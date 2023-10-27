@@ -88,7 +88,7 @@ class jacobi(OrthogonalPolynomial):
     (-1)**n*jacobi(n, b, a, x)
 
     >>> jacobi(n, a, b, 0)
-    gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(2**n*factorial(n)*gamma(a + 1))
+    gamma(a + n + 1)*hyper((-n, -b - n), (a + 1,), -1)/(2**n*factorial(n)*gamma(a + 1))
     >>> jacobi(n, a, b, 1)
     RisingFactorial(a + 1, n)/factorial(n)
 
@@ -118,8 +118,8 @@ class jacobi(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Jacobi_polynomials
-    .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
+    .. [2] https://mathworld.wolfram.com/JacobiPolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/JacobiP/
 
     """
 
@@ -272,8 +272,8 @@ def jacobi_normalized(n, a, b, x):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Jacobi_polynomials
-    .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
+    .. [2] https://mathworld.wolfram.com/JacobiPolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/JacobiP/
 
     """
     nfactor = (S(2)**(a + b + 1) * (gamma(n + a + 1) * gamma(n + b + 1))
@@ -351,15 +351,15 @@ class gegenbauer(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gegenbauer_polynomials
-    .. [2] http://mathworld.wolfram.com/GegenbauerPolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
+    .. [2] https://mathworld.wolfram.com/GegenbauerPolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/GegenbauerC3/
 
     """
 
     @classmethod
     def eval(cls, n, a, x):
         # For negative n the polynomials vanish
-        # See http://functions.wolfram.com/Polynomials/GegenbauerC3/03/01/03/0012/
+        # See https://functions.wolfram.com/Polynomials/GegenbauerC3/03/01/03/0012/
         if n.is_negative:
             return S.Zero
 
@@ -501,10 +501,10 @@ class chebyshevt(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Chebyshev_polynomial
-    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
-    .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
-    .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
-    .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
+    .. [2] https://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
+    .. [3] https://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
+    .. [4] https://functions.wolfram.com/Polynomials/ChebyshevT/
+    .. [5] https://functions.wolfram.com/Polynomials/ChebyshevU/
 
     """
 
@@ -619,10 +619,10 @@ class chebyshevu(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Chebyshev_polynomial
-    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
-    .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
-    .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
-    .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
+    .. [2] https://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
+    .. [3] https://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
+    .. [4] https://functions.wolfram.com/Polynomials/ChebyshevT/
+    .. [5] https://functions.wolfram.com/Polynomials/ChebyshevU/
 
     """
 
@@ -818,9 +818,9 @@ class legendre(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Legendre_polynomial
-    .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/LegendreP/
-    .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
+    .. [2] https://mathworld.wolfram.com/LegendrePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/LegendreP/
+    .. [4] https://functions.wolfram.com/Polynomials/LegendreP2/
 
     """
 
@@ -857,7 +857,7 @@ class legendre(OrthogonalPolynomial):
         elif argindex == 2:
             # Diff wrt x
             # Find better formula, this is unsuitable for x = +/-1
-            # http://www.autodiff.org/ad16/Oral/Buecker_Legendre.pdf says
+            # https://www.autodiff.org/ad16/Oral/Buecker_Legendre.pdf says
             # at x = 1:
             #    n*(n + 1)/2            , m = 0
             #    oo                     , m = 1
@@ -939,9 +939,9 @@ class assoc_legendre(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Associated_Legendre_polynomials
-    .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/LegendreP/
-    .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
+    .. [2] https://mathworld.wolfram.com/LegendrePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/LegendreP/
+    .. [4] https://functions.wolfram.com/Polynomials/LegendreP2/
 
     """
 
@@ -1052,8 +1052,8 @@ class hermite(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hermite_polynomial
-    .. [2] http://mathworld.wolfram.com/HermitePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/HermiteH/
+    .. [2] https://mathworld.wolfram.com/HermitePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/HermiteH/
 
     """
 
@@ -1160,7 +1160,7 @@ class hermite_prob(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hermite_polynomial
-    .. [2] http://mathworld.wolfram.com/HermitePolynomial.html
+    .. [2] https://mathworld.wolfram.com/HermitePolynomial.html
     """
 
     _ortho_poly = staticmethod(hermite_prob_poly)
@@ -1258,9 +1258,9 @@ class laguerre(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial
-    .. [2] http://mathworld.wolfram.com/LaguerrePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
-    .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
+    .. [2] https://mathworld.wolfram.com/LaguerrePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/LaguerreL/
+    .. [4] https://functions.wolfram.com/Polynomials/LaguerreL3/
 
     """
 
@@ -1382,9 +1382,9 @@ class assoc_laguerre(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial#Generalized_Laguerre_polynomials
-    .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
-    .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
+    .. [2] https://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/LaguerreL/
+    .. [4] https://functions.wolfram.com/Polynomials/LaguerreL3/
 
     """
 

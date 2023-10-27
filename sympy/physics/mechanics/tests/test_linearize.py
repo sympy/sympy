@@ -1,5 +1,4 @@
-from sympy.core.backend import (symbols, Matrix, cos, sin, atan, sqrt,
-    Rational, _simplify_matrix)
+from sympy import symbols, Matrix, cos, sin, atan, sqrt, Rational
 from sympy.core.sympify import sympify
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
@@ -131,6 +130,14 @@ def test_linearize_rolling_disc_kane():
     # Check eigenvalues at critical speed are all zero:
     assert sympify(A.subs(upright_nominal).subs(q3d, 1/sqrt(3))).eigenvals() == {0: 8}
 
+    # Check whether alternative solvers work
+    # symengine doesn't support method='GJ'
+    linearizer = KM.to_linearizer(linear_solver='GJ')
+    A, B = linearizer.linearize(op_point=[q_op, u_op, qd_op, ud_op],
+                                A_and_B=True, simplify=True)
+    assert A.subs(upright_nominal) == A_sol
+    assert B.subs(upright_nominal) == B_sol
+
 def test_linearize_pendulum_kane_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     u1 = dynamicsymbols('u1')                     # Angular velocity
@@ -232,6 +239,23 @@ def test_linearize_pendulum_kane_nonminimal():
     assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
+
+    # symengine doesn't support method='GJ'
+    A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op], A_and_B=True,
+                                simplify=True, linear_solver='GJ')
+
+    assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
+    assert B == Matrix([])
+
+    A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op],
+                                 A_and_B=True,
+                                 simplify=True,
+                                 linear_solver=lambda A, b: A.LUsolve(b))
+
+    assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
+    assert B == Matrix([])
+
+
 def test_linearize_pendulum_lagrange_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     q1d = dynamicsymbols('q1', 1)                 # Angular velocity
@@ -260,8 +284,15 @@ def test_linearize_pendulum_lagrange_minimal():
     # Linearize
     A, B, inp_vec = LM.linearize([q1], [q1d], A_and_B=True)
 
-    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+    assert simplify(A) == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
+
+    # Check an alternative solver
+    A, B, inp_vec = LM.linearize([q1], [q1d], A_and_B=True, linear_solver='GJ')
+
+    assert simplify(A) == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+    assert B == Matrix([])
+
 
 def test_linearize_pendulum_lagrange_nonminimal():
     q1, q2 = dynamicsymbols('q1:3')
@@ -293,7 +324,14 @@ def test_linearize_pendulum_lagrange_nonminimal():
     # Perform the Linearization
     A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d],
             op_point=op_point, A_and_B=True)
-    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8/L, 0]])
+    assert simplify(A) == Matrix([[0, 1], [-9.8/L, 0]])
+    assert B == Matrix([])
+
+    # Check if passing a function to linear_solver works
+    A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d], op_point=op_point,
+                                 A_and_B=True, linear_solver=lambda A, b:
+                                 A.LUsolve(b))
+    assert simplify(A) == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
 def test_linearize_rolling_disc_lagrange():

@@ -125,7 +125,7 @@ class floor(RoundFunction):
     ==========
 
     .. [1] "Concrete mathematics" by Graham, pp. 87
-    .. [2] http://mathworld.wolfram.com/FloorFunction.html
+    .. [2] https://mathworld.wolfram.com/FloorFunction.html
 
     """
     _dir = -1
@@ -150,8 +150,13 @@ class floor(RoundFunction):
             r = floor(arg0)
         if arg0.is_finite:
             if arg0 == r:
-                ndir = arg.dir(x, cdir=cdir)
-                return r - 1 if ndir.is_negative else r
+                ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+                if ndir.is_negative:
+                    return r - 1
+                elif ndir.is_positive:
+                    return r
+                else:
+                    raise NotImplementedError("Not sure of sign of %s" % ndir)
             else:
                 return r
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
@@ -171,7 +176,12 @@ class floor(RoundFunction):
             return s + o
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
-            return r - 1 if ndir.is_negative else r
+            if ndir.is_negative:
+                return r - 1
+            elif ndir.is_positive:
+                return r
+            else:
+                raise NotImplementedError("Not sure of sign of %s" % ndir)
         else:
             return r
 
@@ -283,7 +293,7 @@ class ceiling(RoundFunction):
     ==========
 
     .. [1] "Concrete mathematics" by Graham, pp. 87
-    .. [2] http://mathworld.wolfram.com/CeilingFunction.html
+    .. [2] https://mathworld.wolfram.com/CeilingFunction.html
 
     """
     _dir = 1
@@ -308,8 +318,13 @@ class ceiling(RoundFunction):
             r = ceiling(arg0)
         if arg0.is_finite:
             if arg0 == r:
-                ndir = arg.dir(x, cdir=cdir)
-                return r if ndir.is_negative else r + 1
+                ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+                if ndir.is_negative:
+                    return r
+                elif ndir.is_positive:
+                    return r + 1
+                else:
+                    raise NotImplementedError("Not sure of sign of %s" % ndir)
             else:
                 return r
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
@@ -329,7 +344,12 @@ class ceiling(RoundFunction):
             return s + o
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
-            return r if ndir.is_negative else r + 1
+            if ndir.is_negative:
+                return r
+            elif ndir.is_positive:
+                return r + 1
+            else:
+                raise NotImplementedError("Not sure of sign of %s" % ndir)
         else:
             return r
 
@@ -453,7 +473,7 @@ class frac(Function):
     ===========
 
     .. [1] https://en.wikipedia.org/wiki/Fractional_part
-    .. [2] http://mathworld.wolfram.com/FractionalPart.html
+    .. [2] https://mathworld.wolfram.com/FractionalPart.html
 
     """
     @classmethod

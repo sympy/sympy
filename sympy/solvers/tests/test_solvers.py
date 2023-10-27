@@ -2,6 +2,7 @@ from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
@@ -13,6 +14,7 @@ from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (atanh, cosh, sinh, tanh)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sec, sin, tan)
@@ -187,7 +189,7 @@ def test_solve_args():
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations
     assert solve([], [x]) == []
-    # nonlinear systen
+    # nonlinear system
     assert solve((x**2 - 4, y - 2), x, y) == [(-2, 2), (2, 2)]
     assert solve((x**2 - 4, y - 2), y, x) == [(2, -2), (2, 2)]
     assert solve((x**2 - 4 + z, y - 2 - z), a, z, y, x, set=True
@@ -200,7 +202,7 @@ def test_solve_args():
     # - linear
     assert solve((x + y - 2, 2*x + 2*y - 4)) == {x: -y + 2}
     # When one or more args are Boolean
-    assert solve(Eq(x**2, 0.0)) == [0]  # issue 19048
+    assert solve(Eq(x**2, 0.0)) == [0.0]  # issue 19048
     assert solve([True, Eq(x, 0)], [x], dict=True) == [{x: 0}]
     assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == []
     assert not solve([Eq(x, x+1), x < 2], x)
@@ -374,6 +376,14 @@ def test_issue_21004():
     f = x/sqrt(x**2+1)
     f_diff = f.diff(x)
     assert solve(f_diff, x) == []
+
+
+def test_issue_24650():
+    x = symbols('x')
+    r = solve(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0))
+    assert r == [0]
+    r = checksol(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0), x, sol=0)
+    assert r is True
 
 
 def test_linear_system():
@@ -628,6 +638,15 @@ def test_solve_transcendental():
     # issue 15325
     assert solve(y**(1/x) - z, x) == [log(y)/log(z)]
 
+    # issue 25685 (basic trig identies should give simple solutions)
+    for yi in [cos(2*x),sin(2*x),cos(x - pi/3)]:
+        sol = solve([cos(x) - S(3)/5, yi - y])
+        assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)
+    # don't allow massive expansion
+    assert solve(cos(1000*x) - S.Half) == [pi/3000, pi/600]
+    assert solve(cos(x - 1000*y) - 1, x) == [2*atan(tan(500*y))]
+    assert solve(cos(x + y + z) - 1, x) == [-2*atan(tan(y/2 + z/2))]
+
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
@@ -673,7 +692,7 @@ def test_solve_for_functions_derivatives():
     f = Function('f')
     soln = solve([f(x).diff(x) + f(x).diff(x, 2) - 1, f(x).diff(x) - f(x).diff(x, 2)],
             f(x).diff(x), f(x).diff(x, 2))
-    assert soln == { f(x).diff(x, 2): 1/2, f(x).diff(x): 1/2 }
+    assert soln == { f(x).diff(x, 2): S(1)/2, f(x).diff(x): S(1)/2 }
 
     soln = solve([f(x).diff(x, 2) + f(x).diff(x, 3) - 1, 1 - f(x).diff(x, 2) -
             f(x).diff(x, 3), 1 - f(x).diff(x,3)], f(x).diff(x, 2), f(x).diff(x, 3))
@@ -1013,6 +1032,48 @@ def _test_issue_5335_float():
 def test_issue_5767():
     assert set(solve([x**2 + y + 4], [x])) == \
         {(-sqrt(-y - 4),), (sqrt(-y - 4),)}
+
+
+def _make_example_24609():
+    D, R, H, B_g, V, D_c = symbols("D, R, H, B_g, V, D_c", real=True, positive=True)
+    Sigma_f, Sigma_a, nu = symbols("Sigma_f, Sigma_a, nu", real=True, positive=True)
+    x = symbols("x", real=True, positive=True)
+    eq = (
+        2**(S(2)/3)*pi**(S(2)/3)*D_c*(S(231361)/10000 + pi**2/x**2)
+        /(6*V**(S(2)/3)*x**(S(1)/3))
+      - 2**(S(2)/3)*pi**(S(8)/3)*D_c/(2*V**(S(2)/3)*x**(S(7)/3))
+    )
+    expected = 100*sqrt(2)*pi/481
+    return eq, expected, x
+
+
+def test_issue_24609():
+    # https://github.com/sympy/sympy/issues/24609
+    eq, expected, x = _make_example_24609()
+    assert solve(eq, x, simplify=True) == [expected]
+    [solapprox] = solve(eq.n(), x)
+    assert abs(solapprox - expected.n()) < 1e-14
+
+
+@XFAIL
+def test_issue_24609_xfail():
+    #
+    # This returns 5 solutions when it should be 1 (with x positive).
+    # Simplification reveals all solutions to be equivalent. It is expected
+    # that solve without simplify=True returns duplicate solutions in some
+    # cases but the core of this equation is a simple quadratic that can easily
+    # be solved without introducing any redundant solutions:
+    #
+    #     >>> print(factor_terms(eq.as_numer_denom()[0]))
+    #     2**(2/3)*pi**(2/3)*D_c*V**(2/3)*x**(7/3)*(231361*x**2 - 20000*pi**2)
+    #
+    eq, expected, x = _make_example_24609()
+    assert len(solve(eq, x)) == [expected]
+    #
+    # We do not want to pass this test just by using simplify so if the above
+    # passes then uncomment the additional test below:
+    #
+    # assert len(solve(eq, x, simplify=False)) == 1
 
 
 def test_polysys():
@@ -1675,8 +1736,8 @@ def test_high_order_roots():
 
 
 def test_minsolve_linear_system():
-    pqt = dict(quick=True, particular=True)
-    pqf = dict(quick=False, particular=True)
+    pqt = {"quick": True, "particular": True}
+    pqf = {"quick": False, "particular": True}
     assert solve([x + y - 5, 2*x - y - 1], **pqt) == {x: 2, y: 3}
     assert solve([x + y - 5, 2*x - y - 1], **pqf) == {x: 2, y: 3}
     def count(dic):
@@ -1824,6 +1885,13 @@ def test_issues_6819_6820_6821_6248_8692():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
+def test_issue_17638():
+
+    assert solve(((2-exp(2*x))*exp(x))/(exp(2*x)+2)**2 > 0, x) == (-oo < x) & (x < log(2)/2)
+    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < log(4)/2)
+    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < oo)
+
 
 
 def test_issue_14607():
@@ -2116,6 +2184,7 @@ def test_nsolve():
     raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
     raises(TypeError, lambda: nsolve((x - y + 3,x + y,z - y),(x,y,z),(-50,50)))
     raises(TypeError, lambda: nsolve((x + y, x - y), (0, 1)))
+    raises(TypeError, lambda: nsolve(x < 0.5, x, 1))
 
 
 @slow
@@ -2186,20 +2255,12 @@ def test_issue_8828():
     assert p == q == r
 
 
-@slow
 def test_issue_2840_8155():
-    assert solve(sin(3*x) + sin(6*x)) == [
-        0, pi*Rational(-5, 3), pi*Rational(-4, 3), -pi, pi*Rational(-2, 3),
-        pi*Rational(-4, 9), -pi/3, pi*Rational(-2, 9), pi*Rational(2, 9),
-        pi/3, pi*Rational(4, 9), pi*Rational(2, 3), pi, pi*Rational(4, 3),
-        pi*Rational(14, 9), pi*Rational(5, 3), pi*Rational(16, 9), 2*pi,
-        -2*I*log(-(-1)**Rational(1, 9)), -2*I*log(-(-1)**Rational(2, 9)),
-        -2*I*log(-sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(-sin(pi/18) + I*cos(pi/18)),
-        -2*I*log(sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(sin(pi/18) + I*cos(pi/18))]
-    assert solve(2*sin(x) - 2*sin(2*x)) == [
-        0, pi*Rational(-5, 3), -pi, -pi/3, pi/3, pi, pi*Rational(5, 3)]
+    # with parameter-free solutions (i.e. no `n`), we want to avoid
+    # excessive periodic solutions
+    assert solve(sin(3*x) + sin(6*x)) == [0, -2*pi/9, 2*pi/9]
+    assert solve(sin(300*x) + sin(600*x)) == [0, -pi/450, pi/450]
+    assert solve(2*sin(x) - 2*sin(2*x)) == [0, -pi/3, pi/3]
 
 
 def test_issue_9567():
@@ -2579,7 +2640,8 @@ def test_issue_10169():
 
 def test_solve_undetermined_coeffs_issue_23927():
     A, B, r, phi = symbols('A, B, r, phi')
-    eq = Eq(A*sin(t) + B*cos(t), r*sin(t - phi)).rewrite(Add).expand(trig=True)
+    e = Eq(A*sin(t) + B*cos(t), r*sin(t - phi))
+    eq = (e.lhs - e.rhs).expand(trig=True)
     soln = solve_undetermined_coeffs(eq, (r, phi), t)
     assert soln == [{
         phi: 2*atan((A - sqrt(A**2 + B**2))/B),
@@ -2588,3 +2650,33 @@ def test_solve_undetermined_coeffs_issue_23927():
         phi: 2*atan((A + sqrt(A**2 + B**2))/B),
         r: (A**2 + A*sqrt(A**2 + B**2) + B**2)/(A + sqrt(A**2 + B**2))/-1
         }]
+
+def test_issue_24368():
+    # Ideally these would produce a solution, but for now just check that they
+    # don't fail with a RuntimeError
+    raises(NotImplementedError, lambda: solve(Mod(x**2, 49), x))
+    s2 = Symbol('s2', integer=True, positive=True)
+    f = floor(s2/2 - S(1)/2)
+    raises(NotImplementedError, lambda: solve((Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1))*f + Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1), s2))
+
+
+def test_solve_Piecewise():
+    assert [S(10)/3] == solve(3*Piecewise(
+        (S.NaN, x <= 0),
+        (20*x - 3*(x - 6)**2/2 - 176, (x >= 0) & (x >= 2) & (x>= 4) & (x >= 6) & (x < 10)),
+        (100 - 26*x, (x >= 0) & (x >= 2) & (x >= 4) & (x < 10)),
+        (16*x - 3*(x - 6)**2/2 - 176, (x >= 2) & (x >= 4) & (x >= 6) & (x < 10)),
+        (100 - 30*x, (x >= 2) & (x >= 4) & (x < 10)),
+        (30*x - 3*(x - 6)**2/2 - 196, (x>= 0) & (x >= 4) & (x >= 6) & (x < 10)),
+        (80 - 16*x, (x >= 0) & (x >= 4) & (x < 10)),
+        (26*x - 3*(x - 6)**2/2 - 196, (x >= 4) & (x >= 6) & (x < 10)),
+        (80 - 20*x, (x >= 4) & (x < 10)),
+        (40*x - 3*(x - 6)**2/2 - 256, (x >= 0) & (x >= 2) & (x >= 6) & (x < 10)),
+        (20 - 6*x, (x >= 0) & (x >= 2) & (x < 10)),
+        (36*x - 3*(x - 6)**2/2 - 256, (x >= 2) & (x >= 6) & (x < 10)),
+        (20 - 10*x, (x >= 2) & (x < 10)),
+        (50*x - 3*(x - 6)**2/2 - 276, (x >= 0) & (x >= 6) & (x < 10)),
+        (4*x, (x >= 0) & (x < 10)),
+        (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
+        (0, x < 10),  # this will simplify away
+        (S.NaN,True)))

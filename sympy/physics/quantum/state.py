@@ -4,7 +4,7 @@ from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Function
-from sympy.core.numbers import oo
+from sympy.core.numbers import oo, equal_valued
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -108,6 +108,9 @@ class StateBase(QExpr):
 
     def _represent_default_basis(self, **options):
         return self._represent(basis=self.operators)
+
+    def _apply_operator(self, op, **options):
+        return None
 
     #-------------------------------------------------------------------------
     # Dagger/dual
@@ -659,12 +662,12 @@ class OrthogonalKet(OrthogonalState, KetBase):
             is_zero = diff.is_zero
 
             if is_zero is False:
-                return 0
+                return S.Zero # i.e. Integer(0)
 
             if is_zero is None:
                 return None
 
-        return 1
+        return S.One # i.e. Integer(1)
 
 
 class OrthogonalBra(OrthogonalState, BraBase):
@@ -926,7 +929,7 @@ class Wavefunction(Function):
 
         """
 
-        return (self.norm == 1.0)
+        return equal_valued(self.norm, 1)
 
     @property  # type: ignore
     @cacheit

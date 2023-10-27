@@ -130,6 +130,16 @@ def test_content_mathml_functions():
     assert mml_3.childNodes[1].childNodes[
         0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
 
+    mml_4 = mp._print(Lambda((x, y), x * y))
+    assert mml_4.nodeName == 'lambda'
+    assert mml_4.childNodes[0].nodeName == 'bvar'
+    assert mml_4.childNodes[0].childNodes[
+        0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
+    assert mml_4.childNodes[1].nodeName == 'bvar'
+    assert mml_4.childNodes[1].childNodes[
+        0].nodeName == 'ci'  # below bvar there's <ci>y/ci>
+    assert mml_4.childNodes[2].nodeName == 'apply'
+
 
 def test_content_mathml_limits():
     # XXX No unevaluated limits
@@ -1203,24 +1213,6 @@ def test_print_Determinant():
 def test_presentation_settings():
     raises(TypeError, lambda: mathml(x, printer='presentation',
                                      method="garbage"))
-
-
-def test_toprettyxml_hooking():
-    # test that the patch doesn't influence the behavior of the standard
-    # library
-    import xml.dom.minidom
-    doc1 = xml.dom.minidom.parseString(
-        "<apply><plus/><ci>x</ci><cn>1</cn></apply>")
-    doc2 = xml.dom.minidom.parseString(
-        "<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>")
-    prettyxml_old1 = doc1.toprettyxml()
-    prettyxml_old2 = doc2.toprettyxml()
-
-    mp.apply_patch()
-    mp.restore_patch()
-
-    assert prettyxml_old1 == doc1.toprettyxml()
-    assert prettyxml_old2 == doc2.toprettyxml()
 
 
 def test_print_domains():

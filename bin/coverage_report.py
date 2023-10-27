@@ -42,7 +42,7 @@ except ImportError:
     sys.exit(-1)
 
 
-omit_dir_patterns = ['.*tests', 'benchmark', 'examples',
+omit_dir_patterns = ['benchmark', 'examples',
                      'pyglet', 'test_external']
 omit_dir_re = re.compile(r'|'.join(omit_dir_patterns))
 source_re = re.compile(r'.*\.py$')

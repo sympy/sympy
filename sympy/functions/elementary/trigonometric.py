@@ -1,12 +1,11 @@
-from typing import Tuple as tTuple
-
+from typing import Tuple as tTuple, Union as tUnion
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
-from sympy.core.numbers import igcdex, Rational, pi, Integer, Float
+from sympy.core.numbers import Rational, pi, Integer, Float, equal_valued
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
@@ -18,6 +17,8 @@ from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary._trigonometric_special import (
+    cos_table, ipartfrac, fermat_coords)
 from sympy.logic.boolalg import And
 from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
@@ -164,7 +165,7 @@ def _peeloff_pi(arg):
     return arg, S.Zero
 
 
-def _pi_coeff(arg, cycles=1):
+def _pi_coeff(arg: Expr, cycles: int = 1) -> tUnion[Expr, None]:
     r"""
     When arg is a Number times $\pi$ (e.g. $3\pi/2$) then return the Number
     normalized to be in the range $[0, 2]$, else `None`.
@@ -217,7 +218,7 @@ def _pi_coeff(arg, cycles=1):
                     m = 2**p
                     cm = c*m
                     i = int(cm)
-                    if i == cm:
+                    if equal_valued(i, cm):
                         c = Rational(i, m)
                         cx = c*x
                 else:
@@ -236,61 +237,7 @@ def _pi_coeff(arg, cycles=1):
             return cx
     elif arg.is_zero:
         return S.Zero
-
-
-@cacheit
-def _cospi257():
-    """ Express cos(pi/257) explicitly as a function of radicals
-        Based upon the equations in
-        http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
-        See also https://r-knott.surrey.ac.uk/Fibonacci/simpleTrig.html
-    """
-    def f1(a, b):
-        return (a + sqrt(a**2 + b))/2, (a - sqrt(a**2 + b))/2
-
-    def f2(a, b):
-        return (a - sqrt(a**2 + b))/2
-
-    t1, t2 = f1(-1, 256)
-    z1, z3 = f1(t1, 64)
-    z2, z4 = f1(t2, 64)
-    y1, y5 = f1(z1, 4*(5 + t1 + 2*z1))
-    y6, y2 = f1(z2, 4*(5 + t2 + 2*z2))
-    y3, y7 = f1(z3, 4*(5 + t1 + 2*z3))
-    y8, y4 = f1(z4, 4*(5 + t2 + 2*z4))
-    x1, x9 = f1(y1, -4*(t1 + y1 + y3 + 2*y6))
-    x2, x10 = f1(y2, -4*(t2 + y2 + y4 + 2*y7))
-    x3, x11 = f1(y3, -4*(t1 + y3 + y5 + 2*y8))
-    x4, x12 = f1(y4, -4*(t2 + y4 + y6 + 2*y1))
-    x5, x13 = f1(y5, -4*(t1 + y5 + y7 + 2*y2))
-    x6, x14 = f1(y6, -4*(t2 + y6 + y8 + 2*y3))
-    x15, x7 = f1(y7, -4*(t1 + y7 + y1 + 2*y4))
-    x8, x16 = f1(y8, -4*(t2 + y8 + y2 + 2*y5))
-    v1 = f2(x1, -4*(x1 + x2 + x3 + x6))
-    v2 = f2(x2, -4*(x2 + x3 + x4 + x7))
-    v3 = f2(x8, -4*(x8 + x9 + x10 + x13))
-    v4 = f2(x9, -4*(x9 + x10 + x11 + x14))
-    v5 = f2(x10, -4*(x10 + x11 + x12 + x15))
-    v6 = f2(x16, -4*(x16 + x1 + x2 + x5))
-    u1 = -f2(-v1, -4*(v2 + v3))
-    u2 = -f2(-v4, -4*(v5 + v6))
-    w1 = -2*f2(-u1, -4*u2)
-    return sqrt(sqrt(2)*sqrt(w1 + 4)/8 + S.Half)
-
-
-@cacheit
-def _cos_sqrt_cst_table_some():
-    return {
-        3: S.Half,
-        5: (sqrt(5) + 1) / 4,
-        17: sqrt((15 + sqrt(17)) / 32 + sqrt(2) * (sqrt(17 - sqrt(17)) +
-            sqrt(sqrt(2) * (-8 * sqrt(17 + sqrt(17)) - (1 - sqrt(17))
-            * sqrt(17 - sqrt(17))) + 6 * sqrt(17) + 34)) / 32),
-        257: _cospi257()
-        # 65537 is the only other known Fermat prime and the very
-        # large expression is intentionally omitted from SymPy; see
-        # https://r-knott.surrey.ac.uk/Fibonacci/simpleTrig.html
-    }
+    return None
 
 
 class sin(TrigonometricFunction):
@@ -335,9 +282,9 @@ class sin(TrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Sin
-    .. [4] http://mathworld.wolfram.com/TrigonometryAngles.html
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Sin
+    .. [4] https://mathworld.wolfram.com/TrigonometryAngles.html
 
     """
 
@@ -518,10 +465,10 @@ class sin(TrigonometricFunction):
                          (2*cot_half/(1 + cot_half**2), True))
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
-        return self.rewrite(cos).rewrite(pow)
+        return self.rewrite(cos, **kwargs).rewrite(pow, **kwargs)
 
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
-        return self.rewrite(cos).rewrite(sqrt)
+        return self.rewrite(cos, **kwargs).rewrite(sqrt, **kwargs)
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return 1/csc(arg)
@@ -557,7 +504,7 @@ class sin(TrigonometricFunction):
             if n.is_Integer:  # n will be positive because of .eval
                 # canonicalization
 
-                # See http://mathworld.wolfram.com/Multiple-AngleFormulas.html
+                # See https://mathworld.wolfram.com/Multiple-AngleFormulas.html
                 if n.is_odd:
                     return S.NegativeOne**((n - 1)/2)*chebyshevt(n, sin(x))
                 else:
@@ -642,8 +589,8 @@ class cos(TrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Cos
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Cos
 
     """
 
@@ -822,7 +769,7 @@ class cos(TrigonometricFunction):
         I = S.ImaginaryUnit
         from sympy.functions.elementary.hyperbolic import HyperbolicFunction
         if isinstance(arg, (TrigonometricFunction, HyperbolicFunction)):
-            arg = arg.func(arg.args[0]).rewrite(exp)
+            arg = arg.func(arg.args[0]).rewrite(exp, **kwargs)
         return (exp(arg*I) + exp(-arg*I))/2
 
     def _eval_rewrite_as_Pow(self, arg, **kwargs):
@@ -847,101 +794,56 @@ class cos(TrigonometricFunction):
                          ((cot_half - 1)/(cot_half + 1), True))
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
-        return self._eval_rewrite_as_sqrt(arg)
+        return self._eval_rewrite_as_sqrt(arg, **kwargs)
 
-    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
+    def _eval_rewrite_as_sqrt(self, arg: Expr, **kwargs):
         from sympy.functions.special.polynomials import chebyshevt
 
-        def migcdex(x):
-            # recursive calcuation of gcd and linear combination
-            # for a sequence of integers.
-            # Given  (x1, x2, x3)
-            # Returns (y1, y1, y3, g)
-            # such that g is the gcd and x1*y1+x2*y2+x3*y3 - g = 0
-            # Note, that this is only one such linear combination.
-            if len(x) == 1:
-                return (1, x[0])
-            if len(x) == 2:
-                return igcdex(x[0], x[-1])
-            g = migcdex(x[1:])
-            u, v, h = igcdex(x[0], g[-1])
-            return tuple([u] + [v*i for i in g[0:-1] ] + [h])
-
-        def ipartfrac(r, factors=None):
-            if isinstance(r, int):
-                return r
-            if not isinstance(r, Rational):
-                raise TypeError("r is not rational")
-            n = r.q
-            if 2 > r.q*r.q:
-                return r.q
-
-            if None == factors:
-                a = [n//x**y for x, y in factorint(r.q).items()]
-            else:
-                a = [n//x for x in factors]
-            if len(a) == 1:
-                return [ r ]
-            h = migcdex(a)
-            ans = [ r.p*Rational(i*j, r.q) for i, j in zip(h[:-1], a) ]
-            assert r == sum(ans)
-            return ans
         pi_coeff = _pi_coeff(arg)
         if pi_coeff is None:
             return None
 
-        if pi_coeff.is_integer:
-            # it was unevaluated
-            return self.func(pi_coeff*pi)
-
-        if not pi_coeff.is_Rational:
+        if isinstance(pi_coeff, Integer):
             return None
 
-        cst_table_some = _cos_sqrt_cst_table_some()
+        if not isinstance(pi_coeff, Rational):
+            return None
+
+        cst_table_some = cos_table()
 
         if pi_coeff.q in cst_table_some:
-            rv = chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q])
+            rv = chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q]())
             if pi_coeff.q < 257:
                 rv = rv.expand()
             return rv
 
         if not pi_coeff.q % 2:  # recursively remove factors of 2
-            pico2 = pi_coeff*2
-            nval = cos(pico2*pi).rewrite(sqrt)
-            x = (pico2 + 1)/2
+            pico2 = pi_coeff * 2
+            nval = cos(pico2 * pi).rewrite(sqrt, **kwargs)
+            x = (pico2 + 1) / 2
             sign_cos = -1 if int(x) % 2 else 1
-            return sign_cos*sqrt( (1 + nval)/2 )
+            return sign_cos * sqrt((1 + nval) / 2)
 
-        def _fermatCoords(n):
-            # if n can be factored in terms of Fermat primes with
-            # multiplicity of each being 1, return those primes, else
-            # False
-            primes = []
-            for p_i in cst_table_some:
-                quotient, remainder = divmod(n, p_i)
-                if remainder == 0:
-                    n = quotient
-                    primes.append(p_i)
-                    if n == 1:
-                        return tuple(primes)
-            return False
-        FC = _fermatCoords(pi_coeff.q)
+        FC = fermat_coords(pi_coeff.q)
         if FC:
-            decomp = ipartfrac(pi_coeff, FC)
-            X = [(x[1], x[0]*pi) for x in zip(decomp, numbered_symbols('z'))]
-            pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
-            return pcls.rewrite(sqrt)
+            denoms = FC
         else:
-            decomp = ipartfrac(pi_coeff)
-            X = [(x[1], x[0]*pi) for x in zip(decomp, numbered_symbols('z'))]
-            pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
+            denoms = [b**e for b, e in factorint(pi_coeff.q).items()]
+
+        apart = ipartfrac(*denoms)
+        decomp = (pi_coeff.p * Rational(n, d) for n, d in zip(apart, denoms))
+        X = [(x[1], x[0]*pi) for x in zip(decomp, numbered_symbols('z'))]
+        pcls = cos(sum(x[0] for x in X))._eval_expand_trig().subs(X)
+
+        if not FC or len(FC) == 1:
             return pcls
+        return pcls.rewrite(sqrt, **kwargs)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
         return 1/sec(arg)
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        return 1/sec(arg).rewrite(csc)
+        return 1/sec(arg).rewrite(csc, **kwargs)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -1040,8 +942,8 @@ class tan(TrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Tan
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Tan
 
     """
 
@@ -1277,23 +1179,23 @@ class tan(TrigonometricFunction):
         return 1/cot(arg)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
-        sin_in_sec_form = sin(arg).rewrite(sec)
-        cos_in_sec_form = cos(arg).rewrite(sec)
+        sin_in_sec_form = sin(arg).rewrite(sec, **kwargs)
+        cos_in_sec_form = cos(arg).rewrite(sec, **kwargs)
         return sin_in_sec_form/cos_in_sec_form
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        sin_in_csc_form = sin(arg).rewrite(csc)
-        cos_in_csc_form = cos(arg).rewrite(csc)
+        sin_in_csc_form = sin(arg).rewrite(csc, **kwargs)
+        cos_in_csc_form = cos(arg).rewrite(csc, **kwargs)
         return sin_in_csc_form/cos_in_csc_form
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
-        y = self.rewrite(cos).rewrite(pow)
+        y = self.rewrite(cos, **kwargs).rewrite(pow, **kwargs)
         if y.has(cos):
             return None
         return y
 
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
-        y = self.rewrite(cos).rewrite(sqrt)
+        y = self.rewrite(cos, **kwargs).rewrite(sqrt, **kwargs)
         if y.has(cos):
             return None
         return y
@@ -1376,8 +1278,8 @@ class cot(TrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Cot
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Cot
 
     """
 
@@ -1538,7 +1440,7 @@ class cot(TrigonometricFunction):
         from sympy.functions.elementary.hyperbolic import HyperbolicFunction
         I = S.ImaginaryUnit
         if isinstance(arg, (TrigonometricFunction, HyperbolicFunction)):
-            arg = arg.func(arg.args[0]).rewrite(exp)
+            arg = arg.func(arg.args[0]).rewrite(exp, **kwargs)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp + neg_exp)/(pos_exp - neg_exp)
 
@@ -1561,23 +1463,23 @@ class cot(TrigonometricFunction):
         return 1/tan(arg)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
-        cos_in_sec_form = cos(arg).rewrite(sec)
-        sin_in_sec_form = sin(arg).rewrite(sec)
+        cos_in_sec_form = cos(arg).rewrite(sec, **kwargs)
+        sin_in_sec_form = sin(arg).rewrite(sec, **kwargs)
         return cos_in_sec_form/sin_in_sec_form
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        cos_in_csc_form = cos(arg).rewrite(csc)
-        sin_in_csc_form = sin(arg).rewrite(csc)
+        cos_in_csc_form = cos(arg).rewrite(csc, **kwargs)
+        sin_in_csc_form = sin(arg).rewrite(csc, **kwargs)
         return cos_in_csc_form/sin_in_csc_form
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
-        y = self.rewrite(cos).rewrite(pow)
+        y = self.rewrite(cos, **kwargs).rewrite(pow, **kwargs)
         if y.has(cos):
             return None
         return y
 
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
-        y = self.rewrite(cos).rewrite(sqrt)
+        y = self.rewrite(cos, **kwargs).rewrite(sqrt, **kwargs)
         if y.has(cos):
             return None
         return y
@@ -1667,8 +1569,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     # trigonometric functions eval() like even/odd, func(x+2*k*pi), etc.
 
     # optional, to be defined in subclasses:
-    _is_even = None  # type: FuzzyBool
-    _is_odd = None  # type: FuzzyBool
+    _is_even: FuzzyBool = None
+    _is_odd: FuzzyBool = None
 
     @classmethod
     def eval(cls, arg):
@@ -1807,8 +1709,8 @@ class sec(ReciprocalTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Sec
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Sec
 
     """
 
@@ -1829,10 +1731,10 @@ class sec(ReciprocalTrigonometricFunction):
         return sin(arg)/(cos(arg)*sin(arg))
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
-        return (1/cos(arg).rewrite(sin))
+        return (1/cos(arg).rewrite(sin, **kwargs))
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
-        return (1/cos(arg).rewrite(tan))
+        return (1/cos(arg).rewrite(tan, **kwargs))
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return csc(pi/2 - arg, evaluate=False)
@@ -1853,7 +1755,7 @@ class sec(ReciprocalTrigonometricFunction):
     @cacheit
     def taylor_term(n, x, *previous_terms):
         # Reference Formula:
-        # http://functions.wolfram.com/ElementaryFunctions/Sec/06/01/02/01/
+        # https://functions.wolfram.com/ElementaryFunctions/Sec/06/01/02/01/
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -1908,8 +1810,8 @@ class csc(ReciprocalTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Csc
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Csc
 
     """
 
@@ -1930,13 +1832,13 @@ class csc(ReciprocalTrigonometricFunction):
         return (1 + cot_half**2)/(2*cot_half)
 
     def _eval_rewrite_as_cos(self, arg, **kwargs):
-        return 1/sin(arg).rewrite(cos)
+        return 1/sin(arg).rewrite(cos, **kwargs)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
         return sec(pi/2 - arg, evaluate=False)
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
-        return (1/sin(arg).rewrite(tan))
+        return (1/sin(arg).rewrite(tan, **kwargs))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -2221,8 +2123,8 @@ class asin(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSin
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcSin
 
     """
 
@@ -2320,8 +2222,11 @@ class asin(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asin
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         if x0.is_zero:
             return arg.as_leading_term(x)
+
         # Handling branch points
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
@@ -2417,10 +2322,10 @@ class acos(InverseTrigonometricFunction):
     r"""
     The inverse cosine function.
 
-    Returns the arc cosine of x (measured in radians).
+    Explanation
+    ===========
 
-    Examples
-    ========
+    Returns the arc cosine of x (measured in radians).
 
     ``acos(x)`` will evaluate automatically in the cases
     $x \in \{\infty, -\infty, 0, 1, -1\}$ and for some instances when
@@ -2452,8 +2357,8 @@ class acos(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCos
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcCos
 
     """
 
@@ -2536,6 +2441,8 @@ class acos(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acos
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((S.One - arg).as_leading_term(x))
@@ -2675,8 +2582,8 @@ class atan(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcTan
 
     """
 
@@ -2775,6 +2682,8 @@ class atan(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # atan
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         if x0.is_zero:
             return arg.as_leading_term(x)
         # Handling branch points
@@ -2893,8 +2802,8 @@ class acot(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/4.23
-    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCot
+    .. [1] https://dlmf.nist.gov/4.23
+    .. [2] https://functions.wolfram.com/ElementaryFunctions/ArcCot
 
     """
     _singularities = (S.ImaginaryUnit, -S.ImaginaryUnit)
@@ -2990,6 +2899,8 @@ class acot(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acot
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
         # Handling branch points
@@ -3126,9 +3037,9 @@ class asec(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSec
-    .. [4] http://reference.wolfram.com/language/ref/ArcSec.html
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcSec
+    .. [4] https://reference.wolfram.com/language/ref/ArcSec.html
 
     """
 
@@ -3203,6 +3114,8 @@ class asec(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asec
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((arg - S.One).as_leading_term(x))
@@ -3328,8 +3241,8 @@ class acsc(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsc
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcCsc
 
     """
 
@@ -3411,6 +3324,8 @@ class acsc(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acsc
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         # Handling branch points
         if x0 in (-S.One, S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
@@ -3589,7 +3504,7 @@ class atan2(InverseTrigonometricFunction):
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] https://en.wikipedia.org/wiki/Atan2
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan2
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcTan2
 
     """
 

@@ -1,29 +1,67 @@
-from sympy.ntheory.generate import Sieve, sieve
-from sympy.ntheory.primetest import (mr, is_lucas_prp, is_square,
-                                     is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime, is_euler_pseudoprime,
-                                     is_gaussian_prime)
+from math import gcd
 
-from sympy.testing.pytest import slow
+from sympy.ntheory.generate import Sieve, sieve
+from sympy.ntheory.primetest import (mr, _lucas_extrastrong_params, is_lucas_prp, is_square,
+                                     is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime, is_euler_pseudoprime,
+                                     is_gaussian_prime, is_fermat_pseudoprime, is_euler_jacobi_pseudoprime)
+
+from sympy.testing.pytest import slow, raises
 from sympy.core.numbers import I
 
+
+def test_is_fermat_pseudoprime():
+    assert is_fermat_pseudoprime(5, 1)
+    assert is_fermat_pseudoprime(9, 1)
+
+
 def test_euler_pseudoprimes():
-    assert is_euler_pseudoprime(9, 1) == True
-    assert is_euler_pseudoprime(341, 2) == False
-    assert is_euler_pseudoprime(121, 3) == True
-    assert is_euler_pseudoprime(341, 4) == True
-    assert is_euler_pseudoprime(217, 5) == False
-    assert is_euler_pseudoprime(185, 6) == False
-    assert is_euler_pseudoprime(55, 111) == True
-    assert is_euler_pseudoprime(115, 114) == True
-    assert is_euler_pseudoprime(49, 117) == True
-    assert is_euler_pseudoprime(85, 84) == True
-    assert is_euler_pseudoprime(87, 88) == True
-    assert is_euler_pseudoprime(49, 128) == True
-    assert is_euler_pseudoprime(39, 77) == True
-    assert is_euler_pseudoprime(9881, 30) == True
-    assert is_euler_pseudoprime(8841, 29) == False
-    assert is_euler_pseudoprime(8421, 29) == False
-    assert is_euler_pseudoprime(9997, 19) == True
+    assert is_euler_pseudoprime(13, 1)
+    assert is_euler_pseudoprime(15, 1)
+    assert is_euler_pseudoprime(17, 6)
+    assert is_euler_pseudoprime(101, 7)
+    assert is_euler_pseudoprime(1009, 10)
+    assert is_euler_pseudoprime(11287, 41)
+
+    raises(ValueError, lambda: is_euler_pseudoprime(0, 4))
+    raises(ValueError, lambda: is_euler_pseudoprime(3, 0))
+    raises(ValueError, lambda: is_euler_pseudoprime(15, 6))
+
+    # A006970
+    euler_prp = [341, 561, 1105, 1729, 1905, 2047, 2465, 3277,
+                 4033, 4681, 5461, 6601, 8321, 8481, 10261, 10585]
+    for p in euler_prp:
+        assert is_euler_pseudoprime(p, 2)
+
+    # A048950
+    euler_prp = [121, 703, 1729, 1891, 2821, 3281, 7381, 8401, 8911, 10585,
+                 12403, 15457, 15841, 16531, 18721, 19345, 23521, 24661, 28009]
+    for p in euler_prp:
+        assert is_euler_pseudoprime(p, 3)
+
+    # A033181
+    absolute_euler_prp = [1729, 2465, 15841, 41041, 46657, 75361,
+                          162401, 172081, 399001, 449065, 488881]
+    for p in absolute_euler_prp:
+        for a in range(2, p):
+            if gcd(a, p) != 1:
+                continue
+            assert is_euler_pseudoprime(p, a)
+
+
+def test_is_euler_jacobi_pseudoprime():
+    assert is_euler_jacobi_pseudoprime(11, 1)
+    assert is_euler_jacobi_pseudoprime(15, 1)
+
+
+def test_lucas_extrastrong_params():
+    assert _lucas_extrastrong_params(3) == (5, 3, 1)
+    assert _lucas_extrastrong_params(5) == (12, 4, 1)
+    assert _lucas_extrastrong_params(7) == (5, 3, 1)
+    assert _lucas_extrastrong_params(9) == (0, 0, 0)
+    assert _lucas_extrastrong_params(11) == (21, 5, 1)
+    assert _lucas_extrastrong_params(59) == (32, 6, 1)
+    assert _lucas_extrastrong_params(479) == (117, 11, 1)
+
 
 def test_is_extra_strong_lucas_prp():
     assert is_extra_strong_lucas_prp(4) == False

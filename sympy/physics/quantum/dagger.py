@@ -1,6 +1,6 @@
 """Hermitian conjugation."""
 
-from sympy.core import Expr, Mul
+from sympy.core import Expr, Mul, sympify
 from sympy.functions.elementary.complexes import adjoint
 
 __all__ = [
@@ -22,6 +22,8 @@ class Dagger(adjoint):
 
     arg : Expr
         The SymPy expression that we want to take the dagger of.
+    evaluate : bool
+        Whether the resulting expression should be directly evaluated.
 
     Examples
     ========
@@ -77,14 +79,12 @@ class Dagger(adjoint):
     .. [2] https://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
-    def __new__(cls, arg):
-        if hasattr(arg, 'adjoint'):
-            obj = arg.adjoint()
-        elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose'):
-            obj = arg.conjugate().transpose()
-        if obj is not None:
-            return obj
-        return Expr.__new__(cls, arg)
+    def __new__(cls, arg, evaluate=True):
+        if hasattr(arg, 'adjoint') and evaluate:
+            return arg.adjoint()
+        elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose') and evaluate:
+            return arg.conjugate().transpose()
+        return Expr.__new__(cls, sympify(arg))
 
     def __mul__(self, other):
         from sympy.physics.quantum import IdentityOperator

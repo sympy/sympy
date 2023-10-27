@@ -16,7 +16,7 @@ from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
-    real, float32, float64, float80, float128, intc, Comment, CodeBlock
+    real, float32, float64, float80, float128, intc, Comment, CodeBlock, stderr, QuotedString
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.codegen.cnodes import restrict
@@ -164,8 +164,8 @@ def test_ccode_functions2():
     assert ccode(Mod(p1, p2)**s) == 'pow(p1 % p2, s)'
     n = symbols('n', integer=True, negative=True)
     assert ccode(Mod(-n, p2)) == '(-n) % p2'
-    assert ccode(fibonacci(n)) == '(1.0/5.0)*pow(2, -n)*sqrt(5)*(-pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n))'
-    assert ccode(lucas(n)) == 'pow(2, -n)*(pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n))'
+    assert ccode(fibonacci(n)) == '((1.0/5.0)*pow(2, -n)*sqrt(5)*(-pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n)))'
+    assert ccode(lucas(n)) == '(pow(2, -n)*(pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n)))'
 
 
 def test_ccode_user_functions():
@@ -263,12 +263,12 @@ def test_ccode_sinc():
     from sympy.functions.elementary.trigonometric import sinc
     expr = sinc(x)
     assert ccode(expr) == (
-            "((x != 0) ? (\n"
+            "(((x != 0) ? (\n"
             "   sin(x)/x\n"
             ")\n"
             ": (\n"
             "   1\n"
-            "))")
+            ")))")
 
 
 def test_ccode_Piecewise_deep():
@@ -642,16 +642,16 @@ def test_C99CodePrinter():
 
 @XFAIL
 def test_C99CodePrinter__precision_f80():
-    f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
+    f80_printer = C99CodePrinter({"type_aliases": {real: float80}})
     assert f80_printer.doprint(sin(x+Float('2.1'))) == 'sinl(x + 2.1L)'
 
 
 def test_C99CodePrinter__precision():
     n = symbols('n', integer=True)
     p = symbols('p', integer=True, positive=True)
-    f32_printer = C99CodePrinter(dict(type_aliases={real: float32}))
-    f64_printer = C99CodePrinter(dict(type_aliases={real: float64}))
-    f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
+    f32_printer = C99CodePrinter({"type_aliases": {real: float32}})
+    f64_printer = C99CodePrinter({"type_aliases": {real: float64}})
+    f80_printer = C99CodePrinter({"type_aliases": {real: float80}})
     assert f32_printer.doprint(sin(x+2.1)) == 'sinf(x + 2.1F)'
     assert f64_printer.doprint(sin(x+2.1)) == 'sin(x + 2.1000000000000001)'
     assert f80_printer.doprint(sin(x+Float('2.0'))) == 'sinl(x + 2.0L)'
@@ -747,18 +747,18 @@ def test_ccode_Declaration():
 def test_C99CodePrinter_custom_type():
     # We will look at __float128 (new in glibc 2.26)
     f128 = FloatType('_Float128', float128.nbits, float128.nmant, float128.nexp)
-    p128 = C99CodePrinter(dict(
-        type_aliases={real: f128},
-        type_literal_suffixes={f128: 'Q'},
-        type_func_suffixes={f128: 'f128'},
-        type_math_macro_suffixes={
+    p128 = C99CodePrinter({
+        "type_aliases": {real: f128},
+        "type_literal_suffixes": {f128: 'Q'},
+        "type_func_suffixes": {f128: 'f128'},
+        "type_math_macro_suffixes": {
             real: 'f128',
             f128: 'f128'
         },
-        type_macros={
+        "type_macros": {
             f128: ('__STDC_WANT_IEC_60559_TYPES_EXT__',)
         }
-    ))
+    })
     assert p128.doprint(x) == 'x'
     assert not p128.headers
     assert not p128.libraries
@@ -848,12 +848,14 @@ def test_ccode_codegen_ast():
     block = CodeBlock(
         x,
         Print([x, y], "%d %d"),
+        Print([QuotedString('hello'), y], "%s %d", file=stderr),
         FunctionCall('pwer', [x]),
         Return(x),
     )
     assert ccode(block) == '\n'.join([
         'x;',
         'printf("%d %d", x, y);',
+        'fprintf(stderr, "%s %d", "hello", y);',
         'pwer(x);',
         'return x;',
     ])

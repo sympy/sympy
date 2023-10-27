@@ -298,7 +298,7 @@ class Lambdifier:
     # Functions that are the same in numpy
     numpy_functions_same = [
         'sin', 'cos', 'tan', 'sinh', 'cosh', 'tanh', 'exp', 'log',
-        'sqrt', 'floor', 'conjugate',
+        'sqrt', 'floor', 'conjugate', 'sign',
     ]
 
     # Functions with different names in numpy
@@ -622,9 +622,7 @@ class Lambdifier:
             # XXX debug: print funcname
             args_dict = {}
             for a in expr.args:
-                if (isinstance(a, Symbol) or
-                    isinstance(a, NumberSymbol) or
-                        a in [I, zoo, oo]):
+                if (isinstance(a, (Symbol, NumberSymbol)) or a in [I, zoo, oo]):
                     continue
                 else:
                     args_dict.update(cls.sympy_expression_namespace(a))

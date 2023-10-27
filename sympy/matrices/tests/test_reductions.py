@@ -10,6 +10,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify.simplify import simplify
 from sympy.abc import x
 
+
 class ReductionsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixReductions):
     pass
 
@@ -278,6 +279,22 @@ def test_rref():
             [1, 0, sqrt(x)*(-x + 1)/(-x**Rational(5, 2) + x),
                 0, 1, 1/(sqrt(x) + x + 1)]):
         assert simplify(i - j).is_zero
+
+
+def test_rref_rhs():
+    a, b, c, d = symbols('a b c d')
+    A = Matrix([[0, 0], [0, 0], [1, 2], [3, 4]])
+    B = Matrix([a, b, c, d])
+    assert A.rref_rhs(B) == (Matrix([
+    [1, 0],
+    [0, 1],
+    [0, 0],
+    [0, 0]]), Matrix([
+    [   -2*c + d],
+    [3*c/2 - d/2],
+    [          a],
+    [          b]]))
+
 
 def test_issue_17827():
     C = Matrix([

@@ -19,7 +19,7 @@ Rn is a GeometrySet representing n-dimensional Euclidean space. R2 and
 R3 are currently the only ambient spaces implemented.
 
 """
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -64,6 +64,10 @@ ordering_of_classes = [
 ]
 
 
+x, y = [Dummy('entity_dummy') for i in range(2)]
+T = Dummy('entity_dummy', real=True)
+
+
 class GeometryEntity(Basic, EvalfMixin):
     """The base class for all geometrical entities.
 
@@ -72,7 +76,7 @@ class GeometryEntity(Basic, EvalfMixin):
 
     """
 
-    __slots__ = ()  # type: tTuple[str, ...]
+    __slots__: tuple[str, ...] = ()
 
     def __cmp__(self, other):
         """Comparison of two GeometryEntities."""
@@ -392,15 +396,15 @@ class GeometryEntity(Basic, EvalfMixin):
         l = line
         o = Point(0, 0)
         if l.slope.is_zero:
-            y = l.args[0].y
-            if not y:  # x-axis
+            v = l.args[0].y
+            if not v:  # x-axis
                 return g.scale(y=-1)
-            reps = [(p, p.translate(y=2*(y - p.y))) for p in g.atoms(Point)]
+            reps = [(p, p.translate(y=2*(v - p.y))) for p in g.atoms(Point)]
         elif l.slope is oo:
-            x = l.args[0].x
-            if not x:  # y-axis
+            v = l.args[0].x
+            if not v:  # y-axis
                 return g.scale(x=-1)
-            reps = [(p, p.translate(x=2*(x - p.x))) for p in g.atoms(Point)]
+            reps = [(p, p.translate(x=2*(v - p.x))) for p in g.atoms(Point)]
         else:
             if not hasattr(g, 'reflect') and not all(
                     isinstance(arg, Point) for arg in g.args):
@@ -410,7 +414,6 @@ class GeometryEntity(Basic, EvalfMixin):
             c = l.coefficients
             d = -c[-1]/c[1]  # y-intercept
             # apply the transform to a single point
-            x, y = Dummy(), Dummy()
             xf = Point(x, y)
             xf = xf.translate(y=-d).rotate(-a, o).scale(y=-1
                 ).rotate(a, o).translate(y=d)
@@ -528,7 +531,6 @@ class GeometryEntity(Basic, EvalfMixin):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):
             raise ValueError("other must be a point")
-        T = Dummy('t', real=True)
         sol = solve(self.arbitrary_point(T) - other, T, dict=True)
         if not sol:
             raise ValueError("Given point is not on %s" % func_name(self))

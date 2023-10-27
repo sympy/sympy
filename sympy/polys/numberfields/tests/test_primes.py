@@ -149,7 +149,7 @@ def test_decomp_5():
 
 def test_decomp_6():
     # Another case where 2 divides the index. This is Dedekind's example of
-    # an essential discriminant divisor. (See Cohen, Excercise 6.10.)
+    # an essential discriminant divisor. (See Cohen, Exercise 6.10.)
     T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
     rad = {}
     ZK, dK = round_two(T, radicals=rad)

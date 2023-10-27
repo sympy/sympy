@@ -327,7 +327,7 @@ def test_evalf_euler():
     s = '0.699525841805253'  # approx. equal to log(2) i.e. 0.693147180559945
     assert sstr(p.evalf(r, method='Euler')[-1]) == s
 
-    # path taken is a traingle 0-->1+i-->2
+    # path taken is a triangle 0-->1+i-->2
     r = [0.1 + 0.1*I]
     for i in range(9):
         r.append(r[-1]+0.1+0.1*I)
@@ -404,7 +404,7 @@ def test_evalf_rk4():
     s = '0.693146363174626'  # approx. equal to log(2) i.e. 0.693147180559945
     assert sstr(p.evalf(r)[-1]) == s
 
-    # path taken is a traingle 0-->1+i-->2
+    # path taken is a triangle 0-->1+i-->2
     r = [0.1 + 0.1*I]
     for i in range(9):
         r.append(r[-1]+0.1+0.1*I)

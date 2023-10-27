@@ -1,0 +1,16 @@
+[flake8]
+doctests = True
+ignore =
+    F403,
+select =
+    C4,
+    E722,
+    F,
+exclude =
+    sympy/assumptions/*generated.py,
+    sympy/core/*_generated.py,
+    sympy/parsing/autolev/_antlr/*,
+    sympy/parsing/autolev/test-examples/*,
+    sympy/parsing/latex/_antlr/*,
+    sympy/polys/numberfields/resolvent_lookup.py,
+per-file-ignores = sympy/interactive/session.py:F821

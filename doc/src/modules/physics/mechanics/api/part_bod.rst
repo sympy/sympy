@@ -1,18 +1,43 @@
 .. _part_bod:
 
-=====================================================
-Masses, Inertias & Particles, RigidBodys (Docstrings)
-=====================================================
+======================================================
+Bodies, Inertias, Loads & Other Functions (Docstrings)
+======================================================
 
-.. automodule:: sympy.physics.mechanics.particle
+Bodies
+======
+
+.. autoclass:: sympy.physics.mechanics.particle.Particle
+   :members:
+   :inherited-members:
+
+.. autoclass:: sympy.physics.mechanics.rigidbody.RigidBody
+   :members:
+   :inherited-members:
+
+Inertias
+========
+
+.. autoclass:: sympy.physics.mechanics.inertia.Inertia
    :members:
 
-.. automodule:: sympy.physics.mechanics.rigidbody
+.. autofunction:: sympy.physics.mechanics.inertia.inertia
+
+.. autofunction:: sympy.physics.mechanics.inertia.inertia_of_point_mass
+
+Loads
+=====
+
+.. autoclass:: sympy.physics.mechanics.loads.Force
    :members:
 
-.. autofunction:: sympy.physics.mechanics.functions.inertia
+.. autoclass:: sympy.physics.mechanics.loads.Torque
+   :members:
 
-.. autofunction:: sympy.physics.mechanics.functions.inertia_of_point_mass
+Other Functions
+===============
+
+.. autofunction:: sympy.physics.mechanics.functions.center_of_mass
 
 .. autofunction:: sympy.physics.mechanics.functions.linear_momentum
 
@@ -23,3 +48,5 @@ Masses, Inertias & Particles, RigidBodys (Docstrings)
 .. autofunction:: sympy.physics.mechanics.functions.potential_energy
 
 .. autofunction:: sympy.physics.mechanics.functions.Lagrangian
+
+.. autofunction:: sympy.physics.mechanics.functions.find_dynamicsymbols

@@ -6,7 +6,8 @@
   :ref:`theanocode-deprecated` for more information.
 
 """
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
@@ -105,7 +106,7 @@ class TheanoPrinter(Printer):
     printmethod = "_theano"
 
     def __init__(self, *args, **kwargs):
-        self.cache = kwargs.pop('cache', dict())
+        self.cache = kwargs.pop('cache', {})
         super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
@@ -313,7 +314,7 @@ class TheanoPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache = {}  # type: tDict[Any, Any]
+global_cache: dict[Any, Any] = {}
 
 
 def theano_code(expr, cache=None, **kwargs):

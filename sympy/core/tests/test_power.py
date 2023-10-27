@@ -13,7 +13,8 @@ from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh
 from sympy.polys import Poly
 from sympy.series.order import O
 from sympy.sets import FiniteSet
-from sympy.core.power import power, integer_nthroot
+from sympy.core.power import power
+from sympy.core.intfunc import integer_nthroot
 from sympy.testing.pytest import warns, _both_exp_pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.abc import a, b, c, x, y

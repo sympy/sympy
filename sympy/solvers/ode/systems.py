@@ -690,7 +690,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     Explanation
     ===========
 
-    This solver solves the system of ODEs of the follwing form:
+    This solver solves the system of ODEs of the following form:
 
     .. math::
         X'(t) = A(t) X(t) +  b(t)
@@ -938,7 +938,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     n = A.rows
 
     # constants = numbered_symbols(prefix='C', cls=Dummy, start=const_idx+1)
-    Cvect = Matrix(list(Dummy() for _ in range(n)))
+    Cvect = Matrix([Dummy() for _ in range(n)])
 
     if b is None and any(type == typ for typ in ["type2", "type4", "type6"]):
         b = zeros(n, 1)
@@ -1882,7 +1882,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
         t_ = Symbol('{}_'.format(t))
         new_funcs = [Function(Dummy('{}_'.format(f.func.__name__)))(t_) for f in funcs]
         max_order = max(sys_order[func] for func in funcs)
-        subs_dict = {func: new_func for func, new_func in zip(funcs, new_funcs)}
+        subs_dict = dict(zip(funcs, new_funcs))
         subs_dict[t] = exp(t_)
 
         free_function = Function(Dummy())
@@ -2090,7 +2090,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     if t is not None and not isinstance(t, Symbol):
         raise ValueError(filldedent('''
-            The indepedent variable must be of type Symbol
+            The independent variable must be of type Symbol
         '''))
 
     if t is None:
