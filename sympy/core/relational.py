@@ -1,4 +1,4 @@
-from typing import Dict as tDict, Union as tUnion, Type
+from __future__ import annotations
 
 from .basic import Atom, Basic
 from .sorting import ordered
@@ -9,9 +9,10 @@ from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
+from sympy.utilities.exceptions import sympy_deprecation_warning
+
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -141,7 +142,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  # type: tDict[tUnion[str, None], Type[Relational]]
+    ValidRelationOperator: dict[str | None, type[Relational]] = {}
 
     is_Relational = True
 
@@ -595,7 +596,7 @@ class Equality(Relational):
 
     Since this object is already an expression, it does not respond to
     the method ``as_expr`` if one tries to create `x - y` from ``Eq(x, y)``.
-    This can be done with the ``rewrite(Add)`` method.
+    If ``eq = Eq(x, y)`` then write `eq.lhs - eq.rhs` to get ``x - y``.
 
     .. deprecated:: 1.5
 
@@ -610,18 +611,7 @@ class Equality(Relational):
 
     is_Equality = True
 
-    def __new__(cls, lhs, rhs=None, **options):
-
-        if rhs is None:
-            sympy_deprecation_warning(
-                """
-                Eq(expr) with a single argument with the right-hand side
-                defaulting to 0 is deprecated. Use Eq(expr, 0) instead.
-                """,
-                deprecated_since_version="1.5",
-                active_deprecations_target="deprecated-eq-expr",
-            )
-            rhs = 0
+    def __new__(cls, lhs, rhs, **options):
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
@@ -638,7 +628,7 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
-    def _eval_rewrite_as_Add(self, *args, **kwargs):
+    def _eval_rewrite_as_Add(self, L, R, evaluate=True, **kwargs):
         """
         return Eq(L, R) as L - R. To control the evaluation of
         the result set pass `evaluate=True` to give L - R;
@@ -647,26 +637,39 @@ class Equality(Relational):
         non-canonical args will be returned. If one side is 0, the
         non-zero side will be returned.
 
+        .. deprecated:: 1.13
+
+           The method ``Eq.rewrite(Add)`` is deprecated.
+           See :ref:`eq-rewrite-Add` for details.
+
         Examples
         ========
 
         >>> from sympy import Eq, Add
         >>> from sympy.abc import b, x
         >>> eq = Eq(x + b, x - b)
-        >>> eq.rewrite(Add)
+        >>> eq.rewrite(Add)  #doctest: +SKIP
         2*b
-        >>> eq.rewrite(Add, evaluate=None).args
+        >>> eq.rewrite(Add, evaluate=None).args  #doctest: +SKIP
         (b, b, x, -x)
-        >>> eq.rewrite(Add, evaluate=False).args
+        >>> eq.rewrite(Add, evaluate=False).args  #doctest: +SKIP
         (b, x, b, -x)
         """
+        sympy_deprecation_warning("""
+        Eq.rewrite(Add) is deprecated.
+
+        For ``eq = Eq(a, b)`` use ``eq.lhs - eq.rhs`` to obtain
+        ``a - b``.
+        """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="eq-rewrite-Add",
+            stacklevel=5,
+        )
         from .add import _unevaluated_Add, Add
-        L, R = args
         if L == 0:
             return R
         if R == 0:
             return L
-        evaluate = kwargs.get('evaluate', True)
         if evaluate:
             # allow cancellation of args
             return L - R
@@ -701,7 +704,7 @@ class Equality(Relational):
                 from sympy.solvers.solveset import linear_coeffs
                 x = free.pop()
                 m, b = linear_coeffs(
-                    e.rewrite(Add, evaluate=False), x)
+                    Add(e.lhs, -e.rhs, evaluate=False), x)
                 if m.is_zero is False:
                     enew = e.func(x, -b / m)
                 else:
@@ -1090,7 +1093,7 @@ class GreaterThan(_Greater):
        method to determine that a chained inequality is being built.
        Chained comparison operators are evaluated pairwise, using "and"
        logic (see
-       http://docs.python.org/reference/expressions.html#not-in). This
+       https://docs.python.org/3/reference/expressions.html#not-in). This
        is done in an efficient way, so that each object being compared
        is only evaluated once and the comparison can short-circuit. For
        example, ``1 > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2

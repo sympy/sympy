@@ -17,7 +17,7 @@ from sympy.ntheory.factor_ import multiplicity
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
-    reduces expression by combining powers with similar bases and exponents.
+    Reduce expression by combining powers with similar bases and exponents.
 
     Explanation
     ===========

@@ -1,4 +1,5 @@
-from typing import Any, Set as tSet
+from __future__ import annotations
+from typing import Any
 
 from functools import reduce
 from itertools import permutations
@@ -174,7 +175,7 @@ class CoordSystem(Basic):
     assumptions of coordinate symbols of the coordinate system. If not passed,
     these symbols are generated automatically and are assumed to be real valued.
 
-    By passing *relations* parameter, user can define the tranform relations of
+    By passing *relations* parameter, user can define the transform relations of
     coordinate systems. Inverse transformation and indirect transformation can
     be found automatically. If this parameter is not passed, coordinate
     transformation cannot be done.
@@ -494,7 +495,7 @@ That is, replace {s} with Symbol({s!r}, real=True).
                 distance = path_dict[sys][0] + 1
                 if path_dict[newsys][0] >= distance or not path_dict[newsys][1]:
                     path_dict[newsys][0] = distance
-                    path_dict[newsys][1] = [i for i in path_dict[sys][1]]
+                    path_dict[newsys][1] = list(path_dict[sys][1])
                     path_dict[newsys][1].append(sys)
 
         visit(sys1.name)
@@ -991,7 +992,7 @@ class BaseScalarField(Expr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols = set()  # type: tSet[Any]
+    free_symbols: set[Any] = set()
 
 
 class BaseVectorField(Expr):
@@ -1653,7 +1654,7 @@ class CovarDerivativeOp(Expr):
                              'was not a vector field.')
         christoffel = ImmutableDenseNDimArray(christoffel)
         obj = super().__new__(cls, wrt, christoffel)
-        # deprecated assigments
+        # deprecated assignments
         obj._wrt = wrt
         obj._christoffel = christoffel
         return obj

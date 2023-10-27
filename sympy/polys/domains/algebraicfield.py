@@ -178,8 +178,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     sqrt(2) + sqrt(3)
     >>> K.orig_ext
     (sqrt(2), sqrt(3))
-    >>> K.mod
-    DMP([1, 0, -10, 0, 1], QQ, None)
+    >>> K.mod  # doctest: +SKIP
+    DMP_Python([1, 0, -10, 0, 1], QQ)
 
     The `discriminant`_ of the field can be obtained from the
     :py:meth:`~.discriminant` method, and an `integral basis`_ from the
@@ -214,6 +214,12 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     QQ<exp(2*I*pi/7)>
     >>> K.primes_above(11)
     [(11, _x**3 + 5*_x**2 + 4*_x - 1), (11, _x**3 - 4*_x**2 - 5*_x - 1)]
+
+    The Galois group of the Galois closure of the field can be computed (when
+    the minimal polynomial of the field is of sufficiently small degree).
+
+    >>> K.galois_group(by_name=True)[0]
+    S6TransitiveSubgroups.C6
 
     Notes
     =====
@@ -301,7 +307,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         >>> from sympy import QQ, sqrt
         >>> K = QQ.algebraic_field(sqrt(2))
         >>> K.mod
-        DMP([1, 0, -2], QQ, None)
+        DMP([1, 0, -2], QQ)
         """
 
         self.domain = self.dom = dom
@@ -310,15 +316,15 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         self.symbols = self.gens = (self.ext,)
         self.unit = self([dom(1), dom(0)])
 
-        self.zero = self.dtype.zero(self.mod.rep, dom)
-        self.one = self.dtype.one(self.mod.rep, dom)
+        self.zero = self.dtype.zero(self.mod.to_list(), dom)
+        self.one = self.dtype.one(self.mod.to_list(), dom)
 
         self._maximal_order = None
         self._discriminant = None
         self._nilradicals_mod_p = {}
 
     def new(self, element):
-        return self.dtype(element, self.mod.rep, self.dom)
+        return self.dtype(element, self.mod.to_list(), self.dom)
 
     def __str__(self):
         return str(self.dom) + '<' + str(self.ext) + '>'
@@ -328,8 +334,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        return isinstance(other, AlgebraicField) and \
-            self.dtype == other.dtype and self.ext == other.ext
+        if isinstance(other, AlgebraicField):
+            return self.dtype == other.dtype and self.ext == other.ext
+        else:
+            return NotImplemented
 
     def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
@@ -448,7 +456,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         See Also
         ========
 
-        integral_basis()
+        integral_basis
 
         """
         if self._maximal_order is None:
@@ -496,10 +504,9 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         See Also
         ========
 
-        to_sympy()
-        to_alg_num()
-        maximal_order()
-
+        to_sympy
+        to_alg_num
+        maximal_order
         """
         ZK = self.maximal_order()
         M = ZK.QQ_matrix
@@ -524,6 +531,41 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         dK = self.discriminant()
         rad = self._nilradicals_mod_p.get(p)
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
+
+    def galois_group(self, by_name=False, max_tries=30, randomize=False):
+        """
+        Compute the Galois group of the Galois closure of this field.
+
+        Examples
+        ========
+
+        If the field is Galois, the order of the group will equal the degree
+        of the field:
+
+        >>> from sympy import QQ
+        >>> from sympy.abc import x
+        >>> k = QQ.alg_field_from_poly(x**4 + 1)
+        >>> G, _ = k.galois_group()
+        >>> G.order()
+        4
+
+        If the field is not Galois, then its Galois closure is a proper
+        extension, and the order of the Galois group will be greater than the
+        degree of the field:
+
+        >>> k = QQ.alg_field_from_poly(x**4 - 2)
+        >>> G, _ = k.galois_group()
+        >>> G.order()
+        8
+
+        See Also
+        ========
+
+        sympy.polys.numberfields.galoisgroups.galois_group
+
+        """
+        return self.ext.minpoly_of_element().galois_group(
+            by_name=by_name, max_tries=max_tries, randomize=randomize)
 
 
 def _make_converter(K):
@@ -555,7 +597,7 @@ def _make_converter(K):
 
     def converter(a):
         """Convert a to Expr using converter"""
-        ai = a.rep[::-1]
+        ai = a.to_list()[::-1]
         tosympy = K.dom.to_sympy
         coeffs_dom = [sum(mij*aj for mij, aj in zip(mi, ai)) for mi in matrix]
         coeffs_sympy = [tosympy(c) for c in coeffs_dom]

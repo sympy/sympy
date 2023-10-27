@@ -1798,7 +1798,7 @@ def rem_z(p, q, x):
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
     Serdica Journal of Computing, 9(2) (2015), 123-138.
 
-    2. http://planetMath.org/sturmstheorem
+    2. https://planetMath.org/sturmstheorem
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result on
     the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.

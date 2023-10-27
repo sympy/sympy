@@ -17,7 +17,8 @@ each function for more information.
 import itertools
 from functools import reduce
 
-from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
+from sympy.core.intfunc import ilcm
+from sympy.core import Dummy, Add, Mul, Pow, S
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
@@ -1187,7 +1188,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
-            n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
+            n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u *= n
             terms = ([DE.T[i] for i in DE.indices('exp')] +
                     [DE.extargs[i] for i in DE.indices('log')])
@@ -1305,7 +1306,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
             return None
         # Note: if residueterms = [], returns (1, 1)
         # f had better be 0 in that case.
-        n = reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms], S.One)
+        n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms], 1)
         u = Mul(*[Pow(i, j*n) for i, j in residueterms])
         return (n, u)
 
@@ -1321,8 +1322,8 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         raise ValueError("case must be one of {'primitive', 'exp', 'tan', "
         "'base', 'auto'}, not %s" % case)
 
-    common_denom = reduce(ilcm, [i.as_numer_denom()[1] for i in [j for _, j in
-        residueterms]] + [n], S.One)
+    common_denom = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in [j for _, j in
+        residueterms]] + [n], 1)
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
     if common_denom != n*m:  # Verify exact division

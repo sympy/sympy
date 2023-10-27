@@ -102,7 +102,7 @@ class PermutationGroup(Basic):
 
     .. [6] https://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
 
-    .. [7] http://www.algorithmist.com/index.php/Union_Find
+    .. [7] https://algorithmist.com/wiki/Union_find
 
     .. [8] https://en.wikipedia.org/wiki/Multiply_transitive_group#Multiply_transitive_groups
 
@@ -110,13 +110,13 @@ class PermutationGroup(Basic):
 
     .. [10] https://en.wikipedia.org/wiki/Centralizer_and_normalizer
 
-    .. [11] http://groupprops.subwiki.org/wiki/Derived_subgroup
+    .. [11] https://groupprops.subwiki.org/wiki/Derived_subgroup
 
     .. [12] https://en.wikipedia.org/wiki/Nilpotent_group
 
-    .. [13] http://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
+    .. [13] https://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
 
-    .. [14] https://www.gap-system.org/Manuals/doc/ref/manual.pdf
+    .. [14] https://docs.gap-system.org/doc/ref/manual.pdf
 
     """
     is_group = True
@@ -162,6 +162,7 @@ class PermutationGroup(Basic):
         self._max_div = None
         self._is_perfect = None
         self._is_cyclic = None
+        self._is_dihedral = None
         self._r = len(self._generators)
         self._degree = self._generators[0].size
 
@@ -373,7 +374,7 @@ class PermutationGroup(Basic):
         .. [1] Holt, D., Eick, B., O'Brien, E.
                "Handbook of computational group theory"
 
-        .. [7] http://www.algorithmist.com/index.php/Union_Find
+        .. [7] https://algorithmist.com/wiki/Union_find
 
         """
         rep_first = self._union_find_rep(first, parents)
@@ -421,7 +422,7 @@ class PermutationGroup(Basic):
         .. [1] Holt, D., Eick, B., O'Brien, E.
                "Handbook of computational group theory"
 
-        .. [7] http://www.algorithmist.com/index.php/Union_Find
+        .. [7] https://algorithmist.com/wiki/Union_find
 
         """
         rep, parent = num, parents[num]
@@ -1947,7 +1948,7 @@ class PermutationGroup(Basic):
             The criterion for the incorrect ``False`` return.
 
         perms : list[Permutation], optional
-            If explicitly given, it tests over the given candidats
+            If explicitly given, it tests over the given candidates
             for testing.
 
             If ``None``, it randomly computes ``N_eps`` and chooses
@@ -3218,17 +3219,112 @@ class PermutationGroup(Basic):
                 self._is_abelian = True
                 return True
 
-        for p in factors:
-            pgens = []
-            for g in self.generators:
-                pgens.append(g**p)
-            if self.index(self.subgroup(pgens)) != p:
-                self._is_cyclic = False
-                return False
+        if not self.is_abelian:
+            self._is_cyclic = False
+            return False
 
-        self._is_cyclic = True
-        self._is_abelian = True
-        return True
+        self._is_cyclic = all(
+            any(g**(order//p) != self.identity for g in self.generators)
+            for p, e in factors.items() if e > 1
+        )
+        return self._is_cyclic
+
+    @property
+    def is_dihedral(self):
+        r"""
+        Return ``True`` if the group is dihedral.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup
+        >>> G = PermutationGroup(Permutation(1, 6)(2, 5)(3, 4), Permutation(0, 1, 2, 3, 4, 5, 6))
+        >>> G.is_dihedral
+        True
+        >>> G = SymmetricGroup(3)
+        >>> G.is_dihedral
+        True
+        >>> G = CyclicGroup(6)
+        >>> G.is_dihedral
+        False
+
+        References
+        ==========
+
+        .. [Di1] https://math.stackexchange.com/a/827273
+        .. [Di2] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral.pdf
+        .. [Di3] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral2.pdf
+        .. [Di4] https://en.wikipedia.org/wiki/Dihedral_group
+        """
+        if self._is_dihedral is not None:
+            return self._is_dihedral
+
+        order = self.order()
+
+        if order % 2 == 1:
+            self._is_dihedral = False
+            return False
+        if order == 2:
+            self._is_dihedral = True
+            return True
+        if order == 4:
+            # The dihedral group of order 4 is the Klein 4-group.
+            self._is_dihedral = not self.is_cyclic
+            return self._is_dihedral
+        if self.is_abelian:
+            # The only abelian dihedral groups are the ones of orders 2 and 4.
+            self._is_dihedral = False
+            return False
+
+        # Now we know the group is of even order >= 6, and nonabelian.
+        n = order // 2
+
+        # Handle special cases where there are exactly two generators.
+        gens = self.generators
+        if len(gens) == 2:
+            x, y = gens
+            a, b = x.order(), y.order()
+            # Make a >= b
+            if a < b:
+                x, y, a, b = y, x, b, a
+            # Using Theorem 2.1 of [Di3]:
+            if a == 2 == b:
+                self._is_dihedral = True
+                return True
+            # Using Theorem 1.1 of [Di3]:
+            if a == n and b == 2 and y*x*y == ~x:
+                self._is_dihedral = True
+                return True
+
+        # Proceed with algorithm of [Di1]
+        # Find elements of orders 2 and n
+        order_2, order_n = [], []
+        for p in self.elements:
+            k = p.order()
+            if k == 2:
+                order_2.append(p)
+            elif k == n:
+                order_n.append(p)
+
+        if len(order_2) != n + 1 - (n % 2):
+            self._is_dihedral = False
+            return False
+
+        if not order_n:
+            self._is_dihedral = False
+            return False
+
+        x = order_n[0]
+        # Want an element y of order 2 that is not a power of x
+        # (i.e. that is not the 180-deg rotation, when n is even).
+        y = order_2[0]
+        if n % 2 == 0 and y == x**(n//2):
+            y = order_2[1]
+
+        self._is_dihedral = (y*x*y == ~x)
+        return self._is_dihedral
 
     def pointwise_stabilizer(self, points, incremental=True):
         r"""Return the pointwise stabilizer for a set of points.
@@ -4490,7 +4586,7 @@ class PermutationGroup(Basic):
         return C.sylow_subgroup(p)
 
     def _block_verify(self, L, alpha):
-        delta = sorted(list(self.orbit(alpha)))
+        delta = sorted(self.orbit(alpha))
         # p[i] will be the number of the block
         # delta[i] belongs to
         p = [-1]*len(delta)

@@ -3,7 +3,7 @@ Limits
 ======
 
 Implemented according to the PhD thesis
-http://www.cybertester.com/data/gruntz.pdf, which contains very thorough
+https://www.cybertester.com/data/gruntz.pdf, which contains very thorough
 descriptions of the algorithm including many examples.  We summarize here
 the gist of it.
 
@@ -120,7 +120,8 @@ from functools import reduce
 
 from sympy.core import Basic, S, Mul, PoleError, expand_mul
 from sympy.core.cache import cacheit
-from sympy.core.numbers import ilcm, I, oo
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, oo
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.traversal import bottom_up
 
@@ -314,7 +315,7 @@ def mrv(e, x):
         args = [ss.do_subs(x[1]) for x in l]
         return s, e.func(*args)
     elif e.is_Derivative:
-        raise NotImplementedError("MRV set computation for derviatives"
+        raise NotImplementedError("MRV set computation for derivatives"
                                   " not implemented yet.")
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)

@@ -142,7 +142,7 @@ result. For example, this exact equation can be solved:
 ```
 
 but if you use the inexact equation `eq = x**1.4142135623730951 - 2`, SymPy will
-not return a result despite attempting for a long time. 
+not return a result despite attempting for a long time.
 
 ## Include the Variable to be Solved for in the Function Call
 
@@ -168,6 +168,7 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
 
+(ensure-consistent-formatting-from-solve)=
 ## Ensure Consistent Formatting From {func}`~.solve`
 
 {func}`~.solve` produces a variety of output as explained in
@@ -175,8 +176,8 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 which is especially important when extracting information about the solution
 programmatically.
 
-To extract the solutions, you can iterate through the list of dictionaries:  
-    
+To extract the solutions, you can iterate through the list of dictionaries:
+
 ```py
 >>> from sympy import parse_expr, solve, solveset
 >>> from sympy.abc import x
@@ -191,6 +192,7 @@ Eq(x**2, y)
 {-sqrt(y), sqrt(y)}
 ```
 
+(options-that-can-speed-up-solve)=
 ## Options That Can Speed up {func}`~.solve`
 
 ### Include Solutions Making Any Denominator Zero
@@ -258,4 +260,9 @@ Eq(x**2, y)
 ```
 
 SymPy can also parse [LaTeX](https://www.latex-project.org/) into expressions
-using {func}`~.parse_latex`. 
+using {func}`~.parse_latex`.
+
+## Report a Bug
+
+If you find a bug with these commands, please post the problem on the [SymPy mailing
+list](https://groups.google.com/g/sympy).

@@ -1,11 +1,9 @@
-from sympy.core.numbers import igcd, mod_inverse
-from sympy.core.power import integer_nthroot
+from sympy.core.random import _randint
+from sympy.external.gmpy import gcd, invert, sqrt as isqrt
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 from sympy.ntheory import isprime
 from math import log, sqrt
-import random
 
-rgen = random.Random()
 
 class SievePolynomial:
     def __init__(self, modified_coeff=(), a=None, b=None):
@@ -102,10 +100,10 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     """This step is the initialization of the 1st sieve polynomial.
     Here `a` is selected as a product of several primes of the factor_base
     such that `a` is about to ``sqrt(2*N) / M``. Other initial values of
-    factor_base elem are also intialized which includes a_inv, b_ainv, soln1,
+    factor_base elem are also initialized which includes a_inv, b_ainv, soln1,
     soln2 which are used when the sieve polynomial is changed. The b_ainv
     is required for fast polynomial change as we do not have to calculate
-    `2*b*mod_inverse(a, prime)` every time.
+    `2*b*invert(a, prime)` every time.
     We also ensure that the `factor_base` primes which make `a` are between
     1000 and 5000.
 
@@ -115,12 +113,11 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     N : Number to be factored
     M : sieve interval
     factor_base : factor_base primes
-    idx_1000 : index of prime numbe in the factor_base near 1000
-    idx_5000 : index of primenumber in the factor_base near to 5000
+    idx_1000 : index of prime number in the factor_base near 1000
+    idx_5000 : index of prime number in the factor_base near to 5000
     seed : Generate pseudoprime numbers
     """
-    if seed is not None:
-        rgen.seed(seed)
+    randint = _randint(seed)
     approx_val = sqrt(2*N) / M
     # `a` is a parameter of the sieve polynomial and `q` is the prime factors of `a`
     # randomly search for a combination of primes whose multiplication is close to approx_val
@@ -135,7 +132,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
         while(a < approx_val):
             rand_p = 0
             while(rand_p == 0 or rand_p in q):
-                rand_p = rgen.randint(start, end)
+                rand_p = randint(start, end)
             p = factor_base[rand_p].prime
             a *= p
             q.append(rand_p)
@@ -151,7 +148,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     B = []
     for idx, val in enumerate(q):
         q_l = factor_base[val].prime
-        gamma = factor_base[val].tmem_p * mod_inverse(a // q_l, q_l) % q_l
+        gamma = factor_base[val].tmem_p * invert(a // q_l, q_l) % q_l
         if gamma > q_l / 2:
             gamma = q_l - gamma
         B.append(a//q_l*gamma)
@@ -162,7 +159,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     for fb in factor_base:
         if a % fb.prime == 0:
             continue
-        fb.a_inv = mod_inverse(a, fb.prime)
+        fb.a_inv = invert(a, fb.prime)
         fb.b_ainv = [2*b_elem*fb.a_inv % fb.prime for b_elem in B]
         fb.soln1 = (fb.a_inv*(fb.tmem_p - b)) % fb.prime
         fb.soln2 = (fb.a_inv*(-fb.tmem_p - b)) % fb.prime
@@ -297,7 +294,7 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
     partial_relations : stores partial relations with one large prime
     ERROR_TERM : error term for accumulated_val
     """
-    sqrt_n = sqrt(float(N))
+    sqrt_n = isqrt(N)
     accumulated_val = log(M * sqrt_n)*2**10 - ERROR_TERM
     smooth_relations = []
     proper_factor = set()
@@ -325,8 +322,8 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
                 u_prev, v_prev = partial_relations[large_prime]
                 partial_relations.pop(large_prime)
                 try:
-                    large_prime_inv = mod_inverse(large_prime, N)
-                except ValueError:#if large_prine divides N
+                    large_prime_inv = invert(large_prime, N)
+                except ZeroDivisionError:#if large_prime divides N
                     proper_factor.add(large_prime)
                     continue
                 u = u*u_prev*large_prime_inv
@@ -433,8 +430,8 @@ def _find_factor(dependent_rows, mark, gauss_matrix, index, smooth_relations, N)
     for i in independent_v:
         v *= i
     #assert u**2 % N == v % N
-    v = integer_nthroot(v, 2)[0]
-    return igcd(u - v, N)
+    v = isqrt(v)
+    return gcd(u - v, N)
 
 
 def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
@@ -447,7 +444,7 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     these relations then we can form ``(t1*t2...ti)**2 = u1*u2...ui modN`` such that
     the right hand side is a square, thus we found a relation of ``X**2 = Y**2 modN``.
 
-    Here, several optimizations are done like using muliple polynomials for
+    Here, several optimizations are done like using multiple polynomials for
     sieving, fast changing between polynomials and using partial relations.
     The use of partial relations can speeds up the factoring by 2 times.
 
@@ -477,7 +474,6 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     .. [2] https://www.rieselprime.de/ziki/Self-initializing_quadratic_sieve
     """
     ERROR_TERM*=2**10
-    rgen.seed(seed)
     idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
     smooth_relations = []
     ith_poly = 0

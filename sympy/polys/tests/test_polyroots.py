@@ -38,7 +38,7 @@ def _check(roots):
     # by all_roots. It is trivially true for linear
     # polynomials.
     nreal = sum([1 if i.is_real else 0 for i in roots])
-    assert list(sorted(roots[:nreal])) == list(roots[:nreal])
+    assert sorted(roots[:nreal]) == list(roots[:nreal])
     for ix in range(nreal, len(roots), 2):
         if not (
                 roots[ix + 1] == roots[ix] or
@@ -230,19 +230,19 @@ def test_roots_quartic():
     z = symbols('z', negative=True)
     eq = x**4 + 2*x**3 + 3*x**2 + x*(z + 11) + 5
     zans = roots_quartic(Poly(eq, x))
-    assert all([verify_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans])
+    assert all(verify_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans)
     # but some are (see also issue 4989)
     # it's ok if the solution is not Piecewise, but the tests below should pass
     eq = Poly(y*x**4 + x**3 - x + z, x)
     ans = roots_quartic(eq)
     assert all(type(i) == Piecewise for i in ans)
     reps = (
-        dict(y=Rational(-1, 3), z=Rational(-1, 4)),  # 4 real
-        dict(y=Rational(-1, 3), z=Rational(-1, 2)),  # 2 real
-        dict(y=Rational(-1, 3), z=-2))  # 0 real
+        {"y": Rational(-1, 3), "z": Rational(-1, 4)},  # 4 real
+        {"y": Rational(-1, 3), "z": Rational(-1, 2)},  # 2 real
+        {"y": Rational(-1, 3), "z": -2})  # 0 real
     for rep in reps:
         sol = roots_quartic(Poly(eq.subs(rep), x))
-        assert all([verify_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol)])
+        assert all(verify_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol))
 
 
 def test_issue_21287():

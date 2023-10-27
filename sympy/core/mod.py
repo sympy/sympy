@@ -4,6 +4,7 @@ from .function import Function
 from .kind import NumberKind
 from .logic import fuzzy_and, fuzzy_not
 from .mul import Mul
+from .numbers import equal_valued
 from .singleton import S
 
 
@@ -24,6 +25,18 @@ class Mod(Function):
 
     The convention used is the same as Python's: the remainder always has the
     same sign as the divisor.
+
+    Many objects can be evaluated modulo ``n`` much faster than they can be
+    evaluated directly (or at all).  For this, ``evaluate=False`` is
+    necessary to prevent eager evaluation:
+
+    >>> from sympy import binomial, factorial, Mod, Pow
+    >>> Mod(Pow(2, 10**16, evaluate=False), 97)
+    61
+    >>> Mod(factorial(10**9, evaluate=False), 10**9 + 9)
+    712524808
+    >>> Mod(binomial(10**18, 10**12, evaluate=False), (10**5 + 3)**2)
+    3744312326
 
     Examples
     ========
@@ -134,7 +147,7 @@ class Mod(Function):
             for arg in p.args:
                 both_l[isinstance(arg, cls)].append(arg)
 
-            if mod_l and all(inner.args[1] == q for inner in mod_l):
+            if mod_l and all(inner.args[1] == q for inner in mod_l) and all(t.is_integer for t in p.args) and q.is_integer:
                 # finding distributive term
                 non_mod_l = [cls(x, q) for x in non_mod_l]
                 mod = []
@@ -164,7 +177,7 @@ class Mod(Function):
         # extract gcd; any further simplification should be done by the user
         try:
             G = gcd(p, q)
-            if G != 1:
+            if not equal_valued(G, 1):
                 p, q = [gcd_terms(i/G, clear=False, fraction=False)
                         for i in (p, q)]
         except PolynomialError:  # issue 21373
@@ -193,7 +206,7 @@ class Mod(Function):
             ok = False
             if not cp.is_Rational or not cq.is_Rational:
                 r = cp % cq
-                if r == 0:
+                if equal_valued(r, 0):
                     G *= cq
                     p *= int(cp/cq)
                     ok = True
@@ -211,10 +224,10 @@ class Mod(Function):
             return rv*G
 
         # put 1.0 from G on inside
-        if G.is_Float and G == 1:
+        if G.is_Float and equal_valued(G, 1):
             p *= G
             return cls(p, q, evaluate=False)
-        elif G.is_Mul and G.args[0].is_Float and G.args[0] == 1:
+        elif G.is_Mul and G.args[0].is_Float and equal_valued(G.args[0], 1):
             p = G.args[0]*p
             G = Mul._from_args(G.args[1:])
         return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))
@@ -235,3 +248,11 @@ class Mod(Function):
     def _eval_rewrite_as_floor(self, a, b, **kwargs):
         from sympy.functions.elementary.integers import floor
         return a - b*floor(a/b)
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.functions.elementary.integers import floor
+        return self.rewrite(floor)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.functions.elementary.integers import floor
+        return self.rewrite(floor)._eval_nseries(x, n, logx=logx, cdir=cdir)

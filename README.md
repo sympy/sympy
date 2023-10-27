@@ -32,7 +32,7 @@ community.
 ## Download
 
 The recommended installation method is through Anaconda,
-<https://www.anaconda.com/download/>
+<https://www.anaconda.com/products/distribution>
 
 You can also get the latest version of SymPy from
 <https://pypi.python.org/pypi/sympy/>
@@ -108,14 +108,14 @@ To install SymPy from GitHub source, first clone SymPy using `git`:
 
 Then, in the `sympy` repository that you cloned, simply run:
 
-    $ python setup.py install
+    $ pip install .
 
 See <https://docs.sympy.org/dev/install.html> for more information.
 
 ## Contributing
 
 We welcome contributions from anyone, even if you are new to open
-source. Please read our [Introduction to Contributing](https://github.com/sympy/sympy/wiki/Introduction-to-contributing)
+source. Please read our [Introduction to Contributing](https://docs.sympy.org/dev/contributing/introduction-to-contributing.html)
 page and the [SymPy Documentation Style Guide](https://docs.sympy.org/dev/documentation-style-guide.html). If you
 are new and looking for some way to contribute, a good place to start is
 to look at the issues tagged [Easy to Fix](https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22).
@@ -166,10 +166,6 @@ After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
 ## Clean
 
 To clean everything (thus getting the same tree as in the repository):
-
-    $ ./setup.py clean
-
-You can also clean things with git using:
 
     $ git clean -Xdf
 

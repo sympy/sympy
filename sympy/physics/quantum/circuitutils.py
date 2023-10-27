@@ -35,7 +35,7 @@ def kmp_table(word):
     cnd = 0
     # The 'partial match' table that helps one determine
     # the next location to start substring search
-    table = list()
+    table = []
     table.append(-1)
     table.append(0)
 
@@ -266,7 +266,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
     ndx_map = {}
 
     def create_inverse_map(symb_to_real_map):
-        rev_items = lambda item: tuple([item[1], item[0]])
+        rev_items = lambda item: (item[1], item[0])
         return dict(map(rev_items, symb_to_real_map.items()))
 
     if start is not None:

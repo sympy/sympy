@@ -19,7 +19,8 @@ from sympy.utilities.iterables import (
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
     uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,
-    NotIterable, multiset_derangements)
+    NotIterable, multiset_derangements,
+    sequence_partitions, sequence_partitions_empty)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -375,12 +376,12 @@ def test_multiset_partitions():
            ('m', 'py', 's', 'y'), ('m', 'p', 'syy'),
            ('m', 'p', 'sy', 'y'), ('m', 'p', 's', 'yy'),
            ('m', 'p', 's', 'y', 'y')]
-    assert list(tuple("".join(part) for part in p)
-                for p in multiset_partitions('sympy')) == ans
+    assert [tuple("".join(part) for part in p)
+                for p in multiset_partitions('sympy')] == ans
     factorings = [[24], [8, 3], [12, 2], [4, 6], [4, 2, 3],
                   [6, 2, 2], [2, 2, 2, 3]]
-    assert list(factoring_visitor(p, [2,3]) for
-                p in multiset_partitions_taocp([3, 1])) == factorings
+    assert [factoring_visitor(p, [2,3]) for
+                p in multiset_partitions_taocp([3, 1])] == factorings
 
 
 def test_multiset_combinations():
@@ -474,22 +475,22 @@ def test_partitions():
         assert list(partitions(6, None, 2, size=i)) != ans[i]
         assert list(partitions(6, 2, 0, size=i)) == ans[i]
 
-    assert [p for p in partitions(6, k=2)] == [
+    assert list(partitions(6, k=2)) == [
         {2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
 
-    assert [p for p in partitions(6, k=3)] == [
+    assert list(partitions(6, k=3)) == [
         {3: 2}, {1: 1, 2: 1, 3: 1}, {1: 3, 3: 1}, {2: 3}, {1: 2, 2: 2},
         {1: 4, 2: 1}, {1: 6}]
 
-    assert [p for p in partitions(8, k=4, m=3)] == [
+    assert list(partitions(8, k=4, m=3)) == [
         {4: 2}, {1: 1, 3: 1, 4: 1}, {2: 2, 4: 1}, {2: 1, 3: 2}] == [
         i for i in partitions(8, k=4, m=3) if all(k <= 4 for k in i)
         and sum(i.values()) <=3]
 
-    assert [p for p in partitions(S(3), m=2)] == [
+    assert list(partitions(S(3), m=2)) == [
         {3: 1}, {1: 1, 2: 1}]
 
-    assert [i for i in partitions(4, k=3)] == [
+    assert list(partitions(4, k=3)) == [
         {1: 1, 3: 1}, {2: 2}, {1: 2, 2: 1}, {1: 4}] == [
         i for i in partitions(4) if all(k <= 3 for k in i)]
 
@@ -593,7 +594,7 @@ def test_necklaces():
 
 
 def test_bracelets():
-    bc = [i for i in bracelets(2, 4)]
+    bc = list(bracelets(2, 4))
     assert Matrix(bc) == Matrix([
         [0, 0],
         [0, 1],
@@ -606,7 +607,7 @@ def test_bracelets():
         [2, 3],
         [3, 3]
         ])
-    bc = [i for i in bracelets(4, 2)]
+    bc = list(bracelets(4, 2))
     assert Matrix(bc) == Matrix([
         [0, 0, 0, 0],
         [0, 0, 0, 1],
@@ -885,3 +886,51 @@ def test_iterable():
         _iterable = False
 
     assert iterable(Test6()) is False
+
+
+def test_sequence_partitions():
+    assert list(sequence_partitions([1], 1)) == [[[1]]]
+    assert list(sequence_partitions([1, 2], 1)) == [[[1, 2]]]
+    assert list(sequence_partitions([1, 2], 2)) == [[[1], [2]]]
+    assert list(sequence_partitions([1, 2, 3], 1)) == [[[1, 2, 3]]]
+    assert list(sequence_partitions([1, 2, 3], 2)) == \
+        [[[1], [2, 3]], [[1, 2], [3]]]
+    assert list(sequence_partitions([1, 2, 3], 3)) == [[[1], [2], [3]]]
+
+    # Exceptional cases
+    assert list(sequence_partitions([], 0)) == []
+    assert list(sequence_partitions([], 1)) == []
+    assert list(sequence_partitions([1, 2], 0)) == []
+    assert list(sequence_partitions([1, 2], 3)) == []
+
+
+def test_sequence_partitions_empty():
+    assert list(sequence_partitions_empty([], 1)) == [[[]]]
+    assert list(sequence_partitions_empty([], 2)) == [[[], []]]
+    assert list(sequence_partitions_empty([], 3)) == [[[], [], []]]
+    assert list(sequence_partitions_empty([1], 1)) == [[[1]]]
+    assert list(sequence_partitions_empty([1], 2)) == [[[], [1]], [[1], []]]
+    assert list(sequence_partitions_empty([1], 3)) == \
+        [[[], [], [1]], [[], [1], []], [[1], [], []]]
+    assert list(sequence_partitions_empty([1, 2], 1)) == [[[1, 2]]]
+    assert list(sequence_partitions_empty([1, 2], 2)) == \
+        [[[], [1, 2]], [[1], [2]], [[1, 2], []]]
+    assert list(sequence_partitions_empty([1, 2], 3)) == [
+        [[], [], [1, 2]], [[], [1], [2]], [[], [1, 2], []],
+        [[1], [], [2]], [[1], [2], []], [[1, 2], [], []]
+    ]
+    assert list(sequence_partitions_empty([1, 2, 3], 1)) == [[[1, 2, 3]]]
+    assert list(sequence_partitions_empty([1, 2, 3], 2)) == \
+        [[[], [1, 2, 3]], [[1], [2, 3]], [[1, 2], [3]], [[1, 2, 3], []]]
+    assert list(sequence_partitions_empty([1, 2, 3], 3)) == [
+        [[], [], [1, 2, 3]], [[], [1], [2, 3]],
+        [[], [1, 2], [3]], [[], [1, 2, 3], []],
+        [[1], [], [2, 3]], [[1], [2], [3]],
+        [[1], [2, 3], []], [[1, 2], [], [3]],
+        [[1, 2], [3], []], [[1, 2, 3], [], []]
+    ]
+
+    # Exceptional cases
+    assert list(sequence_partitions([], 0)) == []
+    assert list(sequence_partitions([1], 0)) == []
+    assert list(sequence_partitions([1, 2], 0)) == []

@@ -1,11 +1,13 @@
 from sympy.core import S
+from sympy.core.sympify import sympify
 from sympy.core.relational import Eq, Ne
-from sympy.logic.boolalg import BooleanFunction
+from sympy.core.parameters import global_parameters
+from sympy.logic.boolalg import Boolean
 from sympy.utilities.misc import func_name
 from .sets import Set
 
 
-class Contains(BooleanFunction):
+class Contains(Boolean):
     """
     Asserts that x is an element of the set S.
 
@@ -26,16 +28,29 @@ class Contains(BooleanFunction):
 
     .. [1] https://en.wikipedia.org/wiki/Element_%28mathematics%29
     """
-    @classmethod
-    def eval(cls, x, s):
+    def __new__(cls, x, s, evaluate=None):
+        x = sympify(x)
+        s = sympify(s)
+
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
 
         if not isinstance(s, Set):
             raise TypeError('expecting Set, not %s' % func_name(s))
 
-        ret = s.contains(x)
-        if not isinstance(ret, Contains) and (
-                ret in (S.true, S.false) or isinstance(ret, Set)):
-            return ret
+        if evaluate:
+            # _contains can return symbolic booleans that would be returned by
+            # s.contains(x) but here for Contains(x, s) we only evaluate to
+            # true, false or return the unevaluated Contains.
+            result = s._contains(x)
+
+            if isinstance(result, Boolean):
+                if result in (S.true, S.false):
+                    return result
+            elif result is not None:
+                raise TypeError("_contains() should return Boolean or None")
+
+        return super().__new__(cls, x, s)
 
     @property
     def binary_symbols(self):

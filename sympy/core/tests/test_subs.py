@@ -564,7 +564,7 @@ def test_subs_iter():
 def test_subs_dict():
     a, b, c, d, e = symbols('a b c d e')
 
-    assert (2*x + y + z).subs(dict(x=1, y=2)) == 4 + z
+    assert (2*x + y + z).subs({"x": 1, "y": 2}) == 4 + z
 
     l = [(sin(x), 2), (x, 1)]
     assert (sin(x)).subs(l) == \
@@ -572,13 +572,11 @@ def test_subs_dict():
     assert sin(x).subs(reversed(l)) == sin(1)
 
     expr = sin(2*x) + sqrt(sin(2*x))*cos(2*x)*sin(exp(x)*x)
-    reps = dict([
-               (sin(2*x), c),
-               (sqrt(sin(2*x)), a),
-               (cos(2*x), b),
-               (exp(x), e),
-               (x, d),
-    ])
+    reps = {sin(2*x): c,
+               sqrt(sin(2*x)): a,
+               cos(2*x): b,
+               exp(x): e,
+               x: d,}
     assert expr.subs(reps) == c + a*b*sin(d*e)
 
     l = [(x, 3), (y, x**2)]
@@ -635,7 +633,7 @@ def test_issue_6079():
 
 def test_issue_4680():
     N = Symbol('N')
-    assert N.subs(dict(N=3)) == 3
+    assert N.subs({"N": 3}) == 3
 
 
 def test_issue_6158():
@@ -823,8 +821,8 @@ def test_Subs_subs():
 
 def test_issue_13333():
     eq = 1/x
-    assert eq.subs(dict(x='1/2')) == 2
-    assert eq.subs(dict(x='(1/2)')) == 2
+    assert eq.subs({"x": '1/2'}) == 2
+    assert eq.subs({"x": '(1/2)'}) == 2
 
 
 def test_issue_15234():

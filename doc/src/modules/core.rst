@@ -72,6 +72,30 @@ symbol
 
 .. autofunction:: var
 
+intfunc
+-------
+.. module:: sympy.core.intfunc
+
+.. autofunction:: num_digits
+
+.. autofunction:: trailing
+
+.. autofunction:: ilcm
+
+.. autofunction:: igcd
+
+.. autofunction:: igcd_lehmer
+
+.. autofunction:: igcdex
+
+.. autofunction:: isqrt
+
+.. autofunction:: integer_nthroot
+
+.. autofunction:: integer_log
+
+.. autofunction:: mod_inverse
+
 numbers
 -------
 .. module:: sympy.core.numbers
@@ -98,10 +122,6 @@ numbers
 
 .. autoclass:: RealNumber
    :members:
-
-.. autofunction:: igcd
-
-.. autofunction:: ilcm
 
 .. autofunction:: seterr
 
@@ -168,16 +188,15 @@ numbers
 
 .. autofunction:: mod_inverse
 
+.. autofunction:: equal_valued
+
+
 power
 -----
 .. module:: sympy.core.power
 
 .. autoclass:: Pow
    :members:
-
-.. autofunction:: integer_nthroot
-
-.. autofunction:: integer_log
 
 mul
 ---

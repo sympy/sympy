@@ -1,4 +1,3 @@
-from sympy.matrices.common import NonSquareMatrixError
 from .matexpr import MatrixExpr
 from .special import Identity
 from sympy.core import S
@@ -7,15 +6,16 @@ from sympy.core.cache import cacheit
 from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
+from sympy.matrices.common import NonSquareMatrixError
 
 
 class MatPow(MatrixExpr):
-
     def __new__(cls, base, exp, evaluate=False, **options):
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("MatPow base should be a matrix")
-        if not base.is_square:
+
+        if base.is_square is False:
             raise NonSquareMatrixError("Power of non-square matrix %s" % base)
 
         exp = _sympify(exp)
@@ -59,7 +59,7 @@ class MatPow(MatrixExpr):
 
     def doit(self, **hints):
         if hints.get('deep', True):
-            base, exp = [arg.doit(**hints) for arg in self.args]
+            base, exp = (arg.doit(**hints) for arg in self.args)
         else:
             base, exp = self.args
 
@@ -89,7 +89,15 @@ class MatPow(MatrixExpr):
 
     def _eval_transpose(self):
         base, exp = self.args
-        return MatPow(base.T, exp)
+        return MatPow(base.transpose(), exp)
+
+    def _eval_adjoint(self):
+        base, exp = self.args
+        return MatPow(base.adjoint(), exp)
+
+    def _eval_conjugate(self):
+        base, exp = self.args
+        return MatPow(base.conjugate(), exp)
 
     def _eval_derivative(self, x):
         return Pow._eval_derivative(self, x)

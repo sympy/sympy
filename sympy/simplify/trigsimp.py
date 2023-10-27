@@ -5,12 +5,14 @@ from sympy.core import (sympify, Basic, S, Expr, factor_terms,
                         Mul, Add, bottom_up)
 from sympy.core.cache import cacheit
 from sympy.core.function import (count_ops, _mexpand, FunctionClass, expand,
-                                 expand_mul, Derivative)
-from sympy.core.numbers import I, Integer, igcd
+                                 expand_mul, _coeff_isneg, Derivative)
+from sympy.core.numbers import I, Integer
+from sympy.core.intfunc import igcd
 from sympy.core.sorting import _nodes
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
+from sympy.functions import atan2
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.polys import Poly, factor, cancel, parallel_poly_from_expr
@@ -22,7 +24,6 @@ from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
-
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                       polynomial=False):
@@ -257,8 +258,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         """
         # First parse the hints
         n, funcs, iterables, extragens = parse_hints(hints)
-        debug('n=%s' % n, 'funcs:', funcs, 'iterables:',
-              iterables, 'extragens:', extragens)
+        debug('n=%s   funcs: %s   iterables: %s    extragens: %s',
+              (funcs, iterables, extragens))
 
         # We just add the extragens to gens and analyse them as before
         gens = list(gens)
@@ -426,11 +427,52 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
 _trigs = (TrigonometricFunction, HyperbolicFunction)
 
 
-def trigsimp(expr, **opts):
+def _trigsimp_inverse(rv):
+
+    def check_args(x, y):
+        try:
+            return x.args[0] == y.args[0]
+        except IndexError:
+            return False
+
+    def f(rv):
+        # for simple functions
+        g = getattr(rv, 'inverse', None)
+        if (g is not None and isinstance(rv.args[0], g()) and
+                isinstance(g()(1), TrigonometricFunction)):
+            return rv.args[0].args[0]
+
+        # for atan2 simplifications, harder because atan2 has 2 args
+        if isinstance(rv, atan2):
+            y, x = rv.args
+            if _coeff_isneg(y):
+                return -f(atan2(-y, x))
+            elif _coeff_isneg(x):
+                return S.Pi - f(atan2(y, -x))
+
+            if check_args(x, y):
+                if isinstance(y, sin) and isinstance(x, cos):
+                    return x.args[0]
+                if isinstance(y, cos) and isinstance(x, sin):
+                    return S.Pi / 2 - x.args[0]
+
+        return rv
+
+    return bottom_up(rv, f)
+
+
+def trigsimp(expr, inverse=False, **opts):
     """Returns a reduced expression by using known trig identities.
 
     Parameters
     ==========
+
+    inverse : bool, optional
+        If ``inverse=True``, it will be assumed that a composition of inverse
+        functions, such as sin and asin, can be cancelled in any order.
+        For example, ``asin(sin(x))`` will yield ``x`` without checking whether
+        x belongs to the set where this relation is true. The default is False.
+        Default : True
 
     method : string, optional
         Specifies the method to use. Valid choices are:
@@ -450,7 +492,7 @@ def trigsimp(expr, **opts):
         algorithm. If ``'fu'``, run the collection of trigonometric
         transformations described by Fu, et al. (see the
         :py:func:`~sympy.simplify.fu.fu` docstring). If ``'old'``, the original
-        SymPy trig simplication function is run.
+        SymPy trig simplification function is run.
     opts :
         Optional keyword arguments passed to the method. See each method's
         function docstring for details.
@@ -520,7 +562,11 @@ def trigsimp(expr, **opts):
         'old': lambda x: trigsimp_old(x, **opts),
                    }[method]
 
-    return trigsimpfunc(expr)
+    expr_simplified = trigsimpfunc(expr)
+    if inverse:
+        expr_simplified = _trigsimp_inverse(expr_simplified)
+
+    return expr_simplified
 
 
 def exptrigsimp(expr):

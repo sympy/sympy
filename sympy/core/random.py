@@ -32,9 +32,19 @@ choice = rng.choice
 random = rng.random
 randint = rng.randint
 randrange = rng.randrange
-seed = rng.seed
+sample = rng.sample
+# seed = rng.seed
 shuffle = rng.shuffle
 uniform = rng.uniform
+
+_assumptions_rng = _random.Random()
+_assumptions_shuffle = _assumptions_rng.shuffle
+
+
+def seed(a=None, version=2):
+    rng.seed(a=a, version=version)
+    _assumptions_rng.seed(a=a, version=version)
+
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
     """

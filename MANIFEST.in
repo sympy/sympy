@@ -17,3 +17,4 @@ include TODO
 include AUTHORS
 include README.md
 include bin/isympy
+exclude MANIFEST.in

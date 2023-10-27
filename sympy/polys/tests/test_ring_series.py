@@ -518,6 +518,18 @@ def test_puiseux():
     assert r == -x**QQ(9,5) - x**QQ(26,15) - x**QQ(22,15) - x**QQ(6,5)/3 + \
         x + x**QQ(2,3) + x**QQ(2,5)
 
+def test_puiseux_algebraic(): # https://github.com/sympy/sympy/issues/24395
+
+    K = QQ.algebraic_field(sqrt(2))
+    sqrt2 = K.from_sympy(sqrt(2))
+    x, y = symbols('x, y')
+    R, xr, yr = ring([x, y], K)
+    p = (1+sqrt2)*xr**QQ(1,2) + (1-sqrt2)*yr**QQ(2,3)
+
+    assert dict(p) == {(QQ(1,2),QQ(0)):1+sqrt2, (QQ(0),QQ(2,3)):1-sqrt2}
+    assert p.as_expr() == (1 + sqrt(2))*x**(S(1)/2) + (1 - sqrt(2))*y**(S(2)/3)
+
+
 def test1():
     R, x = ring('x', QQ)
     r = rs_sin(x, x, 15)*x**(-5)
