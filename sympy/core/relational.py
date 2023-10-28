@@ -427,6 +427,9 @@ class Relational(Boolean, EvalfMixin):
             v = None
             if dif.is_comparable:
                 v = dif.n(2)
+                if any(i._prec == 1 for i in v.as_real_imag()):
+                    rv, iv = [i.n(2) for i in dif.as_real_imag()]
+                    v = rv + S.ImaginaryUnit*iv
             elif dif.equals(0):  # XXX this is expensive
                 v = S.Zero
             if v is not None:

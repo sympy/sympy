@@ -1838,7 +1838,7 @@ def test_issue_6792():
          CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_6819_6820_6821_6248_8692():
+def test_issues_6819_6820_6821_6248_8692_25777_25779():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
@@ -1852,9 +1852,21 @@ def test_issues_6819_6820_6821_6248_8692():
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
 
+    # 25777
+    assert solve(abs(x**3 + x + 2)/(x + 1)) == []
+
+    # 25779
+    assert solve(abs(x)) == [0]
+    assert solve(Eq(abs(x**2 - 2*x), 4), x) == [
+        1 - sqrt(5), 1 + sqrt(5)]
+    nn = symbols('nn', nonnegative=True)
+    assert solve(abs(sqrt(nn))) == [0]
+    nz = symbols('nz', nonzero=True)
+    assert solve(Eq(Abs(4 + 1 / (4*nz)), 0)) == [-Rational(1, 16)]
+
     x = symbols('x')
     assert solve([re(x) - 1, im(x) - 2], x) == [
-        {re(x): 1, x: 1 + 2*I, im(x): 2}]
+        {x: 1 + 2*I, re(x): 1, im(x): 2}]
 
     # check for 'dict' handling of solution
     eq = sqrt(re(x)**2 + im(x)**2) - 3
