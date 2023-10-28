@@ -1631,7 +1631,21 @@ def primefactors(n, limit=None, verbose=False, **kwargs):
 
 
 def _divisors(n, proper=False):
-    """Helper function for divisors which generates the divisors."""
+    """Helper function for divisors which generates the divisors.
+
+    Parameters
+    ==========
+
+    n : int
+        a nonnegative integer
+    proper: bool
+        If `True`, returns the generator that outputs only the proper divisor (i.e., excluding n).
+
+    """
+    if n <= 1:
+        if not proper and n:
+            yield 1
+        return
 
     factordict = factorint(n)
     ps = sorted(factordict.keys())
@@ -1641,16 +1655,12 @@ def _divisors(n, proper=False):
             yield 1
         else:
             pows = [1]
-            for j in range(factordict[ps[n]]):
+            for _ in range(factordict[ps[n]]):
                 pows.append(pows[-1] * ps[n])
-            for q in rec_gen(n + 1):
-                for p in pows:
-                    yield p * q
+            yield from (p * q for q in rec_gen(n + 1) for p in pows)
 
     if proper:
-        for p in rec_gen():
-            if p != n:
-                yield p
+        yield from (p for p in rec_gen() if p != n)
     else:
         yield from rec_gen()
 
@@ -1687,22 +1697,8 @@ def divisors(n, generator=False, proper=False):
 
     primefactors, factorint, divisor_count
     """
-
-    n = as_int(abs(n))
-    if isprime(n):
-        if proper:
-            return [1]
-        return [1, n]
-    if n == 1:
-        if proper:
-            return []
-        return [1]
-    if n == 0:
-        return []
-    rv = _divisors(n, proper)
-    if not generator:
-        return sorted(rv)
-    return rv
+    rv = _divisors(as_int(abs(n)), proper)
+    return rv if generator else sorted(rv)
 
 
 def divisor_count(n, modulus=1, proper=False):
@@ -1791,16 +1787,29 @@ def proper_divisor_count(n, modulus=1):
 
 
 def _udivisors(n):
-    """Helper function for udivisors which generates the unitary divisors."""
+    """Helper function for udivisors which generates the unitary divisors.
+
+    Parameters
+    ==========
+
+    n : int
+        a nonnegative integer
+
+    """
+    if n <= 1:
+        if n == 1:
+            yield 1
+        return
 
     factorpows = [p**e for p, e in factorint(n).items()]
+    # We want to calculate
+    # yield from (math.prod(s) for s in powersets(factorpows))
     for i in range(2**len(factorpows)):
-        d, j, k = 1, i, 0
-        while j:
-            if (j & 1):
+        d = 1
+        for k in range(i.bit_length()):
+            if i & 1:
                 d *= factorpows[k]
-            j >>= 1
-            k += 1
+            i >>= 1
         yield d
 
 
@@ -1837,18 +1846,8 @@ def udivisors(n, generator=False):
     .. [2] https://mathworld.wolfram.com/UnitaryDivisor.html
 
     """
-
-    n = as_int(abs(n))
-    if isprime(n):
-        return [1, n]
-    if n == 1:
-        return [1]
-    if n == 0:
-        return []
-    rv = _udivisors(n)
-    if not generator:
-        return sorted(rv)
-    return rv
+    rv = _udivisors(as_int(abs(n)))
+    return rv if generator else sorted(rv)
 
 
 def udivisor_count(n):
@@ -1885,8 +1884,17 @@ def udivisor_count(n):
 
 
 def _antidivisors(n):
-    """Helper function for antidivisors which generates the antidivisors."""
+    """Helper function for antidivisors which generates the antidivisors.
 
+    Parameters
+    ==========
+
+    n : int
+        a nonnegative integer
+
+    """
+    if n <= 2:
+        return
     for d in _divisors(n):
         y = 2*d
         if n > y and n % y:
@@ -1927,14 +1935,8 @@ def antidivisors(n, generator=False):
     .. [1] definition is described in https://oeis.org/A066272/a066272a.html
 
     """
-
-    n = as_int(abs(n))
-    if n <= 2:
-        return []
-    rv = _antidivisors(n)
-    if not generator:
-        return sorted(rv)
-    return rv
+    rv = _antidivisors(as_int(abs(n)))
+    return rv if generator else sorted(rv)
 
 
 def antidivisor_count(n):
