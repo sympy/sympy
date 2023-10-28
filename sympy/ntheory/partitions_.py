@@ -174,7 +174,7 @@ def npartitions(n, verbose=False):
         # only do so if n is relatively close to the length
         # of the cache since doing 1 calculation here is about
         # the same as adding 70 elements to the cache. In addition,
-        # the startup here costs about the same as calculation the first
+        # the startup here costs about the same as calculating the first
         # 14,400 values via partition, so we delay startup here unless n
         # is smaller than that.
         return partition(n)
@@ -211,8 +211,8 @@ def npartitions(n, verbose=False):
     M = big  # done with function M; now have value
 
     # sanity check for expected size of answer
-    if M > 10**5:
-        raise ValueError("Input too big") # Corresponds to n > 1.7e11
+    if M > 10**5:  # i.e. M > maxn
+        raise ValueError("Input too big")  # i.e. n > 149832547102
 
     # calculate it
     s = fzero
