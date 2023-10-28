@@ -157,11 +157,27 @@ def npartitions(n, verbose=False):
     .. [1] https://mathworld.wolfram.com/PartitionFunctionP.html
 
     """
+    from sympy.functions.combinatorial.numbers import _npartition, partition
     n = int(n)
     if n < 0:
         return 0
     if n <= 5:
         return [1, 1, 2, 3, 5, 7][n]
+    if (n <= 200_000 and n - len(_npartition) < 70 or
+            len(_npartition) == 2 and n < 14_400):
+        # There will be 2*10**5 elements created here
+        # and n elements created by partition, so in case we
+        # are going to be working with small n, we just
+        # use partition to calculate (and cache) the values
+        # since lookup is used there while summation, using
+        # _factor and _totient, will be used below. But we
+        # only do so if n is relatively close to the length
+        # of the cache since doing 1 calculation here is about
+        # the same as adding 70 elements to the cache. In addition,
+        # the startup here costs about the same as calculation the first
+        # 14,400 values via partition, so we delay startup here unless n
+        # is smaller than that.
+        return partition(n)
     if '_factor' not in globals():
         _pre()
     # Estimate number of bits in p(n). This formula could be tidied
