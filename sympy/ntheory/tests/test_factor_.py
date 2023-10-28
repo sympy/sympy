@@ -500,7 +500,7 @@ def test_antidivisors():
     assert sorted(x for x in antidivisors(3*5*7, 1)) == \
         [2, 6, 10, 11, 14, 19, 30, 42, 70]
     assert antidivisors(1) == []
-    assert type(antidivisort(2, generator=True)) is not list
+    assert type(antidivisors(2, generator=True)) is not list
 
 def test_antidivisor_count():
     assert antidivisor_count(0) == 0
