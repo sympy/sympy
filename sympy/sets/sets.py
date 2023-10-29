@@ -381,6 +381,25 @@ class Set(Basic, EvalfMixin):
         """
         raise NotImplementedError(f"{type(self).__name__}._contains")
 
+    def convert_to_interval(set):
+        if isinstance(set, Interval):
+            return set
+        elif isinstance(set, Union):
+            intervals = [i for i in set.args if isinstance(i, Interval)]
+            if intervals:
+                lower_bound = Min([i.args[0] for i in intervals])
+                upper_bound = Max([i.args[1] for i in intervals])
+                return Interval(lower_bound, upper_bound)
+        elif isinstance(set, Intersection):
+            # Simplify the Intersection first
+            set = set.simplify()
+            intervals = [i for i in set.args if isinstance(i, Interval)]
+            if intervals:
+                lower_bound = Max([i.args[0] for i in intervals])
+                upper_bound = Min([i.args[1] for i in intervals])
+                return Interval(lower_bound, upper_bound)
+        return None
+
     def is_subset(self, other):
         """
         Returns True if ``self`` is a subset of ``other``.
@@ -395,6 +414,10 @@ class Set(Basic, EvalfMixin):
         False
 
         """
+
+        self = self.convert_to_interval()
+        other = other.convert_to_interval()
+
         if not isinstance(other, Set):
             raise ValueError("Unknown argument '%s'" % other)
 
