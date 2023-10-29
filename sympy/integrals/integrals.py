@@ -1174,7 +1174,7 @@ class Integral(AddWithLimits):
             yield integrate(term, *expr.limits)
 
     def _eval_nseries(self, x, n, logx=None, cdir=0):
-        expr = self.as_dummy()
+        expr = self
         symb = x
         for l in expr.limits:
             if x in l[1:]:
