@@ -366,9 +366,8 @@ class bessely(BesselBase):
             if nu is S.Zero:
                 term = 2 * (log(z / 2) + S.EulerGamma) / pi
             else:
-                # Equation 9.1.9 of Abramowitz and Stegun (10th ed, 1972).                
+                # Equation 9.1.9 of Abramowitz and Stegun (10th ed, 1972).
                 term = -1 * gamma(Abs(nu)) * (z / 2) ** (-Abs(nu)) / pi
-                
             return term.as_leading_term(x, logx=logx)
         elif e.is_negative:
             cdir = 1 if cdir == 0 else cdir
@@ -434,7 +433,7 @@ class bessely(BesselBase):
                     c.append(term)
                 return a - Add(*b) - Add(*c)  # Order term comes from a
             else:
-                # Reference - https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/01/04/01/01/0003/                
+                # Reference - https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/01/04/01/01/0003/
                 newn_a = ceiling((n + nu) / exp)
                 newn_b = ceiling((n - nu) / exp)
 
