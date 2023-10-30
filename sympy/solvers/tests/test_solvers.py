@@ -2633,6 +2633,12 @@ def test_issue_22717():
         {y: -1, x: E}, {y: 1, x: E}]
 
 
+def test_issue_25176():
+    eq = (x - 5)**-8 - 3
+    sol = solve(eq)
+    assert not any(eq.subs(x, i) for i in sol)
+
+
 def test_issue_10169():
     eq = S(-8*a - x**5*(a + b + c + e) - x**4*(4*a - 2**Rational(3,4)*c + 4*c +
         d + 2**Rational(3,4)*e + 4*e + k) - x**3*(-4*2**Rational(3,4)*c + sqrt(2)*c -
