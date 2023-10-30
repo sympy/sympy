@@ -490,7 +490,25 @@ class BooleanFunction(Application, Boolean):
 
     @classmethod
     def binary_check_and_simplify(self, *args):
-        return [as_Boolean(i) for i in args]
+        from sympy.core.relational import Relational, Eq, Ne
+        args = [as_Boolean(i) for i in args]
+        bin_syms = set().union(*[i.binary_symbols for i in args])
+        rel = set().union(*[i.atoms(Relational) for i in args])
+        reps = {}
+        for x in bin_syms:
+            for r in rel:
+                if x in bin_syms and x in r.free_symbols:
+                    if isinstance(r, (Eq, Ne)):
+                        if not (
+                                true in r.args or
+                                false in r.args):
+                            reps[r] = false
+                    else:
+                        raise TypeError(filldedent('''
+                            Incompatible use of binary symbol `%s` as a
+                            real variable in `%s`
+                            ''' % (x, r)))
+        return [i.subs(reps) for i in args]
 
     def to_nnf(self, simplify=True):
         return self._to_nnf(*self.args, simplify=simplify)
@@ -662,7 +680,7 @@ class And(LatticeOp, BooleanFunction):
                     if (e.lhs != x or x in e.rhs.free_symbols) and x not in reps:
                         try:
                             m, b = linear_coeffs(
-                                Add(e.lhs, -e.rhs, evaluate=False), x)
+                                e.rewrite(Add, evaluate=False), x)
                             enew = e.func(x, -b/m)
                             if measure(enew) <= ratio*measure(e):
                                 e = enew
@@ -994,7 +1012,7 @@ class Xor(BooleanFunction):
             for j in range(i + 1, len(rel)):
                 rj, cj = rel[j][:2]
                 if cj == nc:
-                    odd = not odd
+                    odd = ~odd
                     break
                 elif cj == c:
                     break
@@ -1044,12 +1062,14 @@ class Xor(BooleanFunction):
                      for x in _get_even_parity_terms(len(a))])
 
     def _eval_simplify(self, **kwargs):
-        # as standard simplify uses simplify_logic which writes things as
-        # And and Or, we only simplify the partial expressions before using
-        # patterns
-        rv = self.func(*[a.simplify(**kwargs) for a in self.args])
-        if not isinstance(rv, Xor):  # This shouldn't really happen here
-            return rv
+        rv = super()._eval_simplify(**kwargs)
+        if not isinstance(rv, Xor) and type(rv) != BooleanTrue:
+            # The second condition simplifies for a case of an arbitrary symbol
+            # (a ^ ~a)
+            # As standard simplify uses simplify_logic which writes things as
+            # And and Or, we only simplify the partial expressions before using
+            # patterns
+            return self.func(*[a.simplify(**kwargs) for a in self.args])
         patterns = _simplify_patterns_xor()
         return _apply_patternbased_simplification(rv, patterns,
                                                   kwargs['measure'], None)
