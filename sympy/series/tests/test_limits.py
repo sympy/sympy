@@ -282,7 +282,7 @@ def test_set_signs():
     assert limit(abs(sin(x + 1)), x, 0) == sin(1)
 
     # https://github.com/sympy/sympy/issues/9449
-    assert limit((Abs(x + y) - Abs(x - y))/(2*x), x, 0) == sign(y)
+    assert limit((Abs(x + y) - Abs(x - y))/(2*x), x, 0) == 1/sign(y)
 
     # https://github.com/sympy/sympy/issues/12398
     assert limit(Abs(log(x)/x**3), x, oo) == 0
@@ -1323,6 +1323,15 @@ def test_issue_25230():
     assert limit(Mod(x, c), x, n*c, '-') == 0
 
 
+def test_issue_25681():
+    x = Symbol('x')
+    expr = x/abs(sqrt(x**2 - 1))
+    assert limit(expr, x, 1, '+') == oo
+    assert limit(expr, x, -1, '-') == -oo
+    assert limit(expr, x, 1, '-') == oo
+    assert limit(expr, x, -1, '+') == -oo
+
+
 def test_issue_25582():
 
     assert limit(asin(exp(x)), x, oo, '-') == -oo*I
@@ -1331,3 +1340,4 @@ def test_issue_25582():
     assert limit(acot(exp(x)), x, oo, '-') == 0
     assert limit(asec(exp(x)), x, oo, '-') == pi/2
     assert limit(acsc(exp(x)), x, oo, '-') == 0
+

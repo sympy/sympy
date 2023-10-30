@@ -662,7 +662,9 @@ class Abs(Function):
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
-        return (sign(direction)*s).expand()
+        if direction.is_zero:
+            return (s*sign(direction)).expand()
+        return (s/sign(direction)).expand()
 
     def _eval_derivative(self, x):
         if self.args[0].is_extended_real or self.args[0].is_imaginary:
