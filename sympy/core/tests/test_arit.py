@@ -2461,3 +2461,7 @@ def test_issue_22453():
 def test_issue_22613():
     assert (0**(x - 2)).as_content_primitive() == (1, 0**(x - 2))
     assert (0**(x + 2)).as_content_primitive() == (1, 0**(x + 2))
+
+
+def test_issue_25176():
+    assert sqrt(-4*3**(S(3)/4)*I/3) == 2*3**(S(7)/8)*sqrt(-I)/3
