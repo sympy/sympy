@@ -969,7 +969,7 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
-        return self._mpf_ == fzero
+        return None
 
     def _eval_is_negative(self):
         if self._mpf_ in (_mpf_ninf, _mpf_inf):
