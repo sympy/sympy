@@ -969,6 +969,8 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
+        if not int_valued(self):
+            return False
         return None
 
     def _eval_is_negative(self):
