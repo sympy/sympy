@@ -11,8 +11,10 @@ from sympy.functions.elementary.trigonometric import (acos, asin, cos, cot, sec,
 from sympy.series.order import O
 
 from sympy.core.expr import unchanged
-from sympy.core.function import ArgumentIndexError
+from sympy.core.function import ArgumentIndexError, PoleError
 from sympy.testing.pytest import raises
+from sympy.series.limits import limit
+
 
 
 def test_sinh():
@@ -1512,3 +1514,31 @@ def test_sign_assumptions():
     assert sech(p).is_positive is True
     assert coth(n).is_negative is True
     assert coth(p).is_positive is True
+
+
+def test_issue_25847():
+    x = Symbol('x')
+
+    #atanh
+    assert atanh(sin(x)/x).as_leading_term(x) == atanh(sin(x)/x)
+    raises(PoleError, lambda: atanh(exp(1/x)).as_leading_term(x))
+
+    #asinh
+    assert asinh(sin(x)/x).as_leading_term(x) == log(1 + sqrt(2))
+    raises(PoleError, lambda: asinh(exp(1/x)).as_leading_term(x))
+
+    #acosh
+    assert acosh(sin(x)/x).as_leading_term(x) == 0
+    raises(PoleError, lambda: acosh(exp(1/x)).as_leading_term(x))
+
+    #acoth
+    assert acoth(sin(x)/x).as_leading_term(x) == acoth(sin(x)/x)
+    raises(PoleError, lambda: acoth(exp(1/x)).as_leading_term(x))
+
+    #asech
+    assert asech(sinh(x)/x).as_leading_term(x) == 0
+    raises(PoleError, lambda: asech(exp(1/x)).as_leading_term(x))
+
+    #acsch
+    assert acsch(sin(x)/x).as_leading_term(x) == log(1 + sqrt(2))
+    raises(PoleError, lambda: acsch(exp(1/x)).as_leading_term(x))
