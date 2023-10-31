@@ -10,7 +10,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (atanh, asinh, acosh, acoth, acsch, asech, tanh, sinh, cosh, coth, sech, csch)
+from sympy.functions.elementary.hyperbolic import (atanh, asinh, acosh, acoth, acsch, asech, tanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
