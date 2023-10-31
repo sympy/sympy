@@ -129,16 +129,24 @@ def test_invert_real():
     assert invert_real(Abs(x**31 + x + 1), y, x) == (lhs, base_values)
 
     assert dumeq(invert_real(sin(x), y, x),
-        (x, imageset(Lambda(n, n*pi + (-1)**n*asin(y)), S.Integers)))
+        (x, Union(
+            ImageSet(Lambda(n, 2*n*pi + asin(y)), S.Integers),
+            ImageSet(Lambda(n, pi*2*n + pi - asin(y)), S.Integers))))
 
     assert dumeq(invert_real(sin(exp(x)), y, x),
-        (x, imageset(Lambda(n, log((-1)**n*asin(y) + n*pi)), S.Integers)))
+        (x, Union(
+            ImageSet(Lambda(n, log(2*n*pi + asin(y))), S.Integers),
+            ImageSet(Lambda(n, log(pi*2*n + pi - asin(y))), S.Integers))))
 
     assert dumeq(invert_real(csc(x), y, x),
-        (x, imageset(Lambda(n, n*pi + (-1)**n*acsc(y)), S.Integers)))
+        (x, Union(
+            ImageSet(Lambda(n, 2*n*pi + acsc(y)), S.Integers),
+            ImageSet(Lambda(n, pi*2*n + pi - acsc(y)), S.Integers))))
 
     assert dumeq(invert_real(csc(exp(x)), y, x),
-        (x, imageset(Lambda(n, log((-1)**n*acsc(y) + n*pi)), S.Integers)))
+        (x, Union(
+            ImageSet(Lambda(n, log(2*n*pi + acsc(y))), S.Integers),
+            ImageSet(Lambda(n, log(pi*2*n + pi - acsc(y))), S.Integers))))
 
     assert dumeq(invert_real(cos(x), y, x),
         (x, Union(imageset(Lambda(n, 2*n*pi + acos(y)), S.Integers), \
@@ -347,6 +355,19 @@ def test_solve_invert():
 
     # issue 4504
     assert solveset_real(2**x - 10, x) == FiniteSet(1 + log(5)/log(2))
+
+
+def test_issue_25768():
+    assert dumeq(solveset_real(sin(x) - S.Half, x), Union(
+        ImageSet(Lambda(n, pi*2*n + pi/6), S.Integers),
+        ImageSet(Lambda(n, pi*2*n + pi*5/6), S.Integers)))
+    n1 = solveset_real(sin(x) - 0.5, x).n(5)
+    n2 = solveset_real(sin(x) - S.Half, x).n(5)
+    # help pass despite fp differences
+    eq = [i.replace(
+        lambda x:x.is_Float,
+        lambda x:Rational(x).limit_denominator(1000)) for i in (n1, n2)]
+    assert dumeq(*eq),(n1,n2)
 
 
 def test_errorinverses():
@@ -657,10 +678,11 @@ def test_solve_abs():
     for si in sol.subs(reps):
         assert not eqab.subs(x, si)
     assert dumeq(solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals), Union(
-        Intersection(Interval(0, oo),
-            ImageSet(Lambda(n, (-1)**n*pi/2 + n*pi), S.Integers)),
-        Intersection(Interval(-oo, 0),
-            ImageSet(Lambda(n, n*pi - (-1)**(-n)*pi/2), S.Integers))))
+        Intersection(Interval(0, oo), Union(
+        Intersection(ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers),
+            Interval(-oo, 0)),
+        Intersection(ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),
+            Interval(0, oo))))))
 
 
 def test_issue_9824():
@@ -849,9 +871,7 @@ def test_solve_trig():
 
     assert dumeq(solveset(sin(y + a) - sin(y), a, domain=S.Reals),
         Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
-        Intersection(ImageSet(Lambda(n, -I*(I*(
-        2*n*pi + arg(-exp(-2*I*y))) +
-        2*im(y))), S.Integers), S.Reals)))
+        Intersection(ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*y))) + 2*im(y))), S.Integers), S.Reals)))
 
     assert dumeq(solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x),
         ImageSet(Lambda(n, n*pi*Rational(2, 3) + pi/6), S.Integers))
@@ -1272,12 +1292,12 @@ def test__solveset_multi():
             [Interval(0, pi), Interval(-1, 1)]) == FiniteSet((0, 1), (pi, -1))
     assert _solveset_multi([r*cos(theta)-1, r*sin(theta)], [r, theta],
             [Interval(0, 1), Interval(0, pi)]) == FiniteSet((1, 0))
-    #assert _solveset_multi([r*cos(theta)-r, r*sin(theta)], [r, theta],
-    #        [Interval(0, 1), Interval(0, pi)]) == ?
-    assert dumeq(_solveset_multi([r*cos(theta)-r, r*sin(theta)], [r, theta],
-            [Interval(0, 1), Interval(0, pi)]), Union(
-            ImageSet(Lambda(((r,),), (r, 0)), ImageSet(Lambda(r, (r,)), Interval(0, 1))),
-            ImageSet(Lambda(((theta,),), (0, theta)), ImageSet(Lambda(theta, (theta,)), Interval(0, pi)))))
+    assert _solveset_multi([r*cos(theta)-r, r*sin(theta)], [r, theta],
+           [Interval(0, 1), Interval(0, pi)]) == Union(
+           ImageSet(Lambda(((r,),), (r, 0)),
+           ImageSet(Lambda(r, (r,)), Interval(0, 1))),
+           ImageSet(Lambda(((theta,),), (0, theta)),
+           ImageSet(Lambda(theta, (theta,)), Interval(0, pi))))
 
 
 def test_conditionset():
@@ -1407,6 +1427,11 @@ def test_linear_eq_to_matrix():
     # issue 15312
     assert linear_eq_to_matrix(Eq(x + 2, 1), x) == (
         Matrix([[1]]), Matrix([[-1]]))
+
+    # issue 25423
+    raises(TypeError, lambda: linear_eq_to_matrix([], {x, y}))
+    raises(TypeError, lambda: linear_eq_to_matrix([x + y], {x, y}))
+    raises(ValueError, lambda: linear_eq_to_matrix({x + y}, (x, y)))
 
 
 def test_issue_16577():
@@ -1583,6 +1608,7 @@ def test_solve_decomposition():
     assert solve_decomposition(f6, x, S.Reals) == S.EmptySet
     assert solve_decomposition(f7, x, S.Reals) == S.EmptySet
     assert solve_decomposition(x, x, Interval(1, 2)) == S.EmptySet
+
 
 # nonlinsolve testcases
 def test_nonlinsolve_basic():
@@ -2244,7 +2270,6 @@ def test_issue_17933():
     eq2 = x*cos(45) - y*sin(q)
     eq3 = 9*x*sin(45)/10 + y*cos(q)
     eq4 = 9*x*cos(45)/10 + y*sin(z) - z
-
     assert nonlinsolve([eq1, eq2, eq3, eq4], x, y, z, q) ==\
         FiniteSet((0, 0, 0, q))
 

@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
 from sympy.core.numbers import Integer, Rational
-from sympy.external.gmpy import gcd, GROUND_TYPES, SYMPY_INTS
+from sympy.external.gmpy import gcd
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
@@ -301,18 +301,6 @@ def test_factorint():
     assert str(factorint(Dict(n))) == sans
 
 
-def test_factorint_flint_int_issue():
-    """
-    Because of a bug in flint, we are temporarily wrapping int in `factorint`.
-    When this fails, the int wrapper is no longer needed in factorint.
-
-    https://github.com/flintlib/python-flint/issues/92
-    https://github.com/sympy/sympy/pull/25749
-    """
-    if GROUND_TYPES == 'flint':
-        assert pow(2, 5, SYMPY_INTS[1](1000)) == 1
-
-
 def test_divisors_and_divisor_count():
     assert divisors(-1) == [1]
     assert divisors(0) == []
@@ -323,6 +311,7 @@ def test_divisors_and_divisor_count():
     assert divisors(10) == [1, 2, 5, 10]
     assert divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50, 100]
     assert divisors(101) == [1, 101]
+    assert type(divisors(2, generator=True)) is not list
 
     assert divisor_count(0) == 0
     assert divisor_count(-1) == 1
@@ -344,6 +333,7 @@ def test_proper_divisors_and_proper_divisor_count():
     assert proper_divisors(10) == [1, 2, 5]
     assert proper_divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50]
     assert proper_divisors(1000000007) == [1]
+    assert type(proper_divisors(2, generator=True)) is not list
 
     assert proper_divisor_count(0) == 0
     assert proper_divisor_count(-1) == 0
@@ -363,6 +353,7 @@ def test_udivisors_and_udivisor_count():
     assert udivisors(100) == [1, 4, 25, 100]
     assert udivisors(101) == [1, 101]
     assert udivisors(1000) == [1, 8, 125, 1000]
+    assert type(udivisors(2, generator=True)) is not list
 
     assert udivisor_count(0) == 0
     assert udivisor_count(-1) == 1
@@ -509,7 +500,7 @@ def test_antidivisors():
     assert sorted(x for x in antidivisors(3*5*7, 1)) == \
         [2, 6, 10, 11, 14, 19, 30, 42, 70]
     assert antidivisors(1) == []
-
+    assert type(antidivisors(2, generator=True)) is not list
 
 def test_antidivisor_count():
     assert antidivisor_count(0) == 0
