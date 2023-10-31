@@ -13,8 +13,6 @@ from sympy.series.order import O
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError, PoleError
 from sympy.testing.pytest import raises
-from sympy.series.limits import limit
-
 
 
 def test_sinh():
