@@ -1298,6 +1298,14 @@ class asinh(InverseHyperbolicFunction):
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
             return arg.as_leading_term(x)
+
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling branch points
         if x0 in (-I, I, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -1481,6 +1489,14 @@ class acosh(InverseHyperbolicFunction):
         # Handling branch points
         if x0 in (-S.One, S.Zero, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling points lying on branch cuts (-oo, 1)
         if (x0 - 1).is_negative:
             ndir = arg.dir(x, cdir if cdir else 1)
@@ -1640,6 +1656,13 @@ class atanh(InverseHyperbolicFunction):
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
             return arg.as_leading_term(x)
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling branch points
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -1785,6 +1808,13 @@ class acoth(InverseHyperbolicFunction):
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling branch points
         if x0 in (-S.One, S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -1951,6 +1981,14 @@ class asech(InverseHyperbolicFunction):
         # Handling branch points
         if x0 in (-S.One, S.Zero, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling points lying on branch cuts (-oo, 0] U (1, oo)
         if x0.is_negative or (1 - x0).is_negative:
             ndir = arg.dir(x, cdir if cdir else 1)
@@ -2142,6 +2180,14 @@ class acsch(InverseHyperbolicFunction):
         # Handling branch points
         if x0 in (-I, I, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
         # Handling points lying on branch cuts (-I, I)
