@@ -265,8 +265,30 @@ Now they should be imported from ``sympy.physics.mechanics``:
 >>> from sympy.physics.mechanics.loads import gravity
 ```
 
+(modularinteger-compare)=
+### Ordered comparisons like ``a < b`` with modular integers
 
-modularinteger-to-int=
+SymPy's ``GF`` domains represent modular integers. Previously it was possible
+to compare these with ordered comparisons like ``a < b``:
+```py
+>>> from sympy import GF
+>>> F5 = GF(5)
+>>> F5(2) < F5(3) # doctest: +SKIP
+True
+```
+This will now fail with ``TypeError`` when the ground types are set to
+``flint``. When the ground types are not ``flint`` these comparisons are now
+deprecated: they will still work but will give a deprecation warning when used.
+
+Ordered comparisons of modular integer or finite fields do not make sense
+because these are not ordered fields:
+```
+>>> e = F5(4)
+>>> e + 1 > e # doctest: +SKIP
+False
+```
+
+(modularinteger-to-int)=
 ### The ``ModularInteger.to_int()`` method
 
 SymPy's ``GF`` domains are for modular integers e.g. ``GF(n)`` is for the
