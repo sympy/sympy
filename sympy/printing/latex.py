@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                             'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
                             'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
-                            'arg',
+                            'arg', 'dfrac',
                             ]
 
 tex_greek_dictionary = {
@@ -166,6 +166,7 @@ class LatexPrinter(Printer):
         "min": None,
         "max": None,
         "diff_operator": "d",
+        "use_dfrac_powers": False
     }
 
     def __init__(self, settings=None):
@@ -666,6 +667,13 @@ class LatexPrinter(Printer):
                     base = self.parenthesize_super(base)
                 if expr.base.is_Function:
                     return self._print(expr.base, exp="%s/%s" % (p, q))
+                return r"%s^{%s/%s}" % (base, p, q)
+            elif self._settings['use_dfrac_powers'] and q != 1:
+                base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
+                if expr.base.is_Symbol:
+                    base = self.parenthesize_super(base)
+                if expr.base.is_Function:
+                    return self._print(expr.base, exp=r"\dfrac{%s}{%s}" % (p, q))
                 return r"%s^{%s/%s}" % (base, p, q)
             elif expr.exp.is_negative and expr.base.is_commutative:
                 # special case for 1^(-x), issue 9216
@@ -3036,6 +3044,8 @@ def latex(expr, **settings):
     diff_operator: string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
+    use_dfrac_powers : boolean, optional
+        Emit ``^{\dfrac{p}{q}}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
 
     Notes
     =====
@@ -3100,6 +3110,8 @@ def latex(expr, **settings):
     \frac{\int r\, dr}{2 \pi}
     >>> print(latex(Integral(r, r)/2/pi, long_frac_ratio=0))
     \frac{1}{2 \pi} \int r\, dr
+    >>> print(latex((2*tau)**Rational(7,2), use_dfrac_powers=True))
+    8 \sqrt{2} \tau^{\dfrac{7}{2}}
 
     Multiplication options:
 
