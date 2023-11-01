@@ -1232,9 +1232,16 @@ def solve(f, *symbols, **flags):
         else:
             unpack = None
 
-    # if dens_special:
-    solution = [s for s in solution if
-        not any(checksol(den, s, **flags) for den in
+    # restore floats
+    if floats and solution and flags.get('rational', None) is None:
+        solution = nfloat(solution, exponent=False)
+        # nfloat might reveal more duplicates
+        solution = _remove_duplicate_solutions(solution)
+
+    # check denominators of removed equations
+    if dens_special:
+        solution = [s for s in solution if
+            not any(checksol(den, s, **flags) for den in
                 dens_special)]
 
     # Restore masked-off objects
@@ -1261,12 +1268,6 @@ def solve(f, *symbols, **flags):
     # Note that if assumptions about a solution can't be verified, it is still
     # returned.
     check = flags.get('check', True)
-
-    # restore floats
-    if floats and solution and flags.get('rational', None) is None:
-        solution = nfloat(solution, exponent=False)
-        # nfloat might reveal more duplicates
-        solution = _remove_duplicate_solutions(solution)
 
     if check and solution:  # assumption checking
         warn = flags.get('warn', False)
