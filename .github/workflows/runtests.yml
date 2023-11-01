@@ -180,7 +180,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', 'pypy3.8']
+        python-version: ['3.9', '3.10', '3.11', '3.12', 'pypy3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -293,7 +293,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11', '3.12.0-alpha - 3.12', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11', '3.12', '3.13-dev', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -318,7 +318,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11', '3.12.0-alpha - 3.12', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11', '3.12', '3.13-dev', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -343,7 +343,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11', '3.12.0-alpha - 3.12', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11', '3.12', '3.13-dev', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
