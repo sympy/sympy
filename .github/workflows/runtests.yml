@@ -180,7 +180,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', 'pypy3.8']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -194,21 +194,19 @@ jobs:
 
       # Install the non-Python dependencies
       - run: sudo apt-get update
-      - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
+      - run: sudo apt-get install antlr4
       - run: python -m pip install --upgrade pip wheel setuptools
 
       # dependencies to install in all Python versions:
-      - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap lxml                       \
-                         'antlr4-python3-runtime==4.11.*'
+      - run: pip install numpy numexpr matplotlib ipython cython          \
+                         wurlitzer autowrap lxml lark z3-solver pycosat   \
+                         jax jaxlib libclang scipy aesara                 \
+                         'antlr4-python3-runtime==4.11.*'                 \
+                         #
 
-      # Not available in pypy or cpython 3.12 (yet).
-      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.12') }}
-        run: pip install llvmlite numba
-
-      # These are not available for pypy
-      - if: ${{ ! contains(matrix.python-version, 'pypy') }}
-        run: pip install gmpy2 jax jaxlib symengine pymc
+      # Not available in CPython 3.12 (yet).
+      - if: ${{ ! contains(matrix.python-version, '3.12') }}
+        run: pip install llvmlite numba gmpy2 symengine pymc
 
       # Test external imports
       - run: bin/test_external_imports.py
