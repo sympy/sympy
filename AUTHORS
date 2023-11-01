@@ -4,7 +4,7 @@ those who explicitly didn't want to be mentioned. People with a * next
 to their names are not found in the metadata of the git history. This
 file is generated automatically by running `./bin/authors_update.py`.
 
-There are a total of 1202 authors.
+There are a total of 1261 authors.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -1208,3 +1208,62 @@ Charles Harris <erdos4d@gmail.com>
 Tejaswini Sanapathi <sastejaswini2002@gmail.com>
 Devansh <be19b002@smail.iitm.ac.in>
 Aaron Gokaslan <aaronGokaslan@gmail.com>
+Daan Koning (he/him) <daanolivierkoning@gmail.com>
+Steven Burns <royalstream@hotmail.com>
+Jay Patankar <patankarjays@gmail.com>
+Vivek Soni <sonisheela1977@gmail.com>
+Le Cong Minh Hieu <hieu.lecongminh@gmail.com>
+Sam Ritchie <sam@mentat.org>
+Maciej Skórski <maciej.skorski@gmail.com>
+Tilo Reneau-Cardoso <tiloreneau@gmail.com>
+Laurence Warne <laurencewarne@gmail.com>
+Lukas Molleman <Lukas.Molleman@gmail.com>
+Konstantinos Riganas <kostasriganas24@gmail.com>
+Grace Su <grace.duansu@gmail.com>
+Pedro Rosa <pedro_sxbr@usp.br>
+Abhinav Cillanki <abhinavcillanki@kgpian.iitkgp.ac.in>
+Baiyuan Qiu <1061688677@qq.com>
+Liwei Cai <cai.lw123@gmail.com>
+Daniel Weindl <daniel.weindl@helmholtz-muenchen.de>
+Isidora Araya <iarayaday@gmail.com>
+Seb Tiburzio <sebtiburzio@gmail.com>
+Victory Omole <vtomole2@gmail.com>
+Abhishek Chaudhary <ac5003@columbia.edu>
+Alexander Zhura <nice.zhura@list.ru>
+Shuai Zhou <shuaivzhou@berkeley.edu>
+Martin Manns <mmanns@gmx.net>
+John Möller <john.moller@outlook.com>
+zzc <1378113190@qq.com>
+Pablo Galindo Salgado <pablogsal@gmail.com>
+Johannes Kasimir <johannes.kasimir@math.lu.se>
+Theodore Dias <theodore.dias@hotmail.co.uk>
+Kaustubh <90597818+kaustubh-765@users.noreply.github.com>
+Idan Pazi <idan.kp@gmail.com>
+Bobby Palmer <bobbyp@umich.edu>
+Saikat Das <saikatdchhe@gmail.com>
+Suman mondal <smondal.qwerty@gmail.com>
+Taylan Sahin <info@taylansahin.net>
+Fabio Luporini <fabio@devitocodes.com>
+Oriel Malihi <orielmalihi1@gmail.com>
+Geetika Vadali <geetika.vadali4@gmail.com>
+Matthias Rettl <matthias.rettl@stud.unileoben.ac.at>
+Mikhail Remnev <maremnev@gmail.com>
+philwillnyc <56197213+philwillnyc@users.noreply.github.com>
+Raphael Lehner <raphael.lehner@gmail.com>
+Harry Mountain <harrymountain1@icloud.com>
+Bhavik Sachdev <b.sachdev1904@gmail.com>
+袁野 (Yuan Ye) <yuanyelele@tutanota.com>
+fazledyn-or <ataf@openrefactory.com>
+mohammedouahman <simofun85@gmail.com>
+K. Kraus <laqueray@googlemail.com>
+Zac Hatfield-Dodds <zac.hatfield.dodds@gmail.com>
+platypus <platypus.computerchip@gmail.com>
+codecruisader <nnisarg55@gmail.com>
+James Whitehead <whiteheadj@gmail.com>
+atharvParlikar <atharvparlikar@gmail.com>
+Ivan Petukhov <satels@gmail.com>
+Augusto Borges <borges.augustoar@gmail.com>
+Han Wei Ang <ang.h.w@u.nus.edu>
+Pablo <48098178+PabloRuizCuevas@users.noreply.github.com>
+Congxu Yang <u7189828@anu.edu.au>
+Saicharan <62512681+saicharan2804@users.noreply.github.com>
