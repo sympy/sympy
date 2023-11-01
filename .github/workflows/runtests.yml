@@ -202,8 +202,8 @@ jobs:
                          aesara wurlitzer autowrap lxml                       \
                          'antlr4-python3-runtime==4.11.*'
 
-      # Not available in pypy or cpython 3.11 (yet).
-      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
+      # Not available in pypy or cpython 3.12 (yet).
+      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.12') }}
         run: pip install llvmlite numba
 
       # These are not available for pypy
