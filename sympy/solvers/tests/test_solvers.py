@@ -2675,6 +2675,8 @@ def test_issue_25849():
         d/48 - c**2/(48*d + 48*c) + c/48]
     assert solve(eq) == [{a: b}, {x: 0}]
     assert solve(eq, x, c) == {x: 0}
+    zero = 1/x - 1/(x - 1) + 1/(x*(x - 1))  # invalidates 0 and 1
+    assert solve([x*(x - 1), zero], [x]) == []
 
 
 def test_issue_24368():

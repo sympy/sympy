@@ -1040,12 +1040,18 @@ def solve(f, *symbols, **flags):
     # this set of symbols (perhaps recast) is needed below
     symset = set(symbols)
 
+    # capture any denominators before rewriting since
+    # they may disappear after the rewrite, e.g. issue 14779
+    # or might be part of a symbolic zero
+    dens_list = [_simple_dens(_, symbols) for _ in f]
+
     # get rid of equations that have no symbols of interest; we don't
     # try to solve them because the user didn't ask and they might be
     # hard to solve; this means that solutions may be given in terms
     # of the eliminated equations e.g. solve((x-y, y-3), x) -> {x: y}
     newf = []
-    for fi in f:
+    dens_special = set()
+    for i, fi in enumerate(f):
         # let the solver handle equations that..
         # - have no symbols but are expressions
         # - have symbols of interest
@@ -1103,6 +1109,9 @@ def solve(f, *symbols, **flags):
     f = newf
     del newf
 
+    # store remaining denominators
+    flags['_denominators'] = set().union(*dens_list)
+
     # mask off any Object that we aren't going to invert: Derivative,
     # Integral, etc... so that solving for anything that they contain will
     # give an implicit solution
@@ -1142,10 +1151,6 @@ def solve(f, *symbols, **flags):
             if fi.has(Float):
                 floats = True
                 f[i] = nsimplify(fi, rational=True)
-
-    # capture any denominators before rewriting since
-    # they may disappear after the rewrite, e.g. issue 14779
-    flags['_denominators'] = _simple_dens(f[0], symbols)
 
     # Any embedded piecewise functions need to be brought out to the
     # top level so that the appropriate strategy gets selected.
@@ -1226,6 +1231,11 @@ def solve(f, *symbols, **flags):
                 unpack = lambda s: s
         else:
             unpack = None
+
+    # if dens_special:
+    solution = [s for s in solution if
+        not any(checksol(den, s, **flags) for den in
+                dens_special)]
 
     # Restore masked-off objects
     if non_inverts and type(solution) is list:
