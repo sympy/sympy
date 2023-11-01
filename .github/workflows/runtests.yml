@@ -196,6 +196,7 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install antlr4
       - run: python -m pip install --upgrade pip wheel setuptools
+      - run: pip install mpmath
 
       # dependencies to install in all Python versions:
       - run: pip install numpy numexpr matplotlib ipython cython          \
