@@ -1061,6 +1061,20 @@ def solve(f, *symbols, **flags):
         # this mod the return value is []
         ok = False
         if fi.free_symbols & symset:
+            if fi.is_constant():
+                # if it's constant and is nonzero, it invalidates
+                # any solution
+                if fi.equals(0):
+                    # any symbols that appear only in this equation
+                    # need not be considered
+                    fisyms = fi.free_symbols & symset
+                    for _ in f:
+                        if _ != fi:
+                            fisyms -= _.free_symbols
+                    symset -= fisyms
+                    dens_special |= dens_list[i]
+                    dens_list[i] = set()
+                    continue
             ok = True
         else:
             if fi.is_number:
@@ -1070,7 +1084,15 @@ def solve(f, *symbols, **flags):
                     return []
                 ok = True
             else:
+                # there are symbols, but if this is constant
+                # then (as above) we must know if it is zero
+                # or not
                 if fi.is_constant():
+                    zero = fi.equals(0)
+                    if zero:
+                        continue
+                    if zero == False:
+                        return []
                     ok = True
         if ok:
             newf.append(fi)

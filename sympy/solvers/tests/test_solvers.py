@@ -2669,6 +2669,14 @@ def test_solve_undetermined_coeffs_issue_23927():
         r: (A**2 + A*sqrt(A**2 + B**2) + B**2)/(A + sqrt(A**2 + B**2))/-1
         }]
 
+
+def test_issue_25849():
+    eq = [x*a - x*b, -d**2/(48*d + 48*c) - d*c/(24*d + 24*c) +
+        d/48 - c**2/(48*d + 48*c) + c/48]
+    assert solve(eq) == [{a: b}, {x: 0}]
+    assert solve(eq, x, c) == {x: 0}
+
+
 def test_issue_24368():
     # Ideally these would produce a solution, but for now just check that they
     # don't fail with a RuntimeError
