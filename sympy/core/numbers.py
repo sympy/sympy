@@ -26,7 +26,7 @@ import mpmath.libmp as mlib
 from mpmath.libmp import bitcount, round_nearest as rnd
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
-from mpmath.ctx_mp import mpnumeric
+from mpmath.ctx_mp_python import mpnumeric
 from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
@@ -1034,6 +1034,8 @@ class Float(Number):
 
     is_Float = True
 
+    _remove_non_digits = str.maketrans(dict.fromkeys("-+_."))
+
     def __new__(cls, num, dps=None, precision=None):
         if dps is not None and precision is not None:
             raise ValueError('Both decimal and binary precision supplied. '
@@ -1123,6 +1125,8 @@ class Float(Number):
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, str):
+            if num.startswith('_') or not num.translate(cls._remove_non_digits):
+                raise ValueError(f"could not convert string to float: {num!r}")
             _mpf_ = mlib.from_str(num, precision, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():
@@ -4558,13 +4562,6 @@ if HAS_GMPY:
 
     _sympy_converter[type(gmpy.mpz(1))] = sympify_mpz
     _sympy_converter[type(gmpy.mpq(1, 2))] = sympify_mpq
-
-
-def sympify_mpmath_mpq(x):
-    p, q = x._mpq_
-    return Rational(p, q, 1)
-
-_sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
 
 
 def sympify_mpmath(x):
