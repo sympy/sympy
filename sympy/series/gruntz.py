@@ -276,7 +276,8 @@ def mrv(e, x):
             return SubsSet(), b1
         if e1.has(x):
             base_lim = limitinf(b1, x)
-            if base_lim is S.One:
+            exp_lim = limitinf(e1, x)
+            if base_lim is S.One and exp_lim is S.Infinity:
                 return mrv(exp(e1 * (b1 - 1)), x)
             return mrv(exp(e1 * log(b1)), x)
         else:
