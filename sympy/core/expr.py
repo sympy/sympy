@@ -681,8 +681,15 @@ class Expr(Basic, EvalfMixin):
         # expression depends on them or not using differentiation. This is
         # not sufficient for all expressions, however, so we don't return
         # False if we get a derivative other than 0 with free symbols.
+        unk = False
         for w in wrt_number:
-            deriv = expr.diff(w)
+            try:
+                deriv = expr.diff(w)
+            except NotImplementedError:
+                # some arg within expr did not like to be differentiated
+                # e.g. issue # 25861
+                unk = True
+                continue
             if simplify:
                 deriv = deriv.simplify()
             if deriv != 0:
@@ -690,6 +697,8 @@ class Expr(Basic, EvalfMixin):
                     if flags.get('failing_number', False):
                         return failing_number
                 return False
+        if unk:
+            return None
         cd = check_denominator_zeros(self)
         if cd is True:
             return False

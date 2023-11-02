@@ -1066,8 +1066,8 @@ def solve(f, *symbols, **flags):
         # to be obtained to queries like solve((x - y, y), x); without
         # this mod the return value is []
         ok = False
-        if fi.free_symbols & symset:
-            if fi.is_constant():
+        if (ifree := fi.free_symbols & symset):
+            if fi.is_constant(*ifree):
                 # if it's constant and is nonzero, it invalidates
                 # any solution
                 if fi.equals(0):

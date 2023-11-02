@@ -143,6 +143,11 @@ class KroneckerDelta(Function):
 
     is_integer = True
 
+    def _eval_derivative(self, x):
+        if len(self.args) == 3:
+            raise NotImplementedError
+        return super()._eval_derivative(x)
+
     @classmethod
     def eval(cls, i, j, delta_range=None):
         """
