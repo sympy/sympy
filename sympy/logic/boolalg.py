@@ -1044,6 +1044,10 @@ class Xor(BooleanFunction):
                      for x in _get_even_parity_terms(len(a))])
 
     def _eval_simplify(self, **kwargs):
+        if len(self.args) == 2:
+            # Simplifies two negating terms
+            if Not(self.args[0]) == self.args[1]:
+                return True
         # as standard simplify uses simplify_logic which writes things as
         # And and Or, we only simplify the partial expressions before using
         # patterns
