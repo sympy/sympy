@@ -89,8 +89,8 @@ def test_int_12():
 def test_float_1():
     z = 1.0
     assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is False
-    assert ask(Q.rational(z)) is None
+    assert ask(Q.integer(z))
+    assert ask(Q.rational(z))
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is None
