@@ -852,7 +852,9 @@ def _solve_inequality(ie, s, linear=False):
         rhs -= b
         ef = factor_terms(e)
         a, e = ef.as_independent(s, as_Add=False)
-        if (a.is_zero != False or  # don't divide by potential 0
+        # don't divide by potential 0 or imaginary factor
+        # b/c not valid and changes real nature, respectively
+        if (a.is_imaginary or a.is_zero != False or
                 a.is_negative ==
                 a.is_positive is None and  # if sign is not known then
                 ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne

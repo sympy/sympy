@@ -662,7 +662,7 @@ class Expr(Basic, EvalfMixin):
                     if b is S.NaN:
                         # evaluation may succeed when substitution fails
                         b = expr._random(None, 1, 0, 1, 0)
-                except ZeroDivisionError:
+                except (TypeError, ZeroDivisionError):
                     b = None
                 if b is not None and nan0 >= b.count(S.NaN) and b.equals(a) is False:
                     return False
