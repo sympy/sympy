@@ -45,7 +45,7 @@ class RoundFunction(Function):
         terms = Add.make_args(arg)
 
         for t in terms:
-            if t.is_integer or (t.is_imaginary and im(t).is_integer):
+            if t.is_integer and not t.is_Float or (t.is_imaginary and im(t).is_integer):
                 ipart += t
             elif t.has(Symbol):
                 spart += t
