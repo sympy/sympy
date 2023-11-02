@@ -1040,6 +1040,34 @@ def solve(f, *symbols, **flags):
     # this set of symbols (perhaps recast) is needed below
     symset = set(symbols)
 
+    # mask off any Object that we aren't going to invert: Derivative,
+    # Integral, etc... so that solving for anything that they contain will
+    # give an implicit solution
+    seen = set()
+    non_inverts = set()
+    for fi in f:
+        pot = preorder_traversal(fi)
+        for p in pot:
+            if not isinstance(p, Expr) or isinstance(p, Piecewise):
+                pass
+            elif (isinstance(p, bool) or
+                    not p.args or
+                    p in symset or
+                    p.is_Add or p.is_Mul or
+                    p.is_Pow and not implicit or
+                    p.is_Function and not implicit) and p.func not in (re, im):
+                continue
+            elif p not in seen:
+                seen.add(p)
+                if p.free_symbols & symset:
+                    non_inverts.add(p)
+                else:
+                    continue
+            pot.skip()
+    del seen
+    non_inverts = dict(list(zip(non_inverts, [Dummy() for _ in non_inverts])))
+    f = [fi.subs(non_inverts) for fi in f]
+
     # capture any denominators before rewriting since
     # they may disappear after the rewrite, e.g. issue 14779
     # or might be part of a symbolic zero
@@ -1112,33 +1140,6 @@ def solve(f, *symbols, **flags):
     # store remaining denominators
     flags['_denominators'] = set().union(*dens_list)
 
-    # mask off any Object that we aren't going to invert: Derivative,
-    # Integral, etc... so that solving for anything that they contain will
-    # give an implicit solution
-    seen = set()
-    non_inverts = set()
-    for fi in f:
-        pot = preorder_traversal(fi)
-        for p in pot:
-            if not isinstance(p, Expr) or isinstance(p, Piecewise):
-                pass
-            elif (isinstance(p, bool) or
-                    not p.args or
-                    p in symset or
-                    p.is_Add or p.is_Mul or
-                    p.is_Pow and not implicit or
-                    p.is_Function and not implicit) and p.func not in (re, im):
-                continue
-            elif p not in seen:
-                seen.add(p)
-                if p.free_symbols & symset:
-                    non_inverts.add(p)
-                else:
-                    continue
-            pot.skip()
-    del seen
-    non_inverts = dict(list(zip(non_inverts, [Dummy() for _ in non_inverts])))
-    f = [fi.subs(non_inverts) for fi in f]
 
     # Both xreplace and subs are needed below: xreplace to force substitution
     # inside Derivative, subs to handle non-straightforward substitutions
