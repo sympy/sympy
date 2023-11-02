@@ -173,7 +173,7 @@ class Pow(Expr):
             # cancellation might occur as in (x - 1)/(1 - x) -> -1. If
             # we returned Piecewise((-1, Ne(x, 1))) for such cases then
             # we could do this...but we don't
-            elif (e.is_Symbol and e.is_integer or e.is_Integer
+            elif (e.is_Symbol and e.is_integer and not e.is_Float or e.is_Integer
                     ) and (b.is_number and b.is_Mul or b.is_Number
                     ) and b.could_extract_minus_sign():
                 if e.is_even:
