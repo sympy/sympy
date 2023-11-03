@@ -4,6 +4,7 @@ from .basic import Atom, Basic
 from .sorting import ordered
 from .evalf import EvalfMixin
 from .function import AppliedUndef
+from .numbers import int_valued
 from .singleton import S
 from .symbol import Dummy
 from .sympify import _sympify, SympifyError
@@ -625,8 +626,8 @@ class Equality(Relational):
             # args with rational/integer symbols to see if the
             # expression evaluates
             val = is_eq(
-                lhs if not lhs.is_Float else Dummy(rational=True),
-                rhs if not rhs.is_Float else Dummy(rational=True))
+                lhs if not lhs.is_Float else (Dummy(integer=True) if int_valued(lhs) else Dummy(rational=True)),
+                rhs if not rhs.is_Float else (Dummy(integer=True) if int_valued(rhs) else Dummy(rational=True)))
             if val is None:
                 return cls(lhs, rhs, evaluate=False)
             else:
