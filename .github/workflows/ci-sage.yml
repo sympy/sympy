@@ -37,6 +37,8 @@ on:
       - master
       # match release branches - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
       - '[0-9]+.[0-9]+'
+  pull_request:
+    # Temporarily run on pull request
   workflow_dispatch:
     # Allow to run manually
 
@@ -100,9 +102,10 @@ jobs:
         ["standard"]
       # Sage distribution packages to build
       targets:                  SAGE_CHECK=no SAGE_CHECK_PACKAGES=sympy build SAGE_DOCTEST_RANDOM_SEED=0 ptest
-      # Standard setting: Test the current beta release of Sage.
+      # Test against the Sage PR:
+      # https://github.com/sagemath/sage/pull/36641
       sage_repo:                sagemath/sage
-      sage_ref:                 develop
+      sage_ref:                 refs/pull/36641/merge
       # To test with a Sage PR, use this:
       #sage_ref:                 refs/pull/PR_NUMBER/merge
       upstream_artifact:        upstream
