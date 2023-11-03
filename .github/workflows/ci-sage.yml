@@ -37,8 +37,6 @@ on:
       - master
       # match release branches - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
       - '[0-9]+.[0-9]+'
-  pull_request:
-    # Temporarily run all PRs
   workflow_dispatch:
     # Allow to run manually
 
