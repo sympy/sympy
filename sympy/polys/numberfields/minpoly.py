@@ -489,7 +489,7 @@ def _minpoly_exp(ex, x):
     """
     c, a = ex.args[0].as_coeff_Mul()
     if a == I*pi:
-        if c.is_rational:
+        if c.is_rational and not c.is_Float:
             q = sympify(c.q)
             if c.p == 1 or c.p == -1:
                 if q == 3:

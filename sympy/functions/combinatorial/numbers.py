@@ -548,7 +548,7 @@ class bernoulli(Function):
             return cls(n)
         elif n.is_zero:
             return S.One
-        elif n.is_integer is False or n.is_nonnegative is False:
+        elif n.is_Float or n.is_integer is False or n.is_nonnegative is False:
             if x is not None and x.is_Integer and x.is_nonpositive:
                 return S.NaN
             return
