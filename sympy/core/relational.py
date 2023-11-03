@@ -4,7 +4,9 @@ from .basic import Atom, Basic
 from .sorting import ordered
 from .evalf import EvalfMixin
 from .function import AppliedUndef
+from .numbers import int_valued, Float
 from .singleton import S
+from .symbol import Dummy
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
@@ -619,7 +621,18 @@ class Equality(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         if evaluate:
-            val = is_eq(lhs, rhs)
+            # while 1 != 1.0, Eq(1, 1.0) is True
+            # so for purpose of evaluation, replace Floats
+            # with rational/integer symbols to see if the
+            # expression evaluates
+            reps = {}
+            for f in lhs.atoms(Float)|rhs.atoms(Float):
+                if f not in reps:
+                    if 0 and int_valued(f):
+                        reps[f] = Dummy(integer=True)
+                    else:
+                        reps[f] = Dummy(rational=True)
+            val = is_eq(lhs.xreplace(reps), rhs.xreplace(reps))
             if val is None:
                 return cls(lhs, rhs, evaluate=False)
             else:
