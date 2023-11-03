@@ -625,9 +625,23 @@ class Equality(Relational):
             # so for purpose of evaluation, replace Float
             # args with rational/integer symbols to see if the
             # expression evaluates
-            val = is_eq(
-                lhs if not lhs.is_Float else (Dummy(integer=True) if int_valued(lhs) else Dummy(rational=True)),
-                rhs if not rhs.is_Float else (Dummy(integer=True) if int_valued(rhs) else Dummy(rational=True)))
+            if 0. in (lhs, rhs) or lhs.is_number and rhs.is_number:
+                val = is_eq(lhs, rhs)
+            elif lhs.is_Float:
+                if rhs.is_Float:
+                    val = is_eq(lhs, rhs)
+                else:
+                    val = is_eq(
+                        Dummy(integer=True) if int_valued(lhs)
+                        else Dummy(rational=True),
+                        rhs)
+            elif rhs.is_Float:
+                val = is_eq(
+                    lhs,
+                    Dummy(integer=True) if int_valued(rhs)
+                    else Dummy(rational=True))
+            else:
+                val = is_eq(lhs, rhs)
             if val is None:
                 return cls(lhs, rhs, evaluate=False)
             else:
