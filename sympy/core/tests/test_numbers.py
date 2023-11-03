@@ -504,11 +504,11 @@ def test_Float():
     # rationality properties
     # if the integer test fails then the use of intlike
     # should be removed from gamma_functions.py
-    assert Float(1).is_integer is False
-    assert Float(1).is_rational is None
-    assert Float(1).is_irrational is None
-    assert sqrt(2).n(15).is_rational is None
-    assert sqrt(2).n(15).is_irrational is None
+    assert Float(1).is_integer is True
+    assert Float(1).is_rational is True
+    assert Float(1).is_irrational is False
+    assert sqrt(2).n(15).is_rational is True
+    assert sqrt(2).n(15).is_irrational is False
 
     # do not automatically evalf
     def teq(a):
