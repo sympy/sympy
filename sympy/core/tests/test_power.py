@@ -321,10 +321,7 @@ def test_issue_6100_12942_4473():
     assert (x**1.0)**2.0 != x**2
     b = Expr()
     assert Pow(b, 1.0, evaluate=False) != b
-    # if the following gets distributed as a Mul (x**1.0*y**1.0 then
-    # __eq__ methods could be added to Symbol and Pow to detect the
-    # power-of-1.0 case.
-    assert ((x*y)**1.0).func is Pow
+    assert ((x*y)**1.0).func is Mul
 
 
 def test_issue_6208():

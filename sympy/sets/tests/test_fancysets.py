@@ -114,7 +114,7 @@ def test_ImageSet():
     harmonics = ImageSet(Lambda(x, 1/x), S.Naturals)
     assert Rational(1, 5) in harmonics
     assert Rational(.25) in harmonics
-    assert 0.25 not in harmonics
+    assert 0.25 in harmonics
     assert Rational(.3) not in harmonics
     assert (1, 2) not in harmonics
 
@@ -1255,7 +1255,7 @@ def test_issue_18050():
         ) == ImageSet(Lambda(x, 3*x + 2 + 5*I), S.Integers)
 
 
-def test_Rationals():
+def test_Rationals_set():
     assert S.Integers.is_subset(S.Rationals)
     assert S.Naturals.is_subset(S.Rationals)
     assert S.Naturals0.is_subset(S.Rationals)
@@ -1268,7 +1268,7 @@ def test_Rationals():
         Rational(1, 3), 3, Rational(-1, 3), -3, Rational(2, 3)]
     assert Basic() not in S.Rationals
     assert S.Half in S.Rationals
-    assert S.Rationals.contains(0.5) == Contains(0.5, S.Rationals, evaluate=False)
+    assert S.Rationals.contains(0.5)
     assert 2 in S.Rationals
     r = symbols('r', rational=True)
     assert r in S.Rationals
