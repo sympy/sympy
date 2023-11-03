@@ -970,6 +970,9 @@ class Float(Number):
     def _eval_is_integer(self):
         return self._mpf_ == fzero or int_valued(self)
 
+    def _eval_is_odd(self):
+        return int_valued(self) and not bool(self._mpf_[2])
+
     def _eval_is_negative(self):
         if self._mpf_ in (_mpf_ninf, _mpf_inf):
             return False
