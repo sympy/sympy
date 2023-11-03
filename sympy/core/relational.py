@@ -4,7 +4,6 @@ from .basic import Atom, Basic
 from .sorting import ordered
 from .evalf import EvalfMixin
 from .function import AppliedUndef
-from .numbers import int_valued, Float
 from .singleton import S
 from .symbol import Dummy
 from .sympify import _sympify, SympifyError
@@ -622,17 +621,12 @@ class Equality(Relational):
         rhs = _sympify(rhs)
         if evaluate:
             # while 1 != 1.0, Eq(1, 1.0) is True
-            # so for purpose of evaluation, replace Floats
-            # with rational/integer symbols to see if the
+            # so for purpose of evaluation, replace Float
+            # args with rational/integer symbols to see if the
             # expression evaluates
-            reps = {}
-            for f in lhs.atoms(Float)|rhs.atoms(Float):
-                if f not in reps:
-                    if 0 and int_valued(f):
-                        reps[f] = Dummy(integer=True)
-                    else:
-                        reps[f] = Dummy(rational=True)
-            val = is_eq(lhs.xreplace(reps), rhs.xreplace(reps))
+            val = is_eq(
+                lhs if not lhs.is_Float else Dummy(rational=True),
+                rhs if not rhs.is_Float else Dummy(rational=True))
             if val is None:
                 return cls(lhs, rhs, evaluate=False)
             else:
