@@ -749,10 +749,9 @@ class Float(Number):
 
     _mpf_: tuple[int, int, int, int]
 
-    # A Float represents many real numbers,
-    # both rational and irrational.
-    is_rational = None
-    is_irrational = None
+    # A Float is a computationally efficient rational
+    is_rational = True
+    is_irrational = False
     is_number = True
 
     is_real = True
@@ -969,7 +968,7 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
-        return self._mpf_ == fzero
+        return self._mpf_ == fzero or int_valued(self)
 
     def _eval_is_negative(self):
         if self._mpf_ in (_mpf_ninf, _mpf_inf):
