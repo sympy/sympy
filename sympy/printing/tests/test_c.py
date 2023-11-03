@@ -658,7 +658,7 @@ def test_C99CodePrinter__precision():
 
     for printer, suffix in zip([f32_printer, f64_printer, f80_printer], ['f', '', 'l']):
         def check(expr, ref):
-            assert printer.doprint(expr) == ref.format(s=suffix, S=suffix.upper())
+            assert printer.doprint(expr) == ref.format(s=suffix, S=suffix.upper()),printer.doprint(expr)
         check(Abs(n), 'abs(n)')
         check(Abs(x + 2.0), 'fabs{s}(x + 2.0{S})')
         check(sin(x + 4.0)**cos(x - 2.0), 'pow{s}(sin{s}(x + 4.0{S}), cos{s}(x - 2.0{S}))')
@@ -699,8 +699,8 @@ def test_C99CodePrinter__precision():
         check(gamma(x), 'tgamma{s}(x)')
         check(loggamma(x), 'lgamma{s}(x)')
 
-        check(ceiling(x + 2.), "ceil{s}(x + 2.0{S})")
-        check(floor(x + 2.), "floor{s}(x + 2.0{S})")
+        check(ceiling(x + 2.), "ceil{s}(x) + 2.0{S}")
+        check(floor(x + 2.), "floor{s}(x) + 2.0{S}")
         check(fma(x, y, -z), 'fma{s}(x, y, -z)')
         check(Max(x, 8.0, x**4.0), 'fmax{s}(8.0{S}, fmax{s}(x, pow{s}(x, 4.0{S})))')
         check(Min(x, 2.0), 'fmin{s}(2.0{S}, x)')
