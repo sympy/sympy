@@ -580,12 +580,12 @@ class Number(AtomicExpr):
 
 
 class Float(Number):
-    """Represent a floating-point number of arbitrary precision.
+    """Represent a number in floating-point format with arbitrary precision.
 
     Examples
     ========
 
-    >>> from sympy import Float
+    >>> from sympy import Float, pi
     >>> Float(3.5)
     3.50000000000000
     >>> Float(3)
@@ -624,6 +624,16 @@ class Float(Number):
     >>> Float(100, 4)
     100.0
 
+    Although NumberSymbols can be passed to Float, the default
+    precision is 15 digits of precision; surds and other expressions
+    must be explicitly converted to Float through evaluation.  XXX should
+    this be disallowed so that all non-numbers are treated the same?
+
+    >>> Float(pi)
+    3.14159265358979
+    >>> Float(_, 20) == Float(pi, 20)
+    False
+
     Float can automatically count significant figures if a null string
     is sent for the precision; spaces or underscores are also allowed. (Auto-
     counting is only allowed for strings, ints and longs).
@@ -636,8 +646,9 @@ class Float(Number):
     3.
 
     If a number is written in scientific notation, only the digits before the
-    exponent are considered significant if a decimal appears, otherwise the
-    "e" signifies only how to move the decimal:
+    exponent are considered significant *if a decimal appears*. If there is
+    no decimal point then "e" signifies only how to move the decimal and
+    trailing zeros will be considered as significant:
 
     >>> Float('60.e2', '')  # 2 digits significant
     6.0e+3
@@ -649,38 +660,103 @@ class Float(Number):
     Notes
     =====
 
-    Floats are inexact by their nature unless their value is a binary-exact
-    value.
+    == Floats are rational approximations ==
 
-    >>> approx, exact = Float(.1, 1), Float(.125, 1)
+    Floats represent all numbers as a rational with a denominator that
+    is a power of 2: ``(-1)**s*m*2**e`` where ``s`` is 0 or 1, ``m`` is an
+    odd integer, and ``e`` is a signed integer. These values are stored
+    in the `_mpf_` attribute of the Float:
 
-    For calculation purposes, evalf needs to be able to change the precision
-    but this will not increase the accuracy of the inexact value. The
-    following is the most accurate 5-digit approximation of a value of 0.1
-    that had only 1 digit of precision:
+    >>> mpf = s, m, e, b = Float(26)._mpf_; mpf
+    (0, 13, 2, 4)
+    >>> (-1)**s*m*2**e
+    26
 
-    >>> approx.evalf(5)
-    0.099609
+    The ``b`` parameter is the number of bits needed to represent ``m``:
 
-    By contrast, 0.125 is exact in binary (as it is in base 10) and so it
-    can be passed to Float or evalf to obtain an arbitrary precision with
-    matching accuracy:
+    >>> from sympy import ceiling, log
+    >>> b == ceiling(log(m, 2))
+    True
 
-    >>> Float(exact, 5)
-    0.12500
-    >>> exact.evalf(20)
-    0.12500000000000000000
+    By definition, integers and fractions with denominators that are
+    powers of two will be represented exactly. All other numbers are
+    represented as the nearest rational with a denominator that is a
+    power of 2. You can see the rational representation of a float
+    by passing it to Rational (see also discusion below on SymPy Float
+    and Python float):
 
-    Trying to make a high-precision Float from a float is not disallowed,
-    but one must keep in mind that the *underlying float* (not the apparent
-    decimal value) is being obtained with high precision. For example, 0.3
-    does not have a finite binary representation. The closest rational is
-    the fraction 5404319552844595/2**54. So if you try to obtain a Float of
-    0.3 to 20 digits of precision you will not see the same thing as 0.3
-    followed by 19 zeros:
+    >>> Rational(Float(1/8))
+    1/8
+    >>> Rational(Float(1/10, 1))  # the 1 digit approximation
+    51/512
+    >>> Rational(Float(1/10, 2))  # the 2 digit approximation
+    819/8192
+
+    While operations involving Rationals are exact, Floats interact under
+    the constraints of the binary denominator and limited precision.
+    Consider the 2 digit approximations for 1/10 and 1/3:
+
+    >>> a, b = Float(1/10, 2), Float(1/3, 2); (a, b)
+    (0.10, 0.33)
+
+    The underlying rational approximations are
+
+    >>> [Rational(i) for i in _]
+    [819/8192, 683/2048]
+
+    The exact sum of them is
+
+    >>> sum(_)
+    3551/8192
+
+    But that result would require more precision than was specified so
+    the actual result is different:
+
+    >>> Rational(Float(_, 2))
+    111/256
+
+    So when we add ``a`` and ``b``, that is the underlying value that
+    is obtained:
+
+    >>> a + b, Rational(a + b)
+    (0.43, 111/256)
+
+    So although Floats are using underlying rationals, those rationals
+    combine under constraints of precision. This makes them
+    computationally efficient but less exact than Rationals.
+
+    == Floats are rational...but not Rational ==
+
+    Integers, Rationals, and Floats are all SymPy Numbers. While all
+    Numbers are rational, the attribute `is_Rational` is True only
+    for Integers and Rational. Other lower-case attributes may
+    also be true for Floats:
+
+    >>> f1 = Float(1)
+    >>> f1.is_Rational, f1.is_rational, f1.is_integer, f1.is_odd
+    (False, True, True, True)
+    >>> r = Float(0.1)
+    >>> r.is_rational, r.is_integer, r.is_odd
+    (True, False, False)
+
+    == SymPy Float from Python float ==
+
+    Python floats follow the same sort of rules as the SymPy Float
+    but only retain 15 decomal digits of precision. Trying to make
+    a high-precision Float from a Python float is not
+    disallowed, but one must keep in mind that the *underlying float*
+    (not the displayed decimal value) is being obtained with high
+    precision. For example,
 
     >>> Float(0.3, 20)
     0.29999999999999998890
+
+    did not give 0.3 followed by 19 zeros because the Python float 0.3
+    is not exactly 3/10; it is the binary approximation with numerator
+    and denominator of
+
+    >>> (.3).as_integer_ratio()
+    (5404319552844595, 18014398509481984)
 
     If you want a 20-digit value of the decimal 0.3 (not the floating point
     approximation of 0.3) you should send the 0.3 as a string. The underlying
@@ -689,9 +765,16 @@ class Float(Number):
 
     >>> Float('0.3', 20)
     0.30000000000000000000
+    >>> Rational(_)
+    354177486215223391027/1180591620717411303424
 
-    Although you can increase the precision of an existing Float using Float
-    it will not increase the accuracy -- the underlying value is not changed:
+    == Changing Float precision ==
+
+    During calculations, `evalf` changes the precision of numbers
+    but this will not increase the accuracy of the inexact value.
+    You can increase the precision of an existing Float using Float
+    but the underlying rational is not changed unless you decrease
+    the precision:
 
     >>> def show(f): # binary rep of Float
     ...     from sympy import Mul, Pow
@@ -704,7 +787,7 @@ class Float(Number):
     4915/2**14 at prec=13
     >>> show(Float(t, 20)) # higher prec, not higher accuracy
     4915/2**14 at prec=70
-    >>> show(Float(t, 2)) # lower prec
+    >>> show(Float(t, 2)) # lower prec creates a new rational approximation
     307/2**10 at prec=10
 
     The same thing happens when evalf is used on a Float:
@@ -714,16 +797,18 @@ class Float(Number):
     >>> show(t.evalf(2))
     307/2**10 at prec=10
 
-    Finally, Floats can be instantiated with an mpf tuple (n, c, p) to
-    produce the number (-1)**n*c*2**p:
+    == Instantiating from tuple ==
 
-    >>> n, c, p = 1, 5, 0
-    >>> (-1)**n*c*2**p
+    Floats can be instantiated with an mpf tuple (s, m, e) to
+    produce the number (-1)**s*m*2**e:
+
+    >>> s, m, e = 1, 5, 0
+    >>> (-1)**s*m*2**e
     -5
     >>> Float((1, 5, 0))
     -5.00000000000000
 
-    An actual mpf tuple also contains the number of bits in c as the last
+    An actual mpf tuple also contains the number of bits in m as the last
     element of the tuple:
 
     >>> _._mpf_
@@ -732,6 +817,8 @@ class Float(Number):
     This is not needed for instantiation and is not the same thing as the
     precision. The mpf tuple and the precision are two separate quantities
     that Float tracks.
+
+    == Instantiating inf and nan ==
 
     In SymPy, a Float is a number that can be computed with arbitrary
     precision. Although floating point 'inf' and 'nan' are not such
