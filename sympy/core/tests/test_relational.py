@@ -1000,6 +1000,7 @@ def test_issues_13081_12583_12534():
     # this should be the same if we reverse the relational
     assert [i for i in range(15, 50) if pi.n(i) < Rational(pi.n(i))] == []
 
+
 def test_issue_18188():
     from sympy.sets.conditionset import ConditionSet
     result1 = Eq(x*cos(x) - 3*sin(x), 0)
@@ -1007,6 +1008,7 @@ def test_issue_18188():
 
     result2 = Eq(x**2 + sqrt(x*2) + sin(x), 0)
     assert result2.as_set() == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
+
 
 def test_binary_symbols():
     ans = {x}
@@ -1156,6 +1158,7 @@ def test_multivariate_linear_function_simplification():
 def test_nonpolymonial_relations():
     assert Eq(cos(x), 0).simplify() == Eq(cos(x), 0)
 
+
 def test_18778():
     raises(TypeError, lambda: is_le(Basic(), Basic()))
     raises(TypeError, lambda: is_gt(Basic(), Basic()))
@@ -1233,6 +1236,239 @@ def test_is_ge_le():
     assert is_gt(PowTest(3, 9), PowTest(3,2))
     assert is_le(PowTest(3, 2), PowTest(3,9))
     assert is_lt(PowTest(3, 2), PowTest(3,9))
+
+
+def test_21429():
+    from sympy import Dummy
+    def test__trivial():
+        from sympy.core.assumptions import check_assumptions, common_assumptions
+
+        # concrete numbers to test
+        n = [oo, S(3), S(2), S(1), S.Half]
+        n += [S(0)] + [-i for i in n]
+        def nums(x):
+            if x.is_number:
+                return [x]
+            return [i for i in n if check_assumptions(i, x)]
+
+        def check(b, e, v):
+            from sympy.core.relational import _trivial
+            b = S(b)
+            e = S(e)
+            v = S(v)
+            # symbolic check
+            assert v == _trivial(Pow(b, e, evaluate=False))
+            bb = nums(b)
+            ee = nums(e)
+            assert bb and ee
+            # specific checks using numbers
+            vv = set()
+            for i in bb:
+                for j in ee:
+                   if v is not None:
+                       assert v.xreplace({b: i, e: j}) == i**j, (v, {b: i, e: j}, i**j)
+                   else:
+                       vv.add(i**j)
+            def incompatible(vv):
+                if S.NaN in vv:
+                    return True
+                if zoo in vv:
+                    return True
+                # is there anything other than the generic commutative
+                # and extended_real in common?
+                c = [k for k,v in common_assumptions(vv).items()
+                    if v and k not in ['commutative', 'extended_real']]
+                return not c
+            assert incompatible(vv)
+
+        check(0, Dummy(extended_positive=True), 0)
+        check(1, x, None)
+        check(1, Dummy(finite=True), 1)
+        check(y, x, None)
+        check(1/Dummy(prime=True), Dummy(extended_positive=True, infinite=True), 0)
+        check(1/Dummy(prime=True), Dummy(extended_negative=True, infinite=True), oo)
+        check(Dummy(integer=True, positive=True), Dummy(extended_positive=True, infinite=True), None)
+        check(Dummy(integer=True, positive=True), Dummy(extended_negative=True, infinite=True), None)
+        b, e = Dummy(positive=True), Dummy(real=True)
+        p = b**e
+        check(b, e, p)
+        b, e = Dummy(extended_nonnegative=True), Dummy(real=True)
+        p = b**e
+        check(b, e, None)
+        b, e = Dummy(extended_nonpositive=True), Dummy(real=True)
+        p = b**e
+        check(b, e, None)
+        check(Dummy(extended_negative=True), Dummy(integer=True), None)
+
+    test__trivial()
+    assert oo > 2*pi
+    r = Symbol('r', real=True)
+    assert (2*(r**2 - r) >= 0).is_Relational  # assertion 10
+    assert (r**2 - 1 >= 0).is_Relational  # assertion 11, 20.5
+    i = Symbol('i', positive=True)
+    assert (1/i <= 1) is not S.true
+    assert (r/i >= 0).is_Relational  # assertion 2
+    assert (-2*y >= x).is_Relational  # recursion check
+    assert (-2*i >= r).is_Relational  # recursion check
+    assert (2**Dummy(infinite=True, extended_positive=True
+        ) >= pi/2) is S.true  # assertion 13
+    assert (2**Dummy(infinite=True, extended_negative=True
+        ) >= pi/2) is S.false  # assertion 12
+    def check(r, b):
+        assert r <= b
+        assert r < b + 1
+        assert (r > b) is S.false
+        assert -r >= -b
+        assert -r > -b - 1, (-r , -b - 1)
+        assert (-r < -b) is S.false
+        assert b >= r
+        assert b + S.One > r
+        assert (b < r) is S.false
+        assert -b <= -r
+        assert -b - S.One < -r
+        assert (-b > -r) is S.false
+    i = Symbol('i', positive=True, integer=True)
+    check(1/i, 1)
+    assert 1/i + 1 >= 0
+    assert S.One >= S.Half**i
+    assert 2/i**2 >= 0
+    assert (1/i > i) is S.false
+    assert 1/i <= i
+    assert i**2 >= i**2 - 1
+    assert 2*i**2 >= i**2 - 1
+    assert (2*i**3 >= 3*i**3 + 1) is S.false
+    assert -i**2 <= i**3
+    assert 2*i**3 >= -i**2
+    assert -2*i**3 <= -i**2
+    assert ((i + 1)**2 >= i - 1)
+    assert ((i + 1)**-2 <= 1/(i - 1))
+    assert ((i + 1)**2 >= (i - 1)**2)
+    j = Symbol('j', positive=True, integer=True)
+    assert 2 >= (i/(1 + i))**j
+    i = Symbol('i', negative=True, integer=True)
+    check(-1/i, 1)
+    check(-i**2, -1)
+    assert i**-2 >= 0
+    assert i**3 <= -1
+    assert not 2/i >= 0
+    i = Symbol('i', prime=True, odd=True)
+    assert 1/i <= S(1)/3
+    i = Symbol('i', nonnegative=True)
+    e = Pow(10, 1000, evaluate=False)
+    assert (i + 1) <= Pow(i + 1, e, evaluate=False)
+    assert i**pi >=0
+    i, j = symbols('i j', integer=True, positive=True)
+    assert i >= i**-pi
+    assert i**pi >= i
+    assert 1/i +1  <= j + 1
+    assert (1/i + 1)/(j + 1) <= 1
+    p = symbols('n', integer=True, positive=True)
+    assert (1/p <= 1) == S.true
+    assert (-1/p >= -1) == S.true
+    n = symbols('n', integer=True, negative=True)
+    assert (1/n >= -1) == S.true
+    assert (-1/n <= 1) == S.true
+    p = symbols('p', prime=True)
+    assert p/n <= 0
+
+    no = Symbol('no', odd=True, negative=True)
+    ne = Symbol('ne', even=True, negative=True)
+    bn = Symbol('bn', integer=True, negative=True)
+    sn = 1/bn
+    nn = Symbol('nn', nonnegative=True)
+    np = Symbol('np', nonpositive=True)
+    e = Symbol('e', even=True)
+    o = Symbol('o', odd=True)
+    po = Symbol('po', odd=True, positive=True)
+    pe = Symbol('pe', even=True, positive=True)
+    bp = Symbol('bp', integer=True, positive=True)
+    sp = 1/bp
+
+    ge1 = bn**pe, sn**ne, sp**np, bp**nn
+    p01 = bn**ne, sn**pe, sp**nn, bp**np
+    n01 = bn**no, sn**po
+    len1 = bn**po, sn**no
+
+    # by groups
+
+    from sympy.core.relational import _big_ppow as f
+    for i in ge1:
+        assert f(*i.args), i
+    from sympy.core.relational import _small_ppow as f
+    for i in p01:
+        assert f(*i.args), i
+    from sympy.core.relational import _small_npow as f
+    for i in n01:
+        assert f(*i.args), i
+    from sympy.core.relational import _big_npow as f
+    for i in len1:
+        assert f(*i.args), i
+
+    for pow in ge1:
+        assert pow >= 0
+        assert pow >= -1, (pow, '>=',-1,'-->',pow>=-1)
+        for i in p01 + n01 + len1:
+            assert (i <= pow) == True, (i, '<=',pow,'-->',i <= pow)
+
+    for pow in p01:
+        assert pow >= 0 and pow <= 1
+        assert pow <= 2
+        assert pow >= -2
+        assert all(i<=pow for i in n01 + len1)
+        assert all(i>=pow for i in ge1)
+
+    for pow in n01:
+        assert pow >= -1 and pow <= 0
+        assert pow >= -2
+        assert pow <= 2
+        assert all(i<=pow for i in len1)
+        assert all(i>=pow for i in ge1 + p01)
+
+    for pow in len1:
+        assert pow <= -1
+        assert pow <= 0
+        assert pow <= 2
+        assert all(i>=pow for i in ge1 + p01 + n01)
+
+    # same b
+    b = bn
+    pow = b**po, b**no, b**ne, Pow(b, 0, evaluate=False), b**pe
+    for i in range(len(pow)):
+        for j in range(i + 1, len(pow)):
+            assert pow[i] <= pow[j], (pow[i],"<=",pow[j])
+
+    assert Pow(-1, e, evaluate=False) >= Pow(-1, o, evaluate=False)
+
+    b = sn
+    pow = b**no, b**po, b**pe, Pow(b, 0, evaluate=False), b**ne
+    for i in range(len(pow)):
+        for j in range(i + 1, len(pow)):
+            assert pow[i] <= pow[j], (pow[i], pow[j],i,j)
+
+    b = sp
+    pow = b**bp, b**sp, Pow(b, 0, evaluate=False), b**sn, b**bn
+    for i in range(len(pow)):
+        for j in range(i + 1, len(pow)):
+            assert (pow[i] <= pow[j]) == True, (pow[i], pow[j],i,j)
+
+    b = bp
+    pow = b**bp, b**sp, Pow(b, 0, evaluate=False), b**sn, b**bn
+    for i in range(len(pow)):
+        for j in range(i + 1, len(pow)):
+            assert pow[i] >= pow[j]
+
+    # same e
+
+    for i in ge1 + p01 + n01 + len1:
+        assert Pow(x, 0, evaluate=False) >= Pow(i, 0, evaluate=False)
+        assert Pow(x, 0, evaluate=False) <= Pow(i, 0, evaluate=False), Pow(x, 0, evaluate=False) <= Pow(i, 0, evaluate=False)
+    assert (n - 1)**pe >= n**pe
+    assert n**ne >= (n - 1)**ne
+    assert (nn**np >= (nn + 1)**np) is S.true
+    assert (p**np >= (p + 1)**np)
+    assert (nn + 1)**nn >= nn**nn
+    assert (n - 1)**no >= n**no
+    assert n**po >= (n - 1)**po
 
 
 def test_weak_strict():

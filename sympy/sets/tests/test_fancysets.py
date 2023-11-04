@@ -906,8 +906,7 @@ def test_ComplexRegion_contains():
     assert c3.contains(x) == Contains(x, c3, evaluate=False)
     assert c3.contains(r + 2*I) == Contains(
         r + 2*I, c3, evaluate=False)  # is in fact False
-    assert c3.contains(1/(1 + r**2)) == Contains(
-        1/(1 + r**2), c3, evaluate=False)  # is in fact True
+    assert c3.contains(1/(1 + r**2))
 
     r2 = Interval(0, 3)
     theta2 = Interval(pi, 2*pi, left_open=True)
@@ -920,8 +919,7 @@ def test_ComplexRegion_contains():
     assert c4.contains(-2) == False
     assert c4.contains(2) == True
     assert c4.contains(x) == Contains(x, c4, evaluate=False)
-    assert c4.contains(3/(1 + r**2)) == Contains(
-        3/(1 + r**2), c4, evaluate=False)  # is in fact True
+    assert c4.contains(3/(1 + r**2))
 
     raises(ValueError, lambda: ComplexRegion(r1*theta1, polar=2))
 
