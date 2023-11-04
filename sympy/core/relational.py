@@ -1586,8 +1586,7 @@ def is_eq(lhs, rhs, assumptions=None):
             if _d.is_infinite:
                 rv = True
             elif _n.is_zero is False:
-                rv = _d.is_infinite
-                if rv is None:
+                if _d.is_infinite is None:
                     # if the condition that makes the denominator
                     # infinite does not make the original expression
                     # True then False can be returned
