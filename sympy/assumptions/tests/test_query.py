@@ -100,8 +100,8 @@ def test_float_1():
     assert ask(Q.even(z)) is False
     assert ask(Q.odd(z)) is True
     assert ask(Q.finite(z)) is True
-    assert ask(Q.prime(z)) is None
-    assert ask(Q.composite(z)) is None
+    assert ask(Q.prime(z)) is False
+    assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
 
