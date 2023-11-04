@@ -973,6 +973,17 @@ class Float(Number):
     def _eval_is_odd(self):
         return int_valued(self) and not bool(self._mpf_[2])
 
+    def _eval_is_prime(self):
+        from sympy.ntheory.primetest import isprime
+        if not int_valued(self):
+            return False
+        return isprime(int(self))
+
+    def _eval_is_composite(self):
+        if not int_valued(self) or self <= 1:
+            return False
+        return fuzzy_not(self.is_prime)
+
     def _eval_is_negative(self):
         if self._mpf_ in (_mpf_ninf, _mpf_inf):
             return False
