@@ -836,8 +836,12 @@ class Float(Number):
 
     _mpf_: tuple[int, int, int, int]
 
-    # A Float is a computationally efficient rational
-    is_rational = True
+    # A Float is a computationally efficient rational but does
+    # not behaves as such in all computations. Integers --
+    # as well all fractions with denominators that are powers
+    # of 2 -- are exact, but currently only the integer
+    # is tracked after instantiation.
+    is_rational = None
     is_irrational = False
     is_number = True
 
@@ -1056,20 +1060,6 @@ class Float(Number):
 
     def _eval_is_integer(self):
         return self._mpf_ == fzero or int_valued(self)
-
-    def _eval_is_odd(self):
-        return int_valued(self) and not bool(self._mpf_[2])
-
-    def _eval_is_prime(self):
-        from sympy.ntheory.primetest import isprime
-        if not int_valued(self):
-            return False
-        return isprime(int(self))
-
-    def _eval_is_composite(self):
-        if not int_valued(self) or self <= 1:
-            return False
-        return fuzzy_not(self.is_prime)
 
     def _eval_is_negative(self):
         if self._mpf_ in (_mpf_ninf, _mpf_inf):
