@@ -5,7 +5,7 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Float, Mul, Pow, S
 from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NaN,
-    NegativeInfinity, NumberSymbol, Rational)
+    NegativeInfinity, NumberSymbol, Rational, int_valued)
 from sympy.functions import Abs, im, re
 from sympy.ntheory import isprime
 
@@ -125,7 +125,7 @@ def _EvenPredicate_number(expr, assumptions):
             raise TypeError
     except TypeError:
         return False
-    if isinstance(expr, (float, Float)):
+    if isinstance(expr, (float, Float)) and not int_valued(expr):
         return False
     return i % 2 == 0
 
