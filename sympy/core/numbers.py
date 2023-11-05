@@ -749,11 +749,11 @@ class Float(Number):
 
     _mpf_: tuple[int, int, int, int]
 
-    # A Float is a computationally efficient rational but does
-    # not behaves as such in all computations. Integers --
-    # as well all fractions with denominators that are powers
-    # of 2 -- are exact, but currently only the integer
-    # is can be identified with int_valued after instantiation.
+    # A Float, though rational in form, does not behave like
+    # a rational in all Python expressions so we deal with
+    # exceptions (where we want to deal with the rational
+    # form of the Float as a rational) at the source rather
+    # than assigning a mathematically loaded category of 'rational'
     is_rational = None
     is_irrational = None
     is_number = True
