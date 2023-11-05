@@ -165,12 +165,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
-           http://dl.acm.org/citation.cfm?doid=322248.322255
+           https://dl.acm.org/doi/10.1145/322248.322255
     .. [2] https://en.wikipedia.org/wiki/Summation#Capital-sigma_notation
     .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
 
     limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
@@ -272,6 +272,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     def eval_zeta_function(self, f, limits):
         """
         Check whether the function matches with the zeta function.
+
         If it matches, then return a `Piecewise` expression because
         zeta function does not converge unless `s > 1` and `q > 0`
         """
@@ -332,8 +333,13 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     def _eval_simplify(self, **kwargs):
 
+        function = self.function
+
+        if kwargs.get('deep', True):
+            function = function.simplify(**kwargs)
+
         # split the function into adds
-        terms = Add.make_args(expand(self.function))
+        terms = Add.make_args(expand(function))
         s_t = [] # Sum Terms
         o_t = [] # Other Terms
 
@@ -348,7 +354,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     # go through each term
                     if isinstance(subterm, Sum):
                         # if it's a sum, simplify it
-                        out_terms.append(subterm._eval_simplify())
+                        out_terms.append(subterm._eval_simplify(**kwargs))
                     else:
                         # otherwise, add it as is
                         out_terms.append(subterm)
@@ -435,8 +441,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         See Also
         ========
 
-        Sum.is_absolutely_convergent()
-        sympy.concrete.products.Product.is_convergent()
+        Sum.is_absolutely_convergent
+        sympy.concrete.products.Product.is_convergent
         """
         p, q, r = symbols('p q r', cls=Wild)
 
@@ -505,7 +511,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- comparison test ------------- ###
         # 1/(n**p*log(n)**q*log(log(n))**r) comparison
-        n_log_test = order.expr.match(1/(sym**p*log(sym)**q*log(log(sym))**r))
+        n_log_test = (order.expr.match(1/(sym**p*log(1/sym)**q*log(-log(1/sym))**r)) or
+                      order.expr.match(1/(sym**p*(-log(1/sym))**q*log(-log(1/sym))**r)))
         if n_log_test is not None:
             if (n_log_test[p] > 1 or
                 (n_log_test[p] == 1 and n_log_test[q] > 1) or
@@ -680,7 +687,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         See Also
         ========
 
-        Sum.is_convergent()
+        Sum.is_convergent
         """
         return Sum(abs(self.function), self.limits).is_convergent()
 
@@ -743,8 +750,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if b.is_Integer and a.is_Integer:
                 m = min(m, b - a + 1)
             if not eps or f.is_polynomial(i):
-                for k in range(m):
-                    s += f.subs(i, a + k)
+                s = Add(*[f.subs(i, a + k) for k in range(m)])
             else:
                 term = f.subs(i, a)
                 if term:
@@ -754,7 +760,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     elif not (test == False):
                         # a symbolic Relational class, can't go further
                         return term, S.Zero
-                s += term
+                s = term
                 for k in range(1, m):
                     term = f.subs(i, a + k)
                     if abs(term.evalf(3)) < eps and term != 0:
@@ -852,7 +858,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
                Volume 28 Issue 2, April 1981, Pages 305-350
-               http://dl.acm.org/citation.cfm?doid=322248.322255
+               https://dl.acm.org/doi/10.1145/322248.322255
         """
         l_indices = list(indices)
 
@@ -951,10 +957,7 @@ def telescopic_direct(L, R, n, limits):
 
     """
     (i, a, b) = limits
-    s = 0
-    for m in range(n):
-        s += L.subs(i, a + m) + R.subs(i, b - m)
-    return s
+    return Add(*[L.subs(i, a + m) + R.subs(i, b - m) for m in range(n)])
 
 
 def telescopic(L, R, limits):
@@ -1475,15 +1478,19 @@ def eval_sum_residue(f, i_a_b):
         shift = - b / a / n
         return shift
 
+    #Need a dummy symbol with no assumptions set for get_residue_factor
+    z = Dummy('z')
+
     def get_residue_factor(numer, denom, alternating):
+        residue_factor = (numer.as_expr() / denom.as_expr()).subs(i, z)
         if not alternating:
-            residue_factor = (numer.as_expr() / denom.as_expr()) * cot(S.Pi * i)
+            residue_factor *= cot(S.Pi * z)
         else:
-            residue_factor = (numer.as_expr() / denom.as_expr()) * csc(S.Pi * i)
+            residue_factor *= csc(S.Pi * z)
         return residue_factor
 
     # We don't know how to deal with symbolic constants in summand
-    if f.free_symbols - set([i]):
+    if f.free_symbols - {i}:
         return None
 
     if not (a.is_Integer or a in (S.Infinity, S.NegativeInfinity)):
@@ -1520,7 +1527,7 @@ def eval_sum_residue(f, i_a_b):
             return None
 
         residue_factor = get_residue_factor(numer, denom, alternating)
-        residues = [residue(residue_factor, i, root) for root in nonint_roots]
+        residues = [residue(residue_factor, z, root) for root in nonint_roots]
         return -S.Pi * sum(residues)
 
     if not (a.is_finite and b is S.Infinity):
@@ -1568,7 +1575,7 @@ def eval_sum_residue(f, i_a_b):
             return None
 
     residue_factor = get_residue_factor(numer, denom, alternating)
-    residues = [residue(residue_factor, i, root) for root in int_roots + nonint_roots]
+    residues = [residue(residue_factor, z, root) for root in int_roots + nonint_roots]
     full_sum = -S.Pi * sum(residues)
 
     if not int_roots:

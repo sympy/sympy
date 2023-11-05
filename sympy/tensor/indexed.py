@@ -1,4 +1,4 @@
-r"""Module that defines indexed objects
+r"""Module that defines indexed objects.
 
 The classes ``IndexedBase``, ``Indexed``, and ``Idx`` represent a
 matrix element ``M[i, j]`` as in the following diagram::
@@ -169,10 +169,8 @@ class Indexed(Expr):
 
         obj = Expr.__new__(cls, base, *args, **kw_args)
 
-        try:
-            IndexedBase._set_assumptions(obj, base.assumptions0)
-        except AttributeError:
-            IndexedBase._set_assumptions(obj, {})
+        IndexedBase._set_assumptions(obj, base.assumptions0)
+
         return obj
 
     def _hashable_content(self):

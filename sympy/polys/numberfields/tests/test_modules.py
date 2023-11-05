@@ -3,7 +3,7 @@ from sympy.polys import Poly, cyclotomic_poly
 from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.matrices import DomainMatrix, DM
 from sympy.polys.numberfields.exceptions import (
-    ClosureFailure, MissingUnityError
+    ClosureFailure, MissingUnityError, StructureError
 )
 from sympy.polys.numberfields.modules import (
     Module, ModuleElement, ModuleEndomorphism, PowerBasis, PowerBasisElement,
@@ -214,6 +214,47 @@ def test_PowerBasis_element_from_poly():
     assert A.element_from_poly(h).coeffs == [0, 0, 0, 0]
 
 
+def test_PowerBasis_element__conversions():
+    k = QQ.cyclotomic_field(5)
+    L = QQ.cyclotomic_field(7)
+    B = PowerBasis(k)
+
+    # ANP --> PowerBasisElement
+    a = k([QQ(1, 2), QQ(1, 3), 5, 7])
+    e = B.element_from_ANP(a)
+    assert e.coeffs == [42, 30, 2, 3]
+    assert e.denom == 6
+
+    # PowerBasisElement --> ANP
+    assert e.to_ANP() == a
+
+    # Cannot convert ANP from different field
+    d = L([QQ(1, 2), QQ(1, 3), 5, 7])
+    raises(UnificationFailed, lambda: B.element_from_ANP(d))
+
+    # AlgebraicNumber --> PowerBasisElement
+    alpha = k.to_alg_num(a)
+    eps = B.element_from_alg_num(alpha)
+    assert eps.coeffs == [42, 30, 2, 3]
+    assert eps.denom == 6
+
+    # PowerBasisElement --> AlgebraicNumber
+    assert eps.to_alg_num() == alpha
+
+    # Cannot convert AlgebraicNumber from different field
+    delta = L.to_alg_num(d)
+    raises(UnificationFailed, lambda: B.element_from_alg_num(delta))
+
+    # When we don't know the field:
+    C = PowerBasis(k.ext.minpoly)
+    # Can convert from AlgebraicNumber:
+    eps = C.element_from_alg_num(alpha)
+    assert eps.coeffs == [42, 30, 2, 3]
+    assert eps.denom == 6
+    # But can't convert back:
+    raises(StructureError, lambda: eps.to_alg_num())
+
+
 def test_Submodule_repr():
     T = Poly(cyclotomic_poly(5, x))
     A = PowerBasis(T)
@@ -356,6 +397,39 @@ def test_Submodule_mul():
     assert C.mul(C, hnf=False) == C3_unred
     assert C * C == C3
     assert C ** 2 == C3
+
+
+def test_Submodule_reduce_element():
+    T = Poly(cyclotomic_poly(5, x))
+    A = PowerBasis(T)
+    B = A.whole_submodule()
+    b = B(to_col([90, 84, 80, 75]), denom=120)
+
+    C = B.submodule_from_matrix(DomainMatrix.eye(4, ZZ), denom=2)
+    b_bar_expected = B(to_col([30, 24, 20, 15]), denom=120)
+    b_bar = C.reduce_element(b)
+    assert b_bar == b_bar_expected
+
+    C = B.submodule_from_matrix(DomainMatrix.eye(4, ZZ), denom=4)
+    b_bar_expected = B(to_col([0, 24, 20, 15]), denom=120)
+    b_bar = C.reduce_element(b)
+    assert b_bar == b_bar_expected
+
+    C = B.submodule_from_matrix(DomainMatrix.eye(4, ZZ), denom=8)
+    b_bar_expected = B(to_col([0, 9, 5, 0]), denom=120)
+    b_bar = C.reduce_element(b)
+    assert b_bar == b_bar_expected
+
+    a = A(to_col([1, 2, 3, 4]))
+    raises(NotImplementedError, lambda: C.reduce_element(a))
+
+    C = B.submodule_from_matrix(DomainMatrix([
+        [5, 4, 3, 2],
+        [0, 8, 7, 6],
+        [0, 0,11,12],
+        [0, 0, 0, 1]
+    ], (4, 4), ZZ).transpose())
+    raises(StructureError, lambda: C.reduce_element(b))
 
 
 def test_is_HNF():
@@ -589,7 +663,14 @@ def test_ModuleElement_mod():
     A = PowerBasis(T)
     e = A(to_col([1, 15, 8, 0]), denom=2)
     assert e % 7 == A(to_col([1, 1, 8, 0]), denom=2)
-    raises(TypeError, lambda: e % QQ(1, 2))
+    assert e % QQ(1, 2) == A.zero()
+    assert e % QQ(1, 3) == A(to_col([1, 1, 0, 0]), denom=6)
+
+    B = A.submodule_from_gens([A(0), 5*A(1), 3*A(2), A(3)])
+    assert e % B == A(to_col([1, 5, 2, 0]), denom=2)
+
+    C = B.whole_submodule()
+    raises(TypeError, lambda: e % C)
 
 
 def test_PowerBasisElement_polys():

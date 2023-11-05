@@ -7,7 +7,7 @@ from .generate import nextprime, prevprime, prime, primepi, primerange, \
 from .primetest import isprime, is_gaussian_prime
 from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
     multiplicity_in_factorial, perfect_power, pollard_pm1, pollard_rho, \
-    primefactors, totient, trailing, \
+    primefactors, totient, \
     divisor_count, proper_divisor_count, divisor_sigma, factorrat, \
     reduced_totient, primenu, primeomega, mersenne_prime_exponent, \
     is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable, \
@@ -15,7 +15,7 @@ from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
 
 from .partitions_ import npartitions
 from .residue_ntheory import is_primitive_root, is_quad_residue, \
-    legendre_symbol, jacobi_symbol, n_order, sqrt_mod, quadratic_residues, \
+    legendre_symbol, jacobi_symbol, kronecker_symbol, n_order, sqrt_mod, quadratic_residues, \
     primitive_root, nthroot_mod, is_nthpow_residue, sqrt_mod_iter, mobius, \
     discrete_log, quadratic_congruence, polynomial_congruence
 from .multinomial import binomial_coefficients, binomial_coefficients_list, \
@@ -35,7 +35,7 @@ __all__ = [
 
 
     'divisors', 'proper_divisors', 'factorint', 'multiplicity', 'perfect_power',
-    'pollard_pm1', 'pollard_rho', 'primefactors', 'totient', 'trailing',
+    'pollard_pm1', 'pollard_rho', 'primefactors', 'totient',
     'divisor_count', 'proper_divisor_count', 'divisor_sigma', 'factorrat',
     'reduced_totient', 'primenu', 'primeomega', 'mersenne_prime_exponent',
     'is_perfect', 'is_mersenne_prime', 'is_abundant', 'is_deficient', 'is_amicable',
@@ -44,7 +44,7 @@ __all__ = [
     'npartitions',
 
     'is_primitive_root', 'is_quad_residue', 'legendre_symbol',
-    'jacobi_symbol', 'n_order', 'sqrt_mod', 'quadratic_residues',
+    'jacobi_symbol', 'kronecker_symbol', 'n_order', 'sqrt_mod', 'quadratic_residues',
     'primitive_root', 'nthroot_mod', 'is_nthpow_residue', 'sqrt_mod_iter',
     'mobius', 'discrete_log', 'quadratic_congruence', 'polynomial_congruence',
 

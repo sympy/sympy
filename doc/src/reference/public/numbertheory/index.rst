@@ -3,10 +3,10 @@
 ===============
 Number Theory
 ===============
-   
+
 **Contents**
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    ../../../modules/ntheory.rst
+   ../../../modules/ntheory.rst

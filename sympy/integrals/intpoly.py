@@ -21,7 +21,7 @@ from sympy.abc import x, y, z
 from sympy.core import S, diff, Expr, Symbol
 from sympy.core.sympify import _sympify
 from sympy.geometry import Segment2D, Polygon, Point, Point2D
-from sympy.polys.polytools import LC, gcd_list, degree_list
+from sympy.polys.polytools import LC, gcd_list, degree_list, Poly
 from sympy.simplify.simplify import nsimplify
 
 
@@ -82,7 +82,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
             lints = len(intersections)
             facets = [Segment2D(intersections[i],
                                 intersections[(i + 1) % lints])
-                      for i in range(0, lints)]
+                      for i in range(lints)]
         else:
             raise NotImplementedError("Integration for H-representation 3D"
                                       "case not implemented yet.")
@@ -94,12 +94,21 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
 
         if max_degree is None:
             if expr is None:
-                raise TypeError('Input expression be must'
-                                'be a valid SymPy expression')
+                raise TypeError('Input expression must be a valid SymPy expression')
             return main_integrate3d(expr, facets, vertices, hp_params)
 
     if max_degree is not None:
         result = {}
+        if expr is not None:
+            f_expr = []
+            for e in expr:
+                _ = decompose(e)
+                if len(_) == 1 and not _.popitem()[0]:
+                    f_expr.append(e)
+                elif Poly(e).total_degree() <= max_degree:
+                    f_expr.append(e)
+            expr = f_expr
+
         if not isinstance(expr, list) and expr is not None:
             raise TypeError('Input polynomials must be list of expressions')
 
@@ -128,8 +137,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
         return result
 
     if expr is None:
-        raise TypeError('Input expression be must'
-                        'be a valid SymPy expression')
+        raise TypeError('Input expression must be a valid SymPy expression')
 
     return main_integrate(expr, facets, hp_params)
 
@@ -142,6 +150,26 @@ def strip(monom):
     else:
         coeff = LC(monom)
         return coeff, monom / coeff
+
+def _polynomial_integrate(polynomials, facets, hp_params):
+    dims = (x, y)
+    dim_length = len(dims)
+    integral_value = S.Zero
+    for deg in polynomials:
+        poly_contribute = S.Zero
+        facet_count = 0
+        for hp in hp_params:
+            value_over_boundary = integration_reduction(facets,
+                                                        facet_count,
+                                                        hp[0], hp[1],
+                                                        polynomials[deg],
+                                                        dims, deg)
+            poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
+            facet_count += 1
+        poly_contribute /= (dim_length + deg)
+        integral_value += poly_contribute
+
+    return integral_value
 
 
 def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
@@ -261,7 +289,6 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     dims = (x, y)
     dim_length = len(dims)
     result = {}
-    integral_value = S.Zero
 
     if max_degree:
         grad_terms = [[0, 0, 0, 0]] + gradient_terms(max_degree)
@@ -294,21 +321,11 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
                                 (b / norm(a)) / (dim_length + degree)
         return result
     else:
-        polynomials = decompose(expr)
-        for deg in polynomials:
-            poly_contribute = S.Zero
-            facet_count = 0
-            for hp in hp_params:
-                value_over_boundary = integration_reduction(facets,
-                                                            facet_count,
-                                                            hp[0], hp[1],
-                                                            polynomials[deg],
-                                                            dims, deg)
-                poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
-                facet_count += 1
-            poly_contribute /= (dim_length + deg)
-            integral_value += poly_contribute
-    return integral_value
+        if not isinstance(expr, list):
+            polynomials = decompose(expr)
+            return _polynomial_integrate(polynomials, facets, hp_params)
+        else:
+            return {e: _polynomial_integrate(decompose(e), facets, hp_params) for e in expr}
 
 
 def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
@@ -350,8 +367,9 @@ def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
         return S.Zero
     result = S.Zero
     x0 = vertices[facet[0]]
-    for i in range(len(facet)):
-        side = (vertices[facet[i]], vertices[facet[(i + 1) % len(facet)]])
+    facet_len = len(facet)
+    for i, fac in enumerate(facet):
+        side = (vertices[fac], vertices[facet[(i + 1) % facet_len]])
         result += distance_to_side(x0, side, hp_param[0]) *\
             lineseg_integrate(facet, i, side, expr, degree)
     if not expr.is_number:
@@ -527,7 +545,7 @@ def left_integral2D(m, index, facets, x0, expr, gens):
     5
     """
     value = S.Zero
-    for j in range(0, m):
+    for j in range(m):
         intersect = ()
         if j in ((index - 1) % m, (index + 1) % m):
             intersect = intersection(facets[index], facets[j], "segment2D")
@@ -687,8 +705,9 @@ def left_integral3D(facets, index, expr, vertices, hp_param, degree):
     value = S.Zero
     facet = facets[index]
     x0 = vertices[facet[0]]
-    for i in range(len(facet)):
-        side = (vertices[facet[i]], vertices[facet[(i + 1) % len(facet)]])
+    facet_len = len(facet)
+    for i, fac in enumerate(facet):
+        side = (vertices[fac], vertices[facet[(i + 1) % facet_len]])
         value += distance_to_side(x0, side, hp_param[0]) * \
             lineseg_integrate(facet, i, side, expr, degree)
     return value
@@ -1081,12 +1100,12 @@ def point_sort(poly, normal=None, clockwise=True):
     order = S.One if clockwise else S.NegativeOne
     dim = len(pts[0])
     if dim == 2:
-        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
-                        sum(map(lambda vertex: vertex.y, pts)) / n)
+        center = Point(sum((vertex.x for vertex in pts)) / n,
+                        sum((vertex.y for vertex in pts)) / n)
     else:
-        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
-                        sum(map(lambda vertex: vertex.y, pts)) / n,
-                        sum(map(lambda vertex: vertex.z, pts)) / n)
+        center = Point(sum((vertex.x for vertex in pts)) / n,
+                        sum((vertex.y for vertex in pts)) / n,
+                        sum((vertex.z for vertex in pts)) / n)
 
     def compare(a, b):
         if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
@@ -1254,8 +1273,8 @@ def plot_polytope(poly):
     """
     from sympy.plotting.plot import Plot, List2DSeries
 
-    xl = list(map(lambda vertex: vertex.x, poly.vertices))
-    yl = list(map(lambda vertex: vertex.y, poly.vertices))
+    xl = [vertex.x for vertex in poly.vertices]
+    yl = [vertex.y for vertex in poly.vertices]
 
     xl.append(poly.vertices[0].x)  # Closing the polygon
     yl.append(poly.vertices[0].y)

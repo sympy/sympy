@@ -1,14 +1,16 @@
 """Tools for solving inequalities and systems of inequalities. """
+import itertools
 
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
-from sympy.core import Symbol, Dummy, sympify
+from sympy.core import sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.core.relational import Relational, Lt, Ge, Eq
+from sympy.core.symbol import Symbol, Dummy
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
-from sympy.functions.elementary.complexes import im, Abs
+from sympy.functions.elementary.complexes import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
@@ -162,12 +164,12 @@ def solve_rational_inequalities(eqs):
 
             intervals = []
 
-            for numer_interval in numer_intervals:
-                for global_interval in global_intervals:
-                    interval = numer_interval.intersect(global_interval)
+            for numer_interval, global_interval in itertools.product(
+                    numer_intervals, global_intervals):
+                interval = numer_interval.intersect(global_interval)
 
-                    if interval is not S.EmptySet:
-                        intervals.append(interval)
+                if interval is not S.EmptySet:
+                    intervals.append(interval)
 
             global_intervals = intervals
 
@@ -222,10 +224,12 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     """
     exact = True
     eqs = []
-    solution = S.Reals if exprs else S.EmptySet
+    solution = S.EmptySet  # add pieces for each group
     for _exprs in exprs:
+        if not _exprs:
+            continue
         _eqs = []
-
+        _sol = S.Reals
         for expr in _exprs:
             if isinstance(expr, tuple):
                 expr, rel = expr
@@ -259,10 +263,11 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             if not (domain.is_ZZ or domain.is_QQ):
                 expr = numer/denom
                 expr = Relational(expr, 0, rel)
-                solution &= solve_univariate_inequality(expr, gen, relational=False)
+                _sol &= solve_univariate_inequality(expr, gen, relational=False)
             else:
                 _eqs.append(((numer, denom), rel))
 
+        solution |= _sol
         if _eqs:
             eqs.append(_eqs)
 
@@ -319,22 +324,14 @@ def reduce_abs_inequality(expr, rel, gen):
                 if not exprs:
                     exprs = _exprs
                 else:
-                    args = []
-
-                    for expr, conds in exprs:
-                        for _expr, _conds in _exprs:
-                            args.append((op(expr, _expr), conds + _conds))
-
-                    exprs = args
+                    exprs = [(op(expr, _expr), conds + _conds) for (expr, conds), (_expr, _conds) in
+                            itertools.product(exprs, _exprs)]
         elif expr.is_Pow:
             n = expr.exp
             if not n.is_Integer:
                 raise ValueError("Only Integer Powers are allowed on Abs.")
 
-            _exprs = _bottom_up_scan(expr.base)
-
-            for expr, conds in _exprs:
-                exprs.append((expr**n, conds))
+            exprs.extend((expr**n, conds) for expr, conds in _bottom_up_scan(expr.base))
         elif isinstance(expr, Abs):
             _exprs = _bottom_up_scan(expr.args[0])
 
@@ -346,12 +343,10 @@ def reduce_abs_inequality(expr, rel, gen):
 
         return exprs
 
-    exprs = _bottom_up_scan(expr)
-
     mapping = {'<': '>', '<=': '>='}
     inequalities = []
 
-    for expr, conds in exprs:
+    for expr, conds in _bottom_up_scan(expr):
         if rel not in mapping.keys():
             expr = Relational( expr, 0, rel)
         else:
@@ -591,7 +586,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     try:
                         reals = sifted[True]
                         if len(reals) > 1:
-                            reals = list(sorted(reals))
+                            reals = sorted(reals)
                     except TypeError:
                         raise NotImplementedError
             except NotImplementedError:
@@ -600,11 +595,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             # If expr contains imaginary coefficients, only take real
             # values of x for which the imaginary part is 0
             make_real = S.Reals
-            if im(expanded_e) != S.Zero:
+            if (coeffI := expanded_e.coeff(S.ImaginaryUnit)) != S.Zero:
                 check = True
                 im_sol = FiniteSet()
                 try:
-                    a = solveset(im(expanded_e), gen, domain)
+                    a = solveset(coeffI, gen, domain)
                     if not isinstance(a, Interval):
                         for z in a:
                             if z not in singularities and valid(z) and z.is_extended_real:
@@ -673,7 +668,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             if valid(_pt(start, end)):
                 sol_sets.append(Interval.open(start, end))
 
-            if im(expanded_e) != S.Zero and check:
+            if coeffI != S.Zero and check:
                 rv = (make_real).intersect(_domain)
             else:
                 rv = Intersection(
@@ -927,14 +922,8 @@ def _reduce_inequalities(inequalities, symbols):
             else:
                 other.append(_solve_inequality(Relational(expr, 0, rel), gen))
 
-    poly_reduced = []
-    abs_reduced = []
-
-    for gen, exprs in poly_part.items():
-        poly_reduced.append(reduce_rational_inequalities([exprs], gen))
-
-    for gen, exprs in abs_part.items():
-        abs_reduced.append(reduce_abs_inequalities(exprs, gen))
+    poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
+    abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
 
     return And(*(poly_reduced + abs_reduced + other))
 

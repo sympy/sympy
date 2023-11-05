@@ -184,12 +184,12 @@ class Product(ExprWithIntLimits):
 
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
-           http://dl.acm.org/citation.cfm?doid=322248.322255
+           https://dl.acm.org/doi/10.1145/322248.322255
     .. [2] https://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
     .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
 
     limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
@@ -392,7 +392,7 @@ class Product(ExprWithIntLimits):
 
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import product_simplify
-        rv = product_simplify(self)
+        rv = product_simplify(self, **kwargs)
         return rv.doit() if kwargs['doit'] else rv
 
     def _eval_transpose(self):
@@ -544,7 +544,7 @@ class Product(ExprWithIntLimits):
 
         .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
                Volume 28 Issue 2, April 1981, Pages 305-350
-               http://dl.acm.org/citation.cfm?doid=322248.322255
+               https://dl.acm.org/doi/10.1145/322248.322255
 
         """
         l_indices = list(indices)

@@ -34,7 +34,7 @@ from .util import convert_to
 from .quantities import Quantity
 
 from .definitions.dimension_definitions import (
-    amount_of_substance, acceleration, action,
+    amount_of_substance, acceleration, action, area,
     capacitance, charge, conductance, current, energy,
     force, frequency, impedance, inductance, length,
     luminous_intensity, magnetic_density,
@@ -97,6 +97,7 @@ from .definitions import (
     g, gram, grams,
     mg, milligram, milligrams,
     ug, microgram, micrograms,
+    t, tonne, metric_ton,
     newton, newtons, N,
     joule, joules, J,
     watt, watts, W,
@@ -127,6 +128,8 @@ from .definitions import (
     yd, yard, yards,
     mi, mile, miles,
     nmi, nautical_mile, nautical_miles,
+    angstrom, angstroms,
+    ha, hectare,
     l, L, liter, liters,
     dl, dL, deciliter, deciliters,
     cl, cL, centiliter, centiliters,
@@ -161,7 +164,8 @@ from .definitions import (
     faraday_constant,
     josephson_constant,
     von_klitzing_constant,
-    amu, amus, atomic_mass_unit, atomic_mass_constant,
+    Da, dalton, amu, amus, atomic_mass_unit, atomic_mass_constant,
+    me, electron_rest_mass,
     gee, gees, acceleration_due_to_gravity,
     u0, magnetic_constant, vacuum_permeability,
     e0, electric_constant, vacuum_permittivity,
@@ -232,6 +236,8 @@ def find_unit(quantity, unit_system="SI"):
     ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
     ['ampere', 'amperes']
+    >>> u.find_unit('angstrom')
+    ['angstrom', 'angstroms']
     >>> u.find_unit('volt')
     ['volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
     >>> u.find_unit(u.inch**3)[:9]
@@ -271,7 +277,7 @@ __all__ = [
     'convert_to',
     'Quantity',
 
-    'amount_of_substance', 'acceleration', 'action',
+    'amount_of_substance', 'acceleration', 'action', 'area',
     'capacitance', 'charge', 'conductance', 'current', 'energy',
     'force', 'frequency', 'impedance', 'inductance', 'length',
     'luminous_intensity', 'magnetic_density',
@@ -329,6 +335,7 @@ __all__ = [
     'g', 'gram', 'grams',
     'mg', 'milligram', 'milligrams',
     'ug', 'microgram', 'micrograms',
+    't', 'tonne', 'metric_ton',
     'newton', 'newtons', 'N',
     'joule', 'joules', 'J',
     'watt', 'watts', 'W',
@@ -359,6 +366,8 @@ __all__ = [
     'yd', 'yard', 'yards',
     'mi', 'mile', 'miles',
     'nmi', 'nautical_mile', 'nautical_miles',
+    'angstrom', 'angstroms',
+    'ha', 'hectare',
     'l', 'L', 'liter', 'liters',
     'dl', 'dL', 'deciliter', 'deciliters',
     'cl', 'cL', 'centiliter', 'centiliters',
@@ -393,7 +402,8 @@ __all__ = [
     'faraday_constant',
     'josephson_constant',
     'von_klitzing_constant',
-    'amu', 'amus', 'atomic_mass_unit', 'atomic_mass_constant',
+    'Da', 'dalton', 'amu', 'amus', 'atomic_mass_unit', 'atomic_mass_constant',
+    'me', 'electron_rest_mass',
     'gee', 'gees', 'acceleration_due_to_gravity',
     'u0', 'magnetic_constant', 'vacuum_permeability',
     'e0', 'electric_constant', 'vacuum_permittivity',

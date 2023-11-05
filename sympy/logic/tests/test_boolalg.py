@@ -6,7 +6,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.sets.sets import (Interval, Union)
+from sympy.sets.sets import Interval, Union
+from sympy.sets.contains import Contains
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
@@ -56,7 +57,6 @@ def test_And():
     assert And(True, False, A) is false
     assert And(1, A) == A
     raises(TypeError, lambda: And(2, A))
-    raises(TypeError, lambda: And(A < 2, A))
     assert And(A < 1, A >= 1) is false
     e = A > 1
     assert And(e, e.canonical) == e.canonical
@@ -81,7 +81,6 @@ def test_Or():
     assert Or(False, False, A) == A
     assert Or(1, A) is true
     raises(TypeError, lambda: Or(2, A))
-    raises(TypeError, lambda: Or(A < 2, A))
     assert Or(A < 1, A >= 1) is true
     e = A > 1
     assert Or(e, e.canonical) == e
@@ -303,7 +302,6 @@ def test_simplification_boolalg():
     assert simplify_logic(Equivalent(A, B)) == \
         Or(And(A, B), And(Not(A), Not(B)))
     assert simplify_logic(And(Equality(A, 2), C)) == And(Equality(A, 2), C)
-    assert simplify_logic(And(Equality(A, 2), A)) is S.false
     assert simplify_logic(And(Equality(A, 2), A)) == And(Equality(A, 2), A)
     assert simplify_logic(And(Equality(A, B), C)) == And(Equality(A, B), C)
     assert simplify_logic(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) \
@@ -323,6 +321,9 @@ def test_simplification_boolalg():
         a & b & c & d & e & f & g & h & ~j
     # This expression can be simplified to get rid of the j variables
     assert simplify_logic(expr) == expr
+
+    # Test dontcare
+    assert simplify_logic((a & b) | c | d, dontcare=(a & b)) == c | d
 
     # check input
     ans = SOPform([x, y], [[1, 0]])
@@ -576,7 +577,6 @@ def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(A & B)) == to_cnf(A & B)
 
 
-
 def test_to_dnf():
     assert to_dnf(~(B | C)) == And(Not(B), Not(C))
     assert to_dnf(A & (B | C)) == Or(And(A, B), And(A, C))
@@ -673,7 +673,6 @@ def test_ITE():
     assert ITE(1, 1, 1) is S.true
     assert isinstance(ITE(1, 1, 1, evaluate=False), ITE)
 
-    raises(TypeError, lambda: ITE(x > 1, y, x))
     assert ITE(Eq(x, True), y, x) == ITE(x, y, x)
     assert ITE(Eq(x, False), y, x) == ITE(~x, y, x)
     assert ITE(Ne(x, True), y, x) == ITE(~x, y, x)
@@ -1049,6 +1048,12 @@ def test_issue_14700():
         (x & ~w) | (y & z & ~x)
 
 
+def test_issue_25115():
+    cond = Contains(x, S.Integers)
+    # Previously this raised an exception:
+    assert simplify_logic(cond) == cond
+
+
 def test_relational_simplification():
     w, x, y, z = symbols('w x y z', real=True)
     d, e = symbols('d e', real=False)
@@ -1111,7 +1116,9 @@ def test_relational_simplification():
     assert And(x > 1, x < -1, Eq(x, y)).simplify() == S.false
     # From #16690
     assert And(x >= y, Eq(y, 0)).simplify() == And(x >= 0, Eq(y, 0))
-
+    assert Or(Ne(x, 1), Ne(x, 2)).simplify() == S.true
+    assert And(Eq(x, 1), Ne(2, x)).simplify() == Eq(x, 1)
+    assert Or(Eq(x, 1), Ne(2, x)).simplify() == Ne(x, 2)
 
 def test_issue_8373():
     x = symbols('x', real=True)
@@ -1131,7 +1138,7 @@ def test_relational_simplification_numerically():
     def test_simplification_numerically_function(original, simplified):
         symb = original.free_symbols
         n = len(symb)
-        valuelist = list(set(list(combinations(list(range(-(n-1), n))*n, n))))
+        valuelist = list(set(combinations(list(range(-(n-1), n))*n, n)))
         for values in valuelist:
             sublist = dict(zip(symb, values))
             originalvalue = original.subs(sublist)
@@ -1168,9 +1175,9 @@ def test_relational_simplification_patterns_numerically():
     patternlists = [[And, _simplify_patterns_and()],
                     [Or, _simplify_patterns_or()],
                     [Xor, _simplify_patterns_xor()]]
-    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 3))))
+    valuelist = list(set(combinations(list(range(-2, 3))*3, 3)))
     # Skip combinations of +/-2 and 0, except for all 0
-    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    valuelist = [v for v in valuelist if any(w % 2 for w in v) or not any(v)]
     for func, patternlist in patternlists:
         for pattern in patternlist:
             original = func(*pattern[0].args)
@@ -1320,9 +1327,9 @@ def test_relational_threeterm_simplification_patterns_numerically():
     c = Wild('c')
     symb = [a, b, c]
     patternlists = [[And, _simplify_patterns_and3()]]
-    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 3))))
+    valuelist = list(set(combinations(list(range(-2, 3))*3, 3)))
     # Skip combinations of +/-2 and 0, except for all 0
-    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    valuelist = [v for v in valuelist if any(w % 2 for w in v) or not any(v)]
     for func, patternlist in patternlists:
         for pattern in patternlist:
             original = func(*pattern[0].args)
@@ -1334,3 +1341,9 @@ def test_relational_threeterm_simplification_patterns_numerically():
                 assert originalvalue == simplifiedvalue, "Original: {}\nand"\
                     " simplified: {}\ndo not evaluate to the same value for"\
                     "{}".format(pattern[0], simplified, sublist)
+
+
+def test_issue_25451():
+    x = Or(And(a, c), Eq(a, b))
+    assert isinstance(x, Or)
+    assert set(x.args) == {And(a, c), Eq(a, b)}

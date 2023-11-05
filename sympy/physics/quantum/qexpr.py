@@ -90,7 +90,7 @@ class QExpr(Expr):
     # derive from args.
 
     # The Hilbert space a quantum Object belongs to.
-    __slots__ = ('hilbert_space')
+    __slots__ = ('hilbert_space', )
 
     is_commutative = False
 
@@ -280,7 +280,7 @@ class QExpr(Expr):
         Handles the printing of any unique identifying contents of a QExpr to
         print as its contents, such as any variables or quantum numbers. The
         default is to print the label, which is almost always the args. This
-        should not include printing of any brackets or parenteses.
+        should not include printing of any brackets or parentheses.
         """
         return self._print_label(printer, *args)
 
@@ -315,13 +315,6 @@ class QExpr(Expr):
 
     def _latex(self, printer, *args):
         return self._print_contents_latex(printer, *args)
-
-    #-------------------------------------------------------------------------
-    # Methods from Basic and Expr
-    #-------------------------------------------------------------------------
-
-    def doit(self, **kw_args):
-        return self
 
     #-------------------------------------------------------------------------
     # Represent

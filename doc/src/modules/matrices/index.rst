@@ -9,7 +9,7 @@ Matrices
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    matrices.rst
    common.rst

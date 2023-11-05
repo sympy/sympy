@@ -1,9 +1,9 @@
 """Computing integral bases for number fields. """
 
 from sympy.polys.polytools import Poly
+from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ
-from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.decorator import public
 from .modules import ModuleEndomorphism, ModuleHomomorphism, PowerBasis
 from .utilities import extract_fundamental_discriminant
@@ -99,9 +99,13 @@ def round_two(T, radicals=None):
     Explanation
     ===========
 
-    Carry out Zassenhaus's "Round 2" algorithm on a monic irreducible
-    polynomial *T* over :ref:`ZZ`. This computes an integral basis and the
+    Carry out Zassenhaus's "Round 2" algorithm on an irreducible polynomial
+    *T* over :ref:`ZZ` or :ref:`QQ`. This computes an integral basis and the
     discriminant for the field $K = \mathbb{Q}[x]/(T(x))$.
+
+    Alternatively, you may pass an :py:class:`~.AlgebraicField` instance, in
+    place of the polynomial *T*, in which case the algorithm is applied to the
+    minimal polynomial for the field's primitive element.
 
     Ordinarily this function need not be called directly, as one can instead
     access the :py:meth:`~.AlgebraicField.maximal_order`,
@@ -147,9 +151,10 @@ def round_two(T, radicals=None):
     Parameters
     ==========
 
-    T : :py:class:`~.Poly`
-        The irreducible monic polynomial over :ref:`ZZ` defining the number
-        field.
+    T : :py:class:`~.Poly`, :py:class:`~.AlgebraicField`
+        Either (1) the irreducible polynomial over :ref:`ZZ` or :ref:`QQ`
+        defining the number field, or (2) an :py:class:`~.AlgebraicField`
+        representing the number field itself.
 
     radicals : dict, optional
         This is a way for any $p$-radicals (if computed) to be returned by
@@ -182,23 +187,21 @@ def round_two(T, radicals=None):
     .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
 
     """
-    if T.domain == QQ:
-        try:
-            T = Poly(T, domain=ZZ)
-        except CoercionFailed:
-            pass  # Let the error be raised by the next clause.
+    K = None
+    if isinstance(T, AlgebraicField):
+        K, T = T, T.ext.minpoly_of_element()
     if (   not T.is_univariate
         or not T.is_irreducible
-        or not T.is_monic
-        or not T.domain == ZZ):
-        raise ValueError('Round 2 requires a monic irreducible univariate polynomial over ZZ.')
+        or T.domain not in [ZZ, QQ]):
+        raise ValueError('Round 2 requires an irreducible univariate polynomial over ZZ or QQ.')
+    T, _ = T.make_monic_over_integers_by_scaling_roots()
     n = T.degree()
     D = T.discriminant()
     D_modulus = ZZ.from_sympy(abs(D))
     # D must be 0 or 1 mod 4 (see Cohen Sec 4.4), which ensures we can write
     # it in the form D = D_0 * F**2, where D_0 is 1 or a fundamental discriminant.
     _, F = extract_fundamental_discriminant(D)
-    Ztheta = PowerBasis(T)
+    Ztheta = PowerBasis(K or T)
     H = Ztheta.whole_submodule()
     nilrad = None
     while F:

@@ -7,7 +7,8 @@ from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.mod import Mod
-from sympy.core.numbers import oo, igcd, Rational
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import oo, Rational
 from sympy.core.relational import Eq, is_eq
 from sympy.core.kind import NumberKind
 from sympy.core.singleton import Singleton, S
@@ -16,7 +17,7 @@ from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.logic.boolalg import And, Or
-from .sets import Set, Interval, Union, FiniteSet, ProductSet, SetKind
+from .sets import tfn, Set, Interval, Union, FiniteSet, ProductSet, SetKind
 from sympy.utilities.misc import filldedent
 
 
@@ -44,8 +45,8 @@ class Rationals(Set, metaclass=Singleton):
 
     def _contains(self, other):
         if not isinstance(other, Expr):
-            return False
-        return other.is_rational
+            return S.false
+        return tfn[other.is_rational]
 
     def __iter__(self):
         yield S.Zero
@@ -106,11 +107,11 @@ class Naturals(Set, metaclass=Singleton):
 
     def _contains(self, other):
         if not isinstance(other, Expr):
-            return False
+            return S.false
         elif other.is_positive and other.is_integer:
-            return True
+            return S.true
         elif other.is_integer is False or other.is_positive is False:
-            return False
+            return S.false
 
     def _eval_is_subset(self, other):
         return Range(1, oo).is_subset(other)
@@ -200,7 +201,7 @@ class Integers(Set, metaclass=Singleton):
     def _contains(self, other):
         if not isinstance(other, Expr):
             return S.false
-        return other.is_integer
+        return tfn[other.is_integer]
 
     def __iter__(self):
         yield S.Zero
@@ -475,7 +476,7 @@ class ImageSet(Set):
         for eq in get_equations(expr, other):
             # Unsatisfiable equation?
             if eq is False:
-                return False
+                return S.false
             equations.append(eq)
 
         # Map the symbols in the signature to the corresponding domains
@@ -494,13 +495,13 @@ class ImageSet(Set):
         solnset = _solveset_multi(equations, variables, base_sets)
         if solnset is None:
             return None
-        return fuzzy_not(solnset.is_empty)
+        return tfn[fuzzy_not(solnset.is_empty)]
 
     @property
     def is_iterable(self):
         return all(s.is_iterable for s in self.base_sets)
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         from sympy.sets.setexpr import SetExpr
         f = self.lamda
         sig = f.signature
@@ -711,7 +712,7 @@ class Range(Set):
         if other.is_infinite:
             return S.false
         if not other.is_integer:
-            return other.is_integer
+            return tfn[other.is_integer]
         if self.has(Symbol):
             n = (self.stop - self.start)/self.step
             if not n.is_extended_positive or not all(
@@ -1059,19 +1060,19 @@ def normalize_theta_set(theta):
     {0, pi}
 
     """
-    from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
+    from sympy.functions.elementary.trigonometric import _pi_coeff
 
     if theta.is_Interval:
         interval_len = theta.measure
         # one complete circle
         if interval_len >= 2*S.Pi:
             if interval_len == 2*S.Pi and theta.left_open and theta.right_open:
-                k = coeff(theta.start)
+                k = _pi_coeff(theta.start)
                 return Union(Interval(0, k*S.Pi, False, True),
                         Interval(k*S.Pi, 2*S.Pi, True, True))
             return Interval(0, 2*S.Pi, False, True)
 
-        k_start, k_end = coeff(theta.start), coeff(theta.end)
+        k_start, k_end = _pi_coeff(theta.start), _pi_coeff(theta.end)
 
         if k_start is None or k_end is None:
             raise NotImplementedError("Normalizing theta without pi as coefficient is "
@@ -1088,7 +1089,7 @@ def normalize_theta_set(theta):
     elif theta.is_FiniteSet:
         new_theta = []
         for element in theta:
-            k = coeff(element)
+            k = _pi_coeff(element)
             if k is None:
                 raise NotImplementedError('Normalizing theta without pi as '
                                           'coefficient, is not Implemented.')
@@ -1346,7 +1347,7 @@ class ComplexRegion(Set):
 
     def _contains(self, other):
         from sympy.functions import arg, Abs
-        other = sympify(other)
+
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:
             raise ValueError('expecting Tuple of length 2')
@@ -1354,20 +1355,21 @@ class ComplexRegion(Set):
         # If the other is not an Expression, and neither a Tuple
         if not isinstance(other, (Expr, Tuple)):
             return S.false
+
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()
-            return fuzzy_or(fuzzy_and([
+            return tfn[fuzzy_or(fuzzy_and([
                 pset.args[0]._contains(re),
                 pset.args[1]._contains(im)])
-                for pset in self.psets)
+                for pset in self.psets)]
 
         # self in polar form
         elif self.polar:
             if other.is_zero:
                 # ignore undefined complex argument
-                return fuzzy_or(pset.args[0]._contains(S.Zero)
-                    for pset in self.psets)
+                return tfn[fuzzy_or(pset.args[0]._contains(S.Zero)
+                    for pset in self.psets)]
             if isTuple:
                 r, theta = other
             else:
@@ -1375,10 +1377,10 @@ class ComplexRegion(Set):
             if theta.is_real and theta.is_number:
                 # angles in psets are normalized to [0, 2pi)
                 theta %= 2*S.Pi
-                return fuzzy_or(fuzzy_and([
+                return tfn[fuzzy_or(fuzzy_and([
                     pset.args[0]._contains(r),
                     pset.args[1]._contains(theta)])
-                    for pset in self.psets)
+                    for pset in self.psets)]
 
 
 class CartesianComplexRegion(ComplexRegion):

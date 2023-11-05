@@ -76,7 +76,7 @@ class CompoundPSpace(PSpace):
         new_pspace = self._transform_pspace(self.symbol, parent_dist, func)
         if new_pspace is not None:
             return new_pspace
-        message = ("Compound Distribution for %s is not implemeted yet" % str(parent_dist))
+        message = ("Compound Distribution for %s is not implemented yet" % str(parent_dist))
         raise NotImplementedError(message)
 
     def _transform_pspace(self, sym, dist, pdf):
@@ -159,7 +159,7 @@ class CompoundDistribution(Distribution, NamedArgsMixin):
     def __new__(cls, dist):
         if not isinstance(dist, (ContinuousDistribution,
                 SingleFiniteDistribution, DiscreteDistribution)):
-            message = "Compound Distribution for %s is not implemeted yet" % str(dist)
+            message = "Compound Distribution for %s is not implemented yet" % str(dist)
             raise NotImplementedError(message)
         if not cls._compound_check(dist):
             return dist

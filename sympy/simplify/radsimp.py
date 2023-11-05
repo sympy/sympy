@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-from sympy import SYMPY_DEBUG
-
 from sympy.core import sympify, S, Mul, Derivative, Pow
 from sympy.core.add import _unevaluated_Add, Add
 from sympy.core.assumptions import assumptions
@@ -114,12 +112,20 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         (a + b)*exp(2*x)
 
     If you are interested only in collecting specific powers of some symbols
-    then set ``exact`` flag in arguments::
+    then set ``exact`` flag to True::
 
         >>> collect(a*x**7 + b*x**7, x, exact=True)
         a*x**7 + b*x**7
         >>> collect(a*x**7 + b*x**7, x**7, exact=True)
         x**7*(a + b)
+
+    If you want to collect on any object containing symbols, set
+    ``exact`` to None:
+
+        >>> collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None)
+        x*exp(x) + 3*x + (y + 2)*sin(x)
+        >>> collect(a*x*y + x*y + b*x + x, [x, y], exact=None)
+        x*y*(a + 1) + x*(b + 1)
 
     You can also apply this function to differential equations, where
     derivatives of arbitrary order can be collected. Note that if you
@@ -165,6 +171,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     """
     expr = sympify(expr)
     syms = [sympify(i) for i in (syms if iterable(syms) else [syms])]
+
     # replace syms[i] if it is not x, -x or has Wild symbols
     cond = lambda x: x.is_Symbol or (-x).is_Symbol or bool(
         x.atoms(Wild))
@@ -181,6 +188,26 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         else:
             return {urep.get(k, k).xreplace(urep): v.xreplace(urep)
                     for k, v in rv.items()}
+
+    # see if other expressions should be considered
+    if exact is None:
+        _syms = set()
+        for i in Add.make_args(expr):
+            if not i.has_free(*syms) or i in syms:
+                continue
+            if not i.is_Mul and i not in syms:
+                _syms.add(i)
+            else:
+                # identify compound generators
+                g = i._new_rawargs(*i.as_coeff_mul(*syms)[1])
+                if g not in syms:
+                    _syms.add(g)
+        simple = all(i.is_Pow and i.base in syms for i in _syms)
+        syms = syms + list(ordered(_syms))
+        if not simple:
+            return collect(expr, syms,
+            func=func, evaluate=evaluate, exact=False,
+            distribute_order_term=distribute_order_term)
 
     if evaluate is None:
         evaluate = global_parameters.evaluate
@@ -392,18 +419,10 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         small_first = True
 
         for symbol in syms:
-            if SYMPY_DEBUG:
-                print("DEBUG: parsing of expression %s with symbol %s " % (
-                    str(terms), str(symbol))
-                )
-
             if isinstance(symbol, Derivative) and small_first:
                 terms = list(reversed(terms))
                 small_first = not small_first
             result = parse_expression(terms, symbol)
-
-            if SYMPY_DEBUG:
-                print("DEBUG: returned %s" % str(result))
 
             if result is not None:
                 if not symbol.is_commutative:

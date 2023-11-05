@@ -1,5 +1,5 @@
 from sympy import sin, Function, symbols, Dummy, Lambda, cos
-from sympy.parsing.mathematica import mathematica, MathematicaParser
+from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
 from sympy.core.sympify import sympify
 from sympy.abc import n, w, x, y, z
 from sympy.testing.pytest import raises
@@ -15,6 +15,7 @@ def test_mathematica():
         'x+y': 'x+y',
         '355/113': '355/113',
         '2.718281828': '2.718281828',
+        'Cos(1/2 * π)': 'Cos(π/2)',
         'Sin[12]': 'sin(12)',
         'Exp[Log[4]]': 'exp(log(4))',
         '(x+1)(x+3)': '(x+1)*(x+3)',
@@ -66,20 +67,21 @@ def test_mathematica():
         'LogIntegral[4]': ' li(4)',
         'PrimePi[7]': 'primepi(7)',
         'Prime[5]': 'prime(5)',
-        'PrimeQ[5]': 'isprime(5)'
+        'PrimeQ[5]': 'isprime(5)',
+        'Rational[2,19]': 'Rational(2,19)',    # test case for issue 25716
         }
 
     for e in d:
-        assert mathematica(e) == sympify(d[e])
+        assert parse_mathematica(e) == sympify(d[e])
 
     # The parsed form of this expression should not evaluate the Lambda object:
-    assert mathematica("Sin[#]^2 + Cos[#]^2 &[x]") == sin(x)**2 + cos(x)**2
+    assert parse_mathematica("Sin[#]^2 + Cos[#]^2 &[x]") == sin(x)**2 + cos(x)**2
 
     d1, d2, d3 = symbols("d1:4", cls=Dummy)
-    assert mathematica("Sin[#] + Cos[#3] &").dummy_eq(Lambda((d1, d2, d3), sin(d1) + cos(d3)))
-    assert mathematica("Sin[#^2] &").dummy_eq(Lambda(d1, sin(d1**2)))
-    assert mathematica("Function[x, x^3]") == Lambda(x, x**3)
-    assert mathematica("Function[{x, y}, x^2 + y^2]") == Lambda((x, y), x**2+y**2)
+    assert parse_mathematica("Sin[#] + Cos[#3] &").dummy_eq(Lambda((d1, d2, d3), sin(d1) + cos(d3)))
+    assert parse_mathematica("Sin[#^2] &").dummy_eq(Lambda(d1, sin(d1**2)))
+    assert parse_mathematica("Function[x, x^3]") == Lambda(x, x**3)
+    assert parse_mathematica("Function[{x, y}, x^2 + y^2]") == Lambda((x, y), x**2 + y**2)
 
 
 def test_parser_mathematica_tokenizer():
@@ -94,6 +96,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("+x") == "x"
     assert chain("-1") == "-1"
     assert chain("- 3") == "-3"
+    assert chain("α") == "α"
     assert chain("+Sin[x]") == ["Sin", "x"]
     assert chain("-Sin[x]") == ["Times", "-1", ["Sin", "x"]]
     assert chain("x(a+1)") == ["Times", "x", ["Plus", "a", "1"]]
@@ -230,6 +233,19 @@ def test_parser_mathematica_tokenizer():
     assert chain("#&[x]") == [["Function", ["Slot", "1"]], "x"]
     assert chain("#1 + #2 & [x, y]") == [["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]], "x", "y"]
     assert chain("#1^2#2^3&") == ["Function", ["Times", ["Power", ["Slot", "1"], "2"], ["Power", ["Slot", "2"], "3"]]]
+
+    # Strings inside Mathematica expressions:
+    assert chain('"abc"') == ["_Str", "abc"]
+    assert chain('"a\\"b"') == ["_Str", 'a"b']
+    # This expression does not make sense mathematically, it's just testing the parser:
+    assert chain('x + "abc" ^ 3') == ["Plus", "x", ["Power", ["_Str", "abc"], "3"]]
+    assert chain('"a (* b *) c"') == ["_Str", "a (* b *) c"]
+    assert chain('"a" (* b *) ') == ["_Str", "a"]
+    assert chain('"a [ b] "') == ["_Str", "a [ b] "]
+    raises(SyntaxError, lambda: chain('"'))
+    raises(SyntaxError, lambda: chain('"\\"'))
+    raises(SyntaxError, lambda: chain('"abc'))
+    raises(SyntaxError, lambda: chain('"abc\\"def'))
 
     # Invalid expressions:
     raises(SyntaxError, lambda: chain("(,"))

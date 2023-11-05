@@ -63,3 +63,24 @@ def test_is_consistent():
     dimension_system = DimensionSystem([length, time])
     us = UnitSystem([m, s], dimension_system=dimension_system)
     assert us.is_consistent == True
+
+
+def test_get_units_non_prefixed():
+    from sympy.physics.units import volt, ohm
+    unit_system = UnitSystem.get_unit_system("SI")
+    units = unit_system.get_units_non_prefixed()
+    for prefix in ["giga", "tera", "peta", "exa", "zetta", "yotta", "kilo", "hecto", "deca", "deci", "centi", "milli", "micro", "nano", "pico", "femto", "atto", "zepto", "yocto"]:
+        for unit in units:
+            assert isinstance(unit, Quantity), f"{unit} must be a Quantity, not {type(unit)}"
+            assert not unit.is_prefixed, f"{unit} is marked as prefixed"
+            assert not unit.is_physical_constant, f"{unit} is marked as physics constant"
+            assert not unit.name.name.startswith(prefix), f"Unit {unit.name} has prefix {prefix}"
+    assert volt in units
+    assert ohm in units
+
+def test_derived_units_must_exist_in_unit_system():
+    for unit_system in UnitSystem._unit_systems.values():
+        for preferred_unit in unit_system.derived_units.values():
+            units = preferred_unit.atoms(Quantity)
+            for unit in units:
+                assert unit in unit_system._units, f"Unit {unit} is not in unit system {unit_system}"

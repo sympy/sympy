@@ -1,7 +1,7 @@
 #TODO:
 # -Implement Clebsch-Gordan symmetries
 # -Improve simplification method
-# -Implement new simpifications
+# -Implement new simplifications
 """Clebsch-Gordon Coefficients."""
 
 from sympy.concrete.summations import Sum
@@ -558,7 +558,7 @@ def _check_varsh_872_9(term_list):
 
     # For numerical alpha,beta
     expr = lt*CG(a, alpha, b, beta, c, gamma)**2
-    simp = 1
+    simp = S.One
     sign = lt/abs(lt)
     x = abs(a - b)
     y = abs(alpha + beta)
@@ -578,19 +578,19 @@ def _check_varsh_872_9(term_list):
     # For numerical alpha,alphap,beta,betap
     expr = CG(a, alpha, b, beta, c, gamma)*CG(a, alphap, b, betap, c, gamma)
     simp = KroneckerDelta(alpha, alphap)*KroneckerDelta(beta, betap)
-    sign = sympify(1)
+    sign = S.One
     x = abs(a - b)
     y = abs(alpha + beta)
     build_expr = a + b + 1 - Piecewise((x, x > y), (0, Eq(x, y)), (y, y > x))
     index_expr = a + b - c
-    term_list, other3 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
+    term_list, other3 = _check_cg_simp(expr, simp, sign, S.One, term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
 
     # For symbolic alpha,alphap,beta,betap
     x = abs(a - b)
     y = a + b
     build_expr = (y + 1 - x)*(x + y + 1)
     index_expr = (c - x)*(x + c) + c + gamma
-    term_list, other4 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
+    term_list, other4 = _check_cg_simp(expr, simp, sign, S.One, term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
 
     return term_list, other1 + other2 + other4
 
@@ -643,7 +643,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
         if sub_1 is None:
             i += 1
             continue
-        if not sympify(build_index_expr.subs(sub_1)).is_number:
+        if not build_index_expr.subs(sub_1).is_number:
             i += 1
             continue
         sub_dep = [(x, sub_1[x]) for x in dep_variables]
@@ -652,7 +652,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             sub_2 = _check_cg(term_list[j], expr.subs(sub_dep), len(variables) - len(dep_variables), sign=(sign.subs(sub_1), sign.subs(sub_dep)))
             if sub_2 is None:
                 continue
-            if not sympify(index_expr.subs(sub_dep).subs(sub_2)).is_number:
+            if not index_expr.subs(sub_dep).subs(sub_2).is_number:
                 continue
             cg_index[index_expr.subs(sub_dep).subs(sub_2)] = j, expr.subs(lt, 1).subs(sub_dep).subs(sub_2), lt.subs(sub_2), sign.subs(sub_dep).subs(sub_2)
         if not any(i is None for i in cg_index):
@@ -740,8 +740,8 @@ def _cg_list(term):
     coeff = 1
     if not isinstance(term, (Mul, Pow)):
         raise NotImplementedError('term must be CG, Add, Mul or Pow')
-    if isinstance(term, Pow) and sympify(term.exp).is_number:
-        if sympify(term.exp).is_number:
+    if isinstance(term, Pow) and term.exp.is_number:
+        if term.exp.is_number:
             [ cg.append(term.base) for _ in range(term.exp) ]
         else:
             return (term,), 1, 1

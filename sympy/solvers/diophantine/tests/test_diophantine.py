@@ -96,7 +96,7 @@ def test_linear():
     assert diop_solve(2*x - 3*y - 5) == (3*t_0 - 5, 2*t_0 - 5)
     assert diop_solve(-2*x - 3*y - 5) == (3*t_0 + 5, -2*t_0 - 5)
     assert diop_solve(7*x + 5*y) == (5*t_0, -7*t_0)
-    assert diop_solve(2*x + 4*y) == (2*t_0, -t_0)
+    assert diop_solve(2*x + 4*y) == (-2*t_0, t_0)
     assert diop_solve(4*x + 6*y - 4) == (3*t_0 - 2, -2*t_0 + 2)
     assert diop_solve(4*x + 6*y - 3) == (None, None)
     assert diop_solve(0*x + 3*y - 4*z + 5) == (4*t_0 + 5, 3*t_0 + 5)
@@ -569,11 +569,10 @@ def test_diophantine():
            {(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)}
 
     # issue 18122
-    assert check_solutions(x**2-y)
-    assert check_solutions(y**2-x)
-    assert diophantine((x**2-y), t) == {(t, t**2)}
-    assert diophantine((y**2-x), t) == {(t**2, -t)}
-
+    assert check_solutions(x**2 - y)
+    assert check_solutions(y**2 - x)
+    assert diophantine((x**2 - y), t) == {(t, t**2)}
+    assert diophantine((y**2 - x), t) == {(t**2, t)}
 
 
 def test_general_pythagorean():
@@ -623,12 +622,23 @@ def test_diop_general_sum_of_squares_quick():
     raises(NotImplementedError, lambda: classify_diop(-eq))
 
 
+def test_issue_23807():
+    # fixes recursion error
+    eq = x**2 + y**2 + z**2 - 1000000
+    base_soln = {(0, 0, 1000), (0, 352, 936), (480, 600, 640), (24, 640, 768), (192, 640, 744),
+                 (192, 480, 856), (168, 224, 960), (0, 600, 800), (280, 576, 768), (152, 480, 864),
+                 (0, 280, 960), (352, 360, 864), (424, 480, 768), (360, 480, 800), (224, 600, 768),
+                 (96, 360, 928), (168, 576, 800), (96, 480, 872)}
+
+    assert diophantine(eq) == base_soln
+
+
 def test_diop_partition():
     for n in [8, 10]:
         for k in range(1, 8):
             for p in partition(n, k):
                 assert len(p) == k
-    assert [p for p in partition(3, 5)] == []
+    assert list(partition(3, 5)) == []
     assert [list(p) for p in partition(3, 5, 1)] == [
         [0, 0, 0, 0, 3], [0, 0, 0, 1, 2], [0, 0, 1, 1, 1]]
     assert list(partition(0)) == [()]
@@ -759,8 +769,8 @@ def test_diopcoverage():
     eq = (2*x + y + 1)**2
     assert diop_solve(eq) == {(t_0, -2*t_0 - 1)}
     eq = 2*x**2 + 6*x*y + 12*x + 4*y**2 + 18*y + 18
-    assert diop_solve(eq) == {(t, -t - 3), (2*t - 3, -t)}
-    assert diop_quadratic(x + y**2 - 3) == {(-t**2 + 3, -t)}
+    assert diop_solve(eq) == {(t, -t - 3), (-2*t - 3, t)}
+    assert diop_quadratic(x + y**2 - 3) == {(-t**2 + 3, t)}
 
     assert diop_linear(x + y - 3) == (t_0, 3 - t_0)
 
@@ -1023,5 +1033,5 @@ def test_quadratic_parameter_passing():
     eq = -33*x*y + 3*y**2
     solution = BinaryQuadratic(eq).solve(parameters=[t, u])
     # test that parameters are passed all the way to the final solution
-    assert solution == {(t, 11*t), (-t, 22*t)}
+    assert solution == {(t, 11*t), (t, -22*t)}
     assert solution(0, 0) == {(0, 0)}

@@ -324,17 +324,17 @@ def test_real_root():
     r3 = root(-1, 4)
     assert real_root(r1 + r2 + r3) == -1 + r2 + r3
     assert real_root(root(-2, 3)) == -root(2, 3)
-    assert real_root(-8., 3) == -2
+    assert real_root(-8., 3) == -2.0
     x = Symbol('x')
     n = Symbol('n')
     g = real_root(x, n)
-    assert g.subs(dict(x=-8, n=3)) == -2
-    assert g.subs(dict(x=8, n=3)) == 2
+    assert g.subs({"x": -8, "n": 3}) == -2
+    assert g.subs({"x": 8, "n": 3}) == 2
     # give principle root if there is no real root -- if this is not desired
     # then maybe a Root class is needed to raise an error instead
-    assert g.subs(dict(x=I, n=3)) == cbrt(I)
-    assert g.subs(dict(x=-8, n=2)) == sqrt(-8)
-    assert g.subs(dict(x=I, n=2)) == sqrt(I)
+    assert g.subs({"x": I, "n": 3}) == cbrt(I)
+    assert g.subs({"x": -8, "n": 2}) == sqrt(-8)
+    assert g.subs({"x": I, "n": 2}) == sqrt(I)
 
 
 def test_issue_11463():
@@ -475,3 +475,30 @@ def test_Rem():
     assert Rem(-5, -3) == -2
     assert Rem(x**3, y) == Rem(x**3, y)
     assert Rem(Rem(-5, 3) + 3, 3) == 1
+
+
+def test_minmax_no_evaluate():
+    from sympy import evaluate
+    p = Symbol('p', positive=True)
+
+    assert Max(1, 3) == 3
+    assert Max(1, 3).args == ()
+    assert Max(0, p) == p
+    assert Max(0, p).args == ()
+    assert Min(0, p) == 0
+    assert Min(0, p).args == ()
+
+    assert Max(1, 3, evaluate=False) != 3
+    assert Max(1, 3, evaluate=False).args == (1, 3)
+    assert Max(0, p, evaluate=False) != p
+    assert Max(0, p, evaluate=False).args == (0, p)
+    assert Min(0, p, evaluate=False) != 0
+    assert Min(0, p, evaluate=False).args == (0, p)
+
+    with evaluate(False):
+        assert Max(1, 3) != 3
+        assert Max(1, 3).args == (1, 3)
+        assert Max(0, p) != p
+        assert Max(0, p).args == (0, p)
+        assert Min(0, p) != 0
+        assert Min(0, p).args == (0, p)

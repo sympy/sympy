@@ -27,8 +27,7 @@ from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import hadamard_power
 from sympy.tensor.array.expressions.array_expressions import ArrayAdd, ArrayTensorProduct, PermuteDims
 
-k = symbols("k")
-i, j = symbols("i j")
+i, j, k = symbols("i j k")
 m, n = symbols("m n")
 
 X = MatrixSymbol("X", k, k)
@@ -84,6 +83,10 @@ def test_matrix_derivative_by_scalar():
     mu = symbols("mu")
     expr = (2*mu*x)
     assert expr.diff(x) == 2*mu*Identity(k)
+
+
+def test_one_matrix():
+    assert MatMul(x.T, OneMatrix(k, 1)).diff(x) == OneMatrix(k, 1)
 
 
 def test_matrix_derivative_non_matrix_result():
@@ -410,7 +413,7 @@ def test_derivatives_elementwise_applyfunc():
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
     expr = x.applyfunc(sin).T*y
-    # TODO: restore (currently returning the traspose):
+    # TODO: restore (currently returning the transpose):
     #  assert expr.diff(x).dummy_eq(DiagMatrix(x.applyfunc(cos))*y)
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 

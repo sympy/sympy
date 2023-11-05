@@ -59,6 +59,7 @@ It is described in great(er) detail in the Sphinx documentation.
 from collections import defaultdict
 from itertools import product
 from functools import reduce
+from math import prod
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
@@ -196,7 +197,7 @@ def add_formulae(formulae):
     add([Rational(-1, 2)], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
 
     # Added to get nice results for Laplace transform of Fresnel functions
-    # http://functions.wolfram.com/07.22.03.6437.01
+    # https://functions.wolfram.com/07.22.03.6437.01
     # Basic rule
     #add([1], [Rational(3, 4), Rational(5, 4)],
     #    sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
@@ -363,7 +364,7 @@ def add_formulae(formulae):
                  [0, 0, 0, 0, 0]]))
 
     # 3F3
-    # This is rule: http://functions.wolfram.com/07.31.03.0134.01
+    # This is rule: https://functions.wolfram.com/07.31.03.0134.01
     # Initial reason to add it was a nice solution for
     # integrate(erf(a*z)/z**2, z) and same for erfc and erfi.
     # Basic rule
@@ -414,7 +415,7 @@ def add_meijerg_formulae(formulae):
         detect_uppergamma)
 
     def detect_3113(func):
-        """http://functions.wolfram.com/07.34.03.0984.01"""
+        """https://functions.wolfram.com/07.34.03.0984.01"""
         x = func.an[0]
         u, v, w = func.bm
         if _mod1((u - v).simplify()) == 0:
@@ -1177,19 +1178,11 @@ class MeijerUnShiftA(Operator):
         bq = list(bq)
         bi = bm.pop(i) - 1
 
-        m = Poly(1, _x)
-        for b in bm:
-            m *= Poly(b - _x, _x)
-        for b in bq:
-            m *= Poly(_x - b, _x)
+        m = Poly(1, _x) * prod(Poly(b - _x, _x) for b in bm) * prod(Poly(_x - b, _x) for b in bq)
 
         A = Dummy('A')
         D = Poly(bi - A, A)
-        n = Poly(z, A)
-        for a in an:
-            n *= (D + 1 - a)
-        for a in ap:
-            n *= (-D + a - 1)
+        n = Poly(z, A) * prod((D + 1 - a) for a in an) * prod((-D + a - 1) for a in ap)
 
         b0 = n.nth(0)
         if b0 == 0:
@@ -1615,7 +1608,7 @@ def devise_plan(target, origin, z):
         if len(al) != len(nal) or len(bk) != len(nbk):
             raise ValueError('%s not reachable from %s' % (target, origin))
 
-        al, nal, bk, nbk = [sorted(list(w), key=default_sort_key)
+        al, nal, bk, nbk = [sorted(w, key=default_sort_key)
             for w in [al, nal, bk, nbk]]
 
         def others(dic, key):
@@ -1686,20 +1679,16 @@ def try_shifted_sum(func, z):
     ops.reverse()
 
     fac = factorial(k)/z**k
-    for a in nap:
-        fac /= rf(a, k)
-    for b in nbq:
-        fac *= rf(b, k)
+    fac *= Mul(*[rf(b, k) for b in nbq])
+    fac /= Mul(*[rf(a, k) for a in nap])
 
     ops += [MultOperator(fac)]
 
     p = 0
     for n in range(k):
         m = z**n/factorial(n)
-        for a in nap:
-            m *= rf(a, n)
-        for b in nbq:
-            m /= rf(b, n)
+        m *= Mul(*[rf(a, n) for a in nap])
+        m /= Mul(*[rf(b, n) for b in nbq])
         p += m
 
     return Hyper_Function(nap, nbq), ops, -p
@@ -1727,10 +1716,8 @@ def try_polynomial(func, z):
     for n in Tuple(*list(range(-a))):
         fac *= z
         fac /= n + 1
-        for a in func.ap:
-            fac *= a + n
-        for b in func.bq:
-            fac /= b + n
+        fac *= Mul(*[a + n for a in func.ap])
+        fac /= Mul(*[b + n for b in func.bq])
         res += fac
     return res
 
@@ -1853,7 +1840,7 @@ def try_lerchphi(func):
     trans = {}
     for n, b in enumerate([S.One] + list(deriv.keys())):
         trans[b] = n
-    basis = [expand_func(b) for (b, _) in sorted(list(trans.items()),
+    basis = [expand_func(b) for (b, _) in sorted(trans.items(),
                                                  key=lambda x:x[1])]
     B = Matrix(basis)
     C = Matrix([[0]*len(B)])

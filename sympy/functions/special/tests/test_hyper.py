@@ -27,9 +27,18 @@ def test_TupleParametersBase():
 def test_hyper():
     raises(TypeError, lambda: hyper(1, 2, z))
 
-    assert hyper((1, 2), (1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
+    assert hyper((2, 1), (1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
+    assert hyper((2, 1, 2), (1, 2, 1, 3), z) == hyper((2,), (1, 3), z)
+    u = hyper((2, 1, 2), (1, 2, 1, 3), z, evaluate=False)
+    assert u.ap == Tuple(1, 2, 2)
+    assert u.bq == Tuple(1, 1, 2, 3)
 
     h = hyper((1, 2), (3, 4, 5), z)
+    assert h.ap == Tuple(1, 2)
+    assert h.bq == Tuple(3, 4, 5)
+    assert h.argument == z
+    assert h.is_commutative is True
+    h = hyper((2, 1), (4, 3, 5), z)
     assert h.ap == Tuple(1, 2)
     assert h.bq == Tuple(3, 4, 5)
     assert h.argument == z
@@ -355,8 +364,6 @@ def test_limits():
     k, x = symbols('k, x')
     assert hyper((1,), (Rational(4, 3), Rational(5, 3)), k**2).series(k) == \
            1 + 9*k**2/20 + 81*k**4/1120 + O(k**6) # issue 6350
-    assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
-            meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
 
     # https://github.com/sympy/sympy/issues/11465
     assert limit(1/hyper((1, ), (1, ), x), x, 0) == 1

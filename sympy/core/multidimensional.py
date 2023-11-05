@@ -41,13 +41,7 @@ def iter_copy(structure):
     """
     Returns a copy of an iterable object (also copying all embedded iterables).
     """
-    l = []
-    for i in structure:
-        if hasattr(i, "__iter__"):
-            l.append(iter_copy(i))
-        else:
-            l.append(i)
-    return l
+    return [iter_copy(i) if hasattr(i, "__iter__") else i for i in structure]
 
 
 def structure_copy(structure):

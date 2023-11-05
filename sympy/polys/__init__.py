@@ -8,9 +8,9 @@ __all__ = [
     'gcd', 'lcm_list', 'lcm', 'terms_gcd', 'trunc', 'monic', 'content',
     'primitive', 'compose', 'decompose', 'sturm', 'gff_list', 'gff',
     'sqf_norm', 'sqf_part', 'sqf_list', 'sqf', 'factor_list', 'factor',
-    'intervals', 'refine_root', 'count_roots', 'real_roots', 'nroots',
-    'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced', 'groebner',
-    'is_zero_dimensional', 'GroebnerBasis', 'poly',
+    'intervals', 'refine_root', 'count_roots', 'all_roots', 'real_roots',
+    'nroots', 'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced',
+    'groebner', 'is_zero_dimensional', 'GroebnerBasis', 'poly',
 
     'symmetrize', 'horner', 'interpolate', 'rational_interpolate', 'viete',
 
@@ -27,7 +27,7 @@ __all__ = [
 
     'minpoly', 'minimal_polynomial', 'primitive_element', 'field_isomorphism',
     'to_number_field', 'isolate', 'round_two', 'prime_decomp',
-    'prime_valuation',
+    'prime_valuation', 'galois_group',
 
     'itermonomials', 'Monomial',
 
@@ -51,7 +51,10 @@ __all__ = [
     'random_poly', 'interpolating_poly',
 
     'jacobi_poly', 'chebyshevt_poly', 'chebyshevu_poly', 'hermite_poly',
-    'legendre_poly', 'laguerre_poly',
+    'hermite_prob_poly', 'legendre_poly', 'laguerre_poly',
+
+    'bernoulli_poly', 'bernoulli_c_poly', 'genocchi_poly', 'euler_poly',
+    'andre_poly',
 
     'apart', 'apart_list', 'assemble_partfrac_list',
 
@@ -69,8 +72,9 @@ from .polytools import (Poly, PurePoly, poly_from_expr,
         gcd, lcm_list, lcm, terms_gcd, trunc, monic, content, primitive,
         compose, decompose, sturm, gff_list, gff, sqf_norm, sqf_part,
         sqf_list, sqf, factor_list, factor, intervals, refine_root,
-        count_roots, real_roots, nroots, ground_roots, nth_power_roots_poly,
-        cancel, reduced, groebner, is_zero_dimensional, GroebnerBasis, poly)
+        count_roots, all_roots, real_roots, nroots, ground_roots,
+        nth_power_roots_poly, cancel, reduced, groebner, is_zero_dimensional,
+        GroebnerBasis, poly)
 
 from .polyfuncs import (symmetrize, horner, interpolate,
         rational_interpolate, viete)
@@ -89,7 +93,7 @@ from .polyerrors import (BasePolynomialError, ExactQuotientFailed,
 
 from .numberfields import (minpoly, minimal_polynomial, primitive_element,
         field_isomorphism, to_number_field, isolate, round_two, prime_decomp,
-        prime_valuation)
+        prime_valuation, galois_group)
 
 from .monomials import itermonomials, Monomial
 
@@ -112,7 +116,10 @@ from .specialpolys import (swinnerton_dyer_poly, cyclotomic_poly,
         symmetric_poly, random_poly, interpolating_poly)
 
 from .orthopolys import (jacobi_poly, chebyshevt_poly, chebyshevu_poly,
-        hermite_poly, legendre_poly, laguerre_poly)
+        hermite_poly, hermite_prob_poly, legendre_poly, laguerre_poly)
+
+from .appellseqs import (bernoulli_poly, bernoulli_c_poly, genocchi_poly,
+        euler_poly, andre_poly)
 
 from .partfrac import apart, apart_list, assemble_partfrac_list
 

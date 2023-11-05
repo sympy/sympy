@@ -8,7 +8,7 @@ Authors:
 from functools import reduce
 
 from sympy.core.basic import Basic
-from sympy.core.numbers import oo
+from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.sets.sets import Interval
 from sympy.printing.pretty.stringpict import prettyForm
@@ -152,14 +152,14 @@ class ComplexSpace(HilbertSpace):
     @classmethod
     def eval(cls, dimension):
         if len(dimension.atoms()) == 1:
-            if not (dimension.is_Integer and dimension > 0 or dimension is oo
+            if not (dimension.is_Integer and dimension > 0 or dimension is S.Infinity
             or dimension.is_Symbol):
                 raise TypeError('The dimension of a ComplexSpace can only'
                                 'be a positive integer, oo, or a Symbol: %r'
                                 % dimension)
         else:
             for dim in dimension.atoms():
-                if not (dim.is_Integer or dim is oo or dim.is_Symbol):
+                if not (dim.is_Integer or dim is S.Infinity or dim.is_Symbol):
                     raise TypeError('The dimension of a ComplexSpace can only'
                                     ' contain integers, oo, or a Symbol: %r'
                                     % dim)
@@ -215,7 +215,7 @@ class L2(HilbertSpace):
 
     @property
     def dimension(self):
-        return oo
+        return S.Infinity
 
     @property
     def interval(self):
@@ -266,7 +266,7 @@ class FockSpace(HilbertSpace):
 
     @property
     def dimension(self):
-        return oo
+        return S.Infinity
 
     def _sympyrepr(self, printer, *args):
         return "FockSpace()"
@@ -380,8 +380,8 @@ class TensorProductHilbertSpace(HilbertSpace):
     @property
     def dimension(self):
         arg_list = [arg.dimension for arg in self.args]
-        if oo in arg_list:
-            return oo
+        if S.Infinity in arg_list:
+            return S.Infinity
         else:
             return reduce(lambda x, y: x*y, arg_list)
 
@@ -499,8 +499,8 @@ class DirectSumHilbertSpace(HilbertSpace):
     @property
     def dimension(self):
         arg_list = [arg.dimension for arg in self.args]
-        if oo in arg_list:
-            return oo
+        if S.Infinity in arg_list:
+            return S.Infinity
         else:
             return reduce(lambda x, y: x + y, arg_list)
 
@@ -598,11 +598,11 @@ class TensorPowerHilbertSpace(HilbertSpace):
         new_args = args[0], sympify(args[1])
         exp = new_args[1]
         #simplify hs**1 -> hs
-        if exp == 1:
+        if exp is S.One:
             return args[0]
         #simplify hs**0 -> 1
-        if exp == 0:
-            return sympify(1)
+        if exp is S.Zero:
+            return S.One
         #check (and allow) for hs**(x+42+y...) case
         if len(exp.atoms()) == 1:
             if not (exp.is_Integer and exp >= 0 or exp.is_Symbol):
@@ -625,8 +625,8 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     @property
     def dimension(self):
-        if self.base.dimension is oo:
-            return oo
+        if self.base.dimension is S.Infinity:
+            return S.Infinity
         else:
             return self.base.dimension**self.exp
 

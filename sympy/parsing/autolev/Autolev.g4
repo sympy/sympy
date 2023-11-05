@@ -1,5 +1,9 @@
 grammar Autolev;
 
+options {
+        language = Python3;
+}
+
 prog:   stat+;
 
 stat:   varDecl

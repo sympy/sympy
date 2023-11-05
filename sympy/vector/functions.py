@@ -74,11 +74,7 @@ def express(expr, system, system2=None, variables=False):
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
-            system_list = []
-            for x in expr.atoms(BaseScalar, BaseVector):
-                if x.system != system:
-                    system_list.append(x.system)
-            system_list = set(system_list)
+            system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {system}
             subs_dict = {}
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))

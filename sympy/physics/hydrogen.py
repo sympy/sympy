@@ -221,7 +221,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
         Atomic number (1 for Hydrogen, 2 for Helium, ...)
     c :
         Speed of light in atomic units. Default value is 137.035999037,
-        taken from http://arxiv.org/abs/1012.3627
+        taken from https://arxiv.org/abs/1012.3627
 
     Examples
     ========

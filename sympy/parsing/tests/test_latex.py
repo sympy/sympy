@@ -24,9 +24,8 @@ from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
-# disable tests if antlr4-python*-runtime is not present
-if not antlr4:
-    disabled = True
+# disable tests if antlr4-python3-runtime is not present
+disabled = antlr4 is None
 
 theta = Symbol('theta')
 f = Function('f')
@@ -92,6 +91,7 @@ GOOD_PAIRS = [
     (r"x", x),
     (r"2x", 2*x),
     (r"x^2", x**2),
+    (r"x^\frac{1}{2}", _Pow(x, _Pow(2, -1))),
     (r"x^{3 + 1}", x**_Add(3, 1)),
     (r"-c", -c),
     (r"a \cdot b", a * b),
@@ -101,6 +101,9 @@ GOOD_PAIRS = [
     (r"a + b - a", _Add(a+b, -a)),
     (r"a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2)),
     (r"(x + y) z", _Mul(_Add(x, y), z)),
+    (r"a'b+ab'", _Add(_Mul(Symbol("a'"), b), _Mul(a, Symbol("b'")))),
+    (r"y''_1", Symbol("y_{1}''")),
+    (r"y_1''", Symbol("y_{1}''")),
     (r"\left(x + y\right) z", _Mul(_Add(x, y), z)),
     (r"\left( x + y\right ) z", _Mul(_Add(x, y), z)),
     (r"\left(  x + y\right ) z", _Mul(_Add(x, y), z)),
@@ -110,6 +113,7 @@ GOOD_PAIRS = [
     (r"0+1", _Add(0, 1)),
     (r"1*2", _Mul(1, 2)),
     (r"0*1", _Mul(0, 1)),
+    (r"1 \times 2 ", _Mul(1, 2)),
     (r"x = y", Eq(x, y)),
     (r"x \neq y", Ne(x, y)),
     (r"x < y", Lt(x, y)),
@@ -129,16 +133,25 @@ GOOD_PAIRS = [
     (r"\sin \cos \theta", sin(cos(theta))),
     (r"\sin(\cos \theta)", sin(cos(theta))),
     (r"\frac{a}{b}", a / b),
+    (r"\dfrac{a}{b}", a / b),
+    (r"\tfrac{a}{b}", a / b),
+    (r"\frac12", _Pow(2, -1)),
+    (r"\frac12y", _Mul(_Pow(2, -1), y)),
+    (r"\frac1234", _Mul(_Pow(2, -1), 34)),
+    (r"\frac2{3}", _Mul(2, _Pow(3, -1))),
+    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1))),
     (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
     (r"\frac{7}{3}", _Mul(7, _Pow(3, -1))),
     (r"(\csc x)(\sec y)", csc(x)*sec(y)),
-    (r"\lim_{x \to 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3)),
+    (r"\lim_{x \to 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
     (r"\lim_{x \to 3^{+}} a", Limit(a, x, 3, dir='+')),
     (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir='-')),
+    (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir='+')),
+    (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir='-')),
     (r"\infty", oo),
     (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Pow(x, -1), x, oo)),
     (r"\frac{d}{dx} x", Derivative(x, x)),
@@ -146,6 +159,8 @@ GOOD_PAIRS = [
     (r"f(x)", f(x)),
     (r"f(x, y)", f(x, y)),
     (r"f(x, y, z)", f(x, y, z)),
+    (r"f'_1(x)", Function("f_{1}'")(x)),
+    (r"f_{1}''(x+y)", Function("f_{1}''")(x+y)),
     (r"\frac{d f(x)}{dx}", Derivative(f(x), x)),
     (r"\frac{d\theta(x)}{dx}", Derivative(Function('theta')(x), x)),
     (r"x \neq y", Unequality(x, y)),
@@ -160,6 +175,7 @@ GOOD_PAIRS = [
     (r"\int x + a dx", Integral(_Add(x, a), x)),
     (r"\int da", Integral(1, a)),
     (r"\int_0^7 dx", Integral(1, (x, 0, 7))),
+    (r"\int\limits_{0}^{1} x dx", Integral(x, (x, 0, 1))),
     (r"\int_a^b x dx", Integral(x, (x, a, b))),
     (r"\int^b_a x dx", Integral(x, (x, a, b))),
     (r"\int_{a}^b x dx", Integral(x, (x, a, b))),
@@ -223,10 +239,11 @@ GOOD_PAIRS = [
     (r"\prod^c_{a = b} x", Product(x, (a, b, c))),
     (r"\exp x", _exp(x)),
     (r"\exp(x)", _exp(x)),
+    (r"\lg x", _log(x, 10)),
     (r"\ln x", _log(x, E)),
     (r"\ln xy", _log(x*y, E)),
-    (r"\log x", _log(x, 10)),
-    (r"\log xy", _log(x*y, 10)),
+    (r"\log x", _log(x, E)),
+    (r"\log xy", _log(x*y, E)),
     (r"\log_{2} x", _log(x, 2)),
     (r"\log_{a} x", _log(x, a)),
     (r"\log_{11} x", _log(x, 11)),
@@ -238,6 +255,7 @@ GOOD_PAIRS = [
     (r"\tbinom{n}{k}", _binomial(n, k)),
     (r"\dbinom{n}{k}", _binomial(n, k)),
     (r"\binom{n}{0}", _binomial(n, 0)),
+    (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k))),
     (r"a \, b", _Mul(a, b)),
     (r"a \thinspace b", _Mul(a, b)),
     (r"a \: b", _Mul(a, b)),
@@ -254,6 +272,7 @@ GOOD_PAIRS = [
     (r"\log_2 x", _log(x, 2)),
     (r"\log_a x", _log(x, a)),
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"3x - 1", _Add(_Mul(3, x), -1))
 ]
 
 
@@ -330,3 +349,10 @@ def test_failing_not_parseable():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
+
+# In strict mode, FAILING_BAD_STRINGS would fail
+def test_strict_mode():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    for latex_str in FAILING_BAD_STRINGS:
+        with raises(LaTeXParsingError):
+            parse_latex(latex_str, strict=True)

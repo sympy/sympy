@@ -1,6 +1,7 @@
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
 from sympy.core.function import (Lambda, diff)
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
@@ -23,7 +24,7 @@ from sympy.sets.fancysets import ImageSet
 from sympy.sets.sets import (FiniteSet, Interval)
 from sympy.simplify.simplify import simplify
 from sympy.core.expr import unchanged
-from sympy.core.function import ArgumentIndexError
+from sympy.core.function import ArgumentIndexError, PoleError
 from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.sets.setexpr import SetExpr
@@ -49,6 +50,7 @@ na = Symbol('na', nonzero=True, algebraic=True)
 
 def test_sin():
     x, y = symbols('x y')
+    z = symbols('z', imaginary=True)
 
     assert sin.nargs == FiniteSet(1)
     assert sin(nan) is nan
@@ -65,6 +67,7 @@ def test_sin():
 
     assert sin(0) == 0
 
+    assert sin(z*I) == I*sinh(z)
     assert sin(asin(x)) == x
     assert sin(atan(x)) == x / sqrt(1 + x**2)
     assert sin(acos(x)) == sqrt(1 - x**2)
@@ -161,7 +164,7 @@ def test_sin():
                        Interval(0, 1)))
 
     for d in list(range(1, 22)) + [60, 85]:
-        for n in range(0, d*2 + 1):
+        for n in range(d*2 + 1):
             x = n*pi/d
             e = abs( float(sin(x)) - sin(float(x)) )
             assert e < 1e-12
@@ -190,7 +193,9 @@ def test_sin_series():
 def test_sin_rewrite():
     assert sin(x).rewrite(exp) == -I*(exp(I*x) - exp(-I*x))/2
     assert sin(x).rewrite(tan) == 2*tan(x/2)/(1 + tan(x/2)**2)
-    assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
+    assert sin(x).rewrite(cot) == \
+        Piecewise((0, Eq(im(x), 0) & Eq(Mod(x, pi), 0)),
+                  (2*cot(x/2)/(cot(x/2)**2 + 1), True))
     assert sin(sinh(x)).rewrite(
         exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, sinh(3)).n()
     assert sin(cosh(x)).rewrite(
@@ -383,9 +388,13 @@ def test_cos():
 
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
-
+    assert cos(0, evaluate=False).is_zero is False
+    assert cos(Rational(1, 2)).is_zero is False
+    # The following test will return None as the result, but really it should
+    # be True even if it is not always possible to resolve an assumptions query.
+    assert cos(asin(-1, evaluate=False), evaluate=False).is_zero is None
     for d in list(range(1, 22)) + [60, 85]:
-        for n in range(0, 2*d + 1):
+        for n in range(2*d + 1):
             x = n*pi/d
             e = abs( float(cos(x)) - cos(float(x)) )
             assert e < 1e-12
@@ -407,7 +416,9 @@ def test_cos_series():
 def test_cos_rewrite():
     assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
     assert cos(x).rewrite(tan) == (1 - tan(x/2)**2)/(1 + tan(x/2)**2)
-    assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
+    assert cos(x).rewrite(cot) == \
+        Piecewise((1, Eq(im(x), 0) & Eq(Mod(x, 2*pi), 0)),
+                  ((cot(x/2)**2 - 1)/(cot(x/2)**2 + 1), True))
     assert cos(sinh(x)).rewrite(
         exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, sinh(3)).n()
     assert cos(cosh(x)).rewrite(
@@ -573,30 +584,26 @@ def test_tan_rewrite():
     assert tan(x).rewrite(sin) == 2*sin(x)**2/sin(2*x)
     assert tan(x).rewrite(cos) == cos(x - S.Pi/2, evaluate=False)/cos(x)
     assert tan(x).rewrite(cot) == 1/cot(x)
-    assert tan(sinh(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sinh(3)).n()
-    assert tan(cosh(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cosh(3)).n()
-    assert tan(tanh(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tanh(3)).n()
-    assert tan(coth(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, coth(3)).n()
-    assert tan(sin(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sin(3)).n()
-    assert tan(cos(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cos(3)).n()
-    assert tan(tan(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tan(3)).n()
-    assert tan(cot(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
+    assert tan(sinh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert tan(cosh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert tan(tanh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert tan(coth(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, coth(3)).n()
+    assert tan(sin(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sin(3)).n()
+    assert tan(cos(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cos(3)).n()
+    assert tan(tan(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tan(3)).n()
+    assert tan(cot(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
     assert tan(log(x)).rewrite(Pow) == I*(x**-I - x**I)/(x**-I + x**I)
+    assert tan(x).rewrite(sec) == sec(x)/sec(x - pi/2, evaluate=False)
+    assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
+    assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
+
+
+@slow
+def test_tan_rewrite_slow():
     assert 0 == (cos(pi/34)*tan(pi/34) - sin(pi/34)).rewrite(pow)
     assert 0 == (cos(pi/17)*tan(pi/17) - sin(pi/17)).rewrite(pow)
     assert tan(pi/19).rewrite(pow) == tan(pi/19)
     assert tan(pi*Rational(8, 19)).rewrite(sqrt) == tan(pi*Rational(8, 19))
-    assert tan(x).rewrite(sec) == sec(x)/sec(x - pi/2, evaluate=False)
-    assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
-    assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
     assert tan(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 +
                Rational(5, 8))/(Rational(-1, 4) + sqrt(5)/4)
 
@@ -752,8 +759,7 @@ def test_cot_rewrite():
     assert cot(x).rewrite(cos) == cos(x)/cos(x - pi/2, evaluate=False)
     assert cot(x).rewrite(tan) == 1/tan(x)
     def check(func):
-        z = cot(func(x)).rewrite(exp
-            ) - cot(x).rewrite(exp).subs(x, func(x))
+        z = cot(func(x)).rewrite(exp) - cot(x).rewrite(exp).subs(x, func(x))
         assert z.rewrite(exp).expand() == 0
     check(sinh)
     check(cosh)
@@ -763,15 +769,21 @@ def test_cot_rewrite():
     check(cos)
     check(tan)
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
-    assert cot(pi*Rational(4, 34)).rewrite(pow).ratsimp() == (cos(pi*Rational(4, 34))/sin(pi*Rational(4, 34))).rewrite(pow).ratsimp()
-    assert cot(pi*Rational(4, 17)).rewrite(pow) == (cos(pi*Rational(4, 17))/sin(pi*Rational(4, 17))).rewrite(pow)
-    assert cot(pi/19).rewrite(pow) == cot(pi/19)
-    assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
     assert cot(x).rewrite(sec) == sec(x - pi / 2, evaluate=False) / sec(x)
     assert cot(x).rewrite(csc) == csc(x) / csc(- x + pi / 2, evaluate=False)
     assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
-    assert cot(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == (Rational(-1, 4) + sqrt(5)/4)/\
-                                                        sqrt(sqrt(5)/8 + Rational(5, 8))
+
+
+@slow
+def test_cot_rewrite_slow():
+    assert cot(pi*Rational(4, 34)).rewrite(pow).ratsimp() == \
+        (cos(pi*Rational(4, 34))/sin(pi*Rational(4, 34))).rewrite(pow).ratsimp()
+    assert cot(pi*Rational(4, 17)).rewrite(pow) == \
+        (cos(pi*Rational(4, 17))/sin(pi*Rational(4, 17))).rewrite(pow)
+    assert cot(pi/19).rewrite(pow) == cot(pi/19)
+    assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
+    assert cot(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == \
+        (Rational(-1, 4) + sqrt(5)/4) / sqrt(sqrt(5)/8 + Rational(5, 8))
 
 
 def test_cot_subs():
@@ -898,7 +910,6 @@ def test_asin():
                 assert asin(sin(n*pi/d)) == n*pi/d
 
     assert asin(x).diff(x) == 1/sqrt(1 - x**2)
-    assert asin(1/x).as_leading_term(x) == I*log(1/x)
 
     assert asin(0.2, evaluate=False).is_real is True
     assert asin(-2).is_real is False
@@ -920,6 +931,23 @@ def test_asin_series():
     t5 = asin(x).taylor_term(5, x)
     assert t5 == 3*x**5/40
     assert asin(x).taylor_term(7, x, t5, 0) == 5*x**7/112
+
+
+def test_asin_leading_term():
+    assert asin(x).as_leading_term(x) == x
+    # Tests concerning branch points
+    assert asin(x + 1).as_leading_term(x) == pi/2
+    assert asin(x - 1).as_leading_term(x) == -pi/2
+    assert asin(1/x).as_leading_term(x, cdir=1) == I*log(x) + pi/2 - I*log(2)
+    assert asin(1/x).as_leading_term(x, cdir=-1) == -I*log(x) - 3*pi/2 + I*log(2)
+    # Tests concerning points lying on branch cuts
+    assert asin(I*x + 2).as_leading_term(x, cdir=1) == pi - asin(2)
+    assert asin(-I*x + 2).as_leading_term(x, cdir=1) == asin(2)
+    assert asin(I*x - 2).as_leading_term(x, cdir=1) == -asin(2)
+    assert asin(-I*x - 2).as_leading_term(x, cdir=1) == -pi + asin(2)
+    # Tests concerning im(ndir) == 0
+    assert asin(-I*x**2 + x - 2).as_leading_term(x, cdir=1) == -pi/2 + I*log(2 - sqrt(3))
+    assert asin(-I*x**2 + x - 2).as_leading_term(x, cdir=-1) == -pi/2 + I*log(2 - sqrt(3))
 
 
 def test_asin_rewrite():
@@ -962,7 +990,6 @@ def test_acos():
     assert acos(2*I) == pi/2 - asin(2*I)
 
     assert acos(x).diff(x) == -1/sqrt(1 - x**2)
-    assert acos(1/x).as_leading_term(x) == I*log(1/x)
 
     assert acos(0.2).is_real is True
     assert acos(-2).is_real is False
@@ -981,6 +1008,23 @@ def test_acos():
     assert acos(z).conjugate() != acos(conjugate(z))
 
 
+def test_acos_leading_term():
+    assert acos(x).as_leading_term(x) == pi/2
+    # Tests concerning branch points
+    assert acos(x + 1).as_leading_term(x) == sqrt(2)*sqrt(-x)
+    assert acos(x - 1).as_leading_term(x) == pi
+    assert acos(1/x).as_leading_term(x, cdir=1) == -I*log(x) + I*log(2)
+    assert acos(1/x).as_leading_term(x, cdir=-1) == I*log(x) + 2*pi - I*log(2)
+    # Tests concerning points lying on branch cuts
+    assert acos(I*x + 2).as_leading_term(x, cdir=1) == -acos(2)
+    assert acos(-I*x + 2).as_leading_term(x, cdir=1) == acos(2)
+    assert acos(I*x - 2).as_leading_term(x, cdir=1) == acos(-2)
+    assert acos(-I*x - 2).as_leading_term(x, cdir=1) == 2*pi - acos(-2)
+    # Tests concerning im(ndir) == 0
+    assert acos(-I*x**2 + x - 2).as_leading_term(x, cdir=1) == pi + I*log(sqrt(3) + 2)
+    assert acos(-I*x**2 + x - 2).as_leading_term(x, cdir=-1) == pi + I*log(sqrt(3) + 2)
+
+
 def test_acos_series():
     assert acos(x).series(x, 0, 8) == \
         pi/2 - x - x**3/6 - 3*x**5/40 - 5*x**7/112 + O(x**8)
@@ -994,8 +1038,7 @@ def test_acos_series():
 
 def test_acos_rewrite():
     assert acos(x).rewrite(log) == pi/2 + I*log(I*x + sqrt(1 - x**2))
-    assert acos(x).rewrite(atan) == \
-           atan(sqrt(1 - x**2)/x) + (pi/2)*(1 - x*sqrt(1/x**2))
+    assert acos(x).rewrite(atan) == pi*(-x*sqrt(x**(-2)) + 1)/2 + atan(sqrt(1 - x**2)/x)
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
@@ -1036,7 +1079,6 @@ def test_atan():
 
     assert atan(oo) == pi/2
     assert atan(x).diff(x) == 1/(1 + x**2)
-    assert atan(1/x).as_leading_term(x) == pi/2
 
     assert atan(r).is_real is True
 
@@ -1080,6 +1122,25 @@ def test_atan_rewrite():
 def test_atan_fdiff():
     assert atan(x).fdiff() == 1/(x**2 + 1)
     raises(ArgumentIndexError, lambda: atan(x).fdiff(2))
+
+
+def test_atan_leading_term():
+    assert atan(x).as_leading_term(x) == x
+    assert atan(1/x).as_leading_term(x, cdir=1) == pi/2
+    assert atan(1/x).as_leading_term(x, cdir=-1) == -pi/2
+    # Tests concerning branch points
+    assert atan(x + I).as_leading_term(x, cdir=1) == -I*log(x)/2 + pi/4 + I*log(2)/2
+    assert atan(x + I).as_leading_term(x, cdir=-1) == -I*log(x)/2 - 3*pi/4 + I*log(2)/2
+    assert atan(x - I).as_leading_term(x, cdir=1) == I*log(x)/2 + pi/4 - I*log(2)/2
+    assert atan(x - I).as_leading_term(x, cdir=-1) == I*log(x)/2 + pi/4 - I*log(2)/2
+    # Tests concerning points lying on branch cuts
+    assert atan(x + 2*I).as_leading_term(x, cdir=1) == I*atanh(2)
+    assert atan(x + 2*I).as_leading_term(x, cdir=-1) == -pi + I*atanh(2)
+    assert atan(x - 2*I).as_leading_term(x, cdir=1) == pi - I*atanh(2)
+    assert atan(x - 2*I).as_leading_term(x, cdir=-1) == -I*atanh(2)
+    # Tests concerning re(ndir) == 0
+    assert atan(2*I - I*x - x**2).as_leading_term(x, cdir=1) == -pi/2 + I*log(3)/2
+    assert atan(2*I - I*x - x**2).as_leading_term(x, cdir=-1) == -pi/2 + I*log(3)/2
 
 
 def test_atan2():
@@ -1179,7 +1240,6 @@ def test_acot():
     assert acot(1/sqrt(3)) == pi/3
     assert acot(-1/sqrt(3)) == -pi/3
     assert acot(x).diff(x) == -1/(1 + x**2)
-    assert acot(1/x).as_leading_term(x) == x
 
     assert acot(r).is_extended_real is True
 
@@ -1211,6 +1271,24 @@ def test_acot_rewrite():
 def test_acot_fdiff():
     assert acot(x).fdiff() == -1/(x**2 + 1)
     raises(ArgumentIndexError, lambda: acot(x).fdiff(2))
+
+def test_acot_leading_term():
+    assert acot(1/x).as_leading_term(x) == x
+    # Tests concerning branch points
+    assert acot(x + I).as_leading_term(x, cdir=1) == I*log(x)/2 + pi/4 - I*log(2)/2
+    assert acot(x + I).as_leading_term(x, cdir=-1) == I*log(x)/2 + pi/4 - I*log(2)/2
+    assert acot(x - I).as_leading_term(x, cdir=1) == -I*log(x)/2 + pi/4 + I*log(2)/2
+    assert acot(x - I).as_leading_term(x, cdir=-1) == -I*log(x)/2 - 3*pi/4 + I*log(2)/2
+    # Tests concerning points lying on branch cuts
+    assert acot(x).as_leading_term(x, cdir=1) == pi/2
+    assert acot(x).as_leading_term(x, cdir=-1) == -pi/2
+    assert acot(x + I/2).as_leading_term(x, cdir=1) == pi - I*acoth(S(1)/2)
+    assert acot(x + I/2).as_leading_term(x, cdir=-1) == -I*acoth(S(1)/2)
+    assert acot(x - I/2).as_leading_term(x, cdir=1) == I*acoth(S(1)/2)
+    assert acot(x - I/2).as_leading_term(x, cdir=-1) == -pi + I*acoth(S(1)/2)
+    # Tests concerning re(ndir) == 0
+    assert acot(I/2 - I*x - x**2).as_leading_term(x, cdir=1) == -pi/2 - I*log(3)/2
+    assert acot(I/2 - I*x - x**2).as_leading_term(x, cdir=-1) == -pi/2 - I*log(3)/2
 
 
 def test_attributes():
@@ -1263,22 +1341,11 @@ def test_evenodd_rewrite():
             x - y) == -func(y - x)  # it doesn't matter which form is canonical
 
 
-def test_issue_4547():
-    assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
-    assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
-    assert tan(x).rewrite(cot) == 1/cot(x)
-    assert cot(x).fdiff() == -1 - cot(x)**2
-
-
 def test_as_leading_term_issue_5272():
     assert sin(x).as_leading_term(x) == x
     assert cos(x).as_leading_term(x) == 1
     assert tan(x).as_leading_term(x) == x
     assert cot(x).as_leading_term(x) == 1/x
-    assert asin(x).as_leading_term(x) == x
-    assert acos(x).as_leading_term(x) == pi/2
-    assert atan(x).as_leading_term(x) == x
-    assert acot(x).as_leading_term(x) == pi/2
 
 
 def test_leading_terms():
@@ -1440,7 +1507,6 @@ def test_inverses():
     assert acot(x).inverse() == cot
 
 
-
 def test_real_imag():
     a, b = symbols('a b', real=True)
     z = a + b*I
@@ -1490,7 +1556,6 @@ def test_sincos_rewrite_sqrt():
                     assert 1e-3 > abs(sin(x.evalf(5)) - s1.evalf(2)), "fails for %d*pi/%d" % (i, n)
                     assert 1e-3 > abs(cos(x.evalf(5)) - c1.evalf(2)), "fails for %d*pi/%d" % (i, n)
     assert cos(pi/14).rewrite(sqrt) == sqrt(cos(pi/7)/2 + S.Half)
-    assert cos(pi/257).rewrite(sqrt).evalf(64) == cos(pi/257).evalf(64)
     assert cos(pi*Rational(-15, 2)/11, evaluate=False).rewrite(
         sqrt) == -sqrt(-cos(pi*Rational(4, 11))/2 + S.Half)
     assert cos(Mul(2, pi, S.Half, evaluate=False), evaluate=False).rewrite(
@@ -1546,6 +1611,11 @@ def test_sincos_rewrite_sqrt():
     # different but that portion of the code should be tested in some way
     assert cos(pi/9/17).rewrite(sqrt) == \
         sin(pi/9)*sin(pi*Rational(2, 17)) + cos(pi/9)*cos(pi*Rational(2, 17))
+
+
+@slow
+def test_sincos_rewrite_sqrt_257():
+    assert cos(pi/257).rewrite(sqrt).evalf(64) == cos(pi/257).evalf(64)
 
 
 @slow
@@ -1732,13 +1802,14 @@ def test_asec():
     assert asec(sqrt(2) - sqrt(6)) == pi*Rational(11, 12)
 
     assert asec(x).diff(x) == 1/(x**2*sqrt(1 - 1/x**2))
-    assert asec(x).as_leading_term(x) == I*log(x)
 
     assert asec(x).rewrite(log) == I*log(sqrt(1 - 1/x**2) + I/x) + pi/2
     assert asec(x).rewrite(asin) == -asin(1/x) + pi/2
     assert asec(x).rewrite(acos) == acos(1/x)
-    assert asec(x).rewrite(atan) == (2*atan(x + sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
-    assert asec(x).rewrite(acot) == (2*acot(x - sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
+    assert asec(x).rewrite(atan) == \
+        pi*(1 - sqrt(x**2)/x)/2 + sqrt(x**2)*atan(sqrt(x**2 - 1))/x
+    assert asec(x).rewrite(acot) == \
+        pi*(1 - sqrt(x**2)/x)/2 + sqrt(x**2)*acot(1/sqrt(x**2 - 1))/x
     assert asec(x).rewrite(acsc) == -acsc(x) + pi/2
     raises(ArgumentIndexError, lambda: asec(x).fdiff(2))
 
@@ -1751,6 +1822,32 @@ def test_asec_is_real():
     assert asec(r).is_real is None
     t = Symbol('t', real=False, finite=True)
     assert asec(t).is_real is False
+
+
+def test_asec_leading_term():
+    assert asec(1/x).as_leading_term(x) == pi/2
+    # Tests concerning branch points
+    assert asec(x + 1).as_leading_term(x) == sqrt(2)*sqrt(x)
+    assert asec(x - 1).as_leading_term(x) == pi
+    # Tests concerning points lying on branch cuts
+    assert asec(x).as_leading_term(x, cdir=1) == -I*log(x) + I*log(2)
+    assert asec(x).as_leading_term(x, cdir=-1) == I*log(x) + 2*pi - I*log(2)
+    assert asec(I*x + 1/2).as_leading_term(x, cdir=1) == asec(1/2)
+    assert asec(-I*x + 1/2).as_leading_term(x, cdir=1) == -asec(1/2)
+    assert asec(I*x - 1/2).as_leading_term(x, cdir=1) == 2*pi - asec(-1/2)
+    assert asec(-I*x - 1/2).as_leading_term(x, cdir=1) == asec(-1/2)
+    # Tests concerning im(ndir) == 0
+    assert asec(-I*x**2 + x - S(1)/2).as_leading_term(x, cdir=1) == pi + I*log(2 - sqrt(3))
+    assert asec(-I*x**2 + x - S(1)/2).as_leading_term(x, cdir=-1) == pi + I*log(2 - sqrt(3))
+
+
+def test_asec_series():
+    assert asec(x).series(x, 0, 9) == \
+        I*log(2) - I*log(x) - I*x**2/4 - 3*I*x**4/32 \
+        - 5*I*x**6/96 - 35*I*x**8/1024 + O(x**9)
+    t4 = asec(x).taylor_term(4, x)
+    assert t4 == -3*I*x**4/32
+    assert asec(x).taylor_term(6, x, t4, 0) == -5*I*x**6/96
 
 
 def test_acsc():
@@ -1779,12 +1876,12 @@ def test_acsc():
     assert acsc(sqrt(2) - sqrt(6)) == pi*Rational(-5, 12)
 
     assert acsc(x).diff(x) == -1/(x**2*sqrt(1 - 1/x**2))
-    assert acsc(x).as_leading_term(x) == I*log(x)
 
     assert acsc(x).rewrite(log) == -I*log(sqrt(1 - 1/x**2) + I/x)
     assert acsc(x).rewrite(asin) == asin(1/x)
     assert acsc(x).rewrite(acos) == -acos(1/x) + pi/2
-    assert acsc(x).rewrite(atan) == (-atan(sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
+    assert acsc(x).rewrite(atan) == \
+        (-atan(sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
     assert acsc(x).rewrite(acot) == (-acot(1/sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
     assert acsc(x).rewrite(asec) == -asec(x) + pi/2
     raises(ArgumentIndexError, lambda: acsc(x).fdiff(2))
@@ -1807,21 +1904,42 @@ def test_csc_rewrite():
                   I*cos(-pi/2 + I*besselj(I, I), evaluate=False), evaluate=False)
 
 
-def test_inverses_nseries():
-    assert asin(x + 2)._eval_nseries(x, 4, None, I) == -asin(2) + pi + sqrt(3)*I*x/3 - sqrt(3)*I*x**2/9 + \
-    sqrt(3)*I*x**3/18 + O(x**4)
-    assert asin(x + 2)._eval_nseries(x, 4, None, -I) == asin(2) - sqrt(3)*I*x/3 + sqrt(3)*I*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
-    assert asin(x - 2)._eval_nseries(x, 4, None, I) == -asin(2) - sqrt(3)*I*x/3 - sqrt(3)*I*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
-    assert asin(x - 2)._eval_nseries(x, 4, None, -I) == asin(2) - pi + sqrt(3)*I*x/3 + sqrt(3)*I*x**2/9 + \
-    sqrt(3)*I*x**3/18 + O(x**4)
-    assert asin(I*x + I*x**3 + 2)._eval_nseries(x, 3, None, 1) == -asin(2) + pi - sqrt(3)*x/3 + sqrt(3)*I*x**2/9 + O(x**3)
-    assert asin(I*x + I*x**3 + 2)._eval_nseries(x, 3, None, -1) == asin(2) + sqrt(3)*x/3 - sqrt(3)*I*x**2/9 + O(x**3)
-    assert asin(I*x + I*x**3 - 2)._eval_nseries(x, 3, None, 1) == -asin(2) + sqrt(3)*x/3 + sqrt(3)*I*x**2/9 + O(x**3)
-    assert asin(I*x + I*x**3 - 2)._eval_nseries(x, 3, None, -1) == asin(2) - pi - sqrt(3)*x/3 - sqrt(3)*I*x**2/9 + O(x**3)
-    assert asin(I*x**2 + I*x**3 + 2)._eval_nseries(x, 3, None, 1) == -asin(2) + pi - sqrt(3)*x**2/3 + O(x**3)
-    assert asin(I*x**2 + I*x**3 + 2)._eval_nseries(x, 3, None, -1) == -asin(2) + pi - sqrt(3)*x**2/3 + O(x**3)
-    assert asin(I*x**2 + I*x**3 - 2)._eval_nseries(x, 3, None, 1) == -asin(2) + sqrt(3)*x**2/3 + O(x**3)
-    assert asin(I*x**2 + I*x**3 - 2)._eval_nseries(x, 3, None, -1) == -asin(2) + sqrt(3)*x**2/3 + O(x**3)
+def test_acsc_leading_term():
+    assert acsc(1/x).as_leading_term(x) == x
+    # Tests concerning branch points
+    assert acsc(x + 1).as_leading_term(x) == pi/2
+    assert acsc(x - 1).as_leading_term(x) == -pi/2
+    # Tests concerning points lying on branch cuts
+    assert acsc(x).as_leading_term(x, cdir=1) == I*log(x) + pi/2 - I*log(2)
+    assert acsc(x).as_leading_term(x, cdir=-1) == -I*log(x) - 3*pi/2 + I*log(2)
+    assert acsc(I*x + 1/2).as_leading_term(x, cdir=1) == acsc(1/2)
+    assert acsc(-I*x + 1/2).as_leading_term(x, cdir=1) == pi - acsc(1/2)
+    assert acsc(I*x - 1/2).as_leading_term(x, cdir=1) == -pi - acsc(-1/2)
+    assert acsc(-I*x - 1/2).as_leading_term(x, cdir=1) == -acsc(1/2)
+    # Tests concerning im(ndir) == 0
+    assert acsc(-I*x**2 + x - S(1)/2).as_leading_term(x, cdir=1) == -pi/2 + I*log(sqrt(3) + 2)
+    assert acsc(-I*x**2 + x - S(1)/2).as_leading_term(x, cdir=-1) == -pi/2 + I*log(sqrt(3) + 2)
+
+
+def test_acsc_series():
+    assert acsc(x).series(x, 0, 9) == \
+        -I*log(2) + pi/2 + I*log(x) + I*x**2/4 \
+        + 3*I*x**4/32 + 5*I*x**6/96 + 35*I*x**8/1024 + O(x**9)
+    t6 = acsc(x).taylor_term(6, x)
+    assert t6 == 5*I*x**6/96
+    assert acsc(x).taylor_term(8, x, t6, 0) == 35*I*x**8/1024
+
+
+def test_asin_nseries():
+    assert asin(x + 2)._eval_nseries(x, 4, None, I) == -asin(2) + pi + \
+    sqrt(3)*I*x/3 - sqrt(3)*I*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
+    assert asin(x + 2)._eval_nseries(x, 4, None, -I) == asin(2) - \
+    sqrt(3)*I*x/3 + sqrt(3)*I*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
+    assert asin(x - 2)._eval_nseries(x, 4, None, I) == -asin(2) - \
+    sqrt(3)*I*x/3 - sqrt(3)*I*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
+    assert asin(x - 2)._eval_nseries(x, 4, None, -I) == asin(2) - pi + \
+    sqrt(3)*I*x/3 + sqrt(3)*I*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
+    # testing nseries for asin at branch points
     assert asin(1 + x)._eval_nseries(x, 3, None) == pi/2 - sqrt(2)*sqrt(-x) - \
     sqrt(2)*(-x)**(S(3)/2)/12 - 3*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
     assert asin(-1 + x)._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(x) + \
@@ -1831,87 +1949,101 @@ def test_inverses_nseries():
     assert asin(-exp(x))._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(-x) - \
     sqrt(2)*(-x)**(S(3)/2)/6 + sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
 
-    assert acos(x + 2)._eval_nseries(x, 4, None, I) == -acos(2) - sqrt(3)*I*x/3 + sqrt(3)*I*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
-    assert acos(x + 2)._eval_nseries(x, 4, None, -I) == acos(2) + sqrt(3)*I*x/3 - sqrt(3)*I*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
-    assert acos(x - 2)._eval_nseries(x, 4, None, I) == acos(-2) + sqrt(3)*I*x/3 + sqrt(3)*I*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
-    assert acos(x - 2)._eval_nseries(x, 4, None, -I) == -acos(-2) + 2*pi - sqrt(3)*I*x/3 - \
-    sqrt(3)*I*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
-    # assert acos(I*x + I*x**3 + 2)._eval_nseries(x, 3, None, 1) == -acos(2) + sqrt(3)*x/3 - sqrt(3)*I*x**2/9 + O(x**3)
-    # assert acos(I*x + I*x**3 + 2)._eval_nseries(x, 3, None, -1) == acos(2) - sqrt(3)*x/3 + sqrt(3)*I*x**2/9 + O(x**3)
-    # assert acos(I*x + I*x**3 - 2)._eval_nseries(x, 3, None, 1) == acos(-2) - sqrt(3)*x/3 - sqrt(3)*I*x**2/9 + O(x**3)
-    # assert acos(I*x + I*x**3 - 2)._eval_nseries(x, 3, None, -1) == -acos(-2) + 2*pi + sqrt(3)*x/3 + sqrt(3)*I*x**2/9 + O(x**3)
-    # assert acos(I*x**2 + I*x**3 + 2)._eval_nseries(x, 3, None, 1) == -acos(2) + sqrt(3)*x**2/3 + O(x**3)
-    # assert acos(I*x**2 + I*x**3 + 2)._eval_nseries(x, 3, None, -1) == -acos(2) + sqrt(3)*x**2/3 + O(x**3)
-    # assert acos(I*x**2 + I*x**3 - 2)._eval_nseries(x, 3, None, 1) == acos(-2) - sqrt(3)*x**2/3 + O(x**3)
-    # assert acos(I*x**2 + I*x**3 - 2)._eval_nseries(x, 3, None, -1) == acos(-2) - sqrt(3)*x**2/3 + O(x**3)
-    # assert acos(1 + x)._eval_nseries(x, 3, None) == sqrt(2)*sqrt(-x) + sqrt(2)*(-x)**(S(3)/2)/12 + 3*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
-    # assert acos(-1 + x)._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(x) - sqrt(2)*x**(S(3)/2)/12 - 3*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
-    # assert acos(exp(x))._eval_nseries(x, 3, None) == sqrt(2)*sqrt(-x) - sqrt(2)*(-x)**(S(3)/2)/6 + sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
-    # assert acos(-exp(x))._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(-x) + sqrt(2)*(-x)**(S(3)/2)/6 - sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
 
-    assert atan(x + 2*I)._eval_nseries(x, 4, None, 1) == I*atanh(2) - x/3 - 2*I*x**2/9 + 13*x**3/81 + O(x**4)
-    assert atan(x + 2*I)._eval_nseries(x, 4, None, -1) == I*atanh(2) - pi - x/3 - 2*I*x**2/9 + 13*x**3/81 + O(x**4)
-    assert atan(x - 2*I)._eval_nseries(x, 4, None, 1) == -I*atanh(2) + pi - x/3 + 2*I*x**2/9 + 13*x**3/81 + O(x**4)
-    assert atan(x - 2*I)._eval_nseries(x, 4, None, -1) == -I*atanh(2) - x/3 + 2*I*x**2/9 + 13*x**3/81 + O(x**4)
-    # assert atan(x**2 + 2*I)._eval_nseries(x, 3, None, 1) == I*atanh(2) - x**2/3 + O(x**3)
-    # assert atan(x**2 + 2*I)._eval_nseries(x, 3, None, -1) == I*atanh(2) - x**2/3 + O(x**3)
-    # assert atan(x**2 - 2*I)._eval_nseries(x, 3, None, 1) == -I*atanh(2) + pi - x**2/3 + O(x**3)
-    # assert atan(x**2 - 2*I)._eval_nseries(x, 3, None, -1) == -I*atanh(2) + pi - x**2/3 + O(x**3)
+def test_acos_nseries():
+    assert acos(x + 2)._eval_nseries(x, 4, None, I) == -acos(2) - sqrt(3)*I*x/3 + \
+    sqrt(3)*I*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
+    assert acos(x + 2)._eval_nseries(x, 4, None, -I) == acos(2) + sqrt(3)*I*x/3 - \
+    sqrt(3)*I*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
+    assert acos(x - 2)._eval_nseries(x, 4, None, I) == acos(-2) + sqrt(3)*I*x/3 + \
+    sqrt(3)*I*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
+    assert acos(x - 2)._eval_nseries(x, 4, None, -I) == -acos(-2) + 2*pi - \
+    sqrt(3)*I*x/3 - sqrt(3)*I*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
+    # testing nseries for acos at branch points
+    assert acos(1 + x)._eval_nseries(x, 3, None) == sqrt(2)*sqrt(-x) + \
+    sqrt(2)*(-x)**(S(3)/2)/12 + 3*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
+    assert acos(-1 + x)._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(x) - \
+    sqrt(2)*x**(S(3)/2)/12 - 3*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
+    assert acos(exp(x))._eval_nseries(x, 3, None) == sqrt(2)*sqrt(-x) - \
+    sqrt(2)*(-x)**(S(3)/2)/6 + sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
+    assert acos(-exp(x))._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(-x) + \
+    sqrt(2)*(-x)**(S(3)/2)/6 - sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
+
+
+def test_atan_nseries():
+    assert atan(x + 2*I)._eval_nseries(x, 4, None, 1) == I*atanh(2) - x/3 - \
+    2*I*x**2/9 + 13*x**3/81 + O(x**4)
+    assert atan(x + 2*I)._eval_nseries(x, 4, None, -1) == I*atanh(2) - pi - \
+    x/3 - 2*I*x**2/9 + 13*x**3/81 + O(x**4)
+    assert atan(x - 2*I)._eval_nseries(x, 4, None, 1) == -I*atanh(2) + pi - \
+    x/3 + 2*I*x**2/9 + 13*x**3/81 + O(x**4)
+    assert atan(x - 2*I)._eval_nseries(x, 4, None, -1) == -I*atanh(2) - x/3 + \
+    2*I*x**2/9 + 13*x**3/81 + O(x**4)
     assert atan(1/x)._eval_nseries(x, 2, None, 1) == pi/2 - x + O(x**2)
     assert atan(1/x)._eval_nseries(x, 2, None, -1) == -pi/2 - x + O(x**2)
+    # testing nseries for atan at branch points
+    assert atan(x + I)._eval_nseries(x, 4, None) == I*log(2)/2 + pi/4 - \
+    I*log(x)/2 + x/4 + I*x**2/16 - x**3/48 + O(x**4)
+    assert atan(x - I)._eval_nseries(x, 4, None) == -I*log(2)/2 + pi/4 + \
+    I*log(x)/2 + x/4 - I*x**2/16 - x**3/48 + O(x**4)
 
-    assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, 1) == -I*acoth(S(1)/2) + pi - 4*x/3 + 8*I*x**2/9 + 112*x**3/81 + O(x**4)
-    assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, -1) == -I*acoth(S(1)/2) - 4*x/3 + 8*I*x**2/9 + 112*x**3/81 + O(x**4)
-    assert acot(x - S(1)/2*I)._eval_nseries(x, 4, None, 1) == I*acoth(S(1)/2) - 4*x/3 - 8*I*x**2/9 + 112*x**3/81 + O(x**4)
-    assert acot(x - S(1)/2*I)._eval_nseries(x, 4, None, -1) == I*acoth(S(1)/2) - pi - 4*x/3 - 8*I*x**2/9 + 112*x**3/81 + O(x**4)
-    # assert acot(x**2 + S(1)/2*I)._eval_nseries(x, 3, None, 1) == -I*acoth(S(1)/2) + pi - 4*x**2/3 + O(x**3)
-    # assert acot(x**2 + S(1)/2*I)._eval_nseries(x, 3, None, -1) == -I*acoth(S(1)/2) + pi - 4*x**2/3 + O(x**3)
-    # assert acot(x**2 - S(1)/2*I)._eval_nseries(x, 3, None, 1) == I*acoth(S(1)/2) - 4*x**2/3 + O(x**3)
-    # assert acot(x**2 - S(1)/2*I)._eval_nseries(x, 3, None, -1) == I*acoth(S(1)/2) - 4*x**2/3 + O(x**3)
-    # assert acot(x)._eval_nseries(x, 2, None, 1) == pi/2 - x + O(x**2)
-    # assert acot(x)._eval_nseries(x, 2, None, -1) == -pi/2 - x + O(x**2)
 
-    assert asec(x + S(1)/2)._eval_nseries(x, 4, None, I) == asec(S(1)/2) - 4*sqrt(3)*I*x/3 + \
-    8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
-    assert asec(x + S(1)/2)._eval_nseries(x, 4, None, -I) == -asec(S(1)/2) + 4*sqrt(3)*I*x/3 - \
-    8*sqrt(3)*I*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
-    assert asec(x - S(1)/2)._eval_nseries(x, 4, None, I) == -asec(-S(1)/2) + 2*pi + 4*sqrt(3)*I*x/3 + \
-    8*sqrt(3)*I*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
-    assert asec(x - S(1)/2)._eval_nseries(x, 4, None, -I) == asec(-S(1)/2) - 4*sqrt(3)*I*x/3 - \
-    8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
-    # assert asec(I*x + I*x**3 + S(1)/2)._eval_nseries(x, 3, None, 1) == asec(S(1)/2) + 4*sqrt(3)*x/3 - 8*sqrt(3)*I*x**2/9 + O(x**3)
-    # assert asec(I*x + I*x**3 + S(1)/2)._eval_nseries(x, 3, None, -1) == -asec(S(1)/2) - 4*sqrt(3)*x/3 + 8*sqrt(3)*I*x**2/9 + O(x**3)
-    # assert asec(I*x + I*x**3 - S(1)/2)._eval_nseries(x, 3, None, 1) == -asec(-S(1)/2) + 2*pi - 4*sqrt(3)*x/3 - 8*sqrt(3)*I*x**2/9 + O(x**3)
-    # assert asec(I*x + I*x**3 - S(1)/2)._eval_nseries(x, 3, None, -1) == asec(-S(1)/2) + 4*sqrt(3)*x/3 + 8*sqrt(3)*I*x**2/9 + O(x**3)
-    # assert asec(I*x**2 + I*x**3 + S(1)/2)._eval_nseries(x, 3, None, 1) == asec(S(1)/2) + 4*sqrt(3)*x**2/3 + O(x**3)
-    # assert asec(I*x**2 + I*x**3 + S(1)/2)._eval_nseries(x, 3, None, -1) == asec(S(1)/2) + 4*sqrt(3)*x**2/3 + O(x**3)
-    # assert asec(I*x**2 + I*x**3 - S(1)/2)._eval_nseries(x, 3, None, 1) == -asec(-S(1)/2) + 2*pi - 4*sqrt(3)*x**2/3 + O(x**3)
-    # assert asec(I*x**2 + I*x**3 - S(1)/2)._eval_nseries(x, 3, None, -1) == -asec(-S(1)/2) + 2*pi - 4*sqrt(3)*x**2/3 + O(x**3)
-    # assert asec(1 + x)._eval_nseries(x, 3, None) == sqrt(2)*sqrt(x) - 5*sqrt(2)*x**(S(3)/2)/12 + 43*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
-    # assert asec(-1 + x)._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(-x) + 5*sqrt(2)*(-x)**(S(3)/2)/12 - 43*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
-    # assert asec(exp(x))._eval_nseries(x, 3, None) == sqrt(2)*sqrt(x) - sqrt(2)*x**(S(3)/2)/6 + sqrt(2)*x**(S(5)/2)/120 + O(x**3)
-    # assert asec(-exp(x))._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(x) + sqrt(2)*x**(S(3)/2)/6 - sqrt(2)*x**(S(5)/2)/120 + O(x**3)
+def test_acot_nseries():
+    assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, 1) == -I*acoth(S(1)/2) + \
+    pi - 4*x/3 + 8*I*x**2/9 + 112*x**3/81 + O(x**4)
+    assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, -1) == -I*acoth(S(1)/2) - \
+    4*x/3 + 8*I*x**2/9 + 112*x**3/81 + O(x**4)
+    assert acot(x - S(1)/2*I)._eval_nseries(x, 4, None, 1) == I*acoth(S(1)/2) - \
+    4*x/3 - 8*I*x**2/9 + 112*x**3/81 + O(x**4)
+    assert acot(x - S(1)/2*I)._eval_nseries(x, 4, None, -1) == I*acoth(S(1)/2) - \
+    pi - 4*x/3 - 8*I*x**2/9 + 112*x**3/81 + O(x**4)
+    assert acot(x)._eval_nseries(x, 2, None, 1) == pi/2 - x + O(x**2)
+    assert acot(x)._eval_nseries(x, 2, None, -1) == -pi/2 - x + O(x**2)
+    # testing nseries for acot at branch points
+    assert acot(x + I)._eval_nseries(x, 4, None) == -I*log(2)/2 + pi/4 + \
+    I*log(x)/2 - x/4 - I*x**2/16 + x**3/48 + O(x**4)
+    assert acot(x - I)._eval_nseries(x, 4, None) == I*log(2)/2 + pi/4 - \
+    I*log(x)/2 - x/4 + I*x**2/16 + x**3/48 + O(x**4)
 
-    assert acsc(x + S(1)/2)._eval_nseries(x, 4, None, I) == acsc(S(1)/2) + 4*sqrt(3)*I*x/3 - \
-    8*sqrt(3)*I*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
-    assert acsc(x + S(1)/2)._eval_nseries(x, 4, None, -I) == -acsc(S(1)/2) + pi - 4*sqrt(3)*I*x/3 + \
-    8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
-    assert acsc(x - S(1)/2)._eval_nseries(x, 4, None, I) == acsc(S(1)/2) - pi - 4*sqrt(3)*I*x/3 - \
-    8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
-    assert acsc(x - S(1)/2)._eval_nseries(x, 4, None, -I) == -acsc(S(1)/2) + 4*sqrt(3)*I*x/3 + \
-    8*sqrt(3)*I*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
-    # assert acsc(I*x + I*x**3 + S(1)/2)._eval_nseries(x, 3, None, 1) == acsc(S(1)/2) - 4*sqrt(3)*x/3 + 8*sqrt(3)*I*x**2/9 + O(x**3)
-    # assert acsc(I*x + I*x**3 + S(1)/2)._eval_nseries(x, 3, None, -1) == -acsc(S(1)/2) + pi + 4*sqrt(3)*x/3 - 8*sqrt(3)*I*x**2/9 + O(x**3)
-    # assert acsc(I*x + I*x**3 - S(1)/2)._eval_nseries(x, 3, None, 1) == acsc(S(1)/2) - pi + 4*sqrt(3)*x/3 + 8*sqrt(3)*I*x**2/9 + O(x**3)
-    # assert acsc(I*x + I*x**3 - S(1)/2)._eval_nseries(x, 3, None, -1) == -acsc(S(1)/2) - 4*sqrt(3)*x/3 - 8*sqrt(3)*I*x**2/9 + O(x**3)
-    # assert acsc(I*x**2 + I*x**3 + S(1)/2)._eval_nseries(x, 3, None, 1) == acsc(S(1)/2) - 4*sqrt(3)*x**2/3 + O(x**3)
-    # assert acsc(I*x**2 + I*x**3 + S(1)/2)._eval_nseries(x, 3, None, -1) == acsc(S(1)/2) - 4*sqrt(3)*x**2/3 + O(x**3)
-    # assert acsc(I*x**2 + I*x**3 - S(1)/2)._eval_nseries(x, 3, None, 1) == acsc(S(1)/2) - pi + 4*sqrt(3)*x**2/3 + O(x**3)
-    # assert acsc(I*x**2 + I*x**3 - S(1)/2)._eval_nseries(x, 3, None, -1) == acsc(S(1)/2) - pi + 4*sqrt(3)*x**2/3 + O(x**3)
-    # assert acsc(1 + x)._eval_nseries(x, 3, None) == pi/2 - sqrt(2)*sqrt(x) + 5*sqrt(2)*x**(S(3)/2)/12 - 43*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
-    # assert acsc(-1 + x)._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(-x) - 5*sqrt(2)*(-x)**(S(3)/2)/12 + 43*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
-    # assert acsc(exp(x))._eval_nseries(x, 3, None) == pi/2 - sqrt(2)*sqrt(x) + sqrt(2)*x**(S(3)/2)/6 - sqrt(2)*x**(S(5)/2)/120 + O(x**3)
-    # assert acsc(-exp(x))._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(x) - sqrt(2)*x**(S(3)/2)/6 + sqrt(2)*x**(S(5)/2)/120 + O(x**3)
+
+def test_asec_nseries():
+    assert asec(x + S(1)/2)._eval_nseries(x, 4, None, I) == asec(S(1)/2) - \
+    4*sqrt(3)*I*x/3 + 8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
+    assert asec(x + S(1)/2)._eval_nseries(x, 4, None, -I) == -asec(S(1)/2) + \
+    4*sqrt(3)*I*x/3 - 8*sqrt(3)*I*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
+    assert asec(x - S(1)/2)._eval_nseries(x, 4, None, I) == -asec(-S(1)/2) + \
+    2*pi + 4*sqrt(3)*I*x/3 + 8*sqrt(3)*I*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
+    assert asec(x - S(1)/2)._eval_nseries(x, 4, None, -I) == asec(-S(1)/2) - \
+    4*sqrt(3)*I*x/3 - 8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
+    # testing nseries for asec at branch points
+    assert asec(1 + x)._eval_nseries(x, 3, None) == sqrt(2)*sqrt(x) - \
+    5*sqrt(2)*x**(S(3)/2)/12 + 43*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
+    assert asec(-1 + x)._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(-x) + \
+    5*sqrt(2)*(-x)**(S(3)/2)/12 - 43*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
+    assert asec(exp(x))._eval_nseries(x, 3, None) == sqrt(2)*sqrt(x) - \
+    sqrt(2)*x**(S(3)/2)/6 + sqrt(2)*x**(S(5)/2)/120 + O(x**3)
+    assert asec(-exp(x))._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(x) + \
+    sqrt(2)*x**(S(3)/2)/6 - sqrt(2)*x**(S(5)/2)/120 + O(x**3)
+
+
+def test_acsc_nseries():
+    assert acsc(x + S(1)/2)._eval_nseries(x, 4, None, I) == acsc(S(1)/2) + \
+    4*sqrt(3)*I*x/3 - 8*sqrt(3)*I*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
+    assert acsc(x + S(1)/2)._eval_nseries(x, 4, None, -I) == -acsc(S(1)/2) + \
+    pi - 4*sqrt(3)*I*x/3 + 8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
+    assert acsc(x - S(1)/2)._eval_nseries(x, 4, None, I) == acsc(S(1)/2) - pi -\
+    4*sqrt(3)*I*x/3 - 8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
+    assert acsc(x - S(1)/2)._eval_nseries(x, 4, None, -I) == -acsc(S(1)/2) + \
+    4*sqrt(3)*I*x/3 + 8*sqrt(3)*I*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
+    # testing nseries for acsc at branch points
+    assert acsc(1 + x)._eval_nseries(x, 3, None) == pi/2 - sqrt(2)*sqrt(x) + \
+    5*sqrt(2)*x**(S(3)/2)/12 - 43*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
+    assert acsc(-1 + x)._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(-x) - \
+    5*sqrt(2)*(-x)**(S(3)/2)/12 + 43*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
+    assert acsc(exp(x))._eval_nseries(x, 3, None) == pi/2 - sqrt(2)*sqrt(x) + \
+    sqrt(2)*x**(S(3)/2)/6 - sqrt(2)*x**(S(5)/2)/120 + O(x**3)
+    assert acsc(-exp(x))._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(x) - \
+    sqrt(2)*x**(S(3)/2)/6 + sqrt(2)*x**(S(5)/2)/120 + O(x**3)
 
 
 def test_issue_8653():
@@ -2028,3 +2160,35 @@ def test_as_real_imag():
 def test_issue_18746():
     e3 = cos(S.Pi*(x/4 + 1/4))
     assert e3.period() == 8
+
+
+def test_issue_25833():
+    assert limit(atan(x**2), x, oo) == pi/2
+    assert limit(atan(x**2 - 1), x, oo) == pi/2
+    assert limit(atan(log(2**x)/log(2*x)), x, oo) == pi/2
+
+
+def test_issue_25847():
+    #atan
+    assert atan(sin(x)/x).as_leading_term(x) == pi/4
+    raises(PoleError, lambda: atan(exp(1/x)).as_leading_term(x))
+
+    #asin
+    assert asin(sin(x)/x).as_leading_term(x) == pi/2
+    raises(PoleError, lambda: asin(exp(1/x)).as_leading_term(x))
+
+    #acos
+    assert acos(sin(x)/x).as_leading_term(x) == 0
+    raises(PoleError, lambda: acos(exp(1/x)).as_leading_term(x))
+
+    #acot
+    assert acot(sin(x)/x).as_leading_term(x) == pi/4
+    raises(PoleError, lambda: acot(exp(1/x)).as_leading_term(x))
+
+    #asec
+    assert asec(sin(x)/x).as_leading_term(x) == 0
+    raises(PoleError, lambda: asec(exp(1/x)).as_leading_term(x))
+
+    #acsc
+    assert acsc(sin(x)/x).as_leading_term(x) == pi/2
+    raises(PoleError, lambda: acsc(exp(1/x)).as_leading_term(x))

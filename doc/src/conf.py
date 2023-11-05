@@ -29,23 +29,65 @@ sys.path = ['ext'] + sys.path
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
-              'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
-              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
-              'myst_parser'
-              ]
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
+              'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
+              'sphinx_reredirects', 'sphinx_copybutton',
+              'sphinx.ext.graphviz', 'sphinxcontrib.jquery',
+              'matplotlib.sphinxext.plot_directive', 'myst_parser',
+              'convert-svg-to-pdf', 'sphinx.ext.intersphinx', ]
+
+# Add redirects here. This should be done whenever a page that is in the
+# existing release docs is moved somewhere else so that the URLs don't break.
+# The format is
+
+# "old-page/path/without/extension": "../new-page/relative_path_with.html"
+
+# Note that the html path is relative to the redirected page. Always test the
+# redirect manually (they aren't tested automatically). See
+# https://documatt.gitlab.io/sphinx-reredirects/usage.html
 
 redirects = {
-    "install.rst": "guides/getting_started/install.html",
-    "documentation-style-guide.rst": "guides/contributing/documentation-style-guide.html",
-    "gotchas.rst": "explanation/gotchas.html",
-    "special_topics/classification.rst": "explanation/classification.html",
-    "special_topics/finite_diff_derivatives.rst": "explanation/finite_diff_derivatives.html",
-    "special_topics/intro.rst": "explanation/index.html",
-    "special_topics/index.rst": "explanation/index.html",
-    "modules/index.rst": "reference/public/index.html",
-    "modules/physics/index.rst": "reference/physics/index.html",
+    "guides/getting_started/install": "../../install.html",
+    "documentation-style-guide": "contributing/documentation-style-guide.html",
+    "gotchas": "explanation/gotchas.html",
+    "special_topics/classification": "../explanation/classification.html",
+    "special_topics/finite_diff_derivatives": "../explanation/finite_diff_derivatives.html",
+    "special_topics/intro": "../explanation/index.html",
+    "special_topics/index": "../explanation/index.html",
+    "modules/index": "../reference/index.html",
+    "modules/physics/index": "../../reference/public/physics/index.html",
+
+    "guides/contributing/index": "../../contributing/index.html",
+    "guides/contributing/dev-setup": "../../contributing/dev-setup.html",
+    "guides/contributing/dependencies": "../../contributing/dependencies.html",
+    "guides/contributing/build-docs": "../../contributing/new-contributors-guide/build-docs.html",
+    "guides/contributing/debug": "../../contributing/debug.html",
+    "guides/contributing/docstring": "../../contributing/docstring.html",
+    "guides/documentation-style-guide": "../../contributing/contributing/documentation-style-guide.html",
+    "guides/make-a-contribution": "../../contributing/make-a-contribution.html",
+    "guides/contributing/deprecations": "../../contributing/deprecations.html",
+
+    "tutorial/preliminaries": "../tutorials/intro-tutorial/preliminaries.html",
+    "tutorial/intro": "../tutorials/intro-tutorial/intro.html",
+    "tutorial/index": "../tutorials/intro-tutorial/index.html",
+    "tutorial/gotchas": "../tutorials/intro-tutorial/gotchas.html",
+    "tutorial/features": "../tutorials/intro-tutorial/features.html",
+    "tutorial/next": "../tutorials/intro-tutorial/next.html",
+    "tutorial/basic_operations": "../tutorials/intro-tutorial/basic_operations.html",
+    "tutorial/printing": "../tutorials/intro-tutorial/printing.html",
+    "tutorial/simplification": "../tutorials/intro-tutorial/simplification.html",
+    "tutorial/calculus": "../tutorials/intro-tutorial/calculus.html",
+    "tutorial/solvers": "../tutorials/intro-tutorial/solvers.html",
+    "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
+    "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
+
 }
+
+html_baseurl = "https://docs.sympy.org/latest/"
+
+# Configure Sphinx copybutton (see https://sphinx-copybutton.readthedocs.io/en/latest/use.html)
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
@@ -71,9 +113,16 @@ mathjax3_config = {
 
 # Myst configuration (for .md files). See
 # https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
-myst_enable_extensions = ["dollarmath", "linkify"]
-myst_heading_anchors = 2
+myst_enable_extensions = ["dollarmath", "linkify", "tasklist"]
+myst_heading_anchors = 6
+# Make - [ ] checkboxes from the tasklist extension checkable
+# Requires https://github.com/executablebooks/MyST-Parser/pull/686
+# myst_enable_checkboxes = True
 # myst_update_mathjax = False
+
+# Don't linkify links unless they start with "https://". This is needed
+# because the linkify library treates .py as a TLD.
+myst_linkify_fuzzy_links = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -119,7 +168,9 @@ today_fmt = '%B %d, %Y'
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+sys.path.append(os.path.abspath("./_pygments"))
+pygments_style = 'styles.SphinxHighContrastStyle'
+pygments_dark_style = 'styles.NativeHighContrastStyle'
 
 # Don't show the source code hyperlinks when using matplotlib plot directive.
 plot_html_show_source_link = False
@@ -130,7 +181,7 @@ plot_html_show_source_link = False
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style = 'default.css'
+# html_style = 'default.css'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -142,12 +193,112 @@ html_static_path = ['_static']
 html_last_updated_fmt = '%b %d, %Y'
 
 # was classic
-html_theme = "classic"
+# html_theme = "classic"
+html_theme = "furo"
 
-html_logo = '_static/sympylogo.png'
-html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
-# See http://www.sphinx-doc.org/en/master/theming.html#builtin-themes
+# Adjust the sidebar so that the entire sidebar is scrollable
+html_sidebars = {
+    "**": [
+        "sidebar/scroll-start.html",
+        "sidebar/brand.html",
+        "sidebar/search.html",
+        "sidebar/navigation.html",
+        "sidebar/versions.html",
+        "sidebar/scroll-end.html",
+    ],
+}
 
+common_theme_variables = {
+    # Main "SymPy green" colors. Many things uses these colors.
+    "color-brand-primary": "#52833A",
+    "color-brand-content": "#307748",
+
+    # The left sidebar.
+    "color-sidebar-background": "#3B5526",
+    "color-sidebar-background-border": "var(--color-background-primary)",
+    "color-sidebar-link-text": "#FFFFFF",
+    "color-sidebar-brand-text": "var(--color-sidebar-link-text--top-level)",
+    "color-sidebar-link-text--top-level": "#FFFFFF",
+    "color-sidebar-item-background--hover": "var(--color-brand-primary)",
+    "color-sidebar-item-expander-background--hover": "var(--color-brand-primary)",
+
+    "color-link-underline--hover": "var(--color-link)",
+    "color-api-keyword": "#000000bd",
+    "color-api-name": "var(--color-brand-content)",
+    "color-api-pre-name": "var(--color-brand-content)",
+    "api-font-size": "var(--font-size--normal)",
+    "color-foreground-secondary": "#53555B",
+
+    # TODO: Add the other types of admonitions here if anyone uses them.
+    "color-admonition-title-background--seealso": "#CCCCCC",
+    "color-admonition-title--seealso": "black",
+    "color-admonition-title-background--note": "#CCCCCC",
+    "color-admonition-title--note": "black",
+    "color-admonition-title-background--warning": "var(--color-problematic)",
+    "color-admonition-title--warning": "white",
+    "admonition-font-size": "var(--font-size--normal)",
+    "admonition-title-font-size": "var(--font-size--normal)",
+
+    # Note: this doesn't work. If we want to change this, we have to set
+    # it as the .highlight background in custom.css.
+    "color-code-background": "hsl(80deg 100% 95%)",
+
+    "code-font-size": "var(--font-size--small)",
+    "font-stack--monospace": 'DejaVu Sans Mono,"SFMono-Regular",Menlo,Consolas,Monaco,Liberation Mono,Lucida Console,monospace;'
+    }
+
+html_theme_options = {
+    "light_css_variables": common_theme_variables,
+    # The dark variables automatically inherit values from the light variables
+    "dark_css_variables": {
+        **common_theme_variables,
+        "color-brand-primary": "#33CB33",
+        "color-brand-content": "#1DBD1D",
+
+        "color-api-keyword": "#FFFFFFbd",
+        "color-api-overall": "#FFFFFF90",
+        "color-api-paren": "#FFFFFF90",
+
+        "color-sidebar-item-background--hover": "#52833A",
+        "color-sidebar-item-expander-background--hover": "#52833A",
+        # This is the color of the text in the right sidebar
+        "color-foreground-secondary": "#9DA1AC",
+
+        "color-admonition-title-background--seealso": "#555555",
+        "color-admonition-title-background--note": "#555555",
+        "color-problematic": "#B30000",
+    },
+    # See https://pradyunsg.me/furo/customisation/footer/
+    "footer_icons": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/sympy/sympy",
+            "html": """
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            """,
+            "class": "",
+        },
+    ],
+}
+
+# Add a header for PR preview builds. See the Circle CI configuration.
+if os.environ.get("CIRCLECI") == "true":
+    PR_NUMBER = os.environ.get('CIRCLE_PR_NUMBER')
+    SHA1 = os.environ.get('CIRCLE_SHA1')
+    html_theme_options['announcement'] = f"""This is a preview build from
+SymPy pull request <a href="https://github.com/sympy/sympy/pull/{PR_NUMBER}">
+#{PR_NUMBER}</a>. It was built against <a
+href="https://github.com/sympy/sympy/pull/{PR_NUMBER}/commits/{SHA1}">{SHA1[:7]}</a>.
+If you aren't looking for a PR preview, go to <a
+href="https://docs.sympy.org/">the main SymPy documentation</a>. """
+
+# custom.css contains changes that aren't possible with the above because they
+# aren't specified in the Furo theme as CSS variables
+html_css_files = ['custom.css']
+
+# html_js_files = []
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -168,7 +319,7 @@ html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
 html_domain_indices = ['py-modindex']
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
-#html_copy_source = True
+# html_copy_source = True
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'SymPydoc'
@@ -220,6 +371,7 @@ latex_elements = {
 # SymPy logo on title page
 html_logo = '_static/sympylogo.png'
 latex_logo = '_static/sympylogo_big.png'
+html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
@@ -248,8 +400,18 @@ texinfo_documents = [
 # Use svg for graphviz
 graphviz_output_format = 'svg'
 
+# Enable links to other packages
+intersphinx_mapping = {
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'mpmath': ('https://mpmath.org/doc/current/', None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+}
+# Require :external: to reference intersphinx. Prevents accidentally linking
+# to something from matplotlib.
+intersphinx_disabled_reftypes = ['*']
 
-# Requried for linkcode extension.
+# Required for linkcode extension.
 # Get commit hash from the external file.
 commit_hash_filepath = '../commit_hash.txt'
 commit_hash = None
@@ -297,15 +459,6 @@ def linkcode_resolve(domain, info):
             obj = getattr(obj, part)
         except Exception:
             return
-
-    # strip decorators, which would resolve to the source of the decorator
-    # possibly an upstream bug in getsourcefile, bpo-1764286
-    try:
-        unwrap = inspect.unwrap
-    except AttributeError:
-        pass
-    else:
-        obj = unwrap(obj)
 
     try:
         fn = inspect.getsourcefile(obj)

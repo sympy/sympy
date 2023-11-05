@@ -19,6 +19,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
@@ -34,7 +35,7 @@ from sympy.utilities.misc import filldedent
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
 
     args: tTuple[Expr, Tuple]
 
@@ -122,7 +123,7 @@ class Integral(AddWithLimits):
         sympy.concrete.expr_with_limits.ExprWithLimits.limits
         sympy.concrete.expr_with_limits.ExprWithLimits.variables
         """
-        return AddWithLimits.free_symbols.fget(self)
+        return super().free_symbols
 
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
@@ -419,8 +420,8 @@ class Integral(AddWithLimits):
             manual = meijerg = heurisch = False
         elif heurisch:
             manual = meijerg = risch = False
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual, heurisch=heurisch,
-            conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual, "heurisch": heurisch,
+            "conds": conds}
 
         if conds not in ('separate', 'piecewise', 'none'):
             raise ValueError('conds must be one of "separate", "piecewise", '
@@ -447,6 +448,12 @@ class Integral(AddWithLimits):
 
         # now compute and check the function
         function = self.function
+
+        # hack to use a consistent Heaviside(x, 1/2)
+        function = function.replace(
+            lambda x: isinstance(x, Heaviside) and x.args[1]*2 != 1,
+            lambda x: Heaviside(x.args[0]))
+
         if deep:
             function = function.doit(**hints)
         if function.is_zero:
@@ -455,7 +462,7 @@ class Integral(AddWithLimits):
         # hacks to handle special cases
         if isinstance(function, MatrixBase):
             return function.applyfunc(
-                lambda f: self.func(f, self.limits).doit(**hints))
+                lambda f: self.func(f, *self.limits).doit(**hints))
 
         if isinstance(function, FormalPowerSeries):
             if len(self.limits) > 1:
@@ -619,7 +626,7 @@ class Integral(AddWithLimits):
 
             final = hints.get('final', True)
             # dotit may be iterated but floor terms making atan and acot
-            # continous should only be added in the final round
+            # continuous should only be added in the final round
             if (final and not isinstance(antideriv, Integral) and
                 antideriv is not None):
                 for atan_term in antideriv.atoms(atan):
@@ -922,8 +929,8 @@ class Integral(AddWithLimits):
             except (ValueError, PolynomialError):
                 pass
 
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual,
-            heurisch=heurisch, conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual,
+            "heurisch": heurisch, "conds": conds}
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
@@ -1167,16 +1174,15 @@ class Integral(AddWithLimits):
             yield integrate(term, *expr.limits)
 
     def _eval_nseries(self, x, n, logx=None, cdir=0):
-        expr = self.as_dummy()
         symb = x
-        for l in expr.limits:
+        for l in self.limits:
             if x in l[1:]:
                 symb = l[0]
                 break
-        terms, order = expr.function.nseries(
+        terms, order = self.function.nseries(
             x=symb, n=n, logx=logx).as_coeff_add(Order)
         order = [o.subs(symb, x) for o in order]
-        return integrate(terms, *expr.limits) + Add(*order)*x
+        return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         series_gen = self.args[0].lseries(x)
@@ -1293,7 +1299,7 @@ class Integral(AddWithLimits):
         References
         ==========
 
-        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
+        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Riemann_summation_methods
         """
 
         from sympy.concrete.summations import Sum
@@ -1362,7 +1368,7 @@ class Integral(AddWithLimits):
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
-        .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+        .. [2] https://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
         if len(self.limits) != 1 or len(list(self.limits[0])) != 3:
             raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "

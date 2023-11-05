@@ -70,7 +70,7 @@ This shows digits 999,951 through 1,000,000 of pi:
 
 
 High-precision calculations can be slow. It is recommended (but entirely
-optional) to install gmpy (https://code.google.com/p/gmpy/), which will
+optional) to install gmpy (https://github.com/aleaxit/gmpy), which will
 significantly speed up computations such as the one above.
 
 Floating-point numbers
@@ -343,7 +343,7 @@ digits in a fraction of a second with a simple command:
     >>> f = factorial
     >>> n = Symbol('n', integer=True)
     >>> R = 9801/sqrt(8)/Sum(f(4*n)*(1103+26390*n)/f(n)**4/396**(4*n),
-    ...                         (n, 0, oo)) #doctest: +SKIP
+    ...                         (n, 0, oo))
     >>> N(R, 10000) #doctest: +SKIP
     3.141592653589793238462643383279502884197169399375105820974944592307816406286208
     99862803482534211706798214808651328230664709384460955058223172535940812848111745

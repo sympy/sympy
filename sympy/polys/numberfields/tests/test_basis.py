@@ -10,10 +10,9 @@ from sympy.testing.pytest import raises
 
 
 def test_round_two():
-    # Poly must be monic, irreducible, and over ZZ:
-    raises(ValueError, lambda: round_two(Poly(3 * x ** 2 + 1)))
+    # Poly must be irreducible, and over ZZ or QQ:
     raises(ValueError, lambda: round_two(Poly(x ** 2 - 1)))
-    raises(ValueError, lambda: round_two(Poly(x ** 2 + QQ(1, 2))))
+    raises(ValueError, lambda: round_two(Poly(x ** 2 + sqrt(2))))
 
     # Test on many fields:
     cases = (
@@ -59,6 +58,10 @@ def test_round_two():
         (x**3 + 9 * x**2 + 6 * x - 8, DM([(1, 0, 0), (0, (1, 2), (1, 2)), (0, 0, 1)], QQ).transpose(), 3969),
         # F = 2^2 * 3^2 * 7
         (x**3 + 15 * x**2 - 9 * x + 13, DM([((1, 6), (1, 3), (1, 6)), (0, 1, 0), (0, 0, 1)], QQ).transpose(), -5292),
+        # Polynomial need not be monic
+        (5*x**3 + 5*x**2 - 10 * x + 40, DM([[1, 0, 0], [0, 1, 0], [0, (1, 2), (1, 2)]], QQ).transpose(), -503),
+        # Polynomial can have non-integer rational coeffs
+        (QQ(5, 3)*x**3 + QQ(5, 3)*x**2 - QQ(10, 3)*x + QQ(40, 3), DM([[1, 0, 0], [0, 1, 0], [0, (1, 2), (1, 2)]], QQ).transpose(), -503),
     )
     for f, B_exp, d_exp in cases:
         K = QQ.alg_field_from_poly(f)
@@ -78,5 +81,5 @@ def test_AlgebraicField_integral_basis():
     B2 = k.integral_basis(fmt='alg')
     assert B0 == [k([1]), k([S.Half, S.Half])]
     assert B1 == [1, S.Half + alpha/2]
-    assert B2 == [alpha.field_element([1]),
-                  alpha.field_element([S.Half, S.Half])]
+    assert B2 == [k.ext.field_element([1]),
+                  k.ext.field_element([S.Half, S.Half])]

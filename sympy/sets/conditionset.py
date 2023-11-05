@@ -212,7 +212,7 @@ with
         try:
             lambda_cond = lamda(other)
         except TypeError:
-            return Contains(other, self, evaluate=False)
+            return None
         else:
             return And(base_cond, lambda_cond)
 

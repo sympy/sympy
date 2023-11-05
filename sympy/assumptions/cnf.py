@@ -54,10 +54,7 @@ class Literal:
         if callable(self.lit):
             lit = self.lit(expr)
         else:
-            try:
-                lit = self.lit.apply(expr)
-            except AttributeError:
-                lit = self.lit.rcall(expr)
+            lit = self.lit.apply(expr)
         return type(self)(lit, self.is_Not)
 
     def __invert__(self):
@@ -173,7 +170,7 @@ def to_NNF(expr, composite_map=None):
     from sympy.assumptions.ask import Q
 
     if composite_map is None:
-        composite_map = dict()
+        composite_map = {}
 
 
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
@@ -359,7 +356,7 @@ class CNF:
         return ll
 
     def rcall(self, expr):
-        clause_list = list()
+        clause_list = []
         for clause in self.clauses:
             lits = [arg.rcall(expr) for arg in clause]
             clause_list.append(OR(*lits))
@@ -405,8 +402,8 @@ class EncodedCNF:
     """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
-            data = list()
-            encoding = dict()
+            data = []
+            encoding = {}
         self.data = data
         self.encoding = encoding
         self._symbols = list(encoding.keys())
@@ -414,7 +411,7 @@ class EncodedCNF:
     def from_cnf(self, cnf):
         self._symbols = list(cnf.all_predicates())
         n = len(self._symbols)
-        self.encoding = dict(list(zip(self._symbols, list(range(1, n + 1)))))
+        self.encoding = dict(zip(self._symbols, range(1, n + 1)))
         self.data = [self.encode(clause) for clause in cnf.clauses]
 
     @property

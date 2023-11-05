@@ -1,7 +1,7 @@
 from sympy.core import Expr, S, oo, pi, sympify
 from sympy.core.evalf import N
 from sympy.core.sorting import default_sort_key, ordered
-from sympy.core.symbol import _symbol, Dummy, symbols, Symbol
+from sympy.core.symbol import _symbol, Dummy, Symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -22,6 +22,9 @@ from mpmath.libmp.libmpf import prec_to_dps
 import warnings
 
 
+x, y, T = [Dummy('polygon_dummy', real=True) for i in range(3)]
+
+
 class Polygon(GeometrySet):
     """A two-dimensional polygon.
 
@@ -31,13 +34,12 @@ class Polygon(GeometrySet):
     Parameters
     ==========
 
-    vertices : sequence of Points
+    vertices
+        A sequence of points.
 
-    Optional parameters
-    ==========
-
-    n : If > 0, an n-sided RegularPolygon is created. See below.
-        Default value is 0.
+    n : int, optional
+        If $> 0$, an n-sided RegularPolygon is created.
+        Default value is $0$.
 
     Attributes
     ==========
@@ -114,6 +116,8 @@ class Polygon(GeometrySet):
     Point2D(0, 1)
 
     """
+
+    __slots__ = ()
 
     def __new__(cls, *args, n = 0, **kwargs):
         if n:
@@ -208,7 +212,7 @@ class Polygon(GeometrySet):
         return simplify(area) / 2
 
     @staticmethod
-    def _isright(a, b, c):
+    def _is_clockwise(a, b, c):
         """Return True/False for cw/ccw orientation.
 
         Examples
@@ -216,9 +220,9 @@ class Polygon(GeometrySet):
 
         >>> from sympy import Point, Polygon
         >>> a, b, c = [Point(i) for i in [(0, 0), (1, 1), (1, 0)]]
-        >>> Polygon._isright(a, b, c)
+        >>> Polygon._is_clockwise(a, b, c)
         True
-        >>> Polygon._isright(a, c, b)
+        >>> Polygon._is_clockwise(a, c, b)
         False
         """
         ba = b - a
@@ -259,18 +263,26 @@ class Polygon(GeometrySet):
 
         """
 
-        # Determine orientation of points
         args = self.vertices
-        cw = self._isright(args[-1], args[0], args[1])
-
+        n = len(args)
         ret = {}
-        for i in range(len(args)):
+        for i in range(n):
             a, b, c = args[i - 2], args[i - 1], args[i]
-            ang = Ray(b, a).angle_between(Ray(b, c))
-            if cw ^ self._isright(a, b, c):
-                ret[b] = 2*S.Pi - ang
+            reflex_ang = Ray(b, a).angle_between(Ray(b, c))
+            if self._is_clockwise(a, b, c):
+                ret[b] = 2*S.Pi - reflex_ang
             else:
-                ret[b] = ang
+                ret[b] = reflex_ang
+
+        # internal sum should be pi*(n - 2), not pi*(n+2)
+        # so if ratio is (n+2)/(n-2) > 1 it is wrong
+        wrong = ((sum(ret.values())/S.Pi-1)/(n - 2) - 1).is_positive
+        if wrong:
+            two_pi = 2*S.Pi
+            for b in ret:
+                ret[b] = two_pi - ret[b]
+        elif wrong is None:
+            raise ValueError("could not determine Polygon orientation.")
         return ret
 
     @property
@@ -675,9 +687,9 @@ class Polygon(GeometrySet):
         """
         # Determine orientation of points
         args = self.vertices
-        cw = self._isright(args[-2], args[-1], args[0])
+        cw = self._is_clockwise(args[-2], args[-1], args[0])
         for i in range(1, len(args)):
-            if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
+            if cw ^ self._is_clockwise(args[i - 2], args[i - 1], args[i]):
                 return False
         # check for intersecting sides
         sides = self.sides
@@ -846,7 +858,6 @@ class Polygon(GeometrySet):
         if other.free_symbols:
             raise NotImplementedError('non-numeric coordinates')
         unknown = False
-        T = Dummy('t', real=True)
         p = self.arbitrary_point(T)
         for pt, cond in p.args:
             sol = solve(pt - other, T, dict=True)
@@ -1002,7 +1013,6 @@ class Polygon(GeometrySet):
         points = list(self.vertices)
         points.append(points[0])
 
-        x, y = symbols('x, y', real=True, cls=Dummy)
         eq = line.equation(x, y)
 
         # considering equation of line to be `ax +by + c`
@@ -1024,7 +1034,7 @@ class Polygon(GeometrySet):
             if compare > 0:
                 if not prev:
                     # if previous point lies below the line, the intersection
-                    # point of the polygon egde and the line has to be included
+                    # point of the polygon edge and the line has to be included
                     edge = Line(point, prev_point)
                     new_point = edge.intersection(line)
                     upper_vertices.append(new_point[0])
@@ -1111,7 +1121,7 @@ class Polygon(GeometrySet):
         ==========================
 
         Method:
-        [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
+        [1] https://web.archive.org/web/20150509035744/http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
         [2] https://en.wikipedia.org/wiki/Rotating_calipers
         and antipodal points:
@@ -1392,7 +1402,7 @@ class Polygon(GeometrySet):
         b = {}
         pts = list(p.args)
         pts.append(pts[0])  # close it
-        cw = Polygon._isright(*pts[:3])
+        cw = Polygon._is_clockwise(*pts[:3])
         if cw:
             pts = list(reversed(pts))
         for v, a in p.angles.items():
@@ -2419,8 +2429,6 @@ class Triangle(Polygon):
         Point2D(1/2, 1/2)
         """
         a, b, c = [x.perpendicular_bisector() for x in self.sides]
-        if not a.intersection(b):
-            print(a,b,a.intersection(b))
         return a.intersection(b)[0]
 
     @property
@@ -2639,8 +2647,8 @@ class Triangle(Polygon):
         References
         ==========
 
-        .. [1] http://mathworld.wolfram.com/Exradius.html
-        .. [2] http://mathworld.wolfram.com/Excircles.html
+        .. [1] https://mathworld.wolfram.com/Exradius.html
+        .. [2] https://mathworld.wolfram.com/Excircles.html
 
         """
 
@@ -2690,7 +2698,7 @@ class Triangle(Polygon):
         References
         ==========
 
-        .. [1] http://mathworld.wolfram.com/Excircles.html
+        .. [1] https://mathworld.wolfram.com/Excircles.html
 
         """
 

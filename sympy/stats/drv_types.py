@@ -179,7 +179,7 @@ def FlorySchulz(name, a):
     >>> X = FlorySchulz("x", a)
 
     >>> density(X)(z)
-    (4/5)**(z - 1)*z/25
+    (5/4)**(1 - z)*z/25
 
     >>> E(X)
     9
@@ -252,7 +252,7 @@ def Geometric(name, p):
     >>> X = Geometric("x", p)
 
     >>> density(X)(z)
-    (4/5)**(z - 1)/5
+    (5/4)**(1 - z)/5
 
     >>> E(X)
     5
@@ -264,7 +264,7 @@ def Geometric(name, p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Geometric_distribution
-    .. [2] http://mathworld.wolfram.com/GeometricDistribution.html
+    .. [2] https://mathworld.wolfram.com/GeometricDistribution.html
 
     """
     return rv(name, GeometricDistribution, p)
@@ -319,8 +319,8 @@ def Hermite(name, a1, a2):
     Parameters
     ==========
 
-    a1: A Positive number greater than equal to 0.
-    a2: A Positive number greater than equal to 0.
+    a1 : A Positive number greater than equal to 0.
+    a2 : A Positive number greater than equal to 0.
 
     Returns
     =======
@@ -398,7 +398,7 @@ def Logarithmic(name, p):
     Parameters
     ==========
 
-    p: A value between 0 and 1
+    p : A value between 0 and 1
 
     Returns
     =======
@@ -429,7 +429,7 @@ def Logarithmic(name, p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Logarithmic_distribution
-    .. [2] http://mathworld.wolfram.com/LogarithmicDistribution.html
+    .. [2] https://mathworld.wolfram.com/LogarithmicDistribution.html
 
     """
     return rv(name, LogarithmicDistribution, p)
@@ -480,8 +480,8 @@ def NegativeBinomial(name, r, p):
     Parameters
     ==========
 
-    r: A positive value
-    p: A value between 0 and 1
+    r : A positive value
+    p : A value between 0 and 1
 
     Returns
     =======
@@ -513,7 +513,7 @@ def NegativeBinomial(name, r, p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Negative_binomial_distribution
-    .. [2] http://mathworld.wolfram.com/NegativeBinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/NegativeBinomialDistribution.html
 
     """
     return rv(name, NegativeBinomialDistribution, r, p)
@@ -556,7 +556,7 @@ def Poisson(name, lamda):
     Parameters
     ==========
 
-    lamda: Positive number, a rate
+    lamda : Positive number, a rate
 
     Returns
     =======
@@ -587,7 +587,7 @@ def Poisson(name, lamda):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Poisson_distribution
-    .. [2] http://mathworld.wolfram.com/PoissonDistribution.html
+    .. [2] https://mathworld.wolfram.com/PoissonDistribution.html
 
     """
     return rv(name, PoissonDistribution, lamda)
@@ -644,8 +644,8 @@ def Skellam(name, mu1, mu2):
     Parameters
     ==========
 
-    mu1: A non-negative value
-    mu2: A non-negative value
+    mu1 : A non-negative value
+    mu2 : A non-negative value
 
     Returns
     =======
@@ -726,7 +726,7 @@ def YuleSimon(name, rho):
     Parameters
     ==========
 
-    rho: A positive value
+    rho : A positive value
 
     Returns
     =======
@@ -799,7 +799,7 @@ def Zeta(name, s):
     Parameters
     ==========
 
-    s: A value greater than 1
+    s : A value greater than 1
 
     Returns
     =======

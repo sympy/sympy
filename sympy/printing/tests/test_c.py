@@ -1,5 +1,5 @@
 from sympy.core import (
-    S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
+    S, pi, oo, Symbol, symbols, Rational, Integer, Float, Function, Mod, GoldenRatio, EulerGamma, Catalan,
     Lambda, Dummy, nan, Mul, Pow, UnevaluatedExpr
 )
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
@@ -11,12 +11,12 @@ from sympy.functions import (
 from sympy.sets import Range
 from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
-    real, float32, float64, float80, float128, intc, Comment, CodeBlock
+    real, float32, float64, float80, float128, intc, Comment, CodeBlock, stderr, QuotedString
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.codegen.cnodes import restrict
@@ -88,7 +88,6 @@ def test_ccode_constants_mathh():
     assert ccode(oo) == "INFINITY"
     assert ccode(-oo, standard='c99') == "-INFINITY"
     assert ccode(pi, type_aliases={real: float80}) == "M_PIl"
-
 
 
 def test_ccode_constants_other():
@@ -165,8 +164,8 @@ def test_ccode_functions2():
     assert ccode(Mod(p1, p2)**s) == 'pow(p1 % p2, s)'
     n = symbols('n', integer=True, negative=True)
     assert ccode(Mod(-n, p2)) == '(-n) % p2'
-    assert ccode(fibonacci(n)) == '(1.0/5.0)*pow(2, -n)*sqrt(5)*(-pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n))'
-    assert ccode(lucas(n)) == 'pow(2, -n)*(pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n))'
+    assert ccode(fibonacci(n)) == '((1.0/5.0)*pow(2, -n)*sqrt(5)*(-pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n)))'
+    assert ccode(lucas(n)) == '(pow(2, -n)*(pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n)))'
 
 
 def test_ccode_user_functions():
@@ -179,6 +178,15 @@ def test_ccode_user_functions():
     assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
     assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
     assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
+
+    expr = Symbol('a')
+    muladd = Function('muladd')
+    for i in range(0, 100):
+        # the large number of terms acts as a regression test for gh-23839
+        expr = muladd(Rational(1, 2), Symbol(f'a{i}'), expr)
+    out = ccode(expr, user_functions={'muladd':'muladd'})
+    assert 'a99' in out
+    assert out.count('muladd') == 100
 
 
 def test_ccode_boolean():
@@ -255,12 +263,12 @@ def test_ccode_sinc():
     from sympy.functions.elementary.trigonometric import sinc
     expr = sinc(x)
     assert ccode(expr) == (
-            "((x != 0) ? (\n"
+            "(((x != 0) ? (\n"
             "   sin(x)/x\n"
             ")\n"
             ": (\n"
             "   1\n"
-            "))")
+            ")))")
 
 
 def test_ccode_Piecewise_deep():
@@ -634,16 +642,16 @@ def test_C99CodePrinter():
 
 @XFAIL
 def test_C99CodePrinter__precision_f80():
-    f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
+    f80_printer = C99CodePrinter({"type_aliases": {real: float80}})
     assert f80_printer.doprint(sin(x+Float('2.1'))) == 'sinl(x + 2.1L)'
 
 
 def test_C99CodePrinter__precision():
     n = symbols('n', integer=True)
     p = symbols('p', integer=True, positive=True)
-    f32_printer = C99CodePrinter(dict(type_aliases={real: float32}))
-    f64_printer = C99CodePrinter(dict(type_aliases={real: float64}))
-    f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
+    f32_printer = C99CodePrinter({"type_aliases": {real: float32}})
+    f64_printer = C99CodePrinter({"type_aliases": {real: float64}})
+    f80_printer = C99CodePrinter({"type_aliases": {real: float80}})
     assert f32_printer.doprint(sin(x+2.1)) == 'sinf(x + 2.1F)'
     assert f64_printer.doprint(sin(x+2.1)) == 'sin(x + 2.1000000000000001)'
     assert f80_printer.doprint(sin(x+Float('2.0'))) == 'sinl(x + 2.0L)'
@@ -739,18 +747,18 @@ def test_ccode_Declaration():
 def test_C99CodePrinter_custom_type():
     # We will look at __float128 (new in glibc 2.26)
     f128 = FloatType('_Float128', float128.nbits, float128.nmant, float128.nexp)
-    p128 = C99CodePrinter(dict(
-        type_aliases={real: f128},
-        type_literal_suffixes={f128: 'Q'},
-        type_func_suffixes={f128: 'f128'},
-        type_math_macro_suffixes={
+    p128 = C99CodePrinter({
+        "type_aliases": {real: f128},
+        "type_literal_suffixes": {f128: 'Q'},
+        "type_func_suffixes": {f128: 'f128'},
+        "type_math_macro_suffixes": {
             real: 'f128',
             f128: 'f128'
         },
-        type_macros={
+        "type_macros": {
             f128: ('__STDC_WANT_IEC_60559_TYPES_EXT__',)
         }
-    ))
+    })
     assert p128.doprint(x) == 'x'
     assert not p128.headers
     assert not p128.libraries
@@ -814,7 +822,10 @@ def test_ccode_Type():
 
 
 def test_ccode_codegen_ast():
-    assert ccode(Comment("this is a comment")) == "// this is a comment"
+    # Note that C only allows comments of the form /* ... */, double forward
+    # slash is not standard C, and some C compilers will grind to a halt upon
+    # encountering them.
+    assert ccode(Comment("this is a comment")) == "/* this is a comment */"  # not //
     assert ccode(While(abs(x) > 1, [aug_assign(x, '-', 1)])) == (
         'while (fabs(x) > 1) {\n'
         '   x -= 1;\n'
@@ -837,21 +848,17 @@ def test_ccode_codegen_ast():
     block = CodeBlock(
         x,
         Print([x, y], "%d %d"),
+        Print([QuotedString('hello'), y], "%s %d", file=stderr),
         FunctionCall('pwer', [x]),
         Return(x),
     )
     assert ccode(block) == '\n'.join([
         'x;',
         'printf("%d %d", x, y);',
+        'fprintf(stderr, "%s %d", "hello", y);',
         'pwer(x);',
         'return x;',
     ])
-
-def test_ccode_submodule():
-    # Test the compatibility sympy.printing.ccode module imports
-    with warns_deprecated_sympy():
-        import sympy.printing.ccode # noqa:F401
-
 
 def test_ccode_UnevaluatedExpr():
     assert ccode(UnevaluatedExpr(y * x) + z) == "z + x*y"

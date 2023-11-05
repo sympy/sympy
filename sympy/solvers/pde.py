@@ -367,10 +367,7 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
                 matching_hints["1st_linear_variable_coeff"] = r
 
     # Order keys based on allhints.
-    retlist = []
-    for i in allhints:
-        if i in matching_hints:
-            retlist.append(i)
+    retlist = [i for i in allhints if i in matching_hints]
 
     if dict:
         # Dictionaries are ordered arbitrarily, so make note of which
@@ -586,7 +583,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         >>> from sympy import Function, pprint
         >>> f = Function('f')
         >>> G = Function('G')
-        >>> u = f(x,y)
+        >>> u = f(x, y)
         >>> ux = u.diff(x)
         >>> uy = u.diff(y)
         >>> genform = a*ux + b*uy + c*u - G(x,y)
@@ -595,40 +592,39 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y) - G(x, y)
           dx              dy
         >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
-                  //          a*x + b*y                                             \
-                  ||              /                                                 |
-                  ||             |                                                  |
-                  ||             |                                       c*xi       |
-                  ||             |                                     -------      |
-                  ||             |                                      2    2      |
-                  ||             |      /a*xi + b*eta  -a*eta + b*xi\  a  + b       |
-                  ||             |     G|------------, -------------|*e        d(xi)|
-                  ||             |      |   2    2         2    2   |               |
-                  ||             |      \  a  + b         a  + b    /               |
-                  ||             |                                                  |
-                  ||            /                                                   |
-                  ||                                                                |
-        f(x, y) = ||F(eta) + -------------------------------------------------------|*
-                  ||                                  2    2                        |
-                  \\                                 a  + b                         /
+                  //          a*x + b*y                                             \  >
+                  ||              /                                                 |  >
+                  ||             |                                                  |  >
+                  ||             |                                      c*xi        |  >
+                  ||             |                                     -------      |  >
+                  ||             |                                      2    2      |  >
+                  ||             |      /a*xi + b*eta  -a*eta + b*xi\  a  + b       |  >
+                  ||             |     G|------------, -------------|*e        d(xi)|  >
+                  ||             |      |   2    2         2    2   |               |  >
+                  ||             |      \  a  + b         a  + b    /               |  >
+                  ||             |                                                  |  >
+                  ||            /                                                   |  >
+                  ||                                                                |  >
+        f(x, y) = ||F(eta) + -------------------------------------------------------|* >
+                  ||                                  2    2                        |  >
+                  \\                                 a  + b                         /  >
         <BLANKLINE>
-                \|
-                ||
-                ||
-                ||
-                ||
-                ||
-                ||
-                ||
-                ||
-          -c*xi ||
-         -------||
-          2    2||
-         a  + b ||
-        e       ||
-                ||
-                /|eta=-a*y + b*x, xi=a*x + b*y
-
+        >         \|
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >  -c*xi  ||
+        >  -------||
+        >   2    2||
+        >  a  + b ||
+        > e       ||
+        >         ||
+        >         /|eta=-a*y + b*x, xi=a*x + b*y
 
     Examples
     ========
@@ -871,10 +867,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
 
     # Handle arguments
     orig_args = list(fun.args)
-    subs_args = []
-    for s in sep:
-        for j in range(0, len(s.args)):
-            subs_args.append(s.args[j])
+    subs_args = [arg for s in sep for arg in s.args]
 
     if do_add:
         functions = reduce(operator.add, sep)
@@ -982,14 +975,8 @@ def _separate(eq, dep, others):
     # current hack :(
     # https://github.com/sympy/sympy/issues/4597
     if len(div) > 0:
-        final = 0
-        for term in eq.args:
-            eqn = 0
-            for i in div:
-                eqn += term / i
-            final += simplify(eqn)
-        eq = final
-
+        # double sum required or some tests will fail
+        eq = Add(*[simplify(Add(*[term/i for i in div])) for term in eq.args])
     # SECOND PASS - separate the derivatives
     div = set()
     lhs = rhs = 0

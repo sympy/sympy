@@ -4,11 +4,10 @@ from sympy.core.sorting import ordered
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, dot
+from sympy.physics.vector.vector import VectorTypeError
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
 
-
-Vector.simp = True
 A = ReferenceFrame('A')
 
 
@@ -110,10 +109,9 @@ def test_Vector_diffs():
     assert v3.dt(A) == (q2dd * A.x + (2 * q3d**2 + q3 * q3dd) * N.x + (q3dd -
                         q3 * q3d**2) * N.y + (q3 * sin(q3) * q2d * q3d -
                         cos(q3) * q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
-    assert v3.dt(B) == (q2dd * A.x - q3 * cos(q3) * q2d**2 * A.y + (2 *
-                        q3d**2 + q3 * q3dd) * N.x + (q3dd - q3 * q3d**2) *
-                        N.y + (2 * q3 * sin(q3) * q2d * q3d - 2 * cos(q3) *
-                        q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
+    assert (v3.dt(B) - (q2dd*A.x - q3*cos(q3)*q2d**2*A.y + (2*q3d**2 +
+        q3*q3dd)*N.x + (q3dd - q3*q3d**2)*N.y + (2*q3*sin(q3)*q2d*q3d -
+        2*cos(q3)*q2d*q3d - q3*cos(q3)*q2dd)*N.z)).express(B).simplify() == 0
     assert v4.dt(N) == (q2dd * A.x + q3d * (q2d + q3d) * A.y + q3dd * B.x +
                         (q3d**2 + q3 * q3dd) * N.x + q3dd * N.y + (q3 *
                         sin(q3) * q2d * q3d - cos(q3) * q2d * q3d - q3 *
@@ -122,10 +120,10 @@ def test_Vector_diffs():
                         N.x + (q3dd - q3 * q3d**2) * N.y + (q3 * sin(q3) *
                         q2d * q3d - cos(q3) * q2d * q3d - q3 * cos(q3) *
                         q2dd) * N.z)
-    assert v4.dt(B) == (q2dd * A.x - q3 * cos(q3) * q2d**2 * A.y + q3dd * B.x +
-                        (2 * q3d**2 + q3 * q3dd) * N.x + (q3dd - q3 * q3d**2) *
-                        N.y + (2 * q3 * sin(q3) * q2d * q3d - 2 * cos(q3) *
-                        q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
+    assert (v4.dt(B) - (q2dd*A.x - q3*cos(q3)*q2d**2*A.y + q3dd*B.x +
+                        (2*q3d**2 + q3*q3dd)*N.x + (q3dd - q3*q3d**2)*N.y +
+                        (2*q3*sin(q3)*q2d*q3d - 2*cos(q3)*q2d*q3d -
+                         q3*cos(q3)*q2dd)*N.z)).express(B).simplify() == 0
     assert v5.dt(B) == q1d*A.x + (q3*q2d + q2d)*A.y + (-q2*q2d + q3d)*A.z
     assert v5.dt(A) == q1d*A.x + q2d*A.y + q3d*A.z
     assert v5.dt(N) == (-q2*q3d + q1d)*A.x + (q1*q3d + q2d)*A.y + q3d*A.z
@@ -238,3 +236,9 @@ def test_vector_xreplace():
     assert v.xreplace({x:1, z:0}) == A.x + y * A.y
     raises(TypeError, lambda: v.xreplace())
     raises(TypeError, lambda: v.xreplace([x, y]))
+
+def test_issue_23366():
+    u1 = dynamicsymbols('u1')
+    N = ReferenceFrame('N')
+    N_v_A = u1*N.x
+    raises(VectorTypeError, lambda: N_v_A.diff(N, u1))

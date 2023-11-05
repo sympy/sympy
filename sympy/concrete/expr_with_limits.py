@@ -338,7 +338,7 @@ class ExprWithLimits(Expr):
             for i in xab[1:]:
                 isyms.update(i.free_symbols)
         reps = {v: k for k, v in reps.items()}
-        return set([reps.get(_, _) for _ in isyms])
+        return {reps.get(_, _) for _ in isyms}
 
     @property
     def is_number(self):
@@ -540,6 +540,8 @@ class AddWithLimits(ExprWithLimits):
         Parent class for Integral and Sum.
     """
 
+    __slots__ = ()
+
     def __new__(cls, function, *symbols, **assumptions):
         from sympy.concrete.summations import Sum
         pre = _common_new(cls, function, *symbols,
@@ -590,7 +592,9 @@ class AddWithLimits(ExprWithLimits):
 
     def _eval_expand_basic(self, **hints):
         summand = self.function.expand(**hints)
-        if summand.is_Add and summand.is_commutative:
+        force = hints.get('force', False)
+        if (summand.is_Add and (force or summand.is_commutative and
+                 self.has_finite_limits is not False)):
             return Add(*[self.func(i, *self.limits) for i in summand.args])
         elif isinstance(summand, MatrixBase):
             return summand.applyfunc(lambda x: self.func(x, *self.limits))

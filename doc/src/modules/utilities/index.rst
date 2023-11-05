@@ -9,7 +9,7 @@ Utilities
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    autowrap.rst
    codegen.rst
@@ -20,6 +20,5 @@ Contents:
    lambdify.rst
    memoization.rst
    misc.rst
-   pkgdata.rst
    source.rst
    timeutils.rst

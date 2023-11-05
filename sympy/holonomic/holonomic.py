@@ -4,7 +4,8 @@ various operations on them.
 """
 
 from sympy.core import Add, Mul, Pow
-from sympy.core.numbers import NaN, Infinity, NegativeInfinity, Float, I, pi
+from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,
+        equal_valued, int_valued)
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -329,9 +330,7 @@ class DifferentialOperator:
 
         # if self is `Dx`
         if self.listofpoly == self.parent.derivative_operator.listofpoly:
-            sol = []
-            for i in range(0, n):
-                sol.append(self.parent.base.zero)
+            sol = [self.parent.base.zero]*n
             sol.append(self.parent.base.one)
             return DifferentialOperator(sol, self.parent)
 
@@ -351,6 +350,8 @@ class DifferentialOperator:
         for i, j in enumerate(listofpoly):
             if j == self.parent.base.zero:
                 continue
+
+            j = self.parent.base.to_sympy(j)
 
             if i == 0:
                 print_str += '(' + sstr(j) + ')'
@@ -607,7 +608,7 @@ class HolonomicFunction:
                 if i >= len(expr.listofpoly):
                     p.append(K.zero)
                 else:
-                    p.append(K.new(expr.listofpoly[i].rep))
+                    p.append(K.new(expr.listofpoly[i].to_list()))
             r.append(p)
 
         # solving the linear system using gauss jordan solver
@@ -635,7 +636,7 @@ class HolonomicFunction:
                     if i >= len(expr.listofpoly):
                         p.append(K.zero)
                     else:
-                        p.append(K.new(expr.listofpoly[i].rep))
+                        p.append(K.new(expr.listofpoly[i].to_list()))
                 r.append(p)
 
             # solving the linear system using gauss jordan solver
@@ -668,7 +669,7 @@ class HolonomicFunction:
                 return HolonomicFunction(sol, self.x, self.x0, y0)
 
             else:
-                # change the intiial conditions to a same point
+                # change the initial conditions to a same point
                 selfat0 = self.annihilator.is_singular(0)
                 otherat0 = other.annihilator.is_singular(0)
 
@@ -757,8 +758,8 @@ class HolonomicFunction:
             for i in self.y0:
                 c = self.y0[i]
                 c2 = []
-                for j in range(len(c)):
-                    if c[j] == 0:
+                for j, cj in enumerate(c):
+                    if cj == 0:
                         c2.append(S.Zero)
 
                     # if power on `x` is -1, the integration becomes log(x)
@@ -766,7 +767,7 @@ class HolonomicFunction:
                     elif i + j + 1 == 0:
                         raise NotImplementedError("logarithmic terms in the series are not supported")
                     else:
-                        c2.append(c[j] / S(i + j + 1))
+                        c2.append(cj / S(i + j + 1))
                 y0[i + 1] = c2
 
             if hasattr(limits, "__iter__"):
@@ -870,7 +871,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        .integrate()
+        integrate
         """
         kwargs.setdefault('evaluate', True)
         if args:
@@ -907,14 +908,14 @@ class HolonomicFunction:
         R = ann.parent.base
         K = R.get_field()
 
-        seq_dmf = [K.new(i.rep) for i in ann.listofpoly]
+        seq_dmf = [K.new(i.to_list()) for i in ann.listofpoly]
 
         # -y = a1*y'/a0 + a2*y''/a0 ... + an*y^n/a0
         rhs = [i / seq_dmf[0] for i in seq_dmf[1:]]
         rhs.insert(0, K.zero)
 
         # differentiate both lhs and rhs
-        sol = _derivate_diff_eq(rhs)
+        sol = _derivate_diff_eq(rhs, K)
 
         # add the term y' in lhs to rhs
         sol = _add_lists(sol, [K.zero, K.one])
@@ -978,10 +979,10 @@ class HolonomicFunction:
         K = R.get_field()
 
         for j in ann_self.listofpoly:
-            list_self.append(K.new(j.rep))
+            list_self.append(K.new(j.to_list()))
 
         for j in ann_other.listofpoly:
-            list_other.append(K.new(j.rep))
+            list_other.append(K.new(j.to_list()))
 
         # will be used to reduce the degree
         self_red = [-list_self[i] / list_self[a] for i in range(a)]
@@ -1009,7 +1010,7 @@ class HolonomicFunction:
                     coeff_mul[i][j + 1] += coeff_mul[i][j]
                     coeff_mul[i + 1][j] += coeff_mul[i][j]
                     if isinstance(coeff_mul[i][j], K.dtype):
-                        coeff_mul[i][j] = DMFdiff(coeff_mul[i][j])
+                        coeff_mul[i][j] = DMFdiff(coeff_mul[i][j], K)
                     else:
                         coeff_mul[i][j] = coeff_mul[i][j].diff(self.x)
 
@@ -1202,7 +1203,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        from_hyper()
+        from_hyper
         """
 
         R = self.annihilator.parent
@@ -1285,13 +1286,13 @@ class HolonomicFunction:
         See Also
         ========
 
-        HolonomicFunction.series()
+        HolonomicFunction.series
 
         References
         ==========
 
         .. [1] https://hal.inria.fr/inria-00070025/document
-        .. [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+        .. [2] https://www3.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
 
         """
 
@@ -1463,7 +1464,7 @@ class HolonomicFunction:
                 grp.append([i])
                 continue
             for j in grp:
-                if int(j[0] - i) == j[0] - i:
+                if int_valued(j[0] - i):
                     j.append(i)
                     intdiff = True
                     break
@@ -1475,7 +1476,7 @@ class HolonomicFunction:
         independent = True if all(len(i) == 1 for i in grp) else False
 
         allpos = all(i >= 0 for i in reals)
-        allint = all(int(i) == i for i in reals)
+        allint = all(int_valued(i) for i in reals)
 
         # if initial conditions are provided
         # then use them.
@@ -1483,7 +1484,7 @@ class HolonomicFunction:
             rootstoconsider = []
             for i in ordered(self.y0.keys()):
                 for j in ordered(indicialroots.keys()):
-                    if j == i:
+                    if equal_valued(j, i):
                         rootstoconsider.append(i)
 
         elif allpos and allint:
@@ -1676,7 +1677,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        HolonomicFunction.to_sequence()
+        HolonomicFunction.to_sequence
         """
 
         if _recur is None:
@@ -1714,10 +1715,10 @@ class HolonomicFunction:
         seq = []
 
         for i, j in enumerate(seq_dmp):
-            seq.append(K.new(j.rep))
+            seq.append(K.new(j.to_list()))
 
         sub = [-seq[i] / seq[k] for i in range(k)]
-        sol = [i for i in recurrence.u0]
+        sol = list(recurrence.u0)
 
         if l + 1 >= n:
             pass
@@ -1778,7 +1779,7 @@ class HolonomicFunction:
             degree = len(listofdmp) - 1
             if - i - b <= 0 and degree - i - b >= 0:
                 s = s + listofdmp[degree - i - b] * y
-            y *= x - i
+            y *= R.from_sympy(x - i)
 
         return roots(R.to_sympy(s), x)
 
@@ -1868,7 +1869,7 @@ class HolonomicFunction:
         parent, _ = DifferentialOperators(R, 'Dx')
         sol = []
         for j in self.annihilator.listofpoly:
-            sol.append(R(j.rep))
+            sol.append(R(j.to_list()))
         sol =  DifferentialOperator(sol, parent)
         return HolonomicFunction(sol, z, self.x0, self.y0)
 
@@ -1965,7 +1966,7 @@ class HolonomicFunction:
             sol = S.Zero
             for j, i in enumerate(nonzeroterms):
 
-                if i < 0 or int(i) != i:
+                if i < 0 or not int_valued(i):
                     continue
 
                 i = int(i)
@@ -2007,10 +2008,10 @@ class HolonomicFunction:
         b = r.listofpoly[-1]
 
         # the constant multiple of argument of hypergeometric function
-        if isinstance(a.rep[0], (PolyElement, FracElement)):
-            c = - (S(a.rep[0].as_expr()) * m**(a.degree())) / (S(b.rep[0].as_expr()) * m**(b.degree()))
+        if isinstance(a.LC(), (PolyElement, FracElement)):
+            c = - (S(a.LC().as_expr()) * m**(a.degree())) / (S(b.LC().as_expr()) * m**(b.degree()))
         else:
-            c = - (S(a.rep[0]) * m**(a.degree())) / (S(b.rep[0]) * m**(b.degree()))
+            c = - (S(a.LC()) * m**(a.degree())) / (S(b.LC()) * m**(b.degree()))
 
         sol = 0
 
@@ -2145,7 +2146,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        to_hyper()
+        to_hyper
         """
 
         # convert to hypergeometric first
@@ -2185,12 +2186,15 @@ def from_hyper(func, x0=0, evalf=False):
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
 
     # generalized hypergeometric differential equation
+    xDx = x*Dx
     r1 = 1
-    for i in range(len(a)):
-        r1 = r1 * (x * Dx + a[i])
+    for ai in a:  # XXX gives sympify error if Mul is used with list of all factors
+        r1 *= xDx + ai
+    xDx_1 = xDx - 1
+    # r2 = Mul(*([Dx] + [xDx_1 + bi for bi in b]))  # XXX gives sympify error
     r2 = Dx
-    for i in range(len(b)):
-        r2 = r2 * (x * Dx + b[i] - 1)
+    for bi in b:
+        r2 *= xDx_1 + bi
     sol = r1 - r2
 
     simp = hyperexpand(func)
@@ -2263,17 +2267,15 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
 
     # compute the differential equation satisfied by the
     # Meijer G-function.
-    mnp = (-1)**(m + n - p)
-    r1 = x * mnp
-
-    for i in range(len(a)):
-        r1 *= x * Dx + 1 - a[i]
-
+    xDx = x*Dx
+    xDx1 = xDx + 1
+    r1 = x*(-1)**(m + n - p)
+    for ai in a:  # XXX gives sympify error if args given in list
+        r1 *= xDx1 - ai
+    # r2 = Mul(*[xDx - bi for bi in b])  # gives sympify error
     r2 = 1
-
-    for i in range(len(b)):
-        r2 *= x * Dx - b[i]
-
+    for bi in b:
+        r2 *= xDx - bi
     sol = r1 - r2
 
     if not initcond:
@@ -2504,7 +2506,7 @@ def _normalize(list_of, parent, negative=True):
     # fraction field
     for i, j in enumerate(list_of):
         if isinstance(j, base.dtype):
-            list_of_coeff.append(K.new(j.rep))
+            list_of_coeff.append(K.new(j.to_list()))
         elif not isinstance(j, K.dtype):
             list_of_coeff.append(K.from_sympy(sympify(j)))
         else:
@@ -2523,29 +2525,29 @@ def _normalize(list_of, parent, negative=True):
     if negative:
         lcm_denom = -lcm_denom
 
-    lcm_denom = K.new(lcm_denom.rep)
+    lcm_denom = K.new(lcm_denom.to_list())
 
     # multiply the coefficients with lcm
     for i, j in enumerate(list_of_coeff):
         list_of_coeff[i] = j * lcm_denom
 
-    gcd_numer = base((list_of_coeff[-1].numer() / list_of_coeff[-1].denom()).rep)
+    gcd_numer = base((list_of_coeff[-1].numer() / list_of_coeff[-1].denom()).to_list())
 
     # gcd of numerators in the coefficients
     for i in num:
         gcd_numer = i.gcd(gcd_numer)
 
-    gcd_numer = K.new(gcd_numer.rep)
+    gcd_numer = K.new(gcd_numer.to_list())
 
     # divide all the coefficients by the gcd
     for i, j in enumerate(list_of_coeff):
         frac_ans = j / gcd_numer
-        list_of_coeff[i] = base((frac_ans.numer() / frac_ans.denom()).rep)
+        list_of_coeff[i] = base((frac_ans.numer() / frac_ans.denom()).to_list())
 
     return DifferentialOperator(list_of_coeff, parent)
 
 
-def _derivate_diff_eq(listofpoly):
+def _derivate_diff_eq(listofpoly, K):
     """
     Let a differential equation a0(x)y(x) + a1(x)y'(x) + ... = 0
     where a0, a1,... are polynomials or rational functions. The function
@@ -2556,10 +2558,10 @@ def _derivate_diff_eq(listofpoly):
 
     sol = []
     a = len(listofpoly) - 1
-    sol.append(DMFdiff(listofpoly[0]))
+    sol.append(DMFdiff(listofpoly[0], K))
 
     for i, j in enumerate(listofpoly[1:]):
-        sol.append(DMFdiff(j) + listofpoly[i])
+        sol.append(DMFdiff(j, K) + listofpoly[i])
 
     sol.append(listofpoly[a])
     return sol
@@ -2626,7 +2628,7 @@ def _extend_y0(Holonomic, n):
 
     for i, j in enumerate(annihilator.listofpoly):
             if isinstance(j, annihilator.parent.base.dtype):
-                listofpoly.append(K.new(j.rep))
+                listofpoly.append(K.new(j.to_list()))
 
     if len(y0) < a or n <= len(y0):
         return y0
@@ -2636,7 +2638,7 @@ def _extend_y0(Holonomic, n):
         if len(y0) > a:
             y1 = [y0[i] for i in range(a)]
         else:
-            y1 = [i for i  in y0]
+            y1 = list(y0)
         for i in range(n - a):
             sol = 0
             for a, b in zip(y1, list_red):
@@ -2647,22 +2649,21 @@ def _extend_y0(Holonomic, n):
                     r = r.as_expr()
                 sol += a * r
             y1.append(sol)
-            list_red = _derivate_diff_eq(list_red)
+            list_red = _derivate_diff_eq(list_red, K)
 
         return y0 + y1[len(y0):]
 
 
-def DMFdiff(frac):
+def DMFdiff(frac, K):
     # differentiate a DMF object represented as p/q
     if not isinstance(frac, DMF):
         return frac.diff()
 
-    K = frac.ring
     p = K.numer(frac)
     q = K.denom(frac)
     sol_num = - p * q.diff() + q * p.diff()
     sol_denom = q**2
-    return K((sol_num.rep, sol_denom.rep))
+    return K((sol_num.to_list(), sol_denom.to_list()))
 
 
 def DMFsubs(frac, x0, mpm=False):
@@ -2737,7 +2738,7 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
 
         # try to compute the conditions for singular points
         if y0 is None and x0 == 0 and is_singular:
-            rep = R.from_sympy(func).rep
+            rep = R.from_sympy(func).to_list()
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
                     continue
@@ -2764,7 +2765,7 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
         # try to compute the conditions for singular points
         if y0 is None and x0 == 0 and is_singular and \
             (lenics is None or lenics <= 1):
-            rep = R.from_sympy(basepoly).rep
+            rep = R.from_sympy(basepoly).to_list()
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
                     continue

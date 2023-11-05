@@ -37,12 +37,12 @@ from inspect import unwrap
 
 from sympy.core.cache import clear_cache
 from sympy.external import import_module
-from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 
 IS_WINDOWS = (os.name == 'nt')
-ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
+ON_CI = os.getenv('CI', None)
 
-# emperically generated list of the proportion of time spent running
+# empirically generated list of the proportion of time spent running
 # an even split of tests.  This should periodically be regenerated.
 # A list of [.6, .1, .3] would mean that if the tests are evenly split
 # into '1/3', '2/3', '3/3', the first split would take 60% of the time,
@@ -53,7 +53,7 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 #     from time import time
 #     import sympy
 #     import os
-#     os.environ["TRAVIS_BUILD_NUMBER"] = '2' # Mock travis to get more correct densities
+#     os.environ["CI"] = 'true' # Mock CI to get more correct densities
 #     delays, num_splits = [], 30
 #     for i in range(1, num_splits + 1):
 #         tic = time()
@@ -504,7 +504,7 @@ def _test(*paths,
         verbose=False, tb="short", kw=None, pdb=False, colors=True,
         force_colors=False, sort=True, seed=None, timeout=False,
         fail_on_timeout=False, slow=False, enhance_asserts=False, split=None,
-        time_balance=True, blacklist=('sympy/integrals/rubi/rubi_tests/tests',),
+        time_balance=True, blacklist=(),
         fast_threshold=None, slow_threshold=None):
     """
     Internal function that actually runs the tests.
@@ -522,16 +522,24 @@ def _test(*paths,
     post_mortem = pdb
     if seed is None:
         seed = random.randrange(100000000)
-    if ON_TRAVIS and timeout is False:
-        # Travis times out if no activity is seen for 10 minutes.
+    if ON_CI and timeout is False:
         timeout = 595
         fail_on_timeout = True
-    if ON_TRAVIS:
-        # pyglet does not work on Travis
+    if ON_CI:
         blacklist = list(blacklist) + ['sympy/plotting/pygletplot/tests']
     blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
+    # This won't strictly run the test for the corresponding file, but it is
+    # good enough for copying and pasting the failing test.
+    _paths = []
+    for path in paths:
+        if '::' in path:
+            path, _kw = path.split('::', 1)
+            kw += (_kw,)
+        _paths.append(path)
+    paths = _paths
+
     t = SymPyTests(r, kw, post_mortem, seed,
                    fast_threshold=fast_threshold,
                    slow_threshold=slow_threshold)
@@ -614,8 +622,9 @@ def doctest(*paths, subprocess=True, rerun=0, **kwargs):
     >>> sympy.doctest(split='1/2')  # doctest: +SKIP
 
     The ``subprocess`` and ``verbose`` options are the same as with the function
-    ``test()``.  See the docstring of that function for more information.
-
+    ``test()`` (see the docstring of that function for more information) except
+    that ``verbose`` may also be set equal to ``2`` in order to print
+    individual doctest lines, as they are being tested.
     """
     # count up from 0, do not print 0
     print_counter = lambda i : (print("rerun %d" % (rerun-i))
@@ -653,7 +662,6 @@ def _get_doctest_blacklist():
         "sympy/core/compatibility.py", # backwards compatibility shim, importing it triggers a deprecation warning
         "sympy/core/trace.py", # backwards compatibility shim, importing it triggers a deprecation warning
         "sympy/galgebra.py", # no longer part of SymPy
-        "sympy/integrals/rubi/rubi.py",
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
@@ -685,7 +693,8 @@ def _get_doctest_blacklist():
             "examples/intermediate/sample.py",
             "examples/intermediate/mplot2d.py",
             "examples/intermediate/mplot3d.py",
-            "doc/src/modules/numeric-computation.rst"
+            "doc/src/modules/numeric-computation.rst",
+            "doc/src/explanation/best-practices.md",
         ])
     else:
         if import_module('matplotlib') is None:
@@ -694,11 +703,11 @@ def _get_doctest_blacklist():
                 "examples/intermediate/mplot3d.py"
             ])
         else:
-            # Use a non-windowed backend, so that the tests work on Travis
+            # Use a non-windowed backend, so that the tests work on CI
             import matplotlib
             matplotlib.use('Agg')
 
-    if ON_TRAVIS or import_module('pyglet') is None:
+    if ON_CI or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     if import_module('aesara') is None:
@@ -708,6 +717,11 @@ def _get_doctest_blacklist():
         ])
 
     if import_module('cupy') is None:
+        blacklist.extend([
+            "doc/src/modules/numeric-computation.rst",
+        ])
+
+    if import_module('jax') is None:
         blacklist.extend([
             "doc/src/modules/numeric-computation.rst",
         ])
@@ -724,6 +738,20 @@ def _get_doctest_blacklist():
             "sympy/parsing/sym_expr.py",
         ])
 
+    if import_module("scipy") is None:
+        # throws ModuleNotFoundError when scipy not installed
+        blacklist.extend([
+            "doc/src/guides/solving/solve-numerically.md",
+            "doc/src/guides/solving/solve-ode.md",
+        ])
+
+    if import_module("numpy") is None:
+        # throws ModuleNotFoundError when numpy not installed
+        blacklist.extend([
+                "doc/src/guides/solving/solve-ode.md",
+                "doc/src/guides/solving/solve-numerically.md",
+        ])
+
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
         "sympy/utilities/autowrap.py",
@@ -731,15 +759,12 @@ def _get_doctest_blacklist():
         "examples/advanced/autowrap_ufuncify.py"
         ])
 
-    # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py", # Depends on pytest
-        "sympy/testing/benchmarking.py",
     ])
 
     # These are deprecated stubs to be removed:
     blacklist.extend([
-        "sympy/utilities/benchmarking.py",
         "sympy/utilities/tmpfiles.py",
         "sympy/utilities/pytest.py",
         "sympy/utilities/runtests.py",
@@ -772,7 +797,7 @@ def _doctest(*paths, **kwargs):
 
     blacklist.extend(_get_doctest_blacklist())
 
-    # Use a non-windowed backend, so that the tests work on Travis
+    # Use a non-windowed backend, so that the tests work on CI
     if import_module('matplotlib') is not None:
         import matplotlib
         matplotlib.use('Agg')
@@ -1428,12 +1453,13 @@ class SymPyDocTests:
                     self._reporter.test_skip(v=str(e))
                     continue
 
-            runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
+            runner = SymPyDocTestRunner(verbose=self._reporter._verbose==2,
+                    optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
                     pdoctest.IGNORE_EXCEPTION_DETAIL)
             runner._checker = SymPyOutputChecker()
             old = sys.stdout
-            new = StringIO()
+            new = old if self._reporter._verbose==2 else StringIO()
             sys.stdout = new
             # If the testing is normal, the doctests get importing magic to
             # provide the global namespace. If not normal (the default) then
@@ -1503,7 +1529,8 @@ class SymPyDocTests:
                             executables=(),
                             modules=(),
                             disable_viewers=(),
-                            python_version=(3, 5)):
+                            python_version=(3, 5),
+                            ground_types=None):
         """
         Checks if the dependencies for the test are installed.
 
@@ -1547,6 +1574,10 @@ class SymPyDocTests:
         if python_version:
             if sys.version_info < python_version:
                 raise DependencyError("Requires Python >= " + '.'.join(map(str, python_version)))
+
+        if ground_types is not None:
+            if GROUND_TYPES not in ground_types:
+                raise DependencyError("Requires ground_types in " + str(ground_types))
 
         if 'pyglet' in modules:
             # monkey-patch pyglet s.t. it does not open a window during
@@ -1712,15 +1743,11 @@ class SymPyDocTestFinder(DocTestFinder):
             lineno = int(matches[0][5:])
 
         else:
-            try:
-                if obj.__doc__ is None:
-                    docstring = ''
-                else:
-                    docstring = obj.__doc__
-                    if not isinstance(docstring, str):
-                        docstring = str(docstring)
-            except (TypeError, AttributeError):
+            docstring = getattr(obj, '__doc__', '')
+            if docstring is None:
                 docstring = ''
+            if not isinstance(docstring, str):
+                docstring = str(docstring)
 
         # Don't bother if the docstring is empty.
         if self._exclude_empty and not docstring:
@@ -2025,7 +2052,7 @@ class PyTestReporter(Reporter):
                 process = subprocess.Popen(['stty', '-a'],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
-                stdout = process.stdout.read()
+                stdout, stderr = process.communicate()
                 stdout = stdout.decode("utf-8")
             except OSError:
                 pass
@@ -2180,10 +2207,7 @@ class PyTestReporter(Reporter):
         self.write("cache:              %s\n" % USE_CACHE)
         version = ''
         if GROUND_TYPES =='gmpy':
-            if HAS_GMPY == 1:
-                import gmpy
-            elif HAS_GMPY == 2:
-                import gmpy2 as gmpy
+            import gmpy2 as gmpy
             version = gmpy.version()
         self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
         numpy = import_module('numpy')
@@ -2267,7 +2291,7 @@ class PyTestReporter(Reporter):
             for e in self._failed:
                 filename, f, (t, val, tb) = e
                 self.write_center("", "_")
-                self.write_center("%s:%s" % (filename, f.__name__), "_")
+                self.write_center("%s::%s" % (filename, f.__name__), "_")
                 self.write_exception(t, val, tb)
             self.write("\n")
 

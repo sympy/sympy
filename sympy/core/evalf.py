@@ -2,7 +2,7 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
-
+from __future__ import annotations
 from typing import Tuple as tTuple, Optional, Union as tUnion, Callable, List, Dict as tDict, Type, TYPE_CHECKING, \
     Any, overload
 
@@ -21,7 +21,6 @@ from mpmath.libmp import bitcount as mpmath_bitcount
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
-from mpmath.libmp.gammazeta import mpf_bernoulli
 
 from .sympify import sympify
 from .singleton import S
@@ -43,8 +42,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.complexes import Abs, re, im
     from sympy.functions.elementary.integers import ceiling, floor
     from sympy.functions.elementary.trigonometric import atan
-    from sympy.functions.combinatorial.numbers import bernoulli
-    from .numbers import Float, Rational, Integer, AlgebraicNumber
+    from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
@@ -149,7 +147,7 @@ def fastlog(x: Optional[MPF_TUP]) -> tUnion[int, Any]:
     return x[2] + x[3]
 
 
-def pure_complex(v: 'Expr', or_real=False) -> Optional[tTuple['Expr', 'Expr']]:
+def pure_complex(v: 'Expr', or_real=False) -> tuple['Number', 'Number'] | None:
     """Return a and b if v matches a + I*b where b is not zero and
     a and b are Numbers, else None. If `or_real` is True then 0 will
     be returned for `b` if `v` is a real number.
@@ -175,7 +173,7 @@ def pure_complex(v: 'Expr', or_real=False) -> Optional[tTuple['Expr', 'Expr']]:
         if i is S.ImaginaryUnit:
             return h, c
     elif or_real:
-        return h, t
+        return h, S.Zero
     return None
 
 
@@ -432,20 +430,21 @@ def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False
             # expression
             s = options.get('subs', False)
             if s:
-                doit = True
                 # use strict=False with as_int because we take
                 # 2.0 == 2
-                for v in s.values():
+                def is_int_reim(x):
+                    """Check for integer or integer + I*integer."""
                     try:
-                        as_int(v, strict=False)
+                        as_int(x, strict=False)
+                        return True
                     except ValueError:
                         try:
-                            [as_int(i, strict=False) for i in v.as_real_imag()]
-                            continue
-                        except (ValueError, AttributeError):
-                            doit = False
-                            break
-                if doit:
+                            [as_int(i, strict=False) for i in x.as_real_imag()]
+                            return True
+                        except ValueError:
+                            return False
+
+                if all(is_int_reim(v) for v in s.values()):
                     re_im = re_im.subs(s)
 
             re_im = Add(re_im, -nint, evaluate=False)
@@ -1046,17 +1045,6 @@ def evalf_piecewise(expr: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     raise NotImplementedError
 
 
-def evalf_bernoulli(expr: 'bernoulli', prec: int, options: OPT_DICT) -> TMP_RES:
-    arg = expr.args[0]
-    if not arg.is_Integer:
-        raise ValueError("Bernoulli number index must be an integer")
-    n = int(arg)
-    b = mpf_bernoulli(n, prec, rnd)
-    if b == fzero:
-        return None, None, None, None
-    return b, None, prec, None
-
-
 def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES:
     return evalf(a.to_root(), prec, options)
 
@@ -1070,7 +1058,7 @@ def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES
 def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> tUnion[mpc, mpf]:
     from .numbers import Infinity, NegativeInfinity, Zero
     x = sympify(x)
-    if isinstance(x, Zero) or x == 0:
+    if isinstance(x, Zero) or x == 0.0:
         return mpf(0)
     if isinstance(x, Infinity):
         return mpf('inf')
@@ -1234,7 +1222,8 @@ def check_convergence(numer: 'Expr', denom: 'Expr', n: 'Symbol') -> tTuple[int, 
     if rate:
         return rate, None, None
     constant = dpol.LC() / npol.LC()
-    if abs(constant) != 1:
+    from .numbers import equal_valued
+    if not equal_valued(abs(constant), 1):
         return rate, constant, None
     if npol.degree() == dpol.degree() == 0:
         return rate, constant, 0
@@ -1250,7 +1239,7 @@ def hypsum(expr: 'Expr', n: 'Symbol', start: int, prec: int) -> mpf:
     quotient between successive terms must be a quotient of integer
     polynomials.
     """
-    from .numbers import Float
+    from .numbers import Float, equal_valued
     from sympy.simplify.simplify import hypersimp
 
     if prec == float('inf'):
@@ -1290,7 +1279,7 @@ def hypsum(expr: 'Expr', n: 'Symbol', start: int, prec: int) -> mpf:
         alt = g < 0
         if abs(g) < 1:
             raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
-        if p < 1 or (p == 1 and not alt):
+        if p < 1 or (equal_valued(p, 1) and not alt):
             raise ValueError("Sum diverges like n^%i" % (-p))
         # We have polynomial convergence: use Richardson extrapolation
         vold = None
@@ -1400,7 +1389,6 @@ evalf_table: tDict[Type['Expr'], Callable[['Expr', int, OPT_DICT], TMP_RES]] = {
 
 def _create_evalf_table():
     global evalf_table
-    from sympy.functions.combinatorial.numbers import bernoulli
     from sympy.concrete.products import Product
     from sympy.concrete.summations import Sum
     from .add import Add
@@ -1454,7 +1442,6 @@ def _create_evalf_table():
         Product: evalf_prod,
         Piecewise: evalf_piecewise,
 
-        bernoulli: evalf_bernoulli,
         AlgebraicNumber: evalf_alg_num,
     }
 
@@ -1507,7 +1494,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
         re, im = as_real_imag()
         if re.has(re_) or im.has(im_):
             raise NotImplementedError
-        if re == 0:
+        if re == 0.0:
             re = None
             reprec = None
         elif re.is_number:
@@ -1515,7 +1502,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
             reprec = prec
         else:
             raise NotImplementedError
-        if im == 0:
+        if im == 0.0:
             im = None
             imprec = None
         elif im.is_number:
@@ -1547,19 +1534,21 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     return r
 
 
-def quad_to_mpmath(q):
+def quad_to_mpmath(q, ctx=None):
     """Turn the quad returned by ``evalf`` into an ``mpf`` or ``mpc``. """
+    mpc = make_mpc if ctx is None else ctx.make_mpc
+    mpf = make_mpf if ctx is None else ctx.make_mpf
     if q is S.ComplexInfinity:
         raise NotImplementedError
     re, im, _, _ = q
     if im:
         if not re:
             re = fzero
-        return make_mpc((re, im))
+        return mpc((re, im))
     elif re:
-        return make_mpf(re)
+        return mpf(re)
     else:
-        return make_mpf(fzero)
+        return mpf(fzero)
 
 
 class EvalfMixin:
@@ -1761,8 +1750,9 @@ def N(x, n=15, **options):
     return sympify(x, rational=True).evalf(n, **options)
 
 
-def _evalf_with_bounded_error(x: 'Expr', eps: 'Expr' = None, m: int = 0,
-                              options: OPT_DICT = None) -> TMP_RES:
+def _evalf_with_bounded_error(x: 'Expr', eps: 'Optional[Expr]' = None,
+                              m: int = 0,
+                              options: Optional[OPT_DICT] = None) -> TMP_RES:
     """
     Evaluate *x* to within a bounded absolute error.
 
@@ -1789,7 +1779,6 @@ def _evalf_with_bounded_error(x: 'Expr', eps: 'Expr' = None, m: int = 0,
     evalf
 
     """
-    eps = sympify(eps)
     if eps is not None:
         if not (eps.is_Rational or eps.is_Float) or not eps > 0:
             raise ValueError("eps must be positive")

@@ -13,9 +13,9 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-
+from __future__ import annotations
 from functools import singledispatch
-from typing import Tuple as tTuple
+from math import prod
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -23,7 +23,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
 from sympy.core.logic import fuzzy_and
-from sympy.core.mul import (Mul, prod)
+from sympy.core.mul import Mul
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
@@ -1078,7 +1078,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     library : str
         - 'scipy' : Sample using scipy
         - 'numpy' : Sample using numpy
-        - 'pymc3' : Sample using PyMC3
+        - 'pymc'  : Sample using PyMC
 
         Choose any of the available options to sample from as string,
         by default is 'scipy'
@@ -1098,7 +1098,7 @@ def sample(expr, condition=None, size=(), library='scipy',
 
         - 'scipy': int, numpy.random.RandomState, numpy.random.Generator
         - 'numpy': int, numpy.random.RandomState, numpy.random.Generator
-        - 'pymc3': int
+        - 'pymc': int
 
         Optional, by default None, in which case seed settings
         related to the given library will be used.
@@ -1192,8 +1192,8 @@ def quantile(expr, evaluate=True, **kwargs):
     Quantile is defined as the value at which the probability of the random
     variable is less than or equal to the given probability.
 
-    ..math::
-        Q(p) = inf{x \in (-\infty, \infty) such that p <= F(x)}
+    .. math::
+        Q(p) = \inf\{x \in (-\infty, \infty) : p \le F(x)\}
 
     Examples
     ========
@@ -1254,7 +1254,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
 
         - 'scipy': int, numpy.random.RandomState, numpy.random.Generator
         - 'numpy': int, numpy.random.RandomState, numpy.random.Generator
-        - 'pymc3': int
+        - 'pymc': int
 
         Optional, by default None, in which case seed settings
         related to the given library will be used.
@@ -1305,16 +1305,16 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         expr = expr.subs(sub)
 
     def fn_subs(*args):
-        return expr.subs({rv: arg for rv, arg in zip(rvs, args)})
+        return expr.subs(dict(zip(rvs, args)))
 
     def given_fn_subs(*args):
         if condition is not None:
-            return condition.subs({rv: arg for rv, arg in zip(rvs, args)})
+            return condition.subs(dict(zip(rvs, args)))
         return False
 
-    if library == 'pymc3':
-        # Currently unable to lambdify in pymc3
-        # TODO : Remove 'pymc3' when lambdify accepts 'pymc3' as module
+    if library in ('pymc', 'pymc3'):
+        # Currently unable to lambdify in pymc
+        # TODO : Remove when lambdify accepts 'pymc' as module
         fn = lambdify(rvs, expr, **kwargs)
     else:
         fn = lambdify(rvs, expr, modules=library, **kwargs)
@@ -1446,7 +1446,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     """
     samples = list(sample_iter(expr, given_condition, library=library,
                           numsamples=numsamples, seed=seed, **kwargs))
-    result = Add(*[samp for samp in samples]) / numsamples
+    result = Add(*samples) / numsamples
 
     if evalf:
         return result.evalf()
@@ -1578,7 +1578,7 @@ def rv_subs(expr, symbols=None):
 
 
 class NamedArgsMixin:
-    _argnames = ()  # type: tTuple[str, ...]
+    _argnames: tuple[str, ...] = ()
 
     def __getattr__(self, attr):
         try:
@@ -1594,7 +1594,7 @@ class Distribution(Basic):
         """ A random realization from the distribution """
 
         module = import_module(library)
-        if library in {'scipy', 'numpy', 'pymc3'} and module is None:
+        if library in {'scipy', 'numpy', 'pymc3', 'pymc'} and module is None:
             raise ValueError("Failed to import %s" % library)
 
         if library == 'scipy':
@@ -1623,14 +1623,18 @@ class Distribution(Basic):
                 rand_state = seed
             _size = None if size == () else size
             samps = do_sample_numpy(self, _size, rand_state)
-        elif library == 'pymc3':
-            from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
+        elif library in ('pymc', 'pymc3'):
+            from sympy.stats.sampling.sample_pymc import do_sample_pymc
             import logging
-            logging.getLogger("pymc3").setLevel(logging.ERROR)
-            import pymc3
-            with pymc3.Model():
-                if do_sample_pymc3(self):
-                    samps = pymc3.sample(draws=prod(size), chains=1, compute_convergence_checks=False,
+            logging.getLogger("pymc").setLevel(logging.ERROR)
+            try:
+                import pymc
+            except ImportError:
+                import pymc3 as pymc
+
+            with pymc.Model():
+                if do_sample_pymc(self):
+                    samps = pymc.sample(draws=prod(size), chains=1, compute_convergence_checks=False,
                             progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X']
                     samps = samps.reshape(size)
                 else:
@@ -1768,7 +1772,7 @@ def sample_stochastic_process(process):
     >>> from sympy import Matrix
     >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
-    >>> next(sample_stochastic_process(Y)) in Y.state_space # doctest: +SKIP
+    >>> next(sample_stochastic_process(Y)) in Y.state_space
     True
     >>> next(sample_stochastic_process(Y))  # doctest: +SKIP
     0

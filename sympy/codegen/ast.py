@@ -85,7 +85,7 @@ It is possible to construct simple algorithms using the AST nodes. Let's constru
 Newton's method::
 
     >>> from sympy import symbols, cos
-    >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print
+    >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print, QuotedString
     >>> t, dx, x = symbols('tol delta val')
     >>> expr = cos(x) - x**3
     >>> whl = While(abs(dx) > t, [
@@ -126,7 +126,8 @@ There is a function constructing a loop (or a complete function) like this in
 
 """
 
-from typing import Any, Dict as tDict, List
+from __future__ import annotations
+from typing import Any
 
 from collections import defaultdict
 
@@ -161,7 +162,7 @@ def _mk_Tuple(args):
 
 
 class CodegenAST(Basic):
-    pass
+    __slots__ = ()
 
 
 class Token(CodegenAST):
@@ -170,10 +171,10 @@ class Token(CodegenAST):
     Explanation
     ===========
 
-    Defining fields are set in ``__slots__``. Attributes (defined in __slots__)
+    Defining fields are set in ``_fields``. Attributes (defined in _fields)
     are only allowed to contain instances of Basic (unless atomic, see
     ``String``). The arguments to ``__new__()`` correspond to the attributes in
-    the order defined in ``__slots__`. The ``defaults`` class attribute is a
+    the order defined in ``_fields`. The ``defaults`` class attribute is a
     dictionary mapping attribute names to their default values.
 
     Subclasses should not need to override the ``__new__()`` method. They may
@@ -182,14 +183,15 @@ class Token(CodegenAST):
     in the class attribute ``not_in_args`` are not passed to :class:`~.Basic`.
     """
 
-    __slots__ = ()
-    defaults = {}  # type: tDict[str, Any]
-    not_in_args = []  # type: List[str]
+    __slots__: tuple[str, ...] = ()
+    _fields = __slots__
+    defaults: dict[str, Any] = {}
+    not_in_args: list[str] = []
     indented_args = ['body']
 
     @property
     def is_Atom(self):
-        return len(self.__slots__) == 0
+        return len(self._fields) == 0
 
     @classmethod
     def _get_constructor(cls, attr):
@@ -199,7 +201,7 @@ class Token(CodegenAST):
     @classmethod
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
-        # arg may be ``NoneToken()``, so comparation is done using == instead of ``is`` operator
+        # arg may be ``NoneToken()``, so comparison is done using == instead of ``is`` operator
         if arg == None:
             return cls.defaults.get(attr, none)
         else:
@@ -213,20 +215,20 @@ class Token(CodegenAST):
         if len(args) == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
 
-        if len(args) > len(cls.__slots__):
-            raise ValueError("Too many arguments (%d), expected at most %d" % (len(args), len(cls.__slots__)))
+        if len(args) > len(cls._fields):
+            raise ValueError("Too many arguments (%d), expected at most %d" % (len(args), len(cls._fields)))
 
         attrvals = []
 
         # Process positional arguments
-        for attrname, argval in zip(cls.__slots__, args):
+        for attrname, argval in zip(cls._fields, args):
             if attrname in kwargs:
                 raise TypeError('Got multiple values for attribute %r' % attrname)
 
             attrvals.append(cls._construct(attrname, argval))
 
         # Process keyword arguments
-        for attrname in cls.__slots__[len(args):]:
+        for attrname in cls._fields[len(args):]:
             if attrname in kwargs:
                 argval = kwargs.pop(attrname)
 
@@ -243,13 +245,13 @@ class Token(CodegenAST):
 
         # Parent constructor
         basic_args = [
-            val for attr, val in zip(cls.__slots__, attrvals)
+            val for attr, val in zip(cls._fields, attrvals)
             if attr not in cls.not_in_args
         ]
         obj = CodegenAST.__new__(cls, *basic_args)
 
         # Set attributes
-        for attr, arg in zip(cls.__slots__, attrvals):
+        for attr, arg in zip(cls._fields, attrvals):
             setattr(obj, attr, arg)
 
         return obj
@@ -257,13 +259,13 @@ class Token(CodegenAST):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        for attr in self.__slots__:
+        for attr in self._fields:
             if getattr(self, attr) != getattr(other, attr):
                 return False
         return True
 
     def _hashable_content(self):
-        return tuple([getattr(self, attr) for attr in self.__slots__])
+        return tuple([getattr(self, attr) for attr in self._fields])
 
     def __hash__(self):
         return super().__hash__()
@@ -291,12 +293,12 @@ class Token(CodegenAST):
     def _sympyrepr(self, printer, *args, joiner=', ', **kwargs):
         from sympy.printing.printer import printer_context
         exclude = kwargs.get('exclude', ())
-        values = [getattr(self, k) for k in self.__slots__]
+        values = [getattr(self, k) for k in self._fields]
         indent_level = printer._context.get('indent_level', 0)
 
         arg_reprs = []
 
-        for i, (attr, value) in enumerate(zip(self.__slots__, values)):
+        for i, (attr, value) in enumerate(zip(self._fields, values)):
             if attr in exclude:
                 continue
 
@@ -329,7 +331,7 @@ class Token(CodegenAST):
         apply : callable, optional
             Function to apply to all values.
         """
-        kwargs = {k: getattr(self, k) for k in self.__slots__ if k not in exclude}
+        kwargs = {k: getattr(self, k) for k in self._fields if k not in exclude}
         if apply is not None:
             return {k: apply(v) for k, v in kwargs.items()}
         else:
@@ -434,9 +436,11 @@ class AssignmentBase(CodegenAST):
         from sympy.matrices.expressions.matexpr import (
             MatrixElement, MatrixSymbol)
         from sympy.tensor.indexed import Indexed
+        from sympy.tensor.array.expressions import ArrayElement
 
         # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable)
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable,
+                ArrayElement)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
 
@@ -674,9 +678,6 @@ class CodeBlock(CodegenAST):
         This is a class constructor so that the default constructor for
         CodeBlock can error when variables are used before they are assigned.
 
-        Examples
-        ========
-
         >>> from sympy import symbols
         >>> from sympy.codegen.ast import CodeBlock, Assignment
         >>> x, y, z = symbols('x y z')
@@ -849,7 +850,7 @@ class For(Token):
         ))
     ))
     """
-    __slots__ = ('target', 'iterable', 'body')
+    __slots__ = _fields = ('target', 'iterable', 'body')
     _construct_target = staticmethod(_sympify)
 
     @classmethod
@@ -893,7 +894,7 @@ class String(Atom, Token):
     String('foo')
 
     """
-    __slots__ = ('text',)
+    __slots__ = _fields = ('text',)
     not_in_args = ['text']
     is_Atom = True
 
@@ -945,9 +946,10 @@ class Node(Token):
 
     """
 
-    __slots__ = ('attrs',)
+    __slots__: tuple[str, ...] = ('attrs',)
+    _fields = __slots__
 
-    defaults = {'attrs': Tuple()}  # type: tDict[str, Any]
+    defaults: dict[str, Any] = {'attrs': Tuple()}
 
     _construct_attrs = staticmethod(_mk_Tuple)
 
@@ -1010,10 +1012,11 @@ class Type(Token):
     References
     ==========
 
-    .. [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
+    .. [1] https://numpy.org/doc/stable/user/basics.types.html
 
     """
-    __slots__ = ('name',)
+    __slots__: tuple[str, ...] = ('name',)
+    _fields = __slots__
 
     _construct_name = String
 
@@ -1142,12 +1145,13 @@ class Type(Token):
 
 class IntBaseType(Type):
     """ Integer base type, contains no size information. """
-    __slots__ = ('name',)
+    __slots__ = ()
     cast_nocheck = lambda self, i: Integer(int(i))
 
 
 class _SizedIntType(IntBaseType):
-    __slots__ = ('name', 'nbits',)
+    __slots__ = ('nbits',)
+    _fields = Type._fields + __slots__
 
     _construct_nbits = Integer
 
@@ -1160,6 +1164,7 @@ class _SizedIntType(IntBaseType):
 
 class SignedIntType(_SizedIntType):
     """ Represents a signed integer type. """
+    __slots__ = ()
     @property
     def min(self):
         return -2**(self.nbits-1)
@@ -1171,6 +1176,7 @@ class SignedIntType(_SizedIntType):
 
 class UnsignedIntType(_SizedIntType):
     """ Represents an unsigned integer type. """
+    __slots__ = ()
     @property
     def min(self):
         return 0
@@ -1183,6 +1189,7 @@ two = Integer(2)
 
 class FloatBaseType(Type):
     """ Represents a floating point number type. """
+    __slots__ = ()
     cast_nocheck = Float
 
 class FloatType(FloatBaseType):
@@ -1226,7 +1233,8 @@ class FloatType(FloatBaseType):
     ValueError: Maximum value for data type smaller than new value.
     """
 
-    __slots__ = ('name', 'nbits', 'nmant', 'nexp',)
+    __slots__ = ('nbits', 'nmant', 'nexp',)
+    _fields = Type._fields + __slots__
 
     _construct_nbits = _construct_nmant = _construct_nexp = Integer
 
@@ -1305,6 +1313,8 @@ class FloatType(FloatBaseType):
 
 class ComplexBaseType(FloatBaseType):
 
+    __slots__ = ()
+
     def cast_nocheck(self, value):
         """ Casts without checking if out of bounds or subnormal. """
         from sympy.functions import re, im
@@ -1321,6 +1331,7 @@ class ComplexBaseType(FloatBaseType):
 
 class ComplexType(ComplexBaseType, FloatType):
     """ Represents a complex floating point number. """
+    __slots__ = ()
 
 
 # NumPy types:
@@ -1379,7 +1390,7 @@ class Attribute(Token):
     >>> a.parameters == (1, 2, 3)
     True
     """
-    __slots__ = ('name', 'parameters')
+    __slots__ = _fields = ('name', 'parameters')
     defaults = {'parameters': Tuple()}
 
     _construct_name = String
@@ -1388,8 +1399,8 @@ class Attribute(Token):
     def _sympystr(self, printer, *args, **kwargs):
         result = str(self.name)
         if self.parameters:
-            result += '(%s)' % ', '.join(map(lambda arg: printer._print(
-                arg, *args, **kwargs), self.parameters))
+            result += '(%s)' % ', '.join((printer._print(
+                arg, *args, **kwargs) for arg in self.parameters))
         return result
 
 value_const = Attribute('value_const')
@@ -1446,7 +1457,8 @@ class Variable(Node):
 
     """
 
-    __slots__ = ('symbol', 'type', 'value') + Node.__slots__
+    __slots__ = ('symbol', 'type', 'value')
+    _fields = __slots__ + Node._fields
 
     defaults = Node.defaults.copy()
     defaults.update({'type': untyped, 'value': none})
@@ -1523,7 +1535,7 @@ class Variable(Node):
         >>> decl1.variable.value == NoneToken()  # OK
         True
         >>> decl2 = x.as_Declaration(value=42.0)
-        >>> decl2.variable.value == 42
+        >>> decl2.variable.value == 42.0
         True
 
         """
@@ -1559,6 +1571,7 @@ class Pointer(Variable):
     Element(x, indices=(i + 1,))
 
     """
+    __slots__ = ()
 
     def __getitem__(self, key):
         try:
@@ -1586,7 +1599,7 @@ class Element(Token):
     'x[i*l + j*m + k*n + o]'
 
     """
-    __slots__ = ('symbol', 'indices', 'strides', 'offset')
+    __slots__ = _fields = ('symbol', 'indices', 'strides', 'offset')
     defaults = {'strides': none, 'offset': none}
     _construct_symbol = staticmethod(sympify)
     _construct_indices = staticmethod(lambda arg: Tuple(*arg))
@@ -1617,7 +1630,7 @@ class Declaration(Token):
     >>> z.variable.value == NoneToken()  # OK
     True
     """
-    __slots__ = ('variable',)
+    __slots__ = _fields = ('variable',)
     _construct_variable = Variable
 
 
@@ -1648,7 +1661,7 @@ class While(Token):
     ... ])
 
     """
-    __slots__ = ('condition', 'body')
+    __slots__ = _fields = ('condition', 'body')
     _construct_condition = staticmethod(lambda cond: _sympify(cond))
 
     @classmethod
@@ -1669,7 +1682,7 @@ class Scope(Token):
         When passed an iterable it is used to instantiate a CodeBlock.
 
     """
-    __slots__ = ('body',)
+    __slots__ = _fields = ('body',)
 
     @classmethod
     def _construct_body(cls, itr):
@@ -1701,7 +1714,7 @@ class Stream(Token):
     print("x", file=sys.stderr)
 
     """
-    __slots__ = ('name',)
+    __slots__ = _fields = ('name',)
     _construct_name = String
 
 stdout = Stream('stdout')
@@ -1709,7 +1722,7 @@ stderr = Stream('stderr')
 
 
 class Print(Token):
-    """ Represents print command in the code.
+    r""" Represents print command in the code.
 
     Parameters
     ==========
@@ -1722,12 +1735,12 @@ class Print(Token):
 
     >>> from sympy.codegen.ast import Print
     >>> from sympy import pycode
-    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g")))
-    print("coordinate: %12.5g %12.5g" % (x, y))
+    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g\\n")))
+    print("coordinate: %12.5g %12.5g\n" % (x, y), end="")
 
     """
 
-    __slots__ = ('print_args', 'format_string', 'file')
+    __slots__ = _fields = ('print_args', 'format_string', 'file')
     defaults = {'format_string': none, 'file': none}
 
     _construct_print_args = staticmethod(_mk_Tuple)
@@ -1760,7 +1773,8 @@ class FunctionPrototype(Node):
 
     """
 
-    __slots__ = ('return_type', 'name', 'parameters', 'attrs')
+    __slots__ = ('return_type', 'name', 'parameters')
+    _fields: tuple[str, ...] = __slots__ + Node._fields
 
     _construct_return_type = Type
     _construct_name = String
@@ -1779,7 +1793,7 @@ class FunctionPrototype(Node):
     @classmethod
     def from_FunctionDefinition(cls, func_def):
         if not isinstance(func_def, FunctionDefinition):
-            raise TypeError("func_def is not an instance of FunctionDefiniton")
+            raise TypeError("func_def is not an instance of FunctionDefinition")
         return cls(**func_def.kwargs(exclude=('body',)))
 
 
@@ -1813,7 +1827,8 @@ class FunctionDefinition(FunctionPrototype):
     }
     """
 
-    __slots__ = FunctionPrototype.__slots__[:-1] + ('body', 'attrs')
+    __slots__ = ('body', )
+    _fields = FunctionPrototype._fields[:-1] + __slots__ + Node._fields
 
     @classmethod
     def _construct_body(cls, itr):
@@ -1848,7 +1863,7 @@ class Return(Token):
     return x
 
     """
-    __slots__ = ('return',)
+    __slots__ = _fields = ('return',)
     _construct_return=staticmethod(_sympify)
 
 
@@ -1871,7 +1886,21 @@ class FunctionCall(Token, Expr):
     foo(bar, baz)
 
     """
-    __slots__ = ('name', 'function_args')
+    __slots__ = _fields = ('name', 'function_args')
 
     _construct_name = String
     _construct_function_args = staticmethod(lambda args: Tuple(*args))
+
+
+class Raise(Token):
+    """ Prints as 'raise ...' in Python, 'throw ...' in C++"""
+    __slots__ = _fields = ('exception',)
+
+
+class RuntimeError_(Token):
+    """ Represents 'std::runtime_error' in C++ and 'RuntimeError' in Python.
+
+    Note that the latter is uncommon, and you might want to use e.g. ValueError.
+    """
+    __slots__ = _fields = ('message',)
+    _construct_message = String

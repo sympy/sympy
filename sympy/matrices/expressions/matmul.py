@@ -7,8 +7,10 @@ from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
-from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
+from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.matrices.expressions._shape import validate_matmul_integer as validate
 
 from .inverse import Inverse
 from .matexpr import MatrixExpr
@@ -37,7 +39,7 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, evaluate=False, check=True, _sympify=True):
+    def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
         if not args:
             return cls.identity
 
@@ -49,7 +51,13 @@ class MatMul(MatrixExpr, Mul):
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
 
-        if check:
+        if check is not None:
+            sympy_deprecation_warning(
+                "Passing check to MatMul is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
+
+        if check is not False:
             validate(*matrices)
 
         if not matrices:
@@ -59,17 +67,18 @@ class MatMul(MatrixExpr, Mul):
             return factor
 
         if evaluate:
-            return canonicalize(obj)
+            return cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        return canonicalize(expr)
 
     @property
     def shape(self):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
-
-    def could_extract_minus_sign(self):
-        return self.args[0].could_extract_minus_sign()
 
     def _entry(self, i, j, expand=True, **kwargs):
         # Avoid cyclic imports
@@ -126,6 +135,10 @@ class MatMul(MatrixExpr, Mul):
         coeff, matrices = self.as_coeff_matrices()
         return coeff, MatMul(*matrices)
 
+    def expand(self, **kwargs):
+        expanded = super(MatMul, self).expand(**kwargs)
+        return self._evaluate(expanded)
+
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
 
@@ -157,8 +170,6 @@ class MatMul(MatrixExpr, Mul):
         if factor != 1:
             from .trace import trace
             return factor * trace(mmul.doit())
-        else:
-            raise NotImplementedError("Can't simplify any further")
 
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import Determinant
@@ -167,17 +178,18 @@ class MatMul(MatrixExpr, Mul):
         return factor**self.rows * Mul(*list(map(Determinant, square_matrices)))
 
     def _eval_inverse(self):
-        try:
-            return MatMul(*[
+        if all(arg.is_square for arg in self.args if isinstance(arg, MatrixExpr)):
+            return MatMul(*(
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
-                    for arg in self.args[::-1]]).doit()
-        except ShapeError:
-            return Inverse(self)
+                    for arg in self.args[::-1]
+                )
+            ).doit()
+        return Inverse(self)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = tuple(arg.doit(**hints) for arg in self.args)
         else:
             args = self.args
 
@@ -186,9 +198,15 @@ class MatMul(MatrixExpr, Mul):
         return expr
 
     # Needed for partial compatibility with Mul
-    def args_cnc(self, **kwargs):
+    def args_cnc(self, cset=False, warn=True, **kwargs):
         coeff_c = [x for x in self.args if x.is_commutative]
         coeff_nc = [x for x in self.args if not x.is_commutative]
+        if cset:
+            clen = len(coeff_c)
+            coeff_c = set(coeff_c)
+            if clen and warn and len(coeff_c) != clen:
+                raise ValueError('repeated commutative arguments: %s' %
+                                 [ci for ci in coeff_c if list(self.args).count(ci) > 1])
         return [coeff_c, coeff_nc]
 
     def _eval_derivative_matrix_lines(self, x):
@@ -218,16 +236,8 @@ class MatMul(MatrixExpr, Mul):
 
 mul.register_handlerclass((Mul, MatMul), MatMul)
 
-def validate(*matrices):
-    """ Checks for valid shapes for args of MatMul """
-    for i in range(len(matrices)-1):
-        A, B = matrices[i:i+2]
-        if A.cols != B.rows:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
 # Rules
-
-
 def newmul(*args):
     if args[0] == 1:
         args = args[1:]

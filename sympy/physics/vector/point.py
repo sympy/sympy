@@ -1,6 +1,7 @@
 from .vector import Vector, _check_vector
 from .frame import _check_frame
 from warnings import warn
+from sympy.utilities.misc import filldedent
 
 __all__ = ['Point']
 
@@ -244,7 +245,7 @@ class Point:
 
         _check_frame(frame)
         if not (frame in self._acc_dict):
-            if self._vel_dict[frame] != 0:
+            if self.vel(frame) != 0:
                 return (self._vel_dict[frame]).dt(frame)
             else:
                 return Vector(0)
@@ -564,33 +565,26 @@ class Point:
                             continue
                         candidate_neighbor.append(neighbor)
                         if not valid_neighbor_found:
-                            vel = None
-                            for f in self.pos_from(neighbor).args:
-                                if f[1] in self._vel_dict.keys():
-                                    if self._vel_dict[f[1]] != 0:
-                                        vel = self._vel_dict[f[1]]
-                                        break
-                            if vel is None:
-                                vel = self.pos_from(neighbor).dt(frame)
-                            self.set_vel(frame, vel + neighbor_velocity)
+                            self.set_vel(frame, self.pos_from(neighbor).dt(frame) + neighbor_velocity)
                             valid_neighbor_found = True
             if is_cyclic:
-                warn('Kinematic loops are defined among the positions of '
-                     'points. This is likely not desired and may cause errors '
-                     'in your calculations.')
+                warn(filldedent("""
+                Kinematic loops are defined among the positions of points. This
+                is likely not desired and may cause errors in your calculations.
+                """))
             if len(candidate_neighbor) > 1:
-                warn('Velocity automatically calculated based on point ' +
-                     candidate_neighbor[0].name +
-                     ' but it is also possible from points(s):' +
-                     str(candidate_neighbor[1:]) +
-                     '. Velocities from these points are not necessarily the '
-                     'same. This may cause errors in your calculations.')
+                warn(filldedent(f"""
+                Velocity of {self.name} automatically calculated based on point
+                {candidate_neighbor[0].name} but it is also possible from
+                points(s): {str(candidate_neighbor[1:])}. Velocities from these
+                points are not necessarily the same. This may cause errors in
+                your calculations."""))
             if valid_neighbor_found:
                 return self._vel_dict[frame]
             else:
-                raise ValueError('Velocity of point ' + self.name +
-                                 ' has not been'
-                                 ' defined in ReferenceFrame ' + frame.name)
+                raise ValueError(filldedent(f"""
+                Velocity of point {self.name} has not been defined in
+                ReferenceFrame {frame.name}."""))
 
         return self._vel_dict[frame]
 

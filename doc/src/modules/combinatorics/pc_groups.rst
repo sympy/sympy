@@ -309,4 +309,4 @@ Bibliography
 .. [Ho05] Derek F. Holt,
     Handbook of Computational Group Theory.
     In the series 'Discrete Mathematics and its Applications',
-    `Chapman & Hall/CRC 2005, xvi + 514 p <https://www.crcpress.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722>`_.
+    `Chapman & Hall/CRC 2005, xvi + 514 p <https://www.routledge.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722>`_.

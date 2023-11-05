@@ -39,8 +39,8 @@ def gammasimp(expr):
 
     All transformation rules can be found (or were derived from) here:
 
-    .. [1] http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
-    .. [2] http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
+    .. [1] https://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
+    .. [2] https://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
 
     Examples
     ========
@@ -330,7 +330,7 @@ def _gammasimp(expr, as_comb):
                 # look for runs in Rationals for each resid
                 keys = sorted(rats, key=default_sort_key)
                 for resid in keys:
-                    coeffs = list(sorted(rats[resid]))
+                    coeffs = sorted(rats[resid])
                     new = []
                     while True:
                         run = _run(coeffs)
@@ -471,18 +471,12 @@ class _rf(Function):
             if not b:
                 return S.One
 
-            n, result = int(b), S.One
+            n = int(b)
 
             if n > 0:
-                for i in range(n):
-                    result *= a + i
-
-                return result
+                return Mul(*[a + i for i in range(n)])
             elif n < 0:
-                for i in range(1, -n + 1):
-                    result *= a - i
-
-                return 1/result
+                return 1/Mul(*[a - i for i in range(1, -n + 1)])
         else:
             if b.is_Add:
                 c, _b = b.as_coeff_Add()
