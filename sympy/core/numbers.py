@@ -668,7 +668,7 @@ class Float(Number):
     in the `_mpf_` attribute of the Float:
 
     >>> mpf = s, m, e, b = Float(26)._mpf_; mpf
-    (0, 13, 2, 4)
+    (0, 13, 1, 4)
     >>> (-1)**s*m*2**e
     26
 
@@ -685,6 +685,7 @@ class Float(Number):
     by passing it to Rational (see also discusion below on SymPy Float
     and Python float):
 
+    >>> from sympy import Rational
     >>> Rational(Float(1/8))
     1/8
     >>> Rational(Float(1/10, 1))  # the 1 digit approximation
@@ -697,7 +698,7 @@ class Float(Number):
     Consider the 2 digit approximations for 1/10 and 1/3:
 
     >>> a, b = Float(1/10, 2), Float(1/3, 2); (a, b)
-    (0.10, 0.33)
+    (0.1, 0.33)
 
     The underlying rational approximations are
 
@@ -729,15 +730,17 @@ class Float(Number):
 
     Integers, Rationals, and Floats are all SymPy Numbers. While all
     Numbers are rational, the attribute `is_Rational` is True only
-    for Integers and Rational. Other lower-case attributes may
-    also be true for Floats:
+    for Integers and Rational and the rational Float does not
+    behave as a rational in all operations unless it is an integer,
+    so `is_rational` is None and `is_integer` is True. Other
+    lower-case attributes may also be true for integer Floats:
 
     >>> f1 = Float(1)
-    >>> f1.is_Rational, f1.is_rational, f1.is_integer, f1.is_odd
-    (False, True, True, True)
+    >>> f1.is_rational, f1.is_Rational, f1.is_integer, f1.is_odd
+    (None, False, True, True)
     >>> r = Float(0.1)
-    >>> r.is_rational, r.is_integer, r.is_odd
-    (True, False, False)
+    >>> r.is_integer, r.is_odd
+    (False, False)
 
     == SymPy Float from Python float ==
 
