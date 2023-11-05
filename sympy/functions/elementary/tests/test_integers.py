@@ -276,6 +276,8 @@ def test_ceiling():
     assert unchanged(ceiling, x + y)
 
     assert ceiling(x + 3) == ceiling(x) + 3
+    assert ceiling(x + 3.0) == ceiling(x) + 3.0
+    assert ceiling(x + 3.0*I) == ceiling(x) + 3.0*I
     assert ceiling(x + k) == ceiling(x) + k
 
     assert ceiling(y + 3) == ceiling(y) + 3
