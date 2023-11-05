@@ -1259,7 +1259,6 @@ def test_issue_23731():
     assert unchanged(Eq, i/2, 0.5)
     ni = symbols('ni', integer=False)
     assert Eq(ni, 1.0) == Eq(ni, 1) == False
-    nr = symbols('nr', rational=False)
     assert unchanged(Eq, ni, .1)
 
 

@@ -660,7 +660,8 @@ class Float(Number):
     Notes
     =====
 
-    == Floats are rational approximations ==
+    Floats are rational
+    -------------------
 
     Floats represent all numbers as a rational with a denominator that
     is a power of 2: ``(-1)**s*m*2**e`` where ``s`` is 0 or 1, ``m`` is an
@@ -726,23 +727,24 @@ class Float(Number):
     combine under constraints of precision. This makes them
     computationally efficient but less exact than Rationals.
 
-    == Floats are rational...but not Rational ==
+    Floats are rational...but not Rational
+    --------------------------------------
 
     Integers, Rationals, and Floats are all SymPy Numbers. While all
     Numbers are rational, the attribute `is_Rational` is True only
     for Integers and Rational and the rational Float does not
     behave as a rational in all operations unless it is an integer,
-    so `is_rational` is None and `is_integer` is True. Other
-    lower-case attributes may also be true for integer Floats:
+    so `is_rational` is None and `is_integer` is True.
 
     >>> f1 = Float(1)
     >>> f1.is_rational, f1.is_Rational, f1.is_integer, f1.is_odd
-    (None, False, True, True)
+    (None, False, True, None)
     >>> r = Float(0.1)
     >>> r.is_integer, r.is_odd
     (False, False)
 
-    == SymPy Float from Python float ==
+    SymPy Float from Python float
+    -----------------------------
 
     Python floats follow the same sort of rules as the SymPy Float
     but only retain 15 decomal digits of precision. Trying to make
@@ -771,7 +773,8 @@ class Float(Number):
     >>> Rational(_)
     354177486215223391027/1180591620717411303424
 
-    == Changing Float precision ==
+    Changing Float precision
+    ------------------------
 
     During calculations, `evalf` changes the precision of numbers
     but this will not increase the accuracy of the inexact value.
@@ -800,7 +803,8 @@ class Float(Number):
     >>> show(t.evalf(2))
     307/2**10 at prec=10
 
-    == Instantiating from tuple ==
+    Instantiating from tuple
+    ------------------------
 
     Floats can be instantiated with an mpf tuple (s, m, e) to
     produce the number (-1)**s*m*2**e:
@@ -821,7 +825,8 @@ class Float(Number):
     precision. The mpf tuple and the precision are two separate quantities
     that Float tracks.
 
-    == Instantiating inf and nan ==
+    Instantiating inf and nan
+    -------------------------
 
     In SymPy, a Float is a number that can be computed with arbitrary
     precision. Although floating point 'inf' and 'nan' are not such
