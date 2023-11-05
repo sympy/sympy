@@ -1260,16 +1260,7 @@ def test_issue_23731():
     ni = symbols('ni', integer=False)
     assert Eq(ni, 1) == False
     assert unchanged(Eq, ni, .1)
-
-
-@XFAIL
-def test_issue_23731b():
-    ni = symbols('ni', integer=False)
     assert Eq(ni, 1.0) == False
-
-
-@XFAIL
-def test_issue_23731c():
     nr = symbols('nr', rational=False)
     assert Eq(nr, .1) == False
 
