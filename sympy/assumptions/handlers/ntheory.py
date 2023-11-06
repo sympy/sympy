@@ -128,7 +128,7 @@ def _EvenPredicate_number(expr, assumptions):
     except TypeError:
         return False
     if not (expr - i).equals(0):
-        raise False
+        return False
     return i % 2 == 0
 
 @EvenPredicate.register(Expr)
