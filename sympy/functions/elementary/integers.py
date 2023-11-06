@@ -7,7 +7,7 @@ from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_or
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, int_valued
 from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
@@ -42,11 +42,13 @@ class RoundFunction(Function):
         ipart = npart = spart = S.Zero
 
         # Extract integral (or complex integral) terms
-        terms = Add.make_args(arg)
-
-        for t in terms:
-            if t.is_integer or (t.is_imaginary and im(t).is_integer):
-                ipart += t
+        intof = lambda x: int(x) if int_valued(x) else (
+            x if x.is_integer else None)
+        for t in Add.make_args(arg):
+            if t.is_imaginary and (i := intof(im(t))) is not None:
+                ipart += i*S.ImaginaryUnit
+            elif (i := intof(t)) is not None:
+                ipart += i
             elif t.has(Symbol):
                 spart += t
             else:
@@ -494,9 +496,8 @@ class frac(Function):
                     return arg - floor(arg)
             return cls(arg, evaluate=False)
 
-        terms = Add.make_args(arg)
         real, imag = S.Zero, S.Zero
-        for t in terms:
+        for t in Add.make_args(arg):
             # Two checks are needed for complex arguments
             # see issue-7649 for details
             if t.is_imaginary or (S.ImaginaryUnit*t).is_real:
