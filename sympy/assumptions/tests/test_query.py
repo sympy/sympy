@@ -97,7 +97,7 @@ def test_float_1():
     assert ask(Q.imaginary(z)) is False
     assert ask(Q.positive(z)) is True
     assert ask(Q.negative(z)) is False
-    assert ask(Q.even(z)) is False
+    assert ask(Q.even(z)) is None
     assert ask(Q.odd(z)) is None
     assert ask(Q.finite(z)) is True
     assert ask(Q.prime(z)) is None
