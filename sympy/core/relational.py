@@ -4,6 +4,7 @@ from .basic import Atom, Basic
 from .sorting import ordered
 from .evalf import EvalfMixin
 from .function import AppliedUndef
+from .numbers import int_valued
 from .singleton import S
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
@@ -1570,6 +1571,15 @@ def is_eq(lhs, rhs, assumptions=None):
                 return False
             if z:
                 return True
+
+        # is_zero cannot help decide integer/rational with Float
+        c, t = dif.as_coeff_Add()
+        if c.is_Float:
+            if int_valued(c):
+                if t.is_integer is False:
+                    return False
+            elif t.is_rational is False:
+                return False
 
         n2 = _n2(lhs, rhs)
         if n2 is not None:
