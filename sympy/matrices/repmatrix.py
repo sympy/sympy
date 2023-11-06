@@ -393,6 +393,89 @@ class RepMatrix(MatrixBase):
                     rv = ans
         return rv
 
+    def lll(self, delta=0.75):
+        """LLL-reduced basis for the rowspace of a matrix of integers.
+
+        Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm.
+
+        The implementation is provided by :class:`~DomainMatrix`. See
+        :meth:`~DomainMatrix.lll` for more details.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 0, 0, 0, -20160],
+        ...             [0, 1, 0, 0, 33768],
+        ...             [0, 0, 1, 0, 39578],
+        ...             [0, 0, 0, 1, 47757]])
+        >>> M.lll()
+        Matrix([
+        [ 10, -3,  -2,  8,  -4],
+        [  3, -9,   8,  1, -11],
+        [ -3, 13,  -9, -3,  -9],
+        [-12, -7, -11,  9,  -1]])
+
+        See Also
+        ========
+
+        lll_transform
+        sympy.polys.matrices.domainmatrix.DomainMatrix.lll
+        """
+        delta = QQ.from_sympy(_sympify(delta))
+        dM = self._rep.convert_to(ZZ)
+        basis = dM.lll(delta=delta)
+        return self._fromrep(basis)
+
+    def lll_transform(self, delta=0.75):
+        """LLL-reduced basis and transformation matrix.
+
+        Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm.
+
+        The implementation is provided by :class:`~DomainMatrix`. See
+        :meth:`~DomainMatrix.lll_transform` for more details.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 0, 0, 0, -20160],
+        ...             [0, 1, 0, 0, 33768],
+        ...             [0, 0, 1, 0, 39578],
+        ...             [0, 0, 0, 1, 47757]])
+        >>> B, T = M.lll_transform()
+        >>> B
+        Matrix([
+        [ 10, -3,  -2,  8,  -4],
+        [  3, -9,   8,  1, -11],
+        [ -3, 13,  -9, -3,  -9],
+        [-12, -7, -11,  9,  -1]])
+        >>> T
+        Matrix([
+        [ 10, -3,  -2,  8],
+        [  3, -9,   8,  1],
+        [ -3, 13,  -9, -3],
+        [-12, -7, -11,  9]])
+
+        The transformation matrix maps the original basis to the LLL-reduced
+        basis:
+
+        >>> T * M == B
+        True
+
+        See Also
+        ========
+
+        lll
+        sympy.polys.matrices.domainmatrix.DomainMatrix.lll_transform
+        """
+        delta = QQ.from_sympy(_sympify(delta))
+        dM = self._rep.convert_to(ZZ)
+        basis, transform = dM.lll_transform(delta=delta)
+        B = self._fromrep(basis)
+        T = self._fromrep(transform)
+        return B, T
+
 
 class MutableRepMatrix(RepMatrix):
     """Mutable matrix based on DomainMatrix as the internal representation"""
