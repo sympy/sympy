@@ -641,6 +641,7 @@ def test_mersenne_prime_exponent():
 
 
 def test_is_perfect():
+    assert is_perfect(-6) is False
     assert is_perfect(6) is True
     assert is_perfect(15) is False
     assert is_perfect(28) is True
@@ -651,6 +652,8 @@ def test_is_perfect():
 
 
 def test_is_mersenne_prime():
+    assert is_mersenne_prime(-3) is False
+    assert is_mersenne_prime(3) is True
     assert is_mersenne_prime(10) is False
     assert is_mersenne_prime(127) is True
     assert is_mersenne_prime(511) is False
