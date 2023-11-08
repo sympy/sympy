@@ -2114,8 +2114,20 @@ def test_issue_19427():
     # Sum of the above, used to incorrectly return 0 for a while:
     assert integrate((x ** 4 - 2 * x ** 2 + 1) * sqrt(1 - x ** 2), (x, -1, 1)) == 5 * pi / 16
 
+
 def test_issue_23942():
     I1 = Integral(1/sqrt(a*(1 + x)**3 + (1 + x)**2), (x, 0, z))
     assert I1.series(a, 1, n=1) == Integral(1/sqrt(x**3 + 4*x**2 + 5*x + 2), (x, 0, z)) + O(a - 1, (a, 1))
     I2 = Integral(1/sqrt(a*(4 - x)**4 + (5 + x)**2), (x, 0, z))
     assert I2.series(a, 2, n=1) == Integral(1/sqrt(2*x**4 - 32*x**3 + 193*x**2 - 502*x + 537), (x, 0, z)) + O(a - 2, (a, 2))
+
+
+def test_issue_25886():
+    # https://github.com/sympy/sympy/issues/25886
+    f = (1-x)*exp(0.937098661j*x)
+    F_exp = (1.0*(-1.0671234968289*I*y
+             + 1.13875255748434
+             + 1.0671234968289*I)*exp(0.937098661*I*y)
+            - 1.13875255748434*exp(0.937098661*I))
+    F = integrate(f, (x, y, 1.0))
+    assert F.is_same(F_exp, math.isclose)
