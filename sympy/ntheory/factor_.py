@@ -2442,10 +2442,9 @@ def is_perfect(n):
     .. [2] https://en.wikipedia.org/wiki/Perfect_number
 
     """
-    _n = as_int(abs(n))
-    if _n < 6:  # no negatives or less than first perfect (which is 6)
+    n = as_int(n)
+    if n < 1:
         return False
-    n = _n
     if n % 2 == 0:
         m = (n.bit_length() + 1) >> 1
         if (1 << (m - 1)) * ((1 << m) - 1) != n:
@@ -2498,10 +2497,9 @@ def is_mersenne_prime(n):
     .. [1] https://mathworld.wolfram.com/MersennePrime.html
 
     """
-    _n = as_int(abs(n))
-    if _n < 3:  # negative or less than first Mersenne prime
+    n = as_int(n)
+    if n < 1:
         return False
-    n = _n
     if n & (n + 1):
         # n is not Mersenne number
         return False
