@@ -674,10 +674,10 @@ def test_EX_convert():
     ]
 
     for R, e in elements:
-        for E in EX, EXRAW:
-            elem = E.from_sympy(R.to_sympy(e))
-            assert E.convert_from(e, R) == elem
-            assert R.convert_from(elem, E) == e
+        for EE in EX, EXRAW:
+            elem = EE.from_sympy(R.to_sympy(e))
+            assert EE.convert_from(e, R) == elem
+            assert R.convert_from(elem, EE) == e
 
 
 def test_GlobalPolynomialRing_convert():
