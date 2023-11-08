@@ -1304,6 +1304,9 @@ def _invert_modular(modterm, rhs, n, symbol):
     """
     a, m = modterm.args
 
+    if rhs.is_integer is False:
+        return symbol, S.EmptySet
+
     if rhs.is_real is False or any(term.is_real is False
             for term in list(_term_factors(a))):
         # Check for complex arguments
