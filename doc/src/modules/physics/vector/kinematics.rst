@@ -210,10 +210,8 @@ acceleration vectors.
 
 We can find these quantities for a simple example easily:
 
-.. image:: kin_1.*
-   :height: 300
-   :width: 300
-   :align: center
+.. raw:: html
+   :file: kin_1.svg
 
 .. math::
   \textrm{Let's define: }
@@ -249,10 +247,8 @@ There will often be cases when the velocity of a point is desired and a related
 point's velocity is known. For the cases in which we have two points fixed on a
 rigid body, we use the 2-Point Theorem:
 
-.. image:: kin_2pt.*
-   :height: 300
-   :width: 300
-   :align: center
+.. raw:: html
+   :file: kin_2pt.svg
 
 Let's say we know the velocity of the point :math:`S` and the angular
 velocity of the body :math:`\mathbf{B}`, both defined in the reference frame
@@ -270,10 +266,8 @@ of the point :math:`P` in :math:`\mathbf{N}` as follows:
 When only one of the two points is fixed on a body, the 1 point theorem is used
 instead.
 
-.. image:: kin_1pt.*
-   :height: 400
-   :width: 400
-   :align: center
+.. raw:: html
+   :file: kin_1pt.svg
 
 Here, the velocity of point :math:`S` is known in the frame :math:`\mathbf{N}`,
 the angular velocity of :math:`\mathbf{B}` is known in :math:`\mathbf{N}`, and
@@ -295,10 +289,8 @@ the velocity of the point :math:`P` is known in the frame associated with body
 
 Examples of applications of the 1 point and 2 point theorem follow.
 
-.. image:: kin_2.*
-   :height: 300
-   :width: 400
-   :align: center
+.. raw:: html
+   :file: kin_2.svg
 
 This example has a disc translating and rotating in a plane. We can easily
 define the angular velocity of the body :math:`\mathbf{B}` and velocity of the
@@ -339,10 +331,8 @@ point :math:`P` now.
   \mathbf{\hat{n}_y} + R\dot{u_3}\mathbf{\hat{b}_y} - R u_3^2
   \mathbf{\hat{b}_x}\\
 
-.. image:: kin_3.*
-   :height: 200
-   :width: 200
-   :align: center
+.. raw:: html
+   :file: kin_3.svg
 
 
 In this example we have a double pendulum. We can use the two point theorem
@@ -363,10 +353,8 @@ point :math:`O`'s velocity is zero in :math:`\mathbf{N}`.
   \times l \mathbf{\hat{c}_x}\\
   ^\mathbf{N}\mathbf{v}^Q &= u_1 l\mathbf{\hat{b}_y}+u_2 l\mathbf{\hat{c}_y}\\
 
-.. image:: kin_4.*
-   :height: 400
-   :width: 300
-   :align: center
+.. raw:: html
+   :file: kin_4.svg
 
 In this example we have a particle moving on a ring; the ring is supported by a
 rod which can rotate about the :math:`\mathbf{\hat{n}_x}` axis. First we use
@@ -397,10 +385,8 @@ rather, rolling without slip. Two bodies are said to be rolling without slip if
 and only if the point of contact on each body has the same velocity in another
 frame. See the following figure:
 
-.. image:: kin_rolling.*
-   :height: 250
-   :width: 450
-   :align: center
+.. raw:: html
+   :file: kin_rolling.svg
 
 This is commonly used to form the velocity of a point on one object rolling on
 another fixed object, such as in the following example:
@@ -444,10 +430,8 @@ Note that the angular velocity can be defined in an alternate way: ::
 Both upon frame creation during ``orientnew`` and when calling ``set_ang_vel``,
 the angular velocity is set in both frames involved, as seen above.
 
-.. image:: kin_angvel2.*
-   :height: 300
-   :width: 450
-   :align: center
+.. raw:: html
+   :file: kin_angvel2.svg
 
 Here we have multiple bodies with angular velocities defined relative to each
 other. This is coded as: ::
@@ -518,10 +502,8 @@ otherwise.
 Next is a description of the 2 point and 1 point theorems, as used in
 ``sympy``.
 
-.. image:: kin_2.*
-   :height: 300
-   :width: 400
-   :align: center
+.. raw:: html
+   :file: kin_2.svg
 
 First is the translating, rotating disc. ::
 
@@ -540,10 +522,8 @@ First is the translating, rotating disc. ::
 
 We will also cover implementation of the 1 point theorem.
 
-.. image:: kin_4.*
-   :height: 400
-   :width: 300
-   :align: center
+.. raw:: html
+   :file: kin_4.svg
 
 This is the particle moving on a ring, again. ::
 
