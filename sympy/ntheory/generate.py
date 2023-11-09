@@ -438,6 +438,8 @@ def prime(nth):
     from sympy.functions.elementary.exponential import log
     from sympy.functions.special.error_functions import li
     a = 2 # Lower bound for binary search
+    # leave n inside int since int(i*r) != i*int(r) is not a valid property
+    # e.g. int(2*.5) != 2*int(.5)
     b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
 
     while a < b:

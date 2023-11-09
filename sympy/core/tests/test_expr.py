@@ -2084,6 +2084,19 @@ def test_round():
         assert type(round(fi)) is int
         assert S(fi).round().is_Integer
 
+        # issue 25698
+        n = 6000002
+        assert int(n*(log(n) + log(log(n)))) == 110130079
+        one = cos(2)**2 + sin(2)**2
+        eq = exp(one*I*pi)
+        qr, qi = eq.as_real_imag()
+        assert qi.round(2) == 0.0
+        assert eq.round(2) == -1.0
+        eq = one - 1/S(10**120)
+        assert S.true not in (eq > 1, eq < 1)
+        assert int(eq) == int(.9) == 0
+        assert int(-eq) == int(-.9) == 0
+
 
 def test_held_expression_UnevaluatedExpr():
     x = symbols("x")
@@ -2269,3 +2282,7 @@ def test_format():
     assert '{:+3.0f}'.format(S(3)) == ' +3'
     assert '{:23.20f}'.format(pi) == ' 3.14159265358979323846'
     assert '{:50.48f}'.format(exp(sin(1))) == '2.319776824715853173956590377503266813254904772376'
+
+
+def test_issue_24045():
+    assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise

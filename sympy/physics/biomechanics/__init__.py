@@ -12,22 +12,32 @@ from .activation import (
    ZerothOrderActivation,
 )
 from .curve import (
+   CharacteristicCurveCollection,
+   CharacteristicCurveFunction,
    FiberForceLengthActiveDeGroote2016,
    FiberForceLengthPassiveDeGroote2016,
    FiberForceLengthPassiveInverseDeGroote2016,
    FiberForceVelocityDeGroote2016,
+   FiberForceVelocityInverseDeGroote2016,
    TendonForceLengthDeGroote2016,
    TendonForceLengthInverseDeGroote2016,
 )
-from .musculotendon import MusculotendonDeGroote2016, MusculotendonFormulation
+from .musculotendon import (
+   MusculotendonBase,
+   MusculotendonDeGroote2016,
+   MusculotendonFormulation,
+)
 
 
 __all__ = [
    # Musculotendon characteristic curve functions
+   'CharacteristicCurveCollection',
+   'CharacteristicCurveFunction',
    'FiberForceLengthActiveDeGroote2016',
    'FiberForceLengthPassiveDeGroote2016',
    'FiberForceLengthPassiveInverseDeGroote2016',
    'FiberForceVelocityDeGroote2016',
+   'FiberForceVelocityInverseDeGroote2016',
    'TendonForceLengthDeGroote2016',
    'TendonForceLengthInverseDeGroote2016',
 
@@ -37,6 +47,7 @@ __all__ = [
    'ZerothOrderActivation',
 
    # Musculotendon classes
+   'MusculotendonBase',
    'MusculotendonDeGroote2016',
    'MusculotendonFormulation',
 ]

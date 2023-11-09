@@ -607,6 +607,9 @@ def test_I():
 
 def test_bounded():
     x, y, z = symbols('x,y,z')
+    a = x + y
+    x, y = a.args
+    assert ask(Q.finite(a), Q.positive_infinite(y)) is None
     assert ask(Q.finite(x)) is None
     assert ask(Q.finite(x), Q.finite(x)) is True
     assert ask(Q.finite(x), Q.finite(y)) is None
@@ -1787,6 +1790,7 @@ def test_prime():
 
 @_both_exp_pow
 def test_positive():
+    assert ask(Q.positive(cos(I) ** 2 + sin(I) ** 2 - 1)) is None
     assert ask(Q.positive(x), Q.positive(x)) is True
     assert ask(Q.positive(x), Q.negative(x)) is False
     assert ask(Q.positive(x), Q.nonzero(x)) is None
