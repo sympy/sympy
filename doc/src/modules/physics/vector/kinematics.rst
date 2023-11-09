@@ -102,10 +102,8 @@ to the previous body in order to be fully defined (and the first body needs
 to be defined in the desired reference frame). The following figure shows an
 example of when using this theorem can make things easier.
 
-.. image:: kin_angvel3.*
-   :height: 250
-   :width: 400
-   :align: center
+.. raw:: html
+   :file: kin_angvel3.svg
 
 Here we can easily write the angular velocity of the body
 :math:`\mathbf{D}` in the reference frame of the first body :math:`\mathbf{A}`:
