@@ -16,11 +16,11 @@
   <text x="1552.5498" y="484.2467" fill="#0070c0" font-family="Calibri, Calibri_MSFontService, sans-serif" font-size="73.6424px" font-weight="400" stroke-width=".89678">child.masscenter</text>
   <path d="m1735.717 703.88596c67.0291 0 134.0578-91.65984 134.0578-183.31968" fill="none" fill-rule="evenodd" stroke="#0070c0" stroke-miterlimit="8" stroke-width="6.16536"/>
   <text x="890.37671" y="1397.1683" font-family="Calibri, Calibri_MSFontService, sans-serif" font-size="73.6424px" font-weight="400" stroke-width=".89678">attachment points</text>
-  <path d="m1328.7405 1244.2674c0 17.3437-39.9426 34.6785-79.8941 34.6785-39.9426 0-79.8941 17.3437-79.8941 34.6784" fill="none" fill-rule="evenodd" stroke="CurrentColor" stroke-miterlimit="8" stroke-width="6.16536"/>
-  <path d="m696.79786 1216.4672c0-22.536 18.2674-40.8034 40.80347-40.8034s40.80347 18.2674 40.80347 40.8034c0 22.5361-18.2674 40.8035-40.80347 40.8035s-40.80347-18.2674-40.80347-40.8035z" fill-rule="evenodd" stroke="CurrentColor" stroke-miterlimit="8" stroke-width="12.3307"/>
+  <path d="m1328.7405 1244.2674c0 17.3437-39.9426 34.6785-79.8941 34.6785-39.9426 0-79.8941 17.3437-79.8941 34.6784" fill="none" fill-rule="evenodd" stroke="#000000" stroke-miterlimit="8" stroke-width="6.16536"/>
+  <path d="m696.79786 1216.4672c0-22.536 18.2674-40.8034 40.80347-40.8034s40.80347 18.2674 40.80347 40.8034c0 22.5361-18.2674 40.8035-40.80347 40.8035s-40.80347-18.2674-40.80347-40.8035z" fill-rule="evenodd" stroke="#000000" stroke-miterlimit="8" stroke-width="12.3307"/>
   <path d="m696.79786 1216.4672c0-22.536 18.2674-40.8034 40.80347-40.8034v40.8034z" fill="#ffffff" fill-rule="evenodd" stroke-width=".89678"/>
   <path d="m778.4048 1216.4672c0 22.5361-18.2674 40.8035-40.80347 40.8035v-40.8035z" fill="#ffffff" fill-rule="evenodd" stroke-width=".89678"/>
-  <path d="m1653.6617 703.50932c0-22.53608 18.2674-40.80348 40.8035-40.80348 22.536 0 40.8034 18.2674 40.8034 40.80348 0 22.53607-18.2674 40.80347-40.8034 40.80347-22.5361 0-40.8035-18.2674-40.8035-40.80347z" fill-rule="evenodd" stroke="CurrentColor" stroke-miterlimit="8" stroke-width="12.3307"/>
+  <path d="m1653.6617 703.50932c0-22.53608 18.2674-40.80348 40.8035-40.80348 22.536 0 40.8034 18.2674 40.8034 40.80348 0 22.53607-18.2674 40.80347-40.8034 40.80347-22.5361 0-40.8035-18.2674-40.8035-40.80347z" fill-rule="evenodd" stroke="#000000" stroke-miterlimit="8" stroke-width="12.3307"/>
   <path d="m1653.6617 703.50932c0-22.53608 18.2674-40.80348 40.8035-40.80348v40.80348z" fill="#ffffff" fill-rule="evenodd" stroke-width=".89678"/>
   <path d="m1735.2686 703.50932c0 22.53607-18.2674 40.80347-40.8034 40.80347v-40.80347z" fill="#ffffff" fill-rule="evenodd" stroke-width=".89678"/>
   <path d="m1329.9601 1214.0818 151.5109 1.2017-0.072 9.2458-151.5109-1.1927zm146.9643-8.08 46.1303 14.2319-46.3545 13.5145z" fill="#008000" stroke-width=".89678"/>

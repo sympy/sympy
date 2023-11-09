@@ -556,7 +556,8 @@ class Joint(ABC):
 class PinJoint(Joint):
     """Pin (Revolute) Joint.
 
-    .. image:: PinJoint.svg
+    .. raw:: html
+        :file: ../../../doc/src/modules/physics/mechanics/api/PinJoint.svg
 
     Explanation
     ===========
