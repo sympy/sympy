@@ -85,6 +85,8 @@ blacklist = [
 
 doctest_list = [
     # numpy
+    'doc/src/tutorials/biomechanics/biomechanical-model-example.rst',
+    'doc/src/tutorials/biomechanics/biomechanics.rst',
     'sympy/matrices/',
     'sympy/utilities/lambdify.py',
 

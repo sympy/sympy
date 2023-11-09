@@ -100,9 +100,10 @@ jobs:
         ["standard"]
       # Sage distribution packages to build
       targets:                  SAGE_CHECK=no SAGE_CHECK_PACKAGES=sympy build SAGE_DOCTEST_RANDOM_SEED=0 ptest
-      # Standard setting: Test the current beta release of Sage.
+      # Test against the Sage PR:
+      # https://github.com/sagemath/sage/pull/36641
       sage_repo:                sagemath/sage
-      sage_ref:                 develop
+      sage_ref:                 refs/pull/36641/merge
       # To test with a Sage PR, use this:
       #sage_ref:                 refs/pull/PR_NUMBER/merge
       upstream_artifact:        upstream

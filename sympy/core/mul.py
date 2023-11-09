@@ -581,6 +581,9 @@ class Mul(Expr, AssocOp):
         i = 0  # steps through num_rat which may grow
         while i < len(num_rat):
             bi, ei = num_rat[i]
+            if bi == 1:
+                i += 1
+                continue
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]

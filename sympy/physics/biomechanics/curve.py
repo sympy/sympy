@@ -73,7 +73,7 @@ class CharacteristicCurveFunction(Function):
 
 
 class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
-    r"""Tendon force-length curve based on De Groote et al., 2016 [1].
+    r"""Tendon force-length curve based on De Groote et al., 2016 [1]_.
 
     Explanation
     ===========
@@ -97,12 +97,12 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``TendonForceLengthDeGroote2016`` is using
-    the ``with_defaults`` constructor because this will automatically
+    The preferred way to instantiate :class:`TendonForceLengthDeGroote2016` is using
+    the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized tendon length. We'll create a
-    ``Symbol`` called ``l_T_tilde`` to represent this.
+    :class:`~.Symbol` called ``l_T_tilde`` to represent this.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.biomechanics import TendonForceLengthDeGroote2016
@@ -134,7 +134,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     33.93669377311689)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -303,7 +303,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
 
 class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
-    r"""Inverse tendon force-length curve based on De Groote et al., 2016 [1].
+    r"""Inverse tendon force-length curve based on De Groote et al., 2016 [1]_.
 
     Explanation
     ===========
@@ -328,12 +328,12 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``TendonForceLengthInverseDeGroote2016`` is
-    using the ``with_defaults`` constructor because this will automatically
+    The preferred way to instantiate :class:`TendonForceLengthInverseDeGroote2016` is
+    using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized tendon force-length, which is
-    equal to the tendon force. We'll create a ``Symbol`` called ``fl_T`` to
+    equal to the tendon force. We'll create a :class:`~.Symbol` called ``fl_T`` to
     represent this.
 
     >>> from sympy import Symbol
@@ -353,7 +353,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -523,7 +523,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
 
 class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     r"""Passive muscle fiber force-length curve based on De Groote et al., 2016
-    [1].
+    [1]_.
 
     Explanation
     ===========
@@ -543,12 +543,12 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``FiberForceLengthPassiveDeGroote2016`` is
-    using the ``with_defaults`` constructor because this will automatically
+    The preferred way to instantiate :class:`FiberForceLengthPassiveDeGroote2016` is
+    using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized muscle fiber length. We'll
-    create a ``Symbol`` called ``l_M_tilde`` to represent this.
+    create a :class:`~.Symbol` called ``l_M_tilde`` to represent this.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.biomechanics import FiberForceLengthPassiveDeGroote2016
@@ -578,7 +578,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     FiberForceLengthPassiveDeGroote2016(l_M/l_M_opt, 0.6, 4.0)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -741,7 +741,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
 
 class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     r"""Inverse passive muscle fiber force-length curve based on De Groote et
-    al., 2016 [1].
+    al., 2016 [1]_.
 
     Explanation
     ===========
@@ -767,12 +767,12 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     ========
 
     The preferred way to instantiate
-    ``FiberForceLengthPassiveInverseDeGroote2016`` is using the
-    ``with_defaults`` constructor because this will automatically populate the
+    :class:`FiberForceLengthPassiveInverseDeGroote2016` is using the
+    :meth:`~.with_defaults` constructor because this will automatically populate the
     constants within the characteristic curve equation with the floating point
     values from the original publication. This constructor takes a single
     argument corresponding to the normalized passive muscle fiber length-force
-    component of the muscle fiber force. We'll create a ``Symbol`` called
+    component of the muscle fiber force. We'll create a :class:`~.Symbol` called
     ``fl_M_pas`` to represent this.
 
     >>> from sympy import Symbol
@@ -791,7 +791,7 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -952,16 +952,16 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
 
 class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     r"""Active muscle fiber force-length curve based on De Groote et al., 2016
-    [1].
+    [1]_.
 
     Explanation
     ===========
 
     The function is defined by the equation:
 
-    $fl^M_{act} = c_0 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_1}{\left(c_2 + c_3 \tilde{l}^M\right)}\right)^2}
-        + c_4 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_5}{\left(c_6 + c_7 \tilde{l}^M\right)}\right)^2}
-        + c_8 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_9}{\left(c_{10} + c_{11} \tilde{l}^M\right)}\right)^2}$
+    $fl_{\text{act}}^M = c_0 \exp\left(-\frac{1}{2}\left(\frac{\tilde{l}^M - c_1}{c_2 + c_3 \tilde{l}^M}\right)^2\right)
+    + c_4 \exp\left(-\frac{1}{2}\left(\frac{\tilde{l}^M - c_5}{c_6 + c_7 \tilde{l}^M}\right)^2\right)
+    + c_8 \exp\left(-\frac{1}{2}\left(\frac{\tilde{l}^M - c_9}{c_{10} + c_{11} \tilde{l}^M}\right)^2\right)$
 
     with constant values of $c0 = 0.814$, $c1 = 1.06$, $c2 = 0.162$,
     $c3 = 0.0633$, $c4 = 0.433$, $c5 = 0.717$, $c6 = -0.0299$, $c7 = 0.2$,
@@ -976,12 +976,12 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``FiberForceLengthActiveDeGroote2016`` is
-    using the ``with_defaults`` constructor because this will automatically
+    The preferred way to instantiate :class:`FiberForceLengthActiveDeGroote2016` is
+    using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized muscle fiber length. We'll
-    create a ``Symbol`` called ``l_M_tilde`` to represent this.
+    create a :class:`~.Symbol` called ``l_M_tilde`` to represent this.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.biomechanics import FiberForceLengthActiveDeGroote2016
@@ -1015,7 +1015,7 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -1289,7 +1289,7 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
 
 
 class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
-    r"""Muscle fiber force-velocity curve based on De Groote et al., 2016 [1].
+    r"""Muscle fiber force-velocity curve based on De Groote et al., 2016 [1]_.
 
     Explanation
     ===========
@@ -1299,8 +1299,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
 
     The function is defined by the equation:
 
-    $fv^M = c_0 \log{\left(c_1 v_M_tilde + c_2\right)
-        + \sqrt{\left(c_1 v_M_tilde + c_2\right)^2 + 1}} + c_3
+    $fv^M = c_0 \log{\left(c_1 \tilde{v}_m + c_2\right) + \sqrt{\left(c_1 \tilde{v}_m + c_2\right)^2 + 1}} + c_3$
 
     with constant values of $c_0 = -0.318$, $c_1 = -8.149$, $c_2 = -0.374$, and
     $c_3 = 0.886$.
@@ -1314,12 +1313,12 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``FiberForceVelocityDeGroote2016`` is using
-    the ``with_defaults`` constructor because this will automatically populate
+    The preferred way to instantiate :class:`FiberForceVelocityDeGroote2016` is using
+    the :meth:`~.with_defaults` constructor because this will automatically populate
     the constants within the characteristic curve equation with the floating
     point values from the original publication. This constructor takes a single
     argument corresponding to normalized muscle fiber extension velocity. We'll
-    create a ``Symbol`` called ``v_M_tilde`` to represent this.
+    create a :class:`~.Symbol` called ``v_M_tilde`` to represent this.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.biomechanics import FiberForceVelocityDeGroote2016
@@ -1349,7 +1348,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     FiberForceVelocityDeGroote2016(v_M/v_M_max, -0.318, -8.149, -0.374, 0.886)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -1523,7 +1522,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
 
 class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     r"""Inverse muscle fiber force-velocity curve based on De Groote et al.,
-    2016 [1].
+    2016 [1]_.
 
     Explanation
     ===========
@@ -1548,12 +1547,12 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``FiberForceVelocityInverseDeGroote2016``
-    is using the ``with_defaults`` constructor because this will automatically
+    The preferred way to instantiate :class:`FiberForceVelocityInverseDeGroote2016`
+    is using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized muscle fiber force-velocity
-    component of the muscle fiber force. We'll create a ``Symbol`` called
+    component of the muscle fiber force. We'll create a :class:`~.Symbol` called
     ``fv_M`` to represent this.
 
     >>> from sympy import Symbol
@@ -1572,7 +1571,7 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     FiberForceVelocityInverseDeGroote2016(fv_M, c0, c1, c2, c3)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 

@@ -1,8 +1,7 @@
 from math import gcd
 
 from sympy.ntheory.generate import Sieve, sieve
-from sympy.ntheory.primetest import (mr, _lucas_sequence, _lucas_selfridge_params, _lucas_extrastrong_params,
-                                     is_lucas_prp, is_square,
+from sympy.ntheory.primetest import (mr, _lucas_extrastrong_params, is_lucas_prp, is_square,
                                      is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime, is_euler_pseudoprime,
                                      is_gaussian_prime, is_fermat_pseudoprime, is_euler_jacobi_pseudoprime)
 
@@ -52,48 +51,6 @@ def test_euler_pseudoprimes():
 def test_is_euler_jacobi_pseudoprime():
     assert is_euler_jacobi_pseudoprime(11, 1)
     assert is_euler_jacobi_pseudoprime(15, 1)
-
-
-def test_lucas_sequence():
-    def lucas_u(P, Q, length):
-        array = [0] * length
-        array[1] = 1
-        for k in range(2, length):
-            array[k] = P * array[k - 1] - Q * array[k - 2]
-        return array
-
-    def lucas_v(P, Q, length):
-        array = [0] * length
-        array[0] = 2
-        array[1] = P
-        for k in range(2, length):
-            array[k] = P * array[k - 1] - Q * array[k - 2]
-        return array
-
-    length = 20
-    for P in range(-10, 10):
-        for Q in range(-10, 10):
-            D = P**2 - 4*Q
-            if D == 0:
-                continue
-            us = lucas_u(P, Q, length)
-            vs = lucas_v(P, Q, length)
-            for n in range(3, 100, 2):
-                for k in range(length):
-                    U, V, Qk = _lucas_sequence(n, P, Q, k)
-                    assert U == us[k] % n
-                    assert V == vs[k] % n
-                    assert pow(Q, k, n) == Qk
-
-
-def test_lucas_selfridge_params():
-    assert _lucas_selfridge_params(3) == (5, 1, -1)
-    assert _lucas_selfridge_params(5) == (-7, 1, 2)
-    assert _lucas_selfridge_params(7) == (5, 1, -1)
-    assert _lucas_selfridge_params(9) == (0, 0, 0)
-    assert _lucas_selfridge_params(11) == (13, 1, -3)
-    assert _lucas_selfridge_params(19) == (-7, 1, 2)
-    assert _lucas_selfridge_params(29) == (-11, 1, 3)
 
 
 def test_lucas_extrastrong_params():
