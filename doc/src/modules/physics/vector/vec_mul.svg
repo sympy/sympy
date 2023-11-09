@@ -9,6 +9,7 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="https://www.inkscape.org/namespaces/inkscape"
+   class="align-center"
    width="200"
    height="150"
    id="svg3154"
@@ -53,7 +54,7 @@
      id="layer1"
      transform="translate(0,-902.36218)">
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:CurrentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 45,43.5 80.4,32.1 75.3,31.8"
        id="path3162"
        inkscape:connector-curvature="0"
@@ -62,20 +63,20 @@
        inkscape:connector-curvature="0"
        id="path3186"
        d="m 96,957.86218 35.4,-11.4 -5.1,-0.3"
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+       style="fill:none;stroke:CurrentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:1.12659538px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:CurrentColor;stroke-width:1.12659538px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 72.736702,993.72548 -36.573404,14.00482 5.26905,0.3686"
        id="path3188"
        inkscape:connector-curvature="0" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:CurrentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 130.8,946.16218 -76.5,26.1"
        id="path3190"
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-size:20px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-size:20px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:CurrentColor;fill-opacity:1;stroke:none;font-family:Sans"
        x="47.700001"
        y="25.200001"
        id="text3192"
@@ -88,7 +89,7 @@
          style="font-size:15px">a</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-size:20px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:CurrentColor;fill-opacity:1;stroke:none;font-family:Sans"
        x="90.899994"
        y="944.36218"
        id="text3196"
@@ -100,7 +101,7 @@
          style="font-size:15px">2a</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-size:20px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:CurrentColor;fill-opacity:1;stroke:none;font-family:Sans"
        x="61.199997"
        y="1016.6622"
        id="text3200"
@@ -111,19 +112,19 @@
          y="1016.6622"
          style="font-size:15px">-a</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:CurrentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 47.7,27.6 7.5,0 z"
        id="path3204"
        inkscape:connector-curvature="0"
        transform="translate(0,902.36218)" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:CurrentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 99.9,44.7 8.7,0 z"
        id="path3206"
        inkscape:connector-curvature="0"
        transform="translate(0,902.36218)" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:CurrentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 65.1,117.6 10.2,-0.3 z"
        id="path3208"
        inkscape:connector-curvature="0"
