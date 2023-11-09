@@ -81,10 +81,8 @@ angular velocities of multiple bodies and frames. The theorem follows:
 
 This is also shown in the following example:
 
-.. image:: kin_angvel2.*
-   :height: 300
-   :width: 450
-   :align: center
+.. raw:: html
+   :file: kin_angvel2.svg
 
 .. math::
   ^{\mathbf{N}}\mathbf{\omega}^{\mathbf{A}} &= 0\\
