@@ -205,10 +205,9 @@ if cin:
             is not implemented
 
             """
-            try:
-                handler = getattr(self, 'transform_%s' % node.kind.name.lower())
-                return handler(node)
-            except AttributeError:
+            handler = getattr(self, 'transform_%s' % node.kind.name.lower(), None)
+
+            if handler is None:
                 print(
                     "Ignoring node of type %s (%s)" % (
                         node.kind,
@@ -217,6 +216,8 @@ if cin:
                         ),
                     file=sys.stderr
                 )
+
+            return handler(node)
 
         def transform_var_decl(self, node):
             """Transformation Function for Variable Declaration

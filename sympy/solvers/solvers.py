@@ -273,8 +273,8 @@ def checksol(f, symbol, sol=None, **flags):
             f = f.subs(sol)
             if not f.is_Boolean:
                 return
-        else:
-            f = f.rewrite(Add, evaluate=False, deep=False)
+        elif isinstance(f, Eq):
+            f = Add(f.lhs, -f.rhs, evaluate=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -947,8 +947,8 @@ def solve(f, *symbols, **flags):
                             Unanticipated argument of Eq when other arg
                             is True or False.
                         '''))
-                else:
-                    fi = fi.rewrite(Add, evaluate=False, deep=False)
+                elif isinstance(fi, Eq):
+                    fi = Add(fi.lhs, -fi.rhs, evaluate=False)
             f[i] = fi
 
         # *** dispatch and handle as a system of relationals
@@ -3144,7 +3144,7 @@ def _invert(eq, *symbols, **kwargs):
 
     >>> invert(sqrt(x + y) - 2)
     (4, x + y)
-    >>> invert(sqrt(x + y) - 2)
+    >>> invert(sqrt(x + y) + 2)  # note +2 instead of -2
     (4, x + y)
 
     If the exponent is an Integer, setting ``integer_power`` to True

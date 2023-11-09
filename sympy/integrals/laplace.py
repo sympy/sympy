@@ -958,8 +958,6 @@ def _laplace_expand(f, t, s):
     expanded term.
     """
 
-    if f.is_Add:
-        return None
     r = expand(f, deep=False)
     if r.is_Add:
         return _laplace_transform(r, t, s, simplify=False)

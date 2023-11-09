@@ -251,7 +251,7 @@ def _switch_domain(g, K):
 
 def _linsolve(p):
     # Compute root of linear polynomial.
-    c, d = p.rep.rep
+    c, d = p.rep.to_list()
     return -d/c
 
 
@@ -385,14 +385,14 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         h = _switch_domain(g, K)
         erep = _linsolve(h.gcd(p))  # ext as element of K
         ogen = K.unit - s*erep  # old gen as element of K
-        reps = [dup_eval(_.rep, ogen, K) for _ in reps] + [erep]
+        reps = [dup_eval(_.to_list(), ogen, K) for _ in reps] + [erep]
 
     if K.ext.root.is_Rational:  # all extensions are rational
         H = [K.convert(_).rep for _ in extension]
         coeffs = [0]*len(extension)
         f = cls(x, domain=QQ)
     else:
-        H = [_.rep for _ in reps]
+        H = [_.to_list() for _ in reps]
     if not polys:
         return f.as_expr(), coeffs, H
     else:
