@@ -47,7 +47,7 @@ Note that multiplication by -1 is equivalent to rotating the vector by 180
 degrees about an arbitrary axis in the plane perpendicular to the vector.
 
 .. raw:: html
-	:file: vec_mul.svg
+   :file: vec_mul.svg
 
 A unit vector is simply a vector whose magnitude is equal to 1.  Given any
 vector :math:`\mathbf{v}` we can define a unit vector as:
@@ -76,7 +76,7 @@ direction and the two vectors' magnitudes. The dot product of two perpendicular
 is zero. The figure below shows some examples:
 
 .. raw:: html
-	:file: vec_dot.svg
+   :file: vec_dot.svg
 
 The dot product is commutative:
 
@@ -98,7 +98,7 @@ the right hand rule between :math:`\Vert \mathbf{a} \Vert \Vert \mathbf{b}
 \Vert`. The figure below shows this:
 
 .. raw:: html
-	:file: vec_cross.svg
+   :file: vec_cross.svg
 
 The cross product has the following properties:
 
@@ -235,7 +235,7 @@ in order to deal with the peculiarities of vectors fixed and not fixed in
 different reference frames, we need to be more explicit in our definitions.
 
 .. raw:: html
-	:file: vec_fix_notfix.svg
+   :file: vec_fix_notfix.svg
 
 In the above figure, we have vectors :math:`\mathbf{c,d,e,f}`. If one were to
 take the derivative of :math:`\mathbf{e}` with respect to :math:`\theta`:
@@ -297,7 +297,7 @@ which is aligned with a basis vector, we say the frames are related by a simple
 rotation. The figure below shows this:
 
 .. raw:: html
-	:file: simp_rot.svg
+   :file: simp_rot.svg
 
 The above rotation is a simple rotation about the Z axis by an angle
 :math:`\theta`. Note that after the rotation, the basis vectors
@@ -423,7 +423,7 @@ Examples
 An example of vector calculus:
 
 .. raw:: html
-	:file: vec_simp_der.svg
+   :file: vec_simp_der.svg
 
 In this example we have two bodies, each with an attached reference frame.
 We will say that :math:`\theta` and :math:`x` are functions of time.
