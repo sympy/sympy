@@ -11,9 +11,8 @@ to do the "book-keeping" of the open-loop system. From this we will get the
 input used in combination with the constraints to manually setup the
 :class:`~.KanesMethod` as the backend.
 
-.. image:: four_bar_linkage.*
-   :align: center
-   :width: 600
+.. raw:: html
+   :file: four_bar_linkage.svg
 
 First we need to create the :func:`~.dynamicsymbols` needed to describe the
 system as shown in the above diagram. In this case, the generalized coordinates
