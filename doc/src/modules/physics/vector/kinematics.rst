@@ -42,10 +42,8 @@ Angular velocity is defined as being positive in the direction which causes the
 orientation angles to increase (for simple rotations, or series of simple
 rotations).
 
-.. image:: kin_angvel1.*
-   :height: 350
-   :width: 250
-   :align: center
+.. raw:: html
+   :file: kin_angvel1.svg
 
 The angular velocity vector represents the time derivative of the orientation.
 As a time derivative vector quantity, like those covered in the Vector &
