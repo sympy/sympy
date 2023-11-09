@@ -114,7 +114,8 @@ def test_ImageSet():
     harmonics = ImageSet(Lambda(x, 1/x), S.Naturals)
     assert Rational(1, 5) in harmonics
     assert Rational(.25) in harmonics
-    assert 0.25 not in harmonics
+    assert harmonics.contains(.25) == Contains(
+        0.25, ImageSet(Lambda(x, 1/x), S.Naturals), evaluate=False)
     assert Rational(.3) not in harmonics
     assert (1, 2) not in harmonics
 
@@ -168,10 +169,15 @@ def test_halfcircle():
     assert (0, -1) not in halfcircle
     assert (0, 0) in halfcircle
     assert halfcircle._contains((r, 0)) is None
-    # This one doesn't work:
-    #assert (r, 2*pi) not in halfcircle
-
     assert not halfcircle.is_iterable
+
+
+@XFAIL
+def test_halfcircle_fail():
+    r, th = symbols('r, theta', real=True)
+    L = Lambda(((r, th),), (r*cos(th), r*sin(th)))
+    halfcircle = ImageSet(L, Interval(0, 1)*Interval(0, pi))
+    assert (r, 2*pi) not in halfcircle
 
 
 def test_ImageSet_iterator_not_injective():
@@ -1263,7 +1269,8 @@ def test_Rationals():
         Rational(1, 3), 3, Rational(-1, 3), -3, Rational(2, 3)]
     assert Basic() not in S.Rationals
     assert S.Half in S.Rationals
-    assert S.Rationals.contains(0.5) == Contains(0.5, S.Rationals, evaluate=False)
+    assert S.Rationals.contains(0.5) == Contains(
+        0.5, S.Rationals, evaluate=False)
     assert 2 in S.Rationals
     r = symbols('r', rational=True)
     assert r in S.Rationals

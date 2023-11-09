@@ -453,6 +453,10 @@ def dup_trunc(f, p, K):
                 g.append(c - p)
             else:
                 g.append(c)
+    elif K.is_FiniteField:
+        # XXX: python-flint's nmod does not support %
+        pi = int(p)
+        g = [ K(int(c) % pi) for c in f ]
     else:
         g = [ c % p for c in f ]
 

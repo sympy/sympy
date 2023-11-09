@@ -533,10 +533,9 @@ def test_python_div_zero_issue_11306():
         skip("numpy not installed.")
     p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
     f = lambdify([x, y], p, modules='numpy')
-    numpy.seterr(divide='ignore')
-    assert float(f(numpy.array([0]),numpy.array([0.5]))) == 0
-    assert str(float(f(numpy.array([0]),numpy.array([1])))) == 'inf'
-    numpy.seterr(divide='warn')
+    with numpy.errstate(divide='ignore'):
+        assert float(f(numpy.array(0), numpy.array(0.5))) == 0
+        assert float(f(numpy.array(0), numpy.array(1))) == float('inf')
 
 
 def test_issue9474():
@@ -1412,7 +1411,7 @@ def test_issue_20070():
         skip("numba not installed")
 
     f = lambdify(x, sin(x), 'numpy')
-    assert numba.jit(f)(1)==0.8414709848078965
+    assert numba.jit(f, nopython=True)(1)==0.8414709848078965
 
 
 def test_fresnel_integrals_scipy():
