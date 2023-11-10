@@ -1644,7 +1644,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
     {0, 1}
-    >>> (B.p).round(2)
+    >>> B.p.round(2)
     0.70
     >>> B.success
     1

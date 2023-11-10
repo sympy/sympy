@@ -2861,6 +2861,8 @@ def test_invert_modular():
     n = Dummy('n', integer=True)
     from sympy.solvers.solveset import _invert_modular as invert_modular
 
+    # no solutions
+    assert invert_modular(Mod(x, 12), S(1)/2, n, x) == (x, S.EmptySet)
     # non invertible cases
     assert invert_modular(Mod(sin(x), 7), S(5), n, x) == (Mod(sin(x), 7), 5)
     assert invert_modular(Mod(exp(x), 7), S(5), n, x) == (Mod(exp(x), 7), 5)
