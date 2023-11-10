@@ -275,11 +275,10 @@ def mrv(e, x):
         if b1 == 1:
             return SubsSet(), b1
         if e1.has(x):
-            base_lim = limitinf(b1, x)
-            exp_lim = limitinf(e1, x)
-            if base_lim is S.One and exp_lim is S.Infinity:
-                return mrv(exp(e1 * (b1 - 1)), x)
-            return mrv(exp(e1 * log(b1)), x)
+            if limitinf(b1, x) is S.One:
+                if limitinf(e1, x).is_infinite is False:
+                    return mrv(exp(e1*(b1 - 1)), x)
+            return mrv(exp(e1*log(b1)), x)
         else:
             s, expr = mrv(b1, x)
             return s, expr**e1
