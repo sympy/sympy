@@ -475,5 +475,8 @@ def test_issue_7096():
     from sympy.functions import sign
     assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
 
-def test_issue_24210():
-    assert gruntz(exp(x)/((1+1/x)**(x**2)),x,+oo) == sqrt(E)
+def test_issue_24210_25885():
+    eq = exp(x)/(1+1/x)**x**2
+    ans = sqrt(E)
+    assert gruntz(eq, x, oo) == ans
+    assert gruntz(1/eq, x, oo) == 1/ans
