@@ -151,6 +151,8 @@ Ntheory Functions Reference
 
 .. autofunction:: is_extra_strong_lucas_prp
 
+.. autofunction:: proth_test
+
 .. autofunction:: isprime
 
 .. autofunction:: is_gaussian_prime
