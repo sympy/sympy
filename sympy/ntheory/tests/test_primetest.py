@@ -117,7 +117,7 @@ def test_proth_test():
     # Proth prime
     A080076 = [3, 5, 13, 17, 41, 97, 113, 193]
 
-    for n in range(100):
+    for n in range(200):
         if n in A080075:
             assert proth_test(n) == (n in A080076)
         else:
