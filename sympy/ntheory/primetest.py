@@ -482,6 +482,7 @@ def proth_test(n):
     .. [1] https://en.wikipedia.org/wiki/Proth_prime
 
     """
+    n = as_int(n)
     if n < 3:
         raise ValueError("n is not Proth number")
     m = bit_scan1(n - 1)
