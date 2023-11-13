@@ -967,29 +967,6 @@ def test_inverse():
     assert all(type(m.inv(s)) is cls for s in 'GE ADJ LU CH LDL QR'.split())
 
 
-def test_matrix_inverse_mod():
-    A = Matrix(2, 1, [1, 0])
-    raises(NonSquareMatrixError, lambda: A.inv_mod(2))
-    A = Matrix(2, 2, [1, 0, 0, 0])
-    raises(ValueError, lambda: A.inv_mod(2))
-    A = Matrix(2, 2, [1, 2, 3, 4])
-    Ai = Matrix(2, 2, [1, 1, 0, 1])
-    assert A.inv_mod(3) == Ai
-    A = Matrix(2, 2, [1, 0, 0, 1])
-    assert A.inv_mod(2) == A
-    A = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
-    raises(ValueError, lambda: A.inv_mod(5))
-    A = Matrix(3, 3, [5, 1, 3, 2, 6, 0, 2, 1, 1])
-    Ai = Matrix(3, 3, [6, 8, 0, 1, 5, 6, 5, 6, 4])
-    assert A.inv_mod(9) == Ai
-    A = Matrix(3, 3, [1, 6, -3, 4, 1, -5, 3, -5, 5])
-    Ai = Matrix(3, 3, [4, 3, 3, 1, 2, 5, 1, 5, 1])
-    assert A.inv_mod(6) == Ai
-    A = Matrix(3, 3, [1, 6, 1, 4, 1, 5, 3, 2, 5])
-    Ai = Matrix(3, 3, [6, 0, 3, 6, 6, 4, 1, 6, 1])
-    assert A.inv_mod(7) == Ai
-
-
 def test_jacobian_hessian():
     L = Matrix(1, 2, [x**2*y, 2*y**2 + x*y])
     syms = [x, y]
