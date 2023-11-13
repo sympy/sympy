@@ -591,6 +591,9 @@ def _solve_as_rational(f, symbol, domain):
     g, h = fraction(f)
     if not h.has(symbol):
         try:
+            print("g", g)
+            print("symbol", symbol)
+            print("domain", domain)
             return _solve_as_poly(g, symbol, domain)
         except NotImplementedError:
             # The polynomial formed from g could end up having
@@ -603,6 +606,7 @@ def _solve_as_rational(f, symbol, domain):
     else:
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)
+        print("closer", valid_solns, invalid_solns)
         return valid_solns - invalid_solns
 
 
@@ -798,6 +802,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
     if f.is_polynomial(symbol):
         solns = roots(f, symbol, cubics=True, quartics=True,
                       quintics=True, domain='EX')
+        print("solutions", solns)
         num_roots = sum(solns.values())
         if degree(f, symbol) <= num_roots:
             result = FiniteSet(*solns.keys())
@@ -808,6 +813,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 result = FiniteSet(*solns)
             else:
                 result = ConditionSet(symbol, Eq(f, 0), domain)
+        print("final", result)
     else:
         poly = Poly(f)
         if poly is None:
@@ -863,8 +869,10 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
     res = unradf
     eq, cov = res if res else (f, [])
     if not cov:
+        print(eq, symbol, f)
         result = solveset_solver(eq, symbol) - \
             Union(*[solveset_solver(g, symbol) for g in denoms(f, symbol)])
+        print(result)
     else:
         y, yeq = cov
         if not solveset_solver(y - I, y):
@@ -1113,6 +1121,7 @@ def _solveset(f, symbol, domain, _check=False):
                         result += _solve_abs(f, symbol, domain)
                     else:
                         result_rational = _solve_as_rational(equation, symbol, domain)
+                        print("result rational", result_rational)
                         if not isinstance(result_rational, ConditionSet):
                             result += result_rational
                         else:

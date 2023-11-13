@@ -329,3 +329,7 @@ def test_issue_16469():
 @_both_exp_pow
 def test_issue_18747():
     assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8
+
+def test_issue_24134():
+    assert function_range(sqrt(x*(2.0 - x)), x, S.Reals) == FiniteSet(0, 1)
+    # right now the bug is that it only gives FiniteSet(0)

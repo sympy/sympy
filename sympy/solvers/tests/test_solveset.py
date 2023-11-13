@@ -3296,3 +3296,9 @@ def test_issue_22628():
 
 def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
+
+def test_issue_24134():
+    e = sqrt(x*(2.0 - x))*(1.0 - x)/(x*(2.0 - x))
+    ans = solveset(e)
+    assert ans == FiniteSet(1)
+    # right now the bug is that it is S.EmptySet when it should have 1 as a solution
