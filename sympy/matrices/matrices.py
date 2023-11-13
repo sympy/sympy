@@ -62,7 +62,7 @@ from .solvers import (
     _pinv_solve, _cramer_solve, _solve, _solve_least_squares)
 
 from .inverse import (
-    _pinv, _inv_mod, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
+    _pinv, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
     _inv, _inv_block)
 
 
@@ -2313,9 +2313,6 @@ class MatrixBase(MatrixDeprecated,
     def pinv(self, method='RD'):
         return _pinv(self, method=method)
 
-    def inv_mod(self, m):
-        return _inv_mod(self, m)
-
     def inverse_ADJ(self, iszerofunc=_iszero):
         return _inv_ADJ(self, iszerofunc=iszerofunc)
 
@@ -2379,7 +2376,6 @@ class MatrixBase(MatrixDeprecated,
     solve_least_squares.__doc__    = _solve_least_squares.__doc__
 
     pinv.__doc__                   = _pinv.__doc__
-    inv_mod.__doc__                = _inv_mod.__doc__
     inverse_ADJ.__doc__            = _inv_ADJ.__doc__
     inverse_GE.__doc__             = _inv_GE.__doc__
     inverse_LU.__doc__             = _inv_LU.__doc__
