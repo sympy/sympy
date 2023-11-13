@@ -2119,3 +2119,16 @@ def test_issue_23942():
     assert I1.series(a, 1, n=1) == Integral(1/sqrt(x**3 + 4*x**2 + 5*x + 2), (x, 0, z)) + O(a - 1, (a, 1))
     I2 = Integral(1/sqrt(a*(4 - x)**4 + (5 + x)**2), (x, 0, z))
     assert I2.series(a, 2, n=1) == Integral(1/sqrt(2*x**4 - 32*x**3 + 193*x**2 - 502*x + 537), (x, 0, z)) + O(a - 2, (a, 2))
+
+def test_issue_25877():
+    I1 = Integral(cos(x)/(1 - (b**2)*(sin(x))**2)**(S(3)/2), x)
+    I1.transform(sin(x), z)
+    I1.transform(sin(x), z).doit()
+    I1 = I1.transform(sin(x), z).doit().subs(z, sin(x))
+    assert I1 == Piecewise((-I*sin(x)/sqrt(b**2*sin(x)**2 - 1), Abs(b**2*sin(x)**2) > 1), (sin(x)/sqrt(-b**2*sin(x)**2 + 1), True))
+
+    # #
+    # expr = cos(x) / (1 - b**2 * sin(x - a)**2)**(3/2)
+    # result = integrate(expr, x)
+    # expected_result = -sin(x - a) / (b**2 * sqrt(1 - b**2 * sin(x - a)**2))
+    # assert result == expected_result
