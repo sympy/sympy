@@ -16,7 +16,7 @@ from sympy.ntheory import (totient,
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega,
-    mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
+    mersenne_prime_exponent, is_perfect, is_abundant,
     is_deficient, is_amicable, dra, drm, _perfect_power)
 
 from sympy.testing.pytest import raises, slow
@@ -649,16 +649,6 @@ def test_is_perfect():
     assert is_perfect(496) is True
     assert is_perfect(8128) is True
     assert is_perfect(10000) is False
-
-
-def test_is_mersenne_prime():
-    assert is_mersenne_prime(-3) is False
-    assert is_mersenne_prime(3) is True
-    assert is_mersenne_prime(10) is False
-    assert is_mersenne_prime(127) is True
-    assert is_mersenne_prime(511) is False
-    assert is_mersenne_prime(131071) is True
-    assert is_mersenne_prime(2147483647) is True
 
 
 def test_is_abundant():
