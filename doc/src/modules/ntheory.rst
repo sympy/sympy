@@ -97,8 +97,6 @@ Ntheory Functions Reference
 
 .. autofunction:: is_perfect
 
-.. autofunction:: is_mersenne_prime
-
 .. autofunction:: abundance
 
 .. autofunction:: is_abundant
@@ -152,6 +150,8 @@ Ntheory Functions Reference
 .. autofunction:: is_extra_strong_lucas_prp
 
 .. autofunction:: proth_test
+
+.. autofunction:: is_mersenne_prime
 
 .. autofunction:: isprime
 
