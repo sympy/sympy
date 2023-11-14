@@ -12,7 +12,14 @@ from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_selfridge_prp, is_strong_selfridge_prp,
                                  is_strong_bpsw_prp)
 from sympy.external.ntheory import _lucas_sequence
-from sympy.utilities.misc import as_int
+from sympy.utilities.misc import as_int, filldedent
+
+# Note: This list should be updated whenever new Mersenne primes are found.
+# Refer: https://www.mersenne.org/
+MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
+ 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049,
+ 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583,
+ 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
 
 
 def is_fermat_pseudoprime(n, a):
@@ -504,6 +511,89 @@ def proth_test(n):
             return pow(a, n >> 1, n) == n - 1
         if j == 0:
             return False
+
+
+def _lucas_lehmer_primality_test(p):
+    r""" Test if the Mersenne number `M_p = 2^p-1` is prime.
+
+    Parameters
+    ==========
+
+    p : int
+        ``p`` is an odd prime number
+
+    Returns
+    =======
+
+    bool : If ``True``, then `M_p` is the Mersenne prime
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import _lucas_lehmer_primality_test
+    >>> _lucas_lehmer_primality_test(5) # 2**5 - 1 = 31 is prime
+    True
+    >>> _lucas_lehmer_primality_test(11) # 2**11 - 1 = 2047 is not prime
+    False
+
+    See Also
+    ========
+
+    is_mersenne_prime
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lucas%E2%80%93Lehmer_primality_test
+
+    """
+    v = 4
+    m = 2**p - 1
+    for _ in range(p - 2):
+        v = pow(v, 2, m) - 2
+    return v == 0
+
+
+def is_mersenne_prime(n):
+    """Returns True if  ``n`` is a Mersenne prime, else False.
+
+    A Mersenne prime is a prime number having the form `2^i - 1`.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_mersenne_prime
+    >>> is_mersenne_prime(6)
+    False
+    >>> is_mersenne_prime(127)
+    True
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/MersennePrime.html
+
+    """
+    n = as_int(n)
+    if n < 1:
+        return False
+    if n & (n + 1):
+        # n is not Mersenne number
+        return False
+    p = n.bit_length()
+    if p in MERSENNE_PRIME_EXPONENTS:
+        return True
+    if p < 65_000_000 or not isprime(p):
+        # According to GIMPS, verification was completed on September 19, 2023 for p less than 65 million.
+        # https://www.mersenne.org/report_milestones/
+        # If p is composite number, then n=2**p-1 is composite number.
+        return False
+    result = _lucas_lehmer_primality_test(p)
+    if result:
+        raise ValueError(filldedent('''
+            This Mersenne Prime, 2^%s - 1, should
+            be added to SymPy's known values.''' % p))
+    return result
 
 
 def isprime(n):
