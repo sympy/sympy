@@ -19,19 +19,12 @@ from sympy.core.random import _randint
 from sympy.core.singleton import S
 from sympy.external.gmpy import (SYMPY_INTS, gcd, lcm, sqrt as isqrt,
                                  sqrtrem, iroot, bit_scan1, remove)
-from .primetest import isprime
+from .primetest import isprime, MERSENNE_PRIME_EXPONENTS, is_mersenne_prime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
-
-# Note: This list should be updated whenever new Mersenne primes are found.
-# Refer: https://www.mersenne.org/
-MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
- 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049,
- 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583,
- 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
 
 
 def smoothness(n):
@@ -2474,48 +2467,6 @@ def is_perfect(n):
             which hem it in on all sides -- would be little short of a
             miracle." I guess SymPy just found that miracle and it
             factors like this: %s''' % factorint(n)))
-    return result
-
-
-def is_mersenne_prime(n):
-    """Returns True if  ``n`` is a Mersenne prime, else False.
-
-    A Mersenne prime is a prime number having the form `2^i - 1`.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.factor_ import is_mersenne_prime
-    >>> is_mersenne_prime(6)
-    False
-    >>> is_mersenne_prime(127)
-    True
-
-    References
-    ==========
-
-    .. [1] https://mathworld.wolfram.com/MersennePrime.html
-
-    """
-    n = as_int(n)
-    if n < 1:
-        return False
-    if n & (n + 1):
-        # n is not Mersenne number
-        return False
-    p = n.bit_length()
-    if p in MERSENNE_PRIME_EXPONENTS:
-        return True
-    if p < 65_000_000 or not isprime(p):
-        # According to GIMPS, verification was completed on September 19, 2023 for p less than 65 million.
-        # https://www.mersenne.org/report_milestones/
-        # If p is composite number, then n=2**p-1 is composite number.
-        return False
-    result = isprime(n)
-    if result:
-        raise ValueError(filldedent('''
-            This Mersenne Prime, 2^%s - 1, should
-            be added to SymPy's known values.''' % p))
     return result
 
 
