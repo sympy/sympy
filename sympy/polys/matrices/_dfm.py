@@ -170,7 +170,8 @@ class DFM:
                     else:
                         return _cls(*e, c)
             else:
-                _func = flint.fmpz_mod_mat
+                m = flint.fmpz_mod_ctx(c)
+                _func = lambda *e: flint.fmpz_mod_mat(*e, m)
             return _func
         else:
             raise NotImplementedError("Only ZZ and QQ are supported by DFM")
