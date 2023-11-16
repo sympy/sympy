@@ -1441,8 +1441,7 @@ class Permutation(Atom):
         if int_valued(i):
             return self(i)
         else:
-            raise NotImplementedError(
-                "i^p = p(i) when i is an integer, not %s." % i)
+            return NotImplemented
 
     def __xor__(self, h):
         """Return the conjugate permutation ``~h*self*h` `.
