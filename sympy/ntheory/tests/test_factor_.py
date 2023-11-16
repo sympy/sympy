@@ -105,10 +105,10 @@ def test_private_perfect_power():
     for x in [2, 3, 5, 6, 7, 12, 15, 105, 100003]:
         for y in range(2, 100):
             assert _perfect_power(x**y) == (x, y)
-            if x != 2:
-                assert _perfect_power(x**y, k=3) == (x, y)
+            if x & 1:
+                assert _perfect_power(x**y, next_p=3) == (x, y)
             if x == 100003:
-                assert _perfect_power(x**y, k=100003) == (x, y)
+                assert _perfect_power(x**y, next_p=100003) == (x, y)
             assert _perfect_power(101*x**y) == False
             # Catalan's conjecture
             if x**y not in [8, 9]:
