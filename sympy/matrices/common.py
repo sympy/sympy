@@ -2430,7 +2430,7 @@ class MatrixOperations(MatrixRequired):
     def _eval_simplify(self, **kwargs):
         # XXX: We can't use self.simplify here as mutable subclasses will
         # override simplify and have it return None
-        return self.applyfunc(lambda x: x.simplify(**kwargs))
+        return MatrixOperations.simplify(self, **kwargs)
 
     def _eval_trigsimp(self, **opts):
         from sympy.simplify.trigsimp import trigsimp
@@ -2473,6 +2473,7 @@ class MatrixOperations(MatrixRequired):
             return self[i, j] if i + k <= j else self.zero
 
         return self._new(self.rows, self.cols, entry)
+
 
     def lower_triangular(self, k=0):
         """Return the elements on and below the kth diagonal of a matrix.
@@ -2618,21 +2619,28 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__radd__')
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes do not match."""
-
-        other, T = _coerce_operand(self, other)
-
-        if T != "is_matrix":
+        if isinstance(other, NDimArray): # Matrix and array addition is currently not implemented
             return NotImplemented
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape'):
+            if self.shape != other.shape:
+                raise ShapeError("Matrix size mismatch: %s + %s" % (
+                    self.shape, other.shape))
 
-        if self.shape != other.shape:
-            raise ShapeError(f"Matrix size mismatch: {self.shape} + {other.shape}.")
+        # honest SymPy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
+            # call the highest-priority class's _eval_add
+            a, b = self, other
+            if a.__class__ != classof(a, b):
+                b, a = a, b
+            return a._eval_add(b)
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return MatrixArithmetic._eval_add(self, other)
 
-        # Unify matrix types
-        a, b = self, other
-        if a.__class__ != classof(a, b):
-            b, a = a, b
-
-        return a._eval_add(b)
+        raise TypeError('cannot add %s and %s' % (type(self), type(other)))
 
     @call_highest_priority('__rtruediv__')
     def __truediv__(self, other):
@@ -2640,9 +2648,8 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
-        self, other, T = _unify_with_other(self, other)
-
-        if T != "is_matrix":
+        other = _matrixify(other)
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
             return NotImplemented
 
         return self.__mul__(other)
@@ -2694,29 +2701,35 @@ class MatrixArithmetic(MatrixRequired):
         """
 
         isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check. Double check other is not explicitly not a Matrix.
+        if (hasattr(other, 'shape') and len(other.shape) == 2 and
+            (getattr(other, 'is_Matrix', True) or
+             getattr(other, 'is_MatrixLike', True))):
+            if self.shape[1] != other.shape[0]:
+                raise ShapeError("Matrix size mismatch: %s * %s." % (
+                    self.shape, other.shape))
 
-        self, other, T = _unify_with_other(self, other)
+        # honest SymPy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
+            m = self._eval_matrix_mul(other)
+            if isimpbool:
+                return m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m])
+            return m
 
-        if T == "possible_scalar":
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return MatrixArithmetic._eval_matrix_mul(self, other)
+
+        # if 'other' is not iterable then scalar multiplication.
+        if not isinstance(other, Iterable):
             try:
                 return self._eval_scalar_mul(other)
             except TypeError:
-                return NotImplemented
+                pass
 
-        elif T == "is_matrix":
-
-            if self.shape[1] != other.shape[0]:
-                raise ShapeError(f"Matrix size mismatch: {self.shape} * {other.shape}.")
-
-            m = self._eval_matrix_mul(other)
-
-            if isimpbool:
-                m = m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m])
-
-            return m
-
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def multiply_elementwise(self, other):
         """Return the Hadamard product (elementwise product) of A and B
@@ -2854,9 +2867,8 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
-        self, other, T = _unify_with_other(self, other)
-
-        if T != "is_matrix":
+        other = _matrixify(other)
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
             return NotImplemented
 
         return self.__rmul__(other)
@@ -2877,27 +2889,33 @@ class MatrixArithmetic(MatrixRequired):
             speed up calculation. Default is off.
         """
         isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
-        self, other, T = _unify_with_other(self, other)
-
-        if T == "possible_scalar":
-            try:
-                return self._eval_scalar_rmul(other)
-            except TypeError:
-                return NotImplemented
-
-        elif T == "is_matrix":
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check. Double check other is not explicitly not a Matrix.
+        if (hasattr(other, 'shape') and len(other.shape) == 2 and
+            (getattr(other, 'is_Matrix', True) or
+             getattr(other, 'is_MatrixLike', True))):
             if self.shape[0] != other.shape[1]:
                 raise ShapeError("Matrix size mismatch.")
 
+        # honest SymPy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_rmul(other)
-
             if isimpbool:
                 return m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m])
-
             return m
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return MatrixArithmetic._eval_matrix_rmul(self, other)
 
-        else:
-            return NotImplemented
+        # if 'other' is not iterable then scalar multiplication.
+        if not isinstance(other, Iterable):
+            try:
+                return self._eval_scalar_rmul(other)
+            except TypeError:
+                pass
+
+        return NotImplemented
 
     @call_highest_priority('__sub__')
     def __rsub__(self, a):
@@ -2906,6 +2924,12 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rsub__')
     def __sub__(self, a):
         return self + (-a)
+
+class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
+                  MatrixSpecial, MatrixShaping):
+    """All common matrix operations including basic arithmetic, shaping,
+    and special matrices like `zeros`, and `eye`."""
+    _diff_wrt = True  # type: bool
 
 
 class _MinimalMatrix:
@@ -3011,13 +3035,6 @@ class _MinimalMatrix:
         return (self.rows, self.cols)
 
 
-class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
-                  MatrixSpecial, MatrixShaping):
-    """All common matrix operations including basic arithmetic, shaping,
-    and special matrices like `zeros`, and `eye`."""
-    _diff_wrt = True  # type: bool
-
-
 class _CastableMatrix: # this is needed here ONLY FOR TESTS.
     def as_mutable(self):
         return self
@@ -3119,59 +3136,6 @@ class MatrixKind(Kind):
 
     def __repr__(self):
         return "MatrixKind(%s)" % self.element_kind
-
-
-def _convert_matrix(typ, mat):
-    """Convert mat to a Matrix of type typ."""
-    from sympy import MatrixBase
-    if getattr(mat, "is_Matrix", True) and not isinstance(mat, MatrixBase):
-        # This is needed for interop between Matrix and the redundant matrix
-        # mixin types like _MinimalMatrix etc. If anyone should happen to be
-        # using those then this keeps them working. Really _MinimalMatrix etc
-        # should be deprecated and removed though.
-        return typ(*mat.shape, list(mat))
-    else:
-        return typ(mat)
-
-def _coerce_operand(self, other):
-    """Convert other to a Matrix, or check for possible scalar."""
-
-    INVALID = None, 'invalid_type'
-
-    # Disallow mixing Matrix and Array
-    if isinstance(other, NDimArray):
-        return INVALID
-
-    is_Matrix = getattr(other, 'is_Matrix', None)
-
-    # Return a Matrix as-is
-    if is_Matrix:
-        return other, 'is_matrix'
-
-    # Try to convert numpy array, mpmath matrix etc.
-    if is_Matrix is None:
-        if hasattr(other, 'shape') or hasattr(other, 'rows') and hasattr(other, 'cols'):
-            return _convert_matrix(type(self), other), 'is_matrix'
-
-    # Could be a scalar but only if not iterable...
-    if not isinstance(other, Iterable):
-        return other, 'possible_scalar'
-
-    return INVALID
-
-
-def _unify_with_other(self, other):
-    """Unify self and other into a single matrix type, or check for scalar."""
-    other, T = _coerce_operand(self, other)
-
-    if T == "is_matrix":
-        typ = classof(self, other)
-        if typ != self.__class__:
-            self = _convert_matrix(typ, self)
-        if typ != other.__class__:
-            other = _convert_matrix(typ, other)
-
-    return self, other, T
 
 
 def _matrixify(mat):
