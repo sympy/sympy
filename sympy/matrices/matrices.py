@@ -24,9 +24,10 @@ from sympy.printing.str import StrPrinter
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
-from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError, MatrixKind, a2idx)
+from .exceptions import (
+    MatrixError, NonSquareMatrixError, NonInvertibleMatrixError, ShapeError)
+
+from .common import MatrixCommon, MatrixKind, a2idx
 
 from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 

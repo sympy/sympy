@@ -15,7 +15,8 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent, as_int
 
-from .common import classof, NonSquareMatrixError, NonInvertibleMatrixError
+from .exceptions import NonSquareMatrixError, NonInvertibleMatrixError
+from .common import classof
 from .matrices import MatrixBase, MatrixKind, ShapeError
 
 

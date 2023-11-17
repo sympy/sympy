@@ -15,7 +15,7 @@ from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
 from sympy.polys.polytools import gcd
 
-from .common import MatrixError, NonSquareMatrixError
+from .exceptions import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
 
 from .utilities import _iszero, _simplify

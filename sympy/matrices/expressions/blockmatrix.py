@@ -9,7 +9,7 @@ from sympy.utilities.iterables import is_sequence, sift
 from sympy.utilities.misc import filldedent
 
 from sympy.matrices import Matrix, ShapeError
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matadd import MatAdd
