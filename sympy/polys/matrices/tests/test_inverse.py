@@ -2,7 +2,7 @@ from sympy import ZZ
 from sympy.polys.matrices import DM, DomainMatrix
 from sympy.polys.matrices.dense import ddm_iinv
 from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 
 import pytest
 from sympy.testing.pytest import raises
