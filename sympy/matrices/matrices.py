@@ -10,7 +10,7 @@ from sympy.core.kind import _NumberKind, UndefinedKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
+from sympy.core.symbol import Dummy, uniquely_named_symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import re
@@ -20,15 +20,15 @@ from sympy.functions.special.tensor_functions import KroneckerDelta, LeviCivita
 from sympy.polys import cancel
 from sympy.printing.defaults import Printable
 from sympy.printing.str import StrPrinter
-from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
+from sympy.utilities.iterables import flatten, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
 from .exceptions import (
     MatrixError, NonSquareMatrixError, NonInvertibleMatrixError, ShapeError)
 
-from .matrixbase import MatrixCommon, DeferredVector
+from .matrixbase import MatrixCommon, DeferredVector, a2idx
 
-from .common import MatrixKind, a2idx
+from .kind import MatrixKind
 
 from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 

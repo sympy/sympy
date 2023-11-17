@@ -12,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (false, true)
-from sympy.matrices.common import MatrixKind
+from sympy.matrices.kind import MatrixKind
 from sympy.matrices.dense import Matrix
 from sympy.polys.rootoftools import rootof
 from sympy.sets.contains import Contains
