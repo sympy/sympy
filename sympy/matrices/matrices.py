@@ -18,7 +18,6 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta, LeviCivita
 from sympy.polys import cancel
-from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.printing.str import StrPrinter
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
@@ -27,7 +26,7 @@ from sympy.utilities.misc import as_int, filldedent
 from .exceptions import (
     MatrixError, NonSquareMatrixError, NonInvertibleMatrixError, ShapeError)
 
-from .matrixbase import MatrixCommon
+from .matrixbase import MatrixCommon, DeferredVector
 
 from .common import MatrixKind, a2idx
 
@@ -67,37 +66,6 @@ from .solvers import (
 from .inverse import (
     _pinv, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
     _inv, _inv_block)
-
-
-class DeferredVector(Symbol, NotIterable):
-    """A vector whose components are deferred (e.g. for use with lambdify).
-
-    Examples
-    ========
-
-    >>> from sympy import DeferredVector, lambdify
-    >>> X = DeferredVector( 'X' )
-    >>> X
-    X
-    >>> expr = (X[0] + 2, X[2] + 3)
-    >>> func = lambdify( X, expr)
-    >>> func( [1, 2, 3] )
-    (3, 6)
-    """
-
-    def __getitem__(self, i):
-        if i == -0:
-            i = 0
-        if i < 0:
-            raise IndexError('DeferredVector index out of range')
-        component_name = '%s[%d]' % (self.name, i)
-        return Symbol(component_name)
-
-    def __str__(self):
-        return sstr(self)
-
-    def __repr__(self):
-        return "DeferredVector('%s')" % self.name
 
 
 class MatrixDeterminant(MatrixCommon):
