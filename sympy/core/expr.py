@@ -3973,7 +3973,7 @@ class AtomicExpr(Atom, Expr):
     def _eval_derivative_n_times(self, s, n):
         from .containers import Tuple
         from sympy.matrices.expressions.matexpr import MatrixExpr
-        from sympy.matrices.common import MatrixCommon
+        from sympy.matrices.matrixbase import MatrixCommon
         if isinstance(s, (MatrixCommon, Tuple, Iterable, MatrixExpr)):
             return super()._eval_derivative_n_times(s, n)
         from .relational import Eq

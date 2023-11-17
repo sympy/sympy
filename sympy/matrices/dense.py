@@ -782,9 +782,9 @@ def diag(*values, strict=True, unpack=False, **kwargs):
 
     See Also
     ========
-    .common.MatrixCommon.eye
-    .common.MatrixCommon.diagonal
-    .common.MatrixCommon.diag
+    .matrixbase.MatrixCommon.eye
+    .matrixbase.MatrixCommon.diagonal
+    .matrixbase.MatrixCommon.diag
     .expressions.blockmatrix.BlockMatrix
     """
     return Matrix.diag(*values, strict=strict, unpack=unpack, **kwargs)
@@ -942,7 +942,7 @@ def matrix_multiply_elementwise(A, B):
     See Also
     ========
 
-    sympy.matrices.common.MatrixCommon.__mul__
+    sympy.matrices.matrixbase.MatrixCommon.__mul__
     """
     return A.multiply_elementwise(B)
 
