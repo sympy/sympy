@@ -30,27 +30,13 @@ from sympy.tensor.array import NDimArray
 from .utilities import _get_intermediate_simp_bool
 
 
-class MatrixError(Exception):
-    pass
-
-
-class ShapeError(ValueError, MatrixError):
-    """Wrong matrix shape"""
-    pass
-
-
-class NonSquareMatrixError(ShapeError):
-    pass
-
-
-class NonInvertibleMatrixError(ValueError, MatrixError):
-    """The matrix in not invertible (division by multidimensional zero error)."""
-    pass
-
-
-class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
-    """The matrix is not a positive-definite matrix."""
-    pass
+# These exception types were previously defined in this module but were moved
+# to exceptions.py. We reimport them here for backwards compatibility in case
+# downstream code was importing them from here.
+from .exceptions import ( # noqa: F401
+    MatrixError, ShapeError, NonSquareMatrixError, NonInvertibleMatrixError,
+    NonPositiveDefiniteMatrixError
+)
 
 
 class MatrixRequired:

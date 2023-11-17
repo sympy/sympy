@@ -1,6 +1,6 @@
 from sympy.utilities.iterables import \
     flatten, connected_components, strongly_connected_components
-from .common import NonSquareMatrixError
+from .exceptions import NonSquareMatrixError
 
 
 def _connected_components(M):

@@ -9,7 +9,7 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 
-from .common import ShapeError
+from .exceptions import ShapeError
 from .decompositions import _cholesky, _LDLdecomposition
 from .matrices import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix

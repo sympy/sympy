@@ -4,7 +4,7 @@ from math import prod
 
 from sympy.core import Mul, sympify
 from sympy.functions import adjoint
-from sympy.matrices.common import ShapeError
+from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.expressions.special import Identity

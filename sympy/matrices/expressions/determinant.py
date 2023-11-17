@@ -2,7 +2,7 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.matrices import MatrixBase
 
 
