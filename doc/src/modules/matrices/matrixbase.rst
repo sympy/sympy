@@ -1,11 +1,9 @@
 Common Matrices
 ===============
 
-.. module:: sympy.matrices.common
+.. module:: sympy.matrices.matrixbase
 
 .. autoclass:: MatrixCommon
    :members:
    :special-members:
    :inherited-members:
-
-.. autoclass:: MatrixKind

@@ -1,9 +1,3 @@
-"""
-Basic methods common to all matrices to be used
-when creating more advanced matrices (e.g., matrices over rings,
-etc.).
-"""
-
 from collections import defaultdict
 from collections.abc import Iterable
 from inspect import isfunction
@@ -12,36 +6,33 @@ from functools import reduce
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
-from sympy.core.decorators import call_highest_priority
-from sympy.core.kind import Kind, NumberKind
-from sympy.core.logic import fuzzy_and, FuzzyBool
 from sympy.core.numbers import Integer
 from sympy.core.mod import Mod
-from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import Abs, re, im
+
 from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
+from sympy.core.decorators import call_highest_priority
+from sympy.core.logic import fuzzy_and, FuzzyBool
+from .utilities import _get_intermediate_simp_bool
 from sympy.tensor.array import NDimArray
 
-from .utilities import _get_intermediate_simp_bool
 
-
-# These exception types were previously defined in this module but were moved
-# to exceptions.py. We reimport them here for backwards compatibility in case
-# downstream code was importing them from here.
-from .exceptions import ( # noqa: F401
+from .exceptions import (
     MatrixError, ShapeError, NonSquareMatrixError, NonInvertibleMatrixError,
-    NonPositiveDefiniteMatrixError
 )
 
 
-class MatrixRequired:
-    """All subclasses of matrix objects must implement the
-    required matrix properties listed here."""
+class MatrixCommon:
+    """All common matrix operations including basic arithmetic, shaping,
+    and special matrices like `zeros`, and `eye`."""
+
+    _op_priority = 10.01
+    _diff_wrt = True  # type: bool
     rows = None  # type: int
     cols = None  # type: int
     _simplify = None
@@ -69,11 +60,21 @@ class MatrixRequired:
 
     @property
     def shape(self):
-        raise NotImplementedError("Subclasses must implement this.")
+        """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).
 
+        Examples
+        ========
 
-class MatrixShaping(MatrixRequired):
-    """Provides basic matrix shaping and extracting of submatrices"""
+        >>> from sympy import zeros
+        >>> M = zeros(2, 3)
+        >>> M.shape
+        (2, 3)
+        >>> M.rows
+        2
+        >>> M.cols
+        3
+        """
+        return (self.rows, self.cols)
 
     def _eval_col_del(self, col):
         def entry(i, j):
@@ -582,24 +583,6 @@ class MatrixShaping(MatrixRequired):
         """
         return self[i, :]
 
-    @property
-    def shape(self):
-        """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).
-
-        Examples
-        ========
-
-        >>> from sympy import zeros
-        >>> M = zeros(2, 3)
-        >>> M.shape
-        (2, 3)
-        >>> M.rows
-        2
-        >>> M.cols
-        3
-        """
-        return (self.rows, self.cols)
-
     def todok(self):
         """Return the matrix as dictionary of keys.
 
@@ -766,10 +749,6 @@ class MatrixShaping(MatrixRequired):
 
         kls = type(args[0])
         return reduce(kls.col_join, args)
-
-
-class MatrixSpecial(MatrixRequired):
-    """Construction of special matrices"""
 
     @classmethod
     def _eval_diag(cls, rows, cols, diag_dict):
@@ -1216,9 +1195,6 @@ class MatrixSpecial(MatrixRequired):
         klass = kwargs.get('cls', kls)
         n = as_int(n)
         return klass._eval_wilkinson(n)
-
-class MatrixProperties(MatrixRequired):
-    """Provides basic properties of a matrix."""
 
     def _eval_atoms(self, *types):
         result = set()
@@ -1906,11 +1882,6 @@ class MatrixProperties(MatrixRequired):
         """Return non-zero values of self."""
         return self._eval_values()
 
-
-class MatrixOperations(MatrixRequired):
-    """Provides basic matrix shape and elementwise
-    operations.  Should not be instantiated directly."""
-
     def _eval_adjoint(self):
         return self.transpose().conjugate()
 
@@ -2512,14 +2483,6 @@ class MatrixOperations(MatrixRequired):
 
         return self._new(self.rows, self.cols, entry)
 
-
-
-class MatrixArithmetic(MatrixRequired):
-    """Provides basic matrix arithmetic operations.
-    Should not be instantiated directly."""
-
-    _op_priority = 10.01
-
     def _eval_Abs(self):
         return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]))
 
@@ -2908,219 +2871,6 @@ class MatrixArithmetic(MatrixRequired):
         return self + (-a)
 
 
-class _MinimalMatrix:
-    """Class providing the minimum functionality
-    for a matrix-like object and implementing every method
-    required for a `MatrixRequired`.  This class does not have everything
-    needed to become a full-fledged SymPy object, but it will satisfy the
-    requirements of anything inheriting from `MatrixRequired`.  If you wish
-    to make a specialized matrix type, make sure to implement these
-    methods and properties with the exception of `__init__` and `__repr__`
-    which are included for convenience."""
-
-    is_MatrixLike = True
-    _sympify = staticmethod(sympify)
-    _class_priority = 3
-    zero = S.Zero
-    one = S.One
-
-    is_Matrix = True
-    is_MatrixExpr = False
-
-    @classmethod
-    def _new(cls, *args, **kwargs):
-        return cls(*args, **kwargs)
-
-    def __init__(self, rows, cols=None, mat=None, copy=False):
-        if isfunction(mat):
-            # if we passed in a function, use that to populate the indices
-            mat = [mat(i, j) for i in range(rows) for j in range(cols)]
-        if cols is None and mat is None:
-            mat = rows
-        rows, cols = getattr(mat, 'shape', (rows, cols))
-        try:
-            # if we passed in a list of lists, flatten it and set the size
-            if cols is None and mat is None:
-                mat = rows
-            cols = len(mat[0])
-            rows = len(mat)
-            mat = [x for l in mat for x in l]
-        except (IndexError, TypeError):
-            pass
-        self.mat = tuple(self._sympify(x) for x in mat)
-        self.rows, self.cols = rows, cols
-        if self.rows is None or self.cols is None:
-            raise NotImplementedError("Cannot initialize matrix with given parameters")
-
-    def __getitem__(self, key):
-        def _normalize_slices(row_slice, col_slice):
-            """Ensure that row_slice and col_slice do not have
-            `None` in their arguments.  Any integers are converted
-            to slices of length 1"""
-            if not isinstance(row_slice, slice):
-                row_slice = slice(row_slice, row_slice + 1, None)
-            row_slice = slice(*row_slice.indices(self.rows))
-
-            if not isinstance(col_slice, slice):
-                col_slice = slice(col_slice, col_slice + 1, None)
-            col_slice = slice(*col_slice.indices(self.cols))
-
-            return (row_slice, col_slice)
-
-        def _coord_to_index(i, j):
-            """Return the index in _mat corresponding
-            to the (i,j) position in the matrix. """
-            return i * self.cols + j
-
-        if isinstance(key, tuple):
-            i, j = key
-            if isinstance(i, slice) or isinstance(j, slice):
-                # if the coordinates are not slices, make them so
-                # and expand the slices so they don't contain `None`
-                i, j = _normalize_slices(i, j)
-
-                rowsList, colsList = list(range(self.rows))[i], \
-                                     list(range(self.cols))[j]
-                indices = (i * self.cols + j for i in rowsList for j in
-                           colsList)
-                return self._new(len(rowsList), len(colsList),
-                                 [self.mat[i] for i in indices])
-
-            # if the key is a tuple of ints, change
-            # it to an array index
-            key = _coord_to_index(i, j)
-        return self.mat[key]
-
-    def __eq__(self, other):
-        try:
-            classof(self, other)
-        except TypeError:
-            return False
-        return (
-            self.shape == other.shape and list(self) == list(other))
-
-    def __len__(self):
-        return self.rows*self.cols
-
-    def __repr__(self):
-        return "_MinimalMatrix({}, {}, {})".format(self.rows, self.cols,
-                                                   self.mat)
-
-    @property
-    def shape(self):
-        return (self.rows, self.cols)
-
-
-class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
-                  MatrixSpecial, MatrixShaping):
-    """All common matrix operations including basic arithmetic, shaping,
-    and special matrices like `zeros`, and `eye`."""
-    _diff_wrt = True  # type: bool
-
-
-class _CastableMatrix: # this is needed here ONLY FOR TESTS.
-    def as_mutable(self):
-        return self
-
-    def as_immutable(self):
-        return self
-
-
-class _MatrixWrapper:
-    """Wrapper class providing the minimum functionality for a matrix-like
-    object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
-    math operations should work on matrix-like objects. This one is intended for
-    matrix-like objects which use the same indexing format as SymPy with respect
-    to returning matrix elements instead of rows for non-tuple indexes.
-    """
-
-    is_Matrix     = False # needs to be here because of __getattr__
-    is_MatrixLike = True
-
-    def __init__(self, mat, shape):
-        self.mat = mat
-        self.shape = shape
-        self.rows, self.cols = shape
-
-    def __getitem__(self, key):
-        if isinstance(key, tuple):
-            return sympify(self.mat.__getitem__(key))
-
-        return sympify(self.mat.__getitem__((key // self.rows, key % self.cols)))
-
-    def __iter__(self): # supports numpy.matrix and numpy.array
-        mat = self.mat
-        cols = self.cols
-
-        return iter(sympify(mat[r, c]) for r in range(self.rows) for c in range(cols))
-
-
-class MatrixKind(Kind):
-    """
-    Kind for all matrices in SymPy.
-
-    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
-    but any expression representing the matrix can have this.
-
-    Parameters
-    ==========
-
-    element_kind : Kind
-        Kind of the element. Default is
-        :class:`sympy.core.kind.NumberKind`,
-        which means that the matrix contains only numbers.
-
-    Examples
-    ========
-
-    Any instance of matrix class has ``MatrixKind``:
-
-    >>> from sympy import MatrixSymbol
-    >>> A = MatrixSymbol('A', 2,2)
-    >>> A.kind
-    MatrixKind(NumberKind)
-
-    Although expression representing a matrix may be not instance of
-    matrix class, it will have ``MatrixKind`` as well:
-
-    >>> from sympy import MatrixExpr, Integral
-    >>> from sympy.abc import x
-    >>> intM = Integral(A, x)
-    >>> isinstance(intM, MatrixExpr)
-    False
-    >>> intM.kind
-    MatrixKind(NumberKind)
-
-    Use ``isinstance()`` to check for ``MatrixKind`` without specifying
-    the element kind. Use ``is`` with specifying the element kind:
-
-    >>> from sympy import Matrix
-    >>> from sympy.core import NumberKind
-    >>> from sympy.matrices import MatrixKind
-    >>> M = Matrix([1, 2])
-    >>> isinstance(M.kind, MatrixKind)
-    True
-    >>> M.kind is MatrixKind(NumberKind)
-    True
-
-    See Also
-    ========
-
-    sympy.core.kind.NumberKind
-    sympy.core.kind.UndefinedKind
-    sympy.core.containers.TupleKind
-    sympy.sets.sets.SetKind
-
-    """
-    def __new__(cls, element_kind=NumberKind):
-        obj = super().__new__(cls, element_kind)
-        obj.element_kind = element_kind
-        return obj
-
-    def __repr__(self):
-        return "MatrixKind(%s)" % self.element_kind
-
-
 def _convert_matrix(typ, mat):
     """Convert mat to a Matrix of type typ."""
     from sympy import MatrixBase
@@ -3132,6 +2882,7 @@ def _convert_matrix(typ, mat):
         return typ(*mat.shape, list(mat))
     else:
         return typ(mat)
+
 
 def _coerce_operand(self, other):
     """Convert other to a Matrix, or check for possible scalar."""
@@ -3158,61 +2909,6 @@ def _coerce_operand(self, other):
         return other, 'possible_scalar'
 
     return INVALID
-
-
-def _unify_with_other(self, other):
-    """Unify self and other into a single matrix type, or check for scalar."""
-    other, T = _coerce_operand(self, other)
-
-    if T == "is_matrix":
-        typ = classof(self, other)
-        if typ != self.__class__:
-            self = _convert_matrix(typ, self)
-        if typ != other.__class__:
-            other = _convert_matrix(typ, other)
-
-    return self, other, T
-
-
-def _matrixify(mat):
-    """If `mat` is a Matrix or is matrix-like,
-    return a Matrix or MatrixWrapper object.  Otherwise
-    `mat` is passed through without modification."""
-
-    if getattr(mat, 'is_Matrix', False) or getattr(mat, 'is_MatrixLike', False):
-        return mat
-
-    if not(getattr(mat, 'is_Matrix', True) or getattr(mat, 'is_MatrixLike', True)):
-        return mat
-
-    shape = None
-
-    if hasattr(mat, 'shape'): # numpy, scipy.sparse
-        if len(mat.shape) == 2:
-            shape = mat.shape
-    elif hasattr(mat, 'rows') and hasattr(mat, 'cols'): # mpmath
-        shape = (mat.rows, mat.cols)
-
-    if shape:
-        return _MatrixWrapper(mat, shape)
-
-    return mat
-
-
-def a2idx(j, n=None):
-    """Return integer after making positive and validating against n."""
-    if not isinstance(j, int):
-        jindex = getattr(j, '__index__', None)
-        if jindex is not None:
-            j = jindex()
-        else:
-            raise IndexError("Invalid index a[%r]" % (j,))
-    if n is not None:
-        if j < 0:
-            j += n
-        if not (j >= 0 and j < n):
-            raise IndexError("Index out of range: a[%s]" % (j,))
-    return int(j)
 
 
 def classof(A, B):
@@ -3250,3 +2946,33 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
+
+
+def _unify_with_other(self, other):
+    """Unify self and other into a single matrix type, or check for scalar."""
+    other, T = _coerce_operand(self, other)
+
+    if T == "is_matrix":
+        typ = classof(self, other)
+        if typ != self.__class__:
+            self = _convert_matrix(typ, self)
+        if typ != other.__class__:
+            other = _convert_matrix(typ, other)
+
+    return self, other, T
+
+
+def a2idx(j, n=None):
+    """Return integer after making positive and validating against n."""
+    if not isinstance(j, int):
+        jindex = getattr(j, '__index__', None)
+        if jindex is not None:
+            j = jindex()
+        else:
+            raise IndexError("Invalid index a[%r]" % (j,))
+    if n is not None:
+        if j < 0:
+            j += n
+        if not (j >= 0 and j < n):
+            raise IndexError("Index out of range: a[%s]" % (j,))
+    return int(j)

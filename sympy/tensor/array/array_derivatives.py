@@ -3,7 +3,7 @@ from __future__ import annotations
 from sympy.core.expr import Expr
 from sympy.core.function import Derivative
 from sympy.core.numbers import Integer
-from sympy.matrices.common import MatrixCommon
+from sympy.matrices.matrixbase import MatrixCommon
 from .ndim_array import NDimArray
 from .arrayop import derive_by_array
 from sympy.matrices.expressions.matexpr import MatrixExpr

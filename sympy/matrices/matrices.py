@@ -27,7 +27,9 @@ from sympy.utilities.misc import as_int, filldedent
 from .exceptions import (
     MatrixError, NonSquareMatrixError, NonInvertibleMatrixError, ShapeError)
 
-from .common import MatrixCommon, MatrixKind, a2idx
+from .matrixbase import MatrixCommon
+
+from .common import MatrixKind, a2idx
 
 from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 
@@ -1453,8 +1455,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        sympy.matrices.common.MatrixCommon.conjugate: By-element conjugation
-        sympy.matrices.common.MatrixCommon.H: Hermite conjugation
+        sympy.matrices.matrixbase.MatrixCommon.conjugate: By-element conjugation
+        sympy.matrices.matrixbase.MatrixCommon.H: Hermite conjugation
         """
         from sympy.physics.matrices import mgamma
         if self.rows != 4:

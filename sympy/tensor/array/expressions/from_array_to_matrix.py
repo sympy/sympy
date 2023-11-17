@@ -15,7 +15,7 @@ from sympy.matrices.expressions.special import (Identity, ZeroMatrix, OneMatrix)
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert, Permutation
-from sympy.matrices.common import MatrixCommon
+from sympy.matrices.matrixbase import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \

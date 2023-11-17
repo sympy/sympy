@@ -491,7 +491,7 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     See Also
     ========
 
-    sympy.matrices.common.MatrixCommon.is_diagonal
+    sympy.matrices.matrixbase.MatrixCommon.is_diagonal
     diagonalize
     """
     if not M.is_square:
@@ -677,7 +677,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     See Also
     ========
 
-    sympy.matrices.common.MatrixCommon.is_diagonal
+    sympy.matrices.matrixbase.MatrixCommon.is_diagonal
     is_diagonalizable
     """
 

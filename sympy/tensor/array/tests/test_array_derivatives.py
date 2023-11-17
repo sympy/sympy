@@ -2,7 +2,7 @@ from sympy.core.symbol import symbols
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.tensor.array.ndim_array import NDimArray
-from sympy.matrices.common import MatrixCommon
+from sympy.matrices.matrixbase import MatrixCommon
 from sympy.tensor.array.array_derivatives import ArrayDerivative
 
 x, y, z, t = symbols("x y z t")

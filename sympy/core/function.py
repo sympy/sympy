@@ -1408,7 +1408,7 @@ class Derivative(Expr):
         # -------------------------------------------------------------
         nderivs = 0  # how many derivatives were performed
         unhandled = []
-        from sympy.matrices.common import MatrixCommon
+        from sympy.matrices.matrixbase import MatrixCommon
         for i, (v, count) in enumerate(variable_count):
 
             old_expr = expr
@@ -1898,7 +1898,7 @@ class Derivative(Expr):
 
 
 def _derivative_dispatch(expr, *variables, **kwargs):
-    from sympy.matrices.common import MatrixCommon
+    from sympy.matrices.matrixbase import MatrixCommon
     from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.tensor.array import NDimArray
     array_types = (MatrixCommon, MatrixExpr, NDimArray, list, tuple, Tuple)

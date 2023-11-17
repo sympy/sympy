@@ -19,7 +19,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import (Dummy, Symbol)
-from sympy.matrices.common import MatrixCommon
+from sympy.matrices.matrixbase import MatrixCommon
 from sympy.matrices.expressions.diagonal import diagonalize_vector
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix
