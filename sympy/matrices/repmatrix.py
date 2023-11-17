@@ -17,7 +17,8 @@ from sympy.utilities.misc import filldedent, as_int
 
 from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
 from .matrixbase import classof
-from .matrices import MatrixBase, MatrixKind
+from .kind import MatrixKind
+from .matrices import MatrixBase
 
 
 class RepMatrix(MatrixBase):

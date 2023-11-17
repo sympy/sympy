@@ -1,5 +1,5 @@
-Common Matrices
-===============
+Matrix base classes
+===================
 
 .. module:: sympy.matrices.matrixbase
 

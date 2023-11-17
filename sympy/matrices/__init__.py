@@ -4,7 +4,7 @@ Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
 from .exceptions import ShapeError, NonSquareMatrixError
-from .common import MatrixKind
+from .kind import MatrixKind
 from .dense import (
     GramSchmidt, casoratian, diag, eye, hessian, jordan_cell,
     list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
