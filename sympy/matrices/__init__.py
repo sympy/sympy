@@ -12,7 +12,8 @@ from .dense import (
     rot_ccw_axis2, rot_ccw_axis3, rot_givens,
     symarray, wronskian, zeros)
 from .dense import MutableDenseMatrix
-from .matrices import DeferredVector, MatrixBase
+from .matrices import MatrixBase
+from .matrixbase import DeferredVector
 
 MutableMatrix = MutableDenseMatrix
 Matrix = MutableMatrix

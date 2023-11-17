@@ -11,6 +11,7 @@ from sympy.core.mod import Mod
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import Abs, re, im
+from sympy.printing import sstr
 
 from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
@@ -20,6 +21,7 @@ from sympy.core.decorators import call_highest_priority
 from sympy.core.logic import fuzzy_and, FuzzyBool
 from .utilities import _get_intermediate_simp_bool
 from sympy.tensor.array import NDimArray
+from sympy.utilities.iterables import NotIterable
 
 
 from .exceptions import (
@@ -2869,6 +2871,37 @@ class MatrixCommon:
     @call_highest_priority('__rsub__')
     def __sub__(self, a):
         return self + (-a)
+
+
+class DeferredVector(Symbol, NotIterable):
+    """A vector whose components are deferred (e.g. for use with lambdify).
+
+    Examples
+    ========
+
+    >>> from sympy import DeferredVector, lambdify
+    >>> X = DeferredVector( 'X' )
+    >>> X
+    X
+    >>> expr = (X[0] + 2, X[2] + 3)
+    >>> func = lambdify( X, expr)
+    >>> func( [1, 2, 3] )
+    (3, 6)
+    """
+
+    def __getitem__(self, i):
+        if i == -0:
+            i = 0
+        if i < 0:
+            raise IndexError('DeferredVector index out of range')
+        component_name = '%s[%d]' % (self.name, i)
+        return Symbol(component_name)
+
+    def __str__(self):
+        return sstr(self)
+
+    def __repr__(self):
+        return "DeferredVector('%s')" % self.name
 
 
 def _convert_matrix(typ, mat):
