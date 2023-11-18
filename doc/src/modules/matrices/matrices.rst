@@ -539,9 +539,6 @@ classes. See also :doc:`/modules/matrices/dense`, and
    :special-members:
    :inherited-members:
 
-.. autoclass:: MatrixReductions
-   :members:
-
 .. autoclass:: MatrixSubspaces
    :members:
 
