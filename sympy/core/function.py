@@ -3323,7 +3323,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     >>> type(nfloat((1, 2))) is tuple
     True
     """
-    from sympy.matrices.matrices import MatrixBase
+    from sympy.matrices.matrixbase import MatrixBase
 
     kw = {"n": n, "exponent": exponent, "dkeys": dkeys}
 

@@ -15,7 +15,7 @@ from sympy.matrices.kind import MatrixKind
 from sympy.matrices.common import (
     _MinimalMatrix, _CastableMatrix, MatrixShaping, MatrixProperties,
     MatrixOperations, MatrixArithmetic, MatrixSpecial)
-from sympy.matrices.matrices import MatrixCalculus
+from sympy.matrices.matrixbase import MatrixCalculus
 from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded,
     MutableDenseMatrix, MutableSparseMatrix, ImmutableDenseMatrix,

@@ -953,7 +953,7 @@ def _recursive_to_string(doprint, arg):
     """Functions in lambdify accept both SymPy types and non-SymPy types such as python
     lists and tuples. This method ensures that we only call the doprint method of the
     printer with SymPy types (so that the printer safely can use SymPy-methods)."""
-    from sympy.matrices.matrices import MatrixBase
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.core.basic import Basic
 
     if isinstance(arg, (Basic, MatrixBase)):

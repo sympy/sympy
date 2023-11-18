@@ -1,7 +1,7 @@
 from sympy.core.numbers import I
 from sympy.core.symbol import symbols
 from sympy.matrices.common import _MinimalMatrix, _CastableMatrix
-from sympy.matrices.matrices import MatrixReductions
+from sympy.matrices.matrixbase import MatrixReductions
 from sympy.testing.pytest import raises
 from sympy.matrices import Matrix, zeros
 from sympy.core.symbol import Symbol

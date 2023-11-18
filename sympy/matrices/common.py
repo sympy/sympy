@@ -916,7 +916,7 @@ class MatrixSpecial(MatrixRequired):
         .expressions.blockmatrix.BlockMatrix
         .sparsetools.banded
        """
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.matrices.dense import Matrix
         from sympy.matrices import SparseMatrix
         klass = kwargs.get('cls', kls)
@@ -1473,7 +1473,7 @@ class MatrixProperties(MatrixRequired):
 
         is_lower
         is_upper
-        sympy.matrices.matrices.MatrixEigen.is_diagonalizable
+        sympy.matrices.matrixbase.MatrixEigen.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()
@@ -2003,7 +2003,7 @@ class MatrixOperations(MatrixRequired):
 
         transpose: Matrix transposition
         H: Hermite conjugation
-        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
+        sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
         return self._eval_conjugate()
 
@@ -2057,7 +2057,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         conjugate: By-element conjugation
-        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
+        sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
         return self.T.C
 
@@ -2747,8 +2747,8 @@ class MatrixArithmetic(MatrixRequired):
         See Also
         ========
 
-        sympy.matrices.matrices.MatrixBase.cross
-        sympy.matrices.matrices.MatrixBase.dot
+        sympy.matrices.matrixbase.MatrixBase.cross
+        sympy.matrices.matrixbase.MatrixBase.dot
         multiply
         """
         if self.shape != other.shape:
@@ -2923,6 +2923,7 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rsub__')
     def __sub__(self, a):
         return self + (-a)
+
 
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
