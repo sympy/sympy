@@ -30,7 +30,7 @@ from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.core.symbol import uniquely_named_symbol
 
-from .utilities import _dotprodsimp, _simplify
+from .utilities import _dotprodsimp, _simplify as _utilities_simplify
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
@@ -1465,7 +1465,7 @@ class MatrixCommon:
         # accept custom simplification
         simpfunc = simplify
         if not isfunction(simplify):
-            simpfunc = _simplify if simplify else lambda x: x
+            simpfunc = _utilities_simplify if simplify else lambda x: x
 
         if not self.is_square:
             return False
@@ -1646,7 +1646,7 @@ class MatrixCommon:
         if not self.is_square:
             return False
 
-        return self._eval_is_matrix_hermitian(_simplify)
+        return self._eval_is_matrix_hermitian(_utilities_simplify)
 
     @property
     def is_Identity(self) -> FuzzyBool:
@@ -1824,7 +1824,7 @@ class MatrixCommon:
         """
         simpfunc = simplify
         if not isfunction(simplify):
-            simpfunc = _simplify if simplify else lambda x: x
+            simpfunc = _utilities_simplify if simplify else lambda x: x
 
         if not self.is_square:
             return False
@@ -2929,42 +2929,6 @@ class MatrixCommon:
     def __sub__(self, a):
         return self + (-a)
 
-
-class DeferredVector(Symbol, NotIterable):
-    """A vector whose components are deferred (e.g. for use with lambdify).
-
-    Examples
-    ========
-
-    >>> from sympy import DeferredVector, lambdify
-    >>> X = DeferredVector( 'X' )
-    >>> X
-    X
-    >>> expr = (X[0] + 2, X[2] + 3)
-    >>> func = lambdify( X, expr)
-    >>> func( [1, 2, 3] )
-    (3, 6)
-    """
-
-    def __getitem__(self, i):
-        if i == -0:
-            i = 0
-        if i < 0:
-            raise IndexError('DeferredVector index out of range')
-        component_name = '%s[%d]' % (self.name, i)
-        return Symbol(component_name)
-
-    def __str__(self):
-        return sstr(self)
-
-    def __repr__(self):
-        return "DeferredVector('%s')" % self.name
-
-
-class MatrixDeterminant(MatrixCommon):
-    """Provides basic matrix determinant operations. Should not be instantiated
-    directly. See ``determinant.py`` for their implementations."""
-
     def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
         return _det_bareiss(self, iszerofunc=iszerofunc)
 
@@ -2986,7 +2950,7 @@ class MatrixDeterminant(MatrixCommon):
     def adjugate(self, method="berkowitz"):
         return _adjugate(self, method=method)
 
-    def charpoly(self, x='lambda', simplify=_simplify):
+    def charpoly(self, x='lambda', simplify=_utilities_simplify):
         return _charpoly(self, x=x, simplify=simplify)
 
     def cofactor(self, i, j, method="berkowitz"):
@@ -3025,7 +2989,7 @@ class MatrixDeterminant(MatrixCommon):
     minor_submatrix.__doc__              = _minor_submatrix.__doc__
 
 
-class MatrixReductions(MatrixDeterminant):
+class MatrixReductions(MatrixCommon):
     """Provides basic matrix row/column operations. Should not be instantiated
     directly. See ``reductions.py`` for some of their implementations."""
 
@@ -3476,7 +3440,7 @@ class MatrixCalculus(MatrixCommon):
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
-    def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
+    def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_utilities_simplify):
         return self.charpoly(x=x)
 
     def berkowitz_det(self):
@@ -5348,3 +5312,34 @@ def a2idx(j, n=None):
         if not (j >= 0 and j < n):
             raise IndexError("Index out of range: a[%s]" % (j,))
     return int(j)
+
+
+class DeferredVector(Symbol, NotIterable):
+    """A vector whose components are deferred (e.g. for use with lambdify).
+
+    Examples
+    ========
+
+    >>> from sympy import DeferredVector, lambdify
+    >>> X = DeferredVector( 'X' )
+    >>> X
+    X
+    >>> expr = (X[0] + 2, X[2] + 3)
+    >>> func = lambdify( X, expr)
+    >>> func( [1, 2, 3] )
+    (3, 6)
+    """
+
+    def __getitem__(self, i):
+        if i == -0:
+            i = 0
+        if i < 0:
+            raise IndexError('DeferredVector index out of range')
+        component_name = '%s[%d]' % (self.name, i)
+        return Symbol(component_name)
+
+    def __str__(self):
+        return sstr(self)
+
+    def __repr__(self):
+        return "DeferredVector('%s')" % self.name

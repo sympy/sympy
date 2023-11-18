@@ -131,7 +131,7 @@ def _eigenvals(
     See Also
     ========
 
-    MatrixDeterminant.charpoly
+    MatrixCommon.charpoly
     eigenvects
 
     Notes
