@@ -1473,7 +1473,7 @@ class MatrixProperties(MatrixRequired):
 
         is_lower
         is_upper
-        sympy.matrices.matrixbase.MatrixEigen.is_diagonalizable
+        sympy.matrices.matrixbase.MatrixCommon.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()

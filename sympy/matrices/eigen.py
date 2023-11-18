@@ -394,7 +394,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     ========
 
     eigenvals
-    MatrixSubspaces.nullspace
+    MatrixCommon.nullspace
     """
     simplify = flags.get('simplify', True)
     primitive = flags.get('simplify', False)

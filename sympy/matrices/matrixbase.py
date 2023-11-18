@@ -1509,7 +1509,7 @@ class MatrixCommon:
 
         is_lower
         is_upper
-        sympy.matrices.matrixbase.MatrixEigen.is_diagonalizable
+        sympy.matrices.matrixbase.MatrixCommon.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()
@@ -3190,12 +3190,6 @@ class MatrixCommon:
         if op == "n->n+km":
             return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
 
-
-class MatrixSubspaces(MatrixCommon):
-    """Provides methods relating to the fundamental subspaces of a matrix.
-    Should not be instantiated directly. See ``subspaces.py`` for their
-    implementations."""
-
     def columnspace(self, simplify=False):
         return _columnspace(self, simplify=simplify)
 
@@ -3217,12 +3211,6 @@ class MatrixSubspaces(MatrixCommon):
     orthogonalize.__doc__ = _orthogonalize.__doc__
 
     orthogonalize         = classmethod(orthogonalize)  # type:ignore
-
-
-class MatrixEigen(MatrixSubspaces):
-    """Provides basic matrix eigenvalue/vector operations.
-    Should not be instantiated directly. See ``eigen.py`` for their
-    implementations."""
 
     def eigenvals(self, error_when_incomplete=True, **flags):
         return _eigenvals(self, error_when_incomplete=error_when_incomplete, **flags)
@@ -3287,10 +3275,6 @@ class MatrixEigen(MatrixSubspaces):
     singular_values.__doc__            = _singular_values.__doc__
     bidiagonalize.__doc__              = _bidiagonalize.__doc__
     bidiagonal_decomposition.__doc__   = _bidiagonal_decomposition.__doc__
-
-
-class MatrixCalculus(MatrixCommon):
-    """Provides calculus-related matrix operations."""
 
     def diff(self, *args, evaluate=True, **kwargs):
         """Calculate the derivative of each element in the matrix.
@@ -3431,10 +3415,6 @@ class MatrixCalculus(MatrixCommon):
         """
         return self.applyfunc(lambda x: x.limit(*args))
 
-
-# https://github.com/sympy/sympy/pull/12854
-class MatrixDeprecated(MatrixCommon):
-    """A class to house deprecated matrix methods."""
     def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_utilities_simplify):
         return self.charpoly(x=x)
 
@@ -3564,11 +3544,7 @@ class MatrixDeprecated(MatrixCommon):
         return self.permute_rows(perm, direction='forward')
 
 
-class MatrixBase(MatrixDeprecated,
-                 MatrixCalculus,
-                 MatrixEigen,
-                 MatrixCommon,
-                 Printable):
+class MatrixBase(MatrixCommon, Printable):
     """Base class for matrix objects."""
     # Added just for numpy compatibility
     __array_priority__ = 11
