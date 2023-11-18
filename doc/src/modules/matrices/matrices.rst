@@ -539,15 +539,6 @@ classes. See also :doc:`/modules/matrices/dense`, and
    :special-members:
    :inherited-members:
 
-.. autoclass:: MatrixSubspaces
-   :members:
-
-.. autoclass:: MatrixEigen
-   :members:
-
-.. autoclass:: MatrixCalculus
-   :members:
-
 .. autoclass:: MatrixBase
    :members:
 

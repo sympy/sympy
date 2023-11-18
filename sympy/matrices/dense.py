@@ -819,7 +819,7 @@ def GramSchmidt(vlist, orthonormal=False):
     See Also
     ========
 
-    .matrixbase.MatrixSubspaces.orthogonalize
+    .matrixbase.MatrixCommon.orthogonalize
 
     References
     ==========
@@ -871,7 +871,7 @@ def hessian(f, varlist, constraints=()):
     See Also
     ========
 
-    sympy.matrices.matrixbase.MatrixCalculus.jacobian
+    sympy.matrices.matrixbase.MatrixCommon.jacobian
     wronskian
     """
     # f is the expression representing a function f, return regular matrix
@@ -1060,7 +1060,7 @@ def wronskian(functions, var, method='bareiss'):
     See Also
     ========
 
-    sympy.matrices.matrixbase.MatrixCalculus.jacobian
+    sympy.matrices.matrixbase.MatrixCommon.jacobian
     hessian
     """
 
