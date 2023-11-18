@@ -93,7 +93,7 @@ different constant vectors $b$, it is more efficient to use one of the following
 methods.
 
 You can use [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition)
-via {meth}`~sympy.matrices.matrxbase.MatrixBase.LUsolve`:
+via {meth}`~sympy.matrices.matrixbase.MatrixBase.LUsolve`:
 
 ```py
 >>> from sympy import symbols, Matrix, eye, simplify

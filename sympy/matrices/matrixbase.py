@@ -2988,11 +2988,6 @@ class MatrixCommon:
     minor.__doc__                        = _minor.__doc__
     minor_submatrix.__doc__              = _minor_submatrix.__doc__
 
-
-class MatrixReductions(MatrixCommon):
-    """Provides basic matrix row/column operations. Should not be instantiated
-    directly. See ``reductions.py`` for some of their implementations."""
-
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
         return _echelon_form(self, iszerofunc=iszerofunc, simplify=simplify,
                 with_pivots=with_pivots)
@@ -3196,7 +3191,7 @@ class MatrixReductions(MatrixCommon):
             return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
 
 
-class MatrixSubspaces(MatrixReductions):
+class MatrixSubspaces(MatrixCommon):
     """Provides methods relating to the fundamental subspaces of a matrix.
     Should not be instantiated directly. See ``subspaces.py`` for their
     implementations."""
