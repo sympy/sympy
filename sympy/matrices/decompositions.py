@@ -93,7 +93,7 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixReductions.rref
+    sympy.matrices.matrixbase.MatrixReductions.rref
     """
 
     F, pivot_cols = M.rref(simplify=simplify, iszerofunc=iszerofunc,
@@ -246,7 +246,7 @@ def _cholesky(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -337,7 +337,7 @@ def _cholesky_sparse(M, hermitian=True):
     ========
 
     sympy.matrices.sparse.SparseMatrix.LDLdecomposition
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -448,7 +448,7 @@ def _LDLdecomposition(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.cholesky
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -929,7 +929,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     LUdecompositionFF
     LUsolve
     """
@@ -1074,7 +1074,7 @@ def _LUdecompositionFF(M):
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     LUdecomposition_Simple
     LUsolve
 
@@ -1549,7 +1549,7 @@ def _QRdecomposition(M):
 
     sympy.matrices.dense.DenseMatrix.cholesky
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     QRsolve
     """
     return _QRdecomposition_optional(M, normalize=True)

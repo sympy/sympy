@@ -5,7 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.simplify.simplify import simplify
-from sympy.matrices.matrices import (ShapeError, NonSquareMatrixError)
+from sympy.matrices.exceptions import (ShapeError, NonSquareMatrixError)
 from sympy.matrices import (
     ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix, dotprodsimp)
 from sympy.matrices.determinant import _det_laplace

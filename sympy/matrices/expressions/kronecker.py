@@ -8,7 +8,7 @@ from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.expressions.special import Identity
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.strategies import (
     canon, condition, distribute, do_one, exhaust, flatten, typed, unpack)
 from sympy.strategies.traverse import bottom_up

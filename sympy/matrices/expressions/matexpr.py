@@ -13,7 +13,7 @@ from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.kind import MatrixKind
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.multipledispatch import dispatch
 from sympy.utilities.misc import filldedent
 
@@ -602,7 +602,6 @@ class MatrixElement(Expr):
 
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
-        from sympy.matrices.matrices import MatrixBase
         if isinstance(name, str):
             name = Symbol(name)
         else:

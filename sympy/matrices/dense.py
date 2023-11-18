@@ -11,7 +11,7 @@ from sympy.utilities.iterables import is_sequence
 
 from .exceptions import ShapeError
 from .decompositions import _cholesky, _LDLdecomposition
-from .matrices import MatrixBase
+from .matrixbase import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
@@ -819,7 +819,7 @@ def GramSchmidt(vlist, orthonormal=False):
     See Also
     ========
 
-    .matrices.MatrixSubspaces.orthogonalize
+    .matrixbase.MatrixSubspaces.orthogonalize
 
     References
     ==========
@@ -871,7 +871,7 @@ def hessian(f, varlist, constraints=()):
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixCalculus.jacobian
+    sympy.matrices.matrixbase.MatrixCalculus.jacobian
     wronskian
     """
     # f is the expression representing a function f, return regular matrix
@@ -1060,7 +1060,7 @@ def wronskian(functions, var, method='bareiss'):
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixCalculus.jacobian
+    sympy.matrices.matrixbase.MatrixCalculus.jacobian
     hessian
     """
 

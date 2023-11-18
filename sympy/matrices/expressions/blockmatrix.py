@@ -76,7 +76,7 @@ class BlockMatrix(MatrixExpr):
 
     See Also
     ========
-    sympy.matrices.matrices.MatrixBase.irregular
+    sympy.matrices.matrixbase.MatrixBase.irregular
     """
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -313,7 +313,7 @@ class BlockMatrix(MatrixExpr):
         See Also
         ========
 
-        sympy.matrices.matrices.MatrixBase.pinv
+        sympy.matrices.matrixbase.MatrixBase.pinv
         """
 
         if self.blockshape == (2, 2):

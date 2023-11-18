@@ -12,7 +12,6 @@ Contents:
    :titlesonly:
 
    matrices.rst
-   matrixbase.rst
    kind.rst
    dense.rst
    sparse.rst
