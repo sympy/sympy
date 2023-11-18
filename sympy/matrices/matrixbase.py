@@ -2907,7 +2907,7 @@ class DeferredVector(Symbol, NotIterable):
 def _convert_matrix(typ, mat):
     """Convert mat to a Matrix of type typ."""
     from sympy import MatrixBase
-    if getattr(mat, "is_Matrix", True) and not isinstance(mat, MatrixBase):
+    if getattr(mat, "is_Matrix", False) and not isinstance(mat, MatrixBase):
         # This is needed for interop between Matrix and the redundant matrix
         # mixin types like _MinimalMatrix etc. If anyone should happen to be
         # using those then this keeps them working. Really _MinimalMatrix etc
@@ -2915,6 +2915,17 @@ def _convert_matrix(typ, mat):
         return typ(*mat.shape, list(mat))
     else:
         return typ(mat)
+
+
+def _has_matrix_shape(other):
+    shape = getattr(other, 'shape', None)
+    if shape is None:
+        return False
+    return isinstance(shape, tuple) and len(shape) == 2
+
+
+def _has_rows_cols(other):
+    return hasattr(other, 'rows') and hasattr(other, 'cols')
 
 
 def _coerce_operand(self, other):
@@ -2934,7 +2945,7 @@ def _coerce_operand(self, other):
 
     # Try to convert numpy array, mpmath matrix etc.
     if is_Matrix is None:
-        if hasattr(other, 'shape') or hasattr(other, 'rows') and hasattr(other, 'cols'):
+        if _has_matrix_shape(other) or _has_rows_cols(other):
             return _convert_matrix(type(self), other), 'is_matrix'
 
     # Could be a scalar but only if not iterable...
