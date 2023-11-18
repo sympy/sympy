@@ -1035,6 +1035,7 @@ def test_issue_5767():
 
 
 def _make_example_24609():
+    # used by two tests below
     D, R, H, B_g, V, D_c = symbols("D, R, H, B_g, V, D_c", real=True, positive=True)
     Sigma_f, Sigma_a, nu = symbols("Sigma_f, Sigma_a, nu", real=True, positive=True)
     x = symbols("x", real=True, positive=True)
@@ -1048,7 +1049,6 @@ def _make_example_24609():
 
 
 def test_issue_24609():
-    # https://github.com/sympy/sympy/issues/24609
     eq, expected, x = _make_example_24609()
     assert solve(eq, x, simplify=True) == [expected]
     [solapprox] = solve(eq.n(), x)
@@ -1838,7 +1838,7 @@ def test_issue_6792():
          CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_6819_6820_6821_6248_8692_25777_25779():
+def test_issues_6819_6820_6821_6248_8692_25777_25779_25895():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
@@ -1854,8 +1854,19 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
     # 25777
     assert solve(abs(x**3 + x + 2)/(x + 1)) == []
+    # you can get an imaginary value for x, however:
+    v = symbols('v')
+    assert solve((abs(y)/(v + 1), v**3 + v + 2 - y)) == [
+        {v: S.Half - sqrt(7)*I/2, y: 0}, {v: S.Half + sqrt(7)*I/2, y: 0}]
 
-    # 25779
+    # issues 25779, 25895
+    assert solve([Eq(x - abs(y), 3), Eq(4*x + 5*abs(y), 21)]
+        ) == [{x: 4, y: -1}, {x: 4, y: 1}]
+    eq1 = Eq(abs(-S(1)/6 - x) - y, 0)
+    eq2 = Eq(abs(S(5)/6 - x) - y, 0)
+    assert solve((eq1, eq2), (x, y)) == [(S(1)/3, S(1)/2)]
+    assert solve(abs(x - I) - 4) == [-sqrt(15), sqrt(15)]
+    assert solve(abs(x + 1) - abs(1 - x) - 2) == [1]
     assert solve(abs(x)) == [0]
     assert solve(Eq(abs(x**2 - 2*x), 4), x) == [
         1 - sqrt(5), 1 + sqrt(5)]
@@ -1897,6 +1908,7 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
 
 def test_issue_17638():
 
