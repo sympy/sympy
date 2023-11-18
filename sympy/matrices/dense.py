@@ -782,9 +782,9 @@ def diag(*values, strict=True, unpack=False, **kwargs):
 
     See Also
     ========
-    .matrixbase.MatrixCommon.eye
-    .matrixbase.MatrixCommon.diagonal
-    .matrixbase.MatrixCommon.diag
+    .matrixbase.MatrixBase.eye
+    .matrixbase.MatrixBase.diagonal
+    .matrixbase.MatrixBase.diag
     .expressions.blockmatrix.BlockMatrix
     """
     return Matrix.diag(*values, strict=strict, unpack=unpack, **kwargs)
@@ -819,7 +819,7 @@ def GramSchmidt(vlist, orthonormal=False):
     See Also
     ========
 
-    .matrixbase.MatrixCommon.orthogonalize
+    .matrixbase.MatrixBase.orthogonalize
 
     References
     ==========
@@ -871,7 +871,7 @@ def hessian(f, varlist, constraints=()):
     See Also
     ========
 
-    sympy.matrices.matrixbase.MatrixCommon.jacobian
+    sympy.matrices.matrixbase.MatrixBase.jacobian
     wronskian
     """
     # f is the expression representing a function f, return regular matrix
@@ -942,7 +942,7 @@ def matrix_multiply_elementwise(A, B):
     See Also
     ========
 
-    sympy.matrices.matrixbase.MatrixCommon.__mul__
+    sympy.matrices.matrixbase.MatrixBase.__mul__
     """
     return A.multiply_elementwise(B)
 
@@ -1060,7 +1060,7 @@ def wronskian(functions, var, method='bareiss'):
     See Also
     ========
 
-    sympy.matrices.matrixbase.MatrixCommon.jacobian
+    sympy.matrices.matrixbase.MatrixBase.jacobian
     hessian
     """
 

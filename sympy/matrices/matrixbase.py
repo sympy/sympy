@@ -86,11 +86,21 @@ from .graph import (
     _strongly_connected_components, _strongly_connected_components_decomposition)
 
 
-class MatrixCommon:
+class MatrixBase(Printable):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
 
     _op_priority = 10.01
+
+    # Added just for numpy compatibility
+    __array_priority__ = 11
+
+    is_Matrix = True
+    _class_priority = 3
+    _sympify = staticmethod(sympify)
+    zero = S.Zero
+    one = S.One
+
     _diff_wrt = True  # type: bool
     rows = None  # type: int
     cols = None  # type: int
@@ -111,10 +121,6 @@ class MatrixCommon:
         case the matrix is indexed as a flat list, tuples (i,j) in which
         case the (i,j) entry is returned, slices, or mixed tuples (a,b)
         where a and b are any combination of slices and integers."""
-        raise NotImplementedError("Subclasses must implement this.")
-
-    def __len__(self):
-        """The total number of entries in the matrix."""
         raise NotImplementedError("Subclasses must implement this.")
 
     @property
@@ -1509,7 +1515,7 @@ class MatrixCommon:
 
         is_lower
         is_upper
-        sympy.matrices.matrixbase.MatrixCommon.is_diagonalizable
+        sympy.matrices.matrixbase.MatrixBase.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()
@@ -3425,28 +3431,15 @@ class MatrixCommon:
         ========
 
         det
-        berkowitz
         """
         return self.det(method='berkowitz')
 
     def berkowitz_eigenvals(self, **flags):
-        """Computes eigenvalues of a Matrix using Berkowitz method.
-
-        See Also
-        ========
-
-        berkowitz
-        """
+        """Computes eigenvalues of a Matrix using Berkowitz method."""
         return self.eigenvals(**flags)
 
     def berkowitz_minors(self):
-        """Computes principal minors using Berkowitz method.
-
-        See Also
-        ========
-
-        berkowitz
-        """
+        """Computes principal minors using Berkowitz method."""
         sign, minors = self.one, []
 
         for poly in self.berkowitz():
@@ -3517,7 +3510,6 @@ class MatrixCommon:
 
 
         det
-        det_bareiss
         berkowitz_det
         """
         return self.det(method='lu')
@@ -3542,18 +3534,6 @@ class MatrixCommon:
     def permuteFwd(self, perm):
         """Permute the rows of the matrix with the given permutation."""
         return self.permute_rows(perm, direction='forward')
-
-
-class MatrixBase(MatrixCommon, Printable):
-    """Base class for matrix objects."""
-    # Added just for numpy compatibility
-    __array_priority__ = 11
-
-    is_Matrix = True
-    _class_priority = 3
-    _sympify = staticmethod(sympify)
-    zero = S.Zero
-    one = S.One
 
     @property
     def kind(self) -> MatrixKind:
@@ -4225,8 +4205,8 @@ class MatrixBase(MatrixCommon, Printable):
         See Also
         ========
 
-        sympy.matrices.matrixbase.MatrixCommon.conjugate: By-element conjugation
-        sympy.matrices.matrixbase.MatrixCommon.H: Hermite conjugation
+        sympy.matrices.matrixbase.MatrixBase.conjugate: By-element conjugation
+        sympy.matrices.matrixbase.MatrixBase.H: Hermite conjugation
         """
         from sympy.physics.matrices import mgamma
         if self.rows != 4:

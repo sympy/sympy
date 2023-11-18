@@ -1408,14 +1408,14 @@ class Derivative(Expr):
         # -------------------------------------------------------------
         nderivs = 0  # how many derivatives were performed
         unhandled = []
-        from sympy.matrices.matrixbase import MatrixCommon
+        from sympy.matrices.matrixbase import MatrixBase
         for i, (v, count) in enumerate(variable_count):
 
             old_expr = expr
             old_v = None
 
             is_symbol = v.is_symbol or isinstance(v,
-                (Iterable, Tuple, MatrixCommon, NDimArray))
+                (Iterable, Tuple, MatrixBase, NDimArray))
 
             if not is_symbol:
                 old_v = v
@@ -1898,10 +1898,10 @@ class Derivative(Expr):
 
 
 def _derivative_dispatch(expr, *variables, **kwargs):
-    from sympy.matrices.matrixbase import MatrixCommon
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.tensor.array import NDimArray
-    array_types = (MatrixCommon, MatrixExpr, NDimArray, list, tuple, Tuple)
+    array_types = (MatrixBase, MatrixExpr, NDimArray, list, tuple, Tuple)
     if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
         from sympy.tensor.array.array_derivatives import ArrayDerivative
         return ArrayDerivative(expr, *variables, **kwargs)

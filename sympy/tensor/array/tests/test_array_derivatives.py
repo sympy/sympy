@@ -2,7 +2,7 @@ from sympy.core.symbol import symbols
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.tensor.array.ndim_array import NDimArray
-from sympy.matrices.matrixbase import MatrixCommon
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.tensor.array.array_derivatives import ArrayDerivative
 
 x, y, z, t = symbols("x y z t")
@@ -18,7 +18,7 @@ def test_array_derivative_construction():
     d = ArrayDerivative(x, m, evaluate=False)
     assert d.shape == (2, 2)
     expr = d.doit()
-    assert isinstance(expr, MatrixCommon)
+    assert isinstance(expr, MatrixBase)
     assert expr.shape == (2, 2)
 
     d = ArrayDerivative(m, m, evaluate=False)
@@ -30,7 +30,7 @@ def test_array_derivative_construction():
     d = ArrayDerivative(m, x, evaluate=False)
     assert d.shape == (2, 2)
     expr = d.doit()
-    assert isinstance(expr, MatrixCommon)
+    assert isinstance(expr, MatrixBase)
     assert expr.shape == (2, 2)
 
     d = ArrayDerivative(M, N, evaluate=False)

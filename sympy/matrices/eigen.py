@@ -131,7 +131,7 @@ def _eigenvals(
     See Also
     ========
 
-    MatrixCommon.charpoly
+    MatrixBase.charpoly
     eigenvects
 
     Notes
@@ -394,7 +394,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     ========
 
     eigenvals
-    MatrixCommon.nullspace
+    MatrixBase.nullspace
     """
     simplify = flags.get('simplify', True)
     primitive = flags.get('simplify', False)
@@ -491,7 +491,7 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     See Also
     ========
 
-    sympy.matrices.matrixbase.MatrixCommon.is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     diagonalize
     """
     if not M.is_square:
@@ -677,7 +677,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     See Also
     ========
 
-    sympy.matrices.matrixbase.MatrixCommon.is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     is_diagonalizable
     """
 

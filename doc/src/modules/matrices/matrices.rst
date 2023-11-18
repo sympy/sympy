@@ -534,13 +534,9 @@ methods and attribute of ``Matrix`` is implemented on one of these base
 classes. See also :doc:`/modules/matrices/dense`, and
 :doc:`/modules/matrices/sparse`.
 
-.. autoclass:: MatrixCommon
-   :members:
-   :special-members:
-   :inherited-members:
-
 .. autoclass:: MatrixBase
    :members:
+   :special-members:
 
 Matrix Exceptions
 ^^^^^^^^^^^^^^^^^
