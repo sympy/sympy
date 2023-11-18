@@ -1,7 +1,7 @@
 from sympy.core.basic import Basic
 from sympy.core.symbol import Dummy
 
-from .matrixbase import MatrixCommon
+from .common import MatrixCommon
 
 from .exceptions import NonSquareMatrixError
 
