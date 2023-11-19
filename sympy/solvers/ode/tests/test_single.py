@@ -547,7 +547,7 @@ def test_factorable():
 
 
 @slow
-def test_factorable():
+def test_factorable_11():
     _ode_solver_test(_get_examples_ode_sol_factorable_11)
 
 
@@ -557,7 +557,7 @@ def test_slow_examples_factorable():
 
 
 @slow
-def test_slow_examples_factorable():
+def test_slow_examples_factorable_11():
     _ode_solver_test(_get_examples_ode_sol_factorable_11, run_slow_test=True)
 
 
@@ -922,7 +922,6 @@ def _get_examples_ode_sol_factorable_1():
     which could be found by Factorable hint. Fact_01 raise exception for
     nth_linear_constant_coeff_undetermined_coefficients"""
 
-    y = Dummy('y')
     a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
     return {
             'hint': "factorable",
