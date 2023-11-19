@@ -1867,6 +1867,7 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779_25895():
     assert solve((eq1, eq2), (x, y)) == [(S(1)/3, S(1)/2)]
     assert solve(abs(x - I) - 4) == [-sqrt(15), sqrt(15)]
     assert solve(abs(x + 1) - abs(1 - x) - 2) == [1]
+
     assert solve(abs(x)) == [0]
     assert solve(Eq(abs(x**2 - 2*x), 4), x) == [
         1 - sqrt(5), 1 + sqrt(5)]
@@ -2509,8 +2510,13 @@ def test_issue_17799():
 
 
 def test_issue_17650():
-    x = Symbol('x', real=True)
-    assert solve(abs(abs(x**2 - 1) - x) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
+    x, y = symbols('x y', real=True)
+    assert solve(abs(abs(x**2 - 1) - x) - x) == [
+        1, -1 + sqrt(2), 1 + sqrt(2)]
+    nest = [-Abs(y) + Abs(3*x + Abs(Abs(x - 1) - 2) - 5),
+        x - Abs(y + Abs(x))]
+    assert solve(nest) == [{x: S(2)/3, y: -S(4)/3},
+        {x: 1, y: 0}, {x: 4, y: -8}]
 
 
 def test_issue_17882():
