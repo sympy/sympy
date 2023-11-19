@@ -1797,7 +1797,7 @@ def test_issue_6528():
 def test_abs_overdetermined():
     x = symbols('x', real=True)
     eqs = [Abs(4*x - 7) - 5, Abs(3 - 8*x) - 1]
-    assert solve(eqs, x) == {x: S.Half}
+    assert solve(eqs, x) == [(S.Half,)]
     assert solve(eqs, x, manual=True) == [(S.Half,)]
     assert solve(eqs, x, manual=True, check=False) == [(S.Half,), (3,)]
 
@@ -1864,7 +1864,7 @@ def test_abs_issues_6819_6820_6821_6248_8692_25777_25779_25895():
         ) == [{x: 4, y: -1}, {x: 4, y: 1}]
     eq1 = Eq(abs(-S(1)/6 - x) - y, 0)
     eq2 = Eq(abs(S(5)/6 - x) - y, 0)
-    assert solve((eq1, eq2), (x, y)) == {x: S(1)/3, y: S(1)/2}
+    assert solve((eq1, eq2), (x, y)) == [(S(1)/3, S(1)/2)]
     assert solve(abs(x - I) - 4) == [-sqrt(15), sqrt(15)]
     assert solve(abs(x + 1) - abs(1 - x) - 2) == [1]
 
@@ -2478,7 +2478,7 @@ def test_issue_10933():
 def test_abs_handling():
     x = symbols('x', real=True)
     assert solve(abs(x/y), x) == [0]
-    assert solve([abs(x - 1) + x - 4], x) == {x: S(5)/2}
+    assert solve([abs(x - 1) + x - 4], x) == [(S(5)/2,)]
     assert solve([abs(x - 1) + x - 4], x, dict=True) == [{x: S(5)/2}]
     assert solve([abs(x**2 - 1) - x**2 + x - 4]) == [{x: 5}]
 
