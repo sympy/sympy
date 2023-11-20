@@ -288,7 +288,7 @@ def multiplicity_in_factorial(p, n):
     return min((n + k - sum(digits(n, k)))//(k - 1)//v for v, k in f.items())
 
 
-def _perfect_power(n, k=2):
+def _perfect_power(n, next_p=2):
     """ Return integers ``(b, e)`` such that ``n == b**e`` if ``n`` is a unique
     perfect power with ``e > 1``, else ``False`` (e.g. 1 is not a perfect power).
 
@@ -302,9 +302,9 @@ def _perfect_power(n, k=2):
 
     n : int
         assume that n is a nonnegative integer
-    k : int
-        Assume that n has no factor less than k.
-        i.e., all(n % p for p in range(2, k)) is True
+    next_p : int
+        Assume that n has no factor less than next_p.
+        i.e., all(n % p for p in range(2, next_p)) is True
 
     Examples
     ========
@@ -331,7 +331,7 @@ def _perfect_power(n, k=2):
 
     # If n is small, only trial factoring is faster
     if n <= 1_000_000:
-        n = _factorint_small(factors, n, 1_000, 1_000)[0]
+        n = _factorint_small(factors, n, 1_000, 1_000, next_p)[0]
         if n > 1:
             return False
         g = gcd(*factors.values())
@@ -340,7 +340,7 @@ def _perfect_power(n, k=2):
         return math.prod(p**(e//g) for p, e in factors.items()), g
 
     # divide by 2
-    if k < 3:
+    if next_p < 3:
         g = bit_scan1(n)
         if g:
             if g == 1:
@@ -357,7 +357,7 @@ def _perfect_power(n, k=2):
                     return 2*m, g
                 elif isprime(g):
                     return False
-        k = 3
+        next_p = 3
 
     # square number?
     while n & 7 == 1: # n % 8 == 1:
@@ -367,16 +367,16 @@ def _perfect_power(n, k=2):
             multi <<= 1
         else:
             break
-    if n < k**3:
+    if n < next_p**3:
         return done(n, factors, g, multi)
 
     # trial factoring
-    # Since the maximum value an exponent can take is `log_k(n)`,
+    # Since the maximum value an exponent can take is `log_{next_p}(n)`,
     # the number of exponents to be checked can be reduced by performing a trial factoring.
     # The value of `tf_max` needs more consideration.
     tf_max = n.bit_length()//27 + 24
-    if k < tf_max:
-        for p in primerange(k, tf_max):
+    if next_p < tf_max:
+        for p in primerange(next_p, tf_max):
             m, t = remove(n, p)
             if t:
                 n = m
@@ -396,8 +396,8 @@ def _perfect_power(n, k=2):
                                             for p, e in factors.items()), g
                     elif isprime(g):
                         return False
-        k = tf_max
-    if n < k**3:
+        next_p = tf_max
+    if n < next_p**3:
         return done(n, factors, g, multi)
 
     # check iroot
@@ -406,9 +406,9 @@ def _perfect_power(n, k=2):
         # 2 can be omitted since it has already been checked.
         prime_iter = sorted(factorint(g >> bit_scan1(g)).keys())
     else:
-        # The maximum possible value of the exponent is `log_k(n)`.
+        # The maximum possible value of the exponent is `log_{next_p}(n)`.
         # To compensate for the presence of computational error, 2 is added.
-        prime_iter = primerange(3, int(math.log(n, k)) + 2)
+        prime_iter = primerange(3, int(math.log(n, next_p)) + 2)
     logn = math.log2(n)
     threshold = logn / 40 # Threshold for direct calculation
     for p in prime_iter:
@@ -432,7 +432,7 @@ def _perfect_power(n, k=2):
                     logn = math.log2(n)
                 else:
                     break
-        if n < k**(p + 2):
+        if n < next_p**(p + 2):
             break
     return done(n, factors, g, multi)
 
@@ -902,7 +902,7 @@ def _trial(factors, n, candidates, verbose=False):
 
 
 def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
-                       verbose):
+                       verbose, next_p):
     """
     Helper function for integer factorization. Checks if ``n``
     is a prime or a perfect power, and in those cases updates
@@ -915,12 +915,21 @@ def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
         if verbose:
             print(complete_msg)
         return True
+    if n < next_p**2 or isprime(n):
+        factors[int(n)] = 1
+        if verbose:
+            print(complete_msg)
+        return True
 
     # since we've already been factoring there is no need to do
     # simultaneous factoring with the power check
-    p = _perfect_power(n)
-    if p is not False:
-        base, exp = p
+    p = _perfect_power(n, next_p)
+    if not p:
+        return False
+    base, exp = p
+    if base < next_p**2 or isprime(base):
+        factors[base] = exp
+    else:
         if limitp1:
             limit = limitp1 - 1
         else:
@@ -932,16 +941,10 @@ def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
                 print(factor_msg % (b, e))
             # int() can be removed when https://github.com/flintlib/python-flint/issues/92 is resolved
             factors[b] = int(exp*e)
-        if verbose:
-            print(complete_msg)
-        return True
+    if verbose:
+        print(complete_msg)
+    return True
 
-    if isprime(n):
-        factors[int(n)] = 1
-        if verbose:
-            print(complete_msg)
-        return True
-    return False
 
 trial_int_msg = "Trial division with ints [%i ... %i] and fail_max=%i"
 trial_msg = "Trial division with primes [%i ... %i]"
@@ -953,7 +956,7 @@ fermat_msg = 'Close factors satisying Fermat condition found.'
 complete_msg = 'Factorization is complete.'
 
 
-def _factorint_small(factors, n, limit, fail_max):
+def _factorint_small(factors, n, limit, fail_max, next_p=2):
     """
     Return the value of n and either a 0 (indicating that factorization up
     to the limit was complete) or else the next near-prime that would have
@@ -975,80 +978,85 @@ def _factorint_small(factors, n, limit, fail_max):
             return n, d
         return n, 0
 
-    d = 2
-    m = bit_scan1(n)
-    if m:
-        factors[d] = m
-        n >>= m
-    d = 3
-    if limit < d:
-        if n > 1:
-            factors[n] = 1
-        return done(n, d)
-    # reduce
-    m = 0
-    while n % d == 0:
-        n //= d
-        m += 1
-        if m == 20:
-            n, mm = remove(n, d)
-            m += mm
-            break
-    if m:
-        factors[d] = m
+    limit2 = limit**2
+    threshold2 = min(n, limit2)
 
-    # when d*d exceeds maxx or n we are done; if limit**2 is greater
-    # than n then maxx is set to zero so the value of n will flag the finish
-    if limit*limit > n:
-        maxx = 0
-    else:
-        maxx = limit*limit
+    if next_p < 3:
+        if not n & 1:
+            m = bit_scan1(n)
+            factors[2] = m
+            n >>= m
+            threshold2 = min(n, limit2)
+        next_p = 3
+        if threshold2 < 9: # next_p**2 = 9
+            return done(n, next_p)
 
-    dd = maxx or n
-    d = 5
+    if next_p < 5:
+        if not n % 3:
+            n //= 3
+            m = 1
+            while not n % 3:
+                n //= 3
+                m += 1
+                if m == 20:
+                    n, mm = remove(n, 3)
+                    m += mm
+                    break
+            factors[3] = m
+            threshold2 = min(n, limit2)
+        next_p = 5
+        if threshold2 < 25: # next_p**2 = 25
+            return done(n, next_p)
+
+    # Because of the order of checks, starting from `min_p = 6k+5`,
+    # useless checks are caused.
+    # We want to calculate
+    # next_p += [-1, -2, 3, 2, 1, 0][next_p % 6]
+    p6 = next_p % 6
+    next_p += (-1 if p6 < 2 else 5) - p6
+
     fails = 0
     while fails < fail_max:
-        if d*d > dd:
-            break
-        # d = 6*i - 1
-        # reduce
-        m = 0
-        while n % d == 0:
-            n //= d
-            m += 1
-            if m == 20:
-                n, mm = remove(n, d)
-                m += mm
-                break
-        if m:
-            factors[d] = m
-            dd = maxx or n
-            fails = 0
-        else:
+        # next_p % 6 == 5
+        if n % next_p:
             fails += 1
-        d += 2
-        if d*d > dd:
-            break
-        # d = 6*i - 1
-        # reduce
-        m = 0
-        while n % d == 0:
-            n //= d
-            m += 1
-            if m == 20:
-                n, mm = remove(n, d)
-                m += mm
-                break
-        if m:
-            factors[d] = m
-            dd = maxx or n
-            fails = 0
         else:
-            fails += 1
-        # d = 6*(i + 1) - 1
-        d += 4
+            n //= next_p
+            m = 1
+            while not n % next_p:
+                n //= next_p
+                m += 1
+                if m == 20:
+                    n, mm = remove(n, next_p)
+                    m += mm
+                    break
+            factors[next_p] = m
+            fails = 0
+            threshold2 = min(n, limit2)
+        next_p += 2
+        if threshold2 < next_p**2:
+            return done(n, next_p)
 
-    return done(n, d)
+        # next_p % 6 == 1
+        if n % next_p:
+            fails += 1
+        else:
+            n //= next_p
+            m = 1
+            while not n % next_p:
+                n //= next_p
+                m += 1
+                if m == 20:
+                    n, mm = remove(n, next_p)
+                    m += mm
+                    break
+            factors[next_p] = m
+            fails = 0
+            threshold2 = min(n, limit2)
+        next_p += 4
+        if threshold2 < next_p**2:
+            return done(n, next_p)
+    return done(n, next_p)
 
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
@@ -1309,16 +1317,15 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         else:
             print('Factoring', n)
 
-    if use_trial:
-        # this is the preliminary factorization for small factors
-        small = 2**15
-        fail_max = 600
-        small = min(small, limit or small)
-        if verbose:
-            print(trial_int_msg % (2, small, fail_max))
-        n, next_p = _factorint_small(factors, n, small, fail_max)
-    else:
-        next_p = 2
+    # this is the preliminary factorization for small factors
+    # We want to guarantee that there are no small prime factors,
+    # so we run even if `use_trial` is False.
+    small = 2**15
+    fail_max = 600
+    small = min(small, limit or small)
+    if verbose:
+        print(trial_int_msg % (2, small, fail_max))
+    n, next_p = _factorint_small(factors, n, small, fail_max)
     if factors and verbose:
         for k in sorted(factors):
             print(factor_msg % (k, factors[k]))
@@ -1335,13 +1342,13 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         if verbose:
             print('Exceeded limit:', limit)
         if _check_termination(factors, n, limit, use_trial,
-                              use_rho, use_pm1, verbose):
+                              use_rho, use_pm1, verbose, next_p):
             return factors
         if n > 1:
             factors[int(n)] = 1
         return factors
     if _check_termination(factors, n, limit, use_trial,
-                          use_rho, use_pm1, verbose):
+                          use_rho, use_pm1, verbose, next_p):
         return factors
 
     # continue with more advanced factorization methods
@@ -1391,8 +1398,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 print(trial_msg % (low, high_))
             ps = sieve.primerange(low, high_)
             n, found_trial = _trial(factors, n, ps, verbose)
+            next_p = high_
             if found_trial and _check_termination(factors, n, limit, use_trial,
-                                                  use_rho, use_pm1, verbose):
+                                                  use_rho, use_pm1, verbose, next_p):
                 return factors
         else:
             found_trial = False
@@ -1425,7 +1433,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                    verbose=verbose)
                     n, _ = _trial(factors, n, ps, verbose=False)
                     if _check_termination(factors, n, limit, use_trial,
-                                          use_rho, use_pm1, verbose):
+                                          use_rho, use_pm1, verbose, next_p):
                         return factors
 
             # Pollard rho
@@ -1444,7 +1452,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                    verbose=verbose)
                     n, _ = _trial(factors, n, ps, verbose=False)
                     if _check_termination(factors, n, limit, use_trial,
-                                          use_rho, use_pm1, verbose):
+                                          use_rho, use_pm1, verbose, next_p):
                         return factors
         # Use subexponential algorithms if use_ecm
         # Use pollard algorithms for finding small factors for 3 iterations
@@ -1470,7 +1478,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                        verbose=verbose)
             n, _ = _trial(factors, n, ps, verbose=False)
             if _check_termination(factors, n, limit, use_trial,
-                                  use_rho, use_pm1, verbose):
+                                  use_rho, use_pm1, verbose, next_p):
                 return factors
         B1 *= 5
         B2 = 100*B1
