@@ -2476,11 +2476,12 @@ def test_issue_10933():
 
 
 def test_abs_handling():
-    x = symbols('x', real=True)
+    x, y = symbols('x y', real=True)
     assert solve(abs(x/y), x) == [0]
     assert solve([abs(x - 1) + x - 4], x) == {x: S(5)/2}
     assert solve([abs(x - 1) + x - 4], x, dict=True) == [{x: S(5)/2}]
     assert solve([abs(x**2 - 1) - x**2 + x - 4]) == [{x: 5}]
+    assert solve(abs(x) + y, x) == []
 
 
 def test_issue_7982():
