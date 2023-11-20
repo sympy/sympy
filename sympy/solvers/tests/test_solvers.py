@@ -2481,7 +2481,11 @@ def test_abs_handling():
     assert solve([abs(x - 1) + x - 4], x) == {x: S(5)/2}
     assert solve([abs(x - 1) + x - 4], x, dict=True) == [{x: S(5)/2}]
     assert solve([abs(x**2 - 1) - x**2 + x - 4]) == [{x: 5}]
-    assert solve(abs(x) + y, x) == []
+    # only one solution is valid; if warn=True user will be
+    # warned. `solve` doesn't currently return conditions under
+    # which solution is valid (though Piecewise could be used for
+    # this purpose).
+    assert solve(abs(x) + y, x) == [-y, y]
 
 
 def test_issue_7982():

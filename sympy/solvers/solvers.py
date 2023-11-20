@@ -998,82 +998,10 @@ def solve(f, *symbols, **flags):
         return []
 
     # Abs handling
-    abs_ = {}
-    for i, fi in enumerate(f):
-        ai = {i: separatevars(i)
-            for i in fi.atoms(Abs) if i.has_free(*symbols)}
-        if not all(isinstance(v, Abs) for v in ai.values()):
-            fi = f[i] = fi.xreplace(ai)
-            ai = {i for i in fi.atoms(Abs) if i.has_free(*symbols)}
-        anew = set(ai) - set(abs_)
-        for a in ordered(anew):
-            ri = a.args[0].as_real_imag()
-            if any(_.has(*symbols) for _ in ri for _ in  _.atoms(re, im)):
-                raise NotImplementedError('solving %s when the argument '
-                'is not real or imaginary.' % a)
-            if 0 not in ri:
-                # if real, ri will be (a.args[0], 0)
-                # if imaginary, ri will be (0,I*a.args[0])
-                raise NotImplementedError('solving %s with real and '
-                'imag parts.' % a)
-            abs_[a] = sum(ri)
-
-    if abs_:
-        abs_nodes, args = zip(*abs_.items())
-        abs_nodes = list(ordered(abs_nodes))
-        # identify the outermost abs that appear
-        outer = []
-        for i in range(len(abs_nodes)):
-            if not any(abs_nodes[j].has(abs_nodes[i]) for j in
-                    range(i + 1, len(abs_nodes))):
-                outer.append(abs_nodes[i])
-        # now figure out what values they can have while considering
-        # any nested abs within them
-        absset = set(abs_nodes)
-        del abs_nodes
-        signed = []
-        for o in outer:
-            a = list(reversed(list(ordered([i for i in o.atoms(Abs)
-                if i in absset]))))
-            b = [abs_[a.pop(0)]]
-            b.append(-b[0])
-            for i in a:
-                b = [j.subs(i, abs_[i]) for j in b
-                    ] + [j.subs(i, -abs_[i]) for j in b]
-            signed.append(b)
-        # capture and set flags
-        as_dict = flags.get('dict', None)
-        flags['dict'] = True  # to make work here easier
-        check = flags.get('check', True)
-        flags['check'] = False  # we need to check in original f
-        # now start finding possible solutions
-        sol = []
-        linear = True
-        for v in product(*signed):
-            reps = dict(zip(outer, v))
-            fi = [_.xreplace(reps) for _ in f]
-            _linear, s = _get_solution(fi, bare_f, symbols, flags)
-            if linear:
-                # it is possible that a nonlinear system
-                # will appear linear, e.g. the square terms
-                # can cancel in abs(x**2 - 1) - x**2 + x - 4
-                linear = _linear
-            sol.extend(s)
-
-        # remove redundant solutions before doing any checking
-        # since this is a costly step
-        solution = sol = list(uniq(sol))
-
-        if check:
-            # check assumptions
-            sol = _check_assumptions(sol, flags.get('warn', False))
-            # need to check in the original equation
-            solution = []
-            for si in sol:
-                if checksol(f, si) is not False:
-                    solution.append(si)
-
-        return _legacy_output(solution, symbols, ordered_symbols, bare_f, linear, as_dict, as_set)
+    if any(fi.has(Abs) for fi in f):
+        solution = _solve_abs(f, symbols, flags, bare_f, ordered_symbols, as_set)
+        if solution is not None:
+            return solution
 
     # arg
     for i, fi in enumerate(f):
@@ -1377,6 +1305,91 @@ def _legacy_output(solution, symbols, ordered_symbols, bare_f, linear, as_dict, 
         # just unify the symbols for which solutions were found
         k = list(ordered(set(flatten(tuple(i.keys()) for i in solution))))
     return k, {tuple([s.get(ki, ki) for ki in k]) for s in solution}
+
+
+def _solve_abs(f, symbols, flags, bare_f, ordered_symbols, as_set):
+    abs_ = {}
+    for i, fi in enumerate(f):
+        ai = {i: separatevars(i)
+            for i in fi.atoms(Abs) if i.has_free(*symbols)}
+        if not all(isinstance(v, Abs) for v in ai.values()):
+            fi = f[i] = fi.xreplace(ai)
+            ai = {i for i in fi.atoms(Abs) if i.has_free(*symbols)}
+        anew = set(ai) - set(abs_)
+        for a in ordered(anew):
+            ri = a.args[0].as_real_imag()
+            if any(_.has(*symbols) for _ in ri for _ in  _.atoms(re, im)):
+                raise NotImplementedError('solving %s when the argument '
+                'is not real or imaginary.' % a)
+            if 0 not in ri:
+                # if real, ri will be (a.args[0], 0)
+                # if imaginary, ri will be (0,I*a.args[0])
+                raise NotImplementedError('solving %s with real and '
+                'imag parts.' % a)
+            abs_[a] = sum(ri)
+
+    if abs_:
+        abs_nodes, args = zip(*abs_.items())
+        abs_nodes = list(ordered(abs_nodes))
+        # identify the outermost abs that appear
+        outer = []
+        for i in range(len(abs_nodes)):
+            if not any(abs_nodes[j].has(abs_nodes[i]) for j in
+                    range(i + 1, len(abs_nodes))):
+                outer.append(abs_nodes[i])
+        # now figure out what values they can have while considering
+        # any nested abs within them
+        absset = set(abs_nodes)
+        del abs_nodes
+        signed = []
+        for o in outer:
+            a = list(reversed(list(ordered([i for i in o.atoms(Abs)
+                if i in absset]))))
+            b = [abs_[a.pop(0)]]
+            b.append(-b[0])
+            for i in a:
+                b = [j.subs(i, abs_[i]) for j in b
+                    ] + [j.subs(i, -abs_[i]) for j in b]
+            signed.append(b)
+        # capture and set flags
+        as_dict = flags.get('dict', None)
+        flags['dict'] = True  # to make work here easier
+        check = flags.get('check', True)
+        flags['check'] = False  # we need to check in original f
+        # now start finding possible solutions
+        sol = []
+        linear = True
+        for v in product(*signed):
+            reps = dict(zip(outer, v))
+            fi = [_.xreplace(reps) for _ in f]
+            _linear, s = _get_solution(fi, bare_f, symbols, flags)
+            if linear:
+                # it is possible that a nonlinear system
+                # will appear linear, e.g. the square terms
+                # can cancel in abs(x**2 - 1) - x**2 + x - 4
+                linear = _linear
+            sol.extend(s)
+
+        # remove redundant solutions before doing any checking
+        # since this is a costly step
+        solution = sol = list(uniq(sol))
+
+        if check:
+            # check assumptions
+            sol = _check_assumptions(sol, flags.get('warn', False))
+            # need to check in the original equation
+            solution = []
+            # don't force the solution because x in abs(x) will be
+            # replaced with positive x and evaluate to x
+            force = flags.get('force', '')
+            flags['force'] = False
+            for si in sol:
+                if checksol(f, si, **flags) is not False:
+                    solution.append(si)
+            if force != '':
+                flags['force'] = force
+
+        return _legacy_output(solution, symbols, ordered_symbols, bare_f, linear, as_dict, as_set)
 
 
 def _solve_undetermined(g, symbols, flags):
