@@ -2481,11 +2481,15 @@ def test_abs_handling():
     assert solve([abs(x - 1) + x - 4], x) == {x: S(5)/2}
     assert solve([abs(x - 1) + x - 4], x, dict=True) == [{x: S(5)/2}]
     assert solve([abs(x**2 - 1) - x**2 + x - 4]) == [{x: 5}]
-    # only one solution is valid; if warn=True user will be
-    # warned. `solve` doesn't currently return conditions under
+    assert solve(abs(y) + abs(abs(abs(y) - 2) - 2)) == [0]
+    # When solutions are symbolic they need to be tested with
+    # actual values since all might not be valid.
+    # `solve` doesn't currently return conditions under
     # which solution is valid (though Piecewise could be used for
     # this purpose).
-    assert solve(abs(x) + y, x) == [-y, y]
+    assert solve(abs(x) + y, x) == [-y, y]  # if y < 0
+    eq = abs(abs(x + 1) - 2) + abs(y)
+    assert solve(eq, x) == [1 - abs(y), -abs(y) - 3, abs(y) - 3, abs(y) + 1]  # if y == 0
 
 
 def test_issue_7982():

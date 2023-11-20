@@ -1332,15 +1332,14 @@ def _solve_abs(f, symbols, flags, bare_f, ordered_symbols, as_set):
         abs_nodes, args = zip(*abs_.items())
         abs_nodes = list(ordered(abs_nodes))
         # identify the outermost abs that appear
-        outer = []
-        for i in range(len(abs_nodes)):
-            if not any(abs_nodes[j].has(abs_nodes[i]) for j in
-                    range(i + 1, len(abs_nodes))):
-                outer.append(abs_nodes[i])
+        absset = set(abs_nodes)
+        outer = {a: Dummy() for a in abs_nodes[::-1]}
+        douter = set(outer.values())
+        _outer = {v: k for k, v in outer.items()}
+        outer = set().union(*[{_outer[i] for i in fi.xreplace(outer).free_symbols & douter} for fi in f])
+        del abs_nodes, _outer, douter
         # now figure out what values they can have while considering
         # any nested abs within them
-        absset = set(abs_nodes)
-        del abs_nodes
         signed = []
         for o in outer:
             a = list(reversed(list(ordered([i for i in o.atoms(Abs)
