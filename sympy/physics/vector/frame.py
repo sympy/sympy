@@ -721,7 +721,7 @@ class ReferenceFrame:
             Direction cosine matrix that specifies the relative rotation
             between the two reference frames.
 
-        rotation matrix :  
+        rotation matrix :  Matrix Rotation Direction
             the simple matrix rotation ``parent`` relative to ``dcm``.          
         """
         self.orient_dcm(parent = parent, dcm = dcm)
@@ -741,7 +741,7 @@ class ReferenceFrame:
             Direction cosine matrix that specifies the relative rotation
             between the two reference frames.
 
-        rotation matrix :  
+        rotation matrix :  Matrix Rotation Direction
             the simple matrix rotation ``parent`` relative to ``dcm``.          
         """
 
