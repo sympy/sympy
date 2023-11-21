@@ -720,8 +720,8 @@ class ReferenceFrame:
         dcm : Matrix, shape(3, 3)
             Direction cosine matrix that specifies the relative rotation
             between the two reference frames.
-        rotation matrix :  Matrix Rotation Direction
-            the simple matrix rotation relative ``parent`` to ``dcm``.   
+        rotation matrix : Matrix Rotation Direction
+            The simple matrix rotation relative ``parent`` to ``dcm``.
         
         Warns
         ======
@@ -745,8 +745,8 @@ class ReferenceFrame:
         dcm : Matrix, shape(3, 3)
             Direction cosine matrix that specifies the relative rotation
             between the two reference frames.
-        rotation matrix :  Matrix Rotation Direction
-            the simple matrix rotation relative ``parent`` to ``dcm``.   
+        rotation matrix : Matrix Rotation Direction
+            The simple matrix rotation relative ``parent`` to ``dcm``.
         
         Warns
         ======
