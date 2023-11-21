@@ -570,6 +570,10 @@ def test_sparse_matrix():
     # gh-15791
     assert 'Not supported in C' in ccode(SparseMatrix([[1, 2, 3]]))
 
+    with raises(ValueError):
+        p = C89CodePrinter({'strict': True}).doprint(SparseMatrix([[1, 2, 3]]))
+
+
 
 def test_ccode_reserved_words():
     x, y = symbols('x, if')

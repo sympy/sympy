@@ -49,15 +49,11 @@ class JavascriptCodePrinter(CodePrinter):
     printmethod = '_javascript'
     language = 'JavaScript'
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
-    }
+    })
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
