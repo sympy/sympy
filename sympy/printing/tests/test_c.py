@@ -139,12 +139,13 @@ def test_ccode_inline_function():
 
 def test_ccode_exceptions():
     assert ccode(gamma(x), standard='C99') == "tgamma(x)"
-    gamma_c89 = ccode(gamma(x), standard='C89')
-    assert 'not supported in c' in gamma_c89.lower()
-    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=False)
-    assert 'not supported in c' in gamma_c89.lower()
+    with raises(ValueError):
+        gamma_c89 = ccode(gamma(x), standard='C89')
+    with raises(ValueError):
+        gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=False)
+
     gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
-    assert 'not supported in c' not in gamma_c89.lower()
+
 
 
 def test_ccode_functions2():
@@ -568,10 +569,10 @@ def test_Matrix_printing():
 
 def test_sparse_matrix():
     # gh-15791
-    assert 'Not supported in C' in ccode(SparseMatrix([[1, 2, 3]]))
-
     with raises(ValueError):
-        C89CodePrinter({'strict': True}).doprint(SparseMatrix([[1, 2, 3]]))
+        ccode(SparseMatrix([[1, 2, 3]]))
+
+    assert 'Not supported in C' in C89CodePrinter({'strict': False}).doprint(SparseMatrix([[1, 2, 3]]))
 
 
 
