@@ -722,7 +722,7 @@ class ReferenceFrame:
             between the two reference frames.
         rotation matrix : Matrix Rotation Direction
             The simple matrix rotation relative ``parent`` to ``dcm``.
-        
+      
         Warns
         ======
 
@@ -747,7 +747,7 @@ class ReferenceFrame:
             between the two reference frames.
         rotation matrix : Matrix Rotation Direction
             The simple matrix rotation relative ``parent`` to ``dcm``.
-        
+
         Warns
         ======
 
