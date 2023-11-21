@@ -451,10 +451,10 @@ def test_dcm_diff_16824():
     assert simplify(AwB.dot(A.y) - alpha2) == 0
     assert simplify(AwB.dot(B.y) - beta2) == 0
 
-def test_orient_explicit():
+def test_orient_dcm():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
-    A.orient_explicit(B, eye(3))
+    A.orient_dcm(B, eye(3))
     assert A.dcm(B) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 def test_orient_axis():
