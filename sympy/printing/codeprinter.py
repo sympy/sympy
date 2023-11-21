@@ -172,8 +172,6 @@ class CodePrinter(StrPrinter):
                         "Not supported in {}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
                     frontlines.append(self._get_comment(type(expr).__name__))
-                if self._settings.get("strict", False):
-                    raise ValueError('\n'.join(frontlines))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append(self._declare_number_const(name, value))
             lines = frontlines + lines
@@ -573,6 +571,8 @@ class CodePrinter(StrPrinter):
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_not_supported(self, expr):
+        if self._settings.get('strict', False):
+            raise ValueError("Unsupported by %s: %s" % (str(type(self)), str(type(expr))))
         try:
             self._not_supported.add(expr)
         except TypeError:

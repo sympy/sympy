@@ -571,7 +571,7 @@ def test_sparse_matrix():
     assert 'Not supported in C' in ccode(SparseMatrix([[1, 2, 3]]))
 
     with raises(ValueError):
-        p = C89CodePrinter({'strict': True}).doprint(SparseMatrix([[1, 2, 3]]))
+        C89CodePrinter({'strict': True}).doprint(SparseMatrix([[1, 2, 3]]))
 
 
 
