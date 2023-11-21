@@ -1018,9 +1018,9 @@ def solve(f, *symbols, **flags):
                 if ai.args[0].has(Abs):
                     continue  # work from innermost to outermost
                 known = ai.atoms(re, im)
-                ri = ai.args[0].as_real_imag()
-                reim_aux |= (re[0].atoms(re,im) | re[1].atoms(re,im)) - known
-                args[ai] = ri
+                R, I = ai.args[0].as_real_imag()
+                reim_aux |= (R.atoms(re, im) | I.atoms(re, im)) - known
+                args[ai] = R, I
             hit = hit or bool(a)
             for ai in a:
                 if ai in abs_:
