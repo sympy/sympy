@@ -49,7 +49,7 @@ def test_issue_15791():
     c = CrashingCodePrinter()
 
     # these should not silently succeed
-    with raises(NotImplementedError):
+    with raises(ValueError):
         c.doprint(ImmutableSparseMatrix(2, 2, {}))
-    with raises(NotImplementedError):
+    with raises(ValueError):
         c.doprint(MutableSparseMatrix(2, 2, {}))
