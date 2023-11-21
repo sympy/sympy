@@ -997,9 +997,10 @@ def solve(f, *symbols, **flags):
             return [], set()
         return []
 
-    # Abs handling
+    # Abs handling: replace abs(x) with sqrt(re(x)**2 - im(x)**2)
     abs_ = {}
     aux = []
+    reim_aux = []
     while True:
         hit = False
         for ix, fi in enumerate(f):
@@ -1014,32 +1015,28 @@ def solve(f, *symbols, **flags):
             del fi
             args = {}
             for ai in a - set(abs_):
+                if ai.args[0].has(Abs):
+                    continue  # work from innermost to outermost
+                known = ai.atoms(re, im)
                 ri = ai.args[0].as_real_imag()
-                if any(_.has(*symbols) for _ in ri for _ in  _.atoms(re, im)):
-                    raise NotImplementedError('solving %s when the argument '
-                    'is not real or imaginary.' % ai)
-                if 0 not in ri:
-                    # if real, ri will be (a.args[0], 0)
-                    # if imaginary, ri will be (0,I*a.args[0])
-                    raise NotImplementedError('solving %s with real and '
-                        'imag parts.' % ai)
-                args[ai] = sum(ri)
-            a = list(ordered(a))
+                reim_aux |= (re[0].atoms(re,im) | re[1].atoms(re,im)) - known
+                args[ai] = ri
             hit = hit or bool(a)
-            for i in range(len(a)):
-                if a[i] in abs_:
+            for ai in a:
+                if ai in abs_:
+                    # already replaced at top of loop enuemrating f
                     continue
-                for j in range(i + 1, len(a)):
-                    if a[j].has(a[i]):
-                        break
-                else:
-                    # outermost
-                    nn = Dummy(nonnegative=True)
-                    abs_[a[i]] = nn
-                    aux.append(nn)
-                    f[ix] = f[ix].xreplace(abs_)
-                    f.append(args[a[i]]**2 - nn**2)
+                # two new variables
+                r, i = Dummy(), Dummy()
+                aux.extend((r, i))
+                R, I = args[ai]
+                # two new equations
+                f.extend([r - R, i - I])
+                # update replacements and current equation
+                abs_[ai] = sqrt(r**2 - i**2)
+                f[ix] = f[ix].xreplace(abs_)
         if not hit:
+            aux.extend(reim_aux - set(symbols))
             break
 
     # arg
