@@ -730,7 +730,7 @@ class ReferenceFrame:
 
         """
         self.orient_dcm(parent = parent, dcm = dcm)
-    
+
     def orient_dcm(self, parent, dcm):
         """Sets the orientation of this reference frame relative to a parent
         reference frame by explicitly setting the direction cosine matrix.
@@ -746,7 +746,6 @@ class ReferenceFrame:
             between the two reference frames.
         rotation matrix : Matrix Rotation Direction
             The simple matrix rotation relative ``parent`` to ``dcm``.
-
         Warns
         ======
 
