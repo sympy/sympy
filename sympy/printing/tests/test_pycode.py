@@ -287,7 +287,7 @@ def test_issue_16535_16536():
     assert prntr.doprint(expr2) == 'scipy.special.gamma(a)*scipy.special.gammaincc(a, x)'
 
     p_numpy = NumPyPrinter()
-    p_pycode = PythonCodePrinter(dict(strict=False))
+    p_pycode = PythonCodePrinter({'strict': False})
 
     for expr in [expr1, expr2]:
         with raises(ValueError):
@@ -370,11 +370,11 @@ def test_airy():
     assert prntr.doprint(expr1) == 'scipy.special.airy(x)[0]'
     assert prntr.doprint(expr2) == 'scipy.special.airy(x)[2]'
 
-    prntr = NumPyPrinter(dict(strict=False))
+    prntr = NumPyPrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
-    prntr = PythonCodePrinter(dict(strict=False))
+    prntr = PythonCodePrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
@@ -388,11 +388,11 @@ def test_airy_prime():
     assert prntr.doprint(expr1) == 'scipy.special.airy(x)[1]'
     assert prntr.doprint(expr2) == 'scipy.special.airy(x)[3]'
 
-    prntr = NumPyPrinter(dict(strict=False))
+    prntr = NumPyPrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
-    prntr = PythonCodePrinter(dict(strict=False))
+    prntr = PythonCodePrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 

@@ -140,11 +140,11 @@ def test_ccode_inline_function():
 def test_ccode_exceptions():
     assert ccode(gamma(x), standard='C99') == "tgamma(x)"
     with raises(ValueError):
-        gamma_c89 = ccode(gamma(x), standard='C89')
+        ccode(gamma(x), standard='C89')
     with raises(ValueError):
-        gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=False)
+        ccode(gamma(x), standard='C89', allow_unknown_functions=False)
 
-    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
+    ccode(gamma(x), standard='C89', allow_unknown_functions=True)
 
 
 
