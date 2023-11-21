@@ -1000,7 +1000,7 @@ def solve(f, *symbols, **flags):
     # Abs handling: replace abs(x) with sqrt(re(x)**2 - im(x)**2)
     abs_ = {}
     aux = []
-    reim_aux = []
+    reim_aux = set()
     while True:
         hit = False
         for ix, fi in enumerate(f):
