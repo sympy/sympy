@@ -64,6 +64,7 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
+        'strict': False
     }
 
     # Functions which are "simple" to rewrite to other functions that
@@ -171,6 +172,8 @@ class CodePrinter(StrPrinter):
                         "Not supported in {}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
                     frontlines.append(self._get_comment(type(expr).__name__))
+                if self._settings.get("strict", False):
+                    raise ValueError('\n'.join(frontlines))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append(self._declare_number_const(name, value))
             lines = frontlines + lines
