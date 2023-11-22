@@ -1249,20 +1249,20 @@ class mobius(Function):
     """
     @classmethod
     def eval(cls, n):
-        if n.is_integer:
-            if n.is_positive is not True:
-                raise ValueError("n should be a positive integer")
-        else:
+        if n.is_integer is not True:
             raise TypeError("n should be an integer")
+        if n.is_positive is not True:
+            raise ValueError("n should be a positive integer")
         if n.is_prime:
             return S.NegativeOne
-        elif n is S.One:
+        if n is S.One:
             return S.One
-        elif n.is_Integer:
-            a = factorint(n)
-            if any(i > 1 for i in a.values()):
-                return S.Zero
-            return S.NegativeOne**len(a)
+        a = factorint(n)
+        if any(i > 1 for i in a.values()):
+            return S.Zero
+        if len(a) % 2:
+            return S.NegativeOne
+        return S.One
 
 
 def _discrete_log_trial_mul(n, a, b, order=None):
