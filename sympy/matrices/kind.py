@@ -22,15 +22,15 @@ class MatrixKind(Kind):
     Examples
     ========
 
-    Any instance of matrix class has ``MatrixKind``:
+    Any instance of matrix class has kind ``MatrixKind``:
 
     >>> from sympy import MatrixSymbol
-    >>> A = MatrixSymbol('A', 2,2)
+    >>> A = MatrixSymbol('A', 2, 2)
     >>> A.kind
     MatrixKind(NumberKind)
 
-    Although expression representing a matrix may be not instance of
-    matrix class, it will have ``MatrixKind`` as well:
+    An expression representing a matrix may not be an instance of
+    the Matrix class, but it will have kind ``MatrixKind``:
 
     >>> from sympy import MatrixExpr, Integral
     >>> from sympy.abc import x
@@ -40,8 +40,8 @@ class MatrixKind(Kind):
     >>> intM.kind
     MatrixKind(NumberKind)
 
-    Use ``isinstance()`` to check for ``MatrixKind`` without specifying
-    the element kind. Use ``is`` with specifying the element kind:
+    Use ``isinstance()`` to check for ``MatrixKind`` without specifying the
+    element kind. Use ``is`` to check the kind including the element kind:
 
     >>> from sympy import Matrix
     >>> from sympy.core import NumberKind
