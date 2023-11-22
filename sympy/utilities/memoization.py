@@ -10,8 +10,8 @@ def recurrence_memo(initial):
 
     >>> from sympy.utilities.memoization import recurrence_memo
     >>> @recurrence_memo([1]) # 0! = 1
-    >>> def factorial(n, prev):
-    >>>     return n * prev[-1]
+    ... def factorial(n, prev):
+    ...     return n * prev[-1]
     >>> factorial(4)
     24
     >>> factorial(3) # use cache values
