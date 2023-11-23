@@ -638,20 +638,21 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     >>> for s in range(5):
     ...     print('loop length = %4i; leader length = %3i' % next(cycle_length(F, s)))
     ...
-    loop length = 2489; leader length =  42
-    loop length =   78; leader length = 120
-    loop length = 1482; leader length =  99
-    loop length = 1482; leader length = 285
+    loop length = 2489; leader length =  43
+    loop length =   78; leader length = 121
     loop length = 1482; leader length = 100
+    loop length = 1482; leader length = 286
+    loop length = 1482; leader length = 101
 
-    Here is an explicit example where there is a two element leadup to
+    Here is an explicit example where there is a three element leadup to
     a sequence of 3 numbers (11, 14, 4) that then repeat:
 
     >>> x=2
     >>> for i in range(9):
-    ...     x=(x**2+12)%17
     ...     print(x)
+    ...     x=(x**2+12)%17
     ...
+    2
     16
     13
     11
@@ -660,11 +661,10 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     11
     14
     4
-    11
     >>> next(cycle_length(lambda x: (x**2+12)%17, 2))
-    (3, 2)
+    (3, 3)
     >>> list(cycle_length(lambda x: (x**2+12)%17, 2, values=True))
-    [16, 13, 11, 14, 4]
+    [2, 16, 13, 11, 14, 4]
 
     Instead of checking the differences of all generated values for a gcd
     with n, only the kth and 2*kth numbers are checked, e.g. 1st and 2nd,
