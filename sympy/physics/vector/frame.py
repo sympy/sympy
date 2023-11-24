@@ -708,8 +708,8 @@ class ReferenceFrame:
         self._var_dict = {}
 
     def orient_explicit(self, parent, dcm):
-        """Sets the orientation of this reference frame relative to a parent
-        reference frame by explicitly setting the direction cosine matrix.
+        """Sets the orientation of this reference frame relative to another (parent) reference frame
+        using a direction cosine matrix that describes the rotation from the parent to the child.
 
         Parameters
         ==========
@@ -720,8 +720,7 @@ class ReferenceFrame:
         dcm : Matrix, shape(3, 3)
             Direction cosine matrix that specifies the relative rotation
             between the two reference frames.
-        rotation matrix : Matrix Rotation Direction
-            The simple matrix rotation relative ``parent`` to ``dcm``.
+
         Warns
         ======
 
@@ -729,11 +728,11 @@ class ReferenceFrame:
             If the orientation creates a kinematic loop.
 
         """
-        self.orient_dcm(parent = parent, dcm = dcm)
+        self.orient_dcm(parent = parent, dcm = dcm.T)
 
     def orient_dcm(self, parent, dcm):
-        """Sets the orientation of this reference frame relative to a parent
-        reference frame by explicitly setting the direction cosine matrix.
+        """Sets the orientation of this reference frame relative to another (parent) reference frame
+        using a direction cosine matrix that describes the rotation from the child to the parent.
 
         Parameters
         ==========
@@ -744,8 +743,7 @@ class ReferenceFrame:
         dcm : Matrix, shape(3, 3)
             Direction cosine matrix that specifies the relative rotation
             between the two reference frames.
-        rotation matrix : Matrix Rotation Direction
-            The simple matrix rotation relative ``parent`` to ``dcm``.
+
         Warns
         ======
 
@@ -1181,7 +1179,7 @@ class ReferenceFrame:
             self.orient_axis(parent, amounts[1], amounts[0])
 
         elif rot_type == 'DCM':
-            self.orient_dcm(parent, amounts)
+            self.orient_explicit(parent, amounts)
 
         elif rot_type == 'BODY':
             self.orient_body_fixed(parent, amounts, rot_order)
@@ -1292,7 +1290,7 @@ class ReferenceFrame:
             newframe.orient_axis(self, amounts[1], amounts[0])
 
         elif rot_type == 'DCM':
-            newframe.orient_dcm(self, amounts)
+            newframe.orient_explicit(self, amounts)
 
         elif rot_type == 'BODY':
             newframe.orient_body_fixed(self, amounts, rot_order)
