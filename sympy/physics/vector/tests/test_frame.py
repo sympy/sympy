@@ -458,23 +458,10 @@ def test_orient_explicit():
     assert A.dcm(B) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 def test_orient_dcm():
-    A = me.ReferenceFrame('A')
-    B = me.ReferenceFrame('B')
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
     B.orient_dcm(A, eye(3))
     assert B.dcm(A) == Matrix([[1, 0, 0],[0, 1, 0],[0, 0, 1]])
-
-    # cxx, cyy, czz = sympy.physics.mechanics.dynamicsymbols('c_{xx}, c_{yy}, c_{zz}')
-    # cxy, cxz, cyx = sympy.physics.mechanics.dynamicsymbols('c_{xy}, c_{xz}, c_{yx}')
-    # cyz, czx, czy = sympy.physics.mechanics.dynamicsymbols('c_{yz}, c_{zx}, c_{zy}')
-
-    # B_C_A = sympy.Matrix([[cxx, cxy, cxz],
-    #                 [cyx, cyy, cyz],
-    #                 [czx, czy, czz]])
-
-    # A = me.ReferenceFrame('A')
-    # B = me.ReferenceFrame('B')
-    # B.orient_explicit(A, B_C_A)
-    # assert B.dcm(A) == Matrix([[c_{xx}(t), c_{xy}(t), c_{xz}(t)],[c_{yx}(t), c_{yy}(t), c_{yz}(t)],[c_{zx}(t), c_{zy}(t), c_{zz}(t)]])
 
 def test_orient_axis():
     A = ReferenceFrame('A')

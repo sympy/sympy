@@ -728,7 +728,19 @@ class ReferenceFrame:
             If the orientation creates a kinematic loop.
 
         """
-        self.orient_dcm(parent = parent, dcm = dcm.T)
+
+        _check_frame(parent)
+        # amounts must be a Matrix type object
+        # (e.g. sympy.matrices.dense.MutableDenseMatrix).
+        if not isinstance(dcm, MatrixBase):
+            raise TypeError("Amounts must be a SymPy Matrix type object.")
+
+        self._dcm(parent, dcm)
+
+        wvec = self._w_diff_dcm(parent)
+        self._ang_vel_dict.update({parent: wvec})
+        parent._ang_vel_dict.update({self: -wvec})
+        self._var_dict = {}
 
     def orient_dcm(self, parent, dcm):
         """Sets the orientation of this reference frame relative to another (parent) reference frame
@@ -753,18 +765,7 @@ class ReferenceFrame:
 
         """
 
-        _check_frame(parent)
-        # amounts must be a Matrix type object
-        # (e.g. sympy.matrices.dense.MutableDenseMatrix).
-        if not isinstance(dcm, MatrixBase):
-            raise TypeError("Amounts must be a SymPy Matrix type object.")
-
-        self._dcm(parent, dcm.T)
-
-        wvec = self._w_diff_dcm(parent)
-        self._ang_vel_dict.update({parent: wvec})
-        parent._ang_vel_dict.update({self: -wvec})
-        self._var_dict = {}
+        self.orient_explicit(parent = parent, dcm = dcm.transpose())
 
     def _rot(self, axis, angle):
         """DCM for simple axis 1,2,or 3 rotations."""
