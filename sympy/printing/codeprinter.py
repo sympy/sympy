@@ -64,6 +64,7 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
+        'declare': None
     }
 
     # Functions which are "simple" to rewrite to other functions that
@@ -182,6 +183,8 @@ class CodePrinter(StrPrinter):
             result = (num_syms, self._not_supported, "\n".join(lines))
         self._not_supported = set()
         self._number_symbols = set()
+        if 'declare' in self._settings and self._settings['declare']:
+            return self._settings['declare'] + " " + result
         return result
 
     def _doprint_loops(self, expr, assign_to=None):
@@ -388,9 +391,10 @@ class CodePrinter(StrPrinter):
             # print the required loops.
             return self._doprint_loops(rhs, lhs)
         else:
-            lhs_code = self._print(lhs)
-            rhs_code = self._print(rhs)
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            lhs_code = self._print(lhs) # b, left on output and right on input
+            rhs_code = self._print(rhs) # pow(a, 2)
+            codestring = "%s = %s"
+            return self._get_statement(codestring % (lhs_code, rhs_code))
 
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -407,7 +411,6 @@ class CodePrinter(StrPrinter):
         return self._print(expr.symbol)
 
     def _print_Symbol(self, expr):
-
         name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:
