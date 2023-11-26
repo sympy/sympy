@@ -356,5 +356,5 @@ def test_matrix():
 
 def test_sparse_matrix():
     # gh-15791
-    with raises(ValueError):
+    with raises(NotImplementedError):
         rust_code(SparseMatrix([[1, 2, 3]]))

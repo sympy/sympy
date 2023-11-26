@@ -34,6 +34,11 @@ class AssignmentError(Exception):
     """
     pass
 
+class PrintMethodNotImplementedError(NotImplementedError):
+    """
+    Raised if a _print_* method is missing in the Printer.
+    """
+    pass
 
 def _convert_python_lists(arg):
     if isinstance(arg, list):
@@ -574,7 +579,7 @@ class CodePrinter(StrPrinter):
 
     def _print_not_supported(self, expr):
         if self._settings.get('strict', False):
-            raise ValueError("Unsupported by %s: %s" % (str(type(self)), str(type(expr))) + \
+            raise PrintMethodNotImplementedError("Unsupported by %s: %s" % (str(type(self)), str(type(expr))) + \
                              "\nSet the printer option 'strict' to False in order to generate partially printed code.")
         try:
             self._not_supported.add(expr)

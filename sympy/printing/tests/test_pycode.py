@@ -290,7 +290,7 @@ def test_issue_16535_16536():
     p_pycode = PythonCodePrinter({'strict': False})
 
     for expr in [expr1, expr2]:
-        with raises(ValueError):
+        with raises(NotImplementedError):
             p_numpy.doprint(expr1)
         assert "Not supported" in p_pycode.doprint(expr)
 
@@ -331,9 +331,9 @@ def test_fresnel_integrals():
     p_pycode = PythonCodePrinter()
     p_mpmath = MpmathPrinter()
     for expr in [expr1, expr2]:
-        with raises(ValueError):
+        with raises(NotImplementedError):
             p_numpy.doprint(expr)
-        with raises(ValueError):
+        with raises(NotImplementedError):
             p_pycode.doprint(expr)
 
     assert p_mpmath.doprint(expr1) == 'mpmath.fresnelc(x)'

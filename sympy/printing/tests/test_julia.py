@@ -309,7 +309,7 @@ def test_julia_boolean():
 
 
 def test_julia_not_supported():
-    with raises(ValueError):
+    with raises(NotImplementedError):
         julia_code(S.ComplexInfinity)
 
     f = Function('f')

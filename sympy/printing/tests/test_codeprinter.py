@@ -1,4 +1,4 @@
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, PrintMethodNotImplementedError
 from sympy.core import symbols
 from sympy.core.symbol import Dummy
 from sympy.testing.pytest import raises
@@ -49,7 +49,7 @@ def test_issue_15791():
     c = CrashingCodePrinter()
 
     # these should not silently succeed
-    with raises(ValueError):
+    with raises(PrintMethodNotImplementedError):
         c.doprint(ImmutableSparseMatrix(2, 2, {}))
-    with raises(ValueError):
+    with raises(PrintMethodNotImplementedError):
         c.doprint(MutableSparseMatrix(2, 2, {}))

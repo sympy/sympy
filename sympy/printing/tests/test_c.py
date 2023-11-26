@@ -12,6 +12,7 @@ from sympy.sets import Range
 from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.testing.pytest import raises, XFAIL
+from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
@@ -139,9 +140,9 @@ def test_ccode_inline_function():
 
 def test_ccode_exceptions():
     assert ccode(gamma(x), standard='C99') == "tgamma(x)"
-    with raises(ValueError):
+    with raises(PrintMethodNotImplementedError):
         ccode(gamma(x), standard='C89')
-    with raises(ValueError):
+    with raises(PrintMethodNotImplementedError):
         ccode(gamma(x), standard='C89', allow_unknown_functions=False)
 
     ccode(gamma(x), standard='C89', allow_unknown_functions=True)
@@ -569,7 +570,7 @@ def test_Matrix_printing():
 
 def test_sparse_matrix():
     # gh-15791
-    with raises(ValueError):
+    with raises(PrintMethodNotImplementedError):
         ccode(SparseMatrix([[1, 2, 3]]))
 
     assert 'Not supported in C' in C89CodePrinter({'strict': False}).doprint(SparseMatrix([[1, 2, 3]]))

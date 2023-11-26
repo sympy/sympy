@@ -22,7 +22,7 @@ def test_cupy_print():
 
 def test_not_cupy_print():
     prntr = CuPyPrinter()
-    with raises(ValueError):
+    with raises(NotImplementedError):
         prntr.doprint("abcd(x)")
 
 def test_cupy_sum():
