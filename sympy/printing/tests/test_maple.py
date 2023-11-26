@@ -303,7 +303,7 @@ def test_sparse():
 
 # Not an important point.
 def test_maple_not_supported():
-    with raises(ValueError):
+    with raises(NotImplementedError):
         maple_code(S.ComplexInfinity)
 
 
