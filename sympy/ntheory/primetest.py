@@ -660,10 +660,12 @@ def isprime(n):
 
     References
     ==========
-    - https://en.wikipedia.org/wiki/Strong_pseudoprime
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
-    - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
+    .. [1] https://en.wikipedia.org/wiki/Strong_pseudoprime
+    .. [2] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
+           Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
+           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [3] https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
     try:
         n = as_int(n)
