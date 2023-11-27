@@ -81,7 +81,7 @@ class OctaveCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
-        'allow_unknown_functions': False,
+        'allow_unknown_functions': True,
         'contract': True,
         'inline': True,
     }
@@ -518,17 +518,22 @@ class OctaveCodePrinter(CodePrinter):
             # nicer to teach parenthesize() to do this for us when needed!
             return "(" + pw + ")"
         else:
+            lines.append("answer = zeros(size(x));")
+            lines.append("for i = 1:size(x)(1)")
+            lines.append("for j = 1:size(x)(2)")
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
-                    lines.append("if (%s)" % self._print(c))
+                    lines.append("if (%s)" % (self._print(c)).replace("x", "x(i, j)"))
                 elif i == len(expr.args) - 1 and c == True:
                     lines.append("else")
                 else:
-                    lines.append("elseif (%s)" % self._print(c))
-                code0 = self._print(e)
+                    lines.append("elseif (%s)" % (self._print(c)).replace("x", "x(i, j)"))
+                code0 = "answer(i,j) = " + self._print(e)
                 lines.append(code0)
                 if i == len(expr.args) - 1:
                     lines.append("end")
+            lines.append("end")
+            lines.append("end")
             return "\n".join(lines)
 
 
