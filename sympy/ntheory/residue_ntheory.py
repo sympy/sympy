@@ -10,6 +10,7 @@ from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csol
 from .primetest import isprime
 from .factor_ import factorint, _perfect_power
 from .modular import crt
+from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint, randint
@@ -1778,11 +1779,8 @@ def _binomial_mod_prime_power(n, m, p, q):
 
     def up_plus_v_binom(u, v):
         """Compute binomial(u*p + v, v)_p modulo p^q."""
-        prod = div = 1
-        for i in range(1, v + 1):
-            div *= i
-            div %= modulo
-        div = invert(div, modulo)
+        prod = 1
+        div = invert(factorial(v), modulo)
         for j in range(1, q):
             b = div
             for v_ in range(j*p + 1, j*p + v + 1):
@@ -1798,13 +1796,10 @@ def _binomial_mod_prime_power(n, m, p, q):
             prod %= modulo
         return prod
 
-    factorials = [1]
-    def factorial(v):
+    @recurrence_memo([1])
+    def factorial(v, prev):
         """Compute v! modulo p^q."""
-        if len(factorials) <= v:
-            for i in range(len(factorials), v + 1):
-                factorials.append(factorials[-1]*i % modulo)
-        return factorials[v]
+        return v*prev[-1] % modulo
 
     def factorial_p(n):
         """Compute n!_p modulo p^q."""
