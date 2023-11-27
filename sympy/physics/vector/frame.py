@@ -729,9 +729,9 @@ class ReferenceFrame:
 
         Examples
         ========
-        
+
         Setup variables for the examples:
-        
+
         >>> from sympy import symbols, Matrix, sin, cos
         >>> from sympy.physics.vector import ReferenceFrame
         >>> q1 = symbols('q1')
@@ -803,9 +803,9 @@ class ReferenceFrame:
 
         Examples
         ========
-        
+
         Setup variables for the examples:
-        
+
         >>> from sympy import symbols, Matrix, sin, cos
         >>> from sympy.physics.vector import ReferenceFrame
         >>> q1 = symbols('q1')
