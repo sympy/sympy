@@ -843,6 +843,12 @@ class Expr(Basic, EvalfMixin):
         # calculated twice as the same value.
         if constant not in (True, None) and constant != 0:
             return False
+        
+        from sympy import radsimp
+        self = radsimp(simplify(self))
+        other = radsimp(other)
+        if self == other:
+            return True
 
         if failing_expression:
             return diff
