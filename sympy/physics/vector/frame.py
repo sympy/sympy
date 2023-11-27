@@ -727,6 +727,51 @@ class ReferenceFrame:
         UserWarning
             If the orientation creates a kinematic loop.
 
+        Examples
+        ========
+        
+        Setup variables for the examples:
+        
+        >>> from sympy import symbols, Matrix, sin, cos
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> q1 = symbols('q1')
+        >>> A = ReferenceFrame('A')
+        >>> B = ReferenceFrame('B')
+        >>> N = ReferenceFrame('N')
+
+        A simple rotation of ``A`` relative to ``N`` about ``N.x`` is defined
+        by the following direction cosine matrix:
+
+        >>> dcm = Matrix([[1, 0, 0],
+        ...               [0, cos(q1), -sin(q1)],
+        ...               [0, sin(q1), cos(q1)]])
+        >>> A.orient_explicit(N, dcm)
+        >>> A.dcm(N)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+
+        This is equivalent to using ``orient_axis()``:
+
+        >>> B.orient_axis(N, N.x, q1)
+        >>> B.dcm(N)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+
+        **Note carefully that** ``N.dcm(B)`` **(the transpose) would be passed
+        into** ``orient_explicit()`` **for** ``A.dcm(N)`` **to match**
+        ``B.dcm(N)``:
+
+        >>> A.orient_explicit(N, N.dcm(B))
+        >>> A.dcm(N)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+
         """
         _check_frame(parent)
         # amounts must be a Matrix type object
@@ -755,7 +800,6 @@ class ReferenceFrame:
 
         UserWarning
             If the orientation creates a kinematic loop.
-
 
         """
 
