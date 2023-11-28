@@ -74,7 +74,7 @@ class MatrixRequired:
         # class.
         #
         # We don't want to warn about the deprecated mixins themselves being
-        # subclassed, only about the deprecated mixins being used as mixins.
+        # created, but only about them being used as mixins by downstream code.
         # Otherwise just importing this module would trigger a warning.
         # Ultimately the whole module should be deprecated and removed but for
         # SymPy 1.13 it is premature to do that given that this module was the
