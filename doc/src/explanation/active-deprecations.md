@@ -76,6 +76,11 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
+(deprecated-matrix-mixins)=
+### Deprecated matrix mixin classes
+
+The Matrix mixin classes are deprecated.
+
 (deprecated-sympify-string-fallback)=
 ### The string fallback in `sympify()`
 
