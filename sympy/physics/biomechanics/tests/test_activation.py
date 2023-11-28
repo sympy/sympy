@@ -1,4 +1,4 @@
-"""Tests for the ``sympy.physics._biomechanics.activation.py`` module."""
+"""Tests for the ``sympy.physics.biomechanics.activation.py`` module."""
 
 import pytest
 
@@ -8,12 +8,12 @@ from sympy.functions.elementary.hyperbolic import tanh
 from sympy.matrices import Matrix
 from sympy.matrices.dense import zeros
 from sympy.physics.mechanics import dynamicsymbols
-from sympy.physics._biomechanics import (
+from sympy.physics.biomechanics import (
     ActivationBase,
     FirstOrderActivationDeGroote2016,
     ZerothOrderActivation,
 )
-from sympy.physics._biomechanics._mixin import _NamedMixin
+from sympy.physics.biomechanics._mixin import _NamedMixin
 from sympy.simplify.simplify import simplify
 
 
@@ -88,7 +88,6 @@ class TestZerothOrderActivation:
         assert self.instance.r.shape == (1, 1)
         assert self.instance.input_vars.shape == (1, 1)
 
-
     def test_constants_attribute(self):
         assert hasattr(self.instance, 'p')
         assert hasattr(self.instance, 'constants')
@@ -162,8 +161,8 @@ class TestFirstOrderActivationDeGroote2016:
         assert instance.activation_time_constant == Float('0.015')
         assert instance.tau_d == Float('0.060')
         assert instance.deactivation_time_constant == Float('0.060')
-        assert instance.b == Integer(10)
-        assert instance.smoothing_rate == Integer(10)
+        assert instance.b == Float('10.0')
+        assert instance.smoothing_rate == Float('10.0')
 
     def test_name(self):
         assert hasattr(self.instance, 'name')

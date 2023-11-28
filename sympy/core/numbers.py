@@ -749,8 +749,11 @@ class Float(Number):
 
     _mpf_: tuple[int, int, int, int]
 
-    # A Float represents many real numbers,
-    # both rational and irrational.
+    # A Float, though rational in form, does not behave like
+    # a rational in all Python expressions so we deal with
+    # exceptions (where we want to deal with the rational
+    # form of the Float as a rational) at the source rather
+    # than assigning a mathematically loaded category of 'rational'
     is_rational = None
     is_irrational = None
     is_number = True
@@ -900,11 +903,10 @@ class Float(Number):
                     return Float._new(
                         (num[0], num[1], num[2], bitcount(num[1])),
                         precision)
+        elif isinstance(num, (Number, NumberSymbol)):
+            _mpf_ = num._as_mpf_val(precision)
         else:
-            try:
-                _mpf_ = num._as_mpf_val(precision)
-            except (NotImplementedError, AttributeError):
-                _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
+            _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
 
         return cls._new(_mpf_, precision, zero=False)
 
@@ -970,7 +972,10 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
-        return self._mpf_ == fzero
+        if self._mpf_ == fzero:
+            return True
+        if not int_valued(self):
+            return False
 
     def _eval_is_negative(self):
         if self._mpf_ in (_mpf_ninf, _mpf_inf):
@@ -2427,7 +2432,7 @@ class AlgebraicNumber(Expr):
 
         if rep0 is not None:
             from sympy.polys.densetools import dup_compose
-            c = dup_compose(rep.rep, rep0.rep, dom)
+            c = dup_compose(rep.to_list(), rep0.to_list(), dom)
             rep = DMP.from_list(c, 0, dom)
             scoeffs = Tuple(*c)
 
@@ -3899,6 +3904,9 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
 
     def __int__(self):
         return 1
+
+    def _as_mpf_val(self, prec):
+        return self._eval_evalf(prec)._mpf_
 
     def _eval_evalf(self, prec):
         rv = self._eval_expand_func(function=True)._eval_evalf(prec + 4)

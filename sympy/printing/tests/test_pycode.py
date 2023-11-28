@@ -286,13 +286,13 @@ def test_issue_16535_16536():
     assert prntr.doprint(expr1) == 'scipy.special.gamma(a)*scipy.special.gammainc(a, x)'
     assert prntr.doprint(expr2) == 'scipy.special.gamma(a)*scipy.special.gammaincc(a, x)'
 
-    prntr = NumPyPrinter()
-    assert "Not supported" in prntr.doprint(expr1)
-    assert "Not supported" in prntr.doprint(expr2)
+    p_numpy = NumPyPrinter()
+    p_pycode = PythonCodePrinter({'strict': False})
 
-    prntr = PythonCodePrinter()
-    assert "Not supported" in prntr.doprint(expr1)
-    assert "Not supported" in prntr.doprint(expr2)
+    for expr in [expr1, expr2]:
+        with raises(NotImplementedError):
+            p_numpy.doprint(expr1)
+        assert "Not supported" in p_pycode.doprint(expr)
 
 
 def test_Integral():
@@ -327,17 +327,17 @@ def test_fresnel_integrals():
     assert prntr.doprint(expr1) == 'scipy.special.fresnel(x)[1]'
     assert prntr.doprint(expr2) == 'scipy.special.fresnel(x)[0]'
 
-    prntr = NumPyPrinter()
-    assert "Not supported" in prntr.doprint(expr1)
-    assert "Not supported" in prntr.doprint(expr2)
+    p_numpy = NumPyPrinter()
+    p_pycode = PythonCodePrinter()
+    p_mpmath = MpmathPrinter()
+    for expr in [expr1, expr2]:
+        with raises(NotImplementedError):
+            p_numpy.doprint(expr)
+        with raises(NotImplementedError):
+            p_pycode.doprint(expr)
 
-    prntr = PythonCodePrinter()
-    assert "Not supported" in prntr.doprint(expr1)
-    assert "Not supported" in prntr.doprint(expr2)
-
-    prntr = MpmathPrinter()
-    assert prntr.doprint(expr1) == 'mpmath.fresnelc(x)'
-    assert prntr.doprint(expr2) == 'mpmath.fresnels(x)'
+    assert p_mpmath.doprint(expr1) == 'mpmath.fresnelc(x)'
+    assert p_mpmath.doprint(expr2) == 'mpmath.fresnels(x)'
 
 
 def test_beta():
@@ -370,11 +370,11 @@ def test_airy():
     assert prntr.doprint(expr1) == 'scipy.special.airy(x)[0]'
     assert prntr.doprint(expr2) == 'scipy.special.airy(x)[2]'
 
-    prntr = NumPyPrinter()
+    prntr = NumPyPrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
-    prntr = PythonCodePrinter()
+    prntr = PythonCodePrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
@@ -388,11 +388,11 @@ def test_airy_prime():
     assert prntr.doprint(expr1) == 'scipy.special.airy(x)[1]'
     assert prntr.doprint(expr2) == 'scipy.special.airy(x)[3]'
 
-    prntr = NumPyPrinter()
+    prntr = NumPyPrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
-    prntr = PythonCodePrinter()
+    prntr = PythonCodePrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 

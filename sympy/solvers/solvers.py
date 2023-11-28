@@ -3144,7 +3144,7 @@ def _invert(eq, *symbols, **kwargs):
 
     >>> invert(sqrt(x + y) - 2)
     (4, x + y)
-    >>> invert(sqrt(x + y) - 2)
+    >>> invert(sqrt(x + y) + 2)  # note +2 instead of -2
     (4, x + y)
 
     If the exponent is an Integer, setting ``integer_power`` to True
@@ -3216,9 +3216,12 @@ def _invert(eq, *symbols, **kwargs):
             if any(_ispow(i) for i in (ad, bd)):
                 a_base, a_exp = ad.as_base_exp()
                 b_base, b_exp = bd.as_base_exp()
-                if a_base == b_base:
-                    # a = -b
-                    lhs = powsimp(powdenest(ad/bd))
+                if a_base == b_base and a_exp.extract_additively(b_exp) is None:
+                    # a = -b and exponents do not have canceling terms/factors
+                    # e.g. if exponents were 3*x and x then the ratio would have
+                    # an exponent of 2*x: one of the roots would be lost
+                    rat = powsimp(powdenest(ad/bd))
+                    lhs = rat
                     rhs = -bi/ai
                 else:
                     rat = ad/bd

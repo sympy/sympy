@@ -5,7 +5,7 @@ from sympy.testing.pytest import XFAIL, raises
 from sympy.assumptions.ask import Q
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
+from sympy.core.expr import Expr, unchanged
 from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
@@ -800,10 +800,10 @@ def test_simplify_relational():
     assert Lt(x, 2).simplify() == Lt(x, 2)
     assert Lt(-x, 2).simplify() == Gt(x, -2)
 
-    # Test particulat branches of _eval_simplify
+    # Test particular branches of _eval_simplify
     m = exp(1) - exp_polar(1)
     assert simplify(m*x > 1) is S.false
-    # These two tests the same branch
+    # These two test the same branch
     assert simplify(m*x + 2*m*y > 1) is S.false
     assert simplify(m*x + y > 1 + y) is S.false
 
@@ -1251,6 +1251,19 @@ def test_weak_strict():
     eq = Le(x, 1)
     assert eq.strict == Lt(x, 1)
     assert eq.weak == eq
+
+
+def test_issue_23731():
+    i = symbols('i', integer=True)
+    assert unchanged(Eq, i, 1.0)
+    assert unchanged(Eq, i/2, 0.5)
+    ni = symbols('ni', integer=False)
+    assert Eq(ni, 1) == False
+    assert unchanged(Eq, ni, .1)
+    assert Eq(ni, 1.0) == False
+    nr = symbols('nr', rational=False)
+    assert Eq(nr, .1) == False
+
 
 def test_rewrite_Add():
     from sympy.testing.pytest import warns_deprecated_sympy

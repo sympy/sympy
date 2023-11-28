@@ -430,20 +430,21 @@ def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False
             # expression
             s = options.get('subs', False)
             if s:
-                doit = True
                 # use strict=False with as_int because we take
                 # 2.0 == 2
-                for v in s.values():
+                def is_int_reim(x):
+                    """Check for integer or integer + I*integer."""
                     try:
-                        as_int(v, strict=False)
+                        as_int(x, strict=False)
+                        return True
                     except ValueError:
                         try:
-                            [as_int(i, strict=False) for i in v.as_real_imag()]
-                            continue
-                        except (ValueError, AttributeError):
-                            doit = False
-                            break
-                if doit:
+                            [as_int(i, strict=False) for i in x.as_real_imag()]
+                            return True
+                        except ValueError:
+                            return False
+
+                if all(is_int_reim(v) for v in s.values()):
                     re_im = re_im.subs(s)
 
             re_im = Add(re_im, -nint, evaluate=False)
