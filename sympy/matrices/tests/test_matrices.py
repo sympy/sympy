@@ -1,3 +1,10 @@
+#
+# Code for testing deprecated matrix classes. New test code should not be added
+# here. Instead, add it to test_matrixbase.py.
+#
+# This entire test module and the corresponding sympy/matrices/matrices.py
+# module will be removed in a future release.
+#
 import random
 import concurrent.futures
 from collections.abc import Hashable
