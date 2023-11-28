@@ -10,11 +10,13 @@ from .pythonmpq import PythonMPQ
 from .ntheory import (
     bit_scan1 as python_bit_scan1,
     bit_scan0 as python_bit_scan0,
+    remove as python_remove,
     factorial as python_factorial,
     sqrt as python_sqrt,
     sqrtrem as python_sqrtrem,
     gcd as python_gcd,
     lcm as python_lcm,
+    gcdext as python_gcdext,
     is_square as python_is_square,
     invert as python_invert,
     legendre as python_legendre,
@@ -24,6 +26,13 @@ from .ntheory import (
     is_fermat_prp as python_is_fermat_prp,
     is_euler_prp as python_is_euler_prp,
     is_strong_prp as python_is_strong_prp,
+    is_fibonacci_prp as python_is_fibonacci_prp,
+    is_lucas_prp as python_is_lucas_prp,
+    is_selfridge_prp as python_is_selfridge_prp,
+    is_strong_lucas_prp as python_is_strong_lucas_prp,
+    is_strong_selfridge_prp as python_is_strong_selfridge_prp,
+    is_bpsw_prp as python_is_bpsw_prp,
+    is_strong_bpsw_prp as python_is_strong_bpsw_prp,
 )
 
 
@@ -52,12 +61,14 @@ __all__ = [
 
     'bit_scan1',
     'bit_scan0',
+    'remove',
     'factorial',
     'sqrt',
     'is_square',
     'sqrtrem',
     'gcd',
     'lcm',
+    'gcdext',
     'invert',
     'legendre',
     'jacobi',
@@ -66,6 +77,13 @@ __all__ = [
     'is_fermat_prp',
     'is_euler_prp',
     'is_strong_prp',
+    'is_fibonacci_prp',
+    'is_lucas_prp',
+    'is_selfridge_prp',
+    'is_strong_lucas_prp',
+    'is_strong_selfridge_prp',
+    'is_bpsw_prp',
+    'is_strong_bpsw_prp',
 ]
 
 
@@ -153,12 +171,14 @@ if GROUND_TYPES == 'gmpy':
 
     bit_scan1 = gmpy.bit_scan1
     bit_scan0 = gmpy.bit_scan0
+    remove = gmpy.remove
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
     is_square = gmpy.is_square
     sqrtrem = gmpy.isqrt_rem
     gcd = gmpy.gcd
     lcm = gmpy.lcm
+    gcdext = gmpy.gcdext
     invert = gmpy.invert
     legendre = gmpy.legendre
     jacobi = gmpy.jacobi
@@ -174,6 +194,13 @@ if GROUND_TYPES == 'gmpy':
     is_fermat_prp = gmpy.is_fermat_prp
     is_euler_prp = gmpy.is_euler_prp
     is_strong_prp = gmpy.is_strong_prp
+    is_fibonacci_prp = gmpy.is_fibonacci_prp
+    is_lucas_prp = gmpy.is_lucas_prp
+    is_selfridge_prp = gmpy.is_selfridge_prp
+    is_strong_lucas_prp = gmpy.is_strong_lucas_prp
+    is_strong_selfridge_prp = gmpy.is_strong_selfridge_prp
+    is_bpsw_prp = gmpy.is_bpsw_prp
+    is_strong_bpsw_prp = gmpy.is_strong_bpsw_prp
 
 elif GROUND_TYPES == 'flint':
 
@@ -185,6 +212,7 @@ elif GROUND_TYPES == 'flint':
 
     bit_scan1 = python_bit_scan1
     bit_scan0 = python_bit_scan0
+    remove = python_remove
     factorial = python_factorial
 
     def sqrt(x):
@@ -204,6 +232,7 @@ elif GROUND_TYPES == 'flint':
     def lcm(*args):
         return reduce(flint.fmpz.lcm, args, flint.fmpz(1))
 
+    gcdext = python_gcdext
     invert = python_invert
     legendre = python_legendre
 
@@ -223,6 +252,13 @@ elif GROUND_TYPES == 'flint':
     is_fermat_prp = python_is_fermat_prp
     is_euler_prp = python_is_euler_prp
     is_strong_prp = python_is_strong_prp
+    is_fibonacci_prp = python_is_fibonacci_prp
+    is_lucas_prp = python_is_lucas_prp
+    is_selfridge_prp = python_is_selfridge_prp
+    is_strong_lucas_prp = python_is_strong_lucas_prp
+    is_strong_selfridge_prp = python_is_strong_selfridge_prp
+    is_bpsw_prp = python_is_bpsw_prp
+    is_strong_bpsw_prp = python_is_strong_bpsw_prp
 
 elif GROUND_TYPES == 'python':
 
@@ -234,12 +270,14 @@ elif GROUND_TYPES == 'python':
 
     bit_scan1 = python_bit_scan1
     bit_scan0 = python_bit_scan0
+    remove = python_remove
     factorial = python_factorial
     sqrt = python_sqrt
     is_square = python_is_square
     sqrtrem = python_sqrtrem
     gcd = python_gcd
     lcm = python_lcm
+    gcdext = python_gcdext
     invert = python_invert
     legendre = python_legendre
     jacobi = python_jacobi
@@ -248,6 +286,13 @@ elif GROUND_TYPES == 'python':
     is_fermat_prp = python_is_fermat_prp
     is_euler_prp = python_is_euler_prp
     is_strong_prp = python_is_strong_prp
+    is_fibonacci_prp = python_is_fibonacci_prp
+    is_lucas_prp = python_is_lucas_prp
+    is_selfridge_prp = python_is_selfridge_prp
+    is_strong_lucas_prp = python_is_strong_lucas_prp
+    is_strong_selfridge_prp = python_is_strong_selfridge_prp
+    is_bpsw_prp = python_is_bpsw_prp
+    is_strong_bpsw_prp = python_is_strong_bpsw_prp
 
 else:
     assert False

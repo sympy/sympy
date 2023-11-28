@@ -2,6 +2,7 @@
 Hongguang Fu's Trigonometric Simplification
 ===========================================
 
+.. automodule:: sympy.simplify.fu
 .. currentmodule:: sympy.simplify.fu
 
 Implementation of the trigsimp algorithm by Fu et al.

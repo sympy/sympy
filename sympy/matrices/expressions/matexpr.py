@@ -200,6 +200,9 @@ class MatrixExpr(Expr):
     def _eval_transpose(self):
         return Transpose(self)
 
+    def _eval_trace(self):
+        return None
+
     def _eval_power(self, exp):
         """
         Override this in sub-classes to implement simplification of powers.  The cases where the exponent
@@ -232,7 +235,8 @@ class MatrixExpr(Expr):
     @classmethod
     def _check_dim(cls, dim):
         """Helper function to check invalid matrix dimensions"""
-        ok = check_assumptions(dim, integer=True, nonnegative=True)
+        ok = not dim.is_Float and check_assumptions(
+            dim, integer=True, nonnegative=True)
         if ok is False:
             raise ValueError(
                 "The dimension specification {} should be "

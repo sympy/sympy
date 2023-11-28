@@ -5,7 +5,18 @@ def recurrence_memo(initial):
     """
     Memo decorator for sequences defined by recurrence
 
-    See usage examples e.g. in the specfun/combinatorial module
+    Examples
+    ========
+
+    >>> from sympy.utilities.memoization import recurrence_memo
+    >>> @recurrence_memo([1]) # 0! = 1
+    ... def factorial(n, prev):
+    ...     return n * prev[-1]
+    >>> factorial(4)
+    24
+    >>> factorial(3) # use cache values
+    6
+
     """
     cache = initial
 
@@ -13,7 +24,7 @@ def recurrence_memo(initial):
         @wraps(f)
         def g(n):
             L = len(cache)
-            if n <= L - 1:
+            if n < L:
                 return cache[n]
             for i in range(L, n + 1):
                 cache.append(f(i, cache))

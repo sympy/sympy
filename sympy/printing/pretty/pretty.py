@@ -1105,6 +1105,15 @@ class PrettyPrinter(Printer):
         mat = prettyForm(*mat.right(subscript))
         return mat
 
+    def _print_StateSpace(self, expr):
+        from sympy.matrices.expressions.blockmatrix import BlockMatrix
+        A = expr._A
+        B = expr._B
+        C = expr._C
+        D = expr._D
+        mat = BlockMatrix([[A, B], [C, D]])
+        return self._print(mat.blocks)
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 
@@ -2344,41 +2353,20 @@ class PrettyPrinter(Printer):
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False, ifascii_nougly=True):
-        try:
-            pforms = []
-            for item in seq:
-                pform = self._print(item)
-                if parenthesize(item):
-                    pform = prettyForm(*pform.parens())
-                if pforms:
-                    pforms.append(delimiter)
-                pforms.append(pform)
 
-            if not pforms:
-                s = stringPict('')
-            else:
-                s = prettyForm(*stringPict.next(*pforms))
+        pforms = []
+        for item in seq:
+            pform = self._print(item)
+            if parenthesize(item):
+                pform = prettyForm(*pform.parens())
+            if pforms:
+                pforms.append(delimiter)
+            pforms.append(pform)
 
-                # XXX: Under the tests from #15686 the above raises:
-                # AttributeError: 'Fake' object has no attribute 'baseline'
-                # This is caught below but that is not the right way to
-                # fix it.
-
-        except AttributeError:
-            s = None
-            for item in seq:
-                pform = self.doprint(item)
-                if parenthesize(item):
-                    pform = prettyForm(*pform.parens())
-                if s is None:
-                    # first element
-                    s = pform
-                else :
-                    s = prettyForm(*stringPict.next(s, delimiter))
-                    s = prettyForm(*stringPict.next(s, pform))
-
-            if s is None:
-                s = stringPict('')
+        if not pforms:
+            s = stringPict('')
+        else:
+            s = prettyForm(*stringPict.next(*pforms))
 
         s = prettyForm(*s.parens(left, right, ifascii_nougly=ifascii_nougly))
         return s
@@ -2756,19 +2744,21 @@ class PrettyPrinter(Printer):
         return self._print_seq(m, '[', ']')
 
     def _print_SubModule(self, M):
-        return self._print_seq(M.gens, '<', '>')
+        gens = [[M.ring.to_sympy(g) for g in gen] for gen in M.gens]
+        return self._print_seq(gens, '<', '>')
 
     def _print_FreeModule(self, M):
         return self._print(M.ring)**self._print(M.rank)
 
     def _print_ModuleImplementedIdeal(self, M):
-        return self._print_seq([x for [x] in M._module.gens], '<', '>')
+        sym = M.ring.to_sympy
+        return self._print_seq([sym(x) for [x] in M._module.gens], '<', '>')
 
     def _print_QuotientRing(self, R):
         return self._print(R.ring) / self._print(R.base_ideal)
 
     def _print_QuotientRingElement(self, R):
-        return self._print(R.data) + self._print(R.ring.base_ideal)
+        return self._print(R.ring.to_sympy(R)) + self._print(R.ring.base_ideal)
 
     def _print_QuotientModuleElement(self, m):
         return self._print(m.data) + self._print(m.module.killed_module)

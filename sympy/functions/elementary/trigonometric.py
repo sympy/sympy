@@ -2222,8 +2222,11 @@ class asin(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asin
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         if x0.is_zero:
             return arg.as_leading_term(x)
+
         # Handling branch points
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
@@ -2438,6 +2441,8 @@ class acos(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acos
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((S.One - arg).as_leading_term(x))
@@ -2677,6 +2682,8 @@ class atan(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # atan
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         if x0.is_zero:
             return arg.as_leading_term(x)
         # Handling branch points
@@ -2727,10 +2734,8 @@ class atan(InverseTrigonometricFunction):
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_aseries(self, n, args0, x, logx):
-        if args0[0] is S.Infinity:
+        if args0[0] in [S.Infinity, S.NegativeInfinity]:
             return (pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
-        elif args0[0] is S.NegativeInfinity:
-            return (-pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
         else:
             return super()._eval_aseries(n, args0, x, logx)
 
@@ -2892,6 +2897,8 @@ class acot(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acot
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
         # Handling branch points
@@ -2938,12 +2945,10 @@ class acot(InverseTrigonometricFunction):
         return res
 
     def _eval_aseries(self, n, args0, x, logx):
-        if args0[0] is S.Infinity:
-            return (pi/2 - acot(1/self.args[0]))._eval_nseries(x, n, logx)
-        elif args0[0] is S.NegativeInfinity:
-            return (pi*Rational(3, 2) - acot(1/self.args[0]))._eval_nseries(x, n, logx)
+        if args0[0] in [S.Infinity, S.NegativeInfinity]:
+            return atan(1/self.args[0])._eval_nseries(x, n, logx)
         else:
-            return super(atan, self)._eval_aseries(n, args0, x, logx)
+            return super()._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2*(log(1 - S.ImaginaryUnit/x)
@@ -3105,6 +3110,8 @@ class asec(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asec
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((arg - S.One).as_leading_term(x))
@@ -3313,6 +3320,8 @@ class acsc(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acsc
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         # Handling branch points
         if x0 in (-S.One, S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()

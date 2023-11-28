@@ -20,6 +20,5 @@ Contents:
    lambdify.rst
    memoization.rst
    misc.rst
-   pkgdata.rst
    source.rst
    timeutils.rst

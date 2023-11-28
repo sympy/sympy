@@ -693,7 +693,8 @@ def _get_doctest_blacklist():
             "examples/intermediate/sample.py",
             "examples/intermediate/mplot2d.py",
             "examples/intermediate/mplot3d.py",
-            "doc/src/modules/numeric-computation.rst"
+            "doc/src/modules/numeric-computation.rst",
+            "doc/src/explanation/best-practices.md",
         ])
     else:
         if import_module('matplotlib') is None:
@@ -1742,15 +1743,11 @@ class SymPyDocTestFinder(DocTestFinder):
             lineno = int(matches[0][5:])
 
         else:
-            try:
-                if obj.__doc__ is None:
-                    docstring = ''
-                else:
-                    docstring = obj.__doc__
-                    if not isinstance(docstring, str):
-                        docstring = str(docstring)
-            except (TypeError, AttributeError):
+            docstring = getattr(obj, '__doc__', '')
+            if docstring is None:
                 docstring = ''
+            if not isinstance(docstring, str):
+                docstring = str(docstring)
 
         # Don't bother if the docstring is empty.
         if self._exclude_empty and not docstring:
