@@ -10,9 +10,11 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.matrices.common import (ShapeError, NonSquareMatrixError,
+from sympy.matrices.exceptions import ShapeError, NonSquareMatrixError
+from sympy.matrices.kind import MatrixKind
+from sympy.matrices.common import (
     _MinimalMatrix, _CastableMatrix, MatrixShaping, MatrixProperties,
-    MatrixOperations, MatrixArithmetic, MatrixSpecial, MatrixKind)
+    MatrixOperations, MatrixArithmetic, MatrixSpecial)
 from sympy.matrices.matrices import MatrixCalculus
 from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded,

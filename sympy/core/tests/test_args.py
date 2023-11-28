@@ -3036,8 +3036,8 @@ def test_sympy__logic__boolalg__Exclusive():
     assert _test_args(Exclusive(x, y, z))
 
 
-def test_sympy__matrices__matrices__DeferredVector():
-    from sympy.matrices.matrices import DeferredVector
+def test_sympy__matrices__matrixbase__DeferredVector():
+    from sympy.matrices.matrixbase import DeferredVector
     assert _test_args(DeferredVector("X"))
 
 

@@ -1,5 +1,5 @@
 from sympy.matrices.dense import Matrix, eye
-from sympy.matrices.common import ShapeError
+from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.special import Identity, OneMatrix, ZeroMatrix
 from sympy.core import symbols

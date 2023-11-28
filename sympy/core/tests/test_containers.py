@@ -4,7 +4,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.numbers import Integer
 from sympy.core.kind import NumberKind
-from sympy.matrices.common import MatrixKind
+from sympy.matrices.kind import MatrixKind
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
