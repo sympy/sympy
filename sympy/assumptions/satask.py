@@ -11,7 +11,7 @@ from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
-from sympy.matrices.common import MatrixKind
+from sympy.matrices.kind import MatrixKind
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,

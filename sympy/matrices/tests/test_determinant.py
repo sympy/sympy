@@ -8,7 +8,7 @@ from sympy.polys.polytools import Poly
 from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.functions.combinatorial.factorials import factorial, subfactorial
 
 

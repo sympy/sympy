@@ -1,7 +1,7 @@
 Matrices (linear algebra)
 =========================
 
-.. module:: sympy.matrices.matrices
+.. module:: sympy.matrices.matrixbase
 
 Creating Matrices
 -----------------
@@ -531,26 +531,12 @@ Matrix Base Classes
 
 The Matrix classes are built from functionality in various base classes. Every
 methods and attribute of ``Matrix`` is implemented on one of these base
-classes. See also :doc:`/modules/matrices/common`,
-:doc:`/modules/matrices/dense`, and :doc:`/modules/matrices/sparse`.
-
-.. autoclass:: MatrixDeterminant
-   :members:
-
-.. autoclass:: MatrixReductions
-   :members:
-
-.. autoclass:: MatrixSubspaces
-   :members:
-
-.. autoclass:: MatrixEigen
-   :members:
-
-.. autoclass:: MatrixCalculus
-   :members:
+classes. See also :doc:`/modules/matrices/dense`, and
+:doc:`/modules/matrices/sparse`.
 
 .. autoclass:: MatrixBase
    :members:
+   :special-members:
 
 Matrix Exceptions
 ^^^^^^^^^^^^^^^^^

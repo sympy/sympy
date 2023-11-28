@@ -67,7 +67,7 @@ else:
     from sympy.matrices.dense import (eye, zeros, diag, Matrix,
         ones, symarray)
     from sympy.matrices.immutable import ImmutableMatrix
-    from sympy.matrices.matrices import MatrixBase
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.utilities.lambdify import lambdify
 
 
