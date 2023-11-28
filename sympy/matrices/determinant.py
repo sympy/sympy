@@ -10,7 +10,7 @@ from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.ddm import DDM
 
-from .common import NonSquareMatrixError
+from .exceptions import NonSquareMatrixError
 from .utilities import (
     _get_intermediate_simp, _get_intermediate_simp_bool,
     _iszero, _is_zero_after_expand_mul, _dotprodsimp, _simplify)
@@ -322,7 +322,7 @@ def _adjugate(M, method="berkowitz"):
     ========
 
     cofactor_matrix
-    sympy.matrices.common.MatrixCommon.transpose
+    sympy.matrices.matrixbase.MatrixBase.transpose
     """
 
     return M.cofactor_matrix(method=method).transpose()

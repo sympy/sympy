@@ -6,7 +6,7 @@ from sympy.core.cache import cacheit
 from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 
 
 class MatPow(MatrixExpr):

@@ -13,7 +13,6 @@ from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.decorators import call_highest_priority
-from sympy.core.kind import Kind, NumberKind
 from sympy.core.logic import fuzzy_and, FuzzyBool
 from sympy.core.numbers import Integer
 from sympy.core.mod import Mod
@@ -30,27 +29,13 @@ from sympy.tensor.array import NDimArray
 from .utilities import _get_intermediate_simp_bool
 
 
-class MatrixError(Exception):
-    pass
-
-
-class ShapeError(ValueError, MatrixError):
-    """Wrong matrix shape"""
-    pass
-
-
-class NonSquareMatrixError(ShapeError):
-    pass
-
-
-class NonInvertibleMatrixError(ValueError, MatrixError):
-    """The matrix in not invertible (division by multidimensional zero error)."""
-    pass
-
-
-class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
-    """The matrix is not a positive-definite matrix."""
-    pass
+# These exception types were previously defined in this module but were moved
+# to exceptions.py. We reimport them here for backwards compatibility in case
+# downstream code was importing them from here.
+from .exceptions import ( # noqa: F401
+    MatrixError, ShapeError, NonSquareMatrixError, NonInvertibleMatrixError,
+    NonPositiveDefiniteMatrixError
+)
 
 
 class MatrixRequired:
@@ -931,7 +916,7 @@ class MatrixSpecial(MatrixRequired):
         .expressions.blockmatrix.BlockMatrix
         .sparsetools.banded
        """
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.matrices.dense import Matrix
         from sympy.matrices import SparseMatrix
         klass = kwargs.get('cls', kls)
@@ -1488,7 +1473,7 @@ class MatrixProperties(MatrixRequired):
 
         is_lower
         is_upper
-        sympy.matrices.matrices.MatrixEigen.is_diagonalizable
+        sympy.matrices.matrixbase.MatrixCommon.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()
@@ -2018,7 +2003,7 @@ class MatrixOperations(MatrixRequired):
 
         transpose: Matrix transposition
         H: Hermite conjugation
-        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
+        sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
         return self._eval_conjugate()
 
@@ -2072,7 +2057,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         conjugate: By-element conjugation
-        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
+        sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
         return self.T.C
 
@@ -2762,8 +2747,8 @@ class MatrixArithmetic(MatrixRequired):
         See Also
         ========
 
-        sympy.matrices.matrices.MatrixBase.cross
-        sympy.matrices.matrices.MatrixBase.dot
+        sympy.matrices.matrixbase.MatrixBase.cross
+        sympy.matrices.matrixbase.MatrixBase.dot
         multiply
         """
         if self.shape != other.shape:
@@ -2939,6 +2924,7 @@ class MatrixArithmetic(MatrixRequired):
     def __sub__(self, a):
         return self + (-a)
 
+
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
@@ -3086,72 +3072,6 @@ class _MatrixWrapper:
         return iter(sympify(mat[r, c]) for r in range(self.rows) for c in range(cols))
 
 
-class MatrixKind(Kind):
-    """
-    Kind for all matrices in SymPy.
-
-    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
-    but any expression representing the matrix can have this.
-
-    Parameters
-    ==========
-
-    element_kind : Kind
-        Kind of the element. Default is
-        :class:`sympy.core.kind.NumberKind`,
-        which means that the matrix contains only numbers.
-
-    Examples
-    ========
-
-    Any instance of matrix class has ``MatrixKind``:
-
-    >>> from sympy import MatrixSymbol
-    >>> A = MatrixSymbol('A', 2,2)
-    >>> A.kind
-    MatrixKind(NumberKind)
-
-    Although expression representing a matrix may be not instance of
-    matrix class, it will have ``MatrixKind`` as well:
-
-    >>> from sympy import MatrixExpr, Integral
-    >>> from sympy.abc import x
-    >>> intM = Integral(A, x)
-    >>> isinstance(intM, MatrixExpr)
-    False
-    >>> intM.kind
-    MatrixKind(NumberKind)
-
-    Use ``isinstance()`` to check for ``MatrixKind`` without specifying
-    the element kind. Use ``is`` with specifying the element kind:
-
-    >>> from sympy import Matrix
-    >>> from sympy.core import NumberKind
-    >>> from sympy.matrices import MatrixKind
-    >>> M = Matrix([1, 2])
-    >>> isinstance(M.kind, MatrixKind)
-    True
-    >>> M.kind is MatrixKind(NumberKind)
-    True
-
-    See Also
-    ========
-
-    sympy.core.kind.NumberKind
-    sympy.core.kind.UndefinedKind
-    sympy.core.containers.TupleKind
-    sympy.sets.sets.SetKind
-
-    """
-    def __new__(cls, element_kind=NumberKind):
-        obj = super().__new__(cls, element_kind)
-        obj.element_kind = element_kind
-        return obj
-
-    def __repr__(self):
-        return "MatrixKind(%s)" % self.element_kind
-
-
 def _matrixify(mat):
     """If `mat` is a Matrix or is matrix-like,
     return a Matrix or MatrixWrapper object.  Otherwise
@@ -3203,7 +3123,7 @@ def classof(A, B):
     ========
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.common import classof
+    >>> from sympy.matrices.matrixbase import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
