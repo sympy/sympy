@@ -1,4 +1,205 @@
-"""Implementation of system for book-keeping all objects defining a model.
+r"""Implementation of system for book-keeping all objects defining a model.
+
+Explanation
+===========
+
+- :math:`t` : time
+- :math:`\mathrm{q} \in \mathbb{R}^N` : coordinates
+- :math:`\mathrm{q}_s \in \mathbb{R}^n` : independent coordinates
+- :math:`\mathrm{q}_r \in \mathbb{R}^M` : dependent coordinates
+- :math:`\mathrm{u} \in \mathbb{R}^n` : generalized speeds
+- :math:`\mathrm{u}_s \in \mathbb{R}^p` : independent generalized speeds
+- :math:`\mathrm{u}_r \in \mathbb{R}^m` : dependent generalized speeds
+- :math:`\mathrm{u}_a` : auxiliary generalized speeds
+- :math:`\mathrm{p}` : constants
+- :math:`\mathrm{r}` : time varying specified inputs (can be kinematic
+  quantities, force quantities, or other)
+- :math:`\mathrm{\lambda}` : Lagrange multipliers (constraint forces)
+- :math:`\mathrm{y}` : time varying outputs
+- :math:`\mathrm{w}` : additional state variables
+
+Lagrange
+========
+
+Holonomic constraints
+
+.. math::
+
+   \mathrm{f}_h(\mathrm{q}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0}
+   \in \mathbb{R}^M
+
+Nonholonomic constraints
+
+.. math::
+
+   \mathrm{f}_n(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}}, \mathrm{r},
+   \mathrm{p}, t) = \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}}
+   \dot{\mathrm{q}} + \mathrm{g}_n(\mathrm{q}, \dot{\mathrm{r}}, \mathrm{r},
+   \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^m
+
+Dynamical equations of motion
+
+.. math::
+
+   \mathrm{f}_d(\ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \mathrm{J}_{\mathrm{f}_d, \ddot{\mathrm{q}}} \ddot{\mathrm{q}} +
+   \mathrm{g}_d(\dot{\mathrm{q}}, \mathrm{q}, \ddot{\mathrm{r}},
+   \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^n
+
+Acceleration constraints
+
+If there are holonomic or nonholonomic constraints the dynamical differential
+equations must be augmented with the constraint forces. The holonomic
+constraints are twice differentiated with respect to time and the nonholonomic
+constraints are differentiated once.
+
+.. math::
+
+   \ddot{\mathrm{f}}_h(\ddot{\mathrm{q}},\dot{\mathrm{q}},\mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \ddot{\mathrm{q}} +
+   \ddot{\mathrm{g}}_h(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}},
+   \mathrm{r}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^M
+
+.. math::
+
+   \dot{\mathrm{f}}_n(\ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}} \ddot{\mathrm{q}} +
+   \dot{\mathrm{g}}_n(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}},
+   \mathrm{r}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^m
+
+.. math::
+
+   \mathrm{f}_c(\ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \begin{bmatrix}
+     \ddot{\mathrm{f}}_h \\
+     \dot{\mathrm{f}}_n
+   \end{bmatrix}
+   =
+   \begin{bmatrix}
+     \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \\
+     \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}}
+   \end{bmatrix}
+   \ddot{\mathrm{q}}
+   +
+   \begin{bmatrix}
+     \ddot{\mathrm{g}}_h(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}},
+     \mathrm{r}, \mathrm{r}, \mathrm{p}, t) \\
+     \dot{\mathrm{g}}_n(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}},
+     \mathrm{r}, \mathrm{r}, \mathrm{p}, t)
+   \end{bmatrix}
+   =
+   \begin{bmatrix}
+     \mathrm{0} \\
+     \mathrm{0}
+   \end{bmatrix}
+
+.. math::
+
+   \mathrm{J}_{\mathrm{f}_c, \ddot{\mathrm{q}}} =
+   \begin{bmatrix}
+     \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \\
+     \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}}
+   \end{bmatrix}
+   \in \mathbb{R}^{(m + M) \times N}
+
+Introducing Lagrange multipliers :math:`\mathbf{\lambda}` lets us write the
+constrained equations of motion:
+
+.. math::
+
+   \begin{bmatrix}
+     \mathrm{J}_{\mathrm{f}_d, \ddot{\mathrm{q}}} &
+     \mathrm{J}_{\mathrm{f}_c, \ddot{\mathrm{q}}}^T \\
+     \mathrm{J}_{\mathrm{f}_c, \ddot{\mathrm{q}}} & \mathbf{0}
+   \end{bmatrix}
+   \begin{bmatrix}
+     \ddot{\mathbf{q}} \\
+     \mathbf{\lambda}
+   \end{bmatrix}
+   +
+   \begin{bmatrix}
+   \mathbf{g}_d \\
+   \mathbf{g}_c
+   \end{bmatrix}
+   =
+   \begin{bmatrix}
+     \mathrm{0} \\
+     \mathrm{0}
+   \end{bmatrix}
+
+Output equations
+
+.. math::
+
+   \mathbf{f}_o(\bar{y}, \ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{\lambda},
+   \mathrm{p}, t) = \mathbf{0}
+
+Additional first-order differential equations
+
+.. math::
+
+   \mathbf{f}_a(\dot{\mathbf{w}}, \mathbf{w}, \dot{\mathrm{q}}, \mathrm{q},
+   \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) = \mathbf{0}
+
+Kane
+====
+
+Holonomic constraints
+
+.. math::
+
+   \mathrm{f}_h(\mathrm{q}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0}
+   \in \mathbb{R}^M
+
+Kinematical differential equations
+
+.. math::
+
+   \mathbf{f}_k(\mathrm{u}, \dot{\mathrm{q}}, \mathrm{q}, \mathrm{r},
+   \mathrm{p}, t) = \mathbf{u} +
+   \mathbf{J}_{\mathbf{f}_k,\dot{\mathbf{q}}}\dot{\mathbf{q}} +
+   \mathbf{g}_k(\mathrm{q}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in
+   \mathbb{R}^n
+
+Nonholonomic constraints
+
+.. math::
+
+   \mathrm{f}_n(\mathrm{u}, \mathrm{q}, \dot{\mathrm{r}}, \mathrm{r},
+   \mathrm{p}, t) = \mathrm{J}_{\mathrm{f}_n, \mathrm{u}_s}
+   \mathrm{u}_s + \mathrm{J}_{\mathrm{f}_n, \mathrm{u}_r}
+   \mathrm{u}_r + \mathrm{g}_n(\mathrm{q}, \dot{\mathrm{r}}, \mathrm{r},
+   \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^m
+
+Dynamical equations of motion
+
+.. math::
+
+   \mathrm{f}_d(\dot{\mathrm{u}}, \mathrm{u}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \mathrm{J}_{\mathrm{f}_d, \dot{\mathrm{u}}} \dot{\mathrm{u}} +
+   \mathrm{g}_d(\mathrm{u}, \mathrm{q}, \ddot{\mathrm{r}},
+   \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^p
+
+Output equations
+
+.. math::
+
+   \mathbf{f}_o(\bar{y}, \ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{\lambda},
+   \mathrm{p}, t) = \mathbf{0}
+
+Additional first-order differential equations
+
+.. math::
+
+   \mathbf{f}_a(\dot{\mathbf{w}}, \mathbf{w}, \dot{\mathrm{q}}, \mathrm{q},
+   \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) = \mathbf{0}
 
 Notes
 =====
