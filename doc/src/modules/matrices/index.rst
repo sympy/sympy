@@ -12,7 +12,7 @@ Contents:
    :titlesonly:
 
    matrices.rst
-   common.rst
+   kind.rst
    dense.rst
    sparse.rst
    sparsetools.rst

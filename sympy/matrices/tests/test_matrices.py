@@ -20,9 +20,11 @@ from sympy.printing.str import sstr
 from sympy.sets.sets import FiniteSet
 from sympy.simplify.simplify import (signsimp, simplify)
 from sympy.simplify.trigsimp import trigsimp
-from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
-    _simplify)
+from sympy.matrices.exceptions import (ShapeError, MatrixError,
+    NonSquareMatrixError)
+from sympy.matrices.matrixbase import DeferredVector
+from sympy.matrices.determinant import _find_reasonable_pivot_naive
+from sympy.matrices.utilities import _simplify
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
