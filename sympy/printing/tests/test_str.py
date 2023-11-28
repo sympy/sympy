@@ -27,12 +27,15 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (Equivalent, false, true, Xor)
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions import Identity
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices import SparseMatrix
 from sympy.polys.polytools import factor
 from sympy.series.limits import Limit
 from sympy.series.order import O
 from sympy.sets.sets import (Complement, FiniteSet, Interval, SymmetricDifference)
+from sympy.stats import (Covariance, Expectation, Probability, Variance)
+from sympy.stats.rv import RandomSymbol
 from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
@@ -1173,3 +1176,24 @@ def test_printing_str_array_expressions():
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
     assert sstr(ArrayElement(M*N, [x, 0])) == "(M*N)[x, 0]"
+
+def test_printing_stats():
+    # issue 24132
+    x = RandomSymbol("x")
+    y = RandomSymbol("y")
+    z1 = Probability(x > 0)*Identity(2)
+    z2 = Expectation(x)*Identity(2)
+    z3 = Variance(x)*Identity(2)
+    z4 = Covariance(x, y) * Identity(2)
+
+    assert str(z1) == "Probability(x > 0)*I"
+    assert str(z2) == "Expectation(x)*I"
+    assert str(z3) == "Variance(x)*I"
+    assert str(z4) ==  "Covariance(x, y)*I"
+    assert z1.is_commutative == False
+    assert z2.is_commutative == False
+    assert z3.is_commutative == False
+    assert z4.is_commutative == False
+    assert z2._eval_is_commutative() == False
+    assert z3._eval_is_commutative() == False
+    assert z4._eval_is_commutative() == False
