@@ -889,7 +889,7 @@ class System(_Methods):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
 
         Returns
         ========
