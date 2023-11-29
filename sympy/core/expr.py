@@ -3831,24 +3831,31 @@ class Expr(Basic, EvalfMixin):
 
         if not x.is_number:
             raise TypeError("Cannot round symbolic expression")
+
         if not x.is_Atom:
             if not pure_complex(x.n(2), or_real=True):
                 raise TypeError(
                     'Expected a number but got %s:' % func_name(x))
-        elif x in _illegal:
+        if x in _illegal:
+            # nan, oo, -oo, zoo
             return x
-        if not (xr := x.is_extended_real):
+
+        if x.is_extended_real is not True:
             r, i = x.as_real_imag()
-            if xr is False:
-                return r.round(n) + S.ImaginaryUnit*i.round(n)
-            if i.equals(0):
-                return r.round(n)
-        if not x:
+            return r._round(n) + S.ImaginaryUnit*i._round(n)
+        else:
+            return x._round(n)
+
+    def _round(self, n):
+        """Helper for round. Here self is known to be real."""
+        x = self
+        p = as_int(n) if n is not None else 0
+
+        if x in _illegal:
+            return x
+        elif not x:
             return S.Zero if n is None else x
-
-        p = as_int(n or 0)
-
-        if x.is_Integer:
+        elif x.is_Integer:
             return Integer(round(int(x), p))
 
         digits_to_decimal = _mag(x)  # _mag(12) = 2, _mag(.012) = -1
