@@ -19,6 +19,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
 from sympy.core.mod import Mod
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.intfunc import integer_log
+from sympy.core.function import expand_mul
 from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
@@ -690,8 +691,24 @@ def _solve_trig1(f, symbol, domain):
         raise _SolveTrig1Error("change of variable not possible")
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
+
     if isinstance(solns, ConditionSet):
         raise _SolveTrig1Error("polynomial has ConditionSet solution")
+
+    # Sometimes Complement does not resolve with imaginary solutions because
+    # e.g. Eq(I*sqrt(2 + sqrt(5)), I) does not resolve to True. This is because
+    # e.g. (I*sqrt(2 + sqrt(5)) - I).is_zero does not succeed. Here we test if
+    # multiplying all solutions by I allows the Complement to resolve. Ideally
+    # this would be fixed in Expr.is_zero to use numerical evaluation as is
+    # done for real numbers.
+    if isinstance(solns, Complement):
+        base, comp = solns.args
+        if isinstance(base, FiniteSet) and isinstance(comp, FiniteSet):
+            base2 = FiniteSet(*[expand_mul(I*b) for b in base])
+            comp2 = FiniteSet(*[expand_mul(I*c) for c in comp])
+            solns2 = Complement(base2, comp2)
+            if isinstance(solns2, FiniteSet):
+                solns = FiniteSet(*[expand_mul(I*s) for s in solns2])
 
     if isinstance(solns, FiniteSet):
         if any(isinstance(s, RootOf) for s in solns):
