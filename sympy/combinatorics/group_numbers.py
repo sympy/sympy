@@ -1,8 +1,26 @@
-from sympy.core import Integer, Pow, Mod
-from sympy import factorint
+from sympy.ntheory.factor_ import factorint
+from sympy.utilities.misc import as_int
 
 
-def is_nilpotent_number(n):
+def _is_nilpotent_number(factors: dict) -> bool:
+    """ Check whether `n` is a nilpotent number.
+    Note that ``factors`` is a prime factorization of `n`.
+
+    This is a low-level helper for ``is_nilpotent_number``, for internal use.
+    """
+    for p in factors.keys():
+        for q, e in factors.items():
+            # We want to calculate
+            # any(pow(q, k, p) == 1 for k in range(1, e + 1))
+            m = 1
+            for _ in range(e):
+                m = m*q % p
+                if m == 1:
+                    return False
+    return True
+
+
+def is_nilpotent_number(n) -> bool:
     """
     Check whether `n` is a nilpotent number. A number `n` is said to be
     nilpotent if and only if every finite group of order `n` is nilpotent.
@@ -21,29 +39,18 @@ def is_nilpotent_number(n):
     References
     ==========
 
-    .. [1] Pakianathan, J., Shankar, K., *Nilpotent Numbers*,
-            The American Mathematical Monthly, 107(7), 631-634.
-
+    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers,
+           The American Mathematical Monthly, 107(7), 631-634.
+    .. [2] https://oeis.org/A056867
 
     """
-    if n <= 0 or int(n) != n:
+    n = as_int(n)
+    if n <= 0:
         raise ValueError("n must be a positive integer, not %i" % n)
-
-    n = Integer(n)
-    prime_factors = list(factorint(n).items())
-    is_nilpotent = True
-    for p_j, a_j in prime_factors:
-        for p_i, a_i in prime_factors:
-            if any(Mod(Pow(p_i, k), p_j) == 1 for k in range(1, a_i + 1)):
-                is_nilpotent = False
-                break
-        if not is_nilpotent:
-            break
-
-    return is_nilpotent
+    return _is_nilpotent_number(factorint(n))
 
 
-def is_abelian_number(n):
+def is_abelian_number(n) -> bool:
     """
     Check whether `n` is an abelian number. A number `n` is said to be abelian
     if and only if every finite group of order `n` is abelian. For more
@@ -64,24 +71,19 @@ def is_abelian_number(n):
     References
     ==========
 
-    .. [1] Pakianathan, J., Shankar, K., *Nilpotent Numbers*,
-            The American Mathematical Monthly, 107(7), 631-634.
-
+    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers,
+           The American Mathematical Monthly, 107(7), 631-634.
+    .. [2] https://oeis.org/A051532
 
     """
-    if n <= 0 or int(n) != n:
+    n = as_int(n)
+    if n <= 0:
         raise ValueError("n must be a positive integer, not %i" % n)
-
-    n = Integer(n)
-    if not is_nilpotent_number(n):
-        return False
-
-    prime_factors = list(factorint(n).items())
-    is_abelian = all(a_i < 3 for p_i, a_i in prime_factors)
-    return is_abelian
+    factors = factorint(n)
+    return all(e < 3 for e in factors.values()) and _is_nilpotent_number(factors)
 
 
-def is_cyclic_number(n):
+def is_cyclic_number(n) -> bool:
     """
     Check whether `n` is a cyclic number. A number `n` is said to be cyclic
     if and only if every finite group of order `n` is cyclic. For more
@@ -102,17 +104,13 @@ def is_cyclic_number(n):
     References
     ==========
 
-    .. [1] Pakianathan, J., Shankar, K., *Nilpotent Numbers*,
-            The American Mathematical Monthly, 107(7), 631-634.
+    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers,
+           The American Mathematical Monthly, 107(7), 631-634.
+    .. [2] https://oeis.org/A003277
 
     """
-    if n <= 0 or int(n) != n:
+    n = as_int(n)
+    if n <= 0:
         raise ValueError("n must be a positive integer, not %i" % n)
-
-    n = Integer(n)
-    if not is_nilpotent_number(n):
-        return False
-
-    prime_factors = list(factorint(n).items())
-    is_cyclic = all(a_i < 2 for p_i, a_i in prime_factors)
-    return is_cyclic
+    factors = factorint(n)
+    return all(e == 1 for e in factors.values()) and _is_nilpotent_number(factors)
