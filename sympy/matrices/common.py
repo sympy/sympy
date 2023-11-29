@@ -60,7 +60,71 @@ _DEPRECATED_MIXINS = (
 )
 
 
-class MatrixRequired:
+class _MatrixDeprecatedMeta(type):
+
+    #
+    # Override the default __instancecheck__ implementation to ensure that
+    # e.g. isinstance(M, MatrixCommon) still works when M is one of the
+    # matrix classes. Matrix no longer inherits from MatrixCommon so
+    # isinstance(M, MatrixCommon) would now return False by default.
+    #
+    # There were lots of places in the codebase where this was being done
+    # so it seems likely that downstream code may be doing it too. All use
+    # of these mixins is deprecated though so we give a deprecation warning
+    # unconditionally if they are being used with isinstance.
+    #
+    # Any code seeing this deprecation warning should be changed to use
+    # isinstance(M, MatrixBase) instead which also works in previous versions
+    # of SymPy.
+    #
+
+    def __instancecheck__(cls, instance):
+
+        sympy_deprecation_warning(
+            f"""
+            Checking whether an object is an instance of {cls.__name__} is
+            deprecated.
+
+            Use `isinstance(obj, Matrix)` instead of `isinstance(obj, {cls.__name__})`.
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="deprecated-matrix-mixins",
+            stacklevel=3,
+        )
+
+        from sympy.matrices.matrixbase import MatrixBase
+        from sympy.matrices.matrices import (
+            MatrixDeterminant,
+            MatrixReductions,
+            MatrixSubspaces,
+            MatrixEigen,
+            MatrixCalculus,
+            MatrixDeprecated
+        )
+
+        all_mixins = (
+            MatrixRequired,
+            MatrixShaping,
+            MatrixSpecial,
+            MatrixProperties,
+            MatrixOperations,
+            MatrixArithmetic,
+            MatrixCommon,
+            MatrixDeterminant,
+            MatrixReductions,
+            MatrixSubspaces,
+            MatrixEigen,
+            MatrixCalculus,
+            MatrixDeprecated
+        )
+
+        if cls in all_mixins and isinstance(instance, MatrixBase):
+            return True
+        else:
+            return super().__instancecheck__(instance)
+
+
+class MatrixRequired(metaclass=_MatrixDeprecatedMeta):
     """Deprecated mixin class for making matrix classes."""
 
     rows = None  # type: int

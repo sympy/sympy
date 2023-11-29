@@ -80,8 +80,8 @@ SymPy deprecation warnings.
 ### Deprecated matrix mixin classes
 
 The matrix mixin classes are deprecated. Previously the ``Matrix`` class (aka
-``MutableDenseMatrix``) created through an inheritance hierarchy that looked
-like:
+``MutableDenseMatrix``) was created through an inheritance hierarchy that
+looked like:
 ```py
 class MatrixRequired:
 class MatrixShaping(MatrixRequired):
@@ -123,18 +123,23 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
 The matrix mixin classes like ``MatrixRequired`` etc are still available
 because downstream code might be subclassing these classes but these are all
 deprecated and will be removed in a future version of SymPy. Subclassing these
-classes is deprecated as is importing anything from the
-``sympy.matrices.common`` or ``sympy.matrices.matrices`` module in which these
-classes are defined.
+classes is deprecated and anycode that does that should be changed to not
+subclass them.
 
-The reason for this change is that the complicated inheritance hierarchy made
-it difficult to improve ``Matrix`` for the majority of users while still
-providing all of these classes that could be subclassed. Since these mixin
-classes are no longer used as part of ``Matrix`` they no longer serve any
-function within SymPy and the removal of this now unused code will simplify the
-codebase. Any downstream code that subclasses these classes should be changed
-not to subclass them and any code that uses e.g. ``isinstance(obj,
-MatrixCommon)`` should be changed to use ``isinstance(obj, MatrixBase)``.
+It is also deprecated to use these classes with ``isinstance`` like
+``isinstance(M, MatrixCommon)``. Any code doing this should be changed to use
+``isinstance(M, Matrixbase)`` instead which will also work with previous SymPy
+versions.
+
+More generally importing anything from the ``sympy.matrices.common`` or
+``sympy.matrices.matrices`` modules in which these classes are defined is
+deprecated. These modules will be removed in a future release of SymPy.
+
+The reason for this change is that the convoluted inheritance hierarchy made it
+difficult to improve ``Matrix`` for the majority of users while still providing
+all of these classes that could be subclassed. Since these mixin classes are no
+longer used as part of ``Matrix`` they no longer serve any function within
+SymPy and the removal of this now unused code will simplify the codebase.
 
 (deprecated-sympify-string-fallback)=
 ### The string fallback in `sympify()`
