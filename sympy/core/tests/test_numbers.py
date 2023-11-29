@@ -1728,12 +1728,10 @@ def test_zoo():
             assert (i*zoo).is_Mul
             assert (zoo*i).is_Mul
 
-        if fuzzy_not((1/i).is_zero) and (i.is_real or i.is_imaginary):
+        if fuzzy_not((1/i).is_zero):
             assert zoo/i is zoo
         elif (1/i).is_zero:
             assert zoo/i is S.NaN
-        elif i.is_zero:
-            assert zoo/i is zoo
         else:
             assert (zoo/i).is_Mul
 

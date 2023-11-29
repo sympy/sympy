@@ -672,15 +672,8 @@ class Mul(Expr, AssocOp):
 
         # zoo
         if coeff is S.ComplexInfinity:
-            # zoo might be
-            #   infinite_real + bounded_im
-            #   bounded_real + infinite_im
-            #   infinite_real + infinite_im
-            # and non-zero real or imaginary will not change that status.
-            c_part = [c for c in c_part if not (fuzzy_not(c.is_zero) and
-                                                c.is_extended_real is not None)]
-            nc_part = [c for c in nc_part if not (fuzzy_not(c.is_zero) and
-                                                  c.is_extended_real is not None)]
+            c_part = [c for c in c_part if c.is_zero is not False]
+            nc_part = [c for c in nc_part if c.is_zero is not False]
 
         # 0
         elif coeff.is_zero:
