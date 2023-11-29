@@ -1,3 +1,10 @@
+#
+# Code for testing deprecated matrix classes. New test code should not be added
+# here. Instead, add it to test_matrixbase.py.
+#
+# This entire test module and the corresponding sympy/matrices/common.py
+# module will be removed in a future release.
+#
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.assumptions import Q
@@ -27,6 +34,68 @@ from sympy.utilities.iterables import flatten
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray as Array
 
 from sympy.abc import x, y, z
+
+
+def test_matrix_deprecated_isinstance():
+
+    # Test that e.g. isinstance(M, MatrixCommon) still gives True when M is a
+    # Matrix for each of the deprecated matrix classes.
+
+    from sympy.matrices.common import (
+        MatrixRequired,
+        MatrixShaping,
+        MatrixSpecial,
+        MatrixProperties,
+        MatrixOperations,
+        MatrixArithmetic,
+        MatrixCommon
+    )
+    from sympy.matrices.matrices import (
+        MatrixDeterminant,
+        MatrixReductions,
+        MatrixSubspaces,
+        MatrixEigen,
+        MatrixCalculus,
+        MatrixDeprecated
+    )
+    from sympy import (
+        Matrix,
+        ImmutableMatrix,
+        SparseMatrix,
+        ImmutableSparseMatrix
+    )
+    all_mixins = (
+        MatrixRequired,
+        MatrixShaping,
+        MatrixSpecial,
+        MatrixProperties,
+        MatrixOperations,
+        MatrixArithmetic,
+        MatrixCommon,
+        MatrixDeterminant,
+        MatrixReductions,
+        MatrixSubspaces,
+        MatrixEigen,
+        MatrixCalculus,
+        MatrixDeprecated
+    )
+    all_matrices = (
+        Matrix,
+        ImmutableMatrix,
+        SparseMatrix,
+        ImmutableSparseMatrix
+    )
+
+    Ms = [M([[1, 2], [3, 4]]) for M in all_matrices]
+    t = ()
+
+    for mixin in all_mixins:
+        for M in Ms:
+            with warns_deprecated_sympy():
+                assert isinstance(M, mixin) is True
+        with warns_deprecated_sympy():
+            assert isinstance(t, mixin) is False
+
 
 # classes to test the deprecated matrix classes. We use warns_deprecated_sympy
 # to suppress the deprecation warnings because subclassing the deprecated
