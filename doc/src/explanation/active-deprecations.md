@@ -124,7 +124,7 @@ The matrix mixin classes like ``MatrixRequired`` etc are still available
 because downstream code might be subclassing these classes but these are all
 deprecated and will be removed in a future version of SymPy. Subclassing these
 classes is deprecated as is importing anything from the
-``sympy.matrices.common`` or ``sympy.matrices.matrices`` modulew in which these
+``sympy.matrices.common`` or ``sympy.matrices.matrices`` module in which these
 classes are defined.
 
 The reason for this change is that the complicated inheritance hierarchy made
@@ -134,7 +134,7 @@ classes are no longer used as part of ``Matrix`` they no longer serve any
 function within SymPy and the removal of this now unused code will simplify the
 codebase. Any downstream code that subclasses these classes should be changed
 not to subclass them and any code that uses e.g. ``isinstance(obj,
-MaatrixCommon)`` should be changed to use ``isinstance(obj, MatrixBase)``.
+MatrixCommon)`` should be changed to use ``isinstance(obj, MatrixBase)``.
 
 (deprecated-sympify-string-fallback)=
 ### The string fallback in `sympify()`
