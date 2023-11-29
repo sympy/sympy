@@ -1,7 +1,12 @@
 """
-Basic methods common to all matrices to be used
-when creating more advanced matrices (e.g., matrices over rings,
-etc.).
+A module contining deprecated matrix mixin classes.
+
+The classes in this module are deprecated and will be removed in a future
+release. They are kept here for backwards compatibility in case downstream
+code was subclassing them.
+
+Importing anything else from this module is deprecated so anything here
+should either not be used or should be imported from somewhere else.
 """
 
 from collections import defaultdict
@@ -20,6 +25,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import Abs, re, im
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten, is_sequence
@@ -38,12 +44,119 @@ from .exceptions import ( # noqa: F401
 )
 
 
-class MatrixRequired:
-    """All subclasses of matrix objects must implement the
-    required matrix properties listed here."""
+_DEPRECATED_MIXINS = (
+    'MatrixShaping',
+    'MatrixSpecial',
+    'MatrixProperties',
+    'MatrixOperations',
+    'MatrixArithmetic',
+    'MatrixCommon',
+    'MatrixDeterminant',
+    'MatrixReductions',
+    'MatrixSubspaces',
+    'MatrixEigen',
+    'MatrixCalculus',
+    'MatrixDeprecated',
+)
+
+
+class _MatrixDeprecatedMeta(type):
+
+    #
+    # Override the default __instancecheck__ implementation to ensure that
+    # e.g. isinstance(M, MatrixCommon) still works when M is one of the
+    # matrix classes. Matrix no longer inherits from MatrixCommon so
+    # isinstance(M, MatrixCommon) would now return False by default.
+    #
+    # There were lots of places in the codebase where this was being done
+    # so it seems likely that downstream code may be doing it too. All use
+    # of these mixins is deprecated though so we give a deprecation warning
+    # unconditionally if they are being used with isinstance.
+    #
+    # Any code seeing this deprecation warning should be changed to use
+    # isinstance(M, MatrixBase) instead which also works in previous versions
+    # of SymPy.
+    #
+
+    def __instancecheck__(cls, instance):
+
+        sympy_deprecation_warning(
+            f"""
+            Checking whether an object is an instance of {cls.__name__} is
+            deprecated.
+
+            Use `isinstance(obj, Matrix)` instead of `isinstance(obj, {cls.__name__})`.
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="deprecated-matrix-mixins",
+            stacklevel=3,
+        )
+
+        from sympy.matrices.matrixbase import MatrixBase
+        from sympy.matrices.matrices import (
+            MatrixDeterminant,
+            MatrixReductions,
+            MatrixSubspaces,
+            MatrixEigen,
+            MatrixCalculus,
+            MatrixDeprecated
+        )
+
+        all_mixins = (
+            MatrixRequired,
+            MatrixShaping,
+            MatrixSpecial,
+            MatrixProperties,
+            MatrixOperations,
+            MatrixArithmetic,
+            MatrixCommon,
+            MatrixDeterminant,
+            MatrixReductions,
+            MatrixSubspaces,
+            MatrixEigen,
+            MatrixCalculus,
+            MatrixDeprecated
+        )
+
+        if cls in all_mixins and isinstance(instance, MatrixBase):
+            return True
+        else:
+            return super().__instancecheck__(instance)
+
+
+class MatrixRequired(metaclass=_MatrixDeprecatedMeta):
+    """Deprecated mixin class for making matrix classes."""
+
     rows = None  # type: int
     cols = None  # type: int
     _simplify = None
+
+    def __init_subclass__(cls, **kwargs):
+
+        # Warn if any downstream code is subclassing this class or any of the
+        # deprecated mixin classes that are all ultimately subclasses of this
+        # class.
+        #
+        # We don't want to warn about the deprecated mixins themselves being
+        # created, but only about them being used as mixins by downstream code.
+        # Otherwise just importing this module would trigger a warning.
+        # Ultimately the whole module should be deprecated and removed but for
+        # SymPy 1.13 it is premature to do that given that this module was the
+        # main way to import matrix exception types in all previous versions.
+
+        if cls.__name__ not in _DEPRECATED_MIXINS:
+            sympy_deprecation_warning(
+                f"""
+                Inheriting from the Matrix mixin classes is deprecated.
+
+                The class {cls.__name__} is subclassing a deprecated mixin.
+                """,
+                deprecated_since_version="1.13",
+                active_deprecations_target="deprecated-matrix-mixins",
+                stacklevel=3,
+            )
+
+        super().__init_subclass__(**kwargs)
 
     @classmethod
     def _new(cls, *args, **kwargs):

@@ -1,3 +1,7 @@
+#
+# A module consisting of deprecated matrix classes. New code should not be
+# added here.
+#
 from sympy.core.basic import Basic
 from sympy.core.symbol import Dummy
 

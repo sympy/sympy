@@ -2295,8 +2295,21 @@ class MatrixBase(Printable):
         [G(0), G(1)],
         [G(1), G(2)]])
         """
-        return self.applyfunc(
-            lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
+        kwargs = {'map': map, 'simultaneous': simultaneous, 'exact': exact}
+
+        if map:
+
+            d = {}
+            def func(eij):
+                eij, dij = eij.replace(F, G, **kwargs)
+                d.update(dij)
+                return eij
+
+            M = self.applyfunc(func)
+            return M, d
+
+        else:
+            return self.applyfunc(lambda i: i.replace(F, G, **kwargs))
 
     def rot90(self, k=1):
         """Rotates Matrix by 90 degrees
