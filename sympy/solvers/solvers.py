@@ -1351,17 +1351,15 @@ def _solve_abs(f, symbols, flags, bare_f, ordered_symbols, as_set):
                     ] + [j.subs(i, -abs_[i]) for j in b]
             signed.append(b)
         # capture and set flags
-        as_dict = flags.get('dict', None)
-        flags['dict'] = True  # to make work here easier
-        check = flags.get('check', True)
-        flags['check'] = False  # we need to check in original f
+        new_flags = flags.copy()
+        new_flags['check'] = False # we need to check in original f
         # now start finding possible solutions
         sol = []
         linear = True
         for v in product(*signed):
             reps = dict(zip(outer, v))
             fi = [_.xreplace(reps) for _ in f]
-            _linear, s = _get_solution(fi, bare_f, symbols, flags)
+            _linear, s = _get_solution(fi, bare_f, symbols, new_flags)
             if linear:
                 # it is possible that a nonlinear system
                 # will appear linear, e.g. the square terms
@@ -1380,13 +1378,10 @@ def _solve_abs(f, symbols, flags, bare_f, ordered_symbols, as_set):
             solution = []
             # don't force the solution because x in abs(x) will be
             # replaced with positive x and evaluate to x
-            force = flags.get('force', '')
-            flags['force'] = False
+            new_flags['force'] = False
             for si in sol:
-                if checksol(f, si, **flags) is not False:
+                if checksol(f, si, **new_flags) is not False:
                     solution.append(si)
-            if force != '':
-                flags['force'] = force
 
         return _legacy_output(solution, symbols, ordered_symbols, bare_f, linear, as_dict, as_set)
 
