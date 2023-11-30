@@ -1351,8 +1351,9 @@ def _solve_abs(f, symbols, flags, bare_f, ordered_symbols, as_set):
                     ] + [j.subs(i, -abs_[i]) for j in b]
             signed.append(b)
         # capture and set flags
-        new_flags = flags.copy()
-        new_flags['check'] = False # we need to check in original f
+        check = flags.get('check', True)
+        as_dict = flags.get('dict', False)
+        new_flags = {**flags, 'check':False}
         # now start finding possible solutions
         sol = []
         linear = True
