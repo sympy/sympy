@@ -843,16 +843,52 @@ class Expr(Basic, EvalfMixin):
         # calculated twice as the same value.
         if constant not in (True, None) and constant != 0:
             return False
-        
-        from sympy import radsimp
-        self = radsimp(simplify(self))
-        other = radsimp(other)
-        if self == other:
-            return True
 
         if failing_expression:
             return diff
         return None
+    
+    def vector_equals(self, others):
+        """
+        Check if the scalar components of self & others's vector system 
+        are equal after simplification.
+
+        Parameters:
+        - self: The first vector for comparison.
+        - others: The second vector for comparison.
+        - N: instance of a 3D coordinate system.
+
+        Returns:
+        - True if the scalar components are equal after simplification,
+        otherwise False. If an error occurs during the process, a
+        RuntimeError is raised with an error message.
+        """
+        import sympy
+        from sympy import simplify, radsimp
+        from sympy.vector import CoordSys3D
+        
+        N = CoordSys3D('N')
+        
+        # finding the vector component of self, others
+        S_V = [i for i in self.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
+        O_V = [i for i in others.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
+
+        # ssc and osc is a list of scalar components of self, others 
+        ssc = [self.dot(N.i) * S_V.dot(N.i), self.dot(N.j) * S_V.dot(N.j), self.dot(N.k) * S_V.dot(N.k)]
+        osc = [others.dot(N.i) * O_V.dot(N.i), others.dot(N.j) * O_V.dot(N.j), others.dot(N.k) * O_V.dot(N.k)]
+
+        try:
+            # Simplifying each scalar component
+            for s_i in range(len(ssc)):
+                ssc[s_i] = radsimp(simplify(ssc[s_i]))
+                osc[s_i] = radsimp(simplify(osc[s_i]))
+
+            if ssc == osc:
+                return True
+            else:
+                return False
+        except Exception as e:
+            raise RuntimeError(f"An error occurred: {str(e)}") from e
 
     def _eval_is_extended_positive_negative(self, positive):
         from sympy.polys.numberfields import minimal_polynomial
