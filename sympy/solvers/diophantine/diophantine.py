@@ -3607,7 +3607,7 @@ def prime_as_sum_of_two_squares(p):
     ==========
 
     p : Integer
-        A prime is congruent to 1 mod 4
+        A prime that is congruent to 1 mod 4
 
     Returns
     =======
