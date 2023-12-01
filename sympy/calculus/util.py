@@ -1,7 +1,7 @@
 from .accumulationbounds import AccumBounds, AccumulationBounds # noqa: F401
 from .singularities import singularities
 from sympy.core import Pow, S
-from sympy.core.function import diff, expand_mul
+from sympy.core.function import diff, expand_mul, Function
 from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
 from sympy.core.numbers import equal_valued
@@ -13,6 +13,9 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
     TrigonometricFunction, sin, cos, csc, sec, asin, acos)
+from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth, sech, csch,
+                   asinh, acosh, atanh, acoth, asech, acsch)
+from sympy.functions.elementary.hyperbolic import (acosh)
 from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement)
@@ -23,10 +26,12 @@ from sympy.utilities.iterables import iterable
 
 def continuous_domain(f, symbol, domain):
     """
-    Returns the intervals in the given domain for which the function
-    is continuous.
-    This method is limited by the ability to determine the various
+    Returns the domain on which the function expression f is continuous.
+
+    This function is limited by the ability to determine the various
     singularities and discontinuities of the given function.
+    The result is either given as a union of intervals or constructed using
+    other set operations.
 
     Parameters
     ==========
@@ -69,33 +74,35 @@ def continuous_domain(f, symbol, domain):
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
 
+    x = Symbol('x')
+    constraints = {
+        log: (x > 0,),
+        asin: (x >= -1, x <= 1),
+        acos: (x >= -1, x <= 1),
+        acosh: (x >= 1,),
+        atanh: (x > -1, x < 1),
+        asech: (x > 0, x <= 1)
+    }
+
     if domain.is_subset(S.Reals):
-        constrained_interval = domain
+        cont_domain = domain
         for atom in f.atoms(Pow):
             den = atom.exp.as_numer_denom()[1]
             if den.is_even and den.is_nonzero:
                 constraint = solve_univariate_inequality(atom.base >= 0,
                                                          symbol).as_set()
-                constrained_interval = Intersection(constraint,
-                                                    constrained_interval)
+                cont_domain = Intersection(constraint, cont_domain)
 
-        for atom in f.atoms(log):
-            constraint = solve_univariate_inequality(atom.args[0] > 0,
-                                                     symbol).as_set()
-            constrained_interval = Intersection(constraint,
-                                                constrained_interval)
+        for atom in f.atoms(Function):
+            if atom.func not in constraints:
+                continue    # no condition; fine for all real number
+            for c in constraints[atom.func]:
+                constraint_relational = c.subs(x, atom.args[0])
+                constraint_set = solve_univariate_inequality(
+                    constraint_relational, symbol).as_set()
+                cont_domain = Intersection(constraint_set, cont_domain)
 
-        for atom in f.atoms(asin, acos):
-            constraint = solve_univariate_inequality(atom.args[0] >= -1,
-                                                     symbol).as_set()
-            constrained_interval = Intersection(constraint,
-                                                constrained_interval)
-            constraint = solve_univariate_inequality(atom.args[0] <= 1,
-                                                     symbol).as_set()
-            constrained_interval = Intersection(constraint,
-                                                constrained_interval)
-
-    return constrained_interval - singularities(f, symbol, domain)
+    return cont_domain - singularities(f, symbol, domain)
 
 
 def function_range(f, symbol, domain):
