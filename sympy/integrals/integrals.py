@@ -31,7 +31,6 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
-
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
@@ -83,6 +82,13 @@ class Integral(AddWithLimits):
         #of behaviour with Integral.
         if hasattr(function, '_eval_Integral'):
             return function._eval_Integral(*symbols, **assumptions)
+
+        if function.atoms(sin):
+            # Transform sin(x) to a new variable z
+            sin_atoms = function.atoms(sin)
+            for sin_atom in sin_atoms:
+                # Replace sin(x) with z in the function
+                function = function.subs(sin_atom, z)           
 
         if isinstance(function, Poly):
             sympy_deprecation_warning(

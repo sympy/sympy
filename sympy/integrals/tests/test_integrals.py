@@ -2127,7 +2127,7 @@ def test_issue_25877():
     I1 = I1.transform(sin(x), z).doit().subs(z, sin(x))
     assert I1 == Piecewise((-I*sin(x)/sqrt(b**2*sin(x)**2 - 1), Abs(b**2*sin(x)**2) > 1), (sin(x)/sqrt(-b**2*sin(x)**2 + 1), True))
 
-    # #
+    # 
     # expr = cos(x) / (1 - b**2 * sin(x - a)**2)**(3/2)
     # result = integrate(expr, x)
     # expected_result = -sin(x - a) / (b**2 * sqrt(1 - b**2 * sin(x - a)**2))
