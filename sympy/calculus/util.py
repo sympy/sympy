@@ -12,7 +12,7 @@ from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
-    TrigonometricFunction, sin, cos, csc, sec, asin, acos)
+    TrigonometricFunction, sin, cos, csc, sec, asin, acos, asec, acsc)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth, sech, csch,
                    asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.hyperbolic import (acosh)
@@ -83,6 +83,11 @@ def continuous_domain(f, symbol, domain):
         atanh: (x > -1, x < 1),
         asech: (x > 0, x <= 1)
     }
+    constraints_union = {
+        asec: (x <= -1, x >= 1),
+        acsc: (x <= -1, x >= 1),
+        acoth: (x < -1, x > 1)
+    }
 
     if domain.is_subset(S.Reals):
         cont_domain = domain
@@ -94,12 +99,18 @@ def continuous_domain(f, symbol, domain):
                 cont_domain = Intersection(constraint, cont_domain)
 
         for atom in f.atoms(Function):
-            if atom.func not in constraints:
-                continue    # no condition; fine for all real number
-            for c in constraints[atom.func]:
-                constraint_relational = c.subs(x, atom.args[0])
-                constraint_set = solve_univariate_inequality(
-                    constraint_relational, symbol).as_set()
+            if atom.func in constraints:
+                for c in constraints[atom.func]:
+                    constraint_relational = c.subs(x, atom.args[0])
+                    constraint_set = solve_univariate_inequality(
+                        constraint_relational, symbol).as_set()
+                    cont_domain = Intersection(constraint_set, cont_domain)
+            elif atom.func in constraints_union:
+                constraint_set = S.EmptySet
+                for c in constraints_union[atom.func]:
+                    constraint_relational = c.subs(x, atom.args[0])
+                    constraint_set += solve_univariate_inequality(
+                        constraint_relational, symbol).as_set()
                 cont_domain = Intersection(constraint_set, cont_domain)
 
     return cont_domain - singularities(f, symbol, domain)
