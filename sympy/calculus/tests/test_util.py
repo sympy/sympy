@@ -7,9 +7,10 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
-    cos, cot, csc, sec, sin, tan, asin, acos, atan, asec, acsc)
-from sympy.functions.elementary.hyperbolic import (
-    sinh, cosh, tanh, sech, asinh, acosh, atanh, acoth, asech)
+    cos, cot, csc, sec, sin, tan, asin, acos, atan, acot, asec, acsc)
+from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
+    sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
+from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.error_functions import expint
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.simplify.simplify import simplify
@@ -105,6 +106,9 @@ def test_continuous_domain():
         Interval(-oo, -1), Interval(1, oo))
     assert continuous_domain(acsc(x), x, S.Reals) == Union(
         Interval(-oo, -1), Interval(1, oo))
+    for f in (coth, acsch, csch):
+        assert continuous_domain(f(x), x, S.Reals) == Union(
+            Interval.open(-oo, 0), Interval.open(0, oo))
 
 
 @XFAIL
