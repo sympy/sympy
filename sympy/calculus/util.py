@@ -12,7 +12,7 @@ from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
-    TrigonometricFunction, sin, cos, csc, sec, asin, acos, asec, acsc)
+    TrigonometricFunction, sin, cos, csc, sec, asin, acos, acot, asec, acsc)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth, sech, csch,
                    asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.hyperbolic import (acosh)
@@ -112,6 +112,13 @@ def continuous_domain(f, symbol, domain):
                     constraint_set += solve_univariate_inequality(
                         constraint_relational, symbol).as_set()
                 cont_domain = Intersection(constraint_set, cont_domain)
+            elif atom.func == acot:
+                from sympy.solvers.solveset import solveset_real
+                # Sympy's acot() has a step discontinuity at 0. Since it's
+                # neither an essential singularity nor a pole, singularities()
+                # will not report it. But it's still relevant for determining
+                # the continuity of the function f.
+                cont_domain -= solveset_real(atom.args[0], symbol)
 
     return cont_domain - singularities(f, symbol, domain)
 

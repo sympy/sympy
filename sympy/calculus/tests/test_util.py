@@ -109,11 +109,11 @@ def test_continuous_domain():
     for f in (coth, acsch, csch):
         assert continuous_domain(f(x), x, S.Reals) == Union(
             Interval.open(-oo, 0), Interval.open(0, oo))
+    assert continuous_domain(acot(x), x, S.Reals).contains(0) == False
 
 
 @XFAIL
 def test_continuous_domain_acot():
-    assert continuous_domain(acot(x), x, S.Reals).contains(0) == False
     acot_cont = Piecewise((pi+acot(x), x<0), (acot(x), True))
     assert continuous_domain(acot_cont, x, S.Reals) == S.Reals
 
