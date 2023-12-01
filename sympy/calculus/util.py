@@ -12,7 +12,7 @@ from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
-    TrigonometricFunction, sin, cos, csc, sec)
+    TrigonometricFunction, sin, cos, csc, sec, asin, acos)
 from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement)
@@ -85,6 +85,15 @@ def continuous_domain(f, symbol, domain):
             constrained_interval = Intersection(constraint,
                                                 constrained_interval)
 
+        for atom in f.atoms(asin, acos):
+            constraint = solve_univariate_inequality(atom.args[0] >= -1,
+                                                     symbol).as_set()
+            constrained_interval = Intersection(constraint,
+                                                constrained_interval)
+            constraint = solve_univariate_inequality(atom.args[0] <= 1,
+                                                     symbol).as_set()
+            constrained_interval = Intersection(constraint,
+                                                constrained_interval)
 
     return constrained_interval - singularities(f, symbol, domain)
 
