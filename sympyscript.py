@@ -4,10 +4,13 @@ from sympy import symbols, cos, sin, Integral, sqrt, S, Piecewise, I, Abs
 # x = symbols('x')
 # e = sqrt(x*(2.0 - x))*(1.0 - x)/(x*(2.0 - x))
 # ans = solveset(e)
-# print(ans)
+# right now the bug is that it is S.EmptySet when it should have 1 as a solution
 
+# test integrals
 x, b, z = symbols('x b z')
-I1 = Integral(cos(x)/(1 - (b**2)*(sin(x))**2)**(S(3)/2), x)
+denom = (1 - (b**2)*(sin(x))**2)**(S(3)/2)
+I1 = Integral(cos(x)/denom, x)
+print(I1)
 I1.transform(sin(x), z)
 I1.transform(sin(x), z).doit()
 I1 = I1.transform(sin(x), z).doit().subs(z, sin(x))
