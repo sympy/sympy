@@ -7,9 +7,9 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
-    cos, cot, csc, sec, sin, tan, asin, acos, atan)
+    cos, cot, csc, sec, sin, tan, asin, acos, atan, asec, acsc)
 from sympy.functions.elementary.hyperbolic import (
-    sinh, cosh, tanh, sech, asinh, acosh, atanh, asech)
+    sinh, cosh, tanh, sech, asinh, acosh, atanh, acoth, asech)
 from sympy.functions.special.error_functions import expint
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.simplify.simplify import simplify
@@ -99,6 +99,12 @@ def test_continuous_domain():
     assert continuous_domain(atanh(x), x, S.Reals) == Interval.open(-1, 1)
     assert continuous_domain(atanh(x)+acosh(x), x, S.Reals) == S.EmptySet
     assert continuous_domain(asech(x), x, S.Reals) == Interval.Lopen(0, 1)
+    assert continuous_domain(acoth(x), x, S.Reals) == Union(
+        Interval.open(-oo, -1), Interval.open(1, oo))
+    assert continuous_domain(asec(x), x, S.Reals) == Union(
+        Interval(-oo, -1), Interval(1, oo))
+    assert continuous_domain(acsc(x), x, S.Reals) == Union(
+        Interval(-oo, -1), Interval(1, oo))
 
 
 @XFAIL
