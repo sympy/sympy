@@ -5,7 +5,8 @@ from sympy.functions.elementary.complexes import (Abs, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, cot, csc, sec, sin, tan)
+from sympy.functions.elementary.trigonometric import (
+    cos, cot, csc, sec, sin, tan, asin, acos)
 from sympy.functions.special.error_functions import expint
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.simplify.simplify import simplify
@@ -78,6 +79,8 @@ def test_continuous_domain():
     assert domain.contains(5)
     d = Symbol('d', even=True, zero=False)
     assert continuous_domain(x**(1/d), x, S.Reals) == Interval(0, oo)
+    assert continuous_domain(asin(x), x, S.Reals) == Interval(-1, 1) # issue #21786
+    assert continuous_domain(1/acos(log(x)), x, S.Reals) == Interval.Ropen(exp(-1), E)
 
 
 def test_not_empty_in():
@@ -329,3 +332,8 @@ def test_issue_16469():
 @_both_exp_pow
 def test_issue_18747():
     assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8
+
+
+def test_issue_25942():
+    x = Symbol("x")
+    assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)
