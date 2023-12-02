@@ -84,6 +84,11 @@ def test_continuous_domain():
         Union(Interval.open(-oo, 0), Interval.open(0, oo))
     assert continuous_domain(1/(x**2 - 4) + 2, x, S.Reals) == \
         Union(Interval.open(-oo, -2), Interval.open(-2, 2), Interval.open(2, oo))
+    assert continuous_domain((x+1)**pi, x, S.Reals) == Interval(-1, oo)
+    assert continuous_domain((x+1)**(pi/2), x, S.Reals) == Interval(-1, oo)
+    assert continuous_domain(x**x, x, S.Reals) == Interval(0, oo)
+    assert continuous_domain((x+1)**log(x**2), x, S.Reals) == Union(
+        Interval.Ropen(-1, 0), Interval.open(0, oo))
     domain = continuous_domain(log(tan(x)**2 + 1), x, S.Reals)
     assert not domain.contains(3*pi/2)
     assert domain.contains(5)
@@ -134,6 +139,10 @@ def test_continuous_domain_acot():
 @XFAIL
 def test_continuous_domain_gamma():
     assert continuous_domain(gamma(x), x, S.Reals).contains(-1) == False
+
+@XFAIL
+def test_continuous_domain_neg_power():
+    assert continuous_domain((x-2)**(1-x), x, S.Reals) == Interval.open(2, oo)
 
 
 def test_not_empty_in():
