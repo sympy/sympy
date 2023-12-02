@@ -5,6 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, re)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import frac
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -114,6 +115,11 @@ def test_continuous_domain():
     assert continuous_domain(acot(x), x, S.Reals).contains(0) == False
     assert continuous_domain(1/(exp(x) - x), x, S.Reals) == Complement(
         S.Reals, ConditionSet(x, Eq(-x + exp(x), 0), S.Reals))
+    assert continuous_domain(frac(x**2), x, Interval(-2,-1)) == Union(
+        Interval.open(-2, -sqrt(3)), Interval.open(-sqrt(2), -1),
+        Interval.open(-sqrt(3), -sqrt(2)))
+    assert continuous_domain(frac(x), x, S.Reals) == Complement(
+        S.Reals, S.Integers)
     raises(NotImplementedError, lambda : continuous_domain(
         1/(x**2+1), x, S.Complexes))
     raises(NotImplementedError, lambda : continuous_domain(
