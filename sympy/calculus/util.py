@@ -10,6 +10,7 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.integers import frac
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
     TrigonometricFunction, sin, cos, tan, cot, csc, sec,
@@ -20,6 +21,7 @@ from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement)
 from sympy.sets.fancysets import ImageSet
+from sympy.sets.conditionset import ConditionSet
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
 
@@ -78,7 +80,7 @@ def continuous_domain(f, symbol, domain):
         raise NotImplementedError(filldedent('''
             Domain must be a subset of S.Reals.
             '''))
-    implemented = [Pow, exp, log, Abs,
+    implemented = [Pow, exp, log, Abs, frac,
                    sin, cos, tan, cot, sec, csc,
                    asin, acos, atan, acot, asec, acsc,
                    sinh, cosh, tanh, coth, sech, csch,
@@ -126,6 +128,8 @@ def continuous_domain(f, symbol, domain):
                 constraint_set += solve_univariate_inequality(
                     constraint_relational, symbol).as_set()
             cont_domain = Intersection(constraint_set, cont_domain)
+        # XXX: the discontinuities below could be factored out in
+        # a new "discontinuities()".
         elif atom.func == acot:
             from sympy.solvers.solveset import solveset_real
             # Sympy's acot() has a step discontinuity at 0. Since it's
@@ -133,6 +137,20 @@ def continuous_domain(f, symbol, domain):
             # will not report it. But it's still relevant for determining
             # the continuity of the function f.
             cont_domain -= solveset_real(atom.args[0], symbol)
+            # Note that the above may introduce spurious discontinuities, e.g.
+            # for abs(acot(x)) at 0.
+        elif atom.func == frac:
+            from sympy.solvers.solveset import solveset_real
+            r = function_range(atom.args[0], symbol, domain)
+            r = Intersection(r, S.Integers)
+            if r.is_finite_set:
+                discont = S.EmptySet
+                for n in r:
+                    discont += solveset_real(atom.args[0]-n, symbol)
+            else:
+                discont = ConditionSet(
+                    symbol, S.Integers.contains(atom.args[0]), cont_domain)
+            cont_domain -= discont
 
     return cont_domain - singularities(f, symbol, domain)
 
