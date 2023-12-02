@@ -1,5 +1,6 @@
 from sympy.core.function import Lambda
 from sympy.core.numbers import (E, I, Rational, oo, pi)
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, re)
@@ -19,6 +20,7 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
                                  stationary_points, minimum, maximum)
 from sympy.sets.sets import (Interval, FiniteSet, Complement, Union)
 from sympy.sets.fancysets import ImageSet
+from sympy.sets.conditionset import ConditionSet
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 from sympy.abc import x
 
@@ -110,6 +112,12 @@ def test_continuous_domain():
         assert continuous_domain(f(x), x, S.Reals) == Union(
             Interval.open(-oo, 0), Interval.open(0, oo))
     assert continuous_domain(acot(x), x, S.Reals).contains(0) == False
+    assert continuous_domain(1/(exp(x) - x), x, S.Reals) == Complement(
+        S.Reals, ConditionSet(x, Eq(-x + exp(x), 0), S.Reals))
+    raises(NotImplementedError, lambda : continuous_domain(
+        1/(x**2+1), x, S.Complexes))
+    raises(NotImplementedError, lambda : continuous_domain(
+        gamma(x), x, Interval(-5,0)))
 
 
 @XFAIL
