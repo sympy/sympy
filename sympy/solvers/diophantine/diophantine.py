@@ -11,7 +11,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import _sympify
-from sympy.external.gmpy import jacobi
+from sympy.external.gmpy import jacobi, remove
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -302,9 +302,7 @@ class Linear(DiophantineEquationType):
             q, r = divmod(c, coeff[var[0]])
             if not r:
                 result.add((q,))
-                return result
-            else:
-                return result
+            return result
 
         '''
         base_solution_linear() can solve diophantine equations of the form:
@@ -849,12 +847,11 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
                 result.add(_remove_gcd(s[0], -coeff[x*z], s[1]))
                 return result
 
-            else:
-                var[0], var[1] = _var[1], _var[0]
-                y_0, x_0, z_0 = unpack_sol(_diop_ternary_quadratic(var, coeff))
-                if x_0 is not None:
-                    result.add((x_0, y_0, z_0))
-                return result
+            var[0], var[1] = _var[1], _var[0]
+            y_0, x_0, z_0 = unpack_sol(_diop_ternary_quadratic(var, coeff))
+            if x_0 is not None:
+                result.add((x_0, y_0, z_0))
+            return result
 
         if coeff[x**2] == 0:
             # If the coefficient of x is zero change the variables
@@ -941,11 +938,8 @@ class InhomogeneousGeneralQuadratic(DiophantineEquationType):
             return False
         if not self.homogeneous_order:
             return True
-        else:
-            # there may be Pow keys like x**2 or Mul keys like x*y
-            if any(k.is_Mul for k in self.coeff): # cross terms
-                return not self.homogeneous
-        return False
+        # there may be Pow keys like x**2 or Mul keys like x*y
+        return any(k.is_Mul for k in self.coeff) and not self.homogeneous
 
 
 class HomogeneousGeneralQuadratic(DiophantineEquationType):
@@ -964,11 +958,8 @@ class HomogeneousGeneralQuadratic(DiophantineEquationType):
             return False
         if not self.homogeneous_order:
             return False
-        else:
-            # there may be Pow keys like x**2 or Mul keys like x*y
-            if any(k.is_Mul for k in self.coeff): # cross terms
-                return self.homogeneous
-        return False
+        # there may be Pow keys like x**2 or Mul keys like x*y
+        return any(k.is_Mul for k in self.coeff) and self.homogeneous
 
 
 class GeneralSumOfSquares(DiophantineEquationType):
@@ -1363,9 +1354,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
             dsol = diophantine(d)
             good = diophantine(n) - dsol
             return {s for s in good if _mexpand(d.subs(zip(var, s)))}
-        else:
-            eq = n
-        eq = factor_terms(eq)
+        eq = factor_terms(n)
         assert not eq.is_number
         eq = eq.as_independent(*var, as_Add=False)[1]
         p = Poly(eq)
@@ -1815,27 +1804,22 @@ def base_solution_linear(c, a, b, t=None):
     a, b, c = _remove_gcd(a, b, c)
 
     if c == 0:
-        if t is not None:
-            if b < 0:
-                t = -t
-            return (b*t, -a*t)
-        else:
+        if t is None:
             return (0, 0)
-    else:
-        x0, y0, d = igcdex(abs(a), abs(b))
+        if b < 0:
+            t = -t
+        return (b*t, -a*t)
 
-        x0 *= sign(a)
-        y0 *= sign(b)
-
-        if divisible(c, d):
-            if t is not None:
-                if b < 0:
-                    t = -t
-                return (c*x0 + b*t, c*y0 - a*t)
-            else:
-                return (c*x0, c*y0)
-        else:
-            return (None, None)
+    x0, y0, d = igcdex(abs(a), abs(b))
+    x0 *= sign(a)
+    y0 *= sign(b)
+    if c % d:
+        return (None, None)
+    if t is None:
+        return (c*x0, c*y0)
+    if b < 0:
+        t = -t
+    return (c*x0 + b*t, c*y0 - a*t)
 
 
 def diop_univariate(eq):
@@ -2006,20 +1990,20 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
     if D < 0:
         if N == 0:
             return [(0, 0)]
-        elif N < 0:
+        if N < 0:
             return []
-        elif N > 0:
-            sol = []
-            for d in divisors(square_factor(N)):
-                sols = cornacchia(1, -D, N // d**2)
-                if sols:
-                    for x, y in sols:
-                        sol.append((d*x, d*y))
-                        if D == -1:
-                            sol.append((d*y, d*x))
-            return sol
+        # N > 0:
+        sol = []
+        for d in divisors(square_factor(N)):
+            sols = cornacchia(1, -D, N // d**2)
+            if sols:
+                for x, y in sols:
+                    sol.append((d*x, d*y))
+                    if D == -1:
+                        sol.append((d*y, d*x))
+        return sol
 
-    elif D == 0:
+    if D == 0:
         if N < 0:
             return []
         if N == 0:
@@ -2027,125 +2011,118 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
         sN, _exact = integer_nthroot(N, 2)
         if _exact:
             return [(sN, t)]
-        else:
-            return []
+        return []
 
-    else:  # D > 0
-        sD, _exact = integer_nthroot(D, 2)
-        if _exact:
-            if N == 0:
-                return [(sD*t, t)]
+    # D > 0
+    sD, _exact = integer_nthroot(D, 2)
+    if _exact:
+        if N == 0:
+            return [(sD*t, t)]
+
+        sol = []
+        for y in range(floor(sign(N)*(N - 1)/(2*sD)) + 1):
+            try:
+                sq, _exact = integer_nthroot(D*y**2 + N, 2)
+            except ValueError:
+                _exact = False
+            if _exact:
+                sol.append((sq, y))
+        return sol
+
+    if 1 < N**2 < D:
+        # It is much faster to call `_special_diop_DN`.
+        return _special_diop_DN(D, N)
+
+    if N == 0:
+        return [(0, 0)]
+
+    if abs(N) == 1:
+        pqa = PQa(0, 1, D)
+        j = 0
+        G = []
+        B = []
+
+        for i in pqa:
+
+            a = i[2]
+            G.append(i[5])
+            B.append(i[4])
+
+            if j != 0 and a == 2*sD:
+                break
+            j = j + 1
+
+        if _odd(j):
+
+            if N == -1:
+                x = G[j - 1]
+                y = B[j - 1]
             else:
-                sol = []
-
-                for y in range(floor(sign(N)*(N - 1)/(2*sD)) + 1):
-                    try:
-                        sq, _exact = integer_nthroot(D*y**2 + N, 2)
-                    except ValueError:
-                        _exact = False
-                    if _exact:
-                        sol.append((sq, y))
-
-                return sol
-
-        elif 1 < N**2 < D:
-            # It is much faster to call `_special_diop_DN`.
-            return _special_diop_DN(D, N)
-
-        else:
-            if N == 0:
-                return [(0, 0)]
-
-            elif abs(N) == 1:
-
-                pqa = PQa(0, 1, D)
-                j = 0
-                G = []
-                B = []
-
-                for i in pqa:
-
-                    a = i[2]
+                count = j
+                while count < 2*j - 1:
+                    i = next(pqa)
                     G.append(i[5])
                     B.append(i[4])
+                    count += 1
 
-                    if j != 0 and a == 2*sD:
-                        break
-                    j = j + 1
-
-                if _odd(j):
-
-                    if N == -1:
-                        x = G[j - 1]
-                        y = B[j - 1]
-                    else:
-                        count = j
-                        while count < 2*j - 1:
-                            i = next(pqa)
-                            G.append(i[5])
-                            B.append(i[4])
-                            count += 1
-
-                        x = G[count]
-                        y = B[count]
-                else:
-                    if N == 1:
-                        x = G[j - 1]
-                        y = B[j - 1]
-                    else:
-                        return []
-
-                return [(x, y)]
-
+                x = G[count]
+                y = B[count]
+        else:
+            if N == 1:
+                x = G[j - 1]
+                y = B[j - 1]
             else:
+                return []
 
-                fs = []
-                sol = []
-                div = divisors(N)
+        return [(x, y)]
 
-                for d in div:
-                    if divisible(N, d**2):
-                        fs.append(d)
+    fs = []
+    sol = []
+    div = divisors(N)
 
-                for f in fs:
-                    m = N // f**2
+    for d in div:
+        if divisible(N, d**2):
+            fs.append(d)
 
-                    zs = sqrt_mod(D, abs(m), all_roots=True)
-                    zs = [i for i in zs if i <= abs(m) // 2 ]
+    for f in fs:
+        m = N // f**2
 
-                    if abs(m) != 2:
-                        zs = zs + [-i for i in zs if i]  # omit dupl 0
+        zs = sqrt_mod(D, abs(m), all_roots=True)
+        zs = [i for i in zs if i <= abs(m) // 2 ]
 
-                    for z in zs:
+        if abs(m) != 2:
+            zs = zs + [-i for i in zs if i]  # omit dupl 0
 
-                        pqa = PQa(z, abs(m), D)
-                        j = 0
-                        G = []
-                        B = []
+        for z in zs:
 
-                        for i in pqa:
+            pqa = PQa(z, abs(m), D)
+            j = 0
+            G = []
+            B = []
 
-                            G.append(i[5])
-                            B.append(i[4])
+            for i in pqa:
 
-                            if j != 0 and abs(i[1]) == 1:
-                                r = G[j-1]
-                                s = B[j-1]
+                G.append(i[5])
+                B.append(i[4])
 
-                                if r**2 - D*s**2 == m:
-                                    sol.append((f*r, f*s))
+                if j != 0 and abs(i[1]) == 1:
+                    r = G[j-1]
+                    s = B[j-1]
 
-                                elif diop_DN(D, -1) != []:
-                                    a = diop_DN(D, -1)
-                                    sol.append((f*(r*a[0][0] + a[0][1]*s*D), f*(r*a[0][1] + s*a[0][0])))
+                    if r**2 - D*s**2 == m:
+                        sol.append((f*r, f*s))
 
-                                break
+                    elif diop_DN(D, -1) != []:
+                        a = diop_DN(D, -1)
+                        sol.append((f*(r*a[0][0] + a[0][1]*s*D), f*(r*a[0][1] + s*a[0][0])))
 
-                            j = j + 1
-                            if j == length(z, abs(m), D):
-                                break
+                    break
 
-                return sol
+                j = j + 1
+                if j == length(z, abs(m), D):
+                    break
+
+    return sol
 
 
 def _special_diop_DN(D, N):
@@ -2424,31 +2401,27 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     a = diop_DN(D, 1)
     u = a[0][0]
 
+    if N == 0:
+        if D < 0:
+            return [(0, 0)]
+        if D == 0:
+            return [(0, t)]
+        sD, _exact = integer_nthroot(D, 2)
+        if _exact:
+            return [(sD*t, t), (-sD*t, t)]
+        return [(0, 0)]
+
     if abs(N) == 1:
         return diop_DN(D, N)
 
-    elif N > 1:
+    if N > 1:
         L1 = 0
         L2 = integer_nthroot(int(N*(u - 1)/(2*D)), 2)[0] + 1
-
-    elif N < -1:
+    else: # N < -1
         L1, _exact = integer_nthroot(-int(N/D), 2)
         if not _exact:
             L1 += 1
         L2 = integer_nthroot(-int(N*(u + 1)/(2*D)), 2)[0] + 1
-
-    else:  # N = 0
-        if D < 0:
-            return [(0, 0)]
-        elif D == 0:
-            return [(0, t)]
-        else:
-            sD, _exact = integer_nthroot(D, 2)
-            if _exact:
-                return [(sD*t, t), (-sD*t, t)]
-            else:
-                return [(0, 0)]
-
 
     for y in range(L1, L2):
         try:
@@ -2654,31 +2627,27 @@ def _transformation_to_DN(var, coeff):
         A_0, B_0 = _transformation_to_DN([X, Y], coeff)
         return Matrix(2, 2, [S.One/B, -S(C)/B, 0, 1])*A_0, Matrix(2, 2, [S.One/B, -S(C)/B, 0, 1])*B_0
 
-    else:
-        if d:
-            B, C = _rational_pq(2*a, d)
-            A, T = _rational_pq(a, B**2)
+    if d:
+        B, C = _rational_pq(2*a, d)
+        A, T = _rational_pq(a, B**2)
 
-            # eq_2 = A*X**2 + c*T*Y**2 + e*T*Y + f*T - A*C**2
-            coeff = {X**2: A, X*Y: 0, Y**2: c*T, X: 0, Y: e*T, 1: f*T - A*C**2}
-            A_0, B_0 = _transformation_to_DN([X, Y], coeff)
-            return Matrix(2, 2, [S.One/B, 0, 0, 1])*A_0, Matrix(2, 2, [S.One/B, 0, 0, 1])*B_0 + Matrix([-S(C)/B, 0])
+        # eq_2 = A*X**2 + c*T*Y**2 + e*T*Y + f*T - A*C**2
+        coeff = {X**2: A, X*Y: 0, Y**2: c*T, X: 0, Y: e*T, 1: f*T - A*C**2}
+        A_0, B_0 = _transformation_to_DN([X, Y], coeff)
+        return Matrix(2, 2, [S.One/B, 0, 0, 1])*A_0, Matrix(2, 2, [S.One/B, 0, 0, 1])*B_0 + Matrix([-S(C)/B, 0])
 
-        else:
-            if e:
-                B, C = _rational_pq(2*c, e)
-                A, T = _rational_pq(c, B**2)
+    if e:
+        B, C = _rational_pq(2*c, e)
+        A, T = _rational_pq(c, B**2)
 
-                # eq_3 = a*T*X**2 + A*Y**2 + f*T - A*C**2
-                coeff = {X**2: a*T, X*Y: 0, Y**2: A, X: 0, Y: 0, 1: f*T - A*C**2}
-                A_0, B_0 = _transformation_to_DN([X, Y], coeff)
-                return Matrix(2, 2, [1, 0, 0, S.One/B])*A_0, Matrix(2, 2, [1, 0, 0, S.One/B])*B_0 + Matrix([0, -S(C)/B])
+        # eq_3 = a*T*X**2 + A*Y**2 + f*T - A*C**2
+        coeff = {X**2: a*T, X*Y: 0, Y**2: A, X: 0, Y: 0, 1: f*T - A*C**2}
+        A_0, B_0 = _transformation_to_DN([X, Y], coeff)
+        return Matrix(2, 2, [1, 0, 0, S.One/B])*A_0, Matrix(2, 2, [1, 0, 0, S.One/B])*B_0 + Matrix([0, -S(C)/B])
 
-            else:
-                # TODO: pre-simplification: Not necessary but may simplify
-                # the equation.
-
-                return Matrix(2, 2, [S.One/a, 0, 0, 1]), Matrix([0, 0])
+    # TODO: pre-simplification: Not necessary but may simplify
+    # the equation.
+    return Matrix(2, 2, [S.One/a, 0, 0, 1]), Matrix([0, 0])
 
 
 def find_DN(eq):
@@ -2874,12 +2843,11 @@ def _transformation_to_normal(var, coeff):
             T.col_swap(0, 2)
             return T
 
-        else:
-            _var[0], _var[1] = var[1], var[0]
-            T = _transformation_to_normal(_var, coeff)
-            T.row_swap(0, 1)
-            T.col_swap(0, 1)
-            return T
+        _var[0], _var[1] = var[1], var[0]
+        T = _transformation_to_normal(_var, coeff)
+        T.row_swap(0, 1)
+        T.col_swap(0, 1)
+        return T
 
     # Apply the transformation x --> X - (B*Y + C*Z)/(2*A)
     if coeff[x*y] != 0 or coeff[x*z] != 0:
@@ -2909,24 +2877,21 @@ def _transformation_to_normal(var, coeff):
                 # Apply transformation y -> Y + Z ans z -> Y - Z
                 return Matrix(3, 3, [1, 0, 0, 0, 1, 1, 0, 1, -1])
 
-            else:
-                # Ax**2 + E*y*z + F*z**2  = 0
-                _var[0], _var[2] = var[2], var[0]
-                T = _transformation_to_normal(_var, coeff)
-                T.row_swap(0, 2)
-                T.col_swap(0, 2)
-                return T
-
-        else:
-            # A*x**2 + D*y**2 + E*y*z + F*z**2 = 0, F may be zero
-            _var[0], _var[1] = var[1], var[0]
+            # Ax**2 + E*y*z + F*z**2  = 0
+            _var[0], _var[2] = var[2], var[0]
             T = _transformation_to_normal(_var, coeff)
-            T.row_swap(0, 1)
-            T.col_swap(0, 1)
+            T.row_swap(0, 2)
+            T.col_swap(0, 2)
             return T
 
-    else:
-        return Matrix.eye(3)
+        # A*x**2 + D*y**2 + E*y*z + F*z**2 = 0, F may be zero
+        _var[0], _var[1] = var[1], var[0]
+        T = _transformation_to_normal(_var, coeff)
+        T.row_swap(0, 1)
+        T.col_swap(0, 1)
+        return T
+
+    return Matrix.eye(3)
 
 
 def parametrize_ternary_quadratic(eq):
@@ -3876,8 +3841,7 @@ def power_representation(n, p, k, zeros=False):
         return
 
     if p == 1:
-        for t in partition(n, k, zeros=zeros):
-            yield t
+        yield from partition(n, k, zeros=zeros)
         return
 
     if p == 2:
@@ -4014,17 +3978,12 @@ def _can_do_sum_of_squares(n, k):
             if n % 4 == 1:
                 return 1  # signal that it was prime
             return False
-        else:
-            f = factorint(n)
-            for p, m in f.items():
-                # we can proceed iff no prime factor in the form 4*k + 3
-                # has an odd multiplicity
-                if (p % 4 == 3) and m % 2:
-                    return False
-            return True
+        # n is a composite number
+        # we can proceed iff no prime factor in the form 4*k + 3
+        # has an odd multiplicity
+        return all(p % 4 !=3 or m % 2 == 0 for p, m in factorint(n).items())
     if k == 3:
-        if (n//4**multiplicity(4, n)) % 8 == 7:
-            return False
+        return remove(n, 4)[0] % 8 != 7
     # every number can be written as a sum of 4 squares; for k > 4 partitions
     # can be 0
     return True
