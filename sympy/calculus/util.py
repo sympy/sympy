@@ -16,7 +16,6 @@ from sympy.functions.elementary.trigonometric import (
     asin, acos, acot, atan, asec, acsc)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
     sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
-from sympy.functions.elementary.hyperbolic import (acosh)
 from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement)
