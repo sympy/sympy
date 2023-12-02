@@ -98,6 +98,7 @@ def singularities(expression, symbol, domain=None):
             if i.exp.is_infinite:
                 raise NotImplementedError
             if i.exp.is_negative:
+                # XXX: exponent of varying sign not handled
                 sings += solveset(i.base, symbol, domain)
         for i in expression.atoms(log, asech, acsch):
             sings += solveset(i.args[0], symbol, domain)

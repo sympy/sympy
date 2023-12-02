@@ -109,7 +109,9 @@ def continuous_domain(f, symbol, domain):
     cont_domain = domain
     for atom in f.atoms(Pow):
         den = atom.exp.as_numer_denom()[1]
-        if den.is_even and den.is_nonzero:
+        if atom.exp.is_rational and den.is_odd:
+            pass    # 0**negative handled by singularities()
+        else:
             constraint = solve_univariate_inequality(atom.base >= 0,
                                                         symbol).as_set()
             cont_domain = Intersection(constraint, cont_domain)
