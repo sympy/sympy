@@ -12,9 +12,10 @@ from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
-    TrigonometricFunction, sin, cos, csc, sec, asin, acos, acot, asec, acsc)
-from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth, sech, csch,
-                   asinh, acosh, atanh, acoth, asech, acsch)
+    TrigonometricFunction, sin, cos, tan, cot, csc, sec,
+    asin, acos, acot, atan, asec, acsc)
+from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
+    sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.hyperbolic import (acosh)
 from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
@@ -74,6 +75,21 @@ def continuous_domain(f, symbol, domain):
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
 
+    if not domain.is_subset(S.Reals):
+        raise NotImplementedError(filldedent('''
+            Domain must be a subset of S.Reals.
+            '''))
+    implemented = [Pow, exp, log, Abs,
+                   sin, cos, tan, cot, sec, csc,
+                   asin, acos, atan, acot, asec, acsc,
+                   sinh, cosh, tanh, coth, sech, csch,
+                   asinh, acosh, atanh, acoth, asech, acsch]
+    used = [fct.func for fct in f.atoms(Function)]
+    if any(func not in implemented for func in used):
+        raise NotImplementedError(filldedent('''
+            Unable to determine the domain of the given function.
+            '''))
+
     x = Symbol('x')
     constraints = {
         log: (x > 0,),
@@ -89,36 +105,35 @@ def continuous_domain(f, symbol, domain):
         acoth: (x < -1, x > 1)
     }
 
-    if domain.is_subset(S.Reals):
-        cont_domain = domain
-        for atom in f.atoms(Pow):
-            den = atom.exp.as_numer_denom()[1]
-            if den.is_even and den.is_nonzero:
-                constraint = solve_univariate_inequality(atom.base >= 0,
-                                                         symbol).as_set()
-                cont_domain = Intersection(constraint, cont_domain)
+    cont_domain = domain
+    for atom in f.atoms(Pow):
+        den = atom.exp.as_numer_denom()[1]
+        if den.is_even and den.is_nonzero:
+            constraint = solve_univariate_inequality(atom.base >= 0,
+                                                        symbol).as_set()
+            cont_domain = Intersection(constraint, cont_domain)
 
-        for atom in f.atoms(Function):
-            if atom.func in constraints:
-                for c in constraints[atom.func]:
-                    constraint_relational = c.subs(x, atom.args[0])
-                    constraint_set = solve_univariate_inequality(
-                        constraint_relational, symbol).as_set()
-                    cont_domain = Intersection(constraint_set, cont_domain)
-            elif atom.func in constraints_union:
-                constraint_set = S.EmptySet
-                for c in constraints_union[atom.func]:
-                    constraint_relational = c.subs(x, atom.args[0])
-                    constraint_set += solve_univariate_inequality(
-                        constraint_relational, symbol).as_set()
+    for atom in f.atoms(Function):
+        if atom.func in constraints:
+            for c in constraints[atom.func]:
+                constraint_relational = c.subs(x, atom.args[0])
+                constraint_set = solve_univariate_inequality(
+                    constraint_relational, symbol).as_set()
                 cont_domain = Intersection(constraint_set, cont_domain)
-            elif atom.func == acot:
-                from sympy.solvers.solveset import solveset_real
-                # Sympy's acot() has a step discontinuity at 0. Since it's
-                # neither an essential singularity nor a pole, singularities()
-                # will not report it. But it's still relevant for determining
-                # the continuity of the function f.
-                cont_domain -= solveset_real(atom.args[0], symbol)
+        elif atom.func in constraints_union:
+            constraint_set = S.EmptySet
+            for c in constraints_union[atom.func]:
+                constraint_relational = c.subs(x, atom.args[0])
+                constraint_set += solve_univariate_inequality(
+                    constraint_relational, symbol).as_set()
+            cont_domain = Intersection(constraint_set, cont_domain)
+        elif atom.func == acot:
+            from sympy.solvers.solveset import solveset_real
+            # Sympy's acot() has a step discontinuity at 0. Since it's
+            # neither an essential singularity nor a pole, singularities()
+            # will not report it. But it's still relevant for determining
+            # the continuity of the function f.
+            cont_domain -= solveset_real(atom.args[0], symbol)
 
     return cont_domain - singularities(f, symbol, domain)
 
