@@ -173,7 +173,7 @@ def _holder_formula(prime_factors: set):
     References
     ==========
 
-    .. [1] Otto Hölder, Die Gruppen der Ordnungen p^3, pq^2, pqr, p^4,
+    .. [1] Otto Holder, Die Gruppen der Ordnungen p^3, pq^2, pqr, p^4,
            Math. Ann. 43 pp. 301-412 (1893).
            http://dx.doi.org/10.1007/BF01443651
     .. [2] John H. Conway, Heiko Dietrich and E.A. O'Brien,
