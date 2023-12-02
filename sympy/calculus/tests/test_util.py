@@ -129,6 +129,7 @@ def test_continuous_domain():
         1/(x**2+1), x, S.Complexes))
     raises(NotImplementedError, lambda : continuous_domain(
         gamma(x), x, Interval(-5,0)))
+    assert continuous_domain(x + gamma(pi), x, S.Reals) == S.Reals
 
 
 @XFAIL

@@ -85,7 +85,7 @@ def continuous_domain(f, symbol, domain):
                    asin, acos, atan, acot, asec, acsc,
                    sinh, cosh, tanh, coth, sech, csch,
                    asinh, acosh, atanh, acoth, asech, acsch]
-    used = [fct.func for fct in f.atoms(Function)]
+    used = [fct.func for fct in f.atoms(Function) if fct.has(symbol)]
     if any(func not in implemented for func in used):
         raise NotImplementedError(filldedent('''
             Unable to determine the domain of the given function.
