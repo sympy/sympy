@@ -119,7 +119,7 @@ def is_cyclic_number(n) -> bool:
     return all(e == 1 for e in factors.values()) and _is_nilpotent_number(factors)
 
 
-def _holder_formula(prime_factors: set):
+def _holder_formula(prime_factors):
     r""" Number of groups of order `n`.
     where `n` is squarefree and its prime factors are ``prime_factors``.
     i.e., ``n == math.prod(prime_factors)``
@@ -226,11 +226,11 @@ def groups_count(n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.group_numbers import number_of_groups
-    >>> number_of_groups(3) # There is only one cyclic group of order 3
+    >>> from sympy.combinatorics.group_numbers import groups_count
+    >>> groups_count(3) # There is only one cyclic group of order 3
     1
     >>> # There are two groups of order 10: the cyclic group and the dihedral group
-    >>> number_of_groups(10)
+    >>> groups_count(10)
     2
 
     See Also
