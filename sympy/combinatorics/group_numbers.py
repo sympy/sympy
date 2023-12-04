@@ -281,6 +281,12 @@ def groups_count(n):
                   (4*p**2 + 44*p + 291)*gcd(p-1, 3) + (p**2 + 19*p + 135)*gcd(p-1, 4) + \
                   (3*p + 31)*gcd(p-1, 5) + 4*gcd(p-1, 7) + 5*gcd(p-1, 8) + gcd(p-1, 9)
     if any(e > 1 for e in factors.values()): # n is not squarefree
+        # some known values for small n that have more than 1 factor and are not square free (https://oeis.org/A000001)
+        small = {12: 5, 18: 5, 20: 5, 24: 15, 28: 4, 36: 14, 40: 14, 44: 4, 45: 2, 48: 52,
+                50: 5, 52: 5, 54: 15, 56: 13, 60: 13, 63: 4, 68: 5, 72: 50, 75: 3, 76: 4,
+                80: 52, 84: 15, 88: 12, 90: 10, 92: 4}
+        if n in small:
+            return small[n]
         raise ValueError("Number of groups of order n is unknown or not implemented")
     if len(factors) == 2: # n is squarefree semiprime
         p, q = list(factors.keys())
