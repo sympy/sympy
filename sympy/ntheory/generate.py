@@ -929,11 +929,10 @@ def cycle_length(f, x0, nmax=None, values=False):
 
     This will yield successive values of i <-- func(i):
 
-        >>> def iter(func, i):
+        >>> def gen(func, i):
         ...     while 1:
-        ...         ii = func(i)
-        ...         yield ii
-        ...         i = ii
+        ...         yield i
+        ...         i = func(i)
         ...
 
     A function is defined:
@@ -943,23 +942,23 @@ def cycle_length(f, x0, nmax=None, values=False):
     and given a seed of 4 and the mu and lambda terms calculated:
 
         >>> next(cycle_length(func, 4))
-        (6, 2)
+        (6, 3)
 
     We can see what is meant by looking at the output:
 
-        >>> n = cycle_length(func, 4, values=True)
-        >>> list(ni for ni in n)
-        [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
+        >>> iter = cycle_length(func, 4, values=True)
+        >>> list(iter)
+        [4, 17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
 
-    There are 6 repeating values after the first 2.
+    There are 6 repeating values after the first 3.
 
     If a sequence is suspected of being longer than you might wish, ``nmax``
     can be used to exit early (and mu will be returned as None):
 
         >>> next(cycle_length(func, 4, nmax = 4))
         (4, None)
-        >>> [ni for ni in cycle_length(func, 4, nmax = 4, values=True)]
-        [17, 35, 2, 5]
+        >>> list(cycle_length(func, 4, nmax = 4, values=True))
+        [4, 17, 35, 2]
 
     Code modified from:
         https://en.wikipedia.org/wiki/Cycle_detection.
@@ -970,7 +969,9 @@ def cycle_length(f, x0, nmax=None, values=False):
     # main phase: search successive powers of two
     power = lam = 1
     tortoise, hare = x0, f(x0)  # f(x0) is the element/node next to x0.
-    i = 0
+    i = 1
+    if values:
+        yield tortoise
     while tortoise != hare and (not nmax or i < nmax):
         i += 1
         if power == lam:   # time to start a new power of two?
@@ -997,8 +998,6 @@ def cycle_length(f, x0, nmax=None, values=False):
             tortoise = f(tortoise)
             hare = f(hare)
             mu += 1
-        if mu:
-            mu -= 1
         yield lam, mu
 
 

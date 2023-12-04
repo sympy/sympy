@@ -92,14 +92,14 @@ class KanesMethod(_Methods):
     kd_eqs_solver : str, callable
         Method used to solve the kinematic differential equations. If a string
         is supplied, it should be a valid method that can be used with the
-        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+        :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
         supplied, it should have the format ``f(A, rhs)``, where it solves the
         equations and returns the solution. The default utilizes LU solve. See
         the notes for more information.
     constraint_solver : str, callable
         Method used to solve the velocity constraints. If a string is
         supplied, it should be a valid method that can be used with the
-        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+        :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
         supplied, it should have the format ``f(A, rhs)``, where it solves the
         equations and returns the solution. The default utilizes LU solve. See
         the notes for more information.
@@ -130,7 +130,7 @@ class KanesMethod(_Methods):
     uses a single division by default per entry of the solution.
 
     While a valid list of solvers can be found at
-    :meth:`sympy.matrices.matrices.MatrixBase.solve`, it is also possible to supply a
+    :meth:`sympy.matrices.matrixbase.MatrixBase.solve`, it is also possible to supply a
     `callable`. This way it is possible to use a different solver routine. If the
     kinematic differential equations are not too complex it can be worth it to simplify
     the solution by using ``lambda A, b: simplify(Matrix.LUsolve(A, b))``. Another
@@ -546,7 +546,7 @@ class KanesMethod(_Methods):
             Method used to solve the several symbolic linear systems of the
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
-            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
             supplied, it should have the format ``x = f(A, b)``, where it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
@@ -640,7 +640,7 @@ class KanesMethod(_Methods):
             Method used to solve the several symbolic linear systems of the
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
-            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
             supplied, it should have the format ``x = f(A, b)``, where it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
@@ -758,7 +758,7 @@ class KanesMethod(_Methods):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
 
         """
         rhs = zeros(len(self.q) + len(self.u), 1)

@@ -12,7 +12,14 @@ from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_selfridge_prp, is_strong_selfridge_prp,
                                  is_strong_bpsw_prp)
 from sympy.external.ntheory import _lucas_sequence
-from sympy.utilities.misc import as_int
+from sympy.utilities.misc import as_int, filldedent
+
+# Note: This list should be updated whenever new Mersenne primes are found.
+# Refer: https://www.mersenne.org/
+MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
+ 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049,
+ 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583,
+ 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
 
 
 def is_fermat_pseudoprime(n, a):
@@ -447,6 +454,148 @@ def is_extra_strong_lucas_prp(n):
     return False
 
 
+def proth_test(n):
+    r""" Test if the Proth number `n = k2^m + 1` is prime. where k is a positive odd number and `2^m > k`.
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is Proth number
+
+    Returns
+    =======
+
+    bool : If ``True``, then ``n`` is the Proth prime
+
+    Raises
+    ======
+
+    ValueError
+        If ``n`` is not Proth number.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import proth_test
+    >>> proth_test(41)
+    True
+    >>> proth_test(57)
+    False
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Proth_prime
+
+    """
+    n = as_int(n)
+    if n < 3:
+        raise ValueError("n is not Proth number")
+    m = bit_scan1(n - 1)
+    k = n >> m
+    if m < k.bit_length():
+        raise ValueError("n is not Proth number")
+    if n % 3 == 0:
+        return n == 3
+    if k % 3: # n % 12 == 5
+        return pow(3, n >> 1, n) == n - 1
+    # If `n` is a square number, then `jacobi(a, n) = 1` for any `a`
+    if gmpy_is_square(n):
+        return False
+    # `a` may be chosen at random.
+    # In any case, we want to find `a` such that `jacobi(a, n) = -1`.
+    for a in range(5, n):
+        j = jacobi(a, n)
+        if j == -1:
+            return pow(a, n >> 1, n) == n - 1
+        if j == 0:
+            return False
+
+
+def _lucas_lehmer_primality_test(p):
+    r""" Test if the Mersenne number `M_p = 2^p-1` is prime.
+
+    Parameters
+    ==========
+
+    p : int
+        ``p`` is an odd prime number
+
+    Returns
+    =======
+
+    bool : If ``True``, then `M_p` is the Mersenne prime
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import _lucas_lehmer_primality_test
+    >>> _lucas_lehmer_primality_test(5) # 2**5 - 1 = 31 is prime
+    True
+    >>> _lucas_lehmer_primality_test(11) # 2**11 - 1 = 2047 is not prime
+    False
+
+    See Also
+    ========
+
+    is_mersenne_prime
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lucas%E2%80%93Lehmer_primality_test
+
+    """
+    v = 4
+    m = 2**p - 1
+    for _ in range(p - 2):
+        v = pow(v, 2, m) - 2
+    return v == 0
+
+
+def is_mersenne_prime(n):
+    """Returns True if  ``n`` is a Mersenne prime, else False.
+
+    A Mersenne prime is a prime number having the form `2^i - 1`.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_mersenne_prime
+    >>> is_mersenne_prime(6)
+    False
+    >>> is_mersenne_prime(127)
+    True
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/MersennePrime.html
+
+    """
+    n = as_int(n)
+    if n < 1:
+        return False
+    if n & (n + 1):
+        # n is not Mersenne number
+        return False
+    p = n.bit_length()
+    if p in MERSENNE_PRIME_EXPONENTS:
+        return True
+    if p < 65_000_000 or not isprime(p):
+        # According to GIMPS, verification was completed on September 19, 2023 for p less than 65 million.
+        # https://www.mersenne.org/report_milestones/
+        # If p is composite number, then n=2**p-1 is composite number.
+        return False
+    result = _lucas_lehmer_primality_test(p)
+    if result:
+        raise ValueError(filldedent('''
+            This Mersenne Prime, 2^%s - 1, should
+            be added to SymPy's known values.''' % p))
+    return result
+
+
 def isprime(n):
     """
     Test if n is a prime number (True) or not (False). For n < 2^64 the
@@ -511,10 +660,12 @@ def isprime(n):
 
     References
     ==========
-    - https://en.wikipedia.org/wiki/Strong_pseudoprime
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
-    - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
+    .. [1] https://en.wikipedia.org/wiki/Strong_pseudoprime
+    .. [2] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
+           Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
+           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [3] https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
     try:
         n = as_int(n)

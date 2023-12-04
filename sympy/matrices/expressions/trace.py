@@ -4,8 +4,8 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import uniquely_named_symbol
 from sympy.core.sympify import sympify
-from sympy.matrices.matrices import MatrixBase
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.matrixbase import MatrixBase
+from sympy.matrices.exceptions import NonSquareMatrixError
 
 
 class Trace(Expr):

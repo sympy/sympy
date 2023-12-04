@@ -358,6 +358,8 @@ def test_Poly__new__():
 
     raises(GeneratorsNeeded, lambda: Poly(1))
 
+    assert Poly('x-x') == Poly(0, x)
+
     f = a*x**2 + b*x + c
 
     assert Poly({2: a, 1: b, 0: c}, x) == f

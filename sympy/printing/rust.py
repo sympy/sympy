@@ -221,18 +221,12 @@ class RustCodePrinter(CodePrinter):
     printmethod = "_rust_code"
     language = "Rust"
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
         'contract': True,
         'dereference': set(),
-        'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-        'inline': False,
-    }
+    })
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)

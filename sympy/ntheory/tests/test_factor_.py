@@ -16,7 +16,7 @@ from sympy.ntheory import (totient,
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega,
-    mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
+    mersenne_prime_exponent, is_perfect, is_abundant,
     is_deficient, is_amicable, dra, drm, _perfect_power)
 
 from sympy.testing.pytest import raises, slow
@@ -105,10 +105,10 @@ def test_private_perfect_power():
     for x in [2, 3, 5, 6, 7, 12, 15, 105, 100003]:
         for y in range(2, 100):
             assert _perfect_power(x**y) == (x, y)
-            if x != 2:
-                assert _perfect_power(x**y, k=3) == (x, y)
+            if x & 1:
+                assert _perfect_power(x**y, next_p=3) == (x, y)
             if x == 100003:
-                assert _perfect_power(x**y, k=100003) == (x, y)
+                assert _perfect_power(x**y, next_p=100003) == (x, y)
             assert _perfect_power(101*x**y) == False
             # Catalan's conjecture
             if x**y not in [8, 9]:
@@ -641,6 +641,7 @@ def test_mersenne_prime_exponent():
 
 
 def test_is_perfect():
+    assert is_perfect(-6) is False
     assert is_perfect(6) is True
     assert is_perfect(15) is False
     assert is_perfect(28) is True
@@ -648,14 +649,6 @@ def test_is_perfect():
     assert is_perfect(496) is True
     assert is_perfect(8128) is True
     assert is_perfect(10000) is False
-
-
-def test_is_mersenne_prime():
-    assert is_mersenne_prime(10) is False
-    assert is_mersenne_prime(127) is True
-    assert is_mersenne_prime(511) is False
-    assert is_mersenne_prime(131071) is True
-    assert is_mersenne_prime(2147483647) is True
 
 
 def test_is_abundant():
