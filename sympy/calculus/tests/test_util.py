@@ -332,4 +332,3 @@ def test_issue_18747():
 
 def test_issue_24134():
     assert function_range(sqrt(x*(2.0 - x)), x, S.Reals) == FiniteSet(0, 1)
-    # right now the bug is that it only gives FiniteSet(0)
