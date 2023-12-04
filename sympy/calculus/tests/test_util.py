@@ -1,11 +1,18 @@
+from sympy.core.function import Lambda
 from sympy.core.numbers import (E, I, Rational, oo, pi)
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, re)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import frac
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, cot, csc, sec, sin, tan)
+from sympy.functions.elementary.trigonometric import (
+    cos, cot, csc, sec, sin, tan, asin, acos, atan, acot, asec, acsc)
+from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
+    sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
+from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.error_functions import expint
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.simplify.simplify import simplify
@@ -13,7 +20,9 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
                                  periodicity, lcim, is_convex,
                                  stationary_points, minimum, maximum)
 from sympy.sets.sets import (Interval, FiniteSet, Complement, Union)
-from sympy.testing.pytest import raises, _both_exp_pow
+from sympy.sets.fancysets import ImageSet
+from sympy.sets.conditionset import ConditionSet
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 from sympy.abc import x
 
 a = Symbol('a', real=True)
@@ -64,6 +73,8 @@ def test_continuous_domain():
     assert continuous_domain(tan(x), x, Interval(0, 2*pi)) == \
         Union(Interval(0, pi/2, False, True), Interval(pi/2, pi*Rational(3, 2), True, True),
               Interval(pi*Rational(3, 2), 2*pi, True, False))
+    assert continuous_domain(cot(x), x, Interval(0, 2*pi)) == Union(
+        Interval.open(0, pi), Interval.open(pi, 2*pi))
     assert continuous_domain((x - 1)/((x - 1)**2), x, S.Reals) == \
         Union(Interval(-oo, 1, True, True), Interval(1, oo, True, True))
     assert continuous_domain(log(x) + log(4*x - 1), x, S.Reals) == \
@@ -73,11 +84,66 @@ def test_continuous_domain():
         Union(Interval.open(-oo, 0), Interval.open(0, oo))
     assert continuous_domain(1/(x**2 - 4) + 2, x, S.Reals) == \
         Union(Interval.open(-oo, -2), Interval.open(-2, 2), Interval.open(2, oo))
+    assert continuous_domain((x+1)**pi, x, S.Reals) == Interval(-1, oo)
+    assert continuous_domain((x+1)**(pi/2), x, S.Reals) == Interval(-1, oo)
+    assert continuous_domain(x**x, x, S.Reals) == Interval(0, oo)
+    assert continuous_domain((x+1)**log(x**2), x, S.Reals) == Union(
+        Interval.Ropen(-1, 0), Interval.open(0, oo))
     domain = continuous_domain(log(tan(x)**2 + 1), x, S.Reals)
     assert not domain.contains(3*pi/2)
     assert domain.contains(5)
     d = Symbol('d', even=True, zero=False)
     assert continuous_domain(x**(1/d), x, S.Reals) == Interval(0, oo)
+    n = Dummy('n')
+    assert continuous_domain(1/sin(x), x, S.Reals).dummy_eq(Complement(
+        S.Reals, Union(ImageSet(Lambda(n, 2*n*pi + pi), S.Integers),
+                       ImageSet(Lambda(n, 2*n*pi), S.Integers))))
+    assert continuous_domain(sin(x) + cos(x), x, S.Reals) == S.Reals
+    assert continuous_domain(asin(x), x, S.Reals) == Interval(-1, 1) # issue #21786
+    assert continuous_domain(1/acos(log(x)), x, S.Reals) == Interval.Ropen(exp(-1), E)
+    assert continuous_domain(sinh(x)+cosh(x), x, S.Reals) == S.Reals
+    assert continuous_domain(tanh(x)+sech(x), x, S.Reals) == S.Reals
+    assert continuous_domain(atan(x)+asinh(x), x, S.Reals) == S.Reals
+    assert continuous_domain(acosh(x), x, S.Reals) == Interval(1, oo)
+    assert continuous_domain(atanh(x), x, S.Reals) == Interval.open(-1, 1)
+    assert continuous_domain(atanh(x)+acosh(x), x, S.Reals) == S.EmptySet
+    assert continuous_domain(asech(x), x, S.Reals) == Interval.Lopen(0, 1)
+    assert continuous_domain(acoth(x), x, S.Reals) == Union(
+        Interval.open(-oo, -1), Interval.open(1, oo))
+    assert continuous_domain(asec(x), x, S.Reals) == Union(
+        Interval(-oo, -1), Interval(1, oo))
+    assert continuous_domain(acsc(x), x, S.Reals) == Union(
+        Interval(-oo, -1), Interval(1, oo))
+    for f in (coth, acsch, csch):
+        assert continuous_domain(f(x), x, S.Reals) == Union(
+            Interval.open(-oo, 0), Interval.open(0, oo))
+    assert continuous_domain(acot(x), x, S.Reals).contains(0) == False
+    assert continuous_domain(1/(exp(x) - x), x, S.Reals) == Complement(
+        S.Reals, ConditionSet(x, Eq(-x + exp(x), 0), S.Reals))
+    assert continuous_domain(frac(x**2), x, Interval(-2,-1)) == Union(
+        Interval.open(-2, -sqrt(3)), Interval.open(-sqrt(2), -1),
+        Interval.open(-sqrt(3), -sqrt(2)))
+    assert continuous_domain(frac(x), x, S.Reals) == Complement(
+        S.Reals, S.Integers)
+    raises(NotImplementedError, lambda : continuous_domain(
+        1/(x**2+1), x, S.Complexes))
+    raises(NotImplementedError, lambda : continuous_domain(
+        gamma(x), x, Interval(-5,0)))
+    assert continuous_domain(x + gamma(pi), x, S.Reals) == S.Reals
+
+
+@XFAIL
+def test_continuous_domain_acot():
+    acot_cont = Piecewise((pi+acot(x), x<0), (acot(x), True))
+    assert continuous_domain(acot_cont, x, S.Reals) == S.Reals
+
+@XFAIL
+def test_continuous_domain_gamma():
+    assert continuous_domain(gamma(x), x, S.Reals).contains(-1) == False
+
+@XFAIL
+def test_continuous_domain_neg_power():
+    assert continuous_domain((x-2)**(1-x), x, S.Reals) == Interval.open(2, oo)
 
 
 def test_not_empty_in():
@@ -329,3 +395,8 @@ def test_issue_16469():
 @_both_exp_pow
 def test_issue_18747():
     assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8
+
+
+def test_issue_25942():
+    x = Symbol("x")
+    assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)

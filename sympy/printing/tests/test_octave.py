@@ -378,13 +378,10 @@ def test_octave_boolean():
 
 
 def test_octave_not_supported():
-    assert mcode(S.ComplexInfinity) == (
-        "% Not supported in Octave:\n"
-        "% ComplexInfinity\n"
-        "zoo"
-    )
+    with raises(NotImplementedError):
+        mcode(S.ComplexInfinity)
     f = Function('f')
-    assert mcode(f(x).diff(x)) == (
+    assert mcode(f(x).diff(x), strict=False) == (
         "% Not supported in Octave:\n"
         "% Derivative\n"
         "Derivative(f(x), x)"
@@ -393,21 +390,15 @@ def test_octave_not_supported():
 
 def test_octave_not_supported_not_on_whitelist():
     from sympy.functions.special.polynomials import assoc_laguerre
-    assert mcode(assoc_laguerre(x, y, z)) == (
-        "% Not supported in Octave:\n"
-        "% assoc_laguerre\n"
-        "assoc_laguerre(x, y, z)"
-    )
+    with raises(NotImplementedError):
+        mcode(assoc_laguerre(x, y, z))
 
 
 def test_octave_expint():
     assert mcode(expint(1, x)) == "expint(x)"
-    assert mcode(expint(2, x)) == (
-        "% Not supported in Octave:\n"
-        "% expint\n"
-        "expint(2, x)"
-    )
-    assert mcode(expint(y, x)) == (
+    with raises(NotImplementedError):
+        mcode(expint(2, x))
+    assert mcode(expint(y, x), strict=False) == (
         "% Not supported in Octave:\n"
         "% expint\n"
         "expint(y, x)"
@@ -515,7 +506,8 @@ def test_MatrixElement_printing():
 
 def test_zeta_printing_issue_14820():
     assert octave_code(zeta(x)) == 'zeta(x)'
-    assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'
+    with raises(NotImplementedError):
+        octave_code(zeta(x, y))
 
 
 def test_automatic_rewrite():

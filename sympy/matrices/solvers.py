@@ -2,7 +2,7 @@ from sympy.core.function import expand_mul
 from sympy.core.symbol import Dummy, uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
 
-from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
 from .eigen import _fuzzy_positive_definite
 from .utilities import _get_intermediate_simp, _iszero
 

@@ -17,7 +17,7 @@ class TensorProduct(Expr):
     def __new__(cls, *args, **kwargs):
         from sympy.tensor.array import NDimArray, tensorproduct, Array
         from sympy.matrices.expressions.matexpr import MatrixExpr
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.strategies import flatten
 
         args = [sympify(arg) for arg in args]

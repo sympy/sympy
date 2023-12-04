@@ -1,19 +1,14 @@
-from sympy.matrices.common import _MinimalMatrix, _CastableMatrix
-from sympy.matrices.matrices import MatrixSubspaces
 from sympy.matrices import Matrix
 from sympy.core.numbers import Rational
 from sympy.core.symbol import symbols
 from sympy.solvers import solve
 
-class SubspaceOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSubspaces):
-    pass
 
-# SubspaceOnlyMatrix tests
 def test_columnspace_one():
-    m = SubspaceOnlyMatrix([[ 1,  2,  0,  2,  5],
-                            [-2, -5,  1, -1, -8],
-                            [ 0, -3,  3,  4,  1],
-                            [ 3,  6,  0, -7,  2]])
+    m = Matrix([[ 1,  2,  0,  2,  5],
+                [-2, -5,  1, -1, -8],
+                [ 0, -3,  3,  4,  1],
+                [ 3,  6,  0, -7,  2]])
 
     basis = m.columnspace()
     assert basis[0] == Matrix([1, -2, 0, 3])
@@ -25,10 +20,10 @@ def test_columnspace_one():
 
 
 def test_rowspace():
-    m = SubspaceOnlyMatrix([[ 1,  2,  0,  2,  5],
-                            [-2, -5,  1, -1, -8],
-                            [ 0, -3,  3,  4,  1],
-                            [ 3,  6,  0, -7,  2]])
+    m = Matrix([[ 1,  2,  0,  2,  5],
+                [-2, -5,  1, -1, -8],
+                [ 0, -3,  3,  4,  1],
+                [ 3,  6,  0, -7,  2]])
 
     basis = m.rowspace()
     assert basis[0] == Matrix([[1, 2, 0, 2, 5]])
@@ -39,10 +34,10 @@ def test_rowspace():
 
 
 def test_nullspace_one():
-    m = SubspaceOnlyMatrix([[ 1,  2,  0,  2,  5],
-                            [-2, -5,  1, -1, -8],
-                            [ 0, -3,  3,  4,  1],
-                            [ 3,  6,  0, -7,  2]])
+    m = Matrix([[ 1,  2,  0,  2,  5],
+                [-2, -5,  1, -1, -8],
+                [ 0, -3,  3,  4,  1],
+                [ 3,  6,  0, -7,  2]])
 
     basis = m.nullspace()
     assert basis[0] == Matrix([-2, 1, 1, 0, 0])
