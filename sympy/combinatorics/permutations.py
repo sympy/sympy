@@ -1422,8 +1422,7 @@ class Permutation(Atom):
         Permutation([0, 1, 2, 3])
         """
         if isinstance(n, Permutation):
-            raise NotImplementedError(
-                'p**p is not defined; do you mean p^p (conjugate)?')
+            return NotImplemented
         n = int(n)
         return self._af_new(_af_pow(self.array_form, n))
 
