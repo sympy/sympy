@@ -88,7 +88,7 @@ class Integral(AddWithLimits):
             sin_atoms = function.atoms(sin)
             for sin_atom in sin_atoms:
                 # Replace sin(x) with z in the function
-                function = function.subs(sin_atom, z)           
+                function = function.subs(sin_atom, z)
 
         if isinstance(function, Poly):
             sympy_deprecation_warning(
