@@ -660,10 +660,15 @@ def test_sum_of_three_squares():
               800, 801, 802, 803, 804, 805, 806]:
         a, b, c = sum_of_three_squares(i)
         assert a**2 + b**2 + c**2 == i
+        assert [a, b, c] == sorted([a, b, c])
+        assert a >= 0
+
+    # error
+    raises(ValueError, lambda: sum_of_three_squares(-1))
 
     assert sum_of_three_squares(7) is None
     assert sum_of_three_squares((4**5)*15) is None
-    assert sum_of_three_squares(25) == (5, 0, 0)
+    assert sum_of_three_squares(25) == (0, 0, 5)
     assert sum_of_three_squares(4) == (0, 0, 2)
 
 
@@ -674,12 +679,15 @@ def test_sum_of_four_squares():
     n = randint(1, 100000000000000)
     assert sum(i**2 for i in sum_of_four_squares(n)) == n
 
-    assert sum_of_four_squares(0) == (0, 0, 0, 0)
-    assert sum_of_four_squares(14) == (0, 1, 2, 3)
-    assert sum_of_four_squares(15) == (1, 1, 2, 3)
-    assert sum_of_four_squares(18) == (1, 2, 2, 3)
-    assert sum_of_four_squares(19) == (0, 1, 3, 3)
-    assert sum_of_four_squares(48) == (0, 4, 4, 4)
+    # error
+    raises(ValueError, lambda: sum_of_four_squares(-1))
+
+    for n in range(1000):
+        result = sum_of_four_squares(n)
+        assert len(result) == 4
+        assert all(r >= 0 for r in result)
+        assert sum(r**2 for r in result) == n
+        assert list(result) == sorted(result)
 
 
 def test_power_representation():
