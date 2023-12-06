@@ -3752,7 +3752,7 @@ def sum_of_four_squares(n):
     >>> sum_of_four_squares(3456)
     (8, 8, 32, 48)
     >>> sum_of_four_squares(1294585930293)
-    (0, 1234, 2161, 1137796)
+    (210, 1216, 2161, 1137796)
 
     References
     ==========
