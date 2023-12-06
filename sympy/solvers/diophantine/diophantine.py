@@ -3782,7 +3782,7 @@ def sum_of_four_squares(n):
         n = n - 1
     else:
         d = 0
-    x, y, z = sum_of_three_squares(n)
+    xyz = x, y, z = sum_of_three_squares(n)  # sorted
     if not d:  # try to get a 4th value
         if x:  # try split 1 into 2
             s3 = [z, y, x]
@@ -3793,22 +3793,41 @@ def sum_of_four_squares(n):
         else:  # split to give 4 if possible
             if y:
                 # try split each into 2
-                do = [(y, z)]
+                do = [(y, z)], 1
             else:
-                # split the 1 into 2 and try split
-                # each into 2
-                do = sum_of_squares(z**2, 2)
-            for y, z in do:
-                for a, b in sum_of_squares(y**2, 2):
+                do = sum_of_squares(z**2, 2), 2
+            # split the 1 into 2 and try split
+            # each into 2
+            for y, z in do[0]:
+                for ya, yb in sum_of_squares(y**2, 2):
                     break
                 else:
                     continue
-                for c, d in sum_of_squares(z**2, 2):
+                for za, zb in sum_of_squares(z**2, 2):
                     break
                 else:
                     continue
-                x, y, z = (a, b, c)
-                # d = d (the value from 2nd loop)
+                x, y, z, d = (ya, yb, za, zb)
+                break
+            else:  # split 1 into 3
+                # reset do
+                if do[1] == 1:
+                    do = [xyz[-2:]], 1
+                else:
+                    do = sum_of_squares(xyz[-1]**2, 2), 2
+                for y, z in do[0]:
+                    abc = sum_of_three_squares(y**2)
+                    if abc and 0 not in abc:
+                        d = z
+                        x, y, z = abc
+                        break
+                    abc = sum_of_three_squares(z**2)
+                    if abc and 0 not in abc:
+                        d = y
+                        x, y, z = abc
+                        break
+                else:
+                    x, y, z = xyz
     return tuple(sorted([v*d, v*x, v*y, v*z]))
 
 
