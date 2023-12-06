@@ -700,7 +700,7 @@ def test_sum_of_four_squares():
         assert sum(r**2 for r in result) == n
         assert list(result) == sorted(result)
         nonzero += int(0 not in result)
-    assert nonzero == 742
+    assert nonzero == 763
 
 
 def test_power_representation():
