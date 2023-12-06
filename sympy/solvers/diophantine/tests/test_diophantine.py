@@ -673,6 +673,13 @@ def test_sum_of_three_squares():
     assert sum_of_three_squares(25) == (0, 0, 5)
     assert sum_of_three_squares(49) == (2, 3, 6)
     assert sum_of_three_squares(4) == (0, 0, 2)
+    nonzero = 0
+    for n in range(1000):
+        result = sum_of_three_squares(n)
+        if result:
+            nonzero += int(0 not in result)
+    assert nonzero == 786
+
 
 
 def test_sum_of_four_squares():
