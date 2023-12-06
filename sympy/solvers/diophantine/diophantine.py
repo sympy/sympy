@@ -3783,12 +3783,27 @@ def sum_of_four_squares(n):
     else:
         d = 0
     x, y, z = sum_of_three_squares(n)
-    if not d and x:
-        s3 = [z, y, x]
-        for i in range(3):
-            s = s3[i]
-            for a, b in sum_of_squares(s**2, 2):
-                d, x, y, z = s3[:i] + s3[i+1:] + [a, b]
+    if not d:  # try to get a 4th value
+        if x:  # try split 1 into 2
+            s3 = [z, y, x]
+            for i in range(3):
+                s = s3[i]
+                for a, b in sum_of_squares(s**2, 2):
+                    d, x, y, z = s3[:i] + s3[i+1:] + [a, b]
+        else:  # split each into 2
+            assert y
+            ok = False
+            for a, b in sum_of_squares(y**2, 2):
+                ok = True
+                break
+            if ok:
+                ok = False
+                for c, d in sum_of_squares(z**2, 2):
+                    ok = True
+                    break
+            if ok:
+                x, y, z = (a, b, c)
+                # d = d (the value from 2nd loop)
     return tuple(sorted([v*d, v*x, v*y, v*z]))
 
 
