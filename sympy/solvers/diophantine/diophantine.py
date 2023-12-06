@@ -3790,18 +3790,23 @@ def sum_of_four_squares(n):
                 s = s3[i]
                 for a, b in sum_of_squares(s**2, 2):
                     d, x, y, z = s3[:i] + s3[i+1:] + [a, b]
-        else:  # split each into 2
-            assert y
-            ok = False
-            for a, b in sum_of_squares(y**2, 2):
-                ok = True
-                break
-            if ok:
-                ok = False
-                for c, d in sum_of_squares(z**2, 2):
-                    ok = True
+        else:  # split to give 4 if possible
+            if y:
+                # try split each into 2
+                do = [(y, z)]
+            else:
+                # split the 1 into 2 and try split
+                # each into 2
+                do = sum_of_squares(z**2, 2)
+            for y, z in do:
+                for a, b in sum_of_squares(y**2, 2):
                     break
-            if ok:
+                else:
+                    continue
+                for c, d in sum_of_squares(z**2, 2):
+                    break
+                else:
+                    continue
                 x, y, z = (a, b, c)
                 # d = d (the value from 2nd loop)
     return tuple(sorted([v*d, v*x, v*y, v*z]))
