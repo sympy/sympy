@@ -682,12 +682,16 @@ def test_sum_of_four_squares():
     # error
     raises(ValueError, lambda: sum_of_four_squares(-1))
 
+    nonzero = 0
     for n in range(1000):
         result = sum_of_four_squares(n)
         assert len(result) == 4
         assert all(r >= 0 for r in result)
         assert sum(r**2 for r in result) == n
         assert list(result) == sorted(result)
+        if 0 not in result:
+            nonzero += 1
+    assert nonzero == 450
 
 
 def test_power_representation():

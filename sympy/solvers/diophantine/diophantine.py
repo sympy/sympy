@@ -3781,7 +3781,7 @@ def sum_of_four_squares(n):
         n = n - 1
     else:
         d = 0
-    x, y, z = sum_of_three_squares(n - d)
+    x, y, z = sum_of_three_squares(n)
     return tuple(sorted([v*d, v*x, v*y, v*z]))
 
 
