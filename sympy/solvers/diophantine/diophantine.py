@@ -3631,7 +3631,8 @@ def prime_as_sum_of_two_squares(p):
 def sum_of_three_squares(n):
     r"""
     Returns a 3-tuple $(a, b, c)$ such that $a^2 + b^2 + c^2 = n$ and
-    $a, b, c \geq 0$.
+    $a, b, c \geq 0$. Zeros are included only if the number cannot be
+    written with 3 non-zero values.
 
     Returns None if $n = 4^a(8m + 7)$ for some `a, m \in \mathbb{Z}`. See
     [1]_ for more details.
@@ -3694,7 +3695,7 @@ def sum_of_three_squares(n):
 
     s, _exact = integer_nthroot(n, 2)
     if _exact:
-        return (0, 0, v*s)
+        _exact = (0, 0, v*s)
     if n % 8 == 3:
         if not s % 2:
             s -= 1
@@ -3716,8 +3717,8 @@ def sum_of_three_squares(n):
             # assert N % 4 == 1
             y, z = prime_as_sum_of_two_squares(N)
             return tuple(sorted([v*x, v*y, v*z]))
-    # We will never reach this point because there must be a solution.
-    assert False
+    assert _exact
+    return _exact
 
 
 def sum_of_four_squares(n):
@@ -3782,6 +3783,12 @@ def sum_of_four_squares(n):
     else:
         d = 0
     x, y, z = sum_of_three_squares(n)
+    if not d and x:
+        s3 = [z, y, x]
+        for i in range(3):
+            s = s3[i]
+            for a, b in sum_of_squares(s**2, 2):
+                d, x, y, z = s3[:i] + s3[i+1:] + [a, b]
     return tuple(sorted([v*d, v*x, v*y, v*z]))
 
 
