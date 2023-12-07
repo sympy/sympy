@@ -12,7 +12,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
-    sinh, tanh, cosh, sech, coth)
+    sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -182,6 +182,25 @@ def test_invert_real():
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
 
+    r = Symbol('r', real=True)
+    p = Symbol('p', positive=True)
+    assert invert_real(sinh(x), r, x) == (x, FiniteSet(asinh(r)))
+    assert invert_real(sinh(log(x)), p, x) == (x, FiniteSet(exp(asinh(p))))
+
+    assert invert_real(cosh(x), r, x) == (x, Intersection(
+        FiniteSet(-acosh(r), acosh(r)), S.Reals))
+    assert invert_real(cosh(x), p + 1, x) == (x,
+        FiniteSet(-acosh(p + 1), acosh(p + 1)))
+
+    assert invert_real(tanh(x), r, x) == (x, Intersection(FiniteSet(atanh(r)), S.Reals))
+    assert invert_real(coth(x), p+1, x) == (x, FiniteSet(acoth(p+1)))
+    assert invert_real(sech(x), r, x) == (x, Intersection(
+        FiniteSet(-asech(r), asech(r)), S.Reals))
+    assert invert_real(csch(x), p, x) == (x, FiniteSet(acsch(p)))
+
+    assert dumeq(invert_real(tanh(sin(x)), r, x), (x, Union(
+        ImageSet(Lambda(n, 2*n*pi + asin(atanh(r))), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi - asin(atanh(r)) + pi), S.Integers))))
 
 def test_invert_complex():
     assert invert_complex(x + 3, y, x) == (x, FiniteSet(y - 3))
@@ -947,9 +966,9 @@ def test_solve_hyperbolic():
     assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
         log(sqrt(sqrt(5) - 2)))
     assert solveset_real(3*cosh(2*x) - 5, x) == FiniteSet(
-        -log(3)/2, log(3)/2)
+        -acosh(S(5)/3)/2, acosh(S(5)/3)/2)
     assert solveset_real(sinh(x - 3) - 2, x) == FiniteSet(
-        log((2 + sqrt(5))*exp(3)))
+        asinh(2) + 3)
     assert solveset_real(cosh(2*x) + 2*sinh(x) - 5, x) == FiniteSet(
         log(-2 + sqrt(5)), log(1 + sqrt(2)))
     assert solveset_real((coth(x) + sinh(2*x))/cosh(x) - 3, x) == FiniteSet(
@@ -1048,7 +1067,7 @@ def test_solve_trig_hyp_symbolic():
 
     ar = Symbol('ar', real=True)
     assert solveset(cosh((ar**2 + 1)*x) - 2, x, S.Reals) == FiniteSet(
-        log(sqrt(3) + 2)/(ar**2 + 1), log(2 - sqrt(3))/(ar**2 + 1))
+        -acosh(2)/(ar**2 + 1), acosh(2)/(ar**2 + 1))
 
 
 def test_issue_9616():
