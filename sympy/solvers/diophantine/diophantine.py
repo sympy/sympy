@@ -3767,7 +3767,7 @@ def sum_of_four_squares(n):
         ``sum_of_four_squares(n)`` is one of the solutions output by ``power_representation(n, 2, 4, zeros=True)``
 
     """
-    n = as_int(n)
+    N = n = as_int(n)
     if n < 0:
         raise ValueError("n should be a non-negative integer")
     if n == 0:
@@ -3783,7 +3783,9 @@ def sum_of_four_squares(n):
     else:
         d = 0
     xyz = x, y, z = sum_of_three_squares(n)  # sorted
-    if not d:  # try to get a 4th value
+    #  A000534
+    need0 = N in (1, 3, 5, 9, 11, 17, 29, 41) or n in (2, 6, 14)
+    if not need0 and not d:  # try to get a 4th value
         if x:  # try split 1 into 2
             s3 = [z, y, x]
             for i in range(3):
@@ -3923,6 +3925,7 @@ def power_representation(n, p, k, zeros=False):
                 return
             # quick tests since feasibility includes the possiblity of 0
             if k == 4 and n in (1, 3, 5, 9, 11, 17, 29, 41) or remove(n, 4)[0] in (2, 6, 14):
+                #  A000534
                 return
             if k == 3:
                 if remove(n, 4)[0] % 8 == 7:
