@@ -3150,10 +3150,18 @@ def ldescent(A, B):
     """
     Return a non-trivial solution to `w^2 = Ax^2 + By^2` using
     Lagrange's method; return None if there is no such solution.
-    .
 
-    Here, `A \\neq 0` and `B \\neq 0` and `A` and `B` are square free. Output a
-    tuple `(w_0, x_0, y_0)` which is a solution to the above equation.
+    Parameters
+    ==========
+
+    A : Integer
+    B : Integer
+        non-zero integer
+
+    Returns
+    =======
+
+    (int, int, int) | None : a tuple `(w_0, x_0, y_0)` which is a solution to the above equation.
 
     Examples
     ========
@@ -3180,39 +3188,30 @@ def ldescent(A, B):
            [online], Available:
            https://nottingham-repository.worktribe.com/output/1023265/efficient-solution-of-rational-conics
     """
+    if A == 0 or B == 0:
+        raise ValueError("A and B must be non-zero integers")
     if abs(A) > abs(B):
         w, y, x = ldescent(B, A)
         return w, x, y
-
     if A == 1:
         return (1, 1, 0)
-
     if B == 1:
         return (1, 0, 1)
-
     if B == -1:  # and A == -1
         return
 
     r = sqrt_mod(A, B)
-
+    if r is None:
+        return
     Q = (r**2 - A) // B
-
     if Q == 0:
-        B_0 = 1
-        d = 0
-    else:
-        div = divisors(Q)
-        B_0 = None
-
-        for i in div:
-            sQ, _exact = integer_nthroot(abs(Q) // i, 2)
-            if _exact:
-                B_0, d = sign(Q)*i, sQ
-                break
-
-    if B_0 is not None:
-        W, X, Y = ldescent(A, B_0)
-        return _remove_gcd((-A*X + r*W), (r*X - W), Y*(B_0*d))
+        return r, -1, 0
+    for i in divisors(Q):
+        d, _exact = integer_nthroot(abs(Q) // i, 2)
+        if _exact:
+            B_0 = sign(Q)*i
+            W, X, Y = ldescent(A, B_0)
+            return _remove_gcd(-A*X + r*W, r*X - W, Y*B_0*d)
 
 
 def descent(A, B):
