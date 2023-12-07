@@ -308,30 +308,37 @@ def _invert_real(f, g_ys, symbol):
                 elif one == S.false:
                     return (expo, S.EmptySet)
 
-
     if isinstance(f, TrigonometricFunction):
-        if isinstance(g_ys, FiniteSet):
-            def inv(trig):
-                if isinstance(trig, (sin, csc)):
-                    F = asin if isinstance(trig, sin) else acsc
-                    return (
-                        lambda a: 2*n*pi + F(a),
-                        lambda a: 2*n*pi + pi - F(a))
-                if isinstance(trig, (cos, sec)):
-                    F = acos if isinstance(trig, cos) else asec
-                    return (
-                        lambda a: 2*n*pi + F(a),
-                        lambda a: 2*n*pi - F(a))
-                if isinstance(trig, (tan, cot)):
-                    return (lambda a: n*pi + trig.inverse()(a),)
-
-            n = Dummy('n', integer=True)
-            invs = S.EmptySet
-            for L in inv(f):
-                invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
-            return _invert_real(f.args[0], invs, symbol)
+         return _invert_trig_real(f, g_ys, symbol)
 
     return (f, g_ys)
+
+
+def _invert_trig_real(f, g_ys, symbol):
+    """Helper function for inverting trigonometric functions."""
+
+    if isinstance(g_ys, FiniteSet):
+        def inv(trig):
+            if isinstance(trig, (sin, csc)):
+                F = asin if isinstance(trig, sin) else acsc
+                return (
+                    lambda a: 2*n*pi + F(a),
+                    lambda a: 2*n*pi + pi - F(a))
+            if isinstance(trig, (cos, sec)):
+                F = acos if isinstance(trig, cos) else asec
+                return (
+                    lambda a: 2*n*pi + F(a),
+                    lambda a: 2*n*pi - F(a))
+            if isinstance(trig, (tan, cot)):
+                return (lambda a: n*pi + trig.inverse()(a),)
+
+        n = Dummy('n', integer=True)
+        invs = S.EmptySet
+        for L in inv(f):
+            invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
+        return _invert_real(f.args[0], invs, symbol)
+    else:
+        return (f, g_ys)
 
 
 def _invert_complex(f, g_ys, symbol):
