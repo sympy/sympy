@@ -32,7 +32,9 @@ from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec,
                              piecewise_fold, Piecewise)
 from sympy.functions.elementary.complexes import Abs, arg, re, im
-from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
+                            sinh, cosh, tanh, coth, sech, csch,
+                            asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.logic.boolalg import And, BooleanTrue
@@ -308,16 +310,91 @@ def _invert_real(f, g_ys, symbol):
                 elif one == S.false:
                     return (expo, S.EmptySet)
 
-    if isinstance(f, TrigonometricFunction):
-         return _invert_trig_real(f, g_ys, symbol)
+    if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
+         return _invert_trig_hyp_real(f, g_ys, symbol)
 
     return (f, g_ys)
 
 
-def _invert_trig_real(f, g_ys, symbol):
-    """Helper function for inverting trigonometric functions."""
+def _invert_trig_hyp_real(f, g_ys, symbol):
+    """Helper function for inverting trigonometric and hyperbolic functions.
 
-    if isinstance(g_ys, FiniteSet):
+    This helper only handles inversion over the reals.
+
+    For trigonometric functions only finite `g_ys` sets are implemented.
+
+    For hyperbolic functions the set `g_ys` is checked against the domain of the
+    respective inverse functions. Infinite `g_ys` sets are also supported.
+    """
+
+    if isinstance(f, HyperbolicFunction):
+        n = Dummy('n', real=True)
+
+        if isinstance(f, sinh):
+            # asinh is defined over R.
+            return _invert_real(f.args[0], imageset(n, asinh(n), g_ys), symbol)
+
+        if isinstance(f, cosh):
+            g_ys_dom = g_ys.intersect(Interval(1, oo))
+            if isinstance(g_ys_dom, Intersection):
+                # could not properly resolve domain check
+                if isinstance(g_ys, FiniteSet):
+                    # If g_ys is a `FiniteSet`` it should be sufficient to just
+                    # let the calling `_invert_real()` add an intersection with
+                    # `S.Reals` (or a subset `domain`) to ensure that only valid
+                    # (real) solutions are returned.
+                    # This avoids adding "too many" Intersections or
+                    # ConditionSets in the returned set.
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0], Union(
+                imageset(n, acosh(n), g_ys_dom),
+                imageset(n, -acosh(n), g_ys_dom)), symbol)
+
+        if isinstance(f, sech):
+            g_ys_dom = g_ys.intersect(Interval.Lopen(0, 1))
+            if isinstance(g_ys_dom, Intersection):
+                if isinstance(g_ys, FiniteSet):
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0], Union(
+                imageset(n, asech(n), g_ys_dom),
+                imageset(n, -asech(n), g_ys_dom)), symbol)
+
+        if isinstance(f, tanh):
+            g_ys_dom = g_ys.intersect(Interval.open(-1, 1))
+            if isinstance(g_ys_dom, Intersection):
+                if isinstance(g_ys, FiniteSet):
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0],
+                imageset(n, atanh(n), g_ys_dom), symbol)
+
+        if isinstance(f, coth):
+            g_ys_dom = g_ys - Interval(-1, 1)
+            if isinstance(g_ys_dom, Complement):
+                if isinstance(g_ys, FiniteSet):
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0],
+                imageset(n, acoth(n), g_ys_dom), symbol)
+
+        if isinstance(f, csch):
+            g_ys_dom = g_ys - FiniteSet(0)
+            if isinstance(g_ys_dom, Complement):
+                if isinstance(g_ys, FiniteSet):
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0],
+                imageset(n, acsch(n), g_ys_dom), symbol)
+
+    elif isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
+        # XXX: a domain check must be added.
         def inv(trig):
             if isinstance(trig, (sin, csc)):
                 F = asin if isinstance(trig, sin) else acsc
@@ -337,6 +414,7 @@ def _invert_trig_real(f, g_ys, symbol):
         for L in inv(f):
             invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
         return _invert_real(f.args[0], invs, symbol)
+
     else:
         return (f, g_ys)
 
@@ -1030,7 +1108,7 @@ def _solveset(f, symbol, domain, _check=False):
         return domain
 
     orig_f = f
-    invert_trig = False  # True if we will use inversion to solve
+    invert_trig_hyp = False  # True if we will use inversion to solve
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
         if coeff in {S.ComplexInfinity, S.NegativeInfinity, S.Infinity}:
@@ -1041,10 +1119,10 @@ def _solveset(f, symbol, domain, _check=False):
         if m not in {S.ComplexInfinity, S.Zero, S.Infinity,
                               S.NegativeInfinity}:
             f = a/m + h  # XXX condition `m != 0` should be added to soln
-        if isinstance(h, TrigonometricFunction) and (a and a.is_number
-                and a.is_real and domain.is_subset(S.Reals)):
-            # solve this by inversion
-            invert_trig = True
+        if isinstance(h, (TrigonometricFunction, HyperbolicFunction)) and (
+            a and a.is_number and a.is_real and domain.is_subset(S.Reals)):
+                # solve this by inversion
+                invert_trig_hyp = True
 
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
@@ -1065,7 +1143,7 @@ def _solveset(f, symbol, domain, _check=False):
         # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
         result = Union(*[solver(m, symbol) for m in f.args])
-    elif not invert_trig and (_is_function_class_equation(TrigonometricFunction, f, symbol) or \
+    elif not invert_trig_hyp and (_is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol)):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
