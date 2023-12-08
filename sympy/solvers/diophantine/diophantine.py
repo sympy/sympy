@@ -3865,13 +3865,13 @@ def power_representation(n, p, k, zeros=False):
         return
 
     if p == 2:
-            if k == 3:
-                n, v = remove(n, 4)
-                if v:
-                    v = 1 << v
-                    for t in power_representation(n, p, k, zeros):
-                        yield tuple(i*v for i in t)
-                    return
+        if k == 3:
+            n, v = remove(n, 4)
+            if v:
+                v = 1 << v
+                for t in power_representation(n, p, k, zeros):
+                    yield tuple(i*v for i in t)
+                return
         feasible = _can_do_sum_of_squares(n, k)
         if not feasible:
             return
