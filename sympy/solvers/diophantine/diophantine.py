@@ -3674,11 +3674,13 @@ def sum_of_three_squares(n):
         ``sum_of_three_squares(n)`` is one of the solutions output by ``power_representation(n, 2, 3, zeros=True)``
 
     """
-    special = {1:(1, 0, 0), 2:(1, 1, 0), 3:(1, 1, 1), 10: (1, 3, 0), 34: (3, 3, 4), 58:(3, 7, 0),
-        85:(6, 7, 0), 130:(3, 11, 0), 214:(3, 6, 13), 226:(8, 9, 9), 370:(8, 9, 15),
-        526:(6, 7, 21), 706:(15, 15, 16), 730:(1, 27, 0), 1414:(6, 17, 33), 1906:(13, 21, 36),
-        2986: (21, 32, 39), 9634: (56, 57, 57)}
-
+    # https://math.stackexchange.com/questions/483101/rabin-and-shallit-algorithm/651425#651425
+    # discusses these numbers (except for 1, 2, 3) as the exceptions of H&L's conjecture that
+    # Every sufficiently large number n is either a square or the sum of a prime and a square.
+    special = {1: (0, 0, 1), 2: (0, 1, 1), 3: (1, 1, 1), 10: (0, 1, 3), 34: (3, 3, 4),
+               58: (0, 3, 7), 85: (0, 6, 7), 130: (0, 3, 11), 214: (3, 6, 13), 226: (8, 9, 9),
+               370: (8, 9, 15), 526: (6, 7, 21), 706: (15, 15, 16), 730: (0, 1, 27),
+               1414: (6, 17, 33), 1906: (13, 21, 36), 2986: (21, 32, 39), 9634: (56, 57, 57)}
     n = as_int(n)
     if n < 0:
         raise ValueError("n should be a non-negative integer")
@@ -3689,12 +3691,11 @@ def sum_of_three_squares(n):
     if n % 8 == 7:
         return
     if n in special:
-        x, y, z = special[n]
-        return tuple(sorted([v*x, v*y, v*z]))
+        return tuple([v*i for i in special[n]])
 
     s, _exact = integer_nthroot(n, 2)
     if _exact:
-        return tuple(sorted([v*s, 0, 0]))
+        return (0, 0, v*s)
     if n % 8 == 3:
         if not s % 2:
             s -= 1
@@ -3725,12 +3726,6 @@ def sum_of_four_squares(n):
     Returns a 4-tuple `(a, b, c, d)` such that `a^2 + b^2 + c^2 + d^2 = n`.
     Here `a, b, c, d \geq 0`.
 
-    Explanation
-    ===========
-
-    If there exists a 3-tuple `(a, b, c)` in `n` such that `n = a^2 + b^2 + c^2`, then return a 4-tuple `(0, a, b, c)`.
-    If there exists a 3-tuple `(a, b, c)` in `n-1` such that `n-1 = a^2 + b^2 + c^2`, then return a 4-tuple `(1, a, b, c)`.
-
     Parameters
     ==========
 
@@ -3754,7 +3749,7 @@ def sum_of_four_squares(n):
 
     >>> from sympy.solvers.diophantine.diophantine import sum_of_four_squares
     >>> sum_of_four_squares(3456)
-    (0, 8, 16, 56)
+    (8, 8, 32, 48)
     >>> sum_of_four_squares(1294585930293)
     (0, 1234, 2161, 1137796)
 
@@ -3778,8 +3773,15 @@ def sum_of_four_squares(n):
         return (0, 0, 0, 0)
     n, v = remove(n, 4)
     v = 1 << v
-    d = 1 if n % 8 == 7 else 0
-    x, y, z = sum_of_three_squares(n - d)
+    if n % 8 == 7:
+        d = 2
+        n = n - 4
+    elif n % 8 in (2, 6):
+        d = 1
+        n = n - 1
+    else:
+        d = 0
+    x, y, z = sum_of_three_squares(n)  # sorted
     return tuple(sorted([v*d, v*x, v*y, v*z]))
 
 
@@ -3864,14 +3866,29 @@ def power_representation(n, p, k, zeros=False):
         return
 
     if p == 2:
+        if k == 3:
+            n, v = remove(n, 4)
+            if v:
+                v = 1 << v
+                for t in power_representation(n, p, k, zeros):
+                    yield tuple(i*v for i in t)
+                return
         feasible = _can_do_sum_of_squares(n, k)
         if not feasible:
             return
-        if not zeros and n > 33 and k >= 5 and k <= n and n - k in (
+        if not zeros:
+            if n > 33 and k >= 5 and k <= n and n - k in (
                 13, 10, 7, 5, 4, 2, 1):
-            '''Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
+                '''Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
                 Available: https://www.maa.org/sites/default/files/Will-MMz-201037918.pdf'''
-            return
+                return
+            # quick tests since feasibility includes the possiblity of 0
+            if k == 4 and (n in (1, 3, 5, 9, 11, 17, 29, 41) or remove(n, 4)[0] in (2, 6, 14)):
+                # A000534
+                return
+            if k == 3 and n in (1, 2, 5, 10, 13, 25, 37, 58, 85, 130):  # or n = some number >= 5*10**10
+                # A051952
+                return
         if feasible is not True:  # it's prime and k == 2
             yield prime_as_sum_of_two_squares(n)
             return
