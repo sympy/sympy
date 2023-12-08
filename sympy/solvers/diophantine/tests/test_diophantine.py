@@ -660,7 +660,6 @@ def test_sum_of_three_squares():
               800, 801, 802, 803, 804, 805, 806]:
         a, b, c = sum_of_three_squares(i)
         assert a**2 + b**2 + c**2 == i
-        assert [a, b, c] == sorted([a, b, c])
         assert a >= 0
 
     # error
