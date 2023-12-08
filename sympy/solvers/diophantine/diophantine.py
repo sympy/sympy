@@ -3631,8 +3631,7 @@ def prime_as_sum_of_two_squares(p):
 def sum_of_three_squares(n):
     r"""
     Returns a 3-tuple $(a, b, c)$ such that $a^2 + b^2 + c^2 = n$ and
-    $a, b, c \geq 0$. Zeros are included only if the number cannot be
-    written with 3 non-zero values.
+    $a, b, c \geq 0$.
 
     Returns None if $n = 4^a(8m + 7)$ for some `a, m \in \mathbb{Z}`. See
     [1]_ for more details.
@@ -3675,9 +3674,10 @@ def sum_of_three_squares(n):
         ``sum_of_three_squares(n)`` is one of the solutions output by ``power_representation(n, 2, 3, zeros=True)``
 
     """
-    # tuples are sorted
-    special = {1: (0, 0, 1), 2: (0, 1, 1), 3: (1, 1, 1), 10: (0, 1, 3), 34: (3, 3, 4),
-               58: (0, 3, 7), 85: (0, 6, 7), 130: (0, 3, 11), 214: (3, 6, 13), 226: (8, 9, 9),
+    # tuples are sorted; XXX perhaps all 57 of the value of remove(n,4)[0] for n<10**4 than have a single
+    # solution should be included?
+    special = {1: (0, 0, 1), 2: (0, 1, 1), 3: (1, 1, 1), 6: (1, 1, 2), 10: (0, 1, 3), 34: (3, 3, 4),
+               58: (0, 3, 7), 85: (0, 6, 7), 97: (5, 6, 6), 130: (0, 3, 11), 214: (3, 6, 13), 226: (8, 9, 9),
                370: (8, 9, 15), 526: (6, 7, 21), 706: (15, 15, 16), 730: (0, 1, 27),
                1414: (6, 17, 33), 1906: (13, 21, 36), 2986: (21, 32, 39), 9634: (56, 57, 57)}
     n = as_int(n)
@@ -3690,12 +3690,11 @@ def sum_of_three_squares(n):
     if n % 8 == 7:
         return
     if n in special:
-        x, y, z = special[n]
-        return (v*x, v*y, v*z)
+        return tuple([v*i for i in special[n]])
 
     s, _exact = integer_nthroot(n, 2)
     if _exact:
-        _exact = (0, 0, v*s)
+        return (0, 0, s)
     if n % 8 == 3:
         if not s % 2:
             s -= 1
@@ -3717,15 +3716,14 @@ def sum_of_three_squares(n):
             # assert N % 4 == 1
             y, z = prime_as_sum_of_two_squares(N)
             return tuple(sorted([v*x, v*y, v*z]))
-    assert _exact
-    return _exact
+    # We will never reach this point because there must be a solution.
+    assert False
 
 
 def sum_of_four_squares(n):
     r"""
     Returns a 4-tuple `(a, b, c, d)` such that `a^2 + b^2 + c^2 + d^2 = n`.
-    Here `a, b, c, d \geq 1` unless the number cannot be written without
-    using 0.
+    Here `a, b, c, d \geq 0`.
 
     Parameters
     ==========
@@ -3752,7 +3750,7 @@ def sum_of_four_squares(n):
     >>> sum_of_four_squares(3456)
     (8, 8, 32, 48)
     >>> sum_of_four_squares(1294585930293)
-    (210, 1216, 2161, 1137796)
+    (0, 1234, 2161, 1137796)
 
     References
     ==========
@@ -3767,7 +3765,7 @@ def sum_of_four_squares(n):
         ``sum_of_four_squares(n)`` is one of the solutions output by ``power_representation(n, 2, 4, zeros=True)``
 
     """
-    N = n = as_int(n)
+    n = as_int(n)
     if n < 0:
         raise ValueError("n should be a non-negative integer")
     if n == 0:
@@ -3782,54 +3780,7 @@ def sum_of_four_squares(n):
         n = n - 1
     else:
         d = 0
-    xyz = x, y, z = sum_of_three_squares(n)  # sorted
-    #  A000534
-    need0 = N in (1, 3, 5, 9, 11, 17, 29, 41) or n in (2, 6, 14)
-    if not need0 and not d:  # try to get a 4th value
-        if x:  # try split 1 into 2
-            s3 = [z, y, x]
-            for i in range(3):
-                s = s3[i]
-                for a, b in sum_of_squares(s**2, 2):
-                    d, x, y, z = s3[:i] + s3[i+1:] + [a, b]
-        else:  # split to give 4 if possible
-            if y:
-                # try split each into 2
-                do = [(y, z)], 1
-            else:
-                do = sum_of_squares(z**2, 2), 2
-            # split the 1 into 2 and try split
-            # each into 2
-            for y, z in do[0]:
-                for ya, yb in sum_of_squares(y**2, 2):
-                    break
-                else:
-                    continue
-                for za, zb in sum_of_squares(z**2, 2):
-                    break
-                else:
-                    continue
-                x, y, z, d = (ya, yb, za, zb)
-                break
-            else:  # split 1 into 3
-                # reset do
-                if do[1] == 1:
-                    do = [xyz[-2:]], 1
-                else:
-                    do = sum_of_squares(xyz[-1]**2, 2), 2
-                for y, z in do[0]:
-                    abc = sum_of_three_squares(y**2)
-                    if abc and 0 not in abc:
-                        d = z
-                        x, y, z = abc
-                        break
-                    abc = sum_of_three_squares(z**2)
-                    if abc and 0 not in abc:
-                        d = y
-                        x, y, z = abc
-                        break
-                else:
-                    x, y, z = xyz
+    x, y, z = sum_of_three_squares(n)  # sorted
     return tuple(sorted([v*d, v*x, v*y, v*z]))
 
 
@@ -3914,6 +3865,12 @@ def power_representation(n, p, k, zeros=False):
         return
 
     if p == 2:
+        n, v = remove(n, 4)
+        if v:
+            v = 1 << v
+            for t in power_representation(n, p, k, zeros):
+                yield tuple(i*v for i in t)
+            return
         feasible = _can_do_sum_of_squares(n, k)
         if not feasible:
             return
@@ -3925,12 +3882,11 @@ def power_representation(n, p, k, zeros=False):
                 return
             # quick tests since feasibility includes the possiblity of 0
             if k == 4 and n in (1, 3, 5, 9, 11, 17, 29, 41) or remove(n, 4)[0] in (2, 6, 14):
-                #  A000534
+                # A000534
                 return
-            if k == 3:
-                if remove(n, 4)[0] % 8 == 7:
-                    return
-                # solutions might have 1 or two zeros
+            if k == 3 and n in (1, 2, 5, 10, 13, 25, 37, 58, 85, 130):  # or n = some number >= 5*10**10
+                # A051952
+                return
         if feasible is not True:  # it's prime and k == 2
             yield prime_as_sum_of_two_squares(n)
             return
