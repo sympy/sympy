@@ -3674,8 +3674,9 @@ def sum_of_three_squares(n):
         ``sum_of_three_squares(n)`` is one of the solutions output by ``power_representation(n, 2, 3, zeros=True)``
 
     """
-    # tuples are sorted; XXX perhaps all 57 of the values of remove(n,4)[0] for n<10**4 that have a single
-    # solution should be included?
+    # https://math.stackexchange.com/questions/483101/rabin-and-shallit-algorithm/651425#651425
+    # discusses these numbers (except for 1, 2, 3) as the exceptions of H&L's conjecture that
+    # Every sufficiently large number n is either a square or the sum of a prime and a square.
     special = {1: (0, 0, 1), 2: (0, 1, 1), 3: (1, 1, 1), 10: (0, 1, 3), 34: (3, 3, 4),
                58: (0, 3, 7), 85: (0, 6, 7), 130: (0, 3, 11), 214: (3, 6, 13), 226: (8, 9, 9),
                370: (8, 9, 15), 526: (6, 7, 21), 706: (15, 15, 16), 730: (0, 1, 27),
