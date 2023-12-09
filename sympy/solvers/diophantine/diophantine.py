@@ -16,8 +16,7 @@ from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
-from sympy.ntheory.factor_ import (
-    divisors, factorint, multiplicity, perfect_power)
+from sympy.ntheory.factor_ import divisors, factorint, perfect_power
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.primetest import is_square, isprime
 from sympy.ntheory.residue_ntheory import sqrt_mod
@@ -1218,10 +1217,6 @@ all_diop_classes = [
 ]
 
 diop_known = {diop_class.name for diop_class in all_diop_classes}
-
-
-def _sorted_tuple(*i):
-    return tuple(sorted(i))
 
 
 def _remove_gcd(*x):
@@ -3640,10 +3635,23 @@ def sum_of_three_squares(n):
     Returns None if $n = 4^a(8m + 7)$ for some `a, m \in \mathbb{Z}`. See
     [1]_ for more details.
 
-    Usage
-    =====
+    Parameters
+    ==========
 
-    ``sum_of_three_squares(n)``: Here ``n`` is a non-negative integer.
+    n : Integer
+        non-negative integer
+
+    Returns
+    =======
+
+    (int, int, int) | None : 3-tuple non-negative integers ``(a, b, c)`` satisfying ``a**2 + b**2 + c**2 = n``.
+                             a,b,c are sorted in ascending order. ``None`` if no such ``(a,b,c)``.
+
+    Raises
+    ======
+
+    ValueError
+        If ``n`` is a negative integer
 
     Examples
     ========
@@ -3661,67 +3669,79 @@ def sum_of_three_squares(n):
     See Also
     ========
 
-    sum_of_squares()
+    power_representation :
+        ``sum_of_three_squares(n)`` is one of the solutions output by ``power_representation(n, 2, 3, zeros=True)``
+
     """
-    special = {1:(1, 0, 0), 2:(1, 1, 0), 3:(1, 1, 1), 10: (1, 3, 0), 34: (3, 3, 4), 58:(3, 7, 0),
-        85:(6, 7, 0), 130:(3, 11, 0), 214:(3, 6, 13), 226:(8, 9, 9), 370:(8, 9, 15),
-        526:(6, 7, 21), 706:(15, 15, 16), 730:(1, 27, 0), 1414:(6, 17, 33), 1906:(13, 21, 36),
-        2986: (21, 32, 39), 9634: (56, 57, 57)}
-
-    v = 0
-
+    # https://math.stackexchange.com/questions/483101/rabin-and-shallit-algorithm/651425#651425
+    # discusses these numbers (except for 1, 2, 3) as the exceptions of H&L's conjecture that
+    # Every sufficiently large number n is either a square or the sum of a prime and a square.
+    special = {1: (0, 0, 1), 2: (0, 1, 1), 3: (1, 1, 1), 10: (0, 1, 3), 34: (3, 3, 4),
+               58: (0, 3, 7), 85: (0, 6, 7), 130: (0, 3, 11), 214: (3, 6, 13), 226: (8, 9, 9),
+               370: (8, 9, 15), 526: (6, 7, 21), 706: (15, 15, 16), 730: (0, 1, 27),
+               1414: (6, 17, 33), 1906: (13, 21, 36), 2986: (21, 32, 39), 9634: (56, 57, 57)}
+    n = as_int(n)
+    if n < 0:
+        raise ValueError("n should be a non-negative integer")
     if n == 0:
         return (0, 0, 0)
-
-    v = multiplicity(4, n)
-    n //= 4**v
-
+    n, v = remove(n, 4)
+    v = 1 << v
     if n % 8 == 7:
         return
-
-    if n in special.keys():
-        x, y, z = special[n]
-        return _sorted_tuple(2**v*x, 2**v*y, 2**v*z)
+    if n in special:
+        return tuple([v*i for i in special[n]])
 
     s, _exact = integer_nthroot(n, 2)
-
     if _exact:
-        return (2**v*s, 0, 0)
-
-    x = None
-
+        return (0, 0, v*s)
     if n % 8 == 3:
-        s = s if _odd(s) else s - 1
-
+        if not s % 2:
+            s -= 1
         for x in range(s, -1, -2):
             N = (n - x**2) // 2
             if isprime(N):
+                # n % 8 == 3 and x % 2 == 1 => N % 4 == 1
                 y, z = prime_as_sum_of_two_squares(N)
-                return _sorted_tuple(2**v*x, 2**v*(y + z), 2**v*abs(y - z))
-        return
+                return tuple(sorted([v*x, v*(y + z), v*abs(y - z)]))
+        # We will never reach this point because there must be a solution.
+        assert False
 
-    if n % 8 in (2, 6):
-        s = s if _odd(s) else s - 1
-    else:
-        s = s - 1 if _odd(s) else s
-
+    # assert n % 4 in [1, 2]
+    if not((n % 2) ^ (s % 2)):
+        s -= 1
     for x in range(s, -1, -2):
         N = n - x**2
         if isprime(N):
+            # assert N % 4 == 1
             y, z = prime_as_sum_of_two_squares(N)
-            return _sorted_tuple(2**v*x, 2**v*y, 2**v*z)
+            return tuple(sorted([v*x, v*y, v*z]))
+    # We will never reach this point because there must be a solution.
+    assert False
 
 
 def sum_of_four_squares(n):
     r"""
     Returns a 4-tuple `(a, b, c, d)` such that `a^2 + b^2 + c^2 + d^2 = n`.
-
     Here `a, b, c, d \geq 0`.
 
-    Usage
-    =====
+    Parameters
+    ==========
 
-    ``sum_of_four_squares(n)``: Here ``n`` is a non-negative integer.
+    n : Integer
+        non-negative integer
+
+    Returns
+    =======
+
+    (int, int, int, int) : 4-tuple non-negative integers ``(a, b, c, d)`` satisfying ``a**2 + b**2 + c**2 + d**2 = n``.
+                           a,b,c,d are sorted in ascending order.
+
+    Raises
+    ======
+
+    ValueError
+        If ``n`` is a negative integer
 
     Examples
     ========
@@ -3741,14 +3761,20 @@ def sum_of_four_squares(n):
     See Also
     ========
 
-    sum_of_squares()
+    power_representation :
+        ``sum_of_four_squares(n)`` is one of the solutions output by ``power_representation(n, 2, 4, zeros=True)``
+
     """
+    n = as_int(n)
+    if n < 0:
+        raise ValueError("n should be a non-negative integer")
     if n == 0:
         return (0, 0, 0, 0)
-
-    v = multiplicity(4, n)
-    n //= 4**v
-
+    # remove factors of 4 since a solution in terms of 3 squares is
+    # going to be returned; this is also done in sum_of_three_squares,
+    # but it needs to be done here to select d
+    n, v = remove(n, 4)
+    v = 1 << v
     if n % 8 == 7:
         d = 2
         n = n - 4
@@ -3757,10 +3783,8 @@ def sum_of_four_squares(n):
         n = n - 1
     else:
         d = 0
-
-    x, y, z = sum_of_three_squares(n)
-
-    return _sorted_tuple(2**v*d, 2**v*x, 2**v*y, 2**v*z)
+    x, y, z = sum_of_three_squares(n)  # sorted
+    return tuple(sorted([v*d, v*x, v*y, v*z]))
 
 
 def power_representation(n, p, k, zeros=False):
@@ -3830,6 +3854,8 @@ def power_representation(n, p, k, zeros=False):
     if k == 1:
         if p == 1:
             yield (n,)
+        elif n == 1:
+            yield (1,)
         else:
             be = perfect_power(n)
             if be:
@@ -3844,14 +3870,29 @@ def power_representation(n, p, k, zeros=False):
         return
 
     if p == 2:
+        if k == 3:
+            n, v = remove(n, 4)
+            if v:
+                v = 1 << v
+                for t in power_representation(n, p, k, zeros):
+                    yield tuple(i*v for i in t)
+                return
         feasible = _can_do_sum_of_squares(n, k)
         if not feasible:
             return
-        if not zeros and n > 33 and k >= 5 and k <= n and n - k in (
+        if not zeros:
+            if n > 33 and k >= 5 and k <= n and n - k in (
                 13, 10, 7, 5, 4, 2, 1):
-            '''Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
+                '''Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
                 Available: https://www.maa.org/sites/default/files/Will-MMz-201037918.pdf'''
-            return
+                return
+            # quick tests since feasibility includes the possiblity of 0
+            if k == 4 and (n in (1, 3, 5, 9, 11, 17, 29, 41) or remove(n, 4)[0] in (2, 6, 14)):
+                # A000534
+                return
+            if k == 3 and n in (1, 2, 5, 10, 13, 25, 37, 58, 85, 130):  # or n = some number >= 5*10**10
+                # A051952
+                return
         if feasible is not True:  # it's prime and k == 2
             yield prime_as_sum_of_two_squares(n)
             return
