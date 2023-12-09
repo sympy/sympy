@@ -3771,6 +3771,9 @@ def sum_of_four_squares(n):
         raise ValueError("n should be a non-negative integer")
     if n == 0:
         return (0, 0, 0, 0)
+    # remove factors of 4 since a solution in terms of 3 squares is
+    # going to be returned; this is also done in sum_of_three_squares,
+    # but it needs to be done here to select d
     n, v = remove(n, 4)
     v = 1 << v
     if n % 8 == 7:
