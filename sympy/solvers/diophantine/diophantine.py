@@ -3855,6 +3855,8 @@ def power_representation(n, p, k, zeros=False):
     if k == 1:
         if p == 1:
             yield (n,)
+        elif n == 1:
+            yield (1,)
         else:
             be = perfect_power(n)
             if be:
