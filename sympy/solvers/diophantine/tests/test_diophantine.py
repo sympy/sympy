@@ -882,6 +882,9 @@ def test_sum_of_squares_powers():
     assert ans == tru
 
     raises(ValueError, lambda: list(sum_of_squares(10, -1)))
+    assert list(sum_of_squares(1, 1)) == [(1,)]
+    assert list(sum_of_squares(1, 2)) == []
+    assert list(sum_of_squares(1, 2, True)) == [(0, 1)]
     assert list(sum_of_squares(-10, 2)) == []
     assert list(sum_of_squares(2, 3)) == []
     assert list(sum_of_squares(0, 3, True)) == [(0, 0, 0)]
