@@ -674,7 +674,6 @@ def test_sum_of_three_squares():
     assert sum_of_three_squares(4) == (0, 0, 2)
 
 
-
 def test_sum_of_four_squares():
     from sympy.core.random import randint
 
