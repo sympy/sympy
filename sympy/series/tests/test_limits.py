@@ -1393,3 +1393,10 @@ def test_issue_25847():
     assert limit(acsch(sin(x)/x), x, 0, '+-') == log(1 + sqrt(2))
     assert limit(acsch(exp(1/x)), x, 0, '+') == 0
     assert limit(acsch(exp(1/x)), x, 0, '-') == oo
+
+
+def test_issue_24067():
+    n = symbols('n', positive=True, integer=True)
+    assert limit((5*x)**(n+2)/x**2, x, 0) == 0
+    assert limit((5*sin(x))**(n+2)/x**2, x, 0) == 0
+    assert limit((5*x*cos(x))**(n+2)/x**2, x, 0) == 0

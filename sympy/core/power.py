@@ -1661,6 +1661,8 @@ class Pow(Expr):
             from sympy.functions.elementary.complexes import im
             try:
                 f = b.as_leading_term(x, logx=logx, cdir=cdir)
+                c, d = f.as_coeff_exponent(x)
+                lt=self.func(c, e)*self.func(x**d, e)
             except PoleError:
                 return self
             if not e.is_integer and f.is_negative and not f.has(x):
@@ -1669,12 +1671,14 @@ class Pow(Expr):
                     # Normally, f**e would evaluate to exp(e*log(f)) but on branch cuts
                     # an other value is expected through the following computation
                     # exp(e*(log(f) - 2*pi*I)) == f**e*exp(-2*e*pi*I) == f**e*(-1)**(-2*e).
-                    return self.func(f, e) * (-1)**(-2*e)
+                    return lt * (-1)**(-2*e)
                 elif im(ndir).is_zero:
                     log_leadterm = log(b)._eval_as_leading_term(x, logx=logx, cdir=cdir)
                     if log_leadterm.is_infinite is False:
-                        return exp(e*log_leadterm)
-            return self.func(f, e)
+                        return exp(e*log_leadterm)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+            if(c.is_negative):
+                return self.func(f, e)
+            return lt
 
     @cacheit
     def _taylor_term(self, n, x, *previous_terms): # of (1 + x)**e
