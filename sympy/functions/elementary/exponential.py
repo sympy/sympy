@@ -8,7 +8,7 @@ from sympy.core.function import (Function, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational, pi, I, ImaginaryUnit
+from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -495,8 +495,10 @@ class exp(ExpBase, metaclass=ExpMeta):
             return Order(x**n, x)
         if arg0 is S.Infinity:
             return self
+        if arg0.is_infinite:
+            raise PoleError("Cannot expand %s around 0" % (self))
         # checking for indecisiveness/ sign terms in arg0
-        if any(isinstance(arg, (sign, ImaginaryUnit)) for arg in arg0.args):
+        if any(isinstance(arg, sign) for arg in arg0.args):
             return self
         t = Dummy("t")
         nterms = n
