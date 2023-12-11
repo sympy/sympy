@@ -976,7 +976,47 @@ class Integral(AddWithLimits):
                         return result + i.doit(risch=False)
                 else:
                     return result
+        def u_substitution_if_possible(integral_obj) :
+            from sympy import sin, cos, tan
+            def perform_u_substitution_on_trig(integral_obj):
+                # Helper function to perform transform_2 and check if substitution was successful
+            
+                x = integral_obj.limits[0][0]  # Assuming x is the variable of integration
+                # Clause 1: Check for trigonometric functions
+                for trig_func in [sin, cos, tan]:
+                    for trig_expr in integral_obj.function.atoms(trig_func):
+                        inside_trig = trig_expr.args[0]
+                        if inside_trig == x:
+                            try:
+                                result = integral_obj.transform(trig_expr, x)
+                                if integral_obj != result:
+                                    return result, trig_expr
+                            except ValueError:
+                                continue
+                        else:
+                            try:
+                                result = integral_obj.transform(inside_trig, x)
+                                if integral_obj != result:
+                                    return result, inside_trig
+                            except ValueError:
+                                continue
+                return integral_obj, None
 
+            # don't attempt u-substitution if it is in the format: exp1 + exp2  
+            f = integral_obj.function
+            args = Add.make_args(f)
+            if len(args) > 1:
+                return integral_obj, None            
+            return perform_u_substitution_on_trig(integral_obj)
+        
+        # Make it an integral Class
+        i = Integral(f, x)
+
+        # If u-sub successful, solve it
+        u_sub_result, x_expr = u_substitution_if_possible(i)
+        if (i != u_sub_result):
+            u = u_sub_result.limits[0][0]
+            return u_sub_result.doit().subs(u, x_expr)
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
         # if `f` is not Add -- we only have one term
