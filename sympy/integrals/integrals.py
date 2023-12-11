@@ -979,8 +979,6 @@ class Integral(AddWithLimits):
         def u_substitution_if_possible(integral_obj) :
             from sympy import sin, cos, tan
             def perform_u_substitution_on_trig(integral_obj):
-                # Helper function to perform transform_2 and check if substitution was successful
-            
                 x = integral_obj.limits[0][0]  # Assuming x is the variable of integration
                 # Clause 1: Check for trigonometric functions
                 for trig_func in [sin, cos, tan]:
