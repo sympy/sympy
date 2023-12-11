@@ -12,7 +12,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
-    sinh, tanh, cosh, sech, coth)
+    sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -42,7 +42,8 @@ from sympy.solvers import solve
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset, solve_decomposition, substitution, nonlinsolve, solvify,
+    _invert_trig_hyp_real, solveset, solve_decomposition, substitution,
+    nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
     _solve_exponential, _is_logarithmic, _is_lambert,
     _solve_logarithm, _term_factors, _is_modular, NonlinearError)
@@ -181,6 +182,41 @@ def test_invert_real():
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
+
+    r = Symbol('r', real=True)
+    p = Symbol('p', positive=True)
+    assert invert_real(sinh(x), r, x) == (x, FiniteSet(asinh(r)))
+    assert invert_real(sinh(log(x)), p, x) == (x, FiniteSet(exp(asinh(p))))
+
+    assert invert_real(cosh(x), r, x) == (x, Intersection(
+        FiniteSet(-acosh(r), acosh(r)), S.Reals))
+    assert invert_real(cosh(x), p + 1, x) == (x,
+        FiniteSet(-acosh(p + 1), acosh(p + 1)))
+
+    assert invert_real(tanh(x), r, x) == (x, Intersection(FiniteSet(atanh(r)), S.Reals))
+    assert invert_real(coth(x), p+1, x) == (x, FiniteSet(acoth(p+1)))
+    assert invert_real(sech(x), r, x) == (x, Intersection(
+        FiniteSet(-asech(r), asech(r)), S.Reals))
+    assert invert_real(csch(x), p, x) == (x, FiniteSet(acsch(p)))
+
+    assert dumeq(invert_real(tanh(sin(x)), r, x), (x, Union(
+        ImageSet(Lambda(n, 2*n*pi + asin(atanh(r))), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi - asin(atanh(r)) + pi), S.Integers))))
+
+def test_invert_trig_hyp_real():
+    # check some codepaths that are not as easily reached otherwise
+    n = Dummy('n')
+    assert _invert_trig_hyp_real(cosh(x), Range(-5, 10, 1), x)[1].dummy_eq(Union(
+        ImageSet(Lambda(n, -acosh(n)), Range(1, 10, 1)),
+        ImageSet(Lambda(n, acosh(n)), Range(1, 10, 1))))
+    assert _invert_trig_hyp_real(coth(x), Interval(-3, 2), x) == (x, Union(
+        Interval(-oo, -acoth(3)), Interval(acoth(2), oo)))
+    assert _invert_trig_hyp_real(tanh(x), Interval(-S.Half, 1), x) == (x,
+        Interval(-atanh(S.Half), oo))
+    assert _invert_trig_hyp_real(sech(x), imageset(n, S.Half + n/3, S.Naturals0), x) == \
+        (x, FiniteSet(-asech(S(1)/2), asech(S(1)/2), -asech(S(5)/6), asech(S(5)/6)))
+    assert _invert_trig_hyp_real(csch(x), S.Reals, x) == (x,
+        Union(Interval.open(-oo, 0), Interval.open(0, oo)))
 
 
 def test_invert_complex():
@@ -938,6 +974,42 @@ def test_solve_trig():
         ImageSet(Lambda(n, 360*n + 30), S.Integers)))
 
 
+def test_solve_trig_hyp_by_inversion():
+    n = Dummy('n')
+    assert solveset_real(sin(2*x + 3) - S(1)/2, x).dummy_eq(Union(
+        ImageSet(Lambda(n, n*pi - S(3)/2 + 13*pi/12), S.Integers),
+        ImageSet(Lambda(n, n*pi - S(3)/2 + 17*pi/12), S.Integers)))
+    assert solveset_real(tan(x) - tan(pi/10), x).dummy_eq(
+        ImageSet(Lambda(n, n*pi + pi/10), S.Integers))
+
+    assert solveset_real(3*cosh(2*x) - 5, x) == FiniteSet(
+        -acosh(S(5)/3)/2, acosh(S(5)/3)/2)
+    assert solveset_real(sinh(x - 3) - 2, x) == FiniteSet(
+        asinh(2) + 3)
+    assert solveset_real(cos(sinh(x))-cos(pi/12), x).dummy_eq(Union(
+        ImageSet(Lambda(n, asinh(2*n*pi + pi/12)), S.Integers),
+        ImageSet(Lambda(n, asinh(2*n*pi + 23*pi/12)), S.Integers)))
+    # XXX: fix domain=Interval(2, 3)
+    assert solveset_real(cos(sinh(x))-cos(pi/12), x).intersect(Interval(2,3)) == \
+        FiniteSet(asinh(23*pi/12), asinh(25*pi/12))
+    assert solveset_real(cosh(x**2-1)-2, x) == FiniteSet(
+        -sqrt(1 + acosh(2)), sqrt(1 + acosh(2)))
+
+    assert solveset_real(cosh(x) + 1, x) == S.EmptySet
+    assert solveset_real(coth(x), x) == S.EmptySet
+    assert solveset_real(sech(x) - 2, x) == S.EmptySet
+    assert solveset_real(sech(x), x) == S.EmptySet
+    assert solveset_real(tanh(x) + 1, x) == S.EmptySet
+
+    assert solveset_real(abs(csch(x)) - 3, x) == FiniteSet(-acsch(3), acsch(3))
+
+    assert solveset_real(tanh(x**2 - 1) - exp(-9), x) == FiniteSet(
+        -sqrt(atanh(exp(-9)) + 1), sqrt(atanh(exp(-9)) + 1))
+
+    assert solveset_real(coth(log(x)) + 2, x) == FiniteSet(exp(-acoth(2)))
+    assert solveset_real(coth(exp(x)) + 2, x) == S.EmptySet
+
+
 def test_solve_hyperbolic():
     # actual solver: _solve_trig1
     n = Dummy('n')
@@ -946,10 +1018,6 @@ def test_solve_hyperbolic():
         Eq(cos(x) + sinh(x), 0), S.Complexes)
     assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
         log(sqrt(sqrt(5) - 2)))
-    assert solveset_real(3*cosh(2*x) - 5, x) == FiniteSet(
-        -log(3)/2, log(3)/2)
-    assert solveset_real(sinh(x - 3) - 2, x) == FiniteSet(
-        log((2 + sqrt(5))*exp(3)))
     assert solveset_real(cosh(2*x) + 2*sinh(x) - 5, x) == FiniteSet(
         log(-2 + sqrt(5)), log(1 + sqrt(2)))
     assert solveset_real((coth(x) + sinh(2*x))/cosh(x) - 3, x) == FiniteSet(
@@ -1048,7 +1116,7 @@ def test_solve_trig_hyp_symbolic():
 
     ar = Symbol('ar', real=True)
     assert solveset(cosh((ar**2 + 1)*x) - 2, x, S.Reals) == FiniteSet(
-        log(sqrt(3) + 2)/(ar**2 + 1), log(2 - sqrt(3))/(ar**2 + 1))
+        -acosh(2)/(ar**2 + 1), acosh(2)/(ar**2 + 1))
 
 
 def test_issue_9616():
