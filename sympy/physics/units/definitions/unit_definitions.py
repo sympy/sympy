@@ -56,10 +56,13 @@ candela.set_global_dimension(luminous_intensity)
 
 # derived units
 newton = newtons = N = Quantity("newton", abbrev="N")
+
 kilonewton = kilonewtons = kN = Quantity("kilonewton", abbrev="kN")
 kilonewton.set_global_relative_scale_factor(kilo, newton)
+
 meganewton = meganewtons = MN = Quantity("meganewton", abbrev="MN")
 meganewton.set_global_relative_scale_factor(mega, newton)
+
 joule = joules = J = Quantity("joule", abbrev="J")
 watt = watts = W = Quantity("watt", abbrev="W")
 pascal = pascals = Pa = pa = Quantity("pascal", abbrev="Pa")
