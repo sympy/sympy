@@ -979,7 +979,6 @@ class Integral(AddWithLimits):
                 
         def u_substitution_if_possible(integral_obj) :
             from sympy import sin, cos, tan
-    
             def perform_u_substitution_on_trig(integral_obj):
                 # Helper function to perform transform_2 and check if substitution was successful
             
@@ -1020,8 +1019,8 @@ class Integral(AddWithLimits):
         if (i != u_sub_result):
             u = u_sub_result.limits[0][0]
             return u_sub_result.doit().subs(u, x_expr)    
-        
-            
+
+
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
