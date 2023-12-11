@@ -1000,13 +1000,13 @@ class Integral(AddWithLimits):
                                 continue
                 return integral_obj, None
 
-            # don't attempt u-substitution if it is in the format: exp1 + exp2  
+            # don't attempt u-substitution if it is in the format: exp1 + exp2
             f = integral_obj.function
             args = Add.make_args(f)
             if len(args) > 1:
-                return integral_obj, None            
+                return integral_obj, None
             return perform_u_substitution_on_trig(integral_obj)
-        
+
         # Make it an integral Class
         i = Integral(f, x)
 
