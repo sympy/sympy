@@ -993,7 +993,7 @@ _doc_positive_definite = \
     hermitian) and we can defer most of the studies to symmetric or
     hermitian positive definite matrices.
 
-    But it is a different problem for the existance of Cholesky
+    But it is a different problem for the existence of Cholesky
     decomposition. Because even though a non symmetric or a non
     hermitian matrix can be positive definite, Cholesky or LDL
     decomposition does not exist because the decompositions require the
