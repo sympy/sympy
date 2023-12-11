@@ -1008,7 +1008,6 @@ class Integral(AddWithLimits):
             args = Add.make_args(f)
             if len(args) > 1:
                 return integral_obj, None            
-            
             return perform_u_substitution_on_trig(integral_obj)
         
         # Make it an integral Class
@@ -1019,8 +1018,6 @@ class Integral(AddWithLimits):
         if (i != u_sub_result):
             u = u_sub_result.limits[0][0]
             return u_sub_result.doit().subs(u, x_expr)    
-
-
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
