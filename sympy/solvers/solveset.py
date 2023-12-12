@@ -419,6 +419,31 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
         return (f, g_ys)
 
 
+def _invert_trig_hyp_complex(f, g_ys, symbol):
+    if isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
+        def inv(trig):
+            if isinstance(trig, (sin, csc)):
+                F = asin if isinstance(trig, sin) else acsc
+                return (
+                    lambda a: 2*n*pi + F(a),
+                    lambda a: 2*n*pi + pi - F(a))
+            if isinstance(trig, (cos, sec)):
+                F = acos if isinstance(trig, cos) else asec
+                return (
+                    lambda a: 2*n*pi + F(a),
+                    lambda a: 2*n*pi - F(a))
+            if isinstance(trig, (tan, cot)):
+                return (lambda a: n*pi + trig.inverse()(a),)
+
+        n = Dummy('n', integer=True)
+        invs = S.EmptySet
+        for L in inv(f):
+            invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
+        return _invert_complex(f.args[0], invs, symbol)
+    else:
+        return (f, g_ys)
+
+
 def _invert_complex(f, g_ys, symbol):
     """Helper function for _invert."""
 
@@ -476,6 +501,9 @@ def _invert_complex(f, g_ys, symbol):
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.exp, exp_invs, symbol)
+
+    if isinstance(f, TrigonometricFunction):
+         return _invert_trig_hyp_complex(f, g_ys, symbol)
 
     return (f, g_ys)
 
@@ -1119,6 +1147,10 @@ def _solveset(f, symbol, domain, _check=False):
         if m not in {S.ComplexInfinity, S.Zero, S.Infinity,
                               S.NegativeInfinity}:
             f = a/m + h  # XXX condition `m != 0` should be added to soln
+        if isinstance(h, (TrigonometricFunction)) and (
+            a and a.is_number and a.is_finite):
+                # solve this by inversion
+                invert_trig_hyp = True
         if isinstance(h, (TrigonometricFunction, HyperbolicFunction)) and (
             a and a.is_number and a.is_real and domain.is_subset(S.Reals)):
                 # solve this by inversion
