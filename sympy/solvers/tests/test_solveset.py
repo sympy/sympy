@@ -922,8 +922,8 @@ def test_solve_trig():
                             ImageSet(Lambda(n, n*pi), S.Integers))
 
     assert dumeq(solveset(sin(x/10) + Rational(3, 4)), Union(
-        ImageSet(Lambda(n, 20*n*pi + 10*atan(3*sqrt(7)/7) + 10*pi), S.Integers),
-        ImageSet(Lambda(n, 20*n*pi - 10*atan(3*sqrt(7)/7) + 20*pi), S.Integers)))
+        ImageSet(Lambda(n, 20*n*pi - 10*asin(S(3)/4) + 20*pi), S.Integers),
+        ImageSet(Lambda(n, 20*n*pi + 10*asin(S(3)/4) + 10*pi), S.Integers)))
 
     assert dumeq(solveset(cos(x/15) + cos(x/5)), Union(
         ImageSet(Lambda(n, 30*n*pi + 15*pi/2), S.Integers),
@@ -934,8 +934,8 @@ def test_solve_trig():
         ImageSet(Lambda(n, 30*n*pi + 15*pi/4), S.Integers)))
 
     assert dumeq(solveset(sec(sqrt(2)*x/3) + 5), Union(
-        ImageSet(Lambda(n, 3*sqrt(2)*(2*n*pi - pi + atan(2*sqrt(6)))/2), S.Integers),
-        ImageSet(Lambda(n, 3*sqrt(2)*(2*n*pi - atan(2*sqrt(6)) + pi)/2), S.Integers)))
+        ImageSet(Lambda(n, 3*sqrt(2)*(2*n*pi - asec(-5))/2), S.Integers),
+        ImageSet(Lambda(n, 3*sqrt(2)*(2*n*pi + asec(-5))/2), S.Integers)))
 
     assert dumeq(simplify(solveset(tan(pi*x) - cot(pi/2*x))), Union(
         ImageSet(Lambda(n, 4*n + 1), S.Integers),
