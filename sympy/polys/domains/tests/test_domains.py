@@ -662,8 +662,8 @@ def test_Domain_convert():
 
     def check_domains(K1, K2):
         K3 = K1.unify(K2)
-        check_element(K3.convert_from( K1.one, K1),  K3.one, K1, K2, K3)
-        check_element(K3.convert_from( K2.one, K2),  K3.one, K1, K2, K3)
+        check_element(K3.convert_from(K1.one, K1),  K3.one,  K1, K2, K3)
+        check_element(K3.convert_from(K2.one, K2),  K3.one,  K1, K2, K3)
         check_element(K3.convert_from(K1.zero, K1), K3.zero, K1, K2, K3)
         check_element(K3.convert_from(K2.zero, K2), K3.zero, K1, K2, K3)
 
@@ -695,6 +695,11 @@ def test_Domain_convert():
 
     assert CC.convert(ZZ_I(1, 2)) == CC(1, 2)
     assert CC.convert(QQ_I(1, 2)) == CC(1, 2)
+
+    assert QQ.convert_from(RR(0.5), RR) == QQ(1, 2)
+    assert RR.convert_from(QQ(1, 2), QQ) == RR(0.5)
+    assert QQ_I.convert_from(CC(0.5, 0.75), CC) == QQ_I(QQ(1, 2), QQ(3, 4))
+    assert CC.convert_from(QQ_I(QQ(1, 2), QQ(3, 4)), QQ_I) == CC(0.5, 0.75)
 
     K1 = QQ.frac_field(x)
     K2 = ZZ.frac_field(x)
