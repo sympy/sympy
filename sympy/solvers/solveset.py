@@ -3505,10 +3505,10 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # symbols appears first
         for index, eq in enumerate(eqs_in_better_order):
             newresult = []
-            original_imageset = {}
             # if imageset, expr is used to solve for other symbol
             imgset_yes = False
             for res in result:
+                original_imageset = {}
                 got_symbol = set()  # symbols solved in one iteration
                 # find the imageset and use its expr.
                 for k, v in res.items():
