@@ -3,14 +3,13 @@
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
-from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.polyclasses import DMF
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 from sympy.utilities import public
 
 @public
-class FractionField(Field, CharacteristicZero, CompositeDomain):
+class FractionField(Field, CompositeDomain):
     """A class for representing rational function fields. """
 
     dtype = DMF
@@ -32,6 +31,10 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         self.domain = self.dom = dom
         self.symbols = self.gens = gens
 
+    def set_domain(self, dom):
+        """Make a new fraction field with given domain. """
+        return self.__class__(dom, *self.gens)
+
     def new(self, element):
         return self.dtype(element, self.dom, len(self.gens) - 1)
 
@@ -45,13 +48,6 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """Returns ``True`` if two domains are equivalent. """
         return isinstance(other, FractionField) and \
             self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
-
-    @property
-    def has_CharacteristicZero(self):
-        return self.dom.has_CharacteristicZero
-
-    def characteristic(self):
-        return self.dom.characteristic()
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
