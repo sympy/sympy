@@ -562,22 +562,70 @@ def test_Domain_get_field():
     assert QQ[x, y].get_field() == QQ.frac_field(x, y)
 
 
+def test_Domain_set_domain():
+    doms = [GF(5), ZZ, QQ, ALG, RR, CC, EX, ZZ[z], QQ[z], RR[z], CC[z], EX[z]]
+    for D1 in doms:
+        for D2 in doms:
+            assert D1[x].set_domain(D2) == D2[x]
+            assert D1[x, y].set_domain(D2) == D2[x, y]
+            assert D1.frac_field(x).set_domain(D2) == D2.frac_field(x)
+            assert D1.frac_field(x, y).set_domain(D2) == D2.frac_field(x, y)
+            assert D1.old_poly_ring(x).set_domain(D2) == D2.old_poly_ring(x)
+            assert D1.old_poly_ring(x, y).set_domain(D2) == D2.old_poly_ring(x, y)
+            assert D1.old_frac_field(x).set_domain(D2) == D2.old_frac_field(x)
+            assert D1.old_frac_field(x, y).set_domain(D2) == D2.old_frac_field(x, y)
+
+
+def test_Domain_is_Exact():
+    exact = [GF(5), ZZ, QQ, ALG, EX]
+    inexact = [RR, CC]
+    for D in exact + inexact:
+        for R in D, D[x], D.frac_field(x), D.old_poly_ring(x), D.old_frac_field(x):
+            if D in exact:
+                assert R.is_Exact is True
+            else:
+                assert R.is_Exact is False
+
+
 def test_Domain_get_exact():
     assert EX.get_exact() == EX
     assert ZZ.get_exact() == ZZ
     assert QQ.get_exact() == QQ
     assert RR.get_exact() == QQ
-    # XXX: This should also be like RR:
-    # assert CC.get_exact() == QQ_I
+    assert CC.get_exact() == QQ_I
     assert ALG.get_exact() == ALG
     assert ZZ[x].get_exact() == ZZ[x]
     assert QQ[x].get_exact() == QQ[x]
+    assert RR[x].get_exact() == QQ[x]
+    assert CC[x].get_exact() == QQ_I[x]
     assert ZZ[x, y].get_exact() == ZZ[x, y]
     assert QQ[x, y].get_exact() == QQ[x, y]
+    assert RR[x, y].get_exact() == QQ[x, y]
+    assert CC[x, y].get_exact() == QQ_I[x, y]
     assert ZZ.frac_field(x).get_exact() == ZZ.frac_field(x)
     assert QQ.frac_field(x).get_exact() == QQ.frac_field(x)
+    assert RR.frac_field(x).get_exact() == QQ.frac_field(x)
+    assert CC.frac_field(x).get_exact() == QQ_I.frac_field(x)
     assert ZZ.frac_field(x, y).get_exact() == ZZ.frac_field(x, y)
     assert QQ.frac_field(x, y).get_exact() == QQ.frac_field(x, y)
+    assert RR.frac_field(x, y).get_exact() == QQ.frac_field(x, y)
+    assert CC.frac_field(x, y).get_exact() == QQ_I.frac_field(x, y)
+    assert ZZ.old_poly_ring(x).get_exact() == ZZ.old_poly_ring(x)
+    assert QQ.old_poly_ring(x).get_exact() == QQ.old_poly_ring(x)
+    assert RR.old_poly_ring(x).get_exact() == QQ.old_poly_ring(x)
+    assert CC.old_poly_ring(x).get_exact() == QQ_I.old_poly_ring(x)
+    assert ZZ.old_poly_ring(x, y).get_exact() == ZZ.old_poly_ring(x, y)
+    assert QQ.old_poly_ring(x, y).get_exact() == QQ.old_poly_ring(x, y)
+    assert RR.old_poly_ring(x, y).get_exact() == QQ.old_poly_ring(x, y)
+    assert CC.old_poly_ring(x, y).get_exact() == QQ_I.old_poly_ring(x, y)
+    assert ZZ.old_frac_field(x).get_exact() == ZZ.old_frac_field(x)
+    assert QQ.old_frac_field(x).get_exact() == QQ.old_frac_field(x)
+    assert RR.old_frac_field(x).get_exact() == QQ.old_frac_field(x)
+    assert CC.old_frac_field(x).get_exact() == QQ_I.old_frac_field(x)
+    assert ZZ.old_frac_field(x, y).get_exact() == ZZ.old_frac_field(x, y)
+    assert QQ.old_frac_field(x, y).get_exact() == QQ.old_frac_field(x, y)
+    assert RR.old_frac_field(x, y).get_exact() == QQ.old_frac_field(x, y)
+    assert CC.old_frac_field(x, y).get_exact() == QQ_I.old_frac_field(x, y)
 
 
 def test_Domain_characteristic():

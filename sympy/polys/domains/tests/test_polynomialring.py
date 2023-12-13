@@ -91,9 +91,3 @@ def test_units():
     assert not R.is_unit(R.convert(2))
     assert not R.is_unit(R.convert(x))
     assert not R.is_unit(R.convert(1 + x))
-
-
-def test_is_Exact():
-    assert RR[x].is_Exact == False
-    assert QQ[x].is_Exact == True
-    assert ZZ[x].is_Exact == True
