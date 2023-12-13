@@ -74,6 +74,10 @@ class PolynomialRing(Ring, CompositeDomain):
     def characteristic(self):
         return self.domain.characteristic()
 
+    @property
+    def is_Exact(self):
+        return self.domain.is_Exact
+
     def is_unit(self, a):
         """Returns ``True`` if ``a`` is a unit of ``self``"""
         if not a.is_ground:
