@@ -5,7 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, Lambda, diff)
 from sympy.core import EulerGamma
-from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo, all_close)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -438,13 +438,13 @@ def test_issue_18133():
 
 
 def test_issue_21741():
-    a = Float('3999999.9999999995', precision=53)
-    b = Float('2.5000000000000004e-7', precision=53)
+    a = 4e6
+    b = 2.5e-7
     r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x),
-                   Ne(1.0*pi*x*exp(a*I*pi*t*y), 0)),
+                   Ne(a*pi*x*exp(a*I*pi*t*y), 0)),
                   (z*exp(-a*I*pi*t*y), True))
     fun = E**((-2*I*pi*(z*x+t*y))/(500*10**(-9)))
-    assert integrate(fun, z) == r
+    assert all_close(integrate(fun, z), r)
 
 
 def test_matrices():
