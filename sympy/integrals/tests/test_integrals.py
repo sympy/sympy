@@ -5,7 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, Lambda, diff)
 from sympy.core import EulerGamma
-from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo, all_close)
+from sympy.core.numbers import (E, I, Rational, nan, oo, pi, zoo, all_close)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
