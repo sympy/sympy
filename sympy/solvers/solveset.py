@@ -548,7 +548,7 @@ def _invert_complex(f, g_ys, symbol):
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.exp, exp_invs, symbol)
 
-    if isinstance(f, TrigonometricFunction):
+    if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
          return _invert_trig_hyp_complex(f, g_ys, symbol)
 
     return (f, g_ys)
@@ -1193,12 +1193,8 @@ def _solveset(f, symbol, domain, _check=False):
         if m not in {S.ComplexInfinity, S.Zero, S.Infinity,
                               S.NegativeInfinity}:
             f = a/m + h  # XXX condition `m != 0` should be added to soln
-        if isinstance(h, (TrigonometricFunction)) and (
-            a and a.is_number and a.is_finite):
-                # solve this by inversion
-                invert_trig_hyp = True
         if isinstance(h, (TrigonometricFunction, HyperbolicFunction)) and (
-            a and a.is_number and a.is_real and domain.is_subset(S.Reals)):
+            a and a.is_number and a.is_finite):
                 # solve this by inversion
                 invert_trig_hyp = True
 
