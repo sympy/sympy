@@ -192,7 +192,7 @@ class Density(HermitianOperator):
         else:
             op = Mul(*nc_part1)*Dagger(Mul(*nc_part2))
 
-        return Mul(*c_part1)*Mul(*c_part2) * op
+        return Mul(*c_part1)*conjugate(Mul(*c_part2)) * op
 
     def _represent(self, **options):
         return represent(self.doit(), **options)
