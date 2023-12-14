@@ -1028,8 +1028,8 @@ def test_solve_hyperbolic():
         log(sqrt(2)/2 + sqrt(-S(1)/2 + sqrt(2))))
 
     assert dumeq(solveset_complex(sinh(x) - I/2, x), Union(
-        ImageSet(Lambda(n, I*(2*n*pi + 5*pi/6)), S.Integers),
-        ImageSet(Lambda(n, I*(2*n*pi + pi/6)), S.Integers)))
+        ImageSet(Lambda(n, 2*I*pi*n + 5*I*pi/6), S.Integers),
+        ImageSet(Lambda(n, 2*I*pi*n + I*pi/6), S.Integers)))
 
     assert dumeq(solveset_complex(sinh(x) + sech(x), x), Union(
         ImageSet(Lambda(n, 2*n*I*pi + log(sqrt(-2 + sqrt(5)))), S.Integers),
@@ -1038,8 +1038,8 @@ def test_solve_hyperbolic():
         ImageSet(Lambda(n, I*(2*n*pi - pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers)))
 
     assert dumeq(solveset(sinh(x/10) + Rational(3, 4)), Union(
-        ImageSet(Lambda(n, 10*I*(2*n*pi + pi) + 10*log(2)), S.Integers),
-        ImageSet(Lambda(n, 20*n*I*pi - 10*log(2)), S.Integers)))
+        ImageSet(Lambda(n, 20*n*I*pi - 10*asinh(S(3)/4)), S.Integers),
+        ImageSet(Lambda(n, 20*n*I*pi + 10*asinh(S(3)/4) + 10*I*pi), S.Integers)))
 
     assert dumeq(solveset(cosh(x/15) + cosh(x/5)), Union(
         ImageSet(Lambda(n, 15*I*(2*n*pi + pi/2)), S.Integers),
@@ -1050,8 +1050,8 @@ def test_solve_hyperbolic():
         ImageSet(Lambda(n, 15*I*(2*n*pi + pi/4)), S.Integers)))
 
     assert dumeq(solveset(sech(sqrt(2)*x/3) + 5), Union(
-        ImageSet(Lambda(n, 3*sqrt(2)*I*(2*n*pi - pi + atan(2*sqrt(6)))/2), S.Integers),
-        ImageSet(Lambda(n, 3*sqrt(2)*I*(2*n*pi - atan(2*sqrt(6)) + pi)/2), S.Integers)))
+        ImageSet(Lambda(n, 3*sqrt(2)*(2*n*I*pi - asech(-5))/2), S.Integers),
+        ImageSet(Lambda(n, 3*sqrt(2)*(2*n*I*pi + asech(-5))/2), S.Integers)))
 
     assert dumeq(solveset(tanh(pi*x) - coth(pi/2*x)), Union(
         ImageSet(Lambda(n, 2*I*(2*n*pi + pi/2)/pi), S.Integers),
@@ -1109,10 +1109,10 @@ def test_solve_trig_hyp_symbolic():
         ImageSet(Lambda(n, pi*(1 - I)*(4*n + 1)/4), S.Integers),
         ImageSet(Lambda(n, pi*(1 - I)*(4*n - 1)/4), S.Integers)))
 
-    assert dumeq(solveset(cosh((a**2 + 1)*x) - 3, x),
-        ConditionSet(x, Ne(a**2 + 1, 0), Union(
-            ImageSet(Lambda(n, (2*n*I*pi + log(3 - 2*sqrt(2)))/(a**2 + 1)), S.Integers),
-            ImageSet(Lambda(n, (2*n*I*pi + log(2*sqrt(2) + 3))/(a**2 + 1)), S.Integers))))
+    assert dumeq(solveset(cosh((a**2 + 1)*x) - 3, x), Union(
+            # XXX this test previously had a ConditionSet with Ne(a**2+1, 0).
+            ImageSet(Lambda(n, (2*n*I*pi - acosh(3))/(a**2 + 1)), S.Integers),
+            ImageSet(Lambda(n, (2*n*I*pi + acosh(3))/(a**2 + 1)), S.Integers)))
 
     ar = Symbol('ar', real=True)
     assert solveset(cosh((ar**2 + 1)*x) - 2, x, S.Reals) == FiniteSet(
