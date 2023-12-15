@@ -1495,7 +1495,7 @@ def dup_inner_gcd(f, g, K):
     # >>> g, p, q = Poly(1, x).cancel(Poly(51.05*x*y - 1.0, x))
     # >>> g
     # 1.0
-    # >>> q
+    # >>> p
     # Poly(17592186044421.0, x, domain='RR[y]')
     # >>> q
     # Poly(898081097567692.0*y*x - 17592186044421.0, x, domain='RR[y]'))
