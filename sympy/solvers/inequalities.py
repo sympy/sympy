@@ -267,15 +267,13 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             else:
                 _eqs.append(((numer, denom), rel))
 
-        solution |= _sol
         if _eqs:
-            eqs.append(_eqs)
+            _sol &= solve_rational_inequalities([_eqs])
+            exclude = solve_rational_inequalities([[((d, d.one), '==')
+                for i in eqs for ((n, d), _) in i if d.has(gen)]])
+            _sol -= exclude
 
-    if eqs:
-        solution &= solve_rational_inequalities(eqs)
-        exclude = solve_rational_inequalities([[((d, d.one), '==')
-            for i in eqs for ((n, d), _) in i if d.has(gen)]])
-        solution -= exclude
+        solution |= _sol
 
     if not exact and solution:
         solution = solution.evalf()
