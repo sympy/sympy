@@ -49,13 +49,6 @@ class FractionField(Field, CompositeDomain):
     def order(self):
         return self.field.order
 
-    @property
-    def is_Exact(self):
-        return self.domain.is_Exact
-
-    def get_exact(self):
-        return FractionField(self.domain.get_exact(), self.symbols)
-
     def __str__(self):
         return str(self.domain) + '(' + ','.join(map(str, self.symbols)) + ')'
 
@@ -67,13 +60,6 @@ class FractionField(Field, CompositeDomain):
         return isinstance(other, FractionField) and \
             (self.dtype.field, self.domain, self.symbols) ==\
             (other.dtype.field, other.domain, other.symbols)
-
-    @property
-    def has_CharacteristicZero(self):
-        return self.domain.has_CharacteristicZero
-
-    def characteristic(self):
-        return self.domain.characteristic()
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
