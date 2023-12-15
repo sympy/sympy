@@ -906,8 +906,8 @@ def test_solve_trig():
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers)))
 
     assert dumeq(solveset(sin(y + a) - sin(y), a, domain=S.Reals),
-        Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
-        Intersection(ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*y))) + 2*im(y))), S.Integers), S.Reals)))
+        Union(ImageSet(Lambda(n, 2*n*pi - y + asin(sin(y))), S.Integers),
+              ImageSet(Lambda(n, 2*n*pi - y - asin(sin(y)) + pi), S.Integers)))
 
     assert dumeq(solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x),
         ImageSet(Lambda(n, n*pi*Rational(2, 3) + pi/6), S.Integers))
@@ -1095,8 +1095,8 @@ def test_solve_trig_hyp_symbolic():
         ImageSet(Lambda(n, 2*n*pi/a), S.Integers))))
 
     assert dumeq(solveset(cosh(x/a), x), ConditionSet(x, Ne(a, 0), Union(
-        ImageSet(Lambda(n, I*a*(2*n*pi + pi/2)), S.Integers),
-        ImageSet(Lambda(n, I*a*(2*n*pi - pi/2)), S.Integers))))
+        ImageSet(Lambda(n, a*(2*n*I*pi + I*pi/2)), S.Integers),
+        ImageSet(Lambda(n, a*(2*n*I*pi + 3*I*pi/2)), S.Integers))))
 
     assert dumeq(solveset(sin(2*sqrt(3)/3*a**2/(b*pi)*x)
         + cos(4*sqrt(3)/3*a**2/(b*pi)*x), x),
