@@ -424,7 +424,7 @@ class ComplexRootOf(RootOf):
         else:
             _reals_cache[currentfactor] = real_part = \
                 dup_isolate_real_roots_sqf(
-                    currentfactor.rep.rep, currentfactor.rep.dom, blackbox=True)
+                    currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
 
         return real_part
 
@@ -436,7 +436,7 @@ class ComplexRootOf(RootOf):
         else:
             _complexes_cache[currentfactor] = complex_part = \
                 dup_isolate_complex_roots_sqf(
-                currentfactor.rep.rep, currentfactor.rep.dom, blackbox=True)
+                currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
         return complex_part
 
     @classmethod

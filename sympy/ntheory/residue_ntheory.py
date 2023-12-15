@@ -2,18 +2,20 @@ from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, invert, sqrt, legendre, jacobi, kronecker
+from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
+                                 kronecker, bit_scan1, remove)
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
-from .factor_ import factorint, trailing, multiplicity, perfect_power
+from .factor_ import factorint, _perfect_power
 from .modular import crt
+from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
+from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint, randint
 
-from collections import defaultdict
-from itertools import cycle, product
+from itertools import product
 
 
 def n_order(a, n):
@@ -69,26 +71,21 @@ def n_order(a, n):
         return 1
     if gcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
-    # We want to calculate
-    # order = totient(n), factors = factorint(order)
-    factors = defaultdict(int)
-    for px, kx in factorint(n).items():
-        if kx > 1:
-            factors[px] += kx - 1
-        for py, ky in factorint(px - 1).items():
-            factors[py] += ky
-    order = 1
-    for px, kx in factors.items():
-        order *= px**kx
-    # Now the `order` is the order of the group.
-    # The order of `a` divides the order of the group.
-    for p, e in factors.items():
-        for _ in range(e):
-            if pow(a, order // p, n) == 1:
-                order //= p
-            else:
-                break
-    return order
+    a_order = 1
+    for p, e in factorint(n).items():
+        pe = p**e
+        pe_order = (p - 1) * p**(e - 1)
+        factors = factorint(p - 1)
+        if e > 1:
+            factors[p] = e - 1
+        order = 1
+        for px, ex in factors.items():
+            x = pow(a, pe_order // px**ex, pe)
+            while x != 1:
+                x = pow(x, px, pe)
+                order *= px
+        a_order = lcm(a_order, order)
+    return int(a_order)
 
 
 def _primitive_root_prime_iter(p):
@@ -313,7 +310,7 @@ def primitive_root(p, smallest=True):
     if isprime(q):
         e = 1
     else:
-        m = perfect_power(q)
+        m = _perfect_power(q, 3)
         if not m:
             return None
         q, e = m
@@ -413,7 +410,7 @@ def is_primitive_root(a, p):
         group_order = q - 1
         factors = factorint(q - 1).keys()
     else:
-        m = perfect_power(q)
+        m = _perfect_power(q, 3)
         if not m:
             return False
         q, e = m
@@ -430,16 +427,13 @@ def _sqrt_mod_tonelli_shanks(a, p):
     Returns the square root in the case of ``p`` prime with ``p == 1 (mod 8)``
 
     Assume that the root exists.
-    Although ``p`` correctly returns the answer for any odd prime,
-    ``p != 1 (mod 8)``, there is no advantage to using this algorithm since
-    a more efficient algorithm exists.
 
     Parameters
     ==========
 
     a : int
     p : int
-        Odd prime number
+        prime number. should be ``p % 8 == 1``
 
     Returns
     =======
@@ -457,17 +451,24 @@ def _sqrt_mod_tonelli_shanks(a, p):
     References
     ==========
 
-    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nd Ed., page 101
+    .. [1] Carl Pomerance, Richard Crandall, Prime Numbers: A Computational Perspective,
+           2nd Edition (2005), page 101, ISBN:978-0387252827
 
     """
-    s = trailing(p - 1)
+    s = bit_scan1(p - 1)
     t = p >> s
     # find a non-quadratic residue
-    while 1:
-        d = randint(2, p - 1)
-        r = jacobi(d, p)
-        if r == -1:
-            break
+    if p % 12 == 5:
+        # Legendre symbol (3/p) == -1 if p % 12 in [5, 7]
+        d = 3
+    elif p % 5 in [2, 3]:
+        # Legendre symbol (5/p) == -1 if p % 5 in [2, 3]
+        d = 5
+    else:
+        while 1:
+            d = randint(6, p - 1)
+            if jacobi(d, p) == -1:
+                break
     #assert legendre_symbol(d, p) == -1
     A = pow(a, t, p)
     D = pow(d, t, p)
@@ -527,39 +528,6 @@ def sqrt_mod(a, p, all_roots=False):
     return x
 
 
-def _product(*iters):
-    """
-    Cartesian product generator
-
-    Notes
-    =====
-
-    Unlike itertools.product, it works also with iterables which do not fit
-    in memory. See https://bugs.python.org/issue10109
-
-    Author: Fernando Sumudu
-    with small changes
-    """
-    inf_iters = tuple(cycle(enumerate(it)) for it in iters)
-    num_iters = len(inf_iters)
-    cur_val = [None]*num_iters
-
-    first_v = True
-    while True:
-        i, p = 0, num_iters
-        while p and not i:
-            p -= 1
-            i, cur_val[p] = next(inf_iters[p])
-
-        if not p and not i:
-            if first_v:
-                first_v = False
-            else:
-                break
-
-        yield cur_val
-
-
 def sqrt_mod_iter(a, p, domain=int):
     """
     Iterate over solutions to ``x**2 = a mod p``.
@@ -577,45 +545,37 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> from sympy.ntheory.residue_ntheory import sqrt_mod_iter
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
+
+    See Also
+    ========
+
+    sqrt_mod : Same functionality, but you want a sorted list or only one solution.
+
     """
     a, p = as_int(a), abs(as_int(p))
-    if isprime(p):
-        a = a % p
-        if a == 0:
-            res = _sqrt_mod1(a, p, 1)
+    v = []
+    pv = []
+    _product = product
+    for px, ex in factorint(p).items():
+        if a % px:
+            # `len(rx)` is at most 4
+            rx = _sqrt_mod_prime_power(a, px, ex)
         else:
-            res = _sqrt_mod_prime_power(a, p, 1)
-        if res:
-            if domain is ZZ:
-                for x in res:
-                    yield ZZ(x)
-            else:
-                for x in res:
-                    yield domain(x)
+            # `len(list(rx))` can be assumed to be large.
+            # The `itertools.product` is disadvantageous in terms of memory usage.
+            # It is also inferior to iproduct in speed if not all Cartesian products are needed.
+            rx = _sqrt_mod1(a, px, ex)
+            _product = iproduct
+        if not rx:
+            return
+        v.append(rx)
+        pv.append(px**ex)
+    if len(v) == 1:
+        yield from map(domain, v[0])
     else:
-        f = factorint(p)
-        v = []
-        pv = []
-        for px, ex in f.items():
-            if a % px == 0:
-                rx = _sqrt_mod1(a, px, ex)
-                if not rx:
-                    return
-            else:
-                rx = _sqrt_mod_prime_power(a, px, ex)
-                if not rx:
-                    return
-            v.append(rx)
-            pv.append(px**ex)
         mm, e, s = gf_crt1(pv, ZZ)
-        if domain is ZZ:
-            for vx in _product(*v):
-                r = gf_crt2(vx, pv, mm, e, s, ZZ)
-                yield r
-        else:
-            for vx in _product(*v):
-                r = gf_crt2(vx, pv, mm, e, s, ZZ)
-                yield domain(r)
+        for vx in _product(*v):
+            yield domain(gf_crt2(vx, pv, mm, e, s, ZZ))
 
 
 def _sqrt_mod_prime_power(a, p, k):
@@ -716,10 +676,10 @@ def _sqrt_mod1(a, p, n):
         # case gcd(a, p**k) = p**n
         return range(0, pn, p**((n + 1) // 2))
     # case gcd(a, p**k) = p**r, r < n
-    r = multiplicity(p, a)
+    a, r = remove(a, p)
     if r % 2 == 1:
         return None
-    res = _sqrt_mod_prime_power(a // p**r, p, n - r)
+    res = _sqrt_mod_prime_power(a, p, n - r)
     if res is None:
         return None
     m = r // 2
@@ -731,8 +691,37 @@ def is_quad_residue(a, p):
     Returns True if ``a`` (mod ``p``) is in the set of squares mod ``p``,
     i.e a % p in set([i**2 % p for i in range(p)]).
 
+    Parameters
+    ==========
+
+    a : integer
+    p : positive integer
+
+    Returns
+    =======
+
+    bool : If True, ``x**2 == a (mod p)`` has solution.
+
+    Raises
+    ======
+
+    ValueError
+        If ``a``, ``p`` is not integer.
+        If ``p`` is not positive.
+
     Examples
     ========
+
+    >>> from sympy.ntheory import is_quad_residue
+    >>> is_quad_residue(21, 100)
+    True
+
+    Indeed, ``pow(39, 2, 100)`` would be 21.
+
+    >>> is_quad_residue(21, 120)
+    False
+
+    That is, for any integer ``x``, ``pow(x, 2, 120)`` is not 21.
 
     If ``p`` is an odd
     prime, an iterative method is used to make the determination:
@@ -746,25 +735,46 @@ def is_quad_residue(a, p):
     See Also
     ========
 
-    legendre_symbol, jacobi_symbol
+    legendre_symbol, jacobi_symbol, sqrt_mod
     """
     a, p = as_int(a), as_int(p)
     if p < 1:
         raise ValueError('p must be > 0')
-    if a >= p or a < 0:
-        a = a % p
+    a %= p
     if a < 2 or p < 3:
         return True
-    if not isprime(p):
-        if p % 2 and jacobi(a, p) == -1:
-            return False
-        r = sqrt_mod(a, p)
-        if r is None:
-            return False
-        else:
+    # Since we want to compute the Jacobi symbol,
+    # we separate p into the odd part and the rest.
+    t = bit_scan1(p)
+    if t:
+        # The existence of a solution to a power of 2 is determined
+        # using the logic of `p==2` in `_sqrt_mod_prime_power` and `_sqrt_mod1`.
+        a_ = a % (1 << t)
+        if a_:
+            r = bit_scan1(a_)
+            if r % 2 or (a_ >> r) & 6:
+                return False
+        p >>= t
+        a %= p
+        if a < 2 or p < 3:
             return True
-
-    return pow(a, (p - 1) // 2, p) == 1
+    # If Jacobi symbol is -1 or p is prime, can be determined by Jacobi symbol only
+    j = jacobi(a, p)
+    if j == -1 or isprime(p):
+        return j == 1
+    # Checks if `x**2 = a (mod p)` has a solution
+    for px, ex in factorint(p).items():
+        if a % px:
+            if jacobi(a, px) != 1:
+                return False
+        else:
+            a_ = a % px**ex
+            if a_ == 0:
+                continue
+            a_, r = remove(a_, px)
+            if r % 2 or jacobi(a_, px) != 1:
+                return False
+    return True
 
 
 def is_nthpow_residue(a, n, m):
@@ -814,18 +824,17 @@ def _is_nthpow_residue_bign_prime_power(a, n, p, k):
         a %= pow(p, k)
         if not a:
             return True
-        mu = multiplicity(p, a)
+        a, mu = remove(a, p)
         if mu % n:
             return False
-        a //= pow(p, mu)
         k -= mu
     if p != 2:
         f = p**(k - 1)*(p - 1) # f = totient(p**k)
         return pow(a, f // gcd(f, n), pow(p, k)) == 1
     if n & 1:
         return True
-    c = trailing(n)
-    return a % pow(2, min(c + 2, k)) == 1
+    c = min(bit_scan1(n) + 2, k)
+    return a % pow(2, c) == 1
 
 
 def _nthroot_mod1(s, q, p, all_roots):
@@ -1539,9 +1548,9 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
 
 
-def quadratic_congruence(a, b, c, p):
-    """
-    Find the solutions to ``a x**2 + b x + c = 0 mod p``.
+def quadratic_congruence(a, b, c, n):
+    r"""
+    Find the solutions to `a x^2 + b x + c \equiv 0 \pmod{n}`.
 
     Parameters
     ==========
@@ -1549,44 +1558,61 @@ def quadratic_congruence(a, b, c, p):
     a : int
     b : int
     c : int
-    p : int
+    n : int
         A positive integer.
+
+    Returns
+    =======
+
+    list[int] :
+        A sorted list of solutions. If no solution exists, ``[]``.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import quadratic_congruence
+    >>> quadratic_congruence(2, 5, 3, 7) # 2x^2 + 5x + 3 = 0 (mod 7)
+    [2, 6]
+    >>> quadratic_congruence(8, 6, 4, 15) # No solution
+    []
+
+    See Also
+    ========
+
+    polynomial_congruence : Solve the polynomial congruence
+
     """
     a = as_int(a)
     b = as_int(b)
     c = as_int(c)
-    p = as_int(p)
-    a = a % p
-    b = b % p
-    c = c % p
+    n = as_int(n)
+    if n <= 1:
+        raise ValueError("n should be an integer greater than 1")
+    a %= n
+    b %= n
+    c %= n
 
     if a == 0:
-        return linear_congruence(b, -c, p)
-    if p == 2:
+        return linear_congruence(b, -c, n)
+    if n == 2:
+        # assert a == 1
         roots = []
-        if c % 2 == 0:
+        if c == 0:
             roots.append(0)
-        if (a + b + c) % 2 == 0:
+        if (b + c) % 2:
             roots.append(1)
         return roots
-    if isprime(p):
-        inv_a = invert(a, p)
+    if gcd(2*a, n) == 1:
+        inv_a = invert(a, n)
         b *= inv_a
         c *= inv_a
-        if b % 2 == 1:
-            b = b + p
-        d = ((b * b) // 4 - c) % p
-        y = sqrt_mod(d, p, all_roots=True)
-        res = set()
-        for i in y:
-            res.add((i - b // 2) % p)
-        return sorted(res)
-    y = sqrt_mod(b * b - 4 * a * c, 4 * a * p, all_roots=True)
+        if b % 2:
+            b += n
+        b >>= 1
+        return sorted((i - b) % n for i in sqrt_mod_iter(b**2 - c, n))
     res = set()
-    for i in y:
-        root = linear_congruence(2 * a, i - b, 4 * a * p)
-        for j in root:
-            res.add(j % p)
+    for i in sqrt_mod_iter(b**2 - 4*a*c, 4*a*n):
+        res.update(j % n for j in linear_congruence(2*a, i - b, 4*a*n))
     return sorted(res)
 
 
@@ -1753,11 +1779,8 @@ def _binomial_mod_prime_power(n, m, p, q):
 
     def up_plus_v_binom(u, v):
         """Compute binomial(u*p + v, v)_p modulo p^q."""
-        prod = div = 1
-        for i in range(1, v + 1):
-            div *= i
-            div %= modulo
-        div = invert(div, modulo)
+        prod = 1
+        div = invert(factorial(v), modulo)
         for j in range(1, q):
             b = div
             for v_ in range(j*p + 1, j*p + v + 1):
@@ -1773,13 +1796,10 @@ def _binomial_mod_prime_power(n, m, p, q):
             prod %= modulo
         return prod
 
-    factorials = [1]
-    def factorial(v):
+    @recurrence_memo([1])
+    def factorial(v, prev):
         """Compute v! modulo p^q."""
-        if len(factorials) <= v:
-            for i in range(len(factorials), v + 1):
-                factorials.append(factorials[-1]*i % modulo)
-        return factorials[v]
+        return v*prev[-1] % modulo
 
     def factorial_p(n):
         """Compute n!_p modulo p^q."""

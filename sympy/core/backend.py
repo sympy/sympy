@@ -52,7 +52,8 @@ else:
     from sympy.core.function import (diff, Function, AppliedUndef,
         expand, Derivative)
     from sympy.core.mul import Mul
-    from sympy.core.numbers import igcd, pi, I, Integer, Rational, E
+    from sympy.core.intfunc import igcd
+    from sympy.core.numbers import pi, I, Integer, Rational, E
     from sympy.core.singleton import S
     from sympy.core.symbol import Symbol, var, symbols
     from sympy.core.sympify import SympifyError, sympify
@@ -66,7 +67,7 @@ else:
     from sympy.matrices.dense import (eye, zeros, diag, Matrix,
         ones, symarray)
     from sympy.matrices.immutable import ImmutableMatrix
-    from sympy.matrices.matrices import MatrixBase
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.utilities.lambdify import lambdify
 
 

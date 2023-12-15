@@ -1,7 +1,7 @@
 from sympy.core.sympify import _sympify
 from sympy.core import S, Basic
 
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.expressions.matpow import MatPow
 
 
@@ -53,6 +53,15 @@ class Inverse(MatPow):
 
     def _eval_inverse(self):
         return self.arg
+
+    def _eval_transpose(self):
+        return Inverse(self.arg.transpose())
+
+    def _eval_adjoint(self):
+        return Inverse(self.arg.adjoint())
+
+    def _eval_conjugate(self):
+        return Inverse(self.arg.conjugate())
 
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import det

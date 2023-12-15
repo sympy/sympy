@@ -111,7 +111,7 @@ class MutablePolyDenseMatrix:
         if polys:
             p_ring = Poly(0, ring.symbols, domain=ring.domain)
             to_ring = ring.ring.from_list
-            convert_poly = lambda p: to_ring(p.unify(p_ring)[0].rep.rep)
+            convert_poly = lambda p: to_ring(p.unify(p_ring)[0].rep.to_list())
             elements = [convert_poly(p) for p in items]
         else:
             convert_expr = ring.from_sympy

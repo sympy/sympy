@@ -11,14 +11,14 @@ This module contains functions to:
     - solve a system of Non Linear Equations with N variables and M equations
 """
 from sympy.core.sympify import sympify
-from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
+from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul,
                         Add, Basic)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig, nfloat)
 from sympy.core.mod import Mod
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.power import integer_log
+from sympy.core.intfunc import integer_log
 from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
@@ -32,7 +32,9 @@ from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec,
                              piecewise_fold, Piecewise)
 from sympy.functions.elementary.complexes import Abs, arg, re, im
-from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
+                            sinh, cosh, tanh, coth, sech, csch,
+                            asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.logic.boolalg import And, BooleanTrue
@@ -57,6 +59,7 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
                                        is_sequence, iterable)
 from sympy.calculus.util import periodicity, continuous_domain, function_range
+
 
 from types import GeneratorType
 
@@ -307,28 +310,113 @@ def _invert_real(f, g_ys, symbol):
                 elif one == S.false:
                     return (expo, S.EmptySet)
 
-
-    if isinstance(f, TrigonometricFunction):
-        if isinstance(g_ys, FiniteSet):
-            def inv(trig):
-                if isinstance(trig, (sin, csc)):
-                    F = asin if isinstance(trig, sin) else acsc
-                    return (lambda a: n*pi + S.NegativeOne**n*F(a),)
-                if isinstance(trig, (cos, sec)):
-                    F = acos if isinstance(trig, cos) else asec
-                    return (
-                        lambda a: 2*n*pi + F(a),
-                        lambda a: 2*n*pi - F(a),)
-                if isinstance(trig, (tan, cot)):
-                    return (lambda a: n*pi + trig.inverse()(a),)
-
-            n = Dummy('n', integer=True)
-            invs = S.EmptySet
-            for L in inv(f):
-                invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
-            return _invert_real(f.args[0], invs, symbol)
+    if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
+         return _invert_trig_hyp_real(f, g_ys, symbol)
 
     return (f, g_ys)
+
+
+def _invert_trig_hyp_real(f, g_ys, symbol):
+    """Helper function for inverting trigonometric and hyperbolic functions.
+
+    This helper only handles inversion over the reals.
+
+    For trigonometric functions only finite `g_ys` sets are implemented.
+
+    For hyperbolic functions the set `g_ys` is checked against the domain of the
+    respective inverse functions. Infinite `g_ys` sets are also supported.
+    """
+
+    if isinstance(f, HyperbolicFunction):
+        n = Dummy('n', real=True)
+
+        if isinstance(f, sinh):
+            # asinh is defined over R.
+            return _invert_real(f.args[0], imageset(n, asinh(n), g_ys), symbol)
+
+        if isinstance(f, cosh):
+            g_ys_dom = g_ys.intersect(Interval(1, oo))
+            if isinstance(g_ys_dom, Intersection):
+                # could not properly resolve domain check
+                if isinstance(g_ys, FiniteSet):
+                    # If g_ys is a `FiniteSet`` it should be sufficient to just
+                    # let the calling `_invert_real()` add an intersection with
+                    # `S.Reals` (or a subset `domain`) to ensure that only valid
+                    # (real) solutions are returned.
+                    # This avoids adding "too many" Intersections or
+                    # ConditionSets in the returned set.
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0], Union(
+                imageset(n, acosh(n), g_ys_dom),
+                imageset(n, -acosh(n), g_ys_dom)), symbol)
+
+        if isinstance(f, sech):
+            g_ys_dom = g_ys.intersect(Interval.Lopen(0, 1))
+            if isinstance(g_ys_dom, Intersection):
+                if isinstance(g_ys, FiniteSet):
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0], Union(
+                imageset(n, asech(n), g_ys_dom),
+                imageset(n, -asech(n), g_ys_dom)), symbol)
+
+        if isinstance(f, tanh):
+            g_ys_dom = g_ys.intersect(Interval.open(-1, 1))
+            if isinstance(g_ys_dom, Intersection):
+                if isinstance(g_ys, FiniteSet):
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0],
+                imageset(n, atanh(n), g_ys_dom), symbol)
+
+        if isinstance(f, coth):
+            g_ys_dom = g_ys - Interval(-1, 1)
+            if isinstance(g_ys_dom, Complement):
+                if isinstance(g_ys, FiniteSet):
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0],
+                imageset(n, acoth(n), g_ys_dom), symbol)
+
+        if isinstance(f, csch):
+            g_ys_dom = g_ys - FiniteSet(0)
+            if isinstance(g_ys_dom, Complement):
+                if isinstance(g_ys, FiniteSet):
+                    g_ys_dom = g_ys
+                else:
+                    return (f, g_ys)
+            return _invert_real(f.args[0],
+                imageset(n, acsch(n), g_ys_dom), symbol)
+
+    elif isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
+        # XXX: a domain check must be added.
+        def inv(trig):
+            if isinstance(trig, (sin, csc)):
+                F = asin if isinstance(trig, sin) else acsc
+                return (
+                    lambda a: 2*n*pi + F(a),
+                    lambda a: 2*n*pi + pi - F(a))
+            if isinstance(trig, (cos, sec)):
+                F = acos if isinstance(trig, cos) else asec
+                return (
+                    lambda a: 2*n*pi + F(a),
+                    lambda a: 2*n*pi - F(a))
+            if isinstance(trig, (tan, cot)):
+                return (lambda a: n*pi + trig.inverse()(a),)
+
+        n = Dummy('n', integer=True)
+        invs = S.EmptySet
+        for L in inv(f):
+            invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
+        return _invert_real(f.args[0], invs, symbol)
+
+    else:
+        return (f, g_ys)
 
 
 def _invert_complex(f, g_ys, symbol):
@@ -373,7 +461,7 @@ def _invert_complex(f, g_ys, symbol):
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         if isinstance(g_ys, ImageSet):
-            # can solve upto `(d*exp(exp(...(exp(a*x + b))...) + c)` format.
+            # can solve up to `(d*exp(exp(...(exp(a*x + b))...) + c)` format.
             # Further can be improved to `(d*exp(exp(...(exp(a*x**n + b*x**(n-1) + ... + f))...) + c)`.
             g_ys_expr = g_ys.lamda.expr
             g_ys_vars = g_ys.lamda.variables
@@ -1020,6 +1108,7 @@ def _solveset(f, symbol, domain, _check=False):
         return domain
 
     orig_f = f
+    invert_trig_hyp = False  # True if we will use inversion to solve
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
         if coeff in {S.ComplexInfinity, S.NegativeInfinity, S.Infinity}:
@@ -1030,6 +1119,10 @@ def _solveset(f, symbol, domain, _check=False):
         if m not in {S.ComplexInfinity, S.Zero, S.Infinity,
                               S.NegativeInfinity}:
             f = a/m + h  # XXX condition `m != 0` should be added to soln
+        if isinstance(h, (TrigonometricFunction, HyperbolicFunction)) and (
+            a and a.is_number and a.is_real and domain.is_subset(S.Reals)):
+                # solve this by inversion
+                invert_trig_hyp = True
 
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
@@ -1050,8 +1143,8 @@ def _solveset(f, symbol, domain, _check=False):
         # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
         result = Union(*[solver(m, symbol) for m in f.args])
-    elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
-            _is_function_class_equation(HyperbolicFunction, f, symbol):
+    elif not invert_trig_hyp and (_is_function_class_equation(TrigonometricFunction, f, symbol) or \
+            _is_function_class_equation(HyperbolicFunction, f, symbol)):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
         a = f.args[0]
@@ -1065,7 +1158,7 @@ def _solveset(f, symbol, domain, _check=False):
             solns = solver(expr, symbol, in_set)
             result += solns
     elif isinstance(f, Eq):
-        result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
+        result = solver(Add(f.lhs, -f.rhs, evaluate=False), symbol, domain)
 
     elif f.is_Relational:
         from .inequalities import solve_univariate_inequality
@@ -1295,6 +1388,9 @@ def _invert_modular(modterm, rhs, n, symbol):
 
     """
     a, m = modterm.args
+
+    if rhs.is_integer is False:
+        return symbol, S.EmptySet
 
     if rhs.is_real is False or any(term.is_real is False
             for term in list(_term_factors(a))):
@@ -2605,6 +2701,11 @@ def linear_eq_to_matrix(equations, *symbols):
             are to be found.
             '''))
 
+    # Check if 'symbols' is a set and raise an error if it is
+    if isinstance(symbols[0], set):
+        raise TypeError(
+            "Unordered 'set' type is not supported as input for symbols.")
+
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
@@ -3017,6 +3118,10 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     if not system:
         return S.EmptySet
 
+    for i, e in enumerate(system):
+        if isinstance(e, Eq):
+            system[i] = e.lhs - e.rhs
+
     if not symbols:
         msg = ('Symbols must be given, for which solution of the '
                'system is to be found.')
@@ -3056,7 +3161,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             unsolved = list(unsolved)
             unsolved.sort(key=default_sort_key)
         return unsolved
-    # end of _unsolved_syms()
 
     # sort such that equation with the fewest potential symbols is first.
     # means eq with less number of variable first in the list.
@@ -3094,13 +3198,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             if res_copy is not None:
                 final_result.append(res_copy)
         return final_result
-    # end of def add_intersection_complement()
 
     def _extract_main_soln(sym, sol, soln_imageset):
         """Separate the Complements, Intersections, ImageSet lambda expr and
-        its base_set. This function returns the unmasks sol from different classes
+        its base_set. This function returns the unmasked sol from different classes
         of sets and also returns the appended ImageSet elements in a
-        soln_imageset (dict: where key as unmasked element and value as ImageSet).
+        soln_imageset dict: `{unmasked element: ImageSet}`.
         """
         # if there is union, then need to check
         # Complement, Intersection, Imageset.
@@ -3150,9 +3253,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         if not isinstance(sol, FiniteSet):
             sol = FiniteSet(sol)
         return sol, soln_imageset
-    # end of def _extract_main_soln()
 
-    # helper function for _append_new_soln
     def _check_exclude(rnew, imgset_yes):
         rnew_ = rnew
         if imgset_yes:
@@ -3175,9 +3276,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         except TypeError:
             satisfy_exclude = None
         return satisfy_exclude
-    # end of def _check_exclude()
 
-    # helper function for _append_new_soln
     def _restore_imgset(rnew, original_imageset, newresult):
         restore_sym = set(rnew.keys()) & \
             set(original_imageset.keys())
@@ -3186,7 +3285,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             rnew[key_sym] = img
         if rnew not in newresult:
             newresult.append(rnew)
-    # end of def _restore_imgset()
 
     def _append_eq(eq, result, res, delete_soln, n=None):
         u = Dummy('u')
@@ -3250,7 +3348,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             rnew = {}
         _restore_imgset(rnew, original_imageset, newresult)
         return newresult, delete_soln
-    # end of def _append_new_soln()
 
     def _new_order_result(result, eq):
         # separate first, second priority. `res` that makes `eq` value equals
@@ -3278,24 +3375,24 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         total_solvest_call = 0
         total_conditionst = 0
 
-        # sort such that equation with the fewest potential symbols is first.
-        # means eq with less variable first
+        # sort equations so the one with the fewest potential
+        # symbols appears first
         for index, eq in enumerate(eqs_in_better_order):
             newresult = []
             original_imageset = {}
-            # if imageset expr is used to solve other symbol
+            # if imageset, expr is used to solve for other symbol
             imgset_yes = False
-            result = _new_order_result(result, eq)
             for res in result:
                 got_symbol = set()  # symbols solved in one iteration
                 # find the imageset and use its expr.
-                for key_res, value_res in res.items():
-                    if isinstance(value_res, ImageSet):
-                        res[key_res] = value_res.lamda.expr
-                        original_imageset[key_res] = value_res
-                        dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
-                        (base,) = value_res.base_sets
+                for k, v in res.items():
+                    if isinstance(v, ImageSet):
+                        res[k] = v.lamda.expr
+                        original_imageset[k] = v
+                        dummy_n = v.lamda.expr.atoms(Dummy).pop()
+                        (base,) = v.base_sets
                         imgset_yes = (dummy_n, base)
+                    assert not isinstance(v, FiniteSet)  # if so, internal error
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
@@ -3307,11 +3404,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         if delete_res:
                             # `delete_res` is true, means substituting `res` in
                             # eq2 doesn't return `zero` or deleting the `res`
-                            # (a soln) since it staisfies expr of `exclude`
+                            # (a soln) since it satisfies expr of `exclude`
                             # list.
                             result.remove(res)
                     continue  # skip as it's independent of desired symbols
-                depen1, depen2 = (eq2.rewrite(Add)).as_independent(*unsolved_syms)
+                depen1, depen2 = eq2.as_independent(*unsolved_syms)
                 if (depen1.has(Abs) or depen2.has(Abs)) and solver == solveset_complex:
                     # Absolute values cannot be inverted in the
                     # complex domain
@@ -3365,7 +3462,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # before this loop
                         sol, soln_imageset = _extract_main_soln(
                             sym, sol, soln_imageset)
-                        sol = set(sol).pop()
+                        sol = set(sol).pop()  # XXX what if there are more solutions?
                         free = sol.free_symbols
                         if got_symbol and any(
                             ss in free for ss in got_symbol
@@ -3395,7 +3492,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             rnew, sym, sol, imgset_yes, soln_imageset,
                             original_imageset, newresult)
                         if delete_res:
-                            # deleting the `res` (a soln) since it staisfies
+                            # deleting the `res` (a soln) since it satisfies
                             # eq of `exclude` list
                             result.remove(res)
                     # solution got for sym
@@ -3405,7 +3502,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             if newresult:
                 result = newresult
         return result, total_solvest_call, total_conditionst
-    # end def _solve_using_know_values()
 
     new_result_real, solve_call1, cnd_call1 = _solve_using_known_values(
         old_result, solveset_real)
@@ -3469,7 +3565,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         temp = [r[symb] for symb in all_symbols]
         result += FiniteSet(tuple(temp))
     return result
-# end of def substitution()
 
 
 def _solveset_work(system, symbols):
@@ -3495,7 +3590,6 @@ def _handle_positive_dimensional(polys, symbols, denominators):
         new_system, symbols, result, [],
         denominators)
     return result
-# end of def _handle_positive_dimensional()
 
 
 def _handle_zero_dimensional(polys, symbols, system):
@@ -3510,7 +3604,6 @@ def _handle_zero_dimensional(polys, symbols, system):
         if all(checksol(eq, dict_sym_value) for eq in system):
             result_update += FiniteSet(res)
     return result_update
-# end of def _handle_zero_dimensional()
 
 
 def _separate_poly_nonpoly(system, symbols):
@@ -3527,8 +3620,8 @@ def _separate_poly_nonpoly(system, symbols):
         # Store denom expressions that contain symbols
         denominators.update(_simple_dens(eq, symbols))
         # Convert equality to expression
-        if isinstance(eq, Equality):
-            eq = eq.rewrite(Add)
+        if isinstance(eq, Eq):
+            eq = eq.lhs - eq.rhs
         # try to remove sqrt and rational power
         without_radicals = unrad(simplify(eq), *symbols)
         if without_radicals:
@@ -3547,7 +3640,6 @@ def _separate_poly_nonpoly(system, symbols):
         else:
             nonpolys.append(eq)
     return polys, polys_expr, nonpolys, denominators, unrad_changed
-# end of def _separate_poly_nonpoly()
 
 
 def _handle_poly(polys, symbols):

@@ -138,7 +138,7 @@ def tschirnhausen_transformation(T, max_coeff=10, max_tries=30, history=None,
 
         A = Poly(a, T.gen)
         U = Poly(T.resultant(X - A), X)
-        if U.rep not in history and dup_sqf_p(U.rep.rep, ZZ):
+        if U.rep not in history and dup_sqf_p(U.rep.to_list(), ZZ):
             return A, U
     raise MaxTriesException
 

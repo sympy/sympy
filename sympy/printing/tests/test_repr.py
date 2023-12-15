@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.assumptions.ask import Q
 from sympy.core.function import (Function, WildFunction)
@@ -281,9 +282,14 @@ def test_PolynomialRingBase():
 
 
 def test_DMP():
-    assert srepr(DMP([1, 2], ZZ)) == 'DMP([1, 2], ZZ)'
-    assert srepr(ZZ.old_poly_ring(x)([1, 2])) == \
-        "DMP([1, 2], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x')))"
+    p1 = DMP([1, 2], ZZ)
+    p2 = ZZ.old_poly_ring(x)([1, 2])
+    if GROUND_TYPES != 'flint':
+        assert srepr(p1) == "DMP_Python([1, 2], ZZ)"
+        assert srepr(p2) == "DMP_Python([1, 2], ZZ)"
+    else:
+        assert srepr(p1) == "DUP_Flint([1, 2], ZZ)"
+        assert srepr(p2) == "DUP_Flint([1, 2], ZZ)"
 
 
 def test_FiniteExtension():
@@ -293,9 +299,11 @@ def test_FiniteExtension():
 
 def test_ExtensionElement():
     A = FiniteExtension(Poly(x**2 + 1, x))
-    assert srepr(A.generator) == \
-        "ExtElem(DMP([1, 0], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x'))), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
-
+    if GROUND_TYPES != 'flint':
+        ans = "ExtElem(DMP_Python([1, 0], ZZ), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
+    else:
+        ans = "ExtElem(DUP_Flint([1, 0], ZZ), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
+    assert srepr(A.generator) == ans
 
 def test_BooleanAtom():
     assert srepr(true) == "true"

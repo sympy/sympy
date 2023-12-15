@@ -151,7 +151,7 @@ class Sieve:
             # Create the list such that block[x] iff (a + 2x + 1) is prime.
             # Note that even numbers are not considered here.
             block = [True] * block_size
-            for p in sieve.primerange(3, sqrt(a + 2 * block_size) + 1):
+            for p in self._list[1:bisect(self._list, sqrt(a + 2 * block_size + 1))]:
                 for t in range((-(a + 1 + p) // 2) % p, block_size, p):
                     block[t] = False
             for idx, p in enumerate(block):
@@ -210,7 +210,6 @@ class Sieve:
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
         """
-
         if b is None:
             b = _as_int_ceiling(a)
             a = 2
@@ -220,15 +219,8 @@ class Sieve:
         if a >= b:
             return
         self.extend(b)
-        i = self.search(a)[1]
-        maxi = len(self._list) + 1
-        while i < maxi:
-            p = self._list[i - 1]
-            if p < b:
-                yield p
-                i += 1
-            else:
-                return
+        yield from self._list[bisect_left(self._list, a):
+                              bisect_left(self._list, b)]
 
     def totientrange(self, a, b):
         """Generate all totient numbers for the range [a, b).
@@ -252,18 +244,20 @@ class Sieve:
             self._tlist += _array('L', range(n, b))
             for i in range(1, n):
                 ti = self._tlist[i]
-                startindex = (n + i - 1) // i * i
-                for j in range(startindex, b, i):
-                    self._tlist[j] -= ti
+                if ti == i - 1:
+                    startindex = (n + i - 1) // i * i
+                    for j in range(startindex, b, i):
+                        self._tlist[j] -= self._tlist[j] // i
                 if i >= a:
                     yield ti
 
             for i in range(n, b):
                 ti = self._tlist[i]
-                for j in range(2 * i, b, i):
-                    self._tlist[j] -= ti
+                if ti == i:
+                    for j in range(i, b, i):
+                        self._tlist[j] -= self._tlist[j] // i
                 if i >= a:
-                    yield ti
+                    yield self._tlist[i]
 
     def mobiusrange(self, a, b):
         """Generate all mobius numbers for the range [a, b).
@@ -436,6 +430,8 @@ def prime(nth):
     from sympy.functions.elementary.exponential import log
     from sympy.functions.special.error_functions import li
     a = 2 # Lower bound for binary search
+    # leave n inside int since int(i*r) != i*int(r) is not a valid property
+    # e.g. int(2*.5) != 2*int(.5)
     b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
 
     while a < b:
@@ -933,11 +929,10 @@ def cycle_length(f, x0, nmax=None, values=False):
 
     This will yield successive values of i <-- func(i):
 
-        >>> def iter(func, i):
+        >>> def gen(func, i):
         ...     while 1:
-        ...         ii = func(i)
-        ...         yield ii
-        ...         i = ii
+        ...         yield i
+        ...         i = func(i)
         ...
 
     A function is defined:
@@ -947,23 +942,23 @@ def cycle_length(f, x0, nmax=None, values=False):
     and given a seed of 4 and the mu and lambda terms calculated:
 
         >>> next(cycle_length(func, 4))
-        (6, 2)
+        (6, 3)
 
     We can see what is meant by looking at the output:
 
-        >>> n = cycle_length(func, 4, values=True)
-        >>> list(ni for ni in n)
-        [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
+        >>> iter = cycle_length(func, 4, values=True)
+        >>> list(iter)
+        [4, 17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
 
-    There are 6 repeating values after the first 2.
+    There are 6 repeating values after the first 3.
 
     If a sequence is suspected of being longer than you might wish, ``nmax``
     can be used to exit early (and mu will be returned as None):
 
         >>> next(cycle_length(func, 4, nmax = 4))
         (4, None)
-        >>> [ni for ni in cycle_length(func, 4, nmax = 4, values=True)]
-        [17, 35, 2, 5]
+        >>> list(cycle_length(func, 4, nmax = 4, values=True))
+        [4, 17, 35, 2]
 
     Code modified from:
         https://en.wikipedia.org/wiki/Cycle_detection.
@@ -974,7 +969,9 @@ def cycle_length(f, x0, nmax=None, values=False):
     # main phase: search successive powers of two
     power = lam = 1
     tortoise, hare = x0, f(x0)  # f(x0) is the element/node next to x0.
-    i = 0
+    i = 1
+    if values:
+        yield tortoise
     while tortoise != hare and (not nmax or i < nmax):
         i += 1
         if power == lam:   # time to start a new power of two?
@@ -1001,8 +998,6 @@ def cycle_length(f, x0, nmax=None, values=False):
             tortoise = f(tortoise)
             hare = f(hare)
             mu += 1
-        if mu:
-            mu -= 1
         yield lam, mu
 
 

@@ -5,7 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, Lambda, diff)
 from sympy.core import EulerGamma
-from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.numbers import (E, I, Rational, nan, oo, pi, zoo, all_close)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -438,13 +438,12 @@ def test_issue_18133():
 
 
 def test_issue_21741():
-    a = Float('3999999.9999999995', precision=53)
-    b = Float('2.5000000000000004e-7', precision=53)
-    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x),
-                   Ne(1.0*pi*x*exp(a*I*pi*t*y), 0)),
+    a = 4e6
+    b = 2.5e-7
+    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x), Ne(x, 0)),
                   (z*exp(-a*I*pi*t*y), True))
     fun = E**((-2*I*pi*(z*x+t*y))/(500*10**(-9)))
-    assert integrate(fun, z) == r
+    assert all_close(integrate(fun, z), r)
 
 
 def test_matrices():
@@ -2074,26 +2073,60 @@ def test_mul_pow_derivative():
     assert integrate(x**3*Derivative(f(x), (x, 4))) == \
            x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) + 6*x*Derivative(f(x), x) - 6*f(x)
 
+
 def test_issue_20782():
-    x_d = symbols('x_d')
+    fun1 = Piecewise((0, x < 0.0), (1, True))
+    fun2 = -Piecewise((0, x < 1.0), (1, True))
+    fun_sum = fun1 + fun2
+    L = (x, -float('Inf'), 1)
 
-    fun1 = lambda x : -Piecewise((0, x < 0.0), (1, True))
-    fun2 = lambda x : Piecewise((0, x < 1.0), (1, True))
-    fun_sum = lambda x : +Piecewise((0, x < 0.0), (1, True)) \
-                        -Piecewise((0, x < 1.0), (1, True))
+    assert integrate(fun1, L) == 1
+    assert integrate(fun2, L) == 0
+    assert integrate(-fun1, L) == -1
+    assert integrate(-fun2, L) == 0.
+    assert integrate(fun_sum, L) == 1.
+    assert integrate(-fun_sum, L) == -1.
 
-    fun_sum_neg = lambda x : -Piecewise((0, x < 0.0), (1, True)) \
-                            +Piecewise((0, x < 1.0), (1, True))
 
-    assert integrate(-fun1(x_d), (x_d, -float('Inf'), 1)) == 1
-    assert integrate(-fun2(x_d), (x_d, -float('Inf'), 1)) == 0
-    assert integrate(fun1(x_d), (x_d, -float('Inf'), 1)) == -1
-    assert integrate(fun2(x_d), (x_d, -float('Inf'), 1)) == 0
-    assert integrate(fun_sum(x_d), (x_d, -float('Inf'), 1)) == 1
-    assert integrate(-fun_sum(x_d), (x_d, -float('Inf'), 1)) == -1
-    assert integrate(fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == -1
-    assert integrate(-fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == 1
+def test_issue_20781():
+    P = lambda a: Piecewise((0, x < a), (1, x >= a))
+    f = lambda a: P(int(a)) + P(float(a))
+    L = (x, -float('Inf'), x)
+    f1 = integrate(f(1), L)
+    assert f1 == 2*x - Min(1.0, x) - Min(x, Max(1.0, 1, evaluate=False))
+    # XXX is_zero is True for S(0) and Float(0) and this is baked into
+    # the code more deeply than the issue of Float(0) != S(0)
+    assert integrate(f(0), (x, -float('Inf'), x)
+        ) == 2*x - 2*Min(0, x)
 
-    f = Piecewise((0, x < 0.0), (1, True)) - Piecewise((0, x < 1.0), (1, True))
-    assert integrate(f, (x, -oo, 1)) == 1
-    assert integrate(-f, (x, -oo, 1)) == -1
+
+@slow
+def test_issue_19427():
+    # <https://github.com/sympy/sympy/issues/19427>
+    x = Symbol("x")
+
+    # Have always been okay:
+    assert integrate((x ** 4) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 16
+    assert integrate((-2 * x ** 2) * sqrt(1 - x ** 2), (x, -1, 1)) == -pi / 4
+    assert integrate((1) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 2
+
+    # Sum of the above, used to incorrectly return 0 for a while:
+    assert integrate((x ** 4 - 2 * x ** 2 + 1) * sqrt(1 - x ** 2), (x, -1, 1)) == 5 * pi / 16
+
+
+def test_issue_23942():
+    I1 = Integral(1/sqrt(a*(1 + x)**3 + (1 + x)**2), (x, 0, z))
+    assert I1.series(a, 1, n=1) == Integral(1/sqrt(x**3 + 4*x**2 + 5*x + 2), (x, 0, z)) + O(a - 1, (a, 1))
+    I2 = Integral(1/sqrt(a*(4 - x)**4 + (5 + x)**2), (x, 0, z))
+    assert I2.series(a, 2, n=1) == Integral(1/sqrt(2*x**4 - 32*x**3 + 193*x**2 - 502*x + 537), (x, 0, z)) + O(a - 2, (a, 2))
+
+
+def test_issue_25886():
+    # https://github.com/sympy/sympy/issues/25886
+    f = (1-x)*exp(0.937098661j*x)
+    F_exp = (1.0*(-1.0671234968289*I*y
+             + 1.13875255748434
+             + 1.0671234968289*I)*exp(0.937098661*I*y)
+            - 1.13875255748434*exp(0.937098661*I))
+    F = integrate(f, (x, y, 1.0))
+    assert F.is_same(F_exp, math.isclose)

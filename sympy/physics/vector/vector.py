@@ -1,5 +1,5 @@
-from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
-                                ImmutableMatrix as Matrix, _simplify_matrix)
+from sympy import (S, sympify, expand, sqrt, Add, zeros, acos,
+                                ImmutableMatrix as Matrix, simplify)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
@@ -256,49 +256,28 @@ class Vector(Printable, EvalfMixin):
     def _pretty(self, printer):
         """Pretty Printing method. """
         from sympy.printing.pretty.stringpict import prettyForm
-        e = self
 
-        class Fake:
+        terms = []
 
-            def render(self, *args, **kwargs):
-                ar = e.args  # just to shorten things
-                if len(ar) == 0:
-                    return str(0)
-                pforms = []  # output list, to be concatenated to a string
-                for i, v in enumerate(ar):
-                    for j in 0, 1, 2:
-                        # if the coef of the basis vector is 1, we skip the 1
-                        if ar[i][0][j] == 1:
-                            pform = printer._print(ar[i][1].pretty_vecs[j])
-                        # if the coef of the basis vector is -1, we skip the 1
-                        elif ar[i][0][j] == -1:
-                            pform = printer._print(ar[i][1].pretty_vecs[j])
-                            pform = prettyForm(*pform.left(" - "))
-                            bin = prettyForm.NEG
-                            pform = prettyForm(binding=bin, *pform)
-                        elif ar[i][0][j] != 0:
-                            # If the basis vector coeff is not 1 or -1,
-                            # we might wrap it in parentheses, for readability.
-                            pform = printer._print(ar[i][0][j])
+        def juxtapose(a, b):
+            pa = printer._print(a)
+            pb = printer._print(b)
+            if a.is_Add:
+                pa = prettyForm(*pa.parens())
+            return printer._print_seq([pa, pb], delimiter=' ')
 
-                            if isinstance(ar[i][0][j], Add):
-                                tmp = pform.parens()
-                                pform = prettyForm(tmp[0], tmp[1])
+        for M, N in self.args:
+            for i in range(3):
+                if M[i] == 0:
+                    continue
+                elif M[i] == 1:
+                    terms.append(prettyForm(N.pretty_vecs[i]))
+                elif M[i] == -1:
+                    terms.append(prettyForm.NEG + prettyForm(N.pretty_vecs[i]))
+                else:
+                    terms.append(juxtapose(M[i], N.pretty_vecs[i]))
 
-                            pform = prettyForm(*pform.right(
-                                " ", ar[i][1].pretty_vecs[j]))
-                        else:
-                            continue
-                        pforms.append(pform)
-
-                pform = prettyForm.__add__(*pforms)
-                kwargs["wrap_line"] = kwargs.get("wrap_line")
-                kwargs["num_columns"] = kwargs.get("num_columns")
-                out_str = pform.render(*args, **kwargs)
-                mlines = [line.rstrip() for line in out_str.split("\n")]
-                return "\n".join(mlines)
-
-        return Fake()
+        return prettyForm.__add__(*terms)
 
     def __ror__(self, other):
         """Outer product between two Vectors.
@@ -655,7 +634,7 @@ class Vector(Printable, EvalfMixin):
         """Returns a simplified Vector."""
         d = {}
         for v in self.args:
-            d[v[1]] = _simplify_matrix(v[0])
+            d[v[1]] = simplify(v[0])
         return Vector(d)
 
     def subs(self, *args, **kwargs):

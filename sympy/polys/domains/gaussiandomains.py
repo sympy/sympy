@@ -449,6 +449,13 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         """Compute hash code of ``self``. """
         return hash('ZZ_I')
 
+    @property
+    def has_CharacteristicZero(self):
+        return True
+
+    def characteristic(self):
+        return 0
+
     def get_ring(self):
         """Returns a ring associated with ``self``. """
         return self
@@ -631,6 +638,13 @@ class GaussianRationalField(GaussianDomain, Field):
         """Compute hash code of ``self``. """
         return hash('QQ_I')
 
+    @property
+    def has_CharacteristicZero(self):
+        return True
+
+    def characteristic(self):
+        return 0
+
     def get_ring(self):
         """Returns a ring associated with ``self``. """
         return ZZ_I
@@ -663,5 +677,10 @@ class GaussianRationalField(GaussianDomain, Field):
     def from_GaussianRationalField(K1, a, K0):
         """Convert a QQ_I element to QQ_I."""
         return a
+
+    def from_ComplexField(K1, a, K0):
+        """Convert a ComplexField element to QQ_I."""
+        return K1.new(QQ.convert(a.real), QQ.convert(a.imag))
+
 
 QQ_I = GaussianRational._parent = GaussianRationalField()

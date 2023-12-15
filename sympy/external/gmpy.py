@@ -1,4 +1,6 @@
 import os
+from ctypes import c_long, sizeof
+from functools import reduce
 from typing import Tuple as tTuple, Type
 
 from sympy.external import import_module
@@ -6,16 +8,31 @@ from sympy.external import import_module
 from .pythonmpq import PythonMPQ
 
 from .ntheory import (
+    bit_scan1 as python_bit_scan1,
+    bit_scan0 as python_bit_scan0,
+    remove as python_remove,
     factorial as python_factorial,
     sqrt as python_sqrt,
     sqrtrem as python_sqrtrem,
     gcd as python_gcd,
     lcm as python_lcm,
+    gcdext as python_gcdext,
     is_square as python_is_square,
     invert as python_invert,
     legendre as python_legendre,
     jacobi as python_jacobi,
     kronecker as python_kronecker,
+    iroot as python_iroot,
+    is_fermat_prp as python_is_fermat_prp,
+    is_euler_prp as python_is_euler_prp,
+    is_strong_prp as python_is_strong_prp,
+    is_fibonacci_prp as python_is_fibonacci_prp,
+    is_lucas_prp as python_is_lucas_prp,
+    is_selfridge_prp as python_is_selfridge_prp,
+    is_strong_lucas_prp as python_is_strong_lucas_prp,
+    is_strong_selfridge_prp as python_is_strong_selfridge_prp,
+    is_bpsw_prp as python_is_bpsw_prp,
+    is_strong_bpsw_prp as python_is_strong_bpsw_prp,
 )
 
 
@@ -42,35 +59,31 @@ __all__ = [
     # MPZ is either gmpy.mpz or int.
     'MPZ',
 
-    # Either the gmpy or the mpmath function
+    'bit_scan1',
+    'bit_scan0',
+    'remove',
     'factorial',
-
-    # isqrt from gmpy or mpmath
     'sqrt',
-
-    # is_square from gmpy or mpmath
     'is_square',
-
-    # sqrtrem from gmpy or mpmath
     'sqrtrem',
-
-    # gcd from gmpy or math
     'gcd',
-
-    # lcm from gmpy or math
     'lcm',
-
-    # invert from gmpy or pow
+    'gcdext',
     'invert',
-
-    # legendre from gmpy or sympy
     'legendre',
-
-    # jacobi from gmpy or sympy
     'jacobi',
-
-    # kronecker from gmpy or sympy
     'kronecker',
+    'iroot',
+    'is_fermat_prp',
+    'is_euler_prp',
+    'is_strong_prp',
+    'is_fibonacci_prp',
+    'is_lucas_prp',
+    'is_selfridge_prp',
+    'is_strong_lucas_prp',
+    'is_strong_selfridge_prp',
+    'is_bpsw_prp',
+    'is_strong_bpsw_prp',
 ]
 
 
@@ -142,6 +155,12 @@ else:
 #
 SYMPY_INTS: tTuple[Type, ...]
 
+#
+# In gmpy2 and flint, there are functions that take a long (or unsigned long) argument.
+# That is, it is not possible to input a value larger than that.
+#
+LONG_MAX = (1 << (8*sizeof(c_long) - 1)) - 1
+
 if GROUND_TYPES == 'gmpy':
 
     HAS_GMPY = 2
@@ -150,16 +169,38 @@ if GROUND_TYPES == 'gmpy':
     MPZ = gmpy.mpz
     MPQ = gmpy.mpq
 
+    bit_scan1 = gmpy.bit_scan1
+    bit_scan0 = gmpy.bit_scan0
+    remove = gmpy.remove
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
     is_square = gmpy.is_square
     sqrtrem = gmpy.isqrt_rem
     gcd = gmpy.gcd
     lcm = gmpy.lcm
+    gcdext = gmpy.gcdext
     invert = gmpy.invert
     legendre = gmpy.legendre
     jacobi = gmpy.jacobi
     kronecker = gmpy.kronecker
+
+    def iroot(x, n):
+        # In the latest gmpy2, the threshold for n is ULONG_MAX,
+        # but adjust to the older one.
+        if n <= LONG_MAX:
+            return gmpy.iroot(x, n)
+        return python_iroot(x, n)
+
+    is_fermat_prp = gmpy.is_fermat_prp
+    is_euler_prp = gmpy.is_euler_prp
+    is_strong_prp = gmpy.is_strong_prp
+    is_fibonacci_prp = gmpy.is_fibonacci_prp
+    is_lucas_prp = gmpy.is_lucas_prp
+    is_selfridge_prp = gmpy.is_selfridge_prp
+    is_strong_lucas_prp = gmpy.is_strong_lucas_prp
+    is_strong_selfridge_prp = gmpy.is_strong_selfridge_prp
+    is_bpsw_prp = gmpy.is_bpsw_prp
+    is_strong_bpsw_prp = gmpy.is_strong_bpsw_prp
 
 elif GROUND_TYPES == 'flint':
 
@@ -169,16 +210,55 @@ elif GROUND_TYPES == 'flint':
     MPZ = flint.fmpz # type: ignore
     MPQ = flint.fmpq # type: ignore
 
+    bit_scan1 = python_bit_scan1
+    bit_scan0 = python_bit_scan0
+    remove = python_remove
     factorial = python_factorial
-    sqrt = python_sqrt
-    is_square = python_is_square
-    sqrtrem = python_sqrtrem
-    gcd = python_gcd
-    lcm = python_lcm
+
+    def sqrt(x):
+        return flint.fmpz(x).isqrt()
+
+    def is_square(x):
+        if x < 0:
+            return False
+        return flint.fmpz(x).sqrtrem()[1] == 0
+
+    def sqrtrem(x):
+        return flint.fmpz(x).sqrtrem()
+
+    def gcd(*args):
+        return reduce(flint.fmpz.gcd, args, flint.fmpz(0))
+
+    def lcm(*args):
+        return reduce(flint.fmpz.lcm, args, flint.fmpz(1))
+
+    gcdext = python_gcdext
     invert = python_invert
     legendre = python_legendre
-    jacobi = python_jacobi
+
+    def jacobi(x, y):
+        if y <= 0 or not y % 2:
+            raise ValueError("y should be an odd positive integer")
+        return flint.fmpz(x).jacobi(y)
+
     kronecker = python_kronecker
+
+    def iroot(x, n):
+        if n <= LONG_MAX:
+            y = flint.fmpz(x).root(n)
+            return y, y**n == x
+        return python_iroot(x, n)
+
+    is_fermat_prp = python_is_fermat_prp
+    is_euler_prp = python_is_euler_prp
+    is_strong_prp = python_is_strong_prp
+    is_fibonacci_prp = python_is_fibonacci_prp
+    is_lucas_prp = python_is_lucas_prp
+    is_selfridge_prp = python_is_selfridge_prp
+    is_strong_lucas_prp = python_is_strong_lucas_prp
+    is_strong_selfridge_prp = python_is_strong_selfridge_prp
+    is_bpsw_prp = python_is_bpsw_prp
+    is_strong_bpsw_prp = python_is_strong_bpsw_prp
 
 elif GROUND_TYPES == 'python':
 
@@ -188,16 +268,31 @@ elif GROUND_TYPES == 'python':
     MPZ = int
     MPQ = PythonMPQ
 
+    bit_scan1 = python_bit_scan1
+    bit_scan0 = python_bit_scan0
+    remove = python_remove
     factorial = python_factorial
     sqrt = python_sqrt
     is_square = python_is_square
     sqrtrem = python_sqrtrem
     gcd = python_gcd
     lcm = python_lcm
+    gcdext = python_gcdext
     invert = python_invert
     legendre = python_legendre
     jacobi = python_jacobi
     kronecker = python_kronecker
+    iroot = python_iroot
+    is_fermat_prp = python_is_fermat_prp
+    is_euler_prp = python_is_euler_prp
+    is_strong_prp = python_is_strong_prp
+    is_fibonacci_prp = python_is_fibonacci_prp
+    is_lucas_prp = python_is_lucas_prp
+    is_selfridge_prp = python_is_selfridge_prp
+    is_strong_lucas_prp = python_is_strong_lucas_prp
+    is_strong_selfridge_prp = python_is_strong_selfridge_prp
+    is_bpsw_prp = python_is_bpsw_prp
+    is_strong_bpsw_prp = python_is_strong_bpsw_prp
 
 else:
     assert False

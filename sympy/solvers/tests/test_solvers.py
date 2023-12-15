@@ -638,6 +638,15 @@ def test_solve_transcendental():
     # issue 15325
     assert solve(y**(1/x) - z, x) == [log(y)/log(z)]
 
+    # issue 25685 (basic trig identies should give simple solutions)
+    for yi in [cos(2*x),sin(2*x),cos(x - pi/3)]:
+        sol = solve([cos(x) - S(3)/5, yi - y])
+        assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)
+    # don't allow massive expansion
+    assert solve(cos(1000*x) - S.Half) == [pi/3000, pi/600]
+    assert solve(cos(x - 1000*y) - 1, x) == [2*atan(tan(500*y))]
+    assert solve(cos(x + y + z) - 1, x) == [-2*atan(tan(y/2 + z/2))]
+
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
@@ -1829,7 +1838,7 @@ def test_issue_6792():
          CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_6819_6820_6821_6248_8692():
+def test_issues_6819_6820_6821_6248_8692_25777_25779():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
@@ -1843,9 +1852,21 @@ def test_issues_6819_6820_6821_6248_8692():
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
 
+    # 25777
+    assert solve(abs(x**3 + x + 2)/(x + 1)) == []
+
+    # 25779
+    assert solve(abs(x)) == [0]
+    assert solve(Eq(abs(x**2 - 2*x), 4), x) == [
+        1 - sqrt(5), 1 + sqrt(5)]
+    nn = symbols('nn', nonnegative=True)
+    assert solve(abs(sqrt(nn))) == [0]
+    nz = symbols('nz', nonzero=True)
+    assert solve(Eq(Abs(4 + 1 / (4*nz)), 0)) == [-Rational(1, 16)]
+
     x = symbols('x')
     assert solve([re(x) - 1, im(x) - 2], x) == [
-        {re(x): 1, x: 1 + 2*I, im(x): 2}]
+        {x: 1 + 2*I, re(x): 1, im(x): 2}]
 
     # check for 'dict' handling of solution
     eq = sqrt(re(x)**2 + im(x)**2) - 3
@@ -2246,20 +2267,12 @@ def test_issue_8828():
     assert p == q == r
 
 
-@slow
 def test_issue_2840_8155():
-    assert solve(sin(3*x) + sin(6*x)) == [
-        0, pi*Rational(-5, 3), pi*Rational(-4, 3), -pi, pi*Rational(-2, 3),
-        pi*Rational(-4, 9), -pi/3, pi*Rational(-2, 9), pi*Rational(2, 9),
-        pi/3, pi*Rational(4, 9), pi*Rational(2, 3), pi, pi*Rational(4, 3),
-        pi*Rational(14, 9), pi*Rational(5, 3), pi*Rational(16, 9), 2*pi,
-        -2*I*log(-(-1)**Rational(1, 9)), -2*I*log(-(-1)**Rational(2, 9)),
-        -2*I*log(-sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(-sin(pi/18) + I*cos(pi/18)),
-        -2*I*log(sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(sin(pi/18) + I*cos(pi/18))]
-    assert solve(2*sin(x) - 2*sin(2*x)) == [
-        0, pi*Rational(-5, 3), -pi, -pi/3, pi/3, pi, pi*Rational(5, 3)]
+    # with parameter-free solutions (i.e. no `n`), we want to avoid
+    # excessive periodic solutions
+    assert solve(sin(3*x) + sin(6*x)) == [0, -2*pi/9, 2*pi/9]
+    assert solve(sin(300*x) + sin(600*x)) == [0, -pi/450, pi/450]
+    assert solve(2*sin(x) - 2*sin(2*x)) == [0, -pi/3, pi/3]
 
 
 def test_issue_9567():
@@ -2620,6 +2633,12 @@ def test_issue_22717():
         {y: -1, x: E}, {y: 1, x: E}]
 
 
+def test_issue_25176():
+    eq = (x - 5)**-8 - 3
+    sol = solve(eq)
+    assert not any(eq.subs(x, i) for i in sol)
+
+
 def test_issue_10169():
     eq = S(-8*a - x**5*(a + b + c + e) - x**4*(4*a - 2**Rational(3,4)*c + 4*c +
         d + 2**Rational(3,4)*e + 4*e + k) - x**3*(-4*2**Rational(3,4)*c + sqrt(2)*c -
@@ -2639,7 +2658,8 @@ def test_issue_10169():
 
 def test_solve_undetermined_coeffs_issue_23927():
     A, B, r, phi = symbols('A, B, r, phi')
-    eq = Eq(A*sin(t) + B*cos(t), r*sin(t - phi)).rewrite(Add).expand(trig=True)
+    e = Eq(A*sin(t) + B*cos(t), r*sin(t - phi))
+    eq = (e.lhs - e.rhs).expand(trig=True)
     soln = solve_undetermined_coeffs(eq, (r, phi), t)
     assert soln == [{
         phi: 2*atan((A - sqrt(A**2 + B**2))/B),
@@ -2656,3 +2676,25 @@ def test_issue_24368():
     s2 = Symbol('s2', integer=True, positive=True)
     f = floor(s2/2 - S(1)/2)
     raises(NotImplementedError, lambda: solve((Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1))*f + Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1), s2))
+
+
+def test_solve_Piecewise():
+    assert [S(10)/3] == solve(3*Piecewise(
+        (S.NaN, x <= 0),
+        (20*x - 3*(x - 6)**2/2 - 176, (x >= 0) & (x >= 2) & (x>= 4) & (x >= 6) & (x < 10)),
+        (100 - 26*x, (x >= 0) & (x >= 2) & (x >= 4) & (x < 10)),
+        (16*x - 3*(x - 6)**2/2 - 176, (x >= 2) & (x >= 4) & (x >= 6) & (x < 10)),
+        (100 - 30*x, (x >= 2) & (x >= 4) & (x < 10)),
+        (30*x - 3*(x - 6)**2/2 - 196, (x>= 0) & (x >= 4) & (x >= 6) & (x < 10)),
+        (80 - 16*x, (x >= 0) & (x >= 4) & (x < 10)),
+        (26*x - 3*(x - 6)**2/2 - 196, (x >= 4) & (x >= 6) & (x < 10)),
+        (80 - 20*x, (x >= 4) & (x < 10)),
+        (40*x - 3*(x - 6)**2/2 - 256, (x >= 0) & (x >= 2) & (x >= 6) & (x < 10)),
+        (20 - 6*x, (x >= 0) & (x >= 2) & (x < 10)),
+        (36*x - 3*(x - 6)**2/2 - 256, (x >= 2) & (x >= 6) & (x < 10)),
+        (20 - 10*x, (x >= 2) & (x < 10)),
+        (50*x - 3*(x - 6)**2/2 - 276, (x >= 0) & (x >= 6) & (x < 10)),
+        (4*x, (x >= 0) & (x < 10)),
+        (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
+        (0, x < 10),  # this will simplify away
+        (S.NaN,True)))

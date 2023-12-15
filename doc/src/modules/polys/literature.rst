@@ -52,7 +52,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     Algorithms, Springer, Second Edition, 1997
 
 .. [Ajwa95] I.A. Ajwa, Z. Liu, P.S. Wang, Groebner Bases Algorithm,
-    https://citeseer.ist.psu.edu/myciteseer/login, 1995
+    https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=2bb46c0852bf74c9d74d1a12af6d11f69f7e8363, 1995
 
 .. [Bose03] N.K. Bose, B. Buchberger, J.P. Guiver, Multidimensional
     Systems Theory and Applications, Springer, 2003
@@ -137,11 +137,11 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Bruce97] Bruce Randall Donald, Deepak Kapur, and Joseph L. Mundy (Eds.).
     "Symbolic and Numerical Computation for Artificial Intelligence",
     Chapter 2, Academic Press, Inc., Orlando, FL, USA, 1997,
-    https://www2.cs.duke.edu/donaldlab/Books/SymbolicNumericalComputation/045-087.pdf.
+    https://donaldlab.cs.duke.edu/Books/SymbolicNumericalComputation/045-087.pdf
 
 .. [Stiller96] P Stiller. "An introduction to the theory of resultants",
     Mathematics and Computer Science, T&M University, 1996, Citeseer,
-    https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.590.2021&rep=rep1&type=pdf.
+    https://isc.tamu.edu/resources/preprints/1996/1996-02.pdf
 
 .. [Cohen93] Henri Cohen. "A Course in Computational Algebraic Number Theory",
    Springer, 1993.

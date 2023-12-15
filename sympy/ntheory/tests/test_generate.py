@@ -215,6 +215,9 @@ def test_generate():
                  (1003003, 1005000), # 1000**2 < a < b
                  ]:
         assert list(primerange(a, b)) == list(s.primerange(a, b))
+    sieve._reset(prime=True)
+    sieve.extend(100000)
+    assert len(sieve._list) == len(set(sieve._list))
     s = Sieve()
     assert s[10] == 29
 
@@ -229,12 +232,12 @@ def test_generate():
     assert mr(1, [2]) is False
 
     func = lambda i: (i**2 + 1) % 51
-    assert next(cycle_length(func, 4)) == (6, 2)
+    assert next(cycle_length(func, 4)) == (6, 3)
     assert list(cycle_length(func, 4, values=True)) == \
-        [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
+        [4, 17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
     assert next(cycle_length(func, 4, nmax=5)) == (5, None)
     assert list(cycle_length(func, 4, nmax=5, values=True)) == \
-        [17, 35, 2, 5, 26]
+        [4, 17, 35, 2, 5]
     sieve.extend(3000)
     assert nextprime(2968) == 2969
     assert prevprime(2930) == 2927

@@ -1,7 +1,7 @@
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia, Inertia
 from sympy.physics.mechanics import inertia_of_point_mass
-from sympy.core.backend import expand, zeros, _simplify_matrix, symbols
+from sympy import expand, zeros, simplify, symbols
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
@@ -170,7 +170,7 @@ def test_parallel_axis():
     # Reference frame from which the parallel axis is viewed should not matter
     A = ReferenceFrame('A')
     A.orient_axis(N, N.z, 1)
-    assert _simplify_matrix(
+    assert simplify(
         (R.parallel_axis(p, A) - Ip_expected).to_matrix(A)) == zeros(3, 3)
 
 

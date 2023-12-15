@@ -22,7 +22,7 @@ from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
     CantSympify, converter)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
-from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
@@ -33,7 +33,6 @@ from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
 import mpmath
 from collections import defaultdict, OrderedDict
-from mpmath.rational import mpq
 
 
 numpy = import_module('numpy')
@@ -141,8 +140,6 @@ def test_sympify_mpmath():
 
     mpmath.mp.dps = 15
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
-
-    assert sympify(mpq(1, 2)) == S.Half
 
 
 def test_sympify2():
@@ -289,8 +286,7 @@ def test_sympify_raises():
         def __str__(self):
             return 'x'
 
-    with warns_deprecated_sympy():
-        assert sympify(A()) == Symbol('x')
+    raises(SympifyError, lambda: sympify(A()))
 
 
 def test__sympify():

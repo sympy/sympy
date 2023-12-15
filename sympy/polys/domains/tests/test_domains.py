@@ -1,5 +1,7 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
+from sympy.external.gmpy import GROUND_TYPES
+
 from sympy.core.numbers import (AlgebraicNumber, E, Float, I, Integer,
     Rational, oo, pi, _illegal)
 from sympy.core.singleton import S
@@ -8,8 +10,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 from sympy.polys.polytools import Poly
 from sympy.abc import x, y, z
-
-from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
@@ -32,7 +32,7 @@ from sympy.polys.polyerrors import (
     NotInvertible,
     DomainError)
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from itertools import product
 
@@ -43,18 +43,26 @@ def unify(K0, K1):
 
 def test_Domain_unify():
     F3 = GF(3)
+    F5 = GF(5)
 
     assert unify(F3, F3) == F3
-    assert unify(F3, ZZ) == ZZ
-    assert unify(F3, QQ) == QQ
-    assert unify(F3, ALG) == ALG
-    assert unify(F3, RR) == RR
-    assert unify(F3, CC) == CC
-    assert unify(F3, ZZ[x]) == ZZ[x]
-    assert unify(F3, ZZ.frac_field(x)) == ZZ.frac_field(x)
-    assert unify(F3, EX) == EX
+    raises(UnificationFailed, lambda: unify(F3, ZZ))
+    raises(UnificationFailed, lambda: unify(F3, QQ))
+    raises(UnificationFailed, lambda: unify(F3, ZZ_I))
+    raises(UnificationFailed, lambda: unify(F3, QQ_I))
+    raises(UnificationFailed, lambda: unify(F3, ALG))
+    raises(UnificationFailed, lambda: unify(F3, RR))
+    raises(UnificationFailed, lambda: unify(F3, CC))
+    raises(UnificationFailed, lambda: unify(F3, ZZ[x]))
+    raises(UnificationFailed, lambda: unify(F3, ZZ.frac_field(x)))
+    raises(UnificationFailed, lambda: unify(F3, EX))
 
-    assert unify(ZZ, F3) == ZZ
+    assert unify(F5, F5) == F5
+    raises(UnificationFailed, lambda: unify(F5, F3))
+    raises(UnificationFailed, lambda: unify(F5, F3[x]))
+    raises(UnificationFailed, lambda: unify(F5, F3.frac_field(x)))
+
+    raises(UnificationFailed, lambda: unify(ZZ, F3))
     assert unify(ZZ, ZZ) == ZZ
     assert unify(ZZ, QQ) == QQ
     assert unify(ZZ, ALG) == ALG
@@ -64,7 +72,7 @@ def test_Domain_unify():
     assert unify(ZZ, ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(ZZ, EX) == EX
 
-    assert unify(QQ, F3) == QQ
+    raises(UnificationFailed, lambda: unify(QQ, F3))
     assert unify(QQ, ZZ) == QQ
     assert unify(QQ, QQ) == QQ
     assert unify(QQ, ALG) == ALG
@@ -74,7 +82,7 @@ def test_Domain_unify():
     assert unify(QQ, ZZ.frac_field(x)) == QQ.frac_field(x)
     assert unify(QQ, EX) == EX
 
-    assert unify(ZZ_I, F3) == ZZ_I
+    raises(UnificationFailed, lambda: unify(ZZ_I, F3))
     assert unify(ZZ_I, ZZ) == ZZ_I
     assert unify(ZZ_I, ZZ_I) == ZZ_I
     assert unify(ZZ_I, QQ) == QQ_I
@@ -87,7 +95,7 @@ def test_Domain_unify():
     assert unify(ZZ_I, ZZ_I.frac_field(x)) == ZZ_I.frac_field(x)
     assert unify(ZZ_I, EX) == EX
 
-    assert unify(QQ_I, F3) == QQ_I
+    raises(UnificationFailed, lambda: unify(QQ_I, F3))
     assert unify(QQ_I, ZZ) == QQ_I
     assert unify(QQ_I, ZZ_I) == QQ_I
     assert unify(QQ_I, QQ) == QQ_I
@@ -104,7 +112,7 @@ def test_Domain_unify():
     assert unify(QQ_I, QQ_I.frac_field(x)) == QQ_I.frac_field(x)
     assert unify(QQ_I, EX) == EX
 
-    assert unify(RR, F3) == RR
+    raises(UnificationFailed, lambda: unify(RR, F3))
     assert unify(RR, ZZ) == RR
     assert unify(RR, QQ) == RR
     assert unify(RR, ALG) == RR
@@ -115,7 +123,7 @@ def test_Domain_unify():
     assert unify(RR, EX) == EX
     assert RR[x].unify(ZZ.frac_field(y)) == RR.frac_field(x, y)
 
-    assert unify(CC, F3) == CC
+    raises(UnificationFailed, lambda: unify(CC, F3))
     assert unify(CC, ZZ) == CC
     assert unify(CC, QQ) == CC
     assert unify(CC, ALG) == CC
@@ -125,7 +133,7 @@ def test_Domain_unify():
     assert unify(CC, ZZ.frac_field(x)) == CC.frac_field(x)
     assert unify(CC, EX) == EX
 
-    assert unify(ZZ[x], F3) == ZZ[x]
+    raises(UnificationFailed, lambda: unify(ZZ[x], F3))
     assert unify(ZZ[x], ZZ) == ZZ[x]
     assert unify(ZZ[x], QQ) == QQ[x]
     assert unify(ZZ[x], ALG) == ALG[x]
@@ -135,7 +143,7 @@ def test_Domain_unify():
     assert unify(ZZ[x], ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(ZZ[x], EX) == EX
 
-    assert unify(ZZ.frac_field(x), F3) == ZZ.frac_field(x)
+    raises(UnificationFailed, lambda: unify(ZZ.frac_field(x), F3))
     assert unify(ZZ.frac_field(x), ZZ) == ZZ.frac_field(x)
     assert unify(ZZ.frac_field(x), QQ) == QQ.frac_field(x)
     assert unify(ZZ.frac_field(x), ALG) == ALG.frac_field(x)
@@ -145,7 +153,7 @@ def test_Domain_unify():
     assert unify(ZZ.frac_field(x), ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(ZZ.frac_field(x), EX) == EX
 
-    assert unify(EX, F3) == EX
+    raises(UnificationFailed, lambda: unify(EX, F3))
     assert unify(EX, ZZ) == EX
     assert unify(EX, QQ) == EX
     assert unify(EX, ALG) == EX
@@ -554,20 +562,81 @@ def test_Domain_get_field():
     assert QQ[x, y].get_field() == QQ.frac_field(x, y)
 
 
+def test_Domain_set_domain():
+    doms = [GF(5), ZZ, QQ, ALG, RR, CC, EX, ZZ[z], QQ[z], RR[z], CC[z], EX[z]]
+    for D1 in doms:
+        for D2 in doms:
+            assert D1[x].set_domain(D2) == D2[x]
+            assert D1[x, y].set_domain(D2) == D2[x, y]
+            assert D1.frac_field(x).set_domain(D2) == D2.frac_field(x)
+            assert D1.frac_field(x, y).set_domain(D2) == D2.frac_field(x, y)
+            assert D1.old_poly_ring(x).set_domain(D2) == D2.old_poly_ring(x)
+            assert D1.old_poly_ring(x, y).set_domain(D2) == D2.old_poly_ring(x, y)
+            assert D1.old_frac_field(x).set_domain(D2) == D2.old_frac_field(x)
+            assert D1.old_frac_field(x, y).set_domain(D2) == D2.old_frac_field(x, y)
+
+
+def test_Domain_is_Exact():
+    exact = [GF(5), ZZ, QQ, ALG, EX]
+    inexact = [RR, CC]
+    for D in exact + inexact:
+        for R in D, D[x], D.frac_field(x), D.old_poly_ring(x), D.old_frac_field(x):
+            if D in exact:
+                assert R.is_Exact is True
+            else:
+                assert R.is_Exact is False
+
+
 def test_Domain_get_exact():
     assert EX.get_exact() == EX
     assert ZZ.get_exact() == ZZ
     assert QQ.get_exact() == QQ
     assert RR.get_exact() == QQ
+    assert CC.get_exact() == QQ_I
     assert ALG.get_exact() == ALG
     assert ZZ[x].get_exact() == ZZ[x]
     assert QQ[x].get_exact() == QQ[x]
+    assert RR[x].get_exact() == QQ[x]
+    assert CC[x].get_exact() == QQ_I[x]
     assert ZZ[x, y].get_exact() == ZZ[x, y]
     assert QQ[x, y].get_exact() == QQ[x, y]
+    assert RR[x, y].get_exact() == QQ[x, y]
+    assert CC[x, y].get_exact() == QQ_I[x, y]
     assert ZZ.frac_field(x).get_exact() == ZZ.frac_field(x)
     assert QQ.frac_field(x).get_exact() == QQ.frac_field(x)
+    assert RR.frac_field(x).get_exact() == QQ.frac_field(x)
+    assert CC.frac_field(x).get_exact() == QQ_I.frac_field(x)
     assert ZZ.frac_field(x, y).get_exact() == ZZ.frac_field(x, y)
     assert QQ.frac_field(x, y).get_exact() == QQ.frac_field(x, y)
+    assert RR.frac_field(x, y).get_exact() == QQ.frac_field(x, y)
+    assert CC.frac_field(x, y).get_exact() == QQ_I.frac_field(x, y)
+    assert ZZ.old_poly_ring(x).get_exact() == ZZ.old_poly_ring(x)
+    assert QQ.old_poly_ring(x).get_exact() == QQ.old_poly_ring(x)
+    assert RR.old_poly_ring(x).get_exact() == QQ.old_poly_ring(x)
+    assert CC.old_poly_ring(x).get_exact() == QQ_I.old_poly_ring(x)
+    assert ZZ.old_poly_ring(x, y).get_exact() == ZZ.old_poly_ring(x, y)
+    assert QQ.old_poly_ring(x, y).get_exact() == QQ.old_poly_ring(x, y)
+    assert RR.old_poly_ring(x, y).get_exact() == QQ.old_poly_ring(x, y)
+    assert CC.old_poly_ring(x, y).get_exact() == QQ_I.old_poly_ring(x, y)
+    assert ZZ.old_frac_field(x).get_exact() == ZZ.old_frac_field(x)
+    assert QQ.old_frac_field(x).get_exact() == QQ.old_frac_field(x)
+    assert RR.old_frac_field(x).get_exact() == QQ.old_frac_field(x)
+    assert CC.old_frac_field(x).get_exact() == QQ_I.old_frac_field(x)
+    assert ZZ.old_frac_field(x, y).get_exact() == ZZ.old_frac_field(x, y)
+    assert QQ.old_frac_field(x, y).get_exact() == QQ.old_frac_field(x, y)
+    assert RR.old_frac_field(x, y).get_exact() == QQ.old_frac_field(x, y)
+    assert CC.old_frac_field(x, y).get_exact() == QQ_I.old_frac_field(x, y)
+
+
+def test_Domain_characteristic():
+    for F, c in [(FF(3), 3), (FF(5), 5), (FF(7), 7)]:
+        for R in F, F[x], F.frac_field(x), F.old_poly_ring(x), F.old_frac_field(x):
+            assert R.has_CharacteristicZero is False
+            assert R.characteristic() == c
+    for D in ZZ, QQ, ZZ_I, QQ_I, ALG:
+        for R in D, D[x], D.frac_field(x), D.old_poly_ring(x), D.old_frac_field(x):
+            assert R.has_CharacteristicZero is True
+            assert R.characteristic() == 0
 
 
 def test_Domain_is_unit():
@@ -593,8 +662,8 @@ def test_Domain_convert():
 
     def check_domains(K1, K2):
         K3 = K1.unify(K2)
-        check_element(K3.convert_from( K1.one, K1),  K3.one, K1, K2, K3)
-        check_element(K3.convert_from( K2.one, K2),  K3.one, K1, K2, K3)
+        check_element(K3.convert_from(K1.one, K1),  K3.one,  K1, K2, K3)
+        check_element(K3.convert_from(K2.one, K2),  K3.one,  K1, K2, K3)
         check_element(K3.convert_from(K1.zero, K1), K3.zero, K1, K2, K3)
         check_element(K3.convert_from(K2.zero, K2), K3.zero, K1, K2, K3)
 
@@ -627,6 +696,11 @@ def test_Domain_convert():
     assert CC.convert(ZZ_I(1, 2)) == CC(1, 2)
     assert CC.convert(QQ_I(1, 2)) == CC(1, 2)
 
+    assert QQ.convert_from(RR(0.5), RR) == QQ(1, 2)
+    assert RR.convert_from(QQ(1, 2), QQ) == RR(0.5)
+    assert QQ_I.convert_from(CC(0.5, 0.75), CC) == QQ_I(QQ(1, 2), QQ(3, 4))
+    assert CC.convert_from(QQ_I(QQ(1, 2), QQ(3, 4)), QQ_I) == CC(0.5, 0.75)
+
     K1 = QQ.frac_field(x)
     K2 = ZZ.frac_field(x)
     K3 = QQ[x]
@@ -636,6 +710,27 @@ def test_Domain_convert():
         assert Ka.convert_from(Kb.from_sympy(x), Kb) == Ka.from_sympy(x)
 
     assert K2.convert_from(QQ(1, 2), QQ) == K2(QQ(1, 2))
+
+
+def test_EX_convert():
+
+    elements = [
+        (ZZ, ZZ(3)),
+        (QQ, QQ(1,2)),
+        (ZZ_I, ZZ_I(1,2)),
+        (QQ_I, QQ_I(1,2)),
+        (RR, RR(3)),
+        (CC, CC(1,2)),
+        (EX, EX(3)),
+        (EXRAW, EXRAW(3)),
+        (ALG, ALG.from_sympy(sqrt(2))),
+    ]
+
+    for R, e in elements:
+        for EE in EX, EXRAW:
+            elem = EE.from_sympy(R.to_sympy(e))
+            assert EE.convert_from(e, R) == elem
+            assert R.convert_from(elem, EE) == e
 
 
 def test_GlobalPolynomialRing_convert():
@@ -790,6 +885,7 @@ def test_PolynomialRing_from_FractionField():
     assert R.to_domain().from_FractionField(g, F.to_domain()) == X**2/4 + Y**2/4
     assert R.to_domain().from_FractionField(h, F.to_domain()) == X**2 + Y**2
 
+
 def test_FractionField_from_PolynomialRing():
     R, x,y = ring("x,y", QQ)
     F, X,Y = field("x,y", ZZ)
@@ -800,10 +896,12 @@ def test_FractionField_from_PolynomialRing():
     assert F.to_domain().from_PolynomialRing(f, R.to_domain()) == 3*X**2 + 5*Y**2
     assert F.to_domain().from_PolynomialRing(g, R.to_domain()) == (5*X**2 + 3*Y**2)/15
 
+
 def test_FF_of_type():
+    # XXX: of_type is not very useful here because in the case of ground types
+    # = flint all elements are of type nmod.
     assert FF(3).of_type(FF(3)(1)) is True
     assert FF(5).of_type(FF(5)(3)) is True
-    assert FF(5).of_type(FF(7)(3)) is False
 
 
 def test___eq__():
@@ -834,92 +932,81 @@ def test_ModularInteger():
     F3 = FF(3)
 
     a = F3(0)
-    assert isinstance(a, F3.dtype) and a == 0
+    assert F3.of_type(a) and a == 0
     a = F3(1)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)
-    assert isinstance(a, F3.dtype) and a == 2
+    assert F3.of_type(a) and a == 2
     a = F3(3)
-    assert isinstance(a, F3.dtype) and a == 0
+    assert F3.of_type(a) and a == 0
     a = F3(4)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = F3(F3(0))
-    assert isinstance(a, F3.dtype) and a == 0
+    assert F3.of_type(a) and a == 0
     a = F3(F3(1))
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(F3(2))
-    assert isinstance(a, F3.dtype) and a == 2
+    assert F3.of_type(a) and a == 2
     a = F3(F3(3))
-    assert isinstance(a, F3.dtype) and a == 0
+    assert F3.of_type(a) and a == 0
     a = F3(F3(4))
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = -F3(1)
-    assert isinstance(a, F3.dtype) and a == 2
+    assert F3.of_type(a) and a == 2
     a = -F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = 2 + F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2) + 2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2) + F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2) + F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = 3 - F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(3) - 2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(3) - F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(3) - F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = 2*F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)*2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)*F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)*F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = 2/F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)/2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)/F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)/F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
-
-    a = 1 % F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
-    a = F3(1) % 2
-    assert isinstance(a, F3.dtype) and a == 1
-    a = F3(1) % F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
-    a = F3(1) % F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = F3(2)**0
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)**1
-    assert isinstance(a, F3.dtype) and a == 2
+    assert F3.of_type(a) and a == 2
     a = F3(2)**2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     F7 = FF(7)
 
     a = F7(3)**100000000000
-    assert isinstance(a, F7.dtype) and a == 4
+    assert F7.of_type(a) and a == 4
     a = F7(3)**-100000000000
-    assert isinstance(a, F7.dtype) and a == 2
-    a = F7(3)**S(2)
-    assert isinstance(a, F7.dtype) and a == 2
+    assert F7.of_type(a) and a == 2
 
     assert bool(F3(3)) is False
     assert bool(F3(4)) is True
@@ -927,59 +1014,38 @@ def test_ModularInteger():
     F5 = FF(5)
 
     a = F5(1)**(-1)
-    assert isinstance(a, F5.dtype) and a == 1
+    assert F5.of_type(a) and a == 1
     a = F5(2)**(-1)
-    assert isinstance(a, F5.dtype) and a == 3
+    assert F5.of_type(a) and a == 3
     a = F5(3)**(-1)
-    assert isinstance(a, F5.dtype) and a == 2
+    assert F5.of_type(a) and a == 2
     a = F5(4)**(-1)
-    assert isinstance(a, F5.dtype) and a == 4
+    assert F5.of_type(a) and a == 4
 
-    assert (F5(1) < F5(2)) is True
-    assert (F5(1) <= F5(2)) is True
-    assert (F5(1) > F5(2)) is False
-    assert (F5(1) >= F5(2)) is False
-
-    assert (F5(3) < F5(2)) is False
-    assert (F5(3) <= F5(2)) is False
-    assert (F5(3) > F5(2)) is True
-    assert (F5(3) >= F5(2)) is True
-
-    assert (F5(1) < F5(7)) is True
-    assert (F5(1) <= F5(7)) is True
-    assert (F5(1) > F5(7)) is False
-    assert (F5(1) >= F5(7)) is False
-
-    assert (F5(3) < F5(7)) is False
-    assert (F5(3) <= F5(7)) is False
-    assert (F5(3) > F5(7)) is True
-    assert (F5(3) >= F5(7)) is True
-
-    assert (F5(1) < 2) is True
-    assert (F5(1) <= 2) is True
-    assert (F5(1) > 2) is False
-    assert (F5(1) >= 2) is False
-
-    assert (F5(3) < 2) is False
-    assert (F5(3) <= 2) is False
-    assert (F5(3) > 2) is True
-    assert (F5(3) >= 2) is True
-
-    assert (F5(1) < 7) is True
-    assert (F5(1) <= 7) is True
-    assert (F5(1) > 7) is False
-    assert (F5(1) >= 7) is False
-
-    assert (F5(3) < 7) is False
-    assert (F5(3) <= 7) is False
-    assert (F5(3) > 7) is True
-    assert (F5(3) >= 7) is True
-
-    raises(NotInvertible, lambda: F5(0)**(-1))
-    raises(NotInvertible, lambda: F5(5)**(-1))
+    if GROUND_TYPES != 'flint':
+        # XXX: This gives a core dump with python-flint...
+        raises(NotInvertible, lambda: F5(0)**(-1))
+        raises(NotInvertible, lambda: F5(5)**(-1))
 
     raises(ValueError, lambda: FF(0))
     raises(ValueError, lambda: FF(2.1))
+
+    for n1 in range(5):
+        for n2 in range(5):
+            if GROUND_TYPES != 'flint':
+                with warns_deprecated_sympy():
+                    assert (F5(n1) < F5(n2)) is (n1 < n2)
+                with warns_deprecated_sympy():
+                    assert (F5(n1) <= F5(n2)) is (n1 <= n2)
+                with warns_deprecated_sympy():
+                    assert (F5(n1) > F5(n2)) is (n1 > n2)
+                with warns_deprecated_sympy():
+                    assert (F5(n1) >= F5(n2)) is (n1 >= n2)
+            else:
+                raises(TypeError, lambda: F5(n1) < F5(n2))
+                raises(TypeError, lambda: F5(n1) <= F5(n2))
+                raises(TypeError, lambda: F5(n1) > F5(n2))
+                raises(TypeError, lambda: F5(n1) >= F5(n2))
 
 def test_QQ_int():
     assert int(QQ(2**2000, 3**1250)) == 455431

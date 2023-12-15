@@ -8,7 +8,7 @@ from sympy.physics.mechanics import (
     PrismaticJoint, LagrangesMethod, inertia)
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.testing.pytest import raises
-from sympy.core.backend import zeros
+from sympy import zeros
 from sympy.utilities.lambdify import lambdify
 from sympy.solvers.solvers import solve
 

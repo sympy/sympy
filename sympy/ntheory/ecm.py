@@ -199,13 +199,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     Returns
     =======
 
-    integer : ``n`` (if it is prime) else a non-trivial divisor of ``n``
-
-    Raises
-    ======
-
-    ValueError
-        When we cannot find a non-trivial divisor of ``n``.
+    integer | None : ``n`` (if it is prime) else a non-trivial divisor of ``n``. ``None`` if not found
 
     References
     ==========
@@ -301,9 +295,6 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
         if g != 1 and g != n:
             return g
 
-    #ECM failed, Increase the bounds
-    raise ValueError("Increase the bounds")
-
 
 def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     """Performs factorization using Lenstra's Elliptic curve method.
@@ -340,9 +331,8 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
             while(n % prime == 0):
                 n //= prime
     while(n > 1):
-        try:
-            factor = _ecm_one_factor(n, B1, B2, max_curve, seed + n)
-        except ValueError:
+        factor = _ecm_one_factor(n, B1, B2, max_curve, seed)
+        if factor is None:
             raise ValueError("Increase the bounds")
         _factors.add(factor)
         n //= factor

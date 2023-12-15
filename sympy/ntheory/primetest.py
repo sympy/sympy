@@ -6,58 +6,168 @@ Primality testing
 from itertools import count
 
 from sympy.core.sympify import sympify
-from sympy.external.gmpy import gmpy as _gmpy, jacobi, is_square as gmpy_is_square
-from sympy.utilities.misc import as_int
+from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
+                                 is_square as gmpy_is_square,
+                                 bit_scan1, is_fermat_prp, is_euler_prp,
+                                 is_selfridge_prp, is_strong_selfridge_prp,
+                                 is_strong_bpsw_prp)
+from sympy.external.ntheory import _lucas_sequence
+from sympy.utilities.misc import as_int, filldedent
 
-from mpmath.libmp import bitcount as _bitlength
+# Note: This list should be updated whenever new Mersenne primes are found.
+# Refer: https://www.mersenne.org/
+MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
+ 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049,
+ 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583,
+ 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
 
 
-def _int_tuple(*i):
-    return tuple(int(_) for _ in i)
+def is_fermat_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
-
-def is_euler_pseudoprime(n, b):
-    """Returns True if n is prime or an Euler pseudoprime to base b, else False.
-
-    Euler Pseudoprime : In arithmetic, an odd composite integer n is called an
-    euler pseudoprime to base a, if a and n are coprime and satisfy the modular
-    arithmetic congruence relation :
-
-    a ^ (n-1)/2 = + 1(mod n) or
-    a ^ (n-1)/2 = - 1(mod n)
+    .. math ::
+        a^{n-1} \equiv 1 \pmod{n}
 
     (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Fermat pseudoprime.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_fermat_pseudoprime
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_fermat_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    341
+    561
+    645
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Fermat_pseudoprime
+    """
+    n, a = as_int(n), as_int(a)
+    if a == 1:
+        return n == 2 or bool(n % 2)
+    return is_fermat_prp(n, a)
+
+
+def is_euler_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
+
+    .. math ::
+        a^{(n-1)/2} \equiv \pm 1 \pmod{n}
+
+    (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Euler pseudoprime.
 
     Examples
     ========
 
     >>> from sympy.ntheory.primetest import is_euler_pseudoprime
-    >>> is_euler_pseudoprime(2, 5)
-    True
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_euler_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    341
+    561
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Euler_pseudoprime
     """
-    from sympy.ntheory.factor_ import trailing
-
-    if not mr(n, [b]):
+    n, a = as_int(n), as_int(a)
+    if a < 1:
+        raise ValueError("a should be an integer greater than 0")
+    if n < 1:
+        raise ValueError("n should be an integer greater than 0")
+    if n == 1:
         return False
+    if a == 1:
+        return n == 2 or bool(n % 2)  # (prime or odd composite)
+    if n % 2 == 0:
+        return n == 2
+    if gcd(n, a) != 1:
+        raise ValueError("The two numbers should be relatively prime")
+    return pow(a, (n - 1) // 2, n) in [1, n - 1]
 
-    n = as_int(n)
-    r = n - 1
-    c = pow(b, r >> trailing(r), n)
 
-    if c == 1:
-        return True
+def is_euler_jacobi_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
-    while True:
-        if c == n - 1:
-            return True
-        c = pow(c, 2, n)
-        if c == 1:
-            return False
+    .. math ::
+        a^{(n-1)/2} \equiv \left(\frac{a}{n}\right) \pmod{n}
+
+    (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Euler-Jacobi pseudoprime.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_euler_jacobi_pseudoprime
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_euler_jacobi_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    561
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Jacobi_pseudoprime
+    """
+    n, a = as_int(n), as_int(a)
+    if a == 1:
+        return n == 2 or bool(n % 2)
+    return is_euler_prp(n, a)
 
 
 def is_square(n, prep=True):
@@ -81,7 +191,7 @@ def is_square(n, prep=True):
 
     See Also
     ========
-    sympy.core.power.isqrt
+    sympy.core.intfunc.isqrt
     """
     if prep:
         n = as_int(n)
@@ -102,14 +212,13 @@ def _test(n, base, s, t):
     b = pow(base, t, n)
     if b == 1 or b == n - 1:
         return True
-    else:
-        for j in range(1, s):
-            b = pow(b, 2, n)
-            if b == n - 1:
-                return True
-            # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
-            if b == 1:
-                return False
+    for _ in range(s - 1):
+        b = pow(b, 2, n)
+        if b == n - 1:
+            return True
+        # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
+        if b == 1:
+            return False
     return False
 
 
@@ -136,14 +245,13 @@ def mr(n, bases):
     True
 
     """
-    from sympy.ntheory.factor_ import trailing
     from sympy.polys.domains import ZZ
 
     n = as_int(n)
     if n < 2:
         return False
     # remove powers of 2 from n-1 (= t * 2**s)
-    s = trailing(n - 1)
+    s = bit_scan1(n - 1)
     t = n >> s
     for base in bases:
         # Bases >= n are wrapped, bases < 2 are invalid
@@ -154,147 +262,6 @@ def mr(n, bases):
             if not _test(n, base, s, t):
                 return False
     return True
-
-
-def _lucas_sequence(n, P, Q, k):
-    """Return the modular Lucas sequence (U_k, V_k, Q_k).
-
-    Given a Lucas sequence defined by P, Q, returns the kth values for
-    U and V, along with Q^k, all modulo n.  This is intended for use with
-    possibly very large values of n and k, where the combinatorial functions
-    would be completely unusable.
-
-    The modular Lucas sequences are used in numerous places in number theory,
-    especially in the Lucas compositeness tests and the various n + 1 proofs.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.primetest import _lucas_sequence
-    >>> N = 10**2000 + 4561
-    >>> sol = U, V, Qk = _lucas_sequence(N, 3, 1, N//2); sol
-    (0, 2, 1)
-
-    """
-    D = P*P - 4*Q
-    if n < 2:
-        raise ValueError("n must be >= 2")
-    if k < 0:
-        raise ValueError("k must be >= 0")
-    if D == 0:
-        raise ValueError("D must not be zero")
-
-    if k == 0:
-        return _int_tuple(0, 2, Q)
-    U = 1
-    V = P
-    Qk = Q
-    b = _bitlength(k)
-    if Q == 1:
-        # Optimization for extra strong tests.
-        while b > 1:
-            U = (U*V) % n
-            V = (V*V - 2) % n
-            b -= 1
-            if (k >> (b - 1)) & 1:
-                U, V = U*P + V, V*P + U*D
-                if U & 1:
-                    U += n
-                if V & 1:
-                    V += n
-                U, V = U >> 1, V >> 1
-    elif P == 1 and Q == -1:
-        # Small optimization for 50% of Selfridge parameters.
-        while b > 1:
-            U = (U*V) % n
-            if Qk == 1:
-                V = (V*V - 2) % n
-            else:
-                V = (V*V + 2) % n
-                Qk = 1
-            b -= 1
-            if (k >> (b-1)) & 1:
-                U, V = U + V, V + U*D
-                if U & 1:
-                    U += n
-                if V & 1:
-                    V += n
-                U, V = U >> 1, V >> 1
-                Qk = -1
-    else:
-        # The general case with any P and Q.
-        while b > 1:
-            U = (U*V) % n
-            V = (V*V - 2*Qk) % n
-            Qk *= Qk
-            b -= 1
-            if (k >> (b - 1)) & 1:
-                U, V = U*P + V, V*P + U*D
-                if U & 1:
-                    U += n
-                if V & 1:
-                    V += n
-                U, V = U >> 1, V >> 1
-                Qk *= Q
-            Qk %= n
-    return _int_tuple(U % n, V % n, Qk)
-
-
-def _lucas_selfridge_params(n):
-    """Calculates the Selfridge parameters (D, P, Q) for n.
-
-    Explanation
-    ===========
-
-    The Lucas compositeness test checks whether n is a prime number.
-    The test can be run with arbitrary parameters ``P`` and ``Q``, which also change the performance of the test.
-    So, which parameters are most effective for running the Lucas compositeness test?
-    As an algorithm for determining ``P`` and ``Q``, Selfridge proposed method A [1]_ page 1401
-    (Since two methods were proposed, referred to simply as A and B in the paper,
-    we will refer to one of them as "method A").
-
-    method A fixes ``P = 1``. Then, ``D`` defined by ``D = P**2 - 4Q`` is varied from 5, -7, 9, -11, 13, and so on,
-    with the first ``D`` being ``jacobi(D, n) == -1``. Once ``D`` is determined,
-    ``Q`` is determined to be ``(P**2 - D)//4``. Here is an implementation of the method A.
-
-    Parameters
-    ==========
-
-    n : int
-        positive odd integer
-
-    Returns
-    =======
-
-    D, P, Q: Selfridge parameters for Lucas compositeness test.
-             ``(0, 0, 0)`` if we find a nontrivial divisor of ``n``.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.primetest import _lucas_selfridge_params
-    >>> _lucas_selfridge_params(101)
-    (-7, 1, 2)
-    >>> _lucas_selfridge_params(15)
-    (0, 0, 0)
-
-    References
-    ==========
-
-    .. [1] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
-           Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
-           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
-           http://mpqs.free.fr/LucasPseudoprimes.pdf
-
-    """
-    for D in count(5, 2):
-        if D & 2: # if D % 4 == 3
-            D = -D
-        j = jacobi(D, n)
-        if j == -1:
-            return (D, 1, (1 - D)//4)
-        elif j == 0 and D % n:
-            return (0, 0, 0)
 
 
 def _lucas_extrastrong_params(n):
@@ -372,17 +339,9 @@ def is_lucas_prp(n):
     9179
     """
     n = as_int(n)
-    if n == 2:
-        return True
-    if n < 2 or (n % 2) == 0:
+    if n < 2:
         return False
-    if gmpy_is_square(n):
-        return False
-
-    D, P, Q = _lucas_selfridge_params(n)
-    if D == 0:
-        return False
-    return _lucas_sequence(n, P, Q, n + 1)[0] == 0
+    return is_selfridge_prp(n)
 
 
 def is_strong_lucas_prp(n):
@@ -417,33 +376,10 @@ def is_strong_lucas_prp(n):
     16109
     18971
     """
-    from sympy.ntheory.factor_ import trailing
     n = as_int(n)
-    if n == 2:
-        return True
-    if n < 2 or (n % 2) == 0:
+    if n < 2:
         return False
-    if gmpy_is_square(n):
-        return False
-
-    D, P, Q = _lucas_selfridge_params(n)
-    if D == 0:
-        return False
-
-    # remove powers of 2 from n+1 (= k * 2**s)
-    s = trailing(n + 1)
-    k = (n + 1) >> s
-
-    U, V, Qk = _lucas_sequence(n, P, Q, k)
-
-    if U == 0 or V == 0:
-        return True
-    for _ in range(1, s):
-        V = (V*V - 2*Qk) % n
-        if V == 0:
-            return True
-        Qk = pow(Qk, 2, n)
-    return False
+    return is_strong_selfridge_prp(n)
 
 
 def is_extra_strong_lucas_prp(n):
@@ -491,7 +427,6 @@ def is_extra_strong_lucas_prp(n):
     #   2) The MathWorld page as of June 2013 specifies Q=-1.  The Lucas
     #      sequence must have Q=1.  See Grantham theorem 2.3, any of the
     #      references on the MathWorld page, or run it and see Q=-1 is wrong.
-    from sympy.ntheory.factor_ import trailing
     n = as_int(n)
     if n == 2:
         return True
@@ -505,7 +440,7 @@ def is_extra_strong_lucas_prp(n):
         return False
 
     # remove powers of 2 from n+1 (= k * 2**s)
-    s = trailing(n + 1)
+    s = bit_scan1(n + 1)
     k = (n + 1) >> s
 
     U, V, _ = _lucas_sequence(n, P, Q, k)
@@ -517,6 +452,148 @@ def is_extra_strong_lucas_prp(n):
             return True
         V = (V*V - 2) % n
     return False
+
+
+def proth_test(n):
+    r""" Test if the Proth number `n = k2^m + 1` is prime. where k is a positive odd number and `2^m > k`.
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is Proth number
+
+    Returns
+    =======
+
+    bool : If ``True``, then ``n`` is the Proth prime
+
+    Raises
+    ======
+
+    ValueError
+        If ``n`` is not Proth number.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import proth_test
+    >>> proth_test(41)
+    True
+    >>> proth_test(57)
+    False
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Proth_prime
+
+    """
+    n = as_int(n)
+    if n < 3:
+        raise ValueError("n is not Proth number")
+    m = bit_scan1(n - 1)
+    k = n >> m
+    if m < k.bit_length():
+        raise ValueError("n is not Proth number")
+    if n % 3 == 0:
+        return n == 3
+    if k % 3: # n % 12 == 5
+        return pow(3, n >> 1, n) == n - 1
+    # If `n` is a square number, then `jacobi(a, n) = 1` for any `a`
+    if gmpy_is_square(n):
+        return False
+    # `a` may be chosen at random.
+    # In any case, we want to find `a` such that `jacobi(a, n) = -1`.
+    for a in range(5, n):
+        j = jacobi(a, n)
+        if j == -1:
+            return pow(a, n >> 1, n) == n - 1
+        if j == 0:
+            return False
+
+
+def _lucas_lehmer_primality_test(p):
+    r""" Test if the Mersenne number `M_p = 2^p-1` is prime.
+
+    Parameters
+    ==========
+
+    p : int
+        ``p`` is an odd prime number
+
+    Returns
+    =======
+
+    bool : If ``True``, then `M_p` is the Mersenne prime
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import _lucas_lehmer_primality_test
+    >>> _lucas_lehmer_primality_test(5) # 2**5 - 1 = 31 is prime
+    True
+    >>> _lucas_lehmer_primality_test(11) # 2**11 - 1 = 2047 is not prime
+    False
+
+    See Also
+    ========
+
+    is_mersenne_prime
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lucas%E2%80%93Lehmer_primality_test
+
+    """
+    v = 4
+    m = 2**p - 1
+    for _ in range(p - 2):
+        v = pow(v, 2, m) - 2
+    return v == 0
+
+
+def is_mersenne_prime(n):
+    """Returns True if  ``n`` is a Mersenne prime, else False.
+
+    A Mersenne prime is a prime number having the form `2^i - 1`.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_mersenne_prime
+    >>> is_mersenne_prime(6)
+    False
+    >>> is_mersenne_prime(127)
+    True
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/MersennePrime.html
+
+    """
+    n = as_int(n)
+    if n < 1:
+        return False
+    if n & (n + 1):
+        # n is not Mersenne number
+        return False
+    p = n.bit_length()
+    if p in MERSENNE_PRIME_EXPONENTS:
+        return True
+    if p < 65_000_000 or not isprime(p):
+        # According to GIMPS, verification was completed on September 19, 2023 for p less than 65 million.
+        # https://www.mersenne.org/report_milestones/
+        # If p is composite number, then n=2**p-1 is composite number.
+        return False
+    result = _lucas_lehmer_primality_test(p)
+    if result:
+        raise ValueError(filldedent('''
+            This Mersenne Prime, 2^%s - 1, should
+            be added to SymPy's known values.''' % p))
+    return result
 
 
 def isprime(n):
@@ -568,10 +645,10 @@ def isprime(n):
     >>> near_int == int(near_int)
     False
     >>> n = Float(near_int, 10)  # truncated by precision
-    >>> n == int(n)
+    >>> n % 1 == 0
     True
     >>> n = Float(near_int, 20)
-    >>> n == int(n)
+    >>> n % 1 == 0
     False
 
     See Also
@@ -583,10 +660,12 @@ def isprime(n):
 
     References
     ==========
-    - https://en.wikipedia.org/wiki/Strong_pseudoprime
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
-    - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
+    .. [1] https://en.wikipedia.org/wiki/Strong_pseudoprime
+    .. [2] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
+           Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
+           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [3] https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
     try:
         n = as_int(n)
@@ -609,8 +688,9 @@ def isprime(n):
         return False
     if n < 2809:
         return True
-    if n < 31417:
-        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951, 23377]
+    if n < 65077:
+        # There are only five Euler pseudoprimes with a least prime factor greater than 47
+        return pow(2, n >> 1, n) in [1, n - 1] and n not in [8321, 31621, 42799, 49141, 49981]
 
     # bisection search on the sieve if the sieve is large enough
     from sympy.ntheory.generate import sieve as s
@@ -622,7 +702,7 @@ def isprime(n):
     # This should be a bit faster than our step 2, and for large values will
     # be a lot faster than our step 3 (C+GMP vs. Python).
     if _gmpy is not None:
-        return _gmpy.is_strong_prp(n, 2) and _gmpy.is_strong_selfridge_prp(n)
+        return is_strong_bpsw_prp(n)
 
 
     # Step 2: deterministic Miller-Rabin testing for numbers < 2^64.  See:
@@ -686,7 +766,7 @@ def isprime(n):
     #      3.2s   extra strong BPSW
 
     # Classic BPSW from page 1401 of the paper.  See alternate ideas below.
-    return mr(n, [2]) and is_strong_lucas_prp(n)
+    return is_strong_bpsw_prp(n)
 
     # Using extra strong test, which is somewhat faster
     #return mr(n, [2]) and is_extra_strong_lucas_prp(n)

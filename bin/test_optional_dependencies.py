@@ -42,6 +42,7 @@ test_list = [
     '*jax*',
 
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # gmpy, numpy, scipy, autowrap, matplotlib
@@ -84,6 +85,8 @@ blacklist = [
 
 doctest_list = [
     # numpy
+    'doc/src/tutorials/biomechanics/biomechanical-model-example.rst',
+    'doc/src/tutorials/biomechanics/biomechanics.rst',
     'sympy/matrices/',
     'sympy/utilities/lambdify.py',
 
@@ -100,6 +103,7 @@ doctest_list = [
     '*aesara*',
 
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # autowrap

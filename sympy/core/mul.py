@@ -1,14 +1,15 @@
 from typing import Tuple as tTuple
 from collections import defaultdict
-from functools import cmp_to_key, reduce
+from functools import reduce
 from itertools import product
 import operator
 
 from .sympify import sympify
-from .basic import Basic
+from .basic import Basic, _args_sortkey
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
+from .intfunc import integer_nthroot, trailing
 from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
@@ -28,8 +29,6 @@ class NC_Marker:
     is_commutative = False
 
 
-# Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -582,6 +581,9 @@ class Mul(Expr, AssocOp):
         i = 0  # steps through num_rat which may grow
         while i < len(num_rat):
             bi, ei = num_rat[i]
+            if bi == 1:
+                i += 1
+                continue
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
@@ -727,7 +729,6 @@ class Mul(Expr, AssocOp):
             if self.is_imaginary:
                 a = self.as_real_imag()[1]
                 if a.is_Rational:
-                    from .power import integer_nthroot
                     n, d = abs(a/2).as_numer_denom()
                     n, t = integer_nthroot(n, 2)
                     if t:
@@ -1390,7 +1391,6 @@ class Mul(Expr, AssocOp):
     #_eval_is_integer = lambda self: _fuzzy_group(
     #    (a.is_integer for a in self.args), quick_exit=True)
     def _eval_is_integer(self):
-        from sympy.ntheory.factor_ import trailing
         is_rational = self._eval_is_rational()
         if is_rational is False:
             return False
@@ -1626,7 +1626,6 @@ class Mul(Expr, AssocOp):
         from sympy.simplify.radsimp import fraction
         n, d = fraction(self)
         if d.is_Integer and d.is_even:
-            from sympy.ntheory.factor_ import trailing
             # if minimal power of 2 in num vs den is
             # positive then we have an even number
             if (Add(*[i.as_base_exp()[1] for i in
@@ -1656,7 +1655,6 @@ class Mul(Expr, AssocOp):
             # if minimal power of 2 in den vs num is not
             # negative then this is not an integer and
             # can't be even
-            from sympy.ntheory.factor_ import trailing
             if (Add(*[i.as_base_exp()[1] for i in
                     Mul.make_args(d) if i.is_even]) - trailing(n.p)
                     ).is_nonnegative:
@@ -1978,7 +1976,10 @@ class Mul(Expr, AssocOp):
                         n -= n1 - ns    # reduce n
                 facs.append(s)
 
-        except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
+        except (ValueError, NotImplementedError, TypeError, PoleError):
+            # XXX: Catching so many generic exceptions around a large block of
+            # code will mask bugs. Whatever purpose catching these exceptions
+            # serves should be handled in a different way.
             n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
             if n0.is_nonnegative:
                 n0 = S.Zero
