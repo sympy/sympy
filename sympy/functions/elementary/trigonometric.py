@@ -510,10 +510,6 @@ class sin(TrigonometricFunction):
                 else:
                     return expand_mul(S.NegativeOne**(n/2 - 1)*cos(x)*
                                       chebyshevu(n - 1, sin(x)), deep=False)
-            pi_coeff = _pi_coeff(arg)
-            if pi_coeff is not None:
-                if pi_coeff.is_Rational:
-                    return self.rewrite(sqrt)
         return sin(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -868,10 +864,6 @@ class cos(TrigonometricFunction):
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer:
                 return chebyshevt(coeff, cos(terms))
-            pi_coeff = _pi_coeff(arg)
-            if pi_coeff is not None:
-                if pi_coeff.is_Rational:
-                    return self.rewrite(sqrt)
         return cos(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):

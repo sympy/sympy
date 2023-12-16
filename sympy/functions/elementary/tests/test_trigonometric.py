@@ -238,6 +238,8 @@ def test_sin_expansion():
     assert sin(2*x).expand(trig=True) == 2*sin(x)*cos(x)
     assert sin(3*x).expand(trig=True) == -4*sin(x)**3 + 3*sin(x)
     assert sin(4*x).expand(trig=True) == -8*sin(x)**3*cos(x) + 4*sin(x)*cos(x)
+    assert sin(2*pi/17).expand(trig=True) == sin(2*pi/17, evaluate=False)
+    assert sin(x+pi/17).expand(trig=True) == sin(pi/17)*cos(x) + cos(pi/17)*sin(x)
     _test_extrig(sin, 2, 2*sin(1)*cos(1))
     _test_extrig(sin, 3, -4*sin(1)**3 + 3*sin(1))
 
@@ -449,6 +451,8 @@ def test_cos_expansion():
     assert cos(2*x).expand(trig=True) == 2*cos(x)**2 - 1
     assert cos(3*x).expand(trig=True) == 4*cos(x)**3 - 3*cos(x)
     assert cos(4*x).expand(trig=True) == 8*cos(x)**4 - 8*cos(x)**2 + 1
+    assert cos(2*pi/17).expand(trig=True) == cos(2*pi/17, evaluate=False)
+    assert cos(x+pi/17).expand(trig=True) == cos(pi/17)*cos(x) - sin(pi/17)*sin(x)
     _test_extrig(cos, 2, 2*cos(1)**2 - 1)
     _test_extrig(cos, 3, 4*cos(1)**3 - 3*cos(1))
 
