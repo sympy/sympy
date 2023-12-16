@@ -1108,10 +1108,10 @@ def test_solve_trig_hyp_symbolic():
         ImageSet(Lambda(n, pi*(1 - I)*(4*n + 1)/4), S.Integers),
         ImageSet(Lambda(n, pi*(1 - I)*(4*n - 1)/4), S.Integers)))
 
-    assert dumeq(solveset(cosh((a**2 + 1)*x) - 3, x), Union(
-            # XXX this test previously had a ConditionSet with Ne(a**2+1, 0).
+    assert dumeq(solveset(cosh((a**2 + 1)*x) - 3, x), ConditionSet(
+        x, Ne(a**2 + 1, 0), Union(
             ImageSet(Lambda(n, (2*n*I*pi - acosh(3))/(a**2 + 1)), S.Integers),
-            ImageSet(Lambda(n, (2*n*I*pi + acosh(3))/(a**2 + 1)), S.Integers)))
+            ImageSet(Lambda(n, (2*n*I*pi + acosh(3))/(a**2 + 1)), S.Integers))))
 
     ar = Symbol('ar', real=True)
     assert solveset(cosh((ar**2 + 1)*x) - 2, x, S.Reals) == FiniteSet(

@@ -1239,7 +1239,6 @@ def _solveset(f, symbol, domain, _check=False):
         return domain
 
     orig_f = f
-    invert_trig_hyp = False  # True if we will use inversion to solve
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
         if coeff in {S.ComplexInfinity, S.NegativeInfinity, S.Infinity}:
@@ -1250,10 +1249,6 @@ def _solveset(f, symbol, domain, _check=False):
         if m not in {S.ComplexInfinity, S.Zero, S.Infinity,
                               S.NegativeInfinity}:
             f = a/m + h  # XXX condition `m != 0` should be added to soln
-        if isinstance(h, (TrigonometricFunction, HyperbolicFunction)) and (
-            a and a.is_number and a.is_finite):
-                # solve this by inversion
-                invert_trig_hyp = True
 
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
@@ -1274,7 +1269,7 @@ def _solveset(f, symbol, domain, _check=False):
         # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
         result = Union(*[solver(m, symbol) for m in f.args])
-    elif not invert_trig_hyp and (_is_function_class_equation(TrigonometricFunction, f, symbol) or \
+    elif (_is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol)):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
