@@ -3,14 +3,13 @@
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
-from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.polyclasses import DMF
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 from sympy.utilities import public
 
 @public
-class FractionField(Field, CharacteristicZero, CompositeDomain):
+class FractionField(Field, CompositeDomain):
     """A class for representing rational function fields. """
 
     dtype = DMF
@@ -26,14 +25,18 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         lev = len(gens) - 1
         self.ngens = len(gens)
 
-        self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one = self.dtype.one(lev, dom, ring=self)
+        self.zero = self.dtype.zero(lev, dom)
+        self.one = self.dtype.one(lev, dom)
 
         self.domain = self.dom = dom
         self.symbols = self.gens = gens
 
+    def set_domain(self, dom):
+        """Make a new fraction field with given domain. """
+        return self.__class__(dom, *self.gens)
+
     def new(self, element):
-        return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)
+        return self.dtype(element, self.dom, len(self.gens) - 1)
 
     def __str__(self):
         return str(self.dom) + '(' + ','.join(map(str, self.gens)) + ')'
@@ -94,9 +97,9 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """Convert a ``DMF`` object to ``dtype``. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
-                return K1(a.rep)
+                return K1(a.to_list())
             else:
-                return K1(a.convert(K1.dom).rep)
+                return K1(a.convert(K1.dom).to_list())
         else:
             monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
 
@@ -122,15 +125,15 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         >>> ZZx = ZZ.old_frac_field(x)
 
         >>> QQx.from_FractionField(f, ZZx)
-        (x + 2)/(x + 1)
+        DMF([1, 2], [1, 1], QQ)
 
         """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return a
             else:
-                return K1((a.numer().convert(K1.dom).rep,
-                           a.denom().convert(K1.dom).rep))
+                return K1((a.numer().convert(K1.dom).to_list(),
+                           a.denom().convert(K1.dom).to_list()))
         elif set(K0.gens).issubset(K1.gens):
             nmonoms, ncoeffs = _dict_reorder(
                 a.numer().to_dict(), K0.gens, K1.gens)

@@ -258,7 +258,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         if len(expr.shape) == 2:
             return self._print(expr.tomatrix())
         # Should be possible to extend to more dimensions
-        return CodePrinter._print_not_supported(self, expr)
+        return super()._print_not_supported(self, expr)
 
     _add = "add"
     _einsum = "einsum"
@@ -483,6 +483,7 @@ class JaxPrinter(NumPyPrinter):
 
     def __init__(self, settings=None):
         super().__init__(settings=settings)
+        self.printmethod = '_jaxcode'
 
     # These need specific override to allow for the lack of "jax.numpy.reduce"
     def _print_And(self, expr):

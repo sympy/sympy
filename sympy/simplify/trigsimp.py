@@ -6,7 +6,8 @@ from sympy.core import (sympify, Basic, S, Expr, factor_terms,
 from sympy.core.cache import cacheit
 from sympy.core.function import (count_ops, _mexpand, FunctionClass, expand,
                                  expand_mul, _coeff_isneg, Derivative)
-from sympy.core.numbers import I, Integer, igcd
+from sympy.core.numbers import I, Integer
+from sympy.core.intfunc import igcd
 from sympy.core.sorting import _nodes
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.external.gmpy import SYMPY_INTS

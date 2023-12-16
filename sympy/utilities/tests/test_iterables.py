@@ -19,7 +19,7 @@ from sympy.utilities.iterables import (
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
     uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,
-    NotIterable, multiset_derangements,
+    NotIterable, multiset_derangements, signed_permutations,
     sequence_partitions, sequence_partitions_empty)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
@@ -934,3 +934,12 @@ def test_sequence_partitions_empty():
     assert list(sequence_partitions([], 0)) == []
     assert list(sequence_partitions([1], 0)) == []
     assert list(sequence_partitions([1, 2], 0)) == []
+
+
+def test_signed_permutations():
+    ans = [(0, 1, 1), (0, -1, 1), (0, 1, -1), (0, -1, -1),
+    (1, 0, 1), (-1, 0, 1), (1, 0, -1), (-1, 0, -1),
+    (1, 1, 0), (-1, 1, 0), (1, -1, 0), (-1, -1, 0)]
+    assert list(signed_permutations((0, 1, 1))) == ans
+    assert list(signed_permutations((1, 0, 1))) == ans
+    assert list(signed_permutations((1, 1, 0))) == ans

@@ -20,7 +20,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
     xsym, pretty_symbol, pretty_atom, pretty_use_unicode, greek_unicode, U, \
-    pretty_try_use_unicode,  annotated
+    pretty_try_use_unicode, annotated, is_subscriptable_in_unicode, center_pad
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -727,12 +727,10 @@ class PrettyPrinter(Printer):
                 # hcenter it, +0.5 to the right                        2
                 # ( it's better to align formula starts for say 0 and r )
                 # XXX this is not good in all cases -- maybe introduce vbaseline?
-                wdelta = maxw[j] - s.width()
-                wleft = wdelta // 2
-                wright = wdelta - wleft
+                left, right = center_pad(s.width(), maxw[j])
 
-                s = prettyForm(*s.right(' '*wright))
-                s = prettyForm(*s.left(' '*wleft))
+                s = prettyForm(*s.right(right))
+                s = prettyForm(*s.left(left))
 
                 # we don't need vcenter cells -- this is automatically done in
                 # a pretty way because when their baselines are taking into
@@ -1106,6 +1104,15 @@ class PrettyPrinter(Printer):
         subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
         mat = prettyForm(*mat.right(subscript))
         return mat
+
+    def _print_StateSpace(self, expr):
+        from sympy.matrices.expressions.blockmatrix import BlockMatrix
+        A = expr._A
+        B = expr._B
+        C = expr._C
+        D = expr._D
+        mat = BlockMatrix([[A, B], [C, D]])
+        return self._print(mat.blocks)
 
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
@@ -1664,10 +1671,9 @@ class PrettyPrinter(Printer):
         return self.emptyPrinter(expr)
 
     def _print_polylog(self, e):
-        if self._use_unicode:
-            func_name = f"Li_{e.args[0].__str__()}"
-            new_e = Function(func_name)(e.args[1])
-            return self._print_Function(new_e)
+        subscript = self._print(e.args[0])
+        if self._use_unicode and is_subscriptable_in_unicode(subscript):
+            return self._print_Function(Function('Li_%s' % subscript)(e.args[1]))
         return self._print_Function(e)
 
     def _print_lerchphi(self, e):
@@ -1813,8 +1819,9 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_expint(self, e):
-        if e.args[0].is_Integer and self._use_unicode:
-            return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
+        subscript = self._print(e.args[0])
+        if self._use_unicode and is_subscriptable_in_unicode(subscript):
+            return self._print_Function(Function('E_%s' % subscript)(e.args[1]))
         return self._print_Function(e)
 
     def _print_Chi(self, e):
@@ -2346,41 +2353,20 @@ class PrettyPrinter(Printer):
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False, ifascii_nougly=True):
-        try:
-            pforms = []
-            for item in seq:
-                pform = self._print(item)
-                if parenthesize(item):
-                    pform = prettyForm(*pform.parens())
-                if pforms:
-                    pforms.append(delimiter)
-                pforms.append(pform)
 
-            if not pforms:
-                s = stringPict('')
-            else:
-                s = prettyForm(*stringPict.next(*pforms))
+        pforms = []
+        for item in seq:
+            pform = self._print(item)
+            if parenthesize(item):
+                pform = prettyForm(*pform.parens())
+            if pforms:
+                pforms.append(delimiter)
+            pforms.append(pform)
 
-                # XXX: Under the tests from #15686 the above raises:
-                # AttributeError: 'Fake' object has no attribute 'baseline'
-                # This is caught below but that is not the right way to
-                # fix it.
-
-        except AttributeError:
-            s = None
-            for item in seq:
-                pform = self.doprint(item)
-                if parenthesize(item):
-                    pform = prettyForm(*pform.parens())
-                if s is None:
-                    # first element
-                    s = pform
-                else :
-                    s = prettyForm(*stringPict.next(s, delimiter))
-                    s = prettyForm(*stringPict.next(s, pform))
-
-            if s is None:
-                s = stringPict('')
+        if not pforms:
+            s = stringPict('')
+        else:
+            s = prettyForm(*stringPict.next(*pforms))
 
         s = prettyForm(*s.parens(left, right, ifascii_nougly=ifascii_nougly))
         return s
@@ -2758,19 +2744,21 @@ class PrettyPrinter(Printer):
         return self._print_seq(m, '[', ']')
 
     def _print_SubModule(self, M):
-        return self._print_seq(M.gens, '<', '>')
+        gens = [[M.ring.to_sympy(g) for g in gen] for gen in M.gens]
+        return self._print_seq(gens, '<', '>')
 
     def _print_FreeModule(self, M):
         return self._print(M.ring)**self._print(M.rank)
 
     def _print_ModuleImplementedIdeal(self, M):
-        return self._print_seq([x for [x] in M._module.gens], '<', '>')
+        sym = M.ring.to_sympy
+        return self._print_seq([sym(x) for [x] in M._module.gens], '<', '>')
 
     def _print_QuotientRing(self, R):
         return self._print(R.ring) / self._print(R.base_ideal)
 
     def _print_QuotientRingElement(self, R):
-        return self._print(R.data) + self._print(R.ring.base_ideal)
+        return self._print(R.ring.to_sympy(R)) + self._print(R.ring.base_ideal)
 
     def _print_QuotientModuleElement(self, m):
         return self._print(m.data) + self._print(m.module.killed_module)

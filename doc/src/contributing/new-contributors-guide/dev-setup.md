@@ -23,7 +23,7 @@ second contribution.
 ## Install Git
 
 SymPy is available on [GitHub](https://github.com/sympy/sympy) and uses
-[Git](https://git-scm.com) for source control. The workflow is such that
+[Git](https://git-scm.com/) for source control. The workflow is such that
 code is pulled and pushed to and from the main repository. Install the respective version
 of Git for your operating system to start development.
 
@@ -175,7 +175,7 @@ You may want to take advantage of using virtual environments to isolate your dev
 If you use `conda`, you can use it to create a virtual environment:
 
 ```bash
-$ conda create -n sympy-dev python=3 mpmath flake8
+$ conda create -n sympy-dev -c conda-forge --file requirements-dev.txt
 ```
 
 If you prefer to use `pip` and `venv`, you can use something like
@@ -184,7 +184,7 @@ If you prefer to use `pip` and `venv`, you can use something like
 cd sympy
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -r requirements-dev.txt
 ```
 
 You can add any other packages to this command that you might find useful for

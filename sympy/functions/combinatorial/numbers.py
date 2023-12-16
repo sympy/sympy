@@ -539,8 +539,8 @@ class bernoulli(Function):
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
-    _cache = {0: S.One, 2: Rational(1, 6), 4: Rational(-1, 30)}
-    _highest = {0: 0, 2: 2, 4: 4}
+    _cache = {0: S.One, 1: Rational(1, 2), 2: Rational(1, 6), 4: Rational(-1, 30)}
+    _highest = {0: 0, 1: 1, 2: 2, 4: 4}
 
     @classmethod
     def eval(cls, n, x=None):
@@ -1217,7 +1217,7 @@ class catalan(Function):
     4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
 
     >>> catalan(n).rewrite(hyper)
-    hyper((1 - n, -n), (2,), 1)
+    hyper((-n, 1 - n), (2,), 1)
 
     For some non-integer values of n we can get closed form
     expressions by rewriting in terms of gamma functions:

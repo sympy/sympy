@@ -1,5 +1,5 @@
-from sympy.core.backend import Symbol, S
-from sympy.physics.vector import ReferenceFrame, Dyadic, dot
+from sympy import Symbol, S
+from sympy.physics.vector import ReferenceFrame, Dyadic, Point, dot
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.inertia import inertia_of_point_mass, Inertia
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -109,6 +109,10 @@ class RigidBody(BodyBase):
 
     @inertia.setter
     def inertia(self, I):
+        # check if I is of the form (Dyadic, Point)
+        if len(I) != 2 or not isinstance(I[0], Dyadic) or not isinstance(I[1], Point):
+            raise TypeError("RigidBody inertia must be a tuple of the form (Dyadic, Point).")
+
         self._inertia = Inertia(I[0], I[1])
         # have I S/O, want I S/S*
         # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O

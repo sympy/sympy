@@ -758,9 +758,17 @@ class arg(Function):
                 break
         else:
             return S.NaN
-        from sympy.functions.elementary.exponential import exp_polar
+        from sympy.functions.elementary.exponential import exp, exp_polar
         if isinstance(arg, exp_polar):
             return periodic_argument(arg, oo)
+        elif isinstance(arg, exp):
+            i_ = im(arg.args[0])
+            if i_.is_comparable:
+                i_ %= 2*S.Pi
+                if i_ > S.Pi:
+                    i_ -= 2*S.Pi
+                return i_
+
         if not arg.is_Atom:
             c, arg_ = factor_terms(arg).as_coeff_Mul()
             if arg_.is_Mul:

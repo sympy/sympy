@@ -3,13 +3,14 @@ from itertools import product
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
 from sympy.core import EulerGamma
+from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, atanh, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (atanh, asinh, acosh, acoth, acsch, asech, tanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
@@ -256,7 +257,7 @@ def test_frac():
     raises(ValueError, lambda: limit(frac(x), x, 0, '+-'))
     assert limit(frac(-2*x + 1), x, 0, "+") == 1
     assert limit(frac(-2*x + 1), x, 0, "-") == 0
-    assert limit(frac(x + S.Half), x, 0, "+-") == 1/2
+    assert limit(frac(x + S.Half), x, 0, "+-") == S(1)/2
     assert limit(frac(1/x), x, 0) == AccumBounds(0, 1)
 
 
@@ -420,10 +421,10 @@ def test_issue_4547():
 
 def test_issue_5164():
     assert limit(x**0.5, x, oo) == oo**0.5 is oo
-    assert limit(x**0.5, x, 16) == S(16)**0.5
+    assert limit(x**0.5, x, 16) == 4 # Should this be a float?
     assert limit(x**0.5, x, 0) == 0
     assert limit(x**(-0.5), x, oo) == 0
-    assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
+    assert limit(x**(-0.5), x, 4) == S.Half # Should this be a float?
 
 
 def test_issue_5383():
@@ -1309,3 +1310,86 @@ def test_issue_24276():
     assert fx.simplify().limit(x, oo) == 2
     assert fx.rewrite(sin).limit(x, oo) == 2
     assert fx.rewrite(sin).simplify().limit(x, oo) == 2
+
+def test_issue_25230():
+    a = Symbol('a', real = True)
+    b = Symbol('b', positive = True)
+    c = Symbol('c', negative = True)
+    n = Symbol('n', integer = True)
+    raises(NotImplementedError, lambda: limit(Mod(x, a), x, a))
+    assert limit(Mod(x, b), x, n*b, '+') == 0
+    assert limit(Mod(x, b), x, n*b, '-') == b
+    assert limit(Mod(x, c), x, n*c, '+') == c
+    assert limit(Mod(x, c), x, n*c, '-') == 0
+
+
+def test_issue_25582():
+
+    assert limit(asin(exp(x)), x, oo, '-') == -oo*I
+    assert limit(acos(exp(x)), x, oo, '-') == oo*I
+    assert limit(atan(exp(x)), x, oo, '-') == pi/2
+    assert limit(acot(exp(x)), x, oo, '-') == 0
+    assert limit(asec(exp(x)), x, oo, '-') == pi/2
+    assert limit(acsc(exp(x)), x, oo, '-') == 0
+
+
+def test_issue_25847():
+    #atan
+    assert limit(atan(sin(x)/x), x, 0, '+-') == pi/4
+    assert limit(atan(exp(1/x)), x, 0, '+') == pi/2
+    assert limit(atan(exp(1/x)), x, 0, '-') == 0
+
+    #asin
+    assert limit(asin(sin(x)/x), x, 0, '+-') == pi/2
+    assert limit(asin(exp(1/x)), x, 0, '+') == -oo*I
+    assert limit(asin(exp(1/x)), x, 0, '-') == 0
+
+    #acos
+    assert limit(acos(sin(x)/x), x, 0, '+-') == 0
+    assert limit(acos(exp(1/x)), x, 0, '+') == oo*I
+    assert limit(acos(exp(1/x)), x, 0, '-') == pi/2
+
+    #acot
+    assert limit(acot(sin(x)/x), x, 0, '+-') == pi/4
+    assert limit(acot(exp(1/x)), x, 0, '+') == 0
+    assert limit(acot(exp(1/x)), x, 0, '-') == pi/2
+
+    #asec
+    assert limit(asec(sin(x)/x), x, 0, '+-') == 0
+    assert limit(asec(exp(1/x)), x, 0, '+') == pi/2
+    assert limit(asec(exp(1/x)), x, 0, '-') == oo*I
+
+    #acsc
+    assert limit(acsc(sin(x)/x), x, 0, '+-') == pi/2
+    assert limit(acsc(exp(1/x)), x, 0, '+') == 0
+    assert limit(acsc(exp(1/x)), x, 0, '-') == -oo*I
+
+    #atanh
+    assert limit(atanh(sin(x)/x), x, 0, '+-') == oo
+    assert limit(atanh(exp(1/x)), x, 0, '+') == -I*pi/2
+    assert limit(atanh(exp(1/x)), x, 0, '-') == 0
+
+    #asinh
+    assert limit(asinh(sin(x)/x), x, 0, '+-') == log(1 + sqrt(2))
+    assert limit(asinh(exp(1/x)), x, 0, '+') == oo
+    assert limit(asinh(exp(1/x)), x, 0, '-') == 0
+
+    #acosh
+    assert limit(acosh(sin(x)/x), x, 0, '+-') == 0
+    assert limit(acosh(exp(1/x)), x, 0, '+') == oo
+    assert limit(acosh(exp(1/x)), x, 0, '-') == I*pi/2
+
+    #acoth
+    assert limit(acoth(sin(x)/x), x, 0, '+-') == oo
+    assert limit(acoth(exp(1/x)), x, 0, '+') == 0
+    assert limit(acoth(exp(1/x)), x, 0, '-') == -I*pi/2
+
+    #asech
+    assert limit(asech(sin(x)/x), x, 0, '+-') == 0
+    assert limit(asech(exp(1/x)), x, 0, '+') == I*pi/2
+    assert limit(asech(exp(1/x)), x, 0, '-') == oo
+
+    #acsch
+    assert limit(acsch(sin(x)/x), x, 0, '+-') == log(1 + sqrt(2))
+    assert limit(acsch(exp(1/x)), x, 0, '+') == 0
+    assert limit(acsch(exp(1/x)), x, 0, '-') == oo

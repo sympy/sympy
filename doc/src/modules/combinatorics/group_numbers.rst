@@ -1,7 +1,7 @@
 .. _combinatorics-group_numbers:
 
-Nilpotent, Abelian and Cyclic Numbers
-=====================================
+Number of groups
+================
 
 .. module:: sympy.combinatorics.group_numbers
 
@@ -10,3 +10,5 @@ Nilpotent, Abelian and Cyclic Numbers
 .. autofunction:: is_abelian_number
 
 .. autofunction:: is_cyclic_number
+
+.. autofunction:: groups_count

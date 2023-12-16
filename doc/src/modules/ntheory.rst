@@ -41,8 +41,6 @@ Ntheory Functions Reference
 
 .. autofunction:: smoothness_p
 
-.. autofunction:: trailing
-
 .. autofunction:: multiplicity
 
 .. autofunction:: perfect_power
@@ -99,8 +97,6 @@ Ntheory Functions Reference
 
 .. autofunction:: is_perfect
 
-.. autofunction:: is_mersenne_prime
-
 .. autofunction:: abundance
 
 .. autofunction:: is_abundant
@@ -137,7 +133,11 @@ Ntheory Functions Reference
 
 .. module:: sympy.ntheory.primetest
 
+.. autofunction:: is_fermat_pseudoprime
+
 .. autofunction:: is_euler_pseudoprime
+
+.. autofunction:: is_euler_jacobi_pseudoprime
 
 .. autofunction:: is_square
 
@@ -148,6 +148,10 @@ Ntheory Functions Reference
 .. autofunction:: is_strong_lucas_prp
 
 .. autofunction:: is_extra_strong_lucas_prp
+
+.. autofunction:: proth_test
+
+.. autofunction:: is_mersenne_prime
 
 .. autofunction:: isprime
 
@@ -176,6 +180,8 @@ Ntheory Functions Reference
 .. autofunction:: legendre_symbol
 
 .. autofunction:: jacobi_symbol
+
+.. autofunction:: kronecker_symbol
 
 .. autofunction:: discrete_log
 

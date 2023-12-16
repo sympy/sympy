@@ -39,7 +39,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand, expand_mul, expand_power_base,
                                  expand_trig, Function)
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, Rational, pi
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild, Symbol
@@ -1299,7 +1300,7 @@ def _int0oo(g1, g2, x):
     >>> g1 = meijerg([], [], [-S(1)/2, 0], [], s**2*t/4)
     >>> g2 = meijerg([], [], [m/2], [-m/2], t/4)
     >>> _int0oo(g1, g2, t)
-    4*meijerg(((1/2, 0), ()), ((m/2,), (-m/2,)), s**(-2))/s**2
+    4*meijerg(((0, 1/2), ()), ((m/2,), (-m/2,)), s**(-2))/s**2
     """
     # See: [L, section 5.6.2, equation (1)]
     eta, _ = _get_coeff_exp(g1.argument, x)

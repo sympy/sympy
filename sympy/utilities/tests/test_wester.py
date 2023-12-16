@@ -14,7 +14,8 @@ from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, Lambda, Subs,
     diff, expand, expand_func)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (AlgebraicNumber, E, I, Rational, igcd,
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import (AlgebraicNumber, E, I, Rational,
     nan, oo, pi, zoo)
 from sympy.core.relational import Eq, Lt
 from sympy.core.singleton import S
@@ -92,7 +93,7 @@ from sympy.concrete.products import Product
 from sympy.integrals import integrate
 from sympy.integrals.transforms import laplace_transform,\
     inverse_laplace_transform, LaplaceTransform, fourier_transform,\
-    mellin_transform
+    mellin_transform, laplace_correspondence, laplace_initial_conds
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
@@ -949,11 +950,12 @@ def test_M8():
 @XFAIL
 def test_M9():
     # x = symbols('x')
+    # solutions are 1/2*(1 +/- sqrt(9 + 8*I*pi*n)) for integer n
     raise NotImplementedError("solveset(exp(2-x**2)-exp(-x),x) has complex solutions.")
 
 
 def test_M10():
-    # TODO: Replace solve with solveset, as of now test fails for solveset
+    # TODO: Replace solve with solveset when it gives Lambert solution
     assert solve(exp(x) - x, x) == [-LambertW(-1)]
 
 
@@ -2941,20 +2943,29 @@ def test_Y5_Y6():
 # Company, 1983, p. 211.  First, take the Laplace transform of the ODE
 # => s^2 Y(s) - s + Y(s) = 4/s [e^(-s) - e^(-2 s)]
 # where Y(s) is the Laplace transform of y(t)
-    t = symbols('t', positive=True)
+    t = symbols('t', real=True)
     s = symbols('s')
     y = Function('y')
-    F, _, _ = laplace_transform(diff(y(t), t, 2) + y(t)
+    Y = Function('Y')
+    F = laplace_correspondence(laplace_transform(diff(y(t), t, 2) + y(t)
                                 - 4*(Heaviside(t - 1) - Heaviside(t - 2)),
-                                t, s, simplify=True)
-    D = (F - (s**2*LaplaceTransform(y(t), t, s) - s*y(0) +
-            LaplaceTransform(y(t), t, s) - Subs(Derivative(y(t), t), t, 0) +
-            4*(1 - exp(s))*exp(-2*s)/s)).simplify(doit=False)
+                                t, s, noconds=True), {y: Y})
+    D = (
+        -F + s**2*Y(s) - s*y(0) + Y(s) - Subs(Derivative(y(t), t), t, 0) -
+        4*exp(-s)/s + 4*exp(-2*s)/s)
     assert D == 0
-# TODO implement second part of test case
 # Now, solve for Y(s) and then take the inverse Laplace transform
 #   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]
 #   => y(t) = cos t + 4 {[1 - cos(t - 1)] H(t - 1) - [1 - cos(t - 2)] H(t - 2)}
+    Yf = solve(F, Y(s))[0]
+    Yf = laplace_initial_conds(Yf, t, {y: [1, 0]})
+    assert Yf == (s**2*exp(2*s) + 4*exp(s) - 4)*exp(-2*s)/(s*(s**2 + 1))
+    yf = inverse_laplace_transform(Yf, s, t)
+    yf = yf.collect(Heaviside(t-1)).collect(Heaviside(t-2))
+    assert yf == (
+        (4 - 4*cos(t - 1))*Heaviside(t - 1) +
+        (4*cos(t - 2) - 4)*Heaviside(t - 2) +
+        cos(t)*Heaviside(t))
 
 
 @XFAIL

@@ -12,6 +12,7 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.utilities.misc import as_int
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -112,15 +113,10 @@ class Quaternion(Expr):
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
-        else:
-            obj = Expr.__new__(cls, a, b, c, d)
-            obj._a = a
-            obj._b = b
-            obj._c = c
-            obj._d = d
-            obj._real_field = real_field
-            obj.set_norm(norm)
-            return obj
+        obj = super().__new__(cls, a, b, c, d)
+        obj._real_field = real_field
+        obj.set_norm(norm)
+        return obj
 
     def set_norm(self, norm):
         """Sets norm of an already instantiated quaternion.
@@ -160,19 +156,19 @@ class Quaternion(Expr):
 
     @property
     def a(self):
-        return self._a
+        return self.args[0]
 
     @property
     def b(self):
-        return self._b
+        return self.args[1]
 
     @property
     def c(self):
-        return self._c
+        return self.args[2]
 
     @property
     def d(self):
-        return self._d
+        return self.args[3]
 
     @property
     def real_field(self):
@@ -387,9 +383,9 @@ class Quaternion(Expr):
             The Euler angles (in radians).
         seq : string of length 3
             Represents the sequence of rotations.
-            For intrinsic rotations, seq must be all lowercase and its elements
+            For extrinsic rotations, seq must be all lowercase and its elements
             must be from the set ``{'x', 'y', 'z'}``
-            For extrinsic rotations, seq must be all uppercase and its elements
+            For intrinsic rotations, seq must be all uppercase and its elements
             must be from the set ``{'X', 'Y', 'Z'}``
 
         Returns
@@ -452,9 +448,9 @@ class Quaternion(Expr):
 
         seq : string of length 3
             Represents the sequence of rotations.
-            For intrinsic rotations, seq must be all lowercase and its elements
+            For extrinsic rotations, seq must be all lowercase and its elements
             must be from the set ``{'x', 'y', 'z'}``
-            For extrinsic rotations, seq must be all uppercase and its elements
+            For intrinsic rotations, seq must be all uppercase and its elements
             must be from the set ``{'X', 'Y', 'Z'}``
 
         angle_addition : bool
@@ -687,7 +683,7 @@ class Quaternion(Expr):
         return self.pow(p)
 
     def __neg__(self):
-        return Quaternion(-self._a, -self._b, -self._c, -self.d)
+        return Quaternion(-self.a, -self.b, -self.c, -self.d)
 
     def __truediv__(self, other):
         return self * sympify(other)**-1
@@ -884,7 +880,7 @@ class Quaternion(Expr):
             q = self
             # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
             # arise when from_axis_angle is used).
-            self._norm = sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+            return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
 
         return self._norm
 
@@ -925,24 +921,23 @@ class Quaternion(Expr):
         668 + (-224)*i + (-336)*j + (-448)*k
 
         """
-        p = sympify(p)
-        q = self
-        if p == -1:
-            return q.inverse()
-        res = 1
-
-        if not p.is_Integer:
+        try:
+            q, p = self, as_int(p)
+        except ValueError:
             return NotImplemented
 
         if p < 0:
             q, p = q.inverse(), -p
 
-        while p > 0:
-            if p % 2 == 1:
-                res = q * res
+        if p == 1:
+            return q
 
-            p = p//2
-            q = q * q
+        res = Quaternion(1, 0, 0, 0)
+        while p > 0:
+            if p & 1:
+                res *= q
+            q *= q
+            p >>= 1
 
         return res
 
@@ -1006,10 +1001,7 @@ class Quaternion(Expr):
     def _eval_subs(self, *args):
         elements = [i.subs(*args) for i in self.args]
         norm = self._norm
-        try:
-            norm = norm.subs(*args)
-        except AttributeError:
-            pass
+        norm = norm.subs(*args)
         _check_norm(elements, norm)
         return Quaternion(*elements, norm=norm)
 

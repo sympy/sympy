@@ -5,13 +5,15 @@ from sympy.testing.pytest import XFAIL, raises
 from sympy.assumptions.ask import Q
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
+from sympy.core.expr import Expr, unchanged
 from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import sign, Abs
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -798,10 +800,10 @@ def test_simplify_relational():
     assert Lt(x, 2).simplify() == Lt(x, 2)
     assert Lt(-x, 2).simplify() == Gt(x, -2)
 
-    # Test particulat branches of _eval_simplify
+    # Test particular branches of _eval_simplify
     m = exp(1) - exp_polar(1)
     assert simplify(m*x > 1) is S.false
-    # These two tests the same branch
+    # These two test the same branch
     assert simplify(m*x + 2*m*y > 1) is S.false
     assert simplify(m*x + y > 1 + y) is S.false
 
@@ -1026,18 +1028,16 @@ def test_rel_args():
                 raises(TypeError, lambda: Relational(b, v, op))
 
 
-def test_Equality_rewrite_as_Add():
-    eq = Eq(x + y, y - x)
-    assert eq.rewrite(Add) == 2*x
-    assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
-    assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
-    for e in (True, False, None):
-        assert Eq(x, 0, evaluate=e).rewrite(Add) == x
-        assert Eq(0, x, evaluate=e).rewrite(Add) == x
+def test_nothing_happens_to_Eq_condition_during_simplify():
+    # issue 25701
+    r = symbols('r', real=True)
+    assert Eq(2*sign(r + 3)/(5*Abs(r + 3)**Rational(3, 5)), 0
+        ).simplify() == Eq(Piecewise(
+        (0, Eq(r, -3)), ((r + 3)/(5*Abs((r + 3)**Rational(8, 5)))*2, True)), 0)
 
 
 def test_issue_15847():
-    a = Ne(x*(x+y), x**2 + x*y)
+    a = Ne(x*(x + y), x**2 + x*y)
     assert simplify(a) == False
 
 
@@ -1251,3 +1251,21 @@ def test_weak_strict():
     eq = Le(x, 1)
     assert eq.strict == Lt(x, 1)
     assert eq.weak == eq
+
+
+def test_issue_23731():
+    i = symbols('i', integer=True)
+    assert unchanged(Eq, i, 1.0)
+    assert unchanged(Eq, i/2, 0.5)
+    ni = symbols('ni', integer=False)
+    assert Eq(ni, 1) == False
+    assert unchanged(Eq, ni, .1)
+    assert Eq(ni, 1.0) == False
+    nr = symbols('nr', rational=False)
+    assert Eq(nr, .1) == False
+
+
+def test_rewrite_Add():
+    from sympy.testing.pytest import warns_deprecated_sympy
+    with warns_deprecated_sympy():
+        assert Eq(x, y).rewrite(Add) == x - y

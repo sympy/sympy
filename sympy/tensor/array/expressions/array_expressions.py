@@ -19,7 +19,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import (Dummy, Symbol)
-from sympy.matrices.common import MatrixCommon
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.diagonal import diagonalize_vector
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix
@@ -1554,7 +1554,7 @@ class Reshape(_CodegenArrayAbstract):
             expr = self.expr.doit(*args, **kwargs)
         else:
             expr = self.expr
-        if isinstance(expr, (MatrixCommon, NDimArray)):
+        if isinstance(expr, (MatrixBase, NDimArray)):
             return expr.reshape(*self.shape)
         return Reshape(expr, self.shape)
 
@@ -1562,7 +1562,7 @@ class Reshape(_CodegenArrayAbstract):
         ee = self.expr
         if hasattr(ee, "as_explicit"):
             ee = ee.as_explicit()
-        if isinstance(ee, MatrixCommon):
+        if isinstance(ee, MatrixBase):
             from sympy import Array
             ee = Array(ee)
         elif isinstance(ee, MatrixExpr):

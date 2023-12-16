@@ -76,6 +76,179 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
+(deprecated-matrix-mixins)=
+### Deprecated matrix mixin classes
+
+The matrix mixin classes are deprecated. Previously the ``Matrix`` class (aka
+``MutableDenseMatrix``) was created through an inheritance hierarchy that
+looked like:
+```py
+class MatrixRequired:
+class MatrixShaping(MatrixRequired):
+class MatrixSpecial(MatrixRequired):
+class MatrixProperties(MatrixRequired):
+class MatrixOperations(MatrixRequired):
+class MatrixArithmetic(MatrixRequired):
+class MatrixCommon(
+    MatrixArithmetic,
+    MatrixOperations,
+    MatrixProperties,
+    MatrixSpecial,
+    MatrixShaping):
+class MatrixDeterminant(MatrixCommon):
+class MatrixReductions(MatrixDeterminant):
+class MatrixSubspaces(MatrixReductions):
+class MatrixEigen(MatrixSubspaces)
+class MatrixCalculus(MatrixCommon):
+class MatrixDeprecated(MatrixCommon):
+class MatrixBase(MatrixDeprecated,
+   MatrixCalculus,
+   MatrixEigen,
+   MatrixCommon,
+   Printable):
+class RepMatrix(MatrixBase):
+class DenseMatrix(RepMatrix):
+class MutableRepMatrix(RepMatrix):
+class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
+```
+As of SymPy 1.13 this has been simplified and all classes above
+``MatrixBase``are merged together so the hierarchy looks like:
+```py
+class MatrixBase(Printable):
+class RepMatrix(MatrixBase):
+class DenseMatrix(RepMatrix):
+class MutableRepMatrix(RepMatrix):
+class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
+```
+The matrix mixin classes like ``MatrixRequired`` etc are still available
+because downstream code might be subclassing these classes but these are all
+deprecated and will be removed in a future version of SymPy. Subclassing these
+classes is deprecated and anycode that does that should be changed to not
+subclass them.
+
+It is also deprecated to use these classes with ``isinstance`` like
+``isinstance(M, MatrixCommon)``. Any code doing this should be changed to use
+``isinstance(M, Matrixbase)`` instead which will also work with previous SymPy
+versions.
+
+More generally importing anything from the ``sympy.matrices.common`` or
+``sympy.matrices.matrices`` modules in which these classes are defined is
+deprecated. These modules will be removed in a future release of SymPy.
+
+The reason for this change is that the convoluted inheritance hierarchy made it
+difficult to improve ``Matrix`` for the majority of users while still providing
+all of these classes that could be subclassed. Since these mixin classes are no
+longer used as part of ``Matrix`` they no longer serve any function within
+SymPy and the removal of this now unused code will simplify the codebase.
+
+(deprecated-sympify-string-fallback)=
+### The string fallback in `sympify()`
+
+The `sympify` function would previously convert an unrecognized object to a
+string and retry sympification. This was deprecated in SymPy 1.6 and was
+removed in SymPy 1.13.
+
+The behavior of {func}`~.sympify` is that `sympify(expr)` tries various methods
+to try to convert `expr` into a SymPy objects. Previously if all these methods
+would fail, it would take `str(expr)` and try to parse it using
+{func}`~.parse_expr`. This string fallback feature was deprecated in SymPy 1.6
+and was removed in SymPy 1.13.
+
+This behaviour was problematic for a few reasons:
+
+- It could affect performance in major ways. See for instance issues
+  [#18056](https://github.com/sympy/sympy/issues/18056) and
+  [#15416](https://github.com/sympy/sympy/issues/15416) where it caused up to
+  100x slowdowns. The issue is that SymPy functions automatically call
+  `sympify` on their arguments. Whenever a function is passed something that
+  `sympify` doesn't know how to convert to a SymPy object, for instance, a
+  Python function type, it passes the string to {func}`~.parse_expr`. This is
+  significantly slower than the direct conversions that happen by default.
+  This occurs specifically whenever `sympify()` is used in library code
+  instead of `_sympify()` (or equivalently `sympify(strict=True)`), but
+  presently this is done a lot. Using `strict=True` will at some point be the
+  default for all library code, but this is a [harder change to
+  make](https://github.com/sympy/sympy/issues/11003).
+
+- It can cause security issues, since strings are evaled, and objects can
+  return whatever string they want in their `__repr__`. See also
+  https://github.com/sympy/sympy/pull/12524.
+
+- It really wasn't very useful to begin with. Just because an object's string
+  form can be parsed into a SymPy expression doesn't mean it should be parsed
+  that way. This is usually correct for custom numeric types, but an object's
+  repr could be anything. For instance, if the string form of an object looks
+  like a valid Python identifier, it would parse as a `Symbol`.
+
+There are plenty of ways to make custom objects work inside of
+{func}`~.sympify`.
+
+- Firstly, if an object is intended to work alongside other SymPy expressions,
+  it should subclass from {class}`~.Basic` (or {class}`~.Expr`). If it does,
+  {func}`~.sympify` will just return it unchanged because it will already be a
+  valid SymPy object.
+
+- For objects that you control, you can add the `_sympy_` method. The [sympify
+  docstring](sympy.core.sympify.sympify) has an example of this.
+
+- For objects that you don't control, you can add a custom converter to the
+  `sympy.core.sympify.converter` dictionary. The {func}`~.sympify` docstring
+  also has an example of this.
+
+(dmp-rep)=
+### Deprecate the DMP.rep attribute.
+
+The internal type of ``Poly`` is the ``DMP`` class which previously could be
+used to access the coefficients of a polynomial as a list like:
+```pycon
+>>> from sympy import symbols, Poly
+>>> x = symbols('x')
+>>> p = Poly(x**2 + 2*x + 3)
+>>> p
+Poly(x**2 + 2*x + 3, x, domain='ZZ')
+>>> p.rep  # doctest: +SKIP
+DMP([1, 2, 3], ZZ)
+>>> p.rep.rep  # doctest: +SKIP
+[1, 2, 3]
+```
+
+As of SymPy 1.13 the ``DMP`` type may be implemented by one of two subclasses:
+
+- ``DMP_Python`` which is like the previous ``DMP`` type and has a list as its
+  internal representation.
+- ``DUP_Flint`` which wraps a Flint polynomial from python-flint.
+
+The ``DUP_Flint`` type does not have an attribute that is analogous to the list
+that ``DMP_Python`` has. Accessing ``.rep`` will still generate a list but now
+gives a deprecation warning.
+
+Instead of ``.rep`` use the ``DMP.to_list()`` method which returns an
+equivalent list:
+```pycon
+>>> p.rep.to_list()
+[1, 2, 3]
+```
+
+The ``.to_list()`` method is also available in previous versions of SymPy and
+its behaviour is unchanged.
+
+(pkgdata)=
+### Deprecate the pkgdata module
+
+The ``sympy.utilities.pkdata`` module is deprecated and will be removed. It is
+no longer used anywhere in SymPy and is unsuitable for use by any downstream
+code. Use the stdlib ``importlib.resources`` module instead.
+
+(eq-rewrite-Add)=
+### Deprecate Eq.rewrite(Add)
+The ability to rewrite ``eq = Eq(x, y)`` like ``eq.rewrite(Add)`` to give ``x - y``
+has been deprecated in favor of writing ``eq.lhs - eq.rhs``. A replacement
+property/method was not deemed necessary given the clarity of the explicit
+use of ``lhs`` and ``rhs``, and the inclusion of this functionality in the
+rewrite apparatus leads to failures when a node expecting a Boolean is re-
+written as an Expr.
+
+
 (deprecated-markers-annotations-fill-rectangles)=
 ### Deprecate markers, annotations, fill, rectangles of the Plot class
 The properties ``markers, annotations, fill, rectangles`` (containing
@@ -156,6 +329,106 @@ Now they should be imported from ``sympy.physics.mechanics``:
 >>> from sympy.physics.mechanics import inertia, inertia_of_point_mass
 >>> from sympy.physics.mechanics.loads import gravity
 ```
+
+(modularinteger-compare)=
+### Ordered comparisons like ``a < b`` with modular integers
+
+SymPy's ``GF`` domains represent modular integers. Previously it was possible
+to compare these with ordered comparisons like ``a < b``:
+```py
+>>> from sympy import GF
+>>> F5 = GF(5)
+>>> F5(2) < F5(3) # doctest: +SKIP
+True
+```
+This will now fail with ``TypeError`` when the ground types are set to
+``flint``. When the ground types are not ``flint`` these comparisons are now
+deprecated: they will still work but will give a deprecation warning when used.
+
+Ordered comparisons of modular integer or finite fields do not make sense
+because these are not ordered fields:
+```
+>>> e = F5(4)
+>>> e + 1 > e # doctest: +SKIP
+False
+```
+
+(modularinteger-to-int)=
+### The ``ModularInteger.to_int()`` method
+
+SymPy's ``GF`` domains are for modular integers e.g. ``GF(n)`` is for the
+integers modulo ``n`` and can be used like:
+```py
+>>> from sympy import GF
+>>> K = GF(5)
+>>> a = K(7)
+>>> a
+2 mod 5
+```
+
+The elements of a modular integer domain have a ``to_int()`` method that is
+deprecated since SymPy 1.13:
+```py
+>>> # this is deprecated:
+>>> a.to_int()  # doctest: +SKIP
+2
+```
+
+Instead the preferred way to achieve equivalent behavior is to use the method
+on the domain (added in SymPy 1.13) or alternatively calling ``int`` might be
+better:
+```py
+>>> K.to_int(a)
+2
+>>> int(a)
+2
+```
+
+These two ways of converting to an ``int`` are not equivalent. The domain
+``GF(p)`` can be defined with ``symmetric=True`` or ``symmetric=False``. This
+difference affects the behavior of the ``to_int`` method:
+```py
+>>> KS = GF(5, symmetric=True)
+>>> KU = GF(5, symmetric=False)
+>>> [KS.to_int(KS(n)) for n in range(10)]
+[0, 1, 2, -2, -1, 0, 1, 2, -2, -1]
+>>> [KU.to_int(KU(n)) for n in range(10)]
+[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+>>> [int(KS(n)) for n in range(10)]
+[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+>>> [int(KU(n)) for n in range(10)]
+[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+```
+
+So if ``symmetric=True`` (which is the default) then the ``to_int`` method will
+sometimes return negative integers. If ``symmetric=False`` or if the ``int(a)``
+method is used the returned result is always a nonnegative integer. Note also
+that the behaviour of ``int(a)`` was changed in SymPy 1.13: in previous
+versions it was equivalent to ``a.to_int()``. To write code that behaves the
+same way in all SymPy versions you can:
+
+1. Use ``symmetric=False`` and use ``int(a)``.
+2. Define a function like
+    ```py
+    def to_int(K, a):
+        if hasattr(K, 'to_int'):
+            return K.to_int(a)
+        else:
+            return a.to_int()
+    ```
+
+The reason for this change is that it makes it possible to use python-flint's
+``nmod`` as an alternative (much faster) implementation for the elements of
+``GF(p)``. It is not possible to add a ``to_int`` method to python-flint's
+``nmod`` type or to capture the equivalent of ``symmetric=True/False`` by
+storing data in the ``nmod`` instance. Deprecating and removing the ``to_int``
+method and changing the behavior of the ``int`` method means that the element
+instances do not have any behavior that depends on whether the domain is
+considered to be "symmetric" or not. Instead the notion of "symmetric" is now
+purely a property of the domain object itself rather than of the elements and
+so the ``to_int`` method that depends on this must be a domain method rather
+than an element method.
+
 
 ## Version 1.12
 
@@ -637,14 +910,15 @@ Plotly, Mayavi, K3D only require lists of coordinates), this has been moved
 inside the `MatplotlibBackend` class.
 
 Note that previously, the method
-{meth}`~sympy.plotting.plot.Parametric2DLineSeries.get_points` always returned
+{meth}`~sympy.plotting.series.LineOver1DRangeSeries.get_points` always returned
 uniformly sampled points, which meant that some functions were not plotted
 correctly when using `get_points()` to plot with Matplotlib.
 
 To avoid this problem, the method `get_segments()` could be used, which used
 adaptive sampling and which could be used with Matplotlib's `LineCollection`.
 However, this has been changed, and now `get_points()` can also use adaptive
-sampling. The {meth}`~.get_data()` method can also be used.
+sampling. The {meth}`~sympy.plotting.series.Line2DBaseSeries.get_data()` method
+can also be used.
 
 
 (deprecated-physics-mdft)=
@@ -1052,59 +1326,6 @@ integral as an {class}`~.Expr` object, call the {meth}`.Poly.as_expr` method
 first.
 
 See also {ref}`deprecated-poly-nonpoly-binary-operations` above.
-
-(deprecated-sympify-string-fallback)=
-### The string fallback in `sympify()`
-
-The current behavior of {func}`~.sympify` is that `sympify(expr)` tries
-various methods to try to convert `expr` into a SymPy objects. If all these
-methods fail, it takes `str(expr)` and tries to parse it using
-{func}`~.parse_expr`. This string fallback feature is deprecated. It is
-problematic for a few reasons:
-
-- It can affect performance in major ways. See for instance issues
-  [#18056](https://github.com/sympy/sympy/issues/18056) and
-  [#15416](https://github.com/sympy/sympy/issues/15416) where it caused up to
-  100x slowdowns. The issue is that SymPy functions automatically call
-  `sympify` on their arguments. Whenever a function is passed something that
-  `sympify` doesn't know how to convert to a SymPy object, for instance, a
-  Python function type, it passes the string to {func}`~.parse_expr`. This is
-  significantly slower than the direct conversions that happen by default.
-  This occurs specifically whenever `sympify()` is used in library code
-  instead of `_sympify()` (or equivalently `sympify(strict=True)`), but
-  presently this is done a lot. Using `strict=True` will at some point be the
-  default for all library code, but this is a [harder change to
-  make](https://github.com/sympy/sympy/issues/11003).
-
-- It can cause security issues, since strings are evaled, and objects can
-  return whatever string they want in their `__repr__`. See also
-  https://github.com/sympy/sympy/pull/12524.
-
-- It really isn't very useful to begin with. Just because an object's string
-  form can be parsed into a SymPy expression doesn't mean it should be parsed
-  that way. This is usually correct for custom numeric types, but an object's
-  repr could be anything. For instance, if the string form of an object looks
-  like a valid Python identifier, it will parse as a `Symbol`.
-
-There are plenty of ways to make custom objects work inside of
-{func}`~.sympify`.
-
-- Firstly, if an object is intended to work alongside other SymPy expressions,
-  it should subclass from {class}`~.Basic` (or {class}`~.Expr`). If it does,
-  {func}`~.sympify` will just return it unchanged because it will already be a
-  valid SymPy object.
-
-- For objects that you control, you can add the `_sympy_` method. The [sympify
-  docstring](sympy.core.sympify.sympify) has an example of this.
-
-- For objects that you don't control, you can add a custom converter to the
-  `sympy.core.sympify.converter` dictionary. The {func}`~.sympify` docstring
-  also has an example of this.
-
-To silence this deprecation warning in all cases, you can pass `strict=True`
-to `sympify()`. However, note that this will also disable some other
-conversions such as conversion of strings (for converting strings to SymPy
-types, you can explicitly use {func}`~.parse_expr`).
 
 (deprecated-indefinite-integral-eq)=
 ### Creating an indefinite `Integral` with an `Eq` argument

@@ -147,7 +147,7 @@ class AesaraPrinter(Printer):
         if key in self.cache:
             return self.cache[key]
 
-        value = aet.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
+        value = aet.tensor(name=name, dtype=dtype, shape=broadcastable)
         self.cache[key] = value
         return value
 
@@ -278,7 +278,8 @@ class AesaraPrinter(Printer):
         See the corresponding `documentation page`__ for more information on
         broadcasting in Aesara.
 
-        .. __: https://aesara.readthedocs.io/en/latest/tutorial/broadcasting.html
+
+        .. __: https://aesara.readthedocs.io/en/latest/reference/tensor/shapes.html#broadcasting
 
         Parameters
         ==========

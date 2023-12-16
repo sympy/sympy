@@ -1,5 +1,5 @@
 from typing import Type
-from sympy import Rational
+from sympy import Interval, numer, Rational, solveset
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -8,22 +8,26 @@ from sympy.core.expr import Expr
 from sympy.core.function import expand
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
+from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
+from sympy.functions import Abs
 from sympy.core.sympify import sympify, _sympify
-from sympy.matrices import ImmutableMatrix, eye
+from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.series import limit
+from sympy.utilities.misc import filldedent
 
 from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
-    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'gbt', 'bilinear', 'forward_diff', 'backward_diff']
-
+    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'StateSpace', 'gbt', 'bilinear', 'forward_diff', 'backward_diff',
+    'phase_margin', 'gain_margin']
 
 def _roots(poly, var):
     """ like roots, but works on higher-order polynomials. """
@@ -199,6 +203,161 @@ def backward_diff(tf, sample_per):
     """
     return gbt(tf, sample_per, S.One)
 
+def phase_margin(system):
+    r"""
+    Returns the phase margin of a continuous time system.
+    Only applicable to Transfer Functions which can generate valid bode plots.
+
+    Raises
+    ======
+
+    NotImplementedError
+        When time delay terms are present in the system.
+
+    ValueError
+        When a SISO LTI system is not passed.
+
+        When more than one free symbol is present in the system.
+        The only variable in the transfer function should be
+        the variable of the Laplace transform.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.control import TransferFunction, phase_margin
+    >>> from sympy.abc import s
+
+    >>> tf = TransferFunction(1, s**3 + 2*s**2 + s, s)
+    >>> phase_margin(tf)
+    180*(-pi + atan((-1 + (-2*18**(1/3)/(9 + sqrt(93))**(1/3) + 12**(1/3)*(9 + sqrt(93))**(1/3))**2/36)/(-12**(1/3)*(9 + sqrt(93))**(1/3)/3 + 2*18**(1/3)/(3*(9 + sqrt(93))**(1/3)))))/pi + 180
+    >>> phase_margin(tf).n()
+    21.3863897518751
+
+    >>> tf1 = TransferFunction(s**3, s**2 + 5*s, s)
+    >>> phase_margin(tf1)
+    -180 + 180*(atan(sqrt(2)*(-51/10 - sqrt(101)/10)*sqrt(1 + sqrt(101))/(2*(sqrt(101)/2 + 51/2))) + pi)/pi
+    >>> phase_margin(tf1).n()
+    -25.1783920627277
+
+    >>> tf2 = TransferFunction(1, s + 1, s)
+    >>> phase_margin(tf2)
+    -180
+
+    See Also
+    ========
+
+    gain_margin
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Phase_margin
+
+    """
+    from sympy.functions import arg
+
+    if not isinstance(system, SISOLinearTimeInvariant):
+        raise ValueError("Margins are only applicable for SISO LTI systems.")
+
+    _w = Dummy("w", real=True)
+    repl = I*_w
+    expr = system.to_expr()
+    len_free_symbols = len(expr.free_symbols)
+    if expr.has(exp):
+        raise NotImplementedError("Margins for systems with Time delay terms are not supported.")
+    elif len_free_symbols > 1:
+        raise ValueError("Extra degree of freedom found. Make sure"
+            " that there are no free symbols in the dynamical system other"
+            " than the variable of Laplace transform.")
+
+    w_expr = expr.subs({system.var: repl})
+
+    mag = 20*log(Abs(w_expr), 10)
+    mag_sol = list(solveset(mag, _w, Interval(0, oo, left_open=True)))
+
+    if (len(mag_sol) == 0):
+      pm = S(-180)
+    else:
+      wcp = mag_sol[0]
+      pm = ((arg(w_expr)*S(180)/pi).subs({_w:wcp}) + S(180)) % 360
+
+    if(pm >= 180):
+        pm = pm - 360
+
+    return pm
+
+def gain_margin(system):
+    r"""
+    Returns the gain margin of a continuous time system.
+    Only applicable to Transfer Functions which can generate valid bode plots.
+
+    Raises
+    ======
+
+    NotImplementedError
+        When time delay terms are present in the system.
+
+    ValueError
+        When a SISO LTI system is not passed.
+
+        When more than one free symbol is present in the system.
+        The only variable in the transfer function should be
+        the variable of the Laplace transform.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.control import TransferFunction, gain_margin
+    >>> from sympy.abc import s
+
+    >>> tf = TransferFunction(1, s**3 + 2*s**2 + s, s)
+    >>> gain_margin(tf)
+    20*log(2)/log(10)
+    >>> gain_margin(tf).n()
+    6.02059991327962
+
+    >>> tf1 = TransferFunction(s**3, s**2 + 5*s, s)
+    >>> gain_margin(tf1)
+    oo
+
+    See Also
+    ========
+
+    phase_margin
+
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Bode_plot
+
+    """
+    if not isinstance(system, SISOLinearTimeInvariant):
+        raise ValueError("Margins are only applicable for SISO LTI systems.")
+
+    _w = Dummy("w", real=True)
+    repl = I*_w
+    expr = system.to_expr()
+    len_free_symbols = len(expr.free_symbols)
+    if expr.has(exp):
+        raise NotImplementedError("Margins for systems with Time delay terms are not supported.")
+    elif len_free_symbols > 1:
+        raise ValueError("Extra degree of freedom found. Make sure"
+            " that there are no free symbols in the dynamical system other"
+            " than the variable of Laplace transform.")
+
+    w_expr = expr.subs({system.var: repl})
+
+    mag = 20*log(Abs(w_expr), 10)
+    phase = w_expr
+    phase_sol = list(solveset(numer(phase.as_real_imag()[1].cancel()),_w, Interval(0, oo, left_open = True)))
+
+    if (len(phase_sol) == 0):
+        gm = oo
+    else:
+        wcg = phase_sol[0]
+        gm = -mag.subs({_w:wcg})
+
+    return gm
 
 class LinearTimeInvariant(Basic, EvalfMixin):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""
@@ -219,8 +378,10 @@ class LinearTimeInvariant(Basic, EvalfMixin):
             raise TypeError(f"All arguments must be of type {cls._clstype}.")
         var_set = {arg.var for arg in args}
         if len(var_set) != 1:
-            raise ValueError("All transfer functions should use the same complex variable"
-                f" of the Laplace transform. {len(var_set)} different values found.")
+            raise ValueError(filldedent(f"""
+                All transfer functions should use the same complex variable
+                of the Laplace transform. {len(var_set)} different
+                values found."""))
 
     @property
     def is_SISO(self):
@@ -459,11 +620,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
             ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
-            obj = super(TransferFunction, cls).__new__(cls, num, den, var)
-            obj._num = num
-            obj._den = den
-            obj._var = var
-            return obj
+            return super(TransferFunction, cls).__new__(cls, num, den, var)
 
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
@@ -537,14 +694,120 @@ class TransferFunction(SISOLinearTimeInvariant):
             if _len_free_symbols == 1:
                 var = list(_free_symbols)[0]
             elif _len_free_symbols == 0:
-                raise ValueError("Positional argument `var` not found in the TransferFunction defined. Specify it manually.")
+                raise ValueError(filldedent("""
+                    Positional argument `var` not found in the
+                    TransferFunction defined. Specify it manually."""))
             else:
-                raise ValueError("Conflicting values found for positional argument `var` ({}). Specify it manually.".format(_free_symbols))
+                raise ValueError(filldedent("""
+                    Conflicting values found for positional argument `var` ({}).
+                    Specify it manually.""".format(_free_symbols)))
 
         _num, _den = expr.as_numer_denom()
         if _den == 0 or _num.has(S.ComplexInfinity):
             raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
         return cls(_num, _den, var)
+
+    @classmethod
+    def from_coeff_lists(cls, num_list, den_list, var):
+        r"""
+        Creates a new ``TransferFunction`` efficiently from a list of coefficients.
+
+        Parameters
+        ==========
+
+        num_list : Sequence
+            Sequence comprising of numerator coefficients.
+        den_list : Sequence
+            Sequence comprising of denominator coefficients.
+        var : Symbol
+            Complex variable of the Laplace transform used by the
+            polynomials of the transfer function.
+
+        Raises
+        ======
+
+        ZeroDivisionError
+            When the constructed denominator is zero.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> num = [1, 0, 2]
+        >>> den = [3, 2, 2, 1]
+        >>> tf = TransferFunction.from_coeff_lists(num, den, s)
+        >>> tf
+        TransferFunction(s**2 + 2, 3*s**3 + 2*s**2 + 2*s + 1, s)
+
+        # Create a Transfer Function with more than one variable
+        >>> tf1 = TransferFunction.from_coeff_lists([p, 1], [2*p, 0, 4], s)
+        >>> tf1
+        TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
+
+        """
+        num_list = num_list[::-1]
+        den_list = den_list[::-1]
+        num_var_powers = [var**i for i in range(len(num_list))]
+        den_var_powers = [var**i for i in range(len(den_list))]
+
+        _num = sum(coeff * var_power for coeff, var_power in zip(num_list, num_var_powers))
+        _den = sum(coeff * var_power for coeff, var_power in zip(den_list, den_var_powers))
+
+        if _den == 0:
+            raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
+
+        return cls(_num, _den, var)
+
+    @classmethod
+    def from_zpk(cls, zeros, poles, gain, var):
+        r"""
+        Creates a new ``TransferFunction`` from given zeros, poles and gain.
+
+        Parameters
+        ==========
+
+        zeros : Sequence
+            Sequence comprising of zeros of transfer function.
+        poles : Sequence
+            Sequence comprising of poles of transfer function.
+        gain : Number, Symbol, Expression
+            A scalar value specifying gain of the model.
+        var : Symbol
+            Complex variable of the Laplace transform used by the
+            polynomials of the transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, k
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> zeros = [1, 2, 3]
+        >>> poles = [6, 5, 4]
+        >>> gain = 7
+        >>> tf = TransferFunction.from_zpk(zeros, poles, gain, s)
+        >>> tf
+        TransferFunction(7*(s - 3)*(s - 2)*(s - 1), (s - 6)*(s - 5)*(s - 4), s)
+
+        # Create a Transfer Function with variable poles and zeros
+        >>> tf1 = TransferFunction.from_zpk([p, k], [p + k, p - k], 2, s)
+        >>> tf1
+        TransferFunction(2*(-k + s)*(-p + s), (-k - p + s)*(k - p + s), s)
+
+        # Complex poles or zeros are acceptable
+        >>> tf2 = TransferFunction.from_zpk([0], [1-1j, 1+1j, 2], -2, s)
+        >>> tf2
+        TransferFunction(-2*s, (s - 2)*(s - 1.0 - 1.0*I)*(s - 1.0 + 1.0*I), s)
+
+        """
+        num_poly = 1
+        den_poly = 1
+        for zero in zeros:
+            num_poly *= var - zero
+        for pole in poles:
+            den_poly *= var - pole
+
+        return cls(gain*num_poly, den_poly, var)
 
     @property
     def num(self):
@@ -564,7 +827,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         (p - 3)*(p + 5)
 
         """
-        return self._num
+        return self.args[0]
 
     @property
     def den(self):
@@ -584,7 +847,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         4
 
         """
-        return self._den
+        return self.args[1]
 
     @property
     def var(self):
@@ -605,7 +868,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         s
 
         """
-        return self._var
+        return self.args[2]
 
     def _eval_subs(self, old, new):
         arg_num = self.num.subs(old, new)
@@ -623,6 +886,64 @@ class TransferFunction(SISOLinearTimeInvariant):
         tf = cancel(Mul(self.num, 1/self.den, evaluate=False), expand=False).as_numer_denom()
         num_, den_ = tf[0], tf[1]
         return TransferFunction(num_, den_, self.var)
+
+    def _eval_rewrite_as_StateSpace(self, *args):
+        """
+        Returns the equivalent space space model of the transfer function model.
+        The state space model will be returned in the controllable cannonical form.
+
+        Unlike the space state to transfer function model conversion, the transfer function
+        to state space model conversion is not unique. There can be multiple state space
+        representations of a given transfer function model.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> tf = TransferFunction(s**2 + 1, s**3 + 2*s + 10, s)
+        >>> tf.rewrite(StateSpace)
+        StateSpace(Matrix([
+        [  0,  1, 0],
+        [  0,  0, 1],
+        [-10, -2, 0]]), Matrix([
+        [0],
+        [0],
+        [1]]), Matrix([[1, 0, 1]]), Matrix([[0]]))
+
+        """
+        if not self.is_proper:
+            raise ValueError("Transfer Function must be proper.")
+
+        num_poly = Poly(self.num, self.var)
+        den_poly = Poly(self.den, self.var)
+        n = den_poly.degree()
+
+        num_coeffs = num_poly.all_coeffs()
+        den_coeffs = den_poly.all_coeffs()
+        diff = n - num_poly.degree()
+        num_coeffs = [0]*diff + num_coeffs
+
+        a = den_coeffs[1:]
+        a_mat = Matrix([[(-1)*coefficient/den_coeffs[0] for coefficient in reversed(a)]])
+        vert = zeros(n-1, 1)
+        mat = eye(n-1)
+        A = vert.row_join(mat)
+        A = A.col_join(a_mat)
+
+        B = zeros(n, 1)
+        B[n-1] = 1
+
+        i = n
+        C = []
+        while(i > 0):
+            C.append(num_coeffs[i] - den_coeffs[i]*num_coeffs[0])
+            i -= 1
+        C = Matrix([C])
+
+        D = Matrix([num_coeffs[0]])
+
+        return StateSpace(A, B, C, D)
 
     def expand(self):
         """
@@ -716,6 +1037,31 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return _roots(Poly(self.num, self.var), self.var)
 
+    def eval_frequency(self, other):
+        """
+        Returns the system response at any point in the real or complex plane.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import I
+        >>> tf1 = TransferFunction(1, s**2 + 2*s + 1, s)
+        >>> omega = 0.1
+        >>> tf1.eval_frequency(I*omega)
+        1/(0.99 + 0.2*I)
+        >>> tf2 = TransferFunction(s**2, a*s + p, s)
+        >>> tf2.eval_frequency(2)
+        4/(2*a + p)
+        >>> tf2.eval_frequency(I*2)
+        -4/(2*I*a + p)
+        """
+        arg_num = self.num.subs(self.var, other)
+        arg_den = self.den.subs(self.var, other)
+        argnew = TransferFunction(arg_num, arg_den, self.var).to_expr()
+        return argnew.expand()
+
     def is_stable(self):
         """
         Returns True if the transfer function is asymptotically stable; else False.
@@ -748,13 +1094,15 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             return Parallel(self, other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             arg_list = list(other.args)
             return Parallel(self, *arg_list)
         else:
@@ -767,13 +1115,15 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __sub__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             return Parallel(self, -other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             arg_list = [-i for i in list(other.args)]
             return Parallel(self, *arg_list)
         else:
@@ -786,13 +1136,15 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             return Series(self, other)
         elif isinstance(other, Series):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             arg_list = list(other.args)
             return Series(self, *arg_list)
         else:
@@ -802,16 +1154,25 @@ class TransferFunction(SISOLinearTimeInvariant):
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        if (isinstance(other, Parallel) and len(other.args) == 2 and isinstance(other.args[0], TransferFunction)
+        if isinstance(other, TransferFunction):
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
+            return Series(self, TransferFunction(other.den, other.num, self.var))
+        elif (isinstance(other, Parallel) and len(other.args
+                ) == 2 and isinstance(other.args[0], TransferFunction)
             and isinstance(other.args[1], (Series, TransferFunction))):
 
             if not self.var == other.var:
-                raise ValueError("Both TransferFunction and Parallel should use the"
-                    " same complex variable of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    Both TransferFunction and Parallel should use the
+                    same complex variable of the Laplace transform."""))
             if other.args[1] == self:
                 # plant and controller with unit feedback.
                 return Feedback(self, other.args[0])
-            other_arg_list = list(other.args[1].args) if isinstance(other.args[1], Series) else other.args[1]
+            other_arg_list = list(other.args[1].args) if isinstance(
+                other.args[1], Series) else other.args[1]
             if other_arg_list == other.args[1]:
                 return Feedback(self, other_arg_list)
             elif self in other_arg_list:
@@ -1116,12 +1477,19 @@ class Series(SISOLinearTimeInvariant):
         return Series(*arg_list, other)
 
     def __truediv__(self, other):
-        if (isinstance(other, Parallel) and len(other.args) == 2
+        if isinstance(other, TransferFunction):
+            return Series(*self.args, TransferFunction(other.den, other.num, other.var))
+        elif isinstance(other, Series):
+            tf_self = self.rewrite(TransferFunction)
+            tf_other = other.rewrite(TransferFunction)
+            return tf_self / tf_other
+        elif (isinstance(other, Parallel) and len(other.args) == 2
             and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
 
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             self_arg_list = set(self.args)
             other_arg_list = set(other.args[1].args)
             res = list(self_arg_list ^ other_arg_list)
@@ -1311,8 +1679,9 @@ class MIMOSeries(MIMOLinearTimeInvariant):
             obj = super().__new__(cls, *args)
 
         else:
-            raise ValueError("Number of input signals do not match the number"
-                " of output signals of adjacent systems for some args.")
+            raise ValueError(filldedent("""
+                Number of input signals do not match the number
+                of output signals of adjacent systems for some args."""))
 
         return obj.doit() if evaluate else obj
 
@@ -1932,15 +2301,18 @@ class Feedback(SISOLinearTimeInvariant):
             raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
 
         if sign not in [-1, 1]:
-            raise ValueError("Unsupported type for feedback. `sign` arg should "
-                "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
+            raise ValueError(filldedent("""
+                Unsupported type for feedback. `sign` arg should
+                either be 1 (positive feedback loop) or -1
+                (negative feedback loop)."""))
 
         if Mul(sys1.to_expr(), sys2.to_expr()).simplify() == sign:
             raise ValueError("The equivalent system will have zero denominator.")
 
         if sys1.var != sys2.var:
-            raise ValueError("Both `sys1` and `sys2` should be using the"
-                " same complex variable.")
+            raise ValueError(filldedent("""
+                Both `sys1` and `sys2` should be using the
+                same complex variable."""))
 
         return super().__new__(cls, sys1, sys2, _sympify(sign))
 
@@ -2195,11 +2567,11 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     >>> pprint(neg_feedback.doit(), use_unicode=False)
     [-1    -1  ]
     [---  -----]
-    [ 11  121*s]
+    [11   121*s]
     [          ]
     [ 0    -1  ]
     [ -    --- ]
-    [ 1     11 ]{t}
+    [ 1    11  ]{t}
 
     See Also
     ========
@@ -2214,18 +2586,22 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         if sys1.num_inputs != sys2.num_outputs or \
             sys1.num_outputs != sys2.num_inputs:
-            raise ValueError("Product of `sys1` and `sys2` "
-                "must yield a square matrix.")
+            raise ValueError(filldedent("""
+                Product of `sys1` and `sys2` must
+                yield a square matrix."""))
 
         if sign not in (-1, 1):
-            raise ValueError("Unsupported type for feedback. `sign` arg should "
-                "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
+            raise ValueError(filldedent("""
+                Unsupported type for feedback. `sign` arg should
+                either be 1 (positive feedback loop) or -1
+                (negative feedback loop)."""))
 
         if not _is_invertible(sys1, sys2, sign):
             raise ValueError("Non-Invertible system inputted.")
         if sys1.var != sys2.var:
-            raise ValueError("Both `sys1` and `sys2` should be using the"
-                " same complex variable.")
+            raise ValueError(filldedent("""
+                Both `sys1` and `sys2` should be using the
+                same complex variable."""))
 
         return super().__new__(cls, sys1, sys2, _sympify(sign))
 
@@ -2425,9 +2801,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         canceling the common factors then the ``cancel`` kwarg should be passed ``False``.
 
         >>> pprint(F_1.doit(cancel=False), use_unicode=False)
-        [           25*s*(1 - s)                          25 - 25*s              ]
-        [       --------------------                    --------------           ]
-        [       25*(1 - 6*s)*(1 - s)                    25*s*(1 - 6*s)           ]
+        [             s*(s - 1)                              s - 1               ]
+        [         -----------------                       -----------            ]
+        [         (1 - s)*(6*s - 1)                       s*(6*s - 1)            ]
         [                                                                        ]
         [s*(25*s - 25) + 5*(1 - s)*(6*s - 1)  s*(s - 1)*(6*s - 1) + s*(25*s - 25)]
         [-----------------------------------  -----------------------------------]
@@ -2680,7 +3056,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     >>> tfm_6
     TransferFunctionMatrix(((Series(TransferFunction(3, s + 2, s), TransferFunction(-a + p, 9*s - 9, s)), Parallel(TransferFunction(3, s + 2, s), TransferFunction(-a + p, 9*s - 9, s))),))
     >>> pprint(tfm_6, use_unicode=False)
-    [ -a + p   3     -a + p     3  ]
+    [-a + p    3    -a + p      3  ]
     [-------*-----  ------- + -----]
     [9*s - 9 s + 2  9*s - 9   s + 2]{t}
     >>> tfm_6.doit()
@@ -2837,17 +3213,23 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         try:
             var = arg[0][0].var
         except TypeError:
-            raise ValueError("`arg` param in TransferFunctionMatrix should "
-            "strictly be a nested list containing TransferFunction objects.")
+            raise ValueError(filldedent("""
+                `arg` param in TransferFunctionMatrix should
+                strictly be a nested list containing TransferFunction
+                objects."""))
         for row_index, row in enumerate(arg):
             temp = []
             for col_index, element in enumerate(row):
                 if not isinstance(element, SISOLinearTimeInvariant):
-                    raise TypeError("Each element is expected to be of type `SISOLinearTimeInvariant`.")
+                    raise TypeError(filldedent("""
+                        Each element is expected to be of
+                        type `SISOLinearTimeInvariant`."""))
 
                 if var != element.var:
-                    raise ValueError("Conflicting value(s) found for `var`. All TransferFunction instances in "
-                            "TransferFunctionMatrix should use the same complex variable in Laplace domain.")
+                    raise ValueError(filldedent("""
+                        Conflicting value(s) found for `var`. All TransferFunction
+                        instances in TransferFunctionMatrix should use the same
+                        complex variable in Laplace domain."""))
 
                 temp.append(element.to_expr())
             expr_mat_arg.append(temp)
@@ -3096,6 +3478,35 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         """
         return [[element.zeros() for element in row] for row in self.doit().args[0]]
 
+    def eval_frequency(self, other):
+        """
+        Evaluates system response of each transfer function in the ``TransferFunctionMatrix`` at any point in the real or complex plane.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> from sympy import I
+        >>> tf_1 = TransferFunction(3, (s + 1), s)
+        >>> tf_2 = TransferFunction(s + 6, (s + 1)*(s + 2), s)
+        >>> tf_3 = TransferFunction(s + 3, s**2 + 3*s + 2, s)
+        >>> tf_4 = TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s)
+        >>> tfm_1 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, tf_4]])
+        >>> tfm_1
+        TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s))))
+        >>> tfm_1.eval_frequency(2)
+        Matrix([
+        [   1, 2/3],
+        [5/12, 3/2]])
+        >>> tfm_1.eval_frequency(I*2)
+        Matrix([
+        [   3/5 - 6*I/5,                -I],
+        [3/20 - 11*I/20, -101/74 + 23*I/74]])
+        """
+        mat = self._expr_mat.subs(self.var, other)
+        return mat.expand()
+
     def _flat(self):
         """Returns flattened list of args in TransferFunctionMatrix"""
         return [elem for tup in self.args[0] for elem in tup]
@@ -3115,3 +3526,740 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         """Expands the transfer function matrix"""
         expand_mat = self._expr_mat.expand(**hints)
         return _to_TFM(expand_mat, self.var)
+
+class StateSpace(LinearTimeInvariant):
+    r"""
+    State space model (ssm) of a linear, time invariant control system.
+
+    Represents the standard state-space model with A, B, C, D as state-space matrices.
+    This makes the linear control system:
+        (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
+        (2) y(t)  = C * x(t) + D * u(t);    y in R^m
+    where u(t) is any input signal, y(t) the corresponding output, and x(t) the system's state.
+
+    Parameters
+    ==========
+
+    A : Matrix
+        The State matrix of the state space model.
+    B : Matrix
+        The Input-to-State matrix of the state space model.
+    C : Matrix
+        The State-to-Output matrix of the state space model.
+    D : Matrix
+        The Feedthrough matrix of the state space model.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.physics.control import StateSpace
+
+    The easiest way to create a StateSpaceModel is via four matrices:
+
+    >>> A = Matrix([[1, 2], [1, 0]])
+    >>> B = Matrix([1, 1])
+    >>> C = Matrix([[0, 1]])
+    >>> D = Matrix([0])
+    >>> StateSpace(A, B, C, D)
+    StateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 1]]), Matrix([[0]]))
+
+
+    One can use less matrices. The rest will be filled with a minimum of zeros:
+
+    >>> StateSpace(A, B)
+    StateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 0]]), Matrix([[0]]))
+
+
+    See Also
+    ========
+
+    TransferFunction, TransferFunctionMatrix
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/State-space_representation
+    .. [2] https://in.mathworks.com/help/control/ref/ss.html
+
+    """
+    def __new__(cls, A=None, B=None, C=None, D=None):
+        if A is None:
+            A = zeros(1)
+        if B is None:
+            B = zeros(A.rows, 1)
+        if C is None:
+            C = zeros(1, A.cols)
+        if D is None:
+            D = zeros(C.rows, B.cols)
+
+        A = _sympify(A)
+        B = _sympify(B)
+        C = _sympify(C)
+        D = _sympify(D)
+
+        if (isinstance(A, ImmutableDenseMatrix) and isinstance(B, ImmutableDenseMatrix) and
+            isinstance(C, ImmutableDenseMatrix) and isinstance(D, ImmutableDenseMatrix)):
+            # Check State Matrix is square
+            if A.rows != A.cols:
+                raise ShapeError("Matrix A must be a square matrix.")
+
+            # Check State and Input matrices have same rows
+            if A.rows != B.rows:
+                raise ShapeError("Matrices A and B must have the same number of rows.")
+
+            # Check Ouput and Feedthrough matrices have same rows
+            if C.rows != D.rows:
+                raise ShapeError("Matrices C and D must have the same number of rows.")
+
+            # Check State and Ouput matrices have same columns
+            if A.cols != C.cols:
+                raise ShapeError("Matrices A and C must have the same number of columns.")
+
+            # Check Input and Feedthrough matrices have same columns
+            if B.cols != D.cols:
+                raise ShapeError("Matrices B and D must have the same number of columns.")
+
+            obj = super(StateSpace, cls).__new__(cls, A, B, C, D)
+            obj._A = A
+            obj._B = B
+            obj._C = C
+            obj._D = D
+
+            # Determine if the system is SISO or MIMO
+            num_outputs = D.rows
+            num_inputs = D.cols
+            if num_inputs == 1 and num_outputs == 1:
+                obj._is_SISO = True
+                obj._clstype = SISOLinearTimeInvariant
+            else:
+                obj._is_SISO = False
+                obj._clstype = MIMOLinearTimeInvariant
+
+            return obj
+
+        else:
+            raise TypeError("A, B, C and D inputs must all be sympy Matrices.")
+
+    @property
+    def state_matrix(self):
+        """
+        Returns the state matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.state_matrix
+        Matrix([
+        [1, 2],
+        [1, 0]])
+
+        """
+        return self._A
+
+    @property
+    def input_matrix(self):
+        """
+        Returns the input matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.input_matrix
+        Matrix([
+        [1],
+        [1]])
+
+        """
+        return self._B
+
+    @property
+    def output_matrix(self):
+        """
+        Returns the output matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.output_matrix
+        Matrix([[0, 1]])
+
+        """
+        return self._C
+
+    @property
+    def feedforward_matrix(self):
+        """
+        Returns the feedforward matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.feedforward_matrix
+        Matrix([[0]])
+
+        """
+        return self._D
+
+    @property
+    def num_states(self):
+        """
+        Returns the number of states of the model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.num_states
+        2
+
+        """
+        return self._A.rows
+
+    @property
+    def num_inputs(self):
+        """
+        Returns the number of inputs of the model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.num_inputs
+        1
+
+        """
+        return self._D.cols
+
+    @property
+    def num_outputs(self):
+        """
+        Returns the number of outputs of the model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.num_outputs
+        1
+
+        """
+        return self._D.rows
+
+    def _eval_evalf(self, prec):
+        """
+        Returns state space model where numerical expressions are evaluated into floating point numbers.
+        """
+        dps = prec_to_dps(prec)
+        return StateSpace(
+            self._A.evalf(n = dps),
+            self._B.evalf(n = dps),
+            self._C.evalf(n = dps),
+            self._D.evalf(n = dps))
+
+    def _eval_rewrite_as_TransferFunction(self, *args):
+        """
+        Returns the equivalent Transfer Function of the state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.rewrite(TransferFunction)
+        [[TransferFunction(12*s + 59, s**2 + 6*s + 8, s)]]
+
+        """
+        s = Symbol('s')
+        n = self._A.shape[0]
+        I = eye(n)
+        G = self._C*(s*I - self._A).solve(self._B) + self._D
+        G = G.simplify()
+        to_tf = lambda expr: TransferFunction.from_rational_expression(expr, s)
+        tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
+        return tf_mat
+
+    def __add__(self, other):
+        """
+        Add two State Space systems (parallel connection).
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A1 = Matrix([[1]])
+        >>> B1 = Matrix([[2]])
+        >>> C1 = Matrix([[-1]])
+        >>> D1 = Matrix([[-2]])
+        >>> A2 = Matrix([[-1]])
+        >>> B2 = Matrix([[-2]])
+        >>> C2 = Matrix([[1]])
+        >>> D2 = Matrix([[2]])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss2 = StateSpace(A2, B2, C2, D2)
+        >>> ss1 + ss2
+        StateSpace(Matrix([
+        [1,  0],
+        [0, -1]]), Matrix([
+        [ 2],
+        [-2]]), Matrix([[-1, 1]]), Matrix([[0]]))
+
+        """
+        # Check for scalars
+        if isinstance(other, (int, float, complex, Symbol)):
+            A = self._A
+            B = self._B
+            C = self._C
+            D = self._D.applyfunc(lambda element: element + other)
+
+        else:
+            # Check nature of system
+            if not isinstance(other, StateSpace):
+                raise ValueError("Addition is only supported for 2 State Space models.")
+            # Check dimensions of system
+            elif ((self.num_inputs != other.num_inputs) or (self.num_outputs != other.num_outputs)):
+                raise ShapeError("Systems with incompatible inputs and outputs cannot be added.")
+
+            m1 = (self._A).row_join(zeros(self._A.shape[0], other._A.shape[-1]))
+            m2 = zeros(other._A.shape[0], self._A.shape[-1]).row_join(other._A)
+
+            A = m1.col_join(m2)
+            B = self._B.col_join(other._B)
+            C = self._C.row_join(other._C)
+            D = self._D + other._D
+
+        return StateSpace(A, B, C, D)
+
+    def __radd__(self, other):
+        """
+        Right add two State Space systems.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control import StateSpace
+        >>> s = StateSpace()
+        >>> 5 + s
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[5]]))
+
+        """
+        return self + other
+
+    def __sub__(self, other):
+        """
+        Subtract two State Space systems.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A1 = Matrix([[1]])
+        >>> B1 = Matrix([[2]])
+        >>> C1 = Matrix([[-1]])
+        >>> D1 = Matrix([[-2]])
+        >>> A2 = Matrix([[-1]])
+        >>> B2 = Matrix([[-2]])
+        >>> C2 = Matrix([[1]])
+        >>> D2 = Matrix([[2]])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss2 = StateSpace(A2, B2, C2, D2)
+        >>> ss1 - ss2
+        StateSpace(Matrix([
+        [1,  0],
+        [0, -1]]), Matrix([
+        [ 2],
+        [-2]]), Matrix([[-1, -1]]), Matrix([[-4]]))
+
+        """
+        return self + (-other)
+
+    def __rsub__(self, other):
+        """
+        Right subtract two tate Space systems.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control import StateSpace
+        >>> s = StateSpace()
+        >>> 5 - s
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[5]]))
+
+        """
+        return other + (-self)
+
+    def __neg__(self):
+        """
+        Returns the negation of the state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> -ss
+        StateSpace(Matrix([
+        [-5, -1],
+        [ 3, -1]]), Matrix([
+        [2],
+        [5]]), Matrix([[-1, -2]]), Matrix([[0]]))
+
+        """
+        return StateSpace(self._A, self._B, -self._C, -self._D)
+
+    def __mul__(self, other):
+        """
+        Multiplication of two State Space systems (serial connection).
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss*5
+        StateSpace(Matrix([
+        [-5, -1],
+        [ 3, -1]]), Matrix([
+        [2],
+        [5]]), Matrix([[5, 10]]), Matrix([[0]]))
+
+        """
+        # Check for scalars
+        if isinstance(other, (int, float, complex, Symbol)):
+            A = self._A
+            B = self._B
+            C = self._C.applyfunc(lambda element: element*other)
+            D = self._D.applyfunc(lambda element: element*other)
+
+        else:
+            # Check nature of system
+            if not isinstance(other, StateSpace):
+                raise ValueError("Multiplication is only supported for 2 State Space models.")
+            # Check dimensions of system
+            elif self.num_inputs != other.num_outputs:
+                raise ShapeError("Systems with incompatible inputs and outputs cannot be multiplied.")
+
+            m1 = (other._A).row_join(zeros(other._A.shape[0], self._A.shape[1]))
+            m2 = (self._B * other._C).row_join(self._A)
+
+            A = m1.col_join(m2)
+            B = (other._B).col_join(self._B * other._D)
+            C = (self._D * other._C).row_join(self._C)
+            D = self._D * other._D
+
+        return StateSpace(A, B, C, D)
+
+    def __rmul__(self, other):
+        """
+        Right multiply two tate Space systems.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> 5*ss
+        StateSpace(Matrix([
+        [-5, -1],
+        [ 3, -1]]), Matrix([
+        [10],
+        [25]]), Matrix([[1, 2]]), Matrix([[0]]))
+
+        """
+        if isinstance(other, (int, float, complex, Symbol)):
+            A = self._A
+            C = self._C
+            B = self._B.applyfunc(lambda element: element*other)
+            D = self._D.applyfunc(lambda element: element*other)
+            return StateSpace(A, B, C, D)
+        else:
+            return self*other
+
+    def __repr__(self):
+        A_str = self._A.__repr__()
+        B_str = self._B.__repr__()
+        C_str = self._C.__repr__()
+        D_str = self._D.__repr__()
+
+        return f"StateSpace(\n{A_str},\n\n{B_str},\n\n{C_str},\n\n{D_str})"
+
+
+    def append(self, other):
+        """
+        Returns the first model appended with the second model. The order is preserved.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A1 = Matrix([[1]])
+        >>> B1 = Matrix([[2]])
+        >>> C1 = Matrix([[-1]])
+        >>> D1 = Matrix([[-2]])
+        >>> A2 = Matrix([[-1]])
+        >>> B2 = Matrix([[-2]])
+        >>> C2 = Matrix([[1]])
+        >>> D2 = Matrix([[2]])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss2 = StateSpace(A2, B2, C2, D2)
+        >>> ss1.append(ss2)
+        StateSpace(Matrix([
+        [1,  0],
+        [0, -1]]), Matrix([
+        [2,  0],
+        [0, -2]]), Matrix([
+        [-1, 0],
+        [ 0, 1]]), Matrix([
+        [-2, 0],
+        [ 0, 2]]))
+
+        """
+        n = self.num_states + other.num_states
+        m = self.num_inputs + other.num_inputs
+        p = self.num_outputs + other.num_outputs
+
+        A = zeros(n, n)
+        B = zeros(n, m)
+        C = zeros(p, n)
+        D = zeros(p, m)
+
+        A[:self.num_states, :self.num_states] = self._A
+        A[self.num_states:, self.num_states:] = other._A
+        B[:self.num_states, :self.num_inputs] = self._B
+        B[self.num_states:, self.num_inputs:] = other._B
+        C[:self.num_outputs, :self.num_states] = self._C
+        C[self.num_outputs:, self.num_states:] = other._C
+        D[:self.num_outputs, :self.num_inputs] = self._D
+        D[self.num_outputs:, self.num_inputs:] = other._D
+        return StateSpace(A, B, C, D)
+
+    def observability_matrix(self):
+        """
+        Returns the observability matrix of the state space model:
+            [C, C * A^1, C * A^2, .. , C * A^(n-1)]; A in R^(n x n), C in R^(m x k)
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ob = ss.observability_matrix()
+        >>> ob
+        Matrix([
+        [0, 1],
+        [1, 0]])
+
+        References
+        ==========
+        .. [1] https://in.mathworks.com/help/control/ref/statespacemodel.obsv.html
+
+        """
+        n = self.num_states
+        ob = self._C
+        for i in range(1,n):
+            ob = ob.col_join(self._C * self._A**i)
+
+        return ob
+
+    def observable_subspace(self):
+        """
+        Returns the observable subspace of the state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ob_subspace = ss.observable_subspace()
+        >>> ob_subspace
+        [Matrix([
+        [0],
+        [1]]), Matrix([
+        [1],
+        [0]])]
+
+        """
+        return self.observability_matrix().columnspace()
+
+    def is_observable(self):
+        """
+        Returns if the state space model is observable.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.is_observable()
+        True
+
+        """
+        return self.observability_matrix().rank() == self.num_states
+
+    def controllability_matrix(self):
+        """
+        Returns the controllability matrix of the system:
+            [B, A * B, A^2 * B, .. , A^(n-1) * B]; A in R^(n x n), B in R^(n x m)
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.controllability_matrix()
+        Matrix([
+        [0.5, -0.75],
+        [  0,   0.5]])
+
+        References
+        ==========
+        .. [1] https://in.mathworks.com/help/control/ref/statespacemodel.ctrb.html
+
+        """
+        co = self._B
+        n = self._A.shape[0]
+        for i in range(1, n):
+            co = co.row_join(((self._A)**i) * self._B)
+
+        return co
+
+    def controllable_subspace(self):
+        """
+        Returns the controllable subspace of the state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> co_subspace = ss.controllable_subspace()
+        >>> co_subspace
+        [Matrix([
+        [0.5],
+        [  0]]), Matrix([
+        [-0.75],
+        [  0.5]])]
+
+        """
+        return self.controllability_matrix().columnspace()
+
+    def is_controllable(self):
+        """
+        Returns if the state space model is controllable.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.is_controllable()
+        True
+
+        """
+        return self.controllability_matrix().rank() == self.num_states

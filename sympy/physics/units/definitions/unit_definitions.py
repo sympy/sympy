@@ -56,6 +56,13 @@ candela.set_global_dimension(luminous_intensity)
 
 # derived units
 newton = newtons = N = Quantity("newton", abbrev="N")
+
+kilonewton = kilonewtons = kN = Quantity("kilonewton", abbrev="kN")
+kilonewton.set_global_relative_scale_factor(kilo, newton)
+
+meganewton = meganewtons = MN = Quantity("meganewton", abbrev="MN")
+meganewton.set_global_relative_scale_factor(mega, newton)
+
 joule = joules = J = Quantity("joule", abbrev="J")
 watt = watts = W = Quantity("watt", abbrev="W")
 pascal = pascals = Pa = pa = Quantity("pascal", abbrev="Pa")
@@ -173,15 +180,15 @@ angstrom.set_global_relative_scale_factor(Rational(1, 10**10), meter)
 
 ha = hectare = Quantity("hectare", abbrev="ha")
 
-l = L = liter = liters = Quantity("liter")
+l = L = liter = liters = Quantity("liter", abbrev="l")
 
-dl = dL = deciliter = deciliters = Quantity("deciliter")
+dl = dL = deciliter = deciliters = Quantity("deciliter", abbrev="dl")
 dl.set_global_relative_scale_factor(Rational(1, 10), liter)
 
-cl = cL = centiliter = centiliters = Quantity("centiliter")
+cl = cL = centiliter = centiliters = Quantity("centiliter", abbrev="cl")
 cl.set_global_relative_scale_factor(Rational(1, 100), liter)
 
-ml = mL = milliliter = milliliters = Quantity("milliliter")
+ml = mL = milliliter = milliliters = Quantity("milliliter", abbrev="ml")
 ml.set_global_relative_scale_factor(Rational(1, 1000), liter)
 
 

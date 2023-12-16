@@ -28,12 +28,19 @@ __all__ = [
 
     'Body',
 
-    'SymbolicSystem',
+    'SymbolicSystem', 'System',
 
     'PinJoint', 'PrismaticJoint', 'CylindricalJoint', 'PlanarJoint',
     'SphericalJoint', 'WeldJoint',
 
-    'JointsMethod'
+    'JointsMethod',
+
+    'WrappingCylinder', 'WrappingGeometryBase', 'WrappingSphere',
+
+    'PathwayBase', 'LinearPathway', 'ObstacleSetPathway', 'WrappingPathway',
+
+    'ActuatorBase', 'ForceActuator', 'LinearDamper', 'LinearSpring',
+    'TorqueActuator',
 ]
 
 from sympy.physics import vector
@@ -66,9 +73,18 @@ from .linearize import Linearizer
 
 from .body import Body
 
-from .system import SymbolicSystem
+from .system import SymbolicSystem, System
 
 from .jointsmethod import JointsMethod
 
 from .joint import (PinJoint, PrismaticJoint, CylindricalJoint, PlanarJoint,
                     SphericalJoint, WeldJoint)
+
+from .wrapping_geometry import (WrappingCylinder, WrappingGeometryBase,
+                                WrappingSphere)
+
+from .pathway import (PathwayBase, LinearPathway, ObstacleSetPathway,
+                      WrappingPathway)
+
+from .actuator import (ActuatorBase, ForceActuator, LinearDamper, LinearSpring,
+                       TorqueActuator)

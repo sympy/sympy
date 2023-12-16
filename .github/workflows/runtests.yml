@@ -20,10 +20,11 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
 
-      - run: pip install mpmath flake8 flake8-comprehensions ruff pytest
+      - run: pip install -r requirements-dev.txt
+      - run: pip install ruff
 
       - name: Basic code quality tests
         run: bin/test quality
@@ -39,6 +40,11 @@ jobs:
 
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
+
+      - run: pip install slotscheck . 
+
+      - name: Check for incorrect use of ``__slots__`` using slotscheck
+        run: python -m slotscheck --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
 
       # -- temporarily disabled -- #
       # These checks were too difficult for new contributors. They will
@@ -61,9 +67,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath mypy
+      - run: pip install mpmath mypy hypothesis
 
       - name: Run mypy on the sympy package
         run: mypy sympy
@@ -78,7 +84,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install sphinx-lint
 
@@ -97,7 +103,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/mailmap_check.py
@@ -112,7 +118,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -124,44 +130,22 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
+
     strategy:
       fail-fast: false
       matrix:
         group: [1, 2, 3, 4]
+
+    name: Tests ${{ matrix.group }}/4
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath pytest pytest-split
+      - run: pip install -r requirements-dev.txt
       - run: bin/test --split ${{ matrix.group }}/4
-
-  # -------------------- Test Pyodide on node ---------------------- #
-
-  test-pyodide:
-    needs: code-quality
-
-    runs-on: ubuntu-20.04
-    timeout-minutes: 75
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - run: python -m pip install --upgrade pip
-      - run: pip install build
-      - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.22.0/pyodide-core-0.22.0.tar.bz2 | tar xjf -
-      - run: python -m build --wheel
-      - run: node bin/test_pyodide.mjs --group=${{ matrix.group }} --splits=4 2>/dev/null  # ignore node exception
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -169,46 +153,37 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
+
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', 'pypy3.8']
-        experimental: [false]
-        #
-        # For now we do not test optional dependencies with 3.12 because as of
-        # 3.12.a.5 it is not possible to pip install numpy. Building numpy,
-        # scipy etc from source is overkill for sympy CI. It is probably not
-        # possible to install builds of most of the other optional dependencies
-        # either (especially since many depend on numpy).
-        #
-        # Maybe use this to add 3.12 when the time comes:
-        #include:
-        #  - python-version: '3.12.0-alpha - 3.12'
-        #    experimental: true
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    name: ${{ matrix.python-version }} Optional Dendendencies
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
+      - run: pip install -r requirements-dev.txt
+
       # Install the non-Python dependencies
       - run: sudo apt-get update
-      - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev clang
+      - run: sudo apt-get install antlr4 clang
       - run: python -m pip install --upgrade pip wheel setuptools
 
       # dependencies to install in all Python versions:
-      - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap lxml pytest                \
-                         'antlr4-python3-runtime==4.11.*'
+      - run: pip install numpy numexpr matplotlib ipython cython          \
+                         wurlitzer autowrap lxml lark z3-solver pycosat   \
+                         jax jaxlib libclang scipy aesara                 \
+                         'antlr4-python3-runtime==4.11.*'                 \
+                         #
 
-      # Not available in pypy or cpython 3.11 (yet).
-      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
-        run: pip install llvmlite numba
-
-      # These are not available for pypy
-      - if: ${{ ! contains(matrix.python-version, 'pypy') }}
-        run: pip install gmpy2 jax jaxlib symengine pymc libclang
+      # Not available in CPython 3.12 (yet).
+      - if: ${{ ! contains(matrix.python-version, '3.12') }}
+        run: pip install llvmlite numba gmpy2 symengine pymc
 
       # Test external imports
       - run: bin/test_external_imports.py
@@ -218,11 +193,48 @@ jobs:
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
 
-  # -------------------- Tensorflow tests -------------------------- #
+  # -------------------- FLINT tests -------------------------------- #
 
-  tensorflow:
+  python-flint:
     needs: code-quality
 
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          # python-flint is not yet available for Python 3.12
+          # https://github.com/flintlib/python-flint/issues/52
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: pip install python-flint
+      # Test the modules that most directly use python-flint
+      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+        env:
+          SYMPY_GROUND_TYPES: flint
+      - run: bin/doctest                                  \
+                    sympy/integrals                       \
+                    sympy/holonomic                       \
+                    sympy/matrices                        \
+                    sympy/ntheory                         \
+                    sympy/polys                           \
+                    sympy/printing                        \
+                    doc/src/modules/integrals             \
+                    doc/src/modules/holonomic             \
+                    doc/src/modules/matrices              \
+                    doc/src/modules/ntheory.rst           \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/printing.rst          \
+                    doc/src/tutorials/intro-tutorial/     \
+        env:
+          SYMPY_GROUND_TYPES: flint
+
+
+  # -------------------- FLINT+gmpy2 ------------------------------ #
+
+  flint-gmpy2:
+    needs: code-quality
 
     runs-on: ubuntu-20.04
     steps:
@@ -231,7 +243,45 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy scipy tensorflow pytest
+      - run: pip install -r requirements-dev.txt
+      - run: pip install python-flint gmpy2
+      # Test the modules that most directly use python-flint
+      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+        env:
+          SYMPY_GROUND_TYPES: flint
+      - run: bin/doctest                                  \
+                    sympy/integrals                       \
+                    sympy/holonomic                       \
+                    sympy/matrices                        \
+                    sympy/ntheory                         \
+                    sympy/polys                           \
+                    sympy/printing                        \
+                    doc/src/modules/integrals             \
+                    doc/src/modules/holonomic             \
+                    doc/src/modules/matrices              \
+                    doc/src/modules/ntheory.rst           \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/printing.rst          \
+                    doc/src/tutorials/intro-tutorial/     \
+        env:
+          SYMPY_GROUND_TYPES: flint
+
+
+  # -------------------- Tensorflow tests -------------------------- #
+
+  tensorflow:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          # tensorflow not yet available for 3.12
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: pip install numpy scipy tensorflow
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
@@ -245,9 +295,11 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
+          # symengine not yet available for 3.12
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy symengine pytest
+      - run: pip install -r requirements-dev.txt
+      - run: pip install numpy symengine
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
         env:
@@ -259,17 +311,19 @@ jobs:
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
+
     strategy:
       fail-fast: false
       matrix:
         group: [1, 2, 3, 4]
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath pytest pytest-split pytest-timeout
+      - run: pip install -r requirements-dev.txt
       - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
 
   # -------------------- Test older (and newer) Python --------------- #
@@ -278,24 +332,22 @@ jobs:
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
+
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
-        experimental: [false]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
         group: [1, 2, 3, 4]
-        # Maybe use this to add 3.12 when the time comes:
-        #include:
-        #  - python-version: '3.12.0-alpha - 3.12'
-        #    experimental: true
+
+    name: ${{ matrix.python-version }} ${{ matrix.group }}/4 Tests
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath pytest pytest-split
+      - run: pip install -r requirements-dev.txt
       - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Doctests older (and newer) Python --------------------- #
@@ -304,16 +356,14 @@ jobs:
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
+
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
-        experimental: [false]
-        # Maybe use this to add 3.12 when the time comes:
-        #include:
-        #  - python-version: '3.12.0-alpha - 3.12'
-        #    experimental: true
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
+
+    name: ${{ matrix.python-version }} Doctests
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -334,7 +384,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
@@ -361,7 +411,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '2.7'
+          python-version: 'pypy2.7'
       - run: bin/test_py2_import.py
 
   # -------------------- Check the list of files for sdist --------- #
@@ -374,7 +424,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip build
       - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
@@ -392,8 +442,8 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-      - run: pip install asv virtualenv
+          python-version: '3.12'
+      - run: pip install asv virtualenv packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
         # Need to make sure we can access the branches from the main repo. We

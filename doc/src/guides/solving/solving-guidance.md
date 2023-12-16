@@ -168,6 +168,7 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
 
+(ensure-consistent-formatting-from-solve)=
 ## Ensure Consistent Formatting From {func}`~.solve`
 
 {func}`~.solve` produces a variety of output as explained in
@@ -191,6 +192,7 @@ Eq(x**2, y)
 FiniteSet(-sqrt(y), sqrt(y))
 ```
 
+(options-that-can-speed-up-solve)=
 ## Options That Can Speed up {func}`~.solve`
 
 ### Include Solutions Making Any Denominator Zero

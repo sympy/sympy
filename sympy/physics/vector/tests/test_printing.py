@@ -51,11 +51,11 @@ def test_vector_pretty_print():
     # w = alpha * N.x + sin(omega) * N.y + alpha / beta * N.z
 
     expected = """\
- 2
+ 2                               \n\
 a  n_x + b n_y + c*sin(alpha) n_z\
 """
     uexpected = """\
- 2
+ 2                           \n\
 a  n_x + b n_y + c⋅sin(α) n_z\
 """
 
@@ -69,16 +69,16 @@ a  n_x + b n_y + c⋅sin(α) n_z\
     assert unicode_vpretty(w) == uexpected
 
     expected = """\
-                     2
-a       b + c       c
-- n_x + ----- n_y + -- n_z
-b         a         b\
+                     2    \n\
+a       b + c       c     \n\
+- n_x + ----- n_y + -- n_z\n\
+b         a         b     \
 """
     uexpected = """\
-                     2
-a       b + c       c
-─ n_x + ───── n_y + ── n_z
-b         a         b\
+                     2    \n\
+a       b + c       c     \n\
+─ n_x + ───── n_y + ── n_z\n\
+b         a         b     \
 """
 
     assert ascii_vpretty(o) == expected
@@ -301,8 +301,22 @@ def test_vector_derivative_printing():
     v = omega.diff().diff().diff().diff().diff() * N.x
 
     assert vlatex(v) == r'\frac{d^{5}}{d t^{5}} \omega\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == '  5\n d\n───(ω) n_x\n  5\ndt'
-    assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
+    expected = '''\
+ 5            \n\
+d             \n\
+---(omega) n_x\n\
+  5           \n\
+dt            \
+'''
+    uexpected = '''\
+ 5        \n\
+d         \n\
+───(ω) n_x\n\
+  5       \n\
+dt        \
+'''
+    assert unicode_vpretty(v) == uexpected
+    assert ascii_vpretty(v) == expected
 
 
 def test_vector_str_printing():

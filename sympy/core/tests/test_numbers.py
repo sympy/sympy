@@ -7,9 +7,12 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import unchanged
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import (mpf_norm, mod_inverse, igcd, seterr,
-    igcd_lehmer, Integer, I, pi, comp, ilcm, Rational, E, nan, igcd2,
-    oo, AlgebraicNumber, igcdex, Number, Float, zoo, equal_valued)
+from sympy.core.numbers import (mpf_norm, seterr,
+    Integer, I, pi, comp, Rational, E, nan,
+    oo, AlgebraicNumber, Number, Float, zoo, equal_valued,
+    int_valued, all_close)
+from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
+    ilcm, integer_nthroot, isqrt, integer_log, mod_inverse)
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Gt, Le, Lt
 from sympy.core.singleton import S
@@ -25,14 +28,12 @@ from sympy.polys.domains.realfield import RealField
 from sympy.printing.latex import latex
 from sympy.printing.repr import srepr
 from sympy.simplify import simplify
-from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 
 from mpmath import mpf
-from mpmath.rational import mpq
 import mpmath
 from sympy.core import numbers
 t = Symbol('t', real=False)
@@ -134,7 +135,7 @@ def test_divmod():
 
     assert divmod(S("2"), S("3/2")) == Tuple(S("1"), S("1/2"))
     assert divmod(S("3/2"), S("2")) == Tuple(S("0"), S("3/2"))
-    assert divmod(S("2"), S("3.5")) == Tuple(S("0"), S("2"))
+    assert divmod(S("2"), S("3.5")) == Tuple(S("0"), S("2."))
     assert divmod(S("3.5"), S("2")) == Tuple(S("1"), S("1.5"))
     assert divmod(S("2"), S("1/3")) == Tuple(S("6"), S("0"))
     assert divmod(S("1/3"), S("2")) == Tuple(S("0"), S("1/3"))
@@ -146,7 +147,7 @@ def test_divmod():
     assert divmod(S("2"), 1.5) == Tuple(S("1"), S("0.5"))
     assert divmod(1.5, S("2")) == Tuple(S("0"), S("1.5"))
     assert divmod(0.3, S("2")) == Tuple(S("0"), S("0.3"))
-    assert divmod(S("3/2"), S("3.5")) == Tuple(S("0"), S("3/2"))
+    assert divmod(S("3/2"), S("3.5")) == Tuple(S("0"), S(3/2))
     assert divmod(S("3.5"), S("3/2")) == Tuple(S("2"), S("0.5"))
     assert divmod(S("3/2"), S("1/3")) == Tuple(S("4"), S("1/6"))
     assert divmod(S("1/3"), S("3/2")) == Tuple(S("0"), S("1/3"))
@@ -154,27 +155,27 @@ def test_divmod():
     assert divmod(S("0.1"), S("3/2")) == Tuple(S("0"), S("0.1"))
     assert divmod(S("3/2"), 2) == Tuple(S("0"), S("3/2"))
     assert divmod(2, S("3/2")) == Tuple(S("1"), S("1/2"))
-    assert divmod(S("3/2"), 1.5) == Tuple(S("1"), S("0"))
-    assert divmod(1.5, S("3/2")) == Tuple(S("1"), S("0"))
-    assert divmod(S("3/2"), 0.3) == Tuple(S("5"), S("0"))
+    assert divmod(S("3/2"), 1.5) == Tuple(S("1"), S("0."))
+    assert divmod(1.5, S("3/2")) == Tuple(S("1"), S("0."))
+    assert divmod(S("3/2"), 0.3) == Tuple(S("5"), S("0."))
     assert divmod(0.3, S("3/2")) == Tuple(S("0"), S("0.3"))
-    assert divmod(S("1/3"), S("3.5")) == Tuple(S("0"), S("1/3"))
-    assert divmod(S("3.5"), S("0.1")) == Tuple(S("35"), S("0"))
+    assert divmod(S("1/3"), S("3.5")) == (0, 1/3)
+    assert divmod(S("3.5"), S("0.1")) == Tuple(S("35"), S("0."))
     assert divmod(S("0.1"), S("3.5")) == Tuple(S("0"), S("0.1"))
     assert divmod(S("3.5"), 2) == Tuple(S("1"), S("1.5"))
-    assert divmod(2, S("3.5")) == Tuple(S("0"), S("2"))
+    assert divmod(2, S("3.5")) == Tuple(S("0"), S("2."))
     assert divmod(S("3.5"), 1.5) == Tuple(S("2"), S("0.5"))
     assert divmod(1.5, S("3.5")) == Tuple(S("0"), S("1.5"))
     assert divmod(0.3, S("3.5")) == Tuple(S("0"), S("0.3"))
     assert divmod(S("0.1"), S("1/3")) == Tuple(S("0"), S("0.1"))
     assert divmod(S("1/3"), 2) == Tuple(S("0"), S("1/3"))
     assert divmod(2, S("1/3")) == Tuple(S("6"), S("0"))
-    assert divmod(S("1/3"), 1.5) == Tuple(S("0"), S("1/3"))
-    assert divmod(0.3, S("1/3")) == Tuple(S("0"), S("0.3"))
-    assert divmod(S("0.1"), 2) == Tuple(S("0"), S("0.1"))
+    assert divmod(S("1/3"), 1.5) == (0, 1/3)
+    assert divmod(0.3, S("1/3")) == (0, 0.3)
+    assert divmod(S("0.1"), 2) == (0, 0.1)
     assert divmod(2, S("0.1"))[0] == 19
-    assert divmod(S("0.1"), 1.5) == Tuple(S("0"), S("0.1"))
-    assert divmod(1.5, S("0.1")) == Tuple(S("15"), S("0"))
+    assert divmod(S("0.1"), 1.5) == (0, 0.1)
+    assert divmod(1.5, S("0.1")) == Tuple(S("15"), S("0."))
     assert divmod(S("0.1"), 0.3) == Tuple(S("0"), S("0.1"))
 
     assert str(divmod(S("2"), 0.3)) == '(6, 0.2)'
@@ -189,10 +190,6 @@ def test_divmod():
     assert divmod(S(-3), S(2)) == (-2, 1)
     assert divmod(S(-3), 2) == (-2, 1)
 
-    assert divmod(S(4), S(-3.1)) == Tuple(-2, -2.2)
-    assert divmod(S(4), S(-2.1)) == divmod(4, -2.1)
-    assert divmod(S(-8), S(-2.5) ) == Tuple(3, -0.5)
-
     assert divmod(oo, 1) == (S.NaN, S.NaN)
     assert divmod(S.NaN, 1) == (S.NaN, S.NaN)
     assert divmod(1, S.NaN) == (S.NaN, S.NaN)
@@ -204,10 +201,12 @@ def test_divmod():
     ANS = [tuple(map(float, i)) for i in ans]
     assert [divmod(i, -oo) for i in range(-2, 3)] == ans
     assert [divmod(i, -OO) for i in range(-2, 3)] == ANS
-    assert divmod(S(3.5), S(-2)) == divmod(3.5, -2)
-    assert divmod(-S(3.5), S(-2)) == divmod(-3.5, -2)
-    assert divmod(S(0.0), S(9)) == divmod(0.0, 9)
-    assert divmod(S(0), S(9.0)) == divmod(0, 9.0)
+
+    # sympy's divmod gives an Integer for the quotient rather than a float
+    dmod = lambda a, b: tuple([j if i else int(j) for i, j in enumerate(divmod(a, b))])
+    for a in (4, 4., 4.25, 0, 0., -4, -4. -4.25):
+        for b in (2, 2., 2.5, -2, -2., -2.5):
+            assert divmod(S(a), S(b)) == dmod(a, b)
 
 
 def test_igcd():
@@ -361,7 +360,6 @@ def test_Rational_new():
     except ImportError:
         pass
 
-    assert Rational(mpq(2, 6)) == Rational(1, 3)
     assert Rational(PythonRational(2, 6)) == Rational(1, 3)
 
     assert Rational(2, 4, gcd=1).q == 4
@@ -457,7 +455,9 @@ def test_Float():
         return (-t < a - b < t)
 
     zeros = (0, S.Zero, 0., Float(0))
-    for i, j in permutations(zeros, 2):
+    for i, j in permutations(zeros[:-1], 2):
+        assert i == j
+    for i, j in permutations(zeros[-2:], 2):
         assert i == j
     for z in zeros:
         assert z in zeros
@@ -504,7 +504,7 @@ def test_Float():
     # rationality properties
     # if the integer test fails then the use of intlike
     # should be removed from gamma_functions.py
-    assert Float(1).is_integer is False
+    assert Float(1).is_integer is None
     assert Float(1).is_rational is None
     assert Float(1).is_irrational is None
     assert sqrt(2).n(15).is_rational is None
@@ -531,8 +531,11 @@ def test_Float():
 
     # inexact floats (repeating binary = denom not multiple of 2)
     # cannot have precision greater than 15
-    assert Float(.125, 22) == .125
-    assert Float(2.0, 22) == 2
+    assert Float(.125, 22)._prec == 76
+    assert Float(2.0, 22)._prec == 76
+    # only default prec is equal, even for exactly representable float
+    assert Float(.125, 22) != .125
+    #assert Float(2.0, 22) == 2
     assert float(Float('.12500000000000001', '')) == .125
     raises(ValueError, lambda: Float(.12500000000000001, ''))
 
@@ -541,15 +544,15 @@ def test_Float():
     assert Integer('123 456') == Integer('123456')
     assert Rational('123 456.123 456') == Rational('123456.123456')
     assert Float(' .3e2') == Float('0.3e2')
+    # but treat them as strictly ass underscore between digits: only 1
+    raises(ValueError, lambda: Float('1  2'))
 
-    # allow underscore
+    # allow underscore between digits
     assert Float('1_23.4_56') == Float('123.456')
-    assert Float('1_') == Float('1.0')
-    assert Float('1_.') == Float('1.0')
-    assert Float('1._') == Float('1.0')
-    assert Float('1__2') == Float('12.0')
     # assert Float('1_23.4_5_6', 12) == Float('123.456', 12)
     # ...but not in all cases (per Py 3.6)
+    raises(ValueError, lambda: Float('1_'))
+    raises(ValueError, lambda: Float('1__2'))
     raises(ValueError, lambda: Float('_1'))
     raises(ValueError, lambda: Float('_inf'))
 
@@ -1062,10 +1065,17 @@ def test_integer_log():
     assert integer_log(3**3, 3) == (3, True)
     assert integer_log(27, 5) == (2, False)
     assert integer_log(2, 3) == (0, False)
+    assert integer_log(-4, 2) == (2, False)
+    assert integer_log(-16, 4) == (0, False)
     assert integer_log(-4, -2) == (2, False)
+    assert integer_log(4, -2) == (2, True)
+    assert integer_log(-8, -2) == (3, True)
+    assert integer_log(8, -2) == (3, False)
+    assert integer_log(-9, 3) == (0, False)
+    assert integer_log(-9, -3) == (2, False)
+    assert integer_log(9, -3) == (2, True)
+    assert integer_log(-27, -3) == (3, True)
     assert integer_log(27, -3) == (3, False)
-    assert integer_log(-49, 7) == (0, False)
-    assert integer_log(-49, -7) == (2, False)
 
 
 def test_isqrt():
@@ -1380,7 +1390,9 @@ def test_abs1():
 
 
 def test_accept_int():
-    assert Float(4) == 4
+    assert not Float(4) == 4
+    assert Float(4) != 4
+    assert Float(4) == 4.0
 
 
 def test_dont_accept_str():
@@ -1846,8 +1858,8 @@ def test_bool_eq():
 
 
 def test_Float_eq():
-    # all .5 values are the same
-    assert Float(.5, 10) == Float(.5, 11) == Float(.5, 1)
+    # Floats with different precision should not compare equal
+    assert Float(.5, 10) != Float(.5, 11) != Float(.5, 1)
     # but floats that aren't exact in base-2 still
     # don't compare the same because they have different
     # underlying mpf values
@@ -1863,23 +1875,27 @@ def test_Float_eq():
     assert Rational(11, 10) != Float('1.1')
     # coverage
     assert not Float(3) == 2
+    assert not Float(3) == Float(2)
+    assert not Float(3) == 3
     assert not Float(2**2) == S.Half
-    assert Float(2**2) == 4
+    assert Float(2**2) == 4.0
     assert not Float(2**-2) == 1
-    assert Float(2**-1) == S.Half
+    assert Float(2**-1) == 0.5
     assert not Float(2*3) == 3
-    assert not Float(2*3) == S.Half
-    assert Float(2*3) == 6
+    assert not Float(2*3) == 0.5
+    assert Float(2*3) == 6.0
+    assert not Float(2*3) == 6
     assert not Float(2*3) == 8
-    assert Float(.75) == Rational(3, 4)
+    assert not Float(.75) == Rational(3, 4)
+    assert Float(.75) == 0.75
     assert Float(5/18) == 5/18
     # 4473
     assert Float(2.) != 3
-    assert Float((0,1,-3)) == S.One/8
+    assert not Float((0,1,-3)) == S.One/8
+    assert Float((0,1,-3)) == 1/8
     assert Float((0,1,-3)) != S.One/9
     # 16196
-    assert 2 == Float(2)  # as per Python
-    # but in a computation...
+    assert not 2 == Float(2)  # unlike Python
     assert t**2 != t**2.0
 
 
@@ -2224,6 +2240,16 @@ def test_exponentiation_of_0():
     assert 0**x == S.One
 
 
+def test_int_valued():
+    x = Symbol('x')
+    assert int_valued(x) == False
+    assert int_valued(S.Half) == False
+    assert int_valued(S.One) == True
+    assert int_valued(Float(1)) == True
+    assert int_valued(Float(1.1)) == False
+    assert int_valued(pi) == False
+
+
 def test_equal_valued():
     x = Symbol('x')
 
@@ -2254,3 +2280,18 @@ def test_equal_valued():
                     continue
                 for value_j in values_n:
                     assert equal_valued(value_i, value_j) is False
+
+
+def test_all_close():
+    x = Symbol('x')
+    assert all_close(2, 2) is True
+    assert all_close(2, 2.0000) is True
+    assert all_close(2, 2.0001) is False
+    assert all_close(1/3, 1/3.0001) is False
+    assert all_close(1/3, 1/3.0001, 1e-3, 1e-3) is True
+    assert all_close(1/3, Rational(1, 3)) is True
+    assert all_close(0.1*exp(0.2*x), exp(x/5)/10) is True
+    # The expressions should be structurally the same:
+    assert all_close(1.4142135623730951, sqrt(2)) is False
+    assert all_close(1.4142135623730951, sqrt(2).evalf()) is True
+    assert all_close(x + 1e-20, x) is False

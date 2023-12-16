@@ -848,7 +848,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> YS = DiscreteMarkovChain("Y")
 
     >>> Y.state_space
-    FiniteSet(0, 1, 2)
+    {0, 1, 2}
     >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],
@@ -1519,7 +1519,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> C.limiting_distribution()
     Matrix([[1/2, 1/2]])
     >>> C.state_space
-    FiniteSet(0, 1)
+    {0, 1}
     >>> C.generator_matrix
     Matrix([
     [-1,  1],
@@ -1643,7 +1643,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
     FiniteSet(0, 1)
-    >>> (B.p).round(2)
+    >>> B.p.round(2)
     0.70
     >>> B.success
     1

@@ -1,4 +1,4 @@
-from sympy.core.backend import diff, zeros, Matrix, eye, sympify
+from sympy import diff, zeros, Matrix, eye, sympify
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.method import _Methods
@@ -307,7 +307,7 @@ class LagrangesMethod(_Methods):
             Method used to solve the several symbolic linear systems of the
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
-            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
             supplied, it should have the format ``x = f(A, b)``, where it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
@@ -382,7 +382,7 @@ class LagrangesMethod(_Methods):
             Method used to solve the several symbolic linear systems of the
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
-            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
             supplied, it should have the format ``x = f(A, b)``, where it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
@@ -481,7 +481,7 @@ class LagrangesMethod(_Methods):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
         """
 
         if inv_method is None:

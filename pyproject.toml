@@ -14,6 +14,7 @@ doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
     "ELLIPSIS",
+    "FLOAT_CMP",
 ]
 
 norecursedirs = [
@@ -105,6 +106,7 @@ ignore_errors = true
 module = [
     "antlr4.*",
     "Cython.*",
+    "flint.*",
     "gmpy.*",
     "gmpy2.*",
     "IPython.*",

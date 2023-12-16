@@ -1408,14 +1408,14 @@ class Derivative(Expr):
         # -------------------------------------------------------------
         nderivs = 0  # how many derivatives were performed
         unhandled = []
-        from sympy.matrices.common import MatrixCommon
+        from sympy.matrices.matrixbase import MatrixBase
         for i, (v, count) in enumerate(variable_count):
 
             old_expr = expr
             old_v = None
 
             is_symbol = v.is_symbol or isinstance(v,
-                (Iterable, Tuple, MatrixCommon, NDimArray))
+                (Iterable, Tuple, MatrixBase, NDimArray))
 
             if not is_symbol:
                 old_v = v
@@ -1898,10 +1898,10 @@ class Derivative(Expr):
 
 
 def _derivative_dispatch(expr, *variables, **kwargs):
-    from sympy.matrices.common import MatrixCommon
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.tensor.array import NDimArray
-    array_types = (MatrixCommon, MatrixExpr, NDimArray, list, tuple, Tuple)
+    array_types = (MatrixBase, MatrixExpr, NDimArray, list, tuple, Tuple)
     if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
         from sympy.tensor.array.array_derivatives import ArrayDerivative
         return ArrayDerivative(expr, *variables, **kwargs)
@@ -2884,8 +2884,21 @@ def expand_log(expr, deep=True, force=False, factor=False):
 
     """
     from sympy.functions.elementary.exponential import log
+    from sympy.simplify.radsimp import fraction
     if factor is False:
-        def _handle(x):
+        def _handleMul(x):
+            # look for the simple case of expanded log(b**a)/log(b) -> a in args
+            n, d = fraction(x)
+            n = [i for i in n.atoms(log) if i.args[0].is_Integer]
+            d = [i for i in d.atoms(log) if i.args[0].is_Integer]
+            if len(n) == 1 and len(d) == 1:
+                n = n[0]
+                d = d[0]
+                from sympy import multiplicity
+                m = multiplicity(d.args[0], n.args[0])
+                if m:
+                    r = m + log(n.args[0]//d.args[0]**m)/d
+                    x = x.subs(n, d*r)
             x1 = expand_mul(expand_log(x, deep=deep, force=force, factor=True))
             if x1.count(log) <= x.count(log):
                 return x1
@@ -2894,7 +2907,7 @@ def expand_log(expr, deep=True, force=False, factor=False):
         expr = expr.replace(
         lambda x: x.is_Mul and all(any(isinstance(i, log) and i.args[0].is_Rational
         for i in Mul.make_args(j)) for j in x.as_numer_denom()),
-        _handle)
+        _handleMul)
 
     return sympify(expr).expand(deep=deep, log=True, mul=False,
         power_exp=False, power_base=False, multinomial=False,
@@ -3310,7 +3323,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     >>> type(nfloat((1, 2))) is tuple
     True
     """
-    from sympy.matrices.matrices import MatrixBase
+    from sympy.matrices.matrixbase import MatrixBase
 
     kw = {"n": n, "exponent": exponent, "dkeys": dkeys}
 

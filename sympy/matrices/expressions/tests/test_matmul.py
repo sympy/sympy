@@ -1,7 +1,7 @@
 from sympy.core import I, symbols, Basic, Mul, S
 from sympy.core.mul import mul
 from sympy.functions import adjoint, transpose
-from sympy.matrices.common import ShapeError
+from sympy.matrices.exceptions import ShapeError
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
         eye, ImmutableMatrix)
 from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow

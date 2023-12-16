@@ -1,6 +1,6 @@
 from sympy.core import symbols, S
 from sympy.matrices.expressions import MatrixSymbol, Inverse, MatPow, ZeroMatrix, OneMatrix
-from sympy.matrices.common import NonInvertibleMatrixError, NonSquareMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError, NonSquareMatrixError
 from sympy.matrices import eye, Identity
 from sympy.testing.pytest import raises
 from sympy.assumptions.ask import Q
@@ -60,3 +60,10 @@ def test_inverse_matpow_canonicalization():
 def test_nonsquare_error():
     A = MatrixSymbol('A', 3, 4)
     raises(NonSquareMatrixError, lambda: Inverse(A))
+
+
+def test_adjoint_trnaspose_conjugate():
+    A = MatrixSymbol('A', n, n)
+    assert A.transpose().inverse() == A.inverse().transpose()
+    assert A.conjugate().inverse() == A.inverse().conjugate()
+    assert A.adjoint().inverse() == A.inverse().adjoint()

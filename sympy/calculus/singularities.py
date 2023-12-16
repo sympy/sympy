@@ -21,6 +21,8 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
+from sympy.functions.elementary.hyperbolic import (
+    sech, csch, coth, tanh, cosh, asech, acsch, atanh, acoth)
 from sympy.utilities.misc import filldedent
 
 
@@ -90,13 +92,19 @@ def singularities(expression, symbol, domain=None):
         domain = S.Reals if symbol.is_real else S.Complexes
     try:
         sings = S.EmptySet
-        for i in expression.rewrite([sec, csc, cot, tan], cos).atoms(Pow):
+        e = expression.rewrite([sec, csc, cot, tan], cos)
+        e = e.rewrite([sech, csch, coth, tanh], cosh)
+        for i in e.atoms(Pow):
             if i.exp.is_infinite:
                 raise NotImplementedError
             if i.exp.is_negative:
+                # XXX: exponent of varying sign not handled
                 sings += solveset(i.base, symbol, domain)
-        for i in expression.atoms(log):
+        for i in expression.atoms(log, asech, acsch):
             sings += solveset(i.args[0], symbol, domain)
+        for i in expression.atoms(atanh, acoth):
+            sings += solveset(i.args[0] - 1, symbol, domain)
+            sings += solveset(i.args[0] + 1, symbol, domain)
         return sings
     except NotImplementedError:
         raise NotImplementedError(filldedent('''

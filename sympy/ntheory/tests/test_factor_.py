@@ -5,19 +5,19 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
-from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
+from sympy.external.gmpy import gcd
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
     primerange, pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
-    trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
+    divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
-    udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
-    mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
-    is_deficient, is_amicable, dra, drm)
+    udivisor_count, proper_divisor_count, primenu, primeomega,
+    mersenne_prime_exponent, is_perfect, is_abundant,
+    is_deficient, is_amicable, dra, drm, _perfect_power)
 
 from sympy.testing.pytest import raises, slow
 
@@ -66,24 +66,6 @@ def multiproduct(seq=(), start=1):
     return units * multiproduct(multi)**2
 
 
-def test_trailing_bitcount():
-    assert trailing(0) == 0
-    assert trailing(1) == 0
-    assert trailing(-1) == 0
-    assert trailing(2) == 1
-    assert trailing(7) == 0
-    assert trailing(-7) == 0
-    for i in range(100):
-        assert trailing(1 << i) == i
-        assert trailing((1 << i) * 31337) == i
-    assert trailing(1 << 1000001) == 1000001
-    assert trailing((1 << 273956)*7**37) == 273956
-    # issue 12709
-    big = small_trailing[-1]*2
-    assert trailing(-big) == trailing(big)
-    assert bitcount(-big) == bitcount(big)
-
-
 def test_multiplicity():
     for b in range(2, 20):
         for i in range(100):
@@ -113,6 +95,32 @@ def test_multiplicity_in_factorial():
     n = fac(1000)
     for i in (2, 4, 6, 12, 30, 36, 48, 60, 72, 96):
         assert multiplicity(i, n) == multiplicity_in_factorial(i, 1000)
+
+
+def test_private_perfect_power():
+    assert _perfect_power(0) is False
+    assert _perfect_power(1) is False
+    assert _perfect_power(2) is False
+    assert _perfect_power(3) is False
+    for x in [2, 3, 5, 6, 7, 12, 15, 105, 100003]:
+        for y in range(2, 100):
+            assert _perfect_power(x**y) == (x, y)
+            if x & 1:
+                assert _perfect_power(x**y, next_p=3) == (x, y)
+            if x == 100003:
+                assert _perfect_power(x**y, next_p=100003) == (x, y)
+            assert _perfect_power(101*x**y) == False
+            # Catalan's conjecture
+            if x**y not in [8, 9]:
+                assert _perfect_power(x**y + 1) == False
+                assert _perfect_power(x**y - 1) == False
+    for x in range(1, 10):
+        for y in range(1, 10):
+            g = gcd(x, y)
+            if g == 1:
+                assert _perfect_power(5**x * 101**y) == False
+            else:
+                assert _perfect_power(5**x * 101**y) == (5**(x//g) * 101**(y//g), g)
 
 
 def test_perfect_power():
@@ -303,6 +311,7 @@ def test_divisors_and_divisor_count():
     assert divisors(10) == [1, 2, 5, 10]
     assert divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50, 100]
     assert divisors(101) == [1, 101]
+    assert type(divisors(2, generator=True)) is not list
 
     assert divisor_count(0) == 0
     assert divisor_count(-1) == 1
@@ -324,6 +333,7 @@ def test_proper_divisors_and_proper_divisor_count():
     assert proper_divisors(10) == [1, 2, 5]
     assert proper_divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50]
     assert proper_divisors(1000000007) == [1]
+    assert type(proper_divisors(2, generator=True)) is not list
 
     assert proper_divisor_count(0) == 0
     assert proper_divisor_count(-1) == 0
@@ -343,6 +353,7 @@ def test_udivisors_and_udivisor_count():
     assert udivisors(100) == [1, 4, 25, 100]
     assert udivisors(101) == [1, 101]
     assert udivisors(1000) == [1, 8, 125, 1000]
+    assert type(udivisors(2, generator=True)) is not list
 
     assert udivisor_count(0) == 0
     assert udivisor_count(-1) == 1
@@ -489,7 +500,7 @@ def test_antidivisors():
     assert sorted(x for x in antidivisors(3*5*7, 1)) == \
         [2, 6, 10, 11, 14, 19, 30, 42, 70]
     assert antidivisors(1) == []
-
+    assert type(antidivisors(2, generator=True)) is not list
 
 def test_antidivisor_count():
     assert antidivisor_count(0) == 0
@@ -630,6 +641,7 @@ def test_mersenne_prime_exponent():
 
 
 def test_is_perfect():
+    assert is_perfect(-6) is False
     assert is_perfect(6) is True
     assert is_perfect(15) is False
     assert is_perfect(28) is True
@@ -637,14 +649,6 @@ def test_is_perfect():
     assert is_perfect(496) is True
     assert is_perfect(8128) is True
     assert is_perfect(10000) is False
-
-
-def test_is_mersenne_prime():
-    assert is_mersenne_prime(10) is False
-    assert is_mersenne_prime(127) is True
-    assert is_mersenne_prime(511) is False
-    assert is_mersenne_prime(131071) is True
-    assert is_mersenne_prime(2147483647) is True
 
 
 def test_is_abundant():

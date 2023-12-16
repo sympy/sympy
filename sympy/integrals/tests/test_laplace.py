@@ -7,6 +7,7 @@ from sympy.core.function import Function, expand_mul
 from sympy.core import EulerGamma, Subs, Derivative, diff
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I, oo, pi
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.simplify.simplify import simplify
@@ -14,9 +15,12 @@ from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import atan, cos, sin
+from sympy.logic.boolalg import And
 from sympy.functions.special.gamma_functions import lowergamma, gamma
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
+from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import lerchphi
 from sympy.functions.special.error_functions import (
     fresnelc, fresnels, erf, erfc, Ei, Ci, expint, E1)
@@ -29,6 +33,7 @@ from sympy.abc import s
 @slow
 def test_laplace_transform():
     LT = laplace_transform
+    ILT = inverse_laplace_transform
     a, b, c, = symbols('a, b, c', positive=True)
     t, w, x = symbols('t, w, x')
     f = Function('f')
@@ -312,6 +317,46 @@ def test_laplace_transform():
             (a*Derivative(LaplaceTransform(f(t), t, s), (s, 2)) -
              b*Derivative(LaplaceTransform(f(t), t, s), s) +
             c*LaplaceTransform(f(t), t, s), -oo, True))
+    # The following tests check whether _piecewise_to_heaviside works:
+    x1 = Piecewise((0, t <= 0), (1, t <= 1), (0, True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == 1/s - exp(-s)/s
+    y1 = ILT(X1, s, t)
+    assert y1 == Heaviside(t) - Heaviside(t - 1)
+    x1 = Piecewise((0, t <= 0), (t, t <= 1), (2-t, t <= 2), (0, True))
+    X1 = LT(x1, t, s)[0].simplify()
+    assert X1 == (exp(2*s) - 2*exp(s) + 1)*exp(-2*s)/s**2
+    y1 = ILT(X1, s, t)
+    assert (
+        -y1 + t*Heaviside(t) + (t - 2)*Heaviside(t - 2) -
+        2*(t - 1)*Heaviside(t - 1)).simplify() == 0
+    x1 = Piecewise((exp(t), t <= 0), (1, t <= 1), (exp(-(t)), True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == exp(-1)*exp(-s)/(s + 1) + 1/s - exp(-s)/s
+    y1 = ILT(X1, s, t)
+    assert y1 == (
+        exp(-1)*exp(1 - t)*Heaviside(t - 1) + Heaviside(t) - Heaviside(t - 1))
+    x1 = Piecewise((0, x <= 0), (1, x <= 1), (0, True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == Piecewise((0, x <= 0), (1, x <= 1), (0, True))/s
+    x1 = [
+        a*Piecewise((1, And(t > 1, t <= 3)), (2, True)),
+        a*Piecewise((1, And(t >= 1, t <= 3)), (2, True)),
+        a*Piecewise((1, And(t >= 1, t < 3)), (2, True)),
+        a*Piecewise((1, And(t > 1, t < 3)), (2, True))]
+    for x2 in x1:
+        assert LT(x2, t, s)[0].expand() == 2*a/s - a*exp(-s)/s + a*exp(-3*s)/s
+    assert (
+        LT(Piecewise((1, Eq(t, 1)), (2, True)), t, s)[0] ==
+        LaplaceTransform(Piecewise((1, Eq(t, 1)), (2, True)), t, s))
+    # The following lines test whether _laplace_transform successfully
+    # removes Heaviside(1) before processing espressions. It fails if
+    # Heaviside(t) remains because then meijerg functions will appear.
+    X1 = 1/sqrt(a*s**2-b)
+    x1 = ILT(X1, s, t)
+    Y1 = LT(x1, t, s)[0]
+    Z1 = (Y1**2/X1**2).simplify()
+    assert Z1 == 1
     # The following two lines test whether issues #5813 and #7176 are solved.
     assert (LT(diff(f(t), (t, 1)), t, s, noconds=True) ==
             s*LaplaceTransform(f(t), t, s) - f(0))
@@ -339,6 +384,10 @@ def test_laplace_transform():
     assert LT(3*exp(t)*Heaviside(t), t, s) == (3/(s - 1), 1, True)
     assert (LT(2*sin(t)*Heaviside(t), t, s, simplify=True) ==
             (2/(s**2 + 1), 0, True))
+    # Issue #25293
+    assert (
+        LT((1/(t-1))*sin(4*pi*(t-1))*DiracDelta(t-1) *
+           (Heaviside(t-1/4) - Heaviside(t-2)), t, s)[0] == 4*pi*exp(-s))
     # additional basic tests from wikipedia
     assert (LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) ==
             ((c + s)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True))
@@ -362,6 +411,11 @@ def test_laplace_transform():
     assert LT(f(t)*DiracDelta(b*t-a), t, s) == (f(a/b)*exp(-a*s/b)/b,
                                                 -oo, True)
     assert LT(f(t)*DiracDelta(b*t+a), t, s) == (0, -oo, True)
+    # SingularityFunction
+    assert LT(SingularityFunction(t, a, -1), t, s)[0] == exp(-a*s)
+    assert LT(SingularityFunction(t, a, 1), t, s)[0] == exp(-a*s)/s**2
+    assert LT(SingularityFunction(t, a, x), t, s)[0] == (
+        LaplaceTransform(SingularityFunction(t, a, x), t, s))
     # Collection of cases that cannot be fully evaluated and/or would catch
     # some common implementation errors
     assert (LT(DiracDelta(t**2), t, s, noconds=True) ==
@@ -415,6 +469,189 @@ def test_laplace_transform():
 
 @slow
 def test_inverse_laplace_transform():
+    s = symbols('s')
+    k, n, t = symbols('k, n, t', real=True)
+    a, b, c, d = symbols('a, b, c, d', positive=True)
+    f = Function('f')
+    F = Function('F')
+
+    def ILT(g):
+        return inverse_laplace_transform(g, s, t)
+
+    def ILTS(g):
+        return inverse_laplace_transform(g, s, t, simplify=True)
+
+    def ILTF(g):
+        return laplace_correspondence(
+            inverse_laplace_transform(g, s, t), {f: F})
+
+    # Tests for the rules in Bateman54.
+
+    # Section 4.1: Some of the Laplace transform rules can also be used well
+    #     in the inverse transform.
+    assert ILTF(exp(-a*s)*F(s)) == f(-a + t)
+    assert ILTF(k*F(s-a)) == k*f(t)*exp(-a*t)
+    assert ILTF(diff(F(s), s, 3)) == -t**3*f(t)
+    assert ILTF(diff(F(s), s, 4)) == t**4*f(t)
+
+    # Section 5.1: Most rules are impractical for a computer algebra system.
+
+    # Section 5.2: Rational functions
+    assert ILT(2) == 2*DiracDelta(t)
+    assert ILT(1/s) == Heaviside(t)
+    assert ILT(1/s**2) == t*Heaviside(t)
+    assert ILT(1/s**5) == t**4*Heaviside(t)/24
+    assert ILT(1/s**n) == t**(n - 1)*Heaviside(t)/gamma(n)
+    assert ILT(a/(a + s)) == a*exp(-a*t)*Heaviside(t)
+    assert ILT(s/(a + s)) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
+    assert (ILT(b*s/(s+a)**2) ==
+            b*(-a*t*exp(-a*t)*Heaviside(t) + exp(-a*t)*Heaviside(t)))
+    assert (ILTS(c/((s+a)*(s+b))) ==
+            c*(exp(a*t) - exp(b*t))*exp(-t*(a + b))*Heaviside(t)/(a - b))
+    assert (ILTS(c*s/((s+a)*(s+b))) ==
+            c*(a*exp(b*t) - b*exp(a*t))*exp(-t*(a + b))*Heaviside(t)/(a - b))
+    assert ILTS(s/(a + s)**3) == t*(-a*t + 2)*exp(-a*t)*Heaviside(t)/2
+    assert ILTS(1/(s*(a + s)**3)) == (
+        -a**2*t**2 - 2*a*t + 2*exp(a*t) - 2)*exp(-a*t)*Heaviside(t)/(2*a**3)
+    assert ILT(1/(s*(a + s)**n)) == (
+        Heaviside(t)*lowergamma(n, a*t)/(a**n*gamma(n)))
+    assert ILT((s-a)**(-b)) == t**(b - 1)*exp(a*t)*Heaviside(t)/gamma(b)
+    assert ILT((a + s)**(-2)) == t*exp(-a*t)*Heaviside(t)
+    assert ILT((a + s)**(-5)) == t**4*exp(-a*t)*Heaviside(t)/24
+    assert ILT(s**2/(s**2 + 1)) == -sin(t)*Heaviside(t) + DiracDelta(t)
+    assert ILT(1 - 1/(s**2 + 1)) == -sin(t)*Heaviside(t) + DiracDelta(t)
+    assert ILT(a/(a**2 + s**2)) == sin(a*t)*Heaviside(t)
+    assert ILT(s/(s**2 + a**2)) == cos(a*t)*Heaviside(t)
+    assert ILT(b/(b**2 + (a + s)**2)) == exp(-a*t)*sin(b*t)*Heaviside(t)
+    assert (ILT(b*s/(b**2 + (a + s)**2)) ==
+            b*(-a*exp(-a*t)*sin(b*t)/b + exp(-a*t)*cos(b*t))*Heaviside(t))
+    assert ILT(1/(s**2*(s**2 + 1))) == t*Heaviside(t) - sin(t)*Heaviside(t)
+    assert (ILTS(c*s/(d**2*(s+a)**2+b**2)) ==
+            c*(-a*d*sin(b*t/d) + b*cos(b*t/d))*exp(-a*t)*Heaviside(t)/(b*d**2))
+    assert ILTS((b*s**2 + d)/(a**2 + s**2)**2) == (
+        2*a**2*b*sin(a*t) + (a**2*b - d)*(a*t*cos(a*t) -
+                                          sin(a*t)))*Heaviside(t)/(2*a**3)
+    assert ILTS(b/(s**2-a**2)) == b*sinh(a*t)*Heaviside(t)/a
+    assert (ILT(b/(s**2-a**2)) ==
+            b*(exp(a*t)*Heaviside(t)/(2*a) - exp(-a*t)*Heaviside(t)/(2*a)))
+    assert ILTS(b*s/(s**2-a**2)) == b*cosh(a*t)*Heaviside(t)
+    assert (ILT(b/(s*(s+a))) ==
+            b*(Heaviside(t)/a - exp(-a*t)*Heaviside(t)/a))
+    # Issue #24424
+    assert (ILTS((s + 8)/((s + 2)*(s**2 + 2*s + 10))) ==
+            ((8*sin(3*t) - 9*cos(3*t))*exp(t) + 9)*exp(-2*t)*Heaviside(t)/15)
+    # Issue #8514; this is not important anymore, since this function
+    # is not solved by integration anymore
+    assert (ILT(1/(a*s**2+b*s+c)) ==
+            2*exp(-b*t/(2*a))*sin(t*sqrt(4*a*c - b**2)/(2*a)) *
+            Heaviside(t)/sqrt(4*a*c - b**2))
+
+    # Section 5.3: Irrational algebraic functions
+    assert (  # (1)
+        ILT(1/sqrt(s)/(b*s-a)) ==
+        exp(a*t/b)*Heaviside(t)*erf(sqrt(a)*sqrt(t)/sqrt(b))/(sqrt(a)*sqrt(b)))
+    assert (  # (2)
+        ILT(1/sqrt(k*s)/(c*s-a)/s) ==
+        (-2*c*sqrt(t)/(sqrt(pi)*a) +
+         c**(S(3)/2)*exp(a*t/c)*erf(sqrt(a)*sqrt(t)/sqrt(c))/a**(S(3)/2)) *
+        Heaviside(t)/(c*sqrt(k)))
+    assert (  # (4)
+        ILT(1/(sqrt(c*s)+a)) == (-a*exp(a**2*t/c)*erfc(a*sqrt(t)/sqrt(c))/c +
+                                 1/(sqrt(pi)*sqrt(c)*sqrt(t)))*Heaviside(t))
+    assert (  # (5)
+        ILT(a/s/(b*sqrt(s)+a)) ==
+        (-exp(a**2*t/b**2)*erfc(a*sqrt(t)/b) + 1)*Heaviside(t))
+    assert (  # (6)
+            ILT((a-b)*sqrt(s)/(sqrt(s)+sqrt(a))/(s-b)) ==
+            (sqrt(a)*sqrt(b)*exp(b*t)*erfc(sqrt(b)*sqrt(t)) +
+             a*exp(a*t)*erfc(sqrt(a)*sqrt(t)) - b*exp(b*t))*Heaviside(t))
+    assert (  # (7)
+            ILT(1/sqrt(s)/(sqrt(b*s)+a)) ==
+            exp(a**2*t/b)*Heaviside(t)*erfc(a*sqrt(t)/sqrt(b))/sqrt(b))
+    assert (  # (8)
+            ILT(a**2/(sqrt(s)+a)/s**(S(3)/2)) ==
+            (2*a*sqrt(t)/sqrt(pi) + exp(a**2*t)*erfc(a*sqrt(t)) - 1) *
+            Heaviside(t))
+    assert (  # (9)
+            ILT((a-b)*sqrt(b)/(s-b)/sqrt(s)/(sqrt(s)+sqrt(a))) ==
+            (sqrt(a)*exp(b*t)*erf(sqrt(b)*sqrt(t)) +
+             sqrt(b)*exp(a*t)*erfc(sqrt(a)*sqrt(t)) -
+             sqrt(b)*exp(b*t))*Heaviside(t))
+    assert (  # (10)
+            ILT(1/(sqrt(s)+sqrt(a))**2) ==
+            (-2*sqrt(a)*sqrt(t)/sqrt(pi) +
+             (-2*a*t + 1)*(erf(sqrt(a)*sqrt(t)) -
+                           1)*exp(a*t) + 1)*Heaviside(t))
+    assert (  # (11)
+            ILT(1/(sqrt(s)+sqrt(a))**2/s) ==
+            ((2*t - 1/a)*exp(a*t)*erfc(sqrt(a)*sqrt(t)) + 1/a -
+             2*sqrt(t)/(sqrt(pi)*sqrt(a)))*Heaviside(t))
+    assert (  # (12)
+            ILT(1/(sqrt(s)+a)**2/sqrt(s)) ==
+            (-2*a*t*exp(a**2*t)*erfc(a*sqrt(t)) +
+             2*sqrt(t)/sqrt(pi))*Heaviside(t))
+    assert (  # (13)
+            ILT(1/(sqrt(s)+a)**3) ==
+            (-a*t*(2*a**2*t + 3)*exp(a**2*t)*erfc(a*sqrt(t)) +
+             2*sqrt(t)*(a**2*t + 1)/sqrt(pi))*Heaviside(t))
+    x = (
+        - ILT(sqrt(s)/(sqrt(s)+a)**3) +
+        2*(sqrt(pi)*a**2*t*(-2*sqrt(pi)*erfc(a*sqrt(t)) +
+                            2*exp(-a**2*t)/(a*sqrt(t))) *
+           (-a**4*t**2 - 5*a**2*t/2 - S.Half) * exp(a**2*t)/2 +
+           sqrt(pi)*a*sqrt(t)*(a**2*t + 1)/2) *
+        Heaviside(t)/(pi*a**2*t)).simplify()
+    assert (  # (14)
+            x == 0)
+    x = (
+        - ILT(1/sqrt(s)/(sqrt(s)+a)**3) +
+        Heaviside(t)*(sqrt(t)*((2*a**2*t + 1) *
+                               (sqrt(pi)*a*sqrt(t)*exp(a**2*t) *
+                                erfc(a*sqrt(t)) - 1) + 1) /
+                      (sqrt(pi)*a))).simplify()
+    assert (  # (15)
+            x == 0)
+    assert (  # (16)
+            factor_terms(ILT(3/(sqrt(s)+a)**4)) ==
+            3*(-2*a**3*t**(S(5)/2)*(2*a**2*t + 5)/(3*sqrt(pi)) +
+               t*(4*a**4*t**2 + 12*a**2*t + 3)*exp(a**2*t) *
+               erfc(a*sqrt(t))/3)*Heaviside(t))
+    assert (  # (17)
+            ILT((sqrt(s)-a)/(s*(sqrt(s)+a))) ==
+            (2*exp(a**2*t)*erfc(a*sqrt(t))-1)*Heaviside(t))
+    assert (  # (18)
+            ILT((sqrt(s)-a)**2/(s*(sqrt(s)+a)**2)) == (
+                1 + 8*a**2*t*exp(a**2*t)*erfc(a*sqrt(t)) -
+                8/sqrt(pi)*a*sqrt(t))*Heaviside(t))
+    assert (  # (19)
+            ILT((sqrt(s)-a)**3/(s*(sqrt(s)+a)**3)) == Heaviside(t)*(
+                2*(8*a**4*t**2+8*a**2*t+1)*exp(a**2*t) *
+                erfc(a*sqrt(t))-8/sqrt(pi)*a*sqrt(t)*(2*a**2*t+1)-1))
+    assert (  # (22)
+            ILT(sqrt(s+a)/(s+b)) == Heaviside(t)*(
+                exp(-a*t)/sqrt(t)/sqrt(pi) +
+                sqrt(a-b)*exp(-b*t)*erf(sqrt(a-b)*sqrt(t))))
+    assert (  # (23)
+            ILT(1/sqrt(s+b)/(s+a)) == Heaviside(t)*(
+                1/sqrt(b-a)*exp(-a*t)*erf(sqrt(b-a)*sqrt(t))))
+    assert (  # (35)
+            ILT(1/sqrt(s**2+a**2)) == Heaviside(t)*(
+                besselj(0, a*t)))
+    assert (  # (44)
+            ILT(1/sqrt(s**2-a**2)) == Heaviside(t)*(
+                besseli(0, a*t)))
+
+    # Miscellaneous tests
+    # Can _inverse_laplace_time_shift deal with positive exponents?
+    assert (
+        - ILT((s**2*exp(2*s) + 4*exp(s) - 4)*exp(-2*s)/(s*(s**2 + 1))) +
+        cos(t)*Heaviside(t) + 4*cos(t - 2)*Heaviside(t - 2) -
+        4*cos(t - 1)*Heaviside(t - 1) - 4*Heaviside(t - 2) +
+        4*Heaviside(t - 1)).simplify() == 0
+
+
+@slow
+def test_inverse_laplace_transform_old():
     from sympy.functions.special.delta_functions import DiracDelta
     ILT = inverse_laplace_transform
     a, b, c, d = symbols('a b c d', positive=True)
@@ -426,27 +663,8 @@ def test_inverse_laplace_transform():
     def simp_hyp(expr):
         return factor_terms(expand_mul(expr)).rewrite(sin)
 
-    assert ILT(1, s, t) == DiracDelta(t)
-    assert ILT(1/s, s, t) == Heaviside(t)
     L = ILT(F(s), s, t)
     assert laplace_correspondence(L, {f: F}) == f(t)
-    assert ILT(a/(a + s), s, t) == a*exp(-a*t)*Heaviside(t)
-    assert ILT(s/(a + s), s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
-    assert (ILT(s/(a + s)**3, s, t, simplify=True) ==
-            t*(-a*t + 4)*exp(-a*t)*Heaviside(t)/2)
-    assert (ILT(1/(s*(a + s)**3), s, t, simplify=True) ==
-            (-a**2*t**2 - 4*a*t + 4*exp(a*t) - 4) *
-            exp(-a*t)*Heaviside(t)/(2*a**3))
-    assert ILT(1/(s*(a + s)**n), s, t) == (
-        Heaviside(t)*lowergamma(n, a*t)/(a**n*gamma(n)))
-    assert ILT((s-a)**(-b), s, t) == t**(b - 1)*exp(a*t)*Heaviside(t)/gamma(b)
-    assert ILT((a + s)**(-2), s, t) == t*exp(-a*t)*Heaviside(t)
-    assert ILT((a + s)**(-5), s, t) == t**4*exp(-a*t)*Heaviside(t)/24
-    assert ILT(a/(a**2 + s**2), s, t) == sin(a*t)*Heaviside(t)
-    assert ILT(s/(s**2 + a**2), s, t) == cos(a*t)*Heaviside(t)
-    assert ILT(b/(b**2 + (a + s)**2), s, t) == exp(-a*t)*sin(b*t)*Heaviside(t)
-    assert (ILT(b*s/(b**2 + (a + s)**2), s, t) ==
-            b*(-a*exp(-a*t)*sin(b*t)/b + exp(-a*t)*cos(b*t))*Heaviside(t))
     assert ILT(exp(-a*s)/s, s, t) == Heaviside(-a + t)
     assert ILT(exp(-a*s)/(b + s), s, t) == exp(-b*(-a + t))*Heaviside(-a + t)
     assert (ILT((b + s)/(a**2 + (b + s)**2), s, t) ==
@@ -456,18 +674,6 @@ def test_inverse_laplace_transform():
     assert (ILT(exp(-a*s)/sqrt(s**2 + 1), s, t) ==
             Heaviside(-a + t)*besselj(0, a - t))
     assert ILT(1/(s*sqrt(s + 1)), s, t) == Heaviside(t)*erf(sqrt(t))
-    assert (ILT(1/(s**2*(s**2 + 1)), s, t) ==
-            t*Heaviside(t) - sin(t)*Heaviside(t))
-    assert ILT(s**2/(s**2 + 1), s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
-    assert ILT(1 - 1/(s**2 + 1), s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
-    assert ILT(1/s**2, s, t) == t*Heaviside(t)
-    assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
-    assert ILT(1/s**n, s, t) == t**(n - 1)*Heaviside(t)/gamma(n)
-    # Issue #24424
-    assert (ILT((s + 8)/((s + 2)*(s**2 + 2*s + 10)), s, t, simplify=True) ==
-            ((8*sin(3*t) - 9*cos(3*t))*exp(t) + 9)*exp(-2*t)*Heaviside(t)/15)
-    assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
-    assert simp_hyp(ILT(s/(s**2 - a**2), s, t)) == cosh(a*t)*Heaviside(t)
     # TODO sinh/cosh shifted come out a mess. also delayed trig is a mess
     # TODO should this simplify further?
     assert (ILT(exp(-a*s)/s**b, s, t) ==
@@ -485,36 +691,13 @@ def test_inverse_laplace_transform():
         Heaviside(t)*besselj(b, a*t))
     assert ILT(1/(s*sqrt(s + 1)), s, t) == Heaviside(t)*erf(sqrt(t))
     # TODO can we make erf(t) work?
-    assert (ILT(1/(s**2*(s**2 + 1)), s, t, simplify=True) ==
-            (t - sin(t))*Heaviside(t))
     assert (ILT((s * eye(2) - Matrix([[1, 0], [0, 2]])).inv(), s, t) ==
             Matrix([[exp(t)*Heaviside(t), 0], [0, exp(2*t)*Heaviside(t)]]))
-    # New tests for rules
-    assert (ILT(b/(s**2-a**2), s, t, simplify=True) ==
-            b*sinh(a*t)*Heaviside(t)/a)
-    assert (ILT(b/(s**2-a**2), s, t) ==
-            b*(exp(a*t)*Heaviside(t)/(2*a) - exp(-a*t)*Heaviside(t)/(2*a)))
-    assert (ILT(b*s/(s**2-a**2), s, t, simplify=True) ==
-            b*cosh(a*t)*Heaviside(t))
-    assert (ILT(b/(s*(s+a)), s, t) ==
-            b*(Heaviside(t)/a - exp(-a*t)*Heaviside(t)/a))
-    assert (ILT(b*s/(s+a)**2, s, t) ==
-            b*(-a*t*exp(-a*t)*Heaviside(t) + exp(-a*t)*Heaviside(t)))
-    assert (ILT(c/((s+a)*(s+b)), s, t, simplify=True) ==
-            c*(exp(a*t) - exp(b*t))*exp(-t*(a + b))*Heaviside(t)/(a - b))
-    assert (ILT(c*s/((s+a)*(s+b)), s, t, simplify=True) ==
-            c*(a*exp(b*t) - b*exp(a*t))*exp(-t*(a + b))*Heaviside(t)/(a - b))
-    assert (ILT(c*s/(d**2*(s+a)**2+b**2), s, t, simplify=True) ==
-            c*(-a*d*sin(b*t/d) + b*cos(b*t/d))*exp(-a*t)*Heaviside(t)/(b*d**2))
     # Test time_diff rule
     assert (ILT(s**42*f(s), s, t) ==
             Derivative(InverseLaplaceTransform(f(s), s, t, None), (t, 42)))
-    assert (ILT((b*s**2 + d)/(a**2 + s**2)**2, s, t, simplify=True) ==
-            (a**3*b*t*cos(a*t) + 5*a**2*b*sin(a*t) - a*d*t*cos(a*t) +
-             d*sin(a*t))*Heaviside(t)/(2*a**3))
     assert ILT(cos(s), s, t) == InverseLaplaceTransform(cos(s), s, t, None)
     # Rules for testing different DiracDelta cases
-    assert ILT(2, s, t) == 2*DiracDelta(t)
     assert (ILT(2*exp(3*s) - 5*exp(-7*s), s, t) ==
             2*InverseLaplaceTransform(exp(3*s), s, t, None) -
             5*DiracDelta(t - 7))
@@ -538,11 +721,6 @@ def test_inverse_laplace_transform():
         f = ILT(exp(z*s), s, t, noconds=False)
         f = f[0] if isinstance(f, tuple) else f
         assert f.func != DiracDelta
-    # old test for Issue 8514, is not important anymore since this function
-    # is not solved by integration anymore
-    assert (ILT(1/(a*s**2+b*s+c), s, t) ==
-            2*exp(-b*t/(2*a))*sin(t*sqrt(4*a*c - b**2)/(2*a)) *
-            Heaviside(t)/sqrt(4*a*c - b**2))
 
 
 @slow
