@@ -183,15 +183,27 @@ def _invert(f_x, y, x, domain=S.Complexes):
     else:
         x1, s = _invert_complex(f_x, FiniteSet(y), x)
 
-    if not isinstance(s, FiniteSet) or x1 != x:
+    # f couldn't be inverted completely; return unmodified.
+    if  x1 != x:
         return x1, s
 
     # Avoid adding gratuitous intersections with S.Complexes. Actual
     # conditions should be handled by the respective inverters.
     if domain is S.Complexes:
         return x1, s
+
+    if isinstance(s, FiniteSet):
+        return x1, s.intersect(domain)
+
+    # "Fancier" solution sets like those obtained by inversion of trigonometric
+    # functions already include general validity conditions (i.e. conditions on
+    # the domain of the respective inverse functions), so we should avoid adding
+    # blanket intesections with S.Reals. But subsets of R (or C) must still be
+    # accounted for.
+    if domain is S.Reals:
+        return x1, s
     else:
-        return x1, s.intersection(domain)
+        return x1, s.intersect(domain)
 
 
 invert_complex = _invert
@@ -209,7 +221,7 @@ def _invert_real(f, g_ys, symbol):
     """Helper function for _invert."""
 
     if f == symbol or g_ys is S.EmptySet:
-        return (f, g_ys)
+        return (symbol, g_ys)
 
     n = Dummy('n', real=True)
 
@@ -495,7 +507,7 @@ def _invert_complex(f, g_ys, symbol):
     """Helper function for _invert."""
 
     if f == symbol or g_ys is S.EmptySet:
-        return (f, g_ys)
+        return (symbol, g_ys)
 
     n = Dummy('n')
 
