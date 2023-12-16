@@ -3526,6 +3526,15 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     assert not isinstance(v, FiniteSet)  # if so, internal error
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
+                if imgset_yes and not eq2.has(imgset_yes[0]):
+                    # The substituted equation simplified in such a way that
+                    # it's no longer necessary to encapsulate a potential new
+                    # solution in an ImageSet. (E.g. at the previous step some
+                    # {n*2*pi} was found as partial solution for one of the
+                    # unknowns, but its main solution expression n*2*pi has now
+                    # been substituted in a trigonometric function.)
+                    imgset_yes = False
+
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
                 if not unsolved_syms:
                     if res:
