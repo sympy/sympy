@@ -208,6 +208,10 @@ Ntheory Functions Reference
 
 .. autofunction:: pi_hex_digits
 
+.. module:: sympy.ntheory.analytic_ntheory
+
+.. autofunction:: ramanujan_tau
+
 .. module:: sympy.ntheory.ecm
 
 ECM function

@@ -27,6 +27,7 @@ from .digits import count_digits, digits, is_palindromic
 from .egyptian_fraction import egyptian_fraction
 from .ecm import ecm
 from .qs import qs
+from .analytic_ntheory import ramanujan_tau
 __all__ = [
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
@@ -64,4 +65,6 @@ __all__ = [
     'ecm',
 
     'qs',
+
+    'ramanujan_tau',
 ]
