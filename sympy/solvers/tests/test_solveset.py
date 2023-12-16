@@ -1058,14 +1058,14 @@ def test_solve_hyperbolic():
         ImageSet(Lambda(n, 2*I*(2*n*pi - pi/2)/pi), S.Integers)))
 
     assert dumeq(solveset(cosh(9*x)), Union(
-        ImageSet(Lambda(n, I*(2*n*pi + pi/2)/9), S.Integers),
-        ImageSet(Lambda(n, I*(2*n*pi - pi/2)/9), S.Integers)))
+        ImageSet(Lambda(n, 2*n*I*pi/9 + I*pi/18), S.Integers),
+        ImageSet(Lambda(n, 2*n*I*pi/9 + I*pi/6), S.Integers)))
 
     # issues #9606 / #9531:
     assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
     assert dumeq(solveset(sinh(x), x, S.Complexes), Union(
-        ImageSet(Lambda(n, I*(2*n*pi + pi)), S.Integers),
-        ImageSet(Lambda(n, 2*n*I*pi), S.Integers)))
+        ImageSet(Lambda(n, 2*n*I*pi), S.Integers),
+        ImageSet(Lambda(n, 2*n*I*pi + I*pi), S.Integers)))
 
     # issues #11218 / #18427
     assert dumeq(solveset(sin(pi*x), x, S.Reals), Union(
@@ -1076,9 +1076,8 @@ def test_solve_hyperbolic():
         ImageSet(Lambda(n, 2*n), S.Integers)))
 
     # issue #17543
-    assert dumeq(simplify(solveset(I*cot(8*x - 8*E), x)), Union(
-        ImageSet(Lambda(n, n*pi/4 - 13*pi/16 + E), S.Integers),
-        ImageSet(Lambda(n, n*pi/4 - 11*pi/16 + E), S.Integers)))
+    assert dumeq(solveset(I*cot(8*x - 8*E), x),
+        ImageSet(Lambda(n, pi*n/8 - 13*pi/16 + E), S.Integers))
 
     # issues #18490 / #19489
     assert solveset(cosh(x) + cosh(3*x) - cosh(5*x), x, S.Reals
