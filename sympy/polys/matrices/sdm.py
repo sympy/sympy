@@ -464,7 +464,6 @@ class SDM(dict):
 
         from_dod
         sympy.polys.matrices.domainmatrix.DomainMatrix.to_dod
-        sympy.matrices.matrices.MatrixBase.to_dod
         """
         return {i: row.copy() for i, row in M.items()}
 
