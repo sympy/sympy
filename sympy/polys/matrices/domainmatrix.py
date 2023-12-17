@@ -965,7 +965,6 @@ class DomainMatrix:
         ========
 
         from_flat_nz
-        to_flat_nz_rowwise
         """
         return self.rep.to_flat_nz()
 
@@ -1014,6 +1013,7 @@ class DomainMatrix:
         to_list
         to_list_flat
         to_flat_nz
+        sympy.matrices.matrixbase.MatrixBase.todod
         """
         return self.rep.to_dod()
 
