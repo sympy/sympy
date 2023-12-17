@@ -273,7 +273,6 @@ class DomainMatrix:
         self.domain = rep.domain
         return self
 
-
     @classmethod
     def from_list(cls, rows, domain):
         r"""
@@ -318,7 +317,6 @@ class DomainMatrix:
         conv = lambda e: domain(*e) if isinstance(e, tuple) else domain(e)
         domain_rows = [[conv(e) for e in row] for row in rows]
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
-
 
     @classmethod
     def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
@@ -967,6 +965,7 @@ class DomainMatrix:
         ========
 
         from_flat_nz
+        to_flat_nz_rowwise
         """
         return self.rep.to_flat_nz()
 
@@ -983,6 +982,71 @@ class DomainMatrix:
         """
         rep = self.rep.from_flat_nz(elements, data, domain)
         return self.from_rep(rep)
+
+    def to_dod(self):
+        """
+        Convert :class:`DomainMatrix` to dictionary of dictionaries (dod) format.
+
+        Explanation
+        ===========
+
+        Returns a dictionary of dictionaries representing the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([[ZZ(1), ZZ(2), ZZ(0)], [ZZ(3), ZZ(0), ZZ(4)]], ZZ)
+        >>> A.to_dod()
+        {0: {0: 1, 1: 2}, 1: {0: 3, 2: 4}}
+        >>> A.to_sparse() == A.from_dod(A.to_dod(), A.shape, A.domain)
+        True
+        >>> A == A.from_dod_like(A.to_dod())
+        True
+
+        See Also
+        ========
+
+        from_dod
+        from_dod_like
+        to_dok
+        to_list
+        to_list_flat
+        to_flat_nz
+        """
+        return self.rep.to_dod()
+
+    @classmethod
+    def from_dod(cls, dod, shape, domain):
+        """
+        Create sparse :class:`DomainMatrix` from dict of dict (dod) format.
+
+        See :meth:`to_dod` for explanation.
+
+        See Also
+        ========
+
+        to_dod
+        from_dod_like
+        """
+        return cls.from_rep(SDM.from_dod(dod, shape, domain))
+
+    def from_dod_like(self, dod, domain=None):
+        """
+        Create :class:`DomainMatrix` like ``self`` from dict of dict (dod) format.
+
+        See :meth:`to_dod` for explanation.
+
+        See Also
+        ========
+
+        to_dod
+        from_dod
+        """
+        if domain is None:
+            domain = self.domain
+        return self.from_rep(self.rep.from_dod(dod, self.shape, domain))
 
     def to_dok(self):
         """
@@ -1694,6 +1758,7 @@ class DomainMatrix:
         ========
 
         sympy.polys.polytools.Poly.clear_denoms
+        clear_denoms_rowwise
         """
         elems0, data = self.to_flat_nz()
 
@@ -1709,6 +1774,77 @@ class DomainMatrix:
 
         den = DomainScalar(den, Kden)
         num = self.from_flat_nz(elems1, data, Knum)
+
+        return den, num
+
+    def clear_denoms_rowwise(self, convert=False):
+        """
+        Clear denominators from each row of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([[(1,2), (1,3), (1,4)], [(1,5), (1,6), (1,7)]], QQ)
+        >>> den, Anum = A.clear_denoms_rowwise()
+        >>> den.to_Matrix()
+        Matrix([
+        [12,   0],
+        [ 0, 210]])
+        >>> Anum.to_Matrix()
+        Matrix([
+        [ 6,  4,  3],
+        [42, 35, 30]])
+
+        The denominator matrix is a diagonal matrix with the denominators of
+        each row on the diagonal. The invariants are:
+
+        >>> den * A == Anum
+        True
+        >>> A == den.to_field().inv() * Anum
+        True
+
+        The numerator matrix will be in the same domain as the original matrix
+        unless ``convert`` is set to ``True``:
+
+        >>> A.clear_denoms_rowwise()[1].domain
+        QQ
+        >>> A.clear_denoms_rowwise(convert=True)[1].domain
+        ZZ
+
+        The domain of the denominator matrix is the associated ring:
+
+        >>> A.clear_denoms_rowwise()[0].domain
+        ZZ
+
+        See Also
+        ========
+
+        sympy.polys.polytools.Poly.clear_denoms
+        clear_denoms
+        """
+        dod = self.to_dod()
+
+        K0 = self.domain
+        K1 = K0.get_ring() if K0.has_assoc_Ring else K0
+
+        diagonals = [K0.one] * self.shape[0]
+        dod_num = {}
+        for i, rowi in dod.items():
+            indices, elems = zip(*rowi.items())
+            den, elems_num = dup_clear_denoms(elems, K0, K1, convert=convert)
+            rowi_num = dict(zip(indices, elems_num))
+            diagonals[i] = den
+            dod_num[i] = rowi_num
+
+        if convert:
+            Kden, Knum = K1, K1
+        else:
+            Kden, Knum = K1, K0
+
+        den = self.diag(diagonals, Kden)
+        num = self.from_dod_like(dod_num, Knum)
 
         return den, num
 

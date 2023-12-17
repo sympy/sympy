@@ -248,6 +248,15 @@ class DFM:
         """Inverse of :meth:`to_flat_nz`."""
         return DDM.from_flat_nz(elements, data, domain).to_dfm()
 
+    def to_dod(self):
+        """Convert to a DOD."""
+        return self.to_ddm().to_dod()
+
+    @classmethod
+    def from_dod(cls, dod, shape, domain):
+        """Inverse of :meth:`to_dod`."""
+        return DDM.from_dod(dod, shape, domain).to_dfm()
+
     def to_dok(self):
         """Convert to a DOK."""
         return self.to_ddm().to_dok()

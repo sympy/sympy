@@ -446,6 +446,58 @@ class SDM(dict):
         dok = dict(zip(indices, elements))
         return cls.from_dok(dok, shape, domain)
 
+    def to_dod(M):
+        """
+        Convert to dictionary of dictionaries (dod) format.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0: {1: QQ(2)}, 1: {0: QQ(3)}}, (2, 2), QQ)
+        >>> A.to_dod()
+        {0: {1: 2}, 1: {0: 3}}
+
+        See Also
+        ========
+
+        from_dod
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dod
+        sympy.matrices.matrices.MatrixBase.to_dod
+        """
+        return {i: row.copy() for i, row in M.items()}
+
+    @classmethod
+    def from_dod(cls, dod, shape, domain):
+        """
+        Create :py:class:`~.SDM` from dictionary of dictionaries (dod) format.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> dod = {0: {1: QQ(2)}, 1: {0: QQ(3)}}
+        >>> A = SDM.from_dod(dod, (2, 2), QQ)
+        >>> A
+        {0: {1: 2}, 1: {0: 3}}
+        >>> A == SDM.from_dod(A.to_dod(), A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        to_dod
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dod
+        """
+        sdm = defaultdict(dict)
+        for i, row in dod.items():
+            for j, e in row.items():
+                if e:
+                    sdm[i][j] = e
+        return cls(sdm, shape, domain)
+
     def to_dok(M):
         """
         Convert to dictionary of keys (dok) format.

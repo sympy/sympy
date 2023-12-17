@@ -304,6 +304,62 @@ class DDM(list):
         """
         return SDM.from_flat_nz(elements, data, domain).to_ddm()
 
+    def to_dod(self):
+        """
+        Convert to a dictionary of dictionaries (dod) format.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> A = DDM([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> A.to_dod()
+        {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}
+
+        See Also
+        ========
+
+        from_dod
+        sympy.polys.matrices.sdm.SDM.to_dod
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dod
+        """
+        dod = {}
+        for i, row in enumerate(self):
+            row = {j:e for j, e in enumerate(row) if e}
+            if row:
+                dod[i] = row
+        return dod
+
+    @classmethod
+    def from_dod(cls, dod, shape, domain):
+        """
+        Create a :class:`DDM` from a dictionary of dictionaries (dod) format.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> dod = {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}
+        >>> A = DDM.from_dod(dod, (2, 2), QQ)
+        >>> A
+        [[1, 2], [3, 4]]
+
+        See Also
+        ========
+
+        to_dod
+        sympy.polys.matrices.sdm.SDM.from_dod
+        sympy.polys.matrices.domainmatrix.DomainMatrix.from_dod
+        """
+        rows, cols = shape
+        lol = [[domain.zero] * cols for _ in range(rows)]
+        for i, row in dod.items():
+            for j, element in row.items():
+                lol[i][j] = element
+        return DDM(lol, shape, domain)
+
     def to_dok(self):
         """
         Convert :class:`DDM` to dictionary of keys (dok) format.

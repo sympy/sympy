@@ -69,7 +69,7 @@ def _dm_rref(M, *, method='auto'):
 
     elif method == 'CD':
         # Clear denominators and use fraction-free GJ in the associated ring.
-        _, Mr = M.clear_denoms(convert=True)
+        _, Mr = M.clear_denoms_rowwise(convert=True)
         M_rref_f, den, pivots = _dm_rref_den_FF(Mr)
         M_rref = _to_field(M_rref_f) / den
 
@@ -133,7 +133,7 @@ def _dm_rref_den(M, *, keep_domain=True, method='auto'):
 
     elif method == 'CD':
         # Clear denominators and use fraction-free GJ in the associated ring.
-        _, Mr = M.clear_denoms(convert=True)
+        _, Mr = M.clear_denoms_rowwise(convert=True)
 
         M_rref_r, den, pivots = _dm_rref_den_FF(Mr)
 
