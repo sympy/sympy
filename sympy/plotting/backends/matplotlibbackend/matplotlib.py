@@ -310,6 +310,17 @@ class MatplotlibBackend(base_backend.Plot):
         else:
             self.close()
 
+    def save_anim(self, path, frame=50, interval=3, fps=60): #default sets
+        import matplotlib.animation as animation
+        self.process_series()
+        def animatex(v):
+            self.ax[0].view_init(elev=30., azim=v) #ax, positions changing.
+            return self.fig,   
+        ani=animation.FuncAnimation(self.fig, animatex, repeat=True,
+                                    frames=frame, interval=interval)
+        ani.save(path+'.gif' ,writer='PillowWriter', fps=fps)
+        #Sample: T= plot3d(x*y, show=False)
+        #        T.save_anim('test1', fps=30)
     def save(self, path):
         self.process_series()
         self.fig.savefig(path)
