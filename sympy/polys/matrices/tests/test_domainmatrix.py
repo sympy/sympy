@@ -327,6 +327,21 @@ def test_DomainMatrix_from_list_flat():
     raises(DMBadInputError, SDM.from_list_flat, nums, (2, 3), ZZ)
 
 
+def test_DomainMatrix_to_dod():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.to_dod() == {0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}
+    A = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(0), ZZ(4)]], (2, 2), ZZ)
+    assert A.to_dod() == {0: {0: ZZ(1)}, 1: {1: ZZ(4)}}
+
+
+def test_DomainMatrix_from_dod():
+    items = {0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}
+    A = DM([[1, 2], [3, 4]], ZZ)
+    assert DomainMatrix.from_dod(items, (2, 2), ZZ) == A.to_sparse()
+    assert A.from_dod_like(items) == A
+    assert A.from_dod_like(items, QQ) == A.convert_to(QQ)
+
+
 def test_DomainMatrix_to_dok():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     assert A.to_dok() == {(0, 0):ZZ(1), (0, 1):ZZ(2), (1, 0):ZZ(3), (1, 1):ZZ(4)}
