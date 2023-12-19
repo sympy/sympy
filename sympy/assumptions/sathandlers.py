@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import MutableMapping
 
 from sympy.assumptions.ask import Q
 from sympy.core import (Add, Mul, Pow, Number, NumberSymbol, Symbol)
@@ -193,6 +194,99 @@ class ClassFactRegistry:
 class_fact_registry = ClassFactRegistry()
 
 
+class PredFactRegistry(MutableMapping):
+    """
+    Registry to store the handlers which returns the new facts from the
+    predicate.
+
+    Explanation
+    ===========
+
+    ``register()`` method registers the handler function against a predicate.
+
+    ``registry(pred)`` method returns a dictionary of computed facts and their
+    handler functions for *pred*.
+
+    ``remove_handler()`` method removes a handler function from every class.
+    This can be useful when you want to extract a compact registry from the
+    pre-built one.
+
+    Examples
+    ========
+
+    Here, we register simple facts for ``Q.gt``.
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.sathandlers import PredFactRegistry
+    >>> reg = PredFactRegistry()
+    >>> @reg.register(Q.gt)
+    ... def _(gt):
+    ...     return gt >> (Q.extended_real(gt.lhs) & Q.extended_real(gt.rhs))
+    >>> @reg.register(Q.gt)
+    ... def _(gt):
+    ...     return gt >> Q.positive(gt.lhs - gt.rhs)
+
+    Calling the registry with predicate returns a dictionary of computed facts
+    and their handler functions for the predicate.
+
+    >>> from sympy.abc import x, y
+    >>> reg(Q.gt(x, y)) # doctest: +SKIP
+    {Implies(Q.gt(x, y), Q.extended_real(x) & Q.extended_real(y)):
+        <function _ at 0x7f292267dd30>,
+     Implies(Q.gt(x, y), Q.positive(x - y)):
+        <function _ at 0x7f29226715e0>}
+
+    You can remove unnecessary handler with ``remove_handler()`` method.
+
+    >>> h = reg(Q.gt(x, y))[Q.gt(x, y) >> Q.positive(x - y)]
+    >>> reg.remove_handler(h)
+    >>> reg(Q.gt(x, y)) # doctest: +SKIP
+    {Implies(Q.gt(x, y), Q.extended_real(x) & Q.extended_real(y)):
+        <function _ at 0x7f292267dd30>}
+
+    """
+    def __init__(self, d=None):
+        d = d or {}
+        self.d = defaultdict(frozenset, d)
+        super().__init__()
+
+    def __setitem__(self, key, item):
+        self.d[key] = frozenset(item)
+
+    def __delitem__(self, key):
+        del self.d[key]
+
+    def __iter__(self):
+        return self.d.__iter__()
+
+    def __len__(self):
+        return len(self.d)
+
+    def __repr__(self):
+        return repr(self.d)
+
+    def register(self, pred):
+        def _(func):
+            self.d[pred] |= {func}
+            return func
+        return _
+
+    def __getitem__(self, key):
+        funcs = self.d.get(key, {})
+        return list(funcs)
+
+    def __call__(self, expr):
+        handlers = self[expr.function]
+        return  {h(expr): h for h in handlers}
+
+    def remove_handler(self, handler):
+        for key in self.d.keys():
+            old_handlers = self.d[key]
+            new_handlers = old_handlers - {handler}
+            self.d[key] = new_handlers
+
+pred_fact_registry = PredFactRegistry()
+
 
 ### Class fact registration ###
 
@@ -321,3 +415,10 @@ def _(expr):
         if prop is not None:
             ret.append(Equivalent(pred, prop))
     return ret
+
+
+### Predicate fact registration ###
+
+for p in (Q.gt, Q.ge, Q.lt, Q.le):
+    fact = lambda r: r >> (Q.extended_real(r.lhs) & Q.extended_real(r.rhs))
+    pred_fact_registry.register(p)(fact)

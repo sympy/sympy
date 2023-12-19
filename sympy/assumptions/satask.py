@@ -7,7 +7,8 @@ from sympy.core.symbol import Symbol
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_known_number_facts
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
-from sympy.assumptions.sathandlers import class_fact_registry
+from sympy.assumptions.sathandlers import (class_fact_registry,
+    pred_fact_registry,)
 from sympy.core import oo
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
@@ -106,10 +107,10 @@ def check_satisfiability(prop, _prop, factbase):
         raise ValueError("Inconsistent assumptions")
 
 
-def extract_predargs(proposition, assumptions=None, context=None):
+def extract_preds_exprs(proposition, assumptions=None, context=None):
     """
-    Extract every expression in the argument of predicates from *proposition*,
-    *assumptions* and *context*.
+    Extract every predicate, and every expression in the arguments of predicates
+    from *proposition*, *assumptions* and *context*.
 
     Parameters
     ==========
@@ -121,27 +122,43 @@ def extract_predargs(proposition, assumptions=None, context=None):
     context : sympy.assumptions.cnf.CNF, optional.
         CNF generated from assumptions context.
 
+    Returns
+    =======
+
+    every_preds : set
+        Every predicate from *proposition*, *assumptions* and *context*.
+
+    exprs : set
+        Every expression in the arguments of predicates in *every_preds*.
+
     Examples
     ========
 
     >>> from sympy import Q, Abs
     >>> from sympy.assumptions.cnf import CNF
-    >>> from sympy.assumptions.satask import extract_predargs
+    >>> from sympy.assumptions.satask import extract_preds_exprs
     >>> from sympy.abc import x, y
     >>> props = CNF.from_prop(Q.zero(Abs(x*y)))
     >>> assump = CNF.from_prop(Q.zero(x) & Q.zero(y))
-    >>> extract_predargs(props, assump)
+    >>> preds, exprs = extract_preds_exprs(props, assump)
+    >>> preds
+    {Q.zero(x), Q.zero(y), Q.zero(Abs(x*y))}
+    >>> exprs
     {x, y, Abs(x*y)}
 
     """
+    every_preds = set()
     req_keys = find_symbols(proposition)
+
     keys = proposition.all_predicates()
+    every_preds |= keys
     # XXX: We need this since True/False are not Basic
     lkeys = set()
     if assumptions:
         lkeys |= assumptions.all_predicates()
     if context:
         lkeys |= context.all_predicates()
+    every_preds |= lkeys
 
     lkeys = lkeys - {S.true, S.false}
     tmp_keys = None
@@ -161,7 +178,7 @@ def extract_predargs(proposition, assumptions=None, context=None):
             exprs |= set(key.arguments)
         else:
             exprs.add(key)
-    return exprs
+    return every_preds, exprs
 
 def find_symbols(pred):
     """
@@ -200,7 +217,7 @@ def get_relevant_clsfacts(exprs, relevant_facts=None):
     Returns
     =======
 
-    exprs : set
+    next_exprs : set
         Candidates for next relevant fact searching.
 
     relevant_facts : sympy.assumptions.cnf.CNF
@@ -263,7 +280,71 @@ def get_relevant_clsfacts(exprs, relevant_facts=None):
                 if isinstance(key, AppliedPredicate):
                     newexprs |= set(key.arguments)
 
-    return newexprs - exprs, relevant_facts
+    next_exprs = newexprs - exprs
+    return next_exprs, relevant_facts
+
+
+def get_relevant_predfacts(preds, relevant_facts=None):
+    """
+    Extract relevant facts from the items in *preds*. Facts are defined in
+    ``assumptions.sathandlers`` module.
+
+    Parameters
+    ==========
+
+    preds : set
+        Predicates whose relevant facts are searched.
+
+    relevant_facts : sympy.assumptions.cnf.CNF, optional.
+        Pre-discovered relevant facts.
+
+    Returns
+    =======
+
+    next_preds : set
+        Candidates for next relevant fact searching.
+
+    relevant_facts : sympy.assumptions.cnf.CNF
+        Updated relevant facts.
+
+    Returns
+    =======
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.satask import get_relevant_predfacts
+    >>> from sympy.abc import x, y
+    >>> preds = {Q.gt(x, y)}
+    >>> _, facts = get_relevant_predfacts(preds)
+    >>> facts.clauses #doctest: +SKIP
+    {frozenset({Literal(Q.gt(x, y), True),
+                Literal(Q.negative(x), False),
+                Literal(Q.negative_infinite(x), False),
+                Literal(Q.positive(x), False),
+                Literal(Q.positive_infinite(x), False),
+                Literal(Q.zero(x), False)}),
+    frozenset({Literal(Q.gt(x, y), True),
+                Literal(Q.negative(y), False),
+                Literal(Q.negative_infinite(y), False),
+                Literal(Q.positive(y), False),
+                Literal(Q.positive_infinite(y), False),
+                Literal(Q.zero(y), False)})}
+    """
+    if not relevant_facts:
+        relevant_facts = CNF()
+
+    newpreds = set()
+    for pred in preds:
+        if not isinstance(pred, AppliedPredicate):
+            continue
+        for fact in pred_fact_registry(pred):
+            newfact = CNF.to_CNF(fact)
+            relevant_facts = relevant_facts._and(newfact)
+            for key in newfact.all_predicates():
+                if isinstance(key, AppliedPredicate):
+                    newpreds.add(key)
+
+    next_preds = newpreds - preds
+    return next_preds, relevant_facts
 
 
 def get_all_relevant_facts(proposition, assumptions, context,
@@ -319,17 +400,22 @@ def get_all_relevant_facts(proposition, assumptions, context,
     # we stop getting new things. Hopefully this strategy won't lead to an
     # infinite loop in the future.
     i = 0
+
     relevant_facts = CNF()
     all_exprs = set()
+
+    preds, exprs = extract_preds_exprs(proposition, assumptions, context)
+
     while True:
-        if i == 0:
-            exprs = extract_predargs(proposition, assumptions, context)
+        if not preds and not exprs:
+            break
+
+        preds, relevant_facts = get_relevant_predfacts(preds, relevant_facts)
+
         all_exprs |= exprs
         exprs, relevant_facts = get_relevant_clsfacts(exprs, relevant_facts)
         i += 1
         if i >= iterations:
-            break
-        if not exprs:
             break
 
     if use_known_facts:
