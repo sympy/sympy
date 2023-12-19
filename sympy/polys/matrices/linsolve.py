@@ -37,7 +37,6 @@ from sympy.polys.solvers import PolyNonlinearError
 
 from .domainmatrix import DomainMatrix
 from .sdm import (
-    SDM,
     sdm_irref,
     sdm_particular_from_rref,
     sdm_nullspace_from_rref
@@ -86,9 +85,9 @@ def _linsolve_aug(Aaug, syms):
     >>> x, y = symbols('x, y')
     >>> eqs = [x + y - 1, x - y - 2]
     >>> A, b = linear_eq_to_matrix(eqs, [x, y])
-    >>> Aaug = Matrix.hstack(A, b).to_DM().to_sdm()
+    >>> Aaug = Matrix.hstack(A, b).to_DM()
     >>> Aaug
-    SDM({0: {0: 1, 1: 1, 2: -1}, 1: {0: 1, 1: -1, 2: -2}}, (2, 3), ZZ)
+    DomainMatrix({0: {0: 1, 1: 1, 2: 1}, 1: {0: 1, 1: -1, 2: 2}}, (2, 3), ZZ)
     >>> _linsolve_aug(Aaug, [x, y])
     {x: 3/2, y: -1/2}
     """
