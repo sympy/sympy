@@ -43,7 +43,7 @@ from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
-from sympy.matrices import zeros, Matrix, MatrixBase
+from sympy.matrices import Matrix, MatrixBase
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
@@ -52,7 +52,6 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert, groebner, poly
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
-from sympy.polys.matrices.linsolve import _linsolve
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -2883,7 +2882,7 @@ def linear_eq_to_matrix(equations, *symbols):
         raise NonlinearError(str(err))
 
     # prepare output matrices
-    m, n = shape = len(eqs), len(symbols)
+    m, n = len(eqs), len(symbols)
     ix = dict(zip(symbols, range(n)))
     eqs_ind = [{ix[s]: v for s, v in eq.items()} for eq in eqs]
     dod = dict(zip(range(m), eqs_ind))
