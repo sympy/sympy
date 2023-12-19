@@ -2878,18 +2878,18 @@ def linear_eq_to_matrix(equations, *symbols):
 
     # construct the dictionaries
     try:
-        eq, c = _linear_eq_to_dict(equations, symbols)
+        eqs, c = _linear_eq_to_dict(equations, symbols)
     except PolyNonlinearError as err:
         raise NonlinearError(str(err))
+
     # prepare output matrices
-    n, m = shape = len(eq), len(symbols)
-    ix = dict(zip(symbols, range(m)))
-    A = zeros(*shape)
-    for row, d in enumerate(eq):
-        for k in d:
-            col = ix[k]
-            A[row, col] = d[k]
-    b = Matrix(n, 1, [-i for i in c])
+    m, n = shape = len(eqs), len(symbols)
+    ix = dict(zip(symbols, range(n)))
+    eqs_ind = [{ix[s]: v for s, v in eq.items()} for eq in eqs]
+    dod = dict(zip(range(m), eqs_ind))
+
+    A = Matrix.from_dod(m, n, dod)
+    b = Matrix(m, 1, [-i for i in c])
     return A, b
 
 
@@ -3066,64 +3066,52 @@ def linsolve(system, *symbols):
     ...
     NonlinearError: nonlinear term: x**2
     """
+    def is_mat(eq):
+        return isinstance(eq, MatrixBase)
+    def is_eq(eq):
+        return isinstance(eq, (Expr, Eq)) and not is_mat(eq)
+
+    # XXX: This is mathematically incorrect if system is supposed to be a list
+    # of equations.
     if not system:
         return S.EmptySet
 
-    # If second argument is an iterable
-    if symbols and hasattr(symbols[0], '__iter__'):
+    sym_gen = False
+    if len(symbols) == 1 and iterable(symbols[0]):
         symbols = symbols[0]
-    sym_gen = isinstance(symbols, GeneratorType)
-    dup_msg = 'duplicate symbols given'
+        sym_gen = isinstance(symbols, GeneratorType)
+    elif symbols:
+        symbols = symbols
+    else:
+        symbols = None
 
+    no_symbols = '''
+    When passing a system of equations, the explicit
+    symbols for which a solution is being sought must
+    be given as a sequence, too.
+    '''
+    wrong_arguments = '''
+    Expected augmented matrix, list of equations or
+    (A, b) as input.
+    '''
 
-    b = None  # if we don't get b the input was bad
-    # unpack system
-
-    if hasattr(system, '__iter__'):
-
-        # 1). (A, b)
-        if len(system) == 2 and isinstance(system[0], MatrixBase):
-            A, b = system
-
-        # 2). (eq1, eq2, ...)
-        if not isinstance(system[0], MatrixBase):
+    if isinstance(system, MatrixBase):
+        A, b = system[:, :-1], system[:, -1]
+    elif is_sequence(system):
+        system = [sympify(eq) for eq in system]
+        if all(is_eq(eq) for eq in system):
             if sym_gen or not symbols:
-                raise ValueError(filldedent('''
-                    When passing a system of equations, the explicit
-                    symbols for which a solution is being sought must
-                    be given as a sequence, too.
-                '''))
+                raise ValueError(filldedent(no_symbols))
             if len(set(symbols)) != len(symbols):
-                raise ValueError(dup_msg)
+                raise ValueError('duplicate symbols given')
+            A, b = linear_eq_to_matrix(system, *symbols)
+        elif len(system) == 2 and is_mat(system[0]) and is_mat(system[1]):
+            A, b = system
+        else:
+            raise ValueError(filldedent(wrong_arguments))
+    else:
+        raise ValueError(filldedent(wrong_arguments))
 
-            #
-            # Pass to the sparse solver implemented in polys. It is important
-            # that we do not attempt to convert the equations to a matrix
-            # because that would be very inefficient for large sparse systems
-            # of equations.
-            #
-            eqs = system
-            eqs = [sympify(eq) for eq in eqs]
-            try:
-                sol = _linsolve(eqs, symbols)
-            except PolyNonlinearError as exc:
-                # e.g. cos(x) contains an element of the set of generators
-                raise NonlinearError(str(exc))
-
-            if sol is None:
-                return S.EmptySet
-
-            sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
-            return sol
-
-    elif isinstance(system, MatrixBase) and not (
-            symbols and not isinstance(symbols, GeneratorType) and
-            isinstance(symbols[0], MatrixBase)):
-        # 3). A augmented with b
-        A, b = system[:, :-1], system[:, -1:]
-
-    if b is None:
-        raise ValueError("Invalid arguments")
     if sym_gen:
         symbols = [next(symbols) for i in range(A.cols)]
         symset = set(symbols)
@@ -3135,7 +3123,7 @@ def linsolve(system, *symbols):
                 the generator, e.g. numbered_symbols('%s', cls=Dummy)
             ''' % symbols[0].name.rstrip('1234567890')))
         elif len(symset) != len(symbols):
-            raise ValueError(dup_msg)
+            raise ValueError('duplicate symbols given')
 
     if not symbols:
         symbols = [Dummy() for _ in range(A.cols)]
@@ -3144,6 +3132,11 @@ def linsolve(system, *symbols):
         gen  = numbered_symbols(name)
     else:
         gen = None
+
+    if any(is_mat(s) for s in symbols):
+        raise ValueError(filldedent('''
+            Symbols must not be matrices.
+            '''))
 
     # This is just a wrapper for solve_lin_sys
     eqs = []
