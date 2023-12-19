@@ -50,8 +50,8 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert, groebner, poly
-from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
-    PolyNonlinearError)
+from sympy.polys.solvers import PolyNonlinearError
+from sympy.polys.matrices.linsolve import _linsolve_aug
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -3137,19 +3137,15 @@ def linsolve(system, *symbols):
             Symbols must not be matrices.
             '''))
 
-    # This is just a wrapper for solve_lin_sys
-    eqs = []
-    rows = A.tolist()
-    for rowi, bi in zip(rows, b):
-        terms = [elem * sym for elem, sym in zip(rowi, symbols) if elem]
-        terms.append(-bi)
-        eqs.append(Add(*terms))
+    # Actually solve the equations:
+    Aaug = Matrix.hstack(A, b).to_DM()
+    if Aaug.domain.is_EXRAW:
+        Aaug = Aaug.convert_to('EX')
+    sol = _linsolve_aug(Aaug, symbols)
 
-    eqs, ring = sympy_eqs_to_ring(eqs, symbols)
-    sol = solve_lin_sys(eqs, ring, _raw=False)
     if sol is None:
         return S.EmptySet
-    #sol = {sym:val for sym, val in sol.items() if sym != val}
+
     sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
 
     if gen is not None:
