@@ -2116,11 +2116,11 @@ class DUP_Flint(DMP):
         assert f.dom == g.dom in (ZZ, QQ)
 
         if f.dom.is_QQ:
-            cF, F = f.clear_denoms()
-            cG, G = g.clear_denoms()
+            cG, F = f.clear_denoms()
+            cF, G = g.clear_denoms()
         else:
-            cF, F = f.dom.one, f
-            cG, G = g.dom.one, g
+            cG, F = f.dom.one, f
+            cF, G = g.dom.one, g
 
         cH = cF.gcd(cG)
         cF, cG = cF // cH, cG // cH
