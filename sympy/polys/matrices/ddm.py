@@ -924,6 +924,19 @@ class DDM(list):
 
         return (basis_ddm, nonpivots)
 
+    def particular_from_rref(A, pivots=None):
+        """Particular solution to Ax = 0 from rref of A.
+
+        The domain of the matrix can be any domain.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.particular
+            The higher level interface to this function.
+        """
+        return A.to_sdm().particular_from_rref(pivots).to_ddm()
+
     def particular(a):
         return a.to_sdm().particular().to_ddm()
 

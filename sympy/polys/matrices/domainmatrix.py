@@ -2525,6 +2525,29 @@ class DomainMatrix:
         null_rep, nonpivots = self.rep.nullspace_from_rref(pivots)
         return self.from_rep(null_rep)
 
+    def particular_from_rref(self, pivots=None):
+        """
+        Compute particular solution from rref and pivots.
+
+        The domain of the matrix can be any domain.
+
+        The matrix must be in reduced row echelon form already. Otherwise the
+        result will be incorrect. Use :meth:`rref` or :meth:`rref_den` first
+        to get the reduced row echelon form.
+
+        See Also
+        ========
+
+        particular
+        rref
+        rref_den
+        solve_den_general
+        sympy.polys.matrices.sdm.SDM.particular_from_rref
+        sympy.polys.matrices.ddm.DDM.particular_from_rref
+        """
+        part_rep = self.rep.particular_from_rref(pivots)
+        return self.from_rep(part_rep)
+
     def inv(self):
         r"""
         Finds the inverse of the DomainMatrix if exists
@@ -3024,6 +3047,75 @@ class DomainMatrix:
         adjA_b = self.eval_poly_mul(f, b)
 
         return (adjA_b, detA)
+
+    def solve_den_general(self, b):
+        """
+        Find the general solution of a matrix equation $Ax = b$.
+
+        This method finds the general solution of the matrix equation $Ax = b$
+        for $x$ and returns the solution as a particular solution and a basis
+        for the nullspace. The particular solution is returned as a numerator
+        and denominator pair.
+
+        Examples
+        ========
+
+        Solve an equation with a unique solution:
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], ZZ)
+        >>> b = DM([[ZZ(5)], [ZZ(6)]], ZZ)
+        >>> xpart, den, xnull = A.solve_den_general(b)
+        >>> xpart
+        DomainMatrix([[8], [-9]], (2, 1), ZZ)
+        >>> den
+        -2
+        >>> xnull
+        DomainMatrix([], (0, 2), ZZ)
+        >>> A * xpart == den * b
+        True
+
+        Solve an equation with infinitely many solutions:
+
+        >>> A = DM([[ZZ(1), ZZ(2), ZZ(3)],
+        ...         [ZZ(4), ZZ(5), ZZ(6)],
+        ...         [ZZ(7), ZZ(8), ZZ(9)]], ZZ)
+        >>> b = DM([[ZZ(1)], [ZZ(2)], [ZZ(3)]], ZZ)
+        >>> xpart, den, xnull = A.solve_den_general(b)
+        >>> xpart
+        DomainMatrix([[1], [-2], [0]], (3, 1), ZZ)
+        >>> den
+        -3
+        >>> xnull
+        DomainMatrix([[-3, 6, -3]], (1, 3), ZZ)
+        >>> A * xpart == den * b
+        True
+        >>> A * xnull.transpose()
+        DomainMatrix([[0], [0], [0]], (3, 1), ZZ)
+        >>> A.rank() == A.shape[0] - xnull.shape[0]
+        True
+
+        See Also
+        ========
+
+        solve_den
+            Solve matrix equations that have a unique solution.
+        """
+        m, n = self.shape
+        assert b.shape == (m, 1)
+
+        A, b = self.unify(b)
+        Aaug = A.hstack(b)
+
+        Aaug_rref, denom, pivots = Aaug.rref_den()
+
+        if pivots and pivots[-1] >= n:
+            raise DMNonInvertibleMatrixError("No solutions")
+
+        particular = Aaug_rref.particular_from_rref(pivots)
+        nullspace = Aaug_rref[:,:-1].nullspace_from_rref(pivots)
+        return particular, denom, nullspace
 
     def adj_poly_det(self, cp=None):
         """
