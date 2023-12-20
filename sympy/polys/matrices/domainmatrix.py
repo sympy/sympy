@@ -3066,13 +3066,15 @@ class DomainMatrix:
         >>> from sympy.polys.matrices import DM
         >>> A = DM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], ZZ)
         >>> b = DM([[ZZ(5)], [ZZ(6)]], ZZ)
-        >>> xpart, den, xnull = A.solve_den_general(b)
+        >>> xpart, den, xnull, free_vars = A.solve_den_general(b)
         >>> xpart
         DomainMatrix([[8], [-9]], (2, 1), ZZ)
         >>> den
         -2
         >>> xnull
         DomainMatrix([], (0, 2), ZZ)
+        >>> free_vars
+        []
         >>> A * xpart == den * b
         True
 
