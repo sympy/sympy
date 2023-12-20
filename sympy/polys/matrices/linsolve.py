@@ -36,6 +36,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys.solvers import PolyNonlinearError
 
 from .domainmatrix import DomainMatrix
+from .exceptions import DMNonInvertibleMatrixError
 from .sdm import (
     sdm_irref,
     sdm_particular_from_rref,
@@ -91,11 +92,27 @@ def _linsolve_aug(Aaug, syms):
     >>> _linsolve_aug(Aaug, [x, y])
     {x: 3/2, y: -1/2}
     """
-    Aaug = Aaug.to_field().to_sdm()
-
     K = Aaug.domain
 
-    P, V, free_variables = _particular_nullspace(Aaug)
+    try:
+        P, den, V, free_variables = Aaug[:,:-1].solve_den_general(Aaug[:,-1])
+    except DMNonInvertibleMatrixError:
+        return None
+
+    Kf = K
+
+    if not K.is_one(den):
+        if not K.is_Field:
+            Kf = K.get_field()
+            P = P.convert_to(Kf)
+            V = V.convert_to(Kf)
+        P = P / den
+        V = V / den
+
+    P = P.transpose().to_dod().get(0, {})
+    Vd = V.to_dod()
+    assert len(Vd) == len(free_variables)
+    V = [Vd[i] for i in range(len(free_variables))]
 
     # No solution:
     if P is None:
@@ -104,11 +121,11 @@ def _linsolve_aug(Aaug, syms):
     # Collect together terms from particular and nullspace:
     sol = defaultdict(list)
     for i, v in P.items():
-        sol[syms[i]].append(K.to_sympy(v))
+        sol[syms[i]].append(Kf.to_sympy(v))
     for npi, Vi in zip(free_variables, V):
         sym = syms[npi]
         for i, v in Vi.items():
-            sol[syms[i]].append(sym * K.to_sympy(v))
+            sol[syms[i]].append(sym * Kf.to_sympy(v))
 
     # Use a single call to Add for each term:
     sol = {s: Add(*terms) for s, terms in sol.items()}
