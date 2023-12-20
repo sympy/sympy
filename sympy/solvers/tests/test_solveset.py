@@ -129,56 +129,66 @@ def test_invert_real():
     base_values =  FiniteSet(y - 1, -y - 1)
     assert invert_real(Abs(x**31 + x + 1), y, x) == (lhs, base_values)
 
-    assert dumeq(invert_real(sin(x), y, x),
-        (x, Union(
+    assert dumeq(invert_real(sin(x), y, x), (x,
+        ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
             ImageSet(Lambda(n, 2*n*pi + asin(y)), S.Integers),
-            ImageSet(Lambda(n, pi*2*n + pi - asin(y)), S.Integers))))
+            ImageSet(Lambda(n, pi*2*n + pi - asin(y)), S.Integers)))))
 
-    assert dumeq(invert_real(sin(exp(x)), y, x),
-        (x, Union(
+    assert dumeq(invert_real(sin(exp(x)), y, x), (x,
+        ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
             ImageSet(Lambda(n, log(2*n*pi + asin(y))), S.Integers),
-            ImageSet(Lambda(n, log(pi*2*n + pi - asin(y))), S.Integers))))
+            ImageSet(Lambda(n, log(pi*2*n + pi - asin(y))), S.Integers)))))
 
-    assert dumeq(invert_real(csc(x), y, x),
-        (x, Union(
-            ImageSet(Lambda(n, 2*n*pi + acsc(y)), S.Integers),
-            ImageSet(Lambda(n, pi*2*n + pi - acsc(y)), S.Integers))))
+    assert dumeq(invert_real(csc(x), y, x), (x,
+        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
+            Union(ImageSet(Lambda(n, 2*n*pi + acsc(y)), S.Integers),
+                ImageSet(Lambda(n, 2*n*pi - acsc(y) + pi), S.Integers)))))
 
-    assert dumeq(invert_real(csc(exp(x)), y, x),
-        (x, Union(
-            ImageSet(Lambda(n, log(2*n*pi + acsc(y))), S.Integers),
-            ImageSet(Lambda(n, log(pi*2*n + pi - acsc(y))), S.Integers))))
+    assert dumeq(invert_real(csc(exp(x)), y, x), (x,
+        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
+            Union(ImageSet(Lambda(n, log(2*n*pi + acsc(y))), S.Integers),
+                ImageSet(Lambda(n, log(2*n*pi - acsc(y) + pi)), S.Integers)))))
 
-    assert dumeq(invert_real(cos(x), y, x),
-        (x, Union(imageset(Lambda(n, 2*n*pi + acos(y)), S.Integers), \
-                imageset(Lambda(n, 2*n*pi - acos(y)), S.Integers))))
+    assert dumeq(invert_real(cos(x), y, x), (x,
+        ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
+            ImageSet(Lambda(n, 2*n*pi + acos(y)), S.Integers),
+            ImageSet(Lambda(n, 2*n*pi - acos(y)), S.Integers)))))
 
-    assert dumeq(invert_real(cos(exp(x)), y, x),
-        (x, Union(imageset(Lambda(n, log(2*n*pi + acos(y))), S.Integers), \
-                imageset(Lambda(n, log(2*n*pi - acos(y))), S.Integers))))
+    assert dumeq(invert_real(cos(exp(x)), y, x), (x,
+        ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
+            ImageSet(Lambda(n, log(2*n*pi + acos(y))), S.Integers),
+            ImageSet(Lambda(n, log(2*n*pi - acos(y))), S.Integers)))))
 
-    assert dumeq(invert_real(sec(x), y, x),
-        (x, Union(imageset(Lambda(n, 2*n*pi + asec(y)), S.Integers), \
-                imageset(Lambda(n, 2*n*pi - asec(y)), S.Integers))))
+    assert dumeq(invert_real(sec(x), y, x), (x,
+        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
+            Union(ImageSet(Lambda(n, 2*n*pi + asec(y)), S.Integers), \
+                ImageSet(Lambda(n, 2*n*pi - asec(y)), S.Integers)))))
 
-    assert dumeq(invert_real(sec(exp(x)), y, x),
-        (x, Union(imageset(Lambda(n, log(2*n*pi + asec(y))), S.Integers), \
-                imageset(Lambda(n, log(2*n*pi - asec(y))), S.Integers))))
+    assert dumeq(invert_real(sec(exp(x)), y, x), (x,
+        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
+            Union(ImageSet(Lambda(n, log(2*n*pi - asec(y))), S.Integers),
+                ImageSet(Lambda(n, log(2*n*pi + asec(y))), S.Integers)))))
 
-    assert dumeq(invert_real(tan(x), y, x),
-        (x, imageset(Lambda(n, n*pi + atan(y)), S.Integers)))
+    assert dumeq(invert_real(tan(x), y, x), (x,
+        ConditionSet(x, (-oo < y) & (y < oo),
+            ImageSet(Lambda(n, n*pi + atan(y)), S.Integers))))
 
-    assert dumeq(invert_real(tan(exp(x)), y, x),
-        (x, imageset(Lambda(n, log(n*pi + atan(y))), S.Integers)))
+    assert dumeq(invert_real(tan(exp(x)), y, x), (x,
+        ConditionSet(x, (-oo < y) & (y < oo),
+            ImageSet(Lambda(n, log(n*pi + atan(y))), S.Integers))))
 
-    assert dumeq(invert_real(cot(x), y, x),
-        (x, imageset(Lambda(n, n*pi + acot(y)), S.Integers)))
+    assert dumeq(invert_real(cot(x), y, x), (x,
+        ConditionSet(x, (-oo < y) & (y < oo),
+            ImageSet(Lambda(n, n*pi + acot(y)), S.Integers))))
 
-    assert dumeq(invert_real(cot(exp(x)), y, x),
-        (x, imageset(Lambda(n, log(n*pi + acot(y))), S.Integers)))
+    assert dumeq(invert_real(cot(exp(x)), y, x), (x,
+        ConditionSet(x, (-oo < y) & (y < oo),
+            ImageSet(Lambda(n, log(n*pi + acot(y))), S.Integers))))
 
     assert dumeq(invert_real(tan(tan(x)), y, x),
-        (tan(x), imageset(Lambda(n, n*pi + atan(y)), S.Integers)))
+        (x, ConditionSet(x, Eq(tan(tan(x)), y), S.Reals)))
+        # slight regression compared to previous result:
+        # (tan(x), imageset(Lambda(n, n*pi + atan(y)), S.Integers)))
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
@@ -199,9 +209,11 @@ def test_invert_real():
         FiniteSet(-asech(r), asech(r)), S.Reals))
     assert invert_real(csch(x), p, x) == (x, FiniteSet(acsch(p)))
 
-    assert dumeq(invert_real(tanh(sin(x)), r, x), (x, Union(
-        ImageSet(Lambda(n, 2*n*pi + asin(atanh(r))), S.Integers),
-        ImageSet(Lambda(n, 2*n*pi - asin(atanh(r)) + pi), S.Integers))))
+    assert dumeq(invert_real(tanh(sin(x)), r, x), (x,
+        ConditionSet(x, (S(-1) <= atanh(r)) & (atanh(r) <= S(1)), Union(
+            ImageSet(Lambda(n, 2*n*pi + asin(atanh(r))), S.Integers),
+            ImageSet(Lambda(n, 2*n*pi - asin(atanh(r)) + pi), S.Integers)))))
+
 
 def test_invert_trig_hyp_real():
     # check some codepaths that are not as easily reached otherwise
@@ -932,8 +944,9 @@ def test_solve_trig():
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers)))
 
     assert dumeq(solveset(sin(y + a) - sin(y), a, domain=S.Reals),
-        Union(ImageSet(Lambda(n, 2*n*pi - y + asin(sin(y))), S.Integers),
-              ImageSet(Lambda(n, 2*n*pi - y - asin(sin(y)) + pi), S.Integers)))
+        ConditionSet(a, (S(-1) <= sin(y)) & (sin(y) <= S(1)), Union(
+            ImageSet(Lambda(n, 2*n*pi - y + asin(sin(y))), S.Integers),
+            ImageSet(Lambda(n, 2*n*pi - y - asin(sin(y)) + pi), S.Integers))))
 
     assert dumeq(solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x),
         ImageSet(Lambda(n, n*pi*Rational(2, 3) + pi/6), S.Integers))
