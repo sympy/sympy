@@ -1045,6 +1045,10 @@ def test_solve_trig_hyp_by_inversion():
     assert solveset_real(cosh(x**2-1)-2, x) == FiniteSet(
         -sqrt(1 + acosh(2)), sqrt(1 + acosh(2)))
 
+    assert solveset_real(sin(x) - 2, x) == S.EmptySet   # issue #17334
+    assert solveset_real(cos(x) + 2, x) == S.EmptySet
+    assert solveset_real(sec(x), x) == S.EmptySet
+    assert solveset_real(csc(x), x) == S.EmptySet
     assert solveset_real(cosh(x) + 1, x) == S.EmptySet
     assert solveset_real(coth(x), x) == S.EmptySet
     assert solveset_real(sech(x) - 2, x) == S.EmptySet
@@ -1086,6 +1090,28 @@ def test_solve_trig_hyp_by_inversion():
     assert solveset(eq, z, S.Reals) == FiniteSet(
         acoth(CRootOf(x**5 - 4*x + 1, 0)), acoth(CRootOf(x**5 - 4*x + 1, 2)))
 
+    eq = ((x-sqrt(3)/2)*(x+2)).expand().subs(x, cos(x))
+    assert solveset(eq, x, S.Complexes).dummy_eq(Union(
+        ImageSet(Lambda(n, 2*n*pi - acos(-2)), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + acos(-2)), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + 11*pi/6), S.Integers)))
+    assert solveset(eq, x, S.Reals).dummy_eq(Union(
+        ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + 11*pi/6), S.Integers)))
+
+    assert solveset((1+sec(sqrt(3)*x+4)**2)/(1-sec(sqrt(3)*x+4))).dummy_eq(Union(
+        ImageSet(Lambda(n, sqrt(3)*(2*n*pi - 4 - asec(I))/3), S.Integers),
+        ImageSet(Lambda(n, sqrt(3)*(2*n*pi - 4 + asec(I))/3), S.Integers),
+        ImageSet(Lambda(n, sqrt(3)*(2*n*pi - 4 - asec(-I))/3), S.Integers),
+        ImageSet(Lambda(n, sqrt(3)*(2*n*pi - 4 + asec(-I))/3), S.Integers)))
+
+    assert all_close(solveset(tan(3.14*x)**(S(3)/2)-5.678, x, Interval(0, 3)),
+        FiniteSet(0.403301114561067, 0.403301114561067 + 0.318471337579618*pi,
+                0.403301114561067 + 0.636942675159236*pi))
+
+
+def test_old_trig_issues():
     # issues #9606 / #9531:
     assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
     assert solveset(sinh(x), x, S.Complexes).dummy_eq(Union(
@@ -1117,6 +1143,41 @@ def test_solve_trig_hyp_by_inversion():
     ret = solveset(cos(2*x) - 0.5, x, S.Complexes)
     ret = ret.subs(ret.atoms(Dummy).pop(), n)
     assert all_close(ret, sol)
+
+    # issue #21296 / #17667
+    assert solveset(tan(x)-sqrt(2), x, Interval(0, pi/2)) == FiniteSet(atan(sqrt(2)))
+    assert solveset(tan(x)-pi, x, Interval(0, pi/2)) == FiniteSet(atan(pi))
+
+    # issue #17667
+    # not yet working properly:
+    # solveset(cos(x)-y, x, Interval(0, pi))
+    assert solveset(cos(x)-y, x, S.Reals).dummy_eq(
+        ConditionSet(x,(S(-1) <= y) & (y <= S(1)), Union(
+            ImageSet(Lambda(n, 2*n*pi - acos(y)), S.Integers),
+            ImageSet(Lambda(n, 2*n*pi + acos(y)), S.Integers))))
+
+    # issue #17579
+    # Valid result, but the intersection could potentially be simplified.
+    assert solveset(sin(log(x)), x, Interval(0,1, True, False)).dummy_eq(
+        Union(Intersection(ImageSet(Lambda(n, exp(2*n*pi)), S.Integers), Interval.Lopen(0, 1)),
+              Intersection(ImageSet(Lambda(n, exp(2*n*pi + pi)), S.Integers), Interval.Lopen(0, 1))))
+
+    # issue #17334
+    assert solveset(sin(x) - sin(1), x, S.Reals).dummy_eq(Union(
+        ImageSet(Lambda(n, 2*n*pi + 1), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi - 1 + pi), S.Integers)))
+    assert solveset(sin(x) - sqrt(5)/3, x, S.Reals).dummy_eq(Union(
+        ImageSet(Lambda(n, 2*n*pi + asin(sqrt(5)/3)), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi - asin(sqrt(5)/3) + pi), S.Integers)))
+    assert solveset(sinh(x)-cosh(2), x, S.Reals) == FiniteSet(asinh(cosh(2)))
+
+    # issue 9825
+    assert solveset(Eq(tan(x), y), x, domain=S.Reals).dummy_eq(
+        ConditionSet(x, (-oo < y) & (y < oo),
+                     ImageSet(Lambda(n, n*pi + atan(y)), S.Integers)))
+    r = Symbol('r', real=True)
+    assert solveset(Eq(tan(x), r), x, domain=S.Reals).dummy_eq(
+        ImageSet(Lambda(n, n*pi + atan(r)), S.Integers))
 
 
 def test_solve_hyperbolic():
