@@ -932,7 +932,7 @@ class DDM(list):
         See Also
         ========
 
-        sympy.polys.matrices.domainmatrix.DomainMatrix.particular
+        sympy.polys.matrices.domainmatrix.DomainMatrix.particular_from_rref
             The higher level interface to this function.
         """
         return A.to_sdm().particular_from_rref(pivots).to_ddm()

@@ -1266,7 +1266,6 @@ class SDM(dict):
         ========
 
         particular_from_rref
-        sympy.polys.matrices.domainmatrix.DomainMatrix.particular
         """
         Aaug, pivots = A.rref()
         return Aaug.particular_from_rref(pivots).transpose()
