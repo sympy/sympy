@@ -4,6 +4,7 @@ from sympy.functions import KroneckerDelta
 from sympy.matrices import Matrix
 from sympy.matrices.expressions import FunctionMatrix, MatrixExpr, Identity
 from sympy.testing.pytest import raises
+import operator
 
 
 def test_funcmatrix_creation():
@@ -45,7 +46,7 @@ def test_funcmatrix():
     assert X[1, 2] == -1
     assert X.shape == (3, 3)
     assert X.rows == X.cols == 3
-    assert Matrix(X) == Matrix(3, 3, lambda i, j: i - j)
+    assert Matrix(X) == Matrix(3, 3, operator.sub)
     assert isinstance(X*X + X, MatrixExpr)
 
 

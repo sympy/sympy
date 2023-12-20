@@ -13,6 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.sets.sets import Interval
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.qexpr import QuantumError
+import operator
 
 
 __all__ = [
@@ -383,7 +384,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         if S.Infinity in arg_list:
             return S.Infinity
         else:
-            return reduce(lambda x, y: x*y, arg_list)
+            return reduce(operator.mul, arg_list)
 
     @property
     def spaces(self):
@@ -502,7 +503,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         if S.Infinity in arg_list:
             return S.Infinity
         else:
-            return reduce(lambda x, y: x + y, arg_list)
+            return reduce(operator.add, arg_list)
 
     @property
     def spaces(self):

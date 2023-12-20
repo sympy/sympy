@@ -74,6 +74,7 @@ from sympy.utilities.iterables import numbered_symbols
 
 from sympy.external import import_module
 import warnings
+import operator
 
 #TODO debugging output
 
@@ -242,8 +243,8 @@ class Lambdifier:
         # and sympy_expression_namespace can not catch it.
         from sympy.functions.elementary.miscellaneous import sqrt
         namespace.update({'sqrt': sqrt})
-        namespace.update({'Eq': lambda x, y: x == y})
-        namespace.update({'Ne': lambda x, y: x != y})
+        namespace.update({'Eq': operator.eq})
+        namespace.update({'Ne': operator.ne})
         # End workaround.
         if use_python_math:
             namespace.update({'math': __import__('math')})

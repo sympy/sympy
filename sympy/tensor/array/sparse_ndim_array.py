@@ -7,6 +7,7 @@ from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 from sympy.utilities.iterables import flatten
 
 import functools
+import operator
 
 class SparseNDimArray(NDimArray):
 
@@ -95,7 +96,7 @@ class SparseNDimArray(NDimArray):
         return SparseMatrix(self.shape[0], self.shape[1], mat_sparse)
 
     def reshape(self, *newshape):
-        new_total_size = functools.reduce(lambda x,y: x*y, newshape)
+        new_total_size = functools.reduce(operator.mul, newshape)
         if new_total_size != self._loop_size:
             raise ValueError("Invalid reshape parameters " + newshape)
 
@@ -107,7 +108,7 @@ class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ign
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         cls._check_special_bounds(flat_list, shape)
-        loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
+        loop_size = functools.reduce(operator.mul, shape) if shape else len(flat_list)
 
         # Sparse array:
         if isinstance(flat_list, (dict, Dict)):
@@ -142,7 +143,7 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
         self = object.__new__(cls)
         self._shape = shape
         self._rank = len(shape)
-        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
+        self._loop_size = functools.reduce(operator.mul, shape) if shape else len(flat_list)
 
         # Sparse array:
         if isinstance(flat_list, (dict, Dict)):

@@ -42,6 +42,7 @@ from .exceptions import ( # noqa: F401
     MatrixError, ShapeError, NonSquareMatrixError, NonInvertibleMatrixError,
     NonPositiveDefiniteMatrixError
 )
+import operator
 
 
 _DEPRECATED_MIXINS = (
@@ -2649,7 +2650,7 @@ class MatrixArithmetic(MatrixRequired):
                 # Some matrices don't work with `sum` or `Add`
                 # They don't work with `sum` because `sum` tries to add `0`
                 # Fall back to a safe way to multiply if the `Add` fails.
-                return reduce(lambda a, b: a + b, vec)
+                return reduce(operator.add, vec)
 
         return self._new(self.rows, other.cols, entry)
 

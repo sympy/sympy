@@ -27,6 +27,7 @@ from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.utilities.iterables import cartes
 
 from sympy.abc import x, y, z, m, n
+import operator
 
 EmptySet = S.EmptySet
 
@@ -355,14 +356,14 @@ def test_Complement():
 def test_set_operations_nonsets():
     '''Tests that e.g. FiniteSet(1) * 2 raises TypeError'''
     ops = [
-        lambda a, b: a + b,
-        lambda a, b: a - b,
-        lambda a, b: a * b,
-        lambda a, b: a / b,
-        lambda a, b: a // b,
-        lambda a, b: a | b,
-        lambda a, b: a & b,
-        lambda a, b: a ^ b,
+        operator.add,
+        operator.sub,
+        operator.mul,
+        operator.truediv,
+        operator.floordiv,
+        operator.or_,
+        operator.and_,
+        operator.xor,
         # FiniteSet(1) ** 2 gives a ProductSet
         #lambda a, b: a ** b,
     ]

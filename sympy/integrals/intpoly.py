@@ -23,6 +23,7 @@ from sympy.core.sympify import _sympify
 from sympy.geometry import Segment2D, Polygon, Point, Point2D
 from sympy.polys.polytools import LC, gcd_list, degree_list, Poly
 from sympy.simplify.simplify import nsimplify
+import operator
 
 
 def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
@@ -550,7 +551,7 @@ def left_integral2D(m, index, facets, x0, expr, gens):
         if j in ((index - 1) % m, (index + 1) % m):
             intersect = intersection(facets[index], facets[j], "segment2D")
         if intersect:
-            distance_origin = norm(tuple(map(lambda x, y: x - y,
+            distance_origin = norm(tuple(map(operator.sub,
                                              intersect, x0)))
             if is_vertex(intersect):
                 if isinstance(expr, Expr):

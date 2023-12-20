@@ -32,6 +32,7 @@ from sympy.solvers.solvers import solve
 
 from sympy.testing.pytest import XFAIL, slow, _both_exp_pow
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, n
+import operator
 
 
 def test_issue_7263():
@@ -825,7 +826,7 @@ def test_nc_simplify():
     C = MatrixSymbol("C", x, x)
     D = MatrixSymbol("D", x, x)
     subst = {a: A, b: B, c: C, d:D}
-    funcs = {Add: lambda x,y: x+y, Mul: lambda x,y: x*y }
+    funcs = {Add: operator.add, Mul: operator.mul }
 
     def _to_matrix(expr):
         if expr in subst:

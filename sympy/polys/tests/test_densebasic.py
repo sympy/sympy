@@ -45,6 +45,7 @@ from sympy.core.singleton import S
 from sympy.testing.pytest import raises
 
 from sympy.core.numbers import oo
+import operator
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
@@ -667,7 +668,7 @@ def test_dmp_list_terms():
 
 
 def test_dmp_apply_pairs():
-    h = lambda a, b: a*b
+    h = operator.mul
 
     assert dmp_apply_pairs([1, 2, 3], [4, 5, 6], h, [], 0, ZZ) == [4, 10, 18]
 

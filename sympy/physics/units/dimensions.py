@@ -25,6 +25,7 @@ from sympy.matrices.dense import Matrix
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
+import operator
 
 
 class _QuantityMapper:
@@ -261,7 +262,7 @@ class Dimension(Expr):
 
     @classmethod
     def _from_dimensional_dependencies(cls, dependencies):
-        return reduce(lambda x, y: x * y, (
+        return reduce(operator.mul, (
             d**e for d, e in dependencies.items()
         ), 1)
 

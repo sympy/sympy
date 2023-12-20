@@ -18,6 +18,7 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
+import operator
 
 
 def as_Boolean(e):
@@ -2603,7 +2604,7 @@ def anf_coeffs(truthvalues):
         tmp = []
         for j in range(2 ** (n-i-1)):
             tmp.append(coeffs[2*j] +
-                list(map(lambda x, y: x^y, coeffs[2*j], coeffs[2*j+1])))
+                list(map(operator.xor, coeffs[2*j], coeffs[2*j+1])))
         coeffs = tmp
 
     return coeffs[0]

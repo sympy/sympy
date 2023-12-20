@@ -7,6 +7,7 @@ from sympy.matrices import \
     Matrix, MutableSparseMatrix, ImmutableSparseMatrix, SparseMatrix, eye, \
     ones, zeros, ShapeError, NonSquareMatrixError
 from sympy.testing.pytest import raises
+import operator
 
 
 def test_sparse_creation():
@@ -269,7 +270,7 @@ def test_sparse_matrix():
     assert m0[:3, :3] == sparse_eye(3)
     assert m0[2:4, 0:2] == sparse_zeros(2)
 
-    m1 = SparseMatrix(3, 3, lambda i, j: i + j)
+    m1 = SparseMatrix(3, 3, operator.add)
     assert m1[0, :] == SparseMatrix(1, 3, (0, 1, 2))
     assert m1[1:3, 1] == SparseMatrix(2, 1, (2, 3))
 
@@ -311,7 +312,7 @@ def test_sparse_matrix():
     # test_reshape
     m0 = sparse_eye(3)
     assert m0.reshape(1, 9) == SparseMatrix(1, 9, (1, 0, 0, 0, 1, 0, 0, 0, 1))
-    m1 = SparseMatrix(3, 4, lambda i, j: i + j)
+    m1 = SparseMatrix(3, 4, operator.add)
     assert m1.reshape(4, 3) == \
         SparseMatrix([(0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)])
     assert m1.reshape(2, 6) == \

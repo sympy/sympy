@@ -84,6 +84,7 @@ from .decompositions import (
 from .graph import (
     _connected_components, _connected_components_decomposition,
     _strongly_connected_components, _strongly_connected_components_decomposition)
+import operator
 
 
 class MatrixBase(Printable):
@@ -2577,7 +2578,7 @@ class MatrixBase(Printable):
                 # Some matrices don't work with `sum` or `Add`
                 # They don't work with `sum` because `sum` tries to add `0`
                 # Fall back to a safe way to multiply if the `Add` fails.
-                return reduce(lambda a, b: a + b, vec)
+                return reduce(operator.add, vec)
 
         return self._new(self.rows, other.cols, entry)
 

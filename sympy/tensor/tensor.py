@@ -525,7 +525,7 @@ class _TensorDataLazyEvaluator(CantSympify):
                     free_args_pos = {y: x for x, y in enumerate(free_args)}
                     axes = [free_args_pos[arg] for arg in key.free_args]
                     sum_list.append(permutedims(data, axes))
-            return reduce(lambda x, y: x+y, sum_list)
+            return reduce(operator.add, sum_list)
 
         return None
 
@@ -3422,7 +3422,7 @@ class TensMul(TensExpr, AssocOp):
         args = [arg for arg in args if arg != self.identity]
 
         # Extract non-tensor coefficients:
-        coeff = reduce(lambda a, b: a*b, [arg for arg in args if not isinstance(arg, TensExpr)], S.One)
+        coeff = reduce(operator.mul, [arg for arg in args if not isinstance(arg, TensExpr)], S.One)
         args = [arg for arg in args if isinstance(arg, TensExpr)]
 
         if len(args) == 0:

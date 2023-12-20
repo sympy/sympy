@@ -1,5 +1,6 @@
 from sympy.strategies.tree import treeapply, greedy, allresults, brute
 from functools import partial, reduce
+import operator
 
 
 def inc(x):
@@ -23,7 +24,7 @@ def add(*args):
 
 
 def mul(*args):
-    return reduce(lambda a, b: a * b, args, 1)
+    return reduce(operator.mul, args, 1)
 
 
 def test_treeapply():
@@ -51,7 +52,7 @@ def test_treeapply_strategies():
     assert treeapply(tree, join)(5) == 6
     assert treeapply(tree, join)(1) == 0
 
-    maximize = partial(minimize, objective=lambda x: -x)
+    maximize = partial(minimize, objective=operator.neg)
     join = {list: chain, tuple: maximize}
     fn = treeapply(tree, join)
     assert fn(4) == 6  # highest value comes from the dec then double
@@ -61,7 +62,7 @@ def test_treeapply_strategies():
 def test_greedy():
     tree = [inc, (dec, double)]  # either inc or dec-then-double
 
-    fn = greedy(tree, objective=lambda x: -x)
+    fn = greedy(tree, objective=operator.neg)
     assert fn(4) == 6  # highest value comes from the dec then double
     assert fn(1) == 2  # highest value comes from the inc
 
@@ -69,7 +70,7 @@ def test_greedy():
     lowest = greedy(tree)
     assert lowest(10) == 8
 
-    highest = greedy(tree, objective=lambda x: -x)
+    highest = greedy(tree, objective=operator.neg)
     assert highest(10) == 12
 
 
@@ -84,7 +85,7 @@ def test_allresults():
 
 def test_brute():
     tree = ([inc, dec], square)
-    fn = brute(tree, lambda x: -x)
+    fn = brute(tree, operator.neg)
 
     assert fn(2) == (2 + 1)**2
     assert fn(-2) == (-2 - 1)**2

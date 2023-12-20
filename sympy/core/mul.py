@@ -965,7 +965,7 @@ class Mul(Expr, AssocOp):
             if d:
                 # Note: reduce is used in step of Mul as Mul is unable to
                 # handle subtypes and operation priority:
-                terms.append(reduce(lambda x, y: x*y, (args[:i] + [d] + args[i + 1:]), S.One))
+                terms.append(reduce(operator.mul, (args[:i] + [d] + args[i + 1:]), S.One))
         return Add.fromiter(terms)
 
     @cacheit

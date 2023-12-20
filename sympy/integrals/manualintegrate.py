@@ -67,6 +67,7 @@ from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
+import operator
 
 
 @dataclass
@@ -1029,9 +1030,9 @@ def special_function_rule(integral):
             (Mul, _symbol**e*exp(a*_symbol, evaluate=False), None, UpperGammaRule),
             (Mul, polylog(b, a*_symbol, evaluate=False)/_symbol, None, PolylogRule),
             (Pow, 1/sqrt(a - d*sin(_symbol, evaluate=False)**2),
-                lambda a, d: a != d, EllipticFRule),
+                operator.ne, EllipticFRule),
             (Pow, sqrt(a - d*sin(_symbol, evaluate=False)**2),
-                lambda a, d: a != d, EllipticERule),
+                operator.ne, EllipticERule),
         ))
     _integrand = integrand.subs(symbol, _symbol)
     for type_, pattern, constraint, rule in _special_function_patterns:

@@ -11,6 +11,7 @@ from sympy.matrices.immutable import \
     ImmutableDenseMatrix, ImmutableSparseMatrix
 from sympy.abc import x, y
 from sympy.testing.pytest import raises
+import operator
 
 IM = ImmutableDenseMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 ISM = ImmutableSparseMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -110,7 +111,7 @@ def test_immutable_evaluation():
 
 
 def test_deterimant():
-    assert ImmutableMatrix(4, 4, lambda i, j: i + j).det() == 0
+    assert ImmutableMatrix(4, 4, operator.add).det() == 0
 
 
 def test_Equality():

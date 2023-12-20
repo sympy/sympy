@@ -25,6 +25,7 @@ from sympy.testing.pytest import (
     ignore_warnings, raises, skip, skip_under_pyodide, slow,
     warns_deprecated_sympy)
 from sympy.utilities.iterables import capture, iterable
+import operator
 
 all_classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
 mutable_classes = (Matrix, SparseMatrix)
@@ -1580,7 +1581,7 @@ def test_slicing():
     assert m0[:3, :3] == eye(3)
     assert m0[2:4, 0:2] == zeros(2)
 
-    m1 = Matrix(3, 3, lambda i, j: i + j)
+    m1 = Matrix(3, 3, operator.add)
     assert m1[0, :] == Matrix(1, 3, (0, 1, 2))
     assert m1[1:3, 1] == Matrix(2, 1, (2, 3))
 
@@ -1620,7 +1621,7 @@ def test_submatrix_assignment():
 def test_reshape():
     m0 = eye(3)
     assert m0.reshape(1, 9) == Matrix(1, 9, (1, 0, 0, 0, 1, 0, 0, 0, 1))
-    m1 = Matrix(3, 4, lambda i, j: i + j)
+    m1 = Matrix(3, 4, operator.add)
     assert m1.reshape(
         4, 3) == Matrix(((0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)))
     assert m1.reshape(2, 6) == Matrix(((0, 1, 2, 3, 1, 2), (3, 4, 2, 3, 4, 5)))

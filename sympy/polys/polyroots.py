@@ -28,6 +28,7 @@ from sympy.polys.rationaltools import together
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.utilities import public
 from sympy.utilities.misc import filldedent
+import operator
 
 
 
@@ -1218,7 +1219,7 @@ def root_factors(f, *gens, filter=None, **args):
             factors, N = factors + [Poly(x - r, x)]*n, N + n
 
         if N < F.degree():
-            G = reduce(lambda p, q: p*q, factors)
+            G = reduce(operator.mul, factors)
             factors.append(F.quo(G))
 
     if not isinstance(f, Poly):

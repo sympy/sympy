@@ -8,6 +8,7 @@ from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray, ArrayKind
 from sympy.utilities.iterables import flatten
+import operator
 
 
 class DenseNDimArray(NDimArray):
@@ -71,7 +72,7 @@ class DenseNDimArray(NDimArray):
 
     @classmethod
     def zeros(cls, *shape):
-        list_length = functools.reduce(lambda x, y: x*y, shape, S.One)
+        list_length = functools.reduce(operator.mul, shape, S.One)
         return cls._new(([0]*list_length,), shape)
 
     def tomatrix(self):
@@ -120,7 +121,7 @@ class DenseNDimArray(NDimArray):
         [[1, 2], [3, 4], [5, 6]]
 
         """
-        new_total_size = functools.reduce(lambda x,y: x*y, newshape)
+        new_total_size = functools.reduce(operator.mul, newshape)
         if new_total_size != self._loop_size:
             raise ValueError('Expecting reshape size to %d but got prod(%s) = %d' % (
                 self._loop_size, str(newshape), new_total_size))
@@ -144,7 +145,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignor
         self._shape = shape
         self._array = list(flat_list)
         self._rank = len(shape)
-        self._loop_size = functools.reduce(lambda x,y: x*y, shape, 1)
+        self._loop_size = functools.reduce(operator.mul, shape, 1)
         return self
 
     def __setitem__(self, index, value):
@@ -170,7 +171,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         self._shape = shape
         self._array = list(flat_list)
         self._rank = len(shape)
-        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
+        self._loop_size = functools.reduce(operator.mul, shape) if shape else len(flat_list)
         return self
 
     def __setitem__(self, index, value):
