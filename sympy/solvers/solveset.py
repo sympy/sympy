@@ -30,7 +30,7 @@ from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
-                             acos, asin, acsc, asec,
+                             acos, asin, atan, acot, acsc, asec,
                              piecewise_fold, Piecewise)
 from sympy.functions.elementary.complexes import Abs, arg, re, im
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
@@ -407,26 +407,34 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                 imageset(n, acsch(n), g_ys_dom), symbol)
 
     elif isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
-        # XXX: a domain check must be added.
-        def inv(trig):
-            if isinstance(trig, (sin, csc)):
-                F = asin if isinstance(trig, sin) else acsc
-                return (
-                    lambda a: 2*n*pi + F(a),
-                    lambda a: 2*n*pi + pi - F(a))
-            if isinstance(trig, (cos, sec)):
-                F = acos if isinstance(trig, cos) else asec
-                return (
-                    lambda a: 2*n*pi + F(a),
-                    lambda a: 2*n*pi - F(a))
-            if isinstance(trig, (tan, cot)):
-                return (lambda a: n*pi + trig.inverse()(a),)
+        def create_return_set(invs, period, rng):
+            # invs: iterable of main inverses, e.g. (acos, -acos).
+            # rng: range of trig function (for domain checking).
+            # returns ConditionSet that will be part of the final (x, set) tuple
+            n = Dummy('n', integer=True)
+            invs = Union(*[
+                imageset(n, period*n + inv(g), S.Integers) for inv in invs])
+            inv_f, inv_g_ys = _invert_real(f.args[0], invs, symbol)
+            if inv_f == symbol:     # inversion successful
+                conds = rng.contains(g)
+                return ConditionSet(symbol, conds, inv_g_ys)
+            else:
+                return ConditionSet(symbol, Eq(f, g), S.Reals)
 
-        n = Dummy('n', integer=True)
-        invs = S.EmptySet
-        for L in inv(f):
-            invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
-        return _invert_real(f.args[0], invs, symbol)
+        trig_inverses = {
+            sin : ((asin, lambda y: pi-asin(y)), 2*pi, Interval(-1, 1)),
+            cos : ((acos, lambda y: -acos(y)), 2*pi, Interval(-1, 1)),
+            tan : ((atan,), pi, S.Reals),
+            cot : ((acot,), pi, S.Reals),
+            sec : ((asec, lambda y: -asec(y)), 2*pi,
+                   Union(Interval(-oo, -1), Interval(1, oo))),
+            csc : ((acsc, lambda y: pi-acsc(y)), 2*pi,
+                   Union(Interval(-oo, -1), Interval(1, oo)))}
+
+        retset = S.EmptySet
+        for g in g_ys:
+            retset += create_return_set(*trig_inverses[f.func])
+        return (symbol, retset)
 
     else:
         return (f, g_ys)
