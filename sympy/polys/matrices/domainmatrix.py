@@ -1637,7 +1637,7 @@ class DomainMatrix:
         if lamda.element == lamda.domain.one:
             return A
 
-        return A.mul(1 / lamda.element)
+        return A.mul(A.domain.one / lamda.element)
 
     def pow(A, n):
         r"""
@@ -2499,7 +2499,7 @@ class DomainMatrix:
             if u != K.one:
                 A_rref *= u
 
-        A_null = A_rref.nullspace_from_rref(pivots)
+        A_null, free_vars = A_rref.nullspace_from_rref(pivots)
 
         return A_null
 
@@ -2523,7 +2523,7 @@ class DomainMatrix:
         sympy.polys.matrices.ddm.DDM.nullspace_from_rref
         """
         null_rep, nonpivots = self.rep.nullspace_from_rref(pivots)
-        return self.from_rep(null_rep)
+        return self.from_rep(null_rep), nonpivots
 
     def particular_from_rref(self, pivots=None):
         """
@@ -3082,13 +3082,15 @@ class DomainMatrix:
         ...         [ZZ(4), ZZ(5), ZZ(6)],
         ...         [ZZ(7), ZZ(8), ZZ(9)]], ZZ)
         >>> b = DM([[ZZ(1)], [ZZ(2)], [ZZ(3)]], ZZ)
-        >>> xpart, den, xnull = A.solve_den_general(b)
+        >>> xpart, den, xnull, free_vars = A.solve_den_general(b)
         >>> xpart
         DomainMatrix([[1], [-2], [0]], (3, 1), ZZ)
         >>> den
         -3
         >>> xnull
         DomainMatrix([[-3, 6, -3]], (1, 3), ZZ)
+        >>> free_vars
+        [2]
         >>> A * xpart == den * b
         True
         >>> A * xnull.transpose()
@@ -3114,8 +3116,9 @@ class DomainMatrix:
             raise DMNonInvertibleMatrixError("No solutions")
 
         particular = Aaug_rref.particular_from_rref(pivots)
-        nullspace = Aaug_rref[:,:-1].nullspace_from_rref(pivots)
-        return particular, denom, nullspace
+        nullspace, free_vars = Aaug_rref[:,:-1].nullspace_from_rref(pivots)
+
+        return particular, denom, nullspace, free_vars
 
     def adj_poly_det(self, cp=None):
         """
