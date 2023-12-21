@@ -29,7 +29,6 @@ from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.sets.setexpr import SetExpr
 from sympy.testing.pytest import XFAIL, slow, raises
-from sympy.integrals.meijerint import _rewrite_single
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.simplify.hyperexpand import hyperexpand
 
