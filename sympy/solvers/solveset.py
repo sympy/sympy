@@ -407,20 +407,6 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                 imageset(n, acsch(n), g_ys_dom), symbol)
 
     elif isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
-        def create_return_set(invs, period, rng):
-            # invs: iterable of main inverses, e.g. (acos, -acos).
-            # rng: range of trig function (for domain checking).
-            # returns ConditionSet that will be part of the final (x, set) tuple
-            n = Dummy('n', integer=True)
-            invs = Union(*[
-                imageset(n, period*n + inv(g), S.Integers) for inv in invs])
-            inv_f, inv_g_ys = _invert_real(f.args[0], invs, symbol)
-            if inv_f == symbol:     # inversion successful
-                conds = rng.contains(g)
-                return ConditionSet(symbol, conds, inv_g_ys)
-            else:
-                return ConditionSet(symbol, Eq(f, g), S.Reals)
-
         trig_inverses = {
             sin : ((asin, lambda y: pi-asin(y)), 2*pi, Interval(-1, 1)),
             cos : ((acos, lambda y: -acos(y)), 2*pi, Interval(-1, 1)),
@@ -431,9 +417,20 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
             csc : ((acsc, lambda y: pi-acsc(y)), 2*pi,
                    Union(Interval(-oo, -1), Interval(1, oo)))}
 
-        retset = S.EmptySet
-        for g in g_ys:
-            retset += create_return_set(*trig_inverses[f.func])
+        invs, period, rng = trig_inverses[f.func]
+        n = Dummy('n', integer=True)
+        def create_return_set(g):
+            # returns ConditionSet that will be part of the final (x, set) tuple
+            invsimg = Union(*[
+                imageset(n, period*n + inv(g), S.Integers) for inv in invs])
+            inv_f, inv_g_ys = _invert_real(f.args[0], invsimg, symbol)
+            if inv_f == symbol:     # inversion successful
+                conds = rng.contains(g)
+                return ConditionSet(symbol, conds, inv_g_ys)
+            else:
+                return ConditionSet(symbol, Eq(f, g), S.Reals)
+
+        retset = Union(*[create_return_set(g) for g in g_ys])
         return (symbol, retset)
 
     else:
@@ -480,20 +477,6 @@ def _invert_trig_hyp_complex(f, g_ys, symbol):
         # benefit of representing the precise conditions that must be satisfied.
         # The conditions are also rather straightforward. (At most two isolated
         # points.)
-        def create_return_set(invs, period, excl):
-            # invs: iterable of main inverses, e.g. (acosh, -acosh).
-            # excl: iterable of singularities to be checked for.
-            # returns ConditionSet that will be part of the final (x, set) tuple
-            n = Dummy('n', integer=True)
-            invs = Union(*[
-                imageset(n, period*n + inv(g), S.Integers) for inv in invs])
-            inv_f, inv_g_ys = _invert_complex(f.args[0], invs, symbol)
-            if inv_f == symbol:     # inversion successful
-                conds = And(*[Ne(g, e) for e in excl])
-                return ConditionSet(symbol, conds, inv_g_ys)
-            else:
-                return ConditionSet(symbol, Eq(f, g), S.Complexes)
-
         hyp_inverses = {
             sinh : ((asinh, lambda y: I*pi-asinh(y)), 2*I*pi, ()),
             cosh : ((acosh, lambda y: -acosh(y)), 2*I*pi, ()),
@@ -502,9 +485,22 @@ def _invert_trig_hyp_complex(f, g_ys, symbol):
             sech : ((asech, lambda y: -asech(y)), 2*I*pi, (0, )),
             csch : ((acsch, lambda y: I*pi-acsch(y)), 2*I*pi, (0, ))}
 
-        retset = S.EmptySet
-        for g in g_ys:
-            retset += create_return_set(*hyp_inverses[f.func])
+        # invs: iterable of main inverses, e.g. (acosh, -acosh).
+        # excl: iterable of singularities to be checked for.
+        invs, period, excl = hyp_inverses[f.func]
+        n = Dummy('n', integer=True)
+        def create_return_set(g):
+            # returns ConditionSet that will be part of the final (x, set) tuple
+            invsimg = Union(*[
+                imageset(n, period*n + inv(g), S.Integers) for inv in invs])
+            inv_f, inv_g_ys = _invert_complex(f.args[0], invsimg, symbol)
+            if inv_f == symbol:     # inversion successful
+                conds = And(*[Ne(g, e) for e in excl])
+                return ConditionSet(symbol, conds, inv_g_ys)
+            else:
+                return ConditionSet(symbol, Eq(f, g), S.Complexes)
+
+        retset = Union(*[create_return_set(g) for g in g_ys])
         return (symbol, retset)
 
     else:
