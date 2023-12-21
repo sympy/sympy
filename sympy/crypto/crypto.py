@@ -32,6 +32,7 @@ from sympy.polys.domains import FF
 from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
+import math
 import operator
 
 
@@ -1540,7 +1541,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
             new_primes.extend(factorint(i, multiple=True))
         primes = new_primes
 
-    n = reduce(operator.mul, primes)
+    n = math.prod(primes)
 
     tally = multiset(primes)
     if all(v == 1 for v in tally.values()):

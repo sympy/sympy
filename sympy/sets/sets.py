@@ -1,7 +1,7 @@
 from typing import Any, Callable
-from functools import reduce
 from collections import defaultdict
 import inspect
+import math
 
 from sympy.core.kind import Kind, UndefinedKind, NumberKind
 from sympy.core.basic import Basic
@@ -32,7 +32,6 @@ from sympy.utilities.misc import func_name, filldedent
 from mpmath import mpi, mpf
 
 from mpmath.libmp.libmpf import prec_to_dps
-import operator
 
 
 tfn = defaultdict(lambda: None, {
@@ -992,7 +991,7 @@ ProductSet(iterable) is deprecated. Use ProductSet(*iterable) instead.
         return SetKind(TupleKind(*(i.kind.element_kind for i in self.args)))
 
     def __len__(self):
-        return reduce(operator.mul, (len(s) for s in self.args))
+        return math.prod(len(s) for s in self.args)
 
     def __bool__(self):
         return all(self.sets)
@@ -1597,7 +1596,7 @@ class Intersection(Set, LatticeOp):
 
         # Convert to Python sets and build the set of all elements
         fs_sets = [set(fs) for fs in fs_args]
-        all_elements = reduce(operator.or_, fs_sets, set())
+        all_elements = set().union(*fs_sets)
 
         # Extract elements that are definitely in or definitely not in the
         # intersection. Here we check contains for all of args.
@@ -1620,7 +1619,7 @@ class Intersection(Set, LatticeOp):
         # sets iteratively until we end up with {n}, {}. At that point if we
         # get any empty set all remaining elements are discarded.
 
-        fs_elements = reduce(operator.or_, fs_sets, set())
+        fs_elements = set().union(*fs_sets)
 
         # Need fuzzy containment testing
         fs_symsets = [FiniteSet(*s) for s in fs_sets]
@@ -1662,7 +1661,7 @@ class Intersection(Set, LatticeOp):
 
         # Any set in others is redundant if it contains all the elements that
         # are in the finite sets so we don't need it in the Intersection
-        all_elements = reduce(operator.or_, fs_sets, set())
+        all_elements = set().union(*fs_sets)
         is_redundant = lambda o: all(fuzzy_bool(o.contains(e)) for e in all_elements)
         others = [o for o in others if not is_redundant(o)]
 
