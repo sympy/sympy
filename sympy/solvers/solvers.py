@@ -1137,27 +1137,28 @@ def solve(f, *symbols, **flags):
         if _has_piecewise(fi):
             f[i] = piecewise_fold(fi)
 
-    # expand double angles; in general, expand_trig will allow
+    # expand angles of sums; in general, expand_trig will allow
     # more roots to be found but this is not a great solultion
     # to not returning a parametric solution, otherwise
     # many values can be returned that have a simple
     # relationship between values
     targs = {t for fi in f for t in fi.atoms(TrigonometricFunction)}
-    add, other = sift(targs, lambda x: x.args[0].is_Add, binary=True)
-    add, other = [[i for i in l if i.has_free(*symbols)] for l in (add, other)]
-    trep = {}
-    for t in add:
-        a = t.args[0]
-        ind, dep = a.as_independent(*symbols)
-        if dep in symbols or -dep in symbols:
-            # don't let expansion expand wrt anything in ind
-            n = Dummy() if not ind.is_Number else ind
-            trep[t] = TR10(t.func(dep + n)).xreplace({n: ind})
-    if other and len(other) <= 2:
-        base = gcd(*[i.args[0] for i in other]) if len(other) > 1 else other[0].args[0]
-        for i in other:
-            trep[i] = TR11(i, base)
-    f = [fi.xreplace(trep) for fi in f]
+    if len(targs) > 1:
+        add, other = sift(targs, lambda x: x.args[0].is_Add, binary=True)
+        add, other = [[i for i in l if i.has_free(*symbols)] for l in (add, other)]
+        trep = {}
+        for t in add:
+            a = t.args[0]
+            ind, dep = a.as_independent(*symbols)
+            if dep in symbols or -dep in symbols:
+                # don't let expansion expand wrt anything in ind
+                n = Dummy() if not ind.is_Number else ind
+                trep[t] = TR10(t.func(dep + n)).xreplace({n: ind})
+        if other and len(other) <= 2:
+            base = gcd(*[i.args[0] for i in other]) if len(other) > 1 else other[0].args[0]
+            for i in other:
+                trep[i] = TR11(i, base)
+        f = [fi.xreplace(trep) for fi in f]
 
     #
     # try to get a solution
