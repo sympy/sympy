@@ -329,6 +329,10 @@ def _invert_real(f, g_ys, symbol):
     return (f, g_ys)
 
 
+# Dictionaries of inverses will be cached after first use.
+_trig_inverses = None
+_hyp_inverses = None
+
 def _invert_trig_hyp_real(f, g_ys, symbol):
     """Helper function for inverting trigonometric and hyperbolic functions.
 
@@ -407,17 +411,21 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                 imageset(n, acsch(n), g_ys_dom), symbol)
 
     elif isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
-        trig_inverses = {
-            sin : ((asin, lambda y: pi-asin(y)), 2*pi, Interval(-1, 1)),
-            cos : ((acos, lambda y: -acos(y)), 2*pi, Interval(-1, 1)),
-            tan : ((atan,), pi, S.Reals),
-            cot : ((acot,), pi, S.Reals),
-            sec : ((asec, lambda y: -asec(y)), 2*pi,
-                   Union(Interval(-oo, -1), Interval(1, oo))),
-            csc : ((acsc, lambda y: pi-acsc(y)), 2*pi,
-                   Union(Interval(-oo, -1), Interval(1, oo)))}
+        def _get_trig_inverses(func):
+            global _trig_inverses
+            if _trig_inverses is None:
+                _trig_inverses = {
+                    sin : ((asin, lambda y: pi-asin(y)), 2*pi, Interval(-1, 1)),
+                    cos : ((acos, lambda y: -acos(y)), 2*pi, Interval(-1, 1)),
+                    tan : ((atan,), pi, S.Reals),
+                    cot : ((acot,), pi, S.Reals),
+                    sec : ((asec, lambda y: -asec(y)), 2*pi,
+                        Union(Interval(-oo, -1), Interval(1, oo))),
+                    csc : ((acsc, lambda y: pi-acsc(y)), 2*pi,
+                        Union(Interval(-oo, -1), Interval(1, oo)))}
+            return _trig_inverses[func]
 
-        invs, period, rng = trig_inverses[f.func]
+        invs, period, rng = _get_trig_inverses(f.func)
         n = Dummy('n', integer=True)
         def create_return_set(g):
             # returns ConditionSet that will be part of the final (x, set) tuple
@@ -477,17 +485,21 @@ def _invert_trig_hyp_complex(f, g_ys, symbol):
         # benefit of representing the precise conditions that must be satisfied.
         # The conditions are also rather straightforward. (At most two isolated
         # points.)
-        hyp_inverses = {
-            sinh : ((asinh, lambda y: I*pi-asinh(y)), 2*I*pi, ()),
-            cosh : ((acosh, lambda y: -acosh(y)), 2*I*pi, ()),
-            tanh : ((atanh,), I*pi, (-1, 1)),
-            coth : ((acoth,), I*pi, (-1, 1)),
-            sech : ((asech, lambda y: -asech(y)), 2*I*pi, (0, )),
-            csch : ((acsch, lambda y: I*pi-acsch(y)), 2*I*pi, (0, ))}
+        def _get_hyp_inverses(func):
+            global _hyp_inverses
+            if _hyp_inverses is None:
+                _hyp_inverses = {
+                    sinh : ((asinh, lambda y: I*pi-asinh(y)), 2*I*pi, ()),
+                    cosh : ((acosh, lambda y: -acosh(y)), 2*I*pi, ()),
+                    tanh : ((atanh,), I*pi, (-1, 1)),
+                    coth : ((acoth,), I*pi, (-1, 1)),
+                    sech : ((asech, lambda y: -asech(y)), 2*I*pi, (0, )),
+                    csch : ((acsch, lambda y: I*pi-acsch(y)), 2*I*pi, (0, ))}
+            return _hyp_inverses[func]
 
         # invs: iterable of main inverses, e.g. (acosh, -acosh).
         # excl: iterable of singularities to be checked for.
-        invs, period, excl = hyp_inverses[f.func]
+        invs, period, excl = _get_hyp_inverses(f.func)
         n = Dummy('n', integer=True)
         def create_return_set(g):
             # returns ConditionSet that will be part of the final (x, set) tuple
