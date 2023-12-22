@@ -665,7 +665,7 @@ def _is_function_class_equation(func_class, f, symbol):
             g = Poly(f.args[0], symbol)
             return g.degree() <= 1
         except PolynomialError:
-            return False
+            return _is_function_class_equation(func_class, f.args[0], symbol)
     else:
         return False
 
@@ -697,15 +697,19 @@ class _SolveTrig1Error(Exception):
 def _solve_trig(f, symbol, domain):
     """Function to call other helpers to solve trigonometric equations """
     sol = None
-    try:
-        sol = _solve_trig1(f, symbol, domain)
-    except _SolveTrig1Error:
+    if any(fr.is_irrational for fr in f.args):
+        soln = _solve_as_poly(f, symbol, domain)
+        sol = soln.intersection(domain)
+    else:
         try:
-            sol = _solve_trig2(f, symbol, domain)
-        except ValueError:
-            raise NotImplementedError(filldedent('''
-                Solution to this kind of trigonometric equations
-                is yet to be implemented'''))
+            sol = _solve_trig1(f, symbol, domain)
+        except _SolveTrig1Error:
+            try:
+                sol = _solve_trig2(f, symbol, domain)
+            except ValueError:
+                raise NotImplementedError(filldedent('''
+                    Solution to this kind of trigonometric equations
+                    is yet to be implemented'''))
     return sol
 
 
@@ -754,7 +758,10 @@ def _solve_trig1(f, symbol, domain):
         try:
             poly_ar = Poly(ar, symbol)
         except PolynomialError:
-            raise _SolveTrig1Error("trig argument is not a polynomial")
+            # For PolynomialError trying to solve with solve_decomposition.
+            # Here nested trig will be utilized mostly.
+            # As of now, trig is only solving for S.Reals.
+            return solve_decomposition(f, symbol, domain=S.Reals)
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise _SolveTrig1Error("degree of variable must not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care
