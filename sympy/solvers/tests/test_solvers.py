@@ -644,8 +644,11 @@ def test_solve_transcendental():
         assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)
     # don't allow massive expansion
     assert solve(cos(1000*x) - S.Half) == [pi/3000, pi/600]
-    assert solve(cos(x - 1000*y) - 1, x) == [2*atan(tan(500*y))]
-    assert solve(cos(x + y + z) - 1, x) == [-2*atan(tan(y/2 + z/2))]
+    assert solve(cos(x - 1000*y) - 1, x) == [1000*y, 1000*y + 2*pi]
+    assert solve(cos(x + y + z) - 1, x) == [-y - z, -y - z + 2*pi]
+
+    # issue 26008
+    assert solve(sin(x + pi/6)) == [-pi/6, 5*pi/6]
 
 
 def test_solve_for_functions_derivatives():
