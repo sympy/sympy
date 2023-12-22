@@ -17,4 +17,3 @@ sphinxcontrib-jsmath
 sphinxcontrib-jquery
 sphinxcontrib-qthelp
 sphinxcontrib-serializinghtml
-sphinx-reredirects
