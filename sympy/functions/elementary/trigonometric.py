@@ -483,9 +483,9 @@ class sin(TrigonometricFunction):
         from sympy.functions.special.bessel import besselj
         return sqrt(pi*arg/2)*besselj(S.Half, arg)
 
-    def  _eval_rewrite_as_hyper(self, arg, **kwargs):
+    def _eval_rewrite_as_meijerg(self, arg, **kwargs):
         from sympy.integrals.meijerint import _rewrite_single
-        return _rewrite_single(sin(arg), arg)[0][0][2]*sqrt(pi)
+        return _rewrite_single(sin(arg), arg)[0][0][2]*_rewrite_single(sin(arg), arg)[0][0][0]
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -860,9 +860,9 @@ class cos(TrigonometricFunction):
                 (1, True)
             )
 
-    def  _eval_rewrite_as_hyper(self, arg, **kwargs):
+    def _eval_rewrite_as_meijerg(self, arg, **kwargs):
         from sympy.integrals.meijerint import _rewrite_single
-        return _rewrite_single(cos(arg), arg)[0][0][2]*sqrt(pi)
+        return _rewrite_single(cos(arg), arg)[0][0][2]*_rewrite_single(cos(arg), arg)[0][0][0]
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -1223,7 +1223,7 @@ class tan(TrigonometricFunction):
         from sympy.functions.special.bessel import besselj
         return besselj(S.Half, arg)/besselj(-S.Half, arg)
 
-    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+    def _eval_rewrite_as_meijerg(self, arg, **kwargs):
         from sympy.integrals.meijerint import _rewrite_single
         return _rewrite_single(tan(arg), arg)[0][0][2]
 
@@ -1515,7 +1515,7 @@ class cot(TrigonometricFunction):
         from sympy.functions.special.bessel import besselj
         return besselj(-S.Half, arg)/besselj(S.Half, arg)
 
-    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+    def _eval_rewrite_as_meijerg(self, arg, **kwargs):
         from sympy.integrals.meijerint import _rewrite_single
         return _rewrite_single(cot(arg), arg)[0][0][2]
 
@@ -1787,9 +1787,9 @@ class sec(ReciprocalTrigonometricFunction):
                 (1, True)
             )
 
-    def  _eval_rewrite_as_hyper(self, arg, **kwargs):
+    def _eval_rewrite_as_meijerg(self, arg, **kwargs):
         from sympy.integrals.meijerint import _rewrite_single
-        return 1/(_rewrite_single(cos(arg), arg)[0][0][2]*sqrt(pi))
+        return 1/(_rewrite_single(cos(arg), arg)[0][0][2]*_rewrite_single(cos(arg), arg)[0][0][0])
 
     def _eval_is_complex(self):
         arg = self.args[0]
@@ -1890,9 +1890,9 @@ class csc(ReciprocalTrigonometricFunction):
         from sympy.functions.special.bessel import besselj
         return sqrt(2/pi)*(1/(sqrt(arg)*besselj(S.Half, arg)))
 
-    def  _eval_rewrite_as_hyper(self, arg, **kwargs):
+    def _eval_rewrite_as_meijerg(self, arg, **kwargs):
         from sympy.integrals.meijerint import _rewrite_single
-        return 1/(_rewrite_single(sin(arg), arg)[0][0][2]*sqrt(pi))
+        return 1/(_rewrite_single(sin(arg), arg)[0][0][2]*_rewrite_single(sin(arg), arg)[0][0][0])
 
     def fdiff(self, argindex=1):
         if argindex == 1:
