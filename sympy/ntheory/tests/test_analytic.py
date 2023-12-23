@@ -1,4 +1,4 @@
-from sympy.ntheory.analytic_ntheory import _ramanujan_tau, ramanujan_tau
+from sympy.ntheory.analytic import _ramanujan_tau, ramanujan_tau
 from sympy.testing.pytest import raises
 
 

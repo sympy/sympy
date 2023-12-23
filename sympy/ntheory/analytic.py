@@ -32,7 +32,7 @@ def _ramanujan_tau(n, prev):
     Examples
     ========
 
-    >>> from sympy.ntheory.analytic_ntheory import _ramanujan_tau
+    >>> from sympy.ntheory.analytic import _ramanujan_tau
     >>> _ramanujan_tau(2)
     -24
 
@@ -91,7 +91,7 @@ def ramanujan_tau(n):
     Examples
     ========
 
-    >>> from sympy.ntheory.analytic_ntheory import ramanujan_tau
+    >>> from sympy.ntheory.analytic import ramanujan_tau
     >>> ramanujan_tau(10)
     -115920
 
