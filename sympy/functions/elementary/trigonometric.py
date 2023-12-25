@@ -479,6 +479,10 @@ class sin(TrigonometricFunction):
     def _eval_rewrite_as_sinc(self, arg, **kwargs):
         return arg*sinc(arg)
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return sqrt(pi*arg/2)*besselj(S.Half, arg)
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -510,10 +514,6 @@ class sin(TrigonometricFunction):
                 else:
                     return expand_mul(S.NegativeOne**(n/2 - 1)*cos(x)*
                                       chebyshevu(n - 1, sin(x)), deep=False)
-            pi_coeff = _pi_coeff(arg)
-            if pi_coeff is not None:
-                if pi_coeff.is_Rational:
-                    return self.rewrite(sqrt)
         return sin(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -845,6 +845,13 @@ class cos(TrigonometricFunction):
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return 1/sec(arg).rewrite(csc, **kwargs)
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return Piecewise(
+                (sqrt(pi*arg/2)*besselj(-S.Half, arg), Ne(arg, 0)),
+                (1, True)
+            )
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -868,10 +875,6 @@ class cos(TrigonometricFunction):
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer:
                 return chebyshevt(coeff, cos(terms))
-            pi_coeff = _pi_coeff(arg)
-            if pi_coeff is not None:
-                if pi_coeff.is_Rational:
-                    return self.rewrite(sqrt)
         return cos(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -1200,6 +1203,10 @@ class tan(TrigonometricFunction):
             return None
         return y
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return besselj(S.Half, arg)/besselj(-S.Half, arg)
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
@@ -1484,6 +1491,10 @@ class cot(TrigonometricFunction):
             return None
         return y
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return besselj(-S.Half, arg)/besselj(S.Half, arg)
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
@@ -1745,6 +1756,13 @@ class sec(ReciprocalTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return Piecewise(
+                (1/(sqrt(pi*arg)/(sqrt(2))*besselj(-S.Half, arg)), Ne(arg, 0)),
+                (1, True)
+            )
+
     def _eval_is_complex(self):
         arg = self.args[0]
 
@@ -1839,6 +1857,10 @@ class csc(ReciprocalTrigonometricFunction):
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
         return (1/sin(arg).rewrite(tan, **kwargs))
+
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return sqrt(2/pi)*(1/(sqrt(arg)*besselj(S.Half, arg)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:

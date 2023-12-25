@@ -3179,9 +3179,9 @@ def ldescent(A, B):
     .. [1] The algorithmic resolution of Diophantine equations, Nigel P. Smart,
            London Mathematical Society Student Texts 41, Cambridge University
            Press, Cambridge, 1998.
-    .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
-           [online], Available:
-           https://nottingham-repository.worktribe.com/output/1023265/efficient-solution-of-rational-conics
+    .. [2] Cremona, J. E., Rusin, D. (2003). Efficient Solution of Rational Conics.
+           Mathematics of Computation, 72(243), 1417-1441.
+           https://doi.org/10.1090/S0025-5718-02-01480-1
     """
     if A == 0 or B == 0:
         raise ValueError("A and B must be non-zero integers")
@@ -3233,8 +3233,9 @@ def descent(A, B):
     References
     ==========
 
-    .. [1] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
-           Mathematics of Computation, Volume 00, Number 0.
+    .. [1] Cremona, J. E., Rusin, D. (2003). Efficient Solution of Rational Conics.
+           Mathematics of Computation, 72(243), 1417-1441.
+           https://doi.org/10.1090/S0025-5718-02-01480-1
     """
     if abs(A) > abs(B):
         x, y, z = descent(B, A)
@@ -3277,8 +3278,9 @@ def gaussian_reduce(w, a, b):
 
     .. [1] Gaussian lattice Reduction [online]. Available:
            https://web.archive.org/web/20201021115213/http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
-    .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
-           Mathematics of Computation, Volume 00, Number 0.
+    .. [2] Cremona, J. E., Rusin, D. (2003). Efficient Solution of Rational Conics.
+           Mathematics of Computation, 72(243), 1417-1441.
+           https://doi.org/10.1090/S0025-5718-02-01480-1
     """
     u = (0, 1)
     v = (1, 0)
@@ -3337,8 +3339,9 @@ def holzer(x, y, z, a, b, c):
     References
     ==========
 
-    .. [1] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
-           Mathematics of Computation, Volume 00, Number 0.
+    .. [1] Cremona, J. E., Rusin, D. (2003). Efficient Solution of Rational Conics.
+           Mathematics of Computation, 72(243), 1417-1441.
+           https://doi.org/10.1090/S0025-5718-02-01480-1
     .. [2] Diophantine Equations, L. J. Mordell, page 48.
 
     """

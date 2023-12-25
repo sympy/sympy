@@ -901,14 +901,12 @@ def _trial(factors, n, candidates, verbose=False):
     return int(n), len(factors) != nfactors
 
 
-def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
+def _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
                        verbose, next_p):
     """
     Helper function for integer factorization. Checks if ``n``
-    is a prime or a perfect power, and in those cases updates
-    the factorization and raises ``StopIteration``.
+    is a prime or a perfect power, and in those cases updates the factorization.
     """
-
     if verbose:
         print('Check for termination')
     if n == 1:
@@ -930,10 +928,6 @@ def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
     if base < next_p**2 or isprime(base):
         factors[base] = exp
     else:
-        if limitp1:
-            limit = limitp1 - 1
-        else:
-            limit = limitp1
         facs = factorint(base, limit, use_trial, use_rho, use_pm1,
                          verbose=False)
         for b, e in facs.items():
@@ -1365,8 +1359,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         if not fermat:
             if verbose:
                 print(fermat_msg)
-            if limit:
-                limit -= 1
             for r in [a - b, a + b]:
                 facs = factorint(r, limit=limit, use_trial=use_trial,
                                  use_rho=use_rho, use_pm1=use_pm1,
@@ -1383,14 +1375,13 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     # be attempted in parallel with pollard methods
     low, high = next_p, 2*next_p
 
-    limit = limit or sqrt_n
     # add 1 to make sure limit is reached in primerange calls
-    limit += 1
+    _limit = (limit or sqrt_n) + 1
     iteration = 0
     while 1:
         high_ = high
-        if limit < high_:
-            high_ = limit
+        if _limit < high_:
+            high_ = _limit
 
         # Trial division
         if use_trial:
@@ -1405,9 +1396,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         else:
             found_trial = False
 
-        if high > limit:
+        if high > _limit:
             if verbose:
-                print('Exceeded limit:', limit)
+                print('Exceeded limit:', _limit)
             if n > 1:
                 factors[int(n)] = 1
             if verbose:
@@ -1425,7 +1416,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 c = pollard_pm1(n, B=high_root, seed=high_)
                 if c:
                     # factor it and let _trial do the update
-                    ps = factorint(c, limit=limit - 1,
+                    ps = factorint(c, limit=limit,
                                    use_trial=use_trial,
                                    use_rho=use_rho,
                                    use_pm1=use_pm1,
@@ -1444,7 +1435,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 c = pollard_rho(n, retries=1, max_steps=max_steps, seed=high_)
                 if c:
                     # factor it and let _trial do the update
-                    ps = factorint(c, limit=limit - 1,
+                    ps = factorint(c, limit=limit,
                                    use_trial=use_trial,
                                    use_rho=use_rho,
                                    use_pm1=use_pm1,
@@ -1470,7 +1461,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             print(ecm_msg % (B1, B2, num_curves))
         factor = _ecm_one_factor(n, B1, B2, num_curves, seed=B1)
         if factor:
-            ps = factorint(factor, limit=limit - 1,
+            ps = factorint(factor, limit=limit,
                        use_trial=use_trial,
                        use_rho=use_rho,
                        use_pm1=use_pm1,

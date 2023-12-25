@@ -4248,6 +4248,53 @@ def equal_valued(x, y):
         return (1 << neg_exp) == q
 
 
+def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
+    """Return True if expr1 and expr2 are numerically close.
+
+    The expressions must have the same structure, but any Rational, Integer, or
+    Float numbers they contain are compared approximately using rtol and atol.
+    Any other parts of expressions are compared exactly.
+
+    Relative tolerance is measured with respect to expr2 so when used in
+    testing expr2 should be the expected correct answer.
+
+    Examples
+    ========
+
+    >>> from sympy import exp
+    >>> from sympy.abc import x, y
+    >>> from sympy.core.numbers import all_close
+    >>> expr1 = 0.1*exp(x - y)
+    >>> expr2 = exp(x - y)/10
+    >>> expr1
+    0.1*exp(x - y)
+    >>> expr2
+    exp(x - y)/10
+    >>> expr1 == expr2
+    False
+    >>> all_close(expr1, expr2)
+    True
+    """
+    NUM_TYPES = (Rational, Float)
+
+    def _all_close(expr1, expr2, rtol, atol):
+        num1 = isinstance(expr1, NUM_TYPES)
+        num2 = isinstance(expr2, NUM_TYPES)
+        if num1 != num2:
+            return False
+        elif num1:
+            return bool(abs(expr1 - expr2) <= atol + rtol*abs(expr2))
+        elif expr1.is_Atom:
+            return expr1 == expr2
+        elif expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
+            return False
+        else:
+            args = zip(expr1.args, expr2.args)
+            return all(_all_close(a1, a2, rtol, atol) for a1, a2 in args)
+
+    return _all_close(_sympify(expr1), _sympify(expr2), rtol, atol)
+
+
 @dispatch(Tuple, Number) # type:ignore
 def _eval_is_eq(self, other): # noqa: F811
     return False
