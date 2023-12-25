@@ -118,8 +118,8 @@ modifier_dict: dict[str, Callable[[str], str]] = {
 greek_letters_set = frozenset(greeks)
 
 _between_two_numbers_p = (
-    re.compile(r'[0-9][} ]*$'),  # search
-    re.compile(r'[0-9]'),  # match
+    re.compile(r'\d[} ]*$'),  # search
+    re.compile(r'\d'),  # match
 )
 
 
