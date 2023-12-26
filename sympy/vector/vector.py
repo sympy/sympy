@@ -614,6 +614,46 @@ def dot(vect1, vect2):
 
     return Dot(vect1, vect2)
 
+class CustomVector(Vector):
+    def equals(self, other):
+        """
+        Check if the scalar components of self & others's vector system 
+        are equal after simplification.
+        Parameters:
+        - self: The first vector for comparison.
+        - others: The second vector for comparison.
+        - N: instance of a 3D coordinate system.
+        Returns:
+        - True if the scalar components are equal after simplification,
+        otherwise False. If an error occurs during the process, a
+        RuntimeError is raised with an error message.
+        """
+        import sympy
+        from sympy import simplify, radsimp
+        from sympy.vector import CoordSys3D
+
+        N = CoordSys3D('N')
+
+        # finding the vector component of self, others
+        S_V = [i for i in self.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
+        O_V = [i for i in other.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
+
+        ssc = [self.dot(N.i) * S_V.dot(N.i), self.dot(N.j) * S_V.dot(N.j), self.dot(N.k) * S_V.dot(N.k)]
+        osc = [other.dot(N.i) * O_V.dot(N.i), other.dot(N.j) * O_V.dot(N.j), other.dot(N.k) * O_V.dot(N.k)]
+
+        try:
+            # Simplifying each scalar component
+            for s_i in range(len(ssc)):
+                ssc[s_i] = radsimp(simplify(ssc[s_i]))
+                osc[s_i] = radsimp(simplify(osc[s_i]))
+
+            if ssc == osc:
+                return True
+            else:
+                return False
+        except Exception as e:
+            raise RuntimeError(f"An error occurred: {str(e)}") from e
+
 
 Vector._expr_type = Vector
 Vector._mul_func = VectorMul
