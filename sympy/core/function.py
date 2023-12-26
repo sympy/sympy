@@ -452,6 +452,29 @@ class Function(Application, Expr):
     @classmethod
     def _new_(cls, *args, **options) -> Expr:
         n = len(args)
+        from sympy.core.equation import Equation
+        eqnloc = None
+        neqns = 0
+        newargs = []
+        for k in args:
+            newargs.append(k)
+        if (n > 0):
+            for i in range(n):
+                if isinstance(args[i], Equation):
+                    neqns += 1
+                    eqnloc = i
+            if neqns > 1:
+                raise NotImplementedError('Function calls with more than one '
+                                          'Equation as a parameter are not '
+                                          'supported. You may be able to get '
+                                          'your desired outcome using .applyrhs'
+                                          ' and .applylhs.')
+            if neqns == 1:
+                newargs[eqnloc] = args[eqnloc].lhs
+                lhs = super().__new__(cls, *newargs, **options)
+                newargs[eqnloc] = args[eqnloc].rhs
+                rhs = super().__new__(cls, *newargs, **options)
+                return Equation(lhs,rhs)
 
         if not cls._valid_nargs(n):
             # XXX: exception message must be in exactly this format to
