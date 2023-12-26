@@ -8,7 +8,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.integrals.integrals import Integral
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
-     VectorMul, VectorZero, CustomVector
+     VectorMul, VectorZero
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import Cross, Dot, cross
 from sympy.testing.pytest import raises

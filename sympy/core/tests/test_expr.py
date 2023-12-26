@@ -2260,4 +2260,4 @@ def test_custom_vector_equals():
     custom_v2 = A*Q.i
 
     # Test vectors that are expected to be equal
-    assert custom_v1.equals(custom_v1)
+    assert custom_v1.equals(custom_v2)
