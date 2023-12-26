@@ -631,6 +631,7 @@ class Equation(Basic, EvalfMixin):
         #  kwargs to this. Since we cannot set evaluation of lhs manually
         #  try to be intelligent about when to do it.
         from sympy.core.function import Derivative
+        from sympy.core.sympify import _sympify
         eval_lhs = False
         if not (isinstance(self.lhs, Derivative)):
             for sym in args:
