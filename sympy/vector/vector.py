@@ -627,6 +627,14 @@ class CustomVector(Vector):
         - True if the scalar components are equal after simplification,
         otherwise False. If an error occurs during the process, a
         RuntimeError is raised with an error message.
+
+        >>> from sympy.vector import CoordSys3D
+        >>> Q = CoordSys3D('Q')
+        >>> A = (sympy.sqrt(2) + sympy.sqrt(6)) / (sympy.sqrt(sympy.sqrt(3) + 2))
+        >>> custom_v1 = 2*Q.i
+        >>> custom_v2 = A*Q.i
+        >>> custom_v1.equals(custom_v1)
+        True
         """
         import sympy
         from sympy import simplify, radsimp
