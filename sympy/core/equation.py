@@ -286,6 +286,7 @@ class Equation(Basic, EvalfMixin):
         """
         Converts the equation to an Equality.
         """
+        from sympy import Equality
         return Equality(self.lhs, self.rhs)
 
     def check(self, **kwargs):
@@ -299,6 +300,7 @@ class Equation(Basic, EvalfMixin):
         -------
         True, False or an unevaluated `Equality` if truth cannot be determined.
         """
+        from sympy.core.relational import Equality
         return Equality(self.lhs, self.rhs, **kwargs).simplify()
 
     @property
@@ -381,6 +383,7 @@ class Equation(Basic, EvalfMixin):
             self.side = side
 
         def __getattr__(self, name):
+            import functools
             func = None
             if self.side in ('rhs', 'both'):
                 func = getattr(self.eqn.rhs, name, None)
@@ -441,6 +444,8 @@ class Equation(Basic, EvalfMixin):
         >>> eq.rewrite(Add, eqn=False, evaluate=False).args
         (b, x, b, -x)
         """
+        from sympy import Add
+        from sympy.core.add import _unevaluated_Add
         if rule == Add:
             # NOTE: the code about `evaluate` is very similar to
             # sympy.core.relational.Equality._eval_rewrite_as_Add
@@ -519,6 +524,8 @@ class Equation(Basic, EvalfMixin):
         Equation(c + 9, 5*a*c*x)
 
         """
+        import functools
+        from sympy import Add
         new_args = args
         if all(isinstance(a, self.func) for a in args):
             new_args = [{a.args[0]: a.args[1] for a in args}]
