@@ -1,5 +1,19 @@
-# SymPy
+# SymPy-for-Algebra
+This is a custom fork of SymPy with an added object of type `Equation`.
+This fork is used by
+[Algebra-with-Sympy](https://github.com/gutow/Algebra_with_Sympy). This is
+typically maintained to match the latest stable release of SymPy.
 
+If you wish to make use of the `Equation` object it is recommended that you
+use it through the
+[Algebra-with-Sympy](https://github.com/gutow/Algebra_with_Sympy) package,
+which has many convenience tools for interactive step-by-step algebraic
+manipulations of equations (e.g. $a = \frac{b}{c} \rightarrow ac = b $).
+
+If you intend to use the SymPy package directly or wish to learn about
+SymPy capabilities see the information below.
+
+# SymPy
 [![pypi version](https://img.shields.io/pypi/v/sympy.svg)](https://pypi.python.org/pypi/sympy)
 [![Join the chat at https://gitter.im/sympy/sympy](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Zenodo Badge](https://zenodo.org/badge/18918/sympy/sympy.svg)](https://zenodo.org/badge/latestdoi/18918/sympy/sympy)
