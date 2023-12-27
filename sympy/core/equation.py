@@ -29,11 +29,11 @@ class Equation(Basic, EvalfMixin):
 
     Examples
     ========
-    NOTE: All the examples below are in vanilla python. You can get human
-    readable equations "lhs = rhs" in vanilla python by adjusting the settings
-    in `algwsym_config` (see it's documentation). Output is human readable by
-    default in IPython and Jupyter environments.
-    >>> from algebra_with_sympy import *
+    NOTE: If used with `algebra_with_sympy`
+    (https://github.com/gutow/Algebra_with_Sympy) you can get human-readable
+    output.
+    >>> from sympy import var, Equation, Eqn, exp, log, diff
+    >>> from sympy import integrate, Integral
     >>> a, b, c, x = var('a b c x')
     >>> Equation(a,b/c)
     Equation(a, b/c)
@@ -50,6 +50,7 @@ class Equation(Basic, EvalfMixin):
     Equation(a, b/c)
 
     Simplification and Expansion
+    >>> from sympy import simplify, expand, factor, collect
     >>> f = Eqn(x**2 - 1, c)
     >>> f
     Equation(x**2 - 1, c)
@@ -139,7 +140,7 @@ class Equation(Basic, EvalfMixin):
     Equation(p, 0.9334*atm)
 
     Substituting an equation into another equation:
-    >>> P, P1, P2, A1, A2, E1, E2 = symbols("P, P1, P2, A1, A2, E1, E2")
+    >>> P, P1, P2, A1, A2, E1, E2 = var("P, P1, P2, A1, A2, E1, E2")
     >>> eq1 = Eqn(P, P1 + P2)
     >>> eq2 = Eqn(P1 / (A1 * E1), P2 / (A2 * E2))
     >>> P1_val = (eq1 - P2).swap
@@ -148,9 +149,6 @@ class Equation(Basic, EvalfMixin):
     >>> eq2 = eq2.subs(P1_val)
     >>> eq2
     Equation((P - P2)/(A1*E1), P2/(A2*E2))
-    >>> P2_val = solve(eq2.subs(P1_val), P2).args[0]
-    >>> P2_val
-    Equation(P2, A2*E2*P/(A1*E1 + A2*E2))
 
     Combining equations (Math with equations: lhs with lhs and rhs with rhs)
     >>> q = Eqn(a*c, b/c**2)
@@ -227,16 +225,6 @@ class Equation(Basic, EvalfMixin):
     Integration of each side with respect to different variables
     >>> q.dorhs.integrate(b).dolhs.integrate(a)
     Equation(a**2*c/2, b**2/(2*c))
-
-    Automatic solutions using sympy solvers. THIS IS EXPERIMENTAL. Please
-    report issues at https://github.com/gutow/Algebra_with_Sympy/issues.
-    >>> tosolv = Eqn(a - b, c/a)
-    >>> solve(tosolv,a)
-    FiniteSet(Equation(a, b/2 - sqrt(b**2 + 4*c)/2), Equation(a, b/2 + sqrt(b**2 + 4*c)/2))
-    >>> solve(tosolv, b)
-    FiniteSet(Equation(b, (a**2 - c)/a))
-    >>> solve(tosolv, c)
-    FiniteSet(Equation(c, a**2 - a*b))
     """
 
     def __new__(cls, lhs, rhs, **kwargs):
@@ -255,17 +243,12 @@ class Equation(Basic, EvalfMixin):
         If not in an IPython environment looks in __main__.
         :return: string value if found or empty string.
         """
-        human_text = algwsym_config.output.human_text
-        algwsym_config.output.human_text = False
         import __main__ as shell
         for k in dir(shell):
             item = getattr(shell, k)
             if isinstance(item, Equation):
-                if item.__repr__() == self.__repr__() and not \
-                    k.startswith('_'):
-                    algwsym_config.output.human_text = human_text
+                if item == self and not k.startswith('_'):
                     return k
-        algwsym_config.output.human_text = human_text
         return ''
 
     @property
@@ -431,7 +414,7 @@ class Equation(Basic, EvalfMixin):
         ========
         >>> from sympy import Add
         >>> from sympy.abc import b, x
-        >>> from algebra_with_sympy import Equation
+        >>> from sympy import Equation
         >>> eq = Equation(x + b, x - b)
         >>> eq.rewrite(Add)
         Equation(2*b, 0)
@@ -494,7 +477,7 @@ class Equation(Basic, EvalfMixin):
         ========
 
         >>> from sympy.abc import a, b, c, x
-        >>> from algebra_with_sympy import Equation
+        >>> from sympy import Equation
         >>> eq = Equation(x + a, b * c)
 
         Substitute a single value:
@@ -524,8 +507,6 @@ class Equation(Basic, EvalfMixin):
         Equation(c + 9, 5*a*c*x)
 
         """
-        import functools
-        from sympy import Add
         new_args = args
         if all(isinstance(a, self.func) for a in args):
             new_args = [{a.args[0]: a.args[1] for a in args}]
@@ -672,31 +653,14 @@ class Equation(Basic, EvalfMixin):
 
     def _latex(self, printer):
         tempstr = ''
-        """
-        if algwsym_config.output.show_code and not \
-            algwsym_config.output.human_text:
-            print('code version: '+ self.__repr__())
-        """
         tempstr += printer._print(self.lhs)
         tempstr += '='
         tempstr += printer._print(self.rhs)
-        namestr = self._get_eqn_name()
-        if namestr != '' and algwsym_config.output.label:
-            tempstr += '\\,\\,\\,\\,\\,\\,\\,\\,\\,\\,'
-            tempstr += '(\\text{' + namestr + '})'
         return tempstr
 
     def __str__(self):
         tempstr = ''
-        # if algwsym_config.output.show_code:
-        #     human_text = algwsym_config.output.human_text
-        #     algwsym_config.output.human_text=False
-        #     tempstr += '\ncode version: '+self.__repr__() +'\n'
-        #     algwsym_config.output.human_text=human_text
         tempstr += str(self.lhs) + ' = ' + str(self.rhs)
-        namestr = self._get_eqn_name()
-        if namestr != '' and algwsym_config.output.label:
-            tempstr += '          (' + namestr + ')'
         return tempstr
 
 

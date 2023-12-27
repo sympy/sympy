@@ -1,5 +1,5 @@
-from sympy.testing.pytest import raises, XFAIL
-from sympy import functions, FunctionClass, symbols, Equation
+from sympy.testing.pytest import raises
+from sympy import functions, symbols, Equation
 
 #####
 # Testing that sympy functions work with Equations
@@ -109,14 +109,13 @@ def test_functions_extensions_eqn_not_arg1():
         eq = Equation(a, b / c)
         obj = globals()['besselj']
         raises(NotImplementedError, lambda: obj(eq, eq))
-        
+
 #####
 # Testing of Equation class
 #####
-from sympy import symbols, integrate, simplify, expand, factor, Integral, Add
-from sympy import diff, FiniteSet, Equality, Function, functions, Matrix, S
-from sympy import sin, cos, log, exp, latex, Symbol, I, collect, Equation, Eqn
-from sympy import Equality
+from sympy import integrate, simplify, expand, factor, Add
+from sympy import diff, FiniteSet, Equality, functions, Matrix, S
+from sympy import sin, cos, log, exp, I, collect, Eqn
 from sympy import sqrt, root, Heaviside
 
 def test_define_equation():
@@ -162,7 +161,7 @@ def test_binary_op():
     assert tsteqn**a == Equation(a**a, (b/c)**a)
     assert tsteqn._eval_power(tsteqn) == Equation(a**a, (b/c)**(b/c))
     assert tsteqn._eval_power(a) == Equation(a**a, (b/c)**a)
-    
+
 def test_sympy_functions():
     a, b, c = symbols('a b c')
     tsteqn = Equation(a, b/c)
@@ -211,7 +210,7 @@ def test_helper_functions():
     assert root(Eqn(a,b/c),3) == Equation(a**(S(1)/S(3)), (b/c)**(S(1)/S(3)))
     assert root(b/c,3) == (b/c)**(S(1)/S(3))
     assert sqrt(Eqn(a,b/c)) == Equation(sqrt(a), sqrt(b/c))
-    
+
 def test_Heaviside():
     a, b, c, x = symbols('a b c x')
     tsteqn = Equation(a, b / c)
@@ -243,10 +242,11 @@ def test_rewrite_add():
     b, x = symbols("x, b")
     eq = Equation(x + b, x - b)
     assert eq.rewrite(Add) == Equation(2 * b, 0)
-    assert set(eq.rewrite(Add, evaluate=None).lhs.args) == set((b, x, b, -x))
-    assert set(eq.rewrite(Add, evaluate=False).lhs.args) == set((b, x, b, -x))
+    assert set(eq.rewrite(Add, evaluate=None).lhs.args) == set({b, x, b, -x})
+    assert set(eq.rewrite(Add, evaluate=False).lhs.args) == set({b, x, b, -x})
     assert eq.rewrite(Add, eqn=False) == 2 * b
-    assert set(eq.rewrite(Add, eqn=False, evaluate=False).args) == set((b, x, b, -x))
+    assert set(eq.rewrite(Add, eqn=False, evaluate=False).args) == set({b, x,
+                                                                        b, -x})
 
 
 def test_rewrite():
