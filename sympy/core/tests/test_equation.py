@@ -21,7 +21,7 @@ _not_applicable_to_equations_ = ('Min', 'Max', 'Id', 'real_root',
 _skip_ = _extended_ + _not_applicable_to_equations_
 
 import importlib
-temp = importlib.import_module('sympy', package=functions.__all__)
+temp = importlib.import_module('sympy', package="functions")
 for func in functions.__all__:
     globals()[func] = getattr(temp, func)
 
