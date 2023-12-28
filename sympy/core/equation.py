@@ -32,7 +32,7 @@ class Equation(Basic, EvalfMixin):
     NOTE: If used with `algebra_with_sympy`
     (https://github.com/gutow/Algebra_with_Sympy) you can get human-readable
     output.
-    >>> from sympy import var, Equation, Eqn, exp, log, diff
+    >>> from sympy import var, Equation, Eqn, exp, log, diff, Derivative
     >>> from sympy import integrate, Integral
     >>> a, b, c, x = var('a b c x')
     >>> Equation(a,b/c)
@@ -507,6 +507,8 @@ class Equation(Basic, EvalfMixin):
         Equation(c + 9, 5*a*c*x)
 
         """
+        import functools
+        from sympy import Add
         new_args = args
         if all(isinstance(a, self.func) for a in args):
             new_args = [{a.args[0]: a.args[1] for a in args}]
