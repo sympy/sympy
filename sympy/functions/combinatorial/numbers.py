@@ -261,6 +261,10 @@ class fibonacci(Function):
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
 
+    def _eval_rewrite_as_tractable(self, n, **kwargs):
+        from sympy.functions import sqrt, cos
+        return (S.GoldenRatio**n - cos(S.Pi*n)/S.GoldenRatio**n)/sqrt(5)
+
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
         from sympy.functions.elementary.miscellaneous import sqrt
         return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5

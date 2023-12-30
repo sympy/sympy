@@ -812,7 +812,7 @@ class Function(Application, Expr):
             raise NotImplementedError(
                 '%s has no _eval_as_leading_term routine' % self.func)
         else:
-            return self.func(*args)
+            return self
 
 
 class AppliedUndef(Function):
