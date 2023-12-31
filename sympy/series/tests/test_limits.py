@@ -2,11 +2,12 @@ from itertools import product
 
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
-from sympy.core import EulerGamma
+from sympy.core import EulerGamma, GoldenRatio
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
@@ -1393,3 +1394,6 @@ def test_issue_25847():
     assert limit(acsch(sin(x)/x), x, 0, '+-') == log(1 + sqrt(2))
     assert limit(acsch(exp(1/x)), x, 0, '+') == 0
     assert limit(acsch(exp(1/x)), x, 0, '-') == oo
+
+def test_issue_26027():
+    assert limit(fibonacci(n + 1)/fibonacci(n), n, oo) == GoldenRatio
