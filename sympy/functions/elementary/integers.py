@@ -49,10 +49,10 @@ class RoundFunction(Function):
                 ipart += i*S.ImaginaryUnit
             elif (i := intof(t)) is not None:
                 ipart += i
-            elif t.has(Symbol):
-                spart += t
-            else:
+            elif t.is_number:
                 npart += t
+            else:
+                spart += t
 
         if not (npart or spart):
             return ipart
