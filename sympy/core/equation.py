@@ -649,8 +649,6 @@ class Equation(Basic, EvalfMixin):
     def __repr__(self):
         repstr = 'Equation(%s, %s)' % (
         self.lhs.__repr__(), self.rhs.__repr__())
-        # if algwsym_config.output.human_text:
-        #     return self.__str__()
         return repstr
 
     def _latex(self, printer):
