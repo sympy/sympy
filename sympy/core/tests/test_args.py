@@ -682,6 +682,7 @@ def test_sympy__core__function__WildFunction():
 def test_sympy__core__mod__Mod():
     from sympy.core.mod import Mod
     assert _test_args(Mod(x, 2))
+    assert _test_args(Mod(3*x, 2))
 
 
 def test_sympy__core__mul__Mul():
