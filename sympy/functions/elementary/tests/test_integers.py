@@ -8,6 +8,11 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, tan
+from sympy.polys.rootoftools import RootOf, CRootOf
+from sympy import Integers
+from sympy.sets.sets import Interval
+from sympy.sets.fancysets import ImageSet
+from sympy.core.function import Lambda
 
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import XFAIL, raises
