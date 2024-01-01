@@ -389,6 +389,10 @@ def test_ceiling():
     assert (ceiling(y) >= n) == (y > n - 1)
     assert (ceiling(y) < n) == (y <= n - 1)
     assert (ceiling(y) > n) == (y > n)
+    
+    assert ceiling(RootOf(x**5-x**2+1,0)) == 0
+    s = ImageSet(Lambda(n, n + (CRootOf(x**5 - x**2 + 1, 0))), Integers)
+    assert s.intersect(Interval(-10, 10)) == {-9 + CRootOf(x**5 - x**2 + 1, 0), -8 + CRootOf(x**5 - x**2 + 1, 0), -7 + CRootOf(x**5 - x**2 + 1, 0), -6 + CRootOf(x**5 - x**2 + 1, 0), -5 + CRootOf(x**5 - x**2 + 1, 0), -4 + CRootOf(x**5 - x**2 + 1, 0), -3 + CRootOf(x**5 - x**2 + 1, 0), -2 + CRootOf(x**5 - x**2 + 1, 0), -1 + CRootOf(x**5 - x**2 + 1, 0), CRootOf(x**5 - x**2 + 1, 0) + 1, CRootOf(x**5 - x**2 + 1, 0) + 2, CRootOf(x**5 - x**2 + 1, 0) + 3, CRootOf(x**5 - x**2 + 1, 0) + 4, CRootOf(x**5 - x**2 + 1, 0) + 5, CRootOf(x**5 - x**2 + 1, 0) + 6, CRootOf(x**5 - x**2 + 1, 0) + 7, CRootOf(x**5 - x**2 + 1, 0) + 8, CRootOf(x**5 - x**2 + 1, 0) + 9, CRootOf(x**5 - x**2 + 1, 0) + 10, CRootOf(x**5 - x**2 + 1, 0)}
 
 
 def test_frac():
