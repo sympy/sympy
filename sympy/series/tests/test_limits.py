@@ -777,6 +777,10 @@ def test_issue_9471():
     assert limit(((27**(log(n,3)+1))/n**3),n,oo) == 27
 
 
+def test_issue_10382():
+    assert limit(fibonacci(n + 1)/fibonacci(n), n, oo) == GoldenRatio
+
+
 def test_issue_11496():
     assert limit(erfc(log(1/x)), x, oo) == 2
 
@@ -1394,6 +1398,3 @@ def test_issue_25847():
     assert limit(acsch(sin(x)/x), x, 0, '+-') == log(1 + sqrt(2))
     assert limit(acsch(exp(1/x)), x, 0, '+') == 0
     assert limit(acsch(exp(1/x)), x, 0, '-') == oo
-
-def test_issue_26027():
-    assert limit(fibonacci(n + 1)/fibonacci(n), n, oo) == GoldenRatio
