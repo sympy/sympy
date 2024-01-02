@@ -1533,7 +1533,8 @@ class Pow(Expr):
                 return res
 
         f = b.as_leading_term(x, logx=logx)
-        g = (b/f - S.One).cancel(expand=False)
+        g = ((b.expand()-f).simplify())
+        g = g/f
         if not m.is_number:
             raise NotImplementedError()
         maxpow = n - m*e
