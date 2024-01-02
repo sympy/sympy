@@ -661,3 +661,7 @@ def test_issue_26546():
     assert Pow(x+I, Rational(1,2)).is_extended_real is False
     assert Pow(x+I, Rational(1,13)).is_extended_real is False
     assert Pow(x+I, Rational(2,3)).is_extended_real is None
+
+
+def test_issue_25165():
+    assert (1/sqrt(( - x + 1)**2 + (x - 0.23)**4)).series(x, 0, 2) == 0.998603724830355 + 1.02004923189934*x + O(x**2)
