@@ -1420,8 +1420,19 @@ class Rational(Number):
             if isinstance(other, Integer):
                 return Rational(self.p + self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
-                #TODO: this can probably be optimized more
-                return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
+                ap, aq = self.p, self.q
+                bp, bq = other.p, other.q
+                g = math.gcd(aq, bq)
+                if g == 1:
+                    p = ap*bq + aq*bp
+                    q = bq*aq
+                    return Rational(p, q)
+                else:
+                    q1, q2 = aq//g, bq//g
+                    p, q = ap*q2 + bp*q1, q1*q2
+                    g2 = math.gcd(p, g)
+                    p, q = (p // g2), q * (g // g2)
+                    return Rational(p, q)
             elif isinstance(other, Float):
                 return other + self
             else:
@@ -1435,7 +1446,19 @@ class Rational(Number):
             if isinstance(other, Integer):
                 return Rational(self.p - self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
+                ap, aq = self.p, self.q
+                bp, bq = other.p, other.q
+                g = math.gcd(aq, bq)
+                if g == 1:
+                    p = ap*bq - aq*bp
+                    q = bq*aq
+                    return Rational(p, q)
+                else:
+                    q1, q2 = aq//g, bq//g
+                    p, q = ap*q2 + bp*q1, q1*q2
+                    g2 = math.gcd(p, g)
+                    p, q = (p // g2), q * (g // g2)
+                    return Rational(p, q)
             elif isinstance(other, Float):
                 return -other + self
             else:
@@ -1457,9 +1480,17 @@ class Rational(Number):
     def __mul__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
+                x = math.gcd(other, self.q)
+                p = self.p*(other//x)
+                q = self.q//x
+                return Rational(p, q)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
+                ap, aq = self.p, self.q
+                bp, bq = other.p, other.q
+                x1 = math.gcd(ap, bq)
+                x2 = math.gcd(bp, aq)
+                p, q = ((ap//x1)*(bp//x2), (aq//x2)*(bq//x1))
+                return Rational(p, q)
             elif isinstance(other, Float):
                 return other*self
             else:
