@@ -2,11 +2,12 @@ from itertools import product
 
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
-from sympy.core import EulerGamma
+from sympy.core import EulerGamma, GoldenRatio
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
@@ -774,6 +775,10 @@ def test_issue_9205():
 def test_issue_9471():
     assert limit(((27**(log(n,3)))/n**3),n,oo) == 1
     assert limit(((27**(log(n,3)+1))/n**3),n,oo) == 27
+
+
+def test_issue_10382():
+    assert limit(fibonacci(n + 1)/fibonacci(n), n, oo) == GoldenRatio
 
 
 def test_issue_11496():
