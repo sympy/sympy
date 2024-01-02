@@ -651,3 +651,7 @@ def test_powers_of_I():
 def test_issue_23918():
     b = S(2)/3
     assert (b**x).as_base_exp() == (1/b, -x)
+
+
+def test_issue_25165():
+    assert (1/sqrt(( - x + 1)**2 + (x - 0.23)**4)).series(x, 0, 2) == 0.998603724830355 + 1.02004923189934*x + O(x**2)

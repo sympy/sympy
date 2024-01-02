@@ -479,14 +479,13 @@ def test_as_leading_term():
     # https://github.com/sympy/sympy/issues/21177
     e = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
         - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
-    assert e.as_leading_term(x) == \
-        (12*sqrt(3)*x - 12*S.ImaginaryUnit*x)/(4*sqrt(3) + 12*S.ImaginaryUnit)
+    assert e.as_leading_term(x) == -sqrt(3)*I*x
 
     # https://github.com/sympy/sympy/issues/21245
     e = 1 - x - x**2
     d = (1 + sqrt(5))/2
     assert e.subs(x, y + 1/d).as_leading_term(y) == \
-        (-576*sqrt(5)*y - 1280*y)/(256*sqrt(5) + 576)
+        (-40*y - 16*sqrt(5)*y)/(16 + 8*sqrt(5))
 
 
 def test_leadterm2():
