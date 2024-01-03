@@ -45,8 +45,6 @@ def _ramanujan_tau(n, prev):
     t = 0
     u = 0
     nm1 = n - 1
-    # The end of the loop is dummy.
-    # In fact, exit the for statement with the condition `n <= u`.
     for m in range(1, n):
         u += m
         if n <= u:
