@@ -41,7 +41,6 @@ from sympy.simplify.simplify import simplify, nsimplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.tensor.indexed import Indexed
 from sympy.physics.units import meter
-from sympy.vector.vector import CustomVector
 
 from sympy.testing.pytest import raises, XFAIL
 
