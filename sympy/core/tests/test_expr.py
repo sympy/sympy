@@ -41,6 +41,7 @@ from sympy.simplify.simplify import simplify, nsimplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.tensor.indexed import Indexed
 from sympy.physics.units import meter
+from sympy.vector.vector import CustomVector
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -2256,8 +2257,8 @@ def test_custom_vector_equals():
     Q = CoordSys3D('Q')
     A = (sympy.sqrt(2) + sympy.sqrt(6)) / (sympy.sqrt(sympy.sqrt(3) + 2))
     
-    custom_v1 = 2*Q.i
-    custom_v2 = A*Q.i
+    custom_v1 = 2 * Q.i
+    custom_v2 = A * Q.i
 
     # Test vectors that are expected to be equal
     assert custom_v1.equals(custom_v2)
