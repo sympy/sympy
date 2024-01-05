@@ -6,7 +6,7 @@ from sympy.core.symbol import (Dummy, Symbol)
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, kronecker_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
-    sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
+    sqrt_mod_iter, discrete_log, quadratic_congruence, \
     polynomial_congruence, sieve
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _primitive_root_prime_power_iter, _primitive_root_prime_power2_iter, \
@@ -278,19 +278,8 @@ def test_residue():
     assert kronecker_symbol(1, 0) == kronecker_symbol(-1, 0) == 1
     assert kronecker_symbol(0, 0) == 0
 
-    assert mobius(13*7) == 1
-    assert mobius(1) == 1
-    assert mobius(13*7*5) == -1
-    assert mobius(13**2) == 0
-    raises(ValueError, lambda: mobius(-3))
-
-    p = Symbol('p', integer=True, positive=True, prime=True)
     x = Symbol('x', positive=True)
     i = Symbol('i', integer=True)
-    assert mobius(p) == -1
-    raises(TypeError, lambda: mobius(x))
-    raises(ValueError, lambda: mobius(i))
-
     assert _discrete_log_trial_mul(587, 2**7, 2) == 7
     assert _discrete_log_trial_mul(941, 7**18, 7) == 18
     assert _discrete_log_trial_mul(389, 3**81, 3) == 81

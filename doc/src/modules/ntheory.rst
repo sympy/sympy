@@ -197,9 +197,6 @@ Ntheory Functions Reference
 .. automodule:: sympy.ntheory.digits
    :members:
 
-.. autoclass:: sympy.ntheory.mobius
-   :members:
-
 .. module:: sympy.ntheory.egyptian_fraction
 
 .. autofunction:: egyptian_fraction

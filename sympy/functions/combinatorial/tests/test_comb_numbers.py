@@ -15,7 +15,7 @@ from sympy.series.limits import limit, Limit
 from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, andre, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    genocchi, andre, partition, mobius, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
 from sympy.functions.combinatorial.numbers import _nT
 
@@ -578,6 +578,55 @@ def test_partition():
     assert partition(x).subs(x, 7) == 15
     assert partition(y).subs(y, 8) == 22
     raises(ValueError, lambda: partition(Rational(5, 4)))
+
+
+def test_mobius():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: mobius(m))
+    raises(TypeError, lambda: mobius(4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: mobius(m))
+    raises(ValueError, lambda: mobius(-3))
+
+    # special case
+    p = Symbol('p', prime=True)
+    assert mobius(p) == -1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert mobius(n).is_integer is True
+    assert mobius(n).is_prime is False
+
+    # symbolic
+    n = Symbol('n', integer=True, positive=True)
+    k = Symbol('k', integer=True, positive=True)
+    assert mobius(n**2) == 0
+    assert mobius(4*n) == 0
+    assert isinstance(mobius(n**k), mobius)
+    assert mobius(n**(k+1)) == 0
+    assert isinstance(mobius(3**k), mobius)
+    assert mobius(3**(k+1)) == 0
+    m = Symbol('m')
+    assert isinstance(mobius(4*m), mobius)
+
+    # Integer
+    assert mobius(13*7) == 1
+    assert mobius(1) == 1
+    assert mobius(13*7*5) == -1
+    assert mobius(13**2) == 0
+    A008683 = [1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1, 0,
+               -1, 0, 1, 1, -1, 0, 0, 1, 0, 0, -1, -1, -1, 0, 1, 1, 1, 0, -1,
+               1, 1, 0, -1, -1, -1, 0, 0, 1, -1, 0, 0, 0, 1, 0, -1, 0, 1, 0]
+    for n, val in enumerate(A008683, 1):
+        assert mobius(n) == val
+
+    # rewrite
+    n = Symbol('n', integer=True, positive=True)
+    m = Symbol('m', integer=True, positive=True)
+    assert mobius(n*m).rewrite(mobius, coprimes=(n, m)) == mobius(n)*mobius(m)
+    assert mobius(8*n*m).rewrite(mobius, coprimes=(6, n*m)) == 0
+    assert mobius(2*n*m).rewrite(mobius, coprimes=(6, n)) == mobius(2*n*m)
 
 
 def test__nT():

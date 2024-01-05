@@ -2014,6 +2014,11 @@ def test_sympy__functions__combinatorial__numbers__carmichael():
     assert _test_args(carmichael(x))
 
 
+def test_sympy__functions__combinatorial__numbers__mobius():
+    from sympy.functions.combinatorial.numbers import mobius
+    assert _test_args(mobius(2))
+
+
 def test_sympy__functions__combinatorial__numbers__motzkin():
     from sympy.functions.combinatorial.numbers import motzkin
     assert _test_args(motzkin(5))
@@ -5002,11 +5007,6 @@ def test_sympy__ntheory__factor___primeomega():
     n = symbols('n', integer=True)
     t = primeomega(n)
     assert _test_args(t)
-
-
-def test_sympy__ntheory__residue_ntheory__mobius():
-    from sympy.ntheory import mobius
-    assert _test_args(mobius(2))
 
 
 def test_sympy__ntheory__generate__primepi():
