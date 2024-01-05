@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from sympy.core.function import Function
-from sympy.core.singleton import S
 from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
                                  kronecker, bit_scan1, remove)
 from sympy.polys import Poly
