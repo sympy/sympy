@@ -979,6 +979,9 @@ class Xor(BooleanFunction):
                     arg = true
                 else:
                     continue
+            if Not(arg) in argset:
+                argset.remove(Not(arg))
+                arg = true
             if isinstance(arg, Xor):
                 for a in arg.args:
                     argset.remove(a) if a in argset else argset.add(a)
@@ -1048,6 +1051,7 @@ class Xor(BooleanFunction):
         # And and Or, we only simplify the partial expressions before using
         # patterns
         rv = self.func(*[a.simplify(**kwargs) for a in self.args])
+        rv = simplify_logic(rv)
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
         patterns = _simplify_patterns_xor()
