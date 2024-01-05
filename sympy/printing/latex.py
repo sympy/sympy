@@ -15,7 +15,7 @@ from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
-from sympy.tensor.array import NDimArray
+
 
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -30,6 +30,7 @@ from sympy.utilities.iterables import has_variety, sift
 import re
 
 if TYPE_CHECKING:
+    from sympy.tensor.array import NDimArray
     from sympy.vector.basisdependent import BasisDependent
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
