@@ -1716,8 +1716,8 @@ class mobius(Function):
 
     The Mobius function is multiplicative whenever n and m are coprime.
 
-    >>> mobius(n*m).rewrite(mobius, coprimes=(n, m))
-    mobius(n)*mobius(m)
+    >>> mobius(m*n).rewrite(mobius, coprimes=(n, m))
+    mobius(m)*mobius(n)
 
     References
     ==========
