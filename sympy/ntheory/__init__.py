@@ -16,7 +16,7 @@ from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
 from .partitions_ import npartitions
 from .residue_ntheory import is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, kronecker_symbol, n_order, sqrt_mod, quadratic_residues, \
-    primitive_root, nthroot_mod, is_nthpow_residue, sqrt_mod_iter, mobius, \
+    primitive_root, nthroot_mod, is_nthpow_residue, sqrt_mod_iter, \
     discrete_log, quadratic_congruence, polynomial_congruence
 from .multinomial import binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients
@@ -46,7 +46,7 @@ __all__ = [
     'is_primitive_root', 'is_quad_residue', 'legendre_symbol',
     'jacobi_symbol', 'kronecker_symbol', 'n_order', 'sqrt_mod', 'quadratic_residues',
     'primitive_root', 'nthroot_mod', 'is_nthpow_residue', 'sqrt_mod_iter',
-    'mobius', 'discrete_log', 'quadratic_congruence', 'polynomial_congruence',
+    'discrete_log', 'quadratic_congruence', 'polynomial_congruence',
 
     'binomial_coefficients', 'binomial_coefficients_list',
     'multinomial_coefficients',
