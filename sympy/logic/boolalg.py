@@ -1051,7 +1051,6 @@ class Xor(BooleanFunction):
         # And and Or, we only simplify the partial expressions before using
         # patterns
         rv = self.func(*[a.simplify(**kwargs) for a in self.args])
-        rv = simplify_logic(rv)
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
         patterns = _simplify_patterns_xor()
@@ -3090,7 +3089,7 @@ def _apply_patternbased_simplification(rv, patterns, measure,
     Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational),
                        binary=True)
     if len(Rel) <= 1:
-        return rv
+        return simplify_logic(rv)
     Rel, nonRealRel = sift(Rel, lambda i: not any(s.is_real is False
                                                   for s in i.free_symbols),
                            binary=True)
