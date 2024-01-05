@@ -1208,64 +1208,6 @@ def kronecker_symbol(a, n):
     return int(kronecker(as_int(a), as_int(n)))
 
 
-class mobius(Function):
-    """
-    Mobius function maps natural number to {-1, 0, 1}
-
-    It is defined as follows:
-        1) `1` if `n = 1`.
-        2) `0` if `n` has a squared prime factor.
-        3) `(-1)^k` if `n` is a square-free positive integer with `k`
-           number of prime factors.
-
-    It is an important multiplicative function in number theory
-    and combinatorics.  It has applications in mathematical series,
-    algebraic number theory and also physics (Fermion operator has very
-    concrete realization with Mobius Function model).
-
-    Parameters
-    ==========
-
-    n : positive integer
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory import mobius
-    >>> mobius(13*7)
-    1
-    >>> mobius(1)
-    1
-    >>> mobius(13*7*5)
-    -1
-    >>> mobius(13**2)
-    0
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/M%C3%B6bius_function
-    .. [2] Thomas Koshy "Elementary Number Theory with Applications"
-
-    """
-    @classmethod
-    def eval(cls, n):
-        if n.is_integer:
-            if n.is_positive is not True:
-                raise ValueError("n should be a positive integer")
-        else:
-            raise TypeError("n should be an integer")
-        if n.is_prime:
-            return S.NegativeOne
-        elif n is S.One:
-            return S.One
-        elif n.is_Integer:
-            a = factorint(n)
-            if any(i > 1 for i in a.values()):
-                return S.Zero
-            return S.NegativeOne**len(a)
-
-
 def _discrete_log_trial_mul(n, a, b, order=None):
     """
     Trial multiplication algorithm for computing the discrete logarithm of
