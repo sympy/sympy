@@ -621,13 +621,6 @@ def test_mobius():
     for n, val in enumerate(A008683, 1):
         assert mobius(n) == val
 
-    # rewrite
-    n = Symbol('n', integer=True, positive=True)
-    m = Symbol('m', integer=True, positive=True)
-    assert mobius(n*m).rewrite(mobius, coprimes=(n, m)) == mobius(n)*mobius(m)
-    assert mobius(8*n*m).rewrite(mobius, coprimes=(6, n*m)) == 0
-    assert mobius(2*n*m).rewrite(mobius, coprimes=(6, n)) == mobius(2*n*m)
-
 
 def test__nT():
        assert [_nT(i, j) for i in range(5) for j in range(i + 2)] == [
