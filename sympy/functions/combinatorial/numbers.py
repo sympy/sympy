@@ -1708,7 +1708,7 @@ class mobius(Function):
     Even in the case of a symbol, if it clearly contains a squared prime factor, it will be zero.
 
     >>> from sympy import Symbol
-    >>> n = Symbols("n", integer=True, positive=True)
+    >>> n = Symbol("n", integer=True, positive=True)
     >>> mobius(4*n)
     0
     >>> mobius(n**2)
