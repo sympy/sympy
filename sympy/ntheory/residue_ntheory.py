@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from sympy.core.function import Function
-from sympy.core.singleton import S
 from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
                                  kronecker, bit_scan1, remove)
 from sympy.polys import Poly
@@ -1208,8 +1206,11 @@ def kronecker_symbol(a, n):
     """
     return int(kronecker(as_int(a), as_int(n)))
 
-
-class mobius(Function):
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.mobius` has been moved to `sympy.functions.combinatorial.numbers.mobius`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def mobius(n):
     """
     Mobius function maps natural number to {-1, 0, 1}
 
@@ -1255,27 +1256,8 @@ class mobius(Function):
     .. [2] Thomas Koshy "Elementary Number Theory with Applications"
 
     """
-    @classmethod
-    @deprecated("""\
-    The `sympy.ntheory.residue_ntheory.mobius` has been moved to `sympy.functions.combinatorial.numbers.mobius`.""",
-    deprecated_since_version="1.13",
-    active_deprecations_target='deprecated-ntheory-symbolic-functions',
-    stacklevel=7)
-    def eval(cls, n):
-        if n.is_integer:
-            if n.is_positive is not True:
-                raise ValueError("n should be a positive integer")
-        else:
-            raise TypeError("n should be an integer")
-        if n.is_prime:
-            return S.NegativeOne
-        elif n is S.One:
-            return S.One
-        elif n.is_Integer:
-            a = factorint(n)
-            if any(i > 1 for i in a.values()):
-                return S.Zero
-            return S.NegativeOne**len(a)
+    from sympy.functions.combinatorial.numbers import mobius as _mobius
+    return _mobius(n)
 
 
 def _discrete_log_trial_mul(n, a, b, order=None):
