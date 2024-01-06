@@ -1707,17 +1707,12 @@ class mobius(Function):
 
     Even in the case of a symbol, if it clearly contains a squared prime factor, it will be zero.
 
-    >>> from sympy import symbols
-    >>> n, m = symbols("n m", integer=True, positive=True)
+    >>> from sympy import Symbol
+    >>> n = Symbols("n", integer=True, positive=True)
     >>> mobius(4*n)
     0
     >>> mobius(n**2)
     0
-
-    The Mobius function is multiplicative whenever n and m are coprime.
-
-    >>> mobius(m*n).rewrite(mobius, coprimes=(n, m))
-    mobius(m)*mobius(n)
 
     References
     ==========
@@ -1760,29 +1755,6 @@ class mobius(Function):
             else:
                 return
         return result
-
-    def _eval_rewrite(self, rule, args, **hints):
-        if rule == mobius and "coprimes" in hints:
-            # mobius(a*b) = mobius(a)*mobius(b)
-            results = []
-            n = args[0]
-            for p in hints["coprimes"]:
-                if p.is_integer is not True:
-                    return
-                qs = factorint(p).keys() if p.is_Integer is True else [p]
-                for q in qs:
-                    m, r = divmod(n, q)
-                    if not r:
-                        e = 1
-                        n = m
-                        m, r = divmod(n, q)
-                        while not r:
-                            e += 1
-                            n = m
-                            m, r = divmod(n, q)
-                        results.append((q, e))
-            if n is S.One:
-                return Mul(*(mobius(n**e) for n, e in results))
 
 
 #######################################################################
