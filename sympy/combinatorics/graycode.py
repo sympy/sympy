@@ -261,7 +261,7 @@ class GrayCode(Basic):
         References
         ==========
 
-        .. [1] http://statweb.stanford.edu/~susan/courses/s208/node12.html
+        .. [1] https://web.archive.org/web/20200224064753/http://statweb.stanford.edu/~susan/courses/s208/node12.html
 
         """
         if self._rank is None:

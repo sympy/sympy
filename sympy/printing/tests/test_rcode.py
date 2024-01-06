@@ -169,7 +169,7 @@ def test_rcode_sinc():
     from sympy.functions.elementary.trigonometric import sinc
     expr = sinc(x)
     res = rcode(expr)
-    ref = "ifelse(x != 0,sin(x)/x,1)"
+    ref = "(ifelse(x != 0,sin(x)/x,1))"
     assert res == ref
 
 
@@ -384,7 +384,7 @@ def test_rcode_loops_multiple_terms():
     c = rcode(
         b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
 
-    ref=dict()
+    ref={}
     ref[0] = s0 + s1 + s2 + s3[:-1]
     ref[1] = s0 + s1 + s3 + s2[:-1]
     ref[2] = s0 + s2 + s1 + s3[:-1]

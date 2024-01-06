@@ -237,7 +237,7 @@ def scalar_potential(field, frame):
     _check_frame(frame)
     field = express(field, frame, variables=True)
     # Make a list of dimensions of the frame
-    dimensions = [x for x in frame]
+    dimensions = list(frame)
     # Calculate scalar potential function
     temp_function = integrate(field.dot(dimensions[0]), frame[0])
     for i, dim in enumerate(dimensions[1:]):

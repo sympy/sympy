@@ -11,7 +11,7 @@ from sympy.functions.elementary.trigonometric import (acos, asin, cos, cot, sec,
 from sympy.series.order import O
 
 from sympy.core.expr import unchanged
-from sympy.core.function import ArgumentIndexError
+from sympy.core.function import ArgumentIndexError, PoleError
 from sympy.testing.pytest import raises
 
 
@@ -504,7 +504,7 @@ def test_asinh():
     assert unchanged(asinh, x)
     assert asinh(-x) == -asinh(x)
 
-    #at specific points
+    # at specific points
     assert asinh(nan) is nan
     assert asinh( 0) == 0
     assert asinh(+1) == log(sqrt(2) + 1)
@@ -524,7 +524,7 @@ def test_asinh():
 
     assert asinh(zoo) is zoo
 
-    #properties
+    # properties
     assert asinh(I *(sqrt(3) - 1)/(2**Rational(3, 2))) == pi*I/12
     assert asinh(-I *(sqrt(3) - 1)/(2**Rational(3, 2))) == -pi*I/12
 
@@ -533,6 +533,15 @@ def test_asinh():
 
     assert asinh(I*(sqrt(5) + 1)/4) == pi*I*Rational(3, 10)
     assert asinh(-I*(sqrt(5) + 1)/4) == pi*I*Rational(-3, 10)
+
+    # reality
+    assert asinh(S(2)).is_real is True
+    assert asinh(S(2)).is_finite is True
+    assert asinh(S(-2)).is_real is True
+    assert asinh(S(oo)).is_extended_real is True
+    assert asinh(-S(oo)).is_real is False
+    assert (asinh(2) - oo) == -oo
+    assert asinh(symbols('y', real=True)).is_real is True
 
     # Symmetry
     assert asinh(Rational(-1, 2)) == -asinh(S.Half)
@@ -559,9 +568,9 @@ def test_asinh_rewrite():
     x = Symbol('x')
     assert asinh(x).rewrite(log) == log(x + sqrt(x**2 + 1))
     assert asinh(x).rewrite(atanh) == atanh(x/sqrt(1 + x**2))
-    assert asinh(x).rewrite(asin) == asinh(x)
+    assert asinh(x).rewrite(asin) == -I*asin(I*x, evaluate=False)
     assert asinh(x*(1 + I)).rewrite(asin) == -I*asin(I*x*(1+I))
-    assert asinh(x).rewrite(acos) == I*(-I*asinh(x) + pi/2) - I*pi/2
+    assert asinh(x).rewrite(acos) == I*acos(I*x, evaluate=False) - I*pi/2
 
 
 def test_asinh_leading_term():
@@ -678,12 +687,21 @@ def test_acosh():
     assert acosh(cosh(cosh(1) + I)) == cosh(1) + I
     assert acosh(1, evaluate=False).is_zero is True
 
+    # Reality
+    assert acosh(S(2)).is_real is True
+    assert acosh(S(2)).is_extended_real is True
+    assert acosh(oo).is_extended_real is True
+    assert acosh(S(2)).is_finite is True
+    assert acosh(S(1) / 5).is_real is False
+    assert (acosh(2) - oo) == -oo
+    assert acosh(symbols('y', real=True)).is_real is None
+
 
 def test_acosh_rewrite():
     x = Symbol('x')
     assert acosh(x).rewrite(log) == log(x + sqrt(x - 1)*sqrt(x + 1))
     assert acosh(x).rewrite(asin) == sqrt(x - 1)*(-asin(x) + pi/2)/sqrt(1 - x)
-    assert acosh(x).rewrite(asinh) == sqrt(x - 1)*(-asin(x) + pi/2)/sqrt(1 - x)
+    assert acosh(x).rewrite(asinh) == sqrt(x - 1)*(I*asinh(I*x, evaluate=False) + pi/2)/sqrt(1 - x)
     assert acosh(x).rewrite(atanh) == \
         (sqrt(x - 1)*sqrt(x + 1)*atanh(sqrt(x**2 - 1)/x)/sqrt(x**2 - 1) +
          pi*sqrt(x - 1)*(-x*sqrt(x**(-2)) + 1)/(2*sqrt(1 - x)))
@@ -784,6 +802,14 @@ def test_asech():
     assert asech(2/sqrt(2 + sqrt(2))) == acosh(sqrt(2 + sqrt(2))/2)
     assert asech(2) == acosh(S.Half)
 
+    # reality
+    assert asech(S(2)).is_real is False
+    assert asech(-S(1) / 3).is_real is False
+    assert asech(S(2) / 3).is_finite is True
+    assert asech(S(0)).is_real is False
+    assert asech(S(0)).is_extended_real is True
+    assert asech(symbols('y', real=True)).is_real is None
+
     # asech(x) == I*acos(1/x)
     # (Note: the exact formula is asech(x) == +/- I*acos(1/x))
     assert asech(-sqrt(2)) == I*acos(-1/sqrt(2))
@@ -862,7 +888,7 @@ def test_asech_rewrite():
     x = Symbol('x')
     assert asech(x).rewrite(log) == log(1/x + sqrt(1/x - 1) * sqrt(1/x + 1))
     assert asech(x).rewrite(acosh) == acosh(1/x)
-    assert asech(x).rewrite(asinh) == sqrt(-1 + 1/x)*(-asin(1/x) + pi/2)/sqrt(1 - 1/x)
+    assert asech(x).rewrite(asinh) == sqrt(-1 + 1/x)*(I*asinh(I/x, evaluate=False) + pi/2)/sqrt(1 - 1/x)
     assert asech(x).rewrite(atanh) == \
         sqrt(x + 1)*sqrt(1/(x + 1))*atanh(sqrt(1 - x**2)) + I*pi*(-sqrt(x)*sqrt(1/x) + 1 - I*sqrt(x**2)/(2*sqrt(-x**2)) - I*sqrt(-x)/(2*sqrt(x)))
 
@@ -915,6 +941,15 @@ def test_acsch():
     # acsch(x) == asinh(1/x)
     assert acsch(-I*sqrt(2)) == asinh(I/sqrt(2))
     assert acsch(-I*2 / sqrt(3)) == asinh(I*sqrt(3) / 2)
+
+    # reality
+    assert acsch(S(2)).is_real is True
+    assert acsch(S(2)).is_finite is True
+    assert acsch(S(-2)).is_real is True
+    assert acsch(S(oo)).is_extended_real is True
+    assert acsch(-S(oo)).is_real is True
+    assert (acsch(2) - oo) == -oo
+    assert acsch(symbols('y', extended_real=True)).is_extended_real is True
 
     # acsch(x) == -I*asin(I/x)
     assert acsch(-I*sqrt(2)) == -I*asin(-1/sqrt(2))
@@ -1005,7 +1040,7 @@ def test_acsch_fdiff():
 def test_atanh():
     x = Symbol('x')
 
-    #at specific points
+    # at specific points
     assert atanh(0) == 0
     assert atanh(I) == I*pi/4
     assert atanh(-I) == -I*pi/4
@@ -1022,9 +1057,18 @@ def test_atanh():
 
     assert atanh(zoo) == I*AccumBounds(-pi/2, pi/2)
 
-    #properties
+    # properties
     assert atanh(-x) == -atanh(x)
 
+    # reality
+    assert atanh(S(2)).is_real is False
+    assert atanh(S(-1)/5).is_real is True
+    assert atanh(symbols('y', extended_real=True)).is_real is None
+    assert atanh(S(1)).is_real is False
+    assert atanh(S(1)).is_extended_real is True
+    assert atanh(S(-1)).is_real is False
+
+    # special values
     assert atanh(I/sqrt(3)) == I*pi/6
     assert atanh(-I/sqrt(3)) == -I*pi/6
     assert atanh(I*sqrt(3)) == I*pi/3
@@ -1158,6 +1202,16 @@ def test_acoth():
     assert acoth(-I*(2 + sqrt(3))) == pi*I/12
     assert acoth(I*(2 - sqrt(3))) == pi*I*Rational(-5, 12)
     assert acoth(I*(sqrt(3) - 2)) == pi*I*Rational(5, 12)
+
+    # reality
+    assert acoth(S(2)).is_real is True
+    assert acoth(S(2)).is_finite is True
+    assert acoth(S(2)).is_extended_real is True
+    assert acoth(S(-2)).is_real is True
+    assert acoth(S(1)).is_real is False
+    assert acoth(S(1)).is_extended_real is True
+    assert acoth(S(-1)).is_real is False
+    assert acoth(symbols('y', real=True)).is_real is None
 
     # Symmetry
     assert acoth(Rational(-1, 2)) == -acoth(S.Half)
@@ -1334,7 +1388,7 @@ def test_cosh_rewrite():
     x = Symbol('x')
     assert cosh(x).rewrite(exp) == (exp(x) + exp(-x))/2 \
         == cosh(x).rewrite('tractable')
-    assert cosh(x).rewrite(sinh) == -I*sinh(x + I*pi/2)
+    assert cosh(x).rewrite(sinh) == -I*sinh(x + I*pi/2, evaluate=False)
     tanh_half = tanh(S.Half*x)**2
     assert cosh(x).rewrite(tanh) == (1 + tanh_half)/(1 - tanh_half)
     coth_half = coth(S.Half*x)**2
@@ -1345,8 +1399,8 @@ def test_tanh_rewrite():
     x = Symbol('x')
     assert tanh(x).rewrite(exp) == (exp(x) - exp(-x))/(exp(x) + exp(-x)) \
         == tanh(x).rewrite('tractable')
-    assert tanh(x).rewrite(sinh) == I*sinh(x)/sinh(I*pi/2 - x)
-    assert tanh(x).rewrite(cosh) == I*cosh(I*pi/2 - x)/cosh(x)
+    assert tanh(x).rewrite(sinh) == I*sinh(x)/sinh(I*pi/2 - x, evaluate=False)
+    assert tanh(x).rewrite(cosh) == I*cosh(I*pi/2 - x, evaluate=False)/cosh(x)
     assert tanh(x).rewrite(coth) == 1/coth(x)
 
 
@@ -1354,8 +1408,8 @@ def test_coth_rewrite():
     x = Symbol('x')
     assert coth(x).rewrite(exp) == (exp(x) + exp(-x))/(exp(x) - exp(-x)) \
         == coth(x).rewrite('tractable')
-    assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2 - x)/sinh(x)
-    assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2 - x)
+    assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2 - x, evaluate=False)/sinh(x)
+    assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2 - x, evaluate=False)
     assert coth(x).rewrite(tanh) == 1/tanh(x)
 
 
@@ -1363,7 +1417,7 @@ def test_csch_rewrite():
     x = Symbol('x')
     assert csch(x).rewrite(exp) == 1 / (exp(x)/2 - exp(-x)/2) \
         == csch(x).rewrite('tractable')
-    assert csch(x).rewrite(cosh) == I/cosh(x + I*pi/2)
+    assert csch(x).rewrite(cosh) == I/cosh(x + I*pi/2, evaluate=False)
     tanh_half = tanh(S.Half*x)
     assert csch(x).rewrite(tanh) == (1 - tanh_half**2)/(2*tanh_half)
     coth_half = coth(S.Half*x)
@@ -1374,7 +1428,7 @@ def test_sech_rewrite():
     x = Symbol('x')
     assert sech(x).rewrite(exp) == 1 / (exp(x)/2 + exp(-x)/2) \
         == sech(x).rewrite('tractable')
-    assert sech(x).rewrite(sinh) == I/sinh(x + I*pi/2)
+    assert sech(x).rewrite(sinh) == I/sinh(x + I*pi/2, evaluate=False)
     tanh_half = tanh(S.Half*x)**2
     assert sech(x).rewrite(tanh) == (1 - tanh_half)/(1 + tanh_half)
     coth_half = coth(S.Half*x)**2
@@ -1458,3 +1512,31 @@ def test_sign_assumptions():
     assert sech(p).is_positive is True
     assert coth(n).is_negative is True
     assert coth(p).is_positive is True
+
+
+def test_issue_25847():
+    x = Symbol('x')
+
+    #atanh
+    assert atanh(sin(x)/x).as_leading_term(x) == atanh(sin(x)/x)
+    raises(PoleError, lambda: atanh(exp(1/x)).as_leading_term(x))
+
+    #asinh
+    assert asinh(sin(x)/x).as_leading_term(x) == log(1 + sqrt(2))
+    raises(PoleError, lambda: asinh(exp(1/x)).as_leading_term(x))
+
+    #acosh
+    assert acosh(sin(x)/x).as_leading_term(x) == 0
+    raises(PoleError, lambda: acosh(exp(1/x)).as_leading_term(x))
+
+    #acoth
+    assert acoth(sin(x)/x).as_leading_term(x) == acoth(sin(x)/x)
+    raises(PoleError, lambda: acoth(exp(1/x)).as_leading_term(x))
+
+    #asech
+    assert asech(sinh(x)/x).as_leading_term(x) == 0
+    raises(PoleError, lambda: asech(exp(1/x)).as_leading_term(x))
+
+    #acsch
+    assert acsch(sin(x)/x).as_leading_term(x) == log(1 + sqrt(2))
+    raises(PoleError, lambda: acsch(exp(1/x)).as_leading_term(x))

@@ -7,8 +7,8 @@ def main(version, prevversion, outdir):
     check_version(version, outdir)
     run_stage(['bin/mailmap_check.py', '--update-authors'])
     run_stage(['mkdir', '-p', outdir])
-    build_release_files('bdist_wheel', 'sympy-%s-py3-none-any.whl', outdir, version)
-    build_release_files('sdist', 'sympy-%s.tar.gz', outdir, version)
+    build_release_files('--wheel', 'sympy-%s-py3-none-any.whl', outdir, version)
+    build_release_files('--sdist', 'sympy-%s.tar.gz', outdir, version)
     run_stage(['release/compare_tar_against_git.py', join(outdir, 'sympy-%s.tar.gz' % (version,)), '.'])
     run_stage(['release/build_docs.py', version, outdir])
     run_stage(['release/sha256.py', version, outdir])
@@ -44,7 +44,7 @@ def run_stage(cmd):
 
 def build_release_files(cmd, fname, outdir, version):
     fname = fname % (version,)
-    run_stage(['python', 'setup.py', '-q', cmd])
+    run_stage(['python', '-m', 'build', cmd])
     src = join('dist', fname)
     dst = join(outdir, fname)
     run_stage(['mv', src, dst])

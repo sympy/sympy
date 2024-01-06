@@ -14,9 +14,8 @@ from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
 from sympy.polys.polytools import gcd
-from sympy.utilities.exceptions import sympy_deprecation_warning
 
-from .common import MatrixError, NonSquareMatrixError
+from .exceptions import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
 
 from .utilities import _iszero, _simplify
@@ -132,7 +131,7 @@ def _eigenvals(
     See Also
     ========
 
-    MatrixDeterminant.charpoly
+    MatrixBase.charpoly
     eigenvects
 
     Notes
@@ -211,11 +210,8 @@ def _eigenvals_list(
         eigs = roots(charpoly, multiple=True, **flags)
 
         if len(eigs) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
             try:
-                eigs = [CRootOf(f, x, idx) for idx in range(degree)]
+                eigs = charpoly.all_roots(multiple=True)
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)
@@ -255,11 +251,8 @@ def _eigenvals_dict(
         eigs = roots(charpoly, multiple=False, **flags)
 
         if sum(eigs.values()) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
             try:
-                eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
+                eigs = dict(charpoly.all_roots(multiple=False))
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)
@@ -401,7 +394,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     ========
 
     eigenvals
-    MatrixSubspaces.nullspace
+    MatrixBase.nullspace
     """
     simplify = flags.get('simplify', True)
     primitive = flags.get('simplify', False)
@@ -498,32 +491,9 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     diagonalize
     """
-
-    if 'clear_cache' in kwargs:
-        sympy_deprecation_warning(
-            """
-            The 'clear_cache' keyword to Matrix.is_diagonalizable is
-            deprecated. It does nothing and should be omitted.
-            """,
-            deprecated_since_version="1.4",
-            active_deprecations_target="deprecated-matrix-is_diagonalizable-cache",
-            stacklevel=4,
-        )
-
-    if 'clear_subproducts' in kwargs:
-        sympy_deprecation_warning(
-            """
-            The 'clear_subproducts' keyword to Matrix.is_diagonalizable is
-            deprecated. It does nothing and should be omitted.
-            """,
-            deprecated_since_version="1.4",
-            active_deprecations_target="deprecated-matrix-is_diagonalizable-cache",
-            stacklevel=4,
-        )
-
     if not M.is_square:
         return False
 
@@ -707,7 +677,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     is_diagonalizable
     """
 
@@ -1023,7 +993,7 @@ _doc_positive_definite = \
     hermitian) and we can defer most of the studies to symmetric or
     hermitian positive definite matrices.
 
-    But it is a different problem for the existance of Cholesky
+    But it is a different problem for the existence of Cholesky
     decomposition. Because even though a non symmetric or a non
     hermitian matrix can be positive definite, Cholesky or LDL
     decomposition does not exist because the decompositions require the
@@ -1034,7 +1004,7 @@ _doc_positive_definite = \
 
     .. [1] https://en.wikipedia.org/wiki/Definiteness_of_a_matrix#Eigenvalues
 
-    .. [2] http://mathworld.wolfram.com/PositiveDefiniteMatrix.html
+    .. [2] https://mathworld.wolfram.com/PositiveDefiniteMatrix.html
 
     .. [3] Johnson, C. R. "Positive Definite Matrices." Amer.
         Math. Monthly 77, 259-264 1970.
@@ -1209,7 +1179,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
     # and so are diagonalizable.  In this case, don't
     # do extra work!
     if len(eigs.keys()) == mat.cols:
-        blocks     = list(sorted(eigs.keys(), key=default_sort_key))
+        blocks     = sorted(eigs.keys(), key=default_sort_key)
         jordan_mat = mat.diag(*blocks)
 
         if not calc_transform:

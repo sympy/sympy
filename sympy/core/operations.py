@@ -494,7 +494,8 @@ class LatticeOp(AssocOp):
     >>> my_join(1, 2)
     2
 
-    References:
+    References
+    ==========
 
     .. [1] https://en.wikipedia.org/wiki/Lattice_%28order%29
     """
@@ -546,10 +547,6 @@ class LatticeOp(AssocOp):
             return expr._argset
         else:
             return frozenset([sympify(expr)])
-
-    @staticmethod
-    def _compare_pretty(a, b):
-        return (str(a) > str(b)) - (str(a) < str(b))
 
 
 class AssocOpDispatcher:

@@ -303,11 +303,8 @@ def test_sparse():
 
 # Not an important point.
 def test_maple_not_supported():
-    assert maple_code(S.ComplexInfinity) == (
-        "# Not supported in maple:\n"
-        "# ComplexInfinity\n"
-        "zoo"
-    )  # PROBLEM
+    with raises(NotImplementedError):
+        maple_code(S.ComplexInfinity)
 
 
 def test_MatrixElement_printing():
@@ -375,8 +372,8 @@ def test_maple_derivatives():
 
 
 def test_automatic_rewrites():
-    assert maple_code(lucas(x)) == '2^(-x)*((1 - sqrt(5))^x + (1 + sqrt(5))^x)'
-    assert maple_code(sinc(x)) == 'piecewise(x <> 0, sin(x)/x, 1)'
+    assert maple_code(lucas(x)) == '(2^(-x)*((1 - sqrt(5))^x + (1 + sqrt(5))^x))'
+    assert maple_code(sinc(x)) == '(piecewise(x <> 0, sin(x)/x, 1))'
 
 
 def test_specfun():

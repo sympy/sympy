@@ -227,7 +227,7 @@ cannot be explicitly expressed as $f(x)$ equaling a function of $x$. Instead,
 solution](https://en.wikipedia.org/wiki/Implicit_function).
 
 When `dsolve` returns an implicit solution, extracting the right-hand side of
-the returned equality will not give an explicity expression for the function to
+the returned equality will not give an explicitly expression for the function to
 be solved for, here $f(x)$. So before extracting an expression for the function
 to be solved for, check that `dsolve` was able to solve for the function
 explicitly.

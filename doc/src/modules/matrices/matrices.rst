@@ -1,7 +1,7 @@
 Matrices (linear algebra)
 =========================
 
-.. module:: sympy.matrices.matrices
+.. module:: sympy.matrices.matrixbase
 
 Creating Matrices
 -----------------
@@ -531,26 +531,12 @@ Matrix Base Classes
 
 The Matrix classes are built from functionality in various base classes. Every
 methods and attribute of ``Matrix`` is implemented on one of these base
-classes. See also :doc:`/modules/matrices/common`,
-:doc:`/modules/matrices/dense`, and :doc:`/modules/matrices/sparse`.
-
-.. autoclass:: MatrixDeterminant
-   :members:
-
-.. autoclass:: MatrixReductions
-   :members:
-
-.. autoclass:: MatrixSubspaces
-   :members:
-
-.. autoclass:: MatrixEigen
-   :members:
-
-.. autoclass:: MatrixCalculus
-   :members:
+classes. See also :doc:`/modules/matrices/dense`, and
+:doc:`/modules/matrices/sparse`.
 
 .. autoclass:: MatrixBase
    :members:
+   :special-members:
 
 Matrix Exceptions
 ^^^^^^^^^^^^^^^^^
@@ -590,6 +576,23 @@ Matrix Functions
 
 .. autofunction:: sympy.matrices.dense::randMatrix
 
+Rotation matrices
+^^^^^^^^^^^^^^^^^
+
+.. autofunction:: sympy.matrices.dense::rot_givens
+
+.. autofunction:: sympy.matrices.dense::rot_axis1
+
+.. autofunction:: sympy.matrices.dense::rot_axis2
+
+.. autofunction:: sympy.matrices.dense::rot_axis3
+
+.. autofunction:: sympy.matrices.dense::rot_ccw_axis1
+
+.. autofunction:: sympy.matrices.dense::rot_ccw_axis2
+
+.. autofunction:: sympy.matrices.dense::rot_ccw_axis3
+
 Numpy Utility Functions
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -598,11 +601,5 @@ Numpy Utility Functions
 .. autofunction:: sympy.matrices.dense::matrix2numpy
 
 .. autofunction:: sympy.matrices.dense::symarray
-
-.. autofunction:: sympy.matrices.dense::rot_axis1
-
-.. autofunction:: sympy.matrices.dense::rot_axis2
-
-.. autofunction:: sympy.matrices.dense::rot_axis3
 
 .. autofunction:: a2idx

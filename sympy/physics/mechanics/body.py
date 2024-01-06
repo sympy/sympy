@@ -1,6 +1,7 @@
-from sympy.core.backend import Symbol
+from sympy import Symbol
 from sympy.physics.vector import Point, Vector, ReferenceFrame, Dyadic
-from sympy.physics.mechanics import RigidBody, Particle, inertia
+from sympy.physics.mechanics import RigidBody, Particle, Inertia
+from sympy.physics.mechanics.body_base import BodyBase
 
 __all__ = ['Body']
 
@@ -99,7 +100,6 @@ class Body(RigidBody, Particle):  # type: ignore
     def __init__(self, name, masscenter=None, mass=None, frame=None,
                  central_inertia=None):
 
-        self.name = name
         self._loads = []
 
         if frame is None:
@@ -115,8 +115,8 @@ class Body(RigidBody, Particle):  # type: ignore
             izx = Symbol(name + '_izx')
             ixy = Symbol(name + '_ixy')
             iyz = Symbol(name + '_iyz')
-            _inertia = (inertia(frame, ixx, iyy, izz, ixy, iyz, izx),
-                        masscenter)
+            _inertia = Inertia.from_inertia_scalars(masscenter, frame, ixx, iyy,
+                                                    izz, ixy, iyz, izx)
         else:
             _inertia = (central_inertia, masscenter)
 
@@ -129,13 +129,21 @@ class Body(RigidBody, Particle):  # type: ignore
 
         # If user passes masscenter and mass then a particle is created
         # otherwise a rigidbody. As a result a body may or may not have inertia.
+        # Note: BodyBase.__init__ is used to prevent problems with super() calls in
+        # Particle and RigidBody arising due to multiple inheritance.
         if central_inertia is None and mass is not None:
+            BodyBase.__init__(self, name, masscenter, _mass)
             self.frame = frame
-            self.masscenter = masscenter
-            Particle.__init__(self, name, masscenter, _mass)
             self._central_inertia = Dyadic(0)
         else:
-            RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
+            BodyBase.__init__(self, name, masscenter, _mass)
+            self.frame = frame
+            self.inertia = _inertia
+
+    def __repr__(self):
+        if self.is_rigidbody:
+            return RigidBody.__repr__(self)
+        return Particle.__repr__(self)
 
     @property
     def loads(self):

@@ -2,7 +2,6 @@
 
 from contextlib import contextmanager
 import inspect
-from sympy.core.assumptions import ManagedProperties
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean, false, true
@@ -172,7 +171,7 @@ class AppliedPredicate(Boolean):
         return set()
 
 
-class PredicateMeta(ManagedProperties):
+class PredicateMeta(type):
     def __new__(cls, clsname, bases, dct):
         # If handler is not defined, assign empty dispatcher.
         if "handler" not in dct:
@@ -296,7 +295,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Predicate_(mathematical_logic)
+    .. [1] https://en.wikipedia.org/wiki/Predicate_%28mathematical_logic%29
     .. [2] https://en.wikipedia.org/wiki/Sexy_prime
 
     """

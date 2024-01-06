@@ -5,7 +5,8 @@ from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sympify import sympify
-from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.matrices.dense import DenseMatrix as Matrix
+from sympy.matrices.immutable import ImmutableDenseMatrix as ImmutableMatrix
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -120,7 +121,8 @@ class TensorProduct(Expr):
     is_commutative = False
 
     def __new__(cls, *args):
-        if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
+        if isinstance(args[0], (Matrix, ImmutableMatrix, numpy_ndarray,
+                                                    scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
         c_part, new_args = cls.flatten(sympify(args))
         c_part = Mul(*c_part)

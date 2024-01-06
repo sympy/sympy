@@ -4,11 +4,11 @@ from math import prod
 
 from sympy.core import Mul, sympify
 from sympy.functions import adjoint
-from sympy.matrices.common import ShapeError
+from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.expressions.special import Identity
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.strategies import (
     canon, condition, distribute, do_one, exhaust, flatten, typed, unpack)
 from sympy.strategies.traverse import bottom_up
@@ -77,7 +77,6 @@ def kronecker_product(*matrices):
     """
     if not matrices:
         raise TypeError("Empty Kronecker product is undefined")
-    validate(*matrices)
     if len(matrices) == 1:
         return matrices[0]
     else:

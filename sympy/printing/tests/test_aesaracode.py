@@ -24,11 +24,13 @@ aesaralogger.setLevel(logging.WARNING)
 if aesara:
     import numpy as np
     aet = aesara.tensor
-    from aesara.scalar.basic import Scalar
+    from aesara.scalar.basic import ScalarType
     from aesara.graph.basic import Variable
     from aesara.tensor.var import TensorVariable
     from aesara.tensor.elemwise import Elemwise, DimShuffle
     from aesara.tensor.math import Dot
+
+    from sympy.printing.aesaracode import true_divide
 
     xt, yt, zt = [aet.scalar(name, 'floatX') for name in 'xyz']
     Xt, Yt, Zt = [aet.tensor('floatX', (False, False), name=n) for n in 'XYZ']
@@ -93,7 +95,7 @@ def aesara_simplify(fgraph):
     """
     mode = aesara.compile.get_default_mode().excluding("fusion")
     fgraph = fgraph.clone()
-    mode.optimizer.optimize(fgraph)
+    mode.optimizer.rewrite(fgraph)
     return fgraph
 
 
@@ -264,8 +266,8 @@ def test_MatAdd():
 
 
 def test_Rationals():
-    assert theq(aesara_code_(sy.Integer(2) / 3), aet.true_div(2, 3))
-    assert theq(aesara_code_(S.Half), aet.true_div(1, 2))
+    assert theq(aesara_code_(sy.Integer(2) / 3), true_divide(2, 3))
+    assert theq(aesara_code_(S.Half), true_divide(1, 2))
 
 def test_Integers():
     assert aesara_code_(sy.Integer(3)) == 3
@@ -419,7 +421,7 @@ def test_MatrixSlice():
     Y = X[1:2:3, 4:5:6]
     Yt = aesara_code_(Y, cache=cache)
 
-    s = Scalar('int64')
+    s = ScalarType('int64')
     assert tuple(Yt.owner.op.idx_list) == (slice(s, s, s), slice(s, s, s))
     assert Yt.owner.inputs[0] == aesara_code_(X, cache=cache)
     # == doesn't work in Aesara like it does in SymPy. You have to use

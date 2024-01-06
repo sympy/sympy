@@ -10,6 +10,8 @@ __all__ = [
     'round_two',
 
     'prime_decomp', 'prime_valuation',
+
+    'galois_group',
 ]
 
 from .minpoly import minpoly, minimal_polynomial
@@ -21,3 +23,5 @@ from .utilities import isolate
 from .basis import round_two
 
 from .primes import prime_decomp, prime_valuation
+
+from .galoisgroups import galois_group

@@ -175,7 +175,7 @@ directly instead.
     @staticmethod
     def find_first_n_carmichaels(n):
         i = 1
-        carmichaels = list()
+        carmichaels = []
 
         while len(carmichaels) < n:
             if carmichael.is_carmichael(i):
@@ -230,7 +230,7 @@ class fibonacci(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Fibonacci_number
-    .. [2] http://mathworld.wolfram.com/FibonacciNumber.html
+    .. [2] https://mathworld.wolfram.com/FibonacciNumber.html
 
     """
 
@@ -260,6 +260,10 @@ class fibonacci(Function):
                     raise ValueError("Fibonacci polynomials are defined "
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
+
+    def _eval_rewrite_as_tractable(self, n, **kwargs):
+        from sympy.functions import sqrt, cos
+        return (S.GoldenRatio**n - cos(S.Pi*n)/S.GoldenRatio**n)/sqrt(5)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
         from sympy.functions.elementary.miscellaneous import sqrt
@@ -304,7 +308,7 @@ class lucas(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Lucas_number
-    .. [2] http://mathworld.wolfram.com/LucasNumber.html
+    .. [2] https://mathworld.wolfram.com/LucasNumber.html
 
     """
 
@@ -362,7 +366,7 @@ class tribonacci(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Generalizations_of_Fibonacci_numbers#Tribonacci_numbers
-    .. [2] http://mathworld.wolfram.com/TribonacciNumber.html
+    .. [2] https://mathworld.wolfram.com/TribonacciNumber.html
     .. [3] https://oeis.org/A000073
 
     """
@@ -510,10 +514,10 @@ class bernoulli(Function):
 
     .. [1] https://en.wikipedia.org/wiki/Bernoulli_number
     .. [2] https://en.wikipedia.org/wiki/Bernoulli_polynomial
-    .. [3] http://mathworld.wolfram.com/BernoulliNumber.html
-    .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
+    .. [3] https://mathworld.wolfram.com/BernoulliNumber.html
+    .. [4] https://mathworld.wolfram.com/BernoulliPolynomial.html
     .. [5] Peter Luschny, "The Bernoulli Manifesto",
-           http://luschny.de/math/zeta/The-Bernoulli-Manifesto.html
+           https://luschny.de/math/zeta/The-Bernoulli-Manifesto.html
     .. [6] Peter Luschny, "An introduction to the Bernoulli function",
            https://arxiv.org/abs/2009.06743
 
@@ -539,8 +543,8 @@ class bernoulli(Function):
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
-    _cache = {0: S.One, 2: Rational(1, 6), 4: Rational(-1, 30)}
-    _highest = {0: 0, 2: 2, 4: 4}
+    _cache = {0: S.One, 1: Rational(1, 2), 2: Rational(1, 6), 4: Rational(-1, 30)}
+    _highest = {0: 0, 1: 1, 2: 2, 4: 4}
 
     @classmethod
     def eval(cls, n, x=None):
@@ -668,8 +672,8 @@ class bell(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Bell_number
-    .. [2] http://mathworld.wolfram.com/BellNumber.html
-    .. [3] http://mathworld.wolfram.com/BellPolynomial.html
+    .. [2] https://mathworld.wolfram.com/BellNumber.html
+    .. [3] https://mathworld.wolfram.com/BellPolynomial.html
 
     """
 
@@ -888,8 +892,8 @@ class harmonic(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Harmonic_number
-    .. [2] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/
-    .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
+    .. [2] https://functions.wolfram.com/GammaBetaErf/HarmonicNumber/
+    .. [3] https://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
 
     """
 
@@ -1102,9 +1106,9 @@ class euler(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Euler_numbers
-    .. [2] http://mathworld.wolfram.com/EulerNumber.html
+    .. [2] https://mathworld.wolfram.com/EulerNumber.html
     .. [3] https://en.wikipedia.org/wiki/Alternating_permutation
-    .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
+    .. [4] https://mathworld.wolfram.com/AlternatingPermutation.html
 
     """
 
@@ -1217,7 +1221,7 @@ class catalan(Function):
     4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
 
     >>> catalan(n).rewrite(hyper)
-    hyper((1 - n, -n), (2,), 1)
+    hyper((-n, 1 - n), (2,), 1)
 
     For some non-integer values of n we can get closed form
     expressions by rewriting in terms of gamma functions:
@@ -1257,8 +1261,8 @@ class catalan(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Catalan_number
-    .. [2] http://mathworld.wolfram.com/CatalanNumber.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/CatalanNumber/
+    .. [2] https://mathworld.wolfram.com/CatalanNumber.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/CatalanNumber/
     .. [4] http://geometer.org/mathcircles/catalan.pdf
 
     """
@@ -1374,7 +1378,7 @@ class genocchi(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Genocchi_number
-    .. [2] http://mathworld.wolfram.com/GenocchiNumber.html
+    .. [2] https://mathworld.wolfram.com/GenocchiNumber.html
     .. [3] Peter Luschny, "An introduction to the Bernoulli function",
            https://arxiv.org/abs/2009.06743
 
@@ -1859,7 +1863,7 @@ def _AOP_product(n):
     True
 
     The generating poly used here is the same as that listed in
-    http://tinyurl.com/cep849r, but in a refactored form.
+    https://tinyurl.com/cep849r, but in a refactored form.
 
     """
 
@@ -1950,7 +1954,7 @@ def nC(n, k=None, replacement=False):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Combination
-    .. [2] http://tinyurl.com/cep849r
+    .. [2] https://tinyurl.com/cep849r
 
     """
 
@@ -2259,7 +2263,7 @@ def nT(n, k=None):
     References
     ==========
 
-    .. [1] http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
+    .. [1] https://web.archive.org/web/20210507012732/https://teaching.csse.uwa.edu.au/units/CITS7209/partition.pdf
 
     """
 
@@ -2386,7 +2390,7 @@ class motzkin(Function):
     @staticmethod
     def find_motzkin_numbers_in_range(x, y):
         if 0 <= x <= y:
-            motzkins = list()
+            motzkins = []
             if x <= 1 <= y:
                 motzkins.append(1)
             tn1 = 1

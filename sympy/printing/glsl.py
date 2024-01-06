@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sympy.core import Basic, S
 from sympy.core.function import Lambda
+from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from functools import reduce
@@ -37,7 +38,7 @@ class GLSLPrinter(CodePrinter):
     printmethod = "_glsl"
     language = "GLSL"
 
-    _default_settings = {
+    _default_settings = dict(CodePrinter._default_settings, **{
         'use_operators': True,
         'zero': 0,
         'mat_nested': False,
@@ -46,16 +47,10 @@ class GLSLPrinter(CodePrinter):
         'array_type': 'float',
         'glsl_types': True,
 
-        'order': None,
-        'full_prec': 'auto',
         'precision': 9,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
-        'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-    }
+    })
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -281,9 +276,9 @@ class GLSLPrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5:
+        elif equal_valued(expr.exp, 0.5):
             return 'sqrt(%s)' % self._print(expr.base)
         else:
             try:
@@ -320,13 +315,13 @@ class GLSLPrinter(CodePrinter):
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: arg.could_extract_minus_sign(), terms)
         if pos:
-            s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
+            s = pos = reduce(lambda a,b: add(a,b), (self._print(t) for t in pos))
         else:
             s = pos = self._print(self._settings['zero'])
 
         if neg:
             # sum the absolute values of the negative terms
-            neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n),neg))
+            neg = reduce(lambda a,b: add(a,b), (self._print(-n) for n in neg))
             # then subtract them from the positive terms
             s = self._print_Function_with_args('sub', (pos,neg))
             # s = self.known_functions['sub']+'(%s, %s)' % (pos,neg)
@@ -340,7 +335,7 @@ class GLSLPrinter(CodePrinter):
             # return self.known_functions['mul']+'(%s, %s)' % (a,b)
             return self._print_Function_with_args('mul', (a,b))
 
-        s = reduce(lambda a,b: mul(a,b), map(lambda t: self._print(t), terms))
+        s = reduce(lambda a,b: mul(a,b), (self._print(t) for t in terms))
         return s
 
 def glsl_code(expr,assign_to=None,**settings):

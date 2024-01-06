@@ -517,10 +517,10 @@ How are symbolic parameters handled in solveset?
 References
 ----------
 
- .. [1] https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas#solvers
+ .. [1] https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas/7abb76ffed50425299b9065129ae87261668a0f7#solvers
  .. [2] https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
  .. [3] https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
- .. [5] http://iamit.in/blog/
+ .. [5] https://iamit.in/blog/
  .. [6] https://github.com/sympy/sympy/pull/2948 : Action Plan for improving solvers.
  .. [7] https://github.com/sympy/sympy/issues/6659 : ``solve()`` is a giant mess
  .. [8] https://github.com/sympy/sympy/pull/7523 : ``solveset`` PR

@@ -1,4 +1,4 @@
-# Find the Roots of a Polynomial Algebraically or Numerically 
+# Find the Roots of a Polynomial Algebraically or Numerically
 
 Use SymPy to find the roots of a univariate polynomial algebraically. For
 example, finding the roots of $ax^2 + bx + c$ for $x$ yields $x =
@@ -501,17 +501,16 @@ symbolically.
 >>> from sympy import init_printing
 >>> init_printing()
 >>> real_roots(fifth_order)
-        / 5           \ 
-[CRootOf\x  - x + 1, 0/]
->>> Poly(fifth_order, x).all_roots()
-        / 5           \         / 5           \         / 5           \       
-[CRootOf\x  - x + 1, 0/, CRootOf\x  - x + 1, 1/, CRootOf\x  - x + 1, 2/, CRoot
-<BLANKLINE>
-    / 5           \         / 5           \ 
-Of\x  - x + 1, 3/, CRootOf\x  - x + 1, 4/]
->>> r0, r1, r2, r3, r4 = Poly(fifth_order, x).all_roots()
->>> r0
         / 5           \
+[CRootOf\x  - x + 1, 0/]
+>>> r = r0, r1, r2, r3, r4 = Poly(fifth_order, x).all_roots(); r
+        / 5           \         / 5           \         / 5           \        >
+[CRootOf\x  - x + 1, 0/, CRootOf\x  - x + 1, 1/, CRootOf\x  - x + 1, 2/, CRoot >
+<BLANKLINE>
+>   / 5           \         / 5           \
+> Of\x  - x + 1, 3/, CRootOf\x  - x + 1, 4/]
+>>> r0
+       / 5           \
 CRootOf\x  - x + 1, 0/
 ```
 

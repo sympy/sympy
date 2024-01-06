@@ -4,7 +4,7 @@ This module implements sums and products containing the Kronecker Delta function
 References
 ==========
 
-.. [1] http://mathworld.wolfram.com/KroneckerDelta.html
+.. [1] https://mathworld.wolfram.com/KroneckerDelta.html
 
 """
 from .products import product

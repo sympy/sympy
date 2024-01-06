@@ -698,7 +698,7 @@ Three-valued logic
     but `None OR True` is `True` because the predicate is `True` whether the
     `None` "really" represents a value of `True` or `False`. One must be
     careful when using the usual Python logical operators like `and`, `or` and
-    `not` on three-valued logic, since `None` is falsy. See [the guide for
+    `not` on three-valued logic, since `None` is false. See [the guide for
     symbolic and fuzzy booleans](booleans-guide) for more details on how to
     code with three-valued logic.
 

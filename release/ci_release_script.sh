@@ -10,7 +10,7 @@
 
 doc/aptinstall.sh
 
-pip install --upgrade setuptools pip wheel
+pip install --upgrade setuptools pip wheel build
 pip install -r doc/requirements.txt
 pip install .
 

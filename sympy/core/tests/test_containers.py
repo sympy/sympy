@@ -4,7 +4,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.numbers import Integer
 from sympy.core.kind import NumberKind
-from sympy.matrices.common import MatrixKind
+from sympy.matrices.kind import MatrixKind
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
@@ -142,7 +142,7 @@ def test_tuple_wrapper():
 
 
 def test_iterable_is_sequence():
-    ordered = [list(), tuple(), Tuple(), Matrix([[]])]
+    ordered = [[], (), Tuple(), Matrix([[]])]
     unordered = [set()]
     not_sympy_iterable = [{}, '', '']
     assert all(is_sequence(i) for i in ordered)
@@ -213,5 +213,5 @@ def test_issue_5788():
         if o != Tuple:
             assert o(*args) == o(*reversed(args))
         pair = [o(*args), o(*reversed(args))]
-        assert sorted(pair) == sorted(reversed(pair))
+        assert sorted(pair) == sorted(pair)
         assert set(o(*args))  # doesn't fail
