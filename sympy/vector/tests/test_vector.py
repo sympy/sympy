@@ -264,3 +264,4 @@ def test_scalar():
     assert v1.is_scalar is False
     assert (v1.dot(v2)).is_scalar is True
     assert (v1.cross(v2)).is_scalar is False
+    
