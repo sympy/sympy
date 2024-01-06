@@ -6,7 +6,7 @@ from sympy.core.symbol import (Dummy, Symbol)
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, kronecker_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
-    sqrt_mod_iter, discrete_log, quadratic_congruence, \
+    sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
     polynomial_congruence, sieve
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _primitive_root_prime_power_iter, _primitive_root_prime_power2_iter, \
@@ -362,3 +362,10 @@ def test_binomial_p_pow():
     for _ in range(trials):
         m, prime, power = randint(0, n), choice(primes), randint(1, 10)
         assert _binomial_mod_prime_power(n, m, prime, power) == binomials[m] % prime**power
+
+
+def test_deprecated_ntheory_symbolic_functions():
+    from sympy.testing.pytest import warns_deprecated_sympy
+
+    with warns_deprecated_sympy():
+        assert mobius(3) == -1

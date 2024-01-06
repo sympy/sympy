@@ -429,6 +429,14 @@ purely a property of the domain object itself rather than of the elements and
 so the ``to_int`` method that depends on this must be a domain method rather
 than an element method.
 
+(deprecated-ntheory-symbolic-functions)=
+### Cleaning up symbolic version functions in ``ntheory``
+
+Symbolic functions in ``ntheory`` have been moved to ``functions``.
+Specifically, the following functions.
+
+* ``sympy.ntheory.residue_ntheory.mobius``
+
 
 ## Version 1.12
 
