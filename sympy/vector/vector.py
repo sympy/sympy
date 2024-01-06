@@ -346,7 +346,7 @@ class Vector(BasisDependent):
 
     def equals(self, other):
         """
-        Check if the scalar components of self & others's vector system 
+        Check if the scalar components of self & others's vector system
         are equal after simplification.
         Parameters:
         - self: The first vector for comparison.
