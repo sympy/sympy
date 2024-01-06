@@ -92,6 +92,7 @@ def test_Xor():
     assert Xor() is false
     assert Xor(A) == A
     assert Xor(A, A) is false
+    assert Xor(A, ~A) is true
     assert Xor(True, A, A) is true
     assert Xor(A, A, A, A, A) == A
     assert Xor(True, False, False, A, B) == ~Xor(A, B)
@@ -1347,3 +1348,6 @@ def test_issue_25451():
     x = Or(And(a, c), Eq(a, b))
     assert isinstance(x, Or)
     assert set(x.args) == {And(a, c), Eq(a, b)}
+
+def test_issue_25827():
+    assert simplify(a^~a) is true
