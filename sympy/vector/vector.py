@@ -343,7 +343,7 @@ class Vector(BasisDependent):
             return VectorMul(one, Pow(other, S.NegativeOne))
         else:
             raise TypeError("Invalid division involving a vector")
-        
+
     def equals(self, other):
         """
         Check if the scalar components of self & others's vector system 
