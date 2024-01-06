@@ -2282,3 +2282,15 @@ def test_format():
     assert '{:+3.0f}'.format(S(3)) == ' +3'
     assert '{:23.20f}'.format(pi) == ' 3.14159265358979323846'
     assert '{:50.48f}'.format(exp(sin(1))) == '2.319776824715853173956590377503266813254904772376'
+
+def test_custom_vector_equals():
+    import sympy
+    from sympy.vector import CoordSys3D
+    Q = CoordSys3D('Q')
+    A = (sympy.sqrt(2) + sympy.sqrt(6)) / (sympy.sqrt(sympy.sqrt(3) + 2))
+
+    custom_v1 = 2 * Q.i
+    custom_v2 = A * Q.i
+
+    # Test vectors that are expected to be equal
+    assert custom_v1.equals(custom_v2)
