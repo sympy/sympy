@@ -501,3 +501,10 @@ def test_complicated_derivative_with_Indexed():
             ((x[i] - y[i])**2/sigma,)
         )/sigma**2
     )
+
+
+def test_IndexedBase_commutative():
+    t = IndexedBase('t' ,commutative=False)
+    u = IndexedBase('u' ,commutative=False)
+
+    assert t[0]*u[0] != u[0]*t[0]
