@@ -366,11 +366,24 @@ class Vector(BasisDependent):
         print(f"self.args: {self.args}")
 
         # finding the vector component of self, others
-        S_V = [i for i in self.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
-        O_V = [i for i in other.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
+        if not self.args or not other.args:
+            if not self.args:
+                ssc = [0, 0, 0]
+            else:
+                S_V = [i for i in self.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
+                ssc = [self.dot(N.i) * S_V.dot(N.i), self.dot(N.j) * S_V.dot(N.j), self.dot(N.k) * S_V.dot(N.k)]
 
-        ssc = [self.dot(N.i) * S_V.dot(N.i), self.dot(N.j) * S_V.dot(N.j), self.dot(N.k) * S_V.dot(N.k)]
-        osc = [other.dot(N.i) * O_V.dot(N.i), other.dot(N.j) * O_V.dot(N.j), other.dot(N.k) * O_V.dot(N.k)]
+            if not other.args:
+                osc = [0, 0, 0]
+            else:
+                O_V = [i for i in other.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
+                osc = [other.dot(N.i) * O_V.dot(N.i), other.dot(N.j) * O_V.dot(N.j), other.dot(N.k) * O_V.dot(N.k)]
+        else:
+            S_V = [i for i in self.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
+            O_V = [i for i in other.args if isinstance(i,sympy.vector.vector.BaseVector)][0]
+
+            ssc = [self.dot(N.i) * S_V.dot(N.i), self.dot(N.j) * S_V.dot(N.j), self.dot(N.k) * S_V.dot(N.k)]
+            osc = [other.dot(N.i) * O_V.dot(N.i), other.dot(N.j) * O_V.dot(N.j), other.dot(N.k) * O_V.dot(N.k)]
 
         try:
             # Simplifying each scalar component
