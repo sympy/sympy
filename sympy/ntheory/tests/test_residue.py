@@ -278,19 +278,8 @@ def test_residue():
     assert kronecker_symbol(1, 0) == kronecker_symbol(-1, 0) == 1
     assert kronecker_symbol(0, 0) == 0
 
-    assert mobius(13*7) == 1
-    assert mobius(1) == 1
-    assert mobius(13*7*5) == -1
-    assert mobius(13**2) == 0
-    raises(ValueError, lambda: mobius(-3))
-
-    p = Symbol('p', integer=True, positive=True, prime=True)
     x = Symbol('x', positive=True)
     i = Symbol('i', integer=True)
-    assert mobius(p) == -1
-    raises(TypeError, lambda: mobius(x))
-    raises(ValueError, lambda: mobius(i))
-
     assert _discrete_log_trial_mul(587, 2**7, 2) == 7
     assert _discrete_log_trial_mul(941, 7**18, 7) == 18
     assert _discrete_log_trial_mul(389, 3**81, 3) == 81
@@ -373,3 +362,10 @@ def test_binomial_p_pow():
     for _ in range(trials):
         m, prime, power = randint(0, n), choice(primes), randint(1, 10)
         assert _binomial_mod_prime_power(n, m, prime, power) == binomials[m] % prime**power
+
+
+def test_deprecated_ntheory_symbolic_functions():
+    from sympy.testing.pytest import warns_deprecated_sympy
+
+    with warns_deprecated_sympy():
+        assert mobius(3) == -1
