@@ -435,6 +435,11 @@ than an element method.
 Symbolic functions in ``ntheory`` have been moved to ``functions``.
 Specifically, the following functions.
 
+All of these functions can be imported like ``from sympy import mobius`` which
+continues to work just fine after these changes as well as it did before.
+However, if you are using ``from sympy.ntheory import mobius``, you need to
+change to ``from sympy import mobius``.
+
 * ``sympy.ntheory.factor_.primenu``
 * ``sympy.ntheory.factor_.primeomega``
 * ``sympy.ntheory.factor_.totient``
