@@ -1809,6 +1809,59 @@ class primenu(Function):
             return S(len(factorint(n)))
 
 
+class primeomega(Function):
+    r"""
+    Calculate the number of prime factors counting multiplicities for a
+    positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primeomega(n)``  or `\Omega(n)` is:
+
+    .. math ::
+        \Omega(n) = \sum_{i=1}^k m_i.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import primeomega
+    >>> primeomega(1)
+    0
+    >>> primeomega(20)
+    3
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.factorint
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/PrimeFactor.html
+    .. [2] https://oeis.org/A001222
+
+    """
+    is_integer = True
+    is_nonnegative = True
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if n.is_prime is True:
+            return S.One
+        if n is S.One:
+            return S.Zero
+        if n.is_Integer is True:
+            return S(sum(factorint(n).values()))
+
+
 #######################################################################
 ###
 ### Functions for enumerating partitions, permutations and combinations

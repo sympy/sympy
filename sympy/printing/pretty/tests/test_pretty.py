@@ -7066,7 +7066,7 @@ def test_pretty_primenu():
 
 
 def test_pretty_primeomega():
-    from sympy.ntheory.factor_ import primeomega
+    from sympy.functions.combinatorial.numbers import primeomega
 
     ascii_str1 = "Omega(n)"
     ucode_str1 = "Ω(n)"
