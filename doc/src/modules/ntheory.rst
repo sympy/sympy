@@ -87,8 +87,7 @@ Ntheory Functions Reference
 
 .. autofunction:: digits
 
-.. autoclass:: primenu
-   :members:
+.. autofunction:: primenu
 
 .. autoclass:: primeomega
    :members:

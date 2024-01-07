@@ -1757,6 +1757,58 @@ class mobius(Function):
         return result
 
 
+class primenu(Function):
+    r"""
+    Calculate the number of distinct prime factors for a positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primenu(n)`` or `\nu(n)` is:
+
+    .. math ::
+        \nu(n) = k.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import primenu
+    >>> primenu(1)
+    0
+    >>> primenu(30)
+    3
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.factorint
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/PrimeFactor.html
+    .. [2] https://oeis.org/A001221
+
+    """
+    is_integer = True
+    is_nonnegative = True
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if n.is_prime is True:
+            return S.One
+        if n is S.One:
+            return S.Zero
+        if n.is_Integer is True:
+            return S(len(factorint(n)))
+
+
 #######################################################################
 ###
 ### Functions for enumerating partitions, permutations and combinations

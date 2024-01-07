@@ -22,6 +22,7 @@ from sympy.external.gmpy import (SYMPY_INTS, gcd, lcm, sqrt as isqrt,
 from .primetest import isprime, MERSENNE_PRIME_EXPONENTS, is_mersenne_prime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
@@ -2306,9 +2307,19 @@ class udivisor_sigma(Function):
                 return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
 
 
-class primenu(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.primenu` has been moved to `sympy.functions.combinatorial.numbers.primenu`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def primenu(n):
     r"""
     Calculate the number of distinct prime factors for a positive integer n.
+
+    .. deprecated:: 1.13
+
+        The ``primenu`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.primenu`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     If n's prime factorization is:
 
@@ -2340,14 +2351,8 @@ class primenu(Function):
     .. [1] https://mathworld.wolfram.com/PrimeFactor.html
 
     """
-
-    @classmethod
-    def eval(cls, n):
-        if n.is_Integer:
-            if n <= 0:
-                raise ValueError("n must be a positive integer")
-            else:
-                return len(factorint(n).keys())
+    from sympy.functions.combinatorial.numbers import primenu as _primenu
+    return _primenu(n)
 
 
 class primeomega(Function):
