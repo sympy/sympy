@@ -435,6 +435,7 @@ than an element method.
 Symbolic functions in ``ntheory`` have been moved to ``functions``.
 Specifically, the following functions.
 
+* ``sympy.ntheory.factor_.primenu``
 * ``sympy.ntheory.residue_ntheory.mobius``
 
 

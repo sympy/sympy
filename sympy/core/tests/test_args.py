@@ -2014,6 +2014,11 @@ def test_sympy__functions__combinatorial__numbers__carmichael():
     assert _test_args(carmichael(x))
 
 
+def test_sympy__functions__combinatorial__numbers__fibonacci():
+    from sympy.functions.combinatorial.numbers import fibonacci
+    assert _test_args(fibonacci(x))
+
+
 def test_sympy__functions__combinatorial__numbers__mobius():
     from sympy.functions.combinatorial.numbers import mobius
     assert _test_args(mobius(2))
@@ -2024,9 +2029,11 @@ def test_sympy__functions__combinatorial__numbers__motzkin():
     assert _test_args(motzkin(5))
 
 
-def test_sympy__functions__combinatorial__numbers__fibonacci():
-    from sympy.functions.combinatorial.numbers import fibonacci
-    assert _test_args(fibonacci(x))
+def test_sympy__functions__combinatorial__numbers__primenu():
+    from sympy.functions.combinatorial.numbers import primenu
+    n = symbols('n', integer=True)
+    t = primenu(n)
+    assert _test_args(t)
 
 
 def test_sympy__functions__combinatorial__numbers__tribonacci():
@@ -4992,13 +4999,6 @@ def test_sympy__ntheory__factor___udivisor_sigma():
     k = symbols('k', integer=True)
     n = symbols('n', integer=True)
     t = udivisor_sigma(n, k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___primenu():
-    from sympy.ntheory.factor_ import primenu
-    n = symbols('n', integer=True)
-    t = primenu(n)
     assert _test_args(t)
 
 

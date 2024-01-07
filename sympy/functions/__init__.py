@@ -8,7 +8,8 @@ Special - gamma, zeta,spherical harmonics...
 from sympy.functions.combinatorial.factorials import (factorial, factorial2,
         rf, ff, binomial, RisingFactorial, FallingFactorial, subfactorial)
 from sympy.functions.combinatorial.numbers import (carmichael, fibonacci, lucas, tribonacci,
-        harmonic, bernoulli, bell, euler, catalan, genocchi, andre, partition, mobius, motzkin)
+        harmonic, bernoulli, bell, euler, catalan, genocchi, andre, partition, mobius,
+        primenu, motzkin)
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
         Id, real_root, cbrt, Rem)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
@@ -55,6 +56,7 @@ __all__ = [
 
     'carmichael', 'fibonacci', 'lucas', 'motzkin', 'tribonacci', 'harmonic',
     'bernoulli', 'bell', 'euler', 'catalan', 'genocchi', 'andre', 'partition', 'mobius',
+    'primenu',
 
     'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'cbrt', 'Rem',
 

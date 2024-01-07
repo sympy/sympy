@@ -603,20 +603,6 @@ def test_core():
     assert core(1, 6) == 1
 
 
-def test_primenu():
-    assert primenu(2) == 1
-    assert primenu(2 * 3) == 2
-    assert primenu(2 * 3 * 5) == 3
-    assert primenu(3 * 25) == primenu(3) + primenu(25)
-    assert [primenu(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
-    assert primenu(fac(50)) == 15
-    assert primenu(2 ** 9941 - 1) == 1
-    n = Symbol('n', integer=True)
-    assert primenu(n)
-    assert primenu(n).subs(n, 2 ** 31 - 1) == 1
-    assert summation(primenu(n), (n, 2, 30)) == 43
-
-
 def test_primeomega():
     assert primeomega(2) == 1
     assert primeomega(2 * 2) == 2
@@ -687,3 +673,10 @@ def test_drm():
     assert drm(234161, 10) == 6
     raises(ValueError, lambda: drm(24, -2))
     raises(ValueError, lambda: drm(11.6, 9))
+
+
+def test_deprecated_ntheory_symbolic_functions():
+    from sympy.testing.pytest import warns_deprecated_sympy
+
+    with warns_deprecated_sympy():
+        assert primenu(3) == 1
