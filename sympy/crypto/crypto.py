@@ -22,9 +22,9 @@ from sympy.core import Symbol
 from sympy.core.numbers import Rational
 from sympy.core.random import _randrange, _randint
 from sympy.external.gmpy import gcd, invert
+from sympy.functions.combinatorial.numbers import totient as _euler
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
-from sympy.ntheory import totient as _euler
 from sympy.ntheory import reduced_totient as _carmichael
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.modular import crt
@@ -1544,7 +1544,10 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
     tally = multiset(primes)
     if all(v == 1 for v in tally.values()):
         multiple = list(tally.keys())
-        phi = _totient._from_distinct_primes(*multiple)
+        if totient == 'Euler':
+            phi = _totient(tally)
+        else:
+            phi = _totient._from_distinct_primes(*multiple)
 
     else:
         if not multipower:
@@ -1560,7 +1563,11 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
                 # stacklevel=4 because most users will call a function that
                 # calls this function
                 ).warn(stacklevel=4)
-        phi = _totient._from_factors(tally)
+        if totient == 'Euler':
+            phi = _totient(tally)
+        else:
+            phi = _totient._from_factors(tally)
+    phi = int(phi)
 
     if gcd(e, phi) == 1:
         if public and not private:

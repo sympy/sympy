@@ -66,6 +66,9 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.primeomega
    :members:
 
+.. autoclass:: sympy.functions.combinatorial.numbers.totient
+   :members:
+
 .. autoclass:: sympy.functions.combinatorial.factorials.MultiFactorial
    :members:
 

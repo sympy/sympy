@@ -71,8 +71,7 @@ Ntheory Functions Reference
 
 .. autofunction:: antidivisor_count
 
-.. autoclass:: totient
-   :members:
+.. autofunction:: totient
 
 .. autoclass:: reduced_totient
    :members:

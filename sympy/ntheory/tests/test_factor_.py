@@ -370,35 +370,6 @@ def test_issue_6981():
     assert S == {1,2,4}
 
 
-def test_totient():
-    assert [totient(k) for k in range(1, 12)] == \
-        [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10]
-    assert totient(5005) == 2880
-    assert totient(5006) == 2502
-    assert totient(5009) == 5008
-    assert totient(2**100) == 2**99
-
-    raises(ValueError, lambda: totient(30.1))
-    raises(ValueError, lambda: totient(20.001))
-
-    m = Symbol("m", integer=True)
-    assert totient(m)
-    assert totient(m).subs(m, 3**10) == 3**10 - 3**9
-    assert summation(totient(m), (m, 1, 11)) == 42
-
-    n = Symbol("n", integer=True, positive=True)
-    assert totient(n).is_integer
-
-    x=Symbol("x", integer=False)
-    raises(ValueError, lambda: totient(x))
-
-    y=Symbol("y", positive=False)
-    raises(ValueError, lambda: totient(y))
-
-    z=Symbol("z", positive=True, integer=True)
-    raises(ValueError, lambda: totient(2**(-z)))
-
-
 def test_reduced_totient():
     assert [reduced_totient(k) for k in range(1, 16)] == \
         [1, 1, 2, 2, 4, 2, 6, 2, 6, 4, 10, 2, 12, 6, 4]
@@ -668,3 +639,5 @@ def test_deprecated_ntheory_symbolic_functions():
         assert primenu(3) == 1
     with warns_deprecated_sympy():
         assert primeomega(3) == 1
+    with warns_deprecated_sympy():
+        assert totient(3) == 2

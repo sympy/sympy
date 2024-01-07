@@ -2,9 +2,9 @@ from collections import defaultdict
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
-
+from sympy.functions.combinatorial.numbers import totient
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
-    legendre_symbol, jacobi_symbol, kronecker_symbol, totient, primerange, sqrt_mod, \
+    legendre_symbol, jacobi_symbol, kronecker_symbol, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
     sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
     polynomial_congruence, sieve

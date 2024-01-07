@@ -437,6 +437,7 @@ Specifically, the following functions.
 
 * ``sympy.ntheory.factor_.primenu``
 * ``sympy.ntheory.factor_.primeomega``
+* ``sympy.ntheory.factor_.totient``
 * ``sympy.ntheory.residue_ntheory.mobius``
 
 

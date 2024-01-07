@@ -3,12 +3,10 @@ Integer factorization
 """
 
 from collections import defaultdict
-from functools import reduce
 import math
 
 from sympy.core import sympify
 from sympy.core.containers import Dict
-from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
@@ -1947,10 +1945,19 @@ def antidivisor_count(n):
     return divisor_count(2*n - 1) + divisor_count(2*n + 1) + \
         divisor_count(n) - divisor_count(n, 2) - 5
 
-
-class totient(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.totient` has been moved to `sympy.functions.combinatorial.numbers.totient`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def totient(n):
     r"""
     Calculate the Euler totient function phi(n)
+
+    .. deprecated:: 1.13
+
+        The ``totient`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.totient`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
     that are relatively prime to n.
@@ -1983,48 +1990,8 @@ class totient(Function):
     .. [2] https://mathworld.wolfram.com/TotientFunction.html
 
     """
-    @classmethod
-    def eval(cls, n):
-        if n.is_Integer:
-            if n < 1:
-                raise ValueError("n must be a positive integer")
-            factors = factorint(n)
-            return cls._from_factors(factors)
-        elif not isinstance(n, Expr) or (n.is_integer is False) or (n.is_positive is False):
-            raise ValueError("n must be a positive integer")
-
-    def _eval_is_integer(self):
-        return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
-
-    @classmethod
-    def _from_distinct_primes(self, *args):
-        """Subroutine to compute totient from the list of assumed
-        distinct primes
-
-        Examples
-        ========
-
-        >>> from sympy.ntheory.factor_ import totient
-        >>> totient._from_distinct_primes(5, 7)
-        24
-        """
-        return reduce(lambda i, j: i * (j-1), args, 1)
-
-    @classmethod
-    def _from_factors(self, factors):
-        """Subroutine to compute totient from already-computed factors
-
-        Examples
-        ========
-
-        >>> from sympy.ntheory.factor_ import totient
-        >>> totient._from_factors({5: 2})
-        20
-        """
-        t = 1
-        for p, k in factors.items():
-            t *= (p - 1) * p**(k - 1)
-        return t
+    from sympy.functions.combinatorial.numbers import totient as _totient
+    return _totient(n)
 
 
 class reduced_totient(Function):

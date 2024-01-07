@@ -22,7 +22,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.functions.combinatorial.factorials import (rf, binomial,
     factorial, factorial2)
-from sympy.functions.combinatorial.numbers import bernoulli, fibonacci
+from sympy.functions.combinatorial.numbers import bernoulli, fibonacci, totient
 from sympy.functions.elementary.complexes import (conjugate, im, re,
     sign)
 from sympy.functions.elementary.exponential import LambertW, exp, log
@@ -50,7 +50,7 @@ from sympy.ntheory.continued_fraction import (
     continued_fraction_convergents as cf_c,
     continued_fraction_iterator as cf_i, continued_fraction_periodic as
     cf_p, continued_fraction_reduce as cf_r)
-from sympy.ntheory.factor_ import factorint, totient
+from sympy.ntheory.factor_ import factorint
 from sympy.ntheory.generate import primerange
 from sympy.ntheory.partitions_ import npartitions
 from sympy.polys.domains.integerring import ZZ
