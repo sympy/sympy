@@ -89,8 +89,7 @@ Ntheory Functions Reference
 
 .. autofunction:: primenu
 
-.. autoclass:: primeomega
-   :members:
+.. autofunction:: primeomega
 
 .. autofunction:: mersenne_prime_exponent
 

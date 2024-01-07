@@ -2036,6 +2036,13 @@ def test_sympy__functions__combinatorial__numbers__primenu():
     assert _test_args(t)
 
 
+def test_sympy__functions__combinatorial__numbers__primeomega():
+    from sympy.functions.combinatorial.numbers import primeomega
+    n = symbols('n', integer=True)
+    t = primeomega(n)
+    assert _test_args(t)
+
+
 def test_sympy__functions__combinatorial__numbers__tribonacci():
     from sympy.functions.combinatorial.numbers import tribonacci
     assert _test_args(tribonacci(x))
@@ -4999,13 +5006,6 @@ def test_sympy__ntheory__factor___udivisor_sigma():
     k = symbols('k', integer=True)
     n = symbols('n', integer=True)
     t = udivisor_sigma(n, k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___primeomega():
-    from sympy.ntheory.factor_ import primeomega
-    n = symbols('n', integer=True)
-    t = primeomega(n)
     assert _test_args(t)
 
 

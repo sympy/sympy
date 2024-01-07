@@ -10,7 +10,7 @@ from sympy.external.gmpy import gcd
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
-    primerange, pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
+    pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
     divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
@@ -603,20 +603,6 @@ def test_core():
     assert core(1, 6) == 1
 
 
-def test_primeomega():
-    assert primeomega(2) == 1
-    assert primeomega(2 * 2) == 2
-    assert primeomega(2 * 2 * 3) == 3
-    assert primeomega(3 * 25) == primeomega(3) + primeomega(25)
-    assert [primeomega(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
-    assert primeomega(fac(50)) == 108
-    assert primeomega(2 ** 9941 - 1) == 1
-    n = Symbol('n', integer=True)
-    assert primeomega(n)
-    assert primeomega(n).subs(n, 2 ** 31 - 1) == 1
-    assert summation(primeomega(n), (n, 2, 30)) == 59
-
-
 def test_mersenne_prime_exponent():
     assert mersenne_prime_exponent(1) == 2
     assert mersenne_prime_exponent(4) == 7
@@ -680,3 +666,5 @@ def test_deprecated_ntheory_symbolic_functions():
 
     with warns_deprecated_sympy():
         assert primenu(3) == 1
+    with warns_deprecated_sympy():
+        assert primeomega(3) == 1

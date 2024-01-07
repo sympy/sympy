@@ -2354,11 +2354,20 @@ def primenu(n):
     from sympy.functions.combinatorial.numbers import primenu as _primenu
     return _primenu(n)
 
-
-class primeomega(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.primeomega` has been moved to `sympy.functions.combinatorial.numbers.primeomega`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def primeomega(n):
     r"""
     Calculate the number of prime factors counting multiplicities for a
     positive integer n.
+
+    .. deprecated:: 1.13
+
+        The ``primeomega`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.primeomega`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     If n's prime factorization is:
 
@@ -2390,14 +2399,8 @@ class primeomega(Function):
     .. [1] https://mathworld.wolfram.com/PrimeFactor.html
 
     """
-
-    @classmethod
-    def eval(cls, n):
-        if n.is_Integer:
-            if n <= 0:
-                raise ValueError("n must be a positive integer")
-            else:
-                return sum(factorint(n).values())
+    from sympy.functions.combinatorial.numbers import primeomega as _primeomega
+    return _primeomega(n)
 
 
 def mersenne_prime_exponent(nth):

@@ -12,7 +12,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (factorial2,
     binomial, factorial)
 from sympy.functions.combinatorial.numbers import (lucas, bell,
-    catalan, euler, tribonacci, fibonacci, bernoulli, primenu)
+    catalan, euler, tribonacci, fibonacci, bernoulli, primenu, primeomega)
 from sympy.functions.elementary.complexes import re, im, conjugate, Abs
 from sympy.functions.elementary.exponential import exp, LambertW, log
 from sympy.functions.elementary.hyperbolic import (tanh, acoth, atanh,
@@ -42,8 +42,7 @@ from sympy.logic.boolalg import (Xor, Or, false, true, And, Equivalent,
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.determinant import Determinant
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.ntheory.factor_ import (totient, reduced_totient,
-    primeomega)
+from sympy.ntheory.factor_ import totient, reduced_totient
 from sympy.physics.quantum import (ComplexSpace, FockSpace, hbar,
     HilbertSpace, Dagger)
 from sympy.printing.mathml import (MathMLPresentationPrinter,
