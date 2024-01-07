@@ -362,8 +362,6 @@ class Vector(BasisDependent):
 
         N = CoordSys3D('N')
 
-        print(f"other.args: {other.args}")
-
         # finding the vector component of self, others
         if self == Vector.zero or other == Vector.zero:
             if self == Vector.zero:
