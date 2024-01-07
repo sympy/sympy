@@ -5009,11 +5009,6 @@ def test_sympy__ntheory__factor___primeomega():
     assert _test_args(t)
 
 
-def test_sympy__ntheory__residue_ntheory__mobius():
-    from sympy.ntheory import mobius
-    assert _test_args(mobius(2))
-
-
 def test_sympy__ntheory__generate__primepi():
     from sympy.ntheory import primepi
     n = symbols('n')
