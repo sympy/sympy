@@ -430,18 +430,23 @@ so the ``to_int`` method that depends on this must be a domain method rather
 than an element method.
 
 (deprecated-ntheory-symbolic-functions)=
-### Cleaning up symbolic version functions in ``ntheory``
+### Relocate symbolic functions from ``ntheory`` to ``functions``
 
-Symbolic functions in ``ntheory`` have been moved to ``functions``.
-All of these functions can be imported like ``from sympy import mobius`` which
-continues to work just fine after these changes as well as it did before.
-However, if you are using ``from sympy.ntheory import mobius``, you need to
-change to ``from sympy import mobius``. Specifically, the following functions.
+The following symbolic functions in ``ntheory`` have been moved to
+``functions``:
 
 * ``sympy.ntheory.factor_.primenu``
 * ``sympy.ntheory.factor_.primeomega``
 * ``sympy.ntheory.factor_.totient``
 * ``sympy.ntheory.residue_ntheory.mobius``
+
+Code that imports these functions from top-level like ``from sympy import
+mobius`` will continue to work fine. However code that imports these from the
+fully qualified module like ``from sympy.ntheory import mobius`` or ``from
+sympy.ntheory.residue_ntheory import mobius`` will now see a deprecation
+warning. The new location for these functions is in ``sympy.functions`` but the
+intended way to import them is still from top-level like ``from sympy import
+mobius``.
 
 
 ## Version 1.12
