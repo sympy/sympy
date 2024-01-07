@@ -371,7 +371,7 @@ class Vector(BasisDependent):
                 ssc = [0, 0, 0]
             else:
                 ssc = [self.dot(N.i), self.dot(N.j), self.dot(N.k)]
-            
+
             if other == Vector.zero:
                 osc = [0, 0, 0]
             else:
