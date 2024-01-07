@@ -377,8 +377,6 @@ class Vector(BasisDependent):
         else:
             ssc = [self.dot(N.i), self.dot(N.j), self.dot(N.k)]
             osc = [other.dot(N.i), other.dot(N.j), other.dot(N.k)]
-            print(ssc)
-            print(osc)
 
         try:
             # Simplifying each scalar component
