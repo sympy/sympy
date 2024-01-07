@@ -12,6 +12,7 @@ from typing import Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
+from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.function import ArgumentIndexError, Function, expand_mul
 from sympy.core.logic import fuzzy_not
@@ -1860,6 +1861,56 @@ class primeomega(Function):
             return S.Zero
         if n.is_Integer is True:
             return S(sum(factorint(n).values()))
+
+
+class totient(Function):
+    r"""
+    Calculate the Euler totient function phi(n)
+
+    ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
+    that are relatively prime to n.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import totient
+    >>> totient(1)
+    1
+    >>> totient(25)
+    20
+    >>> totient(45) == totient(5)*totient(9)
+    True
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.divisor_count
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
+    .. [2] https://mathworld.wolfram.com/TotientFunction.html
+    .. [3] https://oeis.org/A000010
+
+    """
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if n is S.One:
+            return S.One
+        if n.is_prime is True:
+            return n - 1
+        if isinstance(n, Dict):
+            return S(prod(p**(k-1)*(p-1) for p, k in n.items()))
+        if n.is_Integer is True:
+            return S(prod(p**(k-1)*(p-1) for p, k in factorint(n).items()))
 
 
 #######################################################################

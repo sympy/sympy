@@ -3,11 +3,11 @@ from bisect import bisect, bisect_left
 from sympy.core.numbers import (I, Rational, nan, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.combinatorial.numbers import mobius
+from sympy.functions.combinatorial.numbers import mobius, totient
 from sympy.ntheory.generate import (sieve, Sieve)
 from sympy.series.limits import limit
 
-from sympy.ntheory import isprime, totient, randprime, nextprime, prevprime, \
+from sympy.ntheory import isprime, randprime, nextprime, prevprime, \
     primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr

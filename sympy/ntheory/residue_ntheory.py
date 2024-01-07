@@ -372,7 +372,8 @@ def is_primitive_root(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import is_primitive_root, n_order, totient
+    >>> from sympy.functions.combinatorial.numbers import totient
+    >>> from sympy.ntheory import is_primitive_root, n_order
     >>> is_primitive_root(3, 10)
     True
     >>> is_primitive_root(9, 10)
