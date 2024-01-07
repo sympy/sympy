@@ -357,7 +357,6 @@ class Vector(BasisDependent):
         otherwise False. If an error occurs during the process, a
         RuntimeError is raised with an error message.
         """
-        import sympy
         from sympy import simplify, radsimp
         from sympy.vector import CoordSys3D
 
