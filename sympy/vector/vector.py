@@ -14,6 +14,7 @@ from sympy.vector.basisdependent import (BasisDependentZero,
     BasisDependent, BasisDependentMul, BasisDependentAdd)
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
+from sympy.core.expr import Expr
 
 
 class Vector(BasisDependent):
@@ -357,39 +358,48 @@ class Vector(BasisDependent):
         otherwise False. If an error occurs during the process, a
         RuntimeError is raised with an error message.
         """
+        import sympy
         from sympy import simplify, radsimp
-        from sympy.vector import CoordSys3D
+        from sympy.vector import Vector
 
-        N = CoordSys3D('N')
+        # finding vector components of self and other with their respective coordinate system
+        V_S = [0, 0, 0]
+        V_O = [0, 0, 0]
 
-        # finding the vector component of self, others
-        if self == Vector.zero or other == Vector.zero:
-            if self == Vector.zero:
-                ssc = [0, 0, 0]
-            else:
-                ssc = [self.dot(N.i), self.dot(N.j), self.dot(N.k)]
-
-            if other == Vector.zero:
-                osc = [0, 0, 0]
-            else:
-                osc = [other.dot(N.i), other.dot(N.j), other.dot(N.k)]
-
+        # finding scalar components of self and other
+        S_S = [0, 0, 0]
+        S_O = [0, 0, 0]
+        if self == Vector.zero:
+            V_S = [0, 0, 0]
+            S_S = [0, 0, 0]
         else:
-            ssc = [self.dot(N.i), self.dot(N.j), self.dot(N.k)]
-            osc = [other.dot(N.i), other.dot(N.j), other.dot(N.k)]
+            index = 0
+            for i in self.components:
+                if isinstance(i, sympy.vector.vector.BaseVector):
+                    V_S[index] = i
+                    S_S[index] = self.components[i]
+                    index += 1
+
+        if other == Vector.zero:
+            V_O = [0, 0, 0]
+            S_O = [0, 0, 0]
+        else:
+            index = 0
+            for i in other.components:
+                if isinstance(i, sympy.vector.vector.BaseVector):
+                    V_O[index] = i
+                    S_O[index] = other.components[i]
+                index += 1
 
         try:
-            # Simplifying each scalar component
-            for s_i in range(len(ssc)):
-                ssc[s_i] = radsimp(simplify(ssc[s_i]))
-                osc[s_i] = radsimp(simplify(osc[s_i]))
-
-            if ssc == osc:
-                return True
+            # checking if the self and other are in same coordinate system or not
+            if V_S == V_O:
+                return all([radsimp(simplify(S_S[i])) == radsimp(simplify(S_O[i])) for i in range(3)])
             else:
                 return False
         except Exception as e:
             raise RuntimeError(f"An error occurred: {str(e)}") from e
+
 
 
 class BaseVector(Vector, AtomicExpr):
