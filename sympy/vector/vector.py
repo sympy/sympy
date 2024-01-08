@@ -14,7 +14,6 @@ from sympy.vector.basisdependent import (BasisDependentZero,
     BasisDependent, BasisDependentMul, BasisDependentAdd)
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
-from sympy.core.expr import Expr
 
 
 class Vector(BasisDependent):
@@ -394,7 +393,12 @@ class Vector(BasisDependent):
         try:
             # checking if the self and other are in same coordinate system or not
             if V_S == V_O:
-                return all(radsimp(simplify(S_S[i])) == radsimp(simplify(S_O[i])) for i in range(3))
+                for i in range(3):
+                    try:
+                        result = [i.equal(j) for i, j in zip(S_S, S_O)]
+                        return result
+                    except:
+                        return all(radsimp(simplify(S_S[i])) == radsimp(simplify(S_O[i])) for i in range(3))
             else:
                 return False
         except Exception as e:
