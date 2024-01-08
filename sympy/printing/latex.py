@@ -15,7 +15,7 @@ from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
-from sympy.tensor.array import NDimArray
+
 
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -30,6 +30,7 @@ from sympy.utilities.iterables import has_variety, sift
 import re
 
 if TYPE_CHECKING:
+    from sympy.tensor.array import NDimArray
     from sympy.vector.basisdependent import BasisDependent
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
@@ -2218,6 +2219,11 @@ class LatexPrinter(Printer):
 
     def _print_tribonacci(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "T", exp)
+
+    def _print_mobius(self, expr, exp=None):
+        if exp is None:
+            return r'\mu\left(%s\right)' % self._print(expr.args[0])
+        return r'\mu^{%s}\left(%s\right)' % (exp, self._print(expr.args[0]))
 
     def _print_SeqFormula(self, s):
         dots = object()
