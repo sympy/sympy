@@ -73,8 +73,7 @@ Ntheory Functions Reference
 
 .. autofunction:: totient
 
-.. autoclass:: reduced_totient
-   :members:
+.. autofunction:: reduced_totient
 
 .. autoclass:: divisor_sigma
    :members:

@@ -2043,6 +2043,13 @@ def test_sympy__functions__combinatorial__numbers__primeomega():
     assert _test_args(t)
 
 
+def test_sympy__functions__combinatorial__numbers__reduced_totient():
+    from sympy.functions.combinatorial.numbers import reduced_totient
+    k = symbols('k', integer=True)
+    t = reduced_totient(k)
+    assert _test_args(t)
+
+
 def test_sympy__functions__combinatorial__numbers__totient():
     from sympy.functions.combinatorial.numbers import totient
     k = symbols('k', integer=True)
@@ -4984,13 +4991,6 @@ def test_sympy__categories__baseclasses__Category():
     d2 = Diagram([f])
     K = Category("K", commutative_diagrams=[d1, d2])
     assert _test_args(K)
-
-
-def test_sympy__ntheory__factor___reduced_totient():
-    from sympy.ntheory.factor_ import reduced_totient
-    k = symbols('k', integer=True)
-    t = reduced_totient(k)
-    assert _test_args(t)
 
 
 def test_sympy__ntheory__factor___divisor_sigma():
