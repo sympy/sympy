@@ -19,7 +19,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
-from sympy.external.gmpy import SYMPY_INTS
+from sympy.external.gmpy import SYMPY_INTS, remove, lcm
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
@@ -1911,6 +1911,64 @@ class totient(Function):
             return S(prod(p**(k-1)*(p-1) for p, k in n.items()))
         if n.is_Integer is True:
             return S(prod(p**(k-1)*(p-1) for p, k in factorint(n).items()))
+
+
+class reduced_totient(Function):
+    r"""
+    Calculate the Carmichael reduced totient function lambda(n)
+
+    ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
+    `k^m \equiv 1 \mod n` for all k relatively prime to n.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import reduced_totient
+    >>> reduced_totient(1)
+    1
+    >>> reduced_totient(8)
+    2
+    >>> reduced_totient(30)
+    4
+
+    See Also
+    ========
+
+    totient
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_function
+    .. [2] https://mathworld.wolfram.com/CarmichaelFunction.html
+    .. [3] https://oeis.org/A002322
+
+    """
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if n is S.One:
+            return S.One
+        if n.is_prime is True:
+            return n - 1
+        if isinstance(n, Dict):
+            t = 1
+            if 2 in n:
+                t = (1 << (n[2] - 2)) if 2 < n[2] else n[2]
+            return S(lcm(int(t), *(int(p-1)*int(p)**int(k-1) for p, k in n.items() if p != 2)))
+        if n.is_Integer is True:
+            n, t = remove(int(n), 2)
+            if not t:
+                t = 1
+            elif 2 < t:
+                t = 1 << (t - 2)
+            return S(lcm(t, *((p-1)*p**(k-1) for p, k in factorint(n).items())))
 
 
 #######################################################################

@@ -8,14 +8,13 @@ import math
 from sympy.core import sympify
 from sympy.core.containers import Dict
 from sympy.core.function import Function
-from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
 from sympy.core.intfunc import num_digits
 from sympy.core.power import Pow
 from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import (SYMPY_INTS, gcd, lcm, sqrt as isqrt,
+from sympy.external.gmpy import (SYMPY_INTS, gcd, sqrt as isqrt,
                                  sqrtrem, iroot, bit_scan1, remove)
 from .primetest import isprime, MERSENNE_PRIME_EXPONENTS, is_mersenne_prime
 from .generate import sieve, primerange, nextprime
@@ -1994,9 +1993,19 @@ def totient(n):
     return _totient(n)
 
 
-class reduced_totient(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.reduced_totient` has been moved to `sympy.functions.combinatorial.numbers.reduced_totient`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def reduced_totient(n):
     r"""
     Calculate the Carmichael reduced totient function lambda(n)
+
+    .. deprecated:: 1.13
+
+        The ``reduced_totient`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.reduced_totient`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
     `k^m \equiv 1 \mod n` for all k relatively prime to n.
@@ -2024,36 +2033,8 @@ class reduced_totient(Function):
     .. [2] https://mathworld.wolfram.com/CarmichaelFunction.html
 
     """
-    @classmethod
-    def eval(cls, n):
-        if n.is_Integer:
-            if n < 1:
-                raise ValueError("n must be a positive integer")
-            factors = factorint(n)
-            return cls._from_factors(factors)
-
-    @classmethod
-    def _from_factors(self, factors):
-        """Subroutine to compute totient from already-computed factors
-        """
-        t = 1
-        for p, k in factors.items():
-            if p == 2 and k > 2:
-                t = lcm(t, 2**(k - 2))
-            else:
-                t = lcm(t, (p - 1) * p**(k - 1))
-        return t
-
-    @classmethod
-    def _from_distinct_primes(self, *args):
-        """Subroutine to compute totient from the list of assumed
-        distinct primes
-        """
-        args = [p - 1 for p in args]
-        return lcm(*args)
-
-    def _eval_is_integer(self):
-        return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
+    from sympy.functions.combinatorial.numbers import reduced_totient as _reduced_totient
+    return _reduced_totient(n)
 
 
 class divisor_sigma(Function):

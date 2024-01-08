@@ -370,23 +370,6 @@ def test_issue_6981():
     assert S == {1,2,4}
 
 
-def test_reduced_totient():
-    assert [reduced_totient(k) for k in range(1, 16)] == \
-        [1, 1, 2, 2, 4, 2, 6, 2, 6, 4, 10, 2, 12, 6, 4]
-    assert reduced_totient(5005) == 60
-    assert reduced_totient(5006) == 2502
-    assert reduced_totient(5009) == 5008
-    assert reduced_totient(2**100) == 2**98
-
-    m = Symbol("m", integer=True)
-    assert reduced_totient(m)
-    assert reduced_totient(m).subs(m, 2**3*3**10) == 3**10 - 3**9
-    assert summation(reduced_totient(m), (m, 1, 16)) == 68
-
-    n = Symbol("n", integer=True, positive=True)
-    assert reduced_totient(n).is_integer
-
-
 def test_divisor_sigma():
     assert [divisor_sigma(k) for k in range(1, 12)] == \
         [1, 3, 4, 7, 6, 12, 8, 15, 13, 18, 12]
@@ -641,3 +624,5 @@ def test_deprecated_ntheory_symbolic_functions():
         assert primeomega(3) == 1
     with warns_deprecated_sympy():
         assert totient(3) == 2
+    with warns_deprecated_sympy():
+        assert reduced_totient(3) == 2
