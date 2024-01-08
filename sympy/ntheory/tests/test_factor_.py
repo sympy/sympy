@@ -14,7 +14,7 @@ from sympy.ntheory import (totient,
     divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
-    antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
+    antidivisors, antidivisor_count, _divisor_sigma, core, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_abundant,
     is_deficient, is_amicable, dra, drm, _perfect_power)
@@ -370,34 +370,6 @@ def test_issue_6981():
     assert S == {1,2,4}
 
 
-def test_divisor_sigma():
-    assert [divisor_sigma(k) for k in range(1, 12)] == \
-        [1, 3, 4, 7, 6, 12, 8, 15, 13, 18, 12]
-    assert [divisor_sigma(k, 2) for k in range(1, 12)] == \
-        [1, 5, 10, 21, 26, 50, 50, 85, 91, 130, 122]
-    assert divisor_sigma(23450) == 50592
-    assert divisor_sigma(23450, 0) == 24
-    assert divisor_sigma(23450, 1) == 50592
-    assert divisor_sigma(23450, 2) == 730747500
-    assert divisor_sigma(23450, 3) == 14666785333344
-
-    a = Symbol("a", prime=True)
-    b = Symbol("b", prime=True)
-    j = Symbol("j", integer=True, positive=True)
-    k = Symbol("k", integer=True, positive=True)
-    assert divisor_sigma(a**j*b**k) == (a**(j + 1) - 1)*(b**(k + 1) - 1)/((a - 1)*(b - 1))
-    assert divisor_sigma(a**j*b**k, 2) == (a**(2*j + 2) - 1)*(b**(2*k + 2) - 1)/((a**2 - 1)*(b**2 - 1))
-    assert divisor_sigma(a**j*b**k, 0) == (j + 1)*(k + 1)
-
-    m = Symbol("m", integer=True)
-    k = Symbol("k", integer=True)
-    assert divisor_sigma(m)
-    assert divisor_sigma(m, k)
-    assert divisor_sigma(m).subs(m, 3**10) == 88573
-    assert divisor_sigma(m, k).subs([(m, 3**10), (k, 3)]) == 213810021790597
-    assert summation(divisor_sigma(m), (m, 1, 11)) == 99
-
-
 def test_udivisor_sigma():
     assert [udivisor_sigma(k) for k in range(1, 12)] == \
         [1, 3, 4, 5, 6, 12, 8, 9, 10, 18, 12]
@@ -557,6 +529,26 @@ def test_core():
     assert core(1, 6) == 1
 
 
+def test__divisor_sigma():
+    assert _divisor_sigma(23450) == 50592
+    assert _divisor_sigma(23450, 0) == 24
+    assert _divisor_sigma(23450, 1) == 50592
+    assert _divisor_sigma(23450, 2) == 730747500
+    assert _divisor_sigma(23450, 3) == 14666785333344
+    A000005 = [1, 2, 2, 3, 2, 4, 2, 4, 3, 4, 2, 6, 2, 4, 4, 5, 2, 6, 2, 6, 4,
+               4, 2, 8, 3, 4, 4, 6, 2, 8, 2, 6, 4, 4, 4, 9, 2, 4, 4, 8, 2, 8]
+    for n, val in enumerate(A000005, 1):
+        assert _divisor_sigma(n, 0) == val
+    A000203 = [1, 3, 4, 7, 6, 12, 8, 15, 13, 18, 12, 28, 14, 24, 24, 31, 18,
+               39, 20, 42, 32, 36, 24, 60, 31, 42, 40, 56, 30, 72, 32, 63, 48]
+    for n, val in enumerate(A000203, 1):
+        assert _divisor_sigma(n, 1) == val
+    A001157 = [1, 5, 10, 21, 26, 50, 50, 85, 91, 130, 122, 210, 170, 250, 260,
+               341, 290, 455, 362, 546, 500, 610, 530, 850, 651, 850, 820, 1050]
+    for n, val in enumerate(A001157, 1):
+        assert _divisor_sigma(n, 2) == val
+
+
 def test_mersenne_prime_exponent():
     assert mersenne_prime_exponent(1) == 2
     assert mersenne_prime_exponent(4) == 7
@@ -626,3 +618,5 @@ def test_deprecated_ntheory_symbolic_functions():
         assert totient(3) == 2
     with warns_deprecated_sympy():
         assert reduced_totient(3) == 2
+    with warns_deprecated_sympy():
+        assert divisor_sigma(3) == 4

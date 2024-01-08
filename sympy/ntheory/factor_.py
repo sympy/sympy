@@ -2037,9 +2037,19 @@ def reduced_totient(n):
     return _reduced_totient(n)
 
 
-class divisor_sigma(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.divisor_sigma` has been moved to `sympy.functions.combinatorial.numbers.divisor_sigma`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def divisor_sigma(n, k=1):
     r"""
     Calculate the divisor function `\sigma_k(n)` for positive integer n
+
+    .. deprecated:: 1.13
+
+        The ``divisor_sigma`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.divisor_sigma`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
 
@@ -2092,35 +2102,30 @@ class divisor_sigma(Function):
     .. [1] https://en.wikipedia.org/wiki/Divisor_function
 
     """
+    from sympy.functions.combinatorial.numbers import divisor_sigma as func_divisor_sigma
+    return func_divisor_sigma(n, k)
 
-    @classmethod
-    def eval(cls, n, k=S.One):
-        k = sympify(k)
 
-        if n.is_prime:
-            return 1 + n**k
+def _divisor_sigma(n:int, k:int=1) -> int:
+    r""" Calculate the divisor function `\sigma_k(n)` for positive integer n
 
-        if n.is_Integer:
-            if n <= 0:
-                raise ValueError("n must be a positive integer")
-            elif k.is_Integer:
-                k = int(k)
-                return Integer(math.prod(
-                    (p**(k*(e + 1)) - 1)//(p**k - 1) if k != 0
-                    else e + 1 for p, e in factorint(n).items()))
-            else:
-                return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
-                           else e + 1 for p, e in factorint(n).items()])
+    Parameters
+    ==========
 
-        if n.is_integer:  # symbolic case
-            args = []
-            for p, e in (_.as_base_exp() for _ in Mul.make_args(n)):
-                if p.is_prime and e.is_positive:
-                    args.append((p**(k*(e + 1)) - 1)/(p**k - 1) if
-                                k != 0 else e + 1)
-                else:
-                    return
-            return Mul(*args)
+    n : int
+        positive integer
+    k : int
+        nonnegative integer
+
+    See Also
+    ========
+
+    sympy.functions.combinatorial.numbers.divisor_sigma
+
+    """
+    if k == 0:
+        return math.prod(e + 1 for e in factorint(n).values())
+    return math.prod((p**(k*(e + 1)) - 1)//(p**k - 1) for p, e in factorint(n).items())
 
 
 def core(n, t=2):
@@ -2302,6 +2307,7 @@ def primenu(n):
     from sympy.functions.combinatorial.numbers import primenu as _primenu
     return _primenu(n)
 
+
 @deprecated("""\
 The `sympy.ntheory.factor_.primeomega` has been moved to `sympy.functions.combinatorial.numbers.primeomega`.""",
 deprecated_since_version="1.13",
@@ -2380,7 +2386,8 @@ def is_perfect(n):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import is_perfect, divisors, divisor_sigma
+    >>> from sympy.functions.combinatorial.numbers import divisor_sigma
+    >>> from sympy.ntheory.factor_ import is_perfect, divisors
     >>> is_perfect(20)
     False
     >>> is_perfect(6)
@@ -2418,7 +2425,7 @@ def is_perfect(n):
     # to see whether it is a perfect number or not. So we
     # skip the structure checks and go straight to the final
     # test below.
-    result = divisor_sigma(n) == 2 * n
+    result = abundance(n) == 0
     if result:
         raise ValueError(filldedent('''In 1888, Sylvester stated: "
             ...a prolonged meditation on the subject has satisfied
@@ -2447,7 +2454,7 @@ def abundance(n):
     >>> is_abundant(10)
     False
     """
-    return divisor_sigma(n, 1) - 2 * n
+    return _divisor_sigma(n) - 2 * n
 
 
 def is_abundant(n):
@@ -2511,7 +2518,8 @@ def is_amicable(m, n):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import is_amicable, divisor_sigma
+    >>> from sympy.functions.combinatorial.numbers import divisor_sigma
+    >>> from sympy.ntheory.factor_ import is_amicable
     >>> is_amicable(220, 284)
     True
     >>> divisor_sigma(220) == divisor_sigma(284)
@@ -2523,10 +2531,7 @@ def is_amicable(m, n):
     .. [1] https://en.wikipedia.org/wiki/Amicable_numbers
 
     """
-    if m == n:
-        return False
-    a, b = (divisor_sigma(i) for i in (m, n))
-    return a == b == (m + n)
+    return m != n and m + n == _divisor_sigma(m) == _divisor_sigma(n)
 
 
 def dra(n, b):

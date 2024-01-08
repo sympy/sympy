@@ -435,6 +435,7 @@ than an element method.
 The following symbolic functions in ``ntheory`` have been moved to
 ``functions``:
 
+* ``sympy.ntheory.factor_.divisor_sigma``
 * ``sympy.ntheory.factor_.primenu``
 * ``sympy.ntheory.factor_.primeomega``
 * ``sympy.ntheory.factor_.reduce_totient``

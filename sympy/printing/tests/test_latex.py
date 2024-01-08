@@ -17,7 +17,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
 from sympy.functions.combinatorial.numbers import (bernoulli, bell, catalan, euler, genocchi,
-                                                   lucas, fibonacci, tribonacci, mobius, primenu, primeomega,
+                                                   lucas, fibonacci, tribonacci, divisor_sigma, mobius, primenu, primeomega,
                                                    totient, reduced_totient)
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
@@ -48,7 +48,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
-from sympy.ntheory.factor_ import (divisor_sigma, udivisor_sigma)
+from sympy.ntheory.factor_ import udivisor_sigma
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
 from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro

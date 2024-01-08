@@ -15,7 +15,7 @@ from sympy.series.limits import limit, Limit
 from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, andre, partition, mobius, primenu, primeomega, totient, reduced_totient,
+    genocchi, andre, partition, divisor_sigma, mobius, primenu, primeomega, totient, reduced_totient,
     motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
 from sympy.functions.combinatorial.numbers import _nT
@@ -580,6 +580,44 @@ def test_partition():
     assert partition(x).subs(x, 7) == 15
     assert partition(y).subs(y, 8) == 22
     raises(ValueError, lambda: partition(Rational(5, 4)))
+
+
+def test_divisor_sigma():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: divisor_sigma(m))
+    raises(TypeError, lambda: divisor_sigma(4.5))
+    raises(TypeError, lambda: divisor_sigma(1, m))
+    raises(TypeError, lambda: divisor_sigma(1, 4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: divisor_sigma(m))
+    raises(ValueError, lambda: divisor_sigma(0))
+    m = Symbol('m', negative=True)
+    raises(ValueError, lambda: divisor_sigma(1, m))
+    raises(ValueError, lambda: divisor_sigma(1, -1))
+
+    # special case
+    p = Symbol('p', prime=True)
+    k = Symbol('k', integer=True)
+    assert divisor_sigma(p, 1) == p + 1
+    assert divisor_sigma(p, k) == p**k + 1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert divisor_sigma(n).is_integer is True
+    assert divisor_sigma(n).is_positive is True
+
+    # symbolic
+    k = Symbol('k', integer=True, zero=False)
+    assert divisor_sigma(4, k) == 2**(2*k) + 2**k + 1
+    assert divisor_sigma(6, k) == (2**k + 1) * (3**k + 1)
+
+    # Integer
+    assert divisor_sigma(23450) == 50592
+    assert divisor_sigma(23450, 0) == 24
+    assert divisor_sigma(23450, 1) == 50592
+    assert divisor_sigma(23450, 2) == 730747500
+    assert divisor_sigma(23450, 3) == 14666785333344
 
 
 def test_mobius():
