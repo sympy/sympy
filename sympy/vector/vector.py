@@ -393,16 +393,19 @@ class Vector(BasisDependent):
         try:
             # checking if the self and other are in same coordinate system or not
             if V_S == V_O:
-                result = [i.equal(j) for i, j in zip(S_S, S_O)]
+                result = []
+                index = 0
+                for i, j in zip(S_S, S_O):
+                    if type(i) != int and type(j) != int:
+                        result.append(i.equals(j))
+                    else:
+                        result.append(radsimp(simplify(S_S[index])) == radsimp(simplify(S_O[index])))
+                        index += 1
                 return all(result)
             else:
                 return False
         except Exception as e:
-            try:
-                for i in range(3):
-                    return all(radsimp(simplify(S_S[i])) == radsimp(simplify(S_O[i])) for i in range(3))
-            except:
-                raise RuntimeError(f"An error occurred: {str(e)}") from e
+            raise RuntimeError(f"An error occurred: {str(e)}") from e
 
 
 
