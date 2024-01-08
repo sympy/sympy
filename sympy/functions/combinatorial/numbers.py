@@ -24,9 +24,10 @@ from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.ntheory.factor_ import factorint
+from sympy.ntheory.factor_ import factorint, _divisor_sigma
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
+from sympy.polys.polytools import cancel
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
@@ -1676,6 +1677,73 @@ class partition(Function):
         n = self.args[0]
         if n.is_nonnegative and n.is_integer:
             return True
+
+
+class divisor_sigma(Function):
+    r"""
+    Calculate the divisor function `\sigma_k(n)` for positive integer n
+
+    ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        \sigma_k(n) = \prod_{i=1}^\omega (1+p_i^k+p_i^{2k}+\cdots
+        + p_i^{m_ik}).
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import divisor_sigma
+    >>> divisor_sigma(18, 0)
+    6
+    >>> divisor_sigma(39, 1)
+    56
+    >>> divisor_sigma(12, 2)
+    210
+    >>> divisor_sigma(37)
+    38
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.divisor_count, totient, sympy.ntheory.factor_.divisors, sympy.ntheory.factor_.factorint
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Divisor_function
+
+    """
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, n, k=S.One):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if k.is_integer is False:
+            raise TypeError("k should be an integer")
+        if k.is_nonnegative is False:
+            raise ValueError("k should be a nonnegative integer")
+        if n.is_prime is True:
+            return 1 + n**k
+        if n is S.One:
+            return S.One
+        if n.is_Integer is True:
+            if k.is_zero is True:
+                return Mul(*[e + 1 for e in factorint(n).values()])
+            if k.is_Integer is True:
+                return S(_divisor_sigma(as_int(n), as_int(k)))
+            if k.is_zero is False:
+                return Mul(*[cancel((p**(k*(e + 1)) - 1) / (p**k - 1)) for p, e in factorint(n).items()])
 
 
 class mobius(Function):

@@ -2014,6 +2014,14 @@ def test_sympy__functions__combinatorial__numbers__carmichael():
     assert _test_args(carmichael(x))
 
 
+def test_sympy__functions__combinatorial__numbers__divisor_sigma():
+    from sympy.functions.combinatorial.numbers import divisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = divisor_sigma(n, k)
+    assert _test_args(t)
+
+
 def test_sympy__functions__combinatorial__numbers__fibonacci():
     from sympy.functions.combinatorial.numbers import fibonacci
     assert _test_args(fibonacci(x))
@@ -4991,14 +4999,6 @@ def test_sympy__categories__baseclasses__Category():
     d2 = Diagram([f])
     K = Category("K", commutative_diagrams=[d1, d2])
     assert _test_args(K)
-
-
-def test_sympy__ntheory__factor___divisor_sigma():
-    from sympy.ntheory.factor_ import divisor_sigma
-    k = symbols('k', integer=True)
-    n = symbols('n', integer=True)
-    t = divisor_sigma(n, k)
-    assert _test_args(t)
 
 
 def test_sympy__ntheory__factor___udivisor_sigma():
