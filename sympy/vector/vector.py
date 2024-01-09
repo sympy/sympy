@@ -351,61 +351,23 @@ class Vector(BasisDependent):
         Parameters:
         - self: The first vector for comparison.
         - others: The second vector for comparison.
-        - N: instance of a 3D coordinate system.
         Returns:
         - True if the scalar components are equal after simplification,
         otherwise False. If an error occurs during the process, a
         RuntimeError is raised with an error message.
         """
-        import sympy
-        from sympy import simplify, radsimp
-        from sympy.vector import Vector
-
-        # finding vector components of self and other with their respective coordinate system
-        V_S = [0, 0, 0]
-        V_O = [0, 0, 0]
-
-        # finding scalar components of self and other
-        S_S = [0, 0, 0]
-        S_O = [0, 0, 0]
-        if self == Vector.zero:
-            V_S = [0, 0, 0]
-            S_S = [0, 0, 0]
+        if (self != Vector.zero and other != Vector.zero) or (self == Vector.zero and other == Vector.zero):
+            zipped_obj = list(zip(self.components, other.components))
         else:
-            index = 0
-            for i in self.components:
-                if isinstance(i, sympy.vector.vector.BaseVector):
-                    V_S[index] = i
-                    S_S[index] = self.components[i]
-                index += 1
+            return False
+     
+        # cheking vector components
+        V_C = all([Expr.equals(i, j) for i, j in zipped_obj])
 
-        if other == Vector.zero:
-            V_O = [0, 0, 0]
-            S_O = [0, 0, 0]
-        else:
-            index = 0
-            for i in other.components:
-                if isinstance(i, sympy.vector.vector.BaseVector):
-                    V_O[index] = i
-                    S_O[index] = other.components[i]
-                index += 1
+        # cheking scalar components
+        S_C = all([Expr.equals(self.components[i], self.components[j]) for i, j in zipped_obj])
 
-        try:
-            # checking if the self and other are in same coordinate system or not
-            if V_S == V_O:
-                result = []
-                index = 0
-                for i, j in zip(S_S, S_O):
-                    if type(i) != int and type(j) != int:
-                        result.append(i.equals(j))
-                    else:
-                        result.append(radsimp(simplify(S_S[index])) == radsimp(simplify(S_O[index])))
-                        index += 1
-                return all(result)
-            else:
-                return False
-        except Exception as e:
-            raise e
+        return V_C and S_C
 
 
 
