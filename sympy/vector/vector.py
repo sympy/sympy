@@ -362,10 +362,10 @@ class Vector(BasisDependent):
             return False
 
         # cheking vector components
-        V_C = all([Expr.equals(i, j) for i, j in zipped_obj])
+        V_C = all(Expr.equals(i, j) for i, j in zipped_obj)
 
         # cheking scalar components
-        S_C = all([Expr.equals(self.components[i], self.components[j]) for i, j in zipped_obj])
+        S_C = all(Expr.equals(self.components[i], self.components[j]) for i, j in zipped_obj)
 
         return V_C and S_C
 
