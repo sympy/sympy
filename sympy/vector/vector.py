@@ -377,7 +377,7 @@ class Vector(BasisDependent):
                 if isinstance(i, sympy.vector.vector.BaseVector):
                     V_S[index] = i
                     S_S[index] = self.components[i]
-                    index += 1
+                index += 1
 
         if other == Vector.zero:
             V_O = [0, 0, 0]
@@ -405,7 +405,7 @@ class Vector(BasisDependent):
             else:
                 return False
         except Exception as e:
-            raise RuntimeError(f"An error occurred: {str(e)}") from e
+            raise e
 
 
 
