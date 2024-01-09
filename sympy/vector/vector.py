@@ -360,7 +360,7 @@ class Vector(BasisDependent):
             zipped_obj = list(zip(self.components, other.components))
         else:
             return False
-     
+
         # cheking vector components
         V_C = all([Expr.equals(i, j) for i, j in zipped_obj])
 
