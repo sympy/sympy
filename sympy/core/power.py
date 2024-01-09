@@ -17,7 +17,7 @@ from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
-
+from sympy.core.numbers import Rational, equal_valued
 
 class Pow(Expr):
     """
@@ -1532,7 +1532,7 @@ class Pow(Expr):
                 return res
 
         f = b.as_leading_term(x, logx=logx)
-        g = ((b.expand()-f).simplify())
+        g = (b.expand()-f).cancel()
         g = g/f
         if not m.is_number:
             raise NotImplementedError()
@@ -1583,8 +1583,8 @@ class Pow(Expr):
             # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
             # prevent rounding errors which can induce wrong values of d leading
             # to a NotImplementedError being returned from the block below.
-            from sympy.simplify.simplify import nsimplify
-            _, d = nsimplify(g).leadterm(x, logx=logx)
+            g.replace(lambda x: x.is_Float and x.is_same(Rational(x), equal_valued), lambda x: Rational(x))
+            _, d = g.leadterm(x, logx=logx)
         if not d.is_positive:
             g = g.simplify()
             if g.is_zero:
