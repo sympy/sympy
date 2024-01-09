@@ -60,6 +60,9 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.divisor_sigma
    :members:
 
+.. autoclass:: sympy.functions.combinatorial.numbers.udivisor_sigma
+   :members:
+
 .. autoclass:: sympy.functions.combinatorial.numbers.mobius
    :members:
 

@@ -1746,6 +1746,78 @@ class divisor_sigma(Function):
                 return Mul(*[cancel((p**(k*(e + 1)) - 1) / (p**k - 1)) for p, e in factorint(n).items()])
 
 
+class udivisor_sigma(Function):
+    r"""
+    Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
+
+    ``udivisor_sigma(n, k)`` is equal to ``sum([x**k for x in udivisors(n)])``
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        \sigma_k^*(n) = \prod_{i=1}^\omega (1+ p_i^{m_ik}).
+
+    Parameters
+    ==========
+
+    k : power of divisors in the sum
+
+        for k = 0, 1:
+        ``udivisor_sigma(n, 0)`` is equal to ``udivisor_count(n)``
+        ``udivisor_sigma(n, 1)`` is equal to ``sum(udivisors(n))``
+
+        Default for k is 1.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import udivisor_sigma
+    >>> udivisor_sigma(18, 0)
+    4
+    >>> udivisor_sigma(74, 1)
+    114
+    >>> udivisor_sigma(36, 3)
+    47450
+    >>> udivisor_sigma(111)
+    152
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.divisor_count, totient, sympy.ntheory.factor_.divisors,
+    sympy.ntheory.factor_.udivisors, sympy.ntheory.factor_.udivisor_count, divisor_sigma,
+    sympy.ntheory.factor_.factorint
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
+    """
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, n, k=S.One):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if k.is_integer is False:
+            raise TypeError("k should be an integer")
+        if k.is_nonnegative is False:
+            raise ValueError("k should be a nonnegative integer")
+        if n.is_prime is True:
+            return 1 + n**k
+        if n.is_Integer:
+            return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
+
+
 class mobius(Function):
     """
     Mobius function maps natural number to {-1, 0, 1}

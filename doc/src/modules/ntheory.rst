@@ -77,8 +77,7 @@ Ntheory Functions Reference
 
 .. autofunction:: divisor_sigma
 
-.. autoclass:: udivisor_sigma
-   :members:
+.. autofunction:: udivisor_sigma
 
 .. autofunction:: core
 

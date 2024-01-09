@@ -5,9 +5,7 @@ Integer factorization
 from collections import defaultdict
 import math
 
-from sympy.core import sympify
 from sympy.core.containers import Dict
-from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
 from sympy.core.intfunc import num_digits
@@ -2195,9 +2193,19 @@ def core(n, t=2):
         return y
 
 
-class udivisor_sigma(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.udivisor_sigma` has been moved to `sympy.functions.combinatorial.numbers.udivisor_sigma`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def udivisor_sigma(n, k=1):
     r"""
     Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
+
+    .. deprecated:: 1.13
+
+        The ``udivisor_sigma`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.udivisor_sigma`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     ``udivisor_sigma(n, k)`` is equal to ``sum([x**k for x in udivisors(n)])``
 
@@ -2247,17 +2255,8 @@ class udivisor_sigma(Function):
     .. [1] https://mathworld.wolfram.com/UnitaryDivisorFunction.html
 
     """
-
-    @classmethod
-    def eval(cls, n, k=S.One):
-        k = sympify(k)
-        if n.is_prime:
-            return 1 + n**k
-        if n.is_Integer:
-            if n <= 0:
-                raise ValueError("n must be a positive integer")
-            else:
-                return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
+    from sympy.functions.combinatorial.numbers import udivisor_sigma as _udivisor_sigma
+    return _udivisor_sigma(n, k)
 
 
 @deprecated("""\
