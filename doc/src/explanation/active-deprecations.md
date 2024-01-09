@@ -450,6 +450,11 @@ warning. The new location for these functions is in ``sympy.functions`` but the
 intended way to import them is still from top-level like ``from sympy import
 mobius``.
 
+The following symbolic functions in ``ntheory`` have been moved to
+``functions``, but cannot be imported at top-level.
+
+* ``sympy.ntheory.factor_.udivisor_sigma``
+
 
 ## Version 1.12
 
