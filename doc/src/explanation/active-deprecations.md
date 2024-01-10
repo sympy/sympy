@@ -440,6 +440,7 @@ The following symbolic functions in ``ntheory`` have been moved to
 * ``sympy.ntheory.factor_.primeomega``
 * ``sympy.ntheory.factor_.reduce_totient``
 * ``sympy.ntheory.factor_.totient``
+* ``sympy.ntheory.generate.primepi``
 * ``sympy.ntheory.residue_ntheory.mobius``
 
 Code that imports these functions from top-level like ``from sympy import

@@ -78,6 +78,9 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.reduced_totient
    :members:
 
+.. autoclass:: sympy.functions.combinatorial.numbers.primepi
+   :members:
+
 .. autoclass:: sympy.functions.combinatorial.factorials.MultiFactorial
    :members:
 

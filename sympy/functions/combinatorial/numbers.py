@@ -25,6 +25,7 @@ from sympy.functions.combinatorial.factorials import (binomial,
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.ntheory.factor_ import factorint, _divisor_sigma
+from sympy.ntheory.generate import _primepi
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
 from sympy.polys.polytools import cancel
@@ -2109,6 +2110,62 @@ class reduced_totient(Function):
             elif 2 < t:
                 t = 1 << (t - 2)
             return S(lcm(t, *((p-1)*p**(k-1) for p, k in factorint(n).items())))
+
+
+class primepi(Function):
+    r""" Represents the prime counting function pi(n) = the number
+    of prime numbers less than or equal to n.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import primepi
+    >>> from sympy import prime, prevprime, isprime
+    >>> primepi(25)
+    9
+
+    So there are 9 primes less than or equal to 25. Is 25 prime?
+
+    >>> isprime(25)
+    False
+
+    It is not. So the first prime less than 25 must be the
+    9th prime:
+
+    >>> prevprime(25) == prime(9)
+    True
+
+    See Also
+    ========
+
+    sympy.ntheory.primetest.isprime : Test if n is prime
+    sympy.ntheory.generate.primerange : Generate all primes in a given range
+    sympy.ntheory.generate.prime : Return the nth prime
+
+    References
+    ==========
+
+    .. [1] https://oeis.org/A000720
+
+    """
+    is_integer = True
+    is_nonnegative = True
+
+    @classmethod
+    def eval(cls, n):
+        if n is S.Infinity:
+            return S.Infinity
+        if n is S.NegativeInfinity:
+            return S.Zero
+        if n.is_real is False:
+            raise TypeError("n should be a real")
+        if is_lt(n, S(2)) is True:
+            return S.Zero
+        try:
+            n = int(n)
+        except TypeError:
+            return
+        return S(_primepi(n))
 
 
 #######################################################################
