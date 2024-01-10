@@ -189,7 +189,7 @@ class DixonResultant():
         if dixon_matrix.shape[0] != dixon_matrix.shape[1]:
             keep = [column for column in range(dixon_matrix.shape[-1])
                     if any(element != 0 for element
-                        in dixon_matrix[:, column])]
+                        in dixon_matrix[:, column].values())]
 
             dixon_matrix = dixon_matrix[:, keep]
 
@@ -235,7 +235,7 @@ class DixonResultant():
         """Calculate the product of the leading entries of the matrix."""
         res = 1
         for row in range(matrix.rows):
-            for el in matrix.row(row):
+            for el in matrix.row(row).values():
                 if el != 0:
                     res = res * el
                     break
@@ -466,7 +466,7 @@ class MacaulayResultant():
         reduced_matrix = matrix[:, reduced]
         keep = []
         for row in range(reduced_matrix.rows):
-            check = [ai in reduced_matrix[row, :] for ai in ais]
+            check = [ai in reduced_matrix[row, :].values() for ai in ais]
             if True not in check:
                 keep.append(row)
 

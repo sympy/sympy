@@ -175,10 +175,10 @@ def rubik(n):
                 cw(F)
             i += 1
             temp = getr(L, i)
-            setr(L, i, list(getu(D, i)))
-            setu(D, i, list(reversed(getl(R, i))))
-            setl(R, i, list(getd(U, i)))
-            setd(U, i, list(reversed(temp)))
+            setr(L, i, getu(D, i).flat())
+            setu(D, i, getl(R, i).flat()[::-1])
+            setl(R, i, getd(U, i).flat())
+            setd(U, i, temp.flat()[::-1])
             i -= 1
 
     def fccw(i):
@@ -236,7 +236,7 @@ def rubik(n):
         # add perm to the list of perms
         p = []
         for f in names:
-            p.extend(faces[f])
+            p.extend(faces[f].flat())
         if show:
             return p
         g.append(Permutation(p))

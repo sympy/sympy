@@ -367,9 +367,9 @@ class Quaternion(Expr):
                              "elements".format(length))
 
         if length == 3:
-            return Quaternion(0, *elements)
+            return Quaternion(0, *elements.flat())
         else:
-            return Quaternion(*elements)
+            return Quaternion(*elements.flat())
 
     @classmethod
     def from_euler(cls, angles, seq):

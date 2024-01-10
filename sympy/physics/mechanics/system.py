@@ -1009,7 +1009,7 @@ class System(_Methods):
         n_hc = self.holonomic_constraints.shape[0]
         n_nhc = self.nonholonomic_constraints.shape[0]
         n_q_dep, n_u_dep = self.q_dep.shape[0], self.u_dep.shape[0]
-        q_set, u_set = set(self.q), set(self.u)
+        q_set, u_set = set(self.q.flat()), set(self.u.flat())
         n_q, n_u = len(q_set), len(u_set)
         # Check number of holonomic constraints
         if n_q_dep != n_hc:

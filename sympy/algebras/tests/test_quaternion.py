@@ -401,7 +401,7 @@ def test_to_euler_options():
         angles1 = Matrix(q.to_euler(seq, True, True))
         angles2 = Matrix(q.to_euler(seq, False, False))
         angle_errors = simplify(angles1-angles2).evalf()
-        for angle_error in angle_errors:
+        for angle_error in angle_errors.values():
             # forcing angles to set {-pi, pi}
             angle_error = (angle_error + pi) % (2 * pi) - pi
             assert angle_error < 10e-7

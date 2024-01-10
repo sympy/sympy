@@ -1049,26 +1049,26 @@ def is_deriv_k(fa, fd, DE):
 
     u = u.to_Matrix()  # Poly to Expr
 
-    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
+    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u.flat()):
         # If the elements of u are not all constant
         # Note: See comment in constant_system
 
         # Also note: derivation(basic=True) calls cancel()
         return None
     else:
-        if not all(i.is_Rational for i in u):
+        if not all(i.is_Rational for i in u.values()):
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
             terms = ([DE.extargs[i] for i in DE.indices('exp')] +
                     [DE.T[i] for i in DE.indices('log')])
-            ans = list(zip(terms, u))
+            ans = list(zip(terms, u.flat()))
             result = Add(*[Mul(i, j) for i, j in ans])
             argterms = ([DE.T[i] for i in DE.indices('exp')] +
                     [DE.extargs[i] for i in DE.indices('log')])
             l = []
             ld = []
-            for i, j in zip(argterms, u):
+            for i, j in zip(argterms, u.flat()):
                 # We need to get around things like sqrt(x**2) != x
                 # and also sqrt(x**2 + 2*x + 1) != x + 1
                 # Issue 10798: i need not be a polynomial
@@ -1174,25 +1174,25 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
     u = u.to_Matrix()  # Poly to Expr
 
-    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
+    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u.values()):
         # If the elements of u are not all constant
         # Note: See comment in constant_system
 
         # Also note: derivation(basic=True) calls cancel()
         return None
     else:
-        if not all(i.is_Rational for i in u):
+        if not all(i.is_Rational for i in u.values()):
             # TODO: But maybe we can tell if they're not rational, like
             # log(2)/log(3). Also, there should be an option to continue
             # anyway, even if the result might potentially be wrong.
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
-            n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
+            n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u.flat()])
             u *= n
             terms = ([DE.T[i] for i in DE.indices('exp')] +
                     [DE.extargs[i] for i in DE.indices('log')])
-            ans = list(zip(terms, u))
+            ans = list(zip(terms, u.flat()))
             result = Mul(*[Pow(i, j) for i, j in ans])
 
             # exp(f) will be the same as result up to a multiplicative
@@ -1200,7 +1200,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             argterms = ([DE.extargs[i] for i in DE.indices('exp')] +
                     [DE.T[i] for i in DE.indices('log')])
             const = cancel(fa.as_expr()/fd.as_expr() -
-                Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
+                Add(*[Mul(i, j/n) for i, j in zip(argterms, u.flat())]))
 
             return (ans, result, n, const)
 

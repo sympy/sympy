@@ -725,6 +725,9 @@ class MatrixShaping(MatrixRequired):
         """
         return self._eval_todok()
 
+    def flat(self):
+        return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
+
     def tolist(self):
         """Return the Matrix as a nested Python list.
 

@@ -10,6 +10,7 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _validate_coordinates,
                                                _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.utilities.iterables import iterable
 
 __all__ = ['KanesMethod']
@@ -243,9 +244,13 @@ class KanesMethod(_Methods):
 
         # Initialize generalized coordinates
         q_dep = none_handler(q_dep)
-        if not iterable(q_ind):
+        if isinstance(q_ind, MatrixBase):
+            q_ind = q_ind.flat()
+        elif not iterable(q_ind):
             raise TypeError('Generalized coordinates must be an iterable.')
-        if not iterable(q_dep):
+        if isinstance(q_dep, MatrixBase):
+            q_dep = q_dep.flat()
+        elif not iterable(q_dep):
             raise TypeError('Dependent coordinates must be an iterable.')
         q_ind = Matrix(q_ind)
         self._qdep = q_dep
@@ -254,9 +259,13 @@ class KanesMethod(_Methods):
 
         # Initialize generalized speeds
         u_dep = none_handler(u_dep)
-        if not iterable(u_ind):
+        if isinstance(u_ind, MatrixBase):
+            u_ind = u_ind.flat()
+        elif not iterable(u_ind):
             raise TypeError('Generalized speeds must be an iterable.')
-        if not iterable(u_dep):
+        if isinstance(u_dep, MatrixBase):
+            u_dep = u_dep.flat()
+        elif not iterable(u_dep):
             raise TypeError('Dependent speeds must be an iterable.')
         u_ind = Matrix(u_ind)
         self._udep = u_dep

@@ -876,8 +876,8 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
         P = P + [map[pad]]*(k - r)
         m += 1
     rv = ''.join([A[c % N] for j in range(m) for c in
-        list(key*Matrix(k, 1, [P[i]
-        for i in range(k*j, k*(j + 1))]))])
+        (key*Matrix(k, 1, [P[i]
+        for i in range(k*j, k*(j + 1))])).flat()])
     return rv
 
 
@@ -945,8 +945,8 @@ def decipher_hill(msg, key, symbols=None):
         m += 1
     key_inv = key.inv_mod(N)
     rv = ''.join([A[p % N] for j in range(m) for p in
-        list(key_inv*Matrix(
-        k, 1, [C[i] for i in range(k*j, k*(j + 1))]))])
+        (key_inv*Matrix(
+        k, 1, [C[i] for i in range(k*j, k*(j + 1))])).flat()])
     return rv
 
 

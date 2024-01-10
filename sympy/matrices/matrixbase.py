@@ -123,9 +123,6 @@ class MatrixBase(Printable):
         where a and b are any combination of slices and integers."""
         raise NotImplementedError("Subclasses must implement this.")
 
-    def __iter__(self):
-        raise RuntimeError("Not iterable!")
-
     @property
     def shape(self):
         """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).

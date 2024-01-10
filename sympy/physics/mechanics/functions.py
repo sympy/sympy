@@ -7,6 +7,7 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.simplify.simplify import simplify
+from sympy.matrices.matrixbase import MatrixBase
 from sympy import Matrix, Mul, Derivative, sin, cos, tan, S
 from sympy.core.function import AppliedUndef
 from sympy.physics.mechanics.inertia import (inertia as _inertia,
@@ -671,10 +672,14 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
     # Convert input to iterables
     if coordinates is None:
         coordinates = []
+    elif isinstance(coordinates, MatrixBase):
+        coordinates = coordinates.flat()
     elif not iterable(coordinates):
         coordinates = [coordinates]
     if speeds is None:
         speeds = []
+    elif isinstance(speeds, MatrixBase):
+        speeds = speeds.flat()
     elif not iterable(speeds):
         speeds = [speeds]
     if u_auxiliary is None:

@@ -599,7 +599,7 @@ def _(expr, assumptions):
 
 def BM_elements(predicate, expr, assumptions):
     """ Block Matrix elements. """
-    return all(ask(predicate(b), assumptions) for b in expr.blocks)
+    return all(ask(predicate(b), assumptions) for b in expr.blocks.values())
 
 def MS_elements(predicate, expr, assumptions):
     """ Matrix Slice elements. """

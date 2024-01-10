@@ -1235,7 +1235,7 @@ class HolonomicFunction:
             if sol.is_zero_matrix is not True:
                 break
 
-        tau = list(taus)[0]
+        tau = taus[0, 0]
         sol = sol.subs(tau, 1)
         sol = _normalize(sol[0:], R, negative=False)
 

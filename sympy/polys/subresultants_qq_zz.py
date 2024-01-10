@@ -2192,7 +2192,7 @@ def rotate_r(L, k):
     Rotates right by k. L is a row of a matrix or a list.
 
     '''
-    ll = list(L)
+    ll = L if isinstance(L, list) else L.flat()
     if ll == []:
         return []
     for i in range(k):
@@ -2205,7 +2205,7 @@ def rotate_l(L, k):
     Rotates left by k. L is a row of a matrix or a list.
 
     '''
-    ll = list(L)
+    ll = L if isinstance(L, list) else L.flat()
     if ll == []:
         return []
     for i in range(k):

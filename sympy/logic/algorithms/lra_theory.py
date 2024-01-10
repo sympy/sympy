@@ -159,7 +159,7 @@ class LRASolver():
         self.run_checks = testing_mode
         self.s_subs = s_subs  # used only for test_lra_theory.test_random_problems
 
-        if any(not isinstance(a, Rational) for a in A):
+        if any(not isinstance(a, Rational) for a in A.values()):
             raise UnhandledInput("Non-rational numbers are not handled")
         if any(not isinstance(b.bound, Rational) for b in enc_to_boundary.values()):
             raise UnhandledInput("Non-rational numbers are not handled")
@@ -471,7 +471,7 @@ class LRASolver():
                                    for v in self.all_var):
             M = self.A
             X = Matrix([v.assign[0] for v in self.all_var])
-            assert all(abs(val) < 10 ** (-10) for val in M * X)
+            assert all(abs(val) < 10 ** (-10) for val in (M * X).values())
 
         return None
 
@@ -513,7 +513,7 @@ class LRASolver():
                                    for v in self.all_var):
             M = self.A
             X = Matrix([v.assign[0] for v in self.all_var])
-            assert all(abs(val) < 10 ** (-10) for val in M * X)
+            assert all(abs(val) < 10 ** (-10) for val in (M * X).values())
 
         return None
 
@@ -568,7 +568,7 @@ class LRASolver():
                 if all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
                                    for v in self.all_var):
                     X = Matrix([v.assign[0] for v in self.all_var])
-                    assert all(abs(val) < 10**(-10) for val in M*X)
+                    assert all(abs(val) < 10**(-10) for val in (M*X).values())
 
                 # check upper and lower match this format:
                 # x <= rat + delta iff x < rat

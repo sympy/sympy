@@ -345,6 +345,9 @@ class FreeModule(Module):
         >>> F.convert([1, 0])
         [1, 0]
         """
+        from sympy.matrices.matrixbase import MatrixBase
+        elem = elem if not isinstance(elem, MatrixBase) else elem.flat()
+
         if isinstance(elem, FreeModuleElement):
             if elem.module is self:
                 return elem

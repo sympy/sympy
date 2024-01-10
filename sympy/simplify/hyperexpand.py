@@ -741,7 +741,7 @@ class Formula:
 
     @property
     def closed_form(self):
-        return reduce(lambda s,m: s+m[0]*m[1], zip(self.C, self.B), S.Zero)
+        return self.C.dot(self.B)
 
     def find_instantiations(self, func):
         """
@@ -1886,7 +1886,7 @@ def build_hypergeometric_formula(func):
         l.reverse()
         res = [0]*n
         for k, c in enumerate(l):
-            for r, d in enumerate(C*derivs[k]):
+            for r, d in enumerate((C*derivs[k]).flat()):
                 res[r] += c*d
         for k, c in enumerate(res):
             M[n - 1, k] = -c/derivs[n - 1][0, n - 1]/poly.all_coeffs()[0]
@@ -1982,7 +1982,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
 
         if premult == 1:
             C = C.applyfunc(make_simp(z0))
-        r = reduce(lambda s,m: s+m[0]*m[1], zip(C, f.B.subs(f.z, z0)), S.Zero)*premult
+        r = C.dot(f.B.subs(f.z, z0)) * premult
         res = r.subs(z0, z)
         if rewrite:
             res = res.rewrite(rewrite)

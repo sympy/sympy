@@ -62,6 +62,9 @@ class RepMatrix(MatrixBase):
 
         return self._rep.unify_eq(other._rep)
 
+    def __iter__(self):
+        raise RuntimeError("Not iterable!")
+
     def to_DM(self, domain=None, **kwargs):
         """Convert to a :class:`~.DomainMatrix`.
 
