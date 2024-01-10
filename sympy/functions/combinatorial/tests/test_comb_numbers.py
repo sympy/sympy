@@ -16,7 +16,7 @@ from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, andre, partition, divisor_sigma, udivisor_sigma, mobius,
-    primenu, primeomega, totient, reduced_totient,
+    primenu, primeomega, totient, reduced_totient, primepi,
     motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
 from sympy.functions.combinatorial.numbers import _nT
@@ -819,6 +819,34 @@ def test_reduced_totient():
                12, 6, 36, 18, 12, 4, 40, 6, 42, 10, 12, 22, 46, 4, 42]
     for n, val in enumerate(A002322, 1):
         assert reduced_totient(n) == val
+
+
+def test_primepi():
+    # error
+    z = Symbol('z', real=False)
+    raises(TypeError, lambda: primepi(z))
+    raises(TypeError, lambda: primepi(I))
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert primepi(n).is_integer is True
+    assert primepi(n).is_nonnegative is True
+
+    # infinity
+    assert primepi(oo) == oo
+    assert primepi(-oo) == 0
+
+    # symbol
+    x = Symbol('x')
+    assert isinstance(primepi(x), primepi)
+
+    # Integer
+    assert primepi(0) == 0
+    A000720 = [0, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 8,
+               8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 11, 11, 11, 11, 11, 11,
+               12, 12, 12, 12, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15]
+    for n, val in enumerate(A000720, 1):
+        assert primepi(n) == primepi(n + 0.5) == val
 
 
 def test__nT():
