@@ -364,7 +364,7 @@ class Vector(BasisDependent):
 
             # creating a zipped object for vector components
             zipped_obj = list(zip(self.components, other.components))
-        
+
             # cheking vector components equal or not
             V_C = all(Expr.equals(i, j) for i, j in zipped_obj)
 
@@ -375,10 +375,10 @@ class Vector(BasisDependent):
             # expressing self in coordinate system, N.
             N = self_coord.locate_new('N', self)
             self = express(N.position_wrt(self_coord), N)
-        
+
             N = other_coord.locate_new('N', other)
             other = express(N.position_wrt(other_coord), N)
-        
+
             # updating zipped object for scaler components
             zipped_obj = list(zip(self.components, other.components))
 
@@ -389,7 +389,7 @@ class Vector(BasisDependent):
 
         elif self == Vector.zero and other == Vector.zero:
             return True
- 
+
         else:
             return False
 
