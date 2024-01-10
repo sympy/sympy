@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import pi, Derivative, Matrix
+from sympy import pi, Derivative, Matrix, MatrixBase
 from sympy.core.function import AppliedUndef
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.functions import _validate_coordinates
@@ -534,7 +534,7 @@ class Joint(ABC):
         generated_coordinates = []
         if coordinates is None:
             coordinates = []
-        elif not iterable(coordinates):
+        elif not (isinstance(coordinates, MatrixBase) or iterable(coordinates)):
             coordinates = [coordinates]
         if not (len(coordinates) == 0 or len(coordinates) == n_coords):
             raise ValueError(f'Expected {n_coords} {name}s, instead got '
@@ -1976,7 +1976,7 @@ class SphericalJoint(Joint):
     def _set_angular_velocity(self):
         t = dynamicsymbols._t
         vel = self.child_interframe.ang_vel_in(self.parent_interframe).xreplace(
-            {q.diff(t): u for q, u in zip(self.coordinates, self.speeds)}
+            {q.diff(t): u for q, u in zip(self.coordinates.flat(), self.speeds.flat())}
         )
         self.child_interframe.set_ang_vel(self.parent_interframe, vel)
 

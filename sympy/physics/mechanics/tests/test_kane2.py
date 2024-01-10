@@ -87,7 +87,7 @@ def test_aux_dep():
     v_o_n_qd = O.pos_from(P).diff(t, A) + cross(A.ang_vel_in(N), O.pos_from(P))
     kindiffs = Matrix([dot(w_c_n_qd - C.ang_vel_in(N), uv) for uv in B] +
                       [dot(v_o_n_qd - O.vel(N), A.z)])
-    qd_kd = solve(kindiffs, qd) # noqa:F841
+    qd_kd = solve(kindiffs.values(), qd) # noqa:F841
 
     # Values of generalized speeds during a steady turn for later substitution
     # into the Fr_star_steady.

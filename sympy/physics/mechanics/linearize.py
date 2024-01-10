@@ -105,9 +105,9 @@ class Linearizer:
         # If the user doesn't actually use generalized variables, and the
         # qd and u vectors have any intersecting variables, this can cause
         # problems. We'll fix this with some hackery, and Dummy variables
-        dup_vars = set(self._qd).intersection(self.u)
+        dup_vars = set(self._qd.values()).intersection(self.u.values())
         self._qd_dup = Matrix([var if var not in dup_vars else Dummy() for var
-                               in self._qd])
+                               in self._qd.flat()])
 
         # Derive dimesion terms
         l = len(self.f_c)
@@ -461,9 +461,9 @@ def permutation_matrix(orig_vec, per_vec):
         Permutation matrix such that orig_vec == (p_matrix * per_vec).
     """
     if not isinstance(orig_vec, (list, tuple)):
-        orig_vec = flatten(orig_vec)
+        orig_vec = flatten(orig_vec.flat())
     if not isinstance(per_vec, (list, tuple)):
-        per_vec = flatten(per_vec)
+        per_vec = flatten(per_vec.flat())
     if set(orig_vec) != set(per_vec):
         raise ValueError("orig_vec and per_vec must be the same length, "
                          "and contain the same symbols.")

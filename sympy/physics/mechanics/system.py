@@ -3,6 +3,7 @@ from functools import wraps
 from sympy.core.basic import Basic
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.matrices.dense import Matrix, eye, zeros
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.core.containers import OrderedSet
 from sympy.physics.mechanics.actuator import ActuatorBase
 from sympy.physics.mechanics.body_base import BodyBase
@@ -732,12 +733,12 @@ class System(_Methods):
         self._joints.extend(joints)
         coordinates, speeds, kdes, bodies = (OrderedSet() for _ in range(4))
         for joint in joints:
-            coordinates.update(joint.coordinates)
-            speeds.update(joint.speeds)
-            kdes.update(joint.kdes)
+            coordinates.update(joint.coordinates.values())
+            speeds.update(joint.speeds.values())
+            kdes.update(joint.kdes.values())
             bodies.update((joint.parent, joint.child))
-        coordinates = coordinates.difference(self.q)
-        speeds = speeds.difference(self.u)
+        coordinates = coordinates.difference(self.q.values())
+        speeds = speeds.difference(self.u.flat())
         kdes = kdes.difference(self.kdes[:] + (-self.kdes)[:])
         bodies = bodies.difference(self.bodies)
         self.add_coordinates(*tuple(coordinates))
@@ -1019,7 +1020,7 @@ class System(_Methods):
         # Check if all joint coordinates and speeds are present
         missing_q = set()
         for joint in self.joints:
-            missing_q.update(set(joint.coordinates).difference(q_set))
+            missing_q.update(set(joint.coordinates.values()).difference(q_set))
         if missing_q:
             msgs.append(filldedent(f"""
             The generalized coordinates {missing_q} used in joints are not added
@@ -1029,8 +1030,8 @@ class System(_Methods):
             n_kdes = len(self.kdes)
             missing_kdes, missing_u = set(), set()
             for joint in self.joints:
-                missing_u.update(set(joint.speeds).difference(u_set))
-                missing_kdes.update(set(joint.kdes).difference(
+                missing_u.update(set(joint.speeds.values()).difference(u_set))
+                missing_kdes.update(set(joint.kdes.values()).difference(
                     self.kdes[:] + (-self.kdes)[:]))
             if missing_u:
                 msgs.append(filldedent(f"""
@@ -1053,10 +1054,10 @@ class System(_Methods):
                 The number of generalized speeds {n_u} should be equal to the
                 number of kinematic differential equations {n_kdes}."""))
         elif issubclass(eom_method, LagrangesMethod):
-            not_qdots = set(self.u).difference(self.q.diff(dynamicsymbols._t))
+            not_qdots = set(self.u.values()).difference(self.q.diff(dynamicsymbols._t).values())
             for joint in self.joints:
                 not_qdots.update(set(
-                    joint.speeds).difference(self.q.diff(dynamicsymbols._t)))
+                    joint.speeds.values()).difference(self.q.diff(dynamicsymbols._t).values()))
             if not_qdots:
                 msgs.append(filldedent(f"""
                 The generalized speeds {not_qdots} are not supported by this
@@ -1077,6 +1078,8 @@ class System(_Methods):
                                    ('bodies', self.bodies),
                                    ('joints', self.joints)]
             for name, lst in duplicates_to_check:
+                if isinstance(lst, MatrixBase):
+                    lst = lst.flat()
                 seen = set()
                 duplicates = {x for x in lst if x in seen or seen.add(x)}
                 if duplicates:
@@ -1489,7 +1492,7 @@ class SymbolicSystem:
         for expr in eom_expressions:
             functions_of_time = functions_of_time.union(
                 find_dynamicsymbols(expr))
-        functions_of_time = functions_of_time.union(self._states)
+        functions_of_time = functions_of_time.union(self._states.values())
 
         return tuple(functions_of_time)
 

@@ -160,7 +160,7 @@ class JointsMethod(_Methods):
     def _generate_q(self):
         q_ind = []
         for joint in self._joints:
-            for coordinate in joint.coordinates:
+            for coordinate in joint.coordinates.flat():
                 if coordinate in q_ind:
                     raise ValueError('Coordinates of joints should be unique.')
                 q_ind.append(coordinate)
@@ -169,7 +169,7 @@ class JointsMethod(_Methods):
     def _generate_u(self):
         u_ind = []
         for joint in self._joints:
-            for speed in joint.speeds:
+            for speed in joint.speeds.flat():
                 if speed in u_ind:
                     raise ValueError('Speeds of joints should be unique.')
                 u_ind.append(speed)

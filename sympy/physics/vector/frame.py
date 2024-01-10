@@ -888,6 +888,8 @@ class ReferenceFrame:
             List of DCM around the given axis with corresponding magnitude.
 
         """
+        if isinstance(angles, MatrixBase):
+            angles = angles.flat()
         amounts = list(angles)
         for i, v in enumerate(amounts):
             if not isinstance(v, Vector):
@@ -1000,8 +1002,8 @@ class ReferenceFrame:
         rot_vecs = [zeros(3, 1) for _ in range(3)]
         for i, order in enumerate(rot_order):
             rot_vecs[i][order - 1] = amounts[i].diff(dynamicsymbols._t)
-        u1, u2, u3 = rot_vecs[2] + rot_matrices[2].T * (
-            rot_vecs[1] + rot_matrices[1].T * rot_vecs[0])
+        u1, u2, u3 = (rot_vecs[2] + rot_matrices[2].T * (
+            rot_vecs[1] + rot_matrices[1].T * rot_vecs[0])).flat()
         wvec = u1 * self.x + u2 * self.y + u3 * self.z  # There is a double -
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
@@ -1098,8 +1100,8 @@ class ReferenceFrame:
         rot_vecs = [zeros(3, 1) for _ in range(3)]
         for i, order in enumerate(rot_order):
             rot_vecs[i][order - 1] = amounts[i].diff(dynamicsymbols._t)
-        u1, u2, u3 = rot_vecs[0] + rot_matrices[0].T * (
-            rot_vecs[1] + rot_matrices[1].T * rot_vecs[2])
+        u1, u2, u3 = (rot_vecs[0] + rot_matrices[0].T * (
+            rot_vecs[1] + rot_matrices[1].T * rot_vecs[2])).flat()
         wvec = u1 * self.x + u2 * self.y + u3 * self.z  # There is a double -
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})

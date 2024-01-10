@@ -259,13 +259,9 @@ class KanesMethod(_Methods):
 
         # Initialize generalized speeds
         u_dep = none_handler(u_dep)
-        if isinstance(u_ind, MatrixBase):
-            u_ind = u_ind.flat()
-        elif not iterable(u_ind):
+        if not isinstance(u_ind, MatrixBase) and not iterable(u_ind):
             raise TypeError('Generalized speeds must be an iterable.')
-        if isinstance(u_dep, MatrixBase):
-            u_dep = u_dep.flat()
-        elif not iterable(u_dep):
+        if not isinstance(u_dep, MatrixBase) and not iterable(u_dep):
             raise TypeError('Dependent speeds must be an iterable.')
         u_ind = Matrix(u_ind)
         self._udep = u_dep
@@ -299,8 +295,8 @@ class KanesMethod(_Methods):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and acceleration constraints.')
         if vel:
-            u_zero = {i: 0 for i in self.u}
-            udot_zero = {i: 0 for i in self._udot}
+            u_zero = {i: 0 for i in self.u.values()}
+            udot_zero = {i: 0 for i in self._udot.values()}
 
             # When calling kanes_equations, another class instance will be
             # created if auxiliary u's are present. In this case, the
@@ -362,9 +358,9 @@ class KanesMethod(_Methods):
 
             kdeqs = Matrix(kdeqs)
 
-            u_zero = {ui: 0 for ui in u}
-            uaux_zero = {uai: 0 for uai in self._uaux}
-            qdot_zero = {qdi: 0 for qdi in qdot}
+            u_zero = {ui: 0 for ui in u.flat()}
+            uaux_zero = {uai: 0 for uai in self._uaux.flat()}
+            qdot_zero = {qdi: 0 for qdi in qdot.flat()}
 
             # Extract the linear coefficient matrices as per the following
             # equation:
@@ -400,7 +396,7 @@ class KanesMethod(_Methods):
             # implicit form.
             f_k_explicit = linear_solver(k_kqdot, f_k)
             k_ku_explicit = linear_solver(k_kqdot, k_ku)
-            self._qdot_u_map = dict(zip(qdot, -(k_ku_explicit*u + f_k_explicit)))
+            self._qdot_u_map = dict(zip(qdot.flat(), (-(k_ku_explicit*u + f_k_explicit)).flat()))
 
             self._f_k = f_k_explicit.xreplace(uaux_zero)
             self._k_ku = k_ku_explicit.xreplace(uaux_zero)
@@ -453,9 +449,9 @@ class KanesMethod(_Methods):
         t = dynamicsymbols._t
         N = self._inertial
         # Dicts setting things to zero
-        udot_zero = {i: 0 for i in self._udot}
-        uaux_zero = {i: 0 for i in self._uaux}
-        uauxdot = [diff(i, t) for i in self._uaux]
+        udot_zero = {i: 0 for i in self._udot.flat()}
+        uaux_zero = {i: 0 for i in self._uaux.flat()}
+        uauxdot = [diff(i, t) for i in self._uaux.flat()]
         uauxdot_zero = {i: 0 for i in uauxdot}
         # Dictionary of q' and q'' to u and u'
         q_ddot_u_map = {k.diff(t): v.diff(t).xreplace(
@@ -585,10 +581,10 @@ class KanesMethod(_Methods):
         else:
             f_a = Matrix()
         # Dicts to sub to zero, for splitting up expressions
-        u_zero = {i: 0 for i in self.u}
-        ud_zero = {i: 0 for i in self._udot}
-        qd_zero = {i: 0 for i in self._qdot}
-        qd_u_zero = {i: 0 for i in Matrix([self._qdot, self.u])}
+        u_zero = {i: 0 for i in self.u.values()}
+        ud_zero = {i: 0 for i in self._udot.values()}
+        qd_zero = {i: 0 for i in self._qdot.values()}
+        qd_u_zero = {i: 0 for i in Matrix([self._qdot, self.u]).values()}
         # Break the kinematic differential eqs apart into f_0 and f_1
         f_0 = msubs(self._f_k, u_zero) + self._k_kqdot*Matrix(self._qdot)
         f_1 = msubs(self._f_k, qd_zero) + self._k_ku*Matrix(self.u)
@@ -614,11 +610,11 @@ class KanesMethod(_Methods):
         # Form dictionary to set auxiliary speeds & their derivatives to 0.
         uaux = self._uaux
         uauxdot = uaux.diff(dynamicsymbols._t)
-        uaux_zero = {i: 0 for i in Matrix([uaux, uauxdot])}
+        uaux_zero = {i: 0 for i in Matrix([uaux, uauxdot]).values()}
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        sym_list = set(Matrix([q, self._qdot, u, self._udot, uaux, uauxdot]))
+        sym_list = set(Matrix([q, self._qdot, u, self._udot, uaux, uauxdot]).values())
         if any(find_dynamicsymbols(i, sym_list) for i in [self._k_kqdot,
                 self._k_ku, self._f_k, self._k_dnh, self._f_dnh, self._k_d]):
             raise ValueError('Cannot have dynamicsymbols outside dynamic \
@@ -772,7 +768,7 @@ class KanesMethod(_Methods):
         """
         rhs = zeros(len(self.q) + len(self.u), 1)
         kdes = self.kindiffdict()
-        for i, q_i in enumerate(self.q):
+        for i, q_i in enumerate(self.q.flat()):
             rhs[i] = kdes[q_i.diff()]
 
         if inv_method is None:

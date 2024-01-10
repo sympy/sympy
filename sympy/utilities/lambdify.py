@@ -1324,11 +1324,12 @@ def _imp_namespace(expr, namespace=None):
     ['f', 'g']
     """
     # Delayed import to avoid circular imports
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.core.function import FunctionClass
     if namespace is None:
         namespace = {}
     # tuples, lists, dicts are valid expressions
-    if is_sequence(expr):
+    if not isinstance(expr, MatrixBase) and is_sequence(expr):
         for arg in expr:
             _imp_namespace(arg, namespace)
         return namespace

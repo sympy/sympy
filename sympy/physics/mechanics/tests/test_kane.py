@@ -476,8 +476,8 @@ def test_implicit_kinematics():
 
     # Expecting implicit form to be less than 5% of the flops
     n_ops_implicit = sum(
-        [x.count_ops() for x in KM.forcing_full] +
-        [x.count_ops() for x in KM.mass_matrix_full]
+        [x.count_ops() for x in KM.forcing_full.flat()] +
+        [x.count_ops() for x in KM.mass_matrix_full.flat()]
     )
     # Save implicit kinematic matrices to use later
     mass_matrix_kin_implicit = KM.mass_matrix_kin
@@ -485,8 +485,8 @@ def test_implicit_kinematics():
 
     KM.explicit_kinematics = True
     n_ops_explicit = sum(
-        [x.count_ops() for x in KM.forcing_full] +
-        [x.count_ops() for x in KM.mass_matrix_full]
+        [x.count_ops() for x in KM.forcing_full.values()] +
+        [x.count_ops() for x in KM.mass_matrix_full.values()]
     )
     forcing_kin_explicit = KM.forcing_kin
 

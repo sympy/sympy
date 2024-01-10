@@ -1,4 +1,4 @@
-from sympy import diff, zeros, Matrix, eye, sympify
+from sympy import diff, zeros, Matrix, eye, sympify, MatrixBase
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.method import _Methods
@@ -157,6 +157,8 @@ class LagrangesMethod(_Methods):
         self._term4 = Matrix()
 
         # Creating the qs, qdots and qdoubledots
+        if isinstance(qs, MatrixBase):
+            qs = qs.flat()
         if not iterable(qs):
             raise TypeError('Generalized coordinates must be an iterable')
         self._q = Matrix(qs)
@@ -179,7 +181,7 @@ class LagrangesMethod(_Methods):
         """
 
         qds = self._qdots
-        qdd_zero = {i: 0 for i in self._qdoubledots}
+        qdd_zero = {i: 0 for i in self._qdoubledots.values()}
         n = len(self.q)
 
         # Internally we represent the EOM as four terms:
@@ -212,7 +214,7 @@ class LagrangesMethod(_Methods):
         if self.forcelist:
             N = self.inertial
             self._term4 = zeros(n, 1)
-            for i, qd in enumerate(qds):
+            for i, qd in enumerate(qds.flat()):
                 flist = zip(*_f_list_parser(self.forcelist, N))
                 self._term4[i] = sum(v.diff(qd, N) & f for (v, f) in flist)
         else:
@@ -351,16 +353,16 @@ class LagrangesMethod(_Methods):
         if len(q_d) != len(f_c) or len(u_d) != len(f_v):
             raise ValueError(("Must supply {:} dependent coordinates, and " +
                     "{:} dependent speeds").format(len(f_c), len(f_v)))
-        if set(Matrix([q_i, q_d])) != set(q):
+        if set(Matrix([q_i, q_d]).values()) != set(q.values()):
             raise ValueError("Must partition q into q_ind and q_dep, with " +
                     "no extra or missing symbols.")
-        if set(Matrix([u_i, u_d])) != set(u):
+        if set(Matrix([u_i, u_d]).values()) != set(u.values()):
             raise ValueError("Must partition qd into qd_ind and qd_dep, " +
                     "with no extra or missing symbols.")
 
         # Find all other dynamic symbols, forming the forcing vector r.
         # Sort r to make it canonical.
-        insyms = set(Matrix([q, u, ud, lams]))
+        insyms = set(Matrix([q, u, ud, lams]).values())
         r = list(find_dynamicsymbols(f_3, insyms))
         r.sort(key=default_sort_key)
         # Check for any derivatives of variables in r that are also found in r.
@@ -466,7 +468,7 @@ class LagrangesMethod(_Methods):
         # Solve for the multipliers
         sol_list = mass_matrix.LUsolve(-force_matrix)[-k:]
         if sol_type == 'dict':
-            return dict(zip(self.lam_vec, sol_list))
+            return dict(zip(self.lam_vec.flat(), sol_list))
         elif sol_type == 'Matrix':
             return Matrix(sol_list)
         else:

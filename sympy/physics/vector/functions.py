@@ -2,6 +2,7 @@ from functools import reduce
 
 from sympy import (sympify, diff, sin, cos, Matrix, symbols,
                                 Function, S, Symbol)
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.integrals.integrals import integrate
 from sympy.simplify.trigsimp import trigsimp
 from .vector import Vector, _check_vector
@@ -568,6 +569,9 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
 
     if not iterable(vel_vecs):
         raise TypeError('Velocity vectors must be contained in an iterable.')
+
+    if isinstance(gen_speeds, MatrixBase):
+        gen_speeds = gen_speeds.flat()
 
     if not iterable(gen_speeds):
         raise TypeError('Generalized speeds must be contained in an iterable')

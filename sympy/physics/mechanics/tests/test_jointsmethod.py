@@ -190,7 +190,7 @@ def test_four_bar_linkage_with_manual_constraints():
     method = JointsMethod(link1, joint1, joint2, joint3)
 
     t = dynamicsymbols._t
-    qdots = solve(method.kdes, [q1.diff(t), q2.diff(t), q3.diff(t)])
+    qdots = solve(method.kdes.values(), [q1.diff(t), q2.diff(t), q3.diff(t)])
     fhd = fh.diff(t).subs(qdots)
 
     kane = KanesMethod(method.frame, q_ind=[q1], u_ind=[u1],

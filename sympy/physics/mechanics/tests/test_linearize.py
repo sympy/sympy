@@ -202,7 +202,7 @@ def test_linearize_pendulum_kane_nonminimal():
     # Calculate the kinematic differential equations
     kde = Matrix([q1d - u1,
                   q2d - u2])
-    dq_dict = solve(kde, [q1d, q2d])
+    dq_dict = solve(kde.values(), [q1d, q2d])
 
     # Set velocity of point P
     P.set_vel(N, P.pos_from(pN).dt(N).subs(dq_dict))
