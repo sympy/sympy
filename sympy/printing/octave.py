@@ -333,8 +333,8 @@ class OctaveCodePrinter(CodePrinter):
         elif (A.rows, A.cols) == (1, 1):
             # Octave does not distinguish between scalars and 1x1 matrices
             return self._print(A[0, 0])
-        return "[%s]" % "; ".join(" ".join([self._print(a) for a in A[r, :]])
-                                  for r in range(A.rows))
+        return "[%s]" % "; ".join(" ".join([self._print(a) for a in row])
+                                  for row in A.tolist())
 
 
     def _print_SparseRepMatrix(self, A):

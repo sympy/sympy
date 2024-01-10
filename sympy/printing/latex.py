@@ -1684,8 +1684,8 @@ class LatexPrinter(Printer):
     def _print_matrix_contents(self, expr):
         lines = []
 
-        for line in range(expr.rows):  # horrible, should be 'rows'
-            lines.append(" & ".join([self._print(i) for i in expr[line, :]]))
+        for row in expr.tolist():
+            lines.append(" & ".join([self._print(i) for i in row]))
 
         mat_str = self._settings['mat_str']
         if mat_str is None:

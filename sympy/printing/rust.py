@@ -438,7 +438,7 @@ class RustCodePrinter(CodePrinter):
 
     def _print_MatrixBase(self, A):
         if A.cols == 1:
-            return "[%s]" % ", ".join(self._print(a) for a in A)
+            return "[%s]" % ", ".join(self._print(a) for a in A.flat())
         else:
             raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
 

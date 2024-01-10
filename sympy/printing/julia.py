@@ -338,7 +338,7 @@ class JuliaCodePrinter(CodePrinter):
             return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
         elif A.cols == 1:
             # note .table would unnecessarily equispace the rows
-            return "[%s]" % ", ".join([self._print(a) for a in A])
+            return "[%s]" % ", ".join([self._print(a) for a in A.flat()])
         return "[%s]" % A.table(self, rowstart='', rowend='',
                                 rowsep=';\n', colsep=' ')
 
