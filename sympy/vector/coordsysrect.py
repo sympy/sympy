@@ -442,7 +442,7 @@ class CoordSys3D(Basic):
             Transformation equations
 
         """
-        return tuple(matrix * Matrix(equations))
+        return tuple((matrix * Matrix(equations)).flat())
 
     @property
     def origin(self):
@@ -577,7 +577,7 @@ class CoordSys3D(Basic):
 
         """
 
-        origin_coords = tuple(self.position_wrt(other).to_matrix(other))
+        origin_coords = tuple(self.position_wrt(other).to_matrix(other).flat())
         relocated_scalars = [x - origin_coords[i]
                              for i, x in enumerate(other.base_scalars())]
 

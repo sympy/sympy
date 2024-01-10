@@ -16,6 +16,7 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions import factorial
 from sympy.matrices import ImmutableDenseMatrix as Matrix
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.solvers import solve
 
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
@@ -424,6 +425,8 @@ That is, replace {s} with Symbol({s!r}, real=True).
 
     @staticmethod
     def _solve_inverse(sym1, sym2, exprs, sys1_name, sys2_name):
+        if isinstance(exprs, MatrixBase):
+            exprs = exprs.flat()
         ret = solve(
             [t[0] - t[1] for t in zip(sym2, exprs)],
             list(sym1), dict=True)
@@ -592,6 +595,8 @@ That is, replace {s} with Symbol({s!r}, real=True).
             coordinates = self.symbols
         if self != sys:
             transf = self.transformation(sys)
+            if isinstance(coordinates, MatrixBase):
+                coordinates = coordinates.flat()
             coordinates = transf(*coordinates)
         else:
             coordinates = Matrix(coordinates)
@@ -612,7 +617,7 @@ That is, replace {s} with Symbol({s!r}, real=True).
         if self != to_sys:
             with ignore_warnings(SymPyDeprecationWarning):
                 transf = self.transforms[to_sys]
-            coords = transf[1].subs(list(zip(transf[0], coords)))
+            coords = transf[1].subs(list(zip(transf[0].flat(), coords.flat())))
         return coords
 
     def jacobian(self, sys, coordinates=None):
@@ -1894,7 +1899,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
-    reps = dict(zip(args, d_args))
+    reps = dict(zip(args, d_args.flat()))
     d_exprs = Matrix([_sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
 
@@ -2127,7 +2132,7 @@ def metric_to_Christoffel_2nd(expr):
     #matrix = twoform_to_matrix(expr).inv()
     matrix = twoform_to_matrix(expr)
     s_fields = set()
-    for e in matrix:
+    for e in matrix.values():
         s_fields.update(e.atoms(BaseScalarField))
     s_fields = list(s_fields)
     dums = coord_sys.symbols

@@ -91,8 +91,8 @@ def test_dyadic():
                                       [c * d, c * e, c * f]])
     d5 = v1.outer(v1)
     C = A.orient_new_axis('C', q, A.i)
-    for expected, actual in zip(C.rotation_matrix(A) * d5.to_matrix(A) * \
-                               C.rotation_matrix(A).T, d5.to_matrix(C)):
+    for expected, actual in zip((C.rotation_matrix(A) * d5.to_matrix(A) * \
+                               C.rotation_matrix(A).T).flat(), d5.to_matrix(C).flat()):
         assert (expected - actual).simplify() == 0
 
 

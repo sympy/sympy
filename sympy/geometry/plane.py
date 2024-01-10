@@ -63,7 +63,7 @@ class Plane(GeometryEntity):
                 raise ValueError('Enter three non-collinear points')
             a = p1.direction_ratio(p2)
             b = p1.direction_ratio(p3)
-            normal_vector = tuple(Matrix(a).cross(Matrix(b)))
+            normal_vector = tuple(Matrix(a).cross(Matrix(b)).flat())
         else:
             a = kwargs.pop('normal_vector', a)
             evaluate = kwargs.get('evaluate', True)
