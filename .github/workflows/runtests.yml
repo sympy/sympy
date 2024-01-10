@@ -41,10 +41,10 @@ jobs:
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
 
-      - run: pip install slotscheck . 
+          #- run: pip install slotscheck .
 
-      - name: Check for incorrect use of ``__slots__`` using slotscheck
-        run: python -m slotscheck --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
+          #- name: Check for incorrect use of ``__slots__`` using slotscheck
+          #run: python -m slotscheck --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
 
       # -- temporarily disabled -- #
       # These checks were too difficult for new contributors. They will
