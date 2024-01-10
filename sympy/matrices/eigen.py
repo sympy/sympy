@@ -158,7 +158,7 @@ def _eigenvals(
 
     if M._rep.domain not in (ZZ, QQ):
         # Skip this check for ZZ/QQ because it can be slow
-        if all(x.is_number for x in M) and M.has(Float):
+        if all(x.is_number for x in M.values()) and M.has(Float):
             return _eigenvals_mpmath(M, multiple=multiple)
 
     if rational:
@@ -406,7 +406,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
 
     has_floats = M.has(Float)
     if has_floats:
-        if all(x.is_number for x in M):
+        if all(x.is_number for x in M.flat()):
             return _eigenvects_mpmath(M)
         from sympy.simplify import nsimplify
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
@@ -419,7 +419,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
         # if the primitive flag is set, get rid of any common
         # integer denominators
         def denom_clean(l):
-            return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
+            return [(v / gcd(v.flat())).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
 
@@ -497,10 +497,10 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     if not M.is_square:
         return False
 
-    if all(e.is_real for e in M) and M.is_symmetric():
+    if all(e.is_real for e in M.values()) and M.is_symmetric():
         return True
 
-    if all(e.is_complex for e in M) and M.is_hermitian:
+    if all(e.is_complex for e in M.values()) and M.is_hermitian:
         return True
 
     return _is_diagonalizable_with_eigen(M, reals_only=reals_only)[0]
@@ -691,7 +691,12 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
         raise MatrixError("Matrix is not diagonalizable")
 
     if sort:
-        eigenvecs = sorted(eigenvecs, key=default_sort_key)
+        def key(r):
+            k1 = default_sort_key(r[0])
+            k2 = default_sort_key(r[1])
+            k3 = tuple(default_sort_key(tuple((i.flat()))) for i in r[2])
+            return (k1, k2, k3)
+        eigenvecs = sorted(eigenvecs, key=key)
 
     p_cols, diag = [], []
 

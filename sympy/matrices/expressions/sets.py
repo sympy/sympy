@@ -52,7 +52,7 @@ class MatrixSet(Set):
             if are_symbolic:
                 return None
             return False
-        return fuzzy_and(self.set.contains(x) for x in other)
+        return fuzzy_and(self.set.contains(x) for x in other.flat())
 
     @classmethod
     def _check_dim(cls, dim):

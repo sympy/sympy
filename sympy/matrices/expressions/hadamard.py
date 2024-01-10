@@ -102,9 +102,15 @@ class HadamardProduct(MatrixExpr):
         from sympy.matrices.matrixbase import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix
 
-        explicit = [i for i in expr.args if isinstance(i, MatrixBase)]
+        explicit = []
+        remainder = []
+        for i in expr.args:
+            if isinstance(i, MatrixBase):
+                explicit.append(i.flat())
+            else:
+                remainder.append(i)
+
         if explicit:
-            remainder = [i for i in expr.args if i not in explicit]
             expl_mat = ImmutableMatrix([
                 Mul.fromiter(i) for i in zip(*explicit)
             ]).reshape(*self.shape)

@@ -131,10 +131,10 @@ def test_echelon_form():
 
     def verify_row_null_space(mat, rows, nulls):
         for v in nulls:
-            assert all(t.is_zero for t in a_echelon*v)
+            assert all(t.is_zero for t in (a_echelon*v).values())
         for v in rows:
-            if not all(t.is_zero for t in v):
-                assert not all(t.is_zero for t in a_echelon*v.transpose())
+            if not all(t.is_zero for t in v.values()):
+                assert not all(t.is_zero for t in (a_echelon*v.transpose()).values())
 
     a = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
     nulls = [Matrix([
@@ -263,7 +263,7 @@ def test_rref():
 
     x = Symbol('x')
     a = Matrix(2, 3, [x, 1, 1, sqrt(x), x, 1])
-    for i, j in zip(a.rref(pivots=False),
+    for i, j in zip(a.rref(pivots=False).flat(),
             [1, 0, sqrt(x)*(-x + 1)/(-x**Rational(5, 2) + x),
                 0, 1, 1/(sqrt(x) + x + 1)]):
         assert simplify(i - j).is_zero

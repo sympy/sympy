@@ -3,6 +3,7 @@ from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int, filldedent
 
+from .matrixbase import MatrixBase
 from .sparse import MutableSparseMatrix as SparseMatrix
 
 
@@ -235,13 +236,13 @@ def banded(*args, **kwargs):
             extra = 0
             for i, vi in enumerate(v):
                 i += extra
-                if is_sequence(vi):
+                if isinstance(vi, MatrixBase) or is_sequence(vi):
                     vi = SparseMatrix(vi)
                     smat[r + i, c + i] = vi
                     extra += min(vi.shape) - 1
                 else:
                     smat[r + i, c + i] = vi
-        elif is_sequence(v):
+        elif isinstance(v, MatrixBase) or is_sequence(v):
             v = SparseMatrix(v)
             rv, cv = v.shape
             if rows and cols:

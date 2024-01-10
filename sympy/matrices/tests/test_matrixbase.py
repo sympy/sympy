@@ -37,10 +37,10 @@ def test__MinimalMatrix():
     assert x.cols == 3
     assert x[2] == 3
     assert x[1, 1] == 5
-    assert list(x) == [1, 2, 3, 4, 5, 6]
-    assert list(x[1, :]) == [4, 5, 6]
-    assert list(x[:, 1]) == [2, 5]
-    assert list(x[:, :]) == list(x)
+    assert x.flat() == [1, 2, 3, 4, 5, 6]
+    assert x[1, :].flat() == [4, 5, 6]
+    assert x[:, 1].flat() == [2, 5]
+    assert x[:, :].flat() == x.flat()
     assert x[:, :] == x
     assert Matrix(x) == x
     assert Matrix([[1, 2, 3], [4, 5, 6]]) == x
@@ -236,9 +236,9 @@ def test_is_anti_symmetric():
     assert m.is_anti_symmetric(simplify=False) is False
     assert m.is_anti_symmetric(simplify=lambda x: x) is False
 
-    m = Matrix(3, 3, [x.expand() for x in m])
+    m = Matrix(3, 3, [x.expand() for x in m.flat()])
     assert m.is_anti_symmetric(simplify=False) is True
-    m = Matrix(3, 3, [x.expand() for x in [S.One] + list(m)[1:]])
+    m = Matrix(3, 3, [x.expand() for x in [S.One] + m.flat()[1:]])
     assert m.is_anti_symmetric() is False
 
 
@@ -538,23 +538,23 @@ def test_div():
 
 
 def test_eye():
-    assert list(Matrix.eye(2, 2)) == [1, 0, 0, 1]
-    assert list(Matrix.eye(2)) == [1, 0, 0, 1]
+    assert Matrix.eye(2, 2).flat() == [1, 0, 0, 1]
+    assert Matrix.eye(2).flat() == [1, 0, 0, 1]
     assert type(Matrix.eye(2)) == Matrix
     assert type(Matrix.eye(2, cls=Matrix)) == Matrix
 
 
 def test_ones():
-    assert list(Matrix.ones(2, 2)) == [1, 1, 1, 1]
-    assert list(Matrix.ones(2)) == [1, 1, 1, 1]
+    assert Matrix.ones(2, 2).flat() == [1, 1, 1, 1]
+    assert Matrix.ones(2).flat() == [1, 1, 1, 1]
     assert Matrix.ones(2, 3) == Matrix([[1, 1, 1], [1, 1, 1]])
     assert type(Matrix.ones(2)) == Matrix
     assert type(Matrix.ones(2, cls=Matrix)) == Matrix
 
 
 def test_zeros():
-    assert list(Matrix.zeros(2, 2)) == [0, 0, 0, 0]
-    assert list(Matrix.zeros(2)) == [0, 0, 0, 0]
+    assert Matrix.zeros(2, 2).flat() == [0, 0, 0, 0]
+    assert Matrix.zeros(2).flat() == [0, 0, 0, 0]
     assert Matrix.zeros(2, 3) == Matrix([[0, 0, 0], [0, 0, 0]])
     assert type(Matrix.zeros(2)) == Matrix
     assert type(Matrix.zeros(2, cls=Matrix)) == Matrix
@@ -643,10 +643,10 @@ def test_diagonal():
     m = Matrix(3, 3, range(9))
     d = m.diagonal()
     assert d == m.diagonal(0)
-    assert tuple(d) == (0, 4, 8)
-    assert tuple(m.diagonal(1)) == (1, 5)
-    assert tuple(m.diagonal(-1)) == (3, 7)
-    assert tuple(m.diagonal(2)) == (2,)
+    assert tuple(d.flat()) == (0, 4, 8)
+    assert tuple(m.diagonal(1).flat()) == (1, 5)
+    assert tuple(m.diagonal(-1).flat()) == (3, 7)
+    assert tuple(m.diagonal(2).flat()) == (2,)
     assert type(m.diagonal()) == type(m)
     s = SparseMatrix(3, 3, {(1, 1): 1})
     assert type(s.diagonal()) == type(s)
@@ -655,7 +655,7 @@ def test_diagonal():
     raises(ValueError, lambda: m.diagonal(-3))
     raises(ValueError, lambda: m.diagonal(pi))
     M = ones(2, 3)
-    assert banded({i: list(M.diagonal(i))
+    assert banded({i: M.diagonal(i).flat()
         for i in range(1-M.rows, M.cols)}) == M
 
 
@@ -2275,7 +2275,7 @@ def test_diagonalization():
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
-    for i in P:
+    for i in P.flat():
         assert i.as_numer_denom()[1] == 1
 
     m = Matrix(2, 2, [1, 0, 0, 0])
@@ -2809,8 +2809,8 @@ def test_matrix_norm():
     # Test Rows
     A = Matrix([[5, Rational(3, 2)]])
     assert A.norm() == Pow(25 + Rational(9, 4), S.Half)
-    assert A.norm(oo) == max(A)
-    assert A.norm(-oo) == min(A)
+    assert A.norm(oo) == max(A.flat())
+    assert A.norm(-oo) == min(A.flat())
 
     # Matrix Tests
     # Intuitive test
@@ -3332,7 +3332,7 @@ def test_pinv():
     reps = {a: -73633, b: 11362, c: 55486, d: 62570}
     assert all(
         comp(i.n(), j.n())
-        for i, j in zip(q.subs(reps), w.subs(reps))
+        for i, j in zip(q.subs(reps).flat(), w.subs(reps).flat())
         )
 
 
@@ -3606,8 +3606,8 @@ def test_as_real_imag():
 
     for kls in all_classes:
         a,b = kls(m3).as_real_imag()
-        assert list(a) == list(m1)
-        assert list(b) == list(m1)
+        assert a == m1
+        assert b == m1
 
 
 def test_deprecated():

@@ -124,7 +124,7 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
 def _row_reduce(M, iszerofunc, simpfunc, normalize_last=True,
                 normalize=True, zero_above=True):
 
-    mat, pivot_cols, swaps = _row_reduce_list(list(M), M.rows, M.cols, M.one,
+    mat, pivot_cols, swaps = _row_reduce_list(M.flat(), M.rows, M.cols, M.one,
             iszerofunc, simpfunc, normalize_last=normalize_last,
             normalize=normalize, zero_above=zero_above)
 
@@ -139,7 +139,7 @@ def _is_echelon(M, iszerofunc=_iszero):
     if M.rows <= 0 or M.cols <= 0:
         return True
 
-    zeros_below = all(iszerofunc(t) for t in M[1:, 0])
+    zeros_below = all(iszerofunc(t) for t in M[1:, 0].values())
 
     if iszerofunc(M[0, 0]):
         return zeros_below and _is_echelon(M[:, 1:], iszerofunc)
@@ -204,7 +204,7 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
         def complexity(i):
             # the complexity of a column will be judged by how many
             # element's zero-ness cannot be determined
-            return sum(1 if iszerofunc(e) is None else 0 for e in M[:, i])
+            return sum(1 if iszerofunc(e) is None else 0 for e in M[:, i].values())
 
         complex = [(complexity(i), i) for i in range(M.cols)]
         perm    = [j for (i, j) in sorted(complex)]
@@ -220,13 +220,13 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
         return 0
 
     if M.rows <= 1 or M.cols <= 1:
-        zeros = [iszerofunc(x) for x in M]
+        zeros = [iszerofunc(x) for x in M.flat()]
 
         if False in zeros:
             return 1
 
     if M.rows == 2 and M.cols == 2:
-        zeros = [iszerofunc(x) for x in M]
+        zeros = [iszerofunc(x) for x in M.flat()]
 
         if False not in zeros and None not in zeros:
             return 0
@@ -267,7 +267,7 @@ def _to_DM_ZZ_QQ(M):
         except CoercionFailed:
             return rep
     else:
-        if not all(e.is_Rational for e in M):
+        if not all(e.is_Rational for e in M.values()):
             return None
         try:
             return rep.convert_to(ZZ)
