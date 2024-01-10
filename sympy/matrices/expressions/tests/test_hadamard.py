@@ -86,7 +86,7 @@ def test_hadamard_product_with_explicit_mat():
     B = MatrixSymbol("B", 3, 3).as_explicit()
     X = MatrixSymbol("X", 3, 3)
     expr = hadamard_product(A, B)
-    ret = Matrix([i*j for i, j in zip(A, B)]).reshape(3, 3)
+    ret = Matrix([i*j for i, j in zip(A.flat(), B.flat())]).reshape(3, 3)
     assert expr == ret
     expr = hadamard_product(A, X, B)
     assert expr == HadamardProduct(ret, X)

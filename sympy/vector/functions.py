@@ -424,7 +424,7 @@ def matrix_to_vector(matrix, system):
 
     outvec = Vector.zero
     vects = system.base_vectors()
-    for i, x in enumerate(matrix):
+    for i, x in enumerate(matrix.flat()):
         outvec += x * vects[i]
     return outvec
 

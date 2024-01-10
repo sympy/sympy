@@ -2344,7 +2344,7 @@ def solve_linear_system(system, *symbols, **flags):
     assert system.shape[1] == len(symbols) + 1
 
     # This is just a wrapper for solve_lin_sys
-    eqs = list(system * Matrix(symbols + (-1,)))
+    eqs = (system * Matrix(symbols + (-1,))).flat()
     eqs, ring = sympy_eqs_to_ring(eqs, symbols)
     sol = solve_lin_sys(eqs, ring, _raw=False)
     if sol is not None:

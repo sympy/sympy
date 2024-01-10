@@ -1305,7 +1305,7 @@ def _singular_value_decomposition(A):
         V, S = (AH * A).diagonalize()
 
         ranked = []
-        for i, x in enumerate(S.diagonal()):
+        for i, x in enumerate(S.diagonal().flat()):
             if not x.is_zero:
                 ranked.append(i)
 
@@ -1320,7 +1320,7 @@ def _singular_value_decomposition(A):
         U, S = (A * AH).diagonalize()
 
         ranked = []
-        for i, x in enumerate(S.diagonal()):
+        for i, x in enumerate(S.diagonal().flat()):
             if not x.is_zero:
                 ranked.append(i)
 

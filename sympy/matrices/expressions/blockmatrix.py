@@ -82,8 +82,9 @@ class BlockMatrix(MatrixExpr):
         from sympy.matrices.immutable import ImmutableDenseMatrix
         isMat = lambda i: getattr(i, 'is_Matrix', False)
         if len(args) != 1 or \
-                not is_sequence(args[0]) or \
-                len({isMat(r) for r in args[0]}) != 1:
+                (not isMat(args[0]) and not is_sequence(args[0])) or \
+                (not isMat(args[0]) and len({isMat(r) for r in args[0]}) != 1) or\
+                (isMat(args[0]) and len({isMat(r) for r in args[0].flat()}) != 1):
             raise ValueError(filldedent('''
                 expecting a sequence of 1 or more rows
                 containing Matrices.'''))
@@ -179,7 +180,7 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_transpose(self):
         # Flip all the individual matrices
-        matrices = [transpose(matrix) for matrix in self.blocks]
+        matrices = [transpose(matrix) for matrix in self.blocks.flat()]
         # Make a copy
         M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
         # Transpose the block structure
@@ -188,7 +189,7 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_adjoint(self):
         # Adjoint all the individual matrices
-        matrices = [adjoint(matrix) for matrix in self.blocks]
+        matrices = [adjoint(matrix) for matrix in self.blocks.flat()]
         # Make a copy
         M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
         # Transpose the block structure
@@ -213,10 +214,10 @@ class BlockMatrix(MatrixExpr):
         return Determinant(self)
 
     def _eval_as_real_imag(self):
-        real_matrices = [re(matrix) for matrix in self.blocks]
+        real_matrices = [re(matrix) for matrix in self.blocks.flat()]
         real_matrices = Matrix(self.blockshape[0], self.blockshape[1], real_matrices)
 
-        im_matrices = [im(matrix) for matrix in self.blocks]
+        im_matrices = [im(matrix) for matrix in self.blocks.flat()]
         im_matrices = Matrix(self.blockshape[0], self.blockshape[1], im_matrices)
 
         return (BlockMatrix(real_matrices), BlockMatrix(im_matrices))

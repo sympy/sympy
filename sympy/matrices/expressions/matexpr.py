@@ -102,6 +102,9 @@ class MatrixExpr(Expr):
     def __abs__(self):
         raise NotImplementedError
 
+    def flat(self):
+        return list(self)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):

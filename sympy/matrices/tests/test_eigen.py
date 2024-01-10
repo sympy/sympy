@@ -79,10 +79,10 @@ def test_eigen():
                               (6 + 12/(c + b/2))/d, 1])]),
     ]
     r1 = [(NS(r[i][0], 2), NS(r[i][1], 2),
-        [NS(j, 2) for j in r[i][2][0]]) for i in range(len(r))]
+        [NS(j, 2) for j in r[i][2][0].flat()]) for i in range(len(r))]
     r = M.eigenvects()
     r2 = [(NS(r[i][0], 2), NS(r[i][1], 2),
-        [NS(j, 2) for j in r[i][2][0]]) for i in range(len(r))]
+        [NS(j, 2) for j in r[i][2][0].flat()]) for i in range(len(r))]
     assert sorted(r1) == sorted(r2)
 
     eps = Symbol('eps', real=True)
@@ -104,9 +104,9 @@ def test_eigen():
 
     M = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
     M._eigenvects = M.eigenvects(simplify=False)
-    assert max(i.q for i in M._eigenvects[0][2][0]) > 1
+    assert max(i.q for i in M._eigenvects[0][2][0].flat()) > 1
     M._eigenvects = M.eigenvects(simplify=True)
-    assert max(i.q for i in M._eigenvects[0][2][0]) == 1
+    assert max(i.q for i in M._eigenvects[0][2][0].flat()) == 1
 
     M = Matrix([[Rational(1, 4), 1], [1, 1]])
     assert M.eigenvects() == [
@@ -394,7 +394,7 @@ def test_diagonalize():
     m = Matrix(
         [[0, 1, 0, 0], [1, 0, 0, 0.002], [0.002, 0, 0, 1], [0, 0, 1, 0]])
     P, D = m.diagonalize()
-    assert allclose(P*D, m*P)
+    assert allclose((P*D).values(), (m*P).values())
 
 
 def test_is_diagonalizable():
@@ -453,8 +453,8 @@ def test_jordan_form():
         [                0.6875, 0.125 + 0.1875*sqrt(3)],
         [0.125 + 0.1875*sqrt(3),                 0.3125]])
     P, J = m.jordan_form()
-    assert all(isinstance(x, Float) or x == 0 for x in P)
-    assert all(isinstance(x, Float) or x == 0 for x in J)
+    assert all(isinstance(x, Float) or x == 0 for x in P.flat())
+    assert all(isinstance(x, Float) or x == 0 for x in J.flat())
 
 
 def test_singular_values():

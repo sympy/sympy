@@ -145,7 +145,7 @@ class Point(Basic):
         # Determine the position vector
         pos_vect = self.position_wrt(coordinate_system.origin)
         # Express it in the given coordinate system
-        return tuple(pos_vect.to_matrix(coordinate_system))
+        return tuple(pos_vect.to_matrix(coordinate_system).flat())
 
     def _sympystr(self, printer):
         return self._name

@@ -35,7 +35,8 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     finding."""
 
     newly_determined = []
-    col = list(col)
+    if not isinstance(col, list):
+        col = col.flat()
     # a column that contains a mix of floats and integers
     # but at least one float is considered a numerical
     # column, and so we do partial pivoting
@@ -154,6 +155,9 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
     ``newly_determined`` is a list of index-value pairs of pivot candidates
     that were simplified during the pivot search.
     """
+    from .matrixbase import MatrixBase
+    if isinstance(col, MatrixBase):
+        col = col.flat()
 
     # indeterminates holds the index-value pairs of each pivot candidate
     # that is neither zero or non-zero, as determined by iszerofunc().
@@ -419,7 +423,7 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     cp = dM.charpoly()
 
-    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
+    x = uniquely_named_symbol(x, [M], modify=lambda s: '_' + s)
 
     if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the

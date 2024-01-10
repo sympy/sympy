@@ -229,13 +229,14 @@ class NDimArray(Printable):
             elif isinstance(iterable, NDimArray):
                 shape = iterable.shape
 
-            # Construct N-dim array from an iterable (numpy arrays included):
-            elif isinstance(iterable, Iterable):
-                iterable, shape = cls._scan_iterable_shape(iterable)
-
             # Construct N-dim array from a Matrix:
             elif isinstance(iterable, MatrixBase):
                 shape = iterable.shape
+                iterable = iterable.flat()
+
+            # Construct N-dim array from an iterable (numpy arrays included):
+            elif isinstance(iterable, Iterable):
+                iterable, shape = cls._scan_iterable_shape(iterable)
 
             else:
                 shape = ()

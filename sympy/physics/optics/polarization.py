@@ -359,7 +359,7 @@ def jones_2_stokes(e):
     ⎣⎣0⎦  ⎣0 ⎦  ⎣0⎦  ⎣0 ⎦  ⎣1⎦  ⎣-1⎦⎦
 
     """
-    ex, ey = e
+    ex, ey = e.flat()
     return Matrix([Abs(ex)**2 + Abs(ey)**2,
                    Abs(ex)**2 - Abs(ey)**2,
                    2*re(ex*ey.conjugate()),

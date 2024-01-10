@@ -43,8 +43,8 @@ def test_nullspace_one():
     assert basis[0] == Matrix([-2, 1, 1, 0, 0])
     assert basis[1] == Matrix([-1, -1, 0, -1, 1])
     # make sure the null space is really gets zeroed
-    assert all(e.is_zero for e in m*basis[0])
-    assert all(e.is_zero for e in m*basis[1])
+    assert all(e.is_zero for e in (m*basis[0]).values())
+    assert all(e.is_zero for e in (m*basis[1]).values())
 
 def test_nullspace_second():
     # first test reduced row-ech form
@@ -102,7 +102,8 @@ def test_columnspace_second():
     X = Matrix([a, b, c, d, e])
     for i in range(len(basis)):
         eq=M*X-basis[i]
-        assert len(solve(eq, X)) != 0
+        # XXX: Don't keep this change
+        assert len(solve(eq.flat(), X.flat())) != 0
 
     #check if rank-nullity theorem holds
     assert M.rank() == len(basis)

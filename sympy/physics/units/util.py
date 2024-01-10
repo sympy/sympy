@@ -126,7 +126,7 @@ def convert_to(expr, target_units, unit_system="SI"):
     expr_scale_factor = get_total_scale_factor(expr)
     return expr_scale_factor * Mul.fromiter(
         (1/get_total_scale_factor(u)*u)**p for u, p in
-        zip(target_units, depmat))
+        zip(target_units, depmat.flat()))
 
 
 def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):

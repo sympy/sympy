@@ -3068,7 +3068,7 @@ def linsolve(system, *symbols):
     b = None  # if we don't get b the input was bad
     # unpack system
 
-    if hasattr(system, '__iter__'):
+    if hasattr(system, '__iter__') and not isinstance(system, MatrixBase):
 
         # 1). (A, b)
         if len(system) == 2 and isinstance(system[0], MatrixBase):
@@ -3137,7 +3137,7 @@ def linsolve(system, *symbols):
     # This is just a wrapper for solve_lin_sys
     eqs = []
     rows = A.tolist()
-    for rowi, bi in zip(rows, b):
+    for rowi, bi in zip(rows, b.flat()):
         terms = [elem * sym for elem, sym in zip(rowi, symbols) if elem]
         terms.append(-bi)
         eqs.append(Add(*terms))

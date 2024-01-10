@@ -123,6 +123,9 @@ class MatrixBase(Printable):
         where a and b are any combination of slices and integers."""
         raise NotImplementedError("Subclasses must implement this.")
 
+    def __iter__(self):
+        raise RuntimeError("Not iterable!")
+
     @property
     def shape(self):
         """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).
@@ -187,7 +190,7 @@ class MatrixBase(Printable):
                 else:
                     to_the_right = M[:i, i:]
                     to_the_bottom = M[i:, :i]
-                if any(to_the_right) or any(to_the_bottom):
+                if any(to_the_right.flat()) or any(to_the_bottom.flat()):
                     i += 1
                     continue
                 else:
@@ -965,8 +968,8 @@ class MatrixBase(Printable):
         from sympy.matrices.dense import Matrix
         from sympy.matrices import SparseMatrix
         klass = kwargs.get('cls', kls)
-        if unpack and len(args) == 1 and is_sequence(args[0]) and \
-                not isinstance(args[0], MatrixBase):
+        if (unpack and len(args) == 1 and not isinstance(args[0], MatrixBase)
+                and is_sequence(args[0])):
             args = args[0]
 
         # fill a default dict with the diagonal entries
@@ -1262,13 +1265,15 @@ class MatrixBase(Printable):
         return klass._eval_wilkinson(n)
 
     def _eval_atoms(self, *types):
-        result = set()
-        for i in self:
-            result.update(i.atoms(*types))
-        return result
+        values = self.values()
+        if len(values) < self.rows*self.cols and isinstance(S.Zero, types):
+            s = {S.Zero}
+        else:
+            s = set()
+        return s.union(*[v.atoms(*types) for v in values])
 
     def _eval_free_symbols(self):
-        return set().union(*(i.free_symbols for i in self if i))
+        return set().union(*(i.free_symbols for i in self.values()))
 
     def _eval_has(self, *patterns):
         return any(a.has(*patterns) for a in self)
@@ -1320,11 +1325,7 @@ class MatrixBase(Printable):
         return mat.is_zero_matrix
 
     def _eval_is_zero_matrix(self):
-        if any(i.is_zero == False for i in self):
-            return False
-        if any(i.is_zero is None for i in self):
-            return None
-        return True
+        return fuzzy_and(v.is_zero for v in self.values())
 
     def _eval_is_upper_hessenberg(self):
         return all(self[i, j].is_zero
@@ -1951,7 +1952,8 @@ class MatrixBase(Printable):
         return self.transpose().conjugate()
 
     def _eval_applyfunc(self, f):
-        out = self._new(self.rows, self.cols, [f(x) for x in self])
+        # XXX: Handle sparse matrices better here?
+        out = self._new(self.rows, self.cols, [f(x) for x in self.flat()])
         return out
 
     def _eval_as_real_imag(self):  # type: ignore
@@ -2752,7 +2754,7 @@ class MatrixBase(Printable):
             m = self._eval_matrix_mul(other)
 
             if isimpbool:
-                m = m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m])
+                m = m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m.flat()])
 
             return m
 
@@ -3650,7 +3652,7 @@ class MatrixBase(Printable):
       while any(dat):
           r = []
           for a, j in enumerate(active):
-              r.extend(b[j][-dat[j], :])
+              r.extend(b[j][-dat[j], :].flat())
               dat[j] -= 1
               if dat[j] == 0 and q:
                   active[a] = q.pop(0)
@@ -3758,7 +3760,7 @@ class MatrixBase(Printable):
                 dat = list(args[0])
                 ismat = lambda i: isinstance(i, MatrixBase) and (
                     evaluate or isinstance(i, (BlockMatrix, MatrixSymbol)))
-                raw = lambda i: is_sequence(i) and not ismat(i)
+                raw = lambda i: not ismat(i) and (isinstance(i, MatrixBase) or is_sequence(i))
                 evaluate = kwargs.get('evaluate', True)
 
 
@@ -3786,7 +3788,7 @@ class MatrixBase(Printable):
                 if dat in ([], [[]]):
                     rows = cols = 0
                     flat_list = []
-                elif not any(raw(i) or ismat(i) for i in dat):
+                elif not any(ismat(i) or raw(i) for i in dat):
                     # a column as a list of values
                     flat_list = [cls._sympify(i) for i in dat]
                     rows = len(flat_list)
@@ -3831,8 +3833,8 @@ class MatrixBase(Printable):
                     ncol = set()
                     rows = cols = 0
                     for row in dat:
-                        if not is_sequence(row) and \
-                                not getattr(row, 'is_Matrix', False):
+                        if not getattr(row, 'is_Matrix', False) and \
+                                not is_sequence(row):
                             raise ValueError('expecting list of lists')
 
                         if hasattr(row, '__array__'):
@@ -3881,8 +3883,11 @@ class MatrixBase(Printable):
                          for j in range(cols)])
 
             # Matrix(2, 2, [1, 2, 3, 4])
-            elif len(args) == 3 and is_sequence(args[2]):
-                flat_list = args[2]
+            elif len(args) == 3 and (isinstance(args[2], MatrixBase) or is_sequence(args[2])):
+                if isinstance(args[2], MatrixBase):
+                    flat_list = args[2].flat()
+                else:
+                    flat_list = args[2]
                 if len(flat_list) != rows * cols:
                     raise ValueError(
                         'List length should be equal to rows*columns')
@@ -4102,7 +4107,7 @@ class MatrixBase(Printable):
             raise ShapeError("Dimensions incorrect, expected (3, 1), got " +
                              str(self.shape))
         else:
-            x, y, z = self
+            x, y, z = self.flat()
             return self._new(3, 3, (
                  0, -z,  y,
                  z,  0, -x,
@@ -4686,7 +4691,7 @@ class MatrixBase(Printable):
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
-        x = uniquely_named_symbol('x', self, modify=lambda s: '_' + s)
+        x = uniquely_named_symbol('x', [self], modify=lambda s: '_' + s)
         p = self.charpoly(x)
         if p.args[0] == x ** self.rows:
             return True
@@ -4858,7 +4863,7 @@ class MatrixBase(Printable):
         else:
             if ord == 1:  # Maximum column sum
                 m = self.applyfunc(abs)
-                return Max(*[sum(m.col(i)) for i in range(m.cols)])
+                return Max(*[Add(*m.col(i).values()) for i in range(m.cols)])
 
             elif ord == 2:  # Spectral Norm
                 # Maximum singular value
@@ -4870,7 +4875,7 @@ class MatrixBase(Printable):
 
             elif ord is S.Infinity:   # Infinity Norm - Maximum row sum
                 m = self.applyfunc(abs)
-                return Max(*[sum(m.row(i)) for i in range(m.rows)])
+                return Max(*[Add(*m.row(i).values()) for i in range(m.rows)])
 
             elif (ord is None or isinstance(ord,
                                             str) and ord.lower() in

@@ -189,7 +189,7 @@ class DiagMatrix(MatrixExpr):
 
     def as_explicit(self):
         from sympy.matrices.dense import diag
-        return diag(*list(self._vector.as_explicit()))
+        return diag(*self._vector.as_explicit().flat())
 
     def doit(self, **hints):
         from sympy.assumptions import ask, Q
