@@ -580,7 +580,7 @@ def test_partition():
     assert partition(p).is_positive
     assert partition(x).subs(x, 7) == 15
     assert partition(y).subs(y, 8) == 22
-    raises(ValueError, lambda: partition(Rational(5, 4)))
+    raises(TypeError, lambda: partition(Rational(5, 4)))
 
 
 def test_divisor_sigma():
