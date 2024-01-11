@@ -1908,16 +1908,6 @@ class Si(TrigonometricIntegral):
         else:
             return self
     
-
-    def test_si():
-      assert Si(I*x) == I*Shi(x)
-      assert Shi(I*x) == I*Si(x)
-      assert Si(-I*x) == -I*Shi(x)
-      assert Shi(-I*x) == -I*Si(x)
-      assert Si(-x) == -Si(x)
-       
- 
-    
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
         point = args0[0]
