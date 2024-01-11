@@ -3656,6 +3656,23 @@ class MatrixBase(Printable):
         return MatrixKind(elemkind)
 
     def flat(self):
+        """
+        Returns a flat list of all elements in the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[0, 2], [3, 4]])
+        >>> m.flat()
+        [0, 2, 3, 4]
+
+        See Also
+        ========
+
+        tolist
+        values
+        """
         return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
 
     def __array__(self, dtype=object, copy=None):
