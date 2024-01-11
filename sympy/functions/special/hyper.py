@@ -290,6 +290,55 @@ class hyper(TupleParametersBase):
 
         return (Add(*terms) + Order(x**n,x))
 
+    def _eval_aseries(self, n, args0, x, logx):
+
+        # The asymptotic expansion of the hypergeometric functions at infinities are quite complicated
+        # and always not very well defined for all relations between the parameters p and q.
+        # The following is a simple implementation of the asymptotic expansion of the
+        # hypergeometric function when p = q + 1 and |z| -> oo.
+        # Refer https://functions.wolfram.com/HypergeometricFunctions/HypergeometricPFQ/06/01/05/02/0002/
+
+        point = args0[2]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            ap = self.args[0]
+            bq = self.args[1]
+
+            if len(ap) != len(bq) + 1:
+                return super()._eval_aseries(n, args0, x, logx)
+
+            from sympy.functions.special.gamma_functions import gamma
+            from sympy.series.order import Order
+
+            z = unpolarify(self.args[2])
+
+            if any((ap[i] - ap[l]).is_integer is not False for i in range(len(ap)) for l in range(i+1, len(ap))):
+                return super()._eval_aseries(n, args0, x, logx)
+
+            result = S.Zero
+            for k in range(len(self.ap)):
+                term = gamma(ap[k])
+                num = Mul(*[gamma(a-ap[k]) for a in ap if a !=ap[k]])
+                den = Mul(*[gamma(b-ap[k]) for b in bq])
+                term *= (num/den)*(-z)**(-ap[k])
+                terms = [
+                    (Mul(*[RisingFactorial(ap[k] - b + 1, j) for b in bq]) /
+                    Mul(*[RisingFactorial(ap[k] - a + 1, j) for a in ap if a != ap[k]]) *
+                    (z ** -j) * RisingFactorial(ap[k], j) / factorial(j))
+                    for j in range(n)
+                ]
+                terms.append(Order(z**(-n), x))
+                term *= Add(*terms)
+                result += term
+
+            num = Mul(*[gamma(b) for b in bq])
+            den = Mul(*[gamma(a) for a in ap])
+            result *= num/den
+
+            return result
+
+        return super()._eval_aseries(n, args0, x, logx)
+
     @property
     def argument(self):
         """ Argument of the hypergeometric function. """
