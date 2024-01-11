@@ -1895,6 +1895,29 @@ class Si(TrigonometricIntegral):
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
+
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+        if arg0.is_zero:
+            return arg
+        elif not arg0.is_infinite:
+            return self.func(arg0)
+        else:
+            return self
+    
+
+    def test_si():
+      assert Si(I*x) == I*Shi(x)
+      assert Shi(I*x) == I*Si(x)
+      assert Si(-I*x) == -I*Shi(x)
+      assert Shi(-I*x) == -I*Si(x)
+      assert Si(-x) == -Si(x)
+       
+ 
+    
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
         point = args0[0]
