@@ -1529,7 +1529,6 @@ class MatrixProperties(MatrixRequired):
         simplification the matrix does not appear anti-symmetric:
 
         >>> m.is_anti_symmetric(simplify=False)
-        False
 
         But if the matrix were already expanded, then it would appear
         anti-symmetric and simplification in the is_anti_symmetric routine

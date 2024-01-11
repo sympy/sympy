@@ -686,7 +686,7 @@ class MatrixBase(Printable):
 
         >>> from sympy import Matrix
         >>> d = {(0, 0): 1, (1, 2): 3, (2, 1): 4}
-        >>> Matrix.from_dok(d)
+        >>> Matrix.from_dok(3, 3, d)
         Matrix([
         [1, 0, 0],
         [0, 0, 3],
@@ -1489,8 +1489,8 @@ class MatrixBase(Printable):
         simplified, this will speed things up. Here, we see that without
         simplification the matrix does not appear anti-symmetric:
 
-        >>> m.is_anti_symmetric(simplify=False)
-        False
+        >>> print(m.is_anti_symmetric(simplify=False))
+        None
 
         But if the matrix were already expanded, then it would appear
         anti-symmetric and simplification in the is_anti_symmetric routine
