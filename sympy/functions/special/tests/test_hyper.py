@@ -16,6 +16,7 @@ from sympy.core.random import (
     random_complex_number as randcplx,
     verify_numerically as tn,
     test_derivative_numerically as td)
+from sympy.core.numbers import all_close
 
 
 def test_TupleParametersBase():
@@ -401,3 +402,12 @@ def test_eval_nseries():
         1 - x + x**2/4 - 3*x**3/4 - 15*x**4/64 - 93*x**5/64 + O(x**6)
     assert (pi/2*hyper((-S(1)/2, S(1)/2), (1,), 4*x/(x + 1))).nseries(x) == \
         pi/2 - pi*x/2 + pi*x**2/8 - 3*pi*x**3/8 - 15*pi*x**4/128 - 93*pi*x**5/128 + O(x**6)
+
+
+def test_aseries():
+    ex = hyper((1/3, 1/2), (4/3,), -x**3).series(x, oo, 2)
+    ans = 2.80436421065091*(1/x)**1.0 + (-2.0 + 0.142857142857143/x**3)*(1/x)**1.5 + O(x**(-2), (x, oo))
+    assert all_close(ex,ans)
+    ex = hyper((1/4,1/2),(5/4,), -x**4).series(x, oo, 3)
+    ans = 1.85407467730137*(1/x)**1.0 + (-1.0 + 0.1/x**4 - 0.0416666666666667/x**8)*(1/x)**2.0 + O(x**(-3), (x, oo))
+    assert all_close(ex,ans)

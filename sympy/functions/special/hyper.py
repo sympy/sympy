@@ -290,6 +290,34 @@ class hyper(TupleParametersBase):
 
         return (Add(*terms) + Order(x**n,x))
 
+    def _eval_aseries(self, n, args0, x, logx):
+
+        from sympy.functions.special.gamma_functions import gamma
+        from sympy.series.order import Order
+
+        a, b = self.ap
+        c = self.bq[0]
+        z = unpolarify(self.args[2])
+
+        if (a-b).is_integer:
+            return super()._eval_aseries(n, args0, x, logx)
+        terms1=[]
+        for i in range(n):
+            num = RisingFactorial(a, i)*RisingFactorial(1+a-c, i)
+            den = RisingFactorial(1+a-b, i)
+            terms1.append((num/den)*(z**(-i))/(factorial(i)))
+
+        terms2=[]
+        for i in range(n):
+            num = RisingFactorial(b, i)*RisingFactorial(1+b-c, i)
+            den = RisingFactorial(1+b-a, i)
+            terms2.append((num/den)*(z**(-i))/(factorial(i)))
+
+        pre1 = gamma(b-a)*gamma(c)/(gamma(b)*gamma(c-a))
+        pre2 = gamma(a-b)*gamma(c)/(gamma(a)*gamma(c-b))
+
+        return pre1*((-z)**(-a))*Add(*terms1) + pre2*((-z)**(-b))*Add(*terms2) + Order(x**n,x)
+
     @property
     def argument(self):
         """ Argument of the hypergeometric function. """
