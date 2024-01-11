@@ -26,6 +26,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.ntheory.factor_ import factorint, _divisor_sigma
 from sympy.ntheory.generate import _primepi
+from sympy.ntheory.partitions_ import _partition, _partition_rec
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
 from sympy.polys.polytools import cancel
@@ -1591,7 +1592,7 @@ class andre(Function):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-_npartition = [1, 1]
+
 class partition(Function):
     r"""
     Partition numbers
@@ -1624,59 +1625,22 @@ class partition(Function):
     .. [2] https://en.wikipedia.org/wiki/Pentagonal_number_theorem
 
     """
-
-    @staticmethod
-    def _partition(n):
-        L = len(_npartition)
-        if n < L:
-            return _npartition[n]
-        # lengthen cache
-        for _n in range(L, n + 1):
-            v, p, i = 0, 0, 0
-            while 1:
-                s = 0
-                p += 3*i + 1  # p = pentagonal number: 1, 5, 12, ...
-                if _n >= p:
-                    s += _npartition[_n - p]
-                i += 1
-                gp = p + i  # gp = generalized pentagonal: 2, 7, 15, ...
-                if _n >= gp:
-                    s += _npartition[_n - gp]
-                if s == 0:
-                    break
-                else:
-                    v += s if i%2 == 1 else -s
-            _npartition.append(v)
-        return v
+    is_integer = True
+    is_nonnegative = True
 
     @classmethod
     def eval(cls, n):
-        is_int = n.is_integer
-        if is_int == False:
-            raise ValueError("Partition numbers are defined only for "
-                             "integers")
-        elif is_int:
-            if n.is_negative:
-                return S.Zero
-
-            if n.is_zero or (n - 1).is_zero:
-                return S.One
-
-            if n.is_Integer:
-                return Integer(cls._partition(n))
-
-
-    def _eval_is_integer(self):
-        if self.args[0].is_integer:
-            return True
-
-    def _eval_is_negative(self):
-        if self.args[0].is_integer:
-            return False
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_negative is True:
+            return S.Zero
+        if n.is_zero is True or n is S.One:
+            return S.One
+        if n.is_Integer is True:
+            return S(_partition(as_int(n)))
 
     def _eval_is_positive(self):
-        n = self.args[0]
-        if n.is_nonnegative and n.is_integer:
+        if self.args[0].is_nonnegative is True:
             return True
 
 
@@ -2665,10 +2629,10 @@ def _nT(n, k):
         # will be in the cache needed to calculate
         # partition(d), so...
         # update cache
-        tot = partition._partition(d)
+        tot = _partition_rec(d)
         # and correct for values not needed
         if d - k > 0:
-            tot -= sum(_npartition[:d - k])
+            tot -= sum(_partition_rec.fetch_item(slice(d - k)))
         return tot
     # regular exit
     # nT(n, k) = Sum(nT(n - k, m), (m, 1, k));
