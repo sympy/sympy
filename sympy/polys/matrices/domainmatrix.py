@@ -1111,7 +1111,7 @@ class DomainMatrix:
         >>> from sympy import ZZ
         >>> from sympy.polys.matrices import DomainMatrix
         >>> A = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-        >>> list(A.values())
+        >>> list(A.iter_values())
         [1, 3, 4]
 
         See Also
@@ -1133,7 +1133,7 @@ class DomainMatrix:
         >>> from sympy import ZZ
         >>> from sympy.polys.matrices import DomainMatrix
         >>> A = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-        >>> list(A.items())
+        >>> list(A.iter_items())
         [((0, 0), 1), ((1, 0), 3), ((1, 1), 4)]
 
         See Also
