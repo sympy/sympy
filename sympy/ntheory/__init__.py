@@ -10,7 +10,7 @@ from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
     primefactors, totient, \
     divisor_count, proper_divisor_count, divisor_sigma, factorrat, \
     reduced_totient, primenu, primeomega, mersenne_prime_exponent, \
-    is_perfect, is_abundant, is_deficient, is_amicable, \
+    is_perfect, is_abundant, is_deficient, is_amicable, is_carmichael, \
     abundance, dra, drm
 
 from .partitions_ import npartitions
@@ -39,7 +39,7 @@ __all__ = [
     'divisor_count', 'proper_divisor_count', 'divisor_sigma', 'factorrat',
     'reduced_totient', 'primenu', 'primeomega', 'mersenne_prime_exponent',
     'is_perfect', 'is_abundant', 'is_deficient', 'is_amicable',
-    'abundance', 'dra', 'drm', 'multiplicity_in_factorial',
+    'is_carmichael', 'abundance', 'dra', 'drm', 'multiplicity_in_factorial',
 
     'npartitions',
 

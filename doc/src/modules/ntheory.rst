@@ -99,6 +99,8 @@ Ntheory Functions Reference
 
 .. autofunction:: is_amicable
 
+.. autofunction:: is_carmichael
+
 .. module:: sympy.ntheory.modular
 
 .. autofunction:: symmetric_residue

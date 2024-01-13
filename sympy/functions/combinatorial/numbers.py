@@ -24,7 +24,7 @@ from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.ntheory.factor_ import factorint, _divisor_sigma
+from sympy.ntheory.factor_ import factorint, _divisor_sigma, is_carmichael
 from sympy.ntheory.generate import _primepi
 from sympy.ntheory.partitions_ import _partition, _partition_rec
 from sympy.ntheory.primetest import isprime, is_square
@@ -145,34 +145,23 @@ directly instead.
 
     @staticmethod
     def is_carmichael(n):
-        if n >= 0:
-            if (n == 1) or isprime(n) or (n % 2 == 0):
-                return False
-
-            divisors = [1, n]
-
-            # get divisors
-            divisors.extend([i for i in range(3, n // 2 + 1, 2) if n % i == 0])
-
-            for i in divisors:
-                if is_square(i) and i != 1:
-                    return False
-                if isprime(i):
-                    if not _divides(i - 1, n - 1):
-                        return False
-
-            return True
-
-        else:
-            raise ValueError('The provided number must be greater than or equal to 0')
+        sympy_deprecation_warning(
+        """
+is_carmichael is just a wrapper around sympy.ntheory.factor_.is_carmichael so use that
+directly instead.
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target='deprecated-ntheory-symbolic-functions',
+        )
+        return is_carmichael(n)
 
     @staticmethod
     def find_carmichael_numbers_in_range(x, y):
         if 0 <= x <= y:
             if x % 2 == 0:
-                return [i for i in range(x + 1, y, 2) if carmichael.is_carmichael(i)]
+                return [i for i in range(x + 1, y, 2) if is_carmichael(i)]
             else:
-                return [i for i in range(x, y, 2) if carmichael.is_carmichael(i)]
+                return [i for i in range(x, y, 2) if is_carmichael(i)]
 
         else:
             raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
@@ -183,7 +172,7 @@ directly instead.
         carmichaels = []
 
         while len(carmichaels) < n:
-            if carmichael.is_carmichael(i):
+            if is_carmichael(i):
                 carmichaels.append(i)
             i += 2
 
