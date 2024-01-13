@@ -457,6 +457,27 @@ The following symbolic functions in ``ntheory`` have been moved to
 
 * ``sympy.ntheory.factor_.udivisor_sigma``
 
+The following functions have been moved from ``functions`` to ``ntheory``
+because they are numeric functions.
+
+* ``sympy.functions.combinatorial.numbers.carmichael.is_carmichael``
+
+If you are using these functions, change from
+
+```py
+>>> from sympy import carmichael
+>>> carmichael.is_carmichael(561)
+True
+```
+
+to
+
+```py
+>>> from sympy import is_carmichael
+>>> is_carmichael(561)
+True
+```
+
 
 ## Version 1.12
 

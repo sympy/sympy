@@ -15,7 +15,7 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, _divisor_sigma, core, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_abundant,
-    is_deficient, is_amicable, dra, drm, _perfect_power)
+    is_deficient, is_amicable, is_carmichael, dra, drm, _perfect_power)
 
 from sympy.testing.pytest import raises, slow
 
@@ -567,6 +567,16 @@ def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
+
+
+def test_is_carmichael():
+    A002997 = [561, 1105, 1729, 2465, 2821, 6601, 8911, 10585, 15841,
+               29341, 41041, 46657, 52633, 62745, 63973, 75361, 101101]
+    for n in range(1, 5000):
+        assert is_carmichael(n) == (n in A002997)
+    for n in A002997:
+        assert is_carmichael(n)
+
 
 def test_dra():
     assert dra(19, 12) == 8

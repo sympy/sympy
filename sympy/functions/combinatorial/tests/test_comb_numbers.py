@@ -35,7 +35,6 @@ def test_carmichael():
     assert carmichael.find_carmichael_numbers_in_range(561, 1105) == carmichael.find_carmichael_numbers_in_range(561,
                                                                                                                  562)
     assert carmichael.find_first_n_carmichaels(5) == [561, 1105, 1729, 2465, 2821]
-    raises(ValueError, lambda: carmichael.is_carmichael(-2))
     raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(-2, 2))
     raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(22, 2))
     with warns_deprecated_sympy():
@@ -1119,3 +1118,10 @@ def test_nD_derangements():
     raises(TypeError, lambda: nD({1: x}))
     raises(TypeError, lambda: nD(m={1: x}))
     raises(TypeError, lambda: nD(m={x: 1}))
+
+
+def test_deprecated_ntheory_symbolic_functions():
+    from sympy.testing.pytest import warns_deprecated_sympy
+
+    with warns_deprecated_sympy():
+        assert not carmichael.is_carmichael(3)
