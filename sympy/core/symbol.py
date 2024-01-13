@@ -205,60 +205,20 @@ _uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
     """
-    Symbol class is used to create symbolic variables.
-
-    Explanation
-    ===========
-
-    Symbolic variables are placeholders for mathematical symbols that can represent numbers, constants, or any other mathematical entities. A symbolic variable, created using the 'Symbol' class, can be used in mathematical expressions and perform symbolic computations.
-
     Assumptions:
-
-    commutative = True
-    positive = True
-    real = True
-    imaginary = True
-    complex = True
-    hermition = True
-    complete list of more assumptions- :ref:`predicates`
+       commutative = True
 
     You can override the default assumptions in the constructor.
 
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.abc import x
-    >>> x.assumptions0
-    {'commutative': True}
-    >>> x = Symbol("x", positive=True)
-    >>> x.assumptions0
-    {'commutative': True, 'complex': True, 'hermitian': True,
-    'imaginary': False, 'negative': False, 'nonnegative': True,
-    'nonpositive': False, 'nonzero': True, 'positive': True, 'real': True,
-    'zero': False}
-
-    passing in greek letters:
-
-        >>> from sympy import Symbol
-        >>> alpha = Symbol('alpha')
-        >>> alpha
-        α 
-
-    Trailing digits are automatically treated like subscripts of what precedes them in the name.
-    General format to add subscript to a symbol :
-    ``<var_name> = Symbol('<symbol_name>_<subscript>')``
-
-        >>> from sympy import Symbol
-        >>> alpha_i = Symbol('alpha_i')
-        >>> alpha_i
-        αᵢ
-
-    Parameters
-    ==========
-
-    AtomicExpr: variable name
-    Boolean: Assumption with a boolean value(True or False)
+    >>> from sympy import symbols
+    >>> A,B = symbols('A,B', commutative = False)
+    >>> bool(A*B != B*A)
+    True
+    >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
+    True
 
     """
 
