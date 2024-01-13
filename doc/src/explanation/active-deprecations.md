@@ -461,6 +461,7 @@ The following functions have been moved from ``functions`` to ``ntheory``
 because they are numeric functions.
 
 * ``sympy.functions.combinatorial.numbers.carmichael.is_carmichael``
+* ``sympy.functions.combinatorial.numbers.carmichael.find_first_n_carmichaels``
 
 If you are using these functions, change from
 

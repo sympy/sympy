@@ -24,7 +24,7 @@ from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.ntheory.factor_ import factorint, _divisor_sigma, is_carmichael
+from sympy.ntheory.factor_ import factorint, _divisor_sigma, is_carmichael, find_first_n_carmichaels
 from sympy.ntheory.generate import _primepi
 from sympy.ntheory.partitions_ import _partition, _partition_rec
 from sympy.ntheory.primetest import isprime, is_square
@@ -53,9 +53,6 @@ _sym = Symbol('x')
 #                           Carmichael numbers                               #
 #                                                                            #
 #----------------------------------------------------------------------------#
-
-def _divides(p, n):
-    return n % p == 0
 
 class carmichael(Function):
     r"""
@@ -168,15 +165,15 @@ directly instead.
 
     @staticmethod
     def find_first_n_carmichaels(n):
-        i = 1
-        carmichaels = []
-
-        while len(carmichaels) < n:
-            if is_carmichael(i):
-                carmichaels.append(i)
-            i += 2
-
-        return carmichaels
+        sympy_deprecation_warning(
+        """
+find_first_n_carmichaels is just a wrapper around sympy.ntheory.factor_.find_first_n_carmichaels so use that
+directly instead.
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target='deprecated-ntheory-symbolic-functions',
+        )
+        return find_first_n_carmichaels(n)
 
 
 #----------------------------------------------------------------------------#
