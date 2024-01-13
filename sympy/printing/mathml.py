@@ -429,13 +429,13 @@ class MathMLContentPrinter(MathMLPrinterBase):
         return x
 
     def _print_Inv_Trig(self, e):
-        if self._settings['inv_trig_style']:
+        if(self._settings['inv_trig_style']):
             x = self.dom.createElement('apply')
             inv_trig_symbol = self.mathml_tag(e)
             x.appendChild(inv_trig_symbol)
-            arg_elem = self._print(e)
-            x.appendChild(arg_elem)            
-            return x
+        arg_elem = self._print(e)
+        x.appendChild(arg_elem)
+        return x
 
 
     def _print_Number(self, e):
