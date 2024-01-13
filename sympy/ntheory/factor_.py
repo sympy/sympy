@@ -2554,6 +2554,31 @@ def is_carmichael(n):
            all(e == 1 and (n - 1) % (p - 1) == 0 for p, e in factorint(n).items())
 
 
+def find_first_n_carmichaels(n):
+    """ Returns the first n Carmichael numbers.
+
+    Parameters
+    ==========
+
+    n : Integer
+
+    See Also
+    ========
+
+    is_carmichael
+
+    """
+    i = 561
+    carmichaels = []
+
+    while len(carmichaels) < n:
+        if is_carmichael(i):
+            carmichaels.append(i)
+        i += 2
+
+    return carmichaels
+
+
 def dra(n, b):
     """
     Returns the additive digital root of a natural number ``n`` in base ``b``
