@@ -210,7 +210,7 @@ class Symbol(AtomicExpr, Boolean):
     Explanation
     ===========
 
-    Symbolic variables are placeholders for mathematical symbols that can represent numbers, constants, or any other mathematical entities. A symbolic variable, created using the 'Symbol' class, can be used in mathematical expressions and perform symbolic computations.
+    Symbolic variables are placeholders for mathematical symbols that can represent numbers, constants, or any other mathematical entities and can be used in mathematical expressions and to perform symbolic computations.
 
     Assumptions:
 
