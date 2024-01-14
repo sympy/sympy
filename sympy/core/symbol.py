@@ -243,7 +243,7 @@ class Symbol(AtomicExpr, Boolean):
         >>> from sympy import Symbol
         >>> alpha = Symbol('alpha')
         >>> alpha
-        α 
+        α
 
     Trailing digits are automatically treated like subscripts of what precedes them in the name.
     General format to add subscript to a symbol :
