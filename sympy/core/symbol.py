@@ -219,7 +219,6 @@ class Symbol(AtomicExpr, Boolean):
     real = True
     imaginary = True
     complex = True
-    hermition = True
     complete list of more assumptions- :ref:`predicates`
 
     You can override the default assumptions in the constructor.
