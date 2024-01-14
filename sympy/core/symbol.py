@@ -227,8 +227,8 @@ class Symbol(AtomicExpr, Boolean):
     ========
 
     >>> from sympy import Symbol
-    >>> from sympy.abc import x as x_sym
-    >>> x = Symbol("x", positive=True)
+    >>> from sympy.abc import x
+    >>> x = Symbol("y", positive=True)
     >>> x.is_positive
     True
     >>> x.is_negative
