@@ -237,7 +237,7 @@ accuracy of numeric integration calculations.
     >>> x = Symbol('x')
     >>> integral = Integral(sqrt(2)*x, (x, 0, 1))
     >>> integral
-    1        
+    1
     ⌠
     ⎮ √2⋅x dx
     ⌡
