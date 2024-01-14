@@ -237,7 +237,7 @@ class Symbol(AtomicExpr, Boolean):
 
     >>> from sympy import Symbol
     >>> alpha = Symbol('alpha')
-    >>> pprint(alpha)
+    >>> alpha
     α
 
     Trailing digits are automatically treated like subscripts of what precedes them in the name.
@@ -246,7 +246,7 @@ class Symbol(AtomicExpr, Boolean):
 
     >>> from sympy import Symbol
     >>> alpha_i = Symbol('alpha_i')
-    >>> pprint(alpha_i)
+    >>> alpha_i
     αᵢ
 
     Parameters
