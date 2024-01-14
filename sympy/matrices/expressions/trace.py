@@ -145,7 +145,7 @@ class Trace(Expr):
 
     def _eval_rewrite_as_Sum(self, expr, **kwargs):
         from sympy.concrete.summations import Sum
-        i = uniquely_named_symbol('i', expr)
+        i = uniquely_named_symbol('i', [expr])
         s = Sum(self.arg[i, i], (i, 0, self.arg.rows - 1))
         return s.doit()
 
