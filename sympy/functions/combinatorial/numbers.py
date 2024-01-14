@@ -24,7 +24,8 @@ from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.ntheory.factor_ import factorint, _divisor_sigma, is_carmichael, find_first_n_carmichaels
+from sympy.ntheory.factor_ import (factorint, _divisor_sigma, is_carmichael,
+                                   find_carmichael_numbers_in_range, find_first_n_carmichaels)
 from sympy.ntheory.generate import _primepi
 from sympy.ntheory.partitions_ import _partition, _partition_rec
 from sympy.ntheory.primetest import isprime, is_square
@@ -154,14 +155,15 @@ directly instead.
 
     @staticmethod
     def find_carmichael_numbers_in_range(x, y):
-        if 0 <= x <= y:
-            if x % 2 == 0:
-                return [i for i in range(x + 1, y, 2) if is_carmichael(i)]
-            else:
-                return [i for i in range(x, y, 2) if is_carmichael(i)]
-
-        else:
-            raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
+        sympy_deprecation_warning(
+        """
+find_carmichael_numbers_in_range is just a wrapper around sympy.ntheory.factor_.find_carmichael_numbers_in_range so use that
+directly instead.
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target='deprecated-ntheory-symbolic-functions',
+        )
+        return find_carmichael_numbers_in_range(x, y)
 
     @staticmethod
     def find_first_n_carmichaels(n):
