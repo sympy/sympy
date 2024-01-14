@@ -235,10 +235,10 @@ class Symbol(AtomicExpr, Boolean):
 
     passing in greek letters:
 
-        >>> from sympy import Symbol
-        >>> alpha = Symbol('alpha')
-        >>> alpha
-        α
+    >>> from sympy import Symbol
+    >>> alpha = Symbol('alpha')
+    >>> alpha
+    α
 
     Trailing digits are automatically treated like subscripts of what precedes them in the name.
     General format to add subscript to a symbol :
