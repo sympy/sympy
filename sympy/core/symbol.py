@@ -210,7 +210,7 @@ class Symbol(AtomicExpr, Boolean):
     Explanation
     ===========
 
-    Symbolic variables are placeholders for mathematical symbols that can represent numbers, constants, or any other mathematical entities. A symbolic variable, created using the 'Symbol' class, can be used in mathematical expressions and perform symbolic computations.
+    Symbolic variables are placeholders for mathematical symbols that can represent numbers, constants, or any other mathematical entities and can be used in mathematical expressions and to perform symbolic computations.
 
     Assumptions:
 
@@ -219,7 +219,6 @@ class Symbol(AtomicExpr, Boolean):
     real = True
     imaginary = True
     complex = True
-    hermition = True
     complete list of more assumptions- :ref:`predicates`
 
     You can override the default assumptions in the constructor.
@@ -229,30 +228,34 @@ class Symbol(AtomicExpr, Boolean):
 
     >>> from sympy import Symbol
     >>> from sympy.abc import x
-    >>> x.assumptions0
-    {'commutative': True}
     >>> x = Symbol("x", positive=True)
-    >>> x.assumptions0
-    {'commutative': True, 'complex': True, 'hermitian': True,
-    'imaginary': False, 'negative': False, 'nonnegative': True,
-    'nonpositive': False, 'nonzero': True, 'positive': True, 'real': True,
-    'zero': False}
+    >>> x.is_positive
+    True
+    >>> x.is_negative
+    False
 
     passing in greek letters:
 
+<<<<<<< HEAD
         >>> from sympy import Symbol
         >>> alpha = Symbol('alpha')
         >>> alpha
         α
+=======
+    >>> from sympy import Symbol
+    >>> alpha = Symbol('alpha')
+    >>> alpha
+    α
+>>>>>>> 4d8d373626c17355f1825da91f50e04fd6d6f5f6
 
     Trailing digits are automatically treated like subscripts of what precedes them in the name.
     General format to add subscript to a symbol :
     ``<var_name> = Symbol('<symbol_name>_<subscript>')``
 
-        >>> from sympy import Symbol
-        >>> alpha_i = Symbol('alpha_i')
-        >>> alpha_i
-        αᵢ
+    >>> from sympy import Symbol
+    >>> alpha_i = Symbol('alpha_i')
+    >>> alpha_i
+    αᵢ
 
     Parameters
     ==========
@@ -283,10 +286,10 @@ class Symbol(AtomicExpr, Boolean):
         Examples
         ========
 
-            >>> from sympy import Symbol
-            >>> x = Symbol('x')
-            >>> x._diff_wrt
-            True
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> x._diff_wrt
+        True
         """
         return True
 
