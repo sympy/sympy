@@ -232,11 +232,10 @@ class Symbol(AtomicExpr, Boolean):
     >>> x.assumptions0
     {'commutative': True}
     >>> x = Symbol("x", positive=True)
-    >>> x.assumptions0
-    {'commutative': True, 'complex': True, 'hermitian': True,
-    'imaginary': False, 'negative': False, 'nonnegative': True,
-    'nonpositive': False, 'nonzero': True, 'positive': True, 'real': True,
-    'zero': False}
+    >>> x.is_positive
+    True
+    >>> x.is_negative
+    False
 
     passing in greek letters:
 
