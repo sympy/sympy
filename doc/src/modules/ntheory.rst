@@ -101,6 +101,8 @@ Ntheory Functions Reference
 
 .. autofunction:: is_carmichael
 
+.. autofunction:: find_carmichael_numbers_in_range
+
 .. autofunction:: find_first_n_carmichaels
 
 .. module:: sympy.ntheory.modular

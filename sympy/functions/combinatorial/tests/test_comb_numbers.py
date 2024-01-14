@@ -30,12 +30,6 @@ from sympy.abc import x
 
 
 def test_carmichael():
-    assert carmichael.find_carmichael_numbers_in_range(0, 561) == []
-    assert carmichael.find_carmichael_numbers_in_range(561, 562) == [561]
-    assert carmichael.find_carmichael_numbers_in_range(561, 1105) == carmichael.find_carmichael_numbers_in_range(561,
-                                                                                                                 562)
-    raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(-2, 2))
-    raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(22, 2))
     with warns_deprecated_sympy():
         assert carmichael.is_prime(2821) == False
 
@@ -1124,5 +1118,7 @@ def test_deprecated_ntheory_symbolic_functions():
 
     with warns_deprecated_sympy():
         assert not carmichael.is_carmichael(3)
+    with warns_deprecated_sympy():
+        assert carmichael.find_carmichael_numbers_in_range(10, 20) == []
     with warns_deprecated_sympy():
         assert carmichael.find_first_n_carmichaels(1)

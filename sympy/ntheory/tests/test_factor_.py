@@ -15,7 +15,8 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, _divisor_sigma, core, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_abundant,
-    is_deficient, is_amicable, is_carmichael, find_first_n_carmichaels, dra, drm, _perfect_power)
+    is_deficient, is_amicable, is_carmichael, find_carmichael_numbers_in_range,
+    find_first_n_carmichaels, dra, drm, _perfect_power)
 
 from sympy.testing.pytest import raises, slow
 
@@ -576,6 +577,14 @@ def test_is_carmichael():
         assert is_carmichael(n) == (n in A002997)
     for n in A002997:
         assert is_carmichael(n)
+
+
+def test_find_carmichael_numbers_in_range():
+    assert find_carmichael_numbers_in_range(0, 561) == []
+    assert find_carmichael_numbers_in_range(561, 562) == [561]
+    assert find_carmichael_numbers_in_range(561, 1105) == find_carmichael_numbers_in_range(561, 562)
+    raises(ValueError, lambda: find_carmichael_numbers_in_range(-2, 2))
+    raises(ValueError, lambda: find_carmichael_numbers_in_range(22, 2))
 
 
 def test_find_first_n_carmichaels():
