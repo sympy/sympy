@@ -49,6 +49,8 @@ unicode_whitelist = [
     # lll method has unicode in docstring references and author name
     r'*/sympy/polys/matrices/domainmatrix.py',
     r'*/sympy/matrices/repmatrix.py',
+
+    # Explanation of symbols uses greek letters
     r'*/sympy/core/symbol.py',
 ]
 
