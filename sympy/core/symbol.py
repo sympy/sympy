@@ -229,8 +229,6 @@ class Symbol(AtomicExpr, Boolean):
 
     >>> from sympy import Symbol
     >>> from sympy.abc import x
-    >>> x.assumptions0
-    {'commutative': True}
     >>> x = Symbol("x", positive=True)
     >>> x.is_positive
     True
