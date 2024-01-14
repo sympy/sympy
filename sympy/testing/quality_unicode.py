@@ -42,7 +42,6 @@ unicode_whitelist = [
     # multiple lines etc)
     r'*/sympy/physics/wigner.py',
     r'*/sympy/physics/optics/polarization.py',
-    r'*/sympy/core/symbol.py',
 
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
