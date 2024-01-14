@@ -2488,7 +2488,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             newsym = Dummy('R', real=True)
     elif domain.is_subset(S.Complexes):
         if symbol._assumptions_orig != {'complex': True}:
-            newsym = Dummy('C', complex=True) 
+            newsym = Dummy('C', complex=True)
     if newsym is not None:
         rv = solveset(f.xreplace({symbol: newsym}), newsym, domain)
         # try to use the original symbol if possible
