@@ -3530,3 +3530,6 @@ def test_issue_22628():
 
 def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
+
+def test_issue_26077():
+    assert stationary_points(x*cot(5*x), x, S.Reals) == {x| x ∊ ℝ \ ({2⋅n⋅π/5 | n ∊ ℤ} ∪ {2⋅n⋅π/5 + π/5 | n ∊ ℤ}) ∧ (x⋅(- 5⋅cot**2(5⋅x) -5) + cot(5⋅x) = 0)}
