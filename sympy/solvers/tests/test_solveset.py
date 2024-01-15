@@ -3532,4 +3532,4 @@ def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
 
 def test_issue_26077():
-    assert solve(x*cot(5*x), x, S.Reals) == {x for x in Interval(-float('inf'), float('inf')) if (x not in {2 * n * pi / 5 for n in range(-10, 11)} and x not in {(2 * n * pi / 5) + pi / 5 for n in range(-10, 11)} and x * (-5 * cot(5 * x)**2 - 5) + cot(5 * x) == 0)}
+    assert solve(x*cot(5*x), x, S.Reals) == {val for val in Interval(-float('inf'), float('inf')) if (val not in {2 * n * pi / 5 for n in range(-10, 11)} and val not in {(2 * n * pi / 5) + pi / 5 for n in range(-10, 11)} and x * (-5 * cot(5 * x)**2 - 5) + cot(5 * x) == 0)}
