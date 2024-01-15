@@ -3532,7 +3532,7 @@ def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
 
 def stationary_points(function, variable, domain):
-    return {set()}
+    return set()
 
 def test_issue_26077():
     x = Symbol('x', real=True)
