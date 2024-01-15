@@ -3537,7 +3537,7 @@ def test_issue_26077():
         base_set = Complement(Reals, Union(ImageSet(Lamda(_n, 2*_n*pi/5 + pi/5), Integer), ImageSet(Lamda(_n, 2*_n*pi/5), Integers)))
         ConditionSet(sym, S.Reals - S.Integers)
     except TypeError as e:
-        expected_error_message = 'sym '_R' is not in base_set'
+        expected_error_message = 'sym `_R` is not in base_set'
         assert expected_error_message in str(e)
     else:
         raise AssertionError("Expected TypeError but no exception was raised.")
