@@ -442,8 +442,9 @@ The following symbolic functions in ``ntheory`` have been moved to
 * ``sympy.ntheory.factor_.totient``
 * ``sympy.ntheory.generate.primepi``
 * ``sympy.partitions_.npartitions``
-* ``sympy.ntheory.residue_ntheory.mobius``
+* ``sympy.ntheory.residue_ntheory.jacobi_symbol``
 * ``sympy.ntheory.residue_ntheory.legendre_symbol``
+* ``sympy.ntheory.residue_ntheory.mobius``
 
 Code that imports these functions from top-level like ``from sympy import
 mobius`` will continue to work fine. However code that imports these from the

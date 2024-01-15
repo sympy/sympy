@@ -66,6 +66,9 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.legendre_symbol
    :members:
 
+.. autoclass:: sympy.functions.combinatorial.numbers.jacobi_symbol
+   :members:
+
 .. autoclass:: sympy.functions.combinatorial.numbers.mobius
    :members:
 
