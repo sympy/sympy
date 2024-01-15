@@ -63,6 +63,9 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.udivisor_sigma
    :members:
 
+.. autoclass:: sympy.functions.combinatorial.numbers.legendre_symbol
+   :members:
+
 .. autoclass:: sympy.functions.combinatorial.numbers.mobius
    :members:
 

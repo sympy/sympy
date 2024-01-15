@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
+from sympy.external.gmpy import (gcd, lcm, invert, sqrt, jacobi,
                                  kronecker, bit_scan1, remove)
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
@@ -1073,9 +1073,19 @@ def quadratic_residues(p) -> list[int]:
     return sorted(r)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.legendre_symbol` has been moved to `sympy.functions.combinatorial.numbers.legendre_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def legendre_symbol(a, p):
     r"""
     Returns the Legendre symbol `(a / p)`.
+
+    .. deprecated:: 1.13
+
+        The ``legendre_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.legendre_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
     defined as
@@ -1108,10 +1118,8 @@ def legendre_symbol(a, p):
     is_quad_residue, jacobi_symbol
 
     """
-    a, p = as_int(a), as_int(p)
-    if p == 2 or not isprime(p):
-        raise ValueError("p should be an odd prime")
-    return int(legendre(a, p))
+    from sympy.functions.combinatorial.numbers import legendre_symbol as _legendre_symbol
+    return _legendre_symbol(a, p)
 
 
 def jacobi_symbol(m, n):

@@ -19,7 +19,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
-from sympy.external.gmpy import SYMPY_INTS, remove, lcm
+from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
@@ -1769,6 +1769,54 @@ class udivisor_sigma(Function):
             return 1 + n**k
         if n.is_Integer:
             return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
+
+
+class legendre_symbol(Function):
+    r"""
+    Returns the Legendre symbol `(a / p)`.
+
+    For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
+    defined as
+
+    .. math ::
+        \genfrac(){}{}{a}{p} = \begin{cases}
+             0 & \text{if } p \text{ divides } a\\
+             1 & \text{if } a \text{ is a quadratic residue modulo } p\\
+            -1 & \text{if } a \text{ is a quadratic nonresidue modulo } p
+        \end{cases}
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import legendre_symbol
+    >>> [legendre_symbol(i, 7) for i in range(7)]
+    [0, 1, 1, -1, 1, -1, -1]
+    >>> sorted(set([i**2 % 7 for i in range(7)]))
+    [0, 1, 2, 4]
+
+    See Also
+    ========
+
+    sympy.ntheory.residue_ntheory.is_quad_residue, sympy.ntheory.residue_ntheory.jacobi_symbol
+
+    """
+    is_integer = True
+    is_prime = False
+
+    @classmethod
+    def eval(cls, a, p):
+        if a.is_integer is False:
+            raise TypeError("a should be an integer")
+        if p.is_integer is False:
+            raise TypeError("p should be an integer")
+        if p.is_prime is False or p.is_odd is False:
+            raise ValueError("p should be an odd prime integer")
+        if (a % p).is_zero is True:
+            return S.Zero
+        if a is S.One:
+            return S.One
+        if a.is_Integer is True and p.is_Integer is True:
+            return S(legendre(as_int(a), as_int(p)))
 
 
 class mobius(Function):
