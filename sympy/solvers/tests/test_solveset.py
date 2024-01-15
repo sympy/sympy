@@ -3541,4 +3541,3 @@ def test_issue_26077():
         assert expected_error_message in str(e)
     else:
         raise AssertionError("Expected TypeError but no exception was raised.")
-        
