@@ -15,7 +15,7 @@ from sympy.series.limits import limit, Limit
 from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, andre, partition, divisor_sigma, udivisor_sigma, mobius,
+    genocchi, andre, partition, divisor_sigma, udivisor_sigma, legendre_symbol, mobius,
     primenu, primeomega, totient, reduced_totient, primepi,
     motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
@@ -654,6 +654,40 @@ def test_udivisor_sigma():
                730, 850, 842, 1300, 962, 1025, 1220, 1450, 1300, 1394, 1370]
     for n, val in enumerate(A034676, 1):
         assert udivisor_sigma(n, 2) == val
+
+
+def test_legendre_symbol():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: legendre_symbol(m, 3))
+    raises(TypeError, lambda: legendre_symbol(4.5, 3))
+    raises(TypeError, lambda: legendre_symbol(1, m))
+    raises(TypeError, lambda: legendre_symbol(1, 4.5))
+    m = Symbol('m', prime=False)
+    raises(ValueError, lambda: legendre_symbol(1, m))
+    raises(ValueError, lambda: legendre_symbol(1, 6))
+    m = Symbol('m', odd=False)
+    raises(ValueError, lambda: legendre_symbol(1, m))
+    raises(ValueError, lambda: legendre_symbol(1, 2))
+
+    # special case
+    p = Symbol('p', prime=True)
+    k = Symbol('k', integer=True)
+    assert legendre_symbol(p*k, p) == 0
+    assert legendre_symbol(1, p) == 1
+
+    # property
+    n = Symbol('n')
+    m = Symbol('m')
+    assert legendre_symbol(m, n).is_integer is True
+    assert legendre_symbol(m, n).is_prime is False
+
+    # Integer
+    assert legendre_symbol(5, 11) == 1
+    assert legendre_symbol(25, 41) == 1
+    assert legendre_symbol(67, 101) == -1
+    assert legendre_symbol(0, 13) == 0
+    assert legendre_symbol(9, 3) == 0
 
 
 def test_mobius():

@@ -240,13 +240,6 @@ def test_residue():
                 else:
                     assert ans2 in ans
 
-    assert legendre_symbol(5, 11) == 1
-    assert legendre_symbol(25, 41) == 1
-    assert legendre_symbol(67, 101) == -1
-    assert legendre_symbol(0, 13) == 0
-    assert legendre_symbol(9, 3) == 0
-    raises(ValueError, lambda: legendre_symbol(2, 4))
-
     assert jacobi_symbol(25, 41) == 1
     assert jacobi_symbol(-23, 83) == -1
     assert jacobi_symbol(3, 9) == 0
@@ -369,3 +362,5 @@ def test_deprecated_ntheory_symbolic_functions():
 
     with warns_deprecated_sympy():
         assert mobius(3) == -1
+    with warns_deprecated_sympy():
+        assert legendre_symbol(2, 3) == -1

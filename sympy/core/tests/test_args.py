@@ -2027,6 +2027,11 @@ def test_sympy__functions__combinatorial__numbers__fibonacci():
     assert _test_args(fibonacci(x))
 
 
+def test_sympy__functions__combinatorial__numbers__legendre_symbol():
+    from sympy.functions.combinatorial.numbers import legendre_symbol
+    assert _test_args(legendre_symbol(2, 3))
+
+
 def test_sympy__functions__combinatorial__numbers__mobius():
     from sympy.functions.combinatorial.numbers import mobius
     assert _test_args(mobius(2))
