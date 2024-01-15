@@ -3538,7 +3538,7 @@ def test_issue_26077():
     x = Symbol('x', real=True)
     function = x*cot(5*x)
     result = stationary_points(function, x, S.Reals)
-    expected_result = {set()}  # Replace with the expected result
+    expected_result = set()  # Replace with the expected result
 
     # Print the repr of the output for better visibility
     print("Actual Result:", result)
