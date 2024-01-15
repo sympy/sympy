@@ -240,22 +240,11 @@ def test_residue():
                 else:
                     assert ans2 in ans
 
-    assert jacobi_symbol(25, 41) == 1
-    assert jacobi_symbol(-23, 83) == -1
-    assert jacobi_symbol(3, 9) == 0
-    assert jacobi_symbol(42, 97) == -1
-    assert jacobi_symbol(3, 5) == -1
-    assert jacobi_symbol(7, 9) == 1
-    assert jacobi_symbol(0, 3) == 0
-    assert jacobi_symbol(0, 1) == 1
-    assert jacobi_symbol(2, 1) == 1
-    assert jacobi_symbol(1, 3) == 1
-    raises(ValueError, lambda: jacobi_symbol(3, 8))
-
+    from sympy.functions.combinatorial.numbers import jacobi_symbol as _jacobi_symbol
     for n in range(3, 10, 2):
         for a in range(-n, n):
             val = kronecker_symbol(a, n)
-            assert val == jacobi_symbol(a, n)
+            assert val == _jacobi_symbol(a, n)
             minus = kronecker_symbol(a, -n)
             if a < 0:
                 assert -minus == val
@@ -364,3 +353,5 @@ def test_deprecated_ntheory_symbolic_functions():
         assert mobius(3) == -1
     with warns_deprecated_sympy():
         assert legendre_symbol(2, 3) == -1
+    with warns_deprecated_sympy():
+        assert jacobi_symbol(2, 3) == -1

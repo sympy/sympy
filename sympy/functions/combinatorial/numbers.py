@@ -19,7 +19,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
-from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre
+from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre, jacobi
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
@@ -1797,7 +1797,7 @@ class legendre_symbol(Function):
     See Also
     ========
 
-    sympy.ntheory.residue_ntheory.is_quad_residue, sympy.ntheory.residue_ntheory.jacobi_symbol
+    sympy.ntheory.residue_ntheory.is_quad_residue, jacobi_symbol
 
     """
     is_integer = True
@@ -1817,6 +1817,77 @@ class legendre_symbol(Function):
             return S.One
         if a.is_Integer is True and p.is_Integer is True:
             return S(legendre(as_int(a), as_int(p)))
+
+
+class jacobi_symbol(Function):
+    r"""
+    Returns the Jacobi symbol `(m / n)`.
+
+    For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
+    is defined as the product of the Legendre symbols corresponding to the
+    prime factors of ``n``:
+
+    .. math ::
+        \genfrac(){}{}{m}{n} =
+            \genfrac(){}{}{m}{p^{1}}^{\alpha_1}
+            \genfrac(){}{}{m}{p^{2}}^{\alpha_2}
+            ...
+            \genfrac(){}{}{m}{p^{k}}^{\alpha_k}
+            \text{ where } n =
+                p_1^{\alpha_1}
+                p_2^{\alpha_2}
+                ...
+                p_k^{\alpha_k}
+
+    Like the Legendre symbol, if the Jacobi symbol `\genfrac(){}{}{m}{n} = -1`
+    then ``m`` is a quadratic nonresidue modulo ``n``.
+
+    But, unlike the Legendre symbol, if the Jacobi symbol
+    `\genfrac(){}{}{m}{n} = 1` then ``m`` may or may not be a quadratic residue
+    modulo ``n``.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import jacobi_symbol, legendre_symbol
+    >>> from sympy import S
+    >>> jacobi_symbol(45, 77)
+    -1
+    >>> jacobi_symbol(60, 121)
+    1
+
+    The relationship between the ``jacobi_symbol`` and ``legendre_symbol`` can
+    be demonstrated as follows:
+
+    >>> L = legendre_symbol
+    >>> S(45).factors()
+    {3: 2, 5: 1}
+    >>> jacobi_symbol(7, 45) == L(7, 3)**2 * L(7, 5)**1
+    True
+
+    See Also
+    ========
+
+    sympy.ntheory.residue_ntheory.is_quad_residue, legendre_symbol
+
+    """
+    is_integer = True
+    is_prime = False
+
+    @classmethod
+    def eval(cls, m, n):
+        if m.is_integer is False:
+            raise TypeError("m should be an integer")
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False or n.is_odd is False:
+            raise ValueError("n should be an odd positive integer")
+        if m is S.One or n is S.One:
+            return S.One
+        if (m % n).is_zero is True:
+            return S.Zero
+        if m.is_Integer is True and n.is_Integer is True:
+            return S(jacobi(as_int(m), as_int(n)))
 
 
 class mobius(Function):

@@ -1122,9 +1122,19 @@ def legendre_symbol(a, p):
     return _legendre_symbol(a, p)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.jacobi_symbol` has been moved to `sympy.functions.combinatorial.numbers.jacobi_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def jacobi_symbol(m, n):
     r"""
     Returns the Jacobi symbol `(m / n)`.
+
+    .. deprecated:: 1.13
+
+        The ``jacobi_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.jacobi_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
     is defined as the product of the Legendre symbols corresponding to the
@@ -1179,8 +1189,8 @@ def jacobi_symbol(m, n):
 
     is_quad_residue, legendre_symbol
     """
-    m, n = as_int(m), as_int(n)
-    return int(jacobi(m, n))
+    from sympy.functions.combinatorial.numbers import jacobi_symbol as _jacobi_symbol
+    return _jacobi_symbol(m, n)
 
 
 def kronecker_symbol(a, n):
