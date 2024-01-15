@@ -3532,4 +3532,13 @@ def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
 
 def test_issue_26077():
-    assert solve(x*cot(5*x), x, S.Reals) == {val for val in Interval(-float('inf'), float('inf')).args if (val not in {2 * n * pi / 5 for n in range(-10, 11)} and val not in {(2 * n * pi / 5) + pi / 5 for n in range(-10, 11)} and x * (-5 * cot(5 * x)**2 - 5) + cot(5 * x) == 0)}
+    try:
+        sym = Symbol('_R')
+        base_set = Complement(Reals, Union(ImageSet(Lamda(_n, 2*_n*pi/5 + pi/5), Integer), ImageSet(Lamda(_n, 2*_n*pi/5), Integers)))
+        ConditionSet(sym, S.Reals - S.Integers)
+    except TypeError as e:
+        expected_error_message = 'sym '_R' is not in base_set'
+        assert expected_error_message in str(e)
+    else:
+        raise AssertionError("Expected TypeError but no exception was raised.")
+        
