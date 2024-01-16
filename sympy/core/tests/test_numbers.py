@@ -10,7 +10,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import (mpf_norm, seterr,
     Integer, I, pi, comp, Rational, E, nan,
     oo, AlgebraicNumber, Number, Float, zoo, equal_valued,
-    int_valued)
+    int_valued, all_close)
 from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
     ilcm, integer_nthroot, isqrt, integer_log, mod_inverse)
 from sympy.core.power import Pow
@@ -504,7 +504,7 @@ def test_Float():
     # rationality properties
     # if the integer test fails then the use of intlike
     # should be removed from gamma_functions.py
-    assert Float(1).is_integer is False
+    assert Float(1).is_integer is None
     assert Float(1).is_rational is None
     assert Float(1).is_irrational is None
     assert sqrt(2).n(15).is_rational is None
@@ -2280,3 +2280,18 @@ def test_equal_valued():
                     continue
                 for value_j in values_n:
                     assert equal_valued(value_i, value_j) is False
+
+
+def test_all_close():
+    x = Symbol('x')
+    assert all_close(2, 2) is True
+    assert all_close(2, 2.0000) is True
+    assert all_close(2, 2.0001) is False
+    assert all_close(1/3, 1/3.0001) is False
+    assert all_close(1/3, 1/3.0001, 1e-3, 1e-3) is True
+    assert all_close(1/3, Rational(1, 3)) is True
+    assert all_close(0.1*exp(0.2*x), exp(x/5)/10) is True
+    # The expressions should be structurally the same:
+    assert all_close(1.4142135623730951, sqrt(2)) is False
+    assert all_close(1.4142135623730951, sqrt(2).evalf()) is True
+    assert all_close(x + 1e-20, x) is False

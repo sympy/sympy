@@ -1,7 +1,12 @@
 """
-Basic methods common to all matrices to be used
-when creating more advanced matrices (e.g., matrices over rings,
-etc.).
+A module contining deprecated matrix mixin classes.
+
+The classes in this module are deprecated and will be removed in a future
+release. They are kept here for backwards compatibility in case downstream
+code was subclassing them.
+
+Importing anything else from this module is deprecated so anything here
+should either not be used or should be imported from somewhere else.
 """
 
 from collections import defaultdict
@@ -13,7 +18,6 @@ from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.decorators import call_highest_priority
-from sympy.core.kind import Kind, NumberKind
 from sympy.core.logic import fuzzy_and, FuzzyBool
 from sympy.core.numbers import Integer
 from sympy.core.mod import Mod
@@ -21,6 +25,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import Abs, re, im
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten, is_sequence
@@ -30,35 +35,128 @@ from sympy.tensor.array import NDimArray
 from .utilities import _get_intermediate_simp_bool
 
 
-class MatrixError(Exception):
-    pass
+# These exception types were previously defined in this module but were moved
+# to exceptions.py. We reimport them here for backwards compatibility in case
+# downstream code was importing them from here.
+from .exceptions import ( # noqa: F401
+    MatrixError, ShapeError, NonSquareMatrixError, NonInvertibleMatrixError,
+    NonPositiveDefiniteMatrixError
+)
 
 
-class ShapeError(ValueError, MatrixError):
-    """Wrong matrix shape"""
-    pass
+_DEPRECATED_MIXINS = (
+    'MatrixShaping',
+    'MatrixSpecial',
+    'MatrixProperties',
+    'MatrixOperations',
+    'MatrixArithmetic',
+    'MatrixCommon',
+    'MatrixDeterminant',
+    'MatrixReductions',
+    'MatrixSubspaces',
+    'MatrixEigen',
+    'MatrixCalculus',
+    'MatrixDeprecated',
+)
 
 
-class NonSquareMatrixError(ShapeError):
-    pass
+class _MatrixDeprecatedMeta(type):
+
+    #
+    # Override the default __instancecheck__ implementation to ensure that
+    # e.g. isinstance(M, MatrixCommon) still works when M is one of the
+    # matrix classes. Matrix no longer inherits from MatrixCommon so
+    # isinstance(M, MatrixCommon) would now return False by default.
+    #
+    # There were lots of places in the codebase where this was being done
+    # so it seems likely that downstream code may be doing it too. All use
+    # of these mixins is deprecated though so we give a deprecation warning
+    # unconditionally if they are being used with isinstance.
+    #
+    # Any code seeing this deprecation warning should be changed to use
+    # isinstance(M, MatrixBase) instead which also works in previous versions
+    # of SymPy.
+    #
+
+    def __instancecheck__(cls, instance):
+
+        sympy_deprecation_warning(
+            f"""
+            Checking whether an object is an instance of {cls.__name__} is
+            deprecated.
+
+            Use `isinstance(obj, Matrix)` instead of `isinstance(obj, {cls.__name__})`.
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="deprecated-matrix-mixins",
+            stacklevel=3,
+        )
+
+        from sympy.matrices.matrixbase import MatrixBase
+        from sympy.matrices.matrices import (
+            MatrixDeterminant,
+            MatrixReductions,
+            MatrixSubspaces,
+            MatrixEigen,
+            MatrixCalculus,
+            MatrixDeprecated
+        )
+
+        all_mixins = (
+            MatrixRequired,
+            MatrixShaping,
+            MatrixSpecial,
+            MatrixProperties,
+            MatrixOperations,
+            MatrixArithmetic,
+            MatrixCommon,
+            MatrixDeterminant,
+            MatrixReductions,
+            MatrixSubspaces,
+            MatrixEigen,
+            MatrixCalculus,
+            MatrixDeprecated
+        )
+
+        if cls in all_mixins and isinstance(instance, MatrixBase):
+            return True
+        else:
+            return super().__instancecheck__(instance)
 
 
-class NonInvertibleMatrixError(ValueError, MatrixError):
-    """The matrix in not invertible (division by multidimensional zero error)."""
-    pass
+class MatrixRequired(metaclass=_MatrixDeprecatedMeta):
+    """Deprecated mixin class for making matrix classes."""
 
-
-class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
-    """The matrix is not a positive-definite matrix."""
-    pass
-
-
-class MatrixRequired:
-    """All subclasses of matrix objects must implement the
-    required matrix properties listed here."""
     rows = None  # type: int
     cols = None  # type: int
     _simplify = None
+
+    def __init_subclass__(cls, **kwargs):
+
+        # Warn if any downstream code is subclassing this class or any of the
+        # deprecated mixin classes that are all ultimately subclasses of this
+        # class.
+        #
+        # We don't want to warn about the deprecated mixins themselves being
+        # created, but only about them being used as mixins by downstream code.
+        # Otherwise just importing this module would trigger a warning.
+        # Ultimately the whole module should be deprecated and removed but for
+        # SymPy 1.13 it is premature to do that given that this module was the
+        # main way to import matrix exception types in all previous versions.
+
+        if cls.__name__ not in _DEPRECATED_MIXINS:
+            sympy_deprecation_warning(
+                f"""
+                Inheriting from the Matrix mixin classes is deprecated.
+
+                The class {cls.__name__} is subclassing a deprecated mixin.
+                """,
+                deprecated_since_version="1.13",
+                active_deprecations_target="deprecated-matrix-mixins",
+                stacklevel=3,
+            )
+
+        super().__init_subclass__(**kwargs)
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -931,7 +1029,7 @@ class MatrixSpecial(MatrixRequired):
         .expressions.blockmatrix.BlockMatrix
         .sparsetools.banded
        """
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.matrices.dense import Matrix
         from sympy.matrices import SparseMatrix
         klass = kwargs.get('cls', kls)
@@ -1488,7 +1586,7 @@ class MatrixProperties(MatrixRequired):
 
         is_lower
         is_upper
-        sympy.matrices.matrices.MatrixEigen.is_diagonalizable
+        sympy.matrices.matrixbase.MatrixCommon.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()
@@ -2018,7 +2116,7 @@ class MatrixOperations(MatrixRequired):
 
         transpose: Matrix transposition
         H: Hermite conjugation
-        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
+        sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
         return self._eval_conjugate()
 
@@ -2072,7 +2170,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         conjugate: By-element conjugation
-        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
+        sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
         return self.T.C
 
@@ -2762,8 +2860,8 @@ class MatrixArithmetic(MatrixRequired):
         See Also
         ========
 
-        sympy.matrices.matrices.MatrixBase.cross
-        sympy.matrices.matrices.MatrixBase.dot
+        sympy.matrices.matrixbase.MatrixBase.cross
+        sympy.matrices.matrixbase.MatrixBase.dot
         multiply
         """
         if self.shape != other.shape:
@@ -2939,6 +3037,7 @@ class MatrixArithmetic(MatrixRequired):
     def __sub__(self, a):
         return self + (-a)
 
+
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
@@ -3086,72 +3185,6 @@ class _MatrixWrapper:
         return iter(sympify(mat[r, c]) for r in range(self.rows) for c in range(cols))
 
 
-class MatrixKind(Kind):
-    """
-    Kind for all matrices in SymPy.
-
-    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
-    but any expression representing the matrix can have this.
-
-    Parameters
-    ==========
-
-    element_kind : Kind
-        Kind of the element. Default is
-        :class:`sympy.core.kind.NumberKind`,
-        which means that the matrix contains only numbers.
-
-    Examples
-    ========
-
-    Any instance of matrix class has ``MatrixKind``:
-
-    >>> from sympy import MatrixSymbol
-    >>> A = MatrixSymbol('A', 2,2)
-    >>> A.kind
-    MatrixKind(NumberKind)
-
-    Although expression representing a matrix may be not instance of
-    matrix class, it will have ``MatrixKind`` as well:
-
-    >>> from sympy import MatrixExpr, Integral
-    >>> from sympy.abc import x
-    >>> intM = Integral(A, x)
-    >>> isinstance(intM, MatrixExpr)
-    False
-    >>> intM.kind
-    MatrixKind(NumberKind)
-
-    Use ``isinstance()`` to check for ``MatrixKind`` without specifying
-    the element kind. Use ``is`` with specifying the element kind:
-
-    >>> from sympy import Matrix
-    >>> from sympy.core import NumberKind
-    >>> from sympy.matrices import MatrixKind
-    >>> M = Matrix([1, 2])
-    >>> isinstance(M.kind, MatrixKind)
-    True
-    >>> M.kind is MatrixKind(NumberKind)
-    True
-
-    See Also
-    ========
-
-    sympy.core.kind.NumberKind
-    sympy.core.kind.UndefinedKind
-    sympy.core.containers.TupleKind
-    sympy.sets.sets.SetKind
-
-    """
-    def __new__(cls, element_kind=NumberKind):
-        obj = super().__new__(cls, element_kind)
-        obj.element_kind = element_kind
-        return obj
-
-    def __repr__(self):
-        return "MatrixKind(%s)" % self.element_kind
-
-
 def _matrixify(mat):
     """If `mat` is a Matrix or is matrix-like,
     return a Matrix or MatrixWrapper object.  Otherwise
@@ -3203,7 +3236,7 @@ def classof(A, B):
     ========
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.common import classof
+    >>> from sympy.matrices.matrixbase import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)

@@ -1,11 +1,11 @@
 from typing import Tuple as tTuple
 from collections import defaultdict
-from functools import cmp_to_key, reduce
+from functools import reduce
 from itertools import product
 import operator
 
 from .sympify import sympify
-from .basic import Basic
+from .basic import Basic, _args_sortkey
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
@@ -29,8 +29,6 @@ class NC_Marker:
     is_commutative = False
 
 
-# Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -583,6 +581,9 @@ class Mul(Expr, AssocOp):
         i = 0  # steps through num_rat which may grow
         while i < len(num_rat):
             bi, ei = num_rat[i]
+            if bi == 1:
+                i += 1
+                continue
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
@@ -1975,7 +1976,10 @@ class Mul(Expr, AssocOp):
                         n -= n1 - ns    # reduce n
                 facs.append(s)
 
-        except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
+        except (ValueError, NotImplementedError, TypeError, PoleError):
+            # XXX: Catching so many generic exceptions around a large block of
+            # code will mask bugs. Whatever purpose catching these exceptions
+            # serves should be handled in a different way.
             n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
             if n0.is_nonnegative:
                 n0 = S.Zero

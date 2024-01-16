@@ -77,7 +77,7 @@ def xthreaded(func):
 
 
 def conserve_mpmath_dps(func):
-    """After the function finishes, resets the value of mpmath.mp.dps to
+    """After the function finishes, resets the value of ``mpmath.mp.dps`` to
     the value it had before the function was run."""
     import mpmath
 
@@ -129,14 +129,14 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
     Adds metadata about the dependencies which need to be met for doctesting
     the docstrings of the decorated objects.
 
-    exe should be a list of executables
+    ``exe`` should be a list of executables
 
-    modules should be a list of modules
+    ``modules`` should be a list of modules
 
-    disable_viewers should be a list of viewers for preview() to disable
+    ``disable_viewers`` should be a list of viewers for :func:`~sympy.printing.preview.preview` to disable
 
-    python_version should be the minimum Python version required, as a tuple
-    (like (3, 0))
+    ``python_version`` should be the minimum Python version required, as a tuple
+    (like ``(3, 0)``)
     """
     dependencies = {}
     if exe is not None:
@@ -226,7 +226,7 @@ def public(obj):
 
 def memoize_property(propfunc):
     """Property decorator that caches the value of potentially expensive
-    `propfunc` after the first evaluation. The cached value is stored in
+    ``propfunc`` after the first evaluation. The cached value is stored in
     the corresponding property name with an attached underscore."""
     attrname = '_' + propfunc.__name__
     sentinel = object()

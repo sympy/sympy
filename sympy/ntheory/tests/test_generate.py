@@ -3,10 +3,11 @@ from bisect import bisect, bisect_left
 from sympy.core.numbers import (I, Rational, nan, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.numbers import mobius
 from sympy.ntheory.generate import (sieve, Sieve)
 from sympy.series.limits import limit
 
-from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevprime, \
+from sympy.ntheory import isprime, totient, randprime, nextprime, prevprime, \
     primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
@@ -232,12 +233,12 @@ def test_generate():
     assert mr(1, [2]) is False
 
     func = lambda i: (i**2 + 1) % 51
-    assert next(cycle_length(func, 4)) == (6, 2)
+    assert next(cycle_length(func, 4)) == (6, 3)
     assert list(cycle_length(func, 4, values=True)) == \
-        [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
+        [4, 17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
     assert next(cycle_length(func, 4, nmax=5)) == (5, None)
     assert list(cycle_length(func, 4, nmax=5, values=True)) == \
-        [17, 35, 2, 5, 26]
+        [4, 17, 35, 2, 5]
     sieve.extend(3000)
     assert nextprime(2968) == 2969
     assert prevprime(2930) == 2927

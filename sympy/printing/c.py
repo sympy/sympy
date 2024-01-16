@@ -151,18 +151,13 @@ class C89CodePrinter(CodePrinter):
     standard = "C89"
     reserved_words = set(reserved_words)
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
         'dereference': set(),
         'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-    }
+    })
 
     type_aliases = {
         real: float64,

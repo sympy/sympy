@@ -73,7 +73,7 @@ class DFM:
     >>> dfm.rep
     [1, 2]
     [3, 4]
-    >>> type(dfm.rep)
+    >>> type(dfm.rep)  # doctest: +SKIP
     <class 'flint._flint.fmpz_mat'>
 
     Usually, the DFM class is not instantiated directly, but is created as the
@@ -247,6 +247,15 @@ class DFM:
     def from_flat_nz(cls, elements, data, domain):
         """Inverse of :meth:`to_flat_nz`."""
         return DDM.from_flat_nz(elements, data, domain).to_dfm()
+
+    def to_dod(self):
+        """Convert to a DOD."""
+        return self.to_ddm().to_dod()
+
+    @classmethod
+    def from_dod(cls, dod, shape, domain):
+        """Inverse of :meth:`to_dod`."""
+        return DDM.from_dod(dod, shape, domain).to_dfm()
 
     def to_dok(self):
         """Convert to a DOK."""

@@ -9,7 +9,7 @@ from sympy.utilities.iterables import is_sequence, sift
 from sympy.utilities.misc import filldedent
 
 from sympy.matrices import Matrix, ShapeError
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matadd import MatAdd
@@ -76,7 +76,7 @@ class BlockMatrix(MatrixExpr):
 
     See Also
     ========
-    sympy.matrices.matrices.MatrixBase.irregular
+    sympy.matrices.matrixbase.MatrixBase.irregular
     """
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -197,10 +197,8 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
-            return Add(*[trace(self.blocks[i, i])
-                        for i in range(self.blockshape[0])])
-        raise NotImplementedError(
-            "Can't perform trace of irregular blockshape")
+            blocks = [self.blocks[i, i] for i in range(self.blockshape[0])]
+            return Add(*[trace(block) for block in blocks])
 
     def _eval_determinant(self):
         if self.blockshape == (1, 1):
@@ -315,7 +313,7 @@ class BlockMatrix(MatrixExpr):
         See Also
         ========
 
-        sympy.matrices.matrices.MatrixBase.pinv
+        sympy.matrices.matrixbase.MatrixBase.pinv
         """
 
         if self.blockshape == (2, 2):

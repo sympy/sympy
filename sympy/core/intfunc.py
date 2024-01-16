@@ -14,7 +14,8 @@ from functools import lru_cache
 
 from .sympify import sympify
 from .singleton import S
-from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm, sqrt, iroot, bit_scan1
+from sympy.external.gmpy import (gcd as number_gcd, lcm as number_lcm, sqrt,
+                                 iroot, bit_scan1, gcdext)
 from sympy.utilities.misc import as_int, filldedent
 
 
@@ -379,29 +380,8 @@ def igcdex(a, b):
     """
     if (not a) and (not b):
         return (0, 1, 0)
-
-    if not a:
-        return (0, b // abs(b), abs(b))
-    if not b:
-        return (a // abs(a), 0, abs(a))
-
-    if a < 0:
-        a, x_sign = -a, -1
-    else:
-        x_sign = 1
-
-    if b < 0:
-        b, y_sign = -b, -1
-    else:
-        y_sign = 1
-
-    x, y, r, s = 1, 0, 0, 1
-
-    while b:
-        (c, q) = (a % b, a // b)
-        (a, b, r, s, x, y) = (b, c, x - q * r, y - q * s, r, s)
-
-    return (x * x_sign, y * y_sign, a)
+    g, x, y = gcdext(int(a), int(b))
+    return x, y, g
 
 
 def mod_inverse(a, m):

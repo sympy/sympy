@@ -7,7 +7,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices import eye, Matrix
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
-from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError, MatrixError
 from sympy.matrices.expressions.fourier import DFT
 from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix

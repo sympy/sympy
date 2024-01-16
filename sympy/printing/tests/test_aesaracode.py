@@ -24,7 +24,7 @@ aesaralogger.setLevel(logging.WARNING)
 if aesara:
     import numpy as np
     aet = aesara.tensor
-    from aesara.scalar.basic import Scalar
+    from aesara.scalar.basic import ScalarType
     from aesara.graph.basic import Variable
     from aesara.tensor.var import TensorVariable
     from aesara.tensor.elemwise import Elemwise, DimShuffle
@@ -95,7 +95,7 @@ def aesara_simplify(fgraph):
     """
     mode = aesara.compile.get_default_mode().excluding("fusion")
     fgraph = fgraph.clone()
-    mode.optimizer.optimize(fgraph)
+    mode.optimizer.rewrite(fgraph)
     return fgraph
 
 
@@ -421,7 +421,7 @@ def test_MatrixSlice():
     Y = X[1:2:3, 4:5:6]
     Yt = aesara_code_(Y, cache=cache)
 
-    s = Scalar('int64')
+    s = ScalarType('int64')
     assert tuple(Yt.owner.op.idx_list) == (slice(s, s, s), slice(s, s, s))
     assert Yt.owner.inputs[0] == aesara_code_(X, cache=cache)
     # == doesn't work in Aesara like it does in SymPy. You have to use

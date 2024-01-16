@@ -157,11 +157,27 @@ def npartitions(n, verbose=False):
     .. [1] https://mathworld.wolfram.com/PartitionFunctionP.html
 
     """
+    from sympy.functions.combinatorial.numbers import _npartition, partition
     n = int(n)
     if n < 0:
         return 0
     if n <= 5:
         return [1, 1, 2, 3, 5, 7][n]
+    if (n <= 200_000 and n - len(_npartition) < 70 or
+            len(_npartition) == 2 and n < 14_400):
+        # There will be 2*10**5 elements created here
+        # and n elements created by partition, so in case we
+        # are going to be working with small n, we just
+        # use partition to calculate (and cache) the values
+        # since lookup is used there while summation, using
+        # _factor and _totient, will be used below. But we
+        # only do so if n is relatively close to the length
+        # of the cache since doing 1 calculation here is about
+        # the same as adding 70 elements to the cache. In addition,
+        # the startup here costs about the same as calculating the first
+        # 14,400 values via partition, so we delay startup here unless n
+        # is smaller than that.
+        return partition(n)
     if '_factor' not in globals():
         _pre()
     # Estimate number of bits in p(n). This formula could be tidied
@@ -170,10 +186,36 @@ def npartitions(n, verbose=False):
         math.log(4*n))/math.log(10) + 1) * \
         math.log(10, 2)
     prec = p = int(pbits*1.1 + 100)
+
+    # find the number of terms needed so rounded sum will be accurate
+    # using Rademacher's bound M(n, N) for the remainder after a partial
+    # sum of N terms (https://arxiv.org/pdf/1205.5991.pdf, (1.8))
+    c1 = 44*math.pi**2/(225*math.sqrt(3))
+    c2 = math.pi*math.sqrt(2)/75
+    c3 = math.pi*math.sqrt(2/3)
+    def M(n, N):
+        sqrt = math.sqrt
+        return c1/sqrt(N) + c2*sqrt(N/(n - 1))*math.sinh(c3*sqrt(n)/N)
+    big = max(9, math.ceil(n**0.5))  # should be too large (for n > 65, ceil should work)
+    assert M(n, big) < 0.5  # else double big until too large
+    while big > 40 and M(n, big) < 0.5:
+        big //= 2
+    small = big
+    big = small*2
+    while big - small > 1:
+        N = (big + small)//2
+        if (er := M(n, N)) < 0.5:
+            big = N
+        elif er >= 0.5:
+            small = N
+    M = big  # done with function M; now have value
+
+    # sanity check for expected size of answer
+    if M > 10**5:  # i.e. M > maxn
+        raise ValueError("Input too big")  # i.e. n > 149832547102
+
+    # calculate it
     s = fzero
-    M = max(6, int(0.24*n**0.5 + 4))
-    if M > 10**5:
-        raise ValueError("Input too big") # Corresponds to n > 1.7e11
     sq23pi = mpf_mul(mpf_sqrt(from_rational(2, 3, p), p), mpf_pi(p), p)
     sqrt8 = mpf_sqrt(from_int(8), p)
     for q in range(1, M):

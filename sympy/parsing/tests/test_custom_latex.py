@@ -3,7 +3,7 @@ import tempfile
 
 import sympy
 from sympy.testing.pytest import raises
-from sympy.parsing.latex.lark import LarkLatexParser, TransformToSymPyExpr, parse_latex_lark
+from sympy.parsing.latex.lark import LarkLaTeXParser, TransformToSymPyExpr, parse_latex_lark
 from sympy.external import import_module
 
 lark = import_module("lark")
@@ -31,7 +31,7 @@ def init_custom_parser(modification, transformer=None):
     with tempfile.NamedTemporaryFile() as f:
         f.write(bytes(latex_grammar, encoding="utf8"))
 
-        parser = LarkLatexParser(grammar_file=f.name, transformer=transformer)
+        parser = LarkLaTeXParser(grammar_file=f.name, transformer=transformer)
 
     return parser
 

@@ -578,6 +578,19 @@ def test_XXM_from_flat_nz(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_to_dod(DM):
+    dod = {0: {0: ZZ(1), 2: ZZ(4)}, 1: {0: ZZ(4), 1: ZZ(5), 2: ZZ(6)}}
+    assert DM([[1, 0, 4], [4, 5, 6]]).to_dod() == dod
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_from_dod(DM):
+    T = type(DM([[0]]))
+    dod = {0: {0: ZZ(1), 2: ZZ(4)}, 1: {0: ZZ(4), 1: ZZ(5), 2: ZZ(6)}}
+    assert T.from_dod(dod, (2, 3), ZZ) == DM([[1, 0, 4], [4, 5, 6]])
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
 def test_XXM_from_ddm(DM):
     T = type(DM([[0]]))
     ddm = DDM([[1, 2, 4], [4, 5, 6]], (2, 3), ZZ)

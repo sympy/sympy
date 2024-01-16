@@ -1,8 +1,8 @@
-"""Tests for the ``sympy.physics._biomechanics._mixin.py`` module."""
+"""Tests for the ``sympy.physics.biomechanics._mixin.py`` module."""
 
 import pytest
 
-from sympy.physics._biomechanics._mixin import _NamedMixin
+from sympy.physics.biomechanics._mixin import _NamedMixin
 
 
 class TestNamedMixin:

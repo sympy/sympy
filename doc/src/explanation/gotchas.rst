@@ -262,6 +262,11 @@ all built-in names and to autocomplete.  Also, see `this page
 <https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
 trick for getting tab completion in the regular Python console.
 
+.. note::
+
+   See also the :ref:`best-practices-defining-symbols` section of the
+   :doc:`best-practices` page.
+
 .. _calling-functions:
 
 Functions

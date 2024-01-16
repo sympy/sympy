@@ -44,7 +44,7 @@ from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1, TR2i, TR10, TR11
 from sympy.strategies.rl import rebuild
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
@@ -1137,27 +1137,28 @@ def solve(f, *symbols, **flags):
         if _has_piecewise(fi):
             f[i] = piecewise_fold(fi)
 
-    # expand double angles; in general, expand_trig will allow
+    # expand angles of sums; in general, expand_trig will allow
     # more roots to be found but this is not a great solultion
     # to not returning a parametric solution, otherwise
     # many values can be returned that have a simple
     # relationship between values
     targs = {t for fi in f for t in fi.atoms(TrigonometricFunction)}
-    add, other = sift(targs, lambda x: x.args[0].is_Add, binary=True)
-    add, other = [[i for i in l if i.has_free(*symbols)] for l in (add, other)]
-    trep = {}
-    for t in add:
-        a = t.args[0]
-        ind, dep = a.as_independent(*symbols)
-        if dep in symbols or -dep in symbols:
-            # don't let expansion expand wrt anything in ind
-            n = Dummy() if not ind.is_Number else ind
-            trep[t] = TR10(t.func(dep + n)).xreplace({n: ind})
-    if other and len(other) <= 2:
-        base = gcd(*[i.args[0] for i in other]) if len(other) > 1 else other[0].args[0]
-        for i in other:
-            trep[i] = TR11(i, base)
-    f = [fi.xreplace(trep) for fi in f]
+    if len(targs) > 1:
+        add, other = sift(targs, lambda x: x.args[0].is_Add, binary=True)
+        add, other = [[i for i in l if i.has_free(*symbols)] for l in (add, other)]
+        trep = {}
+        for t in add:
+            a = t.args[0]
+            ind, dep = a.as_independent(*symbols)
+            if dep in symbols or -dep in symbols:
+                # don't let expansion expand wrt anything in ind
+                n = Dummy() if not ind.is_Number else ind
+                trep[t] = TR10(t.func(dep + n)).xreplace({n: ind})
+        if other and len(other) <= 2:
+            base = gcd(*[i.args[0] for i in other]) if len(other) > 1 else other[0].args[0]
+            for i in other:
+                trep[i] = TR11(i, base)
+        f = [fi.xreplace(trep) for fi in f]
 
     #
     # try to get a solution
@@ -3144,7 +3145,7 @@ def _invert(eq, *symbols, **kwargs):
 
     >>> invert(sqrt(x + y) - 2)
     (4, x + y)
-    >>> invert(sqrt(x + y) - 2)
+    >>> invert(sqrt(x + y) + 2)  # note +2 instead of -2
     (4, x + y)
 
     If the exponent is an Integer, setting ``integer_power`` to True
@@ -3216,9 +3217,12 @@ def _invert(eq, *symbols, **kwargs):
             if any(_ispow(i) for i in (ad, bd)):
                 a_base, a_exp = ad.as_base_exp()
                 b_base, b_exp = bd.as_base_exp()
-                if a_base == b_base:
-                    # a = -b
-                    lhs = powsimp(powdenest(ad/bd))
+                if a_base == b_base and a_exp.extract_additively(b_exp) is None:
+                    # a = -b and exponents do not have canceling terms/factors
+                    # e.g. if exponents were 3*x and x then the ratio would have
+                    # an exponent of 2*x: one of the roots would be lost
+                    rat = powsimp(powdenest(ad/bd))
+                    lhs = rat
                     rhs = -bi/ai
                 else:
                     rat = ad/bd

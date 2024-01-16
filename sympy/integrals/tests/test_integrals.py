@@ -5,7 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, Lambda, diff)
 from sympy.core import EulerGamma
-from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.numbers import (E, I, Rational, nan, oo, pi, zoo, all_close)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -438,13 +438,12 @@ def test_issue_18133():
 
 
 def test_issue_21741():
-    a = Float('3999999.9999999995', precision=53)
-    b = Float('2.5000000000000004e-7', precision=53)
-    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x),
-                   Ne(1.0*pi*x*exp(a*I*pi*t*y), 0)),
+    a = 4e6
+    b = 2.5e-7
+    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x), Ne(x, 0)),
                   (z*exp(-a*I*pi*t*y), True))
     fun = E**((-2*I*pi*(z*x+t*y))/(500*10**(-9)))
-    assert integrate(fun, z) == r
+    assert all_close(integrate(fun, z), r)
 
 
 def test_matrices():
@@ -2113,3 +2112,21 @@ def test_issue_19427():
 
     # Sum of the above, used to incorrectly return 0 for a while:
     assert integrate((x ** 4 - 2 * x ** 2 + 1) * sqrt(1 - x ** 2), (x, -1, 1)) == 5 * pi / 16
+
+
+def test_issue_23942():
+    I1 = Integral(1/sqrt(a*(1 + x)**3 + (1 + x)**2), (x, 0, z))
+    assert I1.series(a, 1, n=1) == Integral(1/sqrt(x**3 + 4*x**2 + 5*x + 2), (x, 0, z)) + O(a - 1, (a, 1))
+    I2 = Integral(1/sqrt(a*(4 - x)**4 + (5 + x)**2), (x, 0, z))
+    assert I2.series(a, 2, n=1) == Integral(1/sqrt(2*x**4 - 32*x**3 + 193*x**2 - 502*x + 537), (x, 0, z)) + O(a - 2, (a, 2))
+
+
+def test_issue_25886():
+    # https://github.com/sympy/sympy/issues/25886
+    f = (1-x)*exp(0.937098661j*x)
+    F_exp = (1.0*(-1.0671234968289*I*y
+             + 1.13875255748434
+             + 1.0671234968289*I)*exp(0.937098661*I*y)
+            - 1.13875255748434*exp(0.937098661*I))
+    F = integrate(f, (x, y, 1.0))
+    assert F.is_same(F_exp, math.isclose)

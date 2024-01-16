@@ -12,7 +12,7 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity

@@ -27,6 +27,16 @@ from sympy import ordered
 
 
 class TupleArg(Tuple):
+
+    # This method is only needed because hyper._eval_as_leading_term falls back
+    # (via super()) on using Function._eval_as_leading_term, which in turn
+    # calls as_leading_term on the args of the hyper. Ideally hyper should just
+    # have an _eval_as_leading_term method that handles all cases and this
+    # method should be removed because leading terms of tuples don't make
+    # sense.
+    def as_leading_term(self, *x, logx=None, cdir=0):
+        return TupleArg(*[f.as_leading_term(*x, logx=logx, cdir=cdir) for f in self.args])
+
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
         """

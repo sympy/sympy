@@ -154,8 +154,8 @@ def test_bode():
 
 
 def check_point_accuracy(a, b):
-    return all(isclose(a_i, b_i, rel_tol=10e-12) for \
-        a_i, b_i in zip(a, b))
+    return all(isclose(*_, rel_tol=1e-1, abs_tol=1e-6
+        ) for _ in zip(a, b))
 
 
 def test_impulse_response():

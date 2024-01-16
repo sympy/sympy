@@ -303,11 +303,8 @@ def test_sparse():
 
 # Not an important point.
 def test_maple_not_supported():
-    assert maple_code(S.ComplexInfinity) == (
-        "# Not supported in maple:\n"
-        "# ComplexInfinity\n"
-        "zoo"
-    )  # PROBLEM
+    with raises(NotImplementedError):
+        maple_code(S.ComplexInfinity)
 
 
 def test_MatrixElement_printing():

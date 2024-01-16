@@ -80,17 +80,12 @@ class RCodePrinter(CodePrinter):
     printmethod = "_rcode"
     language = "R"
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 15,
         'user_functions': {},
-        'human': True,
         'contract': True,
         'dereference': set(),
-        'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-    }
+    })
     _operators = {
        'and': '&',
         'or': '|',

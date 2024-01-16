@@ -485,3 +485,16 @@ def test__pt():
     assert _pt(x, oo) == _pt(oo, x) == x + 1
     assert _pt(x, -oo) == _pt(-oo, x) == x - 1
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
+
+
+def test_issue_25697():
+    assert _solve_inequality(log(x, 3) <= 2, x) == (x <= 9) & (S.Zero < x)
+
+
+def test_issue_25738():
+    assert reduce_inequalities(3 < abs(x)
+        ) == reduce_inequalities(pi < abs(x)).subs(pi, 3)
+
+
+def test_issue_25983():
+    assert(reduce_inequalities(pi/Abs(x) <= 1) == ((pi <= x) & (x < oo)) | ((-oo < x) & (x <= -pi)))

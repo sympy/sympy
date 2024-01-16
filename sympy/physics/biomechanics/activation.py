@@ -1,4 +1,4 @@
-"""Activation dynamics for musclotendon models.
+r"""Activation dynamics for musclotendon models.
 
 Musculotendon models are able to produce active force when they are activated,
 which is when a chemical process has taken place within the muscle fibers
@@ -18,7 +18,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.matrices.dense import MutableDenseMatrix as Matrix, zeros
-from sympy.physics._biomechanics._mixin import _NamedMixin
+from sympy.physics.biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics import dynamicsymbols
 
 
@@ -172,6 +172,13 @@ class ActivationBase(ABC, _NamedMixin):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
 
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
+
         Explanation
         ===========
 
@@ -185,6 +192,13 @@ class ActivationBase(ABC, _NamedMixin):
     def p(self):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
+
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
 
         Explanation
         ===========
@@ -381,6 +395,13 @@ class ZerothOrderActivation(ActivationBase):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
 
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
+
         Explanation
         ===========
 
@@ -397,6 +418,13 @@ class ZerothOrderActivation(ActivationBase):
     def p(self):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
+
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
 
         Explanation
         ===========
@@ -468,7 +496,7 @@ class ZerothOrderActivation(ActivationBase):
 
 
 class FirstOrderActivationDeGroote2016(ActivationBase):
-    r"""First-order activation dynamics based on De Groote et al., 2016 [1].
+    r"""First-order activation dynamics based on De Groote et al., 2016 [1]_.
 
     Explanation
     ===========
@@ -479,16 +507,21 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
     The function is defined by the equation:
 
-    $\frac{da}{dt} = \left(\frac{\frac{1}{2} + a0}{\tau_a \left(\frac{1}{2}
-        + \frac{3a}{2}\right)} + \frac{\left(\frac{1}{2}
-        + \frac{3a}{2}\right) \left(\frac{1}{2} - a0\right)}{\tau_d}\right)
-        \left(e - a\right)$
+    .. math::
+
+        \frac{da}{dt} = \left(\frac{\frac{1}{2} + a0}{\tau_a \left(\frac{1}{2}
+            + \frac{3a}{2}\right)} + \frac{\left(\frac{1}{2}
+            + \frac{3a}{2}\right) \left(\frac{1}{2} - a0\right)}{\tau_d}\right)
+            \left(e - a\right)
 
     where
 
-    $a0 = \frac{\tanh{\left(b \left(e - a\right) \right)}}{2}$
+    .. math::
 
-    with constant values of $tau_a = 0.015$, $tau_d = 0.060$, and $b = 10$.
+        a0 = \frac{\tanh{\left(b \left(e - a\right) \right)}}{2}
+
+    with constant values of :math:`tau_a = 0.015`, :math:`tau_d = 0.060`, and
+    :math:`b = 10`.
 
     References
     ==========
@@ -534,7 +567,7 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
     @classmethod
     def with_defaults(cls, name):
-        """Alternate constructor that will use the published constants.
+        r"""Alternate constructor that will use the published constants.
 
         Explanation
         ===========
@@ -544,14 +577,14 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
         These have the values:
 
-        $tau_a = 0.015$
-        $tau_d = 0.060$
-        $b = 10$
+        :math:`tau_a = 0.015`
+        :math:`tau_d = 0.060`
+        :math:`b = 10`
 
         """
         tau_a = Float('0.015')
         tau_d = Float('0.060')
-        b = Integer(10)
+        b = Float('10.0')
         return cls(name, tau_a, tau_d, b)
 
     @property
@@ -723,13 +756,22 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
 
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
+
         Explanation
         ===========
 
         The alias ``p`` can also be used to access the same attribute.
 
         """
-        return Matrix([self._tau_a, self._tau_d, self._b])
+        constants = [self._tau_a, self._tau_d, self._b]
+        symbolic_constants = [c for c in constants if not c.is_number]
+        return Matrix(symbolic_constants) if symbolic_constants else zeros(0, 1)
 
     @property
     def p(self):
@@ -739,10 +781,19 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         Explanation
         ===========
 
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
+
         The alias ``constants`` can also be used to access the same attribute.
 
         """
-        return Matrix([self._tau_a, self._tau_d, self._b])
+        constants = [self._tau_a, self._tau_d, self._b]
+        symbolic_constants = [c for c in constants if not c.is_number]
+        return Matrix(symbolic_constants) if symbolic_constants else zeros(0, 1)
 
     @property
     def M(self):

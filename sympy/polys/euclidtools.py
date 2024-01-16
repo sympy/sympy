@@ -1199,7 +1199,7 @@ def dup_zz_heu_gcd(f, g, K):
 
     x = max(min(B, 99*K.sqrt(B)),
             2*min(f_norm // abs(dup_LC(f, K)),
-                  g_norm // abs(dup_LC(g, K))) + 2)
+                  g_norm // abs(dup_LC(g, K))) + 4)
 
     for i in range(0, HEU_GCD_MAX):
         ff = dup_eval(f, x, K)
@@ -1324,7 +1324,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
     x = max(min(B, 99*K.sqrt(B)),
             2*min(f_norm // abs(dmp_ground_LC(f, u, K)),
-                  g_norm // abs(dmp_ground_LC(g, u, K))) + 2)
+                  g_norm // abs(dmp_ground_LC(g, u, K))) + 4)
 
     for i in range(0, HEU_GCD_MAX):
         ff = dmp_eval(f, x, u, K)
@@ -1489,7 +1489,19 @@ def dup_inner_gcd(f, g, K):
     (x - 1, x + 1, x - 2)
 
     """
-    if not K.is_Exact:
+    # XXX: This used to check for K.is_Exact but leads to awkward results when
+    # the domain is something like RR[z] e.g.:
+    #
+    # >>> g, p, q = Poly(1, x).cancel(Poly(51.05*x*y - 1.0, x))
+    # >>> g
+    # 1.0
+    # >>> p
+    # Poly(17592186044421.0, x, domain='RR[y]')
+    # >>> q
+    # Poly(898081097567692.0*y*x - 17592186044421.0, x, domain='RR[y]'))
+    #
+    # Maybe it would be better to flatten into multivariate polynomials first.
+    if K.is_RR or K.is_CC:
         try:
             exact = K.get_exact()
         except DomainError:
@@ -1642,7 +1654,7 @@ def dup_rr_lcm(f, g, K):
 
     """
     if not f or not g:
-        return K.zero
+        return dmp_zero(0)
 
     fc, f = dup_primitive(f, K)
     gc, g = dup_primitive(g, K)
