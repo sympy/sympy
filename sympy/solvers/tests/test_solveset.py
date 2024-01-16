@@ -3545,4 +3545,4 @@ def test_issue_26077():
                                                 ImageSet(Lambda(_n, 2*_n*pi/5 + pi/5), Integers))))
     
     result = stationary_points(x*cot(5*x), x, S.Reals)
-    assert result == expected_result
+    assert result.args == expected_result.args
