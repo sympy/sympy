@@ -3536,7 +3536,8 @@ def test_issue_26077():
     x = Symbol('x', real=True)
     function = x*cot(5*x)
     result = stationary_points(function, x, S.Reals)
-    expected_result = solve(Eq(function.diff(x), 0), x)  # Replace with the expected result
+    expected_result = solve(Eq(function.diff(x), 0), x)
+    expected_result_set = set(expected_result)  # Replace with the expected result
 
     # Print the repr of the output for better visibility
-    assert set(result) == set(expected_result)
+    assert set(result) == expected_result_set
