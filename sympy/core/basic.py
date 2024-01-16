@@ -1693,7 +1693,7 @@ class Basic(Printable):
                 if exact:
                     _value = lambda expr, result: (value(**
                         {str(k)[:-1]: v for k, v in result.items()})
-                        if all(val for val in result.values()) else expr)
+                        if all(val is None for val in result.values()) else expr)
                 else:
                     _value = lambda expr, result: value(**
                         {str(k)[:-1]: v for k, v in result.items()})
