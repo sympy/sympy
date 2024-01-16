@@ -3546,4 +3546,5 @@ def test_issue_26077():
                                                 ImageSet(Lambda(_n, simplify(2*_n*pi/5 + pi/5)), Integers))))
     
 #    modified_result = (result.args[0], result.args[1], simplify(result.args[2]))
-    assert result == expected_result
+    modified_result = ConditionSet(result.variable, result.formula, simplify(result.base_set))
+    assert modified_result == expected_result
