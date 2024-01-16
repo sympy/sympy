@@ -3544,4 +3544,4 @@ def test_issue_26077():
 
     # Print the repr of the output for better visibility
 #    assert result == expected_result
-    assert stationary_points(function, x, S.Reals)== ConditionSet(x, Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0), Complement(Reals, Union(ImageSet(Lambda(_n, 2*pi*_n/5), Integers), ImageSet(Lambda(_n, pi*(2*_n + 1)/5), Integers))))
+    assert stationary_points(function, x, Reals)== ConditionSet(x, Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0), Complement(Reals, Union(ImageSet(Lambda(_n, 2*pi*_n/5), Integers), ImageSet(Lambda(_n, pi*(2*_n + 1)/5), Integers))))
