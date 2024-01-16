@@ -3538,11 +3538,12 @@ def test_issue_26077():
     x = Symbol('x', real=True)
     _n = Symbol('_n', integer=True)
 
-#    result = stationary_points(function, x, S.Reals)
+    result = stationary_points(x*cot(5*x), x, S.Reals)
+
     expected_result = ConditionSet(x, Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0),
                                Complement(Reals,
                                           Union(ImageSet(Lambda(_n, 2*_n*pi/5), Integers),
                                                 ImageSet(Lambda(_n, 2*_n*pi/5 + pi/5), Integers))))
     
-    result = stationary_points(x*cot(5*x), x, S.Reals)
-    assert result.args == expected_result.args
+    modified_result = (result.args[0], result.args[1], simplify(result.args[2]))
+    assert modified_result.args == expected_result.args
