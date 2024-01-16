@@ -389,11 +389,15 @@ def test_factor_nc():
 
     # issue 6701
     _n = symbols('nz', zero=False, commutative=False)
-    assert factor_nc(_n**k + _n**(k + 1)) == _n**k*(1 + _n)
+    assert factor_nc(_n**k + _n**(k + 1)) in [(1 + _n)*_n**k, _n**k*(1 + _n)]
     assert factor_nc((m*n)**k + (m*n)**(k + 1)) == (1 + m*n)*(m*n)**k
 
     # issue 6918
     assert factor_nc(-n*(2*x**2 + 2*x)) == -2*n*x*(x + 1)
+
+    # issue 26041
+    poly = m**2 + 2*m*n + n**2
+    assert factor_nc(poly) == poly
 
 
 def test_issue_6360():
