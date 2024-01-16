@@ -1453,3 +1453,9 @@ def test_eval_classmethod_check():
         class F(Function):
             def eval(self, x):
                 pass
+
+def test_noncommutative_diff():
+    # Check that noncommutative differentiation is properly handled
+    n = Symbol('n', commutative=False)
+    t = Symbol('t')
+    assert exp(t*n).diff(t) == n*exp(t*n)
