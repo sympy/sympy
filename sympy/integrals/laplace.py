@@ -578,7 +578,7 @@ def _laplace_rule_heaviside(f, t, s):
                 return (exp(-ma2[a] * s) * r, pr, cr)
             if ma2[a].is_negative:
                 _debug(
-                    '     rule: Heaviside factor, negative time shift (4.1.4)')
+                    '     rule: Heaviside factor; negative time shift (4.1.4)')
                 r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
                 return (r, pr, cr)
         if ma2 := ma1[y].match(a - t):
