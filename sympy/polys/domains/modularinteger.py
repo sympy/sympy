@@ -150,10 +150,28 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def _compare(self, other, op):
         val = self._get_val(other)
 
-        if val is not None:
-            return op(self.val, val % self.mod)
-        else:
+        if val is None:
             return NotImplemented
+
+        return op(self.val, val % self.mod)
+
+    def _compare_deprecated(self, other, op):
+        val = self._get_val(other)
+
+        if val is None:
+            return NotImplemented
+
+        sympy_deprecation_warning(
+            """Ordered comparisons with modular integers are deprecated.
+
+            Use e.g. int(a) < int(b) instead of a < b.
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="modularinteger-compare",
+            stacklevel=4,
+        )
+
+        return op(self.val, val % self.mod)
 
     def __eq__(self, other):
         return self._compare(other, operator.eq)
@@ -162,16 +180,16 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         return self._compare(other, operator.ne)
 
     def __lt__(self, other):
-        return self._compare(other, operator.lt)
+        return self._compare_deprecated(other, operator.lt)
 
     def __le__(self, other):
-        return self._compare(other, operator.le)
+        return self._compare_deprecated(other, operator.le)
 
     def __gt__(self, other):
-        return self._compare(other, operator.gt)
+        return self._compare_deprecated(other, operator.gt)
 
     def __ge__(self, other):
-        return self._compare(other, operator.ge)
+        return self._compare_deprecated(other, operator.ge)
 
     def __bool__(self):
         return bool(self.val)

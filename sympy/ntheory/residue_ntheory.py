@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from sympy.core.function import Function
-from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, lcm, invert, sqrt, legendre, jacobi, kronecker, bit_scan1
+from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
+                                 kronecker, bit_scan1, remove)
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
-from .factor_ import factorint, multiplicity, perfect_power
+from .factor_ import factorint, _perfect_power
 from .modular import crt
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint, randint
@@ -308,7 +309,7 @@ def primitive_root(p, smallest=True):
     if isprime(q):
         e = 1
     else:
-        m = perfect_power(q)
+        m = _perfect_power(q, 3)
         if not m:
             return None
         q, e = m
@@ -408,7 +409,7 @@ def is_primitive_root(a, p):
         group_order = q - 1
         factors = factorint(q - 1).keys()
     else:
-        m = perfect_power(q)
+        m = _perfect_power(q, 3)
         if not m:
             return False
         q, e = m
@@ -674,10 +675,10 @@ def _sqrt_mod1(a, p, n):
         # case gcd(a, p**k) = p**n
         return range(0, pn, p**((n + 1) // 2))
     # case gcd(a, p**k) = p**r, r < n
-    r = multiplicity(p, a)
+    a, r = remove(a, p)
     if r % 2 == 1:
         return None
-    res = _sqrt_mod_prime_power(a // p**r, p, n - r)
+    res = _sqrt_mod_prime_power(a, p, n - r)
     if res is None:
         return None
     m = r // 2
@@ -769,8 +770,8 @@ def is_quad_residue(a, p):
             a_ = a % px**ex
             if a_ == 0:
                 continue
-            r = multiplicity(px, a_)
-            if r % 2 or jacobi(a_ // px**r, px) != 1:
+            a_, r = remove(a_, px)
+            if r % 2 or jacobi(a_, px) != 1:
                 return False
     return True
 
@@ -822,10 +823,9 @@ def _is_nthpow_residue_bign_prime_power(a, n, p, k):
         a %= pow(p, k)
         if not a:
             return True
-        mu = multiplicity(p, a)
+        a, mu = remove(a, p)
         if mu % n:
             return False
-        a //= pow(p, mu)
         k -= mu
     if p != 2:
         f = p**(k - 1)*(p - 1) # f = totient(p**k)
@@ -1206,10 +1206,19 @@ def kronecker_symbol(a, n):
     """
     return int(kronecker(as_int(a), as_int(n)))
 
-
-class mobius(Function):
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.mobius` has been moved to `sympy.functions.combinatorial.numbers.mobius`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def mobius(n):
     """
     Mobius function maps natural number to {-1, 0, 1}
+
+    .. deprecated:: 1.13
+
+        The ``mobius`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.mobius`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     It is defined as follows:
         1) `1` if `n = 1`.
@@ -1247,22 +1256,8 @@ class mobius(Function):
     .. [2] Thomas Koshy "Elementary Number Theory with Applications"
 
     """
-    @classmethod
-    def eval(cls, n):
-        if n.is_integer:
-            if n.is_positive is not True:
-                raise ValueError("n should be a positive integer")
-        else:
-            raise TypeError("n should be an integer")
-        if n.is_prime:
-            return S.NegativeOne
-        elif n is S.One:
-            return S.One
-        elif n.is_Integer:
-            a = factorint(n)
-            if any(i > 1 for i in a.values()):
-                return S.Zero
-            return S.NegativeOne**len(a)
+    from sympy.functions.combinatorial.numbers import mobius as _mobius
+    return _mobius(n)
 
 
 def _discrete_log_trial_mul(n, a, b, order=None):
@@ -1778,11 +1773,8 @@ def _binomial_mod_prime_power(n, m, p, q):
 
     def up_plus_v_binom(u, v):
         """Compute binomial(u*p + v, v)_p modulo p^q."""
-        prod = div = 1
-        for i in range(1, v + 1):
-            div *= i
-            div %= modulo
-        div = invert(div, modulo)
+        prod = 1
+        div = invert(factorial(v), modulo)
         for j in range(1, q):
             b = div
             for v_ in range(j*p + 1, j*p + v + 1):
@@ -1798,13 +1790,10 @@ def _binomial_mod_prime_power(n, m, p, q):
             prod %= modulo
         return prod
 
-    factorials = [1]
-    def factorial(v):
+    @recurrence_memo([1])
+    def factorial(v, prev):
         """Compute v! modulo p^q."""
-        if len(factorials) <= v:
-            for i in range(len(factorials), v + 1):
-                factorials.append(factorials[-1]*i % modulo)
-        return factorials[v]
+        return v*prev[-1] % modulo
 
     def factorial_p(n):
         """Compute n!_p modulo p^q."""

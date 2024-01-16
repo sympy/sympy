@@ -8,8 +8,18 @@ from itertools import count
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_square as gmpy_is_square,
-                                 bit_scan1, is_fermat_prp, is_euler_prp)
-from sympy.utilities.misc import as_int
+                                 bit_scan1, is_fermat_prp, is_euler_prp,
+                                 is_selfridge_prp, is_strong_selfridge_prp,
+                                 is_strong_bpsw_prp)
+from sympy.external.ntheory import _lucas_sequence
+from sympy.utilities.misc import as_int, filldedent
+
+# Note: This list should be updated whenever new Mersenne primes are found.
+# Refer: https://www.mersenne.org/
+MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
+ 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049,
+ 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583,
+ 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
 
 
 def is_fermat_pseudoprime(n, a):
@@ -254,190 +264,6 @@ def mr(n, bases):
     return True
 
 
-def _lucas_sequence(n, P, Q, k):
-    r"""Return the modular Lucas sequence (U_k, V_k, Q_k).
-
-    Explanation
-    ===========
-
-    Given a Lucas sequence defined by P, Q, returns the kth values for
-    U and V, along with Q^k, all modulo n. This is intended for use with
-    possibly very large values of n and k, where the combinatorial functions
-    would be completely unusable.
-
-    .. math ::
-        U_k = \begin{cases}
-             0 & \text{if } k = 0\\
-             1 & \text{if } k = 1\\
-             PU_{k-1} - QU_{k-2} & \text{if } k > 1
-        \end{cases}\\
-        V_k = \begin{cases}
-             2 & \text{if } k = 0\\
-             P & \text{if } k = 1\\
-             PV_{k-1} - QV_{k-2} & \text{if } k > 1
-        \end{cases}
-
-    The modular Lucas sequences are used in numerous places in number theory,
-    especially in the Lucas compositeness tests and the various n + 1 proofs.
-
-    Parameters
-    ==========
-
-    n : int
-        n is an odd number greater than or equal to 3
-    P : int
-    Q : int
-        D determined by D = P**2 - 4*Q is non-zero
-    k : int
-        k is a nonnegative integer
-
-    Returns
-    =======
-
-    U, V, Qk : (int, int, int)
-        `(U_k \bmod{n}, V_k \bmod{n}, Q^k \bmod{n})`
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.primetest import _lucas_sequence
-    >>> N = 10**2000 + 4561
-    >>> sol = U, V, Qk = _lucas_sequence(N, 3, 1, N//2); sol
-    (0, 2, 1)
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Lucas_sequence
-
-    """
-    if k == 0:
-        return (0, 2, 1)
-    D = P**2 - 4*Q
-    U = 1
-    V = P
-    Qk = Q % n
-    if Q == 1:
-        # Optimization for extra strong tests.
-        for b in bin(k)[3:]:
-            U = (U*V) % n
-            V = (V*V - 2) % n
-            if b == "1":
-                U, V = U*P + V, V*P + U*D
-                if U & 1:
-                    U += n
-                if V & 1:
-                    V += n
-                U, V = U >> 1, V >> 1
-    elif P == 1 and Q == -1:
-        # Small optimization for 50% of Selfridge parameters.
-        for b in bin(k)[3:]:
-            U = (U*V) % n
-            if Qk == 1:
-                V = (V*V - 2) % n
-            else:
-                V = (V*V + 2) % n
-                Qk = 1
-            if b == "1":
-                # new_U = (U + V) // 2
-                # new_V = (5*U + V) // 2 = 2*U + new_U
-                U, V  = U + V, U << 1
-                if U & 1:
-                    U += n
-                U >>= 1
-                V += U
-                Qk = -1
-        Qk %= n
-    elif P == 1:
-        for b in bin(k)[3:]:
-            U = (U*V) % n
-            V = (V*V - 2*Qk) % n
-            Qk *= Qk
-            if b == "1":
-                # new_U = (U + V) // 2
-                # new_V = new_U - 2*Q*U
-                U, V  = U + V, (Q*U) << 1
-                if U & 1:
-                    U += n
-                U >>= 1
-                V = U - V
-                Qk *= Q
-            Qk %= n
-    else:
-        # The general case with any P and Q.
-        for b in bin(k)[3:]:
-            U = (U*V) % n
-            V = (V*V - 2*Qk) % n
-            Qk *= Qk
-            if b == "1":
-                U, V = U*P + V, V*P + U*D
-                if U & 1:
-                    U += n
-                if V & 1:
-                    V += n
-                U, V = U >> 1, V >> 1
-                Qk *= Q
-            Qk %= n
-    return (U % n, V % n, Qk)
-
-
-def _lucas_selfridge_params(n):
-    """Calculates the Selfridge parameters (D, P, Q) for n.
-
-    Explanation
-    ===========
-
-    The Lucas compositeness test checks whether n is a prime number.
-    The test can be run with arbitrary parameters ``P`` and ``Q``, which also change the performance of the test.
-    So, which parameters are most effective for running the Lucas compositeness test?
-    As an algorithm for determining ``P`` and ``Q``, Selfridge proposed method A [1]_ page 1401
-    (Since two methods were proposed, referred to simply as A and B in the paper,
-    we will refer to one of them as "method A").
-
-    method A fixes ``P = 1``. Then, ``D`` defined by ``D = P**2 - 4Q`` is varied from 5, -7, 9, -11, 13, and so on,
-    with the first ``D`` being ``jacobi(D, n) == -1``. Once ``D`` is determined,
-    ``Q`` is determined to be ``(P**2 - D)//4``. Here is an implementation of the method A.
-
-    Parameters
-    ==========
-
-    n : int
-        positive odd integer
-
-    Returns
-    =======
-
-    D, P, Q: Selfridge parameters for Lucas compositeness test.
-             ``(0, 0, 0)`` if we find a nontrivial divisor of ``n``.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.primetest import _lucas_selfridge_params
-    >>> _lucas_selfridge_params(101)
-    (-7, 1, 2)
-    >>> _lucas_selfridge_params(15)
-    (0, 0, 0)
-
-    References
-    ==========
-
-    .. [1] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
-           Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
-           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
-           http://mpqs.free.fr/LucasPseudoprimes.pdf
-
-    """
-    for D in count(5, 2):
-        if D & 2: # if D % 4 == 3
-            D = -D
-        j = jacobi(D, n)
-        if j == -1:
-            return (D, 1, (1 - D)//4)
-        elif j == 0 and D % n:
-            return (0, 0, 0)
-
-
 def _lucas_extrastrong_params(n):
     """Calculates the "extra strong" parameters (D, P, Q) for n.
 
@@ -513,17 +339,9 @@ def is_lucas_prp(n):
     9179
     """
     n = as_int(n)
-    if n == 2:
-        return True
-    if n < 2 or (n % 2) == 0:
+    if n < 2:
         return False
-    if gmpy_is_square(n):
-        return False
-
-    D, P, Q = _lucas_selfridge_params(n)
-    if D == 0:
-        return False
-    return _lucas_sequence(n, P, Q, n + 1)[0] == 0
+    return is_selfridge_prp(n)
 
 
 def is_strong_lucas_prp(n):
@@ -559,31 +377,9 @@ def is_strong_lucas_prp(n):
     18971
     """
     n = as_int(n)
-    if n == 2:
-        return True
-    if n < 2 or (n % 2) == 0:
+    if n < 2:
         return False
-    if gmpy_is_square(n):
-        return False
-
-    D, P, Q = _lucas_selfridge_params(n)
-    if D == 0:
-        return False
-
-    # remove powers of 2 from n+1 (= k * 2**s)
-    s = bit_scan1(n + 1)
-    k = (n + 1) >> s
-
-    U, V, Qk = _lucas_sequence(n, P, Q, k)
-
-    if U == 0 or V == 0:
-        return True
-    for _ in range(1, s):
-        V = (V*V - 2*Qk) % n
-        if V == 0:
-            return True
-        Qk = pow(Qk, 2, n)
-    return False
+    return is_strong_selfridge_prp(n)
 
 
 def is_extra_strong_lucas_prp(n):
@@ -658,6 +454,148 @@ def is_extra_strong_lucas_prp(n):
     return False
 
 
+def proth_test(n):
+    r""" Test if the Proth number `n = k2^m + 1` is prime. where k is a positive odd number and `2^m > k`.
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is Proth number
+
+    Returns
+    =======
+
+    bool : If ``True``, then ``n`` is the Proth prime
+
+    Raises
+    ======
+
+    ValueError
+        If ``n`` is not Proth number.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import proth_test
+    >>> proth_test(41)
+    True
+    >>> proth_test(57)
+    False
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Proth_prime
+
+    """
+    n = as_int(n)
+    if n < 3:
+        raise ValueError("n is not Proth number")
+    m = bit_scan1(n - 1)
+    k = n >> m
+    if m < k.bit_length():
+        raise ValueError("n is not Proth number")
+    if n % 3 == 0:
+        return n == 3
+    if k % 3: # n % 12 == 5
+        return pow(3, n >> 1, n) == n - 1
+    # If `n` is a square number, then `jacobi(a, n) = 1` for any `a`
+    if gmpy_is_square(n):
+        return False
+    # `a` may be chosen at random.
+    # In any case, we want to find `a` such that `jacobi(a, n) = -1`.
+    for a in range(5, n):
+        j = jacobi(a, n)
+        if j == -1:
+            return pow(a, n >> 1, n) == n - 1
+        if j == 0:
+            return False
+
+
+def _lucas_lehmer_primality_test(p):
+    r""" Test if the Mersenne number `M_p = 2^p-1` is prime.
+
+    Parameters
+    ==========
+
+    p : int
+        ``p`` is an odd prime number
+
+    Returns
+    =======
+
+    bool : If ``True``, then `M_p` is the Mersenne prime
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import _lucas_lehmer_primality_test
+    >>> _lucas_lehmer_primality_test(5) # 2**5 - 1 = 31 is prime
+    True
+    >>> _lucas_lehmer_primality_test(11) # 2**11 - 1 = 2047 is not prime
+    False
+
+    See Also
+    ========
+
+    is_mersenne_prime
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lucas%E2%80%93Lehmer_primality_test
+
+    """
+    v = 4
+    m = 2**p - 1
+    for _ in range(p - 2):
+        v = pow(v, 2, m) - 2
+    return v == 0
+
+
+def is_mersenne_prime(n):
+    """Returns True if  ``n`` is a Mersenne prime, else False.
+
+    A Mersenne prime is a prime number having the form `2^i - 1`.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_mersenne_prime
+    >>> is_mersenne_prime(6)
+    False
+    >>> is_mersenne_prime(127)
+    True
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/MersennePrime.html
+
+    """
+    n = as_int(n)
+    if n < 1:
+        return False
+    if n & (n + 1):
+        # n is not Mersenne number
+        return False
+    p = n.bit_length()
+    if p in MERSENNE_PRIME_EXPONENTS:
+        return True
+    if p < 65_000_000 or not isprime(p):
+        # According to GIMPS, verification was completed on September 19, 2023 for p less than 65 million.
+        # https://www.mersenne.org/report_milestones/
+        # If p is composite number, then n=2**p-1 is composite number.
+        return False
+    result = _lucas_lehmer_primality_test(p)
+    if result:
+        raise ValueError(filldedent('''
+            This Mersenne Prime, 2^%s - 1, should
+            be added to SymPy's known values.''' % p))
+    return result
+
+
 def isprime(n):
     """
     Test if n is a prime number (True) or not (False). For n < 2^64 the
@@ -722,10 +660,12 @@ def isprime(n):
 
     References
     ==========
-    - https://en.wikipedia.org/wiki/Strong_pseudoprime
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
-    - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
+    .. [1] https://en.wikipedia.org/wiki/Strong_pseudoprime
+    .. [2] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
+           Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
+           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [3] https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
     try:
         n = as_int(n)
@@ -762,7 +702,7 @@ def isprime(n):
     # This should be a bit faster than our step 2, and for large values will
     # be a lot faster than our step 3 (C+GMP vs. Python).
     if _gmpy is not None:
-        return _gmpy.is_strong_prp(n, 2) and _gmpy.is_strong_selfridge_prp(n)
+        return is_strong_bpsw_prp(n)
 
 
     # Step 2: deterministic Miller-Rabin testing for numbers < 2^64.  See:
@@ -826,7 +766,7 @@ def isprime(n):
     #      3.2s   extra strong BPSW
 
     # Classic BPSW from page 1401 of the paper.  See alternate ideas below.
-    return mr(n, [2]) and is_strong_lucas_prp(n)
+    return is_strong_bpsw_prp(n)
 
     # Using extra strong test, which is somewhat faster
     #return mr(n, [2]) and is_extra_strong_lucas_prp(n)

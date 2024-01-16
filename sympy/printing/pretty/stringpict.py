@@ -12,6 +12,8 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
+import shutil
+
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width, center
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
@@ -318,36 +320,8 @@ class stringPict:
     def terminal_width(self):
         """Return the terminal width if possible, otherwise return 0.
         """
-        ncols = 0
-        try:
-            import curses
-            import io
-            try:
-                curses.setupterm()
-                ncols = curses.tigetnum('cols')
-            except AttributeError:
-                # windows curses doesn't implement setupterm or tigetnum
-                # code below from
-                # https://code.activestate.com/recipes/440694/
-                from ctypes import windll, create_string_buffer
-                # stdin handle is -10
-                # stdout handle is -11
-                # stderr handle is -12
-                h = windll.kernel32.GetStdHandle(-12)
-                csbi = create_string_buffer(22)
-                res = windll.kernel32.GetConsoleScreenBufferInfo(h, csbi)
-                if res:
-                    import struct
-                    (bufx, bufy, curx, cury, wattr,
-                     left, top, right, bottom, maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
-                    ncols = right - left + 1
-            except curses.error:
-                pass
-            except io.UnsupportedOperation:
-                pass
-        except (ImportError, TypeError):
-            pass
-        return ncols
+        size = shutil.get_terminal_size(fallback=(0, 0))
+        return size.columns
 
     def __eq__(self, o):
         if isinstance(o, str):

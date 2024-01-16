@@ -97,8 +97,6 @@ Ntheory Functions Reference
 
 .. autofunction:: is_perfect
 
-.. autofunction:: is_mersenne_prime
-
 .. autofunction:: abundance
 
 .. autofunction:: is_abundant
@@ -151,6 +149,10 @@ Ntheory Functions Reference
 
 .. autofunction:: is_extra_strong_lucas_prp
 
+.. autofunction:: proth_test
+
+.. autofunction:: is_mersenne_prime
+
 .. autofunction:: isprime
 
 .. autofunction:: is_gaussian_prime
@@ -181,6 +183,8 @@ Ntheory Functions Reference
 
 .. autofunction:: kronecker_symbol
 
+.. autofunction:: mobius
+
 .. autofunction:: discrete_log
 
 .. autofunction:: quadratic_congruence
@@ -193,9 +197,6 @@ Ntheory Functions Reference
    :members:
 
 .. automodule:: sympy.ntheory.digits
-   :members:
-
-.. autoclass:: sympy.ntheory.mobius
    :members:
 
 .. module:: sympy.ntheory.egyptian_fraction

@@ -218,6 +218,11 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         if a.y == 0:
             return a.x
 
+    def from_EX(K1, a, K0):
+        """Convert ``Expression`` to GMPY's ``mpz``. """
+        if a.is_Integer:
+            return K1.from_sympy(a)
+
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """
         h, s, t = gcdex(a, b)

@@ -358,6 +358,8 @@ def test_Poly__new__():
 
     raises(GeneratorsNeeded, lambda: Poly(1))
 
+    assert Poly('x-x') == Poly(0, x)
+
     f = a*x**2 + b*x + c
 
     assert Poly({2: a, 1: b, 0: c}, x) == f
@@ -3142,6 +3144,16 @@ def test_cancel():
     g = Poly(-x**9 + x**8 + x**6 - x**5 + 2*x**2 - 3*x + 1, x)
 
     assert cancel((f, g)) == (1, -f, -g)
+
+    f = Poly(x/3 + 1, x)
+    g = Poly(x/7 + 1, x)
+
+    assert f.cancel(g) == (S(7)/3,
+        Poly(x + 3, x, domain=QQ),
+        Poly(x + 7, x, domain=QQ))
+    assert f.cancel(g, include=True) == (
+        Poly(7*x + 21, x, domain=QQ),
+        Poly(3*x + 21, x, domain=QQ))
 
     f = Poly(y, y, domain='ZZ(x)')
     g = Poly(1, y, domain='ZZ[x]')

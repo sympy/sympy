@@ -749,8 +749,11 @@ class Float(Number):
 
     _mpf_: tuple[int, int, int, int]
 
-    # A Float represents many real numbers,
-    # both rational and irrational.
+    # A Float, though rational in form, does not behave like
+    # a rational in all Python expressions so we deal with
+    # exceptions (where we want to deal with the rational
+    # form of the Float as a rational) at the source rather
+    # than assigning a mathematically loaded category of 'rational'
     is_rational = None
     is_irrational = None
     is_number = True
@@ -900,11 +903,10 @@ class Float(Number):
                     return Float._new(
                         (num[0], num[1], num[2], bitcount(num[1])),
                         precision)
+        elif isinstance(num, (Number, NumberSymbol)):
+            _mpf_ = num._as_mpf_val(precision)
         else:
-            try:
-                _mpf_ = num._as_mpf_val(precision)
-            except (NotImplementedError, AttributeError):
-                _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
+            _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
 
         return cls._new(_mpf_, precision, zero=False)
 
@@ -970,7 +972,10 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
-        return self._mpf_ == fzero
+        if self._mpf_ == fzero:
+            return True
+        if not int_valued(self):
+            return False
 
     def _eval_is_negative(self):
         if self._mpf_ in (_mpf_ninf, _mpf_inf):
@@ -2427,7 +2432,7 @@ class AlgebraicNumber(Expr):
 
         if rep0 is not None:
             from sympy.polys.densetools import dup_compose
-            c = dup_compose(rep.rep, rep0.rep, dom)
+            c = dup_compose(rep.to_list(), rep0.to_list(), dom)
             rep = DMP.from_list(c, 0, dom)
             scoeffs = Tuple(*c)
 
@@ -3900,6 +3905,9 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
     def __int__(self):
         return 1
 
+    def _as_mpf_val(self, prec):
+        return self._eval_evalf(prec)._mpf_
+
     def _eval_evalf(self, prec):
         rv = self._eval_expand_func(function=True)._eval_evalf(prec + 4)
         return Float(rv, precision=prec)
@@ -4238,6 +4246,53 @@ def equal_valued(x, y):
         if q.bit_length() - 1 != neg_exp:
             return False
         return (1 << neg_exp) == q
+
+
+def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
+    """Return True if expr1 and expr2 are numerically close.
+
+    The expressions must have the same structure, but any Rational, Integer, or
+    Float numbers they contain are compared approximately using rtol and atol.
+    Any other parts of expressions are compared exactly.
+
+    Relative tolerance is measured with respect to expr2 so when used in
+    testing expr2 should be the expected correct answer.
+
+    Examples
+    ========
+
+    >>> from sympy import exp
+    >>> from sympy.abc import x, y
+    >>> from sympy.core.numbers import all_close
+    >>> expr1 = 0.1*exp(x - y)
+    >>> expr2 = exp(x - y)/10
+    >>> expr1
+    0.1*exp(x - y)
+    >>> expr2
+    exp(x - y)/10
+    >>> expr1 == expr2
+    False
+    >>> all_close(expr1, expr2)
+    True
+    """
+    NUM_TYPES = (Rational, Float)
+
+    def _all_close(expr1, expr2, rtol, atol):
+        num1 = isinstance(expr1, NUM_TYPES)
+        num2 = isinstance(expr2, NUM_TYPES)
+        if num1 != num2:
+            return False
+        elif num1:
+            return bool(abs(expr1 - expr2) <= atol + rtol*abs(expr2))
+        elif expr1.is_Atom:
+            return expr1 == expr2
+        elif expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
+            return False
+        else:
+            args = zip(expr1.args, expr2.args)
+            return all(_all_close(a1, a2, rtol, atol) for a1, a2 in args)
+
+    return _all_close(_sympify(expr1), _sympify(expr2), rtol, atol)
 
 
 @dispatch(Tuple, Number) # type:ignore

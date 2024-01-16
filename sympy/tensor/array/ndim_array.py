@@ -189,7 +189,7 @@ class NDimArray(Printable):
         return None
 
     def _setter_iterable_check(self, value):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         if isinstance(value, (Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
@@ -214,7 +214,7 @@ class NDimArray(Printable):
 
     @classmethod
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array import SparseNDimArray
 
         if shape is None:
@@ -417,7 +417,7 @@ class NDimArray(Printable):
         return type(self)(result_list, self.shape)
 
     def __mul__(self, other):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array import SparseNDimArray
         from sympy.tensor.array.arrayop import Flatten
 
@@ -434,7 +434,7 @@ class NDimArray(Printable):
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array import SparseNDimArray
         from sympy.tensor.array.arrayop import Flatten
 
@@ -451,7 +451,7 @@ class NDimArray(Printable):
         return type(self)(result_list, self.shape)
 
     def __truediv__(self, other):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array import SparseNDimArray
         from sympy.tensor.array.arrayop import Flatten
 

@@ -4,10 +4,10 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
+from functools import cmp_to_key
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
-from .core import ordering_of_classes
 from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
@@ -33,7 +33,73 @@ def as_Basic(expr):
             expr))
 
 
-def _old_compare(x: type, y: type) -> int:
+# Key for sorting commutative args in canonical order
+# by name. This is used for canonical ordering of the
+# args for Add and Mul *if* the names of both classes
+# being compared appear here. Some things in this list
+# are not spelled the same as their name so they do not,
+# in effect, appear here. See Basic.compare.
+ordering_of_classes = [
+    # singleton numbers
+    'Zero', 'One', 'Half', 'Infinity', 'NaN', 'NegativeOne', 'NegativeInfinity',
+    # numbers
+    'Integer', 'Rational', 'Float',
+    # singleton symbols
+    'Exp1', 'Pi', 'ImaginaryUnit',
+    # symbols
+    'Symbol', 'Wild',
+    # arithmetic operations
+    'Pow', 'Mul', 'Add',
+    # function values
+    'Derivative', 'Integral',
+    # defined singleton functions
+    'Abs', 'Sign', 'Sqrt',
+    'Floor', 'Ceiling',
+    'Re', 'Im', 'Arg',
+    'Conjugate',
+    'Exp', 'Log',
+    'Sin', 'Cos', 'Tan', 'Cot', 'ASin', 'ACos', 'ATan', 'ACot',
+    'Sinh', 'Cosh', 'Tanh', 'Coth', 'ASinh', 'ACosh', 'ATanh', 'ACoth',
+    'RisingFactorial', 'FallingFactorial',
+    'factorial', 'binomial',
+    'Gamma', 'LowerGamma', 'UpperGamma', 'PolyGamma',
+    'Erf',
+    # special polynomials
+    'Chebyshev', 'Chebyshev2',
+    # undefined functions
+    'Function', 'WildFunction',
+    # anonymous functions
+    'Lambda',
+    # Landau O symbol
+    'Order',
+    # relational operations
+    'Equality', 'Unequality', 'StrictGreaterThan', 'StrictLessThan',
+    'GreaterThan', 'LessThan',
+]
+
+def _cmp_name(x: type, y: type) -> int:
+    """return -1, 0, 1 if the name of x is before that of y.
+    A string comparison is done if either name does not appear
+    in `ordering_of_classes`. This is the helper for
+    ``Basic.compare``
+
+    Examples
+    ========
+
+    >>> from sympy import cos, tan, sin
+    >>> from sympy.core import basic
+    >>> save = basic.ordering_of_classes
+    >>> basic.ordering_of_classes = ()
+    >>> basic._cmp_name(cos, tan)
+    -1
+    >>> basic.ordering_of_classes = ["tan", "sin", "cos"]
+    >>> basic._cmp_name(cos, tan)
+    1
+    >>> basic._cmp_name(sin, cos)
+    -1
+    >>> basic.ordering_of_classes = save
+
+    """
     # If the other object is not a Basic subclass, then we are not equal to it.
     if not issubclass(y, Basic):
         return -1
@@ -240,11 +306,19 @@ class Basic(Printable):
 
     def compare(self, other):
         """
-        Return -1, 0, 1 if the object is smaller, equal, or greater than other.
-
-        Not in the mathematical sense. If the object is of a different type
-        from the "other" then their classes are ordered according to
-        the sorted_classes list.
+        Return -1, 0, 1 if the object is less than, equal,
+        or greater than other in a canonical sense.
+        Non-Basic are always greater than Basic.
+        If both names of the classes being compared appear
+        in the `ordering_of_classes` then the ordering will
+        depend on the appearance of the names there.
+        If either does not appear in that list, then the
+        comparison is based on the class name.
+        If the names are the same then a comparison is made
+        on the length of the hashable content.
+        Items of the equal-lengthed contents are then
+        successively compared using the same rules. If there
+        is never a difference then 0 is returned.
 
         Examples
         ========
@@ -264,7 +338,7 @@ class Basic(Printable):
             return 0
         n1 = self.__class__
         n2 = other.__class__
-        c = _old_compare(n1, n2)
+        c = _cmp_name(n1, n2)
         if c:
             return c
         #
@@ -286,6 +360,13 @@ class Basic(Printable):
 
     @staticmethod
     def _compare_pretty(a, b):
+        """return -1, 0, 1 if a is canonically less, equal or
+        greater than b. This is used when 'order=old' is selected
+        for printing. This puts Order last, orders Rationals
+        according to value, puts terms in order wrt the power of
+        the last power appearing in a term. Ties are broken using
+        Basic.compare.
+        """
         from sympy.series.order import Order
         if isinstance(a, Order) and not isinstance(b, Order):
             return 1
@@ -309,6 +390,7 @@ class Basic(Printable):
                     if c != 0:
                         return c
 
+        # break ties
         return Basic.compare(a, b)
 
     @classmethod
@@ -2122,6 +2204,9 @@ class Basic(Printable):
         return True
 
 _aresame = Basic.is_same  # for sake of others importing this
+
+# key used by Mul and Add to make canonical args
+_args_sortkey = cmp_to_key(Basic.compare)
 
 # For all Basic subclasses _prepare_class_assumptions is called by
 # Basic.__init_subclass__ but that method is not called for Basic itself so we

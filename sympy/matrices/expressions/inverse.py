@@ -1,7 +1,7 @@
 from sympy.core.sympify import _sympify
 from sympy.core import S, Basic
 
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.expressions.matpow import MatPow
 
 
