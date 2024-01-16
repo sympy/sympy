@@ -390,8 +390,10 @@ class Vector(BasisDependent):
         elif self == Vector.zero and other == Vector.zero:
             return True
 
-        else:
+        elif (self == Vector.zero and other != Vector.zero) or (self != Vector.zero and other == Vector.zero):
             return False
+
+        return None
 
 
 
