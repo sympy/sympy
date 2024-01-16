@@ -234,7 +234,7 @@ class Body(RigidBody, Particle):  # type: ignore
         ===========
 
         Applies the force on self or equal and oppposite forces on
-        self and other body if both are given on the desried point on the bodies.
+        self and other body if both are given on the desired point on the bodies.
         The force applied on other body is taken opposite of self, i.e, -force.
 
         Parameters
@@ -243,7 +243,7 @@ class Body(RigidBody, Particle):  # type: ignore
         force: Vector
             The force to be applied.
         point: Point, optional
-            The point on self on which force is applied.
+            The point on self, on which the force is applied.
             By default self's masscenter.
         reaction_body: Body, optional
             Second body on which equal and opposite force
@@ -336,7 +336,7 @@ class Body(RigidBody, Particle):  # type: ignore
         Explanation
         ===========
 
-        Applies the torque on self or equal and oppposite torquess on
+        Applies the torque on self or equal and oppposite torques on
         self and other body if both are given.
         The torque applied on other body is taken opposite of self,
         i.e, -torque.

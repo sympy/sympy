@@ -3534,17 +3534,17 @@ def test_issue_22628():
 def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
 
+
+
 def test_issue_26077():
     x = Symbol('x', real=True)
-    _n = Symbol('_n', integer=True)
+    _n = Symbol('_n', Integers=True)
 
     result = stationary_points(x*cot(5*x), x, S.Reals)
 
     expected_result = ConditionSet(x, Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0),
                                Complement(Reals,
-                                          Union(ImageSet(Lambda(_n, simplify(2*_n*pi/5)), Integers),
-                                                ImageSet(Lambda(_n, simplify(2*_n*pi/5 + pi/5)), Integers))))
+                                          Union(ImageSet(Lambda(_n, 2*_n*pi/5), Integers),
+                                                ImageSet(Lambda(_n, 2*_n*pi/5 + pi/5), Integers))))
     
-#    modified_result = (result.args[0], result.args[1], simplify(result.args[2]))
-    modified_result = ConditionSet(result.variable, result.formula, simplify(result.base_set))
-    assert modified_result == expected_result
+    assert result == expected_result
