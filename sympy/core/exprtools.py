@@ -1567,3 +1567,440 @@ def factor_nc(expr):
 
         # mid was an Add that didn't factor successfully
         return _keep_coeff(c, g*l*mid*r)
+
+
+def _nc_generators(expr):
+    if expr.is_Add or expr.is_Mul:
+        generators = set()
+        for arg in expr.args:
+            generators |= _nc_generators(arg)
+        return generators
+    if expr.is_commutative:
+        return set()
+    if expr.is_Atom:
+        return set([expr])
+    if expr.is_Pow:
+        term, pw = expr.args
+        if pw.is_positive and pw.is_Integer:
+            return _nc_generators(term)
+    return set([expr])
+
+def _nc_degree(expr, generators):
+    if expr.is_Add:
+        return max([_nc_degree(arg, generators) for arg in expr.args])
+    if expr.is_Mul:
+        return sum([_nc_degree(arg, generators) for arg in expr.args])
+    if expr.is_commutative:
+        return 0
+    if expr in generators:
+        return 1
+    if expr.is_Pow:
+        term, pw = expr.args
+        if term not in generators:
+            raise ValueError(f"_nc_degree: Expected {term} to be in generators")
+        if pw.is_positive and pw.is_Integer:
+            return pw
+    raise ValueError(f"_nc_degree: Expected {expr} to be in generators")
+
+class _NCMonomial():
+    def __init__(self, coeff, term, generators, degree=None):
+        self.coeff = coeff
+        self.term = term
+        self.generators = generators
+        self.degree = degree
+        if self.degree is None:
+            self.degree = _nc_degree(self.term, self.generators)
+
+    def split(self, ldegree):
+        """Split into two monomials of ldegree and self.degree - ldegree"""
+        if ldegree < 0:
+            raise ValueError(f"ldegree must be nonnegative")
+        if ldegree == 0:
+            return (
+                _NCMonomial(self.coeff, Integer(1), self.generators, 0),
+                _NCMonomial(Integer(1), self.term, self.generators, self.degree),
+            )
+        if ldegree == self.degree:
+            return (
+                self,
+                _NCMonomial(Integer(1), Integer(1), self.generators, 0)
+            )
+            
+        if ldegree > self.degree:
+            raise ValueError(f"Monomial {self} of degree {self.degree} can't be split with left term of degree {ldegree}")
+        rdegree = self.degree - ldegree
+        
+        if self.term.is_Pow:
+            subterms = [self.term]
+        elif self.term.is_Mul:
+            subterms = self.term.args
+
+        acc = 0
+        for idx, subterm in enumerate(subterms):
+            if subterm.is_Pow:
+                trm = subterm.args[0]
+                pw = subterm.args[1]
+            else:
+                trm = subterm
+                pw = 1
+            acc += pw
+            if acc < ldegree:
+                continue
+            gap = acc - ldegree
+            lterm = Mul(*subterms[:idx], trm**(pw - gap))
+            rterm = Mul(trm**gap, *subterms[idx+1:])
+            return (
+                _NCMonomial(self.coeff, lterm, self.generators, degree=ldegree),
+                _NCMonomial(Integer(1), rterm, self.generators, degree=rdegree)
+            )
+
+
+    def ldivide(self, other):
+        if other.degree > self.degree:
+            return None
+        if other.degree == self.degree:
+            if self.term == other.term:
+                return _NCMonomial(self.coeff / other.coeff, Integer(1), self.generators, degree=0)
+            return None
+        # Could detect inequality earlier if I don't use split
+        left, right = self.split(other.degree)
+        if left.term == other.term:
+            return _NCMonomial(self.coeff / other.coeff, right.term, self.generators, self.degree - other.degree)
+        return None
+
+
+    def rdivide(self, other):
+        if other.degree > self.degree:
+            return None
+        if other.degree == self.degree:
+            if self.term == other.term:
+                return _NCMonomial(self.coeff / other.coeff, Integer(1), self.generators, degree=0)
+            return None
+        # Could detect inequality earlier if I don't use split
+        left, right = self.split(self.degree - other.degree)
+        if right.term == other.term:
+            return _NCMonomial(self.coeff / other.coeff, left.term, self.generators, self.degree - other.degree)
+        return None
+
+    def to_expr(self):
+        return self.coeff * self.term
+
+    def __add__(self, other):
+        # Assumes other is _NCMonomial with same generators
+        if other.term != self.term:
+            raise ValueError(f"Cannot add {self} and {other} as monomials")
+        return _NCMonomial(self.coeff + other.coeff, self.term, self.generators, self.degree)
+
+    def __mul__(self, other):
+        if isinstance(other, _NCMonomial):
+            # Assumes other has same generators
+            return _NCMonomial(self.coeff * other.coeff, self.term * other.term, self.generators, self.degree + other.degree)
+        if isinstance(other, _NCPoly):
+            return NotImplemented
+        return _NCMonomial(self.coeff * other, self.term, self.generators, self.degree)
+
+    def __str__(self):
+        return str(self.coeff * self.term)
+
+    def __repr__(self):
+        return str(self)
+            
+
+
+class _NCPoly():
+    def __init__(self, expr, generators=None):
+        if isinstance(expr, dict):
+            self.rep = expr
+            self.generators = generators
+        else:
+            if expr is None:
+                expr = Add()
+            expr = expr.expand()
+            self.generators = generators
+            if generators is None:
+                self.generators = _nc_generators(expr)
+            coeffs_dict = expr.as_coefficients_dict(*self.generators)
+
+            # Representation: Dict[degree, Dict[term, _NCMonomial]]
+            self.rep = {}
+            for term, coeff in coeffs_dict.items():
+                degree = _nc_degree(term, self.generators)
+                if degree not in self.rep:
+                    self.rep[degree] = {}
+                self.rep[degree][term] = _NCMonomial(coeff, term, self.generators, degree)
+        self._eval_degree()
+
+    def _eval_degree(self):
+        if len(self.rep) == 0:
+            self.degree = 0
+        else:
+            self.degree = max(self.rep.keys())
+
+    def __add__(self, other):
+        out = self.copy()
+        if isinstance(other, _NCPoly):
+            for monom in other.monomials():
+                out.add(monom)
+        elif isinstance(other, _NCMonomial):
+            out.add(other)
+        else:
+            raise ValueError(f"Can't add {other} to _NCPoly")
+        return out
+
+    def __sub__(self, other):
+        out = self.copy()
+        if isinstance(other, _NCPoly):
+            for monom in other.monomials():
+                out.subtract(monom)
+        elif isinstance(other, _NCMonomial):
+            out.subtract(other)
+        else:
+            raise ValueError(f"Can't add {other} to _NCPoly")
+        return out
+
+    def __mul__(self, other):
+        out = _NCPoly(None, self.generators)
+        if isinstance(other, _NCPoly):
+            if self.generators != other.generators:
+                raise ValueError("Incompatible generators")
+            for lterm in self.monomials():
+                for rterm in other.monomials():
+                    out.add(lterm * rterm)
+        else:
+            for term in self.monomials():
+                out.add(term * other)
+        return out
+
+    def __rmul__(self, other):
+        out = _NCPoly(None, self.generators)
+        for term in self.monomials():
+            out.add(other * term)
+        return out
+
+    def __len__(self):
+        if len(self.rep) == 0:
+            return 0
+        return sum([len(terms) for terms in self.rep.values()])
+
+    def monomials(self, degree=None):
+        if degree is None:
+            for monomials in self.rep.values():
+                for monomial in monomials.values():
+                    yield monomial
+        else:
+            for monomial in self.rep.get(degree, {}).values():
+                yield monomial
+
+    def copy(self, degree=None):
+        if degree is None:
+            new_rep = {k: v.copy() for k, v in self.rep.items()}
+        else:
+            new_rep = {}
+            if degree in self.rep:
+                new_rep[degree] = self.rep[degree].copy()
+        return _NCPoly(new_rep, self.generators)
+
+    def extract_coeff_factor(self, degree=None):
+        '''
+        Return the greatest common divisor of all terms (with specified degree) 
+        '''
+        from sympy.simplify.radsimp import fraction
+        from sympy.polys.polytools import gcd, lcm
+        numerators = []
+        denominators = []
+        for monom in self.monomials(degree):
+            num, denom = fraction(monom.coeff)
+            numerators.append(num)
+            denominators.append(denom)
+        return gcd(numerators) / lcm(denominators)
+ 
+    def add(self, monom):
+        degree = monom.degree
+        term = monom.term
+        if degree > self.degree:
+            self.degree = degree
+
+        if degree not in self.rep:
+            self.rep[degree] = {}
+
+        if term in self.rep[degree]:
+            new_monom = self.rep[degree][term] + monom
+
+            if new_monom.coeff == 0:
+                del self.rep[degree][term]
+                if len(self.rep[degree]) == 0:
+                    del self.rep[degree]
+                    if degree == self.degree:
+                        self._eval_degree()
+            else:
+                self.rep[degree][term] = new_monom
+        else:
+            self.rep[degree][term] = monom
+
+    def subtract(self, monom):
+        return self.add(monom * -1)
+
+    def to_expr(self):
+        return Add(*[monom.to_expr() for monom in self.monomials()])
+        
+
+    def factor_homogeneous(self, ldegree):
+        """Factor the maximum-degree terms into two polynomials of degree ldegree and self.degree - ldegree, if possible.
+        Return None, None if no such factorization exists.
+
+        Implementation based on Algorithm 1 from https://arxiv.org/abs/1002.3180
+        """
+        rdegree = self.degree - ldegree
+        terms = list(self.monomials(self.degree))
+        Ghat, Hhat = terms[0].split(ldegree)
+        G = _NCPoly(None, self.generators)
+        H = _NCPoly(None, self.generators)
+        G.add(Ghat)
+        H.add(Hhat)
+        for monomial in terms[1:]:
+            R = monomial.ldivide(Ghat)
+            if R is None:
+                L = monomial.rdivide(Hhat)
+                if L is not None:
+                    G.add(L)
+            else:
+                H.add(R)
+        if len(G) * len(H) != len(terms):
+            return None, None
+        GH = G * H
+        if GH.to_expr() == Add(*[term.to_expr() for term in terms]):
+            return G, H
+        return None, None
+
+    def factor_all(self):
+        coeff_factor, F = self._factor_coeff()
+        factorizations = F._factor_recursive()
+        if coeff_factor != 1:
+            factorizations = (coeff_factor * f for f in factorizations)
+        return factorizations
+
+    def factor_one(self):
+        return next(self._factor_recursive())
+        coeff_factor, F = self._factor_coeff()
+        out = next(F._factor_recursive())
+        if coeff_factor != 1:
+            out = coeff_factor * out
+        return out
+
+
+    def _factor_recursive(self):
+        out = set()
+        for degree in range(1, self.degree):
+            for G, H in self._factor_once(degree):
+                Gs = G._factor_recursive()
+                Hs = H._factor_recursive()
+                H_list = []
+                G_first = next(Gs)
+                for H_expr in Hs:
+                    H_list.append(H_expr)
+                    expr = G_first * H_expr
+                    if expr not in out:
+                        yield expr
+                        out.add(expr)
+                for G_expr in Gs:
+                    for H_expr in H_list:
+                        expr = G_expr * H_expr
+                        if expr not in out:
+                            yield expr
+                            out.add(expr)
+        if len(out) == 0:
+            yield self.to_expr()
+
+    def _factor_coeff(self):
+        coeff_factor = self.extract_coeff_factor()
+        if coeff_factor == 1:
+            return (Integer(1), self)
+        return (coeff_factor, self * (1/coeff_factor))
+
+    def _factor_once(self, ldegree):
+        """Factor into polynomials of degree ldegree and self.degree - ldegree, if possible.
+
+        Return a generator that yields tuples of polynomials
+
+        Implementation based on Algorithm 2 from https://arxiv.org/abs/1002.3180
+        """
+        from sympy.solvers.solvers import solve
+        if self.degree == 0:
+            return
+        if len(self) < 2:
+            return
+
+        if ldegree == 0 or ldegree >= self.degree:
+            return
+            
+        G, H = self.factor_homogeneous(ldegree)
+        if G is None:
+            return
+
+        n = self.degree
+        h = ldegree
+        k = n - ldegree
+        # TODO: better selection of monomials?
+        Ghat = next(G.monomials())
+        Hhat = next(H.monomials())
+        
+        dummies = []
+        Fhat = self.copy()
+
+        for j in range(1, n + 1):
+            for i in range(1, j):
+                Fhat -= G.copy(h - i) * H.copy(k - j + i)
+
+            if j <= min(h, k):
+                Ghat_L, Ghat_R = Ghat.split(h - j)
+                Hhat_L, Hhat_R = Hhat.split(j)
+                if Ghat_R.term == Hhat_L.term:
+                    # Lines 7-8 of the published algorithm suggest that the term should be
+                    # Ghat_L.term * Hhat_R.term. This doesn't make sense, however - the term is
+                    # supposed to have degree n - j, not n - 2j.
+                    term = Ghat.term * Hhat_R.term
+                    c = 0
+                    if term in Fhat.rep.get(n - j, {}):
+                        c = Fhat.rep[n - j][term].coeff
+                        Fhat.subtract(_NCMonomial(c, term, self.generators, n - j))
+                    dummy = Dummy()
+                    dummies.append(dummy)
+                    # Lines 10-11 of the published algorithm suggest that we should add a monomial
+                    # with term Ghat_L * Hhat_R to both G and H. If this were the case, then in
+                    # step 3 of the example in 3.3 from the paper, we would add -alpha * y to G instead of -alpha.
+                    # This seems to be a second minor mistake in the published algorithm.
+                    G.add(Ghat_L * dummy)
+                    H.add(Hhat_R * (c -dummy))
+
+            for monom in Fhat.monomials(n - j):
+                R = monom.ldivide(Ghat)
+                if R is not None:
+                    H.add(R)
+                L = monom.rdivide(Hhat)
+                if L is not None:
+                    G.add(L)
+
+        diff = self - G * H
+        if len(dummies) == 0:
+            if len(diff) == 0:
+                yield G, H
+            return
+        
+        solns = solve([term.coeff for term in diff.monomials()], dummies)
+        if len(solns) == 0:
+            return
+        Gexpr = G.to_expr()
+        Hexpr = H.to_expr()
+        for soln in solns:
+            substitutes = list(zip(dummies, soln))
+            yield (
+                _NCPoly(Gexpr.subs(substitutes), self.generators),
+                _NCPoly(Hexpr.subs(substitutes), self.generators),
+            )
+                    
+
+    def __str__(self):
+        return str(self.to_expr())
+
+    def __repr__(self):
+        return str(self)
