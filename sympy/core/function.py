@@ -604,7 +604,7 @@ class Function(Application, Expr):
                 df = self.fdiff(i)
             except ArgumentIndexError:
                 df = Function.fdiff(self, i)
-            l.append(df * da)
+            l.append(da * df)
         return Add(*l)
 
     def _eval_is_commutative(self):
