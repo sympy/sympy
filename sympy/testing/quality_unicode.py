@@ -42,7 +42,6 @@ unicode_whitelist = [
     # multiple lines etc)
     r'*/sympy/physics/wigner.py',
     r'*/sympy/physics/optics/polarization.py',
-    r'*/sympy/core/symbol.py',
 
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
@@ -50,6 +49,8 @@ unicode_whitelist = [
     # lll method has unicode in docstring references and author name
     r'*/sympy/polys/matrices/domainmatrix.py',
     r'*/sympy/matrices/repmatrix.py',
+
+    # Explanation of symbols uses greek letters
     r'*/sympy/core/symbol.py',
 ]
 
