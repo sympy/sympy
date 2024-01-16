@@ -1398,3 +1398,7 @@ def test_issue_25847():
     assert limit(acsch(sin(x)/x), x, 0, '+-') == log(1 + sqrt(2))
     assert limit(acsch(exp(1/x)), x, 0, '+') == 0
     assert limit(acsch(exp(1/x)), x, 0, '-') == oo
+
+
+def test_issue_26040():
+    assert limit(besseli(0, x + 1)/besseli(0, x), x, oo) == S.Exp1
