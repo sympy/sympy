@@ -3536,6 +3536,8 @@ def test_issue_26077():
     x = Symbol('x', real=True)
     function = x*cot(5*x)
     result = stationary_points(function, x, S.Reals)
+    assert ConditionSet(x, Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0), Complement(Reals, Union(ImageSet(Lambda(_n, 2*_n*pi/5), Integers), ImageSet(Lambda(_n, 2*_n*pi/5 + pi/5), Integers)))) == set()
+    
     expected_result = set()  # Replace with the expected result
 
     # Print the repr of the output for better visibility
