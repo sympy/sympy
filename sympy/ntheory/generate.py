@@ -534,8 +534,8 @@ def primepi(n):
         primerange : Generate all primes in a given range
         prime : Return the nth prime
     """
-    from sympy.functions.combinatorial.numbers import primepi as _primepi
-    return _primepi(n)
+    from sympy.functions.combinatorial.numbers import primepi as func_primepi
+    return func_primepi(n)
 
 
 def _primepi(n:int) -> int:
