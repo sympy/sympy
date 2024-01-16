@@ -3538,10 +3538,7 @@ def test_issue_26077():
     x = Symbol('x', real=True)
     _n = Symbol('_n', integer=True)
     function = x*cot(5*x)
-#    result = stationary_points(function, x, S.Reals)
-#    expected_result = ConditionSet(x, Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0), Complement(Reals, Union(ImageSet(Lambda(_n, simplify(2*_n*pi/5)), Integers), ImageSet(Lambda(_n, simplify(2*_n*pi/5 + pi/5)), Integers))))
-    # Replace with the expected result
+    result = stationary_points(function, x, S.Reals)
+    expected_result = ConditionSet(x, Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0), Complement(Reals, Union(ImageSet(Lambda(_n, simplify(2*_n*pi/5)), Integers), ImageSet(Lambda(_n, simplify(2*_n*pi/5 + pi/5)), Integers))))
 
-    # Print the repr of the output for better visibility
-#    assert result == expected_result
-    assert stationary_points(function, x, Reals) == ConditionSet(x, Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0), Complement(Reals, Union(ImageSet(Lambda(_n,simplify(2*_n*pi/5)), Integers), ImageSet(Lambda(_n, simplify(2*_n*pi/5 + pi/5)), Integers))))
+    assert result.equals(expected_result)
