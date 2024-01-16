@@ -3541,5 +3541,4 @@ def test_issue_26077():
     expected_result = set()  # Replace with the expected result
 
     # Print the repr of the output for better visibility
-    print("Actual Result:", result)
-    print(f"Expected Result: {expected_result}")
+    assert result == expected_result
