@@ -181,8 +181,6 @@ Ntheory Functions Reference
 
 .. autofunction:: jacobi_symbol
 
-.. autofunction:: kronecker_symbol
-
 .. autofunction:: mobius
 
 .. autofunction:: discrete_log

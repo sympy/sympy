@@ -19,7 +19,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
-from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre, jacobi
+from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre, jacobi, kronecker
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
@@ -1888,6 +1888,45 @@ class jacobi_symbol(Function):
             return S.Zero
         if m.is_Integer is True and n.is_Integer is True:
             return S(jacobi(as_int(m), as_int(n)))
+
+
+class kronecker_symbol(Function):
+    r"""
+    Returns the Kronecker symbol `(a / n)`.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import kronecker_symbol
+    >>> kronecker_symbol(45, 77)
+    -1
+    >>> kronecker_symbol(13, -120)
+    1
+
+    See Also
+    ========
+
+    jacobi_symbol, legendre_symbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
+
+    """
+    is_integer = True
+    is_prime = False
+
+    @classmethod
+    def eval(cls, a, n):
+        if a.is_integer is False:
+            raise TypeError("a should be an integer")
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if a is S.One or n is S.One:
+            return S.One
+        if a.is_Integer is True and n.is_Integer is True:
+            return S(kronecker(as_int(a), as_int(n)))
 
 
 class mobius(Function):

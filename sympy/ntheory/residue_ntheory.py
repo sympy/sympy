@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from sympy.external.gmpy import (gcd, lcm, invert, sqrt, jacobi,
-                                 kronecker, bit_scan1, remove)
+                                 bit_scan1, remove)
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -1192,38 +1192,6 @@ def jacobi_symbol(m, n):
     from sympy.functions.combinatorial.numbers import jacobi_symbol as _jacobi_symbol
     return _jacobi_symbol(m, n)
 
-
-def kronecker_symbol(a, n):
-    r"""
-    Returns the Kronecker symbol `(a / n)`.
-
-    Parameters
-    ==========
-
-    a : integer
-    n : integer
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.residue_ntheory import kronecker_symbol
-    >>> kronecker_symbol(45, 77)
-    -1
-    >>> kronecker_symbol(13, -120)
-    1
-
-    See Also
-    ========
-
-    jacobi_symbol, legendre_symbol
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
-
-    """
-    return int(kronecker(as_int(a), as_int(n)))
 
 @deprecated("""\
 The `sympy.ntheory.residue_ntheory.mobius` has been moved to `sympy.functions.combinatorial.numbers.mobius`.""",
