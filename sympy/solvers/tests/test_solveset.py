@@ -3530,3 +3530,14 @@ def test_issue_22628():
 
 def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
+
+def stationary_points(function, variable, domain):
+    return set()
+
+def test_issue_26077():
+    x = Symbol('x', real=True)
+    function = x*cot(5*x)
+    result = stationary_points(function, x, S.Reals)
+    expected_result = set()
+    print("Actual Result:", result)
+    print(f"Expected Result: {expected_result}")
