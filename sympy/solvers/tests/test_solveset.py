@@ -51,6 +51,7 @@ from sympy.solvers.solveset import (
 from sympy.abc import (a, b, c, d, e, f, g, h, i, j, k, l, m, n, q, r,
     t, w, x, y, z)
 
+from sympy import stationary_points
 
 def dumeq(i, j):
     if type(i) in (list, tuple):
@@ -3530,9 +3531,6 @@ def test_issue_22628():
 
 def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
-
-def stationary_points(function, variable, domain):
-    return set()
 
 def test_issue_26077():
     x = Symbol('x', real=True)
