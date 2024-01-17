@@ -496,7 +496,7 @@ class Quaternion(Expr):
         References
         ==========
 
-        .. [1] https://doi.org/10.1371/journal.pone.0276302
+        .. [1] https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0276302
 
         """
         if self.is_zero_quaternion():
