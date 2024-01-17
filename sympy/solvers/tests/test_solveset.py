@@ -1,5 +1,6 @@
 from math import isclose
 
+from sympy.calculus.util import stationary_points
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
