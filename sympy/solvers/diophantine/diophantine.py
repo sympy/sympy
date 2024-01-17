@@ -707,6 +707,9 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
     name = 'homogeneous_ternary_quadratic_normal'
 
     def matches(self):
+        if self.total_degree > 2 and self.dimension == 3:
+            raise ValueError(filldedent('''
+            No integer solution exists for ternary equation with degree > 2 '''))
         if not (self.total_degree == 2 and self.dimension == 3):
             return False
         if not self.homogeneous:
@@ -728,7 +731,7 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
         a = coeff[x**2]
         b = coeff[y**2]
         c = coeff[z**2]
-
+        print(a,b,c)
         (sqf_of_a, sqf_of_b, sqf_of_c), (a_1, b_1, c_1), (a_2, b_2, c_2) = \
             sqf_normal(a, b, c, steps=True)
 
