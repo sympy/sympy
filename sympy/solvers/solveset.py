@@ -69,6 +69,7 @@ class NonlinearError(ValueError):
     """Raised when unexpectedly encountering nonlinear equations"""
     pass
 
+
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
     Dummy symbols, ``d``, and the list of replacements, ``(d, e)``,
