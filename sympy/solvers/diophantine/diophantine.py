@@ -731,7 +731,7 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
         a = coeff[x**2]
         b = coeff[y**2]
         c = coeff[z**2]
-        print(a,b,c)
+
         (sqf_of_a, sqf_of_b, sqf_of_c), (a_1, b_1, c_1), (a_2, b_2, c_2) = \
             sqf_normal(a, b, c, steps=True)
 
