@@ -1302,7 +1302,7 @@ def _nc_generators(expr):
     if expr.is_Add or expr.is_Mul:
         generators = set()
         for arg in expr.args:
-            generators |= _nc_generators(arg)
+            generators |= set(_nc_generators(arg))
         return generators
     if expr.is_commutative:
         return set()
@@ -1312,25 +1312,8 @@ def _nc_generators(expr):
         term, pw = expr.args
         if pw.is_positive and pw.is_Integer:
             return _nc_generators(term)
-    return set([expr])
+    return [expr]
 
-def _nc_degree(expr, generators):
-    """Return the degree of an expression in the given generators"""
-    if expr.is_Add:
-        return max([_nc_degree(arg, generators) for arg in expr.args])
-    if expr.is_Mul:
-        return sum([_nc_degree(arg, generators) for arg in expr.args])
-    if expr.is_commutative:
-        return 0
-    if expr in generators:
-        return 1
-    if expr.is_Pow:
-        term, pw = expr.args
-        if term not in generators:
-            raise ValueError(f"_nc_degree: Expected {term} to be in generators")
-        if pw.is_positive and pw.is_Integer:
-            return pw
-    raise ValueError(f"_nc_degree: Expected {expr} to be in generators")
 
 class _NCMonomial():
     """Class that represents a monomial with noncommutative generators"""
@@ -1340,12 +1323,36 @@ class _NCMonomial():
         self.generators = generators
         self.degree = degree
         if self.degree is None:
-            self.degree = _nc_degree(self.term, self.generators)
+            self.degree = sum([pw for _, pw in term])
+
+    @staticmethod
+    def _from_expr_helper(expr, generators):
+        if expr == 1:
+            return ()
+        if expr.is_Mul:
+            term = _NCMonomial._from_expr_helper(expr.args[0], generators)
+            for arg in expr.args[1:]:
+                term += _NCMonomial._from_expr_helper(arg, generators)
+            return term
+        if expr in generators:
+            return ((generators.index(expr), 1),)
+        elif expr.is_Pow:
+            if expr.args[0] not in generators:
+                raise ValueError(f"Expected {expr.arg[0]} to be a generator")
+            return ((generators.index(expr.args[0]), expr.args[1]),)
+        raise ValueError(f"Can't convert {expr} to monomial")
+        
+
+    @staticmethod
+    def from_expr(coeff, expr, generators):
+        term = _NCMonomial._from_expr_helper(expr, generators)
+        return _NCMonomial(coeff, term, generators)
+
 
     def __add__(self, other):
         if not isinstance(other, _NCMonomial):
             return NotImplemented
-        if other.term != self.term:
+        if not self.term == other.term:
             raise ValueError(f"Cannot add {self} and {other} as monomials")
         if other.generators != self.generators:
             raise ValueError(f"Cannot add {self} and {other} with different generators")
@@ -1355,20 +1362,37 @@ class _NCMonomial():
         if isinstance(other, _NCMonomial):
             if other.generators != self.generators:
                 raise ValueError(f"Cannot multiply {self} and {other} with different generators")
-            return _NCMonomial(self.coeff * other.coeff, self.term * other.term, self.generators, self.degree + other.degree)
+            term = _NCMonomial._mul_terms(self.term, other.term)
+            return _NCMonomial(
+                self.coeff * other.coeff,
+                term,
+                self.generators,
+                self.degree + other.degree)
         if isinstance(other, _NCPoly):
             return NotImplemented
         return _NCMonomial((self.coeff * other).cancel(), self.term, self.generators, self.degree)
 
+    @staticmethod
+    def _mul_terms(term1, term2):
+        if len(term1) == 0:
+            return term2
+        if len(term2) == 0:
+            return term1
+        if term1[-1][0] == term2[0][0]:
+            pw = term1[-1][1] + term2[0][1]
+            return term1[:-1] + ((term1[-1][0], pw),) + term2[1:]
+        return term1 + term2
+
     def __str__(self):
-        return str(self.coeff * self.term)
+        return str(self.as_expr())
 
     def __repr__(self):
         return str(self)
             
     def as_expr(self):
         """Convert to Expr"""
-        return self.coeff * self.term
+        out_terms = [self.generators[t]**pw for t, pw in self.term]
+        return Mul(self.coeff, *out_terms)
 
     def split(self, ldegree):
         """Split into two monomials of ldegree and self.degree - ldegree
@@ -1380,41 +1404,34 @@ class _NCMonomial():
             raise ValueError(f"ldegree must be nonnegative")
         if ldegree == 0:
             return (
-                _NCMonomial(self.coeff, Integer(1), self.generators, 0),
+                _NCMonomial(self.coeff, (), self.generators, 0),
                 _NCMonomial(Integer(1), self.term, self.generators, self.degree),
             )
         if ldegree == self.degree:
             return (
                 self,
-                _NCMonomial(Integer(1), Integer(1), self.generators, 0)
+                _NCMonomial(Integer(1), (), self.generators, 0)
             )
             
         if ldegree > self.degree:
             raise ValueError(f"Monomial {self} of degree {self.degree} can't be split with left term of degree {ldegree}")
         rdegree = self.degree - ldegree
-        
-        if self.term.is_Pow:
-            subterms = [self.term]
-        elif self.term.is_Mul:
-            subterms = self.term.args
 
         acc = 0
-        for idx, subterm in enumerate(subterms):
-            if subterm.is_Pow:
-                trm = subterm.args[0]
-                pw = subterm.args[1]
-            else:
-                trm = subterm
-                pw = 1
+        for idx, (t, pw) in enumerate(self.term):
             acc += pw
             if acc < ldegree:
                 continue
             gap = acc - ldegree
-            lterm = Mul(*subterms[:idx], trm**(pw - gap))
-            rterm = Mul(trm**gap, *subterms[idx+1:])
+            if gap == 0:
+                lterm = self.term[:idx+1]
+                rterm = self.term[idx+1:]
+            else:
+                lterm = self.term[:idx] + ((t, pw - gap),)
+                rterm = ((t, gap),) + self.term[idx+1:]
             return (
                 _NCMonomial(self.coeff, lterm, self.generators, degree=ldegree),
-                _NCMonomial(Integer(1), rterm, self.generators, degree=rdegree)
+                _NCMonomial(Integer(1), rterm, self.generators, degree=rdegree),
             )
 
 
@@ -1427,14 +1444,30 @@ class _NCMonomial():
             return None
         if other.degree == self.degree:
             if self.term == other.term:
-                return _NCMonomial(self.coeff / other.coeff, Integer(1), self.generators, degree=0)
+                return _NCMonomial(self.coeff / other.coeff, (), self.generators, degree=0)
             return None
-        # Could detect inequality earlier if I don't use split
-        left, right = self.split(other.degree)
-        if left.term == other.term:
-            return _NCMonomial(self.coeff / other.coeff, right.term, self.generators, self.degree - other.degree)
-        return None
-
+        if other.degree == 0:
+            return _NCMonomial(self.coeff / other.coeff, self.term, self.generators, self.degree)
+        other_len = len(other.term)
+        if other.term[:-1] != self.term[:other_len - 1]:
+            return None
+        if other.term[-1][0] != self.term[other_len - 1][0]:
+            return None
+        if other.term[-1][1] > self.term[other_len - 1][1]:
+            return None
+        if other.term[-1][1] == self.term[other_len - 1][1]:
+            return _NCMonomial(
+                self.coeff / other.coeff,
+                self.term[other_len:],
+                self.generators,
+                degree=self.degree - other.degree)
+        else:
+            pw = self.term[other_len - 1][1] - other.term[-1][1]
+            return _NCMonomial(
+                self.coeff / other.coeff,
+                ((self.term[other_len - 1][0], pw),) + self.term[other_len:],
+                self.generators,
+                degree=self.degree - other.degree)
 
     def rdivide(self, other):
         """Return the monomial m such that self == m * other
@@ -1445,14 +1478,30 @@ class _NCMonomial():
             return None
         if other.degree == self.degree:
             if self.term == other.term:
-                return _NCMonomial(self.coeff / other.coeff, Integer(1), self.generators, degree=0)
+                return _NCMonomial(self.coeff / other.coeff, (), self.generators, degree=0)
             return None
-        # Could detect inequality earlier if I don't use split
-        left, right = self.split(self.degree - other.degree)
-        if right.term == other.term:
-            return _NCMonomial(self.coeff / other.coeff, left.term, self.generators, self.degree - other.degree)
-        return None
-
+        if other.degree == 0:
+            return _NCMonomial(self.coeff / other.coeff, self.term, self.generators, self.degree)
+        other_len = len(other.term)
+        if other_len > 1 and other.term[1:] != self.term[-other_len - 1:]:
+            return None
+        if other.term[0][0] != self.term[-other_len][0]:
+            return None
+        if other.term[0][1] > self.term[-other_len][1]:
+            return None
+        if other.term[0][1] == self.term[-other_len][1]:
+            return _NCMonomial(
+                self.coeff / other.coeff,
+                self.term[:-other_len],
+                self.generators,
+                degree=self.degree - other.degree)
+        else:
+            pw = self.term[-other_len][1] - other.term[0][1]
+            return _NCMonomial(
+                self.coeff / other.coeff,
+                self.term[:-other_len] + ((self.term[-other_len], pw),),
+                self.generators,
+                degree=self.degree - other.degree)
 
 
 class _NCPoly():
@@ -1472,16 +1521,16 @@ class _NCPoly():
             expr = expr.expand()
             self.generators = generators
             if generators is None:
-                self.generators = _nc_generators(expr)
+                self.generators = list(_nc_generators(expr))
             coeffs_dict = expr.as_coefficients_dict(*(self.generators or [None]))
 
             # Representation: Dict[degree, Dict[term, _NCMonomial]]
             self.rep = {}
             for term, coeff in coeffs_dict.items():
-                degree = _nc_degree(term, self.generators)
-                if degree not in self.rep:
-                    self.rep[degree] = {}
-                self.rep[degree][term] = _NCMonomial(coeff, term, self.generators, degree)
+                monom = _NCMonomial.from_expr(coeff, term, self.generators)
+                if monom.degree not in self.rep:
+                    self.rep[monom.degree] = {}
+                self.rep[monom.degree][monom.term] = monom
         self._eval_degree()
 
     def __add__(self, other):
@@ -1675,7 +1724,7 @@ class _NCPoly():
                     # Lines 7-8 of the published algorithm suggest that the term should be
                     # Ghat_L.term * Hhat_R.term. This doesn't make sense, however - the term is
                     # supposed to have degree n - j, not n - 2j.
-                    term = Ghat.term * Hhat_R.term
+                    term = _NCMonomial._mul_terms(Ghat.term, Hhat_R.term)
                     c = 0
                     if term in Fhat.rep.get(n - j, {}):
                         c = Fhat.rep[n - j][term].coeff
@@ -1708,15 +1757,12 @@ class _NCPoly():
                 yield G, H
             return
         eqs = [term.coeff for term in diff.monomials()]
-        solns = solve_poly_system([eqs], *dummies)
+        solns = solve_poly_system(eqs, *dummies)
         if len(solns) == 0:
             return
         Gexpr = G.as_expr()
         Hexpr = H.as_expr()
         for soln in solns:
-            for sub in soln:
-                if not sub.is_rational:
-                    import pdb; pdb.set_trace()
             substitutes = list(zip(dummies, soln))
             yield (
                 _NCPoly(Gexpr.subs(substitutes), self.generators),
