@@ -356,7 +356,7 @@ def is_strong_lucas_prp(n):
     ==========
     .. [1] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
            Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
-           https://www.ams.org/journals/mcom/1980-35-152/S0025-5718-1980-0583518-6/
+           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
            http://mpqs.free.fr/LucasPseudoprimes.pdf
     .. [2] OEIS A217255: Strong Lucas Pseudoprimes
            https://oeis.org/A217255
