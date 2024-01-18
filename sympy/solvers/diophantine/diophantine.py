@@ -3280,7 +3280,7 @@ def gaussian_reduce(w, a, b):
            https://web.archive.org/web/20201021115213/http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
     .. [2] Cremona, J. E., Rusin, D. (2003). Efficient Solution of Rational Conics.
            Mathematics of Computation, 72(243), 1417-1441.
-           https://www.ams.org/journals/mcom/2003-72-243/S0025-5718-02-01480-1/home.html
+           https://doi.org/10.1090/S0025-5718-02-01480-1
     """
     u = (0, 1)
     v = (1, 0)
