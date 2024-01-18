@@ -283,7 +283,7 @@ Literature
     Am. J. of Phys. 46, 1 (1978): 78.
 
 .. [deBoer79] J. de Boer, `Group properties of quantities and units
-    <https://pubs.aip.org/aapt/ajp/article-abstract/47/9/818/1051258/Group-properties-of-quantities-and-units?redirectedFrom=fulltext>`_,
+    <https://aapt.scitation.org/doi/10.1119/1.11703>`_,
     Am. J. of Phys. 47, 9 (1979): 818.
 
 .. [LevyLeblond77] J.-M. Lévy-Leblond, `On the Conceptual Nature of the
