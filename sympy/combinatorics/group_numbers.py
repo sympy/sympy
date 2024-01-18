@@ -179,7 +179,7 @@ def _holder_formula(prime_factors):
     .. [2] John H. Conway, Heiko Dietrich and E.A. O'Brien,
            Counting groups: gnus, moas and other exotica
            The Mathematical Intelligencer 30, 6-15 (2008)
-           https://link.springer.com/article/10.1007/BF02985731
+           https://doi.org/10.1007/BF02985731
 
     """
     F = {p for p in prime_factors if all(q % p != 1 for q in prime_factors)}
