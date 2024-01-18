@@ -175,7 +175,7 @@ def _holder_formula(prime_factors):
 
     .. [1] Otto Holder, Die Gruppen der Ordnungen p^3, pq^2, pqr, p^4,
            Math. Ann. 43 pp. 301-412 (1893).
-           https://link.springer.com/article/10.1007/BF01443651
+           http://dx.doi.org/10.1007/BF01443651
     .. [2] John H. Conway, Heiko Dietrich and E.A. O'Brien,
            Counting groups: gnus, moas and other exotica
            The Mathematical Intelligencer 30, 6-15 (2008)
