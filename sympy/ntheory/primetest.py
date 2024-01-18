@@ -403,7 +403,7 @@ def is_extra_strong_lucas_prp(n):
     ==========
     .. [1] Jon Grantham, Frobenius Pseudoprimes,
            Math. Comp. Vol 70, Number 234 (2001), pp. 873-891,
-           https://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/home.html
+           https://doi.org/10.1090%2FS0025-5718-00-01197-2
     .. [2] OEIS A217719: Extra Strong Lucas Pseudoprimes
            https://oeis.org/A217719
     .. [3] https://en.wikipedia.org/wiki/Lucas_pseudoprime
