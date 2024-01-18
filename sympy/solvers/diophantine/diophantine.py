@@ -3235,7 +3235,7 @@ def descent(A, B):
 
     .. [1] Cremona, J. E., Rusin, D. (2003). Efficient Solution of Rational Conics.
            Mathematics of Computation, 72(243), 1417-1441.
-           https://www.ams.org/journals/mcom/2003-72-243/S0025-5718-02-01480-1/home.html
+           https://doi.org/10.1090/S0025-5718-02-01480-1
     """
     if abs(A) > abs(B):
         x, y, z = descent(B, A)
