@@ -18,7 +18,7 @@ from sympy.sets.sets import Interval
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import simplify
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
-                                  gcd_terms, factor_terms, factor_nc, _mask_nc,
+                                  gcd_terms, factor_terms, factor_nc,
                                   _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
@@ -399,6 +399,20 @@ def test_factor_nc():
     poly = m**2 + 2*m*n + n**2
     assert factor_nc(poly) == poly
 
+    # Test nested coefficient factorization
+    # The coefficients of the terms in this polynomial have a gcd of 1
+    # But the coefficients of the result of calling _factor_once have gcds that cancel
+    poly2 = (x**2 - 1)*m**2 + 2*x*m + 1
+    assert factor_nc(poly2) in [
+        ((x + 1)*m + 1)*((x - 1)*m + 1),
+        ((x - 1)*m + 1)*((x + 1)*m + 1),
+    ]
+
+    # Confirm that factorization stays in the rationals domain
+    poly3 = m**2 - 2
+    # TODO: fails right now, returns (-sqrt(2) + m)*(sqrt(2) + m)
+    assert factor_nc(poly3) == poly3
+
 
 def test_issue_6360():
     a, b = symbols("a b")
@@ -412,13 +426,6 @@ def test_issue_7903():
     t = exp(I*cos(a)) + exp(-I*sin(a))
     assert t.simplify()
 
-def test_issue_8263():
-    F, G = symbols('F, G', commutative=False, cls=Function)
-    x, y = symbols('x, y')
-    expr, dummies, _ = _mask_nc(F(x)*G(y) - G(y)*F(x))
-    for v in dummies.values():
-        assert not v.is_commutative
-    assert not expr.is_zero
 
 def test_monotonic_sign():
     F = _monotonic_sign

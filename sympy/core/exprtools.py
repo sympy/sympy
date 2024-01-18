@@ -1267,130 +1267,6 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     return do(expr)
 
 
-def _mask_nc(eq, name=None):
-    """
-    Return ``eq`` with non-commutative objects replaced with Dummy
-    symbols. A dictionary that can be used to restore the original
-    values is returned: if it is None, the expression is noncommutative
-    and cannot be made commutative. The third value returned is a list
-    of any non-commutative symbols that appear in the returned equation.
-
-    Explanation
-    ===========
-
-    All non-commutative objects other than Symbols are replaced with
-    a non-commutative Symbol. Identical objects will be identified
-    by identical symbols.
-
-    If there is only 1 non-commutative object in an expression it will
-    be replaced with a commutative symbol. Otherwise, the non-commutative
-    entities are retained and the calling routine should handle
-    replacements in this case since some care must be taken to keep
-    track of the ordering of symbols when they occur within Muls.
-
-    Parameters
-    ==========
-
-    name : str
-        ``name``, if given, is the name that will be used with numbered Dummy
-        variables that will replace the non-commutative objects and is mainly
-        used for doctesting purposes.
-
-    Examples
-    ========
-
-    >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import symbols
-    >>> from sympy.core.exprtools import _mask_nc
-    >>> from sympy.abc import x, y
-    >>> A, B, C = symbols('A,B,C', commutative=False)
-
-    One nc-symbol:
-
-    >>> _mask_nc(A**2 - x**2, 'd')
-    (_d0**2 - x**2, {_d0: A}, [])
-
-    Multiple nc-symbols:
-
-    >>> _mask_nc(A**2 - B**2, 'd')
-    (A**2 - B**2, {}, [A, B])
-
-    An nc-object with nc-symbols but no others outside of it:
-
-    >>> _mask_nc(1 + x*Commutator(A, B), 'd')
-    (_d0*x + 1, {_d0: Commutator(A, B)}, [])
-    >>> _mask_nc(NO(Fd(x)*F(y)), 'd')
-    (_d0, {_d0: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
-
-    Multiple nc-objects:
-
-    >>> eq = x*Commutator(A, B) + x*Commutator(A, C)*Commutator(A, B)
-    >>> _mask_nc(eq, 'd')
-    (x*_d0 + x*_d1*_d0, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1])
-
-    Multiple nc-objects and nc-symbols:
-
-    >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
-    >>> _mask_nc(eq, 'd')
-    (A*_d0 + B*_d1, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1, A, B])
-
-    """
-    name = name or 'mask'
-    # Make Dummy() append sequential numbers to the name
-
-    def numbered_names():
-        i = 0
-        while True:
-            yield name + str(i)
-            i += 1
-
-    names = numbered_names()
-
-    def Dummy(*args, **kwargs):
-        from .symbol import Dummy
-        return Dummy(next(names), *args, **kwargs)
-
-    expr = eq
-    if expr.is_commutative:
-        return eq, {}, []
-
-    # identify nc-objects; symbols and other
-    rep = []
-    nc_obj = set()
-    nc_syms = set()
-    pot = preorder_traversal(expr, keys=default_sort_key)
-    for i, a in enumerate(pot):
-        if any(a == r[0] for r in rep):
-            pot.skip()
-        elif not a.is_commutative:
-            if a.is_symbol:
-                nc_syms.add(a)
-                pot.skip()
-            elif not (a.is_Add or a.is_Mul or a.is_Pow):
-                nc_obj.add(a)
-                pot.skip()
-
-    # If there is only one nc symbol or object, it can be factored regularly
-    # but polys is going to complain, so replace it with a Dummy.
-    if len(nc_obj) == 1 and not nc_syms:
-        rep.append((nc_obj.pop(), Dummy()))
-    elif len(nc_syms) == 1 and not nc_obj:
-        rep.append((nc_syms.pop(), Dummy()))
-
-    # Any remaining nc-objects will be replaced with an nc-Dummy and
-    # identified as an nc-Symbol to watch out for
-    nc_obj = sorted(nc_obj, key=default_sort_key)
-    for n in nc_obj:
-        nc = Dummy(commutative=False)
-        rep.append((n, nc))
-        nc_syms.add(nc)
-    expr = expr.subs(rep)
-
-    nc_syms = list(nc_syms)
-    nc_syms.sort(key=default_sort_key)
-    return expr, {v: k for k, v in rep}, nc_syms
-
-
 def factor_nc(expr):
     """Return the factored form of ``expr`` while handling non-commutative
     expressions.
@@ -1418,6 +1294,11 @@ def factor_nc(expr):
 
 
 def _nc_generators(expr):
+    """Return noncommutative polynomial generators of an expression.
+
+    Commutative symbols are excluded, and functions of generators other than
+    positive integer powers are treated as generators, as with the polynomials module
+    """
     if expr.is_Add or expr.is_Mul:
         generators = set()
         for arg in expr.args:
@@ -1434,6 +1315,7 @@ def _nc_generators(expr):
     return set([expr])
 
 def _nc_degree(expr, generators):
+    """Return the degree of an expression in the given generators"""
     if expr.is_Add:
         return max([_nc_degree(arg, generators) for arg in expr.args])
     if expr.is_Mul:
@@ -1451,6 +1333,7 @@ def _nc_degree(expr, generators):
     raise ValueError(f"_nc_degree: Expected {expr} to be in generators")
 
 class _NCMonomial():
+    """Class that represents a monomial with noncommutative generators"""
     def __init__(self, coeff, term, generators, degree=None):
         self.coeff = coeff
         self.term = term
@@ -1459,8 +1342,40 @@ class _NCMonomial():
         if self.degree is None:
             self.degree = _nc_degree(self.term, self.generators)
 
+    def __add__(self, other):
+        if not isinstance(other, _NCMonomial):
+            return NotImplemented
+        if other.term != self.term:
+            raise ValueError(f"Cannot add {self} and {other} as monomials")
+        if other.generators != self.generators:
+            raise ValueError(f"Cannot add {self} and {other} with different generators")
+        return _NCMonomial(self.coeff + other.coeff, self.term, self.generators, self.degree)
+
+    def __mul__(self, other):
+        if isinstance(other, _NCMonomial):
+            if other.generators != self.generators:
+                raise ValueError(f"Cannot multiply {self} and {other} with different generators")
+            return _NCMonomial(self.coeff * other.coeff, self.term * other.term, self.generators, self.degree + other.degree)
+        if isinstance(other, _NCPoly):
+            return NotImplemented
+        return _NCMonomial((self.coeff * other).cancel(), self.term, self.generators, self.degree)
+
+    def __str__(self):
+        return str(self.coeff * self.term)
+
+    def __repr__(self):
+        return str(self)
+            
+    def as_expr(self):
+        """Convert to Expr"""
+        return self.coeff * self.term
+
     def split(self, ldegree):
-        """Split into two monomials of ldegree and self.degree - ldegree"""
+        """Split into two monomials of ldegree and self.degree - ldegree
+
+        The left monomial will have the original coefficient.
+        The right monomial will always have a coefficient of 1.
+        """
         if ldegree < 0:
             raise ValueError(f"ldegree must be nonnegative")
         if ldegree == 0:
@@ -1504,6 +1419,10 @@ class _NCMonomial():
 
 
     def ldivide(self, other):
+        """Return the monomial m such that self == other * m
+
+        If no such monomial exists, return None
+        """
         if other.degree > self.degree:
             return None
         if other.degree == self.degree:
@@ -1518,6 +1437,10 @@ class _NCMonomial():
 
 
     def rdivide(self, other):
+        """Return the monomial m such that self == m * other
+
+        If no such monomial exists, return None
+        """
         if other.degree > self.degree:
             return None
         if other.degree == self.degree:
@@ -1530,39 +1453,22 @@ class _NCMonomial():
             return _NCMonomial(self.coeff / other.coeff, left.term, self.generators, self.degree - other.degree)
         return None
 
-    def to_expr(self):
-        return self.coeff * self.term
-
-    def __add__(self, other):
-        # Assumes other is _NCMonomial with same generators
-        if other.term != self.term:
-            raise ValueError(f"Cannot add {self} and {other} as monomials")
-        return _NCMonomial(self.coeff + other.coeff, self.term, self.generators, self.degree)
-
-    def __mul__(self, other):
-        if isinstance(other, _NCMonomial):
-            # Assumes other has same generators
-            return _NCMonomial(self.coeff * other.coeff, self.term * other.term, self.generators, self.degree + other.degree)
-        if isinstance(other, _NCPoly):
-            return NotImplemented
-        return _NCMonomial((self.coeff * other).cancel(), self.term, self.generators, self.degree)
-
-    def __str__(self):
-        return str(self.coeff * self.term)
-
-    def __repr__(self):
-        return str(self)
-            
 
 
 class _NCPoly():
+    """Class that represents a polynomial with noncommutative generators
+
+    It is used only for factoring expressions with noncommutative terms and does not have the
+    same interface as the Poly class (which supports only commutative terms).
+
+    A few functions (add, subtract) update an instance in-place, unlike most sympy classes."""
     def __init__(self, expr, generators=None):
+        if expr is None:
+            expr = {}
         if isinstance(expr, dict):
             self.rep = expr
             self.generators = generators
         else:
-            if expr is None:
-                expr = Add()
             expr = expr.expand()
             self.generators = generators
             if generators is None:
@@ -1577,12 +1483,6 @@ class _NCPoly():
                     self.rep[degree] = {}
                 self.rep[degree][term] = _NCMonomial(coeff, term, self.generators, degree)
         self._eval_degree()
-
-    def _eval_degree(self):
-        if len(self.rep) == 0:
-            self.degree = 0
-        else:
-            self.degree = max(self.rep.keys())
 
     def __add__(self, other):
         out = self.copy()
@@ -1626,20 +1526,20 @@ class _NCPoly():
         return out
 
     def __len__(self):
+        """Number of monomials"""
         if len(self.rep) == 0:
             return 0
         return sum([len(terms) for terms in self.rep.values()])
 
-    def monomials(self, degree=None):
-        if degree is None:
-            for monomials in self.rep.values():
-                for monomial in monomials.values():
-                    yield monomial
+    def _eval_degree(self):
+        """Update the degree field"""
+        if len(self.rep) == 0:
+            self.degree = 0
         else:
-            for monomial in self.rep.get(degree, {}).values():
-                yield monomial
+            self.degree = max(self.rep.keys())
 
     def copy(self, degree=None):
+        """Return a copy, optionally with only the monomials of the specified degree"""
         if degree is None:
             new_rep = {k: v.copy() for k, v in self.rep.items()}
         else:
@@ -1648,21 +1548,33 @@ class _NCPoly():
                 new_rep[degree] = self.rep[degree].copy()
         return _NCPoly(new_rep, self.generators)
 
+    def as_expr(self):
+        """Convert to Expr"""
+        return Add(*[monom.as_expr() for monom in self.monomials()])
+        
+    def monomials(self, degree=None):
+        """Return iterator of all monomials (with specified degree)"""
+        if degree is None:
+            for monomials in self.rep.values():
+                for monomial in monomials.values():
+                    yield monomial
+        else:
+            for monomial in self.rep.get(degree, {}).values():
+                yield monomial
+
     def extract_coeff_factor(self, degree=None):
-        '''
-        Return the greatest common divisor of all terms (with specified degree) 
-        '''
         from sympy.simplify.radsimp import fraction
         from sympy.polys.polytools import gcd, lcm
         numerators = []
         denominators = []
         for monom in self.monomials(degree):
-            num, denom = fraction(monom.coeff)
+            num, denom = fraction(monom.coeff.cancel())
             numerators.append(num)
             denominators.append(denom)
         return gcd(numerators) / lcm(denominators)
  
     def add(self, monom):
+        """Add a monomial to this polynomial, updating in-place"""
         degree = monom.degree
         term = monom.term
         if degree > self.degree:
@@ -1686,15 +1598,15 @@ class _NCPoly():
             self.rep[degree][term] = monom
 
     def subtract(self, monom):
+        """Subtract a monomial from this polynomial, updating in-place"""
         return self.add(monom * -1)
 
-    def to_expr(self):
-        return Add(*[monom.to_expr() for monom in self.monomials()])
-        
 
-    def factor_homogeneous(self, ldegree):
-        """Factor the maximum-degree terms into two polynomials of degree ldegree and self.degree - ldegree, if possible.
-        Return None, None if no such factorization exists.
+    def _factor_homogeneous(self, ldegree):
+        """Factor the maximum-degree terms into two polynomials
+        of degree ldegree and self.degree - ldegree, if possible.
+
+        Return (None, None) if no such factorization exists.
 
         Implementation based on Algorithm 1 from https://arxiv.org/abs/1002.3180
         """
@@ -1716,62 +1628,20 @@ class _NCPoly():
         if len(G) * len(H) != len(terms):
             return None, None
         GH = G * H
-        if GH.to_expr() == Add(*[term.to_expr() for term in terms]):
+        if GH.as_expr() == Add(*[term.as_expr() for term in terms]):
             return G, H
         return None, None
 
-    def factor_all(self):
-        coeff_factor, F = self._factor_coeff()
-        factorizations = F._factor_recursive()
-        if coeff_factor != 1:
-            factorizations = (coeff_factor * f for f in factorizations)
-        return factorizations
-
-    def factor_one(self):
-        coeff_factor, F = self._factor_coeff()
-        out = next(F._factor_recursive())
-        if coeff_factor != 1:
-            out = coeff_factor * out
-        return out
-
-
-    def _factor_recursive(self):
-        out = set()
-        for degree in range(1, self.degree):
-            for G, H in self._factor_once(degree):
-                Gs = G._factor_recursive()
-                Hs = H._factor_recursive()
-                H_list = []
-                G_first = next(Gs)
-                for H_expr in Hs:
-                    H_list.append(H_expr)
-                    expr = G_first * H_expr
-                    if expr not in out:
-                        yield expr
-                        out.add(expr)
-                for G_expr in Gs:
-                    for H_expr in H_list:
-                        expr = G_expr * H_expr
-                        if expr not in out:
-                            yield expr
-                            out.add(expr)
-        if len(out) == 0:
-            yield self.to_expr()
-
-    def _factor_coeff(self):
-        coeff_factor = self.extract_coeff_factor()
-        if coeff_factor == 1:
-            return (Integer(1), self)
-        return (coeff_factor.factor(), self * (1/coeff_factor))
 
     def _factor_once(self, ldegree):
-        """Factor into polynomials of degree ldegree and self.degree - ldegree, if possible.
+        """Factor into pairs of polynomials of degree ldegree and self.degree - ldegree, if possible.
+        Coefficients will not be factored or otherwise simplified.
 
-        Return a generator that yields tuples of polynomials
+        Return a generator that yields tuples of polynomials.
 
         Implementation based on Algorithm 2 from https://arxiv.org/abs/1002.3180
         """
-        from sympy.solvers.solvers import solve
+        from sympy.solvers.polysys import solve_poly_system
         if self.degree == 0:
             return
         if len(self) < 2:
@@ -1780,14 +1650,14 @@ class _NCPoly():
         if ldegree == 0 or ldegree >= self.degree:
             return
             
-        G, H = self.factor_homogeneous(ldegree)
+        G, H = self._factor_homogeneous(ldegree)
         if G is None:
             return
 
         n = self.degree
         h = ldegree
         k = n - ldegree
-        # TODO: better selection of monomials?
+        # Future optimization: select the monomials with the least overlap potential
         Ghat = next(G.monomials())
         Hhat = next(H.monomials())
         
@@ -1816,8 +1686,13 @@ class _NCPoly():
                     # with term Ghat_L * Hhat_R to both G and H. If this were the case, then in
                     # step 3 of the example in 3.3 from the paper, we would add -alpha * y to G instead of -alpha.
                     # This seems to be a second minor mistake in the published algorithm.
-                    G.add(Ghat_L * dummy)
-                    H.add(Hhat_R * (c -dummy))
+                    #
+                    # There is also a subtlety on handling coefficients not mentioned in the algorithm.
+                    # We have to divide the new H term by the coefficient of Ghat
+                    # (We would have to do the same to the new G term, except for the invariant
+                    # that Hhat never has a coefficient)
+                    G.add(_NCMonomial(dummy, Ghat_L.term, self.generators, h - j))
+                    H.add(_NCMonomial((c - dummy)/Ghat.coeff, Hhat_R.term, self.generators, k - j))
 
             for monom in Fhat.monomials(n - j):
                 R = monom.ldivide(Ghat)
@@ -1832,22 +1707,86 @@ class _NCPoly():
             if len(diff) == 0:
                 yield G, H
             return
-        
-        solns = solve([term.coeff for term in diff.monomials()], dummies)
+        eqs = [term.coeff for term in diff.monomials()]
+        solns = solve_poly_system([eqs], *dummies)
         if len(solns) == 0:
             return
-        Gexpr = G.to_expr()
-        Hexpr = H.to_expr()
+        Gexpr = G.as_expr()
+        Hexpr = H.as_expr()
         for soln in solns:
+            for sub in soln:
+                if not sub.is_rational:
+                    import pdb; pdb.set_trace()
             substitutes = list(zip(dummies, soln))
             yield (
                 _NCPoly(Gexpr.subs(substitutes), self.generators),
                 _NCPoly(Hexpr.subs(substitutes), self.generators),
             )
                     
+    def _factor_recursive(self):
+        """Return a generator that yields all unique, valid, irreducible factorizations.
+        Does not fully simplify coefficients.
+        """
+        self_expr = self.as_expr()
+        out = set()
+        for degree in range(1, self.degree):
+            for G, H in self._factor_once(degree):
+                Gcoeff, G = G.factor_coeff()
+                Hcoeff, H = H.factor_coeff()
+                coeff = Gcoeff * Hcoeff
+                Gs = G._factor_recursive()
+                Hs = H._factor_recursive()
+                H_list = []
+                G_first = next(Gs)
+                coeff_G = coeff * G_first
+                for H_expr in Hs:
+                    H_list.append(H_expr)
+                    expr = coeff_G * H_expr
+                    if expr not in out:
+                        yield expr
+                        out.add(expr)
+                for G_expr in Gs:
+                    coeff_G = coeff * G_expr
+                    for H_expr in H_list:
+                        expr = coeff_G * H_expr
+                        if expr not in out:
+                            yield expr
+                            out.add(expr)
+        if len(out) == 0:
+            yield self_expr
+
+    def factor_one(self):
+        """Return a valid factorization. Also handles factorization of commutative coefficients.
+
+        Factorizations of noncommutative polynomials are not unique in general. This method is
+        deterministic, and it is guaranteed to return a valid, irreducible factorization. There are
+        no further guarantees as to *which* valid, irreducible factorization is returned.
+        """
+        coeff_factor, F = self.factor_coeff()
+        out = next(F._factor_recursive())
+        if coeff_factor != 1:
+            out = coeff_factor * out
+        return out
+
+    def factor_all(self):
+        """Return a generator that yields all unique, valid, irreducible factorizations.
+        Also handles factorizations of commutative coefficients.
+        """
+        coeff_factor, F = self.factor_coeff()
+        factorizations = F._factor_recursive()
+        if coeff_factor != 1:
+            factorizations = (coeff_factor * f for f in factorizations)
+        return factorizations
+
+    def factor_coeff(self):
+        coeff_factor = self.extract_coeff_factor()
+        if coeff_factor == 1:
+            return (Integer(1), self)
+        return (coeff_factor.factor(), self * (1/coeff_factor))
+
 
     def __str__(self):
-        return str(self.to_expr())
+        return str(self.as_expr())
 
     def __repr__(self):
         return str(self)
