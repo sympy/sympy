@@ -1372,7 +1372,7 @@ class _NCMonomial():
                 raise ValueError(f"Expected {expr.arg[0]} to be a generator")
             return ((generators.index(expr.args[0]), expr.args[1]),)
         raise ValueError(f"Can't convert {expr} to monomial")
-        
+
 
     @staticmethod
     def from_expr(coeff, expr, generators):
@@ -1419,7 +1419,7 @@ class _NCMonomial():
 
     def __repr__(self):
         return str(self)
-            
+
     def as_expr(self):
         """Convert to Expr"""
         out_terms = [self.generators[t]**pw for t, pw in self.term]
@@ -1443,7 +1443,7 @@ class _NCMonomial():
                 self,
                 _NCMonomial(Integer(1), (), self.generators, 0)
             )
-            
+
         if ldegree > self.degree:
             raise ValueError(f"Monomial {self} of degree {self.degree} can't be split with left term of degree {ldegree}")
         rdegree = self.degree - ldegree
@@ -1638,7 +1638,7 @@ class _NCPoly():
     def as_expr(self):
         """Convert to Expr"""
         return Add(*[monom.as_expr() for monom in self.monomials()])
-        
+
     def monomials(self, degree=None):
         """Return iterator of all monomials (with specified degree)"""
         if degree is None:
@@ -1659,7 +1659,7 @@ class _NCPoly():
             numerators.append(num)
             denominators.append(denom)
         return gcd(numerators) / lcm(denominators)
- 
+
     def add(self, monom):
         """Add a monomial to this polynomial, updating in-place"""
         degree = monom.degree
@@ -1736,7 +1736,7 @@ class _NCPoly():
 
         if ldegree == 0 or ldegree >= self.degree:
             return
-            
+
         G, H = self._factor_homogeneous(ldegree)
         if G is None:
             return
@@ -1747,7 +1747,7 @@ class _NCPoly():
         # Future optimization: select the monomials with the least overlap potential
         Ghat = next(G.monomials())
         Hhat = next(H.monomials())
-        
+
         dummies = []
         Fhat = self.copy()
 
@@ -1809,13 +1809,13 @@ class _NCPoly():
                     break
             if not ok:
                 continue
-                    
+
             substitutes = list(zip(dummies, soln))
             yield (
                 _NCPoly(Gexpr.subs(substitutes), self.generators, self.extensions),
                 _NCPoly(Hexpr.subs(substitutes), self.generators, self.extensions),
             )
-                    
+
     def _factor_recursive(self):
         """Return a generator that yields all unique, valid, irreducible factorizations.
         Does not fully simplify coefficients.
