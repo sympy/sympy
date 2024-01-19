@@ -1306,13 +1306,44 @@ def _nc_generators(expr):
         return generators
     if expr.is_commutative:
         return set()
-    if expr.is_Atom:
-        return set([expr])
     if expr.is_Pow:
         term, pw = expr.args
         if pw.is_positive and pw.is_Integer:
             return _nc_generators(term)
-    return [expr]
+    return set([expr])
+
+def _nc_extensions(expr):
+    """Return commutative non-rational field extensions of a non-commutative polynomial's coefficients
+    """
+    if expr.is_rational:
+        return set()
+    if expr.is_Add or expr.is_Mul:
+        extensions = set()
+        for arg in expr.args:
+            extensions |= _nc_extensions(arg)
+        return extensions
+    if expr.is_Pow:
+        term, pw = expr.args
+        if pw.is_Integer:
+            return _nc_extensions(term)
+    return set([expr])
+
+def _valid_nc_coeff(coeff, extensions):
+    """Return whether the given coefficient is valid given the extensions"""
+    if coeff.is_rational:
+        return True
+    if coeff in extensions:
+        return True
+    if coeff.is_Add or coeff.is_Mul:
+        for arg in coeff.args:
+            if not _valid_nc_coeff(arg, extensions):
+                return False
+        return True
+    if coeff.is_Pow:
+        term, pw = coeff.args
+        if pw.is_Integer:
+            return _valid_nc_coeff(term, extensions)
+    return False
 
 
 class _NCMonomial():
@@ -1499,7 +1530,7 @@ class _NCMonomial():
             pw = self.term[-other_len][1] - other.term[0][1]
             return _NCMonomial(
                 self.coeff / other.coeff,
-                self.term[:-other_len] + ((self.term[-other_len], pw),),
+                self.term[:-other_len] + ((self.term[-other_len][0], pw),),
                 self.generators,
                 degree=self.degree - other.degree)
 
@@ -1511,18 +1542,25 @@ class _NCPoly():
     same interface as the Poly class (which supports only commutative terms).
 
     A few functions (add, subtract) update an instance in-place, unlike most sympy classes."""
-    def __init__(self, expr, generators=None):
+    def __init__(self, expr, generators=None, extensions=None):
         if expr is None:
             expr = {}
         if isinstance(expr, dict):
             self.rep = expr
             self.generators = generators
+            self.extensions = extensions
         else:
             expr = expr.expand()
             self.generators = generators
             if generators is None:
                 self.generators = list(_nc_generators(expr))
             coeffs_dict = expr.as_coefficients_dict(*(self.generators or [None]))
+            self.extensions = extensions
+            if extensions is None:
+                self.extensions = set()
+                for coeff in coeffs_dict.values():
+                    self.extensions |= _nc_extensions(coeff)
+
 
             # Representation: Dict[degree, Dict[term, _NCMonomial]]
             self.rep = {}
@@ -1556,7 +1594,7 @@ class _NCPoly():
         return out
 
     def __mul__(self, other):
-        out = _NCPoly(None, self.generators)
+        out = _NCPoly(None, self.generators, self.extensions)
         if isinstance(other, _NCPoly):
             if self.generators != other.generators:
                 raise ValueError("Incompatible generators")
@@ -1569,7 +1607,7 @@ class _NCPoly():
         return out
 
     def __rmul__(self, other):
-        out = _NCPoly(None, self.generators)
+        out = _NCPoly(None, self.generators, self.extensions)
         for term in self.monomials():
             out.add(other * term)
         return out
@@ -1595,7 +1633,7 @@ class _NCPoly():
             new_rep = {}
             if degree in self.rep:
                 new_rep[degree] = self.rep[degree].copy()
-        return _NCPoly(new_rep, self.generators)
+        return _NCPoly(new_rep, self.generators, self.extensions)
 
     def as_expr(self):
         """Convert to Expr"""
@@ -1662,8 +1700,8 @@ class _NCPoly():
         rdegree = self.degree - ldegree
         terms = list(self.monomials(self.degree))
         Ghat, Hhat = terms[0].split(ldegree)
-        G = _NCPoly(None, self.generators)
-        H = _NCPoly(None, self.generators)
+        G = _NCPoly(None, self.generators, self.extensions)
+        H = _NCPoly(None, self.generators, self.extensions)
         G.add(Ghat)
         H.add(Hhat)
         for monomial in terms[1:]:
@@ -1758,15 +1796,24 @@ class _NCPoly():
             return
         eqs = [term.coeff for term in diff.monomials()]
         solns = solve_poly_system(eqs, *dummies)
-        if len(solns) == 0:
+        if solns is None:
             return
         Gexpr = G.as_expr()
         Hexpr = H.as_expr()
         for soln in solns:
+            # Filter out solutions not in QQ(extensions)
+            ok = True
+            for assignment in soln:
+                if not _valid_nc_coeff(assignment, self.extensions):
+                    ok = False
+                    break
+            if not ok:
+                continue
+                    
             substitutes = list(zip(dummies, soln))
             yield (
-                _NCPoly(Gexpr.subs(substitutes), self.generators),
-                _NCPoly(Hexpr.subs(substitutes), self.generators),
+                _NCPoly(Gexpr.subs(substitutes), self.generators, self.extensions),
+                _NCPoly(Hexpr.subs(substitutes), self.generators, self.extensions),
             )
                     
     def _factor_recursive(self):
