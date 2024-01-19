@@ -1310,7 +1310,7 @@ def _nc_generators(expr):
         term, pw = expr.args
         if pw.is_positive and pw.is_Integer:
             return _nc_generators(term)
-    return set([expr])
+    return {expr}
 
 def _nc_extensions(expr):
     """Return commutative non-rational field extensions of a non-commutative polynomial's coefficients
@@ -1326,7 +1326,7 @@ def _nc_extensions(expr):
         term, pw = expr.args
         if pw.is_Integer:
             return _nc_extensions(term)
-    return set([expr])
+    return {expr}
 
 def _valid_nc_coeff(coeff, extensions):
     """Return whether the given coefficient is valid given the extensions"""
@@ -1346,7 +1346,7 @@ def _valid_nc_coeff(coeff, extensions):
     return False
 
 
-class _NCMonomial():
+class _NCMonomial:
     """Class that represents a monomial with noncommutative generators"""
     def __init__(self, coeff, term, generators, degree=None):
         self.coeff = coeff
@@ -1379,6 +1379,16 @@ class _NCMonomial():
         term = _NCMonomial._from_expr_helper(expr, generators)
         return _NCMonomial(coeff, term, generators)
 
+    def __eq__(self, other):
+        if not isinstance(other, _NCMonomial):
+            return False
+        if self.generators != other.generators:
+            return False
+        if self.term != other.term:
+            return False
+        if self.coeff != other.coeff:
+            return False
+        return True
 
     def __add__(self, other):
         if not isinstance(other, _NCMonomial):
@@ -1535,7 +1545,7 @@ class _NCMonomial():
                 degree=self.degree - other.degree)
 
 
-class _NCPoly():
+class _NCPoly:
     """Class that represents a polynomial with noncommutative generators
 
     It is used only for factoring expressions with noncommutative terms and does not have the
@@ -1704,6 +1714,7 @@ class _NCPoly():
         H = _NCPoly(None, self.generators, self.extensions)
         G.add(Ghat)
         H.add(Hhat)
+
         for monomial in terms[1:]:
             R = monomial.ldivide(Ghat)
             if R is None:
@@ -1715,7 +1726,7 @@ class _NCPoly():
         if len(G) * len(H) != len(terms):
             return None, None
         GH = G * H
-        if GH.as_expr() == Add(*[term.as_expr() for term in terms]):
+        if GH.rep[self.degree] == self.rep[self.degree]:
             return G, H
         return None, None
 
@@ -1767,19 +1778,27 @@ class _NCPoly():
                     if term in Fhat.rep.get(n - j, {}):
                         c = Fhat.rep[n - j][term].coeff
                         Fhat.subtract(_NCMonomial(c, term, self.generators, n - j))
-                    dummy = Dummy()
-                    dummies.append(dummy)
+                    alpha = Dummy()
+                    dummies.append(alpha)
                     # Lines 10-11 of the published algorithm suggest that we should add a monomial
                     # with term Ghat_L * Hhat_R to both G and H. If this were the case, then in
                     # step 3 of the example in 3.3 from the paper, we would add -alpha * y to G instead of -alpha.
                     # This seems to be a second minor mistake in the published algorithm.
                     #
-                    # There is also a subtlety on handling coefficients not mentioned in the algorithm.
-                    # We have to divide the new H term by the coefficient of Ghat
-                    # (We would have to do the same to the new G term, except for the invariant
-                    # that Hhat never has a coefficient)
-                    G.add(_NCMonomial(dummy, Ghat_L.term, self.generators, h - j))
-                    H.add(_NCMonomial((c - dummy)/Ghat.coeff, Hhat_R.term, self.generators, k - j))
+                    # There is also a subtlety on handling coefficients not mentioned in the paper.
+                    # Let c be the coefficient of the relevant Fhat term as in the paper.
+                    # Let alpha be the new Ghat_L term's coefficient, as in the paper.
+                    # Let beta be the new Hhat_R term's coefficient.
+                    # Let g and h be Ghat and Hhat's coefficients, respectively.
+                    # Since we need Ghat_L * Hhat + Ghat * Hhat_R to equal the Fhat term, we need:
+                    # c = alpha*h + g*beta
+                    # Thus, beta = (c - alpha*h)/g
+                    # However, an invariant is that h is always 1: when splitting a monomial into
+                    # G and H, this code always assigns the coefficient to G.
+                    # So this simplifies to (c - alpha)/g
+                    # In the case where g is 1, this simplifies to c - alpha as in the paper.
+                    G.add(_NCMonomial(alpha, Ghat_L.term, self.generators, h - j))
+                    H.add(_NCMonomial((c - alpha)/Ghat.coeff, Hhat_R.term, self.generators, k - j))
 
             for monom in Fhat.monomials(n - j):
                 R = monom.ldivide(Ghat)
