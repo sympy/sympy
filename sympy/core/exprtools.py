@@ -9,14 +9,12 @@ from .function import expand_power_exp
 from .sympify import sympify
 from .numbers import Rational, Integer, Number, I, equal_valued
 from .singleton import S
-from .sorting import default_sort_key, ordered
+from .sorting import ordered
 from .symbol import Dummy
-from .traversal import preorder_traversal
 from .coreerrors import NonCommutativeExpression
 from .containers import Tuple, Dict
 from sympy.external.gmpy import SYMPY_INTS
-from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, iterable, is_sequence)
+from sympy.utilities.iterables import (iterable, is_sequence)
 
 from collections import defaultdict
 from typing import Tuple as tTuple
@@ -1442,7 +1440,7 @@ class _NCMonomial:
         The right monomial will always have a coefficient of 1.
         """
         if ldegree < 0:
-            raise ValueError(f"ldegree must be nonnegative")
+            raise ValueError("ldegree must be nonnegative")
         if ldegree == 0:
             return (
                 _NCMonomial(self.coeff, (), self.generators, 0),
@@ -1707,7 +1705,6 @@ class _NCPoly:
 
         Implementation based on Algorithm 1 from https://arxiv.org/abs/1002.3180
         """
-        rdegree = self.degree - ldegree
         terms = list(self.monomials(self.degree))
         Ghat, Hhat = terms[0].split(ldegree)
         G = _NCPoly(None, self.generators, self.extensions)

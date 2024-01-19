@@ -4,7 +4,6 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
-from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational, oo)
 from sympy.core.singleton import S
