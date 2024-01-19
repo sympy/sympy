@@ -644,7 +644,7 @@ class MatrixDeprecated(MatrixCommon):
         will fail.
 
         TODO: Implement algorithm for sparse matrices (SFF),
-        https://paulbourke.net/geometry/polygonmesh/#insidepoly
+        https://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps
 
         See Also
         ========
