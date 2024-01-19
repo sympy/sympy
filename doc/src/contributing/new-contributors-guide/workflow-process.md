@@ -49,7 +49,7 @@ pull request, or even before committing a change.
 - [ ] **Cross reference relevant issues in the pull request description.** If
   the pull request fixes an issue (i.e., the issue should be closed once the
   PR is merged), use the ["fixes #123" syntax
-  ](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue).
+  ](https://docs.github.com/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue).
 
 - [ ] **Add a comment to the original issue cross-referencing the pull
   request** for visibility. If there is not a corresponding issue, this is OK.
