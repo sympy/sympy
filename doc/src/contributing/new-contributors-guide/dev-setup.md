@@ -113,7 +113,7 @@ choosing a professional username.
 ### Setup SSH Keys
 
 To establish a secure connection between your computer and GitHub see detailed
-instructions in <https://docs.github.com/get-started/quickstart/set-up-git> or at
+instructions in <https://docs.github.com/get-started/getting-started-with-git/set-up-git> or at
 <https://docs.github.com/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>.
 
 If you have any problems with SSH access to GitHub, read the troubleshooting
