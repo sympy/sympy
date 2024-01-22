@@ -195,7 +195,7 @@ jobs:
 
   # -------------------- NumPy 2.0 job ----------------------------- #
 
-  optional-dependencies:
+  numpy-nightly:
     needs: code-quality
 
     runs-on: ubuntu-20.04
@@ -205,7 +205,7 @@ jobs:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
 
-    name: ${{ matrix.python-version }} Optional Dendendencies
+    name: ${{ matrix.python-version }} NumPy nightly
 
     steps:
       - uses: actions/checkout@v3
