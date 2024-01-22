@@ -214,12 +214,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - run: pip install -r requirements-dev.txt
-      - run: pip install -U --pre --only-binary numpy -i \
-                  https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \
-                  numpy
-      - run: pip install -U --pre --only-binary scipy -i \
-                  https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \
-                  scipy
+      - run: pip install -i \
+          https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \
+          numpy
+      - run: pip install -i \
+          https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \
+          scipy
 
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
