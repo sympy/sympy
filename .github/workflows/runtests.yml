@@ -181,11 +181,11 @@ jobs:
                          'antlr4-python3-runtime==4.11.*'                 \
                          #
 
-      - run: pip install llvmlite gmpy2 symengine
+      - run: pip install llvmlite symengine
 
       # Not available in CPython 3.12 (yet).
       - if: ${{ ! contains(matrix.python-version, '3.12') }}
-        run: pip install numba pymc
+        run: pip install numba pymc gmpy2
 
       # Test external imports
       - run: bin/test_external_imports.py
