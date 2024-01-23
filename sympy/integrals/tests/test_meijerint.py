@@ -762,3 +762,13 @@ def test_pr_23583():
     # This result is wrong. Check whether new result is correct when this test fail.
     assert integrate(1/sqrt((x - I)**2-1), meijerg=True) == \
            Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+
+
+def test_issue_26102():
+    from sympy.core.symbol import Symbol
+    x = Symbol('x', real=True)
+    z = Symbol('z', real=True)
+    z0 = Symbol('z0', real=True)
+    zR = Symbol('z_R', positive=True)
+    assert(integrate(abs(exp(-I/2 * x**2 / (I*zR + (z-z0))))**2,(x,-oo,oo),meijerg=True) == \
+        sqrt(pi)*sqrt(zR**2 + (z - z0)**2)/sqrt(zR))
