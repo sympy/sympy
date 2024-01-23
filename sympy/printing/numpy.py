@@ -25,8 +25,7 @@ _known_constants_numpy = {
     'Pi': 'pi',
     'EulerGamma': 'euler_gamma',
     'NaN': 'nan',
-    'Infinity': 'PINF',
-    'NegativeInfinity': 'NINF'
+    'Infinity': 'inf',
 }
 
 _numpy_known_functions = {k: 'numpy.' + v for k, v in _known_functions_numpy.items()}
@@ -62,6 +61,9 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         #     tuples in nopython mode.
         delimiter=', '
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
+
+    def _print_NegativeInfinity(self, expr):
+        return '-' + self._print(S.Infinity)
 
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
