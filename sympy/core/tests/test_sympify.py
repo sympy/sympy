@@ -647,8 +647,8 @@ def test_sympify_numpy():
     assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
 
-    lcprec = np.finfo(np.longcomplex(1)).nmant + 1
-    assert equal(sympify(np.longcomplex(1 + 2j)),
+    lcprec = np.finfo(np.clongdouble(1)).nmant + 1
+    assert equal(sympify(np.clongdouble(1 + 2j)),
                 Float(1.0, precision=lcprec) + Float(2.0, precision=lcprec)*I)
 
     #float96 does not exist on all platforms
