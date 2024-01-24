@@ -532,11 +532,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         gs = solveset(expr - y, self.value, S.Reals)
 
         if isinstance(gs, Intersection):
-            if len(gs.args) == 2:
-                if gs.args[0] is S.Reals:
-                    gs = gs.args[1]
-                else:
-                    raise NotImplementedError("Anticipating Intersection(Reals, Set)")
+            if len(gs.args) == 2 and gs.args[0] is S.Reals:
+                gs = gs.args[1]
         if not gs.is_FiniteSet:
             raise ValueError("Can not solve %s for %s" % (expr, self.value))
         fx = self.compute_density(self.value)
