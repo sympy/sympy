@@ -1633,7 +1633,7 @@ class Basic(Printable):
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=False)
         x
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=True)
-        x**(y)
+        x**y
 
         It is probably better to use a different form of the query
         that describes the target expression more precisely:
