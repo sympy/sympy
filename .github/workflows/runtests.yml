@@ -41,7 +41,7 @@ jobs:
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
 
-      - run: pip install slotscheck . 
+      - run: pip install slotscheck .
 
       - name: Check for incorrect use of ``__slots__`` using slotscheck
         run: python -m slotscheck --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
@@ -181,14 +181,43 @@ jobs:
                          'antlr4-python3-runtime==4.11.*'                 \
                          #
 
+      - run: pip install symengine
+
       # Not available in CPython 3.12 (yet).
       - if: ${{ ! contains(matrix.python-version, '3.12') }}
-        run: pip install llvmlite numba gmpy2 symengine pymc
+        run: pip install numba pymc gmpy2 llvmlite
 
       # Test external imports
       - run: bin/test_external_imports.py
       - run: bin/test_submodule_imports.py
       - run: bin/test_executable.py
+
+      # Test modules with specific dependencies
+      - run: bin/test_optional_dependencies.py
+
+  # -------------------- NumPy 2.0 job ----------------------------- #
+
+  numpy-nightly:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    name: ${{ matrix.python-version }} NumPy nightly
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pip install -r requirements-dev.txt
+      - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy
+      - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scipy
 
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
