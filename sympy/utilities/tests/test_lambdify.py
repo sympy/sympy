@@ -1871,3 +1871,13 @@ def test_lambdify_docstring_size_limit_matrix():
             docstring_limit=test_case.docstring_limit,
         )
         assert lambdified_expr.__doc__ == test_case.expected_docstring
+
+
+def test_issue_15795():
+    from mpmath import mpc
+    assoc_legendre_evalf = -25.4558441227157*I
+    assoc_legendre_n = -0.474572528387641
+    assert assoc_legendre(2, 1, 3) == -18*sqrt(2)*I
+    assert abs(assoc_legendre(2, 1, 3).evalf()) - abs(assoc_legendre_evalf) < 1e-10
+    assert abs(assoc_legendre(1, 1/2, 0.1).n()) - abs(assoc_legendre_n) < 1e-10
+    assert mpmath.legenp(2, 1, 3) == mpc(real='-8.2688999181462742e-24', imag='-25.45584412271571')

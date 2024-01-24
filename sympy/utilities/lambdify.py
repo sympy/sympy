@@ -67,6 +67,7 @@ MPMATH_TRANSLATIONS = {
     "ceiling": "ceil",
     "chebyshevt": "chebyt",
     "chebyshevu": "chebyu",
+    "assoc_legendre": "legenp",
     "E": "e",
     "I": "j",
     "ln": "log",
