@@ -978,7 +978,7 @@ class assoc_legendre(Function):
             # Diff wrt x
             # Find better formula, this is unsuitable for x = 1
             n, m, x = self.args
-            return 1/(x**2 - 1)*(x*n*assoc_legendre(n, m, x) - (m + n)*assoc_legendre(n - 1, m, x))
+            return 1/(x**2 - 1)*( - (n + 1)*x*assoc_legendre(n, m, x) + (n - m + 1)*assoc_legendre(n + 1, m, x))
         else:
             raise ArgumentIndexError(self, argindex)
 
