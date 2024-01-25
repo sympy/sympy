@@ -22,7 +22,7 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
 from sympy.sets.sets import (Interval, FiniteSet, Complement, Union)
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
-from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow, slow
 from sympy.abc import x
 
 a = Symbol('a', real=True)
@@ -57,7 +57,6 @@ def test_function_range():
         ) == Interval(-1, 1)
     assert function_range(cos(x), x, S.EmptySet) == S.EmptySet
     assert function_range(x/sqrt(x**2+1), x, S.Reals) == Interval.open(-1,1)
-    assert function_range(tan(x)**2 + tan(3*x)**2 + 1, x, S.Reals) == Interval(1,oo)
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
     raises(NotImplementedError, lambda : function_range(
@@ -66,6 +65,10 @@ def test_function_range():
         log(x), x, S.Integers))
     raises(NotImplementedError, lambda : function_range(
         sin(x)/2, x, S.Naturals))
+
+@slow
+def test_function_range1():
+    assert function_range(tan(x)**2 + tan(3*x)**2 + 1, x, S.Reals) == Interval(1,oo)
 
 
 def test_continuous_domain():
