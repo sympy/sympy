@@ -2101,6 +2101,10 @@ def _get_examples_ode_sol_2nd_linear_bessel():
         'eq': f(x).diff(x, x) + 2/x*f(x).diff(x) + f(x),
         'sol': [Eq(f(x), (C1*besselj(S(1)/2, x) + C2*bessely(S(1)/2, x))/sqrt(x))],
     },
+    '2nd_lin_bessel_12': {
+        'eq': x**2*f(x).diff(x, 2) + x*f(x).diff(x) + (10**2*x**2/5**2 - 6**2)*f(x),
+        'sol': [Eq(f(x), C1*besselj(6, 2*x) + C2*bessely(6, 2*x))],
+    },
     }
     }
 
