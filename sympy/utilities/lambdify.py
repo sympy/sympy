@@ -963,6 +963,8 @@ def _recursive_to_string(doprint, arg):
             left, right = "[", "]"
         elif isinstance(arg, tuple):
             left, right = "(", ",)"
+            if not arg:
+                return "()"
         else:
             raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
         return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right
