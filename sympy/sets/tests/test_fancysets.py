@@ -1266,7 +1266,7 @@ def test_Rationals():
     it = iter(S.Rationals)
     assert [next(it) for i in range(12)] == [
         0, 1, -1, S.Half, 2, Rational(-1, 2), -2,
-        Rational(1, 3), 3, Rational(-1, 3), -3, Rational(2, 3)]
+        Rational(1, 3), 3, Rational(-1, 3), -3, Rational(3, 2)]
     assert Basic() not in S.Rationals
     assert S.Half in S.Rationals
     assert S.Rationals.contains(0.5) == Contains(

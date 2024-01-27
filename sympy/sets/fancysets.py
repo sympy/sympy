@@ -1,5 +1,5 @@
 from functools import reduce
-from itertools import product
+from itertools import product, count
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -7,7 +7,6 @@ from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.mod import Mod
-from sympy.core.intfunc import igcd
 from sympy.core.numbers import oo, Rational
 from sympy.core.relational import Eq, is_eq
 from sympy.core.kind import NumberKind
@@ -34,7 +33,7 @@ class Rationals(Set, metaclass=Singleton):
     True
     >>> iterable = iter(S.Rationals)
     >>> [next(iterable) for i in range(12)]
-    [0, 1, -1, 1/2, 2, -1/2, -2, 1/3, 3, -1/3, -3, 2/3]
+    [0, 1, -1, 1/2, 2, -1/2, -2, 1/3, 3, -1/3, -3, 3/2]
     """
 
     is_iterable = True
@@ -49,18 +48,27 @@ class Rationals(Set, metaclass=Singleton):
         return tfn[other.is_rational]
 
     def __iter__(self):
+        r""" Enumerate rational numbers.
+
+        References
+        ==========
+
+        .. [1] Aimeric Malter, Dierk Schleicher, Don Zagier, New Looks at Old Number Theory,
+               The American Mathematical Monthly, Vol. 120, No. 3 (2013), pp. 243-264
+               https://doi.org/10.4169/amer.math.monthly.120.03.243
+
+        """
         yield S.Zero
         yield S.One
         yield S.NegativeOne
-        d = 2
-        while True:
-            for n in range(d):
-                if igcd(n, d) == 1:
-                    yield Rational(n, d)
-                    yield Rational(d, n)
-                    yield Rational(-n, d)
-                    yield Rational(-d, n)
-            d += 1
+        for q in count(2):
+            p = 1
+            for _ in range(1 << (q-2)):
+                yield Rational(p, q)
+                yield Rational(q, p)
+                yield Rational(-p, q)
+                yield Rational(-q, p)
+                p, q = q, q*(1 + ((p // q) << 1)) - p
 
     @property
     def _boundary(self):
