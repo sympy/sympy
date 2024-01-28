@@ -1,7 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from sympy.core import EulerGamma, oo  # Must be imported from core, not core.numbers
+from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
@@ -1437,7 +1437,7 @@ class expint(Function):
         from sympy.integrals.integrals import Integral
         n, x = self.args
         t = Dummy('t')
-        return Integral((t**-n) * (exp(-t*x)), (t, 1, oo))
+        return Integral((t**-n) * (exp(-t*x)), (t, 1, S.Infinity))
 
 
 def E1(z):
