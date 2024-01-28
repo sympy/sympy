@@ -1307,10 +1307,9 @@ def solve_modular(equation, symbol, domain=S.Reals):
     Returns:
     Set: The solution set.
     """
-    
     if not isinstance(equation, Eq) or not isinstance(equation.lhs, Mod) or equation.rhs != 0:
         raise ValueError("Invalid Modular Equation")
-    
+
     expression, modulus = equation.lhs.args
     return solve(expression % modulus, symbol, domain=domain)
 
