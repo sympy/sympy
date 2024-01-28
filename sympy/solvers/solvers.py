@@ -1328,8 +1328,6 @@ def _solve_undetermined(g, symbols, flags):
         sol = solve_undetermined_coeffs(g, symbols, **dict(flags, dict=True, set=None))
         if len(sol) == 1:
             return sol
-
-
 def _solve(f, *symbols, **flags):
     """Return a checked solution for *f* in terms of one or more of the
     symbols in the form of a list of dictionaries.
