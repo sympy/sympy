@@ -1,7 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from sympy.core import EulerGamma  # Must be imported from core, not core.numbers
+from sympy.core import EulerGamma, oo  # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
@@ -9,7 +9,7 @@ from sympy.core.numbers import I, pi, Rational
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import  polar_lift, re, unpolarify
@@ -1432,6 +1432,12 @@ class expint(Function):
             return (exp(-z)/z) * Add(*s)
 
         return super(expint, self)._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
+        from sympy.integrals.integrals import Integral
+        n, x = self.args
+        t = Dummy('t')
+        return Integral((t**-n) * (exp(-t*x)), (t, 1, oo))
 
 
 def E1(z):
