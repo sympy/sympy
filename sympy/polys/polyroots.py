@@ -49,7 +49,7 @@ def roots_linear(f):
     return [r]
 
 
-def roots_quadratic(f):
+def roots_quadratic(f,trig = False):
     """Returns a list of roots of a quadratic polynomial. If the domain is ZZ
     then the roots will be sorted with negatives coming before positives.
     The ordering will be the same for any numerical coefficients as long as
@@ -244,7 +244,7 @@ def _roots_quartic_euler(p, q, r, a):
     return [c1 - c2 - a, -c1 - c3 - a, -c1 + c3 - a, c1 + c2 - a]
 
 
-def roots_quartic(f):
+def roots_quartic(f,trig = False):
     r"""
     Returns a list of roots of a quartic polynomial.
 
@@ -368,7 +368,7 @@ def roots_quartic(f):
                     for a1, a2 in zip(_ans(y1), _ans(y2))]
 
 
-def roots_binomial(f):
+def roots_binomial(f,trig=False):
     """Returns a list of roots of a binomial polynomial. If the domain is ZZ
     then the roots will be sorted with negatives coming before positives.
     The ordering will be the same for any numerical coefficients as long as
@@ -381,7 +381,7 @@ def roots_binomial(f):
     base = -cancel(b/a)
     alpha = root(base, n)
 
-    if alpha.is_number:
+    if alpha.is_number and trig == True:
         alpha = alpha.expand(complex=True)
 
     # define some parameters that will allow us to order the roots.
@@ -1029,7 +1029,7 @@ def roots(f, *gens,
             if f.degree() == 1:
                 return list(map(cancel, roots_linear(f)))
             else:
-                return roots_binomial(f)
+                return roots_binomial(f,trig = trig)
 
         result = []
 
@@ -1090,7 +1090,7 @@ def roots(f, *gens,
             _update_dict(result, zeros, roots_linear(f)[0], 1)
         elif f.length() == 2:
             roots_fun = roots_quadratic if f.degree() == 2 else roots_binomial
-            for r in roots_fun(f):
+            for r in roots_fun(f,trig = trig):
                 _update_dict(result, zeros, r, 1)
         else:
             _, factors = Poly(f.as_expr()).factor_list()

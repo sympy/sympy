@@ -7,7 +7,7 @@ from sympy.functions.elementary.complexes import (conjugate, im, re)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.functions.elementary.trigonometric import (acos, cos, sin, atan)
 from sympy.polys.domains.integerring import ZZ
 from sympy.sets.sets import Interval
 from sympy.simplify.powsimp import powsimp
@@ -756,3 +756,15 @@ def test_issue_22768():
         r: 1,
         -r*(1 + sqrt(3)*I)/2: 1,
         r*(-1 + sqrt(3)*I)/2: 1}
+
+def test_issue_26130():
+    assert roots(-64*x**7 + 112*x**5 - 56*x**3, trig = False) == {
+        -sqrt(7/8 - sqrt(7)*I/8): 1,
+        sqrt(7/8 - sqrt(7)*I/8): 1,
+        -sqrt(7/8 + sqrt(7)*I/8): 1,
+        sqrt(7/8 + sqrt(7)*I/8): 1, 0: 3}
+    assert (roots(-64*x**7 + 112*x**5 - 56*x**3, trig = True)) == {
+        -14**(1/4)*cos(atan(sqrt(7)/7)/2)/2 + 14**(1/4)*I*sin(atan(sqrt(7)/7)/2)/2: 1,
+        14**(1/4)*cos(atan(sqrt(7)/7)/2)/2 - 14**(1/4)*I*sin(atan(sqrt(7)/7)/2)/2: 1,
+        -14**(1/4)*cos(atan(sqrt(7)/7)/2)/2 - 14**(1/4)*I*sin(atan(sqrt(7)/7)/2)/2: 1,
+        14**(1/4)*cos(atan(sqrt(7)/7)/2)/2 + 14**(1/4)*I*sin(atan(sqrt(7)/7)/2)/2: 1, 0: 3}
