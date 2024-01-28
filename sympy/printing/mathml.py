@@ -427,7 +427,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
         x.appendChild(self._print(e.base))
         x.appendChild(self._print(e.exp))
         return x
-    
+
     def _print_Inv_Trig(self, e):
         if(self._settings['inv_trig_style']):
             x = self.dom.createElement('apply')
