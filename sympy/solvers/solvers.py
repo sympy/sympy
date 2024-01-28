@@ -29,7 +29,7 @@ from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, BooleanAtom
-
+from sympy import Eq, Mod, symbols
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
                              Abs, re, im, arg, sqrt, atan2)
 from sympy.functions.combinatorial.factorials import binomial
@@ -115,7 +115,6 @@ def recast_to_symbols(eqs, symbols):
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
     return isinstance(e, Expr) and (e.is_Pow or isinstance(e, exp))
-
 
 def _simple_dens(f, symbols):
     # when checking if a denominator is zero, we can just check the
@@ -1296,6 +1295,24 @@ def solve(f, *symbols, **flags):
         k = list(ordered(set(flatten(tuple(i.keys()) for i in solution))))
     return k, {tuple([s.get(ki, ki) for ki in k]) for s in solution}
 
+def solve_modular(equation, symbol, domain=S.Reals):
+    """
+    Solve a modular equation of the form Eq(Mod(expression, modulus), 0).
+
+    Parameters:
+    equation (Eq): The modular equation.
+    symbol (Symbol): The variable to solve for.
+    domain (Set): The solution domain. Default is the set of real numbers.
+
+    Returns:
+    Set: The solution set.
+    """
+    
+    if not isinstance(equation, Eq) or not isinstance(equation.lhs, Mod) or equation.rhs != 0:
+        raise ValueError("Invalid Modular Equation")
+    
+    expression, modulus = equation.lhs.args
+    return solve(expression % modulus, symbol, domain=domain)
 
 def _solve_undetermined(g, symbols, flags):
     """solve helper to return a list with one dict (solution) else None

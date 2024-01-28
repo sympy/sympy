@@ -434,7 +434,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
             inv_trig_symbol = self.mathml_tag(e)
             x.appendChild(inv_trig_symbol)
             arg_elem = self._print(e)
-            x.appendChild(arg_elem)            
+            x.appendChild(arg_elem)
             return x
 
     def _print_Number(self, e):
