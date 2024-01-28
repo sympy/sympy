@@ -382,7 +382,6 @@ latex_show_pagerefs = True
 # We use False otherwise the module index gets generated twice.
 latex_use_modindex = False
 
-default_role = 'math'
 pngmath_divpng_args = ['-gamma 1.5', '-D 110']
 # Note, this is ignored by the mathjax extension
 # Any \newcommand should be defined in the file
