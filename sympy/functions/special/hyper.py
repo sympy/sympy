@@ -288,7 +288,12 @@ class hyper(TupleParametersBase):
             den = Mul(*[RisingFactorial(b, i) for b in bq])
             terms.append(((num/den) * (arg**i)) / factorial(i))
 
-        return (Add(*terms) + Order(x**n,x))
+        result = Add(*terms)
+        newn = min((Abs(a) for a in ap if a.is_negative), default=n)
+
+        if newn < n:
+            return result
+        return result + Order(x**n, x)
 
     def _eval_aseries(self, n, args0, x, logx):
 
@@ -316,7 +321,13 @@ class hyper(TupleParametersBase):
         pre1 = gamma(b-a)*gamma(c)/(gamma(b)*gamma(c-a))
         pre2 = gamma(a-b)*gamma(c)/(gamma(a)*gamma(c-b))
 
-        return pre1*((-z)**(-a))*Add(*terms1) + pre2*((-z)**(-b))*Add(*terms2) + Order(x**n,x)
+        result = pre1*((-z)**(-a))*Add(*terms1) + pre2*((-z)**(-b))*Add(*terms2)
+        newn = min((Abs(a) for a in self.args[0] if a.is_negative), default=n)
+
+        if newn < n:
+            return result
+
+        return result + Order((1/z)**n, x)
 
     @property
     def argument(self):
