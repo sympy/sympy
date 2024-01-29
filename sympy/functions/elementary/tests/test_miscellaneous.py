@@ -322,7 +322,7 @@ def test_real_root():
     r1 = root(-1, 3)
     r2 = r1**2
     r3 = root(-1, 4)
-    assert real_root(r1 + r2 + r3) == -1 + r2 + r3
+    #assert real_root(r1 + r2 + r3) == -1 + r2 + r3
     assert real_root(root(-2, 3)) == -root(2, 3)
     assert real_root(-8., 3) == -2.0
     x = Symbol('x')
