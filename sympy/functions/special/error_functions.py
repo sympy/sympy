@@ -1216,6 +1216,11 @@ class Ei(Function):
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return exp(z) * _eis(z)
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Symbol('t', Dummy=True)
+        return Integral(S.Exp1**t/t, (t, S.NegativeInfinity, z))
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import re
         x0 = self.args[0].limit(x, 0)
@@ -1901,6 +1906,8 @@ class Si(TrigonometricIntegral):
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
 
+    _eval_rewrite_as_Integral =  _eval_rewrite_as_sinc
+
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
         point = args0[0]
@@ -2024,6 +2031,11 @@ class Ci(TrigonometricIntegral):
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Symbol('t', Dummy=True)
+        return S.EulerGamma + log(z) - Integral((1-cos(t))/t, (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
@@ -2447,6 +2459,11 @@ class fresnels(FresnelIntegral):
         return (pi*z**Rational(9, 4) / (sqrt(2)*(z**2)**Rational(3, 4)*(-z)**Rational(3, 4))
                 * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Symbol('t', Dummy=True)
+        return Integral(sin(t**2), (t, 0, z))
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
@@ -2602,6 +2619,11 @@ class fresnelc(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return (pi*z**Rational(3, 4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Symbol('t', Dummy=True)
+        return Integral(cos(t**2), (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order
