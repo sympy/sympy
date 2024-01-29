@@ -2,7 +2,7 @@ from sympy.core.function import (diff, expand, expand_func)
 from sympy.core import EulerGamma
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import (Symbol, symbols, Dummy)
 from sympy.functions.elementary.complexes import (conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
@@ -23,6 +23,7 @@ from sympy.testing.pytest import raises
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
 n = Symbol("n", integer=True)
+t = Dummy('t')
 
 
 def test_erf():
@@ -814,3 +815,7 @@ def test_fresnel_series():
     assert (fresnelc(1/z).series(z) - fc.subs(z, 1/z)).expand().is_Order
     assert ((2*fresnels(3*z)).series(z, oo) - 2*fs.subs(z, 3*z)).expand().is_Order
     assert ((3*fresnelc(2*z)).series(z, oo) - 3*fc.subs(z, 2*z)).expand().is_Order
+
+
+def test_issue_26134():
+    assert expint(n, x).rewrite(Integral).dummy_eq(Integral(t**-n * exp(-t*x), (t, 1, oo)))
