@@ -29,7 +29,7 @@ from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, BooleanAtom
-from sympy import Eq, Mod
+from sympy import Mod
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
                              Abs, re, im, arg, sqrt, atan2)
 from sympy.functions.combinatorial.factorials import binomial
