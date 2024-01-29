@@ -1437,7 +1437,7 @@ class expint(Function):
         from sympy.integrals.integrals import Integral
         n, x = self.args
         t = Dummy('t')
-        return Integral((t**-n) * (exp(-t*x)), (t, 1, S.Infinity))
+        return Integral(t**-n * exp(-t*x), (t, 1, S.Infinity))
 
 
 def E1(z):

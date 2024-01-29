@@ -818,4 +818,4 @@ def test_fresnel_series():
 
 
 def test_issue_26134():
-    assert expint(n, x).rewrite(Integral).dummy_eq(Integral((t**-n) * (exp(-t*x)), (t, 1, oo)))
+    assert expint(n, x).rewrite(Integral).dummy_eq(Integral(t**-n * exp(-t*x), (t, 1, oo)))
