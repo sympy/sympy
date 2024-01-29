@@ -2028,9 +2028,9 @@ class Integer(Rational):
             return super()._eval_power(expt)
         if not isinstance(expt, Rational):
             return
-        if expt is S.Half and self.is_negative:
-            # we extract I for this special case since everyone is doing so
-            return S.ImaginaryUnit*Pow(-self, expt)
+        if self.is_negative:
+            # Extract rational powers of -1
+            return Pow(S.NegativeOne, expt) * Pow(-self, expt)
         if expt.is_negative:
             # invert base and change sign on exponent
             ne = -expt
