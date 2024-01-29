@@ -56,7 +56,6 @@ class LarkLaTeXParser:
             start="latex_string",
             lexer="auto",
             ambiguity="explicit",
-            debug=True,
             propagate_positions=False,
             maybe_placeholders=False,
             keep_all_tokens=True)
