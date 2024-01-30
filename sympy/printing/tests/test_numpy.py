@@ -319,7 +319,7 @@ def test_issue_17006():
 def test_jax_tuple_compatibility():
     if not jax:
         skip("Jax not installed")
-        
+
     x, y, z = symbols('x y z')
     expr = Max(x, y, z) + Min(x, y, z)
     func = lambdify((x, y, z), expr, 'jax')
