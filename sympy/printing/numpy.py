@@ -3,7 +3,6 @@ from sympy.core.function import Lambda
 from sympy.core.power import Pow
 from .pycode import PythonCodePrinter, _known_functions_math, _print_known_const, _print_known_func, _unpack_integral_limits, ArrayPrinter
 from .codeprinter import CodePrinter
-import jax
 
 
 _not_in_numpy = 'erf erfc factorial gamma loggamma'.split()
