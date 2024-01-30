@@ -11,7 +11,6 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.utilities.lambdify import lambdify
 from sympy import symbols, Min, Max
-from jax.numpy import asarray
 
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
@@ -29,6 +28,7 @@ from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
 
 np = import_module('numpy')
+jax = import_module('jax')
 
 if np:
     deafult_float_info = np.finfo(np.array([]).dtype)
