@@ -3,6 +3,7 @@ from sympy.core.function import Lambda
 from sympy.core.power import Pow
 from .pycode import PythonCodePrinter, _known_functions_math, _print_known_const, _print_known_func, _unpack_integral_limits, ArrayPrinter
 from .codeprinter import CodePrinter
+import jax
 
 
 _not_in_numpy = 'erf erfc factorial gamma loggamma'.split()
@@ -216,11 +217,10 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational, sqrt=self._module + '.sqrt')
 
     def _print_Min(self, expr):
-        return '{}(({}), axis=0)'.format(self._module_format(self._module + '.amin'), ','.join(self._print(i) for i in expr.args))
+        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amin'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
 
     def _print_Max(self, expr):
-        return '{}(({}), axis=0)'.format(self._module_format(self._module + '.amax'), ','.join(self._print(i) for i in expr.args))
-
+        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amax'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.angle'), self._print(expr.args[0]))
 
