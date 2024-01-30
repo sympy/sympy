@@ -316,7 +316,7 @@ def test_issue_17006():
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))
 
-def test_26139():
+def test_jax_tuple_compatibility():
     x, y, z = symbols('x y z')
     expr = Max(x, y, z) + Min(x, y, z)
     func = lambdify((x, y, z), expr, modules='jax')
