@@ -51,6 +51,7 @@ def test_K():
     assert K(m).rewrite(Integral).dummy_eq(
         Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2)))
 
+    # assert K(z).rewrite('Integral')
 def test_F():
     assert F(z, 0) == z
     assert F(0, m) == 0
