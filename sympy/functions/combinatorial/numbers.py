@@ -1677,7 +1677,7 @@ class partition(DefinedFunction):
             return True
 
 
-class mobius(Function):
+class mobius(DefinedFunction):
     """
     Mobius function maps natural number to {-1, 0, 1}
 
