@@ -381,7 +381,7 @@ def roots_binomial(f, trig=False):
     base = -cancel(b/a)
     alpha = root(base, n)
 
-    if alpha.is_number and trig == True:
+    if alpha.is_number and trig:
         alpha = alpha.expand(complex=True)
 
     # define some parameters that will allow us to order the roots.
