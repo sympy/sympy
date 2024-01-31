@@ -1029,7 +1029,7 @@ def roots(f, *gens,
             if f.degree() == 1:
                 return list(map(cancel, roots_linear(f)))
             else:
-                return roots_binomial(f,trig = trig)
+                return roots_binomial(f, trig=trig)
 
         result = []
 
