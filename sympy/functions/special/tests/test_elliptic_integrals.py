@@ -178,3 +178,4 @@ def test_P():
         Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z)))
     assert P(n, m).rewrite(Integral).dummy_eq(
         Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, pi/2)))
+    
