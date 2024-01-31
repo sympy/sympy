@@ -37,10 +37,10 @@ class Str(Atom):
     __slots__ = ('name',)
 
     def __new__(cls, name, **kwargs):
-        if not isinstance(name, str):
+        if not isinstance(name, (str, Str)):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
         obj = Expr.__new__(cls, **kwargs)
-        obj.name = name
+        obj.name = str(name) # In case a Str was passed
         return obj
 
     def __getnewargs__(self):
@@ -48,6 +48,9 @@ class Str(Atom):
 
     def _hashable_content(self):
         return (self.name,)
+
+    def __len__(self):
+        return len(str(self.name))
 
 
 def _filter_assumptions(kwargs):

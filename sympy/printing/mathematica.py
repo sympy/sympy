@@ -91,6 +91,7 @@ known_functions = {
     "elliptic_f": [(lambda *x: True, "EllipticE")],
     "elliptic_k": [(lambda x: True, "EllipticK")],
     "elliptic_pi": [(lambda *x: True, "EllipticPi")],
+    "elliptic_nome_q": [(lambda x: True, "EllipticNomeQ")],
     "zeta": [(lambda *x: True, "Zeta")],
     "dirichlet_eta": [(lambda x: True, "DirichletEta")],
     "riemann_xi": [(lambda x: True, "RiemannXi")],
@@ -315,6 +316,12 @@ class MCodePrinter(CodePrinter):
             return "ProductLog[{}]".format(self._print(expr.args[0]))
         return "ProductLog[{}, {}]".format(
             self._print(expr.args[1]), self._print(expr.args[0]))
+
+    def _print_ThetaBase(self, expr):
+        return "EllipticTheta[{}, {}]".format(expr._type_val, ', '.join(self.doprint(a) for a in expr.args))
+
+    def _print_JacobiEllipticFunctionBase(self, expr):
+        return "Jacobi{}[{}]".format(str(expr._type_str).upper(), ', '.join(self.doprint(a) for a in expr.args))
 
     def _print_Integral(self, expr):
         if len(expr.variables) == 1 and not expr.limits[0][1:]:

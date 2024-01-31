@@ -42,8 +42,11 @@ from sympy.functions.special.polynomials import (legendre, assoc_legendre,
         hermite, hermite_prob, chebyshevt, chebyshevu, chebyshevu_root,
         chebyshevt_root, laguerre, assoc_laguerre, gegenbauer, jacobi, jacobi_normalized)
 from sympy.functions.special.spherical_harmonics import Ynm, Ynm_c, Znm
-from sympy.functions.special.elliptic_integrals import (elliptic_k,
-        elliptic_f, elliptic_e, elliptic_pi)
+from sympy.functions.special.elliptic_integrals import (
+    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, theta1, theta2, theta3,
+    theta4, elliptic_nome_q, jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc,
+    jacobi_dn, jacobi_ds, jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc,
+    jacobi_sd, jacobi_sn)
 from sympy.functions.special.beta_functions import beta, betainc, betainc_regularized
 from sympy.functions.special.mathieu_functions import (mathieus, mathieuc,
         mathieusprime, mathieucprime)
@@ -103,7 +106,10 @@ __all__ = [
 
     'Ynm', 'Ynm_c', 'Znm',
 
-    'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi',
+    'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi', 'theta1',
+    'theta2', 'theta3', 'theta4', 'jacobi_cd', 'jacobi_cn', 'jacobi_cs',
+    'jacobi_dc', 'jacobi_dn', 'jacobi_ds', 'jacobi_nc', 'jacobi_nd',
+    'jacobi_ns', 'jacobi_sc', 'jacobi_sd', 'jacobi_sn', 'elliptic_nome_q',
 
     'beta', 'betainc', 'betainc_regularized',
 

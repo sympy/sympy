@@ -2455,6 +2455,105 @@ def test_sympy__functions__special__elliptic_integrals__elliptic_pi():
     assert _test_args(P(x, y, z))
 
 
+@SKIP("abstract class")
+def test_sympy__functions__special__elliptic_integrals__ThetaBase():
+    pass
+
+
+def test_sympy__functions__special__elliptic_integrals__theta1():
+    from sympy.functions.special.elliptic_integrals import theta1
+    assert _test_args(theta1(y))
+    assert _test_args(theta1(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__theta2():
+    from sympy.functions.special.elliptic_integrals import theta2
+    assert _test_args(theta2(y))
+    assert _test_args(theta2(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__theta3():
+    from sympy.functions.special.elliptic_integrals import theta3
+    assert _test_args(theta3(y))
+    assert _test_args(theta3(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__theta4():
+    from sympy.functions.special.elliptic_integrals import theta4
+    assert _test_args(theta4(y))
+    assert _test_args(theta4(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_nome_q():
+    from sympy.functions.special.elliptic_integrals import elliptic_nome_q
+    assert _test_args(elliptic_nome_q(y))
+
+
+@SKIP("abstract class")
+def test_sympy__functions__special__elliptic_integrals__JacobiEllipticFunctionBase():
+    pass
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_cd():
+    from sympy.functions.special.elliptic_integrals import jacobi_cd
+    assert _test_args(jacobi_cd(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_cn():
+    from sympy.functions.special.elliptic_integrals import jacobi_cn
+    assert _test_args(jacobi_cn(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_cs():
+    from sympy.functions.special.elliptic_integrals import jacobi_cs
+    assert _test_args(jacobi_cs(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_dc():
+    from sympy.functions.special.elliptic_integrals import jacobi_dc
+    assert _test_args(jacobi_dc(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_dn():
+    from sympy.functions.special.elliptic_integrals import jacobi_dn
+    assert _test_args(jacobi_dn(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_ds():
+    from sympy.functions.special.elliptic_integrals import jacobi_ds
+    assert _test_args(jacobi_ds(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_nc():
+    from sympy.functions.special.elliptic_integrals import jacobi_nc
+    assert _test_args(jacobi_nc(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_nd():
+    from sympy.functions.special.elliptic_integrals import jacobi_nd
+    assert _test_args(jacobi_nd(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_ns():
+    from sympy.functions.special.elliptic_integrals import jacobi_ns
+    assert _test_args(jacobi_ns(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_sc():
+    from sympy.functions.special.elliptic_integrals import jacobi_sc
+    assert _test_args(jacobi_sc(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_sd():
+    from sympy.functions.special.elliptic_integrals import jacobi_sd
+    assert _test_args(jacobi_sd(y, z))
+
+
+def test_sympy__functions__special__elliptic_integrals__jacobi_sn():
+    from sympy.functions.special.elliptic_integrals import jacobi_sn
+    assert _test_args(jacobi_sn(y, z))
+
+
 def test_sympy__functions__special__delta_functions__DiracDelta():
     from sympy.functions.special.delta_functions import DiracDelta
     assert _test_args(DiracDelta(x, 1))

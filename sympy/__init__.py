@@ -130,8 +130,11 @@ from .functions import (factorial, factorial2, rf, ff, binomial,
         meijerg, appellf1, legendre, assoc_legendre, hermite, hermite_prob,
         chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root, laguerre,
         assoc_laguerre, gegenbauer, jacobi, jacobi_normalized, Ynm, Ynm_c,
-        Znm, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, beta, mathieus,
-        mathieuc, mathieusprime, mathieucprime, riemann_xi, betainc, betainc_regularized)
+        Znm, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, theta1, theta2,
+        theta3, theta4, elliptic_nome_q, jacobi_cd, jacobi_cn, jacobi_cs,
+        jacobi_dc, jacobi_dn, jacobi_ds, jacobi_nc, jacobi_nd, jacobi_ns,
+        jacobi_sc, jacobi_sd, jacobi_sn, beta, mathieus, mathieuc,
+        mathieusprime, mathieucprime, riemann_xi, betainc, betainc_regularized)
 
 from .ntheory import (nextprime, prevprime, prime, primepi, primerange,
         randprime, Sieve, sieve, primorial, cycle_length, composite,
@@ -357,7 +360,10 @@ __all__ = [
     'gegenbauer', 'jacobi', 'jacobi_normalized', 'Ynm', 'Ynm_c', 'Znm',
     'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi', 'beta',
     'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime', 'riemann_xi','betainc',
-    'betainc_regularized',
+    'betainc_regularized', 'theta1', 'theta2', 'theta3', 'theta4',
+    'jacobi_cd', 'jacobi_cn', 'jacobi_cs', 'jacobi_dc', 'jacobi_dn',
+    'jacobi_ds', 'jacobi_nc', 'jacobi_nd', 'jacobi_ns', 'jacobi_sc',
+    'jacobi_sd', 'jacobi_sn', 'elliptic_nome_q',
 
     # sympy.ntheory
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',

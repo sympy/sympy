@@ -57,6 +57,11 @@ known_functions = {
     'fresnelc': 'FresnelC',
     'fresnels': 'FresnelS',
     'lerchphi' : 'LerchPhi',
+    'elliptic_e' : 'EllipticE',
+    'elliptic_f' : 'EllipticF',
+    'elliptic_k' : 'EllipticK',
+    'elliptic_pi' : 'EllipticPi',
+    'elliptic_nome_q' : 'EllipticNome',
 }
 
 for _func in _known_func_same_name:
@@ -213,6 +218,12 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_SparseRepMatrix(self, expr):
         return self._get_matrix(expr, sparse=True)
+
+    def _print_ThetaBase(self, expr):
+        return "JacobiTheta{}({})".format(expr._type_val, ', '.join(self.doprint(a) for a in expr.args))
+
+    def _print_JacobiEllipticFunctionBase(self, expr):
+        return "Jacobi{}({})".format(str(expr._type_str).upper(), ', '.join(self.doprint(a) for a in expr.args))
 
     def _print_Identity(self, expr):
         if isinstance(expr.rows, (Integer, IntegerConstant)):

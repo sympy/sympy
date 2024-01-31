@@ -240,8 +240,8 @@ def test_math_transl():
 def test_mpmath_transl():
     from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
     for sym, mat in MPMATH_TRANSLATIONS.items():
-        assert sym in sympy.__dict__ or sym == 'Matrix'
-        assert mat in mpmath.__dict__
+        assert sym in sympy.__dict__ or sym == 'Matrix', "{} not a SymPy class/function".format(sym)
+        assert mat in mpmath.__dict__, "{} not a mpmath class/function".format(sym)
 
 
 def test_numpy_transl():
