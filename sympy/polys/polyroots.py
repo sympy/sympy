@@ -49,7 +49,7 @@ def roots_linear(f):
     return [r]
 
 
-def roots_quadratic(f,trig = False):
+def roots_quadratic(f, trig=False):
     """Returns a list of roots of a quadratic polynomial. If the domain is ZZ
     then the roots will be sorted with negatives coming before positives.
     The ordering will be the same for any numerical coefficients as long as
