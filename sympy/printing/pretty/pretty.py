@@ -439,6 +439,8 @@ class PrettyPrinter(Printer):
         arg = prettyF
         for x in integral.limits:
             prettyArg = self._print(x[0])
+            if(x[0].is_Dummy):
+                prettyArg = prettyForm(*prettyArg.left('_'))
             # XXX qparens (parens if needs-parens)
             if prettyArg.width() > 1:
                 prettyArg = prettyForm(*prettyArg.parens())
