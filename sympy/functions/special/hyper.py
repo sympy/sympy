@@ -300,28 +300,32 @@ class hyper(TupleParametersBase):
         from sympy.functions.special.gamma_functions import gamma
         from sympy.series.order import Order
 
-        a, b = self.ap
-        c = self.bq[0]
+        ap = self.args[0]
+        bq = self.args[1]
         z = unpolarify(self.args[2])
 
-        if (a-b).is_integer:
-            return super()._eval_aseries(n, args0, x, logx)
-        terms1=[]
-        for i in range(n):
-            num = RisingFactorial(a, i)*RisingFactorial(1+a-c, i)
-            den = RisingFactorial(1+a-b, i)
-            terms1.append((num/den)*(z**(-i))/(factorial(i)))
+        for i in range(len(ap)):
+            for l in range(i+1, len(ap)):
+                if (ap[i]-ap[l]).is_integer:
+                    return super()._eval_aseries(n, args0, x, logx)
 
-        terms2=[]
-        for i in range(n):
-            num = RisingFactorial(b, i)*RisingFactorial(1+b-c, i)
-            den = RisingFactorial(1+b-a, i)
-            terms2.append((num/den)*(z**(-i))/(factorial(i)))
+        result = S.Zero
+        for k in range(len(self.ap)):
+            sum = gamma(ap[k])
+            num = Mul(*[gamma(a-ap[k]) for a in ap if a !=ap[k]])
+            den = Mul(*[gamma(b-ap[k]) for b in bq])
+            sum *= (num/den)*(-z)**(-ap[k])
+            terms = []
+            for j in range(n):
+                num = Mul(*[RisingFactorial(ap[k]-b + 1, j) for b in bq])
+                den = Mul(*[RisingFactorial(ap[k]-a + 1, j) for a in ap if a !=ap[k]])
+                terms.append((num/den) * (z**(-j))*RisingFactorial(ap[k],j) / factorial(j))
+            sum *= Add(*terms)
+            result += sum
 
-        pre1 = gamma(b-a)*gamma(c)/(gamma(b)*gamma(c-a))
-        pre2 = gamma(a-b)*gamma(c)/(gamma(a)*gamma(c-b))
-
-        result = pre1*((-z)**(-a))*Add(*terms1) + pre2*((-z)**(-b))*Add(*terms2)
+        num = Mul(*[gamma(b) for b in bq])
+        den = Mul(*[gamma(a) for a in ap])
+        result *= num/den
         newn = min((Abs(a) for a in self.args[0] if a.is_negative), default=n)
 
         if newn < n:
