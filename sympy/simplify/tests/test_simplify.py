@@ -1041,8 +1041,14 @@ def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0
 
-
 def test_issue_22210():
     d = Symbol('d', integer=True)
     expr = 2*Derivative(sin(x), (x, d))
     assert expr.simplify() == expr
+
+def test_issue_26086():
+    from sympy import I
+    a, b, x, y = symbols('a b x y', real=True)
+    d = (a * (x + I * y)**n + b * (x + I * y)**(n-1)) / (x + I * y)**n
+    test = a + b / (x + I * y)
+    assert simplify(d).equals(test)
