@@ -763,7 +763,7 @@ def test_issue_26130():
         sqrt(7/8 - sqrt(7)*I/8): 1,
         -sqrt(7/8 + sqrt(7)*I/8): 1,
         sqrt(7/8 + sqrt(7)*I/8): 1, 0: 3}
-    assert (roots(-64*x**7 + 112*x**5 - 56*x**3, trig = True)) == {
+    assert roots(-64*x**7 + 112*x**5 - 56*x**3, trig=True) == {
         -14**(1/4)*cos(atan(sqrt(7)/7)/2)/2 + 14**(1/4)*I*sin(atan(sqrt(7)/7)/2)/2: 1,
         14**(1/4)*cos(atan(sqrt(7)/7)/2)/2 - 14**(1/4)*I*sin(atan(sqrt(7)/7)/2)/2: 1,
         -14**(1/4)*cos(atan(sqrt(7)/7)/2)/2 - 14**(1/4)*I*sin(atan(sqrt(7)/7)/2)/2: 1,
