@@ -1090,7 +1090,7 @@ def roots(f, *gens,
             _update_dict(result, zeros, roots_linear(f)[0], 1)
         elif f.length() == 2:
             roots_fun = roots_quadratic if f.degree() == 2 else roots_binomial
-            for r in roots_fun(f,trig = trig):
+            for r in roots_fun(f, trig=trig):
                 _update_dict(result, zeros, r, 1)
         else:
             _, factors = Poly(f.as_expr()).factor_list()
