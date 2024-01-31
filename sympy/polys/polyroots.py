@@ -368,7 +368,7 @@ def roots_quartic(f, trig=False):
                     for a1, a2 in zip(_ans(y1), _ans(y2))]
 
 
-def roots_binomial(f,trig=False):
+def roots_binomial(f, trig=False):
     """Returns a list of roots of a binomial polynomial. If the domain is ZZ
     then the roots will be sorted with negatives coming before positives.
     The ordering will be the same for any numerical coefficients as long as
