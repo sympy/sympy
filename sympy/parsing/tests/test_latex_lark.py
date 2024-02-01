@@ -18,14 +18,14 @@ from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
-from sympy import Matrix, Transpose, Trace
+from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
 from sympy import I
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
 from sympy.abc import x, y, z, a, b, c, d, t, k, n
 
-from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial, _MatAdd, _MatMul
+from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial
 
 lark = import_module("lark")
 
@@ -46,6 +46,14 @@ def _log(a, b=E):
         return log(a, evaluate=False)
     else:
         return log(a, b, evaluate=False)
+
+
+def _MatAdd(a, b):
+    return MatAdd(a, b, evaluate=False)
+
+
+def _MatMul(a, b):
+    return MatMul(a, b, evaluate=False)
 
 
 # These LaTeX strings should parse to the corresponding SymPy expression
@@ -582,12 +590,32 @@ EVALUATED_MATRIX_EXPRESSION_PAIRS = [
      Trace(Matrix([[I, 1+I], [-I, 4]]))),
     (r"\sympyadj(\begin{pmatrix}1 & 2 \\3 & 4\end{pmatrix})",
      Matrix([[4, -2], [-3, 1]])),
+    (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^\ast",
+     Matrix([[-2*I, 6], [4, 8]])),
+    (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{\ast}",
+     Matrix([[-2*I, 6], [4, 8]])),
+    (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{\ast\ast}",
+     Matrix([[2*I, 4], [6, 8]])),
+    (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{\ast\ast\ast}",
+     Matrix([[-2*I, 6], [4, 8]])),
     (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{*}",
      Matrix([[-2*I, 6], [4, 8]])),
     (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{**}",
      Matrix([[2*I, 4], [6, 8]])),
     (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{***}",
      Matrix([[-2*I, 6], [4, 8]])),
+    (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^\prime",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{\prime}",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
+    (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{\prime\prime}",
+     _MatAdd(Matrix([[I, 2], [3, 4]]),
+             Matrix([[I, 2], [3, 4]]))),
+    (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{\prime\prime\prime}",
+     Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
+                       Matrix([[I, 2], [3, 4]])))),
     (r"(\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix}+\begin{pmatrix}\sympyi&2\\3&4\end{pmatrix})^{'}",
      Transpose(_MatAdd(Matrix([[I, 2], [3, 4]]),
                        Matrix([[I, 2], [3, 4]])))),
