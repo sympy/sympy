@@ -76,8 +76,6 @@ def test_GeometricDistribution():
     Y = Geometric('Y', Rational(3, 10))
     assert coskewness(X, X + Y, X + 2*Y).simplify() == sqrt(230)*Rational(81, 1150)
 
-
-
 def test_Hermite():
     a1 = Symbol("a1", positive=True)
     a2 = Symbol("a2", negative=True)
