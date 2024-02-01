@@ -36,7 +36,7 @@ Whether your equations are linear or nonlinear, you can use {func}`~.solve`:
 
 Refer to
 [](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
-and [](solving-guidance.md#ensure-consistent-formatting-from).
+and [](ensure-consistent-formatting-from-solve).
 
 There are two methods below for containing solution results:
 [dictionary](#solve-and-use-results-in-a-dictionary) or
@@ -89,7 +89,7 @@ solve([x**2 + y - 2*z, y + 4*z], [x, y], set=True)
 
 ## Options That Can Speed up {func}`~.solve`
 
-Refer to [](solving-guidance.md#options-that-can-speed-up).
+Refer to [](options-that-can-speed-up-solve).
 
 ## Not All Systems of Equations Can be Solved
 

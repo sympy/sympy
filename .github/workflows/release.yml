@@ -10,14 +10,14 @@ name: release
 on:
   push:
     branches:
-      - '1.11'
+      - '1.12'
   pull_request:
     branches:
-      - '1.11'
+      - '1.12'
 env:
-  release_branch: '1.11'
-  release_version: '1.11rc1'
-  previous_version: '1.10'
+  release_branch: '1.12'
+  release_version: '1.12rc1'
+  previous_version: '1.11'
 
 jobs:
 

@@ -1,6 +1,9 @@
-===========================
-SymbolicSystem (Docstrings)
-===========================
+===================
+System (Docstrings)
+===================
 
-.. automodule:: sympy.physics.mechanics.system
+.. autoclass:: sympy.physics.mechanics.system.SymbolicSystem
+   :members:
+
+.. autoclass:: sympy.physics.mechanics.system.System
    :members:

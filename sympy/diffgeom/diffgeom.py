@@ -495,7 +495,7 @@ That is, replace {s} with Symbol({s!r}, real=True).
                 distance = path_dict[sys][0] + 1
                 if path_dict[newsys][0] >= distance or not path_dict[newsys][1]:
                     path_dict[newsys][0] = distance
-                    path_dict[newsys][1] = [i for i in path_dict[sys][1]]
+                    path_dict[newsys][1] = list(path_dict[sys][1])
                     path_dict[newsys][1].append(sys)
 
         visit(sys1.name)

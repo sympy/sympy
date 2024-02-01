@@ -19,7 +19,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     First Edition, Cambridge University Press, 1999
 
 .. [Weisstein09] Eric W. Weisstein, Cyclotomic Polynomial, From MathWorld - A
-    Wolfram Web Resource, http://mathworld.wolfram.com/CyclotomicPolynomial.html
+    Wolfram Web Resource, https://mathworld.wolfram.com/CyclotomicPolynomial.html
 
 .. [Wang78] P. S. Wang, An Improved Multivariate Polynomial Factoring
     Algorithm, Math. of Computation 32, 1978, pp. 1215--1231
@@ -52,7 +52,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     Algorithms, Springer, Second Edition, 1997
 
 .. [Ajwa95] I.A. Ajwa, Z. Liu, P.S. Wang, Groebner Bases Algorithm,
-    https://citeseer.ist.psu.edu/myciteseer/login, 1995
+    https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=2bb46c0852bf74c9d74d1a12af6d11f69f7e8363, 1995
 
 .. [Bose03] N.K. Bose, B. Buchberger, J.P. Guiver, Multidimensional
     Systems Theory and Applications, Springer, 2003
@@ -109,7 +109,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     Computation and its Application to Indefinite Summation",
     Proceedings of the International Symposium on Symbolic and
     Algebraic Computation, 1994, Pages 175-180
-    http://dl.acm.org/citation.cfm?doid=190347.190413
+    https://dl.acm.org/doi/10.1145/190347.190413
 
 .. [Koepf98] Wolfram Koepf, "Hypergeometric Summation: An Algorithmic Approach
     to Summation and Special Function Identities", Advanced lectures
@@ -121,7 +121,7 @@ a theoretical foundation for implementing polynomials manipulation module.
 
 .. [Man93] Yiu-Kwong Man, "On Computing Closed Forms for Indefinite Summations",
     Journal of Symbolic Computation, Volume 16, Issue 4, 1993, Pages 355-376
-    http://www.sciencedirect.com/science/article/pii/S0747717183710539
+    https://www.sciencedirect.com/science/article/pii/S0747717183710539
 
 .. [Kapur1994] Deepak Kapur, Tushar Saxena, and Lu Yang. "Algebraic and
     geometric reasoning using Dixon resultants", In Proceedings of the
@@ -137,11 +137,11 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Bruce97] Bruce Randall Donald, Deepak Kapur, and Joseph L. Mundy (Eds.).
     "Symbolic and Numerical Computation for Artificial Intelligence",
     Chapter 2, Academic Press, Inc., Orlando, FL, USA, 1997,
-    https://www2.cs.duke.edu/donaldlab/Books/SymbolicNumericalComputation/045-087.pdf.
+    https://donaldlab.cs.duke.edu/Books/SymbolicNumericalComputation/045-087.pdf
 
 .. [Stiller96] P Stiller. "An introduction to the theory of resultants",
     Mathematics and Computer Science, T&M University, 1996, Citeseer,
-    http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.590.2021&rep=rep1&type=pdf.
+    https://isc.tamu.edu/resources/preprints/1996/1996-02.pdf
 
 .. [Cohen93] Henri Cohen. "A Course in Computational Algebraic Number Theory",
    Springer, 1993.

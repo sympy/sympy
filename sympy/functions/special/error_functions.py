@@ -1,7 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from sympy.core import EulerGamma  # Must be imported from core, not core.numbers
+from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
@@ -9,7 +9,7 @@ from sympy.core.numbers import I, pi, Rational
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import  polar_lift, re, unpolarify
@@ -116,9 +116,9 @@ class erf(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Error_function
-    .. [2] http://dlmf.nist.gov/7
-    .. [3] http://mathworld.wolfram.com/Erf.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Erf
+    .. [2] https://dlmf.nist.gov/7
+    .. [3] https://mathworld.wolfram.com/Erf.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Erf
 
     """
 
@@ -341,9 +341,9 @@ class erfc(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Error_function
-    .. [2] http://dlmf.nist.gov/7
-    .. [3] http://mathworld.wolfram.com/Erfc.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
+    .. [2] https://dlmf.nist.gov/7
+    .. [3] https://mathworld.wolfram.com/Erfc.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Erfc
 
     """
 
@@ -530,8 +530,8 @@ class erfi(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Error_function
-    .. [2] http://mathworld.wolfram.com/Erfi.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
+    .. [2] https://mathworld.wolfram.com/Erfi.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/Erfi
 
     """
 
@@ -718,7 +718,7 @@ class erf2(Function):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
+    .. [1] https://functions.wolfram.com/GammaBetaErf/Erf2/
 
     """
 
@@ -844,7 +844,7 @@ class erfinv(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Error_function#Inverse_functions
-    .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErf/
+    .. [2] https://functions.wolfram.com/GammaBetaErf/InverseErf/
 
     """
 
@@ -931,7 +931,7 @@ class erfcinv (Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Error_function#Inverse_functions
-    .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
+    .. [2] https://functions.wolfram.com/GammaBetaErf/InverseErfc/
 
     """
 
@@ -1020,7 +1020,7 @@ class erf2inv(Function):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
+    .. [1] https://functions.wolfram.com/GammaBetaErf/InverseErf2/
 
     """
 
@@ -1151,9 +1151,9 @@ class Ei(Function):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/6.6
+    .. [1] https://dlmf.nist.gov/6.6
     .. [2] https://en.wikipedia.org/wiki/Exponential_integral
-    .. [3] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
+    .. [3] Abramowitz & Stegun, section 5: https://web.archive.org/web/20201128173312/http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
     """
 
@@ -1215,6 +1215,11 @@ class Ei(Function):
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return exp(z) * _eis(z)
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Symbol('t', Dummy=True)
+        return Integral(S.Exp1**t/t, (t, S.NegativeInfinity, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import re
@@ -1345,8 +1350,8 @@ class expint(Function):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/8.19
-    .. [2] http://functions.wolfram.com/GammaBetaErf/ExpIntegralE/
+    .. [1] https://dlmf.nist.gov/8.19
+    .. [2] https://functions.wolfram.com/GammaBetaErf/ExpIntegralE/
     .. [3] https://en.wikipedia.org/wiki/Exponential_integral
 
     """
@@ -1432,6 +1437,12 @@ class expint(Function):
             return (exp(-z)/z) * Add(*s)
 
         return super(expint, self)._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
+        from sympy.integrals.integrals import Integral
+        n, x = self.args
+        t = Dummy('t')
+        return Integral(t**-n * exp(-t*x), (t, 1, S.Infinity))
 
 
 def E1(z):
@@ -1562,9 +1573,9 @@ class li(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Logarithmic_integral
-    .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
-    .. [3] http://dlmf.nist.gov/6
-    .. [4] http://mathworld.wolfram.com/SoldnersConstant.html
+    .. [2] https://mathworld.wolfram.com/LogarithmicIntegral.html
+    .. [3] https://dlmf.nist.gov/6
+    .. [4] https://mathworld.wolfram.com/SoldnersConstant.html
 
     """
 
@@ -1695,8 +1706,8 @@ class Li(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Logarithmic_integral
-    .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
-    .. [3] http://dlmf.nist.gov/6
+    .. [2] https://mathworld.wolfram.com/LogarithmicIntegral.html
+    .. [3] https://dlmf.nist.gov/6
 
     """
 
@@ -1895,6 +1906,8 @@ class Si(TrigonometricIntegral):
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
 
+    _eval_rewrite_as_Integral =  _eval_rewrite_as_sinc
+
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
         point = args0[0]
@@ -2018,6 +2031,11 @@ class Ci(TrigonometricIntegral):
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Symbol('t', Dummy=True)
+        return S.EulerGamma + log(z) - Integral((1-cos(t))/t, (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
@@ -2408,9 +2426,9 @@ class fresnels(FresnelIntegral):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Fresnel_integral
-    .. [2] http://dlmf.nist.gov/7
-    .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelS
+    .. [2] https://dlmf.nist.gov/7
+    .. [3] https://mathworld.wolfram.com/FresnelIntegrals.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/FresnelS
     .. [5] The converging factors for the fresnel integrals
             by John W. Wrench Jr. and Vicki Alley
 
@@ -2440,6 +2458,11 @@ class fresnels(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return (pi*z**Rational(9, 4) / (sqrt(2)*(z**2)**Rational(3, 4)*(-z)**Rational(3, 4))
                 * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Symbol('t', Dummy=True)
+        return Integral(sin(t**2), (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order
@@ -2564,9 +2587,9 @@ class fresnelc(FresnelIntegral):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Fresnel_integral
-    .. [2] http://dlmf.nist.gov/7
-    .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelC
+    .. [2] https://dlmf.nist.gov/7
+    .. [3] https://mathworld.wolfram.com/FresnelIntegrals.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/FresnelC
     .. [5] The converging factors for the fresnel integrals
             by John W. Wrench Jr. and Vicki Alley
 
@@ -2596,6 +2619,11 @@ class fresnelc(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return (pi*z**Rational(3, 4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Symbol('t', Dummy=True)
+        return Integral(cos(t**2), (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order

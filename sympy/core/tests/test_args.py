@@ -320,9 +320,19 @@ def test_sympy__codegen__ast__FunctionDefinition():
     assert _test_args(FunctionDefinition(real, 'pwer', [inp_x], [Assignment(x, x**2)]))
 
 
+def test_sympy__codegen__ast__Raise():
+    from sympy.codegen.ast import Raise
+    assert _test_args(Raise(x))
+
+
 def test_sympy__codegen__ast__Return():
     from sympy.codegen.ast import Return
     assert _test_args(Return(x))
+
+
+def test_sympy__codegen__ast__RuntimeError_():
+    from sympy.codegen.ast import RuntimeError_
+    assert _test_args(RuntimeError_('"message"'))
 
 
 def test_sympy__codegen__ast__FunctionCall():
@@ -1456,6 +1466,11 @@ def test_sympy__stats__crv_types__DagumDistribution():
     assert _test_args(DagumDistribution(1, 1, 1))
 
 
+def test_sympy__stats__crv_types__DavisDistribution():
+    from sympy.stats.crv_types import DavisDistribution
+    assert _test_args(DavisDistribution(1, 1, 1))
+
+
 def test_sympy__stats__crv_types__ExGaussianDistribution():
     from sympy.stats.crv_types import ExGaussianDistribution
     assert _test_args(ExGaussianDistribution(1, 1, 1))
@@ -1997,6 +2012,11 @@ def test_sympy__functions__combinatorial__numbers__andre():
 def test_sympy__functions__combinatorial__numbers__carmichael():
     from sympy.functions.combinatorial.numbers import carmichael
     assert _test_args(carmichael(x))
+
+
+def test_sympy__functions__combinatorial__numbers__mobius():
+    from sympy.functions.combinatorial.numbers import mobius
+    assert _test_args(mobius(2))
 
 
 def test_sympy__functions__combinatorial__numbers__motzkin():
@@ -2841,13 +2861,13 @@ def test_sympy__integrals__transforms__InverseMellinTransform():
     assert _test_args(InverseMellinTransform(2, x, y, 0, 1))
 
 
-def test_sympy__integrals__transforms__LaplaceTransform():
-    from sympy.integrals.transforms import LaplaceTransform
+def test_sympy__integrals__laplace__LaplaceTransform():
+    from sympy.integrals.laplace import LaplaceTransform
     assert _test_args(LaplaceTransform(2, x, y))
 
 
-def test_sympy__integrals__transforms__InverseLaplaceTransform():
-    from sympy.integrals.transforms import InverseLaplaceTransform
+def test_sympy__integrals__laplace__InverseLaplaceTransform():
+    from sympy.integrals.laplace import InverseLaplaceTransform
     assert _test_args(InverseLaplaceTransform(2, x, y, 0))
 
 
@@ -3021,8 +3041,8 @@ def test_sympy__logic__boolalg__Exclusive():
     assert _test_args(Exclusive(x, y, z))
 
 
-def test_sympy__matrices__matrices__DeferredVector():
-    from sympy.matrices.matrices import DeferredVector
+def test_sympy__matrices__matrixbase__DeferredVector():
+    from sympy.matrices.matrixbase import DeferredVector
     assert _test_args(DeferredVector("X"))
 
 
@@ -3344,6 +3364,53 @@ def test_sympy__physics__vector__frame__CoordinateSym():
     from sympy.physics.vector import CoordinateSym
     from sympy.physics.vector import ReferenceFrame
     assert _test_args(CoordinateSym('R_x', ReferenceFrame('R'), 0))
+
+
+@SKIP("abstract class")
+def test_sympy__physics__biomechanics__curve__CharacteristicCurveFunction():
+    pass
+
+
+def test_sympy__physics__biomechanics__curve__TendonForceLengthDeGroote2016():
+    from sympy.physics.biomechanics import TendonForceLengthDeGroote2016
+    l_T_tilde, c0, c1, c2, c3 = symbols('l_T_tilde, c0, c1, c2, c3')
+    assert _test_args(TendonForceLengthDeGroote2016(l_T_tilde, c0, c1, c2, c3))
+
+
+def test_sympy__physics__biomechanics__curve__TendonForceLengthInverseDeGroote2016():
+    from sympy.physics.biomechanics import TendonForceLengthInverseDeGroote2016
+    fl_T, c0, c1, c2, c3 = symbols('fl_T, c0, c1, c2, c3')
+    assert _test_args(TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceLengthPassiveDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceLengthPassiveDeGroote2016
+    l_M_tilde, c0, c1 = symbols('l_M_tilde, c0, c1')
+    assert _test_args(FiberForceLengthPassiveDeGroote2016(l_M_tilde, c0, c1))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceLengthPassiveInverseDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceLengthPassiveInverseDeGroote2016
+    fl_M_pas, c0, c1 = symbols('fl_M_pas, c0, c1')
+    assert _test_args(FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceLengthActiveDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceLengthActiveDeGroote2016
+    l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = symbols('l_M_tilde, c0:12')
+    assert _test_args(FiberForceLengthActiveDeGroote2016(l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceVelocityDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceVelocityDeGroote2016
+    v_M_tilde, c0, c1, c2, c3 = symbols('v_M_tilde, c0, c1, c2, c3')
+    assert _test_args(FiberForceVelocityDeGroote2016(v_M_tilde, c0, c1, c2, c3))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceVelocityInverseDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceVelocityInverseDeGroote2016
+    fv_M, c0, c1, c2, c3 = symbols('fv_M, c0, c1, c2, c3')
+    assert _test_args(FiberForceVelocityInverseDeGroote2016(fv_M, c0, c1, c2, c3))
 
 
 def test_sympy__physics__paulialgebra__Pauli():
@@ -4251,6 +4318,16 @@ def test_sympy__physics__control__lti__TransferFunctionMatrix():
     assert _test_args(TransferFunctionMatrix([[tf1, tf2]]))
 
 
+def test_sympy__physics__control__lti__StateSpace():
+    from sympy.matrices.dense import Matrix
+    from sympy.physics.control import StateSpace
+    A = Matrix([[-5, -1], [3, -1]])
+    B = Matrix([2, 5])
+    C = Matrix([[1, 2]])
+    D = Matrix([0])
+    assert _test_args(StateSpace(A, B, C, D))
+
+
 def test_sympy__physics__units__dimensions__Dimension():
     from sympy.physics.units.dimensions import Dimension
     assert _test_args(Dimension("length", "L"))
@@ -4588,6 +4665,21 @@ def test_sympy__tensor__tensor__TensorElement():
     telem = TensorElement(A(x, y), {x: 1})
     assert _test_args(telem)
 
+def test_sympy__tensor__tensor__WildTensor():
+    from sympy.tensor.tensor import TensorIndexType, WildTensorHead, TensorIndex
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
+    a = TensorIndex('a', Lorentz)
+    p = WildTensorHead('p')
+    assert _test_args(p(a))
+
+def test_sympy__tensor__tensor__WildTensorHead():
+    from sympy.tensor.tensor import WildTensorHead
+    assert _test_args(WildTensorHead('p'))
+
+def test_sympy__tensor__tensor__WildTensorIndex():
+    from sympy.tensor.tensor import TensorIndexType, WildTensorIndex
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
+    assert _test_args(WildTensorIndex('i', Lorentz))
 
 def test_sympy__tensor__toperators__PartialDerivative():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead
@@ -4917,11 +5009,6 @@ def test_sympy__ntheory__factor___primeomega():
     assert _test_args(t)
 
 
-def test_sympy__ntheory__residue_ntheory__mobius():
-    from sympy.ntheory import mobius
-    assert _test_args(mobius(2))
-
-
 def test_sympy__ntheory__generate__primepi():
     from sympy.ntheory import primepi
     n = symbols('n')
@@ -5047,6 +5134,11 @@ def test_sympy__codegen__cfunctions__Cbrt():
 def test_sympy__codegen__cfunctions__hypot():
     from sympy.codegen.cfunctions import hypot
     assert _test_args(hypot(x, y))
+
+
+def test_sympy__codegen__cfunctions__isnan():
+    from sympy.codegen.cfunctions import isnan
+    assert _test_args(isnan(x))
 
 
 def test_sympy__codegen__fnodes__FFunction():

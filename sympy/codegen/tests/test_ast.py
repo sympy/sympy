@@ -493,7 +493,7 @@ def test_FloatType():
     assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 0.1*10**-f80.dig
     assert abs(f128.tiny / Float('3.3621031431120935062626778173217526e-4932', precision=128) - 1) < 0.1*10**-f128.dig
 
-    assert f64.cast_check(0.5) == 0.5
+    assert f64.cast_check(0.5) == Float(0.5, 17)
     assert abs(f64.cast_check(3.7) - 3.7) < 3e-17
     assert isinstance(f64.cast_check(3), (Float, float))
 

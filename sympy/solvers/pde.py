@@ -583,7 +583,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         >>> from sympy import Function, pprint
         >>> f = Function('f')
         >>> G = Function('G')
-        >>> u = f(x,y)
+        >>> u = f(x, y)
         >>> ux = u.diff(x)
         >>> uy = u.diff(y)
         >>> genform = a*ux + b*uy + c*u - G(x,y)
@@ -592,40 +592,39 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y) - G(x, y)
           dx              dy
         >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
-                  //          a*x + b*y                                             \
-                  ||              /                                                 |
-                  ||             |                                                  |
-                  ||             |                                       c*xi       |
-                  ||             |                                     -------      |
-                  ||             |                                      2    2      |
-                  ||             |      /a*xi + b*eta  -a*eta + b*xi\  a  + b       |
-                  ||             |     G|------------, -------------|*e        d(xi)|
-                  ||             |      |   2    2         2    2   |               |
-                  ||             |      \  a  + b         a  + b    /               |
-                  ||             |                                                  |
-                  ||            /                                                   |
-                  ||                                                                |
-        f(x, y) = ||F(eta) + -------------------------------------------------------|*
-                  ||                                  2    2                        |
-                  \\                                 a  + b                         /
+                  //          a*x + b*y                                             \  >
+                  ||              /                                                 |  >
+                  ||             |                                                  |  >
+                  ||             |                                      c*xi        |  >
+                  ||             |                                     -------      |  >
+                  ||             |                                      2    2      |  >
+                  ||             |      /a*xi + b*eta  -a*eta + b*xi\  a  + b       |  >
+                  ||             |     G|------------, -------------|*e        d(xi)|  >
+                  ||             |      |   2    2         2    2   |               |  >
+                  ||             |      \  a  + b         a  + b    /               |  >
+                  ||             |                                                  |  >
+                  ||            /                                                   |  >
+                  ||                                                                |  >
+        f(x, y) = ||F(eta) + -------------------------------------------------------|* >
+                  ||                                  2    2                        |  >
+                  \\                                 a  + b                         /  >
         <BLANKLINE>
-                \|
-                ||
-                ||
-                ||
-                ||
-                ||
-                ||
-                ||
-                ||
-          -c*xi ||
-         -------||
-          2    2||
-         a  + b ||
-        e       ||
-                ||
-                /|eta=-a*y + b*x, xi=a*x + b*y
-
+        >         \|
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >         ||
+        >  -c*xi  ||
+        >  -------||
+        >   2    2||
+        >  a  + b ||
+        > e       ||
+        >         ||
+        >         /|eta=-a*y + b*x, xi=a*x + b*y
 
     Examples
     ========

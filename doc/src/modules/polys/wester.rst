@@ -457,4 +457,4 @@ Literature
 ==========
 
 .. [Wester1999] Michael J. Wester, A Critique of the Mathematical Abilities of
-    CA Systems, 1999, `<http://www.math.unm.edu/~wester/cas/book/Wester.pdf>`_
+    CA Systems, 1999, `<https://www.math.unm.edu/~wester/cas/book/Wester.pdf>`_

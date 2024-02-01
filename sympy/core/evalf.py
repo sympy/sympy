@@ -430,20 +430,21 @@ def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False
             # expression
             s = options.get('subs', False)
             if s:
-                doit = True
                 # use strict=False with as_int because we take
                 # 2.0 == 2
-                for v in s.values():
+                def is_int_reim(x):
+                    """Check for integer or integer + I*integer."""
                     try:
-                        as_int(v, strict=False)
+                        as_int(x, strict=False)
+                        return True
                     except ValueError:
                         try:
-                            [as_int(i, strict=False) for i in v.as_real_imag()]
-                            continue
-                        except (ValueError, AttributeError):
-                            doit = False
-                            break
-                if doit:
+                            [as_int(i, strict=False) for i in x.as_real_imag()]
+                            return True
+                        except ValueError:
+                            return False
+
+                if all(is_int_reim(v) for v in s.values()):
                     re_im = re_im.subs(s)
 
             re_im = Add(re_im, -nint, evaluate=False)
@@ -1057,7 +1058,7 @@ def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES
 def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> tUnion[mpc, mpf]:
     from .numbers import Infinity, NegativeInfinity, Zero
     x = sympify(x)
-    if isinstance(x, Zero) or x == 0:
+    if isinstance(x, Zero) or x == 0.0:
         return mpf(0)
     if isinstance(x, Infinity):
         return mpf('inf')
@@ -1221,7 +1222,8 @@ def check_convergence(numer: 'Expr', denom: 'Expr', n: 'Symbol') -> tTuple[int, 
     if rate:
         return rate, None, None
     constant = dpol.LC() / npol.LC()
-    if abs(constant) != 1:
+    from .numbers import equal_valued
+    if not equal_valued(abs(constant), 1):
         return rate, constant, None
     if npol.degree() == dpol.degree() == 0:
         return rate, constant, 0
@@ -1237,7 +1239,7 @@ def hypsum(expr: 'Expr', n: 'Symbol', start: int, prec: int) -> mpf:
     quotient between successive terms must be a quotient of integer
     polynomials.
     """
-    from .numbers import Float
+    from .numbers import Float, equal_valued
     from sympy.simplify.simplify import hypersimp
 
     if prec == float('inf'):
@@ -1277,7 +1279,7 @@ def hypsum(expr: 'Expr', n: 'Symbol', start: int, prec: int) -> mpf:
         alt = g < 0
         if abs(g) < 1:
             raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
-        if p < 1 or (p == 1 and not alt):
+        if p < 1 or (equal_valued(p, 1) and not alt):
             raise ValueError("Sum diverges like n^%i" % (-p))
         # We have polynomial convergence: use Richardson extrapolation
         vold = None
@@ -1492,7 +1494,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
         re, im = as_real_imag()
         if re.has(re_) or im.has(im_):
             raise NotImplementedError
-        if re == 0:
+        if re == 0.0:
             re = None
             reprec = None
         elif re.is_number:
@@ -1500,7 +1502,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
             reprec = prec
         else:
             raise NotImplementedError
-        if im == 0:
+        if im == 0.0:
             im = None
             imprec = None
         elif im.is_number:
@@ -1532,19 +1534,21 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     return r
 
 
-def quad_to_mpmath(q):
+def quad_to_mpmath(q, ctx=None):
     """Turn the quad returned by ``evalf`` into an ``mpf`` or ``mpc``. """
+    mpc = make_mpc if ctx is None else ctx.make_mpc
+    mpf = make_mpf if ctx is None else ctx.make_mpf
     if q is S.ComplexInfinity:
         raise NotImplementedError
     re, im, _, _ = q
     if im:
         if not re:
             re = fzero
-        return make_mpc((re, im))
+        return mpc((re, im))
     elif re:
-        return make_mpf(re)
+        return mpf(re)
     else:
-        return make_mpf(fzero)
+        return mpf(fzero)
 
 
 class EvalfMixin:

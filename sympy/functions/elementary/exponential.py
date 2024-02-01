@@ -8,7 +8,7 @@ from sympy.core.function import (Function, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational, pi, I, ImaginaryUnit
+from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -63,6 +63,8 @@ class ExpBase(Function):
         """
         # this should be the same as Pow.as_numer_denom wrt
         # exponent handling
+        if not self.is_commutative:
+            return self, S.One
         exp = self.exp
         neg_exp = exp.is_negative
         if not neg_exp and not (-exp).is_negative:
@@ -273,7 +275,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.sets.setexpr import SetExpr
         from sympy.simplify.simplify import logcombine
         if isinstance(arg, MatrixBase):
@@ -493,8 +495,10 @@ class exp(ExpBase, metaclass=ExpMeta):
             return Order(x**n, x)
         if arg0 is S.Infinity:
             return self
+        if arg0.is_infinite:
+            raise PoleError("Cannot expand %s around 0" % (self))
         # checking for indecisiveness/ sign terms in arg0
-        if any(isinstance(arg, (sign, ImaginaryUnit)) for arg in arg0.args):
+        if any(isinstance(arg, sign) for arg in arg0.args):
             return self
         t = Dummy("t")
         nterms = n
@@ -1008,9 +1012,9 @@ class log(Function):
         if not d.is_positive:
             res = log(a) - b*log(cdir) + b*logx
             _res = res
-            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
-                power_base=False, multinomial=False, basic=False, force=True,
-                factor=False)
+            logflags = {"deep": True, "log": True, "mul": False, "power_exp": False,
+                "power_base": False, "multinomial": False, "basic": False, "force": True,
+                "factor": False}
             expr = self.expand(**logflags)
             if (not a.could_extract_minus_sign() and
                 logx.could_extract_minus_sign()):

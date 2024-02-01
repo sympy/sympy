@@ -55,41 +55,38 @@ PlotGrid Class
 Series Classes
 --------------
 
-.. autoclass:: sympy.plotting.plot::BaseSeries
+.. autoclass:: sympy.plotting.series::BaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::Line2DBaseSeries
+.. autoclass:: sympy.plotting.series::Line2DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::LineOver1DRangeSeries
+.. autoclass:: sympy.plotting.series::LineOver1DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::Parametric2DLineSeries
+.. autoclass:: sympy.plotting.series::Parametric2DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::Line3DBaseSeries
+.. autoclass:: sympy.plotting.series::Line3DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::Parametric3DLineSeries
+.. autoclass:: sympy.plotting.series::Parametric3DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::SurfaceBaseSeries
+.. autoclass:: sympy.plotting.series::SurfaceBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::SurfaceOver2DRangeSeries
+.. autoclass:: sympy.plotting.series::SurfaceOver2DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::ParametricSurfaceSeries
+.. autoclass:: sympy.plotting.series::ParametricSurfaceSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
+.. autoclass:: sympy.plotting.series::ImplicitSeries
    :members:
 
 Backends
 --------
-
-.. autoclass:: sympy.plotting.plot::BaseBackend
-   :members:
 
 .. autoclass:: sympy.plotting.plot::MatplotlibBackend
    :members:
@@ -108,7 +105,7 @@ For an alternative you can look at the new plotting module.
 
 The pyglet plotting module can do nice 2D and 3D plots that can be
 controlled by console commands as well as keyboard and mouse, with
-the only dependency being `pyglet <http://pyglet.org/>`_.
+the only dependency being `pyglet <https://pyglet.org/>`_.
 
 Here is the simplest usage:
 

@@ -10,8 +10,6 @@ from .misc import filldedent
 
 from .lambdify import lambdify
 
-from .source import source
-
 from .decorator import threaded, xthreaded, public, memoize_property
 
 from .timeutils import timed
@@ -25,8 +23,6 @@ __all__ = [
     'filldedent',
 
     'lambdify',
-
-    'source',
 
     'threaded', 'xthreaded', 'public', 'memoize_property',
 

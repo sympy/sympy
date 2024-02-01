@@ -173,7 +173,7 @@ import sys
 # DO NOT IMPORT SYMPY HERE! Or the setting of the sympy environment variables
 # by the command line will break.
 
-def main():
+def main() -> None:
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
     VERSION = None

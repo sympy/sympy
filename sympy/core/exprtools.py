@@ -7,7 +7,7 @@ from .basic import Basic
 from .expr import Expr
 from .function import expand_power_exp
 from .sympify import sympify
-from .numbers import Rational, Integer, Number, I
+from .numbers import Rational, Integer, Number, I, equal_valued
 from .singleton import S
 from .sorting import default_sort_key, ordered
 from .symbol import Dummy
@@ -382,9 +382,9 @@ class Factors:
                             factors[I] = S.One
                         elif a.is_Pow:
                             factors[a.base] = factors.get(a.base, S.Zero) + a.exp
-                        elif a == 1:
+                        elif equal_valued(a, 1):
                             factors[a] = S.One
-                        elif a == -1:
+                        elif equal_valued(a, -1):
                             factors[-a] = S.One
                             factors[S.NegativeOne] = S.One
                         else:

@@ -1,4 +1,3 @@
-import builtins
 import typing
 
 import sympy
@@ -16,6 +15,11 @@ from sympy.logic.boolalg import And, Or, Xor, Implies, Boolean
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse, BooleanFunction, Not, ITE
 from sympy.printing.printer import Printer
 from sympy.sets import Interval
+from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
+from sympy.assumptions.assume import AppliedPredicate
+from sympy.assumptions.relation.binrel import AppliedBinaryRelation
+from sympy.assumptions.ask import Q
+from sympy.assumptions.relation.equality import StrictGreaterThanPredicate, StrictLessThanPredicate, GreaterThanPredicate, LessThanPredicate, EqualityPredicate
 
 
 class SMTLibPrinter(Printer):
@@ -42,6 +46,12 @@ class SMTLibPrinter(Printer):
             GreaterThan: '>=',
             StrictLessThan: '<',
             StrictGreaterThan: '>',
+
+            EqualityPredicate(): '=',
+            LessThanPredicate(): '<=',
+            GreaterThanPredicate(): '>=',
+            StrictLessThanPredicate(): '<',
+            StrictGreaterThanPredicate(): '>',
 
             exp: 'exp',
             log: 'log',
@@ -105,6 +115,9 @@ class SMTLibPrinter(Printer):
             op = self._known_functions[type(e)]
         elif type(type(e)) == UndefinedFunction:
             op = e.name
+        elif isinstance(e, AppliedBinaryRelation) and e.function in self._known_functions:
+            op = self._known_functions[e.function]
+            return self._s_expr(op, e.arguments)
         else:
             op = self._known_functions[e]  # throw KeyError
 
@@ -149,6 +162,30 @@ class SMTLibPrinter(Printer):
         else:
             return f'[{e.start}, {e.end}]'
 
+    def _print_AppliedPredicate(self, e: AppliedPredicate):
+        if e.function == Q.positive:
+            rel = Q.gt(e.arguments[0],0)
+        elif e.function == Q.negative:
+            rel = Q.lt(e.arguments[0], 0)
+        elif e.function == Q.zero:
+            rel = Q.eq(e.arguments[0], 0)
+        elif e.function == Q.nonpositive:
+            rel = Q.le(e.arguments[0], 0)
+        elif e.function == Q.nonnegative:
+            rel = Q.ge(e.arguments[0], 0)
+        elif e.function == Q.nonzero:
+            rel = Q.ne(e.arguments[0], 0)
+        else:
+            raise ValueError(f"Predicate (`{e}`) is not handled.")
+
+        return self._print_AppliedBinaryRelation(rel)
+
+    def _print_AppliedBinaryRelation(self, e: AppliedPredicate):
+        if e.function == Q.ne:
+            return self._print_Unequality(Unequality(*e.arguments))
+        else:
+            return self._print_Function(e)
+
     # todo: Sympy does not support quantifiers yet as of 2022, but quantifiers can be handy in SMT.
     # For now, users can extend this class and build in their own quantifier support.
     # See `test_quantifier_extensions()` in test_smtlib.py for an example of how this might look.
@@ -169,11 +206,26 @@ class SMTLibPrinter(Printer):
         return 'false'
 
     def _print_Float(self, x: Float):
-        f = x.evalf(self._precision) if self._precision else x.evalf()
-        return str(f).rstrip('0')
+        dps = prec_to_dps(x._prec)
+        str_real = mlib_to_str(x._mpf_, dps, strip_zeros=True, min_fixed=None, max_fixed=None)
+
+        if 'e' in str_real:
+            (mant, exp) = str_real.split('e')
+
+            if exp[0] == '+':
+                exp = exp[1:]
+
+            mul = self._known_functions[Mul]
+            pow = self._known_functions[Pow]
+
+            return r"(%s %s (%s 10 %s))" % (mul, mant, pow, exp)
+        elif str_real in ["+inf", "-inf"]:
+            raise ValueError("Infinite values are not supported in SMT.")
+        else:
+            return str_real
 
     def _print_float(self, x: float):
-        return str(x)
+        return self._print(Float(x))
 
     def _print_Rational(self, x: Rational):
         return self._s_expr('/', [x.p, x.q])
@@ -191,7 +243,11 @@ class SMTLibPrinter(Printer):
 
     def _print_NumberSymbol(self, x):
         name = self._known_constants.get(x)
-        return name if name else self._print_Float(x)
+        if name:
+            return name
+        else:
+            f = x.evalf(self._precision) if self._precision else x.evalf()
+            return self._print_Float(f)
 
     def _print_UndefinedFunction(self, x):
         assert self._is_legal_name(x.name)
@@ -215,7 +271,7 @@ def smtlib_code(
     symbol_table=None,
     known_types=None, known_constants=None, known_functions=None,
     prefix_expressions=None, suffix_expressions=None,
-    log_warn=builtins.print
+    log_warn=None
 ):
     r"""Converts ``expr`` to a string of smtlib code.
 
@@ -252,20 +308,21 @@ def smtlib_code(
     log_warn: lambda function, optional
         A function to record all warnings during potentially risky operations.
         Soundness is a core value in SMT solving, so it is good to log all assumptions made.
-        If not given, builtins ``print`` will be used.
 
     Examples
     ========
-
-    >>> noop = (lambda _: None)
     >>> from sympy import smtlib_code, symbols, sin, Eq
     >>> x = symbols('x')
-    >>> smtlib_code(sin(x).series(x).removeO(), log_warn=noop)
+    >>> smtlib_code(sin(x).series(x).removeO(), log_warn=print)
+    Could not infer type of `x`. Defaulting to float.
+    Non-Boolean expression `x**5/120 - x**3/6 + x` will not be asserted. Converting to SMTLib verbatim.
     '(declare-const x Real)\n(+ x (* (/ -1 6) (pow x 3)) (* (/ 1 120) (pow x 5)))'
 
     >>> from sympy import Rational
     >>> x, y, tau = symbols("x, y, tau")
-    >>> smtlib_code((2*tau)**Rational(7, 2), log_warn=noop)
+    >>> smtlib_code((2*tau)**Rational(7, 2), log_warn=print)
+    Could not infer type of `tau`. Defaulting to float.
+    Non-Boolean expression `8*sqrt(2)*tau**(7/2)` will not be asserted. Converting to SMTLib verbatim.
     '(declare-const tau Real)\n(* 8 (pow 2 (/ 1 2)) (pow tau (/ 7 2)))'
 
     ``Piecewise`` expressions are implemented with ``ite`` expressions by default.
@@ -275,8 +332,7 @@ def smtlib_code(
 
     >>> from sympy import Piecewise
     >>> pw = Piecewise((x + 1, x > 0), (x, True))
-    >>> smtlib_code(Eq(pw, 3))
-    Could not infer type of `x`. Defaulting to float.
+    >>> smtlib_code(Eq(pw, 3), symbol_table={x: float}, log_warn=print)
     '(declare-const x Real)\n(assert (= (ite (> x 0) (+ 1 x) x) 3))'
 
     Custom printing can be defined for certain types by passing a dictionary of
@@ -293,11 +349,11 @@ def smtlib_code(
     >>> user_def_funcs = {  # functions defined by the user must have their types specified explicitly
     ...   g: Callable[[int], float],
     ... }
-    >>> smtlib_code(f(x) + g(x), symbol_table=user_def_funcs, known_functions=smt_builtin_funcs)
+    >>> smtlib_code(f(x) + g(x), symbol_table=user_def_funcs, known_functions=smt_builtin_funcs, log_warn=print)
     Non-Boolean expression `f(x) + g(x)` will not be asserted. Converting to SMTLib verbatim.
     '(declare-const x Int)\n(declare-fun g (Int) Real)\n(sum (existing_smtlib_fcn x) (g x))'
     """
-    if not log_warn: log_warn = (lambda _: None)
+    log_warn = log_warn or (lambda _: None)
 
     if not isinstance(expr, list): expr = [expr]
     expr = [
@@ -359,16 +415,16 @@ def smtlib_code(
                      if type(fnc) not in p._known_functions and not fnc.is_Piecewise}
         declarations = \
             [
-                _auto_declare_smtlib(sym, p, log_warn=log_warn)
+                _auto_declare_smtlib(sym, p, log_warn)
                 for sym in constants.values()
             ] + [
-                _auto_declare_smtlib(fnc, p, log_warn=log_warn)
+                _auto_declare_smtlib(fnc, p, log_warn)
                 for fnc in functions.values()
             ]
         declarations = [decl for decl in declarations if decl]
 
     if auto_assert:
-        expr = [_auto_assert_smtlib(e, p, log_warn=log_warn) for e in expr]
+        expr = [_auto_assert_smtlib(e, p, log_warn) for e in expr]
 
     # return SMTLibPrinter().doprint(expr)
     return '\n'.join([
@@ -395,7 +451,7 @@ def smtlib_code(
     ])
 
 
-def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, log_warn=print):
+def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
     if sym.is_Symbol:
         type_signature = p.symbol_table[sym]
         assert isinstance(type_signature, type)
@@ -416,7 +472,7 @@ def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, 
         return None
 
 
-def _auto_assert_smtlib(e: Expr, p: SMTLibPrinter, log_warn=print):
+def _auto_assert_smtlib(e: Expr, p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
     if isinstance(e, Boolean) or (
         e in p.symbol_table and p.symbol_table[e] == bool
     ) or (

@@ -1,5 +1,6 @@
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
+from sympy.simplify import trigsimp
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.dense import (eye, zeros)
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
@@ -11,8 +12,7 @@ from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import VectorTypeError
 from sympy.testing.pytest import raises
 import warnings
-
-Vector.simp = True
+import pickle
 
 
 def test_dict_list():
@@ -77,22 +77,25 @@ def test_coordinate_vars():
     assert express(B[0]*B.x + B[1]*B.y + B[2]*B.z, A) == \
            (B[0]*cos(q) - B[1]*sin(q))*A.x + (B[0]*sin(q) + \
            B[1]*cos(q))*A.y + B[2]*A.z
-    assert express(B[0]*B.x + B[1]*B.y + B[2]*B.z, A, variables=True) == \
-           A[0]*A.x + A[1]*A.y + A[2]*A.z
+    assert express(B[0]*B.x + B[1]*B.y + B[2]*B.z, A,
+                   variables=True).simplify() == A[0]*A.x + A[1]*A.y + A[2]*A.z
     assert express(A[0]*A.x + A[1]*A.y + A[2]*A.z, B) == \
            (A[0]*cos(q) + A[1]*sin(q))*B.x + \
            (-A[0]*sin(q) + A[1]*cos(q))*B.y + A[2]*B.z
-    assert express(A[0]*A.x + A[1]*A.y + A[2]*A.z, B, variables=True) == \
-           B[0]*B.x + B[1]*B.y + B[2]*B.z
+    assert express(A[0]*A.x + A[1]*A.y + A[2]*A.z, B,
+                   variables=True).simplify() == B[0]*B.x + B[1]*B.y + B[2]*B.z
     N = B.orientnew('N', 'Axis', [-q, B.z])
-    assert N.variable_map(A) == {N[0]: A[0], N[2]: A[2], N[1]: A[1]}
+    assert ({k: v.simplify() for k, v in N.variable_map(A).items()} ==
+            {N[0]: A[0], N[2]: A[2], N[1]: A[1]})
     C = A.orientnew('C', 'Axis', [q, A.x + A.y + A.z])
     mapping = A.variable_map(C)
-    assert mapping[A[0]] == 2*C[0]*cos(q)/3 + C[0]/3 - 2*C[1]*sin(q + pi/6)/3 +\
-           C[1]/3 - 2*C[2]*cos(q + pi/3)/3 + C[2]/3
-    assert mapping[A[1]] == -2*C[0]*cos(q + pi/3)/3 + \
+    assert trigsimp(mapping[A[0]]) == (2*C[0]*cos(q)/3 + C[0]/3 -
+                                       2*C[1]*sin(q + pi/6)/3 +
+                                       C[1]/3 - 2*C[2]*cos(q + pi/3)/3 +
+                                       C[2]/3)
+    assert trigsimp(mapping[A[1]]) == -2*C[0]*cos(q + pi/3)/3 + \
            C[0]/3 + 2*C[1]*cos(q)/3 + C[1]/3 - 2*C[2]*sin(q + pi/6)/3 + C[2]/3
-    assert mapping[A[2]] == -2*C[0]*sin(q + pi/6)/3 + C[0]/3 - \
+    assert trigsimp(mapping[A[2]]) == -2*C[0]*sin(q + pi/6)/3 + C[0]/3 - \
            2*C[1]*cos(q + pi/3)/3 + C[1]/3 + 2*C[2]*cos(q)/3 + C[2]/3
 
 
@@ -449,10 +452,38 @@ def test_dcm_diff_16824():
     assert simplify(AwB.dot(B.y) - beta2) == 0
 
 def test_orient_explicit():
+    cxx, cyy, czz = dynamicsymbols('c_{xx}, c_{yy}, c_{zz}')
+    cxy, cxz, cyx = dynamicsymbols('c_{xy}, c_{xz}, c_{yx}')
+    cyz, czx, czy = dynamicsymbols('c_{yz}, c_{zx}, c_{zy}')
+    dcxx, dcyy, dczz = dynamicsymbols('c_{xx}, c_{yy}, c_{zz}', 1)
+    dcxy, dcxz, dcyx = dynamicsymbols('c_{xy}, c_{xz}, c_{yx}', 1)
+    dcyz, dczx, dczy = dynamicsymbols('c_{yz}, c_{zx}, c_{zy}', 1)
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
-    A.orient_explicit(B, eye(3))
-    assert A.dcm(B) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    B_C_A = Matrix([[cxx, cxy, cxz],
+                    [cyx, cyy, cyz],
+                    [czx, czy, czz]])
+    B_w_A = ((cyx*dczx + cyy*dczy + cyz*dczz)*B.x +
+            (czx*dcxx + czy*dcxy + czz*dcxz)*B.y +
+            (cxx*dcyx + cxy*dcyy + cxz*dcyz)*B.z)
+    A.orient_explicit(B, B_C_A)
+    assert B.dcm(A) == B_C_A
+    assert A.ang_vel_in(B) == B_w_A
+    assert B.ang_vel_in(A) == -B_w_A
+
+def test_orient_dcm():
+    cxx, cyy, czz = dynamicsymbols('c_{xx}, c_{yy}, c_{zz}')
+    cxy, cxz, cyx = dynamicsymbols('c_{xy}, c_{xz}, c_{yx}')
+    cyz, czx, czy = dynamicsymbols('c_{yz}, c_{zx}, c_{zy}')
+    B_C_A = Matrix([[cxx, cxy, cxz],
+                    [cyx, cyy, cyz],
+                    [czx, czy, czz]])
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_dcm(A, B_C_A)
+    assert B.dcm(A) == Matrix([[cxx, cxy, cxz],
+                               [cyx, cyy, cyz],
+                               [czx, czy, czz]])
 
 def test_orient_axis():
     A = ReferenceFrame('A')
@@ -658,3 +689,73 @@ def test_dcm_cache_dict():
     assert A._dcm_dict == A._dcm_cache
     assert B._dcm_dict == {C: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]]), \
         A: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]])}
+
+def test_xx_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.xx == Vector.outer(N.x, N.x)
+    assert F.xx == Vector.outer(F.x, F.x)
+
+def test_xy_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.xy == Vector.outer(N.x, N.y)
+    assert F.xy == Vector.outer(F.x, F.y)
+
+def test_xz_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.xz == Vector.outer(N.x, N.z)
+    assert F.xz == Vector.outer(F.x, F.z)
+
+def test_yx_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.yx == Vector.outer(N.y, N.x)
+    assert F.yx == Vector.outer(F.y, F.x)
+
+def test_yy_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.yy == Vector.outer(N.y, N.y)
+    assert F.yy == Vector.outer(F.y, F.y)
+
+def test_yz_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.yz == Vector.outer(N.y, N.z)
+    assert F.yz == Vector.outer(F.y, F.z)
+
+def test_zx_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.zx == Vector.outer(N.z, N.x)
+    assert F.zx == Vector.outer(F.z, F.x)
+
+def test_zy_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.zy == Vector.outer(N.z, N.y)
+    assert F.zy == Vector.outer(F.z, F.y)
+
+def test_zz_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.zz == Vector.outer(N.z, N.z)
+    assert F.zz == Vector.outer(F.z, F.z)
+
+def test_unit_dyadic():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.u == N.xx + N.yy + N.zz
+    assert F.u == F.xx + F.yy + F.zz
+
+
+def test_pickle_frame():
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+    A.orient_axis(N, N.x, 1)
+    A_C_N = A.dcm(N)
+    N1 = pickle.loads(pickle.dumps(N))
+    A1 = tuple(N1._dcm_dict.keys())[0]
+    assert A1.dcm(N1) == A_C_N
