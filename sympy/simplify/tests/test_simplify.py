@@ -1052,3 +1052,12 @@ def test_issue_26086():
     d = (a * (x + I * y)**n + b * (x + I * y)**(n-1)) / (x + I * y)**n
     test = a + b / (x + I * y)
     assert simplify(d).equals(test)
+
+def test_reduce_inverses_nc_pow():
+    x, y = symbols("x y", commutative=True)
+    Z = symbols("Z", commutative=False)
+    assert simplify(2**Z * y**Z) == 2**Z * y**Z
+    assert simplify(x**Z * y**Z) == x**Z * y**Z
+    x, y = symbols("x y", positive=True)
+    assert expand((x*y)**Z) == x**Z * y**Z
+    assert simplify(x**Z * y**Z) == expand((x*y)**Z)

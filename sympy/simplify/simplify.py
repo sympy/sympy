@@ -749,20 +749,22 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         n, d = fraction(expr)
         if d != 0:
             expr = signsimp(-n/(-d))
-
+    
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
 
     # restore floats
     if floats and rational is None:
         expr = nfloat(expr, exponent=False)
-
-    expr = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
-    expr = shorter(expr, cancel(expr))
-    expr = shorter(expr, factor_terms(expr), expand_power_exp(expand_mul(expr)))
-    expr = exptrigsimp(expr)
-
-    return done(expr)
+   
+    try:
+        expr = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
+        expr = shorter(expr, cancel(expr))
+        expr = shorter(expr, factor_terms(expr), expand_power_exp(expand_mul(expr)))
+        expr = exptrigsimp(expr)
+        return done(expr)
+    except:
+        return done(expr)
 
 
 def sum_simplify(s, **kwargs):
