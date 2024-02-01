@@ -34,6 +34,7 @@ from sympy.functions.special.hyper import hyper
 from sympy.functions.special.zeta_functions import (polylog, zeta)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import _value_check, is_random
+from sympy import And
 
 
 __all__ = ['FlorySchulz',
