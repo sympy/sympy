@@ -624,7 +624,7 @@ class MultisetPartitionTraverser():
         """
 
         if amt == 1:
-            # In this case we always need to increment, *before*
+            # In this case we always need to decrement, *before*
             # enforcing the "sufficient unallocated multiplicity"
             # constraint.  Easiest for this is just to call the
             # regular decrement method.
@@ -668,7 +668,7 @@ class MultisetPartitionTraverser():
         Parameters
         ==========
 
-         part
+        part
             part to be decremented (topmost part on the stack)
 
         ub
@@ -774,7 +774,7 @@ class MultisetPartitionTraverser():
         See Also
         ========
 
-        multiset_partitions_taocp():
+        multiset_partitions_taocp:
             which provides the same result as this method, but is
             about twice as fast.  Hence, enum_all is primarily useful
             for testing.  Also see the function for a discussion of

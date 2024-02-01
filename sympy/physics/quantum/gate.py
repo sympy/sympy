@@ -37,7 +37,7 @@ from sympy.physics.quantum.operator import (UnitaryOperator, Operator,
 from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
 from sympy.physics.quantum.matrixcache import matrix_cache
 
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 
 from sympy.utilities.iterables import is_sequence
 
@@ -625,6 +625,7 @@ class IdentityGate(OneQubitGate):
     ========
 
     """
+    is_hermitian = True
     gate_name = '1'
     gate_name_latex = '1'
 
@@ -806,6 +807,7 @@ class PhaseGate(OneQubitGate):
     ========
 
     """
+    is_hermitian =  False
     gate_name = 'S'
     gate_name_latex = 'S'
 
@@ -834,6 +836,7 @@ class TGate(OneQubitGate):
     ========
 
     """
+    is_hermitian = False
     gate_name = 'T'
     gate_name_latex = 'T'
 
@@ -989,6 +992,7 @@ class SwapGate(TwoQubitGate):
     ========
 
     """
+    is_hermitian = True
     gate_name = 'SWAP'
     gate_name_latex = r'\text{SWAP}'
 

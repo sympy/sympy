@@ -11,8 +11,9 @@ from sympy.core.sympify import SympifyError, _sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.common import NonSquareMatrixError
-from sympy.matrices.matrices import MatrixKind, MatrixBase
+from sympy.matrices.exceptions import NonSquareMatrixError
+from sympy.matrices.kind import MatrixKind
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.multipledispatch import dispatch
 from sympy.utilities.misc import filldedent
 
@@ -171,8 +172,13 @@ class MatrixExpr(Expr):
         return self.shape[1]
 
     @property
-    def is_square(self):
-        return self.rows == self.cols
+    def is_square(self) -> bool | None:
+        rows, cols = self.shape
+        if isinstance(rows, Integer) and isinstance(cols, Integer):
+            return rows == cols
+        if rows == cols:
+            return True
+        return None
 
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
@@ -194,6 +200,9 @@ class MatrixExpr(Expr):
 
     def _eval_transpose(self):
         return Transpose(self)
+
+    def _eval_trace(self):
+        return None
 
     def _eval_power(self, exp):
         """
@@ -227,7 +236,8 @@ class MatrixExpr(Expr):
     @classmethod
     def _check_dim(cls, dim):
         """Helper function to check invalid matrix dimensions"""
-        ok = check_assumptions(dim, integer=True, nonnegative=True)
+        ok = not dim.is_Float and check_assumptions(
+            dim, integer=True, nonnegative=True)
         if ok is False:
             raise ValueError(
                 "The dimension specification {} should be "
@@ -242,7 +252,7 @@ class MatrixExpr(Expr):
         return adjoint(self)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return S.One, self
 
     def conjugate(self):
@@ -258,7 +268,7 @@ class MatrixExpr(Expr):
         return self.transpose()
 
     def inverse(self):
-        if not self.is_square:
+        if self.is_square is False:
             raise NonSquareMatrixError('Inverse of non-square matrix')
         return self._eval_inverse()
 
@@ -592,7 +602,6 @@ class MatrixElement(Expr):
 
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
-        from sympy.matrices.matrices import MatrixBase
         if isinstance(name, str):
             name = Symbol(name)
         else:
@@ -628,10 +637,7 @@ class MatrixElement(Expr):
     def _eval_derivative(self, v):
 
         if not isinstance(v, MatrixElement):
-            from sympy.matrices.matrices import MatrixBase
-            if isinstance(self.parent, MatrixBase):
-                return self.parent.diff(v)[self.i, self.j]
-            return S.Zero
+            return self.parent.diff(v)[self.i, self.j]
 
         M = self.args[0]
 
@@ -743,7 +749,7 @@ class _LeftRightArgs:
     """
 
     def __init__(self, lines, higher=S.One):
-        self._lines = [i for i in lines]
+        self._lines = list(lines)
         self._first_pointer_parent = self._lines
         self._first_pointer_index = 0
         self._first_line_index = 0
@@ -797,7 +803,7 @@ class _LeftRightArgs:
         data = [self._build(i) for i in self._lines]
         if self.higher != 1:
             data += [self._build(self.higher)]
-        data = [i for i in data]
+        data = list(data)
         return data
 
     def matrix_form(self):

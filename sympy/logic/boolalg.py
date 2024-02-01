@@ -490,25 +490,7 @@ class BooleanFunction(Application, Boolean):
 
     @classmethod
     def binary_check_and_simplify(self, *args):
-        from sympy.core.relational import Relational, Eq, Ne
-        args = [as_Boolean(i) for i in args]
-        bin_syms = set().union(*[i.binary_symbols for i in args])
-        rel = set().union(*[i.atoms(Relational) for i in args])
-        reps = {}
-        for x in bin_syms:
-            for r in rel:
-                if x in bin_syms and x in r.free_symbols:
-                    if isinstance(r, (Eq, Ne)):
-                        if not (
-                                true in r.args or
-                                false in r.args):
-                            reps[r] = false
-                    else:
-                        raise TypeError(filldedent('''
-                            Incompatible use of binary symbol `%s` as a
-                            real variable in `%s`
-                            ''' % (x, r)))
-        return [i.subs(reps) for i in args]
+        return [as_Boolean(i) for i in args]
 
     def to_nnf(self, simplify=True):
         return self._to_nnf(*self.args, simplify=simplify)
@@ -680,7 +662,7 @@ class And(LatticeOp, BooleanFunction):
                     if (e.lhs != x or x in e.rhs.free_symbols) and x not in reps:
                         try:
                             m, b = linear_coeffs(
-                                e.rewrite(Add, evaluate=False), x)
+                                Add(e.lhs, -e.rhs, evaluate=False), x)
                             enew = e.func(x, -b/m)
                             if measure(enew) <= ratio*measure(e):
                                 e = enew
@@ -831,7 +813,7 @@ class Or(LatticeOp, BooleanFunction):
         args = (combinations(self.args, j) for j in args)
         args = chain.from_iterable(args)  # powerset
         args = (And(*arg) for arg in args)
-        args = map(lambda x: to_anf(x, deep=deep) if deep else x, args)
+        args = (to_anf(x, deep=deep) if deep else x for x in args)
         return Xor(*list(args), remove_true=False)
 
 
@@ -1012,7 +994,7 @@ class Xor(BooleanFunction):
             for j in range(i + 1, len(rel)):
                 rj, cj = rel[j][:2]
                 if cj == nc:
-                    odd = ~odd
+                    odd = not odd
                     break
                 elif cj == c:
                     break
@@ -2761,7 +2743,7 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
     Parameters
     ==========
 
-    expr : Boolean expression
+    expr : Boolean
 
     form : string (``'cnf'`` or ``'dnf'``) or ``None`` (default).
         If ``'cnf'`` or ``'dnf'``, the simplest expression in the corresponding
@@ -2780,7 +2762,7 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         made. By setting ``force`` to ``True``, this limit is removed. Be
         aware that this can lead to very long simplification times.
 
-    dontcare : Boolean expression
+    dontcare : Boolean
         Optimize expression under the assumption that inputs where this
         expression is true are don't care. This is useful in e.g. Piecewise
         conditions, where later conditions do not need to consider inputs that
@@ -3169,8 +3151,8 @@ def _apply_patternbased_twoterm_simplification(Rel, patterns, func,
                                 results.append((costsaving, ([i, j], np)))
         if results:
             # Sort results based on complexity
-            results = list(reversed(sorted(results,
-                                           key=lambda pair: pair[0])))
+            results = sorted(results,
+                                           key=lambda pair: pair[0], reverse=True)
             # Replace the one providing most simplification
             replacement = results[0][1]
             idx, newrel = replacement
@@ -3237,8 +3219,8 @@ def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
                                 results.append((costsaving, ([i, j, k], np)))
         if results:
             # Sort results based on complexity
-            results = list(reversed(sorted(results,
-                                           key=lambda pair: pair[0])))
+            results = sorted(results,
+                                           key=lambda pair: pair[0], reverse=True)
             # Replace the one providing most simplification
             replacement = results[0][1]
             idx, newrel = replacement

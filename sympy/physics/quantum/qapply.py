@@ -180,16 +180,22 @@ def qapply_Mul(e, **options):
     # Now try to actually apply the operator and build an inner product.
     try:
         result = lhs._apply_operator(rhs, **options)
-    except (NotImplementedError, AttributeError):
-        try:
-            result = rhs._apply_from_right_to(lhs, **options)
-        except (NotImplementedError, AttributeError):
-            if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
-                result = InnerProduct(lhs, rhs)
-                if ip_doit:
-                    result = result.doit()
-            else:
+    except NotImplementedError:
+        result = None
+
+    if result is None:
+        _apply_right = getattr(rhs, '_apply_from_right_to', None)
+        if _apply_right is not None:
+            try:
+                result = _apply_right(lhs, **options)
+            except NotImplementedError:
                 result = None
+
+    if result is None:
+        if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
+            result = InnerProduct(lhs, rhs)
+            if ip_doit:
+                result = result.doit()
 
     # TODO: I may need to expand before returning the final result.
     if result == 0:

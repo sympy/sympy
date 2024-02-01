@@ -87,7 +87,7 @@ def int_to_Integer(s):
     Wrap integer literals with Integer.
 
     This is based on the decistmt example from
-    http://docs.python.org/library/tokenize.html.
+    https://docs.python.org/3/library/tokenize.html.
 
     Only integer literals are converted.  Float literals are left alone.
 

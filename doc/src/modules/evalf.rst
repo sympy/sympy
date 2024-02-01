@@ -70,7 +70,7 @@ This shows digits 999,951 through 1,000,000 of pi:
 
 
 High-precision calculations can be slow. It is recommended (but entirely
-optional) to install gmpy (https://code.google.com/p/gmpy/), which will
+optional) to install gmpy (https://github.com/aleaxit/gmpy), which will
 significantly speed up computations such as the one above.
 
 Floating-point numbers

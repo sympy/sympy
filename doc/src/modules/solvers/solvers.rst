@@ -100,3 +100,14 @@ Inequalities
 ------------
 
 See :ref:`inequality-docs`
+
+Linear Programming (Optimization)
+---------------------------------
+
+.. module:: sympy.solvers.simplex
+
+.. autofunction:: lpmax
+
+.. autofunction:: lpmin
+
+.. autofunction:: linprog

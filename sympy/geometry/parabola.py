@@ -365,7 +365,7 @@ class Parabola(GeometrySet):
         See Also
         ========
 
-        http://www.sparknotes.com/math/precalc/conicsections/section2.rhtml
+        https://www.sparknotes.com/math/precalc/conicsections/section2/
 
         Examples
         ========

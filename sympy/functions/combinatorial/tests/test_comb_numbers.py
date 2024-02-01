@@ -4,7 +4,7 @@ from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import (diff, expand_func)
 from sympy.core import (EulerGamma, TribonacciConstant)
-from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.numbers import (Float, I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.combinatorial.numbers import carmichael
@@ -15,7 +15,7 @@ from sympy.series.limits import limit, Limit
 from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, andre, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    genocchi, andre, partition, mobius, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
 from sympy.functions.combinatorial.numbers import _nT
 
@@ -118,7 +118,7 @@ def test_fibonacci():
         2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
     assert fibonacci(n).rewrite(sqrt).subs(n, 10).expand() == fibonacci(10)
     assert fibonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
-        fibonacci(10)
+        Float(fibonacci(10))
     assert lucas(n).rewrite(sqrt) == \
         (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
     assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
@@ -149,7 +149,7 @@ def test_tribonacci():
       + c**(n + 1)/((c - a)*(c - b)))
     assert tribonacci(n).rewrite(sqrt).subs(n, 4).simplify() == tribonacci(4)
     assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
-        tribonacci(10)
+        Float(tribonacci(10))
     assert tribonacci(n).rewrite(TribonacciConstant) == floor(
             3*TribonacciConstant**n*(102*sqrt(33) + 586)**Rational(1, 3)/
             (-2*(102*sqrt(33) + 586)**Rational(1, 3) + 4 + (102*sqrt(33)
@@ -213,7 +213,7 @@ def test_harmonic():
     assert harmonic(n, 0) == n
     assert harmonic(n).evalf() == harmonic(n)
     assert harmonic(n, 1) == harmonic(n)
-    assert harmonic(1, n).evalf() == harmonic(1, n)
+    assert harmonic(1, n) == 1
 
     assert harmonic(0, 1) == 0
     assert harmonic(1, 1) == 1
@@ -578,6 +578,48 @@ def test_partition():
     assert partition(x).subs(x, 7) == 15
     assert partition(y).subs(y, 8) == 22
     raises(ValueError, lambda: partition(Rational(5, 4)))
+
+
+def test_mobius():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: mobius(m))
+    raises(TypeError, lambda: mobius(4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: mobius(m))
+    raises(ValueError, lambda: mobius(-3))
+
+    # special case
+    p = Symbol('p', prime=True)
+    assert mobius(p) == -1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert mobius(n).is_integer is True
+    assert mobius(n).is_prime is False
+
+    # symbolic
+    n = Symbol('n', integer=True, positive=True)
+    k = Symbol('k', integer=True, positive=True)
+    assert mobius(n**2) == 0
+    assert mobius(4*n) == 0
+    assert isinstance(mobius(n**k), mobius)
+    assert mobius(n**(k+1)) == 0
+    assert isinstance(mobius(3**k), mobius)
+    assert mobius(3**(k+1)) == 0
+    m = Symbol('m')
+    assert isinstance(mobius(4*m), mobius)
+
+    # Integer
+    assert mobius(13*7) == 1
+    assert mobius(1) == 1
+    assert mobius(13*7*5) == -1
+    assert mobius(13**2) == 0
+    A008683 = [1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1, 0,
+               -1, 0, 1, 1, -1, 0, 0, 1, 0, 0, -1, -1, -1, 0, 1, 1, 1, 0, -1,
+               1, 1, 0, -1, -1, -1, 0, 0, 1, -1, 0, 0, 0, 1, 0, -1, 0, 1, 0]
+    for n, val in enumerate(A008683, 1):
+        assert mobius(n) == val
 
 
 def test__nT():

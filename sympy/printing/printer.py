@@ -218,7 +218,6 @@ from functools import cmp_to_key, update_wrapper
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 
-from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
 
@@ -305,9 +304,9 @@ class Printer:
             # If the printer defines a name for a printing method
             # (Printer.printmethod) and the object knows for itself how it
             # should be printed, use that method.
-            if (self.printmethod and hasattr(expr, self.printmethod)
-                    and not isinstance(expr, BasicMeta)):
-                return getattr(expr, self.printmethod)(self, **kwargs)
+            if self.printmethod and hasattr(expr, self.printmethod):
+                if not (isinstance(expr, type) and issubclass(expr, Basic)):
+                    return getattr(expr, self.printmethod)(self, **kwargs)
 
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
@@ -390,7 +389,7 @@ def print_function(print_cls):
         if sys.version_info < (3, 9):
             # We have to create a subclass so that `help` actually shows the docstring in older Python versions.
             # IPython and Sphinx do not need this, only a raw Python console.
-            cls = type(f'{f.__qualname__}_PrintFunction', (_PrintFunction,), dict(__doc__=f.__doc__))
+            cls = type(f'{f.__qualname__}_PrintFunction', (_PrintFunction,), {"__doc__": f.__doc__})
         else:
             cls = _PrintFunction
         return cls(f, print_cls)

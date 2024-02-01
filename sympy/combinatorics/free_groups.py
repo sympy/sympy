@@ -90,7 +90,7 @@ def vfree_group(symbols):
 
 def _parse_symbols(symbols):
     if not symbols:
-        return tuple()
+        return ()
     if isinstance(symbols, str):
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, (Expr, FreeGroupElement)):
@@ -125,7 +125,7 @@ class FreeGroup(DefaultPrinting):
     References
     ==========
 
-    .. [1] http://www.gap-system.org/Manuals/doc/ref/chap37.html
+    .. [1] https://www.gap-system.org/Manuals/doc/ref/chap37.html
 
     .. [2] https://en.wikipedia.org/wiki/Free_group
 
@@ -363,7 +363,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     @property
     def is_identity(self):
-        if self.array_form == tuple():
+        if self.array_form == ():
             return True
         else:
             return False
@@ -1023,7 +1023,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        .. [1] http://planetmath.org/cyclicpermutation
+        .. [1] https://planetmath.org/cyclicpermutation
 
         """
         return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
@@ -1206,7 +1206,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        .. [1] http://planetmath.org/cyclicallyreduced
+        .. [1] https://planetmath.org/cyclicallyreduced
 
         """
         word = self.copy()

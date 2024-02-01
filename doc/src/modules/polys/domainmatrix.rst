@@ -32,17 +32,22 @@ In general, we represent a matrix without concerning about the :py:class:`~.Doma
 
 .. currentmodule:: sympy.polys.matrices
 
-.. autoclass:: sympy.polys.matrices.domainmatrix.DomainMatrix
+.. automodule:: sympy.polys.matrices.domainmatrix
    :members:
 
-.. currentmodule:: sympy.polys.matrices.ddm
-
-.. autoclass:: DDM
+.. automodule:: sympy.polys.matrices.ddm
    :members:
 
-.. currentmodule:: sympy.polys.matrices.sdm
+.. automodule:: sympy.polys.matrices.dense
+   :members:
 
-.. autoclass:: SDM
+.. automodule:: sympy.polys.matrices._typing
+   :members:
+
+.. automodule:: sympy.polys.matrices.sdm
+   :members:
+
+.. automodule:: sympy.polys.matrices._dfm
    :members:
 
 .. currentmodule:: sympy.polys.matrices.normalforms

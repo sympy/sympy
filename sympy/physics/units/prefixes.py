@@ -6,7 +6,7 @@ BIN_PREFIXES.
 """
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
-
+from sympy.core.singleton import S
 
 class Prefix(Expr):
     """
@@ -85,9 +85,9 @@ class Prefix(Expr):
 
         fact = self.scale_factor * other.scale_factor
 
-        if fact == 1:
-            return 1
-        elif isinstance(other, Prefix):
+        if isinstance(other, Prefix):
+            if fact == 1:
+                return S.One
             # simplify prefix
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == fact:
@@ -103,7 +103,7 @@ class Prefix(Expr):
         fact = self.scale_factor / other.scale_factor
 
         if fact == 1:
-            return 1
+            return S.One
         elif isinstance(other, Prefix):
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == fact:
@@ -175,7 +175,7 @@ zepto = Prefix('zepto', 'z', -21)
 yocto = Prefix('yocto', 'y', -24)
 
 
-# http://physics.nist.gov/cuu/Units/prefixes.html
+# https://physics.nist.gov/cuu/Units/prefixes.html
 PREFIXES = {
     'Y': yotta,
     'Z': zetta,
@@ -208,7 +208,7 @@ pebi = Prefix('pebi', 'Y', 50, 2)
 exbi = Prefix('exbi', 'Y', 60, 2)
 
 
-# http://physics.nist.gov/cuu/Units/binary.html
+# https://physics.nist.gov/cuu/Units/binary.html
 BIN_PREFIXES = {
     'Ki': kibi,
     'Mi': mebi,

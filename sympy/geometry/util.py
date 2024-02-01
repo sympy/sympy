@@ -14,19 +14,22 @@ are_similar
 from collections import deque
 from math import sqrt as _sqrt
 
-
+from sympy import nsimplify
 from .entity import GeometryEntity
 from .exceptions import GeometryError
 from .point import Point, Point2D, Point3D
 from sympy.core.containers import OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import Function, expand_mul
+from sympy.core.numbers import Float
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
 from sympy.polys.polytools import cancel
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import is_sequence
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 def find(x, equation):
@@ -285,7 +288,8 @@ def closest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====
@@ -306,7 +310,7 @@ def closest_points(*args):
     References
     ==========
 
-    .. [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
+    .. [1] https://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
 
     .. [2] Sweep line algorithm
         https://en.wikipedia.org/wiki/Sweep_line_algorithm
@@ -405,7 +409,7 @@ def convex_hull(*args, polygon=True):
     .. [2] Andrew's Monotone Chain Algorithm
       (A.M. Andrew,
       "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
-      http://geomalgorithms.com/a10-_hull-1.html
+      https://web.archive.org/web/20210511015444/http://geomalgorithms.com/a10-_hull-1.html
 
     """
     from .line import Segment
@@ -476,7 +480,8 @@ def farthest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====
@@ -497,7 +502,7 @@ def farthest_points(*args):
     References
     ==========
 
-    .. [1] http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
+    .. [1] https://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
 
     .. [2] Rotating Callipers Technique
         https://en.wikipedia.org/wiki/Rotating_calipers
@@ -505,7 +510,7 @@ def farthest_points(*args):
     """
 
     def rotatingCalipers(Points):
-        U, L = convex_hull(*Points, **dict(polygon=False))
+        U, L = convex_hull(*Points, **{"polygon": False})
 
         if L is None:
             if isinstance(U, Point):
@@ -692,11 +697,18 @@ def intersection(*entities, pairwise=False, **kwargs):
     if len(entities) <= 1:
         return []
 
-    # entities may be an immutable tuple
     entities = list(entities)
+    prec = None
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
-            entities[i] = Point(e)
+            # entities may be an immutable tuple
+            e = Point(e)
+        # convert to exact Rationals
+        d = {}
+        for f in e.atoms(Float):
+            prec = f._prec if prec is None else min(f._prec, prec)
+            d.setdefault(f, nsimplify(f, rational=True))
+        entities[i] = e.xreplace(d)
 
     if not pairwise:
         # find the intersection common to all objects
@@ -706,11 +718,16 @@ def intersection(*entities, pairwise=False, **kwargs):
             for x in res:
                 newres.extend(x.intersection(entity))
             res = newres
-        return res
+    else:
+        # find all pairwise intersections
+        ans = []
+        for j in range(len(entities)):
+            for k in range(j + 1, len(entities)):
+                ans.extend(intersection(entities[j], entities[k]))
+        res = list(ordered(set(ans)))
 
-    # find all pairwise intersections
-    ans = []
-    for j in range(len(entities)):
-        for k in range(j + 1, len(entities)):
-            ans.extend(intersection(entities[j], entities[k]))
-    return list(ordered(set(ans)))
+    # convert back to Floats
+    if prec is not None:
+        p = prec_to_dps(prec)
+        res = [i.n(p) for i in res]
+    return res

@@ -149,11 +149,11 @@ class BasisDependent(Expr):
     factor.__doc__ += fctr.__doc__  # type: ignore
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return (S.One, self)
 
     def as_coeff_add(self, *deps):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         l = [x * self.components[x] for x in self.components]
         return 0, tuple(l)
 
@@ -312,7 +312,7 @@ class BasisDependentZero(BasisDependent):
         obj = super().__new__(cls)
         # Pre-compute a specific hash value for the zero vector
         # Use the same one always
-        obj._hash = tuple([S.Zero, cls]).__hash__()
+        obj._hash = (S.Zero, cls).__hash__()
         return obj
 
     def __hash__(self):

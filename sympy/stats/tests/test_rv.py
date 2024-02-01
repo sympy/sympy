@@ -218,8 +218,8 @@ def test_Sample():
 
     raises(TypeError, lambda: P(Y > z, numsamples=5))
 
-    assert P(sin(Y) <= 1, numsamples=10) == 1
-    assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1
+    assert P(sin(Y) <= 1, numsamples=10) == 1.0
+    assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1.0
 
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))

@@ -15,6 +15,7 @@ from typing import Any
 
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.mul import _keep_coeff
+from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
@@ -74,16 +75,12 @@ class OctaveCodePrinter(CodePrinter):
         'not': '~',
     }
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
-    }
+    })
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Octave.
@@ -220,14 +217,14 @@ class OctaveCodePrinter(CodePrinter):
 
         PREC = precedence(expr)
 
-        if expr.exp == S.Half:
+        if equal_valued(expr.exp, 0.5):
             return "sqrt(%s)" % self._print(expr.base)
 
         if expr.is_commutative:
-            if expr.exp == -S.Half:
+            if equal_valued(expr.exp, -0.5):
                 sym = '/' if expr.base.is_number else './'
                 return "1" + sym + "sqrt(%s)" % self._print(expr.base)
-            if expr.exp == -S.One:
+            if equal_valued(expr.exp, -1):
                 sym = '/' if expr.base.is_number else './'
                 return "1" + sym + "%s" % self.parenthesize(expr.base, PREC)
 

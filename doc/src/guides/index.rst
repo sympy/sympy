@@ -16,5 +16,7 @@ For a deeper and elaborate exploration of other SymPy topics, see the
    assumptions.rst
    booleans.rst
    custom-functions.md
+   physics/index.rst
    solving/index.md
+   logo.rst
    ../citing.md

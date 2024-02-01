@@ -1,7 +1,7 @@
 from sympy.core.assumptions import check_assumptions
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
-from sympy.matrices.common import MatrixKind
+from sympy.matrices.kind import MatrixKind
 from sympy.sets.sets import Set, SetKind
 from sympy.core.kind import NumberKind
 from .matexpr import MatrixExpr
@@ -57,7 +57,8 @@ class MatrixSet(Set):
     @classmethod
     def _check_dim(cls, dim):
         """Helper function to check invalid matrix dimensions"""
-        ok = check_assumptions(dim, integer=True, nonnegative=True)
+        ok = not dim.is_Float and check_assumptions(
+            dim, integer=True, nonnegative=True)
         if ok is False:
             raise ValueError(
                 "The dimension specification {} should be "

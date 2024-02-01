@@ -290,7 +290,7 @@ def root(arg, n, k=0, evaluate=None):
     ========
 
     sympy.polys.rootoftools.rootof
-    sympy.core.power.integer_nthroot
+    sympy.core.intfunc.integer_nthroot
     sqrt, real_root
 
     References
@@ -300,7 +300,7 @@ def root(arg, n, k=0, evaluate=None):
     .. [2] https://en.wikipedia.org/wiki/Real_root
     .. [3] https://en.wikipedia.org/wiki/Root_of_unity
     .. [4] https://en.wikipedia.org/wiki/Principal_value
-    .. [5] http://mathworld.wolfram.com/CubeRoot.html
+    .. [5] https://mathworld.wolfram.com/CubeRoot.html
 
     """
     n = sympify(n)
@@ -351,7 +351,7 @@ def real_root(arg, n=None, evaluate=None):
     ========
 
     sympy.polys.rootoftools.rootof
-    sympy.core.power.integer_nthroot
+    sympy.core.intfunc.integer_nthroot
     root, sqrt
     """
     from sympy.functions.elementary.complexes import Abs, im, sign
@@ -899,8 +899,8 @@ class Rem(Function):
 
     @classmethod
     def eval(cls, p, q):
-        """ the function remainder if both p,q are numbers
-            and q is not zero
+        """Return the function remainder if both p, q are numbers and q is not
+        zero.
         """
 
         if q.is_zero:

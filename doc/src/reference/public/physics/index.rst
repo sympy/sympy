@@ -22,6 +22,7 @@ Physics
    ../../../modules/physics/hep/index.rst
    ../../../modules/physics/vector/index.rst
    ../../../modules/physics/mechanics/index.rst
+   ../../../modules/physics/biomechanics/index.rst
    ../../../modules/physics/quantum/index.rst
    ../../../modules/physics/optics/index.rst
    ../../../modules/physics/control/index.rst

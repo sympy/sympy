@@ -1,6 +1,6 @@
 from functools import reduce
 
-from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
+from sympy import (sympify, diff, sin, cos, Matrix, symbols,
                                 Function, S, Symbol)
 from sympy.integrals.integrals import integrate
 from sympy.simplify.trigsimp import trigsimp

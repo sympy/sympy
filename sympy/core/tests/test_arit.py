@@ -1724,6 +1724,11 @@ def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + y).as_coeff_mul() == (1, (exp(x + y),))
     assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
 
+def test_issue_24751():
+    expr = Add(-2, -3, evaluate=False)
+    expr1 = Add(-1, expr, evaluate=False)
+    assert int(expr1) == int((-3 - 2) - 1)
+
 
 def test_issue_3514_18626():
     assert sqrt(S.Half) * sqrt(6) == 2 * sqrt(3)/2
@@ -1990,6 +1995,11 @@ def test_Mod():
     # issue 24215
     from sympy.abc import phi
     assert Mod(4.0*Mod(phi, 1) , 2) == 2.0*(Mod(2*(Mod(phi, 1)), 1))
+
+    xi = symbols('x', integer=True)
+    assert unchanged(Mod, xi, 2)
+    assert Mod(3*xi, 2) == Mod(xi, 2)
+    assert unchanged(Mod, 3*x, 2)
 
 
 def test_Mod_Pow():
@@ -2456,3 +2466,7 @@ def test_issue_22453():
 def test_issue_22613():
     assert (0**(x - 2)).as_content_primitive() == (1, 0**(x - 2))
     assert (0**(x + 2)).as_content_primitive() == (1, 0**(x + 2))
+
+
+def test_issue_25176():
+    assert sqrt(-4*3**(S(3)/4)*I/3) == 2*3**(S(7)/8)*sqrt(-I)/3

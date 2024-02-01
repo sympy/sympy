@@ -1,7 +1,7 @@
 from sympy.stats import Expectation, Normal, Variance, Covariance
 from sympy.testing.pytest import raises
 from sympy.core.symbol import symbols
-from sympy.matrices.common import ShapeError
+from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import ZeroMatrix
@@ -88,7 +88,7 @@ def test_multivariate_expectation():
 def test_multivariate_variance():
     raises(ShapeError, lambda: Variance(A))
 
-    expr = Variance(a)  # type: VarianceMatrix
+    expr = Variance(a)
     assert expr == Variance(a) == VarianceMatrix(a)
     assert expr.expand() == ZeroMatrix(k, k)
     expr = Variance(a.T)
