@@ -122,8 +122,13 @@ MULTI_LETTER_SYMBOL: /[a-zA-Z]+(\s+[a-zA-Z]+)*'*/
 
 %import common.DIGIT -> DIGIT
 
+CMD_PRIME: "\\prime"
+CMD_ASTERISK: "\\ast"
+
 PRIMES: "'"+
 STARS: "*"+
+PRIMES_VIA_CMD: CMD_PRIME+
+STARS_VIA_CMD: CMD_ASTERISK+
 
 CMD_IMAGINARY_UNIT: "\\sympyi"
 
@@ -266,8 +271,8 @@ summation: FUNC_SUM group_curly_parentheses_special _expression
 product: FUNC_PROD group_curly_parentheses_special _expression
     | FUNC_PROD group_curly_parentheses_special _expression
 
-superscript: _expression_func CARET _expression_power
-    | _expression_func CARET L_BRACE (PRIMES | STARS) R_BRACE
+superscript: _expression_func CARET (_expression_power | CMD_PRIME | CMD_ASTERISK)
+    | _expression_func CARET L_BRACE (PRIMES | STARS | PRIMES_VIA_CMD | STARS_VIA_CMD) R_BRACE
 
 matrix_prime: (matrix | group_round_parentheses) PRIMES
 

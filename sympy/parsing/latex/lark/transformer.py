@@ -195,13 +195,25 @@ class TransformToSymPyExpr(Transformer):
         def isprime(x):
             return isinstance(x, Token) and x.type == "PRIMES"
 
+        def iscmdprime(x):
+            return isinstance(x, Token) and (x.type == "PRIMES_VIA_CMD"
+                                             or x.type == "CMD_PRIME")
+
         def isstar(x):
             return isinstance(x, Token) and x.type == "STARS"
 
+        def iscmdstar(x):
+            return isinstance(x, Token) and (x.type == "STARS_VIA_CMD"
+                                             or x.type == "CMD_ASTERISK")
+
         base = tokens[0]
-        if len(tokens) == 3: # a^b
+        if len(tokens) == 3: # a^b OR a^\prime OR a^\ast
             sup = tokens[2]
-        if len(tokens) == 5: # a^{'} OR a^{*}
+        if len(tokens) == 5:
+            # a^{'}, a^{''}, ... OR
+            # a^{*}, a^{**}, ... OR
+            # a^{\prime}, a^{\prime\prime}, ... OR
+            # a^{\ast}, a^{\ast\ast}, ...
             sup = tokens[3]
 
         if self._obj_is_sympy_Matrix(base):
@@ -214,6 +226,11 @@ class TransformToSymPyExpr(Transformer):
                 if len(sup) % 2 == 0:
                     return base
                 return sympy.Transpose(base)
+            if iscmdprime(sup):
+                sup = sup.value
+                if (len(sup)/len(r"\prime")) % 2 == 0:
+                    return base
+                return sympy.Transpose(base)
             if isstar(sup):
                 sup = sup.value
                 # need .doit() in order to be consistent with
@@ -222,8 +239,14 @@ class TransformToSymPyExpr(Transformer):
                 if len(sup) % 2 == 0:
                     return base.doit()
                 return sympy.adjoint(base)
+            if iscmdstar(sup):
+                sup = sup.value
+                # need .doit() for same reason as above
+                if (len(sup)/len(r"\ast")) % 2 == 0:
+                    return base.doit()
+                return sympy.adjoint(base)
 
-        if isprime(sup) or isstar(sup):
+        if isprime(sup) or iscmdprime(sup) or isstar(sup) or iscmdstar(sup):
             raise LaTeXParsingError(f"{base} with superscript {sup} is not understood.")
 
         return sympy.Pow(base, sup)
@@ -681,18 +704,17 @@ class TransformToSymPyExpr(Transformer):
     def _obj_is_sympy_Matrix(self, obj):
         if hasattr(obj, "is_Matrix"):
             return obj.is_Matrix
-    
+
         return isinstance(obj, sympy.Matrix)
-    
-    
+
     def _handle_division(self, numerator, denominator):
         if self._obj_is_sympy_Matrix(denominator):
             raise LaTeXParsingError("Cannot divide by matrices like this since "
                                     "it is not clear if left or right multiplication "
                                     "by the inverse is intended. Try explicitly "
                                     "multiplying by the inverse instead.")
-    
+
         if self._obj_is_sympy_Matrix(numerator):
             return sympy.MatMul(numerator, sympy.Pow(denominator, -1))
-    
+
         return sympy.Mul(numerator, sympy.Pow(denominator, -1))
