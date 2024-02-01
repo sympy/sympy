@@ -749,14 +749,14 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         n, d = fraction(expr)
         if d != 0:
             expr = signsimp(-n/(-d))
-    
+
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
 
     # restore floats
     if floats and rational is None:
         expr = nfloat(expr, exponent=False)
-   
+
     try:
         expr = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
         expr = shorter(expr, cancel(expr))
