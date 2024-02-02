@@ -626,7 +626,7 @@ def test_si():
         + O(x**(-7), (x, oo)))*cos(x)/x
 
     t = Symbol('t', Dummy=True)
-    assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
+    assert Si(x).rewrite(sinc).dummy_eq(Integral(sinc(t), (t, 0, x)))
 
     assert limit(Shi(x), x, S.Infinity) == S.Infinity
     assert limit(Shi(x), x, S.NegativeInfinity) == S.NegativeInfinity
