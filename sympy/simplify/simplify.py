@@ -757,7 +757,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # restore floats
     if floats and rational is None:
         expr = nfloat(expr, exponent=False)
-    
+
     if d_expr == powsimp(expand(expr)):
         return done(d_expr)
 
