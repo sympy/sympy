@@ -738,6 +738,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         x.args[1].is_Add and
         x.is_commutative)
     expr = short.xreplace(hollow_mul)
+    d_expr = expr
 
     numer, denom = expr.as_numer_denom()
     if denom.is_Add:
@@ -756,11 +757,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # restore floats
     if floats and rational is None:
         expr = nfloat(expr, exponent=False)
-
-    expr = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
-    expr = shorter(expr, cancel(expr))
-    expr = shorter(expr, factor_terms(expr), expand_power_exp(expand_mul(expr)))
-    expr = exptrigsimp(expr)
+    
+    if d_expr == powsimp(expand(expr)):
+        return done(d_expr)
 
     return done(expr)
 
