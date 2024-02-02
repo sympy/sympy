@@ -60,7 +60,7 @@
          width="1"
          y="-0.5"
          x="0"
-         style="fill:black;stroke:none" />
+         style="fill:CurrentColor;stroke:none" />
     </pattern>
     <marker
        inkscape:stockid="Arrow2Lend"
