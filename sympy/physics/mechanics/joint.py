@@ -1382,9 +1382,8 @@ class CylindricalJoint(Joint):
 class PlanarJoint(Joint):
     """Planar Joint.
 
-    .. image:: PlanarJoint.svg
-        :align: center
-        :width: 800
+    .. raw:: html
+        :file: ../../../doc/src/modules/physics/mechanics/api/PlanarJoint.svg
 
     Explanation
     ===========
