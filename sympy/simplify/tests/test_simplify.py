@@ -1065,6 +1065,7 @@ def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0
 
+
 def test_issue_22210():
     d = Symbol('d', integer=True)
     expr = 2*Derivative(sin(x), (x, d))
