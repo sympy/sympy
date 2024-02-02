@@ -1991,9 +1991,8 @@ class SphericalJoint(Joint):
 class WeldJoint(Joint):
     """Weld Joint.
 
-    .. image:: WeldJoint.svg
-        :align: center
-        :width: 500
+    .. raw:: html
+        :file: ../../../doc/src/modules/physics/mechanics/api/WeldJoint.svg
 
     Explanation
     ===========
