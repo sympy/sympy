@@ -1,6 +1,6 @@
 <svg inkscape0:version="0.48.1 r9760" version="1.1" class="align-center" width="450" viewBox="0 0 450 290" xmlns="http://www.w3.org/2000/svg" xmlns:inkscape0="https://www.inkscape.org/namespaces/inkscape">
  <g transform="translate(0,-752.36218)" inkscape0:groupmode="layer" inkscape0:label="Layer 1">
-  <g fill="#808080" fill-rule="evenodd" stroke="CurrentColor" inkscape0:corner0="0.29164835 : -0.023012823 : 0 : 1" inkscape0:corner7="0.021376434 : -0.08537105 : 0.25 : 1" inkscape0:perspectiveID="#perspective2985">
+  <g fill="#767676" fill-rule="evenodd" stroke="CurrentColor" inkscape0:corner0="0.29164835 : -0.023012823 : 0 : 1" inkscape0:corner7="0.021376434 : -0.08537105 : 0.25 : 1" inkscape0:perspectiveID="#perspective2985">
    <path d="m160.69522 910.16309 46.09494 29.4402 45.16936-27.66623-46.5388-19.81579z" inkscape0:box3dsidetype="13"/>
    <path d="m160.69522 861.88507v48.27802l44.7255-18.04182v-40.44906z" inkscape0:box3dsidetype="6"/>
    <path d="m205.42072 851.67221 46.5388 11.21704v49.04781l-46.5388-19.81579z" inkscape0:box3dsidetype="11"/>
@@ -8,7 +8,7 @@
    <path d="m206.79016 878.55017v61.05312l45.16936-27.66623v-49.04781z" inkscape0:box3dsidetype="14"/>
    <path d="m160.69522 861.88507 46.09494 16.6651v61.05312l-46.09494-29.4402z" inkscape0:box3dsidetype="3"/>
   </g>
-  <g fill="#808080" fill-rule="evenodd" stroke="CurrentColor" inkscape0:corner0="-0.16210436 : 0.0042165672 : 0 : 1" inkscape0:corner7="-0.30035715 : -0.037104167 : 0.25 : 1" inkscape0:perspectiveID="#perspective2985">
+  <g fill="#767676" fill-rule="evenodd" stroke="CurrentColor" inkscape0:corner0="-0.16210436 : 0.0042165672 : 0 : 1" inkscape0:corner7="-0.30035715 : -0.037104167 : 0.25 : 1" inkscape0:perspectiveID="#perspective2985">
    <path d="m255.02906 912.80792 53.06279 22.50747 33.80412-35.91057-45.16481-12.77161z" inkscape0:box3dsidetype="13"/>
    <path d="m255.02906 863.49303v49.31489l41.7021-26.17471v-37.98226z" inkscape0:box3dsidetype="6"/>
    <path d="m296.73116 848.65095 45.16481 7.242v43.51187l-45.16481-12.77161z" inkscape0:box3dsidetype="11"/>
@@ -16,7 +16,7 @@
    <path d="m308.09185 876.25564v59.05975l33.80412-35.91057v-43.51187z" inkscape0:box3dsidetype="14"/>
    <path d="m255.02906 863.49303 53.06279 12.76261v59.05975l-53.06279-22.50747z" inkscape0:box3dsidetype="3"/>
   </g>
-  <g fill="#808080" fill-rule="evenodd" stroke="CurrentColor" inkscape0:corner0="-0.30035714 : -0.039729165 : 0 : 1" inkscape0:corner7="-0.40371348 : -0.066151752 : 0.25 : 1" inkscape0:perspectiveID="#perspective2985">
+  <g fill="#767676" fill-rule="evenodd" stroke="CurrentColor" inkscape0:corner0="-0.30035714 : -0.039729165 : 0 : 1" inkscape0:corner7="-0.40371348 : -0.066151752 : 0.25 : 1" inkscape0:perspectiveID="#perspective2985">
    <path d="m308.09185 976.83312 55.74273 30.84058 21.46572-61.67152-43.40434-16.00946z" inkscape0:box3dsidetype="13"/>
    <path d="m308.09185 939.0673v37.76582l33.80411-46.8404v-27.82371z" inkscape0:box3dsidetype="6"/>
    <path d="m341.89596 902.16901 43.40434 12.61137v31.2218l-43.40434-16.00946z" inkscape0:box3dsidetype="11"/>
@@ -24,7 +24,7 @@
    <path d="m363.83458 963.36184v44.31186l21.46572-61.67152v-31.2218z" inkscape0:box3dsidetype="14"/>
    <path d="m308.09185 939.0673 55.74273 24.29454v44.31186l-55.74273-30.84058z" inkscape0:box3dsidetype="3"/>
   </g>
-  <g fill="#808080" fill-rule="evenodd" stroke="CurrentColor" inkscape0:corner0="0.73465171 : 0.057868461 : 0 : 1" inkscape0:corner7="0.29964618 : -0.020730132 : 0.25 : 1" inkscape0:perspectiveID="#perspective2985">
+  <g fill="#767676" fill-rule="evenodd" stroke="CurrentColor" inkscape0:corner0="0.73465171 : 0.057868461 : 0 : 1" inkscape0:corner7="0.29964618 : -0.020730132 : 0.25 : 1" inkscape0:perspectiveID="#perspective2985">
    <path d="m116.20824 844.48538 43.415 15.25573 44.66761-9.81427-47.73662-11.18288z" inkscape0:box3dsidetype="13"/>
    <path d="m116.20824 799.1745v45.31088l40.34599-5.74142v-39.60322z" inkscape0:box3dsidetype="6"/>
    <path d="m156.55423 799.14074 47.73662 0.0657v50.72035l-47.73662-11.18288z" inkscape0:box3dsidetype="11"/>
