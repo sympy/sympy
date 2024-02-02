@@ -1856,7 +1856,7 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import sinc
     >>> Si(z).rewrite(sinc)
-    Integral(sinc(t), (t, 0, z))
+    Integral(sinc(_t), (_t, 0, z))
 
     See Also
     ========
