@@ -9,7 +9,7 @@ from sympy.core.numbers import I, pi, Rational
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
+from sympy.core.symbol import Dummy, uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import  polar_lift, re, unpolarify
