@@ -1908,11 +1908,6 @@ class Si(TrigonometricIntegral):
 
     _eval_rewrite_as_sinc =  _eval_rewrite_as_Integral
 
-    def _eval_rewrite_as_sinc(self, z, **kwargs):
-        from sympy.integrals.integrals import Integral
-        t = Symbol('t', Dummy=True)
-        return Integral(sinc(t), (t, 0, z))
-
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
         point = args0[0]
