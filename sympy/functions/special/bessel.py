@@ -8,14 +8,17 @@ from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
+from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.sympify import sympify
+from sympy.sets.contains import Contains
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import cbrt, sqrt, root
-from sympy.functions.elementary.complexes import (Abs, re, im, polar_lift, unpolarify)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.complexes import (Abs, arg, re, im, polar_lift, unpolarify)
 from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn
@@ -207,19 +210,37 @@ class besselj(BesselBase):
             newz, n = z.extract_branch_factor()
             if n != 0:
                 return exp(2*n*pi*nu*I)*besselj(nu, newz)
+
         nnu = unpolarify(nu)
         if nu != nnu:
             return besselj(nnu, z)
 
     def _eval_rewrite_as_besseli(self, nu, z, **kwargs):
-        return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
+        #return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
+        # 9.6.3 in Abramovitz and Stegun
+        not_lower_left = (re(z) > 0) | (im(z) >= 0)
+        return Piecewise(
+            (exp(+1*I*pi*nu/2)*besseli(nu, z*exp(-1*pi*I/2)), not_lower_left),
+            (exp(-3*I*pi*nu/2)*besseli(nu, z*exp(+3*pi*I/2)), True),
+        )
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
         if nu.is_integer is False:
             return csc(pi*nu)*bessely(-nu, z) - cot(pi*nu)*bessely(nu, z)
 
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
-        return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
+        nzcase = sqrt(2*z/pi)*jn(nu - S.Half, z)
+        if z.is_zero is False:
+            return nzcase
+        else:
+            nzinteger = Contains(nu, (S.Integers - {0}))
+            return Piecewise((nzcase, Ne(z, 0)),
+                    (S.One, Eq(nu, 0)),
+                    (S.Zero, (re(nu) > 0) | nzinteger),
+                    (S.ComplexInfinity, (re(nu) < 0) & ~nzinteger),
+                    )
+
+
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
@@ -329,6 +350,8 @@ class bessely(BesselBase):
             if nu.is_zero:
                 return S.NegativeInfinity
             elif re(nu).is_zero is False:
+                # XXX: Numerically it seems that for nu = -1/2,-3/2, ...
+                # bessely(nu, z) -> 0 as z -> 0 from any direction.
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
@@ -353,7 +376,13 @@ class bessely(BesselBase):
             return aj.rewrite(besseli)
 
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
-        return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
+        nzcase = sqrt(2/pi)*sqrt(z)*yn(nu - S.Half, z)
+        if z.is_zero is False:
+            return nzcase
+        else:
+            return Piecewise((nzcase, Ne(z, 0)),
+                        (S.NegativeInfinity, Eq(nu, 0)),
+                        (S.ComplexInfinity, Ne(re(nu), 0)))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
@@ -485,7 +514,7 @@ class besseli(BesselBase):
                 return S.One
             elif (nu.is_integer and nu.is_zero is False) or re(nu).is_positive:
                 return S.Zero
-            elif re(nu).is_negative and not (nu.is_integer is True):
+            elif re(nu).is_negative and nu.is_integer is False:
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
@@ -519,15 +548,31 @@ class besseli(BesselBase):
             return besseli(nnu, z)
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
+        # 9.6.3 in Abramovitz and Stegun
+        not_upper_left = (re(z) >= 0) | (im(z) < 0)
+        return Piecewise(
+            (exp( -I*pi*nu/2)*besselj(nu, z*exp(   pi*I/2)), not_upper_left),
+            (exp(3*I*pi*nu/2)*besselj(nu, z*exp(-3*pi*I/2)), True),
+        )
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
-        aj = self._eval_rewrite_as_besselj(*self.args)
-        if aj:
-            return aj.rewrite(bessely)
+        if nu.is_integer is False:
+            return (-cot(pi*nu)*bessely(nu, z*polar_lift(I))
+                    +csc(pi*nu)*bessely(-nu, z*polar_lift(I))
+                    )*exp(-I*pi*nu/2)
 
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
-        return self._eval_rewrite_as_besselj(*self.args).rewrite(jn)
+        nzcase = (sqrt(2/pi)*sqrt(z)*exp(I*pi/4)*exp(-I*pi*nu/2)
+                *jn(nu - S.Half, z*exp(I*pi/2)))
+        if z.is_zero is False:
+            return nzcase
+        else:
+            nzinteger = Contains(nu, (S.Integers - {0}))
+            return Piecewise((nzcase, Ne(z, 0)),
+                    (S.One, Eq(nu, 0)),
+                    (S.Zero, (re(nu) > 0) | nzinteger),
+                    (S.ComplexInfinity, (re(nu) < 0) & ~nzinteger),
+                    )
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -950,12 +995,23 @@ class jn(SphericalBesselBase):
         if z in (S.NegativeInfinity, S.Infinity):
             return S.Zero
 
+    def _handle_zero_pw(self, nu, z, nzcase):
+        if z.is_zero is False:
+            return nzcase
+        elif nu.is_real:
+            return Piecewise((nzcase, Ne(z, 0)), (0**nu, True))
+
+    @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
+        nzcase = sqrt(pi/2)/sqrt(z) * besselj(nu + S.Half, z)
+        return self._handle_zero_pw(nu, z, nzcase)
 
+    @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
-        return S.NegativeOne**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
+        nzcase = S.NegativeOne**nu * sqrt(pi/2)/sqrt(z) * bessely(-nu - S.Half, z)
+        return self._handle_zero_pw(nu, z, nzcase)
 
+    @assume_integer_order
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
         return S.NegativeOne**(nu) * yn(-nu - 1, z)
 
@@ -1014,14 +1070,30 @@ class yn(SphericalBesselBase):
     .. [1] https://dlmf.nist.gov/10.47
 
     """
+    @classmethod
+    def eval(cls, nu, z):
+        if z.is_zero and nu.is_integer:
+            return S.Zero ** (-1-nu)
+        elif z in (S.NegativeInfinity, S.Infinity):
+            return S.Zero
+
+    def _handle_zero_pw(self, nu, z, nzcase):
+        if z.is_zero is False:
+            return nzcase
+        elif nu.is_real:
+            return Piecewise((nzcase, Ne(z, 0)), (0**(-1-nu), True))
+
     @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        return S.NegativeOne**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
+        nzcase = S.NegativeOne**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
+        return self._handle_zero_pw(nu, z, nzcase)
 
     @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
-        return sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
+        nzcase = sqrt(pi/2)/sqrt(z) * bessely(nu + S.Half, z)
+        return self._handle_zero_pw(nu, z, nzcase)
 
+    @assume_integer_order
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return S.NegativeOne**(nu + 1) * jn(-nu - 1, z)
 

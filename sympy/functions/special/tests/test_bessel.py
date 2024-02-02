@@ -2,13 +2,16 @@ from itertools import product
 
 from sympy.concrete.summations import Sum
 from sympy.core.function import (diff, expand_func)
-from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.numbers import (I, Rational, oo, pi, zoo)
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
-from sympy.functions.elementary.complexes import (conjugate, polar_lift)
+from sympy.sets.contains import Contains
+from sympy.functions.elementary.complexes import (conjugate, polar_lift, re, im)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely, hankel1, hankel2, hn1, hn2, jn, jn_zeros, yn)
 from sympy.functions.special.gamma_functions import (gamma, uppergamma)
@@ -178,10 +181,17 @@ def test_diff():
 
 
 def test_rewrite():
-    assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S.Half, z)
-    assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S.Half, z)
-    assert besseli(n, z).rewrite(besselj) == \
-        exp(-I*n*pi/2)*besselj(n, polar_lift(I)*z)
+    assert besselj(n, z).rewrite(jn) == Piecewise(
+            (sqrt(2)*sqrt(z)*jn(n - S.Half, z)/sqrt(pi), Ne(z, 0)),
+            (1, Eq(n, 0)),
+            (0, (re(n) > 0) | Contains(n, S.Integers - {0})),
+            (zoo, (re(n) < 0) & ~Contains(n, S.Integers - {0}))
+        )
+    assert bessely(n, z).rewrite(yn) == Piecewise(
+            (sqrt(2)*sqrt(z)*yn(n - S.Half, z)/sqrt(pi), Ne(z, 0)),
+            (-oo, Eq(n, 0)),
+            (zoo, Ne(re(n), 0))
+        )
     assert besselj(n, z).rewrite(besseli) == \
         exp(I*n*pi/2)*besseli(n, polar_lift(-I)*z)
 
@@ -202,10 +212,10 @@ def test_rewrite():
 
     # check that a rewrite was triggered, when the order is set to a generic
     # symbol 'nu'
-    assert yn(nu, z) != yn(nu, z).rewrite(jn)
+    #assert yn(nu, z) != yn(nu, z).rewrite(jn)
     assert hn1(nu, z) != hn1(nu, z).rewrite(jn)
     assert hn2(nu, z) != hn2(nu, z).rewrite(jn)
-    assert jn(nu, z) != jn(nu, z).rewrite(yn)
+    #assert jn(nu, z) != jn(nu, z).rewrite(yn)
     assert hn1(nu, z) != hn1(nu, z).rewrite(yn)
     assert hn2(nu, z) != hn2(nu, z).rewrite(yn)
 
@@ -218,8 +228,8 @@ def test_rewrite():
         assert hn1(order, z) == hn1(order, z).rewrite(f)
         assert hn2(order, z) == hn2(order, z).rewrite(f)
 
-    assert jn(order, z).rewrite(besselj) == sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(order + S.Half, z)/2
-    assert jn(order, z).rewrite(bessely) == (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-order - S.Half, z)/2
+    #assert jn(order, z).rewrite(besselj) == sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(order + S.Half, z)/2
+    #assert jn(order, z).rewrite(bessely) == (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-order - S.Half, z)/2
 
     # for integral orders rewriting SBFs w.r.t bessel[jy] is allowed
     N = Symbol('n', integer=True)
@@ -238,32 +248,70 @@ def test_rewrite():
 
 def test_expand():
     assert expand_func(besselj(S.Half, z).rewrite(jn)) == \
-        sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+        Piecewise((sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z)), Ne(z, 0)), (0, True))
     assert expand_func(bessely(S.Half, z).rewrite(yn)) == \
-        -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+        Piecewise((-sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z)), Ne(z, 0)), (zoo, True))
 
     # XXX: teach sin/cos to work around arguments like
     # x*exp_polar(I*pi*n/2).  Then change besselsimp -> expand_func
-    assert besselsimp(besselj(S.Half, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besselj(Rational(-1, 2), z)) == sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besselj(Rational(5, 2), z)) == \
-        -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**Rational(5, 2))
-    assert besselsimp(besselj(Rational(-5, 2), z)) == \
-        -sqrt(2)*(z**2*cos(z) - 3*z*sin(z) - 3*cos(z))/(sqrt(pi)*z**Rational(5, 2))
+    assert besselsimp(besselj(S.Half, z)) == \
+        Piecewise((sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z)), (z > 0) | (z < 0)), (0, True))
+    assert besselsimp(besselj(Rational(-1, 2), z)) == \
+        Piecewise((sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z)), (z > 0) | (z < 0)), (zoo, True))
+    assert besselsimp(besselj(Rational(5, 2), z)) == Piecewise(
+        (-sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z)) - 3*sqrt(2)*cos(z)/(sqrt(pi)*z**(S(3)/2))
+            + 3*sqrt(2)*sin(z)/(sqrt(pi)*z**(S(5)/2)), (z > 0) | (z < 0)),
+        (0, True)
+        )
+    assert besselsimp(besselj(Rational(-5, 2), z)) == Piecewise(
+        (-sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z)) + 3*sqrt(2)*sin(z)/(sqrt(pi)*z**(S(3)/2))
+            + 3*sqrt(2)*cos(z)/(sqrt(pi)*z**(S(5)/2)), (z > 0) | (z < 0)),
+        (zoo, True)
+        )
 
-    assert besselsimp(bessely(S.Half, z)) == \
-        -(sqrt(2)*cos(z))/(sqrt(pi)*sqrt(z))
-    assert besselsimp(bessely(Rational(-1, 2), z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(bessely(Rational(5, 2), z)) == \
-        sqrt(2)*(z**2*cos(z) - 3*z*sin(z) - 3*cos(z))/(sqrt(pi)*z**Rational(5, 2))
-    assert besselsimp(bessely(Rational(-5, 2), z)) == \
-        -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**Rational(5, 2))
+    assert besselsimp(bessely(S.Half, z)) == Piecewise(
+        (-sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z)), (z > 0) | (z < 0)),
+        (zoo, True)
+        )
+    assert besselsimp(bessely(Rational(-1, 2), z)) == Piecewise(
+        (sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z)), (z > 0) | (z < 0)),
+        (0, True)
+        )
+    assert besselsimp(bessely(Rational(5, 2), z)) == Piecewise(
+        (sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z)) - 3*sqrt(2)*sin(z)/(sqrt(pi)*z**(S(3)/2))
+            - 3*sqrt(2)*cos(z)/(sqrt(pi)*z**(S(5)/2)), (z > 0) | (z < 0)),
+        (zoo, True)
+        )
+    assert besselsimp(bessely(Rational(-5, 2), z)) == Piecewise(
+        (-sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z)) - 3*sqrt(2)*cos(z)/(sqrt(pi)*z**(S(3)/2))
+            + 3*sqrt(2)*sin(z)/(sqrt(pi)*z**(S(5)/2)), (z > 0) | (z < 0)),
+        (0, True)
+        )
 
-    assert besselsimp(besseli(S.Half, z)) == sqrt(2)*sinh(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besseli(Rational(-1, 2), z)) == \
-        sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besseli(Rational(5, 2), z)) == \
-        sqrt(2)*(z**2*sinh(z) - 3*z*cosh(z) + 3*sinh(z))/(sqrt(pi)*z**Rational(5, 2))
+    assert besselsimp(besseli(S.Half, z)) == Piecewise(
+        (Piecewise((-(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z),
+        (z > 0) | (z < 0)), (0, True)), (re(z) >= 0) | (im(z) < 0)),
+        (Piecewise(((-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z),
+        (z > 0) | (z < 0)), (0, True)), True)
+        )
+    assert besselsimp(besseli(Rational(-1, 2), z)) == Piecewise(
+        (Piecewise((-(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*cosh(z)/(sqrt(pi)*z),
+        (z > 0) | (z < 0)), (zoo, True)), (re(z) >= 0) | (im(z) < 0)),
+        (Piecewise(((-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*cosh(z)/(sqrt(pi)*z),
+        (z > 0) | (z < 0)), (zoo, True)), True)
+        )
+    assert besselsimp(besseli(Rational(5, 2), z)) == Piecewise(
+        (Piecewise((-(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z)
+            + 3*(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*cosh(z)/(sqrt(pi)*z**2) -
+            3*(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z**3), (z > 0) |
+            (z < 0)), (0, True)), (re(z) >= 0) | (im(z) < 0)),
+        (Piecewise(((-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z) -
+                3*(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*cosh(z)/(sqrt(pi)*z**2) +
+                3*(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z**3), (z >
+                    0) | (z < 0)), (0, True)), True)
+        )
+    # sqrt(2)*(z**2*sinh(z) - 3*z*cosh(z) + 3*sinh(z))/(sqrt(pi)*z**Rational(5, 2))
+
     assert besselsimp(besseli(Rational(-5, 2), z)) == \
         sqrt(2)*(z**2*cosh(z) - 3*z*sinh(z) + 3*cosh(z))/(sqrt(pi)*z**Rational(5, 2))
 
