@@ -1901,6 +1901,13 @@ class Si(TrigonometricIntegral):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
+        return Integral(sinc(t), (t, 0, z))
+
+    _eval_rewrite_as_sinc =  _eval_rewrite_as_Integral
+
     def _eval_rewrite_as_sinc(self, z, **kwargs):
         from sympy.integrals.integrals import Integral
         t = Symbol('t', Dummy=True)
@@ -2034,8 +2041,6 @@ class Ci(TrigonometricIntegral):
         from sympy.integrals.integrals import Integral
         t = Dummy(uniquely_named_symbol('t', [z]).name)
         return S.EulerGamma + log(z) - Integral((1-cos(t))/t, (t, 0, z))
-
-    _eval_rewrite_as_sinc =  _eval_rewrite_as_Integral
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
