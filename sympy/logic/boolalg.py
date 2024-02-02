@@ -16,7 +16,7 @@ from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
-from sympy.utilities.iterables import sift, ibin
+from sympy.utilities.iterables import sift, ibin,iterable
 from sympy.utilities.misc import filldedent
 
 
@@ -2308,9 +2308,7 @@ def _input_to_binlist(inputlist, variables):
     binlist = []
     bits = len(variables)
     for val in inputlist:
-        if isinstance(val, int):
-            binlist.append(ibin(val, bits))
-        elif isinstance(val, dict):
+        if isinstance(val, dict):
             nonspecvars = list(variables)
             for key in val.keys():
                 nonspecvars.remove(key)
@@ -2318,12 +2316,14 @@ def _input_to_binlist(inputlist, variables):
                 d = dict(zip(nonspecvars, t))
                 d.update(val)
                 binlist.append([d[v] for v in variables])
-        elif isinstance(val, (list, tuple)):
+        elif iterable(val):
             if len(val) != bits:
                 raise ValueError("Each term must contain {bits} bits as there are"
                                  "\n{bits} variables (or be an integer)."
                                  "".format(bits=bits))
             binlist.append(list(val))
+        elif not (val%1):
+            binlist.append(ibin(val, bits))
         else:
             raise TypeError("A term list can only contain lists,"
                             " ints or dicts.")
@@ -2390,7 +2390,7 @@ def SOPform(variables, minterms, dontcares=None):
     .. [2] https://en.wikipedia.org/wiki/Don%27t-care_term
 
     """
-    if not minterms:
+    if not len(minterms):
         return false
 
     variables = tuple(map(sympify, variables))
@@ -2471,7 +2471,7 @@ def POSform(variables, minterms, dontcares=None):
     .. [2] https://en.wikipedia.org/wiki/Don%27t-care_term
 
     """
-    if not minterms:
+    if not len(minterms):
         return false
 
     variables = tuple(map(sympify, variables))
