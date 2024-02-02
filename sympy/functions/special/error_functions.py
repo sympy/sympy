@@ -1906,7 +1906,7 @@ class Si(TrigonometricIntegral):
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
 
-    _eval_rewrite_as_Integral =  _eval_rewrite_as_sinc
+    _eval_rewrite_as_sinc =  _eval_rewrite_as_Integral
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
