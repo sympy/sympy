@@ -423,8 +423,51 @@ def _check_other_MIMO(func):
             return func(*args, **kwargs)
     return wrapper
 
-def routh_table(system, first_col=False):
-    "creates the routh table for the given transfer function."
+def routh_hurwitz_table(system, first_col=False ,simplify=False):
+    """
+    Creates the Routh-Hurwitz table for the given transfer function.
+
+    Parameters
+    ==========
+    system : TransferFunction
+        The transfer function for which the Routh-Hurwitz table is to be generated.
+
+    first_col : bool, optional
+        If True, returns only the first column of the Routh-Hurwitz table.
+        Default is False.
+
+    simplify : bool, optional
+        If True, simplifies the entries in the Routh-Hurwitz table.
+        Default is False.
+
+    Returns
+    =======
+    table : Matrix
+        The Routh-Hurwitz table as a SymPy Matrix.
+
+    first_column : list, optional
+        If `first_col` is True, returns the first column of the table as a list.
+
+    Raises
+    ======
+    ValueError
+        If the given system is not a TransferFunction or has a zero denominator.
+
+    Examples
+    ========
+    >>> from sympy.physics.control import TransferFunction, routh_hurwitz_table
+    >>> from sympy.abc import s
+
+    >>> tf = TransferFunction(s**2 + 5*s + 8,1,s)
+    >>> routh_hurwitz_table(tf)
+    Matrix([
+    [1, 8, 0],
+    [5, 0, 0],
+    [8, 0, 0]])
+
+    >>> routh_hurwitz_table(tf, first_col=True)
+    [1, 5, 8]
+    """
     if(isinstance(system,TransferFunction)):
         system = system._eval_simplify()
         num = Poly(system.num, system.var)
@@ -455,11 +498,14 @@ def routh_table(system, first_col=False):
                     table[j,i] = 0
                 else:
                     table[j,i] = (table[j-1,0]*table[j-2,i+1] - table[j-2,0]*table[j-1,i+1])/table[j-1,0]
-                    table[j,i] = simplify(table[j,i])
+                    if(simplify):
+                        table[j,i] = simplify(table[j,i])
         if first_col:
             first_column = [table[j, 0] for j in range(n+1)]
             return first_column
         return table
+    else:
+        raise ValueError("The given system is not a TransferFunction.")
 
 class TransferFunction(SISOLinearTimeInvariant):
     r"""
