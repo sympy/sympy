@@ -1,0 +1,14 @@
+from sympy.core.symbol import symbols
+from sympy.polys.routh_hurwitz import routh_hurwitz_matrix
+
+def test_routh_hurwitz_table():
+
+    b0, b1, b2, b3, b4, s = symbols('b0, b1, b2, b3, b4, s')
+    # Test from wikipedia
+    tf1 = s**2 +  b1*s + b0
+    tf2 = s**3 + b2*s**2 + b1*s + b0
+
+    assert routh_hurwitz_matrix(tf1, s) == [b1**2 > 0, b0*b1 > 0]
+    assert routh_hurwitz_matrix(tf2, s) == [b0*b1*(b0 - b1*b2) > 0, (b0 - b1*b2)**2 > 0, b0*b2*(-b0 + b1*b2) > 0]
+
+test_routh_hurwitz_table()
