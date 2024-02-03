@@ -118,9 +118,6 @@ def routh_hurwitz_table(system, reduce=False):
     table : Matrix
         The Routh-Hurwitz table as a SymPy Matrix.
 
-    first_column : list, optional
-        If `first_col` is True, returns the first column of the table as a list.
-
     Raises
     ======
     ValueError
