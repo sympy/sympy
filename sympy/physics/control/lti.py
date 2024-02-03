@@ -423,7 +423,7 @@ def _check_other_MIMO(func):
             return func(*args, **kwargs)
     return wrapper
 
-def routh_hurwitz_table(system, first_col=False ,simplify=False):
+def routh_hurwitz_table(system, first_col=False ,reduce=False):
     """
     Creates the Routh-Hurwitz table for the given transfer function.
 
@@ -498,7 +498,7 @@ def routh_hurwitz_table(system, first_col=False ,simplify=False):
                     table[j,i] = 0
                 else:
                     table[j,i] = (table[j-1,0]*table[j-2,i+1] - table[j-2,0]*table[j-1,i+1])/table[j-1,0]
-                    if(simplify):
+                    if(reduce):
                         table[j,i] = simplify(table[j,i])
         if first_col:
             first_column = [table[j, 0] for j in range(n+1)]
