@@ -165,7 +165,6 @@ def routh_hurwitz_table(system, first_col=False ,reduce=False):
         if den.is_zero:
             raise ValueError("The given system has a zero denominator.")
         char_eqn = den
-    
     elif(isinstance(system,Poly)):
         char_eqn = system
     else:
