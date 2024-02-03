@@ -9,7 +9,7 @@ from sympy.core.numbers import I, pi, Rational
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.symbol import Dummy, uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import  polar_lift, re, unpolarify
@@ -1218,7 +1218,7 @@ class Ei(Function):
 
     def _eval_rewrite_as_Integral(self, z, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(S.Exp1**t/t, (t, S.NegativeInfinity, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -1441,7 +1441,7 @@ class expint(Function):
     def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         n, x = self.args
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         return Integral(t**-n * exp(-t*x), (t, 1, S.Infinity))
 
 
@@ -1856,7 +1856,7 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import sinc
     >>> Si(z).rewrite(sinc)
-    Integral(sinc(t), (t, 0, z))
+    Integral(sinc(_t), (_t, 0, z))
 
     See Also
     ========
@@ -1901,12 +1901,12 @@ class Si(TrigonometricIntegral):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
-    def _eval_rewrite_as_sinc(self, z, **kwargs):
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(sinc(t), (t, 0, z))
 
-    _eval_rewrite_as_Integral =  _eval_rewrite_as_sinc
+    _eval_rewrite_as_sinc =  _eval_rewrite_as_Integral
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -2034,7 +2034,7 @@ class Ci(TrigonometricIntegral):
 
     def _eval_rewrite_as_Integral(self, z, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
         return S.EulerGamma + log(z) - Integral((1-cos(t))/t, (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -2461,7 +2461,7 @@ class fresnels(FresnelIntegral):
 
     def _eval_rewrite_as_Integral(self, z, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(sin(t**2), (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -2622,7 +2622,7 @@ class fresnelc(FresnelIntegral):
 
     def _eval_rewrite_as_Integral(self, z, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(cos(t**2), (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
