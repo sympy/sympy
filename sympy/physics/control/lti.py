@@ -22,6 +22,7 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.series import limit
 from sympy.utilities.misc import filldedent
+from sympy.simplify.simplify import simplify
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -422,6 +423,43 @@ def _check_other_MIMO(func):
             return func(*args, **kwargs)
     return wrapper
 
+def routh_table(system, first_col=False):
+    "creates the routh table for the given transfer function."
+    if(isinstance(system,TransferFunction)):
+        system = system._eval_simplify()
+        num = Poly(system.num, system.var)
+        n = num.degree()
+        den = Poly(system.den, system.var)
+        d_val = den.subs(system.var,0)
+        if d_val == 0:
+            raise ValueError("TransferFunction cannot have a zero denominator.")
+        char_eqn = Mul(num,1/d_val, evaluate=True)
+        coeff = char_eqn.all_coeffs()
+        table = zeros(n+1,n+1)
+        row1, row2 = [], []
+        first = True
+        for c in coeff:
+            if first:
+                row1.append(c)
+                first = False
+            else:
+                row2.append(c)
+                first = True
+        for i, v in enumerate(row1):
+            table[0, i] = v
+        for i, v in enumerate(row2):
+            table[1, i] = v
+        for j in range(2,n+1):
+            for i in range(n):
+                if table[j-1,0] == 0:
+                    table[j,i] = 0
+                else:
+                    table[j,i] = (table[j-1,0]*table[j-2,i+1] - table[j-2,0]*table[j-1,i+1])/table[j-1,0]
+                    table[j,i] = simplify(table[j,i])
+        if first_col:
+            first_column = [table[j, 0] for j in range(n+1)]
+            return first_column
+        return table
 
 class TransferFunction(SISOLinearTimeInvariant):
     r"""
