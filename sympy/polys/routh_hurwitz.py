@@ -21,11 +21,8 @@ def rearrange_rows(matrix):
     return matrix
 
 def routh_hurwitz_matrix(poly, var):
-    p = sp.poly(poly, var)
     real = sp.simplify((poly.subs(var, sp.I * var) + poly.subs(var, -sp.I * var)) / 2)
     imag = sp.simplify((poly.subs(var, -sp.I * var) - poly.subs(var, sp.I * var)) / 2 * sp.I)
-    real_coeff = sp.Poly(real, var).all_coeffs()
-    imag_coeff = sp.Poly(imag, var).all_coeffs()
     a = rearrange_rows(sylvester(real, imag, var))
     if a.shape[0] == 3:
         a.row_swap(0, 2)
