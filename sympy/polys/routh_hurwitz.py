@@ -27,5 +27,5 @@ def routh_hurwitz_matrix(poly, var):
     if a.shape[0] == 3:
         a.row_swap(0, 2)
     minors = [a.minor(i, i) for i in range(a.shape[0])]
-    unique_inequalities = list(set(sp.simplify(minor > 0) for minor in minors))
+    unique_inequalities = unique_inequalities = {sp.simplify(minor > 0) for minor in minors}
     return unique_inequalities
