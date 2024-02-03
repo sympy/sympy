@@ -145,7 +145,6 @@ def routh_hurwitz_table(system, first_col=False ,reduce=False):
 
     >>> routh_hurwitz_table(tf, first_col=True)
     [1, 5, 8]
-    
     >>> from sympy.polys import Poly
     >>> p = Poly(s**2 + 5*s + 8, s)
     >>> routh_hurwitz_table(p)
