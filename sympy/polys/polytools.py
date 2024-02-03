@@ -100,7 +100,104 @@ def _polifyit(func):
             return NotImplemented
     return wrapper
 
+def routh_hurwitz_table(system, first_col=False ,reduce=False):
+    """
+    Creates the Routh-Hurwitz table for the given transfer function.
 
+    Parameters
+    ==========
+    system : TransferFunction or Poly
+        The Polynomial for which the Routh-Hurwitz table is to be generated.
+
+    first_col : bool, optional
+        If True, returns only the first column of the Routh-Hurwitz table.
+        Default is False.
+
+    reduce : bool, optional
+        If True, simplifies the entries in the Routh-Hurwitz table.
+        Default is False.
+
+    Returns
+    =======
+    table : Matrix
+        The Routh-Hurwitz table as a SymPy Matrix.
+
+    first_column : list, optional
+        If `first_col` is True, returns the first column of the table as a list.
+
+    Raises
+    ======
+    ValueError
+        If the given system is not a TransferFunction or Poly, or has a zero denominator.
+
+    Examples
+    ========
+    >>> from sympy.physics.control import TransferFunction
+    >>> from sympy.polys.polytools import routh_hurwitz_table
+    >>> from sympy.abc import s
+
+    >>> tf = TransferFunction(1,s**2 + 5*s + 8,s)
+    >>> routh_hurwitz_table(tf)
+    Matrix([
+    [1, 8, 0],
+    [5, 0, 0],
+    [8, 0, 0]])
+
+    >>> routh_hurwitz_table(tf, first_col=True)
+    [1, 5, 8]
+    
+    >>> from sympy.polys import Poly
+    >>> p = Poly(s**2 + 5*s + 8, s)
+    >>> routh_hurwitz_table(p)
+    Matrix([
+    [1, 8, 0],
+    [5, 0, 0],
+    [8, 0, 0]])
+    """
+    from sympy.physics.control import TransferFunction
+    from sympy.matrices import zeros
+    from sympy.simplify.simplify import simplify
+    char_eqn = None
+    n = 0
+    if(isinstance(system, TransferFunction)):
+        system = system._eval_simplify()
+        den = Poly(system.den, system.var)
+        if den.is_zero:
+            raise ValueError("The given system has a zero denominator.")
+        char_eqn = den
+    
+    elif(isinstance(system,Poly)):
+        char_eqn = system
+    else:
+        raise ValueError("The given system is neither a TransferFunction nor a Poly.")
+    n = char_eqn.degree()
+    coeff = char_eqn.all_coeffs()
+    table = zeros(n+1,n+1)
+    row1, row2 = [], []
+    first = True
+    for c in coeff:
+        if first:
+            row1.append(c)
+            first = False
+        else:
+            row2.append(c)
+            first = True
+    for i, v in enumerate(row1):
+        table[0, i] = v
+    for i, v in enumerate(row2):
+        table[1, i] = v
+    for j in range(2,n+1):
+        for i in range(n):
+            if table[j-1,0] == 0:
+                table[j,i] = 0
+            else:
+                table[j,i] = (table[j-1,0]*table[j-2,i+1] - table[j-2,0]*table[j-1,i+1])/table[j-1,0]
+                if(reduce):
+                    table[j,i] = simplify(table[j,i])
+    if first_col:
+        first_column = [table[j, 0] for j in range(n+1)]
+        return first_column
+    return table
 
 @public
 class Poly(Basic):

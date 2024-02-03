@@ -1679,11 +1679,4 @@ def test_StateSpace_functions():
     assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
     assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
-def test_routh_hurwitz_table():
-    b0, b1, b2, b3, b4 = symbols('b0, b1, b2, b3, b4')
-    tf = TransferFunction(s**2 + 5*s + 8,1,s)
-    tf1 = TransferFunction(b1*s**2 + b2*s + 8,1,s)
-    tf2 = TransferFunction(b1*s**3 + b2*s**2 + b3*s,s,s)
-    assert routh_hurwitz_table(tf) == Matrix([[1, 8, 0], [5, 0, 0], [8, 0, 0]])
-    assert routh_hurwitz_table(tf1, first_col=True) == [b1, b2, 8]
-    assert routh_hurwitz_table(tf2) == Matrix([[b1, b3, 0], [b2, 0, 0], [b3, 0, 0]])
+

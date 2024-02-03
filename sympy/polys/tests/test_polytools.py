@@ -29,7 +29,7 @@ from sympy.polys.polytools import (
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
-    to_rational_coeffs)
+    to_rational_coeffs, routh_hurwitz_table)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -65,7 +65,7 @@ from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.hyperbolic import tanh
@@ -78,10 +78,10 @@ from sympy.polys.rootoftools import rootof
 from sympy.simplify.simplify import signsimp
 from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 from sympy.testing.pytest import raises, warns_deprecated_sympy, warns
 
-from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
+from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
+from sympy.physics.control.lti import TransferFunction
 
 
 def _epsilon_eq(a, b):
@@ -3682,7 +3682,29 @@ def test_issue_20389():
 
 
 def test_issue_20985():
-    from sympy.core.symbol import symbols
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
+
+def test_routh_hurwitz_table():
+    b0, b1, b2, b3, b4 = symbols('b0, b1, b2, b3, b4')
+    
+    # Test for TransferFunction
+    tf1 = TransferFunction(1,s**2 + 5*s + 8,s)
+    tf2 = TransferFunction(1,b1*s**2 + b2*s + 8,s)
+    tf3 = TransferFunction(1,b1*s**3 + b2*s**2 + b3*s+4,s)
+    
+    assert routh_hurwitz_table(tf1) == Matrix([[1, 8, 0], [5, 0, 0], [8, 0, 0]])
+    assert routh_hurwitz_table(tf2, first_col=True) == [b1, b2, 8]
+    assert routh_hurwitz_table(tf3) == Matrix([[b1, b3, 0, 0],
+                                               [b2,  4, 0, 0],
+                                               [(-4*b1 + b2*b3)/b2,  0, 0, 0],
+                                               [4,  0, 0, 0]])
+    
+    # Test for Polynomials
+    eq = Poly(s**2 + 5*s + 8, s)
+    eq1 = Poly(b1*s**2 + b2*s + 8, s)
+    eq2 = Poly(b1*s**3 + b2*s**2 + b3*s, s)
+    assert routh_hurwitz_table(eq) == Matrix([[1, 8, 0], [5, 0, 0], [8, 0, 0]])
+    assert routh_hurwitz_table(eq1, first_col=True) == [b1, b2, 8]
+    assert routh_hurwitz_table(eq2) == Matrix([[b1, b3, 0, 0], [b2, 0, 0, 0], [b3, 0, 0, 0], [0, 0, 0, 0]])
