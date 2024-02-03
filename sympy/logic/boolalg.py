@@ -2390,13 +2390,10 @@ def SOPform(variables, minterms, dontcares=None):
     .. [2] https://en.wikipedia.org/wiki/Don%27t-care_term
 
     """
-    if not len(minterms):
-        return false
-
     variables = tuple(map(sympify, variables))
-
-
     minterms = _input_to_binlist(minterms, variables)
+    if not minterms:
+        return false
     dontcares = _input_to_binlist((dontcares or []), variables)
     for d in dontcares:
         if d in minterms:
@@ -2471,11 +2468,10 @@ def POSform(variables, minterms, dontcares=None):
     .. [2] https://en.wikipedia.org/wiki/Don%27t-care_term
 
     """
-    if not len(minterms):
-        return false
-
     variables = tuple(map(sympify, variables))
     minterms = _input_to_binlist(minterms, variables)
+    if not len(minterms):
+        return false
     dontcares = _input_to_binlist((dontcares or []), variables)
     for d in dontcares:
         if d in minterms:
