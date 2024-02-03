@@ -109,10 +109,6 @@ def routh_hurwitz_table(system, reduce=False):
     system : TransferFunction or Poly
         The Polynomial for which the Routh-Hurwitz table is to be generated.
 
-    first_col : bool, optional
-        If True, returns only the first column of the Routh-Hurwitz table.
-        Default is False.
-
     reduce : bool, optional
         If True, simplifies the entries in the Routh-Hurwitz table.
         Default is False.
