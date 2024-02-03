@@ -145,7 +145,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4 -n4
+      - run: pytest --splits 4 --group ${{ matrix.group }} -n4
 
   # -------------------- Optional dependency tests ----------------- #
 
