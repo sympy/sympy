@@ -2,9 +2,9 @@ from itertools import product
 import math
 import inspect
 
-
-
 import mpmath
+import pytest
+
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, Lambda, diff)
@@ -1871,3 +1871,11 @@ def test_lambdify_docstring_size_limit_matrix():
             docstring_limit=test_case.docstring_limit,
         )
         assert lambdified_expr.__doc__ == test_case.expected_docstring
+
+
+def test_lambdify_cse_expr_sympy():
+    x1, x2 = symbols('x1, x2')
+    expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
+    cse_expr = cse(expr, list=False)
+    lambdified_expr = lambdify([x1, x2], cse_expr, 'sympy')
+    assert lambdified_expr(1.5, 0.5) == pytest.approx(2.0166466694282015)
