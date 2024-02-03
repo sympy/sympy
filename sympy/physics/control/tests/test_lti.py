@@ -1679,4 +1679,3 @@ def test_StateSpace_functions():
     assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
     assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
-
