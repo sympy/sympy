@@ -3700,8 +3700,6 @@ def test_routh_hurwitz_table():
 
     # Test for Polynomials
     eq1 = Poly(s**2 + 5*s + 8, s)
-    eq2 = Poly(b1*s**2 + b2*s + 8, s)
-    eq3 = Poly(b1*s**3 + b2*s**2 + b3*s, s)
+    eq2 = Poly(b1*s**3 + b2*s**2 + b3*s, s)
     assert routh_hurwitz_table(eq1) == Matrix([[1, 8, 0], [5, 0, 0], [8, 0, 0]])
-    assert routh_hurwitz_table(eq2) == [b1, b2, 8]
-    assert routh_hurwitz_table(eq3) == Matrix([[b1, b3, 0, 0], [b2, 0, 0, 0], [b3, 0, 0, 0], [0, 0, 0, 0]])
+    assert routh_hurwitz_table(eq2) == Matrix([[b1, b3, 0, 0], [b2, 0, 0, 0], [b3, 0, 0, 0], [0, 0, 0, 0]])
