@@ -100,7 +100,7 @@ def _polifyit(func):
             return NotImplemented
     return wrapper
 
-def routh_hurwitz_table(system, first_col=False ,reduce=False):
+def routh_hurwitz_table(system, reduce=False):
     """
     Creates the Routh-Hurwitz table for the given transfer function.
 
@@ -143,8 +143,6 @@ def routh_hurwitz_table(system, first_col=False ,reduce=False):
     [5, 0, 0],
     [8, 0, 0]])
 
-    >>> routh_hurwitz_table(tf, first_col=True)
-    [1, 5, 8]
     >>> from sympy.polys import Poly
     >>> p = Poly(s**2 + 5*s + 8, s)
     >>> routh_hurwitz_table(p)
@@ -192,9 +190,6 @@ def routh_hurwitz_table(system, first_col=False ,reduce=False):
                 table[j,i] = (table[j-1,0]*table[j-2,i+1] - table[j-2,0]*table[j-1,i+1])/table[j-1,0]
                 if(reduce):
                     table[j,i] = simplify(table[j,i])
-    if first_col:
-        first_column = [table[j, 0] for j in range(n+1)]
-        return first_column
     return table
 
 @public
