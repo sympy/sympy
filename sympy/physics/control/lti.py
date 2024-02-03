@@ -436,7 +436,7 @@ def routh_hurwitz_table(system, first_col=False ,reduce=False):
         If True, returns only the first column of the Routh-Hurwitz table.
         Default is False.
 
-    simplify : bool, optional
+    reduce : bool, optional
         If True, simplifies the entries in the Routh-Hurwitz table.
         Default is False.
 
@@ -476,7 +476,7 @@ def routh_hurwitz_table(system, first_col=False ,reduce=False):
         d_val = den.subs(system.var,0)
         if d_val == 0:
             raise ValueError("TransferFunction cannot have a zero denominator.")
-        char_eqn = Mul(num,1/d_val, evaluate=True)
+        char_eqn = num.mul_ground(1/d_val)
         coeff = char_eqn.all_coeffs()
         table = zeros(n+1,n+1)
         row1, row2 = [], []
