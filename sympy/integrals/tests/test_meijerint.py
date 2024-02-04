@@ -755,10 +755,15 @@ def test_issue_6462():
 
 def test_indefinite_1_bug():
     assert integrate((b + t)**(-a), t, meijerg=True
-        ) == -b**(1 - a)*(1 + t/b)**(1 - a)/(a - 1)
+        ).equals(-b**(1 - a)*(1 + t/b)**(1 - a)/(a - 1))
 
 
 def test_pr_23583():
     # This result is wrong. Check whether new result is correct when this test fail.
     assert integrate(1/sqrt((x - I)**2-1), meijerg=True) == \
            Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+
+
+# 25786
+def test_integrate_function_of_square_over_negatives():
+    assert integrate(exp(-x**2), (x,-5,0), meijerg=True) == sqrt(pi)/2 * erf(5)
