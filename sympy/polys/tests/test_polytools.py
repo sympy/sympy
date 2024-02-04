@@ -80,7 +80,6 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.testing.pytest import raises, warns_deprecated_sympy, warns
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
-from sympy.physics.control.lti import TransferFunction
 
 
 def _epsilon_eq(a, b):
