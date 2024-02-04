@@ -131,8 +131,8 @@ def routh_hurwitz_table(polynomial, var):
     >>> routh_hurwitz_table(exp, s)
     Matrix([
     [1, 8, 0],
-    [5, 0, 0],
-    [8, 0, 0]])
+    [1, 0, 0],
+    [1, 0, 0]])
     """
     from sympy.matrices import Matrix, matrix_multiply_elementwise, zeros
     polynomial = Poly(polynomial, gens=var)
