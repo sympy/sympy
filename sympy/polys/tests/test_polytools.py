@@ -61,7 +61,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, diff, expand)
 from sympy.core.mul import _keep_coeff, Mul
-from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
+from sympy.core.numbers import (Float, I, Integer, nan, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -79,7 +79,6 @@ from sympy.simplify.simplify import signsimp
 from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.testing.pytest import raises, warns_deprecated_sympy, warns
-
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
 from sympy.physics.control.lti import TransferFunction
 
@@ -3687,19 +3686,51 @@ def test_issue_20985():
     assert poly.degree() == S(1)
 
 def test_routh_hurwitz_table():
-    b0, b1, b2, b3, b4 = symbols('b0, b1, b2, b3, b4')
-    # Test for TransferFunction
-    tf1 = TransferFunction(1,s**2 + 5*s + 8,s)
-    tf2 = TransferFunction(1,b1*s**3 + b2*s**2 + b3*s+4,s)
+    #Test for zero pivot element but entire row is not zero
+    eq1 = s**5+3*s**4+2*s**3+6*s**2+6*s+9
+    eq2 = s**6 + s**5 + 3*s**4 + 3*s**3 + 2*s**2 + 2*s + 1
+    eq3 = s**4+s**3+2*s**2+2*s+1
+    #Test for entire row to be zero
+    eq4 = s**5+s**4+4*s**3+24*s**2+3*s+63
+    #Genral tests
+    eq5 = s**3 + 7*s**2 + 25*s + 39
+    eq6 = s**5+2*s**4+2*s**3+4*s**2+11*s+10
+    assert routh_hurwitz_table(eq1, s) == Matrix([[1, 2, 6, 0, 0, 0],
+                                                  [1, 2, 3, 0, 0, 0],
+                                                  [0, 1, 0, 0, 0, 0],
+                                                  [-oo, 3, 0, 0, 0, 0],
+                                                  [-1, 0, 0, 0, 0, 0],
+                                                  [1, 0, 0, 0, 0, 0]])
 
-    assert routh_hurwitz_table(tf1) == Matrix([[1, 8, 0], [5, 0, 0], [8, 0, 0]])
-    assert routh_hurwitz_table(tf2) == Matrix([[b1, b3, 0, 0],
-                                               [b2,  4, 0, 0],
-                                               [(-4*b1 + b2*b3)/b2,  0, 0, 0],
-                                               [4,  0, 0, 0]])
+    assert routh_hurwitz_table(eq2, s) == Matrix([[1,3, 2, 1, 0, 0, 0],
+                                                  [1,3, 2, 0, 0, 0, 0],
+                                                  [0,0, 1, 0, 0, 0, 0],
+                                                  [3,-oo, 0, 0, 0, 0, 0],
+                                                  [Rational(1,3), 1, 0, 0, 0, 0, 0],
+                                                  [1, 0, 0, 0, 0, 0, 0],
+                                                  [1, 0, 0, 0, 0, 0, 0]])
 
-    # Test for Polynomials
-    eq1 = Poly(s**2 + 5*s + 8, s)
-    eq2 = Poly(b1*s**3 + b2*s**2 + b3*s, s)
-    assert routh_hurwitz_table(eq1) == Matrix([[1, 8, 0], [5, 0, 0], [8, 0, 0]])
-    assert routh_hurwitz_table(eq2) == Matrix([[b1, b3, 0, 0], [b2, 0, 0, 0], [b3, 0, 0, 0], [0, 0, 0, 0]])
+    assert routh_hurwitz_table(eq3, s) == Matrix([[ 1, 2, 1, 0, 0],
+                                                  [ 1, 2, 0, 0, 0],
+                                                  [ 0, 1, 0, 0, 0],
+                                                  [-1, 0, 0, 0, 0],
+                                                  [ 1, 0, 0, 0, 0]])
+
+
+    assert routh_hurwitz_table(eq4, s) == Matrix([[ 1,  4,  3,  0,  0, 0],
+                                                  [ 1, 24, 63,  0,  0, 0],
+                                                  [-1, -3,  0,  0,  0, 0],
+                                                  [ 1,  3,  0,  0,  0, 0],
+                                                  [nan, nan, nan, nan, nan, 0],
+                                                  [nan, nan, nan, nan, nan, 0]])
+    assert routh_hurwitz_table(eq5, s) == Matrix([[1, 25, 0, 0],
+                                                  [7, 39, 0, 0],
+                                                  [1,  0, 0, 0],
+                                                  [1,  0, 0, 0]])
+
+    assert routh_hurwitz_table(eq6, s) == Matrix([[ 1,  2, 11,  0,  0, 0],
+                                                  [ 1,  2,  5,  0,  0, 0],
+                                                  [ 0,  1,  0,  0,  0, 0],
+                                                  [-oo,  5,  0,  0,  0, 0],
+                                                  [ -1,  0,  0,  0,  0, 0],
+                                                  [ 1,  0,  0,  0,  0, 0]])
