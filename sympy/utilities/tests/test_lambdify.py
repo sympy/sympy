@@ -1881,3 +1881,8 @@ def test_issue_15795():
     assert abs(assoc_legendre(2, 1, 3).evalf()) - abs(assoc_legendre_evalf) < 1e-10
     assert abs(assoc_legendre(1, 1/2, 0.1).n()) - abs(assoc_legendre_n) < 1e-10
     assert mpmath.legenp(2, 1, 3) == mpc(real='-8.2688999181462742e-24', imag='-25.45584412271571')
+    assert abs(assoc_legendre(1, -1, 10).evalf()) - abs(mpmath.legenp(1, -1, 10)) < 1e-10
+    assert abs(assoc_legendre(0.1, 1, 10).evalf()) - abs(mpmath.legenp(0.1, 1, 10)) < 1e-10
+    assert abs(assoc_legendre(1, -1, 10).evalf()) - abs(mpmath.legenp(1, -1, 10)) < 1e-10
+    assert abs(assoc_legendre(1, -0.1*I, 10).evalf()) - abs(mpmath.legenp(1, -0.1*I, 10)) < 1e-10
+    assert abs(assoc_legendre(1, 0.1*I, 10).evalf()) - abs(mpmath.legenp(1, 0.1*I, 10)) < 1e-10
