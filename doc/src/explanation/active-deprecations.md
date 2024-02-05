@@ -89,20 +89,20 @@ Previously, one could create a simple rigid body or particle using only the
 ```py
 >>> from sympy import symbols
 >>> from sympy.physics.mechanics import Body
->>> Body("rb")  # Rigid body
-Body('rb', masscenter=rb_masscenter, frame=rb_frame, mass=rb_mass, inertia=...)
->>> Body("pt")  # Particle
-Body('pt', masscenter=pt_masscenter, mass=m)
+>>> Body("rigid_body")  # doctest: +SKIP
+rigid_body
+>>> Body("particle", mass=symbols("m"))  # doctest: +SKIP
+particle
 ```
 
 Now they should be created using the ``RigidBody`` and ``Particle`` class:
 
 ```py
 >>> from sympy.physics.mechanics import RigidBody, Particle
->>> RigidBody("rb")
-RigidBody('rb', masscenter=rb_masscenter, frame=rb_frame, mass=rb_mass, inertia= ...)
->>> Particle("pt")
-Particle('pt', masscenter=pt_masscenter, mass=pt_mass)
+>>> RigidBody("rigid_body")
+rigid_body
+>>> Particle("particle")
+particle
 ```
 
 (deprecated-mechanics-jointsmethod)=
@@ -129,8 +129,8 @@ motion.
 >>> pendulum.masscenter.set_vel(pendulum.frame, 0)
 >>> cart.apply_force(-g * cart.mass * wall.y)
 >>> pendulum.apply_force(-g * pendulum.mass * wall.y)
->>> method = JointsMethod(wall, slider, pin)
->>> method.form_eoms()
+>>> method = JointsMethod(wall, slider, pin)  # doctest: +SKIP
+>>> method.form_eoms()  # doctest: +SKIP
 Matrix([
 [ Pendulum_mass*l*u_j(t)**2*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_j(t), t) - (Pendulum_mass + cart_mass)*Derivative(u_s(t), t)],
 [-Pendulum_mass*g*l*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_s(t), t) - (Pendulum_izz + Pendulum_mass*l**2)*Derivative(u_j(t), t)]])
