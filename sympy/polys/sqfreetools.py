@@ -398,8 +398,13 @@ def dmp_sqf_list(f, u, K, all=False):
             f = dmp_neg(f, u, K)
             coeff = -coeff
 
-    if dmp_degree(f, u) <= 0:
+    deg = dmp_degree(f, u)
+    if deg < 0:
         return coeff, []
+    elif deg == 0:
+        coeff2, factors = dmp_sqf_list(f[0], u-1, K, all=all)
+        factors = [([fac], exp) for fac, exp in factors]
+        return coeff*coeff2, factors
 
     result, i = [], 1
 
