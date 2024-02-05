@@ -22,6 +22,8 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.series import limit
 from sympy.utilities.misc import filldedent
+from sympy import S, symbols, Function
+
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -1299,6 +1301,50 @@ class TransferFunction(SISOLinearTimeInvariant):
         else:
             return Pow(self.den, -1, evaluate=False)
 
+
+class PIDController(Function):
+    """
+    A PID Controller class.
+
+    Parameters
+    ==========
+    KP : Expr
+        Proportional gain
+    KI : Expr
+        Integral gain
+    KD : Expr
+        Derivative gain
+    s : Symbol
+        The complex frequency variable
+
+    Examples
+    ========
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import PIDController
+    >>> KP, KI, KD = 1, 0.1, 0.01
+    >>> pid = PIDController(KP, KI, KD, s)
+    >>> pid.transfer_function
+    TransferFunction(s**2*0.01 + s*1 + 0.1, s, s)
+    """
+
+    def __new__(cls, KP, KI, KD, s):
+        if not s.is_Symbol:
+            raise ValueError("s must be a symbol")
+        cls.KP = KP
+        cls.KI = KI
+        cls.KD = KD
+        cls.s = s
+
+        tf = TransferFunction(s*KD + KP + KI/s, 1, s)
+
+        return super().__new__(cls, tf)
+
+    @property
+    def transfer_function(self):
+        """
+        Returns the transfer function of the PID controller.
+        """
+        return TransferFunction(self.s*self.KD + self.KP + self.KI/self.s, 1, self.s)
 
 def _flatten_args(args, _cls):
     temp_args = []

@@ -18,6 +18,7 @@ from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
+from sympy.physics.control.lti import PIDController, TransferFunction
 
 a, x, b, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
     tau, zeta, wn, T')
@@ -503,6 +504,39 @@ def test_Series_construction():
     raises(TypeError, lambda: Series(2, tf, tf4))
     raises(TypeError, lambda: Series(s**2 + p*s, tf3, tf2))
     raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
+
+
+def test_PIDController_creation():
+    KP, KI, KD = symbols('KP KI KD', real=True)
+    pid = PIDController(KP, KI, KD, s)
+
+    assert isinstance(pid, PIDController)
+    assert pid.transfer_function == TransferFunction(KP + KI/s + KD*s, 1, s)
+
+    pid_num = PIDController(1, 0.5, 0.1, s)
+    assert pid_num.transfer_function == TransferFunction(s/10 + 1 + 1/(2*s), 1, s)
+
+def test_PIDController_behavior():
+    KP, KI, KD = 2, 5, 1
+    pid = PIDController(KP, KI, KD, s)
+    tf = pid.transfer_function
+
+    assert tf.numerator == KP + KI/s + KD*s
+    assert tf.denominator == 1
+
+    pid_simplified = pid.transfer_function.simplify()
+    pid_at_s1 = pid.transfer_function.subs(s, 1)
+
+    assert pid_simplified == TransferFunction(2 + 5 + s, 1, s)
+    assert pid_at_s1 == TransferFunction(8, 1, 1)
+
+def test_PIDController_errors():
+    KP, KI, KD = symbols('KP KI KD')
+    try:
+        pid_error = PIDController(KP, KI, KD, "not a symbol")
+        assert False, "PIDController should raise a ValueError for non-symbol 's'"
+    except ValueError:
+        pass
 
 
 def test_MIMOSeries_construction():
