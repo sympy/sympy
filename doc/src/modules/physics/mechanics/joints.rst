@@ -7,18 +7,19 @@ Joints Framework in Physics/Mechanics
 :mod:`sympy.physics.mechanics` provides a joints framework. This system consists
 of two parts. The first are the :obj:`joints<sympy.physics.mechanics.joint>`
 themselves, which are used to create connections between
-:class:`bodies<sympy.physics.mechanics.body.RigidBody>`. The second part is the
+:class:`bodies<sympy.physics.mechanics.rigidbody.RigidBody>`. The second part is the
 :class:`~.System`, which is used to form the equations of motion. Both of these
 parts are doing what we can call "book-keeping": keeping track of the
-relationships between :class:`bodies<sympy.physics.mechanics.body.RigidBody>`.
+relationships between
+:class:`bodies<sympy.physics.mechanics.rigidbody.RigidBody>`.
 
 Joints in Physics/Mechanics
 ===========================
 
 The general task of the :mod:`joints<sympy.physics.mechanics.joint>` is creating
 kinematic relationships between
-:class:`bodies<sympy.physics.mechanics.body.RigidBody>`. A joint is generally
-described as shown in the image below.
+:class:`bodies<sympy.physics.mechanics.rigidbody.RigidBody>`. A joint is
+generally described as shown in the image below.
 
 .. image:: api/joint_explanation.svg
    :align: center
