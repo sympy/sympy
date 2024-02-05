@@ -28,8 +28,6 @@ from sympy.polys.densetools import (
     dup_sign_variations,
     dup_revert, dmp_revert,
 )
-from sympy.polys.domains.realfield import RR
-
 from sympy.polys.polyclasses import ANP
 
 from sympy.polys.polyerrors import (
