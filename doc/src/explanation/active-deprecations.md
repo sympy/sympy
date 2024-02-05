@@ -76,6 +76,35 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
+(deprecated-mechanics-body-class)=
+### Deprecated mechanics Body class
+
+The ``Body`` class in the ``sympy.physics.mechanics`` module has been
+deprecated. It was introduced to support the joints framework. However, it
+causes several problems because it represents both rigid bodies and particles.
+``Body`` has now been fully replaced by ``RigidBody`` and ``Particle``.
+Previously, one could create a simple rigid body or particle using only the
+``Body`` class:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import Body
+>>> Body("rb")  # Rigid body
+Body('rb', masscenter=rb_masscenter, frame=rb_frame, mass=rb_mass, inertia=...)
+>>> Body("pt")  # Particle
+Body('pt', masscenter=pt_masscenter, mass=m)
+```
+
+Now they should be created using the ``RigidBody`` and ``Particle`` class:
+
+```py
+>>> from sympy.physics.mechanics import RigidBody, Particle
+>>> RigidBody("rb")
+RigidBody('rb', masscenter=rb_masscenter, frame=rb_frame, mass=rb_mass, inertia= ...)
+>>> Particle("pt")
+Particle('pt', masscenter=pt_masscenter, mass=pt_mass)
+```
+
 (deprecated-matrix-mixins)=
 ### Deprecated matrix mixin classes
 

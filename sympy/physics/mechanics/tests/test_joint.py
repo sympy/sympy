@@ -215,8 +215,9 @@ def test_particle_compatibility():
 def test_body_compatibility():
     m, l = symbols('m l')
     C_frame = ReferenceFrame('C')
-    P = Body('P')
-    C = Body('C', mass=m, frame=C_frame)
+    with warns_deprecated_sympy():
+        P = Body('P')
+        C = Body('C', mass=m, frame=C_frame)
     q, u = dynamicsymbols('q, u')
     PinJoint('J', P, C, q, u, child_point=l * C_frame.y)
     assert C.frame == C_frame
