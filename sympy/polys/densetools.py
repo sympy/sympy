@@ -1199,13 +1199,18 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
     for c in f:
         common = K1.lcm(common, K0.denom(c))
 
-    if not K1.is_one(common):
-        f = dup_mul_ground(f, common, K0)
+    if K1.is_one(common):
+        if not convert:
+            return common, f
+        else:
+            return common, dup_convert(f, K0, K1)
+
+    f = [K0.numer(c)*K1.quo(common, K0.denom(c)) for c in f]
 
     if not convert:
-        return common, f
+        return common, dup_convert(f, K1, K0)
     else:
-        return common, dup_convert(f, K0, K1)
+        return common, f
 
 
 def _rec_clear_denoms(g, v, K0, K1):
