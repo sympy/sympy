@@ -4,7 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import (I, pi, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols, Symbol
+from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan
