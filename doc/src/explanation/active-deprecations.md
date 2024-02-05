@@ -105,6 +105,60 @@ RigidBody('rb', masscenter=rb_masscenter, frame=rb_frame, mass=rb_mass, inertia=
 Particle('pt', masscenter=pt_masscenter, mass=pt_mass)
 ```
 
+(deprecated-mechanics-jointsmethod)=
+### Deprecated mechanics JointsMethod
+
+The ``JointsMethod`` class in the ``sympy.physics.mechanics`` module has been
+deprecated. It was introduced to support the joints framework, but it has been
+fully replaced due to limitations in its design. Previously, one could construct
+as system solely consisting out of bodies and joints, which were then parsed by
+``JointsMethod`` to a backend, like ``KanesMethod`` to form the equations of
+motion.
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import (
+...   Body, JointsMethod, PinJoint, PrismaticJoint)
+>>> g, l = symbols("g l")
+>>> wall = Body("wall")
+>>> cart = Body("cart")
+>>> pendulum = Body("Pendulum")
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
+...                child_point=l * pendulum.y)
+>>> pendulum.masscenter.set_vel(pendulum.frame, 0)
+>>> cart.apply_force(-g * cart.mass * wall.y)
+>>> pendulum.apply_force(-g * pendulum.mass * wall.y)
+>>> method = JointsMethod(wall, slider, pin)
+>>> method.form_eoms()
+Matrix([
+[ Pendulum_mass*l*u_j(t)**2*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_j(t), t) - (Pendulum_mass + cart_mass)*Derivative(u_s(t), t)],
+[-Pendulum_mass*g*l*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_s(t), t) - (Pendulum_izz + Pendulum_mass*l**2)*Derivative(u_j(t), t)]])
+```
+
+The replacement of ``JointsMethod`` is ``System``, which can be used to form the
+equations of motion of the same cart pole as follows:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import (
+...   Particle, PinJoint, PrismaticJoint, RigidBody, System)
+>>> g, l = symbols("g l")
+>>> wall = RigidBody("wall")
+>>> cart = RigidBody("cart")
+>>> pendulum = RigidBody("Pendulum")
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
+...                child_point=l * pendulum.y)
+>>> system = System.from_newtonian(wall)
+>>> system.add_joints(slider, pin)
+>>> system.apply_uniform_gravity(-g * wall.y)
+>>> system.form_eoms()
+Matrix([
+[ Pendulum_mass*l*u_j(t)**2*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_j(t), t) - (Pendulum_mass + cart_mass)*Derivative(u_s(t), t)],
+[-Pendulum_mass*g*l*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_s(t), t) - (Pendulum_izz + Pendulum_mass*l**2)*Derivative(u_j(t), t)]])
+```
+
 (deprecated-matrix-mixins)=
 ### Deprecated matrix mixin classes
 

@@ -1197,7 +1197,8 @@ def test_weld_joint():
     assert P.frame.ang_vel_in(C.frame) == 0
     assert P.x == A.z
 
-    JointsMethod(P, W)  # Tests #10770
+    with warns_deprecated_sympy():
+        JointsMethod(P, W)  # Tests #10770
 
 
 def test_deprecated_parent_child_axis():
