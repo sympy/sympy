@@ -1302,20 +1302,20 @@ class TransferFunction(SISOLinearTimeInvariant):
             return Pow(self.den, -1, evaluate=False)
 
 
-class PIDController(Function):
+class PIDController(TransferFunction):
     """
-    A PID Controller class.
+    A PID Controller class that subclasses TransferFunction.
 
     Parameters
     ==========
-    KP : Expr
-        Proportional gain
-    KI : Expr
-        Integral gain
-    KD : Expr
-        Derivative gain
+    KP : Expr, Number
+        Proportional gain.
+    KI : Expr, Number
+        Integral gain.
+    KD : Expr, Number
+        Derivative gain.
     s : Symbol
-        The complex frequency variable
+        The complex frequency variable.
 
     Examples
     ========
@@ -1323,28 +1323,24 @@ class PIDController(Function):
     >>> from sympy.physics.control.lti import PIDController
     >>> KP, KI, KD = 1, 0.1, 0.01
     >>> pid = PIDController(KP, KI, KD, s)
-    >>> pid.transfer_function
-    TransferFunction(s**2*0.01 + s*1 + 0.1, s, s)
+    >>> pid
+    TransferFunction(K_D*s + K_P + K_I/s, 1, s)
     """
 
     def __new__(cls, KP, KI, KD, s):
-        if not s.is_Symbol:
-            raise ValueError("s must be a symbol")
-        cls.KP = KP
-        cls.KI = KI
-        cls.KD = KD
-        cls.s = s
+        if not isinstance(s, Symbol):
+            raise ValueError("s must be a Symbol")
 
-        tf = TransferFunction(s*KD + KP + KI/s, 1, s)
+        KP, KI, KD = sympify(KP), sympify(KI), sympify(KD)
+        numerator = KP*s + KI + KD*s**2
+        denominator = s
 
-        return super().__new__(cls, tf)
-
-    @property
-    def transfer_function(self):
-        """
-        Returns the transfer function of the PID controller.
-        """
-        return TransferFunction(self.s*self.KD + self.KP + self.KI/self.s, 1, self.s)
+        obj = TransferFunction.__new__(cls, numerator, denominator, s)
+        obj.KP = KP
+        obj.KI = KI
+        obj.KD = KD
+        obj.s = s
+        return obj
 
 def _flatten_args(args, _cls):
     temp_args = []

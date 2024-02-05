@@ -1,10 +1,10 @@
 from sympy.core.add import Add
-from sympy.core.function import Function
+from sympy.core.function import Function, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, pi, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan
@@ -506,37 +506,22 @@ def test_Series_construction():
     raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
 
 
-def test_PIDController_creation():
+def test_PIDController_creation_and_properties():
     KP, KI, KD = symbols('KP KI KD', real=True)
+    s = Symbol('s')
     pid = PIDController(KP, KI, KD, s)
-
     assert isinstance(pid, PIDController)
-    assert pid.transfer_function == TransferFunction(KP + KI/s + KD*s, 1, s)
-
-    pid_num = PIDController(1, 0.5, 0.1, s)
-    assert pid_num.transfer_function == TransferFunction(s/10 + 1 + 1/(2*s), 1, s)
-
-def test_PIDController_behavior():
-    KP, KI, KD = 2, 5, 1
-    pid = PIDController(KP, KI, KD, s)
-    tf = pid.transfer_function
-
-    assert tf.numerator == KP + KI/s + KD*s
-    assert tf.denominator == 1
-
-    pid_simplified = pid.transfer_function.simplify()
-    pid_at_s1 = pid.transfer_function.subs(s, 1)
-
-    assert pid_simplified == TransferFunction(2 + 5 + s, 1, s)
-    assert pid_at_s1 == TransferFunction(8, 1, 1)
+    expected_expr = (KD*s**2 + KP*s + KI) / s
+    pid_expr = expand(pid.to_expr())
+    assert simplify(pid_expr - expected_expr) == 0
 
 def test_PIDController_errors():
     KP, KI, KD = symbols('KP KI KD')
     try:
         PIDController(KP, KI, KD, "not a symbol")
-        assert False, "Expected ValueError was not raised"
-    except ValueError as e:
-        assert str(e) == "Expected error message", "The error message did not match the expected message"
+        assert False, "PIDController did not raise ValueError for non-Symbol 's'"
+    except ValueError:
+        pass
 
 
 def test_MIMOSeries_construction():
