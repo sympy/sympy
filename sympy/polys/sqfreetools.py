@@ -11,7 +11,7 @@ from sympy.polys.densebasic import (
     dup_strip,
     dup_LC, dmp_ground_LC,
     dmp_zero_p,
-    dmp_ground,
+    dmp_ground, dmp_LC,
     dup_degree, dmp_degree,
     dmp_raise, dmp_inject,
     dup_convert)
@@ -402,7 +402,7 @@ def dmp_sqf_list(f, u, K, all=False):
     if deg < 0:
         return coeff, []
     elif deg == 0:
-        coeff2, factors = dmp_sqf_list(f[0], u-1, K, all=all)
+        coeff2, factors = dmp_sqf_list(dmp_LC(f, u), u-1, K, all=all)
         factors = [([fac], exp) for fac, exp in factors]
         return coeff*coeff2, factors
 
