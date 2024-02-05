@@ -508,7 +508,6 @@ def test_Series_construction():
 
 def test_PIDController_creation_and_properties():
     KP, KI, KD = symbols('KP KI KD', real=True)
-    s = Symbol('s')
     pid = PIDController(KP, KI, KD, s)
     assert isinstance(pid, PIDController)
     expected_expr = (KD*s**2 + KP*s + KI) / s
