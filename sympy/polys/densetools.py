@@ -1205,6 +1205,8 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
         else:
             return common, dup_convert(f, K0, K1)
 
+    # Use quo rather than exquo to handle inexact domains by discarding the
+    # remainder.
     f = [K0.numer(c)*K1.quo(common, K0.denom(c)) for c in f]
 
     if not convert:
