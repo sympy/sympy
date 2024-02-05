@@ -5,7 +5,6 @@ Mechanics API Reference
    :titlesonly:
 
    part_bod.rst
-   body.rst
    kane_lagrange.rst
    joint.rst
    system.rst
