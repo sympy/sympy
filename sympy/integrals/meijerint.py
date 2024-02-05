@@ -790,6 +790,7 @@ def _check_antecedents_1(g, x, helper=False):
                                             tr(g.an), tr(g.aother), x/eta),
                                     x)
 
+    eta=unpolarify(eta)
     tmp = [-re(b) < 1 for b in g.bm] + [1 < 1 - re(a) for a in g.an]
     cond_3 = And(*tmp)
 
@@ -2006,6 +2007,16 @@ def _my_unpolarify(f):
     return _eval_cond(unpolarify(f))
 
 
+def _alt_unpolarify(f):
+   if isinstance(f, Mul):
+       new=S.One
+       for terms in Mul.make_args(f):
+           if terms.is_Pow:
+               b ,e = terms.as_base_exp()
+               terms = unpolarify(b)**e
+           new *= terms
+       return new
+
 @timeit
 def _meijerint_definite_4(f, x, only_double=False):
     """
@@ -2039,6 +2050,8 @@ def _meijerint_definite_4(f, x, only_double=False):
                 if cond == False:
                     break
             cond = _my_unpolarify(cond)
+            if _alt_unpolarify(res):
+                res = _alt_unpolarify(res)
             if cond == False:
                 _debug('But cond is always False.')
             else:
@@ -2069,6 +2082,8 @@ def _meijerint_definite_4(f, x, only_double=False):
                     continue
                 break
             cond = _my_unpolarify(cond)
+            if _alt_unpolarify(res):
+                res = _alt_unpolarify(res)
             if cond == False:
                 _debugf('But cond is always False (full_pb=%s).', full_pb)
             else:
