@@ -24,6 +24,7 @@ def test_rigidbody_default():
         "B_iyz*(B_frame.y|B_frame.z) + B_izx*(B_frame.z|B_frame.x) + "
         "B_iyz*(B_frame.z|B_frame.y) + B_izz*(B_frame.z|B_frame.z), "
         "point=B_masscenter)))")
+    assert b.masscenter.vel(b.frame) == 0
 
 
 def test_rigidbody():
@@ -172,6 +173,19 @@ def test_parallel_axis():
     A.orient_axis(N, N.z, 1)
     assert simplify(
         (R.parallel_axis(p, A) - Ip_expected).to_matrix(A)) == zeros(3, 3)
+
+
+def test_rigidbody_masscenter_vel():
+    N = ReferenceFrame('N')
+    assert RigidBody('rb', frame=N).masscenter.vel(N) == 0
+    O = Point('O')
+    O.set_vel(N, N.x)
+    assert RigidBody('rb', masscenter=O, frame=N).masscenter.vel(N) == N.x
+    P = O.locatenew('P', N.y)
+    assert RigidBody('rb', masscenter=P, frame=N).masscenter.vel(N) == N.x
+    O.set_vel(N, 0)
+    P = O.locatenew('P', N.x)
+    assert RigidBody('rb', masscenter=P, frame=N).masscenter.vel(N) == 0
 
 
 def test_deprecated_set_potential_energy():

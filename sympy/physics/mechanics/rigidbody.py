@@ -60,6 +60,10 @@ class RigidBody(BodyBase):
         if frame is None:
             frame = ReferenceFrame(f'{name}_frame')
         self.frame = frame
+        try:
+            self.masscenter.vel(self.frame)
+        except ValueError:
+            self.masscenter.set_vel(self.frame, 0)
         if inertia is None:
             ixx = Symbol(f'{name}_ixx')
             iyy = Symbol(f'{name}_iyy')
@@ -162,11 +166,12 @@ class RigidBody(BodyBase):
         >>> init_vprinting(pretty_print=False)
         >>> m, v = dynamicsymbols('m v')
         >>> N = ReferenceFrame('N')
+        >>> B_frame = ReferenceFrame('B_frame')
         >>> P = Point('P')
         >>> P.set_vel(N, v * N.x)
         >>> I = outer (N.x, N.x)
         >>> Inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, N, m, Inertia_tuple)
+        >>> B = RigidBody('B', P, B_frame, m, Inertia_tuple)
         >>> B.linear_momentum(N)
         m*v*N.x
 
