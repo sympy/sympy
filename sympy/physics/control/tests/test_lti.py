@@ -18,7 +18,7 @@ from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
-from sympy.physics.control.lti import PIDController, TransferFunction
+from sympy.physics.control.lti import PIDController
 
 a, x, b, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
     tau, zeta, wn, T')
@@ -533,10 +533,10 @@ def test_PIDController_behavior():
 def test_PIDController_errors():
     KP, KI, KD = symbols('KP KI KD')
     try:
-        pid_error = PIDController(KP, KI, KD, "not a symbol")
-        assert False, "PIDController should raise a ValueError for non-symbol 's'"
-    except ValueError:
-        pass
+        PIDController(KP, KI, KD, "not a symbol")
+        assert False, "Expected ValueError was not raised"
+    except ValueError as e:
+        assert str(e) == "Expected error message", "The error message did not match the expected message"
 
 
 def test_MIMOSeries_construction():

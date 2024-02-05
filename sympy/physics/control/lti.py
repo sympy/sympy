@@ -22,7 +22,7 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.series import limit
 from sympy.utilities.misc import filldedent
-from sympy import S, symbols, Function
+from sympy import Function
 
 
 from mpmath.libmp.libmpf import prec_to_dps
