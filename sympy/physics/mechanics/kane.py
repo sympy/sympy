@@ -290,8 +290,8 @@ class KanesMethod(_Methods):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and acceleration constraints.')
         if vel:
-            u_zero = {i: 0 for i in self.u}
-            udot_zero = {i: 0 for i in self._udot}
+            u_zero = dict.fromkeys(self.u, 0)
+            udot_zero = dict.fromkeys(self._udot, 0)
 
             # When calling kanes_equations, another class instance will be
             # created if auxiliary u's are present. In this case, the
@@ -353,9 +353,9 @@ class KanesMethod(_Methods):
 
             kdeqs = Matrix(kdeqs)
 
-            u_zero = {ui: 0 for ui in u}
-            uaux_zero = {uai: 0 for uai in self._uaux}
-            qdot_zero = {qdi: 0 for qdi in qdot}
+            u_zero = dict.fromkeys(u, 0)
+            uaux_zero = dict.fromkeys(self._uaux, 0)
+            qdot_zero = dict.fromkeys(qdot, 0)
 
             # Extract the linear coefficient matrices as per the following
             # equation:
@@ -444,10 +444,10 @@ class KanesMethod(_Methods):
         t = dynamicsymbols._t
         N = self._inertial
         # Dicts setting things to zero
-        udot_zero = {i: 0 for i in self._udot}
-        uaux_zero = {i: 0 for i in self._uaux}
+        udot_zero = dict.fromkeys(self._udot, 0)
+        uaux_zero = dict.fromkeys(self._uaux, 0)
         uauxdot = [diff(i, t) for i in self._uaux]
-        uauxdot_zero = {i: 0 for i in uauxdot}
+        uauxdot_zero = dict.fromkeys(uauxdot, 0)
         # Dictionary of q' and q'' to u and u'
         q_ddot_u_map = {k.diff(t): v.diff(t).xreplace(
             self._qdot_u_map) for (k, v) in self._qdot_u_map.items()}
@@ -576,10 +576,10 @@ class KanesMethod(_Methods):
         else:
             f_a = Matrix()
         # Dicts to sub to zero, for splitting up expressions
-        u_zero = {i: 0 for i in self.u}
-        ud_zero = {i: 0 for i in self._udot}
-        qd_zero = {i: 0 for i in self._qdot}
-        qd_u_zero = {i: 0 for i in Matrix([self._qdot, self.u])}
+        u_zero = dict.fromkeys(self.u, 0)
+        ud_zero = dict.fromkeys(self._udot, 0)
+        qd_zero = dict.fromkeys(self._qdot, 0)
+        qd_u_zero = dict.fromkeys(Matrix([self._qdot, self.u]), 0)
         # Break the kinematic differential eqs apart into f_0 and f_1
         f_0 = msubs(self._f_k, u_zero) + self._k_kqdot*Matrix(self._qdot)
         f_1 = msubs(self._f_k, qd_zero) + self._k_ku*Matrix(self.u)
@@ -605,7 +605,7 @@ class KanesMethod(_Methods):
         # Form dictionary to set auxiliary speeds & their derivatives to 0.
         uaux = self._uaux
         uauxdot = uaux.diff(dynamicsymbols._t)
-        uaux_zero = {i: 0 for i in Matrix([uaux, uauxdot])}
+        uaux_zero = dict.fromkeys(Matrix([uaux, uauxdot]), 0)
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
