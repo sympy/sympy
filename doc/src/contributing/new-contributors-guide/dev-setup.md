@@ -117,7 +117,7 @@ instructions in <https://help.github.com/en/articles/set-up-git> or at
 <https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account>.
 
 If you have any problems with SSH access to GitHub, read the troubleshooting
-instructions at <https://help.github.com/en/articles/troubleshooting-ssh>, or
+instructions at <https://docs.github.com/en/authentication/troubleshooting-ssh>, or
 ask us on the [mailing list](https://groups.google.com/group/sympy).
 
 ### Fork SymPy
