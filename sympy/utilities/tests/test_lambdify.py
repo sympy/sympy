@@ -1879,4 +1879,3 @@ def test_lambdify_empty_tuple():
     f = lambdify(a, expr)
     result = f(1)
     assert result == ((), (1,)), "Lambdify did not handle the empty tuple correctly."
-
