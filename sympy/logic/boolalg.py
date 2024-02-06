@@ -521,15 +521,15 @@ class BooleanFunction(Application, Boolean):
     @classmethod
     def _to_anf(cls, *args, **kwargs):
         deep = kwargs.get('deep', True)
-        argset = set()
+        new_args = []
         for arg in args:
             if deep:
                 if not is_literal(arg) or isinstance(arg, Not):
                     arg = arg.to_anf(deep=deep)
-                argset.add(arg)
+                new_args.append(arg)
             else:
-                argset.add(arg)
-        return cls(*argset, remove_true=False)
+                new_args.append(arg)
+        return cls(*new_args, remove_true=False)
 
     # the diff method below is copied from Expr class
     def diff(self, *symbols, **assumptions):
