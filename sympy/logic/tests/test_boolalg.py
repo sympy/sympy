@@ -505,6 +505,7 @@ def test_to_anf():
             Xor(True, And(Or(x, y), Implies(x, y)), remove_true=False)
     assert to_anf(Nor(x ^ y, x & y), deep=False) == \
             Xor(True, Or(Xor(x, y), And(x, y)), remove_true=False)
+    # issue 25218
     assert to_anf(x ^ ~(x ^ y ^ ~y)) == False
 
 
