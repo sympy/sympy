@@ -526,9 +526,7 @@ class BooleanFunction(Application, Boolean):
             if deep:
                 if not is_literal(arg) or isinstance(arg, Not):
                     arg = arg.to_anf(deep=deep)
-                new_args.append(arg)
-            else:
-                new_args.append(arg)
+            new_args.append(arg)
         return cls(*new_args, remove_true=False)
 
     # the diff method below is copied from Expr class
