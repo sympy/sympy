@@ -1880,3 +1880,20 @@ def test_lambdify_empty_tuple():
     f = lambdify(a, expr)
     result = f(1)
     assert result == ((), (1,)), "Lambdify did not handle the empty tuple correctly."
+
+
+def test_issue_15795():
+    from mpmath import mpc
+    assoc_legendre_evalf = -25.4558441227157*I
+    assoc_legendre_n = -0.474572528387641
+    tol = 1e-3
+    assert assoc_legendre(2, 1, 3) == -18*sqrt(2)*I
+    assert all_close(assoc_legendre(2, 1, 3).evalf(), assoc_legendre_evalf)
+    assert all_close(assoc_legendre(1, 1/2, 0.1).n(), assoc_legendre_n)
+    assert mpmath.legenp(2, 1, 3) == mpc(real='-8.2688999181462742e-24', imag='-25.45584412271571')
+    assert all_close(assoc_legendre(1, -1, 10).evalf(), mpmath.legenp(1, -1, 10))
+    assert all_close(assoc_legendre(0.1, 1, 10).evalf(), mpmath.legenp(0.1, 1, 10))
+    assert all_close(assoc_legendre(1, -1, 10).evalf(), mpmath.legenp(1, -1, 10))
+    assert abs(assoc_legendre(1, -0.1*I, 10).evalf() - mpmath.legenp(1, -0.1*I, 10)) < tol
+    assert all_close(assoc_legendre(1, 0.1*I, 10).evalf(), mpmath.legenp(1, 0.1*I, 10))
+    assert all_close(assoc_legendre(1, 22/7, 10).evalf(), mpmath.legenp(1, 22/7, 10))
