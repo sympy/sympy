@@ -736,7 +736,7 @@ def trigsimp_old(expr, *, first=True, **opts):
                 d = separatevars(d, dict=True) or d
             if isinstance(d, dict):
                 expr = 1
-                for k, v in d.items():
+                for v in d.values():
                     # remove hollow factoring
                     was = v
                     v = expand_mul(v)
