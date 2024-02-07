@@ -3,6 +3,8 @@
 from __future__ import annotations
 from typing import Any, Callable
 
+import mpmath.libmp as mlib
+
 from inspect import getmro
 import string
 from sympy.core.random import choice
@@ -88,8 +90,8 @@ def _convert_numpy_types(a, **sympify_args):
         prec = np.finfo(a).nmant + 1
         # E.g. double precision means prec=53 but nmant=52
         # Leading bit of mantissa is always 1, so is not stored
-        a = str(list(np.reshape(np.asarray(a),
-                                (1, np.size(a)))[0]))[1:-1]
+        p, q = a.as_integer_ratio()
+        a = mlib.from_rational(p, q, prec)
         return Float(a, precision=prec)
 
 
@@ -137,6 +139,22 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: "could not parse 'x***2'"
+
+    When attempting to parse non-Python syntax using ``sympify``, it raises a
+    ``SympifyError``:
+
+    >>> sympify("2x+1")
+    Traceback (most recent call last):
+    ...
+    SympifyError: Sympify of expression 'could not parse '2x+1'' failed
+
+    To parse non-Python syntax, use ``parse_expr`` from ``sympy.parsing.sympy_parser``.
+
+    >>> from sympy.parsing.sympy_parser import parse_expr
+    >>> parse_expr("2x+1", transformations="all")
+    2*x + 1
+
+    For more details about ``transformations``: see :func:`~sympy.parsing.sympy_parser.parse_expr`
 
     Locals
     ------
