@@ -1340,6 +1340,10 @@ class PIDController(TransferFunction):
         obj.s = s
         return obj
 
+    @property
+    def args(self):
+        return (self.KP, self.KI, self.KD, self.s)
+
 def _flatten_args(args, _cls):
     temp_args = []
     for arg in args:

@@ -9,6 +9,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan
 from sympy.matrices.dense import eye
+from sympy.physics.control.lti import PIDController
 from sympy.polys.polytools import factor
 from sympy.polys.rootoftools import CRootOf
 from sympy.simplify.simplify import simplify
@@ -18,7 +19,6 @@ from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
-from sympy.physics.control.lti import PIDController
 
 a, x, b, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
     tau, zeta, wn, T')
@@ -521,7 +521,6 @@ def test_PIDController_errors():
         assert False, "PIDController did not raise ValueError for non-Symbol 's'"
     except ValueError:
         pass
-
 
 def test_MIMOSeries_construction():
     tf_1 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
