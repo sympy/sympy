@@ -1095,7 +1095,7 @@ def _simplification_technique_1(rels):
                 exp = gcd(exp, exps[g].array_form[0][1])
             exps[g] = g**exp
 
-    one_syllables_words = exps.values()
+    one_syllables_words = list(exps.values())
     # decrease some of the exponents in relators, making use of the single
     # syllable relators
     for i in range(len(rels)):
@@ -1113,6 +1113,8 @@ def _simplification_technique_1(rels):
                 rel = rel.eliminate_word(g**(-max_exp), g**(-(max_exp-exp)), _all = True)
         rels[i] = rel
     rels = [r.identity_cyclic_reduction() for r in rels]
+    # include one_syllable_words that are not yet in the list of relators
+    rels += [word for word in one_syllables_words if word not in rels] 
     return rels
 
 
