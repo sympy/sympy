@@ -1613,7 +1613,7 @@ def devise_plan(target, origin, z):
 
         def others(dic, key):
             l = []
-            for k, value in dic.items():
+            for k in dic.keys():
                 if k != key:
                     l += list(dic[k])
             return l
