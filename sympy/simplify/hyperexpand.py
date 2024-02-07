@@ -1615,7 +1615,7 @@ def devise_plan(target, origin, z):
             l = []
             for k in dic:
                 if k != key:
-                    l += list(dic[k])
+                    l.extend(dic[k])
             return l
         aother = others(nabuckets, r)
         bother = others(nbbuckets, r)
