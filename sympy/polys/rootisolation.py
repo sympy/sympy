@@ -772,7 +772,7 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, strict=F
         I_pos = [ (( u, v), k) for ((u, v), k, _) in I_pos ]
     else:
         I_neg = [ ((-v, -u), k, f) for ((u, v), k, f) in I_neg ]
-        I_pos = [ (( u, v), k, f) for ((u, v), k, f) in I_pos ]
+        I_pos = I_pos
 
     return I_neg, I_pos
 
