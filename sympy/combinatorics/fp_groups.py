@@ -1114,7 +1114,7 @@ def _simplification_technique_1(rels):
         rels[i] = rel
     rels = [r.identity_cyclic_reduction() for r in rels]
     # include one_syllable_words that are not yet in the list of relators
-    rels += [word for word in one_syllables_words if word not in rels] 
+    rels += [word for word in one_syllables_words if word not in rels]
     return rels
 
 
