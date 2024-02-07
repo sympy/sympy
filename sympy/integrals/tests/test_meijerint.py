@@ -342,7 +342,7 @@ def test_lookup_table():
     from sympy.integrals.meijerint import z as z_dummy
     table = {}
     _create_lookup_table(table)
-    for _, l in table.items():
+    for l in table.values():
         for formula, terms, cond, hint in sorted(l, key=default_sort_key):
             subs = {}
             for ai in list(formula.free_symbols) + [z_dummy]:
