@@ -3,7 +3,7 @@
 from .order import Order
 from .limits import limit, Limit
 from .gruntz import gruntz
-from .series import series
+from .series import series, lagrange_inversion
 from .approximants import approximants
 from .residues import residue
 from .sequences import (EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd,
@@ -14,7 +14,7 @@ from .limitseq import difference_delta, limit_seq
 
 O = Order
 
-__all__ = ['Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'residue',
+__all__ = ['Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'lagrange_inversion', 'residue',
            'EmptySequence', 'SeqPer', 'SeqFormula', 'sequence',
            'SeqAdd', 'SeqMul', 'fourier_series', 'fps', 'difference_delta',
            'limit_seq']

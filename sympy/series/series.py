@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.sympify import sympify
 
 from sympy.series.limits import limit
@@ -15,7 +13,7 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     return expr.series(x, x0, n, dir)
 
 
-def lagrange_inversion_theorem(eq, x, a=0, n=3):
+def lagrange_inversion(expr, x, x0=0, n=3, dir="+"):
     r"""
     The Lagrange inversion theorem (or Lagrange inversion formula, which we abbreviate
     as LIT), also known as the Lagrange--Bürmann formula, gives the Taylor series
@@ -53,14 +51,16 @@ def lagrange_inversion_theorem(eq, x, a=0, n=3):
     Parameters
     ==========
 
-    eq : expression, the expansion of whose inverse is to be found.
+    expr : expression, the expansion of whose inverse is to be found.
 
     x : variable, in terms of which equation is given, and in terms of which, the
     expansion will be provided.
 
-    a : point on x-axis in the neighbourhood of which, the inverse expansion is to be found.
+    x0 : point on x-axis in the neighbourhood of which, the inverse expansion is to be found.
 
     n : no of terms required in the expansion; default value is 3 terms.
+
+	dir : direction to approach the point from.
 
     Examples
     ========
@@ -117,43 +117,26 @@ def lagrange_inversion_theorem(eq, x, a=0, n=3):
     .. [3] http://www.cfm.brown.edu/people/dobrush/am33/Mathematica/lit.html
     """
 
+    w = sympify(expr)
+
     try:
-        not eq.free_symbols
+        not w.free_symbols
     except AttributeError:
         raise ValueError("The function provided is not analytic i.e. f' = 0. Lagrange's inversion theorem requires "
                          "that the function be analytic")
 
-    if len(eq.free_symbols) == 1:
-        if x not in eq.free_symbols:
-            raise ValueError("The function variable provided does not match the equation variable")
+    if (len(w.free_symbols) == 1) & (x not in w.free_symbols):
+        raise ValueError("The function variable provided does not match the equation variable")
 
-    w = x
-    eq = eq.subs(x, w)
-    z = eq
+    z = x
+    a = x0
 
-    z_diff = diff(eq, w)
-
-    if z_diff.subs(w, a) == 0 or not (z_diff.subs(w, a)).is_real:
+    if diff(w, w).subs(z, a):
         raise ValueError("The first derivative of the function is zero at the point 'a' provided i.e. f'(a) = 0. "
                          "Lagrange's inversion theorem requires that the derivative of the function be non zero at "
                          "the point 'a'.")
 
-    f_a = z.subs(w, a)
-    result = a
-
-    if n == 1:
-        return result
-
-    a_1 = ((w - a)/(z - f_a))
-    l = limit(a_1, w, a)
-    result = result + l*(z - f_a)
-
-    if n == 2:
-        return result
-
-    for i in range(2, n):
-        l = limit(diff(((w - a) / (z - f_a)) ** i, w, i - 1), w, a)
-        result = result + (((z - f_a) ** i) / factorial(i)) * l
-
-    result = result.subs(w, x)
-    return result
+    if n == 0:
+        return a
+    else:
+        return sum(((limit(diff(((z - a)/(w - w.subs({z: a})))**n , z, i - 1, ), z, a, dir) * ((z - w.subs({z: a}))**n)/factorial(n)) for i in range(1, n + 1)), a)
