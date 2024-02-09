@@ -623,12 +623,13 @@ def test_si():
     assert Si(x).series(x, oo) == pi/2 - (- 6/x**3 + 1/x \
         + O(x**(-7), (x, oo)))*sin(x)/x - (24/x**4 - 2/x**2 + 1 \
         + O(x**(-7), (x, oo)))*cos(x)/x
-    
     t = Symbol('t', Dummy=True)
+    assert Si(x).rewrite(sinc).dummy_eq(Integral(sinc(t), (t, 0, x)))
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
     assert Si(x)._eval_as_leading_term(x) == x
     assert Si(2*x)._eval_as_leading_term(x) == 2*x
     assert Si(sin(x))._eval_as_leading_term(x) == x
+    assert Si(1/x)._eval_as_leading_term(x) == 1/x
     assert limit(Shi(x), x, S.Infinity) == S.Infinity
     assert limit(Shi(x), x, S.NegativeInfinity) == S.NegativeInfinity
 
