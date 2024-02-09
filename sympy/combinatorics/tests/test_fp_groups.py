@@ -234,7 +234,7 @@ def test_simplify_presentation():
     # CyclicGroup(3)
     # The second generator in <x, y | x^2, x^5, y^3> is trivial due to relators {x^2, x^5}
     F, x, y = free_group("x, y")
-    G = simplify_presentation(FpGroup(F, [x**2, x**5, y**3])) 
+    G = simplify_presentation(FpGroup(F, [x**2, x**5, y**3]))
     assert x in G.relators
 
 def test_cyclic():
