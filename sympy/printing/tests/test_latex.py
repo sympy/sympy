@@ -16,7 +16,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
-from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, genocchi, lucas, fibonacci, tribonacci
+from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, genocchi, lucas, fibonacci, tribonacci, mobius
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, coth)
@@ -1805,6 +1805,8 @@ def test_latex_numbers():
     assert latex(tribonacci(n, x)) == r"T_{n}\left(x\right)"
     assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
     assert latex(tribonacci(n, x)**2) == r"T_{n}^{2}\left(x\right)"
+    assert latex(mobius(n)) == r"\mu\left(n\right)"
+    assert latex(mobius(n)**2) == r"\mu^{2}\left(n\right)"
 
 
 def test_latex_euler():

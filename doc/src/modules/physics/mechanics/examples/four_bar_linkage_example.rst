@@ -10,9 +10,8 @@ configuration constraints to close the loop. :class:`~.System` will be used to
 do the "book-keeping" of the entire system with :class:`~.KanesMethod` as the
 backend.
 
-.. image:: four_bar_linkage.*
-   :align: center
-   :width: 600
+.. raw:: html
+   :file: four_bar_linkage.svg
 
 First we need to create the :func:`~.dynamicsymbols` needed to describe the
 system as shown in the above diagram. In this case, the generalized coordinates

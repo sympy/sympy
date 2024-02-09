@@ -336,7 +336,7 @@ def test_variable_moment():
     assert b.slope().expand() == ((10*x*SingularityFunction(x, 0, 0)
         - 10*(x - 4)*SingularityFunction(x, 4, 0))/E).expand()
     assert b.deflection().expand() == ((5*x**2*SingularityFunction(x, 0, 0)
-        - 10*Piecewise((0, Abs(x)/4 < 1), (16*meijerg(((3, 1), ()), ((), (2, 0)), x/4), True))
+        - 10*Piecewise((0, Abs(x)/4 < 1), (x**2*meijerg(((-1, 1), ()), ((), (-2, 0)), x/4), True))
         + 40*SingularityFunction(x, 4, 1))/E).expand()
 
     b = Beam(4, E - x, I)
