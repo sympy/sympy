@@ -1714,8 +1714,9 @@ class LatexPrinter(Printer):
         return out_str
 
     def _print_MatrixElement(self, expr):
-        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
-            + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
+        matrix_part = self.parenthesize(expr.parent, PRECEDENCE['Atom'], strict=True)
+        index_part = f"{self._print(expr.i)},{self._print(expr.j)}"
+        return f"{{{matrix_part}}}_{{{index_part}}}"
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x, dim):
