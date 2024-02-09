@@ -363,7 +363,43 @@ def test_issue_20697():
         - b_1**2))/b_0**3)/y)
     assert Q.series(y, n=3).ratsimp() == b_2*y**2 + b_1*y + b_0 + O(y**3)
 
+def test_issue_9173(): 
+    p_0, p_1, p_2, p_3, b_0, b_1, b_2 = symbols('p_0 p_1 p_2 p_3 b_0 b_1 b_2')
+    
+    Q = (p_0 + (p_1 + (p_2 + p_3/y)/y)/y)/(1 + ((p_3/(b_0*y) + (b_0*p_2 - b_1*p_3)/b_0**2)/y + (b_0**2*p_1 - b_0*b_1*p_2 - p_3*(b_0*b_2 - b_1**2))/b_0**3)/y)
+    
+    assert Q.series(y, n=3).ratsimp() == b_2*y**2 + b_1*y + b_0 + O(y**3) #works, so series function works
+    assert Q.simplify().series(y, n=3).ratsimp() == b_2*y**2 + b_1*y + b_0 + O(y**3) #works
 
+    #more tests regarding simplify
+    
+    Q3 = (y**2 + 4*y + 4)/(y + 2)
+    assert Q3.series(y, n=4).ratsimp() == 2 + y +O(y**4) #works (further evidence that series function works so no need to test again)
+    
+    assert Q3.simplify().series(y, n=4).ratsimp() == 2 + y + O(y**4) #doesnt work
+    assert Q3.simplify().series(y, n=4).ratsimp() == 2 + y #so its forgetting the O(y**4)
+
+    Q4 = 1/Q3 * (1/ (y**2 + sin(y)))
+    
+    assert Q4.series(y, n=3).ratsimp() == Q4.simplify().series(y, n=3).ratsimp() #so its works in this case
+
+    #polynomial expressions testing
+
+    Q5 = x**2 + 5*x + 29 #unsimplifiable expression with second degree
+    assert Q5.series(x, n=5).ratsimp() == Q5.simplify().series(x, n=5).ratsimp() #works
+
+    Q6 = (x**2 + 2*x + 1)/(x + 1) #simplifiable expression
+    
+    assert Q6.series(x, n=3).ratsimp() == Q6.simplify().series(x, n=3).ratsimp() #does not work
+    assert Q6.series(x, n=3).ratsimp() == 1 + x + O(x**3) #works
+    assert Q6.simplify().series(x, n=3).ratsimp() == 1 + x #forgetting the O term once again
+    
+
+    Q7 = x + 1 #unsimplifiable but only to first degree
+    assert Q7.series(x, n=3).ratsimp() == Q7.simplify().series(x, n=3).ratsimp() #works
+
+    #In conclusion, polynomial expressions that result in first degree expressions do not work as the "O" term is missing
+    
 def test_issue_21245():
     fi = (1 + sqrt(5))/2
     assert (1/(1 - x - x**2)).series(x, 1/fi, 1).factor() == \
