@@ -612,9 +612,6 @@ def test_dup_sign_variations():
 
 
 def test_dup_clear_denoms():
-
-    x = symbols('x')
-
     assert dup_clear_denoms([], QQ, ZZ) == (ZZ(1), [])
 
     assert dup_clear_denoms([QQ(1)], QQ, ZZ) == (ZZ(1), [QQ(1)])
