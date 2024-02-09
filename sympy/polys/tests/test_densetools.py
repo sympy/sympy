@@ -1,6 +1,5 @@
 """Tests for dense recursive polynomials' tools. """
 
-from sympy.core.symbol import symbols
 from sympy.polys.densebasic import (
     dup_normal, dmp_normal,
     dup_from_raw_dict,
