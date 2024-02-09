@@ -26,6 +26,7 @@ from sympy.testing.pytest import raises, XFAIL, slow
 
 from itertools import combinations, permutations, product
 
+
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
 

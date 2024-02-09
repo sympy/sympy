@@ -16,9 +16,10 @@ from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
-from sympy.utilities.iterables import sift, ibin
+from sympy.utilities.iterables import sift, ibin, iterable
 from sympy.utilities.misc import filldedent
 
+import operator
 
 def as_Boolean(e):
     """Like ``bool``, return the Boolean value of an expression, e,
@@ -2306,9 +2307,7 @@ def _input_to_binlist(inputlist, variables):
     binlist = []
     bits = len(variables)
     for val in inputlist:
-        if isinstance(val, int):
-            binlist.append(ibin(val, bits))
-        elif isinstance(val, dict):
+        if isinstance(val, dict):
             nonspecvars = list(variables)
             for key in val.keys():
                 nonspecvars.remove(key)
@@ -2316,19 +2315,24 @@ def _input_to_binlist(inputlist, variables):
                 d = dict(zip(nonspecvars, t))
                 d.update(val)
                 binlist.append([d[v] for v in variables])
-        elif isinstance(val, (list, tuple)):
-            if len(val) != bits:
-                raise ValueError("Each term must contain {bits} bits as there are"
-                                 "\n{bits} variables (or be an integer)."
-                                 "".format(bits=bits))
-            binlist.append(list(val))
         else:
-            raise TypeError("A term list can only contain lists,"
-                            " ints or dicts.")
+            try:
+                if iterable(val):
+                    if len(val) != bits:
+                        raise ValueError("Each term must contain {bits} bits as there are"
+                                        "\n{bits} variables (or be an integer)."
+                                        "".format(bits=bits))
+                    nums = [operator.index(v) for v in val]
+                else:
+                    nums = ibin(operator.index(val),bits=bits)
+                binlist.append(nums)
+            except TypeError:
+                raise TypeError("A term list can only contain lists,"
+                                " ints or dicts.")
     return binlist
 
 
-def SOPform(variables, minterms, dontcares=None):
+def SOPform(variables, minterms, dontcares=[]):
     """
     The SOPform function uses simplified_pairs and a redundant group-
     eliminating algorithm to convert the list of all input combos that
@@ -2388,14 +2392,11 @@ def SOPform(variables, minterms, dontcares=None):
     .. [2] https://en.wikipedia.org/wiki/Don%27t-care_term
 
     """
+    variables = tuple(map(sympify, variables))
+    minterms = _input_to_binlist(minterms, variables)
     if not minterms:
         return false
-
-    variables = tuple(map(sympify, variables))
-
-
-    minterms = _input_to_binlist(minterms, variables)
-    dontcares = _input_to_binlist((dontcares or []), variables)
+    dontcares = _input_to_binlist(dontcares, variables)
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
@@ -2409,7 +2410,7 @@ def _sop_form(variables, minterms, dontcares):
     return Or(*[_convert_to_varsSOP(x, variables) for x in essential])
 
 
-def POSform(variables, minterms, dontcares=None):
+def POSform(variables, minterms, dontcares=[]):
     """
     The POSform function uses simplified_pairs and a redundant-group
     eliminating algorithm to convert the list of all input combinations
@@ -2469,12 +2470,11 @@ def POSform(variables, minterms, dontcares=None):
     .. [2] https://en.wikipedia.org/wiki/Don%27t-care_term
 
     """
-    if not minterms:
-        return false
-
     variables = tuple(map(sympify, variables))
     minterms = _input_to_binlist(minterms, variables)
-    dontcares = _input_to_binlist((dontcares or []), variables)
+    if not minterms:
+        return false
+    dontcares = _input_to_binlist(dontcares, variables)
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
