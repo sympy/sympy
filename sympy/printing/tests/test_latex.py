@@ -2521,17 +2521,20 @@ def test_MatrixElement_printing():
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
 
-    assert latex(A[0, 0]) == r"A_{0, 0}"
-    assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
+    assert latex(A[0, 0]) == r"{A}_{0,0}"
+    assert latex(3 * A[0, 0]) == r"3 {A}_{0,0}"
 
     F = C[0, 0].subs(C, A - B)
-    assert latex(F) == r"\left(A - B\right)_{0, 0}"
+    assert latex(F) == r"{\left(A - B\right)}_{0,0}"
 
     i, j, k = symbols("i j k")
     M = MatrixSymbol("M", k, k)
     N = MatrixSymbol("N", k, k)
     assert latex((M*N)[i, j]) == \
-        r'\sum_{i_{1}=0}^{k - 1} M_{i, i_{1}} N_{i_{1}, j}'
+        r'\sum_{i_{1}=0}^{k - 1} {M}_{i,i_{1}} {N}_{i_{1},j}'
+
+    X_a = MatrixSymbol('X_a', 3, 3)
+    assert latex(X_a[0, 0]) == r"{X_{a}}_{0,0}"
 
 
 def test_MatrixSymbol_printing():
