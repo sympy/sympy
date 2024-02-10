@@ -1409,7 +1409,19 @@ class expint(Function):
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
-
+    
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.functions.special.gamma_functions import digamma
+        nu, z = self.args
+        if nu.is_real and nu >= 1:
+            term_one = (-z)**(nu - 1)/factorial(nu - 1) * (digamma(nu) - log(z))
+            term_two = 1/(nu - 1)
+            if nu == 1:
+                term_two = z/(2 - nu)
+            arg = Add(*[term_one, term_two]).as_leading_term(x, logx=logx)
+            return arg
+        return super(expint, self)._eval_as_leading_term(x, logx, cdir)
+    
     def _eval_nseries(self, x, n, logx, cdir=0):
         if not self.args[0].has(x):
             nu = self.args[0]
@@ -1894,6 +1906,19 @@ class Si(TrigonometricIntegral):
         from sympy.integrals.integrals import Integral
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
+    
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
+
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+        if arg0.is_zero:
+            return arg
+        elif not arg0.is_infinite:
+            return self.func(arg0)
+        else:
+            return self
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
