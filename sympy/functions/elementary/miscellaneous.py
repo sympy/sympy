@@ -468,7 +468,7 @@ class MinMaxBase(Expr, LatticeOp):
                         break
                     if (arg < small) == True:
                         small = arg
-            elif issubclass(cls, Min):
+            elif issubclass(cls, Max):
                 for arg in args:
                     if not arg.is_number:
                         break
