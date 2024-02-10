@@ -1409,7 +1409,7 @@ class expint(Function):
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
-    
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.functions.special.gamma_functions import digamma
         nu, z = self.args
@@ -1421,7 +1421,7 @@ class expint(Function):
             arg = Add(*[term_one, term_two]).as_leading_term(x, logx=logx)
             return arg
         return super(expint, self)._eval_as_leading_term(x, logx, cdir)
-    
+
     def _eval_nseries(self, x, n, logx, cdir=0):
         if not self.args[0].has(x):
             nu = self.args[0]
@@ -1906,7 +1906,7 @@ class Si(TrigonometricIntegral):
         from sympy.integrals.integrals import Integral
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
-    
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x)
         arg0 = arg.subs(x, 0)
