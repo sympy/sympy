@@ -587,7 +587,7 @@ class MinMaxBase(Expr, LatticeOp):
                     con = cls._is_connected(v, z)
                     if con:
                         is_newzero = False
-                        if con is True or issubclass(cls, Min):
+                        if con is True or issubclass(cls, con):
                             localzeros.remove(z)
                             localzeros.update([v])
             if is_newzero:
