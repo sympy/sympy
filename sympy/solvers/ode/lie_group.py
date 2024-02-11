@@ -550,7 +550,7 @@ def lie_heuristic_bivariate(match, comp=False):
                     etared = etaeq.subs(soldict)
                     # Scaling is done by substituting one for the parameters
                     # This can be any number except zero.
-                    dict_ = dict.fromkeys(symset, 1)
+                    dict_ = {sym: 1 for sym in symset}
                     inf = {eta: etared.subs(dict_).subs(y, func),
                         xi: xired.subs(dict_).subs(y, func)}
                     return [inf]
@@ -613,7 +613,7 @@ def lie_heuristic_chi(match, comp=False):
                         soldict = soldict[0]
                     if any(soldict.values()):
                         chieq = chieq.subs(soldict)
-                        dict_ = dict.fromkeys(solsyms, 1)
+                        dict_ = {sym: 1 for sym in solsyms}
                         chieq = chieq.subs(dict_)
                         # After finding chi, the main aim is to find out
                         # eta, xi by the equation eta = xi*h + chi

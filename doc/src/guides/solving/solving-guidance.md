@@ -233,7 +233,7 @@ simplified, and want to speed up {func}`~.solve`, use `simplify=False`.
 
 If you are creating the expression yourself, we advise [against using string
 parsing to create expressions](
-https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#user-content-strings-as-input).
+https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
 But if you are programmatically reading in a string, this approach is
 convenient.
 

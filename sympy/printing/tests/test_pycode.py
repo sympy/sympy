@@ -138,8 +138,8 @@ def test_NumPyPrinter():
     assert p.doprint(S.Pi) == 'numpy.pi'
     assert p.doprint(S.EulerGamma) == 'numpy.euler_gamma'
     assert p.doprint(S.NaN) == 'numpy.nan'
-    assert p.doprint(S.Infinity) == 'numpy.inf'
-    assert p.doprint(S.NegativeInfinity) == '-numpy.inf'
+    assert p.doprint(S.Infinity) == 'numpy.PINF'
+    assert p.doprint(S.NegativeInfinity) == 'numpy.NINF'
 
     # Function rewriting operator precedence fix
     assert p.doprint(sec(x)**2) == '(numpy.cos(x)**(-1.0))**2'
@@ -305,7 +305,7 @@ def test_Integral():
     evaluateat = Integral(x**2, (x, 1))
 
     prntr = SciPyPrinter()
-    assert prntr.doprint(single) == 'scipy.integrate.quad(lambda x: numpy.exp(-x), 0, numpy.inf)[0]'
+    assert prntr.doprint(single) == 'scipy.integrate.quad(lambda x: numpy.exp(-x), 0, numpy.PINF)[0]'
     assert prntr.doprint(double) == 'scipy.integrate.nquad(lambda x, y: x**2*numpy.exp(x*y), ((-z, z), (0, z)))[0]'
     raises(NotImplementedError, lambda: prntr.doprint(indefinite))
     raises(NotImplementedError, lambda: prntr.doprint(evaluateat))

@@ -24,8 +24,7 @@ from sympy.functions.elementary.trigonometric import cos, sin, atan, sinc
 from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import erf, erfc, Ei
-from sympy.functions.special.gamma_functions import (
-    digamma, gamma, lowergamma, uppergamma)
+from sympy.functions.special.gamma_functions import digamma, gamma, lowergamma
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.integrals import integrate, Integral
 from sympy.integrals.transforms import (
@@ -372,9 +371,9 @@ def _laplace_build_rules():
          S.true, S.Zero, dco),  # Not in Bateman54
         (t**n, gamma(n+1)/s**(n+1),
          n > -1, S.Zero, dco),  # 4.3.1
-        ((a*t+b)**n, uppergamma(n+1, b/a*s)*exp(-b/a*s)/s**(n+1)/a,
+        ((a*t+b)**n, lowergamma(n+1, b/a*s)*exp(-b/a*s)/s**(n+1)/a,
          And(n > -1, Abs(arg(b/a)) < pi), S.Zero, dco),  # 4.3.4
-        (t**n/(t+a), a**n*gamma(n+1)*uppergamma(-n, a*s),
+        (t**n/(t+a), a**n*gamma(n+1)*lowergamma(-n, a*s),
          And(n > -1, Abs(arg(a)) < pi), S.Zero, dco),  # 4.3.7
         (exp(a*t-tau), exp(-tau)/(s-a),
          S.true, re(a), dco),  # 4.5.1
@@ -403,10 +402,6 @@ def _laplace_build_rules():
          Abs(arg(a)) < pi, S.Zero, dco),  # 4.5.31
         (exp(-2*sqrt(a*t))/sqrt(t), (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
          Abs(arg(a)) < pi, S.Zero, dco),  # 4.5.33
-        (exp(-a*exp(-t)), a**(-s)*lowergamma(s, a),
-         S.true, S.Zero, dco),  # 4.5.36
-        (exp(-a*exp(t)), a**s*uppergamma(-s, a),
-         re(a) > 0, S.Zero, dco),  # 4.5.37
         (log(a*t), -log(exp(S.EulerGamma)*s/a)/s,
          a > 0, S.Zero, dco),  # 4.6.1
         (log(1+a*t), -exp(s/a)/s*Ei(-s/a),
@@ -569,27 +564,18 @@ def _laplace_rule_heaviside(f, t, s):
     a = Wild('a', exclude=[t])
     y = Wild('y')
     g = Wild('g')
-    if ma1 := f.match(Heaviside(y) * g):
-        if ma2 := ma1[y].match(t - a):
-            if ma2[a].is_positive:
-                _debug('     rule: time shift (4.1.4)')
-                r, pr, cr = _laplace_transform(
-                    ma1[g].subs(t, t + ma2[a]), t, s, simplify=False)
-                return (exp(-ma2[a] * s) * r, pr, cr)
-            if ma2[a].is_negative:
-                _debug(
-                    '     rule: Heaviside factor; negative time shift (4.1.4)')
-                r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
-                return (r, pr, cr)
-        if ma2 := ma1[y].match(a - t):
-            if ma2[a].is_positive:
-                _debug('     rule: Heaviside window open')
-                r, pr, cr = _laplace_transform(
-                    (1 - Heaviside(t - ma2[a])) * ma1[g], t, s, simplify=False)
-                return (r, pr, cr)
-            if ma2[a].is_negative:
-                _debug('     rule: Heaviside window closed')
-                return (0, 0, S.true)
+    ma1 = f.match(Heaviside(y)*g)
+    if ma1:
+        ma2 = ma1[y].match(t-a)
+        if ma2 and ma2[a].is_positive:
+            _debug('     rule: time shift (4.1.4)')
+            r, pr, cr = _laplace_transform(
+                ma1[g].subs(t, t+ma2[a]), t, s, simplify=False)
+            return (exp(-ma2[a]*s)*r, pr, cr)
+        if ma2 and ma2[a].is_negative:
+            _debug('     rule: Heaviside factor, negative time shift (4.1.4)')
+            r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
+            return (r, pr, cr)
     return None
 
 
@@ -938,6 +924,7 @@ def _laplace_rule_sdiff(f, t, s):
             pc = Poly(pex, t).all_coeffs()
             N = len(pc)
             if N > 1:
+                _debug('     rule: frequency derivative (4.1.6)')
                 oex = prod(ofac)
                 r_, p_, c_ = _laplace_transform(oex, t, s, simplify=False)
                 deri = [r_]
@@ -956,14 +943,6 @@ def _laplace_rule_sdiff(f, t, s):
                 if d1:
                     r = Add(*[pc[N-n-1]*deri[n] for n in range(N)])
                     return (r, p_, c_)
-    # We still have to cover the possibility that there is a symbolic positive
-    # integer exponent.
-    n = Wild('n', exclude=[t])
-    g = Wild('g')
-    if ma1 := f.match(t**n*g):
-        if ma1[n].is_integer and ma1[n].is_positive:
-            r_, p_, c_ = _laplace_transform(ma1[g], t, s, simplify=False)
-            return (-1)**ma1[n]*diff(r_, (s, ma1[n])), p_, c_
     return None
 
 

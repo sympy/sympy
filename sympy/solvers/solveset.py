@@ -70,6 +70,9 @@ class NonlinearError(ValueError):
     pass
 
 
+_rc = Dummy("R", real=True), Dummy("C", complex=True)
+
+
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
     Dummy symbols, ``d``, and the list of replacements, ``(d, e)``,
@@ -2481,19 +2484,12 @@ def solveset(f, symbol=None, domain=S.Complexes):
         return solveset(f[0], s[0], domain).xreplace(swap)
 
     # solveset should ignore assumptions on symbols
-    newsym = None
-    if domain.is_subset(S.Reals):
-        if symbol._assumptions_orig != {'real': True}:
-            newsym = Dummy('R', real=True)
-    elif domain.is_subset(S.Complexes):
-        if symbol._assumptions_orig != {'complex': True}:
-            newsym = Dummy('C', complex=True)
-
-    if newsym is not None:
-        rv = solveset(f.xreplace({symbol: newsym}), newsym, domain)
+    if symbol not in _rc:
+        x = _rc[0] if domain.is_subset(S.Reals) else _rc[1]
+        rv = solveset(f.xreplace({symbol: x}), x, domain)
         # try to use the original symbol if possible
         try:
-            _rv = rv.xreplace({newsym: symbol})
+            _rv = rv.xreplace({x: symbol})
         except TypeError:
             _rv = rv
         if rv.dummy_eq(_rv):

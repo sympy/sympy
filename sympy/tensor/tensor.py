@@ -3328,7 +3328,7 @@ class TensMul(TensExpr, AssocOp):
                     indices.append(index)
                 pos2 += 1
 
-        free = list(free2pos2.items())
+        free = [(i, p) for (i, p) in free2pos2.items()]
         free_names = [i.name for i in free2pos2.keys()]
 
         dummy_data.sort(key=lambda x: x[3])

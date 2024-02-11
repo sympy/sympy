@@ -183,8 +183,6 @@ Ntheory Functions Reference
 
 .. autofunction:: kronecker_symbol
 
-.. autofunction:: mobius
-
 .. autofunction:: discrete_log
 
 .. autofunction:: quadratic_congruence
@@ -197,6 +195,9 @@ Ntheory Functions Reference
    :members:
 
 .. automodule:: sympy.ntheory.digits
+   :members:
+
+.. autoclass:: sympy.ntheory.mobius
    :members:
 
 .. module:: sympy.ntheory.egyptian_fraction

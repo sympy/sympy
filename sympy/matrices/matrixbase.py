@@ -1262,12 +1262,10 @@ class MatrixBase(Printable):
         return klass._eval_wilkinson(n)
 
     def _eval_atoms(self, *types):
-        values = self.values()
-        if len(values) < self.rows * self.cols and isinstance(S.Zero, types):
-            s = {S.Zero}
-        else:
-            s = set()
-        return s.union(*[v.atoms(*types) for v in values])
+        result = set()
+        for i in self:
+            result.update(i.atoms(*types))
+        return result
 
     def _eval_free_symbols(self):
         return set().union(*(i.free_symbols for i in self if i))

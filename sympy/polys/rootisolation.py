@@ -767,11 +767,12 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, strict=F
     I_neg = [ (_mobius_to_interval(M, field), k, f) for (_, M, k, f) in I_neg ]
     I_pos = [ (_mobius_to_interval(M, field), k, f) for (_, M, k, f) in I_pos ]
 
-    I_neg = [((-v, -u), k, f) for ((u, v), k, f) in I_neg]
-
     if not basis:
-        I_neg = [((u, v), k) for ((u, v), k, _) in I_neg]
-        I_pos = [((u, v), k) for ((u, v), k, _) in I_pos]
+        I_neg = [ ((-v, -u), k) for ((u, v), k, _) in I_neg ]
+        I_pos = [ (( u, v), k) for ((u, v), k, _) in I_pos ]
+    else:
+        I_neg = [ ((-v, -u), k, f) for ((u, v), k, f) in I_neg ]
+        I_pos = [ (( u, v), k, f) for ((u, v), k, f) in I_pos ]
 
     return I_neg, I_pos
 

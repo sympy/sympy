@@ -26,7 +26,8 @@ _known_constants_numpy = {
     'Pi': 'pi',
     'EulerGamma': 'euler_gamma',
     'NaN': 'nan',
-    'Infinity': 'inf',
+    'Infinity': 'PINF',
+    'NegativeInfinity': 'NINF'
 }
 
 _numpy_known_functions = {k: 'numpy.' + v for k, v in _known_functions_numpy.items()}
@@ -62,9 +63,6 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         #     tuples in nopython mode.
         delimiter=', '
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
-
-    def _print_NegativeInfinity(self, expr):
-        return '-' + self._print(S.Infinity)
 
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
@@ -216,10 +214,11 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational, sqrt=self._module + '.sqrt')
 
     def _print_Min(self, expr):
-        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amin'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
+        return '{}(({}), axis=0)'.format(self._module_format(self._module + '.amin'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Max(self, expr):
-        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amax'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
+        return '{}(({}), axis=0)'.format(self._module_format(self._module + '.amax'), ','.join(self._print(i) for i in expr.args))
+
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.angle'), self._print(expr.args[0]))
 

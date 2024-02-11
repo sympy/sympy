@@ -911,7 +911,7 @@ class MutableRepMatrix(RepMatrix):
         if not value:
             self._rep = DomainMatrix.zeros(self.shape, EXRAW)
         else:
-            elements_dod = {i: dict.fromkeys(range(self.cols), value) for i in range(self.rows)}
+            elements_dod = {i: {j: value for j in range(self.cols)} for i in range(self.rows)}
             self._rep = DomainMatrix(elements_dod, self.shape, EXRAW)
 
 

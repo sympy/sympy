@@ -206,7 +206,7 @@ def pl_true(expr, model=None, deep=False):
     if result in boolean:
         return bool(result)
     if deep:
-        model = dict.fromkeys(result.atoms(), True)
+        model = {k: True for k in result.atoms()}
         if pl_true(result, model):
             if valid(result):
                 return True

@@ -9,6 +9,7 @@ from sympy.core.function import Function
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import Integer, int_valued
 from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import im, re
 from sympy.multipledispatch import dispatch
@@ -48,10 +49,10 @@ class RoundFunction(Function):
                 ipart += i*S.ImaginaryUnit
             elif (i := intof(t)) is not None:
                 ipart += i
-            elif t.is_number:
-                npart += t
-            else:
+            elif t.has(Symbol):
                 spart += t
+            else:
+                npart += t
 
         if not (npart or spart):
             return ipart

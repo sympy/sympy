@@ -387,7 +387,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
         values (tuple of ``bool``\ s).
     """
     if dim is not None:
-        return dict.fromkeys(inputs, (False,) * dim)
+        return {s: (False,) * dim for s in inputs}
 
     if dims is not None:
         maxdim = max(dims.values())

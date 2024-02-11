@@ -2190,7 +2190,7 @@ class Beam:
         if isinstance(self.length, Expr):
             l = list(self.length.atoms(Symbol))
             # assigning every Symbol a default value of 10
-            l = dict.fromkeys(l, 10)
+            l = {i:10 for i in l}
             length = self.length.subs(l)
         else:
             l = {}

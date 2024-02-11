@@ -179,7 +179,7 @@ class LagrangesMethod(_Methods):
         """
 
         qds = self._qdots
-        qdd_zero = dict.fromkeys(self._qdoubledots, 0)
+        qdd_zero = {i: 0 for i in self._qdoubledots}
         n = len(self.q)
 
         # Internally we represent the EOM as four terms:

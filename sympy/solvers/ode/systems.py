@@ -1830,20 +1830,20 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
         A1 = match.get("A1", None)
         A0 = match.get("A0", None)
 
-    sys_order = dict.fromkeys(funcs, 2)
+    sys_order = {func: 2 for func in funcs}
 
     if type == "type1":
         if b is None:
             b = zeros(len(eqs))
         eqs = _second_order_subs_type1(A1, b, funcs, t)
-        sys_order = dict.fromkeys(funcs, 1)
+        sys_order = {func: 1 for func in funcs}
 
     if type == "type2":
         if t_ is None:
             t_ = Symbol("{}_".format(t))
         t = t_
         eqs, funcs = _second_order_subs_type2(A0, funcs, t_)
-        sys_order = dict.fromkeys(funcs, 2)
+        sys_order = {func: 2 for func in funcs}
 
     return _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 

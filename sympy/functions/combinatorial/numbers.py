@@ -17,13 +17,12 @@ from sympy.core.function import ArgumentIndexError, Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
-from sympy.core.relational import Eq, is_le, is_gt, is_lt
+from sympy.core.relational import Eq, is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.ntheory.factor_ import factorint
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
 from sympy.utilities.enumerative import MultisetPartitionTraverser
@@ -261,10 +260,6 @@ class fibonacci(Function):
                     raise ValueError("Fibonacci polynomials are defined "
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
-
-    def _eval_rewrite_as_tractable(self, n, **kwargs):
-        from sympy.functions import sqrt, cos
-        return (S.GoldenRatio**n - cos(S.Pi*n)/S.GoldenRatio**n)/sqrt(5)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
         from sympy.functions.elementary.miscellaneous import sqrt
@@ -1675,86 +1670,6 @@ class partition(Function):
         n = self.args[0]
         if n.is_nonnegative and n.is_integer:
             return True
-
-
-class mobius(Function):
-    """
-    Mobius function maps natural number to {-1, 0, 1}
-
-    It is defined as follows:
-        1) `1` if `n = 1`.
-        2) `0` if `n` has a squared prime factor.
-        3) `(-1)^k` if `n` is a square-free positive integer with `k`
-           number of prime factors.
-
-    It is an important multiplicative function in number theory
-    and combinatorics.  It has applications in mathematical series,
-    algebraic number theory and also physics (Fermion operator has very
-    concrete realization with Mobius Function model).
-
-    Examples
-    ========
-
-    >>> from sympy.functions.combinatorial.numbers import mobius
-    >>> mobius(13*7)
-    1
-    >>> mobius(1)
-    1
-    >>> mobius(13*7*5)
-    -1
-    >>> mobius(13**2)
-    0
-
-    Even in the case of a symbol, if it clearly contains a squared prime factor, it will be zero.
-
-    >>> from sympy import Symbol
-    >>> n = Symbol("n", integer=True, positive=True)
-    >>> mobius(4*n)
-    0
-    >>> mobius(n**2)
-    0
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/M%C3%B6bius_function
-    .. [2] Thomas Koshy "Elementary Number Theory with Applications"
-    .. [3] https://oeis.org/A008683
-
-    """
-    is_integer = True
-    is_prime = False
-
-    @classmethod
-    def eval(cls, n):
-        if n.is_integer is False:
-            raise TypeError("n should be an integer")
-        if n.is_positive is False:
-            raise ValueError("n should be a positive integer")
-        if n.is_prime is True:
-            return S.NegativeOne
-        if n is S.One:
-            return S.One
-        result = None
-        for m, e in (_.as_base_exp() for _ in Mul.make_args(n)):
-            if m.is_integer is True and m.is_positive is True and \
-               e.is_integer is True and e.is_positive is True:
-                lt = is_lt(S.One, e) # 1 < e
-                if lt is True:
-                    result = S.Zero
-                elif m.is_Integer is True:
-                    factors = factorint(m)
-                    if any(v > 1 for v in factors.values()):
-                        result = S.Zero
-                    elif lt is False:
-                        s = S.NegativeOne if len(factors) % 2 else S.One
-                        if result is None:
-                            result = s
-                        else:
-                            result *= s
-            else:
-                return
-        return result
 
 
 #######################################################################

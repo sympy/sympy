@@ -139,6 +139,7 @@ class Indexed(Expr):
     True
 
     """
+    is_commutative = True
     is_Indexed = True
     is_symbol = True
     is_Atom = True
@@ -425,6 +426,7 @@ class IndexedBase(Expr, NotIterable):
     >>> C_inherit == C_explicit
     True
     """
+    is_commutative = True
     is_symbol = True
     is_Atom = True
 

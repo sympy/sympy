@@ -57,9 +57,6 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.partition
    :members:
 
-.. autoclass:: sympy.functions.combinatorial.numbers.mobius
-   :members:
-
 .. autoclass:: sympy.functions.combinatorial.factorials.MultiFactorial
    :members:
 

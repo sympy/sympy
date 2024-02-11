@@ -419,7 +419,7 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     cp = dM.charpoly()
 
-    x = uniquely_named_symbol(x, [M], modify=lambda s: '_' + s)
+    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
 
     if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the

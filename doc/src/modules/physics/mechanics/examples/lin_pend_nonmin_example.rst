@@ -10,8 +10,8 @@ pendulum angle, and the angular velocity respectively). Choosing instead to
 describe the system using the `x` and `y` coordinates of the mass results in
 a need for constraints. The system is shown below:
 
-.. raw:: html
-   :file: pendulum_nonmin.svg
+.. image:: pendulum_nonmin.*
+   :align: center
 
 The system will be modeled using both Kane's and Lagrange's methods, and the
 resulting EOM linearized. While this is a simple problem, it should illustrate

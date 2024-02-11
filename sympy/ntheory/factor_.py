@@ -893,8 +893,8 @@ def _trial(factors, n, candidates, verbose=False):
     nfactors = len(factors)
     for d in candidates:
         if n % d == 0:
-            n, m = remove(n // d, d)
-            factors[d] = m + 1
+            n, m = remove(n, d)
+            factors[d] = m
     if verbose:
         for k in sorted(set(factors).difference(set(factors0))):
             print(factor_msg % (k, factors[k]))
@@ -1352,9 +1352,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     # 2, 3, 5.
     sqrt_n = isqrt(n)
     a = sqrt_n + 1
-    # If `n % 4 == 1`, `a` must be odd for `a**2 - n` to be a square number.
-    if (n % 4 == 1) ^ (a & 1):
-        a += 1
     a2 = a**2
     b2 = a2 - n
     for _ in range(3):
@@ -1371,8 +1368,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             if verbose:
                 print(complete_msg)
             return factors
-        b2 += (a + 1) << 2  # equiv to (a + 2)**2 - n
-        a += 2
+        b2 += 2*a + 1  # equiv to (a + 1)**2 - n
+        a += 1
 
     # these are the limits for trial division which will
     # be attempted in parallel with pollard methods
@@ -1382,7 +1379,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     _limit = (limit or sqrt_n) + 1
     iteration = 0
     while 1:
-        high_ = min(high, _limit)
+        high_ = high
+        if _limit < high_:
+            high_ = _limit
 
         # Trial division
         if use_trial:
@@ -1407,22 +1406,22 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             return factors
 
         # Only used advanced methods when no small factors were found
-        if not found_trial:
+        if not found_trial and (use_pm1 or use_rho):
+            high_root = max(int(math.log(high_**0.7)), low, 3)
+
             # Pollard p-1
             if use_pm1:
                 if verbose:
-                    print(pm1_msg % (low, high_))
-                c = pollard_pm1(n, B=low, seed=high_)
+                    print(pm1_msg % (high_root, high_))
+                c = pollard_pm1(n, B=high_root, seed=high_)
                 if c:
-                    if c < next_p**2 or isprime(c):
-                        ps = [c]
-                    else:
-                        ps = factorint(c, limit=limit,
-                                       use_trial=use_trial,
-                                       use_rho=use_rho,
-                                       use_pm1=use_pm1,
-                                       use_ecm=use_ecm,
-                                       verbose=verbose)
+                    # factor it and let _trial do the update
+                    ps = factorint(c, limit=limit,
+                                   use_trial=use_trial,
+                                   use_rho=use_rho,
+                                   use_pm1=use_pm1,
+                                   use_ecm=use_ecm,
+                                   verbose=verbose)
                     n, _ = _trial(factors, n, ps, verbose=False)
                     if _check_termination(factors, n, limit, use_trial,
                                           use_rho, use_pm1, verbose, next_p):
@@ -1430,19 +1429,18 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
             # Pollard rho
             if use_rho:
+                max_steps = high_root
                 if verbose:
-                    print(rho_msg % (1, low, high_))
-                c = pollard_rho(n, retries=1, max_steps=low, seed=high_)
+                    print(rho_msg % (1, max_steps, high_))
+                c = pollard_rho(n, retries=1, max_steps=max_steps, seed=high_)
                 if c:
-                    if c < next_p**2 or isprime(c):
-                        ps = [c]
-                    else:
-                        ps = factorint(c, limit=limit,
-                                       use_trial=use_trial,
-                                       use_rho=use_rho,
-                                       use_pm1=use_pm1,
-                                       use_ecm=use_ecm,
-                                       verbose=verbose)
+                    # factor it and let _trial do the update
+                    ps = factorint(c, limit=limit,
+                                   use_trial=use_trial,
+                                   use_rho=use_rho,
+                                   use_pm1=use_pm1,
+                                   use_ecm=use_ecm,
+                                   verbose=verbose)
                     n, _ = _trial(factors, n, ps, verbose=False)
                     if _check_termination(factors, n, limit, use_trial,
                                           use_rho, use_pm1, verbose, next_p):
@@ -1463,15 +1461,12 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             print(ecm_msg % (B1, B2, num_curves))
         factor = _ecm_one_factor(n, B1, B2, num_curves, seed=B1)
         if factor:
-            if factor < next_p**2 or isprime(factor):
-                ps = [factor]
-            else:
-                ps = factorint(factor, limit=limit,
-                           use_trial=use_trial,
-                           use_rho=use_rho,
-                           use_pm1=use_pm1,
-                           use_ecm=use_ecm,
-                           verbose=verbose)
+            ps = factorint(factor, limit=limit,
+                       use_trial=use_trial,
+                       use_rho=use_rho,
+                       use_pm1=use_pm1,
+                       use_ecm=use_ecm,
+                       verbose=verbose)
             n, _ = _trial(factors, n, ps, verbose=False)
             if _check_termination(factors, n, limit, use_trial,
                                   use_rho, use_pm1, verbose, next_p):

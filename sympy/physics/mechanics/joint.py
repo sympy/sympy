@@ -556,8 +556,7 @@ class Joint(ABC):
 class PinJoint(Joint):
     """Pin (Revolute) Joint.
 
-    .. raw:: html
-        :file: ../../../doc/src/modules/physics/mechanics/api/PinJoint.svg
+    .. image:: PinJoint.svg
 
     Explanation
     ===========
@@ -1382,8 +1381,9 @@ class CylindricalJoint(Joint):
 class PlanarJoint(Joint):
     """Planar Joint.
 
-    .. raw:: html
-        :file: ../../../doc/src/modules/physics/mechanics/api/PlanarJoint.svg
+    .. image:: PlanarJoint.svg
+        :align: center
+        :width: 800
 
     Explanation
     ===========
@@ -1991,8 +1991,9 @@ class SphericalJoint(Joint):
 class WeldJoint(Joint):
     """Weld Joint.
 
-    .. raw:: html
-        :file: ../../../doc/src/modules/physics/mechanics/api/WeldJoint.svg
+    .. image:: WeldJoint.svg
+        :align: center
+        :width: 500
 
     Explanation
     ===========

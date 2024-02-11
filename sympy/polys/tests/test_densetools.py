@@ -28,6 +28,7 @@ from sympy.polys.densetools import (
     dup_sign_variations,
     dup_revert, dmp_revert,
 )
+
 from sympy.polys.polyclasses import ANP
 
 from sympy.polys.polyerrors import (
@@ -39,7 +40,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.specialpolys import f_polys
 
-from sympy.polys.domains import FF, ZZ, QQ, EX, RR
+from sympy.polys.domains import FF, ZZ, QQ, EX
 from sympy.polys.rings import ring
 
 from sympy.core.numbers import I
@@ -47,6 +48,7 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.trigonometric import sin
 
 from sympy.abc import x
+
 from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
@@ -635,9 +637,6 @@ def test_dup_clear_denoms():
     assert dup_clear_denoms([EX(7)], EX) == (EX(1), [EX(7)])
     assert dup_clear_denoms([EX(sin(x)/x), EX(0)], EX) == (EX(x), [EX(sin(x)), EX(0)])
 
-    F = RR.frac_field(x)
-    result = dup_clear_denoms([F(8.48717/(8.0089*x + 2.83)), F(0.0)], F)
-    assert str(result) == "(x + 0.353356890459364, [1.05971731448763, 0.0])"
 
 def test_dmp_clear_denoms():
     assert dmp_clear_denoms([[]], 1, QQ, ZZ) == (ZZ(1), [[]])

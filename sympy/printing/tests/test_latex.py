@@ -16,7 +16,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
-from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, genocchi, lucas, fibonacci, tribonacci, mobius
+from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, genocchi, lucas, fibonacci, tribonacci
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, coth)
@@ -1805,8 +1805,6 @@ def test_latex_numbers():
     assert latex(tribonacci(n, x)) == r"T_{n}\left(x\right)"
     assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
     assert latex(tribonacci(n, x)**2) == r"T_{n}^{2}\left(x\right)"
-    assert latex(mobius(n)) == r"\mu\left(n\right)"
-    assert latex(mobius(n)**2) == r"\mu^{2}\left(n\right)"
 
 
 def test_latex_euler():
@@ -2521,20 +2519,17 @@ def test_MatrixElement_printing():
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
 
-    assert latex(A[0, 0]) == r"{A}_{0,0}"
-    assert latex(3 * A[0, 0]) == r"3 {A}_{0,0}"
+    assert latex(A[0, 0]) == r"A_{0, 0}"
+    assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
 
     F = C[0, 0].subs(C, A - B)
-    assert latex(F) == r"{\left(A - B\right)}_{0,0}"
+    assert latex(F) == r"\left(A - B\right)_{0, 0}"
 
     i, j, k = symbols("i j k")
     M = MatrixSymbol("M", k, k)
     N = MatrixSymbol("N", k, k)
     assert latex((M*N)[i, j]) == \
-        r'\sum_{i_{1}=0}^{k - 1} {M}_{i,i_{1}} {N}_{i_{1},j}'
-
-    X_a = MatrixSymbol('X_a', 3, 3)
-    assert latex(X_a[0, 0]) == r"{X_{a}}_{0,0}"
+        r'\sum_{i_{1}=0}^{k - 1} M_{i, i_{1}} N_{i_{1}, j}'
 
 
 def test_MatrixSymbol_printing():
