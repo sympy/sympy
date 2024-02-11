@@ -76,21 +76,21 @@ class LarkLaTeXParser:
 
         if not self.transform_expr:
             # exit early and return the parse tree
-            _lark.logger.debug("expression =", s)
+            _lark.logger.debug("expression = %s", s)
             _lark.logger.debug(parse_tree)
             _lark.logger.debug(parse_tree.pretty())
             return parse_tree
 
         if self.print_debug_output:
             # print this stuff before attempting to run the transformer
-            _lark.logger.debug("expression =", s)
+            _lark.logger.debug("expression = %s", s)
             # print the `parse_tree` variable
             _lark.logger.debug(parse_tree.pretty())
 
         sympy_expression = self.transformer.transform(parse_tree)
 
         if self.print_debug_output:
-            _lark.logger.debug("SymPy expression =", sympy_expression)
+            _lark.logger.debug("SymPy expression = %s", sympy_expression)
 
         return sympy_expression
 
