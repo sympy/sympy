@@ -1321,8 +1321,8 @@ class PIDController(TransferFunction):
     >>> from sympy.physics.control.lti import PIDController
     >>> KP, KI, KD = 1, 0.1, 0.01
     >>> pid = PIDController(KP, KI, KD, s)
-    >>> pid
-    TransferFunction(K_D*s + K_P + K_I/s, 1, s)
+    >>> print(pid)
+    TransferFunction(0.0100000000000000*s**2 + 1*s + 0.100000000000000, 1, s)
     """
 
     def __new__(cls, KP, KI, KD, s):
@@ -1339,6 +1339,9 @@ class PIDController(TransferFunction):
         obj.KD = KD
         obj.s = s
         return obj
+    
+    def __str__(self):
+        return f"TransferFunction({self.KD}*s**2 + {self.KP}*s + {self.KI}, 1, s)"
 
     @property
     def args(self):
