@@ -1138,7 +1138,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
-        if(isinstance(other, Feedback)):
+        if isinstance(other, Feedback):
             other = other.doit()
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
