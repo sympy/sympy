@@ -1679,3 +1679,20 @@ def test_StateSpace_functions():
     assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
     assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
+
+
+def test_Feedback_as_TransferFunction():
+    fd1 = Feedback(TransferFunction(s + 1, 1 , s), TransferFunction(s + 2, 1, s))
+    tf1 = TransferFunction(2 * (s+1), s**2 + 2*s + 1, s)
+    tf2 = TransferFunction(1, s + 1, s)
+    # Type Checking
+    assert isinstance(fd1, TransferFunction)
+    assert isinstance(fd1, Feedback)
+    assert not isinstance(tf1, Feedback)
+    # Operation checking
+    num, den = fd1.num, fd1.den
+    assert num == TransferFunction(s + 1, 1, s)
+    assert den == TransferFunction(s + 2, 1, s)
+    # Combining Operations of TransferFunction and Feedback
+    fd2 = Feedback(tf1*fd1, tf2)
+    assert fd2.doit().simplify() == TransferFunction(2*(s + 1)**2, 2*s + ((s + 1)*(s + 2) + 1)*(s**2 + 2*s + 1) + 2, s)

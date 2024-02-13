@@ -1092,6 +1092,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in self.poles())
 
     def __add__(self, other):
+        if isinstance(other, Feedback):
+            other = other.doit()
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1113,6 +1115,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         return self + other
 
     def __sub__(self, other):
+        if isinstance(other, Feedback):
+            other = other.doit()
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1134,6 +1138,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
+        if(isinstance(other, Feedback)):
+            other = other.doit()
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -2205,7 +2211,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return MIMOParallel(*arg_list)
 
 
-class Feedback(SISOLinearTimeInvariant):
+class Feedback(TransferFunction):
     r"""
     A class for representing closed-loop feedback interconnection between two
     SISO input/output systems.
@@ -2296,6 +2302,11 @@ class Feedback(SISOLinearTimeInvariant):
         if not sys2:
             sys2 = TransferFunction(1, 1, sys1.var)
 
+        if isinstance(sys1, Feedback):
+            sys1 = sys1.doit()
+        if isinstance(sys2, Feedback):
+            sys2 = sys2.doit()
+
         if not (isinstance(sys1, (TransferFunction, Series))
             and isinstance(sys2, (TransferFunction, Series))):
             raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
@@ -2314,7 +2325,7 @@ class Feedback(SISOLinearTimeInvariant):
                 Both `sys1` and `sys2` should be using the
                 same complex variable."""))
 
-        return super().__new__(cls, sys1, sys2, _sympify(sign))
+        return super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
 
     @property
     def sys1(self):
