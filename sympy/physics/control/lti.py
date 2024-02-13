@@ -1339,7 +1339,7 @@ class PIDController(TransferFunction):
         obj.KD = KD
         obj.s = s
         return obj
-    
+
     def __str__(self):
         return f"TransferFunction({self.KD}*s**2 + {self.KP}*s + {self.KI}, 1, s)"
 
