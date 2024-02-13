@@ -1330,7 +1330,7 @@ class PIDController(TransferFunction):
             raise ValueError("s must be a Symbol")
 
         KP, KI, KD = sympify(KP), sympify(KI), sympify(KD)
-        numerator = KP*s + KI + KD*s**2
+        numerator = KD*s**2 + KP*s + KI
         denominator = s
 
         obj = TransferFunction.__new__(cls, numerator, denominator, s)
@@ -1343,6 +1343,11 @@ class PIDController(TransferFunction):
     @property
     def args(self):
         return (self.KP, self.KI, self.KD, self.s)
+
+    def to_PID_expr(self):
+        numerator = self.KD * self.s**2 + self.KP * self.s + self.KI
+        denominator = self.s
+        return numerator / denominator
 
 def _flatten_args(args, _cls):
     temp_args = []

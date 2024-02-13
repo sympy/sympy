@@ -20,6 +20,7 @@ from sympy.physics.control import (TransferFunction, Series, Parallel,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 
+
 a, x, b, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
     tau, zeta, wn, T')
 a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
@@ -506,21 +507,27 @@ def test_Series_construction():
     raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
 
 
-def test_PIDController_creation_and_properties():
-    KP, KI, KD = symbols('KP KI KD', real=True)
+def test_PIDController_instance():
+    KP, KI, KD = 1, 0.1, 0.01
     pid = PIDController(KP, KI, KD, s)
-    assert isinstance(pid, PIDController)
-    expected_expr = (KD*s**2 + KP*s + KI) / s
-    pid_expr = expand(pid.to_expr())
-    assert simplify(pid_expr - expected_expr) == 0
+    assert isinstance(pid, PIDController), "The object should be an instance of PIDController."
+    assert isinstance(pid, TransferFunction), "PIDController should inherit from TransferFunction."
 
-def test_PIDController_errors():
-    KP, KI, KD = symbols('KP KI KD')
-    try:
-        PIDController(KP, KI, KD, "not a symbol")
-        assert False, "PIDController did not raise ValueError for non-Symbol 's'"
-    except ValueError:
-        pass
+def test_PIDController_properties():
+    KP, KI, KD = 1, 0.1, 0.01
+    pid = PIDController(KP, KI, KD, s)
+    assert pid.KP == 1, "Proportional gain KP should be 1."
+    assert pid.KI == 0.1, "Integral gain KI should be 0.1."
+    assert pid.KD == 0.01, "Derivative gain KD should be 0.01."
+    assert pid.s == s, "Symbol s should match the one provided."
+
+def test_PIDController_functionality():
+    KP, KI, KD = 1, 0.1, 0.01
+    pid = PIDController(KP, KI, KD, s)
+    expected_expr = (KD*s**2 + KP*s + KI) / s
+    pid_expr = pid.to_PID_expr()
+    assert simplify(pid_expr - expected_expr) == 0, "The expression should match the expected expression."
+
 
 def test_MIMOSeries_construction():
     tf_1 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)

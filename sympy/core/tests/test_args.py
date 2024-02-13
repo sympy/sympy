@@ -4258,6 +4258,12 @@ def test_sympy__physics__control__lti__TransferFunction():
     from sympy.physics.control.lti import TransferFunction
     assert _test_args(TransferFunction(2, 3, x))
 
+def test_sympy__physics__control__lti__PIDController():
+    from sympy.core.symbol import Symbol
+    from sympy.physics.control.lti import PIDController
+    s = Symbol('s')
+    KP, KI, KD = 1, 0.1, 0.01
+    assert _test_args(PIDController(KP, KI, KD, s))
 
 def test_sympy__physics__control__lti__Series():
     from sympy.physics.control import Series, TransferFunction
@@ -5437,10 +5443,3 @@ def test_sympy__combinatorics__perm_groups__Coset():
     b = Permutation(0, 1)
     G = PermutationGroup([a, b])
     assert _test_args(Coset(a, G))
-
-def test_sympy__physics__control__lti__PIDController():
-    from sympy.core.symbol import Symbol
-    from sympy.physics.control.lti import PIDController
-    s = Symbol('s')
-    KP, KI, KD = 1, 0.1, 0.01
-    assert _test_args(PIDController(KP, KI, KD, s))
