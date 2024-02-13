@@ -1,5 +1,5 @@
 from sympy.core.add import Add
-from sympy.core.function import Function, expand
+from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, pi, Rational, oo)
 from sympy.core.power import Pow
