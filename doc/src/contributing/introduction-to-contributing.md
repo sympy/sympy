@@ -38,7 +38,7 @@ familiar with mailing list etiquette.
 
 ## Setup your development environment
 
-We use the [Git](http://git-scm.com) version control system to track the
+We use the [Git](https://git-scm.com) version control system to track the
 software [changes over time](https://github.com/sympy/sympy/commits/master)
 and to effectively manage [contributions from many different
 authors](https://github.com/sympy/sympy/network). We also utilize GitHub, a
