@@ -243,7 +243,7 @@ class NDimArray(Printable):
 
         if isinstance(iterable, (Dict, dict)) and shape is not None:
             new_dict = iterable.copy()
-            for k, v in new_dict.items():
+            for k in new_dict:
                 if isinstance(k, (tuple, Tuple)):
                     new_key = 0
                     for i, idx in enumerate(k):
