@@ -2302,11 +2302,6 @@ class Feedback(TransferFunction):
         if not sys2:
             sys2 = TransferFunction(1, 1, sys1.var)
 
-        if isinstance(sys1, Feedback):
-            sys1 = sys1.doit()
-        if isinstance(sys2, Feedback):
-            sys2 = sys2.doit()
-
         if not (isinstance(sys1, (TransferFunction, Series))
             and isinstance(sys2, (TransferFunction, Series))):
             raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
