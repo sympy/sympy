@@ -1942,7 +1942,6 @@ class Si(TrigonometricIntegral):
         if z.is_zero:
             return True
 
-
 class Ci(TrigonometricIntegral):
     r"""
     Cosine integral.
@@ -2078,7 +2077,15 @@ class Ci(TrigonometricIntegral):
                     for k in range(int(n/2) - 1)] + [Order(1/z**n, x)]
             return (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
 
-        # All other points are not handled
+        # Expansion at -oo
+        elif point is S.NegativeInfinity:
+            z = self.args[0]
+            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
+                    for k in range(int((n - 1)/2))] + [I*pi] + [Order(1/z**n, x)]
+            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
+                    for k in range(int(n/2) - 1)] +[Order(1/z**n, x)]
+            return (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
+
         return super(Ci, self)._eval_aseries(n, args0, x, logx)
 
 
