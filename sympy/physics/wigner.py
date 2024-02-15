@@ -107,7 +107,7 @@ def _calc_factlist(nn):
             _Factlist.append(_Factlist[ii - 1] * ii)
     return _Factlist[:int(nn) + 1]
 
-
+from fractions import Fraction
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculate the Wigner 3j symbol `\operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,m_3)`.
@@ -194,12 +194,34 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    if int(j_1 * 2) != j_1 * 2 or int(j_2 * 2) != j_2 * 2 or \
-            int(j_3 * 2) != j_3 * 2:
+
+    def convert_float_to_rational_if_half_integer(value):
+        if isinstance(value, float):
+            fraction_value = Fraction(value).limit_denominator()
+            if fraction_value.denominator == 2:
+                return fraction_value
+        return value
+
+    # Example list of values
+    values = [j_1, j_2, j_3, m_1, m_2, m_3]
+
+    # Apply the conversion function to each value using a list comprehension
+    converted_values = [convert_float_to_rational_if_half_integer(value) for value in values]
+    j_1, j_2, j_3, m_1, m_2, m_3 = converted_values
+
+    # Define a tolerance for comparison
+    tolerance = 1e-10
+
+    # Check if each value is either an integer or a half-integer
+    if abs(j_1 * 2 - int(j_1 * 2)) > tolerance or \
+            abs(j_2 * 2 - int(j_2 * 2)) > tolerance or \
+            abs(j_3 * 2 - int(j_3 * 2)) > tolerance:
         raise ValueError("j values must be integer or half integer")
-    if int(m_1 * 2) != m_1 * 2 or int(m_2 * 2) != m_2 * 2 or \
-            int(m_3 * 2) != m_3 * 2:
+    if abs(m_1 * 2 - int(m_1 * 2)) > tolerance or \
+            abs(m_2 * 2 - int(m_2 * 2)) > tolerance or \
+            abs(m_3 * 2 - int(m_3 * 2)) > tolerance:
         raise ValueError("m values must be integer or half integer")
+
     if m_1 + m_2 + m_3 != 0:
         return S.Zero
     prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
