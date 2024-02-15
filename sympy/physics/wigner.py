@@ -107,7 +107,7 @@ def _calc_factlist(nn):
             _Factlist.append(_Factlist[ii - 1] * ii)
     return _Factlist[:int(nn) + 1]
 
-
+from fractions import Fraction
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculate the Wigner 3j symbol `\operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,m_3)`.
