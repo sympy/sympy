@@ -113,7 +113,7 @@ def lagrange_inversion(expr, x, x0=0, n=3, dir="+"):
 
     n : no of terms required in the expansion; default value is 3 terms.
 
-	dir : direction to approach the point from.
+    dir : direction to approach the point from.
 
     Examples
     ========
