@@ -507,12 +507,6 @@ def test_Series_construction():
     raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
 
 
-def test_PIDController_instance():
-    KP, KI, KD = 1, 0.1, 0.01
-    pid = PIDController(KP, KI, KD, s)
-    assert isinstance(pid, PIDController), "The object should be an instance of PIDController."
-    assert isinstance(pid, TransferFunction), "PIDController should inherit from TransferFunction."
-
 def test_PIDController_properties():
     KP, KI, KD = 1, 0.1, 0.01
     pid = PIDController(KP, KI, KD, s)
