@@ -3,6 +3,7 @@ from sympy.physics.mechanics import (Body, Lagrangian, KanesMethod, LagrangesMet
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.method import _Methods
 from sympy import Matrix
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['JointsMethod']
 
@@ -77,6 +78,14 @@ class JointsMethod(_Methods):
     """
 
     def __init__(self, newtonion, *joints):
+        sympy_deprecation_warning(
+            """
+            The JointsMethod class is deprecated.
+            Its functionality has been replaced by the new System class.
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="deprecated-mechanics-jointsmethod"
+        )
         if isinstance(newtonion, BodyBase):
             self.frame = newtonion.frame
         else:
