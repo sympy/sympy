@@ -1422,9 +1422,8 @@ class expint(Function):
             term_one = (-z)**(nu - 1)/factorial(nu - 1) * (digamma(nu) - log(z))
             term_two = 1/(nu - 1)
             if nu == 1:
-                term_two = z/(2 - nu)
-            arg = Add(*[term_one, term_two]).as_leading_term(x, logx=logx)
-            return arg
+                term_two = z
+            return Add(*[term_one, term_two]).as_leading_term(x, logx=logx)
         return super(expint, self)._eval_as_leading_term(x, logx, cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
