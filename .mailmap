@@ -49,9 +49,9 @@
 #   The mailmap file was reordered
 #
 #   For instructions on updating the .mailmap file see:
-#   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
+#   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-.html#add-your-name-and-email-address-to-the-mailmap-file
 #
-#   ...
+#   ...process
 #
 # 5. You should be ready now but just to be sure run the bin/mailmap_check.py
 # script one last time and it should say "No changes needed in .mailmap". The
@@ -210,10 +210,11 @@ Abhinav Anand <abhinav.anand2807@gmail.com>
 Abhinav Chanda <abhinavchanda01@gmail.com>
 Abhinav Cillanki <abhinavcillanki@kgpian.iitkgp.ac.in> Abhinav R Cillanki <95158195+JebronLames32@users.noreply.github.com>
 Abhinav Cillanki <abhinavcillanki@kgpian.iitkgp.ac.in> JebronLames32 <abhinavcillanki@gmail.com>
-Abhishek <kumar325571@gmail.com> Abhishek kumar <kumar325571@gmail.com>
+
 Abhishek <uchiha@pop-os.localdomain>
 Abhishek Chaudhary <ac5003@columbia.edu>
 Abhishek Garg <abhishekgarg119@gmail.com>
+
 Abhishek Kumar <abhishek.nitdelhi@gmail.com>
 Abhishek Patidar <1e9abhi1e10@gmail.com> ABHISHEK PATIDAR <95904102+1e9abhi1e10@users.noreply.github.com>
 Abhishek Patidar <1e9abhi1e10@gmail.com> Abhishek Patidar <2311abhiptdr@gmail.com>
@@ -1632,3 +1633,4 @@ zzj <29055749+zjzh@users.noreply.github.com>
 Łukasz Pankowski <lukpank@o2.pl>
 彭于斌 <1931127624@qq.com>
 袁野 (Yuan Ye) <yuanyelele@tutanota.com>
+Abhishek kumar <kumar325571@gmail.com> Abhishek kumar <kumar325571@gmail.com>
