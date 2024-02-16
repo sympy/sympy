@@ -510,18 +510,31 @@ def test_Series_construction():
 def test_PIDController_properties():
     KP, KI, KD = 1, 0.1, 0.01
     pid = PIDController(KP, KI, KD, s)
-    assert pid.KP == 1, "Proportional gain KP should be 1."
-    assert pid.KI == 0.1, "Integral gain KI should be 0.1."
-    assert pid.KD == 0.01, "Derivative gain KD should be 0.01."
-    assert pid.s == s, "Symbol s should match the one provided."
+    assert pid.KP == 1
+    assert pid.KI == 0.1
+    assert pid.KD == 0.01
+    assert pid.s == s
 
 def test_PIDController_functionality():
     KP, KI, KD = 1, 0.1, 0.01
     pid = PIDController(KP, KI, KD, s)
     expected_expr = (KD*s**2 + KP*s + KI) / s
     pid_expr = pid.to_PID_expr()
-    assert simplify(pid_expr - expected_expr) == 0, "The expression should match the expected expression."
+    assert simplify(pid_expr - expected_expr) == 0
 
+def test_discrete_time_PI_controller_creation():
+    KP, KI = 5, 2.4
+    Ts = 0.1
+    pid = PIDController(KP, KI, 0, s, Ts=Ts, IFormula='Trapezoidal')
+    assert pid.Ts == Ts
+    assert pid.IFormula == 'Trapezoidal'
+
+def test_PID_controller_with_named_input_and_output():
+    KP, KI, KD = 1, 2, 3
+    input_name, output_name = 'e', 'u'
+    pid = PIDController(KP, KI, KD, s, InputName=input_name, OutputName=output_name)
+    assert pid.InputName == input_name
+    assert pid.OutputName == output_name
 
 def test_MIMOSeries_construction():
     tf_1 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)

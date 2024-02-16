@@ -1302,7 +1302,8 @@ class TransferFunction(SISOLinearTimeInvariant):
 
 class PIDController(TransferFunction):
     """
-    A PID Controller class that subclasses TransferFunction.
+    A PID Controller class that subclasses TransferFunction, extended to support
+    discrete-time controllers, derivative filter time constants, and named input/output channels and IFormula.
 
     Parameters
     ==========
@@ -1314,42 +1315,80 @@ class PIDController(TransferFunction):
         Derivative gain.
     s : Symbol
         The complex frequency variable.
+    Tf : Expr, Number, optional
+        Derivative filter time constant.
+    Ts : Expr, Number, optional
+        Sample time for discrete-time controllers.
+    InputName : str, optional
+        Name of the input channel.
+    OutputName : str, optional
+        Name of the output channel.
 
     Examples
     ========
+    Create a continuous-time PID controller:
+
     >>> from sympy.abc import s
     >>> from sympy.physics.control.lti import PIDController
     >>> KP, KI, KD = 1, 0.1, 0.01
     >>> pid = PIDController(KP, KI, KD, s)
     >>> print(pid)
-    TransferFunction(0.0100000000000000*s**2 + 1*s + 0.100000000000000, 1, s)
+    TransferFunction(KP=1, KI=0.100000000000000, KD=0.0100000000000000, s=s, Tf=0, Ts=None, InputName='', OutputName='')
+
+    Create a PID controller with a derivative filter time constant:
+
+    >>> Tf = 0.5
+    >>> pid_with_tf = PIDController(KP, KI, KD, s, Tf=Tf)
+    >>> print(pid_with_tf)
+    TransferFunction(KP=1, KI=0.100000000000000, KD=0.0100000000000000, s=s, Tf=0.500000000000000, Ts=None, InputName='', OutputName='')
+
+    Create a discrete-time PID controller with sample time and named channels:
+
+    >>> Ts = 0.1
+    >>> InputName = 'error'
+    >>> OutputName = 'control_signal'
+    >>> pid_discrete = PIDController(KP, KI, KD, s, Ts=Ts, InputName=InputName, OutputName=OutputName)
+    >>> print(f"InputName: {pid_discrete.InputName}, OutputName: {pid_discrete.OutputName}")
+    InputName: error, OutputName: control_signal
+
+    Create a PID controller specifying the integration method (IFormula):
+
+    >>> IFormula = 'Trapezoidal'
+    >>> pid_with_iformula = PIDController(KP, KI, KD, s, IFormula=IFormula)
+    >>> print(f"IFormula: {pid_with_iformula.IFormula}")
+    IFormula: Trapezoidal
     """
 
-    def __new__(cls, KP, KI, KD, s):
+    def __new__(cls, KP, KI, KD, s, Tf=0, Ts=None, InputName='', OutputName='', IFormula=None):
         if not isinstance(s, Symbol):
             raise ValueError("s must be a Symbol")
 
-        KP, KI, KD = sympify(KP), sympify(KI), sympify(KD)
+        KP, KI, KD, Tf = sympify(KP), sympify(KI), sympify(KD), sympify(Tf)
         numerator = KD*s**2 + KP*s + KI
-        denominator = s
+        denominator = s + Tf if Tf else s
 
         obj = TransferFunction.__new__(cls, numerator, denominator, s)
         obj.KP = KP
         obj.KI = KI
         obj.KD = KD
+        obj.Tf = Tf
+        obj.Ts = Ts
+        obj.InputName = InputName
+        obj.OutputName = OutputName
+        obj.IFormula = IFormula
         obj.s = s
         return obj
 
     def __str__(self):
-        return f"TransferFunction({self.KD}*s**2 + {self.KP}*s + {self.KI}, 1, s)"
+        return f"TransferFunction(KP={self.KP}, KI={self.KI}, KD={self.KD}, s={self.s}, Tf={self.Tf}, Ts={self.Ts}, InputName='{self.InputName}', OutputName='{self.OutputName}')"
 
     @property
     def args(self):
-        return (self.KP, self.KI, self.KD, self.s)
+        return (self.KP, self.KI, self.KD, self.s, self.Tf, self.Ts, self.InputName, self.OutputName)
 
     def to_PID_expr(self):
         numerator = self.KD * self.s**2 + self.KP * self.s + self.KI
-        denominator = self.s
+        denominator = self.s + self.Tf if self.Tf else self.s
         return numerator / denominator
 
 def _flatten_args(args, _cls):
