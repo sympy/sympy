@@ -613,6 +613,13 @@ def test_si():
     assert tn_arg(Si)
     assert tn_arg(Shi)
 
+    assert Si(x)._eval_as_leading_term(x) == x
+    assert Si(2*x)._eval_as_leading_term(x) == 2*x
+    assert Si(sin(x))._eval_as_leading_term(x) == x
+    assert Si(x + 1)._eval_as_leading_term(x) == Si(1)
+    assert Si(1/x)._eval_as_leading_term(x, cdir=1) == \
+        Si(1/x)._eval_as_leading_term(x, cdir=-1) == Si(1/x)
+
     assert Si(x).nseries(x, n=8) == \
         x - x**3/18 + x**5/600 - x**7/35280 + O(x**9)
     assert Shi(x).nseries(x, n=8) == \
@@ -626,7 +633,7 @@ def test_si():
         + O(x**(-7), (x, oo)))*cos(x)/x
 
     t = Symbol('t', Dummy=True)
-    assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
+    assert Si(x).rewrite(sinc).dummy_eq(Integral(sinc(t), (t, 0, x)))
 
     assert limit(Shi(x), x, S.Infinity) == S.Infinity
     assert limit(Shi(x), x, S.NegativeInfinity) == S.NegativeInfinity
