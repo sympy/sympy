@@ -34,7 +34,7 @@ from sympy.polys.polyerrors import (
 )
 from sympy.utilities import variations
 
-from math import ceil as _ceil, log as _log, log2 as _log2
+from math import ceil as _ceil, log2 as _log2
 
 def dup_integrate(f, m, K):
     """

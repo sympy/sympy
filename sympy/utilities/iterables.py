@@ -15,7 +15,6 @@ from sympy.utilities.enumerative import (
 
 from sympy.utilities.misc import as_int
 from sympy.utilities.decorator import deprecated
-import math
 
 
 def is_palindromic(s, i=0, j=None):
@@ -1890,8 +1889,8 @@ def binary_partitions(n):
     .. [1] TAOCP 4, section 7.2.1.5, problem 64
 
     """
-    from math import ceil, log
-    power = int(2**(ceil(math.log2(n))))
+    from math import ceil, log2
+    power = int(2**(ceil(log2(n))))
     acc = 0
     partition = []
     while power:
