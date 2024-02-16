@@ -1384,7 +1384,7 @@ class PIDController(TransferFunction):
 
     @property
     def args(self):
-        return (self.KP, self.KI, self.KD, self.s, self.Tf, self.Ts, self.InputName, self.OutputName)
+        return (self.KP, self.KI, self.KD, self.s)
 
     def to_PID_expr(self):
         numerator = self.KD * self.s**2 + self.KP * self.s + self.KI
