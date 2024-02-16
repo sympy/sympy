@@ -1093,7 +1093,15 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __add__(self, other):
         if isinstance(other, Feedback):
-            other = other.doit()
+            arg_list = list(other.sys1.args) if isinstance(other.sys1, Series) else [other.sys1]
+            F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
+            if other.sign == -1:
+                F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
+            else:
+                F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
+
+            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
+
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1116,7 +1124,15 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __sub__(self, other):
         if isinstance(other, Feedback):
-            other = other.doit()
+            arg_list = list(other.sys1.args) if isinstance(other.sys1, Series) else [other.sys1]
+            F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
+            if other.sign == -1:
+                F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
+            else:
+                F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
+
+            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
+
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1139,7 +1155,15 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __mul__(self, other):
         if isinstance(other, Feedback):
-            other = other.doit()
+            arg_list = list(other.sys1.args) if isinstance(other.sys1, Series) else [other.sys1]
+            F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
+            if other.sign == -1:
+                F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
+            else:
+                F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
+
+            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
+
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1160,6 +1184,16 @@ class TransferFunction(SISOLinearTimeInvariant):
     __rmul__ = __mul__
 
     def __truediv__(self, other):
+        if isinstance(other, Feedback):
+            arg_list = list(other.sys1.args) if isinstance(other.sys1, Series) else [other.sys1]
+            F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
+            if other.sign == -1:
+                F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
+            else:
+                F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
+
+            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
+
         if isinstance(other, TransferFunction):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
