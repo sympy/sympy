@@ -1,10 +1,11 @@
 """Sparse rational function fields. """
 
-from __future__ import print_function, division
+from __future__ import annotations
+from typing import Any
+from functools import reduce
 
 from operator import add, mul, lt, le, gt, ge
 
-from sympy.core.compatibility import is_sequence, reduce, string_types
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Exp1
@@ -12,17 +13,18 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
-from sympy.polys.rings import PolyElement
+from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.domains.fractionfield import FractionField
+from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.constructor import construct_domain
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import _parallel_dict_from_expr
-from sympy.polys.domains.domainelement import DomainElement
-from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.domains.fractionfield import FractionField
-from sympy.polys.constructor import construct_domain
+from sympy.polys.rings import PolyElement
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
 
 @public
@@ -50,17 +52,18 @@ def sfield(exprs, *symbols, **options):
     from options and input expressions.
 
     Parameters
-    ----------
-    exprs : :class:`Expr` or sequence of :class:`Expr` (sympifiable)
-    symbols : sequence of :class:`Symbol`/:class:`Expr`
-    options : keyword arguments understood by :class:`Options`
+    ==========
+
+    exprs   : py:class:`~.Expr` or sequence of :py:class:`~.Expr` (sympifiable)
+
+    symbols : sequence of :py:class:`~.Symbol`/:py:class:`~.Expr`
+
+    options : keyword arguments understood by :py:class:`~.Options`
 
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import exp, log
-    >>> from sympy.polys.fields import sfield
+    >>> from sympy import exp, log, symbols, sfield
 
     >>> x = symbols("x")
     >>> K, f = sfield((x*log(x) + 4*x**2)*exp(1/x + log(x)/3)/x**2)
@@ -96,7 +99,7 @@ def sfield(exprs, *symbols, **options):
     else:
         return (_field, fracs)
 
-_field_cache = {}
+_field_cache: dict[Any, Any] = {}
 
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """
@@ -149,6 +152,12 @@ class FracField(DefaultPrinting):
     def __hash__(self):
         return self._hash
 
+    def index(self, gen):
+        if isinstance(gen, self.dtype):
+            return self.ring.index(gen.to_poly())
+        else:
+            raise ValueError("expected a %s, got %s instead" % (self.dtype,gen))
+
     def __eq__(self, other):
         return isinstance(other, FracField) and \
             (self.symbols, self.ngens, self.domain, self.order) == \
@@ -187,17 +196,33 @@ class FracField(DefaultPrinting):
         if isinstance(element, FracElement):
             if self == element.field:
                 return element
+
+            if isinstance(self.domain, FractionField) and \
+                self.domain.field == element.field:
+                return self.ground_new(element)
+            elif isinstance(self.domain, PolynomialRing) and \
+                self.domain.ring.to_field() == element.field:
+                return self.ground_new(element)
             else:
                 raise NotImplementedError("conversion")
         elif isinstance(element, PolyElement):
             denom, numer = element.clear_denoms()
-            numer = numer.set_ring(self.ring)
+
+            if isinstance(self.domain, PolynomialRing) and \
+                numer.ring == self.domain.ring:
+                numer = self.ring.ground_new(numer)
+            elif isinstance(self.domain, FractionField) and \
+                numer.ring == self.domain.field.to_ring():
+                numer = self.ring.ground_new(numer)
+            else:
+                numer = numer.set_ring(self.ring)
+
             denom = self.ring.ground_new(denom)
             return self.raw_new(numer, denom)
         elif isinstance(element, tuple) and len(element) == 2:
             numer, denom = list(map(self.ring.ring_new, element))
             return self.new(numer, denom)
-        elif isinstance(element, string_types):
+        elif isinstance(element, str):
             raise NotImplementedError("parsing")
         elif isinstance(element, Expr):
             return self.from_expr(element)
@@ -228,6 +253,8 @@ class FracField(DefaultPrinting):
                         return mapping.get(gen)**int(e/eg)
                 if e.is_Integer and e is not S.One:
                     return _rebuild(b)**int(e)
+            elif mapping.get(1/expr) is not None:
+                return 1/mapping.get(1/expr)
 
             try:
                 return domain.convert(expr)
@@ -237,13 +264,13 @@ class FracField(DefaultPrinting):
                 else:
                     raise
 
-        return _rebuild(sympify(expr))
+        return _rebuild(expr)
 
     def from_expr(self, expr):
         mapping = dict(list(zip(self.symbols, self.gens)))
 
         try:
-            frac = self._rebuild_expr(expr, mapping)
+            frac = self._rebuild_expr(sympify(expr), mapping)
         except CoercionFailed:
             raise ValueError("expected an expression convertible to a rational function in %s, got %s" % (self, expr))
         else:
@@ -316,10 +343,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def __ne__(f, g):
         return not f == g
 
-    def __nonzero__(f):
+    def __bool__(f):
         return bool(f.numer)
-
-    __bool__ = __nonzero__
 
     def sort_key(self):
         return (self.denom.sort_key(), self.numer.sort_key())
@@ -534,8 +559,6 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         else:
             return f.new(f.numer*g_denom, f.denom*g_numer)
 
-    __div__ = __truediv__
-
     def __rtruediv__(f, c):
         if not f:
             raise ZeroDivisionError
@@ -550,8 +573,6 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return NotImplemented
         else:
             return f.new(f.denom*g_numer, f.numer*g_denom)
-
-    __rdiv__ = __rtruediv__
 
     def __pow__(f, n):
         """Raise ``f`` to a non-negative power ``n``. """

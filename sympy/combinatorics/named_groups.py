@@ -1,8 +1,5 @@
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range
-from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
+from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
 
 _af_new = Permutation._af_new
@@ -12,6 +9,9 @@ def AbelianGroup(*cyclic_orders):
     """
     Returns the direct product of cyclic groups with the given orders.
 
+    Explanation
+    ===========
+
     According to the structure theorem for finite abelian groups ([1]),
     every finite abelian group can be written as the direct product of
     finitely many cyclic groups.
@@ -19,8 +19,6 @@ def AbelianGroup(*cyclic_orders):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3, 4)
     PermutationGroup([
@@ -37,7 +35,7 @@ def AbelianGroup(*cyclic_orders):
     References
     ==========
 
-    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
+    .. [1] https://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
 
     """
     groups = []
@@ -58,6 +56,9 @@ def AbelianGroup(*cyclic_orders):
 def AlternatingGroup(n):
     """
     Generates the alternating group on ``n`` elements as a permutation group.
+
+    Explanation
+    ===========
 
     For ``n > 2``, the generators taken are ``(0 1 2), (0 1 2 ... n-1)`` for
     ``n`` odd
@@ -86,7 +87,7 @@ def AlternatingGroup(n):
     References
     ==========
 
-    [1] Armstrong, M. "Groups and Symmetry"
+    .. [1] Armstrong, M. "Groups and Symmetry"
 
     """
     # small cases are special
@@ -110,6 +111,13 @@ def AlternatingGroup(n):
         gens = gens[:1]
     G = PermutationGroup([_af_new(a) for a in gens], dups=False)
 
+    set_alternating_group_properties(G, n, n)
+    G._is_alt = True
+    return G
+
+
+def set_alternating_group_properties(G, n, degree):
+    """Set known properties of an alternating group. """
     if n < 4:
         G._is_abelian = True
         G._is_nilpotent = True
@@ -120,15 +128,17 @@ def AlternatingGroup(n):
         G._is_solvable = True
     else:
         G._is_solvable = False
-    G._degree = n
+    G._degree = degree
     G._is_transitive = True
-    G._is_alt = True
-    return G
+    G._is_dihedral = False
 
 
 def CyclicGroup(n):
     """
     Generates the cyclic group of order ``n`` as a permutation group.
+
+    Explanation
+    ===========
 
     The generator taken is the ``n``-cycle ``(0 1 2 ... n-1)``
     (in cycle notation). After the group is generated, some of its basic
@@ -164,12 +174,16 @@ def CyclicGroup(n):
     G._degree = n
     G._is_transitive = True
     G._order = n
+    G._is_dihedral = (n == 2)
     return G
 
 
 def DihedralGroup(n):
     r"""
     Generates the dihedral group `D_n` as a permutation group.
+
+    Explanation
+    ===========
 
     The dihedral group `D_n` is the group of symmetries of the regular
     ``n``-gon. The generators taken are the ``n``-cycle ``a = (0 1 2 ... n-1)``
@@ -201,7 +215,7 @@ def DihedralGroup(n):
     References
     ==========
 
-    [1] https://en.wikipedia.org/wiki/Dihedral_group
+    .. [1] https://en.wikipedia.org/wiki/Dihedral_group
 
     """
     # small cases are special
@@ -223,6 +237,7 @@ def DihedralGroup(n):
         G._is_nilpotent = True
     else:
         G._is_nilpotent = False
+    G._is_dihedral = True
     G._is_abelian = False
     G._is_solvable = True
     G._degree = n
@@ -234,6 +249,9 @@ def DihedralGroup(n):
 def SymmetricGroup(n):
     """
     Generates the symmetric group on ``n`` elements as a permutation group.
+
+    Explanation
+    ===========
 
     The generators taken are the ``n``-cycle
     ``(0 1 2 ... n-1)`` and the transposition ``(0 1)`` (in cycle notation).
@@ -264,7 +282,7 @@ def SymmetricGroup(n):
     References
     ==========
 
-    [1] https://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
+    .. [1] https://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
 
     """
     if n == 1:
@@ -279,6 +297,13 @@ def SymmetricGroup(n):
         a[0], a[1] = a[1], a[0]
         gen2 = _af_new(a)
         G = PermutationGroup([gen1, gen2])
+    set_symmetric_group_properties(G, n, n)
+    G._is_sym = True
+    return G
+
+
+def set_symmetric_group_properties(G, n, degree):
+    """Set known properties of a symmetric group. """
     if n < 3:
         G._is_abelian = True
         G._is_nilpotent = True
@@ -289,10 +314,9 @@ def SymmetricGroup(n):
         G._is_solvable = True
     else:
         G._is_solvable = False
-    G._degree = n
+    G._degree = degree
     G._is_transitive = True
-    G._is_sym = True
-    return G
+    G._is_dihedral = (n in [2, 3])  # cf Landau's func and Stirling's approx
 
 
 def RubikGroup(n):
@@ -304,5 +328,5 @@ def RubikGroup(n):
     """
     from sympy.combinatorics.generators import rubik
     if n <= 1:
-        raise ValueError("Invalid cube . n has to be greater than 1")
+        raise ValueError("Invalid cube. n has to be greater than 1")
     return PermutationGroup(rubik(n))

@@ -1,19 +1,29 @@
 import string
 
-from sympy import (
-    Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
-    expand_func, diff, EulerGamma, cancel, re, im, Product, carmichael)
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.function import (diff, expand_func)
+from sympy.core import (EulerGamma, TribonacciConstant)
+from sympy.core.numbers import (Float, I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.combinatorial.numbers import carmichael
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.integers import floor
+from sympy.polys.polytools import cancel
+from sympy.series.limits import limit, Limit
+from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, partition, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
-    trigamma, polygamma, factorial, sin, cos, cot, zeta)
+    genocchi, andre, partition, mobius, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
+from sympy.functions.combinatorial.numbers import _nT
 
-from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.core.expr import unchanged
+from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.core.numbers import GoldenRatio
-
-x = Symbol('x')
+from sympy.testing.pytest import raises, nocache_fail, warns_deprecated_sympy
+from sympy.abc import x
 
 
 def test_carmichael():
@@ -22,16 +32,16 @@ def test_carmichael():
     assert carmichael.find_carmichael_numbers_in_range(561, 1105) == carmichael.find_carmichael_numbers_in_range(561,
                                                                                                                  562)
     assert carmichael.find_first_n_carmichaels(5) == [561, 1105, 1729, 2465, 2821]
-    assert carmichael.is_prime(2821) == False
-    assert carmichael.is_prime(2465) == False
-    assert carmichael.is_prime(1729) == False
-    assert carmichael.is_prime(1105) == False
-    assert carmichael.is_prime(561) == False
+    raises(ValueError, lambda: carmichael.is_carmichael(-2))
+    raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(-2, 2))
+    raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(22, 2))
+    with warns_deprecated_sympy():
+        assert carmichael.is_prime(2821) == False
 
 
 def test_bernoulli():
     assert bernoulli(0) == 1
-    assert bernoulli(1) == Rational(-1, 2)
+    assert bernoulli(1) == Rational(1, 2)
     assert bernoulli(2) == Rational(1, 6)
     assert bernoulli(3) == 0
     assert bernoulli(4) == Rational(-1, 30)
@@ -43,7 +53,7 @@ def test_bernoulli():
     assert bernoulli(1000001) == 0
 
     assert bernoulli(0, x) == 1
-    assert bernoulli(1, x) == x - Rational(1, 2)
+    assert bernoulli(1, x) == x - S.Half
     assert bernoulli(2, x) == x**2 - x + Rational(1, 6)
     assert bernoulli(3, x) == x**3 - (3*x**2)/2 + x/2
 
@@ -63,6 +73,30 @@ def test_bernoulli():
     assert isinstance(bernoulli(2 * m + 1), bernoulli)
     assert bernoulli(2 * n + 1) == 0
 
+    assert bernoulli(x, 1) == bernoulli(x)
+
+    assert str(bernoulli(0.0, 2.3).evalf(n=10)) == '1.000000000'
+    assert str(bernoulli(1.0).evalf(n=10)) == '0.5000000000'
+    assert str(bernoulli(1.2).evalf(n=10)) == '0.4195995367'
+    assert str(bernoulli(1.2, 0.8).evalf(n=10)) == '0.2144830348'
+    assert str(bernoulli(1.2, -0.8).evalf(n=10)) == '-1.158865646 - 0.6745558744*I'
+    assert str(bernoulli(3.0, 1j).evalf(n=10)) == '1.5 - 0.5*I'
+    assert str(bernoulli(I).evalf(n=10)) == '0.9268485643 - 0.5821580598*I'
+    assert str(bernoulli(I, I).evalf(n=10)) == '0.1267792071 + 0.01947413152*I'
+    assert bernoulli(x).evalf() == bernoulli(x)
+
+
+def test_bernoulli_rewrite():
+    from sympy.functions.elementary.piecewise import Piecewise
+    n = Symbol('n', integer=True, nonnegative=True)
+
+    assert bernoulli(-1).rewrite(zeta) == pi**2/6
+    assert bernoulli(-2).rewrite(zeta) == 2*zeta(3)
+    assert not bernoulli(n, -3).rewrite(zeta).has(harmonic)
+    assert bernoulli(-4, x).rewrite(zeta) == 4*zeta(5, x)
+    assert isinstance(bernoulli(n, x).rewrite(zeta), Piecewise)
+    assert bernoulli(n+1, x).rewrite(zeta) == -(n+1) * zeta(-n, x)
+
 
 def test_fibonacci():
     assert [fibonacci(n) for n in range(-3, 5)] == [2, -1, 1, 0, 1, 1, 2, 3]
@@ -77,17 +111,18 @@ def test_fibonacci():
 
     # issue #8800
     n = Dummy('n')
-    assert fibonacci(n).limit(n, S.Infinity) == S.Infinity
-    assert lucas(n).limit(n, S.Infinity) == S.Infinity
+    assert fibonacci(n).limit(n, S.Infinity) is S.Infinity
+    assert lucas(n).limit(n, S.Infinity) is S.Infinity
 
     assert fibonacci(n).rewrite(sqrt) == \
         2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
     assert fibonacci(n).rewrite(sqrt).subs(n, 10).expand() == fibonacci(10)
     assert fibonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
-        fibonacci(10)
+        Float(fibonacci(10))
     assert lucas(n).rewrite(sqrt) == \
         (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
     assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
+    raises(ValueError, lambda: fibonacci(-3, x))
 
 
 def test_tribonacci():
@@ -102,7 +137,7 @@ def test_tribonacci():
     assert tribonacci(5, x) == x**8 + 3*x**5 + 3*x**2
 
     n = Dummy('n')
-    assert tribonacci(n).limit(n, S.Infinity) == S.Infinity
+    assert tribonacci(n).limit(n, S.Infinity) is S.Infinity
 
     w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
     a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
@@ -114,9 +149,15 @@ def test_tribonacci():
       + c**(n + 1)/((c - a)*(c - b)))
     assert tribonacci(n).rewrite(sqrt).subs(n, 4).simplify() == tribonacci(4)
     assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
-        tribonacci(10)
+        Float(tribonacci(10))
+    assert tribonacci(n).rewrite(TribonacciConstant) == floor(
+            3*TribonacciConstant**n*(102*sqrt(33) + 586)**Rational(1, 3)/
+            (-2*(102*sqrt(33) + 586)**Rational(1, 3) + 4 + (102*sqrt(33)
+            + 586)**Rational(2, 3)) + S.Half)
+    raises(ValueError, lambda: tribonacci(-1, x))
 
 
+@nocache_fail
 def test_bell():
     assert [bell(n) for n in range(8)] == [1, 1, 2, 5, 15, 52, 203, 877]
 
@@ -124,11 +165,11 @@ def test_bell():
     assert bell(1, x) == x
     assert bell(2, x) == x**2 + x
     assert bell(5, x) == x**5 + 10*x**4 + 25*x**3 + 15*x**2 + x
-    assert bell(oo) == S.Infinity
+    assert bell(oo) is S.Infinity
     raises(ValueError, lambda: bell(oo, x))
 
     raises(ValueError, lambda: bell(-1))
-    raises(ValueError, lambda: bell(S(1)/2))
+    raises(ValueError, lambda: bell(S.Half))
 
     X = symbols('x:6')
     # X = (x0, x1, .. x5)
@@ -153,11 +194,16 @@ def test_bell():
     # For large numbers, this is too slow
     # For nonintegers, there are significant precision errors
     for i in [0, 2, 3, 7, 13, 42, 55]:
+        # Running without the cache this is either very slow or goes into an
+        # infinite loop.
         assert bell(i).evalf() == bell(n).rewrite(Sum).evalf(subs={n: i})
 
+    m = Symbol("m")
+    assert bell(m).rewrite(Sum) == bell(m)
+    assert bell(n, m).rewrite(Sum) == bell(n, m)
     # issue 9184
     n = Dummy('n')
-    assert bell(n).limit(n, S.Infinity) == S.Infinity
+    assert bell(n).limit(n, S.Infinity) is S.Infinity
 
 
 def test_harmonic():
@@ -167,7 +213,7 @@ def test_harmonic():
     assert harmonic(n, 0) == n
     assert harmonic(n).evalf() == harmonic(n)
     assert harmonic(n, 1) == harmonic(n)
-    assert harmonic(1, n).evalf() == harmonic(1, n)
+    assert harmonic(1, n) == 1
 
     assert harmonic(0, 1) == 0
     assert harmonic(1, 1) == 1
@@ -185,14 +231,27 @@ def test_harmonic():
     assert harmonic(3, 3) == Rational(251, 216)
     assert harmonic(4, 3) == Rational(2035, 1728)
 
-    assert harmonic(oo, -1) == S.NaN
-    assert harmonic(oo, 0) == oo
-    assert harmonic(oo, S.Half) == oo
-    assert harmonic(oo, 1) == oo
+    assert harmonic(oo, -1) is S.NaN
+    assert harmonic(oo, 0) is oo
+    assert harmonic(oo, S.Half) is oo
+    assert harmonic(oo, 1) is oo
     assert harmonic(oo, 2) == (pi**2)/6
     assert harmonic(oo, 3) == zeta(3)
+    assert harmonic(oo, Dummy(negative=True)) is S.NaN
+    ip = Dummy(integer=True, positive=True)
+    if (1/ip <= 1) is True:  #---------------------------------+
+        assert None, 'delete this if-block and the next line' #|
+    ip = Dummy(even=True, positive=True)  #--------------------+
+    assert harmonic(oo, 1/ip) is oo
+    assert harmonic(oo, 1 + ip) is zeta(1 + ip)
 
     assert harmonic(0, m) == 0
+    assert harmonic(-1, -1) == 0
+    assert harmonic(-1, 0) == -1
+    assert harmonic(-1, 1) is S.ComplexInfinity
+    assert harmonic(-1, 2) is S.NaN
+    assert harmonic(-3, -2) == -5
+    assert harmonic(-3, -3) == 9
 
 
 def test_harmonic_rational():
@@ -204,58 +263,55 @@ def test_harmonic_rational():
     qo = S(13)
 
     Heee = harmonic(ne + pe/qe)
-    Aeee = (-log(10) + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + pi*(1/S(4) + sqrt(5)/4)/(2*sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 13944145/S(4720968))
+    Aeee = (-log(10) + 2*(Rational(-1, 4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 - Rational(1, 4))*log(sqrt(sqrt(5)/8 + Rational(5, 8)))
+             + pi*sqrt(2*sqrt(5)/5 + 1)/2 + Rational(13944145, 4720968))
 
     Heeo = harmonic(ne + pe/qo)
-    Aeeo = (-log(26) + 2*log(sin(3*pi/13))*cos(4*pi/13) + 2*log(sin(2*pi/13))*cos(32*pi/13)
-             + 2*log(sin(5*pi/13))*cos(80*pi/13) - 2*log(sin(6*pi/13))*cos(5*pi/13)
-             - 2*log(sin(4*pi/13))*cos(pi/13) + pi*cot(5*pi/13)/2 - 2*log(sin(pi/13))*cos(3*pi/13)
-             + 2422020029/S(702257080))
+    Aeeo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(4, 13)) + 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(32, 13))
+             + 2*log(sin(pi*Rational(5, 13)))*cos(pi*Rational(80, 13)) - 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(5, 13))
+             - 2*log(sin(pi*Rational(4, 13)))*cos(pi/13) + pi*cot(pi*Rational(5, 13))/2 - 2*log(sin(pi/13))*cos(pi*Rational(3, 13))
+             + Rational(2422020029, 702257080))
 
     Heoe = harmonic(ne + po/qe)
-    Aeoe = (-log(20) + 2*(1/S(4) + sqrt(5)/4)*log(-1/S(4) + sqrt(5)/4)
-             + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 11818877030/S(4286604231) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
+    Aeoe = (-log(20) + 2*(Rational(1, 4) + sqrt(5)/4)*log(Rational(-1, 4) + sqrt(5)/4)
+             + 2*(Rational(-1, 4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 - Rational(1, 4))*log(sqrt(sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 + Rational(1, 4))*log(Rational(1, 4) + sqrt(5)/4)
+             + Rational(11818877030, 4286604231) + pi*sqrt(2*sqrt(5) + 5)/2)
 
     Heoo = harmonic(ne + po/qo)
-    Aeoo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
-             + 2*log(sin(6*pi/13))*cos(108*pi/13) - 2*log(sin(5*pi/13))*cos(pi/13)
-             - 2*log(sin(pi/13))*cos(5*pi/13) + pi*cot(4*pi/13)/2
-             - 2*log(sin(2*pi/13))*cos(3*pi/13) + 11669332571/S(3628714320))
+    Aeoo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(54, 13)) + 2*log(sin(pi*Rational(4, 13)))*cos(pi*Rational(6, 13))
+             + 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(108, 13)) - 2*log(sin(pi*Rational(5, 13)))*cos(pi/13)
+             - 2*log(sin(pi/13))*cos(pi*Rational(5, 13)) + pi*cot(pi*Rational(4, 13))/2
+             - 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(3, 13)) + Rational(11669332571, 3628714320))
 
     Hoee = harmonic(no + pe/qe)
-    Aoee = (-log(10) + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + pi*(1/S(4) + sqrt(5)/4)/(2*sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 779405/S(277704))
+    Aoee = (-log(10) + 2*(Rational(-1, 4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 - Rational(1, 4))*log(sqrt(sqrt(5)/8 + Rational(5, 8)))
+             + pi*sqrt(2*sqrt(5)/5 + 1)/2 + Rational(779405, 277704))
 
     Hoeo = harmonic(no + pe/qo)
-    Aoeo = (-log(26) + 2*log(sin(3*pi/13))*cos(4*pi/13) + 2*log(sin(2*pi/13))*cos(32*pi/13)
-             + 2*log(sin(5*pi/13))*cos(80*pi/13) - 2*log(sin(6*pi/13))*cos(5*pi/13)
-             - 2*log(sin(4*pi/13))*cos(pi/13) + pi*cot(5*pi/13)/2
-             - 2*log(sin(pi/13))*cos(3*pi/13) + 53857323/S(16331560))
+    Aoeo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(4, 13)) + 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(32, 13))
+             + 2*log(sin(pi*Rational(5, 13)))*cos(pi*Rational(80, 13)) - 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(5, 13))
+             - 2*log(sin(pi*Rational(4, 13)))*cos(pi/13) + pi*cot(pi*Rational(5, 13))/2
+             - 2*log(sin(pi/13))*cos(pi*Rational(3, 13)) + Rational(53857323, 16331560))
 
     Hooe = harmonic(no + po/qe)
-    Aooe = (-log(20) + 2*(1/S(4) + sqrt(5)/4)*log(-1/S(4) + sqrt(5)/4)
-             + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 486853480/S(186374097) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
+    Aooe = (-log(20) + 2*(Rational(1, 4) + sqrt(5)/4)*log(Rational(-1, 4) + sqrt(5)/4)
+             + 2*(Rational(-1, 4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 - Rational(1, 4))*log(sqrt(sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 + Rational(1, 4))*log(Rational(1, 4) + sqrt(5)/4)
+             + Rational(486853480, 186374097) + pi*sqrt(2*sqrt(5) + 5)/2)
 
     Hooo = harmonic(no + po/qo)
-    Aooo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
-             + 2*log(sin(6*pi/13))*cos(108*pi/13) - 2*log(sin(5*pi/13))*cos(pi/13)
-             - 2*log(sin(pi/13))*cos(5*pi/13) + pi*cot(4*pi/13)/2
-             - 2*log(sin(2*pi/13))*cos(3*pi/13) + 383693479/S(125128080))
+    Aooo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(54, 13)) + 2*log(sin(pi*Rational(4, 13)))*cos(pi*Rational(6, 13))
+             + 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(108, 13)) - 2*log(sin(pi*Rational(5, 13)))*cos(pi/13)
+             - 2*log(sin(pi/13))*cos(pi*Rational(5, 13)) + pi*cot(pi*Rational(4, 13))/2
+             - 2*log(sin(pi*Rational(2, 13)))*cos(3*pi/13) + Rational(383693479, 125128080))
 
     H = [Heee, Heeo, Heoe, Heoo, Hoee, Hoeo, Hooe, Hooo]
     A = [Aeee, Aeeo, Aeoe, Aeoo, Aoee, Aoeo, Aooe, Aooo]
-
     for h, a in zip(H, A):
         e = expand_func(h).doit()
         assert cancel(e/a) == 1
@@ -265,56 +321,58 @@ def test_harmonic_rational():
 def test_harmonic_evalf():
     assert str(harmonic(1.5).evalf(n=10)) == '1.280372306'
     assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
+    assert str(harmonic(4.0, -3).evalf(n=10)) == '100.0000000'
+    assert str(harmonic(7.0, 1.0).evalf(n=10)) == '2.592857143'
+    assert str(harmonic(1, pi).evalf(n=10)) == '1.000000000'
+    assert str(harmonic(2, pi).evalf(n=10)) == '1.113314732'
+    assert str(harmonic(1000.0, pi).evalf(n=10)) == '1.176241563'
+    assert str(harmonic(I).evalf(n=10)) == '0.6718659855 + 1.076674047*I'
+    assert str(harmonic(I, I).evalf(n=10)) == '-0.3970915266 + 1.9629689*I'
 
+    assert harmonic(-1.0, 1).evalf() is S.NaN
+    assert harmonic(-2.0, 2.0).evalf() is S.NaN
 
-def test_harmonic_rewrite_polygamma():
+def test_harmonic_rewrite():
+    from sympy.functions.elementary.piecewise import Piecewise
     n = Symbol("n")
-    m = Symbol("m")
+    m = Symbol("m", integer=True, positive=True)
+    x1 = Symbol("x1", positive=True)
+    x2 = Symbol("x2", negative=True)
 
     assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(trigamma) ==  polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(polygamma) ==  polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(trigamma) == polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(polygamma) == polygamma(0, n + 1) + EulerGamma
 
     assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
-    assert harmonic(n,m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
+    assert isinstance(harmonic(n,m).rewrite(polygamma), Piecewise)
 
     assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
     assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
-
-@XFAIL
-def test_harmonic_limit_fail():
-    n = Symbol("n")
-    m = Symbol("m")
-    # For m > 1:
-    assert limit(harmonic(n, m), n, oo) == zeta(m)
-
-@XFAIL
-def test_harmonic_rewrite_sum_fail():
-    n = Symbol("n")
-    m = Symbol("m")
+    assert harmonic(n, x1).rewrite("tractable") == harmonic(n, x1)
+    assert harmonic(n, x1 + 1).rewrite("tractable") == zeta(x1 + 1) - zeta(x1 + 1, n + 1)
+    assert harmonic(n, x2).rewrite("tractable") == zeta(x2) - zeta(x2, n + 1)
 
     _k = Dummy("k")
-    assert harmonic(n).rewrite(Sum) == Sum(1/_k, (_k, 1, n))
-    assert harmonic(n, m).rewrite(Sum) == Sum(_k**(-m), (_k, 1, n))
+    assert harmonic(n).rewrite(Sum).dummy_eq(Sum(1/_k, (_k, 1, n)))
+    assert harmonic(n, m).rewrite(Sum).dummy_eq(Sum(_k**(-m), (_k, 1, n)))
 
 
-def replace_dummy(expr, sym):
-    dum = expr.atoms(Dummy)
-    if not dum:
-        return expr
-    assert len(dum) == 1
-    return expr.xreplace({dum.pop(): sym})
-
-
-def test_harmonic_rewrite_sum():
-    n = Symbol("n")
-    m = Symbol("m")
-
-    _k = Dummy("k")
-    assert replace_dummy(harmonic(n).rewrite(Sum), _k) == Sum(1/_k, (_k, 1, n))
-    assert replace_dummy(harmonic(n, m).rewrite(Sum), _k) == Sum(_k**(-m), (_k, 1, n))
+def test_harmonic_calculus():
+    y = Symbol("y", positive=True)
+    z = Symbol("z", negative=True)
+    assert harmonic(x, 1).limit(x, 0) == 0
+    assert harmonic(x, y).limit(x, 0) == 0
+    assert harmonic(x, 1).series(x, y, 2) == \
+            harmonic(y) + (x - y)*zeta(2, y + 1) + O((x - y)**2, (x, y))
+    assert limit(harmonic(x, y), x, oo) == harmonic(oo, y)
+    assert limit(harmonic(x, y + 1), x, oo) == zeta(y + 1)
+    assert limit(harmonic(x, y - 1), x, oo) == harmonic(oo, y - 1)
+    assert limit(harmonic(x, z), x, oo) == Limit(harmonic(x, z), x, oo, dir='-')
+    assert limit(harmonic(x, z + 1), x, oo) == oo
+    assert limit(harmonic(x, z + 2), x, oo) == harmonic(oo, z + 2)
+    assert limit(harmonic(x, z - 1), x, oo) == Limit(harmonic(x, z - 1), x, oo, dir='-')
 
 
 def test_euler():
@@ -332,23 +390,26 @@ def test_euler():
     assert euler(n) != -1
     assert euler(n).subs(n, 2) == -1
 
-    raises(ValueError, lambda: euler(-2))
-    raises(ValueError, lambda: euler(-3))
-    raises(ValueError, lambda: euler(2.3))
+    assert euler(-1) == S.Pi / 2
+    assert euler(-1, 1) == 2*log(2)
+    assert euler(-2).evalf() == (2*S.Catalan).evalf()
+    assert euler(-3).evalf() == (S.Pi**3 / 16).evalf()
+    assert str(euler(2.3).evalf(n=10)) == '-1.052850274'
+    assert str(euler(1.2, 3.4).evalf(n=10)) == '3.575613489'
+    assert str(euler(I).evalf(n=10)) == '1.248446443 - 0.7675445124*I'
+    assert str(euler(I, I).evalf(n=10)) == '0.04812930469 + 0.01052411008*I'
 
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
 
     assert euler(n).rewrite(Sum) == euler(n)
-    # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
     n = Symbol('n', integer=True, nonnegative=True)
     assert euler(2*n + 1).rewrite(Sum) == 0
-
-
-@XFAIL
-def test_euler_failing():
-    # depends on dummy variables being implemented https://github.com/sympy/sympy/issues/5665
-    assert euler(2*n).rewrite(Sum) == I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
+    _j = Dummy('j')
+    _k = Dummy('k')
+    assert euler(2*n).rewrite(Sum).dummy_eq(
+            I*Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*
+                  binomial(_k, _j)/_k, (_j, 0, _k), (_k, 1, 2*n + 1)))
 
 
 def test_euler_odd():
@@ -360,17 +421,15 @@ def test_euler_odd():
 
 def test_euler_polynomials():
     assert euler(0, x) == 1
-    assert euler(1, x) == x - Rational(1, 2)
+    assert euler(1, x) == x - S.Half
     assert euler(2, x) == x**2 - x
     assert euler(3, x) == x**3 - (3*x**2)/2 + Rational(1, 4)
     m = Symbol('m')
     assert isinstance(euler(m, x), euler)
-    from sympy import Float
+    from sympy.core.numbers import Float
     A = Float('-0.46237208575048694923364757452876131e8')  # from Maple
-    B = euler(19, S.Pi.evalf(32))
-    assert abs((A - B)/A) < 1e-31  # expect low relative error
-    C = euler(19, S.Pi, evaluate=False).evalf(32)
-    assert abs((A - C)/A) < 1e-31
+    B = euler(19, S.Pi).evalf(32)
+    assert abs((A - B)/A) < 1e-31
 
 
 def test_euler_polynomial_rewrite():
@@ -391,13 +450,13 @@ def test_catalan():
         assert catalan(n).rewrite(factorial).subs(n, i) == c
         assert catalan(n).rewrite(Product).subs(n, i).doit() == c
 
-    assert catalan(x) == catalan(x)
+    assert unchanged(catalan, x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
-    assert catalan(Rational(1, 2)).rewrite(gamma) == 8/(3*pi)
-    assert catalan(Rational(1, 2)).rewrite(factorial).rewrite(gamma) ==\
+    assert catalan(S.Half).rewrite(gamma) == 8/(3*pi)
+    assert catalan(S.Half).rewrite(factorial).rewrite(gamma) ==\
         8 / (3 * pi)
     assert catalan(3*x).rewrite(gamma) == 4**(
-        3*x)*gamma(3*x + Rational(1, 2))/(sqrt(pi)*gamma(3*x + 2))
+        3*x)*gamma(3*x + S.Half)/(sqrt(pi)*gamma(3*x + 2))
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
 
     assert catalan(n).rewrite(factorial) == factorial(2*n) / (factorial(n + 1)
@@ -406,7 +465,7 @@ def test_catalan():
     assert isinstance(catalan(m).rewrite(Product), Product)
 
     assert diff(catalan(x), x) == (polygamma(
-        0, x + Rational(1, 2)) - polygamma(0, x + 2) + log(4))*catalan(x)
+        0, x + S.Half) - polygamma(0, x + 2) + log(4))*catalan(x)
 
     assert catalan(x).evalf() == catalan(x)
     c = catalan(S.Half).evalf()
@@ -421,23 +480,86 @@ def test_catalan():
 
 
 def test_genocchi():
-    genocchis = [1, -1, 0, 1, 0, -3, 0, 17]
+    genocchis = [0, -1, -1, 0, 1, 0, -3, 0, 17]
     for n, g in enumerate(genocchis):
-        assert genocchi(n + 1) == g
+        assert genocchi(n) == g
 
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True, positive=True)
-    assert genocchi(m) == genocchi(m)
-    assert genocchi(n).rewrite(bernoulli) == (1 - 2 ** n) * bernoulli(n) * 2
+    assert unchanged(genocchi, m)
+    assert genocchi(2*n + 1) == 0
+    gn = 2 * (1 - 2**n) * bernoulli(n)
+    assert genocchi(n).rewrite(bernoulli).factor() == gn.factor()
+    gnx = 2 * (bernoulli(n, x) - 2**n * bernoulli(n, (x+1) / 2))
+    assert genocchi(n, x).rewrite(bernoulli).factor() == gnx.factor()
     assert genocchi(2 * n).is_odd
+    assert genocchi(2 * n).is_even is False
+    assert genocchi(2 * n + 1).is_even
+    assert genocchi(n).is_integer
     assert genocchi(4 * n).is_positive
     # these are the only 2 prime Genocchi numbers
     assert genocchi(6, evaluate=False).is_prime == S(-3).is_prime
     assert genocchi(8, evaluate=False).is_prime
     assert genocchi(4 * n + 2).is_negative
+    assert genocchi(4 * n + 1).is_negative is False
     assert genocchi(4 * n - 2).is_negative
 
+    g0 = genocchi(0, evaluate=False)
+    assert g0.is_positive is False
+    assert g0.is_negative is False
+    assert g0.is_even is True
+    assert g0.is_odd is False
 
+    assert genocchi(0, x) == 0
+    assert genocchi(1, x) == -1
+    assert genocchi(2, x) == 1 - 2*x
+    assert genocchi(3, x) == 3*x - 3*x**2
+    assert genocchi(4, x) == -1 + 6*x**2 - 4*x**3
+    y = Symbol("y")
+    assert genocchi(5, (x+y)**100) == -5*(x+y)**400 + 10*(x+y)**300 - 5*(x+y)**100
+
+    assert str(genocchi(5.0, 4.0).evalf(n=10)) == '-660.0000000'
+    assert str(genocchi(Rational(5, 4)).evalf(n=10)) == '-1.104286457'
+    assert str(genocchi(-2).evalf(n=10)) == '3.606170709'
+    assert str(genocchi(1.3, 3.7).evalf(n=10)) == '-1.847375373'
+    assert str(genocchi(I, 1.0).evalf(n=10)) == '-0.3161917278 - 1.45311955*I'
+
+    n = Symbol('n')
+    assert genocchi(n, x).rewrite(dirichlet_eta) == -2*n * dirichlet_eta(1-n, x)
+
+
+def test_andre():
+    nums = [1, 1, 1, 2, 5, 16, 61, 272, 1385, 7936, 50521]
+    for n, a in enumerate(nums):
+        assert andre(n) == a
+    assert andre(S.Infinity) == S.Infinity
+    assert andre(-1) == -log(2)
+    assert andre(-2) == -2*S.Catalan
+    assert andre(-3) == 3*zeta(3)/16
+    assert andre(-5) == -15*zeta(5)/256
+    # In fact andre(-2*n) is related to the Dirichlet *beta* function
+    # at 2*n, but SymPy doesn't implement that (or general L-functions)
+    assert unchanged(andre, -4)
+
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert unchanged(andre, n)
+    assert andre(n).is_integer is True
+    assert andre(n).is_positive is True
+
+    assert str(andre(10, evaluate=False).evalf(n=10)) == '50521.00000'
+    assert str(andre(-1, evaluate=False).evalf(n=10)) == '-0.6931471806'
+    assert str(andre(-2, evaluate=False).evalf(n=10)) == '-1.831931188'
+    assert str(andre(-4, evaluate=False).evalf(n=10)) == '1.977889103'
+    assert str(andre(I, evaluate=False).evalf(n=10)) == '2.378417833 + 0.6343322845*I'
+
+    assert andre(x).rewrite(polylog) == \
+            (-I)**(x+1) * polylog(-x, I) + I**(x+1) * polylog(-x, -I)
+    assert andre(x).rewrite(zeta) == \
+            2 * gamma(x+1) / (2*pi)**(x+1) * \
+            (zeta(x+1, Rational(1,4)) - cos(pi*x) * zeta(x+1, Rational(3,4)))
+
+
+@nocache_fail
 def test_partition():
     partition_nums = [1, 1, 2, 3, 5, 7, 11, 15, 22]
     for n, p in enumerate(partition_nums):
@@ -455,7 +577,61 @@ def test_partition():
     assert partition(p).is_positive
     assert partition(x).subs(x, 7) == 15
     assert partition(y).subs(y, 8) == 22
-    raises(ValueError, lambda: partition(S(5)/4))
+    raises(ValueError, lambda: partition(Rational(5, 4)))
+
+
+def test_mobius():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: mobius(m))
+    raises(TypeError, lambda: mobius(4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: mobius(m))
+    raises(ValueError, lambda: mobius(-3))
+
+    # special case
+    p = Symbol('p', prime=True)
+    assert mobius(p) == -1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert mobius(n).is_integer is True
+    assert mobius(n).is_prime is False
+
+    # symbolic
+    n = Symbol('n', integer=True, positive=True)
+    k = Symbol('k', integer=True, positive=True)
+    assert mobius(n**2) == 0
+    assert mobius(4*n) == 0
+    assert isinstance(mobius(n**k), mobius)
+    assert mobius(n**(k+1)) == 0
+    assert isinstance(mobius(3**k), mobius)
+    assert mobius(3**(k+1)) == 0
+    m = Symbol('m')
+    assert isinstance(mobius(4*m), mobius)
+
+    # Integer
+    assert mobius(13*7) == 1
+    assert mobius(1) == 1
+    assert mobius(13*7*5) == -1
+    assert mobius(13**2) == 0
+    A008683 = [1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1, 0,
+               -1, 0, 1, 1, -1, 0, 0, 1, 0, 0, -1, -1, -1, 0, 1, 1, 1, 0, -1,
+               1, 1, 0, -1, -1, -1, 0, 0, 1, -1, 0, 0, 0, 1, 0, -1, 0, 1, 0]
+    for n, val in enumerate(A008683, 1):
+        assert mobius(n) == val
+
+
+def test__nT():
+       assert [_nT(i, j) for i in range(5) for j in range(i + 2)] == [
+    1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 2, 1, 1, 0]
+       check = [_nT(10, i) for i in range(11)]
+       assert check == [0, 1, 5, 8, 9, 7, 5, 3, 2, 1, 1]
+       assert all(type(i) is int for i in check)
+       assert _nT(10, 5) == 7
+       assert _nT(100, 98) == 2
+       assert _nT(100, 100) == 1
+       assert _nT(10, 3) == 8
 
 
 def test_nC_nP_nT():
@@ -463,10 +639,10 @@ def test_nC_nP_nT():
         multiset_permutations, multiset_combinations, multiset_partitions,
         partitions, subsets, permutations)
     from sympy.functions.combinatorial.numbers import (
-        nP, nC, nT, stirling, _multiset_histogram, _AOP_product)
+        nP, nC, nT, stirling, _stirling1, _stirling2, _multiset_histogram, _AOP_product)
+
     from sympy.combinatorics.permutations import Permutation
-    from sympy.core.numbers import oo
-    from random import choice
+    from sympy.core.random import choice
 
     c = string.ascii_lowercase
     for i in range(100):
@@ -507,6 +683,7 @@ def test_nC_nP_nT():
         tot = 0
         for j in range(1, i + 2):
             check = nT(i, j)
+            assert check.is_Integer
             tot += check
             assert sum(1 for p in partitions(i, j, size=True) if p[0] == j) == check
         assert nT(i) == tot
@@ -585,6 +762,10 @@ def test_nC_nP_nT():
     assert stirling(3, 4, kind=1) == stirling(3, 4, kind=1) == 0
     raises(ValueError, lambda: stirling(-2, 2))
 
+    # Assertion that the return type is SymPy Integer.
+    assert isinstance(_stirling1(6, 3), Integer)
+    assert isinstance(_stirling2(6, 3), Integer)
+
     def delta(p):
         if len(p) == 1:
             return oo
@@ -635,10 +816,79 @@ def test_issue_8496():
 def test_issue_8601():
     n = Symbol('n', integer=True, negative=True)
 
-    assert catalan(n - 1) == S.Zero
-    assert catalan(-S.Half) == S.ComplexInfinity
-    assert catalan(-S.One) == -S.Half
+    assert catalan(n - 1) is S.Zero
+    assert catalan(Rational(-1, 2)) is S.ComplexInfinity
+    assert catalan(-S.One) == Rational(-1, 2)
     c1 = catalan(-5.6).evalf()
     assert str(c1) == '6.93334070531408e-5'
     c2 = catalan(-35.4).evalf()
     assert str(c2) == '-4.14189164517449e-24'
+
+
+def test_motzkin():
+    assert motzkin.is_motzkin(4) == True
+    assert motzkin.is_motzkin(9) == True
+    assert motzkin.is_motzkin(10) == False
+    assert motzkin.find_motzkin_numbers_in_range(10,200) == [21, 51, 127]
+    assert motzkin.find_motzkin_numbers_in_range(10,400) == [21, 51, 127, 323]
+    assert motzkin.find_motzkin_numbers_in_range(10,1600) == [21, 51, 127, 323, 835]
+    assert motzkin.find_first_n_motzkins(5) == [1, 1, 2, 4, 9]
+    assert motzkin.find_first_n_motzkins(7) == [1, 1, 2, 4, 9, 21, 51]
+    assert motzkin.find_first_n_motzkins(10) == [1, 1, 2, 4, 9, 21, 51, 127, 323, 835]
+    raises(ValueError, lambda: motzkin.eval(77.58))
+    raises(ValueError, lambda: motzkin.eval(-8))
+    raises(ValueError, lambda: motzkin.find_motzkin_numbers_in_range(-2,7))
+    raises(ValueError, lambda: motzkin.find_motzkin_numbers_in_range(13,7))
+    raises(ValueError, lambda: motzkin.find_first_n_motzkins(112.8))
+
+
+def test_nD_derangements():
+    from sympy.utilities.iterables import (partitions, multiset,
+        multiset_derangements, multiset_permutations)
+    from sympy.functions.combinatorial.numbers import nD
+
+    got = []
+    for i in partitions(8, k=4):
+        s = []
+        it = 0
+        for k, v in i.items():
+            for i in range(v):
+                s.extend([it]*k)
+                it += 1
+        ms = multiset(s)
+        c1 = sum(1 for i in multiset_permutations(s) if
+            all(i != j for i, j in zip(i, s)))
+        assert c1 == nD(ms) == nD(ms, 0) == nD(ms, 1)
+        v = [tuple(i) for i in multiset_derangements(s)]
+        c2 = len(v)
+        assert c2 == len(set(v))
+        assert c1 == c2
+        got.append(c1)
+    assert got == [1, 4, 6, 12, 24, 24, 61, 126, 315, 780, 297, 772,
+        2033, 5430, 14833]
+
+    assert nD('1112233456', brute=True) == nD('1112233456') == 16356
+    assert nD('') == nD([]) == nD({}) == 0
+    assert nD({1: 0}) == 0
+    raises(ValueError, lambda: nD({1: -1}))
+    assert nD('112') == 0
+    assert nD(i='112') == 0
+    assert [nD(n=i) for i in range(6)] == [0, 0, 1, 2, 9, 44]
+    assert nD((i for i in range(4))) == nD('0123') == 9
+    assert nD(m=(i for i in range(4))) == 3
+    assert nD(m={0: 1, 1: 1, 2: 1, 3: 1}) == 3
+    assert nD(m=[0, 1, 2, 3]) == 3
+    raises(TypeError, lambda: nD(m=0))
+    raises(TypeError, lambda: nD(-1))
+    assert nD({-1: 1, -2: 1}) == 1
+    assert nD(m={0: 3}) == 0
+    raises(ValueError, lambda: nD(i='123', n=3))
+    raises(ValueError, lambda: nD(i='123', m=(1,2)))
+    raises(ValueError, lambda: nD(n=0, m=(1,2)))
+    raises(ValueError, lambda: nD({1: -1}))
+    raises(ValueError, lambda: nD(m={-1: 1, 2: 1}))
+    raises(ValueError, lambda: nD(m={1: -1, 2: 1}))
+    raises(ValueError, lambda: nD(m=[-1, 2]))
+    raises(TypeError, lambda: nD({1: x}))
+    raises(TypeError, lambda: nD(m={1: x}))
+    raises(TypeError, lambda: nD(m={x: 1}))

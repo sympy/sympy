@@ -1,5 +1,8 @@
-from sympy import (Derivative, diff, Function, Integer, Mul, pi, sin, Symbol,
-                   symbols)
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Integer, pi)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.trigonometric import sin
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.hilbert import HilbertSpace
@@ -10,8 +13,8 @@ from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.represent import represent
-from sympy.core.trace import Tr
 from sympy.physics.quantum.spin import JzKet, JzBra
+from sympy.physics.quantum.trace import Tr
 from sympy.matrices import eye
 
 
@@ -94,6 +97,8 @@ def test_identity():
 
     assert I * O == O
     assert O * I == O
+    assert I * Dagger(O) == Dagger(O)
+    assert Dagger(O) * I == Dagger(O)
     assert isinstance(I * I, IdentityOperator)
     assert isinstance(3 * I, Mul)
     assert isinstance(I * x, Mul)
@@ -226,3 +231,33 @@ def test_differential_operator():
     assert diff(d, th) == \
         DifferentialOperator(Derivative(d.expr, th), f(r, th))
     assert qapply(d*w) == Wavefunction(3*sin(th), r, (th, 0, pi))
+
+
+def test_eval_power():
+    from sympy.core import Pow
+    from sympy.core.expr import unchanged
+    O = Operator('O')
+    U = UnitaryOperator('U')
+    H = HermitianOperator('H')
+    assert O**-1 == O.inv() # same as doc test
+    assert U**-1 == U.inv()
+    assert H**-1 == H.inv()
+    x = symbols("x", commutative = True)
+    assert unchanged(Pow, H, x) # verify Pow(H,x)=="X^n"
+    assert H**x == Pow(H, x)
+    assert Pow(H,x) == Pow(H, x, evaluate=False) # Just check
+    from sympy.physics.quantum.gate import XGate
+    X = XGate(0) # is hermitian and unitary
+    assert unchanged(Pow, X, x) # verify Pow(X,x)=="X^x"
+    assert X**x == Pow(X, x)
+    assert Pow(X, x, evaluate=False) == Pow(X, x) # Just check
+    n = symbols("n", integer=True, even=True)
+    assert X**n == 1
+    n = symbols("n", integer=True, odd=True)
+    assert X**n == X
+    n = symbols("n", integer=True)
+    assert unchanged(Pow, X, n) # verify Pow(X,n)=="X^n"
+    assert X**n == Pow(X, n)
+    assert Pow(X, n, evaluate=False)==Pow(X, n) # Just check
+    assert X**4 == 1
+    assert X**7 == X

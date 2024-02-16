@@ -1,7 +1,15 @@
-from sympy import Symbol, Contains, S, Interval, FiniteSet, oo, Eq
+from sympy.core.expr import unchanged
+from sympy.core.numbers import oo
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.sets.contains import Contains
+from sympy.sets.sets import (FiniteSet, Interval)
+from sympy.testing.pytest import raises
 
 
 def test_contains_basic():
+    raises(TypeError, lambda: Contains(S.Integers, 1))
     assert Contains(2, S.Integers) is S.true
     assert Contains(-2, S.Naturals) is S.false
 
@@ -11,8 +19,8 @@ def test_contains_basic():
 
 def test_issue_6194():
     x = Symbol('x')
-    assert Contains(x, Interval(0, 1)) != (x >= 0) & (x <= 1)
-    assert Interval(0, 1).contains(x) == (x >= 0) & (x <= 1)
+    assert unchanged(Contains, x, Interval(0, 1))
+    assert Interval(0, 1).contains(x) == (S.Zero <= x) & (x <= 1)
     assert Contains(x, FiniteSet(0)) != S.false
     assert Contains(x, Interval(1, 1)) != S.false
     assert Contains(x, S.Integers) != S.false
@@ -28,11 +36,17 @@ def test_binary_symbols():
     y = Symbol('y')
     z = Symbol('z')
     assert Contains(x, FiniteSet(y, Eq(z, True))
-        ).binary_symbols == set([y, z])
+        ).binary_symbols == {y, z}
 
 
 def test_as_set():
     x = Symbol('x')
     y = Symbol('y')
-    assert Contains(x, FiniteSet(y)
-        ).as_set() == Contains(x, FiniteSet(y))
+    assert Contains(x, FiniteSet(y)).as_set() == FiniteSet(y)
+    assert Contains(x, S.Integers).as_set() == S.Integers
+    assert Contains(x, S.Reals).as_set() == S.Reals
+
+
+def test_type_error():
+    # Pass in a parameter not of type "set"
+    raises(TypeError, lambda: Contains(2, None))

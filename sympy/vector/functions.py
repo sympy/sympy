@@ -3,7 +3,10 @@ from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
-from sympy import diff, integrate, S, simplify
+from sympy.core.function import diff
+from sympy.core.singleton import S
+from sympy.integrals.integrals import integrate
+from sympy.simplify.simplify import simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
 
@@ -56,7 +59,7 @@ def express(expr, system, system2=None, variables=False):
 
     """
 
-    if expr == 0 or expr == Vector.zero:
+    if expr in (0, Vector.zero):
         return expr
 
     if not isinstance(system, CoordSys3D):
@@ -71,11 +74,7 @@ def express(expr, system, system2=None, variables=False):
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
-            system_list = []
-            for x in expr.atoms(BaseScalar, BaseVector):
-                if x.system != system:
-                    system_list.append(x.system)
-            system_list = set(system_list)
+            system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {system}
             subs_dict = {}
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
@@ -112,9 +111,9 @@ def express(expr, system, system2=None, variables=False):
                                 Vectors")
         if variables:
             # Given expr is a scalar field
-            system_set = set([])
+            system_set = set()
             expr = sympify(expr)
-            # Subsitute all the coordinate variables
+            # Substitute all the coordinate variables
             for x in expr.atoms(BaseScalar):
                 if x.system != system:
                     system_set.add(x.system)
@@ -154,8 +153,8 @@ def directional_derivative(field, direction_vector):
     5*R.x**2 + 30*R.x*R.z
 
     """
-    from sympy.vector.operators import _get_coord_sys_from_expr
-    coord_sys = _get_coord_sys_from_expr(field)
+    from sympy.vector.operators import _get_coord_systems
+    coord_sys = _get_coord_systems(field)
     if len(coord_sys) > 0:
         # TODO: This gets a random coordinate system in case of multiple ones:
         coord_sys = next(iter(coord_sys))
@@ -171,7 +170,7 @@ def directional_derivative(field, direction_vector):
     elif isinstance(field, Vector):
         return Vector.zero
     else:
-        return S(0)
+        return S.Zero
 
 
 def laplacian(expr):
@@ -198,6 +197,7 @@ def laplacian(expr):
     2*R.i + 6*R.y*R.j + 12*R.z**2*R.k
 
     """
+
     delop = Del()
     if expr.is_Vector:
         return (gradient(divergence(expr)) - curl(curl(expr))).doit()
@@ -267,7 +267,7 @@ def is_solenoidal(field):
         raise TypeError("field should be a Vector")
     if field == Vector.zero:
         return True
-    return divergence(field).simplify() == S(0)
+    return divergence(field).simplify() is S.Zero
 
 
 def scalar_potential(field, coord_sys):
@@ -304,9 +304,9 @@ def scalar_potential(field, coord_sys):
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
     if field == Vector.zero:
-        return S(0)
+        return S.Zero
     # Express the field exntirely in coord_sys
-    # Subsitute coordinate variables also
+    # Substitute coordinate variables also
     if not isinstance(coord_sys, CoordSys3D):
         raise TypeError("coord_sys must be a CoordSys3D")
     field = express(field, coord_sys, variables=True)
@@ -353,7 +353,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSys3D, Point
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy.vector import scalar_potential_difference
     >>> R = CoordSys3D('R')
     >>> P = R.origin.locate_new('P', R.x*R.i + R.y*R.j + R.z*R.k)
@@ -462,7 +462,7 @@ def _path(from_object, to_object):
     return index, from_path
 
 
-def orthogonalize(*vlist, **kwargs):
+def orthogonalize(*vlist, orthonormal=False):
     """
     Takes a sequence of independent vectors and orthogonalizes them
     using the Gram - Schmidt process. Returns a list of
@@ -482,7 +482,6 @@ def orthogonalize(*vlist, **kwargs):
     ========
 
     >>> from sympy.vector.coordsysrect import CoordSys3D
-    >>> from sympy.vector.vector import Vector, BaseVector
     >>> from sympy.vector.functions import orthogonalize
     >>> C = CoordSys3D('C')
     >>> i, j, k = C.base_vectors()
@@ -497,7 +496,6 @@ def orthogonalize(*vlist, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Gram-Schmidt_process
 
     """
-    orthonormal = kwargs.get('orthonormal', False)
 
     if not all(isinstance(vec, Vector) for vec in vlist):
         raise TypeError('Each element must be of Type Vector')

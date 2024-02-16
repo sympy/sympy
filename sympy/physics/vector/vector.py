@@ -1,13 +1,17 @@
-from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
-    ImmutableMatrix as Matrix)
-from sympy import trigsimp
-from sympy.core.compatibility import unicode
+from sympy import (S, sympify, expand, sqrt, Add, zeros, acos,
+                                ImmutableMatrix as Matrix, simplify)
+from sympy.simplify.trigsimp import trigsimp
+from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
+from sympy.core.evalf import EvalfMixin
+
+from mpmath.libmp.libmpf import prec_to_dps
+
 
 __all__ = ['Vector']
 
 
-class Vector(object):
+class Vector(Printable, EvalfMixin):
     """The class used to define vectors.
 
     It along with ReferenceFrame are the building blocks of describing a
@@ -22,9 +26,10 @@ class Vector(object):
     """
 
     simp = False
+    is_number = False
 
     def __init__(self, inlist):
-        """This is the constructor for the Vector class.  You shouldn't be
+        """This is the constructor for the Vector class.  You should not be
         calling this, it should only be used by other functions. You should be
         treating Vectors like you would with if you were doing the math by
         hand, and getting the first 3 from the standard basis vectors from a
@@ -51,6 +56,11 @@ class Vector(object):
         for k, v in d.items():
             if v != Matrix([0, 0, 0]):
                 self.args.append((v, k))
+
+    @property
+    def func(self):
+        """Returns the class Vector. """
+        return Vector
 
     def __hash__(self):
         return hash(tuple(self.args))
@@ -94,22 +104,20 @@ class Vector(object):
         if isinstance(other, Dyadic):
             return NotImplemented
         other = _check_vector(other)
-        out = S(0)
+        out = S.Zero
         for i, v1 in enumerate(self.args):
             for j, v2 in enumerate(other.args):
                 out += ((v2[0].T)
                         * (v2[1].dcm(v1[1]))
                         * (v1[0]))[0]
         if Vector.simp:
-            return trigsimp(sympify(out), recursive=True)
+            return trigsimp(out, recursive=True)
         else:
-            return sympify(out)
+            return out
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         """This uses mul and inputs self and 1 divided by other. """
-        return self.__mul__(sympify(1) / other)
-
-    __truediv__ = __div__
+        return self.__mul__(S.One / other)
 
     def __eq__(self, other):
         """Tests for equality.
@@ -162,13 +170,11 @@ class Vector(object):
 
         """
 
-        newlist = [v for v in self.args]
+        newlist = list(self.args)
+        other = sympify(other)
         for i, v in enumerate(newlist):
-            newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1])
+            newlist[i] = (other * newlist[i][0], newlist[i][1])
         return Vector(newlist)
-
-    def __ne__(self, other):
-        return not self == other
 
     def __neg__(self):
         return self * -1
@@ -213,10 +219,8 @@ class Vector(object):
                 ol += Dyadic([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
         return ol
 
-    def _latex(self, printer=None):
+    def _latex(self, printer):
         """Latex Printing method. """
-
-        from sympy.physics.vector.printing import VectorLatexPrinter
 
         ar = self.args  # just to shorten things
         if len(ar) == 0:
@@ -233,7 +237,7 @@ class Vector(object):
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = VectorLatexPrinter().doprint(ar[i][0][j])
+                    arg_str = printer._print(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
                         arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':
@@ -249,55 +253,31 @@ class Vector(object):
             outstr = outstr[1:]
         return outstr
 
-    def _pretty(self, printer=None):
+    def _pretty(self, printer):
         """Pretty Printing method. """
-        from sympy.physics.vector.printing import VectorPrettyPrinter
         from sympy.printing.pretty.stringpict import prettyForm
-        e = self
 
-        class Fake(object):
+        terms = []
 
-            def render(self, *args, **kwargs):
-                ar = e.args  # just to shorten things
-                if len(ar) == 0:
-                    return unicode(0)
-                settings = printer._settings if printer else {}
-                vp = printer if printer else VectorPrettyPrinter(settings)
-                pforms = []  # output list, to be concatenated to a string
-                for i, v in enumerate(ar):
-                    for j in 0, 1, 2:
-                        # if the coef of the basis vector is 1, we skip the 1
-                        if ar[i][0][j] == 1:
-                            pform = vp._print(ar[i][1].pretty_vecs[j])
-                        # if the coef of the basis vector is -1, we skip the 1
-                        elif ar[i][0][j] == -1:
-                            pform = vp._print(ar[i][1].pretty_vecs[j])
-                            pform = prettyForm(*pform.left(" - "))
-                            bin = prettyForm.NEG
-                            pform = prettyForm(binding=bin, *pform)
-                        elif ar[i][0][j] != 0:
-                            # If the basis vector coeff is not 1 or -1,
-                            # we might wrap it in parentheses, for readability.
-                            pform = vp._print(ar[i][0][j])
+        def juxtapose(a, b):
+            pa = printer._print(a)
+            pb = printer._print(b)
+            if a.is_Add:
+                pa = prettyForm(*pa.parens())
+            return printer._print_seq([pa, pb], delimiter=' ')
 
-                            if isinstance(ar[i][0][j], Add):
-                                tmp = pform.parens()
-                                pform = prettyForm(tmp[0], tmp[1])
+        for M, N in self.args:
+            for i in range(3):
+                if M[i] == 0:
+                    continue
+                elif M[i] == 1:
+                    terms.append(prettyForm(N.pretty_vecs[i]))
+                elif M[i] == -1:
+                    terms.append(prettyForm.NEG + prettyForm(N.pretty_vecs[i]))
+                else:
+                    terms.append(juxtapose(M[i], N.pretty_vecs[i]))
 
-                            pform = prettyForm(*pform.right(" ",
-                                                ar[i][1].pretty_vecs[j]))
-                        else:
-                            continue
-                        pforms.append(pform)
-
-                pform = prettyForm.__add__(*pforms)
-                kwargs["wrap_line"] = kwargs.get("wrap_line")
-                kwargs["num_columns"] = kwargs.get("num_columns")
-                out_str = pform.render(*args, **kwargs)
-                mlines = [line.rstrip() for line in out_str.split("\n")]
-                return "\n".join(mlines)
-
-        return Fake()
+        return prettyForm.__add__(*terms)
 
     def __ror__(self, other):
         """Outer product between two Vectors.
@@ -342,14 +322,12 @@ class Vector(object):
     def __rsub__(self, other):
         return (-1 * self) + other
 
-    def __str__(self, printer=None, order=True):
+    def _sympystr(self, printer, order=True):
         """Printing method. """
-        from sympy.physics.vector.printing import VectorStrPrinter
-
         if not order or len(self.args) == 1:
             ar = list(self.args)
         elif len(self.args) == 0:
-            return str(0)
+            return printer._print(0)
         else:
             d = {v[1]: v[0] for v in self.args}
             keys = sorted(d.keys(), key=lambda x: x.index)
@@ -368,7 +346,7 @@ class Vector(object):
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = VectorStrPrinter().doprint(ar[i][0][j])
+                    arg_str = printer._print(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
                         arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':
@@ -385,7 +363,7 @@ class Vector(object):
         return outstr
 
     def __sub__(self, other):
-        """The subraction operator. """
+        """The subtraction operator. """
         return self.__add__(other * -1)
 
     def __xor__(self, other):
@@ -402,16 +380,17 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
         >>> from sympy import symbols
+        >>> from sympy.physics.vector import ReferenceFrame, cross
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> N.x ^ N.y
+        >>> cross(N.x, N.y)
         N.z
-        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
-        >>> A.x ^ N.y
+        >>> A = ReferenceFrame('A')
+        >>> A.orient_axis(N, q1, N.x)
+        >>> cross(A.x, N.y)
         N.z
-        >>> N.y ^ A.x
+        >>> cross(N.y, A.x)
         - sin(q1)*A.y - cos(q1)*A.z
 
         """
@@ -426,8 +405,8 @@ class Vector(object):
         def _det(mat):
             """This is needed as a little method for to find the determinant
             of a list in python; needs to work for a 3x3 list.
-            SymPy's Matrix won't take in Vector, so need a custom function.
-            You shouldn't be calling this.
+            SymPy's Matrix will not take in Vector, so need a custom function.
+            You should not be calling this.
 
             """
 
@@ -442,35 +421,13 @@ class Vector(object):
             tempx = v[1].x
             tempy = v[1].y
             tempz = v[1].z
-            tempm = ([[tempx, tempy, tempz], [self & tempx, self & tempy,
-                self & tempz], [Vector([ar[i]]) & tempx,
-                Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz]])
+            tempm = ([[tempx, tempy, tempz],
+                      [self & tempx, self & tempy, self & tempz],
+                      [Vector([ar[i]]) & tempx, Vector([ar[i]]) & tempy,
+                       Vector([ar[i]]) & tempz]])
             outlist += _det(tempm).args
         return Vector(outlist)
 
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_
-
-    _sympystr = __str__
-    _sympyrepr = _sympystr
-    __repr__ = __str__
     __radd__ = __add__
     __rand__ = __and__
     __rmul__ = __mul__
@@ -535,13 +492,15 @@ class Vector(object):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-        >>> from sympy.physics.vector import Vector
-        >>> Vector.simp = True
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
+        - sin(q1)*q1'*N.x - cos(q1)*q1'*N.z
+        >>> A.x.diff(t, N).express(A).simplify()
         - q1'*A.z
         >>> B = ReferenceFrame('B')
         >>> u1, u2 = dynamicsymbols('u1, u2')
@@ -553,8 +512,8 @@ class Vector(object):
 
         from sympy.physics.vector.frame import _check_frame
 
-        var = sympify(var)
         _check_frame(frame)
+        var = sympify(var)
 
         inlist = []
 
@@ -568,12 +527,11 @@ class Vector(object):
                 # with the derivative frame does not contain the variable.
                 if not var_in_dcm or (frame.dcm(component_frame).diff(var) ==
                                       zeros(3, 3)):
-                    inlist += [(measure_number.diff(var),
-                                        component_frame)]
+                    inlist += [(measure_number.diff(var), component_frame)]
                 else:  # else express in the frame
                     reexp_vec_comp = Vector([vector_component]).express(frame)
                     deriv = reexp_vec_comp.args[0][0].diff(var)
-                    inlist += Vector([(deriv, frame)]).express(component_frame).args
+                    inlist += Vector([(deriv, frame)]).args
 
         return Vector(inlist)
 
@@ -595,7 +553,9 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
+        >>> from sympy.physics.vector import ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
@@ -625,7 +585,6 @@ class Vector(object):
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame
-        >>> from sympy.physics.mechanics.functions import inertia
         >>> a, b, c = symbols('a, b, c')
         >>> N = ReferenceFrame('N')
         >>> vector = a * N.x + b * N.y + c * N.z
@@ -675,7 +634,7 @@ class Vector(object):
         """Returns a simplified Vector."""
         d = {}
         for v in self.args:
-            d[v[1]] = v[0].simplify()
+            d[v[1]] = simplify(v[0])
         return Vector(d)
 
     def subs(self, *args, **kwargs):
@@ -700,7 +659,17 @@ class Vector(object):
         return Vector(d)
 
     def magnitude(self):
-        """Returns the magnitude (Euclidean norm) of self."""
+        """Returns the magnitude (Euclidean norm) of self.
+
+        Warnings
+        ========
+
+        Python ignores the leading negative sign so that might
+        give wrong results.
+        ``-A.x.magnitude()`` would be treated as ``-(A.x.magnitude())``,
+        instead of ``(-A.x).magnitude()``.
+
+        """
         return sqrt(self & self)
 
     def normalize(self):
@@ -717,21 +686,139 @@ class Vector(object):
             d[v[1]] = v[0].applyfunc(f)
         return Vector(d)
 
-    def free_symbols(self, reference_frame):
+    def angle_between(self, vec):
         """
-        Returns the free symbols in the measure numbers of the vector
-        expressed in the given reference frame.
+        Returns the smallest angle between Vector 'vec' and self.
 
         Parameter
         =========
 
+        vec : Vector
+            The Vector between which angle is needed.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> A = ReferenceFrame("A")
+        >>> v1 = A.x
+        >>> v2 = A.y
+        >>> v1.angle_between(v2)
+        pi/2
+
+        >>> v3 = A.x + A.y + A.z
+        >>> v1.angle_between(v3)
+        acos(sqrt(3)/3)
+
+        Warnings
+        ========
+
+        Python ignores the leading negative sign so that might give wrong
+        results. ``-A.x.angle_between()`` would be treated as
+        ``-(A.x.angle_between())``, instead of ``(-A.x).angle_between()``.
+
+        """
+
+        vec1 = self.normalize()
+        vec2 = vec.normalize()
+        angle = acos(vec1.dot(vec2))
+        return angle
+
+    def free_symbols(self, reference_frame):
+        """Returns the free symbols in the measure numbers of the vector
+        expressed in the given reference frame.
+
+        Parameters
+        ==========
         reference_frame : ReferenceFrame
-            The frame with respect to which the free symbols of the
-            given vector is to be determined.
+            The frame with respect to which the free symbols of the given
+            vector is to be determined.
+
+        Returns
+        =======
+        set of Symbol
+            set of symbols present in the measure numbers of
+            ``reference_frame``.
 
         """
 
         return self.to_matrix(reference_frame).free_symbols
+
+    def free_dynamicsymbols(self, reference_frame):
+        """Returns the free dynamic symbols (functions of time ``t``) in the
+        measure numbers of the vector expressed in the given reference frame.
+
+        Parameters
+        ==========
+        reference_frame : ReferenceFrame
+            The frame with respect to which the free dynamic symbols of the
+            given vector is to be determined.
+
+        Returns
+        =======
+        set
+            Set of functions of time ``t``, e.g.
+            ``Function('f')(me.dynamicsymbols._t)``.
+
+        """
+        # TODO : Circular dependency if imported at top. Should move
+        # find_dynamicsymbols into physics.vector.functions.
+        from sympy.physics.mechanics.functions import find_dynamicsymbols
+
+        return find_dynamicsymbols(self, reference_frame=reference_frame)
+
+    def _eval_evalf(self, prec):
+        if not self.args:
+            return self
+        new_args = []
+        dps = prec_to_dps(prec)
+        for mat, frame in self.args:
+            new_args.append([mat.evalf(n=dps), frame])
+        return Vector(new_args)
+
+    def xreplace(self, rule):
+        """Replace occurrences of objects within the measure numbers of the
+        vector.
+
+        Parameters
+        ==========
+
+        rule : dict-like
+            Expresses a replacement rule.
+
+        Returns
+        =======
+
+        Vector
+            Result of the replacement.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, pi
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> A = ReferenceFrame('A')
+        >>> x, y, z = symbols('x y z')
+        >>> ((1 + x*y) * A.x).xreplace({x: pi})
+        (pi*y + 1)*A.x
+        >>> ((1 + x*y) * A.x).xreplace({x: pi, y: 2})
+        (1 + 2*pi)*A.x
+
+        Replacements occur only if an entire node in the expression tree is
+        matched:
+
+        >>> ((x*y + z) * A.x).xreplace({x*y: pi})
+        (z + pi)*A.x
+        >>> ((x*y*z) * A.x).xreplace({x*y: pi})
+        x*y*z*A.x
+
+        """
+
+        new_args = []
+        for mat, frame in self.args:
+            mat = mat.xreplace(rule)
+            new_args.append([mat, frame])
+        return Vector(new_args)
 
 
 class VectorTypeError(TypeError):
@@ -739,7 +826,7 @@ class VectorTypeError(TypeError):
     def __init__(self, other, want):
         msg = filldedent("Expected an instance of %s, but received object "
                          "'%s' of %s." % (type(want), other, type(other)))
-        super(VectorTypeError, self).__init__(msg)
+        super().__init__(msg)
 
 
 def _check_vector(other):

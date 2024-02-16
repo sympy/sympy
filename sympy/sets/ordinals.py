@@ -1,11 +1,12 @@
 from sympy.core import Basic, Integer
 import operator
 
+
 class OmegaPower(Basic):
     """
     Represents ordinal exponential and multiplication terms one of the
-    building blocks of the Ordinal class.
-    In OmegaPower(a, b) a represents exponent and b represents multiplicity.
+    building blocks of the :class:`Ordinal` class.
+    In ``OmegaPower(a, b)``, ``a`` represents exponent and ``b`` represents multiplicity.
     """
     def __new__(cls, a, b):
         if isinstance(b, int):
@@ -40,7 +41,8 @@ class OmegaPower(Basic):
                 return NotImplemented
         return self.args == other.args
 
-    __hash__ = Basic.__hash__
+    def __hash__(self):
+        return Basic.__hash__(self)
 
     def __lt__(self, other):
         if not isinstance(other, OmegaPower):
@@ -50,19 +52,21 @@ class OmegaPower(Basic):
                 return NotImplemented
         return self._compare_term(other, operator.lt)
 
+
 class Ordinal(Basic):
     """
     Represents ordinals in Cantor normal form.
 
-    Internally, this class is just a list of instances of OmegaPower
+    Internally, this class is just a list of instances of OmegaPower.
+
     Examples
     ========
-    >>> from sympy.sets import Ordinal, ord0, OmegaPower
+    >>> from sympy import Ordinal, OmegaPower
     >>> from sympy.sets.ordinals import omega
     >>> w = omega
     >>> w.is_limit_ordinal
     True
-    >>> Ordinal(OmegaPower(w + 1 ,1), OmegaPower(3, 2))
+    >>> Ordinal(OmegaPower(w + 1, 1), OmegaPower(3, 2))
     w**(w + 1) + w**3*2
     >>> 3 + w
     w
@@ -75,23 +79,27 @@ class Ordinal(Basic):
     .. [1] https://en.wikipedia.org/wiki/Ordinal_arithmetic
     """
     def __new__(cls, *terms):
-        obj = super(Ordinal, cls).__new__(cls, *terms)
+        obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
         if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
             raise ValueError("powers must be in decreasing order")
         return obj
 
     @property
+    def terms(self):
+        return self.args
+
+    @property
     def leading_term(self):
         if self == ord0:
             raise ValueError("ordinal zero has no leading term")
-        return self.args[0]
+        return self.terms[0]
 
     @property
     def trailing_term(self):
         if self == ord0:
             raise ValueError("ordinal zero has no trailing term")
-        return self.args[-1]
+        return self.terms[-1]
 
     @property
     def is_successor_ordinal(self):
@@ -123,7 +131,7 @@ class Ordinal(Basic):
                 other = Ordinal.convert(other)
             except TypeError:
                 return NotImplemented
-        return self.args == other.args
+        return self.terms == other.terms
 
     def __hash__(self):
         return hash(self.args)
@@ -134,10 +142,10 @@ class Ordinal(Basic):
                 other = Ordinal.convert(other)
             except TypeError:
                 return NotImplemented
-        for term_self, term_other in zip(self.args, other.args):
+        for term_self, term_other in zip(self.terms, other.terms):
             if term_self != term_other:
                 return term_self < term_other
-        return len(self.args) < len(other.args)
+        return len(self.terms) < len(other.terms)
 
     def __le__(self, other):
         return (self == other or self < other)
@@ -153,7 +161,7 @@ class Ordinal(Basic):
         plus_count = 0
         if self == ord0:
             return 'ord0'
-        for i in self.args:
+        for i in self.terms:
             if plus_count:
                 net_str += " + "
 
@@ -161,7 +169,7 @@ class Ordinal(Basic):
                 net_str += str(i.mult)
             elif i.exp == 1:
                 net_str += 'w'
-            elif len(i.exp.args) > 1 or i.exp.is_limit_ordinal:
+            elif len(i.exp.terms) > 1 or i.exp.is_limit_ordinal:
                 net_str += 'w**(%s)'%i.exp
             else:
                 net_str += 'w**%s'%i.exp
@@ -182,8 +190,8 @@ class Ordinal(Basic):
                 return NotImplemented
         if other == ord0:
             return self
-        a_terms = list(self.args)
-        b_terms = list(other.args)
+        a_terms = list(self.terms)
+        b_terms = list(other.terms)
         r = len(a_terms) - 1
         b_exp = other.degree
         while r >= 0 and a_terms[r].exp < b_exp:
@@ -215,18 +223,18 @@ class Ordinal(Basic):
             return ord0
         a_exp = self.degree
         a_mult = self.leading_term.mult
-        sum = []
+        summation = []
         if other.is_limit_ordinal:
-            for arg in other.args:
-                sum.append(OmegaPower(a_exp + arg.exp, arg.mult))
+            for arg in other.terms:
+                summation.append(OmegaPower(a_exp + arg.exp, arg.mult))
 
         else:
-            for arg in other.args[:-1]:
-                sum.append(OmegaPower(a_exp + arg.exp, arg.mult))
+            for arg in other.terms[:-1]:
+                summation.append(OmegaPower(a_exp + arg.exp, arg.mult))
             b_mult = other.trailing_term.mult
-            sum.append(OmegaPower(a_exp, a_mult*b_mult))
-            sum += list(self.args[1:])
-        return Ordinal(*sum)
+            summation.append(OmegaPower(a_exp, a_mult*b_mult))
+            summation += list(self.terms[1:])
+        return Ordinal(*summation)
 
     def __rmul__(self, other):
         if not isinstance(other, Ordinal):
@@ -241,12 +249,14 @@ class Ordinal(Basic):
             return NotImplemented
         return Ordinal(OmegaPower(other, 1))
 
+
 class OrdinalZero(Ordinal):
     """The ordinal zero.
 
     OrdinalZero can be imported as ``ord0``.
     """
     pass
+
 
 class OrdinalOmega(Ordinal):
     """The ordinal omega which forms the base of all ordinals in cantor normal form.
@@ -261,7 +271,12 @@ class OrdinalOmega(Ordinal):
     w*2
     """
     def __new__(cls):
-        return Ordinal.__new__(cls, OmegaPower(1, 1))
+        return Ordinal.__new__(cls)
+
+    @property
+    def terms(self):
+        return (OmegaPower(1, 1),)
+
 
 ord0 = OrdinalZero()
 omega = OrdinalOmega()

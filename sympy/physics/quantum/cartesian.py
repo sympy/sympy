@@ -6,10 +6,12 @@ TODO:
 
 """
 
-from __future__ import print_function, division
-
-from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
-from sympy.core.compatibility import range
+from sympy.core.numbers import (I, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.sets.sets import Interval
 
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
@@ -53,15 +55,13 @@ class XOp(HermitianOperator):
     def _eval_commutator_PxOp(self, other):
         return I*hbar
 
-    def _apply_operator_XKet(self, ket):
+    def _apply_operator_XKet(self, ket, **options):
         return ket.position*ket
 
-    def _apply_operator_PositionKet3D(self, ket):
+    def _apply_operator_PositionKet3D(self, ket, **options):
         return ket.position_x*ket
 
-    def _represent_PxKet(self, basis, **options):
-        index = options.pop("index", 1)
-
+    def _represent_PxKet(self, basis, *, index=1, **options):
         states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].momentum
         coord2 = states[1].momentum
@@ -82,7 +82,7 @@ class YOp(HermitianOperator):
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
-    def _apply_operator_PositionKet3D(self, ket):
+    def _apply_operator_PositionKet3D(self, ket, **options):
         return ket.position_y*ket
 
 
@@ -97,7 +97,7 @@ class ZOp(HermitianOperator):
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
-    def _apply_operator_PositionKet3D(self, ket):
+    def _apply_operator_PositionKet3D(self, ket, **options):
         return ket.position_z*ket
 
 #-------------------------------------------------------------------------
@@ -116,12 +116,10 @@ class PxOp(HermitianOperator):
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
-    def _apply_operator_PxKet(self, ket):
+    def _apply_operator_PxKet(self, ket, **options):
         return ket.momentum*ket
 
-    def _represent_XKet(self, basis, **options):
-        index = options.pop("index", 1)
-
+    def _represent_XKet(self, basis, *, index=1, **options):
         states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].position
         coord2 = states[1].position
@@ -237,7 +235,10 @@ class PositionKet3D(Ket, PositionState3D):
         return PositionBra3D
 
 
-class PositionBra3D(Bra, PositionState3D):
+# XXX: The type:ignore here is because mypy gives Definition of
+# "_state_to_operators" in base class "PositionState3D" is incompatible with
+# definition in base class "BraBase"
+class PositionBra3D(Bra, PositionState3D):  # type: ignore
     """ 3D cartesian position eigenbra """
 
     @classmethod

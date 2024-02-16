@@ -1,0 +1,145 @@
+/* Reduce the vertical space between lines in code blocks. Required to */
+/* make Unicode pretty printing appear correctly. */
+pre {
+    line-height: 120% !important;
+}
+
+article pre {
+    line-height: 120% !important;
+}
+
+/* Disable most blockquotes. The Furo defaults make block quotes very*/
+/* apparent. However, the parameter blocks from numpydoc render as block
+ * quotes, which looks bad. Furthermore, it is very easy for things to
+ * accidentally have block quotes due to the fact that RST makes indented
+ * blocks render as a block quote (unlike Markdown which makes indented blocks
+ * render as code). Apart from a few epigraphs, there aren't any places in the
+ * documentation that use a block quote on purpose. */
+blockquote {
+    border-left: inherit;
+    font-style: inherit;
+    margin-left: inherit;
+    margin-right: inherit;
+    padding: inherit;
+    background-color: inherit;
+    margin-block-start: -0.5rem;
+    margin-block-end: -0.5rem;
+}
+blockquote.epigraph {
+    border-left: 4px solid var(--color-background-border);
+    background: var(--color-background-secondary);
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Version selector. See _templates/sidebar/versions.html */
+.versions-header {
+    color: white;
+    padding: var(--sidebar-item-spacing-vertical) var(--sidebar-item-spacing-horizontal);
+    margin: 1rem 0rem;
+}
+.current-version {
+    background-color: #2f431e;
+}
+.versions-not-found {
+    color: white;
+    font-style: italic;
+    padding: var(--sidebar-item-spacing-vertical) var(--sidebar-item-spacing-horizontal);
+}
+
+/* Make the "SymPy documentation" text bold */
+.sidebar-brand-text {
+    font-weight: bold;
+}
+/* Remove the green underline from the "SymPy documentation" on hover */
+.sidebar-brand:hover {
+    text-decoration: none !important;
+}
+
+/* Make top-level items in the sidebar bold */
+.sidebar-tree .toctree-l1>.reference, .sidebar-tree .toctree-l1>label .icon {
+    font-weight: bold !important;
+}
+/* Indicate the current page using a background color rather than bold text */
+.sidebar-tree .current-page>.reference {
+    font-weight: normal;
+    background-color: #2f431e;
+}
+/* Make sure the 'a' colors below don't affect the sidebar*/
+.sidebar-tree .icon, .sidebar-tree .reference {
+    color: var(--color-sidebar-link-text) !important;
+}
+
+/* The "hide search matches" text after doing a search. Defaults to the same
+   color as the icon which is illegible on the green background. */
+.highlight-link a {
+    color: white !important;
+}
+
+.admonition.warning>.admonition-title {
+    color: white;
+}
+
+/* Makes the text look better on Mac retina displays (the Furo CSS disables*/
+/* subpixel antialiasing). */
+body {
+    -webkit-font-smoothing: auto;
+    -moz-osx-font-smoothing: auto;
+}
+
+/* Disable upcasing of headers 4+ (they are still distinguishable by*/
+/* font-weight and size) */
+h4, h5, h6 {
+    text-transform: inherit;
+}
+
+/* Make "Examples" and "Parameters" headers easier to see */
+p.rubric, dl.c .field-list dt, dl.cpp .field-list dt, dl.js .field-list dt, dl.py .field-list dt, dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) .field-list>dt {
+    text-transform: none;
+    font-weight: 600;
+    font-size: 120%;
+}
+
+/* Disable underlines on links except on hover */
+a {
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+/* Keep the underline in the announcement header */
+.announcement-content a {
+    text-decoration: underline;
+}
+/* TODO: Some styling for visited? */
+/* a:visited { */
+/*     color: #307748; */
+/*     text-decoration: none; */
+/* } */
+/* a:visited:hover { */
+/*     color: #307748; */
+/*     text-decoration: underline; */
+/* } */
+
+/* Disable the fancy scrolling behavior when jumping to headers (this is too
+   slow for long pages) */
+html {
+    scroll-behavior: auto;
+}
+
+/* Make checkboxes from the tasklist extension ('- [ ]' in Markdown) not add bullet points to the checkboxes.
+
+This can be removed once https://github.com/executablebooks/mdit-py-plugins/issues/59 is addressed.
+*/
+
+.contains-task-list {
+    list-style: none;
+}
+
+/* Make the checkboxes indented like they are bullets */
+.task-list-item-checkbox {
+    margin: 0 0.2em 0.25em -1.4em;
+}

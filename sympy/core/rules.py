@@ -2,17 +2,16 @@
 Replacement rules.
 """
 
-from __future__ import print_function, division
-
-
-class Transform(object):
+class Transform:
     """
     Immutable mapping that can be used as a generic transformation rule.
 
     Parameters
-    ----------
+    ==========
+
     transform : callable
         Computes the value corresponding to any key.
+
     filter : callable, optional
         If supplied, specifies which objects are in the mapping.
 

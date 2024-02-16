@@ -1,7 +1,10 @@
 """Tests for efficient functions for generating orthogonal polynomials. """
 
-from sympy import Poly, S, Rational as Q
-from sympy.utilities.pytest import raises
+from sympy.core.numbers import Rational as Q
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.polys.polytools import Poly
+from sympy.testing.pytest import raises
 
 from sympy.polys.orthopolys import (
     jacobi_poly,
@@ -9,8 +12,10 @@ from sympy.polys.orthopolys import (
     chebyshevt_poly,
     chebyshevu_poly,
     hermite_poly,
+    hermite_prob_poly,
     legendre_poly,
     laguerre_poly,
+    spherical_bessel_fn,
 )
 
 from sympy.abc import x, a, b
@@ -24,8 +29,10 @@ def test_jacobi_poly():
 
     assert jacobi_poly(0, a, b, x) == 1
     assert jacobi_poly(1, a, b, x) == a/2 - b/2 + x*(a/2 + b/2 + 1)
-    assert jacobi_poly(2, a, b, x) == (a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 +
-                                       b**2/8 + 7*b/8 + S(3)/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - S(1)/2)
+    assert jacobi_poly(2, a, b, x) == (a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 +
+                                       x**2*(a**2/8 + a*b/4 + a*Q(7, 8) + b**2/8 +
+                                             b*Q(7, 8) + Q(3, 2)) + x*(a**2/4 +
+                                            a*Q(3, 4) - b**2/4 - b*Q(3, 4)) - S.Half)
 
     assert jacobi_poly(1, a, b, polys=True) == Poly(
         (a/2 + b/2 + 1)*x + a/2 - b/2, x, domain='ZZ(a,b)')
@@ -41,7 +48,7 @@ def test_gegenbauer_poly():
     assert gegenbauer_poly(1, a, x) == 2*a*x
     assert gegenbauer_poly(2, a, x) == -a + x**2*(2*a**2 + 2*a)
     assert gegenbauer_poly(
-        3, a, x) == x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)
+        3, a, x) == x**3*(4*a**3/3 + 4*a**2 + a*Q(8, 3)) + x*(-2*a**2 - 2*a)
 
     assert gegenbauer_poly(1, S.Half).dummy_eq(x)
     assert gegenbauer_poly(1, a, polys=True) == Poly(2*a*x, x, domain='ZZ(a)')
@@ -98,10 +105,27 @@ def test_hermite_poly():
     assert hermite_poly(1, polys=True) == Poly(2*x)
 
 
+def test_hermite_prob_poly():
+    raises(ValueError, lambda: hermite_prob_poly(-1, x))
+
+    assert hermite_prob_poly(1, x, polys=True) == Poly(x)
+
+    assert hermite_prob_poly(0, x) == 1
+    assert hermite_prob_poly(1, x) == x
+    assert hermite_prob_poly(2, x) == x**2 - 1
+    assert hermite_prob_poly(3, x) == x**3 - 3*x
+    assert hermite_prob_poly(4, x) == x**4 - 6*x**2 + 3
+    assert hermite_prob_poly(5, x) == x**5 - 10*x**3 + 15*x
+    assert hermite_prob_poly(6, x) == x**6 - 15*x**4 + 45*x**2 - 15
+
+    assert hermite_prob_poly(1).dummy_eq(x)
+    assert hermite_prob_poly(1, polys=True) == Poly(x)
+
+
 def test_legendre_poly():
     raises(ValueError, lambda: legendre_poly(-1, x))
 
-    assert legendre_poly(1, x, polys=True) == Poly(x)
+    assert legendre_poly(1, x, polys=True) == Poly(x, domain='QQ')
 
     assert legendre_poly(0, x) == 1
     assert legendre_poly(1, x) == x
@@ -119,7 +143,7 @@ def test_legendre_poly():
 def test_laguerre_poly():
     raises(ValueError, lambda: laguerre_poly(-1, x))
 
-    assert laguerre_poly(1, x, polys=True) == Poly(-x + 1)
+    assert laguerre_poly(1, x, polys=True) == Poly(-x + 1, domain='QQ')
 
     assert laguerre_poly(0, x) == 1
     assert laguerre_poly(1, x) == -x + 1
@@ -133,9 +157,17 @@ def test_laguerre_poly():
 
     assert laguerre_poly(0, x, a) == 1
     assert laguerre_poly(1, x, a) == -x + a + 1
-    assert laguerre_poly(2, x, a) == x**2/2 + (-a - 2)*x + a**2/2 + 3*a/2 + 1
+    assert laguerre_poly(2, x, a) == x**2/2 + (-a - 2)*x + a**2/2 + a*Q(3, 2) + 1
     assert laguerre_poly(3, x, a) == -x**3/6 + (a/2 + Q(
-        3)/2)*x**2 + (-a**2/2 - 5*a/2 - 3)*x + a**3/6 + a**2 + 11*a/6 + 1
+        3)/2)*x**2 + (-a**2/2 - a*Q(5, 2) - 3)*x + a**3/6 + a**2 + a*Q(11, 6) + 1
 
     assert laguerre_poly(1).dummy_eq(-x + 1)
     assert laguerre_poly(1, polys=True) == Poly(-x + 1)
+
+
+def test_spherical_bessel_fn():
+    x, z = symbols("x z")
+    assert spherical_bessel_fn(1, z) == 1/z**2
+    assert spherical_bessel_fn(2, z) == -1/z + 3/z**3
+    assert spherical_bessel_fn(3, z) == -6/z**2 + 15/z**4
+    assert spherical_bessel_fn(4, z) == 1/z - 45/z**3 + 105/z**5

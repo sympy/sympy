@@ -1,5 +1,8 @@
-from sympy import sqrt, exp, S, prod
-from sympy.core.compatibility import range
+from math import prod
+
+from sympy.core.numbers import Rational
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.quantum import Dagger, Commutator, qapply
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.boson import (
@@ -16,13 +19,15 @@ def test_bosonoperator():
     assert a.is_annihilation
     assert not Dagger(a).is_annihilation
 
-    assert BosonOp("a") == BosonOp("a")
+    assert BosonOp("a") == BosonOp("a", True)
     assert BosonOp("a") != BosonOp("c")
     assert BosonOp("a", True) != BosonOp("a", False)
 
     assert Commutator(a, Dagger(a)).doit() == 1
 
     assert Commutator(a, Dagger(b)).doit() == a * Dagger(b) - Dagger(b) * a
+
+    assert Dagger(exp(a)) == exp(Dagger(a))
 
 
 def test_boson_states():
@@ -40,6 +45,6 @@ def test_boson_states():
     assert (BosonCoherentBra(alpha1) * BosonCoherentKet(alpha1)).doit() == 1
     assert (BosonCoherentBra(alpha2) * BosonCoherentKet(alpha2)).doit() == 1
     assert abs((BosonCoherentBra(alpha1) * BosonCoherentKet(alpha2)).doit() -
-               exp(-S(1) / 2 * (alpha1 - alpha2) ** 2)) < 1e-12
+               exp((alpha1 - alpha2) ** 2 * Rational(-1, 2))) < 1e-12
     assert qapply(a * BosonCoherentKet(alpha1)) == \
         alpha1 * BosonCoherentKet(alpha1)

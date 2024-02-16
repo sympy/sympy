@@ -8,7 +8,7 @@ Implementation in sympy.vector
 Scalar and vector fields
 ------------------------
 
-In :mod:`sympy.vector`, every ``CoordSysCartesian`` instance is assigned basis
+In :mod:`sympy.vector`, every ``CoordSys3D`` instance is assigned basis
 vectors corresponding to the :math:`X`, :math:`Y` and
 :math:`Z` axes. These can be accessed using the properties
 named ``i``, ``j`` and ``k`` respectively. Hence, to define a vector

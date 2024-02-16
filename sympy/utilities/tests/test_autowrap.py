@@ -4,17 +4,16 @@
 import os
 import tempfile
 import shutil
-import tempfile
+from io import StringIO
 
 from sympy.core import symbols, Eq
-from sympy.core.compatibility import StringIO
-from sympy.utilities.pytest import raises
 from sympy.utilities.autowrap import (autowrap, binary_function,
-            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
+            CythonCodeWrapper, UfuncifyCodeWrapper, CodeWrapper)
 from sympy.utilities.codegen import (
     CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
 )
-from sympy.utilities.tmpfiles import TmpFileManager, cleanup_tmp_files
+from sympy.testing.pytest import raises
+from sympy.testing.tmpfiles import TmpFileManager
 
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
@@ -50,7 +49,7 @@ def test_cython_wrapper_scalar_function():
 
 
 def test_cython_wrapper_outarg():
-    from sympy import Equality
+    from sympy.core.relational import Equality
     x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(C99CodeGen())
 
@@ -69,7 +68,7 @@ def test_cython_wrapper_outarg():
 
 
 def test_cython_wrapper_inoutarg():
-    from sympy import Equality
+    from sympy.core.relational import Equality
     x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(C99CodeGen())
     routine = make_routine("test", Equality(z, x + y + z))
@@ -85,23 +84,18 @@ def test_cython_wrapper_inoutarg():
     assert source == expected
 
 
-@cleanup_tmp_files
 def test_cython_wrapper_compile_flags():
-    from sympy import Equality
+    from sympy.core.relational import Equality
     x, y, z = symbols('x,y,z')
     routine = make_routine("test", Equality(z, x + y))
 
     code_gen = CythonCodeWrapper(CCodeGen())
 
     expected = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
-cy_opts = {}
+cy_opts = {'compiler_directives': {'language_level': '3'}}
 
 ext_mods = [Extension(
     'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
@@ -132,12 +126,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
                                  cythonize_options={'compiler_directives': {'boundscheck': False}}
                                  )
     expected = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
 cy_opts = {'compiler_directives': {'boundscheck': False}}
 
@@ -158,12 +148,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     assert setup_text == expected
 
     expected = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
 cy_opts = {'compiler_directives': {'boundscheck': False}}
 import numpy as np
@@ -184,6 +170,29 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     with open(setup_file_path) as f:
         setup_text = f.read()
     assert setup_text == expected
+
+    TmpFileManager.cleanup()
+
+def test_cython_wrapper_unique_dummyvars():
+    from sympy.core.relational import Equality
+    from sympy.core.symbol import Dummy
+    x, y, z = Dummy('x'), Dummy('y'), Dummy('z')
+    x_id, y_id, z_id = [str(d.dummy_index) for d in [x, y, z]]
+    expr = Equality(z, x + y)
+    routine = make_routine("test", expr)
+    code_gen = CythonCodeWrapper(CCodeGen())
+    source = get_string(code_gen.dump_pyx, [routine])
+    expected_template = (
+        "cdef extern from 'file.h':\n"
+        "    void test(double x_{x_id}, double y_{y_id}, double *z_{z_id})\n"
+        "\n"
+        "def test_c(double x_{x_id}, double y_{y_id}):\n"
+        "\n"
+        "    cdef double z_{z_id} = 0\n"
+        "    test(x_{x_id}, y_{y_id}, &z_{z_id})\n"
+        "    return z_{z_id}")
+    expected = expected_template.format(x_id=x_id, y_id=y_id, z_id=z_id)
+    assert source == expected
 
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
@@ -226,8 +235,6 @@ def test_autowrap_args():
     assert f.args == "y, x, z"
     assert f.returns == "z"
 
-
-@cleanup_tmp_files
 def test_autowrap_store_files():
     x, y = symbols('x y')
     tmp = tempfile.mkdtemp()
@@ -237,17 +244,21 @@ def test_autowrap_store_files():
     assert f() == str(x + y)
     assert os.access(tmp, os.F_OK)
 
+    TmpFileManager.cleanup()
 
 def test_autowrap_store_files_issue_gh12939():
     x, y = symbols('x y')
     tmp = './tmp'
+    saved_cwd = os.getcwd()
+    temp_cwd = tempfile.mkdtemp()
     try:
+        os.chdir(temp_cwd)
         f = autowrap(x + y, backend='dummy', tempdir=tmp)
         assert f() == str(x + y)
         assert os.access(tmp, os.F_OK)
     finally:
-        shutil.rmtree(tmp)
-
+        os.chdir(saved_cwd)
+        shutil.rmtree(temp_cwd)
 
 
 def test_binary_function():
@@ -273,7 +284,11 @@ static PyMethodDef wrapper_module_%(num)sMethods[] = {
         {NULL, NULL, 0, NULL}
 };
 
+#ifdef NPY_1_19_API_VERSION
+static void test_ufunc(char **args, const npy_intp *dimensions, const npy_intp* steps, void* data)
+#else
 static void test_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+#endif
 {
     npy_intp i;
     npy_intp n = dimensions[0];
@@ -367,7 +382,11 @@ static PyMethodDef wrapper_module_%(num)sMethods[] = {
         {NULL, NULL, 0, NULL}
 };
 
+#ifdef NPY_1_19_API_VERSION
+static void multitest_ufunc(char **args, const npy_intp *dimensions, const npy_intp* steps, void* data)
+#else
 static void multitest_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+#endif
 {
     npy_intp i;
     npy_intp n = dimensions[0];

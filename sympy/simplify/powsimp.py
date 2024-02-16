@@ -1,14 +1,15 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
+from functools import reduce
+from math import prod
 
-from sympy.core.function import expand_log, count_ops
+from sympy.core.function import expand_log, count_ops, _coeff_isneg
 from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms
-from sympy.core.compatibility import ordered, default_sort_key, reduce
+from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.numbers import Integer, Rational
-from sympy.core.mul import prod, _keep_coeff
+from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys import lcm, gcd
 from sympy.ntheory.factor_ import multiplicity
 
@@ -16,15 +17,15 @@ from sympy.ntheory.factor_ import multiplicity
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
-    reduces expression by combining powers with similar bases and exponents.
+    Reduce expression by combining powers with similar bases and exponents.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
-    If deep is True then powsimp() will also simplify arguments of
-    functions. By default deep is set to False.
+    If ``deep`` is ``True`` then powsimp() will also simplify arguments of
+    functions. By default ``deep`` is set to ``False``.
 
-    If force is True then bases will be combined without checking for
+    If ``force`` is ``True`` then bases will be combined without checking for
     assumptions, e.g. sqrt(x)*sqrt(y) -> sqrt(x*y) which is not true
     if x and y are both negative.
 
@@ -77,7 +78,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     Radicals with Mul bases will be combined if combine='exp'
 
-    >>> from sympy import sqrt, Mul
+    >>> from sympy import sqrt
     >>> x, y = symbols('x y')
 
     Two radicals are automatically joined through Mul:
@@ -99,8 +100,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     x*y*sqrt(x*sqrt(y))
 
     """
-    from sympy.matrices.expressions.matexpr import MatrixSymbol
-
     def recurse(arg, **kwargs):
         _deep = kwargs.get('deep', deep)
         _combine = kwargs.get('combine', combine)
@@ -201,10 +200,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # check for base and negated base pairs
         be = list(c_powers.items())
         _n = S.NegativeOne
-        for i, (b, e) in enumerate(be):
-            if ((-b).is_Symbol or b.is_Add) and -b in c_powers:
-                if (b.is_positive in (0, 1) or e.is_integer):
-                    c_powers[-b] += c_powers.pop(b)
+        for b, e in be:
+            if (b.is_Symbol or b.is_Add) and -b in c_powers and b in c_powers:
+                if (b.is_positive is not None or e.is_integer):
+                    if e.is_integer or b.is_negative:
+                        c_powers[-b] += c_powers.pop(b)
+                    else:  # (-b).is_positive so use its e
+                        e = c_powers.pop(-b)
+                        c_powers[b] += e
                     if _n in c_powers:
                         c_powers[_n] += e
                     else:
@@ -282,7 +285,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 common_b[b] = e
             if b[1] != 1 and b[0].is_Mul:
                 bases.append(b)
-        c_powers = [(b, e) for b, e in common_b.items() if e]
         bases.sort(key=default_sort_key)  # this makes tie-breaking canonical
         bases.sort(key=measure, reverse=True)  # handle longest first
         for base in bases:
@@ -400,6 +402,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         for b, e in c_powers:
             if deep:
                 e = recurse(e)
+            if e.is_Add and (b.is_positive or e.is_integer):
+                e = factor_terms(e)
+                if _coeff_isneg(e):
+                    e = -e
+                    b = 1/b
             c_exp[e].append(b)
         del c_powers
 
@@ -487,6 +494,9 @@ def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
 
+    Explanation
+    ===========
+
     Given ``(bb**be)**e``, this can be simplified as follows:
         * if ``bb`` is positive, or
         * ``e`` is an integer, or
@@ -503,11 +513,11 @@ def powdenest(eq, force=False, polar=False):
       of the exponent can be removed from any term and the gcd of such
       integers can be joined with e
 
-    Setting ``force`` to True will make symbols that are not explicitly
+    Setting ``force`` to ``True`` will make symbols that are not explicitly
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting ``polar`` to True will do simplifications on the Riemann surface of
+    Setting ``polar`` to ``True`` will do simplifications on the Riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
@@ -574,14 +584,26 @@ def powdenest(eq, force=False, polar=False):
     from sympy.simplify.simplify import posify
 
     if force:
-        eq, rep = posify(eq)
-        return powdenest(eq, force=False).xreplace(rep)
+        def _denest(b, e):
+            if not isinstance(b, (Pow, exp)):
+                return b.is_positive, Pow(b, e, evaluate=False)
+            return _denest(b.base, b.exp*e)
+        reps = []
+        for p in eq.atoms(Pow, exp):
+            if isinstance(p.base, (Pow, exp)):
+                ok, dp = _denest(*p.args)
+                if ok is not False:
+                    reps.append((p, dp))
+        if reps:
+            eq = eq.subs(reps)
+        eq, reps = posify(eq)
+        return powdenest(eq, force=False, polar=polar).xreplace(reps)
 
     if polar:
         eq, rep = polarify(eq)
         return unpolarify(powdenest(unpolarify(eq, exponents_only=True)), rep)
 
-    new = powsimp(sympify(eq))
+    new = powsimp(eq)
     return new.xreplace(Transform(
         _denest_pow, filter=lambda m: m.is_Pow or isinstance(m, exp)))
 
@@ -598,7 +620,7 @@ def _denest_pow(eq):
     from sympy.simplify.simplify import logcombine
 
     b, e = eq.as_base_exp()
-    if b.is_Pow or isinstance(b.func, exp) and e != 1:
+    if b.is_Pow or isinstance(b, exp) and e != 1:
         new = b._eval_power(e)
         if new is not None:
             eq = new

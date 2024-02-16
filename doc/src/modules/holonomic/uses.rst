@@ -1,4 +1,4 @@
-.. module:: sympy.holonomic.holonomic
+.. currentmodule:: sympy.holonomic.holonomic
 
 Uses and Current limitations
 ============================
@@ -44,7 +44,7 @@ which initial conditions for the integrand are stored. Sometimes this gives an a
 For instance:
 
 >>> expr_to_holonomic(sin(x)).integrate(x).to_expr()
--cos(x) + 1
+1 - cos(x)
 >>> sin(x).integrate(x)
 -cos(x)
 

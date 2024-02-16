@@ -1,42 +1,31 @@
 from sympy.core.basic import Basic
 from sympy.core.numbers import Rational
-from sympy.core.singleton import S, Singleton, SingletonRegistry
-
-from sympy.core.compatibility import with_metaclass, exec_
+from sympy.core.singleton import S, Singleton
 
 def test_Singleton():
-    global instantiated
-    instantiated = 0
 
-    class MySingleton(with_metaclass(Singleton, Basic)):
-        def __new__(cls):
-            global instantiated
-            instantiated += 1
-            return Basic.__new__(cls)
+    class MySingleton(Basic, metaclass=Singleton):
+        pass
 
-    assert instantiated == 0
     MySingleton() # force instantiation
-    assert instantiated == 1
     assert MySingleton() is not Basic()
     assert MySingleton() is MySingleton()
     assert S.MySingleton is MySingleton()
-    assert instantiated == 1
 
     class MySingleton_sub(MySingleton):
         pass
-    assert instantiated == 1
+
     MySingleton_sub()
-    assert instantiated == 2
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
 
 def test_singleton_redefinition():
-    class TestSingleton(with_metaclass(Singleton, Basic)):
+    class TestSingleton(Basic, metaclass=Singleton):
         pass
 
     assert TestSingleton() is S.TestSingleton
 
-    class TestSingleton(with_metaclass(Singleton, Basic)):
+    class TestSingleton(Basic, metaclass=Singleton):
         pass
 
     assert TestSingleton() is S.TestSingleton
@@ -65,7 +54,7 @@ def test_names_in_namespace():
     # str printer should print a form that does not use S. This is because
     # sympify() disables attribute lookups by default for safety purposes.
     d = {}
-    exec_('from sympy import *', d)
+    exec('from sympy import *', d)
 
     for name in dir(S) + list(S._classes_to_install):
         if name.startswith('_'):
@@ -83,5 +72,5 @@ def test_names_in_namespace():
             # Accessible by -oo
             continue
 
-        # Use is here because of complications with ==
-        assert any(getattr(S, name) is i or type(getattr(S, name)) is i for i in d.values()), name
+        # Use is here to ensure it is the exact same object
+        assert any(getattr(S, name) is i for i in d.values()), name

@@ -1,20 +1,5 @@
 """Advanced tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
-from __future__ import print_function, division
-
-from sympy.polys.densebasic import (
-    dup_strip, dmp_strip,
-    dup_convert, dmp_convert,
-    dup_degree, dmp_degree,
-    dmp_to_dict,
-    dmp_from_dict,
-    dup_LC, dmp_LC, dmp_ground_LC,
-    dup_TC, dmp_TC,
-    dmp_zero, dmp_ground,
-    dmp_zero_p,
-    dup_to_raw_dict, dup_from_raw_dict,
-    dmp_zeros
-)
 
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
@@ -30,16 +15,26 @@ from sympy.polys.densearith import (
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
 )
-
+from sympy.polys.densebasic import (
+    dup_strip, dmp_strip,
+    dup_convert, dmp_convert,
+    dup_degree, dmp_degree,
+    dmp_to_dict,
+    dmp_from_dict,
+    dup_LC, dmp_LC, dmp_ground_LC,
+    dup_TC, dmp_TC,
+    dmp_zero, dmp_ground,
+    dmp_zero_p,
+    dup_to_raw_dict, dup_from_raw_dict,
+    dmp_zeros
+)
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError
 )
-
 from sympy.utilities import variations
 
 from math import ceil as _ceil, log as _log
-from sympy.core.compatibility import range
 
 def dup_integrate(f, m, K):
     """
@@ -279,7 +274,7 @@ def dup_eval(f, a, K):
 
     """
     if not a:
-        return dup_TC(f, K)
+        return K.convert(dup_TC(f, K))
 
     result = K.zero
 
@@ -458,6 +453,10 @@ def dup_trunc(f, p, K):
                 g.append(c - p)
             else:
                 g.append(c)
+    elif K.is_FiniteField:
+        # XXX: python-flint's nmod does not support %
+        pi = int(p)
+        g = [ K(int(c) % pi) for c in f ]
     else:
         g = [ c % p for c in f ]
 
@@ -1080,7 +1079,7 @@ def dup_decompose(f, K):
     References
     ==========
 
-    1. [Kozen89]_
+    .. [1] [Kozen89]_
 
     """
     F = []
@@ -1116,6 +1115,11 @@ def dmp_lift(f, u, K):
     x**8 + 2*x**6 + 9*x**4 - 8*x**2 + 16
 
     """
+    if K.is_GaussianField:
+        K1 = K.as_AlgebraicField()
+        f = dmp_convert(f, u, K, K1)
+        K = K1
+
     if not K.is_Algebraic:
         raise DomainError(
             'computation can be done only in an algebraic domain')
@@ -1195,13 +1199,20 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
     for c in f:
         common = K1.lcm(common, K0.denom(c))
 
-    if not K1.is_one(common):
-        f = dup_mul_ground(f, common, K0)
+    if K1.is_one(common):
+        if not convert:
+            return common, f
+        else:
+            return common, dup_convert(f, K0, K1)
+
+    # Use quo rather than exquo to handle inexact domains by discarding the
+    # remainder.
+    f = [K0.numer(c)*K1.quo(common, K0.denom(c)) for c in f]
 
     if not convert:
-        return common, f
+        return common, dup_convert(f, K1, K0)
     else:
-        return common, dup_convert(f, K0, K1)
+        return common, f
 
 
 def _rec_clear_denoms(g, v, K0, K1):

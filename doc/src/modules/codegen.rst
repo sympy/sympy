@@ -1,8 +1,8 @@
 .. _codegen_prose:
 
-================================================
-Structural Details of Code Generation with SymPy
-================================================
+===============
+Code Generation
+===============
 
 Several submodules in SymPy allow one to generate directly compilable and
 executable code in a variety of different programming languages from SymPy
@@ -59,8 +59,8 @@ This is where the meat of code generation is; the translation of SymPy
 actually more like a lightweight version of codegen for Python, and
 Python (:py:func:`sympy.printing.pycode.pycode`), and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
-(like NumPy), and theano
-(:py:func:`sympy.printing.theanocode.theano_function`). The code printers are
+(like NumPy), and Aesara
+(:py:func:`sympy.printing.aesaracode.aesara_function`). The code printers are
 special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with assignments
@@ -164,8 +164,9 @@ An example of Mathematica code printer::
 
     >>> expr = summation(expr, (n, -1, 1))
     >>> mathematica_code(expr)
-    T*x[-T]*Sin[(T + t)/T]/(T + t) + T*x[T]*Sin[(-T + t)/T]/(-T + t) + T*x[0]*Sin[
-    t/T]/t
+    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T ↪
+    <BLANKLINE>
+    ↪ ]/t)
 
 We can go through a common expression in different languages we support and see
 how it works::
@@ -186,7 +187,7 @@ how it works::
     >>> print(fcode(expr, assign_to="H_is"))
           H_is = I*S*gamma_1*gamma_2*k*(3*cos(beta)**2 - 1)/r**3
     >>> print(julia_code(expr, assign_to="H_is"))
-    H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3
+    H_is = I .* S .* gamma_1 .* gamma_2 .* k .* (3 * cos(beta) .^ 2 - 1) ./ r .^ 3
     >>> print(octave_code(expr, assign_to="H_is"))
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3;
     >>> print(rust_code(expr, assign_to="H_is"))
@@ -289,12 +290,12 @@ For example::
     >>> [arg.result_var for arg in routine.results]   # doctest: +SKIP
     [result₅₁₄₂₃₄₁₆₈₁₃₉₇₇₁₉₄₂₈]
     >>> [arg.expr for arg in routine.results]
-    ⎡                ___________                                           ⎤
-    ⎢          y    ╱ (-y + 2)!   -2⋅x                                     ⎥
-    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ───────── ⋅ℯ    ⋅assoc_laguerre(-y + 2, 2⋅y + 1, 4⋅x)⎥
-    ⎢            ╲╱    (y + 3)!                                            ⎥
-    ⎢──────────────────────────────────────────────────────────────────────⎥
-    ⎣                                  3                                   ⎦
+    ⎡                __________                                          ⎤
+    ⎢          y    ╱ (2 - y)!   -2⋅x                                    ⎥
+    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ──────── ⋅ℯ    ⋅assoc_laguerre(2 - y, 2⋅y + 1, 4⋅x)⎥
+    ⎢            ╲╱   (y + 3)!                                           ⎥
+    ⎢────────────────────────────────────────────────────────────────────⎥
+    ⎣                                 3                                  ⎦
     >>> [arg.name for arg in routine.arguments]
     [x, y]
 
@@ -428,7 +429,7 @@ supply an argument sequence to helper routines.
 Another method available at the ``autowrap`` level is ``binary_function``. It
 returns a sympy function. The advantage is that we can have very fast functions
 as compared to SymPy speeds. This is because we will be using compiled
-functions with Sympy attributes and methods. An illustration::
+functions with SymPy attributes and methods. An illustration::
 
     >>> from sympy.utilities.autowrap import binary_function
     >>> from sympy.physics.hydrogen import R_nl
@@ -486,7 +487,7 @@ implies 'Universal functions' and follows an ideology set by NumPy. The main
 point of ufuncify as compared to autowrap is that it allows arrays as arguments
 and can operate in an element-by-element fashion. The core operation done
 element-wise is in accordance to Numpy's array broadcasting rules. See `this
-<https://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
+<https://numpy.org/doc/stable/reference/ufuncs.html>`_ for more.
 
     >>> from sympy import *
     >>> from sympy.abc import x
@@ -505,9 +506,9 @@ Let us see an example for some quantitative analysis::
     >>> from sympy.physics.hydrogen import R_nl
     >>> expr = R_nl(3, 1, x, 6)
     >>> expr
-                    -2⋅x
-    8⋅x⋅(-4⋅x + 4)⋅ℯ
-    ────────────────────
+                   -2⋅x
+    8⋅x⋅(4 - 4⋅x)⋅ℯ
+    ───────────────────
              3
 
 The lambdify function translates SymPy expressions into Python functions,
@@ -546,6 +547,9 @@ Classes and functions for rewriting expressions (sympy.codegen.rewriting)
 -------------------------------------------------------------------------
 
 .. automodule:: sympy.codegen.rewriting
+   :members:
+
+.. automodule:: sympy.codegen.matrix_nodes
    :members:
 
 Tools for simplifying expressions using approximations (sympy.codegen.approximations)

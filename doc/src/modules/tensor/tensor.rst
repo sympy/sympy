@@ -5,27 +5,16 @@ Tensor
 
 .. module:: sympy.tensor.tensor
 
-.. autoclass:: _TensorManager
-   :members:
-
 .. autoclass:: TensorIndexType
    :members:
 
 .. autoclass:: TensorIndex
    :members:
 
-.. autofunction:: tensor_indices
-
-.. autoclass:: TensorSymmetry
-   :members:
-
-.. autofunction:: tensorsymmetry
-
-.. autoclass:: TensorType
-   :members:
-
 .. autoclass:: TensorHead
    :members:
+
+.. autofunction:: tensor_heads
 
 .. autoclass:: TensExpr
    :members:
@@ -38,8 +27,17 @@ Tensor
 
 .. autofunction:: canon_bp
 
-.. autofunction:: tensor_mul
-
 .. autofunction:: riemann_cyclic_replace
 
 .. autofunction:: riemann_cyclic
+
+.. autoclass:: TensorSymmetry
+   :members:
+
+.. autofunction:: tensorsymmetry
+
+.. autoclass:: TensorType
+   :members:
+
+.. autoclass:: _TensorManager
+   :members:

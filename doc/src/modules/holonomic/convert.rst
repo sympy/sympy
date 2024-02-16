@@ -1,7 +1,7 @@
 Converting other representations to holonomic
 =============================================
 
-.. module:: sympy.holonomic.holonomic
+.. currentmodule:: sympy.holonomic.holonomic
 
 Converting hypergeometric functions
 -----------------------------------

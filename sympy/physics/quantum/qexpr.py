@@ -1,9 +1,10 @@
-from __future__ import print_function, division
-
-from sympy import Expr, sympify, Symbol, Matrix
+from sympy.core.expr import Expr
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import is_sequence, string_types
+from sympy.utilities.iterables import is_sequence
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
@@ -61,7 +62,7 @@ def __qsympify_sequence_helper(seq):
     if not is_sequence(seq):
         if isinstance(seq, Matrix):
             return seq
-        elif isinstance(seq, string_types):
+        elif isinstance(seq, str):
             return Symbol(seq)
         else:
             return sympify(seq)
@@ -89,18 +90,18 @@ class QExpr(Expr):
     # derive from args.
 
     # The Hilbert space a quantum Object belongs to.
-    __slots__ = ['hilbert_space']
+    __slots__ = ('hilbert_space', )
 
     is_commutative = False
 
     # The separator used in printing the label.
-    _label_separator = u''
+    _label_separator = ''
 
     @property
     def free_symbols(self):
         return {self}
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args, **kwargs):
         """Construct a new quantum object.
 
         Parameters
@@ -129,10 +130,10 @@ class QExpr(Expr):
         """
 
         # First compute args and call Expr.__new__ to create the instance
-        args = cls._eval_args(args)
+        args = cls._eval_args(args, **kwargs)
         if len(args) == 0:
-            args = cls._eval_args(tuple(cls.default_args()))
-        inst = Expr.__new__(cls, *args, **old_assumptions)
+            args = cls._eval_args(tuple(cls.default_args()), **kwargs)
+        inst = Expr.__new__(cls, *args)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
@@ -215,7 +216,7 @@ class QExpr(Expr):
     # Printing
     #-------------------------------------------------------------------------
 
-    # Utilities for printing: these operate on raw sympy objects
+    # Utilities for printing: these operate on raw SymPy objects
 
     def _print_sequence(self, seq, sep, printer, *args):
         result = []
@@ -226,8 +227,8 @@ class QExpr(Expr):
     def _print_sequence_pretty(self, seq, sep, printer, *args):
         pform = printer._print(seq[0], *args)
         for item in seq[1:]:
-            pform = prettyForm(*pform.right((sep)))
-            pform = prettyForm(*pform.right((printer._print(item, *args))))
+            pform = prettyForm(*pform.right(sep))
+            pform = prettyForm(*pform.right(printer._print(item, *args)))
         return pform
 
     # Utilities for printing: these operate prettyForm objects
@@ -279,7 +280,7 @@ class QExpr(Expr):
         Handles the printing of any unique identifying contents of a QExpr to
         print as its contents, such as any variables or quantum numbers. The
         default is to print the label, which is almost always the args. This
-        should not include printing of any brackets or parenteses.
+        should not include printing of any brackets or parentheses.
         """
         return self._print_label(printer, *args)
 
@@ -316,20 +317,13 @@ class QExpr(Expr):
         return self._print_contents_latex(printer, *args)
 
     #-------------------------------------------------------------------------
-    # Methods from Basic and Expr
-    #-------------------------------------------------------------------------
-
-    def doit(self, **kw_args):
-        return self
-
-    #-------------------------------------------------------------------------
     # Represent
     #-------------------------------------------------------------------------
 
     def _represent_default_basis(self, **options):
         raise NotImplementedError('This object does not have a default basis')
 
-    def _represent(self, **options):
+    def _represent(self, *, basis=None, **options):
         """Represent this object in a given basis.
 
         This method dispatches to the actual methods that perform the
@@ -363,7 +357,6 @@ class QExpr(Expr):
             the representation, such as the number of basis functions to
             be used.
         """
-        basis = options.pop('basis', None)
         if basis is None:
             result = self._represent_default_basis(**options)
         else:
@@ -415,6 +408,6 @@ def dispatch_method(self, basename, arg, **options):
         if result is not None:
             return result
     raise NotImplementedError(
-        "%s.%s can't handle: %r" %
+        "%s.%s cannot handle: %r" %
         (self.__class__.__name__, basename, arg)
     )

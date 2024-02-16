@@ -25,19 +25,22 @@
     metric(LorentzIndex,LorentzIndex)
 
 """
-from sympy import S, Mul, eye, trace
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.matrices.dense import eye
+from sympy.matrices.expressions.trace import trace
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
-    TensMul, TensAdd, tensor_mul, Tensor, tensorhead
-from sympy.core.compatibility import range
+    TensMul, TensAdd, tensor_mul, Tensor, TensorHead, TensorSymmetry
 
 
-# DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
+# DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_name="S")
 
 
-LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_fmt="L")
+LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_name="L")
 
 
-GammaMatrix = tensorhead("GammaMatrix", [LorentzIndex], [[1]], comm=None)
+GammaMatrix = TensorHead("GammaMatrix", [LorentzIndex],
+                         TensorSymmetry.no_symmetry(1), comm=None)
 
 
 def extract_type_tens(expression, component):
@@ -84,8 +87,8 @@ def simplify_gpgp(ex, sort=True):
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, \
         LorentzIndex, simplify_gpgp
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-    >>> p, q = tensorhead('p, q', [LorentzIndex], [[1]])
+    >>> from sympy.tensor.tensor import tensor_indices, tensor_heads
+    >>> p, q = tensor_heads('p, q', [LorentzIndex])
     >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', LorentzIndex)
     >>> ps = p(i0)*G(-i0)
     >>> qs = q(i0)*G(-i0)
@@ -173,8 +176,8 @@ def gamma_trace(t):
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, \
         gamma_trace, LorentzIndex
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-    >>> p, q = tensorhead('p, q', [LorentzIndex], [[1]])
+    >>> from sympy.tensor.tensor import tensor_indices, tensor_heads
+    >>> p, q = tensor_heads('p, q', [LorentzIndex])
     >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', LorentzIndex)
     >>> ps = p(i0)*G(-i0)
     >>> qs = q(i0)*G(-i0)
@@ -187,7 +190,7 @@ def gamma_trace(t):
 
     """
     if isinstance(t, TensAdd):
-        res = TensAdd(*[_trace_single_line(x) for x in t.args])
+        res = TensAdd(*[gamma_trace(x) for x in t.args])
         return res
     t = _simplify_single_line(t)
     res = _trace_single_line(t)
@@ -203,8 +206,8 @@ def _simplify_single_line(expression):
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, \
         LorentzIndex, _simplify_single_line
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-    >>> p = tensorhead('p', [LorentzIndex], [[1]])
+    >>> from sympy.tensor.tensor import tensor_indices, TensorHead
+    >>> p = TensorHead('p', [LorentzIndex])
     >>> i0,i1 = tensor_indices('i0:2', LorentzIndex)
     >>> _simplify_single_line(G(i0)*G(i1)*p(-i1)*G(-i0)) + 2*G(i0)*p(-i0)
     0
@@ -233,8 +236,8 @@ def _trace_single_line(t):
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, \
         LorentzIndex, _trace_single_line
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-    >>> p = tensorhead('p', [LorentzIndex], [[1]])
+    >>> from sympy.tensor.tensor import tensor_indices, TensorHead
+    >>> p = TensorHead('p', [LorentzIndex])
     >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', LorentzIndex)
     >>> _trace_single_line(G(i0)*G(i1))
     4*metric(i0, i1)
@@ -482,9 +485,7 @@ def kahane_simplify(expression):
     # All values in `links` are integers, negative numbers are used in the case
     # where it is necessary to insert gamma matrices between free indices, in
     # order to make Kahane's algorithm work (see paper).
-    links = dict()
-    for i in range(first_dum_pos, total_number):
-        links[i] = []
+    links = {i: [] for i in range(first_dum_pos, total_number)}
 
     # `cum_sign` is a step variable to mark the sign of every index, see paper.
     cum_sign = -1
@@ -693,8 +694,7 @@ def kahane_simplify(expression):
 
     # If `first_dum_pos` is not zero, it means that there are trailing free gamma
     # matrices in front of `expression`, so multiply by them:
-    for i in range(0, first_dum_pos):
-        [ri.insert(0, free_pos[i]) for ri in resulting_indices]
+    resulting_indices = [ free_pos[0:first_dum_pos] + ri for ri in resulting_indices ]
 
     resulting_expr = S.Zero
     for i in resulting_indices:

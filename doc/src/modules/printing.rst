@@ -1,7 +1,10 @@
-Printing System
-===============
+.. _module-printing:
 
-See the :ref:`tutorial-printing` section in Tutorial for introduction into
+========
+Printing
+========
+
+See the :ref:`tutorial-printing` section in tutorial for introduction into
 printing.
 
 This guide documents the printing system in SymPy and how it works
@@ -13,13 +16,12 @@ Printer Class
 .. automodule:: sympy.printing.printer
 
 The main class responsible for printing is ``Printer`` (see also its
-`source code
-<https://github.com/sympy/sympy/blob/master/sympy/printing/printer.py>`_):
+`source code <https://github.com/sympy/sympy/blob/master/sympy/printing/printer.py>`_):
 
 .. autoclass:: Printer
-    :members: doprint, _print, set_global_settings, order
+   :members: doprint, _print, set_global_settings, order
 
-    .. autoattribute:: Printer.printmethod
+   .. autoattribute:: Printer.printmethod
 
 
 PrettyPrinter Class
@@ -39,6 +41,8 @@ The module ``pretty_symbology`` provides primitives to construct 2D shapes
 (hline, vline, etc) together with a technique to use unicode automatically
 when possible.
 
+.. module:: sympy.printing.pretty
+
 .. module:: sympy.printing.pretty.pretty
 
 .. autoclass:: PrettyPrinter
@@ -52,7 +56,7 @@ when possible.
 C code printers
 ---------------
 
-.. module:: sympy.printing.ccode
+.. module:: sympy.printing.c
 
 This class implements C code printing, i.e. it converts Python expressions
 to strings of C code (see also ``C89CodePrinter``).
@@ -71,53 +75,53 @@ Usage::
     >>> print_ccode(gamma(x**2), standard='C99')
     tgamma(pow(x, 2))
 
-.. autodata:: sympy.printing.ccode.known_functions_C89
-.. autodata:: sympy.printing.ccode.known_functions_C99
+.. autodata:: sympy.printing.c::known_functions_C89
+.. autodata:: sympy.printing.c::known_functions_C99
 
-.. autoclass:: sympy.printing.ccode.C89CodePrinter
+.. autoclass:: sympy.printing.c::C89CodePrinter
    :members:
 
    .. autoattribute:: C89CodePrinter.printmethod
 
-.. autoclass:: sympy.printing.ccode.C99CodePrinter
+.. autoclass:: sympy.printing.c::C99CodePrinter
    :members:
 
    .. autoattribute:: C99CodePrinter.printmethod
 
 
-.. autofunction:: sympy.printing.ccode.ccode
+.. autofunction:: sympy.printing.c::ccode
 
-.. autofunction:: sympy.printing.ccode.print_ccode
+.. autofunction:: sympy.printing.c::print_ccode
 
 C++ code printers
 -----------------
 
-.. module:: sympy.printing.cxxcode
+.. module:: sympy.printing.cxx
 
 This module contains printers for C++ code, i.e. functions to convert
 SymPy expressions to strings of C++ code.
 
 Usage::
 
-    >>> from sympy.printing.cxxcode import cxxcode
+    >>> from sympy.printing import cxxcode
     >>> from sympy.functions import Min, gamma
     >>> from sympy.abc import x
     >>> print(cxxcode(Min(gamma(x) - 1, x), standard='C++11'))
     std::min(x, std::tgamma(x) - 1)
 
-.. autoclass:: sympy.printing.cxxcode.CXX98CodePrinter
+.. autoclass:: sympy.printing.cxx::CXX98CodePrinter
    :members:
 
    .. autoattribute:: CXX98CodePrinter.printmethod
 
 
-.. autoclass:: sympy.printing.cxxcode.CXX11CodePrinter
+.. autoclass:: sympy.printing.cxx::CXX11CodePrinter
    :members:
 
    .. autoattribute:: CXX11CodePrinter.printmethod
 
 
-.. autofunction:: sympy.printing.cxxcode.cxxcode
+.. autofunction:: sympy.printing.codeprinter::cxxcode
 
 
 
@@ -141,17 +145,17 @@ Usage::
     >>> print_rcode(Abs(x**2))
     abs(x^2)
 
-.. autodata:: sympy.printing.rcode.known_functions
+.. autodata:: sympy.printing.rcode::known_functions
 
-.. autoclass:: sympy.printing.rcode.RCodePrinter
+.. autoclass:: sympy.printing.rcode::RCodePrinter
    :members:
 
    .. autoattribute:: RCodePrinter.printmethod
 
 
-.. autofunction:: sympy.printing.rcode.rcode
+.. autofunction:: sympy.printing.rcode::rcode
 
-.. autofunction:: sympy.printing.rcode.print_rcode
+.. autofunction:: sympy.printing.rcode::print_rcode
 
 Fortran Printing
 ----------------
@@ -163,7 +167,7 @@ very little) manual tweaking to make it compilable. The optional arguments
 of ``fcode`` can be used to fine-tune the behavior of ``fcode`` in such a way
 that manual changes in the result are no longer needed.
 
-.. module:: sympy.printing.fcode
+.. module:: sympy.printing.fortran
 .. autofunction:: fcode
 .. autofunction:: print_fcode
 .. autoclass:: FCodePrinter
@@ -177,18 +181,18 @@ Two basic examples:
     >>> from sympy import *
     >>> x = symbols("x")
     >>> fcode(sqrt(1-x**2))
-    '      sqrt(-x**2 + 1)'
+    '      sqrt(1 - x**2)'
     >>> fcode((3 + 4*I)/(1 - conjugate(x)))
-    '      (cmplx(3,4))/(-conjg(x) + 1)'
+    '      (cmplx(3,4))/(1 - conjg(x))'
 
 An example where line wrapping is required:
 
     >>> expr = sqrt(1-x**2).series(x,n=20).removeO()
     >>> print(fcode(expr))
-          -715.0d0/65536.0d0*x**18 - 429.0d0/32768.0d0*x**16 - 33.0d0/
-         @ 2048.0d0*x**14 - 21.0d0/1024.0d0*x**12 - 7.0d0/256.0d0*x**10 -
-         @ 5.0d0/128.0d0*x**8 - 1.0d0/16.0d0*x**6 - 1.0d0/8.0d0*x**4 - 1.0d0
-         @ /2.0d0*x**2 + 1
+        -715.0d0/65536.0d0*x**18 - 429.0d0/32768.0d0*x**16 - 33.0d0/
+        @ 2048.0d0*x**14 - 21.0d0/1024.0d0*x**12 - 7.0d0/256.0d0*x**10 -
+        @ 5.0d0/128.0d0*x**8 - 1.0d0/16.0d0*x**6 - 1.0d0/8.0d0*x**4 - 1.0d0
+        @ /2.0d0*x**2 + 1
 
 In case of line wrapping, it is handy to include the assignment so that lines
 are wrapped properly when the assignment part is added.
@@ -257,21 +261,22 @@ When some functions are not part of the Fortran standard, it might be desirable
 to introduce the names of user-defined functions in the Fortran expression.
 
     >>> print(fcode(1 - gamma(x)**2, user_functions={'gamma': 'mygamma'}))
-          -mygamma(x)**2 + 1
+          1 - mygamma(x)**2
 
 However, when the user_functions argument is not provided, ``fcode`` will
-generate code which assumes that a function of the same name will be provided
-by the user.  A comment will be added to inform the user of the issue:
+by default raise an Exception, but if the user intends to provide a function
+with the same name, code can still be generated, by passing the option
+``strict=False``. The code then contains a comment informing the user of the issue:
 
-    >>> print(fcode(1 - gamma(x)**2))
+    >>> print(fcode(1 - gamma(x)**2, strict=False))
     C     Not supported in Fortran:
     C     gamma
-          -gamma(x)**2 + 1
+          1 - gamma(x)**2
 
 The printer can be configured to omit these comments:
 
     >>> print(fcode(1 - gamma(x)**2, allow_unknown_functions=True))
-          -gamma(x)**2 + 1
+          1 - gamma(x)**2
 
 By default the output is human readable code, ready for copy and paste. With the
 option ``human=False``, the return value is suitable for post-processing with
@@ -281,11 +286,25 @@ be defined as 'Fortran parameters', (ii) a list functions that cannot be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
     >>> fcode(1 - gamma(x)**2, human=False)
-    (set(), {gamma(x)}, '      -gamma(x)**2 + 1')
+    (set(), {gamma(x)}, '      1 - gamma(x)**2')
     >>> fcode(1 - sin(x)**2, human=False)
-    (set(), set(), '      -sin(x)**2 + 1')
+    (set(), set(), '      1 - sin(x)**2')
     >>> fcode(x - pi**2, human=False)
     ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
+
+SMT-Lib printing
+---------------------------------
+
+.. module:: sympy.printing.smtlib
+
+.. autoclass:: sympy.printing.smtlib.SMTLibPrinter
+   :members:
+
+   .. autoattribute:: SMTLibPrinter.printmethod
+
+   .. autoattribute:: SMTLibPrinter._default_settings
+
+.. autofunction:: sympy.printing.smtlib.smtlib_code
 
 Mathematica code printing
 -------------------------
@@ -301,19 +320,33 @@ Mathematica code printing
 
 .. autofunction:: sympy.printing.mathematica.mathematica_code
 
+Maple code printing
+-------------------
+
+.. module:: sympy.printing.maple
+
+.. autoclass:: sympy.printing.maple.MapleCodePrinter
+   :members:
+
+   .. autoattribute:: MapleCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.maple.maple_code
+
+.. autofunction:: sympy.printing.maple.print_maple_code
+
 Javascript Code printing
 ------------------------
 
 .. module:: sympy.printing.jscode
 
-.. autodata:: sympy.printing.jscode.known_functions
+.. autodata:: sympy.printing.jscode::known_functions
 
-.. autoclass:: sympy.printing.jscode.JavascriptCodePrinter
+.. autoclass:: sympy.printing.jscode::JavascriptCodePrinter
    :members:
 
    .. autoattribute:: JavascriptCodePrinter.printmethod
 
-.. autofunction:: sympy.printing.jscode.jscode
+.. autofunction:: sympy.printing.jscode::jscode
 
 Julia code printing
 ---------------------------------
@@ -361,19 +394,21 @@ Rust code printing
 
 .. autofunction:: sympy.printing.rust.rust_code
 
-Theano Code printing
+Aesara Code printing
 --------------------
 
-.. module:: sympy.printing.theanocode
+.. module:: sympy.printing.aesaracode
 
-.. autoclass:: sympy.printing.theanocode.TheanoPrinter
+.. autoclass:: sympy.printing.aesaracode.AesaraPrinter
    :members:
 
-   .. autoattribute:: TheanoPrinter.printmethod
+   .. autoattribute:: AesaraPrinter.printmethod
 
-.. autofunction:: sympy.printing.theanocode.theano_code
+.. autofunction:: sympy.printing.aesaracode.aesara_code
 
-.. autofunction:: sympy.printing.theanocode.theano_function
+.. autofunction:: sympy.printing.aesaracode.aesara_function
+
+.. autofunction:: sympy.printing.aesaracode.dim_handling
 
 Gtk
 ---
@@ -403,6 +438,7 @@ This classes implements printing to strings that can be used by the
 :py:func:`sympy.utilities.lambdify.lambdify` function.
 
 .. autoclass:: LambdaPrinter
+   :members:
 
    .. autoattribute:: LambdaPrinter.printmethod
 
@@ -434,9 +470,10 @@ MathMLPrinter
 
 This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 
-More info on mathml : http://www.w3.org/TR/MathML2
+More info on mathml : https://www.w3.org/TR/MathML2
 
 .. autoclass:: MathMLPrinterBase
+   :members:
 
 .. autoclass:: MathMLContentPrinter
    :members:
@@ -494,7 +531,7 @@ Example::
 but for SymPy we don’t actually use ``srepr()`` for ``__repr__`` because it’s
 is so verbose, it is unlikely that anyone would want it called by default.
 Another reason is that lists call repr on their elements, like ``print([a, b, c])``
-calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for `` __repr__`` any list with
+calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for ``__repr__`` any list with
 SymPy objects would include the srepr form, even if we used ``str()`` or ``print()``.
 
 
@@ -516,6 +553,8 @@ This module generates readable representations of SymPy expressions.
    :members: parenthesize, stringify, emptyPrinter
 
    .. autoattribute:: StrPrinter.printmethod
+
+.. autofunction:: sstr
 
 .. autofunction:: sstrrepr
 
@@ -560,9 +599,8 @@ This class is a base class for other classes that implement code-printing
 functionality, and additionally lists a number of functions that cannot be
 easily translated to C or Fortran.
 
-.. autoclass:: sympy.printing.codeprinter.Assignment
-
 .. autoclass:: sympy.printing.codeprinter.CodePrinter
+   :members:
 
    .. autoattribute:: CodePrinter.printmethod
 

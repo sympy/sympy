@@ -1,12 +1,27 @@
-from sympy import (
-    Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
-    Integer, Eq, symbols, Add, I, Float, log, Rational,
-    Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
-    Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
-    AccumBounds, Matrix, zeros)
+from sympy.calculus.accumulationbounds import AccumBounds
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.function import (Derivative, Function, Lambda, Subs)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi, zoo)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.core.sympify import SympifyError
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (atan2, cos, cot, sin, tan)
+from sympy.matrices.dense import (Matrix, zeros)
+from sympy.matrices.expressions.special import ZeroMatrix
+from sympy.polys.polytools import factor
+from sympy.polys.rootoftools import RootOf
+from sympy.simplify.cse_main import cse
+from sympy.simplify.simplify import nsimplify
 from sympy.core.basic import _aresame
-from sympy.utilities.pytest import XFAIL
-from sympy.abc import a, x, y, z
+from sympy.testing.pytest import XFAIL, raises
+from sympy.abc import a, x, y, z, t
 
 
 def test_subs():
@@ -23,10 +38,17 @@ def test_subs():
 
 def test_subs_Matrix():
     z = zeros(2)
-    assert (x*y).subs({x:z, y:0}) == z
+    z1 = ZeroMatrix(2, 2)
+    assert (x*y).subs({x:z, y:0}) in [z, z1]
     assert (x*y).subs({y:z, x:0}) == 0
-    assert (x*y).subs({y:z, x:0}, simultaneous=True) == z
-    assert (x + y).subs({x: z, y: z}) == z
+    assert (x*y).subs({y:z, x:0}, simultaneous=True) in [z, z1]
+    assert (x + y).subs({x: z, y: z}, simultaneous=True) in [z, z1]
+    assert (x + y).subs({x: z, y: z}) in [z, z1]
+
+    # Issue #15528
+    assert Mul(Matrix([[3]]), x).subs(x, 2.0) == Matrix([[6.0]])
+    # Does not raise a TypeError, see comment on the MatAdd postprocessor
+    assert Add(Matrix([[3]]), x).subs(x, 2.0) == Add(Matrix([[3]]), 2.0)
 
 
 def test_subs_AccumBounds():
@@ -199,9 +221,9 @@ def test_mul():
     assert (x*y/z).subs(y/z, a) == a*x
     assert (x*y/z).subs(x/z, 1/a) == y/a
     assert (x*y/z).subs(x, 1/a) == y/(z*a)
-    assert (2*x*y).subs(5*x*y, z) != 2*z/5
+    assert (2*x*y).subs(5*x*y, z) != z*Rational(2, 5)
     assert (x*y*A).subs(x*y, a) == a*A
-    assert (x**2*y**(3*x/2)).subs(x*y**(x/2), 2) == 4*y**(x/2)
+    assert (x**2*y**(x*Rational(3, 2))).subs(x*y**(x/2), 2) == 4*y**(x/2)
     assert (x*exp(x*2)).subs(x*exp(x), 2) == 2*exp(x)
     assert ((x**(2*y))**3).subs(x**y, 2) == 64
     assert (x*A*B).subs(x*A, y) == y*B
@@ -214,8 +236,8 @@ def test_mul():
     assert (b*A**3/(a**3*c**3)).subs(a**4*c**3*A**3/b**4, z) == \
         b*A**3/(a**3*c**3)
     assert (6*x).subs(2*x, y) == 3*y
-    assert (y*exp(3*x/2)).subs(y*exp(x), 2) == 2*exp(x/2)
-    assert (y*exp(3*x/2)).subs(y*exp(x), 2) == 2*exp(x/2)
+    assert (y*exp(x*Rational(3, 2))).subs(y*exp(x), 2) == 2*exp(x/2)
+    assert (y*exp(x*Rational(3, 2))).subs(y*exp(x), 2) == 2*exp(x/2)
     assert (A**2*B*A**2*B*A**2).subs(A*B*A, C) == A*C**2*A
     assert (x*A**3).subs(x*A, y) == y*A**2
     assert (x**2*A**3).subs(x*A, y) == y**2*A
@@ -240,7 +262,7 @@ def test_mul():
     assert (-2*x**3/9).subs(-x/3, z) == -2*x*z**2
     assert (-2*x**3/9).subs(-2*x, z) == z*x**2/9
     assert (-2*x**3/9).subs(2*x, z) == -z*x**2/9
-    assert (2*(3*x/5/7)**2).subs(3*x/5, z) == 2*(S(1)/7)**2*z**2
+    assert (2*(3*x/5/7)**2).subs(3*x/5, z) == 2*(Rational(1, 7))**2*z**2
     assert (4*x).subs(-2*x, z) == 4*x  # try keep subs literal
 
 
@@ -316,10 +338,10 @@ def test_subs_noncommutative():
     for p in range(1, 5):
         for k in range(10):
             assert (y * x**k).subs(x**p, L) == y * L**(k//p) * x**(k % p)
-    assert (x**(S(3)/2)).subs(x**(S(1)/2), L) == x**(S(3)/2)
-    assert (x**(S(1)/2)).subs(x**(S(1)/2), L) == L
-    assert (x**(-S(1)/2)).subs(x**(S(1)/2), L) == x**(-S(1)/2)
-    assert (x**(-S(1)/2)).subs(x**(-S(1)/2), L) == L
+    assert (x**Rational(3, 2)).subs(x**S.Half, L) == x**Rational(3, 2)
+    assert (x**S.Half).subs(x**S.Half, L) == L
+    assert (x**Rational(-1, 2)).subs(x**S.Half, L) == x**Rational(-1, 2)
+    assert (x**Rational(-1, 2)).subs(x**Rational(-1, 2), L) == L
 
     assert (x**(2*someint)).subs(x**someint, L) == L**2
     assert (x**(2*someint + 3)).subs(x**someint, L) == L**2*x**3
@@ -415,15 +437,15 @@ def test_division():
     assert (1/a).subs(a, c) == 1/c
     assert (1/a**2).subs(a, c) == 1/c**2
     assert (1/a**2).subs(a, -2) == Rational(1, 4)
-    assert (-(1/a**2)).subs(a, -2) == -Rational(1, 4)
+    assert (-(1/a**2)).subs(a, -2) == Rational(-1, 4)
 
     assert (1/x).subs(x, z) == 1/z
     assert (1/x**2).subs(x, z) == 1/z**2
     assert (1/x**2).subs(x, -2) == Rational(1, 4)
-    assert (-(1/x**2)).subs(x, -2) == -Rational(1, 4)
+    assert (-(1/x**2)).subs(x, -2) == Rational(-1, 4)
 
     #issue 5360
-    assert (1/x).subs(x, 0) == 1/S(0)
+    assert (1/x).subs(x, 0) == 1/S.Zero
 
 
 def test_add():
@@ -456,6 +478,11 @@ def test_add():
     e = (-x*(-y + 1) - y*(y - 1))
     ans = (-x*(x) - y*(-x)).expand()
     assert e.subs(-y + 1, x) == ans
+
+    #Test issue 18747
+    assert (exp(x) + cos(x)).subs(x, oo) == oo
+    assert Add(*[AccumBounds(-1, 1), oo]) == oo
+    assert Add(*[oo, AccumBounds(-1, 1)]) == oo
 
 
 def test_subs_issue_4009():
@@ -537,7 +564,7 @@ def test_subs_iter():
 def test_subs_dict():
     a, b, c, d, e = symbols('a b c d e')
 
-    assert (2*x + y + z).subs(dict(x=1, y=2)) == 4 + z
+    assert (2*x + y + z).subs({"x": 1, "y": 2}) == 4 + z
 
     l = [(sin(x), 2), (x, 1)]
     assert (sin(x)).subs(l) == \
@@ -545,13 +572,11 @@ def test_subs_dict():
     assert sin(x).subs(reversed(l)) == sin(1)
 
     expr = sin(2*x) + sqrt(sin(2*x))*cos(2*x)*sin(exp(x)*x)
-    reps = dict([
-               (sin(2*x), c),
-               (sqrt(sin(2*x)), a),
-               (cos(2*x), b),
-               (exp(x), e),
-               (x, d),
-    ])
+    reps = {sin(2*x): c,
+               sqrt(sin(2*x)): a,
+               cos(2*x): b,
+               exp(x): e,
+               x: d,}
     assert expr.subs(reps) == c + a*b*sin(d*e)
 
     l = [(x, 3), (y, x**2)]
@@ -600,15 +625,15 @@ def test_issue_6079():
     assert _aresame((x + 2.0).subs(2, 3), x + 2.0)
     assert _aresame((x + 2.0).subs(2.0, 3), x + 3)
     assert not _aresame(x + 2, x + 2.0)
-    assert not _aresame(Basic(cos, 1), Basic(cos, 1.))
+    assert not _aresame(Basic(cos(x), S(1)), Basic(cos(x), S(1.)))
     assert _aresame(cos, cos)
-    assert not _aresame(1, S(1))
+    assert not _aresame(1, S.One)
     assert not _aresame(x, symbols('x', positive=True))
 
 
 def test_issue_4680():
     N = Symbol('N')
-    assert N.subs(dict(N=3)) == 3
+    assert N.subs({"N": 3}) == 3
 
 
 def test_issue_6158():
@@ -702,11 +727,11 @@ def test_issue_2877():
 
 def test_issue_5910():
     t = Symbol('t')
-    assert (1/(1 - t)).subs(t, 1) == zoo
+    assert (1/(1 - t)).subs(t, 1) is zoo
     n = t
     d = t - 1
-    assert (n/d).subs(t, 1) == zoo
-    assert (-n/-d).subs(t, 1) == zoo
+    assert (n/d).subs(t, 1) is zoo
+    assert (-n/-d).subs(t, 1) is zoo
 
 
 def test_issue_5217():
@@ -755,8 +780,8 @@ def test_issue_8886():
     # doesn't play well with SymPy and disallow the
     # substitution
     v = R('A').x
-    assert x.subs(x, v) == x
-    assert v.subs(v, x) == v
+    raises(SympifyError, lambda: x.subs(x, v))
+    raises(SympifyError, lambda: v.subs(v, x))
     assert v.__eq__(x) is False
 
 
@@ -796,8 +821,8 @@ def test_Subs_subs():
 
 def test_issue_13333():
     eq = 1/x
-    assert eq.subs(dict(x='1/2')) == 2
-    assert eq.subs(dict(x='(1/2)')) == 2
+    assert eq.subs({"x": '1/2'}) == 2
+    assert eq.subs({"x": '(1/2)'}) == 2
 
 
 def test_issue_15234():
@@ -818,10 +843,53 @@ def test_issue_6976():
     assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
         sqrt(x) + x**3 + x + y**2 + y
     assert x.subs(x**3, y) == x
-    assert x.subs(x**(S(1)/3), y) == y**3
+    assert x.subs(x**Rational(1, 3), y) == y**3
 
     # More substitutions are possible with nonnegative symbols
     x, y = symbols('x y', nonnegative=True)
     assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
-        y**(S(1)/4) + y**(S(3)/2) + sqrt(y) + y**2 + y
-    assert x.subs(x**3, y) == y**(S(1)/3)
+        y**Rational(1, 4) + y**Rational(3, 2) + sqrt(y) + y**2 + y
+    assert x.subs(x**3, y) == y**Rational(1, 3)
+
+
+def test_issue_11746():
+    assert (1/x).subs(x**2, 1) == 1/x
+    assert (1/(x**3)).subs(x**2, 1) == x**(-3)
+    assert (1/(x**4)).subs(x**2, 1) == 1
+    assert (1/(x**3)).subs(x**4, 1) == x**(-3)
+    assert (1/(y**5)).subs(x**5, 1) == y**(-5)
+
+
+def test_issue_17823():
+    from sympy.physics.mechanics import dynamicsymbols
+    q1, q2 = dynamicsymbols('q1, q2')
+    expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
+    reps={q1: a, q1.diff(): a*x*y, q1.diff().diff(): z}
+    assert expr.subs(reps) == a*x*y*Derivative(q2, t) + a*z**2
+
+
+def test_issue_19326():
+    x, y = [i(t) for i in map(Function, 'xy')]
+    assert (x*y).subs({x: 1 + x, y: x}) == (1 + x)*x
+
+
+def test_issue_19558():
+    e = (7*x*cos(x) - 12*log(x)**3)*(-log(x)**4 + 2*sin(x) + 1)**2/ \
+    (2*(x*cos(x) - 2*log(x)**3)*(3*log(x)**4 - 7*sin(x) + 3)**2)
+
+    assert e.subs(x, oo) == AccumBounds(-oo, oo)
+    assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)
+
+
+def test_issue_22033():
+    xr = Symbol('xr', real=True)
+    e = (1/xr)
+    assert e.subs(xr**2, y) == e
+
+
+def test_guard_against_indeterminate_evaluation():
+    eq = x**y
+    assert eq.subs([(x, 1), (y, oo)]) == 1  # because 1**y == 1
+    assert eq.subs([(y, oo), (x, 1)]) is S.NaN
+    assert eq.subs({x: 1, y: oo}) is S.NaN
+    assert eq.subs([(x, 1), (y, oo)], simultaneous=True) is S.NaN

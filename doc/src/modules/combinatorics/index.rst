@@ -1,14 +1,14 @@
 .. _combinatiorics-docs:
 
-====================
-Combinatorics Module
-====================
+=============
+Combinatorics
+=============
 
 Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    partitions.rst
    permutations.rst
@@ -18,8 +18,11 @@ Contents
    subsets.rst
    graycode.rst
    named_groups.rst
+   galois.rst
+   group_numbers.rst
    util.rst
    group_constructs.rst
    testutil.rst
    tensor_can.rst
    fp_groups.rst
+   pc_groups.rst

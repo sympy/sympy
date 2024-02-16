@@ -1,12 +1,9 @@
-from __future__ import print_function, division
-
-from sympy.core import Basic
+from sympy.core import Basic, Expr
 from sympy.core.sympify import _sympify
 from sympy.matrices.expressions.transpose import transpose
-from sympy.matrices.expressions.matexpr import MatrixExpr
 
 
-class DotProduct(MatrixExpr):
+class DotProduct(Expr):
     """
     Dot product of vector matrices
 
@@ -43,7 +40,7 @@ class DotProduct(MatrixExpr):
 
         return Basic.__new__(cls, arg1, arg2)
 
-    def doit(self, expand=False):
+    def doit(self, expand=False, **hints):
         if self.args[0].shape == self.args[1].shape:
             if self.args[0].shape[0] == 1:
                 mul = self.args[0]*transpose(self.args[1])

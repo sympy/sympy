@@ -1,12 +1,11 @@
 from .cartan_type import Standard_Cartan
-from sympy.core.compatibility import range
 from sympy.core.backend import eye
 
 class TypeC(Standard_Cartan):
 
     def __new__(cls, n):
         if n < 3:
-            raise ValueError("n can not be less than 3")
+            raise ValueError("n cannot be less than 3")
         return Standard_Cartan.__new__(cls, "C", n)
 
 

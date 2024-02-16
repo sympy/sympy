@@ -1,14 +1,21 @@
-from sympy import (
-    adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
-    symbols, transpose, Symbol, Piecewise, I, S, Eq, oo,
-    SingularityFunction, signsimp
-)
+from sympy.core.numbers import (I, nan, oo, pi)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (adjoint, conjugate, sign, transpose)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
+from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.simplify.simplify import signsimp
 
-from sympy.utilities.pytest import raises, warns_deprecated_sympy
+
+from sympy.testing.pytest import raises
+
+from sympy.core.expr import unchanged
 
 from sympy.core.function import ArgumentIndexError
 
-from sympy.utilities.misc import filldedent
 
 x, y = symbols('x y')
 i = symbols('t', nonzero=True)
@@ -20,10 +27,11 @@ def test_DiracDelta():
     assert DiracDelta(5.1) == 0
     assert DiracDelta(-pi) == 0
     assert DiracDelta(5, 7) == 0
+    assert DiracDelta(x, 0) == DiracDelta(x)
     assert DiracDelta(i) == 0
     assert DiracDelta(j) == 0
     assert DiracDelta(k) == 0
-    assert DiracDelta(nan) == nan
+    assert DiracDelta(nan) is nan
     assert DiracDelta(0).func is DiracDelta
     assert DiracDelta(x).func is DiracDelta
     # FIXME: this is generally undefined @ x=0
@@ -62,16 +70,11 @@ def test_DiracDelta():
     assert DiracDelta(x - y) != DiracDelta(y - x)
     assert signsimp(DiracDelta(x - y) - DiracDelta(y - x)) == 0
 
-    with warns_deprecated_sympy():
-        assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)
-    with warns_deprecated_sympy():
-        assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)
-    with warns_deprecated_sympy():
-        assert DiracDelta(x**2*y).simplify(x) == DiracDelta(x**2*y)
-    with warns_deprecated_sympy():
-        assert DiracDelta(y).simplify(x) == DiracDelta(y)
-    with warns_deprecated_sympy():
-        assert DiracDelta((x - 1)*(x - 2)*(x - 3)).simplify(x) == (
+    assert DiracDelta(x*y).expand(diracdelta=True, wrt=x) == DiracDelta(x)/abs(y)
+    assert DiracDelta(x*y).expand(diracdelta=True, wrt=y) == DiracDelta(y)/abs(x)
+    assert DiracDelta(x**2*y).expand(diracdelta=True, wrt=x) == DiracDelta(x**2*y)
+    assert DiracDelta(y).expand(diracdelta=True, wrt=x) == DiracDelta(y)
+    assert DiracDelta((x - 1)*(x - 2)*(x - 3)).expand(diracdelta=True) == (
             DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2)
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
@@ -81,17 +84,22 @@ def test_DiracDelta():
 
 
 def test_heaviside():
-    assert Heaviside(0).func == Heaviside
     assert Heaviside(-5) == 0
     assert Heaviside(1) == 1
-    assert Heaviside(nan) == nan
+    assert Heaviside(0) == S.Half
 
     assert Heaviside(0, x) == x
+    assert unchanged(Heaviside,x, nan)
     assert Heaviside(0, nan) == nan
-    assert Heaviside(x, None) == Heaviside(x)
-    assert Heaviside(0, None) == Heaviside(0)
-    # we do not want None in the args:
-    assert None not in Heaviside(x, None).args
+
+    h0  = Heaviside(x, 0)
+    h12 = Heaviside(x, S.Half)
+    h1  = Heaviside(x, 1)
+
+    assert h0.args == h0.pargs == (x, 0)
+    assert h1.args == h1.pargs == (x, 1)
+    assert h12.args == (x, S.Half)
+    assert h12.pargs == (x,) # default 1/2 suppressed
 
     assert adjoint(Heaviside(x)) == Heaviside(x)
     assert adjoint(Heaviside(x - y)) == Heaviside(x - y)
@@ -112,20 +120,34 @@ def test_heaviside():
 def test_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
     assert Heaviside(x).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, True)))
     assert Heaviside(y).rewrite(Piecewise) == (
-        Piecewise((0, y < 0), (Heaviside(0), Eq(y, 0)), (1, y > 0)))
+        Piecewise((0, y < 0), (Heaviside(0), Eq(y, 0)), (1, True)))
     assert Heaviside(x, y).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (y, Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (y, Eq(x, 0)), (1, True)))
     assert Heaviside(x, 0).rewrite(Piecewise) == (
-        Piecewise((0, x <= 0), (1, x > 0)))
+        Piecewise((0, x <= 0), (1, True)))
     assert Heaviside(x, 1).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (1, x >= 0)))
+        Piecewise((0, x < 0), (1, True)))
+    assert Heaviside(x, nan).rewrite(Piecewise) == (
+        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, True)))
 
-    assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
+    assert Heaviside(x).rewrite(sign) == \
+        Heaviside(x, H0=Heaviside(0)).rewrite(sign) == \
+        Piecewise(
+            (sign(x)/2 + S(1)/2, Eq(Heaviside(0), S(1)/2)),
+            (Piecewise(
+                (sign(x)/2 + S(1)/2, Ne(x, 0)), (Heaviside(0), True)), True)
+        )
+
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
     assert Heaviside(x, S.Half).rewrite(sign) == (sign(x)+1)/2
-    assert Heaviside(x, y).rewrite(sign) == Heaviside(x, y)
+    assert Heaviside(x, y).rewrite(sign) == \
+        Piecewise(
+            (sign(x)/2 + S(1)/2, Eq(y, S(1)/2)),
+            (Piecewise(
+                (sign(x)/2 + S(1)/2, Ne(x, 0)), (y, True)), True)
+        )
 
     assert DiracDelta(y).rewrite(Piecewise) == Piecewise((DiracDelta(0), Eq(y, 0)), (0, True))
     assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)
@@ -140,13 +162,4 @@ def test_rewrite():
     assert Heaviside(x).rewrite(SingularityFunction) == SingularityFunction(x, 0, 0)
     assert 5*x*y*Heaviside(y + 1).rewrite(SingularityFunction) == 5*x*y*SingularityFunction(y, -1, 0)
     assert ((x - 3)**3*Heaviside(x - 3)).rewrite(SingularityFunction) == (x - 3)**3*SingularityFunction(x, 3, 0)
-    assert Heaviside(0).rewrite(SingularityFunction) == SingularityFunction(0, 0, 0)
-
-def test_issue_15923():
-    x = Symbol('x', real=True)
-    assert Heaviside(x).rewrite(Piecewise, H0=0) == (
-        Piecewise((0, x <= 0), (1, True)))
-    assert Heaviside(x).rewrite(Piecewise, H0=1) == (
-        Piecewise((0, x < 0), (1, True)))
-    assert Heaviside(x).rewrite(Piecewise, H0=S(1)/2) == (
-        Piecewise((0, x < 0), (S(1)/2, Eq(x, 0)), (1, x > 0)))
+    assert Heaviside(0).rewrite(SingularityFunction) == S.Half

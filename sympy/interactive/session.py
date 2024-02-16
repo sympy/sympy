@@ -1,14 +1,13 @@
 """Tools for setting up interactive sessions. """
 
-from __future__ import print_function, division
+from sympy.external.gmpy import GROUND_TYPES
+from sympy.external.importtools import version_tuple
 
-from distutils.version import LooseVersion as V
-
-from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
+from sympy.utilities.misc import ARCH
+
 preexec_source = """\
-from __future__ import division
 from sympy import *
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
@@ -23,7 +22,7 @@ Documentation can be found at https://docs.sympy.org/%(version)s
 """
 
 no_ipython = """\
-Couldn't locate IPython. Having IPython installed is greatly recommended.
+Could not locate IPython. Having IPython installed is greatly recommended.
 See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """
@@ -32,8 +31,6 @@ just install the 'ipython' package and start isympy again.
 def _make_message(ipython=True, quiet=False, source=None):
     """Create a banner for an interactive session. """
     from sympy import __version__ as sympy_version
-    from sympy.polys.domains import GROUND_TYPES
-    from sympy.utilities.misc import ARCH
     from sympy import SYMPY_DEBUG
 
     import sys
@@ -90,15 +87,15 @@ def int_to_Integer(s):
     Wrap integer literals with Integer.
 
     This is based on the decistmt example from
-    http://docs.python.org/library/tokenize.html.
+    https://docs.python.org/3/library/tokenize.html.
 
     Only integer literals are converted.  Float literals are left alone.
+
     Examples
     ========
 
-    >>> from __future__ import division
+    >>> from sympy import Integer # noqa: F401
     >>> from sympy.interactive.session import int_to_Integer
-    >>> from sympy import Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
     >>> int_to_Integer(s)
     '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+a1 '
@@ -111,7 +108,7 @@ def int_to_Integer(s):
     1/2
     """
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
 
     def _is_int(num):
         """
@@ -123,7 +120,7 @@ def int_to_Integer(s):
         return True
 
     result = []
-    g = generate_tokens(StringIO(s).readline)   # tokenize the string
+    g = generate_tokens(StringIO(s).readline)  # tokenize the string
     for toknum, tokval, _, _, _ in g:
         if toknum == NUMBER and _is_int(tokval):  # replace NUMBER tokens
             result.extend([
@@ -156,13 +153,13 @@ def enable_automatic_int_sympification(shell):
             pass
         else:
             cell = int_to_Integer(cell)
-        old_run_cell(cell, *args, **kwargs)
+        return old_run_cell(cell, *args, **kwargs)
 
     shell.run_cell = my_run_cell
 
 
 def enable_automatic_symbols(shell):
-    """Allow IPython to automatially create symbols (``isympy -a``). """
+    """Allow IPython to automatically create symbols (``isympy -a``). """
     # XXX: This should perhaps use tokenize, like int_to_Integer() above.
     # This would avoid re-executing the code, which can lead to subtle
     # issues.  For example:
@@ -212,7 +209,7 @@ def enable_automatic_symbols(shell):
             if match is not None:
                 # XXX: Make sure Symbol is in scope. Otherwise you'll get infinite recursion.
                 self.run_cell("%(symbol)s = Symbol('%(symbol)s')" %
-                    {'symbol': match.group("symbol")}, store_history=False)
+                              {'symbol': match.group("symbol")}, store_history=False)
 
                 try:
                     code = self.user_ns['In'][-1]
@@ -236,13 +233,13 @@ def init_ipython_session(shell=None, argv=[], auto_symbols=False, auto_int_to_In
     """Construct new IPython session. """
     import IPython
 
-    if V(IPython.__version__) >= '0.11':
+    if version_tuple(IPython.__version__) >= version_tuple('0.11'):
         if not shell:
             # use an app to parse the command line, and init config
             # IPython 1.0 deprecates the frontend module, so we import directly
             # from the terminal module to prevent a deprecation message from being
             # shown.
-            if V(IPython.__version__) >= '1.0':
+            if version_tuple(IPython.__version__) >= version_tuple('1.0'):
                 from IPython.terminal import ipapp
             else:
                 from IPython.frontend.terminal import ipapp
@@ -273,9 +270,10 @@ def init_python_session():
         """An interactive console with readline support. """
 
         def __init__(self):
-            InteractiveConsole.__init__(self)
-
+            ns_locals = {}
+            InteractiveConsole.__init__(self, locals=ns_locals)
             try:
+                import rlcompleter
                 import readline
             except ImportError:
                 pass
@@ -283,6 +281,7 @@ def init_python_session():
                 import os
                 import atexit
 
+                readline.set_completer(rlcompleter.Completer(ns_locals).complete)
                 readline.parse_and_bind('tab: complete')
 
                 if hasattr(readline, 'read_history_file'):
@@ -290,7 +289,7 @@ def init_python_session():
 
                     try:
                         readline.read_history_file(history)
-                    except IOError:
+                    except OSError:
                         pass
 
                     atexit.register(readline.write_history_file, history)
@@ -299,9 +298,9 @@ def init_python_session():
 
 
 def init_session(ipython=None, pretty_print=True, order=None,
-        use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
-        auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
-        latex_printer=None, argv=[]):
+                 use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
+                 auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
+                 latex_printer=None, argv=[]):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -419,15 +418,15 @@ def init_session(ipython=None, pretty_print=True, order=None,
         mainloop = ip.interact
     else:
         ip = init_ipython_session(ip, argv=argv, auto_symbols=auto_symbols,
-            auto_int_to_Integer=auto_int_to_Integer)
+                                  auto_int_to_Integer=auto_int_to_Integer)
 
-        if V(IPython.__version__) >= '0.11':
+        if version_tuple(IPython.__version__) >= version_tuple('0.11'):
             # runsource is gone, use run_cell instead, which doesn't
             # take a symbol arg.  The second arg is `store_history`,
             # and False means don't add the line to IPython's history.
             ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
 
-            #Enable interactive plotting using pylab.
+            # Enable interactive plotting using pylab.
             try:
                 ip.enable_pylab(import_all=False)
             except Exception:
@@ -439,9 +438,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
         if not in_ipython:
             mainloop = ip.mainloop
 
-    if auto_symbols and (not ipython or V(IPython.__version__) < '0.11'):
+    if auto_symbols and (not ipython or version_tuple(IPython.__version__) < version_tuple('0.11')):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
-    if auto_int_to_Integer and (not ipython or V(IPython.__version__) < '0.11'):
+    if auto_int_to_Integer and (not ipython or version_tuple(IPython.__version__) < version_tuple('0.11')):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
     _preexec_source = preexec_source

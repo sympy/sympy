@@ -1,15 +1,5 @@
 """Square-free decomposition algorithms and related tools. """
 
-from __future__ import print_function, division
-
-from sympy.polys.densebasic import (
-    dup_strip,
-    dup_LC, dmp_ground_LC,
-    dmp_zero_p,
-    dmp_ground,
-    dup_degree, dmp_degree,
-    dmp_raise, dmp_inject,
-    dup_convert)
 
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
@@ -17,21 +7,25 @@ from sympy.polys.densearith import (
     dup_mul,
     dup_quo, dmp_quo,
     dup_mul_ground, dmp_mul_ground)
-
+from sympy.polys.densebasic import (
+    dup_strip,
+    dup_LC, dmp_ground_LC,
+    dmp_zero_p,
+    dmp_ground, dmp_LC,
+    dup_degree, dmp_degree,
+    dmp_raise, dmp_inject,
+    dup_convert)
 from sympy.polys.densetools import (
-    dup_diff, dmp_diff,
+    dup_diff, dmp_diff, dmp_diff_in,
     dup_shift, dmp_compose,
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_ground_primitive)
-
 from sympy.polys.euclidtools import (
     dup_inner_gcd, dmp_inner_gcd,
     dup_gcd, dmp_gcd,
     dmp_resultant)
-
 from sympy.polys.galoistools import (
     gf_sqf_list, gf_sqf_part)
-
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError)
@@ -110,7 +104,7 @@ def dup_sqf_norm(f, K):
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
 
-    s, g = 0, dmp_raise(K.mod.rep, 1, 0, K.dom)
+    s, g = 0, dmp_raise(K.mod.to_list(), 1, 0, K.dom)
 
     while True:
         h, _ = dmp_inject(f, 0, K, front=True)
@@ -157,7 +151,7 @@ def dmp_sqf_norm(f, u, K):
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
 
-    g = dmp_raise(K.mod.rep, u + 1, 0, K.dom)
+    g = dmp_raise(K.mod.to_list(), u + 1, 0, K.dom)
     F = dmp_raise([K.one, -K.unit], u, 0, K)
 
     s = 0
@@ -181,7 +175,7 @@ def dmp_norm(f, u, K):
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
 
-    g = dmp_raise(K.mod.rep, u + 1, 0, K.dom)
+    g = dmp_raise(K.mod.to_list(), u + 1, 0, K.dom)
     h, _ = dmp_inject(f, u, K, front=True)
 
     return dmp_resultant(g, h, u + 1, K.dom)
@@ -194,7 +188,7 @@ def dup_gf_sqf_part(f, K):
     return dup_convert(g, K.dom, K)
 
 
-def dmp_gf_sqf_part(f, K):
+def dmp_gf_sqf_part(f, u, K):
     """Compute square-free part of ``f`` in ``GF(p)[X]``. """
     raise NotImplementedError('multivariate polynomials over finite fields')
 
@@ -257,7 +251,9 @@ def dmp_sqf_part(f, u, K):
     if K.is_negative(dmp_ground_LC(f, u, K)):
         f = dmp_neg(f, u, K)
 
-    gcd = dmp_gcd(f, dmp_diff(f, 1, u, K), u, K)
+    gcd = f
+    for i in range(u+1):
+        gcd = dmp_gcd(gcd, dmp_diff_in(f, 1, i, u, K), u, K)
     sqf = dmp_quo(f, gcd, u, K)
 
     if K.is_Field:
@@ -402,8 +398,13 @@ def dmp_sqf_list(f, u, K, all=False):
             f = dmp_neg(f, u, K)
             coeff = -coeff
 
-    if dmp_degree(f, u) <= 0:
+    deg = dmp_degree(f, u)
+    if deg < 0:
         return coeff, []
+    elif deg == 0:
+        coeff2, factors = dmp_sqf_list(dmp_LC(f, u), u-1, K, all=all)
+        factors = [([fac], exp) for fac, exp in factors]
+        return coeff*coeff2, factors
 
     result, i = [], 1
 

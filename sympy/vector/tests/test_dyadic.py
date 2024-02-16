@@ -1,5 +1,8 @@
-from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix, \
-     simplify
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.simplify.simplify import simplify
 from sympy.vector import (CoordSys3D, Vector, Dyadic,
                           DyadicAdd, DyadicMul, DyadicZero,
                           BaseDyadic, express)
@@ -62,11 +65,18 @@ def test_dyadic():
     q = symbols('q')
     B = A.orient_new_axis('B', q, A.k)
     assert express(d1, B) == express(d1, B, B)
-    assert express(d1, B) == ((cos(q)**2) * (B.i | B.i) + (-sin(q) * cos(q)) *
+
+    expr1 = ((cos(q)**2) * (B.i | B.i) + (-sin(q) * cos(q)) *
             (B.i | B.j) + (-sin(q) * cos(q)) * (B.j | B.i) + (sin(q)**2) *
             (B.j | B.j))
-    assert express(d1, B, A) == (cos(q)) * (B.i | A.i) + (-sin(q)) * (B.j | A.i)
-    assert express(d1, A, B) == (cos(q)) * (A.i | B.i) + (-sin(q)) * (A.i | B.j)
+    assert (express(d1, B) - expr1).simplify() == Dyadic.zero
+
+    expr2 = (cos(q)) * (B.i | A.i) + (-sin(q)) * (B.j | A.i)
+    assert (express(d1, B, A) - expr2).simplify() == Dyadic.zero
+
+    expr3 = (cos(q)) * (A.i | B.i) + (-sin(q)) * (A.i | B.j)
+    assert (express(d1, A, B) - expr3).simplify() == Dyadic.zero
+
     assert d1.to_matrix(A) == Matrix([[1, 0, 0], [0, 0, 0], [0, 0, 0]])
     assert d1.to_matrix(A, B) == Matrix([[cos(q), -sin(q), 0],
                                          [0, 0, 0],
@@ -108,3 +118,17 @@ def test_dyadic_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * dy
     test4 = test4.simplify()
     assert (N.i & test4 & N.i) == -2 * y
+
+
+def test_dyadic_srepr():
+    from sympy.printing.repr import srepr
+    N = CoordSys3D('N')
+
+    dy = N.i | N.j
+    res = "BaseDyadic(CoordSys3D(Str('N'), Tuple(ImmutableDenseMatrix([["\
+        "Integer(1), Integer(0), Integer(0)], [Integer(0), Integer(1), "\
+        "Integer(0)], [Integer(0), Integer(0), Integer(1)]]), "\
+        "VectorZero())).i, CoordSys3D(Str('N'), Tuple(ImmutableDenseMatrix("\
+        "[[Integer(1), Integer(0), Integer(0)], [Integer(0), Integer(1), "\
+        "Integer(0)], [Integer(0), Integer(0), Integer(1)]]), VectorZero())).j)"
+    assert srepr(dy) == res

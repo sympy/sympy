@@ -4,10 +4,11 @@ Todo:
 * Sometimes the final result needs to be expanded, we should do this by hand.
 """
 
-from __future__ import print_function, division
-
-from sympy import Add, Mul, Pow, sympify, S
-from sympy.core.compatibility import range
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
@@ -93,7 +94,7 @@ def qapply(e, **options):
         result = 0
         for arg in e.args:
             result += qapply(arg, **options)
-        return result
+        return result.expand()
 
     # For a Density operator call qapply on its state
     elif isinstance(e, Density):
@@ -111,7 +112,13 @@ def qapply(e, **options):
 
     # We have a Mul where there might be actual operators to apply to kets.
     elif isinstance(e, Mul):
-        result = qapply_Mul(e, **options)
+        c_part, nc_part = e.args_cnc()
+        c_mul = Mul(*c_part)
+        nc_mul = Mul(*nc_part)
+        if isinstance(nc_mul, Mul):
+            result = c_mul*qapply_Mul(nc_mul, **options)
+        else:
+            result = c_mul*qapply(nc_mul, **options)
         if result == e and dagger:
             return Dagger(qapply_Mul(Dagger(e), **options))
         else:
@@ -136,8 +143,8 @@ def qapply_Mul(e, **options):
     lhs = args.pop()
 
     # Make sure we have two non-commutative objects before proceeding.
-    if (sympify(rhs).is_commutative and not isinstance(rhs, Wavefunction)) or \
-            (sympify(lhs).is_commutative and not isinstance(lhs, Wavefunction)):
+    if (not isinstance(rhs, Wavefunction) and sympify(rhs).is_commutative) or \
+            (not isinstance(lhs, Wavefunction) and sympify(lhs).is_commutative):
         return e
 
     # For a Pow with an integer exponent, apply one of them and reduce the
@@ -164,8 +171,8 @@ def qapply_Mul(e, **options):
             return qapply(e.func(*args)*comm*rhs, **options)
 
     # Apply tensor products of operators to states
-    if isinstance(lhs, TensorProduct) and all([isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in lhs.args]) and \
-            isinstance(rhs, TensorProduct) and all([isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in rhs.args]) and \
+    if isinstance(lhs, TensorProduct) and all(isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in lhs.args) and \
+            isinstance(rhs, TensorProduct) and all(isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in rhs.args) and \
             len(lhs.args) == len(rhs.args):
         result = TensorProduct(*[qapply(lhs.args[n]*rhs.args[n], **options) for n in range(len(lhs.args))]).expand(tensorproduct=True)
         return qapply_Mul(e.func(*args), **options)*result
@@ -173,16 +180,22 @@ def qapply_Mul(e, **options):
     # Now try to actually apply the operator and build an inner product.
     try:
         result = lhs._apply_operator(rhs, **options)
-    except (NotImplementedError, AttributeError):
-        try:
-            result = rhs._apply_operator(lhs, **options)
-        except (NotImplementedError, AttributeError):
-            if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
-                result = InnerProduct(lhs, rhs)
-                if ip_doit:
-                    result = result.doit()
-            else:
+    except NotImplementedError:
+        result = None
+
+    if result is None:
+        _apply_right = getattr(rhs, '_apply_from_right_to', None)
+        if _apply_right is not None:
+            try:
+                result = _apply_right(lhs, **options)
+            except NotImplementedError:
                 result = None
+
+    if result is None:
+        if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
+            result = InnerProduct(lhs, rhs)
+            if ip_doit:
+                result = result.doit()
 
     # TODO: I may need to expand before returning the final result.
     if result == 0:

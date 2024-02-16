@@ -1,18 +1,18 @@
 """Useful utilities for higher level polynomial classes. """
 
-from __future__ import print_function, division
+from __future__ import annotations
 
+from sympy.external.gmpy import GROUND_TYPES
+
+from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
+    expand_mul, expand_multinomial)
+from sympy.core.exprtools import decompose_power, decompose_power_rat
+from sympy.core.numbers import _illegal
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
-from sympy.core.exprtools import decompose_power, decompose_power_rat
-
-from sympy.core import (S, Add, Mul, Pow, Expr,
-    expand_mul, expand_multinomial)
-
-from sympy.core.compatibility import range
-
 import re
+
 
 _gens_order = {
     'a': 301, 'b': 302, 'c': 303, 'd': 304,
@@ -25,7 +25,7 @@ _gens_order = {
 }
 
 _max_order = 1000
-_re_gen = re.compile(r"^(.+?)(\d*)$")
+_re_gen = re.compile(r"^(.*?)(\d*)$", re.MULTILINE)
 
 
 def _nsort(roots, separated=False):
@@ -43,7 +43,7 @@ def _nsort(roots, separated=False):
     # get the real part of the evaluated real and imaginary parts of each root
     key = [[i.n(2).as_real_imag()[0] for i in r.as_real_imag()] for r in roots]
     # make sure the parts were computed with precision
-    if any(i._prec == 1 for k in key for i in k):
+    if len(roots) > 1 and any(i._prec == 1 for k in key for i in k):
         raise NotImplementedError("could not compute root with precision")
     # insert a key to indicate if the root has an imaginary part
     key = [(1 if i else 0, r, i) for r, i in key]
@@ -157,12 +157,24 @@ def _analyze_gens(gens):
 
 def _sort_factors(factors, **args):
     """Sort low-level factors in increasing 'complexity' order. """
+
+    # XXX: GF(p) does not support comparisons so we need a key function to sort
+    # the factors if python-flint is being used. A better solution might be to
+    # add a sort key method to each domain.
+    def order_key(factor):
+        if isinstance(factor, _GF_types):
+            return int(factor)
+        elif isinstance(factor, list):
+            return [order_key(f) for f in factor]
+        else:
+            return factor
+
     def order_if_multiple_key(factor):
         (f, n) = factor
-        return (len(f), n, f)
+        return (len(f), n, order_key(f))
 
     def order_no_multiple_key(f):
-        return (len(f), f)
+        return (len(f), order_key(f))
 
     if args.get('multiple', True):
         return sorted(factors, key=order_if_multiple_key)
@@ -170,9 +182,17 @@ def _sort_factors(factors, **args):
         return sorted(factors, key=order_no_multiple_key)
 
 
+illegal_types = [type(obj) for obj in _illegal]
+finf = [float(i) for i in _illegal[1:3]]
+
+
 def _not_a_coeff(expr):
     """Do not treat NaN and infinities as valid polynomial coefficients. """
-    return expr in [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
+    if type(expr) in illegal_types or expr in finf:
+        return True
+    if isinstance(expr, float) and float(expr) != expr:
+        return True  # nan
+    return  # could be
 
 
 def _parallel_dict_from_expr_if_gens(exprs, opt):
@@ -208,7 +228,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
 
                         monom[indices[base]] = exp
                     except KeyError:
-                        if not factor.free_symbols.intersection(opt.gens):
+                        if not factor.has_free(*opt.gens):
                             coeff.append(factor)
                         else:
                             raise PolynomialError("%s contains an element of "
@@ -236,12 +256,12 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             return factor.is_algebraic
     elif opt.greedy is not False:
         def _is_coeff(factor):
-            return False
+            return factor is S.ImaginaryUnit
     else:
         def _is_coeff(factor):
             return factor.is_number
 
-    gens, reprs = set([]), []
+    gens, reprs = set(), []
 
     for expr in exprs:
         terms = []
@@ -350,7 +370,7 @@ def _dict_from_expr(expr, opt):
                 and expr.base.is_Add)
 
     if opt.expand is not False:
-        if not isinstance(expr, Expr):
+        if not isinstance(expr, (Expr, Eq)):
             raise PolynomialError('expression must be of type Expr')
         expr = expr.expand()
         # TODO: Integrate this into expand() itself
@@ -419,7 +439,7 @@ def _dict_reorder(rep, gens, new_gens):
     return map(tuple, new_monoms), coeffs
 
 
-class PicklableWithSlots(object):
+class PicklableWithSlots:
     """
     Mixin class that allows to pickle objects with ``__slots__``.
 
@@ -430,7 +450,7 @@ class PicklableWithSlots(object):
 
         >>> from sympy.polys.polyutils import PicklableWithSlots
         >>> class Some(PicklableWithSlots):
-        ...     __slots__ = ['foo', 'bar']
+        ...     __slots__ = ('foo', 'bar')
         ...
         ...     def __init__(self, foo, bar):
         ...         self.foo = foo
@@ -438,7 +458,7 @@ class PicklableWithSlots(object):
 
     To make :mod:`pickle` happy in doctest we have to use these hacks::
 
-        >>> from sympy.core.compatibility import builtins
+        >>> import builtins
         >>> builtins.Some = Some
         >>> from sympy.polys import polyutils
         >>> polyutils.Some = Some
@@ -457,7 +477,7 @@ class PicklableWithSlots(object):
 
     """
 
-    __slots__ = []
+    __slots__ = ()
 
     def __getstate__(self, cls=None):
         if cls is None:
@@ -468,8 +488,15 @@ class PicklableWithSlots(object):
 
         # Get all data that should be stored from super classes
         for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
+            # XXX: Python 3.11 defines object.__getstate__ and it does not
+            # accept any arguments so we need to make sure not to call it with
+            # an argument here. To be compatible with Python < 3.11 we need to
+            # be careful not to assume that c or object has a __getstate__
+            # method though.
+            getstate = getattr(c, "__getstate__", None)
+            objstate = getattr(object, "__getstate__", None)
+            if getstate is not None and getstate is not objstate:
+                d.update(getstate(self, c))
 
         # Get all information that should be stored from cls and return the dict
         for name in cls.__slots__:
@@ -481,7 +508,75 @@ class PicklableWithSlots(object):
     def __setstate__(self, d):
         # All values that were pickled are now assigned to a fresh instance
         for name, value in d.items():
+            setattr(self, name, value)
+
+
+class IntegerPowerable:
+    r"""
+    Mixin class for classes that define a `__mul__` method, and want to be
+    raised to integer powers in the natural way that follows. Implements
+    powering via binary expansion, for efficiency.
+
+    By default, only integer powers $\geq 2$ are supported. To support the
+    first, zeroth, or negative powers, override the corresponding methods,
+    `_first_power`, `_zeroth_power`, `_negative_power`, below.
+    """
+
+    def __pow__(self, e, modulo=None):
+        if e < 2:
             try:
-                setattr(self, name, value)
-            except AttributeError:    # This is needed in cases like Rational :> Half
-                pass
+                if e == 1:
+                    return self._first_power()
+                elif e == 0:
+                    return self._zeroth_power()
+                else:
+                    return self._negative_power(e, modulo=modulo)
+            except NotImplementedError:
+                return NotImplemented
+        else:
+            bits = [int(d) for d in reversed(bin(e)[2:])]
+            n = len(bits)
+            p = self
+            first = True
+            for i in range(n):
+                if bits[i]:
+                    if first:
+                        r = p
+                        first = False
+                    else:
+                        r *= p
+                        if modulo is not None:
+                            r %= modulo
+                if i < n - 1:
+                    p *= p
+                    if modulo is not None:
+                        p %= modulo
+            return r
+
+    def _negative_power(self, e, modulo=None):
+        """
+        Compute inverse of self, then raise that to the abs(e) power.
+        For example, if the class has an `inv()` method,
+            return self.inv() ** abs(e) % modulo
+        """
+        raise NotImplementedError
+
+    def _zeroth_power(self):
+        """Return unity element of algebraic struct to which self belongs."""
+        raise NotImplementedError
+
+    def _first_power(self):
+        """Return a copy of self."""
+        raise NotImplementedError
+
+
+_GF_types: tuple[type, ...]
+
+
+if GROUND_TYPES == 'flint':
+    import flint
+    _GF_types = (flint.nmod, flint.fmpz_mod)
+else:
+    from sympy.polys.domains.modularinteger import ModularInteger
+    flint = None
+    _GF_types = (ModularInteger,)

@@ -19,21 +19,24 @@ Rn is a GeometrySet representing n-dimensional Euclidean space. R2 and
 R3 are currently the only ambient spaces implemented.
 
 """
+from __future__ import annotations
 
-from __future__ import division, print_function
-
-from sympy.core.compatibility import is_sequence
-from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
-from sympy.core.symbol import _symbol
+from sympy.core.containers import Tuple
+from sympy.core.evalf import EvalfMixin, N
+from sympy.core.numbers import oo
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
-from sympy.functions import cos, sin
+from sympy.functions.elementary.trigonometric import cos, sin, atan
 from sympy.matrices import eye
-from sympy.sets import Set
-from sympy.utilities.misc import func_name
 from sympy.multipledispatch import dispatch
-from sympy.sets.handlers.union import union_sets
+from sympy.printing import sstr
+from sympy.sets import Set, Union, FiniteSet
 from sympy.sets.handlers.intersection import intersection_sets
+from sympy.sets.handlers.union import union_sets
+from sympy.solvers.solvers import solve
+from sympy.utilities.misc import func_name
+from sympy.utilities.iterables import is_sequence
 
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
@@ -61,13 +64,19 @@ ordering_of_classes = [
 ]
 
 
-class GeometryEntity(Basic):
+x, y = [Dummy('entity_dummy') for i in range(2)]
+T = Dummy('entity_dummy', real=True)
+
+
+class GeometryEntity(Basic, EvalfMixin):
     """The base class for all geometrical entities.
 
-    This class doesn't represent any particular geometric entity, it only
+    This class does not represent any particular geometric entity, it only
     provides the implementation of some methods common to all subclasses.
 
     """
+
+    __slots__: tuple[str, ...] = ()
 
     def __cmp__(self, other):
         """Comparison of two GeometryEntities."""
@@ -101,7 +110,7 @@ class GeometryEntity(Basic):
 
     def __contains__(self, other):
         """Subclasses should implement this method for anything more complex than equality."""
-        if type(self) == type(other):
+        if type(self) is type(other):
             return self == other
         raise NotImplementedError()
 
@@ -129,9 +138,9 @@ class GeometryEntity(Basic):
         """Implementation of reverse add method."""
         return a.__add__(self)
 
-    def __rdiv__(self, a):
+    def __rtruediv__(self, a):
         """Implementation of reverse division method."""
-        return a.__div__(self)
+        return a.__truediv__(self)
 
     def __repr__(self):
         """String representation of a GeometryEntity that can be evaluated
@@ -143,12 +152,11 @@ class GeometryEntity(Basic):
         return a.__mul__(self)
 
     def __rsub__(self, a):
-        """Implementation of reverse substraction method."""
+        """Implementation of reverse subtraction method."""
         return a.__sub__(self)
 
     def __str__(self):
         """String representation of a GeometryEntity."""
-        from sympy.printing import sstr
         return type(self).__name__ + sstr(self.args)
 
     def _eval_subs(self, old, new):
@@ -165,13 +173,14 @@ class GeometryEntity(Basic):
     def _repr_svg_(self):
         """SVG representation of a GeometryEntity suitable for IPython"""
 
-        from sympy.core.evalf import N
-
         try:
             bounds = self.bounds
         except (NotImplementedError, TypeError):
             # if we have no SVG representation, return None so IPython
             # will fall back to the next representation
+            return None
+
+        if not all(x.is_number and x.is_finite for x in bounds):
             return None
 
         svg_top = '''<svg xmlns="http://www.w3.org/2000/svg"
@@ -220,12 +229,12 @@ class GeometryEntity(Basic):
             # will fall back to the next representation
             return None
 
-        view_box = "{0} {1} {2} {3}".format(xmin, ymin, dx, dy)
-        transform = "matrix(1,0,0,-1,0,{0})".format(ymax + ymin)
+        view_box = "{} {} {} {}".format(xmin, ymin, dx, dy)
+        transform = "matrix(1,0,0,-1,0,{})".format(ymax + ymin)
         svg_top = svg_top.format(view_box, width, height)
 
         return svg_top + (
-            '<g transform="{0}">{1}</g></svg>'
+            '<g transform="{}">{}</g></svg>'
             ).format(transform, svg)
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
@@ -293,7 +302,7 @@ class GeometryEntity(Basic):
             return self.encloses_point(o)
         elif isinstance(o, Segment):
             return all(self.encloses_point(x) for x in o.points)
-        elif isinstance(o, Ray) or isinstance(o, Line):
+        elif isinstance(o, (Ray, Line)):
             return False
         elif isinstance(o, Ellipse):
             return self.encloses_point(o.center) and \
@@ -381,21 +390,21 @@ class GeometryEntity(Basic):
         Circle(Point2D(-pi, pi), -5)
 
         """
-        from sympy import atan, Point, Dummy, oo
+        from sympy.geometry.point import Point
 
         g = self
         l = line
         o = Point(0, 0)
-        if l.slope == 0:
-            y = l.args[0].y
-            if not y:  # x-axis
+        if l.slope.is_zero:
+            v = l.args[0].y
+            if not v:  # x-axis
                 return g.scale(y=-1)
-            reps = [(p, p.translate(y=2*(y - p.y))) for p in g.atoms(Point)]
-        elif l.slope == oo:
-            x = l.args[0].x
-            if not x:  # y-axis
+            reps = [(p, p.translate(y=2*(v - p.y))) for p in g.atoms(Point)]
+        elif l.slope is oo:
+            v = l.args[0].x
+            if not v:  # y-axis
                 return g.scale(x=-1)
-            reps = [(p, p.translate(x=2*(x - p.x))) for p in g.atoms(Point)]
+            reps = [(p, p.translate(x=2*(v - p.x))) for p in g.atoms(Point)]
         else:
             if not hasattr(g, 'reflect') and not all(
                     isinstance(arg, Point) for arg in g.args):
@@ -405,7 +414,6 @@ class GeometryEntity(Basic):
             c = l.coefficients
             d = -c[-1]/c[1]  # y-intercept
             # apply the transform to a single point
-            x, y = Dummy(), Dummy()
             xf = Point(x, y)
             xf = xf.translate(y=-d).rotate(-a, o).scale(y=-1
                 ).rotate(a, o).translate(y=d)
@@ -490,8 +498,7 @@ class GeometryEntity(Basic):
         >>> t.translate(2)
         Triangle(Point2D(3, 0), Point2D(3/2, sqrt(3)/2), Point2D(3/2, -sqrt(3)/2))
         >>> t.translate(2, 2)
-        Triangle(Point2D(3, 2), Point2D(3/2, sqrt(3)/2 + 2),
-            Point2D(3/2, -sqrt(3)/2 + 2))
+        Triangle(Point2D(3, 2), Point2D(3/2, sqrt(3)/2 + 2), Point2D(3/2, 2 - sqrt(3)/2))
 
         """
         newargs = []
@@ -520,13 +527,10 @@ class GeometryEntity(Basic):
         Point2D(1, 1)
         """
         from sympy.geometry.point import Point
-        from sympy.core.symbol import Dummy
-        from sympy.solvers.solvers import solve
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):
             raise ValueError("other must be a point")
-        T = Dummy('t', real=True)
         sol = solve(self.arbitrary_point(T) - other, T, dict=True)
         if not sol:
             raise ValueError("Given point is not on %s" % func_name(self))
@@ -537,6 +541,8 @@ class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
     (compatible with sympy.sets)
     """
+    __slots__ = ()
+
     def _contains(self, other):
         """sympy.sets uses the _contains method, so include it for compatibility."""
 
@@ -545,12 +551,11 @@ class GeometrySet(GeometryEntity, Set):
 
         return self.__contains__(other)
 
-@dispatch(GeometrySet, Set)
-def union_sets(self, o):
+@dispatch(GeometrySet, Set)  # type:ignore # noqa:F811
+def union_sets(self, o): # noqa:F811
     """ Returns the union of self and o
     for use with sympy.sets.Set, if possible. """
 
-    from sympy.sets import Union, FiniteSet
 
     # if its a FiniteSet, merge any points
     # we contain and return a union with the rest
@@ -564,13 +569,12 @@ def union_sets(self, o):
     return None
 
 
-@dispatch(GeometrySet, Set)
-def intersection_sets(self, o):
+@dispatch(GeometrySet, Set)  # type: ignore # noqa:F811
+def intersection_sets(self, o): # noqa:F811
     """ Returns a sympy.sets.Set of intersection objects,
     if possible. """
 
-    from sympy.sets import Set, FiniteSet, Union
-    from sympy.geometry import Point
+    from sympy.geometry.point import Point
 
     try:
         # if o is a FiniteSet, find the intersection directly

@@ -3,7 +3,7 @@ Vector & ReferenceFrame
 =======================
 
 
-In :mod:`vector`, vectors and reference frames are the "building blocks" of
+In :mod:`sympy.physics.vector`, vectors and reference frames are the "building blocks" of
 dynamic systems. This document will describe these mathematically and describe
 how to use them with this module's code.
 
@@ -13,10 +13,8 @@ Vector
 A vector is a geometric object that has a magnitude (or length) and a
 direction. Vectors in 3-space are often represented on paper as:
 
-.. image:: vec_rep.*
-   :height: 175
-   :width: 350
-   :align: center
+.. raw:: html
+   :file: vec_rep.svg
 
 Vector Algebra
 ==============
@@ -33,10 +31,8 @@ vectors, scalar multiplication, and vector multiplication.
 
 Vector addition as based on the parallelogram law.
 
-.. image:: vec_add.*
-   :height: 200
-   :width: 200
-   :align: center
+.. raw:: html
+   :file: vec_add.svg
 
 Vector addition is also commutative:
 
@@ -50,10 +46,8 @@ vector with the same orientation but whose magnitude is scaled by the scalar.
 Note that multiplication by -1 is equivalent to rotating the vector by 180
 degrees about an arbitrary axis in the plane perpendicular to the vector.
 
-.. image:: vec_mul.*
-   :height: 150
-   :width: 200
-   :align: center
+.. raw:: html
+   :file: vec_mul.svg
 
 A unit vector is simply a vector whose magnitude is equal to 1.  Given any
 vector :math:`\mathbf{v}` we can define a unit vector as:
@@ -64,7 +58,7 @@ vector :math:`\mathbf{v}` we can define a unit vector as:
 Note that every vector can be written as the product of a scalar and unit
 vector.
 
-Three vector products are implemented in :mod:`vector`: the dot product, the
+Three vector products are implemented in :mod:`sympy.physics.vector`: the dot product, the
 cross product, and the outer product.
 
 The dot product operation maps two vectors to a scalar.  It is defined as:
@@ -81,10 +75,8 @@ direction; for other vectors, it is the product of the magnitude of the common
 direction and the two vectors' magnitudes. The dot product of two perpendicular
 is zero. The figure below shows some examples:
 
-.. image:: vec_dot.*
-   :height: 250
-   :width: 450
-   :align: center
+.. raw:: html
+   :file: vec_dot.svg
 
 The dot product is commutative:
 
@@ -105,10 +97,8 @@ is defined as :math:`\Vert \mathbf{c} \Vert = \Vert \mathbf{a} \Vert \Vert
 the right hand rule between :math:`\Vert \mathbf{a} \Vert \Vert \mathbf{b}
 \Vert`. The figure below shows this:
 
-.. image:: vec_cross.*
-   :height: 350
-   :width: 700
-   :align: center
+.. raw:: html
+   :file: vec_cross.svg
 
 The cross product has the following properties:
 
@@ -244,10 +234,8 @@ properties when observed from that frame. Calculus is the study of change, and
 in order to deal with the peculiarities of vectors fixed and not fixed in
 different reference frames, we need to be more explicit in our definitions.
 
-.. image:: vec_fix_notfix.*
-   :height: 300
-   :width: 450
-   :align: center
+.. raw:: html
+   :file: vec_fix_notfix.svg
 
 In the above figure, we have vectors :math:`\mathbf{c,d,e,f}`. If one were to
 take the derivative of :math:`\mathbf{e}` with respect to :math:`\theta`:
@@ -308,10 +296,8 @@ aligned, then one frame has all of its basis vectors rotated around an axis
 which is aligned with a basis vector, we say the frames are related by a simple
 rotation. The figure below shows this:
 
-.. image:: simp_rot.*
-   :height: 250
-   :width: 250
-   :align: center
+.. raw:: html
+   :file: simp_rot.svg
 
 The above rotation is a simple rotation about the Z axis by an angle
 :math:`\theta`. Note that after the rotation, the basis vectors
@@ -436,10 +422,8 @@ Examples
 
 An example of vector calculus:
 
-.. image:: vec_simp_der.*
-   :height: 500
-   :width: 350
-   :align: center
+.. raw:: html
+   :file: vec_simp_der.svg
 
 In this example we have two bodies, each with an attached reference frame.
 We will say that :math:`\theta` and :math:`x` are functions of time.
@@ -501,7 +485,7 @@ Using Vectors and Reference Frames
 
 We have waited until after all of the relevant mathematical relationships have
 been defined for vectors and reference frames to introduce code. This is due to
-how vectors are formed. When starting any problem in :mod:`vector`, one of
+how vectors are formed. When starting any problem in :mod:`sympy.physics.vector`, one of
 the first steps is defining a reference frame (remember to import
 sympy.physics.vector first)::
 
@@ -545,14 +529,10 @@ Remember to refer to SymPy's Gotchas and Pitfalls when dealing with symbols.::
   >>> x*(N.x + N.y)
   x*N.x + x*N.y
 
-In :mod:`vector` multiple interfaces to vector multiplication have been
+In :mod:`sympy.physics.vector` multiple interfaces to vector multiplication have been
 implemented, at the operator level, method level, and function level. The
 vector dot product can work as follows: ::
 
-  >>> N.x & N.x
-  1
-  >>> N.x & N.y
-  0
   >>> N.x.dot(N.x)
   1
   >>> N.x.dot(N.y)
@@ -565,7 +545,7 @@ vector dot product can work as follows: ::
 The "official" interface is the function interface; this is what will be used
 in all examples. This is to avoid confusion with the attribute and methods
 being next to each other, and in the case of the operator operation priority.
-The operators used in :mod:`vector` for vector multiplication do not posses
+The operators used in :mod:`sympy.physics.vector` for vector multiplication do not posses
 the correct order of operations; this can lead to errors. Care with parentheses
 is needed when using operators to represent vector multiplication.
 
@@ -573,17 +553,13 @@ The cross product is the other vector multiplication which will be discussed
 here. It offers similar interfaces to the dot product, and comes with the same
 warnings. ::
 
-  >>> N.x ^ N.x
-  0
-  >>> N.x ^ N.y
-  N.z
   >>> N.x.cross(N.x)
   0
   >>> N.x.cross(N.z)
   - N.y
   >>> cross(N.x, N.y)
   N.z
-  >>> N.x ^ (N.y + N.z)
+  >>> cross(N.x, (N.y + N.z))
   - N.y + N.z
 
 Two additional operations can be done with vectors: normalizing the vector to
@@ -616,7 +592,7 @@ derivative in that frame right now, if we desire: ::
   N.x
 
 SymPy has a ``diff`` function, but it does not currently work with
-:mod:`vector` Vectors, so please use ``Vector``'s ``diff`` method.  The
+:mod:`sympy.physics.vector` Vectors, so please use ``Vector``'s ``diff`` method.  The
 reason for this is that when differentiating a ``Vector``, the frame of
 reference must be specified in addition to what you are taking the derivative
 with respect to; SymPy's ``diff`` function doesn't fit this mold.
@@ -639,7 +615,7 @@ functionality. ::
 
 If we desire, we can view the DCM between these two frames at any time. This
 can be calculated with the ``dcm`` method. This code: ``N.dcm(A)`` gives the
-dcm :math:`^{\mathbf{N}} \mathbf{C} ^{\mathbf{A}}`.
+dcm :math:`^{\mathbf{A}} \mathbf{C} ^{\mathbf{N}}`.
 
 This orients the :math:`\mathbf{A}` frame relative to the :math:`\mathbf{N}`
 frame by a simple rotation around the Y axis, by an amount x. Other, more
@@ -688,7 +664,7 @@ and ``orientnew`` method help, or in the references [Kane1983]_.
 
 
 Finally, before starting multiframe calculus operations, we will introduce
-another :mod:`vector` tool: ``dynamicsymbols``. ``dynamicsymbols`` is
+another :mod:`sympy.physics.vector` tool: ``dynamicsymbols``. ``dynamicsymbols`` is
 a shortcut function to create undefined functions of time within SymPy. The
 derivative of such a 'dynamicsymbol' is shown below. ::
 
@@ -720,7 +696,7 @@ for SymPy's ``vprint``, ``vpprint``, and ``latex``, ``vlatex``. ::
   q1'
 
 A 'dynamicsymbol' should be used to represent any time varying quantity in
-:mod:`vector`, whether it is a coordinate, varying position, or force.  The
+:mod:`sympy.physics.vector`, whether it is a coordinate, varying position, or force.  The
 primary use of a 'dynamicsymbol' is for speeds and coordinates (of which there
 will be more discussion in the Kinematics Section of the documentation).
 
@@ -747,7 +723,7 @@ How Vectors are Coded
 ---------------------
 
 What follows is a short description of how vectors are defined by the code in
-:mod:`vector`. It is provided for those who want to learn more about how
+:mod:`sympy.physics.vector`. It is provided for those who want to learn more about how
 this part of :mod:`sympy.physics.vector` works, and does not need to be read
 to use this module; don't read it unless you want to learn how this module was
 implemented.

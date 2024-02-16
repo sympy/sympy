@@ -1,13 +1,18 @@
-from sympy import (
-    Add, Mul, S, Symbol, cos, cot, pi, I, sin, sqrt, tan, root, csc, sec,
-    powsimp, symbols, sinh, cosh, tanh, coth, sech, csch, Dummy)
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.hyperbolic import (cosh, coth, csch, sech, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import (cos, cot, csc, sec, sin, tan)
+from sympy.simplify.powsimp import powsimp
 from sympy.simplify.fu import (
-    L, TR1, TR10, TR10i, TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
+    L, TR1, TR10, TR10i, TR11, _TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
     TRpower, hyper_as_trig, fu, process_common_addends, trig_split,
     as_f_sign_1)
-from sympy.utilities.randtest import verify_numerically
-from sympy.core.compatibility import range
+from sympy.core.random import verify_numerically
 from sympy.abc import a, b, c, x, y, z
 
 
@@ -63,18 +68,22 @@ def test_TR3():
     assert cos(30*pi/2 + x) == -cos(x)
 
     for f in (cos, sin, tan, cot, csc, sec):
-        i = f(3*pi/7)
+        i = f(pi*Rational(3, 7))
         j = TR3(i)
         assert verify_numerically(i, j) and i.func != j.func
 
 
 def test__TR56():
     h = lambda x: 1 - x
-    assert T(sin(x)**3, sin, cos, h, 4, False) == sin(x)**3
+    assert T(sin(x)**3, sin, cos, h, 4, False) == sin(x)*(-cos(x)**2 + 1)
     assert T(sin(x)**10, sin, cos, h, 4, False) == sin(x)**10
     assert T(sin(x)**6, sin, cos, h, 6, False) == (-cos(x)**2 + 1)**3
     assert T(sin(x)**6, sin, cos, h, 6, True) == sin(x)**6
     assert T(sin(x)**8, sin, cos, h, 10, True) == (-cos(x)**2 + 1)**4
+
+    # issue 17137
+    assert T(sin(x)**I, sin, cos, h, 4, True) == sin(x)**I
+    assert T(sin(x)**(2*I + 1), sin, cos, h, 4, True) == sin(x)**(2*I + 1)
 
 
 def test_TR5():
@@ -90,8 +99,8 @@ def test_TR6():
 
 
 def test_TR7():
-    assert TR7(cos(x)**2) == cos(2*x)/2 + S(1)/2
-    assert TR7(cos(x)**2 + 1) == cos(2*x)/2 + S(3)/2
+    assert TR7(cos(x)**2) == cos(2*x)/2 + S.Half
+    assert TR7(cos(x)**2 + 1) == cos(2*x)/2 + Rational(3, 2)
 
 
 def test_TR8():
@@ -101,14 +110,14 @@ def test_TR8():
     assert TR8(sin(1)*sin(2)*sin(3)) == sin(4)/4 - sin(6)/4 + sin(2)/4
     assert TR8(cos(2)*cos(3)*cos(4)*cos(5)) == \
         cos(4)/4 + cos(10)/8 + cos(2)/8 + cos(8)/8 + cos(14)/8 + \
-        cos(6)/8 + S(1)/8
+        cos(6)/8 + Rational(1, 8)
     assert TR8(cos(2)*cos(3)*cos(4)*cos(5)*cos(6)) == \
         cos(10)/8 + cos(4)/8 + 3*cos(2)/16 + cos(16)/16 + cos(8)/8 + \
-        cos(14)/16 + cos(20)/16 + cos(12)/16 + S(1)/16 + cos(6)/8
-    assert TR8(sin(3*pi/7)**2*cos(3*pi/7)**2/(16*sin(pi/7)**2)) == S(1)/64
+        cos(14)/16 + cos(20)/16 + cos(12)/16 + Rational(1, 16) + cos(6)/8
+    assert TR8(sin(pi*Rational(3, 7))**2*cos(pi*Rational(3, 7))**2/(16*sin(pi/7)**2)) == Rational(1, 64)
 
 def test_TR9():
-    a = S(1)/2
+    a = S.Half
     b = 3*a
     assert TR9(a) == a
     assert TR9(cos(1) + cos(2)) == 2*cos(a)*cos(b)
@@ -119,7 +128,7 @@ def test_TR9():
     assert TR9(cos(4) + cos(2) + 2*cos(1)*cos(3)) == 4*cos(1)*cos(3)
     assert TR9((cos(4) + cos(2))/cos(3)/2 + cos(3)) == 2*cos(1)*cos(2)
     assert TR9(cos(3) + cos(4) + cos(5) + cos(6)) == \
-        4*cos(S(1)/2)*cos(1)*cos(S(9)/2)
+        4*cos(S.Half)*cos(1)*cos(Rational(9, 2))
     assert TR9(cos(3) + cos(3)*cos(2)) == cos(3) + cos(2)*cos(3)
     assert TR9(-cos(y) + cos(x*y)) == -2*sin(x*y/2 - y/2)*sin(x*y/2 + y/2)
     assert TR9(-sin(y) + sin(x*y)) == 2*sin(x*y/2 - y/2)*cos(x*y/2 + y/2)
@@ -183,8 +192,8 @@ def test_TR10i():
     h = sin(y)
     r = cos(y)
     for si in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
-        for a in ((c*r, s*h), (c*h, s*r)): # explicit 2-args
-            args = zip(si, a)
+        for argsi in ((c*r, s*h), (c*h, s*r)): # explicit 2-args
+            args = zip(si, argsi)
             ex = Add(*[Mul(*ai) for ai in args])
             t = TR10i(ex)
             assert not (ex - t.expand(trig=True) or t.is_Add)
@@ -194,8 +203,8 @@ def test_TR10i():
     h = sin(pi/6)
     r = cos(pi/6)
     for si in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
-        for a in ((c*r, s*h), (c*h, s*r)): # induced
-            args = zip(si, a)
+        for argsi in ((c*r, s*h), (c*h, s*r)): # induced
+            args = zip(si, argsi)
             ex = Add(*[Mul(*ai) for ai in args])
             t = TR10i(ex)
             assert not (ex - t.expand(trig=True) or t.is_Add)
@@ -205,7 +214,7 @@ def test_TR11():
 
     assert TR11(sin(2*x)) == 2*sin(x)*cos(x)
     assert TR11(sin(4*x)) == 4*((-sin(x)**2 + cos(x)**2)*sin(x)*cos(x))
-    assert TR11(sin(4*x/3)) == \
+    assert TR11(sin(x*Rational(4, 3))) == \
         4*((-sin(x/3)**2 + cos(x/3)**2)*sin(x/3)*cos(x/3))
 
     assert TR11(cos(2*x)) == -sin(x)**2 + cos(x)**2
@@ -214,10 +223,20 @@ def test_TR11():
 
     assert TR11(cos(2)) == cos(2)
 
-    assert TR11(cos(3*pi/7), 2*pi/7) == -cos(2*pi/7)**2 + sin(2*pi/7)**2
+    assert TR11(cos(pi*Rational(3, 7)), pi*Rational(2, 7)) == -cos(pi*Rational(2, 7))**2 + sin(pi*Rational(2, 7))**2
     assert TR11(cos(4), 2) == -sin(2)**2 + cos(2)**2
     assert TR11(cos(6), 2) == cos(6)
     assert TR11(sin(x)/cos(x/2), x/2) == 2*sin(x/2)
+
+def test__TR11():
+
+    assert _TR11(sin(x/3)*sin(2*x)*sin(x/4)/(cos(x/6)*cos(x/8))) == \
+        4*sin(x/8)*sin(x/6)*sin(2*x),_TR11(sin(x/3)*sin(2*x)*sin(x/4)/(cos(x/6)*cos(x/8)))
+    assert _TR11(sin(x/3)/cos(x/6)) == 2*sin(x/6)
+
+    assert _TR11(cos(x/6)/sin(x/3)) == 1/(2*sin(x/6))
+    assert _TR11(sin(2*x)*cos(x/8)/sin(x/4)) == sin(2*x)/(2*sin(x/8)), _TR11(sin(2*x)*cos(x/8)/sin(x/4))
+    assert _TR11(sin(x)/sin(x/2)) == 2*cos(x/2)
 
 
 def test_TR12():
@@ -243,7 +262,7 @@ def test_L():
 
 def test_fu():
 
-    assert fu(sin(50)**2 + cos(50)**2 + sin(pi/6)) == S(3)/2
+    assert fu(sin(50)**2 + cos(50)**2 + sin(pi/6)) == Rational(3, 2)
     assert fu(sqrt(6)*cos(x) + sqrt(2)*sin(x)) == 2*sqrt(2)*sin(x + pi/3)
 
 
@@ -260,17 +279,23 @@ def test_fu():
     assert fu(1 - sin(2*x)**2/4 - sin(y)**2 - cos(x)**4) == \
         -cos(x)**2 + cos(y)**2
 
-    assert fu(cos(4*pi/9)) == sin(pi/18)
-    assert fu(cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)) == S(1)/16
+    assert fu(cos(pi*Rational(4, 9))) == sin(pi/18)
+    assert fu(cos(pi/9)*cos(pi*Rational(2, 9))*cos(pi*Rational(3, 9))*cos(pi*Rational(4, 9))) == Rational(1, 16)
 
     assert fu(
-        tan(7*pi/18) + tan(5*pi/18) - sqrt(3)*tan(5*pi/18)*tan(7*pi/18)) == \
+        tan(pi*Rational(7, 18)) + tan(pi*Rational(5, 18)) - sqrt(3)*tan(pi*Rational(5, 18))*tan(pi*Rational(7, 18))) == \
         -sqrt(3)
 
     assert fu(tan(1)*tan(2)) == tan(1)*tan(2)
 
     expr = Mul(*[cos(2**i) for i in range(10)])
     assert fu(expr) == sin(1024)/(1024*sin(1))
+
+    # issue #18059:
+    assert fu(cos(x) + sqrt(sin(x)**2)) == cos(x) + sqrt(sin(x)**2)
+
+    assert fu((-14*sin(x)**3 + 35*sin(x) + 6*sqrt(3)*cos(x)**3 + 9*sqrt(3)*cos(x))/((cos(2*x) + 4))) == \
+        7*sin(x) + 3*sqrt(3)*cos(x)
 
 
 def test_objective():
@@ -284,7 +309,7 @@ def test_process_common_addends():
     # this tests that the args are not evaluated as they are given to do
     # and that key2 works when key1 is False
     do = lambda x: Add(*[i**(i%2) for i in x.args])
-    process_common_addends(Add(*[1, 2, 3, 4], evaluate=False), do,
+    assert process_common_addends(Add(*[1, 2, 3, 4], evaluate=False), do,
         key2=lambda x: x%2, key1=False) == 1**1 + 3**1 + 2**0 + 4**0
 
 
@@ -329,23 +354,29 @@ def test_TRmorrie():
         7*sin(12)*sin(16)*cos(5)*cos(7)*cos(9)/(64*sin(1)*sin(3))
     assert TRmorrie(x) == x
     assert TRmorrie(2*x) == 2*x
-    e = cos(pi/7)*cos(2*pi/7)*cos(4*pi/7)
-    assert TR8(TRmorrie(e)) == -S(1)/8
+    e = cos(pi/7)*cos(pi*Rational(2, 7))*cos(pi*Rational(4, 7))
+    assert TR8(TRmorrie(e)) == Rational(-1, 8)
     e = Mul(*[cos(2**i*pi/17) for i in range(1, 17)])
-    assert TR8(TR3(TRmorrie(e))) == S(1)/65536
+    assert TR8(TR3(TRmorrie(e))) == Rational(1, 65536)
+    # issue 17063
+    eq = cos(x)/cos(x/2)
+    assert TRmorrie(eq) == eq
+    # issue #20430
+    eq = cos(x/2)*sin(x/2)*cos(x)**3
+    assert TRmorrie(eq) == sin(2*x)*cos(x)**2/4
 
 
 def test_TRpower():
     assert TRpower(1/sin(x)**2) == 1/sin(x)**2
     assert TRpower(cos(x)**3*sin(x/2)**4) == \
-        (3*cos(x)/4 + cos(3*x)/4)*(-cos(x)/2 + cos(2*x)/8 + S(3)/8)
+        (3*cos(x)/4 + cos(3*x)/4)*(-cos(x)/2 + cos(2*x)/8 + Rational(3, 8))
     for k in range(2, 8):
         assert verify_numerically(sin(x)**k, TRpower(sin(x)**k))
         assert verify_numerically(cos(x)**k, TRpower(cos(x)**k))
 
 
 def test_hyper_as_trig():
-    from sympy.simplify.fu import _osborne as o, _osbornei as i, TR12
+    from sympy.simplify.fu import _osborne, _osbornei
 
     eq = sinh(x)**2 + cosh(x)**2
     t, f = hyper_as_trig(eq)
@@ -354,24 +385,24 @@ def test_hyper_as_trig():
     assert f(TR12(e)) == (tanh(x) + tanh(y))/(tanh(x)*tanh(y) + 1)
 
     d = Dummy()
-    assert o(sinh(x), d) == I*sin(x*d)
-    assert o(tanh(x), d) == I*tan(x*d)
-    assert o(coth(x), d) == cot(x*d)/I
-    assert o(cosh(x), d) == cos(x*d)
-    assert o(sech(x), d) == sec(x*d)
-    assert o(csch(x), d) == csc(x*d)/I
+    assert _osborne(sinh(x), d) == I*sin(x*d)
+    assert _osborne(tanh(x), d) == I*tan(x*d)
+    assert _osborne(coth(x), d) == cot(x*d)/I
+    assert _osborne(cosh(x), d) == cos(x*d)
+    assert _osborne(sech(x), d) == sec(x*d)
+    assert _osborne(csch(x), d) == csc(x*d)/I
     for func in (sinh, cosh, tanh, coth, sech, csch):
         h = func(pi)
-        assert i(o(h, d), d) == h
+        assert _osbornei(_osborne(h, d), d) == h
     # /!\ the _osborne functions are not meant to work
     # in the o(i(trig, d), d) direction so we just check
     # that they work as they are supposed to work
-    assert i(cos(x*y + z), y) == cosh(x + z*I)
-    assert i(sin(x*y + z), y) == sinh(x + z*I)/I
-    assert i(tan(x*y + z), y) == tanh(x + z*I)/I
-    assert i(cot(x*y + z), y) == coth(x + z*I)*I
-    assert i(sec(x*y + z), y) == sech(x + z*I)
-    assert i(csc(x*y + z), y) == csch(x + z*I)*I
+    assert _osbornei(cos(x*y + z), y) == cosh(x + z*I)
+    assert _osbornei(sin(x*y + z), y) == sinh(x + z*I)/I
+    assert _osbornei(tan(x*y + z), y) == tanh(x + z*I)/I
+    assert _osbornei(cot(x*y + z), y) == coth(x + z*I)*I
+    assert _osbornei(sec(x*y + z), y) == sech(x + z*I)
+    assert _osbornei(csc(x*y + z), y) == csch(x + z*I)*I
 
 
 def test_TR12i():
@@ -435,3 +466,15 @@ def test_as_f_sign_1():
     assert as_f_sign_1(2*x + 2) == (2, x, 1)
     assert as_f_sign_1(x*y - y) == (y, x, -1)
     assert as_f_sign_1(-x*y + y) == (-y, x, -1)
+
+
+def test_issue_25590():
+    A = Symbol('A', commutative=False)
+    B = Symbol('B', commutative=False)
+
+    assert TR8(2*cos(x)*sin(x)*B*A) == sin(2*x)*B*A
+    assert TR13(tan(2)*tan(3)*B*A) == (-tan(2)/tan(5) - tan(3)/tan(5) + 1)*B*A
+
+    # XXX The result may not be optimal than
+    # sin(2*x)*B*A + cos(x)**2 and may change in the future
+    assert (2*cos(x)*sin(x)*B*A + cos(x)**2).simplify() == sin(2*x)*B*A + cos(2*x)/2 + S.One/2

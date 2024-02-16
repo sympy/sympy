@@ -1,3 +1,5 @@
+.. _classical_mechanics:
+
 ===================
 Classical Mechanics
 ===================
@@ -5,16 +7,18 @@ Classical Mechanics
 .. topic:: Abstract
 
    In this documentation many components of the physics/mechanics module will
-   be discussed. :mod:`mechanics` has been written to allow for creation of
+   be discussed. :mod:`sympy.physics.mechanics` has been written to allow for creation of
    symbolic equations of motion for complicated multibody systems.
+
+.. module:: sympy.physics.mechanics
 
 Vector
 ======
 
 This module derives the vector-related abilities and related functionalities
-from :mod:`physics.vector`. Please have a look at the documentation of
-:mod:`physics.vector` and its necessary API to understand the vector capabilities
-of :mod:`mechanics`.
+from :mod:`sympy.physics.vector`. Please have a look at the documentation of
+:mod:`sympy.physics.vector` and its necessary API to understand the vector capabilities
+of :mod:`sympy.physics.mechanics`.
 
 Mechanics
 =========
@@ -56,14 +60,14 @@ dynamics, has the following steps:
 5.  organizing the resulting equations so that they can be integrated to obtain
     the system's trajectory through time.
 
-Together with the rest of :mod:`SymPy`, this module performs steps 4 and 5,
+Together with the rest of SymPy, this module performs steps 4 and 5,
 provided that the user can perform 1 through 3 for the module. That is to say,
 the user must provide a complete representation of the free
 body diagrams that themselves represent the system, with which this code can
 provide equations of motion in a form amenable to numerical integration. Step
 5 above amounts to arduous algebra for even fairly simple multi-body systems.
-Thus, it is desirable to use a symbolic math package, such as Sympy, to
-perform this step. It is for this reason that this module is a part of Sympy.
+Thus, it is desirable to use a symbolic math package, such as SymPy, to
+perform this step. It is for this reason that this module is a part of SymPy.
 Step 4 amounts to this specific module, sympy.physics.mechanics.
 
 
@@ -71,29 +75,17 @@ Guide to Mechanics
 ==================
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    masses.rst
-    kane.rst
-    lagrange.rst
-    symsystem.rst
-    linearize.rst
-    examples.rst
-    advanced.rst
-    reference.rst
-    autolev_parser.rst
-    sympy_mechanics_for_autolev_users.rst
-
-Mechanics API
-=============
-
-.. toctree::
-    :maxdepth: 2
-
-    api/part_bod.rst
-    api/kane_lagrange.rst
-    api/system.rst
-    api/linearize.rst
-    api/expr_manip.rst
-    api/printing.rst
-    api/body.rst
+   masses.rst
+   kane.rst
+   lagrange.rst
+   joints.rst
+   symsystem.rst
+   linearize.rst
+   examples.rst
+   advanced.rst
+   reference.rst
+   autolev_parser.rst
+   sympy_mechanics_for_autolev_users.rst
+   api/index.rst

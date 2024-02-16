@@ -71,13 +71,12 @@ as a scalar field of the form
 Implementation of fields in sympy.physics.vector
 ================================================
 
-In sympy.physics.vector, every :mod:`ReferenceFrame` instance is assigned basis
-vectors corresponding to the :math:`X`, :math:`Y` and
-:math:`Z` directions. These can be accessed using the attributes
-named :mod:`x`, :mod:`y` and :mod:`z` respectively. Hence, to define a vector
-:math:`\mathbf{v}` of the form
-:math:`3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}}` with
-respect to a given frame :math:`\mathbf{R}`, you would do
+In :mod:`sympy.physics.vector`, every :obj:`~.ReferenceFrame` instance is
+assigned basis vectors corresponding to the :math:`X`, :math:`Y` and :math:`Z`
+directions. These can be accessed using the attributes named ``x``, ``y`` and
+``z`` respectively. Hence, to define a vector :math:`\mathbf{v}` of the form
+:math:`3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}}` with respect
+to a given frame :math:`\mathbf{R}`, you would do
 
   >>> from sympy.physics.vector import ReferenceFrame
   >>> R = ReferenceFrame('R')
@@ -88,11 +87,11 @@ already been elaborated upon in other sections of this module's
 documentation.
 
 On the other hand, base scalars (or coordinate variables) are implemented
-as special :mod:`SymPy` :mod:`Symbol` s assigned to every frame, one for each
+as special SymPy :obj:`~sympy.core.symbol.Symbol`\ s assigned to every frame, one for each
 direction from :math:`X`, :math:`Y` and :math:`Z`. For a frame
-:mod:`R`, the :math:`X`, :math:`Y` and :math:`Z`
-base scalar :mod:`Symbol` s can be accessed using the :mod:`R[0]`, :mod:`R[1]`
-and :mod:`R[2]` expressions respectively.
+``R``, the :math:`X`, :math:`Y` and :math:`Z`
+base scalar :obj:`~sympy.core.symbol.Symbol`\ s can be accessed using the ``R[0]``, ``R[1]``
+and ``R[2]`` expressions respectively.
 
 Therefore, to generate the expression for the aforementioned electric
 potential field :math:`2{x}^{2}y`, you would have to do
@@ -103,14 +102,14 @@ potential field :math:`2{x}^{2}y`, you would have to do
   >>> electric_potential
   2*R_x**2*R_y
 
-In string representation, :mod:`R_x` denotes the :math:`X` base
-scalar assigned to :mod:`ReferenceFrame` :mod:`R`. Essentially, :mod:`R_x` is
-the string representation of :mod:`R[0]`.
+In string representation, ``R_x`` denotes the :math:`X` base
+scalar assigned to :obj:`~.ReferenceFrame` ``R``. Essentially, ``R_x`` is
+the string representation of ``R[0]``.
 
-Scalar fields can be treated just as any other :mod:`SymPy` expression,
-for any math/calculus functionality. Hence, to differentiate the above
-electric potential with respect to :math:`x` (i.e. :mod:`R[0]`), you would
-have to use the :mod:`diff` method.
+Scalar fields can be treated just as any other SymPy expression, for any
+math/calculus functionality. Hence, to differentiate the above electric
+potential with respect to :math:`x` (i.e. ``R[0]``), you would have to use the
+:obj:`~sympy.core.function.diff` function.
 
   >>> from sympy.physics.vector import ReferenceFrame
   >>> R = ReferenceFrame('R')
@@ -121,9 +120,10 @@ have to use the :mod:`diff` method.
 
 Like vectors (and vector fields), scalar fields can also be re-expressed in
 other frames of reference, apart from the one they were defined in – assuming
-that an orientation relationship exists between the concerned frames. This
-can be done using the :mod:`express` method, in a way similar to vectors -
-but with the :mod:`variables` parameter set to :mod:`True`.
+that an orientation relationship exists between the concerned frames. This can
+be done using the :obj:`sympy.physics.vector.vector.Vector.express` method, in a way
+similar to vectors - but with the ``variables`` parameter set to
+``True``.
 
   >>> from sympy.physics.vector import ReferenceFrame
   >>> R = ReferenceFrame('R')
@@ -136,8 +136,9 @@ but with the :mod:`variables` parameter set to :mod:`True`.
 
 Moreover, considering scalars can also be functions of time just as vectors,
 differentiation with respect to time is also possible. Depending on the
-:mod:`Symbol` s present in the expression and the frame with respect to which
-the time differentiation is being done, the output will change/remain the same.
+:obj:`~sympy.core.symbol.Symbol`\ s present in the expression and the frame
+with respect to which the time differentiation is being done, the output will
+change/remain the same.
 
   >>> from sympy.physics.vector import ReferenceFrame
   >>> R = ReferenceFrame('R')
@@ -177,7 +178,7 @@ denoted by :math:`\nabla \times \mathbf{F}` is given by -
 
 where :math:`F_x` denotes the :math:`X` component of vector :math:`\mathbf{F}`.
 
-To compute the curl of a vector field in :mod:`physics.vector`, you would do
+To compute the curl of a vector field in :mod:`sympy.physics.vector`, you would do
 
   >>> from sympy.physics.vector import ReferenceFrame
   >>> R = ReferenceFrame('R')
@@ -205,7 +206,7 @@ denoted by :math:`\nabla\cdot\mathbf{F}` is given by -
 where :math:`U`, :math:`V` and :math:`W` denote the :math:`X`, :math:`Y` and
 :math:`Z` components of :math:`\mathbf{F}` respectively.
 
-To compute the divergence of a vector field in :mod:`physics.vector`, you
+To compute the divergence of a vector field in :mod:`sympy.physics.vector`, you
 would do
 
   >>> from sympy.physics.vector import ReferenceFrame
@@ -230,7 +231,7 @@ denoted by :math:`\nabla f` is given by -
 \frac{\partial f}{\partial y}  \mathbf{\hat{j}} +
 \frac{\partial f}{\partial z} \mathbf{\hat{k}}`
 
-To compute the gradient of a scalar field in :mod:`physics.vector`, you
+To compute the gradient of a scalar field in :mod:`sympy.physics.vector`, you
 would do
 
   >>> from sympy.physics.vector import ReferenceFrame
@@ -253,8 +254,8 @@ curl of a conservative field is always zero.
 In physics, conservative fields represent forces in physical systems where
 energy is conserved.
 
-To check if a vector field is conservative in :mod:`physics.vector`, use
-the :mod:`is_conservative` function.
+To check if a vector field is conservative in :mod:`sympy.physics.vector`, use
+the :obj:`sympy.physics.vector.fieldfunctions.is_conservative` function.
 
   >>> from sympy.physics.vector import ReferenceFrame, is_conservative
   >>> R = ReferenceFrame('R')
@@ -267,8 +268,8 @@ the :mod:`is_conservative` function.
 A solenoidal field, on the other hand, is a vector field whose divergence
 is zero at all points in space.
 
-To check if a vector field is solenoidal in :mod:`physics.vector`, use
-the :mod:`is_solenoidal` function.
+To check if a vector field is solenoidal in :mod:`sympy.physics.vector`, use
+the :obj:`sympy.physics.vector.fieldfunctions.is_solenoidal` function.
 
   >>> from sympy.physics.vector import ReferenceFrame, is_solenoidal
   >>> R = ReferenceFrame('R')
@@ -285,9 +286,10 @@ We have previously mentioned that every conservative field can be defined as
 the gradient of some scalar field. This scalar field is also called the 'scalar
 potential field' corresponding to the aforementioned conservative field.
 
-The :mod:`scalar_potential` function in :mod:`physics.vector` calculates the
-scalar potential field corresponding to a given conservative vector field in
-3D space - minus the extra constant of integration, of course.
+The :obj:`sympy.physics.vector.fieldfunctions.scalar_potential` function in
+:mod:`sympy.physics.vector` calculates the scalar potential field
+corresponding to a given conservative vector field in 3D space - minus the
+extra constant of integration, of course.
 
 Example of usage -
 
@@ -298,7 +300,7 @@ Example of usage -
   2*R_x**2*R_y*R_z
 
 Providing a non-conservative vector field as an argument to
-:mod:`scalar_potential` raises a :mod:`ValueError`.
+:obj:`sympy.physics.vector.fieldfunctions.scalar_potential` raises a ``ValueError``.
 
 The scalar potential difference, or simply 'potential difference',
 corresponding to a conservative vector field can be defined as the difference
@@ -306,7 +308,7 @@ between the values of its scalar potential function at two points in space.
 This is useful in calculating a line integral with respect to a conservative
 function, since it depends only on the endpoints of the path.
 
-This computation is performed as follows in :mod:`physics.vector`.
+This computation is performed as follows in :mod:`sympy.physics.vector`.
 
   >>> from sympy.physics.vector import ReferenceFrame, Point
   >>> from sympy.physics.vector import scalar_potential_difference
@@ -318,5 +320,6 @@ This computation is performed as follows in :mod:`physics.vector`.
   4
 
 If provided with a scalar expression instead of a vector field,
-:mod:`scalar_potential_difference` returns the difference between the values
-of that scalar field at the two given points in space.
+:obj:`sympy.physics.vector.fieldfunctions.scalar_potential_difference` returns
+the difference between the values of that scalar field at the two given points
+in space.

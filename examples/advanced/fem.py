@@ -15,7 +15,7 @@ $ python fem.py
 
 """
 
-from sympy import symbols, Symbol, factorial, Rational, zeros, div, eye, \
+from sympy import symbols, Symbol, factorial, Rational, zeros, eye, \
     integrate, diff, pprint, reduced
 
 x, y, z = symbols('x,y,z')
@@ -115,7 +115,7 @@ def create_point_set(order, nsd):
             for j in range(0, order + 1):
                 y = j*h
                 for k in range(0, order + 1):
-                    z = j*h
+                    z = k*h
                     if x + y + z <= 1:
                         set.append((x, y, z))
 

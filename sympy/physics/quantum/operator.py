@@ -8,10 +8,14 @@ TODO:
 * Doctests and documentation of special methods for InnerProduct, Commutator,
   AntiCommutator, represent, apply_operators.
 """
+from typing import Optional
 
-from __future__ import print_function, division
-
-from sympy import Derivative, Expr, Integer, oo, Mul, expand, Add
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import (Derivative, expand)
+from sympy.core.mul import Mul
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -51,7 +55,7 @@ class Operator(QExpr):
     Create an operator and examine its attributes::
 
         >>> from sympy.physics.quantum import Operator
-        >>> from sympy import symbols, I
+        >>> from sympy import I
         >>> A = Operator('A')
         >>> A
         A
@@ -69,7 +73,7 @@ class Operator(QExpr):
         >>> C
         2*A**2 + I*B
 
-    Operators don't commute::
+    Operators do not commute::
 
         >>> A.is_commutative
         False
@@ -97,7 +101,8 @@ class Operator(QExpr):
     .. [1] https://en.wikipedia.org/wiki/Operator_%28physics%29
     .. [2] https://en.wikipedia.org/wiki/Observable
     """
-
+    is_hermitian: Optional[bool] = None
+    is_unitary: Optional[bool] = None
     @classmethod
     def default_args(self):
         return ("O",)
@@ -109,7 +114,7 @@ class Operator(QExpr):
     _label_separator = ','
 
     def _print_operator_name(self, printer, *args):
-        return printer._print(self.__class__.__name__, *args)
+        return self.__class__.__name__
 
     _print_operator_name_latex = _print_operator_name
 
@@ -134,7 +139,7 @@ class Operator(QExpr):
             label_pform = prettyForm(
                 *label_pform.parens(left='(', right=')')
             )
-            pform = prettyForm(*pform.right((label_pform)))
+            pform = prettyForm(*pform.right(label_pform))
             return pform
 
     def _print_contents_latex(self, printer, *args):
@@ -164,6 +169,9 @@ class Operator(QExpr):
 
     def _apply_operator(self, ket, **options):
         return dispatch_method(self, '_apply_operator', ket, **options)
+
+    def _apply_from_right_to(self, bra, **options):
+        return None
 
     def matrix_element(self, *args):
         raise NotImplementedError('matrix_elements is not defined')
@@ -213,14 +221,14 @@ class HermitianOperator(Operator):
 
     def _eval_power(self, exp):
         if isinstance(self, UnitaryOperator):
-            if exp == -1:
-                return Operator._eval_power(self, exp)
-            elif abs(exp) % 2 == 0:
-                return self*(Operator._eval_inverse(self))
-            else:
+            # so all eigenvalues of self are 1 or -1
+            if exp.is_even:
+                from sympy.core.singleton import S
+                return S.One # is identity, see Issue 24153.
+            elif exp.is_odd:
                 return self
-        else:
-            return Operator._eval_power(self, exp)
+        # No simplification in all other cases
+        return Operator._eval_power(self, exp)
 
 
 class UnitaryOperator(Operator):
@@ -241,7 +249,7 @@ class UnitaryOperator(Operator):
     >>> U*Dagger(U)
     1
     """
-
+    is_unitary = True
     def _eval_adjoint(self):
         return self._eval_inverse()
 
@@ -264,6 +272,8 @@ class IdentityOperator(Operator):
     >>> IdentityOperator()
     I
     """
+    is_hermitian = True
+    is_unitary = True
     @property
     def dimension(self):
         return self.N
@@ -273,13 +283,13 @@ class IdentityOperator(Operator):
         return (oo,)
 
     def __init__(self, *args, **hints):
-        if not len(args) in [0, 1]:
+        if not len(args) in (0, 1):
             raise ValueError('0 or 1 parameters expected, got %s' % args)
 
         self.N = args[0] if (len(args) == 1 and args[0]) else oo
 
     def _eval_commutator(self, other, **hints):
-        return Integer(0)
+        return S.Zero
 
     def _eval_anticommutator(self, other, **hints):
         return 2 * other
@@ -292,6 +302,9 @@ class IdentityOperator(Operator):
 
     def _apply_operator(self, ket, **options):
         return ket
+
+    def _apply_from_right_to(self, bra, **options):
+        return bra
 
     def _eval_power(self, exp):
         return self
@@ -307,7 +320,7 @@ class IdentityOperator(Operator):
 
     def __mul__(self, other):
 
-        if isinstance(other, Operator):
+        if isinstance(other, (Operator, Dagger)):
             return other
 
         return Mul(self, other)
@@ -458,7 +471,7 @@ class OuterProduct(Operator):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympystr(self, printer, *args):
-        return str(self.ket) + str(self.bra)
+        return printer._print(self.ket) + printer._print(self.bra)
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__,
@@ -609,7 +622,7 @@ class DifferentialOperator(Operator):
 
         return self.expr.free_symbols
 
-    def _apply_operator_Wavefunction(self, func):
+    def _apply_operator_Wavefunction(self, func, **options):
         from sympy.physics.quantum.state import Wavefunction
         var = self.variables
         wf_vars = func.args[1:]
@@ -640,5 +653,5 @@ class DifferentialOperator(Operator):
         label_pform = prettyForm(
             *label_pform.parens(left='(', right=')')
         )
-        pform = prettyForm(*pform.right((label_pform)))
+        pform = prettyForm(*pform.right(label_pform))
         return pform

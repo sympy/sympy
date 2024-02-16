@@ -1,7 +1,14 @@
 # conceal the implicit import from the code quality tester
-from __future__ import print_function, division
-
-exec("from sympy import *")
+from sympy.core.numbers import (oo, pi)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.bessel import besseli
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import integrate
+from sympy.integrals.transforms import (mellin_transform,
+    inverse_fourier_transform, inverse_mellin_transform,
+    laplace_transform, inverse_laplace_transform, fourier_transform)
 
 LT = laplace_transform
 FT = fourier_transform
@@ -10,7 +17,7 @@ IFT = inverse_fourier_transform
 ILT = inverse_laplace_transform
 IMT = inverse_mellin_transform
 
-from sympy.abc import a, b, s, t, x, y, z
+from sympy.abc import x, y
 nu, beta, rho = symbols('nu beta rho')
 
 apos, bpos, cpos, dpos, posk, p = symbols('a b c d k p', positive=True)
@@ -20,7 +27,7 @@ negk = Symbol('k', negative=True)
 mu1, mu2 = symbols('mu1 mu2', real=True, nonzero=True, finite=True)
 sigma1, sigma2 = symbols('sigma1 sigma2', real=True, nonzero=True,
                          finite=True, positive=True)
-rate = Symbol('lambda', real=True, positive=True, finite=True)
+rate = Symbol('lambda', positive=True)
 
 
 def normal(x, mu, sigma):
@@ -50,9 +57,9 @@ tpos = Symbol('t', positive=True)
 
 
 def E(expr):
-    res1 = integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
+    integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
                      (x, 0, oo), (y, -oo, oo), meijerg=True)
-    res2 = integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
+    integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
                      (y, -oo, oo), (x, 0, oo), meijerg=True)
 
 bench = [
@@ -250,5 +257,5 @@ if __name__ == '__main__':
 
     timings.sort(key=lambda x: -x[0])
 
-    for t, string in timings:
-        print('%.2fs %s' % (t, string))
+    for ti, string in timings:
+        print('%.2fs %s' % (ti, string))

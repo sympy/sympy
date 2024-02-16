@@ -6,30 +6,21 @@ combinatorial polynomials.
 
 """
 
-from __future__ import print_function, division
-
-from sympy.core.singleton import S
 from sympy.core import Rational
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import binomial, factorial, RisingFactorial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.elementary.trigonometric import cos, sec
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
-
-from sympy.polys.orthopolys import (
-    jacobi_poly,
-    gegenbauer_poly,
-    chebyshevt_poly,
-    chebyshevu_poly,
-    laguerre_poly,
-    hermite_poly,
-    legendre_poly
-)
+from sympy.polys.orthopolys import (chebyshevt_poly, chebyshevu_poly,
+                                    gegenbauer_poly, hermite_poly, hermite_prob_poly,
+                                    jacobi_poly, laguerre_poly, legendre_poly)
 
 _x = Dummy('x')
 
@@ -53,27 +44,29 @@ class OrthogonalPolynomial(Function):
 
 class jacobi(OrthogonalPolynomial):
     r"""
-    Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
+    Jacobi polynomial $P_n^{\left(\alpha, \beta\right)}(x)$.
 
-    jacobi(n, alpha, beta, x) gives the nth Jacobi polynomial
-    in x, :math:`P_n^{\left(\alpha, \beta\right)}(x)`.
+    Explanation
+    ===========
 
-    The Jacobi polynomials are orthogonal on :math:`[-1, 1]` with respect
-    to the weight :math:`\left(1-x\right)^\alpha \left(1+x\right)^\beta`.
+    ``jacobi(n, alpha, beta, x)`` gives the $n$th Jacobi polynomial
+    in $x$, $P_n^{\left(\alpha, \beta\right)}(x)$.
+
+    The Jacobi polynomials are orthogonal on $[-1, 1]$ with respect
+    to the weight $\left(1-x\right)^\alpha \left(1+x\right)^\beta$.
 
     Examples
     ========
 
     >>> from sympy import jacobi, S, conjugate, diff
-    >>> from sympy.abc import n,a,b,x
+    >>> from sympy.abc import a, b, n, x
 
     >>> jacobi(0, a, b, x)
     1
     >>> jacobi(1, a, b, x)
     a/2 - b/2 + x*(a/2 + b/2 + 1)
-    >>> jacobi(2, a, b, x)   # doctest:+SKIP
-    (a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 +
-    b**2/8 + 7*b/8 + 3/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - 1/2)
+    >>> jacobi(2, a, b, x)
+    a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 + b**2/8 + 7*b/8 + 3/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - 1/2
 
     >>> jacobi(n, a, b, x)
     jacobi(n, a, b, x)
@@ -95,7 +88,7 @@ class jacobi(OrthogonalPolynomial):
     (-1)**n*jacobi(n, b, a, x)
 
     >>> jacobi(n, a, b, 0)
-    2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(factorial(n)*gamma(a + 1))
+    gamma(a + n + 1)*hyper((-n, -b - n), (a + 1,), -1)/(2**n*factorial(n)*gamma(a + 1))
     >>> jacobi(n, a, b, 1)
     RisingFactorial(a + 1, n)/factorial(n)
 
@@ -111,7 +104,7 @@ class jacobi(OrthogonalPolynomial):
     gegenbauer,
     chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly,
     sympy.polys.orthopolys.gegenbauer_poly
@@ -125,8 +118,9 @@ class jacobi(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Jacobi_polynomials
-    .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
+    .. [2] https://mathworld.wolfram.com/JacobiPolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/JacobiP/
+
     """
 
     @classmethod
@@ -134,9 +128,9 @@ class jacobi(OrthogonalPolynomial):
         # Simplify to other polynomials
         # P^{a, a}_n(x)
         if a == b:
-            if a == -S.Half:
+            if a == Rational(-1, 2):
                 return RisingFactorial(S.Half, n) / factorial(n) * chebyshevt(n, x)
-            elif a == S.Zero:
+            elif a.is_zero:
                 return legendre(n, x)
             elif a == S.Half:
                 return RisingFactorial(3*S.Half, n) / factorial(n + 1) * chebyshevu(n, x)
@@ -145,9 +139,6 @@ class jacobi(OrthogonalPolynomial):
         elif b == -a:
             # P^{a, -a}_n(x)
             return gamma(n + a + 1) / gamma(n + 1) * (1 + x)**(a/2) / (1 - x)**(a/2) * assoc_legendre(n, -a, x)
-        elif a == -b:
-            # P^{-b, b}_n(x)
-            return gamma(n - b + 1) / gamma(n + 1) * (1 - x)**(b/2) / (1 + x)**(b/2) * assoc_legendre(n, b, x)
 
         if not n.is_Number:
             # Symbolic result P^{a,b}_n(x)
@@ -155,12 +146,12 @@ class jacobi(OrthogonalPolynomial):
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * jacobi(n, b, a, -x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return (2**(-n) * gamma(a + n + 1) / (gamma(a + 1) * factorial(n)) *
                         hyper([-b - n, -n], [a + 1], -1))
             if x == S.One:
                 return RisingFactorial(a + 1, n) / factorial(n)
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 if n.is_positive:
                     # Make sure a+b+2*n \notin Z
                     if (a + b + 2*n).is_integer:
@@ -171,7 +162,7 @@ class jacobi(OrthogonalPolynomial):
             return jacobi_poly(n, a, b, x)
 
     def fdiff(self, argindex=4):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -198,8 +189,8 @@ class jacobi(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, a, b, x, **kwargs):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, a, b, x, **kwargs):
+        from sympy.concrete.summations import Sum
         # Make sure n \in N
         if n.is_negative or n.is_integer is False:
             raise ValueError("Error: n should be a non-negative integer.")
@@ -208,6 +199,11 @@ class jacobi(OrthogonalPolynomial):
                 factorial(k) * ((1 - x)/2)**k)
         return 1 / factorial(n) * Sum(kern, (k, 0, n))
 
+    def _eval_rewrite_as_polynomial(self, n, a, b, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, a, b, x, **kwargs)
+
     def _eval_conjugate(self):
         n, a, b, x = self.args
         return self.func(n, a.conjugate(), b.conjugate(), x.conjugate())
@@ -215,13 +211,16 @@ class jacobi(OrthogonalPolynomial):
 
 def jacobi_normalized(n, a, b, x):
     r"""
-    Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
+    Jacobi polynomial $P_n^{\left(\alpha, \beta\right)}(x)$.
 
-    jacobi_normalized(n, alpha, beta, x) gives the nth Jacobi polynomial
-    in x, :math:`P_n^{\left(\alpha, \beta\right)}(x)`.
+    Explanation
+    ===========
 
-    The Jacobi polynomials are orthogonal on :math:`[-1, 1]` with respect
-    to the weight :math:`\left(1-x\right)^\alpha \left(1+x\right)^\beta`.
+    ``jacobi_normalized(n, alpha, beta, x)`` gives the $n$th
+    Jacobi polynomial in $x$, $P_n^{\left(\alpha, \beta\right)}(x)$.
+
+    The Jacobi polynomials are orthogonal on $[-1, 1]$ with respect
+    to the weight $\left(1-x\right)^\alpha \left(1+x\right)^\beta$.
 
     This functions returns the polynomials normilzed:
 
@@ -242,13 +241,24 @@ def jacobi_normalized(n, a, b, x):
     >>> jacobi_normalized(n, a, b, x)
     jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1)))
 
+    Parameters
+    ==========
+
+    n : integer degree of polynomial
+
+    a : alpha value
+
+    b : beta value
+
+    x : symbol
+
     See Also
     ========
 
     gegenbauer,
     chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly,
     sympy.polys.orthopolys.gegenbauer_poly
@@ -262,8 +272,9 @@ def jacobi_normalized(n, a, b, x):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Jacobi_polynomials
-    .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
+    .. [2] https://mathworld.wolfram.com/JacobiPolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/JacobiP/
+
     """
     nfactor = (S(2)**(a + b + 1) * (gamma(n + a + 1) * gamma(n + b + 1))
                / (2*n + a + b + 1) / (factorial(n) * gamma(n + a + b + 1)))
@@ -278,13 +289,16 @@ def jacobi_normalized(n, a, b, x):
 
 class gegenbauer(OrthogonalPolynomial):
     r"""
-    Gegenbauer polynomial :math:`C_n^{\left(\alpha\right)}(x)`
+    Gegenbauer polynomial $C_n^{\left(\alpha\right)}(x)$.
 
-    gegenbauer(n, alpha, x) gives the nth Gegenbauer polynomial
-    in x, :math:`C_n^{\left(\alpha\right)}(x)`.
+    Explanation
+    ===========
 
-    The Gegenbauer polynomials are orthogonal on :math:`[-1, 1]` with
-    respect to the weight :math:`\left(1-x^2\right)^{\alpha-\frac{1}{2}}`.
+    ``gegenbauer(n, alpha, x)`` gives the $n$th Gegenbauer polynomial
+    in $x$, $C_n^{\left(\alpha\right)}(x)$.
+
+    The Gegenbauer polynomials are orthogonal on $[-1, 1]$ with
+    respect to the weight $\left(1-x^2\right)^{\alpha-\frac{1}{2}}$.
 
     Examples
     ========
@@ -306,7 +320,7 @@ class gegenbauer(OrthogonalPolynomial):
     (-1)**n*gegenbauer(n, a, x)
 
     >>> gegenbauer(n, a, 0)
-    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(-n/2 + 1/2)*gamma(n + 1))
+    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(1/2 - n/2)*gamma(n + 1))
     >>> gegenbauer(n, a, 1)
     gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
 
@@ -322,13 +336,14 @@ class gegenbauer(OrthogonalPolynomial):
     jacobi,
     chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
@@ -336,14 +351,15 @@ class gegenbauer(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gegenbauer_polynomials
-    .. [2] http://mathworld.wolfram.com/GegenbauerPolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
+    .. [2] https://mathworld.wolfram.com/GegenbauerPolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/GegenbauerC3/
+
     """
 
     @classmethod
     def eval(cls, n, a, x):
         # For negative n the polynomials vanish
-        # See http://functions.wolfram.com/Polynomials/GegenbauerC3/03/01/03/0012/
+        # See https://functions.wolfram.com/Polynomials/GegenbauerC3/03/01/03/0012/
         if n.is_negative:
             return S.Zero
 
@@ -361,22 +377,20 @@ class gegenbauer(OrthogonalPolynomial):
                 if (re(a) > S.Half) == True:
                     return S.ComplexInfinity
                 else:
-                    # No sec function available yet
-                    #return (cos(S.Pi*(a+n)) * sec(S.Pi*a) * gamma(2*a+n) /
-                    #            (gamma(2*a) * gamma(n+1)))
-                    return None
+                    return (cos(S.Pi*(a+n)) * sec(S.Pi*a) * gamma(2*a+n) /
+                                (gamma(2*a) * gamma(n+1)))
 
             # Symbolic result C^a_n(x)
             # C^a_n(-x)  --->  (-1)**n * C^a_n(x)
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * gegenbauer(n, a, -x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return (2**n * sqrt(S.Pi) * gamma(a + S.Half*n) /
                         (gamma((1 - n)/2) * gamma(n + 1) * gamma(a)) )
             if x == S.One:
                 return gamma(2*a + n) / (gamma(2*a) * gamma(n + 1))
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 if n.is_positive:
                     return RisingFactorial(a, n) * S.Infinity
         else:
@@ -384,7 +398,7 @@ class gegenbauer(OrthogonalPolynomial):
             return gegenbauer_poly(n, a, x)
 
     def fdiff(self, argindex=3):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -405,12 +419,17 @@ class gegenbauer(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, a, x, **kwargs):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, a, x, **kwargs):
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = ((-1)**k * RisingFactorial(a, n - k) * (2*x)**(n - 2*k) /
                 (factorial(k) * factorial(n - 2*k)))
         return Sum(kern, (k, 0, floor(n/2)))
+
+    def _eval_rewrite_as_polynomial(self, n, a, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, a, x, **kwargs)
 
     def _eval_conjugate(self):
         n, a, x = self.args
@@ -423,18 +442,21 @@ class gegenbauer(OrthogonalPolynomial):
 
 class chebyshevt(OrthogonalPolynomial):
     r"""
-    Chebyshev polynomial of the first kind, :math:`T_n(x)`
+    Chebyshev polynomial of the first kind, $T_n(x)$.
 
-    chebyshevt(n, x) gives the nth Chebyshev polynomial (of the first
-    kind) in x, :math:`T_n(x)`.
+    Explanation
+    ===========
+
+    ``chebyshevt(n, x)`` gives the $n$th Chebyshev polynomial (of the first
+    kind) in $x$, $T_n(x)$.
 
     The Chebyshev polynomials of the first kind are orthogonal on
-    :math:`[-1, 1]` with respect to the weight :math:`\frac{1}{\sqrt{1-x^2}}`.
+    $[-1, 1]$ with respect to the weight $\frac{1}{\sqrt{1-x^2}}$.
 
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevt, diff
     >>> from sympy.abc import n,x
     >>> chebyshevt(0, x)
     1
@@ -464,13 +486,14 @@ class chebyshevt(OrthogonalPolynomial):
     jacobi, gegenbauer,
     chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
@@ -478,10 +501,11 @@ class chebyshevt(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Chebyshev_polynomial
-    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
-    .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
-    .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
-    .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
+    .. [2] https://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
+    .. [3] https://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
+    .. [4] https://functions.wolfram.com/Polynomials/ChebyshevT/
+    .. [5] https://functions.wolfram.com/Polynomials/ChebyshevU/
+
     """
 
     _ortho_poly = staticmethod(chebyshevt_poly)
@@ -497,11 +521,11 @@ class chebyshevt(OrthogonalPolynomial):
             if n.could_extract_minus_sign():
                 return chebyshevt(-n, x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return cos(S.Half * S.Pi * n)
             if x == S.One:
                 return S.One
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -522,27 +546,35 @@ class chebyshevt(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, x, **kwargs):
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = binomial(n, 2*k) * (x**2 - 1)**k * x**(n - 2*k)
         return Sum(kern, (k, 0, floor(n/2)))
 
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
 
 class chebyshevu(OrthogonalPolynomial):
     r"""
-    Chebyshev polynomial of the second kind, :math:`U_n(x)`
+    Chebyshev polynomial of the second kind, $U_n(x)$.
 
-    chebyshevu(n, x) gives the nth Chebyshev polynomial of the second
-    kind in x, :math:`U_n(x)`.
+    Explanation
+    ===========
+
+    ``chebyshevu(n, x)`` gives the $n$th Chebyshev polynomial of the second
+    kind in x, $U_n(x)$.
 
     The Chebyshev polynomials of the second kind are orthogonal on
-    :math:`[-1, 1]` with respect to the weight :math:`\sqrt{1-x^2}`.
+    $[-1, 1]$ with respect to the weight $\sqrt{1-x^2}$.
 
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevu, diff
     >>> from sympy.abc import n,x
     >>> chebyshevu(0, x)
     1
@@ -572,13 +604,14 @@ class chebyshevu(OrthogonalPolynomial):
     jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu_root,
     legendre, assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
@@ -586,10 +619,11 @@ class chebyshevu(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Chebyshev_polynomial
-    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
-    .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
-    .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
-    .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
+    .. [2] https://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html
+    .. [3] https://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
+    .. [4] https://functions.wolfram.com/Polynomials/ChebyshevT/
+    .. [5] https://functions.wolfram.com/Polynomials/ChebyshevU/
+
     """
 
     _ortho_poly = staticmethod(chebyshevu_poly)
@@ -604,15 +638,16 @@ class chebyshevu(OrthogonalPolynomial):
             # U_{-n}(x)  --->  -U_{n-2}(x)
             if n.could_extract_minus_sign():
                 if n == S.NegativeOne:
+                    # n can not be -1 here
                     return S.Zero
-                else:
+                elif not (-n - 2).could_extract_minus_sign():
                     return -chebyshevu(-n - 2, x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return cos(S.Half * S.Pi * n)
             if x == S.One:
                 return S.One + n
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -636,19 +671,24 @@ class chebyshevu(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, x, **kwargs):
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = S.NegativeOne**k * factorial(
             n - k) * (2*x)**(n - 2*k) / (factorial(k) * factorial(n - 2*k))
         return Sum(kern, (k, 0, floor(n/2)))
 
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
 
 class chebyshevt_root(Function):
     r"""
-    chebyshev_root(n, k) returns the kth root (indexed from zero) of
-    the nth Chebyshev polynomial of the first kind; that is, if
-    0 <= k < n, chebyshevt(n, chebyshevt_root(n, k)) == 0.
+    ``chebyshev_root(n, k)`` returns the $k$th root (indexed from zero) of
+    the $n$th Chebyshev polynomial of the first kind; that is, if
+    $0 \le k < n$, ``chebyshevt(n, chebyshevt_root(n, k)) == 0``.
 
     Examples
     ========
@@ -665,13 +705,14 @@ class chebyshevt_root(Function):
     jacobi, gegenbauer,
     chebyshevt, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
     """
@@ -686,9 +727,9 @@ class chebyshevt_root(Function):
 
 class chebyshevu_root(Function):
     r"""
-    chebyshevu_root(n, k) returns the kth root (indexed from zero) of the
-    nth Chebyshev polynomial of the second kind; that is, if 0 <= k < n,
-    chebyshevu(n, chebyshevu_root(n, k)) == 0.
+    ``chebyshevu_root(n, k)`` returns the $k$th root (indexed from zero) of the
+    $n$th Chebyshev polynomial of the second kind; that is, if $0 \le k < n$,
+    ``chebyshevu(n, chebyshevu_root(n, k)) == 0``.
 
     Examples
     ========
@@ -704,13 +745,14 @@ class chebyshevu_root(Function):
 
     chebyshevt, chebyshevt_root, chebyshevu,
     legendre, assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
     """
@@ -730,11 +772,14 @@ class chebyshevu_root(Function):
 
 class legendre(OrthogonalPolynomial):
     r"""
-    legendre(n, x) gives the nth Legendre polynomial of x, :math:`P_n(x)`
+    ``legendre(n, x)`` gives the $n$th Legendre polynomial of $x$, $P_n(x)$
 
-    The Legendre polynomials are orthogonal on [-1, 1] with respect to
-    the constant weight 1. They satisfy :math:`P_n(1) = 1` for all n; further,
-    :math:`P_n` is odd for odd n and even for even n.
+    Explanation
+    ===========
+
+    The Legendre polynomials are orthogonal on $[-1, 1]$ with respect to
+    the constant weight 1. They satisfy $P_n(1) = 1$ for all $n$; further,
+    $P_n$ is odd for odd $n$ and even for even $n$.
 
     Examples
     ========
@@ -758,13 +803,14 @@ class legendre(OrthogonalPolynomial):
     jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
@@ -772,9 +818,10 @@ class legendre(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Legendre_polynomial
-    .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/LegendreP/
-    .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
+    .. [2] https://mathworld.wolfram.com/LegendrePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/LegendreP/
+    .. [4] https://functions.wolfram.com/Polynomials/LegendreP2/
+
     """
 
     _ortho_poly = staticmethod(legendre_poly)
@@ -787,14 +834,14 @@ class legendre(OrthogonalPolynomial):
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * legendre(n, -x)
             # L_{-n}(x)  --->  L_{n-1}(x)
-            if n.could_extract_minus_sign():
+            if n.could_extract_minus_sign() and not(-n - 1).could_extract_minus_sign():
                 return legendre(-n - S.One, x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return sqrt(S.Pi)/(gamma(S.Half - n/2)*gamma(S.One + n/2))
             elif x == S.One:
                 return S.One
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial;
@@ -809,33 +856,53 @@ class legendre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
         elif argindex == 2:
             # Diff wrt x
-            # Find better formula, this is unsuitable for x = 1
+            # Find better formula, this is unsuitable for x = +/-1
+            # https://www.autodiff.org/ad16/Oral/Buecker_Legendre.pdf says
+            # at x = 1:
+            #    n*(n + 1)/2            , m = 0
+            #    oo                     , m = 1
+            #    -(n-1)*n*(n+1)*(n+2)/4 , m = 2
+            #    0                      , m = 3, 4, ..., n
+            #
+            # at x = -1
+            #    (-1)**(n+1)*n*(n + 1)/2       , m = 0
+            #    (-1)**n*oo                    , m = 1
+            #    (-1)**n*(n-1)*n*(n+1)*(n+2)/4 , m = 2
+            #    0                             , m = 3, 4, ..., n
             n, x = self.args
             return n/(x**2 - 1)*(x*legendre(n, x) - legendre(n - 1, x))
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, x, **kwargs):
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
-        kern = (-1)**k*binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
+        kern = S.NegativeOne**k*binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
         return Sum(kern, (k, 0, n))
+
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
 
 class assoc_legendre(Function):
     r"""
-    assoc_legendre(n,m, x) gives :math:`P_n^m(x)`, where n and m are
+    ``assoc_legendre(n, m, x)`` gives $P_n^m(x)$, where $n$ and $m$ are
     the degree and order or an expression which is related to the nth
-    order Legendre polynomial, :math:`P_n(x)` in the following manner:
+    order Legendre polynomial, $P_n(x)$ in the following manner:
 
     .. math::
         P_n^m(x) = (-1)^m (1 - x^2)^{\frac{m}{2}}
                    \frac{\mathrm{d}^m P_n(x)}{\mathrm{d} x^m}
 
-    Associated Legendre polynomial are orthogonal on [-1, 1] with:
+    Explanation
+    ===========
 
-    - weight = 1            for the same m, and different n.
-    - weight = 1/(1-x**2)   for the same n, and different m.
+    Associated Legendre polynomials are orthogonal on $[-1, 1]$ with:
+
+    - weight $= 1$            for the same $m$ and different $n$.
+    - weight $= \frac{1}{1-x^2}$   for the same $n$ and different $m$.
 
     Examples
     ========
@@ -847,7 +914,7 @@ class assoc_legendre(Function):
     >>> assoc_legendre(1,0, x)
     x
     >>> assoc_legendre(1,1, x)
-    -sqrt(-x**2 + 1)
+    -sqrt(1 - x**2)
     >>> assoc_legendre(n,m,x)
     assoc_legendre(n, m, x)
 
@@ -857,13 +924,14 @@ class assoc_legendre(Function):
     jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
@@ -871,15 +939,16 @@ class assoc_legendre(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Associated_Legendre_polynomials
-    .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/LegendreP/
-    .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
+    .. [2] https://mathworld.wolfram.com/LegendrePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/LegendreP/
+    .. [4] https://functions.wolfram.com/Polynomials/LegendreP2/
+
     """
 
     @classmethod
     def _eval_at_order(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
-        return (-1)**m * (1 - _x**2)**Rational(m, 2) * P.as_expr()
+        return S.NegativeOne**m * (1 - _x**2)**Rational(m, 2) * P.as_expr()
 
     @classmethod
     def eval(cls, n, m, x):
@@ -913,12 +982,17 @@ class assoc_legendre(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, m, x, **kwargs):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, m, x, **kwargs):
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = factorial(2*n - 2*k)/(2**n*factorial(n - k)*factorial(
-            k)*factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
+            k)*factorial(n - 2*k - m))*S.NegativeOne**k*x**(n - m - 2*k)
         return (1 - x**2)**(m/2) * Sum(kern, (k, 0, floor((n - m)*S.Half)))
+
+    def _eval_rewrite_as_polynomial(self, n, m, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, m, x, **kwargs)
 
     def _eval_conjugate(self):
         n, m, x = self.args
@@ -931,10 +1005,13 @@ class assoc_legendre(Function):
 
 class hermite(OrthogonalPolynomial):
     r"""
-    hermite(n, x) gives the nth Hermite polynomial in x, :math:`H_n(x)`
+    ``hermite(n, x)`` gives the $n$th Hermite polynomial in $x$, $H_n(x)$.
 
-    The Hermite polynomials are orthogonal on :math:`(-\infty, \infty)`
-    with respect to the weight :math:`\exp\left(-x^2\right)`.
+    Explanation
+    ===========
+
+    The Hermite polynomials are orthogonal on $(-\infty, \infty)$
+    with respect to the weight $\exp\left(-x^2\right)$.
 
     Examples
     ========
@@ -960,12 +1037,14 @@ class hermite(OrthogonalPolynomial):
     jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
+    hermite_prob,
     laguerre, assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
@@ -973,8 +1052,9 @@ class hermite(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hermite_polynomial
-    .. [2] http://mathworld.wolfram.com/HermitePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/HermiteH/
+    .. [2] https://mathworld.wolfram.com/HermitePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/HermiteH/
+
     """
 
     _ortho_poly = staticmethod(hermite_poly)
@@ -987,9 +1067,9 @@ class hermite(OrthogonalPolynomial):
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * hermite(n, -x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return 2**n * sqrt(S.Pi) / gamma((S.One - n)/2)
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -1010,11 +1090,117 @@ class hermite(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, x, **kwargs):
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
-        kern = (-1)**k / (factorial(k)*factorial(n - 2*k)) * (2*x)**(n - 2*k)
+        kern = S.NegativeOne**k / (factorial(k)*factorial(n - 2*k)) * (2*x)**(n - 2*k)
         return factorial(n)*Sum(kern, (k, 0, floor(n/2)))
+
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
+    def _eval_rewrite_as_hermite_prob(self, n, x, **kwargs):
+        return sqrt(2)**n * hermite_prob(n, x*sqrt(2))
+
+
+class hermite_prob(OrthogonalPolynomial):
+    r"""
+    ``hermite_prob(n, x)`` gives the $n$th probabilist's Hermite polynomial
+    in $x$, $He_n(x)$.
+
+    Explanation
+    ===========
+
+    The probabilist's Hermite polynomials are orthogonal on $(-\infty, \infty)$
+    with respect to the weight $\exp\left(-\frac{x^2}{2}\right)$. They are monic
+    polynomials, related to the plain Hermite polynomials (:py:class:`~.hermite`) by
+
+    .. math :: He_n(x) = 2^{-n/2} H_n(x/\sqrt{2})
+
+    Examples
+    ========
+
+    >>> from sympy import hermite_prob, diff, I
+    >>> from sympy.abc import x, n
+    >>> hermite_prob(1, x)
+    x
+    >>> hermite_prob(5, x)
+    x**5 - 10*x**3 + 15*x
+    >>> diff(hermite_prob(n,x), x)
+    n*hermite_prob(n - 1, x)
+    >>> hermite_prob(n, -x)
+    (-1)**n*hermite_prob(n, x)
+
+    The sum of absolute values of coefficients of $He_n(x)$ is the number of
+    matchings in the complete graph $K_n$ or telephone number, A000085 in the OEIS:
+
+    >>> [hermite_prob(n,I) / I**n for n in range(11)]
+    [1, 1, 2, 4, 10, 26, 76, 232, 764, 2620, 9496]
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    laguerre, assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Hermite_polynomial
+    .. [2] https://mathworld.wolfram.com/HermitePolynomial.html
+    """
+
+    _ortho_poly = staticmethod(hermite_prob_poly)
+
+    @classmethod
+    def eval(cls, n, x):
+        if not n.is_Number:
+            if x.could_extract_minus_sign():
+                return S.NegativeOne**n * hermite_prob(n, -x)
+            if x.is_zero:
+                return sqrt(S.Pi) / gamma((S.One-n) / 2)
+            elif x is S.Infinity:
+                return S.Infinity
+        else:
+            if n.is_negative:
+                ValueError("n must be a nonnegative integer, not %r" % n)
+            else:
+                return cls._eval_at_order(n, x)
+
+    def fdiff(self, argindex=2):
+        if argindex == 2:
+            n, x = self.args
+            return n*hermite_prob(n-1, x)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Sum(self, n, x, **kwargs):
+        from sympy.concrete.summations import Sum
+        k = Dummy("k")
+        kern = (-S.Half)**k * x**(n-2*k) / (factorial(k) * factorial(n-2*k))
+        return factorial(n)*Sum(kern, (k, 0, floor(n/2)))
+
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
+    def _eval_rewrite_as_hermite(self, n, x, **kwargs):
+        return sqrt(2)**(-n) * hermite(n, x/sqrt(2))
+
 
 #----------------------------------------------------------------------------
 # Laguerre polynomials
@@ -1023,13 +1209,7 @@ class hermite(OrthogonalPolynomial):
 
 class laguerre(OrthogonalPolynomial):
     r"""
-    Returns the nth Laguerre polynomial in x, :math:`L_n(x)`.
-
-    Parameters
-    ==========
-
-    n : int
-        Degree of Laguerre polynomial. Must be ``n >= 0``.
+    Returns the $n$th Laguerre polynomial in $x$, $L_n(x)$.
 
     Examples
     ========
@@ -1039,7 +1219,7 @@ class laguerre(OrthogonalPolynomial):
     >>> laguerre(0, x)
     1
     >>> laguerre(1, x)
-    -x + 1
+    1 - x
     >>> laguerre(2, x)
     x**2/2 - 2*x + 1
     >>> laguerre(3, x)
@@ -1051,19 +1231,26 @@ class laguerre(OrthogonalPolynomial):
     >>> diff(laguerre(n, x), x)
     -assoc_laguerre(n - 1, 1, x)
 
+    Parameters
+    ==========
+
+    n : int
+        Degree of Laguerre polynomial. Must be `n \ge 0`.
+
     See Also
     ========
 
     jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     assoc_laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
@@ -1071,33 +1258,34 @@ class laguerre(OrthogonalPolynomial):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial
-    .. [2] http://mathworld.wolfram.com/LaguerrePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
-    .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
+    .. [2] https://mathworld.wolfram.com/LaguerrePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/LaguerreL/
+    .. [4] https://functions.wolfram.com/Polynomials/LaguerreL3/
+
     """
 
     _ortho_poly = staticmethod(laguerre_poly)
 
     @classmethod
     def eval(cls, n, x):
+        if n.is_integer is False:
+            raise ValueError("Error: n should be an integer.")
         if not n.is_Number:
             # Symbolic result L_n(x)
             # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
             # L_{-n}(x)  --->  exp(x) * L_{n-1}(-x)
-            if n.could_extract_minus_sign():
-                return exp(x) * laguerre(n - 1, -x)
+            if n.could_extract_minus_sign() and not(-n - 1).could_extract_minus_sign():
+                return exp(x)*laguerre(-n - 1, -x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return S.One
-            elif x == S.NegativeInfinity:
+            elif x is S.NegativeInfinity:
                 return S.Infinity
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.NegativeOne**n * S.Infinity
         else:
-            # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
-                raise ValueError(
-                    "The index n must be nonnegative integer (got %r)" % n)
+                return exp(x)*laguerre(-n - 1, -x)
             else:
                 return cls._eval_at_order(n, x)
 
@@ -1112,34 +1300,31 @@ class laguerre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, x, **kwargs):
+        from sympy.concrete.summations import Sum
         # Make sure n \in N_0
-        if n.is_negative or n.is_integer is False:
-            raise ValueError("Error: n should be a non-negative integer.")
+        if n.is_negative:
+            return exp(x) * self._eval_rewrite_as_Sum(-n - 1, -x, **kwargs)
+        if n.is_integer is False:
+            raise ValueError("Error: n should be an integer.")
         k = Dummy("k")
         kern = RisingFactorial(-n, k) / factorial(k)**2 * x**k
         return Sum(kern, (k, 0, n))
 
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
 
 class assoc_laguerre(OrthogonalPolynomial):
     r"""
-    Returns the nth generalized Laguerre polynomial in x, :math:`L_n(x)`.
-
-    Parameters
-    ==========
-
-    n : int
-        Degree of Laguerre polynomial. Must be ``n >= 0``.
-
-    alpha : Expr
-        Arbitrary expression. For ``alpha=0`` regular Laguerre
-        polynomials will be generated.
+    Returns the $n$th generalized Laguerre polynomial in $x$, $L_n(x)$.
 
     Examples
     ========
 
-    >>> from sympy import laguerre, assoc_laguerre, diff
+    >>> from sympy import assoc_laguerre, diff
     >>> from sympy.abc import x, n, a
     >>> assoc_laguerre(0, a, x)
     1
@@ -1166,44 +1351,56 @@ class assoc_laguerre(OrthogonalPolynomial):
     >>> diff(assoc_laguerre(n, a, x), a)
     Sum(assoc_laguerre(_k, a, x)/(-a + n), (_k, 0, n - 1))
 
+    Parameters
+    ==========
+
+    n : int
+        Degree of Laguerre polynomial. Must be `n \ge 0`.
+
+    alpha : Expr
+        Arbitrary expression. For ``alpha=0`` regular Laguerre
+        polynomials will be generated.
+
     See Also
     ========
 
     jacobi, gegenbauer,
     chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
     legendre, assoc_legendre,
-    hermite,
+    hermite, hermite_prob,
     laguerre,
     sympy.polys.orthopolys.jacobi_poly
     sympy.polys.orthopolys.gegenbauer_poly
     sympy.polys.orthopolys.chebyshevt_poly
     sympy.polys.orthopolys.chebyshevu_poly
     sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
     sympy.polys.orthopolys.legendre_poly
     sympy.polys.orthopolys.laguerre_poly
 
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial#Assoc_laguerre_polynomials
-    .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
-    .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
-    .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
+    .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial#Generalized_Laguerre_polynomials
+    .. [2] https://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
+    .. [3] https://functions.wolfram.com/Polynomials/LaguerreL/
+    .. [4] https://functions.wolfram.com/Polynomials/LaguerreL3/
+
     """
 
     @classmethod
     def eval(cls, n, alpha, x):
         # L_{n}^{0}(x)  --->  L_{n}(x)
-        if alpha == S.Zero:
+        if alpha.is_zero:
             return laguerre(n, x)
 
         if not n.is_Number:
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return binomial(n + alpha, alpha)
-            elif x == S.Infinity and n > S.Zero:
+            elif x is S.Infinity and n > 0:
                 return S.NegativeOne**n * S.Infinity
-            elif x == S.NegativeInfinity and n > S.Zero:
+            elif x is S.NegativeInfinity and n > 0:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -1214,7 +1411,7 @@ class assoc_laguerre(OrthogonalPolynomial):
                 return laguerre_poly(n, x, alpha)
 
     def fdiff(self, argindex=3):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -1230,8 +1427,8 @@ class assoc_laguerre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, alpha, x, **kwargs):
+        from sympy.concrete.summations import Sum
         # Make sure n \in N_0
         if n.is_negative or n.is_integer is False:
             raise ValueError("Error: n should be a non-negative integer.")
@@ -1239,6 +1436,11 @@ class assoc_laguerre(OrthogonalPolynomial):
         kern = RisingFactorial(
             -n, k) / (gamma(k + alpha + 1) * factorial(k)) * x**k
         return gamma(n + alpha + 1) / factorial(n) * Sum(kern, (k, 0, n))
+
+    def _eval_rewrite_as_polynomial(self, n, alpha, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, alpha, x, **kwargs)
 
     def _eval_conjugate(self):
         n, alpha, x = self.args

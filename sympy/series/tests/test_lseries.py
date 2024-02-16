@@ -1,4 +1,9 @@
-from sympy import sin, cos, exp, tanh, E, S, Order
+from sympy.core.numbers import E
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.series.order import Order
 from sympy.abc import x, y
 
 
@@ -33,14 +38,14 @@ def test_exp2():
 
 
 def test_simple():
-    assert [t for t in x.lseries()] == [x]
-    assert [t for t in S.One.lseries(x)] == [1]
+    assert list(x.lseries()) == [x]
+    assert list(S.One.lseries(x)) == [1]
     assert not next((x/(x + y)).lseries(y)).has(Order)
 
 
 def test_issue_5183():
     s = (x + 1/x).lseries()
-    assert [si for si in s] == [1/x, x]
+    assert list(s) == [1/x, x]
     assert next((x + x**2).lseries()) == x
     assert next(((1 + x)**7).lseries(x)) == 1
     assert next((sin(x + y)).series(x, n=3).lseries(y)) == x

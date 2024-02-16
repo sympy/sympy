@@ -1,8 +1,9 @@
-from sympy import (
-    adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
-    symbols, transpose,
-)
-from sympy.core.compatibility import range, long
+from sympy.core.relational import Ne
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.complexes import (adjoint, conjugate, transpose)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.tensor_functions import (Eijk, KroneckerDelta, LeviCivita)
+
 from sympy.physics.secondquant import evaluate_deltas, F
 
 x, y = symbols('x y')
@@ -11,7 +12,7 @@ x, y = symbols('x y')
 def test_levicivita():
     assert Eijk(1, 2, 3) == LeviCivita(1, 2, 3)
     assert LeviCivita(1, 2, 3) == 1
-    assert LeviCivita(long(1), long(2), long(3)) == 1
+    assert LeviCivita(int(1), int(2), int(3)) == 1
     assert LeviCivita(1, 3, 2) == -1
     assert LeviCivita(1, 2, 2) == 0
     i, j, k = symbols('i j k')
@@ -45,8 +46,8 @@ def test_kronecker_delta():
     assert KroneckerDelta(i + k, i) == 0
     assert KroneckerDelta(i + k, i + k) == 1
     assert KroneckerDelta(i + k, i + 1 + k) == 0
-    assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0
-    assert KroneckerDelta(i, j).subs(dict(i=3, j=3)) == 1
+    assert KroneckerDelta(i, j).subs({"i": 1, "j": 0}) == 0
+    assert KroneckerDelta(i, j).subs({"i": 3, "j": 3}) == 1
 
     assert KroneckerDelta(i, j)**0 == 1
     for n in range(1, 10):
@@ -60,6 +61,19 @@ def test_kronecker_delta():
     assert transpose(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
     # to test if canonical
     assert (KroneckerDelta(i, j) == KroneckerDelta(j, i)) == True
+
+    assert KroneckerDelta(i, j).rewrite(Piecewise) == Piecewise((0, Ne(i, j)), (1, True))
+
+    # Tests with range:
+    assert KroneckerDelta(i, j, (0, i)).args == (i, j, (0, i))
+    assert KroneckerDelta(i, j, (-j, i)).delta_range == (-j, i)
+
+    # If index is out of range, return zero:
+    assert KroneckerDelta(i, j, (0, i-1)) == 0
+    assert KroneckerDelta(-1, j, (0, i-1)) == 0
+    assert KroneckerDelta(j, -1, (0, i-1)) == 0
+    assert KroneckerDelta(j, i, (0, i-1)) == 0
+
 
 def test_kronecker_delta_secondquant():
     """secondquant-specific methods"""

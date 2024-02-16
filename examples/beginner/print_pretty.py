@@ -17,7 +17,7 @@ def main():
     c = MatrixSymbol("c", 1, 1)
 
     pprint( x**x )
-    print('\n')  # separate with two blank likes
+    print('\n')  # separate with two blank lines
 
     pprint(x**2 + y + x)
     print('\n')

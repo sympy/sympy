@@ -1,8 +1,11 @@
 """1D quantum particle in a box."""
 
-from __future__ import print_function, division
-
-from sympy import Symbol, pi, sqrt, sin, Interval, S
+from sympy.core.numbers import pi
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.sets.sets import Interval
 
 from sympy.physics.quantum.operator import HermitianOperator
 from sympy.physics.quantum.state import Ket, Bra

@@ -2,32 +2,34 @@
 A few practical conventions common to all printers.
 """
 
-from __future__ import print_function, division
-
 import re
 
-from sympy.core.compatibility import Iterable
+from collections.abc import Iterable
+from sympy.core.function import Derivative
 
-_name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')
+_name_with_digits_p = re.compile(r'^([^\W\d_]+)(\d+)$', re.U)
 
 
 def split_super_sub(text):
     """Split a symbol name into a name, superscripts and subscripts
 
-       The first part of the symbol name is considered to be its actual
-       'name', followed by super- and subscripts. Each superscript is
-       preceded with a "^" character or by "__". Each subscript is preceded
-       by a "_" character.  The three return values are the actual name, a
-       list with superscripts and a list with subscripts.
+    The first part of the symbol name is considered to be its actual
+    'name', followed by super- and subscripts. Each superscript is
+    preceded with a "^" character or by "__". Each subscript is preceded
+    by a "_" character.  The three return values are the actual name, a
+    list with superscripts and a list with subscripts.
 
-       >>> from sympy.printing.conventions import split_super_sub
-       >>> split_super_sub('a_x^1')
-       ('a', ['1'], ['x'])
-       >>> split_super_sub('var_sub1__sup_sub2')
-       ('var', ['sup'], ['sub1', 'sub2'])
+    Examples
+    ========
+
+    >>> from sympy.printing.conventions import split_super_sub
+    >>> split_super_sub('a_x^1')
+    ('a', ['1'], ['x'])
+    >>> split_super_sub('var_sub1__sup_sub2')
+    ('var', ['sup'], ['sub1', 'sub2'])
 
     """
-    if len(text) == 0:
+    if not text:
         return text, [], []
 
     pos = 0
@@ -58,7 +60,7 @@ def split_super_sub(text):
         else:
             raise RuntimeError("This should never happen.")
 
-    # make a little exception when a name ends with digits, i.e. treat them
+    # Make a little exception when a name ends with digits, i.e. treat them
     # as a subscript too.
     m = _name_with_digits_p.match(name)
     if m:
@@ -72,10 +74,13 @@ def requires_partial(expr):
     """Return whether a partial derivative symbol is required for printing
 
     This requires checking how many free variables there are,
-    filtering out the ones that are integers. Some expressions don't have
+    filtering out the ones that are integers. Some expressions do not have
     free variables. In that case, check its variable list explicitly to
     get the context of the expression.
     """
+
+    if isinstance(expr, Derivative):
+        return requires_partial(expr.expr)
 
     if not isinstance(expr.free_symbols, Iterable):
         return len(set(expr.variables)) > 1

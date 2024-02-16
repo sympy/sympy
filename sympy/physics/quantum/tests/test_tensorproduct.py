@@ -1,4 +1,7 @@
-from sympy import I, symbols, Matrix
+from sympy.core.numbers import I
+from sympy.core.symbol import symbols
+from sympy.core.expr import unchanged
+from sympy.matrices import Matrix, SparseMatrix, ImmutableMatrix
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -8,13 +11,18 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.density import Density
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 
 A, B, C, D = symbols('A,B,C,D', commutative=False)
 x = symbols('x')
 
 mat1 = Matrix([[1, 2*I], [1 + I, 3]])
 mat2 = Matrix([[2*I, 3], [4*I, 2]])
+
+
+def test_sparse_matrices():
+    spm = SparseMatrix.diag(1, 0)
+    assert unchanged(TensorProduct, spm, spm)
 
 
 def test_tensor_product_dagger():
@@ -36,6 +44,13 @@ def test_tensor_product_abstract():
 def test_tensor_product_expand():
     assert TP(A + B, B + C).expand(tensorproduct=True) == \
         TP(A, B) + TP(A, C) + TP(B, B) + TP(B, C)
+    #Tests for fix of issue #24142
+    assert TP(A-B, B-A).expand(tensorproduct=True) == \
+        TP(A, B) - TP(A, A) - TP(B, B) + TP(B, A)
+    assert TP(2*A + B, A + B).expand(tensorproduct=True) == \
+        2 * TP(A, A) + 2 * TP(A, B) + TP(B, A) + TP(B, B)
+    assert TP(2 * A * B + A, A + B).expand(tensorproduct=True) == \
+        2 * TP(A*B, A) + 2 * TP(A*B, B) + TP(A, A) + TP(A, B)
 
 
 def test_tensor_product_commutator():
@@ -110,3 +125,13 @@ def test_eval_trace():
                         1.0*A*Dagger(C)*Tr(B*Dagger(D)) +
                         1.0*C*Dagger(A)*Tr(D*Dagger(B)) +
                         1.0*C*Dagger(C)*Tr(D*Dagger(D)))
+
+
+def test_pr24993():
+    from sympy.matrices.expressions.kronecker import matrix_kronecker_product
+    from sympy.physics.quantum.matrixutils    import matrix_tensor_product
+    X = Matrix([[0, 1], [1, 0]])
+    Xi = ImmutableMatrix(X)
+    assert TensorProduct(Xi, Xi) == TensorProduct(X, X)
+    assert TensorProduct(Xi, Xi) == matrix_tensor_product(X, X)
+    assert TensorProduct(Xi, Xi) == matrix_kronecker_product(X, X)

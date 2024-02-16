@@ -1,10 +1,12 @@
 """Abstract tensor product."""
 
-from __future__ import print_function, division
-
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify
-from sympy.core.compatibility import range
-from sympy.core.trace import Tr
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import DenseMatrix as Matrix
+from sympy.matrices.immutable import ImmutableDenseMatrix as ImmutableMatrix
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -17,6 +19,7 @@ from sympy.physics.quantum.matrixutils import (
     scipy_sparse_matrix,
     matrix_tensor_product
 )
+from sympy.physics.quantum.trace import Tr
 
 
 __all__ = [
@@ -70,9 +73,9 @@ class TensorProduct(Expr):
     Examples
     ========
 
-    Start with a simple tensor product of sympy matrices::
+    Start with a simple tensor product of SymPy matrices::
 
-        >>> from sympy import I, Matrix, symbols
+        >>> from sympy import Matrix
         >>> from sympy.physics.quantum import TensorProduct
 
         >>> m1 = Matrix([[1,2],[3,4]])
@@ -118,7 +121,8 @@ class TensorProduct(Expr):
     is_commutative = False
 
     def __new__(cls, *args):
-        if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
+        if isinstance(args[0], (Matrix, ImmutableMatrix, numpy_ndarray,
+                                                    scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
         c_part, new_args = cls.flatten(sympify(args))
         c_part = Mul(*c_part)
@@ -144,19 +148,16 @@ class TensorProduct(Expr):
     def _eval_adjoint(self):
         return TensorProduct(*[Dagger(i) for i in self.args])
 
-    def _eval_rewrite(self, pattern, rule, **hints):
-        sargs = self.args
-        terms = [t._eval_rewrite(pattern, rule, **hints) for t in sargs]
-        return TensorProduct(*terms).expand(tensorproduct=True)
+    def _eval_rewrite(self, rule, args, **hints):
+        return TensorProduct(*args).expand(tensorproduct=True)
 
     def _sympystr(self, printer, *args):
-        from sympy.printing.str import sstr
         length = len(self.args)
         s = ''
         for i in range(length):
             if isinstance(self.args[i], (Add, Pow, Mul)):
                 s = s + '('
-            s = s + sstr(self.args[i])
+            s = s + printer._print(self.args[i])
             if isinstance(self.args[i], (Add, Pow, Mul)):
                 s = s + ')'
             if i != length - 1:
@@ -166,8 +167,8 @@ class TensorProduct(Expr):
     def _pretty(self, printer, *args):
 
         if (_combined_printing and
-                (all([isinstance(arg, Ket) for arg in self.args]) or
-                 all([isinstance(arg, Bra) for arg in self.args]))):
+                (all(isinstance(arg, Ket) for arg in self.args) or
+                 all(isinstance(arg, Bra) for arg in self.args))):
 
             length = len(self.args)
             pform = printer._print('', *args)
@@ -202,7 +203,7 @@ class TensorProduct(Expr):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u'\N{N-ARY CIRCLED TIMES OPERATOR}' + u' '))
+                    pform = prettyForm(*pform.right('\N{N-ARY CIRCLED TIMES OPERATOR}' + ' '))
                 else:
                     pform = prettyForm(*pform.right('x' + ' '))
         return pform
@@ -210,8 +211,8 @@ class TensorProduct(Expr):
     def _latex(self, printer, *args):
 
         if (_combined_printing and
-                (all([isinstance(arg, Ket) for arg in self.args]) or
-                 all([isinstance(arg, Bra) for arg in self.args]))):
+                (all(isinstance(arg, Ket) for arg in self.args) or
+                 all(isinstance(arg, Bra) for arg in self.args))):
 
             def _label_wrap(label, nlabels):
                 return label if nlabels == 1 else r"\left\{%s\right\}" % label
@@ -243,14 +244,16 @@ class TensorProduct(Expr):
         """Distribute TensorProducts across addition."""
         args = self.args
         add_args = []
-        stop = False
         for i in range(len(args)):
             if isinstance(args[i], Add):
                 for aa in args[i].args:
                     tp = TensorProduct(*args[:i] + (aa,) + args[i + 1:])
-                    if isinstance(tp, TensorProduct):
-                        tp = tp._eval_expand_tensorproduct()
-                    add_args.append(tp)
+                    c_part, nc_part = tp.args_cnc()
+                    # Check for TensorProduct object: is the one object in nc_part, if any:
+                    # (Note: any other object type to be expanded must be added here)
+                    if len(nc_part) == 1 and isinstance(nc_part[0], TensorProduct):
+                        nc_part = (nc_part[0]._eval_expand_tensorproduct(), )
+                    add_args.append(Mul(*c_part)*Mul(*nc_part))
                 break
 
         if add_args:

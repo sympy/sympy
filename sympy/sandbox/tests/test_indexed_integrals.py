@@ -1,5 +1,7 @@
 from sympy.sandbox.indexed_integrals import IndexedIntegral
-from sympy import IndexedBase, Idx, symbols, sin, cos
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.tensor.indexed import (Idx, IndexedBase)
 
 
 def test_indexed_integrals():

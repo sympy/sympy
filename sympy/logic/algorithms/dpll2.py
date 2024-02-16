@@ -8,17 +8,17 @@ Features:
 References:
   - https://en.wikipedia.org/wiki/DPLL_algorithm
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 from heapq import heappush, heappop
 
-from sympy.core.compatibility import range
-from sympy import default_sort_key, ordered
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
+from sympy.core.sorting import ordered
+from sympy.assumptions.cnf import EncodedCNF
+
+from sympy.logic.algorithms.lra_theory import LRASolver
 
 
-def dpll_satisfiable(expr, all_models=False):
+def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds.
@@ -35,16 +35,23 @@ def dpll_satisfiable(expr, all_models=False):
     False
 
     """
-    clauses = conjuncts(to_cnf(expr))
-    if False in clauses:
+    if not isinstance(expr, EncodedCNF):
+        exprs = EncodedCNF()
+        exprs.add_prop(expr)
+        expr = exprs
+
+    # Return UNSAT when False (encoded as 0) is present in the CNF
+    if {0} in expr.data:
         if all_models:
             return (f for f in [False])
         return False
-    symbols = sorted(_find_predicates(expr), key=default_sort_key)
-    symbols_int_repr = range(1, len(symbols) + 1)
-    clauses_int_repr = to_int_repr(clauses, symbols)
 
-    solver = SATSolver(clauses_int_repr, symbols_int_repr, set(), symbols)
+    if use_lra_theory:
+        lra, immediate_conflicts = LRASolver.from_encoded_cnf(expr)
+    else:
+        lra = None
+        immediate_conflicts = []
+    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra)
     models = solver._find_model()
 
     if all_models:
@@ -72,7 +79,7 @@ def _all_models(models):
             yield False
 
 
-class SATSolver(object):
+class SATSolver:
     """
     Class for representing a SAT solver capable of
      finding a model to a boolean theory in conjunctive
@@ -80,7 +87,8 @@ class SATSolver(object):
     """
 
     def __init__(self, clauses, variables, var_settings, symbols=None,
-                heuristic='vsids', clause_learning='none', INTERVAL=500):
+                heuristic='vsids', clause_learning='none', INTERVAL=500,
+                 lra_theory = None):
 
         self.var_settings = var_settings
         self.heuristic = heuristic
@@ -112,8 +120,8 @@ class SATSolver(object):
 
         if 'simple' == clause_learning:
             self.add_learned_clause = self._simple_add_learned_clause
-            self.compute_conflict = self.simple_compute_conflict
-            self.update_functions.append(self.simple_clean_clauses)
+            self.compute_conflict = self._simple_compute_conflict
+            self.update_functions.append(self._simple_clean_clauses)
         elif 'none' == clause_learning:
             self.add_learned_clause = lambda x: None
             self.compute_conflict = lambda: None
@@ -129,6 +137,8 @@ class SATSolver(object):
         self.num_learned_clauses = 0
         self.original_num_clauses = len(self.clauses)
 
+        self.lra = lra_theory
+
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
         self.sentinels = defaultdict(set)
@@ -143,21 +153,19 @@ class SATSolver(object):
         - Non-unit clauses have their first and last literals set as sentinels.
         - The number of clauses a literal appears in is computed.
         """
-        self.clauses = []
-        for cls in clauses:
-            self.clauses.append(list(cls))
+        self.clauses = [list(clause) for clause in clauses]
 
-        for i in range(len(self.clauses)):
+        for i, clause in enumerate(self.clauses):
 
             # Handle the unit clauses
-            if 1 == len(self.clauses[i]):
-                self._unit_prop_queue.append(self.clauses[i][0])
+            if 1 == len(clause):
+                self._unit_prop_queue.append(clause[0])
                 continue
 
-            self.sentinels[self.clauses[i][0]].add(i)
-            self.sentinels[self.clauses[i][-1]].add(i)
+            self.sentinels[clause[0]].add(i)
+            self.sentinels[clause[-1]].add(i)
 
-            for lit in self.clauses[i]:
+            for lit in clause:
                 self.occurrence_count[lit] += 1
 
     def _find_model(self):
@@ -183,6 +191,7 @@ class SATSolver(object):
         ... {3, -2}], {1, 2, 3}, set(), [A, B, C])
         >>> list(l._find_model())
         [{A: True, B: False, C: False}, {A: True, B: True, C: True}]
+
         """
 
         # We use this variable to keep track of if we should flip a
@@ -213,8 +222,23 @@ class SATSolver(object):
 
                 # Stopping condition for a satisfying theory
                 if 0 == lit:
-                    yield dict((self.symbols[abs(lit) - 1],
-                                lit > 0) for lit in self.var_settings)
+
+                    # check if assignment satisfies lra theory
+                    if self.lra:
+                        for enc_var in self.var_settings:
+                            res = self.lra.assert_lit(enc_var)
+                            if res is not None:
+                                break
+                        res = self.lra.check()
+                        self.lra.reset_bounds()
+                    else:
+                        res = None
+                    if res is None or res[0]:
+                        yield {self.symbols[abs(lit) - 1]:
+                                    lit > 0 for lit in self.var_settings}
+                    else:
+                        self._simple_add_learned_clause(res[1])
+
                     while self._current_level.flipped:
                         self._undo()
                     if len(self.levels) == 1:
@@ -276,6 +300,7 @@ class SATSolver(object):
         False
         >>> l._current_level.var_settings
         {1, 2}
+
         """
         return self.levels[-1]
 
@@ -295,6 +320,7 @@ class SATSolver(object):
         False
         >>> l._clause_sat(1)
         True
+
         """
         for lit in self.clauses[cls]:
             if lit in self.var_settings:
@@ -316,6 +342,7 @@ class SATSolver(object):
         True
         >>> l._is_sentinel(-3, 1)
         False
+
         """
         return cls in self.sentinels[lit]
 
@@ -348,6 +375,7 @@ class SATSolver(object):
         ...     pass
         >>> l.var_settings
         {-1}
+
         """
         self.var_settings.add(lit)
         self._current_level.var_settings.add(lit)
@@ -392,6 +420,7 @@ class SATSolver(object):
         >>> level = l._current_level
         >>> level.decision, level.var_settings, level.flipped
         (0, {1}, False)
+
         """
         # Undo the variable settings
         for lit in self._current_level.var_settings:
@@ -431,6 +460,7 @@ class SATSolver(object):
         >>> l.sentinels
         {-3: {0, 2}, -2: {3, 4}, -1: set(), 2: {0, 3},
         ...3: {2, 4}}
+
         """
         changed = True
         while changed:
@@ -487,6 +517,7 @@ class SATSolver(object):
 
         >>> l.lit_scores
         {-3: -1.0, -2: -1.0, -1: 0.0, 1: 0.0, 2: -1.0, 3: -1.0}
+
         """
         # We divide every literal score by 2 for a decay factor
         #  Note: This doesn't change the heap property
@@ -512,6 +543,7 @@ class SATSolver(object):
 
         >>> l.lit_heap
         [(-2.0, -2), (-2.0, 2), (0.0, -1), (0.0, 1), (-2.0, 3)]
+
         """
         if len(self.lit_heap) == 0:
             return 0
@@ -545,6 +577,7 @@ class SATSolver(object):
         >>> l.lit_heap
         [(-2.0, -3), (-2.0, -2), (-2.0, -2), (-2.0, 2), (-2.0, 3), (0.0, -1),
         ...(-2.0, 2), (0.0, 1)]
+
         """
         var = abs(lit)
         heappush(self.lit_heap, (self.lit_scores[var], var))
@@ -571,6 +604,7 @@ class SATSolver(object):
         1
         >>> l.lit_scores
         {-3: -1.0, -2: -2.0, -1: 0.0, 1: 0.0, 2: -1.0, 3: -2.0}
+
         """
         self.num_learned_clauses += 1
         for lit in cls:
@@ -602,6 +636,7 @@ class SATSolver(object):
         [[2, -3], [1], [3, -3], [2, -2], [3, -2], [3]]
         >>> l.sentinels
         {-3: {0, 2}, -2: {3, 4}, 2: {0, 3}, 3: {2, 4, 5}}
+
         """
         cls_num = len(self.clauses)
         self.clauses.append(cls)
@@ -628,6 +663,7 @@ class SATSolver(object):
         {1: True, 2: False, 3: False}
         >>> l._simple_compute_conflict()
         [3]
+
         """
         return [-(level.decision) for level in self.levels[1:]]
 
@@ -636,7 +672,7 @@ class SATSolver(object):
         pass
 
 
-class Level(object):
+class Level:
     """
     Represents a single level in the DPLL algorithm, and contains
     enough information for a sound backtracking procedure.

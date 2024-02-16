@@ -12,7 +12,7 @@ if not scipy:
     #bin/test will not execute any tests now
     disabled = True
 
-from sympy import jn_zeros
+from sympy.functions.special.bessel import jn_zeros
 
 
 def eq(a, b, tol=1e-6):

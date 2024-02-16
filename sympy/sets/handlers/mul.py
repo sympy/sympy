@@ -1,29 +1,32 @@
-from sympy.multipledispatch import dispatch, Dispatcher
-from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import Min, Max, Set, sympify, Lambda, symbols, exp, log, S, oo
-from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-    ProductSet, EmptySet, Intersection)
-from sympy.core.function import FunctionClass
-from sympy.logic.boolalg import And, Or, Not, true, false
+from sympy.core import Basic, Expr
+from sympy.core.numbers import oo
+from sympy.core.symbol import symbols
+from sympy.multipledispatch import Dispatcher
+from sympy.sets.setexpr import set_mul
+from sympy.sets.sets import Interval, Set
 
 
 _x, _y = symbols("x y")
 
 
-@dispatch(Basic, Basic)
-def _set_mul(x, y):
+_set_mul = Dispatcher('_set_mul')
+_set_div = Dispatcher('_set_div')
+
+
+@_set_mul.register(Basic, Basic)
+def _(x, y):
     return None
 
-@dispatch(Set, Set)
-def _set_mul(x, y):
+@_set_mul.register(Set, Set)
+def _(x, y):
     return None
 
-@dispatch(Expr, Expr)
-def _set_mul(x, y):
+@_set_mul.register(Expr, Expr)
+def _(x, y):
     return x*y
 
-@dispatch(Interval, Interval)
-def _set_mul(x, y):
+@_set_mul.register(Interval, Interval)
+def _(x, y):
     """
     Multiplications in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -44,29 +47,25 @@ def _set_mul(x, y):
         minopen,
         maxopen
     )
-    return SetExpr(Interval(start, end))
 
-
-@dispatch(Basic, Basic)
-def _set_div(x, y):
+@_set_div.register(Basic, Basic)
+def _(x, y):
     return None
 
-@dispatch(Expr, Expr)
-def _set_div(x, y):
+@_set_div.register(Expr, Expr)
+def _(x, y):
     return x/y
 
-@dispatch(Set, Set)
-def _set_div(x, y):
+@_set_div.register(Set, Set)
+def _(x, y):
     return None
 
-@dispatch(Interval, Interval)
-def _set_div(x, y):
+@_set_div.register(Interval, Interval)
+def _(x, y):
     """
     Divisions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
-    from sympy.sets.setexpr import set_mul
-    from sympy import oo
     if (y.start*y.end).is_negative:
         return Interval(-oo, oo)
     if y.start == 0:

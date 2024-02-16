@@ -1,15 +1,15 @@
 """Basic tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
-from __future__ import print_function, division
 
 from sympy.core import igcd
-from sympy import oo
-
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key
-from sympy.core.compatibility import range
 
 import random
+
+
+ninf = float('-inf')
+
 
 def poly_LC(f, K):
     """
@@ -138,7 +138,7 @@ def dup_degree(f):
     """
     Return the leading degree of ``f`` in ``K[x]``.
 
-    Note that the degree of 0 is negative infinity (the SymPy object -oo).
+    Note that the degree of 0 is negative infinity (``float('-inf')``).
 
     Examples
     ========
@@ -153,7 +153,7 @@ def dup_degree(f):
 
     """
     if not f:
-        return -oo
+        return ninf
     return len(f) - 1
 
 
@@ -161,7 +161,7 @@ def dmp_degree(f, u):
     """
     Return the leading degree of ``f`` in ``x_0`` in ``K[X]``.
 
-    Note that the degree of 0 is negative infinity (the SymPy object -oo).
+    Note that the degree of 0 is negative infinity (``float('-inf')``).
 
     Examples
     ========
@@ -170,7 +170,7 @@ def dmp_degree(f, u):
     >>> from sympy.polys.densebasic import dmp_degree
 
     >>> dmp_degree([[[]]], 2)
-    -oo
+    -inf
 
     >>> f = ZZ.map([[2], [1, 2, 3]])
 
@@ -179,7 +179,7 @@ def dmp_degree(f, u):
 
     """
     if dmp_zero_p(f, u):
-        return -oo
+        return ninf
     else:
         return len(f) - 1
 
@@ -247,7 +247,7 @@ def dmp_degree_list(f, u):
     (1, 2)
 
     """
-    degs = [-oo]*(u + 1)
+    degs = [ninf]*(u + 1)
     _rec_degree_list(f, u, 0, degs)
     return tuple(degs)
 
@@ -314,15 +314,15 @@ def dmp_strip(f, u):
 
 def _rec_validate(f, g, i, K):
     """Recursive helper for :func:`dmp_validate`."""
-    if type(g) is not list:
+    if not isinstance(g, list):
         if K is not None and not K.of_type(g):
             raise TypeError("%s in %s in not of type %s" % (g, f, K.dtype))
 
-        return set([i - 1])
+        return {i - 1}
     elif not g:
-        return set([i])
+        return {i}
     else:
-        j, levels = i + 1, set([])
+        levels = set()
 
         for c in g:
             levels |= _rec_validate(f, c, i + 1, K)
@@ -487,7 +487,7 @@ def dup_normal(f, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_normal
 
-    >>> dup_normal([0, 1.5, 2, 3], ZZ)
+    >>> dup_normal([0, 1, 2, 3], ZZ)
     [1, 2, 3]
 
     """
@@ -504,7 +504,7 @@ def dmp_normal(f, u, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_normal
 
-    >>> dmp_normal([[], [0, 1.5, 2]], 1, ZZ)
+    >>> dmp_normal([[], [0, 1, 2]], 1, ZZ)
     [[1, 2]]
 
     """
@@ -688,7 +688,7 @@ def dmp_ground_nth(f, N, u, K):
             return K.zero
         else:
             d = dmp_degree(f, v)
-            if d == -oo:
+            if d == ninf:
                 d = -1
             f, v = f[d - n], v - 1
 
@@ -938,7 +938,7 @@ def dup_from_dict(f, K):
 
     n, h = max(f.keys()), []
 
-    if type(n) is int:
+    if isinstance(n, int):
         for k in range(n, -1, -1):
             h.append(f.get(k, K.zero))
     else:
@@ -1094,7 +1094,7 @@ def dmp_to_dict(f, u, K=None, zero=False):
 
     n, v, result = dmp_degree(f, u), u - 1, {}
 
-    if n == -oo:
+    if n == ninf:
         n = -1
 
     for k in range(0, n + 1):

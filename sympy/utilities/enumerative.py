@@ -1,6 +1,3 @@
-from __future__ import print_function, division
-from sympy.core.compatibility import range
-
 """
 Algorithms and classes to support enumerative combinatorics.
 
@@ -92,7 +89,7 @@ time that would be spent skipping over zeros.
 
 """
 
-class PartComponent(object):
+class PartComponent:
     """Internal class used in support of the multiset partitions
     enumerators and the associated visitor functions.
 
@@ -160,7 +157,7 @@ def multiset_partitions_taocp(multiplicities):
 
     state
         Internal data structure which encodes a particular partition.
-        This output is then usually processed by a vistor function
+        This output is then usually processed by a visitor function
         which combines the information from this data structure with
         the components themselves to produce an actual partition.
 
@@ -381,11 +378,6 @@ class MultisetPartitionTraverser():
     data structures which can be interpreted by the same visitor
     functions used for the output of ``multiset_partitions_taocp``.
 
-    See Also
-    ========
-    multiset_partitions_taocp
-    sympy.utilities.iterables.multiset_partititions
-
     Examples
     ========
 
@@ -395,6 +387,12 @@ class MultisetPartitionTraverser():
     127750
     >>> m.count_partitions([3,3,3])
     686
+
+    See Also
+    ========
+
+    multiset_partitions_taocp
+    sympy.utilities.iterables.multiset_partitions
 
     References
     ==========
@@ -421,16 +419,36 @@ class MultisetPartitionTraverser():
         self.k1 = 0
         self.k2 = 0
         self.p1 = 0
+        self.pstack = None
+        self.f = None
+        self.lpart = 0
+        self.discarded = 0
+        # dp_stack is list of lists of (part_key, start_count) pairs
+        self.dp_stack = []
+
+        # dp_map is map part_key-> count, where count represents the
+        # number of multiset which are descendants of a part with this
+        # key, **or any of its decrements**
+
+        # Thus, when we find a part in the map, we add its count
+        # value to the running total, cut off the enumeration, and
+        # backtrack
+
+        if not hasattr(self, 'dp_map'):
+            self.dp_map = {}
 
     def db_trace(self, msg):
-        """Useful for usderstanding/debugging the algorithms.  Not
+        """Useful for understanding/debugging the algorithms.  Not
         generally activated in end-user code."""
         if self.debug:
-            letters = 'abcdefghijklmnopqrstuvwxyz'
-            state = [self.f, self.lpart, self.pstack]
-            print("DBG:", msg,
-                  ["".join(part) for part in list_visitor(state, letters)],
-                  animation_visitor(state))
+            # XXX: animation_visitor is undefined... Clearly this does not
+            # work and was not tested. Previous code in comments below.
+            raise RuntimeError
+            #letters = 'abcdefghijklmnopqrstuvwxyz'
+            #state = [self.f, self.lpart, self.pstack]
+            #print("DBG:", msg,
+            #      ["".join(part) for part in list_visitor(state, letters)],
+            #      animation_visitor(state))
 
     #
     # Helper methods for enumeration
@@ -485,7 +503,7 @@ class MultisetPartitionTraverser():
         """
         plen = len(part)
         for j in range(plen - 1, -1, -1):
-            if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
+            if j == 0 and part[j].v > 1 or j > 0 and part[j].v > 0:
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
@@ -520,7 +538,7 @@ class MultisetPartitionTraverser():
         decision is made to fail, it must be accurate, otherwise the
         enumeration will miss some partitions.  But, it is OK not to
         capture all the possible failures -- if a part is passed that
-        shouldn't be, the resulting too-large partitions are filtered
+        should not be, the resulting too-large partitions are filtered
         by the enumeration one level up.  However, as is usual in
         constrained enumerations, failing early is advantageous.
 
@@ -551,11 +569,11 @@ class MultisetPartitionTraverser():
         plen = len(part)
         for j in range(plen - 1, -1, -1):
             # Knuth's mod, (answer to problem 7.2.1.5.69)
-            if (j == 0) and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
+            if j == 0 and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
                 self.k1 += 1
                 return False
 
-            if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
+            if j == 0 and part[j].v > 1 or j > 0 and part[j].v > 0:
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
@@ -567,7 +585,7 @@ class MultisetPartitionTraverser():
                 # that turns out to be surprisingly common - exactly
                 # enough room to expand the leading component, but no
                 # room for the second component, which has v=0.
-                if (plen > 1 and (part[1].v == 0) and
+                if (plen > 1 and part[1].v == 0 and
                     (part[0].u - part[0].v) ==
                         ((ub - self.lpart - 1) * part[0].v)):
                     self.k2 += 1
@@ -606,7 +624,7 @@ class MultisetPartitionTraverser():
         """
 
         if amt == 1:
-            # In this case we always need to increment, *before*
+            # In this case we always need to decrement, *before*
             # enforcing the "sufficient unallocated multiplicity"
             # constraint.  Easiest for this is just to call the
             # regular decrement method.
@@ -650,7 +668,7 @@ class MultisetPartitionTraverser():
         Parameters
         ==========
 
-         part
+        part
             part to be decremented (topmost part on the stack)
 
         ub
@@ -753,10 +771,10 @@ class MultisetPartitionTraverser():
         [['a'], ['a'], ['b', 'b']],
         [['a'], ['a'], ['b'], ['b']]]
 
-        See also
+        See Also
         ========
 
-        multiset_partitions_taocp():
+        multiset_partitions_taocp:
             which provides the same result as this method, but is
             about twice as fast.  Hence, enum_all is primarily useful
             for testing.  Also see the function for a discussion of
@@ -784,10 +802,6 @@ class MultisetPartitionTraverser():
 
         Equivalent to enum_range(multiplicities, 0, ub)
 
-        See also
-        ========
-        enum_all, enum_large, enum_range
-
         Parameters
         ==========
 
@@ -814,6 +828,11 @@ class MultisetPartitionTraverser():
         The implementation is based, in part, on the answer given to
         exercise 69, in Knuth [AOCP]_.
 
+        See Also
+        ========
+
+        enum_all, enum_large, enum_range
+
         """
 
         # Keep track of iterations which do not yield a partition.
@@ -823,18 +842,15 @@ class MultisetPartitionTraverser():
             return
         self._initialize_enumeration(multiplicities)
         while True:
-            good_partition = True
             while self.spread_part_multiplicity():
-                self.db_trace("spread 1")
+                self.db_trace('spread 1')
                 if self.lpart >= ub:
                     self.discarded += 1
-                    good_partition = False
-                    self.db_trace("  Discarding")
+                    self.db_trace('  Discarding')
                     self.lpart = ub - 2
                     break
-
-            # M4  Visit a partition
-            if good_partition:
+            else:
+                # M4  Visit a partition
                 state = [self.f, self.lpart, self.pstack]
                 yield state
 
@@ -852,10 +868,6 @@ class MultisetPartitionTraverser():
         """Enumerate the partitions of a multiset with lb < num(parts)
 
         Equivalent to enum_range(multiplicities, lb, sum(multiplicities))
-
-        See also
-        ========
-        enum_all, enum_small, enum_range
 
         Parameters
         ==========
@@ -880,6 +892,11 @@ class MultisetPartitionTraverser():
         [['a', 'b'], ['a'], ['b']],
         [['a'], ['a'], ['b', 'b']],
         [['a'], ['a'], ['b'], ['b']]]
+
+        See Also
+        ========
+
+        enum_all, enum_small, enum_range
 
         """
         self.discarded = 0
@@ -1073,19 +1090,9 @@ class MultisetPartitionTraverser():
         """
         # number of partitions so far in the enumeration
         self.pcount = 0
+
         # dp_stack is list of lists of (part_key, start_count) pairs
         self.dp_stack = []
-
-        # dp_map is map part_key-> count, where count represents the
-        # number of multiset which are descendants of a part with this
-        # key, **or any of its decrements**
-
-        # Thus, when we find a part in the map, we add its count
-        # value to the running total, cut off the enumeration, and
-        # backtrack
-
-        if not hasattr(self, 'dp_map'):
-            self.dp_map = {}
 
         self._initialize_enumeration(multiplicities)
         pkey = part_key(self.top_part())

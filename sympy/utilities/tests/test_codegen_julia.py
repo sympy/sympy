@@ -1,14 +1,11 @@
-from sympy.core import (S, symbols, Eq, pi, Catalan, EulerGamma, Lambda,
-                        Dummy, Function)
-from sympy.core.compatibility import StringIO
-from sympy import erf, Integral, Piecewise
-from sympy import Equality
+from io import StringIO
+
+from sympy.core import S, symbols, Eq, pi, Catalan, EulerGamma, Function
+from sympy.core.relational import Equality
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.printing.codeprinter import Assignment
 from sympy.utilities.codegen import JuliaCodeGen, codegen, make_routine
-from sympy.utilities.pytest import raises
-from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 import sympy
 
 
@@ -30,7 +27,7 @@ def test_jl_simple_code():
     source = result[1]
     expected = (
         "function test(x, y, z)\n"
-        "    out1 = z.*(x + y)\n"
+        "    out1 = z .* (x + y)\n"
         "    return out1\n"
         "end\n"
     )
@@ -43,13 +40,13 @@ def test_jl_simple_code_with_header():
     assert result[0] == "test.jl"
     source = result[1]
     expected = (
-        "#   Code generated with sympy " + sympy.__version__ + "\n"
+        "#   Code generated with SymPy " + sympy.__version__ + "\n"
         "#\n"
         "#   See http://www.sympy.org/ for more information.\n"
         "#\n"
         "#   This file is part of 'project'\n"
         "function test(x, y, z)\n"
-        "    out1 = z.*(x + y)\n"
+        "    out1 = z .* (x + y)\n"
         "    return out1\n"
         "end\n"
     )
@@ -76,7 +73,7 @@ def test_jl_numbersymbol():
     source = result[1]
     expected = (
         "function test()\n"
-        "    out1 = pi^catalan\n"
+        "    out1 = pi ^ catalan\n"
         "    return out1\n"
         "end\n"
     )
@@ -94,7 +91,7 @@ def test_jl_numbersymbol_no_inline():
         "function test()\n"
         "    Catalan = 0.915965594177219\n"
         "    EulerGamma = 0.5772156649015329\n"
-        "    out1 = pi^Catalan\n"
+        "    out1 = pi ^ Catalan\n"
         "    out2 = EulerGamma\n"
         "    return out1, out2\n"
         "end\n"
@@ -127,8 +124,8 @@ def test_multiple_results_m():
     source = result[1]
     expected = (
         "function test(x, y, z)\n"
-        "    out1 = z.*(x + y)\n"
-        "    out2 = z.*(x - y)\n"
+        "    out1 = z .* (x + y)\n"
+        "    out2 = z .* (x - y)\n"
         "    return out1, out2\n"
         "end\n"
     )
@@ -146,9 +143,9 @@ def test_results_named_unordered():
     source = result[1]
     expected = (
         "function test(x, y, z)\n"
-        "    C = z.*(x + y)\n"
-        "    A = z.*(x - y)\n"
-        "    B = 2*x\n"
+        "    C = z .* (x + y)\n"
+        "    A = z .* (x - y)\n"
+        "    B = 2 * x\n"
         "    return C, A, B\n"
         "end\n"
     )
@@ -167,9 +164,9 @@ def test_results_named_ordered():
     source = result[0][1]
     expected = (
         "function test(x, z, y)\n"
-        "    C = z.*(x + y)\n"
-        "    A = z.*(x - y)\n"
-        "    B = 2*x\n"
+        "    C = z .* (x + y)\n"
+        "    A = z .* (x - y)\n"
+        "    B = 2 * x\n"
         "    return C, A, B\n"
         "end\n"
     )
@@ -177,7 +174,7 @@ def test_results_named_ordered():
 
 
 def test_complicated_jl_codegen():
-    from sympy import sin, cos, tan
+    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
     name_expr = ("testlong",
             [ ((sin(x) + cos(y) + tan(z))**3).expand(),
             cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))
@@ -187,9 +184,9 @@ def test_complicated_jl_codegen():
     source = result[0][1]
     expected = (
         "function testlong(x, y, z)\n"
-        "    out1 = sin(x).^3 + 3*sin(x).^2.*cos(y) + 3*sin(x).^2.*tan(z)"
-        " + 3*sin(x).*cos(y).^2 + 6*sin(x).*cos(y).*tan(z) + 3*sin(x).*tan(z).^2"
-        " + cos(y).^3 + 3*cos(y).^2.*tan(z) + 3*cos(y).*tan(z).^2 + tan(z).^3\n"
+        "    out1 = sin(x) .^ 3 + 3 * sin(x) .^ 2 .* cos(y) + 3 * sin(x) .^ 2 .* tan(z)"
+        " + 3 * sin(x) .* cos(y) .^ 2 + 6 * sin(x) .* cos(y) .* tan(z) + 3 * sin(x) .* tan(z) .^ 2"
+        " + cos(y) .^ 3 + 3 * cos(y) .^ 2 .* tan(z) + 3 * cos(y) .* tan(z) .^ 2 + tan(z) .^ 3\n"
         "    out2 = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))\n"
         "    return out1, out2\n"
         "end\n"
@@ -199,7 +196,7 @@ def test_complicated_jl_codegen():
 
 def test_jl_output_arg_mixed_unordered():
     # named outputs are alphabetical, unnamed output appear in the given order
-    from sympy import sin, cos, tan
+    from sympy.functions.elementary.trigonometric import (cos, sin)
     a = symbols("a")
     name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
     result, = codegen(name_expr, "Julia", header=False, empty=False)
@@ -207,10 +204,10 @@ def test_jl_output_arg_mixed_unordered():
     source = result[1];
     expected = (
         'function foo(x)\n'
-        '    out1 = cos(2*x)\n'
+        '    out1 = cos(2 * x)\n'
         '    y = sin(x)\n'
         '    out3 = cos(x)\n'
-        '    a = sin(2*x)\n'
+        '    a = sin(2 * x)\n'
         '    return out1, y, out3, a\n'
         'end\n'
     )
@@ -225,8 +222,8 @@ def test_jl_piecewise_():
     expected = (
         "function pwtest(x)\n"
         "    out1 = ((x < -1) ? (0) :\n"
-        "    (x <= 1) ? (x.^2) :\n"
-        "    (x > 1) ? (-x + 2) : (1))\n"
+        "    (x <= 1) ? (x .^ 2) :\n"
+        "    (x > 1) ? (2 - x) : (1))\n"
         "    return out1\n"
         "end\n"
     )
@@ -246,7 +243,7 @@ def test_jl_piecewise_no_inline():
         "    if (x < -1)\n"
         "        out1 = 0\n"
         "    elseif (x <= 1)\n"
-        "        out1 = x.^2\n"
+        "        out1 = x .^ 2\n"
         "    elseif (x > 1)\n"
         "        out1 = -x + 2\n"
         "    else\n"
@@ -265,13 +262,13 @@ def test_jl_multifcns_per_file():
     source = result[0][1];
     expected = (
         "function foo(x, y)\n"
-        "    out1 = 2*x\n"
-        "    out2 = 3*y\n"
+        "    out1 = 2 * x\n"
+        "    out2 = 3 * y\n"
         "    return out1, out2\n"
         "end\n"
         "function bar(y)\n"
-        "    out1 = y.^2\n"
-        "    out2 = 4*y\n"
+        "    out1 = y .^ 2\n"
+        "    out2 = 4 * y\n"
         "    return out1, out2\n"
         "end\n"
     )
@@ -284,19 +281,19 @@ def test_jl_multifcns_per_file_w_header():
     assert result[0][0] == "foo.jl"
     source = result[0][1];
     expected = (
-        "#   Code generated with sympy " + sympy.__version__ + "\n"
+        "#   Code generated with SymPy " + sympy.__version__ + "\n"
         "#\n"
         "#   See http://www.sympy.org/ for more information.\n"
         "#\n"
         "#   This file is part of 'project'\n"
         "function foo(x, y)\n"
-        "    out1 = 2*x\n"
-        "    out2 = 3*y\n"
+        "    out1 = 2 * x\n"
+        "    out2 = 3 * y\n"
         "    return out1, out2\n"
         "end\n"
         "function bar(y)\n"
-        "    out1 = y.^2\n"
-        "    out2 = 4*y\n"
+        "    out1 = y .^ 2\n"
+        "    out2 = 4 * y\n"
         "    return out1, out2\n"
         "end\n"
     )
@@ -318,7 +315,7 @@ def test_jl_matrix_named():
     source = result[0][1]
     expected = (
         "function test(x, y, z)\n"
-        "    myout1 = [x 2*y pi*z]\n"
+        "    myout1 = [x 2 * y pi * z]\n"
         "    return myout1\n"
         "end\n"
     )
@@ -333,7 +330,7 @@ def test_jl_matrix_named_matsym():
     source = result[1]
     expected = (
         "function test(x, y, z)\n"
-        "    myout1 = [x 2*y pi*z]\n"
+        "    myout1 = [x 2 * y pi * z]\n"
         "    return myout1\n"
         "end\n"
     )
@@ -365,7 +362,7 @@ def test_jl_matrix_output_autoname_2():
     expected = (
         "function test(x, y, z)\n"
         "    out1 = x + y\n"
-        "    out2 = [2*x 2*y 2*z]\n"
+        "    out2 = [2 * x 2 * y 2 * z]\n"
         "    out3 = [x, y, z]\n"
         "    out4 = [x  y;\n"
         "    z 16]\n"
@@ -387,9 +384,9 @@ def test_jl_results_matrix_named_ordered():
     source = result[1]
     expected = (
         "function test(x, z, y)\n"
-        "    C = z.*(x + y)\n"
+        "    C = z .* (x + y)\n"
         "    A = [1 2 x]\n"
-        "    B = 2*x\n"
+        "    B = 2 * x\n"
         "    return C, A, B\n"
         "end\n"
     )
@@ -477,7 +474,7 @@ def test_jl_loops():
     # and n.  Perhaps users would expect us to vectorize automatically here?
     # Or is it possible to represent such things using IndexedBase?
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -500,14 +497,14 @@ def test_jl_loops():
         '    return y\n'
         'end\n'
     )
-    assert (source == expected % {'rhs': 'A[%s,%s].*x[j]' % (i, j)} or
-            source == expected % {'rhs': 'x[j].*A[%s,%s]' % (i, j)})
+    assert (source == expected % {'rhs': 'A[%s,%s] .* x[j]' % (i, j)} or
+            source == expected % {'rhs': 'x[j] .* A[%s,%s]' % (i, j)})
 
 
 def test_jl_tensor_loops_multiple_contractions():
     # see comments in previous test about vectorizing
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A')
     B = IndexedBase('B')
@@ -528,7 +525,7 @@ def test_jl_tensor_loops_multiple_contractions():
         '        for j = 1:n\n'
         '            for k = 1:o\n'
         '                for l = 1:p\n'
-        '                    y[i] = A[i,j,k,l].*B[j,k,l] + y[i]\n'
+        '                    y[i] = A[i,j,k,l] .* B[j,k,l] + y[i]\n'
         '                end\n'
         '            end\n'
         '        end\n'
@@ -546,7 +543,7 @@ def test_jl_InOutArgument():
     source = result[1]
     expected = (
         "function mysqr(x)\n"
-        "    x = x.^2\n"
+        "    x = x .^ 2\n"
         "    return x\n"
         "end\n"
     )
@@ -562,7 +559,7 @@ def test_jl_InOutArgument_order():
     source = result[1]
     expected = (
         "function test(x, y)\n"
-        "    x = x.^2 + y\n"
+        "    x = x .^ 2 + y\n"
         "    return x\n"
         "end\n"
     )
@@ -574,7 +571,7 @@ def test_jl_InOutArgument_order():
     source = result[1]
     expected = (
         "function test(x, y)\n"
-        "    x = x.^2 + y\n"
+        "    x = x .^ 2 + y\n"
         "    return x\n"
         "end\n"
     )
@@ -605,7 +602,7 @@ def test_global_vars_octave():
     source = result[0][1]
     expected = (
         "function f(x)\n"
-        "    out1 = x.*y\n"
+        "    out1 = x .* y\n"
         "    return out1\n"
         "end\n"
         )
@@ -616,7 +613,7 @@ def test_global_vars_octave():
     source = result[0][1]
     expected = (
         "function f(x, y)\n"
-        "    out1 = x.*y + z\n"
+        "    out1 = x .* y + z\n"
         "    return out1\n"
         "end\n"
     )

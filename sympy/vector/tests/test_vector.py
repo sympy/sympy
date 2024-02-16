@@ -1,11 +1,17 @@
-from sympy.core import S
+from sympy.core import Rational, S
 from sympy.simplify import simplify, trigsimp
-from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
-     sin, cos, Function, Integral, Derivative, diff
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Cross, Dot, dot, cross
+from sympy.vector.vector import Cross, Dot, cross
+from sympy.testing.pytest import raises
 
 C = CoordSys3D('C')
 
@@ -101,6 +107,8 @@ def test_vector():
     assert VectorMul(1, i) == i
     assert VectorAdd(v1, Vector.zero) == v1
     assert VectorMul(0, Vector.zero) == Vector.zero
+    raises(TypeError, lambda: v1.outer(1))
+    raises(TypeError, lambda: v1.dot(1))
 
 
 def test_vector_magnitude_normalize():
@@ -180,6 +188,8 @@ def test_vector_dot():
     assert k & j == 0
     assert k & k == 1
 
+    raises(TypeError, lambda: k.dot(1))
+
 
 def test_vector_cross():
     assert i.cross(Vector.zero) == Vector.zero
@@ -206,16 +216,19 @@ def test_vector_cross():
     assert k ^ j == -i
     assert k ^ k == Vector.zero
 
+    assert k.cross(1) == Cross(k, 1)
+
 
 def test_projection():
     v1 = i + j + k
     v2 = 3*i + 4*j
     v3 = 0*i + 0*j
     assert v1.projection(v1) == i + j + k
-    assert v1.projection(v2) == S(7)/3*C.i + S(7)/3*C.j + S(7)/3*C.k
-    assert v1.projection(v1, scalar=True) == 1
-    assert v1.projection(v2, scalar=True) == S(7)/3
+    assert v1.projection(v2) == Rational(7, 3)*C.i + Rational(7, 3)*C.j + Rational(7, 3)*C.k
+    assert v1.projection(v1, scalar=True) == S.One
+    assert v1.projection(v2, scalar=True) == Rational(7, 3)
     assert v3.projection(v1) == Vector.zero
+    assert v3.projection(v1, scalar=True) == S.Zero
 
 
 def test_vector_diff_integrate():
@@ -227,3 +240,27 @@ def test_vector_diff_integrate():
             (Derivative(f(a), a))*C.i + 2*a*C.j)
     assert (Integral(v, a) == (Integral(f(a), a))*C.i +
             (Integral(a**2, a))*C.j + (Integral(-1, a))*C.k)
+
+
+def test_vector_args():
+    raises(ValueError, lambda: BaseVector(3, C))
+    raises(TypeError, lambda: BaseVector(0, Vector.zero))
+
+
+def test_srepr():
+    from sympy.printing.repr import srepr
+    res = "CoordSys3D(Str('C'), Tuple(ImmutableDenseMatrix([[Integer(1), "\
+            "Integer(0), Integer(0)], [Integer(0), Integer(1), Integer(0)], "\
+            "[Integer(0), Integer(0), Integer(1)]]), VectorZero())).i"
+    assert srepr(C.i) == res
+
+
+def test_scalar():
+    from sympy.vector import CoordSys3D
+    C = CoordSys3D('C')
+    v1 = 3*C.i + 4*C.j + 5*C.k
+    v2 = 3*C.i - 4*C.j + 5*C.k
+    assert v1.is_Vector is True
+    assert v1.is_scalar is False
+    assert (v1.dot(v2)).is_scalar is True
+    assert (v1.cross(v2)).is_scalar is False

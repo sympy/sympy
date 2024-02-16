@@ -1,6 +1,16 @@
-from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
-    count_ops, S, And, I, pi, Eq, Or, Not, Xor, Nand, Nor, Implies, \
-    Equivalent, MatrixSymbol, Symbol, ITE, Rel
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import (Derivative, Function, count_ops)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import (Eq, Rel)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Equivalent, ITE, Implies, Nand,
+    Nor, Not, Or, Xor)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.core.containers import Tuple
 
 x, y, z = symbols('x,y,z')
@@ -30,8 +40,8 @@ def test_count_ops_non_visual():
 
 
 def test_count_ops_visual():
-    ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
-        'Add Mul Pow sin cos exp And Derivative Integral'.upper())
+    ADD, MUL, POW, SIN, COS, EXP, AND, D, G, M = symbols(
+        'Add Mul Pow sin cos exp And Derivative Integral Sum'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
     LT, LE, GT, GE, EQ, NE = symbols('LT LE GT GE EQ NE')
     NOT, OR, AND, XOR, IMPLIES, EQUIVALENT, _ITE, BASIC, TUPLE = symbols(
@@ -45,6 +55,7 @@ def test_count_ops_visual():
     assert count(-1) == NEG
     assert count(-2) == NEG
     assert count(S(2)/3) == DIV
+    assert count(Rational(2, 3)) == DIV
     assert count(pi/3) == DIV
     assert count(-pi/3) == DIV + NEG
     assert count(I - 1) == SUB
@@ -54,6 +65,7 @@ def test_count_ops_visual():
     assert count(x) is S.Zero
     assert count(-x) == NEG
     assert count(-2*x/3) == NEG + DIV + MUL
+    assert count(Rational(-2, 3)*x) == NEG + DIV + MUL
     assert count(1/x) == DIV
     assert count(1/(x*y)) == DIV + MUL
     assert count(-1/x) == NEG + DIV
@@ -66,7 +78,8 @@ def test_count_ops_visual():
     assert count(-2*x**2) == POW + MUL + NEG
 
     assert count(x + pi/3) == ADD + DIV
-    assert count(x + S(1)/3) == ADD + DIV
+    assert count(x + S.One/3) == ADD + DIV
+    assert count(x + Rational(1, 3)) == ADD + DIV
     assert count(x + y) == ADD
     assert count(x - y) == SUB
     assert count(y - x) == SUB
@@ -85,6 +98,7 @@ def test_count_ops_visual():
 
     assert count(Derivative(x, x)) == D
     assert count(Integral(x, x) + 2*x/(1 + x)) == G + DIV + MUL + 2*ADD
+    assert count(Sum(x, (x, 1, x + 1)) + 2*x/(1 + x)) == M + DIV + MUL + 3*ADD
     assert count(Basic()) is S.Zero
 
     assert count({x + 1: sin(x)}) == ADD + SIN
@@ -131,3 +145,11 @@ def test_issue_9324():
     n = Symbol('n', integer=True)
     M = MatrixSymbol('M', m + n, m * m)
     assert count(M[0, 1]) == 2
+
+
+def test_issue_21532():
+    f = Function('f')
+    g = Function('g')
+    FUNC_F, FUNC_G = symbols('FUNC_F, FUNC_G')
+    assert f(x).count_ops(visual=True) == FUNC_F
+    assert g(x).count_ops(visual=True) == FUNC_G

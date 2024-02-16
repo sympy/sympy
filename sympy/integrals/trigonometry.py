@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
-from sympy.functions import binomial, sin, cos, Piecewise
+from sympy.functions import binomial, sin, cos, Piecewise, Abs
+from .integrals import integrate
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
@@ -17,7 +13,7 @@ from sympy.functions import binomial, sin, cos, Piecewise
 # need to use a function instead of lamda since hash of lambda changes on
 # each call to _pat_sincos
 def _integer_instance(n):
-    return isinstance(n , Integer)
+    return isinstance(n, Integer)
 
 @cacheit
 def _pat_sincos(x):
@@ -31,25 +27,32 @@ _u = Dummy('u')
 
 
 def trigintegrate(f, x, conds='piecewise'):
-    """Integrate f = Mul(trig) over x
+    """
+    Integrate f = Mul(trig) over x.
 
-       >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
-       >>> from sympy.integrals.trigonometry import trigintegrate
-       >>> from sympy.abc import x
+    Examples
+    ========
 
-       >>> trigintegrate(sin(x)*cos(x), x)
-       sin(x)**2/2
+    >>> from sympy import sin, cos, tan, sec
+    >>> from sympy.integrals.trigonometry import trigintegrate
+    >>> from sympy.abc import x
 
-       >>> trigintegrate(sin(x)**2, x)
-       x/2 - sin(x)*cos(x)/2
+    >>> trigintegrate(sin(x)*cos(x), x)
+    sin(x)**2/2
 
-       >>> trigintegrate(tan(x)*sec(x), x)
-       1/cos(x)
+    >>> trigintegrate(sin(x)**2, x)
+    x/2 - sin(x)*cos(x)/2
 
-       >>> trigintegrate(sin(x)*tan(x), x)
-       -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
+    >>> trigintegrate(tan(x)*sec(x), x)
+    1/cos(x)
 
-       http://en.wikibooks.org/wiki/Calculus/Integration_techniques
+    >>> trigintegrate(sin(x)*tan(x), x)
+    -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
+
+    References
+    ==========
+
+    .. [1] https://en.wikibooks.org/wiki/Calculus/Integration_techniques
 
     See Also
     ========
@@ -57,7 +60,6 @@ def trigintegrate(f, x, conds='piecewise'):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-    from sympy.integrals.integrals import integrate
     pat, a, n, m = _pat_sincos(x)
 
     f = f.rewrite('sincos')
@@ -67,9 +69,9 @@ def trigintegrate(f, x, conds='piecewise'):
         return
 
     n, m = M[n], M[m]
-    if n is S.Zero and m is S.Zero:
+    if n.is_zero and m.is_zero:
         return x
-    zz = x if n is S.Zero else S.Zero
+    zz = x if n.is_zero else S.Zero
 
     a = M[a]
 
@@ -132,8 +134,8 @@ def trigintegrate(f, x, conds='piecewise'):
     # then S   is integrated with recursive formula
 
     # take largest n or m -- to choose simplest substitution
-    n_ = (abs(n) > abs(m))
-    m_ = (abs(m) > abs(n))
+    n_ = (Abs(n) > Abs(m))
+    m_ = (Abs(m) > Abs(n))
     res = S.Zero
 
     if n_:
@@ -141,7 +143,7 @@ def trigintegrate(f, x, conds='piecewise'):
         # C   = (1 - S )  = sum(i, (-) * B(k, i) * S  )
         if m > 0:
             for i in range(0, m//2 + 1):
-                res += ((-1)**i * binomial(m//2, i) *
+                res += (S.NegativeOne**i * binomial(m//2, i) *
                         _sin_pow_integrate(n + 2*i, x))
 
         elif m == 0:
@@ -187,7 +189,7 @@ def trigintegrate(f, x, conds='piecewise'):
             #
 
             for i in range(0, n//2 + 1):
-                res += ((-1)**i * binomial(n//2, i) *
+                res += (S.NegativeOne**i * binomial(n//2, i) *
                         _cos_pow_integrate(m + 2*i, x))
 
         elif n == 0:
@@ -227,12 +229,12 @@ def trigintegrate(f, x, conds='piecewise'):
     else:
         if m == n:
             ##Substitute sin(2x)/2 for sin(x)cos(x) and then Integrate.
-            res = integrate((Rational(1, 2)*sin(2*x))**m, x)
+            res = integrate((sin(2*x)*S.Half)**m, x)
         elif (m == -n):
             if n < 0:
                 # Same as the scheme described above.
                 # the function argument to integrate in the end will
-                # be 1 , this cannot be integrated by trigintegrate.
+                # be 1, this cannot be integrated by trigintegrate.
                 # Hence use sympy.integrals.integrate.
                 res = (Rational(1, n + 1) * cos(x)**(m - 1) * sin(x)**(n + 1) +
                        Rational(m - 1, n + 1) *

@@ -1,12 +1,19 @@
+from __future__ import annotations
+from itertools import product
+
+from sympy.core.add import Add
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, sympify
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.compatibility import range, default_sort_key
-from sympy import sqrt, ImmutableMatrix as Matrix, Add
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.vector.basisdependent import (BasisDependentZero,
+    BasisDependent, BasisDependentMul, BasisDependentAdd)
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
-                                         BasisDependentMul, BasisDependentZero)
-from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
+from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
 
 
 class Vector(BasisDependent):
@@ -16,8 +23,16 @@ class Vector(BasisDependent):
     instantiated by the user.
     """
 
+    is_scalar = False
     is_Vector = True
     _op_priority = 12.0
+
+    _expr_type: type[Vector]
+    _mul_func: type[Vector]
+    _add_func: type[Vector]
+    _zero_func: type[Vector]
+    _base_func: type[Vector]
+    zero: VectorZero
 
     @property
     def components(self):
@@ -56,7 +71,7 @@ class Vector(BasisDependent):
         """
         Returns the dot product of this Vector, either with another
         Vector, or a Dyadic, or a Del operator.
-        If 'other' is a Vector, returns the dot product scalar (Sympy
+        If 'other' is a Vector, returns the dot product scalar (SymPy
         expression).
         If 'other' is a Dyadic, the dot product is returned as a Vector.
         If 'other' is an instance of Del, returns the directional
@@ -101,7 +116,7 @@ class Vector(BasisDependent):
                 outvec += vect_dot * v * k.args[1]
             return outvec
         from sympy.vector.deloperator import Del
-        if not isinstance(other, Vector) and not isinstance(other, Del):
+        if not isinstance(other, (Del, Vector)):
             raise TypeError(str(other) + " is not a vector, dyadic or " +
                             "del operator")
 
@@ -199,10 +214,8 @@ class Vector(BasisDependent):
 
         # Iterate over components of both the vectors to generate
         # the required Dyadic instance
-        args = []
-        for k1, v1 in self.components.items():
-            for k2, v2 in other.components.items():
-                args.append((v1 * v2) * BaseDyadic(k1, k2))
+        args = [(v1 * v2) * BaseDyadic(k1, k2) for (k1, v1), (k2, v2)
+                in product(self.components.items(), other.components.items())]
 
         return DyadicAdd(*args)
 
@@ -214,7 +227,6 @@ class Vector(BasisDependent):
         ========
 
         >>> from sympy.vector.coordsysrect import CoordSys3D
-        >>> from sympy.vector.vector import Vector, BaseVector
         >>> C = CoordSys3D('C')
         >>> i, j, k = C.base_vectors()
         >>> v1 = i + j + k
@@ -226,7 +238,7 @@ class Vector(BasisDependent):
 
         """
         if self.equals(Vector.zero):
-            return S.zero if scalar else Vector.zero
+            return S.Zero if scalar else Vector.zero
 
         if scalar:
             return self.dot(other) / self.dot(self)
@@ -255,10 +267,10 @@ class Vector(BasisDependent):
         (0, 0, 0)
         """
 
-        from sympy.vector.operators import _get_coord_sys_from_expr
+        from sympy.vector.operators import _get_coord_systems
         if isinstance(self, VectorZero):
-            return (S(0), S(0), S(0))
-        base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
+            return (S.Zero, S.Zero, S.Zero)
+        base_vec = next(iter(_get_coord_systems(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])
 
     def __or__(self, other):
@@ -321,20 +333,29 @@ class Vector(BasisDependent):
                                   vect * measure)
         return parts
 
+    def _div_helper(one, other):
+        """ Helper for division involving vectors. """
+        if isinstance(one, Vector) and isinstance(other, Vector):
+            raise TypeError("Cannot divide two vectors")
+        elif isinstance(one, Vector):
+            if other == S.Zero:
+                raise ValueError("Cannot divide a vector by zero")
+            return VectorMul(one, Pow(other, S.NegativeOne))
+        else:
+            raise TypeError("Invalid division involving a vector")
+
 
 class BaseVector(Vector, AtomicExpr):
     """
     Class to denote a base vector.
 
-    Unicode pretty forms in Python 2 should use the prefix ``u``.
-
     """
 
     def __new__(cls, index, system, pretty_str=None, latex_str=None):
         if pretty_str is None:
-            pretty_str = "x{0}".format(index)
+            pretty_str = "x{}".format(index)
         if latex_str is None:
-            latex_str = "x_{0}".format(index)
+            latex_str = "x_{}".format(index)
         pretty_str = str(pretty_str)
         latex_str = str(latex_str)
         # Verify arguments
@@ -344,16 +365,17 @@ class BaseVector(Vector, AtomicExpr):
             raise TypeError("system should be a CoordSys3D")
         name = system._vector_names[index]
         # Initialize an object
-        obj = super(BaseVector, cls).__new__(cls, S(index), system)
+        obj = super().__new__(cls, S(index), system)
         # Assign important attributes
         obj._base_instance = obj
-        obj._components = {obj: S(1)}
-        obj._measure_number = S(1)
+        obj._components = {obj: S.One}
+        obj._measure_number = S.One
         obj._name = system._name + '.' + name
-        obj._pretty_form = u'' + pretty_str
+        obj._pretty_form = '' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
-
+        # The _id is used for printing purposes
+        obj._id = (index, system)
         assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
 
@@ -368,15 +390,16 @@ class BaseVector(Vector, AtomicExpr):
     def system(self):
         return self._system
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
+
+    def _sympyrepr(self, printer):
+        index, system = self._id
+        return printer._print(system) + '.' + system._vector_names[index]
 
     @property
     def free_symbols(self):
         return {self}
-
-    __repr__ = __str__
-    _sympystr = __str__
 
 
 class VectorAdd(BasisDependentAdd, Vector):
@@ -388,7 +411,7 @@ class VectorAdd(BasisDependentAdd, Vector):
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         ret_str = ''
         items = list(self.separate().items())
         items.sort(key=lambda x: x[0].__str__())
@@ -397,11 +420,8 @@ class VectorAdd(BasisDependentAdd, Vector):
             for x in base_vects:
                 if x in vect.components:
                     temp_vect = self.components[x] * x
-                    ret_str += temp_vect.__str__(printer) + " + "
+                    ret_str += printer._print(temp_vect) + " + "
         return ret_str[:-3]
-
-    __repr__ = __str__
-    _sympystr = __str__
 
 
 class VectorMul(BasisDependentMul, Vector):
@@ -432,7 +452,7 @@ class VectorZero(BasisDependentZero, Vector):
     """
 
     _op_priority = 12.1
-    _pretty_form = u'0'
+    _pretty_form = '0'
     _latex_form = r'\mathbf{\hat{0}}'
 
     def __new__(cls):
@@ -468,7 +488,7 @@ class Cross(Vector):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return cross(self._expr1, self._expr2)
 
 
@@ -501,7 +521,7 @@ class Dot(Expr):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return dot(self._expr1, self._expr2)
 
 
@@ -534,11 +554,13 @@ def cross(vect1, vect2):
             n3 = ({0,1,2}.difference({n1, n2})).pop()
             sign = 1 if ((n1 + 1) % 3 == n2) else -1
             return sign*vect1._sys.base_vectors()[n3]
+        from .functions import express
         try:
-            from .functions import express
-            return cross(express(vect1, vect2._sys), vect2)
-        except:
+            v = express(vect1, vect2._sys)
+        except ValueError:
             return Cross(vect1, vect2)
+        else:
+            return cross(v, vect2)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return Vector.zero
     if isinstance(vect1, VectorMul):
@@ -574,11 +596,13 @@ def dot(vect1, vect2):
     if isinstance(vect1, BaseVector) and isinstance(vect2, BaseVector):
         if vect1._sys == vect2._sys:
             return S.One if vect1 == vect2 else S.Zero
+        from .functions import express
         try:
-            from .functions import express
-            return dot(vect1, express(vect2, vect1._sys))
-        except:
+            v = express(vect2, vect1._sys)
+        except ValueError:
             return Dot(vect1, vect2)
+        else:
+            return dot(vect1, v)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return S.Zero
     if isinstance(vect1, VectorMul):
@@ -591,22 +615,9 @@ def dot(vect1, vect2):
     return Dot(vect1, vect2)
 
 
-def _vect_div(one, other):
-    """ Helper for division involving vectors. """
-    if isinstance(one, Vector) and isinstance(other, Vector):
-        raise TypeError("Cannot divide two vectors")
-    elif isinstance(one, Vector):
-        if other == S.Zero:
-            raise ValueError("Cannot divide a vector by zero")
-        return VectorMul(one, Pow(other, S.NegativeOne))
-    else:
-        raise TypeError("Invalid division involving a vector")
-
-
 Vector._expr_type = Vector
 Vector._mul_func = VectorMul
 Vector._add_func = VectorAdd
 Vector._zero_func = VectorZero
 Vector._base_func = BaseVector
-Vector._div_helper = _vect_div
 Vector.zero = VectorZero()

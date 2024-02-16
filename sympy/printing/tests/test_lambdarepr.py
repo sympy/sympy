@@ -1,5 +1,13 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,Expr
-from sympy.utilities.pytest import raises
+from sympy.concrete.summations import Sum
+from sympy.core.expr import Expr
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.sets.sets import Interval
+from sympy.utilities.lambdify import lambdify
+from sympy.testing.pytest import raises
 
 from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.lambdarepr import lambdarepr, LambdaPrinter, NumExprPrinter
@@ -17,13 +25,11 @@ def test_basic():
 
 
 def test_matrix():
-    A = Matrix([[x, y], [y*x, z**2]])
-    # assert lambdarepr(A) == "ImmutableDenseMatrix([[x, y], [x*y, z**2]])"
     # Test printing a Matrix that has an element that is printed differently
-    # with the LambdaPrinter than in the StrPrinter.
-    p = Piecewise((x, True), evaluate=False)
-    A = Matrix([p])
-    assert lambdarepr(A) == "ImmutableDenseMatrix([[((x))]])"
+    # with the LambdaPrinter than with the StrPrinter.
+    e = x % 2
+    assert lambdarepr(e) != str(e)
+    assert lambdarepr(Matrix([e])) == 'ImmutableDenseMatrix([[x % 2]])'
 
 
 def test_piecewise():
@@ -31,11 +37,6 @@ def test_piecewise():
     # correct number of parentheses. It will give a SyntaxError if there aren't.
 
     h = "lambda x: "
-
-    p = Piecewise((x, True), evaluate=False)
-    l = lambdarepr(p)
-    eval(h + l)
-    assert l == "((x))"
 
     p = Piecewise((x, x < 0))
     l = lambdarepr(p)
@@ -77,7 +78,7 @@ def test_piecewise():
     l = lambdarepr(p)
     eval(h + l)
     assert l == "((x**2) if (x < 0) else (x) if (x < 1)"\
-                                " else (-x + 2) if (x >= 1) else (0))"
+                                " else (2 - x) if (x >= 1) else (0))"
 
     p = Piecewise(
         (x**2, x < 0),
@@ -87,7 +88,7 @@ def test_piecewise():
     l = lambdarepr(p)
     eval(h + l)
     assert l == "((x**2) if (x < 0) else (x) if (x < 1)"\
-                    " else (-x + 2) if (x >= 1) else None)"
+                    " else (2 - x) if (x >= 1) else None)"
 
     p = Piecewise(
         (1, x >= 1),
@@ -190,8 +191,29 @@ def test_multiple_sums():
     assert f_res == f_ref
 
 
+def test_sqrt():
+    prntr = LambdaPrinter({'standard' : 'python3'})
+    assert prntr._print_Pow(sqrt(x), rational=False) == 'sqrt(x)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
+
+
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
+
+
+def test_numexpr():
+    # test ITE rewrite as Piecewise
+    from sympy.logic.boolalg import ITE
+    expr = ITE(x > 0, True, False, evaluate=False)
+    assert NumExprPrinter().doprint(expr) == \
+           "numexpr.evaluate('where((x > 0), True, False)', truediv=True)"
+
+    from sympy.codegen.ast import Return, FunctionDefinition, Variable, Assignment
+    func_def = FunctionDefinition(None, 'foo', [Variable(x)], [Assignment(y,x), Return(y**2)])
+    expected = "def foo(x):\n"\
+               "    y = numexpr.evaluate('x', truediv=True)\n"\
+               "    return numexpr.evaluate('y**2', truediv=True)"
+    assert NumExprPrinter().doprint(func_def) == expected
 
 
 class CustomPrintedObject(Expr):
@@ -218,4 +240,7 @@ def test_printmethod():
     obj = CustomPrintedObject()
     assert LambdaPrinter().doprint(obj) == 'lambda'
     assert TensorflowPrinter().doprint(obj) == 'tensorflow'
-    assert NumExprPrinter().doprint(obj) == "evaluate('numexpr', truediv=True)"
+    assert NumExprPrinter().doprint(obj) == "numexpr.evaluate('numexpr', truediv=True)"
+
+    assert NumExprPrinter().doprint(Piecewise((y, x >= 0), (z, x < 0))) == \
+            "numexpr.evaluate('where((x >= 0), y, z)', truediv=True)"

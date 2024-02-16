@@ -1,6 +1,7 @@
 """Tests for the implementation of RootOf class and related tools. """
 
 from sympy.polys.polytools import Poly
+import sympy.polys.rootoftools as rootoftools
 from sympy.polys.rootoftools import (rootof, RootOf, CRootOf, RootSum,
     _pure_key_dict as D)
 
@@ -10,13 +11,20 @@ from sympy.polys.polyerrors import (
     PolynomialError,
 )
 
-from sympy import (
-    S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly
-)
+from sympy.core.function import (Function, Lambda)
+from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import tan
+from sympy.integrals.integrals import Integral
+from sympy.polys.orthopolys import legendre_poly
+from sympy.solvers.solvers import solve
 
-from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
+
+from sympy.testing.pytest import raises, slow
+from sympy.core.expr import unchanged
 
 from sympy.abc import a, b, x, y, z, r
 
@@ -116,7 +124,6 @@ def test_CRootOf_attributes():
     raises(NotImplementedError, lambda: rootof(Poly(x**3 + y*x + 1, x), 0))
 
 
-
 def test_CRootOf___eq__():
     assert (rootof(x**3 + x + 3, 0) == rootof(x**3 + x + 3, 0)) is True
     assert (rootof(x**3 + x + 3, 0) == rootof(x**3 + x + 3, 1)) is False
@@ -138,12 +145,11 @@ def test_CRootOf___eval_Eq__():
     r1 = rootof(eq, 1)
     assert Eq(r, r1) is S.false
     assert Eq(r, r) is S.true
-    assert Eq(r, x) is S.false
+    assert unchanged(Eq, r, x)
     assert Eq(r, 0) is S.false
     assert Eq(r, S.Infinity) is S.false
     assert Eq(r, I) is S.false
-    assert Eq(r, f(0)) is S.false
-    assert Eq(r, f(0)) is S.false
+    assert unchanged(Eq, r, f(0))
     sol = solve(eq)
     for s in sol:
         if s.is_real:
@@ -154,8 +160,8 @@ def test_CRootOf___eval_Eq__():
             assert Eq(r, s) is S.true
     eq = x**3 + x + 1
     sol = solve(eq)
-    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol] == [
-        False, False, True, False, True, False, True, False, False]
+    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol
+        ].count(True) == 3
     assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False
 
 
@@ -178,6 +184,7 @@ def test_CRootOf_diff():
     assert rootof(x**3 + x + 1, 0).diff(y) == 0
 
 
+@slow
 def test_CRootOf_evalf():
     real = rootof(x**3 + x + 3, 0).evalf(n=20)
 
@@ -241,8 +248,8 @@ def test_CRootOf_evalf():
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
-    assert r0.n(4) == -1.0*I
-    assert r1.n(4) == 1.0*I
+    assert r0.n(4) == Float(-1.0, 4) * I
+    assert r1.n(4) == Float(1.0, 4) * I
 
     # make sure verification is used in case a max/min traps the "root"
     assert str(rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'
@@ -262,11 +269,23 @@ def test_CRootOf_evalf():
     r[0]._reset()
     for ri in r:
         i = ri._get_interval()
-        n = ri.n(2)
+        ri.n(2)
         assert i != ri._get_interval()
         ri._reset()
         assert i == ri._get_interval()
         assert i == i.func(*i.args)
+
+
+def test_issue_24978():
+    # Irreducible poly with negative leading coeff is normalized
+    # (factor of -1 is extracted), before being stored as CRootOf.poly.
+    f = -x**2 + 2
+    r = CRootOf(f, 0)
+    assert r.poly.as_expr() == x**2 - 2
+    # An action that prompts calculation of an interval puts r.poly in
+    # the cache.
+    r.n()
+    assert r.poly in rootoftools._reals_cache
 
 
 def test_CRootOf_evalf_caching_bug():
@@ -284,12 +303,16 @@ def test_CRootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots(radicals=False) == [rootof(
         x**3 - x**2 + 1, 0)]
 
+    # https://github.com/sympy/sympy/issues/20902
+    p = Poly(-3*x**4 - 10*x**3 - 12*x**2 - 6*x - 1, x, domain='ZZ')
+    assert CRootOf.real_roots(p) == [S(-1), S(-1), S(-1), S(-1)/3]
+
 
 def test_CRootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
         rootof(x**3 - x**2 + 1, 0),
-        -S(1)/2 - sqrt(3)*I/2,
-        -S(1)/2 + sqrt(3)*I/2,
+        Rational(-1, 2) - sqrt(3)*I/2,
+        Rational(-1, 2) + sqrt(3)*I/2,
         rootof(x**3 - x**2 + 1, 1),
         rootof(x**3 - x**2 + 1, 2),
     ]
@@ -306,15 +329,59 @@ def test_CRootOf_all_roots():
 def test_CRootOf_eval_rational():
     p = legendre_poly(4, x, polys=True)
     roots = [r.eval_rational(n=18) for r in p.real_roots()]
-    for r in roots:
-        assert isinstance(r, Rational)
-    roots = [str(r.n(17)) for r in roots]
+    for root in roots:
+        assert isinstance(root, Rational)
+    roots = [str(root.n(17)) for root in roots]
     assert roots == [
             "-0.86113631159405258",
             "-0.33998104358485626",
              "0.33998104358485626",
              "0.86113631159405258",
              ]
+
+
+def test_CRootOf_lazy():
+    # irreducible poly with both real and complex roots:
+    f = Poly(x**3 + 2*x + 2)
+
+    # real root:
+    CRootOf.clear_cache()
+    r = CRootOf(f, 0)
+    # Not yet in cache, after construction:
+    assert r.poly not in rootoftools._reals_cache
+    assert r.poly not in rootoftools._complexes_cache
+    r.evalf()
+    # In cache after evaluation:
+    assert r.poly in rootoftools._reals_cache
+    assert r.poly not in rootoftools._complexes_cache
+
+    # complex root:
+    CRootOf.clear_cache()
+    r = CRootOf(f, 1)
+    # Not yet in cache, after construction:
+    assert r.poly not in rootoftools._reals_cache
+    assert r.poly not in rootoftools._complexes_cache
+    r.evalf()
+    # In cache after evaluation:
+    assert r.poly in rootoftools._reals_cache
+    assert r.poly in rootoftools._complexes_cache
+
+    # composite poly with both real and complex roots:
+    f = Poly((x**2 - 2)*(x**2 + 1))
+
+    # real root:
+    CRootOf.clear_cache()
+    r = CRootOf(f, 0)
+    # In cache immediately after construction:
+    assert r.poly in rootoftools._reals_cache
+    assert r.poly not in rootoftools._complexes_cache
+
+    # complex root:
+    CRootOf.clear_cache()
+    r = CRootOf(f, 2)
+    # In cache immediately after construction:
+    assert r.poly in rootoftools._reals_cache
+    assert r.poly in rootoftools._complexes_cache
 
 
 def test_RootSum___new__():
@@ -348,8 +415,8 @@ def test_RootSum___new__():
 
     assert RootSum(f, auto=False).is_commutative is True
 
-    assert RootSum(f, Lambda(x, 1/(x + x**2))) == S(11)/3
-    assert RootSum(f, Lambda(x, y/(x + x**2))) == S(11)/3*y
+    assert RootSum(f, Lambda(x, 1/(x + x**2))) == Rational(11, 3)
+    assert RootSum(f, Lambda(x, y/(x + x**2))) == Rational(11, 3)*y
 
     assert RootSum(x**2 - 1, Lambda(x, 3*x**2), x) == 6
     assert RootSum(x**2 - y, Lambda(x, 3*x**2), x) == 6*y
@@ -432,7 +499,7 @@ def test_RootSum_rational():
 
     f = 161*z**3 + 115*z**2 + 19*z + 1
     g = Lambda(z, z*log(
-        -3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - 125*z/2 - 5 + exp(x)))
+        -3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - z*Rational(125, 2) - 5 + exp(x)))
 
     assert RootSum(f, g).diff(x) == -(
         (5*exp(2*x) - 6*exp(x) + 4)*exp(x)/(exp(3*x) - exp(2*x) + 1))/7
@@ -517,15 +584,17 @@ def test_pure_key_dict():
     raises(ValueError, lambda: dont(1))
 
 
+@slow
 def test_eval_approx_relative():
     CRootOf.clear_cache()
     t = [CRootOf(x**3 + 10*x + 1, i) for i in range(3)]
     assert [i.eval_rational(1e-1) for i in t] == [
-        -S(21)/220, S(15)/256 - 805*I/256, S(15)/256 + 805*I/256]
+        Rational(-21, 220), Rational(15, 256) - I*805/256,
+        Rational(15, 256) + I*805/256]
     t[0]._reset()
     assert [i.eval_rational(1e-1, 1e-4) for i in t] == [
-        -S(21)/220, S(3275)/65536 - 414645*I/131072,
-        S(3275)/65536 + 414645*I/131072]
+        Rational(-21, 220), Rational(3275, 65536) - I*414645/131072,
+        Rational(3275, 65536) + I*414645/131072]
     assert S(t[0]._get_interval().dx) < 1e-1
     assert S(t[1]._get_interval().dx) < 1e-1
     assert S(t[1]._get_interval().dy) < 1e-4
@@ -533,8 +602,8 @@ def test_eval_approx_relative():
     assert S(t[2]._get_interval().dy) < 1e-4
     t[0]._reset()
     assert [i.eval_rational(1e-4, 1e-4) for i in t] == [
-        -S(2001)/20020, S(6545)/131072 - 414645*I/131072,
-        S(6545)/131072 + 414645*I/131072]
+        Rational(-2001, 20020), Rational(6545, 131072) - I*414645/131072,
+        Rational(6545, 131072) + I*414645/131072]
     assert S(t[0]._get_interval().dx) < 1e-4
     assert S(t[1]._get_interval().dx) < 1e-4
     assert S(t[1]._get_interval().dy) < 1e-4
@@ -544,8 +613,8 @@ def test_eval_approx_relative():
     # less than tested, but it should never be greater
     t[0]._reset()
     assert [i.eval_rational(n=2) for i in t] == [
-        -S(202201)/2024022, S(104755)/2097152 - 6634255*I/2097152,
-        S(104755)/2097152 + 6634255*I/2097152]
+        Rational(-202201, 2024022), Rational(104755, 2097152) - I*6634255/2097152,
+        Rational(104755, 2097152) + I*6634255/2097152]
     assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-2
     assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-2
     assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-2
@@ -553,8 +622,8 @@ def test_eval_approx_relative():
     assert abs(S(t[2]._get_interval().dy)/t[2]).n() < 1e-2
     t[0]._reset()
     assert [i.eval_rational(n=3) for i in t] == [
-        -S(202201)/2024022, S(1676045)/33554432 - 106148135*I/33554432,
-        S(1676045)/33554432 + 106148135*I/33554432]
+        Rational(-202201, 2024022), Rational(1676045, 33554432) - I*106148135/33554432,
+        Rational(1676045, 33554432) + I*106148135/33554432]
     assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-3
     assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-3
     assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-3
@@ -566,3 +635,19 @@ def test_eval_approx_relative():
     assert [str(i) for i in a] == [
         '-0.10', '0.05 - 3.2*I', '0.05 + 3.2*I']
     assert all(abs(((a[i] - t[i])/t[i]).n()) < 1e-2 for i in range(len(a)))
+
+
+def test_issue_15920():
+    r = rootof(x**5 - x + 1, 0)
+    p = Integral(x, (x, 1, y))
+    assert unchanged(Eq, r, p)
+
+
+def test_issue_19113():
+    eq = y**3 - y + 1
+    # generator is a canonical x in RootOf
+    assert str(Poly(eq).real_roots()) == '[CRootOf(x**3 - x + 1, 0)]'
+    assert str(Poly(eq.subs(y, tan(y))).real_roots()
+        ) == '[CRootOf(x**3 - x + 1, 0)]'
+    assert str(Poly(eq.subs(y, tan(x))).real_roots()
+        ) == '[CRootOf(x**3 - x + 1, 0)]'

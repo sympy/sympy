@@ -10,17 +10,15 @@
     refactoring.
 """
 
-from __future__ import print_function, division
-
+from functools import reduce
 
 from sympy.core.function import Function
 from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
-
-
-from sympy.core.compatibility import reduce
-from collections import OrderedDict
 from sympy.utilities import sift
+
+from collections import OrderedDict
+
 class IndexConformanceException(Exception):
     pass
 
@@ -33,7 +31,6 @@ def _unique_and_repeated(inds):
     ========
 
     >>> from sympy.tensor.index_methods import _unique_and_repeated
-
     >>> _unique_and_repeated([2, 3, 1, 3, 0, 4, 0])
     ([2, 1, 4], [3, 0])
     """
@@ -67,6 +64,9 @@ def _remove_repeated(inds):
 
 def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
+
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import _get_indices_Mul
     >>> from sympy.tensor.indexed import IndexedBase, Idx
@@ -125,6 +125,9 @@ def _get_indices_Pow(expr):
     contractable with its own base.  Note however, that indices in the same
     exponent can be contracted with each other.
 
+    Examples
+    ========
+
     >>> from sympy.tensor.index_methods import _get_indices_Pow
     >>> from sympy import Pow, exp, IndexedBase, Idx
     >>> A = IndexedBase('A')
@@ -164,6 +167,9 @@ def _get_indices_Add(expr):
 
     FIXME: Add support for Numpy broadcasting
 
+    Examples
+    ========
+
     >>> from sympy.tensor.index_methods import _get_indices_Add
     >>> from sympy.tensor.indexed import IndexedBase, Idx
     >>> i, j, k = map(Idx, ['i', 'j', 'k'])
@@ -182,7 +188,7 @@ def _get_indices_Add(expr):
     if not non_scalars:
         return set(), {}
 
-    if not all([x == non_scalars[0] for x in non_scalars[1:]]):
+    if not all(x == non_scalars[0] for x in non_scalars[1:]):
         raise IndexConformanceException("Indices are not consistent: %s" % expr)
     if not reduce(lambda x, y: x != y or y, syms):
         symmetries = syms[0]
@@ -205,7 +211,7 @@ def get_indices(expr):
 
     >>> from sympy.tensor.index_methods import get_indices
     >>> from sympy import symbols
-    >>> from sympy.tensor import IndexedBase, Idx
+    >>> from sympy.tensor import IndexedBase
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, a, z = symbols('i j a z', integer=True)
 
@@ -274,7 +280,7 @@ def get_indices(expr):
             return set(), {}
         elif isinstance(expr, Function):
             # Support ufunc like behaviour by returning indices from arguments.
-            # Functions do not interpret repeated indices across argumnts
+            # Functions do not interpret repeated indices across arguments
             # as summation
             ind0 = set()
             for arg in expr.args:
@@ -311,7 +317,7 @@ def get_contraction_structure(expr):
        dicts for the non-trivial deeper contractions, omitting dicts with None
        as the one and only key.
 
-    .. Note:: The presence of expressions among the dictinary keys indicates
+    .. Note:: The presence of expressions among the dictionary keys indicates
        multiple levels of index contractions.  A nested dict displays nested
        contractions and may itself contain dicts from a deeper level.  In
        practical calculations the summation in the deepest nested level must be
@@ -322,7 +328,7 @@ def get_contraction_structure(expr):
     ========
 
     >>> from sympy.tensor.index_methods import get_contraction_structure
-    >>> from sympy import symbols, default_sort_key
+    >>> from sympy import default_sort_key
     >>> from sympy.tensor import IndexedBase, Idx
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])

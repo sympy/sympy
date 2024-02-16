@@ -1,0 +1,56 @@
+<!-- Versions Menu. In order to work, there should be a file called versions.json one level up from the documentation listing the "dev" and "latest" version numbers, like
+{
+    "latest": "1.10",
+    "dev": "1.11.dev"
+}
+-->
+<div class="sidebar-tree sidebar-versions">
+  <h5 class="versions-header">Documentation Version</h4>
+</div>
+
+<!-- Make sure jquery is loaded (we would put this as a separate .js, but it uses jinja templates in some of the variables) -->
+<script src="{{ pathto('_static/jquery.js', 1) }}"></script>
+<script>
+  var versions_json_loc = "../{{ pathto('versions.json', 1) }}";
+
+  function add_version_menu(json_loc) {
+      var menu = document.createElement("ul");
+      var thisversion = "{{ 'dev' if '.dev' in release else 'latest' }}"
+      $.getJSON(json_loc, function(versions) {
+          for (var key in versions) {
+              if (key != "latest" && key != "dev") {
+                  console.error("Invalid key in versions.json", key);
+              } else {
+                  var version = document.createElement("li")
+                  version.className = "sidebar-versions-l1 sidebar-versions-" + key + "-l1";
+                  if (key == thisversion){
+                      version.className += " current-version";
+                  }
+                  var a = document.createElement("a");
+                  a.className = "reference internal";
+                  a.innerHTML = "SymPy " + versions[key] + " (" + key + " version)";
+                  a.title = key + " version";
+                  a.href = "https://docs.sympy.org/" + key + "/{{ pagename }}.html";
+                  version.appendChild(a);
+                  menu.appendChild(version);
+              }
+          }
+      }).done(function() {
+          console.log("versions.json read successfully");
+      }).fail(function() {
+          var version = document.createElement("li")
+          version.className = "sidebar-versions-l1 sidebar-versions-latest-l1";
+          var d = document.createElement("div");
+          d.className = "versions-not-found"
+          d.innerHTML = "Other Versions Not Found";
+          d.title = "The version selection menu is only available for the documentation published on docs.sympy.org";
+          version.appendChild(d);
+          menu.appendChild(version);
+          console.error("Could not read versions.json");
+      }).always(function() {
+          $(".sidebar-versions").append(menu)
+      });
+  };
+
+  $( document ).ready( add_version_menu(versions_json_loc));
+</script>

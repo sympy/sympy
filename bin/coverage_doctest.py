@@ -30,7 +30,10 @@ except ImportError:
     # It's html.parser in Python 3
     from html.parser import HTMLParser
 
-# Load color templates, used from sympy/utilities/runtests.py
+from sympy.utilities.misc import filldedent
+
+
+# Load color templates, duplicated from sympy/testing/runtests.py
 color_templates = (
     ("Black", "0;30"),
     ("Red", "0;31"),
@@ -69,8 +72,8 @@ def print_header(name, underline=None, color=None):
         print(underline*len(name))
 
 
-def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
-                   f_idt, f_sph, score, total_doctests, total_members,
+def print_coverage(module_path, c, c_missing_doc, c_missing_doctest, c_indirect_doctest, c_sph, f, f_missing_doc, f_missing_doctest,
+                   f_indirect_doctest, f_sph, score, total_doctests, total_members,
                    sphinx_score, total_sphinx, verbose=False, no_color=False,
                    sphinx=True):
     """ Prints details (depending on verbose) of a module """
@@ -134,19 +137,19 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
             print_header('No classes found!')
 
         else:
-            if c_md:
+            if c_missing_doc:
                 print_header('Missing docstrings', '-', not no_color and small_header_color)
-                for md in c_md:
+                for md in c_missing_doc:
                     print('  * ' + md)
-            if c_mdt:
+            if c_missing_doctest:
                 print_header('Missing doctests', '-', not no_color and small_header_color)
-                for md in c_mdt:
+                for md in c_missing_doctest:
                     print('  * ' + md)
-            if c_idt:
+            if c_indirect_doctest:
                 # Use "# indirect doctest" in the docstring to
                 # suppress this warning.
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
-                for md in c_idt:
+                for md in c_indirect_doctest:
                     print('  * ' + md)
                 print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if c_sph:
@@ -158,17 +161,17 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
         if not f:
             print_header('No functions found!')
         else:
-            if f_md:
+            if f_missing_doc:
                 print_header('Missing docstrings', '-', not no_color and small_header_color)
-                for md in f_md:
+                for md in f_missing_doc:
                     print('  * ' + md)
-            if f_mdt:
+            if f_missing_doctest:
                 print_header('Missing doctests', '-', not no_color and small_header_color)
-                for md in f_mdt:
+                for md in f_missing_doctest:
                     print('  * ' + md)
-            if f_idt:
+            if f_indirect_doctest:
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
-                for md in f_idt:
+                for md in f_indirect_doctest:
                     print('  * ' + md)
                 print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if f_sph:
@@ -204,7 +207,7 @@ def _get_arg_list(name, fobj):
 
     trunc = 20  # Sometimes argument length can be huge
 
-    argspec = inspect.getargspec(fobj)
+    argspec = inspect.getfullargspec(fobj)
 
     arg_list = []
 
@@ -225,8 +228,8 @@ def _get_arg_list(name, fobj):
     # Add var args
     if argspec.varargs:
         arg_list.append(argspec.varargs)
-    if argspec.keywords:
-        arg_list.append(argspec.keywords)
+    if argspec.varkw:
+        arg_list.append(argspec.varkw)
 
     # Truncate long arguments
     arg_list = [x[:trunc] for x in arg_list]
@@ -280,20 +283,20 @@ def find_sphinx(name, mod_path, found={}):
     found[mod_path] = p.is_imported
     return name in p.is_imported
 
-def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
-                     f_has_doctest, sk_list, sph, sphinx=True):
+def process_function(name, c_name, b_obj, mod_path, f_skip, f_missing_doc, f_missing_doctest, f_indirect_doctest,
+                     f_has_doctest, skip_list, sph, sphinx=True):
     """
     Processes a function to get information regarding documentation.
     It is assume that the function calling this subrouting has already
     verified that it is a valid module function.
     """
-    if name in sk_list:
+    if name in skip_list:
         return False, False
 
     # We add in the end, as inspect.getsourcelines is slow
-    add_md = False
-    add_mdt = False
-    add_idt = False
+    add_missing_doc = False
+    add_missing_doctest = False
+    add_indirect_doctest = False
     in_sphinx = True
     f_doctest = False
     function = False
@@ -308,23 +311,30 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
     full_name = _get_arg_list(name, obj)
 
     if name.startswith('_'):
-        f_sk.append(full_name)
+        f_skip.append(full_name)
     else:
-        if not obj.__doc__:
-            add_md = True
-        elif not '>>>' in obj.__doc__:
-            add_mdt = True
-        elif _is_indirect(name, obj.__doc__):
-            add_idt = True
-        else:
+        doc = obj.__doc__
+        if isinstance(doc, str):
+            if not doc:
+                add_missing_doc = True
+            elif not '>>>' in doc:
+                add_missing_doctest = True
+            elif _is_indirect(name, doc):
+                add_indirect_doctest = True
+            else:
+                f_doctest = True
+        elif doc is None:
+            # this was a function defined in the docstring
             f_doctest = True
+        else:
+            raise TypeError('Current doc type for ', print(obj), ' is ', type(doc), '. Docstring must be a string, property, or none')
 
         function = True
 
         if sphinx:
             in_sphinx = find_sphinx(obj_name, mod_path)
 
-    if add_md or add_mdt or add_idt or not in_sphinx:
+    if add_missing_doc or add_missing_doctest or add_indirect_doctest or not in_sphinx:
         try:
             line_no = inspect.getsourcelines(obj)[1]
         except IOError:
@@ -333,19 +343,19 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
             return False, False
 
         full_name = "LINE %d: %s" % (line_no, full_name)
-        if add_md:
-            f_md.append(full_name)
-        elif add_mdt:
-            f_mdt.append(full_name)
-        elif add_idt:
-            f_idt.append(full_name)
+        if add_missing_doc:
+            f_missing_doc.append(full_name)
+        elif add_missing_doctest:
+            f_missing_doctest.append(full_name)
+        elif add_indirect_doctest:
+            f_indirect_doctest.append(full_name)
         if not in_sphinx:
             sph.append(full_name)
 
     return f_doctest, function
 
 
-def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
+def process_class(c_name, obj, c_skip, c_missing_doc, c_missing_doctest, c_indirect_doctest, c_has_doctest,
                   mod_path, sph, sphinx=True):
     """
     Extracts information about the class regarding documentation.
@@ -355,7 +365,7 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
 
     # Skip class case
     if c_name.startswith('_'):
-        c_sk.append(c_name)
+        c_skip.append(c_name)
         return False, False, None
 
     c = False
@@ -370,15 +380,27 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
 
     c = True
     full_name = "LINE %d: %s" % (line_no, c_name)
-    if not obj.__doc__:
-        c_md.append(full_name)
-    elif not '>>>' in obj.__doc__:
-        c_mdt.append(full_name)
-    elif _is_indirect(c_name, obj.__doc__):
-        c_idt.append(full_name)
-    else:
+    doc = obj.__doc__
+    if isinstance(doc, str):
+        if not doc:
+            c_missing_doc.append(full_name)
+        elif not '>>>' in doc:
+            c_missing_doctest.append(full_name)
+        elif _is_indirect(c_name, doc):
+            c_indirect_doctest.append(full_name)
+        else:
+            c_dt = True
+            c_has_doctest.append(full_name)
+    elif doc is None:
+        # this was a class defined in the docstring
         c_dt = True
         c_has_doctest.append(full_name)
+    elif isinstance(doc, property):
+        # skip class with dynamic doc
+        c_skip.append(c_name)
+        return False, False, None
+    else:
+        raise TypeError('Current doc type of ', print(obj), ' is ', type(doc), '. Docstring must be a string, property , or none')
 
     in_sphinx = False
     if sphinx:
@@ -407,19 +429,19 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
         return 0, 0, 0
 
     c_skipped = []
-    c_md = []
-    c_mdt = []
+    c_missing_doc = []
+    c_missing_doctest = []
     c_has_doctest = []
-    c_idt = []
+    c_indirect_doctest = []
     classes = 0
     c_doctests = 0
     c_sph = []
 
     f_skipped = []
-    f_md = []
-    f_mdt = []
+    f_missing_doc = []
+    f_missing_doctest = []
     f_has_doctest = []
-    f_idt = []
+    f_indirect_doctest = []
     functions = 0
     f_doctests = 0
     f_sph = []
@@ -435,7 +457,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
         if member in skip_members:
             continue
 
-        # Identify if the member (class/def) a part of this module
+        # Identify if the member (class/def) is a part of this module
         obj = getattr(m, member)
         obj_mod = inspect.getmodule(obj)
 
@@ -447,7 +469,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
         if inspect.isfunction(obj) or inspect.ismethod(obj):
 
             f_dt, f = process_function(member, '', obj, module_path,
-                f_skipped, f_md, f_mdt, f_idt, f_has_doctest, skip_members,
+                f_skipped, f_missing_doc, f_missing_doctest, f_indirect_doctest, f_has_doctest, skip_members,
                 f_sph, sphinx=sphinx)
             if f:
                 functions += 1
@@ -458,8 +480,8 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
         elif inspect.isclass(obj):
 
             # Process the class first
-            c_dt, c, source = process_class(member, obj, c_skipped, c_md,
-                c_mdt, c_idt, c_has_doctest, module_path, c_sph, sphinx=sphinx)
+            c_dt, c, source = process_class(member, obj, c_skipped, c_missing_doc,
+                c_missing_doctest, c_indirect_doctest, c_has_doctest, module_path, c_sph, sphinx=sphinx)
             if not c:
                 continue
             else:
@@ -489,7 +511,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
                 if inspect.isfunction(f_obj) or inspect.ismethod(f_obj):
 
                     f_dt, f = process_function(f_name, member, obj,
-                        module_path, f_skipped, f_md, f_mdt, f_idt, f_has_doctest,
+                        module_path, f_skipped, f_missing_doc, f_missing_doctest, f_indirect_doctest, f_has_doctest,
                         skip_members, f_sph, sphinx=sphinx)
                     if f:
                         functions += 1
@@ -517,16 +539,16 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
         sphinx_score = 0
 
     # Sort functions/classes by line number
-    c_md = sorted(c_md, key=lambda x: int(x.split()[1][:-1]))
-    c_mdt = sorted(c_mdt, key=lambda x: int(x.split()[1][:-1]))
-    c_idt = sorted(c_idt, key=lambda x: int(x.split()[1][:-1]))
+    c_missing_doc = sorted(c_missing_doc, key=lambda x: int(x.split()[1][:-1]))
+    c_missing_doctest = sorted(c_missing_doctest, key=lambda x: int(x.split()[1][:-1]))
+    c_indirect_doctest = sorted(c_indirect_doctest, key=lambda x: int(x.split()[1][:-1]))
 
-    f_md = sorted(f_md, key=lambda x: int(x.split()[1][:-1]))
-    f_mdt = sorted(f_mdt, key=lambda x: int(x.split()[1][:-1]))
-    f_idt = sorted(f_idt, key=lambda x: int(x.split()[1][:-1]))
+    f_missing_doc = sorted(f_missing_doc, key=lambda x: int(x.split()[1][:-1]))
+    f_missing_doctest = sorted(f_missing_doctest, key=lambda x: int(x.split()[1][:-1]))
+    f_indirect_doctest = sorted(f_indirect_doctest, key=lambda x: int(x.split()[1][:-1]))
 
-    print_coverage(module_path, classes, c_md, c_mdt, c_idt, c_sph, functions, f_md,
-                   f_mdt, f_idt, f_sph, score, total_doctests, total_members,
+    print_coverage(module_path, classes, c_missing_doc, c_missing_doctest, c_indirect_doctest, c_sph, functions, f_missing_doc,
+                   f_missing_doctest, f_indirect_doctest, f_sph, score, total_doctests, total_members,
                    sphinx_score, total_sphinx, verbose=verbose,
                    no_color=no_color, sphinx=sphinx)
 
@@ -534,6 +556,10 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
 
 
 def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
+
+    # file names containing any string in skip_paths will be skipped,
+    skip_paths = []
+
     if os.path.isdir(file):
         doctests, total_sphinx, num_functions = 0, 0, 0
         for F in os.listdir(file):
@@ -543,7 +569,7 @@ def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
             total_sphinx += _total_sphinx
             num_functions += _num_functions
         return doctests, total_sphinx, num_functions
-    if (not (file.endswith('.py') or file.endswith('.pyx')) or
+    if (not (file.endswith((".py", ".pyx"))) or
         file.endswith('__init__.py') or
         not exact and ('test_' in file or 'bench_' in file or
         any(name in file for name in skip_paths))):
@@ -584,10 +610,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.sphinx and not os.path.exists(os.path.join(sympy_top, 'doc', '_build', 'html')):
-        print("""
-Cannot check Sphinx coverage without a documentation build. To build the
-docs, run "cd doc; make html".  To skip checking Sphinx coverage, pass --no-sphinx.
-""")
+        print(filldedent("""
+            Cannot check Sphinx coverage without a documentation build.
+            To build the docs, run "cd doc; make html".  To skip
+            checking Sphinx coverage, pass --no-sphinx.
+            """))
         sys.exit(1)
 
     full_coverage = True

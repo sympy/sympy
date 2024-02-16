@@ -1,9 +1,6 @@
-from __future__ import print_function, division
-
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import uniq
-from sympy.core.compatibility import range
 
 _af_new = Permutation._af_new
 
@@ -11,6 +8,9 @@ _af_new = Permutation._af_new
 def DirectProduct(*groups):
     """
     Returns the direct product of several groups as a permutation group.
+
+    Explanation
+    ===========
 
     This is implemented much like the __mul__ procedure for taking the direct
     product of two permutation groups, but the idea of shifting the
@@ -30,7 +30,8 @@ def DirectProduct(*groups):
 
     See Also
     ========
-    __mul__
+
+    sympy.combinatorics.perm_groups.PermutationGroup.__mul__
 
     """
     degrees = []

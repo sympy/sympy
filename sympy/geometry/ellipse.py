@@ -6,32 +6,35 @@ Contains
 
 """
 
-from __future__ import division, print_function
-
-from sympy import Expr, Eq
+from sympy.core.expr import Expr
+from sympy.core.relational import Eq
 from sympy.core import S, pi, sympify
+from sympy.core.evalf import N
+from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
-from sympy.core.compatibility import ordered
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
+from sympy.core.sorting import ordered
+from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_integrals import elliptic_e
-from sympy.geometry.exceptions import GeometryError
-from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
+from .entity import GeometryEntity, GeometrySet
+from .exceptions import GeometryError
+from .line import Line, Segment, Ray2D, Segment2D, Line2D, LinearEntity3D
+from .point import Point, Point2D, Point3D
+from .util import idiff, find
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
 
-from .entity import GeometryEntity, GeometrySet
-from .point import Point, Point2D, Point3D
-from .line import Line, LinearEntity, Segment
-from .util import idiff
+from mpmath.libmp.libmpf import prec_to_dps
 
 import random
+
+x, y = [Dummy('ellipse_dummy', real=True) for i in range(2)]
 
 
 class Ellipse(GeometrySet):
@@ -102,9 +105,6 @@ class Ellipse(GeometrySet):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = Dummy('x', real=True)
-            y = Dummy('y', real=True)
-
             res = self.equation(x, y).subs({x: o.x, y: o.y})
             return trigsimp(simplify(res)) is S.Zero
         elif isinstance(o, Ellipse):
@@ -118,22 +118,20 @@ class Ellipse(GeometrySet):
                                            self.vradius == o.vradius)
 
     def __hash__(self):
-        return super(Ellipse, self).__hash__()
+        return super().__hash__()
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
+
         hradius = sympify(hradius)
         vradius = sympify(vradius)
-
-        eccentricity = sympify(eccentricity)
 
         if center is None:
             center = Point(0, 0)
         else:
+            if len(center) != 2:
+                raise ValueError('The center of "{}" must be a two dimensional point'.format(cls))
             center = Point(center, dim=2)
-
-        if len(center) != 2:
-            raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
 
         if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError(filldedent('''
@@ -141,7 +139,10 @@ class Ellipse(GeometrySet):
                 "eccentricity" must not be None.'''))
 
         if eccentricity is not None:
-            if hradius is None:
+            eccentricity = sympify(eccentricity)
+            if eccentricity.is_negative:
+                raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
+            elif hradius is None:
                 hradius = vradius / sqrt(1 - eccentricity**2)
             elif vradius is None:
                 vradius = hradius * sqrt(1 - eccentricity**2)
@@ -149,8 +150,11 @@ class Ellipse(GeometrySet):
         if hradius == vradius:
             return Circle(center, hradius, **kwargs)
 
-        if hradius == 0 or vradius == 0:
+        if S.Zero in (hradius, vradius):
             return Segment(Point(center[0] - hradius, center[1] - vradius), Point(center[0] + hradius, center[1] + vradius))
+
+        if hradius.is_real is False or vradius.is_real is False:
+            raise GeometryError("Invalid value encountered when computing hradius / vradius.")
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 
@@ -165,8 +169,6 @@ class Ellipse(GeometrySet):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-
-        from sympy.core.evalf import N
 
         c = N(self.center)
         h, v = N(self.hradius), N(self.vradius)
@@ -421,7 +423,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         See Also
         ========
@@ -455,7 +457,7 @@ class Ellipse(GeometrySet):
         ==========
 
         .. [1] https://math.stackexchange.com/questions/108270/what-is-the-equation-of-an-ellipse-that-is-not-aligned-with-the-axis
-        .. [2] https://en.wikipedia.org/wiki/Ellipse#Equation_of_a_shifted_ellipse
+        .. [2] https://en.wikipedia.org/wiki/Ellipse#Shifted_ellipse
 
         """
 
@@ -492,7 +494,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         Examples
         ========
@@ -636,7 +638,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Ellipse, Point, Line, sqrt
+        >>> from sympy import Ellipse, Point, Line
         >>> e = Ellipse(Point(0, 0), 5, 7)
         >>> e.intersection(Point(0, 0))
         []
@@ -661,8 +663,6 @@ class Ellipse(GeometrySet):
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
         """
         # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
-        x = Dummy('x', real=True)
-        y = Dummy('y', real=True)
 
         if isinstance(o, Point):
             if o in self:
@@ -672,7 +672,9 @@ class Ellipse(GeometrySet):
 
         elif isinstance(o, (Segment2D, Ray2D)):
             ellipse_equation = self.equation(x, y)
-            result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+            result = solve([ellipse_equation, Line(
+                o.points[0], o.points[1]).equation(x, y)], [x, y],
+                set=True)[1]
             return list(ordered([Point(i) for i in result if i in o]))
 
         elif isinstance(o, Polygon):
@@ -683,7 +685,9 @@ class Ellipse(GeometrySet):
                 return self
             else:
                 ellipse_equation = self.equation(x, y)
-                return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation(x, y)], [x, y])]))
+                return list(ordered([Point(i) for i in solve(
+                    [ellipse_equation, o.equation(x, y)], [x, y],
+                    set=True)[1]]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
@@ -733,11 +737,17 @@ class Ellipse(GeometrySet):
             if isinstance(intersect, Ellipse):
                 return True
             elif intersect:
-                return all((self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect)
+                return all((self.tangent_lines(i)[0]).equals(o.tangent_lines(i)[0]) for i in intersect)
             else:
                 return False
         elif isinstance(o, Line2D):
-            return len(self.intersection(o)) == 1
+            hit = self.intersection(o)
+            if not hit:
+                return False
+            if len(hit) == 1:
+                return True
+            # might return None if it can't decide
+            return hit[0].equals(hit[1])
         elif isinstance(o, Ray2D):
             intersect = self.intersection(o)
             if len(intersect) == 1:
@@ -751,13 +761,13 @@ class Ellipse(GeometrySet):
                 intersect = self.intersection(segment)
                 if len(intersect) == 1:
                     if not any(intersect[0] in i for i in segment.points) \
-                        and all(not self.encloses_point(i) for i in segment.points):
+                        and not any(self.encloses_point(i) for i in segment.points):
                         all_tangents = True
                         continue
                     else:
                         return False
                 else:
-                    return all_tangents
+                    return False
             return all_tangents
         elif isinstance(o, (LinearEntity3D, Point3D)):
             raise TypeError('Entity must be two dimensional, not three dimensional')
@@ -874,7 +884,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Line, Point, Ellipse
+        >>> from sympy import Point, Ellipse
         >>> e = Ellipse((0, 0), 2, 3)
         >>> c = e.center
         >>> e.normal_lines(c + Point(1, 0))
@@ -912,7 +922,6 @@ class Ellipse(GeometrySet):
 
         # find the 4 normal points and construct lines through them with
         # the corresponding slope
-        x, y = Dummy('x', real=True), Dummy('y', real=True)
         eq = self.equation(x, y)
         dydx = idiff(eq, y, x)
         norm = -1/dydx
@@ -962,7 +971,7 @@ class Ellipse(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.periapsis
-        -2*sqrt(2) + 3
+        3 - 2*sqrt(2)
 
         """
         return self.major * (1 - self.eccentricity)
@@ -972,7 +981,7 @@ class Ellipse(GeometrySet):
         """
         Calculates the semi-latus rectum of the Ellipse.
 
-        Semi-latus rectum is defined as one half of the the chord through a
+        Semi-latus rectum is defined as one half of the chord through a
         focus parallel to the conic section directrix of a conic section.
 
         Returns
@@ -999,11 +1008,57 @@ class Ellipse(GeometrySet):
         References
         ==========
 
-        [1] http://mathworld.wolfram.com/SemilatusRectum.html
-        [2] https://en.wikipedia.org/wiki/Ellipse#Semi-latus_rectum
+        .. [1] https://mathworld.wolfram.com/SemilatusRectum.html
+        .. [2] https://en.wikipedia.org/wiki/Ellipse#Semi-latus_rectum
 
         """
         return self.major * (1 - self.eccentricity ** 2)
+
+    def auxiliary_circle(self):
+        """Returns a Circle whose diameter is the major axis of the ellipse.
+
+        Examples
+        ========
+
+        >>> from sympy import Ellipse, Point, symbols
+        >>> c = Point(1, 2)
+        >>> Ellipse(c, 8, 7).auxiliary_circle()
+        Circle(Point2D(1, 2), 8)
+        >>> a, b = symbols('a b')
+        >>> Ellipse(c, a, b).auxiliary_circle()
+        Circle(Point2D(1, 2), Max(a, b))
+        """
+        return Circle(self.center, Max(self.hradius, self.vradius))
+
+    def director_circle(self):
+        """
+        Returns a Circle consisting of all points where two perpendicular
+        tangent lines to the ellipse cross each other.
+
+        Returns
+        =======
+
+        Circle
+            A director circle returned as a geometric object.
+
+        Examples
+        ========
+
+        >>> from sympy import Ellipse, Point, symbols
+        >>> c = Point(3,8)
+        >>> Ellipse(c, 7, 9).director_circle()
+        Circle(Point2D(3, 8), sqrt(130))
+        >>> a, b = symbols('a b')
+        >>> Ellipse(c, a, b).director_circle()
+        Circle(Point2D(3, 8), sqrt(a**2 + b**2))
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Director_circle
+
+        """
+        return Circle(self.center, sqrt(self.hradius**2 + self.vradius**2))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
@@ -1043,7 +1098,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Ellipse, Segment
+        >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.random_point() # gives some random point
         Point2D(...)
@@ -1074,7 +1129,6 @@ class Ellipse(GeometrySet):
         sympy.geometry.point.Point
         arbitrary_point : Returns parameterized point on ellipse
         """
-        from sympy import sin, cos, Rational
         t = _symbol('t', real=True)
         x, y = self.arbitrary_point(t).args
         # get a random value in [-1, 1) corresponding to cos(t)
@@ -1122,8 +1176,9 @@ class Ellipse(GeometrySet):
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
         else:
-            x, y = [_uniquely_named_symbol(
-                name, (self, line), real=True) for name in 'xy']
+            x, y = [uniquely_named_symbol(
+                name, (self, line), modify=lambda s: '_' + s, real=True)
+                for name in 'xy']
             expr = self.equation(x, y)
             p = Point(x, y).reflect(line)
             result = expr.subs(zip((x, y), p.args
@@ -1151,7 +1206,7 @@ class Ellipse(GeometrySet):
         if self.hradius == self.vradius:
             return self.func(self.center.rotate(angle, pt), self.hradius)
         if (angle/S.Pi).is_integer:
-            return super(Ellipse, self).rotate(angle, pt)
+            return super().rotate(angle, pt)
         if (2*angle/S.Pi).is_integer:
             return self.func(self.center.rotate(angle, pt), self.vradius, self.hradius)
         # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes
@@ -1240,7 +1295,6 @@ class Ellipse(GeometrySet):
             # else p is outside the ellipse or we can't tell. In case of the
             # latter, the solutions returned will only be valid if
             # the point is not inside the ellipse; if it is, nan will result.
-            x, y = Dummy('x'), Dummy('y')
             eq = self.equation(x, y)
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
@@ -1250,9 +1304,11 @@ class Ellipse(GeometrySet):
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
-                assert tangent_points[0][
-                           0] == p.x or tangent_points[0][1] == p.y
-                return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
+                if tangent_points[0][
+                           0] == p.x or tangent_points[0][1] == p.y:
+                    return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
+                else:
+                    return [Line(p, p + Point(0, 1)), Line(p, tangent_points[0])]
 
             # others
             return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
@@ -1283,6 +1339,7 @@ class Ellipse(GeometrySet):
         """
         return self.args[2]
 
+
     def second_moment_of_area(self, point=None):
         """Returns the second moment and product moment area of an ellipse.
 
@@ -1297,7 +1354,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        I_xx, I_yy, I_xy : number or sympy expression
+        I_xx, I_yy, I_xy : number or SymPy expression
             I_xx, I_yy are second moment of area of an ellise.
             I_xy is product moment of area of an ellipse.
 
@@ -1313,7 +1370,7 @@ class Ellipse(GeometrySet):
         References
         ==========
 
-        https://en.wikipedia.org/wiki/List_of_second_moments_of_area
+        .. [1] https://en.wikipedia.org/wiki/List_of_second_moments_of_area
 
         """
 
@@ -1332,6 +1389,103 @@ class Ellipse(GeometrySet):
         return I_xx, I_yy, I_xy
 
 
+    def polar_second_moment_of_area(self):
+        """Returns the polar second moment of area of an Ellipse
+
+        It is a constituent of the second moment of area, linked through
+        the perpendicular axis theorem. While the planar second moment of
+        area describes an object's resistance to deflection (bending) when
+        subjected to a force applied to a plane parallel to the central
+        axis, the polar second moment of area describes an object's
+        resistance to deflection when subjected to a moment applied in a
+        plane perpendicular to the object's central axis (i.e. parallel to
+        the cross-section)
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Circle, Ellipse
+        >>> c = Circle((5, 5), 4)
+        >>> c.polar_second_moment_of_area()
+        128*pi
+        >>> a, b = symbols('a, b')
+        >>> e = Ellipse((0, 0), a, b)
+        >>> e.polar_second_moment_of_area()
+        pi*a**3*b/4 + pi*a*b**3/4
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Polar_moment_of_inertia
+
+        """
+        second_moment = self.second_moment_of_area()
+        return second_moment[0] + second_moment[1]
+
+
+    def section_modulus(self, point=None):
+        """Returns a tuple with the section modulus of an ellipse
+
+        Section modulus is a geometric property of an ellipse defined as the
+        ratio of second moment of area to the distance of the extreme end of
+        the ellipse from the centroidal axis.
+
+        Parameters
+        ==========
+
+        point : Point, two-tuple of sympifyable objects, or None(default=None)
+            point is the point at which section modulus is to be found.
+            If "point=None" section modulus will be calculated for the
+            point farthest from the centroidal axis of the ellipse.
+
+        Returns
+        =======
+
+        S_x, S_y: numbers or SymPy expressions
+                  S_x is the section modulus with respect to the x-axis
+                  S_y is the section modulus with respect to the y-axis
+                  A negative sign indicates that the section modulus is
+                  determined for a point below the centroidal axis.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Ellipse, Circle, Point2D
+        >>> d = Symbol('d', positive=True)
+        >>> c = Circle((0, 0), d/2)
+        >>> c.section_modulus()
+        (pi*d**3/32, pi*d**3/32)
+        >>> e = Ellipse(Point2D(0, 0), 2, 4)
+        >>> e.section_modulus()
+        (8*pi, 4*pi)
+        >>> e.section_modulus((2, 2))
+        (16*pi, 4*pi)
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Section_modulus
+
+        """
+        x_c, y_c = self.center
+        if point is None:
+            # taking x and y as maximum distances from centroid
+            x_min, y_min, x_max, y_max = self.bounds
+            y = max(y_c - y_min, y_max - y_c)
+            x = max(x_c - x_min, x_max - x_c)
+        else:
+            # taking x and y as distances of the given point from the center
+            point = Point2D(point)
+            y = point.y - y_c
+            x = point.x - x_c
+
+        second_moment = self.second_moment_of_area()
+        S_x = second_moment[0]/y
+        S_y = second_moment[1]/x
+
+        return S_x, S_y
+
+
 class Circle(Ellipse):
     """A circle in space.
 
@@ -1342,7 +1496,7 @@ class Circle(Ellipse):
     ==========
 
     center : Point
-    radius : number or sympy expression
+    radius : number or SymPy expression
     points : sequence of three Points
     equation : equation of a circle
 
@@ -1368,8 +1522,7 @@ class Circle(Ellipse):
     Examples
     ========
 
-    >>> from sympy import Eq
-    >>> from sympy.geometry import Point, Circle
+    >>> from sympy import Point, Circle, Eq
     >>> from sympy.abc import x, y, a, b
 
     A circle constructed from a center and radius:
@@ -1398,13 +1551,11 @@ class Circle(Ellipse):
     """
 
     def __new__(cls, *args, **kwargs):
-        from sympy.geometry.util import find
-        from .polygon import Triangle
-
-        if len(args) == 1 and isinstance(args[0], Expr):
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
+        if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
-            equation = args[0]
+            equation = args[0].expand()
             if isinstance(equation, Eq):
                 equation = equation.lhs - equation.rhs
             x = find(x, equation)
@@ -1415,19 +1566,19 @@ class Circle(Ellipse):
             except ValueError:
                 raise GeometryError("The given equation is not that of a circle.")
 
-            if a == 0 or b == 0 or a != b:
+            if S.Zero in (a, b) or a != b:
                 raise GeometryError("The given equation is not that of a circle.")
 
             center_x = -c/a/2
             center_y = -d/b/2
-            r2 = (center_x**2) + (center_y**2) - e
+            r2 = (center_x**2) + (center_y**2) - e/a
 
-            return Circle((center_x, center_y), sqrt(r2))
+            return Circle((center_x, center_y), sqrt(r2), evaluate=evaluate)
 
         else:
             c, r = None, None
             if len(args) == 3:
-                args = [Point(a, dim=2) for a in args]
+                args = [Point(a, dim=2, evaluate=evaluate) for a in args]
                 t = Triangle(*args)
                 if not isinstance(t, Triangle):
                     return t
@@ -1435,8 +1586,13 @@ class Circle(Ellipse):
                 r = t.circumradius
             elif len(args) == 2:
                 # Assume (center, radius) pair
-                c = Point(args[0], dim=2)
-                r = sympify(args[1])
+                c = Point(args[0], dim=2, evaluate=evaluate)
+                r = args[1]
+                # this will prohibit imaginary radius
+                try:
+                    r = Point(r, 0, evaluate=evaluate).x
+                except ValueError:
+                    raise GeometryError("Circle with imaginary radius is not permitted")
 
             if not (c is None or r is None):
                 if r == 0:
@@ -1444,6 +1600,13 @@ class Circle(Ellipse):
                 return GeometryEntity.__new__(cls, c, r, **kwargs)
 
             raise GeometryError("Circle.__new__ received unknown arguments")
+
+    def _eval_evalf(self, prec=15, **options):
+        pt, r = self.args
+        dps = prec_to_dps(prec)
+        pt = pt.evalf(n=dps, **options)
+        r = r.evalf(n=dps, **options)
+        return self.func(pt, r, evaluate=False)
 
     @property
     def circumference(self):
@@ -1535,7 +1698,7 @@ class Circle(Ellipse):
         Returns
         =======
 
-        radius : number or sympy expression
+        radius : number or SymPy expression
 
         See Also
         ========
@@ -1614,4 +1777,4 @@ class Circle(Ellipse):
         return abs(self.radius)
 
 
-from .polygon import Polygon
+from .polygon import Polygon, Triangle

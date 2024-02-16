@@ -4,6 +4,7 @@ from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, i
 from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup, CyclicGroup
+from sympy.testing.pytest import raises
 
 def test_homomorphism():
     # FpGroup -> PermutationGroup
@@ -56,6 +57,11 @@ def test_homomorphism():
     assert T.codomain == D
     assert T(a*b) == p
 
+    D3 = DihedralGroup(3)
+    T = homomorphism(D3, D3, D3.generators, D3.generators)
+    assert T.is_isomorphism()
+
+
 def test_isomorphisms():
 
     F, a, b = free_group("a, b")
@@ -72,7 +78,7 @@ def test_isomorphisms():
     G = FpGroup(F, [c**3, d**3, (c*d)**2])
     check, T =  group_isomorphism(G, H)
     assert check
-    T(c**3*d**2) == a**3*b**2
+    assert T(c**3*d**2) == a**3*b**2
 
     # FpGroup -> PermutationGroup
     # FpGroup is converted to the equivalent isomorphic group.
@@ -99,3 +105,10 @@ def test_isomorphisms():
     H = CyclicGroup(5)
     assert G.order() == H.order()
     assert is_isomorphic(G, H)
+
+
+def test_check_homomorphism():
+    a = Permutation(1,2,3,4)
+    b = Permutation(1,3)
+    G = PermutationGroup([a, b])
+    raises(ValueError, lambda: homomorphism(G, G, [a], [a]))

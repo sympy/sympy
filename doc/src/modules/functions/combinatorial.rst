@@ -1,117 +1,71 @@
+.. _combinatorial-functions:
+
 Combinatorial
 =============
 
 This module implements various combinatorial functions.
 
-bell
-----
-
 .. autoclass:: sympy.functions.combinatorial.numbers.bell
    :members:
-
-bernoulli
----------
 
 .. autoclass:: sympy.functions.combinatorial.numbers.bernoulli
    :members:
 
-binomial
---------
-
 .. autoclass:: sympy.functions.combinatorial.factorials.binomial
    :members:
-
-catalan
--------
 
 .. autoclass:: sympy.functions.combinatorial.numbers.catalan
    :members:
 
 
-euler
------
-
 .. autoclass:: sympy.functions.combinatorial.numbers.euler
    :members:
 
 
-factorial
----------
-
 .. autoclass:: sympy.functions.combinatorial.factorials.factorial
    :members:
 
-subfactorial
-------------
-
 .. autoclass:: sympy.functions.combinatorial.factorials.subfactorial
    :members:
-
-factorial2 / double factorial
------------------------------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.factorial2
    :members:
 
 
-FallingFactorial
-----------------
-
 .. autoclass:: sympy.functions.combinatorial.factorials.FallingFactorial
    :members:
 
-fibonacci
----------
-
 .. autoclass:: sympy.functions.combinatorial.numbers.fibonacci
    :members:
-
-tribonacci
-----------
 
 .. autoclass:: sympy.functions.combinatorial.numbers.tribonacci
    :members:
 
 
-harmonic
---------
-
 .. autoclass:: sympy.functions.combinatorial.numbers.harmonic
    :members:
-
-lucas
------
 
 .. autoclass:: sympy.functions.combinatorial.numbers.lucas
    :members:
 
-genocchi
---------
-
 .. autoclass:: sympy.functions.combinatorial.numbers.genocchi
    :members:
 
-partition
----------
+.. autoclass:: sympy.functions.combinatorial.numbers.andre
+   :members:
 
 .. autoclass:: sympy.functions.combinatorial.numbers.partition
    :members:
 
-MultiFactorial
---------------
+.. autoclass:: sympy.functions.combinatorial.numbers.mobius
+   :members:
 
 .. autoclass:: sympy.functions.combinatorial.factorials.MultiFactorial
    :members:
 
 
-RisingFactorial
----------------
-
 .. autoclass:: sympy.functions.combinatorial.factorials.RisingFactorial
    :members:
-
-stirling
---------
 
 .. autofunction:: sympy.functions.combinatorial.numbers.stirling
 
@@ -132,47 +86,8 @@ set.
 >>> from sympy.functions.combinatorial.numbers import nC, nP, nT
 >>> items = 'baby'
 
-nC
---
+.. autofunction:: sympy.functions.combinatorial.numbers.nC
 
-Calculate the number of combinations of length ``k``.
+.. autofunction:: sympy.functions.combinatorial.numbers.nP
 
->>> [nC(items, k) for k in range(len(items) + 1)], nC(items)
-([1, 3, 4, 3, 1], 12)
->>> nC('aaa', 2)
-1
->>> nC('abc', 2)
-3
->>> nC(3, 2)
-3
-
-nP
---
-
-Calculate the number of permutations of length ``k``.
-
->>> [nP(items, k) for k in range(len(items) + 1)], nP(items)
-([1, 3, 7, 12, 12], 35)
->>> nC('aaa', 2)
-1
->>> nC('abc', 2)
-3
->>> nC(3, 2)
-3
-
-nT
---
-
-Calculate the number of partitions that have ``k`` parts.
-
->>> [nT(items, k) for k in range(len(items) + 1)], nT(items)
-([0, 1, 5, 4, 1], 11)
->>> nT('aaa', 2)
-1
->>> nT('abc', 2)
-3
->>> nT(3, 2)
-1
-
-Note that the integer for ``n`` indicates *identical* items for ``nT`` but
-indicates ``n`` *different* items for ``nC`` and ``nP``.
+.. autofunction:: sympy.functions.combinatorial.numbers.nT

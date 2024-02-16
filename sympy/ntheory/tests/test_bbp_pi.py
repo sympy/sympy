@@ -1,11 +1,11 @@
-from random import randint
+from sympy.core.random import randint
 
 from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 # http://www.herongyang.com/Cryptography/Blowfish-First-8366-Hex-Digits-of-PI.html
-# There are actually 8336 listed there; with the preppended 3 there are 8337
+# There are actually 8336 listed there; with the prepended 3 there are 8337
 # below
 dig=''.join('''
 3243f6a8885a308d313198a2e03707344a4093822299f31d0082efa98ec4e6c89452821e638d013
@@ -123,6 +123,7 @@ def test_hex_pi_nth_digits():
     assert pi_hex_digits(0, 3) == '324'
     assert pi_hex_digits(0, 0) == ''
     raises(ValueError, lambda: pi_hex_digits(-1))
+    raises(ValueError, lambda: pi_hex_digits(0, -1))
     raises(ValueError, lambda: pi_hex_digits(3.14))
 
     # this will pick a random segment to compute every time

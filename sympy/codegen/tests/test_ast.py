@@ -1,9 +1,14 @@
 import math
-from sympy import (
-    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Symbol, Tuple, Lt, nan, oo
-)
-from sympy.core.relational import StrictLessThan
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.containers import Tuple
+from sympy.core.numbers import nan, oo, Float, Integer
+from sympy.core.relational import Lt
+from sympy.core.symbol import symbols, Symbol
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.sets.fancysets import Range
+from sympy.tensor.indexed import Idx, IndexedBase
+from sympy.testing.pytest import raises
 
 
 from sympy.codegen.ast import (
@@ -262,6 +267,7 @@ def test_String():
     assert st == String('foobar')
     assert st.text == 'foobar'
     assert st.func(**st.kwargs()) == st
+    assert st.func(*st.args) == st
 
 
     class Signifier(String):
@@ -381,7 +387,6 @@ def test_Variable():
     assert Variable.deduced(z, value=3.0+1j).type == complex_
 
 
-
 def test_Pointer():
     p = Pointer(x)
     assert p.symbol == x
@@ -410,8 +415,9 @@ def test_Declaration():
     vn = Variable(n, type=Type.from_expr(n))
     assert Declaration(vn).variable.type == integer
 
-    lt = StrictLessThan(vu, vn)
-    assert isinstance(lt, StrictLessThan)
+    # PR 19107, does not allow comparison between expressions and Basic
+    # lt = StrictLessThan(vu, vn)
+    # assert isinstance(lt, StrictLessThan)
 
     vuc = Variable(u, Type.from_expr(u), value=3.0, attrs={value_const})
     assert value_const in vuc.attrs
@@ -435,7 +441,6 @@ def test_Declaration():
     assert decl3.variable.value == 3.0
 
     raises(ValueError, lambda: Declaration(vi, 42))
-
 
 
 def test_IntBaseType():
@@ -488,13 +493,14 @@ def test_FloatType():
     assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 0.1*10**-f80.dig
     assert abs(f128.tiny / Float('3.3621031431120935062626778173217526e-4932', precision=128) - 1) < 0.1*10**-f128.dig
 
-    assert f64.cast_check(0.5) == 0.5
+    assert f64.cast_check(0.5) == Float(0.5, 17)
     assert abs(f64.cast_check(3.7) - 3.7) < 3e-17
     assert isinstance(f64.cast_check(3), (Float, float))
 
     assert f64.cast_nocheck(oo) == float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
+    assert f64.cast_nocheck(-oo) == float('-inf')
+    assert f64.cast_nocheck(float(oo)) == float('inf')
+    assert f64.cast_nocheck(float(-oo)) == float('-inf')
     assert math.isnan(f64.cast_nocheck(nan))
 
     assert f32 != f64
@@ -546,7 +552,6 @@ def test_While():
     whl2 = While(x < 2, cblk)
     assert whl1 == whl2
     assert whl1 != While(x < 3, [xpp])
-
 
 
 def test_Scope():
@@ -617,12 +622,22 @@ def test_FunctionCall():
     fc = FunctionCall('power', (x, 3))
     assert fc.function_args[0] == x
     assert fc.function_args[1] == 3
+    assert len(fc.function_args) == 2
     assert isinstance(fc.function_args[1], Integer)
     assert fc == FunctionCall('power', (x, 3))
     assert fc != FunctionCall('power', (3, x))
     assert fc != FunctionCall('Power', (x, 3))
     assert fc.func(*fc.args) == fc
 
+    fc2 = FunctionCall('fma', [2, 3, 4])
+    assert len(fc2.function_args) == 3
+    assert fc2.function_args[0] == 2
+    assert fc2.function_args[1] == 3
+    assert fc2.function_args[2] == 4
+    assert str(fc2) in ( # not sure if QuotedString is a better default...
+        'FunctionCall(fma, function_args=(2, 3, 4))',
+        'FunctionCall("fma", function_args=(2, 3, 4))',
+    )
 
 def test_ast_replace():
     x = Variable('x', real)

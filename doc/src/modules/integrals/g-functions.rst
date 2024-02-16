@@ -1,5 +1,8 @@
+.. _g-functions:
+
+============================================
 Computing Integrals using Meijer G-Functions
-********************************************
+============================================
 
 This text aims do describe in some detail the steps (and subtleties) involved
 in using Meijer G-functions for computing definite and indefinite integrals.
@@ -462,7 +465,7 @@ Thus the final computation remains valid as long as the initial integral
 converges, and if there exists a changed set of parameters where the computation
 is valid. If we assume w.l.o.g. that `a > 0`, then the latter condition is
 fulfilled if `G` converges along contours (2) or (3) of [Luke1969]_,
-section 5.2, i.e. either `\delta >= \frac{a}{2}` or `p \ge 1, p \ge q`.
+section 5.2, i.e. either `\delta \ge \frac{a}{2}` or `p \ge 1, p \ge q`.
 
 When the integral exists
 ========================
@@ -506,3 +509,10 @@ of deriving new formulae improve. Of course it has to grow whenever a new class
 of special functions is to be dealt with.
 
 .. automodule:: sympy.integrals.meijerint_doc
+
+Internal API Reference
+**********************
+
+.. automodule:: sympy.integrals.meijerint
+   :members:
+   :private-members:

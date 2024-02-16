@@ -1,22 +1,21 @@
 """Real and complex elements. """
 
-from __future__ import print_function, division
 
+from sympy.external.gmpy import MPQ
 from sympy.polys.domains.domainelement import DomainElement
+from sympy.utilities import public
 
 from mpmath.ctx_mp_python import PythonMPContext, _mpf, _mpc, _constant
 from mpmath.libmp import (MPZ_ONE, fzero, fone, finf, fninf, fnan,
-    round_nearest, mpf_mul, mpf_abs, mpf_lt, mpc_abs, repr_dps, int_types,
+    round_nearest, mpf_mul, repr_dps, int_types,
     from_int, from_float, from_str, to_rational)
-from mpmath.rational import mpq
 
-from sympy.utilities import public
 
 @public
 class RealElement(_mpf, DomainElement):
     """An element of a real domain. """
 
-    __slots__ = ['__mpf__']
+    __slots__ = ('__mpf__',)
 
     def _set_mpf(self, val):
         self.__mpf__ = val
@@ -30,7 +29,7 @@ class RealElement(_mpf, DomainElement):
 class ComplexElement(_mpc, DomainElement):
     """An element of a complex domain. """
 
-    __slots__ = ['__mpc__']
+    __slots__ = ('__mpc__',)
 
     def _set_mpc(self, val):
         self.__mpc__ = val
@@ -45,7 +44,7 @@ new = object.__new__
 @public
 class MPContext(PythonMPContext):
 
-    def __init__(ctx, prec=53, dps=None, tol=None):
+    def __init__(ctx, prec=53, dps=None, tol=None, real=False):
         ctx._prec_rounding = [prec, round_nearest]
 
         if dps is None:
@@ -57,8 +56,12 @@ class MPContext(PythonMPContext):
         ctx.mpc = ComplexElement
         ctx.mpf._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.mpc._ctxdata = [ctx.mpc, new, ctx._prec_rounding]
-        ctx.mpf.context = ctx
-        ctx.mpc.context = ctx
+
+        if real:
+            ctx.mpf.context = ctx
+        else:
+            ctx.mpc.context = ctx
+
         ctx.constant = _constant
         ctx.constant._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.constant.context = ctx
@@ -104,7 +107,7 @@ class MPContext(PythonMPContext):
         if hasattr(tol, "_mpf_"):
             return tol._mpf_
         prec, rounding = ctx._prec_rounding
-        if isinstance(tol, basestring):
+        if isinstance(tol, str):
             return from_str(tol, prec, rounding)
         raise ValueError("expected a real number, got %s" % tol)
 
@@ -122,6 +125,11 @@ class MPContext(PythonMPContext):
     def to_rational(ctx, s, limit=True):
         p, q = to_rational(s._mpf_)
 
+        # Needed for GROUND_TYPES=flint if gmpy2 is installed because mpmath's
+        # to_rational() function returns a gmpy2.mpz instance and if MPQ is
+        # flint.fmpq then MPQ(p, q) will fail.
+        p = int(p)
+
         if not limit or q <= ctx.max_denom:
             return p, q
 
@@ -138,16 +146,16 @@ class MPContext(PythonMPContext):
 
         k = (ctx.max_denom - q0)//q1
 
-        number = mpq(p, q)
-        bound1 = mpq(p0 + k*p1, q0 + k*q1)
-        bound2 = mpq(p1, q1)
+        number = MPQ(p, q)
+        bound1 = MPQ(p0 + k*p1, q0 + k*q1)
+        bound2 = MPQ(p1, q1)
 
         if not bound2 or not bound1:
             return p, q
         elif abs(bound2 - number) <= abs(bound1 - number):
-            return bound2._mpq_
+            return bound2.numerator, bound2.denominator
         else:
-            return bound1._mpq_
+            return bound1.numerator, bound1.denominator
 
     def almosteq(ctx, s, t, rel_eps=None, abs_eps=None):
         t = ctx.convert(t)

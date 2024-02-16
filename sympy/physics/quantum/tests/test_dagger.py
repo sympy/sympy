@@ -1,8 +1,14 @@
-from sympy import I, Matrix, symbols, conjugate, Expr, Integer
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer)
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import conjugate
+from sympy.matrices.dense import Matrix
 
 from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
+from sympy.physics.quantum.operator import Operator, IdentityOperator
 
 
 def test_scalars():
@@ -29,6 +35,15 @@ def test_matrix():
     assert Dagger(m) == m.H
 
 
+def test_dagger_mul():
+    O = Operator('O')
+    I = IdentityOperator()
+    assert Dagger(O)*O == Dagger(O)*O
+    assert Dagger(O)*O*I == Mul(Dagger(O), O)*I
+    assert Dagger(O)*Dagger(O) == Dagger(O)**2
+    assert Dagger(O)*Dagger(I) == Dagger(O)
+
+
 class Foo(Expr):
 
     def _eval_adjoint(self):
@@ -47,12 +62,12 @@ def test_numpy_dagger():
     if not np:
         skip("numpy not installed.")
 
-    a = np.matrix([[1.0, 2.0j], [-1.0j, 2.0]])
+    a = np.array([[1.0, 2.0j], [-1.0j, 2.0]])
     adag = a.copy().transpose().conjugate()
     assert (Dagger(a) == adag).all()
 
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def test_scipy_sparse_dagger():
@@ -66,3 +81,22 @@ def test_scipy_sparse_dagger():
     a = sparse.csr_matrix([[1.0 + 0.0j, 2.0j], [-1.0j, 2.0 + 0.0j]])
     adag = a.copy().transpose().conjugate()
     assert np.linalg.norm((Dagger(a) - adag).todense()) == 0.0
+
+
+def test_unknown():
+    """Check treatment of unknown objects.
+    Objects without adjoint or conjugate/transpose methods
+    are sympified and wrapped in dagger.
+    """
+    x = symbols("x")
+    result = Dagger(x)
+    assert result.args == (x,) and isinstance(result, adjoint)
+
+
+def test_unevaluated():
+    """Check that evaluate=False returns unevaluated Dagger.
+    """
+    x = symbols("x", real=True)
+    assert Dagger(x) == x
+    result = Dagger(x, evaluate=False)
+    assert result.args == (x,) and isinstance(result, adjoint)

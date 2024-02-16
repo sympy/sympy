@@ -14,7 +14,7 @@ systems, allowing you to create mathematical expressions in SymPy and then
 ship them off to the numeric system of your choice.  This page documents many
 of the options available including the ``math`` library, the popular array
 computing package ``numpy``, code generation in ``Fortran`` or ``C``, and the
-use of the array compiler ``Theano``.
+use of the array compiler ``Aesara``.
 
 Subs/evalf
 ----------
@@ -73,6 +73,30 @@ If you have array-based data this can confer a considerable speedup, on the
 order of 10 nano-seconds per element. Unfortunately numpy incurs some start-up
 time and introduces an overhead of a few microseconds.
 
+CuPy is a NumPy-compatible array library that mainly runs on CUDA, but has
+increasing support for other GPU manufacturers. It can in many cases be used as
+a drop-in replacement for numpy.
+
+    >>> f = lambdify(x, expr, "cupy")
+    >>> import cupy as cp
+    >>> data = cp.linspace(1, 10, 10000)
+    >>> y = f(data) # perform the computation
+    >>> cp.asnumpy(y) # explicitly copy from GPU to CPU / numpy array
+    [ 0.84147098  0.84119981  0.84092844 ... -0.05426074 -0.05433146
+     -0.05440211]
+
+JAX is a similar alternative to CuPy that provides GPU and TPU acceleration via
+just-in-time compilation to XLA. It too, can in some cases, be used as a drop-in
+replacement for numpy.
+
+    >>> f = lambdify(x, expr, "jax")
+    >>> import jax.numpy as jnp
+    >>> data = jnp.linspace(1, 10, 10000)
+    >>> y = f(data) # perform the computation
+    >>> numpy.asarray(y) # explicitly copy to CPU / numpy array
+    array([ 0.84147096,  0.8411998 ,  0.84092844, ..., -0.05426079,
+       -0.05433151, -0.05440211], dtype=float32)
+
 uFuncify
 --------
 
@@ -90,49 +114,55 @@ The ``autowrap`` module contains methods that help in efficient computation.
 
 The API reference of all the above is listed here: :py:func:`sympy.utilities.autowrap`.
 
-Theano
+Aesara
 ------
 
 SymPy has a strong connection with
-`Theano <http://deeplearning.net/software/theano/>`_, a mathematical array
-compiler.  SymPy expressions can be easily translated to Theano graphs and then
-compiled using the Theano compiler chain.
+`Aesara <https://aesara.readthedocs.io/en/latest/>`_, a mathematical array
+compiler.  SymPy expressions can be easily translated to Aesara graphs and then
+compiled using the Aesara compiler chain.
 
     >>> from sympy import *
     >>> from sympy.abc import x
     >>> expr = sin(x)/x
 
-    >>> from sympy.printing.theanocode import theano_function
-    >>> f = theano_function([x], [expr])
+    >>> from sympy.printing.aesaracode import aesara_function
+    >>> f = aesara_function([x], [expr])
 
-If array broadcasting or types are desired then Theano requires this extra
+If array broadcasting or types are desired then Aesara requires this extra
 information
 
-    >>> f = theano_function([x], [expr], dims={x: 1}, dtypes={x: 'float64'})
+    >>> f = aesara_function([x], [expr], dims={x: 1}, dtypes={x: 'float64'})
 
-Theano has a more sophisticated code generation system than SymPy's C/Fortran
+Aesara has a more sophisticated code generation system than SymPy's C/Fortran
 code printers.  Among other things it handles common sub-expressions and
-compilation onto the GPU.  Theano also supports SymPy Matrix and Matrix
+compilation onto the GPU.  Aesara also supports SymPy Matrix and Matrix
 Expression objects.
 
 So Which Should I Use?
 ----------------------
 
 The options here were listed in order from slowest and least dependencies to
-fastest and most dependencies.  For example, if you have Theano installed then
-that will often be the best choice.  If you don't have Theano but do have
-``f2py`` then you should use ``ufuncify``.
+fastest and most dependencies.  For example, if you have Aesara installed then
+that will often be the best choice.  If you don't have Aesara but do have
+``f2py`` then you should use ``ufuncify``. If you have been comfortable using
+lambdify with the numpy module, but have a GPU, CuPy and JAX can provide substantial
+speedups with little effort.
 
-+-----------------+-------+-----------------------------+---------------+
-| Tool            | Speed | Qualities                   | Dependencies  |
-+=================+=======+=============================+===============+
-| subs/evalf      | 50us  | Simple                      | None          |
-+-----------------+-------+-----------------------------+---------------+
-| lambdify        | 1us   | Scalar functions            | math          |
-+-----------------+-------+-----------------------------+---------------+
-| lambdify-numpy  | 10ns  | Vector functions            | numpy         |
-+-----------------+-------+-----------------------------+---------------+
-| ufuncify        | 10ns  | Complex vector expressions  | f2py, Cython  |
-+-----------------+-------+-----------------------------+---------------+
-| Theano          | 10ns  | Many outputs, CSE, GPUs     | Theano        |
-+-----------------+-------+-----------------------------+---------------+
++-----------------+-------+------------------------------------------+---------------+
+| Tool            | Speed | Qualities                                | Dependencies  |
++=================+=======+==========================================+===============+
+| subs/evalf      | 50us  | Simple                                   | None          |
++-----------------+-------+------------------------------------------+---------------+
+| lambdify        | 1us   | Scalar functions                         | math          |
++-----------------+-------+------------------------------------------+---------------+
+| lambdify-numpy  | 10ns  | Vector functions                         | numpy         |
++-----------------+-------+------------------------------------------+---------------+
+| ufuncify        | 10ns  | Complex vector expressions               | f2py, Cython  |
++-----------------+-------+------------------------------------------+---------------+
+| lambdify-cupy   | 10ns  | Vector functions on GPUs                 | cupy          |
++-----------------+-------+------------------------------------------+---------------+
+| lambdify-jax    | 10ns  | Vector functions on CPUs, GPUs and TPUs  | jax           |
++-----------------+-------+------------------------------------------+---------------+
+| Aesara          | 10ns  | Many outputs, CSE, GPUs                  | Aesara        |
++-----------------+-------+------------------------------------------+---------------+

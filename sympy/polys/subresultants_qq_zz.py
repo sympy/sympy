@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module contains functions for the computation
 of Euclidean, (generalized) Sturmian, (modified) subresultant
@@ -21,8 +20,8 @@ references stated in the docstring of rem_z().
 
 1. Theoretical background:
 ==========================
-Consider the polynomials f, g ∈ Z[x] of degrees deg(f) = n and
-deg(g) = m with n ≥ m.
+Consider the polynomials f, g in Z[x] of degrees deg(f) = n and
+deg(g) = m with n >= m.
 
 Definition 1:
 =============
@@ -46,20 +45,20 @@ the two definitions above.
 =====================================
 The subresultant prs of f, g is a sequence of polynomials in Z[x]
 analogous to the Euclidean prs, the sequence obtained by applying
-on f, g Euclid’s algorithm for polynomial greatest common divisors
+on f, g Euclid's algorithm for polynomial greatest common divisors
 (gcd) in Q[x].
 
 The subresultant prs differs from the Euclidean prs in that the
 coefficients of each polynomial in the former sequence are determinants
 --- also referred to as subresultants --- of appropriately selected
-sub-matrices of sylvester1(f, g, x), Sylvester’s matrix of 1840 of
-dimensions (n + m) × (n + m).
+sub-matrices of sylvester1(f, g, x), Sylvester's matrix of 1840 of
+dimensions (n + m) * (n + m).
 
 Recall that the determinant of sylvester1(f, g, x) itself is
 called the resultant of f, g and serves as a criterion of whether
 the two polynomials have common roots or not.
 
-In sympy the resultant is computed with the function
+In SymPy the resultant is computed with the function
 resultant(f, g, x). This function does _not_ evaluate the
 determinant of sylvester(f, g, x, 1); instead, it returns
 the last member of the subresultant prs of f, g, multiplied
@@ -78,39 +77,39 @@ Caveat: If Df = degree(f, x) and Dg = degree(g, x), then:
 
 resultant(f, g, x) = (-1)**(Df*Dg) * resultant(g, f, x).
 
-For complete prs’s the sign sequence of the Euclidean prs of f, g
+For complete prs's the sign sequence of the Euclidean prs of f, g
 is identical to the sign sequence of the subresultant prs of f, g
 and the coefficients of one sequence  are easily computed from the
 coefficients of the  other.
 
-For incomplete prs’s the polynomials in the subresultant prs, generally
+For incomplete prs's the polynomials in the subresultant prs, generally
 differ in sign from those of the Euclidean prs, and --- unlike the
-case of complete prs’s --- it is not at all obvious how to compute
+case of complete prs's --- it is not at all obvious how to compute
 the coefficients of one sequence from the coefficients of the  other.
 
 1B. Sturmian and modified subresultant prs's:
 =============================================
-For the same polynomials f, g ∈ Z[x] mentioned above, their ``modified''
+For the same polynomials f, g in Z[x] mentioned above, their ``modified''
 subresultant prs is a sequence of polynomials similar to the Sturmian
-prs, the sequence obtained by applying in Q[x] Sturm’s algorithm on f, g.
+prs, the sequence obtained by applying in Q[x] Sturm's algorithm on f, g.
 
 The two sequences differ in that the coefficients of each polynomial
 in the modified subresultant prs are the determinants --- also referred
 to as modified subresultants --- of appropriately selected  sub-matrices
-of sylvester2(f, g, x), Sylvester’s matrix of 1853 of dimensions 2n × 2n.
+of sylvester2(f, g, x), Sylvester's matrix of 1853 of dimensions 2n x 2n.
 
 The determinant of sylvester2 itself is called the modified resultant
 of f, g and it also can serve as a criterion of whether the two
 polynomials have common roots or not.
 
-For complete prs’s the  sign sequence of the Sturmian prs of f, g is
+For complete prs's the  sign sequence of the Sturmian prs of f, g is
 identical to the sign sequence of the modified subresultant prs of
 f, g and the coefficients of one sequence  are easily computed from
 the coefficients of the other.
 
-For incomplete prs’s the polynomials in the modified subresultant prs,
+For incomplete prs's the polynomials in the modified subresultant prs,
 generally differ in sign from those of the Sturmian prs, and --- unlike
-the case of complete prs’s --- it is not at all obvious how to compute
+the case of complete prs's --- it is not at all obvious how to compute
 the coefficients of one sequence from the coefficients of the  other.
 
 As Sylvester pointed out, the coefficients of the polynomial remainders
@@ -132,7 +131,7 @@ subresultant and modified subresultant prs respectively.
 
 2. Functions in the module:
 ===========================
-No function utilizes sympy's function prem().
+No function utilizes SymPy's function prem().
 
 2A. Matrices:
 =============
@@ -177,13 +176,13 @@ modified_subresultants_bezout(f, g, x)
 All three functions in this section evaluate one determinant
 per remainder polynomial; this is the determinant of an
 appropriately selected sub-matrix of sylvester1(f, g, x),
-Sylvester’s matrix of 1840.
+Sylvester's matrix of 1840.
 
 To compute the remainder polynomials the function
 subresultants_rem(f, g, x) employs rem(f, g, x).
-By contrast, the other two functions implement Van Vleck’s ideas
+By contrast, the other two functions implement Van Vleck's ideas
 of 1900 and compute the remainder polynomials by trinagularizing
-sylvester2(f, g, x), Sylvester’s matrix of 1853.
+sylvester2(f, g, x), Sylvester's matrix of 1853.
 
 
 subresultants_rem(f, g, x)
@@ -232,7 +231,7 @@ and A-M-V can be implemented utilizing either the function
 rem(f, g, x) or the function rem_z(f, g, x).
 
 For clearly historical reasons --- since the Collins-Brown-Traub
-coefficients-reduction factor β_i was not available in 1917 ---
+coefficients-reduction factor beta_i was not available in 1917 ---
 we have implemented the Pell-Gordon theorem with the function
 rem(f, g, x) and the A-M-V Theorem  with the function rem_z(f, g, x).
 
@@ -244,16 +243,25 @@ res_z(f, g, x)
 """
 
 
-from __future__ import print_function, division
-
-from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
-from sympy import (QQ, quo, prem, rem, S, sign, simplify, summation, var, zeros)
+from sympy.concrete.summations import summation
+from sympy.core.function import expand
+from sympy.core.numbers import nan
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy as var
+from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions.elementary.integers import floor
+from sympy.matrices.dense import eye, Matrix, zeros
+from sympy.printing.pretty.pretty import pretty_print as pprint
+from sympy.simplify.simplify import simplify
+from sympy.polys.domains import QQ
+from sympy.polys.polytools import degree, LC, Poly, pquo, quo, prem, rem
 from sympy.polys.polyerrors import PolynomialError
+
 
 def sylvester(f, g, x, method = 1):
     '''
       The input polynomials f, g are in Z[x] or in Q[x]. Let m = degree(f, x),
-      n = degree(g, x) and mx = max( m , n ).
+      n = degree(g, x) and mx = max(m, n).
 
       a. If method = 1 (default), computes sylvester1, Sylvester's matrix of 1840
           of dimension (m + n) x (m + n). The determinants of properly chosen
@@ -272,11 +280,11 @@ def sylvester(f, g, x, method = 1):
       ==========
       1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On a Theorem
       by Van Vleck Regarding Sturm Sequences. Serdica Journal of Computing,
-      Vol. 7, No 4, 101–134, 2013.
+      Vol. 7, No 4, 101-134, 2013.
 
       2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
       and Modified Subresultant Polynomial Remainder Sequences.''
-      Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
+      Serdica Journal of Computing, Vol. 8, No 1, 29-46, 2014.
 
     '''
     # obtain degrees of polys
@@ -402,7 +410,7 @@ def subresultants_sylv(f, g, x):
     ===========
     1. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
     and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
-    Vol. 15, 233–266, 2004.
+    Vol. 15, 233-266, 2004.
 
     """
 
@@ -442,7 +450,7 @@ def subresultants_sylv(f, g, x):
         # evaluate determinants and form coefficients list
         coeff_L, k, l = [], Sp.rows, 0
         while l <= j:
-            coeff_L.append(Sp[ : , 0 : k].det())
+            coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
             l += 1
 
@@ -510,7 +518,7 @@ def modified_subresultants_sylv(f, g, x):
         # evaluate determinants and form coefficients list
         coeff_L, k, l = [], Sp.rows, 0
         while l <= j:
-            coeff_L.append(Sp[ : , 0 : k].det())
+            coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
             l += 1
 
@@ -612,7 +620,7 @@ def sign_seq(poly_seq, x):
 def bezout(p, q, x, method='bz'):
     """
     The input polynomials p, q are in Z[x] or in Q[x]. Let
-    mx = max( degree(p, x) , degree(q, x) ).
+    mx = max(degree(p, x), degree(q, x)).
 
     The default option bezout(p, q, x, method='bz') returns Bezout's
     symmetric matrix of p and q, of dimensions (mx) x (mx). The
@@ -642,7 +650,7 @@ def bezout(p, q, x, method='bz'):
     ==========
     1. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
     and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
-    Vol. 15, 233–266, 2004.
+    Vol. 15, 233-266, 2004.
 
     """
     # obtain degrees of polys
@@ -731,7 +739,7 @@ def subresultants_bezout(p, q, x):
     ==========
     1. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
     and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
-    Vol. 15, 233–266, 2004.
+    Vol. 15, 233-266, 2004.
 
     """
     # make sure neither p nor q is 0
@@ -766,14 +774,14 @@ def subresultants_bezout(p, q, x):
         M = B[0:j, :]
         k, coeff_L = j - 1, []
         while k <= degF - 1:
-            coeff_L.append(M[: ,0 : j].det())
+            coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
                 M.col_swap(j - 1, k + 1)
             k = k + 1
 
         # apply Theorem 2.1 in the paper by Toca & Vega 2004
         # to get correct signs
-        SR_L.append((int((-1)**(j*(j-1)/2)) * Poly(coeff_L, x) / F).as_expr())
+        SR_L.append(int((-1)**(j*(j-1)/2)) * (Poly(coeff_L, x) / F).as_expr())
         j = j + 1
 
     return process_matrix_output(SR_L, x)
@@ -802,11 +810,11 @@ def modified_subresultants_bezout(p, q, x):
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
     and Modified Subresultant Polynomial Remainder Sequences.''
-    Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
+    Serdica Journal of Computing, Vol. 8, No 1, 29-46, 2014.
 
     2. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
     and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
-    Vol. 15, 233–266, 2004.
+    Vol. 15, 233-266, 2004.
 
 
     """
@@ -841,7 +849,7 @@ def modified_subresultants_bezout(p, q, x):
         M = B[0:j, :]
         k, coeff_L = j - 1, []
         while k <= degF - 1:
-            coeff_L.append(M[: ,0 : j].det())
+            coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
                 M.col_swap(j - 1, k + 1)
             k = k + 1
@@ -894,11 +902,11 @@ def sturm_pg(p, q, x, method=0):
     ==========
     1. Pell A. J., R. L. Gordon. The Modified Remainders Obtained in Finding
     the Highest Common Factor of Two Polynomials. Annals of MatheMatics,
-    Second Series, 18 (1917), No. 4, 188–193.
+    Second Series, 18 (1917), No. 4, 188-193.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
     and Modified Subresultant Polynomial Remainder Sequences.''
-    Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
+    Serdica Journal of Computing, Vol. 8, No 1, 29-46, 2014.
 
     """
     # make sure neither p nor q is 0
@@ -1004,14 +1012,14 @@ def sturm_q(p, q, x):
     ==========
     1. Pell A. J., R. L. Gordon. The Modified Remainders Obtained in Finding
     the Highest Common Factor of Two Polynomials. Annals of MatheMatics,
-    Second Series, 18 (1917), No. 4, 188–193.
+    Second Series, 18 (1917), No. 4, 188-193.
 
     2 Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
     and Modified Subresultant Polynomial Remainder Sequences.''
-    Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
+    Serdica Journal of Computing, Vol. 8, No 1, 29-46, 2014.
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
 
     """
     # make sure neither p nor q is 0
@@ -1103,7 +1111,7 @@ def sturm_amv(p, q, x, method=0):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.'' Serdica
@@ -1111,7 +1119,7 @@ def sturm_amv(p, q, x, method=0):
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     Remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
+    Serdica Journal of Computing 10 (2016), No.3-4, 197-217.
 
     """
     # compute the euclidean sequence
@@ -1190,7 +1198,7 @@ def euclid_pg(p, q, x):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.'' Serdica
@@ -1198,8 +1206,7 @@ def euclid_pg(p, q, x):
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     Remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
-
+    Serdica Journal of Computing 10 (2016), No.3-4, 197-217.
     """
     # compute the sturmian sequence using the Pell-Gordon (or AMV) theorem
     # with the coefficients in the prs being (in absolute value) subresultants
@@ -1259,14 +1266,14 @@ def euclid_q(p, q, x):
     ==========
     1. Pell A. J., R. L. Gordon. The Modified Remainders Obtained in Finding
     the Highest Common Factor of Two Polynomials. Annals of MatheMatics,
-    Second Series, 18 (1917), No. 4, 188–193.
+    Second Series, 18 (1917), No. 4, 188-193.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
     and Modified Subresultant Polynomial Remainder Sequences.''
-    Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
+    Serdica Journal of Computing, Vol. 8, No 1, 29-46, 2014.
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
 
     """
     # make sure neither p nor q is 0
@@ -1342,11 +1349,11 @@ def euclid_amv(f, g, x):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
+    Serdica Journal of Computing 10 (2016), No.3-4, 197-217.
 
     """
     # make sure neither f nor g is 0
@@ -1383,7 +1390,7 @@ def euclid_amv(f, g, x):
         sigma0 = -LC(a0)
         c = (sigma0**(deg_dif_p1 - 1)) / (c**(deg_dif_p1 - 2))
         deg_dif_p1 = degree(a0, x) - d2 + 1
-        a2 = rem_z(a0, a1, x) / Abs( ((c**(deg_dif_p1 - 1)) * sigma0) )
+        a2 = rem_z(a0, a1, x) / Abs( (c**(deg_dif_p1 - 1)) * sigma0 )
         euclid_seq.append( a2 )
         d2 =  degree(a2, x)                   # actual degree of a2
 
@@ -1416,11 +1423,11 @@ def modified_subresultants_pg(p, q, x):
     ==========
     1. Pell A. J., R. L. Gordon. The Modified Remainders Obtained in Finding
     the Highest Common Factor of Two Polynomials. Annals of MatheMatics,
-    Second Series, 18 (1917), No. 4, 188–193.
+    Second Series, 18 (1917), No. 4, 188-193.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
     and Modified Subresultant Polynomial Remainder Sequences.''
-    Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
+    Serdica Journal of Computing, Vol. 8, No 1, 29-46, 2014.
 
     """
     # make sure neither p nor q is 0
@@ -1473,8 +1480,8 @@ def modified_subresultants_pg(p, q, x):
 
     # apply Pell-Gordon formula (7) in second reference
     num = 1                                     # numerator of fraction
-    for k in range(len(u_list)):
-        num *= (-1)**u_list[k]
+    for u in u_list:
+        num *= (-1)**u
     num = num * (-1)**v
 
     # denominator depends on complete / incomplete seq
@@ -1498,7 +1505,7 @@ def modified_subresultants_pg(p, q, x):
         subres_l.append(- simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
 
     # update Pell-Gordon variables
-    k =  var('k')
+    k = var('k')
     rho_list.append( sign(rho2))
     u =  summation(k, (k, 1, p_list[len(p_list) - 1]))
     u_list.append(u)
@@ -1532,8 +1539,8 @@ def modified_subresultants_pg(p, q, x):
 
         # apply Pell-Gordon formula (7) in second reference
         num = 1                              # numerator
-        for k in range(len(u_list)):
-            num *= (-1)**u_list[k]
+        for u in u_list:
+            num *= (-1)**u
         num = num * (-1)**v
 
         # denominator depends on complete / incomplete seq
@@ -1557,7 +1564,7 @@ def modified_subresultants_pg(p, q, x):
             subres_l.append(- simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
 
         # update Pell-Gordon variables
-        k =  var('k')
+        k = var('k')
         rho_list.append( sign(rho2))
         u =  summation(k, (k, 1, p_list[len(p_list) - 1]))
         u_list.append(u)
@@ -1599,8 +1606,8 @@ def subresultants_pg(p, q, x):
 
     References
     ==========
-    1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ‘‘On the Remainders
-    Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
+    1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: "On the Remainders
+    Obtained in Finding the Greatest Common Divisor of Two Polynomials."
     Serdica Journal of Computing 9(2) (2015), 123-138.
 
     """
@@ -1665,11 +1672,11 @@ def subresultants_amv_q(p, q, x):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
+    Serdica Journal of Computing 10 (2016), No.3-4, 197-217.
 
     """
     # make sure neither p nor q is 0
@@ -1791,10 +1798,10 @@ def rem_z(p, q, x):
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
     Serdica Journal of Computing, 9(2) (2015), 123-138.
 
-    2. http://planetMath.org/sturmstheorem
+    2. https://planetMath.org/sturmstheorem
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result on
-    the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
+    the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
 
     '''
     if (p.as_poly().is_univariate and q.as_poly().is_univariate and
@@ -1851,11 +1858,11 @@ def subresultants_amv(f, g, x):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
+    Serdica Journal of Computing 10 (2016), No.3-4, 197-217.
 
     """
     # make sure neither f nor g is 0
@@ -1931,7 +1938,7 @@ def subresultants_amv(f, g, x):
         sigma0 = -LC(a0)
         c = (sigma0**(deg_dif_p1 - 1)) / (c**(deg_dif_p1 - 2))
         deg_dif_p1 = degree(a0, x) - d2 + 1
-        a2 = rem_z(a0, a1, x) / Abs( ((c**(deg_dif_p1 - 1)) * sigma0) )
+        a2 = rem_z(a0, a1, x) / Abs( (c**(deg_dif_p1 - 1)) * sigma0 )
         sigma3 =  LC(a2, x)                   # leading coeff of a2
         d2 =  degree(a2, x)                   # actual degree of a2
         p1 = d1 - d2                          # degree difference
@@ -1990,8 +1997,8 @@ def modified_subresultants_amv(p, q, x):
 
     References
     ==========
-    1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ‘‘On the Remainders
-    Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
+    1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: "On the Remainders
+    Obtained in Finding the Greatest Common Divisor of Two Polynomials."
     Serdica Journal of Computing, Serdica Journal of Computing, 9(2) (2015), 123-138.
 
     """
@@ -2057,7 +2064,7 @@ def correct_sign(deg_f, deg_g, s1, rdel, cdel):
     ==========
     Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
     and Modified Subresultant Polynomial Remainder Sequences.''
-    Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
+    Serdica Journal of Computing, Vol. 8, No 1, 29-46, 2014.
 
     """
     M = s1[:, :]   # copy of matrix s1
@@ -2103,7 +2110,7 @@ def subresultants_rem(p, q, x):
     References
     ==========
     1. Akritas, A. G.:``Three New Methods for Computing Subresultant
-    Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing 9(1) (2015), 1-26.
+    Polynomial Remainder Sequences (PRS's).'' Serdica Journal of Computing 9(1) (2015), 1-26.
 
     """
     # make sure neither p nor q is 0
@@ -2167,7 +2174,7 @@ def pivot(M, i, j):
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On a Theorem
     by Van Vleck Regarding Sturm Sequences.''
-    Serdica Journal of Computing, 7, No 4, 101–134, 2013.
+    Serdica Journal of Computing, 7, No 4, 101-134, 2013.
 
     '''
     ma = M[:, :] # copy of matrix M
@@ -2191,7 +2198,7 @@ def rotate_r(L, k):
     for i in range(k):
         el = ll.pop(len(ll) - 1)
         ll.insert(0, el)
-    return ll if type(L) is list else Matrix([ll])
+    return ll if isinstance(L, list) else Matrix([ll])
 
 def rotate_l(L, k):
     '''
@@ -2204,7 +2211,7 @@ def rotate_l(L, k):
     for i in range(k):
         el = ll.pop(0)
         ll.insert(len(ll) - 1, el)
-    return ll if type(L) is list else Matrix([ll])
+    return ll if isinstance(L, list) else Matrix([ll])
 
 def row2poly(row, deg, x):
     '''
@@ -2340,10 +2347,10 @@ def subresultants_vv(p, q, x, method = 0):
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On a Theorem
     by Van Vleck Regarding Sturm Sequences.''
-    Serdica Journal of Computing, 7, No 4, 101–134, 2013.
+    Serdica Journal of Computing, 7, No 4, 101-134, 2013.
 
     3. Akritas, A. G.:``Three New Methods for Computing Subresultant
-    Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing 9(1) (2015), 1-26.
+    Polynomial Remainder Sequences (PRS's).'' Serdica Journal of Computing 9(1) (2015), 1-26.
 
     """
     # make sure neither p nor q is 0
@@ -2409,7 +2416,7 @@ def subresultants_vv(p, q, x, method = 0):
 
         # treat last row of M as poly; find its degree
         d = find_degree(M, deg_f)
-        if d == None:
+        if d is None:
             break
         exp_deg = deg_g - 1
 
@@ -2479,10 +2486,10 @@ def subresultants_vv_2(p, q, x):
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On a Theorem
     by Van Vleck Regarding Sturm Sequences.''
-    Serdica Journal of Computing, 7, No 4, 101–134, 2013.
+    Serdica Journal of Computing, 7, No 4, 101-134, 2013.
 
     3. Akritas, A. G.:``Three New Methods for Computing Subresultant
-    Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing 9(1) (2015), 1-26.
+    Polynomial Remainder Sequences (PRS's).'' Serdica Journal of Computing 9(1) (2015), 1-26.
 
     """
     # make sure neither p nor q is 0
@@ -2527,7 +2534,7 @@ def subresultants_vv_2(p, q, x):
 
         # treat last row of M as poly; find its degree
         d = find_degree(M, deg_f)
-        if d == None:
+        if d is None:
             return sr_list
         exp_deg = deg_g - 1
 

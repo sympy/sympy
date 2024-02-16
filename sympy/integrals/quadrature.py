@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Dummy, pi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos
@@ -8,12 +6,14 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.polys.orthopolys import (legendre_poly, laguerre_poly,
                                     hermite_poly, jacobi_poly)
 from sympy.polys.rootoftools import RootOf
-from sympy.core.compatibility import range
 
 
 def gauss_legendre(n, n_digits):
     r"""
     Computes the Gauss-Legendre quadrature [1]_ points and weights.
+
+    Explanation
+    ===========
 
     The Gauss-Legendre quadrature approximates the integral:
 
@@ -29,9 +29,10 @@ def gauss_legendre(n, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
-
-    n_digits : number of significant digits of the points and weights to return
+    n :
+        The order of quadrature.
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
@@ -64,7 +65,7 @@ def gauss_legendre(n, n_digits):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gaussian_quadrature
-    .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/legendre_rule/legendre_rule.html
+    .. [2] https://people.sc.fsu.edu/~jburkardt/cpp_src/legendre_rule/legendre_rule.html
     """
     x = Dummy("x")
     p = legendre_poly(n, x, polys=True)
@@ -73,7 +74,7 @@ def gauss_legendre(n, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((2/((1-r**2) * pd.subs(x, r)**2)).n(n_digits))
     return xi, w
@@ -82,6 +83,9 @@ def gauss_legendre(n, n_digits):
 def gauss_laguerre(n, n_digits):
     r"""
     Computes the Gauss-Laguerre quadrature [1]_ points and weights.
+
+    Explanation
+    ===========
 
     The Gauss-Laguerre quadrature approximates the integral:
 
@@ -98,14 +102,15 @@ def gauss_laguerre(n, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
-
-    n_digits : number of significant digits of the points and weights to return
+    n :
+        The order of quadrature.
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
 
-    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats.
+    (x, w) : The ``x`` and ``w`` are lists of points and weights as Floats.
              The points `x_i` and weights `w_i` are returned as ``(x, w)``
              tuple of lists.
 
@@ -133,7 +138,7 @@ def gauss_laguerre(n, n_digits):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature
-    .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/laguerre_rule/laguerre_rule.html
+    .. [2] https://people.sc.fsu.edu/~jburkardt/cpp_src/laguerre_rule/laguerre_rule.html
     """
     x = Dummy("x")
     p = laguerre_poly(n, x, polys=True)
@@ -142,7 +147,7 @@ def gauss_laguerre(n, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((r/((n+1)**2 * p1.subs(x, r)**2)).n(n_digits))
     return xi, w
@@ -151,6 +156,9 @@ def gauss_laguerre(n, n_digits):
 def gauss_hermite(n, n_digits):
     r"""
     Computes the Gauss-Hermite quadrature [1]_ points and weights.
+
+    Explanation
+    ===========
 
     The Gauss-Hermite quadrature approximates the integral:
 
@@ -167,14 +175,15 @@ def gauss_hermite(n, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
-
-    n_digits : number of significant digits of the points and weights to return
+    n :
+        The order of quadrature.
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
 
-    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats.
+    (x, w) : The ``x`` and ``w`` are lists of points and weights as Floats.
              The points `x_i` and weights `w_i` are returned as ``(x, w)``
              tuple of lists.
 
@@ -203,8 +212,8 @@ def gauss_hermite(n, n_digits):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gauss-Hermite_Quadrature
-    .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/hermite_rule/hermite_rule.html
-    .. [3] http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_hermite_rule/gen_hermite_rule.html
+    .. [2] https://people.sc.fsu.edu/~jburkardt/cpp_src/hermite_rule/hermite_rule.html
+    .. [3] https://people.sc.fsu.edu/~jburkardt/cpp_src/gen_hermite_rule/gen_hermite_rule.html
     """
     x = Dummy("x")
     p = hermite_poly(n, x, polys=True)
@@ -213,7 +222,7 @@ def gauss_hermite(n, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append(((2**(n-1) * factorial(n) * sqrt(pi)) /
                  (n**2 * p1.subs(x, r)**2)).n(n_digits))
@@ -223,6 +232,9 @@ def gauss_hermite(n, n_digits):
 def gauss_gen_laguerre(n, alpha, n_digits):
     r"""
     Computes the generalized Gauss-Laguerre quadrature [1]_ points and weights.
+
+    Explanation
+    ===========
 
     The generalized Gauss-Laguerre quadrature approximates the integral:
 
@@ -240,11 +252,14 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
+    n :
+        The order of quadrature.
 
-    alpha : the exponent of the singularity, `\alpha > -1`
+    alpha :
+        The exponent of the singularity, `\alpha > -1`.
 
-    n_digits : number of significant digits of the points and weights to return
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
@@ -279,7 +294,7 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature
-    .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_laguerre_rule/gen_laguerre_rule.html
+    .. [2] https://people.sc.fsu.edu/~jburkardt/cpp_src/gen_laguerre_rule/gen_laguerre_rule.html
     """
     x = Dummy("x")
     p = laguerre_poly(n, x, alpha=alpha, polys=True)
@@ -289,7 +304,7 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((gamma(alpha+n) /
                  (n*gamma(n)*p1.subs(x, r)*p2.subs(x, r))).n(n_digits))
@@ -300,6 +315,9 @@ def gauss_chebyshev_t(n, n_digits):
     r"""
     Computes the Gauss-Chebyshev quadrature [1]_ points and weights of
     the first kind.
+
+    Explanation
+    ===========
 
     The Gauss-Chebyshev quadrature of the first kind approximates the integral:
 
@@ -316,9 +334,11 @@ def gauss_chebyshev_t(n, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
+    n :
+        The order of quadrature.
 
-    n_digits : number of significant digits of the points and weights to return
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
@@ -330,7 +350,6 @@ def gauss_chebyshev_t(n, n_digits):
     Examples
     ========
 
-    >>> from sympy import S
     >>> from sympy.integrals.quadrature import gauss_chebyshev_t
     >>> x, w = gauss_chebyshev_t(3, 5)
     >>> x
@@ -353,7 +372,7 @@ def gauss_chebyshev_t(n, n_digits):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature
-    .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev1_rule/chebyshev1_rule.html
+    .. [2] https://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev1_rule/chebyshev1_rule.html
     """
     xi = []
     w = []
@@ -367,6 +386,9 @@ def gauss_chebyshev_u(n, n_digits):
     r"""
     Computes the Gauss-Chebyshev quadrature [1]_ points and weights of
     the second kind.
+
+    Explanation
+    ===========
 
     The Gauss-Chebyshev quadrature of the second kind approximates the
     integral:
@@ -397,7 +419,6 @@ def gauss_chebyshev_u(n, n_digits):
     Examples
     ========
 
-    >>> from sympy import S
     >>> from sympy.integrals.quadrature import gauss_chebyshev_u
     >>> x, w = gauss_chebyshev_u(3, 5)
     >>> x
@@ -420,7 +441,7 @@ def gauss_chebyshev_u(n, n_digits):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature
-    .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev2_rule/chebyshev2_rule.html
+    .. [2] https://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev2_rule/chebyshev2_rule.html
     """
     xi = []
     w = []
@@ -433,6 +454,9 @@ def gauss_chebyshev_u(n, n_digits):
 def gauss_jacobi(n, alpha, beta, n_digits):
     r"""
     Computes the Gauss-Jacobi quadrature [1]_ points and weights.
+
+    Explanation
+    ===========
 
     The Gauss-Jacobi quadrature of the first kind approximates the integral:
 
@@ -488,14 +512,15 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     See Also
     ========
 
-    gauss_legendre, gauss_laguerre, gauss_hermite, gauss_gen_laguerre, gauss_chebyshev_t, gauss_chebyshev_u, gauss_lobatto
+    gauss_legendre, gauss_laguerre, gauss_hermite, gauss_gen_laguerre,
+    gauss_chebyshev_t, gauss_chebyshev_u, gauss_lobatto
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gauss%E2%80%93Jacobi_quadrature
-    .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/jacobi_rule/jacobi_rule.html
-    .. [3] http://people.sc.fsu.edu/~jburkardt/cpp_src/gegenbauer_rule/gegenbauer_rule.html
+    .. [2] https://people.sc.fsu.edu/~jburkardt/cpp_src/jacobi_rule/jacobi_rule.html
+    .. [3] https://people.sc.fsu.edu/~jburkardt/cpp_src/gegenbauer_rule/gegenbauer_rule.html
     """
     x = Dummy("x")
     p = jacobi_poly(n, alpha, beta, x, polys=True)
@@ -505,7 +530,7 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((
             - (2*n+alpha+beta+2) / (n+alpha+beta+S.One) *
@@ -518,6 +543,9 @@ def gauss_jacobi(n, alpha, beta, n_digits):
 def gauss_lobatto(n, n_digits):
     r"""
     Computes the Gauss-Lobatto quadrature [1]_ points and weights.
+
+    Explanation
+    ===========
 
     The Gauss-Lobatto quadrature approximates the integral:
 
@@ -569,7 +597,7 @@ def gauss_lobatto(n, n_digits):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
-    .. [2] http://people.math.sfu.ca/~cbm/aands/page_888.htm
+    .. [2] https://web.archive.org/web/20200118141346/http://people.math.sfu.ca/~cbm/aands/page_888.htm
     """
     x = Dummy("x")
     p = legendre_poly(n-1, x, polys=True)
@@ -578,7 +606,7 @@ def gauss_lobatto(n, n_digits):
     w = []
     for r in pd.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((2/(n*(n-1) * p.subs(x, r)**2)).n(n_digits))
 

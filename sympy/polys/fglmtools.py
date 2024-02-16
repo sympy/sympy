@@ -1,9 +1,7 @@
 """Implementation of matrix FGLM Groebner basis conversion algorithm. """
 
-from __future__ import print_function, division
 
 from sympy.polys.monomials import monomial_mul, monomial_div
-from sympy.core.compatibility import range
 
 def matrix_fglm(F, ring, O_to):
     """
@@ -14,9 +12,9 @@ def matrix_fglm(F, ring, O_to):
     References
     ==========
 
-    J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
-    Computation of Zero-dimensional Groebner Bases by Change of
-    Ordering
+    .. [1] J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
+           Computation of Zero-dimensional Groebner Bases by Change of
+           Ordering
     """
     domain = ring.domain
     ngens = ring.ngens
@@ -148,8 +146,8 @@ def _basis(G, ring):
             if all(monomial_div(_incr_k(t, k), lmg) is None
             for lmg in leading_monomials)]
         candidates.extend(new_candidates)
-        candidates.sort(key=lambda m: order(m), reverse=True)
+        candidates.sort(key=order, reverse=True)
 
     basis = list(set(basis))
 
-    return sorted(basis, key=lambda m: order(m))
+    return sorted(basis, key=order)

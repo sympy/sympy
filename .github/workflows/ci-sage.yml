@@ -1,0 +1,110 @@
+name: Run Sage CI
+
+## This GitHub Actions workflow provides:
+##
+##  - portability testing, by building and testing this project on many platforms
+##
+##  - continuous integration, by building and testing other software
+##    that depends on this project.
+##
+## The testing can be monitored in the "Actions" tab of the GitHub repository.
+##
+## After all jobs have finished (or are canceled) and a short delay,
+## tar files of all logs are made available as "build artifacts".
+##
+## This GitHub Actions workflow uses the portability testing framework
+## of SageMath (https://www.sagemath.org/).  For more information, see
+## https://doc.sagemath.org/html/en/developer/portability_testing.html
+
+## The workflow consists of two jobs:
+##
+##  - First, it builds a source distribution of the project
+##    and generates a script "update-pkgs.sh".  It uploads them
+##    as a build artifact named upstream.
+##
+##  - Second, it checks out a copy of the SageMath source tree.
+##    It downloads the upstream artifact and replaces the project's
+##    package in the SageMath distribution by the newly packaged one
+##    from the upstream artifact, by running the script "update-pkgs.sh".
+##    Then it builds a small portion of the Sage distribution.
+##
+## Many copies of the second step are run in parallel for each of the tested
+## systems/configurations.
+
+on:
+  push:
+    branches:
+      - master
+      # match release branches - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
+      - '[0-9]+.[0-9]+'
+  workflow_dispatch:
+    # Allow to run manually
+
+env:
+  # Ubuntu packages to install so that the project's "make dist" can succeed
+  DIST_PREREQ:      python3-setuptools
+  # Name of this project in the Sage distribution
+  SPKG:             sympy
+  # Remove all downstream patches
+  REMOVE_PATCHES:   "*"
+  # Until https://github.com/sagemath/sage/issues/23712 is resolved
+  EXTRA_CONFIGURE_ARGS: "--without-system-tachyon"
+
+jobs:
+
+  dist:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out ${{ env.SPKG }}
+        uses: actions/checkout@v3
+        with:
+          path: build/pkgs/${{ env.SPKG }}/src
+      - name: Install prerequisites
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install $DIST_PREREQ
+      - name: Run make dist, prepare upstream artifact
+        run: |
+          (cd build/pkgs/${{ env.SPKG }}/src && python3 setup.py sdist ) \
+          && mkdir -p upstream && cp build/pkgs/${{ env.SPKG }}/src/dist/*.tar.gz upstream/${{ env.SPKG }}-git.tar.gz \
+          && echo "sage-package create ${{ env.SPKG }} --version git --tarball ${{ env.SPKG }}-git.tar.gz --type=standard" > upstream/update-pkgs.sh \
+          && if [ -n "${{ env.REMOVE_PATCHES }}" ]; then echo "(cd ../build/pkgs/${{ env.SPKG }}/patches && rm -f ${{ env.REMOVE_PATCHES }}; :)" >> upstream/update-pkgs.sh; fi \
+          && ls -l upstream/
+      - uses: actions/upload-artifact@v3
+        with:
+          path: upstream
+          name: upstream
+
+  docker:
+    uses: sagemath/sage/.github/workflows/docker.yml@develop
+    with:
+      # debian-bullseye uses system python 3.9
+      # archlinux-latest is at the cutting edge
+      #
+      # XXX: For now the archlinux job fails too often for reasons unrelated
+      # to SAGE's use of SymPy so we skip Arch and only test Ubuntu. The
+      # ubuntu-focal job also fails sometimes due to timeouts or network
+      # problems but it mostly succeeds and does correctly pick up where a
+      # change in SymPy affects SAGE. Mostly this is where there are printing
+      # changes in SymPy because SAGE does most of its testing in the form of
+      # doctests.
+      #
+      #tox_system_factors: >-
+      # ["debian-bullseye", "archlinux-latest"]
+      tox_system_factors: >-
+        ["debian-bullseye"]
+      # "standard" installs lots of system packages, reducing the full build and test of the
+      # Sage distribution to 3-4 hours
+      tox_packages_factors: >-
+        ["standard"]
+      # Sage distribution packages to build
+      targets:                  SAGE_CHECK=no SAGE_CHECK_PACKAGES=sympy build SAGE_DOCTEST_RANDOM_SEED=0 ptest
+      # Test against the Sage PR:
+      # https://github.com/sagemath/sage/pull/36641
+      sage_repo:                sagemath/sage
+      sage_ref:                 refs/pull/36641/merge
+      # To test with a Sage PR, use this:
+      #sage_ref:                 refs/pull/PR_NUMBER/merge
+      upstream_artifact:        upstream
+    needs: [dist]

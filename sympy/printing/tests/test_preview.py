@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from sympy import Symbol, Piecewise, Eq
+from sympy.core.relational import Eq
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.printing.preview import preview
 
 from io import BytesIO
