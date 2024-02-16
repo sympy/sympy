@@ -69,11 +69,11 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
 def lagrange_inversion(expr, x, x0=0, n=3, dir="+"):
     r"""
     The Lagrange inversion theorem (or Lagrange inversion formula, which we abbreviate
-    as LIT), also known as the Lagrange--Bürmann formula, gives the Taylor series
+    as LIT), also known as the Lagrange--Burmann formula, gives the Taylor series
     expansion of the inverse function of an analytic function.
 
     The theorem was proved by Lagrange (1736--1813) and generalized by the German
-    mathematician and teacher Hans Heinrich Bürmann ( --1817), both in the late 18th
+    mathematician and teacher Hans Heinrich Burmann ( --1817), both in the late 18th
     century.
 
     The Lagrange inversion formula is one of the fundamental formulas of combinatorics.
