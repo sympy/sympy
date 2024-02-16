@@ -196,3 +196,13 @@ def test_wigner_d():
     w = wigner_d(1, -pi/2, pi/2, -pi/2)@v.subs({theta: pi/4, phi: pi})
     w_ = v.subs({theta: pi/2, phi: pi/4})
     assert w.expand(func=True).as_real_imag() == w_.expand(func=True).as_real_imag()
+
+def test_wigner_3j():
+    a = Rational(1, 2)
+    b = 0.5
+    c = 1
+    assert wigner_3j(a, a, a, a, a, a) == 0
+    assert wigner_3j(b, b, b, b, b, b) == 0
+    assert wigner_3j(c, c, c, c, c, c) == 0
+    assert wigner_3j(0, a, b, 0, b ,-a) == sqrt(2)/2
+    assert wigner_3j(2, 6, Rational(4,1), 0, 0, 0) == sqrt(715)/143

@@ -194,11 +194,11 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    if int(j_1 * 2) != j_1 * 2 or int(j_2 * 2) != j_2 * 2 or \
-            int(j_3 * 2) != j_3 * 2:
+    if not(int_valued(j_1 * 2) and int_valued(j_2 * 2) and \
+            int_valued(j_3 * 2)):
         raise ValueError("j values must be integer or half integer")
-    if int(m_1 * 2) != m_1 * 2 or int(m_2 * 2) != m_2 * 2 or \
-            int(m_3 * 2) != m_3 * 2:
+    if not(int_valued(m_1 * 2) and int_valued(m_2 * 2) and \
+            int_valued(m_3 * 2)):
         raise ValueError("m values must be integer or half integer")
     if m_1 + m_2 + m_3 != 0:
         return S.Zero
