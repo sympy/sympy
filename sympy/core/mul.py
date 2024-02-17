@@ -863,6 +863,9 @@ class Mul(Expr, AssocOp):
                 else:
                     if a.is_Add:
                         addterms *= a
+                    elif a.is_Pow and a.base.is_Add and not a.has(re, im):
+                        r, i = a.as_real_imag()
+                        other.append(r + i*S.ImaginaryUnit)
                     else:
                         other.append(a)
             else:
