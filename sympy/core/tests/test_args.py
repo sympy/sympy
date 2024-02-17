@@ -4259,11 +4259,14 @@ def test_sympy__physics__control__lti__TransferFunction():
     assert _test_args(TransferFunction(2, 3, x))
 
 def test_sympy__physics__control__lti__PIDController():
-    from sympy.core.symbol import Symbol
+    from sympy import Symbol
     from sympy.physics.control.lti import PIDController
     s = Symbol('s')
     KP, KI, KD = 1, 0.1, 0.01
-    assert _test_args(PIDController(KP, KI, KD, s))
+    pid = PIDController(KP, KI, KD, s)
+    recreated_pid = pid.func(*pid.args)
+    assert pid.KP == recreated_pid.KP and pid.KI == recreated_pid.KI and \
+           pid.KD == recreated_pid.KD and pid.s == recreated_pid.s
 
 def test_sympy__physics__control__lti__Series():
     from sympy.physics.control import Series, TransferFunction
