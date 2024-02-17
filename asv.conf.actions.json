@@ -50,9 +50,9 @@
     // list indicates to just test against the default (latest)
     // version.
     "matrix": {
-        "pip+fastcache": [""],
-        "pip+mpmath": [""],
-        "pip+numpy": [""],
+        "pip+fastcache": [],
+        "pip+mpmath": [],
+        "pip+numpy": [],
     },
 
     // The directory (relative to the current directory) that benchmarks are
@@ -66,7 +66,7 @@
 
     // The directory (relative to the current directory) that raw benchmark
     // results are stored in.  If not provided, defaults to "results".
-    "results_dir": "sympy_benchmarks/results"
+    "results_dir": "sympy_benchmarks/results",
 
     // The directory (relative to the current directory) that the html tree
     // should be written to.  If not provided, defaults to "html".
@@ -79,4 +79,9 @@
     // environment, making them faster to install next time.  This is
     // number of builds to keep, per environment.
     // "wheel_cache_size": 0
+
+    "build_command": [
+        "python -m pip install build",
+        "python -m build --wheel -o {build_cache_dir} {build_dir}",
+    ],
 }

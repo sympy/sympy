@@ -1942,6 +1942,7 @@ class Si(TrigonometricIntegral):
         if z.is_zero:
             return True
 
+
 class Ci(TrigonometricIntegral):
     r"""
     Cosine integral.
