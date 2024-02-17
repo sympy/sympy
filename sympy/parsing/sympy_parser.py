@@ -1074,9 +1074,6 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
 
     code = stringify_expr(s, local_dict, global_dict, _transformations)
 
-    if not evaluate:
-        code = compile(evaluateFalse(code), '<string>', 'eval') # type: ignore
-
     # Make sure we apply NFKC normalization to the input string
     # as well as keys of local_dict to make sure Python's built
     # in NFKC normalization, done when calling eval on code doesn't
@@ -1084,6 +1081,10 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
     code = unicodedata.normalize('NFKC', code)
     local_dict_tmp = {unicodedata.normalize('NFKC', k): v
                       for k, v in local_dict.items()}
+
+    if not evaluate:
+        code = compile(evaluateFalse(code), '<string>', 'eval') # type: ignore
+
     try:
         rv = eval_expr(code, local_dict_tmp, global_dict)
         # restore neutral definitions for names
