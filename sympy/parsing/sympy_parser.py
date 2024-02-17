@@ -906,13 +906,6 @@ def eval_expr(code, local_dict: DICT, global_dict: DICT):
 
     Generally, ``parse_expr`` should be used.
     """
-    # Make sure we apply NFKC normalization to the input string
-    # as well as keys of local_dict to make sure Python's built
-    # in NFKC normalization, done when calling eval on code doesn't
-    # create a discrepancy between the code and local_dict keys.
-    code = unicodedata.normalize('NFKC', code)
-    local_dict = {unicodedata.normalize('NFKC', k): v
-                  for k, v in local_dict.items()}
     expr = eval(
         code, global_dict, local_dict)  # take local objects in preference
     return expr
@@ -1084,8 +1077,15 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval') # type: ignore
 
+    # Make sure we apply NFKC normalization to the input string
+    # as well as keys of local_dict to make sure Python's built
+    # in NFKC normalization, done when calling eval on code doesn't
+    # create a discrepancy between the code and local_dict keys.
+    code = unicodedata.normalize('NFKC', code)
+    local_dict_tmp = {unicodedata.normalize('NFKC', k): v
+                      for k, v in local_dict.items()}
     try:
-        rv = eval_expr(code, local_dict, global_dict)
+        rv = eval_expr(code, local_dict_tmp, global_dict)
         # restore neutral definitions for names
         for i in local_dict.pop(null, ()):
             local_dict[i] = null
