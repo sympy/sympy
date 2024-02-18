@@ -308,6 +308,43 @@ def test_split_symbols_numeric():
 def test_unicode_names():
     assert parse_expr('α') == Symbol('α')
 
+def test_unicode_nfkc_names():
+    assert parse_expr('ϵ', {'ϵ': Symbol('ϵ')}) == Symbol('ϵ')
+    # assert parse_expr('ϵ', {'\u03b5': Symbol('ϵ')}) == Symbol('ϵ')
+    assert parse_expr('Ω', {'Ω': Symbol('Ω')}) == Symbol('Ω')
+    # assert parse_expr('Ω', {'\u03A9': Symbol('Ω')}) == Symbol('Ω')
+    assert parse_expr('π', {'π': Symbol('π')}) == Symbol('π')
+    # assert parse_expr('π', {'\u03C0': Symbol('π')}) == Symbol('π')
+    assert parse_expr('α', {'α': Symbol('α')}) == Symbol('α')
+    # assert parse_expr('α', {'\u03B1': Symbol('α')}) == Symbol('α')
+    assert parse_expr('β', {'β': Symbol('β')}) == Symbol('β')
+    # assert parse_expr('β', {'\u03B2': Symbol('β')}) == Symbol('β')
+    assert parse_expr('γ', {'γ': Symbol('γ')}) == Symbol('γ')
+    # assert parse_expr('γ', {'\u03B3': Symbol('γ')}) == Symbol('γ')
+    assert parse_expr('δ', {'δ': Symbol('δ')}) == Symbol('δ')
+    # assert parse_expr('δ', {'\u03B4': Symbol('δ')}) == Symbol('δ')
+    assert parse_expr('ζ', {'ζ': Symbol('ζ')}) == Symbol('ζ')
+    # assert parse_expr('ζ', {'\u03B6': Symbol('ζ')}) == Symbol('ζ')
+    assert parse_expr('η', {'η': Symbol('η')}) == Symbol('η')
+    # assert parse_expr('η', {'\u03B7': Symbol('η')}) == Symbol('η')
+    assert parse_expr('θ', {'θ': Symbol('θ')}) == Symbol('θ')
+    # assert parse_expr('θ', {'\u03B8': Symbol('θ')}) == Symbol('θ')
+    assert parse_expr('ι', {'ι': Symbol('ι')}) == Symbol('ι')
+    # assert parse_expr('ι', {'\u03B9': Symbol('ι')}) == Symbol('ι')
+    assert parse_expr('κ', {'κ': Symbol('κ')}) == Symbol('κ')
+    # assert parse_expr('κ', {'\u03BA': Symbol('κ')}) == Symbol('κ')
+    assert parse_expr('λ', {'λ': Symbol('λ')}) == Symbol('λ')
+    # assert parse_expr('λ', {'\u03BB': Symbol('λ')}) == Symbol('λ')
+    assert parse_expr('μ', {'μ': Symbol('μ')}) == Symbol('μ')
+    # assert parse_expr('μ', {'\u03BC': Symbol('μ')}) == Symbol('μ')
+    assert parse_expr('ν', {'ν': Symbol('ν')}) == Symbol('ν')
+    # assert parse_expr('ν', {'\u03BD': Symbol('ν')}) == Symbol('ν')
+    assert parse_expr('ξ', {'ξ': Symbol('ξ')}) == Symbol('ξ')
+    # assert parse_expr('ξ', {'\u03BE': Symbol('ξ')}) == Symbol('ξ')
+    assert parse_expr('ο', {'ο': Symbol('ο')}) == Symbol('ο')
+    # assert parse_expr('ο', {'\u03BF': Symbol('ο')}) == Symbol('ο')
+        
+
 
 def test_python3_features():
     # Make sure the tokenizer can handle Python 3-only features
@@ -329,6 +366,7 @@ def test_issue_19501():
         standard_transformations +
         (implicit_multiplication_application,)))
     assert eq.free_symbols == {x}
+
 
 
 def test_parsing_definitions():
