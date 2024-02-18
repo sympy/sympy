@@ -343,7 +343,6 @@ def test_unicode_nfkc_names():
     # assert parse_expr('ξ', {'\u03BE': Symbol('ξ')}) == Symbol('ξ')
     assert parse_expr('ο', {'ο': Symbol('ο')}) == Symbol('ο')
     # assert parse_expr('ο', {'\u03BF': Symbol('ο')}) == Symbol('ο')
-        
 
 
 def test_python3_features():
