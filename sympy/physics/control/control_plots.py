@@ -483,7 +483,7 @@ def impulse_response_plot(system, color='b', prec=8, lower_limit=0,
     References
     ==========
 
-    .. [1] https://www.mathworks.com/help/control/ref/lti.impulse.html
+    .. [1] https://www.mathworks.com/help/control/ref/dynamicsystem.impulse.html
 
     """
     x, y = impulse_response_numerical_data(system, prec=prec,

@@ -22,7 +22,7 @@ The equations of motion are formed in the physics/mechanics/examples_. In that
 spot the variables q1 and q2 are used in place of x and y and the reference
 frame is rotated 90 degrees.
 
-.. _examples: ../mechanics/examples/lin_pend_nonmin_example.html
+.. _examples: https://docs.sympy.org/latest/modules/physics/mechanics/examples/lin_pend_nonmin_example.html
 
 ::
 

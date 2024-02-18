@@ -517,7 +517,7 @@ How are symbolic parameters handled in solveset?
 References
 ----------
 
- .. [1] https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas/7abb76ffed50425299b9065129ae87261668a0f7#solvers
+ .. [1] https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas/7abb76ffed50425299b9065129ae87261668a0f7#user-content-solvers
  .. [2] https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
  .. [3] https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
  .. [5] https://iamit.in/blog/
