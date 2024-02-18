@@ -1301,18 +1301,39 @@ class TransferFunction(SISOLinearTimeInvariant):
 
 
 class PIDController:
-    def __init__(self, KP, KI, KD, s):
-        if not isinstance(s, Symbol):
-            raise ValueError("s must be a Symbol")
+    """
+    A PID Controller class that uses Parallel to combine the P, I, and D components.
+    Parameters
+    ==========
+    KP : Expr, Number
+        Proportional gain.
+    KI : Expr, Number
+        Integral gain.
+    KD : Expr, Number
+        Derivative gain.
+    s : Symbol
+        The complex frequency variable.
+    Examples
+    ========
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import PIDController
+    >>> KP, KI, KD = 1, 0.1, 0.01
+    >>> pid = PIDController(KP, KI, KD, s)
+    >>> print(pid.to_PID_expr())
+    TransferFunction(s*(0.01*s + 1) + 0.1, s, s)
+    """
+    def __init__(self, KP, KI, KD, var):
+        if not isinstance(var, Symbol):
+            raise ValueError("var must be a Symbol")
 
         self.KP = sympify(KP)
         self.KI = sympify(KI)
         self.KD = sympify(KD)
-        self.s = s
+        self.var = var
 
-        P = TransferFunction(KP, 1, s)
-        I = TransferFunction(KI, s, s)
-        D = TransferFunction(KD * s, 1, s)
+        P = TransferFunction(KP, 1, var)
+        I = TransferFunction(KI, var, var)
+        D = TransferFunction(KD * var, 1, var)
 
         self.pid_controller = Parallel(P, I, D)
 
@@ -1321,7 +1342,7 @@ class PIDController:
 
     @property
     def args(self):
-        return (self.KP, self.KI, self.KD, self.s)
+        return (self.KP, self.KI, self.KD, self.var)
 
     @property
     def func(self):

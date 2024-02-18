@@ -508,18 +508,20 @@ def test_Series_construction():
 
 
 def test_PIDController_properties():
+    var = symbols('s')
     KP, KI, KD = 1, 0.1, 0.01
-    pid = PIDController(KP, KI, KD, s)
+    pid = PIDController(KP, KI, KD, var)
     assert pid.KP == S(1)
     assert pid.KI == S(0.1)
     assert pid.KD == S(0.01)
-    assert pid.s == s
+    assert pid.var == var
 
 def test_PIDController_functionality():
+    var = symbols('s')
     KP, KI, KD = 1, 0.1, 0.01
-    pid = PIDController(KP, KI, KD, s)
+    pid = PIDController(KP, KI, KD, var)
     pid_tf = pid.to_PID_expr()
-    expected_tf = TransferFunction(s*(KD*s + KP) + KI, s, s)
+    expected_tf = TransferFunction(s*(KD*s + KP) + KI, var, var)
     diff = simplify(pid_tf - expected_tf)
     assert diff.num == 0
 
