@@ -538,7 +538,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         # no unique exponent for 0, 1
         # 2 and 3 have exponents of 1
         return False
-    logn = math.log(n, 2)
+    logn = math.log2(n)
     max_possible = int(logn) + 2  # only check values less than this
     not_square = n % 10 in [2, 3, 7, 8]  # squares cannot end in 2, 3, 7, 8
     min_possible = 2 + not_square
