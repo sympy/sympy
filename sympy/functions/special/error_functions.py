@@ -2069,18 +2069,19 @@ class Ci(TrigonometricIntegral):
         from sympy.series.order import Order
         point = args0[0]
 
-        # Expansion at oo
-        if point is S.Infinity:
+        if point in (S.Infinity, S.NegativeInfinity):
             z = self.args[0]
             p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
                     for k in range(int((n - 1)/2))] + [Order(1/z**n, x)]
             q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
                     for k in range(int(n/2) - 1)] + [Order(1/z**n, x)]
-            return (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
+            result = (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
 
-        # All other points are not handled
+            if point is S.NegativeInfinity:
+                result += I*pi
+            return result
+
         return super(Ci, self)._eval_aseries(n, args0, x, logx)
-
 
 class Shi(TrigonometricIntegral):
     r"""
