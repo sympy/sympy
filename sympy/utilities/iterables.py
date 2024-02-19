@@ -1889,8 +1889,8 @@ def binary_partitions(n):
     .. [1] TAOCP 4, section 7.2.1.5, problem 64
 
     """
-    from math import ceil, log
-    power = int(2**(ceil(log(n, 2))))
+    from math import ceil, log2
+    power = int(2**(ceil(log2(n))))
     acc = 0
     partition = []
     while power:
