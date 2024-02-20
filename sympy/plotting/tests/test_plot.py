@@ -1345,7 +1345,7 @@ def test_issue_25190():
     p1 = plot(sin(log(x)), (x, .001, 10), xscale="log", show=False)
     p2 = plot(sin(log(x)), (x, .001, 10), xscale="log", show=False, adaptive=False)
 
-    assert len(p1._series) == len(p2._series) 
+    assert len(p1._series) == len(p2._series)
 
     assert p1[0].get_data()[0][0] == p2[0].get_data()[0][0]
     assert p1[0].get_data()[0][-1] == p2[0].get_data()[0][-1]
