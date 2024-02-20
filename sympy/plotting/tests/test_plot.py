@@ -1352,5 +1352,3 @@ def test_issue_25190():
 
     assert round(p1[0].get_data()[1][0], 4) == round(p2[0].get_data()[1][0], 4)
     assert round(p1[0].get_data()[1][-1], 4) == round(p2[0].get_data()[1][-1], 4)
-
-    
