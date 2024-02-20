@@ -1339,8 +1339,9 @@ def test_plot3d_parametric_surface_arguments():
     assert p[1].rendering_kw == {}
 
 def test_issue_25190():
+    #https://github.com/sympy/sympy/issues/25190
     if not matplotlib:
-        skip("Matplotlib not hte default backend")
+        skip("Matplotlib not the default backend")
     x = Symbol("x")
     p1 = plot(sin(log(x)), (x, .001, 10), xscale="log", show=False)
     p2 = plot(sin(log(x)), (x, .001, 10), xscale="log", show=False, adaptive=False)
