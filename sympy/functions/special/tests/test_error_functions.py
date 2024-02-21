@@ -2,7 +2,7 @@ from sympy.core.function import (diff, expand, expand_func)
 from sympy.core import EulerGamma
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import (Symbol, symbols, Dummy)
 from sympy.functions.elementary.complexes import (conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
@@ -23,6 +23,7 @@ from sympy.testing.pytest import raises
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
 n = Symbol("n", integer=True)
+t = Dummy('t')
 
 
 def test_erf():
@@ -612,6 +613,13 @@ def test_si():
     assert tn_arg(Si)
     assert tn_arg(Shi)
 
+    assert Si(x)._eval_as_leading_term(x) == x
+    assert Si(2*x)._eval_as_leading_term(x) == 2*x
+    assert Si(sin(x))._eval_as_leading_term(x) == x
+    assert Si(x + 1)._eval_as_leading_term(x) == Si(1)
+    assert Si(1/x)._eval_as_leading_term(x, cdir=1) == \
+        Si(1/x)._eval_as_leading_term(x, cdir=-1) == Si(1/x)
+
     assert Si(x).nseries(x, n=8) == \
         x - x**3/18 + x**5/600 - x**7/35280 + O(x**9)
     assert Shi(x).nseries(x, n=8) == \
@@ -625,7 +633,7 @@ def test_si():
         + O(x**(-7), (x, oo)))*cos(x)/x
 
     t = Symbol('t', Dummy=True)
-    assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
+    assert Si(x).rewrite(sinc).dummy_eq(Integral(sinc(t), (t, 0, x)))
 
     assert limit(Shi(x), x, S.Infinity) == S.Infinity
     assert limit(Shi(x), x, S.NegativeInfinity) == S.NegativeInfinity
@@ -674,6 +682,10 @@ def test_ci():
     assert Ci(x).series(x, oo) == -cos(x)*(-6/x**3 + 1/x \
         + O(x**(-7), (x, oo)))/x + (24/x**4 - 2/x**2 + 1 \
         + O(x**(-7), (x, oo)))*sin(x)/x
+
+    assert Ci(x).series(x, -oo) == -cos(x)*(-6/x**3 + 1/x + O(-1/x**7, (x, -oo)))/x + \
+            (24/x**4 - 2/x**2 + 1 + O(-1/x**7, (x, -oo)))*sin(x)/x + I*pi
+
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
     assert Ci(x).rewrite(uppergamma) == -expint(1, x*exp_polar(-I*pi/2))/2 -\
                                         expint(1, x*exp_polar(I*pi/2))/2
@@ -814,3 +826,12 @@ def test_fresnel_series():
     assert (fresnelc(1/z).series(z) - fc.subs(z, 1/z)).expand().is_Order
     assert ((2*fresnels(3*z)).series(z, oo) - 2*fs.subs(z, 3*z)).expand().is_Order
     assert ((3*fresnelc(2*z)).series(z, oo) - 3*fc.subs(z, 2*z)).expand().is_Order
+
+
+def test_integral_rewrites(): #issues 26134, 26144
+    assert expint(n, x).rewrite(Integral).dummy_eq(Integral(t**-n * exp(-t*x), (t, 1, oo)))
+    assert Si(x).rewrite(Integral).dummy_eq(Integral(sinc(t), (t, 0, x)))
+    assert Ci(x).rewrite(Integral).dummy_eq(log(x) - Integral((1 - cos(t))/t, (t, 0, x)) + EulerGamma)
+    assert fresnels(x).rewrite(Integral).dummy_eq(Integral(sin(t**2), (t, 0, x)))
+    assert fresnelc(x).rewrite(Integral).dummy_eq(Integral(cos(t**2), (t, 0, x)))
+    assert Ei(x).rewrite(Integral).dummy_eq(Integral(exp(t)/t, (t, -oo, x)))

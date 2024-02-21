@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.trigonometric import atan
     from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
 
-LG10 = math.log(10, 2)
+LG10 = math.log2(10)
 rnd = round_nearest
 
 
@@ -773,7 +773,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
             return fone, None, prec, None
         # Exponentiation by p magnifies relative error by |p|, so the
         # base must be evaluated with increased precision if p is large
-        prec += int(math.log(abs(p), 2))
+        prec += int(math.log2(abs(p)))
         result = evalf(base, prec + 5, options)
         if result is S.ComplexInfinity:
             if p < 0:

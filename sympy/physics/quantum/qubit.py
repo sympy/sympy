@@ -737,7 +737,7 @@ def _get_possible_outcomes(m, bits):
     # This is filled with loads of dirty binary tricks...You have been warned
 
     size = max(m.shape)  # Max of shape to account for bra or ket
-    nqubits = int(math.log(size, 2) + .1)  # Number of qubits possible
+    nqubits = int(math.log2(size) + .1)  # Number of qubits possible
 
     # Make the output states and put in output_matrices, nothing in them now.
     # Each state will represent a possible outcome of the measurement
@@ -804,7 +804,7 @@ def measure_all_oneshot(qubit, format='sympy'):
             if total > random_number:
                 break
             result += 1
-        return Qubit(IntQubit(result, int(math.log(max(m.shape), 2) + .1)))
+        return Qubit(IntQubit(result, int(math.log2(max(m.shape)) + .1)))
     else:
         raise NotImplementedError(
             "This function cannot handle non-SymPy matrix formats yet"

@@ -76,6 +76,89 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
+(deprecated-mechanics-body-class)=
+### Deprecated mechanics Body class
+
+The ``Body`` class in the ``sympy.physics.mechanics`` module has been
+deprecated. It was introduced to support the joints framework. However, it
+causes several problems because it represents both rigid bodies and particles.
+``Body`` has now been fully replaced by ``RigidBody`` and ``Particle``.
+Previously, one could create a simple rigid body or particle using only the
+``Body`` class:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import Body
+>>> Body("rigid_body")  # doctest: +SKIP
+rigid_body
+>>> Body("particle", mass=symbols("m"))  # doctest: +SKIP
+particle
+```
+
+Now they should be created using the ``RigidBody`` and ``Particle`` class:
+
+```py
+>>> from sympy.physics.mechanics import RigidBody, Particle
+>>> RigidBody("rigid_body")
+rigid_body
+>>> Particle("particle")
+particle
+```
+
+(deprecated-mechanics-jointsmethod)=
+### Deprecated mechanics JointsMethod
+
+The ``JointsMethod`` class in the ``sympy.physics.mechanics`` module has been
+deprecated. It was introduced to support the joints framework, but it has been
+fully replaced due to limitations in its design. Previously, one could construct
+as system solely consisting out of bodies and joints, which were then parsed by
+``JointsMethod`` to a backend, like ``KanesMethod`` to form the equations of
+motion.
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import (
+...   Body, JointsMethod, PinJoint, PrismaticJoint)
+>>> g, l = symbols("g l")
+>>> wall = Body("wall")
+>>> cart = Body("cart")
+>>> pendulum = Body("Pendulum")
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
+...                child_point=l * pendulum.y)
+>>> pendulum.masscenter.set_vel(pendulum.frame, 0)
+>>> cart.apply_force(-g * cart.mass * wall.y)
+>>> pendulum.apply_force(-g * pendulum.mass * wall.y)
+>>> method = JointsMethod(wall, slider, pin)  # doctest: +SKIP
+>>> method.form_eoms()  # doctest: +SKIP
+Matrix([
+[ Pendulum_mass*l*u_j(t)**2*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_j(t), t) - (Pendulum_mass + cart_mass)*Derivative(u_s(t), t)],
+[-Pendulum_mass*g*l*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_s(t), t) - (Pendulum_izz + Pendulum_mass*l**2)*Derivative(u_j(t), t)]])
+```
+
+The replacement of ``JointsMethod`` is ``System``, which can be used to form the
+equations of motion of the same cart pole as follows:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import (
+...   Particle, PinJoint, PrismaticJoint, RigidBody, System)
+>>> g, l = symbols("g l")
+>>> wall = RigidBody("wall")
+>>> cart = RigidBody("cart")
+>>> pendulum = RigidBody("Pendulum")
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
+...                child_point=l * pendulum.y)
+>>> system = System.from_newtonian(wall)
+>>> system.add_joints(slider, pin)
+>>> system.apply_uniform_gravity(-g * wall.y)
+>>> system.form_eoms()
+Matrix([
+[ Pendulum_mass*l*u_j(t)**2*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_j(t), t) - (Pendulum_mass + cart_mass)*Derivative(u_s(t), t)],
+[-Pendulum_mass*g*l*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_s(t), t) - (Pendulum_izz + Pendulum_mass*l**2)*Derivative(u_j(t), t)]])
+```
+
 (deprecated-matrix-mixins)=
 ### Deprecated matrix mixin classes
 

@@ -1510,7 +1510,7 @@ def sqrt_linear_rule(integral: IntegralInfo):
         step: Rule = URule(integrand, x, u, u_x, substep)
         generic_cond = Ne(b0, 0)
         if generic_cond is not S.true:  # possible degenerate case
-            simplified = integrand.subs({b: 0 for b in bs})
+            simplified = integrand.subs(dict.fromkeys(bs, 0))
             degenerate_step = integral_steps(simplified, x)
             step = PiecewiseRule(integrand, x, [(step, generic_cond), (degenerate_step, S.true)])
         return step

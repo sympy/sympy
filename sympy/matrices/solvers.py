@@ -590,7 +590,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
 
     # Free parameters
     # what are current unnumbered free symbol names?
-    name = uniquely_named_symbol('tau', aug,
+    name = uniquely_named_symbol('tau', [aug],
             compare=lambda i: str(i).rstrip('1234567890'),
             modify=lambda s: '_' + s).name
     gen  = numbered_symbols(name)
