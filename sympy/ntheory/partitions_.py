@@ -196,7 +196,7 @@ def _partition(n: int) -> int:
     pbits = int((
         math.pi*(2*n/3.)**0.5 -
         math.log(4*n))/math.log(10) + 1) * \
-        math.log(10, 2)
+        math.log2(10)
     prec = p = int(pbits*1.1 + 100)
 
     # find the number of terms needed so rounded sum will be accurate
