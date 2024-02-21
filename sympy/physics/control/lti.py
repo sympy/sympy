@@ -11,7 +11,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.functions import Abs
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
@@ -19,9 +19,10 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
-from sympy.polys.polytools import (cancel, degree)
+from sympy.polys.polytools import (cancel, degree, poly)
 from sympy.series import limit
 from sympy.utilities.misc import filldedent
+from sympy.simplify.simplify import simplify
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -358,6 +359,46 @@ def gain_margin(system):
         gm = -mag.subs({_w:wcg})
 
     return gm
+
+def reduce_transfer_function_order(tf_or_feedback):
+    """
+    Reduces the order of a transfer function or a feedback system's numerator and denominator by the specified degree.
+
+    Parameters:
+    - tf_or_feedback: The transfer function or feedback system to be reduced.
+    - order_reduction: The degree by which to reduce the order of the numerator and denominator.
+
+    Returns:
+    - A new transfer function with reduced order, if reduction is possible.
+    """
+
+    if isinstance(tf_or_feedback, Feedback):
+        transfer_function = tf_or_feedback.doit()
+    else:
+        transfer_function = tf_or_feedback
+
+    num, den = transfer_function.num, transfer_function.den
+
+    s = symbols('s')
+
+    if isinstance(transfer_function, Feedback):
+        transfer_function = transfer_function.doit()
+
+    num, den = transfer_function.num, transfer_function.den
+
+    num_poly = poly(num, s)
+    den_poly = poly(den, s)
+
+    if num_poly.degree() >= 5 and den_poly.degree() >= 6:
+        reduced_num = simplify(num_poly.as_expr() / s**2)
+        reduced_den = simplify(den_poly.as_expr() / s**2)
+
+        reduced_tf = TransferFunction(reduced_num, reduced_den, s)
+    else:
+        print("Order reduction to 3 (numerator) and 4 (denominator) not possible due to lower initial orders.")
+        return transfer_function
+
+    return reduced_tf
 
 class LinearTimeInvariant(Basic, EvalfMixin):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""

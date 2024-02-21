@@ -18,7 +18,7 @@ from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
-
+from sympy.physics.control import reduce_transfer_function_order
 a, x, b, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
     tau, zeta, wn, T')
 a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
@@ -1359,6 +1359,29 @@ def test_TransferFunction_gain_margin():
     raises(ValueError, lambda: gain_margin(tf3))
     raises(ValueError, lambda: gain_margin(MIMOSeries(tf_m)))
 
+def test_transfer_function_order_reduction():
+    from sympy.polys.polytools import degree
+
+    Ib, Is, c, m, h, g, l2, l1, KD, v = symbols('I_b I_s c m h g l2 l1 K_D K_P v', real=True)
+
+    tau1_sq = (Ib + m*h**2)/m/g/h
+    tau2 = l2/v
+    K = v**2/g/(l1 + l2)
+
+    Gtheta = TransferFunction(-K*(tau2*s + 1), tau1_sq*s**2 - 1, s)
+    Gdelta = TransferFunction(1, Is*s**2 + c*s, s)
+    Dcont = TransferFunction(KD*s, 1, s)
+
+    Ginner = Feedback(Dcont*Gdelta, Gtheta)
+    reduced_tf = reduce_transfer_function_order(Ginner)
+
+    num, den = reduced_tf.num, reduced_tf.den
+
+    num_degree = degree(num, gen=s)
+    den_degree = degree(den, gen=s)
+
+    assert num_degree == 3, f"Expected numerator degree of 3, got {num_degree}"
+    assert den_degree == 4, f"Expected denominator degree of 4, got {den_degree}"
 
 def test_StateSpace_construction():
     # using different numbers for a SISO system.
