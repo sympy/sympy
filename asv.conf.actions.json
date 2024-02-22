@@ -17,6 +17,13 @@
     // project being benchmarked
     "repo": ".",
 
+    // The command to run to build the project.
+    // https://github.com/sympy/sympy/issues/26239
+    "build_command": [
+        "python -m pip install build",
+        "python -m build --wheel -o {build_cache_dir} {build_dir}"
+    ],
+
     // List of branches to benchmark. If not provided, defaults to "master"
     // (for git) or "tip" (for mercurial).
 
@@ -52,7 +59,7 @@
     "matrix": {
         "pip+fastcache": [""],
         "pip+mpmath": [""],
-        "pip+numpy": [""],
+        "pip+numpy": [""]
     },
 
     // The directory (relative to the current directory) that benchmarks are
@@ -66,7 +73,7 @@
 
     // The directory (relative to the current directory) that raw benchmark
     // results are stored in.  If not provided, defaults to "results".
-    "results_dir": "sympy_benchmarks/results"
+    "results_dir": "sympy_benchmarks/results",
 
     // The directory (relative to the current directory) that the html tree
     // should be written to.  If not provided, defaults to "html".
@@ -79,4 +86,5 @@
     // environment, making them faster to install next time.  This is
     // number of builds to keep, per environment.
     // "wheel_cache_size": 0
+
 }

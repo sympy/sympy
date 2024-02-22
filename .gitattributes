@@ -3,3 +3,5 @@
 
 # auto-collapse generated files in github diffs
 sympy/parsing/*/_antlr/*.py    linguist-generated=true
+
+*.json linguist-language=jsonc
