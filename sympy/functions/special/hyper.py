@@ -282,8 +282,7 @@ class hyper(TupleParametersBase):
         for i in range(n):
             num = Mul(*[RisingFactorial(a, i) for a in ap])
             den = Mul(*[RisingFactorial(b, i) for b in bq])
-            terms.append(((num/den) * (arg**i)) / factorial(i))
-
+            terms.append(((num/den) * (arg**i).nseries()) / factorial(i))
         return (Add(*terms) + Order(x**n,x))
 
     @property
