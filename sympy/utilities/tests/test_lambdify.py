@@ -8,7 +8,7 @@ import mpmath
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, Lambda, diff)
-from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
+from sympy.core.numbers import (E, Float, I, Rational, all_close, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
@@ -1879,3 +1879,15 @@ def test_lambdify_empty_tuple():
     f = lambdify(a, expr)
     result = f(1)
     assert result == ((), (1,)), "Lambdify did not handle the empty tuple correctly."
+
+def test_assoc_legendre_numerical_evaluation():
+
+    tol = 1e-10
+
+    sympy_result_integer = assoc_legendre(1, 1/2, 0.1).evalf()
+    sympy_result_complex = assoc_legendre(2, 1, 3).evalf()
+    mpmath_result_integer = -0.474572528387641
+    mpmath_result_complex = -25.45584412271571*I
+
+    assert all_close(sympy_result_integer, mpmath_result_integer, tol)
+    assert all_close(sympy_result_complex, mpmath_result_complex, tol)
