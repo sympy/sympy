@@ -289,7 +289,7 @@ class hyper(TupleParametersBase):
             terms.append(((num/den) * (arg**i)) / factorial(i))
 
         result = Add(*terms)
-        newn = min((Abs(a) for a in ap if a.is_negative), default=n)
+        newn = min((Abs(a) for a in ap if a.is_negative and a.is_integer), default=n)
 
         if newn < n:
             return result
@@ -297,12 +297,20 @@ class hyper(TupleParametersBase):
 
     def _eval_aseries(self, n, args0, x, logx):
 
+        # The asymptotic expansion of the hypergeometric functions is quite complicated
+        # and are not well defined for all relation between the parameters p and q.
+        # The following is a simple implementation of the asymptotic expansion of the
+        # hypergeometric function for the case when p = q + 1 and |z| -> oo.
+
         from sympy.functions.special.gamma_functions import gamma
         from sympy.series.order import Order
 
         ap = self.args[0]
         bq = self.args[1]
         z = unpolarify(self.args[2])
+
+        if len(ap) != len(bq) + 1:
+            return super()._eval_aseries(n, args0, x, logx)
 
         for i in range(len(ap)):
             for l in range(i+1, len(ap)):
@@ -326,7 +334,7 @@ class hyper(TupleParametersBase):
         num = Mul(*[gamma(b) for b in bq])
         den = Mul(*[gamma(a) for a in ap])
         result *= num/den
-        newn = min((Abs(a) for a in self.args[0] if a.is_negative), default=n)
+        newn = min((Abs(a) for a in self.args[0] if a.is_negative and a.is_integer), default=n)
 
         if newn < n:
             return result
