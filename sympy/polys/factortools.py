@@ -75,7 +75,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.utilities import subsets
 
-from math import ceil as _ceil, log as _log
+from math import ceil as _ceil, log as _log, log2 as _log2
 
 
 if GROUND_TYPES == 'flint':
@@ -287,7 +287,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
 
     m = p
     k = r // 2
-    d = int(_ceil(_log(l, 2)))
+    d = int(_ceil(_log2(l)))
 
     g = gf_from_int_poly([lc], p)
 
@@ -333,7 +333,7 @@ def dup_zz_zassenhaus(f, K):
     b = dup_LC(f, K)
     B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
-    gamma = int(_ceil(2*_log(C, 2)))
+    gamma = int(_ceil(2*_log2(C)))
     bound = int(2*gamma*_log(gamma))
     a = []
     # choose a prime number `p` such that `f` be square free in Z_p
