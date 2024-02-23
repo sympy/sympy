@@ -682,6 +682,10 @@ def test_ci():
     assert Ci(x).series(x, oo) == -cos(x)*(-6/x**3 + 1/x \
         + O(x**(-7), (x, oo)))/x + (24/x**4 - 2/x**2 + 1 \
         + O(x**(-7), (x, oo)))*sin(x)/x
+
+    assert Ci(x).series(x, -oo) == -cos(x)*(-6/x**3 + 1/x + O(-1/x**7, (x, -oo)))/x + \
+            (24/x**4 - 2/x**2 + 1 + O(-1/x**7, (x, -oo)))*sin(x)/x + I*pi
+
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
     assert Ci(x).rewrite(uppergamma) == -expint(1, x*exp_polar(-I*pi/2))/2 -\
                                         expint(1, x*exp_polar(I*pi/2))/2

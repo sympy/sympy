@@ -34,7 +34,7 @@ from sympy.polys.polyerrors import (
 )
 from sympy.utilities import variations
 
-from math import ceil as _ceil, log as _log
+from math import ceil as _ceil, log2 as _log2
 
 def dup_integrate(f, m, K):
     """
@@ -1292,7 +1292,7 @@ def dup_revert(f, n, K):
     g = [K.revert(dup_TC(f, K))]
     h = [K.one, K.zero, K.zero]
 
-    N = int(_ceil(_log(n, 2)))
+    N = int(_ceil(_log2(n)))
 
     for i in range(1, N + 1):
         a = dup_mul_ground(g, K(2), K)
