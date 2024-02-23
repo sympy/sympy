@@ -1314,6 +1314,7 @@ class PIDController:
         Derivative gain.
     s : Symbol
         The complex frequency variable.
+        
     Examples
     ========
     >>> from sympy.abc import s
