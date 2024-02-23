@@ -525,6 +525,18 @@ def test_PIDController_functionality():
     diff = simplify(pid_tf - expected_tf)
     assert diff.num == 0
 
+def test_PIDController_parallel_functionality():
+    var = symbols('s')
+    KP, KI, KD = 1, 0.1, 0.01
+    pid = PIDController(KP, KI, KD, var)
+    parallel_tf = pid.pid_controller
+    expected_tf = Parallel(
+        TransferFunction(KP, 1, var),
+        TransferFunction(KI, var, var),
+        TransferFunction(KD * var, 1, var)).doit()
+
+    assert simplify(parallel_tf.to_expr() - expected_tf.to_expr()) == 0
+
 def test_MIMOSeries_construction():
     tf_1 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
     tf_2 = TransferFunction(a2*p - s, a2*s + p, s)
