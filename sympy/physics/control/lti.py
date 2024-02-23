@@ -1303,6 +1303,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 class PIDController:
     """
     A PID Controller class that uses Parallel to combine the P, I, and D components.
+    
     Parameters
     ==========
     KP : Expr, Number
