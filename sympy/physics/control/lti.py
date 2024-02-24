@@ -2361,7 +2361,7 @@ class Feedback(TransferFunction):
                 Both `sys1` and `sys2` should be using the
                 same complex variable."""))
 
-        return super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
+        return super(TransferFunction, cls).__new__(cls, sys1, sys2, _sympify(sign))
 
     @property
     def sys1(self):
