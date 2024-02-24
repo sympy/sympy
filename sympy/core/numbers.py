@@ -4330,13 +4330,6 @@ if flint is not None:
     _sympy_converter[type(flint.fmpq(1, 2))] = sympify_fmpq
 
 
-def sympify_mpmath_mpq(x):
-    p, q = x._mpq_
-    return Rational(p, q, 1)
-
-_sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
-
-
 def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 
