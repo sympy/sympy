@@ -927,9 +927,11 @@ class Float(Number):
         obj._prec = _prec
         return obj
 
-    # mpz can't be pickled
     def __getnewargs_ex__(self):
-        return ((mlib.to_pickable(self._mpf_),), {'precision': self._prec})
+        sign, man, exp, bc = self._mpf_
+        arg = (sign, hex(man)[2:], exp, bc)
+        kwargs = {'precision': self._prec}
+        return ((arg,), kwargs)
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
