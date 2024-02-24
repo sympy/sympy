@@ -180,7 +180,7 @@ class Cable:
         This method changes the mentioned support with a new support.
 
         Parameters
-        ==========
+        ===========
         label: String or symbol
             The label of the support to be changed
 
