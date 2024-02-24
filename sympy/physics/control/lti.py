@@ -1102,7 +1102,7 @@ class TransferFunction(SISOLinearTimeInvariant):
                 F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
             else:
                 F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
-
+            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1134,6 +1134,7 @@ class TransferFunction(SISOLinearTimeInvariant):
                 F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
             else:
                 F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
+            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
@@ -1166,6 +1167,7 @@ class TransferFunction(SISOLinearTimeInvariant):
                 F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
             else:
                 F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
+            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
@@ -1197,6 +1199,7 @@ class TransferFunction(SISOLinearTimeInvariant):
                 F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
             else:
                 F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
+            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
         if isinstance(other, TransferFunction):
             if not self.var == other.var:
