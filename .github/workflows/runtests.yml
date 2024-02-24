@@ -405,8 +405,8 @@ jobs:
 
   # -------------------- Test with mpmath master ------------------- #
 
-  tests-mpmath-master
-  #needs: [doctests-latest, tests-latest]
+  tests-mpmath-master:
+    #needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
 
