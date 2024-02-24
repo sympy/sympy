@@ -927,9 +927,11 @@ class Float(Number):
         obj._prec = _prec
         return obj
 
-    # mpz can't be pickled
     def __getnewargs_ex__(self):
-        return ((mlib.to_pickable(self._mpf_),), {'precision': self._prec})
+        sign, man, exp, bc = self._mpf_
+        arg = (sign, hex(man)[2:], exp, bc)
+        kwargs = {'precision': self._prec}
+        return ((arg,), kwargs)
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
@@ -4328,13 +4330,6 @@ if flint is not None:
 
     _sympy_converter[type(flint.fmpz(1))] = sympify_fmpz
     _sympy_converter[type(flint.fmpq(1, 2))] = sympify_fmpq
-
-
-def sympify_mpmath_mpq(x):
-    p, q = x._mpq_
-    return Rational(p, q, 1)
-
-_sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
 
 
 def sympify_mpmath(x):

@@ -403,6 +403,30 @@ jobs:
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 
+  # -------------------- Test with mpmath master ------------------- #
+
+  tests-mpmath-master:
+    needs: [doctests-latest, tests-latest]
+
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4]
+
+    name: mpmath-master ${{ matrix.group }}/4 Tests
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip
+      - run: pip install git+https://github.com/mpmath/mpmath.git@master
+      - run: pip install -r requirements-dev.txt
+      - run: bin/test --split ${{ matrix.group }}/4
+
   # -------------------- Build the html/latex docs ----------------- #
 
   sphinx:
