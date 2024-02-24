@@ -47,3 +47,21 @@ def test_cable():
     # tests for apply_length method
     c.apply_length(20)
     assert c.length == 20
+
+    del c
+    # tests for solve method
+    # for point loads
+    c = Cable(("A", 0, 10), ("B", 5.5, 8))
+    c.apply_load(-1, ('Z', 2, 7.26, 3, 270))
+    c.apply_load(-1, ('X', 4, 6, 8, 270))
+    c.solve()
+    #assert c.tension == {Symbol("Z_X"): 4.79150773600774, Symbol("X_B"): 6.78571428571429, Symbol("A_Z"): 6.89488895397307}
+    assert abs(c.tension[Symbol("A_Z")] - 6.89488895397307) < 10e-12
+    assert abs(c.tension[Symbol("Z_X")] - 4.79150773600774) < 10e-12
+    assert abs(c.tension[Symbol("X_B")] - 6.78571428571429) < 10e-12
+    #assert c.reaction_loads == {Symbol("R_A_x"): -4.06504065040650, Symbol("R_A_y"): 5.56910569105691, Symbol("R_B_x"): 4.06504065040650, Symbol("R_B_y"): 5.43089430894309}
+    assert abs(c.reaction_loads[Symbol("R_A_x")] + 4.06504065040650) < 10e-12
+    assert abs(c.reaction_loads[Symbol("R_A_y")] - 5.56910569105691) < 10e-12
+    assert abs(c.reaction_loads[Symbol("R_B_x")] - 4.06504065040650) < 10e-12
+    assert abs(c.reaction_loads[Symbol("R_B_y")] - 5.43089430894309) < 10e-12
+    assert abs(c.length - 8.25609584845190) < 10e-12
