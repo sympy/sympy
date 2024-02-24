@@ -1093,14 +1093,15 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __add__(self, other):
         if isinstance(other, Feedback):
-            arg_list = list(other.sys1.args) if isinstance(other.sys1, Series) else [other.sys1]
+            if isinstance(other.sys1, Series):
+                arg_list = list(other.sys1.args)
+            else:
+                arg_list = [other.sys1]
             F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
             if other.sign == -1:
                 F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
             else:
                 F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
-
-            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
@@ -1124,14 +1125,15 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __sub__(self, other):
         if isinstance(other, Feedback):
-            arg_list = list(other.sys1.args) if isinstance(other.sys1, Series) else [other.sys1]
+            if isinstance(other.sys1, Series):
+                arg_list = list(other.sys1.args)
+            else:
+                arg_list = [other.sys1]
             F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
             if other.sign == -1:
                 F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
             else:
                 F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
-
-            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
@@ -1155,14 +1157,15 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __mul__(self, other):
         if isinstance(other, Feedback):
-            arg_list = list(other.sys1.args) if isinstance(other.sys1, Series) else [other.sys1]
+            if isinstance(other.sys1, Series):
+                arg_list = list(other.sys1.args)
+            else:
+                arg_list = [other.sys1]
             F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
             if other.sign == -1:
                 F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
             else:
                 F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
-
-            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
@@ -1185,14 +1188,15 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __truediv__(self, other):
         if isinstance(other, Feedback):
-            arg_list = list(other.sys1.args) if isinstance(other.sys1, Series) else [other.sys1]
+            if isinstance(other.sys1, Series):
+                arg_list = list(other.sys1.args)
+            else:
+                arg_list = [other.sys1]
             F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
             if other.sign == -1:
                 F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
             else:
                 F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
-
-            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
         if isinstance(other, TransferFunction):
             if not self.var == other.var:
@@ -2336,6 +2340,11 @@ class Feedback(TransferFunction):
         if not sys2:
             sys2 = TransferFunction(1, 1, sys1.var)
 
+        if isinstance(sys1, Feedback):
+            sys1 = sys1.doit()
+        if isinstance(sys2, Feedback):
+            sys2 = sys2.doit()
+
         if not (isinstance(sys1, (TransferFunction, Series))
             and isinstance(sys2, (TransferFunction, Series))):
             raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
@@ -2354,7 +2363,7 @@ class Feedback(TransferFunction):
                 Both `sys1` and `sys2` should be using the
                 same complex variable."""))
 
-        return super(TransferFunction,cls).__new__(cls, sys1, sys2, _sympify(sign))
+        return super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
 
     @property
     def sys1(self):
