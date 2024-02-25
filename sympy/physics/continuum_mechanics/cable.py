@@ -151,7 +151,7 @@ class Cable:
         initialized to 0.
         """
         return self._reaction_loads
-    
+
     @property
     def tension(self):
         """
@@ -459,7 +459,7 @@ class Cable:
                     y1 = self._loads_position[sorted_position[i+1][0]][1]
 
                 angle_with_horizontal = atan((y1 - y2)/(x1 - x2))
-                
+
                 tension = -(moment_sum_from_left_support)/(abs(self._left_support[1] - self._loads_position[sorted_position[i][0]][1])*cos(angle_with_horizontal) + abs(self._left_support[0] - self._loads_position[sorted_position[i][0]][0])*sin(angle_with_horizontal))
                 self._tension[label] = tension
                 moment_sum_from_right_support += self._loads['point_load'][sorted_position[i][0]][0] * cos(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180) * abs(self._right_support[1] - self._loads_position[sorted_position[i][0]][1])
@@ -471,7 +471,7 @@ class Cable:
             x1 = self._left_support[0]
             y1 = self._left_support[1]
 
-            angle_with_horizontal = -atan((y2 - y1)/(x2 - x1)) 
+            angle_with_horizontal = -atan((y2 - y1)/(x2 - x1))
             tension = -(moment_sum_from_right_support)/(abs(self._right_support[1] - self._loads_position[sorted_position[1][0]][1])*cos(angle_with_horizontal) + abs(self._right_support[0] - self._loads_position[sorted_position[1][0]][0])*sin(angle_with_horizontal))
             self._tension[label] = tension
 
@@ -484,4 +484,4 @@ class Cable:
 
             label = self._support_labels[1]
             self._reaction_loads[Symbol("R_"+label+"_x")] = -F_x
-            self._reaction_loads[Symbol("R_"+label+"_y")] = -F_y                 
+            self._reaction_loads[Symbol("R_"+label+"_y")] = -F_y
