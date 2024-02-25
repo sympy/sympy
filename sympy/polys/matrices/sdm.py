@@ -1805,6 +1805,13 @@ def sdm_rref_den(A, K):
         Aij = Ai[j]
         return ({0: Ai.copy()}, Aij, [j])
 
+    # For inexact domains like RR[x] we use quo and discard the remainder.
+    # Maybe it would be better for K.exquo to do this automatically.
+    if K.is_Exact:
+        exquo = K.exquo
+    else:
+        exquo = K.quo
+
     # Make sure we have the rows in order to make this deterministic from the
     # outset.
     _, rows_in_order = zip(*sorted(A.items()))
@@ -1901,7 +1908,7 @@ def sdm_rref_den(A, K):
                 for l, Akl in Ak.items():
                     Akl = Akl * Aij
                     if divisor is not None:
-                        Akl = K.exquo(Akl, divisor)
+                        Akl = exquo(Akl, divisor)
                     Ak[l] = Akl
                 continue
 
@@ -1912,19 +1919,19 @@ def sdm_rref_den(A, K):
             for l in Ai_nz - Ak_nz:
                 Ak[l] = - Akj * Ai[l]
                 if divisor is not None:
-                    Ak[l] = K.exquo(Ak[l], divisor)
+                    Ak[l] = exquo(Ak[l], divisor)
 
             # This loop also not needed in sdm_irref.
             for l in Ak_nz - Ai_nz:
                 Ak[l] = Aij * Ak[l]
                 if divisor is not None:
-                    Ak[l] = K.exquo(Ak[l], divisor)
+                    Ak[l] = exquo(Ak[l], divisor)
 
             for l in Ai_nz & Ak_nz:
                 Akl = Aij * Ak[l] - Akj * Ai[l]
                 if Akl:
                     if divisor is not None:
-                        Akl = K.exquo(Akl, divisor)
+                        Akl = exquo(Akl, divisor)
                     Ak[l] = Akl
                 else:
                     Ak.pop(l)
@@ -1948,7 +1955,7 @@ def sdm_rref_den(A, K):
                 denom *= Aij
 
         if divisor is not None:
-            denom = K.exquo(denom, divisor)
+            denom = exquo(denom, divisor)
 
         # Update the divisor.
         divisor = denom
