@@ -983,6 +983,7 @@ Mikhail Remnev <maremnev@gmail.com> Mikhail Remnev <141655736+maremnev@users.nor
 Milan Jolly <milan.cs16@iitp.ac.in> mijo2 <milan.cs16@iitp.ac.in>
 Min Ragan-Kelley <benjaminrk@gmail.com>
 Miro Hrončok <miro@hroncok.cz>
+Mohak Malviya <mohakmalviya2000@gmail.com>
 Mohammad Sadeq Dousti <msdousti@gmail.com>
 Mohammed Bilal <r.mohammedbilal@gmail.com>
 Mohit Balwani <mohitbalwani.ict17@gmail.com> Mohit Balwani <44258119+Mohitbalwani26@users.noreply.github.com>
@@ -1280,7 +1281,20 @@ Sebastian Krause <sebastian.krause@gmx.de>
 Sebastian Kreft <skreft@gmail.com>
 Sebastian Krämer <basti.kr@gmail.com> basti.kr <devnull@localhost>
 Segev Finer <segev208@gmail.com>
+<<<<<<< HEAD
+<<<<<<< HEAD
+Senku <38376114+mohakmalviya@users.noreply.github.com>
+<<<<<<< HEAD
 Senku <mohakmalviya2000@gmail.com>
+=======
+>>>>>>> b600e3a11d (Added author in .mailmap)
+=======
+Mohak Malviya <mohakmalviya2000@gmail.com>
+>>>>>>> 0c64091374 (Updated .mailmap(1))
+=======
+Senku <38376114+mohakmalviya@users.noreply.github.com>
+Senku <mohakmalviya2000@gmail.com>
+>>>>>>> 8d864b314a (updated .mailmap and test_args for failing dependencies)
 Sergey B Kirpichev <skirpichev@gmail.com>
 Sergey Pestov <pestov-sa@yandex.ru>
 Sergiu Ivanov <unlimitedscolobb@gmail.com>

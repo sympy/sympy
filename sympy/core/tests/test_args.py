@@ -17,6 +17,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
+
 from sympy.testing.pytest import SKIP
 
 a, b, c, x, y, z = symbols('a,b,c,x,y,z')
@@ -4253,23 +4254,33 @@ def test_sympy__physics__control__lti__MIMOLinearTimeInvariant():
     # Direct instances of MIMOLinearTimeInvariant class are not allowed.
     pass
 
-
 def test_sympy__physics__control__lti__TransferFunction():
     from sympy.physics.control.lti import TransferFunction
     assert _test_args(TransferFunction(2, 3, x))
+
+def _test_args_PIDController(obj):
+    from sympy import Symbol
+    from sympy.physics.control.lti import PIDController
+    if isinstance(obj, PIDController):
+        var = Symbol('s')
+        KP, KI, KD = obj.KP, obj.KI, obj.KD
+        recreated_pid = PIDController(KP, KI, KD, var)
+        return recreated_pid == obj
+    return False
 
 def test_sympy__physics__control__lti__PIDController():
     from sympy import Symbol
     from sympy.physics.control.lti import PIDController
     var = Symbol('s')
     KP, KI, KD = 1, 0.1, 0.01
-    assert _test_args(PIDController(KP, KI, KD, var))
+    assert _test_args_PIDController(PIDController(KP, KI, KD, var))
 
 def test_sympy__physics__control__lti__Series():
     from sympy.physics.control import Series, TransferFunction
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
     tf2 = TransferFunction(y - x, z + y, x)
     assert _test_args(Series(tf1, tf2))
+
 
 def test_sympy__physics__control__lti__MIMOSeries():
     from sympy.physics.control import MIMOSeries, TransferFunction, TransferFunctionMatrix

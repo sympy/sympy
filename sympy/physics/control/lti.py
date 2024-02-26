@@ -1325,7 +1325,6 @@ class PIDController(TransferFunction):
     TransferFunction(s*(0.01*s + 1) + 0.1, s, s)
     """
     def __new__(cls, KP, KI, KD, var):
-        print("var type:", type(var))
         if not isinstance(var, Symbol):
             raise ValueError("var must be a Symbol")
 
