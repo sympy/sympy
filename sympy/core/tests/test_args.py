@@ -4263,17 +4263,13 @@ def test_sympy__physics__control__lti__PIDController():
     from sympy.physics.control.lti import PIDController
     var = Symbol('s')
     KP, KI, KD = 1, 0.1, 0.01
-    pid = PIDController(KP, KI, KD, var)
-    recreated_pid = pid.func(*pid.args)
-    assert pid.KP == recreated_pid.KP and pid.KI == recreated_pid.KI and \
-           pid.KD == recreated_pid.KD and pid.var == recreated_pid.var
+    assert _test_args(PIDController(KP, KI, KD, var))
 
 def test_sympy__physics__control__lti__Series():
     from sympy.physics.control import Series, TransferFunction
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
     tf2 = TransferFunction(y - x, z + y, x)
     assert _test_args(Series(tf1, tf2))
-
 
 def test_sympy__physics__control__lti__MIMOSeries():
     from sympy.physics.control import MIMOSeries, TransferFunction, TransferFunctionMatrix

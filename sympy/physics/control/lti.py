@@ -1300,9 +1300,9 @@ class TransferFunction(SISOLinearTimeInvariant):
             return Pow(self.den, -1, evaluate=False)
 
 
-class PIDController:
+class PIDController(TransferFunction):
     """
-    A PID Controller class that uses Parallel to combine the P, I, and D components.
+    A PID Controller class that uses Parallel connection to combine the P, I, and D components.
 
     Parameters
     ==========
@@ -1321,34 +1321,55 @@ class PIDController:
     >>> from sympy.physics.control.lti import PIDController
     >>> KP, KI, KD = 1, 0.1, 0.01
     >>> pid = PIDController(KP, KI, KD, s)
-    >>> print(pid.to_PID_expr())
+    >>> print(pid)
     TransferFunction(s*(0.01*s + 1) + 0.1, s, s)
     """
-    def __init__(self, KP, KI, KD, var):
+    def __new__(cls, KP, KI, KD, var):
+        print("var type:", type(var))
         if not isinstance(var, Symbol):
             raise ValueError("var must be a Symbol")
 
-        self.KP = sympify(KP)
-        self.KI = sympify(KI)
-        self.KD = sympify(KD)
-        self.var = var
+        KP = sympify(KP)
+        KI = sympify(KI)
+        KD = sympify(KD)
 
         P = TransferFunction(KP, 1, var)
         I = TransferFunction(KI, var, var)
         D = TransferFunction(KD * var, 1, var)
 
-        self.pid_controller = Parallel(P, I, D)
+        pid_controller = Parallel(P, I, D)
 
-    def to_PID_expr(self):
-        return self.pid_controller.doit()
+        tf = pid_controller.doit()
+
+        numerator = tf.num
+        denominator = tf.den
+
+        return TransferFunction.__new__(cls, numerator, denominator, var)
+
+    def __init__(self, KP, KI, KD, var):
+        self._KP = KP
+        self._KI = KI
+        self._KD = KD
+        self._var = var
+
+    def __str__(self):
+        return f"TransferFunction(s*({self.KD}*s + {self.KP}) + {self.KI}, {self.var}, {self.var})"
 
     @property
-    def args(self):
-        return (self.KP, self.KI, self.KD, self.var)
+    def KP(self):
+        return self._KP
 
     @property
-    def func(self):
-        return self.__class__
+    def KI(self):
+        return self._KI
+
+    @property
+    def KD(self):
+        return self._KD
+
+    @property
+    def var(self):
+        return self._var
 
 def _flatten_args(args, _cls):
     temp_args = []

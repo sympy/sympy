@@ -506,9 +506,9 @@ def test_Series_construction():
     raises(TypeError, lambda: Series(s**2 + p*s, tf3, tf2))
     raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
 
+var = symbols('s')
 
 def test_PIDController_properties():
-    var = symbols('s')
     KP, KI, KD = 1, 0.1, 0.01
     pid = PIDController(KP, KI, KD, var)
     assert pid.KP == S(1)
@@ -517,25 +517,20 @@ def test_PIDController_properties():
     assert pid.var == var
 
 def test_PIDController_functionality():
-    var = symbols('s')
     KP, KI, KD = 1, 0.1, 0.01
     pid = PIDController(KP, KI, KD, var)
-    pid_tf = pid.to_PID_expr()
-    expected_tf = TransferFunction(s*(KD*s + KP) + KI, var, var)
-    diff = simplify(pid_tf - expected_tf)
-    assert diff.num == 0
+    expected_tf = TransferFunction(var*(0.01*var + 1) + 0.1, var, var)
+    assert pid.to_expr() == expected_tf.to_expr()
 
 def test_PIDController_parallel_functionality():
-    var = symbols('s')
     KP, KI, KD = 1, 0.1, 0.01
     pid = PIDController(KP, KI, KD, var)
-    parallel_tf = pid.pid_controller
-    expected_tf = Parallel(
-        TransferFunction(KP, 1, var),
-        TransferFunction(KI, var, var),
-        TransferFunction(KD * var, 1, var)).doit()
+    expected_tf = simplify(Parallel(
+        TransferFunction(1, 1, var),
+        TransferFunction(0.1, var, var),
+        TransferFunction(0.01 * var, 1, var)))
 
-    assert simplify(parallel_tf.to_expr() - expected_tf.to_expr()) == 0
+    assert pid.to_expr() == expected_tf.to_expr()
 
 def test_MIMOSeries_construction():
     tf_1 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
