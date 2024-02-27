@@ -167,6 +167,9 @@ class LatexPrinter(Printer):
         "min": None,
         "max": None,
         "diff_operator": "d",
+        "mat_compact": True,
+        "mat_visible_rows": 15,
+        "mat_visible_cols": 15,
     }
 
     def __init__(self, settings=None):
@@ -1683,10 +1686,37 @@ class LatexPrinter(Printer):
         return tex % r" \\".join(ecpairs)
 
     def _print_matrix_contents(self, expr):
-        lines = []
 
-        for line in range(expr.rows):  # horrible, should be 'rows'
-            lines.append(" & ".join([self._print(i) for i in expr[line, :]]))
+        visible_rows = self._settings['mat_visible_rows']
+        visible_cols = self._settings['mat_visible_cols']
+        compact = self._settings['mat_compact']
+
+        row_compactify =  compact and expr.rows > visible_rows
+        col_compactify =  compact and expr.cols > visible_cols
+
+        row_bound = visible_rows if compact and row_compactify else expr.rows
+        col_bound = visible_cols if compact and col_compactify else expr.cols
+
+        lines = [[] for _ in range(row_bound)]
+
+        for i in range(row_bound):
+            lines[i] = [self._print(expr[i, j]) for j in range(col_bound)]
+
+            if col_compactify:
+                # horizental dots and add last element in the ith row
+                lines[i][-2:] = [r'\cdots', self._print(expr[i, -1])]
+
+        if row_compactify:
+            last_row = expr[-1, 0:col_bound]
+            lines[-2:] = [r'\vdots'] * col_bound, [self._print(i) for i in last_row]
+
+        if col_compactify:
+            lines[-1][-2:] = [r'\cdots', self._print(expr[-1, -1])]
+
+        if col_compactify and row_compactify:
+            lines[-2][-2] = r'\ddots' # diagonal dots
+
+        lines = [' & '.join(line) for line in lines]
 
         mat_str = self._settings['mat_str']
         if mat_str is None:
@@ -3043,6 +3073,15 @@ def latex(expr, **settings):
     diff_operator: string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
+    mat_compact: boolean, optional
+        Truncate large Matrix for printing. Default is ``True``, to avoid printing
+        slowdown.
+    mat_visible_rows: int, optional
+        Sets the maximum number of rows to be printed. Default is ``15``, and
+        it doesn't take effect if mat_compact is ``False``.
+    mat_visible_cols: int, optional
+        Sets the maximum number of columns to be printed. Default is ``15``, and
+        it doesn't take effect if mat_compact is ``False``.
 
     Notes
     =====
