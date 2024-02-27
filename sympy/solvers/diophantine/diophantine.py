@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
