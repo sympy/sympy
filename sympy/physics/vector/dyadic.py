@@ -174,7 +174,7 @@ class Dyadic(Printable, EvalfMixin):
                               printer._print(ar[i][2]))
                 else:
                     ol.append(' + ' + printer._print(ar[i][1]) +
-                              printer._print(ar[i][2]))                    
+                              printer._print(ar[i][2]))
             # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
                 if not shorten:
@@ -197,7 +197,6 @@ class Dyadic(Printable, EvalfMixin):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                
                 if not shorten:
                     ol.append(str_start + arg_str + printer._print(ar[i][1]) +
                               r"\otimes " + printer._print(ar[i][2]))
