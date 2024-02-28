@@ -4286,9 +4286,9 @@ class PIDController(TransferFunction):
     >>> from sympy.abc import s
     >>> from sympy.physics.control.lti import PIDController
     >>> KP, KI, KD, TF = 1, 0.1, 0.01, 0
-    >>> pid = PIDController(KP, KI, KD, s)
-    >>> pid
-    PIDController(1, 0.1, s, 0, s)
+    >>> pid = PIDController(KP, KI, KD, TF, s)
+    >>> print(pid)
+    PIDController(1, 0.1, 0.01, 0, s)
     >>> pid.doit() #Converts PIDController into TransferFunction
     TransferFunction(s*(0.01*s + 1) + 0.1, s, s)
     >>> pid.var

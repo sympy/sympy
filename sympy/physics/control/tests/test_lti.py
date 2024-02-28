@@ -1682,7 +1682,6 @@ def test_StateSpace_functions():
 def test_PIDControl():
     kp, ki, kd = symbols(['kp','ki','kd'])
     p1 = PIDController(kp, ki, kd,0, s)
-    p2 = PIDController(kp, 0, kd, 1, s)
     # Type Checking
     assert isinstance(p1, PIDController)
     assert isinstance(p1, TransferFunction)
@@ -1709,5 +1708,3 @@ def test_PIDControl():
     assert per1 == Parallel(PIDController(kp, ki, kd,0, s), TransferFunction(s, 1, s))
     assert ser1.doit() == TransferFunction(s*(ki + s*(kd*s + kp)), s, s)
     assert per1.doit() == TransferFunction(ki + s**2 + s*(kd*s + kp), s, s)
-
-

@@ -405,8 +405,22 @@ jobs:
 
   # -------------------- Test with mpmath master ------------------- #
 
+<<<<<<< HEAD
+<<<<<<< HEAD
   tests-mpmath-master:
     needs: [doctests-latest, tests-latest]
+=======
+  tests-mpmath-master
+  #needs: [doctests-latest, tests-latest]
+>>>>>>> 73c18c518e (maint(ci): add CI tests for mpmath master branch)
+=======
+  tests-mpmath-master:
+<<<<<<< HEAD
+    #needs: [doctests-latest, tests-latest]
+>>>>>>> a3415a176f (Fix yml syntax)
+=======
+    needs: [doctests-latest, tests-latest]
+>>>>>>> 50217bbe18 (maint(ci): make mpmath CI job run after main tests)
 
     runs-on: ubuntu-20.04
 
@@ -421,7 +435,15 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
+<<<<<<< HEAD
+<<<<<<< HEAD
           python-version: '3.12'
+=======
+          python-version: ${{ matrix.python-version }}
+>>>>>>> 73c18c518e (maint(ci): add CI tests for mpmath master branch)
+=======
+          python-version: '3.12'
+>>>>>>> bae2acf5b6 (fix python version)
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
