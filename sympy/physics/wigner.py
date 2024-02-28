@@ -69,7 +69,7 @@ from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import zeros
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.utilities.misc import as_int
-from fractions import Fraction
+from sympy import Rational
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
 _Factlist = [1]
@@ -195,15 +195,19 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - Jens Rasch (2009-03-24): initial version
     """
 
+    
+
     def convert_float_to_rational_if_half_integer(value):
         if isinstance(value, float):
-            fraction_value = Fraction(value).limit_denominator()
+            fraction_value = Rational(value).limit_denominator()
             if fraction_value.denominator == 2:
                 return fraction_value
         return value
+
     values = [j_1, j_2, j_3, m_1, m_2, m_3]
     converted_values = [convert_float_to_rational_if_half_integer(value) for value in values]
     j_1, j_2, j_3, m_1, m_2, m_3 = converted_values
+
     tolerance = 1e-10
     if abs(j_1 * 2 - int(j_1 * 2)) > tolerance or \
             abs(j_2 * 2 - int(j_2 * 2)) > tolerance or \
@@ -213,6 +217,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             abs(m_2 * 2 - int(m_2 * 2)) > tolerance or \
             abs(m_3 * 2 - int(m_3 * 2)) > tolerance:
         raise ValueError("m values must be integer or half integer")
+
     if m_1 + m_2 + m_3 != 0:
         return S.Zero
     prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
