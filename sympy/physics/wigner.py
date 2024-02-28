@@ -195,8 +195,6 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - Jens Rasch (2009-03-24): initial version
     """
 
-    
-
     def convert_float_to_rational_if_half_integer(value):
         if isinstance(value, float):
             fraction_value = Rational(value).limit_denominator()
