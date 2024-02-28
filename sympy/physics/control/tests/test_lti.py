@@ -16,7 +16,7 @@ from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
 from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
-    StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
+    StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin, PIDController)
 from sympy.testing.pytest import raises
 
 a, x, b, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
@@ -1679,3 +1679,35 @@ def test_StateSpace_functions():
     assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
     assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
+def test_PIDControl():
+    kp, ki, kd = symbols(['kp','ki','kd'])
+    p1 = PIDController(kp, ki, kd,0, s)
+    p2 = PIDController(kp, 0, kd, 1, s)
+    # Type Checking
+    assert isinstance(p1, PIDController)
+    assert isinstance(p1, TransferFunction)
+
+    # Properties checking
+    assert p1 == PIDController(kp, ki, kd, 0, s)
+    assert p1.var == s
+    assert p1.num == ki + s*(kd*s + kp)
+    assert p1.den == s
+    assert p1.KP == kp
+    assert p1.KI == ki
+    assert p1.KD == kd
+
+    #Functionality Checking
+    assert p1.doit() == TransferFunction(ki + s*(kd*s + kp), s, s)
+    assert p1.to_expr().expand() == kd*s + ki/s + kp
+
+    #Using PIDController with TransferFunctions
+    tf1 = TransferFunction(s,1,s)
+    #Series combination and Parallel combination with TransferFunction
+    ser1 = Series(p1,tf1)
+    per1 = Parallel(p1, tf1)
+    assert ser1 == Series(PIDController(kp, ki, kd,0, s), TransferFunction(s, 1, s))
+    assert per1 == Parallel(PIDController(kp, ki, kd,0, s), TransferFunction(s, 1, s))
+    assert ser1.doit() == TransferFunction(s*(ki + s*(kd*s + kp)), s, s)
+    assert per1.doit() == TransferFunction(ki + s**2 + s*(kd*s + kp), s, s)
+
+
