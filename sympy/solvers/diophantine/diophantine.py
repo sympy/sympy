@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
@@ -3263,15 +3265,45 @@ def descent(A, B):
     return _remove_gcd(x_0*x_1 + A*z_0*z_1, z_0*x_1 + x_0*z_1, t_1*t_2*y_1)
 
 
-def gaussian_reduce(w, a, b):
+def gaussian_reduce(w:int, a:int, b:int) -> tuple[int, int]:
     r"""
     Returns a reduced solution `(x, z)` to the congruence
-    `X^2 - aZ^2 \equiv 0 \ (mod \ b)` so that `x^2 + |a|z^2` is minimal.
+    `X^2 - aZ^2 \equiv 0 \pmod{b}` so that `x^2 + |a|z^2` is minimal.
+    Here ``w`` is a solution of the congruence `x^2 \equiv a \pmod{b}`.
 
-    Details
-    =======
+    Explanation
+    ===========
 
-    Here ``w`` is a solution of the congruence `x^2 \equiv a \ (mod \ b)`
+    We define a special dot product of the vectors `u = (u_{1}, u_{2})` and
+    `v = (v_{1}, v_{2})` which is defined in order to reduce solution of
+    the congruence equation `X^2 - aZ^2 \equiv 0 \pmod{b}`.
+
+    .. math ::
+        u \cdot v := (wu_1 + bu_2)(wv_1 + bv_2) + |a|u_1v_1
+
+    Here, if `u_3` is defined as `wu_1 + bu_2`, `u \cdot v` can be computed in `u_3v_3 + |a|u_1v_1`.
+    Therefore, it is kept in pairs of ``(u_3, u_1)``.
+
+    Parameters
+    ==========
+
+    w : int
+        ``w`` s.t. `w^2 \equiv a \pmod{b}`
+    a : int
+    b : int
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine.diophantine import gaussian_reduce
+    >>> from sympy.ntheory.residue_ntheory import sqrt_mod
+    >>> a, b = 19, 101
+    >>> gaussian_reduce(sqrt_mod(a, b), a, b) # 1**2 - 19*(-4)**2 = -303
+    (1, -4)
+    >>> a, b = 11, 14
+    >>> x, z = gaussian_reduce(sqrt_mod(a, b), a, b)
+    >>> (x**2 - a*z**2) % b == 0
+    True
 
     References
     ==========
@@ -3282,48 +3314,25 @@ def gaussian_reduce(w, a, b):
            Mathematics of Computation, 72(243), 1417-1441.
            https://doi.org/10.1090/S0025-5718-02-01480-1
     """
-    u = (0, 1)
-    v = (1, 0)
+    a = abs(a)
+    def _dot(u, v):
+        return u[0]*v[0] + a*u[1]*v[1]
 
-    if dot(u, v, w, a, b) < 0:
-        v = (-v[0], -v[1])
+    u = (b, 0)
+    v = (w, 1) if b*w >= 0 else (-w, -1)
+    # i.e., _dot(u, v) >= 0
 
-    if norm(u, w, a, b) < norm(v, w, a, b):
+    if b**2 < w**2 + a:
         u, v = v, u
+    # i.e., norm(u) >= norm(v), where norm(u) := sqrt(_dot(u, u))
 
-    while norm(u, w, a, b) > norm(v, w, a, b):
-        k = dot(u, v, w, a, b) // dot(v, v, w, a, b)
-        u, v = v, (u[0]- k*v[0], u[1]- k*v[1])
-
-    u, v = v, u
-
-    if dot(u, v, w, a, b) < dot(v, v, w, a, b)/2 or norm((u[0]-v[0], u[1]-v[1]), w, a, b) > norm(v, w, a, b):
-        c = v
-    else:
-        c = (u[0] - v[0], u[1] - v[1])
-
-    return c[0]*w + b*c[1], c[0]
-
-
-def dot(u, v, w, a, b):
-    r"""
-    Returns a special dot product of the vectors `u = (u_{1}, u_{2})` and
-    `v = (v_{1}, v_{2})` which is defined in order to reduce solution of
-    the congruence equation `X^2 - aZ^2 \equiv 0 \ (mod \ b)`.
-    """
-    u_1, u_2 = u
-    v_1, v_2 = v
-    return (w*u_1 + b*u_2)*(w*v_1 + b*v_2) + abs(a)*u_1*v_1
-
-
-def norm(u, w, a, b):
-    r"""
-    Returns the norm of the vector `u = (u_{1}, u_{2})` under the dot product
-    defined by `u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}`
-    where `u = (u_{1}, u_{2})` and `v = (v_{1}, v_{2})`.
-    """
-    u_1, u_2 = u
-    return sqrt(dot((u_1, u_2), (u_1, u_2), w, a, b))
+    while _dot(u, u) > (dv := _dot(v, v)):
+        k = _dot(u, v) // dv
+        u, v = v, (u[0] - k*v[0], u[1] - k*v[1])
+    c = (v[0] - u[0], v[1] - u[1])
+    if _dot(c, c) <= _dot(u, u) <= 2*_dot(u, v):
+        return c
+    return u
 
 
 def holzer(x, y, z, a, b, c):
