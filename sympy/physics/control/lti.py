@@ -4279,6 +4279,8 @@ class PIDController(TransferFunction):
         Derivative filter time constant
     s : Symbol
         The complex frequency variable.
+
+
     Examples
     ========
     >>> from sympy.abc import s
