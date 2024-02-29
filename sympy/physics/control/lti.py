@@ -4275,7 +4275,7 @@ class PIDController(TransferFunction):
         Integral gain.
     KD : Expr, Number
         Derivative gain.
-    TP : Expr, Number
+    TF : Expr, Number
         Derivative filter time constant
     s : Symbol
         The complex frequency variable.
