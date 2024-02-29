@@ -4357,6 +4357,7 @@ class PIDController(TransferFunction):
     def KP(self):
         """
         Get the Proportional (KP) gain of the PIDController.
+
         Returns
         -------
         Expr, Number
@@ -4368,6 +4369,7 @@ class PIDController(TransferFunction):
     def KI(self):
         """
         Get the Proportional Integral (KI) gain of the PIDController.
+
         Returns
         =======
         Expr, Number
@@ -4379,6 +4381,7 @@ class PIDController(TransferFunction):
     def KD(self):
         """
         Get the Proportional Derivative(P) gain of the PIDController.
+
         Returns
         =======
         Expr, Number
@@ -4390,6 +4393,7 @@ class PIDController(TransferFunction):
     def TF(self):
         """
         Get the Derivative filter time constant (TP) of the PIDController.
+
         Returns
         =======
         Expr, Number
@@ -4400,6 +4404,7 @@ class PIDController(TransferFunction):
     def doit(self):
         """
         Convert the PIDController into a TransferFunction.
+
         Returns
         =======
         TransferFunction
