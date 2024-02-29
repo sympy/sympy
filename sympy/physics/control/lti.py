@@ -827,8 +827,6 @@ class TransferFunction(SISOLinearTimeInvariant):
         (p - 3)*(p + 5)
 
         """
-        if isinstance(self.args[0], TransferFunction):
-            return self.args[0].num
         return self.args[0]
 
     @property
@@ -849,8 +847,6 @@ class TransferFunction(SISOLinearTimeInvariant):
         4
 
         """
-        if isinstance(self.args[1], TransferFunction):
-            return self.args[1].num
         return self.args[1]
 
     @property
@@ -2442,6 +2438,40 @@ class Feedback(TransferFunction):
 
         """
         return self.sys1.var
+
+    @property
+    def num(self):
+        """
+        Returns the numerator of the Feedback equivalent Transfer Function.
+
+        Returns:
+        - Expression: Numerator expression of the Feedback Transfer Function.
+        """
+        arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
+        # F_n and F_d are resultant TFs of num and den of Feedback.
+        F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
+        if self.sign == -1:
+            F_d = Parallel(unit, Series(self.sys2, *arg_list)).doit()
+        else:
+            F_d = Parallel(unit, -Series(self.sys2, *arg_list)).doit()
+        return F_n.num * F_d.den
+
+    @property
+    def den(self):
+        """
+        Returns the denominator of the Feedback equivalent Transfer Function.
+
+        Returns:
+        - Expression: Denominator expression of the Feedback Transfer Function.
+        """
+        arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
+        # F_n and F_d are resultant TFs of num and den of Feedback.
+        F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
+        if self.sign == -1:
+            F_d = Parallel(unit, Series(self.sys2, *arg_list)).doit()
+        else:
+            F_d = Parallel(unit, -Series(self.sys2, *arg_list)).doit()
+        return F_n.den * F_d.num
 
     @property
     def sign(self):
