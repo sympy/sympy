@@ -4267,6 +4267,7 @@ class StateSpace(LinearTimeInvariant):
 class PIDController(TransferFunction):
     """
     A PID Controller class that uses Parallel connection to combine the P, I, and D components.
+
     Parameters
     ==========
     KP : Expr, Number
@@ -4279,7 +4280,6 @@ class PIDController(TransferFunction):
         Derivative filter time constant
     s : Symbol
         The complex frequency variable.
-
 
     Examples
     ========
