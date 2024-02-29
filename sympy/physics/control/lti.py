@@ -827,6 +827,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         (p - 3)*(p + 5)
 
         """
+        if isinstance(self.args[0], TransferFunction):
+            return self.args[0].num
         return self.args[0]
 
     @property
@@ -847,6 +849,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         4
 
         """
+        if isinstance(self.args[1], TransferFunction):
+            return self.args[1].num
         return self.args[1]
 
     @property

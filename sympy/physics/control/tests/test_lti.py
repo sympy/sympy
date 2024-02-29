@@ -1691,8 +1691,8 @@ def test_Feedback_as_TransferFunction(): #Solves https://github.com/sympy/sympy/
     assert not isinstance(tf1, Feedback)
     # Operation checking
     num, den = fd1.num, fd1.den
-    assert num == TransferFunction(s + 1, 1, s)
-    assert den == TransferFunction(s + 2, 1, s)
+    assert num == s + 1
+    assert den == s + 2
     # Combining Operations of TransferFunction and Feedback
     fd2 = Feedback(tf1*fd1, tf2)
     assert fd2.doit().simplify() == TransferFunction(2*(s + 1)**2, 2*s + ((s + 1)*(s + 2) + 1)*(s**2 + 2*s + 1) + 2, s)
