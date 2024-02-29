@@ -2443,9 +2443,6 @@ class Feedback(TransferFunction):
     def num(self):
         """
         Returns the numerator of the Feedback equivalent Transfer Function.
-
-        Returns:
-        - Expression: Numerator expression of the Feedback Transfer Function.
         """
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
@@ -2460,9 +2457,6 @@ class Feedback(TransferFunction):
     def den(self):
         """
         Returns the denominator of the Feedback equivalent Transfer Function.
-
-        Returns:
-        - Expression: Denominator expression of the Feedback Transfer Function.
         """
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
