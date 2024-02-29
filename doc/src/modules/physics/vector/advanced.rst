@@ -131,7 +131,7 @@ Advanced Interfaces
 ===================
 
 Here we will cover advanced options in: ``ReferenceFrame``, ``dynamicsymbols``,
-and some associated functionality.
+``Point``, and some associated functionality.
 
 ReferenceFrame
 --------------
@@ -163,6 +163,22 @@ that would be used if there were custom indices. ::
   '\\mathbf{n}_2'
   >>> vlatex(N.z)
   'cat'
+
+Multiple ReferenceFrame can be created in a single step using ``symbols()``. An 
+example of this is shown below. ::
+
+  >>> from sympy.physics.vector import ReferenceFrame
+  >>> from sympy import symbols
+  >>> A, B, C = symbols('A B C', cls=ReferenceFrame)
+  >>> D, E = symbols('D E', cls=ReferenceFrame, indices=('1', '2', '3'))
+  >>> A[0]
+  A_x
+  >>> D.x
+  D['1']
+  >>> E.y
+  E['2']
+  >>> type(A) == type(D)
+  True
 
 dynamicsymbols
 --------------
@@ -198,3 +214,30 @@ so dynamic symbols created before or after will print the same way.
 Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and
 methods. Don't mix and match symbols representing time.
+
+Shortcut to create multiple mechanics objects
+---------------------------------------------
+Multiple instances of ``Point``, ``ReferenceFrame``, ``Particle`` and
+``RigidBody`` can also be created in a single step, using the ``symbols()``
+function. Examples of this are shown below. ::
+
+  >>> from sympy import symbols
+  >>> from sympy.physics.vector import Point, ReferenceFrame
+  >>> from sympy.physics.mechanics import outer, Particle, RigidBody
+  >>> x, y, z = symbols('x y z', cls=Point)
+  >>> m = symbols('m')
+  >>> type(m)
+  <class 'sympy.core.symbol.Symbol'>
+  >>> pa, pb = symbols('pa pb', point=x, mass=m, cls=Particle)
+  >>> type(pa)
+  <class 'sympy.physics.mechanics.particle.Particle'>
+  >>> pa.point, pa.mass
+  (x, m)
+  >>> N, O = symbols('N O', cls=ReferenceFrame)
+  >>> I = outer(N.x, N.x)
+  >>> inertia_tuple = (I, x)
+  >>> A, B = symbols('A B', masscenter=x, frame=N, mass=m, inertia=inertia_tuple, cls=RigidBody)
+  >>> type(A)
+  <class 'sympy.physics.mechanics.rigidbody.RigidBody'>
+  >>> A.masscenter, A.frame, A.mass, A.inertia
+  (x, N, m, ((N.x|N.x), x))
