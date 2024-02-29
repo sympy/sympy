@@ -4335,17 +4335,10 @@ class PIDController(TransferFunction):
         instance = super(PIDController, cls).__new__(cls,numerator,denominator,var)
         instance._num = tf.num
         instance._den = tf.den
+        instance._KP, instance._KI, instance._KD = KP, KI, KD
+        instance._TF = TF
 
         return instance
-
-    def __init__(self, KP, KI, KD, TF, var):
-        """
-        Initialise the PID instance
-        """
-        self._KP = KP
-        self._KI = KI
-        self._KD = KD
-        self._TF = TF
 
     def __str__(self):
         return f'PIDController({self._KP}, {self._KI}, {self._KD}, {self._TF}, {self.var})'
@@ -4359,7 +4352,7 @@ class PIDController(TransferFunction):
         Get the Proportional (KP) gain of the PIDController.
 
         Returns
-        -------
+        =======
         Expr, Number
             The Proportional gain.
         """
