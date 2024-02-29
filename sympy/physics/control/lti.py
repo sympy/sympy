@@ -4332,7 +4332,7 @@ class PIDController(TransferFunction):
         numerator = tf.num
         denominator = tf.den
 
-        instance = super(PIDController, cls).__new__(cls,numerator,denominator,var)
+        instance = super(PIDController, cls).__new__(cls, numerator, denominator, var)
         instance._num = tf.num
         instance._den = tf.den
         instance._KP, instance._KI, instance._KD = KP, KI, KD
@@ -4350,11 +4350,6 @@ class PIDController(TransferFunction):
     def KP(self):
         """
         Get the Proportional (KP) gain of the PIDController.
-
-        Returns
-        =======
-        Expr, Number
-            The Proportional gain.
         """
         return self._KP
 
@@ -4362,11 +4357,6 @@ class PIDController(TransferFunction):
     def KI(self):
         """
         Get the Proportional Integral (KI) gain of the PIDController.
-
-        Returns
-        =======
-        Expr, Number
-            The Proportional gain.
         """
         return self._KI
 
@@ -4374,11 +4364,6 @@ class PIDController(TransferFunction):
     def KD(self):
         """
         Get the Proportional Derivative(P) gain of the PIDController.
-
-        Returns
-        =======
-        Expr, Number
-            The Proportional gain.
         """
         return self._KD
 
@@ -4386,21 +4371,11 @@ class PIDController(TransferFunction):
     def TF(self):
         """
         Get the Derivative filter time constant (TP) of the PIDController.
-
-        Returns
-        =======
-        Expr, Number
-            The Proportional gain.
         """
         return self._TF
 
     def doit(self):
         """
         Convert the PIDController into a TransferFunction.
-
-        Returns
-        =======
-        TransferFunction
-            A TransferFunction representing the PIDController.
         """
         return TransferFunction(self._num, self._den, self.var)
