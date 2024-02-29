@@ -4297,7 +4297,10 @@ class PIDController(TransferFunction):
     1
     """
 
-    def __new__(cls, KP = None, KI = None, KD = None, TF = None, var):
+    def __new__(cls, KP = None, KI = None, KD = None, TF = None, var = None):
+        if var is None:
+            raise ValueError("var should not be None")
+
         if not isinstance(var, Symbol):
             raise ValueError("var must be a Symbol")
 
