@@ -4296,7 +4296,8 @@ class PIDController(TransferFunction):
     >>> pid.KP
     1
     """
-    def __new__(cls, KP, KI, KD, TF, var):
+
+    def __new__(cls, KP = None, KI = None, KD = None, TF = None, var):
         if not isinstance(var, Symbol):
             raise ValueError("var must be a Symbol")
 
@@ -4333,6 +4334,7 @@ class PIDController(TransferFunction):
         instance._den = tf.den
 
         return instance
+
     def __init__(self, KP, KI, KD, TF, var):
         """
         Initialise the PID instance
@@ -4344,8 +4346,10 @@ class PIDController(TransferFunction):
 
     def __str__(self):
         return f'PIDController({self._KP}, {self._KI}, {self._KD}, {self._TF}, {self.var})'
+
     def __repr__(self):
         return f'PIDController({self._KP}, {self._KI}, {self._KD}, {self._TF}, {self.var})'
+
     @property
     def KP(self):
         """
@@ -4367,6 +4371,7 @@ class PIDController(TransferFunction):
             The Proportional gain.
         """
         return self._KI
+
     @property
     def KD(self):
         """
@@ -4377,6 +4382,7 @@ class PIDController(TransferFunction):
             The Proportional gain.
         """
         return self._KD
+
     @property
     def TF(self):
         """
@@ -4387,6 +4393,7 @@ class PIDController(TransferFunction):
             The Proportional gain.
         """
         return self._TF
+
     def doit(self):
         """
         Convert the PIDController into a TransferFunction.
