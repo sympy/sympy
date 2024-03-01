@@ -1006,6 +1006,32 @@ def test_Feedback_functions():
         TransferFunction(p, a0*p + p + p**a1 - s, p)
 
 
+def test_Feedback_as_TransferFunction():
+    tf1 = TransferFunction(s+1, 1, s)
+    tf2 = TransferFunction(s+2, 1, s)
+    fd1 = Feedback(tf1, tf2, -1) # Negative Feedback system
+    fd2 = Feedback(tf1, tf2, 1) # Postitive Feedback system
+    unit = TransferFunction(1, 1, s)
+
+    # Checking the type
+    assert isinstance(fd1, TransferFunction)
+    assert isinstance(fd1, Feedback)
+
+    # Testing the numerator and denominator
+    assert fd1.num == tf1
+    assert fd2.num == tf1
+    assert fd1.den == Parallel(unit, Series(tf2, tf1))
+    assert fd2.den == Parallel(unit, -Series(tf2, tf1))
+
+    # Testing the Series Combination with Feedback and TransferFunction
+    s1 = Series(tf1, fd1)
+    assert tf1 * fd1 == s1
+
+    # Testing the use of Feedback with TransferFunction and Feedback
+    fd3 = Feedback(tf1*fd1, tf2, -1)
+    assert fd3 == Feedback(Series(tf1, fd1), tf2)
+    assert fd3.num == tf1 * fd1
+    assert fd3.den == Parallel(unit, Series(tf2, Series(tf1, fd1)))
 def test_MIMOFeedback_construction():
     tf1 = TransferFunction(1, s, s)
     tf2 = TransferFunction(s, s**3 - 1, s)
