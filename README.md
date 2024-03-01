@@ -273,8 +273,8 @@ A BibTeX entry for LaTeX users is
 SymPy is BSD licensed, so you are free to use it whatever you like, be
 it academic, commercial, creating forks or derivatives, as long as you
 copy the BSD statement if you redistribute it (see the 
-[LICENSE](https://github.com/sympy/sympy/blob/master/LICENSE) file for
-details). That said, although not required by the SymPy license, if it
+[LICENSE](https://github.com/sympy/sympy/blob/master/LICENSE) file fordetails). 
+That said, although not required by the SymPy license, if it
 is convenient for you, please cite SymPy when using it in your work and
 also consider contributing all your changes back, so that we can
 incorporate it and all of us will benefit in the end.
