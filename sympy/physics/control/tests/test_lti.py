@@ -1007,10 +1007,11 @@ def test_Feedback_functions():
 
 
 def test_Feedback_as_TransferFunction():
+    # Solves issue https://github.com/sympy/sympy/issues/26161
     tf1 = TransferFunction(s+1, 1, s)
     tf2 = TransferFunction(s+2, 1, s)
     fd1 = Feedback(tf1, tf2, -1) # Negative Feedback system
-    fd2 = Feedback(tf1, tf2, 1) # Postitive Feedback system
+    fd2 = Feedback(tf1, tf2, 1) # Positive Feedback system
     unit = TransferFunction(1, 1, s)
 
     # Checking the type
