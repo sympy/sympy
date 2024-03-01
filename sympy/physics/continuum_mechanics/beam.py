@@ -467,6 +467,11 @@ class Beam:
 
         self._support_as_loads.append((reaction_load, loc, -1, None))
 
+        if type in ("pin", "roller"):
+            return reaction_load
+        else:
+            return reaction_load, reaction_moment
+
     def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
