@@ -864,7 +864,7 @@ class Mul(Expr, AssocOp):
                     if a.is_Add:
                         addterms *= a
                     elif a.has(re, im) or r.has(S.ImaginaryUnit) or i.has(S.ImaginaryUnit):
-                            other.append(a)
+                        other.append(a)
                     elif a.is_Pow and a.base.is_Add:
                         other.append(r + i*S.ImaginaryUnit)
                     else:

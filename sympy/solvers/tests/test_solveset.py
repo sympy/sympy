@@ -2402,7 +2402,10 @@ def test_substitution_redundant():
            {(-y, 1), (y, 1), (-sqrt(y**2), 1), (sqrt(y**2), 1)}
 
     res = substitution([x - y, y**3 - 3*y**2 + 1], [x, y])
-    assert len(res) == 3
+    sol = {(1 + 2*cos(pi/9), 1 + 2*cos(pi/9)),\
+            (-cos(pi/9) - sqrt(3)*sin(pi/9) + 1, -cos(pi/9) - sqrt(3)*sin(pi/9) + 1),\
+            (-cos(pi/9) + sqrt(3)*sin(pi/9) + 1, -cos(pi/9) + sqrt(3)*sin(pi/9) + 1)}
+    assert res == sol
 
 
 def test_issue_5132_substitution():
