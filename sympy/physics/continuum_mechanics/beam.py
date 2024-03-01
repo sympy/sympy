@@ -406,7 +406,7 @@ class Beam:
             new_beam._hinge_position = self.length
             return new_beam
 
-    def apply_support(self, loc, type="fixed"):
+    def apply_support(self, loc, type="fixed", return_ = False):
         """
         This method applies support to a particular beam object.
 
@@ -466,6 +466,9 @@ class Beam:
             self._support_as_loads.append((reaction_moment, loc, -2, None))
 
         self._support_as_loads.append((reaction_load, loc, -1, None))
+
+        if not return_:
+            return
 
         if type in ("pin", "roller"):
             return reaction_load
