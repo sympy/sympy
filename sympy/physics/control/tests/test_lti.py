@@ -1024,9 +1024,11 @@ def test_Feedback_as_TransferFunction():
     assert fd1.den == Parallel(unit, Series(tf2, tf1))
     assert fd2.den == Parallel(unit, -Series(tf2, tf1))
 
-    # Testing the Series Combination with Feedback and TransferFunction
+    # Testing the Series and Parallel Combination with Feedback and TransferFunction
     s1 = Series(tf1, fd1)
+    p1 = Parallel(tf1, fd1)
     assert tf1 * fd1 == s1
+    assert tf1 + fd1 == p1
 
     # Testing the use of Feedback with TransferFunction and Feedback
     fd3 = Feedback(tf1*fd1, tf2, -1)
