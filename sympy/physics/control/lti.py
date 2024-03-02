@@ -2417,6 +2417,7 @@ class Feedback(TransferFunction):
         if self.sign == 1:
             return Parallel(unit, -Series(self.sys2, *arg_list))
         return Parallel(unit, Series(self.sys2, *arg_list))
+
     @property
     def sensitivity(self):
         """
