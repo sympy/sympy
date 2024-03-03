@@ -1030,11 +1030,16 @@ def test_Feedback_as_TransferFunction():
     assert tf1 * fd1 == s1
     assert tf1 + fd1 == p1
 
-    # Testing the use of Feedback with TransferFunction and Feedback
+    # Testing the use of Feedback and TransferFunction with Feedback
     fd3 = Feedback(tf1*fd1, tf2, -1)
     assert fd3 == Feedback(Series(tf1, fd1), tf2)
     assert fd3.num == tf1 * fd1
     assert fd3.den == Parallel(unit, Series(tf2, Series(tf1, fd1)))
+
+    # Testing the use of Feedback and TransferFunction with TransferFunction
+    tf3 = TransferFunction(tf1*fd1, tf2, s)
+    assert tf3 == TransferFunction(Series(tf1, fd1), tf2, s)
+    assert tf3.num == tf1*fd1
 
 
 def test_MIMOFeedback_construction():
