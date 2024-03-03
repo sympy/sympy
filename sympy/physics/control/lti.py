@@ -2498,11 +2498,7 @@ class Feedback(TransferFunction):
         return self.doit()
 
     def to_expr(self):
-        expr1 = self.sys1.to_expr()
-        expr2 = self.sys2.to_expr()
-        if self.sign == 1:
-            return expr1 / (1 - expr1 * expr2)
-        return expr1 / (1 + expr1 * expr2)
+        return self.doit().to_expr()
 
     def __neg__(self):
         return Feedback(-self.sys1, -self.sys2, self.sign)
