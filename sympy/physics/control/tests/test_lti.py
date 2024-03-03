@@ -1029,6 +1029,8 @@ def test_Feedback_as_TransferFunction():
     p1 = Parallel(tf1, fd1)
     assert tf1 * fd1 == s1
     assert tf1 + fd1 == p1
+    s1.doit() == TransferFunction((s + 1)**2, (s + 1)*(s + 2) + 1, s)
+    p1.doit() == TransferFunction(s + (s + 1)*((s + 1)*(s + 2) + 1) + 1, (s + 1)*(s + 2) + 1, s)
 
     # Testing the use of Feedback and TransferFunction with Feedback
     fd3 = Feedback(tf1*fd1, tf2, -1)
