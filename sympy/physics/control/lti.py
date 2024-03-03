@@ -2498,6 +2498,24 @@ class Feedback(TransferFunction):
         return self.doit()
 
     def to_expr(self):
+        """
+        Converts a ``Feedback`` object to SymPy Expr.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> from sympy import Expr
+        >>> tf1 = TransferFunction(a+s, 1, s)
+        >>> tf2 = TransferFunction(b+s, 1, s)
+        >>> fd1 = Feedback(tf1, tf2)
+        >>> fd1.to_expr()
+        (a + s)/((a + s)*(b + s) + 1)
+        >>> isinstance(_, Expr)
+        True
+        """
+
         return self.doit().to_expr()
 
     def __neg__(self):

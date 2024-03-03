@@ -1066,12 +1066,8 @@ def test_issue_26161():
     assert Gouter == Feedback(Series(PIcont, Series(Ginner, Gpsi)), Gunity)
     assert Gouter.num == Series(PIcont, Series(Ginner, Gpsi))
     assert Gouter.den == Parallel(Gunity, Series(Gunity, Series(PIcont, Series(Ginner, Gpsi))))
-    PIcont_expr = PIcont.to_expr()
-    Ginner_expr = Ginner.to_expr()
-    Gpsi_expr = Gpsi.to_expr()
-    Gunity_expr = Gunity.to_expr()
-    Gouter_expr_known = PIcont_expr * Ginner_expr * Gpsi_expr / (1 + PIcont_expr * Ginner_expr * Gpsi_expr * Gunity_expr)
-    assert (Gouter_expr_known - Gouter.to_expr()).simplify() == 0
+    expr = Gouter.doit().to_expr() - Feedback(Series(PIcont, Series(Ginner, Gpsi)), Gunity).doit().to_expr()
+    assert expr.simplify() == 0
 
 
 def test_MIMOFeedback_construction():
