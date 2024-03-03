@@ -2403,14 +2403,14 @@ class Feedback(TransferFunction):
     @property
     def num(self):
         """
-        Returns the Numerator of the Feedback model.
+        Returns the numerator of the closed loop feedback system.
         """
         return self.sys1
 
     @property
     def den(self):
         """
-        Returns the Denominator of the Feedback model.
+        Returns the denominator of the closed loop feedback model.
         """
         unit = TransferFunction(1, 1, self.var)
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
