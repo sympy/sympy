@@ -3268,21 +3268,27 @@ def descent(A, B):
 def gaussian_reduce(w:int, a:int, b:int) -> tuple[int, int]:
     r"""
     Returns a reduced solution `(x, z)` to the congruence
-    `X^2 - aZ^2 \equiv 0 \pmod{b}` so that `x^2 + |a|z^2` is minimal.
+    `X^2 - aZ^2 \equiv 0 \pmod{b}` so that `x^2 + |a|z^2` is as small as possible.
     Here ``w`` is a solution of the congruence `x^2 \equiv a \pmod{b}`.
+
+    This function is intended to be used only for ``descent()``.
 
     Explanation
     ===========
 
-    We define a special dot product of the vectors `u = (u_{1}, u_{2})` and
-    `v = (v_{1}, v_{2})` which is defined in order to reduce solution of
-    the congruence equation `X^2 - aZ^2 \equiv 0 \pmod{b}`.
+    The Gaussian reduction can find the shortest vector for any norm.
+    So we define the special norm for the vectors `u = (u_1, u_2)` and `v = (v_1, v_2)` as follows.
 
     .. math ::
         u \cdot v := (wu_1 + bu_2)(wv_1 + bv_2) + |a|u_1v_1
 
-    Here, if `u_3` is defined as `wu_1 + bu_2`, `u \cdot v` can be computed in `u_3v_3 + |a|u_1v_1`.
-    Therefore, it is kept in pairs of ``(u_3, u_1)``.
+    Note that, given the mapping `f: (u_1, u_2) \to (wu_1 + bu_2, u_1)`,
+    `f((u_1,u_2))` is the solution to `X^2 - aZ^2 \equiv 0 \pmod{b}`.
+    In other words, finding the shortest vector in this norm will yield a solution with smaller `X^2 + |a|Z^2`.
+    The algorithm starts from basis vectors `(0, 1)` and `(1, 0)`
+    (corresponding to solutions `(b, 0)` and `(w, 1)`, respectively) and finds the shortest vector.
+    The shortest vector does not necessarily correspond to the smallest solution,
+    but since ``descent()`` only wants the smallest possible solution, it is sufficient.
 
     Parameters
     ==========
@@ -3290,7 +3296,9 @@ def gaussian_reduce(w:int, a:int, b:int) -> tuple[int, int]:
     w : int
         ``w`` s.t. `w^2 \equiv a \pmod{b}`
     a : int
+        square-free nonzero integer
     b : int
+        square-free nonzero integer
 
     Examples
     ========
@@ -3303,6 +3311,16 @@ def gaussian_reduce(w:int, a:int, b:int) -> tuple[int, int]:
     >>> a, b = 11, 14
     >>> x, z = gaussian_reduce(sqrt_mod(a, b), a, b)
     >>> (x**2 - a*z**2) % b == 0
+    True
+
+    It does not always return the smallest solution.
+
+    >>> a, b = 6, 95
+    >>> min_x, min_z = 1, 4
+    >>> x, z = gaussian_reduce(sqrt_mod(a, b), a, b)
+    >>> (x**2 - a*z**2) % b == 0 and (min_x**2 - a*min_z**2) % b == 0
+    True
+    >>> min_x**2 + abs(a)*min_z**2 < x**2 + abs(a)*z**2
     True
 
     References
