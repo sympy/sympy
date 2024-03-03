@@ -19,7 +19,7 @@ from sympy.physics.control import (TransferFunction, Series, Parallel,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 
-a, x, b, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
+a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
     tau, zeta, wn, T')
 a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
     b0:4, c0:4, d0:4')
@@ -1029,8 +1029,8 @@ def test_Feedback_as_TransferFunction():
     p1 = Parallel(tf1, fd1)
     assert tf1 * fd1 == s1
     assert tf1 + fd1 == p1
-    s1.doit() == TransferFunction((s + 1)**2, (s + 1)*(s + 2) + 1, s)
-    p1.doit() == TransferFunction(s + (s + 1)*((s + 1)*(s + 2) + 1) + 1, (s + 1)*(s + 2) + 1, s)
+    assert s1.doit() == TransferFunction((s + 1)**2, (s + 1)*(s + 2) + 1, s)
+    assert p1.doit() == TransferFunction(s + (s + 1)*((s + 1)*(s + 2) + 1) + 1, (s + 1)*(s + 2) + 1, s)
 
     # Testing the use of Feedback and TransferFunction with Feedback
     fd3 = Feedback(tf1*fd1, tf2, -1)
