@@ -2453,6 +2453,8 @@ def test_Pow():
     assert latex(x**(Rational(-1, 3))) == r'\frac{1}{\sqrt[3]{x}}'
     x2 = Symbol(r'x^2')
     assert latex(x2**2) == r'\left(x^{2}\right)^{2}'
+    # Issue 11011
+    assert latex(S('1.453e4500')**x) == r'{1.453 \cdot 10^{4500}}^{x}'
 
 
 def test_issue_7180():
