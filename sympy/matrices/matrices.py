@@ -767,7 +767,9 @@ class MatrixBase(MatrixDeprecated,
     def flat(self):
         return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
 
-    def __array__(self, dtype=object):
+    def __array__(self, dtype=object, copy=None):
+        if copy is not None and not copy:
+            raise TypeError("Cannot implement copy=False when converting Matrix to ndarray")
         from .dense import matrix2numpy
         return matrix2numpy(self, dtype=dtype)
 

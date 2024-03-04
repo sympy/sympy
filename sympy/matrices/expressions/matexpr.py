@@ -383,7 +383,9 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().as_mutable()
 
-    def __array__(self):
+    def __array__(self, dtype=object, copy=None):
+        if copy is not None and not copy:
+            raise TypeError("Cannot implement copy=False when converting Matrix to ndarray")
         from numpy import empty
         a = empty(self.shape, dtype=object)
         for i in range(self.rows):
