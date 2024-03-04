@@ -1795,7 +1795,6 @@ class TrigonometricIntegral(Function):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE this is fairly inefficient
-        n += 1
         if self.args[0].subs(x, 0) != 0:
             return super()._eval_nseries(x, n, logx)
         baseseries = self._trigfunc(x)._eval_nseries(x, n, logx)
@@ -1928,11 +1927,11 @@ class Si(TrigonometricIntegral):
         # Expansion at oo
         if point is S.Infinity:
             z = self.args[0]
-            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
-                    for k in range(int((n - 1)/2))] + [Order(1/z**n, x)]
-            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
-                    for k in range(int(n/2) - 1)] + [Order(1/z**n, x)]
-            return pi/2 - (cos(z)/z)*Add(*p) - (sin(z)/z)*Add(*q)
+            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k + 1)
+                    for k in range(n//2 + 1)] + [Order(1/z**n, x)]
+            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*(k + 1))
+                    for k in range(n//2)] + [Order(1/z**n, x)]
+            return pi/2 - cos(z)*Add(*p) - sin(z)*Add(*q)
 
         # All other points are not handled
         return super(Si, self)._eval_aseries(n, args0, x, logx)
@@ -2071,11 +2070,11 @@ class Ci(TrigonometricIntegral):
 
         if point in (S.Infinity, S.NegativeInfinity):
             z = self.args[0]
-            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
-                    for k in range(int((n - 1)/2))] + [Order(1/z**n, x)]
-            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
-                    for k in range(int(n/2) - 1)] + [Order(1/z**n, x)]
-            result = (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
+            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k + 1)
+                    for k in range(n//2 + 1)] + [Order(1/z**n, x)]
+            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*(k + 1))
+                    for k in range(n//2)] + [Order(1/z**n, x)]
+            result = sin(z)*(Add(*p)) - cos(z)*(Add(*q))
 
             if point is S.NegativeInfinity:
                 result += I*pi
