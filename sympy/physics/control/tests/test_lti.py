@@ -1066,8 +1066,13 @@ def test_issue_26161():
     assert Gouter == Feedback(Series(PIcont, Series(Ginner, Gpsi)), Gunity)
     assert Gouter.num == Series(PIcont, Series(Ginner, Gpsi))
     assert Gouter.den == Parallel(Gunity, Series(Gunity, Series(PIcont, Series(Ginner, Gpsi))))
-    expr = Gouter.doit().to_expr() - Feedback(Series(PIcont, Series(Ginner, Gpsi)), Gunity).doit().to_expr()
-    assert expr.simplify() == 0
+    expr = (KD*KP*g*s**3*v**2*(l1 + l2)*(Is*s**2 + c*s)**2*(-g*h*m + s**2*(Ib + h**2*m))*(-KD*g*h*m*s*v**2*(l2*s + v) + \
+            g*v*(l1 + l2)*(Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m))))/((s**2*v*(Is*s**2 + c*s)*(-KD*g*h*m*s*v**2* \
+            (l2*s + v) + g*v*(l1 + l2)*(Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m)))*(KD*KP*g*s*v*(l1 + l2)**2* \
+            (Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m)) + s**2*v*(Is*s**2 + c*s)*(-KD*g*h*m*s*v**2*(l2*s + v) + \
+            g*v*(l1 + l2)*(Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m))))/(l1 + l2)))
+
+    assert (Gouter.to_expr() - expr).simplify() == 0
 
 
 def test_MIMOFeedback_construction():
