@@ -2176,44 +2176,26 @@ def _special_diop_DN(D, N):
     #
     # assert (1 < N**2 < D) and (not integer_nthroot(D, 2)[1])
 
-    sqrt_D = sqrt(D)
-    F = [(N, 1)]
-    f = 2
-    while True:
-        f2 = f**2
-        if f2 > abs(N):
-            break
-        n, r = divmod(N, f2)
-        if r == 0:
-            F.append((n, f))
-        f += 1
-
+    sqrt_D = isqrt(D)
+    F = {N // f**2: f for f in divisors(square_factor(abs(N)), generator=True)}
     P = 0
     Q = 1
     G0, G1 = 0, 1
     B0, B1 = 1, 0
 
     solutions = []
-
-    i = 0
     while True:
-        a = floor((P + sqrt_D) / Q)
-        P = a*Q - P
-        Q = (D - P**2) // Q
-        G2 = a*G1 + G0
-        B2 = a*B1 + B0
-
-        for n, f in F:
-            if G2**2 - D*B2**2 == n:
-                solutions.append((f*G2, f*B2))
-
-        i += 1
-        if Q == 1 and i % 2 == 0:
+        for _ in range(2):
+            a = (P + sqrt_D) // Q
+            P = a*Q - P
+            Q = (D - P**2) // Q
+            G0, G1 = G1, a*G1 + G0
+            B0, B1 = B1, a*B1 + B0
+            if (s := G1**2 - D*B1**2) in F:
+                f = F[s]
+                solutions.append((f*G1, f*B1))
+        if Q == 1:
             break
-
-        G0, G1 = G1, G2
-        B0, B1 = B1, B2
-
     return solutions
 
 
