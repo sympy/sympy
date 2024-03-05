@@ -197,10 +197,10 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     def convert_float_to_rational_if_half_integer(value):
         if isinstance(value, float):
-            if value.is_integer():  # Check if the float value is an integer
-                return Rational(int(value))  # Convert to a Rational if it's an integer
-            elif equal_valued((v:=2*value), (i:=int(v))):  # Check if the value is equivalent to a half
-                return Rational(i, 2)  # Return the value as a Rational with a denominator of 2
+            if value.is_integer():  
+                return Rational(int(value))  
+            elif equal_valued((v:=2*value), (i:=int(v))):  
+                return Rational(i, 2) 
         return value
 
     values = [j_1, j_2, j_3, m_1, m_2, m_3]
