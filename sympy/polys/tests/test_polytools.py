@@ -1007,6 +1007,10 @@ def test_Poly_slice():
     assert f.slice(x, 0, 3) == Poly(2*x**2 + 3*x + 4, x)
     assert f.slice(x, 0, 4) == Poly(x**3 + 2*x**2 + 3*x + 4, x)
 
+    g = Poly(x**3 + 1)
+
+    assert g.slice(0, 3) == Poly(1, x)
+
 
 def test_Poly_coeffs():
     assert Poly(0, x).coeffs() == [0]
