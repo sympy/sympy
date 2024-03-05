@@ -2302,30 +2302,23 @@ def PQa(P_0, Q_0, D):
     .. [1] Solving the generalized Pell equation x^2 - Dy^2 = N, John P.
         Robertson, July 31, 2004, Pages 4 - 8. https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
     """
-    A_i_2 = B_i_1 = 0
-    A_i_1 = B_i_2 = 1
-
-    G_i_2 = -P_0
-    G_i_1 = Q_0
-
+    sqD = isqrt(D)
+    A2 = B1 = 0
+    A1 = B2 = 1
+    G1 = Q_0
+    G2 = -P_0
     P_i = P_0
     Q_i = Q_0
 
     while True:
-
-        a_i = floor((P_i + sqrt(D))/Q_i)
-        A_i = a_i*A_i_1 + A_i_2
-        B_i = a_i*B_i_1 + B_i_2
-        G_i = a_i*G_i_1 + G_i_2
-
-        yield P_i, Q_i, a_i, A_i, B_i, G_i
-
-        A_i_1, A_i_2 = A_i, A_i_1
-        B_i_1, B_i_2 = B_i, B_i_1
-        G_i_1, G_i_2 = G_i, G_i_1
+        a_i = (P_i + sqD) // Q_i
+        A1, A2 = a_i*A1 + A2, A1
+        B1, B2 = a_i*B1 + B2, B1
+        G1, G2 = a_i*G1 + G2, G1
+        yield P_i, Q_i, a_i, A1, B1, G1
 
         P_i = a_i*Q_i - P_i
-        Q_i = (D - P_i**2)/Q_i
+        Q_i = (D - P_i**2) // Q_i
 
 
 def diop_bf_DN(D, N, t=symbols("t", integer=True)):
