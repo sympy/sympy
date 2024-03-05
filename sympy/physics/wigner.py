@@ -69,7 +69,7 @@ from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import zeros
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.utilities.misc import as_int
-from sympy import Rational
+from sympy.core.numbers import Rational, Integer, equal_valued
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
 _Factlist = [1]
@@ -197,7 +197,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     def convert_float_to_rational_if_half_integer(value):
         if isinstance(value, float):
             if (value.is_integer()):
-                return Rational(int(value))
+                return Integer(int(value))
             elif (equal_valued((v:=2*value), (i:=int(v)))):
                 return Rational(i, 2)
         return value
