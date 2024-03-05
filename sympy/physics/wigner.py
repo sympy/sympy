@@ -56,7 +56,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.numbers import int_valued
 from sympy.core.function import Function
-from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.numbers import (I, Integer, pi, Rational, equal_valued)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -69,7 +69,7 @@ from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import zeros
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.utilities.misc import as_int
-from sympy.core.numbers import Rational, Integer, equal_valued
+
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
 _Factlist = [1]
