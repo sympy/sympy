@@ -250,20 +250,21 @@ jobs:
               sympy/solvers
         env:
           SYMPY_GROUND_TYPES: flint
-      - run: bin/doctest                                  \
-                    sympy/integrals                       \
-                    sympy/holonomic                       \
-                    sympy/matrices                        \
-                    sympy/ntheory                         \
-                    sympy/polys                           \
-                    sympy/printing                        \
-                    doc/src/modules/integrals             \
-                    doc/src/modules/holonomic             \
-                    doc/src/modules/matrices              \
-                    doc/src/modules/ntheory.rst           \
-                    doc/src/modules/polys                 \
-                    doc/src/modules/printing.rst          \
-                    doc/src/tutorials/intro-tutorial/     \
+      - run: >-
+          bin/doctest
+              sympy/integrals
+              sympy/holonomic
+              sympy/matrices
+              sympy/ntheory
+              sympy/polys
+              sympy/printing
+              doc/src/modules/integrals
+              doc/src/modules/holonomic
+              doc/src/modules/matrices
+              doc/src/modules/ntheory.rst
+              doc/src/modules/polys
+              doc/src/modules/printing.rst
+              doc/src/tutorials/intro-tutorial/
         env:
           SYMPY_GROUND_TYPES: flint
 
