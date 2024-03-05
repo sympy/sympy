@@ -2476,7 +2476,7 @@ class fresnels(FresnelIntegral):
     def _eval_rewrite_as_Integral(self, z, **kwargs):
         from sympy.integrals.integrals import Integral
         t = Dummy(uniquely_named_symbol('t', [z]).name)
-        return Integral(sin(t**2), (t, 0, z))
+        return Integral(sin(pi*t**2/2), (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order
@@ -2637,7 +2637,7 @@ class fresnelc(FresnelIntegral):
     def _eval_rewrite_as_Integral(self, z, **kwargs):
         from sympy.integrals.integrals import Integral
         t = Dummy(uniquely_named_symbol('t', [z]).name)
-        return Integral(cos(t**2), (t, 0, z))
+        return Integral(cos(pi*t**2/2), (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order
