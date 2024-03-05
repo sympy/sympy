@@ -239,7 +239,14 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
       # Test the modules that most directly use python-flint
-      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+      - run: pytest                    \
+                    sympy/crypto       \
+                    sympy/integrals    \
+                    sympy/holonomic    \
+                    sympy/matrices     \
+                    sympy/ntheory      \
+                    sympy/polys        \
+                    sympy/solvers      \
         env:
           SYMPY_GROUND_TYPES: flint
       - run: bin/doctest                                  \
