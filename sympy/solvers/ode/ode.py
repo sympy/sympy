@@ -625,8 +625,8 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             retdict['best'] = min(list(retdict.values()), key=lambda x:
                 ode_sol_simplicity(x, func, trysolving=not simplify))
             if given_hint == 'best':
-            	rv = retdict['best']
-            	if rv.has(Piecewise):
+                rv = retdict['best']
+                if rv.has(Piecewise):
                     rv = piecewise_fold(rv)            	
                 return rv
             for i in orderedhints:
@@ -637,8 +637,8 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             retdict['order'] = gethints['order']
             retdict.update(failed_hints)
             for value in retdict.values():
-            	if value.has(Piecewise):
-            	    value = piecewise_fold(value)
+                if value.has(Piecewise):
+                    value = piecewise_fold(value)
             return retdict
 
         else:
@@ -646,7 +646,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             hint = hints['hint']
             rv = _helper_simplify(eq, hint, hints, simplify, ics=ics)
             if rv.has(Piecewise):
-            	rv = piecewise_fold(rv)            	            	
+                rv = piecewise_fold(rv)
             return rv
 
 
