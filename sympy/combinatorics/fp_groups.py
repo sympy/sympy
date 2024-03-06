@@ -984,7 +984,7 @@ def simplify_presentation(*args, change_gens=False):
         while change_gens and not set(prev_gens) == set(gens):
             prev_gens = gens
             gens, rels = elimination_technique_1(gens, rels, identity)
-        rels = _simplify_relators(rels, identity)
+        rels = _simplify_relators(rels)
 
     if change_gens:
         syms = [g.array_form[0][0] for g in gens]
@@ -1010,7 +1010,7 @@ def _simplify_relators(rels):
     ========
 
     >>> from sympy.combinatorics import free_group
-    >>> from sympy.combinatorics.fp_groups import _simplfy_relators
+    >>> from sympy.combinatorics.fp_groups import _simplify_relators
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
     >>> _simplify_relators(w1)
@@ -1069,8 +1069,8 @@ def _simplify_relators(rels):
 
     rels = [r.identity_cyclic_reduction() for r in rels]
 
-    # include one_syllable_words that are not yet in the list of relators
-    rels += [word for word in one_syllables_words if word not in rels]
+    rels += one_syllables_words # include one_syllable_words in the list of relators
+    rels = list(set(rels)) # get unique values in rels
     rels.sort()
 
     # remove <identity> entries in rels
