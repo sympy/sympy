@@ -3159,6 +3159,22 @@ def test_cancel():
         Poly(7*x + 21, x, domain=QQ),
         Poly(3*x + 21, x, domain=QQ))
 
+    pairs = [
+        (1 + x, 1 + x, 1, 1, 1),
+        (1 + x, 1 - x, -1, -1-x, -1+x),
+        (1 - x, 1 + x, -1, 1-x, 1+x),
+        (1 - x, 1 - x, 1, 1, 1),
+    ]
+    for f, g, c, p, q in pairs:
+        assert cancel((f, g)) == (1, p, q)
+        pf = Poly(f, x)
+        pg = Poly(g, x)
+        pp = Poly(p, x)
+        pq = Poly(q, x)
+        assert pf.cancel(pg) == (c, c*pp, pq)
+        assert pf.rep.cancel(pg.rep) == (pp.rep, pq.rep)
+        assert pf.rep.cancel(pg.rep, include=True) == (pp.rep, pq.rep)
+
     f = Poly(y, y, domain='ZZ(x)')
     g = Poly(1, y, domain='ZZ[x]')
 
