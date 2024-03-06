@@ -1955,8 +1955,13 @@ class DUP_Flint(DMP):
 
     def _div(f, g):
         """Polynomial division with remainder of ``f`` and ``g``. """
-        q, r = divmod(f._rep, g._rep)
-        return f.from_rep(q, f.dom), f.from_rep(r, f.dom)
+        if f.dom.is_Field:
+            q, r = divmod(f._rep, g._rep)
+            return f.from_rep(q, f.dom), f.from_rep(r, f.dom)
+        else:
+            # XXX: python-flint defines division in ZZ[x] differently
+            q, r = f.to_DMP_Python()._div(g.to_DMP_Python())
+            return q.to_DUP_Flint(), r.to_DUP_Flint()
 
     def _rem(f, g):
         """Computes polynomial remainder of ``f`` and ``g``. """
