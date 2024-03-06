@@ -2136,7 +2136,7 @@ class DUP_Flint(DMP):
         elif f_neg:
             cF, F = -cF, F.neg()
         elif g_neg:
-            cG, G = -cG, G.neg()
+            cF, G = -cF, G.neg()
 
         return cF, cG, F, G
 
