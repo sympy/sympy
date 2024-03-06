@@ -2122,6 +2122,19 @@ def test_gcd():
         assert lcm(i, f) == 0
         assert lcm(f, i) == 0
 
+    f = 4*x**2 + x + 2
+    pfz = Poly(f, domain=ZZ)
+    pfq = Poly(f, domain=QQ)
+
+    assert pfz.gcd(pfz) == pfz
+    assert pfz.lcm(pfz) == pfz
+    assert pfq.gcd(pfq) == pfq.monic()
+    assert pfq.lcm(pfq) == pfq.monic()
+    assert gcd(f, f) == f
+    assert lcm(f, f) == f
+    assert gcd(f, f, domain=QQ) == monic(f)
+    assert lcm(f, f, domain=QQ) == monic(f)
+
 
 def test_gcd_numbers_vs_polys():
     assert isinstance(gcd(3, 9), Integer)
