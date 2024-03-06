@@ -1005,7 +1005,7 @@ def _simplify_relators(rels):
     Simplifies a set of relators. All relators are checked to see if they are
     of the form `gen^n`. If any such relators are found then all other relators
     are processed for strings in the `gen` known order.
-    
+
     Examples
     ========
 
@@ -1033,7 +1033,7 @@ def _simplify_relators(rels):
 
     if not rels:
         return []
-    
+
     identity = rels[0].group.identity
 
     # build dictionary with "gen: n" where gen^n is one of the relators
