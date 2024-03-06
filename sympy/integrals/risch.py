@@ -29,7 +29,7 @@ from functools import reduce
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, oo
+from sympy.core.numbers import I
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -43,7 +43,7 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
     tan, acot, cot, asin, acos)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
-from sympy.polys.polyerrors import DomainError, PolynomialError
+from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
 from sympy.polys.rootoftools import RootSum
