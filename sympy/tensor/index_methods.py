@@ -18,6 +18,7 @@ from sympy.tensor.indexed import Idx, Indexed
 from sympy.utilities import sift
 
 from collections import OrderedDict
+import operator
 
 class IndexConformanceException(Exception):
     pass
@@ -84,7 +85,7 @@ def _get_indices_Mul(expr, return_dummies=False):
     inds, syms = list(zip(*inds))
 
     inds = list(map(list, inds))
-    inds = list(reduce(lambda x, y: x + y, inds))
+    inds = list(reduce(operator.add, inds))
     inds, dummies = _remove_repeated(inds)
 
     symmetry = {}

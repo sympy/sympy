@@ -26,6 +26,7 @@ from sympy.utilities.enumerative import (
 
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+import operator
 
 w, x, y, z = symbols('w,x,y,z')
 
@@ -262,7 +263,7 @@ def test_topological_sort():
          (11, 9), (11, 10), (8, 9)]
 
     assert topological_sort((V, E)) == [3, 5, 7, 8, 11, 2, 9, 10]
-    assert topological_sort((V, E), key=lambda v: -v) == \
+    assert topological_sort((V, E), key=operator.neg) == \
         [7, 5, 11, 3, 10, 8, 9, 2]
 
     raises(ValueError, lambda: topological_sort((V, E + [(10, 7)])))

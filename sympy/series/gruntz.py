@@ -130,6 +130,7 @@ from sympy.series.order import Order
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
+import operator
 
 timeit = timethis('gruntz')
 
@@ -595,7 +596,7 @@ def build_expression_tree(Omega, rewrites):
             self.expr = None
             self.var = None
         def ht(self):
-            return reduce(lambda x, y: x + y,
+            return reduce(operator.add,
                           [x.ht() for x in self.before], 1)
     nodes = {}
     for expr, v in Omega:

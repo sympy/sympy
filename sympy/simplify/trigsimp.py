@@ -24,6 +24,7 @@ from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
+import operator
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                       polynomial=False):
@@ -939,7 +940,7 @@ def _replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph):
 
 
 _idn = lambda x: x
-_midn = lambda x: -x
+_midn = operator.neg
 _one = lambda x: S.One
 
 def _match_div_rewrite(expr, i):

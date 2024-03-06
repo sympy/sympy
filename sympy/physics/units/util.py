@@ -18,6 +18,7 @@ from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.utilities.iterables import sift
+import operator
 
 
 def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
@@ -111,7 +112,7 @@ def convert_to(expr, target_units, unit_system="SI"):
 
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
-            return reduce(lambda x, y: x * y,
+            return reduce(operator.mul,
                 [get_total_scale_factor(i) for i in expr.args])
         elif isinstance(expr, Pow):
             return get_total_scale_factor(expr.base) ** expr.exp

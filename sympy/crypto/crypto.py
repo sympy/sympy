@@ -32,6 +32,8 @@ from sympy.polys.domains import FF
 from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
+import math
+import operator
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -1539,7 +1541,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
             new_primes.extend(factorint(i, multiple=True))
         primes = new_primes
 
-    n = reduce(lambda i, j: i*j, primes)
+    n = math.prod(primes)
 
     tally = multiset(primes)
     if all(v == 1 for v in tally.values()):
@@ -1886,7 +1888,7 @@ def _encipher_decipher_rsa(i, key, factors=None):
                     break
         return is_coprime_set
 
-    prod = reduce(lambda i, j: i*j, factors)
+    prod = reduce(operator.mul, factors)
     if prod == n and _is_coprime_set(factors):
         return _decipher_rsa_crt(i, d, factors)
     return _encipher_decipher_rsa(i, key, factors=None)

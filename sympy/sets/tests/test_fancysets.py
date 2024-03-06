@@ -27,6 +27,7 @@ from sympy.abc import x, y, t, z
 from sympy.core.mod import Mod
 
 import itertools
+import operator
 
 
 def test_naturals():
@@ -140,7 +141,7 @@ def test_ImageSet():
     assert 2/S(100) not in ImageSet(Lambda(((x, y),), 2/x), c)
     assert Rational(2, 3) in ImageSet(Lambda(((x, y),), 2/x), c)
 
-    S1 = imageset(lambda x, y: x + y, S.Integers, S.Naturals)
+    S1 = imageset(operator.add, S.Integers, S.Naturals)
     assert S1.base_pset == ProductSet(S.Integers, S.Naturals)
     assert S1.base_sets == (S.Integers, S.Naturals)
 
