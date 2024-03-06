@@ -1843,6 +1843,10 @@ def test_div():
     assert p.div(q, auto=True) == \
         (Poly(-S(1)/2 + 5*I/2, x, domain='QQ_I'), Poly(0, x, domain='QQ_I'))
 
+    f = 5*x**2 + 10*x + 3
+    g = 2*x + 2
+    assert div(f, g, domain=ZZ) == (0, f)
+
 
 def test_issue_7864():
     q, r = div(a, .408248290463863*a)
@@ -3165,13 +3169,13 @@ def test_cancel():
         (1 - x, 1 + x, -1, 1-x, 1+x),
         (1 - x, 1 - x, 1, 1, 1),
     ]
-    for f, g, c, p, q in pairs:
+    for f, g, coeff, p, q in pairs:
         assert cancel((f, g)) == (1, p, q)
         pf = Poly(f, x)
         pg = Poly(g, x)
         pp = Poly(p, x)
         pq = Poly(q, x)
-        assert pf.cancel(pg) == (c, c*pp, pq)
+        assert pf.cancel(pg) == (coeff, coeff*pp, pq)
         assert pf.rep.cancel(pg.rep) == (pp.rep, pq.rep)
         assert pf.rep.cancel(pg.rep, include=True) == (pp.rep, pq.rep)
 
