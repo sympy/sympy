@@ -3504,7 +3504,9 @@ class Expr(Basic, EvalfMixin):
         c, p = s.as_coeff_mul(x)
         if len(p) == 1:
             b, e = p[0].as_base_exp()
-            if b == x:
+            if b in [x, 1/x]:
+                if b == 1/x:
+                    e = -e
                 return c, e
         return s, S.Zero
 
