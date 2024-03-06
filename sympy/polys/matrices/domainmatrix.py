@@ -273,6 +273,7 @@ class DomainMatrix:
         self.domain = rep.domain
         return self
 
+    @doctest_depends_on(ground_types=['python', 'gmpy'])
     @classmethod
     def from_list(cls, rows, domain):
         r"""

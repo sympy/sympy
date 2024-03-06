@@ -32,6 +32,7 @@ from sympy.polys.domains import FF
 from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -2284,6 +2285,7 @@ def decode_morse(msg, sep='|', mapping=None):
 #################### LFSRs  ##########################################
 
 
+@doctest_depends_on(ground_types=['python', 'gmpy'])
 def lfsr_sequence(key, fill, n):
     r"""
     This function creates an LFSR sequence.
