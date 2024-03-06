@@ -56,7 +56,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.numbers import int_valued
 from sympy.core.function import Function
-from sympy.core.numbers import (I, Integer, pi, Rational, equal_valued)
+from sympy.core.numbers import (Float, I, Integer, pi, Rational, equal_valued)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
