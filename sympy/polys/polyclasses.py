@@ -1949,9 +1949,9 @@ class DUP_Flint(DMP):
         """Polynomial exact pseudo-quotient of ``f`` and ``g``. """
         d = f.degree() - g.degree() + 1
         q, r = divmod(g.LC()**d * f._rep, g._rep)
-        if not r:
+        if r:
             raise ExactQuotientFailed(f, g)
-        return q
+        return f.from_rep(q, f.dom)
 
     def _div(f, g):
         """Polynomial division with remainder of ``f`` and ``g``. """
