@@ -118,6 +118,8 @@ def _Integer_or_halfInteger(value):
             return Rational(i, 2)
     elif isinstance(value, Integer):
         return value
+    elif isinstance(value, Rational) and value.q == 2:
+        return value
     raise ValueError("expecting integer or half-integer, got %s" % value)
 
 
