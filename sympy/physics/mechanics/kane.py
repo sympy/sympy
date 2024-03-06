@@ -160,10 +160,10 @@ class KanesMethod(_Methods):
         >>> P.set_vel(N, u * N.x)
 
     Next we need to arrange/store information in the way that KanesMethod
-    requires.  The kinematic differential equations need to be stored in a
-    dict.  A list of forces/torques must be constructed, where each entry in
-    the list is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where the
-    Vectors represent the Force or Torque.
+    requires. The kinematic differential equations should be an iterable of
+    expressions. A list of forces/torques must be constructed, where each entry
+    in the list is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where
+    the Vectors represent the Force or Torque.
     Next a particle needs to be created, and it needs to have a point and mass
     assigned to it.
     Finally, a list of all bodies and particles needs to be created.
