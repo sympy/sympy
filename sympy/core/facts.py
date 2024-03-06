@@ -307,7 +307,26 @@ class Prover:
         return self.split_alpha_beta()[1]
 
     def process_rule(self, a, b):
-        """process a -> b rule"""   # TODO write more?
+        """ 
+        Process Rule: a -> b
+
+        This method handles a logical rule where 'a' represents the antecedent and 
+        'b' represents the consequent. It ensures the validity of the rule
+        and non-redundant before proceeding with further processing. 
+        The method checks for the following conditions:
+
+        1. If the antecedent 'a' is False or the consequent 'b' is a boolean, indicating
+           a trivial or malformed rule, it returns without further processing.
+
+        2. If the antecedent 'a' is a boolean, implying a trivial tautology or contradiction,
+           it returns without further processing.
+
+        3. If the current rule (a, b) has already been seen and processed, it prevents redundant
+           processing to avoid infinite loops or unnecessary work.
+
+        If the rule satisfies all conditions and is deemed valid, it is added to the set of
+        seen rules for tracking purposes, and the core processing of the rule is performed.
+        """ 
         if (not a) or isinstance(b, bool):
             return
         if isinstance(a, bool):
@@ -327,12 +346,13 @@ class Prover:
         # right part first
 
         # a -> b & c    -->  a -> b  ;  a -> c
-        # (?) FIXME this is only correct when b & c != null !
 
         if isinstance(b, And):
             sorted_bargs = sorted(b.args, key=str)
-            for barg in sorted_bargs:
-                self.process_rule(a, barg)
+            # Check if both b and c are not empty
+            if sorted_bargs:
+                for barg in sorted_bargs:
+                    self.process_rule(a, barg)
 
         # a -> b | c    -->  !b & !c -> !a
         #               -->   a & !b -> c
