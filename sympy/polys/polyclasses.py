@@ -2109,7 +2109,9 @@ class DUP_Flint(DMP):
 
         l = f._mul(g)._exquo(f._gcd(g))
 
-        if l.LC() < 0:
+        if l.dom.is_Field:
+            l = l.monic()
+        elif l.LC() < 0:
             l = l.neg()
 
         return l
