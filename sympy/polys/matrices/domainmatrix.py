@@ -273,8 +273,8 @@ class DomainMatrix:
         self.domain = rep.domain
         return self
 
-    @doctest_depends_on(ground_types=['python', 'gmpy'])
     @classmethod
+    @doctest_depends_on(ground_types=['python', 'gmpy'])
     def from_list(cls, rows, domain):
         r"""
         Convert a list of lists into a DomainMatrix
