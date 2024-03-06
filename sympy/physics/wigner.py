@@ -108,6 +108,19 @@ def _calc_factlist(nn):
     return _Factlist[:int(nn) + 1]
 
 
+def _Integer_or_halfInteger(value):
+    if isinstance(value, int):
+        return Integer(value)
+    elif isinstance(value, (float, Float)):
+        if isinstance(value, float) and value.is_integer():
+            return Integer(int(value))
+        elif (equal_valued((v:=2*value), (i:=int(v)))):
+            return Rational(i, 2)
+    elif isinstance(value, Integer):
+        return value
+    raise ValueError("expecting integer or half-integer, got %s" % value)
+
+
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculate the Wigner 3j symbol `\operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,m_3)`.
@@ -194,32 +207,12 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    def convert_float_to_rational_if_half_integer(value):
-        if isinstance(value, float):
-            if (value.is_integer()):
-                return Integer(int(value))
-            elif (equal_valued((v:=2*value), (i:=int(v)))):
-                return Rational(i, 2)
-        return value
 
-    values = [j_1, j_2, j_3, m_1, m_2, m_3]
-    converted_values = [convert_float_to_rational_if_half_integer(value) for value in values]
-    j_1, j_2, j_3, m_1, m_2, m_3 = converted_values
-
-    tolerance = 1e-10
-    if abs(j_1 * 2 - int(j_1 * 2)) > tolerance or \
-            abs(j_2 * 2 - int(j_2 * 2)) > tolerance or \
-            abs(j_3 * 2 - int(j_3 * 2)) > tolerance:
-        raise ValueError("j values must be integer or half integer")
-    if abs(m_1 * 2 - int(m_1 * 2)) > tolerance or \
-            abs(m_2 * 2 - int(m_2 * 2)) > tolerance or \
-            abs(m_3 * 2 - int(m_3 * 2)) > tolerance:
-        raise ValueError("m values must be integer or half integer")
+    j_1, j_2, j_3, m_1, m_2, m_3 = map(_Integer_or_halfInteger,
+                                       [j_1, j_2, j_3, m_1, m_2, m_3])
 
     if m_1 + m_2 + m_3 != 0:
         return S.Zero
-    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
-    m_3 = -m_3
     a1 = j_1 + j_2 - j_3
     if a1 < 0:
         return S.Zero
@@ -232,6 +225,8 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
         return S.Zero
 
+    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
+    m_3 = -m_3
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
                   j_3 + abs(m_3))
     _calc_factlist(int(maxfact))
@@ -353,6 +348,8 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
         1/2*sqrt(1/6)
     """
 
+    # the triangle test will only pass if a) all 3 values are ints or
+    # b) 1 is an int and the other two are half-ints
     if not int_valued(aa + bb - cc):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if not int_valued(aa + cc - bb):
