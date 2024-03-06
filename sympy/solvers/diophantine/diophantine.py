@@ -13,7 +13,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import _sympify
-from sympy.external.gmpy import jacobi, remove
+from sympy.external.gmpy import jacobi, remove, invert, iroot
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -21,7 +21,7 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.ntheory.factor_ import divisors, factorint, perfect_power
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.primetest import is_square, isprime
-from sympy.ntheory.residue_ntheory import sqrt_mod
+from sympy.ntheory.residue_ntheory import sqrt_mod, sqrt_mod_iter
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polytools import Poly, factor_list
 from sympy.simplify.simplify import signsimp
@@ -1991,13 +1991,11 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
             return []
         # N > 0:
         sol = []
-        for d in divisors(square_factor(N)):
-            sols = cornacchia(1, -D, N // d**2)
-            if sols:
-                for x, y in sols:
-                    sol.append((d*x, d*y))
-                    if D == -1:
-                        sol.append((d*y, d*x))
+        for d in divisors(square_factor(N), generator=True):
+            for x, y in cornacchia(1, int(-D), int(N // d**2)):
+                sol.append((d*x, d*y))
+                if D == -1:
+                    sol.append((d*y, d*x))
         return sol
 
     if D == 0:
@@ -2199,7 +2197,7 @@ def _special_diop_DN(D, N):
     return solutions
 
 
-def cornacchia(a, b, m):
+def cornacchia(a:int, b:int, m:int) -> set[tuple[int, int]]:
     r"""
     Solves `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
 
@@ -2234,34 +2232,22 @@ def cornacchia(a, b, m):
 
     sympy.utilities.iterables.signed_permutations
     """
+    # Assume gcd(a, b) = gcd(a, m) = 1 and a, b > 0 but no error checking
     sols = set()
-
-    a1 = igcdex(a, m)[0]
-    v = sqrt_mod(-b*a1, m, all_roots=True)
-    if not v:
-        return None
-
-    for t in v:
+    for t in sqrt_mod_iter(-b*invert(a, m), m):
         if t < m // 2:
             continue
-
-        u, r = t, m
-
-        while True:
+        u, r = m, t
+        while (m1 := m - a*r**2) <= 0:
             u, r = r, u % r
-            if a*r**2 < m:
-                break
-
-        m1 = m - a*r**2
-
-        if m1 % b == 0:
-            m1 = m1 // b
-            s, _exact = integer_nthroot(m1, 2)
-            if _exact:
-                if a == b and r < s:
-                    r, s = s, r
-                sols.add((int(r), int(s)))
-
+        m1, _r = divmod(m1, b)
+        if _r:
+            continue
+        s, _exact = iroot(m1, 2)
+        if _exact:
+            if a == b and r < s:
+                r, s = s, r
+            sols.add((int(r), int(s)))
     return sols
 
 
