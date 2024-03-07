@@ -618,8 +618,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         if den == 0:
             raise ValueError("TransferFunction cannot have a zero denominator.")
 
-        if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
-            ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
+        if (((isinstance(num, (Expr, TransferFunction, Series, Parallel)) and num.has(Symbol)) or num.is_number) and
+            ((isinstance(den, (Expr, TransferFunction, Series, Parallel)) and den.has(Symbol)) or den.is_number)):
             return super(TransferFunction, cls).__new__(cls, num, den, var)
 
         else:
@@ -1092,17 +1092,6 @@ class TransferFunction(SISOLinearTimeInvariant):
         return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in self.poles())
 
     def __add__(self, other):
-        if isinstance(other, Feedback):
-            if isinstance(other.sys1, Series):
-                arg_list = list(other.sys1.args)
-            else:
-                arg_list = [other.sys1]
-            F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
-            if other.sign == -1:
-                F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
-            else:
-                F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
-            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1124,18 +1113,6 @@ class TransferFunction(SISOLinearTimeInvariant):
         return self + other
 
     def __sub__(self, other):
-        if isinstance(other, Feedback):
-            if isinstance(other.sys1, Series):
-                arg_list = list(other.sys1.args)
-            else:
-                arg_list = [other.sys1]
-            F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
-            if other.sign == -1:
-                F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
-            else:
-                F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
-            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
-
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1157,18 +1134,6 @@ class TransferFunction(SISOLinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
-        if isinstance(other, Feedback):
-            if isinstance(other.sys1, Series):
-                arg_list = list(other.sys1.args)
-            else:
-                arg_list = [other.sys1]
-            F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
-            if other.sign == -1:
-                F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
-            else:
-                F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
-            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
-
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1189,18 +1154,6 @@ class TransferFunction(SISOLinearTimeInvariant):
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        if isinstance(other, Feedback):
-            if isinstance(other.sys1, Series):
-                arg_list = list(other.sys1.args)
-            else:
-                arg_list = [other.sys1]
-            F_n, unit = other.sys1.doit(), TransferFunction(1, 1, other.sys1.var)
-            if other.sign == -1:
-                F_d = Parallel(unit, Series(other.sys2, *arg_list)).doit()
-            else:
-                F_d = Parallel(unit, -Series(other.sys2, *arg_list)).doit()
-            other = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
-
         if isinstance(other, TransferFunction):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -2343,8 +2296,8 @@ class Feedback(TransferFunction):
         if not sys2:
             sys2 = TransferFunction(1, 1, sys1.var)
 
-        if not (isinstance(sys1, (TransferFunction, Series))
-            and isinstance(sys2, (TransferFunction, Series))):
+        if not (isinstance(sys1, (TransferFunction, Series, Feedback))
+            and isinstance(sys2, (TransferFunction, Series, Feedback))):
             raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
 
         if sign not in [-1, 1]:
@@ -2440,40 +2393,30 @@ class Feedback(TransferFunction):
         return self.sys1.var
 
     @property
-    def num(self):
-        """
-        Returns the numerator of the Feedback equivalent Transfer Function.
-        """
-        arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
-        # F_n and F_d are resultant TFs of num and den of Feedback.
-        F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
-        if self.sign == -1:
-            F_d = Parallel(unit, Series(self.sys2, *arg_list)).doit()
-        else:
-            F_d = Parallel(unit, -Series(self.sys2, *arg_list)).doit()
-        return F_n.num * F_d.den
-
-    @property
-    def den(self):
-        """
-        Returns the denominator of the Feedback equivalent Transfer Function.
-        """
-        arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
-        # F_n and F_d are resultant TFs of num and den of Feedback.
-        F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
-        if self.sign == -1:
-            F_d = Parallel(unit, Series(self.sys2, *arg_list)).doit()
-        else:
-            F_d = Parallel(unit, -Series(self.sys2, *arg_list)).doit()
-        return F_n.den * F_d.num
-
-    @property
     def sign(self):
         """
         Returns the type of MIMO Feedback model. ``1``
         for Positive and ``-1`` for Negative.
         """
         return self.args[2]
+
+    @property
+    def num(self):
+        """
+        Returns the numerator of the closed loop feedback system.
+        """
+        return self.sys1
+
+    @property
+    def den(self):
+        """
+        Returns the denominator of the closed loop feedback model.
+        """
+        unit = TransferFunction(1, 1, self.var)
+        arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
+        if self.sign == 1:
+            return Parallel(unit, -Series(self.sys2, *arg_list))
+        return Parallel(unit, Series(self.sys2, *arg_list))
 
     @property
     def sensitivity(self):
@@ -2553,6 +2496,27 @@ class Feedback(TransferFunction):
 
     def _eval_rewrite_as_TransferFunction(self, num, den, sign, **kwargs):
         return self.doit()
+
+    def to_expr(self):
+        """
+        Converts a ``Feedback`` object to SymPy Expr.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> from sympy import Expr
+        >>> tf1 = TransferFunction(a+s, 1, s)
+        >>> tf2 = TransferFunction(b+s, 1, s)
+        >>> fd1 = Feedback(tf1, tf2)
+        >>> fd1.to_expr()
+        (a + s)/((a + s)*(b + s) + 1)
+        >>> isinstance(_, Expr)
+        True
+        """
+
+        return self.doit().to_expr()
 
     def __neg__(self):
         return Feedback(-self.sys1, -self.sys2, self.sign)
