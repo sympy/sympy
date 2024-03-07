@@ -19,7 +19,7 @@ from sympy.physics.control import (TransferFunction, Series, Parallel,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 
-a, x, b, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
+a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
     tau, zeta, wn, T')
 a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
     b0:4, c0:4, d0:4')
@@ -1006,6 +1006,75 @@ def test_Feedback_functions():
         TransferFunction(p, a0*p + p + p**a1 - s, p)
 
 
+def test_Feedback_as_TransferFunction():
+    # Solves issue https://github.com/sympy/sympy/issues/26161
+    tf1 = TransferFunction(s+1, 1, s)
+    tf2 = TransferFunction(s+2, 1, s)
+    fd1 = Feedback(tf1, tf2, -1) # Negative Feedback system
+    fd2 = Feedback(tf1, tf2, 1) # Positive Feedback system
+    unit = TransferFunction(1, 1, s)
+
+    # Checking the type
+    assert isinstance(fd1, TransferFunction)
+    assert isinstance(fd1, Feedback)
+
+    # Testing the numerator and denominator
+    assert fd1.num == tf1
+    assert fd2.num == tf1
+    assert fd1.den == Parallel(unit, Series(tf2, tf1))
+    assert fd2.den == Parallel(unit, -Series(tf2, tf1))
+
+    # Testing the Series and Parallel Combination with Feedback and TransferFunction
+    s1 = Series(tf1, fd1)
+    p1 = Parallel(tf1, fd1)
+    assert tf1 * fd1 == s1
+    assert tf1 + fd1 == p1
+    assert s1.doit() == TransferFunction((s + 1)**2, (s + 1)*(s + 2) + 1, s)
+    assert p1.doit() == TransferFunction(s + (s + 1)*((s + 1)*(s + 2) + 1) + 1, (s + 1)*(s + 2) + 1, s)
+
+    # Testing the use of Feedback and TransferFunction with Feedback
+    fd3 = Feedback(tf1*fd1, tf2, -1)
+    assert fd3 == Feedback(Series(tf1, fd1), tf2)
+    assert fd3.num == tf1 * fd1
+    assert fd3.den == Parallel(unit, Series(tf2, Series(tf1, fd1)))
+
+    # Testing the use of Feedback and TransferFunction with TransferFunction
+    tf3 = TransferFunction(tf1*fd1, tf2, s)
+    assert tf3 == TransferFunction(Series(tf1, fd1), tf2, s)
+    assert tf3.num == tf1*fd1
+
+def test_issue_26161():
+    # Issue https://github.com/sympy/sympy/issues/26161
+    Ib, Is, m, h, l2, l1 = symbols('I_b, I_s, m, h, l2, l1',
+                                            real=True, nonnegative=True)
+    KD, KP, v = symbols('K_D, K_P, v', real=True)
+
+    tau1_sq = (Ib + m * h ** 2) / m / g / h
+    tau2 = l2 / v
+    tau3 = v / (l1 + l2)
+    K = v ** 2 / g / (l1 + l2)
+
+    Gtheta = TransferFunction(-K * (tau2 * s + 1), tau1_sq * s ** 2 - 1, s)
+    Gdelta = TransferFunction(1, Is * s ** 2 + c * s, s)
+    Gpsi = TransferFunction(1, tau3 * s, s)
+    Dcont = TransferFunction(KD * s, 1, s)
+    PIcont = TransferFunction(KP, s, s)
+    Gunity = TransferFunction(1, 1, s)
+
+    Ginner = Feedback(Dcont * Gdelta, Gtheta)
+    Gouter = Feedback(PIcont * Ginner * Gpsi, Gunity)
+    assert Gouter == Feedback(Series(PIcont, Series(Ginner, Gpsi)), Gunity)
+    assert Gouter.num == Series(PIcont, Series(Ginner, Gpsi))
+    assert Gouter.den == Parallel(Gunity, Series(Gunity, Series(PIcont, Series(Ginner, Gpsi))))
+    expr = (KD*KP*g*s**3*v**2*(l1 + l2)*(Is*s**2 + c*s)**2*(-g*h*m + s**2*(Ib + h**2*m))*(-KD*g*h*m*s*v**2*(l2*s + v) + \
+            g*v*(l1 + l2)*(Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m))))/((s**2*v*(Is*s**2 + c*s)*(-KD*g*h*m*s*v**2* \
+            (l2*s + v) + g*v*(l1 + l2)*(Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m)))*(KD*KP*g*s*v*(l1 + l2)**2* \
+            (Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m)) + s**2*v*(Is*s**2 + c*s)*(-KD*g*h*m*s*v**2*(l2*s + v) + \
+            g*v*(l1 + l2)*(Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m))))/(l1 + l2)))
+
+    assert (Gouter.to_expr() - expr).simplify() == 0
+
+
 def test_MIMOFeedback_construction():
     tf1 = TransferFunction(1, s, s)
     tf2 = TransferFunction(s, s**3 - 1, s)
@@ -1679,28 +1748,3 @@ def test_StateSpace_functions():
     assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
     assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
-
-
-def test_Feedback_as_TransferFunction(): #Solves https://github.com/sympy/sympy/issues/26161
-    fd1 = Feedback(TransferFunction(s + 1, 1 , s), TransferFunction(s + 2, 1, s))
-    tf1 = TransferFunction(2 * (s+1), s**2 + 2*s + 1, s)
-    tf2 = TransferFunction(1, s + 1, s)
-    # Type Checking
-    assert isinstance(fd1, TransferFunction)
-    assert isinstance(fd1, Feedback)
-    assert not isinstance(tf1, Feedback)
-    # Operation checking
-    num, den = fd1.num, fd1.den
-    assert num == s + 1
-    assert den == (s + 1)*(s + 2) + 1
-    # Combining Operations of TransferFunction and Feedback
-    fd2 = Feedback(tf1*fd1, tf2)
-    assert fd2.doit().simplify() == TransferFunction(2*(s + 1)**2, 2*s + ((s + 1)*(s + 2) + 1)*(s**2 + 2*s + 1) + 2, s)
-    assert (tf1+fd1) == Parallel(TransferFunction(2*s + 2, s**2 + 2*s + 1, s),
-                                 TransferFunction(s + 1, (s + 1)*(s + 2) + 1, s))
-    assert (fd1-tf1) == Parallel(Feedback(TransferFunction(s + 1, 1, s), TransferFunction(s + 2, 1, s), -1),
-                                 TransferFunction(-2*s - 2, s**2 + 2*s + 1, s))
-    assert (fd1*tf1) == Series(Feedback(TransferFunction(s + 1, 1, s), TransferFunction(s + 2, 1, s), -1),
-                               TransferFunction(2*s + 2, s**2 + 2*s + 1, s))
-    assert (fd1/tf1) == Series(Feedback(TransferFunction(s + 1, 1, s), TransferFunction(s + 2, 1, s), -1),
-                               TransferFunction(s**2 + 2*s + 1, 2*s + 2, s))

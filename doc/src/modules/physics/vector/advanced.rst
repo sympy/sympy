@@ -198,3 +198,34 @@ so dynamic symbols created before or after will print the same way.
 Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and
 methods. Don't mix and match symbols representing time.
+
+Solving Vector Equations
+========================
+
+To solve equations involving vectors, you cannot directly use the solve
+functions on a vector. Instead, you must convert the vector to a set of scalar
+equations.
+
+Suppose that we have two frames ``N`` and ``A``, where ``A`` is rotated 30
+degrees about the z-axis with respect to ``N``. ::
+
+  >>> from sympy import pi, symbols, solve
+  >>> from sympy.physics.vector import ReferenceFrame
+  >>> N = ReferenceFrame("N")
+  >>> A = ReferenceFrame("A")
+  >>> A.orient_axis(N, pi / 6, N.z)
+
+Suppose that we have two vectors ``v1`` and ``v2``, which represent the same
+vector using different symbols. ::
+
+  >>> v1x, v1y, v1z = symbols("v1x v1y v1z")
+  >>> v2x, v2y, v2z = symbols("v2x v2y v2z")
+  >>> v1 = v1x * N.x + v1y * N.y + v1z * N.z
+  >>> v2 = v2x * A.x + v2y * A.y + v2z * A.z
+
+Our goal is to find the relationship between the symbols used in ``v2`` and the
+symbols used in ``v1``. We can achieve this by converting the vector to a matrix
+and then solving the matrix using :meth:`sympy.solvers.solvers.solve`. ::
+
+  >>> solve((v1 - v2).to_matrix(N), [v2x, v2y, v2z])
+  {v2x: sqrt(3)*v1x/2 + v1y/2, v2y: -v1x/2 + sqrt(3)*v1y/2, v2z: v1z}
