@@ -260,7 +260,7 @@ _xobj_unicode = {
     ')_lower_hook':         U('RIGHT PARENTHESIS LOWER HOOK'),
     '(_upper_hook':         U('LEFT PARENTHESIS UPPER HOOK'),
     ')_upper_hook':         U('RIGHT PARENTHESIS UPPER HOOK'),
-    '°':                    U('DEGREE SIGN'),
+    'Deg':                    U('DEGREE SIGN'),
 
     '<':                  ((U('BOX DRAWINGS LIGHT VERTICAL'),
                             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),

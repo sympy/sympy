@@ -2831,7 +2831,7 @@ class PrettyPrinter(Printer):
 
     def _print_Quantity(self, e):
         if e.name.name == 'degree':
-            pform = self._print(xobj('°', 1))
+            pform = self._print(xobj('Deg', 1))
             return pform
         else:
             return self.emptyPrinter(e)
