@@ -26,10 +26,12 @@ from sympy.testing.pytest import raises, XFAIL, slow
 
 from itertools import combinations, permutations, product
 
+from sympy.external.importtools import import_module
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
 
+np = import_module('numpy')
 
 def test_overloading():
     """Test that |, & are overloaded as expected"""
@@ -356,6 +358,22 @@ def test_simplification_boolalg():
     assert And(Eq(x - 1, 0), Eq(x + 2, 2)).simplify() == False
     assert And(Ne(x - 1, 0), Ne(x + 2, 2)).simplify(
         ) == And(Ne(x, 1), Ne(x, 0))
+
+    if np is not None:
+        minterms = np.array([[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
+                    [1, 1, 1, 1]])
+        dontcares = np.array([[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]])
+        assert (
+            SOPform([w, x, y, z], minterms, dontcares) ==
+            Or(And(y, z), And(Not(w), Not(x))))
+        assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
+
+        minterms = np.array([1, 3, 7, 11, 15])
+        dontcares = np.array([0, 2, 5])
+        assert (
+            SOPform([w, x, y, z], minterms, dontcares) ==
+            Or(And(y, z), And(Not(w), Not(x))))
+        assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
 
 def test_bool_map():
