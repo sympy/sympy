@@ -682,7 +682,7 @@ class PrettyPrinter(Printer):
             dir = ""
         else:
             if self._use_unicode:
-                dir = pretty_atom('SuperscritPlus') if str(dir) == "+" else pretty_atom('SuperscriptMinus')
+                dir = pretty_atom('SuperscriptPlus') if str(dir) == "+" else pretty_atom('SuperscriptMinus')
 
         LimArg = prettyForm(*LimArg.right(self._print(dir)))
 

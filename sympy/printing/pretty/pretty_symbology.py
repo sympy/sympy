@@ -529,7 +529,7 @@ atoms_table = {
     'NotImplies':              U('LEFT RIGHT DOUBLE ARROW WITH STROKE'),
     'Arrow':                   U('RIGHTWARDS ARROW'),
     'ArrowFromBar':            U('RIGHTWARDS ARROW FROM BAR'),
-    'NotArrow':                U('RIGHTWARDS ARROW WITH STROKE}'),
+    'NotArrow':                U('RIGHTWARDS ARROW WITH STROKE'),
     'Tautology':               U('BOX DRAWINGS LIGHT UP AND HORIZONTAL'),
     'Contradiction':           U('BOX DRAWINGS LIGHT DOWN AND HORIZONTAL')
 }
