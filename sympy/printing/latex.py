@@ -695,6 +695,8 @@ class LatexPrinter(Printer):
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
         if expr.base.is_Symbol:
             base = self.parenthesize_super(base)
+        elif expr.base.is_Float:
+            base = r"{%s}" % base
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)

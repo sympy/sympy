@@ -790,7 +790,7 @@ def test_diopcoverage():
     assert base_solution_linear(4, 8, 12, t) == ans
     assert base_solution_linear(4, 8, 12, t=None) == tuple(_.subs(t, 0) for _ in ans)
 
-    assert cornacchia(1, 1, 20) is None
+    assert cornacchia(1, 1, 20) == set()
     assert cornacchia(1, 1, 5) == {(2, 1)}
     assert cornacchia(1, 2, 17) == {(3, 2)}
 
