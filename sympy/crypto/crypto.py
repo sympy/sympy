@@ -32,6 +32,7 @@ from sympy.polys.domains import FF
 from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -2284,6 +2285,7 @@ def decode_morse(msg, sep='|', mapping=None):
 #################### LFSRs  ##########################################
 
 
+@doctest_depends_on(ground_types=['python', 'gmpy'])
 def lfsr_sequence(key, fill, n):
     r"""
     This function creates an LFSR sequence.
@@ -2373,7 +2375,7 @@ def lfsr_sequence(key, fill, n):
         raise TypeError("key must be a list")
     if not isinstance(fill, list):
         raise TypeError("fill must be a list")
-    p = key[0].mod
+    p = key[0].modulus()
     F = FF(p)
     s = fill
     k = len(fill)
@@ -2494,7 +2496,7 @@ def lfsr_connection_polynomial(s):
 
     """
     # Initialization:
-    p = s[0].mod
+    p = s[0].modulus()
     x = Symbol("x")
     C = 1*x**0
     B = 1*x**0

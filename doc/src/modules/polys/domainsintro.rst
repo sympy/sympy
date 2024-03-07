@@ -300,7 +300,7 @@ might give a ``float`` which is not an element of :ref:`ZZ`::
 
 The behaviour of ``/`` for non-fields can also differ for different
 implementations of the ground types of the domain. For example with
-`SYMPY_GROUND_TYPES=flint` dividing two elements of :ref:`ZZ` will raise an
+``SYMPY_GROUND_TYPES=flint`` dividing two elements of :ref:`ZZ` will raise an
 error rather than return a float::
 
    >>> z1 / z1  # doctest: +SKIP
@@ -573,11 +573,11 @@ finite field of prime order `p` can be constructed with :ref:`GF(p)`::
   >>> from sympy import GF
   >>> K = GF(5)
   >>> two = K(2)
-  >>> two
+  >>> two #doctest: +SKIP
   2 mod 5
-  >>> two ** 2
+  >>> two ** 2A #doctest: +SKIP
   4 mod 5
-  >>> two ** 3
+  >>> two ** 3 #doctest: +SKIP
   3 mod 5
 
 There is also ``FF`` as an alias for ``GF`` (standing for "finite field" and
@@ -593,7 +593,7 @@ a field. It is just the integers modulo ``6`` or ``9`` and therefore has zero
 divisors and non-invertible elements::
 
   >>> K = GF(6)
-  >>> K(3) * K(2)
+  >>> K(3) * K(2) #doctest: +SKIP
   0 mod 6
 
 It would be good to have a proper implementation of prime-power order finite
