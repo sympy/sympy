@@ -20,7 +20,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
     xsym, pretty_symbol, pretty_atom, pretty_use_unicode, greek_unicode, U, \
-    pretty_try_use_unicode, annotated, is_subscriptable_in_unicode, center_pad, root
+    pretty_try_use_unicode, annotated, is_subscriptable_in_unicode, center_pad,  root as nth_root
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -2042,7 +2042,7 @@ class PrettyPrinter(Printer):
             and root == 2 and bpretty.height() == 1
             and (bpretty.width() == 1
                  or (base.is_Integer and base.is_nonnegative))):
-            return prettyForm(*bpretty.left(root[2]))
+            return prettyForm(*bpretty.left(nth_root[2]))
 
         # Construct root sign, start with the \/ shape
         _zZ = xobj('/', 1)
