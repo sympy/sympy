@@ -1,6 +1,7 @@
 """Implementation of :class:`FiniteField` class. """
 
 from sympy.external.gmpy import GROUND_TYPES
+from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.core.numbers import int_valued
 from sympy.polys.domains.field import Field
@@ -50,6 +51,7 @@ def _modular_int_factory(mod, dom, symmetric, self):
 
 
 @public
+@doctest_depends_on(modules=['python', 'gmpy'])
 class FiniteField(Field, SimpleDomain):
     r"""Finite field of prime order :ref:`GF(p)`
 

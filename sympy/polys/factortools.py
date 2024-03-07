@@ -674,7 +674,7 @@ def dup_zz_factor(f, K):
         f_flint = fmpz_poly(f[::-1])
         cont, factors = f_flint.factor()
         factors = [(fac.coeffs()[::-1], exp) for fac, exp in factors]
-        return cont, factors
+        return cont, _sort_factors(factors)
 
     cont, g = dup_primitive(f, K)
 
