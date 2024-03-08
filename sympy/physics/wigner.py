@@ -231,8 +231,6 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
         return S.Zero
 
-    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
-    m_3 = -m_3
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
                   j_3 + abs(m_3))
     _calc_factlist(int(maxfact))
@@ -264,6 +262,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             _Factlist[int(j_1 + j_2 - j_3 - ii)]
         sumres = sumres + Integer((-1) ** ii) / den
 
+    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
     res = ressqrt * sumres * prefid
     return res
 
