@@ -17,7 +17,7 @@ class Body(RigidBody, Particle):  # type: ignore
     created. Otherwise a RigidBody object will be created.
 
     .. deprecated:: 1.13
-        The Body class is deprecated. Its functionality is captured by 
+        The Body class is deprecated. Its functionality is captured by
         :class:`~.RigidBody` and :class:`~.Particle`.
 
     Explanation
