@@ -48,10 +48,10 @@ class JointsMethod(_Methods):
     As Body and JointsMethod have been deprecated, the following examples are
     for illustrative purposes only. The functionality of Body is fully captured
     by RigidBody and Particle and the functionality of JointsMethod is fully
-    captured by System. To ignore the deprecation warnings, use the following:
-
-    >>> import warnings
-    >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
+    captured by System. To ignore the deprecation warning we can use the
+    ignore_warnings context manager.
+    
+    >>> from sympy.utilities.exceptions import ignore_warnings
 
     This is a simple example for a one degree of freedom translational
     spring-mass-damper.
@@ -61,12 +61,14 @@ class JointsMethod(_Methods):
     >>> from sympy.physics.vector import dynamicsymbols
     >>> c, k = symbols('c k')
     >>> x, v = dynamicsymbols('x v')
-    >>> wall = Body('W')
-    >>> body = Body('B')
+    >>> with ignore_warnings(DeprecationWarning):
+    ...     wall = Body('W')
+    ...     body = Body('B')
     >>> J = PrismaticJoint('J', wall, body, coordinates=x, speeds=v)
     >>> wall.apply_force(c*v*wall.x, reaction_body=body)
     >>> wall.apply_force(k*x*wall.x, reaction_body=body)
-    >>> method = JointsMethod(wall, J)
+    >>> with ignore_warnings(DeprecationWarning):
+    ...     method = JointsMethod(wall, J)
     >>> method.form_eoms()
     Matrix([[-B_mass*Derivative(v(t), t) - c*v(t) - k*x(t)]])
     >>> M = method.mass_matrix_full
@@ -237,11 +239,10 @@ class JointsMethod(_Methods):
         As Body and JointsMethod have been deprecated, the following examples
         are for illustrative purposes only. The functionality of Body is fully
         captured by RigidBody and Particle and the functionality of JointsMethod
-        is fully captured by System. To ignore the deprecation warnings, use the
-        following:
-
-        >>> import warnings
-        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
+        is fully captured by System. To ignore the deprecation warning we can
+        use the ignore_warnings context manager.
+        
+        >>> from sympy.utilities.exceptions import ignore_warnings
 
         This is a simple example for a one degree of freedom translational
         spring-mass-damper.
@@ -252,12 +253,14 @@ class JointsMethod(_Methods):
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> m, k, b = symbols('m k b')
-        >>> wall = Body('W')
-        >>> part = Body('P', mass=m)
+        >>> with ignore_warnings(DeprecationWarning):
+        ...     wall = Body('W')
+        ...     part = Body('P', mass=m)
         >>> part.potential_energy = k * q**2 / S(2)
         >>> J = PrismaticJoint('J', wall, part, coordinates=q, speeds=qd)
         >>> wall.apply_force(b * qd * wall.x, reaction_body=part)
-        >>> method = JointsMethod(wall, J)
+        >>> with ignore_warnings(DeprecationWarning):
+        ...     method = JointsMethod(wall, J)
         >>> method.form_eoms(LagrangesMethod)
         Matrix([[b*Derivative(q(t), t) + k*q(t) + m*Derivative(q(t), (t, 2))]])
 
