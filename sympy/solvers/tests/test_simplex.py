@@ -25,7 +25,7 @@ scipy = import_module("scipy")
 def get_results_with_scipy(objective, constraints, variables):
     if scipy is not None and np is not None:
         from sympy.solvers.simplex import _rel_as_nonpos
-        nonpos, rep, xx = _rel_as_nonpos(constraints, [])
+        nonpos, rep, xx = _rel_as_nonpos(constraints, variables)
         assert not rep  # only testing nonneg variables
         C, _D = linear_eq_to_matrix(objective, *variables)
         A, B = linear_eq_to_matrix(nonpos, *variables)
