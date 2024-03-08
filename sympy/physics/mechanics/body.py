@@ -16,6 +16,10 @@ class Body(RigidBody, Particle):  # type: ignore
     passed in and central_inertia is left as None, the Particle object is
     created. Otherwise a RigidBody object will be created.
 
+    .. deprecated:: 1.13
+        The Body class is deprecated. Its functionality is captured by 
+        :class:`~.RigidBody` and :class:`~.Particle`.
+
     Explanation
     ===========
 

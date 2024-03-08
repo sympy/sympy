@@ -11,6 +11,10 @@ __all__ = ['JointsMethod']
 class JointsMethod(_Methods):
     """Method for formulating the equations of motion using a set of interconnected bodies with joints.
 
+    .. deprecated:: 1.13
+        The JointsMethod class is deprecated. Its functionality has been
+        replaced by the new :class:`~.System` class.
+
     Parameters
     ==========
 
