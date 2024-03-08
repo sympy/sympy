@@ -45,6 +45,14 @@ class JointsMethod(_Methods):
     Examples
     ========
 
+    As Body and JointsMethod have been deprecated, the following examples are
+    for illustrative purposes only. The functionality of Body is fully captured
+    by RigidBody and Particle and the functionality of JointsMethod is fully
+    captured by System. To ignore the deprecation warnings, use the following:
+
+    >>> import warnings
+    >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
+
     This is a simple example for a one degree of freedom translational
     spring-mass-damper.
 
@@ -225,6 +233,15 @@ class JointsMethod(_Methods):
 
         Examples
         ========
+
+        As Body and JointsMethod have been deprecated, the following examples
+        are for illustrative purposes only. The functionality of Body is fully
+        captured by RigidBody and Particle and the functionality of JointsMethod
+        is fully captured by System. To ignore the deprecation warnings, use the
+        following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         This is a simple example for a one degree of freedom translational
         spring-mass-damper.
