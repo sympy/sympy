@@ -51,9 +51,9 @@ class JointsMethod(_Methods):
 
     As Body and JointsMethod have been deprecated, the following examples are
     for illustrative purposes only. The functionality of Body is fully captured
-    by RigidBody and Particle and the functionality of JointsMethod is fully
-    captured by System. To ignore the deprecation warning we can use the
-    ignore_warnings context manager.
+    by :class:`~.RigidBody` and :class:`~.Particle` and the functionality of
+    JointsMethod is fully captured by :class:`~.System`. To ignore the
+    deprecation warning we can use the ignore_warnings context manager.
 
     >>> from sympy.utilities.exceptions import ignore_warnings
 
@@ -242,9 +242,10 @@ class JointsMethod(_Methods):
 
         As Body and JointsMethod have been deprecated, the following examples
         are for illustrative purposes only. The functionality of Body is fully
-        captured by RigidBody and Particle and the functionality of JointsMethod
-        is fully captured by System. To ignore the deprecation warning we can
-        use the ignore_warnings context manager.
+        captured by :class:`~.RigidBody` and :class:`~.Particle` and the
+        functionality of JointsMethod is fully captured by :class:`~.System`. To
+        ignore the deprecation warning we can use the ignore_warnings context
+        manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
 
