@@ -14,3 +14,4 @@ Mechanics API Reference
    pathway.rst
    actuator.rst
    wrapping_geometry.rst
+   deprecated_classes.rst
