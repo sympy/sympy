@@ -108,21 +108,22 @@ def _calc_factlist(nn):
     return _Factlist[:int(nn) + 1]
 
 
-def _Integer_or_halfInteger(value):
-    if isinstance(value,Rational):
-        if value.q == 2:
-            return value.p/value.q
-        elif value.q == 1:
-            return value.p
-    elif isinstance(value, int):
+def _int_or_halfint(value):
+    """return Python int unless value is half-int (then return float)"""
+    if isinstance(value, int):
         return value
+    elif type(value) is float:
+        if value.is_integer():
+            return int(value)  # an int
+        if (2*value).is_integer():
+            return value  # a float
+    elif isinstance(value, Rational):
+        if value.q == 2:
+            return value.p/value.q  # a float
+        elif value.q == 1:
+            return value.p  # an int
     elif isinstance(value, Float):
-        value = float(value)
-    if type(value) is float:
-            if value.is_integer():
-                return int(value)
-            if (2*value).is_integer():
-                return value
+        return _int_or_halfint(float(value))
     raise ValueError("expecting integer or half-integer, got %s" % value)
 
 
@@ -213,7 +214,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - Jens Rasch (2009-03-24): initial version
     """
 
-    j_1, j_2, j_3, m_1, m_2, m_3 = map(_Integer_or_halfInteger,
+    j_1, j_2, j_3, m_1, m_2, m_3 = map(_int_or_halfint,
                                        [j_1, j_2, j_3, m_1, m_2, m_3])
 
     if m_1 + m_2 + m_3 != 0:
