@@ -121,6 +121,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
+      - run: pip install hypothesis
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 
@@ -409,6 +410,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
+      - run: pip install hypothesis
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 
