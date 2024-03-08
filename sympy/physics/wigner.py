@@ -107,21 +107,22 @@ def _calc_factlist(nn):
             _Factlist.append(_Factlist[ii - 1] * ii)
     return _Factlist[:int(nn) + 1]
 
-
 def _Integer_or_halfInteger(value):
-    if isinstance(value, int):
-        return Integer(value)
-    elif isinstance(value, (float, Float)):
-        if isinstance(value, float) and value.is_integer():
-            return Integer(int(value))
-        elif (equal_valued((v:=2*value), (i:=int(v)))):
-            return Rational(i, 2)
-    elif isinstance(value, Integer):
+    if isinstance(value,Rational):
+        if value.q == 2:
+            return value.p/value.q
+        elif value.q == 1:
+            return value.p
+    elif isinstance(value, int):
         return value
-    elif isinstance(value, Rational) and value.q == 2:
-        return value
+    elif isinstance(value, Float):
+        value = float(value)
+    if type(value) is float:
+            if value.is_integer():
+                return int(value)
+            if (2*value).is_integer():
+                return value
     raise ValueError("expecting integer or half-integer, got %s" % value)
-
 
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
