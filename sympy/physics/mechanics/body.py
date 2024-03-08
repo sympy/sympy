@@ -65,6 +65,13 @@ class Body(RigidBody, Particle):  # type: ignore
     Examples
     ========
 
+    As Body has been deprecated, the following examples are for illustrative
+    purposes only. The functionality of Body is fully captured by RigidBody and
+    Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
+
     Default behaviour. This results in the creation of a RigidBody object for
     which the mass, mass center, frame and inertia attributes are given default
     values. ::
@@ -204,6 +211,13 @@ class Body(RigidBody, Particle):  # type: ignore
         Examples
         ========
 
+        As Body has been deprecated, the following examples are for illustrative
+        purposes only. The functionality of Body is fully captured by RigidBody
+        and Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
+
         >>> from sympy.physics.mechanics import Body, ReferenceFrame, Point
         >>> from sympy import symbols
         >>> m, v, r, omega = symbols('m v r omega')
@@ -263,6 +277,13 @@ class Body(RigidBody, Particle):  # type: ignore
 
         Example
         =======
+
+        As Body has been deprecated, the following examples are for illustrative
+        purposes only. The functionality of Body is fully captured by RigidBody
+        and Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Body, Point, dynamicsymbols
@@ -362,6 +383,13 @@ class Body(RigidBody, Particle):  # type: ignore
         Example
         =======
 
+        As Body has been deprecated, the following examples are for illustrative
+        purposes only. The functionality of Body is fully captured by RigidBody
+        and Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
+
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Body, dynamicsymbols
         >>> t = symbols('t')
@@ -434,6 +462,13 @@ class Body(RigidBody, Particle):  # type: ignore
         Example
         =======
 
+        As Body has been deprecated, the following examples are for illustrative
+        purposes only. The functionality of Body is fully captured by RigidBody
+        and Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
+
         >>> from sympy.physics.mechanics import Body
         >>> B = Body('B')
         >>> force = B.x + B.y
@@ -463,6 +498,13 @@ class Body(RigidBody, Particle):  # type: ignore
 
         Example
         =======
+
+        As Body has been deprecated, the following examples are for illustrative
+        purposes only. The functionality of Body is fully captured by RigidBody
+        and Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         >>> from sympy.physics.mechanics import Body, Point
         >>> B = Body('B')
@@ -505,6 +547,13 @@ class Body(RigidBody, Particle):  # type: ignore
         Example
         =======
 
+        As Body has been deprecated, the following examples are for illustrative
+        purposes only. The functionality of Body is fully captured by RigidBody
+        and Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
+
         >>> from sympy.physics.mechanics import Body
         >>> A = Body('A')
         >>> B = Body('B')
@@ -535,6 +584,13 @@ class Body(RigidBody, Particle):  # type: ignore
 
         Example
         =======
+
+        As Body has been deprecated, the following examples are for illustrative
+        purposes only. The functionality of Body is fully captured by RigidBody
+        and Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         >>> from sympy.physics.mechanics import Body, ReferenceFrame
         >>> A = Body('A')
@@ -567,6 +623,13 @@ class Body(RigidBody, Particle):  # type: ignore
 
         Example
         =======
+
+        As Body has been deprecated, the following examples are for illustrative
+        purposes only. The functionality of Body is fully captured by RigidBody
+        and Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         >>> from sympy.physics.mechanics import Body
         >>> A = Body('A')
@@ -612,6 +675,13 @@ class Body(RigidBody, Particle):  # type: ignore
 
         Example
         =======
+
+        As Body has been deprecated, the following examples are for illustrative
+        purposes only. The functionality of Body is fully captured by RigidBody
+        and Particle. To ignore the deprecation warning, use the following:
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         >>> from sympy.physics.mechanics import Body
         >>> A = Body('A')
