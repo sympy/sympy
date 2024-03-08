@@ -513,12 +513,57 @@ so the ``to_int`` method that depends on this must be a domain method rather
 than an element method.
 
 (deprecated-ntheory-symbolic-functions)=
-### Cleaning up symbolic version functions in ``ntheory``
+### Relocate symbolic functions from ``ntheory`` to ``functions``
 
-Symbolic functions in ``ntheory`` have been moved to ``functions``.
-Specifically, the following functions.
+The following symbolic functions in ``ntheory`` have been moved to
+``functions``:
 
+* ``sympy.ntheory.factor_.divisor_sigma``
+* ``sympy.ntheory.factor_.primenu``
+* ``sympy.ntheory.factor_.primeomega``
+* ``sympy.ntheory.factor_.reduce_totient``
+* ``sympy.ntheory.factor_.totient``
+* ``sympy.ntheory.generate.primepi``
+* ``sympy.partitions_.npartitions``
+* ``sympy.ntheory.residue_ntheory.jacobi_symbol``
+* ``sympy.ntheory.residue_ntheory.legendre_symbol``
 * ``sympy.ntheory.residue_ntheory.mobius``
+
+Code that imports these functions from top-level like ``from sympy import
+mobius`` will continue to work fine. However code that imports these from the
+fully qualified module like ``from sympy.ntheory import mobius`` or ``from
+sympy.ntheory.residue_ntheory import mobius`` will now see a deprecation
+warning. The new location for these functions is in ``sympy.functions`` but the
+intended way to import them is still from top-level like ``from sympy import
+mobius``.
+
+The following symbolic functions in ``ntheory`` have been moved to
+``functions``, but cannot be imported at top-level.
+
+* ``sympy.ntheory.factor_.udivisor_sigma``
+
+The following functions have been moved from ``functions`` to ``ntheory``
+because they are numeric functions.
+
+* ``sympy.functions.combinatorial.numbers.carmichael.is_carmichael``
+* ``sympy.functions.combinatorial.numbers.carmichael.find_carmichael_numbers_in_range``
+* ``sympy.functions.combinatorial.numbers.carmichael.find_first_n_carmichaels``
+
+If you are using these functions, change from
+
+```py
+>>> from sympy import carmichael
+>>> carmichael.is_carmichael(561)
+True
+```
+
+to
+
+```py
+>>> from sympy import is_carmichael
+>>> is_carmichael(561)
+True
+```
 
 
 ## Version 1.12

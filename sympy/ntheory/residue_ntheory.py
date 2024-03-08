@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
-                                 kronecker, bit_scan1, remove)
+from sympy.external.gmpy import (gcd, lcm, invert, sqrt, jacobi,
+                                 bit_scan1, remove)
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -372,7 +372,8 @@ def is_primitive_root(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import is_primitive_root, n_order, totient
+    >>> from sympy.functions.combinatorial.numbers import totient
+    >>> from sympy.ntheory import is_primitive_root, n_order
     >>> is_primitive_root(3, 10)
     True
     >>> is_primitive_root(9, 10)
@@ -1072,9 +1073,19 @@ def quadratic_residues(p) -> list[int]:
     return sorted(r)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.legendre_symbol` has been moved to `sympy.functions.combinatorial.numbers.legendre_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def legendre_symbol(a, p):
     r"""
     Returns the Legendre symbol `(a / p)`.
+
+    .. deprecated:: 1.13
+
+        The ``legendre_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.legendre_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
     defined as
@@ -1107,15 +1118,23 @@ def legendre_symbol(a, p):
     is_quad_residue, jacobi_symbol
 
     """
-    a, p = as_int(a), as_int(p)
-    if p == 2 or not isprime(p):
-        raise ValueError("p should be an odd prime")
-    return int(legendre(a, p))
+    from sympy.functions.combinatorial.numbers import legendre_symbol as _legendre_symbol
+    return _legendre_symbol(a, p)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.jacobi_symbol` has been moved to `sympy.functions.combinatorial.numbers.jacobi_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def jacobi_symbol(m, n):
     r"""
     Returns the Jacobi symbol `(m / n)`.
+
+    .. deprecated:: 1.13
+
+        The ``jacobi_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.jacobi_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
     is defined as the product of the Legendre symbols corresponding to the
@@ -1170,41 +1189,9 @@ def jacobi_symbol(m, n):
 
     is_quad_residue, legendre_symbol
     """
-    m, n = as_int(m), as_int(n)
-    return int(jacobi(m, n))
+    from sympy.functions.combinatorial.numbers import jacobi_symbol as _jacobi_symbol
+    return _jacobi_symbol(m, n)
 
-
-def kronecker_symbol(a, n):
-    r"""
-    Returns the Kronecker symbol `(a / n)`.
-
-    Parameters
-    ==========
-
-    a : integer
-    n : integer
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.residue_ntheory import kronecker_symbol
-    >>> kronecker_symbol(45, 77)
-    -1
-    >>> kronecker_symbol(13, -120)
-    1
-
-    See Also
-    ========
-
-    jacobi_symbol, legendre_symbol
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
-
-    """
-    return int(kronecker(as_int(a), as_int(n)))
 
 @deprecated("""\
 The `sympy.ntheory.residue_ntheory.mobius` has been moved to `sympy.functions.combinatorial.numbers.mobius`.""",
