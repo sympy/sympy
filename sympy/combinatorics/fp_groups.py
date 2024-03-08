@@ -1014,15 +1014,15 @@ def _simplify_relators(rels):
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
     >>> _simplify_relators(w1)
-    [x**-1*y**4, x**3]
+    [x**3, x**-1*y**4]
 
     >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
     >>> _simplify_relators(w2)
-    [x**-1*y*x**-1, x**3, x**-1*y**-2, y**5]
+    [x**-1*y**-2, x**-1*y*x**-1, x**3, y**5]
 
     >>> w3 = [x**6*y**4, x**4]
     >>> _simplify_relators(w3)
-    [x**2*y**4, x**4]
+    [x**4, x**2*y**4]
 
     >>> w4 = [x**2, x**5, y**3]
     >>> _simplify_relators(w4)
