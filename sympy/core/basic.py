@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
 from functools import cmp_to_key
+from typing import TYPE_CHECKING
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -19,6 +20,11 @@ from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
 from inspect import getmro
+
+
+if TYPE_CHECKING:
+    from typing import ClassVar
+    from .assumptions import StdFactKB
 
 
 def as_Basic(expr):
@@ -218,11 +224,40 @@ class Basic(Printable):
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
-    is_real: bool | None
-    is_extended_real: bool | None
-    is_zero: bool | None
+
+    default_assumptions: ClassVar[StdFactKB]
+
+    is_composite: bool | None
+    is_noninteger: bool | None
+    is_extended_positive: bool | None
     is_negative: bool | None
+    is_complex: bool | None
+    is_extended_nonpositive: bool | None
+    is_integer: bool | None
+    is_positive: bool | None
+    is_rational: bool | None
+    is_extended_nonnegative: bool | None
+    is_infinite: bool | None
+    is_antihermitian: bool | None
+    is_extended_negative: bool | None
+    is_extended_real: bool | None
+    is_finite: bool | None
+    is_polar: bool | None
+    is_imaginary: bool | None
+    is_transcendental: bool | None
+    is_extended_nonzero: bool | None
+    is_nonzero: bool | None
+    is_odd: bool | None
+    is_algebraic: bool | None
+    is_prime: bool | None
     is_commutative: bool | None
+    is_nonnegative: bool | None
+    is_nonpositive: bool | None
+    is_hermitian: bool | None
+    is_irrational: bool | None
+    is_real: bool | None
+    is_zero: bool | None
+    is_even: bool | None
 
     kind: Kind = UndefinedKind
 

@@ -440,11 +440,15 @@ class Function(Application, Expr):
         return False
 
     @cacheit
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, **options) -> type[AppliedUndef]:  # type: ignore
         # Handle calls like Function('f')
         if cls is Function:
-            return UndefinedFunction(*args, **options)
+            return UndefinedFunction(*args, **options)  # type: ignore
+        else:
+            return cls._new_(*args, **options)  # type: ignore
 
+    @classmethod
+    def _new_(cls, *args, **options) -> Expr:
         n = len(args)
 
         if not cls._valid_nargs(n):
@@ -815,6 +819,14 @@ class Function(Application, Expr):
             return self
 
 
+class DefinedFunction(Function):
+    """Base class for defined functions like ``sin``, ``cos``, ..."""
+
+    @cacheit
+    def __new__(cls, *args, **options) -> Expr:  # type: ignore
+        return cls._new_(*args, **options)
+
+
 class AppliedUndef(Function):
     """
     Base class for expressions resulting from the application of an undefined
@@ -823,13 +835,13 @@ class AppliedUndef(Function):
 
     is_number = False
 
-    def __new__(cls, *args, **options):
-        args = list(map(sympify, args))
+    def __new__(cls, *args, **options) -> Expr:  # type: ignore
+        args = tuple(map(sympify, args))
         u = [a.name for a in args if isinstance(a, UndefinedFunction)]
         if u:
             raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction%s: %s' % (
                 's'*(len(u) > 1), ', '.join(u)))
-        obj = super().__new__(cls, *args, **options)
+        obj: Expr = super().__new__(cls, *args, **options)  # type: ignore
         return obj
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -868,11 +880,15 @@ class UndefSageHelper:
 
 _undef_sage_helper = UndefSageHelper()
 
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
-    def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
+    name: str
+    _sage_: UndefSageHelper
+
+    def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs) -> type[AppliedUndef]:
         from .symbol import _filter_assumptions
         # Allow Function('f', real=True)
         # and/or Function(Symbol('f', real=True))
@@ -900,10 +916,10 @@ class UndefinedFunction(FunctionClass):
         __dict__.update({'_kwargs': kwargs})
         # do this for pickling
         __dict__['__module__'] = None
-        obj = super().__new__(mcl, name, bases, __dict__)
+        obj = super().__new__(mcl, name, bases, __dict__)  # type: ignore
         obj.name = name
         obj._sage_ = _undef_sage_helper
-        return obj
+        return obj  # type: ignore
 
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__

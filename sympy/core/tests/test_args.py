@@ -655,6 +655,11 @@ def test_sympy__core__function__AppliedUndef():
     assert _test_args(AppliedUndef(1, 2, 3))
 
 
+def test_sympy__core__function__DefinedFunction():
+    from sympy.core.function import DefinedFunction
+    assert _test_args(DefinedFunction(1, 2, 3))
+
+
 def test_sympy__core__function__Derivative():
     from sympy.core.function import Derivative
     assert _test_args(Derivative(2, x, y, 3))

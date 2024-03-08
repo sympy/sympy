@@ -2,7 +2,7 @@
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import ArgumentIndexError, expand_mul, Function
+from sympy.core.function import ArgumentIndexError, expand_mul, DefinedFunction
 from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -21,7 +21,7 @@ from sympy.polys.polytools import Poly
 ###############################################################################
 
 
-class lerchphi(Function):
+class lerchphi(DefinedFunction):
     r"""
     Lerch transcendent (Lerch phi function).
 
@@ -219,7 +219,7 @@ class lerchphi(Function):
 ###############################################################################
 
 
-class polylog(Function):
+class polylog(DefinedFunction):
     r"""
     Polylogarithm function.
 
@@ -391,7 +391,7 @@ class polylog(Function):
 ###############################################################################
 
 
-class zeta(Function):
+class zeta(DefinedFunction):
     r"""
     Hurwitz zeta function (or Riemann zeta function).
 
@@ -582,7 +582,7 @@ class zeta(Function):
         return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
 
 
-class dirichlet_eta(Function):
+class dirichlet_eta(DefinedFunction):
     r"""
     Dirichlet eta function.
 
@@ -665,7 +665,7 @@ class dirichlet_eta(Function):
             return self.rewrite(zeta)._eval_evalf(prec)
 
 
-class riemann_xi(Function):
+class riemann_xi(DefinedFunction):
     r"""
     Riemann Xi function.
 
@@ -704,7 +704,7 @@ class riemann_xi(Function):
         return s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
 
-class stieltjes(Function):
+class stieltjes(DefinedFunction):
     r"""
     Represents Stieltjes constants, $\gamma_{k}$ that occur in
     Laurent Series expansion of the Riemann zeta function.

@@ -7,7 +7,7 @@ combinatorial polynomials.
 """
 
 from sympy.core import Rational
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import binomial, factorial, RisingFactorial
@@ -25,7 +25,7 @@ from sympy.polys.orthopolys import (chebyshevt_poly, chebyshevu_poly,
 _x = Dummy('x')
 
 
-class OrthogonalPolynomial(Function):
+class OrthogonalPolynomial(DefinedFunction):
     """Base class for orthogonal polynomials.
     """
 
@@ -684,7 +684,7 @@ class chebyshevu(OrthogonalPolynomial):
         return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
 
-class chebyshevt_root(Function):
+class chebyshevt_root(DefinedFunction):
     r"""
     ``chebyshev_root(n, k)`` returns the $k$th root (indexed from zero) of
     the $n$th Chebyshev polynomial of the first kind; that is, if
@@ -725,7 +725,7 @@ class chebyshevt_root(Function):
         return cos(S.Pi*(2*k + 1)/(2*n))
 
 
-class chebyshevu_root(Function):
+class chebyshevu_root(DefinedFunction):
     r"""
     ``chebyshevu_root(n, k)`` returns the $k$th root (indexed from zero) of the
     $n$th Chebyshev polynomial of the second kind; that is, if $0 \le k < n$,
@@ -886,7 +886,7 @@ class legendre(OrthogonalPolynomial):
         return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
 
-class assoc_legendre(Function):
+class assoc_legendre(DefinedFunction):
     r"""
     ``assoc_legendre(n, m, x)`` gives $P_n^m(x)$, where $n$ and $m$ are
     the degree and order or an expression which is related to the nth
