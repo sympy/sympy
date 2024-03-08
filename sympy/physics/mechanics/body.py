@@ -70,9 +70,9 @@ class Body(RigidBody, Particle):  # type: ignore
     ========
 
     As Body has been deprecated, the following examples are for illustrative
-    purposes only. The functionality of Body is fully captured by RigidBody and
-    Particle. To ignore the deprecation warning we can use the ignore_warnings
-    context manager.
+    purposes only. The functionality of Body is fully captured by
+    :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+    warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
 
@@ -219,9 +219,9 @@ class Body(RigidBody, Particle):  # type: ignore
         ========
 
         As Body has been deprecated, the following examples are for illustrative
-        purposes only. The functionality of Body is fully captured by RigidBody
-        and Particle. To ignore the deprecation warning we can use the
-        ignore_warnings context manager.
+        purposes only. The functionality of Body is fully captured by
+        :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+        warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
         >>> from sympy.physics.mechanics import Body, ReferenceFrame, Point
@@ -287,9 +287,9 @@ class Body(RigidBody, Particle):  # type: ignore
         =======
 
         As Body has been deprecated, the following examples are for illustrative
-        purposes only. The functionality of Body is fully captured by RigidBody
-        and Particle. To ignore the deprecation warning we can use the
-        ignore_warnings context manager.
+        purposes only. The functionality of Body is fully captured by
+        :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+        warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
         >>> from sympy import symbols
@@ -394,9 +394,9 @@ class Body(RigidBody, Particle):  # type: ignore
         =======
 
         As Body has been deprecated, the following examples are for illustrative
-        purposes only. The functionality of Body is fully captured by RigidBody
-        and Particle. To ignore the deprecation warning we can use the
-        ignore_warnings context manager.
+        purposes only. The functionality of Body is fully captured by
+        :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+        warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
         >>> from sympy import symbols
@@ -474,9 +474,9 @@ class Body(RigidBody, Particle):  # type: ignore
         =======
 
         As Body has been deprecated, the following examples are for illustrative
-        purposes only. The functionality of Body is fully captured by RigidBody
-        and Particle. To ignore the deprecation warning we can use the
-        ignore_warnings context manager.
+        purposes only. The functionality of Body is fully captured by
+        :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+        warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
         >>> from sympy.physics.mechanics import Body
@@ -511,9 +511,9 @@ class Body(RigidBody, Particle):  # type: ignore
         =======
 
         As Body has been deprecated, the following examples are for illustrative
-        purposes only. The functionality of Body is fully captured by RigidBody
-        and Particle. To ignore the deprecation warning we can use the
-        ignore_warnings context manager.
+        purposes only. The functionality of Body is fully captured by
+        :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+        warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
         >>> from sympy.physics.mechanics import Body, Point
@@ -559,9 +559,9 @@ class Body(RigidBody, Particle):  # type: ignore
         =======
 
         As Body has been deprecated, the following examples are for illustrative
-        purposes only. The functionality of Body is fully captured by RigidBody
-        and Particle. To ignore the deprecation warning we can use the
-        ignore_warnings context manager.
+        purposes only. The functionality of Body is fully captured by
+        :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+        warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
         >>> from sympy.physics.mechanics import Body
@@ -597,9 +597,9 @@ class Body(RigidBody, Particle):  # type: ignore
         =======
 
         As Body has been deprecated, the following examples are for illustrative
-        purposes only. The functionality of Body is fully captured by RigidBody
-        and Particle. To ignore the deprecation warning we can use the
-        ignore_warnings context manager.
+        purposes only. The functionality of Body is fully captured by
+        :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+        warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
         >>> from sympy.physics.mechanics import Body, ReferenceFrame
@@ -637,9 +637,9 @@ class Body(RigidBody, Particle):  # type: ignore
         =======
 
         As Body has been deprecated, the following examples are for illustrative
-        purposes only. The functionality of Body is fully captured by RigidBody
-        and Particle. To ignore the deprecation warning we can use the
-        ignore_warnings context manager.
+        purposes only. The functionality of Body is fully captured by
+        :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+        warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
         >>> from sympy.physics.mechanics import Body
@@ -689,9 +689,9 @@ class Body(RigidBody, Particle):  # type: ignore
         =======
 
         As Body has been deprecated, the following examples are for illustrative
-        purposes only. The functionality of Body is fully captured by RigidBody
-        and Particle. To ignore the deprecation warning we can use the
-        ignore_warnings context manager.
+        purposes only. The functionality of Body is fully captured by
+        :class:`~.RigidBody` and :class:`~.Particle`. To ignore the deprecation
+        warning we can use the ignore_warnings context manager.
 
         >>> from sympy.utilities.exceptions import ignore_warnings
         >>> from sympy.physics.mechanics import Body
