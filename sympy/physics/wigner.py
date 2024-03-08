@@ -56,7 +56,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.numbers import int_valued
 from sympy.core.function import Function
-from sympy.core.numbers import (Float, I, Integer, pi, Rational, equal_valued)
+from sympy.core.numbers import (Float, I, Integer, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -109,17 +109,20 @@ def _calc_factlist(nn):
 
 
 def _Integer_or_halfInteger(value):
-    if isinstance(value, int):
-        return Integer(value)
-    elif isinstance(value, (float, Float)):
-        if isinstance(value, float) and value.is_integer():
-            return Integer(int(value))
-        elif (equal_valued((v:=2*value), (i:=int(v)))):
-            return Rational(i, 2)
-    elif isinstance(value, Integer):
+    if isinstance(value,Rational):
+        if value.q == 2:
+            return value.p/value.q
+        elif value.q == 1:
+            return value.p
+    elif isinstance(value, int):
         return value
-    elif isinstance(value, Rational) and value.q == 2:
-        return value
+    elif isinstance(value, Float):
+        value = float(value)
+    if type(value) is float:
+            if value.is_integer():
+                return int(value)
+            if (2*value).is_integer():
+                return value
     raise ValueError("expecting integer or half-integer, got %s" % value)
 
 
