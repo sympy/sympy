@@ -50,7 +50,7 @@ class JointsMethod(_Methods):
     by RigidBody and Particle and the functionality of JointsMethod is fully
     captured by System. To ignore the deprecation warning we can use the
     ignore_warnings context manager.
-    
+
     >>> from sympy.utilities.exceptions import ignore_warnings
 
     This is a simple example for a one degree of freedom translational
@@ -241,7 +241,7 @@ class JointsMethod(_Methods):
         captured by RigidBody and Particle and the functionality of JointsMethod
         is fully captured by System. To ignore the deprecation warning we can
         use the ignore_warnings context manager.
-        
+
         >>> from sympy.utilities.exceptions import ignore_warnings
 
         This is a simple example for a one degree of freedom translational
