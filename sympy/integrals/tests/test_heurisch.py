@@ -365,3 +365,10 @@ def test_issue_22527():
     Uz = integrate(f(z), z)
     Ut = integrate(f(t), t)
     assert Ut == Uz.subs(z, t)
+
+
+def test_heurisch_complex_erf():
+    # It should not be able to find a solution,
+    # rather than returning an incorrect solution.
+    r = symbols(r'r', real=True)
+    assert heurisch(exp(-r**2/(2*(2-I)**2)), r, hints=[]) is None

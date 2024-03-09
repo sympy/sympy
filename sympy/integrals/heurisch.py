@@ -732,7 +732,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             raise PolynomialError
         solution = solve_lin_sys(numer.coeffs(), coeff_ring, _raw=False)
 
-        if solution is None:
+        if solution is None or any(s.has_free(*V) for s in solution.values()):
             return None
         else:
             return candidate.xreplace(solution).xreplace(
