@@ -1748,3 +1748,31 @@ def test_StateSpace_functions():
     assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
     assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
+
+def test_phase_criterion():
+
+    system1 = TransferFunction((1 + 0.25*s), (0.1*s**3 + 0.8*s**2 + 1.7*s + 1), s)
+
+    #test1
+    z1 = -1.73+2.49*I
+    z2 = -1.97+10.4*I
+    z3 = -10+10*I
+    z4 = -47
+
+    assert system1.phase_criterion(z1) == True
+    assert system1.phase_criterion(z2) == True
+    assert system1.phase_criterion(z3) == False
+    assert system1.phase_criterion(z4) == False
+
+    #test2
+    system2 = TransferFunction((1), ((s**2+100*s+2600)*(s+25)*s), s)
+    
+    z1 = 37.1+65.2*I
+    z2 = -67+31.1*I
+    z3 = -12.1
+    z4 = -43
+    
+    assert system2.phase_criterion(z1) == True
+    assert system2.phase_criterion(z2) == True
+    assert system2.phase_criterion(z3) == True
+    assert system2.phase_criterion(z4) == False
