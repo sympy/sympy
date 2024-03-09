@@ -3482,7 +3482,7 @@ class TensMul(TensExpr, AssocOp):
                     dummy_name = dummy_name_gen(index_type)
                     if dummy_name not in free_names:
                         break
-                dummy = TensorIndex(dummy_name, index_type, True)
+                dummy = old_index.func(dummy_name, index_type, *old_index.args[2:])
                 replacements[pos1cov][old_index] = dummy
                 replacements[pos1contra][-old_index] = -dummy
                 indices[pos2cov] = dummy
