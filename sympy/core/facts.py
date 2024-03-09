@@ -310,9 +310,9 @@ class Prover:
         """
         Process Rule: a -> b
 
-        This method handles a logical rule where 'a' represents the antecedent and 
+        This method handles a logical rule where 'a' represents the antecedent and
         'b' represents the consequent. It ensures the validity of the rule
-        and non-redundant before proceeding with further processing. 
+        and non-redundant before proceeding with further processing.
         The method checks for the following conditions:
 
         1. If the antecedent 'a' is False or the consequent 'b' is a boolean, indicating
