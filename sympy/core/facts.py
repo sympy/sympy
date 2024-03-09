@@ -307,7 +307,7 @@ class Prover:
         return self.split_alpha_beta()[1]
 
     def process_rule(self, a, b):
-        """ 
+        """
         Process Rule: a -> b
 
         This method handles a logical rule where 'a' represents the antecedent and 
@@ -326,7 +326,7 @@ class Prover:
 
         If the rule satisfies all conditions and is deemed valid, it is added to the set of
         seen rules for tracking purposes, and the core processing of the rule is performed.
-        """ 
+        """
         if (not a) or isinstance(b, bool):
             return
         if isinstance(a, bool):
