@@ -4380,6 +4380,20 @@ class TensMul(TensExpr, AssocOp):
 
         return repl_dict
 
+    def matches(self, expr, repl_dict=None, old=False):
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        commute = all(arg.component.comm == 0 for arg in expr.args if isinstance(arg, Tensor))
+        if commute:
+            return self._matches_commutative(expr, repl_dict, old)
+        else:
+            raise NotImplementedError("Tensor matching not implemented for non-commuting tensors")
+
 class TensorElement(TensExpr):
     """
     Tensor with evaluated components.
