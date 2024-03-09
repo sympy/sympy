@@ -1967,7 +1967,7 @@ def totient(n):
     Examples
     ========
 
-    >>> from sympy.ntheory import totient
+    >>> from sympy.functions.combinatorial.numbers import totient
     >>> totient(1)
     1
     >>> totient(25)
@@ -2011,7 +2011,7 @@ def reduced_totient(n):
     Examples
     ========
 
-    >>> from sympy.ntheory import reduced_totient
+    >>> from sympy.functions.combinatorial.numbers import reduced_totient
     >>> reduced_totient(1)
     1
     >>> reduced_totient(8)
@@ -2079,7 +2079,7 @@ def divisor_sigma(n, k=1):
     Examples
     ========
 
-    >>> from sympy.ntheory import divisor_sigma
+    >>> from sympy.functions.combinatorial.numbers import divisor_sigma
     >>> divisor_sigma(18, 0)
     6
     >>> divisor_sigma(39, 1)
@@ -2233,7 +2233,7 @@ def udivisor_sigma(n, k=1):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import udivisor_sigma
+    >>> from sympy.functions.combinatorial.numbers import udivisor_sigma
     >>> udivisor_sigma(18, 0)
     4
     >>> udivisor_sigma(74, 1)
@@ -2286,7 +2286,7 @@ def primenu(n):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import primenu
+    >>> from sympy.functions.combinatorial.numbers import primenu
     >>> primenu(1)
     0
     >>> primenu(30)
@@ -2335,7 +2335,7 @@ def primeomega(n):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import primeomega
+    >>> from sympy.functions.combinatorial.numbers import primeomega
     >>> primeomega(1)
     0
     >>> primeomega(20)
