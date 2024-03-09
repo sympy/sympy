@@ -15,7 +15,7 @@ from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul,
                         Add, Basic)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log, _mexpand, expand_trig, nfloat)
+                                 expand_log, _mexpand, expand_trig, nfloat, expand)
 from sympy.core.mod import Mod
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.intfunc import integer_log
@@ -3885,6 +3885,8 @@ def _handle_poly(polys, symbols):
 
         if inexact:
             poly_eqs = [nfloat(p) for p in poly_eqs]
+    # poly_sol=expand(x) for x in poly_sol
+    # print('dtype of poly=',poly_sol,'is',type( poly_sol),'\ndtype of poly_eqn= ',poly_eqs,'is',type(poly_eqs))
 
     return poly_sol, poly_eqs
 
@@ -4109,6 +4111,18 @@ def nonlinsolve(system, *symbols):
         # If solve_poly_system did succeed then we pass those solutions in as
         # preliminary results.
         subs_res = substitution(remaining, symbols, result=poly_sol, exclude=denominators)
+
+        expanded_tuples = []
+        for s in subs_res:
+            expanded_sub = []
+            for t in s:
+                try:
+                    expanded_sub.append(expand(t))
+                except AttributeError:
+                    expanded_sub.append(t)
+            expanded_tuples.append(Tuple(*expanded_sub))
+
+        subs_res = FiniteSet(*expanded_tuples)
 
         if not isinstance(subs_res, FiniteSet):
             return subs_res
