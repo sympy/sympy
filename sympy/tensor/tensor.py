@@ -38,6 +38,7 @@ from abc import abstractmethod, ABC
 from collections import defaultdict
 import operator
 import itertools
+
 from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
@@ -45,8 +46,9 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.cache import clear_cache
 from sympy.core.containers import Tuple, Dict
+from sympy.core.function import WildFunction
 from sympy.core.sorting import default_sort_key
-from sympy.core.symbol import Symbol, symbols
+from sympy.core.symbol import Symbol, symbols, Wild
 from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
 from sympy.external.gmpy import SYMPY_INTS
@@ -4991,6 +4993,10 @@ def _expand(expr, **kwargs):
         return expr._expand(**kwargs)
     else:
         return expr.expand(**kwargs)
+
+
+def _get_wilds(expr):
+    return list(expr.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead))
 
 
 def get_postprocessor(cls):
