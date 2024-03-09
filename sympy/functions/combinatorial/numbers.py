@@ -88,14 +88,14 @@ class carmichael(Function):
     Examples
     ========
 
-    >>> from sympy import carmichael
-    >>> carmichael.find_first_n_carmichaels(5)
+    >>> from sympy.ntheory.factor_ import find_first_n_carmichaels, find_carmichael_numbers_in_range
+    >>> find_first_n_carmichaels(5)
     [561, 1105, 1729, 2465, 2821]
-    >>> carmichael.find_carmichael_numbers_in_range(0, 562)
+    >>> find_carmichael_numbers_in_range(0, 562)
     [561]
-    >>> carmichael.find_carmichael_numbers_in_range(0,1000)
+    >>> find_carmichael_numbers_in_range(0,1000)
     [561]
-    >>> carmichael.find_carmichael_numbers_in_range(0,2000)
+    >>> find_carmichael_numbers_in_range(0,2000)
     [561, 1105, 1729]
 
     References

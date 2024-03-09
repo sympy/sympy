@@ -1106,7 +1106,7 @@ def legendre_symbol(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import legendre_symbol
+    >>> from sympy.functions.combinatorial.numbers import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
     >>> sorted(set([i**2 % 7 for i in range(7)]))
@@ -1168,7 +1168,7 @@ def jacobi_symbol(m, n):
     Examples
     ========
 
-    >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
+    >>> from sympy.functions.combinatorial.numbers import jacobi_symbol, legendre_symbol
     >>> from sympy import S
     >>> jacobi_symbol(45, 77)
     -1
@@ -1226,7 +1226,7 @@ def mobius(n):
     Examples
     ========
 
-    >>> from sympy.ntheory import mobius
+    >>> from sympy.functions.combinatorial.numbers import mobius
     >>> mobius(13*7)
     1
     >>> mobius(1)
