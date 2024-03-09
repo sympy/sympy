@@ -1815,7 +1815,6 @@ class TensorHead(Basic):
             assert symmetry.rank == len(index_types)
 
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(comm))
-        obj.comm = TensorManager.comm_symbols2i(comm)
         return obj
 
     @property
@@ -1829,6 +1828,10 @@ class TensorHead(Basic):
     @property
     def symmetry(self):
         return self.args[2]
+
+    @property
+    def comm(self):
+        return TensorManager.comm_symbols2i(self.args[3])
 
     @property
     def rank(self):
@@ -4271,10 +4274,12 @@ class WildTensorHead(TensorHead):
             raise NotImplementedError("Wild matching based on symmetry is not implemented.")
 
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), sympify(symmetry), sympify(comm), sympify(unordered_indices))
-        obj.comm = TensorManager.comm_symbols2i(comm)
-        obj.unordered_indices = unordered_indices
 
         return obj
+
+    @property
+    def unordered_indices(self):
+        return self.args[4]
 
     def __call__(self, *indices, **kwargs):
         tensor = WildTensor(self, indices, **kwargs)
