@@ -264,8 +264,8 @@ def npartitions(n, verbose=False):
     Examples
     ========
 
-    >>> from sympy.ntheory import npartitions
-    >>> npartitions(25)
+    >>> from sympy.functions.combinatorial.numbers import partition
+    >>> partition(25)
     1958
 
     References
