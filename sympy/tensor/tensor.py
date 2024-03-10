@@ -903,6 +903,9 @@ class _TensorManager:
         if c not in (0, 1, None):
             raise ValueError('`c` can assume only the values 0, 1 or None')
 
+        i = sympify(i)
+        j = sympify(j)
+
         if i not in self._comm_symbols2i:
             n = len(self._comm)
             self._comm.append({})
