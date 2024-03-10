@@ -1298,9 +1298,9 @@ class TransferFunction(SISOLinearTimeInvariant):
             return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
         else:
             return Pow(self.den, -1, evaluate=False)
-    
-    def phase_condition(self, z) -> bool:
-        r'''
+
+    def phase_condition(self, z)->bool:
+        '''
         Returns True if the number z confirm the phase condition of system.
 
         Parameters
@@ -1313,43 +1313,42 @@ class TransferFunction(SISOLinearTimeInvariant):
         Examples
         ========
 
-            >>> from sympy.physics.control.lti import TransferFunction
-            >>> from sympy.abc import s
-            >>> from sympy.core.numbers import I
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.abc import s
+        >>> from sympy.core.numbers import I
 
-            >>> system1 = TransferFunction((1 + 0.25*s), (0.1*s**3 + 0.8*s**2 + 1.7*s + 1), s)
-            >>> z1 = -1.73+2.49*I
-            >>> z2 = -1.97+10.4*I
-            >>> z3 = -10+10*I
-            >>> z4 = -47
-            >>> system1.phase_condition(z1)
-            True
-            >>> system1.phase_condition(z2)
-            True
-            >>> system1.phase_condition(z3)
-            False
-            >>> system1.phase_condition(z4)
-            False
+        >>> system1 = TransferFunction((1 + 0.25*s), (0.1*s**3 + 0.8*s**2 + 1.7*s + 1), s)
+        >>> z1 = -1.73+2.49*I
+        >>> z2 = -1.97+10.4*I
+        >>> z3 = -10+10*I
+        >>> z4 = -47
+        >>> system1.phase_condition(z1)
+        True
+        >>> system1.phase_condition(z2)
+        True
+        >>> system1.phase_condition(z3)
+        False
+        >>> system1.phase_condition(z4)
+        False
 
-            >>> system2 = TransferFunction((1), ((s**2+100*s+2600)*(s+25)*s), s)
-            >>> z1 = 37.1+65.2*I
-            >>> z2 = -67+31.1*I
-            >>> z3 = -12.1
-            >>> z4 = -43
-            >>> system2.phase_condition(z1)
-            True
-            >>> system2.phase_condition(z2)
-            True
-            >>> system2.phase_condition(z3)
-            True
-            >>> system2.phase_condition(z4)
-            False
+        >>> system2 = TransferFunction((1), ((s**2+100*s+2600)*(s+25)*s), s)
+        >>> z1 = 37.1+65.2*I
+        >>> z2 = -67+31.1*I
+        >>> z3 = -12.1
+        >>> z4 = -43
+        >>> system2.phase_condition(z1)
+        True
+        >>> system2.phase_condition(z2)
+        True
+        >>> system2.phase_condition(z3)
+        True
+        >>> system2.phase_condition(z4)
+        False
 
         Note
         ====
 
         If phase condition is true for a number z and a system G(s) the z is part of system's root locus.
-
         '''
         #I place this method import here as local variable (and not at the beginning)
         #because there is a loop variable named arg (in _flatten_args function)
@@ -1362,17 +1361,15 @@ class TransferFunction(SISOLinearTimeInvariant):
         psi = 0
 
         for pole in poles:
-            phi += arg(z-pole)
+            phi += arg(z - pole)
 
         for zero in zeros:
-            psi += arg(z-zero)
+            psi += arg(z - zero)
 
         expr = phi - psi
-        result = '%.2f' % (expr/pi) #round to 2 decimal points
+        result = '%.2f'%(expr/pi) #round to 2 decimal points
 
-        return float(result) % 2  == 1
-
-
+        return float(result)%2 == 1
 
 def _flatten_args(args, _cls):
     temp_args = []

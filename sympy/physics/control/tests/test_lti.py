@@ -1753,9 +1753,9 @@ def test_phase_condition():
     system1 = TransferFunction((1 + 0.25*s), (0.1*s**3 + 0.8*s**2 + 1.7*s + 1), s)
 
     #test1
-    z1 = -1.73+2.49*I
-    z2 = -1.97+10.4*I
-    z3 = -10+10*I
+    z1 = -1.73 + 2.49*I
+    z2 = -1.97 + 10.4*I
+    z3 = -10 + 10*I
     z4 = -47
 
     assert system1.phase_condition(z1) == True
@@ -1766,8 +1766,8 @@ def test_phase_condition():
     #test2
     system2 = TransferFunction((1), ((s**2+100*s+2600)*(s+25)*s), s)
 
-    z1 = 37.1+65.2*I
-    z2 = -67+31.1*I
+    z1 = 37.1 + 65.2*I
+    z2 = -67 + 31.1*I
     z3 = -12.1
     z4 = -43
 
