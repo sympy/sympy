@@ -260,8 +260,6 @@ _xobj_unicode = {
     ')_lower_hook':         U('RIGHT PARENTHESIS LOWER HOOK'),
     '(_upper_hook':         U('LEFT PARENTHESIS UPPER HOOK'),
     ')_upper_hook':         U('RIGHT PARENTHESIS UPPER HOOK'),
-    'Deg':                    U('DEGREE SIGN'),
-
     '<':                  ((U('BOX DRAWINGS LIGHT VERTICAL'),
                             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
                             U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT')), '<'),
@@ -516,6 +514,7 @@ atoms_table = {
     'SuperscriptPlus':         U('SUPERSCRIPT PLUS SIGN'),
     'SuperscriptMinus':        U('SUPERSCRIPT MINUS'),
     'Dagger':                  U('DAGGER'),
+    'Degree':                  U('DEGREE SIGN'),
     #Logic Symbols
     'And':                     U('LOGICAL AND'),
     'Or':                      U('LOGICAL OR'),
