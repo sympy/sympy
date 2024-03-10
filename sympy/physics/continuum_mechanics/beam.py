@@ -469,7 +469,6 @@ class Beam:
 
         if not return_:
             return
-
         if type in ("pin", "roller"):
             return reaction_load
         else:
