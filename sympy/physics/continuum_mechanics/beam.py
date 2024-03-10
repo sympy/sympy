@@ -1039,6 +1039,7 @@ class Beam:
                 max_moment = max(val)
                 moment_values.append(max_moment)
                 intervals.append(points[val.index(max_moment)])
+
             # If bending moment in a particular Interval has zero or constant
             # slope, then above block gives NotImplementedError as solve
             # can't represent Interval solutions.
