@@ -1299,16 +1299,16 @@ class TransferFunction(SISOLinearTimeInvariant):
         else:
             return Pow(self.den, -1, evaluate=False)
     
-    def phase_criterion(self, z) -> bool:
-        r''' 
-        Returns True if the number z confirm the phase criterion of system.
+    def phase_condition(self, z) -> bool:
+        """  
+        Returns True if the number z confirm the phase condition of system.
 
         Parameters
         ==========
 
         self : Transfer Function
         z : Number (Complex or Integer)
-            Number for which it will be checked whether the phase criterion applies.
+            Number for which it will be checked whether the phase condition applies.
 
         Examples
         ========
@@ -1322,13 +1322,13 @@ class TransferFunction(SISOLinearTimeInvariant):
             >>> z2 = -1.97+10.4*I
             >>> z3 = -10+10*I
             >>> z4 = -47
-            >>> system1.phase_criterion(z1)
+            >>> system1.phase_condition(z1)
             True
-            >>> system1.phase_criterion(z2)
+            >>> system1.phase_condition(z2)
             True
-            >>> system1.phase_criterion(z3)
+            >>> system1.phase_condition(z3)
             False
-            >>> system1.phase_criterion(z4)
+            >>> system1.phase_condition(z4)
             False
 
             >>> system2 = TransferFunction((1), ((s**2+100*s+2600)*(s+25)*s), s)
@@ -1336,21 +1336,21 @@ class TransferFunction(SISOLinearTimeInvariant):
             >>> z2 = -67+31.1*I
             >>> z3 = -12.1
             >>> z4 = -43
-            >>> system2.phase_criterion(z1)
+            >>> system2.phase_condition(z1)
             True
-            >>> system2.phase_criterion(z2)
+            >>> system2.phase_condition(z2)
             True
-            >>> system2.phase_criterion(z3)
+            >>> system2.phase_condition(z3)
             True
-            >>> system2.phase_criterion(z4)
+            >>> system2.phase_condition(z4)
             False
         
         Note
         ====
 
-        If phase criterion is true for a number z and a system G(s) the z is part of system's root locus.
+        If phase condition is true for a number z and a system G(s) the z is part of system's root locus.
 
-        '''
+        """
         #I place this method import here as local variable (and not at the beginning) 
         #because there is a loop variable named arg (in _flatten_args function) 
         #and there will be confusion.
@@ -1368,7 +1368,7 @@ class TransferFunction(SISOLinearTimeInvariant):
             psi += arg(z-zero)
 
         expr = phi - psi
-        result = '%.2f' % (expr/pi) #round to 2 deciaml points
+        result = '%.2f' % (expr/pi) #round to 2 decimal points
 
         return float(result) % 2  == 1
 
