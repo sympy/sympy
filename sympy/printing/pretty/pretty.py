@@ -912,7 +912,7 @@ class PrettyPrinter(Printer):
 
     def _print_Identity(self, expr):
         if self._use_unicode:
-            return prettyForm(pretty_atom('MatrixIdentity'))
+            return prettyForm(pretty_atom('IdentityMatrix'))
         else:
             return prettyForm('I')
 
@@ -2831,7 +2831,10 @@ class PrettyPrinter(Printer):
 
     def _print_Quantity(self, e):
         if e.name.name == 'degree':
-            pform = self._print(xobj('Deg', 1))
+            if self._use_unicode:
+                pform = self._print(pretty_atom('Degree'))
+            else:
+                pform = self._print("°")
             return pform
         else:
             return self.emptyPrinter(e)
