@@ -1300,7 +1300,7 @@ class TransferFunction(SISOLinearTimeInvariant):
             return Pow(self.den, -1, evaluate=False)
     
     def phase_condition(self, z) -> bool:
-        """  
+        r'''
         Returns True if the number z confirm the phase condition of system.
 
         Parameters
@@ -1344,20 +1344,20 @@ class TransferFunction(SISOLinearTimeInvariant):
             True
             >>> system2.phase_condition(z4)
             False
-        
+
         Note
         ====
 
         If phase condition is true for a number z and a system G(s) the z is part of system's root locus.
 
-        """
-        #I place this method import here as local variable (and not at the beginning) 
-        #because there is a loop variable named arg (in _flatten_args function) 
+        '''
+        #I place this method import here as local variable (and not at the beginning)
+        #because there is a loop variable named arg (in _flatten_args function)
         #and there will be confusion.
         from sympy import arg
 
         poles = roots(self.den)
-        zeros = roots(self.num)   
+        zeros = roots(self.num)
         phi = 0
         psi = 0
 
