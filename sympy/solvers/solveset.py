@@ -32,6 +32,7 @@ from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, atan, acot, acsc, asec,
                              piecewise_fold, Piecewise)
+from sympy.functions.combinatorial.numbers import totient
 from sympy.functions.elementary.complexes import Abs, arg, re, im
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
                             sinh, cosh, tanh, coth, sech, csch,
@@ -43,7 +44,6 @@ from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
 from sympy.matrices import zeros, Matrix, MatrixBase
-from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
