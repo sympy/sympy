@@ -2834,7 +2834,7 @@ class PrettyPrinter(Printer):
             if self._use_unicode:
                 pform = self._print(pretty_atom('Degree'))
             else:
-                pform = self._print("°")
+                pform = self._print(chr(176))
             return pform
         else:
             return self.emptyPrinter(e)
