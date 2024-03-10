@@ -56,7 +56,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.numbers import int_valued
 from sympy.core.function import Function
-from sympy.core.numbers import (Float, I, Integer, pi, Rational, equal_valued)
+from sympy.core.numbers import (Float, I, Integer, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -108,18 +108,22 @@ def _calc_factlist(nn):
     return _Factlist[:int(nn) + 1]
 
 
-def _Integer_or_halfInteger(value):
+def _int_or_halfint(value):
+    """return Python int unless value is half-int (then return float)"""
     if isinstance(value, int):
-        return Integer(value)
-    elif isinstance(value, (float, Float)):
-        if isinstance(value, float) and value.is_integer():
-            return Integer(int(value))
-        elif (equal_valued((v:=2*value), (i:=int(v)))):
-            return Rational(i, 2)
-    elif isinstance(value, Integer):
         return value
-    elif isinstance(value, Rational) and value.q == 2:
-        return value
+    elif type(value) is float:
+        if value.is_integer():
+            return int(value)  # an int
+        if (2*value).is_integer():
+            return value  # a float
+    elif isinstance(value, Rational):
+        if value.q == 2:
+            return value.p/value.q  # a float
+        elif value.q == 1:
+            return value.p  # an int
+    elif isinstance(value, Float):
+        return _int_or_halfint(float(value))
     raise ValueError("expecting integer or half-integer, got %s" % value)
 
 
@@ -210,7 +214,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - Jens Rasch (2009-03-24): initial version
     """
 
-    j_1, j_2, j_3, m_1, m_2, m_3 = map(_Integer_or_halfInteger,
+    j_1, j_2, j_3, m_1, m_2, m_3 = map(_int_or_halfint,
                                        [j_1, j_2, j_3, m_1, m_2, m_3])
 
     if m_1 + m_2 + m_3 != 0:
@@ -227,8 +231,6 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
         return S.Zero
 
-    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
-    m_3 = -m_3
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
                   j_3 + abs(m_3))
     _calc_factlist(int(maxfact))
@@ -260,6 +262,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             _Factlist[int(j_1 + j_2 - j_3 - ii)]
         sumres = sumres + Integer((-1) ** ii) / den
 
+    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
     res = ressqrt * sumres * prefid
     return res
 
