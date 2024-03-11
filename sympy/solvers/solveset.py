@@ -3885,8 +3885,6 @@ def _handle_poly(polys, symbols):
 
         if inexact:
             poly_eqs = [nfloat(p) for p in poly_eqs]
-    # poly_sol=expand(x) for x in poly_sol
-    # print('dtype of poly=',poly_sol,'is',type( poly_sol),'\ndtype of poly_eqn= ',poly_eqs,'is',type(poly_eqs))
 
     return poly_sol, poly_eqs
 
