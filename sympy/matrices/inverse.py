@@ -1,7 +1,7 @@
 from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
 from sympy.polys.domains import EX
 
-from .common import MatrixError, NonSquareMatrixError, NonInvertibleMatrixError
+from .exceptions import MatrixError, NonSquareMatrixError, NonInvertibleMatrixError
 from .utilities import _iszero
 
 

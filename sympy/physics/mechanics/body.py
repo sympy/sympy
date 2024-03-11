@@ -2,6 +2,7 @@ from sympy import Symbol
 from sympy.physics.vector import Point, Vector, ReferenceFrame, Dyadic
 from sympy.physics.mechanics import RigidBody, Particle, Inertia
 from sympy.physics.mechanics.body_base import BodyBase
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['Body']
 
@@ -99,6 +100,14 @@ class Body(RigidBody, Particle):  # type: ignore
 
     def __init__(self, name, masscenter=None, mass=None, frame=None,
                  central_inertia=None):
+        sympy_deprecation_warning(
+            """
+            Support for the Body class has been removed, as its functionality is
+            fully captured by RigidBody and Particle.
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="deprecated-mechanics-body-class"
+        )
 
         self._loads = []
 
@@ -233,8 +242,8 @@ class Body(RigidBody, Particle):  # type: ignore
         Explanation
         ===========
 
-        Applies the force on self or equal and oppposite forces on
-        self and other body if both are given on the desried point on the bodies.
+        Applies the force on self or equal and opposite forces on
+        self and other body if both are given on the desired point on the bodies.
         The force applied on other body is taken opposite of self, i.e, -force.
 
         Parameters
@@ -336,7 +345,7 @@ class Body(RigidBody, Particle):  # type: ignore
         Explanation
         ===========
 
-        Applies the torque on self or equal and oppposite torquess on
+        Applies the torque on self or equal and opposite torques on
         self and other body if both are given.
         The torque applied on other body is taken opposite of self,
         i.e, -torque.

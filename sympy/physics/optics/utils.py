@@ -671,8 +671,8 @@ def hyperfocal_distance(f, N, c):
 def transverse_magnification(si, so):
     """
 
-    Calculates the transverse magnification, which is the ratio of the
-    image size to the object size.
+    Calculates the transverse magnification upon reflection in a mirror,
+    which is the ratio of the image size to the object size.
 
     Parameters
     ==========

@@ -225,7 +225,7 @@ class ImplicitRegion(Basic):
             flag = False
             for sol in solutions:
                 syms = Tuple(*sol).free_symbols
-                rep = {s: 3 for s in syms}
+                rep = dict.fromkeys(syms, 3)
                 sol_z = sol[2]
 
                 if sol_z == 0:
@@ -418,7 +418,7 @@ class ImplicitRegion(Basic):
             singular_points = self.singular_points()
             for spoint in singular_points:
                 syms = Tuple(*spoint).free_symbols
-                rep = {s: 2 for s in syms}
+                rep = dict.fromkeys(syms, 2)
 
                 if len(syms) != 0:
                    spoint = tuple(s.subs(rep) for s in spoint)

@@ -1,7 +1,11 @@
-from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.numbers import (I, Rational, pi, oo)
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
+from sympy.core.function import Lambda
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import sec, csc
+from sympy.functions.elementary.hyperbolic import (coth, sech,
+                                                   atanh, asech, acoth, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.calculus.singularities import (
     singularities,
@@ -11,7 +15,7 @@ from sympy.calculus.singularities import (
     is_strictly_decreasing,
     is_monotonic
 )
-from sympy.sets import Interval, FiniteSet
+from sympy.sets import Interval, FiniteSet, Union, ImageSet
 from sympy.testing.pytest import raises
 from sympy.abc import x, y
 
@@ -25,6 +29,17 @@ def test_singularities():
         FiniteSet(-1, (1 - sqrt(3) * I) / 2, (1 + sqrt(3) * I) / 2)
     assert singularities(1/(y**2 + 2*I*y + 1), y) == \
         FiniteSet(-I + sqrt(2)*I, -I - sqrt(2)*I)
+    _n = Dummy('n')
+    assert singularities(sech(x), x).dummy_eq(Union(
+        ImageSet(Lambda(_n, 2*_n*I*pi + I*pi/2), S.Integers),
+        ImageSet(Lambda(_n, 2*_n*I*pi + 3*I*pi/2), S.Integers)))
+    assert singularities(coth(x), x).dummy_eq(Union(
+        ImageSet(Lambda(_n, 2*_n*I*pi + I*pi), S.Integers),
+        ImageSet(Lambda(_n, 2*_n*I*pi), S.Integers)))
+    assert singularities(atanh(x), x) == FiniteSet(-1, 1)
+    assert singularities(acoth(x), x) == FiniteSet(-1, 1)
+    assert singularities(asech(x), x) == FiniteSet(0)
+    assert singularities(acsch(x), x) == FiniteSet(0)
 
     x = Symbol('x', real=True)
     assert singularities(1/(x**2 + 1), x) == S.EmptySet
@@ -32,6 +47,10 @@ def test_singularities():
     assert singularities(exp(1/x), x, Interval(1, 2)) == S.EmptySet
     assert singularities(log((x - 2)**2), x, Interval(1, 3)) == FiniteSet(2)
     raises(NotImplementedError, lambda: singularities(x**-oo, x))
+    assert singularities(sec(x), x, Interval(0, 3*pi)) == FiniteSet(
+        pi/2, 3*pi/2, 5*pi/2)
+    assert singularities(csc(x), x, Interval(0, 3*pi)) == FiniteSet(
+        0, pi, 2*pi, 3*pi)
 
 
 def test_is_increasing():

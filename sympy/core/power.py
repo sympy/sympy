@@ -362,7 +362,7 @@ class Pow(Expr):
             if q.is_integer and base % q == 0:
                 return S.Zero
 
-            from sympy.ntheory.factor_ import totient
+            from sympy.functions.combinatorial.numbers import totient
 
             if base.is_Integer and exp.is_Integer and q.is_Integer:
                 b, e, m = int(base), int(exp), int(q)

@@ -531,11 +531,11 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         gs = solveset(expr - y, self.value, S.Reals)
 
-        if isinstance(gs, Intersection) and S.Reals in gs.args:
-            gs = list(gs.args[1])
-
-        if not gs:
-            raise ValueError("Can not solve %s for %s"%(expr, self.value))
+        if isinstance(gs, Intersection):
+            if len(gs.args) == 2 and gs.args[0] is S.Reals:
+                gs = gs.args[1]
+        if not gs.is_FiniteSet:
+            raise ValueError("Can not solve %s for %s" % (expr, self.value))
         fx = self.compute_density(self.value)
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)

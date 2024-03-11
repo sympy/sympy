@@ -6,7 +6,7 @@ from sympy.core import S, Dummy, Lambda
 from sympy.core.symbol import Str
 from sympy.core.symbol import symbols
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.solvers import solve
 from sympy.vector.scalar import BaseScalar
 from sympy.core.containers import Tuple

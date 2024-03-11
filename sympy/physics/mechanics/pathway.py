@@ -3,11 +3,13 @@
 from abc import ABC, abstractmethod
 
 from sympy.core.singleton import S
-from sympy.physics.mechanics import Force, Point, WrappingGeometryBase
-from sympy.physics.vector import dynamicsymbols
+from sympy.physics.mechanics.loads import Force
+from sympy.physics.mechanics.wrapping_geometry import WrappingGeometryBase
+from sympy.physics.vector import Point, dynamicsymbols
 
 
-__all__ = ['PathwayBase', 'LinearPathway', 'ObstacleSetPathway', 'WrappingPathway']
+__all__ = ['PathwayBase', 'LinearPathway', 'ObstacleSetPathway',
+           'WrappingPathway']
 
 
 class PathwayBase(ABC):

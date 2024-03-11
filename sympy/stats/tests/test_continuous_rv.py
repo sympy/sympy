@@ -1577,3 +1577,7 @@ def test_issue_16318():
     # test compute_expectation function of the SingleContinuousDomain
     N = SingleContinuousDomain(x, Interval(0, 1))
     raises(ValueError, lambda: SingleContinuousDomain.compute_expectation(N, x+1, {x, y}))
+
+def test_compute_density():
+    X = Normal('X', 0, Symbol("sigma")**2)
+    raises(ValueError, lambda: density(X**5 + X))

@@ -128,11 +128,11 @@ class RayTransferMatrix(MutableDenseMatrix):
 
     def __mul__(self, other):
         if isinstance(other, RayTransferMatrix):
-            return RayTransferMatrix(Matrix.__mul__(self, other))
+            return RayTransferMatrix(Matrix(self)*Matrix(other))
         elif isinstance(other, GeometricRay):
-            return GeometricRay(Matrix.__mul__(self, other))
+            return GeometricRay(Matrix(self)*Matrix(other))
         elif isinstance(other, BeamParameter):
-            temp = self*Matrix(((other.q,), (1,)))
+            temp = Matrix(self)*Matrix(((other.q,), (1,)))
             q = (temp[0]/temp[1]).expand(complex=True)
             return BeamParameter(other.wavelen,
                                  together(re(q)),

@@ -1,11 +1,14 @@
 import pytest
 
-from sympy import ImmutableMatrix, cos, eye, sin, symbols, sympify, zeros
+from sympy.core.symbol import symbols
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.matrices.dense import eye, zeros
+from sympy.matrices.immutable import ImmutableMatrix
 from sympy.physics.mechanics import (
     Force, KanesMethod, LagrangesMethod, Particle, PinJoint, Point,
-    PrismaticJoint, ReferenceFrame, RigidBody, Torque, TorqueActuator,
+    PrismaticJoint, ReferenceFrame, RigidBody, Torque, TorqueActuator, System,
     dynamicsymbols)
-from sympy.physics.mechanics._system import System
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 
@@ -13,16 +16,17 @@ t = dynamicsymbols._t  # type: ignore
 q = dynamicsymbols('q:6')  # type: ignore
 qd = dynamicsymbols('q:6', 1)  # type: ignore
 u = dynamicsymbols('u:6')  # type: ignore
+ua = dynamicsymbols('ua:3')  # type: ignore
 
 
 class TestSystemBase:
     @pytest.fixture()
     def _empty_system_setup(self):
-        self.system = System(ReferenceFrame('frame'), Point('origin'))
+        self.system = System(ReferenceFrame('frame'), Point('fixed_point'))
 
     def _empty_system_check(self, exclude=()):
-        matrices = ('q_ind', 'q_dep', 'q', 'u_ind', 'u_dep', 'u', 'kdes',
-                    'holonomic_constraints', 'nonholonomic_constraints')
+        matrices = ('q_ind', 'q_dep', 'q', 'u_ind', 'u_dep', 'u', 'u_aux',
+                    'kdes', 'holonomic_constraints', 'nonholonomic_constraints')
         tuples = ('loads', 'bodies', 'joints', 'actuators')
         for attr in matrices:
             if attr not in exclude:
@@ -34,7 +38,7 @@ class TestSystemBase:
             assert self.system.eom_method is None
 
     def _create_filled_system(self, with_speeds=True):
-        self.system = System(ReferenceFrame('frame'), Point('origin'))
+        self.system = System(ReferenceFrame('frame'), Point('fixed_point'))
         u = dynamicsymbols('u:6') if with_speeds else qd
         self.bodies = symbols('rb1:5', cls=RigidBody)
         self.joints = (
@@ -47,6 +51,7 @@ class TestSystemBase:
         self.system.add_speeds(u[3], independent=False)
         if with_speeds:
             self.system.add_kdes(u[3] - qd[3])
+            self.system.add_auxiliary_speeds(ua[0], ua[1])
         self.system.add_holonomic_constraints(q[2] - q[0] + q[1])
         self.system.add_nonholonomic_constraints(u[3] - qd[1] + u[2])
         self.system.u_ind = u[:2]
@@ -72,6 +77,7 @@ class TestSystemBase:
         assert 'u_ind' in exclude or self.system.u_ind[:] == u[:2]
         assert 'u_dep' in exclude or self.system.u_dep[:] == u[2:4]
         assert 'u' in exclude or self.system.u[:] == u[:4]
+        assert 'u_aux' in exclude or self.system.u_aux[:] == ua[:2]
         assert 'kdes' in exclude or self.system.kdes[:] == [
             ui - qdi for ui, qdi in zip(u[:4], qd[:4])]
         assert ('holonomic_constraints' in exclude or
@@ -91,7 +97,7 @@ class TestSystemBase:
         self.system.kdes = u[0] - q[0].diff(t)
         p = Particle('p', mass=symbols('m'))
         self.system.add_bodies(p)
-        p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
+        p.masscenter.set_pos(self.system.fixed_point, q[0] * self.system.x)
 
 
 class TestSystem(TestSystemBase):
@@ -103,17 +109,17 @@ class TestSystem(TestSystemBase):
         self._filled_system_check()
         self.system.validate_system()
 
-    @pytest.mark.parametrize('origin', [None, Point('origin')])
     @pytest.mark.parametrize('frame', [None, ReferenceFrame('frame')])
-    def test_init(self, origin, frame):
-        if origin is None and frame is None:
+    @pytest.mark.parametrize('fixed_point', [None, Point('fixed_point')])
+    def test_init(self, frame, fixed_point):
+        if fixed_point is None and frame is None:
             self.system = System()
         else:
-            self.system = System(frame, origin)
-        if origin is None:
-            assert self.system.origin.name == 'inertial_origin'
+            self.system = System(frame, fixed_point)
+        if fixed_point is None:
+            assert self.system.fixed_point.name == 'inertial_point'
         else:
-            assert self.system.origin == origin
+            assert self.system.fixed_point == fixed_point
         if frame is None:
             assert self.system.frame.name == 'inertial_frame'
         else:
@@ -132,7 +138,7 @@ class TestSystem(TestSystemBase):
     def test_from_newtonian_rigid_body(self):
         rb = RigidBody('body')
         self.system = System.from_newtonian(rb)
-        assert self.system.origin == rb.masscenter
+        assert self.system.fixed_point == rb.masscenter
         assert self.system.frame == rb.frame
         self._empty_system_check(exclude=('bodies',))
         self.system.bodies = (rb,)
@@ -203,11 +209,37 @@ class TestSystem(TestSystemBase):
         assert self.system.u[:] == exp_u
         self._empty_system_check(exclude=('u_ind', 'u_dep', 'u'))
 
+    @pytest.mark.parametrize('args, kwargs, exp_u_aux', [
+        (ua[:3], {}, ua[:3]),
+    ])
+    def test_auxiliary_speeds(self, _empty_system_setup, args, kwargs,
+                              exp_u_aux):
+        # Test add_speeds
+        self.system.add_auxiliary_speeds(*args, **kwargs)
+        assert self.system.u_aux[:] == exp_u_aux
+        self._empty_system_check(exclude=('u_aux',))
+        # Test setter for u_ind and u_dep
+        self.system.u_aux = exp_u_aux
+        assert self.system.u_aux[:] == exp_u_aux
+        self._empty_system_check(exclude=('u_aux',))
+
+    @pytest.mark.parametrize('args, kwargs', [
+        ((ua[2], q[0]), {}),
+        ((ua[2], u[1]), {}),
+        ((ua[0], ua[2]), {}),
+        ((symbols('a'), ua[2]), {}),
+    ])
+    def test_auxiliary_invalid(self, _filled_system_setup, args, kwargs):
+        with pytest.raises(ValueError):
+            self.system.add_auxiliary_speeds(*args, **kwargs)
+        self._filled_system_check()
+
     @pytest.mark.parametrize('prop, add_func, args, kwargs', [
         ('q_ind', 'add_coordinates', (q[0],), {}),
         ('q_dep', 'add_coordinates', (q[3],), {'independent': False}),
         ('u_ind', 'add_speeds', (u[0],), {}),
         ('u_dep', 'add_speeds', (u[3],), {'independent': False}),
+        ('u_aux', 'add_auxiliary_speeds', (ua[2],), {}),
         ('kdes', 'add_kdes', (qd[0] - u[0],), {}),
         ('holonomic_constraints', 'add_holonomic_constraints',
          (q[0] - q[1],), {}),
@@ -231,6 +263,7 @@ class TestSystem(TestSystemBase):
         ('q_dep', 'add_coordinates', symbols('a'), ValueError),
         ('u_ind', 'add_speeds', symbols('a'), ValueError),
         ('u_dep', 'add_speeds', symbols('a'), ValueError),
+        ('u_aux', 'add_auxiliary_speeds', symbols('a'), ValueError),
         ('kdes', 'add_kdes', 7, TypeError),
         ('holonomic_constraints', 'add_holonomic_constraints', 7, TypeError),
         ('nonholonomic_constraints', 'add_nonholonomic_constraints', 7,
@@ -489,7 +522,7 @@ class TestSystem(TestSystemBase):
         self.system.q_ind = q[0]
         p = Particle('p', mass=symbols('m'))
         self.system.add_bodies(p)
-        p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
+        p.masscenter.set_pos(self.system.fixed_point, q[0] * self.system.x)
         with pytest.raises(error):
             self.system.form_eoms(eom_method=eom_method, **kwargs)
 
@@ -576,6 +609,11 @@ class TestValidateSystem(TestSystemBase):
             self.system.validate_system(LagrangesMethod)
         self.system.u_ind = []
         self.system.validate_system(LagrangesMethod)
+        self.system.u_aux = ua
+        with pytest.raises(ValueError):
+            self.system.validate_system(LagrangesMethod)
+        self.system.u_aux = []
+        self.system.validate_system(LagrangesMethod)
         self.system.add_joints(
             PinJoint('Ju', RigidBody('rbu1'), RigidBody('rbu2')))
         self.system.u_ind = []
@@ -596,7 +634,7 @@ class TestSystemExamples:
         system = System.from_newtonian(rail)
         assert system.bodies == (rail,)
         assert system.frame == rail.frame
-        assert system.origin == rail.masscenter
+        assert system.fixed_point == rail.masscenter
         slider = PrismaticJoint('slider', rail, cart, qc, uc, joint_axis=rail.x)
         pin = PinJoint('pin', cart, bob, qp, up, joint_axis=cart.z,
                        child_interframe=bob_frame, child_point=l * bob_frame.y)
@@ -604,7 +642,7 @@ class TestSystemExamples:
         assert system.joints == (slider, pin)
         assert system.get_joint('slider') == slider
         assert system.get_body('bob') == bob
-        system.apply_gravity(-g * system.y)
+        system.apply_uniform_gravity(-g * system.y)
         system.add_loads((cart.masscenter, F * rail.x))
         system.add_actuators(TorqueActuator(k * qp, cart.z, bob_frame, cart))
         system.validate_system()
@@ -666,7 +704,7 @@ class TestSystemExamples:
         system = System.from_newtonian(rail)
         assert system.bodies == (rail,)
         assert system.frame == rail.frame
-        assert system.origin == rail.masscenter
+        assert system.fixed_point == rail.masscenter
         slider = PrismaticJoint('slider', rail, cart, qc, qcd,
                                 joint_axis=rail.x)
         pin = PinJoint('pin', cart, bob, qp, qpd, joint_axis=cart.z,
@@ -677,7 +715,7 @@ class TestSystemExamples:
         assert system.get_body('bob') == bob
         for body in system.bodies:
             body.potential_energy = body.mass * g * body.masscenter.pos_from(
-                system.origin).dot(system.y)
+                system.fixed_point).dot(system.y)
         system.add_loads((cart.masscenter, F * rail.x))
         system.add_actuators(TorqueActuator(k * qp, cart.z, bob_frame, cart))
         system.validate_system(LagrangesMethod)
@@ -723,3 +761,38 @@ class TestSystemExamples:
         assert simplify(system.forcing - gd) == zeros(2, 1)
         assert simplify(system.mass_matrix_full - Mm) == zeros(5, 5)
         assert simplify(system.forcing_full - gm) == zeros(5, 1)
+
+    def test_box_on_ground(self):
+        # Particle sliding on ground with friction. The applied force is assumed
+        # to be positive and to be higher than the friction force.
+        g, m, mu = symbols('g m mu')
+        q, u, ua = dynamicsymbols('q u ua')
+        N, F = dynamicsymbols('N F', positive=True)
+        P = Particle("P", mass=m)
+        system = System()
+        system.add_bodies(P)
+        P.masscenter.set_pos(system.fixed_point, q * system.x)
+        P.masscenter.set_vel(system.frame, u * system.x + ua * system.y)
+        system.q_ind, system.u_ind, system.u_aux = [q], [u], [ua]
+        system.kdes = [q.diff(t) - u]
+        system.apply_uniform_gravity(-g * system.y)
+        system.add_loads(
+            Force(P, N * system.y),
+            Force(P, F * system.x - mu * N * system.x))
+        system.validate_system()
+        system.form_eoms()
+
+        # Test other output
+        Mk = ImmutableMatrix([1])
+        gk = ImmutableMatrix([u])
+        Md = ImmutableMatrix([m])
+        gd = ImmutableMatrix([F - mu * N])
+        Mm = (Mk.row_join(zeros(1, 1))).col_join(zeros(1, 1).row_join(Md))
+        gm = gk.col_join(gd)
+        aux_eqs = ImmutableMatrix([N - m * g])
+        assert simplify(system.mass_matrix - Md) == zeros(1, 1)
+        assert simplify(system.forcing - gd) == zeros(1, 1)
+        assert simplify(system.mass_matrix_full - Mm) == zeros(2, 2)
+        assert simplify(system.forcing_full - gm) == zeros(2, 1)
+        assert simplify(system.eom_method.auxiliary_eqs - aux_eqs
+                        ) == zeros(1, 1)

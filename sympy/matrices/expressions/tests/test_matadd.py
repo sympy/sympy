@@ -1,6 +1,6 @@
 from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatPow, MatMul
 from sympy.matrices.expressions.special import GenericZeroMatrix, ZeroMatrix
-from sympy.matrices.common import ShapeError
+from sympy.matrices.exceptions import ShapeError
 from sympy.matrices import eye, ImmutableMatrix
 from sympy.core import Add, Basic, S
 from sympy.core.add import add

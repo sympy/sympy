@@ -279,7 +279,7 @@ class PolyRing(DefaultPrinting, IPolys):
         state = self.__dict__.copy()
         del state["leading_expv"]
 
-        for key, value in state.items():
+        for key in state:
             if key.startswith("monomial_"):
                 del state[key]
 

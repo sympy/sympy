@@ -44,7 +44,7 @@ def calculateit(func, base, n, tofile):
     else:
         skip = len(intpart)
     print("Step 1 of 2: calculating binary value...")
-    prec = int(n*math.log(base, 2)) + 10
+    prec = int(n*math.log2(base)) + 10
     t = perf_counter()
     a = func(prec)
     step1_time = perf_counter() - t

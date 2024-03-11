@@ -106,19 +106,19 @@ to do them again.
 ### Create a GitHub Account
 
 A [GitHub](https://github.com) account is required to contribute to SymPy. If
-you have not one yet then sign up at <https://github.com/signup/free>. Your
+you have not one yet then sign up at <https://github.com/join>. Your
 GitHub account is your presence in the open source world, so we recommend
 choosing a professional username.
 
 ### Setup SSH Keys
 
 To establish a secure connection between your computer and GitHub see detailed
-instructions in <https://help.github.com/en/articles/set-up-git> or at
-<https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account>.
+instructions in <https://docs.github.com/get-started/getting-started-with-git/set-up-git> or at
+<https://docs.github.com/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>.
 
 If you have any problems with SSH access to GitHub, read the troubleshooting
-instructions at <https://help.github.com/en/articles/troubleshooting-ssh>, or
-ask us on the [mailing list](https://groups.google.com/group/sympy).
+instructions at <https://docs.github.com/authentication/troubleshooting-ssh>, or
+ask us on the [mailing list](https://groups.google.com/g/sympy).
 
 ### Fork SymPy
 
@@ -156,7 +156,7 @@ git remote add github git@github.com:<your-github-username>/sympy.git
 ```
 
 For more information about GitHub forking and tuning see:
-<https://help.github.com/en/articles/about-pull-requests>, <https://help.github.com/en/articles/fork-a-repo>, and <https://help.github.com/en/articles/set-up-git>
+<https://docs.github.com/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>, <https://docs.github.com/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>, and <https://docs.github.com/get-started/quickstart/set-up-git>
 
 After the configuration, your setup should be similar to this:
 

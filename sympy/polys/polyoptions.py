@@ -152,7 +152,7 @@ class Options(dict):
 
         preprocess_options(args)
 
-        for key, value in dict(defaults).items():
+        for key in dict(defaults):
             if key in self:
                 del defaults[key]
             else:

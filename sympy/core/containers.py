@@ -167,7 +167,7 @@ class Tuple(Basic):
         See Also
         ========
 
-        sympy.matrices.common.MatrixKind
+        sympy.matrices.kind.MatrixKind
         sympy.core.kind.NumberKind
         """
         return TupleKind(*(i.kind for i in self.args))

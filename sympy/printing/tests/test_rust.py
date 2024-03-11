@@ -356,4 +356,5 @@ def test_matrix():
 
 def test_sparse_matrix():
     # gh-15791
-    assert 'Not supported in Rust' in rust_code(SparseMatrix([[1, 2, 3]]))
+    with raises(NotImplementedError):
+        rust_code(SparseMatrix([[1, 2, 3]]))

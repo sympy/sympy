@@ -3,7 +3,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from .matexpr import MatrixExpr
 
 

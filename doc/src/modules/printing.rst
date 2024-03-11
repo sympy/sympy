@@ -264,10 +264,11 @@ to introduce the names of user-defined functions in the Fortran expression.
           1 - mygamma(x)**2
 
 However, when the user_functions argument is not provided, ``fcode`` will
-generate code which assumes that a function of the same name will be provided
-by the user.  A comment will be added to inform the user of the issue:
+by default raise an Exception, but if the user intends to provide a function
+with the same name, code can still be generated, by passing the option
+``strict=False``. The code then contains a comment informing the user of the issue:
 
-    >>> print(fcode(1 - gamma(x)**2))
+    >>> print(fcode(1 - gamma(x)**2, strict=False))
     C     Not supported in Fortran:
     C     gamma
           1 - gamma(x)**2

@@ -1,10 +1,13 @@
 from mpmath.libmp import (fzero, from_int, from_rational,
-    fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
+    fone, fhalf, bitcount, to_int, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
 from sympy.external.gmpy import gcd, legendre, jacobi
 from .residue_ntheory import _sqrt_mod_prime_power, is_quad_residue
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.memoization import recurrence_memo
 
 import math
+from itertools import count
 
 def _pre():
     maxn = 10**5
@@ -134,37 +137,46 @@ def _d(n, j, prec, sq23pi, sqrt8):
     return mpf_mul(D, E)
 
 
-def npartitions(n, verbose=False):
-    """
-    Calculate the partition function P(n), i.e. the number of ways that
-    n can be written as a sum of positive integers.
+@recurrence_memo([1, 1])
+def _partition_rec(n: int, prev) -> int:
+    """ Calculate the partition function P(n)
 
-    P(n) is computed using the Hardy-Ramanujan-Rademacher formula [1]_.
-
-
-    The correctness of this implementation has been tested through $10^{10}$.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory import npartitions
-    >>> npartitions(25)
-    1958
-
-    References
+    Parameters
     ==========
 
-    .. [1] https://mathworld.wolfram.com/PartitionFunctionP.html
+    n : int
+        nonnegative integer
 
     """
-    from sympy.functions.combinatorial.numbers import _npartition, partition
-    n = int(n)
+    v = 0
+    penta = 0 # pentagonal number: 1, 5, 12, ...
+    for i in count():
+        penta += 3*i + 1
+        np = n - penta
+        if np < 0:
+            break
+        s = prev[np]
+        np -= i + 1
+        # np = n - gp where gp = generalized pentagonal: 2, 7, 15, ...
+        if 0 <= np:
+            s += prev[np]
+        v += -s if i % 2 else s
+    return v
+
+
+def _partition(n: int) -> int:
+    """ Calculate the partition function P(n)
+
+    Parameters
+    ==========
+
+    n : int
+
+    """
     if n < 0:
         return 0
-    if n <= 5:
-        return [1, 1, 2, 3, 5, 7][n]
-    if (n <= 200_000 and n - len(_npartition) < 70 or
-            len(_npartition) == 2 and n < 14_400):
+    if (n <= 200_000 and n - _partition_rec.cache_length() < 70 or
+            _partition_rec.cache_length() == 2 and n < 14_400):
         # There will be 2*10**5 elements created here
         # and n elements created by partition, so in case we
         # are going to be working with small n, we just
@@ -177,14 +189,14 @@ def npartitions(n, verbose=False):
         # the startup here costs about the same as calculating the first
         # 14,400 values via partition, so we delay startup here unless n
         # is smaller than that.
-        return partition(n)
+        return _partition_rec(n)
     if '_factor' not in globals():
         _pre()
     # Estimate number of bits in p(n). This formula could be tidied
     pbits = int((
         math.pi*(2*n/3.)**0.5 -
         math.log(4*n))/math.log(10) + 1) * \
-        math.log(10, 2)
+        math.log2(10)
     prec = p = int(pbits*1.1 + 100)
 
     # find the number of terms needed so rounded sum will be accurate
@@ -193,18 +205,18 @@ def npartitions(n, verbose=False):
     c1 = 44*math.pi**2/(225*math.sqrt(3))
     c2 = math.pi*math.sqrt(2)/75
     c3 = math.pi*math.sqrt(2/3)
-    def M(n, N):
+    def _M(n, N):
         sqrt = math.sqrt
         return c1/sqrt(N) + c2*sqrt(N/(n - 1))*math.sinh(c3*sqrt(n)/N)
     big = max(9, math.ceil(n**0.5))  # should be too large (for n > 65, ceil should work)
-    assert M(n, big) < 0.5  # else double big until too large
-    while big > 40 and M(n, big) < 0.5:
+    assert _M(n, big) < 0.5  # else double big until too large
+    while big > 40 and _M(n, big) < 0.5:
         big //= 2
     small = big
     big = small*2
     while big - small > 1:
         N = (big + small)//2
-        if (er := M(n, N)) < 0.5:
+        if (er := _M(n, N)) < 0.5:
             big = N
         elif er >= 0.5:
             small = N
@@ -222,12 +234,45 @@ def npartitions(n, verbose=False):
         a = _a(n, q, p)
         d = _d(n, q, p, sq23pi, sqrt8)
         s = mpf_add(s, mpf_mul(a, d), prec)
-        if verbose:
-            print("step", q, "of", M, to_str(a, 10), to_str(d, 10))
         # On average, the terms decrease rapidly in magnitude.
         # Dynamically reducing the precision greatly improves
         # performance.
         p = bitcount(abs(to_int(d))) + 50
     return int(to_int(mpf_add(s, fhalf, prec)))
 
-__all__ = ['npartitions']
+
+@deprecated("""\
+The `sympy.ntheory.partitions_.npartitions` has been moved to `sympy.functions.combinatorial.numbers.partition`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def npartitions(n, verbose=False):
+    """
+    Calculate the partition function P(n), i.e. the number of ways that
+    n can be written as a sum of positive integers.
+
+    .. deprecated:: 1.13
+
+        The ``npartitions`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.partition`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
+
+    P(n) is computed using the Hardy-Ramanujan-Rademacher formula [1]_.
+
+
+    The correctness of this implementation has been tested through $10^{10}$.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import partition
+    >>> partition(25)
+    1958
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/PartitionFunctionP.html
+
+    """
+    from sympy.functions.combinatorial.numbers import partition as func_partition
+    return func_partition(n)

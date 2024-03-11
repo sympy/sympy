@@ -49,7 +49,7 @@ pull request, or even before committing a change.
 - [ ] **Cross reference relevant issues in the pull request description.** If
   the pull request fixes an issue (i.e., the issue should be closed once the
   PR is merged), use the ["fixes #123" syntax
-  ](https://help.github.com/articles/closing-issues-via-commit-messages).
+  ](https://docs.github.com/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue).
 
 - [ ] **Add a comment to the original issue cross-referencing the pull
   request** for visibility. If there is not a corresponding issue, this is OK.
@@ -75,7 +75,7 @@ in the issue tracker and see if one interests you. If you'd like to try to fix
 it, then create a message in the issue saying that you'd like to work on it.
 If it isn't clear how to fix it, ask for suggestions on how to do it in the
 issue itself or on the [mailing
-list](https://groups.google.com/forum/#!forum/sympy).
+list](https://groups.google.com/g/sympy).
 
 SymPy's code is organized into Python packages and modules. The core code is
 in the `sympy/core` directory and other packages in the sympy directory have
@@ -391,7 +391,7 @@ Using `.git/info/exclude` would be the best, because it is only applied locally.
 
 <https://stackoverflow.com/questions/22906851/when-would-you-use-git-info-exclude-instead-of-gitignore-to-exclude-files>
 
-<https://help.github.com/en/articles/ignoring-files>
+<https://docs.github.com/get-started/getting-started-with-git/ignoring-files>
 
 (workflow-process-commit-messages)=
 ### Writing commit messages
@@ -517,7 +517,7 @@ Co-authored-by: AUTHOR-NAME ANOTHER-NAME@EXAMPLE.COM
 ```
 
 to the bottom of the commit message. See
-https://help.github.com/en/articles/creating-a-commit-with-multiple-authors.
+https://docs.github.com/pull-requests/committing-changes-to-your-project/creating-and-editing-commits/creating-a-commit-with-multiple-authors.
 
 ## Make a Pull Request
 
@@ -571,9 +571,9 @@ The description is a good place to:
 
 - Use phrases like "closes #1234" or "fixed #1234" (or similar that [follow
   the auto-close
-  syntax](https://help.github.com/articles/closing-issues-via-commit-messages)
+  syntax](https://docs.github.com/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)
   and are also [discussed
-  here](https://github.com/blog/1506-closing-issues-via-pull-requests)). Then
+  here](https://github.blog/2013-05-14-closing-issues-via-pull-requests/)). Then
   those other issues or pull requests will be closed automatically when your
   pull request is merged. Note: this syntax does not work in the discussion of
   the pull request. See this [quick

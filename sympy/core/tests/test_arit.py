@@ -1996,6 +1996,11 @@ def test_Mod():
     from sympy.abc import phi
     assert Mod(4.0*Mod(phi, 1) , 2) == 2.0*(Mod(2*(Mod(phi, 1)), 1))
 
+    xi = symbols('x', integer=True)
+    assert unchanged(Mod, xi, 2)
+    assert Mod(3*xi, 2) == Mod(xi, 2)
+    assert unchanged(Mod, 3*x, 2)
+
 
 def test_Mod_Pow():
     # modular exponentiation

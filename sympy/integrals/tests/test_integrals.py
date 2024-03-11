@@ -5,7 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, Lambda, diff)
 from sympy.core import EulerGamma
-from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.numbers import (E, I, Rational, nan, oo, pi, zoo, all_close)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -438,13 +438,12 @@ def test_issue_18133():
 
 
 def test_issue_21741():
-    a = Float('3999999.9999999995', precision=53)
-    b = Float('2.5000000000000004e-7', precision=53)
-    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x),
-                   Ne(1.0*pi*x*exp(a*I*pi*t*y), 0)),
+    a = 4e6
+    b = 2.5e-7
+    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x), Ne(x, 0)),
                   (z*exp(-a*I*pi*t*y), True))
     fun = E**((-2*I*pi*(z*x+t*y))/(500*10**(-9)))
-    assert integrate(fun, z) == r
+    assert all_close(integrate(fun, z), r)
 
 
 def test_matrices():
@@ -2131,3 +2130,15 @@ def test_issue_25886():
             - 1.13875255748434*exp(0.937098661*I))
     F = integrate(f, (x, y, 1.0))
     assert F.is_same(F_exp, math.isclose)
+
+
+def test_old_issues():
+    # https://github.com/sympy/sympy/issues/5212
+    I1 = integrate(cos(log(x**2))/x)
+    assert I1 == sin(log(x**2))/2
+    # https://github.com/sympy/sympy/issues/5462
+    I2 = integrate(1/(x**2+y**2)**(Rational(3,2)),x)
+    assert I2 == x/(y**3*sqrt(x**2/y**2 + 1))
+    # https://github.com/sympy/sympy/issues/6278
+    I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
+    assert I3 == 2*sqrt(3)*pi/3

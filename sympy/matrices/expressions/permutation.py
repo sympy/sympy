@@ -184,7 +184,7 @@ class MatrixPermute(MatrixExpr):
     =====
 
     This follows the same notation used in
-    :meth:`sympy.matrices.common.MatrixCommon.permute`.
+    :meth:`sympy.matrices.matrixbase.MatrixBase.permute`.
 
     Examples
     ========
@@ -215,7 +215,7 @@ class MatrixPermute(MatrixExpr):
     See Also
     ========
 
-    sympy.matrices.common.MatrixCommon.permute
+    sympy.matrices.matrixbase.MatrixBase.permute
     """
     def __new__(cls, mat, perm, axis=S.Zero):
         from sympy.combinatorics.permutations import Permutation

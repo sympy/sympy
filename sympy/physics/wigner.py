@@ -56,7 +56,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.numbers import int_valued
 from sympy.core.function import Function
-from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.numbers import (Float, I, Integer, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -106,6 +106,25 @@ def _calc_factlist(nn):
         for ii in range(len(_Factlist), int(nn + 1)):
             _Factlist.append(_Factlist[ii - 1] * ii)
     return _Factlist[:int(nn) + 1]
+
+
+def _int_or_halfint(value):
+    """return Python int unless value is half-int (then return float)"""
+    if isinstance(value, int):
+        return value
+    elif type(value) is float:
+        if value.is_integer():
+            return int(value)  # an int
+        if (2*value).is_integer():
+            return value  # a float
+    elif isinstance(value, Rational):
+        if value.q == 2:
+            return value.p/value.q  # a float
+        elif value.q == 1:
+            return value.p  # an int
+    elif isinstance(value, Float):
+        return _int_or_halfint(float(value))
+    raise ValueError("expecting integer or half-integer, got %s" % value)
 
 
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
@@ -194,16 +213,12 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    if int(j_1 * 2) != j_1 * 2 or int(j_2 * 2) != j_2 * 2 or \
-            int(j_3 * 2) != j_3 * 2:
-        raise ValueError("j values must be integer or half integer")
-    if int(m_1 * 2) != m_1 * 2 or int(m_2 * 2) != m_2 * 2 or \
-            int(m_3 * 2) != m_3 * 2:
-        raise ValueError("m values must be integer or half integer")
+
+    j_1, j_2, j_3, m_1, m_2, m_3 = map(_int_or_halfint,
+                                       [j_1, j_2, j_3, m_1, m_2, m_3])
+
     if m_1 + m_2 + m_3 != 0:
         return S.Zero
-    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
-    m_3 = -m_3
     a1 = j_1 + j_2 - j_3
     if a1 < 0:
         return S.Zero
@@ -247,6 +262,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             _Factlist[int(j_1 + j_2 - j_3 - ii)]
         sumres = sumres + Integer((-1) ** ii) / den
 
+    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
     res = ressqrt * sumres * prefid
     return res
 
@@ -337,6 +353,8 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
         1/2*sqrt(1/6)
     """
 
+    # the triangle test will only pass if a) all 3 values are ints or
+    # b) 1 is an int and the other two are half-ints
     if not int_valued(aa + bb - cc):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if not int_valued(aa + cc - bb):

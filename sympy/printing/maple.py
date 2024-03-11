@@ -88,13 +88,10 @@ class MapleCodePrinter(CodePrinter):
     printmethod = "_maple"
     language = "maple"
 
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
-        'human': True,
+    _default_settings = dict(CodePrinter._default_settings, **{
         'inline': True,
         'allow_unknown_functions': True,
-    }
+    })
 
     def __init__(self, settings=None):
         if settings is None:

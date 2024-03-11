@@ -1,3 +1,12 @@
+#
+# Code for testing deprecated matrix classes. New test code should not be added
+# here. Instead, add it to test_matrixbase.py.
+#
+# This entire test module and the corresponding sympy/matrices/common.py
+# module will be removed in a future release.
+#
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+
 from sympy.assumptions import Q
 from sympy.core.expr import Expr
 from sympy.core.add import Add
@@ -10,9 +19,11 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.matrices.common import (ShapeError, NonSquareMatrixError,
+from sympy.matrices.exceptions import ShapeError, NonSquareMatrixError
+from sympy.matrices.kind import MatrixKind
+from sympy.matrices.common import (
     _MinimalMatrix, _CastableMatrix, MatrixShaping, MatrixProperties,
-    MatrixOperations, MatrixArithmetic, MatrixSpecial, MatrixKind)
+    MatrixOperations, MatrixArithmetic, MatrixSpecial)
 from sympy.matrices.matrices import MatrixCalculus
 from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded,
@@ -20,14 +31,79 @@ from sympy.matrices import (Matrix, diag, eye,
     ImmutableSparseMatrix)
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten
-from sympy.testing.pytest import raises, XFAIL
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray as Array
 
 from sympy.abc import x, y, z
 
-# classes to test the basic matrix classes
-class ShapingOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixShaping):
-    pass
+
+def test_matrix_deprecated_isinstance():
+
+    # Test that e.g. isinstance(M, MatrixCommon) still gives True when M is a
+    # Matrix for each of the deprecated matrix classes.
+
+    from sympy.matrices.common import (
+        MatrixRequired,
+        MatrixShaping,
+        MatrixSpecial,
+        MatrixProperties,
+        MatrixOperations,
+        MatrixArithmetic,
+        MatrixCommon
+    )
+    from sympy.matrices.matrices import (
+        MatrixDeterminant,
+        MatrixReductions,
+        MatrixSubspaces,
+        MatrixEigen,
+        MatrixCalculus,
+        MatrixDeprecated
+    )
+    from sympy import (
+        Matrix,
+        ImmutableMatrix,
+        SparseMatrix,
+        ImmutableSparseMatrix
+    )
+    all_mixins = (
+        MatrixRequired,
+        MatrixShaping,
+        MatrixSpecial,
+        MatrixProperties,
+        MatrixOperations,
+        MatrixArithmetic,
+        MatrixCommon,
+        MatrixDeterminant,
+        MatrixReductions,
+        MatrixSubspaces,
+        MatrixEigen,
+        MatrixCalculus,
+        MatrixDeprecated
+    )
+    all_matrices = (
+        Matrix,
+        ImmutableMatrix,
+        SparseMatrix,
+        ImmutableSparseMatrix
+    )
+
+    Ms = [M([[1, 2], [3, 4]]) for M in all_matrices]
+    t = ()
+
+    for mixin in all_mixins:
+        for M in Ms:
+            with warns_deprecated_sympy():
+                assert isinstance(M, mixin) is True
+        with warns_deprecated_sympy():
+            assert isinstance(t, mixin) is False
+
+
+# classes to test the deprecated matrix classes. We use warns_deprecated_sympy
+# to suppress the deprecation warnings because subclassing the deprecated
+# classes causes a warning to be raised.
+
+with warns_deprecated_sympy():
+    class ShapingOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixShaping):
+        pass
 
 
 def eye_Shaping(n):
@@ -38,8 +114,9 @@ def zeros_Shaping(n):
     return ShapingOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class PropertiesOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixProperties):
-    pass
+with warns_deprecated_sympy():
+    class PropertiesOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixProperties):
+        pass
 
 
 def eye_Properties(n):
@@ -50,8 +127,9 @@ def zeros_Properties(n):
     return PropertiesOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class OperationsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixOperations):
-    pass
+with warns_deprecated_sympy():
+    class OperationsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixOperations):
+        pass
 
 
 def eye_Operations(n):
@@ -62,8 +140,9 @@ def zeros_Operations(n):
     return OperationsOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class ArithmeticOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixArithmetic):
-    pass
+with warns_deprecated_sympy():
+    class ArithmeticOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixArithmetic):
+        pass
 
 
 def eye_Arithmetic(n):
@@ -74,12 +153,14 @@ def zeros_Arithmetic(n):
     return ArithmeticOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class SpecialOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSpecial):
-    pass
+with warns_deprecated_sympy():
+    class SpecialOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSpecial):
+        pass
 
 
-class CalculusOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixCalculus):
-    pass
+with warns_deprecated_sympy():
+    class CalculusOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixCalculus):
+        pass
 
 
 def test__MinimalMatrix():

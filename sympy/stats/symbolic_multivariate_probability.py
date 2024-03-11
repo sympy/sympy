@@ -5,7 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import expand as _expand
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.matrices.common import ShapeError
+from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.special import ZeroMatrix

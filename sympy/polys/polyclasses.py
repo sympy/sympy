@@ -1959,14 +1959,19 @@ class DUP_Flint(DMP):
         """Polynomial exact pseudo-quotient of ``f`` and ``g``. """
         d = f.degree() - g.degree() + 1
         q, r = divmod(g.LC()**d * f._rep, g._rep)
-        if not r:
+        if r:
             raise ExactQuotientFailed(f, g)
-        return q
+        return f.from_rep(q, f.dom)
 
     def _div(f, g):
         """Polynomial division with remainder of ``f`` and ``g``. """
-        q, r = divmod(f._rep, g._rep)
-        return f.from_rep(q, f.dom), f.from_rep(r, f.dom)
+        if f.dom.is_Field:
+            q, r = divmod(f._rep, g._rep)
+            return f.from_rep(q, f.dom), f.from_rep(r, f.dom)
+        else:
+            # XXX: python-flint defines division in ZZ[x] differently
+            q, r = f.to_DMP_Python()._div(g.to_DMP_Python())
+            return q.to_DUP_Flint(), r.to_DUP_Flint()
 
     def _rem(f, g):
         """Computes polynomial remainder of ``f`` and ``g``. """
@@ -2114,9 +2119,10 @@ class DUP_Flint(DMP):
 
         l = f._mul(g)._exquo(f._gcd(g))
 
-        if (l.dom.is_ZZ or l.dom.is_QQ):
-            if l.LC() < 0:
-                l = l.neg()
+        if l.dom.is_Field:
+            l = l.monic()
+        elif l.LC() < 0:
+            l = l.neg()
 
         return l
 
@@ -2127,11 +2133,11 @@ class DUP_Flint(DMP):
         assert f.dom == g.dom in (ZZ, QQ)
 
         if f.dom.is_QQ:
-            cF, F = f.clear_denoms()
-            cG, G = g.clear_denoms()
+            cG, F = f.clear_denoms()
+            cF, G = g.clear_denoms()
         else:
-            cF, F = f.dom.one, f
-            cG, G = g.dom.one, g
+            cG, F = f.dom.one, f
+            cF, G = g.dom.one, g
 
         cH = cF.gcd(cG)
         cF, cG = cF // cH, cG // cH
@@ -2147,7 +2153,7 @@ class DUP_Flint(DMP):
         elif f_neg:
             cF, F = -cF, F.neg()
         elif g_neg:
-            cG, G = -cG, G.neg()
+            cF, G = -cF, G.neg()
 
         return cF, cG, F, G
 

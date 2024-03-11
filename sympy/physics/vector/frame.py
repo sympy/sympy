@@ -708,8 +708,8 @@ class ReferenceFrame:
         self._var_dict = {}
 
     def orient_explicit(self, parent, dcm):
-        """Sets the orientation of this reference frame relative to a parent
-        reference frame by explicitly setting the direction cosine matrix.
+        """Sets the orientation of this reference frame relative to another (parent) reference frame
+        using a direction cosine matrix that describes the rotation from the parent to the child.
 
         Parameters
         ==========
@@ -773,6 +773,69 @@ class ReferenceFrame:
         [0, -sin(q1), cos(q1)]])
 
         """
+        _check_frame(parent)
+        # amounts must be a Matrix type object
+        # (e.g. sympy.matrices.dense.MutableDenseMatrix).
+        if not isinstance(dcm, MatrixBase):
+            raise TypeError("Amounts must be a SymPy Matrix type object.")
+
+        self.orient_dcm(parent, dcm.T)
+
+    def orient_dcm(self, parent, dcm):
+        """Sets the orientation of this reference frame relative to another (parent) reference frame
+        using a direction cosine matrix that describes the rotation from the child to the parent.
+
+        Parameters
+        ==========
+
+        parent : ReferenceFrame
+            Reference frame that this reference frame will be rotated relative
+            to.
+        dcm : Matrix, shape(3, 3)
+            Direction cosine matrix that specifies the relative rotation
+            between the two reference frames.
+
+        Warns
+        ======
+
+        UserWarning
+            If the orientation creates a kinematic loop.
+
+        Examples
+        ========
+
+        Setup variables for the examples:
+
+        >>> from sympy import symbols, Matrix, sin, cos
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> q1 = symbols('q1')
+        >>> A = ReferenceFrame('A')
+        >>> B = ReferenceFrame('B')
+        >>> N = ReferenceFrame('N')
+
+        A simple rotation of ``A`` relative to ``N`` about ``N.x`` is defined
+        by the following direction cosine matrix:
+
+        >>> dcm = Matrix([[1, 0, 0],
+        ...               [0,  cos(q1), sin(q1)],
+        ...               [0, -sin(q1), cos(q1)]])
+        >>> A.orient_dcm(N, dcm)
+        >>> A.dcm(N)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+
+        This is equivalent to using ``orient_axis()``:
+
+        >>> B.orient_axis(N, N.x, q1)
+        >>> B.dcm(N)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+
+        """
 
         _check_frame(parent)
         # amounts must be a Matrix type object
@@ -780,9 +843,7 @@ class ReferenceFrame:
         if not isinstance(dcm, MatrixBase):
             raise TypeError("Amounts must be a SymPy Matrix type object.")
 
-        parent_orient_dcm = dcm
-
-        self._dcm(parent, parent_orient_dcm)
+        self._dcm(parent, dcm.T)
 
         wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})

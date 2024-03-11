@@ -2753,7 +2753,7 @@ class SecondLinearBessel(SingleODESolver):
             # c3 maybe of very complex form so I am simply checking (a - b) form
             # if yes later I will match with the standerd form of bessel in a and b
             # a, b are wild variable defined above.
-            _coeff2 = r[c3].match(a - b)
+            _coeff2 = expand(r[c3]).match(a - b)
             if _coeff2 is None:
                 return False
             # matching with standerd form for c3

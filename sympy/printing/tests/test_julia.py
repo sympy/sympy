@@ -309,13 +309,11 @@ def test_julia_boolean():
 
 
 def test_julia_not_supported():
-    assert julia_code(S.ComplexInfinity) == (
-        "# Not supported in Julia:\n"
-        "# ComplexInfinity\n"
-        "zoo"
-    )
+    with raises(NotImplementedError):
+        julia_code(S.ComplexInfinity)
+
     f = Function('f')
-    assert julia_code(f(x).diff(x)) == (
+    assert julia_code(f(x).diff(x), strict=False) == (
         "# Not supported in Julia:\n"
         "# Derivative\n"
         "Derivative(f(x), x)"

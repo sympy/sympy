@@ -284,7 +284,11 @@ static PyMethodDef wrapper_module_%(num)sMethods[] = {
         {NULL, NULL, 0, NULL}
 };
 
+#ifdef NPY_1_19_API_VERSION
+static void test_ufunc(char **args, const npy_intp *dimensions, const npy_intp* steps, void* data)
+#else
 static void test_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+#endif
 {
     npy_intp i;
     npy_intp n = dimensions[0];
@@ -378,7 +382,11 @@ static PyMethodDef wrapper_module_%(num)sMethods[] = {
         {NULL, NULL, 0, NULL}
 };
 
+#ifdef NPY_1_19_API_VERSION
+static void multitest_ufunc(char **args, const npy_intp *dimensions, const npy_intp* steps, void* data)
+#else
 static void multitest_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+#endif
 {
     npy_intp i;
     npy_intp n = dimensions[0];

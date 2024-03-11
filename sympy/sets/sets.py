@@ -2754,7 +2754,7 @@ class SetKind(Kind):
     ========
 
     sympy.core.kind.NumberKind
-    sympy.matrices.common.MatrixKind
+    sympy.matrices.kind.MatrixKind
     sympy.core.containers.TupleKind
     """
     def __new__(cls, element_kind=None):

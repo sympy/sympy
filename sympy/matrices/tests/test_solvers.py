@@ -5,12 +5,12 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.simplify.simplify import simplify
-from sympy.matrices.matrices import (ShapeError, NonSquareMatrixError)
+from sympy.matrices.exceptions import (ShapeError, NonSquareMatrixError)
 from sympy.matrices import (
     ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix, dotprodsimp)
 from sympy.matrices.determinant import _det_laplace
 from sympy.testing.pytest import raises
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.polys.matrices.exceptions import DMShapeError
 from sympy.solvers.solveset import linsolve
 from sympy.abc import x, y

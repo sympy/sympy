@@ -3,7 +3,8 @@
 Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
-from .common import ShapeError, NonSquareMatrixError, MatrixKind
+from .exceptions import ShapeError, NonSquareMatrixError
+from .kind import MatrixKind
 from .dense import (
     GramSchmidt, casoratian, diag, eye, hessian, jordan_cell,
     list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
@@ -11,7 +12,7 @@ from .dense import (
     rot_ccw_axis2, rot_ccw_axis3, rot_givens,
     symarray, wronskian, zeros)
 from .dense import MutableDenseMatrix
-from .matrices import DeferredVector, MatrixBase
+from .matrixbase import DeferredVector, MatrixBase
 
 MutableMatrix = MutableDenseMatrix
 Matrix = MutableMatrix

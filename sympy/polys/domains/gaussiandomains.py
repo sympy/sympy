@@ -678,4 +678,9 @@ class GaussianRationalField(GaussianDomain, Field):
         """Convert a QQ_I element to QQ_I."""
         return a
 
+    def from_ComplexField(K1, a, K0):
+        """Convert a ComplexField element to QQ_I."""
+        return K1.new(QQ.convert(a.real), QQ.convert(a.imag))
+
+
 QQ_I = GaussianRational._parent = GaussianRationalField()

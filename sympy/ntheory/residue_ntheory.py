@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from sympy.core.function import Function
-from sympy.core.singleton import S
-from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
-                                 kronecker, bit_scan1, remove)
+from sympy.external.gmpy import (gcd, lcm, invert, sqrt, jacobi,
+                                 bit_scan1, remove)
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
 from .factor_ import factorint, _perfect_power
 from .modular import crt
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint, randint
@@ -372,7 +372,8 @@ def is_primitive_root(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import is_primitive_root, n_order, totient
+    >>> from sympy.functions.combinatorial.numbers import totient
+    >>> from sympy.ntheory import is_primitive_root, n_order
     >>> is_primitive_root(3, 10)
     True
     >>> is_primitive_root(9, 10)
@@ -1072,9 +1073,19 @@ def quadratic_residues(p) -> list[int]:
     return sorted(r)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.legendre_symbol` has been moved to `sympy.functions.combinatorial.numbers.legendre_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def legendre_symbol(a, p):
     r"""
     Returns the Legendre symbol `(a / p)`.
+
+    .. deprecated:: 1.13
+
+        The ``legendre_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.legendre_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
     defined as
@@ -1095,7 +1106,7 @@ def legendre_symbol(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import legendre_symbol
+    >>> from sympy.functions.combinatorial.numbers import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
     >>> sorted(set([i**2 % 7 for i in range(7)]))
@@ -1107,15 +1118,23 @@ def legendre_symbol(a, p):
     is_quad_residue, jacobi_symbol
 
     """
-    a, p = as_int(a), as_int(p)
-    if p == 2 or not isprime(p):
-        raise ValueError("p should be an odd prime")
-    return int(legendre(a, p))
+    from sympy.functions.combinatorial.numbers import legendre_symbol as _legendre_symbol
+    return _legendre_symbol(a, p)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.jacobi_symbol` has been moved to `sympy.functions.combinatorial.numbers.jacobi_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def jacobi_symbol(m, n):
     r"""
     Returns the Jacobi symbol `(m / n)`.
+
+    .. deprecated:: 1.13
+
+        The ``jacobi_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.jacobi_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
     is defined as the product of the Legendre symbols corresponding to the
@@ -1149,7 +1168,7 @@ def jacobi_symbol(m, n):
     Examples
     ========
 
-    >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
+    >>> from sympy.functions.combinatorial.numbers import jacobi_symbol, legendre_symbol
     >>> from sympy import S
     >>> jacobi_symbol(45, 77)
     -1
@@ -1170,46 +1189,23 @@ def jacobi_symbol(m, n):
 
     is_quad_residue, legendre_symbol
     """
-    m, n = as_int(m), as_int(n)
-    return int(jacobi(m, n))
+    from sympy.functions.combinatorial.numbers import jacobi_symbol as _jacobi_symbol
+    return _jacobi_symbol(m, n)
 
 
-def kronecker_symbol(a, n):
-    r"""
-    Returns the Kronecker symbol `(a / n)`.
-
-    Parameters
-    ==========
-
-    a : integer
-    n : integer
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.residue_ntheory import kronecker_symbol
-    >>> kronecker_symbol(45, 77)
-    -1
-    >>> kronecker_symbol(13, -120)
-    1
-
-    See Also
-    ========
-
-    jacobi_symbol, legendre_symbol
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
-
-    """
-    return int(kronecker(as_int(a), as_int(n)))
-
-
-class mobius(Function):
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.mobius` has been moved to `sympy.functions.combinatorial.numbers.mobius`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def mobius(n):
     """
     Mobius function maps natural number to {-1, 0, 1}
+
+    .. deprecated:: 1.13
+
+        The ``mobius`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.mobius`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     It is defined as follows:
         1) `1` if `n = 1`.
@@ -1230,7 +1226,7 @@ class mobius(Function):
     Examples
     ========
 
-    >>> from sympy.ntheory import mobius
+    >>> from sympy.functions.combinatorial.numbers import mobius
     >>> mobius(13*7)
     1
     >>> mobius(1)
@@ -1247,22 +1243,8 @@ class mobius(Function):
     .. [2] Thomas Koshy "Elementary Number Theory with Applications"
 
     """
-    @classmethod
-    def eval(cls, n):
-        if n.is_integer:
-            if n.is_positive is not True:
-                raise ValueError("n should be a positive integer")
-        else:
-            raise TypeError("n should be an integer")
-        if n.is_prime:
-            return S.NegativeOne
-        elif n is S.One:
-            return S.One
-        elif n.is_Integer:
-            a = factorint(n)
-            if any(i > 1 for i in a.values()):
-                return S.Zero
-            return S.NegativeOne**len(a)
+    from sympy.functions.combinatorial.numbers import mobius as _mobius
+    return _mobius(n)
 
 
 def _discrete_log_trial_mul(n, a, b, order=None):
@@ -1778,11 +1760,8 @@ def _binomial_mod_prime_power(n, m, p, q):
 
     def up_plus_v_binom(u, v):
         """Compute binomial(u*p + v, v)_p modulo p^q."""
-        prod = div = 1
-        for i in range(1, v + 1):
-            div *= i
-            div %= modulo
-        div = invert(div, modulo)
+        prod = 1
+        div = invert(factorial(v), modulo)
         for j in range(1, q):
             b = div
             for v_ in range(j*p + 1, j*p + v + 1):
@@ -1798,13 +1777,10 @@ def _binomial_mod_prime_power(n, m, p, q):
             prod %= modulo
         return prod
 
-    factorials = [1]
-    def factorial(v):
+    @recurrence_memo([1])
+    def factorial(v, prev):
         """Compute v! modulo p^q."""
-        if len(factorials) <= v:
-            for i in range(len(factorials), v + 1):
-                factorials.append(factorials[-1]*i % modulo)
-        return factorials[v]
+        return v*prev[-1] % modulo
 
     def factorial_p(n):
         """Compute n!_p modulo p^q."""

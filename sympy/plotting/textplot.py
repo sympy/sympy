@@ -76,7 +76,7 @@ def textplot_str(expr, a, b, W=55, H=21):
     else:
         mi, ma = -1, 1
     y_range = ma - mi
-    precision = math.floor(math.log(y_range, 10)) - 1
+    precision = math.floor(math.log10(y_range)) - 1
     precision *= -1
     mi = round(mi, precision)
     ma = round(ma, precision)

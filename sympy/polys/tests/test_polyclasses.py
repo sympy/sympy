@@ -162,6 +162,30 @@ def test_DMP_arithmetics():
 
     raises(ExactQuotientFailed, lambda: f.exquo(g))
 
+    f = DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ)
+    g = DMP([ZZ(2), ZZ(-2)], ZZ)
+
+    q = DMP([], ZZ)
+    r = f
+
+    pq = DMP([ZZ(2), ZZ(2)], ZZ)
+    pr = DMP([], ZZ)
+
+    assert f.div(g) == (q, r)
+    assert f.quo(g) == q
+    assert f.rem(g) == r
+
+    assert divmod(f, g) == (q, r)
+    assert f // g == q
+    assert f % g == r
+
+    raises(ExactQuotientFailed, lambda: f.exquo(g))
+
+    assert f.pdiv(g) == (pq, pr)
+    assert f.pquo(g) == pq
+    assert f.prem(g) == pr
+    assert f.pexquo(g) == pq
+
 
 def test_DMP_functionality():
     f = DMP([[ZZ(1)], [ZZ(2), ZZ(0)], [ZZ(1), ZZ(0), ZZ(0)]], ZZ)
@@ -207,6 +231,20 @@ def test_DMP_functionality():
 
     assert (4*f).content() == ZZ(4)
     assert (4*f).primitive() == (ZZ(4), f)
+
+    f = DMP([QQ(1,3), QQ(1)], QQ)
+    g = DMP([QQ(1,7), QQ(1)], QQ)
+
+    assert f.cancel(g) == f.cancel(g, include=True) == (
+        DMP([QQ(7), QQ(21)], QQ),
+        DMP([QQ(3), QQ(21)], QQ)
+    )
+    assert f.cancel(g, include=False) == (
+        QQ(7),
+        QQ(3),
+        DMP([QQ(1), QQ(3)], QQ),
+        DMP([QQ(1), QQ(7)], QQ)
+    )
 
     f = DMP([[ZZ(1)], [ZZ(2)], [ZZ(3)], [ZZ(4)], [ZZ(5)], [ZZ(6)]], ZZ)
 

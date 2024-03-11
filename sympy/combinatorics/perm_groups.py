@@ -3253,7 +3253,7 @@ class PermutationGroup(Basic):
         References
         ==========
 
-        .. [Di1] https://math.stackexchange.com/a/827273
+        .. [Di1] https://math.stackexchange.com/questions/827230/given-a-cayley-table-is-there-an-algorithm-to-determine-if-it-is-a-dihedral-gro/827273#827273
         .. [Di2] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral.pdf
         .. [Di3] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral2.pdf
         .. [Di4] https://en.wikipedia.org/wiki/Dihedral_group

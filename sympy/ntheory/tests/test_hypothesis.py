@@ -1,9 +1,8 @@
 from hypothesis import given
 from hypothesis import strategies as st
 from sympy import divisors
+from sympy.functions.combinatorial.numbers import divisor_sigma, totient
 from sympy.ntheory.primetest import is_square
-from sympy.ntheory import totient
-from sympy.ntheory import divisor_sigma
 
 
 @given(n=st.integers(1, 10**10))

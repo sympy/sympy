@@ -5,7 +5,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import Abs
 from sympy.simplify.simplify import simplify
-from sympy.matrices.matrices import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices import Matrix, zeros, eye, SparseMatrix
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises, slow

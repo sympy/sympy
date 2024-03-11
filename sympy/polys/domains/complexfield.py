@@ -5,6 +5,7 @@ from sympy.external.gmpy import SYMPY_INTS
 from sympy.core.numbers import Float, I
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
+from sympy.polys.domains.gaussiandomains import QQ_I
 from sympy.polys.domains.mpelements import MPContext
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import DomainError, CoercionFailed
@@ -136,7 +137,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
 
     def get_exact(self):
         """Returns an exact domain associated with ``self``. """
-        raise DomainError("there is no exact domain associated with %s" % self)
+        return QQ_I
 
     def is_negative(self, element):
         """Returns ``False`` for any ``ComplexElement``. """

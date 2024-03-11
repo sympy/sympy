@@ -1,5 +1,5 @@
 from sympy.testing.pytest import raises
-from sympy.matrices.common import NonSquareMatrixError, NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError, NonInvertibleMatrixError
 
 from sympy import Matrix, Rational
 

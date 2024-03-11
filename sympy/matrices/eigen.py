@@ -15,7 +15,7 @@ from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
 from sympy.polys.polytools import gcd
 
-from .common import MatrixError, NonSquareMatrixError
+from .exceptions import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
 
 from .utilities import _iszero, _simplify
@@ -131,7 +131,7 @@ def _eigenvals(
     See Also
     ========
 
-    MatrixDeterminant.charpoly
+    MatrixBase.charpoly
     eigenvects
 
     Notes
@@ -394,7 +394,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     ========
 
     eigenvals
-    MatrixSubspaces.nullspace
+    MatrixBase.nullspace
     """
     simplify = flags.get('simplify', True)
     primitive = flags.get('simplify', False)
@@ -491,7 +491,7 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     See Also
     ========
 
-    sympy.matrices.common.MatrixCommon.is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     diagonalize
     """
     if not M.is_square:
@@ -677,7 +677,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     See Also
     ========
 
-    sympy.matrices.common.MatrixCommon.is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     is_diagonalizable
     """
 
@@ -993,7 +993,7 @@ _doc_positive_definite = \
     hermitian) and we can defer most of the studies to symmetric or
     hermitian positive definite matrices.
 
-    But it is a different problem for the existance of Cholesky
+    But it is a different problem for the existence of Cholesky
     decomposition. Because even though a non symmetric or a non
     hermitian matrix can be positive definite, Cholesky or LDL
     decomposition does not exist because the decompositions require the

@@ -1,7 +1,7 @@
 from sympy.core.assumptions import check_assumptions
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
-from sympy.matrices.common import MatrixKind
+from sympy.matrices.kind import MatrixKind
 from sympy.sets.sets import Set, SetKind
 from sympy.core.kind import NumberKind
 from .matexpr import MatrixExpr

@@ -26,7 +26,7 @@ $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
 ## Solve a Matrix Equation
 
 Here is an example of solving a matrix equation with SymPy's
-{meth}`sympy.matrices.matrices.MatrixBase.solve`. We use the standard matrix
+{meth}`sympy.matrices.matrixbase.MatrixBase.solve`. We use the standard matrix
 equation formulation $Ax=b$ where
 - $A$ is the matrix representing the coefficients in the linear equations
 - $x$ is the column vector of unknowns to be solved for
@@ -72,11 +72,11 @@ with the same number of unknowns as equations. If not, SymPy will give the error
 
 The exception to the requirement that a matrix be square comes from SymPy's use
 of the {any}`Moore-Penrose pseudoinverse
-<sympy.matrices.matrices.MatrixBase.pinv>`.
+<sympy.matrices.matrixbase.MatrixBase.pinv>`.
 
 ### Methods for Solving Matrix Equations
 
-SymPy's matrix solving method, {meth}`sympy.matrices.matrices.MatrixBase.solve`,
+SymPy's matrix solving method, {meth}`sympy.matrices.matrixbase.MatrixBase.solve`,
 can use several different methods, which are listed at that API reference link.
 Depending on the nature of the matrix, a given method may be more efficient. By
 default, [Gauss-Jordan
@@ -84,7 +84,7 @@ elimination](https://en.wikipedia.org/wiki/Gaussian_elimination) will be used.
 
 Specifying a method in solve is equivalent to using a specialized solving
 function. For example, using `solve` with `method='LU'` calls
-{meth}`~sympy.matrices.matrices.MatrixBase.LUsolve`.
+{meth}`~sympy.matrices.matrixbase.MatrixBase.LUsolve`.
 
 ### Solving Several Matrix Equations With the Same Matrix
 
@@ -93,7 +93,7 @@ different constant vectors $b$, it is more efficient to use one of the following
 methods.
 
 You can use [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition)
-via {meth}`~sympy.matrices.matrices.MatrixBase.LUsolve`:
+via {meth}`~sympy.matrices.matrixbase.MatrixBase.LUsolve`:
 
 ```py
 >>> from sympy import symbols, Matrix, eye, simplify
@@ -145,7 +145,8 @@ via {meth}`~sympy.matrices.matrices.MatrixBase.LUsolve`:
 
 Another approach is to compute the inverse matrix, but this is almost always
 slower, and significantly slower for larger matrices. If efficient computation
-is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
+is not a priority, you can use
+{meth}`~sympy.matrices.matrixbase.MatrixBase.inv`:
 
 ```py
 >>> from sympy import symbols, Matrix, simplify

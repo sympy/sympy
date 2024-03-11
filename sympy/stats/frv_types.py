@@ -149,7 +149,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
     @property  # type: ignore
     @cacheit
     def dict(self):
-        return {k: self.p for k in self.set}
+        return dict.fromkeys(self.set, self.p)
 
     @property
     def set(self):
