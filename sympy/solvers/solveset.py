@@ -3888,6 +3888,21 @@ def _handle_poly(polys, symbols):
 
     return poly_sol, poly_eqs
 
+def expand_and_simplify(subs_res):
+    expanded_tuples = []
+    for s in subs_res:
+        if isinstance(s, FiniteSet):
+            expanded_tuples.append(expand_and_simplify(s))
+        else:
+            expanded_sub = []
+            for t in s:
+                try:
+                    expanded_term = simplify(expand(t))
+                    expanded_sub.append(expanded_term)
+                except AttributeError:
+                    expanded_sub.append(t)
+            expanded_tuples.append(Tuple(*expanded_sub))
+    return FiniteSet(*expanded_tuples)
 
 def nonlinsolve(system, *symbols):
     r"""
@@ -4108,19 +4123,7 @@ def nonlinsolve(system, *symbols):
         #
         # If solve_poly_system did succeed then we pass those solutions in as
         # preliminary results.
-        subs_res = substitution(remaining, symbols, result=poly_sol, exclude=denominators)
-
-        expanded_tuples = []
-        for s in subs_res:
-            expanded_sub = []
-            for t in s:
-                try:
-                    expanded_sub.append(expand(t))
-                except AttributeError:
-                    expanded_sub.append(t)
-            expanded_tuples.append(Tuple(*expanded_sub))
-
-        subs_res = FiniteSet(*expanded_tuples)
+        subs_res = expand_and_simplify(substitution(remaining, symbols, result=poly_sol, exclude=denominators))
 
         if not isinstance(subs_res, FiniteSet):
             return subs_res
