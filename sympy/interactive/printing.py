@@ -61,6 +61,16 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     else:
         extra_preamble = ""
 
+    if forecolor.lower() == 'auto':
+        color = ip.colors.lower()
+        if color.lower() == 'lightbg':
+            forecolor = 'Black'
+        elif color.lower() == 'linux':
+            forecolor = 'White'
+        else:
+            # No idea, go with gray.
+            forecolor = 'Gray'
+
     imagesize = 'tight'
     offset = "0cm,0cm"
     resolution = round(150*scale)
@@ -327,7 +337,11 @@ NO_GLOBAL = False
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
+<<<<<<< Updated upstream
                   no_global=False, ip=None, euler=False, forecolor=None,
+=======
+                  no_global=False, ip=None, euler=False, forecolor='Auto',
+>>>>>>> Stashed changes
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
