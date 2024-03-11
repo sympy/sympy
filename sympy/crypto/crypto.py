@@ -22,10 +22,10 @@ from sympy.core import Symbol
 from sympy.core.numbers import Rational
 from sympy.core.random import _randrange, _randint
 from sympy.external.gmpy import gcd, invert
+from sympy.functions.combinatorial.numbers import (totient as _euler,
+                                                   reduced_totient as _carmichael)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
-from sympy.ntheory import totient as _euler
-from sympy.ntheory import reduced_totient as _carmichael
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import FF
@@ -1544,8 +1544,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
 
     tally = multiset(primes)
     if all(v == 1 for v in tally.values()):
-        multiple = list(tally.keys())
-        phi = _totient._from_distinct_primes(*multiple)
+        phi = int(_totient(tally))
 
     else:
         if not multipower:
@@ -1561,7 +1560,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
                 # stacklevel=4 because most users will call a function that
                 # calls this function
                 ).warn(stacklevel=4)
-        phi = _totient._from_factors(tally)
+        phi = int(_totient(tally))
 
     if gcd(e, phi) == 1:
         if public and not private:
@@ -1633,10 +1632,10 @@ def rsa_public_key(*args, **kwargs):
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
-        :meth:`sympy.ntheory.factor_.totient` in SymPy.
+        :meth:`sympy.functions.combinatorial.numbers.totient` in SymPy.
 
         If ``'Carmichael'``, it uses Carmichael's totient `\lambda(n)`
-        which is :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
+        which is :meth:`sympy.functions.combinatorial.numbers.reduced_totient` in SymPy.
 
         Unlike private key generation, this is a trivial keyword for
         public key generation because
@@ -1763,11 +1762,11 @@ def rsa_private_key(*args, **kwargs):
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient convention `\phi(n)`
-        which is :meth:`sympy.ntheory.factor_.totient` in SymPy.
+        which is :meth:`sympy.functions.combinatorial.numbers.totient` in SymPy.
 
         If ``'Carmichael'``, it uses Carmichael's totient convention
         `\lambda(n)` which is
-        :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
+        :meth:`sympy.functions.combinatorial.numbers.reduced_totient` in SymPy.
 
         There can be some output differences for private key generation
         as examples below.
