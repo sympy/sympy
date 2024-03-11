@@ -1074,7 +1074,7 @@ def fraction(expr, exact=False):
        (x, y**(-k))
 
        If we know nothing about sign of some exponent and ``exact``
-       flag is unset, then structure this exponent's structure will
+       flag is unset, then the exponent's structure will
        be analyzed and pretty fraction will be returned:
 
        >>> from sympy import exp, Mul
