@@ -1848,18 +1848,18 @@ def ordered_partitions(n, m=None, sort=True):
             x = n - b*m
             if not x:
                 if sort:
-                    yield a
+                    yield a[:]
             elif not sort and x <= m:
                 for ax in ordered_partitions(x, sort=False):
                     mi = len(ax)
                     a[-mi:] = [i + b for i in ax]
-                    yield a
+                    yield a[:]
                     a[-mi:] = [b]*mi
             else:
                 for mi in range(1, m):
                     for ax in ordered_partitions(x, mi, sort=True):
                         a[-mi:] = [i + b for i in ax]
-                        yield a
+                        yield a[:]
                         a[-mi:] = [b]*mi
 
 
