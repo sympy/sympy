@@ -21,6 +21,7 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.ntheory.factor_ import divisors, factorint, perfect_power
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.primetest import is_square, isprime
+from sympy.ntheory.modular import symmetric_residue
 from sympy.ntheory.residue_ntheory import sqrt_mod, sqrt_mod_iter
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polytools import Poly, factor_list
@@ -2031,92 +2032,41 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
     if N == 0:
         return [(0, 0)]
 
+    sol = []
     if abs(N) == 1:
         pqa = PQa(0, 1, D)
-        j = 0
-        G = []
-        B = []
-
-        for i in pqa:
-
-            a = i[2]
-            G.append(i[5])
-            B.append(i[4])
-
-            if j != 0 and a == 2*sD:
+        *_, prev_B, prev_G = next(pqa)
+        for j, (*_, a, _, _B, _G) in enumerate(pqa):
+            if a == 2*sD:
                 break
-            j = j + 1
-
-        if _odd(j):
-
-            if N == -1:
-                x = G[j - 1]
-                y = B[j - 1]
-            else:
-                count = j
-                while count < 2*j - 1:
-                    i = next(pqa)
-                    G.append(i[5])
-                    B.append(i[4])
-                    count += 1
-
-                x = G[count]
-                y = B[count]
-        else:
+            prev_B, prev_G = _B, _G
+        if j % 2:
             if N == 1:
-                x = G[j - 1]
-                y = B[j - 1]
-            else:
-                return []
+                sol.append((prev_G, prev_B))
+            return sol
+        if N == -1:
+            return [(prev_G, prev_B)]
+        for _ in range(j):
+            *_, _B, _G = next(pqa)
+        return [(_G, _B)]
 
-        return [(x, y)]
-
-    fs = []
-    sol = []
-    div = divisors(N)
-
-    for d in div:
-        if divisible(N, d**2):
-            fs.append(d)
-
-    for f in fs:
+    for f in divisors(square_factor(N), generator=True):
         m = N // f**2
-
-        zs = sqrt_mod(D, abs(m), all_roots=True)
-        zs = [i for i in zs if i <= abs(m) // 2 ]
-
-        if abs(m) != 2:
-            zs = zs + [-i for i in zs if i]  # omit dupl 0
-
-        for z in zs:
-
-            pqa = PQa(z, abs(m), D)
-            j = 0
-            G = []
-            B = []
-
-            for i in pqa:
-
-                G.append(i[5])
-                B.append(i[4])
-
-                if j != 0 and abs(i[1]) == 1:
-                    r = G[j-1]
-                    s = B[j-1]
-
-                    if r**2 - D*s**2 == m:
-                        sol.append((f*r, f*s))
-
-                    elif diop_DN(D, -1) != []:
-                        a = diop_DN(D, -1)
-                        sol.append((f*(r*a[0][0] + a[0][1]*s*D), f*(r*a[0][1] + s*a[0][0])))
-
+        am = abs(m)
+        for sqm in sqrt_mod(D, am, all_roots=True):
+            z = symmetric_residue(sqm, am)
+            pqa = PQa(z, am, D)
+            *_, prev_B, prev_G = next(pqa)
+            for _ in range(length(z, am, D) - 1):
+                _, q, *_, _B, _G = next(pqa)
+                if abs(q) == 1:
+                    if prev_G**2 - D*prev_B**2 == m:
+                        sol.append((f*prev_G, f*prev_B))
+                    elif a := diop_DN(D, -1):
+                        sol.append((f*(prev_G*a[0][0] + prev_B*D*a[0][1]),
+                                    f*(prev_G*a[0][1] + prev_B*a[0][0])))
                     break
-
-                j = j + 1
-                if j == length(z, abs(m), D):
-                    break
-
+                prev_B, prev_G = _B, _G
     return sol
 
 

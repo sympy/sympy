@@ -2115,6 +2115,13 @@ def test_Adjoint():
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
 
+    # adjoint style
+    assert latex(Adjoint(X), adjoint_style="star") == r'X^{\ast}'
+    assert latex(Adjoint(X + Y), adjoint_style="hermitian") == r'\left(X + Y\right)^{\mathsf{H}}'
+    assert latex(Adjoint(X) + Adjoint(Y), adjoint_style="dagger") == r'X^{\dagger} + Y^{\dagger}'
+    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^{\dagger} X^{\dagger}'
+    assert latex(Adjoint(X**2), adjoint_style="star") == r'\left(X^{2}\right)^{\ast}'
+    assert latex(Adjoint(X)**2, adjoint_style="hermitian") == r'\left(X^{\mathsf{H}}\right)^{2}'
 
 def test_Transpose():
     from sympy.matrices import Transpose, MatPow, HadamardPower
