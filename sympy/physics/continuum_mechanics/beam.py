@@ -10,7 +10,6 @@ from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.simplify import simplify
 from sympy.solvers import linsolve
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
@@ -1028,8 +1027,7 @@ class Beam:
             if s == 0:
                 continue
             try:
-                moment_in_range = simplify(Piecewise((float("nan"), x<0),((self.shear_force().rewrite(Piecewise)), True),(float("nan"), x>self.length)))
-                moment_slope = Piecewise((float("nan"), x<=singularity[i-1]),(moment_in_range, x<s), (float("nan"), True))
+                moment_slope = Piecewise((float("nan"), x<=singularity[i-1]),((self.shear_force().rewrite(Piecewise)), x<s), (float("nan"), True))
                 points = solve(moment_slope, x)
                 val = []
                 for point in points:
