@@ -934,8 +934,8 @@ class Beam:
             if isinstance(term, Mul):
                 term = term.args[-1]    # SingularityFunction in the term
             singularity.append(term.args[1])
-        singularity.sort()
         singularity = list(set(singularity))
+        singularity.sort()
 
         intervals = []    # List of Intervals with discrete value of shear force
         shear_values = []   # List of values of shear force in each interval
@@ -1018,8 +1018,8 @@ class Beam:
             if isinstance(term, Mul):
                 term = term.args[-1]    # SingularityFunction in the term
             singularity.append(term.args[1])
-        singularity.sort()
         singularity = list(set(singularity))
+        singularity.sort()
 
         intervals = []    # List of Intervals with discrete value of bending moment
         moment_values = []   # List of values of bending moment in each interval
@@ -1027,7 +1027,10 @@ class Beam:
             if s == 0:
                 continue
             try:
-                moment_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self.shear_force().rewrite(Piecewise), x<s), (float("nan"), True))
+                moment_slope = Piecewise(
+                    (float("nan"), x <= singularity[i - 1]),
+                    (self.shear_force().rewrite(Piecewise), x < s),
+                    (float("nan"), True))
                 points = solve(moment_slope, x)
                 val = []
                 for point in points:
@@ -1037,6 +1040,7 @@ class Beam:
                 max_moment = max(val)
                 moment_values.append(max_moment)
                 intervals.append(points[val.index(max_moment)])
+
             # If bending moment in a particular Interval has zero or constant
             # slope, then above block gives NotImplementedError as solve
             # can't represent Interval solutions.
