@@ -1027,7 +1027,10 @@ class Beam:
             if s == 0:
                 continue
             try:
-                moment_slope = Piecewise((float("nan"), x<=singularity[i-1]),((self.shear_force().rewrite(Piecewise)), x<s), (float("nan"), True))
+                moment_slope = Piecewise(
+                    (float("nan"), x <= singularity[i - 1]),
+                    (self.shear_force().rewrite(Piecewise), x < s),
+                    (float("nan"), True))
                 points = solve(moment_slope, x)
                 val = []
                 for point in points:
