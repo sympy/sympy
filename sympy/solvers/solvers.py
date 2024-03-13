@@ -1417,8 +1417,15 @@ def _solve(f, *symbols, **flags):
         result = set()
         if any(e.is_zero for e, c in f.args):
             f = f.simplify()  # failure imminent w/o help
-        for i, (expr, cond) in enumerate(f.args):
-            if expr.is_zero:
+
+        cond = neg = True
+        for i, (expr, cnd) in enumerate(f.args):
+            # the explicit condition for this expr is the current cond
+            # and none of the previous conditions
+            cond = And(neg, cnd)
+            neg = And(neg, ~cond)
+
+            if expr.is_zero and (simplify(cond)!=False):
                 raise NotImplementedError(filldedent('''
                     An expression is already zero when %s.
                     This means that in this *region* the solution
@@ -1427,10 +1434,7 @@ def _solve(f, *symbols, **flags):
                     interval it might be resolved with simplification
                     of the Piecewise conditions.''' % cond))
             candidates = _vsolve(expr, symbol, **flags)
-            # the explicit condition for this expr is the current cond
-            # and none of the previous conditions
-            args = [~c for _, c in f.args[:i]] + [cond]
-            cond = And(*args)
+
             for candidate in candidates:
                 if candidate in result:
                     # an unconditional value was already there
