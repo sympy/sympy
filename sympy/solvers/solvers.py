@@ -1422,10 +1422,10 @@ def _solve(f, *symbols, **flags):
         for i, (expr, cnd) in enumerate(f.args):
             # the explicit condition for this expr is the current cond
             # and none of the previous conditions
-            cond = And(neg, cnd).simplify()
+            cond = And(neg, cnd)
             neg = And(neg, ~cond)
 
-            if expr.is_zero and cond != False:
+            if expr.is_zero and cond.simplify() != False:
                 raise NotImplementedError(filldedent('''
                     An expression is already zero when %s.
                     This means that in this *region* the solution
