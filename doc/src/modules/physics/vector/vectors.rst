@@ -607,18 +607,18 @@ relationship between the two frames has been defined. ::
   >>> A.x + N.x
   N.x + A.x
 
-If we want to do vector multiplication, first we have to define and
+If we want to do vector multiplication, first we have to define an
 orientation. The ``orient`` method of ``ReferenceFrame`` provides that
 functionality. ::
 
   >>> A.orient(N, 'Axis', [x, N.y])
 
-If we desire, we can view the DCM between these two frames at any time. This
-can be calculated with the ``dcm`` method. This code: ``N.dcm(A)`` gives the
-dcm :math:`^{\mathbf{A}} \mathbf{C} ^{\mathbf{N}}`.
-
 This orients the :math:`\mathbf{A}` frame relative to the :math:`\mathbf{N}`
-frame by a simple rotation around the Y axis, by an amount x. Other, more
+frame by a simple rotation, around the Y axis, by an amount x.
+The DCM between these two frames can be viewed at any time with the
+``dcm`` method: ``A.dcm(N)`` gives the dcm :math:`^{\mathbf{A}} \mathbf{C} ^{\mathbf{N}}`.
+
+Other, more
 complicated rotation types include Body rotations, Space rotations,
 quaternions, and arbitrary axis rotations. Body and space rotations are
 equivalent to doing 3 simple rotations in a row, each about a basis vector in
