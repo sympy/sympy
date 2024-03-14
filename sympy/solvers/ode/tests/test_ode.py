@@ -1,4 +1,3 @@
-from math import tanh
 from sympy.core.function import (Derivative, Function, Subs, diff)
 from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Eq
