@@ -1363,7 +1363,6 @@ class TransferFunction(SISOLinearTimeInvariant):
         #and there will be confusion.
         from sympy import arg
 
-
         if isinstance(z, Symbol):
             z = z.subs(I, 1j)
 
@@ -1384,7 +1383,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         odd_n = [1, 3, 5, 7, 9, 11, 13, 15]
         for n in odd_n:
             if (Le(expr, n*pi+0.009) & Ge(expr, n*pi-0.009)) | (Le(expr, -n*pi+0.009) & Ge(expr, -n*pi-0.009)):
-                return Le(expr, n*pi+0.009) & Ge(expr, n*pi-0.009) | Le(expr, -n*pi+0.009) & Ge(expr, -n*pi-0.009)# expr is between [π-0.009, π+0.009]
+                return Le(expr, n*pi+0.009) & Ge(expr, n*pi-0.009) | Le(expr, -n*pi+0.009) & Ge(expr, -n*pi-0.009) # expr is between [pi-0.009, pi+0.009]
         return False
 
 def _flatten_args(args, _cls):
