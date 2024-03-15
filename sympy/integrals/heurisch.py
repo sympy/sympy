@@ -498,6 +498,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     # sort mapping expressions from largest to smallest (last is always x).
     mapping = list(reversed(list(zip(*ordered(                          #
         [(a[0].as_independent(x)[1], a) for a in zip(terms, V)])))[1])) #
+    mapping_subs = []
+    for k, v in mapping:
+        mapping_subs += [(1/k, 1/v), (k, v)]
     rev_mapping = {v: k for k, v in mapping}                            #
     if mappings is None:                                                #
         # optimizing the number of permutations of mapping              #
@@ -508,7 +511,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         unnecessary_permutations = unnecessary_permutations or []
 
     def _substitute(expr):
-        return expr.subs(mapping)
+        return expr.subs(mapping_subs)
 
     for mapping in mappings:
         mapping = list(mapping)
@@ -732,7 +735,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             raise PolynomialError
         solution = solve_lin_sys(numer.coeffs(), coeff_ring, _raw=False)
 
-        if solution is None or any(s.has_free(*V) for s in solution.values()):
+        if solution is None:
             return None
         else:
             return candidate.xreplace(solution).xreplace(
