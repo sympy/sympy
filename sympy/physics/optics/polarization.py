@@ -752,6 +752,7 @@ def quarter_wave_plate(delta=0):
 
     A quarter-wave plate with a phase retardance of pi/4.
 
+    >>> from sympy import pprint, pi
     >>> from sympy.physics.optics.polarization import quarter_wave_plate
     >>> delta = pi/4
     >>> J = quarter_wave_plate(delta)
