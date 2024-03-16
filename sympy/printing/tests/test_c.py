@@ -26,8 +26,18 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 
 from sympy.printing.codeprinter import ccode
+from sympy.printing.c import _is_valid_c_variable_name
 
 x, y, z = symbols('x,y,z')
+
+
+def test_invalid_variable_names():
+    long_var = 'w'*32
+    syms = symbols('I_{x}, a*, 9t, bus#, %s' % long_var)
+    for s in syms:
+        with raises(ValueError):
+            ccode(s)
+    ccode('w'*31)
 
 
 def test_printmethod():
