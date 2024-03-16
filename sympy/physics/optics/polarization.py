@@ -757,9 +757,9 @@ def quarter_wave_plate(delta=0):
     >>> delta = pi/4
     >>> J = quarter_wave_plate(delta)
     >>> pprint(J, use_unicode=True)
-    ⎡1   0⎤
-    ⎢     ⎥
-    ⎣0  -1⎦
+    ⎡ √2/2   √2/2 ⎤
+    ⎢             ⎥
+    ⎣ √2/2  -√2/2 ⎦
 
     """
     M = Matrix([[cos(delta), sin(delta)],
