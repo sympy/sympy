@@ -1763,11 +1763,10 @@ def test_phase_condition():
     assert system1.phase_condition(z2) == True
     assert system1.phase_condition(z3) == False
     assert system1.phase_condition(z4) == False
-    assert system1.phase_condition(z5) == ((arg(a + I*b + 1.0) + arg(a + I*b + 2.0) - arg(a + I*b + 4.0) + arg(a + I*b + 5.0) >= -0.009 + pi)\
-                                            & (arg(a + I*b + 1.0) + arg(a + I*b + 2.0) - arg(a + I*b + 4.0) + arg(a + I*b + 5.0) <= 0.009 + pi))\
-                                            | ((arg(a + I*b + 1.0) + arg(a + I*b + 2.0) - arg(a + I*b + 4.0) + arg(a + I*b + 5.0) >= -pi - 0.009)\
-                                            & (arg(a + I*b + 1.0) + arg(a + I*b + 2.0) - arg(a + I*b + 4.0) + arg(a + I*b + 5.0) <= 0.009 - pi))
-
+    assert system1.phase_condition(z5) == ((((((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) >= (-0.009 + pi))
+                                            & (((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) <= (0.009 + pi))
+                                            | ((((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) >= (-pi - 0.009))
+                                            & (((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) <= (0.009 - pi))
     #test2
     system2 = TransferFunction((1), ((s**2+100*s+2600)*(s+25)*s), s)
 

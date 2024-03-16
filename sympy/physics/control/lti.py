@@ -1333,11 +1333,10 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> system1.phase_condition(z4)
         False
         >>> system1.phase_condition(z5)
-        ((arg(a + I*b + 1.0) + arg(a + I*b + 2.0) - arg(a + I*b + 4.0) + arg(a + I*b + 5.0) >= -0.009 + pi)\
-        & (arg(a + I*b + 1.0) + arg(a + I*b + 2.0) - arg(a + I*b + 4.0) + arg(a + I*b + 5.0) <= 0.009 + pi))\
-        | ((arg(a + I*b + 1.0) + arg(a + I*b + 2.0) - arg(a + I*b + 4.0) + arg(a + I*b + 5.0) >= -pi - 0.009)\
-        & (arg(a + I*b + 1.0) + arg(a + I*b + 2.0) - arg(a + I*b + 4.0) + arg(a + I*b + 5.0) <= 0.009 - pi))
-
+        ((((((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) >= (-0.009 + pi))
+        & (((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) <= (0.009 + pi))
+        | ((((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) >= (-pi - 0.009))
+        & (((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) <= (0.009 - pi))
         >>> system2 = TransferFunction((1), ((s**2+100*s+2600)*(s+25)*s), s)
         >>> z1 = 37.1+65.2*I
         >>> z2 = -67+31.1*I
