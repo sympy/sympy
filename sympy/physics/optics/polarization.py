@@ -765,4 +765,3 @@ def quarter_wave_plate(delta=0):
     M = Matrix([[cos(delta), sin(delta)],
                 [sin(delta), -cos(delta)]])
     return M
-
