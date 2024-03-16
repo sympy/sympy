@@ -1,7 +1,7 @@
 from sympy.physics.optics.polarization import (jones_vector, stokes_vector,
     jones_2_stokes, linear_polarizer, phase_retarder, half_wave_retarder,
     quarter_wave_retarder, transmissive_filter, reflective_filter,
-    mueller_matrix, polarizing_beam_splitter)
+    mueller_matrix, polarizing_beam_splitter, quarter_wave_plate)
 from sympy.core.numbers import (I, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -55,3 +55,6 @@ def test_polarization():
     #################################################################
     res = Matrix([[1, 0, 0, 0], [0, 0, 0, -I], [0, 0, 1, 0], [0, -I, 0, 0]])
     assert polarizing_beam_splitter() == res
+    #################################################################
+    res = Matrix([[1, 0], [0, -1]])
+    assert quarter_wave_plate(0) == res
