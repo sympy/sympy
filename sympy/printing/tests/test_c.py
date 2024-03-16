@@ -26,7 +26,6 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 
 from sympy.printing.codeprinter import ccode
-from sympy.printing.c import _is_valid_c_variable_name
 
 x, y, z = symbols('x,y,z')
 
