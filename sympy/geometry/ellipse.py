@@ -748,13 +748,13 @@ class Ellipse(GeometrySet):
                 return True
             # might return None if it can't decide
             return hit[0].equals(hit[1])
-        elif isinstance(o, Ray2D):
+        elif isinstance(o, (Segment2D, Ray2D)):
             intersect = self.intersection(o)
             if len(intersect) == 1:
-                return intersect[0] != o.source and not self.encloses_point(o.source)
+                return o in self.tangent_lines(intersect[0])[0]
             else:
                 return False
-        elif isinstance(o, (Segment2D, Polygon)):
+        elif isinstance(o, Polygon):
             all_tangents = False
             segments = o.sides if isinstance(o, Polygon) else [o]
             for segment in segments:
