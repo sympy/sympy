@@ -365,9 +365,9 @@ def test_composite_beam():
     b.bc_slope = [(0, 0)]
     b.bc_deflection = [(0, 0)]
     assert b.length == 4
-    assert b.second_moment == Piecewise((1.5*I, x <= 2), (I, x <= 4))
-    assert b.slope().subs(x, 4) == 120.0/(E*I)
-    assert b.slope().subs(x, 2) == 80.0/(E*I)
+    assert b.second_moment == Piecewise((3*I/2, x <= 2), (I, x <= 4))
+    assert simplify(b.slope().subs(x, 4) - 120.0/(E*I)) == 0
+    assert simplify(b.slope().subs(x, 2) - 80.0/(E*I)) == 0
     assert int(b.deflection().subs(x, 4).args[0]) == -302  # Coefficient of 1/(E*I)
 
     l = symbols('l', positive=True)
