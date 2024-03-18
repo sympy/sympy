@@ -340,7 +340,7 @@ class Beam:
         if(isinstance(input, tuple)):
             return tuple(self.nsimplficate(e) for e in input)
         elif(isinstance(input, list)):
-            return list(self.nsimplficate(e) for e in input)
+            return [self.nsimplficate(e) for e in input]
         else:
             return nsimplify(input)
 
