@@ -9,7 +9,6 @@ from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
-from sympy.core.sympify import sympify
 from sympy.simplify.simplify import nsimplify
 from sympy.solvers import linsolve
 from sympy.solvers.ode.ode import dsolve
