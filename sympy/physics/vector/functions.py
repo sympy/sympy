@@ -1,7 +1,7 @@
 from functools import reduce
 
 from sympy import (sympify, diff, sin, cos, Matrix, symbols,
-                                Function, S, Symbol)
+                                Function, S, Symbol, collect)
 from sympy.integrals.integrals import integrate
 from sympy.simplify.trigsimp import trigsimp
 from .vector import Vector, _check_vector
@@ -573,12 +573,24 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
         raise TypeError('Generalized speeds must be contained in an iterable')
 
     vec_partials = []
-    for vec in vel_vecs:
+    repl_dicts = [{key: (key if key == speed else 0) for key in gen_speeds} for speed in gen_speeds]
+    for vel in vel_vecs:
         partials = []
-        for speed in gen_speeds:
-            partials.append(vec.diff(speed, frame, var_in_dcm=False))
+        for idx, speed in enumerate(gen_speeds):
+            partial_vec = 0 * frame.x
+            repl = repl_dicts[idx]
+            for components, ref in vel.args:
+                comp0 = components[0].xreplace(repl)
+                if comp0 != 0:
+                    partial_vec += ref.x * collect(comp0, speed).coeff(speed)
+                comp1 = components[1].xreplace(repl)
+                if comp1 != 0:
+                    partial_vec += ref.y * collect(comp1, speed).coeff(speed)
+                comp2 = components[2].xreplace(repl)
+                if comp2 != 0:
+                    partial_vec += ref.z * collect(comp2, speed).coeff(speed)
+            partials.append(partial_vec)
         vec_partials.append(partials)
-
     return vec_partials
 
 
