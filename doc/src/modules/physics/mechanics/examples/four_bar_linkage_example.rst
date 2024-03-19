@@ -138,7 +138,7 @@ noncontributing forces and compute their values for a simple configuration.
    >>> subs = {
    ...   l1: 2, l2: 1, l3: 2, l4: 1,
    ...   rho: 5, g: 9.81,
-   ...   q1: pi / 2, q2: pi / 2, q3: pi / 2,
+   ...   q1: pi/2, q2: pi/2, q3: pi/2,
    ...   u1: 0, u2: 0, u3: 0, u1.diff(): 0, u2.diff(): 0, u3.diff(): 0,
    ... }
    >>> forces_eqs.xreplace(subs)
