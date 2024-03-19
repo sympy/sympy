@@ -1,7 +1,7 @@
 from functools import reduce
 
 from sympy import (sympify, diff, sin, cos, Matrix, symbols,
-                                Function, S, Symbol, collect)
+                                Function, S, Symbol, linear_eq_to_matrix)
 from sympy.integrals.integrals import integrate
 from sympy.simplify.trigsimp import trigsimp
 from .vector import Vector, _check_vector
@@ -573,24 +573,18 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
         raise TypeError('Generalized speeds must be contained in an iterable')
 
     vec_partials = []
-    repl_dicts = [{key: (key if key == speed else 0) for key in gen_speeds} for speed in gen_speeds]
+    gen_speeds = list(gen_speeds)
     for vel in vel_vecs:
-        partials = []
-        for idx, speed in enumerate(gen_speeds):
-            partial_vec = 0 * frame.x
-            repl = repl_dicts[idx]
-            for components, ref in vel.args:
-                comp0 = components[0].xreplace(repl)
-                if comp0 != 0:
-                    partial_vec += ref.x * collect(comp0, speed).coeff(speed)
-                comp1 = components[1].xreplace(repl)
-                if comp1 != 0:
-                    partial_vec += ref.y * collect(comp1, speed).coeff(speed)
-                comp2 = components[2].xreplace(repl)
-                if comp2 != 0:
-                    partial_vec += ref.z * collect(comp2, speed).coeff(speed)
-            partials.append(partial_vec)
+        partials = [Vector(0) for _ in gen_speeds]
+        for components, ref in vel.args:
+            mat, _ = linear_eq_to_matrix(components, gen_speeds)
+            for i in range(len(gen_speeds)):
+                for dim, direction in enumerate(ref):
+                    if mat[dim, i] != 0:
+                        partials[i] += direction * mat[dim, i]
+
         vec_partials.append(partials)
+
     return vec_partials
 
 
