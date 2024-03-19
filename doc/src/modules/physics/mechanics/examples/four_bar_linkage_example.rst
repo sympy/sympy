@@ -127,7 +127,7 @@ validating the system and forming the equations of motion.
    >>> g = symbols('g')
    >>> system.apply_uniform_gravity(-g*N.y)
    >>> system.validate_system()
-   >>> system.form_eoms();
+   >>> eoms = system.form_eoms()
 
 With the equations of motion formed we can solve the auxiliary equations for the
 noncontributing forces and compute their values for a simple configuration.
