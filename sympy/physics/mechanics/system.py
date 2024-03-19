@@ -72,6 +72,8 @@ class System(_Methods):
         Matrix of the independent generalized speeds.
     u_dep : ImmutableMatrix
         Matrix of the dependent generalized speeds.
+    u_aux : ImmutableMatrix
+        Matrix of auxiliary generalized speeds.
     kdes : ImmutableMatrix
         Matrix of the kinematical differential equations as expressions equated
         to the zero matrix.
