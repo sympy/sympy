@@ -20,7 +20,7 @@ generalized speeds `u_1`, `u_2` and `u_3` represent the angular velocities
 between the links. We also create some :func:`~.symbols` to represent the
 lengths and density of the links. ::
 
-   >>> from sympy import symbols, Matrix, solve, simplify
+   >>> from sympy import symbols, simplify
    >>> from sympy.physics.mechanics import *
    >>> mechanics_printing(pretty_print=False)
    >>> q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1:4, u1:4')
