@@ -375,6 +375,24 @@ class TestSystem(TestSystemBase):
             self.system.add_nonholonomic_constraints(*args, **kwargs)
         self._filled_system_check()
 
+    @pytest.mark.parametrize('constraints, expected', [
+        ([], []),
+        (qd[2] - qd[0] + qd[1], [qd[2] - qd[0] + qd[1]]),
+        ([qd[2] + qd[1], u[2] - u[1]], [qd[2] + qd[1], u[2] - u[1]]),
+    ])
+    def test_velocity_constraints_overwrite(self, _filled_system_setup,
+                                            constraints, expected):
+        self.system.velocity_constraints = constraints
+        self._filled_system_check(exclude=('velocity_constraints',))
+        assert self.system.velocity_constraints[:] == expected
+
+    def test_velocity_constraints_back_to_auto(self, _filled_system_setup):
+        self.system.velocity_constraints = qd[3] - qd[2]
+        self._filled_system_check(exclude=('velocity_constraints',))
+        assert self.system.velocity_constraints[:] == [qd[3] - qd[2]]
+        self.system.velocity_constraints = None
+        self._filled_system_check()
+
     def test_bodies(self, _filled_system_setup):
         rb1, rb2 = RigidBody('rb1'), RigidBody('rb2')
         p1, p2 = Particle('p1'), Particle('p2')
