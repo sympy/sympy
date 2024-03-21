@@ -2286,3 +2286,11 @@ def test_format():
 
 def test_issue_24045():
     assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
+    
+def test_issue_26305():
+    assert ((1/x)**(y)).as_coeff_exponent(x) == (1, -y)
+    assert (sqrt(1/x)).as_coeff_exponent(x) == (1, -S(1)/2)
+    assert ((1/x)**(S(1)/3)).as_coeff_exponent(x) == (1, -S(1)/3)
+    assert ((1/-x)**(y)).as_coeff_exponent(-x) == (1, -y)
+    assert (sqrt(1/-x)).as_coeff_exponent(-x) == (1, -S(1)/2)
+    assert ((1/-x)**(S(1)/3)).as_coeff_exponent(-x) == (1, -S(1)/3)
