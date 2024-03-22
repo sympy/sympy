@@ -2286,3 +2286,10 @@ def test_format():
 
 def test_issue_24045():
     assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
+
+
+def test_issue_26383():
+    a = tan(2*x)
+    b = 2*tan(x)/(1 - tan(x)**2)
+    assert a.equals(b) == True
+    assert b.equals(a) == True

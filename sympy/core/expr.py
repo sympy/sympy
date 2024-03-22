@@ -715,9 +715,11 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import nsimplify, simplify
+        from sympy.simplify.trigsimp import trigsimp
         from sympy.solvers.solvers import solve
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
+        from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
         other = sympify(other)
         if self == other:
@@ -727,7 +729,10 @@ class Expr(Basic, EvalfMixin):
         # don't worry about doing simplification steps one at a time
         # because if the expression ever goes to 0 then the subsequent
         # simplification steps that are done will be very fast.
-        diff = factor_terms(simplify(self - other), radical=True)
+        if self.has(TrigonometricFunction):
+            diff = factor_terms(trigsimp(self - other))
+        else:
+            diff = factor_terms(simplify(self - other), radical=True)
 
         if not diff:
             return True
