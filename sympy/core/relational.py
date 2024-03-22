@@ -146,6 +146,7 @@ class Relational(Boolean, EvalfMixin):
     ValidRelationOperator: dict[str | None, type[Relational]] = {}
 
     is_Relational = True
+    is_sympy = True
 
     # ValidRelationOperator - Defined below, because the necessary classes
     #   have not yet been defined
