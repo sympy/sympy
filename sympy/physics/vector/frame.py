@@ -1558,8 +1558,10 @@ class ReferenceFrame:
 
         """
 
-        partials = [self.ang_vel_in(frame).diff(speed, frame, var_in_dcm=False)
-                    for speed in gen_speeds]
+        from sympy.physics.vector.functions import partial_velocity
+
+        vel = self.ang_vel_in(frame)
+        partials = partial_velocity([vel], gen_speeds, frame)[0]
 
         if len(partials) == 1:
             return partials[0]
