@@ -281,45 +281,6 @@ class Vector(Printable, EvalfMixin):
 
         return prettyForm.__add__(*terms)
 
-    def __ror__(self, other):
-        """Outer product between two Vectors.
-
-        A rank increasing operation, which returns a Dyadic from two Vectors
-
-        Parameters
-        ==========
-
-        other : Vector
-            The Vector to take the outer product with
-
-        Examples
-        ========
-
-        >>> from sympy.physics.vector import ReferenceFrame, outer
-        >>> N = ReferenceFrame('N')
-        >>> outer(N.x, N.x)
-        (N.x|N.x)
-
-        """
-        from sympy.physics.vector.dyadic import Dyadic
-        other = _check_vector(other)
-        ol = Dyadic(0)
-        for i, v in enumerate(other.args):
-            for i2, v2 in enumerate(self.args):
-                # it looks this way because if we are in the same frame and
-                # use the enumerate function on the same frame in a nested
-                # fashion, then bad things happen
-                ol += Dyadic([(v[0][0] * v2[0][0], v[1].x, v2[1].x)])
-                ol += Dyadic([(v[0][0] * v2[0][1], v[1].x, v2[1].y)])
-                ol += Dyadic([(v[0][0] * v2[0][2], v[1].x, v2[1].z)])
-                ol += Dyadic([(v[0][1] * v2[0][0], v[1].y, v2[1].x)])
-                ol += Dyadic([(v[0][1] * v2[0][1], v[1].y, v2[1].y)])
-                ol += Dyadic([(v[0][1] * v2[0][2], v[1].y, v2[1].z)])
-                ol += Dyadic([(v[0][2] * v2[0][0], v[1].z, v2[1].x)])
-                ol += Dyadic([(v[0][2] * v2[0][1], v[1].z, v2[1].y)])
-                ol += Dyadic([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
-        return ol
-
     def __rsub__(self, other):
         return (-1 * self) + other
 
