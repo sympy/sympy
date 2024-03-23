@@ -1969,21 +1969,20 @@ def test_nonlinsolve_complex():
 
     system = [exp(x) - sin(y), 1/exp(y) - 3]
     assert dumeq(nonlinsolve(system, [x, y]),
-                 {(ImageSet(Lambda(n, 2*n*I*pi + log(sin(log(3))) + I*pi), S.Integers), -log(3)),
-                  (ImageSet(Lambda(n, 2*n*I*pi + log(Abs(sin(2*n*I*pi - log(3)))) + I*arg(sin(2*n*I*pi - log(3)))), S.Integers),
-                   ImageSet(Lambda(n, 2*n*I*pi - log(3)), S.Integers))}
-)
+                 {(ImageSet(Lambda(n, 2 * n * I * pi + log(sin(log(3))) + I * pi), S.Integers), -log(3)), (ImageSet(
+                     Lambda(n, 2 * n * I * pi + log(Abs(sin(2 * n * I * pi - log(3)))) + I * arg(
+                         sin(2 * n * I * pi - log(3)))), S.Integers), ImageSet(Lambda(n, 2 * n * I * pi - log(3)),
+                                                                              S.Integers))}
+                 )
 
     system = [exp(x) - sin(y), y**2 - 4]
-    assert dumeq(nonlinsolve(system, [x, y]), {
-        (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2),
-        (ImageSet(Lambda(n, 2*n*I*pi + log(sin(2))), S.Integers), 2)})
+    assert dumeq(nonlinsolve(system, [x, y]), {(ImageSet(Lambda(n, 2*n*I*pi + log(sin(2)) + I*pi), S.Integers), -2), (ImageSet(Lambda(n, 2*n*I*pi + log(sin(2))), S.Integers), 2)})
 
     system = [exp(x) - 2, y ** 2 - 2]
     assert dumeq(nonlinsolve(system, [x, y]), {
         (log(2), -sqrt(2)), (log(2), sqrt(2)),
-        (ImageSet(Lambda(n, 2*n*I*pi + log(2)), S.Integers), -sqrt(2)),
-        (ImageSet(Lambda(n, 2 * n * I * pi + log(2)), S.Integers), sqrt(2))})
+        (ImageSet(Lambda(n, 2*I*pi*n + log(2)), S.Integers), -sqrt(2)),
+        (ImageSet(Lambda(n, 2* I * pi*n + log(2)), S.Integers), sqrt(2))})
 
 
 def test_nonlinsolve_radical():
@@ -2180,8 +2179,7 @@ def test_issue_10876():
 def test_issue_19050():
     # test_issue_19050 --> TypeError removed
     assert dumeq(nonlinsolve([x + y, sin(y)], [x, y]),
-        FiniteSet((ImageSet(Lambda(n, -2*n*pi), S.Integers), ImageSet(Lambda(n, 2*n*pi), S.Integers)),\
-             (ImageSet(Lambda(n, -2*n*pi - pi), S.Integers), ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))))
+        FiniteSet((ImageSet(Lambda(n, -2*n*pi), S.Integers), ImageSet(Lambda(n, 2*n*pi), S.Integers)), (ImageSet(Lambda(n, pi*(-2*n - 1)), S.Integers), ImageSet(Lambda(n, pi*(2*n + 1)), S.Integers))))
     assert dumeq(nonlinsolve([x + y, sin(y) + cos(y)], [x, y]),
         FiniteSet((ImageSet(Lambda(n, pi*(-8*n - 3)/4), S.Integers), ImageSet(Lambda(n, pi*(8*n + 3)/4), S.Integers)), (ImageSet(Lambda(n, pi*(-8*n - 7)/4), S.Integers), ImageSet(Lambda(n, pi*(8*n + 7)/4), S.Integers))))
 
@@ -3424,10 +3422,10 @@ def test_issue_16877():
 
 def test_issue_16876():
     assert dumeq(nonlinsolve([sin(x), 2*x - 4*y], x, y),
-                 FiniteSet((ImageSet(Lambda(n, 2*n*pi), S.Integers),
-                            ImageSet(Lambda(n, n*pi), S.Integers)),
+                 FiniteSet((ImageSet(Lambda(n, 2*pi*n), S.Integers),
+                            ImageSet(Lambda(n, pi*n), S.Integers)),
                            (ImageSet(Lambda(n, pi*(2*n + 1)), S.Integers),
-                            ImageSet(Lambda(n, pi*(n + 1/2)), S.Integers))))
+                            ImageSet(Lambda(n, pi*(n + S(1)/2)), S.Integers))))
     # Even better if (ImageSet(Lambda(n, n*pi), S.Integers),
     #                 ImageSet(Lambda(n, n*pi/2), S.Integers)) is obtained
 
