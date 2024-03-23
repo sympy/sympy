@@ -1825,7 +1825,7 @@ def test_nonlinsolve_basic():
     assert nonlinsolve(system, [y]) == S.EmptySet
     soln = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
     assert dumeq(nonlinsolve([sin(x) - 1], [x]), FiniteSet(tuple(soln)))
-    soln = ((ImageSet(Lambda(n, 2*n*pi + pi), S.Integers), 1),
+    soln = ((ImageSet(Lambda(n, pi*(2*n + 1)), S.Integers), 1),
             (ImageSet(Lambda(n, 2*n*pi), S.Integers), 1))
     assert dumeq(nonlinsolve([sin(x), y - 1], [x, y]), FiniteSet(*soln))
     assert nonlinsolve([x**2 - 1], [x]) == FiniteSet((-1,), (1,))
@@ -1862,7 +1862,7 @@ def test_trig_system():
     # TODO: add more simple testcases when solveset returns
     # simplified soln for Trig eq
     assert nonlinsolve([sin(x) - 1, cos(x) -1 ], x) == S.EmptySet
-    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
+    soln1 = (ImageSet(Lambda(n, pi*(4*n + 1)/2), S.Integers),)
     soln = FiniteSet(soln1)
     assert dumeq(nonlinsolve([sin(x) - 1, cos(x)], x), soln)
 
@@ -1968,12 +1968,11 @@ def test_nonlinsolve_complex():
         (ImageSet(Lambda(n, 2*n*I*pi + log(sin(Rational(1, 3)))), S.Integers), Rational(1, 3))})
 
     system = [exp(x) - sin(y), 1/exp(y) - 3]
-    assert dumeq(nonlinsolve(system, [x, y]), {
-        (ImageSet(Lambda(n, I*(2*n*pi + pi)
-                         + log(sin(log(3)))), S.Integers), -log(3)),
-        (ImageSet(Lambda(n, I*(2*n*pi + arg(sin(2*n*I*pi - log(3))))
-                         + log(Abs(sin(2*n*I*pi - log(3))))), S.Integers),
-        ImageSet(Lambda(n, 2*n*I*pi - log(3)), S.Integers))})
+    assert dumeq(nonlinsolve(system, [x, y]),
+                 {(ImageSet(Lambda(n, 2*n*I*pi + log(sin(log(3))) + I*pi), S.Integers), -log(3)),
+                  (ImageSet(Lambda(n, 2*n*I*pi + log(Abs(sin(2*n*I*pi - log(3)))) + I*arg(sin(2*n*I*pi - log(3)))), S.Integers),
+                   ImageSet(Lambda(n, 2*n*I*pi - log(3)), S.Integers))}
+)
 
     system = [exp(x) - sin(y), y**2 - 4]
     assert dumeq(nonlinsolve(system, [x, y]), {
@@ -2184,16 +2183,14 @@ def test_issue_19050():
         FiniteSet((ImageSet(Lambda(n, -2*n*pi), S.Integers), ImageSet(Lambda(n, 2*n*pi), S.Integers)),\
              (ImageSet(Lambda(n, -2*n*pi - pi), S.Integers), ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))))
     assert dumeq(nonlinsolve([x + y, sin(y) + cos(y)], [x, y]),
-        FiniteSet((ImageSet(Lambda(n, -2*n*pi - 3*pi/4), S.Integers), ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)), \
-            (ImageSet(Lambda(n, -2*n*pi - 7*pi/4), S.Integers), ImageSet(Lambda(n, 2*n*pi + 7*pi/4), S.Integers))))
+        FiniteSet((ImageSet(Lambda(n, pi*(-8*n - 3)/4), S.Integers), ImageSet(Lambda(n, pi*(8*n + 3)/4), S.Integers)), (ImageSet(Lambda(n, pi*(-8*n - 7)/4), S.Integers), ImageSet(Lambda(n, pi*(8*n + 7)/4), S.Integers))))
 
 
 def test_issue_16618():
     eqn = [sin(x)*sin(y), cos(x)*cos(y) - 1]
     # nonlinsolve's answer is still suspicious since it contains only three
     # distinct Dummys instead of 4. (Both 'x' ImageSets share the same Dummy.)
-    ans = FiniteSet((ImageSet(Lambda(n, 2*n*pi), S.Integers), ImageSet(Lambda(n, 2*n*pi), S.Integers)),
-        (ImageSet(Lambda(n, 2*n*pi + pi), S.Integers), ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)))
+    ans = FiniteSet((ImageSet(Lambda(n, 2*n*pi), S.Integers), ImageSet(Lambda(n, 2*n*pi), S.Integers)), (ImageSet(Lambda(n, pi*(2*n + 1)), S.Integers), ImageSet(Lambda(n, pi*(2*n + 1)), S.Integers)))
     sol = nonlinsolve(eqn, [x, y])
 
     for i0, j0 in zip(ordered(sol), ordered(ans)):
@@ -2216,7 +2213,7 @@ def test_issue_16643():
 def test_issue_19587():
     n,m = symbols('n m')
     assert nonlinsolve([32*2**m*2**n - 4**n, 27*3**m - 3**(-n)], m, n) ==\
-        FiniteSet(-4, 1)
+        FiniteSet((-4, 1))
 
 
 def test_issue_5132_1():
@@ -2243,11 +2240,12 @@ def test_issue_5132_1():
 
 
 def test_issue_5132_2():
-    x, y = symbols('x, y', real=True)
+    x, y = symbols('x y', real=True)
     eqs = [exp(x)**2 - sin(y) + z**2]
     n = Dummy('n')
     soln_real = (log(-z**2 + sin(y))/2, z)
-    lam = Lambda( n, I*(2*n*pi + arg(-z**2 + sin(y)))/2 + log(Abs(z**2 - sin(y)))/2)
+    # lam = Lambda( n, I*(2*n*pi + arg(-z**2 + sin(y)))/2 + log(Abs(z**2 - sin(y)))/2)
+    lam=Lambda(n, n*I*pi + log(Abs(z**2 - sin(y)))/2 + I*arg(-z**2 + sin(y))/2)
     img = ImageSet(lam, S.Integers)
     # not sure about the complex soln. But it looks correct.
     soln_complex = (img, z)
@@ -2350,10 +2348,10 @@ def test_nonlinsolve_conditionset():
     f2 = f(y) - pi*Rational(3, 2)
     intermediate_system = Eq(2*f(x) - pi, 0) & Eq(2*f(y) - 3*pi, 0)
     syms = Tuple(x, y)
-    soln = ConditionSet(
+    soln = FiniteSet(ConditionSet(
         syms,
         intermediate_system,
-        S.Complexes**2)
+        S.Complexes**2))
     assert nonlinsolve([f1, f2], [x, y]) == soln
 
 
@@ -3420,7 +3418,7 @@ def test_issue_15024():
 def test_issue_16877():
     assert dumeq(nonlinsolve([x - 1, sin(y)], x, y),
                  FiniteSet((1, ImageSet(Lambda(n, 2*n*pi), S.Integers)),
-                           (1, ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))))
+                           (1, ImageSet(Lambda(n, pi*(2*n + 1)), S.Integers))))
     # Even better if (1, ImageSet(Lambda(n, n*pi), S.Integers)) is obtained
 
 
@@ -3428,8 +3426,8 @@ def test_issue_16876():
     assert dumeq(nonlinsolve([sin(x), 2*x - 4*y], x, y),
                  FiniteSet((ImageSet(Lambda(n, 2*n*pi), S.Integers),
                             ImageSet(Lambda(n, n*pi), S.Integers)),
-                           (ImageSet(Lambda(n, 2*n*pi + pi), S.Integers),
-                            ImageSet(Lambda(n, n*pi + pi/2), S.Integers))))
+                           (ImageSet(Lambda(n, pi*(2*n + 1)), S.Integers),
+                            ImageSet(Lambda(n, pi*(n + 1/2)), S.Integers))))
     # Even better if (ImageSet(Lambda(n, n*pi), S.Integers),
     #                 ImageSet(Lambda(n, n*pi/2), S.Integers)) is obtained
 
