@@ -2291,5 +2291,13 @@ def test_issue_24045():
 def test_issue_26383():
     a = tan(2*x)
     b = 2*tan(x)/(1 - tan(x)**2)
-    assert a.equals(b) == True
-    assert b.equals(a) == True
+    c = tan(3*x)
+    d = (3*tan(x) - tan(x)**3)/(1 - 3*tan(x)**2)
+    assert a.equals(b)
+    assert b.equals(a)
+    assert (1/a).equals(1/b)
+    assert (1/b).equals(1/a)
+    assert c.equals(d)
+    assert d.equals(c)
+    assert (1/c).equals(1/d)
+    assert (1/d).equals(1/c)
