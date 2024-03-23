@@ -333,7 +333,7 @@ def vieta_expansion(cons):
     """
     n = len(cons)
     c = [0]*(n + 1)
-    c[0] = 1  # coeff of x**n
+    c[0] = c  # coeff of x**n
     for i in range(n):
         for j in range(i + 1, 0, -1):
             c[j] += cons[i]*coeff[j - 1]
