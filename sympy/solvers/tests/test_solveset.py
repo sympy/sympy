@@ -1946,8 +1946,8 @@ def test_nonlinsolve_polysys():
 def test_nonlinsolve_using_substitution():
     x, y, z, n = symbols('x, y, z, n', real = True)
     system = [(x + y)*n - y**2 + 2]
-    s_x = (n*y - y**2 + 2)/n
-    soln = (-s_x, y)
+    s_x = (-n * y + y ** 2 - 2) / n
+    soln = (s_x, y)
     assert nonlinsolve(system, [x, y]) == FiniteSet(soln)
 
     system = [z**2*x**2 - z**2*y**2/exp(x)]
@@ -2125,8 +2125,7 @@ def test_issue_13961():
     V = (ax, bx, cx, gx, jx, lx, mx, nx, q) = symbols('ax bx cx gx jx lx mx nx q')
     S = (ax*q - lx*q - mx, ax - gx*q - lx, bx*q**2 + cx*q - jx*q - nx, q*(-ax*q + lx*q + mx), q*(-ax + gx*q + lx))
 
-    sol = FiniteSet((lx + mx/q, (-cx*q + jx*q + nx)/q**2, cx, mx/q**2, jx, lx, mx, nx, Complement({q}, {0})),
-                    (lx + mx/q, (cx*q - jx*q - nx)/q**2*-1, cx, mx/q**2, jx, lx, mx, nx, Complement({q}, {0})))
+    sol = FiniteSet((lx + mx/q, (nx + q*(-cx + jx))/q**2, cx, mx/q**2, jx, lx, mx, nx, Complement({q}, {0})))
     assert nonlinsolve(S, *V) == sol
     # The two solutions are in fact identical, so even better if only one is returned
 
@@ -2205,7 +2204,7 @@ def test_issue_16618():
 
 def test_issue_17566():
     assert nonlinsolve([32*(2**x)/2**(-y) - 4**y, 27*(3**x) - S(1)/3**y], x, y) ==\
-        FiniteSet((-log(81)/log(3), 1))
+        FiniteSet((-4, 1))
 
 
 def test_issue_16643():
@@ -2217,7 +2216,7 @@ def test_issue_16643():
 def test_issue_19587():
     n,m = symbols('n m')
     assert nonlinsolve([32*2**m*2**n - 4**n, 27*3**m - 3**(-n)], m, n) ==\
-        FiniteSet((-log(81)/log(3), 1))
+        FiniteSet(-4, 1)
 
 
 def test_issue_5132_1():
@@ -3496,7 +3495,7 @@ def test_issue_23318():
 
 def test_issue_19814():
     assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
-                      ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))
+                      ) == FiniteSet((log(4**n)/log(2), S.Complexes))
 
 
 def test_issue_22058():
@@ -3511,16 +3510,16 @@ def test_issue_11184():
 
 def test_issue_21890():
     e = S(2)/3
-    assert nonlinsolve([4*x**3*y**4 - 2*y, 4*x**4*y**3 - 2*x], x, y) == {
-        (2**e/(2*y), y), ((-2**e/4 - 2**e*sqrt(3)*I/4)/y, y),
-        ((-2**e/4 + 2**e*sqrt(3)*I/4)/y, y)}
+    assert nonlinsolve([4*x**3*y**4 - 2*y, 4*x**4*y**3 - 2*x], x, y) == {(2**(2/3)/(2*y), y),
+                                                                         (2**(2/3)*(-1 - sqrt(3)*I)/(4*y), y),
+                                                                         (2**(2/3)*(-1 + sqrt(3)*I)/(4*y), y)}
     assert nonlinsolve([(1 - 4*x**2)*exp(-2*x**2 - 2*y**2),
         -4*x*y*exp(-2*x**2)*exp(-2*y**2)], x, y) == {(-S(1)/2, 0), (S(1)/2, 0)}
     rx, ry = symbols('x y', real=True)
     sol = nonlinsolve([4*rx**3*ry**4 - 2*ry, 4*rx**4*ry**3 - 2*rx], rx, ry)
-    ans = {(2**(S(2)/3)/(2*ry), ry),
-        ((-2**(S(2)/3)/4 - 2**(S(2)/3)*sqrt(3)*I/4)/ry, ry),
-        ((-2**(S(2)/3)/4 + 2**(S(2)/3)*sqrt(3)*I/4)/ry, ry)}
+    ans = {(2**(2/3)/(2*y), y),
+           (2**(2/3)*(-1 - sqrt(3)*I)/(4*y), y),
+           (2**(2/3)*(-1 + sqrt(3)*I)/(4*y), y)}
     assert sol == ans
 
 

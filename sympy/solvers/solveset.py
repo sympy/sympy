@@ -23,7 +23,7 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
-from sympy.core.traversal import preorder_traversal
+from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm
 from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
@@ -3890,20 +3890,24 @@ def _handle_poly(polys, symbols):
 
 def expand_and_simplify(subs_res):
     expanded_tuples = []
-    for s in subs_res:
-        if isinstance(s, FiniteSet):
-            expanded_tuples.append(expand_and_simplify(s))
-        else:
-            expanded_sub = []
-            for t in s:
-                try:
-                    expanded_term = simplify(expand(t))
-                    expanded_sub.append(expanded_term)
-                except AttributeError:
-                    expanded_sub.append(t)
-            expanded_tuples.append(Tuple(*expanded_sub))
-    return FiniteSet(*expanded_tuples)
 
+    def expand_and_simplify_term(term):
+        try:
+            return simplify(expand(term))
+        except AttributeError:
+            return term
+
+    if subs_res.is_FiniteSet:
+        for s in subs_res:
+            if isinstance(s, Tuple):
+                expanded_sub = bottom_up(s, expand_and_simplify_term)
+                expanded_tuples.append(Tuple(*expanded_sub))
+            else:
+                expanded_tuples.append(expand_and_simplify(s))
+    else:
+        expanded_tuples.append(subs_res)
+
+    return FiniteSet(*expanded_tuples)
 def nonlinsolve(system, *symbols):
     r"""
     Solve system of $N$ nonlinear equations with $M$ variables, which means both

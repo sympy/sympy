@@ -337,11 +337,7 @@ NO_GLOBAL = False
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
-<<<<<<< Updated upstream
-                  no_global=False, ip=None, euler=False, forecolor=None,
-=======
                   no_global=False, ip=None, euler=False, forecolor='Auto',
->>>>>>> Stashed changes
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
