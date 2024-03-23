@@ -227,7 +227,7 @@ class KanesMethod(_Methods):
         self._bodylist = bodies
 
         self.explicit_kinematics = explicit_kinematics
-
+        self._constraint_solver = constraint_solver
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
         _validate_coordinates(self.q, self.u)
@@ -720,14 +720,15 @@ class KanesMethod(_Methods):
         if self._uaux:
             if not self._udep:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
-                             u_auxiliary=self._uaux)
+                             u_auxiliary=self._uaux, constraint_solver=self._constraint_solver)
             else:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                         u_auxiliary=self._uaux, u_dependent=self._udep,
                         velocity_constraints=(self._k_nh * self.u +
                         self._f_nh),
                         acceleration_constraints=(self._k_dnh * self._udot +
-                        self._f_dnh)
+                        self._f_dnh),
+                        constraint_solver=self._constraint_solver
                         )
             km._qdot_u_map = self._qdot_u_map
             self._km = km
