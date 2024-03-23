@@ -224,7 +224,7 @@ def outer(vec1, vec2):
     """Outer product convenience wrapper for Vector.outer():\n"""
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
-    return vec1 | vec2
+    return vec1.outer(vec2)
 
 
 outer.__doc__ += Vector.outer.__doc__  # type: ignore
