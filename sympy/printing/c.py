@@ -90,12 +90,6 @@ reserved_words = [
 reserved_words_c99 = ['inline', 'restrict']
 
 
-def _is_valid_c_variable_name(var_name):
-    pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]{0,30}$")
-    if not pattern.search(var_name):
-        raise ValueError('SymPy symbol {} not printable in C.'.format(var_name))
-
-
 def get_math_macros():
     """ Returns a dictionary with math-related macros from math.h/cmath
 
@@ -275,6 +269,13 @@ class C89CodePrinter(CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
 
+    @staticmethod
+    def _check_valid_c_variable_name(var_name):
+        pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]{0,30}$")
+        msg = 'SymPy symbol {} not printable in C.'
+        if not pattern.search(var_name):
+            raise ValueError(msg.format(var_name))
+
     @_as_macro_if_defined
     def _print_Mul(self, expr, **kwargs):
         return super()._print_Mul(expr, **kwargs)
@@ -396,7 +397,7 @@ class C89CodePrinter(CodePrinter):
     def _print_Symbol(self, expr):
         name = super()._print_Symbol(expr)
         # if name is an indexed, e.g. a[0], only check the variable name
-        _is_valid_c_variable_name(name.split('[')[0])
+        self._check_valid_c_variable_name(name.split('[')[0])
         if expr in self._settings['dereference']:
             return '(*{})'.format(name)
         else:
