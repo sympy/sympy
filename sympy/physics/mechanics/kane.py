@@ -421,7 +421,7 @@ class KanesMethod(_Methods):
         FR = zeros(o, 1)
         partials = partial_velocity(vel_list, self.u, N)
         for i in range(o):
-            FR[i] = sum(partials[j][i] & f_list[j] for j in range(b))
+            FR[i] = sum(partials[j][i].dot(f_list[j]) for j in range(b))
 
         # In case there are dependent speeds
         if self._udep:
@@ -486,19 +486,19 @@ class KanesMethod(_Methods):
                 omega = zero_uaux(body.frame.ang_vel_in(N))
                 acc = zero_udot_uaux(body.masscenter.acc(N))
                 inertial_force = (M.diff(t) * vel + M * acc)
-                inertial_torque = zero_uaux((I.dt(body.frame) & omega) +
-                    msubs(I & body.frame.ang_acc_in(N), udot_zero) +
-                    (omega ^ (I & omega)))
+                inertial_torque = zero_uaux((I.dt(body.frame).dot(omega)) +
+                    msubs(I.dot(body.frame.ang_acc_in(N)), udot_zero) +
+                    (omega.cross(I.dot(omega))))
                 for j in range(o):
                     tmp_vel = zero_uaux(partials[i][0][j])
-                    tmp_ang = zero_uaux(I & partials[i][1][j])
+                    tmp_ang = zero_uaux(I.dot(partials[i][1][j]))
                     for k in range(o):
                         # translational
-                        MM[j, k] += M * (tmp_vel & partials[i][0][k])
+                        MM[j, k] += M*tmp_vel.dot(partials[i][0][k])
                         # rotational
-                        MM[j, k] += (tmp_ang & partials[i][1][k])
-                    nonMM[j] += inertial_force & partials[i][0][j]
-                    nonMM[j] += inertial_torque & partials[i][1][j]
+                        MM[j, k] += tmp_ang.dot(partials[i][1][k])
+                    nonMM[j] += inertial_force.dot(partials[i][0][j])
+                    nonMM[j] += inertial_torque.dot(partials[i][1][j])
             else:
                 M = zero_uaux(body.mass)
                 vel = zero_uaux(body.point.vel(N))
@@ -507,8 +507,8 @@ class KanesMethod(_Methods):
                 for j in range(o):
                     temp = zero_uaux(partials[i][0][j])
                     for k in range(o):
-                        MM[j, k] += M * (temp & partials[i][0][k])
-                    nonMM[j] += inertial_force & partials[i][0][j]
+                        MM[j, k] += M*temp.dot(partials[i][0][k])
+                    nonMM[j] += inertial_force.dot(partials[i][0][j])
         # Compose fr_star out of MM and nonMM
         MM = zero_uaux(msubs(MM, q_ddot_u_map))
         nonMM = msubs(msubs(nonMM, q_ddot_u_map),
