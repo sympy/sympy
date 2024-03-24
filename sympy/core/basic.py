@@ -1034,7 +1034,7 @@ class Basic(Printable):
         from .containers import Dict
         from .symbol import Dummy, Symbol
         from .numbers import _illegal
-        from .relational import 
+        from .relational import Equality
 
         unordered = False
         if len(args) == 1:
