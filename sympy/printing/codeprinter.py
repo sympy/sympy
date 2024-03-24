@@ -120,9 +120,8 @@ class CodePrinter(StrPrinter):
     }
 
     # These two fields are used by the method "_check_valid_symbol_name",
-    # they may optionally be a dict mapping standard to regular epxression.
     _valid_var_name_pattern = _re.compile('.+')  # should cover most targeted languages
-    _invalid_var_name_pattern = _re.compile('[+-/*^\'"]')  # should cover most targeted languages
+    _invalid_var_name_pattern = _re.compile('[+-/*^\'" #$]')  # non-exhaustive, decent start for most languages
 
     def __init__(self, settings=None):
         super().__init__(settings=settings)

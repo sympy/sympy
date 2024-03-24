@@ -3,12 +3,13 @@ from sympy.codegen.ast import none
 from sympy.codegen.cfunctions import expm1, log1p
 from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.matrix_nodes import MatrixSolve
-from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
+from sympy.core import Expr, Mod, Symbol, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
+from sympy.printing.codeprinter import InvalidVariableNameError
 from sympy.printing.pycode import (
     MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
@@ -186,6 +187,17 @@ def test_pycode_reserved_words():
     raises(ValueError, lambda: pycode(s1 + s2, error_on_reserved=True))
     py_str = pycode(s1 + s2)
     assert py_str in ('else_ + if_', 'if_ + else_')
+
+
+def test_pycode_strict_names():
+    for invalid in ["", "⋅", "±"]:
+        s = Symbol(invalid)
+        pycode(s)
+        with raises(InvalidVariableNameError):
+            pycode(s, strict_names=True)
+
+    for valid in ["α", "å"]:
+        pycode(Symbol(valid), strict_names=True)
 
 
 def test_issue_20762():

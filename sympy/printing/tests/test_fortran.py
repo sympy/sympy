@@ -6,7 +6,7 @@ from sympy.core import (Catalan, EulerGamma, GoldenRatio)
 from sympy.core.numbers import (E, Float, I, Integer, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (conjugate, sign)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -219,6 +219,16 @@ def test_not_fortran():
     too_long_name_90 = symbols('too_long_name_in_fortran_90'*3)
     with raises(InvalidVariableNameError):
         fcode(too_long_name_90, strict_names=True, standard=90)
+
+def test_fcode_strict_names():
+    for invalid in ["α", "å", "", "⋅", "±"]:
+        s = Symbol(invalid)
+        fcode(s)
+        with raises(InvalidVariableNameError):
+            fcode(s, strict_names=True)
+
+    for valid in ["a"*i for i in range(1,7)]:
+        fcode(Symbol(valid), strict_names=True)
 
 
 def test_user_functions():

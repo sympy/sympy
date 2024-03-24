@@ -1,6 +1,6 @@
 from sympy.printing.codeprinter import CodePrinter, PrintMethodNotImplementedError, InvalidVariableNameError
 from sympy.core import symbols
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Symbol, Dummy
 from sympy.testing.pytest import raises
 
 
@@ -36,11 +36,13 @@ def test_print_Symbol():
     p.reserved_words.update(['if'])
     assert p._print(y) == 'if_He_Man'
 
-    invalid_symbol_name = symbols("f'(x)")
-    assert p._print(invalid_symbol_name) == invalid_symbol_name.name
-    p = setup_test_printer(strict_names=True)
-    with raises(InvalidVariableNameError):
-        p._print(invalid_symbol_name)
+
+    p2 = setup_test_printer(strict_names=True)
+    for invalid_name in ["f'(x)", "a b", "a+b", "#error", "", "$_"]:
+        invalid_symbol = Symbol(invalid_name)
+        assert p._print(invalid_symbol) == invalid_symbol.name
+        with raises(InvalidVariableNameError):
+            p2._print(invalid_symbol)
 
 
 def test_issue_15791():
