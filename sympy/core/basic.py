@@ -1034,21 +1034,30 @@ class Basic(Printable):
         from .containers import Dict
         from .symbol import Dummy, Symbol
         from .numbers import _illegal
+        from .relational import 
 
         unordered = False
         if len(args) == 1:
-
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
             elif isinstance(sequence, (Dict, Mapping)):
                 unordered = True
                 sequence = sequence.items()
+            elif isinstance(sequence, Equality):
+                if isinstance(sequence.lhs, Symbol) and len(sequence.lhs.free_symbols) == 1:
+                    sequence = [[sequence.lhs, sequence.rhs]]
+                else:
+                    raise ValueError(filldedent("""
+                        Any Equality passed to subs must have a single free symbol
+                        on the left-hand side representing the symbol to be replaced.
+                        Use solve() to solve the equality in terms of
+                        the desired variable before using."""))
             elif not iterable(sequence):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
-                   it should be a dictionary of old: new pairs or an iterable
-                   of (old, new) tuples."""))
+                   it should be either an Equality, a dictionary of old: new pairs,
+                   or an iterable of (old, new) tuples."""))
         elif len(args) == 2:
             sequence = [args]
         else:
