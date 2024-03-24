@@ -924,6 +924,7 @@ class Basic(Printable):
 
         `args` is either:
           - two arguments, e.g. foo.subs(old, new)
+          - one Equality, e.g. foo.subs(Eq(old, new))
           - one iterable argument, e.g. foo.subs(iterable). The iterable may be
              o an iterable container with (old, new) pairs. In this case the
                replacements are processed in the order given with successive
@@ -1045,14 +1046,7 @@ class Basic(Printable):
                 unordered = True
                 sequence = sequence.items()
             elif isinstance(sequence, Equality):
-                if isinstance(sequence.lhs, Symbol):
-                    sequence = sequence.args
-                else:
-                    raise ValueError(filldedent("""
-                        Any Equality passed to subs must have a single free symbol
-                        on the left-hand side representing the symbol to be replaced.
-                        Use solve() to solve the equality in terms of
-                        the desired variable before using."""))
+                sequence = [sequence.args]
             elif not iterable(sequence):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
