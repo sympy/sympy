@@ -397,7 +397,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_Symbol(self, expr):
         name = super()._print_Symbol(expr)
-        if self._settings['strict'] is True:  # can be None
+        if self._settings['strict']:
             # if name is an accessor, e.g. a[0], a.b a->b, only check the first
             # variable name
             first = name.split('[')[0].split('.')[0].split('->')[0]
