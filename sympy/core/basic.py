@@ -1045,8 +1045,8 @@ class Basic(Printable):
                 unordered = True
                 sequence = sequence.items()
             elif isinstance(sequence, Equality):
-                if isinstance(sequence.lhs, Symbol) and len(sequence.lhs.free_symbols) == 1:
-                    sequence = [[sequence.lhs, sequence.rhs]]
+                if isinstance(sequence.lhs, Symbol):
+                    sequence = sequence.args
                 else:
                     raise ValueError(filldedent("""
                         Any Equality passed to subs must have a single free symbol
