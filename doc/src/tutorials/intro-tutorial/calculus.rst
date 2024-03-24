@@ -222,7 +222,7 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎩
 
 This last example returned a ``Piecewise`` expression because the integral
-does not converge unless `\Re(y) > 1.`
+does not converge unless `\Re(y) > -1.`
 
 Limits
 ======
