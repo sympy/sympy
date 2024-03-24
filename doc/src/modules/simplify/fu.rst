@@ -112,7 +112,7 @@ In the expanded state, there are nearly 1000 trig functions:
     >>> L(expr)
     932
 
-If the expression where factored first, this would take time but the
+If the expression were factored first, this would take time but the
 resulting expression would be transformed very quickly:
 
     >>> def clock(f, n=2):
