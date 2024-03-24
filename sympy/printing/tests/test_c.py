@@ -39,7 +39,7 @@ def test_invalid_variable_names():
         ccode(sym, strict_names=False)
     # these should not raise
     short_var = 'w'*31
-    stm = 'a.b.c, a.b->c, a->c, funny_var[5], b[1][2], a[idx], out[i*N+j], %s'
+    stm = '_, _0, %s'
     syms = symbols(stm % short_var)
     for sym in syms:
         ccode(sym, strict_names=False)

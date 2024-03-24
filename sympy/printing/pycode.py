@@ -3,6 +3,7 @@ Python code printers
 
 This module contains Python code printers for plain Python as well as NumPy & SciPy enabled code.
 """
+import re as _re
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S
@@ -96,6 +97,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         contract=False,
         standard='python3',
     )
+    _valid_var_name_pattern = _re.compile(r'[^\W0-9]\w*')  # somewhat wider than PEP 3131
 
     def __init__(self, settings=None):
         super().__init__(settings)

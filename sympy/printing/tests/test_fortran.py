@@ -25,6 +25,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.matrices import Matrix, MatrixSymbol
+from sympy.printing.codeprinter import InvalidVariableNameError
 from sympy.printing.fortran import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions import ArraySymbol, ArrayElement
@@ -210,6 +211,14 @@ def test_not_fortran():
     assert fcode(Integral(sin(x)), strict=False) == "C     Not supported in Fortran:\nC     Integral\n      Integral(sin(x), x)"
     with raises(NotImplementedError):
         fcode(g(x))
+
+    too_long_name_77 = symbols('too_long_name_in_fortran_77')
+    with raises(InvalidVariableNameError):
+        fcode(too_long_name_77, strict_names=True)
+    fcode(too_long_name_77, strict_names=True, standard=90)
+    too_long_name_90 = symbols('too_long_name_in_fortran_90'*3)
+    with raises(InvalidVariableNameError):
+        fcode(too_long_name_90, strict_names=True, standard=90)
 
 
 def test_user_functions():

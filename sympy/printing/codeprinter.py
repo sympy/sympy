@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any
-
 from functools import wraps
+import re as _re
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
@@ -40,6 +40,11 @@ class PrintMethodNotImplementedError(NotImplementedError):
     """
     pass
 
+class InvalidVariableNameError(ValueError):
+    """The printed name of a Symbol instance is not a valid
+    variable name in the targeted langauge."""
+    pass
+
 def _convert_python_lists(arg):
     if isinstance(arg, list):
         from sympy.codegen.abstract_nodes import List
@@ -69,7 +74,8 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
-        'strict': None  # True or False; None => True if human == True
+        'strict': None,  # True or False; None => True if human == True
+        'strict_names': False
     }
 
     # Functions which are "simple" to rewrite to other functions that
@@ -112,6 +118,11 @@ class CodePrinter(StrPrinter):
             'riemann_xi': ('zeta', ['gamma']),
             'SingularityFunction': ('Piecewise', []),
     }
+
+    # These two fields are used by the method "_check_valid_symbol_name",
+    # they may optionally be a dict mapping standard to regular epxression.
+    _valid_var_name_pattern = _re.compile('.+')  # should cover most targeted languages
+    _invalid_var_name_pattern = _re.compile('[+-/*^\'"]')  # should cover most targeted languages
 
     def __init__(self, settings=None):
         super().__init__(settings=settings)
@@ -414,9 +425,19 @@ class CodePrinter(StrPrinter):
     def _print_Variable(self, expr):
         return self._print(expr.symbol)
 
+    def _check_valid_symbol_name(self, name):
+        lang = getattr(self, "language", type(self))
+        if not self._valid_var_name_pattern.search(name):
+            raise InvalidVariableNameError(f'Symbol "{name}" does not match valid pattern for {lang}')
+        if self._invalid_var_name_pattern.search(name):
+            raise InvalidVariableNameError(f'Symbol "{name}" matches an invalid pattern for {lang}')
+
     def _print_Symbol(self, expr):
 
         name = super()._print_Symbol(expr)
+
+        if self._settings['strict_names']:
+            self._check_valid_symbol_name(name)
 
         if name in self.reserved_words:
             if self._settings['error_on_reserved']:

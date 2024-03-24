@@ -16,7 +16,7 @@ from typing import Any
 
 from functools import wraps
 from itertools import chain
-import re
+import re as _re
 
 from sympy.core import S
 from sympy.core.numbers import equal_valued, Float
@@ -221,7 +221,8 @@ class C89CodePrinter(CodePrinter):
     # known_functions-dict to copy
     _kf: dict[str, Any] = known_functions_C89
 
-    _valid_var_name_pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]{0,30}$")
+    # 31 characters guaranteed to be supported by all C89 compilers:
+    _valid_var_name_pattern = _re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]{0,30}$")
 
     def __init__(self, settings=None):
         settings = settings or {}
