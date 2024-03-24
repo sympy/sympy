@@ -35,15 +35,15 @@ def test_invalid_variable_names():
     syms = symbols(r'a_{\delta}[0], I_{x}, a*, 9t, bus#, %s' % long_var)
     for sym in syms:
         with raises(ValueError):
-            ccode(sym, strict=True)
-        ccode(sym, strict=False)
+            ccode(sym, strict_names=True)
+        ccode(sym, strict_names=False)
     # these should not raise
     short_var = 'w'*31
     stm = 'a.b.c, a.b->c, a->c, funny_var[5], b[1][2], a[idx], out[i*N+j], %s'
     syms = symbols(stm % short_var)
     for sym in syms:
-        ccode(sym, strict=False)
-        ccode(sym, strict=True)
+        ccode(sym, strict_names=False)
+        ccode(sym, strict_names=True)
 
 
 def test_printmethod():
