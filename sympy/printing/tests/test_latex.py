@@ -16,7 +16,10 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
-from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, genocchi, lucas, fibonacci, tribonacci, mobius
+from sympy.functions.combinatorial.numbers import (bernoulli, bell, catalan, euler, genocchi,
+                                                   lucas, fibonacci, tribonacci, divisor_sigma, udivisor_sigma,
+                                                   mobius, primenu, primeomega,
+                                                   totient, reduced_totient)
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, coth)
@@ -46,7 +49,6 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
-from sympy.ntheory.factor_ import (divisor_sigma, primenu, primeomega, reduced_totient, totient, udivisor_sigma)
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
 from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
@@ -2113,6 +2115,13 @@ def test_Adjoint():
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
 
+    # adjoint style
+    assert latex(Adjoint(X), adjoint_style="star") == r'X^{\ast}'
+    assert latex(Adjoint(X + Y), adjoint_style="hermitian") == r'\left(X + Y\right)^{\mathsf{H}}'
+    assert latex(Adjoint(X) + Adjoint(Y), adjoint_style="dagger") == r'X^{\dagger} + Y^{\dagger}'
+    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^{\dagger} X^{\dagger}'
+    assert latex(Adjoint(X**2), adjoint_style="star") == r'\left(X^{2}\right)^{\ast}'
+    assert latex(Adjoint(X)**2, adjoint_style="hermitian") == r'\left(X^{\mathsf{H}}\right)^{2}'
 
 def test_Transpose():
     from sympy.matrices import Transpose, MatPow, HadamardPower
@@ -2453,6 +2462,8 @@ def test_Pow():
     assert latex(x**(Rational(-1, 3))) == r'\frac{1}{\sqrt[3]{x}}'
     x2 = Symbol(r'x^2')
     assert latex(x2**2) == r'\left(x^{2}\right)^{2}'
+    # Issue 11011
+    assert latex(S('1.453e4500')**x) == r'{1.453 \cdot 10^{4500}}^{x}'
 
 
 def test_issue_7180():

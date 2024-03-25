@@ -1827,6 +1827,9 @@ def dup_slice(f, m, n, K):
 
     f = f[N:M]
 
+    while f and f[0] == K.zero:
+        f.pop(0)
+
     if not f:
         return []
     else:

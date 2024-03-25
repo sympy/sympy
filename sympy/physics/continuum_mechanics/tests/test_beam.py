@@ -514,7 +514,9 @@ def test_max_shear_force():
     b.apply_load(R2, l, -1)
     b.apply_load(P, 0, 0, end=l)
     b.solve_for_reaction_loads(R1, R2)
-    assert b.max_shear_force() == (0, l*Abs(P)/2)
+    max_shear = b.max_shear_force()
+    assert max_shear[0] == 0
+    assert simplify(max_shear[1] - (l*Abs(P)/2)) == 0
 
 
 def test_max_bmoment():
