@@ -1046,7 +1046,7 @@ class Basic(Printable):
                 unordered = True
                 sequence = sequence.items()
             elif isinstance(sequence, Equality):
-                sequence = [sequence.args]
+                sequence = sequence.args
             elif not iterable(sequence):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
