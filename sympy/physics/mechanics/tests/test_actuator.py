@@ -378,7 +378,6 @@ class TestLinearDamper:
         expected = [Force(self.pA, pA_force), Force(self.pB, pB_force)]
         assert damper.to_loads() == expected
 
-
 class TestForcedMassSpringDamperModel():
     r"""A single degree of freedom translational forced mass-spring-damper.
 
