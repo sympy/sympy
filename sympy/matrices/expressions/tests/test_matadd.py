@@ -6,8 +6,10 @@ from sympy.core import Add, Basic, S
 from sympy.core.add import add
 from sympy.testing.pytest import XFAIL, raises
 
+
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 2)
+
 
 def test_evaluate():
     assert MatAdd(X, X, evaluate=True) == add(X, X, evaluate=True) == MatAdd(X, X).doit()
@@ -37,8 +39,8 @@ def test_doit_args():
 
 
 def test_generic_identity():
-    assert MatAdd.identity == GenericZeroMatrix()
-    assert MatAdd.identity != S.Zero
+    assert MatAdd.identity != GenericZeroMatrix()
+    assert MatAdd.identity == S.Zero
 
 
 def test_zero_matrix_add():
@@ -56,3 +58,10 @@ def test_shape_error():
 
     A = MatrixSymbol('A', 3, 2)
     raises(ShapeError, lambda: MatAdd(A, B))
+
+
+def test_issue_24131():
+    A = MatrixSymbol("A", 2, 2)
+    B = MatrixSymbol("B", 2, 2)
+    C = MatrixSymbol("C", 2, 2)
+    assert (A + B + C).subs(A + B, C) == MatAdd(C, C)
