@@ -355,6 +355,7 @@ class polylog(Function):
             return True
 
     def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.functions.special.gamma_functions import gamma
         from sympy.series.order import Order
         nu, z = self.args
 
@@ -384,7 +385,11 @@ class polylog(Function):
                     s.append(term/k**nu)
                 return Add(*s) + o
 
-        return super(polylog, self)._eval_nseries(x, n, logx, cdir)
+        result = super(polylog, self.expand())._eval_nseries(x, n, logx, cdir)
+        if ((1-nu).is_integer and (1-nu).is_nonpositive):
+            return result
+        result += gamma(1-nu)*(((log(1/z))**(nu-1)).nseries(x, n=n, logx=logx))
+        return result
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
