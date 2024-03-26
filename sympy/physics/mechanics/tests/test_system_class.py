@@ -60,6 +60,7 @@ class TestSystemBase:
         self.u_ind, self.u_dep = self.system.u_ind[:], self.system.u_dep[:]
         self.kdes = self.system.kdes[:]
         self.hc = self.system.holonomic_constraints[:]
+        self.vc = self.system.velocity_constraints[:]
         self.nhc = self.system.nonholonomic_constraints[:]
 
     @pytest.fixture()
@@ -85,6 +86,9 @@ class TestSystemBase:
         assert ('nonholonomic_constraints' in exclude or
                 self.system.nonholonomic_constraints[:] == [u[3] - qd[1] + u[2]]
                 )
+        assert ('velocity_constraints' in exclude or
+                self.system.velocity_constraints[:] == [
+                    qd[2] - qd[0] + qd[1], u[3] - qd[1] + u[2]])
         assert ('bodies' in exclude or
                 self.system.bodies == tuple(self.bodies))
         assert ('joints' in exclude or
@@ -253,7 +257,10 @@ class TestSystem(TestSystemBase):
     def test_add_after_reset(self, _filled_system_setup, prop, add_func, args,
                              kwargs):
         setattr(self.system, prop, ())
-        self._filled_system_check(exclude=(prop, 'q', 'u'))
+        exclude = (prop, 'q', 'u')
+        if prop in ('holonomic_constraints', 'nonholonomic_constraints'):
+            exclude += ('velocity_constraints',)
+        self._filled_system_check(exclude=exclude)
         assert list(getattr(self.system, prop)[:]) == []
         getattr(self.system, add_func)(*args, **kwargs)
         assert list(getattr(self.system, prop)[:]) == list(args)
@@ -312,14 +319,18 @@ class TestSystem(TestSystemBase):
     ])
     def test_holonomic_constraints(self, _filled_system_setup, args, kwargs,
                                    exp_con):
+        exclude = ('holonomic_constraints', 'velocity_constraints')
+        exp_vel_con = [c.diff(t) for c in exp_con] + self.nhc
         # Test add_holonomic_constraints
         self.system.add_holonomic_constraints(*args, **kwargs)
-        self._filled_system_check(exclude=('holonomic_constraints',))
+        self._filled_system_check(exclude=exclude)
         assert self.system.holonomic_constraints[:] == exp_con
+        assert self.system.velocity_constraints[:] == exp_vel_con
         # Test setter for holonomic_constraints
         self.system.holonomic_constraints = exp_con
-        self._filled_system_check(exclude=('holonomic_constraints',))
+        self._filled_system_check(exclude=exclude)
         assert self.system.holonomic_constraints[:] == exp_con
+        assert self.system.velocity_constraints[:] == exp_vel_con
 
     @pytest.mark.parametrize('args, kwargs', [
         ((q[2] - q[0] + q[1], q[4] - q[3]), {}),
@@ -339,14 +350,18 @@ class TestSystem(TestSystemBase):
     ])
     def test_nonholonomic_constraints(self, _filled_system_setup, args, kwargs,
                                       exp_con):
+        exclude = ('nonholonomic_constraints', 'velocity_constraints')
+        exp_vel_con = self.vc[:len(self.hc)] + exp_con
         # Test add_nonholonomic_constraints
         self.system.add_nonholonomic_constraints(*args, **kwargs)
-        self._filled_system_check(exclude=('nonholonomic_constraints',))
+        self._filled_system_check(exclude=exclude)
         assert self.system.nonholonomic_constraints[:] == exp_con
+        assert self.system.velocity_constraints[:] == exp_vel_con
         # Test setter for nonholonomic_constraints
         self.system.nonholonomic_constraints = exp_con
-        self._filled_system_check(exclude=('nonholonomic_constraints',))
+        self._filled_system_check(exclude=exclude)
         assert self.system.nonholonomic_constraints[:] == exp_con
+        assert self.system.velocity_constraints[:] == exp_vel_con
 
     @pytest.mark.parametrize('args, kwargs', [
         ((u[3] - qd[1] + u[2], u[4] - u[3]), {}),
@@ -358,6 +373,24 @@ class TestSystem(TestSystemBase):
                                               kwargs):
         with pytest.raises(ValueError):
             self.system.add_nonholonomic_constraints(*args, **kwargs)
+        self._filled_system_check()
+
+    @pytest.mark.parametrize('constraints, expected', [
+        ([], []),
+        (qd[2] - qd[0] + qd[1], [qd[2] - qd[0] + qd[1]]),
+        ([qd[2] + qd[1], u[2] - u[1]], [qd[2] + qd[1], u[2] - u[1]]),
+    ])
+    def test_velocity_constraints_overwrite(self, _filled_system_setup,
+                                            constraints, expected):
+        self.system.velocity_constraints = constraints
+        self._filled_system_check(exclude=('velocity_constraints',))
+        assert self.system.velocity_constraints[:] == expected
+
+    def test_velocity_constraints_back_to_auto(self, _filled_system_setup):
+        self.system.velocity_constraints = qd[3] - qd[2]
+        self._filled_system_check(exclude=('velocity_constraints',))
+        assert self.system.velocity_constraints[:] == [qd[3] - qd[2]]
+        self.system.velocity_constraints = None
         self._filled_system_check()
 
     def test_bodies(self, _filled_system_setup):

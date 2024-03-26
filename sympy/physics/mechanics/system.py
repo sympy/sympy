@@ -72,6 +72,8 @@ class System(_Methods):
         Matrix of the independent generalized speeds.
     u_dep : ImmutableMatrix
         Matrix of the dependent generalized speeds.
+    u_aux : ImmutableMatrix
+        Matrix of auxiliary generalized speeds.
     kdes : ImmutableMatrix
         Matrix of the kinematical differential equations as expressions equated
         to the zero matrix.
@@ -89,6 +91,10 @@ class System(_Methods):
     nonholonomic_constraints : ImmutableMatrix
         Matrix with the nonholonomic constraints as expressions equated to the
         zero matrix.
+    velocity_constraints : ImmutableMatrix
+        Matrix with the velocity constraints as expressions equated to the zero
+        matrix. These are by default derived as the time derivatives of the
+        holonomic constraints extended with the nonholonomic constraints.
     eom_method : subclass of KanesMethod or LagrangesMethod
         Backend for forming the equations of motion.
 
@@ -258,6 +264,7 @@ class System(_Methods):
         self._kdes = ImmutableMatrix(1, 0, []).T
         self._hol_coneqs = ImmutableMatrix(1, 0, []).T
         self._nonhol_coneqs = ImmutableMatrix(1, 0, []).T
+        self._vel_constrs = None
         self._bodies = []
         self._joints = []
         self._loads = []
@@ -454,6 +461,27 @@ class System(_Methods):
         constraints = self._objects_to_list(constraints)
         self._nonhol_coneqs = self._parse_expressions(
             constraints, [], 'nonholonomic constraints')
+
+    @property
+    def velocity_constraints(self):
+        """Matrix with the velocity constraints as expressions equated to the
+        zero matrix. The velocity constraints are by default derived from the
+        holonomic and nonholonomic constraints unless they are explicitly set.
+        """
+        if self._vel_constrs is None:
+            return self.holonomic_constraints.diff(dynamicsymbols._t).col_join(
+                self.nonholonomic_constraints)
+        return self._vel_constrs
+
+    @velocity_constraints.setter
+    @_reset_eom_method
+    def velocity_constraints(self, constraints):
+        if constraints is None:
+            self._vel_constrs = None
+            return
+        constraints = self._objects_to_list(constraints)
+        self._vel_constrs = self._parse_expressions(
+            constraints, [], 'velocity constraints')
 
     @property
     def eom_method(self):
@@ -848,13 +876,11 @@ class System(_Methods):
                 raise ValueError(
                     f"The following keyword arguments are not allowed to be "
                     f"overwritten in {eom_method.__name__}: {wrong_kwargs}.")
-            velocity_constraints = self.holonomic_constraints.diff(
-                dynamicsymbols._t).col_join(self.nonholonomic_constraints)
             kwargs = {"frame": self.frame, "q_ind": self.q_ind,
                       "u_ind": self.u_ind, "kd_eqs": self.kdes,
                       "q_dependent": self.q_dep, "u_dependent": self.u_dep,
                       "configuration_constraints": self.holonomic_constraints,
-                      "velocity_constraints": velocity_constraints,
+                      "velocity_constraints": self.velocity_constraints,
                       "u_auxiliary": self.u_aux,
                       "forcelist": loads, "bodies": self.bodies,
                       "explicit_kinematics": False, **kwargs}
@@ -1007,7 +1033,7 @@ class System(_Methods):
         msgs = []
         # Save some data in variables
         n_hc = self.holonomic_constraints.shape[0]
-        n_nhc = self.nonholonomic_constraints.shape[0]
+        n_vc = self.velocity_constraints.shape[0]
         n_q_dep, n_u_dep = self.q_dep.shape[0], self.u_dep.shape[0]
         q_set, u_set = set(self.q), set(self.u)
         n_q, n_u = len(q_set), len(u_set)
@@ -1040,10 +1066,10 @@ class System(_Methods):
                 msgs.append(filldedent(f"""
                 The kinematic differential equations {missing_kdes} used in
                 joints are not added to the system."""))
-            if n_u_dep != n_hc + n_nhc:
+            if n_u_dep != n_vc:
                 msgs.append(filldedent(f"""
                 The number of dependent generalized speeds {n_u_dep} should be
-                equal to the number of velocity constraints {n_hc + n_nhc}."""))
+                equal to the number of velocity constraints {n_vc}."""))
             if n_q > n_u:
                 msgs.append(filldedent(f"""
                 The number of generalized coordinates {n_q} should be less than
