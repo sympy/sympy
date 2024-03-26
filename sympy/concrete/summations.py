@@ -10,7 +10,7 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
-from sympy.core.numbers import Float, _illegal
+from sympy.core.numbers import _illegal
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -1278,16 +1278,12 @@ def _eval_sum_hyper(f, i, a):
     if hs is None:
         return None
 
-    if isinstance(hs, Float):
-        from sympy.simplify.simplify import nsimplify
-        hs = nsimplify(hs)
-
     from sympy.simplify.combsimp import combsimp
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.simplify.radsimp import fraction
     numer, denom = fraction(factor(hs))
-    top, topl = numer.as_coeff_mul(i)
-    bot, botl = denom.as_coeff_mul(i)
+    top, topl = numer.as_coeff_mul(i,rational=False)
+    bot, botl = denom.as_coeff_mul(i,rational=False)
     ab = [top, bot]
     factors = [topl, botl]
     params = [[], []]
