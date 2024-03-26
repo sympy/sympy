@@ -1057,6 +1057,8 @@ def test_has_basics():
     # see issue at https://github.com/sympy/sympy/issues/5190
     assert not S(1).has(Wild)
     assert not x.has(Wild)
+    assert not S(2).has(Wild)
+    assert not y.has(Wild)
 
 
 def test_has_multiple():
