@@ -31,6 +31,8 @@ except ImportError:
     from html.parser import HTMLParser
 
 from sympy.utilities.misc import filldedent
+from lxml import html
+import requests
 
 
 # Load color templates, duplicated from sympy/testing/runtests.py
@@ -260,28 +262,76 @@ def get_mod_name(path, base):
 
     return file_module[:-1]
 
-class FindInSphinx(HTMLParser):
-    is_imported = []
-    def handle_starttag(self, tag, attr):
-        a = dict(attr)
-        if tag == "div" and a.get('class', None) == "viewcode-block":
-            self.is_imported.append(a['id'])
-
-def find_sphinx(name, mod_path, found={}):
-    if mod_path in found: # Cache results
-        return name in found[mod_path]
-
-    doc_path = mod_path.split('.')
-    doc_path[-1] += '.html'
-    sphinx_path = os.path.join(sympy_top, 'doc', '_build', 'html', '_modules', *doc_path)
-    if not os.path.exists(sphinx_path):
+def find_codeblock(html_tree, name):
+    # Code block element has class 'highlight-default notranslate'
+    # so this xpath checks if html tree that follows an element
+    # with the module name contains a code block
+    xpath = "//*[@id='" + name + \
+            "']/following-sibling::*/descendant-or-self::" \
+            "div[contains(@class, 'highlight-default notranslate')]"
+    codeblock_element = html_tree.xpath(xpath)
+    if not codeblock_element:
         return False
-    with open(sphinx_path) as f:
-        html_txt = f.read()
-    p = FindInSphinx()
-    p.feed(html_txt)
-    found[mod_path] = p.is_imported
-    return name in p.is_imported
+    return True
+
+def find_sphinx(name, mod_path):
+    # Find sphinx coverage based on a few possible paths for html file,
+    # returns False if there is no code example for module
+    doc_path = mod_path.split('.')
+    fin = doc_path[1:]
+    document_path = fin[:3]
+
+    document_path_copy_1 = document_path.copy()
+    document_path_copy_2 = document_path.copy()
+
+    possible_path_list = find_module_html_paths(document_path)
+
+    for path in possible_path_list:
+        if os.path.exists(path):
+            with open(path) as f:
+                html_txt = f.read()
+            html_tree = html.fromstring(html_txt)
+
+            # Create the formatted module name to be searched for in the html file
+            document_path_copy_1.insert(0, "sympy")
+            document_path_copy_1.append(name)
+            fullname = ".".join(document_path_copy_1)
+
+            # Find another possible module name
+            if document_path_copy_2[-1] == document_path_copy_2[-2]:
+                document_path_copy_2.pop()
+            document_path_copy_2.insert(0, "sympy")
+            document_path_copy_2.append(name)
+            othername = ".".join(document_path_copy_2)
+
+            if find_codeblock(html_tree, fullname) or find_codeblock(html_tree, othername):
+                return True
+        else:
+            continue
+        return False
+
+def find_module_html_paths(document_path):
+    # Find all paths that should be checked given the module name
+    # (i.e. look for a self titled html file or index.html as well as
+    # a html file with the module name)
+    path_list = []
+    # While not os.path.exists(sphinx_path):
+    while len(document_path) > 1:
+        document_path[-1] = document_path[-1].replace('_', '')
+        document_path[-1] += '.html'
+        path_list.append(os.path.join(sympy_top, 'doc', '_build', 'html', 'modules', *document_path))
+        document_path[-1] = "index.html"
+        path_list.append(os.path.join(sympy_top, 'doc', '_build', 'html', 'modules', *document_path))
+
+        # Look if module is in self titled html file (i.e. file for modules that dont deserve their own)
+        if len(document_path) > 1:
+            document_path[-1] = document_path[-2]
+            document_path[-1] += '.html'
+            path_list.append(os.path.join(sympy_top, 'doc', '_build', 'html', 'modules', *document_path))
+        document_path.pop()
+    document_path[-1] += '.html'
+    path_list.append(os.path.join(sympy_top, 'doc', '_build', 'html', 'modules', *document_path))
+    return path_list
 
 def process_function(name, c_name, b_obj, mod_path, f_skip, f_missing_doc, f_missing_doctest, f_indirect_doctest,
                      f_has_doctest, skip_list, sph, sphinx=True):
