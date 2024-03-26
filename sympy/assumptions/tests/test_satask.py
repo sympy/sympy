@@ -39,7 +39,10 @@ def test_satask():
     assert satask(Q.positive(x), Q.zero(x)) is False
     assert satask(Q.real(x), Q.zero(x)) is True
     assert satask(Q.zero(x), Q.zero(x*y)) is None
-    assert satask(Q.zero(x*y), Q.zero(x))
+    assert satask(Q.zero(x*y), Q.zero(x)) is True
+
+    # https://github.com/sympy/sympy/issues/25349
+    assert raises(ValueError, satask(Q.positive(x), Q.positive(x) & Q.positive(y) & Q.zero(y)))
 
 
 def test_zero():
