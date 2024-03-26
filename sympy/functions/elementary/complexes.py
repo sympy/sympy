@@ -692,6 +692,19 @@ class Abs(Function):
     def _eval_rewrite_as_conjugate(self, arg, **kwargs):
         return sqrt(arg*conjugate(arg))
 
+    def _eval_refine(self, assumptions, **kwargs):
+        from sympy.assumptions.ask import ask
+        q = ask(self.args[0] >= 0, assumptions)
+        if q is True:
+            return self.args[0]
+        if q is False:
+            return -self.args[0]
+        q = ask(self.args[0] <= 0, assumptions)
+        if q is True:
+            return -self.args[0]
+        if q is False:
+            return self.args[0]
+
 
 class arg(Function):
     r"""
