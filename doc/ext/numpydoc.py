@@ -16,8 +16,7 @@ It will:
 .. [1] https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 
 """
-
-import sys
+from __future__ import annotations
 import re
 import pydoc
 import sphinx
@@ -47,10 +46,7 @@ def mangle_docstrings(app, what, name, obj, options, lines,
         lines[:] = title_re.sub('', u_NL.join(lines)).split(u_NL)
     else:
         doc = get_doc_object(obj, what, u_NL.join(lines), config=cfg)
-        if sys.version_info[0] >= 3:
-            doc = str(doc)
-        else:
-            doc = unicode(doc)
+        doc = str(doc)
         lines[:] = doc.split(u_NL)
 
     if (app.config.numpydoc_edit_link and hasattr(obj, '__name__') and
@@ -132,12 +128,13 @@ def setup(app, get_doc_object_=get_doc_object):
 # ------------------------------------------------------------------------------
 
 from docutils.statemachine import ViewList
+from sphinx.domains import Domain
 from sphinx.domains.c import CDomain
 from sphinx.domains.python import PythonDomain
 
 
-class ManglingDomainBase:
-    directive_mangling_map = {}
+class ManglingDomainBase(Domain):
+    directive_mangling_map: dict[str, str] = {}
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
