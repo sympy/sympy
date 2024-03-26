@@ -30,6 +30,22 @@ from sympy.printing.codeprinter import ccode
 x, y, z = symbols('x,y,z')
 
 
+def test_invalid_variable_names():
+    long_var = 'w'*32
+    syms = symbols(r'a_{\delta}[0], I_{x}, a*, 9t, bus#, %s' % long_var)
+    for sym in syms:
+        with raises(ValueError):
+            ccode(sym, strict_names=True)
+        ccode(sym, strict_names=False)
+    # these should not raise
+    short_var = 'w'*31
+    stm = '_, _0, %s'
+    syms = symbols(stm % short_var)
+    for sym in syms:
+        ccode(sym, strict_names=False)
+        ccode(sym, strict_names=True)
+
+
 def test_printmethod():
     class fabs(Abs):
         def _ccode(self, printer):
@@ -574,7 +590,6 @@ def test_sparse_matrix():
         ccode(SparseMatrix([[1, 2, 3]]))
 
     assert 'Not supported in C' in C89CodePrinter({'strict': False}).doprint(SparseMatrix([[1, 2, 3]]))
-
 
 
 def test_ccode_reserved_words():
