@@ -219,7 +219,7 @@ jobs:
 
   # -------------------- NumPy 2.0 job ----------------------------- #
 
-  numpy-nightly:
+  numpy-prerelease:
     needs: code-quality
 
     runs-on: ubuntu-20.04
@@ -229,7 +229,7 @@ jobs:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
 
-    name: ${{ matrix.python-version }} NumPy nightly
+    name: ${{ matrix.python-version }} NumPy prerelease
 
     steps:
       - uses: actions/checkout@v3
