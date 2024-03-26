@@ -245,6 +245,7 @@ from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
                                 BooleanFalse)
 from sympy.functions import exp, log, sqrt
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.integrals.integrals import Integral
 from sympy.polys import (Poly, terms_gcd, PolynomialError, lcm)
 from sympy.polys.polytools import cancel
@@ -624,7 +625,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             retdict['best'] = min(list(retdict.values()), key=lambda x:
                 ode_sol_simplicity(x, func, trysolving=not simplify))
             if given_hint == 'best':
-                return retdict['best']
+                rv = retdict['best']
+                if rv.has(Piecewise):
+                    rv = piecewise_fold(rv)            	
+                return rv
             for i in orderedhints:
                 if retdict['best'] == retdict.get(i, None):
                     retdict['best_hint'] = i
@@ -632,12 +636,18 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             retdict['default'] = gethints['default']
             retdict['order'] = gethints['order']
             retdict.update(failed_hints)
+            for value in retdict.values():
+                if value.has(Piecewise):
+                    value = piecewise_fold(value)
             return retdict
 
         else:
             # The key 'hint' stores the hint needed to be solved for.
             hint = hints['hint']
-            return _helper_simplify(eq, hint, hints, simplify, ics=ics)
+            rv = _helper_simplify(eq, hint, hints, simplify, ics=ics)
+            if rv.has(Piecewise):
+                rv = piecewise_fold(rv)
+            return rv
 
 
 def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
