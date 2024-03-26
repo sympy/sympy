@@ -161,6 +161,13 @@ def test_Function():
     assert myfunc.nargs == S.Naturals0
     assert myfunc(x).nargs == S.Naturals0
 
+#def test_Function_Basic_Compatibility():
+#    f = Function('f')
+#    assert f.func(*f.args) == f
+#
+#    x = Symbol('x')
+#    e = Subs(f(x), f, sin)
+#    assert e.apart() == e
 
 def test_nargs():
     f = Function('f')
