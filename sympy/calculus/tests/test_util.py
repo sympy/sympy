@@ -65,6 +65,9 @@ def test_function_range():
         log(x), x, S.Integers))
     raises(NotImplementedError, lambda : function_range(
         sin(x)/2, x, S.Naturals))
+    raises(NotImplementedError, lambda : function_range(
+        x, x, S.Complexes))
+    assert function_range(Abs(x) + x, x, Interval(-2, -1)) == Interval(0, 0)
 
 
 @slow
@@ -389,6 +392,11 @@ def test_issue_19869():
     t = symbols('t')
     assert (maximum(sqrt(3)*(t - 1)/(3*sqrt(t**2 + 1)), t)
         ) == sqrt(3)/3
+
+
+def test_issue_21956():
+    x = Symbol('x')
+    assert maximum(Abs(x**3), x, Interval(0, 3)) ==  27
 
 
 def test_issue_16469():
