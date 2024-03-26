@@ -265,7 +265,7 @@ class MatplotlibBackend(base_backend.Plot):
         if not self.axis:
             ax.set_axis_off()
         if self.legend:
-            if ax.legend():
+            if ax.legend(loc=self.legend_loc):
                 ax.legend_.set_visible(self.legend)
         if self.margin:
             ax.set_xmargin(self.margin)
