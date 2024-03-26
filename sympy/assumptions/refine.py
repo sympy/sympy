@@ -373,7 +373,7 @@ def refine_sign(expr, assumptions):
 
 def refine_matrixelement(expr, assumptions):
     """
-    Handler for symmetric part.
+    Handler for matrix elements.
 
     Examples
     ========
@@ -385,13 +385,30 @@ def refine_matrixelement(expr, assumptions):
     X[0, 1]
     >>> refine_matrixelement(X[1, 0], Q.symmetric(X))
     X[0, 1]
+    >>> refine_matrixelement(X[1, 0], Q.hermitian(X))
+    conjugate(X[0, 1])
+    >>> refine_matrixelement(X[0, 0], Q.diagonal(X))
+    X[0, 0]
+    >>> refine_matrixelement(X[0, 1], Q.diagonal(X))
+    0
     """
     from sympy.matrices.expressions.matexpr import MatrixElement
     matrix, i, j = expr.args
+    if ask(Q.diagonal(matrix), assumptions):
+        if i == j:
+            return expr
+        return S.Zero
     if ask(Q.symmetric(matrix), assumptions):
         if (i - j).could_extract_minus_sign():
             return expr
         return MatrixElement(matrix, j, i)
+    if ask(Q.hermitian(matrix), assumptions):
+        diff = i - j
+        # following zero diff checking is necessary to avoid infinite recursion
+        # (different to 'symmetric', where the diagonal elements are not changed)
+        if diff.is_zero or diff.could_extract_minus_sign():
+            return expr
+        return MatrixElement(matrix, j, i).conjugate()
 
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'Abs': refine_abs,
