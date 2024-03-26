@@ -730,3 +730,38 @@ def polarizing_beam_splitter(Tp=1, Rs=1, Ts=0, Rp=0, phia=0, phib=0):
                   [I*sqrt(Rp), 0, sqrt(Tp), 0],
                   [0, -I*sqrt(Rs)*exp(I*phib), 0, sqrt(Ts)]])
     return PBS
+
+
+def quarter_wave_plate(delta=0):
+    """A quarter-wave plate Jones matrix with phase retardance ``delta``.
+
+    Parameters
+    ==========
+
+    delta : numeric type or SymPy Symbol
+        The phase retardance of the quarter-wave plate in radians.
+
+    Returns
+    =======
+
+    SymPy Matrix
+        A Jones matrix representing the quarter-wave plate.
+
+    Examples
+    ========
+
+    A quarter-wave plate with a phase retardance of pi/4.
+
+    >>> from sympy import pprint, pi
+    >>> from sympy.physics.optics.polarization import quarter_wave_plate
+    >>> delta = pi/4
+    >>> J = quarter_wave_plate(delta)
+    >>> pprint(J, use_unicode=True)
+    ⎡ √2/2   √2/2 ⎤
+    ⎢             ⎥
+    ⎣ √2/2  -√2/2 ⎦
+
+    """
+    M = Matrix([[cos(delta), sin(delta)],
+                [sin(delta), -cos(delta)]])
+    return M
