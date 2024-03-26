@@ -240,7 +240,7 @@ def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2))
     sT(a, "AlgebraicNumber(Pow(Integer(2), Rational(1, 2)), [Integer(1), Integer(0)])")
     a = AlgebraicNumber(root(-2, 3))
-    sT(a, "AlgebraicNumber(Pow(Integer(-2), Rational(1, 3)), [Integer(1), Integer(0)])")
+    sT(a, "AlgebraicNumber(Mul(Pow(Integer(-1), Rational(1, 3)), Pow(Integer(2), Rational(1, 3))), [Integer(1), Integer(0)])")
 
 
 def test_PolyRing():
