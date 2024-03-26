@@ -69,6 +69,23 @@ class Point:
         if not isinstance(other, Point):
             raise TypeError('A Point must be supplied')
 
+    def _check_not_moving(self, frame):
+        """Checks whether the point is indeed not moving in a frame."""
+        point_valid = True
+        try:
+            if not self.vel(frame) == 0:
+                point_valid = False
+        except ValueError:
+            pass
+        try:
+            if not self.acc(frame) == 0:
+                point_valid = False
+        except (ValueError, KeyError):
+            pass
+        if not point_valid:
+            raise ValueError('Point ' + self.name + ' is not fixed in ' +
+                             'ReferenceFrame ' + frame.name)
+
     def _pdict_list(self, other, num):
         """Returns a list of points that gives the shortest path with respect
         to position, velocity, or acceleration from this point to the provided
@@ -152,7 +169,7 @@ class Point:
         >>> B = ReferenceFrame('B')
         >>> B.set_ang_vel(N, 5 * B.y)
         >>> O = Point('O')
-        >>> P = O.locatenew('P', q * B.x)
+        >>> P = O.locatenew('P', q * B.x + q2 * B.y)
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.a1pt_theory(O, N, B)
@@ -163,6 +180,7 @@ class Point:
         _check_frame(outframe)
         _check_frame(interframe)
         self._check_point(otherpoint)
+        otherpoint._check_not_moving(interframe)
         dist = self.pos_from(otherpoint)
         v = self.vel(interframe)
         a1 = otherpoint.acc(outframe)
@@ -214,6 +232,7 @@ class Point:
         _check_frame(outframe)
         _check_frame(fixedframe)
         self._check_point(otherpoint)
+        otherpoint._check_not_moving(fixedframe)
         dist = self.pos_from(otherpoint)
         a = otherpoint.acc(outframe)
         omega = fixedframe.ang_vel_in(outframe)
@@ -435,7 +454,7 @@ class Point:
         >>> B = ReferenceFrame('B')
         >>> B.set_ang_vel(N, 5 * B.y)
         >>> O = Point('O')
-        >>> P = O.locatenew('P', q * B.x)
+        >>> P = O.locatenew('P', q * B.x + q2 * B.y)
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.v1pt_theory(O, N, B)
@@ -446,6 +465,7 @@ class Point:
         _check_frame(outframe)
         _check_frame(interframe)
         self._check_point(otherpoint)
+        otherpoint._check_not_moving(interframe)
         dist = self.pos_from(otherpoint)
         v1 = self.vel(interframe)
         v2 = otherpoint.vel(outframe)
@@ -494,6 +514,7 @@ class Point:
         _check_frame(outframe)
         _check_frame(fixedframe)
         self._check_point(otherpoint)
+        otherpoint._check_not_moving(fixedframe)
         dist = self.pos_from(otherpoint)
         v = otherpoint.vel(outframe)
         omega = fixedframe.ang_vel_in(outframe)
