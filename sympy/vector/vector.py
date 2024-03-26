@@ -344,6 +344,58 @@ class Vector(BasisDependent):
         else:
             raise TypeError("Invalid division involving a vector")
 
+    def equals(self, other):
+        """
+        Check if the scalar components of self & others's vector system
+        are equal after simplification.
+        Parameters:
+        - self: The first vector for comparison.
+        - others: The second vector for comparison.
+        - N: instance of a 3D coordinate system.
+        Returns:
+        - True if the scalar components are equal after simplification,
+        otherwise False. If an error occurs during the process, a
+        RuntimeError is raised with an error message.
+        """
+        from sympy.vector import express
+        # from sympy.core import Expr
+
+        if self != Vector.zero and other != Vector.zero:
+
+            # creating a zipped object for vector components
+            zipped_obj = list(zip(self.components, other.components))
+
+            # cheking vector components equal or not
+            V_C = all(Expr.equals(i, j) for i, j in zipped_obj)
+
+            # finding coordinates of self and other
+            self_coord = list((self.components).keys())[0].args[1]
+            other_coord = list((other.components).keys())[0].args[1]
+
+            # expressing self in coordinate system, N.
+            N = self_coord.locate_new('N', self)
+            self = express(N.position_wrt(self_coord), N)
+
+            N = other_coord.locate_new('N', other)
+            other = express(N.position_wrt(other_coord), N)
+
+            # updating zipped object for scaler components
+            zipped_obj = list(zip(self.components, other.components))
+
+            # cheking scaler components equal or not
+            S_C = all(Expr.equals(self.components[i], other.components[j]) for i, j in zipped_obj)
+
+            return V_C and S_C
+
+        elif self == Vector.zero and other == Vector.zero:
+            return True
+
+        elif (self == Vector.zero and other != Vector.zero) or (self != Vector.zero and other == Vector.zero):
+            return False
+
+        return None
+
+
 
 class BaseVector(Vector, AtomicExpr):
     """

@@ -2286,3 +2286,16 @@ def test_format():
 
 def test_issue_24045():
     assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
+
+
+def test_custom_vector_equals():
+    import sympy
+    from sympy.vector import CoordSys3D
+    Q = CoordSys3D('Q')
+    A = (sympy.sqrt(2) + sympy.sqrt(6)) / (sympy.sqrt(sympy.sqrt(3) + 2))
+
+    custom_v1 = 2 * Q.i
+    custom_v2 = A * Q.i
+
+    # Test vectors that are expected to be equal
+    assert custom_v1.equals(custom_v2)
