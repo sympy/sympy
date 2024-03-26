@@ -34,6 +34,7 @@ from sympy.functions.special.hyper import hyper
 from sympy.functions.special.zeta_functions import (polylog, zeta)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import _value_check, is_random
+from sympy import And
 
 
 __all__ = ['FlorySchulz',
@@ -207,7 +208,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
         _value_check((0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
-        return (1 - self.p)**(k - 1) * self.p
+        return Piecewise(((1 - self.p)**(k - 1) * self.p, And(k > 0, k <= floor(k))), (0, True))
 
     def _characteristic_function(self, t):
         p = self.p
@@ -252,7 +253,7 @@ def Geometric(name, p):
     >>> X = Geometric("x", p)
 
     >>> density(X)(z)
-    (5/4)**(1 - z)/5
+     Piecewise(((5/4)**(1 - z)/5, (z > 0) & (z <= floor(z))), (0, True))
 
     >>> E(X)
     5
