@@ -224,3 +224,17 @@ def test_issue_11518():
     assert conjugate(r) == r
     s = abs(x + I * y)
     assert conjugate(s) == r
+
+
+def test_issue_25783():
+    x = Symbol("x", positive=True)
+    from sympy.functions.elementary.trigonometric import atan
+    assert (1/((x+2*I)*(x+3*I))).as_real_imag() == (x**2/((x**2 + 4)*(x**2 + 9)) - 6/((x**2 + 4)*(x**2 + 9)),-5*x/((x**2 + 4)*(x**2 + 9)))
+    assert (1/((x + 2*I)**(S(3)/2)*(x + 3*I)**(S(2)/3))).as_real_imag() == \
+        (-sin(3*atan(2/x)/2)*sin(2*atan(3/x)/3)/((x**2 + 4)**(S(3)/4)*(x**2 + 9)**(S(1)/3)) + \
+        cos(3*atan(2/x)/2)*cos(2*atan(3/x)/3)/((x**2 + 4)**(S(3)/4)*(x**2 + 9)**(S(1)/3)),\
+        -sin(3*atan(2/x)/2)*cos(2*atan(3/x)/3)/((x**2 + 4)**(S(3)/4)*(x**2 + 9)**(S(1)/3)) - \
+        sin(2*atan(3/x)/3)*cos(3*atan(2/x)/2)/((x**2 + 4)**(S(3)/4)*(x**2 + 9)**(S(1)/3)))
+    assert (1/((1 + I/x)*(I*x + 1))).as_real_imag() == (0, -x/((1 + x**(-2))*(x**2 + 1)) - 1/(x*(1 + x**(-2))*(x**2 + 1)))
+    assert (1/((-S(1)/2 + sqrt(3)*I/2)*(S(1)/6 + sqrt(3)*I/18)**(S(1)/3))).as_real_imag() == \
+        (-sqrt(3)*cos(pi/18)/2 - 3*sin(pi/18)/2, -3*cos(pi/18)/2 + sqrt(3)*sin(pi/18)/2)
