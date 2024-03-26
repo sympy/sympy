@@ -197,6 +197,32 @@ jobs:
 
   # -------------------- NumPy 2.0 job ----------------------------- #
 
+  numpy-prerelease:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    name: ${{ matrix.python-version }} NumPy Prerelease
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pip install -r requirements-dev.txt
+      - run: pip install --pre numpy scipy
+
+      # Test modules with specific dependencies
+      - run: bin/test_optional_dependencies.py
+
+  # -------------------- NumPy nightly ----------------------------- #
+
   numpy-nightly:
     needs: code-quality
 
