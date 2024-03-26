@@ -19,9 +19,9 @@ from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.realfield import RealField
 
 from sympy.polys.numberfields.subfield import field_isomorphism
-from sympy.polys.rings import ring
+from sympy.polys.rings import ring, PolyElement
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.polys.fields import field
+from sympy.polys.fields import field, FracElement
 
 from sympy.polys.agca.extensions import FiniteExtension
 
@@ -657,7 +657,12 @@ def test_Domain_is_unit():
 def test_Domain_convert():
 
     def check_element(e1, e2, K1, K2, K3):
-        assert type(e1) is type(e2), '%s, %s: %s %s -> %s' % (e1, e2, K1, K2, K3)
+        if isinstance(e1, PolyElement):
+            assert isinstance(e2, PolyElement) and e1.ring == e2.ring
+        elif isinstance(e1, FracElement):
+            assert isinstance(e2, FracElement) and e1.field == e2.field
+        else:
+            assert type(e1) is type(e2), '%s, %s: %s %s -> %s' % (e1, e2, K1, K2, K3)
         assert e1 == e2, '%s, %s: %s %s -> %s' % (e1, e2, K1, K2, K3)
 
     def check_domains(K1, K2):

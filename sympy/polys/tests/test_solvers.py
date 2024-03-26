@@ -13,7 +13,7 @@ def test_solve_lin_sys_2x2_one():
            2*x1 - x2]
     sol = {x1: QQ(5, 3), x2: QQ(10, 3)}
     _sol = solve_lin_sys(eqs, domain)
-    assert _sol == sol and all(isinstance(s, domain.dtype) for s in _sol)
+    assert _sol == sol and all(s.ring == domain for s in _sol)
 
 def test_solve_lin_sys_2x4_none():
     domain, x1,x2 = ring("x1,x2", QQ)
