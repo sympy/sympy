@@ -21,6 +21,7 @@ from sympy.functions.elementary.complexes import unpolarify, Abs, sign
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.miscellaneous import (Min, Max)
 from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold,
                                                   piecewise_simplify)
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -36,7 +37,7 @@ from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.powsimp import powsimp
-from sympy.simplify.radsimp import radsimp, fraction, collect_abs
+from sympy.simplify.radsimp import radsimp, fraction, collect_abs, collect_minmax
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
@@ -611,7 +612,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             return expr
 
     # do deep simplification
-    handled = Add, Mul, Pow, ExpBase
+    handled = Add, Mul, Pow, ExpBase, Max, Min
     expr = expr.replace(
         # here, checking for x.args is not enough because Basic has
         # args but Basic does not always play well with replace, e.g.
@@ -653,6 +654,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         return expr
 
     expr = factor_terms(expr, sign=False)
+
+    if expr.has(Max) or expr.has(Min):
+        print("we made it into Max or Min")
+        expr = collect_minmax(expr)
 
     # must come before `Piecewise` since this introduces more `Piecewise` terms
     if expr.has(sign):
