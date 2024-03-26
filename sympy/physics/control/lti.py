@@ -4302,3 +4302,119 @@ class StateSpace(LinearTimeInvariant):
 
         """
         return self.controllability_matrix().rank() == self.num_states
+
+class PIDController(TransferFunction):
+    """
+    A PID Controller class that uses Parallel connection to combine the P, I, and D components.
+
+    Parameters
+    ==========
+    KP : Expr, Number
+        Proportional gain.
+    KI : Expr, Number
+        Integral gain.
+    KD : Expr, Number
+        Derivative gain.
+    TF : Expr, Number
+        Derivative filter time constant
+    s : Symbol
+        The complex frequency variable.
+
+    Examples
+    ========
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import PIDController
+    >>> KP, KI, KD, TF = 1, 0.1, 0.01, 0
+    >>> pid = PIDController(KP, KI, KD, TF, s)
+    >>> print(pid)
+    PIDController(1, 0.1, 0.01, 0, s)
+    >>> pid.doit() #Converts PIDController into TransferFunction
+    TransferFunction(s*(0.01*s + 1) + 0.1, s, s)
+    >>> pid.var
+    s
+    >>> pid.KP
+    1
+    """
+
+    def __new__(cls, KP = None, KI = None, KD = None, TF = None, var = None):
+        if var is None:
+            raise ValueError("var should not be None")
+
+        if not isinstance(var, Symbol):
+            raise ValueError("var must be a Symbol")
+
+        if not (KP or KI or  KD):
+            raise ValueError("All KP, KI & KD should not be None")
+
+        if(TF is None):
+            TF = S.Zero
+        if(KP is None):
+            KP = S.Zero
+        if(KI is None):
+            KI = S.Zero
+        if (KD is None):
+            KD = S.Zero
+
+        KP = _sympify(KP)
+        KI = _sympify(KI)
+        KD = _sympify(KD)
+        TF = _sympify(TF)
+
+        P = TransferFunction(KP, 1, var)
+        I = TransferFunction(KI, var, var)
+        D = TransferFunction(KD * var, S.One+TF*var, var)
+
+        pid_controller = Parallel(P, I, D)
+
+        tf = pid_controller.doit()
+
+        numerator = tf.num
+        denominator = tf.den
+
+        instance = super(PIDController, cls).__new__(cls, numerator, denominator, var)
+        instance._num = tf.num
+        instance._den = tf.den
+        instance._KP, instance._KI, instance._KD = KP, KI, KD
+        instance._TF = TF
+
+        return instance
+
+    def __str__(self):
+        return f'PIDController({self._KP}, {self._KI}, {self._KD}, {self._TF}, {self.var})'
+
+    def __repr__(self):
+        return f'PIDController({self._KP}, {self._KI}, {self._KD}, {self._TF}, {self.var})'
+
+    @property
+    def KP(self):
+        """
+        Get the Proportional (KP) gain of the PIDController.
+        """
+        return self._KP
+
+    @property
+    def KI(self):
+        """
+        Get the Proportional Integral (KI) gain of the PIDController.
+        """
+        return self._KI
+
+    @property
+    def KD(self):
+        """
+        Get the Proportional Derivative(P) gain of the PIDController.
+        """
+        return self._KD
+
+    @property
+    def TF(self):
+        """
+        Get the Derivative filter time constant (TP) of the PIDController.
+        """
+        return self._TF
+
+    def doit(self):
+        """
+        Convert the PIDController into a TransferFunction.
+        """
+        return TransferFunction(self._num, self._den, self.var)
