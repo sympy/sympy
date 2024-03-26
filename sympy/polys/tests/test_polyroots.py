@@ -480,12 +480,11 @@ def test_roots0():
     r13_20, r1_20 = [ Rational(*r)
         for r in ((13, 20), (1, 20)) ]
 
-    s2 = sqrt(2)
     assert roots(f, x) == {
-        r13_20 + r1_20*sqrt(1 - 8*I*s2): 1,
-        r13_20 - r1_20*sqrt(1 - 8*I*s2): 1,
-        r13_20 + r1_20*sqrt(1 + 8*I*s2): 1,
-        r13_20 - r1_20*sqrt(1 + 8*I*s2): 1,
+        S(13)/20 + sqrt(S(1)/400 - sqrt(2)*I/50): 1,
+        S(13)/20 + sqrt(S(1)/400 + sqrt(2)*I/50): 1,
+        S(13)/20 - sqrt(S(1)/400 - sqrt(2)*I/50): 1,
+        S(13)/20 - sqrt(S(1)/400 + sqrt(2)*I/50): 1,
     }
 
     f = x**4 + x**3 + x**2 + x + 1
@@ -750,9 +749,11 @@ def test_issue_20913():
 
 
 def test_issue_22768():
-    e = Rational(1, 3)
-    r = (-1/a)**e*(a + 1)**(5*e)
-    assert roots(Poly(a*x**3 + (a + 1)**5, x)) == {
+    r = (-(a + 1)**5/a) ** Rational(1, 3)
+    result = roots(Poly(a*x**3 + (a + 1)**5, x))
+    result_factored = {r.factor(deep=True): m for r, m in result.items()}
+    assert result_factored == {
         r: 1,
-        -r*(1 + sqrt(3)*I)/2: 1,
-        r*(-1 + sqrt(3)*I)/2: 1}
+        -I*r*(sqrt(3) - I)/2: 1,
+        +I*r*(sqrt(3) + I)/2: 1,
+    }
