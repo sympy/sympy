@@ -197,7 +197,7 @@ jobs:
 
   # -------------------- NumPy 2.0 job ----------------------------- #
 
-  numpy-nightly:
+  numpy-prerelease:
     needs: code-quality
 
     runs-on: ubuntu-20.04
