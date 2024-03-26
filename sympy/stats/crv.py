@@ -540,6 +540,10 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
 
+    from sympy.stats import ContinuousDistributionHandmade
+    from sympy import Lambda
+    dist = ContinuousDistributionHandmade(Lambda(y, fy), set=Interval(0, oo))
+    dist.fy(x)
     def compute_quantile(self, expr, **kwargs):
 
         if expr == self.value:
