@@ -623,8 +623,11 @@ class Point:
         (N.x, A.y)
 
         """
-        partials = [self.vel(frame).diff(speed, frame, var_in_dcm=False) for
-                    speed in gen_speeds]
+
+        from sympy.physics.vector.functions import partial_velocity
+
+        vel = self.vel(frame)
+        partials = partial_velocity([vel], gen_speeds, frame)[0]
 
         if len(partials) == 1:
             return partials[0]
