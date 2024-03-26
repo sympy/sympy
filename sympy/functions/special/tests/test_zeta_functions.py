@@ -82,6 +82,21 @@ def test_zeta_eval():
 def test_zeta_series():
     assert zeta(x, a).series(a, z, 2) == \
         zeta(x, z) - x*(a-z)*zeta(x+1, z) + O((a-z)**2, (a, z))
+    assert zeta(4, x).aseries(x, 11) == \
+        2/(9*x**9) - 1/(6*x**7) + 1/(3*x**5) + 1/(2*x**4) + 1/(3*x**3) + O(x**(-11), (x, oo))
+    assert zeta(Rational(-1,3), x).aseries(x, 4) == \
+        1/(1944*x**Rational(8,3)) - 1/(36*x**Rational(2,3)) + \
+        x**Rational(1,3)/2 - 3*x**Rational(4,3)/4 + O(x**(-4), (x, oo))
+    assert zeta(x).series(x, 1, 4) == 1/(x - 1) + S.EulerGamma - (x - 1)*stieltjes(1) + \
+        (x - 1)**2*stieltjes(2)/2 - (x - 1)**3*stieltjes(3)/6 + O((x - 1)**4, (x, 1))
+    assert zeta(x, 2).series(x, 1, 4) == 1/(x - 1) + stieltjes(0,2) - (x - 1)*stieltjes(1,2) + \
+        (x - 1)**2*stieltjes(2,2)/2 - (x - 1)**3*stieltjes(3,2)/6 + O((x - 1)**4, (x, 1))
+    assert zeta(x**2).series(x, 1, 4) == 1/(x - 1)/2 + S.EulerGamma - S(1)/4 + \
+        (S(1)/8 - 2*stieltjes(1))*(x - 1) + (x - 1)**2*(S(-1)/16 + 2*stieltjes(2) - stieltjes(1)) + \
+        (x - 1)**3*(2*stieltjes(2) - 4*stieltjes(3)/3 + S(1)/32) + O((x - 1)**4, (x, 1))
+    assert zeta((x-1)**2, 2).series(x, 0, 4) == -1/(2*x) + S.EulerGamma - S(5)/4 + \
+        x*(2*stieltjes(1, 2) - S(1)/8) + x**2*(S(-1)/16 + 2*stieltjes(2, 2) - stieltjes(1, 2)) + \
+        x**3*(S(-1)/32 + 4*stieltjes(3, 2)/3 - 2*stieltjes(2, 2)) + O(x**4)
 
 
 def test_dirichlet_eta_eval():

@@ -620,7 +620,23 @@ def test_loggamma():
     tN(5, 5)
 
 
-def test_polygamma_expansion():
+def test_polygamma_series():
+    assert polygamma(0, x).nseries(x, 0, 6) == -1/x - S.EulerGamma + x*zeta(2) - \
+        x**2*zeta(3) + x**3*zeta(4) - x**4*zeta(5) + x**5*zeta(6) + O(x**6)
+    assert polygamma(2, x).nseries(x, 0, 6) == -2/x**3 - 2*zeta(3) + 6*x*zeta(4) - \
+        12*x**2*zeta(5) + 20*x**3*zeta(6) - 30*x**4*zeta(7) + 42*x**5*zeta(8) + O(x**6)
+    assert polygamma(2, x).series(x, -3, 4) == -2/(x + 3)**3 + S(251)/108 - 2*zeta(3) + \
+        (S(1393)/216 + pi**4/15)*(x + 3) + (S(8051)/648 - 12*zeta(5))*(x + 3)**2 + \
+        (S(237245)/11664 + 4*pi**6/189)*(x + 3)**3 + O((x + 3)**4, (x, -3))
+    assert polygamma(1, sqrt(x)).series(x, 0, 4) == 1/x + zeta(2) - 2*sqrt(x)*zeta(3) + \
+        3*x*zeta(4) - 4*x**(S(3)/2)*zeta(5) + 5*x**2*zeta(6) - 6*x**(S(5)/2)*zeta(7) + \
+        7*x**3*zeta(8) - 8*x**(S(7)/2)*zeta(9) + O(x**4)
+
+    # issue 23635
+    assert gamma(-x-y).series(x, n=2).removeO().series(y, n=2) == -1/y - S.EulerGamma + \
+        y*(-S.EulerGamma*pi**2*x/6 - 2*x*zeta(3)/3 - S.EulerGamma**3*x/3 - pi**2/12 - S.EulerGamma**2/2) + \
+        x/y**2 - EulerGamma**2*x/2 - pi**2*x/12 + O(y**2)
+
     # A. & S., pa. 259 and 260
     assert polygamma(0, 1/x).nseries(x, n=3) == \
         -log(x) - x/2 - x**2/12 + O(x**3)
