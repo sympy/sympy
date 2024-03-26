@@ -7653,7 +7653,7 @@ def poly(expr, *gens, **args):
                     factor = Mul(*factors)
 
                     if factor.is_Number:
-                        product = product.mul(factor)
+                        product *= factor
                     else:
                         product = product.mul(Poly._from_expr(factor, opt))
 
