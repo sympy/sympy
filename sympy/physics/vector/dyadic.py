@@ -166,22 +166,32 @@ class Dyadic(Printable, EvalfMixin):
     def __neg__(self):
         return self * -1
 
-    def _latex(self, printer):
+    def _latex(self, printer, **kwargs):
         ar = self.args  # just to shorten things
+        shorten = kwargs.get('shorten', False)
         if len(ar) == 0:
             return str(0)
         ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
-                ol.append(' + ' + printer._print(ar[i][1]) + r"\otimes " +
-                          printer._print(ar[i][2]))
+                if not shorten:
+                    ol.append(' + ' + printer._print(ar[i][1]) + r"\otimes " +
+                              printer._print(ar[i][2]))
+                else:
+                    ol.append(' + ' + printer._print(ar[i][1]) +
+                              printer._print(ar[i][2]))
             # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
-                ol.append(' - ' +
-                          printer._print(ar[i][1]) +
-                          r"\otimes " +
-                          printer._print(ar[i][2]))
+                if not shorten:
+                    ol.append(' - ' +
+                              printer._print(ar[i][1]) +
+                              r"\otimes " +
+                              printer._print(ar[i][2]))
+                else:
+                    ol.append(' - ' +
+                              printer._print(ar[i][1]) +
+                              printer._print(ar[i][2]))
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
@@ -193,8 +203,12 @@ class Dyadic(Printable, EvalfMixin):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + printer._print(ar[i][1]) +
-                          r"\otimes " + printer._print(ar[i][2]))
+                if not shorten:
+                    ol.append(str_start + arg_str + printer._print(ar[i][1]) +
+                              r"\otimes " + printer._print(ar[i][2]))
+                else:
+                    ol.append(str_start + arg_str + printer._print(ar[i][1]) +
+                              printer._print(ar[i][2]))
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
