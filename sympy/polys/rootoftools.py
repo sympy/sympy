@@ -403,8 +403,9 @@ class ComplexRootOf(RootOf):
         self._ensure_reals_init()
         if self.index >= len(_reals_cache[self.poly]):
             ivl = self._get_interval()
-            return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
-        return False  # XXX is this necessary?
+            # all others are on one side or the other:
+            return ivl.ax*ivl.bx <= 0
+        return False
 
     @classmethod
     def real_roots(cls, poly, radicals=True):
