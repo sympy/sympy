@@ -43,6 +43,7 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
+from sympy.core.cache import clear_cache
 from sympy.core.containers import Tuple, Dict
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols
@@ -902,6 +903,9 @@ class _TensorManager:
         if c not in (0, 1, None):
             raise ValueError('`c` can assume only the values 0, 1 or None')
 
+        i = sympify(i)
+        j = sympify(j)
+
         if i not in self._comm_symbols2i:
             n = len(self._comm)
             self._comm.append({})
@@ -920,6 +924,14 @@ class _TensorManager:
         nj = self._comm_symbols2i[j]
         self._comm[ni][nj] = c
         self._comm[nj][ni] = c
+
+        """
+        Cached sympy functions (e.g. expand) may have cached the results of
+        expressions involving tensors, but those results may not be valid after
+        changing the commutation properties. To stay on the safe side, we clear
+        the cache of all functions.
+        """
+        clear_cache()
 
     def set_comms(self, *args):
         """
@@ -1805,8 +1817,7 @@ class TensorHead(Basic):
         else:
             assert symmetry.rank == len(index_types)
 
-        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
-        obj.comm = TensorManager.comm_symbols2i(comm)
+        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(comm))
         return obj
 
     @property
@@ -1820,6 +1831,10 @@ class TensorHead(Basic):
     @property
     def symmetry(self):
         return self.args[2]
+
+    @property
+    def comm(self):
+        return TensorManager.comm_symbols2i(self.args[3])
 
     @property
     def rank(self):
@@ -4262,10 +4277,12 @@ class WildTensorHead(TensorHead):
             raise NotImplementedError("Wild matching based on symmetry is not implemented.")
 
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), sympify(symmetry), sympify(comm), sympify(unordered_indices))
-        obj.comm = TensorManager.comm_symbols2i(comm)
-        obj.unordered_indices = unordered_indices
 
         return obj
+
+    @property
+    def unordered_indices(self):
+        return self.args[4]
 
     def __call__(self, *indices, **kwargs):
         tensor = WildTensor(self, indices, **kwargs)
