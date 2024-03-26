@@ -656,7 +656,7 @@ class AccumulationBounds(Expr):
         EmptySet
 
         >>> AccumBounds(1, 4).intersection(FiniteSet(1, 2, 5))
-        {1, 2}
+        FiniteSet(1, 2)
 
         """
         if not isinstance(other, (AccumBounds, FiniteSet)):

@@ -112,10 +112,14 @@ class StrPrinter(Printer):
         return 'zoo'
 
     def _print_ConditionSet(self, s):
+        from sympy.sets.sets import FiniteSet
         args = tuple([self._print(i) for i in (s.sym, s.condition)])
         if s.base_set is S.UniversalSet:
             return 'ConditionSet(%s, %s)' % args
-        args += (self._print(s.base_set),)
+        if isinstance(s.base_set, FiniteSet):
+            args += (self._wrapped_Finite_Set_print(s.base_set),)
+        else:
+            args += (self._print(s.base_set),)
         return 'ConditionSet(%s, %s, %s)' % args
 
     def _print_Derivative(self, expr):
@@ -813,20 +817,43 @@ class StrPrinter(Printer):
             return "set()"
         return '{%s}' % args
 
-    def _print_FiniteSet(self, s):
+    def _print_Set(self,s):
+        from sympy.sets.sets import FiniteSet, Interval, ProductSet, \
+            Complement
+        from sympy.sets.conditionset import ConditionSet
+        from sympy.sets.fancysets import Range, ImageSet
+        from sympy.geometry.entity import GeometrySet
+        if isinstance(s, Interval):
+            return self._print_Interval(s)
+        if isinstance(s, ConditionSet):
+            return self._print_ConditionSet(s)
+        name = s.__class__.__name__
+        items = None
+        if isinstance(s, (ProductSet, Complement, Range, ImageSet,
+                          GeometrySet)):
+            items = s.args
+        else:
+            items = sorted(s.args, key=default_sort_key)
+        args = ''
+        for item in items:
+            if isinstance(item, FiniteSet):
+                args += self._wrapped_Finite_Set_print(item) + ', '
+            else:
+                args += self._print(item) + ', '
+        args = args[:-2]
+        return name + '({})'.format(args)
+
+    def _wrapped_Finite_Set_print(self,s):
         from sympy.sets.sets import FiniteSet
         items = sorted(s, key=default_sort_key)
-
-        args = ', '.join(self._print(item) for item in items)
-        if any(item.has(FiniteSet) for item in items):
-            return 'FiniteSet({})'.format(args)
+        args = ''
+        for item in items:
+            if isinstance(item, FiniteSet):
+                args += self._wrapped_Finite_Set_print(item) + ', '
+            else:
+                args += self._print(item) + ', '
+        args = args[:-2]
         return '{{{}}}'.format(args)
-
-    def _print_Partition(self, s):
-        items = sorted(s, key=default_sort_key)
-
-        args = ', '.join(self._print(arg) for arg in items)
-        return 'Partition({})'.format(args)
 
     def _print_frozenset(self, s):
         if not s:
