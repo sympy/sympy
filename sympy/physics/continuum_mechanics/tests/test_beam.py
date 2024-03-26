@@ -431,7 +431,7 @@ def test_remove_load():
     except ValueError:
         assert True
     else:
-        assert False
+        raise AssertionError()
 
     b.apply_load(-3, 0, -2)
     b.apply_load(4, 2, -1)
@@ -447,7 +447,7 @@ def test_remove_load():
     except ValueError:
         assert True
     else:
-        assert False
+        raise AssertionError()
 
     b.remove_load(-3, 0, -2)
     b.remove_load(4, 2, -1)
