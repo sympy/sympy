@@ -1,5 +1,6 @@
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
+from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
 from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.numbers import Integer
@@ -7,6 +8,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.printing.defaults import Printable
+from mpmath.libmp.libmpf import prec_to_dps
 
 import itertools
 from collections.abc import Iterable
@@ -83,7 +85,7 @@ class ArrayKind(Kind):
         return ArrayKind(elemkind)
 
 
-class NDimArray(Printable):
+class NDimArray(Printable, EvalfMixin):
     """N-dimensional array.
 
     Examples
@@ -585,6 +587,11 @@ class NDimArray(Printable):
             raise ValueError('Dimension of index greater than rank of array')
 
         return index
+
+    def _eval_evalf(self, prec):
+        """Apply evalf() to each element of self."""
+        dps = prec_to_dps(prec)
+        return self.applyfunc(lambda e: e.evalf(dps))
 
 
 class ImmutableNDimArray(NDimArray, Basic):
