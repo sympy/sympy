@@ -119,7 +119,7 @@ if GROUND_TYPES in ('auto', 'gmpy', 'gmpy2'):
 elif GROUND_TYPES == 'flint':
 
     # Try to use python_flint
-    flint = import_module('flint')
+    flint = import_module('flint', min_module_version='0.5.0')
     gmpy = None
 
     if flint is None:
