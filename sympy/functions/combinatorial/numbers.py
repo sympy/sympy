@@ -1631,6 +1631,52 @@ class partition(Function):
         if self.args[0].is_nonnegative is True:
             return True
 
+class lobb(Function):
+    r"""
+    The Lobb number `L_{m,n}` counts the number of ways that `n + m` open parentheses
+    and `n - m` close parentheses can be arranged to form the start of a valid sequence
+    of balanced parentheses.
+
+    Lobb numbers form a natural generalization of the Catalan numbers,
+    which count the number of complete  strings of balanced parentheses of a given length.
+    Thus, the `n^{th}` Catalan number equals the Lobb number `L_{0,n}`.
+
+    The `(m, n)^{th}` Lobb number `L_{m,n}` is given by the formula:
+
+    .. math:: L_{m,n} = \frac{2m+1}{m+n+1}\binom{2n}{m+n}
+
+    Examples
+    ========
+    >>> from sympy.functions.combinatorial.numbers import lobb
+    >>> for i in range(0,6):
+    ...     if i == 0: print("1")
+    ...     else:
+    ...         for j in range(i):
+    ...             print(lobb(j, i), end=" ")
+    ...         print("1")
+    1
+    1 1
+    2 3 1
+    5 9 5 1
+    14 28 20 7 1
+    42 90 75 35 9 1
+
+    See Also
+    ========
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition, tribonacci,
+    genocchi
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Lobb_number
+    """
+
+
+    @classmethod
+    def eval(cls, m, n):
+
+        if n.is_Integer and n.is_nonnegative and m.is_Integer and m.is_nonnegative:
+            return binomial(2*n, m + n)*(2*m + 1)/(m + n + 1)
+
 
 class divisor_sigma(Function):
     r"""
