@@ -207,7 +207,7 @@ jobs:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
 
-    name: ${{ matrix.python-version }} NumPy nightly
+    name: ${{ matrix.python-version }} NumPy Prerelease
 
     steps:
       - uses: actions/checkout@v3
