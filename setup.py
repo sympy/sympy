@@ -99,7 +99,6 @@ modules = [
     'sympy.parsing.c',
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
-    'sympy.parsing.latex._antlr',
     'sympy.parsing.latex.lark',
     'sympy.physics',
     'sympy.physics.biomechanics',
@@ -334,7 +333,7 @@ if __name__ == '__main__':
                   'test-examples/pydy-example-repo/*.py',
                   'test-examples/README.txt',
                   ],
-              'sympy.parsing.latex': ['*.txt', '*.g4', 'lark/grammar/*.lark'],
+              'sympy.parsing.latex': ['lark/grammar/*.lark'],
               'sympy.plotting.tests': ['test_region_*.png'],
               'sympy': ['py.typed']
               },
