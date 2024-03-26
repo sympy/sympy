@@ -39,8 +39,7 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
 # WHITE_LIST is a list of predicates that can always be handled.
 WHITE_LIST = ALLOWED_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative,
                                             Q.extended_positive, Q.extended_negative, Q.extended_nonpositive,
-                                            Q.extended_negative, Q.extended_nonzero, Q.negative_infinite,
-                                            Q.positive_infinite}
+                                            Q.extended_negative, Q.extended_nonzero}
 
 
 def check_satisfiability(prop, _prop, factbase):
@@ -59,6 +58,9 @@ def check_satisfiability(prop, _prop, factbase):
             raise UnhandledInput(f"LRASolver: {expr} is of MatrixKind")
         if expr == S.NaN:
             raise UnhandledInput("LRASolver: nan")
+
+    if not all_expr_real(all_exprs, factbase):
+        raise UnhandledInput("LRASolver: all expresions must be guaranteed to be real")
 
     # convert old assumptions into predicates and add them to sat_true and sat_false
     # also check for unhandled predicates
@@ -91,6 +93,113 @@ def check_satisfiability(prop, _prop, factbase):
 
     if not can_be_true and not can_be_false:
         raise ValueError("Inconsistent assumptions")
+
+
+def all_expr_real(all_exprs, assumptions):
+    all_exprs = {expr for expr in all_exprs
+                             if hasattr(expr, "free_symbols") and len(expr.free_symbols) > 0}
+
+    possibly_nonreal_expr = set(all_exprs)
+
+    rev_encoding = {value: key for key, value in assumptions.encoding.items()}
+
+    # check old assumptions
+    for expr in all_exprs:
+        if expr.is_real is True:
+            possibly_nonreal_expr.remove(expr)
+        # test for I times imaginary variable; such expressions are considered real and break LRASolver
+        if isinstance(expr, Mul) and any(arg.is_imaginary is True for arg in expr.args):
+            raise UnhandledInput(f"LRASolver: {expr} must be real")
+
+        if expr.is_integer == True and expr.is_zero != True:
+            raise UnhandledInput(f"LRASolver: {expr} is an integer")
+        if expr.is_integer == False:
+            raise UnhandledInput(f"LRASolver: {expr} can't be an integer")
+        if expr.is_rational == False:
+            raise UnhandledInput(f"LRASolver: {expr} is irational")
+
+
+
+    unit_clauses = []
+    len3_clauses = [] # Q.real gets broken down into 3 clauses: Q.negative | Q.zero | Q.positive
+    len5_clauses = [] # Q.extended_real gets broken down into 5 clauses
+    for clause in assumptions.data:
+        if len(clause) == 1:
+            unit_clauses.append(clause)
+        elif len(clause) == 3:
+            len3_clauses.append(clause)
+        elif len(clause) == 5:
+            len5_clauses.append(clause)
+
+    for clause in unit_clauses:
+        lit = list(clause)[0]
+        if lit == 0:
+            raise ValueError("Inconsistent assumptions")
+        pred = rev_encoding[abs(lit)]
+        if isinstance(pred, AppliedPredicate) and pred.function in imply_real:
+            if lit > 0:
+                for arg in pred.arguments:
+                    possibly_nonreal_expr.discard(arg)
+
+    for clause in len3_clauses:
+        real = is_real(clause, rev_encoding)
+        if real is False:
+            return False
+        if real is True:
+            expr = rev_encoding[list(clause)[0]].arguments[0]
+            possibly_nonreal_expr.discard(expr)
+
+    for clause in len5_clauses:
+        real = is_real(clause, rev_encoding, extended=True)
+        if real is False:
+            return False
+        if real is True:
+            expr = rev_encoding[list(clause)[0]].arguments[0]
+            possibly_nonreal_expr.discard(expr)
+
+
+    return len(possibly_nonreal_expr) == 0
+
+
+def is_real(clause, rev_encoding, extended=False):
+    """
+    Returns True if `clause` with contains a broken down real (or extended real) predicate.
+    Return False if `clause` contains negated real (or extended real) predicate.
+    Returns None otherwise.
+    """
+    # real is broken down into 3 predicates: Q.negative, Q.zero, Q.positive
+    # extended real gets broken down into 5 predicates
+    unseen = {Q.negative, Q.zero, Q.positive}
+    if extended:
+        unseen |= {Q.positive_infinite, Q.negative_infinite}
+
+    for lit in clause:
+        pred = rev_encoding[abs(lit)]
+        if not isinstance(pred, AppliedPredicate) or pred.function not in unseen:
+            return None
+        unseen.remove(pred.function)
+
+    if len(unseen) != 0:
+        return None
+
+    # check expresions are all the same
+    exprs = [rev_encoding[lit].arguments[0] for lit in clause]
+    if exprs[0] != exprs[1] or exprs[1] != exprs[2]:
+        return None
+
+    negated = [lit < 0 for lit in clause]
+    if all(negated):
+        return False
+    if not any(negated):
+        return True
+    return None
+
+
+imply_real = {
+    Q.gt, Q.lt, Q.ge, Q.le,
+    Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative,
+    Q.extended_positive, Q.extended_negative, Q.extended_nonzero, Q.extended_nonpositive, Q.extended_nonnegative,
+}
 
 
 def _preprocess(enc_cnf):
@@ -209,8 +318,6 @@ pred_to_pos_neg_zero = {
     Q.extended_nonpositive: Q.nonpositive,
     Q.extended_negative: Q.negative,
     Q.extended_nonzero: Q.nonzero,
-    Q.negative_infinite: False,
-    Q.positive_infinite: False
 }
 
 def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
@@ -257,19 +364,6 @@ def extract_pred_from_old_assum(all_exprs):
             continue
         if len(expr.free_symbols) == 0:
             continue
-
-        if expr.is_real is not True:
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
-        # test for I times imaginary variable; such expressions are considered real
-        if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
-
-        if expr.is_integer == True and expr.is_zero != True:
-            raise UnhandledInput(f"LRASolver: {expr} is an integer")
-        if expr.is_integer == False:
-            raise UnhandledInput(f"LRASolver: {expr} can't be an integer")
-        if expr.is_rational == False:
-            raise UnhandledInput(f"LRASolver: {expr} is irational")
 
         if expr.is_zero:
             ret.append(Q.zero(expr))
