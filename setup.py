@@ -34,6 +34,7 @@ from setuptools.command.sdist import sdist
 
 
 min_mpmath_version = '0.19'
+max_mpmath_version = '1.4.0'
 
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
@@ -351,7 +352,7 @@ if __name__ == '__main__':
             'Programming Language :: Python :: Implementation :: PyPy',
             ],
           install_requires=[
-            'mpmath>=%s' % min_mpmath_version,
+            'mpmath>=%s,<%s' % (min_mpmath_version, max_mpmath_version),
             ],
           **extra_kwargs
           )
