@@ -555,10 +555,10 @@ def trigsimp(expr, inverse=False, **opts):
 
     trigsimpfunc = {
         'fu': (lambda x: fu(x, **opts)),
-        'matching': (lambda x: futrig(x)),
+        'matching': (lambda x: futrig(x, **opts)),
         'groebner': (lambda x: groebnersimp(x, **opts)),
         'combined': (lambda x: futrig(groebnersimp(x,
-                               polynomial=True, hints=[2, tan]))),
+                               polynomial=True, hints=[2, tan]), **opts)),
         'old': lambda x: trigsimp_old(x, **opts),
                    }[method]
 
@@ -1156,11 +1156,11 @@ def futrig(e, *, hyper=True, **kwargs):
         return e
 
     old = e
-    e = bottom_up(e, _futrig)
+    e = bottom_up(e, lambda x: _futrig(x, kwargs.get('measure')))
 
     if hyper and e.has(HyperbolicFunction):
         e, f = hyper_as_trig(e)
-        e = f(bottom_up(e, _futrig))
+        e = f(bottom_up(e, lambda x: _futrig(x, kwargs.get('measure'))))
 
     if e != old and e.is_Mul and e.args[0].is_Rational:
         # redistribute leading coeff on 2-arg Add
@@ -1168,7 +1168,7 @@ def futrig(e, *, hyper=True, **kwargs):
     return e
 
 
-def _futrig(e):
+def _futrig(e, measure=None):
     """Helper for futrig."""
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,
@@ -1183,7 +1183,7 @@ def _futrig(e):
     else:
         coeff = None
 
-    Lops = lambda x: (L(x), x.count_ops(), _nodes(x), len(x.args), x.is_Add)
+    Lops = lambda x: (L(x), measure(x) if measure is not None else x.count_ops(), _nodes(x), len(x.args), x.is_Add)
     trigs = lambda x: x.has(TrigonometricFunction)
 
     tree = [identity,
