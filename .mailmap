@@ -51,7 +51,7 @@
 #   For instructions on updating the .mailmap file see:
 #   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-.html#add-your-name-and-email-address-to-the-mailmap-file
 #
-#   ...process
+#   ...
 #
 # 5. You should be ready now but just to be sure run the bin/mailmap_check.py
 # script one last time and it should say "No changes needed in .mailmap". The
@@ -185,8 +185,6 @@
 #
 # See also: 'git shortlog --help' and 'git check-mailmap --help'.
 #
-
-
 *Chu-Ching Huang <cchuang@mail.cgu.edu.tw>
 *Dan <coolg49964@gmail.com>
 *Marc-Etienne M.Leveille <protonyc@gmail.com>
