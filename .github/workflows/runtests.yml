@@ -413,7 +413,7 @@ jobs:
   # -------------------- Test with mpmath master ------------------- #
 
   tests-mpmath-master:
-    needs: [doctests-latest, tests-latest]
+    needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
 
