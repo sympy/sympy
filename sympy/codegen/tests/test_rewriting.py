@@ -241,7 +241,7 @@ def test_powm1():
     assert opt1 == powm1(x, y)
     for arg in args:
         assert expr1.diff(arg) == opt1.diff(arg)
-    if scipy and tuple(map(int, scipy.version.version.split('.')[:3])) >= (1, 10, 0):
+    if scipy and tuple(map(int, scipy.version.version.split('.')[:2])) > (1, 9):
         subs1_a = {x: Rational(*(1.0+1e-13).as_integer_ratio()), y: pi}
         ref1_f64_a = 3.139081648208105e-13
         _check_num_lambdify(expr1, opt1, subs1_a, ref1_f64_a, lambdify_kw={"modules": 'scipy'}, poorness=10**11)

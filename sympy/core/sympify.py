@@ -3,6 +3,8 @@
 from __future__ import annotations
 from typing import Any, Callable
 
+import mpmath.libmp as mlib
+
 from inspect import getmro
 import string
 from sympy.core.random import choice
@@ -85,17 +87,13 @@ def _convert_numpy_types(a, **sympify_args):
         else:
             return sympify(a.item(), **sympify_args)
     else:
-        try:
-            from .numbers import Float
-            prec = np.finfo(a).nmant + 1
-            # E.g. double precision means prec=53 but nmant=52
-            # Leading bit of mantissa is always 1, so is not stored
-            a = str(list(np.reshape(np.asarray(a),
-                                    (1, np.size(a)))[0]))[1:-1]
-            return Float(a, precision=prec)
-        except NotImplementedError:
-            raise SympifyError('Translation for numpy float : %s '
-                               'is not implemented' % a)
+        from .numbers import Float
+        prec = np.finfo(a).nmant + 1
+        # E.g. double precision means prec=53 but nmant=52
+        # Leading bit of mantissa is always 1, so is not stored
+        p, q = a.as_integer_ratio()
+        a = mlib.from_rational(p, q, prec)
+        return Float(a, precision=prec)
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
