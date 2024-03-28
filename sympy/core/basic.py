@@ -1051,7 +1051,7 @@ class Basic(Printable):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
                    it should be either an Equality, a dictionary of old: new pairs,
-                   or an iterable of (old, new) tuples."""))
+                   or an iterable of (old, new) tuples or Equalities."""))
         elif len(args) == 2:
             sequence = [args]
         else:
