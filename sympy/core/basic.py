@@ -926,7 +926,7 @@ class Basic(Printable):
           - two arguments, e.g. foo.subs(old, new)
           - one Equality, e.g. foo.subs(Eq(old, new))
           - one iterable argument, e.g. foo.subs(iterable). The iterable may be
-             o an iterable container with (old, new) pairs. In this case the
+             o an iterable container with (old, new) pairs or Eq(old, new) objects;
                replacements are processed in the order given with successive
                patterns possibly affecting replacements already made.
              o a dict or set whose key/value items correspond to old/new pairs.
