@@ -1,22 +1,13 @@
 """Implementations of actuators for linked force and torque application."""
 
 from abc import ABC, abstractmethod
-from ast import Eq
-from math import cos
-from pyclbr import Function
-
-import numpy as np
 
 from sympy import S, sympify
-from sympy.core.symbol import symbols
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
 from sympy.physics.mechanics.pathway import PathwayBase
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.vector import ReferenceFrame, Vector
-from sympy.physics.vector.functions import dynamicsymbols
-from sympy.solvers.ode.ode import dsolve
-from scipy.integrate import solve_ivp
 
 
 __all__ = [
@@ -25,7 +16,7 @@ __all__ = [
     'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
-    'DuffingActuator'
+    'DuffingSpring'
 ]
 
 
@@ -582,6 +573,7 @@ class LinearDamper(ForceActuator):
         """Representation of a ``LinearDamper``."""
         return f'{self.__class__.__name__}({self.damping}, {self.pathway})'
 
+
 class TorqueActuator(ActuatorBase):
     """Torque-producing actuator.
 
@@ -883,108 +875,45 @@ class TorqueActuator(ActuatorBase):
             string += ')'
         return string
 
-class DuffingActuator(ActuatorBase):
-    """An actuator modeled by the Duffing equation.
+
+class DuffingSpring(ForceActuator):
+    """A nonlinear spring based on the Duffing equation.
 
     Explanation
     ===========
-
-    The Duffing equation is a non-linear differential equation used to model
-    various physical systems, especially oscillators with non-linear stiffness.
-    In its standard form, the equation is given by:
-
-        (d**2 * x) / (dt**2) + δ * (dx / dt) + α * x + β * x**3 = γ * cos(ω * t)
-
-    where:
-    - x is the displacement,
-    - δ is the damping coefficient,
-    - α is the linear stiffness coefficient,
-    - β is the non-linear stiffness coefficient,
-    - γ is the amplitude of the driving force,
-    - ω is the angular frequency of the driving force.
-
-    The `DuffingActuator` class represents an actuator that follows the
-    dynamics described by the Duffing equation. It is a subclass of
-    `ActuatorBase` and can be used in mechanical systems to model components
-    with non-linear stiffness characteristics.
-
-    Examples
-    ========
-
-    To create a Duffing actuator, you need to specify the parameters of the
-    Duffing equation along with a reference frame:
-
-    >>> from sympy import symbols
-    >>> from sympy.physics.vector import ReferenceFrame
-    >>> delta, alpha, beta, gamma, omega = symbols('delta alpha beta gamma omega')
-    >>> N = ReferenceFrame('N')
-    >>> duffing_actuator = DuffingActuator(delta, alpha, beta, gamma, omega, N)
+    Here, ``DuffingSpring`` represents the force exerted by a nonlinear spring based on the Duffing equation:
+    F = -k*x-β*x**3, where x is the displacement from the equilibrium position, k is the linear spring constant,
+    and β is the coefficient for the nonlinear cubic term.
 
     Parameters
     ==========
-
-    delta : Expr
-        The damping coefficient.
-    alpha : Expr
-        The linear stiffness coefficient.
-    beta : Expr
-        The non-linear stiffness coefficient.
-    gamma : Expr
-        The amplitude of the driving force.
-    omega : Expr
-        The angular frequency of the driving force.
-    frame : ReferenceFrame
-        The reference frame in which the actuator's motion is described.
-
-    See Also
-    ========
-
-    ActuatorBase: Abstract base class for actuators.
+    linear_stiffness : Expr
+        The linear stiffness coefficient (k).
+    nonlinear_stiffness : Expr
+        The nonlinear stiffness coefficient (beta).
+    pathway : PathwayBase
+        The pathway that the actuator follows.
+    equilibrium_length : Expr, optional
+        The length at which the spring is in equilibrium.
     """
-    def __init__(self, delta, alpha, beta, gamma, omega, frame):
-        # Initialise the parameters of the Duffing equation and the reference frame.
-        self.delta = delta
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
-        self.omega = omega
-        self.frame = frame
 
-    def duffing_equation(self):
-        # Return the symbolic form of the Duffing equation.
-        t = symbols('t')
-        x = Function('x')(t)
-        x_dot = x.diff(t)
-        x_ddot = x_dot.diff(t)
-        eq = Eq(x_ddot + self.delta * x_dot + self.alpha * x + self.beta * x**3, self.gamma * cos(self.omega * t))
-        return eq
+    def __init__(self, linear_stiffness, nonlinear_stiffness, pathway, equilibrium_length=S.Zero):
+        self.linear_stiffness = linear_stiffness
+        self.nonlinear_stiffness = nonlinear_stiffness
+        self.pathway = pathway
+        self.equilibrium_length = equilibrium_length
 
-    def solve_symbolic(self, ics=None):
-        # Solve the Duffing equation symbolically for given initial conditions.
-        # Note: This method might not always find a solution due to the non-linearity of the equation.
-        eq = self.duffing_equation()
-        solution = dsolve(eq, ics=ics)
-        return solution
-    
-    def forced_response(self, omega_range, x0=0, x_dot0=0, t_max=100, points_per_period=100):
-        # Compute the amplitude of the steady-state response for a range of driving frequencies.
-        # This method uses numerical simulation to solve the Duffing equation.
-        amplitudes = []
-        for omega in omega_range:
-            def duffing_ode(t, y):
-                # Define the ordinary differential equation for the Duffing oscillator.
-                x, x_dot = y
-                x_ddot = -self.delta * x_dot - self.alpha * x - self.beta * x**3 + self.gamma * np.cos(omega * t)
-                return [x_dot, x_ddot]
+    @property
+    def force(self):
+        """The force produced by the Duffing spring."""
+        displacement = self.pathway.length - self.equilibrium_length
+        return -self.linear_stiffness * displacement - self.nonlinear_stiffness * displacement**3
 
-            # Solve the ODE numerically for the given driving frequency.
-            t_eval = np.linspace(0, t_max, int(t_max * omega * points_per_period / (2 * np.pi)))
-            sol = solve_ivp(duffing_ode, [0, t_max], [x0, x_dot0], t_eval=t_eval)
-            x = sol.y[0]
+    @force.setter
+    def force(self, force):
+        raise AttributeError("Can't set computed attribute `force`.")
 
-            # Extract the amplitude of the steady-state response.
-            steady_state = x[-len(x)//4:]
-            amplitude = (np.max(steady_state) - np.min(steady_state)) / 2
-            amplitudes.append(amplitude)
-
-        return np.array(amplitudes)
+    def __repr__(self):
+        return (f"{self.__class__.__name__}("
+                f"{self.linear_stiffness}, {self.nonlinear_stiffness}, {self.pathway}, "
+                f"equilibrium_length={self.equilibrium_length})")
