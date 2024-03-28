@@ -1031,7 +1031,7 @@ just printing support then perhaps `TableForm` can be used.
 
 It isn't clear what to advise as a replacement here without knowing more about
 the usecase. If you are unclear how to update your code, please [open an
-issue](https://github.com/sympy/sympy/issues/new) or [write to our mailing
+issue](https://github.com/login?return_to=https%3A%2F%2Fgithub.com%2Fsympy%2Fsympy%2Fissues%2Fnew) or [write to our mailing
 list](https://groups.google.com/g/sympy) so we can discuss it.
 
 (deprecated-get-segments)=

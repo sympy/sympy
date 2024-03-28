@@ -729,7 +729,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
         Defaults to ``lambda x: x.is_zero``.
 
     TODO: Implement algorithm for sparse matrices (SFF),
-    http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
+    https://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
     """
 
     # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
