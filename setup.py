@@ -311,7 +311,7 @@ if __name__ == '__main__':
               'Source': 'https://github.com/sympy/sympy',
           },
           install_requires=[
-            f'mpmath >= 1.1.0, < 1.4.0',
+              'mpmath >= 1.1.0, < 1.4.0',
           ],
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
