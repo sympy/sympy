@@ -1074,8 +1074,7 @@ class Basic(Printable):
             else:
                 return sympify(new, strict=True)
 
-        sequence = [i.args if isinstance(i, Equality) else i for i in sequence]
-        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in sequence]
+        sequence = [i.args if isinstance(i, Equality) else tuple(map(sympify_old, i)) for i in sequence]
 
         # skip if there is no change
         sequence = [(s1, s2) for s1, s2 in sequence if not _aresame(s1, s2)]
