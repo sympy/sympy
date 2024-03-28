@@ -55,7 +55,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     ==========
 
     .. [1] M. Monagan, R. Pearce, Rational Simplification Modulo a Polynomial
-        Ideal, https://dl.acm.org/doi/pdf/10.1145/1145768.1145809
+        Ideal, https://dl.acm.org/doi/abs/10.1145/1145768.1145809
         (specifically, the second algorithm)
     """
     from sympy.solvers.solvers import solve
