@@ -924,8 +924,9 @@ class Basic(Printable):
 
         `args` is either:
           - two arguments, e.g. foo.subs(old, new)
+          - one Equality, e.g. foo.subs(Eq(old, new))
           - one iterable argument, e.g. foo.subs(iterable). The iterable may be
-             o an iterable container with (old, new) pairs. In this case the
+             o an iterable container with (old, new) pairs or Eq(old, new) objects;
                replacements are processed in the order given with successive
                patterns possibly affecting replacements already made.
              o a dict or set whose key/value items correspond to old/new pairs.
@@ -1034,21 +1035,23 @@ class Basic(Printable):
         from .containers import Dict
         from .symbol import Dummy, Symbol
         from .numbers import _illegal
+        from .relational import Equality
 
         unordered = False
         if len(args) == 1:
-
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
             elif isinstance(sequence, (Dict, Mapping)):
                 unordered = True
                 sequence = sequence.items()
+            elif isinstance(sequence, Equality):
+                sequence = [sequence]
             elif not iterable(sequence):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
-                   it should be a dictionary of old: new pairs or an iterable
-                   of (old, new) tuples."""))
+                   it should be either an Equality, a dictionary of old: new pairs,
+                   or an iterable of (old, new) tuples or Equalities."""))
         elif len(args) == 2:
             sequence = [args]
         else:
@@ -1071,7 +1074,7 @@ class Basic(Printable):
             else:
                 return sympify(new, strict=True)
 
-        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in sequence]
+        sequence = [i.args if isinstance(i, Equality) else tuple(map(sympify_old, i)) for i in sequence]
 
         # skip if there is no change
         sequence = [(s1, s2) for s1, s2 in sequence if not _aresame(s1, s2)]
