@@ -16,6 +16,7 @@ __all__ = [
     'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
+    'StaticFrictionActuator'
 ]
 
 
@@ -873,3 +874,57 @@ class TorqueActuator(ActuatorBase):
         else:
             string += ')'
         return string
+    
+
+class StaticFrictionActuator(ForceActuator):
+    """A friction force actuator that models static friction.
+
+    Explanation
+    ===========
+    This represents a model for static friction force acting on a point,
+    parameterized by the coefficient of static friction and the normal force:
+    F_s = μ_s * N, where N is the normal force, and μ_s is the coefficient of static friction.
+
+    Parameters
+    ==========
+    coefficient_of_static_friction : Expr
+        The coefficient of static friction.
+    normal_force : Expr
+        The normal force between the surfaces.
+    pathway : PathwayBase
+        The pathway that the actuator follows.
+
+    """
+
+    def __init__(self, coefficient_of_static_friction, normal_force, pathway):
+        """Initializer for ``StaticFrictionActuator``."""
+        self.coefficient_of_static_friction = coefficient_of_static_friction
+        self._normal_force = normal_force
+        self.pathway = pathway
+        force = -self.coefficient_of_static_friction * self.normal_force
+        super().__init__(force, pathway)
+
+    @property
+    def force(self):
+        """The magnitude of the force produced by the actuator."""
+        return -self.coefficient_of_static_friction * self.normal_force
+
+    @property
+    def coefficient_of_static_friction(self):
+        """The coefficient of static friction for the actuator."""
+        return self._coefficient_of_static_friction
+    # No settler for coefficient of friction since it never changes
+
+    @property
+    def normal_force(self):
+        """The normal force for the actuator."""
+        return self._normal_force
+
+    @normal_force.setter
+    def normal_force(self, value):
+        self._normal_force = value
+        self.force = -self.coefficient_of_static_friction * self._normal_force  
+
+    def __repr__(self):
+        """Representation of a ``StaticFrictionActuator``."""
+        return f'{self.__class__.__name__}({self.coefficient_of_static_friction}, {self.normal_force}, {self.pathway})'
