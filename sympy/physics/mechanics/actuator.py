@@ -16,6 +16,7 @@ __all__ = [
     'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
+    'DuffingSpring',
     'StaticFrictionActuator'
 ]
 
@@ -948,6 +949,7 @@ class StaticFrictionActuator(ForceActuator):
         super().__init__(force, pathway)
 
     @property
+    def force(self):
         """The magnitude of the force produced by the actuator."""
         return -self.coefficient_of_static_friction * self.normal_force
 
