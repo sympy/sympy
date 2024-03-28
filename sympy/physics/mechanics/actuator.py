@@ -16,7 +16,6 @@ __all__ = [
     'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
-    'DuffingSpring',
     'StaticFrictionActuator'
 ]
 
@@ -875,49 +874,6 @@ class TorqueActuator(ActuatorBase):
         else:
             string += ')'
         return string
-
-
-class DuffingSpring(ForceActuator):
-    """A nonlinear spring based on the Duffing equation.
-
-    Explanation
-    ===========
-    Here, ``DuffingSpring`` represents the force exerted by a nonlinear spring based on the Duffing equation:
-    F = -k*x-β*x**3, where x is the displacement from the equilibrium position, k is the linear spring constant,
-    and β is the coefficient for the nonlinear cubic term.
-
-    Parameters
-    ==========
-    linear_stiffness : Expr
-        The linear stiffness coefficient (k).
-    nonlinear_stiffness : Expr
-        The nonlinear stiffness coefficient (beta).
-    pathway : PathwayBase
-        The pathway that the actuator follows.
-    equilibrium_length : Expr, optional
-        The length at which the spring is in equilibrium.
-    """
-
-    def __init__(self, linear_stiffness, nonlinear_stiffness, pathway, equilibrium_length=S.Zero):
-        self.linear_stiffness = linear_stiffness
-        self.nonlinear_stiffness = nonlinear_stiffness
-        self.pathway = pathway
-        self.equilibrium_length = equilibrium_length
-
-    @property
-    def force(self):
-        """The force produced by the Duffing spring."""
-        displacement = self.pathway.length - self.equilibrium_length
-        return -self.linear_stiffness * displacement - self.nonlinear_stiffness * displacement**3
-
-    @force.setter
-    def force(self, force):
-        raise AttributeError("Can't set computed attribute `force`.")
-
-    def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"{self.linear_stiffness}, {self.nonlinear_stiffness}, {self.pathway}, "
-                f"equilibrium_length={self.equilibrium_length})")
     
 
 class StaticFrictionActuator(ForceActuator):
