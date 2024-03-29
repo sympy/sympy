@@ -84,8 +84,8 @@ using :class:`~.KanesMethod` as the backend. ::
 Revealing noncontributing forces
 --------------------------------
 
-To reveal the noncontributing forces at the closing joint, we require to
-introduce auxiliary speeds in the x and y-direction at the endpoint.
+To reveal the noncontributing forces at the closing joint, we must introduce
+auxiliary speeds in the x and y-direction at the endpoint.
 
    >>> uaux1, uaux2 = dynamicsymbols('uaux1:3')
    >>> end_point_aux = end_point.locatenew('end_point_aux', 0)
@@ -121,7 +121,7 @@ Next, we can add the auxiliary speeds and noncontributing forces to the system.
    >>> system.add_loads(*noncontributing_forces)
    >>> system.u_aux = [uaux1, uaux2]
 
-To include the gravity we can use :meth:`~.System.apply_uniform_gravity` before
+To include gravity we can use :meth:`~.System.apply_uniform_gravity` before
 validating the system and forming the equations of motion.
 
    >>> g = symbols('g')
