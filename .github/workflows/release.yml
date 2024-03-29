@@ -18,8 +18,8 @@ on:
       - '1.12'
 env:
   release_branch: '1.12'
-  release_version: '1.12.1a1'
-  previous_version: '1.11'
+  release_version: '1.12.1a2'
+  previous_version: '1.12'
 
 jobs:
 
@@ -86,7 +86,8 @@ jobs:
   test-pypi-publish:
     name: Publish to Test-PyPI
     needs: [build]
-    if: "! (github.event_name == 'push' && startsWith(github.ref, 'refs/tags'))"
+    # Run when a pull request is merged into a release branch.
+    if: "github.event_name == 'push' && ! startsWith(github.ref, 'refs/tags')"
     environment:
       name: test-pypi
       url: https://test.pypi.org/p/sympy
@@ -108,3 +109,30 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+
+  # -------------------- Upload to Test-PyPI ----------------------- #
+
+  test-pypi-publish:
+    name: Publish to PyPI
+    needs: [build]
+    # Run when a tag is pushed
+    if: "github.event_name == 'push' && startsWith(github.ref, 'refs/tags')"
+    environment:
+      name: pypi
+      url: https://pypi.org/p/sympy
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release_files
+          path: dist.all
+
+      - name: Copy the PyPI files into dist
+        run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
+
+      - name: Publish package on PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
