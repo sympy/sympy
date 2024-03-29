@@ -16,6 +16,7 @@ __all__ = [
     'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
+    'StaticFrictionActuator',
     'CoulombFrictionActuator'
 ]
 
@@ -990,7 +991,7 @@ class CoulombFrictionActuator(ActuatorBase):
 
     @property
     def force(self):
-        return self.calculate_force()
+        return self.force()
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self._coefficient_of_kinetic_friction}, {self._normal_force}, {self._tangential_friction_force}, {self._coulomb_friction_constant}, {self._velocity}, {self.pathway})'
