@@ -177,28 +177,6 @@ class Mul(Expr, AssocOp):
             return False  # e.g. zoo*x == -zoo*x
         c = self.args[0]
         return c.is_Number and c.is_extended_negative
-    def convert_to(self, other, unit_system="SI"):
-        """
-        Convert the quantity to another quantity of same dimensions.
-
-
-        Examples
-        ========
-
-
-        >>> from sympy.physics.units import speed_of_light, meter, second
-        >>> speed_of_light
-        speed_of_light
-        >>> (3*speed_of_light).convert_to(meter/second)
-        899377374*meter/second
-
-
-        >>> from sympy.physics.units import liter
-        >>> (26*liter).convert_to(meter**3)
-        13*meter**3/500
-        """
-        from sympy.physics.units.util import convert_to
-        return convert_to(self, other, unit_system)
     def __neg__(self):
         c, args = self.as_coeff_mul()
         if args[0] is not S.ComplexInfinity:
