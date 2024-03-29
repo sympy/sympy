@@ -43,7 +43,7 @@ jobs:
         run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
 
       - name: Store release files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release_files
           path: release-${{ env.release_version }}
@@ -68,7 +68,7 @@ jobs:
           allow-preleases: true
 
       - name: Retrieve release files
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: release_files
 
