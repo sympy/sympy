@@ -112,7 +112,7 @@ jobs:
 
   # -------------------- Upload to Test-PyPI ----------------------- #
 
-  test-pypi-publish:
+  pypi-publish:
     name: Publish to PyPI
     needs: [build]
     # Run when a tag is pushed
