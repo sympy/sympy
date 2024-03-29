@@ -264,10 +264,12 @@ def test_parser_mathematica_exp_alt():
     full_form1 = "Sin[Times[x, y]]"
     full_form2 = "Plus[Times[x, y], z]"
     full_form3 = "Sin[Times[x, Plus[y, z], Power[w, n]]]]"
+    full_form4 = "Rational[Rational[x, y], z]"
 
     assert parser._from_fullform_to_fullformlist(full_form1) == ["Sin", ["Times", "x", "y"]]
     assert parser._from_fullform_to_fullformlist(full_form2) == ["Plus", ["Times", "x", "y"], "z"]
     assert parser._from_fullform_to_fullformlist(full_form3) == ["Sin", ["Times", "x", ["Plus", "y", "z"], ["Power", "w", "n"]]]
+    assert parser._from_fullform_to_fullformlist(full_form4) == ["Rational", ["Rational", "x", "y"], "z"]
 
     assert convert_chain2(full_form1) == Sin(Times(x, y))
     assert convert_chain2(full_form2) == Plus(Times(x, y), z)
