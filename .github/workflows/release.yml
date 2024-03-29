@@ -115,7 +115,7 @@ jobs:
   pypi-publish:
     name: Publish to PyPI
     needs: [build]
-    # Run when a tag is pushed
+    # Run when a tag is pushed (not sure if this works)
     if: "github.event_name == 'push' && startsWith(github.ref, 'refs/tags')"
     environment:
       name: pypi
