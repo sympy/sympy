@@ -98,9 +98,14 @@ def convert_to(expr, target_units, unit_system="SI"):
     if not isinstance(target_units, (Iterable, Tuple)):
         target_units = [target_units]
 
-    if isinstance(expr, Add):
+    def handle_Adds(expr):
         return Add.fromiter(convert_to(i, target_units, unit_system)
             for i in expr.args)
+
+    if isinstance(expr, Add):
+        return handle_Adds(expr)
+    elif isinstance(expr, Pow) and isinstance(expr.base, Add):
+        return handle_Adds(expr.base) ** expr.exp
 
     expr = sympify(expr)
     target_units = sympify(target_units)
