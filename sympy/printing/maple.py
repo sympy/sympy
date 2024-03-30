@@ -88,6 +88,12 @@ class MapleCodePrinter(CodePrinter):
     printmethod = "_maple"
     language = "maple"
 
+    _operators = {
+        'and': 'and',
+        'or': 'or',
+        'not': 'not ',
+    }
+
     _default_settings = dict(CodePrinter._default_settings, **{
         'inline': True,
         'allow_unknown_functions': True,
