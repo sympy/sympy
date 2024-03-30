@@ -1,5 +1,4 @@
 from sympy.testing.pytest import slow
-
 from sympy.core.function import diff
 from sympy.core.function import expand
 from sympy.core.numbers import (E, I, Rational, pi)
