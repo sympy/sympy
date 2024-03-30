@@ -12,7 +12,7 @@ on:
     branches:
       - '1.12'
     tags:
-      - 'sympy-*'
+      - 'sympy-1.12.*'
   pull_request:
     branches:
       - '1.12'
