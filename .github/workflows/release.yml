@@ -185,9 +185,8 @@ jobs:
           token: ${{ secrets.SYMPY_DOC_RELEASE_PUSH_TOKEN }}
           path: sympy_doc
 
-      - name: Set up git
-        run: git config --global user.name "SymPy GitHub Actions release bot"
-        run: git config --global user.email "<>"
+      - run: git config --global user.name "SymPy GitHub Actions release bot"
+      - run: git config --global user.email "<>"
 
       - uses: actions/download-artifact@v4
         with:
