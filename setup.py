@@ -33,8 +33,6 @@ from setuptools import setup, Command
 from setuptools.command.sdist import sdist
 
 
-min_mpmath_version = '0.19'
-
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
 
@@ -312,6 +310,9 @@ if __name__ == '__main__':
           project_urls={
               'Source': 'https://github.com/sympy/sympy',
           },
+          install_requires=[
+              'mpmath >= 1.1.0, < 1.4.0',
+          ],
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
@@ -349,9 +350,6 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3 :: Only',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
-            ],
-          install_requires=[
-            'mpmath>=%s' % min_mpmath_version,
             ],
           **extra_kwargs
           )
