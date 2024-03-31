@@ -18,7 +18,7 @@ on:
       - '1.12'
 env:
   release_branch: '1.12'
-  release_version: '1.12.1a3'
+  release_version: '1.12.1a4'
   final_release_version: '1.12.1'
   previous_version: '1.12'
   dev_version: '1.13-dev'
@@ -158,6 +158,8 @@ jobs:
           path: dist
 
       - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: >
           gh release create ${{ env.release_version }} dist/*
           --title "SymPy ${{ env.release_version }}"
@@ -176,9 +178,11 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout sympy
+        uses: actions/checkout@v3
 
-      - uses: actions/checkout@v3
+      - name: Checkout sympy_doc
+        uses: actions/checkout@v3
         with:
           repository: sympy/sympy_doc
           ref: gh-pages
