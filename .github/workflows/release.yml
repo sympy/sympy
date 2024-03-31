@@ -18,8 +18,10 @@ on:
       - '1.12'
 env:
   release_branch: '1.12'
-  release_version: '1.12.1a2'
+  release_version: '1.12.1a3'
+  final_release_version: '1.12.1'
   previous_version: '1.12'
+  dev_version: '1.13-dev'
 
 jobs:
 
@@ -110,7 +112,7 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
-  # -------------------- Upload to Test-PyPI ----------------------- #
+  # -------------------- Upload to PyPI proper --------------------- #
 
   pypi-publish:
     name: Publish to PyPI
@@ -135,4 +137,68 @@ jobs:
         run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
 
       - name: Publish package on PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        # It is recommended to pin a commit hash here for security but it
+        # should be kept up to date. Probably all actions and dependencies
+        # installed by the build script should be pinned...
+        uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450  # v1.8.14
+
+  # -------------------- Make a GitHub release --------------------- #
+
+  github-publish:
+    name: Publish GitHub release
+    needs: [build, pypi-publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release_files
+          path: dist
+
+      - name: Create GitHub release
+        run: >
+          gh release create ${{ env.release_version }} dist/*
+          --title "SymPy ${{ env.release_version }}"
+          --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+          --draft
+
+  # -------------------- Update the docs repository ---------------- #
+
+  update-docs:
+    name: Update the docs repository
+    needs: [build, pypi-publish]
+    # Only run for a final release
+    # if: "env.release_version == env.final_release_version"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/checkout@v3
+        with:
+          repository: sympy/sympy_doc
+          ref: gh-pages
+          token: ${{ secrets.SYMPY_DOC_RELEASE_PUSH_TOKEN }}
+          path: sympy_doc
+
+      - name: Set up git
+        run: git config --global user.name "SymPy GitHub Actions release bot"
+        run: git config --global user.email "<>"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release_files
+          path: dist
+
+      - name: Update the docs
+        run: >
+          release/update_docs.py
+          sympy_doc
+          dist/sympy-docs-html-${{ env.release_version }}.zip
+          ${{ env.release_version }}
+          ${{ env.dev_version }}
+          --push
