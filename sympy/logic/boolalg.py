@@ -1045,7 +1045,7 @@ class Xor(BooleanFunction):
         # as standard simplify uses simplify_logic which writes things as
         # And and Or, we only simplify the partial expressions before using
         # patterns
-        rv = self.func(*[a.simplify(**kwargs) for a in self.args])
+        rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
         patterns = _simplify_patterns_xor()
