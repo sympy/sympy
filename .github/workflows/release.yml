@@ -168,7 +168,6 @@ jobs:
           gh release create ${{ env.release_version }} dist/*
           --title "SymPy ${{ env.release_version }}"
           --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
-          --draft
 
   # -------------------- Update the docs repository ---------------- #
 
