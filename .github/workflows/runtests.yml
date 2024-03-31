@@ -455,7 +455,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4
+      - run: pytest -n auto
 
   # -------------------- Build the html/latex docs ----------------- #
 
