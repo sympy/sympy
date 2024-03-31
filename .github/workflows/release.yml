@@ -18,7 +18,7 @@ on:
       - '1.12'
 env:
   release_branch: '1.12'
-  release_version: '1.12.1rc1'
+  release_version: '1.12.1'
   final_release_version: '1.12.1'
   previous_version: '1.12'
   dev_version: '1.13-dev'
@@ -175,7 +175,7 @@ jobs:
     name: Update the docs repository
     needs: [build, pypi-publish]
     # Only run for a final release
-    # if: "env.release_version == env.final_release_version"
+    if: "env.release_version == env.final_release_version"
     runs-on: ubuntu-latest
     permissions:
       contents: write
