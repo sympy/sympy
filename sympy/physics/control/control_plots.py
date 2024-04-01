@@ -973,7 +973,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         
     if show:
         plt.show()
-        return
+        return plt
         
     return plt    
 
