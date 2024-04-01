@@ -1022,7 +1022,6 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
 
     """
     _check_system(system)
-    
     s = system.var
     w = Dummy('w', real=True)
     
@@ -1074,5 +1073,73 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
         xlabel='Real Axis',
         ylabel='Imaginary Axis',
         title='Nyquist Plot (Phase)',
+        show=show
+    )
+def nichols_numerical_data(system, initial_omega=0.01, final_omega=100, **kwargs):
+    """
+    Returns the numerical data of the Nichols plot of the system.
+
+    Parameters:
+        system : SISOLinearTimeInvariant
+            The system for which the Nichols plot data is to be computed.
+        initial_omega : Number, optional
+            The initial value of frequency. Defaults to 0.01.
+        final_omega : Number, optional
+            The final value of frequency. Defaults to 100.
+
+    Returns:
+        - mag_expr: sympy expression
+            The magnitude in decibels evaluated at various frequencies.
+        - phase_expr: sympy expression
+            The phase in degrees evaluated at various frequencies.
+        - w: sympy Dummy variable
+            A placeholder variable representing the frequency variable in Laplace domain.
+    """
+    _check_system(system)   
+    s = system.var
+    w = Dummy('w', real=True)   
+    repl = I * w
+    expr = system.to_expr()
+    w_expr = expr.subs({s: repl})
+    mag_expr = 20*log(Abs(w_expr), 10)
+    phase_expr = arg(w_expr)*180/pi
+
+    return mag_expr, phase_expr, w
+
+def nichols_plot(system, initial_omega=0.01, final_omega=100, color='b', grid=False, show=True, **kwargs):
+    """
+    Generates and displays the Nichols plot for a given system.
+
+    Parameters:
+        system: callable
+            The system for which the Nichols plot is to be generated.
+        initial_omega: float, optional
+            The initial frequency for plotting. Default is 0.01.
+        final_omega: float, optional
+            The final frequency for plotting. Default is 100.
+        color: str, optional
+            Color of the Nichols plot. Default is 'b' (blue).
+        grid: bool, optional
+            If True, grid lines are displayed. Default is False.
+        show: bool, optional
+            If True, the plot is displayed. Default is True.
+        **kwargs:
+            Additional keyword arguments to be passed to the plot.
+
+    Returns:
+        None
+    """
+    mag_expr, phase_expr, w = nichols_numerical_data(system)
+    from sympy.plotting import plot_parametric 
+    w_values = [(w, initial_omega, final_omega)]
+    plot_parametric(
+        (phase_expr, mag_expr),   # The curve
+        *w_values,
+        line_color=color,
+        aspect_ratio='auto',
+        axes=True,
+        xlabel='Phase (°)',
+        ylabel='Magnitude(dB)',
+        title='Nichols Plot',
         show=show
     )
