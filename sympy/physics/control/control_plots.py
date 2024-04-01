@@ -976,6 +976,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         return
 
     return plt
+        
 def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_points=1000, **kwargs):
     """
     Returns the numerical data of Nyquist plot of the system.
@@ -997,7 +998,6 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
         The ending frequency value for plotting (default is 100).
     - nb_of_points: int, optional
         The number of points to sample between the initial and final frequencies (default is 1000).
-
     Returns:
     - real_expr: sympy expression
     The real part of the transfer function evaluated at various frequencies.
@@ -1005,7 +1005,6 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
     The imaginary part of the transfer function evaluated at various frequencies.
     - w: sympy Dummy variable
     A placeholder variable representing the frequency variable in Laplace domain.
-
     Raises:
     - NotImplementedError:
     If the provided system is not a TransferFunction.
@@ -1013,18 +1012,15 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
     If there are extra degrees of freedom detected in the system.
     - NotImplementedError:
     If the system contains time delay terms, which are not supported..
-
     Example usage:
     --------------
     s = Dummy('s')
     system = TransferFunction(8, (s**2 + 9*s + 18), s)
     nyquist_plot(system)
-
     """
     _check_system(system)
     s = system.var
-    w = Dummy('w', real=True)
-    
+    w = Dummy('w', real=True)    
     repl = I * w
     expr = system.to_expr()
     w_expr = expr.subs({s: repl})
@@ -1032,12 +1028,10 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
     real_expr = w_expr[0]
     imag_expr = w_expr[1]
     return real_expr, imag_expr, w
-
 def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
                  color='b', grid=False, show=True, **kwargs):
     """
     Generates and displays the Nyquist plot for a given system.
-
     Parameters:
         system: callable
             The system for which the Nyquist plot is to be generated.
@@ -1055,14 +1049,11 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
             If True, the plot is displayed. Default is True.
         **kwargs:
             Additional keyword arguments to be passed to the plot.
-
     Returns:
         None
     """
-    real_expr, imag_expr, w = nyquist_numerical_data(system)
-    
-    w_values = [(w, initial_omega, final_omega)]
-    
+    real_expr, imag_expr, w = nyquist_numerical_data(system)    
+    w_values = [(w, initial_omega, final_omega)]   
     plot_parametric(
         (real_expr, imag_expr),   # The curve
         (real_expr, -imag_expr),  # Its mirror image
@@ -1078,7 +1069,6 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
 def nichols_numerical_data(system, initial_omega=0.01, final_omega=100, **kwargs):
     """
     Returns the numerical data of the Nichols plot of the system.
-
     Parameters:
         system : SISOLinearTimeInvariant
             The system for which the Nichols plot data is to be computed.
@@ -1086,7 +1076,6 @@ def nichols_numerical_data(system, initial_omega=0.01, final_omega=100, **kwargs
             The initial value of frequency. Defaults to 0.01.
         final_omega : Number, optional
             The final value of frequency. Defaults to 100.
-
     Returns:
         - mag_expr: sympy expression
             The magnitude in decibels evaluated at various frequencies.
@@ -1103,13 +1092,10 @@ def nichols_numerical_data(system, initial_omega=0.01, final_omega=100, **kwargs
     w_expr = expr.subs({s: repl})
     mag_expr = 20*log(Abs(w_expr), 10)
     phase_expr = arg(w_expr)*180/pi
-
     return mag_expr, phase_expr, w
-
 def nichols_plot(system, initial_omega=0.01, final_omega=100, color='b', grid=False, show=True, **kwargs):
     """
     Generates and displays the Nichols plot for a given system.
-
     Parameters:
         system: callable
             The system for which the Nichols plot is to be generated.
@@ -1125,7 +1111,6 @@ def nichols_plot(system, initial_omega=0.01, final_omega=100, color='b', grid=Fa
             If True, the plot is displayed. Default is True.
         **kwargs:
             Additional keyword arguments to be passed to the plot.
-
     Returns:
         None
     """
