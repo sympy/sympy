@@ -33,6 +33,8 @@ from sympy.physics.biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics.actuator import ForceActuator
 from sympy.physics.vector.functions import dynamicsymbols
 
+from sympy import symbols, cos, solve, diff
+from sympy import sympy.physics.biomechanics import MusculotendonBase
 
 __all__ = [
     'MusculotendonBase',
@@ -1422,3 +1424,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
         fiber_force_velocity=FiberForceVelocityDeGroote2016,
         fiber_force_velocity_inverse=FiberForceVelocityInverseDeGroote2016,
     )
+
+
+class HillTypeMuscle(MusculotendonBase):
+    def __init__(self)
