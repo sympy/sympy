@@ -974,7 +974,8 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
     if show:
         plt.show()
         return
-    return plt       
+        
+    return plt 
 def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_points=1000,**kwargs): 
     """
     Returns the numerical data of Nyquist plot of the system.
