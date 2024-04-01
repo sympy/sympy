@@ -1023,7 +1023,6 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
 
     """
     _check_system(system)
-    
     s = system.var
     w = Dummy('w', real=True)
     
