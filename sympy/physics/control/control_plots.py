@@ -977,6 +977,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 
     return plt
 def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_points=1000, **kwargs):
+    
     """
     Returns the numerical data of Nyquist plot of the system.
     It is internally used by ``nyquist_plot`` to get the data
@@ -1036,6 +1037,7 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
 
 def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
                  color='b', grid=False, show=True, **kwargs):
+    from sympy.plotting import plot_parametric
     """
     Generates and displays the Nyquist plot for a given system.
 
@@ -1069,7 +1071,7 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
         (real_expr, -imag_expr),  # Its mirror image
         *w_values,
         line_color=color,
-        aspect_ratio=(1, 1),
+        aspect_ratio='auto',
         axes=True,
         xlabel='Real Axis',
         ylabel='Imaginary Axis',
