@@ -970,12 +970,11 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
     plt.subplot(212)
     bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes, freq_unit=freq_unit, phase_unit=phase_unit, phase_unwrap=phase_unwrap, **kwargs).title(None)
-
     if show:
         plt.show()
         return
-
     return plt
+        
 def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_points=1000, **kwargs):
     """
     Returns the numerical data of Nyquist plot of the system.
