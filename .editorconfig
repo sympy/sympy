@@ -19,7 +19,7 @@ skip = .eggs
 # RST files (used by sphinx)
 [*.rst]
 indent_style = space
-indent_size = 3
+indent_size = 4
 
 # JSON, YML
 [*.{json,yml}]
@@ -29,3 +29,4 @@ indent_size = 2
 # Tab indentation (no size specified)
 [Makefile]
 indent_type = tab
+indent_size = 8
