@@ -54,3 +54,4 @@ Nichols Plot
 .. automethod:: sympy.physics.control.control_plots.nichols_plot
 
 .. automethod:: sympy.physics.control.control_plots.nichol_numerical_data
+    
