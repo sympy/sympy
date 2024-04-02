@@ -382,7 +382,6 @@ def test_numpy_conversion():
     assert array_equal(array(A, copy=True), np_array)
     #raises(TypeError, lambda: array(A, copy=False)) TODO: Uncomment this whenever copy variable properly passes to __array__
 
-
 def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
     assert (A.T * A).I.as_explicit() == Matrix([[(A.T * A).I[0, 0], (A.T * A).I[0, 1]], \
