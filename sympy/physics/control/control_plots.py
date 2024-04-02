@@ -983,8 +983,9 @@ def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_point
     for plotting Nyquist plot. Users can use this data to further
     analyse the dynamics of the system or plot using a different
     backend/plotting-module.
+    
     Parameters
-    ==========
+    ----------
     system : SISOLinearTimeInvariant
         The system for which the nyquist data is to be computed.
     initial_omega : Number, optional
@@ -993,24 +994,25 @@ def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_point
         The final value of frequency. Defaults to 100.
     nb_of_points: Number, optional
         The number of points sampled for the data. Defaults to 1000.
-    - final_omega: float, optional
-        The ending frequency value for plotting (default is 100).
-    - nb_of_points: int, optional
-        The number of points to sample between the initial and final frequencies (default is 1000).
+        
     Returns:
-    - real_expr: sympy expression
-    The real part of the transfer function evaluated at various frequencies.
-    - imag_expr: sympy expression
-    The imaginary part of the transfer function evaluated at various frequencies.
-    - w: sympy Dummy variable
-    A placeholder variable representing the frequency variable in Laplace domain.
+    -------
+    real_expr: sympy expression
+        The real part of the transfer function evaluated at various frequencies.
+    imag_expr: sympy expression
+        The imaginary part of the transfer function evaluated at various frequencies.
+    w: sympy Dummy variable
+        A placeholder variable representing the frequency variable in Laplace domain.
+    
     Raises:
+    ------
     - NotImplementedError:
     If the provided system is not a TransferFunction.
     - ValueError:
     If there are extra degrees of freedom detected in the system.
     - NotImplementedError:
-    If the system contains time delay terms, which are not supported..
+    If the system contains time delay terms, which are not supported.
+    
     Example usage:
     --------------
     s = Dummy('s')
@@ -1033,7 +1035,9 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
     from sympy.plotting import plot_parametric
     """
     Generates and displays the Nyquist plot for a given system.
+    
     Parameters:
+    ----------
         system: callable
             The system for which the Nyquist plot is to be generated.
         initial_omega: float, optional
@@ -1050,7 +1054,9 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
             If True, the plot is displayed. Default is True.
         **kwargs:
             Additional keyword arguments to be passed to the plot.
+            
     Returns:
+    -------
         None
     """
     real_expr, imag_expr, w = nyquist_numerical_data(system)
