@@ -353,8 +353,10 @@ class FpGroup(DefaultPrinting):
         # TODO: use |G:H| = |G|/|H| (currently H can't be made into a group)
         # when we know |G| and |H|
 
-        if H == []:
-            return self.order()
+        # Lagrange's Theorem applies for finite groups, this should solve the above task and give a small optimisation
+        # for finite groups
+        if self.order(strategy) is not S.Infinity:
+            return self.order(strategy) / self.subgroup(H).order(strategy)
         else:
             C = self.coset_enumeration(H, strategy)
             return len(C.table)

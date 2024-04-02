@@ -255,3 +255,23 @@ def test_abelian_invariants():
     assert f.abelian_invariants() == [2]
     f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
     assert f.abelian_invariants() == [2, 4]
+
+
+def test_index():
+    F, x = free_group("x")
+    f = FpGroup(F, [x**8])
+    H1 = [[x**i] for i in range(1, 9)]
+    I1 = [1, 2, 1, 4, 1, 2, 1, 8]
+    for H, I in zip(H1, I1):
+        assert f.index(H) == I
+
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x**3, y**2, (x*y)**4])
+    H2 = [f.identity, x, x**-1, y, x*y, x**2*y, y*x, y*x**2, x*y*x, x*y*x**2, x**2*y*x, x**2*y*x**2, y*x*y, y*x**2*y,
+          x*y*x*y, x*y*x**2*y, x**2*y*x*y, y*x*y*x, y*x*y*x**2, y*x**2*y*x, x*y*x**2*y*x, y*x*y*x**2*y, y*x**2*y*x*y,
+          x*y*x**2*y*x*y]
+    I2 = [24, 8, 8, 12, 6, 6, 6, 6, 6, 12, 12, 6, 8, 8, 12, 8, 8, 12, 8, 8, 12, 12, 12, 12]
+    for H, I in zip(H2, I2):
+        assert f.index([H]) == I
+
+    assert f.index(f.elements) == 1
