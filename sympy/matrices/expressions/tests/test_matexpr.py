@@ -18,7 +18,7 @@ from sympy.matrices.common import NonSquareMatrixError
 from sympy.matrices.expressions.determinant import Determinant, det
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, skip
 
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
