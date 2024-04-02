@@ -1,4 +1,4 @@
-from .accumulationbounds import AccumBounds, AccumulationBounds # noqa: F401
+uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuufrom .accumulationbounds import AccumBounds, AccumulationBounds # noqa: F401
 from .singularities import singularities
 from sympy.core import Pow, S
 from sympy.core.function import diff, expand_mul, Function
@@ -24,11 +24,12 @@ from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
-from sympy.matrices.dense import hessian
-
+from sympy.matrices.dense import hessianuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
+from sympy.matrices.matrices import is_positive_semidefiniteuuuuuuuuuuu
+uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
 
 def continuous_domain(f, symbol, domain):
-    """
+    """uuuuuuuuuuuuuuuuuuuuuuu
     Returns the domain on which the function expression f is continuous.
 
     This function is limited by the ability to determine the various
@@ -746,13 +747,13 @@ def is_convex(f, *syms, domain=S.Reals):
     .. [5] https://en.wikipedia.org/wiki/Concave_function
 
     """
-    if type(*syms) != Symbol :
-        a = hessian(f,*syms)
+
+    if len(syms) > 1:
+        a = hessian(f,syms)
         b = a.is_positive_semidefinite
-        if b == None :
-            return None
-        else:
+        if b :
             return b
+        return False
 
     from sympy.solvers.inequalities import solve_univariate_inequality
 
