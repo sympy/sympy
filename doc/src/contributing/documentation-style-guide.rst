@@ -1,6 +1,6 @@
 
 Documentation Style Guide
-=====================
+===================================
 
 General Guidelines
 --------------------
