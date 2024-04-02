@@ -9,6 +9,7 @@ from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.series import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+from sympy.plotting import plot_parametric
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'step_response_numerical_data', 'step_response_plot',
