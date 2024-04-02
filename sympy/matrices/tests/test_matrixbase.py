@@ -351,6 +351,16 @@ def test_replace_map():
     assert N == Matrix(2, 2, lambda i, j: G(i+j))
     assert d == {F(0): G(0), F(1): G(1), F(2): G(2)}
 
+def test_numpy_conversion():
+    try:
+        from numpy import array, array_equal
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+    A = Matrix([[1,2], [3,4]])
+    np_array = array([[1,2], [3,4]])
+    assert array_equal(array(A), np_array)
+    assert array_equal(array(A, copy=True), np_array)
+    #raises(TypeError, lambda: array(A, copy=False)) TODO: Uncomment this whenever copy variable properly passes to __array__
 
 def test_rot90():
     A = Matrix([[1, 2], [3, 4]])
