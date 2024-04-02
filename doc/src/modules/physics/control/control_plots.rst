@@ -54,4 +54,3 @@ Nyquist Plot
 .. automethod:: sympy.physics.control.control_plots.nyquist_plot
 
 .. automethod:: sympy.physics.control.control_plots.nyquist_numerical_data
-    
