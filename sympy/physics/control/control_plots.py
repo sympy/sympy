@@ -15,7 +15,7 @@ __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'impulse_response_numerical_data', 'impulse_response_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
-    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot']
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot','nyquist_numerical_data',' nyquist_plot']
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -974,9 +974,9 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
     if show:
         plt.show()
         return
-        
-    return plt 
-def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_points=1000,**kwargs): 
+
+    return plt
+def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_points=1000,**kwargs):
     """
     Returns the numerical data of Nyquist plot of the system.
     It is internally used by ``nyquist_plot`` to get the data
@@ -1019,7 +1019,7 @@ def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_point
     """
     _check_system(system)
     s = system.var
-    w = Dummy('w',real=True) 
+    w = Dummy('w',real=True)
     repl = I * w
     expr = system.to_expr()
     w_expr = expr.subs({s: repl})
