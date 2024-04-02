@@ -982,9 +982,9 @@ def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_point
     It is internally used by ``nyquist_plot`` to get the data
     for plotting Nyquist plot. Users can use this data to further
     analyse the dynamics of the system or plot using a different
-    backend/plotting-module. 
+    backend/plotting-module.
     Parameters
-    ----------
+    ==========
     system : SISOLinearTimeInvariant
         The system for which the nyquist data is to be computed.
     initial_omega : Number, optional
@@ -992,23 +992,25 @@ def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_point
     final_omega : Number, optional
         The final value of frequency. Defaults to 100.
     nb_of_points: Number, optional
-        The number of points sampled for the data. Defaults to 1000.  
+        The number of points sampled for the data. Defaults to 1000.
+    - final_omega: float, optional
+        The ending frequency value for plotting (default is 100).
+    - nb_of_points: int, optional
+        The number of points to sample between the initial and final frequencies (default is 1000).
     Returns:
-    -------
-    real_expr: sympy expression
-        The real part of the transfer function evaluated at various frequencies.
-    imag_expr: sympy expression
-        The imaginary part of the transfer function evaluated at various frequencies.
-    w: sympy Dummy variable
-        A placeholder variable representing the frequency variable in Laplace domain.
+    - real_expr: sympy expression
+    The real part of the transfer function evaluated at various frequencies.
+    - imag_expr: sympy expression
+    The imaginary part of the transfer function evaluated at various frequencies.
+    - w: sympy Dummy variable
+    A placeholder variable representing the frequency variable in Laplace domain.
     Raises:
-    ------
     - NotImplementedError:
     If the provided system is not a TransferFunction.
     - ValueError:
     If there are extra degrees of freedom detected in the system.
     - NotImplementedError:
-    If the system contains time delay terms, which are not supported.
+    If the system contains time delay terms, which are not supported..
     Example usage:
     --------------
     s = Dummy('s')
