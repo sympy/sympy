@@ -982,8 +982,7 @@ def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_point
     It is internally used by ``nyquist_plot`` to get the data
     for plotting Nyquist plot. Users can use this data to further
     analyse the dynamics of the system or plot using a different
-    backend/plotting-module.
-    
+    backend/plotting-module. 
     Parameters
     ----------
     system : SISOLinearTimeInvariant
@@ -993,8 +992,7 @@ def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_point
     final_omega : Number, optional
         The final value of frequency. Defaults to 100.
     nb_of_points: Number, optional
-        The number of points sampled for the data. Defaults to 1000.
-        
+        The number of points sampled for the data. Defaults to 1000.  
     Returns:
     -------
     real_expr: sympy expression
@@ -1003,7 +1001,6 @@ def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_point
         The imaginary part of the transfer function evaluated at various frequencies.
     w: sympy Dummy variable
         A placeholder variable representing the frequency variable in Laplace domain.
-    
     Raises:
     ------
     - NotImplementedError:
@@ -1012,7 +1009,6 @@ def nyquist_numerical_data(system,initial_omega=0.01,final_omega=100,nb_of_point
     If there are extra degrees of freedom detected in the system.
     - NotImplementedError:
     If the system contains time delay terms, which are not supported.
-    
     Example usage:
     --------------
     s = Dummy('s')
@@ -1035,7 +1031,6 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
     from sympy.plotting import plot_parametric
     """
     Generates and displays the Nyquist plot for a given system.
-    
     Parameters:
     ----------
         system: callable
@@ -1054,7 +1049,6 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
             If True, the plot is displayed. Default is True.
         **kwargs:
             Additional keyword arguments to be passed to the plot.
-            
     Returns:
     -------
         None
