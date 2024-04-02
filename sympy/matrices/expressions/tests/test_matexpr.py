@@ -376,8 +376,8 @@ def test_numpy_conversion():
     except ImportError:
         skip('NumPy must be available to test creating matrices from ndarrays')
     A = MatrixSymbol('A', 2, 2)
-    np_array = array([[MatrixElement(A, 0, 0), MatrixElement(A, 1, 0)], 
-                     [MatrixElement(A, 0, 1), MatrixElement(A, 1, 1)]])
+    np_array = array([[MatrixElement(A, 0, 0), MatrixElement(A, 1, 0)],
+    [MatrixElement(A, 0, 1), MatrixElement(A, 1, 1)]])
     assert array_equal(array(A), np_array)
     assert array_equal(array(A, copy=True), np_array)
     #raises(TypeError, lambda: array(A, copy=False)) TODO: Uncomment this whenever copy variable properly passes to __array__
