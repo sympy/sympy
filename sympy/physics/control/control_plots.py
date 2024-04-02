@@ -1122,7 +1122,7 @@ def nichols_plot(system, initial_omega=0.01, final_omega=100, color='b', grid=Fa
         line_color=color,
         aspect_ratio='auto',
         axes=True,
-        xlabel='Phase (°)',
+        xlabel='Phase',
         ylabel='Magnitude(dB)',
         title='Nichols Plot',
         show=show
