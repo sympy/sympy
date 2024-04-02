@@ -904,6 +904,11 @@ def bode_phase_plot(system, initial_exp=-5, final_exp=5,
     if show_axes:
         plt.axhline(0, color='black')
         plt.axvline(0, color='black')
+    if show:
+        plt.show()
+        return
+
+    return plt
   
 def bode_plot(system, initial_exp=-5, final_exp=5,
     grid=True, show_axes=False, show=True, freq_unit='rad/sec', phase_unit='rad', phase_unwrap=True, **kwargs):
