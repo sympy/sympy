@@ -1,7 +1,7 @@
 .. _style_guide_docstring_guidelines:
 
 ===============================
-SymPy Docstrings Style Guide
+Docstrings Style Guide
 ===============================
 
 General Guidelines
