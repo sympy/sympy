@@ -909,7 +909,7 @@ def bode_phase_plot(system, initial_exp=-5, final_exp=5,
         return
 
     return plt
-  
+
 def bode_plot(system, initial_exp=-5, final_exp=5,
     grid=True, show_axes=False, show=True, freq_unit='rad/sec', phase_unit='rad', phase_unwrap=True, **kwargs):
     r"""
@@ -1019,7 +1019,7 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
     """
     _check_system(system)
     s = system.var
-    w = Dummy('w',real=True)    
+    w = Dummy('w',real=True)
     repl = I * w
     expr = system.to_expr()
     w_expr = expr.subs({s: repl})
@@ -1051,8 +1051,8 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
     Returns:
         None
     """
-    real_expr, imag_expr, w = nyquist_numerical_data(system)    
-    w_values = [(w, initial_omega, final_omega)]   
+    real_expr, imag_expr, w = nyquist_numerical_data(system)
+    w_values = [(w, initial_omega, final_omega)]
     plot_parametric(
         (real_expr, imag_expr),   # The curve
         (real_expr, -imag_expr),  # Its mirror image
@@ -1083,9 +1083,9 @@ def nichols_numerical_data(system, initial_omega=0.01, final_omega=100, **kwargs
         - w: sympy Dummy variable
             A placeholder variable representing the frequency variable in Laplace domain.
     """
-    _check_system(system)   
+    _check_system(system)
     s = system.var
-    w = Dummy('w', real=True)   
+    w = Dummy('w', real=True)
     repl = I * w
     expr = system.to_expr()
     w_expr = expr.subs({s: repl})
@@ -1114,7 +1114,7 @@ def nichols_plot(system, initial_omega=0.01, final_omega=100, color='b', grid=Fa
         None
     """
     mag_expr, phase_expr, w = nichols_numerical_data(system)
-    from sympy.plotting import plot_parametric 
+    from sympy.plotting import plot_parametric
     w_values = [(w, initial_omega, final_omega)]
     plot_parametric(
         (phase_expr, mag_expr),   # The curve
