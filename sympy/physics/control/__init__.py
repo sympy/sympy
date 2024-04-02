@@ -13,4 +13,4 @@ __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel',
     'step_response_plot', 'impulse_response_numerical_data', 'impulse_response_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
-    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot']
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot','nyquist_numerical_data',' nyquist_plot']
