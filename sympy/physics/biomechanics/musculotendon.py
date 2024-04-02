@@ -1457,17 +1457,17 @@ class HillTypeMuscle(MusculotendonBase):
         # Constant for maximum isometric force
         self.max_isometric_force = max_isometric_force
 
-    def active_force(self):
-        """Calculate the active force of the muscle."""
-        return self.a * self.F_0(self.l_m) * self.f_l(self.l_m) * self.f_v(self.v_m)
+    def contractile_force(self):
+        """Calculate the contractile force of the muscle."""
+        return self.a * self.F_0 * self.f_l(self.l_m) * self.f_v(self.v_m)
 
-    def passive_force(self):
-        """Calculate the passive force of the muscle."""
-        return self.F_0(self.l_m) * self.f_p(self.l_m)
+    def passive_parallel_force(self):
+        """Calculate the passive parallel force of the muscle."""
+        return self.F_0 * self.f_p(self.l_m)
 
     def tendon_force(self):
         """Calculate the tendon force."""
-        return self.F_0(self.l_t) * self.f_t(self.l_t)
+        return self.F_0 * self.f_t(self.l_t)
 
     def equilibrium_equation(self, alpha):
         """
@@ -1477,13 +1477,12 @@ class HillTypeMuscle(MusculotendonBase):
         alpha (sympy.Expr): The pennation angle.
         """
         # Calculate forces for the contractile element (CE), passive element (PE), and series element (SE)
-        F_CE = self.active_force()
-        F_PE = self.passive_force()
+        F_CE = self.contractile_force()
+        F_PE = self.passive_parallel_force()
         F_SE = self.tendon_force()
 
-        # The equilibrium equation based on the musculotendon force
-        F_musculotendon = (F_CE + F_PE) * cos(alpha)
-        F_equilibrium = F_SE - F_musculotendon
+        # The equilibrium equation
+        F_equilibrium = (F_CE + F_PE) * cos(alpha)
         return F_equilibrium
     
     def __repr__(self):
