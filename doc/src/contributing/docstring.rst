@@ -1,7 +1,7 @@
 .. _style_guide_docstring_guidelines:
 
 ===============================
-Docstrings Style Guide
+Docstring Style Guide
 ===============================
 
 General Guidelines
