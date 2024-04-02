@@ -40,7 +40,7 @@ def declare_frames(self, ctx, i, j=None):
         else:
             name1 = ctx.ID().getText().lower() + str(i)
     else:
-        name1 = ctx.ID().getText()
+        name1 = ctx.ID().getText().lower()
     name2 = "frame_" + name1
     if self.getValue(ctx.parentCtx.varType()) == "newtonian":
         self.newtonian = name2
@@ -61,7 +61,7 @@ def declare_points(self, ctx, i, j=None):
         else:
             name1 = ctx.ID().getText().lower() + str(i)
     else:
-        name1 = ctx.ID().getText()
+        name1 = ctx.ID().getText().lower()
 
     name2 = "point_" + name1
 
@@ -76,7 +76,7 @@ def declare_particles(self, ctx, i, j=None):
         else:
             name1 = ctx.ID().getText().lower() + str(i)
     else:
-        name1 = ctx.ID().getText()
+        name1 = ctx.ID().getText().lower()
 
     name2 = "particle_" + name1
 
@@ -93,7 +93,7 @@ def declare_bodies(self, ctx, i, j=None):
         else:
             name1 = ctx.ID().getText().lower() + str(i)
     else:
-        name1 = ctx.ID().getText()
+        name1 = ctx.ID().getText().lower()
 
     name2 = "body_" + name1
     self.bodies.update({name1: name2})
@@ -1447,7 +1447,7 @@ if AutolevListener:
                 elif ctx.equals().getText() == "^=":
                     equals = "**="
 
-                text = ctx.ID().getText()
+                text = ctx.ID().getText().lower()
                 self.type.update({text: "matrix"})
                 # Handle assignments of type ID[2] = expr
                 if ctx.index().getChildCount() == 1:
