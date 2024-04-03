@@ -63,6 +63,7 @@ representation is friendlier.
 """
 from itertools import chain
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 
 from .exceptions import (
@@ -92,6 +93,10 @@ from .dense import (
         )
 
 from .lll import ddm_lll, ddm_lll_transform
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['DDM.to_dfm', 'DDM.to_dfm_or_ddm']
 
 
 class DDM(list):
