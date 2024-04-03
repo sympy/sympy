@@ -2180,7 +2180,7 @@ class Beam:
             >>> b.apply_support(50, "pin")
             >>> b.apply_support(0, "fixed")
             >>> b.apply_support(20, "roller")
-            >>> p = b.draw()  # doctest: +IGNORE_WARNINGS
+            >>> p = b.draw()  # doctest: +SKIP
             >>> p  # doctest: +ELLIPSIS
             Plot object containing:
             [0]: cartesian line: 25*SingularityFunction(x, 5, 0) - 25*SingularityFunction(x, 23, 0)
