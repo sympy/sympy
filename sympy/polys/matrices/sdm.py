@@ -7,6 +7,7 @@ Module for the SDM class.
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import _strongly_connected_components
 
@@ -15,6 +16,10 @@ from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 from sympy.polys.domains import QQ
 
 from .ddm import DDM
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['SDM.to_dfm', 'SDM.to_dfm_or_ddm']
 
 
 class SDM(dict):

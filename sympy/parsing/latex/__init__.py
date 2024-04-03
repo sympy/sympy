@@ -5,6 +5,10 @@ from sympy.parsing.latex.lark import LarkLaTeXParser, TransformToSymPyExpr, pars
 
 from .errors import LaTeXParsingError  # noqa
 
+
+__doctest_requires__ = {('parse_latex',): ['antlr4', 'lark']}
+
+
 @doctest_depends_on(modules=('antlr4', 'lark'))
 def parse_latex(s, strict=False, backend="antlr"):
     r"""Converts the input LaTeX string ``s`` to a SymPy ``Expr``.

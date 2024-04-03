@@ -48,9 +48,9 @@ You can also use the standard Python functions ``float()``, ``complex()`` to
 convert SymPy expressions to regular Python numbers:
 
     >>> float(pi)
-    3.1415926535...
+    3.141592653589793
     >>> complex(pi+E*I)
-    (3.1415926535...+2.7182818284...j)
+    (3.141592653589793+2.718281828459045j)
 
 
 If these functions are used, failure to evaluate the expression to an explicit
