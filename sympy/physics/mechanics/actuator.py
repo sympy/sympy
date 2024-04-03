@@ -3,11 +3,13 @@
 from abc import ABC, abstractmethod
 
 from sympy import S, sympify
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
 from sympy.physics.mechanics.pathway import PathwayBase
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.vector import ReferenceFrame, Vector
+from sympy.series.gruntz import sign
 
 
 __all__ = [
@@ -16,7 +18,6 @@ __all__ = [
     'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
-    'StaticFrictionActuator',
     'CoulombFrictionActuator'
 ]
 
@@ -877,61 +878,7 @@ class TorqueActuator(ActuatorBase):
         return string
     
 
-class StaticFrictionActuator(ForceActuator):
-    """A friction force actuator that models static friction.
-
-    Explanation
-    ===========
-    This represents a model for static friction force acting on a point,
-    parameterized by the coefficient of static friction and the normal force:
-    F_s = μ_s * N, where N is the normal force, and μ_s is the coefficient of static friction.
-
-    Parameters
-    ==========
-    coefficient_of_static_friction : Expr
-        The coefficient of static friction.
-    normal_force : Expr
-        The normal force between the surfaces.
-    pathway : PathwayBase
-        The pathway that the actuator follows.
-
-    """
-
-    def __init__(self, coefficient_of_static_friction, normal_force, pathway):
-        """Initializer for ``StaticFrictionActuator``."""
-        self.coefficient_of_static_friction = coefficient_of_static_friction
-        self._normal_force = normal_force
-        self.pathway = pathway
-        force = -self.coefficient_of_static_friction * self.normal_force
-        super().__init__(force, pathway)
-
-    @property
-    def force(self):
-        """The magnitude of the force produced by the actuator."""
-        return -self.coefficient_of_static_friction * self.normal_force
-
-    @property
-    def coefficient_of_static_friction(self):
-        """The coefficient of static friction for the actuator."""
-        return self._coefficient_of_static_friction
-    # No settler for coefficient of friction since it never changes
-
-    @property
-    def normal_force(self):
-        """The normal force for the actuator."""
-        return self._normal_force
-
-    @normal_force.setter
-    def normal_force(self, value):
-        self._normal_force = value
-        self.force = -self.coefficient_of_static_friction * self._normal_force  
-
-    def __repr__(self):
-        """Representation of a ``StaticFrictionActuator``."""
-        return f'{self.__class__.__name__}({self.coefficient_of_static_friction}, {self.normal_force}, {self.pathway})'
-    
-
-class CoulombFrictionActuator(ActuatorBase):
+class CoulombFrictionActuator(ForceActuator):
     """
     A friction force actuator that models the Coulomb Friction Model with Static and Dynamic Friction.
 
@@ -975,23 +922,16 @@ class CoulombFrictionActuator(ActuatorBase):
         self._velocity = velocity
         self.pathway = pathway
 
-        force = self.force()
-        super().__init__(force, pathway)
-
-    def force(self):
-        if self._velocity < 0:
-            return self._coefficient_of_kinetic_friction * self._normal_force
-        elif self._velocity == 0:
-            if abs(self._residual_friction_force) < self._coulomb_friction_constant:
-                return self._tangential_friction_force
-            else:
-                return self._coulomb_friction_constant * sign(self._tangential_friction_force)
-        else: # self._velocity > 0
-            return -self._coefficient_of_kinetic_friction * self._normal_force
+        super().__init__(self.force, pathway)
 
     @property
     def force(self):
-        return self.force()
+        return Piecewise(
+            (self._coefficient_of_kinetic_friction * self._normal_force, self._velocity < 0),
+            (self._tangential_friction_force, (self._velocity == 0) & (abs(self._tangential_friction_force) < self._coulomb_friction_constant)),
+            (self._coulomb_friction_constant * sign(self._tangential_friction_force), (self._velocity == 0) & (abs(self._tangential_friction_force) >= self._coulomb_friction_constant)),
+            (-self._coefficient_of_kinetic_friction * self._normal_force, self._velocity > 0)
+        )
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self._coefficient_of_kinetic_friction}, {self._normal_force}, {self._tangential_friction_force}, {self._coulomb_friction_constant}, {self._velocity}, {self.pathway})'
