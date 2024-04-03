@@ -280,6 +280,7 @@ def test_lcim():
 
 
 def test_is_convex():
+    x, y = symbols ('x y')
     assert is_convex(1/x, x, domain=Interval.open(0, oo)) == True
     assert is_convex(1/x, x, domain=Interval(-oo, 0)) == False
     assert is_convex(x**2, x, domain=Interval(0, oo)) == True
