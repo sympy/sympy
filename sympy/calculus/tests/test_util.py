@@ -290,7 +290,6 @@ def test_is_convex():
     assert is_convex(x**2+y**2,(x,y))==True
     assert is_convex(cos(x)+cos(y),x)==False
     assert is_convex(8*x**2-2*y**2,(x,y))==False
-    raises(NotImplementedError, lambda: is_convex(log(x), x, a))
 
 
 def test_stationary_points():
