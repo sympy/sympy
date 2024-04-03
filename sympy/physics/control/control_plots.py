@@ -980,43 +980,49 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_points=1000, **kwargs):
     """
     Returns the numerical data of Nyquist plot of the system.
-    It is internally used by ``nyquist_plot`` to get the data
-    for plotting Nyquist plot. Users can use this data to further
-    analyse the dynamics of the system or plot using a different
-    backend/plotting-module.
+    It is internally used by ``nyquist_plot`` to obtain the data
+    for plotting the Nyquist plot. Users can utilize this data 
+    for further analysis of the system dynamics or for plotting 
+    using a different backend/plotting-module.
+    
     Parameters
     ==========
     system : SISOLinearTimeInvariant
-        The system for which the nyquist data is to be computed.
+        The system for which the Nyquist data is to be computed.
     initial_omega : Number, optional
         The initial value of frequency. Defaults to 0.01.
     final_omega : Number, optional
         The final value of frequency. Defaults to 100.
     nb_of_points: Number, optional
         The number of points sampled for the data. Defaults to 1000.
-    - final_omega: float, optional
-        The ending frequency value for plotting (default is 100).
-    - nb_of_points: int, optional
-        The number of points to sample between the initial and final frequencies (default is 1000).
-    Returns:
-    - real_expr: sympy expression
-    The real part of the transfer function evaluated at various frequencies.
-    - imag_expr: sympy expression
-    The imaginary part of the transfer function evaluated at various frequencies.
-    - w: sympy Dummy variable
-    A placeholder variable representing the frequency variable in Laplace domain.
-    Raises:
-    - NotImplementedError:
-    If the provided system is not a TransferFunction.
-    - ValueError:
-    If there are extra degrees of freedom detected in the system.
-    - NotImplementedError:
-    If the system contains time delay terms, which are not supported..
-    Example usage:
-    --------------
-    s = Dummy('s')
-    system = TransferFunction(8, (s**2 + 9*s + 18), s)
-    nyquist_plot(system)
+    
+    Returns
+    =======
+    real_expr : sympy expression
+        The real part of the transfer function evaluated at various frequencies.
+    imag_expr : sympy expression
+        The imaginary part of the transfer function evaluated at various frequencies.
+    w : sympy Dummy variable
+        A placeholder variable representing the frequency variable in the Laplace domain.
+    
+    Raises
+    ======
+    NotImplementedError
+        If the provided system is not a TransferFunction.
+    ValueError
+        If there are extra degrees of freedom detected in the system.
+    NotImplementedError
+        If the system contains time delay terms, which are not supported.
+    
+    Example Usage
+    =============
+    >>> s = Dummy('s')
+    >>> system = TransferFunction(8, (s**2 + 9*s + 18), s)
+    >>> nyquist_plot(system)
+    
+    See Also
+    ========
+    nyquist_plot
     """
     _check_system(system)
     s = system.var
@@ -1032,25 +1038,37 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
                  color='b', grid=False, show=True, **kwargs):
     """
     Generates and displays the Nyquist plot for a given system.
+    
     Parameters:
-        system: callable
+        system : callable
             The system for which the Nyquist plot is to be generated.
-        initial_omega: float, optional
+        initial_omega : float, optional
             The initial frequency for plotting. Default is 0.01.
-        final_omega: float, optional
+        final_omega : float, optional
             The final frequency for plotting. Default is 100.
-        nb_of_points: int, optional
+        nb_of_points : int, optional
             Number of points to plot between initial and final frequencies. Default is 1000.
-        color: str, optional
+        color : str, optional
             Color of the Nyquist plot. Default is 'b' (blue).
-        grid: bool, optional
+        grid : bool, optional
             If True, grid lines are displayed. Default is False.
-        show: bool, optional
+        show : bool, optional
             If True, the plot is displayed. Default is True.
         **kwargs:
             Additional keyword arguments to be passed to the plot.
+    
     Returns:
         None
+            The function displays the Nyquist plot but does not return any value.
+    
+    Examples:
+        >>> s = symbols('s')
+        >>> system = TransferFunction(1, s + 1, s)
+        >>> nyquist_plot(system)
+        # Generates and displays the Nyquist plot for the system TransferFunction(1, s + 1, s).
+    
+    See Also:
+        nyquist_plot_numerical_data
     """
     real_expr, imag_expr, w = nyquist_numerical_data(system)
     w_values = [(w, initial_omega, final_omega)]
@@ -1077,11 +1095,11 @@ def nichols_numerical_data(system, initial_omega=0.01, final_omega=100, **kwargs
         final_omega : Number, optional
             The final value of frequency. Defaults to 100.
     Returns:
-        - mag_expr: sympy expression
+         mag_expr: sympy expression
             The magnitude in decibels evaluated at various frequencies.
-        - phase_expr: sympy expression
+         phase_expr: sympy expression
             The phase in degrees evaluated at various frequencies.
-        - w: sympy Dummy variable
+         w: sympy Dummy variable
             A placeholder variable representing the frequency variable in Laplace domain.
     """
     _check_system(system)
@@ -1109,10 +1127,11 @@ def nichols_plot(system, initial_omega=0.01, final_omega=100, color='b', grid=Fa
             If True, grid lines are displayed. Default is False.
         show: bool, optional
             If True, the plot is displayed. Default is True.
-        **kwargs:
+        **kwargs: dict
             Additional keyword arguments to be passed to the plot.
     Returns:
-        None
+    None
+        This function return nothing
     """
     mag_expr, phase_expr, w = nichols_numerical_data(system)
     from sympy.plotting import plot_parametric
