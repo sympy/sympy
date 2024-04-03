@@ -508,7 +508,7 @@ class FpGroup(DefaultPrinting):
 
         '''
         P, T = self._to_perm_group()
-        return T.invert(P._elements)
+        return T.invert(P.elements)
 
     @property
     def is_cyclic(self):
