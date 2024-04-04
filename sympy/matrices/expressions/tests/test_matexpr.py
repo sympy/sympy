@@ -19,7 +19,7 @@ from sympy.matrices.expressions.determinant import Determinant, det
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
 from sympy.testing.pytest import raises, XFAIL, skip
-
+from importlib.metadata import version
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 x = symbols('x')
@@ -376,11 +376,12 @@ def test_numpy_conversion():
     except ImportError:
         skip('NumPy must be available to test creating matrices from ndarrays')
     A = MatrixSymbol('A', 2, 2)
-    np_array = array([[MatrixElement(A, 0, 0), MatrixElement(A, 1, 0)],
-    [MatrixElement(A, 0, 1), MatrixElement(A, 1, 1)]])
+    np_array = array([[MatrixElement(A, 0, 0), MatrixElement(A, 0, 1)],
+    [MatrixElement(A, 1, 0), MatrixElement(A, 1, 1)]])
     assert array_equal(array(A), np_array)
     assert array_equal(array(A, copy=True), np_array)
-    #raises(TypeError, lambda: array(A, copy=False)) TODO: Uncomment this whenever copy variable properly passes to __array__
+    if(int(version('numpy').split('.')[0]) >= 2): #run this test only if numpy is new enough that copy variable is passed properly.
+        raises(TypeError, lambda: array(A, copy=False)) 
 
 def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
