@@ -583,11 +583,14 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             the expression listed first is selected.
             """
             if not has_variety(choices):
+                signal.alarm(0)
                 return choices[0]
+            signal.alarm(0)
             return min(choices, key=measure)
 
         def done(e):
             rv = e.doit() if doit else e
+            signal.alarm(0)
             return shorter(rv, collect_abs(rv))
 
         expr = sympify(expr, rational=rational)
@@ -599,20 +602,24 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             "doit": kwargs.get('doit', doit)}
         # no routine for Expr needs to check for is_zero
         if isinstance(expr, Expr) and expr.is_zero:
+            signal.alarm(0)
             return S.Zero if not expr.is_Number else expr
 
         _eval_simplify = getattr(expr, '_eval_simplify', None)
         if _eval_simplify is not None:
+            signal.alarm(0)
             return _eval_simplify(**kwargs)
 
         original_expr = expr = collect_abs(signsimp(expr))
 
         if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
+            signal.alarm(0)
             return expr
 
         if inverse and expr.has(Function):
             expr = inversecombine(expr)
             if not expr.args:  # simplified to atomic
+                signal.alarm(0)
                 return expr
 
         # do deep simplification
@@ -628,6 +635,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             lambda x: x.func(*[simplify(i, **kwargs) for i in x.args]),
             simultaneous=False)
         if not isinstance(expr, handled):
+            signal.alarm(0)
             return done(expr)
 
         if not expr.is_commutative:
@@ -655,6 +663,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         else:
             expr = shorter(expr2, expr1, expr)
         if not isinstance(expr, Basic):  # XXX: temporary hack
+            signal.alarm(0)
             return expr
 
         expr = factor_terms(expr, sign=False)
@@ -688,6 +697,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                         expr = shorter(expr, factor_terms(expr))
                         # As all expressions have been simplified above with the
                         # complete simplify, nothing more needs to be done here
+                        signal.alarm(0)
                         return expr
 
         # hyperexpand automatically only works on hypergeometric terms
@@ -761,7 +771,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         # restore floats
         if floats and rational is None:
             expr = nfloat(expr, exponent=False)
-
+        signal.alarm(0)
         return done(expr)
     # handle the timeout error if one occurs
     except TimeoutError as e:
