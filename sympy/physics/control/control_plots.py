@@ -980,7 +980,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 
 def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_points=1000, **kwargs):
     """
-    Returns the numerical data of Nyquist plot of the system.
+     Returns the numerical data of Nyquist plot of the system.
     It is internally used by ``nyquist_plot`` to get the data
     for plotting Nyquist plot. Users can use this data to further
     analyse the dynamics of the system or plot using a different
@@ -995,32 +995,29 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
         The final value of frequency. Defaults to 100.
     nb_of_points: Number, optional
         The number of points sampled for the data. Defaults to 1000.
-    Returns
-    =======
-    tuple : (real_points, imag_points)
-        real_points = real values of the Nyquist plot.
-        imag_points = imaginary values of the Nyquist plot.
-    Raises
-    ======
-    NotImplementedError
-        When a SISO LTI system is not passed.
-        When time delay terms are present in the system.
-    ValueError
-        When more than one free symbol is present in the system.
-        The only variable in the transfer function should be
-        the variable of the Laplace transform.
-    Examples
-    ========
-    >>> from sympy.abc import s
-    >>> from sympy.physics.control.lti import TransferFunction
-    >>> from sympy.physics.control.control_plots import nyquist_numerical_data
-    >>> tf1 = TransferFunction(2*s**2 + 5*s + 1,s**2 + 2*s + 3, s)
-    >>> nyquist_numerical_data(tf1)   # doctest: +SKIP
-    (array([0.33337408, 0.33831157, 0.35187019, ..., 2.0007028 , 2.00070139, 2.00069999]),
-    array([ 1.44446543e-02,  1.59297201e-01,  3.05494689e-01, ..., -1.00089887e-02, -9.99898283e-03, -9.98899690e-03]))
-    See Also
-    ========
-    nyquist_plot
+    - final_omega: float, optional
+        The ending frequency value for plotting (default is 100).
+    - nb_of_points: int, optional
+        The number of points to sample between the initial and final frequencies (default is 1000).
+    Returns:
+    - real_expr: sympy expression
+    The real part of the transfer function evaluated at various frequencies.
+    - imag_expr: sympy expression
+    The imaginary part of the transfer function evaluated at various frequencies.
+    - w: sympy Dummy variable
+    A placeholder variable representing the frequency variable in Laplace domain.
+    Raises:
+    - NotImplementedError:
+    If the provided system is not a TransferFunction.
+    - ValueError:
+    If there are extra degrees of freedom detected in the system.
+    - NotImplementedError:
+    If the system contains time delay terms, which are not supported..
+    Example usage:
+    --------------
+    s = Dummy('s')
+    system = TransferFunction(8, (s**2 + 9*s + 18), s)
+    nyquist_plot(system)
     """
     _check_system(system)
     s = system.var
@@ -1034,44 +1031,113 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
     return real_expr, imag_expr, w
 def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
                  color='b', grid=False, show=True, **kwargs):
-    r"""
-    Returns the nyquist plot of a continuous-time system.
-    A Nyquist plot is a frequency response plot used in control engineering.
+    """
+    Generates and displays the Nyquist plot for a given system.
+    Parameters:
+        system: callable
+            The system for which the Nyquist plot is to be generated.
+        initial_omega: float, optional
+            The initial frequency for plotting. Default is 0.01.
+        final_omega: float, optional
+            The final frequency for plotting. Default is 100.
+        nb_of_points: int, optional
+            Number of points to plot between initial and final frequencies. Default is 1000.
+        color: str, optional
+            Color of the Nyquist plot. Default is 'b' (blue).
+        grid: bool, optional
+            If True, grid lines are displayed. Default is False.
+        show: bool, optional
+            If True, the plot is displayed. Default is True.
+        **kwargs:
+            Additional keyword arguments to be passed to the plot.
+    Returns:
+        None
+    """
+    _check_system(system)
+    s = system.var
+    w = Dummy('w',real=True)
+    repl = I * w
+    expr = system.to_expr()
+    w_expr = expr.subs({s: repl})
+    w_expr = w_expr.as_real_imag()
+    real_expr = w_expr[0]
+    imag_expr = w_expr[1]
+    return real_expr, imag_expr, w
+def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
+                 color='b', grid=False, show=True, **kwargs):
+    """
+     Returns the numerical data of Nyquist plot of the system.
+    It is internally used by ``nyquist_plot`` to get the data
+    for plotting Nyquist plot. Users can use this data to further
+    analyse the dynamics of the system or plot using a different
+    backend/plotting-module.
     Parameters
     ==========
-    system : SISOLinearTimeInvariant type
-        The LTI SISO system for which the Ramp Response is to be computed.
+    system : SISOLinearTimeInvariant
+        The system for which the nyquist data is to be computed.
     initial_omega : Number, optional
         The initial value of frequency. Defaults to 0.01.
     final_omega : Number, optional
         The final value of frequency. Defaults to 100.
     nb_of_points: Number, optional
         The number of points sampled for the data. Defaults to 1000.
-    show : boolean, optional
-        If ``True``, the plot will be displayed otherwise
-        the equivalent matplotlib ``plot`` object will be returned.
-        Defaults to True.
-    show_axes : boolean, optional
-        If ``True``, the coordinate axes will be shown. Defaults to False.
-    grid : boolean, optional
-        If ``True``, the plot will have a grid. Defaults to False.
-    Examples
-    ========
-    .. plot::
-        :context: close-figs
-        :format: doctest
-        :include-source: True
-        >>> from sympy.abc import s
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> from sympy.physics.control.control_plots import nyquist_plot
-        >>> tf1 = TransferFunction(2*s**2 + 5*s + 1,s**2 + 2*s + 3, s)
-        >>> nyquist_plot(tf1)   # doctest: +SKIP
-    See Also
-    ========
-    bode_magnitude_plot, bode_phase_plot
-    References
-    ==========
-    .. [1] https://en.wikipedia.org/?title=Nyquist_plot&redirect=no
+    - final_omega: float, optional
+        The ending frequency value for plotting (default is 100).
+    - nb_of_points: int, optional
+        The number of points to sample between the initial and final frequencies (default is 1000).
+    Returns:
+    - real_expr: sympy expression
+    The real part of the transfer function evaluated at various frequencies.
+    - imag_expr: sympy expression
+    The imaginary part of the transfer function evaluated at various frequencies.
+    - w: sympy Dummy variable
+    A placeholder variable representing the frequency variable in Laplace domain.
+    Raises:
+    - NotImplementedError:
+    If the provided system is not a TransferFunction.
+    - ValueError:
+    If there are extra degrees of freedom detected in the system.
+    - NotImplementedError:
+    If the system contains time delay terms, which are not supported..
+    Example usage:
+    --------------
+    s = Dummy('s')
+    system = TransferFunction(8, (s**2 + 9*s + 18), s)
+    nyquist_plot(system)
+    """
+    _check_system(system)
+    s = system.var
+    w = Dummy('w',real=True)
+    repl = I * w
+    expr = system.to_expr()
+    w_expr = expr.subs({s: repl})
+    w_expr = w_expr.as_real_imag()
+    real_expr = w_expr[0]
+    imag_expr = w_expr[1]
+    return real_expr, imag_expr, w
+def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
+                 color='b', grid=False, show=True, **kwargs):
+    """
+    Generates and displays the Nyquist plot for a given system.
+    Parameters:
+        system: callable
+            The system for which the Nyquist plot is to be generated.
+        initial_omega: float, optional
+            The initial frequency for plotting. Default is 0.01.
+        final_omega: float, optional
+            The final frequency for plotting. Default is 100.
+        nb_of_points: int, optional
+            Number of points to plot between initial and final frequencies. Default is 1000.
+        color: str, optional
+            Color of the Nyquist plot. Default is 'b' (blue).
+        grid: bool, optional
+            If True, grid lines are displayed. Default is False.
+        show: bool, optional
+            If True, the plot is displayed. Default is True.
+        **kwargs:
+            Additional keyword arguments to be passed to the plot.
+    Returns:
+        None
     """
     real_expr, imag_expr, w = nyquist_numerical_data(system)
     w_values = [(w, initial_omega, final_omega)]
