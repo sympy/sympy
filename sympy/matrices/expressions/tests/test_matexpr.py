@@ -381,7 +381,7 @@ def test_numpy_conversion():
     assert array_equal(array(A), np_array)
     assert array_equal(array(A, copy=True), np_array)
     if(int(version('numpy').split('.')[0]) >= 2): #run this test only if numpy is new enough that copy variable is passed properly.
-        raises(TypeError, lambda: array(A, copy=False)) 
+        raises(TypeError, lambda: array(A, copy=False))
 
 def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
