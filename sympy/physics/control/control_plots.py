@@ -1034,27 +1034,44 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
     return real_expr, imag_expr, w
 def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
                  color='b', grid=False, show=True, **kwargs):
-    """
-    Generates and displays the Nyquist plot for a given system.
-    Parameters:
-        system: callable
-            The system for which the Nyquist plot is to be generated.
-        initial_omega: float, optional
-            The initial frequency for plotting. Default is 0.01.
-        final_omega: float, optional
-            The final frequency for plotting. Default is 100.
-        nb_of_points: int, optional
-            Number of points to plot between initial and final frequencies. Default is 1000.
-        color: str, optional
-            Color of the Nyquist plot. Default is 'b' (blue).
-        grid: bool, optional
-            If True, grid lines are displayed. Default is False.
-        show: bool, optional
-            If True, the plot is displayed. Default is True.
-        **kwargs:
-            Additional keyword arguments to be passed to the plot.
-    Returns:
-        None
+    r"""
+    Returns the nyquist plot of a continuous-time system.
+    A Nyquist plot is a frequency response plot used in control engineering.
+    Parameters
+    ==========
+    system : SISOLinearTimeInvariant type
+        The LTI SISO system for which the Ramp Response is to be computed.
+    initial_omega : Number, optional
+        The initial value of frequency. Defaults to 0.01.
+    final_omega : Number, optional
+        The final value of frequency. Defaults to 100.
+    nb_of_points: Number, optional
+        The number of points sampled for the data. Defaults to 1000.
+    show : boolean, optional
+        If ``True``, the plot will be displayed otherwise
+        the equivalent matplotlib ``plot`` object will be returned.
+        Defaults to True.
+    show_axes : boolean, optional
+        If ``True``, the coordinate axes will be shown. Defaults to False.
+    grid : boolean, optional
+        If ``True``, the plot will have a grid. Defaults to False.
+    Examples
+    ========
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import nyquist_plot
+        >>> tf1 = TransferFunction(2*s**2 + 5*s + 1,s**2 + 2*s + 3, s)
+        >>> nyquist_plot(tf1)   # doctest: +SKIP
+    See Also
+    ========
+    bode_magnitude_plot, bode_phase_plot
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/?title=Nyquist_plot&redirect=no
     """
     real_expr, imag_expr, w = nyquist_numerical_data(system)
     w_values = [(w, initial_omega, final_omega)]
