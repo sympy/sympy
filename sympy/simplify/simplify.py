@@ -574,7 +574,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
     try:
-        # Set up a signal handler to interrupt the process after the timeout
+        # Set up a signal handler to interrupt the process after a timeout
         signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(timeout)
         def shorter(*choices):
@@ -763,9 +763,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             expr = nfloat(expr, exponent=False)
 
         return done(expr)
+    # handle the timeout error if one occurs
     except TimeoutError as e:
         print("Timeout occurred:", e)
-        return "Simplification Timed Out"  # or handle the timeout in any other way
+        return "Simplification Timed Out"  # return string stating that a timeout occured
 
 def sum_simplify(s, **kwargs):
     """Main function for Sum simplification"""
