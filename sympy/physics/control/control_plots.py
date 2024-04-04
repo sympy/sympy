@@ -980,7 +980,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 
 def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_points=1000, **kwargs):
     """
-     Returns the numerical data of Nyquist plot of the system.
+    Returns the numerical data of Nyquist plot of the system.
     It is internally used by ``nyquist_plot`` to get the data
     for plotting Nyquist plot. Users can use this data to further
     analyse the dynamics of the system or plot using a different
@@ -995,29 +995,32 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
         The final value of frequency. Defaults to 100.
     nb_of_points: Number, optional
         The number of points sampled for the data. Defaults to 1000.
-    - final_omega: float, optional
-        The ending frequency value for plotting (default is 100).
-    - nb_of_points: int, optional
-        The number of points to sample between the initial and final frequencies (default is 1000).
-    Returns:
-    - real_expr: sympy expression
-    The real part of the transfer function evaluated at various frequencies.
-    - imag_expr: sympy expression
-    The imaginary part of the transfer function evaluated at various frequencies.
-    - w: sympy Dummy variable
-    A placeholder variable representing the frequency variable in Laplace domain.
-    Raises:
-    - NotImplementedError:
-    If the provided system is not a TransferFunction.
-    - ValueError:
-    If there are extra degrees of freedom detected in the system.
-    - NotImplementedError:
-    If the system contains time delay terms, which are not supported..
-    Example usage:
-    --------------
-    s = Dummy('s')
-    system = TransferFunction(8, (s**2 + 9*s + 18), s)
-    nyquist_plot(system)
+    Returns
+    =======
+    tuple : (real_points, imag_points)
+        real_points = real values of the Nyquist plot.
+        imag_points = imaginary values of the Nyquist plot.
+    Raises
+    ======
+    NotImplementedError
+        When a SISO LTI system is not passed.
+        When time delay terms are present in the system.
+    ValueError
+        When more than one free symbol is present in the system.
+        The only variable in the transfer function should be
+        the variable of the Laplace transform.
+    Examples
+    ========
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import TransferFunction
+    >>> from sympy.physics.control.control_plots import nyquist_numerical_data
+    >>> tf1 = TransferFunction(2*s**2 + 5*s + 1,s**2 + 2*s + 3, s)
+    >>> nyquist_numerical_data(tf1)   # doctest: +SKIP
+    (array([0.33337408, 0.33831157, 0.35187019, ..., 2.0007028 , 2.00070139, 2.00069999]),
+    array([ 1.44446543e-02,  1.59297201e-01,  3.05494689e-01, ..., -1.00089887e-02, -9.99898283e-03, -9.98899690e-03]))
+    See Also
+    ========
+    nyquist_plot
     """
     _check_system(system)
     s = system.var
