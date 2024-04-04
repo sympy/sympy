@@ -25,6 +25,7 @@ from sympy.testing.pytest import (
     ignore_warnings, raises, skip, skip_under_pyodide, slow,
     warns_deprecated_sympy)
 from sympy.utilities.iterables import capture, iterable
+from importlib.metadata import version
 
 all_classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
 mutable_classes = (Matrix, SparseMatrix)
@@ -360,7 +361,8 @@ def test_numpy_conversion():
     np_array = array([[1,2], [3,4]])
     assert array_equal(array(A), np_array)
     assert array_equal(array(A, copy=True), np_array)
-    #raises(TypeError, lambda: array(A, copy=False)) TODO: Uncomment this whenever copy variable properly passes to __array__
+    if(int(version('numpy').split('.')[0]) >= 2): #run this test only if numpy is new enough that copy variable is passed properly.
+        raises(TypeError, lambda: array(A, copy=False)) 
 
 def test_rot90():
     A = Matrix([[1, 2], [3, 4]])
