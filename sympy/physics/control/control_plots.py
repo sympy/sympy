@@ -1021,7 +1021,7 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
 
     >>> from sympy.abc import s
     >>> from sympy.physics.control.lti import TransferFunction
-    >>> from sympy.physics.control.control_plots import nyquist_plot
+    >>> from sympy.physics.control.control_plots import nyquist_numerical_data
     >>> tf1 = TransferFunction(s, s**2 + 5*s + 8, s)
     >>> nyquist_numerical_data(tf1)   # doctest: +SKIP
     (([0.0, 0.12166980856813935,..., 9.861246379582118, 10.0],
