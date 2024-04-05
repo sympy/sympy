@@ -985,7 +985,7 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
     for plotting Nyquist plot. Users can use this data to further
     analyse the dynamics of the system or plot using a different
     backend/plotting-module.
-    
+
     Parameters
     ==========
     system : SISOLinearTimeInvariant
@@ -1026,7 +1026,7 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
     >>> nyquist_numerical_data(tf1)   # doctest: +SKIP
     (([0.0, 0.12166980856813935,..., 9.861246379582118, 10.0],
     [1.4504508011325967e-09, 0.006046440489058766,..., 0.12499999999568202, 0.12499999999661349]))
-    
+
     See Also
     ========
 
