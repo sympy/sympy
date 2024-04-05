@@ -314,15 +314,9 @@ class TableForm:
 
             s.append(format_str % tuple(d))
 
-        test1 = []
-        test2 = []
-        for i in range(len(s)):
-            test1.append(s[i].rstrip('\n'))
-
-        for j in range(len(test1)):
-            test2.append(test1[j].rstrip())
-
-        result = map(lambda x: x + "\n", test2)
+        test1 = [line.rstrip('\n') for line in s]
+        test2 = [line.rstrip() for line in test1]
+        result = (line + "\n" for line in test2)
         return ''.join(list(result))[:-1]  # don't include trailing newline
 
     def _latex(self, printer):
