@@ -948,7 +948,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         :context: close-figs
         :format: doctest
         :include-source: True
-        
+
         >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunction
         >>> from sympy.physics.control.control_plots import nyquist_plot
