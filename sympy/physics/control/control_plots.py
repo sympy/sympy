@@ -156,7 +156,6 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
 
     .. plot::
         :context: close-figs
-        :format: doctest
         :include-source: True
 
         >>> from sympy.abc import s
