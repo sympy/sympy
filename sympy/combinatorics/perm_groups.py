@@ -1,5 +1,5 @@
 from math import factorial as _factorial, log, prod
-from itertools import chain, islice, product
+from itertools import chain, product
 
 
 from sympy.combinatorics import Permutation
