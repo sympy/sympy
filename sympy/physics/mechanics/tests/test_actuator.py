@@ -7,6 +7,7 @@ from sympy import (
     Matrix,
     Symbol,
     SympifyError,
+    simplify,
     sqrt,
 )
 from sympy.physics.mechanics import (
@@ -25,6 +26,7 @@ from sympy.physics.mechanics import (
     TorqueActuator,
     Vector,
     dynamicsymbols,
+    DuffingSpring,
 )
 
 from sympy.core.expr import Expr as ExprType
@@ -660,3 +662,181 @@ class TestTorqueActuator:
             (self.A, - self.torque*self.axis),
         ]
         assert actuator.to_loads() == expected
+
+
+class TestDuffingSpring:
+    @pytest.fixture(autouse=True)
+    # Set up common vairables that will be used in multiple tests
+    def _duffing_spring_fixture(self):
+        self.linear_stiffness = Symbol('beta')
+        self.nonlinear_stiffness = Symbol('alpha')
+        self.equilibrium_length = Symbol('l')
+        self.pA = Point('pA')
+        self.pB = Point('pB')
+        self.pathway = LinearPathway(self.pA, self.pB)
+        self.q = dynamicsymbols('q')
+        self.N = ReferenceFrame('N')
+
+    # Simples tests to check that DuffingSpring is a subclass of ForceActuator and ActuatorBase
+    def test_is_force_actuator_subclass(self):
+        assert issubclass(DuffingSpring, ForceActuator)
+
+    def test_is_actuator_base_subclass(self):
+        assert issubclass(DuffingSpring, ActuatorBase)
+
+    @pytest.mark.parametrize(
+    # Create parametrized tests that allows running the same test function multiple times with different sets of arguments
+    (
+        'linear_stiffness,  '
+        'expected_linear_stiffness,  '
+        'nonlinear_stiffness,   '
+        'expected_nonlinear_stiffness,  '
+        'equilibrium_length,    '
+        'expected_equilibrium_length,   '
+        'force'
+    ),
+    [
+            (
+                1,
+                S.One,
+                1,
+                S.One,
+                0,
+                S.Zero,
+                -sqrt(dynamicsymbols('q')**2)-(sqrt(dynamicsymbols('q')**2))**3,
+            ),
+            (
+                Symbol('beta'),
+                Symbol('beta'),
+                Symbol('alpha'),
+                Symbol('alpha'),
+                0,
+                S.Zero,
+                -Symbol('beta')*sqrt(dynamicsymbols('q')**2)-Symbol('alpha')*(sqrt(dynamicsymbols('q')**2))**3,
+            ),
+            (
+                Symbol('beta'),
+                Symbol('beta'),
+                Symbol('alpha'),
+                Symbol('alpha'),
+                S.Zero,
+                S.Zero,
+                -Symbol('beta')*sqrt(dynamicsymbols('q')**2)-Symbol('alpha')*(sqrt(dynamicsymbols('q')**2))**3,
+            ),
+            (
+                Symbol('beta'),
+                Symbol('beta'),
+                Symbol('alpha'),
+                Symbol('alpha'),
+                Symbol('l'),
+                Symbol('l'),
+                -Symbol('beta')*(sqrt(dynamicsymbols('q')**2)-Symbol('l'))-Symbol('alpha')*((sqrt(dynamicsymbols('q')**2))**3-Symbol('l')),
+            ),
+        ]
+    )
+
+    # Check if DuffingSpring correctly inializes its attributes
+    # It tests various combinations of linear & nonlinear stiffness, equilibriun length, and the resulting force expression
+    def test_valid_constructor(
+        self,
+        linear_stiffness,
+        expected_linear_stiffness,
+        nonlinear_stiffness,
+        expected_nonlinear_stiffness,
+        equilibrium_length,
+        expected_equilibrium_length,
+        force,
+    ):
+        self.pB.set_pos(self.pA, self.q*self.N.x)
+        spring = DuffingSpring(linear_stiffness, nonlinear_stiffness, self.pathway, equilibrium_length)
+
+        assert isinstance(spring, DuffingSpring)
+
+        assert hasattr(spring, 'linear_stiffness')
+        assert isinstance(spring.linear_stiffness, ExprType)
+        assert spring.linear_stiffness == expected_linear_stiffness
+
+        assert hasattr(spring, 'nonlinear_stiffness')
+        assert isinstance(spring.nonlinear_stiffness, ExprType)
+        assert spring.nonlinear_stiffness == expected_nonlinear_stiffness
+
+        assert hasattr(spring, 'pathway')
+        assert isinstance(spring.pathway, LinearPathway)
+        assert spring.pathway == self.pathway
+
+        assert hasattr(spring, 'equilibrium_length')
+        assert isinstance(spring.equilibrium_length, ExprType)
+        assert spring.equilibrium_length == expected_equilibrium_length
+
+        assert hasattr(spring, 'force')
+        assert isinstance(spring.force, ExprType)
+        assert spring.force == force
+
+    @pytest.mark.parametrize('linear_stiffness', [None, 'beta'])
+    # Check that the constructor raises a SympifyError when linear_stiffness parameter cannot be converted into a SymPy expression
+    def test_invalid_constructor_linear_stiffness_not_sympifyable(self, linear_stiffness):
+        with pytest.raises(SympifyError):
+            _ = DuffingSpring(linear_stiffness, self.nonlinear_stiffness, self.pathway, self.equilibrium_length)
+
+    @pytest.mark.parametrize('nonlinear_stiffness', [None, 'alpha'])
+    # Ensure that a SympifyError is raised if nonlinear_stiffness cannot be sympified
+    def test_invalid_constructor_nonlinear_stiffness_not_sympifyable(self, nonlinear_stiffness):
+        with pytest.raises(SympifyError):
+            _ = DuffingSpring(self.linear_stiffness, nonlinear_stiffness, self.pathway, self.equilibrium_length)
+
+    def test_invalid_constructor_pathway_not_pathway_base(self):
+        with pytest.raises(TypeError):
+            _ = DuffingSpring(self.linear_stiffness, self.nonlinear_stiffness, None, self.equilibrium_length)
+
+    @pytest.mark.parametrize('equilibrium_length', [None, 'l'])
+    # Check that the constructor raises a TypeError when the pathway parameter is not an instance of a PathwayBase class/subclass
+    def test_invalid_constructor_equilibrium_length_not_sympifyable(self, equilibrium_length):
+        with pytest.raises(SympifyError):
+            _ = DuffingSpring(self.linear_stiffness, self.nonlinear_stiffness, self.pathway, equilibrium_length)
+
+    @pytest.mark.parametrize(
+        'property_name, fixture_attr_name',
+        [
+            ('linear_stiffness', 'linear_stiffness'),
+            ('nonlinear_stiffness', 'nonlinear_stiffness'),
+            ('pathway', 'pathway'),
+            ('equilibrium_length', 'equilibrium_length')
+        ]
+    )
+    # Check if certain properties of DuffingSpring object are immutable after initialization
+    # Ensure that once DuffingSpring is created, its key properties cannot be changed
+    def test_properties_are_immutable(self, property_name, fixture_attr_name):
+        spring = DuffingSpring(self.linear_stiffness, self.nonlinear_stiffness, self.pathway, self.equilibrium_length)
+        value = getattr(self, fixture_attr_name)
+        with pytest.raises(AttributeError):
+            setattr(spring, property_name, value)
+
+    @pytest.mark.parametrize(
+        'equilibrium_length, expected',
+        [
+            (S.Zero, 'DuffingSpring(beta, alpha, LinearPathway(pA, pB))'),
+            (
+                Symbol('l'),
+                'DuffingSpring(beta, alpha, LinearPathway(pA, pB), equilibrium_length=l)',
+            ),
+        ]
+    )
+    # Check the __repr__ method of DuffingSpring class
+    # Check if the actual string representation of DuffingSpring instance matches the expected string for each provided parameter values
+    def test_repr(self, equilibrium_length, expected):
+        self.pB.set_pos(self.pA, self.q*self.N.x)
+        spring = DuffingSpring(self.linear_stiffness, self.nonlinear_stiffness, self.pathway, equilibrium_length)
+        assert repr(spring) == expected
+
+    def test_to_loads(self):
+        self.pB.set_pos(self.pA, self.q*self.N.x)
+        spring = DuffingSpring(self.linear_stiffness, self.nonlinear_stiffness, self.pathway, self.equilibrium_length)
+        displacement = self.q - self.equilibrium_length
+        force = -self.linear_stiffness * displacement - self.nonlinear_stiffness * displacement**3
+        expected = [Force(self.pA, force*self.N.x), Force(self.pB, -force*self.N.x)]
+        loads = spring.to_loads()
+
+        for load, (point, vector) in zip(loads, expected):
+            assert isinstance(load, Force)
+            assert load.point == point
+            assert simplify(load.vector - vector) == 0
