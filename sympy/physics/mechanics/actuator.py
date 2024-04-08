@@ -881,18 +881,18 @@ class DuffingSpring(ForceActuator):
     Explanation
     ===========
     Here, ``DuffingSpring`` represents the force exerted by a nonlinear spring based on the Duffing equation:
-    F = -β*x-α*x**3, where x is the displacement from the equilibrium position, β is the linear spring constant,
-    and α is the coefficient for the nonlinear cubic term.
+    F = -beta*x-alpha*x**3, where x is the displacement from the equilibrium position, beta is the linear spring constant,
+    and alpha is the coefficient for the nonlinear cubic term.
     Parameters
     ==========
     linear_stiffness : Expr
-        The linear stiffness coefficient (k).
+        The linear stiffness coefficient (beta).
     nonlinear_stiffness : Expr
-        The nonlinear stiffness coefficient (beta).
+        The nonlinear stiffness coefficient (alpha).
     pathway : PathwayBase
         The pathway that the actuator follows.
     equilibrium_length : Expr, optional
-        The length at which the spring is in equilibrium.
+        The length at which the spring is in equilibrium (x).
     """
 
     def __init__(self, linear_stiffness, nonlinear_stiffness, pathway, equilibrium_length=S.Zero):
