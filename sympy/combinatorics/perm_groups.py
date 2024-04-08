@@ -1391,7 +1391,7 @@ class PermutationGroup(Basic):
 
         """
         if not self._elements:
-            self._elements = list(islice(self.generate(), None))
+            self._elements = list(self.generate())
 
         return self._elements
 
