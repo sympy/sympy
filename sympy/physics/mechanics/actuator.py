@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import S, sympify
+from sympy import S, simplify, sympify
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
 from sympy.physics.mechanics.pathway import PathwayBase
@@ -896,15 +896,15 @@ class DuffingSpring(ForceActuator):
     """
 
     def __init__(self, linear_stiffness, nonlinear_stiffness, pathway, equilibrium_length=S.Zero):
-        self.linear_stiffness = linear_stiffness
-        self.nonlinear_stiffness = nonlinear_stiffness
+        self.linear_stiffness = sympify(linear_stiffness)
+        self.nonlinear_stiffness = sympify(nonlinear_stiffness)
+        self.equilibrium_length = sympify(equilibrium_length)
         self.pathway = pathway
-        self.equilibrium_length = equilibrium_length
 
     @property
     def force(self):
         """The force produced by the Duffing spring."""
-        displacement = self.pathway.length - self.equilibrium_length
+        displacement = simplify(self.pathway.length - self.equilibrium_length)
         return -self.linear_stiffness * displacement - self.nonlinear_stiffness * displacement**3
 
     @force.setter
