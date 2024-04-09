@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 
 from sympy import S, simplify, sympify
+from sympy.core.sympify import SympifyError
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
 from sympy.physics.mechanics.pathway import PathwayBase
@@ -896,9 +897,15 @@ class DuffingSpring(ForceActuator):
     """
 
     def __init__(self, linear_stiffness, nonlinear_stiffness, pathway, equilibrium_length=S.Zero):
-        self.linear_stiffness = sympify(linear_stiffness)
-        self.nonlinear_stiffness = sympify(nonlinear_stiffness)
-        self.equilibrium_length = sympify(equilibrium_length)
+        try:
+            self.linear_stiffness = sympify(linear_stiffness)
+            self.nonlinear_stiffness = sympify(nonlinear_stiffness)
+            self.equilibrium_length = sympify(equilibrium_length)
+        except SympifyError:
+            raise SympifyError("Input arguments could not be sympified.")
+
+        if not isinstance(pathway, PathwayBase):
+            raise TypeError("pathway must be an instance of PathwayBase.")
         self.pathway = pathway
 
     @property
