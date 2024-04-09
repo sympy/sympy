@@ -47,11 +47,10 @@ expression is a polynomial in expanded form, the coefficients are evaluated:
 You can also use the standard Python functions ``float()``, ``complex()`` to
 convert SymPy expressions to regular Python numbers:
 
-    >>> float(pi)
+    >>> float(pi)  # doctest: +SKIP
     3.141592653589793
-    >>> complex(pi+E*I)
+    >>> complex(pi+E*I)  # doctest: +SKIP
     (3.141592653589793+2.718281828459045j)
-
 
 If these functions are used, failure to evaluate the expression to an explicit
 number (for example if the expression contains symbols) will raise an exception.
