@@ -282,7 +282,9 @@ def test_factor_terms():
     assert factor_terms(eq, radical=True) == sqrt(2)*(1 + sqrt(5))
     eq = root(-6, 3) + root(6, 3)
     assert factor_terms(eq, radical=True) == 6**(S.One/3)*(1 + (-1)**(S.One/3))
-    assert factor_terms(Sum(5 * x **2  * y ** 2 + 4, (x, 1, 5),(y,1,3))) == 4*Sum(1, (x, 1, 5), (y, 1, 3)) + 5*Sum(x**2*y**2, (x, 1, 5), (y, 1, 3))
+    assert factor_terms(Sum(5*x**2*y**2 + 4, (x, 1, 5), (y, 1, 3))
+        ) == 4*Sum(1, (x, 1, 5), (y, 1, 3)
+        ) + 5*Sum(x**2*y**2, (x, 1, 5), (y, 1, 3))
     eq = [x + x*y]
     ans = [x*(y + 1)]
     for c in [list, tuple, set]:
