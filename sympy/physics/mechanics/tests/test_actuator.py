@@ -730,7 +730,7 @@ class TestDuffingSpring:
                 Symbol('alpha'),
                 Symbol('l'),
                 Symbol('l'),
-                -Symbol('beta')*(sqrt(dynamicsymbols('q')**2)-Symbol('l'))-Symbol('alpha')*((sqrt(dynamicsymbols('q')**2))**3-Symbol('l')),
+                -Symbol('beta') * (sqrt(dynamicsymbols('q')**2) - Symbol('l')) - Symbol('alpha') * (sqrt(dynamicsymbols('q')**2) - Symbol('l'))**3,
             ),
         ]
     )
