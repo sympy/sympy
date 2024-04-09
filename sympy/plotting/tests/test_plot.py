@@ -60,6 +60,13 @@ class DummyBackendOk(Plot):
     def close(self):
         pass
 
+def test_basic_plotting_backend():
+    x = Symbol('x')
+    try:
+        plot(x, (x, 0, 3), backend='text')
+        plot(x**2 + 1, (x, 0, 3), backend='text')
+    except TypeError as exc:
+        assert False, f"{exc}"
 
 @pytest.mark.parametrize("adaptive", [True, False])
 def test_plot_and_save_1(adaptive):
