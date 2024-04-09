@@ -1104,6 +1104,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         return Dict(*[(k, handle(v)) for k, v in terms.args])
     return terms.func(*[handle(i) for i in terms.args])
 
+
 def _factor_sum_int(expr, **kwargs):
     """Return Sum or Integral object with factors that are not
     in the wrt variables removed. In cases where there are additive
@@ -1142,6 +1143,7 @@ def _factor_sum_int(expr, **kwargs):
 
     # get the wrt variables
     wrt = {i.args[0] for i in limits}
+
     # factor out any common terms that are independent of wrt
     f = factor_terms(result, **kwargs)
     i, d = f.as_independent(*wrt)
