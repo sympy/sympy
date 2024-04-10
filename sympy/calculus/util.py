@@ -746,13 +746,10 @@ def is_convex(f, *syms, domain=S.Reals):
     .. [5] https://en.wikipedia.org/wiki/Concave_function
 
     """
-    if type(syms) != Symbol :
-        a = hessian(f,*syms)
-        b = a.is_positive_semidefinite
-        if b == None :
-            return None
-        else:
-            return b
+    if len(syms) > 1 :
+        a = hessian(f,syms)
+        return a.is_positive_semidefinite
+    
 
     from sympy.solvers.inequalities import solve_univariate_inequality
 
