@@ -1460,13 +1460,37 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None):
         Vanstone, S. A. (1997).
     """
     from .modular import crt
+    from collections import defaultdict
     a %= n
     b %= n
 
     if order is None:
-        order = n_order(b, n)
-
-    f = factorint(order)
+        # Compute the order and its factoring in one pass
+        # order = totient(n), factors = factorint(order)
+        factors = defaultdict(int)
+        for px, kx in factorint(n).items():
+            if kx > 1:
+                factors[px] += kx - 1
+            for py, ky in factorint(px - 1).items():
+                factors[py] += ky
+        order = 1
+        for px, kx in factors.items():
+            order *= px**kx
+        # Now the `order` is the order of the group and factors = factorint(order)
+        # The order of `a` divides the order of the group.
+        f= defaultdict(int)
+        for p, e in factors.items():
+            i=0
+            for _ in range(e):
+                if pow(a, order // p, n) == 1:
+                   order //= p
+                   i+=1
+                else:
+                    break
+            if i<e:
+                f[p]=e-i
+    else:
+        f = factorint(order)
     l = [0] * len(f)
 
     for i, (pi, ri) in enumerate(f.items()):
