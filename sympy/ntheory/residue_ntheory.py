@@ -1584,6 +1584,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         * Trial multiplication
         * Baby-step giant-step
         * Pollard's Rho
+        * Index Calculus
         * Pohlig-Hellman
 
     Examples
