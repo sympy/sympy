@@ -1433,7 +1433,7 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
     raise ValueError("Pollard's Rho failed to find logarithm")
 
 
-def _discrete_log_is_smooth(n: int, factorbase: list) -> list:
+def _discrete_log_is_smooth(n: int, factorbase: list):
     """Try to factor n with respect to a a given factorbase. Upon success a list of exponents with repect to the factorbase is returned. Otherwise None."""
     factors= [0]*len(factorbase)
     for i in range(len(factorbase)):
@@ -1456,7 +1456,7 @@ def _discrete_log_index_calculus(n, a, b, order):
 
     >>> from sympy.ntheory.residue_ntheory import _discrete_log_index_calculus
     >>> _discrete_log_pohlig_hellman(24570203447, 2, 23859756228, 12285101723)
-   4822041612497768
+    4822041612497768
 
     See Also
     ========
