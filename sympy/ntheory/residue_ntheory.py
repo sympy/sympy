@@ -1473,7 +1473,7 @@ def _discrete_log_index_calculus(n, a, b, order):
     a %= n
     b %= n
     #assert isprime(order), "The order of a must be prime."
-    # first determine the bound B for the factorbase: Choosing B=n^(1/u) Canfield-Erdös-Pomerance gives us
+    # first determine the bound B for the factorbase: Choosing B=n^(1/u) Canfield-Erdoes-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
     # we use Newton
     u=2*sqrt(log(n)/log(log(n))) # asymptotic value
