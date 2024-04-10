@@ -6,6 +6,7 @@ from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
+from .generate import primerange
 from .factor_ import factorint, _perfect_power
 from .modular import crt
 from sympy.utilities.decorator import deprecated
@@ -1432,6 +1433,95 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
     raise ValueError("Pollard's Rho failed to find logarithm")
 
 
+def _discrete_log_is_smooth(n: int, factorbase: list) -> list:
+    """Try to factor n with respect to a a given factorbase. Upon success a list of exponents with repect to the factorbase is returned. Otherwise None."""
+    factors= [0]*len(factorbase)
+    for i in range(len(factorbase)):
+        p=factorbase[i]
+        while ( n!=1 and n % p == 0 ): # divide by p as many times as possible
+            factors[i]+=1
+            n= n // p
+    if n != 1: return None # the number factors if at the end nothing is left
+    return factors
+
+def _discrete_log_index_calculus(n, a, b, order):
+    """
+    Index Calculus algorithm for computing the discrete logarithm of ``a`` to
+    the base ``b`` modulo ``n``.
+
+    The group order must be given and prime.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _discrete_log_index_calculus
+    >>> _discrete_log_pohlig_hellman(24570203447, 2, 23859756228, 12285101723)
+   4822041612497768
+
+    See Also
+    ========
+
+    discrete_log
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+    """
+    from math import ceil, sqrt, exp, log
+    a %= n
+    b %= n
+    #assert isprime(order), "The order of a must be prime."
+    B = ceil(exp(0.5*sqrt(2*log(n)*log(log(n))))) # bound for the factorbase
+    factorbase= list(primerange(B)) # compute the factorbase
+    lf=len(factorbase) # length of the factorbase
+    ordermo=order-1
+    k=1 # number of relations found
+
+    while True: # first find a relation involving b
+        x=randint(0,ordermo)
+        relationb= _discrete_log_is_smooth(b * pow(a,x,n) % n, factorbase)
+        if relationb:
+            relationb+= [ x ]
+            break
+
+    relations = [None] * lf
+    while k<2*lf: # find relations for all primes in our factor base
+        x=randint(0,ordermo)
+        relation= _discrete_log_is_smooth(pow(a,x,n), factorbase)
+        if relation:
+            k+=1
+            relation+= [ x ]
+            index=lf # determine the index of the first nonzero entry
+            for i in range(lf):
+                ri=relation[i]
+                if ri> 0 and relations[i] != None: # make this entry zero if we can
+                    for j in range(lf+1):
+                        relation[j]= (relation[j] - ri*relations[i][j]) % order
+                if relation[i]> 0 and index==lf: # is this the index of the first nonzero entry?
+                    index= i
+            if index == lf or relations[index] != None: # the relation contains no new information
+                pass
+            else: # the relation contains new information
+                rinv=pow(relation[index],-1,order) # normalize the first nonzero entry
+                for j in range(index,lf+1):
+                    relation[j]= rinv * relation[j] % order
+                relations[index]=  relation
+                index=lf # determine the index of the first nonzero entry
+                for i in range(lf): # subtract the new relation from the one for b
+                    if relationb[i]> 0 and relations[i] != None:
+                        rbi=relationb[i]
+                        for j in range(lf+1):
+                            relationb[j]= (relationb[j] - rbi*relations[i][j]) % order
+                    if relationb[i]> 0 and index==lf: # is this the index of the first nonzero entry?
+                        index= i
+                        break # we do not need to reduce further at this point
+                if index == lf: # all unkonws are gone
+                    #print(f"Success after {k} relations out of {lf}")
+                    return relationb[lf] * (order-1) % order
+    return None
+
 def _discrete_log_pohlig_hellman(n, a, b, order=None):
     """
     Pohlig-Hellman algorithm for computing the discrete logarithm of ``a`` to
@@ -1521,9 +1611,11 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     if order < 1000:
         return _discrete_log_trial_mul(n, a, b, order)
     elif prime_order:
-        if order < 1000000000000:
+        if order < 10000000000:
             return _discrete_log_shanks_steps(n, a, b, order)
-        return _discrete_log_pollard_rho(n, a, b, order)
+        elif order< 10000000000:
+            return _discrete_log_pollard_rho(n, a, b, order)
+        return _discrete_log_index_calculus(n, a, b, order)
 
     return _discrete_log_pohlig_hellman(n, a, b, order)
 
