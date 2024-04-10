@@ -1469,11 +1469,18 @@ def _discrete_log_index_calculus(n, a, b, order):
     .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
         Vanstone, S. A. (1997).
     """
-    from math import ceil, sqrt, exp, log
+    from math import sqrt, exp, log
     a %= n
     b %= n
     #assert isprime(order), "The order of a must be prime."
-    B = ceil(exp(0.5*sqrt(2*log(n)*log(log(n))))) # bound for the factorbase
+    # first determine the bound B for the factorbase: Choosing B=n^(1/u) Canfield-Erdös-Pomerance gives us
+    # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
+    # we use Newton
+    u=2*sqrt(log(n)/log(log(n))) # asymptotic value
+    for _ in range(3):
+        u=(2*log(n)+u*u*(2+log(u)))/(2+3*u+2*u*log(u)) # Newton iteration
+    B= int(exp(log(n)/u))
+    #B = int(exp(0.5*sqrt(2*log(n)*log(log(n))))) # bound for the factorbase
     factorbase= list(primerange(B)) # compute the factorbase
     lf=len(factorbase) # length of the factorbase
     ordermo=order-1
