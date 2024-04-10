@@ -1456,7 +1456,7 @@ def _discrete_log_index_calculus(n, a, b, order):
 
     >>> from sympy.ntheory.residue_ntheory import _discrete_log_index_calculus
     >>> _discrete_log_index_calculus(24570203447, 2, 23859756228, 12285101723)
-    4822041612497768
+    4519867240
 
     See Also
     ========
