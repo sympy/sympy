@@ -1,5 +1,5 @@
 from math import factorial as _factorial, log, prod
-from itertools import chain, islice, product
+from itertools import chain, product
 
 
 from sympy.combinatorics import Permutation
@@ -149,7 +149,8 @@ class PermutationGroup(Basic):
     def __init__(self, *args, **kwargs):
         self._generators = list(self.args)
         self._order = None
-        self._center = []
+        self._elements = []
+        self._center = None
         self._is_abelian = None
         self._is_transitive = None
         self._is_sym = None
@@ -804,7 +805,7 @@ class PermutationGroup(Basic):
             raise ValueError("The argument must be a subgroup")
 
         if H.order() == 1:
-            return self._elements
+            return self.elements
 
         self._schreier_sims(base=H.base) # make G.base an extension of H.base
 
@@ -831,7 +832,7 @@ class PermutationGroup(Basic):
         # contains all the elements of G^(l) so we might just as well
         # start with l = len(h_stabs)-1
         if len(g_stabs) > len(h_stabs):
-            T = g_stabs[len(h_stabs)]._elements
+            T = g_stabs[len(h_stabs)].elements
         else:
             T = [identity]
         l = len(h_stabs)-1
@@ -962,7 +963,9 @@ class PermutationGroup(Basic):
         of ``.centralizer()``
 
         """
-        return self.centralizer(self)
+        if not self._center:
+            self._center = self.centralizer(self)
+        return self._center
 
     def centralizer(self, other):
         r"""
@@ -1376,21 +1379,6 @@ class PermutationGroup(Basic):
 
     @property
     def elements(self):
-        """Returns all the elements of the permutation group as a set
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation, PermutationGroup
-        >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
-        >>> p.elements
-        {(1 2 3), (1 3 2), (1 3), (2 3), (3), (3)(1 2)}
-
-        """
-        return set(self._elements)
-
-    @property
-    def _elements(self):
         """Returns all the elements of the permutation group as a list
 
         Examples
@@ -1398,11 +1386,14 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics import Permutation, PermutationGroup
         >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
-        >>> p._elements
+        >>> p.elements
         [(3), (3)(1 2), (1 3), (2 3), (1 2 3), (1 3 2)]
 
         """
-        return list(islice(self.generate(), None))
+        if not self._elements:
+            self._elements = list(self.generate())
+
+        return self._elements
 
     def derived_series(self):
         r"""Return the derived series for the group.
