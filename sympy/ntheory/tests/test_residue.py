@@ -11,7 +11,7 @@ from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _primitive_root_prime_power_iter, _primitive_root_prime_power2_iter, \
     _nthroot_mod_prime_power, _discrete_log_trial_mul, _discrete_log_shanks_steps, \
-    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman, \
+    _discrete_log_pollard_rho, _discrete_log_index_calculus, _discrete_log_pohlig_hellman, \
     _binomial_mod_prime_power, binomial_mod
 from sympy.polys.domains import ZZ
 from sympy.testing.pytest import raises
@@ -256,6 +256,10 @@ def test_residue():
     assert _discrete_log_pollard_rho(24567899, 3**333, 3, rseed=0) == 333
     raises(ValueError, lambda: _discrete_log_pollard_rho(11, 7, 31, rseed=0))
     raises(ValueError, lambda: _discrete_log_pollard_rho(227, 3**7, 5, rseed=0))
+    assert _discrete_log_index_calculus(983, 2, 948, 491) == 183
+    assert _discrete_log_index_calculus(633383, 2, 21794, 316691) == 68048
+    assert _discrete_log_index_calculus(941762639, 2, 68822582, 470881319) == 338029275
+    assert _discrete_log_index_calculus(999231337607, 2, 888188918786, 499615668803) == 142811376514
 
     assert _discrete_log_pohlig_hellman(98376431, 11**9, 11) == 9
     assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
