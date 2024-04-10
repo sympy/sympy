@@ -749,15 +749,11 @@ def is_convex(f, *syms, domain=S.Reals):
     if len(syms) > 1 :
         a = hessian(f,syms)
         return a.is_positive_semidefinite
-    
-
     from sympy.solvers.inequalities import solve_univariate_inequality
-
     f = _sympify(f)
     var = syms[0]
     if any(s in domain for s in singularities(f, var)):
         return False
-
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
         return False
