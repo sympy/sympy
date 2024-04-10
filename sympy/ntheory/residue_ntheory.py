@@ -1460,6 +1460,7 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None):
         Vanstone, S. A. (1997).
     """
     from .modular import crt
+    from collections import defaultdict
     a %= n
     b %= n
 
