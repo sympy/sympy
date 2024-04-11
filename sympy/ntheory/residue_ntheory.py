@@ -1531,7 +1531,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         for px, kx in factors.items():
             order *= px**kx
         # Now the `order` is the order of the group and factors = factorint(order)
-        # The order of `a` divides the order of the group.
+        # The order of `b` divides the order of the group.
         order_factors = {}
         for p, e in factors.items():
             i = 0
