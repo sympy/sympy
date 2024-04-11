@@ -1455,7 +1455,7 @@ def _discrete_log_index_calculus(n, a, b, order):
     ========
 
     >>> from sympy.ntheory.residue_ntheory import _discrete_log_index_calculus
-    >>> _discrete_log_index_calculus(24570203447, 2, 23859756228, 12285101723)
+    >>> _discrete_log_index_calculus(24570203447, 23859756228, 2, 12285101723)
     4519867240
 
     See Also
@@ -1486,17 +1486,17 @@ def _discrete_log_index_calculus(n, a, b, order):
     ordermo = order-1
     k=1 # number of relations found
 
-    while True: # first find a relation involving b
+    while True: # first find a relation involving a
         x = randint(0,ordermo)
-        relationb = _discrete_log_is_smooth(b * pow(a,x,n) % n, factorbase)
-        if relationb:
-            relationb += [ x ]
+        relationa = _discrete_log_is_smooth(a * pow(b,x,n) % n, factorbase)
+        if relationa:
+            relationa += [ x ]
             break
 
     relations = [None] * lf
     while True: # find relations for all primes in our factor base
         x = randint(0,ordermo)
-        relation = _discrete_log_is_smooth(pow(a,x,n), factorbase)
+        relation = _discrete_log_is_smooth(pow(b,x,n), factorbase)
         if relation:
             k += 1
             relation += [ x ]
@@ -1516,17 +1516,17 @@ def _discrete_log_index_calculus(n, a, b, order):
                     relation[j] = rinv * relation[j] % order
                 relations[index] =  relation
                 index = lf # determine the index of the first nonzero entry
-                for i in range(lf): # subtract the new relation from the one for b
-                    if relationb[i] > 0 and relations[i] != None:
-                        rbi = relationb[i]
+                for i in range(lf): # subtract the new relation from the one for a
+                    if relationa[i] > 0 and relations[i] != None:
+                        rbi = relationa[i]
                         for j in range(lf+1):
-                            relationb[j] = (relationb[j] - rbi*relations[i][j]) % order
-                    if relationb[i] > 0 and index == lf: # is this the index of the first nonzero entry?
+                            relationa[j] = (relationa[j] - rbi*relations[i][j]) % order
+                    if relationa[i] > 0 and index == lf: # is this the index of the first nonzero entry?
                         index = i
                         break # we do not need to reduce further at this point
                 if index == lf: # all unkonws are gone
                     #print(f"Success after {k} relations out of {lf}")
-                    return relationb[lf] * (order - 1) % order
+                    return relationa[lf] * (order - 1) % order
 
 def _discrete_log_pohlig_hellman(n, a, b, order=None):
     """
