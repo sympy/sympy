@@ -1699,7 +1699,7 @@ def meijerint_indefinite(f, x):
 
     def _compare(item):
         r, c = item
-        if c is has_closed_form:
+        if c == has_closed_form:
             return 0
         elif c == True:
             return 1

@@ -687,7 +687,7 @@ def test_issue_6252():
     expr = 1/x/(a + b*x)**Rational(1, 3)
     anti = integrate(expr, x, meijerg=True)
 
-    # Note upon more aggressive treatment of special conditions related to poles in the integrand (the inadequate treatment of which has been baked into the lookup table rules of meijerint, the following result is obtainable)
+    # Note upon more aggressive treatment of special conditions related to poles in the integration result (the inadequate treatment of which has been baked into the lookup table rules of meijerint, the following result is obtainable)
     # assert anti == sympify("Piecewise((2*log(1 - b**(1/3)*(a/b + x)**(1/3)/a**(1/3))*gamma(2/3)/(3*a**(1/3)*gamma(5/3)) + 2*exp(2*I*pi/3)*log(1 - b**(1/3)*(a/b + x)**(1/3) *exp_polar(2*I*pi/3)/a**(1/3))*gamma(2/3)/(3*a**(1/3)*gamma(5/3)) + 2*exp(-2*I*pi/3)*log(1 - b**(1/3)*(a/b + x)**(1/3)*exp_polar(4*I*pi/3)/a**(1/3))*gamma(2/3)/(3*a**(1/3)* gamma(5/3)), Ne(a/b, 0)), (-3/(b**(1/3)*x**(1/3)), Eq(a, 0)), (log(x)/a**(1/3), Eq(b, 0)), (-gamma(1/3)*hyper((1/3, 1/3), (4/3,), a*exp_polar(I*pi)/(b*x))/(b**(1/3)*x**(1/3)*gamma(4/3)), True))", locals={"a": a, "b": b, "x": x})
 
     # Just treating the special conditions related to splitting points (in meijerint_indefinite) results in the current behavior of
