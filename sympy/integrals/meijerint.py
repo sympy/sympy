@@ -1664,27 +1664,53 @@ def meijerint_indefinite(f, x):
     -cos(x)
     """
     f = sympify(f)
-    results = []
+    results_conditional = []
+    splitting_points_used = []
+    found_closed_form = False
+    has_closed_form = Dummy("has_closed_form")
+
     for a in sorted(_find_splitting_points(f, x) | {S.Zero}, key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if not res:
             continue
         res = res.subs(x, x - a)
-        if _has(res, hyper, meijerg):
-            results.append(res)
-        else:
-            return res
-    if f.has(HyperbolicFunction):
+        res_cond = S.true
+        for s in splitting_points_used:
+            res_cond = And(res_cond, Ne(a, s))
+        splitting_points_used.append(a)
+        if not _has(res, hyper, meijerg):
+            found_closed_form = True
+            res_cond = And(has_closed_form, res_cond)
+        results_conditional.append((res, res_cond))
+        if found_closed_form:
+            break
+
+    if not found_closed_form and f.has(HyperbolicFunction):
         _debug('Try rewriting hyperbolics in terms of exp.')
         rv = meijerint_indefinite(
             _rewrite_hyperbolics_as_exp(f), x)
         if rv:
-            if not isinstance(rv, list):
-                from sympy.simplify.radsimp import collect
-                return collect(factor_terms(rv), rv.atoms(exp))
-            results.extend(rv)
-    if results:
-        return next(ordered(results))
+            from sympy.simplify.radsimp import collect
+            def _collect_factor(e):
+                return collect(factor_terms(e), e.atoms(exp))
+            if isinstance(rv, Piecewise):
+                return rv.func(*[(_collect_factor(r), c) for r, c in rv.args])
+            return _collect_factor(rv)
+
+    def _compare(item):
+        r, c = item
+        if c is has_closed_form:
+            return 0
+        elif c == True:
+            return 1
+        return -1
+    results_conditional = sorted(results_conditional, key=_compare)
+    results_conditional = [(r, c.subs(has_closed_form, True))
+                           for r, c in results_conditional]
+    if results_conditional:
+        res = piecewise_fold(Piecewise(*results_conditional))
+        return res
+    return None
 
 
 def _meijerint_indefinite_1(f, x):

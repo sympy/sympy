@@ -683,11 +683,31 @@ def test_issue_6122():
 
 
 def test_issue_6252():
+    from sympy import sympify
     expr = 1/x/(a + b*x)**Rational(1, 3)
     anti = integrate(expr, x, meijerg=True)
-    assert not anti.has(hyper)
-    # XXX the expression is a mess, but actually upon differentiation and
-    # putting in numerical values seems to work...
+
+    # Note upon more aggressive treatment of special conditions related to poles in the integrand (the inadequate treatment of which has been baked into the lookup table rules of meijerint, the following result is obtainable)
+    # assert anti == sympify("Piecewise((2*log(1 - b**(1/3)*(a/b + x)**(1/3)/a**(1/3))*gamma(2/3)/(3*a**(1/3)*gamma(5/3)) + 2*exp(2*I*pi/3)*log(1 - b**(1/3)*(a/b + x)**(1/3) *exp_polar(2*I*pi/3)/a**(1/3))*gamma(2/3)/(3*a**(1/3)*gamma(5/3)) + 2*exp(-2*I*pi/3)*log(1 - b**(1/3)*(a/b + x)**(1/3)*exp_polar(4*I*pi/3)/a**(1/3))*gamma(2/3)/(3*a**(1/3)* gamma(5/3)), Ne(a/b, 0)), (-3/(b**(1/3)*x**(1/3)), Eq(a, 0)), (log(x)/a**(1/3), Eq(b, 0)), (-gamma(1/3)*hyper((1/3, 1/3), (4/3,), a*exp_polar(I*pi)/(b*x))/(b**(1/3)*x**(1/3)*gamma(4/3)), True))", locals={"a": a, "b": b, "x": x})
+
+    # Just treating the special conditions related to splitting points (in meijerint_indefinite) results in the current behavior of
+    assert anti == sympify("Piecewise((2*log(1 - b**(1/3)*(a/b + x)**(1/3)/a**(1/3))*gamma(2/3)/(3*a**(1/3)*gamma(5/3)) + 2*exp(2*I*pi/3)*log(1 - b**(1/3)*(a/b + x)**(1/3)*exp_polar(2*I*pi/3)/a**(1/3))*gamma(2/3)/(3*a**(1/3)*gamma(5/3)) + 2*exp(-2*I*pi/3)*log(1 - b**(1/3)*(a/b + x)**(1/3)*exp_polar(4*I*pi/3)/a**(1/3))*gamma(2/3)/(3*a**(1/3)*gamma(5/3)), Ne(a/b, 0)), (-gamma(1/3)*hyper((1/3, 1/3), (4/3,), a*exp_polar(I*pi)/(b*x))/(b**(1/3)*x**(1/3)*gamma(4/3)), True))", locals={"a": a, "b": b, "x": x})
+
+    assert anti.subs(a, 0).simplify() == -3/(b**(S(1)/3)*x**(S(1)/3))
+
+    # XXX Note that the current antiderivative obtained is clearly not valid in the case b = 0
+    # assert anti.subs(b, 0).simplify() == log(x)/a**(S(1)/3)  # Ultimately the desired result of integrate
+    # HOWEVER it's debatable if meijerint should produce such a special case directly - (an alternative option to obtain this log result is to recognize "b" as a pole in the current integration result from meijerint followed by a reintegration under the substitution "b = 0" - the approach of heurish; this is an alternative to handling such pole complications in meijerint directly whose lookup table results (among other things) don't consider this pole issue)
+    # Note that meijerint does not currently even handle the case Integral(1/x, x).doit() == log(x). This is likely by design (even Prudnikov seems to suggest such results are special cases to be handled elsewhere [citation needed])
+
+
+def test_issue_26477():
+    from sympy.core.symbol import Symbol
+    x = Symbol("x", positive=True)
+    z = Symbol("z", real=True)
+    result = meijerint_indefinite(z**(x - Rational(1, 2))*sqrt(1 - z), z)
+    assert result == sqrt(z)*z**x*gamma(x + S(1)/2)*hyper((-S(1)/2, x + S(1)/2), (x + S(3)/2,), z*exp_polar(2*I*pi))/gamma(x + S(3)/2)
+    assert (result.subs(z, 1) - result.subs(z, 0)).simplify() == sqrt(pi)*gamma(x + S(1)/2)/(2*gamma(x + 2))
 
 
 def test_issue_6348():
