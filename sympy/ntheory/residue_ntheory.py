@@ -1435,12 +1435,12 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
 def _discrete_log_is_smooth(n: int, factorbase: list):
     """Try to factor n with respect to a a given factorbase. Upon success a list of exponents with repect to the factorbase is returned. Otherwise None."""
-    factors= [0]*len(factorbase)
+    factors = [0]*len(factorbase)
     for i in range(len(factorbase)):
         p=factorbase[i]
-        while ( n!=1 and n % p == 0 ): # divide by p as many times as possible
-            factors[i]+=1
-            n= n // p
+        while ( n != 1 and n % p == 0 ): # divide by p as many times as possible
+            factors[i] +=1
+            n = n // p
     if n != 1: return None # the number factors if at the end nothing is left
     return factors
 
@@ -1621,7 +1621,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     elif prime_order:
         if 2*sqrt(log(n)*log(log(n))) < log(sqrt(order)):
             return _discrete_log_index_calculus(n, a, b, order)
-        elif order < 10000000000:
+        elif order < 1000000000000:
             return _discrete_log_shanks_steps(n, a, b, order)
         return _discrete_log_pollard_rho(n, a, b, order)
 
