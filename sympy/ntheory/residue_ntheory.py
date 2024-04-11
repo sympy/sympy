@@ -1444,7 +1444,7 @@ def _discrete_log_is_smooth(n: int, factorbase: list):
     if n != 1: return None # the number factors if at the end nothing is left
     return factors
 
-def _discrete_log_index_calculus(n, a, b, order):
+def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
     """
     Index Calculus algorithm for computing the discrete logarithm of ``a`` to
     the base ``b`` modulo ``n``.
@@ -1472,7 +1472,8 @@ def _discrete_log_index_calculus(n, a, b, order):
     from math import sqrt, exp, log
     a %= n
     b %= n
-    #assert isprime(order), "The order of a must be prime."
+    if prime_order == None:
+        assert isprime(order), "The order of the base must be prime."
     # first determine the bound B for the factorbase: Choosing B=n^(1/u) Canfield-Erdoes-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
     # we use Newton
@@ -1620,7 +1621,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         return _discrete_log_trial_mul(n, a, b, order)
     elif prime_order:
         if 3*sqrt(log(n)*log(log(n))) < log(order):
-            return _discrete_log_index_calculus(n, a, b, order)
+            return _discrete_log_index_calculus(n, a, b, order, True)
         elif order < 1000000000000:
             return _discrete_log_shanks_steps(n, a, b, order)
         return _discrete_log_pollard_rho(n, a, b, order)
