@@ -705,9 +705,26 @@ def test_issue_26477():
     from sympy.core.symbol import Symbol
     x = Symbol("x", positive=True)
     z = Symbol("z", real=True)
+
     result = meijerint_indefinite(z**(x - Rational(1, 2))*sqrt(1 - z), z)
     assert result == sqrt(z)*z**x*gamma(x + S(1)/2)*hyper((-S(1)/2, x + S(1)/2), (x + S(3)/2,), z*exp_polar(2*I*pi))/gamma(x + S(3)/2)
     assert (result.subs(z, 1) - result.subs(z, 0)).simplify() == sqrt(pi)*gamma(x + S(1)/2)/(2*gamma(x + 2))
+
+
+@slow
+def test_issue_26477_higher_level():
+    from sympy.core.symbol import Symbol
+    x = Symbol("x", positive=True)
+    z = Symbol("z", real=True)
+    y = Symbol('y', positive=True)
+
+    result = Integral(z**(x - 1)*(1 - z)**(y - 1), (z, 0, 1)).doit()
+    assert result == gamma(x)*hyper((x, 1 - y), (x + 1,), 1)/gamma(x + 1)
+    assert result.simplify() == gamma(x)*gamma(y)/gamma(x + y)
+
+    result2 = Integral(z**(x - S(1)/2)*(1 - z)**(y - 1), (z, 0, 1)).doit()
+    assert result2 == gamma(x + S(1)/2)*hyper((x + S(1)/2, 1 - y), (x + S(3)/2,), 1)/gamma(x + S(3)/2)
+    assert result2.simplify() == gamma(x + S(1)/2)*gamma(y)/gamma(x + y + S(1)/2)
 
 
 def test_issue_6348():
