@@ -1476,58 +1476,57 @@ def _discrete_log_index_calculus(n, a, b, order):
     # first determine the bound B for the factorbase: Choosing B=n^(1/u) Canfield-Erdoes-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
     # we use Newton
-    u=2*sqrt(log(n)/log(log(n))) # asymptotic value
+    u = 2*sqrt(log(n)/log(log(n))) # asymptotic value
     for _ in range(3):
-        u=(2*log(n)+u*u*(2+log(u)))/(2+3*u+2*u*log(u)) # Newton iteration
-    B= int(exp(log(n)/u))
-    #B = int(exp(0.5*sqrt(2*log(n)*log(log(n))))) # bound for the factorbase
-    factorbase= list(primerange(B)) # compute the factorbase
-    lf=len(factorbase) # length of the factorbase
-    ordermo=order-1
+        u = (2*log(n)+u*u*(2+log(u)))/(2+3*u+2*u*log(u)) # Newton iteration
+    B = int(exp(log(n)/u))
+    #B = int(exp(0.7*sqrt(log(n)*log(log(n))))) # simple bound for the factorbase
+    factorbase = list(primerange(B)) # compute the factorbase
+    lf = len(factorbase) # length of the factorbase
+    ordermo = order-1
     k=1 # number of relations found
 
     while True: # first find a relation involving b
-        x=randint(0,ordermo)
-        relationb= _discrete_log_is_smooth(b * pow(a,x,n) % n, factorbase)
+        x = randint(0,ordermo)
+        relationb = _discrete_log_is_smooth(b * pow(a,x,n) % n, factorbase)
         if relationb:
-            relationb+= [ x ]
+            relationb += [ x ]
             break
 
     relations = [None] * lf
-    while k<2*lf: # find relations for all primes in our factor base
-        x=randint(0,ordermo)
-        relation= _discrete_log_is_smooth(pow(a,x,n), factorbase)
+    while True: # find relations for all primes in our factor base
+        x = randint(0,ordermo)
+        relation = _discrete_log_is_smooth(pow(a,x,n), factorbase)
         if relation:
-            k+=1
-            relation+= [ x ]
+            k += 1
+            relation += [ x ]
             index=lf # determine the index of the first nonzero entry
             for i in range(lf):
-                ri=relation[i]
+                ri = relation[i]
                 if ri> 0 and relations[i] != None: # make this entry zero if we can
                     for j in range(lf+1):
-                        relation[j]= (relation[j] - ri*relations[i][j]) % order
-                if relation[i]> 0 and index==lf: # is this the index of the first nonzero entry?
+                        relation[j] = (relation[j] - ri*relations[i][j]) % order
+                if relation[i] > 0 and index == lf: # is this the index of the first nonzero entry?
                     index= i
             if index == lf or relations[index] != None: # the relation contains no new information
                 pass
             else: # the relation contains new information
-                rinv=pow(relation[index],-1,order) # normalize the first nonzero entry
+                rinv = pow(relation[index],-1,order) # normalize the first nonzero entry
                 for j in range(index,lf+1):
-                    relation[j]= rinv * relation[j] % order
-                relations[index]=  relation
-                index=lf # determine the index of the first nonzero entry
+                    relation[j] = rinv * relation[j] % order
+                relations[index] =  relation
+                index = lf # determine the index of the first nonzero entry
                 for i in range(lf): # subtract the new relation from the one for b
-                    if relationb[i]> 0 and relations[i] != None:
-                        rbi=relationb[i]
+                    if relationb[i] > 0 and relations[i] != None:
+                        rbi = relationb[i]
                         for j in range(lf+1):
-                            relationb[j]= (relationb[j] - rbi*relations[i][j]) % order
-                    if relationb[i]> 0 and index==lf: # is this the index of the first nonzero entry?
-                        index= i
+                            relationb[j] = (relationb[j] - rbi*relations[i][j]) % order
+                    if relationb[i] > 0 and index == lf: # is this the index of the first nonzero entry?
+                        index = i
                         break # we do not need to reduce further at this point
                 if index == lf: # all unkonws are gone
                     #print(f"Success after {k} relations out of {lf}")
-                    return relationb[lf] * (order-1) % order
-    return None
+                    return relationb[lf] * (order - 1) % order
 
 def _discrete_log_pohlig_hellman(n, a, b, order=None):
     """
@@ -1609,6 +1608,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         Vanstone, S. A. (1997).
 
     """
+    from math import sqrt, log
     n, a, b = as_int(n), as_int(a), as_int(b)
     if order is None:
         order = n_order(b, n)
@@ -1619,11 +1619,12 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     if order < 1000:
         return _discrete_log_trial_mul(n, a, b, order)
     elif prime_order:
-        if order < 10000000000:
+        if 2*sqrt(log(n)*log(log(n))) < log(sqrt(order)):
+            return _discrete_log_index_calculus(n, a, b, order)
+        elif order < 10000000000:
             return _discrete_log_shanks_steps(n, a, b, order)
-        elif order< 10000000000:
-            return _discrete_log_pollard_rho(n, a, b, order)
-        return _discrete_log_index_calculus(n, a, b, order)
+        return _discrete_log_pollard_rho(n, a, b, order)
+
 
     return _discrete_log_pohlig_hellman(n, a, b, order)
 
