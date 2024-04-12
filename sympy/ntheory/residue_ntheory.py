@@ -1543,8 +1543,6 @@ def discrete_log(n, a, b, order=None, prime_order=None):
                     break
             if i<e:
                 order_factors[p] = e-i
-    else:
-        order_factors= factorint(order)
 
     if prime_order is None:
         prime_order = isprime(order)
