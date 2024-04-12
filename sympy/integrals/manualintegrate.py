@@ -1430,7 +1430,12 @@ def quadratic_denom_rule(integral):
             if positive_cond is S.false:
                 return negative_step
             return PiecewiseRule(integrand, symbol, [(general_rule, positive_cond), (negative_step, S.true)])
-        return general_rule
+
+        power = PowerRule(integrand, symbol, symbol, -2)
+        if b != 1:
+            power = ConstantTimesRule(integrand, symbol, 1/b, symbol**-2, power)
+
+        return PiecewiseRule(integrand, symbol, [(general_rule, Ne(c, 0)), (power, True)])
 
     d = Wild('d', exclude=[symbol])
     match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))
