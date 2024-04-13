@@ -898,15 +898,47 @@ class DuffingSpring(ForceActuator):
 
     def __init__(self, linear_stiffness, nonlinear_stiffness, pathway, equilibrium_length=S.Zero):
         try:
-            self.linear_stiffness = sympify(linear_stiffness)
-            self.nonlinear_stiffness = sympify(nonlinear_stiffness)
-            self.equilibrium_length = sympify(equilibrium_length)
+            self._linear_stiffness = sympify(linear_stiffness)
+            self._nonlinear_stiffness = sympify(nonlinear_stiffness)
+            self._equilibrium_length = sympify(equilibrium_length)
         except SympifyError:
             raise SympifyError("Input arguments could not be sympified.")
 
         if not isinstance(pathway, PathwayBase):
             raise TypeError("pathway must be an instance of PathwayBase.")
-        self.pathway = pathway
+        self._pathway = pathway
+
+    @property
+    def linear_stiffness(self):
+        return self._linear_stiffness
+
+    @linear_stiffness.setter
+    def linear_stiffness(self, value):
+        raise AttributeError("Cannot modify linear_stiffness")
+
+    @property
+    def nonlinear_stiffness(self):
+        return self._nonlinear_stiffness
+
+    @nonlinear_stiffness.setter
+    def nonlinear_stiffness(self, value):
+        raise AttributeError("Cannot modify nonlinear_stiffness")
+
+    @property
+    def pathway(self):
+        return self._pathway
+
+    @pathway.setter
+    def pathway(self, value):
+        raise AttributeError("Cannot modify pathway")
+
+    @property
+    def equilibrium_length(self):
+        return self._equilibrium_length
+
+    @equilibrium_length.setter
+    def equilibrium_length(self, value):
+        raise AttributeError("Cannot modify equilibrium_length")
 
     @property
     def force(self):
