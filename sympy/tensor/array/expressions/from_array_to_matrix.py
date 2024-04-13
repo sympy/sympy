@@ -758,7 +758,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
     v: List[_ArgE]
     for k, v in map_contr_to_args.items():
         make_trace: bool = False
-        if len(k) == 1 and next(iter(k)) >= 0 and sum([next(iter(k)) in i for i in map_contr_to_args]) == 1:
+        if len(k) == 1 and next(iter(k)) >= 0 and sum(next(iter(k)) in i for i in map_contr_to_args) == 1:
             # This is a trace: the arguments are fully contracted with only one
             # index, and the index isn't used anywhere else:
             make_trace = True
@@ -870,7 +870,7 @@ def remove_identity_matrices(expr: ArrayContraction):
 
     permutation_map = {}
 
-    free_indices = list(accumulate([0] + [sum([i is None for i in arg.indices]) for arg in editor.args_with_ind]))
+    free_indices = list(accumulate([0] + [sum(i is None for i in arg.indices) for arg in editor.args_with_ind]))
     free_map = dict(zip(editor.args_with_ind, free_indices[:-1]))
 
     update_pairs = {}

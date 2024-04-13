@@ -3649,7 +3649,7 @@ class MatrixBase(Printable):
       q = list(range(len(b)))
       dat = [i.rows for i in b]
       active = [q.pop(0) for _ in range(ntop)]
-      cols = sum([b[i].cols for i in active])
+      cols = sum(b[i].cols for i in active)
       rows = []
       while any(dat):
           r = []

@@ -2172,7 +2172,7 @@ def _simplified_pairs(terms):
     # is at most a difference of a single one
     termdict = defaultdict(list)
     for n, term in enumerate(terms):
-        ones = sum([1 for t in term if t == 1])
+        ones = sum(1 for t in term if t == 1)
         termdict[ones].append(n)
 
     variables = len(terms[0])

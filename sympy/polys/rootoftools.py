@@ -635,7 +635,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _count_roots(cls, roots):
         """Count the number of real or complex roots with multiplicities."""
-        return sum([k for _, _, k in roots])
+        return sum(k for _, _, k in roots)
 
     @classmethod
     def _indexed_root(cls, poly, index, lazy=False):

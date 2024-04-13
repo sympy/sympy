@@ -25,7 +25,7 @@ def _eigenvals_eigenvects_mpmath(M):
     norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
 
     v1 = None
-    prec = max([x._prec for x in M.atoms(Float)])
+    prec = max(x._prec for x in M.atoms(Float))
     eps = 2**-prec
 
     while prec < DEFAULT_MAXPREC:
