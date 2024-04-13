@@ -828,7 +828,7 @@ class TestDuffingSpring:
     def test_to_loads(self):
         self.pB.set_pos(self.pA, self.q*self.N.x)
         spring = DuffingSpring(self.linear_stiffness, self.nonlinear_stiffness, self.pathway, self.equilibrium_length)
-    
+
         # Calculate the displacement from the equilibrium length
         displacement = self.q - self.equilibrium_length
     
