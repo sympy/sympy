@@ -831,13 +831,13 @@ class TestDuffingSpring:
 
         # Calculate the displacement from the equilibrium length
         displacement = self.q - self.equilibrium_length
-    
+
         # Make sure this matches the computation in DuffingSpring class
         force = -self.linear_stiffness * displacement - self.nonlinear_stiffness * displacement**3
-    
+
         # The expected loads on pA and pB due to the spring
         expected_loads = [Force(self.pA, force * self.N.x), Force(self.pB, -force * self.N.x)]
-    
+
         # Compare expected loads to what is returned from DuffingSpring.to_loads()
         calculated_loads = spring.to_loads()
         for calculated, expected in zip(calculated_loads, expected_loads):
