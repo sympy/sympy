@@ -7,7 +7,6 @@ from sympy import (
     Matrix,
     Symbol,
     SympifyError,
-    simplify,
     sqrt,
     Abs
 )
