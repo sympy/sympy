@@ -19,7 +19,7 @@ skip = .eggs
 # RST files (used by sphinx)
 [*.rst]
 indent_style = space
-indent_size = 4
+indent_size = 3
 
 # JSON, YML
 [*.{json,yml}]
