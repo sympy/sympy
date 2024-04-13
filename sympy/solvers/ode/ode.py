@@ -235,7 +235,7 @@ from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
 from sympy.core.multidimensional import vectorize
 from sympy.core.numbers import nan, zoo, Number
-from sympy.core.relational import Equality, Eq
+from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
@@ -1638,6 +1638,34 @@ def odesimp(ode, eq, func, hint):
         eq = simplify(eq)
     if not isinstance(eq, Equality):
         raise TypeError("eq should be an instance of Equality")
+
+    if eq.lhs.is_Piecewise or eq.rhs.is_Piecewise:
+        # Ignore any simple constraints imposed on the arbitrary constants from evaluating
+        # the integral. While it might be nice to indicate that say Ne(C1, 0) in the
+        # ode solution (even if somewhat obvious due to C1 appearing in a denominator),
+        # the call to solve below won't handle a Piecewise very well (see issue #20269).
+        # For example, the integral evaluation above returns in one case:
+        # Eq(Piecewise((2*atan(sqrt(C1 + 2*exp(f(x)))/sqrt(-C1))/sqrt(-C1), Ne(C1, 0)),
+        #              (-2/sqrt(C1 + 2*exp(f(x))), True)), C2 + x)
+        # Below we look for a Piecewise result with two branches, a Ne(C1, k) for
+        # some is_Number k branch, and an otherwise branch (the otherwise branch
+        # and the condition Ne(C1, k) are ignored).
+        piecewise = [a for a in eq.args if a.is_Piecewise]
+        if len(piecewise) == 1:
+            piecewise_args = piecewise[0].args
+            # Ignore otherwise branch of Piecewise:
+            piecewise_args = [a for a in piecewise_args if a[1] != True]
+            if len(piecewise_args) == 1:
+                ne_branch = piecewise_args[0]
+                ne = ne_branch[1]
+                if isinstance(ne, Ne) and set(ne.args) & constants:
+                    ne = ne.canonical
+                    assert ne.lhs in constants
+                    if ne.rhs.is_Number:
+                        # Keep only the constrained branch (but ignore the Ne condition
+                        # imposed on one of the arbitrary constants):
+                        other_side = next(a for a in eq.args if not a.is_Piecewise)
+                        eq = Eq(ne_branch[0], other_side)
 
     # Second, clean up the arbitrary constants.
     # Right now, nth linear hints can put as many as 2*order constants in an
