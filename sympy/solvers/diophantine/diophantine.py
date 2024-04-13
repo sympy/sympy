@@ -2699,7 +2699,7 @@ def diop_ternary_quadratic(eq, parameterize=False):
 
 
 def _diop_ternary_quadratic(_var, coeff):
-    eq = sum([i*coeff[i] for i in coeff])
+    eq = sum(i*coeff[i] for i in coeff)
     if HomogeneousTernaryQuadratic(eq).matches():
         return HomogeneousTernaryQuadratic(eq, free_symbols=_var).solve()
     elif HomogeneousTernaryQuadraticNormal(eq).matches():
@@ -2952,7 +2952,7 @@ def diop_ternary_quadratic_normal(eq, parameterize=False):
 
 
 def _diop_ternary_quadratic_normal(var, coeff):
-    eq = sum([i * coeff[i] for i in coeff])
+    eq = sum(i * coeff[i] for i in coeff)
     return HomogeneousTernaryQuadraticNormal(eq, free_symbols=var).solve()
 
 

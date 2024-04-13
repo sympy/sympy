@@ -1541,8 +1541,8 @@ class HolonomicFunction:
             keylist = [i[0] for i in dict1]
             lower = min(keylist)
             upper = max(keylist)
-            degree = max([i[1] for i in dict1])
-            degree2 = min([i[1] for i in dict1])
+            degree = max(i[1] for i in dict1)
+            degree2 = min(i[1] for i in dict1)
 
             smallest_n = lower + degree
             dummys = {}
