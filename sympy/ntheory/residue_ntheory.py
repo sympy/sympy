@@ -1628,7 +1628,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
             return _discrete_log_index_calculus(n, a, b, order, True)
         elif order < 1000000000000:
             return _discrete_log_shanks_steps(n, a, b, order)
-        return _discrete_log_pollard_rho(n, a, b, order)
+        return _discrete_log_pollard_rho(n, a, b, order, order_factors)
 
 
     return _discrete_log_pohlig_hellman(n, a, b, order)
