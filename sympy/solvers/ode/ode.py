@@ -1660,8 +1660,8 @@ def odesimp(ode, eq, func, hint):
                 ne = ne_branch[1]
                 if isinstance(ne, Ne) and set(ne.args) & constants:
                     ne = ne.canonical
-                    assert ne.lhs in constants
                     if ne.rhs.is_Number:
+                        assert ne.lhs in constants
                         # Keep only the constrained branch (but ignore the Ne condition
                         # imposed on one of the arbitrary constants):
                         other_side = next(a for a in eq.args if not a.is_Piecewise)
