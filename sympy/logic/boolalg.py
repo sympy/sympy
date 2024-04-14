@@ -846,6 +846,9 @@ class Not(BooleanFunction):
       value of True.  To avoid this issue, use the SymPy boolean types
       ``true`` and ``false``.
 
+    - As of Python 3.12, the bitwise not operator ``~`` used on a
+      Python ``bool`` is deprecated and will emit a warning.
+
     >>> from sympy import true
     >>> ~True  # doctest: +SKIP
     -2
