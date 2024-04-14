@@ -1508,12 +1508,12 @@ def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
         index=lf # determine the index of the first nonzero entry
         for i in range(lf):
             ri = relation[i]
-            if ri> 0 and relations[i] != None: # make this entry zero if we can
+            if ri> 0 and relations[i] is not None: # make this entry zero if we can
                 for j in range(lf+1):
                     relation[j] = (relation[j] - ri*relations[i][j]) % order
             if relation[i] > 0 and index == lf: # is this the index of the first nonzero entry?
                 index= i
-        if index == lf or relations[index] != None: # the relation contains no new information
+        if index == lf or relations[index] is not None: # the relation contains no new information
             continue
         # the relation contains new information
         rinv = pow(relation[index],-1,order) # normalize the first nonzero entry
@@ -1522,7 +1522,7 @@ def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
         relations[index] =  relation
         index = lf # determine the index of the first nonzero entry
         for i in range(lf): # subtract the new relation from the one for a
-            if relationa[i] > 0 and relations[i] != None:
+            if relationa[i] > 0 and relations[i] is not None:
                 rbi = relationa[i]
                 for j in range(lf+1):
                     relationa[j] = (relationa[j] - rbi*relations[i][j]) % order
