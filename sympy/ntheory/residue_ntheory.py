@@ -1434,15 +1434,18 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
 
 def _discrete_log_is_smooth(n: int, factorbase: list):
-    """Try to factor n with respect to a a given factorbase. Upon success a list of exponents with repect to the factorbase is returned. Otherwise None."""
+    """Try to factor n with respect to a a given factorbase.
+    Upon success a list of exponents with repect to the factorbase is returned.
+    Otherwise None."""
     factors = [0]*len(factorbase)
-    for i in range(len(factorbase)):
-        p=factorbase[i]
+    for i, p in enumerate(factorbase):
         while ( n != 1 and n % p == 0 ): # divide by p as many times as possible
             factors[i] +=1
             n = n // p
-    if n != 1: return None # the number factors if at the end nothing is left
+    if n != 1:
+        return None # the number factors if at the end nothing is left
     return factors
+
 
 def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
     """
@@ -1472,11 +1475,11 @@ def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
     from math import sqrt, exp, log
     a %= n
     b %= n
-    if prime_order == None:
+    if prime_order is None:
         assert isprime(order), "The order of the base must be prime."
     # first determine the bound B for the factorbase: Choosing B=n^(1/u) Canfield-Erdoes-Pomerance gives us
-    # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
-    # we use Newton
+    # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). See https://math.mit.edu/classes/18.783/2021/LectureNotes10.pdf
+    #There is no explicit expression for the optimum, which seems to work better than the asymptotic value, hence we use Newton
     u = 2*sqrt(log(n)/log(log(n))) # asymptotic value
     for _ in range(3):
         u = (2*log(n)+u*u*(2+log(u)))/(2+3*u+2*u*log(u)) # Newton iteration
@@ -1485,7 +1488,7 @@ def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
     factorbase = list(primerange(B)) # compute the factorbase
     lf = len(factorbase) # length of the factorbase
     ordermo = order-1
-    k=1 # number of relations found
+    #k=1 # number of relations found
 
     while True: # first find a relation involving a
         x = randint(0,ordermo)
@@ -1498,36 +1501,37 @@ def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
     while True: # find relations for all primes in our factor base
         x = randint(0,ordermo)
         relation = _discrete_log_is_smooth(pow(b,x,n), factorbase)
-        if relation:
-            k += 1
-            relation += [ x ]
-            index=lf # determine the index of the first nonzero entry
-            for i in range(lf):
-                ri = relation[i]
-                if ri> 0 and relations[i] != None: # make this entry zero if we can
-                    for j in range(lf+1):
-                        relation[j] = (relation[j] - ri*relations[i][j]) % order
-                if relation[i] > 0 and index == lf: # is this the index of the first nonzero entry?
-                    index= i
-            if index == lf or relations[index] != None: # the relation contains no new information
-                pass
-            else: # the relation contains new information
-                rinv = pow(relation[index],-1,order) # normalize the first nonzero entry
-                for j in range(index,lf+1):
-                    relation[j] = rinv * relation[j] % order
-                relations[index] =  relation
-                index = lf # determine the index of the first nonzero entry
-                for i in range(lf): # subtract the new relation from the one for a
-                    if relationa[i] > 0 and relations[i] != None:
-                        rbi = relationa[i]
-                        for j in range(lf+1):
-                            relationa[j] = (relationa[j] - rbi*relations[i][j]) % order
-                    if relationa[i] > 0 and index == lf: # is this the index of the first nonzero entry?
-                        index = i
-                        break # we do not need to reduce further at this point
-                if index == lf: # all unkonws are gone
-                    #print(f"Success after {k} relations out of {lf}")
-                    return relationa[lf] * (order - 1) % order
+        if relation is None:
+            continue
+        #k += 1
+        relation += [ x ]
+        index=lf # determine the index of the first nonzero entry
+        for i in range(lf):
+            ri = relation[i]
+            if ri> 0 and relations[i] != None: # make this entry zero if we can
+                for j in range(lf+1):
+                    relation[j] = (relation[j] - ri*relations[i][j]) % order
+            if relation[i] > 0 and index == lf: # is this the index of the first nonzero entry?
+                index= i
+        if index == lf or relations[index] != None: # the relation contains no new information
+            continue
+        # the relation contains new information
+        rinv = pow(relation[index],-1,order) # normalize the first nonzero entry
+        for j in range(index,lf+1):
+            relation[j] = rinv * relation[j] % order
+        relations[index] =  relation
+        index = lf # determine the index of the first nonzero entry
+        for i in range(lf): # subtract the new relation from the one for a
+            if relationa[i] > 0 and relations[i] != None:
+                rbi = relationa[i]
+                for j in range(lf+1):
+                    relationa[j] = (relationa[j] - rbi*relations[i][j]) % order
+            if relationa[i] > 0 and index == lf: # is this the index of the first nonzero entry?
+                index = i
+                break # we do not need to reduce further at this point
+        if index == lf: # all unkonws are gone
+            #print(f"Success after {k} relations out of {lf}")
+            return relationa[lf] * (order - 1) % order
 
 def _discrete_log_pohlig_hellman(n, a, b, order=None):
     """
