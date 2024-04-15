@@ -176,7 +176,7 @@ def dup_zz_mignotte_bound(f, K):
     delta2 = _ceil(delta / 2)
 
     # euclidean-norm
-    eucl_norm = K.sqrt( sum( [cf**2 for cf in f] ) )
+    eucl_norm = K.sqrt( sum( cf**2 for cf in f ) )
 
     # biggest values of binomial coefficients (p. 538 of reference)
     t1 = binomial(delta - 1, delta2)

@@ -1733,7 +1733,7 @@ def nc_simplify(expr, deep=True):
         if isinstance(s, _Pow):
             return get_score(s.args[0])
         elif isinstance(s, (_Add, _Mul)):
-            return sum([get_score(a) for a in s.args])
+            return sum(get_score(a) for a in s.args)
         return 1
 
     def compare(s, alt_s):

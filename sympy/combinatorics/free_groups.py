@@ -841,7 +841,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         if len(gen) != 1:
             raise ValueError("gen must be a generator or inverse of a generator")
         s = gen.array_form[0]
-        return s[1]*sum([i[1] for i in self.array_form if i[0] == s[0]])
+        return s[1]*sum(i[1] for i in self.array_form if i[0] == s[0])
 
     def generator_count(self, gen):
         """
@@ -870,7 +870,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         if len(gen) != 1 or gen.array_form[0][1] < 0:
             raise ValueError("gen must be a generator")
         s = gen.array_form[0]
-        return s[1]*sum([abs(i[1]) for i in self.array_form if i[0] == s[0]])
+        return s[1]*sum(abs(i[1]) for i in self.array_form if i[0] == s[0])
 
     def subword(self, from_i, to_j, strict=True):
         """
