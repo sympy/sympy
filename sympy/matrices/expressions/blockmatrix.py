@@ -111,7 +111,7 @@ class BlockMatrix(MatrixExpr):
             if not ok:
                 # same total cols in each row
                 ok = len({
-                    sum([i.cols for i in r]) for r in rows}) == 1
+                    sum(i.cols for i in r) for r in rows}) == 1
                 if blocky and ok:
                     raise ValueError(filldedent('''
                         Although this matrix is comprised of blocks,

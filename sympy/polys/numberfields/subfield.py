@@ -488,7 +488,7 @@ def to_number_field(extension, theta=None, *, gen=None, alias=None):
         return AlgebraicNumber(extension[0], alias=alias)
 
     minpoly, coeffs = primitive_element(extension, gen, polys=True)
-    root = sum([ coeff*ext for coeff, ext in zip(coeffs, extension) ])
+    root = sum(coeff*ext for coeff, ext in zip(coeffs, extension))
 
     if theta is None:
         return AlgebraicNumber((minpoly, root), alias=alias)
