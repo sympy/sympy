@@ -1050,8 +1050,6 @@ class Xor(BooleanFunction):
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
         patterns = _simplify_patterns_xor()
-        print(_apply_patternbased_simplification(rv, patterns,
-                                                  kwargs['measure'], None))
         return _apply_patternbased_simplification(rv, patterns,
                                                   kwargs['measure'], None)
 
