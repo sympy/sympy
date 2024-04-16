@@ -2864,7 +2864,7 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
 
     '1st_homogeneous_coeff_best_08': {
         'eq': f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x),
-        'sol': [Eq(f(x), -sqrt(-x*exp(2*C1)/(x - 2*exp(C1)))), Eq(f(x), sqrt(-x*exp(2*C1)/(x - 2*exp(C1))))],
+        'sol': [Eq(f(x), -C1*sqrt(-x/(x - 2*C1))), Eq(f(x), C1*sqrt(-x/(x - 2*C1)))],
         'checkodesol_XFAIL': True  # solutions are valid in a range
     },
     }
