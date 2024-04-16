@@ -11,7 +11,7 @@ from sympy.polys.densebasic import (
     dup_strip,
     dup_LC, dmp_ground_LC,
     dmp_zero_p,
-    dmp_ground, dmp_LC,
+    dmp_ground,
     dup_degree, dmp_degree,
     dmp_raise, dmp_inject,
     dup_convert)
