@@ -879,13 +879,17 @@ class TorqueActuator(ActuatorBase):
 
 class DuffingSpring(ForceActuator):
     """A nonlinear spring based on the Duffing equation.
+    
     Explanation
     ===========
+    
     Here, ``DuffingSpring`` represents the force exerted by a nonlinear spring based on the Duffing equation:
     F = -beta*x-alpha*x**3, where x is the displacement from the equilibrium position, beta is the linear spring constant,
     and alpha is the coefficient for the nonlinear cubic term.
+    
     Parameters
     ==========
+    
     linear_stiffness : Expr
         The linear stiffness coefficient (beta).
     nonlinear_stiffness : Expr
@@ -897,12 +901,9 @@ class DuffingSpring(ForceActuator):
     """
 
     def __init__(self, linear_stiffness, nonlinear_stiffness, pathway, equilibrium_length=S.Zero):
-        try:
-            self._linear_stiffness = sympify(linear_stiffness)
-            self._nonlinear_stiffness = sympify(nonlinear_stiffness)
-            self._equilibrium_length = sympify(equilibrium_length)
-        except SympifyError:
-            raise SympifyError("Input arguments could not be sympified.")
+        self._linear_stiffness = sympify(linear_stiffness, strict=True)
+        self._nonlinear_stiffness = sympify(nonlinear_stiffness, strict=True)
+        self._equilibrium_length = sympify(equilibrium_length, strict=True)
 
         if not isinstance(pathway, PathwayBase):
             raise TypeError("pathway must be an instance of PathwayBase.")
@@ -911,44 +912,54 @@ class DuffingSpring(ForceActuator):
     @property
     def linear_stiffness(self):
         return self._linear_stiffness
-
+    
     @linear_stiffness.setter
-    def linear_stiffness(self, value):
-        raise AttributeError("Cannot modify linear_stiffness")
+    def linear_stiffness(self, linear_stiffness):
+        if hasattr(self, '_linear_stiffness'):
+            msg = (
+                f'Can\'t set attribute `linear_stiffness` to '
+                f'{repr(linear_stiffness)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._linear_stiffness = sympify(linear_stiffness, strict=True)
 
     @property
     def nonlinear_stiffness(self):
         return self._nonlinear_stiffness
 
     @nonlinear_stiffness.setter
-    def nonlinear_stiffness(self, value):
-        raise AttributeError("Cannot modify nonlinear_stiffness")
+    def nonlinear_stiffness(self, nonlinear_stiffness):
+        if hasattr(self, '_nonlinear_stiffness'):
+            msg = (
+                f'Can\'t set attribute `nonlinear_stiffness` to '
+                f'{repr(nonlinear_stiffness)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._nonlinear_stiffness = sympify(nonlinear_stiffness, strict=True)
 
     @property
     def pathway(self):
         return self._pathway
-
-    @pathway.setter
-    def pathway(self, value):
-        raise AttributeError("Cannot modify pathway")
 
     @property
     def equilibrium_length(self):
         return self._equilibrium_length
 
     @equilibrium_length.setter
-    def equilibrium_length(self, value):
-        raise AttributeError("Cannot modify equilibrium_length")
+    def equilibrium_length(self, equilibrium_length):
+        if hasattr(self, '_equilibrium_length'):
+            msg = (
+                f'Can\'t set attribute `equilibrium_length` to '
+                f'{repr(equilibrium_length)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._equilibrium_length = sympify(equilibrium_length, strict=True)
 
     @property
     def force(self):
         """The force produced by the Duffing spring."""
-        displacement = simplify(self.pathway.length - self.equilibrium_length)
+        displacement = self.pathway.length - self.equilibrium_length
         return -self.linear_stiffness * displacement - self.nonlinear_stiffness * displacement**3
-
-    @force.setter
-    def force(self, force):
-        raise AttributeError("Can't set computed attribute `force`.")
 
     def __repr__(self):
         return (f"{self.__class__.__name__}("
