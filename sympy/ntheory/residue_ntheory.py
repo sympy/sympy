@@ -1520,16 +1520,14 @@ def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
         for j in range(index,lf+1):
             relation[j] = rinv * relation[j] % order
         relations[index] =  relation
-        index = lf # determine the index of the first nonzero entry
         for i in range(lf): # subtract the new relation from the one for a
             if relationa[i] > 0 and relations[i] is not None:
                 rbi = relationa[i]
                 for j in range(lf+1):
                     relationa[j] = (relationa[j] - rbi*relations[i][j]) % order
-            if relationa[i] > 0 and index == lf: # is this the index of the first nonzero entry?
-                index = i
+            if relationa[i] > 0: # the index of the first nonzero entry
                 break # we do not need to reduce further at this point
-        if index == lf: # all unkonws are gone
+        else: # all unkowns are gone
             #print(f"Success after {k} relations out of {lf}")
             return relationa[lf] * (order - 1) % order
 
