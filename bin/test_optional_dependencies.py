@@ -54,7 +54,7 @@ test_list = [
     # ipython
     '*ipython*',
 
-    # antlr, lfortran, clang
+    # antlr, lfortran, clang, lark
     'sympy/parsing/',
 
     # codegen
@@ -110,7 +110,7 @@ doctest_list = [
     # ipython
     '*ipython*',
 
-    # antlr, lfortran, clang
+    # antlr, lfortran, clang, lark
     'sympy/parsing/',
 
     # codegen
