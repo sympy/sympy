@@ -879,17 +879,17 @@ class TorqueActuator(ActuatorBase):
 
 class DuffingSpring(ForceActuator):
     """A nonlinear spring based on the Duffing equation.
-    
+
     Explanation
     ===========
-    
+
     Here, ``DuffingSpring`` represents the force exerted by a nonlinear spring based on the Duffing equation:
     F = -beta*x-alpha*x**3, where x is the displacement from the equilibrium position, beta is the linear spring constant,
     and alpha is the coefficient for the nonlinear cubic term.
-    
+
     Parameters
     ==========
-    
+
     linear_stiffness : Expr
         The linear stiffness coefficient (beta).
     nonlinear_stiffness : Expr
@@ -912,7 +912,7 @@ class DuffingSpring(ForceActuator):
     @property
     def linear_stiffness(self):
         return self._linear_stiffness
-    
+
     @linear_stiffness.setter
     def linear_stiffness(self, linear_stiffness):
         if hasattr(self, '_linear_stiffness'):
