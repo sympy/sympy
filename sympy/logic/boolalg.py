@@ -323,15 +323,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     Python operators give a boolean result for true but a
     bitwise result for True
 
-    >>> ~true, ~True
-    (False, -2)
-    >>> true >> true, True >> True
-    (True, 0)
-
-    Python operators give a boolean result for true but a
-    bitwise result for True
-
-    >>> ~true, ~True
+    >>> ~true, ~True  # doctest: +SKIP
     (False, -2)
     >>> true >> true, True >> True
     (True, 0)
@@ -406,7 +398,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     Python operators give a boolean result for false but a
     bitwise result for False
 
-    >>> ~false, ~False
+    >>> ~false, ~False  # doctest: +SKIP
     (True, -1)
     >>> false >> false, False >> False
     (True, 0)
@@ -854,8 +846,11 @@ class Not(BooleanFunction):
       value of True.  To avoid this issue, use the SymPy boolean types
       ``true`` and ``false``.
 
+    - As of Python 3.12, the bitwise not operator ``~`` used on a
+      Python ``bool`` is deprecated and will emit a warning.
+
     >>> from sympy import true
-    >>> ~True
+    >>> ~True  # doctest: +SKIP
     -2
     >>> ~true
     False

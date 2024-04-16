@@ -26,8 +26,20 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
 import warnings
 
-numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
+__doctest_requires__ = {
+    ('Beam.draw',
+     'Beam.plot_bending_moment',
+     'Beam.plot_deflection',
+     'Beam.plot_ild_moment',
+     'Beam.plot_ild_shear',
+     'Beam.plot_shear_force',
+     'Beam.plot_shear_stress',
+     'Beam.plot_slope'): ['matplotlib'],
+}
+
+
+numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 
 class Beam:
@@ -2168,7 +2180,7 @@ class Beam:
             >>> b.apply_support(50, "pin")
             >>> b.apply_support(0, "fixed")
             >>> b.apply_support(20, "roller")
-            >>> p = b.draw()
+            >>> p = b.draw()  # doctest: +SKIP
             >>> p  # doctest: +ELLIPSIS
             Plot object containing:
             [0]: cartesian line: 25*SingularityFunction(x, 5, 0) - 25*SingularityFunction(x, 23, 0)

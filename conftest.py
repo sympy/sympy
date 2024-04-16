@@ -26,7 +26,9 @@ def _mk_group(group_dict):
     return list(chain(*[[k+'::'+v for v in files] for k, files in group_dict.items()]))
 
 if os.path.exists(durations_path):
-    veryslow_group, slow_group = [_mk_group(group_dict) for group_dict in json.loads(open(durations_path, 'rt').read())]
+    with open(durations_path, 'rt') as fin:
+        text = fin.read()
+    veryslow_group, slow_group = [_mk_group(group_dict) for group_dict in json.loads(text)]
 else:
     # warnings in conftest has issues: https://github.com/pytest-dev/pytest/issues/2891
     warnings.warn("conftest.py:22: Could not find %s, --quickcheck and --veryquickcheck will have no effect.\n" % durations_path)

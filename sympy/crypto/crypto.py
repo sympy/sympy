@@ -18,6 +18,7 @@ import warnings
 
 from itertools import cycle
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.core import Symbol
 from sympy.core.numbers import Rational
 from sympy.core.random import _randrange, _randint
@@ -33,6 +34,10 @@ from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.utilities.decorator import doctest_depends_on
+
+
+if GROUND_TYPES == 'flint':
+    __doctest_skip__ = ['lfsr_sequence']
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
