@@ -23,7 +23,7 @@ from sympy.polys.densetools import (
 from sympy.polys.euclidtools import (
     dup_inner_gcd, dmp_inner_gcd,
     dup_gcd, dmp_gcd,
-    dmp_resultant)
+    dmp_resultant, dmp_primitive)
 from sympy.polys.galoistools import (
     gf_sqf_list, gf_sqf_part)
 from sympy.polys.polyerrors import (
@@ -401,30 +401,36 @@ def dmp_sqf_list(f, u, K, all=False):
     deg = dmp_degree(f, u)
     if deg < 0:
         return coeff, []
-    elif deg == 0:
-        coeff2, factors = dmp_sqf_list(dmp_LC(f, u), u-1, K, all=all)
-        factors = [([fac], exp) for fac, exp in factors]
-        return coeff*coeff2, factors
 
-    result, i = [], 1
+    content, f = dmp_primitive(f, u, K)
 
-    h = dmp_diff(f, 1, u, K)
-    g, p, q = dmp_inner_gcd(f, h, u, K)
+    result = []
 
-    while True:
-        d = dmp_diff(p, 1, u, K)
-        h = dmp_sub(q, d, u, K)
+    if deg != 0:
 
-        if dmp_zero_p(h, u):
-            result.append((p, i))
-            break
+        h = dmp_diff(f, 1, u, K)
+        g, p, q = dmp_inner_gcd(f, h, u, K)
 
-        g, p, q = dmp_inner_gcd(p, h, u, K)
+        i = 1
 
-        if all or dmp_degree(g, u) > 0:
-            result.append((g, i))
+        while True:
+            d = dmp_diff(p, 1, u, K)
+            h = dmp_sub(q, d, u, K)
 
-        i += 1
+            if dmp_zero_p(h, u):
+                result.append((p, i))
+                break
+
+            g, p, q = dmp_inner_gcd(p, h, u, K)
+
+            if all or dmp_degree(g, u) > 0:
+                result.append((g, i))
+
+            i += 1
+
+    coeff_content, result_content = dmp_sqf_list(content, u-1, K, all=all)
+    coeff *= coeff_content
+    result += [([fac], exp) for fac, exp in result_content]
 
     return coeff, result
 

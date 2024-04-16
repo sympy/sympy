@@ -2472,6 +2472,16 @@ def test_sqf():
     assert sqf(f) == (x + 1)**40000000000
     assert sqf_list(f) == (1, [(x + 1, 40000000000)])
 
+    # https://github.com/sympy/sympy/issues/26497
+    assert sqf(expand(((y - 2)**2 * (y + 2) * (x + 1)))) == \
+        (y - 2)**2 * expand((y + 2) * (x + 1))
+    assert sqf(expand(((y - 2)**2 * (y + 2) * (z + 1)))) == \
+        (y - 2)**2 * expand((y + 2) * (z + 1))
+    assert sqf(expand(((y - I)**2 * (y + I) * (x + 1)))) == \
+        (y - I)**2 * expand((y + I) * (x + 1))
+    assert sqf(expand(((y - I)**2 * (y + I) * (z + 1)))) == \
+        (y - I)**2 * expand((y + I) * (z + 1))
+
 
 def test_factor():
     f = x**5 - x**3 - x**2 + 1
