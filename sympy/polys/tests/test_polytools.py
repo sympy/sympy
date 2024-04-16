@@ -2482,6 +2482,13 @@ def test_sqf():
     assert sqf(expand(((y - I)**2 * (y + I) * (z + 1)))) == \
         (y - I)**2 * expand((y + I) * (z + 1))
 
+    # Check that factors are combined and sorted.
+    p = (x - 2)**2*(x - 1)*(x + y)**2*(y - 2)**2*(y - 1)
+    assert Poly(p).sqf_list() == (1, [
+        (Poly(x*y - x - y + 1), 1),
+        (Poly(x**2*y - 2*x**2 + x*y**2 - 4*x*y + 4*x - 2*y**2 + 4*y), 2)
+    ])
+
 
 def test_factor():
     f = x**5 - x**3 - x**2 + 1

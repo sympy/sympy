@@ -4,7 +4,7 @@
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_sub, dmp_sub,
-    dup_mul,
+    dup_mul, dmp_mul,
     dup_quo, dmp_quo,
     dup_mul_ground, dmp_mul_ground)
 from sympy.polys.densebasic import (
@@ -402,9 +402,11 @@ def dmp_sqf_list(f, u, K, all=False):
     if deg < 0:
         return coeff, []
 
+    # Yun's algorithm requires the polynomial to be primitive as a univariate
+    # polynomial in its main variable.
     content, f = dmp_primitive(f, u, K)
 
-    result = []
+    result = {}
 
     if deg != 0:
 
@@ -418,19 +420,30 @@ def dmp_sqf_list(f, u, K, all=False):
             h = dmp_sub(q, d, u, K)
 
             if dmp_zero_p(h, u):
-                result.append((p, i))
+                result[i] = p
                 break
 
             g, p, q = dmp_inner_gcd(p, h, u, K)
 
             if all or dmp_degree(g, u) > 0:
-                result.append((g, i))
+                result[i] = g
 
             i += 1
 
     coeff_content, result_content = dmp_sqf_list(content, u-1, K, all=all)
+
     coeff *= coeff_content
-    result += [([fac], exp) for fac, exp in result_content]
+
+    # Combine factors of the content and primitive part that have the same
+    # multiplicity to produce a list in ascending order of multiplicity.
+    for fac, i in result_content:
+        fac = [fac]
+        if i in result:
+            result[i] = dmp_mul(result[i], fac, u, K)
+        else:
+            result[i] = fac
+
+    result = [(result[i], i) for i in sorted(result)]
 
     return coeff, result
 
