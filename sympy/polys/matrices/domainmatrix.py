@@ -13,6 +13,7 @@ from collections import Counter
 from functools import reduce
 from typing import Union as tUnion, Tuple as tTuple
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.core.sympify import _sympify
@@ -55,6 +56,12 @@ from .sdm import SDM
 from .dfm import DFM
 
 from .rref import _dm_rref, _dm_rref_den
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['DomainMatrix.to_dfm', 'DomainMatrix.to_dfm_or_ddm']
+else:
+    __doctest_skip__ = ['DomainMatrix.from_list']
 
 
 def DM(rows, domain):

@@ -86,6 +86,15 @@ from .graph import (
     _strongly_connected_components, _strongly_connected_components_decomposition)
 
 
+__doctest_requires__ = {
+    ('MatrixBase.is_indefinite',
+     'MatrixBase.is_positive_definite',
+     'MatrixBase.is_positive_semidefinite',
+     'MatrixBase.is_negative_definite',
+     'MatrixBase.is_negative_semidefinite'): ['matplotlib'],
+}
+
+
 class MatrixBase(Printable):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
