@@ -776,12 +776,12 @@ class TestDuffingSpring:
         assert isinstance(spring.force, ExprType)
         assert spring.force == force
 
-    @pytest.mark.parametrize('linear_stiffness', [NonSympifyable(), [NonSympifyable()]])
+    @pytest.mark.parametrize('linear_stiffness', [None, NonSympifyable()])
     def test_invalid_constructor_linear_stiffness_not_sympifyable(self, linear_stiffness):
         with pytest.raises(SympifyError):
             _ = DuffingSpring(linear_stiffness, self.nonlinear_stiffness, self.pathway, self.equilibrium_length)
 
-    @pytest.mark.parametrize('nonlinear_stiffness', [NonSympifyable(), [NonSympifyable()]])
+    @pytest.mark.parametrize('nonlinear_stiffness', [None, NonSympifyable()])
     def test_invalid_constructor_nonlinear_stiffness_not_sympifyable(self, nonlinear_stiffness):
         with pytest.raises(SympifyError):
             _ = DuffingSpring(self.linear_stiffness, nonlinear_stiffness, self.pathway, self.equilibrium_length)
@@ -790,7 +790,7 @@ class TestDuffingSpring:
         with pytest.raises(TypeError):
             _ = DuffingSpring(self.linear_stiffness, self.nonlinear_stiffness, NonSympifyable(), self.equilibrium_length)
 
-    @pytest.mark.parametrize('equilibrium_length', [NonSympifyable(), [NonSympifyable()]])
+    @pytest.mark.parametrize('equilibrium_length', [None, NonSympifyable()])
     def test_invalid_constructor_equilibrium_length_not_sympifyable(self, equilibrium_length):
         with pytest.raises(SympifyError):
             _ = DuffingSpring(self.linear_stiffness, self.nonlinear_stiffness, self.pathway, equilibrium_length)
