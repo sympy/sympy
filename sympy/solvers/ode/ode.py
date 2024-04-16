@@ -235,7 +235,7 @@ from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
 from sympy.core.multidimensional import vectorize
 from sympy.core.numbers import nan, zoo, Number
-from sympy.core.relational import Equality, Eq, Ne
+from sympy.core.relational import Equality, Eq
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
