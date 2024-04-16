@@ -1187,7 +1187,7 @@ class PrettyPrinter(Printer):
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]
-        n_newlines = max([len(x) for x in o1])  # Width of part in its pretty form
+        n_newlines = max(len(x) for x in o1)  # Width of part in its pretty form
 
         if 1 in flag:                           # If there was a fractional scalar
             for i, parts in enumerate(o1):
@@ -1369,7 +1369,7 @@ class PrettyPrinter(Printer):
         len_args = len(pexpr.args)
 
         # max widths
-        maxw = [max([P[i, j].width() for i in range(len_args)])
+        maxw = [max(P[i, j].width() for i in range(len_args))
                 for j in range(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.

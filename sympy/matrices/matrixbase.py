@@ -86,6 +86,15 @@ from .graph import (
     _strongly_connected_components, _strongly_connected_components_decomposition)
 
 
+__doctest_requires__ = {
+    ('MatrixBase.is_indefinite',
+     'MatrixBase.is_positive_definite',
+     'MatrixBase.is_positive_semidefinite',
+     'MatrixBase.is_negative_definite',
+     'MatrixBase.is_negative_semidefinite'): ['matplotlib'],
+}
+
+
 class MatrixBase(Printable):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
@@ -3649,7 +3658,7 @@ class MatrixBase(Printable):
       q = list(range(len(b)))
       dat = [i.rows for i in b]
       active = [q.pop(0) for _ in range(ntop)]
-      cols = sum([b[i].cols for i in active])
+      cols = sum(b[i].cols for i in active)
       rows = []
       while any(dat):
           r = []

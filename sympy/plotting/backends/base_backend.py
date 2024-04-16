@@ -3,6 +3,11 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 
 
+__doctest_requires__ = {
+    ('Plot.append', 'Plot.extend'): ['matplotlib'],
+}
+
+
 # Global variable
 # Set to False when running tests / doctests so that the plots don't show.
 _show = True

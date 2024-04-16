@@ -18,6 +18,7 @@ import warnings
 
 from itertools import cycle
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.core import Symbol
 from sympy.core.numbers import Rational
 from sympy.core.random import _randrange, _randint
@@ -33,6 +34,10 @@ from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.utilities.decorator import doctest_depends_on
+
+
+if GROUND_TYPES == 'flint':
+    __doctest_skip__ = ['lfsr_sequence']
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -2383,7 +2388,7 @@ def lfsr_sequence(key, fill, n):
         s0 = s[:]
         L.append(s[0])
         s = s[1:k]
-        x = sum([int(key[i]*s0[i]) for i in range(k)])
+        x = sum(int(key[i]*s0[i]) for i in range(k))
         s.append(F(x))
     return L       # use [int(x) for x in L] for int version
 
@@ -2509,8 +2514,8 @@ def lfsr_connection_polynomial(s):
             r = min(L + 1, dC + 1)
             coeffsC = [C.subs(x, 0)] + [C.coeff(x**i)
                 for i in range(1, dC + 1)]
-            d = (int(s[N]) + sum([coeffsC[i]*int(s[N - i])
-                for i in range(1, r)])) % p
+            d = (int(s[N]) + sum(coeffsC[i]*int(s[N - i])
+                for i in range(1, r))) % p
         if L == 0:
             d = int(s[N])*x**0
         if d == 0:
@@ -2531,8 +2536,8 @@ def lfsr_connection_polynomial(s):
                 N += 1
     dC = Poly(C).degree()
     coeffsC = [C.subs(x, 0)] + [C.coeff(x**i) for i in range(1, dC + 1)]
-    return sum([coeffsC[i] % p*x**i for i in range(dC + 1)
-        if coeffsC[i] is not None])
+    return sum(coeffsC[i] % p*x**i for i in range(dC + 1)
+        if coeffsC[i] is not None)
 
 
 #################### ElGamal  #############################

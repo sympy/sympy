@@ -355,6 +355,7 @@ def test_simplification_boolalg():
     assert And(Eq(x - 1, 0), Eq(x + 2, 2)).simplify() == False
     assert And(Ne(x - 1, 0), Ne(x + 2, 2)).simplify(
         ) == And(Ne(x, 1), Ne(x, 0))
+    assert simplify(Xor(x, ~x)) == True
 
 
 def test_bool_map():

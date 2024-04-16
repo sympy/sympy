@@ -618,7 +618,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             else:
                 return 1
         elif not g.is_Atom and g.args:
-            return max([ _exponent(h) for h in g.args ])
+            return max(_exponent(h) for h in g.args)
         else:
             return 1
 

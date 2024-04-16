@@ -18,7 +18,12 @@ from functools import partial
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
+
+__doctest_requires__ = {('theano_function',): ['theano']}
+
+
 theano = import_module('theano')
+
 
 if theano:
     ts = theano.scalar
