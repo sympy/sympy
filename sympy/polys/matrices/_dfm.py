@@ -39,6 +39,7 @@
 # and also to make some of the above methods simpler or more efficient e.g.
 # slicing, fancy indexing etc.
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.external.importtools import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -53,6 +54,11 @@ from .exceptions import (
     DMShapeError,
     DMValueError,
 )
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['*']
+
 
 flint = import_module('flint')
 
