@@ -488,8 +488,14 @@ def test_issue_10847():
     assert manualintegrate(sqrt(x) * log(x), x) == 2*x**Rational(3, 2)*log(x)/3 - 4*x**Rational(3, 2)/9
 
     result = manualintegrate(sqrt(a*x + b) / x, x)
-    assert result == Piecewise((-2*b*Piecewise((-atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b), Ne(b, 0)), (1/sqrt(a*x + b), True)) + 2*sqrt(a*x + b), Ne(a, 0)), (sqrt(b)*log(x), True))
-    assert piecewise_fold(result) == Piecewise((2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b), Ne(a, 0) & Ne(b, 0)), (-2*b/sqrt(a*x + b) + 2*sqrt(a*x + b), Ne(a, 0)), (sqrt(b)*log(x), True))
+    assert result == Piecewise((-2*b*Piecewise(
+        (-atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b), Ne(b, 0)),
+        (1/sqrt(a*x + b), True)) + 2*sqrt(a*x + b), Ne(a, 0)),
+        (sqrt(b)*log(x), True))
+    assert piecewise_fold(result) == Piecewise(
+        (2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b), Ne(a, 0) & Ne(b, 0)),
+        (-2*b/sqrt(a*x + b) + 2*sqrt(a*x + b), Ne(a, 0)),
+        (sqrt(b)*log(x), True))
 
     ra = Symbol('a', real=True)
     rb = Symbol('b', real=True)
