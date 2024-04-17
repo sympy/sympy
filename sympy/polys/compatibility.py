@@ -101,6 +101,7 @@ from sympy.polys.densetools import dup_real_imag
 from sympy.polys.densetools import dup_mirror
 from sympy.polys.densetools import dup_scale
 from sympy.polys.densetools import dup_shift
+from sympy.polys.densetools import dmp_shift
 from sympy.polys.densetools import dup_transform
 from sympy.polys.densetools import dup_compose
 from sympy.polys.densetools import dmp_compose
@@ -515,6 +516,8 @@ class IPolys:
         return self.from_dense(dup_scale(self.to_dense(f), a, self.domain))
     def dup_shift(self, f, a):
         return self.from_dense(dup_shift(self.to_dense(f), a, self.domain))
+    def dmp_shift(self, f, a):
+        return self.from_dense(dmp_shift(self.to_dense(f), a, self.ngens-1, self.domain))
     def dup_transform(self, f, p, q):
         return self.from_dense(dup_transform(self.to_dense(f), self.to_dense(p), self.to_dense(q), self.domain))
 

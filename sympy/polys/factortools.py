@@ -55,8 +55,7 @@ from sympy.polys.densetools import (
     dup_primitive, dmp_ground_primitive,
     dmp_eval_tail,
     dmp_eval_in, dmp_diff_eval_in,
-    dmp_compose,
-    dup_shift, dup_mirror)
+    dup_shift, dmp_shift, dup_mirror)
 
 from sympy.polys.euclidtools import (
     dmp_primitive,
@@ -124,6 +123,9 @@ def dmp_trial_division(f, factors, u, K):
                 f, k = q, k + 1
             else:
                 break
+
+        if k == 0:
+            raise RuntimeError("trial division failed")
 
         result.append((factor, k))
 
@@ -1278,7 +1280,11 @@ def dup_ext_factor(f, K):
 
 
 def dmp_ext_factor(f, u, K):
-    """Factor multivariate polynomials over algebraic number fields. """
+    """Factor multivariate polynomials over algebraic number fields.
+
+    Algebraic Factoring and Rational Function Integration
+    Barry Trager 1976.
+    """
     if not u:
         return dup_ext_factor(f, K)
 
@@ -1296,12 +1302,11 @@ def dmp_ext_factor(f, u, K):
     if len(factors) == 1:
         factors = [f]
     else:
-        H = dmp_raise([K.one, s*K.unit], u, 0, K)
-
         for i, (factor, _) in enumerate(factors):
             h = dmp_convert(factor, u, K.dom, K)
             h, _, g = dmp_inner_gcd(h, g, u, K)
-            h = dmp_compose(h, H, u, K)
+            a = [s*K.unit]*(u+1)
+            h = dmp_shift(h, a, u, K)
             factors[i] = h
 
     return lc, dmp_trial_division(F, factors, u, K)
