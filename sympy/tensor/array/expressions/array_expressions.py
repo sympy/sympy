@@ -1860,7 +1860,7 @@ class _EditArrayContraction:
                 perm.append(counter)
                 counter += 1
             permutation.append(perm)
-        max_ind = max([max(i) if i else -1 for i in permutation]) if permutation else -1
+        max_ind = max(max(i) if i else -1 for i in permutation) if permutation else -1
         perm_diag = [max_ind - i for i in perm_diag]
         self._track_permutation = permutation + [perm_diag]
 
