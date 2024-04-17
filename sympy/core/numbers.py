@@ -122,7 +122,7 @@ def comp(z1, z2, tol=None):
                 ca = pure_complex(a, or_real=True)
                 if not ca:
                     if fa:
-                        a = a.n(prec_to_dps(min([i._prec for i in fa])))
+                        a = a.n(prec_to_dps(min(i._prec for i in fa)))
                         ca = pure_complex(a, or_real=True)
                         break
                     else:
@@ -130,7 +130,7 @@ def comp(z1, z2, tol=None):
                         a, b = b, a
             cb = pure_complex(b)
             if not cb and fb:
-                b = b.n(prec_to_dps(min([i._prec for i in fb])))
+                b = b.n(prec_to_dps(min(i._prec for i in fb)))
                 cb = pure_complex(b, or_real=True)
             if ca and cb and (ca[1] or cb[1]):
                 return all(comp(i, j) for i, j in zip(ca, cb))
@@ -210,7 +210,7 @@ def _decimal_to_Rational_prec(dec):
         rv = Integer(int(dec))
     else:
         s = (-1)**s
-        d = sum([di*10**i for i, di in enumerate(reversed(d))])
+        d = sum(di*10**i for i, di in enumerate(reversed(d)))
         rv = Rational(s*d, 10**-e)
     return rv, prec
 

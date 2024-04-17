@@ -1434,12 +1434,12 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
 
 def _discrete_log_is_smooth(n: int, factorbase: list):
-    """Try to factor n with respect to a a given factorbase.
+    """Try to factor n with respect to a given factorbase.
     Upon success a list of exponents with repect to the factorbase is returned.
     Otherwise None."""
     factors = [0]*len(factorbase)
     for i, p in enumerate(factorbase):
-        while ( n != 1 and n % p == 0 ): # divide by p as many times as possible
+        while n % p == 0: # divide by p as many times as possible
             factors[i] +=1
             n = n // p
     if n != 1:
@@ -1519,16 +1519,14 @@ def _discrete_log_index_calculus(n, a, b, order):
         for j in range(index,lf+1):
             relation[j] = rinv * relation[j] % order
         relations[index] =  relation
-        index = lf # determine the index of the first nonzero entry
         for i in range(lf): # subtract the new relation from the one for a
             if relationa[i] > 0 and relations[i] is not None:
                 rbi = relationa[i]
                 for j in range(lf+1):
                     relationa[j] = (relationa[j] - rbi*relations[i][j]) % order
-            if relationa[i] > 0 and index == lf: # is this the index of the first nonzero entry?
-                index = i
+            if relationa[i] > 0: # the index of the first nonzero entry
                 break # we do not need to reduce further at this point
-        if index == lf: # all unkonws are gone
+        else: # all unkowns are gone
             #print(f"Success after {k} relations out of {lf}")
             return relationa[lf] * (order - 1) % order
 
@@ -1656,9 +1654,9 @@ def discrete_log(n, a, b, order=None, prime_order=None):
             return _discrete_log_index_calculus(n, a, b, order)
         elif order < 1000000000000:
             return _discrete_log_shanks_steps(n, a, b, order)
-        return _discrete_log_pollard_rho(n, a, b, order, order_factors)
+        return _discrete_log_pollard_rho(n, a, b, order)
 
-    return _discrete_log_pohlig_hellman(n, a, b, order)
+    return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
 
 
 

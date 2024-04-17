@@ -1638,7 +1638,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif i < 0:
             return 0
         else:
-            return max([ monom[i] for monom in f.itermonoms() ])
+            return max(monom[i] for monom in f.itermonoms())
 
     def degrees(f):
         """
@@ -1666,7 +1666,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif i < 0:
             return 0
         else:
-            return min([ monom[i] for monom in f.itermonoms() ])
+            return min(monom[i] for monom in f.itermonoms())
 
     def tail_degrees(f):
         """
@@ -2474,7 +2474,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             for i, (monom, coeff) in enumerate(f.terms()):
                 if all(monom[i] >= monom[i + 1] for i in indices):
-                    height = max([n*m for n, m in zip(weights, monom)])
+                    height = max(n*m for n, m in zip(weights, monom))
 
                     if height > _height:
                         _height, _monom, _coeff = height, monom, coeff
