@@ -12,12 +12,12 @@ from sympy.polys.densebasic import (
     dup_LC, dmp_ground_LC,
     dmp_zero_p,
     dmp_ground,
-    dup_degree, dmp_degree,
+    dup_degree, dmp_degree, dmp_degree_in,
     dmp_raise, dmp_inject,
     dup_convert)
 from sympy.polys.densetools import (
     dup_diff, dmp_diff, dmp_diff_in,
-    dup_shift, dmp_compose,
+    dup_shift, dmp_shift,
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_ground_primitive)
 from sympy.polys.euclidtools import (
@@ -70,8 +70,20 @@ def dmp_sqf_p(f, u, K):
     """
     if dmp_zero_p(f, u):
         return True
-    else:
-        return not dmp_degree(dmp_gcd(f, dmp_diff(f, 1, u, K), u, K), u)
+
+    for i in range(u+1):
+
+        fp = dmp_diff_in(f, 1, i, u, K)
+
+        if dmp_zero_p(fp, u):
+            continue
+
+        gcd = dmp_gcd(f, fp, u, K)
+
+        if dmp_degree_in(gcd, i, u) != 0:
+            return False
+
+    return True
 
 
 def dup_sqf_norm(f, K):
@@ -152,7 +164,7 @@ def dmp_sqf_norm(f, u, K):
         raise DomainError("ground domain must be algebraic")
 
     g = dmp_raise(K.mod.to_list(), u + 1, 0, K.dom)
-    F = dmp_raise([K.one, -K.unit], u, 0, K)
+    a = [-K.unit] * (u + 1)
 
     s = 0
 
@@ -163,7 +175,7 @@ def dmp_sqf_norm(f, u, K):
         if dmp_sqf_p(r, u, K.dom):
             break
         else:
-            f, s = dmp_compose(f, F, u, K), s + 1
+            f, s = dmp_shift(f, a, u, K), s + 1
 
     return s, f, r
 
@@ -381,6 +393,8 @@ def dmp_sqf_list(f, u, K, all=False):
     >>> R.dmp_sqf_list(f, all=True)
     (1, [(1, 1), (x + y, 2), (x, 3)])
 
+    Yun, David Y.Y. (1976). "On square-free decomposition algorithms".
+    doi:10.1145/800205.806320. ISBN 978-1-4503-7790-4.
     """
     if not u:
         return dup_sqf_list(f, K, all=all)

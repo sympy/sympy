@@ -6554,11 +6554,11 @@ def factor(f, *gens, deep=False, **args):
 
     try:
         return _generic_factor(f, gens, args, method='factor')
-    except PolynomialError as msg:
+    except PolynomialError:
         if not f.is_commutative:
             return factor_nc(f)
         else:
-            raise PolynomialError(msg)
+            raise
 
 
 @public
