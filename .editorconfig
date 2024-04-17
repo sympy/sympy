@@ -29,3 +29,4 @@ indent_size = 2
 # Tab indentation (no size specified)
 [Makefile]
 indent_type = tab
+indent_size = 8
