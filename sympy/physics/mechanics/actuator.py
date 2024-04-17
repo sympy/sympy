@@ -940,6 +940,22 @@ class DuffingSpring(ForceActuator):
     def pathway(self):
         return self._pathway
 
+    @pathway.setter
+    def pathway(self, pathway):
+        if hasattr(self, '_pathway'):
+            msg = (
+                f'Can\'t set attribute `pathway` to {repr(pathway)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        if not isinstance(pathway, PathwayBase):
+            msg = (
+                f'Value {repr(pathway)} passed to `pathway` was of type '
+                f'{type(pathway)}, must be {PathwayBase}.'
+            )
+            raise TypeError(msg)
+        self._pathway = pathway
+
     @property
     def equilibrium_length(self):
         return self._equilibrium_length
@@ -959,6 +975,16 @@ class DuffingSpring(ForceActuator):
         """The force produced by the Duffing spring."""
         displacement = self.pathway.length - self.equilibrium_length
         return -self.linear_stiffness * displacement - self.nonlinear_stiffness * displacement**3
+
+    @force.setter
+    def force(self, force):
+        if hasattr(self, '_force'):
+            msg = (
+                f'Can\'t set attribute `force` to {repr(force)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        self._force = sympify(force, strict=True)
 
     def __repr__(self):
         return (f"{self.__class__.__name__}("
