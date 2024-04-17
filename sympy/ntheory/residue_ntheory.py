@@ -1476,14 +1476,8 @@ def _discrete_log_index_calculus(n, a, b, order):
     a %= n
     b %= n
     # assert isprime(order), "The order of the base must be prime."
-    # First determine the bound B for the factorbase: Choosing B=n^(1/u) Canfield-Erdoes-Pomerance gives us
-    # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). See https://math.mit.edu/classes/18.783/2021/LectureNotes10.pdf
-    # There is no explicit expression for the optimum, which seems to work better than the asymptotic value, hence we use Newton
-    u = 2*sqrt(log(n)/log(log(n))) # asymptotic value
-    for _ in range(3):
-        u = (2*log(n)+u*u*(2+log(u)))/(2+3*u+2*u*log(u)) # Newton iteration
-    B = int(exp(log(n)/u))
-    #B = int(exp(0.7*sqrt(log(n)*log(log(n))))) # simple bound for the factorbase
+    # First choose a heuristic the bound B for the factorbase,
+    B = int(exp(0.5 * sqrt( log(p) * log(log(p)) )*( 1 + 1/log(log(p)) )))
     factorbase = list(primerange(B)) # compute the factorbase
     lf = len(factorbase) # length of the factorbase
     ordermo = order-1
