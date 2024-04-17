@@ -1447,7 +1447,7 @@ def _discrete_log_is_smooth(n: int, factorbase: list):
     return factors
 
 
-def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
+def _discrete_log_index_calculus(n, a, b, order):
     """
     Index Calculus algorithm for computing the discrete logarithm of ``a`` to
     the base ``b`` modulo ``n``.
@@ -1475,11 +1475,10 @@ def _discrete_log_index_calculus(n, a, b, order, prime_order=None):
     from math import sqrt, exp, log
     a %= n
     b %= n
-    if prime_order is None:
-        assert isprime(order), "The order of the base must be prime."
-    # first determine the bound B for the factorbase: Choosing B=n^(1/u) Canfield-Erdoes-Pomerance gives us
+    # assert isprime(order), "The order of the base must be prime."
+    # First determine the bound B for the factorbase: Choosing B=n^(1/u) Canfield-Erdoes-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). See https://math.mit.edu/classes/18.783/2021/LectureNotes10.pdf
-    #There is no explicit expression for the optimum, which seems to work better than the asymptotic value, hence we use Newton
+    # There is no explicit expression for the optimum, which seems to work better than the asymptotic value, hence we use Newton
     u = 2*sqrt(log(n)/log(log(n))) # asymptotic value
     for _ in range(3):
         u = (2*log(n)+u*u*(2+log(u)))/(2+3*u+2*u*log(u)) # Newton iteration
@@ -1654,7 +1653,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         return _discrete_log_trial_mul(n, a, b, order)
     elif prime_order:
         if 3*sqrt(log(n)*log(log(n))) < log(order):
-            return _discrete_log_index_calculus(n, a, b, order, True)
+            return _discrete_log_index_calculus(n, a, b, order)
         elif order < 1000000000000:
             return _discrete_log_shanks_steps(n, a, b, order)
         return _discrete_log_pollard_rho(n, a, b, order, order_factors)
