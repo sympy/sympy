@@ -1477,7 +1477,7 @@ def _discrete_log_index_calculus(n, a, b, order):
     b %= n
     # assert isprime(order), "The order of the base must be prime."
     # First choose a heuristic the bound B for the factorbase,
-    B = int(exp(0.5 * sqrt( log(p) * log(log(p)) )*( 1 + 1/log(log(p)) )))
+    B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
     factorbase = list(primerange(B)) # compute the factorbase
     lf = len(factorbase) # length of the factorbase
     ordermo = order-1
