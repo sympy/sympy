@@ -9,7 +9,7 @@ from sympy.ntheory.primetest import (mr, _lucas_extrastrong_params, is_lucas_prp
                                      is_mersenne_prime)
 
 from sympy.testing.pytest import slow, raises
-from sympy.core.numbers import I
+from sympy.core.numbers import I, Float
 
 
 def test_is_fermat_pseudoprime():
@@ -209,7 +209,8 @@ def test_isprime():
     sieve.extend(3000)
     assert isprime(2819)
     assert not isprime(2931)
-    assert not isprime(2.0)
+    raises(ValueError, lambda: isprime(2.0))
+    raises(ValueError, lambda: isprime(Float(2)))
 
 
 def test_is_square():
