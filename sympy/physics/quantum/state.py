@@ -914,10 +914,10 @@ class Wavefunction(Function):
         """
         This function recursively traverses the given expression, replacing any instances of Wavefunction with their
         internal expressions.
-        
+
         Parameters
         ==========
-    
+
         input_expression : sympy.Expr
                The expression that needs to be simplified.
 
@@ -926,18 +926,18 @@ class Wavefunction(Function):
     
         import sympy as sp
         from sympy.physics.quantum.state import Wavefunction
-    
+
         R = sp.Function('R')
         Z = sp.Function('Z')
         x,y = sp.symbols('x y', real=True)
-    
+
         ϕ = Wavefunction(R(x)*Z(y), x, y)
-    
+
         extract_expression_from_wavefunction(ϕ + ϕ)
-    
+
         Returns
         =======
-    
+
         sympy.Expr
                The simplified expression with Wavefunction instances replaced by their internal expressions.
         """
@@ -950,9 +950,9 @@ class Wavefunction(Function):
                     new_term = replace_wavefunctions(argument)
                     simplified_expression = simplified_expression.subs(argument, new_term)
             return simplified_expression
-    
+
         return replace_wavefunctions(input_expression)
-    
+
     @property
     def is_normalized(self):
         """
