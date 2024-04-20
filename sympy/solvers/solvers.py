@@ -174,8 +174,7 @@ def denoms(eq, *symbols):
         den = denom(p)
         if den is S.One:
             continue
-        for d in Mul.make_args(den):
-            dens.add(d)
+        dens.update(Mul.make_args(den))
     if not symbols:
         return dens
     elif len(symbols) == 1:
