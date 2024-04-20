@@ -1,4 +1,3 @@
-from .codeprinter import CodePrinter
 from .jscode import AbstractJavaFamilyPrinter, known_functions as _known_functions
 
 _known_constants = {
