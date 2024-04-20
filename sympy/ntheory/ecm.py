@@ -227,8 +227,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     deltas_list = []
     for r in range(B1 + 2*D, B2 + 2*D, 4*D):
         deltas = set()
-        for q in primerange(r - 2*D, r + 2*D):
-            deltas.add((abs(q - r) - 1) // 2)
+        deltas.update((abs(q - r) - 1) // 2 for q in primerange(r - 2*D, r + 2*D))
         # d in deltas iff r+(2d+1) and/or r-(2d+1) is prime
         deltas_list.append(list(deltas))
 

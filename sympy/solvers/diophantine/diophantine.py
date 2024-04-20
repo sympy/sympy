@@ -630,8 +630,7 @@ class BinaryQuadratic(DiophantineEquationType):
                 # In this case equation can be transformed into a Pell equation
 
                 solns_pell = set(solns_pell)
-                for X, Y in list(solns_pell):
-                    solns_pell.add((-X, -Y))
+                solns_pell.update((-X, -Y) for X, Y in list(solns_pell))
 
                 a = diop_DN(D, 1)
                 T = a[0][0]
@@ -1480,8 +1479,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                 GeneralSumOfSquares.name,
                 GeneralSumOfEvenPowers.name,
                 Univariate.name]:
-            for sol in solution:
-                sols.add(merge_solution(var, var_t, sol))
+            sols.update(merge_solution(var, var_t, sol) for sol in solution)
 
         else:
             raise NotImplementedError('unhandled type: %s' % eq_type)
