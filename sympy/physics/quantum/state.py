@@ -912,9 +912,9 @@ class Wavefunction(Function):
     @staticmethod
     def extract_expression_from_wavefunction(input_expression):
         """
-        This function recursively traverses the given expression, replacing any instances of Wavefunction with their 
+        This function recursively traverses the given expression, replacing any instances of Wavefunction with their
         internal expressions.
-    
+        
         Parameters
         ==========
     
