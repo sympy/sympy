@@ -59,9 +59,9 @@ class AbstractJavaFamilyPrinter(CodePrinter):
         else:
             return 'Math.pow(%s, %s)' % (self._print(expr.base),
                                  self._print(expr.exp))
-    
 
-class JavascriptCodePrinter(CodePrinter):
+
+class JavascriptCodePrinter(AbstractJavaFamilyPrinter):
     """"A Printer to convert Python expressions to strings of JavaScript code
     """
     printmethod = '_javascript'

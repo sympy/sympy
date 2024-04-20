@@ -6,7 +6,7 @@ _known_constants = {
 }
 
 class JavaPrinter(AbstractJavaFamilyPrinter):
-    
+
     printmethod = '_java'
     language = 'Java'
 
@@ -17,8 +17,7 @@ class JavaPrinter(AbstractJavaFamilyPrinter):
             'user_functions', {}))
         self.known_constants = dict(_known_constants, **(settings or {}).get(
             'user_constants', {}))
-        
-    
+
     def _print_isnan(self, e):
         arg, = e.args
         return f"Double.isNaN({self._print(arg)})"
@@ -33,3 +32,7 @@ class JavaPrinter(AbstractJavaFamilyPrinter):
     
     def _print_Print(self, e):
         return "System.out." + super()._print_Print(e)
+
+
+def javacode(expr, assign_to=None, **settings):
+    return JavaPrinter(settings).doprint(expr, assign_to)
