@@ -21,15 +21,15 @@ class JavaPrinter(AbstractJavaFamilyPrinter):
     def _print_isnan(self, e):
         arg, = e.args
         return f"Double.isNaN({self._print(arg)})"
-    
+
     def _print_Raise(self, e):
         arg, = e.args
         return f"throw new {self._print(arg)}"
-    
+
     def _print_RuntimeError_(self, e):
         arg, = e.args
         return f"Exception({self._print(arg)})"
-    
+
     def _print_Print(self, e):
         return "System.out." + super()._print_Print(e)
 
