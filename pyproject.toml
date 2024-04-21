@@ -42,6 +42,7 @@ lint.select = [
     "PIE810",
     "PLE",
     "SIM101",
+    "TRY002",
 ]
 
 # Ignore rules that currently fail on the SymPy codebase
