@@ -639,8 +639,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     for poly in ordered(polys):
         coeff, factors = factor_list(poly, *V)
         reducibles.add(coeff)
-        for fact, mul in factors:
-            reducibles.add(fact)
+        reducibles.update(fact for fact, mul in factors)
 
     def _integrate(field=None):
         atans = set()
