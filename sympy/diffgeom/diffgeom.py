@@ -1122,10 +1122,7 @@ class BaseVectorField(Expr):
 def _find_coords(expr):
     # Finds CoordinateSystems existing in expr
     fields = expr.atoms(BaseScalarField, BaseVectorField)
-    result = set()
-    for f in fields:
-        result.add(f._coord_sys)
-    return result
+    return {f._coord_sys for f in fields}
 
 
 class Commutator(Expr):

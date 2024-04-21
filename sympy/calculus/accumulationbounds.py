@@ -350,8 +350,7 @@ class AccumulationBounds(Expr):
                 v = set()
                 for a in self.args:
                     vi = other*a
-                    for i in vi.args or (vi,):
-                        v.add(i)
+                    v.update(vi.args or (vi,))
                 return AccumBounds(Min(*v), Max(*v))
             if other is S.Infinity:
                 if self.min.is_zero:
