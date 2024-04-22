@@ -1498,7 +1498,7 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
         bx = bx * b % n
         x += 1
     else:
-        raise Exception("Index Calculus failed")
+        raise ValueError("Index Calculus failed")
 
     relations = [None] * lf
     k=1  # number of relations found
@@ -1542,8 +1542,8 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
             if pow(b,x,n) == a:
                 return x
             else:
-                raise Exception("Index Calculus failed")
-    raise Exception("Index Calculus failed")
+                raise ValueError("Index Calculus failed")
+    raise ValueError("Index Calculus failed")
 
 def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     """
