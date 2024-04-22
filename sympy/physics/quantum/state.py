@@ -909,49 +909,49 @@ class Wavefunction(Function):
         """
         return self._args[0]
 
-@staticmethod
-def extract_expression_from_wavefunction(input_expression):
-    """
-    This function recursively traverses the given expression, replacing any instances of Wavefunction with their
-    internal expressions.
+    @staticmethod
+    def extract_expression_from_wavefunction(input_expression):
+        """
+        This function recursively traverses the given expression, replacing any instances of Wavefunction with their
+        internal expressions.
 
-    Parameters
-    ==========
+        Parameters
+        ==========
 
-    input_expression : sympy.Expr
-           The expression that needs to be simplified.
+        input_expression : sympy.Expr
+            The expression that needs to be simplified.
 
-    Example
-    =======
+        Example
+        =======
 
-    import sympy as sp
-    from sympy.physics.quantum.state import Wavefunction
+        import sympy as sp
+        from sympy.physics.quantum.state import Wavefunction
 
-    R = sp.Function('R')
-    Z = sp.Function('Z')
-    x,y = sp.symbols('x y', real=True)
+        R = sp.Function('R')
+        Z = sp.Function('Z')
+        x,y = sp.symbols('x y', real=True)
 
-    ϕ = Wavefunction(R(x)*Z(y), x, y)
+        ϕ = Wavefunction(R(x)*Z(y), x, y)
 
-    extract_expression_from_wavefunction(ϕ + ϕ)
+        extract_expression_from_wavefunction(ϕ + ϕ)
 
-    Returns
-    =======
+        Returns
+        =======
 
-    sympy.Expr
-           The simplified expression with Wavefunction instances replaced by their internal expressions.
-    """
-    def replace_wavefunctions(expression):
-        simplified_expression = expression
-        for argument in expression.args:
-            if argument.func == Wavefunction:
-                simplified_expression = simplified_expression.subs(argument, argument.expr)
-            else:
-                new_term = replace_wavefunctions(argument)
-                simplified_expression = simplified_expression.subs(argument, new_term)
-        return simplified_expression
+        sympy.Expr
+            The simplified expression with Wavefunction instances replaced by their internal expressions.
+        """
+        def replace_wavefunctions(expression):
+            simplified_expression = expression
+            for argument in expression.args:
+                if argument.func == Wavefunction:
+                    simplified_expression = simplified_expression.subs(argument, argument.expr)
+                else:
+                    new_term = replace_wavefunctions(argument)
+                    simplified_expression = simplified_expression.subs(argument, new_term)
+            return simplified_expression
 
-    return replace_wavefunctions(input_expression)
+        return replace_wavefunctions(input_expression)
 
     @property
     def is_normalized(self):
