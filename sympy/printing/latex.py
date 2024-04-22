@@ -166,10 +166,10 @@ class LatexPrinter(Printer):
         "parenthesize_super": True,
         "min": None,
         "max": None,
-        "diff_operator": "d",
         "mat_compact": True,
         "mat_visible_rows": 15,
         "mat_visible_cols": 15,
+        "diff_operator": "d",
     }
 
     def __init__(self, settings=None):
