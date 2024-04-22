@@ -260,6 +260,7 @@ def test_residue():
     assert _discrete_log_index_calculus(633383, 21794, 2, 316691) == 68048
     assert _discrete_log_index_calculus(941762639, 68822582, 2, 470881319) == 338029275
     assert _discrete_log_index_calculus(999231337607, 888188918786, 2, 499615668803) == 142811376514
+    assert _discrete_log_index_calculus(47747730623, 19410045286, 43425105668, 645239603) == 590504662
     assert _discrete_log_pohlig_hellman(98376431, 11**9, 11) == 9
     assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
     assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98

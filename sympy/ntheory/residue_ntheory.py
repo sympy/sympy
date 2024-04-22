@@ -1447,12 +1447,12 @@ def _discrete_log_is_smooth(n: int, factorbase: list):
     return factors
 
 
-def _discrete_log_index_calculus(n, a, b, order):
+def _discrete_log_index_calculus(n, a, b, order, rseed=None):
     """
     Index Calculus algorithm for computing the discrete logarithm of ``a`` to
     the base ``b`` modulo ``n``.
 
-    The group order must be given and prime.
+    The group order must be given and prime. It is not suitable for small orders.
 
     Examples
     ========
@@ -1472,57 +1472,78 @@ def _discrete_log_index_calculus(n, a, b, order):
     .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
         Vanstone, S. A. (1997).
     """
+    randint = _randint(rseed)
     from math import sqrt, exp, log
     a %= n
     b %= n
     # assert isprime(order), "The order of the base must be prime."
     # First choose a heuristic the bound B for the factorbase,
     B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
+    max = 5 * B * B  # expected number of trys to find a relation
     factorbase = list(primerange(B)) # compute the factorbase
     lf = len(factorbase) # length of the factorbase
     ordermo = order-1
-    #k=1 # number of relations found
-
-    while True: # first find a relation involving a
-        x = randint(0,ordermo)
-        relationa = _discrete_log_is_smooth(a * pow(b,x,n) % n, factorbase)
+    x = 0
+    bx = 1
+    while x < order:  # first find a relation involving a
+        tmp = a * bx % n
+        if tmp == 1:
+            return x * (order - 1) % order
+        relationa = _discrete_log_is_smooth(tmp, factorbase)
         if relationa:
+            for i in range(lf):
+                relationa[i] %= order
             relationa += [ x ]
             break
+        bx = bx * b % n
+        x += 1
+    else:
+        raise Exception("Index Calculus failed")
 
     relations = [None] * lf
-    while True: # find relations for all primes in our factor base
-        x = randint(0,ordermo)
+    k=1  # number of relations found
+    kk = 0
+    while k < 3 * lf and kk < max:  # find relations for all primes in our factor base
+        x = randint(1,ordermo)
         relation = _discrete_log_is_smooth(pow(b,x,n), factorbase)
         if relation is None:
+            kk += 1
             continue
-        #k += 1
+        k += 1
+        kk = 0
         relation += [ x ]
-        index=lf # determine the index of the first nonzero entry
+        index = lf  # determine the index of the first nonzero entry
         for i in range(lf):
-            ri = relation[i]
-            if ri> 0 and relations[i] is not None: # make this entry zero if we can
+            ri = relation[i] % order
+            if ri> 0 and relations[i] is not None:  # make this entry zero if we can
                 for j in range(lf+1):
                     relation[j] = (relation[j] - ri*relations[i][j]) % order
-            if relation[i] > 0 and index == lf: # is this the index of the first nonzero entry?
+            else:
+                relation[i] = ri
+            if relation[i] > 0 and index == lf:  # is this the index of the first nonzero entry?
                 index= i
-        if index == lf or relations[index] is not None: # the relation contains no new information
+        if index == lf or relations[index] is not None:  # the relation contains no new information
             continue
         # the relation contains new information
-        rinv = pow(relation[index],-1,order) # normalize the first nonzero entry
+        rinv = pow(relation[index],-1,order)  # normalize the first nonzero entry
         for j in range(index,lf+1):
             relation[j] = rinv * relation[j] % order
-        relations[index] =  relation
-        for i in range(lf): # subtract the new relation from the one for a
+        relations[index] = relation
+        for i in range(lf):  # subtract the new relation from the one for a
             if relationa[i] > 0 and relations[i] is not None:
                 rbi = relationa[i]
                 for j in range(lf+1):
                     relationa[j] = (relationa[j] - rbi*relations[i][j]) % order
-            if relationa[i] > 0: # the index of the first nonzero entry
-                break # we do not need to reduce further at this point
-        else: # all unkowns are gone
+            if relationa[i] > 0:  # the index of the first nonzero entry
+                break  # we do not need to reduce further at this point
+        else:  # all unkowns are gone
             #print(f"Success after {k} relations out of {lf}")
-            return relationa[lf] * (order - 1) % order
+            x = relationa[lf] * (order - 1) % order
+            if pow(b,x,n) == a:
+                return x
+            else:
+                raise Exception("Index Calculus failed")
+    raise Exception("Index Calculus failed")
 
 def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     """
