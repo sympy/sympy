@@ -132,15 +132,15 @@ class Plane(GeometryEntity):
             a = Matrix(self.normal_vector)
             b = Matrix(o.direction_ratio)
             c = a.dot(b)
-            d = sqrt(sum([i**2 for i in self.normal_vector]))
-            e = sqrt(sum([i**2 for i in o.direction_ratio]))
+            d = sqrt(sum(i**2 for i in self.normal_vector))
+            e = sqrt(sum(i**2 for i in o.direction_ratio))
             return asin(c/(d*e))
         if isinstance(o, Plane):
             a = Matrix(self.normal_vector)
             b = Matrix(o.normal_vector)
             c = a.dot(b)
-            d = sqrt(sum([i**2 for i in self.normal_vector]))
-            e = sqrt(sum([i**2 for i in o.normal_vector]))
+            d = sqrt(sum(i**2 for i in self.normal_vector))
+            e = sqrt(sum(i**2 for i in o.normal_vector))
             return acos(c/(d*e))
 
 
@@ -490,7 +490,7 @@ class Plane(GeometryEntity):
         if isinstance(l, LinearEntity3D):
             a = l.direction_ratio
             b = self.normal_vector
-            c = sum([i*j for i, j in zip(a, b)])
+            c = sum(i*j for i, j in zip(a, b))
             if c == 0:
                 return True
             else:

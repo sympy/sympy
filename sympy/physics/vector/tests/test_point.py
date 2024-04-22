@@ -76,8 +76,8 @@ def test_point_funcs():
     B = ReferenceFrame('B')
     B.set_ang_vel(N, 5 * B.y)
     O = Point('O')
-    P = O.locatenew('P', q * B.x)
-    assert P.pos_from(O) == q * B.x
+    P = O.locatenew('P', q * B.x + q2 * B.y)
+    assert P.pos_from(O) == q * B.x + q2 * B.y
     P.set_vel(B, qd * B.x + q2d * B.y)
     assert P.vel(B) == qd * B.x + q2d * B.y
     O.set_vel(N, 0)
@@ -94,7 +94,7 @@ def test_point_funcs():
 
     B.set_ang_vel(N, 5 * B.y)
     O = Point('O')
-    P = O.locatenew('P', q * B.x)
+    P = O.locatenew('P', q * B.x + q2 * B.y)
     P.set_vel(B, qd * B.x + q2d * B.y)
     O.set_vel(N, 0)
     assert P.v1pt_theory(O, N, B) == qd * B.x + q2d * B.y - 5 * q * B.z

@@ -177,7 +177,6 @@ class Mul(Expr, AssocOp):
             return False  # e.g. zoo*x == -zoo*x
         c = self.args[0]
         return c.is_Number and c.is_extended_negative
-
     def __neg__(self):
         c, args = self.as_coeff_mul()
         if args[0] is not S.ComplexInfinity:
@@ -920,7 +919,8 @@ class Mul(Expr, AssocOp):
         # Handle things like 1/(x*(x + 1)), which are automatically converted
         # to 1/x*1/(x + 1)
         expr = self
-        n, d = fraction(expr)
+        # default matches fraction's default
+        n, d = fraction(expr, hints.get('exact', False))
         if d.is_Mul:
             n, d = [i._eval_expand_mul(**hints) if i.is_Mul else i
                 for i in (n, d)]

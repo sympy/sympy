@@ -21,11 +21,20 @@ from .determinant import _find_reasonable_pivot
 from .utilities import _iszero, _simplify
 
 
+__doctest_requires__ = {
+    ('_is_indefinite',
+     '_is_negative_definite',
+     '_is_negative_semidefinite',
+     '_is_positive_definite',
+     '_is_positive_semidefinite'): ['matplotlib'],
+}
+
+
 def _eigenvals_eigenvects_mpmath(M):
     norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
 
     v1 = None
-    prec = max([x._prec for x in M.atoms(Float)])
+    prec = max(x._prec for x in M.atoms(Float))
     eps = 2**-prec
 
     while prec < DEFAULT_MAXPREC:

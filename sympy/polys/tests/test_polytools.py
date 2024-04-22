@@ -1007,6 +1007,10 @@ def test_Poly_slice():
     assert f.slice(x, 0, 3) == Poly(2*x**2 + 3*x + 4, x)
     assert f.slice(x, 0, 4) == Poly(x**3 + 2*x**2 + 3*x + 4, x)
 
+    g = Poly(x**3 + 1)
+
+    assert g.slice(0, 3) == Poly(1, x)
+
 
 def test_Poly_coeffs():
     assert Poly(0, x).coeffs() == [0]
@@ -1839,6 +1843,10 @@ def test_div():
     assert p.div(q, auto=True) == \
         (Poly(-S(1)/2 + 5*I/2, x, domain='QQ_I'), Poly(0, x, domain='QQ_I'))
 
+    f = 5*x**2 + 10*x + 3
+    g = 2*x + 2
+    assert div(f, g, domain=ZZ) == (0, f)
+
 
 def test_issue_7864():
     q, r = div(a, .408248290463863*a)
@@ -2113,6 +2121,19 @@ def test_gcd():
         assert lcm(0, i) == 0
         assert lcm(i, f) == 0
         assert lcm(f, i) == 0
+
+    f = 4*x**2 + x + 2
+    pfz = Poly(f, domain=ZZ)
+    pfq = Poly(f, domain=QQ)
+
+    assert pfz.gcd(pfz) == pfz
+    assert pfz.lcm(pfz) == pfz
+    assert pfq.gcd(pfq) == pfq.monic()
+    assert pfq.lcm(pfq) == pfq.monic()
+    assert gcd(f, f) == f
+    assert lcm(f, f) == f
+    assert gcd(f, f, domain=QQ) == monic(f)
+    assert lcm(f, f, domain=QQ) == monic(f)
 
 
 def test_gcd_numbers_vs_polys():
@@ -2450,6 +2471,23 @@ def test_sqf():
 
     assert sqf(f) == (x + 1)**40000000000
     assert sqf_list(f) == (1, [(x + 1, 40000000000)])
+
+    # https://github.com/sympy/sympy/issues/26497
+    assert sqf(expand(((y - 2)**2 * (y + 2) * (x + 1)))) == \
+        (y - 2)**2 * expand((y + 2) * (x + 1))
+    assert sqf(expand(((y - 2)**2 * (y + 2) * (z + 1)))) == \
+        (y - 2)**2 * expand((y + 2) * (z + 1))
+    assert sqf(expand(((y - I)**2 * (y + I) * (x + 1)))) == \
+        (y - I)**2 * expand((y + I) * (x + 1))
+    assert sqf(expand(((y - I)**2 * (y + I) * (z + 1)))) == \
+        (y - I)**2 * expand((y + I) * (z + 1))
+
+    # Check that factors are combined and sorted.
+    p = (x - 2)**2*(x - 1)*(x + y)**2*(y - 2)**2*(y - 1)
+    assert Poly(p).sqf_list() == (1, [
+        (Poly(x*y - x - y + 1), 1),
+        (Poly(x**2*y - 2*x**2 + x*y**2 - 4*x*y + 4*x - 2*y**2 + 4*y), 2)
+    ])
 
 
 def test_factor():
@@ -3154,6 +3192,22 @@ def test_cancel():
     assert f.cancel(g, include=True) == (
         Poly(7*x + 21, x, domain=QQ),
         Poly(3*x + 21, x, domain=QQ))
+
+    pairs = [
+        (1 + x, 1 + x, 1, 1, 1),
+        (1 + x, 1 - x, -1, -1-x, -1+x),
+        (1 - x, 1 + x, -1, 1-x, 1+x),
+        (1 - x, 1 - x, 1, 1, 1),
+    ]
+    for f, g, coeff, p, q in pairs:
+        assert cancel((f, g)) == (1, p, q)
+        pf = Poly(f, x)
+        pg = Poly(g, x)
+        pp = Poly(p, x)
+        pq = Poly(q, x)
+        assert pf.cancel(pg) == (coeff, coeff*pp, pq)
+        assert pf.rep.cancel(pg.rep) == (pp.rep, pq.rep)
+        assert pf.rep.cancel(pg.rep, include=True) == (pp.rep, pq.rep)
 
     f = Poly(y, y, domain='ZZ(x)')
     g = Poly(1, y, domain='ZZ[x]')

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
-                                 kronecker, bit_scan1, remove)
+from sympy.external.gmpy import (gcd, lcm, invert, sqrt, jacobi,
+                                 bit_scan1, remove)
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -372,7 +372,8 @@ def is_primitive_root(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import is_primitive_root, n_order, totient
+    >>> from sympy.functions.combinatorial.numbers import totient
+    >>> from sympy.ntheory import is_primitive_root, n_order
     >>> is_primitive_root(3, 10)
     True
     >>> is_primitive_root(9, 10)
@@ -1072,9 +1073,19 @@ def quadratic_residues(p) -> list[int]:
     return sorted(r)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.legendre_symbol` has been moved to `sympy.functions.combinatorial.numbers.legendre_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def legendre_symbol(a, p):
     r"""
     Returns the Legendre symbol `(a / p)`.
+
+    .. deprecated:: 1.13
+
+        The ``legendre_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.legendre_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
     defined as
@@ -1095,7 +1106,7 @@ def legendre_symbol(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import legendre_symbol
+    >>> from sympy.functions.combinatorial.numbers import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
     >>> sorted(set([i**2 % 7 for i in range(7)]))
@@ -1107,15 +1118,23 @@ def legendre_symbol(a, p):
     is_quad_residue, jacobi_symbol
 
     """
-    a, p = as_int(a), as_int(p)
-    if p == 2 or not isprime(p):
-        raise ValueError("p should be an odd prime")
-    return int(legendre(a, p))
+    from sympy.functions.combinatorial.numbers import legendre_symbol as _legendre_symbol
+    return _legendre_symbol(a, p)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.jacobi_symbol` has been moved to `sympy.functions.combinatorial.numbers.jacobi_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def jacobi_symbol(m, n):
     r"""
     Returns the Jacobi symbol `(m / n)`.
+
+    .. deprecated:: 1.13
+
+        The ``jacobi_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.jacobi_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
     is defined as the product of the Legendre symbols corresponding to the
@@ -1149,7 +1168,7 @@ def jacobi_symbol(m, n):
     Examples
     ========
 
-    >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
+    >>> from sympy.functions.combinatorial.numbers import jacobi_symbol, legendre_symbol
     >>> from sympy import S
     >>> jacobi_symbol(45, 77)
     -1
@@ -1170,41 +1189,9 @@ def jacobi_symbol(m, n):
 
     is_quad_residue, legendre_symbol
     """
-    m, n = as_int(m), as_int(n)
-    return int(jacobi(m, n))
+    from sympy.functions.combinatorial.numbers import jacobi_symbol as _jacobi_symbol
+    return _jacobi_symbol(m, n)
 
-
-def kronecker_symbol(a, n):
-    r"""
-    Returns the Kronecker symbol `(a / n)`.
-
-    Parameters
-    ==========
-
-    a : integer
-    n : integer
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.residue_ntheory import kronecker_symbol
-    >>> kronecker_symbol(45, 77)
-    -1
-    >>> kronecker_symbol(13, -120)
-    1
-
-    See Also
-    ========
-
-    jacobi_symbol, legendre_symbol
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
-
-    """
-    return int(kronecker(as_int(a), as_int(n)))
 
 @deprecated("""\
 The `sympy.ntheory.residue_ntheory.mobius` has been moved to `sympy.functions.combinatorial.numbers.mobius`.""",
@@ -1239,7 +1226,7 @@ def mobius(n):
     Examples
     ========
 
-    >>> from sympy.ntheory import mobius
+    >>> from sympy.functions.combinatorial.numbers import mobius
     >>> mobius(13*7)
     1
     >>> mobius(1)
@@ -1445,7 +1432,7 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
     raise ValueError("Pollard's Rho failed to find logarithm")
 
 
-def _discrete_log_pohlig_hellman(n, a, b, order=None):
+def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     """
     Pohlig-Hellman algorithm for computing the discrete logarithm of ``a`` to
     the base ``b`` modulo ``n``.
@@ -1478,18 +1465,18 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None):
 
     if order is None:
         order = n_order(b, n)
+    if order_factors is None:
+        order_factors = factorint(order)
+    l = [0] * len(order_factors)
 
-    f = factorint(order)
-    l = [0] * len(f)
-
-    for i, (pi, ri) in enumerate(f.items()):
+    for i, (pi, ri) in enumerate(order_factors.items()):
         for j in range(ri):
             aj = pow(a * pow(b, -l[i], n), order // pi**(j + 1), n)
             bj = pow(b, order // pi, n)
             cj = discrete_log(n, aj, bj, pi, True)
             l[i] += cj * pi**j
 
-    d, _ = crt([pi**ri for pi, ri in f.items()], l)
+    d, _ = crt([pi**ri for pi, ri in order_factors.items()], l)
     return d
 
 
@@ -1526,7 +1513,36 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     """
     n, a, b = as_int(n), as_int(a), as_int(b)
     if order is None:
-        order = n_order(b, n)
+        # Compute the order and its factoring in one pass
+        # order = totient(n), factors = factorint(order)
+        factors = {}
+        for px, kx in factorint(n).items():
+            if kx > 1:
+                if px in factors:
+                    factors[px] += kx - 1
+                else:
+                    factors[px] = kx - 1
+            for py, ky in factorint(px - 1).items():
+                if py in factors:
+                    factors[py] += ky
+                else:
+                    factors[py] = ky
+        order = 1
+        for px, kx in factors.items():
+            order *= px**kx
+        # Now the `order` is the order of the group and factors = factorint(order)
+        # The order of `b` divides the order of the group.
+        order_factors = {}
+        for p, e in factors.items():
+            i = 0
+            for _ in range(e):
+                if pow(b, order // p, n) == 1:
+                   order //= p
+                   i += 1
+                else:
+                    break
+            if i < e:
+                order_factors[p] = e - i
 
     if prime_order is None:
         prime_order = isprime(order)
@@ -1536,7 +1552,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     elif prime_order:
         if order < 1000000000000:
             return _discrete_log_shanks_steps(n, a, b, order)
-        return _discrete_log_pollard_rho(n, a, b, order)
+        return _discrete_log_pollard_rho(n, a, b, order, order_factors)
 
     return _discrete_log_pohlig_hellman(n, a, b, order)
 
