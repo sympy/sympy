@@ -3070,9 +3070,6 @@ def latex(expr, **settings):
     max: Integer or None, optional
         Sets the upper bound for the exponent to print floating point numbers in
         fixed-point format.
-    diff_operator: string, optional
-        String to use for differential operator. Default is ``'d'``, to print in italic
-        form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
     mat_compact: boolean, optional
         Truncate large Matrix for printing. Default is ``True``, to avoid printing
         slowdown.
@@ -3082,6 +3079,9 @@ def latex(expr, **settings):
     mat_visible_cols: int, optional
         Sets the maximum number of columns to be printed. Default is ``15``, and
         it doesn't take effect if mat_compact is ``False``.
+    diff_operator: string, optional
+        String to use for differential operator. Default is ``'d'``, to print in italic
+        form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
 
     Notes
     =====
