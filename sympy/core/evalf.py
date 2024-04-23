@@ -370,7 +370,8 @@ def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False
     """
     from sympy.functions.elementary.complexes import re, im
     # The expression is likely less than 2^30 or so
-    assumed_size = 30
+    assumed_size = 60
+    margin = 10
     result = evalf(expr, assumed_size, options)
     if result is S.ComplexInfinity:
         raise ValueError("Cannot get integer part of Complex Infinity")
@@ -378,27 +379,22 @@ def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False
 
     # We now know the size, so we can calculate how much extra precision
     # (if any) is needed to get within the nearest integer
-    if ire and iim:
-        gap = max(fastlog(ire) - ire_acc, fastlog(iim) - iim_acc)
-    elif ire:
+    if ire:
         gap = fastlog(ire) - ire_acc
     elif iim:
         gap = fastlog(iim) - iim_acc
     else:
-        # ... or maybe the expression was exactly zero
+        # The expression was exactly zero
         if return_ints:
             return 0, 0
         else:
             return None, None, None, None
 
-    margin = 10
 
-    if gap >= -margin:
-        prec = margin + assumed_size + gap
-        ire, iim, ire_acc, iim_acc = evalf(
-            expr, prec, options)
-    else:
-        prec = assumed_size
+    # Calculate the required precision based on the gap
+    prec = margin + assumed_size + gap if gap >= -margin else assumed_size
+    # Evaluate the expression with the calculated precision
+    ire, iim, ire_acc, iim_acc = evalf(expr, prec, options)
 
     # We can now easily find the nearest integer, but to find floor/ceil, we
     # must also calculate whether the difference to the nearest integer is
