@@ -1452,7 +1452,8 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
     Index Calculus algorithm for computing the discrete logarithm of ``a`` to
     the base ``b`` modulo ``n``.
 
-    The group order must be given and prime. It is not suitable for small orders.
+    The group order must be given and prime. It is not suitable for small orders
+    and the algorithm might fail to find a solution in such situations.
 
     Examples
     ========
@@ -1665,10 +1666,12 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     if order < 1000:
         return _discrete_log_trial_mul(n, a, b, order)
     elif prime_order:
-        if 3*sqrt(log(n)*log(log(n))) < log(order):
+        # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
+        # we compare the expected running times to determine the algorithmus which is expected to be faster
+        if 3*sqrt(log(n)*log(log(n))) < log(order):  # the number 3 was determined experimental
             return _discrete_log_index_calculus(n, a, b, order)
         elif order < 1000000000000:
-            return _discrete_log_shanks_steps(n, a, b, order)
+            return _discrete_log_shanks_steps(n, a, b, order)  # Shanks seems typically faster, but uses O(sqrt(order)) memory
         return _discrete_log_pollard_rho(n, a, b, order)
 
     return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
