@@ -2700,18 +2700,17 @@ class SecondLinearBessel(SingleODESolver):
     hint = "2nd_linear_bessel"
     has_integral = False
 
+    from sympy import cancel, factor, collect, Wild, simplify, expand
+
+class BesselSolver:
     def _matches(self):
         eq = self.ode_problem.eq_high_order_free
         f = self.ode_problem.func
         order = self.ode_problem.order
         x = self.ode_problem.sym
         df = f.diff(x)
-        a = Wild('a', exclude=[f, df])
-        b = Wild('b', exclude=[x, f, df])
         a4 = Wild('a4', exclude=[x, f, df])
         b4 = Wild('b4', exclude=[x, f, df])
-        c4 = Wild('c4', exclude=[x, f, df])
-        d4 = Wild('d4', exclude=[x, f, df])
         a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
         b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
         c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
@@ -2744,6 +2743,7 @@ class SecondLinearBessel(SingleODESolver):
                 return True
 
         return False
+
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         f = self.ode_problem.func.func
