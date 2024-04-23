@@ -732,3 +732,17 @@ def test_issue_20733():
     assert srepr(expr.evalf(2, subs={x: 1})) == "Float('4.0271e+2561', precision=10)"
     assert srepr(expr.evalf(10, subs={x: 1})) == "Float('4.02790050126e+2561', precision=37)"
     assert srepr(expr.evalf(53, subs={x: 1})) == "Float('4.0279005012722099453824067459760158730668154575647110393e+2561', precision=179)"
+
+
+def test_issue_26368():
+    assert floor(log(2**30-1,2)+1) == 30
+    assert floor(log(2**31-1,2)+1) == 31
+    assert floor(log(2**32-1,2)+1) == 32
+    assert floor(log(2**40-1,2)+1) == 40
+    assert floor(log(2**50-1,2)+1) == 50
+
+    assert 2**31 == 2**floor(log(2**31-1,2)+1)
+
+    assert (1 / floor(log(2**40-1,2)+1)) == 0.025
+    assert floor(1/2**40) == 0
+    assert floor (1/2**40) != (1/2**40)
