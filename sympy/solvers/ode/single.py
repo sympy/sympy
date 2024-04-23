@@ -2709,39 +2709,77 @@ class BesselSolver:
         order = self.ode_problem.order
         x = self.ode_problem.sym
         df = f.diff(x)
-        a4 = Wild('a4', exclude=[x, f, df])
-        b4 = Wild('b4', exclude=[x, f, df])
+        a = Wild('a', exclude=[f,df])
+        b = Wild('b', exclude=[x, f,df])
+        a4 = Wild('a4', exclude=[x,f,df])
+        b4 = Wild('b4', exclude=[x,f,df])
+        c4 = Wild('c4', exclude=[x,f,df])
+        d4 = Wild('d4', exclude=[x,f,df])
         a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
         b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
         c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
-        deq = a3 * (f.diff(x, 2)) + b3 * df + c3 * f
-        r = collect(eq, [f.diff(x, 2), df, f]).match(deq)
+        deq = a3*(f.diff(x, 2)) + b3*df + c3*f
+        r = collect(eq,
+            [f.diff(x, 2), df, f]).match(deq)
         if order == 2 and r:
             if not all(r[key].is_polynomial() for key in r):
                 n, d = eq.as_numer_denom()
                 eq = expand(n)
-                r = collect(eq, [f.diff(x, 2), df, f]).match(deq)
+                r = collect(eq,
+                    [f.diff(x, 2), df, f]).match(deq)
 
         if r and r[a3] != 0:
-            coeff = factor(r[a3]).match(a4 * (x - self.b) ** b4)
+            # leading coeff of f(x).diff(x, 2)
+            coeff = factor(r[a3]).match(a4*(x-b)**b4)
 
-            if coeff and coeff[b4] != 0:
-                # making a3 in the form of x**2
-                r[a3] = cancel(r[a3] / (coeff[a4] * x ** (2 - coeff[b4])))
-                r[b3] = cancel(r[b3] / (coeff[a4] * x ** (2 - coeff[b4])))
-                r[c3] = cancel(r[c3] / (coeff[a4] * x ** (2 - coeff[b4])))
+            if coeff:
+                # if coeff[b4] = 0 means constant coefficient
+                if coeff[b4] == 0:
+                    return False
+                point = coeff[b]
+            else:
+                return False
 
-                # Simplify expressions to handle sqrt(-1/sqrt(t)) better
-                r[a3] = simplify(r[a3])
-                r[b3] = simplify(r[b3])
-                r[c3] = simplify(r[c3])
+            if point:
+                r[a3] = simplify(r[a3].subs(x, x+point))
+                r[b3] = simplify(r[b3].subs(x, x+point))
+                r[c3] = simplify(r[c3].subs(x, x+point))
 
-                # Perform additional checks or modifications as needed
-                # For example, check if the resulting expression contains problematic terms
+            # making a3 in the form of x**2
+            r[a3] = cancel(r[a3]/(coeff[a4]*(x)**(-2+coeff[b4])))
+            r[b3] = cancel(r[b3]/(coeff[a4]*(x)**(-2+coeff[b4])))
+            r[c3] = cancel(r[c3]/(coeff[a4]*(x)**(-2+coeff[b4])))
 
-                self.rn = {}  # Update rn with the desired coefficients
-                return True
+            # Adjusting the formula slightly based on the reflection
+            # from the provided code snippet
+            # r[a3] = cancel(r[a3]/(coeff[a4]*(x)**(-2+coeff[b4]))) 
+            # r[b3] = cancel(r[b3]/(coeff[a4]*(x)**(-2+coeff[b4]))) 
+            # r[c3] = cancel(r[c3]/(coeff[a4]*(x)**(-2+coeff[b4]))) 
 
+            # checking if b3 is of form c*(x-b)
+            coeff1 = factor(r[b3]).match(a4*(x))
+            if coeff1 is None:
+                return False
+            # c3 maybe of very complex form so I am simply checking (a - b) form
+            # if yes later I will match with the standerd form of bessel in a and b
+            # a, b are wild variable defined above.
+            _coeff2 = expand(r[c3]).match(a - b)
+            if _coeff2 is None:
+                return False
+            # matching with standerd form for c3
+            coeff2 = factor(_coeff2[a]).match(c4**2*(x)**(2*a4))
+            if coeff2 is None:
+                return False
+
+            if _coeff2[b] == 0:
+                coeff2[d4] = 0
+            else:
+                coeff2[d4] = factor(_coeff2[b]).match(d4**2)[d4]
+
+            self.rn = {'n':coeff2[d4], 'a4':coeff2[c4], 'd4':coeff2[a4]}
+            self.rn['c4'] = coeff1[a4]
+            self.rn['b4'] = point
+            return True
         return False
 
 
