@@ -2727,11 +2727,9 @@ class BesselSolver:
                 eq = expand(n)
                 r = collect(eq,
                     [f.diff(x, 2), df, f]).match(deq)
-
         if r and r[a3] != 0:
             # leading coeff of f(x).diff(x, 2)
             coeff = factor(r[a3]).match(a4*(x-b)**b4)
-
             if coeff:
                 # if coeff[b4] = 0 means constant coefficient
                 if coeff[b4] == 0:
@@ -2739,17 +2737,14 @@ class BesselSolver:
                 point = coeff[b]
             else:
                 return False
-
             if point:
                 r[a3] = simplify(r[a3].subs(x, x+point))
                 r[b3] = simplify(r[b3].subs(x, x+point))
                 r[c3] = simplify(r[c3].subs(x, x+point))
-
             # making a3 in the form of x**2
             r[a3] = cancel(r[a3]/(coeff[a4]*(x)**(-2+coeff[b4])))
             r[b3] = cancel(r[b3]/(coeff[a4]*(x)**(-2+coeff[b4])))
             r[c3] = cancel(r[c3]/(coeff[a4]*(x)**(-2+coeff[b4])))
-            
             # checking if b3 is of form c*(x-b)
             coeff1 = factor(r[b3]).match(a4*(x))
             if coeff1 is None:
@@ -2764,18 +2759,15 @@ class BesselSolver:
             coeff2 = factor(_coeff2[a]).match(c4**2*(x)**(2*a4))
             if coeff2 is None:
                 return False
-
             if _coeff2[b] == 0:
                 coeff2[d4] = 0
             else:
                 coeff2[d4] = factor(_coeff2[b]).match(d4**2)[d4]
-
             self.rn = {'n':coeff2[d4], 'a4':coeff2[c4], 'd4':coeff2[a4]}
             self.rn['c4'] = coeff1[a4]
             self.rn['b4'] = point
             return True
         return False
-
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         f = self.ode_problem.func.func
