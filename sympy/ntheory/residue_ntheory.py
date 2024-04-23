@@ -1478,7 +1478,9 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
     a %= n
     b %= n
     # assert isprime(order), "The order of the base must be prime."
-    # First choose a heuristic the bound B for the factorbase,
+    # First choose a heuristic the bound B for the factorbase.
+    # We have added an extra term to the asymptotic value which
+    # is closer to the theoretical optimum for n up to 2^70.
     B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
     max = 5 * B * B  # expected number of trys to find a relation
     factorbase = list(primerange(B)) # compute the factorbase
