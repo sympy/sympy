@@ -2749,13 +2749,7 @@ class BesselSolver:
             r[a3] = cancel(r[a3]/(coeff[a4]*(x)**(-2+coeff[b4])))
             r[b3] = cancel(r[b3]/(coeff[a4]*(x)**(-2+coeff[b4])))
             r[c3] = cancel(r[c3]/(coeff[a4]*(x)**(-2+coeff[b4])))
-
-            # Adjusting the formula slightly based on the reflection
-            # from the provided code snippet
-            # r[a3] = cancel(r[a3]/(coeff[a4]*(x)**(-2+coeff[b4]))) 
-            # r[b3] = cancel(r[b3]/(coeff[a4]*(x)**(-2+coeff[b4]))) 
-            # r[c3] = cancel(r[c3]/(coeff[a4]*(x)**(-2+coeff[b4]))) 
-
+            
             # checking if b3 is of form c*(x-b)
             coeff1 = factor(r[b3]).match(a4*(x))
             if coeff1 is None:
