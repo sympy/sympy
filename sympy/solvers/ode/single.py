@@ -2723,7 +2723,7 @@ class BesselSolver:
                 r = collect(eq, [f.diff(x, 2), df, f]).match(deq)
 
         if r and r[a3] != 0:
-            coeff = factor(r[a3]).match(a4 * (x - b) ** b4)
+            coeff = factor(r[a3]).match(a4 * (x - self.b) ** b4)
 
             if coeff and coeff[b4] != 0:
                 # making a3 in the form of x**2
