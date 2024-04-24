@@ -1486,15 +1486,16 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
     factorbase = list(primerange(B)) # compute the factorbase
     lf = len(factorbase) # length of the factorbase
     ordermo = order-1
-    abx = 1
+    abx = a
     for x in range(order):
-        abx = abx * b % n # abx = a*pow(b, x, n) % n
         if abx == 1:
-            return x * (order - 1) % order
+            return (order - x) % order
         relationa = _discrete_log_is_smooth(abx, factorbase)
         if relationa:
             relationa = [r % order for r in relationa] + [x]
             break
+        abx = abx * b % n # abx = a*pow(b, x, n) % n
+
     else:
         raise ValueError("Index Calculus failed")
 
@@ -1536,7 +1537,7 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
                 break  # we do not need to reduce further at this point
         else:  # all unkowns are gone
             #print(f"Success after {k} relations out of {lf}")
-            x = relationa[lf] * (order - 1) % order
+            x = (order -relationa[lf]) % order
             if pow(b,x,n) == a:
                 return x
             raise ValueError("Index Calculus failed")
