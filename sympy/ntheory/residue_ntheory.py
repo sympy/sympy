@@ -1547,6 +1547,7 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
             raise ValueError("Index Calculus failed")
     raise ValueError("Index Calculus failed")
 
+
 def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     """
     Pohlig-Hellman algorithm for computing the discrete logarithm of ``a`` to
