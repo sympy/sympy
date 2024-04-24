@@ -1524,7 +1524,7 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
             else:
                 relation[i] = ri
             if relation[i] > 0 and index == lf:  # is this the index of the first nonzero entry?
-                index= i
+                index = i
         if index == lf or relations[index] is not None:  # the relation contains no new information
             continue
         # the relation contains new information
