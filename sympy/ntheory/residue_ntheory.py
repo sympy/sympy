@@ -1504,7 +1504,7 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
         raise ValueError("Index Calculus failed")
 
     relations = [None] * lf
-    k=1  # number of relations found
+    k = 1  # number of relations found
     kk = 0
     while k < 3 * lf and kk < max:  # find relations for all primes in our factor base
         x = randint(1,ordermo)
