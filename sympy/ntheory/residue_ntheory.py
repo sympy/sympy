@@ -1544,8 +1544,7 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
             x = relationa[lf] * (order - 1) % order
             if pow(b,x,n) == a:
                 return x
-            else:
-                raise ValueError("Index Calculus failed")
+            raise ValueError("Index Calculus failed")
     raise ValueError("Index Calculus failed")
 
 def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
