@@ -644,7 +644,7 @@ class OrthogonalKet(OrthogonalState, KetBase):
         >>> (OrthogonalBra(n)*OrthogonalKet(n+1)).doit()
         0
         >>> (OrthogonalBra(n)*OrthogonalKet(m)).doit()
-        <n|m>
+        KroneckerDelta(m, n)
     """
 
     @classmethod
