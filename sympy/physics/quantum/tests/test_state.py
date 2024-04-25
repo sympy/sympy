@@ -1,3 +1,4 @@
+from sympy import KroneckerDelta
 from sympy.core.add import Add
 from sympy.core.function import diff
 from sympy.core.mul import Mul
@@ -245,4 +246,4 @@ def test_orthogonal_states():
     assert braket.doit() == 0
 
     braket = OrthogonalBra(x) * OrthogonalKet(y)
-    assert braket.doit() == braket
+    assert braket.doit() == KroneckerDelta(x, y)

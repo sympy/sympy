@@ -1,5 +1,6 @@
 """Dirac notation for states."""
 
+from sympy import KroneckerDelta
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -665,7 +666,7 @@ class OrthogonalKet(OrthogonalState, KetBase):
                 return S.Zero # i.e. Integer(0)
 
             if is_zero is None:
-                return None
+                return KroneckerDelta(arg, bra_arg)
 
         return S.One # i.e. Integer(1)
 
