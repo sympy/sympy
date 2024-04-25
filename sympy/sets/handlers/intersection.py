@@ -345,8 +345,7 @@ def _(self, other):
         return imageset(lam, base_set)
 
     elif isinstance(other, Interval):
-        from sympy.solvers.solveset import (invert_real, invert_complex,
-                                            solveset)
+        from sympy.solvers.solveset import (invert_real, invert_complex)
 
         f = self.lamda.expr
         n = self.lamda.variables[0]
