@@ -230,7 +230,7 @@ def test_roots_quartic():
     z = symbols('z', negative=True)
     eq = x**4 + 2*x**3 + 3*x**2 + x*(z + 11) + 5
     zans = roots_quartic(Poly(eq, x))
-    assert all([verify_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans])
+    assert all(verify_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans)
     # but some are (see also issue 4989)
     # it's ok if the solution is not Piecewise, but the tests below should pass
     eq = Poly(y*x**4 + x**3 - x + z, x)
