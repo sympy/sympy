@@ -242,7 +242,7 @@ def test_roots_quartic():
         {"y": Rational(-1, 3), "z": -2})  # 0 real
     for rep in reps:
         sol = roots_quartic(Poly(eq.subs(rep), x))
-        assert all([verify_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol)])
+        assert all(verify_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol))
 
 
 def test_issue_21287():
