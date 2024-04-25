@@ -886,7 +886,7 @@ def remove_identity_matrices(expr: ArrayContraction):
         non_identity = [i for i in args if not isinstance(i.element, Identity)][0]
         # Check that all identity matrices have at least one free index
         # (otherwise they would be contractions to some other elements)
-        if any([None not in i.indices for i in identity_matrices]):
+        if any(None not in i.indices for i in identity_matrices):
             continue
         # Mark the identity matrices for removal:
         for i in identity_matrices:
