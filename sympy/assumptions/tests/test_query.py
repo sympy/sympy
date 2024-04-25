@@ -89,7 +89,7 @@ def test_int_12():
 def test_float_1():
     z = 1.0
     assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is False
+    assert ask(Q.integer(z)) is None
     assert ask(Q.rational(z)) is None
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
@@ -97,11 +97,11 @@ def test_float_1():
     assert ask(Q.imaginary(z)) is False
     assert ask(Q.positive(z)) is True
     assert ask(Q.negative(z)) is False
-    assert ask(Q.even(z)) is False
-    assert ask(Q.odd(z)) is False
+    assert ask(Q.even(z)) is None
+    assert ask(Q.odd(z)) is None
     assert ask(Q.finite(z)) is True
-    assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is False
+    assert ask(Q.prime(z)) is None
+    assert ask(Q.composite(z)) is None
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
 
@@ -607,6 +607,9 @@ def test_I():
 
 def test_bounded():
     x, y, z = symbols('x,y,z')
+    a = x + y
+    x, y = a.args
+    assert ask(Q.finite(a), Q.positive_infinite(y)) is None
     assert ask(Q.finite(x)) is None
     assert ask(Q.finite(x), Q.finite(x)) is True
     assert ask(Q.finite(x), Q.finite(y)) is None
@@ -1787,6 +1790,7 @@ def test_prime():
 
 @_both_exp_pow
 def test_positive():
+    assert ask(Q.positive(cos(I) ** 2 + sin(I) ** 2 - 1)) is None
     assert ask(Q.positive(x), Q.positive(x)) is True
     assert ask(Q.positive(x), Q.negative(x)) is False
     assert ask(Q.positive(x), Q.nonzero(x)) is None
@@ -2163,8 +2167,7 @@ def test_known_facts_consistent():
     # test cnf clauses of fact between unary predicates
     cnf = CNF.to_CNF(fact)
     clauses = set()
-    for cl in cnf.clauses:
-        clauses.add(frozenset(Literal(lit.arg.function, lit.is_Not) for lit in sorted(cl, key=str)))
+    clauses.update(frozenset(Literal(lit.arg.function, lit.is_Not) for lit in sorted(cl, key=str)) for cl in cnf.clauses)
     assert get_all_known_facts() == clauses
     # test dictionary of fact between unary predicates
     keys = [pred(x) for pred in get_known_facts_keys()]
@@ -2303,11 +2306,11 @@ def test_check_old_assumption():
 
 
 def test_issue_9636():
-    assert ask(Q.integer(1.0)) is False
-    assert ask(Q.prime(3.0)) is False
-    assert ask(Q.composite(4.0)) is False
-    assert ask(Q.even(2.0)) is False
-    assert ask(Q.odd(3.0)) is False
+    assert ask(Q.integer(1.0)) is None
+    assert ask(Q.prime(3.0)) is None
+    assert ask(Q.composite(4.0)) is None
+    assert ask(Q.even(2.0)) is None
+    assert ask(Q.odd(3.0)) is None
 
 
 def test_autosimp_used_to_fail():
@@ -2406,3 +2409,9 @@ def test_relational():
     assert not ask(Q.eq(x, 0), Q.nonzero(x))
     assert not ask(Q.ne(x, 0), Q.zero(x))
     assert ask(Q.ne(x, 0), Q.nonzero(x))
+
+
+def test_issue_25221():
+    assert ask(Q.transcendental(x), Q.algebraic(x) | Q.positive(y,y)) is None
+    assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
+    assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None

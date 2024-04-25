@@ -44,16 +44,22 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
+__doctest_requires__ = {('sample',): ['scipy']}
+
+
 x = Symbol('x')
+
 
 @singledispatch
 def is_random(x):
     return False
 
+
 @is_random.register(Basic)
 def _(x):
     atoms = x.free_symbols
     return any(is_random(i) for i in atoms)
+
 
 class RandomDomain(Basic):
     """
@@ -1305,11 +1311,11 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         expr = expr.subs(sub)
 
     def fn_subs(*args):
-        return expr.subs({rv: arg for rv, arg in zip(rvs, args)})
+        return expr.subs(dict(zip(rvs, args)))
 
     def given_fn_subs(*args):
         if condition is not None:
-            return condition.subs({rv: arg for rv, arg in zip(rvs, args)})
+            return condition.subs(dict(zip(rvs, args)))
         return False
 
     if library in ('pymc', 'pymc3'):

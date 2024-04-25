@@ -424,7 +424,7 @@ class ComplexRootOf(RootOf):
         else:
             _reals_cache[currentfactor] = real_part = \
                 dup_isolate_real_roots_sqf(
-                    currentfactor.rep.rep, currentfactor.rep.dom, blackbox=True)
+                    currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
 
         return real_part
 
@@ -436,7 +436,7 @@ class ComplexRootOf(RootOf):
         else:
             _complexes_cache[currentfactor] = complex_part = \
                 dup_isolate_complex_roots_sqf(
-                currentfactor.rep.rep, currentfactor.rep.dom, blackbox=True)
+                currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
         return complex_part
 
     @classmethod
@@ -635,7 +635,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _count_roots(cls, roots):
         """Count the number of real or complex roots with multiplicities."""
-        return sum([k for _, _, k in roots])
+        return sum(k for _, _, k in roots)
 
     @classmethod
     def _indexed_root(cls, poly, index, lazy=False):
@@ -645,8 +645,11 @@ class ComplexRootOf(RootOf):
         # If the given poly is already irreducible, then the index does not
         # need to be adjusted, and we can postpone the heavy lifting of
         # computing and refining isolating intervals until that is needed.
+        # Note, however, that `_pure_factors()` extracts a negative leading
+        # coeff if present, so `factors[0][0]` may differ from `poly`, and
+        # is the "normalized" version of `poly` that we must return.
         if lazy and len(factors) == 1 and factors[0][1] == 1:
-            return poly, index
+            return factors[0][0], index
 
         reals = cls._get_reals(factors)
         reals_count = cls._count_roots(reals)

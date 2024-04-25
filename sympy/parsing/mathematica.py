@@ -5,7 +5,7 @@ from itertools import product
 from typing import Any, Callable
 
 import sympy
-from sympy import Mul, Add, Pow, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
+from sympy import Mul, Add, Pow, Rational, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
     acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
     UnevaluatedExpr, S, atan, atan2, Mod, Max, Min, rf, Ei, Si, Ci, airyai, airyaiprime, airybi, primepi, prime, \
     isprime, cot, sec, csc, csch, sech, coth, Function, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
@@ -131,6 +131,7 @@ class MathematicaParser:
     # left: Mathematica, right: SymPy
     CORRESPONDENCES = {
         'Sqrt[x]': 'sqrt(x)',
+        'Rational[x,y]': 'Rational(x,y)',
         'Exp[x]': 'exp(x)',
         'Log[x]': 'log(x)',
         'Log[x,y]': 'log(y,x)',
@@ -385,7 +386,7 @@ class MathematicaParser:
             x_args = self.translations[key]['args']
 
             # make CORRESPONDENCES between model arguments and actual ones
-            d = {k: v for k, v in zip(x_args, args)}
+            d = dict(zip(x_args, args))
 
         # with variable-length argument
         elif (fm, '*') in self.translations:
@@ -975,9 +976,11 @@ class MathematicaParser:
         "Times": Mul,
         "Plus": Add,
         "Power": Pow,
+        "Rational": Rational,
         "Log": lambda *a: log(*reversed(a)),
         "Log2": lambda x: log(x, 2),
         "Log10": lambda x: log(x, 10),
+        "Rational": Rational,
         "Exp": exp,
         "Sqrt": sqrt,
 

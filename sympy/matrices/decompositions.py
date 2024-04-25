@@ -5,7 +5,7 @@ from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
 from sympy.functions.elementary.complexes import sign
 
-from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
+from .exceptions import NonSquareMatrixError, NonPositiveDefiniteMatrixError
 from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot_naive
 
@@ -93,7 +93,7 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixReductions.rref
+    sympy.matrices.matrixbase.MatrixBase.rref
     """
 
     F, pivot_cols = M.rref(simplify=simplify, iszerofunc=iszerofunc,
@@ -246,7 +246,7 @@ def _cholesky(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -337,7 +337,7 @@ def _cholesky_sparse(M, hermitian=True):
     ========
 
     sympy.matrices.sparse.SparseMatrix.LDLdecomposition
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -448,7 +448,7 @@ def _LDLdecomposition(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.cholesky
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -929,7 +929,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     LUdecompositionFF
     LUsolve
     """
@@ -1074,7 +1074,7 @@ def _LUdecompositionFF(M):
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     LUdecomposition_Simple
     LUsolve
 
@@ -1130,7 +1130,7 @@ def _singular_value_decomposition(A):
     Explanation
     ===========
 
-    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V$
+    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V^H$
     where
 
     - $U, V$ are column orthogonal matrix.
@@ -1313,11 +1313,7 @@ def _singular_value_decomposition(A):
 
         Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
 
-        S = S.zeros(len(Singular_vals))
-
-        for i, sv in enumerate(Singular_vals):
-            S[i, i] = sv
-
+        S = S.diag(*Singular_vals)
         V, _ = V.QRdecomposition()
         U = A * V * S.inv()
     else:
@@ -1331,11 +1327,7 @@ def _singular_value_decomposition(A):
         U = U[:, ranked]
         Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
 
-        S = S.zeros(len(Singular_vals))
-
-        for i, sv in enumerate(Singular_vals):
-            S[i, i] = sv
-
+        S = S.diag(*Singular_vals)
         U, _ = U.QRdecomposition()
         V = AH * U * S.inv()
 
@@ -1482,11 +1474,11 @@ def _QRdecomposition(M):
     decomposition, you should augment $Q$ with an another orthogonal
     column.
 
-    You are able to append an arbitrary standard basis that are linearly
-    independent to every other columns and you can run the Gram-Schmidt
+    You are able to append an identity matrix,
+    and you can run the Gram-Schmidt
     process to make them augmented as orthogonal basis.
 
-    >>> Q_aug = Q.row_join(Matrix([0, 0, 1]))
+    >>> Q_aug = Q.row_join(Matrix.eye(3))
     >>> Q_aug = Q_aug.QRdecomposition()[0]
     >>> Q_aug
     Matrix([
@@ -1557,7 +1549,7 @@ def _QRdecomposition(M):
 
     sympy.matrices.dense.DenseMatrix.cholesky
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     QRsolve
     """
     return _QRdecomposition_optional(M, normalize=True)

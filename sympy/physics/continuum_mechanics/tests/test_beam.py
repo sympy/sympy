@@ -336,7 +336,7 @@ def test_variable_moment():
     assert b.slope().expand() == ((10*x*SingularityFunction(x, 0, 0)
         - 10*(x - 4)*SingularityFunction(x, 4, 0))/E).expand()
     assert b.deflection().expand() == ((5*x**2*SingularityFunction(x, 0, 0)
-        - 10*Piecewise((0, Abs(x)/4 < 1), (16*meijerg(((3, 1), ()), ((), (2, 0)), x/4), True))
+        - 10*Piecewise((0, Abs(x)/4 < 1), (x**2*meijerg(((-1, 1), ()), ((), (-2, 0)), x/4), True))
         + 40*SingularityFunction(x, 4, 1))/E).expand()
 
     b = Beam(4, E - x, I)
@@ -514,7 +514,9 @@ def test_max_shear_force():
     b.apply_load(R2, l, -1)
     b.apply_load(P, 0, 0, end=l)
     b.solve_for_reaction_loads(R1, R2)
-    assert b.max_shear_force() == (0, l*Abs(P)/2)
+    max_shear = b.max_shear_force()
+    assert max_shear[0] == 0
+    assert simplify(max_shear[1] - (l*Abs(P)/2)) == 0
 
 
 def test_max_bmoment():

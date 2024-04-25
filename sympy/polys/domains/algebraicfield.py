@@ -178,8 +178,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     sqrt(2) + sqrt(3)
     >>> K.orig_ext
     (sqrt(2), sqrt(3))
-    >>> K.mod
-    DMP([1, 0, -10, 0, 1], QQ, None)
+    >>> K.mod  # doctest: +SKIP
+    DMP_Python([1, 0, -10, 0, 1], QQ)
 
     The `discriminant`_ of the field can be obtained from the
     :py:meth:`~.discriminant` method, and an `integral basis`_ from the
@@ -307,7 +307,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         >>> from sympy import QQ, sqrt
         >>> K = QQ.algebraic_field(sqrt(2))
         >>> K.mod
-        DMP([1, 0, -2], QQ, None)
+        DMP([1, 0, -2], QQ)
         """
 
         self.domain = self.dom = dom
@@ -316,15 +316,15 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         self.symbols = self.gens = (self.ext,)
         self.unit = self([dom(1), dom(0)])
 
-        self.zero = self.dtype.zero(self.mod.rep, dom)
-        self.one = self.dtype.one(self.mod.rep, dom)
+        self.zero = self.dtype.zero(self.mod.to_list(), dom)
+        self.one = self.dtype.one(self.mod.to_list(), dom)
 
         self._maximal_order = None
         self._discriminant = None
         self._nilradicals_mod_p = {}
 
     def new(self, element):
-        return self.dtype(element, self.mod.rep, self.dom)
+        return self.dtype(element, self.mod.to_list(), self.dom)
 
     def __str__(self):
         return str(self.dom) + '<' + str(self.ext) + '>'
@@ -334,8 +334,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        return isinstance(other, AlgebraicField) and \
-            self.dtype == other.dtype and self.ext == other.ext
+        if isinstance(other, AlgebraicField):
+            return self.dtype == other.dtype and self.ext == other.ext
+        else:
+            return NotImplemented
 
     def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
@@ -595,7 +597,7 @@ def _make_converter(K):
 
     def converter(a):
         """Convert a to Expr using converter"""
-        ai = a.rep[::-1]
+        ai = a.to_list()[::-1]
         tosympy = K.dom.to_sympy
         coeffs_dom = [sum(mij*aj for mij, aj in zip(mi, ai)) for mi in matrix]
         coeffs_sympy = [tosympy(c) for c in coeffs_dom]

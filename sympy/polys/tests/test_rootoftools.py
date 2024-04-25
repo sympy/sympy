@@ -276,6 +276,18 @@ def test_CRootOf_evalf():
         assert i == i.func(*i.args)
 
 
+def test_issue_24978():
+    # Irreducible poly with negative leading coeff is normalized
+    # (factor of -1 is extracted), before being stored as CRootOf.poly.
+    f = -x**2 + 2
+    r = CRootOf(f, 0)
+    assert r.poly.as_expr() == x**2 - 2
+    # An action that prompts calculation of an interval puts r.poly in
+    # the cache.
+    r.n()
+    assert r.poly in rootoftools._reals_cache
+
+
 def test_CRootOf_evalf_caching_bug():
     r = rootof(x**5 - 5*x + 12, 1)
     r.n()
@@ -521,8 +533,8 @@ def test_issue_8316():
 def test__imag_count():
     from sympy.polys.rootoftools import _imag_count_of_factor
     def imag_count(p):
-        return sum([_imag_count_of_factor(f)*m for f, m in
-        p.factor_list()[1]])
+        return sum(_imag_count_of_factor(f)*m for f, m in
+        p.factor_list()[1])
     assert imag_count(Poly(x**6 + 10*x**2 + 1)) == 2
     assert imag_count(Poly(x**2)) == 0
     assert imag_count(Poly([1]*3 + [-1], x)) == 0

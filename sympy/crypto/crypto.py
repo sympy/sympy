@@ -18,19 +18,26 @@ import warnings
 
 from itertools import cycle
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.core import Symbol
-from sympy.core.numbers import igcdex, mod_inverse, igcd, Rational
+from sympy.core.numbers import Rational
 from sympy.core.random import _randrange, _randint
+from sympy.external.gmpy import gcd, invert
+from sympy.functions.combinatorial.numbers import (totient as _euler,
+                                                   reduced_totient as _carmichael)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
-from sympy.ntheory import totient as _euler
-from sympy.ntheory import reduced_totient as _carmichael
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import FF
-from sympy.polys.polytools import gcd, Poly
+from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
+from sympy.utilities.decorator import doctest_depends_on
+
+
+if GROUND_TYPES == 'flint':
+    __doctest_skip__ = ['lfsr_sequence']
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -429,7 +436,7 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     a, b = key
     assert gcd(a, N) == 1
     if _inverse:
-        c = mod_inverse(a, N)
+        c = invert(a, N)
         d = -b*c
         a, b = c, d
     B = ''.join([A[(a*i + b) % N] for i in range(N)])
@@ -1542,8 +1549,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
 
     tally = multiset(primes)
     if all(v == 1 for v in tally.values()):
-        multiple = list(tally.keys())
-        phi = _totient._from_distinct_primes(*multiple)
+        phi = int(_totient(tally))
 
     else:
         if not multipower:
@@ -1559,9 +1565,9 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
                 # stacklevel=4 because most users will call a function that
                 # calls this function
                 ).warn(stacklevel=4)
-        phi = _totient._from_factors(tally)
+        phi = int(_totient(tally))
 
-    if igcd(e, phi) == 1:
+    if gcd(e, phi) == 1:
         if public and not private:
             if isinstance(index, int):
                 e = e % phi
@@ -1569,7 +1575,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
             return n, e
 
         if private and not public:
-            d = mod_inverse(e, phi)
+            d = invert(e, phi)
             if isinstance(index, int):
                 d += index * phi
             return n, d
@@ -1631,10 +1637,10 @@ def rsa_public_key(*args, **kwargs):
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
-        :meth:`sympy.ntheory.factor_.totient` in SymPy.
+        :meth:`sympy.functions.combinatorial.numbers.totient` in SymPy.
 
         If ``'Carmichael'``, it uses Carmichael's totient `\lambda(n)`
-        which is :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
+        which is :meth:`sympy.functions.combinatorial.numbers.reduced_totient` in SymPy.
 
         Unlike private key generation, this is a trivial keyword for
         public key generation because
@@ -1761,11 +1767,11 @@ def rsa_private_key(*args, **kwargs):
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient convention `\phi(n)`
-        which is :meth:`sympy.ntheory.factor_.totient` in SymPy.
+        which is :meth:`sympy.functions.combinatorial.numbers.totient` in SymPy.
 
         If ``'Carmichael'``, it uses Carmichael's totient convention
         `\lambda(n)` which is
-        :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
+        :meth:`sympy.functions.combinatorial.numbers.reduced_totient` in SymPy.
 
         There can be some output differences for private key generation
         as examples below.
@@ -1880,7 +1886,7 @@ def _encipher_decipher_rsa(i, key, factors=None):
         is_coprime_set = True
         for i in range(len(l)):
             for j in range(i+1, len(l)):
-                if igcd(l[i], l[j]) != 1:
+                if gcd(l[i], l[j]) != 1:
                     is_coprime_set = False
                     break
         return is_coprime_set
@@ -2283,6 +2289,7 @@ def decode_morse(msg, sep='|', mapping=None):
 #################### LFSRs  ##########################################
 
 
+@doctest_depends_on(ground_types=['python', 'gmpy'])
 def lfsr_sequence(key, fill, n):
     r"""
     This function creates an LFSR sequence.
@@ -2372,7 +2379,7 @@ def lfsr_sequence(key, fill, n):
         raise TypeError("key must be a list")
     if not isinstance(fill, list):
         raise TypeError("fill must be a list")
-    p = key[0].mod
+    p = key[0].modulus()
     F = FF(p)
     s = fill
     k = len(fill)
@@ -2381,9 +2388,9 @@ def lfsr_sequence(key, fill, n):
         s0 = s[:]
         L.append(s[0])
         s = s[1:k]
-        x = sum([int(key[i]*s0[i]) for i in range(k)])
+        x = sum(int(key[i]*s0[i]) for i in range(k))
         s.append(F(x))
-    return L       # use [x.to_int() for x in L] for int version
+    return L       # use [int(x) for x in L] for int version
 
 
 def lfsr_autocorrelation(L, P, k):
@@ -2431,7 +2438,7 @@ def lfsr_autocorrelation(L, P, k):
     k = int(k)
     L0 = L[:P]     # slices makes a copy
     L1 = L0 + L0[:k]
-    L2 = [(-1)**(L1[i].to_int() + L1[i + k].to_int()) for i in range(P)]
+    L2 = [(-1)**(int(L1[i]) + int(L1[i + k])) for i in range(P)]
     tot = sum(L2)
     return Rational(tot, P)
 
@@ -2493,7 +2500,7 @@ def lfsr_connection_polynomial(s):
 
     """
     # Initialization:
-    p = s[0].mod
+    p = s[0].modulus()
     x = Symbol("x")
     C = 1*x**0
     B = 1*x**0
@@ -2507,10 +2514,10 @@ def lfsr_connection_polynomial(s):
             r = min(L + 1, dC + 1)
             coeffsC = [C.subs(x, 0)] + [C.coeff(x**i)
                 for i in range(1, dC + 1)]
-            d = (s[N].to_int() + sum([coeffsC[i]*s[N - i].to_int()
-                for i in range(1, r)])) % p
+            d = (int(s[N]) + sum(coeffsC[i]*int(s[N - i])
+                for i in range(1, r))) % p
         if L == 0:
-            d = s[N].to_int()*x**0
+            d = int(s[N])*x**0
         if d == 0:
             m += 1
             N += 1
@@ -2529,8 +2536,8 @@ def lfsr_connection_polynomial(s):
                 N += 1
     dC = Poly(C).degree()
     coeffsC = [C.subs(x, 0)] + [C.coeff(x**i) for i in range(1, dC + 1)]
-    return sum([coeffsC[i] % p*x**i for i in range(dC + 1)
-        if coeffsC[i] is not None])
+    return sum(coeffsC[i] % p*x**i for i in range(dC + 1)
+        if coeffsC[i] is not None)
 
 
 #################### ElGamal  #############################
@@ -2716,7 +2723,7 @@ def decipher_elgamal(msg, key):
     """
     p, _, d = key
     c1, c2 = msg
-    u = igcdex(c1**d, p)[0]
+    u = pow(c1, -d, p)
     return u * c2 % p
 
 
@@ -3345,7 +3352,7 @@ def decipher_bg(message, key):
     r_p = pow(int(y), int(p_t), int(p))
     r_q = pow(int(y), int(q_t), int(q))
 
-    x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
+    x = (q * invert(q, p) * r_p + p * invert(p, q) * r_q) % public_key
 
     orig_bits = []
     for _ in range(L):

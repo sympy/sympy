@@ -8,49 +8,94 @@ the features that will be implemented in the future will also be covered, along
 with unanswered questions about proper functionality. Also, common problems
 will be discussed, along with some solutions.
 
-Inertia (Dyadics)
-=================
+.. _Dyadic:
 
-A dyadic tensor is a second order tensor formed by the juxtaposition of a pair
-of vectors. There are various operations defined with respect to dyadics,
-which have been implemented in :obj:`~.sympy.physics.vector` in the form of
-class :obj:`sympy.physics.vector.dyadic.Dyadic`. To know more, refer to the
-:obj:`sympy.physics.vector.dyadic.Dyadic` and
-:obj:`sympy.physics.vector.vector.Vector` class APIs. Dyadics are used to
-define the inertia of bodies within :mod:`sympy.physics.mechanics`. Inertia
-dyadics can be defined explicitly but the ``inertia`` function is typically
-much more convenient for the user::
+Dyadic
+======
 
-  >>> from sympy.physics.mechanics import ReferenceFrame, inertia
-  >>> N = ReferenceFrame('N')
+In :mod:`sympy.physics.mechanics`, dyadics are used to represent inertia ([Kane1985]_,
+[WikiDyadics]_, [WikiDyadicProducts]_). A dyadic is a linear polynomial of
+component unit dyadics, similar to a vector being a linear polynomial of
+component unit vectors. A dyadic is the outer product between two vectors which
+returns a new quantity representing the juxtaposition of these two vectors. For
+example:
 
-  Supply a reference frame and the moments of inertia if the object
-  is symmetrical:
+.. math::
+  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_x} &= \mathbf{\hat{a}_x}
+  \mathbf{\hat{a}_x}\\
+  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_y} &= \mathbf{\hat{a}_x}
+  \mathbf{\hat{a}_y}\\
 
-  >>> inertia(N, 1, 2, 3)
-  (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
+Where :math:`\mathbf{\hat{a}_x}\mathbf{\hat{a}_x}` and
+`\mathbf{\hat{a}_x}\mathbf{\hat{a}_y}` are the outer products obtained by
+multiplying the left side as a column vector by the right side as a row vector.
+Note that the order is significant.
 
-  Supply a reference frame along with the products and moments of inertia
-  for a general object:
+Some additional properties of a dyadic are:
 
-  >>> inertia(N, 1, 2, 3, 4, 5, 6)
-  (N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) + 5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)
+.. math::
+  (x \mathbf{v}) \otimes \mathbf{w} &= \mathbf{v} \otimes (x \mathbf{w}) = x
+  (\mathbf{v} \otimes \mathbf{w})\\
+  \mathbf{v} \otimes (\mathbf{w} + \mathbf{u}) &= \mathbf{v} \otimes \mathbf{w}
+  + \mathbf{v} \otimes \mathbf{u}\\
+  (\mathbf{v} + \mathbf{w}) \otimes \mathbf{u} &= \mathbf{v} \otimes \mathbf{u}
+  + \mathbf{w} \otimes \mathbf{u}\\
 
-Notice that the ``inertia`` function returns a dyadic with each component
-represented as two unit vectors separated by a ``|``. Refer to the
-:obj:`sympy.physics.vector.dyadic.Dyadic` section for more information about dyadics.
+A vector in a reference frame can be represented as
+:math:`\begin{bmatrix}a\\b\\c\end{bmatrix}` or :math:`a \mathbf{\hat{i}} + b
+\mathbf{\hat{j}} + c \mathbf{\hat{k}}`. Similarly, a dyadic can be represented
+in tensor form:
 
-Inertia is often expressed in a matrix, or tensor, form, especially for
-numerical purposes. Since the matrix form does not contain any information
-about the reference frame(s) the inertia dyadic is defined in, you must provide
-one or two reference frames to extract the measure numbers from the dyadic.
-There is a convenience function to do this::
+.. math::
+  \begin{bmatrix}
+  a_{11} & a_{12} & a_{13} \\
+  a_{21} & a_{22} & a_{23} \\
+  a_{31} & a_{32} & a_{33}
+  \end{bmatrix}\\
 
-  >>> inertia(N, 1, 2, 3, 4, 5, 6).to_matrix(N)
-  Matrix([
-  [1, 4, 6],
-  [4, 2, 5],
-  [6, 5, 3]])
+or in dyadic form:
+
+.. math::
+  a_{11} \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} +
+  a_{12} \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} +
+  a_{13} \mathbf{\hat{a}_x}\mathbf{\hat{a}_z} +
+  a_{21} \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} +
+  a_{22} \mathbf{\hat{a}_y}\mathbf{\hat{a}_y} +
+  a_{23} \mathbf{\hat{a}_y}\mathbf{\hat{a}_z} +
+  a_{31} \mathbf{\hat{a}_z}\mathbf{\hat{a}_x} +
+  a_{32} \mathbf{\hat{a}_z}\mathbf{\hat{a}_y} +
+  a_{33} \mathbf{\hat{a}_z}\mathbf{\hat{a}_z}\\
+
+Just as with vectors, the later representation makes it possible to keep track
+of which frames the dyadic is defined with respect to. Also, the two
+components of each term in the dyadic need not be in the same frame. The
+following is valid:
+
+.. math::
+  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{b}_y} = \mathbf{\hat{a}_x}
+  \mathbf{\hat{b}_y}
+
+Dyadics can also be crossed and dotted with vectors; again, order matters:
+
+.. math::
+  \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &=
+  \mathbf{\hat{a}_x}\\
+  \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &=
+  \mathbf{\hat{a}_y}\\
+  \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} \cdot \mathbf{\hat{a}_x} &= 0\\
+  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &=
+  \mathbf{\hat{a}_x}\\
+  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} &=
+  \mathbf{\hat{a}_y}\\
+  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &= 0\\
+  \mathbf{\hat{a}_x} \times \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &=
+  \mathbf{\hat{a}_z}\mathbf{\hat{a}_x}\\
+  \mathbf{\hat{a}_x} \times \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &= 0\\
+  \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \times \mathbf{\hat{a}_z} &=
+  - \mathbf{\hat{a}_y}\mathbf{\hat{a}_y}\\
+
+One can also take the time derivative of dyadics or express them in different
+frames, just like with vectors.
 
 Common Issues
 =============
@@ -153,3 +198,34 @@ so dynamic symbols created before or after will print the same way.
 Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and
 methods. Don't mix and match symbols representing time.
+
+Solving Vector Equations
+========================
+
+To solve equations involving vectors, you cannot directly use the solve
+functions on a vector. Instead, you must convert the vector to a set of scalar
+equations.
+
+Suppose that we have two frames ``N`` and ``A``, where ``A`` is rotated 30
+degrees about the z-axis with respect to ``N``. ::
+
+  >>> from sympy import pi, symbols, solve
+  >>> from sympy.physics.vector import ReferenceFrame
+  >>> N = ReferenceFrame("N")
+  >>> A = ReferenceFrame("A")
+  >>> A.orient_axis(N, pi / 6, N.z)
+
+Suppose that we have two vectors ``v1`` and ``v2``, which represent the same
+vector using different symbols. ::
+
+  >>> v1x, v1y, v1z = symbols("v1x v1y v1z")
+  >>> v2x, v2y, v2z = symbols("v2x v2y v2z")
+  >>> v1 = v1x * N.x + v1y * N.y + v1z * N.z
+  >>> v2 = v2x * A.x + v2y * A.y + v2z * A.z
+
+Our goal is to find the relationship between the symbols used in ``v2`` and the
+symbols used in ``v1``. We can achieve this by converting the vector to a matrix
+and then solving the matrix using :meth:`sympy.solvers.solvers.solve`. ::
+
+  >>> solve((v1 - v2).to_matrix(N), [v2x, v2y, v2z])
+  {v2x: sqrt(3)*v1x/2 + v1y/2, v2y: -v1x/2 + sqrt(3)*v1y/2, v2z: v1z}

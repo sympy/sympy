@@ -6,7 +6,7 @@ BIN_PREFIXES.
 """
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
-
+from sympy.core.singleton import S
 
 class Prefix(Expr):
     """
@@ -85,9 +85,9 @@ class Prefix(Expr):
 
         fact = self.scale_factor * other.scale_factor
 
-        if fact == 1:
-            return 1
-        elif isinstance(other, Prefix):
+        if isinstance(other, Prefix):
+            if fact == 1:
+                return S.One
             # simplify prefix
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == fact:
@@ -103,7 +103,7 @@ class Prefix(Expr):
         fact = self.scale_factor / other.scale_factor
 
         if fact == 1:
-            return 1
+            return S.One
         elif isinstance(other, Prefix):
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == fact:
@@ -140,7 +140,7 @@ def prefix_unit(unit, prefixes):
 
     prefixed_units = []
 
-    for prefix_abbr, prefix in prefixes.items():
+    for prefix in prefixes.values():
         quantity = Quantity(
                 "%s%s" % (prefix.name, unit.name),
                 abbrev=("%s%s" % (prefix.abbrev, unit.abbrev)),

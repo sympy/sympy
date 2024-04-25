@@ -31,6 +31,10 @@ lti
 .. autoclass:: MIMOFeedback
    :members:
 
+.. autofunction:: gbt
+
 .. autofunction:: bilinear
+
+.. autofunction:: forward_diff
 
 .. autofunction:: backward_diff

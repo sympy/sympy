@@ -141,8 +141,8 @@ def cse_release_variables(r, e):
     # sort e so those with most sub-expressions appear first
     e = [(e[i], syms[i]) for i in range(len(e))]
     e, syms = zip(*sorted(e,
-        key=lambda x: -sum([p[s.index(i)].count_ops()
-        for i in x[0].free_symbols & in_use])))
+        key=lambda x: -sum(p[s.index(i)].count_ops()
+        for i in x[0].free_symbols & in_use)))
     syms = list(syms)
     p += e
     rv = []
@@ -512,7 +512,14 @@ def opt_cse(exprs, order='canonical'):
         list(map(_find_opts, expr.args))
 
         if not isinstance(expr, MatrixExpr) and expr.could_extract_minus_sign():
-            neg_expr = -expr
+            # XXX -expr does not always work rigorously for some expressions
+            # containing UnevaluatedExpr.
+            # https://github.com/sympy/sympy/issues/24818
+            if isinstance(expr, Add):
+                neg_expr = Add(*(-i for i in expr.args))
+            else:
+                neg_expr = -expr
+
             if not neg_expr.is_Atom:
                 opt_subs[expr] = Unevaluated(Mul, (S.NegativeOne, neg_expr))
                 seen_subexp.add(neg_expr)
@@ -614,7 +621,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
                 expr.is_Order or
                 isinstance(expr, (MatrixSymbol, MatrixElement))):
             if expr.is_Symbol:
-                excluded_symbols.add(expr)
+                excluded_symbols.add(expr.name)
             return
 
         if iterable(expr):
@@ -645,7 +652,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
     ## Rebuild tree
 
     # Remove symbols from the generator that conflict with names in the expressions.
-    symbols = (symbol for symbol in symbols if symbol not in excluded_symbols)
+    symbols = (_ for _ in symbols if _.name not in excluded_symbols)
 
     replacements = []
 

@@ -3,25 +3,24 @@ from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
-from sympy.core.backend import Matrix, _simplify_matrix, eye, zeros
+from sympy import Matrix, simplify, eye, zeros
 from sympy.core.symbol import symbols
-from sympy.physics.mechanics import (dynamicsymbols, Body, JointsMethod,
-                                     PinJoint, PrismaticJoint, CylindricalJoint,
-                                     PlanarJoint, SphericalJoint, WeldJoint)
+from sympy.physics.mechanics import (
+    dynamicsymbols, RigidBody, Particle, JointsMethod, PinJoint, PrismaticJoint,
+    CylindricalJoint, PlanarJoint, SphericalJoint, WeldJoint, Body)
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
-Vector.simp = True
 t = dynamicsymbols._t # type: ignore
 
 
 def _generate_body(interframe=False):
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
-    P = Body('P', frame=N)
-    C = Body('C', frame=A)
+    P = RigidBody('P', frame=N)
+    C = RigidBody('C', frame=A)
     if interframe:
         Pint, Cint = ReferenceFrame('P_int'), ReferenceFrame('C_int')
         Pint.orient_axis(N, N.x, pi)
@@ -31,8 +30,8 @@ def _generate_body(interframe=False):
 
 
 def test_Joint():
-    parent = Body('parent')
-    child = Body('child')
+    parent = RigidBody('parent')
+    child = RigidBody('child')
     raises(TypeError, lambda: Joint('J', parent, child))
 
 
@@ -84,8 +83,8 @@ def test_coordinate_generation():
 
 
 def test_pin_joint():
-    P = Body('P')
-    C = Body('C')
+    P = RigidBody('P')
+    C = RigidBody('C')
     l, m = symbols('l m')
     q, u = dynamicsymbols('q_J, u_J')
     Pj = PinJoint('J', P, C)
@@ -104,8 +103,8 @@ def test_pin_joint():
     assert Pj.child_interframe == C.frame
     assert Pj.__str__() == 'PinJoint: J  parent: P  child: C'
 
-    P1 = Body('P1')
-    C1 = Body('C1')
+    P1 = RigidBody('P1')
+    C1 = RigidBody('C1')
     Pint = ReferenceFrame('P_int')
     Pint.orient_axis(P1.frame, P1.y, pi / 2)
     J1 = PinJoint('J1', P1, C1, parent_point=l*P1.frame.x,
@@ -140,6 +139,96 @@ def test_pin_joint():
     assert J.child_interframe == Cint
 
 
+def test_particle_compatibility():
+    m, l = symbols('m l')
+    C_frame = ReferenceFrame('C')
+    P = Particle('P')
+    C = Particle('C', mass=m)
+    q, u = dynamicsymbols('q, u')
+    J = PinJoint('J', P, C, q, u, child_interframe=C_frame,
+                 child_point=l * C_frame.y)
+    assert J.child_interframe == C_frame
+    assert J.parent_interframe.name == 'J_P_frame'
+    assert C.masscenter.pos_from(P.masscenter) == -l * C_frame.y
+    assert C_frame.dcm(J.parent_interframe) == Matrix([[1, 0, 0],
+                                                       [0, cos(q), sin(q)],
+                                                       [0, -sin(q), cos(q)]])
+    assert C.masscenter.vel(J.parent_interframe) == -l * u * C_frame.z
+    # Test with specified joint axis
+    P_frame = ReferenceFrame('P')
+    C_frame = ReferenceFrame('C')
+    P = Particle('P')
+    C = Particle('C', mass=m)
+    q, u = dynamicsymbols('q, u')
+    J = PinJoint('J', P, C, q, u, parent_interframe=P_frame,
+                 child_interframe=C_frame, child_point=l * C_frame.y,
+                 joint_axis=P_frame.z)
+    assert J.joint_axis == J.parent_interframe.z
+    assert C_frame.dcm(J.parent_interframe) == Matrix([[cos(q), sin(q), 0],
+                                                       [-sin(q), cos(q), 0],
+                                                       [0, 0, 1]])
+    assert P.masscenter.vel(J.parent_interframe) == 0
+    assert C.masscenter.vel(J.parent_interframe) == l * u * C_frame.x
+    q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1:4 u1:4')
+    qdot_to_u = {qi.diff(t): ui for qi, ui in ((q1, u1), (q2, u2), (q3, u3))}
+    # Test compatibility for prismatic joint
+    P, C = Particle('P'), Particle('C')
+    J = PrismaticJoint('J', P, C, q, u)
+    assert J.parent_interframe.dcm(J.child_interframe) == eye(3)
+    assert C.masscenter.pos_from(P.masscenter) == q * J.parent_interframe.x
+    assert P.masscenter.vel(J.parent_interframe) == 0
+    assert C.masscenter.vel(J.parent_interframe) == u * J.parent_interframe.x
+    # Test compatibility for cylindrical joint
+    P, C = Particle('P'), Particle('C')
+    P_frame = ReferenceFrame('P_frame')
+    J = CylindricalJoint('J', P, C, q1, q2, u1, u2, parent_interframe=P_frame,
+                         parent_point=l * P_frame.x, joint_axis=P_frame.y)
+    assert J.parent_interframe.dcm(J.child_interframe) == Matrix([
+        [cos(q1), 0, sin(q1)], [0, 1, 0], [-sin(q1), 0, cos(q1)]])
+    assert C.masscenter.pos_from(P.masscenter) == l * P_frame.x + q2 * P_frame.y
+    assert C.masscenter.vel(J.parent_interframe) == u2 * P_frame.y
+    assert P.masscenter.vel(J.child_interframe).xreplace(qdot_to_u) == (
+        -u2 * P_frame.y - l * u1 * P_frame.z)
+    # Test compatibility for planar joint
+    P, C = Particle('P'), Particle('C')
+    C_frame = ReferenceFrame('C_frame')
+    J = PlanarJoint('J', P, C, q1, [q2, q3], u1, [u2, u3],
+                    child_interframe=C_frame, child_point=l * C_frame.z)
+    P_frame = J.parent_interframe
+    assert J.parent_interframe.dcm(J.child_interframe) == Matrix([
+        [1, 0, 0], [0, cos(q1), -sin(q1)], [0, sin(q1), cos(q1)]])
+    assert C.masscenter.pos_from(P.masscenter) == (
+        -l * C_frame.z + q2 * P_frame.y + q3 * P_frame.z)
+    assert C.masscenter.vel(J.parent_interframe) == (
+        l * u1 * C_frame.y + u2 * P_frame.y + u3 * P_frame.z)
+    # Test compatibility for weld joint
+    P, C = Particle('P'), Particle('C')
+    C_frame, P_frame = ReferenceFrame('C_frame'), ReferenceFrame('P_frame')
+    J = WeldJoint('J', P, C, parent_interframe=P_frame,
+                  child_interframe=C_frame, parent_point=l * P_frame.x,
+                  child_point=l * C_frame.y)
+    assert P_frame.dcm(C_frame) == eye(3)
+    assert C.masscenter.pos_from(P.masscenter) == l * P_frame.x - l * C_frame.y
+    assert C.masscenter.vel(J.parent_interframe) == 0
+
+
+def test_body_compatibility():
+    m, l = symbols('m l')
+    C_frame = ReferenceFrame('C')
+    with warns_deprecated_sympy():
+        P = Body('P')
+        C = Body('C', mass=m, frame=C_frame)
+    q, u = dynamicsymbols('q, u')
+    PinJoint('J', P, C, q, u, child_point=l * C_frame.y)
+    assert C.frame == C_frame
+    assert P.frame.name == 'P_frame'
+    assert C.masscenter.pos_from(P.masscenter) == -l * C.y
+    assert C.frame.dcm(P.frame) == Matrix([[1, 0, 0],
+                                           [0, cos(q), sin(q)],
+                                           [0, -sin(q), cos(q)]])
+    assert C.masscenter.vel(P.frame) == -l * u * C.z
+
+
 def test_pin_joint_double_pendulum():
     q1, q2 = dynamicsymbols('q1 q2')
     u1, u2 = dynamicsymbols('u1 u2')
@@ -147,9 +236,9 @@ def test_pin_joint_double_pendulum():
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
-    C = Body('C', frame=N)  # ceiling
-    PartP = Body('P', frame=A, mass=m)
-    PartR = Body('R', frame=B, mass=m)
+    C = RigidBody('C', frame=N)  # ceiling
+    PartP = RigidBody('P', frame=A, mass=m)
+    PartR = RigidBody('R', frame=B, mass=m)
 
     J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1,
                   child_point=-l*A.x, joint_axis=C.frame.z)
@@ -161,7 +250,7 @@ def test_pin_joint_double_pendulum():
                                [sin(q1), cos(q1), 0], [0, 0, 1]])
     assert A.dcm(B) == Matrix([[cos(q2), -sin(q2), 0],
                                [sin(q2), cos(q2), 0], [0, 0, 1]])
-    assert _simplify_matrix(N.dcm(B)) == Matrix([[cos(q1 + q2), -sin(q1 + q2), 0],
+    assert simplify(N.dcm(B)) == Matrix([[cos(q1 + q2), -sin(q1 + q2), 0],
                                                  [sin(q1 + q2), cos(q1 + q2), 0],
                                                  [0, 0, 1]])
 
@@ -188,9 +277,9 @@ def test_pin_joint_chaos_pendulum():
     B = ReferenceFrame('B')
     lA = (lB - h / 2) / 2
     lC = (lB/2 + h/4)
-    rod = Body('rod', frame=A, mass=mA)
-    plate = Body('plate', mass=mB, frame=B)
-    C = Body('C', frame=N)
+    rod = RigidBody('rod', frame=A, mass=mA)
+    plate = RigidBody('plate', mass=mB, frame=B)
+    C = RigidBody('C', frame=N)
     J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
                   child_point=lA*A.z, joint_axis=N.y)
     J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
@@ -245,7 +334,7 @@ def test_pin_joint_interframe():
     Pint.orient_body_fixed(N, (pi / 4, pi, pi / 3), 'xyz')
     PinJoint('J', P, C, q, u, parent_point=N.x, child_point=-C.y,
              parent_interframe=Pint, joint_axis=Pint.x)
-    assert _simplify_matrix(N.dcm(A)) - Matrix([
+    assert simplify(N.dcm(A)) - Matrix([
         [-1 / 2, sqrt(3) * cos(q) / 2, -sqrt(3) * sin(q) / 2],
         [sqrt(6) / 4, sqrt(2) * (2 * sin(q) + cos(q)) / 4,
          sqrt(2) * (-sin(q) + 2 * cos(q)) / 4],
@@ -262,7 +351,7 @@ def test_pin_joint_interframe():
     Cint.orient_body_fixed(A, (2 * pi / 3, -pi, pi / 2), 'xyz')
     PinJoint('J', P, C, q, u, parent_point=-N.z, child_point=C.x,
              child_interframe=Cint, joint_axis=P.x + P.z)
-    assert _simplify_matrix(N.dcm(A)) == Matrix([
+    assert simplify(N.dcm(A)) == Matrix([
         [-sqrt(2) * sin(q) / 2,
          -sqrt(3) * (cos(q) - 1) / 4 - cos(q) / 4 - S(1) / 4,
          sqrt(3) * (cos(q) + 1) / 4 - cos(q) / 4 + S(1) / 4],
@@ -285,7 +374,7 @@ def test_pin_joint_interframe():
     PinJoint('J', P, C, q, u, parent_point=N.x - N.y, child_point=-C.z,
              parent_interframe=Pint, child_interframe=Cint,
              joint_axis=Pint.x + Pint.z)
-    assert _simplify_matrix(N.dcm(A)) == Matrix([
+    assert simplify(N.dcm(A)) == Matrix([
         [cos(q), (sqrt(2) + sqrt(6)) * -sin(q) / 4,
          (-sqrt(2) + sqrt(6)) * sin(q) / 4],
         [-sqrt(2) * sin(q) / 2,
@@ -420,7 +509,7 @@ def test_pin_joint_arbitrary_axis():
              child_interframe=A.x + A.y)
     assert expand_mul(N.x.angle_between(A.x + A.y)) == 0  # Axis are aligned
     assert (A.x + A.y).express(N).simplify() == sqrt(2)*N.x
-    assert _simplify_matrix(A.dcm(N)) == Matrix([
+    assert simplify(A.dcm(N)) == Matrix([
         [sqrt(2)/2, -sqrt(2)*cos(q)/2, -sqrt(2)*sin(q)/2],
         [sqrt(2)/2, sqrt(2)*cos(q)/2, sqrt(2)*sin(q)/2],
         [0, -sin(q), cos(q)]])
@@ -444,7 +533,7 @@ def test_pin_joint_arbitrary_axis():
              child_interframe=A.x + A.y - A.z)
     assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0  # Axis aligned
     assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
-    assert _simplify_matrix(A.dcm(N)) == Matrix([
+    assert simplify(A.dcm(N)) == Matrix([
         [sqrt(3)/3, -sqrt(6)*sin(q + pi/4)/3,
          sqrt(6)*cos(q + pi/4)/3],
         [sqrt(3)/3, sqrt(6)*cos(q + pi/12)/3,
@@ -456,7 +545,7 @@ def test_pin_joint_arbitrary_axis():
                                                      u*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == sqrt(u**2)
     angle = A.ang_vel_in(N).angle_between(A.x + A.y-A.z)
-    assert angle.xreplace({u: 1}) == 0
+    assert angle.xreplace({u: 1}).simplify() == 0
     assert C.masscenter.vel(N).simplify() == (u*A.y + u*A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
     assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
@@ -477,19 +566,19 @@ def test_pin_joint_arbitrary_axis():
     assert ((A.x-A.y+A.z).express(N).simplify() ==
             (-4*cos(q)/3 - S(1)/3)*N.x + (S(1)/3 - 4*sin(q + pi/6)/3)*N.y +
             (4*cos(q + pi/3)/3 - S(1)/3)*N.z)
-    assert _simplify_matrix(A.dcm(N)) == Matrix([
+    assert simplify(A.dcm(N)) == Matrix([
         [S(1)/3 - 2*cos(q)/3, -2*sin(q + pi/6)/3 - S(1)/3,
          2*cos(q + pi/3)/3 + S(1)/3],
         [2*cos(q + pi/3)/3 + S(1)/3, 2*cos(q)/3 - S(1)/3,
          2*sin(q + pi/6)/3 + S(1)/3],
         [-2*sin(q + pi/6)/3 - S(1)/3, 2*cos(q + pi/3)/3 + S(1)/3,
          2*cos(q)/3 - S(1)/3]])
-    assert A.ang_vel_in(N) == (u*N.x - u*N.y + u*N.z)/sqrt(3)
+    assert (A.ang_vel_in(N) - (u*N.x - u*N.y + u*N.z)/sqrt(3)).simplify()
     assert A.ang_vel_in(N).express(A).simplify() == (u*A.x + u*A.y -
                                                      u*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == sqrt(u**2)
     angle = A.ang_vel_in(N).angle_between(A.x+A.y-A.z)
-    assert angle.xreplace({u: 1}) == 0
+    assert angle.xreplace({u: 1}).simplify() == 0
     assert (C.masscenter.vel(N).simplify() ==
             sqrt(3)*n*u/3*A.y + sqrt(3)*n*u/3*A.z)
     assert C.masscenter.pos_from(P.masscenter) == m*N.x - n*A.x
@@ -597,7 +686,7 @@ def test_locate_joint_frame():
            lambda: PinJoint('J', P, C, child_interframe=child_interframe))
 
 
-def test_sliding_joint():
+def test_prismatic_joint():
     _, _, P, C = _generate_body()
     q, u = dynamicsymbols('q_S, u_S')
     S = PrismaticJoint('S', P, C)
@@ -613,8 +702,8 @@ def test_sliding_joint():
     assert S.parent_point.pos_from(S.child_point) == - q * P.frame.x
     assert P.masscenter.pos_from(C.masscenter) == - q * P.frame.x
     assert C.masscenter.vel(P.frame) == u * P.frame.x
-    assert P.ang_vel_in(C) == 0
-    assert C.ang_vel_in(P) == 0
+    assert P.frame.ang_vel_in(C.frame) == 0
+    assert C.frame.ang_vel_in(P.frame) == 0
     assert S.__str__() == 'PrismaticJoint: S  parent: P  child: C'
 
     N, A, P, C = _generate_body()
@@ -629,11 +718,11 @@ def test_sliding_joint():
     assert S.child_point.pos_from(C.masscenter) == m * C.frame.y
     assert S.parent_point.pos_from(P.masscenter) == l * P.frame.x
     assert S.parent_point.pos_from(S.child_point) == - q * P.frame.z
-    assert P.masscenter.pos_from(C.masscenter) == - l*N.x - q*N.z + m*A.y
+    assert P.masscenter.pos_from(C.masscenter) == - l * N.x - q * N.z + m * A.y
     assert C.masscenter.vel(P.frame) == u * P.frame.z
     assert P.masscenter.vel(Pint) == Vector(0)
-    assert C.ang_vel_in(P) == 0
-    assert P.ang_vel_in(C) == 0
+    assert C.frame.ang_vel_in(P.frame) == 0
+    assert P.frame.ang_vel_in(C.frame) == 0
 
     _, _, P, C = _generate_body()
     Pint = ReferenceFrame('P_int')
@@ -647,11 +736,11 @@ def test_sliding_joint():
     assert S.parent_point.pos_from(S.child_point) == - q * P.frame.z
     assert P.masscenter.pos_from(C.masscenter) == (-l - q)*P.frame.z + m*C.frame.x
     assert C.masscenter.vel(P.frame) == u * P.frame.z
-    assert C.ang_vel_in(P) == 0
-    assert P.ang_vel_in(C) == 0
+    assert C.frame.ang_vel_in(P.frame) == 0
+    assert P.frame.ang_vel_in(C.frame) == 0
 
 
-def test_sliding_joint_arbitrary_axis():
+def test_prismatic_joint_arbitrary_axis():
     q, u = dynamicsymbols('q_S, u_S')
 
     N, A, P, C = _generate_body()
@@ -712,16 +801,17 @@ def test_sliding_joint_arbitrary_axis():
     N, A, P, C = _generate_body()
     PrismaticJoint('S', P, C, parent_point=N.x, child_point=A.x,
                    child_interframe=A.x + A.y - A.z)
-    assert N.x.angle_between(A.x + A.y - A.z) == 0 #Axis are aligned
-    assert (A.x + A.y - A.z).express(N) == sqrt(3)*N.x
-    assert _simplify_matrix(A.dcm(N)) == Matrix([[sqrt(3)/3, -sqrt(3)/3, sqrt(3)/3],
+    assert N.x.angle_between(A.x + A.y - A.z).simplify() == 0 #Axis are aligned
+    assert ((A.x + A.y - A.z).express(N) - sqrt(3)*N.x).simplify() == 0
+    assert simplify(A.dcm(N)) == Matrix([[sqrt(3)/3, -sqrt(3)/3, sqrt(3)/3],
                                                  [sqrt(3)/3, sqrt(3)/6 + S(1)/2, S(1)/2 - sqrt(3)/6],
                                                  [-sqrt(3)/3, S(1)/2 - sqrt(3)/6, sqrt(3)/6 + S(1)/2]])
     assert C.masscenter.pos_from(P.masscenter) == (q + 1)*N.x - A.x
-    assert C.masscenter.pos_from(P.masscenter).express(N) == \
-        (q - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z
+    assert (C.masscenter.pos_from(P.masscenter).express(N) -
+        ((q - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z)).simplify() == 0
     assert C.masscenter.vel(N) == u*N.x
-    assert C.masscenter.vel(N).express(A) == sqrt(3)*u/3*A.x + sqrt(3)*u/3*A.y - sqrt(3)*u/3*A.z
+    assert (C.masscenter.vel(N).express(A) - (
+        sqrt(3)*u/3*A.x + sqrt(3)*u/3*A.y - sqrt(3)*u/3*A.z)).simplify()
     assert A.ang_vel_in(N) == 0
     assert N.ang_vel_in(A) == 0
 
@@ -732,16 +822,20 @@ def test_sliding_joint_arbitrary_axis():
                    parent_interframe=N.x - N.y + N.z)
     # 0 angle means that the axis are aligned
     assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z).simplify() == 0
-    assert (A.x+A.y-A.z).express(N) == N.x - N.y + N.z
-    assert _simplify_matrix(A.dcm(N)) == Matrix([[-S(1)/3, -S(2)/3, S(2)/3],
+    assert ((A.x+A.y-A.z).express(N) - (N.x - N.y + N.z)).simplify() == 0
+    assert simplify(A.dcm(N)) == Matrix([[-S(1)/3, -S(2)/3, S(2)/3],
                                                  [S(2)/3, S(1)/3, S(2)/3],
                                                  [-S(2)/3, S(2)/3, S(1)/3]])
-    assert C.masscenter.pos_from(P.masscenter) == \
-        (m + sqrt(3)*q/3)*N.x - sqrt(3)*q/3*N.y + sqrt(3)*q/3*N.z - n*A.x
-    assert C.masscenter.pos_from(P.masscenter).express(N) == \
-        (m + n/3 + sqrt(3)*q/3)*N.x + (2*n/3 - sqrt(3)*q/3)*N.y + (-2*n/3 + sqrt(3)*q/3)*N.z
-    assert C.masscenter.vel(N) == sqrt(3)*u/3*N.x - sqrt(3)*u/3*N.y + sqrt(3)*u/3*N.z
-    assert C.masscenter.vel(N).express(A) == sqrt(3)*u/3*A.x + sqrt(3)*u/3*A.y - sqrt(3)*u/3*A.z
+    assert (C.masscenter.pos_from(P.masscenter) - (
+        (m + sqrt(3)*q/3)*N.x - sqrt(3)*q/3*N.y + sqrt(3)*q/3*N.z - n*A.x)
+            ).express(N).simplify() == 0
+    assert (C.masscenter.pos_from(P.masscenter).express(N) - (
+        (m + n/3 + sqrt(3)*q/3)*N.x + (2*n/3 - sqrt(3)*q/3)*N.y +
+        (-2*n/3 + sqrt(3)*q/3)*N.z)).simplify() == 0
+    assert (C.masscenter.vel(N).express(N) - (
+        sqrt(3)*u/3*N.x - sqrt(3)*u/3*N.y + sqrt(3)*u/3*N.z)).simplify() == 0
+    assert (C.masscenter.vel(N).express(A) -
+            (sqrt(3)*u/3*A.x + sqrt(3)*u/3*A.y - sqrt(3)*u/3*A.z)).simplify() == 0
     assert A.ang_vel_in(N) == 0
     assert N.ang_vel_in(A) == 0
 
@@ -874,7 +968,7 @@ def test_planar_joint_advanced():
          sqrt(3) * (1 - cos(q0)) / 4],
         [-sin(q0) / 2, sqrt(3) * (1 - cos(q0)) / 4, cos(q0) / 4 + 3 / 4]])
     # N.dcm(A) == N_R_A did not work
-    assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
+    assert simplify(N.dcm(A) - N_R_A) == zeros(3)
 
 
 def test_spherical_joint():
@@ -892,10 +986,10 @@ def test_spherical_joint():
     assert S.parent_point.pos_from(S.child_point) == Vector(0)
     assert P.masscenter.pos_from(C.masscenter) == Vector(0)
     assert C.masscenter.vel(N) == Vector(0)
-    assert P.ang_vel_in(C) == (-u0 * cos(q1) * cos(q2) - u1 * sin(q2)) * A.x + (
+    assert N.ang_vel_in(A) == (-u0 * cos(q1) * cos(q2) - u1 * sin(q2)) * A.x + (
             u0 * sin(q2) * cos(q1) - u1 * cos(q2)) * A.y + (
                    -u0 * sin(q1) - u2) * A.z
-    assert C.ang_vel_in(P) == (u0 * cos(q1) * cos(q2) + u1 * sin(q2)) * A.x + (
+    assert A.ang_vel_in(N) == (u0 * cos(q1) * cos(q2) + u1 * sin(q2)) * A.x + (
             -u0 * sin(q2) * cos(q1) + u1 * cos(q2)) * A.y + (
                    u0 * sin(q1) + u2) * A.z
     assert S.__str__() == 'SphericalJoint: S  parent: P  child: C'
@@ -914,7 +1008,7 @@ def test_spherical_joint_speeds_as_derivative_terms():
     assert S.coordinates == Matrix([q0, q1, q2])
     assert S.speeds == Matrix([u0, u1, u2])
     assert S.kdes == Matrix([0, 0, 0])
-    assert P.ang_vel_in(C) == (-u0 * cos(q1) * cos(q2) - u1 * sin(q2)) * A.x + (
+    assert N.ang_vel_in(A) == (-u0 * cos(q1) * cos(q2) - u1 * sin(q2)) * A.x + (
         u0 * sin(q2) * cos(q1) - u1 * cos(q2)) * A.y + (
                -u0 * sin(q1) - u2) * A.z
 
@@ -966,9 +1060,9 @@ def test_spherical_joint_orient_body():
                        rot_type='body', rot_order=123)
     assert S._rot_type.upper() == 'BODY'
     assert S._rot_order == 123
-    assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
-    assert A.ang_vel_in(N).to_matrix(A) == N_w_A
-    assert C.masscenter.vel(N).to_matrix(A) == N_v_Co
+    assert simplify(N.dcm(A) - N_R_A) == zeros(3)
+    assert simplify(A.ang_vel_in(N).to_matrix(A) - N_w_A) == zeros(3, 1)
+    assert simplify(C.masscenter.vel(N).to_matrix(A)) == N_v_Co
     # Test change of amounts
     N, A, P, C, Pint, Cint = _generate_body(True)
     S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
@@ -979,9 +1073,10 @@ def test_spherical_joint_orient_body():
         {q0: q1, q1: q0, q2: q2, u0: u1, u1: u0, u2: u2})
     assert S._rot_type.upper() == 'BODY'
     assert S._rot_order == 123
-    assert _simplify_matrix(N.dcm(A) - switch_order(N_R_A)) == zeros(3)
-    assert A.ang_vel_in(N).to_matrix(A) == switch_order(N_w_A)
-    assert C.masscenter.vel(N).to_matrix(A) == switch_order(N_v_Co)
+    assert simplify(N.dcm(A) - switch_order(N_R_A)) == zeros(3)
+    assert simplify(A.ang_vel_in(N).to_matrix(A) - switch_order(N_w_A)
+                            ) == zeros(3, 1)
+    assert simplify(C.masscenter.vel(N).to_matrix(A)) == switch_order(N_v_Co)
     # Test different rot_order
     N, A, P, C, Pint, Cint = _generate_body(True)
     S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
@@ -990,16 +1085,16 @@ def test_spherical_joint_orient_body():
                        rot_type='BodY', rot_order='yxz')
     assert S._rot_type.upper() == 'BODY'
     assert S._rot_order == 'yxz'
-    assert _simplify_matrix(N.dcm(A) - Matrix([
+    assert simplify(N.dcm(A) - Matrix([
         [-sin(q0) * cos(q1), sin(q0) * sin(q1) * cos(q2) - sin(q2) * cos(q0),
          sin(q0) * sin(q1) * sin(q2) + cos(q0) * cos(q2)],
         [-sin(q1), -cos(q1) * cos(q2), -sin(q2) * cos(q1)],
         [cos(q0) * cos(q1), -sin(q0) * sin(q2) - sin(q1) * cos(q0) * cos(q2),
          sin(q0) * cos(q2) - sin(q1) * sin(q2) * cos(q0)]])) == zeros(3)
-    assert A.ang_vel_in(N).to_matrix(A) == Matrix([
+    assert simplify(A.ang_vel_in(N).to_matrix(A) - Matrix([
         [u0 * sin(q1) - u2], [u0 * cos(q1) * cos(q2) - u1 * sin(q2)],
-        [u0 * sin(q2) * cos(q1) + u1 * cos(q2)]])
-    assert C.masscenter.vel(N).to_matrix(A) == Matrix([
+        [u0 * sin(q2) * cos(q1) + u1 * cos(q2)]])) == zeros(3, 1)
+    assert simplify(C.masscenter.vel(N).to_matrix(A)) == Matrix([
         [-sqrt(2) * (u0 * sin(q2 + pi / 4) * cos(q1) + u1 * cos(q2 + pi / 4))],
         [u0 * sin(q1) - u2], [u0 * sin(q1) - u2]])
 
@@ -1026,9 +1121,9 @@ def test_spherical_joint_orient_space():
                        rot_type='space', rot_order=123)
     assert S._rot_type.upper() == 'SPACE'
     assert S._rot_order == 123
-    assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
-    assert _simplify_matrix(A.ang_vel_in(N).to_matrix(A)) == N_w_A
-    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == N_v_Co
+    assert simplify(N.dcm(A) - N_R_A) == zeros(3)
+    assert simplify(A.ang_vel_in(N).to_matrix(A)) == N_w_A
+    assert simplify(C.masscenter.vel(N).to_matrix(A)) == N_v_Co
     # Test change of amounts
     switch_order = lambda expr: expr.xreplace(
         {q0: q1, q1: q0, q2: q2, u0: u1, u1: u0, u2: u2})
@@ -1039,9 +1134,9 @@ def test_spherical_joint_orient_space():
                        rot_type='SPACE', amounts=(q1, q0, q2), rot_order=123)
     assert S._rot_type.upper() == 'SPACE'
     assert S._rot_order == 123
-    assert _simplify_matrix(N.dcm(A) - switch_order(N_R_A)) == zeros(3)
-    assert _simplify_matrix(A.ang_vel_in(N).to_matrix(A)) == switch_order(N_w_A)
-    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == switch_order(N_v_Co)
+    assert simplify(N.dcm(A) - switch_order(N_R_A)) == zeros(3)
+    assert simplify(A.ang_vel_in(N).to_matrix(A)) == switch_order(N_w_A)
+    assert simplify(C.masscenter.vel(N).to_matrix(A)) == switch_order(N_v_Co)
     # Test different rot_order
     N, A, P, C, Pint, Cint = _generate_body(True)
     S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
@@ -1050,16 +1145,16 @@ def test_spherical_joint_orient_space():
                        rot_type='SPaCe', rot_order='zxy')
     assert S._rot_type.upper() == 'SPACE'
     assert S._rot_order == 'zxy'
-    assert _simplify_matrix(N.dcm(A) - Matrix([
+    assert simplify(N.dcm(A) - Matrix([
         [-sin(q2) * cos(q1), -sin(q0) * cos(q2) + sin(q1) * sin(q2) * cos(q0),
          sin(q0) * sin(q1) * sin(q2) + cos(q0) * cos(q2)],
         [-sin(q1), -cos(q0) * cos(q1), -sin(q0) * cos(q1)],
         [cos(q1) * cos(q2), -sin(q0) * sin(q2) - sin(q1) * cos(q0) * cos(q2),
          -sin(q0) * sin(q1) * cos(q2) + sin(q2) * cos(q0)]]))
-    assert _simplify_matrix(A.ang_vel_in(N).to_matrix(A) - Matrix([
+    assert simplify(A.ang_vel_in(N).to_matrix(A) - Matrix([
         [-u0 + u2 * sin(q1)], [-u1 * sin(q0) + u2 * cos(q0) * cos(q1)],
         [u1 * cos(q0) + u2 * sin(q0) * cos(q1)]])) == zeros(3, 1)
-    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A) - Matrix([
+    assert simplify(C.masscenter.vel(N).to_matrix(A) - Matrix([
         [u1 * cos(q0) + u2 * sin(q0) * cos(q1)],
         [u1 * cos(q0) + u2 * sin(q0) * cos(q1)],
         [u0 + u1 * sin(q0) - u2 * sin(q1) -
@@ -1075,14 +1170,14 @@ def test_weld_joint():
     assert W.coordinates == Matrix()
     assert W.speeds == Matrix()
     assert W.kdes == Matrix(1, 0, []).T
-    assert P.dcm(C) == eye(3)
+    assert P.frame.dcm(C.frame) == eye(3)
     assert W.child_point.pos_from(C.masscenter) == Vector(0)
     assert W.parent_point.pos_from(P.masscenter) == Vector(0)
     assert W.parent_point.pos_from(W.child_point) == Vector(0)
     assert P.masscenter.pos_from(C.masscenter) == Vector(0)
     assert C.masscenter.vel(P.frame) == Vector(0)
-    assert P.ang_vel_in(C) == 0
-    assert C.ang_vel_in(P) == 0
+    assert P.frame.ang_vel_in(C.frame) == 0
+    assert C.frame.ang_vel_in(P.frame) == 0
     assert W.__str__() == 'WeldJoint: W  parent: P  child: C'
 
     N, A, P, C = _generate_body()
@@ -1098,11 +1193,12 @@ def test_weld_joint():
     assert P.masscenter.pos_from(C.masscenter) == - l * N.x + m * A.y
     assert C.masscenter.vel(P.frame) == Vector(0)
     assert P.masscenter.vel(Pint) == Vector(0)
-    assert C.ang_vel_in(P) == 0
-    assert P.ang_vel_in(C) == 0
+    assert C.frame.ang_vel_in(P.frame) == 0
+    assert P.frame.ang_vel_in(C.frame) == 0
     assert P.x == A.z
 
-    JointsMethod(P, W)  # Tests #10770
+    with warns_deprecated_sympy():
+        JointsMethod(P, W)  # Tests #10770
 
 
 def test_deprecated_parent_child_axis():

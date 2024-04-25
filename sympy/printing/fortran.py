@@ -27,7 +27,7 @@ import string
 from sympy.codegen.ast import (
     Assignment, Declaration, Pointer, value_const,
     float32, float64, float80, complex64, complex128, int8, int16, int32,
-    int64, intc, real, integer,  bool_, complex_
+    int64, intc, real, integer,  bool_, complex_, none, stderr, stdout
 )
 from sympy.codegen.fnodes import (
     allocatable, isign, dsign, cmplx, merge, literal_dp, elemental, pure,
@@ -96,18 +96,14 @@ class FCodePrinter(CodePrinter):
         intc: {'iso_c_binding': 'c_int'}
     }
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
         'name_mangling': True,
-    }
+    })
 
     _operators = {
         'and': '.and.',
@@ -669,11 +665,15 @@ class FCodePrinter(CodePrinter):
                 return strm.name
 
     def _print_Print(self, ps):
-        if ps.format_string != None: # Must be '!= None', cannot be 'is not None'
-            fmt = self._print(ps.format_string)
+        if ps.format_string == none: # Must be '!= None', cannot be 'is not None'
+            template = "print {fmt}, {iolist}"
+            fmt = '*'
         else:
-            fmt = "*"
-        return "print {fmt}, {iolist}".format(fmt=fmt, iolist=', '.join(
+            template = 'write(%(out)s, fmt="{fmt}", advance="no"), {iolist}' % {
+                'out': {stderr: '0', stdout: '6'}.get(ps.file, '*')
+            }
+            fmt = self._print(ps.format_string)
+        return template.format(fmt=fmt, iolist=', '.join(
             (self._print(arg) for arg in ps.print_args)))
 
     def _print_Return(self, rs):

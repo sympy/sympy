@@ -179,16 +179,15 @@ will return values and update the dictionary.
 For a :class:`~.Symbol`, there are two locations for assumptions that may
 be of interest. The ``assumptions0`` attribute gives the full set of
 assumptions derived from a given set of initial assumptions. The
-latter assumptions are stored as ``Symbol._assumptions.generator``
+latter assumptions are stored as ``Symbol._assumptions_orig``
 
-    >>> Symbol('x', prime=True, even=True)._assumptions.generator
+    >>> Symbol('x', prime=True, even=True)._assumptions_orig
     {'even': True, 'prime': True}
 
-The ``generator`` is not necessarily canonical nor is it filtered
-in any way: it records the assumptions used to instantiate a Symbol
-and (for storage purposes) represents a more compact representation
-of the assumptions needed to recreate the full set in
-``Symbol.assumptions0``.
+The ``_assumptions_orig`` are not necessarily canonical nor are they filtered
+in any way: they records the assumptions used to instantiate a Symbol and (for
+storage purposes) represent a more compact representation of the assumptions
+needed to recreate the full set in ``Symbol.assumptions0``.
 
 
 References
@@ -218,7 +217,7 @@ from .sympify import sympify
 from sympy.core.random import _assumptions_shuffle as shuffle
 from sympy.core.assumptions_generated import generated_assumptions as _assumptions
 
-def _load_pre_generated_assumption_rules():
+def _load_pre_generated_assumption_rules() -> FactRules:
     """ Load the assumption rules from pre-generated data
 
     To update the pre-generated data, see :method::`_generate_assumption_rules`

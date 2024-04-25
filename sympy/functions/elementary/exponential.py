@@ -8,9 +8,10 @@ from sympy.core.function import (Function, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational, pi, I, ImaginaryUnit
+from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
+from sympy.core.relational import Ge
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.sympify import sympify
@@ -63,6 +64,8 @@ class ExpBase(Function):
         """
         # this should be the same as Pow.as_numer_denom wrt
         # exponent handling
+        if not self.is_commutative:
+            return self, S.One
         exp = self.exp
         neg_exp = exp.is_negative
         if not neg_exp and not (-exp).is_negative:
@@ -273,7 +276,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.sets.setexpr import SetExpr
         from sympy.simplify.simplify import logcombine
         if isinstance(arg, MatrixBase):
@@ -493,8 +496,10 @@ class exp(ExpBase, metaclass=ExpMeta):
             return Order(x**n, x)
         if arg0 is S.Infinity:
             return self
+        if arg0.is_infinite:
+            raise PoleError("Cannot expand %s around 0" % (self))
         # checking for indecisiveness/ sign terms in arg0
-        if any(isinstance(arg, (sign, ImaginaryUnit)) for arg in arg0.args):
+        if any(isinstance(arg, sign) for arg in arg0.args):
             return self
         t = Dummy("t")
         nterms = n
@@ -1157,20 +1162,30 @@ class LambertW(Function):
                 return S.Zero
             if x is S.Exp1:
                 return S.One
-            if x == -1/S.Exp1:
-                return S.NegativeOne
+            w = Wild('w')
+            # W(x*log(x)) = log(x) for x >= 1/e
+            # e.g., W(-1/e) = -1, W(2*log(2)) = log(2)
+            result = x.match(w*log(w))
+            if result is not None and Ge(result[w]*S.Exp1, S.One) is S.true:
+                return log(result[w])
             if x == -log(2)/2:
                 return -log(2)
-            if x == 2*log(2):
-                return log(2)
+            # W(x**(x+1)*log(x)) = x*log(x) for x > 0
+            # e.g., W(81*log(3)) = 3*log(3)
+            result = x.match(w**(w+1)*log(w))
+            if result is not None and result[w].is_positive is True:
+                return result[w]*log(result[w])
+            # W(e**(1/n)/n) = 1/n
+            # e.g., W(sqrt(e)/2) = 1/2
+            result = x.match(S.Exp1**(1/w)/w)
+            if result is not None:
+                return 1 / result[w]
             if x == -pi/2:
                 return I*pi/2
             if x == exp(1 + S.Exp1):
                 return S.Exp1
             if x is S.Infinity:
                 return S.Infinity
-            if x.is_zero:
-                return S.Zero
 
         if fuzzy_not(k.is_zero):
             if x.is_zero:

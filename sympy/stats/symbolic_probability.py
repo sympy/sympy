@@ -1,5 +1,4 @@
 import itertools
-
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -59,6 +58,9 @@ class Probability(Expr):
     >>> prob.evaluate_integral()
     sqrt(2)*(-sqrt(2)*sqrt(pi)*erf(sqrt(2)/2) + sqrt(2)*sqrt(pi))/(4*sqrt(pi))
     """
+
+    is_commutative = True
+
     def __new__(cls, prob, condition=None, **kwargs):
         prob = _sympify(prob)
         if condition is None:
@@ -73,15 +75,15 @@ class Probability(Expr):
         condition = self.args[0]
         given_condition = self._condition
         numsamples = hints.get('numsamples', False)
-        for_rewrite = not hints.get('for_rewrite', False)
+        evaluate = hints.get('evaluate', True)
 
         if isinstance(condition, Not):
             return S.One - self.func(condition.args[0], given_condition,
-                                    evaluate=for_rewrite).doit(**hints)
+                                    evaluate=evaluate).doit(**hints)
 
         if condition.has(RandomIndexedSymbol):
             return pspace(condition).probability(condition, given_condition,
-                                             evaluate=for_rewrite)
+                                             evaluate=evaluate)
 
         if isinstance(given_condition, RandomSymbol):
             condrv = random_symbols(condition)
@@ -117,13 +119,13 @@ class Probability(Expr):
             return Probability(condition, given_condition)
 
         result = pspace(condition).probability(condition)
-        if hasattr(result, 'doit') and for_rewrite:
+        if hasattr(result, 'doit') and evaluate:
             return result.doit()
         else:
             return result
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
-        return self.func(arg, condition=condition).doit(for_rewrite=True)
+        return self.func(arg, condition=condition).doit(evaluate=False)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
@@ -197,7 +199,7 @@ class Expectation(Expr):
     >>> Expectation(X + Expectation(Y)).doit(deep=False)
     mu + Expectation(Expectation(Y))
     >>> Expectation(X + Expectation(Y + Expectation(2*X))).doit(deep=False)
-    mu + Expectation(Expectation(Y + Expectation(2*X)))
+    mu + Expectation(Expectation(Expectation(2*X) + Y))
 
     """
 
@@ -215,6 +217,9 @@ class Expectation(Expr):
             obj = Expr.__new__(cls, expr, condition)
         obj._condition = condition
         return obj
+
+    def _eval_is_commutative(self):
+        return(self.args[0].is_commutative)
 
     def expand(self, **hints):
         expr = self.args[0]
@@ -249,7 +254,7 @@ class Expectation(Expr):
         condition = self._condition
         expr = self.args[0]
         numsamples = hints.get('numsamples', False)
-        for_rewrite = not hints.get('for_rewrite', False)
+        evaluate = hints.get('evaluate', True)
 
         if deep:
             expr = expr.doit(**hints)
@@ -280,8 +285,8 @@ class Expectation(Expr):
         if pspace(expr) == PSpace():
             return self.func(expr)
         # Otherwise case is simple, pass work off to the ProbabilitySpace
-        result = pspace(expr).compute_expectation(expr, evaluate=for_rewrite)
-        if hasattr(result, 'doit') and for_rewrite:
+        result = pspace(expr).compute_expectation(expr, evaluate=evaluate)
+        if hasattr(result, 'doit') and evaluate:
             return result.doit(**hints)
         else:
             return result
@@ -312,8 +317,8 @@ class Expectation(Expr):
             else:
                 return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
 
-    def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
-        return self.func(arg, condition=condition).doit(deep=False, for_rewrite=True)
+    def _eval_rewrite_as_Integral(self, arg, condition=None, evaluate=False, **kwargs):
+        return self.func(arg, condition=condition).doit(deep=False, evaluate=evaluate)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral # For discrete this will be Sum
 
@@ -384,6 +389,9 @@ class Variance(Expr):
             obj = Expr.__new__(cls, arg, condition)
         obj._condition = condition
         return obj
+
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
 
     def expand(self, **hints):
         arg = self.args[0]
@@ -498,6 +506,9 @@ class Covariance(Expr):
             obj = Expr.__new__(cls, arg1, arg2, condition)
         obj._condition = condition
         return obj
+
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
 
     def expand(self, **hints):
         arg1 = self.args[0]
@@ -651,7 +662,7 @@ class CentralMoment(Expr):
     Rewrite the CentralMoment expression in terms of Expectation:
 
     >>> CM.rewrite(Expectation)
-    Expectation((X - Expectation(X))**4)
+    Expectation((-Expectation(X) + X)**4)
 
     Rewrite the CentralMoment expression in terms of Probability:
 

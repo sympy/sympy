@@ -530,3 +530,7 @@ class hypot(Function):
         return _hypot(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
+
+
+class isnan(Function):
+    nargs = 1

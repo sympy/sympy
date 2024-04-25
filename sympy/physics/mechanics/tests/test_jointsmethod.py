@@ -3,11 +3,12 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.dense import Matrix
 from sympy.simplify.trigsimp import trigsimp
-from sympy.physics.mechanics import (PinJoint, JointsMethod, Body, KanesMethod,
-                                    PrismaticJoint, LagrangesMethod, inertia)
+from sympy.physics.mechanics import (
+    PinJoint, JointsMethod, RigidBody, Particle, Body, KanesMethod,
+    PrismaticJoint, LagrangesMethod, inertia)
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-from sympy.testing.pytest import raises
-from sympy.core.backend import zeros
+from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy import zeros
 from sympy.utilities.lambdify import lambdify
 from sympy.solvers.solvers import solve
 
@@ -16,13 +17,15 @@ t = dynamicsymbols._t # type: ignore
 
 
 def test_jointsmethod():
-    P = Body('P')
-    C = Body('C')
+    with warns_deprecated_sympy():
+        P = Body('P')
+        C = Body('C')
     Pin = PinJoint('P1', P, C)
     C_ixx, g = symbols('C_ixx g')
     q, u = dynamicsymbols('q_P1, u_P1')
     P.apply_force(g*P.y)
-    method = JointsMethod(P, Pin)
+    with warns_deprecated_sympy():
+        method = JointsMethod(P, Pin)
     assert method.frame == P.frame
     assert method.bodies == [C, P]
     assert method.loads == [(P.masscenter, g*P.frame.y)]
@@ -35,30 +38,52 @@ def test_jointsmethod():
     assert method.mass_matrix_full == Matrix([[1, 0], [0, C_ixx]])
     assert isinstance(method.method, KanesMethod)
 
+
+def test_rigid_body_particle_compatibility():
+    l, m, g = symbols('l m g')
+    C = RigidBody('C')
+    b = Particle('b', mass=m)
+    b_frame = ReferenceFrame('b_frame')
+    q, u = dynamicsymbols('q u')
+    P = PinJoint('P', C, b, coordinates=q, speeds=u, child_interframe=b_frame,
+                 child_point=-l * b_frame.x, joint_axis=C.z)
+    with warns_deprecated_sympy():
+        method = JointsMethod(C, P)
+    method.loads.append((b.masscenter, m * g * C.x))
+    method.form_eoms()
+    rhs = method.rhs()
+    assert rhs[1] == -g*sin(q)/l
+
+
 def test_jointmethod_duplicate_coordinates_speeds():
-    P = Body('P')
-    C = Body('C')
-    T = Body('T')
+    with warns_deprecated_sympy():
+        P = Body('P')
+        C = Body('C')
+        T = Body('T')
     q, u = dynamicsymbols('q u')
     P1 = PinJoint('P1', P, C, q)
     P2 = PrismaticJoint('P2', C, T, q)
-    raises(ValueError, lambda: JointsMethod(P, P1, P2))
+    with warns_deprecated_sympy():
+        raises(ValueError, lambda: JointsMethod(P, P1, P2))
 
     P1 = PinJoint('P1', P, C, speeds=u)
     P2 = PrismaticJoint('P2', C, T, speeds=u)
-    raises(ValueError, lambda: JointsMethod(P, P1, P2))
+    with warns_deprecated_sympy():
+        raises(ValueError, lambda: JointsMethod(P, P1, P2))
 
     P1 = PinJoint('P1', P, C, q, u)
     P2 = PrismaticJoint('P2', C, T, q, u)
-    raises(ValueError, lambda: JointsMethod(P, P1, P2))
+    with warns_deprecated_sympy():
+        raises(ValueError, lambda: JointsMethod(P, P1, P2))
 
 def test_complete_simple_double_pendulum():
     q1, q2 = dynamicsymbols('q1 q2')
     u1, u2 = dynamicsymbols('u1 u2')
     m, l, g = symbols('m l g')
-    C = Body('C')  # ceiling
-    PartP = Body('P', mass=m)
-    PartR = Body('R', mass=m)
+    with warns_deprecated_sympy():
+        C = Body('C')  # ceiling
+        PartP = Body('P', mass=m)
+        PartR = Body('R', mass=m)
     J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1,
                   child_point=-l*PartP.x, joint_axis=C.z)
     J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2,
@@ -67,7 +92,8 @@ def test_complete_simple_double_pendulum():
     PartP.apply_force(m*g*C.x)
     PartR.apply_force(m*g*C.x)
 
-    method = JointsMethod(C, J1, J2)
+    with warns_deprecated_sympy():
+        method = JointsMethod(C, J1, J2)
     method.form_eoms()
 
     assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0],
@@ -81,16 +107,18 @@ def test_complete_simple_double_pendulum():
 def test_two_dof_joints():
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
     m, c1, c2, k1, k2 = symbols('m c1 c2 k1 k2')
-    W = Body('W')
-    B1 = Body('B1', mass=m)
-    B2 = Body('B2', mass=m)
+    with warns_deprecated_sympy():
+        W = Body('W')
+        B1 = Body('B1', mass=m)
+        B2 = Body('B2', mass=m)
     J1 = PrismaticJoint('J1', W, B1, coordinates=q1, speeds=u1)
     J2 = PrismaticJoint('J2', B1, B2, coordinates=q2, speeds=u2)
     W.apply_force(k1*q1*W.x, reaction_body=B1)
     W.apply_force(c1*u1*W.x, reaction_body=B1)
     B1.apply_force(k2*q2*W.x, reaction_body=B2)
     B1.apply_force(c2*u2*W.x, reaction_body=B2)
-    method = JointsMethod(W, J1, J2)
+    with warns_deprecated_sympy():
+        method = JointsMethod(W, J1, J2)
     method.form_eoms()
     MM = method.mass_matrix
     forcing = method.forcing
@@ -101,13 +129,15 @@ def test_two_dof_joints():
 
 def test_simple_pedulum():
     l, m, g = symbols('l m g')
-    C = Body('C')
-    b = Body('b', mass=m)
+    with warns_deprecated_sympy():
+        C = Body('C')
+        b = Body('b', mass=m)
     q = dynamicsymbols('q')
     P = PinJoint('P', C, b, speeds=q.diff(t), coordinates=q,
                  child_point=-l * b.x, joint_axis=C.z)
     b.potential_energy = - m * g * l * cos(q)
-    method = JointsMethod(C, P)
+    with warns_deprecated_sympy():
+        method = JointsMethod(C, P)
     method.form_eoms(LagrangesMethod)
     rhs = method.rhs()
     assert rhs[1] == -g*sin(q)/l
@@ -120,9 +150,12 @@ def test_chaos_pendulum():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
 
-    rod = Body('rod', mass=mA, frame=A, central_inertia=inertia(A, IAxx, IAxx, 0))
-    plate = Body('plate', mass=mB, frame=B, central_inertia=inertia(B, IBxx, IByy, IBzz))
-    C = Body('C')
+    with warns_deprecated_sympy():
+        rod = Body('rod', mass=mA, frame=A,
+                   central_inertia=inertia(A, IAxx, IAxx, 0))
+        plate = Body('plate', mass=mB, frame=B,
+                     central_inertia=inertia(B, IBxx, IByy, IBzz))
+        C = Body('C')
     J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
                   child_point=-lA * rod.z, joint_axis=C.y)
     J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
@@ -131,7 +164,8 @@ def test_chaos_pendulum():
     rod.apply_force(mA*g*C.z)
     plate.apply_force(mB*g*C.z)
 
-    method = JointsMethod(C, J1, J2)
+    with warns_deprecated_sympy():
+        method = JointsMethod(C, J1, J2)
     method.form_eoms()
 
     MM = method.mass_matrix
@@ -150,10 +184,12 @@ def test_four_bar_linkage_with_manual_constraints():
 
     N = ReferenceFrame('N')
     inertias = [inertia(N, 0, 0, rho * l ** 3 / 12) for l in (l1, l2, l3, l4)]
-    link1 = Body('Link1', frame=N, mass=rho * l1, central_inertia=inertias[0])
-    link2 = Body('Link2', mass=rho * l2, central_inertia=inertias[1])
-    link3 = Body('Link3', mass=rho * l3, central_inertia=inertias[2])
-    link4 = Body('Link4', mass=rho * l4, central_inertia=inertias[3])
+    with warns_deprecated_sympy():
+        link1 = Body('Link1', frame=N, mass=rho * l1,
+                     central_inertia=inertias[0])
+        link2 = Body('Link2', mass=rho * l2, central_inertia=inertias[1])
+        link3 = Body('Link3', mass=rho * l3, central_inertia=inertias[2])
+        link4 = Body('Link4', mass=rho * l4, central_inertia=inertias[3])
 
     joint1 = PinJoint(
         'J1', link1, link2, coordinates=q1, speeds=u1, joint_axis=link1.z,
@@ -170,7 +206,8 @@ def test_four_bar_linkage_with_manual_constraints():
 
     fh = Matrix([loop.dot(link1.x), loop.dot(link1.y)])
 
-    method = JointsMethod(link1, joint1, joint2, joint3)
+    with warns_deprecated_sympy():
+        method = JointsMethod(link1, joint1, joint2, joint3)
 
     t = dynamicsymbols._t
     qdots = solve(method.kdes, [q1.diff(t), q2.diff(t), q3.diff(t)])

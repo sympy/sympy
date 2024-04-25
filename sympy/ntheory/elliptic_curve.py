@@ -1,13 +1,12 @@
 from sympy.core.numbers import oo
-from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
 from sympy.polys.domains import FiniteField, QQ, RationalField, FF
+from sympy.polys.polytools import Poly
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
 from .factor_ import divisors
 from .residue_ntheory import polynomial_congruence
-
 
 
 class EllipticCurve:
@@ -17,7 +16,7 @@ class EllipticCurve:
     `y^{2} + a_{1} x y + a_{3} y = x^{3} + a_{2} x^{2} + a_{4} x + a_{6}`
 
     The default domain is ``QQ``. If no coefficient ``a1``, ``a2``, ``a3``,
-    it create curve as following form.
+    is given then it creates a curve with the following form:
 
     `y^{2} = x^{3} + a_{4} x + a_{6}`
 
@@ -33,7 +32,7 @@ class EllipticCurve:
 
     """
 
-    def __init__(self, a4, a6, a1=0, a2=0, a3=0, modulus = 0):
+    def __init__(self, a4, a6, a1=0, a2=0, a3=0, modulus=0):
         if modulus == 0:
             domain = QQ
         else:
@@ -55,7 +54,7 @@ class EllipticCurve:
         self._a6 = a6
         x, y, z = symbols('x y z')
         self.x, self.y, self.z = x, y, z
-        self._eq = Eq(y**2*z + a1*x*y*z + a3*y*z**2, x**3 + a2*x**2*z + a4*x*z**2 + a6*z**3)
+        self._poly = Poly(y**2*z + a1*x*y*z + a3*y*z**2 - x**3 - a2*x**2*z - a4*x*z**2 - a6*z**3, domain=domain)
         if isinstance(self._domain, FiniteField):
             self._rank = 0
         elif isinstance(self._domain, RationalField):
@@ -77,10 +76,10 @@ class EllipticCurve:
             raise ValueError('Invalid point.')
         if self.characteristic == 0 and z1 == 0:
             return True
-        return self._eq.subs({self.x: x1, self.y: y1, self.z: z1})
+        return self._poly.subs({self.x: x1, self.y: y1, self.z: z1}) == 0
 
     def __repr__(self):
-        return 'E({}): {}'.format(self._domain, self._eq)
+        return self._poly.__repr__()
 
     def minimal(self):
         """
@@ -93,7 +92,7 @@ class EllipticCurve:
 
         >>> e1 = EllipticCurve(-10, -20, 0, -1, 1)
         >>> e1.minimal()
-        E(QQ): Eq(y**2*z, x**3 - 13392*x*z**2 - 1080432*z**3)
+        Poly(-x**3 + 13392*x*z**2 + y**2*z + 1080432*z**3, x, y, z, domain='QQ')
 
         """
         char = self.characteristic
@@ -123,23 +122,23 @@ class EllipticCurve:
         all_pt = set()
         if char >= 1:
             for i in range(char):
-                congruence_eq = ((self._eq.lhs - self._eq.rhs).subs({self.x: i, self.z: 1}))
+                congruence_eq = self._poly.subs({self.x: i, self.z: 1}).expr
                 sol = polynomial_congruence(congruence_eq, char)
-                for num in sol:
-                    all_pt.add((i, num))
+                all_pt.update((i, num) for num in sol)
             return all_pt
         else:
             raise ValueError("Infinitely many points")
 
     def points_x(self, x):
-        "Returns points on with curve where xcoordinate = x"
+        """Returns points on the curve for the given x-coordinate."""
         pt = []
         if self._domain == QQ:
-            for y in solve(self._eq.subs(self.x, x)):
-                    pt.append((x, y))
-        congruence_eq = ((self._eq.lhs - self._eq.rhs).subs({self.x: x, self.z: 1}))
-        for y in polynomial_congruence(congruence_eq, self.characteristic):
-            pt.append((x, y))
+            for y in solve(self._poly.subs(self.x, x)):
+                pt.append((x, y))
+        else:
+            congruence_eq = self._poly.subs({self.x: x, self.z: 1}).expr
+            for y in polynomial_congruence(congruence_eq, self.characteristic):
+                pt.append((x, y))
         return pt
 
     def torsion_points(self):
@@ -164,13 +163,13 @@ class EllipticCurve:
         if self.characteristic > 0:
             raise ValueError("No torsion point for Finite Field.")
         l = [EllipticCurvePoint.point_at_infinity(self)]
-        for xx in solve(self._eq.subs({self.y: 0, self.z: 1})):
+        for xx in solve(self._poly.subs({self.y: 0, self.z: 1})):
             if xx.is_rational:
                 l.append(self(xx, 0))
         for i in divisors(self.discriminant, generator=True):
             j = int(i**.5)
             if j**2 == i:
-                for xx in solve(self._eq.subs({self.y: j, self.z: 1})):
+                for xx in solve(self._poly.subs({self.y: j, self.z: 1})):
                     if not xx.is_rational:
                         continue
                     p = self(xx, j)

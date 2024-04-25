@@ -16,7 +16,10 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
-from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, genocchi, lucas, fibonacci, tribonacci
+from sympy.functions.combinatorial.numbers import (bernoulli, bell, catalan, euler, genocchi,
+                                                   lucas, fibonacci, tribonacci, divisor_sigma, udivisor_sigma,
+                                                   mobius, primenu, primeomega,
+                                                   totient, reduced_totient)
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, coth)
@@ -46,7 +49,6 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
-from sympy.ntheory.factor_ import (divisor_sigma, primenu, primeomega, reduced_totient, totient, udivisor_sigma)
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
 from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
@@ -810,7 +812,7 @@ def test_hyper_printing():
     assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(), z)) == \
         r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
     assert latex(hyper((x, 2), (3,), z)) == \
-        r'{{}_{2}F_{1}\left(\begin{matrix} x, 2 ' \
+        r'{{}_{2}F_{1}\left(\begin{matrix} 2, x ' \
         r'\\ 3 \end{matrix}\middle| {z} \right)}'
     assert latex(hyper(Tuple(), Tuple(1), z)) == \
         r'{{}_{0}F_{1}\left(\begin{matrix}  ' \
@@ -1805,6 +1807,8 @@ def test_latex_numbers():
     assert latex(tribonacci(n, x)) == r"T_{n}\left(x\right)"
     assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
     assert latex(tribonacci(n, x)**2) == r"T_{n}^{2}\left(x\right)"
+    assert latex(mobius(n)) == r"\mu\left(n\right)"
+    assert latex(mobius(n)**2) == r"\mu^{2}\left(n\right)"
 
 
 def test_latex_euler():
@@ -2111,6 +2115,13 @@ def test_Adjoint():
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
 
+    # adjoint style
+    assert latex(Adjoint(X), adjoint_style="star") == r'X^{\ast}'
+    assert latex(Adjoint(X + Y), adjoint_style="hermitian") == r'\left(X + Y\right)^{\mathsf{H}}'
+    assert latex(Adjoint(X) + Adjoint(Y), adjoint_style="dagger") == r'X^{\dagger} + Y^{\dagger}'
+    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^{\dagger} X^{\dagger}'
+    assert latex(Adjoint(X**2), adjoint_style="star") == r'\left(X^{2}\right)^{\ast}'
+    assert latex(Adjoint(X)**2, adjoint_style="hermitian") == r'\left(X^{\mathsf{H}}\right)^{2}'
 
 def test_Transpose():
     from sympy.matrices import Transpose, MatPow, HadamardPower
@@ -2451,6 +2462,8 @@ def test_Pow():
     assert latex(x**(Rational(-1, 3))) == r'\frac{1}{\sqrt[3]{x}}'
     x2 = Symbol(r'x^2')
     assert latex(x2**2) == r'\left(x^{2}\right)^{2}'
+    # Issue 11011
+    assert latex(S('1.453e4500')**x) == r'{1.453 \cdot 10^{4500}}^{x}'
 
 
 def test_issue_7180():
@@ -2519,17 +2532,20 @@ def test_MatrixElement_printing():
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
 
-    assert latex(A[0, 0]) == r"A_{0, 0}"
-    assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
+    assert latex(A[0, 0]) == r"{A}_{0,0}"
+    assert latex(3 * A[0, 0]) == r"3 {A}_{0,0}"
 
     F = C[0, 0].subs(C, A - B)
-    assert latex(F) == r"\left(A - B\right)_{0, 0}"
+    assert latex(F) == r"{\left(A - B\right)}_{0,0}"
 
     i, j, k = symbols("i j k")
     M = MatrixSymbol("M", k, k)
     N = MatrixSymbol("N", k, k)
     assert latex((M*N)[i, j]) == \
-        r'\sum_{i_{1}=0}^{k - 1} M_{i, i_{1}} N_{i_{1}, j}'
+        r'\sum_{i_{1}=0}^{k - 1} {M}_{i,i_{1}} {N}_{i_{1},j}'
+
+    X_a = MatrixSymbol('X_a', 3, 3)
+    assert latex(X_a[0, 0]) == r"{X_{a}}_{0,0}"
 
 
 def test_MatrixSymbol_printing():

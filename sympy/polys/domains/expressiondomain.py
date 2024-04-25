@@ -2,6 +2,7 @@
 
 
 from sympy.core import sympify, SympifyError
+from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -17,7 +18,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     is_SymbolicDomain = is_EX = True
 
-    class Expression(PicklableWithSlots):
+    class Expression(DomainElement, PicklableWithSlots):
         """An arbitrary expression. """
 
         __slots__ = ('ex',)
@@ -36,6 +37,9 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
         def __hash__(self):
             return hash((self.__class__.__name__, self.ex))
+
+        def parent(self):
+            return EX
 
         def as_expr(f):
             return f.ex
@@ -60,6 +64,9 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
                 return f.__class__(g)
             except SympifyError:
                 return None
+
+        def __lt__(f, g):
+            return f.ex.sort_key() < g.ex.sort_key()
 
         def __add__(f, g):
             g = f._to_ex(g)
@@ -156,6 +163,15 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     def __init__(self):
         pass
 
+    def __eq__(self, other):
+        if isinstance(other, ExpressionDomain):
+            return True
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        return hash("EX")
+
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         return a.as_expr()
@@ -196,8 +212,16 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert a ``GaussianRational`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
+    def from_AlgebraicField(K1, a, K0):
+        """Convert an ``ANP`` object to ``dtype``. """
+        return K1(K0.to_sympy(a))
+
     def from_RealField(K1, a, K0):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
+        return K1(K0.to_sympy(a))
+
+    def from_ComplexField(K1, a, K0):
+        """Convert a mpmath ``mpc`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_PolynomialRing(K1, a, K0):

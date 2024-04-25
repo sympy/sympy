@@ -1,15 +1,14 @@
-from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, S, Function
+from sympy import sin, cos, tan, pi, symbols, Matrix, S, Function
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
-                                     inertia, inertia_of_point_mass,
                                      kinetic_energy, linear_momentum,
                                      outer, potential_energy, msubs,
                                      find_dynamicsymbols, Lagrangian)
 
-from sympy.physics.mechanics.functions import (gravity, center_of_mass,
-                                               _validate_coordinates)
-from sympy.testing.pytest import raises
+from sympy.physics.mechanics.functions import (
+    center_of_mass, _validate_coordinates, _parse_linear_solver)
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -17,49 +16,6 @@ N = ReferenceFrame('N')
 A = N.orientnew('A', 'Axis', [q1, N.z])
 B = A.orientnew('B', 'Axis', [q2, A.x])
 C = B.orientnew('C', 'Axis', [q3, B.y])
-
-
-def test_inertia():
-    N = ReferenceFrame('N')
-    ixx, iyy, izz = symbols('ixx iyy izz')
-    ixy, iyz, izx = symbols('ixy iyz izx')
-    assert inertia(N, ixx, iyy, izz) == (ixx * (N.x | N.x) + iyy *
-            (N.y | N.y) + izz * (N.z | N.z))
-    assert inertia(N, 0, 0, 0) == 0 * (N.x | N.x)
-    raises(TypeError, lambda: inertia(0, 0, 0, 0))
-    assert inertia(N, ixx, iyy, izz, ixy, iyz, izx) == (ixx * (N.x | N.x) +
-            ixy * (N.x | N.y) + izx * (N.x | N.z) + ixy * (N.y | N.x) + iyy *
-        (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
-            N.y) + izz * (N.z | N.z))
-
-
-def test_inertia_of_point_mass():
-    r, s, t, m = symbols('r s t m')
-    N = ReferenceFrame('N')
-
-    px = r * N.x
-    I = inertia_of_point_mass(m, px, N)
-    assert I == m * r**2 * (N.y | N.y) + m * r**2 * (N.z | N.z)
-
-    py = s * N.y
-    I = inertia_of_point_mass(m, py, N)
-    assert I == m * s**2 * (N.x | N.x) + m * s**2 * (N.z | N.z)
-
-    pz = t * N.z
-    I = inertia_of_point_mass(m, pz, N)
-    assert I == m * t**2 * (N.x | N.x) + m * t**2 * (N.y | N.y)
-
-    p = px + py + pz
-    I = inertia_of_point_mass(m, p, N)
-    assert I == (m * (s**2 + t**2) * (N.x | N.x) -
-                 m * r * s * (N.x | N.y) -
-                 m * r * t * (N.x | N.z) -
-                 m * r * s * (N.y | N.x) +
-                 m * (r**2 + t**2) * (N.y | N.y) -
-                 m * s * t * (N.y | N.z) -
-                 m * r * t * (N.z | N.x) -
-                 m * s * t * (N.z | N.y) +
-                 m * (r**2 + s**2) * (N.z | N.z))
 
 
 def test_linear_momentum():
@@ -210,24 +166,6 @@ def test_find_dynamicsymbols():
     raises(ValueError, lambda: find_dynamicsymbols(v))
 
 
-def test_gravity():
-    N = ReferenceFrame('N')
-    m, M, g = symbols('m M g')
-    F1, F2 = dynamicsymbols('F1 F2')
-    po = Point('po')
-    pa = Particle('pa', po, m)
-    A = ReferenceFrame('A')
-    P = Point('P')
-    I = outer(A.x, A.x)
-    B = RigidBody('B', P, A, M, (I, P))
-    forceList = [(po, F1), (P, F2)]
-    forceList.extend(gravity(g*N.y, pa, B))
-    l = [(po, F1), (P, F2), (po, g*m*N.y), (P, g*M*N.y)]
-
-    for i in range(len(l)):
-        for j in range(len(l[i])):
-            assert forceList[i][j] == l[i][j]
-
 # This function tests the center_of_mass() function
 # that was added in PR #14758 to compute the center of
 # mass of a system of bodies.
@@ -253,10 +191,11 @@ def test_center_of_mass():
 
 
 def test_validate_coordinates():
-    q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1:4 u1:4')
+    q1, q2, q3, u1, u2, u3, ua1, ua2, ua3 = dynamicsymbols('q1:4 u1:4 ua1:4')
     s1, s2, s3 = symbols('s1:4')
     # Test normal
-    _validate_coordinates([q1, q2, q3], [u1, u2, u3])
+    _validate_coordinates([q1, q2, q3], [u1, u2, u3],
+                          u_auxiliary=[ua1, ua2, ua3])
     # Test not equal number of coordinates and speeds
     _validate_coordinates([q1, q2])
     _validate_coordinates([q1, q2], [u1])
@@ -270,6 +209,14 @@ def test_validate_coordinates():
         [q1, q2, q3], [u1, u2, u2], check_duplicates=True))
     raises(ValueError, lambda: _validate_coordinates(
         [q1, q2, q3], [q1, u2, u3], check_duplicates=True))
+    _validate_coordinates([q1, q2, q3], [u1, u2, u3], check_duplicates=False,
+                          u_auxiliary=[u1, ua2, ua2])
+    raises(ValueError, lambda: _validate_coordinates(
+        [q1, q2, q3], [u1, u2, u3], u_auxiliary=[u1, ua2, ua3]))
+    raises(ValueError, lambda: _validate_coordinates(
+        [q1, q2, q3], [u1, u2, u3], u_auxiliary=[q1, ua2, ua3]))
+    raises(ValueError, lambda: _validate_coordinates(
+        [q1, q2, q3], [u1, u2, u3], u_auxiliary=[ua1, ua2, ua2]))
     # Test is_dynamicsymbols
     _validate_coordinates([q1 + q2, q3], is_dynamicsymbols=False)
     raises(ValueError, lambda: _validate_coordinates([q1 + q2, q3]))
@@ -279,6 +226,8 @@ def test_validate_coordinates():
     _validate_coordinates([s1 + s2 + s3, q1], [0, u1], is_dynamicsymbols=False)
     raises(ValueError, lambda: _validate_coordinates(
         [s1 + s2 + s3, q1], [0, u1], is_dynamicsymbols=True))
+    _validate_coordinates(u_auxiliary=[s1, ua1], is_dynamicsymbols=False)
+    raises(ValueError, lambda: _validate_coordinates(u_auxiliary=[s1, ua1]))
     # Test normal function
     t = dynamicsymbols._t
     a = symbols('a')
@@ -290,3 +239,24 @@ def test_validate_coordinates():
     _validate_coordinates([f1(a), f2(a)])
     raises(ValueError, lambda: _validate_coordinates([f1(t), f2(t)]))
     dynamicsymbols._t = t
+
+
+def test_parse_linear_solver():
+    A, b = Matrix(3, 3, symbols('a:9')), Matrix(3, 2, symbols('b:6'))
+    assert _parse_linear_solver(Matrix.LUsolve) == Matrix.LUsolve  # Test callable
+    assert _parse_linear_solver('LU')(A, b) == Matrix.LUsolve(A, b)
+
+
+def test_deprecated_moved_functions():
+    from sympy.physics.mechanics.functions import (
+        inertia, inertia_of_point_mass, gravity)
+    N = ReferenceFrame('N')
+    with warns_deprecated_sympy():
+        assert inertia(N, 0, 1, 0, 1) == (N.x | N.y) + (N.y | N.x) + (N.y | N.y)
+    with warns_deprecated_sympy():
+        assert inertia_of_point_mass(1, N.x + N.y, N) == (
+            (N.x | N.x) + (N.y | N.y) + 2 * (N.z | N.z) -
+            (N.x | N.y) - (N.y | N.x))
+    p = Particle('P')
+    with warns_deprecated_sympy():
+        assert gravity(-2 * N.z, p) == [(p.masscenter, -2 * p.mass * N.z)]

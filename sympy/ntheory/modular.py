@@ -1,7 +1,6 @@
-from functools import reduce
 from math import prod
 
-from sympy.core.numbers import igcdex, igcd
+from sympy.external.gmpy import gcd, gcdext
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
@@ -96,8 +95,8 @@ def crt(m, v, symmetric=False, check=True):
             result, mm = result
 
     if symmetric:
-        return symmetric_residue(result, mm), mm
-    return result, mm
+        return int(symmetric_residue(result, mm)), int(mm)
+    return int(result), int(mm)
 
 
 def crt1(m):
@@ -106,9 +105,36 @@ def crt1(m):
     Examples
     ========
 
-    >>> from sympy.ntheory.modular import crt1
-    >>> crt1([18, 42, 6])
-    (4536, [252, 108, 756], [0, 2, 0])
+    >>> from sympy.ntheory.modular import crt, crt1, crt2
+    >>> m = [99, 97, 95]
+    >>> v = [49, 76, 65]
+
+    The following two codes have the same result.
+
+    >>> crt(m, v)
+    (639985, 912285)
+
+    >>> mm, e, s = crt1(m)
+    >>> crt2(m, v, mm, e, s)
+    (639985, 912285)
+
+    However, it is faster when we want to fix ``m`` and
+    compute for multiple ``v``, i.e. the following cases:
+
+    >>> mm, e, s = crt1(m)
+    >>> vs = [[52, 21, 37], [19, 46, 76]]
+    >>> for v in vs:
+    ...     print(crt2(m, v, mm, e, s))
+    (397042, 912285)
+    (803206, 912285)
+
+    See Also
+    ========
+
+    sympy.polys.galoistools.gf_crt1 : low level crt routine used by this routine
+    sympy.ntheory.modular.crt
+    sympy.ntheory.modular.crt2
+
     """
 
     return gf_crt1(m, ZZ)
@@ -117,6 +143,8 @@ def crt1(m):
 def crt2(m, v, mm, e, s, symmetric=False):
     """Second part of Chinese Remainder Theorem, for multiple application.
 
+    See ``crt1`` for usage.
+
     Examples
     ========
 
@@ -124,13 +152,21 @@ def crt2(m, v, mm, e, s, symmetric=False):
     >>> mm, e, s = crt1([18, 42, 6])
     >>> crt2([18, 42, 6], [0, 0, 0], mm, e, s)
     (0, 4536)
+
+    See Also
+    ========
+
+    sympy.polys.galoistools.gf_crt2 : low level crt routine used by this routine
+    sympy.ntheory.modular.crt
+    sympy.ntheory.modular.crt1
+
     """
 
     result = gf_crt2(v, m, mm, e, s, ZZ)
 
     if symmetric:
-        return symmetric_residue(result, mm), mm
-    return result, mm
+        return int(symmetric_residue(result, mm)), int(mm)
+    return int(result), int(mm)
 
 
 def solve_congruence(*remainder_modulus_pairs, **hint):
@@ -197,10 +233,10 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         a1, m1 = c1
         a2, m2 = c2
         a, b, c = m1, a2 - a1, m2
-        g = reduce(igcd, [a, b, c])
+        g = gcd(a, b, c)
         a, b, c = [i//g for i in [a, b, c]]
         if a != 1:
-            inv_a, _, g = igcdex(a, c)
+            g, inv_a, _ = gcdext(a, c)
             if g != 1:
                 return None
             b *= inv_a

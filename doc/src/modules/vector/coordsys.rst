@@ -59,10 +59,8 @@ respect to :math:`A`'s Z-axis by an angle :math:`\theta`.
 
 The orientation is shown in the diagram below:
 
-.. image:: coordsys_rot.*
-   :height: 250
-   :width: 250
-   :align: center
+.. raw:: html
+   :file: coordsys_rot.svg
 
 There are two ways to achieve this.
 
@@ -116,7 +114,7 @@ appear in the iterable.
   >>> C = A.orient_new('C', (axis_orienter, body_orienter))
 
 The :mod:`sympy.vector` API provides the following four ``Orienter``
-classes for orientation purposes-
+classes for orientation purposes:
 
 1. ``AxisOrienter``
 
@@ -214,7 +212,7 @@ expressions and dyadic tensors.
 :mod:`sympy.vector` supports the expression of vector/scalar quantities
 in different coordinate systems using the ``express`` function.
 
-For purposes of this section, assume the following initializations-
+For purposes of this section, assume the following initializations:
 
   >>> from sympy.vector import CoordSys3D, express
   >>> from sympy.abc import a, b, c

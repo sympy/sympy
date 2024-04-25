@@ -2,6 +2,7 @@ from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
@@ -13,6 +14,7 @@ from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (atanh, cosh, sinh, tanh)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sec, sin, tan)
@@ -432,7 +434,7 @@ def test_linear_system_symbols_doesnt_hang_1():
         y1s = symbols('y1_:{}'.format(wy), real=True)
         c = symbols('c_:{}'.format(order+1), real=True)
 
-        expr = sum([coeff*x**o for o, coeff in enumerate(c)])
+        expr = sum(coeff*x**o for o, coeff in enumerate(c))
         eqs = []
         for i in range(wy):
             eqs.append(expr.diff(x, i).subs({x: x0}) - y0s[i])
@@ -635,6 +637,18 @@ def test_solve_transcendental():
 
     # issue 15325
     assert solve(y**(1/x) - z, x) == [log(y)/log(z)]
+
+    # issue 25685 (basic trig identies should give simple solutions)
+    for yi in [cos(2*x),sin(2*x),cos(x - pi/3)]:
+        sol = solve([cos(x) - S(3)/5, yi - y])
+        assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)
+    # don't allow massive expansion
+    assert solve(cos(1000*x) - S.Half) == [pi/3000, pi/600]
+    assert solve(cos(x - 1000*y) - 1, x) == [1000*y, 1000*y + 2*pi]
+    assert solve(cos(x + y + z) - 1, x) == [-y - z, -y - z + 2*pi]
+
+    # issue 26008
+    assert solve(sin(x + pi/6)) == [-pi/6, 5*pi/6]
 
 
 def test_solve_for_functions_derivatives():
@@ -1827,7 +1841,7 @@ def test_issue_6792():
          CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_6819_6820_6821_6248_8692():
+def test_issues_6819_6820_6821_6248_8692_25777_25779():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
@@ -1841,9 +1855,21 @@ def test_issues_6819_6820_6821_6248_8692():
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
 
+    # 25777
+    assert solve(abs(x**3 + x + 2)/(x + 1)) == []
+
+    # 25779
+    assert solve(abs(x)) == [0]
+    assert solve(Eq(abs(x**2 - 2*x), 4), x) == [
+        1 - sqrt(5), 1 + sqrt(5)]
+    nn = symbols('nn', nonnegative=True)
+    assert solve(abs(sqrt(nn))) == [0]
+    nz = symbols('nz', nonzero=True)
+    assert solve(Eq(Abs(4 + 1 / (4*nz)), 0)) == [-Rational(1, 16)]
+
     x = symbols('x')
     assert solve([re(x) - 1, im(x) - 2], x) == [
-        {re(x): 1, x: 1 + 2*I, im(x): 2}]
+        {x: 1 + 2*I, re(x): 1, im(x): 2}]
 
     # check for 'dict' handling of solution
     eq = sqrt(re(x)**2 + im(x)**2) - 3
@@ -2101,7 +2127,7 @@ def test_issue_5114_6611():
     ans = solve(list(eqs), list(v), simplify=False)
     # If time is taken to simplify then then 2617 below becomes
     # 1168 and the time is about 50 seconds instead of 2.
-    assert sum([s.count_ops() for s in ans.values()]) <= 3270
+    assert sum(s.count_ops() for s in ans.values()) <= 3270
 
 
 def test_det_quick():
@@ -2173,6 +2199,7 @@ def test_nsolve():
     raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
     raises(TypeError, lambda: nsolve((x - y + 3,x + y,z - y),(x,y,z),(-50,50)))
     raises(TypeError, lambda: nsolve((x + y, x - y), (0, 1)))
+    raises(TypeError, lambda: nsolve(x < 0.5, x, 1))
 
 
 @slow
@@ -2243,20 +2270,12 @@ def test_issue_8828():
     assert p == q == r
 
 
-@slow
 def test_issue_2840_8155():
-    assert solve(sin(3*x) + sin(6*x)) == [
-        0, pi*Rational(-5, 3), pi*Rational(-4, 3), -pi, pi*Rational(-2, 3),
-        pi*Rational(-4, 9), -pi/3, pi*Rational(-2, 9), pi*Rational(2, 9),
-        pi/3, pi*Rational(4, 9), pi*Rational(2, 3), pi, pi*Rational(4, 3),
-        pi*Rational(14, 9), pi*Rational(5, 3), pi*Rational(16, 9), 2*pi,
-        -2*I*log(-(-1)**Rational(1, 9)), -2*I*log(-(-1)**Rational(2, 9)),
-        -2*I*log(-sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(-sin(pi/18) + I*cos(pi/18)),
-        -2*I*log(sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(sin(pi/18) + I*cos(pi/18))]
-    assert solve(2*sin(x) - 2*sin(2*x)) == [
-        0, pi*Rational(-5, 3), -pi, -pi/3, pi/3, pi, pi*Rational(5, 3)]
+    # with parameter-free solutions (i.e. no `n`), we want to avoid
+    # excessive periodic solutions
+    assert solve(sin(3*x) + sin(6*x)) == [0, -2*pi/9, 2*pi/9]
+    assert solve(sin(300*x) + sin(600*x)) == [0, -pi/450, pi/450]
+    assert solve(2*sin(x) - 2*sin(2*x)) == [0, -pi/3, pi/3]
 
 
 def test_issue_9567():
@@ -2617,6 +2636,12 @@ def test_issue_22717():
         {y: -1, x: E}, {y: 1, x: E}]
 
 
+def test_issue_25176():
+    eq = (x - 5)**-8 - 3
+    sol = solve(eq)
+    assert not any(eq.subs(x, i) for i in sol)
+
+
 def test_issue_10169():
     eq = S(-8*a - x**5*(a + b + c + e) - x**4*(4*a - 2**Rational(3,4)*c + 4*c +
         d + 2**Rational(3,4)*e + 4*e + k) - x**3*(-4*2**Rational(3,4)*c + sqrt(2)*c -
@@ -2636,7 +2661,8 @@ def test_issue_10169():
 
 def test_solve_undetermined_coeffs_issue_23927():
     A, B, r, phi = symbols('A, B, r, phi')
-    eq = Eq(A*sin(t) + B*cos(t), r*sin(t - phi)).rewrite(Add).expand(trig=True)
+    e = Eq(A*sin(t) + B*cos(t), r*sin(t - phi))
+    eq = (e.lhs - e.rhs).expand(trig=True)
     soln = solve_undetermined_coeffs(eq, (r, phi), t)
     assert soln == [{
         phi: 2*atan((A - sqrt(A**2 + B**2))/B),
@@ -2645,3 +2671,33 @@ def test_solve_undetermined_coeffs_issue_23927():
         phi: 2*atan((A + sqrt(A**2 + B**2))/B),
         r: (A**2 + A*sqrt(A**2 + B**2) + B**2)/(A + sqrt(A**2 + B**2))/-1
         }]
+
+def test_issue_24368():
+    # Ideally these would produce a solution, but for now just check that they
+    # don't fail with a RuntimeError
+    raises(NotImplementedError, lambda: solve(Mod(x**2, 49), x))
+    s2 = Symbol('s2', integer=True, positive=True)
+    f = floor(s2/2 - S(1)/2)
+    raises(NotImplementedError, lambda: solve((Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1))*f + Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1), s2))
+
+
+def test_solve_Piecewise():
+    assert [S(10)/3] == solve(3*Piecewise(
+        (S.NaN, x <= 0),
+        (20*x - 3*(x - 6)**2/2 - 176, (x >= 0) & (x >= 2) & (x>= 4) & (x >= 6) & (x < 10)),
+        (100 - 26*x, (x >= 0) & (x >= 2) & (x >= 4) & (x < 10)),
+        (16*x - 3*(x - 6)**2/2 - 176, (x >= 2) & (x >= 4) & (x >= 6) & (x < 10)),
+        (100 - 30*x, (x >= 2) & (x >= 4) & (x < 10)),
+        (30*x - 3*(x - 6)**2/2 - 196, (x>= 0) & (x >= 4) & (x >= 6) & (x < 10)),
+        (80 - 16*x, (x >= 0) & (x >= 4) & (x < 10)),
+        (26*x - 3*(x - 6)**2/2 - 196, (x >= 4) & (x >= 6) & (x < 10)),
+        (80 - 20*x, (x >= 4) & (x < 10)),
+        (40*x - 3*(x - 6)**2/2 - 256, (x >= 0) & (x >= 2) & (x >= 6) & (x < 10)),
+        (20 - 6*x, (x >= 0) & (x >= 2) & (x < 10)),
+        (36*x - 3*(x - 6)**2/2 - 256, (x >= 2) & (x >= 6) & (x < 10)),
+        (20 - 10*x, (x >= 2) & (x < 10)),
+        (50*x - 3*(x - 6)**2/2 - 276, (x >= 0) & (x >= 6) & (x < 10)),
+        (4*x, (x >= 0) & (x < 10)),
+        (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
+        (0, x < 10),  # this will simplify away
+        (S.NaN,True)))

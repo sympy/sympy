@@ -2,8 +2,9 @@
 
 from abc import ABC, abstractmethod
 
-from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
-from sympy.physics.mechanics.body import Body
+from sympy import pi, Derivative, Matrix
+from sympy.core.function import AppliedUndef
+from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.functions import _validate_coordinates
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
@@ -38,9 +39,9 @@ class Joint(ABC):
 
     name : string
         A unique name for the joint.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The parent body of joint.
-    child : Body
+    child : Particle or RigidBody or Body
         The child body of joint.
     coordinates : iterable of dynamicsymbols, optional
         Generalized coordinates of the joint.
@@ -94,9 +95,9 @@ class Joint(ABC):
 
     name : string
         The joint's name.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The joint's parent body.
-    child : Body
+    child : Particle or RigidBody or Body
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates.
@@ -132,29 +133,61 @@ class Joint(ABC):
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None,
-                 parent_point=None, child_point=None, parent_axis=None,
-                 child_axis=None, parent_interframe=None, child_interframe=None,
+                 parent_point=None, child_point=None, parent_interframe=None,
+                 child_interframe=None, parent_axis=None, child_axis=None,
                  parent_joint_pos=None, child_joint_pos=None):
 
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
 
-        if not isinstance(parent, Body):
-            raise TypeError('Parent must be an instance of Body.')
+        if not isinstance(parent, BodyBase):
+            raise TypeError('Parent must be a body.')
         self._parent = parent
 
-        if not isinstance(child, Body):
-            raise TypeError('Parent must be an instance of Body.')
+        if not isinstance(child, BodyBase):
+            raise TypeError('Child must be a body.')
         self._child = child
 
-        self._coordinates = self._generate_coordinates(coordinates)
-        self._speeds = self._generate_speeds(speeds)
-        _validate_coordinates(self.coordinates, self.speeds)
-        self._kdes = self._generate_kdes()
+        if parent_axis is not None or child_axis is not None:
+            sympy_deprecation_warning(
+                """
+                The parent_axis and child_axis arguments for the Joint classes
+                are deprecated. Instead use parent_interframe, child_interframe.
+                """,
+                deprecated_since_version="1.12",
+                active_deprecations_target="deprecated-mechanics-joint-axis",
+                stacklevel=4
+            )
+            if parent_interframe is None:
+                parent_interframe = parent_axis
+            if child_interframe is None:
+                child_interframe = child_axis
 
-        self._parent_axis = self._axis(parent_axis, parent.frame)
-        self._child_axis = self._axis(child_axis, child.frame)
+        # Set parent and child frame attributes
+        if hasattr(self._parent, 'frame'):
+            self._parent_frame = self._parent.frame
+        else:
+            if isinstance(parent_interframe, ReferenceFrame):
+                self._parent_frame = parent_interframe
+            else:
+                self._parent_frame = ReferenceFrame(
+                    f'{self.name}_{self._parent.name}_frame')
+        if hasattr(self._child, 'frame'):
+            self._child_frame = self._child.frame
+        else:
+            if isinstance(child_interframe, ReferenceFrame):
+                self._child_frame = child_interframe
+            else:
+                self._child_frame = ReferenceFrame(
+                    f'{self.name}_{self._child.name}_frame')
+
+        self._parent_interframe = self._locate_joint_frame(
+            self._parent, parent_interframe, self._parent_frame)
+        self._child_interframe = self._locate_joint_frame(
+            self._child, child_interframe, self._child_frame)
+        self._parent_axis = self._axis(parent_axis, self._parent_frame)
+        self._child_axis = self._axis(child_axis, self._child_frame)
 
         if parent_joint_pos is not None or child_joint_pos is not None:
             sympy_deprecation_warning(
@@ -170,26 +203,15 @@ class Joint(ABC):
                 parent_point = parent_joint_pos
             if child_point is None:
                 child_point = child_joint_pos
-        self._parent_point = self._locate_joint_pos(parent, parent_point)
-        self._child_point = self._locate_joint_pos(child, child_point)
-        if parent_axis is not None or child_axis is not None:
-            sympy_deprecation_warning(
-                """
-                The parent_axis and child_axis arguments for the Joint classes
-                are deprecated. Instead use parent_interframe, child_interframe.
-                """,
-                deprecated_since_version="1.12",
-                active_deprecations_target="deprecated-mechanics-joint-axis",
-                stacklevel=4
-            )
-            if parent_interframe is None:
-                parent_interframe = parent_axis
-            if child_interframe is None:
-                child_interframe = child_axis
-        self._parent_interframe = self._locate_joint_frame(parent,
-                                                           parent_interframe)
-        self._child_interframe = self._locate_joint_frame(child,
-                                                          child_interframe)
+        self._parent_point = self._locate_joint_pos(
+            self._parent, parent_point, self._parent_frame)
+        self._child_point = self._locate_joint_pos(
+            self._child, child_point, self._child_frame)
+
+        self._coordinates = self._generate_coordinates(coordinates)
+        self._speeds = self._generate_speeds(speeds)
+        _validate_coordinates(self.coordinates, self.speeds)
+        self._kdes = self._generate_kdes()
 
         self._orient_frames()
         self._set_angular_velocity()
@@ -344,7 +366,7 @@ class Joint(ABC):
         Parameters
         ==========
 
-        frame : Body or ReferenceFrame
+        frame : BodyBase or ReferenceFrame
             The body or reference frame with respect to which the intermediate
             frame is oriented.
         align_axis : Vector
@@ -364,13 +386,13 @@ class Joint(ABC):
         with ``parent.y + parent.z`` can be created as follows:
 
         >>> from sympy.physics.mechanics.joint import Joint
-        >>> from sympy.physics.mechanics import Body
-        >>> parent = Body('parent')
+        >>> from sympy.physics.mechanics import RigidBody
+        >>> parent = RigidBody('parent')
         >>> parent_interframe = Joint._create_aligned_interframe(
         ...     parent, parent.y + parent.z)
         >>> parent_interframe
         parent_int_frame
-        >>> parent.dcm(parent_interframe)
+        >>> parent.frame.dcm(parent_interframe)
         Matrix([
         [        0, -sqrt(2)/2, -sqrt(2)/2],
         [sqrt(2)/2,        1/2,       -1/2],
@@ -418,7 +440,7 @@ class Joint(ABC):
              - ``(x+y+z) × x``
 
         """
-        if isinstance(frame, Body):
+        if isinstance(frame, BodyBase):
             frame = frame.frame
         if frame_axis is None:
             frame_axis = frame.x
@@ -447,8 +469,10 @@ class Joint(ABC):
             kdes.append(-self.coordinates[i].diff(t) + self.speeds[i])
         return Matrix(kdes)
 
-    def _locate_joint_pos(self, body, joint_pos):
+    def _locate_joint_pos(self, body, joint_pos, body_frame=None):
         """Returns the attachment point of a body."""
+        if body_frame is None:
+            body_frame = body.frame
         if joint_pos is None:
             return body.masscenter
         if not isinstance(joint_pos, (Point, Vector)):
@@ -456,22 +480,24 @@ class Joint(ABC):
         if isinstance(joint_pos, Vector):
             point_name = f'{self.name}_{body.name}_joint'
             joint_pos = body.masscenter.locatenew(point_name, joint_pos)
-        if not joint_pos.pos_from(body.masscenter).dt(body.frame) == 0:
+        if not joint_pos.pos_from(body.masscenter).dt(body_frame) == 0:
             raise ValueError('Attachment point must be fixed to the associated '
                              'body.')
         return joint_pos
 
-    def _locate_joint_frame(self, body, interframe):
+    def _locate_joint_frame(self, body, interframe, body_frame=None):
         """Returns the attachment frame of a body."""
+        if body_frame is None:
+            body_frame = body.frame
         if interframe is None:
-            return body.frame
+            return body_frame
         if isinstance(interframe, Vector):
             interframe = Joint._create_aligned_interframe(
-                body, interframe,
+                body_frame, interframe,
                 frame_name=f'{self.name}_{body.name}_int_frame')
         elif not isinstance(interframe, ReferenceFrame):
             raise TypeError('Interframe must be a ReferenceFrame.')
-        if not interframe.ang_vel_in(body.frame) == 0:
+        if not interframe.ang_vel_in(body_frame) == 0:
             raise ValueError(f'Interframe {interframe} is not fixed to body '
                              f'{body}.')
         body.masscenter.set_vel(interframe, 0)  # Fixate interframe to body
@@ -530,7 +556,8 @@ class Joint(ABC):
 class PinJoint(Joint):
     """Pin (Revolute) Joint.
 
-    .. image:: PinJoint.svg
+    .. raw:: html
+        :file: ../../../doc/src/modules/physics/mechanics/api/PinJoint.svg
 
     Explanation
     ===========
@@ -549,9 +576,9 @@ class PinJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The parent body of joint.
-    child : Body
+    child : Particle or RigidBody or Body
         The child body of joint.
     coordinates : dynamicsymbol, optional
         Generalized coordinates of the joint.
@@ -608,9 +635,9 @@ class PinJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The joint's parent body.
-    child : Body
+    child : Particle or RigidBody or Body
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates. The default value is
@@ -644,11 +671,11 @@ class PinJoint(Joint):
     A single pin joint is created from two bodies and has the following basic
     attributes:
 
-    >>> from sympy.physics.mechanics import Body, PinJoint
-    >>> parent = Body('P')
+    >>> from sympy.physics.mechanics import RigidBody, PinJoint
+    >>> parent = RigidBody('P')
     >>> parent
     P
-    >>> child = Body('C')
+    >>> child = RigidBody('C')
     >>> child
     C
     >>> joint = PinJoint('PC', parent, child)
@@ -672,9 +699,9 @@ class PinJoint(Joint):
     Matrix([[q_PC(t)]])
     >>> joint.speeds
     Matrix([[u_PC(t)]])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     u_PC(t)*P_frame.x
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1,             0,            0],
     [0,  cos(q_PC(t)), sin(q_PC(t))],
@@ -687,15 +714,15 @@ class PinJoint(Joint):
     created as follows.
 
     >>> from sympy import symbols, trigsimp
-    >>> from sympy.physics.mechanics import Body, PinJoint
+    >>> from sympy.physics.mechanics import RigidBody, PinJoint
     >>> l1, l2 = symbols('l1 l2')
 
     First create bodies to represent the fixed ceiling and one to represent
     each pendulum bob.
 
-    >>> ceiling = Body('C')
-    >>> upper_bob = Body('U')
-    >>> lower_bob = Body('L')
+    >>> ceiling = RigidBody('C')
+    >>> upper_bob = RigidBody('U')
+    >>> lower_bob = RigidBody('L')
 
     The first joint will connect the upper bob to the ceiling by a distance of
     ``l1`` and the joint axis will be about the Z axis for each body.
@@ -750,14 +777,14 @@ class PinJoint(Joint):
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None,
-                 parent_point=None, child_point=None, parent_axis=None,
-                 child_axis=None, parent_interframe=None, child_interframe=None,
+                 parent_point=None, child_point=None, parent_interframe=None,
+                 child_interframe=None, parent_axis=None, child_axis=None,
                  joint_axis=None, parent_joint_pos=None, child_joint_pos=None):
 
         self._joint_axis = joint_axis
         super().__init__(name, parent, child, coordinates, speeds, parent_point,
-                         child_point, parent_axis, child_axis,
-                         parent_interframe, child_interframe, parent_joint_pos,
+                         child_point, parent_interframe, child_interframe,
+                         parent_axis, child_axis, parent_joint_pos,
                          child_joint_pos)
 
     def __str__(self):
@@ -786,10 +813,10 @@ class PinJoint(Joint):
 
     def _set_linear_velocity(self):
         self.child_point.set_pos(self.parent_point, 0)
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
         self.child.masscenter.v2pt_theory(self.parent_point,
-                                          self.parent.frame, self.child.frame)
+                                          self._parent_frame, self._child_frame)
 
 
 class PrismaticJoint(Joint):
@@ -814,9 +841,9 @@ class PrismaticJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The parent body of joint.
-    child : Body
+    child : Particle or RigidBody or Body
         The child body of joint.
     coordinates : dynamicsymbol, optional
         Generalized coordinates of the joint. The default value is
@@ -875,9 +902,9 @@ class PrismaticJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The joint's parent body.
-    child : Body
+    child : Particle or RigidBody or Body
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates.
@@ -906,11 +933,11 @@ class PrismaticJoint(Joint):
     A single prismatic joint is created from two bodies and has the following
     basic attributes:
 
-    >>> from sympy.physics.mechanics import Body, PrismaticJoint
-    >>> parent = Body('P')
+    >>> from sympy.physics.mechanics import RigidBody, PrismaticJoint
+    >>> parent = RigidBody('P')
     >>> parent
     P
-    >>> child = Body('C')
+    >>> child = RigidBody('C')
     >>> child
     C
     >>> joint = PrismaticJoint('PC', parent, child)
@@ -934,9 +961,9 @@ class PrismaticJoint(Joint):
     Matrix([[q_PC(t)]])
     >>> joint.speeds
     Matrix([[u_PC(t)]])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     0
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
@@ -949,14 +976,14 @@ class PrismaticJoint(Joint):
     to the moving body. about the X axis of each connected body can be created
     as follows.
 
-    >>> from sympy.physics.mechanics import PrismaticJoint, Body
+    >>> from sympy.physics.mechanics import PrismaticJoint, RigidBody
 
     First create bodies to represent the fixed ceiling and one to represent
     a particle.
 
-    >>> wall = Body('W')
-    >>> Part1 = Body('P1')
-    >>> Part2 = Body('P2')
+    >>> wall = RigidBody('W')
+    >>> Part1 = RigidBody('P1')
+    >>> Part2 = RigidBody('P2')
 
     The first joint will connect the particle to the ceiling and the
     joint axis will be about the X axis for each body.
@@ -972,13 +999,13 @@ class PrismaticJoint(Joint):
     be accessed. First the direction cosine matrices of Part relative
     to the ceiling are found:
 
-    >>> Part1.dcm(wall)
+    >>> Part1.frame.dcm(wall.frame)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
     [0, 0, 1]])
 
-    >>> Part2.dcm(wall)
+    >>> Part2.frame.dcm(wall.frame)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
@@ -995,16 +1022,16 @@ class PrismaticJoint(Joint):
     The angular velocities of the two particle links can be computed with
     respect to the ceiling.
 
-    >>> Part1.ang_vel_in(wall)
+    >>> Part1.frame.ang_vel_in(wall.frame)
     0
 
-    >>> Part2.ang_vel_in(wall)
+    >>> Part2.frame.ang_vel_in(wall.frame)
     0
 
     And finally, the linear velocities of the two particles can be computed
     with respect to the ceiling.
 
-    >>> Part1.masscenter_vel(wall)
+    >>> Part1.masscenter.vel(wall.frame)
     u_J1(t)*W_frame.x
 
     >>> Part2.masscenter.vel(wall.frame)
@@ -1013,14 +1040,14 @@ class PrismaticJoint(Joint):
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None,
-                 parent_point=None, child_point=None, parent_axis=None,
-                 child_axis=None, parent_interframe=None, child_interframe=None,
+                 parent_point=None, child_point=None, parent_interframe=None,
+                 child_interframe=None, parent_axis=None, child_axis=None,
                  joint_axis=None, parent_joint_pos=None, child_joint_pos=None):
 
         self._joint_axis = joint_axis
         super().__init__(name, parent, child, coordinates, speeds, parent_point,
-                         child_point, parent_axis, child_axis,
-                         parent_interframe, child_interframe, parent_joint_pos,
+                         child_point, parent_interframe, child_interframe,
+                         parent_axis, child_axis, parent_joint_pos,
                          child_joint_pos)
 
     def __str__(self):
@@ -1049,10 +1076,10 @@ class PrismaticJoint(Joint):
     def _set_linear_velocity(self):
         axis = self.joint_axis.normalize()
         self.child_point.set_pos(self.parent_point, self.coordinates[0] * axis)
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
-        self.child_point.set_vel(self.parent.frame, self.speeds[0] * axis)
-        self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * axis)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
+        self.child_point.set_vel(self._parent_frame, self.speeds[0] * axis)
+        self.child.masscenter.set_vel(self._parent_frame, self.speeds[0] * axis)
 
 
 class CylindricalJoint(Joint):
@@ -1080,9 +1107,9 @@ class CylindricalJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The parent body of joint.
-    child : Body
+    child : Particle or RigidBody or Body
         The child body of joint.
     rotation_coordinate : dynamicsymbol, optional
         Generalized coordinate corresponding to the rotation angle. The default
@@ -1125,9 +1152,9 @@ class CylindricalJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The joint's parent body.
-    child : Body
+    child : Particle or RigidBody or Body
         The joint's child body.
     rotation_coordinate : dynamicsymbol
         Generalized coordinate corresponding to the rotation angle.
@@ -1162,11 +1189,11 @@ class CylindricalJoint(Joint):
     A single cylindrical joint is created between two bodies and has the
     following basic attributes:
 
-    >>> from sympy.physics.mechanics import Body, CylindricalJoint
-    >>> parent = Body('P')
+    >>> from sympy.physics.mechanics import RigidBody, CylindricalJoint
+    >>> parent = RigidBody('P')
     >>> parent
     P
-    >>> child = Body('C')
+    >>> child = RigidBody('C')
     >>> child
     C
     >>> joint = CylindricalJoint('PC', parent, child)
@@ -1194,9 +1221,9 @@ class CylindricalJoint(Joint):
     Matrix([
     [u0_PC(t)],
     [u1_PC(t)]])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     u0_PC(t)*P_frame.x
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1,              0,             0],
     [0,  cos(q0_PC(t)), sin(q0_PC(t))],
@@ -1210,7 +1237,7 @@ class CylindricalJoint(Joint):
     two cylindrical joints perpendicular to each other can be created as follows.
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import Body, CylindricalJoint
+    >>> from sympy.physics.mechanics import RigidBody, CylindricalJoint
     >>> r, l, w = symbols('r l w')
 
     First create bodies to represent the fixed floor with a fixed pole on it.
@@ -1218,9 +1245,9 @@ class CylindricalJoint(Joint):
     body represents a solid flag freely translating along and rotating around
     the Y axis of the tube.
 
-    >>> floor = Body('floor')
-    >>> tube = Body('tube')
-    >>> flag = Body('flag')
+    >>> floor = RigidBody('floor')
+    >>> tube = RigidBody('tube')
+    >>> flag = RigidBody('flag')
 
     The first joint will connect the first tube to the floor with it translating
     along and rotating around the Z axis of both bodies.
@@ -1241,12 +1268,12 @@ class CylindricalJoint(Joint):
     be accessed. First the direction cosine matrices of both the body and the
     flag relative to the floor are found:
 
-    >>> tube.dcm(floor)
+    >>> tube.frame.dcm(floor.frame)
     Matrix([
     [ cos(q0_C1(t)), sin(q0_C1(t)), 0],
     [-sin(q0_C1(t)), cos(q0_C1(t)), 0],
     [             0,             0, 1]])
-    >>> flag.dcm(floor)
+    >>> flag.frame.dcm(floor.frame)
     Matrix([
     [cos(q0_C1(t))*cos(q0_C2(t)), sin(q0_C1(t))*cos(q0_C2(t)), -sin(q0_C2(t))],
     [             -sin(q0_C1(t)),               cos(q0_C1(t)),              0],
@@ -1260,9 +1287,9 @@ class CylindricalJoint(Joint):
     The angular velocities of the two tubes can be computed with respect to the
     floor.
 
-    >>> tube.ang_vel_in(floor)
+    >>> tube.frame.ang_vel_in(floor.frame)
     u0_C1(t)*floor_frame.z
-    >>> flag.ang_vel_in(floor)
+    >>> flag.frame.ang_vel_in(floor.frame)
     u0_C1(t)*floor_frame.z + u0_C2(t)*tube_frame.y
 
     Finally, the linear velocities of the two tube centers of mass can be
@@ -1343,21 +1370,20 @@ class CylindricalJoint(Joint):
         self.child_point.set_pos(
             self.parent_point,
             self.translation_coordinate * self.joint_axis.normalize())
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
         self.child_point.set_vel(
-            self.parent.frame,
+            self._parent_frame,
             self.translation_speed * self.joint_axis.normalize())
-        self.child.masscenter.v2pt_theory(self.child_point, self.parent.frame,
+        self.child.masscenter.v2pt_theory(self.child_point, self._parent_frame,
                                           self.child_interframe)
 
 
 class PlanarJoint(Joint):
     """Planar Joint.
 
-    .. image:: PlanarJoint.svg
-        :align: center
-        :width: 800
+    .. raw:: html
+        :file: ../../../doc/src/modules/physics/mechanics/api/PlanarJoint.svg
 
     Explanation
     ===========
@@ -1397,9 +1423,9 @@ class PlanarJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The parent body of joint.
-    child : Body
+    child : Particle or RigidBody or Body
         The child body of joint.
     rotation_coordinate : dynamicsymbol, optional
         Generalized coordinate corresponding to the rotation angle. The default
@@ -1439,9 +1465,9 @@ class PlanarJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The joint's parent body.
-    child : Body
+    child : Particle or RigidBody or Body
         The joint's child body.
     rotation_coordinate : dynamicsymbol
         Generalized coordinate corresponding to the rotation angle.
@@ -1478,11 +1504,11 @@ class PlanarJoint(Joint):
     A single planar joint is created between two bodies and has the following
     basic attributes:
 
-    >>> from sympy.physics.mechanics import Body, PlanarJoint
-    >>> parent = Body('P')
+    >>> from sympy.physics.mechanics import RigidBody, PlanarJoint
+    >>> parent = RigidBody('P')
     >>> parent
     P
-    >>> child = Body('C')
+    >>> child = RigidBody('C')
     >>> child
     C
     >>> joint = PlanarJoint('PC', parent, child)
@@ -1524,9 +1550,9 @@ class PlanarJoint(Joint):
     [u0_PC(t)],
     [u1_PC(t)],
     [u2_PC(t)]])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     u0_PC(t)*P_frame.x
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1,              0,             0],
     [0,  cos(q0_PC(t)), sin(q0_PC(t))],
@@ -1540,13 +1566,13 @@ class PlanarJoint(Joint):
     block sliding on a slope, can be created as follows.
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import PlanarJoint, Body, ReferenceFrame
+    >>> from sympy.physics.mechanics import PlanarJoint, RigidBody, ReferenceFrame
     >>> a, d, h = symbols('a d h')
 
     First create bodies to represent the slope and the block.
 
-    >>> ground = Body('G')
-    >>> block = Body('B')
+    >>> ground = RigidBody('G')
+    >>> block = RigidBody('B')
 
     To define the slope you can either define the plane by specifying the
     ``planar_vectors`` or/and the ``rotation_axis``. However it is advisable to
@@ -1577,7 +1603,7 @@ class PlanarJoint(Joint):
     The direction cosine matrix of the block with respect to the ground can be
     found with:
 
-    >>> block.dcm(ground)
+    >>> block.frame.dcm(ground.frame)
     Matrix([
     [              cos(a),              0,              -sin(a)],
     [sin(a)*sin(q0_PC(t)),  cos(q0_PC(t)), sin(q0_PC(t))*cos(a)],
@@ -1586,7 +1612,7 @@ class PlanarJoint(Joint):
     The angular velocity of the block can be computed with respect to the
     ground.
 
-    >>> block.ang_vel_in(ground)
+    >>> block.frame.ang_vel_in(ground.frame)
     u0_PC(t)*A.x
 
     The position of the block's center of mass can be found with:
@@ -1612,15 +1638,15 @@ class PlanarJoint(Joint):
     between the provided vector and the 'x' axis.
 
     >>> from sympy import symbols, cos, sin
-    >>> from sympy.physics.mechanics import PlanarJoint, Body
+    >>> from sympy.physics.mechanics import PlanarJoint, RigidBody
     >>> a, d, h = symbols('a d h')
-    >>> ground = Body('G')
-    >>> block = Body('B')
+    >>> ground = RigidBody('G')
+    >>> block = RigidBody('B')
     >>> joint = PlanarJoint(
     ...     'PC', ground, block, parent_point=d * ground.x,
     ...     child_point=-h * block.x, child_interframe=block.x,
     ...     parent_interframe=cos(a) * ground.x + sin(a) * ground.z)
-    >>> block.dcm(ground).simplify()
+    >>> block.frame.dcm(ground.frame).simplify()
     Matrix([
     [               cos(a),              0,               sin(a)],
     [-sin(a)*sin(q0_PC(t)),  cos(q0_PC(t)), sin(q0_PC(t))*cos(a)],
@@ -1705,10 +1731,10 @@ class PlanarJoint(Joint):
         self.parent_point.set_vel(self.parent_interframe, 0)
         self.child_point.set_vel(self.child_interframe, 0)
         self.child_point.set_vel(
-            self.parent.frame, self.planar_speeds[0] * self.planar_vectors[0] +
+            self._parent_frame, self.planar_speeds[0] * self.planar_vectors[0] +
             self.planar_speeds[1] * self.planar_vectors[1])
-        self.child.masscenter.v2pt_theory(self.child_point, self.parent.frame,
-                                          self.child.frame)
+        self.child.masscenter.v2pt_theory(self.child_point, self._parent_frame,
+                                          self._child_frame)
 
 
 class SphericalJoint(Joint):
@@ -1738,9 +1764,9 @@ class SphericalJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The parent body of joint.
-    child : Body
+    child : Particle or RigidBody or Body
         The child body of joint.
     coordinates: iterable of dynamicsymbols, optional
         Generalized coordinates of the joint.
@@ -1795,9 +1821,9 @@ class SphericalJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The joint's parent body.
-    child : Body
+    child : Particle or RigidBody or Body
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates.
@@ -1822,11 +1848,11 @@ class SphericalJoint(Joint):
     A single spherical joint is created from two bodies and has the following
     basic attributes:
 
-    >>> from sympy.physics.mechanics import Body, SphericalJoint
-    >>> parent = Body('P')
+    >>> from sympy.physics.mechanics import RigidBody, SphericalJoint
+    >>> parent = RigidBody('P')
     >>> parent
     P
-    >>> child = Body('C')
+    >>> child = RigidBody('C')
     >>> child
     C
     >>> joint = SphericalJoint('PC', parent, child)
@@ -1873,13 +1899,13 @@ class SphericalJoint(Joint):
     spherical joint with a ZXZ rotation can be created as follows.
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import Body, SphericalJoint
+    >>> from sympy.physics.mechanics import RigidBody, SphericalJoint
     >>> l1 = symbols('l1')
 
     First create bodies to represent the fixed floor and a pendulum bob.
 
-    >>> floor = Body('F')
-    >>> bob = Body('B')
+    >>> floor = RigidBody('F')
+    >>> bob = RigidBody('B')
 
     The joint will connect the bob to the floor, with the joint located at a
     distance of ``l1`` from the child's center of mass and the rotation set to a
@@ -1956,18 +1982,17 @@ class SphericalJoint(Joint):
 
     def _set_linear_velocity(self):
         self.child_point.set_pos(self.parent_point, 0)
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
-        self.child.masscenter.v2pt_theory(self.parent_point, self.parent.frame,
-                                          self.child.frame)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
+        self.child.masscenter.v2pt_theory(self.parent_point, self._parent_frame,
+                                          self._child_frame)
 
 
 class WeldJoint(Joint):
     """Weld Joint.
 
-    .. image:: WeldJoint.svg
-        :align: center
-        :width: 500
+    .. raw:: html
+        :file: ../../../doc/src/modules/physics/mechanics/api/WeldJoint.svg
 
     Explanation
     ===========
@@ -1984,9 +2009,9 @@ class WeldJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The parent body of joint.
-    child : Body
+    child : Particle or RigidBody or Body
         The child body of joint.
     parent_point : Point or Vector, optional
         Attachment point where the joint is fixed to the parent body. If a
@@ -2014,9 +2039,9 @@ class WeldJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Body
+    parent : Particle or RigidBody or Body
         The joint's parent body.
-    child : Body
+    child : Particle or RigidBody or Body
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates. The default value is
@@ -2043,11 +2068,11 @@ class WeldJoint(Joint):
     A single weld joint is created from two bodies and has the following basic
     attributes:
 
-    >>> from sympy.physics.mechanics import Body, WeldJoint
-    >>> parent = Body('P')
+    >>> from sympy.physics.mechanics import RigidBody, WeldJoint
+    >>> parent = RigidBody('P')
     >>> parent
     P
-    >>> child = Body('C')
+    >>> child = RigidBody('C')
     >>> child
     C
     >>> joint = WeldJoint('PC', parent, child)
@@ -2067,9 +2092,9 @@ class WeldJoint(Joint):
     Matrix(0, 0, [])
     >>> joint.speeds
     Matrix(0, 0, [])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     0
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
@@ -2081,13 +2106,13 @@ class WeldJoint(Joint):
     bodies rotated by a quarter turn about the Y axis can be created as follows:
 
     >>> from sympy import symbols, pi
-    >>> from sympy.physics.mechanics import ReferenceFrame, Body, WeldJoint
+    >>> from sympy.physics.mechanics import ReferenceFrame, RigidBody, WeldJoint
     >>> l1, l2 = symbols('l1 l2')
 
     First create the bodies to represent the parent and rotated child body.
 
-    >>> parent = Body('P')
-    >>> child = Body('C')
+    >>> parent = RigidBody('P')
+    >>> child = RigidBody('C')
 
     Next the intermediate frame specifying the fixed rotation with respect to
     the parent can be created.
@@ -2107,7 +2132,7 @@ class WeldJoint(Joint):
     accessed. The direction cosine matrix of the child body with respect to the
     parent can be found:
 
-    >>> child.dcm(parent)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [0, 0, -1],
     [0, 1,  0],
@@ -2127,7 +2152,7 @@ class WeldJoint(Joint):
     The angular velocity of the child with respect to the parent is 0 as one
     would expect.
 
-    >>> child.ang_vel_in(parent)
+    >>> child.frame.ang_vel_in(parent.frame)
     0
 
     """
@@ -2158,6 +2183,6 @@ class WeldJoint(Joint):
 
     def _set_linear_velocity(self):
         self.child_point.set_pos(self.parent_point, 0)
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
-        self.child.masscenter.set_vel(self.parent.frame, 0)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
+        self.child.masscenter.set_vel(self._parent_frame, 0)

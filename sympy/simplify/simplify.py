@@ -1214,7 +1214,7 @@ def besselsimp(expr):
     works on the Bessel J and I functions, however. It works by looking at all
     such functions in turn, and eliminating factors of "I" and "-1" (actually
     their polar equivalents) in front of the argument. Then, functions of
-    half-integer order are rewritten using strigonometric functions and
+    half-integer order are rewritten using trigonometric functions and
     functions of integer order (> 1) are rewritten using functions
     of low order.  Finally, if the expression was changed, compute
     factorization of the result with factor().
@@ -1733,7 +1733,7 @@ def nc_simplify(expr, deep=True):
         if isinstance(s, _Pow):
             return get_score(s.args[0])
         elif isinstance(s, (_Add, _Mul)):
-            return sum([get_score(a) for a in s.args])
+            return sum(get_score(a) for a in s.args)
         return 1
 
     def compare(s, alt_s):

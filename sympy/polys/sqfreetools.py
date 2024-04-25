@@ -4,7 +4,7 @@
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_sub, dmp_sub,
-    dup_mul,
+    dup_mul, dmp_mul,
     dup_quo, dmp_quo,
     dup_mul_ground, dmp_mul_ground)
 from sympy.polys.densebasic import (
@@ -23,7 +23,7 @@ from sympy.polys.densetools import (
 from sympy.polys.euclidtools import (
     dup_inner_gcd, dmp_inner_gcd,
     dup_gcd, dmp_gcd,
-    dmp_resultant)
+    dmp_resultant, dmp_primitive)
 from sympy.polys.galoistools import (
     gf_sqf_list, gf_sqf_part)
 from sympy.polys.polyerrors import (
@@ -104,7 +104,7 @@ def dup_sqf_norm(f, K):
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
 
-    s, g = 0, dmp_raise(K.mod.rep, 1, 0, K.dom)
+    s, g = 0, dmp_raise(K.mod.to_list(), 1, 0, K.dom)
 
     while True:
         h, _ = dmp_inject(f, 0, K, front=True)
@@ -151,7 +151,7 @@ def dmp_sqf_norm(f, u, K):
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
 
-    g = dmp_raise(K.mod.rep, u + 1, 0, K.dom)
+    g = dmp_raise(K.mod.to_list(), u + 1, 0, K.dom)
     F = dmp_raise([K.one, -K.unit], u, 0, K)
 
     s = 0
@@ -175,7 +175,7 @@ def dmp_norm(f, u, K):
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
 
-    g = dmp_raise(K.mod.rep, u + 1, 0, K.dom)
+    g = dmp_raise(K.mod.to_list(), u + 1, 0, K.dom)
     h, _ = dmp_inject(f, u, K, front=True)
 
     return dmp_resultant(g, h, u + 1, K.dom)
@@ -398,28 +398,52 @@ def dmp_sqf_list(f, u, K, all=False):
             f = dmp_neg(f, u, K)
             coeff = -coeff
 
-    if dmp_degree(f, u) <= 0:
+    deg = dmp_degree(f, u)
+    if deg < 0:
         return coeff, []
 
-    result, i = [], 1
+    # Yun's algorithm requires the polynomial to be primitive as a univariate
+    # polynomial in its main variable.
+    content, f = dmp_primitive(f, u, K)
 
-    h = dmp_diff(f, 1, u, K)
-    g, p, q = dmp_inner_gcd(f, h, u, K)
+    result = {}
 
-    while True:
-        d = dmp_diff(p, 1, u, K)
-        h = dmp_sub(q, d, u, K)
+    if deg != 0:
 
-        if dmp_zero_p(h, u):
-            result.append((p, i))
-            break
+        h = dmp_diff(f, 1, u, K)
+        g, p, q = dmp_inner_gcd(f, h, u, K)
 
-        g, p, q = dmp_inner_gcd(p, h, u, K)
+        i = 1
 
-        if all or dmp_degree(g, u) > 0:
-            result.append((g, i))
+        while True:
+            d = dmp_diff(p, 1, u, K)
+            h = dmp_sub(q, d, u, K)
 
-        i += 1
+            if dmp_zero_p(h, u):
+                result[i] = p
+                break
+
+            g, p, q = dmp_inner_gcd(p, h, u, K)
+
+            if all or dmp_degree(g, u) > 0:
+                result[i] = g
+
+            i += 1
+
+    coeff_content, result_content = dmp_sqf_list(content, u-1, K, all=all)
+
+    coeff *= coeff_content
+
+    # Combine factors of the content and primitive part that have the same
+    # multiplicity to produce a list in ascending order of multiplicity.
+    for fac, i in result_content:
+        fac = [fac]
+        if i in result:
+            result[i] = dmp_mul(result[i], fac, u, K)
+        else:
+            result[i] = fac
+
+    result = [(result[i], i) for i in sorted(result)]
 
     return coeff, result
 

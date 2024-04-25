@@ -12,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (false, true)
-from sympy.matrices.common import MatrixKind
+from sympy.matrices.kind import MatrixKind
 from sympy.matrices.dense import Matrix
 from sympy.polys.rootoftools import rootof
 from sympy.sets.contains import Contains
@@ -24,6 +24,7 @@ from sympy.core.expr import unchanged
 from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.utilities.iterables import cartes
 
 from sympy.abc import x, y, z, m, n
 
@@ -500,6 +501,40 @@ def test_intersect1():
     assert Union(Interval(0, 1), Interval(2, 3)).intersection(Interval(1, 2)) == \
         Union(Interval(1, 1), Interval(2, 2))
 
+    # canonical boundary selected
+    a = sqrt(2*sqrt(6) + 5)
+    b = sqrt(2) + sqrt(3)
+    assert Interval(a, 4).intersection(Interval(b, 5)) == Interval(b, 4)
+    assert Interval(1, a).intersection(Interval(0, b)) == Interval(1, b)
+
+
+def test_intersection_interval_float():
+    # intersection of Intervals with mixed Rational/Float boundaries should
+    # lead to Float boundaries in all cases regardless of which Interval is
+    # open or closed.
+    typs = [
+        (Interval, Interval, Interval),
+        (Interval, Interval.open, Interval.open),
+        (Interval, Interval.Lopen, Interval.Lopen),
+        (Interval, Interval.Ropen, Interval.Ropen),
+        (Interval.open, Interval.open, Interval.open),
+        (Interval.open, Interval.Lopen, Interval.open),
+        (Interval.open, Interval.Ropen, Interval.open),
+        (Interval.Lopen, Interval.Lopen, Interval.Lopen),
+        (Interval.Lopen, Interval.Ropen, Interval.open),
+        (Interval.Ropen, Interval.Ropen, Interval.Ropen),
+    ]
+
+    as_float = lambda a1, a2: a2 if isinstance(a2, float) else a1
+
+    for t1, t2, t3 in typs:
+        for t1i, t2i in [(t1, t2), (t2, t1)]:
+            for a1, a2, b1, b2 in cartes([2, 2.0], [2, 2.0], [3, 3.0], [3, 3.0]):
+                I1 = t1(a1, b1)
+                I2 = t2(a2, b2)
+                I3 = t3(as_float(a1, a2), as_float(b1, b2))
+                assert I1.intersect(I2) == I3
+
 
 def test_intersection():
     # iterable
@@ -632,7 +667,7 @@ def test_ProductSet():
     assert Z2.contains(x) == Contains(x, Z2, evaluate=False)
     assert Z2.contains(x).subs(x, 1) is S.false
     assert Z2.contains((x, 1)).subs(x, 2) is S.true
-    assert Z2.contains((x, y)) == Contains((x, y), Z2, evaluate=False)
+    assert Z2.contains((x, y)) == Contains(x, S.Integers) & Contains(y, S.Integers)
     assert unchanged(Contains, (x, y), Z2)
     assert Contains((1, 2), Z2) is S.true
 
@@ -803,17 +838,17 @@ def test_contains():
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
 
-    assert FiniteSet(y)._contains(x) is None
+    assert FiniteSet(y)._contains(x) == Eq(y, x, evaluate=False)
     raises(TypeError, lambda: x in FiniteSet(y))
-    assert FiniteSet({x, y})._contains({x}) is None
-    assert FiniteSet({x, y}).subs(y, x)._contains({x}) is True
-    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is False
+    assert FiniteSet({x, y})._contains({x}) == Eq({x, y}, {x}, evaluate=False)
+    assert FiniteSet({x, y}).subs(y, x)._contains({x}) is S.true
+    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is S.false
 
     # issue 8197
     from sympy.abc import a, b
-    assert isinstance(FiniteSet(b).contains(-a), Contains)
-    assert isinstance(FiniteSet(b).contains(a), Contains)
-    assert isinstance(FiniteSet(a).contains(1), Contains)
+    assert FiniteSet(b).contains(-a) == Eq(b, -a)
+    assert FiniteSet(b).contains(a) == Eq(b, a)
+    assert FiniteSet(a).contains(1) == Eq(a, 1)
     raises(TypeError, lambda: 1 in FiniteSet(a))
 
     # issue 8209
@@ -1702,3 +1737,17 @@ def test_issue_20379():
 def test_finiteset_simplify():
     S = FiniteSet(1, cos(1)**2 + sin(1)**2)
     assert S.simplify() == {1}
+
+def test_issue_14336():
+    #https://github.com/sympy/sympy/issues/14336
+    U = S.Complexes
+    x = Symbol("x")
+    U -= U.intersect(Ne(x, 1).as_set())
+    U -= U.intersect(S.true.as_set())
+
+def test_issue_9855():
+    #https://github.com/sympy/sympy/issues/9855
+    x, y, z = symbols('x, y, z', real=True)
+    s1 = Interval(1, x) & Interval(y, 2)
+    s2 = Interval(1, 2)
+    assert s1.is_subset(s2) == None

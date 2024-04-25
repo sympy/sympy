@@ -4,6 +4,7 @@ from .basic import Atom, Basic
 from .sorting import ordered
 from .evalf import EvalfMixin
 from .function import AppliedUndef
+from .numbers import int_valued
 from .singleton import S
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
@@ -11,6 +12,8 @@ from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
+from sympy.utilities.exceptions import sympy_deprecation_warning
+
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -425,6 +428,9 @@ class Relational(Boolean, EvalfMixin):
             v = None
             if dif.is_comparable:
                 v = dif.n(2)
+                if any(i._prec == 1 for i in v.as_real_imag()):
+                    rv, iv = [i.n(2) for i in dif.as_real_imag()]
+                    v = rv + S.ImaginaryUnit*iv
             elif dif.equals(0):  # XXX this is expensive
                 v = S.Zero
             if v is not None:
@@ -594,7 +600,7 @@ class Equality(Relational):
 
     Since this object is already an expression, it does not respond to
     the method ``as_expr`` if one tries to create `x - y` from ``Eq(x, y)``.
-    This can be done with the ``rewrite(Add)`` method.
+    If ``eq = Eq(x, y)`` then write `eq.lhs - eq.rhs` to get ``x - y``.
 
     .. deprecated:: 1.5
 
@@ -626,7 +632,7 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
-    def _eval_rewrite_as_Add(self, *args, **kwargs):
+    def _eval_rewrite_as_Add(self, L, R, evaluate=True, **kwargs):
         """
         return Eq(L, R) as L - R. To control the evaluation of
         the result set pass `evaluate=True` to give L - R;
@@ -635,26 +641,39 @@ class Equality(Relational):
         non-canonical args will be returned. If one side is 0, the
         non-zero side will be returned.
 
+        .. deprecated:: 1.13
+
+           The method ``Eq.rewrite(Add)`` is deprecated.
+           See :ref:`eq-rewrite-Add` for details.
+
         Examples
         ========
 
         >>> from sympy import Eq, Add
         >>> from sympy.abc import b, x
         >>> eq = Eq(x + b, x - b)
-        >>> eq.rewrite(Add)
+        >>> eq.rewrite(Add)  #doctest: +SKIP
         2*b
-        >>> eq.rewrite(Add, evaluate=None).args
+        >>> eq.rewrite(Add, evaluate=None).args  #doctest: +SKIP
         (b, b, x, -x)
-        >>> eq.rewrite(Add, evaluate=False).args
+        >>> eq.rewrite(Add, evaluate=False).args  #doctest: +SKIP
         (b, x, b, -x)
         """
+        sympy_deprecation_warning("""
+        Eq.rewrite(Add) is deprecated.
+
+        For ``eq = Eq(a, b)`` use ``eq.lhs - eq.rhs`` to obtain
+        ``a - b``.
+        """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="eq-rewrite-Add",
+            stacklevel=5,
+        )
         from .add import _unevaluated_Add, Add
-        L, R = args
         if L == 0:
             return R
         if R == 0:
             return L
-        evaluate = kwargs.get('evaluate', True)
         if evaluate:
             # allow cancellation of args
             return L - R
@@ -689,7 +708,7 @@ class Equality(Relational):
                 from sympy.solvers.solveset import linear_coeffs
                 x = free.pop()
                 m, b = linear_coeffs(
-                    e.rewrite(Add, evaluate=False), x)
+                    Add(e.lhs, -e.rhs, evaluate=False), x)
                 if m.is_zero is False:
                     enew = e.func(x, -b / m)
                 else:
@@ -1552,6 +1571,15 @@ def is_eq(lhs, rhs, assumptions=None):
                 return False
             if z:
                 return True
+
+        # is_zero cannot help decide integer/rational with Float
+        c, t = dif.as_coeff_Add()
+        if c.is_Float:
+            if int_valued(c):
+                if t.is_integer is False:
+                    return False
+            elif t.is_rational is False:
+                return False
 
         n2 = _n2(lhs, rhs)
         if n2 is not None:

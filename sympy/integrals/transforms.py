@@ -6,7 +6,7 @@ from sympy.core.add import Add
 from sympy.core.function import (
     AppliedUndef, count_ops, expand, expand_mul, Function)
 from sympy.core.mul import Mul
-from sympy.core.numbers import igcd, ilcm
+from sympy.core.intfunc import igcd, ilcm
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 from sympy.core.traversal import postorder_traversal
@@ -1584,5 +1584,7 @@ import sympy.integrals.laplace as _laplace
 
 LaplaceTransform = _laplace.LaplaceTransform
 laplace_transform = _laplace.laplace_transform
+laplace_correspondence = _laplace.laplace_correspondence
+laplace_initial_conds = _laplace.laplace_initial_conds
 InverseLaplaceTransform = _laplace.InverseLaplaceTransform
 inverse_laplace_transform = _laplace.inverse_laplace_transform

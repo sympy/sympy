@@ -1,23 +1,22 @@
-from sympy.concrete.summations import summation
 from sympy.core.containers import Dict
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
-from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
+from sympy.external.gmpy import gcd
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
-    primerange, pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
-    trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
+    pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
+    divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
-    antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
-    udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
-    mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
-    is_deficient, is_amicable, dra, drm)
+    antidivisors, antidivisor_count, _divisor_sigma, core, udivisors, udivisor_sigma,
+    udivisor_count, proper_divisor_count, primenu, primeomega,
+    mersenne_prime_exponent, is_perfect, is_abundant,
+    is_deficient, is_amicable, is_carmichael, find_carmichael_numbers_in_range,
+    find_first_n_carmichaels, dra, drm, _perfect_power)
 
 from sympy.testing.pytest import raises, slow
 
@@ -66,24 +65,6 @@ def multiproduct(seq=(), start=1):
     return units * multiproduct(multi)**2
 
 
-def test_trailing_bitcount():
-    assert trailing(0) == 0
-    assert trailing(1) == 0
-    assert trailing(-1) == 0
-    assert trailing(2) == 1
-    assert trailing(7) == 0
-    assert trailing(-7) == 0
-    for i in range(100):
-        assert trailing(1 << i) == i
-        assert trailing((1 << i) * 31337) == i
-    assert trailing(1 << 1000001) == 1000001
-    assert trailing((1 << 273956)*7**37) == 273956
-    # issue 12709
-    big = small_trailing[-1]*2
-    assert trailing(-big) == trailing(big)
-    assert bitcount(-big) == bitcount(big)
-
-
 def test_multiplicity():
     for b in range(2, 20):
         for i in range(100):
@@ -113,6 +94,32 @@ def test_multiplicity_in_factorial():
     n = fac(1000)
     for i in (2, 4, 6, 12, 30, 36, 48, 60, 72, 96):
         assert multiplicity(i, n) == multiplicity_in_factorial(i, 1000)
+
+
+def test_private_perfect_power():
+    assert _perfect_power(0) is False
+    assert _perfect_power(1) is False
+    assert _perfect_power(2) is False
+    assert _perfect_power(3) is False
+    for x in [2, 3, 5, 6, 7, 12, 15, 105, 100003]:
+        for y in range(2, 100):
+            assert _perfect_power(x**y) == (x, y)
+            if x & 1:
+                assert _perfect_power(x**y, next_p=3) == (x, y)
+            if x == 100003:
+                assert _perfect_power(x**y, next_p=100003) == (x, y)
+            assert _perfect_power(101*x**y) == False
+            # Catalan's conjecture
+            if x**y not in [8, 9]:
+                assert _perfect_power(x**y + 1) == False
+                assert _perfect_power(x**y - 1) == False
+    for x in range(1, 10):
+        for y in range(1, 10):
+            g = gcd(x, y)
+            if g == 1:
+                assert _perfect_power(5**x * 101**y) == False
+            else:
+                assert _perfect_power(5**x * 101**y) == (5**(x//g) * 101**(y//g), g)
 
 
 def test_perfect_power():
@@ -303,6 +310,7 @@ def test_divisors_and_divisor_count():
     assert divisors(10) == [1, 2, 5, 10]
     assert divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50, 100]
     assert divisors(101) == [1, 101]
+    assert type(divisors(2, generator=True)) is not list
 
     assert divisor_count(0) == 0
     assert divisor_count(-1) == 1
@@ -324,6 +332,7 @@ def test_proper_divisors_and_proper_divisor_count():
     assert proper_divisors(10) == [1, 2, 5]
     assert proper_divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50]
     assert proper_divisors(1000000007) == [1]
+    assert type(proper_divisors(2, generator=True)) is not list
 
     assert proper_divisor_count(0) == 0
     assert proper_divisor_count(-1) == 0
@@ -343,6 +352,7 @@ def test_udivisors_and_udivisor_count():
     assert udivisors(100) == [1, 4, 25, 100]
     assert udivisors(101) == [1, 101]
     assert udivisors(1000) == [1, 8, 125, 1000]
+    assert type(udivisors(2, generator=True)) is not list
 
     assert udivisor_count(0) == 0
     assert udivisor_count(-1) == 1
@@ -357,100 +367,6 @@ def test_udivisors_and_udivisor_count():
 def test_issue_6981():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
     assert S == {1,2,4}
-
-
-def test_totient():
-    assert [totient(k) for k in range(1, 12)] == \
-        [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10]
-    assert totient(5005) == 2880
-    assert totient(5006) == 2502
-    assert totient(5009) == 5008
-    assert totient(2**100) == 2**99
-
-    raises(ValueError, lambda: totient(30.1))
-    raises(ValueError, lambda: totient(20.001))
-
-    m = Symbol("m", integer=True)
-    assert totient(m)
-    assert totient(m).subs(m, 3**10) == 3**10 - 3**9
-    assert summation(totient(m), (m, 1, 11)) == 42
-
-    n = Symbol("n", integer=True, positive=True)
-    assert totient(n).is_integer
-
-    x=Symbol("x", integer=False)
-    raises(ValueError, lambda: totient(x))
-
-    y=Symbol("y", positive=False)
-    raises(ValueError, lambda: totient(y))
-
-    z=Symbol("z", positive=True, integer=True)
-    raises(ValueError, lambda: totient(2**(-z)))
-
-
-def test_reduced_totient():
-    assert [reduced_totient(k) for k in range(1, 16)] == \
-        [1, 1, 2, 2, 4, 2, 6, 2, 6, 4, 10, 2, 12, 6, 4]
-    assert reduced_totient(5005) == 60
-    assert reduced_totient(5006) == 2502
-    assert reduced_totient(5009) == 5008
-    assert reduced_totient(2**100) == 2**98
-
-    m = Symbol("m", integer=True)
-    assert reduced_totient(m)
-    assert reduced_totient(m).subs(m, 2**3*3**10) == 3**10 - 3**9
-    assert summation(reduced_totient(m), (m, 1, 16)) == 68
-
-    n = Symbol("n", integer=True, positive=True)
-    assert reduced_totient(n).is_integer
-
-
-def test_divisor_sigma():
-    assert [divisor_sigma(k) for k in range(1, 12)] == \
-        [1, 3, 4, 7, 6, 12, 8, 15, 13, 18, 12]
-    assert [divisor_sigma(k, 2) for k in range(1, 12)] == \
-        [1, 5, 10, 21, 26, 50, 50, 85, 91, 130, 122]
-    assert divisor_sigma(23450) == 50592
-    assert divisor_sigma(23450, 0) == 24
-    assert divisor_sigma(23450, 1) == 50592
-    assert divisor_sigma(23450, 2) == 730747500
-    assert divisor_sigma(23450, 3) == 14666785333344
-
-    a = Symbol("a", prime=True)
-    b = Symbol("b", prime=True)
-    j = Symbol("j", integer=True, positive=True)
-    k = Symbol("k", integer=True, positive=True)
-    assert divisor_sigma(a**j*b**k) == (a**(j + 1) - 1)*(b**(k + 1) - 1)/((a - 1)*(b - 1))
-    assert divisor_sigma(a**j*b**k, 2) == (a**(2*j + 2) - 1)*(b**(2*k + 2) - 1)/((a**2 - 1)*(b**2 - 1))
-    assert divisor_sigma(a**j*b**k, 0) == (j + 1)*(k + 1)
-
-    m = Symbol("m", integer=True)
-    k = Symbol("k", integer=True)
-    assert divisor_sigma(m)
-    assert divisor_sigma(m, k)
-    assert divisor_sigma(m).subs(m, 3**10) == 88573
-    assert divisor_sigma(m, k).subs([(m, 3**10), (k, 3)]) == 213810021790597
-    assert summation(divisor_sigma(m), (m, 1, 11)) == 99
-
-
-def test_udivisor_sigma():
-    assert [udivisor_sigma(k) for k in range(1, 12)] == \
-        [1, 3, 4, 5, 6, 12, 8, 9, 10, 18, 12]
-    assert [udivisor_sigma(k, 3) for k in range(1, 12)] == \
-        [1, 9, 28, 65, 126, 252, 344, 513, 730, 1134, 1332]
-    assert udivisor_sigma(23450) == 42432
-    assert udivisor_sigma(23450, 0) == 16
-    assert udivisor_sigma(23450, 1) == 42432
-    assert udivisor_sigma(23450, 2) == 702685000
-    assert udivisor_sigma(23450, 4) == 321426961814978248
-
-    m = Symbol("m", integer=True)
-    k = Symbol("k", integer=True)
-    assert udivisor_sigma(m)
-    assert udivisor_sigma(m, k)
-    assert udivisor_sigma(m).subs(m, 4**9) == 262145
-    assert udivisor_sigma(m, k).subs([(m, 4**9), (k, 2)]) == 68719476737
-    assert summation(udivisor_sigma(m), (m, 2, 15)) == 169
 
 
 def test_issue_4356():
@@ -489,7 +405,7 @@ def test_antidivisors():
     assert sorted(x for x in antidivisors(3*5*7, 1)) == \
         [2, 6, 10, 11, 14, 19, 30, 42, 70]
     assert antidivisors(1) == []
-
+    assert type(antidivisors(2, generator=True)) is not list
 
 def test_antidivisor_count():
     assert antidivisor_count(0) == 0
@@ -592,32 +508,24 @@ def test_core():
     assert core(1, 6) == 1
 
 
-def test_primenu():
-    assert primenu(2) == 1
-    assert primenu(2 * 3) == 2
-    assert primenu(2 * 3 * 5) == 3
-    assert primenu(3 * 25) == primenu(3) + primenu(25)
-    assert [primenu(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
-    assert primenu(fac(50)) == 15
-    assert primenu(2 ** 9941 - 1) == 1
-    n = Symbol('n', integer=True)
-    assert primenu(n)
-    assert primenu(n).subs(n, 2 ** 31 - 1) == 1
-    assert summation(primenu(n), (n, 2, 30)) == 43
-
-
-def test_primeomega():
-    assert primeomega(2) == 1
-    assert primeomega(2 * 2) == 2
-    assert primeomega(2 * 2 * 3) == 3
-    assert primeomega(3 * 25) == primeomega(3) + primeomega(25)
-    assert [primeomega(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
-    assert primeomega(fac(50)) == 108
-    assert primeomega(2 ** 9941 - 1) == 1
-    n = Symbol('n', integer=True)
-    assert primeomega(n)
-    assert primeomega(n).subs(n, 2 ** 31 - 1) == 1
-    assert summation(primeomega(n), (n, 2, 30)) == 59
+def test__divisor_sigma():
+    assert _divisor_sigma(23450) == 50592
+    assert _divisor_sigma(23450, 0) == 24
+    assert _divisor_sigma(23450, 1) == 50592
+    assert _divisor_sigma(23450, 2) == 730747500
+    assert _divisor_sigma(23450, 3) == 14666785333344
+    A000005 = [1, 2, 2, 3, 2, 4, 2, 4, 3, 4, 2, 6, 2, 4, 4, 5, 2, 6, 2, 6, 4,
+               4, 2, 8, 3, 4, 4, 6, 2, 8, 2, 6, 4, 4, 4, 9, 2, 4, 4, 8, 2, 8]
+    for n, val in enumerate(A000005, 1):
+        assert _divisor_sigma(n, 0) == val
+    A000203 = [1, 3, 4, 7, 6, 12, 8, 15, 13, 18, 12, 28, 14, 24, 24, 31, 18,
+               39, 20, 42, 32, 36, 24, 60, 31, 42, 40, 56, 30, 72, 32, 63, 48]
+    for n, val in enumerate(A000203, 1):
+        assert _divisor_sigma(n, 1) == val
+    A001157 = [1, 5, 10, 21, 26, 50, 50, 85, 91, 130, 122, 210, 170, 250, 260,
+               341, 290, 455, 362, 546, 500, 610, 530, 850, 651, 850, 820, 1050]
+    for n, val in enumerate(A001157, 1):
+        assert _divisor_sigma(n, 2) == val
 
 
 def test_mersenne_prime_exponent():
@@ -630,6 +538,7 @@ def test_mersenne_prime_exponent():
 
 
 def test_is_perfect():
+    assert is_perfect(-6) is False
     assert is_perfect(6) is True
     assert is_perfect(15) is False
     assert is_perfect(28) is True
@@ -637,14 +546,6 @@ def test_is_perfect():
     assert is_perfect(496) is True
     assert is_perfect(8128) is True
     assert is_perfect(10000) is False
-
-
-def test_is_mersenne_prime():
-    assert is_mersenne_prime(10) is False
-    assert is_mersenne_prime(127) is True
-    assert is_mersenne_prime(511) is False
-    assert is_mersenne_prime(131071) is True
-    assert is_mersenne_prime(2147483647) is True
 
 
 def test_is_abundant():
@@ -668,6 +569,30 @@ def test_is_amicable():
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
 
+
+def test_is_carmichael():
+    A002997 = [561, 1105, 1729, 2465, 2821, 6601, 8911, 10585, 15841,
+               29341, 41041, 46657, 52633, 62745, 63973, 75361, 101101]
+    for n in range(1, 5000):
+        assert is_carmichael(n) == (n in A002997)
+    for n in A002997:
+        assert is_carmichael(n)
+
+
+def test_find_carmichael_numbers_in_range():
+    assert find_carmichael_numbers_in_range(0, 561) == []
+    assert find_carmichael_numbers_in_range(561, 562) == [561]
+    assert find_carmichael_numbers_in_range(561, 1105) == find_carmichael_numbers_in_range(561, 562)
+    raises(ValueError, lambda: find_carmichael_numbers_in_range(-2, 2))
+    raises(ValueError, lambda: find_carmichael_numbers_in_range(22, 2))
+
+
+def test_find_first_n_carmichaels():
+    assert find_first_n_carmichaels(0) == []
+    assert find_first_n_carmichaels(1) == [561]
+    assert find_first_n_carmichaels(2) == [561, 1105]
+
+
 def test_dra():
     assert dra(19, 12) == 8
     assert dra(2718, 10) == 9
@@ -683,3 +608,20 @@ def test_drm():
     assert drm(234161, 10) == 6
     raises(ValueError, lambda: drm(24, -2))
     raises(ValueError, lambda: drm(11.6, 9))
+
+
+def test_deprecated_ntheory_symbolic_functions():
+    from sympy.testing.pytest import warns_deprecated_sympy
+
+    with warns_deprecated_sympy():
+        assert primenu(3) == 1
+    with warns_deprecated_sympy():
+        assert primeomega(3) == 1
+    with warns_deprecated_sympy():
+        assert totient(3) == 2
+    with warns_deprecated_sympy():
+        assert reduced_totient(3) == 2
+    with warns_deprecated_sympy():
+        assert divisor_sigma(3) == 4
+    with warns_deprecated_sympy():
+        assert udivisor_sigma(3) == 4

@@ -1,10 +1,11 @@
-from sympy.ntheory import sieve, isprime
-from sympy.core.numbers import mod_inverse
-from sympy.core.power import integer_log
-from sympy.utilities.misc import as_int
-import random
+from math import log
 
-rgen = random.Random()
+from sympy.core.random import _randint
+from sympy.external.gmpy import gcd, invert, sqrt
+from sympy.utilities.misc import as_int
+from .generate import sieve, primerange
+from .primetest import isprime
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -28,7 +29,12 @@ class Point:
     References
     ==========
 
-    .. [1]  https://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
+    .. [1] Kris Gaj, Soonhak Kwon, Patrick Baier, Paul Kohlbrenner, Hoang Le, Mohammed Khaleeluddin, Ramakrishna Bachimanchi,
+           Implementing the Elliptic Curve Method of Factoring in Reconfigurable Hardware,
+           Cryptographic Hardware and Embedded Systems - CHES 2006 (2006), pp. 119-133,
+           https://doi.org/10.1007/11894063_10
+           https://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
+
     """
 
     def __init__(self, x_cord, z_cord, a_24, mod):
@@ -151,12 +157,15 @@ class Point:
         return Q
 
 
-def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
+def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
     arithmetic is used for fast computation of addition
     and doubling of points in elliptic curve.
+
+    Explanation
+    ===========
 
     This ECM method considers elliptic curves in Montgomery
     form (E : b*y**2*z = x**3 + a*x**2*z + x*z**2) and involves
@@ -183,48 +192,61 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     ==========
 
     n : Number to be Factored
-    B1 : Stage 1 Bound
-    B2 : Stage 2 Bound
+    B1 : Stage 1 Bound. Must be an even number.
+    B2 : Stage 2 Bound. Must be an even number.
     max_curve : Maximum number of curves generated
+
+    Returns
+    =======
+
+    integer | None : ``n`` (if it is prime) else a non-trivial divisor of ``n``. ``None`` if not found
 
     References
     ==========
 
-    .. [1]  Carl Pomerance and Richard Crandall "Prime Numbers:
-        A Computational Perspective" (2nd Ed.), page 344
+    .. [1] Carl Pomerance, Richard Crandall, Prime Numbers: A Computational Perspective,
+           2nd Edition (2005), page 344, ISBN:978-0387252827
     """
-    n = as_int(n)
-    if B1 % 2 != 0 or B2 % 2 != 0:
-        raise ValueError("The Bounds should be an even integer")
-    sieve.extend(B2)
-
+    randint = _randint(seed)
     if isprime(n):
         return n
 
-    from sympy.functions.elementary.miscellaneous import sqrt
-    from sympy.polys.polytools import gcd
-    D = int(sqrt(B2))
-    beta = [0]*(D + 1)
-    S = [0]*(D + 1)
+    # When calculating T, if (B1 - 2*D) is negative, it cannot be calculated.
+    D = min(sqrt(B2), B1 // 2 - 1)
+    sieve.extend(D)
+    beta = [0] * D
+    S = [0] * D
     k = 1
-    for p in sieve.primerange(1, B1 + 1):
-        k *= pow(p, integer_log(B1, p)[0])
+    for p in primerange(2, B1 + 1):
+        k *= pow(p, int(log(B1, p)))
+
+    # Pre-calculate the prime numbers to be used in stage 2.
+    # Using the fact that the x-coordinates of point P and its
+    # inverse -P coincide, the number of primes to be checked
+    # in stage 2 can be reduced.
+    deltas_list = []
+    for r in range(B1 + 2*D, B2 + 2*D, 4*D):
+        deltas = set()
+        deltas.update((abs(q - r) - 1) // 2 for q in primerange(r - 2*D, r + 2*D))
+        # d in deltas iff r+(2d+1) and/or r-(2d+1) is prime
+        deltas_list.append(list(deltas))
+
     for _ in range(max_curve):
         #Suyama's Parametrization
-        sigma = rgen.randint(6, n - 1)
-        u = (sigma*sigma - 5) % n
+        sigma = randint(6, n - 1)
+        u = (sigma**2 - 5) % n
         v = (4*sigma) % n
         u_3 = pow(u, 3, n)
 
         try:
             # We use the elliptic curve y**2 = x**3 + a*x**2 + x
-            # where a = pow(v - u, 3, n)*(3*u + v)*mod_inverse(4*u_3*v, n) - 2
+            # where a = pow(v - u, 3, n)*(3*u + v)*invert(4*u_3*v, n) - 2
             # However, we do not declare a because it is more convenient
-            # to use a24 = (a + 2)*mod_inverse(4, n) in the calculation.
-            a24 = pow(v - u, 3, n)*(3*u + v)*mod_inverse(16*u_3*v, n) % n
-        except ValueError:
-            #If the mod_inverse(16*u_3*v, n) doesn't exist (i.e., g != 1)
-            g = gcd(16*u_3*v, n)
+            # to use a24 = (a + 2)*invert(4, n) in the calculation.
+            a24 = pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n
+        except ZeroDivisionError:
+            #If the invert(16*u_3*v, n) doesn't exist (i.e., g != 1)
+            g = gcd(2*u_3*v, n)
             #If g = n, try another curve
             if g == n:
                 continue
@@ -242,54 +264,50 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             continue
 
         #Stage 2 - Improved Standard Continuation
-        S[1] = Q.double()
-        S[2] = S[1].double()
+        S[0] = Q
+        Q2 = Q.double()
+        S[1] = Q2.add(Q, Q)
+        beta[0] = (S[0].x_cord*S[0].z_cord) % n
         beta[1] = (S[1].x_cord*S[1].z_cord) % n
-        beta[2] = (S[2].x_cord*S[2].z_cord) % n
-
-        for d in range(3, D + 1):
-            S[d] = S[d - 1].add(S[1], S[d - 2])
+        for d in range(2, D):
+            S[d] = S[d - 1].add(Q2, S[d - 2])
             beta[d] = (S[d].x_cord*S[d].z_cord) % n
+        # i.e., S[i] = Q.mont_ladder(2*i + 1)
 
         g = 1
-        B = B1 - 1
-        T = Q.mont_ladder(B - 2*D)
-        R = Q.mont_ladder(B)
-
-        for r in  range(B, B2, 2*D):
+        W = Q.mont_ladder(4*D)
+        T = Q.mont_ladder(B1 - 2*D)
+        R = Q.mont_ladder(B1 + 2*D)
+        for deltas in deltas_list:
+            # R = Q.mont_ladder(r) where r in range(B1 + 2*D, B2 + 2*D, 4*D)
             alpha = (R.x_cord*R.z_cord) % n
-            for q in sieve.primerange(r + 2, r + 2*D + 1):
-                delta = (q - r) // 2
+            for delta in deltas:
                 # We want to calculate
                 # f = R.x_cord * S[delta].z_cord - S[delta].x_cord * R.z_cord
                 f = (R.x_cord - S[delta].x_cord)*\
                     (R.z_cord + S[delta].z_cord) - alpha + beta[delta]
                 g = (g*f) % n
-            #Swap
-            T, R = R, R.add(S[D], T)
+            T, R = R, R.add(W, T)
         g = gcd(n, g)
 
         #Stage 2 Factor found
         if g != 1 and g != n:
             return g
 
-    #ECM failed, Increase the bounds
-    raise ValueError("Increase the bounds")
-
 
 def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     """Performs factorization using Lenstra's Elliptic curve method.
 
-    This function repeatedly calls `ecm_one_factor` to compute the factors
+    This function repeatedly calls ``_ecm_one_factor`` to compute the factors
     of n. First all the small factors are taken out using trial division.
-    Then `ecm_one_factor` is used to compute one factor at a time.
+    Then ``_ecm_one_factor`` is used to compute one factor at a time.
 
     Parameters
     ==========
 
     n : Number to be Factored
-    B1 : Stage 1 Bound
-    B2 : Stage 2 Bound
+    B1 : Stage 1 Bound. Must be an even number.
+    B2 : Stage 2 Bound. Must be an even number.
     max_curve : Maximum number of curves generated
     seed : Initialize pseudorandom generator
 
@@ -302,17 +320,18 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     >>> ecm(9804659461513846513)
     {4641991, 2112166839943}
     """
+    n = as_int(n)
+    if B1 % 2 != 0 or B2 % 2 != 0:
+        raise ValueError("both bounds must be even")
     _factors = set()
     for prime in sieve.primerange(1, 100000):
         if n % prime == 0:
             _factors.add(prime)
             while(n % prime == 0):
                 n //= prime
-    rgen.seed(seed)
     while(n > 1):
-        try:
-            factor = _ecm_one_factor(n, B1, B2, max_curve)
-        except ValueError:
+        factor = _ecm_one_factor(n, B1, B2, max_curve, seed)
+        if factor is None:
             raise ValueError("Increase the bounds")
         _factors.add(factor)
         n //= factor

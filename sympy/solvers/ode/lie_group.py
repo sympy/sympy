@@ -192,12 +192,15 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
         ... - (xi.diff(y))*h**2 - xi*(h.diff(x)) - eta*(h.diff(y)), 0)
         >>> pprint(genform)
         /d               d           \                     d              2       d
+        >
         |--(eta(x, y)) - --(xi(x, y))|*h(x, y) - eta(x, y)*--(h(x, y)) - h (x, y)*--(x
+        >
         \dy              dx          /                     dy                     dy
+        >
         <BLANKLINE>
-                            d             d
-        i(x, y)) - xi(x, y)*--(h(x, y)) + --(eta(x, y)) = 0
-                            dx            dx
+        >                     d             d
+        > i(x, y)) - xi(x, y)*--(h(x, y)) + --(eta(x, y)) = 0
+        >                     dx            dx
 
     Solving the above mentioned PDE is not trivial, and can be solved only by
     making intelligent assumptions for `\xi` and `\eta` (heuristics). Once an
@@ -547,7 +550,7 @@ def lie_heuristic_bivariate(match, comp=False):
                     etared = etaeq.subs(soldict)
                     # Scaling is done by substituting one for the parameters
                     # This can be any number except zero.
-                    dict_ = {sym: 1 for sym in symset}
+                    dict_ = dict.fromkeys(symset, 1)
                     inf = {eta: etared.subs(dict_).subs(y, func),
                         xi: xired.subs(dict_).subs(y, func)}
                     return [inf]
@@ -610,7 +613,7 @@ def lie_heuristic_chi(match, comp=False):
                         soldict = soldict[0]
                     if any(soldict.values()):
                         chieq = chieq.subs(soldict)
-                        dict_ = {sym: 1 for sym in solsyms}
+                        dict_ = dict.fromkeys(solsyms, 1)
                         chieq = chieq.subs(dict_)
                         # After finding chi, the main aim is to find out
                         # eta, xi by the equation eta = xi*h + chi

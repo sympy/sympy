@@ -45,6 +45,8 @@ def test_eval():
     assert SingularityFunction(5, 3, 2) == 4
     assert SingularityFunction(3, 5, 1) == 0
     assert SingularityFunction(3, 3, 0) == 1
+    assert SingularityFunction(3, 3, 1) == 0
+    assert SingularityFunction(Symbol('z', zero=True), 0, 1) == 0  # like sin(z) == 0
     assert SingularityFunction(4, 4, -1) is oo
     assert SingularityFunction(4, 2, -1) == 0
     assert SingularityFunction(4, 7, -1) == 0
@@ -90,26 +92,28 @@ def test_series():
 
 def test_rewrite():
     assert SingularityFunction(x, 4, 5).rewrite(Piecewise) == (
-        Piecewise(((x - 4)**5, x - 4 > 0), (0, True)))
+        Piecewise(((x - 4)**5, x - 4 >= 0), (0, True)))
     assert SingularityFunction(x, -10, 0).rewrite(Piecewise) == (
-        Piecewise((1, x + 10 > 0), (0, True)))
+        Piecewise((1, x + 10 >= 0), (0, True)))
     assert SingularityFunction(x, 2, -1).rewrite(Piecewise) == (
         Piecewise((oo, Eq(x - 2, 0)), (0, True)))
     assert SingularityFunction(x, 0, -2).rewrite(Piecewise) == (
         Piecewise((oo, Eq(x, 0)), (0, True)))
 
     n = Symbol('n', nonnegative=True)
-    assert SingularityFunction(x, a, n).rewrite(Piecewise) == (
-        Piecewise(((x - a)**n, x - a > 0), (0, True)))
+    p = SingularityFunction(x, a, n).rewrite(Piecewise)
+    assert p == (
+        Piecewise(((x - a)**n, x - a >= 0), (0, True)))
+    assert p.subs(x, a).subs(n, 0) == 1
 
     expr_in = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
-    expr_out = (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    expr_out = (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(x + 3) - DiracDelta(x, 1)
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
 
     expr_in = SingularityFunction(x, a, n) + SingularityFunction(x, a, -1) - SingularityFunction(x, a, -2)
-    expr_out = (x - a)**n*Heaviside(x - a) + DiracDelta(x - a) + DiracDelta(a - x, 1)
+    expr_out = (x - a)**n*Heaviside(x - a, 1) + DiracDelta(x - a) + DiracDelta(a - x, 1)
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out

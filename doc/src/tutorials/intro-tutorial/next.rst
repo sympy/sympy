@@ -14,6 +14,4 @@ The :ref:`SymPy API Reference <reference>` has a detailed description of the
 SymPy API.
 
 If you are interested in contributing to SymPy, visit the :ref:`contribution
-guides <contributing>` and the full `Development Workflow
-<https://github.com/sympy/sympy/wiki/Development-workflow>`_ guide on the
-SymPy wiki.
+guides <contributing>`.

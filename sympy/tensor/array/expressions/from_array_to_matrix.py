@@ -15,7 +15,7 @@ from sympy.matrices.expressions.special import (Identity, ZeroMatrix, OneMatrix)
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert, Permutation
-from sympy.matrices.common import MatrixCommon
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
@@ -363,7 +363,7 @@ def _(expr: ArrayTensorProduct):
         if isinstance(arg, OneArray):
             removed.extend(current_range)
             continue
-        if not isinstance(arg, (MatrixExpr, MatrixCommon)):
+        if not isinstance(arg, (MatrixExpr, MatrixBase)):
             rarg, rem = _remove_trivial_dims(arg)
             removed.extend(rem)
             newargs.append(rarg)
@@ -758,7 +758,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
     v: List[_ArgE]
     for k, v in map_contr_to_args.items():
         make_trace: bool = False
-        if len(k) == 1 and next(iter(k)) >= 0 and sum([next(iter(k)) in i for i in map_contr_to_args]) == 1:
+        if len(k) == 1 and next(iter(k)) >= 0 and sum(next(iter(k)) in i for i in map_contr_to_args) == 1:
             # This is a trace: the arguments are fully contracted with only one
             # index, and the index isn't used anywhere else:
             make_trace = True
@@ -870,8 +870,8 @@ def remove_identity_matrices(expr: ArrayContraction):
 
     permutation_map = {}
 
-    free_indices = list(accumulate([0] + [sum([i is None for i in arg.indices]) for arg in editor.args_with_ind]))
-    free_map = {k: v for k, v in zip(editor.args_with_ind, free_indices[:-1])}
+    free_indices = list(accumulate([0] + [sum(i is None for i in arg.indices) for arg in editor.args_with_ind]))
+    free_map = dict(zip(editor.args_with_ind, free_indices[:-1]))
 
     update_pairs = {}
 

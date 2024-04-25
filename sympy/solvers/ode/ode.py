@@ -639,6 +639,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             hint = hints['hint']
             return _helper_simplify(eq, hint, hints, simplify, ics=ics)
 
+
 def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
@@ -670,9 +671,15 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         else:
             sols = solvefunc(eq, func, order, match)
         if iterable(sols):
-            rv = [odesimp(eq, s, func, hint) for s in sols]
+            rv = []
+            for s in sols:
+                simp = odesimp(eq, s, func, hint)
+                if iterable(simp):
+                    rv.extend(simp)
+                else:
+                    rv.append(simp)
         else:
-            rv =  odesimp(eq, sols, func, hint)
+            rv = odesimp(eq, sols, func, hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
         if isinstance(solvefunc, SingleODESolver):
@@ -686,6 +693,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = _handle_Integral(exprs, func, hint)
 
     if isinstance(rv, list):
+        assert all(isinstance(i, Eq) for i in rv), rv  # if not => internal error
         if simplify:
             rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
         if len(rv) == 1:
@@ -706,6 +714,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
                 return rv1[0]
             rv = rv1
     return rv
+
 
 def solve_ics(sols, funcs, constants, ics):
     """
@@ -1630,6 +1639,9 @@ def odesimp(ode, eq, func, hint):
     if not isinstance(eq, Equality):
         raise TypeError("eq should be an instance of Equality")
 
+    # allow simplifications under assumption that symbols are nonzero
+    eq = eq.xreplace((_:={i: Dummy(nonzero=True) for i in constants})).xreplace({_[i]: i for i in _})
+
     # Second, clean up the arbitrary constants.
     # Right now, nth linear hints can put as many as 2*order constants in an
     # expression.  If that number grows with another hint, the third argument
@@ -2159,7 +2171,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     constants_found = [c for c in constants_found if c not in variables]
 
     # Renumbering happens here
-    subs_dict = {var: cons for var, cons in zip(constants_found, iter_constants)}
+    subs_dict = dict(zip(constants_found, iter_constants))
     expr = expr.subs(subs_dict, simultaneous=True)
 
     return expr
@@ -2460,10 +2472,10 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_regular'))
-                                  /    6    4    2    \
-                                  |   x    x    x     |
-              /  4    2    \   C1*|- --- + -- - -- + 1|
-              | x    x     |      \  720   24   2     /    / 6\
+                                  /   6     4    2    \
+                                  |  x     x    x     |
+              / 4     2    \   C1*|- --- + -- - -- + 1|
+              |x     x     |      \  720   24   2     /    / 6\
     f(x) = C2*|--- - -- + 1| + ------------------------ + O\x /
               \120   6     /              x
 

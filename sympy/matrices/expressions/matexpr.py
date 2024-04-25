@@ -11,8 +11,9 @@ from sympy.core.sympify import SympifyError, _sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.common import NonSquareMatrixError
-from sympy.matrices.matrices import MatrixKind, MatrixBase
+from sympy.matrices.exceptions import NonSquareMatrixError
+from sympy.matrices.kind import MatrixKind
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.multipledispatch import dispatch
 from sympy.utilities.misc import filldedent
 
@@ -200,6 +201,9 @@ class MatrixExpr(Expr):
     def _eval_transpose(self):
         return Transpose(self)
 
+    def _eval_trace(self):
+        return None
+
     def _eval_power(self, exp):
         """
         Override this in sub-classes to implement simplification of powers.  The cases where the exponent
@@ -232,7 +236,8 @@ class MatrixExpr(Expr):
     @classmethod
     def _check_dim(cls, dim):
         """Helper function to check invalid matrix dimensions"""
-        ok = check_assumptions(dim, integer=True, nonnegative=True)
+        ok = not dim.is_Float and check_assumptions(
+            dim, integer=True, nonnegative=True)
         if ok is False:
             raise ValueError(
                 "The dimension specification {} should be "
@@ -383,7 +388,9 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().as_mutable()
 
-    def __array__(self):
+    def __array__(self, dtype=object, copy=None):
+        if copy is not None and not copy:
+            raise TypeError("Cannot implement copy=False when converting Matrix to ndarray")
         from numpy import empty
         a = empty(self.shape, dtype=object)
         for i in range(self.rows):
@@ -556,7 +563,7 @@ def _matrix_derivative_old_algorithm(expr, x):
         return 1, 1
 
     def get_rank(parts):
-        return sum([j not in (1, None) for i in parts for j in _get_shape(i)])
+        return sum(j not in (1, None) for i in parts for j in _get_shape(i))
 
     ranks = [get_rank(i) for i in parts]
     rank = ranks[0]
@@ -597,7 +604,6 @@ class MatrixElement(Expr):
 
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
-        from sympy.matrices.matrices import MatrixBase
         if isinstance(name, str):
             name = Symbol(name)
         else:
@@ -633,10 +639,7 @@ class MatrixElement(Expr):
     def _eval_derivative(self, v):
 
         if not isinstance(v, MatrixElement):
-            from sympy.matrices.matrices import MatrixBase
-            if isinstance(self.parent, MatrixBase):
-                return self.parent.diff(v)[self.i, self.j]
-            return S.Zero
+            return self.parent.diff(v)[self.i, self.j]
 
         M = self.args[0]
 
@@ -834,9 +837,9 @@ class _LeftRightArgs:
         """
         rank = 0
         if self.first != 1:
-            rank += sum([i != 1 for i in self.first.shape])
+            rank += sum(i != 1 for i in self.first.shape)
         if self.second != 1:
-            rank += sum([i != 1 for i in self.second.shape])
+            rank += sum(i != 1 for i in self.second.shape)
         if self.higher != 1:
             rank += 2
         return rank

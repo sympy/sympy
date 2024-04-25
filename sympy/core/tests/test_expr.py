@@ -1054,6 +1054,10 @@ def test_has_basics():
 
     assert not x.has()
 
+    # see issue at https://github.com/sympy/sympy/issues/5190
+    assert not S(1).has(Wild)
+    assert not x.has(Wild)
+
 
 def test_has_multiple():
     f = x**2*y + sin(2**t + log(z))
@@ -1660,6 +1664,7 @@ def test_as_coeff_Mul():
     assert Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
     assert Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
     assert Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))
+    assert Float(0.0).as_coeff_Mul() == (Float(0.0), Integer(1))
 
     assert (Integer(3)*x).as_coeff_Mul() == (Integer(3), x)
     assert (Rational(3, 4)*x).as_coeff_Mul() == (Rational(3, 4), x)
@@ -2010,6 +2015,11 @@ def test_round():
     assert a.round(26) == Float('3.000000000000000000000000000', '')
     assert a.round(27) == Float('2.999999999999999999999999999', '')
     assert a.round(30) == Float('2.999999999999999999999999999', '')
+    #assert a.round(10) == Float('3.0000000000', '')
+    #assert a.round(25) == Float('3.0000000000000000000000000', '')
+    #assert a.round(26) == Float('3.00000000000000000000000000', '')
+    #assert a.round(27) == Float('2.999999999999999999999999999', '')
+    #assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     # XXX: Should round set the precision of the result?
     #      The previous version of the tests above is this but they only pass
@@ -2073,6 +2083,19 @@ def test_round():
         assert S(i).round().is_Integer
         assert type(round(fi)) is int
         assert S(fi).round().is_Integer
+
+        # issue 25698
+        n = 6000002
+        assert int(n*(log(n) + log(log(n)))) == 110130079
+        one = cos(2)**2 + sin(2)**2
+        eq = exp(one*I*pi)
+        qr, qi = eq.as_real_imag()
+        assert qi.round(2) == 0.0
+        assert eq.round(2) == -1.0
+        eq = one - 1/S(10**120)
+        assert S.true not in (eq > 1, eq < 1)
+        assert int(eq) == int(.9) == 0
+        assert int(-eq) == int(-.9) == 0
 
 
 def test_held_expression_UnevaluatedExpr():
@@ -2259,3 +2282,7 @@ def test_format():
     assert '{:+3.0f}'.format(S(3)) == ' +3'
     assert '{:23.20f}'.format(pi) == ' 3.14159265358979323846'
     assert '{:50.48f}'.format(exp(sin(1))) == '2.319776824715853173956590377503266813254904772376'
+
+
+def test_issue_24045():
+    assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise

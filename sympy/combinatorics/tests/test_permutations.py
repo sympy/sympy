@@ -1,4 +1,5 @@
 from itertools import permutations
+from copy import copy
 
 from sympy.core.expr import unchanged
 from sympy.core.numbers import Integer
@@ -29,6 +30,8 @@ def test_Permutation():
     raises(TypeError, lambda: p(5))
     # conversion to list
     assert list(p) == list(range(4))
+    assert p.copy() == p
+    assert copy(p) == p
     assert Permutation(size=4) == Permutation(3)
     assert Permutation(Permutation(3), size=5) == Permutation(4)
     # cycle form with size
@@ -147,7 +150,6 @@ def test_Permutation():
 
     assert rmul(~p, p).is_Identity
     assert (~p)**13 == Permutation([5, 2, 0, 4, 6, 1, 3])
-    assert ~(r**2).is_Identity
     assert p.max() == 6
     assert p.min() == 0
 

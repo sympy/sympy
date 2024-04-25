@@ -2,7 +2,7 @@
 
 from sympy.core import S, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy,uniquely_named_symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -93,9 +93,9 @@ class elliptic_k(Function):
         if m.is_infinite:
             return True
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         m = self.args[0]
         return Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2))
 
@@ -171,9 +171,9 @@ class elliptic_f(Function):
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(z.conjugate(), m.conjugate())
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         z, m = self.args[0], self.args[1]
         return Integral(1/(sqrt(1 - m*sin(t)**2)), (t, 0, z))
 
@@ -300,10 +300,10 @@ class elliptic_e(Function):
             return -meijerg(((S.Half, Rational(3, 2)), []), \
                             ((S.Zero,), (S.Zero,)), -m)/4
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         z, m = (pi/2, self.args[0]) if len(self.args) == 1 else self.args
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         return Integral(sqrt(1 - m*sin(t)**2), (t, 0, z))
 
 
@@ -435,11 +435,11 @@ class elliptic_pi(Function):
                 return (elliptic_e(m)/(m - 1) + elliptic_pi(n, m))/(2*(n - m))
         raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         if len(self.args) == 2:
             n, m, z = self.args[0], self.args[1], pi/2
         else:
             n, z, m = self.args
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         return Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z))

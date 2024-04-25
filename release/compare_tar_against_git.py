@@ -53,12 +53,15 @@ git_whitelist = {
     'CODEOWNERS',
     'asv.conf.actions.json',
     'codecov.yml',
+    'requirements-dev.txt',
     'MANIFEST.in',
     'banner.svg',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide
     'CONTRIBUTING.md',
+    # Citation config
+    'CITATION.cff',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
     # of this stuff is for development anyway. To run the tests from the
     # tarball, use setup.py test, or import sympy and run sympy.test() or
@@ -130,9 +133,6 @@ git_whitelist = {
     'release/sha256.py',
     'release/authors.py',
     'release/ci_release_script.sh',
-    # This is just a distribute version of setup.py. Used mainly for setup.py
-    # develop, which we don't care about in the release tarball
-    'setupegg.py',
     # pytest stuff
     'conftest.py',
     }

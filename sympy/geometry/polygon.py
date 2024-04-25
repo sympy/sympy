@@ -212,7 +212,7 @@ class Polygon(GeometrySet):
         return simplify(area) / 2
 
     @staticmethod
-    def _isright(a, b, c):
+    def _is_clockwise(a, b, c):
         """Return True/False for cw/ccw orientation.
 
         Examples
@@ -220,9 +220,9 @@ class Polygon(GeometrySet):
 
         >>> from sympy import Point, Polygon
         >>> a, b, c = [Point(i) for i in [(0, 0), (1, 1), (1, 0)]]
-        >>> Polygon._isright(a, b, c)
+        >>> Polygon._is_clockwise(a, b, c)
         True
-        >>> Polygon._isright(a, c, b)
+        >>> Polygon._is_clockwise(a, c, b)
         False
         """
         ba = b - a
@@ -263,18 +263,26 @@ class Polygon(GeometrySet):
 
         """
 
-        # Determine orientation of points
         args = self.vertices
-        cw = self._isright(args[-1], args[0], args[1])
-
+        n = len(args)
         ret = {}
-        for i in range(len(args)):
+        for i in range(n):
             a, b, c = args[i - 2], args[i - 1], args[i]
-            ang = Ray(b, a).angle_between(Ray(b, c))
-            if cw ^ self._isright(a, b, c):
-                ret[b] = 2*S.Pi - ang
+            reflex_ang = Ray(b, a).angle_between(Ray(b, c))
+            if self._is_clockwise(a, b, c):
+                ret[b] = 2*S.Pi - reflex_ang
             else:
-                ret[b] = ang
+                ret[b] = reflex_ang
+
+        # internal sum should be pi*(n - 2), not pi*(n+2)
+        # so if ratio is (n+2)/(n-2) > 1 it is wrong
+        wrong = ((sum(ret.values())/S.Pi-1)/(n - 2) - 1).is_positive
+        if wrong:
+            two_pi = 2*S.Pi
+            for b in ret:
+                ret[b] = two_pi - ret[b]
+        elif wrong is None:
+            raise ValueError("could not determine Polygon orientation.")
         return ret
 
     @property
@@ -679,9 +687,9 @@ class Polygon(GeometrySet):
         """
         # Determine orientation of points
         args = self.vertices
-        cw = self._isright(args[-2], args[-1], args[0])
+        cw = self._is_clockwise(args[-2], args[-1], args[0])
         for i in range(1, len(args)):
-            if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
+            if cw ^ self._is_clockwise(args[i - 2], args[i - 1], args[i]):
                 return False
         # check for intersecting sides
         sides = self.sides
@@ -735,7 +743,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        .. [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
+        .. [1] https://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
         p = Point(p, dim=2)
@@ -1394,7 +1402,7 @@ class Polygon(GeometrySet):
         b = {}
         pts = list(p.args)
         pts.append(pts[0])  # close it
-        cw = Polygon._isright(*pts[:3])
+        cw = Polygon._is_clockwise(*pts[:3])
         if cw:
             pts = list(reversed(pts))
         for v, a in p.angles.items():

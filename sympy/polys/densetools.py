@@ -34,7 +34,7 @@ from sympy.polys.polyerrors import (
 )
 from sympy.utilities import variations
 
-from math import ceil as _ceil, log as _log
+from math import ceil as _ceil, log2 as _log2
 
 def dup_integrate(f, m, K):
     """
@@ -453,6 +453,10 @@ def dup_trunc(f, p, K):
                 g.append(c - p)
             else:
                 g.append(c)
+    elif K.is_FiniteField:
+        # XXX: python-flint's nmod does not support %
+        pi = int(p)
+        g = [ K(int(c) % pi) for c in f ]
     else:
         g = [ c % p for c in f ]
 
@@ -1195,13 +1199,20 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
     for c in f:
         common = K1.lcm(common, K0.denom(c))
 
-    if not K1.is_one(common):
-        f = dup_mul_ground(f, common, K0)
+    if K1.is_one(common):
+        if not convert:
+            return common, f
+        else:
+            return common, dup_convert(f, K0, K1)
+
+    # Use quo rather than exquo to handle inexact domains by discarding the
+    # remainder.
+    f = [K0.numer(c)*K1.quo(common, K0.denom(c)) for c in f]
 
     if not convert:
-        return common, f
+        return common, dup_convert(f, K1, K0)
     else:
-        return common, dup_convert(f, K0, K1)
+        return common, f
 
 
 def _rec_clear_denoms(g, v, K0, K1):
@@ -1281,7 +1292,7 @@ def dup_revert(f, n, K):
     g = [K.revert(dup_TC(f, K))]
     h = [K.one, K.zero, K.zero]
 
-    N = int(_ceil(_log(n, 2)))
+    N = int(_ceil(_log2(n)))
 
     for i in range(1, N + 1):
         a = dup_mul_ground(g, K(2), K)
