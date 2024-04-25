@@ -1180,7 +1180,7 @@ def test_relational_simplification_patterns_numerically():
                     [Xor, _simplify_patterns_xor()]]
     valuelist = list(set(combinations(list(range(-2, 3))*3, 3)))
     # Skip combinations of +/-2 and 0, except for all 0
-    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    valuelist = [v for v in valuelist if any(w % 2 for w in v) or not any(v)]
     for func, patternlist in patternlists:
         for pattern in patternlist:
             original = func(*pattern[0].args)
