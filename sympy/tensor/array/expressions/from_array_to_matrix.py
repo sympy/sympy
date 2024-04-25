@@ -779,7 +779,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
             return x == sorted(x)
 
         # Check if expression is a trace:
-        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]) and all([j >= 0 for j in k]):
+        if all(map_ind_to_inds[j] == len(v) and j >= 0 for j in k) and all(j >= 0 for j in k):
             # This is a trace
             make_trace = True
             first_element = v[0].element
