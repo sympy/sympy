@@ -571,6 +571,15 @@ def test_intersection():
     assert Intersection({1}, {1}, {x}) == Intersection({1}, {x})
 
 
+def test_issue_24726():
+    t, n = symbols('t, _n')
+    sin_zeros = solveset(sin(t))
+    ivl = Interval(-10, oo)
+    assert sin_zeros & Interval(-10, oo) == Union(
+        Intersection(ivl, ImageSet(Lambda(n, 2*n*pi), S.Integers)),
+        Intersection(ivl, ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)))
+
+
 def test_issue_9623():
     n = Symbol('n')
 
