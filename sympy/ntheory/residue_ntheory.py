@@ -1666,7 +1666,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     elif prime_order:
         # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
         # we compare the expected running times to determine the algorithmus which is expected to be faster
-        if 3*sqrt(log(n)*log(log(n))) < log(order):  # the number 3 was determined experimental
+        if 4*sqrt(log(n)*log(log(n))) < log(order) - 10:  # the number 10 was determined experimental
             return _discrete_log_index_calculus(n, a, b, order)
         elif order < 1000000000000:
             # Shanks seems typically faster, but uses O(sqrt(order)) memory
