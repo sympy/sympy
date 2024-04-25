@@ -558,7 +558,14 @@ class LatexPrinter(Printer):
 
                 _tex += term_tex
                 last_term_tex = term_tex
-            return _tex
+
+            # Debug output before modification
+            # print("Original LaTeX:", _tex)
+            pattern = r'(\^\{[\d]+?\})\s*\\cdot\s*(\\left\(.+?\\right\))'
+            modified_latex = re.sub(pattern, r'\1 \2', _tex)
+            # print("Modified LaTeX:", modified_latex)
+            return modified_latex
+
 
         # Check for unevaluated Mul. In this case we need to make sure the
         # identities are visible, multiple Rational factors are not combined
