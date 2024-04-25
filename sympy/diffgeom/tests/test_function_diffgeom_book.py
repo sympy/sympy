@@ -69,7 +69,7 @@ def test_functional_diffgeom_ch3():
     series = intcurve_series(circ, t, R2_r.point([1, 0]), coeffs=True)
     series_x, series_y = zip(*series)
     assert all(
-        [term == cos(t).taylor_term(i, t) for i, term in enumerate(series_x)])
+        term == cos(t).taylor_term(i, t) for i, term in enumerate(series_x))
     assert all(
         [term == sin(t).taylor_term(i, t) for i, term in enumerate(series_y)])
 
