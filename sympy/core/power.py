@@ -513,6 +513,11 @@ class Pow(Expr):
                 return self.exp.is_imaginary
             return
         real_e = self.exp.is_extended_real
+        if real_b == False and real_e:
+            if self.exp == S.Half:
+                return False
+            if type(self.exp) == Rational and self.exp.nominator == 1:
+                return False
         if real_e is None:
             return
         if real_b and real_e:
@@ -1837,6 +1842,6 @@ power = Dispatcher('power')
 power.add((object, object), Pow)
 
 from .add import Add
-from .numbers import Integer
+from .numbers import Integer, Rational
 from .mul import Mul, _keep_coeff
 from .symbol import Symbol, Dummy, symbols
