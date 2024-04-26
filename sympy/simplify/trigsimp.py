@@ -439,7 +439,7 @@ def _trigsimp_inverse(rv):
         # for simple functions
         g = getattr(rv, 'inverse', None)
 
-        if g is not None: 
+        if g is not None:
             g_type = g()
             if g_type is not None and isinstance(rv.args[0], g_type) and isinstance(g_type(1), TrigonometricFunction):
                 return rv.args[0].args[0]
