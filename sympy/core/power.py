@@ -513,11 +513,6 @@ class Pow(Expr):
                 return self.exp.is_imaginary
             return
         real_e = self.exp.is_extended_real
-        if real_b == False and real_e:
-            if self.exp == S.Half:
-                return False
-            if type(self.exp) == Rational and self.exp.numerator == 1:
-                return False
         if real_e is None:
             return
         if real_b and real_e:
@@ -565,6 +560,8 @@ class Pow(Expr):
                     return ok
 
         if real_b is False and real_e: # we already know it's not imag
+            if isinstance(self.exp, Rational) and self.exp.p == 1:
+                return False
             from sympy.functions.elementary.complexes import arg
             i = arg(self.base)*self.exp/S.Pi
             if i.is_complex: # finite
