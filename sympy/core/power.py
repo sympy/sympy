@@ -516,7 +516,7 @@ class Pow(Expr):
         if real_b == False and real_e:
             if self.exp == S.Half:
                 return False
-            if type(self.exp) == Rational and self.exp.nominator == 1:
+            if type(self.exp) == Rational and self.exp.numerator == 1:
                 return False
         if real_e is None:
             return
