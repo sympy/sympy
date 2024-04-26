@@ -18,6 +18,8 @@ from sympy.polys.rootoftools import rootof
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range)
 from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset, SetKind)
+from sympy.solvers.solveset import solveset
+
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
