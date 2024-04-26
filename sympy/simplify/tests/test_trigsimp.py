@@ -526,4 +526,3 @@ def test_trigsimp_inverse_26541():
     '''
     # this would throw before
     trigsimp(cos('x')**2, inverse=True)
-    
