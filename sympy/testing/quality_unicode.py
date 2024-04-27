@@ -55,6 +55,7 @@ unicode_whitelist = [
 
     # Greek letter used as variable
     r'*/sympy/physics/quantum/state.py',
+    r'*/sympy/physics/quantum/tests/test_state.py',
 ]
 
 unicode_strict_whitelist = [
