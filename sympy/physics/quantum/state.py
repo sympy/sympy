@@ -657,16 +657,7 @@ class OrthogonalKet(OrthogonalState, KetBase):
             raise ValueError('Cannot multiply a ket that has a different number of labels.')
 
         for arg, bra_arg in zip(self.args, bra.args):
-            diff = arg - bra_arg
-            diff = diff.expand()
-
-            is_zero = diff.is_zero
-
-            if is_zero is False:
-                return S.Zero # i.e. Integer(0)
-
-            if is_zero is None:
-                return KroneckerDelta(arg, bra_arg)
+            return KroneckerDelta(arg, bra_arg)
 
         return S.One # i.e. Integer(1)
 

@@ -7,6 +7,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
+from sympy.core.function import Function
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
@@ -247,3 +248,10 @@ def test_orthogonal_states():
 
     braket = OrthogonalBra(x) * OrthogonalKet(y)
     assert braket.doit() == KroneckerDelta(x, y)
+
+def test_wavefunction_expr():
+    x = symbols('x', real = True)
+    a, b = symbols('a b', complex = True)
+    ψ1 = Wavefunction(Function('ψ1')(x), x)
+    ψ2 = Wavefunction(Function('ψ2')(x), x)
+    assert Wavefunction.extract_expression_from_wavefunction(a*ψ1 + b*ψ2) == a*Function('ψ1')(x) + b*Function('ψ2')(x)
