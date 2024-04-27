@@ -1,7 +1,7 @@
 """Efficient functions for generating orthogonal polynomials."""
 from sympy.core.symbol import Dummy
 from sympy.polys.densearith import (dup_mul, dup_mul_ground,
-    dup_lshift, dup_sub, dup_add)
+    dup_lshift, dup_sub, dup_add, dup_sub_term, dup_sub_ground, dup_sqr)
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import named_poly
 from sympy.utilities import public
@@ -72,10 +72,24 @@ def dup_chebyshevt(n, K):
     """Low-level implementation of Chebyshev polynomials of the first kind."""
     if n < 1:
         return [K.one]
-    m2, m1 = [K.one], [K.one, K.zero]
-    for i in range(2, n+1):
-        m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(2), K), m2, K)
-    return m1
+    # When n is small, it is faster to directly calculate the recurrence relation.
+    if n < 64: # The threshold serves as a heuristic
+        # T_n = 2xT_{n-1} - T_{n-2}
+        m2, m1 = [K.one], [K.one, K.zero]
+        for _ in range(n - 1):
+            m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(2), K), m2, K)
+        return m1
+    # When n is large, the following relation is used for fast computation
+    # T_{2n} = 2T_n^2 - 1
+    # T_{2n+1} = 2T_{n+1}T_n - x
+    m2, m1 = [K.one, K.zero], [K(2), K.zero, -K.one] # T_1, T_2
+    for i in bin(n)[3:]:
+        c = dup_sub_term(dup_mul_ground(dup_mul(m1, m2, K), K(2), K), K.one, 1, K)
+        if  i  == '1':
+            m2, m1 = c, dup_sub_ground(dup_mul_ground(dup_sqr(m1, K), K(2), K), K.one, K)
+        else:
+            m2, m1 = dup_sub_ground(dup_mul_ground(dup_sqr(m2, K), K(2), K), K.one, K), c
+    return m2
 
 def dup_chebyshevu(n, K):
     """Low-level implementation of Chebyshev polynomials of the second kind."""
