@@ -188,11 +188,9 @@ class Options(dict):
             for name, option in cls.__options__.items():
                 vertices.append(name)
 
-                for _name in option.after:
-                    edges.add((_name, name))
+                edges.update((_name, name) for _name in option.after)
 
-                for _name in option.before:
-                    edges.add((name, _name))
+                edges.update((name, _name) for _name in option.before)
 
             try:
                 cls.__order__ = topological_sort((vertices, list(edges)))

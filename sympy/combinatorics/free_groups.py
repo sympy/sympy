@@ -985,10 +985,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         group = self.group
-        gens = set()
-        for syllable in self.array_form:
-            gens.add(group.dtype(((syllable[0], 1),)))
-        return set(gens)
+        gens = {group.dtype(((syllable[0], 1),)) for syllable in self.array_form}
+        return gens
 
     def cyclic_subword(self, from_i, to_j):
         group = self.group

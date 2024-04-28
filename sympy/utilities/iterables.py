@@ -855,8 +855,7 @@ def topological_sort(graph, key=None):
     S = set(V)
     E = list(E)
 
-    for v, u in E:
-        S.discard(u)
+    S.difference_update(u for v, u in E)
 
     if key is None:
         def key(value):

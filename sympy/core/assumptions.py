@@ -217,7 +217,7 @@ from .sympify import sympify
 from sympy.core.random import _assumptions_shuffle as shuffle
 from sympy.core.assumptions_generated import generated_assumptions as _assumptions
 
-def _load_pre_generated_assumption_rules():
+def _load_pre_generated_assumption_rules() -> FactRules:
     """ Load the assumption rules from pre-generated data
 
     To update the pre-generated data, see :method::`_generate_assumption_rules`
