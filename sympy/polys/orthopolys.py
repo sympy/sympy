@@ -78,19 +78,21 @@ def dup_chebyshevt(n, K):
     return _dup_chebyshevt_prod(n, K)
 
 def _dup_chebyshevt_rec(n, K):
-    r""" Low-level implementation of Chebyshev polynomials of the first kind using a recurrence relation.
+    r""" Chebyshev polynomials of the first kind using recurrence.
 
     Explanation
     ===========
 
-    Chebyshev polynomials of the first kind are defined by the recurrence relation:
+    Chebyshev polynomials of the first kind are defined by the recurrence
+    relation:
 
     .. math::
         T_0(x) &= 1\\
         T_1(x) &= x\\
         T_n(x) &= 2xT_{n-1}(x) - T_{n-2}(x)
 
-    This function calculates the Chebyshev polynomial of the first kind using the above recurrence relation.
+    This function calculates the Chebyshev polynomial of the first kind using
+    the above recurrence relation.
 
     Parameters
     ==========
@@ -106,22 +108,18 @@ def _dup_chebyshevt_rec(n, K):
     return m1
 
 def _dup_chebyshevt_prod(n, K):
-    r""" Low-level implementation of Chebyshev polynomials of the first kind using a product expression.
+    r""" Chebyshev polynomials of the first kind using recursive products.
 
     Explanation
     ===========
 
-    Chebyshev polynomials of the first kind are expressed by the following product formulas:
+    Computes Chebyshev polynomials of the first kind using
 
     .. math::
         T_{2n}(x) &= 2T_n^2(x) - 1\\
         T_{2n+1}(x) &= 2T_{n+1}(x)T_n(x) - x
 
-    Consequently, to calculate `(T_n(x), T_{n+1}(x))`, we need to know
-    either `(T_{n/2}(x), T_{n/2+1}(x))` or `(T_{(n-1)/2}(x), T_{(n-1)/2+1}(x))`.
-    Starting with `(T_1(x), T_2(x))`, we can derive `(T_n(x), T_{n+1}(x))` for any integer n.
-    This algorithm, which requires only `O(\log n)` computations,
-    is more efficient than using the standard recurrence relation for large n.
+    This is faster than ``_dup_chebyshevt_rec`` for large ``n``.
 
     Parameters
     ==========
