@@ -18,7 +18,7 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.state import (
     Ket, Bra, TimeDepKet, TimeDepBra,
     KetBase, BraBase, StateBase, Wavefunction,
-    OrthogonalKet, OrthogonalBra
+    OrthonormalKet, OrthonormalBra
 )
 from sympy.physics.quantum.hilbert import HilbertSpace
 
@@ -240,13 +240,13 @@ def test_wavefunction():
     assert type(k.variables[0]) == Symbol
 
 def test_orthogonal_states():
-    braket = OrthogonalBra(x) * OrthogonalKet(x)
+    braket = OrthonormalBra(x) * OrthonormalKet(x)
     assert braket.doit() == 1
 
-    braket = OrthogonalBra(x) * OrthogonalKet(x+1)
+    braket = OrthonormalBra(x) * OrthonormalKet(x+1)
     assert braket.doit() == 0
 
-    braket = OrthogonalBra(x) * OrthogonalKet(y)
+    braket = OrthonormalBra(x) * OrthonormalKet(y)
     assert braket.doit() == KroneckerDelta(x, y)
 
 def test_wavefunction_expr():

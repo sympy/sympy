@@ -23,8 +23,8 @@ __all__ = [
     'TimeDepState',
     'TimeDepBra',
     'TimeDepKet',
-    'OrthogonalKet',
-    'OrthogonalBra',
+    'OrthonormalKet',
+    'OrthonormalBra',
     'OrthogonalState',
     'Wavefunction'
 ]
@@ -631,25 +631,25 @@ class OrthogonalState(State, StateBase):
     """General abstract quantum state used as a base class for Ket and Bra."""
     pass
 
-class OrthogonalKet(OrthogonalState, KetBase):
+class OrthonormalKet(OrthogonalState, KetBase):
     """Orthogonal Ket in quantum mechanics.
 
     The inner product of two states with different labels will give zero,
     states with the same label will give one.
 
-        >>> from sympy.physics.quantum import OrthogonalBra, OrthogonalKet
+        >>> from sympy.physics.quantum import OrthonormalBra, OrthonormalKet
         >>> from sympy.abc import m, n
-        >>> (OrthogonalBra(n)*OrthogonalKet(n)).doit()
+        >>> (OrthonormalBra(n)*OrthonormalKet(n)).doit()
         1
-        >>> (OrthogonalBra(n)*OrthogonalKet(n+1)).doit()
+        >>> (OrthonormalBra(n)*OrthonormalKet(n+1)).doit()
         0
-        >>> (OrthogonalBra(n)*OrthogonalKet(m)).doit()
+        >>> (OrthonormalBra(n)*OrthonormalKet(m)).doit()
         KroneckerDelta(m, n)
     """
 
     @classmethod
     def dual_class(self):
-        return OrthogonalBra
+        return OrthonormalBra
 
     def _eval_innerproduct(self, bra, **hints):
 
@@ -662,13 +662,13 @@ class OrthogonalKet(OrthogonalState, KetBase):
         return S.One # i.e. Integer(1)
 
 
-class OrthogonalBra(OrthogonalState, BraBase):
+class OrthonormalBra(OrthogonalState, BraBase):
     """Orthogonal Bra in quantum mechanics.
     """
 
     @classmethod
     def dual_class(self):
-        return OrthogonalKet
+        return OrthonormalKet
 
 
 class Wavefunction(Function):
