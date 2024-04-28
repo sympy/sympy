@@ -197,6 +197,8 @@ SYMPY_INTS: tTuple[Type, ...]
 
 if _SYMPY_GROUND_TYPES == 'gmpy':
 
+    assert _gmpy is not None
+
     flint = None
     gmpy = _gmpy
 
@@ -240,6 +242,8 @@ if _SYMPY_GROUND_TYPES == 'gmpy':
     is_strong_bpsw_prp = gmpy.is_strong_bpsw_prp
 
 elif _SYMPY_GROUND_TYPES == 'flint':
+
+    assert _flint is not None
 
     flint = _flint
     gmpy = None
