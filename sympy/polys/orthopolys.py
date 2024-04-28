@@ -74,15 +74,64 @@ def dup_chebyshevt(n, K):
         return [K.one]
     # When n is small, it is faster to directly calculate the recurrence relation.
     if n < 64: # The threshold serves as a heuristic
-        # T_n = 2xT_{n-1} - T_{n-2}
-        m2, m1 = [K.one], [K.one, K.zero]
-        for _ in range(n - 1):
-            m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(2), K), m2, K)
-        return m1
-    # When n is large, the following relation is used for fast computation
-    # T_{2n} = 2T_n^2 - 1
-    # T_{2n+1} = 2T_{n+1}T_n - x
-    m2, m1 = [K.one, K.zero], [K(2), K.zero, -K.one] # T_1, T_2
+        return _dup_chebyshevt_rec(n, K)
+    return _dup_chebyshevt_prod(n, K)
+
+def _dup_chebyshevt_rec(n, K):
+    r""" Low-level implementation of Chebyshev polynomials of the first kind using a recurrence relation.
+
+    Explanation
+    ===========
+
+    Chebyshev polynomials of the first kind are defined by the recurrence relation:
+
+    .. math::
+        T_0(x) &= 1\\
+        T_1(x) &= x\\
+        T_n(x) &= 2xT_{n-1}(x) - T_{n-2}(x)
+
+    This function calculates the Chebyshev polynomial of the first kind using the above recurrence relation.
+
+    Parameters
+    ==========
+
+    n : int
+        n is a nonnegative integer.
+    K : domain
+
+    """
+    m2, m1 = [K.one], [K.one, K.zero]
+    for _ in range(n - 1):
+        m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(2), K), m2, K)
+    return m1
+
+def _dup_chebyshevt_prod(n, K):
+    r""" Low-level implementation of Chebyshev polynomials of the first kind using a product expression.
+
+    Explanation
+    ===========
+
+    Chebyshev polynomials of the first kind are expressed by the following product formulas:
+
+    .. math::
+        T_{2n}(x) &= 2T_n^2(x) - 1\\
+        T_{2n+1}(x) &= 2T_{n+1}(x)T_n(x) - x
+
+    Consequently, to calculate `(T_n(x), T_{n+1}(x))`, we need to know
+    either `(T_{n/2}(x), T_{n/2+1}(x))` or `(T_{(n-1)/2}(x), T_{(n-1)/2+1}(x))`.
+    Starting with `(T_1(x), T_2(x))`, we can derive `(T_n(x), T_{n+1}(x))` for any integer n.
+    This algorithm, which requires only `O(\log n)` computations,
+    is more efficient than using the standard recurrence relation for large n.
+
+    Parameters
+    ==========
+
+    n : int
+        n is a nonnegative integer.
+    K : domain
+
+    """
+    m2, m1 = [K.one, K.zero], [K(2), K.zero, -K.one]
     for i in bin(n)[3:]:
         c = dup_sub_term(dup_mul_ground(dup_mul(m1, m2, K), K(2), K), K.one, 1, K)
         if  i  == '1':
