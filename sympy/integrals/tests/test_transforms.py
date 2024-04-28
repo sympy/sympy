@@ -26,8 +26,10 @@ from sympy.functions.special.hyper import meijerg
 from sympy.simplify.gammasimp import gammasimp
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.trigsimp import trigsimp
-from sympy.testing.pytest import XFAIL, slow, skip, raises
+from sympy.testing.pytest import XFAIL, slow, tooslow, skip, raises
 from sympy.abc import x, s, a, b, c, d
+
+from sympy import simplify
 
 
 nu, beta, rho = symbols('nu beta rho')
@@ -276,7 +278,6 @@ def test_mellin_transform_bessel():
 def test_expint():
     from sympy.functions.elementary.miscellaneous import Max
     from sympy.functions.special.error_functions import Ci, E1, Si
-    from sympy.simplify.simplify import simplify
 
     aneg = Symbol('a', negative=True)
     u = Symbol('u', polar=True)
@@ -312,7 +313,6 @@ def test_inverse_mellin_transform():
     from sympy.functions.elementary.miscellaneous import (Max, Min)
     from sympy.functions.elementary.trigonometric import cot
     from sympy.simplify.powsimp import powsimp
-    from sympy.simplify.simplify import simplify
     IMT = inverse_mellin_transform
 
     assert IMT(gamma(s), s, x, (0, oo)) == exp(-x)
@@ -416,11 +416,6 @@ def test_inverse_mellin_transform():
                       / (gamma(S.Half - s - a/2)*gamma(1 - 2*s + a)),
                       s, x, (-re(a)/2, Rational(1, 4)))) == \
         cos(sqrt(x))*besselj(a, sqrt(x))
-    # TODO this comes out as an amazing mess, but simplifies nicely
-    assert simplify(IMT(gamma(a + s)*gamma(S.Half - s)
-                      / (sqrt(pi)*gamma(1 - s)*gamma(1 + a - s)),
-                      s, x, (-re(a), S.Half))) == \
-        besselj(a, sqrt(x))**2
     assert simplify(IMT(gamma(s)*gamma(S.Half - s)
                       / (sqrt(pi)*gamma(1 - s - a)*gamma(1 + a - s)),
                       s, x, (0, S.Half))) == \
@@ -447,10 +442,19 @@ def test_inverse_mellin_transform():
     assert IMT(pi/cos(pi*s), s, x, (0, S.Half)) == sqrt(x)/(x + 1)
 
 
+@tooslow
+def test_inverse_mellin_transform_slow():
+    # TODO this comes out as an amazing mess, but simplifies nicely
+    IMT = inverse_mellin_transform
+    assert simplify(IMT(gamma(a + s)*gamma(S.Half - s)
+                      / (sqrt(pi)*gamma(1 - s)*gamma(1 + a - s)),
+                      s, x, (-re(a), S.Half))) == \
+        besselj(a, sqrt(x))**2
+
+
 def test_fourier_transform():
     from sympy.core.function import (expand, expand_complex, expand_trig)
     from sympy.polys.polytools import factor
-    from sympy.simplify.simplify import simplify
     FT = fourier_transform
     IFT = inverse_fourier_transform
 
