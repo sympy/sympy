@@ -112,6 +112,7 @@ def dup_sqf_norm(f, K):
     >>> r == X**4 - 10*X**2 + 1
     True
 
+    See Trager
     """
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
@@ -134,8 +135,9 @@ def dmp_sqf_norm(f, u, K):
     """
     Square-free norm of ``f`` in ``K[X]``, useful over algebraic domains.
 
-    Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and ``r(x) = Norm(g(x))``
-    is a square-free polynomial over K, where ``a`` is the algebraic extension of ``K``.
+    Returns ``s``, ``g``, ``r``, such that ``g(X) = f(X-sa)`` and
+    ``r(x) = Norm(g(x))`` is a square-free polynomial over K, where ``a`` is
+    the algebraic extension of ``K``.
 
     Examples
     ========
@@ -147,15 +149,28 @@ def dmp_sqf_norm(f, u, K):
     >>> R, x, y = ring("x,y", K)
     >>> _, X, Y = ring("x,y", QQ)
 
-    >>> s, f, r = R.dmp_sqf_norm(x*y + y**2)
+    >>> f = x*y + y**2
+    >>> s, g, r = R.dmp_sqf_norm(f)
 
-    >>> s == 1
+    The actual values returned are somewhat arbitrary:
+
+    >>> s
+    1
+    >>> g == x*y - I*x + y**2 - 3*I*y - 2
     True
-    >>> f == x*y + y**2 + K([QQ(-1), QQ(0)])*y
-    True
-    >>> r == X**2*Y**2 + 2*X*Y**3 + Y**4 + Y**2
+    >>> r == X**2*Y**2 + X**2 + 2*X*Y**3 + 2*X*Y + Y**4 + 5*Y**2 + 4
     True
 
+    However the required invariants are satisfied:
+
+    >>> g == f.shift([-K.unit, -K.unit])
+    True
+    >>> g.as_expr().as_poly(domain=K).norm().as_expr() == r.as_expr()
+    True
+    >>> g.norm_algebraic() == r
+    True
+
+    See Trager
     """
     if not u:
         return dup_sqf_norm(f, K)
