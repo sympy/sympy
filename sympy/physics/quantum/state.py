@@ -25,7 +25,7 @@ __all__ = [
     'TimeDepKet',
     'OrthonormalKet',
     'OrthonormalBra',
-    'OrthogonalState',
+    'OrthonormalState',
     'Wavefunction'
 ]
 
@@ -627,12 +627,12 @@ class TimeDepBra(TimeDepState, BraBase):
         return TimeDepKet
 
 
-class OrthogonalState(State, StateBase):
+class OrthonormalState(State, StateBase):
     """General abstract quantum state used as a base class for Ket and Bra."""
     pass
 
-class OrthonormalKet(OrthogonalState, KetBase):
-    """Orthogonal Ket in quantum mechanics.
+class OrthonormalKet(OrthonormalState, KetBase):
+    """Orthonormal Ket in quantum mechanics.
 
     The inner product of two states with different labels will give zero,
     states with the same label will give one.
@@ -662,8 +662,8 @@ class OrthonormalKet(OrthogonalState, KetBase):
         return S.One # i.e. Integer(1)
 
 
-class OrthonormalBra(OrthogonalState, BraBase):
-    """Orthogonal Bra in quantum mechanics.
+class OrthonormalBra(OrthonormalState, BraBase):
+    """Orthonormal Bra in quantum mechanics.
     """
 
     @classmethod
