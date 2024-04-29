@@ -59,7 +59,7 @@ from sympy.solvers.ode.single import (FirstLinear, ODEMatchError,
 
 from sympy.solvers.ode.subscheck import checkodesol
 
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises, slow, tooslow
 import traceback
 
 
@@ -378,7 +378,7 @@ def test_1st_homogeneous_coeff_ode():
 def test_slow_examples_1st_homogeneous_coeff_ode_1():
     _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep, run_slow_test=True)
 
-@slow
+@tooslow
 def test_slow_examples_1st_homogeneous_coeff_ode_1_tooslow():
     _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep_tooslow, run_slow_test=True)
 
