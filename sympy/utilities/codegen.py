@@ -216,10 +216,8 @@ class Routine:
 
         """
         v = set(self.local_vars)
-        for arg in self.arguments:
-            v.add(arg.name)
-        for res in self.results:
-            v.add(res.result_var)
+        v.update(arg.name for arg in self.arguments)
+        v.update(res.result_var for res in self.results)
         return v
 
     @property

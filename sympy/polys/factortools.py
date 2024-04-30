@@ -176,7 +176,7 @@ def dup_zz_mignotte_bound(f, K):
     delta2 = _ceil(delta / 2)
 
     # euclidean-norm
-    eucl_norm = K.sqrt( sum( [cf**2 for cf in f] ) )
+    eucl_norm = K.sqrt( sum( cf**2 for cf in f ) )
 
     # biggest values of binomial coefficients (p. 538 of reference)
     t1 = binomial(delta - 1, delta2)
@@ -674,7 +674,7 @@ def dup_zz_factor(f, K):
         f_flint = fmpz_poly(f[::-1])
         cont, factors = f_flint.factor()
         factors = [(fac.coeffs()[::-1], exp) for fac, exp in factors]
-        return cont, factors
+        return cont, _sort_factors(factors)
 
     cont, g = dup_primitive(f, K)
 

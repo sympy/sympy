@@ -1001,7 +1001,8 @@ class Quaternion(Expr):
     def _eval_subs(self, *args):
         elements = [i.subs(*args) for i in self.args]
         norm = self._norm
-        norm = norm.subs(*args)
+        if norm is not None:
+            norm = norm.subs(*args)
         _check_norm(elements, norm)
         return Quaternion(*elements, norm=norm)
 

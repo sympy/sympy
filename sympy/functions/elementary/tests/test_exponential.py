@@ -605,7 +605,10 @@ def test_lambertw():
     assert LambertW(0) == 0
     assert LambertW(E) == 1
     assert LambertW(-1/E) == -1
+    assert LambertW(100*log(100)) == log(100)
     assert LambertW(-log(2)/2) == -log(2)
+    assert LambertW(81*log(3)) == 3*log(3)
+    assert LambertW(sqrt(E)/2) == S.Half
     assert LambertW(oo) is oo
     assert LambertW(0, 1) is -oo
     assert LambertW(0, 42) is -oo
@@ -627,6 +630,7 @@ def test_lambertw():
     assert LambertW(2, evaluate=False).is_real
     p = Symbol('p', positive=True)
     assert LambertW(p, evaluate=False).is_real
+    assert LambertW(p**(p+1)*log(p)) == p*log(p)
     assert LambertW(p - 1, evaluate=False).is_real is None
     assert LambertW(-p - 2/S.Exp1, evaluate=False).is_real is False
     assert LambertW(S.Half, -1, evaluate=False).is_real is False

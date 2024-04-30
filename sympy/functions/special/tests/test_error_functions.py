@@ -621,16 +621,15 @@ def test_si():
         Si(1/x)._eval_as_leading_term(x, cdir=-1) == Si(1/x)
 
     assert Si(x).nseries(x, n=8) == \
-        x - x**3/18 + x**5/600 - x**7/35280 + O(x**9)
+        x - x**3/18 + x**5/600 - x**7/35280 + O(x**8)
     assert Shi(x).nseries(x, n=8) == \
-        x + x**3/18 + x**5/600 + x**7/35280 + O(x**9)
-    assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + 17*x**5/450 + O(x**6)
+        x + x**3/18 + x**5/600 + x**7/35280 + O(x**8)
+    assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + O(x**5)
     assert Si(x).nseries(x, 1, n=3) == \
         Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
 
-    assert Si(x).series(x, oo) == pi/2 - (- 6/x**3 + 1/x \
-        + O(x**(-7), (x, oo)))*sin(x)/x - (24/x**4 - 2/x**2 + 1 \
-        + O(x**(-7), (x, oo)))*cos(x)/x
+    assert Si(x).series(x, oo) == -sin(x)*(-6/x**4 + x**(-2) + O(x**(-6), (x, oo))) - \
+        cos(x)*(24/x**5 - 2/x**3 + 1/x + O(x**(-6), (x, oo))) + pi/2
 
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc).dummy_eq(Integral(sinc(t), (t, 0, x)))
@@ -675,16 +674,15 @@ def test_ci():
     assert tn_arg(Chi)
 
     assert Ci(x).nseries(x, n=4) == \
-        EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
+        EulerGamma + log(x) - x**2/4 + O(x**4)
     assert Chi(x).nseries(x, n=4) == \
-        EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
+        EulerGamma + log(x) + x**2/4 + O(x**4)
 
-    assert Ci(x).series(x, oo) == -cos(x)*(-6/x**3 + 1/x \
-        + O(x**(-7), (x, oo)))/x + (24/x**4 - 2/x**2 + 1 \
-        + O(x**(-7), (x, oo)))*sin(x)/x
+    assert Ci(x).series(x, oo) == -cos(x)*(-6/x**4 + x**(-2) + O(x**(-6), (x, oo))) + \
+        sin(x)*(24/x**5 - 2/x**3 + 1/x + O(x**(-6), (x, oo)))
 
-    assert Ci(x).series(x, -oo) == -cos(x)*(-6/x**3 + 1/x + O(-1/x**7, (x, -oo)))/x + \
-            (24/x**4 - 2/x**2 + 1 + O(-1/x**7, (x, -oo)))*sin(x)/x + I*pi
+    assert Ci(x).series(x, -oo) == -cos(x)*(-6/x**4 + x**(-2) + O(x**(-6), (x, -oo))) + \
+        sin(x)*(24/x**5 - 2/x**3 + 1/x + O(x**(-6), (x, -oo))) + I*pi
 
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
     assert Ci(x).rewrite(uppergamma) == -expint(1, x*exp_polar(-I*pi/2))/2 -\
@@ -828,10 +826,12 @@ def test_fresnel_series():
     assert ((3*fresnelc(2*z)).series(z, oo) - 3*fc.subs(z, 2*z)).expand().is_Order
 
 
-def test_integral_rewrites(): #issues 26134, 26144
+def test_integral_rewrites(): #issues 26134, 26144, 26306
     assert expint(n, x).rewrite(Integral).dummy_eq(Integral(t**-n * exp(-t*x), (t, 1, oo)))
     assert Si(x).rewrite(Integral).dummy_eq(Integral(sinc(t), (t, 0, x)))
     assert Ci(x).rewrite(Integral).dummy_eq(log(x) - Integral((1 - cos(t))/t, (t, 0, x)) + EulerGamma)
-    assert fresnels(x).rewrite(Integral).dummy_eq(Integral(sin(t**2), (t, 0, x)))
-    assert fresnelc(x).rewrite(Integral).dummy_eq(Integral(cos(t**2), (t, 0, x)))
+    assert fresnels(x).rewrite(Integral).dummy_eq(Integral(sin(pi*t**2/2), (t, 0, x)))
+    assert fresnelc(x).rewrite(Integral).dummy_eq(Integral(cos(pi*t**2/2), (t, 0, x)))
     assert Ei(x).rewrite(Integral).dummy_eq(Integral(exp(t)/t, (t, -oo, x)))
+    assert fresnels(x).diff(x) == fresnels(x).rewrite(Integral).diff(x)
+    assert fresnelc(x).diff(x) == fresnelc(x).rewrite(Integral).diff(x)

@@ -141,8 +141,8 @@ def cse_release_variables(r, e):
     # sort e so those with most sub-expressions appear first
     e = [(e[i], syms[i]) for i in range(len(e))]
     e, syms = zip(*sorted(e,
-        key=lambda x: -sum([p[s.index(i)].count_ops()
-        for i in x[0].free_symbols & in_use])))
+        key=lambda x: -sum(p[s.index(i)].count_ops()
+        for i in x[0].free_symbols & in_use)))
     syms = list(syms)
     p += e
     rv = []

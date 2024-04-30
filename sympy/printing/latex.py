@@ -168,6 +168,7 @@ class LatexPrinter(Printer):
         "max": None,
         "mat_compact": True,
         "diff_operator": "d",
+        "adjoint_style": "dagger",
     }
 
     def __init__(self, settings=None):
@@ -696,6 +697,8 @@ class LatexPrinter(Printer):
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
         if expr.base.is_Symbol:
             base = self.parenthesize_super(base)
+        elif expr.base.is_Float:
+            base = r"{%s}" % base
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
@@ -1781,17 +1784,23 @@ class LatexPrinter(Printer):
         return r"\operatorname{tr}\left(%s \right)" % self._print(mat)
 
     def _print_Adjoint(self, expr):
+        style_to_latex = {
+            "dagger"   : r"\dagger",
+            "star"     : r"\ast",
+            "hermitian": r"\mathsf{H}"
+        }
+        adjoint_style = style_to_latex.get(self._settings["adjoint_style"], r"\dagger")
         mat = expr.arg
         from sympy.matrices import MatrixSymbol, BlockMatrix
         if (not isinstance(mat, MatrixSymbol) and
             not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
-            return r"\left(%s\right)^{\dagger}" % self._print(mat)
+            return r"\left(%s\right)^{%s}" % (self._print(mat), adjoint_style)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)
             if '^' in s:
-                return r"\left(%s\right)^{\dagger}" % s
+                return r"\left(%s\right)^{%s}" % (s, adjoint_style)
             else:
-                return r"%s^{\dagger}" % s
+                return r"%s^{%s}" % (s, adjoint_style)
 
     def _print_MatMul(self, expr):
         from sympy import MatMul
@@ -3074,6 +3083,9 @@ def latex(expr, **settings):
     diff_operator: string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
+    adjoint_style: string, optional
+        String to use for the adjoint symbol. Defined options are ``'dagger'``
+        (default),``'star'``, and ``'hermitian'``.
 
     Notes
     =====
