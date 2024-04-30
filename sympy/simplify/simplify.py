@@ -9,7 +9,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, pi, Rational
+from sympy.core.numbers import Float, I, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sorting import ordered
@@ -1758,7 +1758,7 @@ def nc_simplify(expr, deep=True):
         # get the non-commutative part
         c_args, args = expr.args_cnc()
         com_coeff = Mul(*c_args)
-        if com_coeff != 1:
+        if not equal_valued(com_coeff, 1):
             return com_coeff*nc_simplify(expr/com_coeff, deep=deep)
 
     inv_tot, args = _reduce_inverses(args)
