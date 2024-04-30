@@ -1758,7 +1758,7 @@ def nc_simplify(expr, deep=True):
         # get the non-commutative part
         c_args, args = expr.args_cnc()
         com_coeff = Mul(*c_args)
-        if com_coeff != 1:
+        if com_coeff != 1 and com_coeff != 1.0:
             return com_coeff*nc_simplify(expr/com_coeff, deep=deep)
 
     inv_tot, args = _reduce_inverses(args)
