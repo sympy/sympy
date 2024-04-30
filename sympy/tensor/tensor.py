@@ -3323,7 +3323,7 @@ class TensMul(TensExpr, AssocOp):
 
         for pos1, arg_indices in enumerate(args_indices):
 
-            for index_pos, index in enumerate(arg_indices):
+            for index in arg_indices:
                 if not isinstance(index, TensorIndex):
                     raise TypeError("expected TensorIndex")
                 if -index in free2pos1:
@@ -3498,7 +3498,7 @@ class TensMul(TensExpr, AssocOp):
     def _get_position_offset_for_indices(self):
         arg_offset = [None for i in range(self.ext_rank)]
         counter = 0
-        for i, arg in enumerate(self.args):
+        for arg in self.args:
             if not isinstance(arg, TensExpr):
                 continue
             for j in range(arg.ext_rank):
@@ -3927,7 +3927,7 @@ class TensMul(TensExpr, AssocOp):
                 continue
             shifts[i] = shift
         free = [(ind, p - shifts[pos_map[p]]) for (ind, p) in free if pos_map[p] not in elim]
-        dum = [(p0 - shifts[pos_map[p0]], p1 - shifts[pos_map[p1]]) for i, (p0, p1) in enumerate(dum) if pos_map[p0] not in elim and pos_map[p1] not in elim]
+        dum = [(p0 - shifts[pos_map[p0]], p1 - shifts[pos_map[p1]]) for p0, p1 in dum if pos_map[p0] not in elim and pos_map[p1] not in elim]
 
         res = sign*TensMul(*args).doit()
         if not isinstance(res, TensExpr):

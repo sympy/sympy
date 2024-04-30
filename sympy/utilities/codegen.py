@@ -1428,7 +1428,7 @@ class JuliaCodeGen(CodeGen):
 
         # Inputs
         args = []
-        for i, arg in enumerate(routine.arguments):
+        for arg in routine.arguments:
             if isinstance(arg, OutputArgument):
                 raise CodeGenError("Julia: invalid argument of type %s" %
                                    str(type(arg)))
@@ -1463,7 +1463,7 @@ class JuliaCodeGen(CodeGen):
     def _call_printer(self, routine):
         declarations = []
         code_lines = []
-        for i, result in enumerate(routine.results):
+        for result in routine.results:
             if isinstance(result, Result):
                 assign_to = result.result_var
             else:
@@ -1636,7 +1636,7 @@ class OctaveCodeGen(CodeGen):
 
         # Outputs
         outs = []
-        for i, result in enumerate(routine.results):
+        for result in routine.results:
             if isinstance(result, Result):
                 # Note: name not result_var; want `y` not `y(i)` for Indexed
                 s = self._get_symbol(result.name)
@@ -1651,7 +1651,7 @@ class OctaveCodeGen(CodeGen):
 
         # Inputs
         args = []
-        for i, arg in enumerate(routine.arguments):
+        for arg in routine.arguments:
             if isinstance(arg, (OutputArgument, InOutArgument)):
                 raise CodeGenError("Octave: invalid argument of type %s" %
                                    str(type(arg)))
@@ -1681,7 +1681,7 @@ class OctaveCodeGen(CodeGen):
     def _call_printer(self, routine):
         declarations = []
         code_lines = []
-        for i, result in enumerate(routine.results):
+        for result in routine.results:
             if isinstance(result, Result):
                 assign_to = result.result_var
             else:
@@ -1920,7 +1920,7 @@ class RustCodeGen(CodeGen):
             if isinstance(arg, ResultBase) and not arg.dimensions:
                 dereference.append(arg.name)
 
-        for i, result in enumerate(routine.results):
+        for result in routine.results:
             if isinstance(result, Result):
                 assign_to = result.result_var
                 returns.append(str(result.result_var))

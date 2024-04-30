@@ -1079,7 +1079,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         contraction_indices_remaining = []
         contraction_indices_args = [[] for i in expr.args]
         backshift = set()
-        for i, contraction_group in enumerate(contraction_indices):
+        for contraction_group in contraction_indices:
             for j in range(len(expr.args)):
                 if not isinstance(expr.args[j], ArrayAdd):
                     continue
@@ -1795,7 +1795,7 @@ class _EditArrayContraction:
     def get_contraction_indices(self) -> List[List[int]]:
         contraction_indices: List[List[int]] = [[] for i in range(self.number_of_contraction_indices)]
         current_position: int = 0
-        for i, arg_with_ind in enumerate(self.args_with_ind):
+        for arg_with_ind in self.args_with_ind:
             for j in arg_with_ind.indices:
                 if j is not None:
                     contraction_indices[j].append(current_position)
