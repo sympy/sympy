@@ -166,7 +166,7 @@ class LatexPrinter(Printer):
         "parenthesize_super": True,
         "min": None,
         "max": None,
-        "mat_compact": True,
+        "truncate": True,
         "diff_operator": "d",
         "adjoint_style": "dagger",
     }
@@ -1690,7 +1690,7 @@ class LatexPrinter(Printer):
 
         visible_rows = 10
         visible_cols = 10
-        compact = self._settings['mat_compact']
+        compact = self._settings['truncate']
 
         row_compactify =  compact and expr.rows > visible_rows
         col_compactify =  compact and expr.cols > visible_cols
