@@ -166,7 +166,7 @@ class LatexPrinter(Printer):
         "parenthesize_super": True,
         "min": None,
         "max": None,
-        "truncate": True,
+        "full_output": False,
         "diff_operator": "d",
         "adjoint_style": "dagger",
     }
@@ -1690,7 +1690,7 @@ class LatexPrinter(Printer):
 
         visible_rows = 10
         visible_cols = 10
-        compact = self._settings['truncate']
+        compact = not(self._settings['full_output'])
 
         row_compactify =  compact and expr.rows > visible_rows
         col_compactify =  compact and expr.cols > visible_cols
@@ -3077,9 +3077,9 @@ def latex(expr, **settings):
     max: Integer or None, optional
         Sets the upper bound for the exponent to print floating point numbers in
         fixed-point format.
-    truncate: boolean, optional
-        Truncate large Matrix for printing. Default is ``True``.  Might be extended
-        to truncate other things in the future.
+    full_output: boolean, optional
+        ``False``.  If set to False, output is truncated.  Else, the output
+        is printed normally
     diff_operator: string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
