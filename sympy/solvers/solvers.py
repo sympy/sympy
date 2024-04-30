@@ -97,7 +97,7 @@ def recast_to_symbols(eqs, symbols):
     symbols = list(ordered(symbols))
     swap_sym = {}
     i = 0
-    for j, s in enumerate(symbols):
+    for s in symbols:
         if not isinstance(s, Symbol) and s not in swap_sym:
             swap_sym[s] = Dummy('X%d' % i)
             i += 1
@@ -1418,7 +1418,7 @@ def _solve(f, *symbols, **flags):
             f = f.simplify()  # failure imminent w/o help
 
         cond = neg = True
-        for i, (expr, cnd) in enumerate(f.args):
+        for expr, cnd in f.args:
             # the explicit condition for this expr is the current cond
             # and none of the previous conditions
             cond = And(neg, cnd)

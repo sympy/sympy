@@ -1746,7 +1746,7 @@ def _weak_component_solver(wcc, t):
 
     sol = []
 
-    for j, scc in enumerate(wcc):
+    for scc in wcc:
         eqs = scc
         funcs = _get_funcs_from_canon(eqs)
 

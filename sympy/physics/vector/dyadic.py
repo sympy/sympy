@@ -127,13 +127,13 @@ class Dyadic(Printable, EvalfMixin):
         if isinstance(other, Dyadic):
             other = _check_dyadic(other)
             ol = Dyadic(0)
-            for i, v in enumerate(self.args):
-                for i2, v2 in enumerate(other.args):
+            for v in self.args:
+                for v2 in other.args:
                     ol += v[0] * v2[0] * (v[2].dot(v2[1])) * (v[1].outer(v2[2]))
         else:
             other = _check_vector(other)
             ol = Vector(0)
-            for i, v in enumerate(self.args):
+            for v in self.args:
                 ol += v[0] * v[1] * (v[2].dot(other))
         return ol
 
@@ -320,7 +320,7 @@ class Dyadic(Printable, EvalfMixin):
         from sympy.physics.vector.vector import _check_vector
         other = _check_vector(other)
         ol = Dyadic(0)
-        for i, v in enumerate(self.args):
+        for v in self.args:
             ol += v[0] * (v[1].outer((v[2].cross(other))))
         return ol
 
