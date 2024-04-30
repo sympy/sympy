@@ -3256,9 +3256,9 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 `arg` param in TransferFunctionMatrix should
                 strictly be a nested list containing TransferFunction
                 objects."""))
-        for row_index, row in enumerate(arg):
+        for row in arg:
             temp = []
-            for col_index, element in enumerate(row):
+            for element in row:
                 if not isinstance(element, SISOLinearTimeInvariant):
                     raise TypeError(filldedent("""
                         Each element is expected to be of
