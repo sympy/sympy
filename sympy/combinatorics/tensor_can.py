@@ -588,7 +588,7 @@ def canonical_free(base, gens, g, num_free):
         if x not in base:
             base.append(x)
     h = g
-    for i, transv in enumerate(transversals):
+    for transv in transversals:
         h_i = [size]*num_free
         # find the element s in transversals[i] such that
         # _af_rmul(h, s) has its free elements with the lowest position in h

@@ -1003,7 +1003,7 @@ class PrettyPrinter(Printer):
         from sympy.physics.control.lti import MIMOParallel
         args = list(expr.args)
         pretty_args = []
-        for i, a in enumerate(reversed(args)):
+        for a in reversed(args):
             if (isinstance(a, MIMOParallel) and len(expr.args) > 1):
                 expression = self._print(a)
                 expression.baseline = expression.height()//2
@@ -1257,7 +1257,7 @@ class PrettyPrinter(Printer):
         last_valence = None
         prev_map = None
 
-        for i, index in enumerate(indices):
+        for index in indices:
             indpic = self._print(index.args[0])
             if ((index in index_map) or prev_map) and last_valence == index.is_up:
                 if index.is_up:

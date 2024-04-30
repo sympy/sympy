@@ -687,7 +687,7 @@ def _pgroup_calcs():
                         range(len(ordered_faces))))
         flat_faces = flatten(ordered_faces)
         new_pgroup = []
-        for i, p in enumerate(pgroup):
+        for p in pgroup:
             h = polyh.copy()
             h.rotate(p)
             c = h.corners
