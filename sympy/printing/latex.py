@@ -167,8 +167,6 @@ class LatexPrinter(Printer):
         "min": None,
         "max": None,
         "mat_compact": True,
-        "mat_visible_rows": 15,
-        "mat_visible_cols": 15,
         "diff_operator": "d",
     }
 
@@ -1687,8 +1685,8 @@ class LatexPrinter(Printer):
 
     def _print_matrix_contents(self, expr):
 
-        visible_rows = self._settings['mat_visible_rows']
-        visible_cols = self._settings['mat_visible_cols']
+        visible_rows = 10
+        visible_cols = 10
         compact = self._settings['mat_compact']
 
         row_compactify =  compact and expr.rows > visible_rows
@@ -3070,15 +3068,9 @@ def latex(expr, **settings):
     max: Integer or None, optional
         Sets the upper bound for the exponent to print floating point numbers in
         fixed-point format.
-    mat_compact: boolean, optional
-        Truncate large Matrix for printing. Default is ``True``, to avoid printing
-        slowdown.
-    mat_visible_rows: int, optional
-        Sets the maximum number of rows to be printed. Default is ``15``, and
-        it doesn't take effect if mat_compact is ``False``.
-    mat_visible_cols: int, optional
-        Sets the maximum number of columns to be printed. Default is ``15``, and
-        it doesn't take effect if mat_compact is ``False``.
+    truncate: boolean, optional
+        Truncate large Matrix for printing. Default is ``True``.  Might be extended
+        to truncate other things in the future.
     diff_operator: string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
