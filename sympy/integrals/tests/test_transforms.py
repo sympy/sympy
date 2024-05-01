@@ -26,7 +26,7 @@ from sympy.functions.special.hyper import meijerg
 from sympy.simplify.gammasimp import gammasimp
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.trigsimp import trigsimp
-from sympy.testing.pytest import XFAIL, slow, tooslow, skip, raises
+from sympy.testing.pytest import XFAIL, slow, skip, raises
 from sympy.abc import x, s, a, b, c, d
 
 from sympy import simplify
@@ -442,7 +442,7 @@ def test_inverse_mellin_transform():
     assert IMT(pi/cos(pi*s), s, x, (0, S.Half)) == sqrt(x)/(x + 1)
 
 
-@tooslow
+@slow
 def test_inverse_mellin_transform_slow():
     # TODO this comes out as an amazing mess, but simplifies nicely
     IMT = inverse_mellin_transform

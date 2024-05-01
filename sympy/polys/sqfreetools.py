@@ -12,7 +12,7 @@ from sympy.polys.densebasic import (
     dup_LC, dmp_ground_LC,
     dmp_zero_p,
     dmp_ground,
-    dup_degree, dmp_degree, dmp_degree_in,
+    dup_degree, dmp_degree, dmp_degree_in, dmp_degree_list,
     dmp_raise, dmp_inject,
     dup_convert)
 from sympy.polys.densetools import (
@@ -131,6 +131,46 @@ def dup_sqf_norm(f, K):
     return s, f, r
 
 
+def _dmp_sqf_norm_shifts(f, u, K):
+    """Generate a sequence of candidate shifts for dmp_sqf_norm."""
+    #
+    # We want to find a minimal shift if possible because shifting high degree
+    # variables can be expensive e.g. x**10 -> (x + 1)**10. We try a few easy
+    # cases first before the final infinite loop that is guaranteed to give
+    # only finitely many bad shifts (see Trager for proof of this in the
+    # univariate case).
+    #
+
+    # First the trivial shift [0, 0, ...]
+    n = u + 1
+    s0 = [0] * n
+    yield s0, f
+
+    # Shift in multiples of the generator of the extension field K
+    a = K.unit
+
+    # Variables of degree > 0 ordered by increasing degree
+    d = dmp_degree_list(f, u)
+    var_indices = [i for di, i in sorted(zip(d, range(u+1))) if di > 0]
+
+    # Now try [1, 0, 0, ...], [0, 1, 0, ...]
+    for i in var_indices:
+        s1 = s0.copy()
+        s1[i] = 1
+        a1 = [-a*s1i for s1i in s1]
+        f1 = dmp_shift(f, a1, u, K)
+        yield s1, f1
+
+    # Now try [1, 1, 1, ...], [2, 2, 2, ...]
+    j = 0
+    while True:
+        j += 1
+        sj = [j] * n
+        aj = [-a*j] * n
+        fj = dmp_shift(f, aj, u, K)
+        yield sj, fj
+
+
 def dmp_sqf_norm(f, u, K):
     """
     Find a shift of ``f`` in ``K[X]`` that has square-free norm.
@@ -158,10 +198,10 @@ def dmp_sqf_norm(f, u, K):
     for ``g`` and ``r`` are determined by ``s``.
 
     >>> s
-    [1, 1]
-    >>> g == x*y - I*x + y**2 - 3*I*y - 2
+    [0, 1]
+    >>> g == x*y - I*x + y**2 - 2*I*y - 1
     True
-    >>> r == X**2*Y**2 + X**2 + 2*X*Y**3 + 2*X*Y + Y**4 + 5*Y**2 + 4
+    >>> r == X**2*Y**2 + X**2 + 2*X*Y**3 + 2*X*Y + Y**4 + 2*Y**2 + 1
     True
 
     The required invariants are:
@@ -183,19 +223,14 @@ def dmp_sqf_norm(f, u, K):
         raise DomainError("ground domain must be algebraic")
 
     g = dmp_raise(K.mod.to_list(), u + 1, 0, K.dom)
-    a = [-K.unit] * (u + 1)
 
-    s = [0] * (u + 1)
+    for s, f in _dmp_sqf_norm_shifts(f, u, K):
 
-    while True:
         h, _ = dmp_inject(f, u, K, front=True)
         r = dmp_resultant(g, h, u + 1, K.dom)
 
         if dmp_sqf_p(r, u, K.dom):
             break
-        else:
-            f = dmp_shift(f, a, u, K)
-            s = [si + 1 for si in s]
 
     return s, f, r
 
