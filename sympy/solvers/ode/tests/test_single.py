@@ -375,15 +375,8 @@ def test_1st_homogeneous_coeff_ode():
 
 
 @slow
-def test_slow_examples_1st_homogeneous_coeff_ode_1():
+def test_slow_examples_1st_homogeneous_coeff_ode():
     _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep, run_slow_test=True)
-
-@slow
-def test_slow_examples_1st_homogeneous_coeff_ode_1_tooslow():
-    _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep_tooslow, run_slow_test=True)
-
-@slow
-def test_slow_examples_1st_homogeneous_coeff_ode_2():
     _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_best, run_slow_test=True)
 
 
@@ -2779,11 +2772,17 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep():
         'slow': True
     },
 
-    # indep_div_dep actually has a simpler solution for example 2 but it runs too slow.
+    #indep_div_dep actually has a simpler solution for example 2 but it runs too slow.
     'dep_div_indep_02': {
         'eq': x*f(x).diff(x) - f(x) - x*sin(f(x)/x),
         'sol': [Eq(log(x), log(C1) + log(cos(f(x)/x) - 1)/2 - log(cos(f(x)/x) + 1)/2)],
         'simplify_flag':False,
+    },
+
+    'dep_div_indep_03': {
+        'eq': x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x),
+        'sol': [Eq(log(x), C1 + exp(-f(x)/x)*sin(f(x)/x)/2 + exp(-f(x)/x)*cos(f(x)/x)/2)],
+        'slow': True
     },
 
     'dep_div_indep_04': {
@@ -2801,22 +2800,6 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep():
     },
     }
     }
-
-
-@_add_example_keys
-def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep_tooslow():
-    return {
-            'hint': "1st_homogeneous_coeff_subs_dep_div_indep",
-            'func': f(x),
-            'examples':{
-    'dep_div_indep_03': {
-        'eq': x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x),
-        'sol': [Eq(log(x), C1 + exp(-f(x)/x)*sin(f(x)/x)/2 + exp(-f(x)/x)*cos(f(x)/x)/2)],
-        'slow': True
-    },
-    }
-    }
-
 
 @_add_example_keys
 def _get_examples_ode_sol_linear_coefficients():
