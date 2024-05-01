@@ -74,7 +74,7 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
 
     is_diagonalizable.__doc__ = SparseRepMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)
-    
+
     def analytic_func(self, f, x):
         return self.as_mutable().analytic_func(f, x).as_immutable()
 
