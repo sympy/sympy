@@ -87,14 +87,19 @@ def dmp_sqf_p(f, u, K):
 
 
 def dup_sqf_norm(f, K):
-    """
-    Square-free norm of ``f`` in ``K[x]``, useful over algebraic domains.
+    r"""
+    Find a shift of `f` in `K[x]` that has square-free norm.
 
-    Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and ``r(x) = Norm(g(x))``
-    is a square-free polynomial over K, where ``a`` is the algebraic extension of ``K``.
+    The domain `K` must be an algebraic number field `k(a)` (see :ref:`QQ(a)`).
+
+    Returns `(s,g,r)`, such that `g(x)=f(x-sa)`, `r(x)=\text{Norm}(g(x))` and
+    `r` is a square-free polynomial over `k`.
 
     Examples
     ========
+
+    We first create the algebraic number field `K=k(a)=\mathbb{Q}(\sqrt{3})`
+    and rings `K[x]` and `k[x]`:
 
     >>> from sympy.polys import ring, QQ
     >>> from sympy import sqrt
@@ -103,16 +108,48 @@ def dup_sqf_norm(f, K):
     >>> R, x = ring("x", K)
     >>> _, X = ring("x", QQ)
 
-    >>> s, f, r = R.dup_sqf_norm(x**2 - 2)
+    We can now find a square free norm for a shift of `f`:
+
+    >>> f = x**2 - 1
+    >>> s, g, r = R.dup_sqf_norm(f)
+
+    The choice of shift `s` is arbitrary and the particular values returned for
+    `g` and `r` are determined by `s`.
 
     >>> s == 1
     True
-    >>> f == x**2 + K([QQ(-2), QQ(0)])*x + 1
+    >>> g == x**2 - 2*sqrt(3)*x + 2
     True
-    >>> r == X**4 - 10*X**2 + 1
+    >>> r == X**4 - 8*X**2 + 4
     True
 
-    See Trager
+    The invariants are:
+
+    >>> g == f.shift(-s*K.unit)
+    True
+    >>> g.norm_algebraic() == r
+    True
+    >>> r.is_squarefree
+    True
+
+    Explanation
+    ===========
+
+    This is part of Trager's algorithm for factorizing polynomials over
+    algebraic number fields. In particular this function is algorithm
+    ``sqfr_norm`` from [Trager76]_.
+
+    See Also
+    ========
+
+    dmp_sqf_norm:
+        Analogous function for multivariate polynomials over ``k(a)``.
+    dmp_norm:
+        Computes the norm of `f` directly without any shift.
+    dup_ext_factor:
+        Function implementing Trager's algorithm that uses this.
+    sympy.polys.polytools.sqf_norm:
+        High-level interface for using this function.
     """
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
@@ -137,7 +174,7 @@ def _dmp_sqf_norm_shifts(f, u, K):
     # We want to find a minimal shift if possible because shifting high degree
     # variables can be expensive e.g. x**10 -> (x + 1)**10. We try a few easy
     # cases first before the final infinite loop that is guaranteed to give
-    # only finitely many bad shifts (see Trager for proof of this in the
+    # only finitely many bad shifts (see Trager76 for proof of this in the
     # univariate case).
     #
 
@@ -172,17 +209,20 @@ def _dmp_sqf_norm_shifts(f, u, K):
 
 
 def dmp_sqf_norm(f, u, K):
-    """
+    r"""
     Find a shift of ``f`` in ``K[X]`` that has square-free norm.
 
-    The ground ring ``K`` must be an algebraic extension field.
+    The domain `K` must be an algebraic number field `k(a)` (see :ref:`QQ(a)`).
 
-    Returns ``s``, ``g``, ``r``, such that ``g(X) = f(X-s*a)`` and
-    ``r(x) = Norm(g(x))`` is a square-free polynomial over K, where ``a`` is
-    the generator of the algebraic extension field ``K``.
+    Returns `(s,g,r)`, such that `g(x_1,x_2,\cdots)=f(x_1-s_1 a, x_2 - s_2 a,
+    \cdots)`, `r(x)=\text{Norm}(g(x))` and `r` is a square-free polynomial over
+    `k`.
 
     Examples
     ========
+
+    We first create the algebraic number field `K=k(a)=\mathbb{Q}(i)` and rings
+    `K[x]` and `k[x]`:
 
     >>> from sympy.polys import ring, QQ
     >>> from sympy import I
@@ -190,6 +230,8 @@ def dmp_sqf_norm(f, u, K):
     >>> K = QQ.algebraic_field(I)
     >>> R, x, y = ring("x,y", K)
     >>> _, X, Y = ring("x,y", QQ)
+
+    We can now find a square free norm for a shift of `f`:
 
     >>> f = x*y + y**2
     >>> s, g, r = R.dmp_sqf_norm(f)
@@ -213,7 +255,24 @@ def dmp_sqf_norm(f, u, K):
     >>> r.is_squarefree
     True
 
-    See Trager
+    Explanation
+    ===========
+
+    This is part of Trager's algorithm for factorizing polynomials over
+    algebraic number fields. In particular this function is a multivariate
+    generalization of algorithm ``sqfr_norm`` from [Trager76]_.
+
+    See Also
+    ========
+
+    dup_sqf_norm:
+        Analogous function for multivariate polynomials over ``k(a)``.
+    dmp_norm:
+        Computes the norm of `f` directly without any shift.
+    dmp_ext_factor:
+        Function implementing Trager's algorithm that uses this.
+    sympy.polys.polytools.sqf_norm:
+        High-level interface for using this function.
     """
     if not u:
         s, g, r = dup_sqf_norm(f, K)
@@ -236,8 +295,76 @@ def dmp_sqf_norm(f, u, K):
 
 
 def dmp_norm(f, u, K):
-    """
-    Norm of ``f`` in ``K[X1, ..., Xn]``, often not square-free.
+    r"""
+    Norm of ``f`` in ``K[X]``, often not square-free.
+
+    The domain `K` must be an algebraic number field `k(a)` (see :ref:`QQ(a)`).
+
+    Examples
+    ========
+
+    We first define the algebraic number field `K = k(a) = \mathbb{Q}(\sqrt{2})`:
+
+    >>> from sympy import QQ, sqrt
+    >>> from sympy.polys.sqfreetools import dmp_norm
+    >>> k = QQ
+    >>> K = k.algebraic_field(sqrt(2))
+
+    We can now compute the norm of a polynomial `p` in `K[x,y]`:
+
+    >>> p = [[K(1)], [K(1),K.unit]]                  # x + y + sqrt(2)
+    >>> N = [[k(1)], [k(2),k(0)], [k(1),k(0),k(-2)]] # x**2 + 2*x*y + y**2 - 2
+    >>> dmp_norm(p, 1, K) == N
+    True
+
+    In higher level functions that is:
+
+    >>> from sympy import expand, roots, minpoly
+    >>> from sympy.abc import x, y
+    >>> from math import prod
+    >>> a = sqrt(2)
+    >>> e = (x + y + a)
+    >>> e.as_poly([x, y], extension=a).norm()
+    Poly(x**2 + 2*x*y + y**2 - 2, x, y, domain='QQ')
+
+    This is equal to the product of the expressions `x + y + a_i` where the
+    `a_i` are the conjugates of `a`:
+
+    >>> pa = minpoly(a)
+    >>> pa
+    _x**2 - 2
+    >>> rs = roots(pa, multiple=True)
+    >>> rs
+    [sqrt(2), -sqrt(2)]
+    >>> n = prod(e.subs(a, r) for r in rs)
+    >>> n
+    (x + y - sqrt(2))*(x + y + sqrt(2))
+    >>> expand(n)
+    x**2 + 2*x*y + y**2 - 2
+
+    Explanation
+    ===========
+
+    Given an algebraic number field `K = k(a)` any element `b` of `K` can be
+    represented as polynomial function `b=g(a)` where `g` is in `k[x]`. If the
+    minimal polynomial of `a` over `k` is `p_a` then the roots `a_1`, `a_2`,
+    `\cdots` of `p_a(x)` are the conjugates of `a`. The norm of `b` is the
+    product `g(a1) \times g(a2) \times \cdots` and is an element of `k`.
+
+    As in [Trager76]_ we extend this norm to multivariate polynomials over `K`.
+    If `b(x)` is a polynomial in `k(a)[X]` then we can think of `b` as being
+    alternately a function `g_X(a)` where `g_X` is an element of `k[X][y]` i.e.
+    a polynomial function with coefficients that are elements of `k[X]`. Then
+    the norm of `b` is the product `g_X(a1) \times g_X(a2) \times \cdots` and
+    will be an element of `k[X]`.
+
+    See Also
+    ========
+
+    dmp_sqf_norm:
+        Compute a shift of `f` so that the `\text{Norm}(f)` is square-free.
+    sympy.polys.polytools.Poly.norm:
+        Higher-level function that calls this.
     """
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
@@ -273,6 +400,10 @@ def dup_sqf_part(f, K):
     >>> R.dup_sqf_part(x**3 - 3*x - 2)
     x**2 - x - 2
 
+    See Also
+    ========
+
+    sympy.polys.polytools.Poly.sqf_part
     """
     if K.is_FiniteField:
         return dup_gf_sqf_part(f, K)
@@ -350,6 +481,8 @@ def dup_sqf_list(f, K, all=False):
     """
     Return square-free decomposition of a polynomial in ``K[x]``.
 
+    Uses Yun's algorithm from [Yun76]_.
+
     Examples
     ========
 
@@ -363,6 +496,20 @@ def dup_sqf_list(f, K, all=False):
     >>> R.dup_sqf_list(f, all=True)
     (2, [(1, 1), (x + 1, 2), (x + 2, 3)])
 
+    See Also
+    ========
+
+    dmp_sqf_list:
+        Corresponding function for multivariate polynomials.
+    sympy.polys.polytools.sqf_list:
+        High-level function for square-free factorization of expressions.
+    sympy.polys.polytools.Poly.sqf_list:
+        Analogous method on :class:`~.Poly`.
+
+    References
+    ==========
+
+    [Yun76]_
     """
     if K.is_FiniteField:
         return dup_gf_sqf_list(f, K, all=all)
