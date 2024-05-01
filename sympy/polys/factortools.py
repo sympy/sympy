@@ -1305,7 +1305,7 @@ def dmp_ext_factor(f, u, K):
         for i, (factor, _) in enumerate(factors):
             h = dmp_convert(factor, u, K.dom, K)
             h, _, g = dmp_inner_gcd(h, g, u, K)
-            a = [s*K.unit]*(u+1)
+            a = [si*K.unit for si in s]
             h = dmp_shift(h, a, u, K)
             factors[i] = h
 
