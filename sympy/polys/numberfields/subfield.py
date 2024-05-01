@@ -356,7 +356,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
                 continue
             _, factors = factor_list(g, extension=ext)
             g = _choose_factor(factors, x, gen)
-            s, _, g = g.sqf_norm()
+            [s], _, g = g.sqf_norm()
             gen += s*ext
             coeffs.append(s)
 
@@ -378,7 +378,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         L = QQ.algebraic_field((p, ext))
         _, factors = factor_list(f, domain=L)
         f = _choose_factor(factors, x, gen)
-        s, g, f = f.sqf_norm()
+        [s], g, f = f.sqf_norm()
         gen += s*ext
         coeffs.append(s)
         K = QQ.algebraic_field((f, gen))

@@ -133,11 +133,13 @@ def dup_sqf_norm(f, K):
 
 def dmp_sqf_norm(f, u, K):
     """
-    Square-free norm of ``f`` in ``K[X]``, useful over algebraic domains.
+    Find a shift of ``f`` in ``K[X]`` that has square-free norm.
 
-    Returns ``s``, ``g``, ``r``, such that ``g(X) = f(X-sa)`` and
+    The ground ring ``K`` must be an algebraic extension field.
+
+    Returns ``s``, ``g``, ``r``, such that ``g(X) = f(X-s*a)`` and
     ``r(x) = Norm(g(x))`` is a square-free polynomial over K, where ``a`` is
-    the algebraic extension of ``K``.
+    the generator of the algebraic extension field ``K``.
 
     Examples
     ========
@@ -152,28 +154,30 @@ def dmp_sqf_norm(f, u, K):
     >>> f = x*y + y**2
     >>> s, g, r = R.dmp_sqf_norm(f)
 
-    The actual values returned are somewhat arbitrary:
+    The choice of shifts ``s`` is arbitrary and the particular values returned
+    for ``g`` and ``r`` are determined by ``s``.
 
     >>> s
-    1
+    [1, 1]
     >>> g == x*y - I*x + y**2 - 3*I*y - 2
     True
     >>> r == X**2*Y**2 + X**2 + 2*X*Y**3 + 2*X*Y + Y**4 + 5*Y**2 + 4
     True
 
-    However the required invariants are satisfied:
+    The required invariants are:
 
-    >>> g == f.shift([-K.unit, -K.unit])
-    True
-    >>> g.as_expr().as_poly(domain=K).norm().as_expr() == r.as_expr()
+    >>> g == f.shift([-si*K.unit for si in s])
     True
     >>> g.norm_algebraic() == r
+    True
+    >>> r.is_squarefree
     True
 
     See Trager
     """
     if not u:
-        return dup_sqf_norm(f, K)
+        s, g, r = dup_sqf_norm(f, K)
+        return [s], g, r
 
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
@@ -181,7 +185,7 @@ def dmp_sqf_norm(f, u, K):
     g = dmp_raise(K.mod.to_list(), u + 1, 0, K.dom)
     a = [-K.unit] * (u + 1)
 
-    s = 0
+    s = [0] * (u + 1)
 
     while True:
         h, _ = dmp_inject(f, u, K, front=True)
@@ -190,7 +194,8 @@ def dmp_sqf_norm(f, u, K):
         if dmp_sqf_p(r, u, K.dom):
             break
         else:
-            f, s = dmp_shift(f, a, u, K), s + 1
+            f = dmp_shift(f, a, u, K)
+            s = [si + 1 for si in s]
 
     return s, f, r
 

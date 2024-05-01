@@ -3240,7 +3240,7 @@ class Poly(Basic):
         >>> s, f, r = Poly(x**2 + 1, x, extension=[sqrt(3)]).sqf_norm()
 
         >>> s
-        1
+        [1]
         >>> f
         Poly(x**2 - 2*sqrt(3)*x + 4, x, domain='QQ<sqrt(3)>')
         >>> r
@@ -6042,7 +6042,7 @@ def sqf_norm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_norm(x**2 + 1, extension=[sqrt(3)])
-    (1, x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
+    ([1], x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -6054,10 +6054,12 @@ def sqf_norm(f, *gens, **args):
 
     s, g, r = F.sqf_norm()
 
+    s_expr = [Integer(si) for si in s]
+
     if not opt.polys:
-        return Integer(s), g.as_expr(), r.as_expr()
+        return s_expr, g.as_expr(), r.as_expr()
     else:
-        return Integer(s), g, r
+        return s_expr, g, r
 
 
 @public
