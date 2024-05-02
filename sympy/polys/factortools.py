@@ -1370,8 +1370,49 @@ def dup_ext_factor(f, K):
 def dmp_ext_factor(f, u, K):
     """Factor multivariate polynomials over algebraic number fields.
 
-    Algebraic Factoring and Rational Function Integration
-    Barry Trager 1976.
+    The domain `K` must be an algebraic number field `k(a)` (see :ref:`QQ(a)`).
+
+    Examples
+    ========
+
+    First define the algebraic number field `K = \mathbb{Q}(\sqrt{2})`:
+
+    >>> from sympy import QQ, sqrt
+    >>> from sympy.polys.factortools import dmp_ext_factor
+    >>> K = QQ.algebraic_field(sqrt(2))
+
+    We can now factorise the polynomial `x^2 y^2 - 2` over `K`:
+
+    >>> p = [[K(1),K(0),K(0)], [], [K(-2)]] # x**2*y**2 - 2
+    >>> p1 = [[K(1),K(0)], [-K.unit]]       # x*y - sqrt(2)
+    >>> p2 = [[K(1),K(0)], [+K.unit]]       # x*y + sqrt(2)
+    >>> dmp_ext_factor(p, 1, K) == (K.one, [(p1, 1), (p2, 1)])
+    True
+
+    Usually this would be done at a higher level:
+
+    >>> from sympy import factor
+    >>> from sympy.abc import x, y
+    >>> factor(x**2*y**2 - 2, extension=sqrt(2))
+    (x*y - sqrt(2))*(x*y + sqrt(2))
+
+    Explanation
+    ===========
+
+    This is Trager's algorithm for multivariate polynomials. In particular this
+    function is algorithm ``alg_factor`` from [Trager76]_.
+
+    See :func:`dup_ext_factor` for explanation.
+
+    See Also
+    ========
+
+    dmp_ext_factor:
+        Analogous function for multivariate polynomials over ``k(a)``.
+    dmp_sqf_norm:
+        Multivariate version of subroutine ``sqfr_norm`` also from [Trager76]_.
+    sympy.polys.polytools.factor:
+        The high-level function that ultimately uses this function as needed.
     """
     if not u:
         return dup_ext_factor(f, K)

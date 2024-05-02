@@ -2693,6 +2693,24 @@ def test_factor():
     assert factor_list((x - sqrt(2)*pi)*(x + sqrt(2)*pi), x) == (
         1, [(x - sqrt(2)*pi, 1), (x + sqrt(2)*pi, 1)])
 
+    # https://github.com/sympy/sympy/issues/26497
+    p = ((y - I)**2 * (y + I) * (x + 1))
+    assert factor(expand(p)) == p
+
+    p = ((x - I)**2 * (x + I) * (y + 1))
+    assert factor(expand(p)) == p
+
+    p = (y + 1)**2*(y + sqrt(2))**2*(x**2 + x + 2 + 3*sqrt(2))**2
+    assert factor(expand(p), extension=True) == p
+
+    e = (
+        -x**2*y**4/(y**2 + 1) + 2*I*x**2*y**3/(y**2 + 1) + 2*I*x**2*y/(y**2 + 1) +
+        x**2/(y**2 + 1) - 2*x*y**4/(y**2 + 1) + 4*I*x*y**3/(y**2 + 1) +
+        4*I*x*y/(y**2 + 1) + 2*x/(y**2 + 1) - y**4 - y**4/(y**2 + 1) + 2*I*y**3
+        + 2*I*y**3/(y**2 + 1) + 2*I*y + 2*I*y/(y**2 + 1) + 1 + 1/(y**2 + 1)
+    )
+    assert factor(e) == -(y - I)**3*(y + I)*(x**2 + 2*x + y**2 + 2)/(y**2 + 1)
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
