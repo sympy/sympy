@@ -1368,7 +1368,7 @@ def dup_ext_factor(f, K):
 
 
 def dmp_ext_factor(f, u, K):
-    """Factor multivariate polynomials over algebraic number fields.
+    r"""Factor multivariate polynomials over algebraic number fields.
 
     The domain `K` must be an algebraic number field `k(a)` (see :ref:`QQ(a)`).
 
