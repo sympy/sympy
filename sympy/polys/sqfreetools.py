@@ -30,6 +30,22 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError)
 
+
+def _dup_check_degrees(f, result):
+    """Sanity check the degrees of a computed factorization in K[x]."""
+    deg = sum(k * dup_degree(fac) for (fac, k) in result)
+    assert deg == dup_degree(f)
+
+
+def _dmp_check_degrees(f, u, result):
+    """Sanity check the degrees of a computed factorization in K[X]."""
+    degs = [0] * (u + 1)
+    for fac, k in result:
+        degs_fac = dmp_degree_list(fac, u)
+        degs = [d1 + k * d2 for d1, d2 in zip(degs, degs_fac)]
+    assert tuple(degs) == dmp_degree_list(f, u)
+
+
 def dup_sqf_p(f, K):
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[x]``.
@@ -462,12 +478,16 @@ def dmp_sqf_part(f, u, K):
 
 def dup_gf_sqf_list(f, K, all=False):
     """Compute square-free decomposition of ``f`` in ``GF(p)[x]``. """
+    f_orig = f
+
     f = dup_convert(f, K, K.dom)
 
     coeff, factors = gf_sqf_list(f, K.mod, K.dom, all=all)
 
     for i, (f, k) in enumerate(factors):
         factors[i] = (dup_convert(f, K.dom, K), k)
+
+    _dup_check_degrees(f_orig, factors)
 
     return K.convert(coeff, K.dom), factors
 
@@ -514,6 +534,8 @@ def dup_sqf_list(f, K, all=False):
     if K.is_FiniteField:
         return dup_gf_sqf_list(f, K, all=all)
 
+    f_orig = f
+
     if K.is_Field:
         coeff = dup_LC(f, K)
         f = dup_monic(f, K)
@@ -546,6 +568,8 @@ def dup_sqf_list(f, K, all=False):
             result.append((g, i))
 
         i += 1
+
+    _dup_check_degrees(f_orig, result)
 
     return coeff, result
 
@@ -604,6 +628,8 @@ def dmp_sqf_list(f, u, K, all=False):
     if K.is_FiniteField:
         return dmp_gf_sqf_list(f, u, K, all=all)
 
+    f_orig = f
+
     if K.is_Field:
         coeff = dmp_ground_LC(f, u, K)
         f = dmp_ground_monic(f, u, K)
@@ -660,6 +686,8 @@ def dmp_sqf_list(f, u, K, all=False):
             result[i] = fac
 
     result = [(result[i], i) for i in sorted(result)]
+
+    _dmp_check_degrees(f_orig, u, result)
 
     return coeff, result
 
