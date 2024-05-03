@@ -238,7 +238,7 @@ def dmp_sqf_norm(f, u, K):
     ========
 
     We first create the algebraic number field `K=k(a)=\mathbb{Q}(i)` and rings
-    `K[x]` and `k[x]`:
+    `K[x,y]` and `k[x,y]`:
 
     >>> from sympy.polys import ring, QQ
     >>> from sympy import I
