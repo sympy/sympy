@@ -64,7 +64,9 @@ from sympy.polys.euclidtools import (
 from sympy.polys.sqfreetools import (
     dup_sqf_p,
     dup_sqf_norm, dmp_sqf_norm,
-    dup_sqf_part, dmp_sqf_part)
+    dup_sqf_part, dmp_sqf_part,
+    _dup_check_degrees, _dmp_check_degrees,
+    )
 
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
@@ -81,21 +83,6 @@ if GROUND_TYPES == 'flint':
     from flint import fmpz_poly
 else:
     fmpz_poly = None
-
-
-def _dup_check_factorization(f, result):
-    """Sanity check the degrees of a computed factorization in K[x]."""
-    deg = sum(k * dup_degree(fac) for (fac, k) in result)
-    assert deg == dup_degree(f)
-
-
-def _dmp_check_factorization(f, u, result):
-    """Sanity check the degrees of a computed factorization in K[X]."""
-    degs = [0] * (u + 1)
-    for fac, k in result:
-        degs_fac = dmp_degree_list(fac, u)
-        degs = [d1 + k * d2 for d1, d2 in zip(degs, degs_fac)]
-    assert tuple(degs) == dmp_degree_list(f, u)
 
 
 def dup_trial_division(f, factors, K):
@@ -721,7 +708,7 @@ def dup_zz_factor(f, K):
 
     factors = dup_trial_division(f, H, K)
 
-    _dup_check_factorization(f, factors)
+    _dup_check_degrees(f, factors)
 
     return cont, factors
 
@@ -1198,7 +1185,7 @@ def dmp_zz_factor(f, u, K):
     for g, k in dmp_zz_factor(G, u - 1, K)[1]:
         factors.insert(0, ([g], k))
 
-    _dmp_check_factorization(f, u, factors)
+    _dmp_check_degrees(f, u, factors)
 
     return cont, _sort_factors(factors)
 
@@ -1362,7 +1349,7 @@ def dup_ext_factor(f, K):
 
     factors = dup_trial_division(F, factors, K)
 
-    _dup_check_factorization(F, factors)
+    _dup_check_degrees(F, factors)
 
     return lc, factors
 
@@ -1440,7 +1427,7 @@ def dmp_ext_factor(f, u, K):
 
     result = dmp_trial_division(F, factors, u, K)
 
-    _dmp_check_factorization(F, u, result)
+    _dmp_check_degrees(F, u, result)
 
     return lc, result
 
