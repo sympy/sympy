@@ -282,7 +282,7 @@ def dmp_sqf_norm(f, u, K):
     ========
 
     dup_sqf_norm:
-        Analogous function for multivariate polynomials over ``k(a)``.
+        Analogous function for univariate polynomials over ``k(a)``.
     dmp_norm:
         Computes the norm of `f` directly without any shift.
     dmp_ext_factor:

@@ -1394,8 +1394,8 @@ def dmp_ext_factor(f, u, K):
     See Also
     ========
 
-    dmp_ext_factor:
-        Analogous function for multivariate polynomials over ``k(a)``.
+    dup_ext_factor:
+        Analogous function for univariate polynomials over ``k(a)``.
     dmp_sqf_norm:
         Multivariate version of subroutine ``sqfr_norm`` also from [Trager76]_.
     sympy.polys.polytools.factor:
