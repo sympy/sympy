@@ -2983,7 +2983,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if f.ring.is_univariate:
             return f.ring.dup_shift(f, a)
         else:
-            return f.ring.dmp_shift(f, a)
+            raise MultivariatePolynomialError("shift: use shift_list instead")
+
+    def shift_list(f, a):
+        return f.ring.dmp_shift(f, a)
 
     def sturm(f):
         if f.ring.is_univariate:

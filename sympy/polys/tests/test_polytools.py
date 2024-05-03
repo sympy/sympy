@@ -2313,6 +2313,11 @@ def test_compose():
 def test_shift():
     assert Poly(x**2 - 2*x + 1, x).shift(2) == Poly(x**2 + 2*x + 1, x)
 
+
+def test_shift_list():
+    assert Poly(x*y, [x,y]).shift_list([1,2]) == Poly((x+1)*(y+2), [x,y])
+
+
 def test_transform():
     # Also test that 3-way unification is done correctly
     assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1), Poly(x - 1)) == \
