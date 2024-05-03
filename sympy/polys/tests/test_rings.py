@@ -1519,6 +1519,16 @@ def test_PolyElement_gff_list():
     f = x*(x - 1)**3*(x - 2)**2*(x - 4)**2*(x - 5)
     assert f.gff_list() == [(x**2 - 5*x + 4, 1), (x**2 - 5*x + 4, 2), (x, 3)]
 
+def tset_PolyElement_norm():
+    k = QQ
+    K = QQ.algebraic_field(sqrt(2))
+    sqrt2 = K.unit
+    _, X, Y = ring("x,y", k)
+    _, x, y = ring("x,y", K)
+
+    f = x*y + sqrt2
+    assert (x*y + sqrt2).norm() == X**2*Y**2 - 2
+
 def test_PolyElement_sqf_norm():
     R, x = ring("x", QQ.algebraic_field(sqrt(3)))
     X = R.to_ground().x
