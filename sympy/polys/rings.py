@@ -2997,7 +2997,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def gff_list(f):
         return f.ring.dmp_gff_list(f)
 
-    def norm_algebraic(f):
+    def norm(f):
         return f.ring.dmp_norm(f)
 
     def sqf_norm(f):

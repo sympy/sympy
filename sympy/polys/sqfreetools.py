@@ -143,7 +143,7 @@ def dup_sqf_norm(f, K):
 
     >>> g == f.shift(-s*K.unit)
     True
-    >>> g.norm_algebraic() == r
+    >>> g.norm() == r
     True
     >>> r.is_squarefree
     True
@@ -266,7 +266,7 @@ def dmp_sqf_norm(f, u, K):
 
     >>> g == f.shift_list([-si*K.unit for si in s])
     True
-    >>> g.norm_algebraic() == r
+    >>> g.norm() == r
     True
     >>> r.is_squarefree
     True
