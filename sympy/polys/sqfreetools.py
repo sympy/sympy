@@ -604,7 +604,7 @@ def dup_sqf_list_include(f, K, all=False):
 
 def dmp_sqf_list(f, u, K, all=False):
     """
-    Return square-free decomposition of a polynomial in ``K[X]``.
+    Return square-free decomposition of a polynomial in `K[X]`.
 
     Examples
     ========
@@ -619,8 +619,26 @@ def dmp_sqf_list(f, u, K, all=False):
     >>> R.dmp_sqf_list(f, all=True)
     (1, [(1, 1), (x + y, 2), (x, 3)])
 
-    Yun, David Y.Y. (1976). "On square-free decomposition algorithms".
-    doi:10.1145/800205.806320. ISBN 978-1-4503-7790-4.
+    Explanation
+    ===========
+
+    Uses Yun's algorithm for univariate polynomials from [Yun76]_ recrusively.
+    The multivariate polynomial is treated as a univariate polynomial in its
+    leading variable. Then Yun's algorithm computes the square-free
+    factorization of the primitive and the content is factored recursively.
+
+    It would be better to use a dedicated algorithm for multivariate
+    polynomials instead.
+
+    See Also
+    ========
+
+    dup_sqf_list:
+        Corresponding function for univariate polynomials.
+    sympy.polys.polytools.sqf_list:
+        High-level function for square-free factorization of expressions.
+    sympy.polys.polytools.Poly.sqf_list:
+        Analogous method on :class:`~.Poly`.
     """
     if not u:
         return dup_sqf_list(f, K, all=all)
