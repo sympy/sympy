@@ -3102,13 +3102,32 @@ class Poly(Basic):
         >>> Poly(x**2 - 2*x + 1, x).shift(2)
         Poly(x**2 + 2*x + 1, x, domain='ZZ')
 
-        """
-        if hasattr(f.rep, 'shift'):
-            result = f.rep.shift(a)
-        else:  # pragma: no cover
-            raise OperationNotSupported(f, 'shift')
+        See Also
+        ========
 
-        return f.per(result)
+        shift_list: Analogous method for multivariate polynomials.
+        """
+        return f.per(f.rep.shift(a))
+
+    def shift_list(f, a):
+        """
+        Efficiently compute Taylor shift ``f(X + A)``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x*y, [x,y]).shift_list([1, 2]) == Poly((x+1)*(y+2), [x,y])
+        True
+
+        See Also
+        ========
+
+        shift: Analogous method for univariate polynomials.
+        """
+        return f.per(f.rep.shift_list(a))
 
     def transform(f, p, q):
         """

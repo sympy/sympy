@@ -248,7 +248,7 @@ def dmp_sqf_norm(f, u, K):
 
     The required invariants are:
 
-    >>> g == f.shift([-si*K.unit for si in s])
+    >>> g == f.shift_list([-si*K.unit for si in s])
     True
     >>> g.norm_algebraic() == r
     True
