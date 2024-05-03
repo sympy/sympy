@@ -1526,7 +1526,6 @@ def tset_PolyElement_norm():
     _, X, Y = ring("x,y", k)
     _, x, y = ring("x,y", K)
 
-    f = x*y + sqrt2
     assert (x*y + sqrt2).norm() == X**2*Y**2 - 2
 
 def test_PolyElement_sqf_norm():
