@@ -214,6 +214,16 @@ class lerchphi(Function):
     def _eval_rewrite_as_polylog(self, z, s, a, **kwargs):
         return self._eval_rewrite_helper(polylog)
 
+    def _eval_is_finite(self):
+        z, s, a = self.args
+        if z == 0 or a == 0:
+            return z.is_zero and a.is_zero and s.is_nonpositive
+        if z == 1:
+            # Let zeta handle this case
+            return self._eval_expand_func().is_finite
+        if a.is_integer and a.is_nonpositive:
+            return False
+
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
 ###############################################################################

@@ -231,6 +231,10 @@ def test_lerchphi_expansion():
 
 def test_lerchphi_finite():
     assert lerchphi(1, 1, a).is_finite is False
+    assert lerchphi(0, -3, 0).is_finite is True
+    assert lerchphi(2, s, 0).is_finite is False
+    assert lerchphi(z, s, -1).is_finite is False
+    assert lerchphi(z, s, -5).is_finite is False
 
 
 def test_lerchphi_leadterm():
