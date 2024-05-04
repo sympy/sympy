@@ -229,6 +229,16 @@ def test_lerchphi_expansion():
     assert myexpand(lerchphi(exp(I*pi*Rational(2, 5)), s, a), None)
 
 
+def test_lerchphi_finite():
+    assert lerchphi(1, 1, a).is_finite is False
+
+
+def test_lerchphi_leadterm():
+    from sympy.functions.special.gamma_functions import digamma
+    assert (lerchphi(1-x, 1, a)._eval_as_leading_term(x)
+            == -log(x) - S.EulerGamma - digamma(a))
+
+
 def test_stieltjes():
     assert isinstance(stieltjes(x), stieltjes)
     assert isinstance(stieltjes(x, a), stieltjes)
