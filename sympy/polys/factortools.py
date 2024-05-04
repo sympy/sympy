@@ -89,6 +89,8 @@ def dup_trial_division(f, factors, K):
     """
     Determine multiplicities of factors for a univariate polynomial
     using trial division.
+
+    An error will be raised if any factor does not divide ``f``.
     """
     result = []
 
@@ -103,6 +105,9 @@ def dup_trial_division(f, factors, K):
             else:
                 break
 
+        if k == 0:
+            raise RuntimeError("trial division failed")
+
         result.append((factor, k))
 
     return _sort_factors(result)
@@ -112,6 +117,8 @@ def dmp_trial_division(f, factors, u, K):
     """
     Determine multiplicities of factors for a multivariate polynomial
     using trial division.
+
+    An error will be raised if any factor does not divide ``f``.
     """
     result = []
 
