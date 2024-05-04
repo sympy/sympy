@@ -4,7 +4,7 @@ from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import ArgumentIndexError, expand_mul, DefinedFunction
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -215,6 +215,37 @@ class lerchphi(DefinedFunction):
 
     def _eval_rewrite_as_polylog(self, z, s, a, **kwargs):
         return self._eval_rewrite_helper(polylog)
+
+    def _eval_is_finite(self):
+        z, s, a = self.args
+        if z.is_infinite or s.is_infinite or a.is_infinite:
+            # TODO: Write a valid implementation for infinite numbers.
+            return None
+        if z.is_zero:
+            # a^(-s)
+            # I follow the sympy convention of 0^0 = 1
+            return fuzzy_or([re(s).is_nonpositive, a.is_nonzero])
+        # The following parts assume analytic continuation
+        z_is_one = (z-1).is_zero
+        if z_is_one:
+            # zeta(s, a)
+            return (s-1).is_nonzero
+        if s.is_zero:
+            # 1/(1-z)
+            # One could be tempted to exclude z=1,
+            # but lerchphi(1,0,a)=zeta(0,a) is finite.
+            return True
+        if a.is_integer and a.is_nonpositive:
+            # The sum contains 0^(-s)
+            if re(s).is_positive:
+                # These are would be divergent results, but the actual result
+                # depends on z
+                if z_is_one is None and (s-1).is_zero is not True:
+                    return None
+                if z.is_zero is None and a.is_zero is not True:
+                    return None
+            return re(s).is_nonpositive
+        return None
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################

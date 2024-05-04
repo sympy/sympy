@@ -232,7 +232,46 @@ def test_lerchphi_expansion():
 
 
 def test_lerchphi_finite():
+    assert lerchphi(0, -1, -1).is_finite is True
+    assert lerchphi(0, -1, 0).is_finite is True
+    assert lerchphi(0, 0, 0).is_finite is True
+    assert lerchphi(0, -1, a).is_finite is True
+    assert lerchphi(0, 1, -1).is_finite is True
+    assert lerchphi(0, 2, -1).is_finite is True
+    assert lerchphi(0, 1, 0).is_finite is False
+    assert lerchphi(0, 1, a).is_finite is None
+    assert lerchphi(0, s, -1).is_finite is True
+    assert lerchphi(0, s, 0).is_finite is None
+    assert lerchphi(0, s, a).is_finite is None
+
     assert lerchphi(1, 1, a).is_finite is False
+    assert lerchphi(1, 0, a).is_finite is True
+    assert lerchphi(1, s, 0).is_finite is None
+    assert lerchphi(1, 1, -1).is_finite is False
+    assert lerchphi(1, 2, -1).is_finite is True
+    assert lerchphi(z, 0, a).is_finite is True
+
+    assert lerchphi(z, 2, -1).is_finite is None
+    assert lerchphi(z, 1, -1).is_finite is None
+    assert lerchphi(z, -1, -1).is_finite is True
+    assert lerchphi(z, -3, 0).is_finite is True
+    assert lerchphi(-1, 1, -1).is_finite is False
+    assert lerchphi(2, 1, 0).is_finite is False
+    assert lerchphi(-1, 2, -1).is_finite is False
+    assert lerchphi(2, -1, 0).is_finite is True
+    assert lerchphi(0.5, -1, 0).is_finite is True
+    assert lerchphi(0.5+0.5j, 0, 0).is_finite is True
+    assert lerchphi(2, s, 0).is_finite is None
+    assert lerchphi(2, 1j, 0).is_finite is True
+    assert lerchphi(2, 1+1j, 0).is_finite is False
+
+    # The following tests return None for lack of proper implementation:
+    assert lerchphi(oo, 2, 2).is_finite is None
+    assert lerchphi(2, oo, 2).is_finite is None
+    assert lerchphi(2, 2, oo).is_finite is None
+    assert lerchphi(2, 2, 2).is_finite is None
+
+    assert lerchphi(a, s, z).is_finite is None
 
 
 def test_lerchphi_leadterm():
