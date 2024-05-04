@@ -216,13 +216,22 @@ class lerchphi(Function):
 
     def _eval_is_finite(self):
         z, s, a = self.args
-        if z == 0 or a == 0:
-            return z.is_zero and a.is_zero and s.is_nonpositive
-        if z == 1:
-            # Let zeta handle this case
-            return self._eval_expand_func().is_finite
+        if z.is_infinite or s.is_infinite or a.is_infinite:
+            # TODO: Write a valid implementation for infinite numbers.
+            return
+        if z == 0:
+            if a.is_zero is False:
+                return True
+            if s.is_real:
+                return s.is_nonpositive
+            return
         if a.is_integer and a.is_nonpositive:
-            return False
+            if s.is_real:
+                return s.is_nonpositive
+            return
+        exp_expr = self.expand(func=True)
+        if exp_expr != self:
+            return exp_expr.is_finite
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
