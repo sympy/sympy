@@ -133,6 +133,9 @@ def test_latex_basic():
     assert latex(Mul(S.Half, -5, S.Half, evaluate=False)) == r"\frac{1}{2} \left(-5\right) \frac{1}{2}"
     assert latex(Mul(5, I, 5, evaluate=False)) == r"5 i 5"
     assert latex(Mul(5, I, -5, evaluate=False)) == r"5 i \left(-5\right)"
+    assert latex(Mul(Pow(x, 2), S.Half*x + 1)) == r"x^{2} \left(\frac{x}{2} + 1\right)"
+    assert latex(Mul(Pow(x, 3), Rational(2, 3)*x + 1)) == r"x^{3} \left(\frac{2 x}{3} + 1\right)"
+    assert latex(Mul(Pow(x, 11), 2*x + 1)) == r"x^{11} \left(2 x + 1\right)"
 
     assert latex(Mul(0, 1, evaluate=False)) == r'0 \cdot 1'
     assert latex(Mul(1, 0, evaluate=False)) == r'1 \cdot 0'
