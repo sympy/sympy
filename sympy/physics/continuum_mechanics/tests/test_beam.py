@@ -491,6 +491,12 @@ def test_apply_support():
     b.solve_for_reaction_loads(R_0, R_L, M_0, M_L)
     assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
 
+    b = Beam(10, E, I)
+    b.apply_support(0, type='fixed')
+    b.apply_load(-P, 10, -1)
+    b.solve_for_reaction_loads()
+    assert b.reaction_loads == {R_0: P, M_0: -10*P}
+
 
 def test_max_shear_force():
     E = Symbol('E')

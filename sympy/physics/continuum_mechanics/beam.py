@@ -837,6 +837,12 @@ class Beam:
         """
         Solves for the reaction forces.
 
+        Parameters
+        ==========
+        *reactions : Symbol, optional
+            Symbols representing the reaction forces. If not provided, the method
+            will attempt to use the reaction forces from the beam's supports.
+
         Examples
         ========
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
@@ -868,7 +874,29 @@ class Beam:
         >>> b.load
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
+
+        This same example can be solved by applying the supports on the beam.
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(120, 30, -2)
+        >>> b.apply_support(10, type="pin")
+        >>> b.apply_support(30, type="roller")
+        >>> b.load
+        R_10*SingularityFunction(x, 10, -1) + R_30*SingularityFunction(x, 30, -1)
+            - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
+        >>> b.solve_for_reaction_loads()
+        >>> b.reaction_loads
+        {R_10: 6, R_30: 2}
+        >>> b.load
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
+            + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
+        if not reactions:
+            reactions = tuple(support[0] for support in self._support_as_loads)
+
         if self._composite_type == "hinge":
             return self._solve_hinge_beams(*reactions)
 
