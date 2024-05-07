@@ -485,6 +485,20 @@ def test_apply_support():
     assert b.reaction_loads == {R_10: 6, R_30: 2}
     assert b.reaction_loads[p0] == 6
 
+    b = Beam(8, E, I)
+    p0, m0 = b.apply_support(0, "fixed")
+    p1 = b.apply_support(8, "roller")
+    b.apply_load(-5, 0, 0, 8)
+    b.solve_for_reaction_loads(p0, m0, p1)
+    R_0 = Symbol('R_0')
+    M_0 = Symbol('M_0')
+    R_8 = Symbol('R_8')
+    assert p0 == R_0
+    assert m0 == M_0
+    assert p1 == R_8
+    assert b.reaction_loads == {R_0: 25, M_0: -40, R_8: 15}
+    assert b.reaction_loads[m0] == -40
+
     P = Symbol('P', positive=True)
     L = Symbol('L', positive=True)
     b = Beam(L, E, I)

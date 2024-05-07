@@ -434,6 +434,12 @@ class Beam:
             - one degree of freedom, type = "pin"
             - two degrees of freedom, type = "roller"
 
+        Returns
+        =======
+        The unknown reaction load as a symbol.
+            - Symbol(reaction_force) if type = "pin" or "roller"
+            - Symbol(reaction_force), Symbol(reaction_moment) if type = "fixed"
+
         Examples
         ========
         There is a beam of length 20 meters. A moment of magnitude 100 Nm is
@@ -454,7 +460,7 @@ class Beam:
         >>> b.apply_load(100, 20, -2)
         >>> b.solve_for_reaction_loads(p0, m0, p1)
         >>> b.reaction_loads
-        {R_0: -2, M_0: 20, R_20: 10}
+        {M_0: 20, R_0: -2, R_20: 10}
         >>> b.reaction_loads[p0]
         -2
         >>> b.load
