@@ -420,7 +420,8 @@ class Beam:
 
     def apply_support(self, loc, type="fixed"):
         """
-        This method applies support to a particular beam object.
+        This method applies support to a particular beam object and returns
+        the symbol of the unknown reaction load(s).
 
         Parameters
         ==========
@@ -433,14 +434,19 @@ class Beam:
             - one degree of freedom, type = "pin"
             - two degrees of freedom, type = "roller"
 
+        Returns
+        =======
+        Symbol or tuple of Symbol
+            The unknown reaction load as a symbol.
+            - Symbol(reaction_force) if type = "pin" or "roller"
+            - Symbol(reaction_force), Symbol(reaction_moment) if type = "fixed"
+
         Examples
         ========
-        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        There is a beam of length 20 meters. A moment of magnitude 100 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
-        of magnitude 8 N is applied from the top of the beam at the starting
-        point. There are two simple supports below the beam. One at the end
-        and another one at a distance of 10 meters from the start. The
-        deflection is restricted at both the supports.
+        of magnitude 8 N is applied from the top of the beam at a distance of 10 meters.
+        There is one fixed support at the start of the beam and a roller at the end.
 
         Using the sign convention of upward forces and clockwise moment
         being positive.
@@ -448,19 +454,20 @@ class Beam:
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
-        >>> b = Beam(30, E, I)
-        >>> b.apply_support(10, 'roller')
-        >>> b.apply_support(30, 'roller')
-        >>> b.apply_load(-8, 0, -1)
-        >>> b.apply_load(120, 30, -2)
-        >>> R_10, R_30 = symbols('R_10, R_30')
-        >>> b.solve_for_reaction_loads(R_10, R_30)
+        >>> b = Beam(20, E, I)
+        >>> p0, m0 = b.apply_support(0, 'fixed')
+        >>> p1 = b.apply_support(20, 'roller')
+        >>> b.apply_load(-8, 10, -1)
+        >>> b.apply_load(100, 20, -2)
+        >>> b.solve_for_reaction_loads(p0, m0, p1)
+        >>> b.reaction_loads
+        {M_0: 20, R_0: -2, R_20: 10}
+        >>> b.reaction_loads[p0]
+        -2
         >>> b.load
-        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
-        + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
-        >>> b.slope()
-        (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
-            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
+        20*SingularityFunction(x, 0, -2) - 2*SingularityFunction(x, 0, -1)
+        - 8*SingularityFunction(x, 10, -1) + 100*SingularityFunction(x, 20, -2)
+        + 10*SingularityFunction(x, 20, -1)
         """
         loc = sympify(loc)
         self._applied_supports.append((loc, type))
@@ -478,6 +485,11 @@ class Beam:
             self._support_as_loads.append((reaction_moment, loc, -2, None))
 
         self._support_as_loads.append((reaction_load, loc, -1, None))
+
+        if type in ("pin", "roller"):
+            return reaction_load
+        else:
+            return reaction_load, reaction_moment
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -1754,8 +1766,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_10 = symbols('R_0, R_10')
             >>> b = Beam(10, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(10, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p10 = b.apply_support(10, 'roller')
             >>> b.solve_for_ild_reactions(1,R_0,R_10)
             >>> b.ild_reactions
             {R_0: x/10 - 1, R_10: -x/10}
@@ -1827,8 +1839,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_7 = symbols('R_0, R_7')
             >>> b = Beam(10, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(7, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p7 = b.apply_support(7, 'roller')
             >>> b.apply_load(5,4,-1)
             >>> b.solve_for_ild_reactions(1,R_0,R_7)
             >>> b.ild_reactions
@@ -1902,8 +1914,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(8, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
@@ -1961,8 +1973,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(8, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
@@ -2029,8 +2041,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(8, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
@@ -2087,8 +2099,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(8, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
@@ -2177,9 +2189,9 @@ class Beam:
             >>> b.apply_load(10, 30, 1, 50)
             >>> b.apply_load(M, 15, -2)
             >>> b.apply_load(-M, 30, -2)
-            >>> b.apply_support(50, "pin")
-            >>> b.apply_support(0, "fixed")
-            >>> b.apply_support(20, "roller")
+            >>> p50 = b.apply_support(50, "pin")
+            >>> p0, m0 = b.apply_support(0, "fixed")
+            >>> p20 = b.apply_support(20, "roller")
             >>> p = b.draw()  # doctest: +SKIP
             >>> p  # doctest: +ELLIPSIS
             Plot object containing:
