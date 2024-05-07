@@ -1765,8 +1765,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_10 = symbols('R_0, R_10')
             >>> b = Beam(10, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(10, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p10 = b.apply_support(10, 'roller')
             >>> b.solve_for_ild_reactions(1,R_0,R_10)
             >>> b.ild_reactions
             {R_0: x/10 - 1, R_10: -x/10}
@@ -1838,8 +1838,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_7 = symbols('R_0, R_7')
             >>> b = Beam(10, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(7, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p7 = b.apply_support(7, 'roller')
             >>> b.apply_load(5,4,-1)
             >>> b.solve_for_ild_reactions(1,R_0,R_7)
             >>> b.ild_reactions
@@ -1913,8 +1913,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(8, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
@@ -1972,8 +1972,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(8, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
@@ -2040,8 +2040,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(8, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
@@ -2098,8 +2098,8 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> b.apply_support(0, 'roller')
-            >>> b.apply_support(8, 'roller')
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
@@ -2188,18 +2188,18 @@ class Beam:
             >>> b.apply_load(10, 30, 1, 50)
             >>> b.apply_load(M, 15, -2)
             >>> b.apply_load(-M, 30, -2)
-            >>> b.apply_support(50, "pin")
-            >>> b.apply_support(0, "fixed")
-            >>> b.apply_support(20, "roller")
+            >>> p50 = b.apply_support(50, "pin")
+            >>> p0, m0 = b.apply_support(0, "fixed")
+            >>> p20 = b.apply_support(20, "roller")
             >>> p = b.draw()  # doctest: +SKIP
-            >>> p  # doctest: +ELLIPSIS
+            >>> p  # doctest: +SKIP
             Plot object containing:
             [0]: cartesian line: 25*SingularityFunction(x, 5, 0) - 25*SingularityFunction(x, 23, 0)
             + SingularityFunction(x, 30, 1) - 20*SingularityFunction(x, 50, 0)
             - SingularityFunction(x, 50, 1) + 5 for x over (0.0, 50.0)
             [1]: cartesian line: 5 for x over (0.0, 50.0)
             ...
-            >>> p.show()
+            >>> p.show() # doctest: +SKIP
 
         """
         if not numpy:
