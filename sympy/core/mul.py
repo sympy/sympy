@@ -2156,8 +2156,12 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         return coeff
     if coeff is S.One:
         return factors
-    elif coeff is S.NegativeOne and not sign:
+    elif coeff.is_Float and equal_valued(coeff, S.One):
+        return Add(*[coeff*term for term in Add.make_args(factors)])
+    elif not sign and coeff is S.NegativeOne:
         return -factors
+    elif not sign and coeff.is_Float and equal_valued(coeff, S.NegativeOne):
+        return Add(*[coeff*term for term in Add.make_args(factors)])
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
             args = [i.as_coeff_Mul() for i in factors.args]
@@ -2191,6 +2195,6 @@ def expand_2arg(e):
     return bottom_up(e, do)
 
 
-from .numbers import Rational
+from .numbers import Rational, equal_valued
 from .power import Pow
 from .add import Add, _unevaluated_Add

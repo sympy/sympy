@@ -624,7 +624,7 @@ def test_to_expr():
     q = 1.4*a*x**2
     assert p == q
     p = (expr_to_holonomic(1.4*x)+expr_to_holonomic(a*x, x)).to_expr()
-    q = x*(a + 1.4)
+    q = x*(1.0*a + 1.4)
     assert p == q
     p = (expr_to_holonomic(1.4*x)+expr_to_holonomic(x)).to_expr()
     assert p == 2.4*x

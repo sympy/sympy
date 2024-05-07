@@ -1250,9 +1250,10 @@ def test_as_coeff_add():
 
 def test_as_coeff_mul():
     assert S(2).as_coeff_mul() == (2, ())
-    assert S(3.0).as_coeff_mul() == (1, (S(3.0),))
-    assert S(-3.0).as_coeff_mul() == (-1, (S(3.0),))
+    assert S(3.0).as_coeff_mul() == (S(3.0), ())
+    assert S(-3.0).as_coeff_mul() == (S(-3.0), ())
     assert S(-3.0).as_coeff_mul(rational=False) == (-S(3.0), ())
+    assert S(-3.0).as_coeff_mul(rational=True) == (-1, (S(3.0),))
     assert x.as_coeff_mul() == (1, (x,))
     assert (-x).as_coeff_mul() == (-1, (x,))
     assert (2*x).as_coeff_mul() == (2, (x,))

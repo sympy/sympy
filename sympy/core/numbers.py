@@ -537,7 +537,7 @@ class Number(AtomicExpr):
     def is_constant(self, *wrt, **flags):
         return True
 
-    def as_coeff_mul(self, *deps, rational=True, **kwargs):
+    def as_coeff_mul(self, *deps, rational=False, **kwargs):
         # a -> c*t
         if self.is_Rational or not rational:
             return self, ()
