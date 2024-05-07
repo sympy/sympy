@@ -1738,9 +1738,15 @@ class Mul(Expr, AssocOp):
             but not vice versa, and 2/5 does not divide 1/3) then return
             the integer number of times it divides, else return 0.
             """
-            if not b.q % a.q or not a.q % b.q:
-                return int(a/b)
-            return 0
+            if a.is_Rational and b.is_Rational:
+                if not b.q % a.q or not a.q % b.q:
+                    return int(a/b)
+                else:
+                    return 0
+            elif a.is_Float and b.is_Float:
+                return ndiv(Rational(a), Rational(b))
+            else:
+                assert False
 
         # give Muls in the denominator a chance to be changed (see issue 5651)
         # rv will be the default return value
