@@ -22,26 +22,6 @@ from sympy.abc import x, y, z
 np = import_module("numpy")
 scipy = import_module("scipy")
 
-def get_results_with_scipy(objective, constraints, variables):
-    if scipy is not None and np is not None:
-        from sympy.solvers.inequalities import _np
-        nonpos, rep, xx = _np(constraints, [])
-        assert not rep  # only testing nonneg variables
-        C, _D = linear_eq_to_matrix(objective, *variables)
-        A, B = linear_eq_to_matrix(nonpos, *variables)
-        assert _D[0] == 0  # scipy only deals with D = 0
-
-
-
-        A_sci = Matrix([[A], [-eye(len(variables))]])
-        B_sci = Matrix([[B], [Matrix([0] * len(variables))]])
-        C_sci = C
-        A_sci = np.array(A_sci.tolist())
-        B_sci = np.array(B_sci.tolist())
-        C_sci = np.array(C_sci.tolist())
-        res = scipy.optimize.linprog(C_sci, A_ub=A_sci, b_ub=B_sci)
-        return res
-
 
 def test_lp():
     r1 = y + 2*z <= 3
