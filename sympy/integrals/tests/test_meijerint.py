@@ -20,6 +20,7 @@ from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
 from sympy.testing.pytest import slow
 from sympy.core.random import (verify_numerically,
         random_complex_number as randcplx)
+from sympy import nsimplify
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
 
@@ -761,6 +762,14 @@ def test_pr_23583():
     # This result is wrong. Check whether new result is correct when this test fail.
     assert integrate(1/sqrt((x - I)**2-1), meijerg=True) == \
            Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+
+
+def test_meijerint_hyper_float():
+    # https://github.com/sympy/sympy/issues/26571
+    from sympy.integrals.meijerint import meijerint_indefinite
+    res = 0.125*x*gamma(S(1)/8)*hyper((0.5, S(1)/8), (S(9)/8,), x**8*exp_polar(I*pi))/gamma(S(9)/8)
+    assert meijerint_indefinite((x**8+1)**(-1/2), x) == res
+    assert meijerint_indefinite((x**8+1)**(-S(1)/2), x) == nsimplify(res)
 
 
 # 25786
