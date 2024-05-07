@@ -40,7 +40,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh)
 from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sec, sin, tan)
@@ -1825,7 +1825,10 @@ def _get_examples_ode_sol_separable():
 
     'separable_26': {
         'eq': f1 - k * (v(t) ** 2) - m * Derivative(v(t)),
-        'sol': [Eq(v(t), (-1.0*exp(0.2857738033247041*C1 - 0.2857738033247041*t) - 1.0)/(0.014580296087995107*exp(0.2857738033247041*C1 - 0.2857738033247041*t) - 0.014580296087995107))],
+        'sol': [Eq(v(t), (
+            -1.0*exp(0.2857738033247041*C1 - 0.2857738033247041*t) - 1.0)
+            /(0.014580296087995107*exp(0.2857738033247041*C1 - 0.2857738033247041*t)
+              - 0.014580296087995107))],
         'func': v(t),
         'checkodesol_XFAIL': True,
     },
