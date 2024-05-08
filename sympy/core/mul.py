@@ -2163,7 +2163,11 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
     if coeff is S.One:
         return factors
     elif coeff.is_Float and equal_valued(coeff, S.One):
-        return Add(*[coeff*term for term in Add.make_args(factors)])
+        c, a = factors.as_coeff_add()
+        if c.is_Number and c:
+            return coeff*c + a
+        else:
+            return Add(*[coeff*term for term in Add.make_args(factors)])
     elif not sign and coeff is S.NegativeOne:
         return -factors
     elif not sign and coeff.is_Float and equal_valued(coeff, S.NegativeOne):
