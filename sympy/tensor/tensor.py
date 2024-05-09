@@ -2998,6 +2998,90 @@ class Tensor(TensExpr):
                 indices.append(index)
         return self.head(*indices)
 
+    def _get_symmetrized_forms(self):
+        """
+        Return a list giving all possible permutations of self that are allowed by its symmetries.
+        """
+        comp = self.component
+        gens = comp.symmetry.generators
+        rank = comp.rank
+
+        old_perms = None
+        new_perms = {self}
+        while new_perms != old_perms:
+            old_perms = new_perms.copy()
+            for tens in old_perms:
+                for gen in gens:
+                    inds = tens.get_indices()
+                    per = [gen.apply(i) for i in range(0,rank)]
+                    sign = (-1)**(gen.apply(rank) - rank)
+                    ind_map = dict(zip(inds, [inds[i] for i in per]))
+                    new_perms.add( sign * tens._replace_indices(ind_map) )
+
+        return new_perms
+
+    def matches(self, expr, repl_dict=None, old=False):
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        #simple checks
+        if self == expr:
+            return repl_dict
+        if not isinstance(expr, Tensor):
+            return None
+        if self.head != expr.head:
+            return None
+
+        #Now consider all index symmetries of expr, and see if any of them allow a match.
+        for new_expr in expr._get_symmetrized_forms():
+            m = self._matches(new_expr, repl_dict, old=old)
+            if m is not None:
+                repl_dict.update(m)
+                return repl_dict
+
+        return None
+
+    def _matches(self, expr, repl_dict=None, old=False):
+        """
+        This does not account for index symmetries of expr
+        """
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        #simple checks
+        if self == expr:
+            return repl_dict
+        if not isinstance(expr, Tensor):
+            return None
+        if self.head != expr.head:
+            return None
+
+        s_indices = self.get_indices()
+        e_indices = expr.get_indices()
+
+        if len(s_indices) != len(e_indices):
+            return None
+
+        for i in range(len(s_indices)):
+            s_ind = s_indices[i]
+            m = s_ind.matches(e_indices[i])
+            if m is None:
+                return None
+            elif -s_ind in repl_dict.keys() and -repl_dict[-s_ind] != m[s_ind]:
+                return None
+            else:
+                repl_dict.update(m)
+
+        return repl_dict
+
     def __call__(self, *indices):
         deprecate_call()
         free_args = self.free_args
