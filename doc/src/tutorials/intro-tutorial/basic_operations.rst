@@ -198,6 +198,8 @@ Here is an example of symbolic solving of equations using SymPy:
 
    print("Solution:", sol)
 
+   * Added a example of symbolic solving.
+
 This code defines a quadratic equation and uses SymPy's solve function to find the symbolic solution.
 
 
