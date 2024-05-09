@@ -1114,7 +1114,7 @@ def __trigsimp(expr, deep=False):
             raise TypeError
         fnew = factor(new)
         if fnew != new:
-            new = sorted([new, factor(new)], key=count_ops)[0]
+            new = min([new, factor(new)], key=count_ops)
         # if all exp that were introduced disappeared then accept it
         if not (new.atoms(exp) - e):
             expr = new
