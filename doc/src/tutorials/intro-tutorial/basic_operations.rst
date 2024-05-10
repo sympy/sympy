@@ -180,6 +180,8 @@ the given numerical library, usually NumPy.  For example
 
 .. warning:: ``lambdify`` uses ``eval``.  Don't use it on unsanitized input.
 
+<!-- BEGIN RELEASE NOTES -->
+
 Here is an example of symbolic solving of equations using SymPy:
 
 .. code-block:: python
@@ -201,7 +203,7 @@ Here is an example of symbolic solving of equations using SymPy:
    * Added a example of symbolic solving.
 
 This code defines a quadratic equation and uses SymPy's solve function to find the symbolic solution.
-
+<!-- END RELEASE NOTES -->
 
 You can use other libraries than NumPy. For example, to use the standard
 library math module, use ``"math"``.
