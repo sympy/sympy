@@ -200,10 +200,12 @@ Here is an example of symbolic solving of equations using SymPy:
 
    print("Solution:", sol)
 
-   * Added a example of symbolic solving.
+   * Added an example of symbolic solving.
 
 This code defines a quadratic equation and uses SymPy's solve function to find the symbolic solution.
+
 <!-- END RELEASE NOTES -->
+
 
 You can use other libraries than NumPy. For example, to use the standard
 library math module, use ``"math"``.
