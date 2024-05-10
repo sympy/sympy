@@ -103,7 +103,7 @@ class SingularityFunction(Function):
 
         if argindex == 1:
             x, a, n = self.args
-            if n in (S.Zero, S.NegativeOne):
+            if n.is_nonpositive:
                 return self.func(x, a, n-1)
             elif n.is_positive:
                 return n*self.func(x, a, n-1)
@@ -164,8 +164,8 @@ class SingularityFunction(Function):
             raise ValueError("Singularity Functions are not defined for imaginary exponents.")
         if shift is S.NaN or n is S.NaN:
             return S.NaN
-        if (n + 2).is_negative:
-            raise ValueError("Singularity Functions are not defined for exponents less than -2.")
+        if n.is_negative and not n.is_integer:
+            raise ValueError("Singularity Functions are not defined for negative non-integer exponents.")
         if shift.is_extended_negative:
             return S.Zero
         if n.is_nonnegative:
@@ -173,7 +173,7 @@ class SingularityFunction(Function):
                 return S.Zero**n
             if shift.is_extended_nonnegative:
                 return shift**n
-        if n in (S.NegativeOne, -2):
+        if n.is_negative:
             if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
@@ -186,7 +186,7 @@ class SingularityFunction(Function):
         '''
         x, a, n = self.args
 
-        if n in (S.NegativeOne, S(-2)):
+        if n.is_negative:
             return Piecewise((oo, Eq(x - a, 0)), (0, True))
         elif n.is_nonnegative:
             return Piecewise(((x - a)**n, x - a >= 0), (0, True))
@@ -198,10 +198,8 @@ class SingularityFunction(Function):
         '''
         x, a, n = self.args
 
-        if n == -2:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 2)
-        if n == -1:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 1)
+        if n.is_negative:
+            return diff(Heaviside(x - a), x.free_symbols.pop(), -n)
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a, 1)
 

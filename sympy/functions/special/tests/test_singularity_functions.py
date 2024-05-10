@@ -61,7 +61,7 @@ def test_eval():
 
     raises(ValueError, lambda: SingularityFunction(x, a, I))
     raises(ValueError, lambda: SingularityFunction(2*I, I, n))
-    raises(ValueError, lambda: SingularityFunction(x, a, -3))
+    raises(ValueError, lambda: SingularityFunction(x, a, -3.5))
 
 
 def test_leading_term():
