@@ -24,7 +24,6 @@ np = import_module("numpy")
 scipy = import_module("scipy")
 
 
-@XFAIL
 def get_results_with_scipy(objective, constraints, variables):
     if scipy is not None and np is not None:
         from sympy.solvers.simplex import _rel_as_nonpos
@@ -46,6 +45,7 @@ def get_results_with_scipy(objective, constraints, variables):
         return res
 
 
+@XFAIL
 def test_lp():
     r1 = y + 2*z <= 3
     r2 = -x - 3*z <= -2
