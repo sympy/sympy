@@ -1998,6 +1998,9 @@ def test_sympy__functions__combinatorial__numbers__genocchi():
     from sympy.functions.combinatorial.numbers import genocchi
     assert _test_args(genocchi(x))
 
+def test_sympy__functions__combinatorial__numbers__lobb():
+    from sympy.functions.combinatorial.numbers import lobb
+    assert _test_args(lobb(x, y))
 
 def test_sympy__functions__combinatorial__numbers__euler():
     from sympy.functions.combinatorial.numbers import euler
