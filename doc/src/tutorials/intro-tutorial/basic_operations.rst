@@ -200,32 +200,30 @@ dictionary of ``sympy_name:numerical_function`` pairs.  For example
     0.1
 
 
+Advanced Numerics
+=================
 
-.. TODO: Write an advanced numerics section
+Symbolic Solving Example
+------------------------
 
-<!-- BEGIN RELEASE NOTES -->
-
-Here is an example of symbolic solving of equations using SymPy:
+This release includes an example showcasing symbolic solving of equations using SymPy's solve function:
 
 .. code-block:: python
    :linenos:
 
    from sympy import symbols, Eq, solve
 
-   # Define the symbols
-   x = symbols('x')
-
    # Define the quadratic equation
+   x = symbols('x')
    eq = Eq(x**2 - 4*x + 3, 0)
 
    # Solve the equation symbolically
-   sol = solve(eq, x)
+   solution = solve(eq, x)
 
-   print("Solution:", sol)
+   print("Solution:", solution)
 
    * Added an example of symbolic solving.
 
-This code defines a quadratic equation and uses SymPy's solve function to find the symbolic solution.
+The provided code demonstrates solving a quadratic equation symbolically, highlighting SymPy's functionality for numerical computations.
 
-<!-- END RELEASE NOTES -->
 
