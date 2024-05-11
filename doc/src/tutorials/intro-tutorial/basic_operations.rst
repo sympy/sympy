@@ -180,6 +180,29 @@ the given numerical library, usually NumPy.  For example
 
 .. warning:: ``lambdify`` uses ``eval``.  Don't use it on unsanitized input.
 
+You can use other libraries than NumPy. For example, to use the standard
+library math module, use ``"math"``.
+
+    >>> f = lambdify(x, expr, "math")
+    >>> f(0.1)
+    0.0998334166468
+
+To use lambdify with numerical libraries that it does not know about, pass a
+dictionary of ``sympy_name:numerical_function`` pairs.  For example
+
+    >>> def mysin(x):
+    ...     """
+    ...     My sine. Note that this is only accurate for small x.
+    ...     """
+    ...     return x
+    >>> f = lambdify(x, expr, {"sin":mysin})
+    >>> f(0.1)
+    0.1
+
+
+
+.. TODO: Write an advanced numerics section
+
 <!-- BEGIN RELEASE NOTES -->
 
 Here is an example of symbolic solving of equations using SymPy:
@@ -205,28 +228,4 @@ Here is an example of symbolic solving of equations using SymPy:
 This code defines a quadratic equation and uses SymPy's solve function to find the symbolic solution.
 
 <!-- END RELEASE NOTES -->
-
-
-You can use other libraries than NumPy. For example, to use the standard
-library math module, use ``"math"``.
-
-    >>> f = lambdify(x, expr, "math")
-    >>> f(0.1)
-    0.0998334166468
-
-To use lambdify with numerical libraries that it does not know about, pass a
-dictionary of ``sympy_name:numerical_function`` pairs.  For example
-
-    >>> def mysin(x):
-    ...     """
-    ...     My sine. Note that this is only accurate for small x.
-    ...     """
-    ...     return x
-    >>> f = lambdify(x, expr, {"sin":mysin})
-    >>> f(0.1)
-    0.1
-
-
-
-.. TODO: Write an advanced numerics section
 
