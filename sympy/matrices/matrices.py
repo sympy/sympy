@@ -35,6 +35,15 @@ from .eigen import (
 from .matrixbase import MatrixBase
 
 
+__doctest_requires__ = {
+    ('MatrixEigen.is_indefinite',
+     'MatrixEigen.is_negative_definite',
+     'MatrixEigen.is_negative_semidefinite',
+     'MatrixEigen.is_positive_definite',
+     'MatrixEigen.is_positive_semidefinite'): ['matplotlib'],
+}
+
+
 class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations. Should not be instantiated
     directly. See ``determinant.py`` for their implementations."""

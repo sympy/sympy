@@ -333,7 +333,7 @@ class ImplicitRegion(Basic):
 
         if len(modified_eq.args) != 0:
             terms = modified_eq.args
-            m = min([total_degree(term) for term in terms])
+            m = min(total_degree(term) for term in terms)
         else:
             terms = modified_eq
             m = total_degree(terms)

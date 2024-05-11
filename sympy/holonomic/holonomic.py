@@ -1541,8 +1541,8 @@ class HolonomicFunction:
             keylist = [i[0] for i in dict1]
             lower = min(keylist)
             upper = max(keylist)
-            degree = max([i[1] for i in dict1])
-            degree2 = min([i[1] for i in dict1])
+            degree = max(i[1] for i in dict1)
+            degree2 = min(i[1] for i in dict1)
 
             smallest_n = lower + degree
             dummys = {}
@@ -2626,9 +2626,9 @@ def _extend_y0(Holonomic, n):
     R = annihilator.parent.base
     K = R.get_field()
 
-    for i, j in enumerate(annihilator.listofpoly):
-            if isinstance(j, annihilator.parent.base.dtype):
-                listofpoly.append(K.new(j.to_list()))
+    for j in annihilator.listofpoly:
+        if isinstance(j, annihilator.parent.base.dtype):
+            listofpoly.append(K.new(j.to_list()))
 
     if len(y0) < a or n <= len(y0):
         return y0
