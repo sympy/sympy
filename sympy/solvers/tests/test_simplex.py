@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.random import random, choice
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory.generate import randprime
-from sympy.matrices.dense import Matrix
+from sympy.matrices.dense import Matrix, eye
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.solvers.simplex import (_lp as lp, _primal_dual,
     UnboundedLPError, InfeasibleLPError, lpmin, lpmax,
