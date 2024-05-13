@@ -184,13 +184,15 @@ class Beam:
             self.second_moment = second_moment
         self.variable = variable
         self._base_char = base_char
-        self._boundary_conditions = {'deflection': [], 'slope': []}
+        self._boundary_conditions = {'deflection': [], 'slope': [], 'bending moment': []}
         self._load = 0
         self.area = area
         self._applied_supports = []
+        self._applied_hinges = []
         self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
+        self._rotation_jumps = {}
         self._ild_reactions = {}
         self._ild_shear = 0
         self._ild_moment = 0
@@ -338,6 +340,14 @@ class Beam:
         Similarly, the slope of the beam should be ``1`` at ``0``.
         """
         return self._boundary_conditions
+
+    @property
+    def bc_bending_moment(self):
+        return self._boundary_conditions['bending moment']
+
+    @bc_bending_moment.setter
+    def bc_bending_moment(self, bm_bcs):
+        self._boundary_conditions['bending moment'] = bm_bcs
 
     @property
     def bc_slope(self):
@@ -490,6 +500,21 @@ class Beam:
             return reaction_load
         else:
             return reaction_load, reaction_moment
+
+    def apply_hinge(self, loc):
+        """
+
+        Parameters
+        ----------
+        loc : Sympifyable
+            Location of point at which hinge is applied.
+
+        """
+        loc = sympify(loc)
+        rotation_jump = Symbol('P_'+str(loc))
+        self._applied_hinges.append(loc)
+        self.apply_load(rotation_jump, loc, -3)
+        self.bc_bending_moment.append((loc, 0))
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -888,12 +913,19 @@ class Beam:
         l = self.length
         C3 = Symbol('C3')
         C4 = Symbol('C4')
+        rotation_jumps = tuple(Symbol('P_' + str(loc)) for loc in self._applied_hinges)
 
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
 
+        bending_moment_eqs = []
         slope_eqs = []
         deflection_eqs = []
+
+        for position, value in self._boundary_conditions['bending moment']:
+            eqs = self.bending_moment().subs(x, position) - value
+            new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
+            bending_moment_eqs.append(new_eqs)
 
         slope_curve = integrate(self.bending_moment(), x) + C3
         for position, value in self._boundary_conditions['slope']:
@@ -905,12 +937,16 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
 
-        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions).args)[0])
-        solution = solution[2:]
+        solution = list((linsolve([shear_curve, moment_curve] + bending_moment_eqs + slope_eqs
+                            + deflection_eqs, (C3, C4) + reactions + rotation_jumps).args)[0])
+        reaction_index = 2+len(reactions)
+        reaction_solution = solution[2:reaction_index]
+        rotation_solution = solution[reaction_index:]
 
-        self._reaction_loads = dict(zip(reactions, solution))
+        self._reaction_loads = dict(zip(reactions, reaction_solution))
+        self._rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
         self._load = self._load.subs(self._reaction_loads)
+        self._load = self._load.subs(self._rotation_jumps)
 
     def shear_force(self):
         """
