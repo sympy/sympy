@@ -1620,7 +1620,8 @@ class Beam:
         copy of the load equation and uses it to calculate shear force and bending
         moment equations.
         """
-
+        if self._applied_hinges:
+            raise NotImplementedError("I.L.D. calculations are not implemented for beams with hinges.")
         x = self.variable
         shear_force = -integrate(self._original_load, x)
         bending_moment = integrate(shear_force, x)
