@@ -79,7 +79,7 @@ class Beam:
     >>> b.apply_load(R2, 4, -1)
     >>> b.bc_deflection = [(0, 0), (4, 0)]
     >>> b.boundary_conditions
-    {'deflection': [(0, 0), (4, 0)], 'slope': []}
+    {'bending moment': [], 'deflection': [(0, 0), (4, 0)], 'slope': []}
     >>> b.load
     R1*SingularityFunction(x, 0, -1) + R2*SingularityFunction(x, 4, -1) + 6*SingularityFunction(x, 2, 0)
     >>> b.solve_for_reaction_loads(R1, R2)
@@ -333,7 +333,7 @@ class Beam:
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.boundary_conditions
-        {'deflection': [(0, 2)], 'slope': [(0, 1)]}
+        {'bending moment': [], 'deflection': [(0, 2)], 'slope': [(0, 1)]}
 
         Here the deflection of the beam should be ``2`` at ``0``.
         Similarly, the slope of the beam should be ``1`` at ``0``.
@@ -502,11 +502,44 @@ class Beam:
 
     def apply_hinge(self, loc):
         """
+        This method applies a hinge in a particular beam object.
 
         Parameters
         ----------
         loc : Sympifyable
             Location of point at which hinge is applied.
+
+        Examples
+        ========
+        There is a beam of length 15 meters. Pin supports are placed at distances
+        of 0 and 10 meters. There is a fixed support at the end. There are two hinges
+        in the structure, one at 5 meters and one at 10 meters. A pointload of magnitude
+        10 kN is applied on the hinge at 5 meters. A distributed load of 5 kN works on
+        the structure from 10 meters to the end.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import Symbol
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(15, E, I)
+        >>> r0 = b.apply_support(0, type='pin')
+        >>> r10 = b.apply_support(10, type='pin')
+        >>> r15, m15 = b.apply_support(15, type='fixed')
+        >>> b.apply_hinge(5)
+        >>> b.apply_hinge(12)
+        >>> b.apply_load(-10, 5, -1)
+        >>> b.apply_load(-5, 10, 0, 15)
+        >>> b.solve_for_reaction_loads(r0, r10, r15, m15)
+        >>> b.reaction_loads
+        {M_15: -75/2, R_0: 0, R_10: 40, R_15: -5}
+        >>> b.bending_moment()
+        -9625*SingularityFunction(x, 5, -1)/24 + 10*SingularityFunction(x, 5, 1)
+        - 40*SingularityFunction(x, 10, 1) + 5*SingularityFunction(x, 10, 2)/2
+        + 1875*SingularityFunction(x, 12, -1)/16 + 75*SingularityFunction(x, 15, 0)/2
+        + 5*SingularityFunction(x, 15, 1) - 5*SingularityFunction(x, 15, 2)/2
 
         """
         loc = sympify(loc)
@@ -2473,7 +2506,7 @@ class Beam3D(Beam):
         >>> b.bc_slope = [(0, (4, 0, 0))]
         >>> b.bc_deflection = [(4, [0, 0, 0])]
         >>> b.boundary_conditions
-        {'deflection': [(4, [0, 0, 0])], 'slope': [(0, (4, 0, 0))]}
+        {'deflection': [(4, [0, 0, 0])], 'slope': [(0, (4, 0, 0))], 'bending moment': []}
 
         Here the deflection of the beam should be ``0`` along all the three axes at ``4``.
         Similarly, the slope of the beam should be ``4`` along x-axis and ``0``
