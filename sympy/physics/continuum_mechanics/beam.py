@@ -189,6 +189,7 @@ class Beam:
         self.area = area
         self._applied_supports = []
         self._applied_hinges = []
+        self._hinge_symbols = []
         self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
@@ -545,6 +546,7 @@ class Beam:
         loc = sympify(loc)
         rotation_jump = Symbol('P_'+str(loc))
         self._applied_hinges.append(loc)
+        self._hinge_symbols.append(rotation_jump)
         self.apply_load(rotation_jump, loc, -3)
         self.bc_bending_moment.append((loc, 0))
 
@@ -808,7 +810,7 @@ class Beam:
         l = self.length
         C3 = Symbol('C3')
         C4 = Symbol('C4')
-        rotation_jumps = tuple(Symbol('P_' + str(loc)) for loc in self._applied_hinges)
+        rotation_jumps = tuple(self._hinge_symbols)
 
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
