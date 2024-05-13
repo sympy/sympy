@@ -49,7 +49,7 @@ def test_Beam():
     # Test for all boundary conditions.
     b.bc_deflection = [(0, 2)]
     b.bc_slope = [(0, 1)]
-    assert b.boundary_conditions == {'deflection': [(0, 2)], 'slope': [(0, 1)]}
+    assert b.boundary_conditions == {'deflection': [(0, 2)], 'slope': [(0, 1)], 'bending moment': []}
 
     # Test for slope boundary condition method
     b.bc_slope.extend([(4, 3), (5, 0)])
@@ -65,7 +65,8 @@ def test_Beam():
     bcs_new = b.boundary_conditions
     assert bcs_new == {
         'deflection': [(0, 2), (4, 3), (5, 0)],
-        'slope': [(0, 1), (4, 3), (5, 0)]}
+        'slope': [(0, 1), (4, 3), (5, 0)],
+        'bending moment': []}
 
     b1 = Beam(30, E, I)
     b1.apply_load(-8, 0, -1)
@@ -509,6 +510,38 @@ def test_apply_support():
     b.solve_for_reaction_loads(R_0, R_L, M_0, M_L)
     assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
 
+def test_apply_hinge():
+    b = Beam(15, 20, 20)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r10 = b.apply_support(10, type='pin')
+    r15 = b.apply_support(15, type='pin')
+    b.apply_hinge(7)
+    b.apply_hinge(12)
+    b.apply_load(-10, 7, -1)
+    b.apply_load(-2, 10, 0, 15)
+    b.solve_for_reaction_loads(r0, m0, r10, r15)
+    R_0, M_0, R_10, R_15= symbols('R_0, M_0, R_10, R_15')
+    expected_reactions = {R_0: 20/3, M_0: -140/3, R_10: 31/3, R_15: 3}
+    tolerance = 1e-6
+    assert all(abs(b.reaction_loads[r] - expected_reactions[r]) < tolerance for r in expected_reactions)
+    expected_bending_moment = (140 * SingularityFunction(x, 0, 0) / 3 - 20 * SingularityFunction(x, 0, 1) / 3
+        - 11405 * SingularityFunction(x, 7, -1) / 27 + 10 * SingularityFunction(x, 7, 1)
+        - 31 * SingularityFunction(x, 10, 1) / 3 + SingularityFunction(x, 10, 2)
+        + 128425 * SingularityFunction(x, 12, -1) / 324 - 3 * SingularityFunction(x, 15, 1)
+        - SingularityFunction(x, 15, 2))
+    assert b.bending_moment().expand() == expected_bending_moment.expand()
+    expected_slope = (-7*SingularityFunction(x, 0, 1)/60 + SingularityFunction(x, 0, 2)/120
+        + 2281*SingularityFunction(x, 7, 0)/2160 - SingularityFunction(x, 7, 2)/80
+        + 31*SingularityFunction(x, 10, 2)/2400 - SingularityFunction(x, 10, 3)/1200
+        - 5137*SingularityFunction(x, 12, 0)/5184 + 3*SingularityFunction(x, 15, 2)/800
+        + SingularityFunction(x, 15, 3)/1200)
+    assert b.slope().expand() == expected_slope.expand()
+    expected_deflection = (-7 * SingularityFunction(x, 0, 2) / 120 + SingularityFunction(x, 0, 3) / 360
+        + 2281 * SingularityFunction(x, 7, 1) / 2160 - SingularityFunction(x, 7, 3) / 240
+        + 31 * SingularityFunction(x, 10, 3) / 7200 - SingularityFunction(x, 10, 4) / 4800
+        - 5137 * SingularityFunction(x, 12, 1) / 5184 + SingularityFunction(x, 15, 3) / 800
+        + SingularityFunction(x, 15, 4) / 4800)
+    assert b.deflection().expand() == expected_deflection.expand()
 
 def test_max_shear_force():
     E = Symbol('E')
