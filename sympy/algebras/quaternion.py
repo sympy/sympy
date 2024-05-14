@@ -972,22 +972,22 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
-    def _ln(self):
-        """Returns the natural logarithm of the quaternion (_ln(q)).
+    def log(self):
+        r"""Returns the logarithm of the quaternion, given by $\log q$.
 
         Examples
         ========
 
         >>> from sympy import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> q._ln()
+        >>> q.log()
         log(sqrt(30))
         + 2*sqrt(29)*acos(sqrt(30)/30)/29*i
         + 3*sqrt(29)*acos(sqrt(30)/30)/29*j
         + 4*sqrt(29)*acos(sqrt(30)/30)/29*k
 
         """
-        # _ln(q) = _ln||q|| + v/||v||*arccos(a/||q||)
+        # log(q) = log||q|| + v/||v||*arccos(a/||q||)
         q = self
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         q_norm = q.norm()

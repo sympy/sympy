@@ -172,7 +172,7 @@ def test_quaternion_functions():
                2 * sqrt(29) * E * sin(sqrt(29)) / 29,
                3 * sqrt(29) * E * sin(sqrt(29)) / 29,
                4 * sqrt(29) * E * sin(sqrt(29)) / 29)
-    assert q1._ln() == \
+    assert q1.log() == \
     Quaternion(log(sqrt(30)),
                2 * sqrt(29) * acos(sqrt(30)/30) / 29,
                3 * sqrt(29) * acos(sqrt(30)/30) / 29,
