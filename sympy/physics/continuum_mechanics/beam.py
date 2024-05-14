@@ -2508,7 +2508,7 @@ class Beam3D(Beam):
         >>> b.bc_slope = [(0, (4, 0, 0))]
         >>> b.bc_deflection = [(4, [0, 0, 0])]
         >>> b.boundary_conditions
-        {'deflection': [(4, [0, 0, 0])], 'slope': [(0, (4, 0, 0))], 'bending moment': []}
+        {'bending moment': [], 'deflection': [(4, [0, 0, 0])], 'slope': [(0, (4, 0, 0))]}
 
         Here the deflection of the beam should be ``0`` along all the three axes at ``4``.
         Similarly, the slope of the beam should be ``4`` along x-axis and ``0``
