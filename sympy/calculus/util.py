@@ -747,8 +747,7 @@ def is_convex(f, *syms, domain=S.Reals):
 
     """
     if len(syms) > 1 :
-        a = hessian(f,syms)
-        return a.is_positive_semidefinite
+        return hessian(f, syms).is_positive_semidefinite
     from sympy.solvers.inequalities import solve_univariate_inequality
     f = _sympify(f)
     var = syms[0]
