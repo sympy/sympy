@@ -213,6 +213,11 @@ class Beam:
         return self._reaction_loads
 
     @property
+    def rotation_jumps(self):
+        """ Returns the rotation jumps in hinges in a dictionary."""
+        return self._rotation_jumps
+
+    @property
     def ild_shear(self):
         """ Returns the I.L.D. shear equation."""
         return self._ild_shear
@@ -510,6 +515,11 @@ class Beam:
         loc : Sympifyable
             Location of point at which hinge is applied.
 
+        Returns
+        =======
+        Symbol
+            The unknown rotation jump as a symbol.
+
         Examples
         ========
         There is a beam of length 15 meters. Pin supports are placed at distances
@@ -529,13 +539,17 @@ class Beam:
         >>> r0 = b.apply_support(0, type='pin')
         >>> r10 = b.apply_support(10, type='pin')
         >>> r15, m15 = b.apply_support(15, type='fixed')
-        >>> b.apply_hinge(5)
-        >>> b.apply_hinge(12)
+        >>> p5 = b.apply_hinge(5)
+        >>> p12 = b.apply_hinge(12)
         >>> b.apply_load(-10, 5, -1)
         >>> b.apply_load(-5, 10, 0, 15)
         >>> b.solve_for_reaction_loads(r0, r10, r15, m15)
         >>> b.reaction_loads
         {M_15: -75/2, R_0: 0, R_10: 40, R_15: -5}
+        >>> b.rotation_jumps
+        {P_12: -1875/16, P_5: 9625/24}
+        >>> b.rotation_jumps[p12]
+        -1875/16
         >>> b.bending_moment()
         -9625*SingularityFunction(x, 5, -1)/24 + 10*SingularityFunction(x, 5, 1)
         - 40*SingularityFunction(x, 10, 1) + 5*SingularityFunction(x, 10, 2)/2
@@ -549,6 +563,7 @@ class Beam:
         self._hinge_symbols.append(rotation_jump)
         self.apply_load(rotation_jump, loc, -3)
         self.bc_bending_moment.append((loc, 0))
+        return rotation_jump
 
     def apply_load(self, value, start, order, end=None):
         """
