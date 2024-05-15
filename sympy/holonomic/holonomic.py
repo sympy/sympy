@@ -1177,8 +1177,7 @@ class HolonomicFunction:
         """
         Returns the highest power of `x` in the annihilator.
         """
-        sol = [i.degree() for i in self.annihilator.listofpoly]
-        return max(sol)
+        return max(i.degree() for i in self.annihilator.listofpoly)
 
     def composition(self, expr, *args, **kwargs):
         """
@@ -1764,15 +1763,11 @@ class HolonomicFunction:
             else:
                 return 0
 
-        degree = [j.degree() for j in list_coeff]
-        degree = max(degree)
+        degree = max(j.degree() for j in list_coeff)
         inf = 10 * (max(1, degree) + max(1, self.annihilator.order))
 
         deg = lambda q: inf if q.is_zero else _pole_degree(q)
-        b = deg(list_coeff[0])
-
-        for j in range(1, len(list_coeff)):
-            b = min(b, deg(list_coeff[j]) - j)
+        b = min(deg(q) - j for j, q in enumerate(list_coeff))
 
         for i, j in enumerate(list_coeff):
             listofdmp = j.all_coeffs()
