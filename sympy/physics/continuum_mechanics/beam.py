@@ -555,7 +555,6 @@ class Beam:
         - 40*SingularityFunction(x, 10, 1) + 5*SingularityFunction(x, 10, 2)/2
         + 1875*SingularityFunction(x, 12, -1)/16 + 75*SingularityFunction(x, 15, 0)/2
         + 5*SingularityFunction(x, 15, 1) - 5*SingularityFunction(x, 15, 2)/2
-
         """
         loc = sympify(loc)
         rotation_jump = Symbol('P_'+str(loc))
