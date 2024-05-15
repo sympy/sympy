@@ -553,7 +553,7 @@ def test_apply_hinge():
     b = Beam(10, E, I)
     r0, m0 = b.apply_support(0, type="fixed")
     r10 = b.apply_support(10, type="pin")
-    p6 = b.apply_hinge(6)
+    b.apply_hinge(6)
     b.apply_load(F, 8, -1)
     b.solve_for_reaction_loads(r0, m0, r10)
     assert b.reaction_loads == {R_0: -F/2, M_0: 3*F, R_10: -F/2}
