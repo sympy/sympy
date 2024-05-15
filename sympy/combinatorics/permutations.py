@@ -2168,7 +2168,7 @@ class Permutation(Atom):
         """
         a = self.array_form
         if not a:
-            return len(a)
+            return 0
         return min(_a for i, _a in enumerate(a) if _a != i)
 
     def inversions(self):
