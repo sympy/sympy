@@ -557,6 +557,15 @@ class Beam:
         + 5*SingularityFunction(x, 15, 1) - 5*SingularityFunction(x, 15, 2)/2
         """
         loc = sympify(loc)
+        if loc in self._applied_hinges:
+            raise ValueError('Cannot place two hinges at the same location.')
+        if loc == 0:
+            raise ValueError('Cannot place hinge at the beginning of the beam.')
+        if loc == self.length:
+            raise ValueError('Cannot place hinge at the end of the beam.')
+        if any(loc == support[0] and support[1] == 'fixed' for support in self._applied_supports):
+            raise ValueError('Cannot place hinge at the location of a fixed support. Change fixed support to pin.')
+
         rotation_jump = Symbol('P_'+str(loc))
         self._applied_hinges.append(loc)
         self._hinge_symbols.append(rotation_jump)
