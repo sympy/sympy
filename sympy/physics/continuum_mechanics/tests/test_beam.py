@@ -587,6 +587,21 @@ def test_apply_hinge():
             - (-2*F*l1**3*l3 - 3*F*l1**2*l2*l3 - 3*F*l1**2*l3**2 + F*l2**3*l3 + 3*F*l2**2*l3**2 + 2*F*l2*l3**3)
             *SingularityFunction(x, l1, -1)/(6*l2**2 + 12*l2*l3 + 6*l3**2))
 
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    b.apply_support(2, type="fixed")
+    b.apply_support(10, type="pin")
+    b.apply_hinge(6)
+    with raises(ValueError):
+        b.apply_hinge(0)
+    with raises(ValueError):
+        b.apply_hinge(2)
+    with raises(ValueError):
+        b.apply_hinge(6)
+    with raises(ValueError):
+        b.apply_hinge(10)
+
 def test_max_shear_force():
     E = Symbol('E')
     I = Symbol('I')
