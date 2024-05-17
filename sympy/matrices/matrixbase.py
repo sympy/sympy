@@ -3851,8 +3851,6 @@ class MatrixBase(Printable):
                         if hasattr(row, '__array__'):
                             if 0 in row.shape:
                                 continue
-                        elif not row:
-                            continue
 
                         if evaluate and all(ismat(i) for i in row):
                             r, c, flatT = cls._handle_creation_inputs(
