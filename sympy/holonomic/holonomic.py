@@ -321,9 +321,8 @@ class DifferentialOperator:
         if n % 2 == 1:
             powreduce = self**(n - 1)
             return powreduce * self
-        elif n % 2 == 0:
-            powreduce = self**(n / 2)
-            return powreduce * powreduce
+        powreduce = self**(n // 2)
+        return powreduce * powreduce
 
     def __str__(self):
         listofpoly = self.listofpoly
