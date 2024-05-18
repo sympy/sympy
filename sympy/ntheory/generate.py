@@ -549,7 +549,7 @@ def nextprime(n, ith=1):
         Notes
         =====
 
-        Potential primes are located at 6*j +/- 1. This
+        Potential primes are located at 30*j + {1, 7, 11, 13, 17, 19, 23, 29}. This
         property is used during searching.
 
         >>> from sympy import nextprime
@@ -587,26 +587,20 @@ def nextprime(n, ith=1):
             return sieve[u + 1]
         else:
             return sieve[u]
-    nn = 6*(n//6)
-    if nn == n:
-        n += 1
+    nn = 30 * (n // 30)
+    pc = [1, 7, 11, 13, 17, 19, 23, 29]
+    pg = [2, 6, 4, 2, 4, 2, 4, 6]
+    from itertools import dropwhile
+    spc = list(dropwhile(lambda x: x <= n-nn, pc))
+    for p in spc:
+        n = nn + p
         if isprime(n):
             return n
-        n += 4
-    elif n - nn == 5:
-        n += 2
-        if isprime(n):
-            return n
-        n += 4
-    else:
-        n = nn + 5
-    while 1:
-        if isprime(n):
-            return n
-        n += 2
-        if isprime(n):
-            return n
-        n += 4
+    while True:
+        for g in pg:
+            n += g
+            if isprime(n):
+                return n
 
 
 def prevprime(n):
