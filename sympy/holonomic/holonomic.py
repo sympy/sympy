@@ -309,20 +309,22 @@ class DifferentialOperator:
     def __pow__(self, n):
         if n == 1:
             return self
+        result = DifferentialOperator([self.parent.base.one], self.parent)
         if n == 0:
-            return DifferentialOperator([self.parent.base.one], self.parent)
-
+            return result
         # if self is `Dx`
         if self.listofpoly == self.parent.derivative_operator.listofpoly:
             sol = [self.parent.base.zero]*n + [self.parent.base.one]
             return DifferentialOperator(sol, self.parent)
-
-        # the general case
-        if n % 2 == 1:
-            powreduce = self**(n - 1)
-            return powreduce * self
-        powreduce = self**(n // 2)
-        return powreduce * powreduce
+        x = self
+        while True:
+            if n % 2:
+                result *= x
+            n >>= 1
+            if not n:
+                break
+            x *= x
+        return result
 
     def __str__(self):
         listofpoly = self.listofpoly
@@ -1094,17 +1096,19 @@ class HolonomicFunction:
             return HolonomicFunction(dd, self.x, self.x0, y0)
         if n < 0:
             raise NotHolonomicError("Negative Power on a Holonomic Function")
+        Dx = self.annihilator.parent.derivative_operator
+        result = HolonomicFunction(Dx, self.x, S.Zero, [S.One])
         if n == 0:
-            Dx = self.annihilator.parent.derivative_operator
-            return HolonomicFunction(Dx, self.x, S.Zero, [S.One])
-        if n == 1:
-            return self
-        if n % 2 == 1:
-            powreduce = self**(n - 1)
-            return powreduce * self
-        if n % 2 == 0:
-            powreduce = self**(n / 2)
-            return powreduce * powreduce
+            return result
+        x = self
+        while True:
+            if n % 2:
+                result *= x
+            n >>= 1
+            if not n:
+                break
+            x *= x
+        return result
 
     def degree(self):
         """
