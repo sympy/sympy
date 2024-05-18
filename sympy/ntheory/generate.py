@@ -650,7 +650,7 @@ def nextprime(n, ith=1):
         Notes
         =====
 
-        Potential primes are located at 6*j +/- 1. This
+        Potential primes are located at 30*j + {1, 7, 11, 13, 17, 19, 23, 29}. This
         property is used during searching.
 
         >>> from sympy import nextprime
@@ -668,40 +668,44 @@ def nextprime(n, ith=1):
     """
     n = int(n)
     i = as_int(ith)
-    if i <= 0:
-        raise ValueError("ith should be positive")
+    if i > 1:
+        pr = n
+        j = 1
+        while 1:
+            pr = nextprime(pr)
+            j += 1
+            if j > i:
+                break
+        return pr
+
     if n < 2:
-        n = 2
-        i -= 1
+        return 2
+    if n < 7:
+        return {2: 3, 3: 5, 4: 5, 5: 7, 6: 7}[n]
     if n <= sieve._list[-2]:
-        l, _ = sieve.search(n)
-        if l + i - 1 < len(sieve._list):
-            return sieve._list[l + i - 1]
-        return nextprime(sieve._list[-1], l + i - len(sieve._list))
-    if 1 < i:
-        for _ in range(i):
-            n = nextprime(n)
-        return n
-    nn = 6*(n//6)
-    if nn == n:
-        n += 1
+        l, u = sieve.search(n)
+        if l == u:
+            return sieve[u + 1]
+        else:
+            return sieve[u]
+
+    nn = 30 * (n // 30)
+    pc = [1, 7, 11, 13, 17, 19, 23, 29]
+    pg = [2, 6, 4, 2, 4, 2, 4, 6]
+
+    from itertools import dropwhile
+    spc = list(dropwhile(lambda x: x <= n-nn, pc))
+
+    for p in spc:
+        n = nn + p
         if isprime(n):
             return n
-        n += 4
-    elif n - nn == 5:
-        n += 2
-        if isprime(n):
-            return n
-        n += 4
-    else:
-        n = nn + 5
-    while 1:
-        if isprime(n):
-            return n
-        n += 2
-        if isprime(n):
-            return n
-        n += 4
+
+    while True:
+        for g in pg:
+            n += g
+            if isprime(n):
+                return n
 
 
 def prevprime(n):
