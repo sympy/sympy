@@ -593,18 +593,9 @@ class Monomial(PicklableWithSlots):
 
     def __pow__(self, other):
         n = int(other)
-
-        if not n:
-            return self.rebuild([0]*len(self))
-        elif n > 0:
-            exponents = self.exponents
-
-            for i in range(1, n):
-                exponents = monomial_mul(exponents, self.exponents)
-
-            return self.rebuild(exponents)
-        else:
+        if n < 0:
             raise ValueError("a non-negative integer expected, got %s" % other)
+        return self.rebuild(monomial_pow(self.exponents, n))
 
     def gcd(self, other):
         """Greatest common divisor of monomials. """
