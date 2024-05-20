@@ -76,7 +76,9 @@ def test_convert_to_quantities():
 
 
 def test_convert_to_tuples_of_quantities():
-    from sympy.abc import alpha, beta
+    from sympy.core.symbol import symbols
+
+    alpha, beta = symbols('alpha beta')
 
     assert convert_to(speed_of_light, [meter, second]) == 299792458 * meter / second
     assert convert_to(speed_of_light, (meter, second)) == 299792458 * meter / second
