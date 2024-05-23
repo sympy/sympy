@@ -586,8 +586,21 @@ class Beam:
         + 5*SingularityFunction(x, 15, 1) - 5*SingularityFunction(x, 15, 2)/2
         """
         loc = sympify(loc)
-        if loc in self._applied_rotation_hinges or loc in self._applied_sliding_hinges:
-            raise ValueError('Cannot place two hinges at the same location.')
+
+        #Check for duplicate hinges
+        if loc in self._applied_rotation_hinges and type == "rotation":
+            raise ValueError('Cannot place two rotation hinges at the same location.')
+        if loc in self._applied_sliding_hinges and type == "sliding":
+            raise ValueError('Cannot place two sliding hinges at the same location.')
+
+        #Check for unusual hinge placement
+        warning_message = 'It is highly unusual to place a rotation hinge and a sliding hinge at the same location.'
+        if loc in self._applied_sliding_hinges and type == "rotation":
+            warnings.warn(warning_message)
+        if loc in self._applied_rotation_hinges and type == "sliding":
+            warnings.warn(warning_message)
+
+        #Check for other errors
         if loc == 0:
             raise ValueError('Cannot place hinge at the beginning of the beam.')
         if loc == self.length:
