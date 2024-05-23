@@ -520,9 +520,9 @@ def test_apply_hinge():
     b.apply_load(-10, 7, -1)
     b.apply_load(-2, 10, 0, 15)
     b.solve_for_reaction_loads(r0, m0, r10, r15)
-    R_0, M_0, R_10, R_15, P_7, P_12 = symbols('R_0, M_0, R_10, R_15, P_7, P_12')
+    R_0, M_0, R_10, R_15, EI_P_7, EI_P_12 = symbols('R_0, M_0, R_10, R_15, EI_P_7, EI_P_12')
     expected_reactions = {R_0: 20/3, M_0: -140/3, R_10: 31/3, R_15: 3}
-    expected_rotations = {P_7: 11405/27, P_12: -128425/324}
+    expected_rotations = {EI_P_7: 11405/27, EI_P_12: -128425/324}
     reaction_symbols = [r0, m0, r10, r15]
     rotation_symbols = [p7, p12]
     tolerance = 1e-6
@@ -589,6 +589,7 @@ def test_apply_hinge():
 
     E = Symbol('E')
     I = Symbol('I')
+    M = Symbol('M')
     b = Beam(10, E, I)
     b.apply_support(2, type="fixed")
     b.apply_support(10, type="pin")
@@ -601,6 +602,11 @@ def test_apply_hinge():
         b.apply_hinge(6)
     with raises(ValueError):
         b.apply_hinge(10)
+    with raises(ValueError):
+        b.apply_load(M, 6, -2)
+    b.apply_load(M, 4, -2)
+    with raises(ValueError):
+        b.apply_hinge(4)
 
 def test_max_shear_force():
     E = Symbol('E')

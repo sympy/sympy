@@ -214,7 +214,7 @@ class Beam:
 
     @property
     def rotation_jumps(self):
-        """ Returns the rotation jumps in hinges in a dictionary."""
+        """ Returns the rotation jumps in hinges multiplied by the elastic modulus and second moment in a dictionary."""
         return self._rotation_jumps
 
     @property
@@ -518,7 +518,7 @@ class Beam:
         Returns
         =======
         Symbol
-            The unknown rotation jump as a symbol.
+            The unknown rotation jump multiplied by the elastic modulus and second moment as a symbol.
 
         Examples
         ========
@@ -547,7 +547,7 @@ class Beam:
         >>> b.reaction_loads
         {M_15: -75/2, R_0: 0, R_10: 40, R_15: -5}
         >>> b.rotation_jumps
-        {P_12: -1875/16, P_5: 9625/24}
+        {EI_P_12: -1875/16, EI_P_5: 9625/24}
         >>> b.rotation_jumps[p12]
         -1875/16
         >>> b.bending_moment()
@@ -565,8 +565,10 @@ class Beam:
             raise ValueError('Cannot place hinge at the end of the beam.')
         if any(loc == support[0] and support[1] == 'fixed' for support in self._applied_supports):
             raise ValueError('Cannot place hinge at the location of a fixed support. Change fixed support to pin.')
+        if any(loc == arg[1] and arg[2] == -2 for arg in self._applied_loads):
+            raise ValueError('Cannot place hinge at the location of a moment load.')
 
-        rotation_jump = Symbol('P_'+str(loc))
+        rotation_jump = Symbol('EI_P_'+str(loc))
         self._applied_hinges.append(loc)
         self._hinge_symbols.append(rotation_jump)
         self.apply_load(rotation_jump, loc, -3)
@@ -632,6 +634,9 @@ class Beam:
         value = sympify(value)
         start = sympify(start)
         order = sympify(order)
+
+        if order == -2 and start in self._applied_hinges:
+            raise ValueError('Cannot place a moment load directly on a hinge.')
 
         self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)
