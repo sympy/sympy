@@ -49,7 +49,20 @@ def test_Beam():
     # Test for all boundary conditions.
     b.bc_deflection = [(0, 2)]
     b.bc_slope = [(0, 1)]
-    assert b.boundary_conditions == {'deflection': [(0, 2)], 'slope': [(0, 1)], 'bending moment': []}
+    b.bc_bending_moment = [(0, 5)]
+    b.bc_shear_force = [(2, 1)]
+    assert b.boundary_conditions == {'deflection': [(0, 2)], 'slope': [(0, 1)],
+                                     'bending moment': [(0, 5)], 'shear force': [(2, 1)]}
+
+    # Test for shear force boundary condition method
+    b.bc_shear_force.extend([(1, 1), (2, 3)])
+    sf_bcs = b.bc_shear_force
+    assert sf_bcs == [(2, 1), (1, 1), (2, 3)]
+
+    # Test for slope boundary condition method
+    b.bc_bending_moment.extend([(1, 3), (5, 3)])
+    bm_bcs = b.bc_bending_moment
+    assert bm_bcs == [(0, 5), (1, 3), (5, 3)]
 
     # Test for slope boundary condition method
     b.bc_slope.extend([(4, 3), (5, 0)])
@@ -66,7 +79,8 @@ def test_Beam():
     assert bcs_new == {
         'deflection': [(0, 2), (4, 3), (5, 0)],
         'slope': [(0, 1), (4, 3), (5, 0)],
-        'bending moment': []}
+        'bending moment': [(0, 5), (1, 3), (5, 3)],
+        'shear force': [(2, 1), (1, 1), (2, 3)]}
 
     b1 = Beam(30, E, I)
     b1.apply_load(-8, 0, -1)
@@ -586,6 +600,41 @@ def test_apply_hinge():
             + F*l3*SingularityFunction(x, 0, 1)/(l2 + l3) - F*SingularityFunction(x, l1 + l2, 1)
             - (-2*F*l1**3*l3 - 3*F*l1**2*l2*l3 - 3*F*l1**2*l3**2 + F*l2**3*l3 + 3*F*l2**2*l3**2 + 2*F*l2*l3**3)
             *SingularityFunction(x, l1, -1)/(6*l2**2 + 12*l2*l3 + 6*l3**2))
+
+    b = Beam(13, 20, 20)
+    r0, m0 = b.apply_support(0, type="fixed")
+    b.apply_hinge(8, type="sliding")
+    r10 = b.apply_support(13, type="pin")
+    b.apply_load(-10, 5, -1)
+    b.solve_for_reaction_loads(r0, m0, r10)
+    R_0, M_0, R_13, W_8 = symbols('R_0, M_0, R_13 W_8')
+    assert b.reaction_loads == {R_0: 10, M_0: -50, R_13: 0}
+    assert (b.bending_moment() == 50*SingularityFunction(x, 0, 0) - 10*SingularityFunction(x, 0, 1)
+            + 10*SingularityFunction(x, 5, 1) - 4250*SingularityFunction(x, 8, -2)/3)
+    assert (b.deflection() == -SingularityFunction(x, 0, 2)/16 + SingularityFunction(x, 0, 3)/240
+            - SingularityFunction(x, 5, 3)/240 + 85*SingularityFunction(x, 8, 0)/24)
+
+    E = Symbol('E')
+    I = Symbol('I')
+    q = Symbol('q')
+    l1 = Symbol('l1', positive=True)
+    l2 = Symbol('l2', positive=True)
+    l3 = Symbol('l3', positive=True)
+    L = l1 + l2 + l3
+    b = Beam(L, E, I)
+    r0 = b.apply_support(0, type="pin")
+    r3 = b.apply_support(l1, type="pin")
+    b.apply_hinge(l1 + l2, type="sliding")
+    r10 = b.apply_support(L, type="pin")
+    b.apply_load(q, 0, 0, l1)
+    b.solve_for_reaction_loads(r0, r3, r10)
+    assert (b.bending_moment() == l1*q*SingularityFunction(x, 0, 1)/2 + l1*q*SingularityFunction(x, l1, 1)/2
+            - q*SingularityFunction(x, 0, 2)/2 + q*SingularityFunction(x, l1, 2)/2
+            + (-l1**3*l2*q/24 - l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, -2))
+    assert b.deflection() ==(l1**3*q*x/24 - l1*q*SingularityFunction(x, 0, 3)/12
+                             - l1*q*SingularityFunction(x, l1, 3)/12 + q*SingularityFunction(x, 0, 4)/24
+                             - q*SingularityFunction(x, l1, 4)/24
+                             + (l1**3*l2*q/24 + l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, 0))/(E*I)
 
     E = Symbol('E')
     I = Symbol('I')
