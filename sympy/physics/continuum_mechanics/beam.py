@@ -2264,7 +2264,10 @@ class Beam:
             x_pos = float(ratio) * length
             markers += [{'args':[[x_pos], [height / 2]], 'marker':'o', 'markersize':6, 'color':"white"}]
 
-        #toevoegen tekenen van sliding hinges
+        for loc in self._applied_sliding_hinges:
+            ratio = loc / self.length
+            x_pos = float(ratio) * length
+            markers += [{'args': [[x_pos], [height / 2]], 'marker':'|', 'markersize':12, 'color':"white"}]
 
         ylim = (-length, 1.25*length)
         if fill:
