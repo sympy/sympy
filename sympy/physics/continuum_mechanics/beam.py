@@ -79,7 +79,7 @@ class Beam:
     >>> b.apply_load(R2, 4, -1)
     >>> b.bc_deflection = [(0, 0), (4, 0)]
     >>> b.boundary_conditions
-    {'bending moment': [], 'deflection': [(0, 0), (4, 0)], 'slope': []}
+    {'bending moment': [], 'deflection': [(0, 0), (4, 0)], 'shear force': [], 'slope': []}
     >>> b.load
     R1*SingularityFunction(x, 0, -1) + R2*SingularityFunction(x, 4, -1) + 6*SingularityFunction(x, 2, 0)
     >>> b.solve_for_reaction_loads(R1, R2)
@@ -184,16 +184,19 @@ class Beam:
             self.second_moment = second_moment
         self.variable = variable
         self._base_char = base_char
-        self._boundary_conditions = {'deflection': [], 'slope': [], 'bending moment': []}
+        self._boundary_conditions = {'deflection': [], 'slope': [], 'bending moment': [], 'shear force': []}
         self._load = 0
         self.area = area
         self._applied_supports = []
-        self._applied_hinges = []
-        self._hinge_symbols = []
+        self._applied_rotation_hinges = []
+        self._applied_sliding_hinges = []
+        self._rotation_hinge_symbols = []
+        self._sliding_hinge_symbols = []
         self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
         self._rotation_jumps = {}
+        self._deflection_jumps = {}
         self._ild_reactions = {}
         self._ild_shear = 0
         self._ild_moment = 0
@@ -216,6 +219,11 @@ class Beam:
     def rotation_jumps(self):
         """ Returns the rotation jumps in hinges multiplied by the elastic modulus and second moment in a dictionary."""
         return self._rotation_jumps
+
+    @property
+    def deflection_jumps(self): #AANPASSEN
+        """ Returns the deflection jumps in sliding hinges in a dictionary."""
+        return self._deflection_jumps
 
     @property
     def ild_shear(self):
@@ -339,12 +347,20 @@ class Beam:
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.boundary_conditions
-        {'bending moment': [], 'deflection': [(0, 2)], 'slope': [(0, 1)]}
+        {'bending moment': [], 'deflection': [(0, 2)], 'shear force': [], 'slope': [(0, 1)]}
 
         Here the deflection of the beam should be ``2`` at ``0``.
         Similarly, the slope of the beam should be ``1`` at ``0``.
         """
         return self._boundary_conditions
+
+    @property
+    def bc_shear_force(self):
+        return self._boundary_conditions['shear force']
+
+    @bc_shear_force.setter
+    def bc_shear_force(self, sf_bcs):
+        self._boundary_conditions['shear force'] = sf_bcs
 
     @property
     def bc_bending_moment(self):
@@ -385,7 +401,7 @@ class Beam:
         via : String
             States the way two Beam object would get connected
             - For axially fixed Beams, via="fixed"
-            - For Beams connected via hinge, via="hinge"
+            - For Beams connected via rotaion hinge, via="hinge"
 
         Examples
         ========
@@ -506,7 +522,7 @@ class Beam:
         else:
             return reaction_load, reaction_moment
 
-    def apply_hinge(self, loc):
+    def apply_hinge(self, loc, type="rotation"):
         """
         This method applies a hinge in a particular beam object.
 
@@ -514,11 +530,18 @@ class Beam:
         ----------
         loc : Sympifyable
             Location of point at which hinge is applied.
+        type : String
+            Determines type of hinge applied.
+            - For a hinge that allows rotational movement, type = "rotation"
+            - For a hinge that allows vertical sliding movement, type = "sliding"
 
         Returns
         =======
         Symbol
-            The unknown rotation jump multiplied by the elastic modulus and second moment as a symbol.
+            If type = "rotation"
+                - The unknown rotation jump multiplied by the elastic modulus and second moment as a symbol.
+            If type = "sliding"
+                - The unknown deflection jump multiplied by the elastic modulus and second moment as a symbol.
 
         Examples
         ========
@@ -557,23 +580,33 @@ class Beam:
         + 5*SingularityFunction(x, 15, 1) - 5*SingularityFunction(x, 15, 2)/2
         """
         loc = sympify(loc)
-        if loc in self._applied_hinges:
+        if loc in self._applied_rotation_hinges or loc in self._applied_sliding_hinges:
             raise ValueError('Cannot place two hinges at the same location.')
         if loc == 0:
             raise ValueError('Cannot place hinge at the beginning of the beam.')
         if loc == self.length:
             raise ValueError('Cannot place hinge at the end of the beam.')
-        if any(loc == support[0] and support[1] == 'fixed' for support in self._applied_supports):
-            raise ValueError('Cannot place hinge at the location of a fixed support. Change fixed support to pin.')
         if any(loc == arg[1] and arg[2] == -2 for arg in self._applied_loads):
             raise ValueError('Cannot place hinge at the location of a moment load.')
+        if type == "rotation" and any(loc == support[0] and support[1] == 'fixed' for support in self._applied_supports):
+            raise ValueError('Cannot place rotation hinge at the location of a fixed support. Change fixed support to pin.')
+        # toevoegen over sliding hinge op een support
 
-        rotation_jump = Symbol('EI_P_'+str(loc))
-        self._applied_hinges.append(loc)
-        self._hinge_symbols.append(rotation_jump)
-        self.apply_load(rotation_jump, loc, -3)
-        self.bc_bending_moment.append((loc, 0))
-        return rotation_jump
+        if type == "rotation":
+            rotation_jump = Symbol('P_'+str(loc))
+            self._applied_rotation_hinges.append(loc)
+            self._rotation_hinge_symbols.append(rotation_jump)
+            self.apply_load(rotation_jump, loc, -3)
+            self.bc_bending_moment.append((loc, 0))
+            return rotation_jump
+
+        if type == "sliding":
+            deflection_jump = Symbol('W_' + str(loc))
+            self._applied_sliding_hinges.append(loc)
+            self._sliding_hinge_symbols.append(deflection_jump)
+            self.apply_load(deflection_jump, loc, -4)
+            self.bc_shear_force.append((loc, 0))
+            return deflection_jump
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -838,14 +871,21 @@ class Beam:
         l = self.length
         C3 = Symbol('C3')
         C4 = Symbol('C4')
-        rotation_jumps = tuple(self._hinge_symbols)
+        rotation_jumps = tuple(self._rotation_hinge_symbols)
+        deflection_jumps = tuple(self._sliding_hinge_symbols)
 
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
 
+        shear_force_eqs = []
         bending_moment_eqs = []
         slope_eqs = []
         deflection_eqs = []
+
+        for position, value in self._boundary_conditions['shear force']:
+            eqs = self.shear_force().subs(x, position) - value
+            new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
+            shear_force_eqs.append(new_eqs)
 
         for position, value in self._boundary_conditions['bending moment']:
             eqs = self.bending_moment().subs(x, position) - value
@@ -862,16 +902,20 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
 
-        solution = list((linsolve([shear_curve, moment_curve] + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions + rotation_jumps).args)[0])
+        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
+                            + deflection_eqs, (C3, C4) + reactions + rotation_jumps + deflection_jumps).args)[0])
         reaction_index = 2+len(reactions)
+        rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
-        rotation_solution = solution[reaction_index:]
+        rotation_solution = solution[reaction_index:rotation_index]
+        deflection_solution = solution[rotation_index:]
 
         self._reaction_loads = dict(zip(reactions, reaction_solution))
         self._rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
+        self._deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
         self._load = self._load.subs(self._reaction_loads)
         self._load = self._load.subs(self._rotation_jumps)
+        self._load = self._load.subs(self._deflection_jumps)
 
     def shear_force(self):
         """
@@ -1683,7 +1727,7 @@ class Beam:
         copy of the load equation and uses it to calculate shear force and bending
         moment equations.
         """
-        if self._applied_hinges:
+        if self._applied_rotation_hinges or self._applied_sliding_hinges:
             raise NotImplementedError("I.L.D. calculations are not implemented for beams with hinges.")
         x = self.variable
         shear_force = -integrate(self._original_load, x)
@@ -2191,10 +2235,12 @@ class Beam:
         rectangles += support_rectangles
         markers += support_markers
 
-        for loc in self._applied_hinges:
+        for loc in self._applied_rotation_hinges:
             ratio = loc / self.length
             x_pos = float(ratio) * length
             markers += [{'args':[[x_pos], [height / 2]], 'marker':'o', 'markersize':6, 'color':"white"}]
+
+        #toevoegen tekenen van sliding hinges
 
         ylim = (-length, 1.25*length)
         if fill:
@@ -2536,7 +2582,7 @@ class Beam3D(Beam):
         >>> b.bc_slope = [(0, (4, 0, 0))]
         >>> b.bc_deflection = [(4, [0, 0, 0])]
         >>> b.boundary_conditions
-        {'bending moment': [], 'deflection': [(4, [0, 0, 0])], 'slope': [(0, (4, 0, 0))]}
+        {'bending moment': [], 'deflection': [(4, [0, 0, 0])], 'shear force': [], 'slope': [(0, (4, 0, 0))]}
 
         Here the deflection of the beam should be ``0`` along all the three axes at ``4``.
         Similarly, the slope of the beam should be ``4`` along x-axis and ``0``
