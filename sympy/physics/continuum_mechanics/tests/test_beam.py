@@ -541,7 +541,7 @@ def test_apply_hinge():
     rotation_symbols = [p7, p12]
     tolerance = 1e-6
     assert all(abs(b.reaction_loads[r] - expected_reactions[r]) < tolerance for r in reaction_symbols)
-    assert all(abs(b.rotation_jumps[r] - expected_rotations[r]) < tolerance for r in rotation_symbols)
+    assert all(abs(b.EI_rotation_jumps[r] - expected_rotations[r]) < tolerance for r in rotation_symbols)
     expected_bending_moment = (140 * SingularityFunction(x, 0, 0) / 3 - 20 * SingularityFunction(x, 0, 1) / 3
         - 11405 * SingularityFunction(x, 7, -1) / 27 + 10 * SingularityFunction(x, 7, 1)
         - 31 * SingularityFunction(x, 10, 1) / 3 + SingularityFunction(x, 10, 2)
