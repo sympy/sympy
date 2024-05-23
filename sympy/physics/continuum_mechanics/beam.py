@@ -593,7 +593,7 @@ class Beam:
         # toevoegen over sliding hinge op een support
 
         if type == "rotation":
-            rotation_jump = Symbol('P_'+str(loc))
+            rotation_jump = Symbol('EI_P_'+str(loc))
             self._applied_rotation_hinges.append(loc)
             self._rotation_hinge_symbols.append(rotation_jump)
             self.apply_load(rotation_jump, loc, -3)
@@ -601,7 +601,7 @@ class Beam:
             return rotation_jump
 
         if type == "sliding":
-            deflection_jump = Symbol('W_' + str(loc))
+            deflection_jump = Symbol('EI_W_' + str(loc))
             self._applied_sliding_hinges.append(loc)
             self._sliding_hinge_symbols.append(deflection_jump)
             self.apply_load(deflection_jump, loc, -4)
@@ -668,7 +668,7 @@ class Beam:
         start = sympify(start)
         order = sympify(order)
 
-        if order == -2 and start in self._applied_hinges:
+        if order == -2 and start in self._applied_rotation_hinges:
             raise ValueError('Cannot place a moment load directly on a hinge.')
 
         self._applied_loads.append((value, start, order, end))
