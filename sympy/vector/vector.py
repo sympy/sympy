@@ -14,6 +14,7 @@ from sympy.vector.basisdependent import (BasisDependentZero,
     BasisDependent, BasisDependentMul, BasisDependentAdd)
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
+from sympy.vector.kind import VectorKind
 
 
 class Vector(BasisDependent):
@@ -272,6 +273,10 @@ class Vector(BasisDependent):
             return (S.Zero, S.Zero, S.Zero)
         base_vec = next(iter(_get_coord_systems(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])
+
+    @property
+    def kind(self) -> VectorKind:
+        return VectorKind()
 
     def __or__(self, other):
         return self.outer(other)
