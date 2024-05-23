@@ -501,6 +501,12 @@ class Beam:
         + 10*SingularityFunction(x, 20, -1)
         """
         loc = sympify(loc)
+
+        if loc in self._applied_rotation_hinges and type == "fixed":
+            raise ValueError('Cannot place a fixed support at the location of a rotation hinge.')
+        if loc in self._applied_sliding_hinges:
+            raise ValueError('Cannot place a support at the location of a sliding hinge.')
+
         self._applied_supports.append((loc, type))
         if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
@@ -588,9 +594,12 @@ class Beam:
             raise ValueError('Cannot place hinge at the end of the beam.')
         if any(loc == arg[1] and arg[2] == -2 for arg in self._applied_loads):
             raise ValueError('Cannot place hinge at the location of a moment load.')
+        if any(loc == arg[1] and arg[2] == -1 for arg in self._applied_loads):
+            raise ValueError('Cannot place hinge at the location of a point load.')
         if type == "rotation" and any(loc == support[0] and support[1] == 'fixed' for support in self._applied_supports):
             raise ValueError('Cannot place rotation hinge at the location of a fixed support. Change fixed support to pin.')
-        # toevoegen over sliding hinge op een support
+        if type == "sliding" and any(loc == support[0] for support in self._applied_supports):
+            raise ValueError('Cannot place sliding hinge at the location of a support.')
 
         if type == "rotation":
             rotation_jump = Symbol('EI_P_'+str(loc))
@@ -669,7 +678,9 @@ class Beam:
         order = sympify(order)
 
         if order == -2 and start in self._applied_rotation_hinges:
-            raise ValueError('Cannot place a moment load directly on a hinge.')
+            raise ValueError('Cannot place a moment load directly on a rotation hinge.')
+        if order == -1 and start in self._applied_sliding_hinges:
+            raise ValueError('Cannot place a point load directly on a sliding hinge')
 
         self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)

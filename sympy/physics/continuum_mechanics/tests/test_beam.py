@@ -639,6 +639,7 @@ def test_apply_hinge():
     E = Symbol('E')
     I = Symbol('I')
     M = Symbol('M')
+    F = Symbol('F')
     b = Beam(10, E, I)
     b.apply_support(2, type="fixed")
     b.apply_support(10, type="pin")
@@ -656,6 +657,11 @@ def test_apply_hinge():
     b.apply_load(M, 4, -2)
     with raises(ValueError):
         b.apply_hinge(4)
+    with raises(ValueError):
+        b.apply_hinge(2, type="sliding")
+    b.apply_hinge(1, type="sliding")
+    with raises(ValueError):
+        b.apply_load(F, 1, -1)
 
 def test_max_shear_force():
     E = Symbol('E')
