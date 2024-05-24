@@ -1,7 +1,7 @@
 from __future__ import annotations
 from itertools import product
 
-from sympy.core.add import Add
+from sympy.core import Add, Basic
 from sympy.core.assumptions import StdFactKB
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.power import Pow
@@ -349,6 +349,24 @@ class Vector(BasisDependent):
         else:
             raise TypeError("Invalid division involving a vector")
 
+# The following is adapted from the matrices.expressions.matexpr file
+
+def get_postprocessor(cls):
+    def _postprocessor(expr):
+        mat_class = {Add: VectorAdd}[cls]
+        vectors = []
+        for term in expr.args:
+            if isinstance(term, Vector):
+                vectors.append(term)
+
+        if mat_class == VectorAdd:
+            return VectorAdd(*vectors).doit(deep=False)
+    return _postprocessor
+
+
+Basic._constructor_postprocessor_mapping[Vector] = {
+    "Add": [get_postprocessor(Add)],
+}
 
 class BaseVector(Vector, AtomicExpr):
     """
