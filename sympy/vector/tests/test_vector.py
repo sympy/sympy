@@ -1,4 +1,4 @@
-from sympy.core import Rational, S
+from sympy.core import Rational, S, Add, Mul
 from sympy.simplify import simplify, trigsimp
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.numbers import pi
@@ -12,6 +12,8 @@ from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import Cross, Dot, cross
 from sympy.testing.pytest import raises
+from sympy.vector.kind import VectorKind
+from sympy.core.kind import NumberKind
 
 C = CoordSys3D('C')
 
@@ -50,6 +52,44 @@ def test_vector_sympy():
     v3 = 2*i + 4*j + i + 4*k + k
     assert v3 == v2
     assert v3.__hash__() == v2.__hash__()
+
+def test_kind():
+    assert C.i.kind is VectorKind()
+    assert C.j.kind is VectorKind()
+    assert C.k.kind is VectorKind()
+
+    assert Mul._kind_dispatcher(NumberKind, VectorKind()) is VectorKind()
+    assert Mul(2, C.i).kind is VectorKind()
+
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert v1.kind is VectorKind()
+    assert v2.kind is VectorKind()
+
+    assert (v1 + v2).kind is VectorKind()
+    assert Add(v1, v2).kind is VectorKind()
+    assert Cross(v1, v2).doit().kind is VectorKind()
+    assert VectorAdd(v1, v2).kind is VectorKind()
+    assert VectorMul(2, v1).kind is VectorKind()
+    assert VectorZero().kind is VectorKind()
+
+    assert v1.projection(v2).kind is VectorKind()
+    assert v2.projection(v1).kind is VectorKind()
+
+def test_vectoradd():
+    assert isinstance(Add(C.i, C.j), VectorAdd)
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert isinstance(Add(v1, v2), VectorAdd)
+
+    # https://github.com/sympy/sympy/issues/26121
+
+    E = Matrix([C.i, C.j, C.k]).T
+    a = Matrix([1, 2, 3])
+    av = E*a
+
+    assert av[0].kind == VectorKind()
+    assert isinstance(av[0], VectorAdd)
 
 
 def test_vector():
