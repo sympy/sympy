@@ -353,13 +353,13 @@ class Vector(BasisDependent):
 
 def get_postprocessor(cls):
     def _postprocessor(expr):
-        mat_class = {Add: VectorAdd}[cls]
+        vec_class = {Add: VectorAdd}[cls]
         vectors = []
         for term in expr.args:
-            if isinstance(term, Vector):
+            if term.kind is VectorKind():
                 vectors.append(term)
 
-        if mat_class == VectorAdd:
+        if vec_class == VectorAdd:
             return VectorAdd(*vectors).doit(deep=False)
     return _postprocessor
 
