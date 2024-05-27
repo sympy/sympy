@@ -595,11 +595,12 @@ def test_apply_rotation_hinge():
     assert b.reaction_loads[r0] == -F*l3/(l2 + l3)
     assert b.reaction_loads[m0] == F*l1*l3/(l2 + l3)
     assert b.reaction_loads[r1] == -F*l2/(l2 + l3)
-    assert (b.bending_moment() == -F*l1*l3*SingularityFunction(x, 0, 0)/(l2 + l3)
+    expected_bending_moment = (-F*l1*l3*SingularityFunction(x, 0, 0)/(l2 + l3)
             + F*l2*SingularityFunction(x, l1 + l2 + l3, 1)/(l2 + l3)
             + F*l3*SingularityFunction(x, 0, 1)/(l2 + l3) - F*SingularityFunction(x, l1 + l2, 1)
             - (-2*F*l1**3*l3 - 3*F*l1**2*l2*l3 - 3*F*l1**2*l3**2 + F*l2**3*l3 + 3*F*l2**2*l3**2 + 2*F*l2*l3**3)
             *SingularityFunction(x, l1, -1)/(6*l2**2 + 12*l2*l3 + 6*l3**2))
+    assert simplify(b.bending_moment().expand()) == simplify(expected_bending_moment.expand())
 
     E = Symbol('E')
     I = Symbol('I')

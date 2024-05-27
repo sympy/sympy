@@ -195,8 +195,6 @@ class Beam:
         self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
-        self._EI_rotation_jumps = {}
-        self._EI_deflection_jumps = {}
         self._ild_reactions = {}
         self._ild_shear = 0
         self._ild_moment = 0
@@ -528,6 +526,18 @@ class Beam:
         else:
             return reaction_load, reaction_moment
 
+    def _get_I(self, loc):
+        """
+        Helper function that returns the Second moment (I) at a location in the beam.
+        """
+        I = self.second_moment
+        if not isinstance(I, Piecewise):
+            return I
+        else:
+            for i in range(len(I.args)):
+                if loc <= I.args[i][1].args[1]:
+                    return I.args[i][0]
+
     def apply_rotation_hinge(self, loc):
         """
         This method applies a rotation hinge in a particular beam object.
@@ -579,6 +589,8 @@ class Beam:
         + 5*SingularityFunction(x, 15, 1) - 5*SingularityFunction(x, 15, 2)/2
         """
         loc = sympify(loc)
+        E = self.elastic_modulus
+        I = self._get_I(loc)
 
         #Check for duplicate hinges
         if loc in self._applied_rotation_hinges:
@@ -602,7 +614,7 @@ class Beam:
         rotation_jump = Symbol('P_'+str(loc))
         self._applied_rotation_hinges.append(loc)
         self._rotation_hinge_symbols.append(rotation_jump)
-        self.apply_load(rotation_jump, loc, -3)
+        self.apply_load(E * I * rotation_jump, loc, -3)
         self.bc_bending_moment.append((loc, 0))
         return rotation_jump
 
@@ -650,6 +662,8 @@ class Beam:
         - SingularityFunction(x, 5, 3)/240 + 85*SingularityFunction(x, 8, 0)/24
         """
         loc = sympify(loc)
+        E = self.elastic_modulus
+        I = self._get_I(loc)
 
         #Check for duplicate hinges
         if loc in self._applied_sliding_hinges:
@@ -673,7 +687,7 @@ class Beam:
         deflection_jump = Symbol('W_' + str(loc))
         self._applied_sliding_hinges.append(loc)
         self._sliding_hinge_symbols.append(deflection_jump)
-        self.apply_load(deflection_jump, loc, -4)
+        self.apply_load(E * I * deflection_jump, loc, -4)
         self.bc_shear_force.append((loc, 0))
         return deflection_jump
 
@@ -901,25 +915,6 @@ class Beam:
         """
         return self._applied_loads
 
-    def _calculate_jumps(self, jump_dict):
-        """
-        Helper function that divides the values in the jump dictionary by the
-        values of EI at the place of the rotation or deflection jump.
-        """
-        E = self.elastic_modulus
-        I = self.second_moment
-        if not isinstance(I, Piecewise):
-            jumps = {hinge: jump / (E * I) for hinge, jump in jump_dict.items()}
-        else:
-            jumps = {}
-            for hinge, jump in jump_dict.items():
-                loc = float(str(hinge).split('_')[1])
-                for i in range(len(I.args)):
-                    if loc <= I.args[i][1].args[1]:
-                        jumps[hinge] = jump / (E * I.args[i][0])
-                        break
-        return jumps
-
     def solve_for_reaction_loads(self, *reactions):
         """
         Solves for the reaction forces.
@@ -1001,13 +996,11 @@ class Beam:
         deflection_solution = solution[rotation_index:]
 
         self._reaction_loads = dict(zip(reactions, reaction_solution))
-        self._EI_rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
-        self._EI_deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
-        self._rotation_jumps = self._calculate_jumps(self._EI_rotation_jumps)
-        self._deflection_jumps = self._calculate_jumps(self._EI_deflection_jumps)
+        self._rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
+        self._deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
         self._load = self._load.subs(self._reaction_loads)
-        self._load = self._load.subs(self._EI_rotation_jumps)
-        self._load = self._load.subs(self._EI_deflection_jumps)
+        self._load = self._load.subs(self._rotation_jumps)
+        self._load = self._load.subs(self._deflection_jumps)
 
     def shear_force(self):
         """
