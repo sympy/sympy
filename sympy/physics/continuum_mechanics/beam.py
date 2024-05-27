@@ -630,7 +630,6 @@ class Beam:
         being positive.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
         >>> b = Beam(13, 20, 20)
         >>> r0, m0 = b.apply_support(0, type="fixed")
         >>> s8 = b.apply_sliding_hinge(8)
