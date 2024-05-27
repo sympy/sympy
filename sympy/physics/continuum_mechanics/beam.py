@@ -216,14 +216,14 @@ class Beam:
         return self._reaction_loads
 
     @property
-    def EI_rotation_jumps(self):
-        """ Returns the rotation jumps in hinges multiplied by the elastic modulus and second moment in a dictionary."""
-        return self._EI_rotation_jumps
+    def rotation_jumps(self):
+        """ Returns the rotation jumps in rotation hinges in a dictionary."""
+        return self._rotation_jumps
 
     @property
-    def EI_deflection_jumps(self): #AANPASSEN
+    def deflection_jumps(self):
         """ Returns the deflection jumps in sliding hinges in a dictionary."""
-        return self._EI_deflection_jumps
+        return self._deflection_jumps
 
     @property
     def ild_shear(self):
@@ -568,10 +568,10 @@ class Beam:
         >>> b.solve_for_reaction_loads(r0, r10, r15, m15)
         >>> b.reaction_loads
         {M_15: -75/2, R_0: 0, R_10: 40, R_15: -5}
-        >>> b.EI_rotation_jumps
-        {EI_P_12: -1875/16, EI_P_5: 9625/24}
-        >>> b.EI_rotation_jumps[p12]
-        -1875/16
+        >>> b.rotation_jumps
+        {P_12: -1875/(16*E*I), P_5: 9625/(24*E*I)}
+        >>> b.rotation_jumps[p12]
+        -1875/(16*E*I)
         >>> b.bending_moment()
         -9625*SingularityFunction(x, 5, -1)/24 + 10*SingularityFunction(x, 5, 1)
         - 40*SingularityFunction(x, 10, 1) + 5*SingularityFunction(x, 10, 2)/2
@@ -599,7 +599,7 @@ class Beam:
         if any(loc == support[0] and support[1] == 'fixed' for support in self._applied_supports):
             raise ValueError('Cannot place rotation hinge at the location of a fixed support. Change fixed support to pin.')
 
-        rotation_jump = Symbol('EI_P_'+str(loc))
+        rotation_jump = Symbol('P_'+str(loc))
         self._applied_rotation_hinges.append(loc)
         self._rotation_hinge_symbols.append(rotation_jump)
         self.apply_load(rotation_jump, loc, -3)
@@ -638,10 +638,10 @@ class Beam:
         >>> b.solve_for_reaction_loads(r0, m0, r13)
         >>> b.reaction_loads
         {M_0: -50, R_0: 10, R_13: 0}
-        >>> b.EI_deflection_jumps
-        {EI_W_8: 4250/3}
-        >>> b.EI_deflection_jumps[s8]
-        4250/3
+        >>> b.deflection_jumps
+        {W_8: 85/24}
+        >>> b.deflection_jumps[s8]
+        85/24
         >>> b.bending_moment()
         50*SingularityFunction(x, 0, 0) - 10*SingularityFunction(x, 0, 1)
         + 10*SingularityFunction(x, 5, 1) - 4250*SingularityFunction(x, 8, -2)/3
@@ -670,7 +670,7 @@ class Beam:
         if any(loc == support[0] for support in self._applied_supports):
             raise ValueError('Cannot place sliding hinge at the location of a support.')
 
-        deflection_jump = Symbol('EI_W_' + str(loc))
+        deflection_jump = Symbol('W_' + str(loc))
         self._applied_sliding_hinges.append(loc)
         self._sliding_hinge_symbols.append(deflection_jump)
         self.apply_load(deflection_jump, loc, -4)
@@ -901,6 +901,25 @@ class Beam:
         """
         return self._applied_loads
 
+    def _calculate_jumps(self, jump_dict):
+        """
+        Helper function that divides the values in the jump dictionary by the
+        values of EI at the place of the rotation or deflection jump.
+        """
+        E = self.elastic_modulus
+        I = self.second_moment
+        if not isinstance(I, Piecewise):
+            jumps = {hinge: jump / (E * I) for hinge, jump in jump_dict.items()}
+        else:
+            jumps = {}
+            for hinge, jump in jump_dict.items():
+                loc = float(str(hinge).split('_')[1])
+                for i in range(len(I.args)):
+                    if loc <= I.args[i][1].args[1]:
+                        jumps[hinge] = jump / (E * I.args[i][0])
+                        break
+        return jumps
+
     def solve_for_reaction_loads(self, *reactions):
         """
         Solves for the reaction forces.
@@ -984,6 +1003,8 @@ class Beam:
         self._reaction_loads = dict(zip(reactions, reaction_solution))
         self._EI_rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
         self._EI_deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
+        self._rotation_jumps = self._calculate_jumps(self._EI_rotation_jumps)
+        self._deflection_jumps = self._calculate_jumps(self._EI_deflection_jumps)
         self._load = self._load.subs(self._reaction_loads)
         self._load = self._load.subs(self._EI_rotation_jumps)
         self._load = self._load.subs(self._EI_deflection_jumps)
