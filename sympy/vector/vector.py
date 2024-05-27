@@ -35,6 +35,8 @@ class Vector(BasisDependent):
     _base_func: type[Vector]
     zero: VectorZero
 
+    kind: VectorKind = VectorKind()
+
     @property
     def components(self):
         """
@@ -273,10 +275,6 @@ class Vector(BasisDependent):
             return (S.Zero, S.Zero, S.Zero)
         base_vec = next(iter(_get_coord_systems(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])
-
-    @property
-    def kind(self) -> VectorKind:
-        return VectorKind()
 
     def __or__(self, other):
         return self.outer(other)
