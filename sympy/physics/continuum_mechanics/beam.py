@@ -446,7 +446,7 @@ class Beam:
         if via == "hinge":
             new_beam = Beam(new_length, E, new_second_moment, x)
             new_beam._joined_beam = True
-            new_beam.apply_hinge(self.length)
+            new_beam.apply_rotation_hinge(self.length)
             return new_beam
 
     def apply_support(self, loc, type="fixed"):
@@ -528,31 +528,24 @@ class Beam:
         else:
             return reaction_load, reaction_moment
 
-    def apply_hinge(self, loc, type="rotation"):
+    def apply_rotation_hinge(self, loc):
         """
-        This method applies a hinge in a particular beam object.
+        This method applies a rotation hinge in a particular beam object.
 
         Parameters
         ----------
         loc : Sympifyable
             Location of point at which hinge is applied.
-        type : String
-            Determines type of hinge applied.
-            - For a hinge that allows rotational movement, type = "rotation"
-            - For a hinge that allows vertical sliding movement, type = "sliding"
 
         Returns
         =======
         Symbol
-            If type = "rotation"
-                - The unknown rotation jump multiplied by the elastic modulus and second moment as a symbol.
-            If type = "sliding"
-                - The unknown deflection jump multiplied by the elastic modulus and second moment as a symbol.
+            The unknown rotation jump multiplied by the elastic modulus and second moment as a symbol.
 
         Examples
         ========
         There is a beam of length 15 meters. Pin supports are placed at distances
-        of 0 and 10 meters. There is a fixed support at the end. There are two hinges
+        of 0 and 10 meters. There is a fixed support at the end. There are two rotation hinges
         in the structure, one at 5 meters and one at 10 meters. A pointload of magnitude
         10 kN is applied on the hinge at 5 meters. A distributed load of 5 kN works on
         the structure from 10 meters to the end.
@@ -568,8 +561,8 @@ class Beam:
         >>> r0 = b.apply_support(0, type='pin')
         >>> r10 = b.apply_support(10, type='pin')
         >>> r15, m15 = b.apply_support(15, type='fixed')
-        >>> p5 = b.apply_hinge(5)
-        >>> p12 = b.apply_hinge(12)
+        >>> p5 = b.apply_rotation_hinge(5)
+        >>> p12 = b.apply_rotation_hinge(12)
         >>> b.apply_load(-10, 5, -1)
         >>> b.apply_load(-5, 10, 0, 15)
         >>> b.solve_for_reaction_loads(r0, r10, r15, m15)
@@ -588,16 +581,12 @@ class Beam:
         loc = sympify(loc)
 
         #Check for duplicate hinges
-        if loc in self._applied_rotation_hinges and type == "rotation":
+        if loc in self._applied_rotation_hinges:
             raise ValueError('Cannot place two rotation hinges at the same location.')
-        if loc in self._applied_sliding_hinges and type == "sliding":
-            raise ValueError('Cannot place two sliding hinges at the same location.')
 
         #Check for unusual hinge placement
         warning_message = 'It is highly unusual to place a rotation hinge and a sliding hinge at the same location.'
-        if loc in self._applied_sliding_hinges and type == "rotation":
-            warnings.warn(warning_message)
-        if loc in self._applied_rotation_hinges and type == "sliding":
+        if loc in self._applied_sliding_hinges:
             warnings.warn(warning_message)
 
         #Check for other errors
@@ -606,29 +595,88 @@ class Beam:
         if loc == self.length:
             raise ValueError('Cannot place hinge at the end of the beam.')
         if any(loc == arg[1] and arg[2] == -2 for arg in self._applied_loads):
-            raise ValueError('Cannot place hinge at the location of a moment load.')
-        if any(loc == arg[1] and arg[2] == -1 for arg in self._applied_loads):
-            raise ValueError('Cannot place hinge at the location of a point load.')
-        if type == "rotation" and any(loc == support[0] and support[1] == 'fixed' for support in self._applied_supports):
+            raise ValueError('Cannot place rotation hinge at the location of a moment load.')
+        if any(loc == support[0] and support[1] == 'fixed' for support in self._applied_supports):
             raise ValueError('Cannot place rotation hinge at the location of a fixed support. Change fixed support to pin.')
-        if type == "sliding" and any(loc == support[0] for support in self._applied_supports):
+
+        rotation_jump = Symbol('EI_P_'+str(loc))
+        self._applied_rotation_hinges.append(loc)
+        self._rotation_hinge_symbols.append(rotation_jump)
+        self.apply_load(rotation_jump, loc, -3)
+        self.bc_bending_moment.append((loc, 0))
+        return rotation_jump
+
+    def apply_sliding_hinge(self, loc):
+        """
+        This method applies a sliding hinge in a particular beam object.
+
+        Parameters
+        ----------
+        loc : Sympifyable
+            Location of point at which hinge is applied.
+
+        Returns
+        =======
+        Symbol
+            The unknown deflection jump multiplied by the elastic modulus and second moment as a symbol.
+
+        Examples
+        ========
+        There is a beam of length 13 meters. A fixed support is placed at the beginning.
+        There is a pin support at the end. There is a sliding hinge at a location of 8 meters.
+        A pointload of magnitude 10 kN is applied on the hinge at 5 meters.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import Symbol
+        >>> b = Beam(13, 20, 20)
+        >>> r0, m0 = b.apply_support(0, type="fixed")
+        >>> s8 = b.apply_sliding_hinge(8)
+        >>> r13 = b.apply_support(13, type="pin")
+        >>> b.apply_load(-10, 5, -1)
+        >>> b.solve_for_reaction_loads(r0, m0, r13)
+        >>> b.reaction_loads
+        {M_0: -50, R_0: 10, R_13: 0}
+        >>> b.EI_deflection_jumps
+        {EI_W_8: 4250/3}
+        >>> b.EI_deflection_jumps[s8]
+        4250/3
+        >>> b.bending_moment()
+        50*SingularityFunction(x, 0, 0) - 10*SingularityFunction(x, 0, 1)
+        + 10*SingularityFunction(x, 5, 1) - 4250*SingularityFunction(x, 8, -2)/3
+        >>> b.deflection()
+        -SingularityFunction(x, 0, 2)/16 + SingularityFunction(x, 0, 3)/240
+        - SingularityFunction(x, 5, 3)/240 + 85*SingularityFunction(x, 8, 0)/24
+        """
+        loc = sympify(loc)
+
+        #Check for duplicate hinges
+        if loc in self._applied_sliding_hinges:
+            raise ValueError('Cannot place two sliding hinges at the same location.')
+
+        #Check for unusual hinge placement
+        warning_message = 'It is highly unusual to place a rotation hinge and a sliding hinge at the same location.'
+        if loc in self._applied_rotation_hinges:
+            warnings.warn(warning_message)
+
+        #Check for other errors
+        if loc == 0:
+            raise ValueError('Cannot place hinge at the beginning of the beam.')
+        if loc == self.length:
+            raise ValueError('Cannot place hinge at the end of the beam.')
+        if any(loc == arg[1] and arg[2] == -1 for arg in self._applied_loads):
+            raise ValueError('Cannot place sliding hinge at the location of a point load.')
+        if any(loc == support[0] for support in self._applied_supports):
             raise ValueError('Cannot place sliding hinge at the location of a support.')
 
-        if type == "rotation":
-            rotation_jump = Symbol('EI_P_'+str(loc))
-            self._applied_rotation_hinges.append(loc)
-            self._rotation_hinge_symbols.append(rotation_jump)
-            self.apply_load(rotation_jump, loc, -3)
-            self.bc_bending_moment.append((loc, 0))
-            return rotation_jump
-
-        if type == "sliding":
-            deflection_jump = Symbol('EI_W_' + str(loc))
-            self._applied_sliding_hinges.append(loc)
-            self._sliding_hinge_symbols.append(deflection_jump)
-            self.apply_load(deflection_jump, loc, -4)
-            self.bc_shear_force.append((loc, 0))
-            return deflection_jump
+        deflection_jump = Symbol('EI_W_' + str(loc))
+        self._applied_sliding_hinges.append(loc)
+        self._sliding_hinge_symbols.append(deflection_jump)
+        self.apply_load(deflection_jump, loc, -4)
+        self.bc_shear_force.append((loc, 0))
+        return deflection_jump
 
     def apply_load(self, value, start, order, end=None):
         """
