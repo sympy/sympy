@@ -534,14 +534,14 @@ def test_apply_rotation_hinge():
     b.apply_load(-10, 7, -1)
     b.apply_load(-2, 10, 0, 15)
     b.solve_for_reaction_loads(r0, m0, r10, r15)
-    R_0, M_0, R_10, R_15, EI_P_7, EI_P_12 = symbols('R_0, M_0, R_10, R_15, EI_P_7, EI_P_12')
+    R_0, M_0, R_10, R_15, P_7, P_12 = symbols('R_0, M_0, R_10, R_15, P_7, P_12')
     expected_reactions = {R_0: 20/3, M_0: -140/3, R_10: 31/3, R_15: 3}
-    expected_rotations = {EI_P_7: 11405/27, EI_P_12: -128425/324}
+    expected_rotations = {P_7: 2281/2160, P_12: -5137/5184}
     reaction_symbols = [r0, m0, r10, r15]
     rotation_symbols = [p7, p12]
     tolerance = 1e-6
     assert all(abs(b.reaction_loads[r] - expected_reactions[r]) < tolerance for r in reaction_symbols)
-    assert all(abs(b.EI_rotation_jumps[r] - expected_rotations[r]) < tolerance for r in rotation_symbols)
+    assert all(abs(b.rotation_jumps[r] - expected_rotations[r]) < tolerance for r in rotation_symbols)
     expected_bending_moment = (140 * SingularityFunction(x, 0, 0) / 3 - 20 * SingularityFunction(x, 0, 1) / 3
         - 11405 * SingularityFunction(x, 7, -1) / 27 + 10 * SingularityFunction(x, 7, 1)
         - 31 * SingularityFunction(x, 10, 1) / 3 + SingularityFunction(x, 10, 2)
@@ -625,16 +625,32 @@ def test_apply_rotation_hinge():
 def test_apply_sliding_hinge():
     b = Beam(13, 20, 20)
     r0, m0 = b.apply_support(0, type="fixed")
-    b.apply_sliding_hinge(8)
+    w8 = b.apply_sliding_hinge(8)
     r13 = b.apply_support(13, type="pin")
     b.apply_load(-10, 5, -1)
     b.solve_for_reaction_loads(r0, m0, r13)
     R_0, M_0, R_13, W_8 = symbols('R_0, M_0, R_13 W_8')
     assert b.reaction_loads == {R_0: 10, M_0: -50, R_13: 0}
+    tolerance = 1e-6
+    assert abs(b.deflection_jumps[w8] - 85/24) < tolerance
     assert (b.bending_moment() == 50*SingularityFunction(x, 0, 0) - 10*SingularityFunction(x, 0, 1)
             + 10*SingularityFunction(x, 5, 1) - 4250*SingularityFunction(x, 8, -2)/3)
     assert (b.deflection() == -SingularityFunction(x, 0, 2)/16 + SingularityFunction(x, 0, 3)/240
             - SingularityFunction(x, 5, 3)/240 + 85*SingularityFunction(x, 8, 0)/24)
+
+    E = Symbol('E')
+    I = Symbol('I')
+    I2 = Symbol('I2')
+    b1 = Beam(5, E, I)
+    b2 = Beam(8, E, I2)
+    b = b1.join(b2)
+    r0, m0 = b.apply_support(0, type="fixed")
+    b.apply_sliding_hinge(8)
+    r13 = b.apply_support(13, type="pin")
+    b.apply_load(-10, 5, -1)
+    b.solve_for_reaction_loads(r0, m0, r13)
+    W_8 = Symbol('W_8')
+    assert b.deflection_jumps == {W_8: 4250/(3*E*I2)}
 
     E = Symbol('E')
     I = Symbol('I')
