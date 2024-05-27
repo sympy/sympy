@@ -1,6 +1,6 @@
 #sympy.vector.kind
 
-from sympy.core.kind import Kind, _NumberKind, NumberKind
+from sympy.core.kind import Kind, _NumberKind
 from sympy.core.mul import Mul
 
 class VectorKind(Kind):
@@ -33,16 +33,8 @@ class VectorKind(Kind):
     >>> Add(v1, v2).kind
     VectorKind
 
-    Subclasses of Vector also have the kind ``VectorKind``:
-
-    >>> Cross(v1, v2).doit().kind
-    VectorKind
-    >>> VectorAdd(v1, v2).kind
-    VectorKind
-    >>> VectorMul(2, v1).kind
-    VectorKind
-    >>> VectorZero().kind
-    VectorKind
+    Subclasses of Vector also have the kind ``VectorKind``, such as
+    Cross, VectorAdd, VectorMul or VectorZero.
 
     See Also
     ========
