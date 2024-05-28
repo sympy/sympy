@@ -430,6 +430,9 @@ class Beam:
         x = self.variable
         E = self.elastic_modulus
         new_length = self.length + beam.length
+        if self.elastic_modulus != beam.elastic_modulus:
+            raise NotImplementedError('Joining beams with different Elastic modulus is not implemented.')
+
         if self.second_moment != beam.second_moment:
             new_second_moment = Piecewise((self.second_moment, x<=self.length),
                                     (beam.second_moment, x<=new_length))
