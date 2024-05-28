@@ -547,7 +547,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
                     mult_count_stack.pop()
 
         if derivative_order > 0:
-            if isinstance(node, Function) and not dyn_sym(node) or isinstance(node, sm.Pow):
+            if isinstance(node, Function) and not dyn_sym(node) or isinstance(node, Pow):
                 func_count -= 1
 
         if isinstance(node, Derivative) and node.args[1][0] == t:
