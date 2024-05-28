@@ -245,6 +245,8 @@ def test_lerchphi_finite():
     assert lerchphi(0.5, -1, 0).is_finite is True
     assert lerchphi(0.5+0.5j, 0, 0).is_finite is True
     assert lerchphi(1, 3, 0).is_finite is False
+    assert lerchphi(0, 1, a).is_finite is None
+    assert lerchphi(1, (1+I)/2, 0).is_finite is True
 
 
 def test_lerchphi_leadterm():

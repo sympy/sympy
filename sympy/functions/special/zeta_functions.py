@@ -220,18 +220,19 @@ class lerchphi(Function):
             # TODO: Write a valid implementation for infinite numbers.
             return
         if z == 0:
-            if a.is_zero is False:
-                return True
-            if s.is_real:
+            if a.is_zero and s.is_real:
                 return s.is_nonpositive
+            if a.is_nonzero:
+                return True
             return
         if a.is_integer and a.is_nonpositive:
             if s.is_real:
                 return s.is_nonpositive
-            return
-        exp_expr = self.expand(func=True)
-        if exp_expr != self:
-            return exp_expr.is_finite
+        # This part assumes analytic continuation
+        if z == 1:
+            arg_is_one = (s - 1).is_zero
+            if arg_is_one is not None:
+                return not arg_is_one
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
