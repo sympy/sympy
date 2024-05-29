@@ -234,6 +234,21 @@ class lerchphi(Function):
             if arg_is_one is not None:
                 return not arg_is_one
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.functions.special.gamma_functions import digamma
+        z, s, a = self.args
+        z0, s0, a0 = (arg.subs(x, 0).cancel() for arg in self.args)
+        if s == 1 and z0 == 1 and not a.has(x):
+            lt = -log(-log(z))._eval_as_leading_term(x, logx=logx, cdir=cdir)
+            return lt - S.EulerGamma - digamma(a)
+        if z0 == 1:
+            return zeta(s, a)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+        if a0.is_integer and a0.is_nonpositive:
+            if s.is_real and s.is_positive:
+                lt = z**(-a0)/(a-a0)**s
+                return lt._eval_as_leading_term(x, logx=logx, cdir=cdir)
+        return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
 ###############################################################################
@@ -598,6 +613,13 @@ class zeta(Function):
 
         if e.is_negative and not s.is_positive:
             raise NotImplementedError
+
+        s0, a0 = (arg.subs(x, 0).cancel() for arg in self.args)
+        if (s0 - 1).is_nonzero:
+            if (lt := zeta(s0, a0)).is_nonzero:
+                return lt
+        elif s.has(x) and (s0 - 1).is_zero:
+            return (1 / (s - 1))._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
         return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
 
