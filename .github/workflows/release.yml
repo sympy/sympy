@@ -32,12 +32,12 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       # Check out with full git history for authors check:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -64,10 +64,9 @@ jobs:
     name: Python ${{ matrix.python-version }} test install
     steps:
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          allow-preleases: true
 
       - name: Retrieve release files
         uses: actions/download-artifact@v4
@@ -153,7 +152,7 @@ jobs:
 
     steps:
       - name: Checkout sympy
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download release artifacts
         uses: actions/download-artifact@v4
@@ -182,10 +181,10 @@ jobs:
 
     steps:
       - name: Checkout sympy
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout sympy_doc
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: sympy/sympy_doc
           ref: gh-pages
