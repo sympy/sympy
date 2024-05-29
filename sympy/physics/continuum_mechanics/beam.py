@@ -551,7 +551,7 @@ class Beam:
 
     def apply_rotation_hinge(self, loc):
         """
-        This method applies a rotation hinge in a particular beam object.
+        This method applies a rotation hinge at a single location on the beam.
 
         Parameters
         ----------
@@ -631,7 +631,7 @@ class Beam:
 
     def apply_sliding_hinge(self, loc):
         """
-        This method applies a sliding hinge in a particular beam object.
+        This method applies a sliding hinge at a single location on the beam.
 
         Parameters
         ----------
