@@ -2,13 +2,18 @@ from sympy.physics.mechanics import (Body, Lagrangian, KanesMethod, LagrangesMet
                                     RigidBody, Particle)
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.method import _Methods
-from sympy.core.backend import Matrix
+from sympy import Matrix
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['JointsMethod']
 
 
 class JointsMethod(_Methods):
     """Method for formulating the equations of motion using a set of interconnected bodies with joints.
+
+    .. deprecated:: 1.13
+        The JointsMethod class is deprecated. Its functionality has been
+        replaced by the new :class:`~.System` class.
 
     Parameters
     ==========
@@ -44,6 +49,14 @@ class JointsMethod(_Methods):
     Examples
     ========
 
+    As Body and JointsMethod have been deprecated, the following examples are
+    for illustrative purposes only. The functionality of Body is fully captured
+    by :class:`~.RigidBody` and :class:`~.Particle` and the functionality of
+    JointsMethod is fully captured by :class:`~.System`. To ignore the
+    deprecation warning we can use the ignore_warnings context manager.
+
+    >>> from sympy.utilities.exceptions import ignore_warnings
+
     This is a simple example for a one degree of freedom translational
     spring-mass-damper.
 
@@ -52,12 +65,14 @@ class JointsMethod(_Methods):
     >>> from sympy.physics.vector import dynamicsymbols
     >>> c, k = symbols('c k')
     >>> x, v = dynamicsymbols('x v')
-    >>> wall = Body('W')
-    >>> body = Body('B')
+    >>> with ignore_warnings(DeprecationWarning):
+    ...     wall = Body('W')
+    ...     body = Body('B')
     >>> J = PrismaticJoint('J', wall, body, coordinates=x, speeds=v)
     >>> wall.apply_force(c*v*wall.x, reaction_body=body)
     >>> wall.apply_force(k*x*wall.x, reaction_body=body)
-    >>> method = JointsMethod(wall, J)
+    >>> with ignore_warnings(DeprecationWarning):
+    ...     method = JointsMethod(wall, J)
     >>> method.form_eoms()
     Matrix([[-B_mass*Derivative(v(t), t) - c*v(t) - k*x(t)]])
     >>> M = method.mass_matrix_full
@@ -77,6 +92,14 @@ class JointsMethod(_Methods):
     """
 
     def __init__(self, newtonion, *joints):
+        sympy_deprecation_warning(
+            """
+            The JointsMethod class is deprecated.
+            Its functionality has been replaced by the new System class.
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="deprecated-mechanics-jointsmethod"
+        )
         if isinstance(newtonion, BodyBase):
             self.frame = newtonion.frame
         else:
@@ -217,6 +240,15 @@ class JointsMethod(_Methods):
         Examples
         ========
 
+        As Body and JointsMethod have been deprecated, the following examples
+        are for illustrative purposes only. The functionality of Body is fully
+        captured by :class:`~.RigidBody` and :class:`~.Particle` and the
+        functionality of JointsMethod is fully captured by :class:`~.System`. To
+        ignore the deprecation warning we can use the ignore_warnings context
+        manager.
+
+        >>> from sympy.utilities.exceptions import ignore_warnings
+
         This is a simple example for a one degree of freedom translational
         spring-mass-damper.
 
@@ -226,12 +258,14 @@ class JointsMethod(_Methods):
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> m, k, b = symbols('m k b')
-        >>> wall = Body('W')
-        >>> part = Body('P', mass=m)
+        >>> with ignore_warnings(DeprecationWarning):
+        ...     wall = Body('W')
+        ...     part = Body('P', mass=m)
         >>> part.potential_energy = k * q**2 / S(2)
         >>> J = PrismaticJoint('J', wall, part, coordinates=q, speeds=qd)
         >>> wall.apply_force(b * qd * wall.x, reaction_body=part)
-        >>> method = JointsMethod(wall, J)
+        >>> with ignore_warnings(DeprecationWarning):
+        ...     method = JointsMethod(wall, J)
         >>> method.form_eoms(LagrangesMethod)
         Matrix([[b*Derivative(q(t), t) + k*q(t) + m*Derivative(q(t), (t, 2))]])
 
@@ -263,7 +297,7 @@ class JointsMethod(_Methods):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
 
         Returns
         ========

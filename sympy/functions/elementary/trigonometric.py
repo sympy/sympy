@@ -479,6 +479,10 @@ class sin(TrigonometricFunction):
     def _eval_rewrite_as_sinc(self, arg, **kwargs):
         return arg*sinc(arg)
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return sqrt(pi*arg/2)*besselj(S.Half, arg)
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -510,10 +514,6 @@ class sin(TrigonometricFunction):
                 else:
                     return expand_mul(S.NegativeOne**(n/2 - 1)*cos(x)*
                                       chebyshevu(n - 1, sin(x)), deep=False)
-            pi_coeff = _pi_coeff(arg)
-            if pi_coeff is not None:
-                if pi_coeff.is_Rational:
-                    return self.rewrite(sqrt)
         return sin(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -845,6 +845,13 @@ class cos(TrigonometricFunction):
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return 1/sec(arg).rewrite(csc, **kwargs)
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return Piecewise(
+                (sqrt(pi*arg/2)*besselj(-S.Half, arg), Ne(arg, 0)),
+                (1, True)
+            )
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -868,10 +875,6 @@ class cos(TrigonometricFunction):
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer:
                 return chebyshevt(coeff, cos(terms))
-            pi_coeff = _pi_coeff(arg)
-            if pi_coeff is not None:
-                if pi_coeff.is_Rational:
-                    return self.rewrite(sqrt)
         return cos(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -1200,6 +1203,10 @@ class tan(TrigonometricFunction):
             return None
         return y
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return besselj(S.Half, arg)/besselj(-S.Half, arg)
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
@@ -1484,6 +1491,10 @@ class cot(TrigonometricFunction):
             return None
         return y
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return besselj(-S.Half, arg)/besselj(S.Half, arg)
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
@@ -1745,6 +1756,13 @@ class sec(ReciprocalTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return Piecewise(
+                (1/(sqrt(pi*arg)/(sqrt(2))*besselj(-S.Half, arg)), Ne(arg, 0)),
+                (1, True)
+            )
+
     def _eval_is_complex(self):
         arg = self.args[0]
 
@@ -1839,6 +1857,10 @@ class csc(ReciprocalTrigonometricFunction):
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
         return (1/sin(arg).rewrite(tan, **kwargs))
+
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return sqrt(2/pi)*(1/(sqrt(arg)*besselj(S.Half, arg)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -2222,8 +2244,11 @@ class asin(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asin
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         if x0.is_zero:
             return arg.as_leading_term(x)
+
         # Handling branch points
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
@@ -2438,6 +2463,8 @@ class acos(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acos
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((S.One - arg).as_leading_term(x))
@@ -2677,6 +2704,8 @@ class atan(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # atan
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         if x0.is_zero:
             return arg.as_leading_term(x)
         # Handling branch points
@@ -2727,10 +2756,8 @@ class atan(InverseTrigonometricFunction):
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_aseries(self, n, args0, x, logx):
-        if args0[0] is S.Infinity:
+        if args0[0] in [S.Infinity, S.NegativeInfinity]:
             return (pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
-        elif args0[0] is S.NegativeInfinity:
-            return (-pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
         else:
             return super()._eval_aseries(n, args0, x, logx)
 
@@ -2892,6 +2919,8 @@ class acot(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acot
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
         # Handling branch points
@@ -2938,12 +2967,10 @@ class acot(InverseTrigonometricFunction):
         return res
 
     def _eval_aseries(self, n, args0, x, logx):
-        if args0[0] is S.Infinity:
-            return (pi/2 - acot(1/self.args[0]))._eval_nseries(x, n, logx)
-        elif args0[0] is S.NegativeInfinity:
-            return (pi*Rational(3, 2) - acot(1/self.args[0]))._eval_nseries(x, n, logx)
+        if args0[0] in [S.Infinity, S.NegativeInfinity]:
+            return atan(1/self.args[0])._eval_nseries(x, n, logx)
         else:
-            return super(atan, self)._eval_aseries(n, args0, x, logx)
+            return super()._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2*(log(1 - S.ImaginaryUnit/x)
@@ -3105,6 +3132,8 @@ class asec(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asec
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((arg - S.One).as_leading_term(x))
@@ -3313,6 +3342,8 @@ class acsc(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acsc
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            return self.func(arg.as_leading_term(x))
         # Handling branch points
         if x0 in (-S.One, S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()

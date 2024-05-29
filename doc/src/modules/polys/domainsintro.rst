@@ -48,9 +48,9 @@ representing the implementation of those coefficients::
   Poly(x**2 + 1/2*x, x, domain='QQ')
   >>> p.domain
   QQ
-  >>> p.rep
-  DMP([1, 1/2, 0], QQ, None)
-  >>> p.rep.rep
+  >>> p.rep  # doctest: +SKIP
+  DMP_Python([1, 1/2, 0], QQ)
+  >>> p.rep.rep  # doctest: +SKIP
   [1, 1/2, 0]
   >>> type(p.rep.rep[0])  # doctest: +SKIP
   <class 'sympy.external.pythonmpq.PythonMPQ'>
@@ -152,7 +152,7 @@ tree representations. We can see this representation from a :py:class:`~.Poly`
 instance by looking it its ``rep.rep`` attribute::
 
   >>> p = Poly(x**4 + x + 1)
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [1, 0, 0, 1, 1]
 
 In the DUP representation it is not possible to represent the same expression
@@ -211,7 +211,7 @@ lists of coefficients::
   >>> p = Poly(x**2*y + x**2 + x*y + y + 1)
   >>> p
   Poly(x**2*y + x**2 + x*y + y + 1, x, y, domain='ZZ')
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [[1, 1], [1, 0], [1, 1]]
 
 This list of lists of (lists of...) coefficients representation is known as
@@ -226,7 +226,7 @@ Instead of lists we can use a dict mapping nonzero monomial terms to their
 coefficients. This is known as the "sparse polynomial" representation. We can
 see what this would look like using the :py:meth:`~.Poly.as_dict` method::
 
-  >>> Poly(7*x**20 + 8*x + 9).rep.rep
+  >>> Poly(7*x**20 + 8*x + 9).rep.rep  # doctest: +SKIP
   [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 9]
   >>> Poly(7*x**20 + 8*x + 9).as_dict()
   {(0,): 9, (1,): 8, (20,): 7}
@@ -246,7 +246,7 @@ particularly inefficient and it is better to use the sparse representation::
   >>> p = Poly(prod(gens))
   >>> p
   Poly(x0*x1*x2*x3*x4*x5*x6*x7*x8*x9, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, domain='ZZ')
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [[[[[[[[[[1, 0], []], [[]]], [[[]]]], [[[[]]]]], [[[[[]]]]]], [[[[[[]]]]]]], [[[[[[[]]]]]]]], [[[[[[[[]]]]]]]]], [[[[[[[[[]]]]]]]]]]
   >>> p.as_dict()
   {(1, 1, 1, 1, 1, 1, 1, 1, 1, 1): 1}
@@ -289,14 +289,24 @@ multiplication will work for the elements of any domain and will produce new
 domain elements. Division with ``/`` (Python's "true division" operator) is not
 possible for all domains and should not be used with domain elements unless
 the domain is known to be a field. For example dividing two elements of :ref:`ZZ`
-gives a ``float`` which is not an element of :ref:`ZZ`::
+might give a ``float`` which is not an element of :ref:`ZZ`::
 
-  >>> z1 / z1
+  >>> z1 / z1  # doctest: +SKIP
   1.0
   >>> type(z1 / z1)  # doctest: +SKIP
   <class 'float'>
   >>> ZZ.is_Field
   False
+
+The behaviour of ``/`` for non-fields can also differ for different
+implementations of the ground types of the domain. For example with
+``SYMPY_GROUND_TYPES=flint`` dividing two elements of :ref:`ZZ` will raise an
+error rather than return a float::
+
+   >>> z1 / z1  # doctest: +SKIP
+   Traceback (most recent call last):
+   ...
+   TypeError: unsupported operand type(s) for /: 'flint._flint.fmpz' and 'flint._flint.fmpz'
 
 Most domains representing non-field rings allow floor and modulo division
 (remainder) with Python's floor division ``//`` and modulo division ``%``
@@ -563,11 +573,11 @@ finite field of prime order `p` can be constructed with :ref:`GF(p)`::
   >>> from sympy import GF
   >>> K = GF(5)
   >>> two = K(2)
-  >>> two
+  >>> two #doctest: +SKIP
   2 mod 5
-  >>> two ** 2
+  >>> two ** 2A #doctest: +SKIP
   4 mod 5
-  >>> two ** 3
+  >>> two ** 3 #doctest: +SKIP
   3 mod 5
 
 There is also ``FF`` as an alias for ``GF`` (standing for "finite field" and
@@ -583,7 +593,7 @@ a field. It is just the integers modulo ``6`` or ``9`` and therefore has zero
 divisors and non-invertible elements::
 
   >>> K = GF(6)
-  >>> K(3) * K(2)
+  >>> K(3) * K(2) #doctest: +SKIP
   0 mod 6
 
 It would be good to have a proper implementation of prime-power order finite
@@ -914,22 +924,22 @@ two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
   >>> p2 = K2.from_sympy(x**2 + 1)
   >>> p1
   x**2 + 1
-  >>> p2
-  x**2 + 1
+  >>> p2  # doctest: +SKIP
+  DMP_Python([1, 0, 1], ZZ)
   >>> type(K1)
   <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
   >>> type(p1)
   <class 'sympy.polys.rings.PolyElement'>
   >>> type(K2)
   <class 'sympy.polys.domains.old_polynomialring.GlobalPolynomialRing'>
-  >>> type(p2)
-  <class 'sympy.polys.polyclasses.DMP'>
+  >>> type(p2)  # doctest: +SKIP
+  <class 'sympy.polys.polyclasses.DMP_Python'>
 
 The internal representation of the old polynomial ring domain is the
 :py:class:`~.DMP` representation as a list of (lists of) coefficients::
 
   >>> repr(p2)  # doctest: +SKIP
-  'DMP([1, 0, 1], ZZ, ZZ[x])'
+  'DMP_Python([1, 0, 1], ZZ, ZZ[x])'
 
 The most notable use of the :py:class:`~.DMP` representation of polynomials is
 as the internal representation used by :py:class:`~.Poly` (this is discussed
@@ -1353,11 +1363,11 @@ internally. This is the public interface of :py:class:`~.Poly`::
 This is the internal implementation of :py:class:`~.Poly`::
 
   >>> d = p.rep  # internal representation of Poly
-  >>> d
-  DMP([1, 0, 1], ZZ, None)
-  >>> d.rep      # internal representation of DMP
+  >>> d  # doctest: +SKIP
+  DMP_Python([1, 0, 1], ZZ)
+  >>> d.rep      # internal representation of DMP  # doctest: +SKIP
   [1, 0, 1]
-  >>> type(d.rep)
+  >>> type(d.rep)  # doctest: +SKIP
   <class 'list'>
   >>> type(d.rep[0])  # doctest: +SKIP
   <class 'int'>
@@ -1428,13 +1438,13 @@ coefficients in this case is the sparse ("new") polynomial ring::
   True
   >>> p.domain == ZZ.old_poly_ring(y, z)
   False
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [y, 0, z]
-  >>> p.rep.rep[0]
+  >>> p.rep.rep[0]  # doctest: +SKIP
   y
-  >>> type(p.rep.rep[0])
+  >>> type(p.rep.rep[0])  # doctest: +SKIP
   <class 'sympy.polys.rings.PolyElement'>
-  >>> dict(p.rep.rep[0])
+  >>> dict(p.rep.rep[0])  # doctest: +SKIP
   {(1, 0): 1}
 
 What we have here is a strange hybrid of dense and sparse implementations. The
@@ -1451,10 +1461,10 @@ then we get a fully dense DMP list of lists of lists representation::
   >>> p
   Poly(x**2*y + z, x, y, z, domain='ZZ')
   >>> p.rep
-  DMP([[[1], []], [[]], [[1, 0]]], ZZ, None)
-  >>> p.rep.rep
+  DMP_Python([[[1], []], [[]], [[1, 0]]], ZZ)
+  >>> p.rep.rep  # doctest: +SKIP
   [[[1], []], [[]], [[1, 0]]]
-  >>> p.rep.rep[0][0][0]
+  >>> p.rep.rep[0][0][0]  # doctest: +SKIP
   1
   >>> type(p.rep.rep[0][0][0])  # doctest: +SKIP
   <class 'int'>
@@ -1466,12 +1476,12 @@ representation by choosing a generator that is not in the expression at all::
   >>> p
   Poly(x**2*y + z, t, domain='ZZ[x,y,z]')
   >>> p.rep
-  DMP([x**2*y + z], ZZ[x,y,z], None)
-  >>> p.rep.rep[0]
+  DMP_Python([x**2*y + z], ZZ[x,y,z])
+  >>> p.rep.rep[0]  # doctest: +SKIP
   x**2*y + z
-  >>> type(p.rep.rep[0])
+  >>> type(p.rep.rep[0])  # doctest: +SKIP
   <class 'sympy.polys.rings.PolyElement'>
-  >>> dict(p.rep.rep[0])
+  >>> dict(p.rep.rep[0])  # doctest: +SKIP
   {(0, 0, 1): 1, (2, 1, 0): 1}
 
 If no generators are provided to the :py:class:`~.Poly` constructor then it

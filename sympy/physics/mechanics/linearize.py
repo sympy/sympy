@@ -1,6 +1,6 @@
 __all__ = ['Linearizer']
 
-from sympy.core.backend import Matrix, eye, zeros
+from sympy import Matrix, eye, zeros
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
@@ -68,7 +68,7 @@ class Linearizer:
             Method used to solve the several symbolic linear systems of the
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
-            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
             supplied, it should have the format ``x = f(A, b)``, where it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.

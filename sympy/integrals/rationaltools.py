@@ -360,8 +360,8 @@ def log_to_real(h, q, x, t):
     from sympy.simplify.radsimp import collect
     u, v = symbols('u,v', cls=Dummy)
 
-    H = h.as_expr().subs({t: u + I*v}).expand()
-    Q = q.as_expr().subs({t: u + I*v}).expand()
+    H = h.as_expr().xreplace({t: u + I*v}).expand()
+    Q = q.as_expr().xreplace({t: u + I*v}).expand()
 
     H_map = collect(H, I, evaluate=False)
     Q_map = collect(Q, I, evaluate=False)
@@ -379,7 +379,18 @@ def log_to_real(h, q, x, t):
     result = S.Zero
 
     for r_u in R_u.keys():
-        C = Poly(c.subs({u: r_u}), v)
+        C = Poly(c.xreplace({u: r_u}), v)
+        if not C:
+            # t was split into real and imaginary parts
+            # and denom Q(u, v) = c + I*d. We just found
+            # that c(r_u) is 0 so the roots are in d
+            C = Poly(d.xreplace({u: r_u}), v)
+            # we were going to reject roots from C that
+            # did not set d to zero, but since we are now
+            # using C = d and c is already 0, there is
+            # nothing to check
+            d = S.Zero
+
         R_v = roots(C, filter='R')
 
         if len(R_v) != C.count_roots():
@@ -395,13 +406,13 @@ def log_to_real(h, q, x, t):
 
         for r_v in R_v_paired:
 
-            D = d.subs({u: r_u, v: r_v})
+            D = d.xreplace({u: r_u, v: r_v})
 
             if D.evalf(chop=True) != 0:
                 continue
 
-            A = Poly(a.subs({u: r_u, v: r_v}), x)
-            B = Poly(b.subs({u: r_u, v: r_v}), x)
+            A = Poly(a.xreplace({u: r_u, v: r_v}), x)
+            B = Poly(b.xreplace({u: r_u, v: r_v}), x)
 
             AB = (A**2 + B**2).as_expr()
 

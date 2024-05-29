@@ -1,8 +1,8 @@
 .. _style_guide_docstring_guidelines:
 
-===============================
-SymPy Docstrings Style Guide
-===============================
+=========================
+Docstrings Style Guide
+=========================
 
 General Guidelines
 --------------------
@@ -757,7 +757,7 @@ You may also see errors like:
 ::
 
     WARNING: more than one target found for cross-reference 'subs()':
-    sympy.core.basic.Basic.subs, sympy.matrices.common.MatrixCommon.subs,
+    sympy.core.basic.Basic.subs, sympy.matrices.matrixbase.MatrixBase.subs,
     sympy.physics.vector.vector.Vector.subs,
     sympy.physics.vector.dyadic.Dyadic.subs
 

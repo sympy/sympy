@@ -20,7 +20,9 @@ from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
 
+
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
+
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -67,6 +69,7 @@ MPMATH_TRANSLATIONS = {
     "ceiling": "ceil",
     "chebyshevt": "chebyt",
     "chebyshevu": "chebyu",
+    "assoc_legendre": "legenp",
     "E": "e",
     "I": "j",
     "ln": "log",
@@ -721,15 +724,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     But if we try to pass in a SymPy expression, it fails
 
-    >>> try:
-    ...     g(x + 1)
-    ... # NumPy release after 1.17 raises TypeError instead of
-    ... # AttributeError
-    ... except (AttributeError, TypeError):
-    ...     raise AttributeError() # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> g(x + 1)
     Traceback (most recent call last):
     ...
-    AttributeError:
+    TypeError: loop of ufunc does not support argument 0 of type Add which has
+               no callable sin method
 
     Now, let's look at what happened. The reason this fails is that ``g``
     calls ``numpy.sin`` on the input expression, and ``numpy.sin`` does not
@@ -957,16 +956,18 @@ def _recursive_to_string(doprint, arg):
     """Functions in lambdify accept both SymPy types and non-SymPy types such as python
     lists and tuples. This method ensures that we only call the doprint method of the
     printer with SymPy types (so that the printer safely can use SymPy-methods)."""
-    from sympy.matrices.common import MatrixOperations
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.core.basic import Basic
 
-    if isinstance(arg, (Basic, MatrixOperations)):
+    if isinstance(arg, (Basic, MatrixBase)):
         return doprint(arg)
     elif iterable(arg):
         if isinstance(arg, list):
             left, right = "[", "]"
         elif isinstance(arg, tuple):
             left, right = "(", ",)"
+            if not arg:
+                return "()"
         else:
             raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
         return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right

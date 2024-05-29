@@ -1,7 +1,7 @@
 from .accumulationbounds import AccumBounds, AccumulationBounds # noqa: F401
 from .singularities import singularities
 from sympy.core import Pow, S
-from sympy.core.function import diff, expand_mul
+from sympy.core.function import diff, expand_mul, Function
 from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
 from sympy.core.numbers import equal_valued
@@ -10,23 +10,31 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.integers import frac
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
-    TrigonometricFunction, sin, cos, csc, sec)
+    TrigonometricFunction, sin, cos, tan, cot, csc, sec,
+    asin, acos, acot, atan, asec, acsc)
+from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
+    sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement)
 from sympy.sets.fancysets import ImageSet
+from sympy.sets.conditionset import ConditionSet
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
+from sympy.matrices.dense import hessian
 
 
 def continuous_domain(f, symbol, domain):
     """
-    Returns the intervals in the given domain for which the function
-    is continuous.
-    This method is limited by the ability to determine the various
+    Returns the domain on which the function expression f is continuous.
+
+    This function is limited by the ability to determine the various
     singularities and discontinuities of the given function.
+    The result is either given as a union of intervals or constructed using
+    other set operations.
 
     Parameters
     ==========
@@ -69,24 +77,85 @@ def continuous_domain(f, symbol, domain):
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
 
-    if domain.is_subset(S.Reals):
-        constrained_interval = domain
-        for atom in f.atoms(Pow):
-            den = atom.exp.as_numer_denom()[1]
-            if den.is_even and den.is_nonzero:
-                constraint = solve_univariate_inequality(atom.base >= 0,
-                                                         symbol).as_set()
-                constrained_interval = Intersection(constraint,
-                                                    constrained_interval)
+    if not domain.is_subset(S.Reals):
+        raise NotImplementedError(filldedent('''
+            Domain must be a subset of S.Reals.
+            '''))
+    implemented = [Pow, exp, log, Abs, frac,
+                   sin, cos, tan, cot, sec, csc,
+                   asin, acos, atan, acot, asec, acsc,
+                   sinh, cosh, tanh, coth, sech, csch,
+                   asinh, acosh, atanh, acoth, asech, acsch]
+    used = [fct.func for fct in f.atoms(Function) if fct.has(symbol)]
+    if any(func not in implemented for func in used):
+        raise NotImplementedError(filldedent('''
+            Unable to determine the domain of the given function.
+            '''))
 
-        for atom in f.atoms(log):
-            constraint = solve_univariate_inequality(atom.args[0] > 0,
-                                                     symbol).as_set()
-            constrained_interval = Intersection(constraint,
-                                                constrained_interval)
+    x = Symbol('x')
+    constraints = {
+        log: (x > 0,),
+        asin: (x >= -1, x <= 1),
+        acos: (x >= -1, x <= 1),
+        acosh: (x >= 1,),
+        atanh: (x > -1, x < 1),
+        asech: (x > 0, x <= 1)
+    }
+    constraints_union = {
+        asec: (x <= -1, x >= 1),
+        acsc: (x <= -1, x >= 1),
+        acoth: (x < -1, x > 1)
+    }
 
+    cont_domain = domain
+    for atom in f.atoms(Pow):
+        den = atom.exp.as_numer_denom()[1]
+        if atom.exp.is_rational and den.is_odd:
+            pass    # 0**negative handled by singularities()
+        else:
+            constraint = solve_univariate_inequality(atom.base >= 0,
+                                                        symbol).as_set()
+            cont_domain = Intersection(constraint, cont_domain)
 
-    return constrained_interval - singularities(f, symbol, domain)
+    for atom in f.atoms(Function):
+        if atom.func in constraints:
+            for c in constraints[atom.func]:
+                constraint_relational = c.subs(x, atom.args[0])
+                constraint_set = solve_univariate_inequality(
+                    constraint_relational, symbol).as_set()
+                cont_domain = Intersection(constraint_set, cont_domain)
+        elif atom.func in constraints_union:
+            constraint_set = S.EmptySet
+            for c in constraints_union[atom.func]:
+                constraint_relational = c.subs(x, atom.args[0])
+                constraint_set += solve_univariate_inequality(
+                    constraint_relational, symbol).as_set()
+            cont_domain = Intersection(constraint_set, cont_domain)
+        # XXX: the discontinuities below could be factored out in
+        # a new "discontinuities()".
+        elif atom.func == acot:
+            from sympy.solvers.solveset import solveset_real
+            # Sympy's acot() has a step discontinuity at 0. Since it's
+            # neither an essential singularity nor a pole, singularities()
+            # will not report it. But it's still relevant for determining
+            # the continuity of the function f.
+            cont_domain -= solveset_real(atom.args[0], symbol)
+            # Note that the above may introduce spurious discontinuities, e.g.
+            # for abs(acot(x)) at 0.
+        elif atom.func == frac:
+            from sympy.solvers.solveset import solveset_real
+            r = function_range(atom.args[0], symbol, domain)
+            r = Intersection(r, S.Integers)
+            if r.is_finite_set:
+                discont = S.EmptySet
+                for n in r:
+                    discont += solveset_real(atom.args[0]-n, symbol)
+            else:
+                discont = ConditionSet(
+                    symbol, S.Integers.contains(atom.args[0]), cont_domain)
+            cont_domain -= discont
+
+    return cont_domain - singularities(f, symbol, domain)
 
 
 def function_range(f, symbol, domain):
@@ -677,18 +746,13 @@ def is_convex(f, *syms, domain=S.Reals):
     .. [5] https://en.wikipedia.org/wiki/Concave_function
 
     """
-
-    if len(syms) > 1:
-        raise NotImplementedError(
-            "The check for the convexity of multivariate functions is not implemented yet.")
-
+    if len(syms) > 1 :
+        return hessian(f, syms).is_positive_semidefinite
     from sympy.solvers.inequalities import solve_univariate_inequality
-
     f = _sympify(f)
     var = syms[0]
     if any(s in domain for s in singularities(f, var)):
         return False
-
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
         return False

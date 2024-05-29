@@ -67,7 +67,7 @@ def invariant_factors(m):
         return ()
 
     rows, cols = shape = m.shape
-    m = list(m.to_dense().rep)
+    m = list(m.to_dense().rep.to_ddm())
 
     def add_rows(m, i, j, a, b, c, d):
         # replace m[i, :] by a*m[i, :] + b*m[j, :]
@@ -207,7 +207,7 @@ def _hermite_normal_form(A):
     # We work one row at a time, starting from the bottom row, and working our
     # way up.
     m, n = A.shape
-    A = A.to_dense().rep.copy()
+    A = A.to_dense().rep.to_ddm().copy()
     # Our goal is to put pivot entries in the rightmost columns.
     # Invariant: Before processing each row, k should be the index of the
     # leftmost column in which we have so far put a pivot.
@@ -248,7 +248,7 @@ def _hermite_normal_form(A):
                 add_columns(A, j, k, 1, -q, 0, 1)
     # Finally, the HNF consists of those columns of A in which we succeeded in making
     # a nonzero pivot.
-    return DomainMatrix.from_rep(A)[:, k:]
+    return DomainMatrix.from_rep(A.to_dfm_or_ddm())[:, k:]
 
 
 def _hermite_normal_form_modulo_D(A, D):
@@ -314,7 +314,7 @@ def _hermite_normal_form_modulo_D(A, D):
     m, n = A.shape
     if n < m:
         raise DMShapeError('Matrix must have at least as many columns as rows.')
-    A = A.to_dense().rep.copy()
+    A = A.to_dense().rep.to_ddm().copy()
     k = n
     R = D
     for i in range(m - 1, -1, -1):

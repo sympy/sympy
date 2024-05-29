@@ -5,10 +5,13 @@ Mechanics API Reference
    :titlesonly:
 
    part_bod.rst
-   body.rst
    kane_lagrange.rst
    joint.rst
    system.rst
    linearize.rst
    expr_manip.rst
    printing.rst
+   pathway.rst
+   actuator.rst
+   wrapping_geometry.rst
+   deprecated_classes.rst

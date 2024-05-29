@@ -1,12 +1,11 @@
 from sympy import solve
-from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
+from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros, eye)
 from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot, find_dynamicsymbols)
 from sympy.testing.pytest import raises
-from sympy.core.backend import USE_SYMENGINE
 
 
 def test_invalid_coordinates():
@@ -454,11 +453,7 @@ def test_implicit_kinematics():
           explicit_kinematics = False # implicit kinematics
         )
     except Exception as e:
-        # symengine struggles with these kinematic equations
-        if USE_SYMENGINE and 'Matrix is rank deficient' in str(e):
-            return
-        else:
-            raise e
+        raise e
 
     # mass and inertia dyadic relative to CM
     M_B = symbols('M_B')

@@ -30,3 +30,23 @@ class CompositeDomain(Domain):
             return domain
         else:
             return self.__class__(domain, newsyms, self.order)
+
+    def set_domain(self, domain):
+        """Set the ground domain of this domain. """
+        return self.__class__(domain, self.symbols, self.order)
+
+    @property
+    def is_Exact(self):
+        """Returns ``True`` if this domain is exact. """
+        return self.domain.is_Exact
+
+    def get_exact(self):
+        """Returns an exact version of this domain. """
+        return self.set_domain(self.domain.get_exact())
+
+    @property
+    def has_CharacteristicZero(self):
+        return self.domain.has_CharacteristicZero
+
+    def characteristic(self):
+        return self.domain.characteristic()

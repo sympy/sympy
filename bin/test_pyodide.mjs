@@ -21,7 +21,7 @@ await pyodide.loadPackage([
 console.log('Pyodide packages loaded successfully')
 
 const micropip = pyodide.pyimport('micropip');
-await micropip.install('pytest-split');
+await micropip.install(['pytest-split', 'hypothesis']);
 console.log('Micropip packages loaded successfully')
 
 let group = 'None'

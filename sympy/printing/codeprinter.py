@@ -34,6 +34,11 @@ class AssignmentError(Exception):
     """
     pass
 
+class PrintMethodNotImplementedError(NotImplementedError):
+    """
+    Raised if a _print_* method is missing in the Printer.
+    """
+    pass
 
 def _convert_python_lists(arg):
     if isinstance(arg, list):
@@ -64,6 +69,7 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
+        'strict': None  # True or False; None => True if human == True
     }
 
     # Functions which are "simple" to rewrite to other functions that
@@ -104,11 +110,14 @@ class CodePrinter(StrPrinter):
             'Ei': ('li', []),
             'dirichlet_eta': ('zeta', []),
             'riemann_xi': ('zeta', ['gamma']),
+            'SingularityFunction': ('Piecewise', []),
     }
 
     def __init__(self, settings=None):
-
         super().__init__(settings=settings)
+        if self._settings.get('strict', True) == None:
+            # for backwards compatibility, human=False need not to throw:
+            self._settings['strict'] = self._settings.get('human', True) == True
         if not hasattr(self, 'reserved_words'):
             self.reserved_words = set()
 
@@ -444,7 +453,8 @@ class CodePrinter(StrPrinter):
             # Simple rewrite to supported function possible
             target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
             if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
-                return self._print(expr.rewrite(target_f))
+                return '(' + self._print(expr.rewrite(target_f)) + ')'
+
         if expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
@@ -568,6 +578,9 @@ class CodePrinter(StrPrinter):
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_not_supported(self, expr):
+        if self._settings.get('strict', False):
+            raise PrintMethodNotImplementedError("Unsupported by %s: %s" % (str(type(self)), str(type(expr))) + \
+                             "\nSet the printer option 'strict' to False in order to generate partially printed code.")
         try:
             self._not_supported.add(expr)
         except TypeError:

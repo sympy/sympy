@@ -325,7 +325,7 @@ class FpGroup(DefaultPrinting):
     def most_frequent_generator(self):
         gens = self.generators
         rels = self.relators
-        freqs = [sum([r.generator_count(g) for r in rels]) for g in gens]
+        freqs = [sum(r.generator_count(g) for r in rels) for g in gens]
         return gens[freqs.index(max(freqs))]
 
     def random(self):
@@ -508,7 +508,7 @@ class FpGroup(DefaultPrinting):
 
         '''
         P, T = self._to_perm_group()
-        return T.invert(P._elements)
+        return T.invert(P.elements)
 
     @property
     def is_cyclic(self):
@@ -984,7 +984,7 @@ def simplify_presentation(*args, change_gens=False):
         while change_gens and not set(prev_gens) == set(gens):
             prev_gens = gens
             gens, rels = elimination_technique_1(gens, rels, identity)
-        rels = _simplify_relators(rels, identity)
+        rels = _simplify_relators(rels)
 
     if change_gens:
         syms = [g.array_form[0][0] for g in gens]
@@ -1000,13 +1000,80 @@ def simplify_presentation(*args, change_gens=False):
             rels[j] = rel
     return gens, rels
 
-def _simplify_relators(rels, identity):
-    """Relies upon ``_simplification_technique_1`` for its functioning. """
+def _simplify_relators(rels):
+    """
+    Simplifies a set of relators. All relators are checked to see if they are
+    of the form `gen^n`. If any such relators are found then all other relators
+    are processed for strings in the `gen` known order.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics import free_group
+    >>> from sympy.combinatorics.fp_groups import _simplify_relators
+    >>> F, x, y = free_group("x, y")
+    >>> w1 = [x**2*y**4, x**3]
+    >>> _simplify_relators(w1)
+    [x**3, x**-1*y**4]
+
+    >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
+    >>> _simplify_relators(w2)
+    [x**-1*y**-2, x**-1*y*x**-1, x**3, y**5]
+
+    >>> w3 = [x**6*y**4, x**4]
+    >>> _simplify_relators(w3)
+    [x**4, x**2*y**4]
+
+    >>> w4 = [x**2, x**5, y**3]
+    >>> _simplify_relators(w4)
+    [x, y**3]
+
+    """
     rels = rels[:]
 
-    rels = list(set(_simplification_technique_1(rels)))
-    rels.sort()
+    if not rels:
+        return []
+
+    identity = rels[0].group.identity
+
+    # build dictionary with "gen: n" where gen^n is one of the relators
+    exps = {}
+    for i in range(len(rels)):
+        rel = rels[i]
+        if rel.number_syllables() == 1:
+            g = rel[0]
+            exp = abs(rel.array_form[0][1])
+            if rel.array_form[0][1] < 0:
+                rels[i] = rels[i]**-1
+                g = g**-1
+            if g in exps:
+                exp = gcd(exp, exps[g].array_form[0][1])
+            exps[g] = g**exp
+
+    one_syllables_words = list(exps.values())
+    # decrease some of the exponents in relators, making use of the single
+    # syllable relators
+    for i, rel in enumerate(rels):
+        if rel in one_syllables_words:
+            continue
+        rel = rel.eliminate_words(one_syllables_words, _all = True)
+        # if rels[i] contains g**n where abs(n) is greater than half of the power p
+        # of g in exps, g**n can be replaced by g**(n-p) (or g**(p-n) if n<0)
+        for g in rel.contains_generators():
+            if g in exps:
+                exp = exps[g].array_form[0][1]
+                max_exp = (exp + 1)//2
+                rel = rel.eliminate_word(g**(max_exp), g**(max_exp-exp), _all = True)
+                rel = rel.eliminate_word(g**(-max_exp), g**(-(max_exp-exp)), _all = True)
+        rels[i] = rel
+
     rels = [r.identity_cyclic_reduction() for r in rels]
+
+    rels += one_syllables_words # include one_syllable_words in the list of relators
+    rels = list(set(rels)) # get unique values in rels
+    rels.sort()
+
+    # remove <identity> entries in rels
     try:
         rels.remove(identity)
     except ValueError:
@@ -1054,67 +1121,6 @@ def elimination_technique_1(gens, rels, identity):
         pass
     gens = [g for g in gens if g not in redundant_gens]
     return gens, rels
-
-def _simplification_technique_1(rels):
-    """
-    All relators are checked to see if they are of the form `gen^n`. If any
-    such relators are found then all other relators are processed for strings
-    in the `gen` known order.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics import free_group
-    >>> from sympy.combinatorics.fp_groups import _simplification_technique_1
-    >>> F, x, y = free_group("x, y")
-    >>> w1 = [x**2*y**4, x**3]
-    >>> _simplification_technique_1(w1)
-    [x**-1*y**4, x**3]
-
-    >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
-    >>> _simplification_technique_1(w2)
-    [x**-1*y*x**-1, x**3, x**-1*y**-2, y**5]
-
-    >>> w3 = [x**6*y**4, x**4]
-    >>> _simplification_technique_1(w3)
-    [x**2*y**4, x**4]
-
-    """
-    rels = rels[:]
-    # dictionary with "gen: n" where gen^n is one of the relators
-    exps = {}
-    for i in range(len(rels)):
-        rel = rels[i]
-        if rel.number_syllables() == 1:
-            g = rel[0]
-            exp = abs(rel.array_form[0][1])
-            if rel.array_form[0][1] < 0:
-                rels[i] = rels[i]**-1
-                g = g**-1
-            if g in exps:
-                exp = gcd(exp, exps[g].array_form[0][1])
-            exps[g] = g**exp
-
-    one_syllables_words = exps.values()
-    # decrease some of the exponents in relators, making use of the single
-    # syllable relators
-    for i in range(len(rels)):
-        rel = rels[i]
-        if rel in one_syllables_words:
-            continue
-        rel = rel.eliminate_words(one_syllables_words, _all = True)
-        # if rels[i] contains g**n where abs(n) is greater than half of the power p
-        # of g in exps, g**n can be replaced by g**(n-p) (or g**(p-n) if n<0)
-        for g in rel.contains_generators():
-            if g in exps:
-                exp = exps[g].array_form[0][1]
-                max_exp = (exp + 1)//2
-                rel = rel.eliminate_word(g**(max_exp), g**(max_exp-exp), _all = True)
-                rel = rel.eliminate_word(g**(-max_exp), g**(-(max_exp-exp)), _all = True)
-        rels[i] = rel
-    rels = [r.identity_cyclic_reduction() for r in rels]
-    return rels
-
 
 ###############################################################################
 #                           SUBGROUP PRESENTATIONS                            #

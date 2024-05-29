@@ -8,6 +8,11 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, tan
+from sympy.polys.rootoftools import RootOf, CRootOf
+from sympy import Integers
+from sympy.sets.sets import Interval
+from sympy.sets.fancysets import ImageSet
+from sympy.core.function import Lambda
 
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import XFAIL, raises
@@ -203,6 +208,8 @@ def test_floor():
     assert (floor(y) < n) == (y < n)
     assert (floor(y) > n) == (y >= n + 1)
 
+    assert floor(RootOf(x**3 - 27*x, 2)) == 5
+
 
 def test_ceiling():
 
@@ -276,6 +283,8 @@ def test_ceiling():
     assert unchanged(ceiling, x + y)
 
     assert ceiling(x + 3) == ceiling(x) + 3
+    assert ceiling(x + 3.0) == ceiling(x) + 3
+    assert ceiling(x + 3.0*I) == ceiling(x) + 3*I
     assert ceiling(x + k) == ceiling(x) + k
 
     assert ceiling(y + 3) == ceiling(y) + 3
@@ -387,6 +396,12 @@ def test_ceiling():
     assert (ceiling(y) >= n) == (y > n - 1)
     assert (ceiling(y) < n) == (y <= n - 1)
     assert (ceiling(y) > n) == (y > n)
+
+    assert ceiling(RootOf(x**3 - 27*x, 2)) == 6
+    s = ImageSet(Lambda(n, n + (CRootOf(x**5 - x**2 + 1, 0))), Integers)
+    f = CRootOf(x**5 - x**2 + 1, 0)
+    s = ImageSet(Lambda(n, n + f), Integers)
+    assert s.intersect(Interval(-10, 10)) == {i + f for i in range(-9, 11)}
 
 
 def test_frac():

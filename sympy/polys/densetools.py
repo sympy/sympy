@@ -34,7 +34,7 @@ from sympy.polys.polyerrors import (
 )
 from sympy.utilities import variations
 
-from math import ceil as _ceil, log as _log
+from math import ceil as _ceil, log2 as _log2
 
 def dup_integrate(f, m, K):
     """
@@ -453,6 +453,10 @@ def dup_trunc(f, p, K):
                 g.append(c - p)
             else:
                 g.append(c)
+    elif K.is_FiniteField:
+        # XXX: python-flint's nmod does not support %
+        pi = int(p)
+        g = [ K(int(c) % pi) for c in f ]
     else:
         g = [ c % p for c in f ]
 
@@ -778,7 +782,7 @@ def dmp_ground_extract(f, g, u, K):
 
 def dup_real_imag(f, K):
     """
-    Return bivariate polynomials ``f1`` and ``f2``, such that ``f = f1 + f2*I``.
+    Find ``f1`` and ``f2``, such that ``f(x+I*y) = f1(x,y) + f2(x,y)*I``.
 
     Examples
     ========
@@ -788,6 +792,11 @@ def dup_real_imag(f, K):
 
     >>> R.dup_real_imag(x**3 + x**2 + x + 1)
     (x**3 + x**2 - 3*x*y**2 + x - y**2 + 1, 3*x**2*y + 2*x*y - y**3 + y)
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import I
+    >>> (z**3 + z**2 + z + 1).subs(z, x+I*y).expand().collect(I)
+    x**3 + x**2 - 3*x*y**2 + x - y**2 + I*(3*x**2*y + 2*x*y - y**3 + y) + 1
 
     """
     if not K.is_ZZ and not K.is_QQ:
@@ -886,6 +895,44 @@ def dup_shift(f, a, K):
     for i in range(n, 0, -1):
         for j in range(0, i):
             f[j + 1] += a*f[j]
+
+    return f
+
+
+def dmp_shift(f, a, u, K):
+    """
+    Evaluate efficiently Taylor shift ``f(X + A)`` in ``K[X]``.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, ring, ZZ
+    >>> x, y = symbols('x y')
+    >>> R, _, _ = ring([x, y], ZZ)
+
+    >>> p = x**2*y + 2*x*y + 3*x + 4*y + 5
+
+    >>> R.dmp_shift(R(p), [ZZ(1), ZZ(2)])
+    x**2*y + 2*x**2 + 4*x*y + 11*x + 7*y + 22
+
+    >>> p.subs({x: x + 1, y: y + 2}).expand()
+    x**2*y + 2*x**2 + 4*x*y + 11*x + 7*y + 22
+    """
+    if not u:
+        return dup_shift(f, a[0], K)
+
+    if dmp_zero_p(f, u):
+        return f
+
+    a0, a1 = a[0], a[1:]
+
+    f = [ dmp_shift(c, a1, u-1, K) for c in f ]
+    n = len(f) - 1
+
+    for i in range(n, 0, -1):
+        for j in range(0, i):
+            afj = dmp_mul_ground(f[j], a0, u-1, K)
+            f[j + 1] = dmp_add(f[j + 1], afj, u-1, K)
 
     return f
 
@@ -1195,13 +1242,20 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
     for c in f:
         common = K1.lcm(common, K0.denom(c))
 
-    if not K1.is_one(common):
-        f = dup_mul_ground(f, common, K0)
+    if K1.is_one(common):
+        if not convert:
+            return common, f
+        else:
+            return common, dup_convert(f, K0, K1)
+
+    # Use quo rather than exquo to handle inexact domains by discarding the
+    # remainder.
+    f = [K0.numer(c)*K1.quo(common, K0.denom(c)) for c in f]
 
     if not convert:
-        return common, f
+        return common, dup_convert(f, K1, K0)
     else:
-        return common, dup_convert(f, K0, K1)
+        return common, f
 
 
 def _rec_clear_denoms(g, v, K0, K1):
@@ -1281,7 +1335,7 @@ def dup_revert(f, n, K):
     g = [K.revert(dup_TC(f, K))]
     h = [K.one, K.zero, K.zero]
 
-    N = int(_ceil(_log(n, 2)))
+    N = int(_ceil(_log2(n)))
 
     for i in range(1, N + 1):
         a = dup_mul_ground(g, K(2), K)

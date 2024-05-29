@@ -54,10 +54,7 @@ class Literal:
         if callable(self.lit):
             lit = self.lit(expr)
         else:
-            try:
-                lit = self.lit.apply(expr)
-            except AttributeError:
-                lit = self.lit.rcall(expr)
+            lit = self.lit.apply(expr)
         return type(self)(lit, self.is_Not)
 
     def __invert__(self):
@@ -335,8 +332,7 @@ class CNF:
         clauses = set()
         for a, b in product(self.clauses, cnf.clauses):
             tmp = set(a)
-            for t in b:
-                tmp.add(t)
+            tmp.update(b)
             clauses.add(frozenset(tmp))
         return CNF(clauses)
 
@@ -346,15 +342,11 @@ class CNF:
 
     def _not(self):
         clss = list(self.clauses)
-        ll = set()
-        for x in clss[-1]:
-            ll.add(frozenset((~x,)))
+        ll = {frozenset((~x,)) for x in clss[-1]}
         ll = CNF(ll)
 
         for rest in clss[:-1]:
-            p = set()
-            for x in rest:
-                p.add(frozenset((~x,)))
+            p = {frozenset((~x,)) for x in rest}
             ll = ll._or(CNF(p))
         return ll
 
