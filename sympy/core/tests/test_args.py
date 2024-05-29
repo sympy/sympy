@@ -4394,6 +4394,22 @@ def test_sympy__physics__control__lti__StateSpace():
     assert _test_args(StateSpace(A, B, C, D))
 
 
+def test_sympy__physics__control__lti__StateSpaceSeries():
+    from sympy import Matrix
+    from sympy.physics.control import StateSpace, StateSpaceSeries
+    A1 = Matrix([[-5, -1], [3, -1]])
+    B1 = Matrix([2, 5])
+    C1 = Matrix([[1, 2]])
+    D1 = Matrix([0])
+    A2 = Matrix([[-1, -5], [-1, 3]])
+    B2 = Matrix([5, 2])
+    C2 = Matrix([[2, 1]])
+    D2 = Matrix([1])
+    ss1 = StateSpace(A1, B1, C1, D1)
+    ss2 = StateSpace(A2, B2, C2, D2)
+    assert _test_args(StateSpaceSeries(ss1, ss2))
+
+
 def test_sympy__physics__units__dimensions__Dimension():
     from sympy.physics.units.dimensions import Dimension
     assert _test_args(Dimension("length", "L"))

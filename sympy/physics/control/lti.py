@@ -27,7 +27,7 @@ from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
     'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'StateSpace', 'gbt', 'bilinear', 'forward_diff', 'backward_diff',
-    'phase_margin', 'gain_margin']
+    'phase_margin', 'gain_margin', 'StateSpaceSeries']
 
 def _roots(poly, var):
     """ like roots, but works on higher-order polynomials. """
@@ -4302,3 +4302,107 @@ class StateSpace(LinearTimeInvariant):
 
         """
         return self.controllability_matrix().rank() == self.num_states
+
+
+class StateSpaceSeries(StateSpace):
+    r"""
+    A class for representing a series configuration of StateSpace models.
+
+    Parameters
+    ==========
+    args : StateSpace
+        StateSpace models in a series configuration.
+    evaluate : Boolean, Keyword
+        When passed ``True``, returns the equivalent
+        ``StateSpaceSeries(*args).doit()``. Set to
+        ``False`` by default.
+
+    Raises
+    ======
+
+    ValueError
+        When no argument is passed.
+    TypeError
+        Any of the passed ``*args`` has unsupported type.
+
+    Examples
+    ========
+    >>> from sympy import Matrix
+    >>> from sympy.physics.control import TransferFunction, StateSpace, StateSpaceSeries
+    >>> A1 = Matrix([-1])
+    >>> A2 = Matrix([0])
+    >>> B1 = Matrix([1])
+    >>> B2 = Matrix([1])
+    >>> C1 = Matrix([-1])
+    >>> C2 = Matrix([1])
+    >>> D1 = Matrix([1])
+    >>> D2 = Matrix([0])
+    >>> s1 = StateSpace(A1, B1, C1, D1)
+    >>> s2 = StateSpace(A2, B2, C2, D2)
+    >>> ser = StateSpaceSeries(s1, s2)
+    >>> ser
+    StateSpaceSeries(StateSpace(Matrix([[-1]]), Matrix([[1]]), Matrix([[-1]]), Matrix([[1]])),
+    StateSpace(Matrix([[0]]), Matrix([[1]]), Matrix([[1]]), Matrix([[0]])))
+    >>> ser.rewrite(TransferFunction)
+    [[TransferFunction(1, s + 1, s)]]
+
+    See Also
+    ========
+
+    StateSpace
+    """
+
+    def __new__(cls, *args, evaluate=False):
+        args = _flatten_args(args, StateSpaceSeries)
+        if not args:
+            raise ValueError(f"{args} should not be empty.")
+        if not all(isinstance(arg, StateSpace) for arg in args):
+            raise TypeError(f"All arguments must be of type {StateSpace}")
+        instance = object.__new__(cls)
+        instance._args = args
+        return instance.doit() if evaluate else instance
+
+    def __repr__(self):
+        args_str = ", ".join(map(repr, self._args))
+        return f"StateSpaceSeries({args_str})"
+
+    def doit(self, **hints):
+        r"""
+        Returns the equivalent StateSpace model obtained by evaluating the
+        series configuration.
+
+        Examples
+        ========
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace, StateSpaceSeries
+        >>> A1 = Matrix([-1])
+        >>> A2 = Matrix([0])
+        >>> B1 = Matrix([1])
+        >>> B2 = Matrix([1])
+        >>> C1 = Matrix([-1])
+        >>> C2 = Matrix([1])
+        >>> D1 = Matrix([1])
+        >>> D2 = Matrix([0])
+        >>> s1 = StateSpace(A1, B1, C1, D1)
+        >>> s2 = StateSpace(A2, B2, C2, D2)
+        >>> ser = StateSpaceSeries(s1, s2)
+        >>> ser.doit()
+        StateSpace(Matrix([
+        [0,  0],
+        [1, -1]]), Matrix([
+        [1],
+        [0]]), Matrix([[1, -1]]), Matrix([[0]]))
+
+        """
+        models = [arg.doit() for arg in self._args]
+        res = models[0]
+        for model in models[1:]:
+            res *= model
+        return res
+
+    def _eval_rewrite_as_StateSpace(self, *args, **kwargs):
+        return self.doit()
+
+    def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        model = self.doit()
+        return model.rewrite(TransferFunction)

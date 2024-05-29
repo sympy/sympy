@@ -16,7 +16,8 @@ from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
 from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
-    StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
+    StateSpace, StateSpaceSeries, gbt, bilinear, forward_diff, backward_diff,
+    phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
@@ -1748,3 +1749,29 @@ def test_StateSpace_functions():
     assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
     assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
+
+
+def test_StateSpace_interconnection():
+    A1 = Matrix([[0, 1], [1, 0]])
+    B1 = Matrix([[0], [1]])
+    C1 = Matrix([[0, 1]])
+    D1 = Matrix([[0]])
+    ss1 = StateSpace(A1, B1, C1, D1)
+    ss2 = StateSpace(Matrix([[1, 0], [0, 1]]), Matrix([[1], [0]]), Matrix([[1, 0]]), Matrix([[1]]))
+    ser = StateSpaceSeries(ss1, ss2)
+    assert ser == StateSpaceSeries(
+        StateSpace(
+        Matrix([[0, 1],[1, 0]]),
+        Matrix([[0],[1]]),
+        Matrix([[0, 1]]),
+        Matrix([[0]])),
+        StateSpace(
+        Matrix([[1, 0],[0, 1]]),
+        Matrix([[1],[0]]),
+        Matrix([[1, 0]]),Matrix([[1]])))
+    assert ser.doit() == StateSpace(
+        Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [1, 0, 1, 0]]),
+        Matrix([[1], [0], [0], [1]]),
+        Matrix([[0, 0, 0, 1]]),
+        Matrix([[0]]))
+    assert ser.rewrite(TransferFunction) == [[TransferFunction(s**2, s**3 - s**2 - s + 1, s)]]
