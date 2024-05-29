@@ -607,11 +607,6 @@ class Beam:
         if loc in self._applied_rotation_hinges:
             raise ValueError('Cannot place two rotation hinges at the same location.')
 
-        #Check for unusual hinge placement
-        warning_message = 'It is highly unusual to place a rotation hinge and a sliding hinge at the same location.'
-        if loc in self._applied_sliding_hinges:
-            warnings.warn(warning_message)
-
         #Check for other errors
         if loc == 0:
             raise ValueError('Cannot place hinge at the beginning of the beam.')
@@ -679,11 +674,6 @@ class Beam:
         #Check for duplicate hinges
         if loc in self._applied_sliding_hinges:
             raise ValueError('Cannot place two sliding hinges at the same location.')
-
-        #Check for unusual hinge placement
-        warning_message = 'It is highly unusual to place a rotation hinge and a sliding hinge at the same location.'
-        if loc in self._applied_rotation_hinges:
-            warnings.warn(warning_message)
 
         #Check for other errors
         if loc == 0:
