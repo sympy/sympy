@@ -215,12 +215,20 @@ class Beam:
 
     @property
     def rotation_jumps(self):
-        """ Returns the rotation jumps in rotation hinges in a dictionary."""
+        """
+        Returns the value for the rotation jumps in rotation hinges in a dictionary.
+        The rotation jump is the rotation (in degrees) in a rotation hinge. This can
+        be seen as a jump in the slope plot.
+        """
         return self._rotation_jumps
 
     @property
     def deflection_jumps(self):
-        """ Returns the deflection jumps in sliding hinges in a dictionary."""
+        """
+        Returns the deflection jumps in sliding hinges in a dictionary.
+        The deflection jump is the deflection (in meters) in a sliding hinge.
+        This can be seen as a jump in the deflection plot.
+        """
         return self._deflection_jumps
 
     @property
