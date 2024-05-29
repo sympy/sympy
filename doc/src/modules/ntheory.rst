@@ -41,8 +41,6 @@ Ntheory Functions Reference
 
 .. autofunction:: smoothness_p
 
-.. autofunction:: trailing
-
 .. autofunction:: multiplicity
 
 .. autofunction:: perfect_power
@@ -73,33 +71,25 @@ Ntheory Functions Reference
 
 .. autofunction:: antidivisor_count
 
-.. autoclass:: totient
-   :members:
+.. autofunction:: totient
 
-.. autoclass:: reduced_totient
-   :members:
+.. autofunction:: reduced_totient
 
-.. autoclass:: divisor_sigma
-   :members:
+.. autofunction:: divisor_sigma
 
-.. autoclass:: udivisor_sigma
-   :members:
+.. autofunction:: udivisor_sigma
 
 .. autofunction:: core
 
 .. autofunction:: digits
 
-.. autoclass:: primenu
-   :members:
+.. autofunction:: primenu
 
-.. autoclass:: primeomega
-   :members:
+.. autofunction:: primeomega
 
 .. autofunction:: mersenne_prime_exponent
 
 .. autofunction:: is_perfect
-
-.. autofunction:: is_mersenne_prime
 
 .. autofunction:: abundance
 
@@ -108,6 +98,12 @@ Ntheory Functions Reference
 .. autofunction:: is_deficient
 
 .. autofunction:: is_amicable
+
+.. autofunction:: is_carmichael
+
+.. autofunction:: find_carmichael_numbers_in_range
+
+.. autofunction:: find_first_n_carmichaels
 
 .. module:: sympy.ntheory.modular
 
@@ -137,7 +133,11 @@ Ntheory Functions Reference
 
 .. module:: sympy.ntheory.primetest
 
+.. autofunction:: is_fermat_pseudoprime
+
 .. autofunction:: is_euler_pseudoprime
+
+.. autofunction:: is_euler_jacobi_pseudoprime
 
 .. autofunction:: is_square
 
@@ -148,6 +148,10 @@ Ntheory Functions Reference
 .. autofunction:: is_strong_lucas_prp
 
 .. autofunction:: is_extra_strong_lucas_prp
+
+.. autofunction:: proth_test
+
+.. autofunction:: is_mersenne_prime
 
 .. autofunction:: isprime
 
@@ -177,7 +181,7 @@ Ntheory Functions Reference
 
 .. autofunction:: jacobi_symbol
 
-.. autofunction:: kronecker_symbol
+.. autofunction:: mobius
 
 .. autofunction:: discrete_log
 
@@ -191,9 +195,6 @@ Ntheory Functions Reference
    :members:
 
 .. automodule:: sympy.ntheory.digits
-   :members:
-
-.. autoclass:: sympy.ntheory.mobius
    :members:
 
 .. module:: sympy.ntheory.egyptian_fraction

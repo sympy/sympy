@@ -1621,8 +1621,8 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep',
     ... simplify=False))
-                             /    2    \
-                             | 3*x     |
+                             /   2     \
+                             |3*x      |
                           log|----- + 1|
                              | 2       |
                              \f (x)    /
@@ -1707,8 +1707,8 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_best', simplify=False))
-                             /    2    \
-                             | 3*x     |
+                             /   2     \
+                             |3*x      |
                           log|----- + 1|
                              | 2       |
                              \f (x)    /
@@ -2753,7 +2753,7 @@ class SecondLinearBessel(SingleODESolver):
             # c3 maybe of very complex form so I am simply checking (a - b) form
             # if yes later I will match with the standerd form of bessel in a and b
             # a, b are wild variable defined above.
-            _coeff2 = r[c3].match(a - b)
+            _coeff2 = expand(r[c3]).match(a - b)
             if _coeff2 is None:
                 return False
             # matching with standerd form for c3

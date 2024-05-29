@@ -15,7 +15,8 @@ from sympy.core.evalf import (
     pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.numbers import ilcm, I, Integer, equal_valued
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, Integer, equal_valued
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -69,6 +70,9 @@ def _polifyit(func):
     def wrapper(f, g):
         g = _sympify(g)
         if isinstance(g, Poly):
+            return func(f, g)
+        elif isinstance(g, Integer):
+            g = f.from_expr(g, *f.gens, domain=f.domain)
             return func(f, g)
         elif isinstance(g, Expr):
             try:
@@ -174,7 +178,7 @@ class Poly(Basic):
             else:
                 return cls._from_list(list(rep), opt)
         else:
-            rep = sympify(rep)
+            rep = sympify(rep, evaluate=type(rep) is not str)
 
             if rep.is_Poly:
                 return cls._from_poly(rep, opt)
@@ -473,9 +477,11 @@ class Poly(Basic):
 
         if not g.is_Poly:
             try:
-                return f.rep.dom, f.per, f.rep, f.rep.per(f.rep.dom.from_sympy(g))
+                g_coeff = f.rep.dom.from_sympy(g)
             except CoercionFailed:
                 raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+            else:
+                return f.rep.dom, f.per, f.rep, f.rep.ground_new(g_coeff)
 
         if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
             gens = _unify_gens(f.gens, g.gens)
@@ -489,7 +495,7 @@ class Poly(Basic):
                 if f.rep.dom != dom:
                     f_coeffs = [dom.convert(c, f.rep.dom) for c in f_coeffs]
 
-                F = DMP(dict(list(zip(f_monoms, f_coeffs))), dom, lev)
+                F = DMP.from_dict(dict(list(zip(f_monoms, f_coeffs))), lev, dom)
             else:
                 F = f.rep.convert(dom)
 
@@ -500,7 +506,7 @@ class Poly(Basic):
                 if g.rep.dom != dom:
                     g_coeffs = [dom.convert(c, g.rep.dom) for c in g_coeffs]
 
-                G = DMP(dict(list(zip(g_monoms, g_coeffs))), dom, lev)
+                G = DMP.from_dict(dict(list(zip(g_monoms, g_coeffs))), lev, dom)
             else:
                 G = g.rep.convert(dom)
         else:
@@ -690,7 +696,7 @@ class Poly(Basic):
 
         rep = dict(list(zip(*_dict_reorder(f.rep.to_dict(), f.gens, gens))))
 
-        return f.per(DMP(rep, f.rep.dom, len(gens) - 1), gens=gens)
+        return f.per(DMP.from_dict(rep, len(gens) - 1, f.rep.dom), gens=gens)
 
     def ltrim(f, gen):
         """
@@ -1884,7 +1890,10 @@ class Poly(Basic):
         j = f._gen_to_level(gen)
 
         if hasattr(f.rep, 'degree'):
-            return f.rep.degree(j)
+            d = f.rep.degree(j)
+            if d < 0:
+                d = S.NegativeInfinity
+            return d
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree')
 
@@ -3093,13 +3102,32 @@ class Poly(Basic):
         >>> Poly(x**2 - 2*x + 1, x).shift(2)
         Poly(x**2 + 2*x + 1, x, domain='ZZ')
 
-        """
-        if hasattr(f.rep, 'shift'):
-            result = f.rep.shift(a)
-        else:  # pragma: no cover
-            raise OperationNotSupported(f, 'shift')
+        See Also
+        ========
 
-        return f.per(result)
+        shift_list: Analogous method for multivariate polynomials.
+        """
+        return f.per(f.rep.shift(a))
+
+    def shift_list(f, a):
+        """
+        Efficiently compute Taylor shift ``f(X + A)``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x*y, [x,y]).shift_list([1, 2]) == Poly((x+1)*(y+2), [x,y])
+        True
+
+        See Also
+        ========
+
+        shift: Analogous method for univariate polynomials.
+        """
+        return f.per(f.rep.shift_list(a))
 
     def transform(f, p, q):
         """
@@ -3231,7 +3259,7 @@ class Poly(Basic):
         >>> s, f, r = Poly(x**2 + 1, x, extension=[sqrt(3)]).sqf_norm()
 
         >>> s
-        1
+        [1]
         >>> f
         Poly(x**2 - 2*sqrt(3)*x + 4, x, domain='QQ<sqrt(3)>')
         >>> r
@@ -5189,7 +5217,7 @@ def invert(f, g, *gens, **args):
     NotInvertible: zero divisor
 
     For more efficient inversion of Rationals,
-    use the :obj:`~.mod_inverse` function:
+    use the :obj:`sympy.core.intfunc.mod_inverse` function:
 
     >>> mod_inverse(3, 5)
     2
@@ -5198,8 +5226,7 @@ def invert(f, g, *gens, **args):
 
     See Also
     ========
-
-    sympy.core.numbers.mod_inverse
+    sympy.core.intfunc.mod_inverse
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -6034,7 +6061,7 @@ def sqf_norm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_norm(x**2 + 1, extension=[sqrt(3)])
-    (1, x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
+    ([1], x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -6046,10 +6073,12 @@ def sqf_norm(f, *gens, **args):
 
     s, g, r = F.sqf_norm()
 
+    s_expr = [Integer(si) for si in s]
+
     if not opt.polys:
-        return Integer(s), g.as_expr(), r.as_expr()
+        return s_expr, g.as_expr(), r.as_expr()
     else:
-        return Integer(s), g, r
+        return s_expr, g, r
 
 
 @public
@@ -6087,12 +6116,12 @@ def _sorted_factors(factors, method):
     if method == 'sqf':
         def key(obj):
             poly, exp = obj
-            rep = poly.rep.rep
+            rep = poly.rep.to_list()
             return (exp, len(rep), len(poly.gens), str(poly.domain), rep)
     else:
         def key(obj):
             poly, exp = obj
-            rep = poly.rep.rep
+            rep = poly.rep.to_list()
             return (len(rep), len(poly.gens), exp, str(poly.domain), rep)
 
     return sorted(factors, key=key)
@@ -6546,11 +6575,11 @@ def factor(f, *gens, deep=False, **args):
 
     try:
         return _generic_factor(f, gens, args, method='factor')
-    except PolynomialError as msg:
+    except PolynomialError:
         if not f.is_commutative:
             return factor_nc(f)
         else:
-            raise PolynomialError(msg)
+            raise
 
 
 @public
@@ -6584,7 +6613,7 @@ def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=Fal
             raise MultivariatePolynomialError
 
         for i, poly in enumerate(polys):
-            polys[i] = poly.rep.rep
+            polys[i] = poly.rep.to_list()
 
         if eps is not None:
             eps = opt.domain.convert(eps)

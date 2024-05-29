@@ -170,3 +170,6 @@ $(BUILDDIR)/logo/*.png: $(SOURCEDIR)/logo/sympy.svg
 	$(PYTHON) ./generate_logos.py -d
 	@echo
 	@echo "Logo generated."
+
+autobuild:
+	sphinx-autobuild $(ALLSPHINXOPTS) $(SPHINXSAVEWARNINGS) $(SOURCEDIR) $(BUILDDIR)/html

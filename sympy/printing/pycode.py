@@ -558,6 +558,9 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         PREC = precedence(expr)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
+    def _print_IndexedBase(self, expr):
+        return expr.name
+
     def _print_Indexed(self, expr):
         base = expr.args[0]
         index = expr.args[1:]
@@ -754,6 +757,11 @@ for k in _known_constants_mpmath:
 class SymPyPrinter(AbstractPythonCodePrinter):
 
     language = "Python with SymPy"
+
+    _default_settings = dict(
+        AbstractPythonCodePrinter._default_settings,
+        strict=False   # any class name will per definition be what we target in SymPyPrinter.
+    )
 
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''

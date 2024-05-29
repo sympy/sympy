@@ -22,7 +22,7 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
 
     dir : String, optional
           The series-expansion can be bi-directional. If ``dir="+"``,
-          then (x->x0+). If ``dir="-", then (x->x0-). For infinite
+          then (x->x0+). If ``dir="-"``, then (x->x0-). For infinite
           ``x0`` (``oo`` or ``-oo``), the ``dir`` argument is determined
           from the direction of the infinity (i.e., ``dir="-"`` for
           ``oo``).

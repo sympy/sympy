@@ -1,12 +1,15 @@
 """Basic tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
 
-from sympy.core.numbers import oo
 from sympy.core import igcd
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key
 
 import random
+
+
+ninf = float('-inf')
+
 
 def poly_LC(f, K):
     """
@@ -135,7 +138,7 @@ def dup_degree(f):
     """
     Return the leading degree of ``f`` in ``K[x]``.
 
-    Note that the degree of 0 is negative infinity (the SymPy object -oo).
+    Note that the degree of 0 is negative infinity (``float('-inf')``).
 
     Examples
     ========
@@ -150,7 +153,7 @@ def dup_degree(f):
 
     """
     if not f:
-        return -oo
+        return ninf
     return len(f) - 1
 
 
@@ -158,7 +161,7 @@ def dmp_degree(f, u):
     """
     Return the leading degree of ``f`` in ``x_0`` in ``K[X]``.
 
-    Note that the degree of 0 is negative infinity (the SymPy object -oo).
+    Note that the degree of 0 is negative infinity (``float('-inf')``).
 
     Examples
     ========
@@ -167,7 +170,7 @@ def dmp_degree(f, u):
     >>> from sympy.polys.densebasic import dmp_degree
 
     >>> dmp_degree([[[]]], 2)
-    -oo
+    -inf
 
     >>> f = ZZ.map([[2], [1, 2, 3]])
 
@@ -176,7 +179,7 @@ def dmp_degree(f, u):
 
     """
     if dmp_zero_p(f, u):
-        return -oo
+        return ninf
     else:
         return len(f) - 1
 
@@ -188,7 +191,7 @@ def _rec_degree_in(g, v, i, j):
 
     v, i = v - 1, i + 1
 
-    return max([ _rec_degree_in(c, v, i, j) for c in g ])
+    return max(_rec_degree_in(c, v, i, j) for c in g)
 
 
 def dmp_degree_in(f, j, u):
@@ -244,7 +247,7 @@ def dmp_degree_list(f, u):
     (1, 2)
 
     """
-    degs = [-oo]*(u + 1)
+    degs = [ninf]*(u + 1)
     _rec_degree_list(f, u, 0, degs)
     return tuple(degs)
 
@@ -484,7 +487,7 @@ def dup_normal(f, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_normal
 
-    >>> dup_normal([0, 1.5, 2, 3], ZZ)
+    >>> dup_normal([0, 1, 2, 3], ZZ)
     [1, 2, 3]
 
     """
@@ -501,7 +504,7 @@ def dmp_normal(f, u, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_normal
 
-    >>> dmp_normal([[], [0, 1.5, 2]], 1, ZZ)
+    >>> dmp_normal([[], [0, 1, 2]], 1, ZZ)
     [[1, 2]]
 
     """
@@ -685,7 +688,7 @@ def dmp_ground_nth(f, N, u, K):
             return K.zero
         else:
             d = dmp_degree(f, v)
-            if d == -oo:
+            if d == ninf:
                 d = -1
             f, v = f[d - n], v - 1
 
@@ -1091,7 +1094,7 @@ def dmp_to_dict(f, u, K=None, zero=False):
 
     n, v, result = dmp_degree(f, u), u - 1, {}
 
-    if n == -oo:
+    if n == ninf:
         n = -1
 
     for k in range(0, n + 1):
@@ -1823,6 +1826,9 @@ def dup_slice(f, m, n, K):
         N = 0
 
     f = f[N:M]
+
+    while f and f[0] == K.zero:
+        f.pop(0)
 
     if not f:
         return []

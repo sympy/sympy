@@ -39,7 +39,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand, expand_mul, expand_power_base,
                                  expand_trig, Function)
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, Rational, pi
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild, Symbol
@@ -1299,7 +1300,7 @@ def _int0oo(g1, g2, x):
     >>> g1 = meijerg([], [], [-S(1)/2, 0], [], s**2*t/4)
     >>> g2 = meijerg([], [], [m/2], [-m/2], t/4)
     >>> _int0oo(g1, g2, t)
-    4*meijerg(((1/2, 0), ()), ((m/2,), (-m/2,)), s**(-2))/s**2
+    4*meijerg(((0, 1/2), ()), ((m/2,), (-m/2,)), s**(-2))/s**2
     """
     # See: [L, section 5.6.2, equation (1)]
     eta, _ = _get_coeff_exp(g1.argument, x)
@@ -1705,8 +1706,8 @@ def _meijerint_indefinite_1(f, x):
         c += s
 
         # we do a substitution t=a*x**b, get integrand fac*t**rho*g
-        fac_ = fac * C / (b*a**((1 + c)/b))
-        rho = (c + 1)/b - 1
+        fac_ = fac * C * x**(1 + c) / b
+        rho = (c + 1)/b
 
         # we now use t**rho*G(params, t) = G(params + rho, t)
         # [L, page 150, equation (4)]
@@ -1719,13 +1720,13 @@ def _meijerint_indefinite_1(f, x):
         t = _dummy('t', 'meijerint-indefinite', S.One)
 
         def tr(p):
-            return [a + rho + 1 for a in p]
+            return [a + rho for a in p]
         if any(b.is_integer and (b <= 0) == True for b in tr(g.bm)):
             r = -meijerg(
-                tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)
+                list(g.an), list(g.aother) + [1-rho], list(g.bm) + [-rho], list(g.bother), t)
         else:
             r = meijerg(
-                tr(g.an) + [1], tr(g.aother), tr(g.bm), tr(g.bother) + [0], t)
+                list(g.an) + [1-rho], list(g.aother), list(g.bm), list(g.bother) + [-rho], t)
         # The antiderivative is most often expected to be defined
         # in the neighborhood of  x = 0.
         if b.is_extended_nonnegative and not f.subs(x, 0).has(S.NaN, S.ComplexInfinity):

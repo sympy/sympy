@@ -8,7 +8,7 @@ import mpmath
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, Lambda, diff)
-from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
+from sympy.core.numbers import (E, Float, I, Rational, all_close, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
@@ -533,10 +533,9 @@ def test_python_div_zero_issue_11306():
         skip("numpy not installed.")
     p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
     f = lambdify([x, y], p, modules='numpy')
-    numpy.seterr(divide='ignore')
-    assert float(f(numpy.array([0]),numpy.array([0.5]))) == 0
-    assert str(float(f(numpy.array([0]),numpy.array([1])))) == 'inf'
-    numpy.seterr(divide='warn')
+    with numpy.errstate(divide='ignore'):
+        assert float(f(numpy.array(0), numpy.array(0.5))) == 0
+        assert float(f(numpy.array(0), numpy.array(1))) == float('inf')
 
 
 def test_issue9474():
@@ -1242,7 +1241,7 @@ def test_lambdify_Derivative_arg_issue_16468():
     fx = f.diff()
     assert lambdify((f, fx), f + fx)(10, 5) == 15
     assert eval(lambdastr((f, fx), f/fx))(10, 5) == 2
-    raises(SyntaxError, lambda:
+    raises(Exception, lambda:
         eval(lambdastr((f, fx), f/fx, dummify=False)))
     assert eval(lambdastr((f, fx), f/fx, dummify=True))(10, 5) == 2
     assert eval(lambdastr((fx, f), f/fx, dummify=True))(S(10), 5) == S.Half
@@ -1412,7 +1411,7 @@ def test_issue_20070():
         skip("numba not installed")
 
     f = lambdify(x, sin(x), 'numpy')
-    assert numba.jit(f)(1)==0.8414709848078965
+    assert numba.jit(f, nopython=True)(1)==0.8414709848078965
 
 
 def test_fresnel_integrals_scipy():
@@ -1872,3 +1871,23 @@ def test_lambdify_docstring_size_limit_matrix():
             docstring_limit=test_case.docstring_limit,
         )
         assert lambdified_expr.__doc__ == test_case.expected_docstring
+
+
+def test_lambdify_empty_tuple():
+    a = symbols("a")
+    expr = ((), (a,))
+    f = lambdify(a, expr)
+    result = f(1)
+    assert result == ((), (1,)), "Lambdify did not handle the empty tuple correctly."
+
+def test_assoc_legendre_numerical_evaluation():
+
+    tol = 1e-10
+
+    sympy_result_integer = assoc_legendre(1, 1/2, 0.1).evalf()
+    sympy_result_complex = assoc_legendre(2, 1, 3).evalf()
+    mpmath_result_integer = -0.474572528387641
+    mpmath_result_complex = -25.45584412271571*I
+
+    assert all_close(sympy_result_integer, mpmath_result_integer, tol)
+    assert all_close(sympy_result_complex, mpmath_result_complex, tol)

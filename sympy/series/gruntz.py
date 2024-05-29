@@ -120,7 +120,8 @@ from functools import reduce
 
 from sympy.core import Basic, S, Mul, PoleError, expand_mul
 from sympy.core.cache import cacheit
-from sympy.core.numbers import ilcm, I, oo
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, oo
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.traversal import bottom_up
 
@@ -274,10 +275,10 @@ def mrv(e, x):
         if b1 == 1:
             return SubsSet(), b1
         if e1.has(x):
-            base_lim = limitinf(b1, x)
-            if base_lim is S.One:
-                return mrv(exp(e1 * (b1 - 1)), x)
-            return mrv(exp(e1 * log(b1)), x)
+            if limitinf(b1, x) is S.One:
+                if limitinf(e1, x).is_infinite is False:
+                    return mrv(exp(e1*(b1 - 1)), x)
+            return mrv(exp(e1*log(b1)), x)
         else:
             s, expr = mrv(b1, x)
             return s, expr**e1

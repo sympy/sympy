@@ -22,18 +22,17 @@ from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
     CantSympify, converter)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
-from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import gmpy as _gmpy, flint as _flint
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
 import mpmath
 from collections import defaultdict, OrderedDict
-from mpmath.rational import mpq
 
 
 numpy = import_module('numpy')
@@ -101,16 +100,24 @@ def test_sympify_Fraction():
 
 
 def test_sympify_gmpy():
-    if HAS_GMPY:
-        if HAS_GMPY == 2:
-            import gmpy2 as gmpy
-        elif HAS_GMPY == 1:
-            import gmpy
+    if _gmpy is not None:
+        import gmpy2
 
-        value = sympify(gmpy.mpz(1000001))
+        value = sympify(gmpy2.mpz(1000001))
         assert value == Integer(1000001) and type(value) is Integer
 
-        value = sympify(gmpy.mpq(101, 127))
+        value = sympify(gmpy2.mpq(101, 127))
+        assert value == Rational(101, 127) and type(value) is Rational
+
+
+def test_sympify_flint():
+    if _flint is not None:
+        import flint
+
+        value = sympify(flint.fmpz(1000001))
+        assert value == Integer(1000001) and type(value) is Integer
+
+        value = sympify(flint.fmpq(101, 127))
         assert value == Rational(101, 127) and type(value) is Rational
 
 
@@ -133,8 +140,6 @@ def test_sympify_mpmath():
 
     mpmath.mp.dps = 15
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
-
-    assert sympify(mpq(1, 2)) == S.Half
 
 
 def test_sympify2():
@@ -281,8 +286,7 @@ def test_sympify_raises():
         def __str__(self):
             return 'x'
 
-    with warns_deprecated_sympy():
-        assert sympify(A()) == Symbol('x')
+    raises(SympifyError, lambda: sympify(A()))
 
 
 def test__sympify():
@@ -643,8 +647,8 @@ def test_sympify_numpy():
     assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
 
-    lcprec = np.finfo(np.longcomplex(1)).nmant + 1
-    assert equal(sympify(np.longcomplex(1 + 2j)),
+    lcprec = np.finfo(np.clongdouble(1)).nmant + 1
+    assert equal(sympify(np.clongdouble(1 + 2j)),
                 Float(1.0, precision=lcprec) + Float(2.0, precision=lcprec)*I)
 
     #float96 does not exist on all platforms

@@ -129,7 +129,7 @@ def _util_contraction_diagonal(array, *contraction_or_diagonal_axes):
     for axes_group in contraction_or_diagonal_axes:
         lidx = []
         for js in range(array.shape[axes_group[0]]):
-            lidx.append(sum([cum_shape[ig] * js for ig in axes_group]))
+            lidx.append(sum(cum_shape[ig] * js for ig in axes_group))
         summed_deltas.append(lidx)
 
     return array, remaining_indices, remaining_shape, summed_deltas
@@ -478,7 +478,7 @@ class Flatten(Printable):
     [0, 1, 2, 3, 4, 5]
     """
     def __init__(self, iterable):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array import NDimArray
 
         if not isinstance(iterable, (Iterable, MatrixBase)):
@@ -494,7 +494,7 @@ class Flatten(Printable):
         return self
 
     def __next__(self):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
 
         if len(self._iter) > self._idx:
             if isinstance(self._iter, DenseNDimArray):

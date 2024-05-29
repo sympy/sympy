@@ -5,6 +5,7 @@ from operator import add, mul
 
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
+from sympy.polys.densebasic import ninf
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
 from sympy.polys.polyerrors import GeneratorsError, \
@@ -13,7 +14,7 @@ from sympy.polys.polyerrors import GeneratorsError, \
 from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
 from sympy.core.singleton import S
-from sympy.core.numbers import (oo, pi)
+from sympy.core.numbers import pi
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -316,28 +317,30 @@ def test_PolyElement_from_expr():
 def test_PolyElement_degree():
     R, x,y,z = ring("x,y,z", ZZ)
 
-    assert R(0).degree() is -oo
+    assert ninf == float('-inf')
+
+    assert R(0).degree() is ninf
     assert R(1).degree() == 0
     assert (x + 1).degree() == 1
     assert (2*y**3 + z).degree() == 0
     assert (x*y**3 + z).degree() == 1
     assert (x**5*y**3 + z).degree() == 5
 
-    assert R(0).degree(x) is -oo
+    assert R(0).degree(x) is ninf
     assert R(1).degree(x) == 0
     assert (x + 1).degree(x) == 1
     assert (2*y**3 + z).degree(x) == 0
     assert (x*y**3 + z).degree(x) == 1
     assert (7*x**5*y**3 + z).degree(x) == 5
 
-    assert R(0).degree(y) is -oo
+    assert R(0).degree(y) is ninf
     assert R(1).degree(y) == 0
     assert (x + 1).degree(y) == 0
     assert (2*y**3 + z).degree(y) == 3
     assert (x*y**3 + z).degree(y) == 3
     assert (7*x**5*y**3 + z).degree(y) == 3
 
-    assert R(0).degree(z) is -oo
+    assert R(0).degree(z) is ninf
     assert R(1).degree(z) == 0
     assert (x + 1).degree(z) == 0
     assert (2*y**3 + z).degree(z) == 1
@@ -345,34 +348,34 @@ def test_PolyElement_degree():
     assert (7*x**5*y**3 + z).degree(z) == 1
 
     R, = ring("", ZZ)
-    assert R(0).degree() is -oo
+    assert R(0).degree() is ninf
     assert R(1).degree() == 0
 
 def test_PolyElement_tail_degree():
     R, x,y,z = ring("x,y,z", ZZ)
 
-    assert R(0).tail_degree() is -oo
+    assert R(0).tail_degree() is ninf
     assert R(1).tail_degree() == 0
     assert (x + 1).tail_degree() == 0
     assert (2*y**3 + x**3*z).tail_degree() == 0
     assert (x*y**3 + x**3*z).tail_degree() == 1
     assert (x**5*y**3 + x**3*z).tail_degree() == 3
 
-    assert R(0).tail_degree(x) is -oo
+    assert R(0).tail_degree(x) is ninf
     assert R(1).tail_degree(x) == 0
     assert (x + 1).tail_degree(x) == 0
     assert (2*y**3 + x**3*z).tail_degree(x) == 0
     assert (x*y**3 + x**3*z).tail_degree(x) == 1
     assert (7*x**5*y**3 + x**3*z).tail_degree(x) == 3
 
-    assert R(0).tail_degree(y) is -oo
+    assert R(0).tail_degree(y) is ninf
     assert R(1).tail_degree(y) == 0
     assert (x + 1).tail_degree(y) == 0
     assert (2*y**3 + x**3*z).tail_degree(y) == 0
     assert (x*y**3 + x**3*z).tail_degree(y) == 0
     assert (7*x**5*y**3 + x**3*z).tail_degree(y) == 0
 
-    assert R(0).tail_degree(z) is -oo
+    assert R(0).tail_degree(z) is ninf
     assert R(1).tail_degree(z) == 0
     assert (x + 1).tail_degree(z) == 0
     assert (2*y**3 + x**3*z).tail_degree(z) == 0
@@ -380,20 +383,20 @@ def test_PolyElement_tail_degree():
     assert (7*x**5*y**3 + x**3*z).tail_degree(z) == 0
 
     R, = ring("", ZZ)
-    assert R(0).tail_degree() is -oo
+    assert R(0).tail_degree() is ninf
     assert R(1).tail_degree() == 0
 
 def test_PolyElement_degrees():
     R, x,y,z = ring("x,y,z", ZZ)
 
-    assert R(0).degrees() == (-oo, -oo, -oo)
+    assert R(0).degrees() == (ninf, ninf, ninf)
     assert R(1).degrees() == (0, 0, 0)
     assert (x**2*y + x**3*z**2).degrees() == (3, 1, 2)
 
 def test_PolyElement_tail_degrees():
     R, x,y,z = ring("x,y,z", ZZ)
 
-    assert R(0).tail_degrees() == (-oo, -oo, -oo)
+    assert R(0).tail_degrees() == (ninf, ninf, ninf)
     assert R(1).tail_degrees() == (0, 0, 0)
     assert (x**2*y + x**3*z**2).tail_degrees() == (2, 0, 0)
 
@@ -1487,6 +1490,12 @@ def test_PolyElement_decompose():
 def test_PolyElement_shift():
     _, x = ring("x", ZZ)
     assert (x**2 - 2*x + 1).shift(2) == x**2 + 2*x + 1
+    assert (x**2 - 2*x + 1).shift_list([2]) == x**2 + 2*x + 1
+
+    R, x, y = ring("x, y", ZZ)
+    assert (x*y).shift_list([1, 2]) == (x+1)*(y+2)
+
+    raises(MultivariatePolynomialError, lambda: (x*y).shift(1))
 
 def test_PolyElement_sturm():
     F, t = field("t", ZZ)
@@ -1510,16 +1519,25 @@ def test_PolyElement_gff_list():
     f = x*(x - 1)**3*(x - 2)**2*(x - 4)**2*(x - 5)
     assert f.gff_list() == [(x**2 - 5*x + 4, 1), (x**2 - 5*x + 4, 2), (x, 3)]
 
+def test_PolyElement_norm():
+    k = QQ
+    K = QQ.algebraic_field(sqrt(2))
+    sqrt2 = K.unit
+    _, X, Y = ring("x,y", k)
+    _, x, y = ring("x,y", K)
+
+    assert (x*y + sqrt2).norm() == X**2*Y**2 - 2
+
 def test_PolyElement_sqf_norm():
     R, x = ring("x", QQ.algebraic_field(sqrt(3)))
     X = R.to_ground().x
 
-    assert (x**2 - 2).sqf_norm() == (1, x**2 - 2*sqrt(3)*x + 1, X**4 - 10*X**2 + 1)
+    assert (x**2 - 2).sqf_norm() == ([1], x**2 - 2*sqrt(3)*x + 1, X**4 - 10*X**2 + 1)
 
     R, x = ring("x", QQ.algebraic_field(sqrt(2)))
     X = R.to_ground().x
 
-    assert (x**2 - 3).sqf_norm() == (1, x**2 - 2*sqrt(2)*x - 1, X**4 - 10*X**2 + 1)
+    assert (x**2 - 3).sqf_norm() == ([1], x**2 - 2*sqrt(2)*x - 1, X**4 - 10*X**2 + 1)
 
 def test_PolyElement_sqf_list():
     _, x = ring("x", ZZ)

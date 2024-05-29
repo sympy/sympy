@@ -7,7 +7,7 @@ from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
-from sympy.external.gmpy import HAS_GMPY, gmpy
+from sympy.external.gmpy import gmpy as _gmpy
 from sympy.ntheory import sieve
 from sympy.ntheory.residue_ntheory import binomial_mod
 from sympy.polys.polytools import Poly
@@ -159,8 +159,16 @@ class factorial(CombinatorialFunction):
                         result = cls._small_factorials[n-1]
 
                     # GMPY factorial is faster, use it when available
-                    elif HAS_GMPY:
-                        result = gmpy.fac(n)
+                    #
+                    # XXX: There is a sympy.external.gmpy.factorial function
+                    # which provides gmpy.fac if available or the flint version
+                    # if flint is used. It could be used here to avoid the
+                    # conditional logic but it needs to be checked whether the
+                    # pure Python fallback used there is as fast as the
+                    # fallback used here (perhaps the fallback here should be
+                    # moved to sympy.external.ntheory).
+                    elif _gmpy is not None:
+                        result = _gmpy.fac(n)
 
                     else:
                         bits = bin(n).count('1')
@@ -939,8 +947,11 @@ class binomial(CombinatorialFunction):
                 elif k > n // 2:
                     k = n - k
 
-                if HAS_GMPY:
-                    return Integer(gmpy.bincoef(n, k))
+                # XXX: This conditional logic should be moved to
+                # sympy.external.gmpy and the pure Python version of bincoef
+                # should be moved to sympy.external.ntheory.
+                if _gmpy is not None:
+                    return Integer(_gmpy.bincoef(n, k))
 
                 d, result = n - k, 1
                 for i in range(1, k + 1):

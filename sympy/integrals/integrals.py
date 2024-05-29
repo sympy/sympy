@@ -19,6 +19,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
@@ -216,7 +217,8 @@ class Integral(AddWithLimits):
         transform can perform u-substitution as long as a unique
         integrand is obtained:
 
-        >>> i.transform(x**2 - 1, u)
+        >>> ui = i.transform(x**2 - 1, u)
+        >>> ui
         Integral(cos(u)/2, (u, -1, 0))
 
         This attempt fails because x = +/-sqrt(u + 1) and the
@@ -232,8 +234,7 @@ class Integral(AddWithLimits):
         result is transformed back into the original expression
         using "u-substitution":
 
-        >>> ui = _
-        >>> _.transform(sqrt(u + 1), x) == i
+        >>> ui.transform(sqrt(u + 1), x) == i
         True
 
         We can accomplish the same with a regular substitution:
@@ -447,6 +448,12 @@ class Integral(AddWithLimits):
 
         # now compute and check the function
         function = self.function
+
+        # hack to use a consistent Heaviside(x, 1/2)
+        function = function.replace(
+            lambda x: isinstance(x, Heaviside) and x.args[1]*2 != 1,
+            lambda x: Heaviside(x.args[0]))
+
         if deep:
             function = function.doit(**hints)
         if function.is_zero:
@@ -1167,16 +1174,15 @@ class Integral(AddWithLimits):
             yield integrate(term, *expr.limits)
 
     def _eval_nseries(self, x, n, logx=None, cdir=0):
-        expr = self.as_dummy()
         symb = x
-        for l in expr.limits:
+        for l in self.limits:
             if x in l[1:]:
                 symb = l[0]
                 break
-        terms, order = expr.function.nseries(
+        terms, order = self.function.nseries(
             x=symb, n=n, logx=logx).as_coeff_add(Order)
         order = [o.subs(symb, x) for o in order]
-        return integrate(terms, *expr.limits) + Add(*order)*x
+        return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         series_gen = self.args[0].lseries(x)
@@ -1245,9 +1251,10 @@ class Integral(AddWithLimits):
         intervals. This is equivalent to taking the average of the left and
         right hand rule results:
 
-        >>> e.as_sum(2, 'trapezoid')
+        >>> s = e.as_sum(2, 'trapezoid')
+        >>> s
         2*sin(5) + sin(3) + sin(7)
-        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
+        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == s
         True
 
         Here, the discontinuity at x = 0 can be avoided by using the

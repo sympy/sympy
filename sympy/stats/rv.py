@@ -44,16 +44,22 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
+__doctest_requires__ = {('sample',): ['scipy']}
+
+
 x = Symbol('x')
+
 
 @singledispatch
 def is_random(x):
     return False
 
+
 @is_random.register(Basic)
 def _(x):
     atoms = x.free_symbols
     return any(is_random(i) for i in atoms)
+
 
 class RandomDomain(Basic):
     """

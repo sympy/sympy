@@ -19,7 +19,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import (Dummy, Symbol)
-from sympy.matrices.common import MatrixCommon
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.diagonal import diagonalize_vector
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix
@@ -1079,7 +1079,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         contraction_indices_remaining = []
         contraction_indices_args = [[] for i in expr.args]
         backshift = set()
-        for i, contraction_group in enumerate(contraction_indices):
+        for contraction_group in contraction_indices:
             for j in range(len(expr.args)):
                 if not isinstance(expr.args[j], ArrayAdd):
                     continue
@@ -1554,7 +1554,7 @@ class Reshape(_CodegenArrayAbstract):
             expr = self.expr.doit(*args, **kwargs)
         else:
             expr = self.expr
-        if isinstance(expr, (MatrixCommon, NDimArray)):
+        if isinstance(expr, (MatrixBase, NDimArray)):
             return expr.reshape(*self.shape)
         return Reshape(expr, self.shape)
 
@@ -1562,7 +1562,7 @@ class Reshape(_CodegenArrayAbstract):
         ee = self.expr
         if hasattr(ee, "as_explicit"):
             ee = ee.as_explicit()
-        if isinstance(ee, MatrixCommon):
+        if isinstance(ee, MatrixBase):
             from sympy import Array
             ee = Array(ee)
         elif isinstance(ee, MatrixExpr):
@@ -1795,7 +1795,7 @@ class _EditArrayContraction:
     def get_contraction_indices(self) -> List[List[int]]:
         contraction_indices: List[List[int]] = [[] for i in range(self.number_of_contraction_indices)]
         current_position: int = 0
-        for i, arg_with_ind in enumerate(self.args_with_ind):
+        for arg_with_ind in self.args_with_ind:
             for j in arg_with_ind.indices:
                 if j is not None:
                     contraction_indices[j].append(current_position)
@@ -1860,7 +1860,7 @@ class _EditArrayContraction:
                 perm.append(counter)
                 counter += 1
             permutation.append(perm)
-        max_ind = max([max(i) if i else -1 for i in permutation]) if permutation else -1
+        max_ind = max(max(i) if i else -1 for i in permutation) if permutation else -1
         perm_diag = [max_ind - i for i in perm_diag]
         self._track_permutation = permutation + [perm_diag]
 

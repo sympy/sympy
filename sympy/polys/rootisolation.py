@@ -767,12 +767,11 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, strict=F
     I_neg = [ (_mobius_to_interval(M, field), k, f) for (_, M, k, f) in I_neg ]
     I_pos = [ (_mobius_to_interval(M, field), k, f) for (_, M, k, f) in I_pos ]
 
+    I_neg = [((-v, -u), k, f) for ((u, v), k, f) in I_neg]
+
     if not basis:
-        I_neg = [ ((-v, -u), k) for ((u, v), k, _) in I_neg ]
-        I_pos = [ (( u, v), k) for ((u, v), k, _) in I_pos ]
-    else:
-        I_neg = [ ((-v, -u), k, f) for ((u, v), k, f) in I_neg ]
-        I_pos = [ (( u, v), k, f) for ((u, v), k, f) in I_pos ]
+        I_neg = [((u, v), k) for ((u, v), k, _) in I_neg]
+        I_pos = [((u, v), k) for ((u, v), k, _) in I_pos]
 
     return I_neg, I_pos
 
@@ -1272,7 +1271,7 @@ def _reverse_intervals(intervals):
 
 def _winding_number(T, field):
     """Compute the winding number of the input polynomial, i.e. the number of roots. """
-    return int(sum([ field(*_values[t][i]) for t, i in T ]) / field(2))
+    return int(sum(field(*_values[t][i]) for t, i in T) / field(2))
 
 def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
     """Count all roots in [u + v*I, s + t*I] rectangle using Collins-Krandick algorithm. """
@@ -1288,7 +1287,7 @@ def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
 
     if inf is None or sup is None:
         _, lc = dup_degree(f), abs(dup_LC(f, F))
-        B = 2*max([ F.quo(abs(c), lc) for c in f ])
+        B = 2*max(F.quo(abs(c), lc) for c in f)
 
     if inf is None:
         (u, v) = (-B, -B)
@@ -1597,7 +1596,7 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None, blackbox=F
     f = dup_convert(f, K, F)
 
     lc = abs(dup_LC(f, F))
-    B = 2*max([ F.quo(abs(c), lc) for c in f ])
+    B = 2*max(F.quo(abs(c), lc) for c in f)
 
     (u, v), (s, t) = (-B, F.zero), (B, B)
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from sympy.core.backend import Symbol, sympify
+from sympy import Symbol, sympify
 from sympy.physics.vector import Point
 
 __all__ = ['BodyBase']

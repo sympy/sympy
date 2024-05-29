@@ -290,7 +290,7 @@ def root(arg, n, k=0, evaluate=None):
     ========
 
     sympy.polys.rootoftools.rootof
-    sympy.core.power.integer_nthroot
+    sympy.core.intfunc.integer_nthroot
     sqrt, real_root
 
     References
@@ -351,7 +351,7 @@ def real_root(arg, n=None, evaluate=None):
     ========
 
     sympy.polys.rootoftools.rootof
-    sympy.core.power.integer_nthroot
+    sympy.core.intfunc.integer_nthroot
     root, sqrt
     """
     from sympy.functions.elementary.complexes import Abs, im, sign

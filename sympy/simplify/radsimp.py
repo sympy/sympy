@@ -1074,7 +1074,7 @@ def fraction(expr, exact=False):
        (x, y**(-k))
 
        If we know nothing about sign of some exponent and ``exact``
-       flag is unset, then structure this exponent's structure will
+       flag is unset, then the exponent's structure will
        be analyzed and pretty fraction will be returned:
 
        >>> from sympy import exp, Mul
@@ -1116,7 +1116,7 @@ def fraction(expr, exact=False):
             elif ex.is_positive:
                 numer.append(term)
             elif not exact and ex.is_Mul:
-                n, d = term.as_numer_denom()
+                n, d = term.as_numer_denom()  # this will cause evaluation
                 if n != 1:
                     numer.append(n)
                 denom.append(d)
@@ -1131,12 +1131,12 @@ def fraction(expr, exact=False):
     return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
-def numer(expr):
-    return fraction(expr)[0]
+def numer(expr, exact=False):  # default matches fraction's default
+    return fraction(expr, exact=exact)[0]
 
 
-def denom(expr):
-    return fraction(expr)[1]
+def denom(expr, exact=False):  # default matches fraction's default
+    return fraction(expr, exact=exact)[1]
 
 
 def fraction_expand(expr, **hints):
@@ -1144,12 +1144,14 @@ def fraction_expand(expr, **hints):
 
 
 def numer_expand(expr, **hints):
-    a, b = fraction(expr)
+    # default matches fraction's default
+    a, b = fraction(expr, exact=hints.get('exact', False))
     return a.expand(numer=True, **hints) / b
 
 
 def denom_expand(expr, **hints):
-    a, b = fraction(expr)
+    # default matches fraction's default
+    a, b = fraction(expr, exact=hints.get('exact', False))
     return a / b.expand(denom=True, **hints)
 
 

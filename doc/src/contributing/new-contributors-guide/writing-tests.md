@@ -1153,3 +1153,22 @@ is executed, doesn't mean that is correct. The test needs to actually check
 that the output of the function is what it is supposed to be. Test coverage is
 just one part of ensuring the correctness of a codebase. See
 https://nedbatchelder.com/blog/200710/flaws_in_coverage_measurement.html.
+
+## Hypothesis Testing
+Property based tests can now be created using the [Hypothesis](https://hypothesis.readthedocs.io/en/latest/quickstart.html)
+library. Tests should be added to the `test_hypothesis.py` file in the respective `tests` subdirectory. If the file does
+not exist, create one. Below is an example of hypothesis test for modular arithmetic:
+```py
+from hypothesis import given
+from hypothesis import strategies as st
+from sympy import symbols
+from sympy import Mod
+
+
+@given(a = st.integers(), p = st.integers().filter(lambda p: p != 0), i = st.integers(),
+j = st.integers().filter(lambda j: j != 0))
+def test_modular(a, p, i, j):
+    x, y = symbols('x y')
+    value = Mod(x, y).subs({x: a, y: p})
+    assert value == a % p
+```

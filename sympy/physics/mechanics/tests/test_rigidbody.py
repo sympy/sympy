@@ -1,7 +1,7 @@
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia, Inertia
 from sympy.physics.mechanics import inertia_of_point_mass
-from sympy.core.backend import expand, zeros, _simplify_matrix, symbols
+from sympy import expand, zeros, simplify, symbols
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
@@ -17,13 +17,13 @@ def test_rigidbody_default():
     assert b.frame.name == 'B_frame'
     assert b.__str__() == 'B'
     assert b.__repr__() == (
-        "RigidBody('B', masscenter=B_masscenter, frame=B_frame, mass=B_mass), "
+        "RigidBody('B', masscenter=B_masscenter, frame=B_frame, mass=B_mass, "
         "inertia=Inertia(dyadic=B_ixx*(B_frame.x|B_frame.x) + "
         "B_ixy*(B_frame.x|B_frame.y) + B_izx*(B_frame.x|B_frame.z) + "
         "B_ixy*(B_frame.y|B_frame.x) + B_iyy*(B_frame.y|B_frame.y) + "
         "B_iyz*(B_frame.y|B_frame.z) + B_izx*(B_frame.z|B_frame.x) + "
         "B_iyz*(B_frame.z|B_frame.y) + B_izz*(B_frame.z|B_frame.z), "
-        "point=B_masscenter)))")
+        "point=B_masscenter))")
 
 
 def test_rigidbody():
@@ -170,7 +170,7 @@ def test_parallel_axis():
     # Reference frame from which the parallel axis is viewed should not matter
     A = ReferenceFrame('A')
     A.orient_axis(N, N.z, 1)
-    assert _simplify_matrix(
+    assert simplify(
         (R.parallel_axis(p, A) - Ip_expected).to_matrix(A)) == zeros(3, 3)
 
 
