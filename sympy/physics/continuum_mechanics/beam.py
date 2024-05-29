@@ -79,7 +79,7 @@ class Beam:
     >>> b.apply_load(R2, 4, -1)
     >>> b.bc_deflection = [(0, 0), (4, 0)]
     >>> b.boundary_conditions
-    {'bending moment': [], 'deflection': [(0, 0), (4, 0)], 'shear force': [], 'slope': []}
+    {'bending_moment': [], 'deflection': [(0, 0), (4, 0)], 'shear_force': [], 'slope': []}
     >>> b.load
     R1*SingularityFunction(x, 0, -1) + R2*SingularityFunction(x, 4, -1) + 6*SingularityFunction(x, 2, 0)
     >>> b.solve_for_reaction_loads(R1, R2)
@@ -184,7 +184,7 @@ class Beam:
             self.second_moment = second_moment
         self.variable = variable
         self._base_char = base_char
-        self._boundary_conditions = {'deflection': [], 'slope': [], 'bending moment': [], 'shear force': []}
+        self._boundary_conditions = {'deflection': [], 'slope': [], 'bending_moment': [], 'shear_force': []}
         self._load = 0
         self.area = area
         self._applied_supports = []
@@ -353,7 +353,7 @@ class Beam:
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.boundary_conditions
-        {'bending moment': [], 'deflection': [(0, 2)], 'shear force': [], 'slope': [(0, 1)]}
+        {'bending_moment': [], 'deflection': [(0, 2)], 'shear_force': [], 'slope': [(0, 1)]}
 
         Here the deflection of the beam should be ``2`` at ``0``.
         Similarly, the slope of the beam should be ``1`` at ``0``.
@@ -362,19 +362,19 @@ class Beam:
 
     @property
     def bc_shear_force(self):
-        return self._boundary_conditions['shear force']
+        return self._boundary_conditions['shear_force']
 
     @bc_shear_force.setter
     def bc_shear_force(self, sf_bcs):
-        self._boundary_conditions['shear force'] = sf_bcs
+        self._boundary_conditions['shear_force'] = sf_bcs
 
     @property
     def bc_bending_moment(self):
-        return self._boundary_conditions['bending moment']
+        return self._boundary_conditions['bending_moment']
 
     @bc_bending_moment.setter
     def bc_bending_moment(self, bm_bcs):
-        self._boundary_conditions['bending moment'] = bm_bcs
+        self._boundary_conditions['bending_moment'] = bm_bcs
 
     @property
     def bc_slope(self):
@@ -978,12 +978,12 @@ class Beam:
         slope_eqs = []
         deflection_eqs = []
 
-        for position, value in self._boundary_conditions['shear force']:
+        for position, value in self._boundary_conditions['shear_force']:
             eqs = self.shear_force().subs(x, position) - value
             new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
             shear_force_eqs.append(new_eqs)
 
-        for position, value in self._boundary_conditions['bending moment']:
+        for position, value in self._boundary_conditions['bending_moment']:
             eqs = self.bending_moment().subs(x, position) - value
             new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
             bending_moment_eqs.append(new_eqs)
@@ -2689,7 +2689,7 @@ class Beam3D(Beam):
         >>> b.bc_slope = [(0, (4, 0, 0))]
         >>> b.bc_deflection = [(4, [0, 0, 0])]
         >>> b.boundary_conditions
-        {'bending moment': [], 'deflection': [(4, [0, 0, 0])], 'shear force': [], 'slope': [(0, (4, 0, 0))]}
+        {'bending_moment': [], 'deflection': [(4, [0, 0, 0])], 'shear_force': [], 'slope': [(0, (4, 0, 0))]}
 
         Here the deflection of the beam should be ``0`` along all the three axes at ``4``.
         Similarly, the slope of the beam should be ``4`` along x-axis and ``0``
