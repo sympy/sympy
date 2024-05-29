@@ -85,6 +85,12 @@ def test_zeta_series():
         zeta(x, z) - x*(a-z)*zeta(x+1, z) + O((a-z)**2, (a, z))
 
 
+def test_zeta_leadterm():
+    assert zeta(2+x, 2-x).as_leading_term(x) == zeta(2, 2)
+    assert zeta(1+x, 4).as_leading_term(x) == 1 / x
+    assert zeta(1-I*x**3, 4).as_leading_term(x) == I / x**3
+
+
 def test_dirichlet_eta_eval():
     assert dirichlet_eta(0) == S.Half
     assert dirichlet_eta(-1) == Rational(1, 4)
@@ -276,8 +282,25 @@ def test_lerchphi_finite():
 
 def test_lerchphi_leadterm():
     from sympy.functions.special.gamma_functions import digamma
-    assert (lerchphi(1-x, 1, a)._eval_as_leading_term(x, logx=None, cdir=0)
+    h = S.Half
+    assert (lerchphi(1-x, 1, a).as_leading_term(x)
             == -log(x) - S.EulerGamma - digamma(a))
+    assert lerchphi(1+x, 3, 4).as_leading_term(x) == zeta(3, 4)
+    assert lerchphi(1, 1+x, 3).as_leading_term(x) == 1 / x
+    assert lerchphi(1, 1+x**2, 3).as_leading_term(x) == 1 / x**2
+    assert lerchphi(S.One/10, h, x).as_leading_term(x) == 1 / sqrt(x)
+    assert (lerchphi(S.One/10, h, x-2).as_leading_term(x)
+            == 1 / (100*sqrt(x)))
+    assert lerchphi(z+x, h/2, x-1).as_leading_term(x) == z / x**(h/2)
+    assert lerchphi(1-x, 2+x**2, a).as_leading_term(x) == zeta(2, a)
+    # Missing implementation
+    assert lerchphi(2 + x, 0, 1).as_leading_term(x) == lerchphi(2 + x, 0, 1)
+
+
+def test_lerchphi_nseries():
+    from sympy.core.function import PoleError
+    raises(PoleError,
+           lambda: lerchphi(1-x, 1, z)._eval_nseries(x, n=1, logx=None))
 
 
 def test_stieltjes():
