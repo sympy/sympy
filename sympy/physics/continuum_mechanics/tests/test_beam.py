@@ -52,7 +52,7 @@ def test_Beam():
     b.bc_bending_moment = [(0, 5)]
     b.bc_shear_force = [(2, 1)]
     assert b.boundary_conditions == {'deflection': [(0, 2)], 'slope': [(0, 1)],
-                                     'bending moment': [(0, 5)], 'shear force': [(2, 1)]}
+                                     'bending_moment': [(0, 5)], 'shear_force': [(2, 1)]}
 
     # Test for shear force boundary condition method
     b.bc_shear_force.extend([(1, 1), (2, 3)])
@@ -79,8 +79,8 @@ def test_Beam():
     assert bcs_new == {
         'deflection': [(0, 2), (4, 3), (5, 0)],
         'slope': [(0, 1), (4, 3), (5, 0)],
-        'bending moment': [(0, 5), (1, 3), (5, 3)],
-        'shear force': [(2, 1), (1, 1), (2, 3)]}
+        'bending_moment': [(0, 5), (1, 3), (5, 3)],
+        'shear_force': [(2, 1), (1, 1), (2, 3)]}
 
     b1 = Beam(30, E, I)
     b1.apply_load(-8, 0, -1)
