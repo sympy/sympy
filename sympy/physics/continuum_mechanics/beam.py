@@ -1216,11 +1216,11 @@ class Beam:
         >>> b.point_cflexure()
         [10/3]
         """
-        new_bending_moment = sum(arg for arg in self.bending_moment().args if not arg.args[1].args[2] < 0)
+        real_bending_moment = sum(arg for arg in self.bending_moment().args if not arg.args[1].args[2] < 0)
 
         # To restrict the range within length of the Beam
         moment_curve = Piecewise((float("nan"), self.variable<=0),
-                (new_bending_moment, self.variable<self.length),
+                (real_bending_moment, self.variable<self.length),
                 (float("nan"), True))
         try:
             points = solve(moment_curve.rewrite(Piecewise), self.variable,
