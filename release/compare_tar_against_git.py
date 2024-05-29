@@ -135,6 +135,7 @@ git_whitelist = {
     'release/ci_release_script.sh',
     # pytest stuff
     'conftest.py',
+    'requirements-dev.txt',
     }
 
 # Files that should be in the tarball should not be in git
