@@ -241,7 +241,7 @@ Let's compare with analytical solutions/results from the literature for validati
    >>> beta_val = 1
    >>> alpha_values = [-1, 0, 1]
    >>> x_vals = np.linspace(-2, 2, 400)
-   
+
    >>> plt.figure(figsize=(6, 6))
    >>> for alpha_val in alpha_values:
    >>>    # Create a lambdified function to evaluate force for specific alpha and beta values
