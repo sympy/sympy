@@ -133,8 +133,7 @@ Phase Space Plot
 
 We can also create a phase space plot which is a plot of velocity vs displacement.
 This phase space plot graphs velocity against displacement, visually representing
-the system's state over time. The closed loop indicates a stable limit cycle,
-characteristic of periodic motion.
+the system's state over time.
 
 .. plot::
    :format: doctest
@@ -223,8 +222,6 @@ to check energy conservation.
    >>> _ = ax.set_ylabel('Energy')
 
 This plot tracks the total mechanical energy of the system over time.
-A gradual decline in total energy indicates a non-conservative system,
-where energy dissipation occurs over time, likely due to internal damping effects.
 
 Analytical Solutions
 ====================
