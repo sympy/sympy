@@ -248,7 +248,7 @@ Let's compare with analytical solutions/results from the literature for validati
    >>>    F_lambdified = sm.lambdify(x, force_expr.subs({alpha: alpha_val, beta: beta_val}), 'numpy')
    >>>    F_vals = F_lambdified(x_vals)
    >>>    plt.plot(x_vals, F_vals, label=f'α = {alpha_val}', linewidth=2)
-   
+
    >>> fig, ax = plt.subplots()
    >>> _ = ax.set_title('Duffing Oscillator Restoring Force')
    >>> _ = ax.set_xlabel('Displacement (x)')
