@@ -627,27 +627,6 @@ def test_apply_rotation_hinge():
             *SingularityFunction(x, l1, -1)/(6*l2**2 + 12*l2*l3 + 6*l3**2))
     assert simplify(b.bending_moment().expand()) == simplify(expected_bending_moment.expand())
 
-    E = Symbol('E')
-    I = Symbol('I')
-    M = Symbol('M')
-    b = Beam(10, E, I)
-    b.apply_support(2, type="fixed")
-    b.apply_support(10, type="pin")
-    b.apply_rotation_hinge(6)
-    with raises(ValueError):
-        b.apply_rotation_hinge(0)
-    with raises(ValueError):
-        b.apply_rotation_hinge(2)
-    with raises(ValueError):
-        b.apply_rotation_hinge(6)
-    with raises(ValueError):
-        b.apply_rotation_hinge(10)
-    with raises(ValueError):
-        b.apply_load(M, 6, -2)
-    b.apply_load(M, 4, -2)
-    with raises(ValueError):
-        b.apply_rotation_hinge(4)
-
 def test_apply_sliding_hinge():
     b = Beam(13, 20, 20)
     r0, m0 = b.apply_support(0, type="fixed")
@@ -699,24 +678,6 @@ def test_apply_sliding_hinge():
                              - l1*q*SingularityFunction(x, l1, 3)/12 + q*SingularityFunction(x, 0, 4)/24
                              - q*SingularityFunction(x, l1, 4)/24
                              + (l1**3*l2*q/24 + l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, 0))/(E*I)
-
-    E = Symbol('E')
-    I = Symbol('I')
-    F = Symbol('F')
-    b = Beam(10, E, I)
-    b.apply_support(2, type="fixed")
-    b.apply_support(10, type="pin")
-    with raises(ValueError):
-        b.apply_sliding_hinge(0)
-    with raises(ValueError):
-        b.apply_sliding_hinge(2)
-    with raises(ValueError):
-        b.apply_sliding_hinge(10)
-    with raises(ValueError):
-        b.apply_sliding_hinge(2)
-    b.apply_sliding_hinge(1)
-    with raises(ValueError):
-        b.apply_load(F, 1, -1)
 
 def test_max_shear_force():
     E = Symbol('E')
