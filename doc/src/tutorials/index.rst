@@ -26,5 +26,13 @@ Biomechanics Tutorials
    biomechanics/biomechanics.rst
    biomechanics/biomechanical-model-example.rst
 
+Duffing Spring Example
+======================
+.. toctree::
+   :hidden:
+
+   duffing-example.rst
+
 - :ref:`Introduction to Biomechanical Modeling <biomechanics-tutorial>`
 - :ref:`Biomechanical Model Example <biomechanical-model-example>`
+- :ref:`Duffing Spring Example <duffing-example>`
