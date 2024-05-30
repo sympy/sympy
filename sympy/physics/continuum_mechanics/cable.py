@@ -9,7 +9,7 @@ from sympy import sin, cos, pi, atan, diff
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solveset import linsolve
 from sympy.matrices import Matrix
-
+from sympy.plotting import plot
 
 class Cable:
     """
@@ -585,3 +585,40 @@ class Cable:
             label = self._support_labels[1]
             self._reaction_loads[Symbol("R_"+label+"_x")] = self.tension_at(self._left_support[0]) * cos(atan(tangent_slope_to_curve.subs(X, self._right_support[0] - lowest_x)))
             self._reaction_loads[Symbol("R_"+label+"_y")] = self.tension_at(self._left_support[0]) * sin(atan(tangent_slope_to_curve.subs(X, self._right_support[0] - lowest_x)))
+
+    def draw(self):
+        x = Symbol("x")
+        support_rectangles = self._draw_supports()
+
+        cab_plot = plot(rectangles=support_rectangles)
+    
+    def _draw_supports(self):
+        member_rectangles = []
+        
+        x_min = self._left_support[0]
+        xmax = self._right_support[0]
+
+        if(self._left_support[1]<self._right_support[1]):
+            y_min = self._left_support[1]
+            y_max = self.right_support[1]
+        else:
+            y_max = self._left_support[1]
+            y_min = self.right_support[1]
+        
+        if abs(1.1*xmax-0.8*x_min)>abs(1.1*y_max-0.8*y_min):
+            max_diff = 1.1*xmax-0.8*x_min
+        else:
+            max_diff = 1.1*y_max-0.8*y_min
+
+        supp_width = 0.01*max_diff
+
+        member_rectangles.append(
+            {
+                'xy': (self._left_support[0],self._left_support[1]),
+                'width': supp_width,
+                'height':supp_width,
+                'color':'brown'
+            }
+        )
+
+        return member_rectangles
