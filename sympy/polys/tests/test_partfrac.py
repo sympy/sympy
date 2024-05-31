@@ -168,13 +168,8 @@ def test_apart_full_floats():
 
     f_apart = apart(f, full=True).evalf()
 
-    expected_terms = sorted(expected.args, key=numer)
-    found_terms = sorted(f_apart.args, key=numer)
-
-    assert len(expected_terms) == len(found_terms)
-
-    for e, f in zip(expected_terms, found_terms):
-        assert all_close(e, f, rtol=1e-3, atol=1e-5)
+    # There is a significant floating point error in this operation.
+    assert all_close(f_apart, expected, rtol=1e-3, atol=1e-5)
 
 
 def test_apart_undetermined_coeffs():
