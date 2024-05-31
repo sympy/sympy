@@ -94,7 +94,10 @@ MPMATH_TRANSLATIONS = {
 NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
 }
-SCIPY_TRANSLATIONS: dict[str, str] = {}
+SCIPY_TRANSLATIONS: dict[str, str] = {
+    "jn" : "spherical_jn",
+    "yn" : "spherical_yn"
+}
 CUPY_TRANSLATIONS: dict[str, str] = {}
 JAX_TRANSLATIONS: dict[str, str] = {}
 
