@@ -9,7 +9,7 @@ from sympy.polys.partfrac import (
 
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.numbers import (E, I, Rational, pi, all_close)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
@@ -19,6 +19,7 @@ from sympy.polys.polytools import (Poly, factor)
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import RootSum
 from sympy.testing.pytest import raises, XFAIL
+from sympy import numer
 from sympy.abc import x, y, a, b, c
 
 
@@ -146,6 +147,34 @@ def test_apart_full():
     assert apart(f, full=True).dummy_eq(
         -RootSum(x**4 - x**3 + x**2 - x + 1,
         Lambda(a, a/(x - a)), auto=False)/5 + (Rational(1, 5))/(x + 1))
+
+
+def test_apart_full_floats():
+    # https://github.com/sympy/sympy/issues/26648
+    f = (
+        6.43369157032015e-9*x**3 + 1.35203404799555e-5*x**2
+        + 0.00357538393743079*x + 0.085
+        )/(
+        4.74334912634438e-11*x**4 + 4.09576274286244e-6*x**3
+        + 0.00334241812250921*x**2 + 0.15406018058983*x + 1.0
+    )
+
+    expected = (
+        133.599202650992/(x + 85524.0054884464)
+        + 1.07757928431867/(x + 774.88576677949)
+        + 0.395006955518971/(x + 40.7977016133126)
+        + 0.564264854137341/(x + 7.79746609204661)
+    )
+
+    f_apart = apart(f, full=True).evalf()
+
+    expected_terms = sorted(expected.args, key=numer)
+    found_terms = sorted(f_apart.args, key=numer)
+
+    assert len(expected_terms) == len(found_terms)
+
+    for e, f in zip(expected_terms, found_terms):
+        assert all_close(e, f, rtol=1e-3, atol=1e-5)
 
 
 def test_apart_undetermined_coeffs():
