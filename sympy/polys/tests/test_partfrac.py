@@ -19,7 +19,6 @@ from sympy.polys.polytools import (Poly, factor)
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import RootSum
 from sympy.testing.pytest import raises, XFAIL
-from sympy import numer
 from sympy.abc import x, y, a, b, c
 
 
