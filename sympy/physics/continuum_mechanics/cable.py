@@ -590,11 +590,11 @@ class Cable:
         x = Symbol("x")
         support_rectangles = self._draw_supports()
 
-        cab_plot = plot(rectangles=support_rectangles)
-    
+        cab_plot = plot(1,(x,1,1),rectangles=support_rectangles,show= False)
+        return cab_plot
+
     def _draw_supports(self):
         member_rectangles = []
-        
         x_min = self._left_support[0]
         xmax = self._right_support[0]
 
@@ -604,20 +604,31 @@ class Cable:
         else:
             y_max = self._left_support[1]
             y_min = self.right_support[1]
-        
+
         if abs(1.1*xmax-0.8*x_min)>abs(1.1*y_max-0.8*y_min):
             max_diff = 1.1*xmax-0.8*x_min
         else:
             max_diff = 1.1*y_max-0.8*y_min
 
-        supp_width = 0.01*max_diff
+        supp_width = 0.05*max_diff
 
         member_rectangles.append(
             {
-                'xy': (self._left_support[0],self._left_support[1]),
+                'xy': (self._left_support[0]-supp_width,self._left_support[1]),
                 'width': supp_width,
                 'height':supp_width,
-                'color':'brown'
+                'color':'brown',
+                'fill': False
+            }
+        )
+
+        member_rectangles.append(
+            {
+                'xy': (self._right_support[0],self._right_support[1]),
+                'width': supp_width,
+                'height':supp_width,
+                'color':'brown',
+                'fill': False
             }
         )
 
