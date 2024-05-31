@@ -22,7 +22,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, cot, sin,
                                                       sinc, tan)
-from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
+from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely, jn, yn)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels, Si, Ci)
@@ -375,6 +375,18 @@ def test_double_integral():
     l = lambdify([z], i)
     d = l(1)
     assert 1.23370055 < d < 1.233700551
+
+def test_spherical_bessel():
+    if numpy and not scipy:
+        skip("scipy not installed.")
+    test_point = 4.2 #randomly selected
+    x = symbols("x")
+    jtest = jn(1, x)
+    assert abs(lambdify(x,jtest)(test_point) -
+            jtest.subs(x,test_point).evalf()) < 1e-8
+    ytest = yn(1, x)
+    assert abs(lambdify(x,ytest)(test_point) -
+            ytest.subs(x,test_point).evalf()) < 1e-8
 
 
 #================== Test vectors ===================================
