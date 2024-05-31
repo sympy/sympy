@@ -72,7 +72,12 @@ Now, let's calculate the force and equation of motion using DuffingSpring.
 
    >>> duffing_spring = DuffingSpring(linear_stiffness=beta, nonlinear_stiffness=alpha, pathway=pathway, equilibrium_length=equilibrium_length)
    >>> force_expr = duffing_spring.force
-   >>> force_func = sm.lambdify((x, xdot, alpha, beta), force_expr) # Lambdify the force expression
+   >>> force_func = sm.lambdify((x, alpha, beta), force_expr) # Lambdify the force expression
+   >>> def corrected_force(x_val, alpha_val, beta_val):
+   ...     sign_correction = np.sign(x_val)
+   ...     force = force_func(x_val, alpha_val, beta_val)
+   ...     corrected_force = sign_correction * force
+   ...     return corrected_force
 
 We also numerically solve the Duffing Spring equation using solve_ivp from
 scipy.integrate, which provides up with the system's dynamics
@@ -86,7 +91,9 @@ over a specific time span.
 
    >>> def duffing_oscillator(t, y, alpha_val, beta_val):
    ...     x_val, xdot_val = y
-   ...     xddot_val = force_func(x_val, xdot_val, alpha_val, beta_val)
+   ...     force = corrected_force(x_val, alpha_val, beta_val)
+   ...     mass = 1
+   ...     xddot_val = force / mass
    ...     return [xdot_val, xddot_val]
 
    >>> # Parameters for the simulation
@@ -241,14 +248,11 @@ Let's compare with analytical solutions/results from the literature for validati
 
    >>> plt.figure(figsize=(6, 6))
    >>> for alpha_val in alpha_values:
-   >>>    # Create a lambdified function to evaluate force for specific alpha and beta values
-   >>>    F_lambdified = sm.lambdify(x, force_expr.subs({alpha: alpha_val, beta: beta_val}), 'numpy')
-   >>>    F_vals = F_lambdified(x_vals)
-   >>>    plt.plot(x_vals, F_vals, label=f'α = {alpha_val}', linewidth=2)
+   >>>    corrected_F_vals = [corrected_force(x, alpha_val, beta_val) for x in x_vals]
+   >>>    plt.plot(x_vals, corrected_F_vals, label=f'α = {alpha_val}', linewidth=2)
 
    >>> fig, ax = plt.subplots()
    >>> _ = ax.set_title('Duffing Oscillator Restoring Force')
    >>> _ = ax.set_xlabel('Displacement (x)')
    >>> _ = ax.set_ylabel('Force (F)')
    >>> _ = ax.axhline(0, color='black', linewidth=0.5)
-   >>> _ = ax.axvline(0, color='black', linewidth=0.5)
