@@ -1157,7 +1157,7 @@ def test_scipy_fns():
             if sympy_fn in (RisingFactorial, polygamma):
                 tv2 = numpy.real(tv2)
             if sympy_fn == polygamma:
-                tv1 = abs(int(tv1))  # first argument to polygamma must be a non-negative integral.
+                tv1 = abs(int(tv1))  # first argument to polygamma must be a non-negative integer.
             sympy_result = sympy_fn(tv1, tv2).evalf()
             assert abs(f(tv1, tv2) - sympy_result) < 1e-13*(1 + abs(sympy_result))
             assert abs(f(tv1, tv2) - scipy_fn(tv1, tv2)) < 1e-13*(1 + abs(sympy_result))
