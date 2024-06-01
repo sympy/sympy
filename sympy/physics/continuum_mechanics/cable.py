@@ -3,7 +3,7 @@ This module can be used to solve problems related
 to 2D Cables.
 """
 
-from sympy import Piecewise, solve, Eq
+from sympy import Piecewise, solve
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
 from sympy import sin, cos, pi, atan, diff
