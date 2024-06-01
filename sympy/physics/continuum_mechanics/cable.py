@@ -3,7 +3,7 @@ This module can be used to solve problems related
 to 2D Cables.
 """
 
-from sympy import Piecewise
+from sympy import Piecewise, solve, Eq
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
 from sympy import sin, cos, pi, atan, diff
@@ -68,6 +68,7 @@ class Cable:
         self._reaction_loads = {}
         self._tension = {}
         self._lowest_x_global = sympify(0)
+        self._lowest_y_global = sympify(0)
 
         if support_1[0] == support_2[0]:
             raise ValueError("Supports can not have the same label")
@@ -542,6 +543,7 @@ class Cable:
             lowest_x = sympify(args[0])
             lowest_y = sympify(args[1])
             self._lowest_x_global = lowest_x
+            self._lowest_y_global = lowest_y
 
             a = Symbol('a')
             b = Symbol('b')
@@ -660,4 +662,13 @@ class Cable:
             return Piecewise(*line_func)
 
         elif order == 0:
-            pass
+            a,b,c,x,y = symbols('a b c x y')
+            parabola_eqn = a*x**2 + b*x + c - y
+
+            points = [(self._left_support[0],self._left_support[1]),(self._lowest_x_global,self._lowest_y_global),(self._right_support[0],self._right_support[1])]
+            equations = []
+            for px, py in points:
+                equations.append(parabola_eqn.subs({x: px, y: py}))
+            solution = solve(equations, (a, b, c))
+            parabola_eqn = solution[a]*x**2 + solution[b]*x + solution[c]
+            return parabola_eqn
