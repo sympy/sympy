@@ -197,7 +197,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - zero for `m_1 + m_2 + m_3 \neq 0`
 
     - zero for violating any one of the conditions
-      `j_1 \ge |m_1|`,  `j_2 \ge |m_2|`,  `j_3 \ge |m_3|`
+         `m_1  \in \{-|j_1|, \ldots, |j_1|\}`,
+         `m_2  \in \{-|j_2|, \ldots, |j_2|\}`,
+         `m_3  \in \{-|j_3|, \ldots, |j_3|\}`
 
     Algorithm
     =========
