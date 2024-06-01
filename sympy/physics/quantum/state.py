@@ -1,5 +1,6 @@
 """Dirac notation for states."""
 
+from sympy import KroneckerDelta
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -22,9 +23,9 @@ __all__ = [
     'TimeDepState',
     'TimeDepBra',
     'TimeDepKet',
-    'OrthogonalKet',
-    'OrthogonalBra',
-    'OrthogonalState',
+    'OrthonormalKet',
+    'OrthonormalBra',
+    'OrthonormalState',
     'Wavefunction'
 ]
 
@@ -626,29 +627,29 @@ class TimeDepBra(TimeDepState, BraBase):
         return TimeDepKet
 
 
-class OrthogonalState(State, StateBase):
+class OrthonormalState(State, StateBase):
     """General abstract quantum state used as a base class for Ket and Bra."""
     pass
 
-class OrthogonalKet(OrthogonalState, KetBase):
-    """Orthogonal Ket in quantum mechanics.
+class OrthonormalKet(OrthonormalState, KetBase):
+    """Orthonormal Ket in quantum mechanics.
 
     The inner product of two states with different labels will give zero,
     states with the same label will give one.
 
-        >>> from sympy.physics.quantum import OrthogonalBra, OrthogonalKet
+        >>> from sympy.physics.quantum import OrthonormalBra, OrthonormalKet
         >>> from sympy.abc import m, n
-        >>> (OrthogonalBra(n)*OrthogonalKet(n)).doit()
+        >>> (OrthonormalBra(n)*OrthonormalKet(n)).doit()
         1
-        >>> (OrthogonalBra(n)*OrthogonalKet(n+1)).doit()
+        >>> (OrthonormalBra(n)*OrthonormalKet(n+1)).doit()
         0
-        >>> (OrthogonalBra(n)*OrthogonalKet(m)).doit()
-        <n|m>
+        >>> (OrthonormalBra(n)*OrthonormalKet(m)).doit()
+        KroneckerDelta(m, n)
     """
 
     @classmethod
     def dual_class(self):
-        return OrthogonalBra
+        return OrthonormalBra
 
     def _eval_innerproduct(self, bra, **hints):
 
@@ -656,27 +657,18 @@ class OrthogonalKet(OrthogonalState, KetBase):
             raise ValueError('Cannot multiply a ket that has a different number of labels.')
 
         for arg, bra_arg in zip(self.args, bra.args):
-            diff = arg - bra_arg
-            diff = diff.expand()
-
-            is_zero = diff.is_zero
-
-            if is_zero is False:
-                return S.Zero # i.e. Integer(0)
-
-            if is_zero is None:
-                return None
+            return KroneckerDelta(arg, bra_arg)
 
         return S.One # i.e. Integer(1)
 
 
-class OrthogonalBra(OrthogonalState, BraBase):
-    """Orthogonal Bra in quantum mechanics.
+class OrthonormalBra(OrthonormalState, BraBase):
+    """Orthonormal Bra in quantum mechanics.
     """
 
     @classmethod
     def dual_class(self):
-        return OrthogonalKet
+        return OrthonormalKet
 
 
 class Wavefunction(Function):
@@ -908,6 +900,50 @@ class Wavefunction(Function):
 
         """
         return self._args[0]
+
+    @staticmethod
+    def extract_expression_from_wavefunction(input_expression):
+        """
+        This function recursively traverses the given expression, replacing any instances of Wavefunction with their
+        internal expressions.
+
+        Parameters
+        ==========
+
+        input_expression : sympy.Expr
+            The expression that needs to be simplified.
+
+        Example
+        =======
+
+        import sympy as sp
+        from sympy.physics.quantum.state import Wavefunction
+
+        R = sp.Function('R')
+        Z = sp.Function('Z')
+        x,y = sp.symbols('x y', real=True)
+
+        ϕ = Wavefunction(R(x)*Z(y), x, y)
+
+        extract_expression_from_wavefunction(ϕ + ϕ)
+
+        Returns
+        =======
+
+        sympy.Expr
+            The simplified expression with Wavefunction instances replaced by their internal expressions.
+        """
+        def replace_wavefunctions(expression):
+            simplified_expression = expression
+            for argument in expression.args:
+                if argument.func == Wavefunction:
+                    simplified_expression = simplified_expression.subs(argument, argument.expr)
+                else:
+                    new_term = replace_wavefunctions(argument)
+                    simplified_expression = simplified_expression.subs(argument, new_term)
+            return simplified_expression
+
+        return replace_wavefunctions(input_expression)
 
     @property
     def is_normalized(self):

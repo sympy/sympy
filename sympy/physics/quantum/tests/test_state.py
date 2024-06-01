@@ -1,3 +1,4 @@
+from sympy import KroneckerDelta
 from sympy.core.add import Add
 from sympy.core.function import diff
 from sympy.core.mul import Mul
@@ -6,6 +7,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
+from sympy.core.function import Function
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
@@ -16,7 +18,7 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.state import (
     Ket, Bra, TimeDepKet, TimeDepBra,
     KetBase, BraBase, StateBase, Wavefunction,
-    OrthogonalKet, OrthogonalBra
+    OrthonormalKet, OrthonormalBra
 )
 from sympy.physics.quantum.hilbert import HilbertSpace
 
@@ -238,11 +240,18 @@ def test_wavefunction():
     assert type(k.variables[0]) == Symbol
 
 def test_orthogonal_states():
-    braket = OrthogonalBra(x) * OrthogonalKet(x)
+    braket = OrthonormalBra(x) * OrthonormalKet(x)
     assert braket.doit() == 1
 
-    braket = OrthogonalBra(x) * OrthogonalKet(x+1)
+    braket = OrthonormalBra(x) * OrthonormalKet(x+1)
     assert braket.doit() == 0
 
-    braket = OrthogonalBra(x) * OrthogonalKet(y)
-    assert braket.doit() == braket
+    braket = OrthonormalBra(x) * OrthonormalKet(y)
+    assert braket.doit() == KroneckerDelta(x, y)
+
+def test_wavefunction_expr():
+    x = symbols('x', real = True)
+    a, b = symbols('a b', complex = True)
+    ψ1 = Wavefunction(Function('ψ1')(x), x)
+    ψ2 = Wavefunction(Function('ψ2')(x), x)
+    assert Wavefunction.extract_expression_from_wavefunction(a*ψ1 + b*ψ2) == a*Function('ψ1')(x) + b*Function('ψ2')(x)

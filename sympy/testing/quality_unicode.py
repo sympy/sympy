@@ -52,6 +52,10 @@ unicode_whitelist = [
 
     # Explanation of symbols uses greek letters
     r'*/sympy/core/symbol.py',
+
+    # Greek letter used as variable
+    r'*/sympy/physics/quantum/state.py',
+    r'*/sympy/physics/quantum/tests/test_state.py',
 ]
 
 unicode_strict_whitelist = [
