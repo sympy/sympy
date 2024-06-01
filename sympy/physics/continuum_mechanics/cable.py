@@ -3,8 +3,9 @@ This module can be used to solve problems related
 to 2D Cables.
 """
 
+from sympy import Piecewise
 from sympy.core.sympify import sympify
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol,symbols
 from sympy import sin, cos, pi, atan, diff
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solveset import linsolve
@@ -589,8 +590,14 @@ class Cable:
     def draw(self):
         x = Symbol("x")
         support_rectangles = self._draw_supports()
+        if len(self._loads_position) != 0:
+            cable_shape = self._draw_cable(-1)
 
-        cab_plot = plot(1,(x,1,1),rectangles=support_rectangles,show= False)
+        elif len(self._loads['distributed']) != 0 :
+            cable_shape = self._draw_cable(0)
+
+        print(cable_shape)
+        cab_plot = plot(cable_shape,(x,self._left_support[0],self._right_support[0]),rectangles=support_rectangles,show= False)
         return cab_plot
 
     def _draw_supports(self):
@@ -614,8 +621,8 @@ class Cable:
 
         member_rectangles.append(
             {
-                'xy': (self._left_support[0]-supp_width,self._left_support[1]),
-                'width': supp_width,
+                'xy': (self._left_support[0]-supp_width*1.5,self._left_support[1]),
+                'width': supp_width*1.5,
                 'height':supp_width,
                 'color':'brown',
                 'fill': False
@@ -625,7 +632,7 @@ class Cable:
         member_rectangles.append(
             {
                 'xy': (self._right_support[0],self._right_support[1]),
-                'width': supp_width,
+                'width': supp_width*1.5,
                 'height':supp_width,
                 'color':'brown',
                 'fill': False
@@ -633,3 +640,24 @@ class Cable:
         )
 
         return member_rectangles
+
+    def _draw_cable(self,order):
+        if order == -1 :
+            x,y = symbols('x y')
+            line_func = []
+            sorted_position = sorted(self._loads_position.items(), key = lambda item : item[1][0])
+
+            # print(sorted_position)
+            for i in range(len(sorted_position)):
+                if(i==0):
+                    y = ((sorted_position[i][1][1] - self._left_support[1])*(x-self._left_support[0]))/(sorted_position[i][1][0]- self._left_support[0]) + self._left_support[1]
+                else:
+                    y = ((sorted_position[i][1][1] - sorted_position[i-1][1][1] )*(x-sorted_position[i-1][1][0]))/(sorted_position[i][1][0]- sorted_position[i-1][1][0]) + sorted_position[i-1][1][1]
+                line_func.append((y,x<=sorted_position[i][1][0]))
+
+            y = ((sorted_position[len(sorted_position)-1][1][1] - self._right_support[1])*(x-self._right_support[0]))/(sorted_position[i][1][0]- self._right_support[0]) + self._right_support[1]
+            line_func.append((y,x<=self._right_support[0]))
+            return Piecewise(*line_func)
+
+        elif order == 0:
+            pass
