@@ -53,10 +53,15 @@ def test_vector_sympy():
     assert v3 == v2
     assert v3.__hash__() == v2.__hash__()
 
+
 def test_kind():
     assert C.i.kind is VectorKind()
     assert C.j.kind is VectorKind()
     assert C.k.kind is VectorKind()
+
+    assert C.x.kind is NumberKind
+    assert C.y.kind is NumberKind
+    assert C.z.kind is NumberKind
 
     assert Mul._kind_dispatcher(NumberKind, VectorKind()) is VectorKind()
     assert Mul(2, C.i).kind is VectorKind()
@@ -75,6 +80,7 @@ def test_kind():
 
     assert v1.projection(v2).kind is VectorKind()
     assert v2.projection(v1).kind is VectorKind()
+
 
 def test_vectoradd():
     assert isinstance(Add(C.i, C.j), VectorAdd)
