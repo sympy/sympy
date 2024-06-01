@@ -232,9 +232,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
         return S.Zero
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
         return S.Zero
-    if int(j_1 - m_1) != (j_1 - m_1) or \
-            int(j_2 - m_2) != (j_2 - m_2) or \
-            int(j_3 - m_3) != (j_3 - m_3):
+    if not (int_valued(j_1 - m_1) and \
+            int_valued(j_2 - m_2) and \
+            int_valued(j_3 - m_3)):
         return S.Zero
 
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
