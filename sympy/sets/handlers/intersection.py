@@ -345,8 +345,7 @@ def _(self, other):
         return imageset(lam, base_set)
 
     elif isinstance(other, Interval):
-        from sympy.solvers.solveset import (invert_real, invert_complex,
-                                            solveset)
+        from sympy.solvers.solveset import (invert_real, invert_complex)
 
         f = self.lamda.expr
         n = self.lamda.variables[0]
@@ -378,20 +377,15 @@ def _(self, other):
 
             range_set = S.EmptySet
 
-            if all(i.is_real for i in (new_sup, new_inf)):
-                # this assumes continuity of underlying function
-                # however fixes the case when it is decreasing
-                if new_inf > new_sup:
-                    new_inf, new_sup = new_sup, new_inf
-                new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
-                range_set = base_set.intersect(new_interval)
-            else:
-                if other.is_subset(S.Reals):
-                    solutions = solveset(f, n, S.Reals)
-                    if not isinstance(range_set, (ImageSet, ConditionSet)):
-                        range_set = solutions.intersect(other)
-                    else:
-                        return
+            if not all(i.is_real for i in (new_sup, new_inf)):
+                return
+
+            # this assumes continuity of underlying function
+            # however fixes the case when it is decreasing
+            if new_inf > new_sup:
+                new_inf, new_sup = new_sup, new_inf
+            new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
+            range_set = base_set.intersect(new_interval)
 
             if range_set is S.EmptySet:
                 return S.EmptySet

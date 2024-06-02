@@ -18,6 +18,8 @@ from sympy.polys.rootoftools import rootof
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range)
 from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset, SetKind)
+from sympy.solvers.solveset import solveset
+
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
@@ -569,6 +571,15 @@ def test_intersection():
 
     # issue 16987
     assert Intersection({1}, {1}, {x}) == Intersection({1}, {x})
+
+
+def test_issue_24726():
+    t, n = symbols('t, _n')
+    sin_zeros = solveset(sin(t))
+    ivl = Interval(-10, oo)
+    assert sin_zeros & Interval(-10, oo) == Union(
+        Intersection(ivl, ImageSet(Lambda(n, 2*n*pi), S.Integers)),
+        Intersection(ivl, ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)))
 
 
 def test_issue_9623():
