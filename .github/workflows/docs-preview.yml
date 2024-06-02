@@ -1,9 +1,12 @@
 name: Docs Preview
-on: [status]
-
+on:
+  workflow_run:
+    # test is the name given for the workflow in runtests.yml
+    workflows: ["test"]
+    types: [completed]
 jobs:
   circleci_artifacts_redirector_job:
-    if: "${{ github.event.context == 'ci/circleci: Build Docs Preview' }}"
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     name: Run CircleCI artifacts redirector
     steps:
@@ -16,8 +19,7 @@ jobs:
           circleci-jobs: Build Docs Preview
           job-title: Click here to see a preview of the documentation.
           api-token: ${{ secrets.CIRCLECI_TOKEN }}
-      # This keeps failing even though the step above suceeds:
-      #- name: Check the URL
-      #  if: github.event.status != 'pending'
-      #  run: |
-      #    curl --fail ${{ steps.step1.outputs.url }} | grep $GITHUB_SHA
+      - name: Check the URL
+        if: github.event.status != 'pending'
+        run: |
+          curl --fail ${{ steps.step1.outputs.url }} | grep $GITHUB_SHA
