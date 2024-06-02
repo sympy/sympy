@@ -177,13 +177,13 @@ jobs:
                          wurlitzer autowrap lxml lark z3-solver pycosat   \
                          jax jaxlib libclang scipy aesara                 \
                          'antlr4-python3-runtime==4.11.*'                 \
+                         symengine                                        \
+                         numba llvmlite pymc                              \
                          #
-
-      - run: pip install symengine
 
       # Not available in CPython 3.12 (yet).
       - if: ${{ ! contains(matrix.python-version, '3.12') }}
-        run: pip install numba pymc gmpy2 llvmlite
+        run: pip install gmpy2
 
       # Test external imports
       - run: bin/test_external_imports.py
