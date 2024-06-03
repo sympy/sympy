@@ -335,6 +335,10 @@ def test_sign():
     d = p - q
     assert sign(d).func is sign or sign(d) == 0
 
+    # test leading term
+    assert sign(x).as_leading_term(x) == S.One
+    assert sign(-x).as_leading_term(x) == -S.One
+
 
 def test_as_real_imag():
     n = pi**1000

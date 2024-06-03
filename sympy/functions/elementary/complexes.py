@@ -418,15 +418,6 @@ class sign(Function):
         ):
             return S.One
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
-        arg0 = self.args[0]
-        x0 = arg0.subs(x, 0)
-        if x0 != 0:
-            return self.func(x0)
-        if cdir != 0:
-            cdir = arg0.dir(x, cdir)
-        return -S.One if re(cdir) < 0 else S.One
-
     def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_extended_real:
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
@@ -441,6 +432,18 @@ class sign(Function):
 
     def _eval_simplify(self, **kwargs):
         return self.func(factor_terms(self.args[0]))  # XXX include doit?
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg0 = self.args[0]
+        x0 = arg0.subs(x, 0)
+        if x0 != 0:
+            return self.func(x0)
+        if cdir != 0:
+            cdir = arg0.dir(x, cdir)
+        return -S.One if re(cdir) < 0 else S.One
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        return self._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
 
 class Abs(Function):
@@ -659,13 +662,16 @@ class Abs(Function):
     def _eval_nseries(self, x, n, logx, cdir=0):
         from sympy.functions.elementary.exponential import log
         from sympy.series.order import Order
-        direction = self.args[0].leadterm(x)[0]
+        direction = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
         if direction.is_extended_real is False:
             return im(s.removeO()) + Order(x**n, x)
-        return (sign(direction)*s).expand()
+        sig = sign(direction)
+        if sig.has(sign):
+            sig = sig.leadterm(x)[0]
+        return (sig*s).expand()
 
     def _eval_derivative(self, x):
         if self.args[0].is_extended_real or self.args[0].is_imaginary:
