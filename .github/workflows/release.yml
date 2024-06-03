@@ -79,8 +79,11 @@ jobs:
       - name: Install wheel
         run: pip install sympy-${{ env.release_version }}-py3-none-any.whl
 
+      - name: Install test-only dependencies
+        run: pip install pytest pytest-xdist hypothesis
+
       - name: Run tests after install
-        run: python -c 'import sympy; sympy.test()'
+        run: python -c 'import sympy; sympy.test(parallel=True)'
 
   # -------------------- Upload to Test-PyPI ----------------------- #
 
