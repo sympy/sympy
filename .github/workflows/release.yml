@@ -10,18 +10,18 @@ name: release
 on:
   push:
     branches:
-      - '1.12'
+      - '1.13'
     tags:
-      - 'sympy-1.12.*'
+      - 'sympy-1.13.*'
   pull_request:
     branches:
-      - '1.12'
+      - '1.13'
 env:
-  release_branch: '1.12'
-  release_version: '1.12.1'
-  final_release_version: '1.12.1'
-  previous_version: '1.12'
-  dev_version: '1.13-dev'
+  release_branch: '1.13'
+  release_version: '1.13.0rc1'
+  final_release_version: '1.13.0'
+  previous_version: '1.12.1'
+  dev_version: '1.14-dev'
 
 jobs:
 

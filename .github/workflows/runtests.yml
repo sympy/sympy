@@ -537,7 +537,7 @@ jobs:
         # well.
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
-      - run: git fetch upstream master
+      - run: git fetch upstream 1.13
       - run: git fetch upstream 1.12
 
       - name: Configure benchmarks
@@ -548,10 +548,10 @@ jobs:
         run: asv run --config asv.conf.actions.json
 
         # Output benchmark results
-      - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
-      - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.13 HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
+      - run: asv compare upstream/1.13 HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
+      - run: asv compare upstream/1.12 upstream/1.13 --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.12 upstream/1.13 --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # This workflow does not have write permissions for the repository so
         # we save all outputs as artifacts that can be accessed by the
