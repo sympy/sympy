@@ -1505,10 +1505,13 @@ class Series(SISOLinearTimeInvariant):
             res = self.args[0]
             if not isinstance(res, StateSpace):
                 res = res.doit().rewrite(StateSpace)
-            for model in self.args[1:]:
-                if not isinstance(model, StateSpace):
-                    model = model.doit()
-                res *= model
+            for arg in self.args[1:]:
+                if not isinstance(arg, StateSpace):
+                    arg = arg.doit().rewrite(StateSpace)
+                else:
+                    arg = arg.doit()
+                arg = arg.doit()
+                res *= arg
                 return res
 
         _num_arg = (arg.doit().num for arg in self.args)
@@ -1880,10 +1883,12 @@ class MIMOSeries(MIMOLinearTimeInvariant):
             res = self.args[0]
             if not isinstance(res, StateSpace):
                 res = res.doit().rewrite(StateSpace)
-            for model in self.args[1:]:
-                if not isinstance(model, StateSpace):
-                    model = model.doit()
-                res *= model
+            for arg in self.args[1:]:
+                if not isinstance(arg, StateSpace):
+                    arg = arg.doit().rewrite(StateSpace)
+                else:
+                    arg = arg.doit()
+                res *= arg
             return res
 
         _arg = (arg.doit()._expr_mat for arg in reversed(self.args))
