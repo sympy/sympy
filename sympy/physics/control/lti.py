@@ -400,7 +400,7 @@ class SISOLinearTimeInvariant(LinearTimeInvariant):
 
     @property
     def num_outputs(self):
-        """Return the number of outputs for a SISOLinearTimeInvariant."""
+        """Return the number of outputs for SISOLinearTimeInvariant."""
         return 1
 
     _is_SISO = True
