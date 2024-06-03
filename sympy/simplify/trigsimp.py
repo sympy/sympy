@@ -736,7 +736,7 @@ def trigsimp_old(expr, *, first=True, **opts):
                 d = separatevars(d, dict=True) or d
             if isinstance(d, dict):
                 expr = 1
-                for k, v in d.items():
+                for v in d.values():
                     # remove hollow factoring
                     was = v
                     v = expand_mul(v)
@@ -1114,7 +1114,7 @@ def __trigsimp(expr, deep=False):
             raise TypeError
         fnew = factor(new)
         if fnew != new:
-            new = sorted([new, factor(new)], key=count_ops)[0]
+            new = min([new, factor(new)], key=count_ops)
         # if all exp that were introduced disappeared then accept it
         if not (new.atoms(exp) - e):
             expr = new

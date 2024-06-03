@@ -618,8 +618,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         if den == 0:
             raise ValueError("TransferFunction cannot have a zero denominator.")
 
-        if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
-            ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
+        if (((isinstance(num, (Expr, TransferFunction, Series, Parallel)) and num.has(Symbol)) or num.is_number) and
+            ((isinstance(den, (Expr, TransferFunction, Series, Parallel)) and den.has(Symbol)) or den.is_number)):
             return super(TransferFunction, cls).__new__(cls, num, den, var)
 
         else:
@@ -2205,7 +2205,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return MIMOParallel(*arg_list)
 
 
-class Feedback(SISOLinearTimeInvariant):
+class Feedback(TransferFunction):
     r"""
     A class for representing closed-loop feedback interconnection between two
     SISO input/output systems.
@@ -2296,8 +2296,8 @@ class Feedback(SISOLinearTimeInvariant):
         if not sys2:
             sys2 = TransferFunction(1, 1, sys1.var)
 
-        if not (isinstance(sys1, (TransferFunction, Series))
-            and isinstance(sys2, (TransferFunction, Series))):
+        if not (isinstance(sys1, (TransferFunction, Series, Feedback))
+            and isinstance(sys2, (TransferFunction, Series, Feedback))):
             raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
 
         if sign not in [-1, 1]:
@@ -2314,7 +2314,7 @@ class Feedback(SISOLinearTimeInvariant):
                 Both `sys1` and `sys2` should be using the
                 same complex variable."""))
 
-        return super().__new__(cls, sys1, sys2, _sympify(sign))
+        return super(TransferFunction, cls).__new__(cls, sys1, sys2, _sympify(sign))
 
     @property
     def sys1(self):
@@ -2401,6 +2401,24 @@ class Feedback(SISOLinearTimeInvariant):
         return self.args[2]
 
     @property
+    def num(self):
+        """
+        Returns the numerator of the closed loop feedback system.
+        """
+        return self.sys1
+
+    @property
+    def den(self):
+        """
+        Returns the denominator of the closed loop feedback model.
+        """
+        unit = TransferFunction(1, 1, self.var)
+        arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
+        if self.sign == 1:
+            return Parallel(unit, -Series(self.sys2, *arg_list))
+        return Parallel(unit, Series(self.sys2, *arg_list))
+
+    @property
     def sensitivity(self):
         """
         Returns the sensitivity function of the feedback loop.
@@ -2478,6 +2496,27 @@ class Feedback(SISOLinearTimeInvariant):
 
     def _eval_rewrite_as_TransferFunction(self, num, den, sign, **kwargs):
         return self.doit()
+
+    def to_expr(self):
+        """
+        Converts a ``Feedback`` object to SymPy Expr.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> from sympy import Expr
+        >>> tf1 = TransferFunction(a+s, 1, s)
+        >>> tf2 = TransferFunction(b+s, 1, s)
+        >>> fd1 = Feedback(tf1, tf2)
+        >>> fd1.to_expr()
+        (a + s)/((a + s)*(b + s) + 1)
+        >>> isinstance(_, Expr)
+        True
+        """
+
+        return self.doit().to_expr()
 
     def __neg__(self):
         return Feedback(-self.sys1, -self.sys2, self.sign)
@@ -3217,9 +3256,9 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 `arg` param in TransferFunctionMatrix should
                 strictly be a nested list containing TransferFunction
                 objects."""))
-        for row_index, row in enumerate(arg):
+        for row in arg:
             temp = []
-            for col_index, element in enumerate(row):
+            for element in row:
                 if not isinstance(element, SISOLinearTimeInvariant):
                     raise TypeError(filldedent("""
                         Each element is expected to be of

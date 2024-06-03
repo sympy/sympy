@@ -18,6 +18,8 @@ x, y, a, n = symbols('x y a n')
 def test_fdiff():
     assert SingularityFunction(x, 4, 5).fdiff() == 5*SingularityFunction(x, 4, 4)
     assert SingularityFunction(x, 4, -1).fdiff() == SingularityFunction(x, 4, -2)
+    assert SingularityFunction(x, 4, -2).fdiff() == SingularityFunction(x, 4, -3)
+    assert SingularityFunction(x, 4, -3).fdiff() == SingularityFunction(x, 4, -4)
     assert SingularityFunction(x, 4, 0).fdiff() == SingularityFunction(x, 4, -1)
 
     assert SingularityFunction(y, 6, 2).diff(y) == 2*SingularityFunction(y, 6, 1)
@@ -53,6 +55,10 @@ def test_eval():
     assert SingularityFunction(5, 6, -2) == 0
     assert SingularityFunction(4, 2, -2) == 0
     assert SingularityFunction(4, 4, -2) is oo
+    assert SingularityFunction(4, 2, -3) == 0
+    assert SingularityFunction(8, 8, -3) is oo
+    assert SingularityFunction(4, 2, -4) == 0
+    assert SingularityFunction(8, 8, -4) is oo
     assert (SingularityFunction(6.1, 4, 5)).evalf(5) == Float('40.841', '5')
     assert SingularityFunction(6.1, pi, 2) == (-pi + 6.1)**2
     assert SingularityFunction(x, a, nan) is nan
@@ -61,7 +67,7 @@ def test_eval():
 
     raises(ValueError, lambda: SingularityFunction(x, a, I))
     raises(ValueError, lambda: SingularityFunction(2*I, I, n))
-    raises(ValueError, lambda: SingularityFunction(x, a, -3))
+    raises(ValueError, lambda: SingularityFunction(x, a, -5))
 
 
 def test_leading_term():
@@ -72,6 +78,8 @@ def test_leading_term():
     assert SingularityFunction(x, 0, 0).as_leading_term(x, cdir=-1) == 0
     assert SingularityFunction(x, 0, -1).as_leading_term(x) == 0
     assert SingularityFunction(x, 0, -2).as_leading_term(x) == 0
+    assert SingularityFunction(x, 0, -3).as_leading_term(x) == 0
+    assert SingularityFunction(x, 0, -4).as_leading_term(x) == 0
     assert (SingularityFunction(x + l, 0, 1)/2\
         - SingularityFunction(x + l, l/2, 1)\
         + SingularityFunction(x + l, l, 1)/2).as_leading_term(x) == -x/2
@@ -85,6 +93,8 @@ def test_series():
     assert SingularityFunction(x, 0, 0).series(x, dir='-') == 0
     assert SingularityFunction(x, 0, -1).series(x) == 0
     assert SingularityFunction(x, 0, -2).series(x) == 0
+    assert SingularityFunction(x, 0, -3).series(x) == 0
+    assert SingularityFunction(x, 0, -4).series(x) == 0
     assert (SingularityFunction(x + l, 0, 1)/2\
         - SingularityFunction(x + l, l/2, 1)\
         + SingularityFunction(x + l, l, 1)/2).nseries(x) == -x/2 + O(x**6)

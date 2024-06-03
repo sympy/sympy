@@ -1,5 +1,5 @@
 from sympy import (S, sympify, expand, sqrt, Add, zeros, acos,
-                                ImmutableMatrix as Matrix, simplify)
+                   ImmutableMatrix as Matrix, simplify)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
@@ -29,7 +29,7 @@ class Vector(Printable, EvalfMixin):
     is_number = False
 
     def __init__(self, inlist):
-        """This is the constructor for the Vector class.  You should not be
+        """This is the constructor for the Vector class. You should not be
         calling this, it should only be used by other functions. You should be
         treating Vectors like you would with if you were doing the math by
         hand, and getting the first 3 from the standard basis vectors from a
@@ -72,7 +72,7 @@ class Vector(Printable, EvalfMixin):
         other = _check_vector(other)
         return Vector(self.args + other.args)
 
-    def __and__(self, other):
+    def dot(self, other):
         """Dot product of two vectors.
 
         Returns a scalar, the dot product of the two Vectors
@@ -100,16 +100,18 @@ class Vector(Printable, EvalfMixin):
 
         """
 
-        from sympy.physics.vector.dyadic import Dyadic
+        from sympy.physics.vector.dyadic import Dyadic, _check_dyadic
         if isinstance(other, Dyadic):
-            return NotImplemented
+            other = _check_dyadic(other)
+            ol = Vector(0)
+            for v in other.args:
+                ol += v[0] * v[2] * (v[1].dot(self))
+            return ol
         other = _check_vector(other)
         out = S.Zero
-        for i, v1 in enumerate(self.args):
-            for j, v2 in enumerate(other.args):
-                out += ((v2[0].T)
-                        * (v2[1].dcm(v1[1]))
-                        * (v1[0]))[0]
+        for v1 in self.args:
+            for v2 in other.args:
+                out += ((v2[0].T) * (v2[1].dcm(v1[1])) * (v1[0]))[0]
         if Vector.simp:
             return trigsimp(out, recursive=True)
         else:
@@ -144,7 +146,7 @@ class Vector(Printable, EvalfMixin):
 
         frame = self.args[0][1]
         for v in frame:
-            if expand((self - other) & v) != 0:
+            if expand((self - other).dot(v)) != 0:
                 return False
         return True
 
@@ -179,7 +181,7 @@ class Vector(Printable, EvalfMixin):
     def __neg__(self):
         return self * -1
 
-    def __or__(self, other):
+    def outer(self, other):
         """Outer product between two Vectors.
 
         A rank increasing operation, which returns a Dyadic from two Vectors
@@ -203,8 +205,8 @@ class Vector(Printable, EvalfMixin):
         from sympy.physics.vector.dyadic import Dyadic
         other = _check_vector(other)
         ol = Dyadic(0)
-        for i, v in enumerate(self.args):
-            for i2, v2 in enumerate(other.args):
+        for v in self.args:
+            for v2 in other.args:
                 # it looks this way because if we are in the same frame and
                 # use the enumerate function on the same frame in a nested
                 # fashion, then bad things happen
@@ -279,46 +281,6 @@ class Vector(Printable, EvalfMixin):
 
         return prettyForm.__add__(*terms)
 
-    def __ror__(self, other):
-        """Outer product between two Vectors.
-
-        A rank increasing operation, which returns a Dyadic from two Vectors
-
-        Parameters
-        ==========
-
-        other : Vector
-            The Vector to take the outer product with
-
-        Examples
-        ========
-
-        >>> from sympy.physics.vector import ReferenceFrame, outer
-        >>> N = ReferenceFrame('N')
-        >>> outer(N.x, N.x)
-        (N.x|N.x)
-
-        """
-
-        from sympy.physics.vector.dyadic import Dyadic
-        other = _check_vector(other)
-        ol = Dyadic(0)
-        for i, v in enumerate(other.args):
-            for i2, v2 in enumerate(self.args):
-                # it looks this way because if we are in the same frame and
-                # use the enumerate function on the same frame in a nested
-                # fashion, then bad things happen
-                ol += Dyadic([(v[0][0] * v2[0][0], v[1].x, v2[1].x)])
-                ol += Dyadic([(v[0][0] * v2[0][1], v[1].x, v2[1].y)])
-                ol += Dyadic([(v[0][0] * v2[0][2], v[1].x, v2[1].z)])
-                ol += Dyadic([(v[0][1] * v2[0][0], v[1].y, v2[1].x)])
-                ol += Dyadic([(v[0][1] * v2[0][1], v[1].y, v2[1].y)])
-                ol += Dyadic([(v[0][1] * v2[0][2], v[1].y, v2[1].z)])
-                ol += Dyadic([(v[0][2] * v2[0][0], v[1].z, v2[1].x)])
-                ol += Dyadic([(v[0][2] * v2[0][1], v[1].z, v2[1].y)])
-                ol += Dyadic([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
-        return ol
-
     def __rsub__(self, other):
         return (-1 * self) + other
 
@@ -366,7 +328,7 @@ class Vector(Printable, EvalfMixin):
         """The subtraction operator. """
         return self.__add__(other * -1)
 
-    def __xor__(self, other):
+    def cross(self, other):
         """The cross product operator for two Vectors.
 
         Returns a Vector, expressed in the same ReferenceFrames as self.
@@ -395,9 +357,13 @@ class Vector(Printable, EvalfMixin):
 
         """
 
-        from sympy.physics.vector.dyadic import Dyadic
+        from sympy.physics.vector.dyadic import Dyadic, _check_dyadic
         if isinstance(other, Dyadic):
-            return NotImplemented
+            other = _check_dyadic(other)
+            ol = Dyadic(0)
+            for i, v in enumerate(other.args):
+                ol += v[0] * ((self.cross(v[1])).outer(v[2]))
+            return ol
         other = _check_vector(other)
         if other.args == []:
             return Vector(0)
@@ -422,14 +388,13 @@ class Vector(Printable, EvalfMixin):
             tempy = v[1].y
             tempz = v[1].z
             tempm = ([[tempx, tempy, tempz],
-                      [self & tempx, self & tempy, self & tempz],
-                      [Vector([ar[i]]) & tempx, Vector([ar[i]]) & tempy,
-                       Vector([ar[i]]) & tempz]])
+                      [self.dot(tempx), self.dot(tempy), self.dot(tempz)],
+                      [Vector([ar[i]]).dot(tempx), Vector([ar[i]]).dot(tempy),
+                       Vector([ar[i]]).dot(tempz)]])
             outlist += _det(tempm).args
         return Vector(outlist)
 
     __radd__ = __add__
-    __rand__ = __and__
     __rmul__ = __mul__
 
     def separate(self):
@@ -457,17 +422,18 @@ class Vector(Printable, EvalfMixin):
             components[x[1]] = Vector([x])
         return components
 
-    def dot(self, other):
-        return self & other
-    dot.__doc__ = __and__.__doc__
+    def __and__(self, other):
+        return self.dot(other)
+    __and__.__doc__ = dot.__doc__
+    __rand__ = __and__
 
-    def cross(self, other):
-        return self ^ other
-    cross.__doc__ = __xor__.__doc__
+    def __xor__(self, other):
+        return self.cross(other)
+    __xor__.__doc__ = cross.__doc__
 
-    def outer(self, other):
-        return self | other
-    outer.__doc__ = __or__.__doc__
+    def __or__(self, other):
+        return self.outer(other)
+    __or__.__doc__ = outer.__doc__
 
     def diff(self, var, frame, var_in_dcm=True):
         """Returns the partial derivative of the vector with respect to a
@@ -670,7 +636,7 @@ class Vector(Printable, EvalfMixin):
         instead of ``(-A.x).magnitude()``.
 
         """
-        return sqrt(self & self)
+        return sqrt(self.dot(self))
 
     def normalize(self):
         """Returns a Vector of magnitude 1, codirectional with self."""

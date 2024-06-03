@@ -29,11 +29,11 @@ jobs:
       - name: Basic code quality tests
         run: bin/test quality
 
-      - name: Run flake8 on the sympy package
-        run: flake8 sympy
-
       - name: Run Ruff on the sympy package
         run: ruff check .
+
+      - name: Run flake8 on the sympy package
+        run: flake8 sympy
 
       - name: Detect invalid escapes like '\e'
         run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
@@ -41,7 +41,7 @@ jobs:
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
 
-      - run: pip install slotscheck . 
+      - run: pip install slotscheck .
 
       - name: Check for incorrect use of ``__slots__`` using slotscheck
         run: python -m slotscheck --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
@@ -133,10 +133,8 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
 
-    name: Tests ${{ matrix.group }}/4
+    name: Tests
 
     steps:
       - uses: actions/checkout@v3
@@ -145,7 +143,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4
+      - run: pytest -n auto
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -179,16 +177,71 @@ jobs:
                          wurlitzer autowrap lxml lark z3-solver pycosat   \
                          jax jaxlib libclang scipy aesara                 \
                          'antlr4-python3-runtime==4.11.*'                 \
+                         symengine                                        \
+                         numba llvmlite pymc                              \
                          #
 
       # Not available in CPython 3.12 (yet).
       - if: ${{ ! contains(matrix.python-version, '3.12') }}
-        run: pip install llvmlite numba gmpy2 symengine pymc
+        run: pip install gmpy2
 
       # Test external imports
       - run: bin/test_external_imports.py
       - run: bin/test_submodule_imports.py
       - run: bin/test_executable.py
+
+      # Test modules with specific dependencies
+      - run: bin/test_optional_dependencies.py
+
+  # -------------------- NumPy 2.0 job ----------------------------- #
+
+  numpy-prerelease:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    name: ${{ matrix.python-version }} NumPy Prerelease
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pip install -r requirements-dev.txt
+      - run: pip install --pre numpy scipy
+
+      # Test modules with specific dependencies
+      - run: bin/test_optional_dependencies.py
+
+  # -------------------- NumPy nightly ----------------------------- #
+
+  numpy-nightly:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    name: ${{ matrix.python-version }} NumPy nightly
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pip install -r requirements-dev.txt
+      - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy
+      - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scipy
 
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
@@ -210,23 +263,32 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
       # Test the modules that most directly use python-flint
-      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+      - run: >-
+          pytest
+          sympy/crypto
+          sympy/integrals
+          sympy/holonomic
+          sympy/matrices
+          sympy/ntheory
+          sympy/polys
+          sympy/solvers
         env:
           SYMPY_GROUND_TYPES: flint
-      - run: bin/doctest                                  \
-                    sympy/integrals                       \
-                    sympy/holonomic                       \
-                    sympy/matrices                        \
-                    sympy/ntheory                         \
-                    sympy/polys                           \
-                    sympy/printing                        \
-                    doc/src/modules/integrals             \
-                    doc/src/modules/holonomic             \
-                    doc/src/modules/matrices              \
-                    doc/src/modules/ntheory.rst           \
-                    doc/src/modules/polys                 \
-                    doc/src/modules/printing.rst          \
-                    doc/src/tutorials/intro-tutorial/     \
+      - run: >-
+          bin/doctest
+          sympy/integrals
+          sympy/holonomic
+          sympy/matrices
+          sympy/ntheory
+          sympy/polys
+          sympy/printing
+          doc/src/modules/integrals
+          doc/src/modules/holonomic
+          doc/src/modules/matrices
+          doc/src/modules/ntheory.rst
+          doc/src/modules/polys
+          doc/src/modules/printing.rst
+          doc/src/tutorials/intro-tutorial/
         env:
           SYMPY_GROUND_TYPES: flint
 
@@ -314,8 +376,6 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
 
     steps:
       - uses: actions/checkout@v3
@@ -324,7 +384,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
+      - run: pytest -m slow --timeout 595 -n auto
 
   # -------------------- Test older (and newer) Python --------------- #
 
@@ -337,9 +397,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
-        group: [1, 2, 3, 4]
 
-    name: ${{ matrix.python-version }} ${{ matrix.group }}/4 Tests
+    name: ${{ matrix.python-version }} Tests
 
     steps:
       - uses: actions/checkout@v3
@@ -348,7 +407,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4
+      - run: pytest -n auto
 
   # -------------------- Doctests older (and newer) Python --------------------- #
 
@@ -373,6 +432,30 @@ jobs:
       - run: pip install mpmath
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
+
+  # -------------------- Test with mpmath master ------------------- #
+
+  tests-mpmath-master:
+    needs: [doctests-latest, tests-latest]
+
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4]
+
+    name: mpmath-master ${{ matrix.group }}/4 Tests
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip
+      - run: pip install git+https://github.com/mpmath/mpmath.git@master
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -n auto
 
   # -------------------- Build the html/latex docs ----------------- #
 

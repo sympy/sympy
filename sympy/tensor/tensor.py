@@ -43,6 +43,7 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
+from sympy.core.cache import clear_cache
 from sympy.core.containers import Tuple, Dict
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols
@@ -902,6 +903,9 @@ class _TensorManager:
         if c not in (0, 1, None):
             raise ValueError('`c` can assume only the values 0, 1 or None')
 
+        i = sympify(i)
+        j = sympify(j)
+
         if i not in self._comm_symbols2i:
             n = len(self._comm)
             self._comm.append({})
@@ -920,6 +924,14 @@ class _TensorManager:
         nj = self._comm_symbols2i[j]
         self._comm[ni][nj] = c
         self._comm[nj][ni] = c
+
+        """
+        Cached sympy functions (e.g. expand) may have cached the results of
+        expressions involving tensors, but those results may not be valid after
+        changing the commutation properties. To stay on the safe side, we clear
+        the cache of all functions.
+        """
+        clear_cache()
 
     def set_comms(self, *args):
         """
@@ -1805,8 +1817,7 @@ class TensorHead(Basic):
         else:
             assert symmetry.rank == len(index_types)
 
-        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
-        obj.comm = TensorManager.comm_symbols2i(comm)
+        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(comm))
         return obj
 
     @property
@@ -1820,6 +1831,10 @@ class TensorHead(Basic):
     @property
     def symmetry(self):
         return self.args[2]
+
+    @property
+    def comm(self):
+        return TensorManager.comm_symbols2i(self.args[3])
 
     @property
     def rank(self):
@@ -2983,6 +2998,90 @@ class Tensor(TensExpr):
                 indices.append(index)
         return self.head(*indices)
 
+    def _get_symmetrized_forms(self):
+        """
+        Return a list giving all possible permutations of self that are allowed by its symmetries.
+        """
+        comp = self.component
+        gens = comp.symmetry.generators
+        rank = comp.rank
+
+        old_perms = None
+        new_perms = {self}
+        while new_perms != old_perms:
+            old_perms = new_perms.copy()
+            for tens in old_perms:
+                for gen in gens:
+                    inds = tens.get_indices()
+                    per = [gen.apply(i) for i in range(0,rank)]
+                    sign = (-1)**(gen.apply(rank) - rank)
+                    ind_map = dict(zip(inds, [inds[i] for i in per]))
+                    new_perms.add( sign * tens._replace_indices(ind_map) )
+
+        return new_perms
+
+    def matches(self, expr, repl_dict=None, old=False):
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        #simple checks
+        if self == expr:
+            return repl_dict
+        if not isinstance(expr, Tensor):
+            return None
+        if self.head != expr.head:
+            return None
+
+        #Now consider all index symmetries of expr, and see if any of them allow a match.
+        for new_expr in expr._get_symmetrized_forms():
+            m = self._matches(new_expr, repl_dict, old=old)
+            if m is not None:
+                repl_dict.update(m)
+                return repl_dict
+
+        return None
+
+    def _matches(self, expr, repl_dict=None, old=False):
+        """
+        This does not account for index symmetries of expr
+        """
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        #simple checks
+        if self == expr:
+            return repl_dict
+        if not isinstance(expr, Tensor):
+            return None
+        if self.head != expr.head:
+            return None
+
+        s_indices = self.get_indices()
+        e_indices = expr.get_indices()
+
+        if len(s_indices) != len(e_indices):
+            return None
+
+        for i in range(len(s_indices)):
+            s_ind = s_indices[i]
+            m = s_ind.matches(e_indices[i])
+            if m is None:
+                return None
+            elif -s_ind in repl_dict.keys() and -repl_dict[-s_ind] != m[s_ind]:
+                return None
+            else:
+                repl_dict.update(m)
+
+        return repl_dict
+
     def __call__(self, *indices):
         deprecate_call()
         free_args = self.free_args
@@ -3308,7 +3407,7 @@ class TensMul(TensExpr, AssocOp):
 
         for pos1, arg_indices in enumerate(args_indices):
 
-            for index_pos, index in enumerate(arg_indices):
+            for index in arg_indices:
                 if not isinstance(index, TensorIndex):
                     raise TypeError("expected TensorIndex")
                 if -index in free2pos1:
@@ -3328,7 +3427,7 @@ class TensMul(TensExpr, AssocOp):
                     indices.append(index)
                 pos2 += 1
 
-        free = [(i, p) for (i, p) in free2pos2.items()]
+        free = list(free2pos2.items())
         free_names = [i.name for i in free2pos2.keys()]
 
         dummy_data.sort(key=lambda x: x[3])
@@ -3483,7 +3582,7 @@ class TensMul(TensExpr, AssocOp):
     def _get_position_offset_for_indices(self):
         arg_offset = [None for i in range(self.ext_rank)]
         counter = 0
-        for i, arg in enumerate(self.args):
+        for arg in self.args:
             if not isinstance(arg, TensExpr):
                 continue
             for j in range(arg.ext_rank):
@@ -3912,7 +4011,7 @@ class TensMul(TensExpr, AssocOp):
                 continue
             shifts[i] = shift
         free = [(ind, p - shifts[pos_map[p]]) for (ind, p) in free if pos_map[p] not in elim]
-        dum = [(p0 - shifts[pos_map[p0]], p1 - shifts[pos_map[p1]]) for i, (p0, p1) in enumerate(dum) if pos_map[p0] not in elim and pos_map[p1] not in elim]
+        dum = [(p0 - shifts[pos_map[p0]], p1 - shifts[pos_map[p1]]) for p0, p1 in dum if pos_map[p0] not in elim and pos_map[p1] not in elim]
 
         res = sign*TensMul(*args).doit()
         if not isinstance(res, TensExpr):
@@ -4262,10 +4361,12 @@ class WildTensorHead(TensorHead):
             raise NotImplementedError("Wild matching based on symmetry is not implemented.")
 
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), sympify(symmetry), sympify(comm), sympify(unordered_indices))
-        obj.comm = TensorManager.comm_symbols2i(comm)
-        obj.unordered_indices = unordered_indices
 
         return obj
+
+    @property
+    def unordered_indices(self):
+        return self.args[4]
 
     def __call__(self, *indices, **kwargs):
         tensor = WildTensor(self, indices, **kwargs)

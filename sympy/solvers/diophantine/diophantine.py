@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
@@ -11,7 +13,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import _sympify
-from sympy.external.gmpy import jacobi, remove
+from sympy.external.gmpy import jacobi, remove, invert, iroot
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -19,7 +21,8 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.ntheory.factor_ import divisors, factorint, perfect_power
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.primetest import is_square, isprime
-from sympy.ntheory.residue_ntheory import sqrt_mod
+from sympy.ntheory.modular import symmetric_residue
+from sympy.ntheory.residue_ntheory import sqrt_mod, sqrt_mod_iter
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polytools import Poly, factor_list
 from sympy.simplify.simplify import signsimp
@@ -414,7 +417,7 @@ class Linear(DiophantineEquationType):
         for Ai, Bi in zip(A, B):
             tot_x, tot_y = [], []
 
-            for j, arg in enumerate(Add.make_args(c)):
+            for arg in Add.make_args(c):
                 if arg.is_Integer:
                     # example: 5 -> k = 5
                     k, p = arg, S.One
@@ -627,8 +630,7 @@ class BinaryQuadratic(DiophantineEquationType):
                 # In this case equation can be transformed into a Pell equation
 
                 solns_pell = set(solns_pell)
-                for X, Y in list(solns_pell):
-                    solns_pell.add((-X, -Y))
+                solns_pell.update((-X, -Y) for X, Y in list(solns_pell))
 
                 a = diop_DN(D, 1)
                 T = a[0][0]
@@ -834,15 +836,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
         if not any(coeff[i**2] for i in var):
             if coeff[x*z]:
                 sols = diophantine(coeff[x*y]*x + coeff[y*z]*z - x*z)
-                s = sols.pop()
-                min_sum = abs(s[0]) + abs(s[1])
-
-                for r in sols:
-                    m = abs(r[0]) + abs(r[1])
-                    if m < min_sum:
-                        s = r
-                        min_sum = m
-
+                s = min(sols, key=lambda r: abs(r[0]) + abs(r[1]))
                 result.add(_remove_gcd(s[0], -coeff[x*z], s[1]))
                 return result
 
@@ -1477,8 +1471,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                 GeneralSumOfSquares.name,
                 GeneralSumOfEvenPowers.name,
                 Univariate.name]:
-            for sol in solution:
-                sols.add(merge_solution(var, var_t, sol))
+            sols.update(merge_solution(var, var_t, sol) for sol in solution)
 
         else:
             raise NotImplementedError('unhandled type: %s' % eq_type)
@@ -1989,13 +1982,11 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
             return []
         # N > 0:
         sol = []
-        for d in divisors(square_factor(N)):
-            sols = cornacchia(1, -D, N // d**2)
-            if sols:
-                for x, y in sols:
-                    sol.append((d*x, d*y))
-                    if D == -1:
-                        sol.append((d*y, d*x))
+        for d in divisors(square_factor(N), generator=True):
+            for x, y in cornacchia(1, int(-D), int(N // d**2)):
+                sol.append((d*x, d*y))
+                if D == -1:
+                    sol.append((d*y, d*x))
         return sol
 
     if D == 0:
@@ -2031,92 +2022,41 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
     if N == 0:
         return [(0, 0)]
 
+    sol = []
     if abs(N) == 1:
         pqa = PQa(0, 1, D)
-        j = 0
-        G = []
-        B = []
-
-        for i in pqa:
-
-            a = i[2]
-            G.append(i[5])
-            B.append(i[4])
-
-            if j != 0 and a == 2*sD:
+        *_, prev_B, prev_G = next(pqa)
+        for j, (*_, a, _, _B, _G) in enumerate(pqa):
+            if a == 2*sD:
                 break
-            j = j + 1
-
-        if _odd(j):
-
-            if N == -1:
-                x = G[j - 1]
-                y = B[j - 1]
-            else:
-                count = j
-                while count < 2*j - 1:
-                    i = next(pqa)
-                    G.append(i[5])
-                    B.append(i[4])
-                    count += 1
-
-                x = G[count]
-                y = B[count]
-        else:
+            prev_B, prev_G = _B, _G
+        if j % 2:
             if N == 1:
-                x = G[j - 1]
-                y = B[j - 1]
-            else:
-                return []
+                sol.append((prev_G, prev_B))
+            return sol
+        if N == -1:
+            return [(prev_G, prev_B)]
+        for _ in range(j):
+            *_, _B, _G = next(pqa)
+        return [(_G, _B)]
 
-        return [(x, y)]
-
-    fs = []
-    sol = []
-    div = divisors(N)
-
-    for d in div:
-        if divisible(N, d**2):
-            fs.append(d)
-
-    for f in fs:
+    for f in divisors(square_factor(N), generator=True):
         m = N // f**2
-
-        zs = sqrt_mod(D, abs(m), all_roots=True)
-        zs = [i for i in zs if i <= abs(m) // 2 ]
-
-        if abs(m) != 2:
-            zs = zs + [-i for i in zs if i]  # omit dupl 0
-
-        for z in zs:
-
-            pqa = PQa(z, abs(m), D)
-            j = 0
-            G = []
-            B = []
-
-            for i in pqa:
-
-                G.append(i[5])
-                B.append(i[4])
-
-                if j != 0 and abs(i[1]) == 1:
-                    r = G[j-1]
-                    s = B[j-1]
-
-                    if r**2 - D*s**2 == m:
-                        sol.append((f*r, f*s))
-
-                    elif diop_DN(D, -1) != []:
-                        a = diop_DN(D, -1)
-                        sol.append((f*(r*a[0][0] + a[0][1]*s*D), f*(r*a[0][1] + s*a[0][0])))
-
+        am = abs(m)
+        for sqm in sqrt_mod(D, am, all_roots=True):
+            z = symmetric_residue(sqm, am)
+            pqa = PQa(z, am, D)
+            *_, prev_B, prev_G = next(pqa)
+            for _ in range(length(z, am, D) - 1):
+                _, q, *_, _B, _G = next(pqa)
+                if abs(q) == 1:
+                    if prev_G**2 - D*prev_B**2 == m:
+                        sol.append((f*prev_G, f*prev_B))
+                    elif a := diop_DN(D, -1):
+                        sol.append((f*(prev_G*a[0][0] + prev_B*D*a[0][1]),
+                                    f*(prev_G*a[0][1] + prev_B*a[0][0])))
                     break
-
-                j = j + 1
-                if j == length(z, abs(m), D):
-                    break
-
+                prev_B, prev_G = _B, _G
     return sol
 
 
@@ -2174,48 +2114,30 @@ def _special_diop_DN(D, N):
     #
     # assert (1 < N**2 < D) and (not integer_nthroot(D, 2)[1])
 
-    sqrt_D = sqrt(D)
-    F = [(N, 1)]
-    f = 2
-    while True:
-        f2 = f**2
-        if f2 > abs(N):
-            break
-        n, r = divmod(N, f2)
-        if r == 0:
-            F.append((n, f))
-        f += 1
-
+    sqrt_D = isqrt(D)
+    F = {N // f**2: f for f in divisors(square_factor(abs(N)), generator=True)}
     P = 0
     Q = 1
     G0, G1 = 0, 1
     B0, B1 = 1, 0
 
     solutions = []
-
-    i = 0
     while True:
-        a = floor((P + sqrt_D) / Q)
-        P = a*Q - P
-        Q = (D - P**2) // Q
-        G2 = a*G1 + G0
-        B2 = a*B1 + B0
-
-        for n, f in F:
-            if G2**2 - D*B2**2 == n:
-                solutions.append((f*G2, f*B2))
-
-        i += 1
-        if Q == 1 and i % 2 == 0:
+        for _ in range(2):
+            a = (P + sqrt_D) // Q
+            P = a*Q - P
+            Q = (D - P**2) // Q
+            G0, G1 = G1, a*G1 + G0
+            B0, B1 = B1, a*B1 + B0
+            if (s := G1**2 - D*B1**2) in F:
+                f = F[s]
+                solutions.append((f*G1, f*B1))
+        if Q == 1:
             break
-
-        G0, G1 = G1, G2
-        B0, B1 = B1, B2
-
     return solutions
 
 
-def cornacchia(a, b, m):
+def cornacchia(a:int, b:int, m:int) -> set[tuple[int, int]]:
     r"""
     Solves `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
 
@@ -2250,34 +2172,22 @@ def cornacchia(a, b, m):
 
     sympy.utilities.iterables.signed_permutations
     """
+    # Assume gcd(a, b) = gcd(a, m) = 1 and a, b > 0 but no error checking
     sols = set()
-
-    a1 = igcdex(a, m)[0]
-    v = sqrt_mod(-b*a1, m, all_roots=True)
-    if not v:
-        return None
-
-    for t in v:
+    for t in sqrt_mod_iter(-b*invert(a, m), m):
         if t < m // 2:
             continue
-
-        u, r = t, m
-
-        while True:
+        u, r = m, t
+        while (m1 := m - a*r**2) <= 0:
             u, r = r, u % r
-            if a*r**2 < m:
-                break
-
-        m1 = m - a*r**2
-
-        if m1 % b == 0:
-            m1 = m1 // b
-            s, _exact = integer_nthroot(m1, 2)
-            if _exact:
-                if a == b and r < s:
-                    r, s = s, r
-                sols.add((int(r), int(s)))
-
+        m1, _r = divmod(m1, b)
+        if _r:
+            continue
+        s, _exact = iroot(m1, 2)
+        if _exact:
+            if a == b and r < s:
+                r, s = s, r
+            sols.add((int(r), int(s)))
     return sols
 
 
@@ -2318,30 +2228,23 @@ def PQa(P_0, Q_0, D):
     .. [1] Solving the generalized Pell equation x^2 - Dy^2 = N, John P.
         Robertson, July 31, 2004, Pages 4 - 8. https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
     """
-    A_i_2 = B_i_1 = 0
-    A_i_1 = B_i_2 = 1
-
-    G_i_2 = -P_0
-    G_i_1 = Q_0
-
+    sqD = isqrt(D)
+    A2 = B1 = 0
+    A1 = B2 = 1
+    G1 = Q_0
+    G2 = -P_0
     P_i = P_0
     Q_i = Q_0
 
     while True:
-
-        a_i = floor((P_i + sqrt(D))/Q_i)
-        A_i = a_i*A_i_1 + A_i_2
-        B_i = a_i*B_i_1 + B_i_2
-        G_i = a_i*G_i_1 + G_i_2
-
-        yield P_i, Q_i, a_i, A_i, B_i, G_i
-
-        A_i_1, A_i_2 = A_i, A_i_1
-        B_i_1, B_i_2 = B_i, B_i_1
-        G_i_1, G_i_2 = G_i, G_i_1
+        a_i = (P_i + sqD) // Q_i
+        A1, A2 = a_i*A1 + A2, A1
+        B1, B2 = a_i*B1 + B2, B1
+        G1, G2 = a_i*G1 + G2, G1
+        yield P_i, Q_i, a_i, A1, B1, G1
 
         P_i = a_i*Q_i - P_i
-        Q_i = (D - P_i**2)/Q_i
+        Q_i = (D - P_i**2) // Q_i
 
 
 def diop_bf_DN(D, N, t=symbols("t", integer=True)):
@@ -2786,7 +2689,7 @@ def diop_ternary_quadratic(eq, parameterize=False):
 
 
 def _diop_ternary_quadratic(_var, coeff):
-    eq = sum([i*coeff[i] for i in coeff])
+    eq = sum(i*coeff[i] for i in coeff)
     if HomogeneousTernaryQuadratic(eq).matches():
         return HomogeneousTernaryQuadratic(eq, free_symbols=_var).solve()
     elif HomogeneousTernaryQuadraticNormal(eq).matches():
@@ -3039,7 +2942,7 @@ def diop_ternary_quadratic_normal(eq, parameterize=False):
 
 
 def _diop_ternary_quadratic_normal(var, coeff):
-    eq = sum([i * coeff[i] for i in coeff])
+    eq = sum(i * coeff[i] for i in coeff)
     return HomogeneousTernaryQuadraticNormal(eq, free_symbols=var).solve()
 
 
@@ -3263,15 +3166,63 @@ def descent(A, B):
     return _remove_gcd(x_0*x_1 + A*z_0*z_1, z_0*x_1 + x_0*z_1, t_1*t_2*y_1)
 
 
-def gaussian_reduce(w, a, b):
+def gaussian_reduce(w:int, a:int, b:int) -> tuple[int, int]:
     r"""
     Returns a reduced solution `(x, z)` to the congruence
-    `X^2 - aZ^2 \equiv 0 \ (mod \ b)` so that `x^2 + |a|z^2` is minimal.
+    `X^2 - aZ^2 \equiv 0 \pmod{b}` so that `x^2 + |a|z^2` is as small as possible.
+    Here ``w`` is a solution of the congruence `x^2 \equiv a \pmod{b}`.
 
-    Details
-    =======
+    This function is intended to be used only for ``descent()``.
 
-    Here ``w`` is a solution of the congruence `x^2 \equiv a \ (mod \ b)`
+    Explanation
+    ===========
+
+    The Gaussian reduction can find the shortest vector for any norm.
+    So we define the special norm for the vectors `u = (u_1, u_2)` and `v = (v_1, v_2)` as follows.
+
+    .. math ::
+        u \cdot v := (wu_1 + bu_2)(wv_1 + bv_2) + |a|u_1v_1
+
+    Note that, given the mapping `f: (u_1, u_2) \to (wu_1 + bu_2, u_1)`,
+    `f((u_1,u_2))` is the solution to `X^2 - aZ^2 \equiv 0 \pmod{b}`.
+    In other words, finding the shortest vector in this norm will yield a solution with smaller `X^2 + |a|Z^2`.
+    The algorithm starts from basis vectors `(0, 1)` and `(1, 0)`
+    (corresponding to solutions `(b, 0)` and `(w, 1)`, respectively) and finds the shortest vector.
+    The shortest vector does not necessarily correspond to the smallest solution,
+    but since ``descent()`` only wants the smallest possible solution, it is sufficient.
+
+    Parameters
+    ==========
+
+    w : int
+        ``w`` s.t. `w^2 \equiv a \pmod{b}`
+    a : int
+        square-free nonzero integer
+    b : int
+        square-free nonzero integer
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine.diophantine import gaussian_reduce
+    >>> from sympy.ntheory.residue_ntheory import sqrt_mod
+    >>> a, b = 19, 101
+    >>> gaussian_reduce(sqrt_mod(a, b), a, b) # 1**2 - 19*(-4)**2 = -303
+    (1, -4)
+    >>> a, b = 11, 14
+    >>> x, z = gaussian_reduce(sqrt_mod(a, b), a, b)
+    >>> (x**2 - a*z**2) % b == 0
+    True
+
+    It does not always return the smallest solution.
+
+    >>> a, b = 6, 95
+    >>> min_x, min_z = 1, 4
+    >>> x, z = gaussian_reduce(sqrt_mod(a, b), a, b)
+    >>> (x**2 - a*z**2) % b == 0 and (min_x**2 - a*min_z**2) % b == 0
+    True
+    >>> min_x**2 + abs(a)*min_z**2 < x**2 + abs(a)*z**2
+    True
 
     References
     ==========
@@ -3282,48 +3233,25 @@ def gaussian_reduce(w, a, b):
            Mathematics of Computation, 72(243), 1417-1441.
            https://doi.org/10.1090/S0025-5718-02-01480-1
     """
-    u = (0, 1)
-    v = (1, 0)
+    a = abs(a)
+    def _dot(u, v):
+        return u[0]*v[0] + a*u[1]*v[1]
 
-    if dot(u, v, w, a, b) < 0:
-        v = (-v[0], -v[1])
+    u = (b, 0)
+    v = (w, 1) if b*w >= 0 else (-w, -1)
+    # i.e., _dot(u, v) >= 0
 
-    if norm(u, w, a, b) < norm(v, w, a, b):
+    if b**2 < w**2 + a:
         u, v = v, u
+    # i.e., norm(u) >= norm(v), where norm(u) := sqrt(_dot(u, u))
 
-    while norm(u, w, a, b) > norm(v, w, a, b):
-        k = dot(u, v, w, a, b) // dot(v, v, w, a, b)
-        u, v = v, (u[0]- k*v[0], u[1]- k*v[1])
-
-    u, v = v, u
-
-    if dot(u, v, w, a, b) < dot(v, v, w, a, b)/2 or norm((u[0]-v[0], u[1]-v[1]), w, a, b) > norm(v, w, a, b):
-        c = v
-    else:
-        c = (u[0] - v[0], u[1] - v[1])
-
-    return c[0]*w + b*c[1], c[0]
-
-
-def dot(u, v, w, a, b):
-    r"""
-    Returns a special dot product of the vectors `u = (u_{1}, u_{2})` and
-    `v = (v_{1}, v_{2})` which is defined in order to reduce solution of
-    the congruence equation `X^2 - aZ^2 \equiv 0 \ (mod \ b)`.
-    """
-    u_1, u_2 = u
-    v_1, v_2 = v
-    return (w*u_1 + b*u_2)*(w*v_1 + b*v_2) + abs(a)*u_1*v_1
-
-
-def norm(u, w, a, b):
-    r"""
-    Returns the norm of the vector `u = (u_{1}, u_{2})` under the dot product
-    defined by `u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}`
-    where `u = (u_{1}, u_{2})` and `v = (v_{1}, v_{2})`.
-    """
-    u_1, u_2 = u
-    return sqrt(dot((u_1, u_2), (u_1, u_2), w, a, b))
+    while _dot(u, u) > (dv := _dot(v, v)):
+        k = _dot(u, v) // dv
+        u, v = v, (u[0] - k*v[0], u[1] - k*v[1])
+    c = (v[0] - u[0], v[1] - u[1])
+    if _dot(c, c) <= _dot(u, u) <= 2*_dot(u, v):
+        return c
+    return u
 
 
 def holzer(x, y, z, a, b, c):

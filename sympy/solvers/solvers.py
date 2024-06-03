@@ -97,7 +97,7 @@ def recast_to_symbols(eqs, symbols):
     symbols = list(ordered(symbols))
     swap_sym = {}
     i = 0
-    for j, s in enumerate(symbols):
+    for s in symbols:
         if not isinstance(s, Symbol) and s not in swap_sym:
             swap_sym[s] = Dummy('X%d' % i)
             i += 1
@@ -174,8 +174,7 @@ def denoms(eq, *symbols):
         den = denom(p)
         if den is S.One:
             continue
-        for d in Mul.make_args(den):
-            dens.add(d)
+        dens.update(Mul.make_args(den))
     if not symbols:
         return dens
     elif len(symbols) == 1:
@@ -1417,8 +1416,15 @@ def _solve(f, *symbols, **flags):
         result = set()
         if any(e.is_zero for e, c in f.args):
             f = f.simplify()  # failure imminent w/o help
-        for i, (expr, cond) in enumerate(f.args):
-            if expr.is_zero:
+
+        cond = neg = True
+        for expr, cnd in f.args:
+            # the explicit condition for this expr is the current cond
+            # and none of the previous conditions
+            cond = And(neg, cnd)
+            neg = And(neg, ~cond)
+
+            if expr.is_zero and cond.simplify() != False:
                 raise NotImplementedError(filldedent('''
                     An expression is already zero when %s.
                     This means that in this *region* the solution
@@ -1427,10 +1433,7 @@ def _solve(f, *symbols, **flags):
                     interval it might be resolved with simplification
                     of the Piecewise conditions.''' % cond))
             candidates = _vsolve(expr, symbol, **flags)
-            # the explicit condition for this expr is the current cond
-            # and none of the previous conditions
-            args = [~c for _, c in f.args[:i]] + [cond]
-            cond = And(*args)
+
             for candidate in candidates:
                 if candidate in result:
                     # an unconditional value was already there
@@ -2573,9 +2576,9 @@ def det_minor(M):
     if n == 2:
         return M[0, 0]*M[1, 1] - M[1, 0]*M[0, 1]
     else:
-        return sum([(1, -1)[i % 2]*Add(*[M[0, i]*d for d in
+        return sum((1, -1)[i % 2]*Add(*[M[0, i]*d for d in
             Add.make_args(det_minor(M.minor_submatrix(0, i)))])
-            if M[0, i] else S.Zero for i in range(n)])
+            if M[0, i] else S.Zero for i in range(n))
 
 
 def det_quick(M, method=None):

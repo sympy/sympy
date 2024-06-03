@@ -122,7 +122,7 @@ def comp(z1, z2, tol=None):
                 ca = pure_complex(a, or_real=True)
                 if not ca:
                     if fa:
-                        a = a.n(prec_to_dps(min([i._prec for i in fa])))
+                        a = a.n(prec_to_dps(min(i._prec for i in fa)))
                         ca = pure_complex(a, or_real=True)
                         break
                     else:
@@ -130,7 +130,7 @@ def comp(z1, z2, tol=None):
                         a, b = b, a
             cb = pure_complex(b)
             if not cb and fb:
-                b = b.n(prec_to_dps(min([i._prec for i in fb])))
+                b = b.n(prec_to_dps(min(i._prec for i in fb)))
                 cb = pure_complex(b, or_real=True)
             if ca and cb and (ca[1] or cb[1]):
                 return all(comp(i, j) for i, j in zip(ca, cb))
@@ -210,7 +210,7 @@ def _decimal_to_Rational_prec(dec):
         rv = Integer(int(dec))
     else:
         s = (-1)**s
-        d = sum([di*10**i for i, di in enumerate(reversed(d))])
+        d = sum(di*10**i for i, di in enumerate(reversed(d)))
         rv = Rational(s*d, 10**-e)
     return rv, prec
 
@@ -927,9 +927,11 @@ class Float(Number):
         obj._prec = _prec
         return obj
 
-    # mpz can't be pickled
     def __getnewargs_ex__(self):
-        return ((mlib.to_pickable(self._mpf_),), {'precision': self._prec})
+        sign, man, exp, bc = self._mpf_
+        arg = (sign, hex(man)[2:], exp, bc)
+        kwargs = {'precision': self._prec}
+        return ((arg,), kwargs)
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
@@ -4288,9 +4290,25 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
             return expr1 == expr2
         elif expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
             return False
+        elif expr1.is_Add or expr1.is_Mul:
+            return _all_close_ac(expr1, expr2, rtol, atol)
         else:
             args = zip(expr1.args, expr2.args)
             return all(_all_close(a1, a2, rtol, atol) for a1, a2 in args)
+
+    def _all_close_ac(expr1, expr2, rtol, atol):
+        # Compare expressions with associative commutative operators for
+        # approximate equality. This could be horribly inefficient for large
+        # expressions e.g. an Add with many terms.
+        args2 = list(expr2.args)
+        for arg1 in expr1.args:
+            for i, arg2 in enumerate(args2):
+                if _all_close(arg1, arg2, rtol, atol):
+                    args2.pop(i)
+                    break
+            else:
+                return False
+        return True
 
     return _all_close(_sympify(expr1), _sympify(expr2), rtol, atol)
 
@@ -4328,13 +4346,6 @@ if flint is not None:
 
     _sympy_converter[type(flint.fmpz(1))] = sympify_fmpz
     _sympy_converter[type(flint.fmpq(1, 2))] = sympify_fmpq
-
-
-def sympify_mpmath_mpq(x):
-    p, q = x._mpq_
-    return Rational(p, q, 1)
-
-_sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
 
 
 def sympify_mpmath(x):
