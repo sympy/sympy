@@ -74,6 +74,10 @@ will need to either add a `warnings` filter as above or use pytest to filter
 SymPy deprecation warnings.
 ```
 
+## Version 1.14
+
+There are no deprecations yet for SymPy 1.14.
+
 ## Version 1.13
 
 (deprecated-mechanics-body-class)=
