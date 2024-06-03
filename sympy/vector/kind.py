@@ -23,7 +23,7 @@ class VectorKind(Kind):
     >>> from sympy.vector.coordsysrect import CoordSys3D
     >>> Sys = CoordSys3D('Sys')
     >>> Sys.i.kind
-    VectorKind
+    VectorKind(NumberKind)
 
     Operations between instances of Vector keep also have the kind ``VectorKind``:
 
@@ -31,11 +31,11 @@ class VectorKind(Kind):
     >>> v1 = Sys.i * 2 + Sys.j * 3 + Sys.k * 4
     >>> v2 = Sys.i * Sys.x + Sys.j * Sys.y + Sys.k * Sys.z
     >>> v1.kind
-    VectorKind
+    VectorKind(NumberKind)
     >>> v2.kind
-    VectorKind
+    VectorKind(NumberKind)
     >>> Add(v1, v2).kind
-    VectorKind
+    VectorKind(NumberKind)
 
     Subclasses of Vector also have the kind ``VectorKind``, such as
     Cross, VectorAdd, VectorMul or VectorZero.
