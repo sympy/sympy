@@ -205,21 +205,55 @@ _uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
     """
+    Symbol class is used to create symbolic variables.
+
+    Explanation
+    ===========
+
+    Symbolic variables are placeholders for mathematical symbols that can represent numbers, constants, or any other mathematical entities and can be used in mathematical expressions and to perform symbolic computations.
+
     Assumptions:
-       commutative = True
+
+    commutative = True
+    positive = True
+    real = True
+    imaginary = True
+    complex = True
+    complete list of more assumptions- :ref:`predicates`
 
     You can override the default assumptions in the constructor.
 
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> A,B = symbols('A,B', commutative = False)
-    >>> bool(A*B != B*A)
+    >>> from sympy import Symbol
+    >>> x = Symbol("x", positive=True)
+    >>> x.is_positive
     True
-    >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
-    True
+    >>> x.is_negative
+    False
 
+    passing in greek letters:
+
+    >>> from sympy import Symbol
+    >>> alpha = Symbol('alpha')
+    >>> alpha #doctest: +SKIP
+    α
+
+    Trailing digits are automatically treated like subscripts of what precedes them in the name.
+    General format to add subscript to a symbol :
+    ``<var_name> = Symbol('<symbol_name>_<subscript>')``
+
+    >>> from sympy import Symbol
+    >>> alpha_i = Symbol('alpha_i')
+    >>> alpha_i #doctest: +SKIP
+    αᵢ
+
+    Parameters
+    ==========
+
+    AtomicExpr: variable name
+    Boolean: Assumption with a boolean value(True or False)
     """
 
     is_comparable = False
@@ -244,10 +278,10 @@ class Symbol(AtomicExpr, Boolean):
         Examples
         ========
 
-            >>> from sympy import Symbol
-            >>> x = Symbol('x')
-            >>> x._diff_wrt
-            True
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> x._diff_wrt
+        True
         """
         return True
 

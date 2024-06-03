@@ -86,6 +86,15 @@ from .graph import (
     _strongly_connected_components, _strongly_connected_components_decomposition)
 
 
+__doctest_requires__ = {
+    ('MatrixBase.is_indefinite',
+     'MatrixBase.is_positive_definite',
+     'MatrixBase.is_positive_semidefinite',
+     'MatrixBase.is_negative_definite',
+     'MatrixBase.is_negative_semidefinite'): ['matplotlib'],
+}
+
+
 class MatrixBase(Printable):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
@@ -1302,10 +1311,12 @@ class MatrixBase(Printable):
                     yield (i, j), self[i, j]
 
     def _eval_atoms(self, *types):
-        result = set()
-        for i in self:
-            result.update(i.atoms(*types))
-        return result
+        values = self.values()
+        if len(values) < self.rows * self.cols and isinstance(S.Zero, types):
+            s = {S.Zero}
+        else:
+            s = set()
+        return s.union(*[v.atoms(*types) for v in values])
 
     def _eval_free_symbols(self):
         return set().union(*(i.free_symbols for i in set(self.values())))
@@ -3664,7 +3675,9 @@ class MatrixBase(Printable):
         """
         return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
 
-    def __array__(self, dtype=object):
+    def __array__(self, dtype=object, copy=None):
+        if copy is not None and not copy:
+            raise TypeError("Cannot implement copy=False when converting Matrix to ndarray")
         from .dense import matrix2numpy
         return matrix2numpy(self, dtype=dtype)
 
@@ -3749,7 +3762,7 @@ class MatrixBase(Printable):
       q = list(range(len(b)))
       dat = [i.rows for i in b]
       active = [q.pop(0) for _ in range(ntop)]
-      cols = sum([b[i].cols for i in active])
+      cols = sum(b[i].cols for i in active)
       rows = []
       while any(dat):
           r = []
@@ -3942,8 +3955,6 @@ class MatrixBase(Printable):
                         if hasattr(row, '__array__'):
                             if 0 in row.shape:
                                 continue
-                        elif not row:
-                            continue
 
                         if evaluate and all(ismat(i) for i in row):
                             r, c, flatT = cls._handle_creation_inputs(

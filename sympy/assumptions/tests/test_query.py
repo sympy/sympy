@@ -2167,8 +2167,7 @@ def test_known_facts_consistent():
     # test cnf clauses of fact between unary predicates
     cnf = CNF.to_CNF(fact)
     clauses = set()
-    for cl in cnf.clauses:
-        clauses.add(frozenset(Literal(lit.arg.function, lit.is_Not) for lit in sorted(cl, key=str)))
+    clauses.update(frozenset(Literal(lit.arg.function, lit.is_Not) for lit in sorted(cl, key=str)) for cl in cnf.clauses)
     assert get_all_known_facts() == clauses
     # test dictionary of fact between unary predicates
     keys = [pred(x) for pred in get_known_facts_keys()]

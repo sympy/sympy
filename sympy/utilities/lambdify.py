@@ -20,7 +20,9 @@ from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
 
+
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
+
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -67,6 +69,7 @@ MPMATH_TRANSLATIONS = {
     "ceiling": "ceil",
     "chebyshevt": "chebyt",
     "chebyshevu": "chebyu",
+    "assoc_legendre": "legenp",
     "E": "e",
     "I": "j",
     "ln": "log",
@@ -91,7 +94,10 @@ MPMATH_TRANSLATIONS = {
 NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
 }
-SCIPY_TRANSLATIONS: dict[str, str] = {}
+SCIPY_TRANSLATIONS: dict[str, str] = {
+    "jn" : "spherical_jn",
+    "yn" : "spherical_yn"
+}
 CUPY_TRANSLATIONS: dict[str, str] = {}
 JAX_TRANSLATIONS: dict[str, str] = {}
 
@@ -963,6 +969,8 @@ def _recursive_to_string(doprint, arg):
             left, right = "[", "]"
         elif isinstance(arg, tuple):
             left, right = "(", ",)"
+            if not arg:
+                return "()"
         else:
             raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
         return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right

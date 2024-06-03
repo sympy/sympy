@@ -279,7 +279,7 @@ class PolyRing(DefaultPrinting, IPolys):
         state = self.__dict__.copy()
         del state["leading_expv"]
 
-        for key, value in state.items():
+        for key in state:
             if key.startswith("monomial_"):
                 del state[key]
 
@@ -1638,7 +1638,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif i < 0:
             return 0
         else:
-            return max([ monom[i] for monom in f.itermonoms() ])
+            return max(monom[i] for monom in f.itermonoms())
 
     def degrees(f):
         """
@@ -1666,7 +1666,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif i < 0:
             return 0
         else:
-            return min([ monom[i] for monom in f.itermonoms() ])
+            return min(monom[i] for monom in f.itermonoms())
 
     def tail_degrees(f):
         """
@@ -2474,7 +2474,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             for i, (monom, coeff) in enumerate(f.terms()):
                 if all(monom[i] >= monom[i + 1] for i in indices):
-                    height = max([n*m for n, m in zip(weights, monom)])
+                    height = max(n*m for n, m in zip(weights, monom))
 
                     if height > _height:
                         _height, _monom, _coeff = height, monom, coeff
@@ -2983,7 +2983,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if f.ring.is_univariate:
             return f.ring.dup_shift(f, a)
         else:
-            raise MultivariatePolynomialError("polynomial shift")
+            raise MultivariatePolynomialError("shift: use shift_list instead")
+
+    def shift_list(f, a):
+        return f.ring.dmp_shift(f, a)
 
     def sturm(f):
         if f.ring.is_univariate:
@@ -2993,6 +2996,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def gff_list(f):
         return f.ring.dmp_gff_list(f)
+
+    def norm(f):
+        return f.ring.dmp_norm(f)
 
     def sqf_norm(f):
         return f.ring.dmp_sqf_norm(f)

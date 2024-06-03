@@ -1,6 +1,6 @@
-=====================
-Docstring Style Guide
-=====================
+============================
+Documentation Style Guide
+============================
 
 General Guidelines
 --------------------

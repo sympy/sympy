@@ -332,7 +332,10 @@ def test_z3():
     x, y, z = symbols('x,y,z')
     assert z3_satisfiable((x >= 2) & (x < 1)) is False
     assert z3_satisfiable( A & ~A ) is False
-    assert z3_satisfiable(A & (~A | B | C)) is True
+
+    model = z3_satisfiable(A & (~A | B | C))
+    assert bool(model) is True
+    assert model[A] is True
 
     # test nonlinear function
     assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
