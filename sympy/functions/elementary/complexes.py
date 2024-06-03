@@ -659,7 +659,7 @@ class Abs(Function):
     def _eval_nseries(self, x, n, logx, cdir=0):
         from sympy.functions.elementary.exponential import log
         from sympy.series.order import Order
-        direction = self.args[0].leadterm(x)[0]
+        direction = self.args[0].as_leading_term(x, logx=logx,cdir=cdir)
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
