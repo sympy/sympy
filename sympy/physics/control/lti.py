@@ -392,6 +392,17 @@ class LinearTimeInvariant(Basic, EvalfMixin):
 class SISOLinearTimeInvariant(LinearTimeInvariant):
     """A common class for all the SISO Linear Time-Invariant Dynamical Systems."""
     # Users should not directly interact with this class.
+
+    @property
+    def num_inputs(self):
+        """Return the number of inputs for SISOLinearTimeInvariant."""
+        return 1
+
+    @property
+    def num_outputs(self):
+        """Return the number of outputs for a SISOLinearTimeInvariant."""
+        return 1
+
     _is_SISO = True
 
 
@@ -869,13 +880,6 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         """
         return self.args[2]
-
-    @property
-    def num_inputs(self):
-        """Return the number of inputs of a given TransferFunction."""
-        return 1
-
-    num_outputs = num_inputs
 
     def _eval_subs(self, old, new):
         arg_num = self.num.subs(old, new)
@@ -1653,12 +1657,6 @@ class Series(SISOLinearTimeInvariant):
     @property
     def is_StateSpace_object(self):
         return self._is_series_StateSpace
-
-    @property
-    def num_inputs(self):
-        return 1
-
-    num_outputs = num_inputs
 
 def _mat_mul_compatible(*args):
     """To check whether shapes are compatible for matrix mul."""
