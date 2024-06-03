@@ -1,6 +1,6 @@
 #sympy.vector.kind
 
-from sympy.core.kind import Kind, _NumberKind
+from sympy.core.kind import Kind, _NumberKind, NumberKind
 from sympy.core.mul import Mul
 
 class VectorKind(Kind):
@@ -9,7 +9,11 @@ class VectorKind(Kind):
 
     Parameters
     ==========
-    No parameters.
+
+    element_kind : Kind
+        Kind of the element. Default is
+        :class:`sympy.core.kind.NumberKind`,
+        which means that the vector contains only numbers.
 
     Examples
     ========
@@ -43,15 +47,21 @@ class VectorKind(Kind):
     sympy.matrices.kind.MatrixKind
 
     """
-    def __new__(cls):
-        return super().__new__(cls)
+    def __new__(cls, element_kind=NumberKind):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
+        return obj
 
     def __repr__(self):
-        return "VectorKind"
+        return "VectorKind(%s)" % self.element_kind
 
 @Mul._kind_dispatcher.register(_NumberKind, VectorKind)
 def num_vec_mul(k1, k2):
     """
     The result of a multiplication between a number and a Vector should be of VectorKind.
+    The element kind is selected by recursive dispatching.
     """
-    return VectorKind()
+    if not isinstance(k2, VectorKind):
+        k1, k2 = k2, k1
+    elemk = Mul._kind_dispatcher(k1, k2.element_kind)
+    return VectorKind(elemk)

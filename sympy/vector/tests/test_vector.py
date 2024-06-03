@@ -55,31 +55,31 @@ def test_vector_sympy():
 
 
 def test_kind():
-    assert C.i.kind is VectorKind()
-    assert C.j.kind is VectorKind()
-    assert C.k.kind is VectorKind()
+    assert C.i.kind is VectorKind(NumberKind)
+    assert C.j.kind is VectorKind(NumberKind)
+    assert C.k.kind is VectorKind(NumberKind)
 
     assert C.x.kind is NumberKind
     assert C.y.kind is NumberKind
     assert C.z.kind is NumberKind
 
-    assert Mul._kind_dispatcher(NumberKind, VectorKind()) is VectorKind()
-    assert Mul(2, C.i).kind is VectorKind()
+    assert Mul._kind_dispatcher(NumberKind, VectorKind(NumberKind)) is VectorKind(NumberKind)
+    assert Mul(2, C.i).kind is VectorKind(NumberKind)
 
     v1 = C.x * i + C.z * C.z * j
     v2 = C.x * i + C.y * j + C.z * k
-    assert v1.kind is VectorKind()
-    assert v2.kind is VectorKind()
+    assert v1.kind is VectorKind(NumberKind)
+    assert v2.kind is VectorKind(NumberKind)
 
-    assert (v1 + v2).kind is VectorKind()
-    assert Add(v1, v2).kind is VectorKind()
-    assert Cross(v1, v2).doit().kind is VectorKind()
-    assert VectorAdd(v1, v2).kind is VectorKind()
-    assert VectorMul(2, v1).kind is VectorKind()
-    assert VectorZero().kind is VectorKind()
+    assert (v1 + v2).kind is VectorKind(NumberKind)
+    assert Add(v1, v2).kind is VectorKind(NumberKind)
+    assert Cross(v1, v2).doit().kind is VectorKind(NumberKind)
+    assert VectorAdd(v1, v2).kind is VectorKind(NumberKind)
+    assert VectorMul(2, v1).kind is VectorKind(NumberKind)
+    assert VectorZero().kind is VectorKind(NumberKind)
 
-    assert v1.projection(v2).kind is VectorKind()
-    assert v2.projection(v1).kind is VectorKind()
+    assert v1.projection(v2).kind is VectorKind(NumberKind)
+    assert v2.projection(v1).kind is VectorKind(NumberKind)
 
 
 def test_vectoradd():
