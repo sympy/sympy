@@ -354,7 +354,7 @@ def get_postprocessor(cls):
         vec_class = {Add: VectorAdd}[cls]
         vectors = []
         for term in expr.args:
-            if term.kind is VectorKind():
+            if isinstance(term.kind, VectorKind):
                 vectors.append(term)
 
         if vec_class == VectorAdd:
