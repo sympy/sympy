@@ -16,7 +16,7 @@ blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.jso
 collect_ignore = _get_doctest_blacklist()
 
 # Set up printing for doctests
-setup_pprint()
+setup_pprint(disable_line_wrap=False)
 sys.__displayhook__ = sys.displayhook
 #from sympy import pprint_use_unicode
 #pprint_use_unicode(False)

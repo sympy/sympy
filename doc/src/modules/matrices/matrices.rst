@@ -10,7 +10,7 @@ The linear algebra module is designed to be as simple as possible. First, we
 import and declare our first ``Matrix`` object:
 
     >>> from sympy.interactive.printing import init_printing
-    >>> init_printing(use_unicode=False, wrap_line=False)
+    >>> init_printing(use_unicode=False)
     >>> from sympy.matrices import Matrix, eye, zeros, ones, diag, GramSchmidt
     >>> M = Matrix([[1,0,0], [0,0,0]]); M
     [1  0  0]
