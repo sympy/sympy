@@ -76,6 +76,10 @@ def test_convert_to_quantities():
 
 
 def test_convert_to_tuples_of_quantities():
+    from sympy.core.symbol import symbols
+
+    alpha, beta = symbols('alpha beta')
+
     assert convert_to(speed_of_light, [meter, second]) == 299792458 * meter / second
     assert convert_to(speed_of_light, (meter, second)) == 299792458 * meter / second
     assert convert_to(speed_of_light, Tuple(meter, second)) == 299792458 * meter / second
@@ -98,6 +102,9 @@ def test_convert_to_tuples_of_quantities():
     assert convert_to(sqrt(meter**2 + second**2.0), [meter, second]) == sqrt(meter**2 + second**2.0)
     assert convert_to((meter**2 + second**2.0)**2, [meter, second]) == (meter**2 + second**2.0)**2
 
+    # similar to https://github.com/sympy/sympy/issues/21463
+    assert convert_to(1/(beta*meter + meter), 1/meter) == 1/(beta*meter + meter)
+    assert convert_to(1/(beta*meter + alpha*meter), 1/kilometer) == (1/(kilometer*beta/1000 + alpha*kilometer/1000))
 
 def test_eval_simplify():
     from sympy.physics.units import cm, mm, km, m, K, kilo
