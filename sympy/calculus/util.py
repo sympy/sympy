@@ -24,6 +24,7 @@ from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
+from sympy.matrices.dense import hessian
 
 
 def continuous_domain(f, symbol, domain):
@@ -745,18 +746,13 @@ def is_convex(f, *syms, domain=S.Reals):
     .. [5] https://en.wikipedia.org/wiki/Concave_function
 
     """
-
-    if len(syms) > 1:
-        raise NotImplementedError(
-            "The check for the convexity of multivariate functions is not implemented yet.")
-
+    if len(syms) > 1 :
+        return hessian(f, syms).is_positive_semidefinite
     from sympy.solvers.inequalities import solve_univariate_inequality
-
     f = _sympify(f)
     var = syms[0]
     if any(s in domain for s in singularities(f, var)):
         return False
-
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
         return False

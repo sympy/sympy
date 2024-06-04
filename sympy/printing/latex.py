@@ -1889,7 +1889,8 @@ class LatexPrinter(Printer):
         block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         block_str = block_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
-            block_str= block_str.replace('%s','{}%s')
+            block_str = block_str.replace('%s', '{' + 'c'*expr.shape[0] + '}%s')
+
         if self._settings['mat_delim']:
             left_delim: str = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]

@@ -10,14 +10,18 @@ name: release
 on:
   push:
     branches:
-      - '1.12'
+      - '1.13'
+    tags:
+      - 'sympy-1.13.*'
   pull_request:
     branches:
-      - '1.12'
+      - '1.13'
 env:
-  release_branch: '1.12'
-  release_version: '1.12rc1'
-  previous_version: '1.11'
+  release_branch: '1.13'
+  release_version: '1.13.1'
+  final_release_version: '1.13.1'
+  previous_version: '1.13'
+  dev_version: '1.14-dev'
 
 jobs:
 
@@ -28,12 +32,12 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       # Check out with full git history for authors check:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -41,7 +45,7 @@ jobs:
         run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
 
       - name: Store release files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release_files
           path: release-${{ env.release_version }}
@@ -53,19 +57,19 @@ jobs:
 
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13-dev', 'pypy-3.8', 'pypy-3.9', 'pypy-3.10']
 
     name: Python ${{ matrix.python-version }} test install
     steps:
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: x64
 
       - name: Retrieve release files
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: release_files
 
@@ -77,3 +81,129 @@ jobs:
 
       - name: Run tests after install
         run: python -c 'import sympy; sympy.test()'
+
+  # -------------------- Upload to Test-PyPI ----------------------- #
+
+  test-pypi-publish:
+    name: Publish to Test-PyPI
+    needs: [build]
+    # Run when a pull request is merged into a release branch.
+    if: "github.event_name == 'push' && ! startsWith(github.ref, 'refs/tags')"
+    environment:
+      name: test-pypi
+      url: https://test.pypi.org/p/sympy
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release_files
+          path: dist.all
+
+      - name: Copy the PyPI files into dist
+        run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
+
+      - name: Publish package on TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  # -------------------- Upload to PyPI proper --------------------- #
+
+  pypi-publish:
+    name: Publish to PyPI
+    needs: [build]
+    # Run when a tag is pushed (not sure if this works)
+    if: "github.event_name == 'push' && startsWith(github.ref, 'refs/tags')"
+    environment:
+      name: pypi
+      url: https://pypi.org/p/sympy
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release_files
+          path: dist.all
+
+      - name: Copy the PyPI files into dist
+        run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
+
+      - name: Publish package on PyPI
+        # It is recommended to pin a commit hash here for security but it
+        # should be kept up to date. Probably all actions and dependencies
+        # used by the build script should be pinned...
+        uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450  # v1.8.14
+
+  # -------------------- Make a GitHub release --------------------- #
+
+  github-publish:
+    name: Publish GitHub release
+    needs: [build, pypi-publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout sympy
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release_files
+          path: dist
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create ${{ env.release_version }} dist/*
+          --title "SymPy ${{ env.release_version }}"
+          --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+
+  # -------------------- Update the docs repository ---------------- #
+
+  update-docs:
+    name: Update the docs repository
+    needs: [build, pypi-publish]
+    # Only run for a final release
+    if: ${{ github.env.release_version == github.env.final_release_version }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout sympy
+        uses: actions/checkout@v4
+
+      - name: Checkout sympy_doc
+        uses: actions/checkout@v4
+        with:
+          repository: sympy/sympy_doc
+          ref: gh-pages
+          ssh-key: ${{ secrets.SYMPY_DOC_RELEASE_PUSH_TOKEN }}
+          path: sympy_doc
+
+      - run: git config --global user.name "SymPy GitHub Actions release bot"
+      - run: git config --global user.email "<>"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release_files
+          path: dist
+
+      - name: Update the docs
+        run: >
+          release/update_docs.py
+          sympy_doc
+          dist/sympy-docs-html-${{ env.release_version }}.zip
+          ${{ env.release_version }}
+          ${{ env.dev_version }}
+          --push
