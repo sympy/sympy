@@ -153,7 +153,7 @@ def get_sympy_dir():
     return os.path.normcase(sympy_dir)
 
 
-def setup_pprint():
+def setup_pprint(disable_line_wrap=True):
     from sympy.interactive.printing import init_printing
     from sympy.printing.pretty.pretty import pprint_use_unicode
     import sympy.interactive.printing as interactive_printing
@@ -167,7 +167,8 @@ def setup_pprint():
 
     # disable line wrapping for pprint() outputs
     wrap_line_prev = stringpict._GLOBAL_WRAP_LINE
-    stringpict._GLOBAL_WRAP_LINE = False
+    if disable_line_wrap:
+        stringpict._GLOBAL_WRAP_LINE = False
 
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
