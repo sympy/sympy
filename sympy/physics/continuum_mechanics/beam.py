@@ -889,8 +889,8 @@ class Beam:
         C3 = Symbol('C3')
         C4 = Symbol('C4')
 
-        shear_curve = limit(self.shear_force(), x, l)
-        moment_curve = limit(self.bending_moment(), x, l)
+        shear_curve = limit(self.shear_force().rewrite('Heaviside'), x, l)
+        moment_curve = limit(self.bending_moment().rewrite('Heaviside'), x, l)
 
         slope_eqs = []
         deflection_eqs = []
@@ -1719,19 +1719,57 @@ class Beam:
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
-    def _solve_for_ild_equations(self):
+    def _solve_for_ild_equations(self, ild_load_value, *reactions):
         """
 
-        Helper function for I.L.D. It takes the unsubstituted
-        copy of the load equation and uses it to calculate shear force and bending
-        moment equations.
+        Helper function for I.L.D. It takes the ILD load value and reactions
+        as arguments. Applies ILD load at variable location y and then solves for
+        ILD reactions, ILD shear and ILD moment. These are returned where by
+        substituting x as distance of the point we get required ILD equations.
+        After substituting y as x we get ILD equation for shear force or bending
+        moment which represents the shear force or bending moment at chosen distance
+        when ILD load is applied at distance x.
         """
+
+        y = Symbol('y', positive = True)
+        self.apply_load(ild_load_value, y, -1)
 
         x = self.variable
-        shear_force = -integrate(self._original_load, x)
-        bending_moment = integrate(shear_force, x)
+        l = self.length
+        C3 = Symbol('C3')
+        C4 = Symbol('C4')
 
-        return shear_force, bending_moment
+        shear_curve = limit(self.shear_force().rewrite('Heaviside'), x, l)
+        moment_curve = limit(self.bending_moment().rewrite('Heaviside'), x, l)
+
+        slope_eqs = []
+        deflection_eqs = []
+
+        slope_curve = integrate(self.bending_moment(), x) + C3
+
+
+        for position, value in self._boundary_conditions['slope']:
+            eqs = slope_curve.subs(x, position) - value
+            slope_eqs.append(eqs)
+
+        deflection_curve = integrate(slope_curve, x) + C4
+        for position, value in self._boundary_conditions['deflection']:
+            eqs = deflection_curve.subs(x, position) - value
+            deflection_eqs.append(eqs)
+
+        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
+                            + deflection_eqs, (C3, C4) + reactions).args)[0])
+
+        solution = solution[2:]
+
+        ild_reactions = dict(zip(reactions, solution))
+
+        ild_shear = self.shear_force().subs(ild_reactions)
+        ild_moment = self.bending_moment().subs(ild_reactions)
+
+        self.remove_load(ild_load_value, y, -1)
+
+        return ild_reactions, ild_shear, ild_moment, y
 
     def solve_for_ild_reactions(self, value, *reactions):
         """
@@ -1770,37 +1808,17 @@ class Beam:
             >>> p10 = b.apply_support(10, 'roller')
             >>> b.solve_for_ild_reactions(1,R_0,R_10)
             >>> b.ild_reactions
-            {R_0: x/10 - 1, R_10: -x/10}
+            {R_0: x*Piecewise((0, x > 10), (1, True))/10 - Piecewise((0, x > 10), (1, True)), R_10: -x*Piecewise((0, x > 10), (1, True))/10}
 
         """
-        shear_force, bending_moment = self._solve_for_ild_equations()
+
+        solution, _, _, y = self._solve_for_ild_equations(value, *reactions)
         x = self.variable
-        l = self.length
-        C3 = Symbol('C3')
-        C4 = Symbol('C4')
 
-        shear_curve = limit(shear_force, x, l) - value
-        moment_curve = limit(bending_moment, x, l) - value*(l-x)
+        for reaction in solution.keys():
+            solution[reaction] = (solution[reaction].subs(y,x)).rewrite('Piecewise')
 
-        slope_eqs = []
-        deflection_eqs = []
-
-        slope_curve = integrate(bending_moment, x) + C3
-        for position, value in self._boundary_conditions['slope']:
-            eqs = slope_curve.subs(x, position) - value
-            slope_eqs.append(eqs)
-
-        deflection_curve = integrate(slope_curve, x) + C4
-        for position, value in self._boundary_conditions['deflection']:
-            eqs = deflection_curve.subs(x, position) - value
-            deflection_eqs.append(eqs)
-
-        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions).args)[0])
-        solution = solution[2:]
-
-        # Determining the equations and solving them.
-        self._ild_reactions = dict(zip(reactions, solution))
+        self._ild_reactions = solution
 
     def plot_ild_reactions(self, subs=None):
         """
@@ -1844,13 +1862,13 @@ class Beam:
             >>> b.apply_load(5,4,-1)
             >>> b.solve_for_ild_reactions(1,R_0,R_7)
             >>> b.ild_reactions
-            {R_0: x/7 - 22/7, R_7: -x/7 - 20/7}
+            {R_0: x*Piecewise((0, x > 10), (1, True))/7 - Piecewise((0, x > 10), (1, True)) - 15/7, R_7: -x*Piecewise((0, x > 10), (1, True))/7 - 20/7}
             >>> b.plot_ild_reactions()
             PlotGrid object containing:
             Plot[0]:Plot object containing:
-            [0]: cartesian line: x/7 - 22/7 for x over (0.0, 10.0)
+            [0]: cartesian line: x*Piecewise((0, x > 10), (1, True))/7 - Piecewise((0, x > 10), (1, True)) - 15/7 for x over (0.0, 10.0)
             Plot[1]:Plot object containing:
-            [0]: cartesian line: -x/7 - 20/7 for x over (0.0, 10.0)
+            [0]: cartesian line: -x*Piecewise((0, x > 10), (1, True))/7 - 20/7 for x over (0.0, 10.0)
 
         """
         if not self._ild_reactions:
@@ -1919,25 +1937,13 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
-            Piecewise((x/8, x < 4), (x/8 - 1, x > 4))
+            -x*Piecewise((0, x > 12), (1, True))/8 + Piecewise((0, x > 12), (1, True)) - Piecewise((1, x <= 4), (0, True))
 
         """
 
+        _, ild_shear, _, y = self._solve_for_ild_equations(value, *reactions)
         x = self.variable
-        l = self.length
-
-        shear_force, _ = self._solve_for_ild_equations()
-
-        shear_curve1 = value - limit(shear_force, x, distance)
-        shear_curve2 = (limit(shear_force, x, l) - limit(shear_force, x, distance)) - value
-
-        for reaction in reactions:
-            shear_curve1 = shear_curve1.subs(reaction,self._ild_reactions[reaction])
-            shear_curve2 = shear_curve2.subs(reaction,self._ild_reactions[reaction])
-
-        shear_eq = Piecewise((shear_curve1, x < distance), (shear_curve2, x > distance))
-
-        self._ild_shear = shear_eq
+        self._ild_shear = ((ild_shear.subs(x, distance)).subs(y,x)).rewrite('Piecewise')
 
     def plot_ild_shear(self,subs=None):
         """
@@ -1978,10 +1984,10 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
-            Piecewise((x/8, x < 4), (x/8 - 1, x > 4))
+            -x*Piecewise((0, x > 12), (1, True))/8 + Piecewise((0, x > 12), (1, True)) - Piecewise((1, x <= 4), (0, True))
             >>> b.plot_ild_shear()
             Plot object containing:
-            [0]: cartesian line: Piecewise((x/8, x < 4), (x/8 - 1, x > 4)) for x over (0.0, 12.0)
+            [0]: cartesian line: -x*Piecewise((0, x > 12), (1, True))/8 + Piecewise((0, x > 12), (1, True)) - Piecewise((1, x <= 4), (0, True)) for x over (0.0, 12.0)
 
         """
 
@@ -1989,7 +1995,6 @@ class Beam:
             raise ValueError("I.L.D. shear equation not found. Please use solve_for_ild_shear() to generate the I.L.D. shear equations.")
 
         x = self.variable
-        l = self._length
 
         if subs is None:
             subs = {}
@@ -2002,7 +2007,7 @@ class Beam:
             if sym != x and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
 
-        return plot(self._ild_shear.subs(subs), (x, 0, l),  title='I.L.D. for Shear',
+        return plot(self._ild_shear.subs(subs), (x, 0, self._length.subs(subs)),  title='I.L.D. for Shear',
                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V}$', line_color='blue',show=True)
 
     def solve_for_ild_moment(self, distance, value, *reactions):
@@ -2046,24 +2051,13 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
-            Piecewise((-x/2, x < 4), (x/2 - 4, x > 4))
+            -x*Piecewise((0, x > 12), (1, True))/2 + 4*Piecewise((0, x > 12), (1, True)) - Piecewise((4 - x, x <= 4), (0, True))
 
         """
 
+        _, _, ild_moment, y = self._solve_for_ild_equations(value, *reactions)
         x = self.variable
-        l = self.length
-
-        _, moment = self._solve_for_ild_equations()
-
-        moment_curve1 = value*(distance-x) - limit(moment, x, distance)
-        moment_curve2= (limit(moment, x, l)-limit(moment, x, distance))-value*(l-x)
-
-        for reaction in reactions:
-            moment_curve1 = moment_curve1.subs(reaction, self._ild_reactions[reaction])
-            moment_curve2 = moment_curve2.subs(reaction, self._ild_reactions[reaction])
-
-        moment_eq = Piecewise((moment_curve1, x < distance), (moment_curve2, x > distance))
-        self._ild_moment = moment_eq
+        self._ild_moment = ((ild_moment.subs(x, distance)).subs(y,x)).rewrite('Piecewise')
 
     def plot_ild_moment(self,subs=None):
         """
@@ -2104,10 +2098,10 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
-            Piecewise((-x/2, x < 4), (x/2 - 4, x > 4))
+            -x*Piecewise((0, x > 12), (1, True))/2 + 4*Piecewise((0, x > 12), (1, True)) - Piecewise((4 - x, x <= 4), (0, True))
             >>> b.plot_ild_moment()
             Plot object containing:
-            [0]: cartesian line: Piecewise((-x/2, x < 4), (x/2 - 4, x > 4)) for x over (0.0, 12.0)
+            [0]: cartesian line: -x*Piecewise((0, x > 12), (1, True))/2 + 4*Piecewise((0, x > 12), (1, True)) - Piecewise((4 - x, x <= 4), (0, True)) for x over (0.0, 12.0)
 
         """
 
@@ -2126,7 +2120,7 @@ class Beam:
         for sym in self._length.atoms(Symbol):
             if sym != x and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
-        return plot(self._ild_moment.subs(subs), (x, 0, self._length), title='I.L.D. for Moment',
+        return plot(self._ild_moment.subs(subs), (x, 0, self._length.subs(subs)), title='I.L.D. for Moment',
                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M}$', line_color='blue', show=True)
 
     @doctest_depends_on(modules=('numpy',))
