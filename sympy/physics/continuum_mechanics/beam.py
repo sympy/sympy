@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
-from sympy.core.sympify import sympify
+from sympy.simplify.simplify import nsimplify
 from sympy.solvers import linsolve
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
@@ -232,7 +232,7 @@ class Beam:
 
     @length.setter
     def length(self, l):
-        self._length = sympify(l)
+        self._length = nsimplify(l)
 
     @property
     def area(self):
@@ -241,7 +241,7 @@ class Beam:
 
     @area.setter
     def area(self, a):
-        self._area = sympify(a)
+        self._area = nsimplify(a)
 
     @property
     def variable(self):
@@ -284,7 +284,7 @@ class Beam:
 
     @elastic_modulus.setter
     def elastic_modulus(self, e):
-        self._elastic_modulus = sympify(e)
+        self._elastic_modulus = nsimplify(e)
 
     @property
     def second_moment(self):
@@ -297,7 +297,7 @@ class Beam:
         if isinstance(i, GeometryEntity):
             raise ValueError("To update cross-section geometry use `cross_section` attribute")
         else:
-            self._second_moment = sympify(i)
+            self._second_moment = nsimplify(i)
 
     @property
     def cross_section(self):
@@ -343,9 +343,21 @@ class Beam:
     def bc_slope(self):
         return self._boundary_conditions['slope']
 
+    def nsimplficate(self, input):
+        """
+        This is a helper function user to apply nsimplify function to elements
+        of tuples and lists.
+        """
+        if(isinstance(input, tuple)):
+            return tuple(self.nsimplficate(e) for e in input)
+        elif(isinstance(input, list)):
+            return [self.nsimplficate(e) for e in input]
+        else:
+            return nsimplify(input)
+
     @bc_slope.setter
     def bc_slope(self, s_bcs):
-        self._boundary_conditions['slope'] = s_bcs
+        self._boundary_conditions['slope'] = self.nsimplficate(s_bcs)
 
     @property
     def bc_deflection(self):
@@ -353,7 +365,7 @@ class Beam:
 
     @bc_deflection.setter
     def bc_deflection(self, d_bcs):
-        self._boundary_conditions['deflection'] = d_bcs
+        self._boundary_conditions['deflection'] = self.nsimplficate(d_bcs)
 
     def join(self, beam, via="fixed"):
         """
@@ -394,9 +406,9 @@ class Beam:
         >>> b.load
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
         >>> b.slope()
-        (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
-        - 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
-        + 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
+        (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80/(E*I))*SingularityFunction(x, 2, 0)
+        - 2*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(3*E*I)
+        + 2*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(3*E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -469,7 +481,7 @@ class Beam:
         - 8*SingularityFunction(x, 10, -1) + 100*SingularityFunction(x, 20, -2)
         + 10*SingularityFunction(x, 20, -1)
         """
-        loc = sympify(loc)
+        loc = nsimplify(loc)
         self._applied_supports.append((loc, type))
         if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
@@ -547,9 +559,9 @@ class Beam:
 
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
-        order = sympify(order)
+        value = nsimplify(value)
+        start = nsimplify(start)
+        order = nsimplify(order)
 
         self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)
@@ -607,9 +619,9 @@ class Beam:
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1)
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
-        order = sympify(order)
+        value = nsimplify(value)
+        start = nsimplify(start)
+        order = nsimplify(order)
 
         if (value, start, order, end) in self._applied_loads:
             self._load -= value*SingularityFunction(x, start, order)
@@ -1572,9 +1584,10 @@ class Beam:
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_slope()
             Plot object containing:
-            [0]: cartesian line: -8.59375e-5*SingularityFunction(x, 0, 2) + 3.125e-5*SingularityFunction(x, 2, 2)
-            + 2.08333333333333e-5*SingularityFunction(x, 4, 3) - 0.0001953125*SingularityFunction(x, 8, 2)
-            - 2.08333333333333e-5*SingularityFunction(x, 8, 3) + 0.00138541666666667 for x over (0.0, 8.0)
+            [0]: cartesian line: -11*SingularityFunction(x, 0, 2)/128000
+            + SingularityFunction(x, 2, 2)/32000 + SingularityFunction(x, 4, 3)/48000
+            - SingularityFunction(x, 8, 2)/5120 - SingularityFunction(x, 8, 3)/48000
+            + 133/96000 for x over (0.0, 8.0)
         """
         slope = self.slope()
         if subs is None:
@@ -1630,9 +1643,9 @@ class Beam:
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_deflection()
             Plot object containing:
-            [0]: cartesian line: 0.00138541666666667*x - 2.86458333333333e-5*SingularityFunction(x, 0, 3)
-            + 1.04166666666667e-5*SingularityFunction(x, 2, 3) + 5.20833333333333e-6*SingularityFunction(x, 4, 4)
-            - 6.51041666666667e-5*SingularityFunction(x, 8, 3) - 5.20833333333333e-6*SingularityFunction(x, 8, 4)
+            [0]: cartesian line: 133*x/96000 - 11*SingularityFunction(x, 0, 3)/384000
+            + SingularityFunction(x, 2, 3)/96000 + SingularityFunction(x, 4, 4)/192000
+            - SingularityFunction(x, 8, 3)/15360 - SingularityFunction(x, 8, 4)/192000
             for x over (0.0, 8.0)
         """
         deflection = self.deflection()
@@ -2518,7 +2531,7 @@ class Beam3D(Beam):
 
     @shear_modulus.setter
     def shear_modulus(self, e):
-        self._shear_modulus = sympify(e)
+        self._shear_modulus = nsimplify(e)
 
     @property
     def second_moment(self):
@@ -2528,10 +2541,10 @@ class Beam3D(Beam):
     @second_moment.setter
     def second_moment(self, i):
         if isinstance(i, list):
-            i = [sympify(x) for x in i]
+            i = [nsimplify(x) for x in i]
             self._second_moment = i
         else:
-            self._second_moment = sympify(i)
+            self._second_moment = nsimplify(i)
 
     @property
     def area(self):
@@ -2540,7 +2553,7 @@ class Beam3D(Beam):
 
     @area.setter
     def area(self, a):
-        self._area = sympify(a)
+        self._area = nsimplify(a)
 
     @property
     def load_vector(self):
@@ -2629,9 +2642,9 @@ class Beam3D(Beam):
             - ... so on.
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
-        order = sympify(order)
+        value = nsimplify(value)
+        start = nsimplify(start)
+        order = nsimplify(order)
 
         if dir == "x":
             if not order == -1:
@@ -2667,9 +2680,9 @@ class Beam3D(Beam):
             - ... so on.
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
-        order = sympify(order)
+        value = nsimplify(value)
+        start = nsimplify(start)
+        order = nsimplify(order)
 
         if dir == "x":
             if not order == -2:
