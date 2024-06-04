@@ -217,7 +217,7 @@ class Beam:
     def rotation_jumps(self):
         """
         Returns the value for the rotation jumps in rotation hinges in a dictionary.
-        The rotation jump is the rotation (in degrees) in a rotation hinge. This can
+        The rotation jump is the rotation (in radian) in a rotation hinge. This can
         be seen as a jump in the slope plot.
         """
         return self._rotation_jumps
@@ -407,7 +407,7 @@ class Beam:
         via : String
             States the way two Beam object would get connected
             - For axially fixed Beams, via="fixed"
-            - For Beams connected via rotaion hinge, via="hinge"
+            - For Beams connected via rotation hinge, via="hinge"
 
         Examples
         ========
