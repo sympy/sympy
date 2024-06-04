@@ -3,7 +3,7 @@ This module can be used to solve problems related
 to 2D Cables.
 """
 
-from sympy import Piecewise, solve
+from sympy import Piecewise, solve, diff
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
 from sympy import sin, cos, pi, atan, diff
@@ -599,7 +599,7 @@ class Cable:
             cable_shape = self._draw_cable(0)
 
         print(cable_shape)
-        cab_plot = plot(cable_shape,(x,self._left_support[0],self._right_support[0]),rectangles=support_rectangles,show= False)
+        cab_plot = plot(*cable_shape,(x,self._left_support[0],self._right_support[0]),rectangles=support_rectangles,show= False)
         return cab_plot
 
     def _draw_supports(self):
@@ -659,7 +659,7 @@ class Cable:
 
             y = ((sorted_position[len(sorted_position)-1][1][1] - self._right_support[1])*(x-self._right_support[0]))/(sorted_position[i][1][0]- self._right_support[0]) + self._right_support[1]
             line_func.append((y,x<=self._right_support[0]))
-            return Piecewise(*line_func)
+            return [Piecewise(*line_func)]
 
         elif order == 0:
             a,b,c,x,y = symbols('a b c x y')
@@ -671,4 +671,5 @@ class Cable:
                 equations.append(parabola_eqn.subs({x: px, y: py}))
             solution = solve(equations, (a, b, c))
             parabola_eqn = solution[a]*x**2 + solution[b]*x + solution[c]
-            return parabola_eqn
+            diff_force_height = max(abs(self._left_support[1]-self._right_support[1]),abs(self._left_support[0]-self._right_support[0]))*0.03
+            return [parabola_eqn, parabola_eqn+diff_force_height]
