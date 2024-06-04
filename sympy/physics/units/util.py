@@ -12,6 +12,7 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
+from sympy.core.function import Function
 from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
@@ -109,6 +110,9 @@ def convert_to(expr, target_units, unit_system="SI"):
 
     expr = sympify(expr)
     target_units = sympify(target_units)
+
+    if isinstance(expr, Function):
+        expr = expr.together()
 
     if not isinstance(expr, Quantity) and expr.has(Quantity):
         expr = expr.replace(lambda x: isinstance(x, Quantity),
