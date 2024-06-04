@@ -35,7 +35,7 @@ equation formulation $Ax=b$ where
 
 ```py
 >>> from sympy import init_printing
->>> init_printing(use_unicode=True, wrap_line=False)
+>>> init_printing(use_unicode=True)
 ```
 
 ```py
