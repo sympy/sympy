@@ -32,6 +32,7 @@ from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
+from sympy import Add
 
 from mpmath import mpf
 import mpmath
@@ -2295,3 +2296,5 @@ def test_all_close():
     assert all_close(1.4142135623730951, sqrt(2)) is False
     assert all_close(1.4142135623730951, sqrt(2).evalf()) is True
     assert all_close(x + 1e-20, x) is False
+    # We should be able to match terms of an Add/Mul in any order
+    assert all_close(Add(1, 2, evaluate=False), Add(2, 1, evaluate=False))
