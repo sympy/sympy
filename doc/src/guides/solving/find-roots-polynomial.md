@@ -504,11 +504,8 @@ symbolically.
         / 5           \
 [CRootOf\x  - x + 1, 0/]
 >>> r = r0, r1, r2, r3, r4 = Poly(fifth_order, x).all_roots(); r
-        / 5           \         / 5           \         / 5           \        >
-[CRootOf\x  - x + 1, 0/, CRootOf\x  - x + 1, 1/, CRootOf\x  - x + 1, 2/, CRoot >
-<BLANKLINE>
->   / 5           \         / 5           \
-> Of\x  - x + 1, 3/, CRootOf\x  - x + 1, 4/]
+        / 5           \         / 5           \         / 5           \         / 5           \         / 5           \
+[CRootOf\x  - x + 1, 0/, CRootOf\x  - x + 1, 1/, CRootOf\x  - x + 1, 2/, CRootOf\x  - x + 1, 3/, CRootOf\x  - x + 1, 4/]
 >>> r0
        / 5           \
 CRootOf\x  - x + 1, 0/
