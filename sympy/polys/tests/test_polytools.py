@@ -3586,6 +3586,12 @@ def test_poly():
     assert poly(x + y, x, y) == Poly(x + y, x, y)
     assert poly(x + y, y, x) == Poly(x + y, y, x)
 
+    # https://github.com/sympy/sympy/issues/19755
+    expr1 = x + (2*x + 3)**2/5 + S(6)/5
+    assert poly(expr1).as_expr() == expr1.expand()
+    expr2 = y*(y+1) + S(1)/3
+    assert poly(expr2).as_expr() == expr2.expand()
+
 
 def test_keep_coeff():
     u = Mul(2, x + 1, evaluate=False)
