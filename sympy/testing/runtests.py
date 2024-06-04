@@ -162,7 +162,7 @@ def setup_pprint():
     use_unicode_prev = pprint_use_unicode(False)
 
     # hook our nice, hash-stable strprinter
-    init_printing(pretty_print=False)
+    init_printing(pretty_print=False, wrap_line=False)
 
     # Prevent init_printing() in doctests from affecting other doctests
     interactive_printing.NO_GLOBAL = True
