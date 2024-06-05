@@ -245,6 +245,13 @@ class MatrixBase(Printable):
                     dok[i, j] = val
         return dok
 
+    @classmethod
+    def _eval_from_dok(cls, rows, cols, dok):
+        out_flat = [cls.zero] * (rows * cols)
+        for (i, j), val in dok.items():
+            out_flat[i * cols + j] = val
+        return cls._new(rows, cols, out_flat)
+
     def _eval_vec(self):
         rows = self.rows
 
@@ -669,6 +676,24 @@ class MatrixBase(Printable):
         {(0, 0): 1, (1, 1): 1, (2, 2): 1}
         """
         return self._eval_todok()
+
+    @classmethod
+    def from_dok(cls, rows, cols, dok):
+        """Create a matrix from a dictionary of keys.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> d = {(0, 0): 1, (1, 2): 3, (2, 1): 4}
+        >>> Matrix.from_dok(3, 3, d)
+        Matrix([
+        [1, 0, 0],
+        [0, 0, 3],
+        [0, 4, 0]])
+        """
+        dok = {ij: cls._sympify(val) for ij, val in dok.items()}
+        return cls._eval_from_dok(rows, cols, dok)
 
     def tolist(self):
         """Return the Matrix as a nested Python list.
@@ -1270,6 +1295,21 @@ class MatrixBase(Printable):
         n = as_int(n)
         return klass._eval_wilkinson(n)
 
+    # The RepMatrix subclass uses more efficient sparse implementations of
+    # _eval_iter_values and other things.
+
+    def _eval_iter_values(self):
+        return (i for i in self if i is not S.Zero)
+
+    def _eval_values(self):
+        return list(self.iter_values())
+
+    def _eval_iter_items(self):
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self[i, j]:
+                    yield (i, j), self[i, j]
+
     def _eval_atoms(self, *types):
         values = self.values()
         if len(values) < self.rows * self.cols and isinstance(S.Zero, types):
@@ -1279,71 +1319,52 @@ class MatrixBase(Printable):
         return s.union(*[v.atoms(*types) for v in values])
 
     def _eval_free_symbols(self):
-        return set().union(*(i.free_symbols for i in self if i))
+        return set().union(*(i.free_symbols for i in set(self.values())))
 
     def _eval_has(self, *patterns):
-        return any(a.has(*patterns) for a in self)
+        return any(a.has(*patterns) for a in self.iter_values())
 
-    def _eval_is_anti_symmetric(self, simpfunc):
-        if not all(simpfunc(self[i, j] + self[j, i]).is_zero for i in range(self.rows) for j in range(self.cols)):
-            return False
-        return True
-
-    def _eval_is_diagonal(self):
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if i != j and self[i, j]:
-                    return False
-        return True
+    def _eval_is_symbolic(self):
+        return self.has(Symbol)
 
     # _eval_is_hermitian is called by some general SymPy
     # routines and has a different *args signature.  Make
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):
-        mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()))
-        return mat.is_zero_matrix
-
-    def _eval_is_Identity(self) -> FuzzyBool:
-        def dirac(i, j):
-            if i == j:
-                return 1
-            return 0
-
-        return all(self[i, j] == dirac(i, j)
-                for i in range(self.rows)
-                for j in range(self.cols))
-
-    def _eval_is_lower_hessenberg(self):
-        return all(self[i, j].is_zero
-                   for i in range(self.rows)
-                   for j in range(i + 2, self.cols))
-
-    def _eval_is_lower(self):
-        return all(self[i, j].is_zero
-                   for i in range(self.rows)
-                   for j in range(i + 1, self.cols))
-
-    def _eval_is_symbolic(self):
-        return self.has(Symbol)
-
-    def _eval_is_symmetric(self, simpfunc):
-        mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i]))
-        return mat.is_zero_matrix
+        herm = lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()).is_zero
+        return fuzzy_and(herm(i, j) for (i, j), v in self.iter_items())
 
     def _eval_is_zero_matrix(self):
-        if any(i.is_zero == False for i in self):
-            return False
-        if any(i.is_zero is None for i in self):
-            return None
-        return True
+        return fuzzy_and(v.is_zero for v in self.iter_values())
+
+    def _eval_is_Identity(self) -> FuzzyBool:
+        one = self.one
+        zero = self.zero
+        ident = lambda i, j, v: v is one if i == j else v is zero
+        return all(ident(i, j, v) for (i, j), v in self.iter_items())
+
+    def _eval_is_diagonal(self):
+        return fuzzy_and(v.is_zero for (i, j), v in self.iter_items() if i != j)
+
+    def _eval_is_lower(self):
+        return all(v.is_zero for (i, j), v in self.iter_items() if i < j)
+
+    def _eval_is_upper(self):
+        return all(v.is_zero for (i, j), v in self.iter_items() if i > j)
+
+    def _eval_is_lower_hessenberg(self):
+        return all(v.is_zero for (i, j), v in self.iter_items() if i + 1 < j)
 
     def _eval_is_upper_hessenberg(self):
-        return all(self[i, j].is_zero
-                   for i in range(2, self.rows)
-                   for j in range(min(self.cols, (i - 1))))
+        return all(v.is_zero for (i, j), v in self.iter_items() if i > j + 1)
 
-    def _eval_values(self):
-        return [i for i in self if not i.is_zero]
+    def _eval_is_symmetric(self, simpfunc):
+        sym = lambda i, j: simpfunc(self[i, j] - self[j, i]).is_zero
+        return fuzzy_and(sym(i, j) for (i, j), v in self.iter_items())
+
+    def _eval_is_anti_symmetric(self, simpfunc):
+        anti = lambda i, j: simpfunc(self[i, j] + self[j, i]).is_zero
+        return fuzzy_and(anti(i, j) for (i, j), v in self.iter_items())
 
     def _has_positive_diagonals(self):
         diagonal_entries = (self[i, i] for i in range(self.rows))
@@ -1468,8 +1489,8 @@ class MatrixBase(Printable):
         simplified, this will speed things up. Here, we see that without
         simplification the matrix does not appear anti-symmetric:
 
-        >>> m.is_anti_symmetric(simplify=False)
-        False
+        >>> print(m.is_anti_symmetric(simplify=False))
+        None
 
         But if the matrix were already expanded, then it would appear
         anti-symmetric and simplification in the is_anti_symmetric routine
@@ -1919,9 +1940,7 @@ class MatrixBase(Printable):
         is_diagonal
         is_upper_hessenberg
         """
-        return all(self[i, j].is_zero
-                   for i in range(1, self.rows)
-                   for j in range(min(i, self.cols)))
+        return self._eval_is_upper()
 
     @property
     def is_zero_matrix(self):
@@ -1955,14 +1974,82 @@ class MatrixBase(Printable):
         return self._eval_is_zero_matrix()
 
     def values(self):
-        """Return non-zero values of self."""
+        """Return non-zero values of self.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[0, 1], [2, 3]])
+        >>> m.values()
+        [1, 2, 3]
+
+        See Also
+        ========
+
+        iter_values
+        tolist
+        flat
+        """
         return self._eval_values()
+
+    def iter_values(self):
+        """
+        Iterate over non-zero values of self.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[0, 1], [2, 3]])
+        >>> list(m.iter_values())
+        [1, 2, 3]
+
+        See Also
+        ========
+
+        values
+        """
+        return self._eval_iter_values()
+
+    def iter_items(self):
+        """Iterate over indices and values of nonzero items.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[0, 1], [2, 3]])
+        >>> list(m.iter_items())
+        [((0, 1), 1), ((1, 0), 2), ((1, 1), 3)]
+
+        See Also
+        ========
+
+        iter_values
+        todok
+        """
+        return self._eval_iter_items()
 
     def _eval_adjoint(self):
         return self.transpose().conjugate()
 
     def _eval_applyfunc(self, f):
-        out = self._new(self.rows, self.cols, [f(x) for x in self])
+        cols = self.cols
+        size = self.rows*self.cols
+
+        dok = self.todok()
+        valmap = {v: f(v) for v in dok.values()}
+
+        if len(dok) < size and ((fzero := f(S.Zero)) is not S.Zero):
+            out_flat = [fzero]*size
+            for (i, j), v in dok.items():
+                out_flat[i*cols + j] = valmap[v]
+            out = self._new(self.rows, self.cols, out_flat)
+        else:
+            fdok = {ij: valmap[v] for ij, v in dok.items()}
+            out = self.from_dok(self.rows, self.cols, fdok)
+
         return out
 
     def _eval_as_real_imag(self):  # type: ignore
@@ -3569,6 +3656,23 @@ class MatrixBase(Printable):
         return MatrixKind(elemkind)
 
     def flat(self):
+        """
+        Returns a flat list of all elements in the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[0, 2], [3, 4]])
+        >>> m.flat()
+        [0, 2, 3, 4]
+
+        See Also
+        ========
+
+        tolist
+        values
+        """
         return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
 
     def __array__(self, dtype=object, copy=None):
