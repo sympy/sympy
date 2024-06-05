@@ -556,6 +556,45 @@ class SDM(dict):
                 sdm[i][j] = e
         return cls(sdm, shape, domain)
 
+    def iter_values(M):
+        """
+        Iterate over the nonzero values of a :py:class:`~.SDM` matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0: {1: QQ(2)}, 1: {0: QQ(3)}}, (2, 2), QQ)
+        >>> list(A.iter_values())
+        [2, 3]
+
+        """
+        for row in M.values():
+            yield from row.values()
+
+    def iter_items(M):
+        """
+        Iterate over indices and values of the nonzero elements.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0: {1: QQ(2)}, 1: {0: QQ(3)}}, (2, 2), QQ)
+        >>> list(A.iter_items())
+        [((0, 1), 2), ((1, 0), 3)]
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.iter_items
+        """
+        for i, row in M.items():
+            for j, e in row.items():
+                yield (i, j), e
+
     def to_ddm(M):
         """
         Convert a :py:class:`~.SDM` object to a :py:class:`~.DDM` object
