@@ -5,7 +5,7 @@ to 2D Cables.
 
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
-from sympy import sin, cos, pi, atan, diff, Piecewise, solve
+from sympy import sin, cos, pi, atan, diff, Piecewise, cosh, nsolve, asinh,solve
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solveset import linsolve
 from sympy.matrices import Matrix
@@ -664,17 +664,37 @@ class Cable:
             return [Piecewise(*line_func)]
 
         elif order == 0:
-            a,b,c,x,y = symbols('a b c x y')
-            parabola_eqn = a*x**2 + b*x + c - y
+            x1,y1 = self._left_support
+            x2,y2 = self._right_support
+            x0,y0 = self._lowest_x_global , self._lowest_y_global
 
-            points = [(self._left_support[0],self._left_support[1]),(self._lowest_x_global,self._lowest_y_global),(self._right_support[0],self._right_support[1])]
-            equations = []
-            for px, py in points:
-                equations.append(parabola_eqn.subs({x: px, y: py}))
-            solution = solve(equations, (a, b, c))
-            parabola_eqn = solution[a]*x**2 + solution[b]*x + solution[c]
-            diff_force_height = max(abs(self._left_support[1]-self._right_support[1]),abs(self._left_support[0]-self._right_support[0]))*0.03
-            return [parabola_eqn, parabola_eqn+diff_force_height]
+            span = float(x2-x1)
+            height_diff = float(abs(y2-y1))
+            diff_force_height = max(span,height_diff)*0.03
+
+            if(height_diff!=0):
+                a, x = symbols('a x')
+                initial_guess_a = span / (2 * asinh(height_diff / span))
+                cat_eqn_expr = (y1 - (a * cosh((x1 - x0) / a) + y0 - a)) - (y2 - (a * cosh((x2 - x0) / a) + y0 - a))
+                try:
+                    a_sol = nsolve(cat_eqn_expr, a, initial_guess_a)
+                except ValueError:
+                    a_init = (span + height_diff) / 2
+                    a_sol = nsolve(cat_eqn_expr, a, a_init)
+                cat_eqn = a_sol * cosh((x - x0) / a_sol) + y0 - a_sol
+                return [cat_eqn, cat_eqn + diff_force_height]
+            else:
+                a,b,c,x,y = symbols('a b c x y')
+                parabola_eqn = a*x**2 + b*x + c - y
+
+                points = [(self._left_support[0],self._left_support[1]),(self._lowest_x_global,self._lowest_y_global),(self._right_support[0],self._right_support[1])]
+                equations = []
+                for px, py in points:
+                    equations.append(parabola_eqn.subs({x: px, y: py}))
+                solution = solve(equations, (a, b, c))
+                parabola_eqn = solution[a]*x**2 + solution[b]*x + solution[c]
+                diff_force_height = max(abs(self._left_support[1]-self._right_support[1]),abs(self._left_support[0]-self._right_support[0]))*0.03
+                return [parabola_eqn, parabola_eqn+diff_force_height]
 
     def _draw_loads(self,order):
         if(order==-1):
@@ -700,4 +720,4 @@ class Cable:
                         'arrowprops':{'width':diff_force_height*0.3, 'headlength':diff_force_height, 'headwidth':diff_force_height, 'facecolor':'black'}
                     }
                 )
-            return node_markers                
+            return node_markers
