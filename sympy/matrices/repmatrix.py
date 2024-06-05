@@ -242,8 +242,29 @@ class RepMatrix(MatrixBase):
     def _eval_todok(self):
         return self._rep.to_sympy().to_dok()
 
+    @classmethod
+    def _eval_from_dok(cls, rows, cols, dok):
+        return cls._fromrep(cls._smat_to_DomainMatrix(rows, cols, dok))
+
     def _eval_values(self):
-        return list(self.todok().values())
+        return list(self._eval_iter_values())
+
+    def _eval_iter_values(self):
+        rep = self._rep
+        K = rep.domain
+        values = rep.iter_values()
+        if not K.is_EXRAW:
+            values = map(K.to_sympy, values)
+        return values
+
+    def _eval_iter_items(self):
+        rep = self._rep
+        K = rep.domain
+        to_sympy = K.to_sympy
+        items = rep.iter_items()
+        if not K.is_EXRAW:
+            items = ((i, to_sympy(v)) for i, v in items)
+        return items
 
     def copy(self):
         return self._fromrep(self._rep.copy())
