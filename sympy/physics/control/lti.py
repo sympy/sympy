@@ -1398,12 +1398,12 @@ class Series(SISOLinearTimeInvariant):
     You can also connect StateSpace which results in SISO
 
     >>> A1 = Matrix([[-1]])
-    >>> A2 = Matrix([[0]])
     >>> B1 = Matrix([[1]])
-    >>> B2 = Matrix([[1]])
     >>> C1 = Matrix([[-1]])
-    >>> C2 = Matrix([[1]])
     >>> D1 = Matrix([1])
+    >>> A2 = Matrix([[0]])
+    >>> B2 = Matrix([[1]])
+    >>> C2 = Matrix([[1]])
     >>> D2 = Matrix([[0]])
     >>> ss1 = StateSpace(A1, B1, C1, D1)
     >>> ss2 = StateSpace(A2, B2, C2, D2)
@@ -1412,10 +1412,10 @@ class Series(SISOLinearTimeInvariant):
     Series(StateSpace(Matrix([[-1]]), Matrix([[1]]), Matrix([[-1]]), Matrix([[1]])), StateSpace(Matrix([[0]]), Matrix([[1]]), Matrix([[1]]), Matrix([[0]])))
     >>> S5.doit()
     StateSpace(Matrix([
-    [0,  0],
-    [1, -1]]), Matrix([
+    [-1,  0],
+    [-1, 0]]), Matrix([
     [1],
-    [0]]), Matrix([[1, -1]]), Matrix([[0]]))
+    [1]]), Matrix([[0, 1]]), Matrix([[0]]))
 
     Notes
     =====
@@ -1511,7 +1511,7 @@ class Series(SISOLinearTimeInvariant):
                 else:
                     arg = arg.doit()
                 arg = arg.doit()
-                res *= arg
+                res = arg * res
                 return res
 
         _num_arg = (arg.doit().num for arg in self.args)
@@ -1766,20 +1766,20 @@ class MIMOSeries(MIMOLinearTimeInvariant):
             [ 0, 1]])))
     >>> S1.doit()
     StateSpace(Matrix([
-    [ -3,   4,  2, 0,  0],
-    [ -1,  -3,  0, 0,  0],
-    [  2,   5,  3, 0,  0],
-    [ 22,  18, -9, 4,  1],
-    [-15, -18,  0, 2, -3]]), Matrix([
-    [  1,   4],
-    [ -3,  -3],
-    [ -2,   1],
-    [-10,  22],
-    [  6, -15]]), Matrix([
-    [14, 14, -3, 2, -4],
-    [ 3, -2, -6, 0,  1]]), Matrix([
-    [-6, 14],
-    [-2,  3]]))
+    [ 4,  1,  0,  0, 0],
+    [ 2, -3,  0,  0, 0],
+    [ 2,  0, -3,  4, 2],
+    [-6,  9, -1, -3, 0],
+    [-4,  9,  2,  5, 3]]), Matrix([
+    [  5,  2],
+    [ -3, -3],
+    [  7, -2],
+    [-12, -3],
+    [ -5, -5]]), Matrix([
+    [-4, 12, 4, 2, -3],
+    [ 0,  1, 1, 4,  3]]), Matrix([
+    [-2, -8],
+    [ 1, -1]]))
 
     Notes
     =====
@@ -1801,8 +1801,8 @@ class MIMOSeries(MIMOLinearTimeInvariant):
             # Check compatibility
             for i in range(1, len(args)):
                 if args[i].num_inputs != args[i - 1].num_outputs:
-                    raise ValueError(filldedent("""Systems with incompatible inputs and outputs "
-                        cannot be connected in MIMOSeries"""))
+                    raise ValueError(filldedent("""Systems with incompatible inputs and outputs
+                        cannot be connected in MIMOSeries."""))
             obj = super().__new__(cls, *args)
             cls._is_series_StateSpace = True
         else:
@@ -1888,7 +1888,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
                     arg = arg.doit().rewrite(StateSpace)
                 else:
                     arg = arg.doit()
-                res *= arg
+                res = arg * res
             return res
 
         _arg = (arg.doit()._expr_mat for arg in reversed(self.args))

@@ -1752,12 +1752,17 @@ def test_StateSpace_functions():
 
 def test_StateSpace_series():
     # For SISO Systems
-    A1 = Matrix([[0, 1], [1, 0]])
-    B1 = Matrix([[0], [1]])
-    C1 = Matrix([[0, 1]])
-    D1 = Matrix([[0]])
-    ss1 = StateSpace(A1, B1, C1, D1)
-    ss2 = StateSpace(Matrix([[1, 0], [0, 1]]), Matrix([[1], [0]]), Matrix([[1, 0]]), Matrix([[1]]))
+    a1 = Matrix([[0, 1], [1, 0]])
+    b1 = Matrix([[0], [1]])
+    c1 = Matrix([[0, 1]])
+    d1 = Matrix([[0]])
+    a2 = Matrix([[1, 0], [0, 1]])
+    b2 = Matrix([[1], [0]])
+    c2 = Matrix([[1, 0]])
+    d2 = Matrix([[1]])
+
+    ss1 = StateSpace(a1, b1, c1, d1)
+    ss2 = StateSpace(a2, b2, c2, d2)
     tf1 = TransferFunction(s, s+1, s)
     ser1 = Series(ss1, ss2)
     assert ser1 == Series(StateSpace(Matrix([
@@ -1771,16 +1776,16 @@ def test_StateSpace_series():
                             [0]]), Matrix([[1, 0]]), Matrix([[1]])))
     assert ser1.doit() == StateSpace(
                             Matrix([
-                            [1, 0, 0, 0],
                             [0, 1, 0, 0],
-                            [0, 0, 0, 1],
-                            [1, 0, 1, 0]]),
+                            [1, 0, 0, 0],
+                            [0, 1, 1, 0],
+                            [0, 0, 0, 1]]),
                             Matrix([
+                            [0],
                             [1],
                             [0],
-                            [0],
-                            [1]]),
-                            Matrix([[0, 0, 0, 1]]),
+                            [0]]),
+                            Matrix([[0, 1, 1, 0]]),
                             Matrix([[0]]))
 
     assert ser1.num_inputs == 1
@@ -1798,27 +1803,27 @@ def test_StateSpace_series():
                             [1]]), Matrix([[0, 1]]), Matrix([[0]])))
     assert ser_tf.doit() == StateSpace(
                             Matrix([
-                            [0, 1,  0],
-                            [1, 0,  0],
-                            [0, 1, -1]]),
+                            [-1, 0,  0],
+                            [0, 0,  1],
+                            [-1, 1, 0]]),
                             Matrix([
-                            [0],
                             [1],
-                            [0]]),
-                            Matrix([[0, 1, -1]]),
+                            [0],
+                            [1]]),
+                            Matrix([[0, 0, 1]]),
                             Matrix([[0]]))
     assert ser_tf.rewrite(TransferFunction) == TransferFunction(s**2, s**3 + s**2 - s - 1, s)
     # For MIMO Systems
-    A2 = Matrix([[4, 1], [2, -3]])
-    B2 = Matrix([[5, 2], [-3, -3]])
-    C2 = Matrix([[2, -4], [0, 1]])
-    D2 = Matrix([[3, 2], [1, -1]])
-    ss3 = StateSpace(A2, B2, C2, D2)
-    A3 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
-    B3 = Matrix([[1, 4], [-3, -3], [-2, 1]])
-    C3 = Matrix([[4, 2, -3], [1, 4, 3]])
-    D3 = Matrix([[-2, 4], [0, 1]])
-    ss4 = StateSpace(A3, B3, C3, D3)
+    a3 = Matrix([[4, 1], [2, -3]])
+    b3 = Matrix([[5, 2], [-3, -3]])
+    c3 = Matrix([[2, -4], [0, 1]])
+    d3 = Matrix([[3, 2], [1, -1]])
+    a4 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    b4 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    c4 = Matrix([[4, 2, -3], [1, 4, 3]])
+    d4 = Matrix([[-2, 4], [0, 1]])
+    ss3 = StateSpace(a3, b3, c3, d3)
+    ss4 = StateSpace(a4, b4, c4, d4)
     ser4 = MIMOSeries(ss3, ss4)
     assert ser4 == MIMOSeries(StateSpace(Matrix([
                     [4,  1],
@@ -1841,23 +1846,23 @@ def test_StateSpace_series():
                     [ 0, 1]])))
     assert ser4.doit() == StateSpace(
                         Matrix([
-                        [-3,   4,  2, 0,  0],
-                        [-1,  -3,  0, 0,  0],
-                        [2,   5,  3, 0,  0],
-                        [22,  18, -9, 4,  1],
-                        [-15, -18,  0, 2, -3]]),
+                        [4,   1,  0, 0,  0],
+                        [2,  -3,  0, 0,  0],
+                        [2,   0,  -3, 4,  2],
+                        [-6,  9, -1, -3,  0],
+                        [-4, 9,  2, 5, 3]]),
                         Matrix([
-                        [1,   4],
+                        [5,   2],
                         [-3,  -3],
-                        [-2,   1],
-                        [-10,  22],
-                        [6, -15]]),
+                        [7,   -2],
+                        [-12,  -3],
+                        [-5, -5]]),
                         Matrix([
-                        [14, 14, -3, 2, -4],
-                        [3, -2, -6, 0,  1]]),
+                        [-4, 12, 4, 2, -3],
+                        [0, 1, 1, 4, 3]]),
                         Matrix([
-                        [-6, 14],
-                        [-2,  3]]))
+                        [-2, -8],
+                        [1, -1]]))
     assert ser4.num_inputs == ss3.num_inputs
     assert ser4.num_outputs == ss4.num_outputs
     ser5 = MIMOSeries(ss3)
