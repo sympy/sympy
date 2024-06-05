@@ -3,10 +3,9 @@ This module can be used to solve problems related
 to 2D Cables.
 """
 
-from sympy import Piecewise, solve, diff
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
-from sympy import sin, cos, pi, atan, diff
+from sympy import sin, cos, pi, atan, diff, Piecewise, solve
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solveset import linsolve
 from sympy.matrices import Matrix
@@ -69,6 +68,7 @@ class Cable:
         self._tension = {}
         self._lowest_x_global = sympify(0)
         self._lowest_y_global = sympify(0)
+        self._cable_eqn = None
 
         if support_1[0] == support_2[0]:
             raise ValueError("Supports can not have the same label")
@@ -591,15 +591,17 @@ class Cable:
 
     def draw(self):
         x = Symbol("x")
+        annotations = []
         support_rectangles = self._draw_supports()
         if len(self._loads_position) != 0:
-            cable_shape = self._draw_cable(-1)
+            self._cable_eqn = self._draw_cable(-1)
+            annotations += self._draw_loads(-1)
 
         elif len(self._loads['distributed']) != 0 :
-            cable_shape = self._draw_cable(0)
+            self._cable_eqn = self._draw_cable(0)
+            annotations += self._draw_loads(0)
 
-        print(cable_shape)
-        cab_plot = plot(*cable_shape,(x,self._left_support[0],self._right_support[0]),rectangles=support_rectangles,show= False)
+        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),rectangles=support_rectangles,show= False,annotations=annotations)
         return cab_plot
 
     def _draw_supports(self):
@@ -673,3 +675,29 @@ class Cable:
             parabola_eqn = solution[a]*x**2 + solution[b]*x + solution[c]
             diff_force_height = max(abs(self._left_support[1]-self._right_support[1]),abs(self._left_support[0]-self._right_support[0]))*0.03
             return [parabola_eqn, parabola_eqn+diff_force_height]
+
+    def _draw_loads(self,order):
+        if(order==-1):
+            pass
+        elif (order == 0):
+            x = symbols('x')
+            node_markers = []
+            diff_force_height = max(abs(self._left_support[1]-self._right_support[1]),abs(self._left_support[0]-self._right_support[0]))*0.03
+            x_val = [self._left_support[0] + ((self._right_support[0]-self._left_support[0])/10)*i for i in range(1,10)]
+            print(x_val)
+            for i in x_val:
+                node_markers.append(
+                    {
+                        'text':'',
+                        'xy':(
+                            i,
+                            self._cable_eqn[0].subs(x,i)
+                        ),
+                        'xytext':(
+                            i,
+                            self._cable_eqn[1].subs(x,i)
+                        ),
+                        'arrowprops':{'width':diff_force_height*0.3, 'headlength':diff_force_height, 'headwidth':diff_force_height, 'facecolor':'black'}
+                    }
+                )
+            return node_markers                
