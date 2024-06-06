@@ -22,14 +22,3 @@ to our `mailing list
    :maxdepth: 2
 
    biomechanics/index.rst
-
-:ref:`Biomechanics Tutorial <biomechanics>`
-=============================================
-
-For biomechanics tutorial, start here.
-
-.. toctree::
-   :maxdepth: 2
-
-   biomechanics/biomechanics.rst
-   biomechanics/biomechanical-model-example.rst
