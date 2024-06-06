@@ -81,8 +81,6 @@ redirects = {
     "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
     "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
 
-    "tutorials/biomechanics": "tutorials/physics/biomechanics",
-
 }
 
 html_baseurl = "https://docs.sympy.org/latest/"
