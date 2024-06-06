@@ -695,6 +695,8 @@ def _get_doctest_blacklist():
             "examples/intermediate/mplot3d.py",
             "doc/src/modules/numeric-computation.rst",
             "doc/src/explanation/best-practices.md",
+            "doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst",
+            "doc/src/tutorials/physics/biomechanics/biomechanics.rst",
         ])
     else:
         if import_module('matplotlib') is None:
