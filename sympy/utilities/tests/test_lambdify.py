@@ -27,6 +27,7 @@ from sympy.functions.special.beta_functions import (beta, betainc, betainc_regul
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels, Si, Ci)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, polygamma)
+from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
@@ -1259,6 +1260,16 @@ def test_lambdify_Derivative_arg_issue_16468():
     assert eval(lambdastr((fx, f), f/fx, dummify=True))(S(10), 5) == S.Half
     assert lambdify(fx, 1 + fx)(41) == 42
     assert eval(lambdastr(fx, 1 + fx, dummify=True))(41) == 42
+
+
+def test_lambdify_Derivative_zeta():
+    # This is related to gh-11802 (and to lesser extent gh-26663)
+    s = symbols('s')
+    zp = zeta(s).diff(s, evaluate=False)
+    f = lambdify(s, zp, modules=['mpmath'])
+    ans = f(2)
+    ref = (zeta(2+1e-8).evalf()-zeta(2).evalf())/1e-8
+    assert abs(ans - ref)/abs(ref) < 1e-7
 
 
 def test_imag_real():
