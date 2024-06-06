@@ -741,6 +741,118 @@ def test_max_deflection():
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
 
+def test_solve_for_ild_reactions():
+    E = Symbol('E')
+    I = Symbol('I')
+    a = Symbol('a', positive=True)
+    b = Beam(10, E, I)
+    b.apply_support(0, type="pin")
+    b.apply_support(10, type="pin")
+    R_0, R_10 = symbols('R_0, R_10')
+    b.solve_for_ild_reactions(1, R_0, R_10)
+    assert b.ild_reactions == {R_0: a/10 - 1, R_10: -a/10}
+
+    E = Symbol('E')
+    I = Symbol('I')
+    a = Symbol('a', positive=True)
+    F = Symbol('F')
+    L = Symbol('L', positive=True)
+    b = Beam(L, E, I)
+    b.apply_support(L, type="fixed")
+    b.apply_load(F, 0, -1)
+    R_L, M_L = symbols('R_L, M_L')
+    b.solve_for_ild_reactions(F, R_L, M_L)
+    assert b.ild_reactions == {R_L: -2*F, M_L: -2*F*L + F*a}
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(20, E, I)
+    r0 = b.apply_support(0, type="pin")
+    r5 = b.apply_support(5, type="pin")
+    r10 = b.apply_support(10, type="pin")
+    r20, m20 = b.apply_support(20, type="fixed")
+    b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
+    expected_r0 = (11*SingularityFunction(5, a, 3)/2375 - 27*SingularityFunction(10, a, 3)/9500
+                  - 3*SingularityFunction(20, a, 2)/950 + 3*SingularityFunction(20, a, 3)/9500)
+    assert b.ild_reactions[r0].expand() == expected_r0.expand()
+    expected_r5 = (-28*SingularityFunction(5, a, 3)/2375 + 43*SingularityFunction(10, a, 3)/4750
+                  + 9*SingularityFunction(20, a, 2)/475 - 9*SingularityFunction(20, a, 3)/4750)
+    assert b.ild_reactions[r5].expand() == expected_r5.expand()
+    expected_r10 = (43*SingularityFunction(5, a, 3)/4750 - 351*SingularityFunction(10, a, 3)/38000
+                    - 153*SingularityFunction(20, a, 2)/3800 + 23*SingularityFunction(20, a, 3)/7600)
+    assert b.ild_reactions[r10].expand() == expected_r10.expand()
+    expected_r20 = (-9*SingularityFunction(5, a, 3)/4750 + 23*SingularityFunction(10, a, 3)/7600
+                    + 93*SingularityFunction(20, a, 2)/3800 - 11*SingularityFunction(20, a, 3)/7600 - 1)
+    assert b.ild_reactions[r20].expand() == expected_r20.expand()
+    expected_m20 = (a - 3*SingularityFunction(5, a, 3)/475 + 51*SingularityFunction(10, a, 3)/3800
+                    + 69*SingularityFunction(20, a, 2)/380 - 31*SingularityFunction(20, a, 3)/3800 - 20)
+    assert b.ild_reactions[m20].expand() == expected_m20.expand()
+
+def test_solve_for_ild_shear():
+    E = Symbol('E')
+    I = Symbol('I')
+    a = Symbol('a', positive=True)
+    F = Symbol('F')
+    L1 = Symbol('L1', positive=True)
+    L2 = Symbol('L2', positive=True)
+    b = Beam(L1 + L2, E, I)
+    r0 = b.apply_support(0, type="pin")
+    rL = b.apply_support(L1 + L2, type="pin")
+    b.solve_for_ild_reactions(F, r0, rL)
+    b.solve_for_ild_shear(L1, F, r0, rL)
+    assert b.ild_shear == Piecewise((-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2) + F, L1 > a),
+                                    (F*a/(L1 + L2) - F, L1 < a))
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(20, E, I)
+    r0 = b.apply_support(0, type="pin")
+    r5 = b.apply_support(5, type="pin")
+    r10 = b.apply_support(10, type="pin")
+    r20, m20 = b.apply_support(20, type="fixed")
+    b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
+    b.solve_for_ild_shear(6, 1, r0, r5, r10, r20, m20)
+    assert b.ild_shear == Piecewise((-17*SingularityFunction(5, a, 3)/2375
+                                     + 59*SingularityFunction(10, a, 3)/9500
+                                     + 3*SingularityFunction(20, a, 2)/190
+                                     - 3*SingularityFunction(20, a, 3)/1900 + 1, a < 6),
+                                    (-17*SingularityFunction(5, a, 3)/2375
+                                     + 59*SingularityFunction(10, a, 3)/9500
+                                     + 3*SingularityFunction(20, a, 2)/190
+                                     - 3*SingularityFunction(20, a, 3)/1900, a > 6))
+
+def test_solve_for_ild_moment():
+    E = Symbol('E')
+    I = Symbol('I')
+    a = Symbol('a', positive=True)
+    F = Symbol('F')
+    L1 = Symbol('L1', positive=True)
+    L2 = Symbol('L2', positive=True)
+    b = Beam(L1 + L2, E, I)
+    r0 = b.apply_support(0, type="pin")
+    rL = b.apply_support(L1 + L2, type="pin")
+    b.solve_for_ild_reactions(F, r0, rL)
+    b.solve_for_ild_moment(L1, F, r0, rL)
+    assert b.ild_moment == Piecewise((F*(L1 - a) + L1*(-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2)), L1 > a),
+                                     (-F*(L1 + L2 - a) - L2*(-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2)), L1 < a))
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(20, E, I)
+    r0 = b.apply_support(0, type="pin")
+    r5 = b.apply_support(5, type="pin")
+    r10 = b.apply_support(10, type="pin")
+    r20, m20 = b.apply_support(20, type="fixed")
+    b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
+    b.solve_for_ild_moment(5, 1, r0, r5, r10, r20, m20)
+    assert b.ild_moment == Piecewise((-a + 11*SingularityFunction(5, a, 3)/475
+                                      - 27*SingularityFunction(10, a, 3)/1900
+                                      - 3*SingularityFunction(20, a, 2)/190
+                                      + 3*SingularityFunction(20, a, 3)/1900 + 5, a < 5),
+                                     (11*SingularityFunction(5, a, 3)/475
+                                      - 27*SingularityFunction(10, a, 3)/1900
+                                      - 3*SingularityFunction(20, a, 2)/190
+                                      + 3*SingularityFunction(20, a, 3)/1900, a > 5))
 
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')

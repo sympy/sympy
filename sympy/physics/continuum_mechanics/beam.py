@@ -1777,7 +1777,7 @@ class Beam:
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
-    def _solve_for_ild_equations(self):
+    def _solve_for_ild_equations(self, value):
         """
 
         Helper function for I.L.D. It takes the unsubstituted
@@ -1787,7 +1787,9 @@ class Beam:
         if self._applied_rotation_hinges or self._applied_sliding_hinges:
             raise NotImplementedError("I.L.D. calculations are not implemented for beams with hinges.")
         x = self.variable
-        shear_force = -integrate(self._original_load, x)
+        a = Symbol('a', positive=True)
+        load = self._load + value * SingularityFunction(x, a, -1)
+        shear_force = -integrate(load, x)
         bending_moment = integrate(shear_force, x)
 
         return shear_force, bending_moment
@@ -1825,21 +1827,23 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_10 = symbols('R_0, R_10')
             >>> b = Beam(10, E, I)
-            >>> p0 = b.apply_support(0, 'roller')
+            >>> p0 = b.apply_support(0, 'pin')
             >>> p10 = b.apply_support(10, 'roller')
             >>> b.solve_for_ild_reactions(1,R_0,R_10)
             >>> b.ild_reactions
-            {R_0: x/10 - 1, R_10: -x/10}
+            {R_0: a/10 - 1, R_10: -a/10}
 
         """
-        shear_force, bending_moment = self._solve_for_ild_equations()
+        shear_force, bending_moment = self._solve_for_ild_equations(value)
         x = self.variable
         l = self.length
+        a = Symbol('a', positive=True)
+
         C3 = Symbol('C3')
         C4 = Symbol('C4')
 
         shear_curve = limit(shear_force, x, l) - value
-        moment_curve = limit(bending_moment, x, l) - value*(l-x)
+        moment_curve = limit(bending_moment, x, l) - value*(l-a)
 
         slope_eqs = []
         deflection_eqs = []
@@ -1903,19 +1907,19 @@ class Beam:
             >>> b.apply_load(5,4,-1)
             >>> b.solve_for_ild_reactions(1,R_0,R_7)
             >>> b.ild_reactions
-            {R_0: x/7 - 22/7, R_7: -x/7 - 20/7}
+            {R_0: a/7 - 22/7, R_7: -a/7 - 20/7}
             >>> b.plot_ild_reactions()
             PlotGrid object containing:
             Plot[0]:Plot object containing:
-            [0]: cartesian line: x/7 - 22/7 for x over (0.0, 10.0)
+            [0]: cartesian line: a/7 - 22/7 for a over (0.0, 10.0)
             Plot[1]:Plot object containing:
-            [0]: cartesian line: -x/7 - 20/7 for x over (0.0, 10.0)
+            [0]: cartesian line: -a/7 - 20/7 for a over (0.0, 10.0)
 
         """
         if not self._ild_reactions:
             raise ValueError("I.L.D. reaction equations not found. Please use solve_for_ild_reactions() to generate the I.L.D. reaction equations.")
 
-        x = self.variable
+        a = Symbol('a', positive=True)
         ildplots = []
 
         if subs is None:
@@ -1923,17 +1927,17 @@ class Beam:
 
         for reaction in self._ild_reactions:
             for sym in self._ild_reactions[reaction].atoms(Symbol):
-                if sym != x and sym not in subs:
+                if sym != a and sym not in subs:
                     raise ValueError('Value of %s was not passed.' %sym)
 
         for sym in self._length.atoms(Symbol):
-            if sym != x and sym not in subs:
+            if sym != a and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
 
         for reaction in self._ild_reactions:
             ildplots.append(plot(self._ild_reactions[reaction].subs(subs),
-            (x, 0, self._length.subs(subs)), title='I.L.D. for Reactions',
-            xlabel=x, ylabel=reaction, line_color='blue', show=False))
+            (a, 0, self._length.subs(subs)), title='I.L.D. for Reactions',
+            xlabel=a, ylabel=reaction, line_color='blue', show=False))
 
         return PlotGrid(len(ildplots), 1, *ildplots)
 
@@ -1978,14 +1982,15 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
-            Piecewise((x/8, x < 4), (x/8 - 1, x > 4))
+            Piecewise((a/8, a < 4), (a/8 - 1, a > 4))
 
         """
 
         x = self.variable
         l = self.length
+        a = Symbol('a', positive=True)
 
-        shear_force, _ = self._solve_for_ild_equations()
+        shear_force, _ = self._solve_for_ild_equations(value)
 
         shear_curve1 = value - limit(shear_force, x, distance)
         shear_curve2 = (limit(shear_force, x, l) - limit(shear_force, x, distance)) - value
@@ -1994,7 +1999,7 @@ class Beam:
             shear_curve1 = shear_curve1.subs(reaction,self._ild_reactions[reaction])
             shear_curve2 = shear_curve2.subs(reaction,self._ild_reactions[reaction])
 
-        shear_eq = Piecewise((shear_curve1, x < distance), (shear_curve2, x > distance))
+        shear_eq = Piecewise((shear_curve1, a < distance), (shear_curve2, a > distance))
 
         self._ild_shear = shear_eq
 
@@ -2037,32 +2042,32 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
-            Piecewise((x/8, x < 4), (x/8 - 1, x > 4))
+            Piecewise((a/8, a < 4), (a/8 - 1, a > 4))
             >>> b.plot_ild_shear()
             Plot object containing:
-            [0]: cartesian line: Piecewise((x/8, x < 4), (x/8 - 1, x > 4)) for x over (0.0, 12.0)
+            [0]: cartesian line: Piecewise((a/8, a < 4), (a/8 - 1, a > 4)) for a over (0.0, 12.0)
 
         """
 
         if not self._ild_shear:
             raise ValueError("I.L.D. shear equation not found. Please use solve_for_ild_shear() to generate the I.L.D. shear equations.")
 
-        x = self.variable
         l = self._length
+        a = Symbol('a', positive=True)
 
         if subs is None:
             subs = {}
 
         for sym in self._ild_shear.atoms(Symbol):
-            if sym != x and sym not in subs:
+            if sym != a and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
 
         for sym in self._length.atoms(Symbol):
-            if sym != x and sym not in subs:
+            if sym != a and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
 
-        return plot(self._ild_shear.subs(subs), (x, 0, l),  title='I.L.D. for Shear',
-               xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V}$', line_color='blue',show=True)
+        return plot(self._ild_shear.subs(subs), (a, 0, l),  title='I.L.D. for Shear',
+               xlabel=r'$\mathrm{a}$', ylabel=r'$\mathrm{V}$', line_color='blue',show=True)
 
     def solve_for_ild_moment(self, distance, value, *reactions):
         """
@@ -2105,23 +2110,24 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
-            Piecewise((-x/2, x < 4), (x/2 - 4, x > 4))
+            Piecewise((-a/2, a < 4), (a/2 - 4, a > 4))
 
         """
 
         x = self.variable
         l = self.length
+        a = Symbol('a', positive=True)
 
-        _, moment = self._solve_for_ild_equations()
+        _, moment = self._solve_for_ild_equations(value)
 
-        moment_curve1 = value*(distance-x) - limit(moment, x, distance)
-        moment_curve2= (limit(moment, x, l)-limit(moment, x, distance))-value*(l-x)
+        moment_curve1 = value*(distance-a) - limit(moment, x, distance)
+        moment_curve2 = (limit(moment, x, l)-limit(moment, x, distance))-value*(l-a)
 
         for reaction in reactions:
             moment_curve1 = moment_curve1.subs(reaction, self._ild_reactions[reaction])
             moment_curve2 = moment_curve2.subs(reaction, self._ild_reactions[reaction])
 
-        moment_eq = Piecewise((moment_curve1, x < distance), (moment_curve2, x > distance))
+        moment_eq = Piecewise((moment_curve1, a < distance), (moment_curve2, a > distance))
         self._ild_moment = moment_eq
 
     def plot_ild_moment(self,subs=None):
@@ -2163,30 +2169,30 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
-            Piecewise((-x/2, x < 4), (x/2 - 4, x > 4))
+            Piecewise((-a/2, a < 4), (a/2 - 4, a > 4))
             >>> b.plot_ild_moment()
             Plot object containing:
-            [0]: cartesian line: Piecewise((-x/2, x < 4), (x/2 - 4, x > 4)) for x over (0.0, 12.0)
+            [0]: cartesian line: Piecewise((-a/2, a < 4), (a/2 - 4, a > 4)) for a over (0.0, 12.0)
 
         """
 
         if not self._ild_moment:
             raise ValueError("I.L.D. moment equation not found. Please use solve_for_ild_moment() to generate the I.L.D. moment equations.")
 
-        x = self.variable
+        a = Symbol('a', positive=True)
 
         if subs is None:
             subs = {}
 
         for sym in self._ild_moment.atoms(Symbol):
-            if sym != x and sym not in subs:
+            if sym != a and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
 
         for sym in self._length.atoms(Symbol):
-            if sym != x and sym not in subs:
+            if sym != a and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
-        return plot(self._ild_moment.subs(subs), (x, 0, self._length), title='I.L.D. for Moment',
-               xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M}$', line_color='blue', show=True)
+        return plot(self._ild_moment.subs(subs), (a, 0, self._length), title='I.L.D. for Moment',
+               xlabel=r'$\mathrm{a}$', ylabel=r'$\mathrm{M}$', line_color='blue', show=True)
 
     @doctest_depends_on(modules=('numpy',))
     def draw(self, pictorial=True):
