@@ -134,6 +134,10 @@ def test_dmp_sqf():
     f = -x**2 + 2*x - 1
     assert R.dmp_sqf_list_include(f) == [(-1, 1), (x - 1, 2)]
 
+    f = (y**2 + 1)**2*(x**2 + 2*x + 2)
+    assert R.dmp_sqf_p(f) is False
+    assert R.dmp_sqf_list(f) == (1, [(x**2 + 2*x + 2, 1), (y**2 + 1, 2)])
+
     R, x, y = ring("x,y", FF(2))
     raises(NotImplementedError, lambda: R.dmp_sqf_list(y**2 + 1))
 

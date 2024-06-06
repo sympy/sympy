@@ -81,6 +81,7 @@ from sympy.polys.densetools import (
     dmp_compose,
     dup_decompose,
     dup_shift,
+    dmp_shift,
     dup_transform,
     dmp_lift)
 
@@ -897,6 +898,11 @@ class DMP(CantSympify):
 
         return f._shift(f.dom.convert(a))
 
+    def shift_list(f, a):
+        """Efficiently compute Taylor shift ``f(X + A)``. """
+        a = [f.dom.convert(ai) for ai in a]
+        return f._shift_list(a)
+
     def _shift(f, a):
         raise NotImplementedError
 
@@ -1573,6 +1579,10 @@ class DMP_Python(DMP):
     def _shift(f, a):
         """Efficiently compute Taylor shift ``f(x + a)``. """
         return f.per(dup_shift(f._rep, a, f.dom))
+
+    def _shift_list(f, a):
+        """Efficiently compute Taylor shift ``f(X + A)``. """
+        return f.per(dmp_shift(f._rep, a, f.lev, f.dom))
 
     def _transform(f, p, q):
         """Evaluate functional transformation ``q**n * f(p/q)``."""

@@ -102,7 +102,7 @@ def express(expr, frame, frame2=None, variables=False):
             expr = expr.subs(subs_dict)
         # Re-express in this frame
         outvec = Vector([])
-        for i, v in enumerate(expr.args):
+        for v in expr.args:
             if v[1] != frame:
                 temp = frame.dcm(v[1]) * v[0]
                 if Vector.simp:
@@ -118,7 +118,7 @@ def express(expr, frame, frame2=None, variables=False):
             frame2 = frame
         _check_frame(frame2)
         ol = Dyadic(0)
-        for i, v in enumerate(expr.args):
+        for v in expr.args:
             ol += express(v[0], frame, variables=variables) * \
                   (express(v[1], frame, variables=variables) |
                    express(v[2], frame2, variables=variables))
@@ -198,7 +198,7 @@ def time_derivative(expr, frame, order=1):
 
     if isinstance(expr, Vector):
         outlist = []
-        for i, v in enumerate(expr.args):
+        for v in expr.args:
             if v[1] == frame:
                 outlist += [(express(v[0], frame, variables=True).diff(t),
                              frame)]
@@ -210,7 +210,7 @@ def time_derivative(expr, frame, order=1):
 
     if isinstance(expr, Dyadic):
         ol = Dyadic(0)
-        for i, v in enumerate(expr.args):
+        for v in expr.args:
             ol += (v[0].diff(t) * (v[1] | v[2]))
             ol += (v[0] * (time_derivative(v[1], frame) | v[2]))
             ol += (v[0] * (v[1] | time_derivative(v[2], frame)))

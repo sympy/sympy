@@ -230,10 +230,8 @@ def get_known_facts_keys():
     ``generate_known_facts_dict``.
 
     """
-    exclude = set()
-    for pred in [Q.eq, Q.ne, Q.gt, Q.lt, Q.ge, Q.le]:
-        # exclude polyadic predicates
-        exclude.add(pred)
+    # exclude polyadic predicates
+    exclude = {Q.eq, Q.ne, Q.gt, Q.lt, Q.ge, Q.le}
 
     result = []
     for attr in Q.__class__.__dict__:

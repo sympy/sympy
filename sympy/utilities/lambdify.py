@@ -20,7 +20,9 @@ from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
 
+
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
+
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -92,7 +94,10 @@ MPMATH_TRANSLATIONS = {
 NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
 }
-SCIPY_TRANSLATIONS: dict[str, str] = {}
+SCIPY_TRANSLATIONS: dict[str, str] = {
+    "jn" : "spherical_jn",
+    "yn" : "spherical_yn"
+}
 CUPY_TRANSLATIONS: dict[str, str] = {}
 JAX_TRANSLATIONS: dict[str, str] = {}
 

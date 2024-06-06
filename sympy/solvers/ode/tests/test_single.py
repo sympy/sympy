@@ -59,7 +59,7 @@ from sympy.solvers.ode.single import (FirstLinear, ODEMatchError,
 
 from sympy.solvers.ode.subscheck import checkodesol
 
-from sympy.testing.pytest import raises, slow, ON_CI
+from sympy.testing.pytest import raises, slow
 import traceback
 
 
@@ -275,7 +275,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
             if len(expected_sol) == 1:
                 expected_checkodesol = (True, 0)
 
-            if not (checkodesol_too_slow and ON_CI):
+            if not checkodesol_too_slow:
                 if not checkodesol_XFAIL:
                     if checkodesol(eq, dsolve_sol, func, solve_for_func=False) != expected_checkodesol:
                         result['unsolve_list'] = example
@@ -2864,7 +2864,7 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
 
     '1st_homogeneous_coeff_best_08': {
         'eq': f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x),
-        'sol': [Eq(f(x), -sqrt(-x*exp(2*C1)/(x - 2*exp(C1)))), Eq(f(x), sqrt(-x*exp(2*C1)/(x - 2*exp(C1))))],
+        'sol': [Eq(f(x), -C1*sqrt(-x/(x - 2*C1))), Eq(f(x), C1*sqrt(-x/(x - 2*C1)))],
         'checkodesol_XFAIL': True  # solutions are valid in a range
     },
     }

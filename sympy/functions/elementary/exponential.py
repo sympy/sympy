@@ -11,6 +11,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
+from sympy.core.relational import Ge
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.sympify import sympify
@@ -1161,20 +1162,30 @@ class LambertW(Function):
                 return S.Zero
             if x is S.Exp1:
                 return S.One
-            if x == -1/S.Exp1:
-                return S.NegativeOne
+            w = Wild('w')
+            # W(x*log(x)) = log(x) for x >= 1/e
+            # e.g., W(-1/e) = -1, W(2*log(2)) = log(2)
+            result = x.match(w*log(w))
+            if result is not None and Ge(result[w]*S.Exp1, S.One) is S.true:
+                return log(result[w])
             if x == -log(2)/2:
                 return -log(2)
-            if x == 2*log(2):
-                return log(2)
+            # W(x**(x+1)*log(x)) = x*log(x) for x > 0
+            # e.g., W(81*log(3)) = 3*log(3)
+            result = x.match(w**(w+1)*log(w))
+            if result is not None and result[w].is_positive is True:
+                return result[w]*log(result[w])
+            # W(e**(1/n)/n) = 1/n
+            # e.g., W(sqrt(e)/2) = 1/2
+            result = x.match(S.Exp1**(1/w)/w)
+            if result is not None:
+                return 1 / result[w]
             if x == -pi/2:
                 return I*pi/2
             if x == exp(1 + S.Exp1):
                 return S.Exp1
             if x is S.Infinity:
                 return S.Infinity
-            if x.is_zero:
-                return S.Zero
 
         if fuzzy_not(k.is_zero):
             if x.is_zero:

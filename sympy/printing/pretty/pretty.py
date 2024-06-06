@@ -1003,7 +1003,7 @@ class PrettyPrinter(Printer):
         from sympy.physics.control.lti import MIMOParallel
         args = list(expr.args)
         pretty_args = []
-        for i, a in enumerate(reversed(args)):
+        for a in reversed(args):
             if (isinstance(a, MIMOParallel) and len(expr.args) > 1):
                 expression = self._print(a)
                 expression.baseline = expression.height()//2
@@ -1187,7 +1187,7 @@ class PrettyPrinter(Printer):
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]
-        n_newlines = max([len(x) for x in o1])  # Width of part in its pretty form
+        n_newlines = max(len(x) for x in o1)  # Width of part in its pretty form
 
         if 1 in flag:                           # If there was a fractional scalar
             for i, parts in enumerate(o1):
@@ -1257,7 +1257,7 @@ class PrettyPrinter(Printer):
         last_valence = None
         prev_map = None
 
-        for i, index in enumerate(indices):
+        for index in indices:
             indpic = self._print(index.args[0])
             if ((index in index_map) or prev_map) and last_valence == index.is_up:
                 if index.is_up:
@@ -1369,7 +1369,7 @@ class PrettyPrinter(Printer):
         len_args = len(pexpr.args)
 
         # max widths
-        maxw = [max([P[i, j].width() for i in range(len_args)])
+        maxw = [max(P[i, j].width() for i in range(len_args))
                 for j in range(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.

@@ -325,7 +325,7 @@ class FpGroup(DefaultPrinting):
     def most_frequent_generator(self):
         gens = self.generators
         rels = self.relators
-        freqs = [sum([r.generator_count(g) for r in rels]) for g in gens]
+        freqs = [sum(r.generator_count(g) for r in rels) for g in gens]
         return gens[freqs.index(max(freqs))]
 
     def random(self):
@@ -508,7 +508,7 @@ class FpGroup(DefaultPrinting):
 
         '''
         P, T = self._to_perm_group()
-        return T.invert(P._elements)
+        return T.invert(P.elements)
 
     @property
     def is_cyclic(self):

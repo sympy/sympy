@@ -227,17 +227,12 @@ symbolic matrix has 24 terms with four elements in each term:
 ⎢                  ⎥
 ⎣A₃₀  A₃₁  A₃₂  A₃₃⎦
 >>> A.det()
-A₀₀⋅A₁₁⋅A₂₂⋅A₃₃ - A₀₀⋅A₁₁⋅A₂₃⋅A₃₂ - A₀₀⋅A₁₂⋅A₂₁⋅A₃₃ + A₀₀⋅A₁₂⋅A₂₃⋅A₃₁ + A₀₀⋅A₁ ↪
-<BLANKLINE>
-↪ ₃⋅A₂₁⋅A₃₂ - A₀₀⋅A₁₃⋅A₂₂⋅A₃₁ - A₀₁⋅A₁₀⋅A₂₂⋅A₃₃ + A₀₁⋅A₁₀⋅A₂₃⋅A₃₂ + A₀₁⋅A₁₂⋅A₂ ↪
-<BLANKLINE>
-↪ ₀⋅A₃₃ - A₀₁⋅A₁₂⋅A₂₃⋅A₃₀ - A₀₁⋅A₁₃⋅A₂₀⋅A₃₂ + A₀₁⋅A₁₃⋅A₂₂⋅A₃₀ + A₀₂⋅A₁₀⋅A₂₁⋅A₃ ↪
-<BLANKLINE>
-↪ ₃ - A₀₂⋅A₁₀⋅A₂₃⋅A₃₁ - A₀₂⋅A₁₁⋅A₂₀⋅A₃₃ + A₀₂⋅A₁₁⋅A₂₃⋅A₃₀ + A₀₂⋅A₁₃⋅A₂₀⋅A₃₁ -  ↪
-<BLANKLINE>
-↪ A₀₂⋅A₁₃⋅A₂₁⋅A₃₀ - A₀₃⋅A₁₀⋅A₂₁⋅A₃₂ + A₀₃⋅A₁₀⋅A₂₂⋅A₃₁ + A₀₃⋅A₁₁⋅A₂₀⋅A₃₂ - A₀₃⋅ ↪
-<BLANKLINE>
-↪ A₁₁⋅A₂₂⋅A₃₀ - A₀₃⋅A₁₂⋅A₂₀⋅A₃₁ + A₀₃⋅A₁₂⋅A₂₁⋅A₃₀
+A₀₀⋅A₁₁⋅A₂₂⋅A₃₃ - A₀₀⋅A₁₁⋅A₂₃⋅A₃₂ - A₀₀⋅A₁₂⋅A₂₁⋅A₃₃ + A₀₀⋅A₁₂⋅A₂₃⋅A₃₁ +
+A₀₀⋅A₁₃⋅A₂₁⋅A₃₂ - A₀₀⋅A₁₃⋅A₂₂⋅A₃₁ - A₀₁⋅A₁₀⋅A₂₂⋅A₃₃ + A₀₁⋅A₁₀⋅A₂₃⋅A₃₂ +
+A₀₁⋅A₁₂⋅A₂₀⋅A₃₃ - A₀₁⋅A₁₂⋅A₂₃⋅A₃₀ - A₀₁⋅A₁₃⋅A₂₀⋅A₃₂ + A₀₁⋅A₁₃⋅A₂₂⋅A₃₀ +
+A₀₂⋅A₁₀⋅A₂₁⋅A₃₃ - A₀₂⋅A₁₀⋅A₂₃⋅A₃₁ - A₀₂⋅A₁₁⋅A₂₀⋅A₃₃ + A₀₂⋅A₁₁⋅A₂₃⋅A₃₀ +
+A₀₂⋅A₁₃⋅A₂₀⋅A₃₁ - A₀₂⋅A₁₃⋅A₂₁⋅A₃₀ - A₀₃⋅A₁₀⋅A₂₁⋅A₃₂ + A₀₃⋅A₁₀⋅A₂₂⋅A₃₁ +
+A₀₃⋅A₁₁⋅A₂₀⋅A₃₂ - A₀₃⋅A₁₁⋅A₂₂⋅A₃₀ - A₀₃⋅A₁₂⋅A₂₀⋅A₃₁ + A₀₃⋅A₁₂⋅A₂₁⋅A₃₀
 ```
 
 and solving a matrix equation of it takes about a minute, whereas the analogous

@@ -191,7 +191,7 @@ def _rec_degree_in(g, v, i, j):
 
     v, i = v - 1, i + 1
 
-    return max([ _rec_degree_in(c, v, i, j) for c in g ])
+    return max(_rec_degree_in(c, v, i, j) for c in g)
 
 
 def dmp_degree_in(f, j, u):
