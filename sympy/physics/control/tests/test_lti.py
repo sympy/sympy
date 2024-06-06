@@ -1748,3 +1748,34 @@ def test_StateSpace_functions():
     assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
     assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
+
+def test_phase_condition():
+    system1 = TransferFunction((1 + 0.25*s), (0.1*s**3 + 0.8*s**2 + 1.7*s + 1), s)
+    a, b = symbols('a b')
+    #test1
+    z1 = -1.73 + 2.49*I
+    z2 = -1.97 + 10.4*I
+    z3 = -10 + 10*I
+    z4 = -47
+    z5 = a+b*I
+    from sympy import arg
+    assert system1.phase_condition(z1) == True
+    assert system1.phase_condition(z2) == True
+    assert system1.phase_condition(z3) == False
+    assert system1.phase_condition(z4) == False
+    assert system1.phase_condition(z5) == ((((((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) >= (-0.009 + pi))
+                                            & (((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) <= (0.009 + pi))
+                                            | ((((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) >= (-pi - 0.009))
+                                            & (((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) <= (0.009 - pi))
+    #test2
+    system2 = TransferFunction((1), ((s**2+100*s+2600)*(s+25)*s), s)
+
+    z1 = 37.1 + 65.2*I
+    z2 = -67 + 31.1*I
+    z3 = -12.1
+    z4 = -43
+
+    assert system2.phase_condition(z1) == True
+    assert system2.phase_condition(z2) == True
+    assert system2.phase_condition(z3) == True
+    assert system2.phase_condition(z4) == False

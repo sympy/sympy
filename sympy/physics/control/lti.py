@@ -1,5 +1,5 @@
 from typing import Type
-from sympy import Interval, numer, Rational, solveset
+from sympy import Interval, numer, Rational, solveset, Ge, Le
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -1299,6 +1299,91 @@ class TransferFunction(SISOLinearTimeInvariant):
         else:
             return Pow(self.den, -1, evaluate=False)
 
+    def phase_condition(self, z):
+        '''
+        Returns True if the number z confirm the phase condition of system.
+
+        Parameters
+        ==========
+
+        self: Transfer Function
+        z: Number
+            Number for which it will be checked whether the phase condition applies.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.abc import s
+        >>> from sympy.core.numbers import I
+        >>> from sympy import symbols
+        >>> a, b = symbols('a b')
+        >>> system1 = TransferFunction((1 + 0.25*s), (0.1*s**3 + 0.8*s**2 + 1.7*s + 1), s)
+        >>> z1 = -1.73+2.49*I
+        >>> z2 = -1.97+10.4*I
+        >>> z3 = -10+10*I
+        >>> z4 = -47
+        >>> z5 = a+b*I
+        >>> system1.phase_condition(z1)
+        True
+        >>> system1.phase_condition(z2)
+        True
+        >>> system1.phase_condition(z3)
+        False
+        >>> system1.phase_condition(z4)
+        False
+        >>> system1.phase_condition(z5)
+        ((((((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) >= (-0.009 + pi))
+        & (((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) <= (0.009 + pi))
+        | ((((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) >= (-pi - 0.009))
+        & (((arg(a + I*b + 1.0) + arg(a + I*b + 2.0)) - arg(a + I*b + 4.0)) + arg(a + I*b + 5.0)) <= (0.009 - pi))
+        >>> system2 = TransferFunction((1), ((s**2+100*s+2600)*(s+25)*s), s)
+        >>> z1 = 37.1+65.2*I
+        >>> z2 = -67+31.1*I
+        >>> z3 = -12.1
+        >>> z4 = -43
+        >>> system2.phase_condition(z1)
+        True
+        >>> system2.phase_condition(z2)
+        True
+        >>> system2.phase_condition(z3)
+        True
+        >>> system2.phase_condition(z4)
+        False
+
+        Note
+        ====
+
+        If phase condition is true for a number z and a system G(s) the z is part of system's root locus.
+
+        '''
+        #I place this method import here as local variable (and not at the beginning)
+        #because there is a loop variable named arg (in _flatten_args function)
+        #and there will be confusion.
+        from sympy import arg
+
+        if isinstance(z, Symbol):
+            z = z.subs(I, 1j)
+
+        poles = roots(self.den)
+        zeros = roots(self.num)
+
+        phi = 0
+        psi = 0
+
+        for pole in poles:
+            phi += arg(z - pole)
+
+        for zero in zeros:
+            psi += arg(z - zero)
+
+        expr = phi - psi
+
+        odd_n = [1, 3, 5, 7, 9, 11, 13, 15]
+        for n in odd_n:
+            if (Le(expr, n*pi+0.009) & Ge(expr, n*pi-0.009)) | (Le(expr, -n*pi+0.009) & Ge(expr, -n*pi-0.009)):
+                return Le(expr, n*pi+0.009) & Ge(expr, n*pi-0.009) | Le(expr, -n*pi+0.009) & Ge(expr, -n*pi-0.009) # expr is between [pi-0.009, pi+0.009]
+        return False
 
 def _flatten_args(args, _cls):
     temp_args = []
