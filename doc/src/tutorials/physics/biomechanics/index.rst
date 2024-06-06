@@ -4,6 +4,7 @@
 Biomechanics Tutorials
 ======================
 
+<<<<<<< HEAD
 These tutorials provide a comprehensive guide on using SymPy for
 biomechanical simulations and analysis. We cover various models, including
 a human arm moving a lever, forces produced by muscles, and
@@ -18,6 +19,9 @@ In these tutorials, you can expect:
 - Modeling: Step-by-step process of constructing the biomechanical models.
 
 - Equations of Motion: Derivation and analysis of the equations of motion for the systems.
+=======
+This tutorial focuses on biomechanics.
+>>>>>>> e67bc3e455 (Update physics, biomechanics set up)
 
 .. toctree::
    :maxdepth: 2

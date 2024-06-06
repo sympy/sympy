@@ -6,39 +6,37 @@ Physics Tutorials
 =================
 
 The Physics Tutorials aim to introduce SymPy to users who have not previously
-used its physics features. The functionalities presented here have many
-more options and capabilities than what is covered in the tutorials.
-Through insightful examples and exercises, the tutorials demonstrate
-how to incorporate various physics subpackages of SymPy, including but not limited to
-multibody dynamics, quantum mechanics, optics, and continuum mechanics, to model and simulate
-different physical systems and their behaviors.
-=======
+used its physics features. The functionalities presented here have many more
+options and capabilities than what is covered in the tutorials.  Through
+insightful examples and exercises, the tutorials demonstrate how to incorporate
+various physics subpackages of SymPy, including but not limited to multibody
+dynamics, quantum mechanics, optics, and continuum mechanics, to model and
+simulate different physical systems and their behaviors.
+
 .. _physics:
 
-================
+=================
 Physics Tutorials
-================
+=================
 
-This tutorial aims to introduce SymPy to users who have not previously
-used its physics features. The functionalities presented here have many
-more options and capabilities than what is covered in this tutorial.
-Through insightful examples and exercises, this tutorial demonstrates
-how to incorporate the physics features of SymPy into a multibody dynamics model
-and simulate the resulting equations of motion from the model.
->>>>>>> 78a4527c11 (Remove redirect and add physics tutorial)
+This tutorial aims to introduce SymPy to users who have not previously used its
+physics features. The functionalities presented here have many more options and
+capabilities than what is covered in this tutorial.  Through insightful
+examples and exercises, this tutorial demonstrates how to incorporate various
+physics subpackages of SymPy, including but not limited to, multibody dynamics,
+quantum mechanics, optics, and continuum mechanics, to model and simulate
+different physical systems and their behaviors.
 
 Feedback on this tutorial, or on SymPy in general is always welcome. Just
 write to our `mailing list
 <https://groups.google.com/forum/?fromgroups#!forum/sympy>`_.
 
-<<<<<<< HEAD
 **Content**
 
 .. toctree::
    :maxdepth: 2
 
    biomechanics/index.rst
-=======
 
 :ref:`Biomechanics Tutorial <biomechanics>`
 =============================================
@@ -46,8 +44,7 @@ write to our `mailing list
 For biomechanics tutorial, start here.
 
 .. toctree::
-   :hidden:
+   :maxdepth: 2
 
    biomechanics/biomechanics.rst
    biomechanics/biomechanical-model-example.rst
->>>>>>> 78a4527c11 (Remove redirect and add physics tutorial)
