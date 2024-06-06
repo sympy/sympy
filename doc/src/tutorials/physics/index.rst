@@ -1,14 +1,14 @@
-.. _physics:
+.. _physics_tutorials:
 
 =================
 Physics Tutorials
 =================
 
-This tutorial aims to introduce SymPy to users who have not previously
+The Physics Tutorials aim to introduce SymPy to users who have not previously
 used its physics features. The functionalities presented here have many
-more options and capabilities than what is covered in this tutorial.
-Through insightful examples and exercises, this tutorial demonstrates
-how to incorporate various physics subpackages of SymPy, including but not limited to,
+more options and capabilities than what is covered in the tutorials.
+Through insightful examples and exercises, the tutorials demonstrate
+how to incorporate various physics subpackages of SymPy, including but not limited to
 multibody dynamics, quantum mechanics, optics, and continuum mechanics, to model and simulate
 different physical systems and their behaviors.
 
