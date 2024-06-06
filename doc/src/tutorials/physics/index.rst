@@ -16,7 +16,7 @@ different physical systems and their behaviors.
 .. _physics:
 
 ================
-Physics Tutorial
+Physics Tutorials
 ================
 
 This tutorial aims to introduce SymPy to users who have not previously
