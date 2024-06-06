@@ -17,8 +17,8 @@ If you are new to SymPy, start here.
 
    intro-tutorial/index.rst
 
-:ref:`Physics Tutorial <physics>`
-==========================================
+:ref:`Physics Tutorial <physics_tutorials>`
+===========================================
 
 For physics features in SymPy, start here.
 
