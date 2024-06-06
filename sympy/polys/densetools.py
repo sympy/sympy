@@ -782,7 +782,7 @@ def dmp_ground_extract(f, g, u, K):
 
 def dup_real_imag(f, K):
     """
-    Return bivariate polynomials ``f1`` and ``f2``, such that ``f = f1 + f2*I``.
+    Find ``f1`` and ``f2``, such that ``f(x+I*y) = f1(x,y) + f2(x,y)*I``.
 
     Examples
     ========
@@ -792,6 +792,11 @@ def dup_real_imag(f, K):
 
     >>> R.dup_real_imag(x**3 + x**2 + x + 1)
     (x**3 + x**2 - 3*x*y**2 + x - y**2 + 1, 3*x**2*y + 2*x*y - y**3 + y)
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import I
+    >>> (z**3 + z**2 + z + 1).subs(z, x+I*y).expand().collect(I)
+    x**3 + x**2 - 3*x*y**2 + x - y**2 + I*(3*x**2*y + 2*x*y - y**3 + y) + 1
 
     """
     if not K.is_ZZ and not K.is_QQ:
@@ -890,6 +895,44 @@ def dup_shift(f, a, K):
     for i in range(n, 0, -1):
         for j in range(0, i):
             f[j + 1] += a*f[j]
+
+    return f
+
+
+def dmp_shift(f, a, u, K):
+    """
+    Evaluate efficiently Taylor shift ``f(X + A)`` in ``K[X]``.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, ring, ZZ
+    >>> x, y = symbols('x y')
+    >>> R, _, _ = ring([x, y], ZZ)
+
+    >>> p = x**2*y + 2*x*y + 3*x + 4*y + 5
+
+    >>> R.dmp_shift(R(p), [ZZ(1), ZZ(2)])
+    x**2*y + 2*x**2 + 4*x*y + 11*x + 7*y + 22
+
+    >>> p.subs({x: x + 1, y: y + 2}).expand()
+    x**2*y + 2*x**2 + 4*x*y + 11*x + 7*y + 22
+    """
+    if not u:
+        return dup_shift(f, a[0], K)
+
+    if dmp_zero_p(f, u):
+        return f
+
+    a0, a1 = a[0], a[1:]
+
+    f = [ dmp_shift(c, a1, u-1, K) for c in f ]
+    n = len(f) - 1
+
+    for i in range(n, 0, -1):
+        for j in range(0, i):
+            afj = dmp_mul_ground(f[j], a0, u-1, K)
+            f[j + 1] = dmp_add(f[j + 1], afj, u-1, K)
 
     return f
 

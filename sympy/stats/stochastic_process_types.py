@@ -675,13 +675,13 @@ class MarkovProcess(StochasticProcess):
                 gprob = S.One
 
             if min_key_rv == rv:
-                return sum([prob[FiniteSet(state)] for state in states])
+                return sum(prob[FiniteSet(state)] for state in states)
             if isinstance(self, ContinuousMarkovChain):
-                return gprob * sum([trans_probs(rv.key - min_key_rv.key).__getitem__((gstate, state))
-                                    for state in states])
+                return gprob * sum(trans_probs(rv.key - min_key_rv.key).__getitem__((gstate, state))
+                                    for state in states)
             if isinstance(self, DiscreteMarkovChain):
-                return gprob * sum([(trans_probs**(rv.key - min_key_rv.key)).__getitem__((gstate, state))
-                                    for state in states])
+                return gprob * sum((trans_probs**(rv.key - min_key_rv.key)).__getitem__((gstate, state))
+                                    for state in states)
 
         if isinstance(condition, Not):
             expr = condition.args[0]
@@ -720,8 +720,8 @@ class MarkovProcess(StochasticProcess):
             return prod
 
         if isinstance(condition, Or):
-            return sum([self.probability(expr, given_condition, evaluate, **kwargs)
-                        for expr in condition.args])
+            return sum(self.probability(expr, given_condition, evaluate, **kwargs)
+                        for expr in condition.args)
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(condition, given_condition))
@@ -816,7 +816,7 @@ class MarkovProcess(StochasticProcess):
             cond = condition & mat_of & \
                     StochasticStateSpaceOf(self, state_index)
             func = lambda s: self.probability(Eq(rv, s), cond) * expr.subs(rv, self._state_index[s])
-            return sum([func(s) for s in state_index])
+            return sum(func(s) for s in state_index)
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(expr, condition))

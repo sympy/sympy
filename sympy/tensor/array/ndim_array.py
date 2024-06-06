@@ -171,7 +171,7 @@ class NDimArray(Printable):
 
     def _get_tuple_index(self, integer_index):
         index = []
-        for i, sh in enumerate(reversed(self.shape)):
+        for sh in reversed(self.shape):
             index.append(integer_index % sh)
             integer_index //= sh
         index.reverse()

@@ -327,7 +327,7 @@ class C89CodePrinter(CodePrinter):
                 temp += (shift,)
                 shift *= dims[i]
             strides = temp
-        flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
+        flat_index = sum(x[0]*x[1] for x in zip(indices, strides)) + offset
         return "%s[%s]" % (self._print(expr.base.label),
                            self._print(flat_index))
 
@@ -540,7 +540,7 @@ class C89CodePrinter(CodePrinter):
                 raise ValueError("Expected strides when offset is given")
             idxs = ']['.join((self._print(arg) for arg in elem.indices))
         else:
-            global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
+            global_idx = sum(i*s for i, s in zip(elem.indices, elem.strides))
             if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 global_idx += elem.offset
             idxs = self._print(global_idx)

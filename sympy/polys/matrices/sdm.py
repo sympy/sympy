@@ -7,6 +7,7 @@ Module for the SDM class.
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import _strongly_connected_components
 
@@ -15,6 +16,10 @@ from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 from sympy.polys.domains import QQ
 
 from .ddm import DDM
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['SDM.to_dfm', 'SDM.to_dfm_or_ddm']
 
 
 class SDM(dict):
@@ -550,6 +555,45 @@ class SDM(dict):
             if e:
                 sdm[i][j] = e
         return cls(sdm, shape, domain)
+
+    def iter_values(M):
+        """
+        Iterate over the nonzero values of a :py:class:`~.SDM` matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0: {1: QQ(2)}, 1: {0: QQ(3)}}, (2, 2), QQ)
+        >>> list(A.iter_values())
+        [2, 3]
+
+        """
+        for row in M.values():
+            yield from row.values()
+
+    def iter_items(M):
+        """
+        Iterate over indices and values of the nonzero elements.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0: {1: QQ(2)}, 1: {0: QQ(3)}}, (2, 2), QQ)
+        >>> list(A.iter_items())
+        [((0, 1), 2), ((1, 0), 3)]
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.iter_items
+        """
+        for i, row in M.items():
+            for j, e in row.items():
+                yield (i, j), e
 
     def to_ddm(M):
         """

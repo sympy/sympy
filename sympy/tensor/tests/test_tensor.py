@@ -1983,6 +1983,7 @@ def test_tensor_matching():
     p, q, r = tensor_indices("p q r", R3)
     a,b,c = symbols("a b c", cls = WildTensorIndex, tensor_index_type=R3, ignore_updown=True)
     g = WildTensorIndex("g", R3)
+    delta = R3.delta
     eps = R3.epsilon
     K = TensorHead("K", [R3])
     V = TensorHead("V", [R3])
@@ -2004,6 +2005,11 @@ def test_tensor_matching():
     assert W(p,q).matches( A(q,p) ) == {W(p,q).head: _WildTensExpr(A(q, p))}
     assert U(p,q).matches( A(q,p) ) == None
     assert ( K(q)*K(p) ).replace( W(q,p), 1) == 1
+
+    #Some tests for matching without Wild
+    assert delta(p,q).matches(delta(q,p)) == {}
+    assert eps(p,q,r).matches(eps(q,p,r)) is None
+    assert eps(p,q,r).matches(eps(q,r,p)) == {}
 
 def test_TensMul_subs():
     """

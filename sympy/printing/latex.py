@@ -120,7 +120,7 @@ greek_letters_set = frozenset(greeks)
 
 _between_two_numbers_p = (
     re.compile(r'[0-9][} ]*$'),  # search
-    re.compile(r'[0-9]'),  # match
+    re.compile(r'(\d|\\frac{\d+}{\d+})'),  # match
 )
 
 
@@ -548,7 +548,7 @@ class LatexPrinter(Printer):
                         term_tex = r"\left(%s\right)" % term_tex
 
                     if  _between_two_numbers_p[0].search(last_term_tex) and \
-                        _between_two_numbers_p[1].match(str(term)):
+                        _between_two_numbers_p[1].match(term_tex):
                         # between two numbers
                         _tex += numbersep
                     elif _tex:
@@ -1889,7 +1889,8 @@ class LatexPrinter(Printer):
         block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         block_str = block_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
-            block_str= block_str.replace('%s','{}%s')
+            block_str = block_str.replace('%s', '{' + 'c'*expr.shape[0] + '}%s')
+
         if self._settings['mat_delim']:
             left_delim: str = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]

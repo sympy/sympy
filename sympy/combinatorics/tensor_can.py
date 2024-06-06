@@ -431,7 +431,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
             md = [min(_orbit(size, [_af_new(
                 ddx) for ddx in dsgsx], ii)) for ii in range(size - 2)]
 
-        p_i = min([min([md[h[x]] for x in deltab]) for s, d, h in TAB])
+        p_i = min(min(md[h[x]] for x in deltab) for s, d, h in TAB)
         dsgsx1 = [_af_new(_) for _ in dsgsx]
         Dxtrav = _orbit_transversal(size, dsgsx1, p_i, False, af=True) \
             if dsgsx else None
@@ -454,7 +454,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
         TAB1 = []
         while TAB:
             s, d, h = TAB.pop()
-            if min([md[h[x]] for x in deltab]) != p_i:
+            if min(md[h[x]] for x in deltab) != p_i:
                 continue
             deltab1 = [x for x in deltab if md[h[x]] == p_i]
             # NEXT = s*deltab1 intersection (d*g)**-1*deltap
@@ -588,7 +588,7 @@ def canonical_free(base, gens, g, num_free):
         if x not in base:
             base.append(x)
     h = g
-    for i, transv in enumerate(transversals):
+    for transv in transversals:
         h_i = [size]*num_free
         # find the element s in transversals[i] such that
         # _af_rmul(h, s) has its free elements with the lowest position in h

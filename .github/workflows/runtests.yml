@@ -133,10 +133,8 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
 
-    name: Tests ${{ matrix.group }}/4
+    name: Tests
 
     steps:
       - uses: actions/checkout@v3
@@ -145,7 +143,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4
+      - run: pytest -n auto
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -179,13 +177,13 @@ jobs:
                          wurlitzer autowrap lxml lark z3-solver pycosat   \
                          jax jaxlib libclang scipy aesara                 \
                          'antlr4-python3-runtime==4.11.*'                 \
+                         symengine                                        \
+                         numba llvmlite pymc                              \
                          #
-
-      - run: pip install symengine
 
       # Not available in CPython 3.12 (yet).
       - if: ${{ ! contains(matrix.python-version, '3.12') }}
-        run: pip install numba pymc gmpy2 llvmlite
+        run: pip install gmpy2
 
       # Test external imports
       - run: bin/test_external_imports.py
@@ -258,12 +256,10 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          # python-flint is not yet available for Python 3.12
-          # https://github.com/flintlib/python-flint/issues/52
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pip install python-flint
+      - run: pip install python-flint==0.6
       # Test the modules that most directly use python-flint
       - run: >-
           pytest
@@ -274,8 +270,6 @@ jobs:
           sympy/ntheory
           sympy/polys
           sympy/solvers
-        env:
-          SYMPY_GROUND_TYPES: flint
       - run: >-
           bin/doctest
           sympy/integrals
@@ -291,8 +285,6 @@ jobs:
           doc/src/modules/polys
           doc/src/modules/printing.rst
           doc/src/tutorials/intro-tutorial/
-        env:
-          SYMPY_GROUND_TYPES: flint
 
 
   # -------------------- FLINT+gmpy2 ------------------------------ #
@@ -305,30 +297,40 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
+          # gmpy2 is not yet available for Python 3.12
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pip install python-flint gmpy2
+      - run: pip install python-flint==0.6 gmpy2
       # Test the modules that most directly use python-flint
       - run: pytest sympy/polys sympy/ntheory sympy/matrices
         env:
           SYMPY_GROUND_TYPES: flint
-      - run: bin/doctest                                  \
-                    sympy/integrals                       \
-                    sympy/holonomic                       \
-                    sympy/matrices                        \
-                    sympy/ntheory                         \
-                    sympy/polys                           \
-                    sympy/printing                        \
-                    doc/src/modules/integrals             \
-                    doc/src/modules/holonomic             \
-                    doc/src/modules/matrices              \
-                    doc/src/modules/ntheory.rst           \
-                    doc/src/modules/polys                 \
-                    doc/src/modules/printing.rst          \
-                    doc/src/tutorials/intro-tutorial/     \
-        env:
-          SYMPY_GROUND_TYPES: flint
+      # Test the modules that most directly use python-flint
+      - run: >-
+          pytest
+          sympy/crypto
+          sympy/integrals
+          sympy/holonomic
+          sympy/matrices
+          sympy/ntheory
+          sympy/polys
+          sympy/solvers
+      - run: >-
+          bin/doctest
+          sympy/integrals
+          sympy/holonomic
+          sympy/matrices
+          sympy/ntheory
+          sympy/polys
+          sympy/printing
+          doc/src/modules/integrals
+          doc/src/modules/holonomic
+          doc/src/modules/matrices
+          doc/src/modules/ntheory.rst
+          doc/src/modules/polys
+          doc/src/modules/printing.rst
+          doc/src/tutorials/intro-tutorial/
 
 
   # -------------------- Tensorflow tests -------------------------- #
@@ -378,8 +380,6 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
 
     steps:
       - uses: actions/checkout@v3
@@ -388,7 +388,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
+      - run: pytest -m slow --timeout 595 -n auto
 
   # -------------------- Test older (and newer) Python --------------- #
 
@@ -401,9 +401,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
-        group: [1, 2, 3, 4]
 
-    name: ${{ matrix.python-version }} ${{ matrix.group }}/4 Tests
+    name: ${{ matrix.python-version }} Tests
 
     steps:
       - uses: actions/checkout@v3
@@ -412,7 +411,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4
+      - run: pytest -n auto
 
   # -------------------- Doctests older (and newer) Python --------------------- #
 
@@ -460,7 +459,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4
+      - run: pytest -n auto
 
   # -------------------- Build the html/latex docs ----------------- #
 
@@ -543,7 +542,7 @@ jobs:
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
       - run: git fetch upstream master
-      - run: git fetch upstream 1.12
+      - run: git fetch upstream 1.13
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -555,8 +554,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # This workflow does not have write permissions for the repository so
         # we save all outputs as artifacts that can be accessed by the

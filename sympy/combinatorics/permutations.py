@@ -2127,7 +2127,7 @@ class Permutation(Atom):
         pos = [i for i in range(len(a) - 1) if a[i] > a[i + 1]]
         return pos
 
-    def max(self):
+    def max(self) -> int:
         """
         The maximum element moved by the permutation.
 
@@ -2144,14 +2144,12 @@ class Permutation(Atom):
 
         min, descents, ascents, inversions
         """
-        max = 0
         a = self.array_form
-        for i in range(len(a)):
-            if a[i] != i and a[i] > max:
-                max = a[i]
-        return max
+        if not a:
+            return 0
+        return max(_a for i, _a in enumerate(a) if _a != i)
 
-    def min(self):
+    def min(self) -> int:
         """
         The minimum element moved by the permutation.
 
@@ -2169,11 +2167,9 @@ class Permutation(Atom):
         max, descents, ascents, inversions
         """
         a = self.array_form
-        min = len(a)
-        for i in range(len(a)):
-            if a[i] != i and a[i] < min:
-                min = a[i]
-        return min
+        if not a:
+            return 0
+        return min(_a for i, _a in enumerate(a) if _a != i)
 
     def inversions(self):
         """
@@ -2430,7 +2426,7 @@ class Permutation(Atom):
         """
         a = self.array_form
 
-        return sum([j for j in range(len(a) - 1) if a[j] > a[j + 1]])
+        return sum(j for j in range(len(a) - 1) if a[j] > a[j + 1])
 
     def runs(self):
         """
@@ -2829,7 +2825,7 @@ class Permutation(Atom):
         b = other.array_form
         if len(a) != len(b):
             raise ValueError("The permutations must be of the same size.")
-        return sum([abs(a[i] - b[i]) for i in range(len(a))])
+        return sum(abs(a[i] - b[i]) for i in range(len(a)))
 
     @classmethod
     def josephus(cls, m, n, s=1):
