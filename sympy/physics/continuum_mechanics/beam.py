@@ -242,6 +242,24 @@ class Beam:
         return self._ild_reactions
 
     @property
+    def ild_rotation_jumps(self):
+        """
+        Returns the I.L.D. rotation jumps in rotation hinges in a dictionary.
+        The rotation jump is the rotation (in radian) in a rotation hinge. This can
+        be seen as a jump in the slope plot.
+        """
+        return self._ild_rotations_jumps
+
+    @property
+    def ild_deflection_jumps(self):
+        """
+        Returns the I.L.D. deflection jumps in sliding hinges in a dictionary.
+        The deflection jump is the deflection (in meters) in a sliding hinge.
+        This can be seen as a jump in the deflection plot.
+        """
+        return self._ild_deflection_jumps
+
+    @property
     def ild_moment(self):
         """ Returns the I.L.D. moment equation."""
         return self._ild_moment
@@ -1784,8 +1802,6 @@ class Beam:
         copy of the load equation and uses it to calculate shear force and bending
         moment equations.
         """
-        if self._applied_rotation_hinges or self._applied_sliding_hinges:
-            raise NotImplementedError("I.L.D. calculations are not implemented for beams with hinges.")
         x = self.variable
         a = Symbol('a', positive=True)
         load = self._load + value * SingularityFunction(x, a, -1)
@@ -1839,31 +1855,56 @@ class Beam:
         l = self.length
         a = Symbol('a', positive=True)
 
+        rotation_jumps = tuple(self._rotation_hinge_symbols)
+        deflection_jumps = tuple(self._sliding_hinge_symbols)
+
         C3 = Symbol('C3')
         C4 = Symbol('C4')
 
         shear_curve = limit(shear_force, x, l) - value
         moment_curve = limit(bending_moment, x, l) - value*(l-a)
 
+        shear_force_eqs = []
+        bending_moment_eqs = []
         slope_eqs = []
         deflection_eqs = []
 
+        for position, val in self._boundary_conditions['shear_force']:
+            eqs = self.shear_force().subs(x, position) - val
+            eqs_without_inf = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
+            shear_sinc = value - value * SingularityFunction(a, position, 0)
+            eqs_with_shear_sinc = eqs_without_inf - shear_sinc
+            shear_force_eqs.append(eqs_with_shear_sinc)
+
+        for position, val in self._boundary_conditions['bending_moment']:
+            eqs = self.bending_moment().subs(x, position) - val
+            eqs_without_inf = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
+            moment_sinc = value * (position - a) - value * (position - a) * SingularityFunction(a, position, 0)
+            eqs_with_moment_sinc = eqs_without_inf - moment_sinc
+            bending_moment_eqs.append(eqs_with_moment_sinc)
+
         slope_curve = integrate(bending_moment, x) + C3
-        for position, value in self._boundary_conditions['slope']:
-            eqs = slope_curve.subs(x, position) - value
+        for position, val in self._boundary_conditions['slope']:
+            eqs = slope_curve.subs(x, position) - val
             slope_eqs.append(eqs)
 
         deflection_curve = integrate(slope_curve, x) + C4
-        for position, value in self._boundary_conditions['deflection']:
-            eqs = deflection_curve.subs(x, position) - value
+        for position, val in self._boundary_conditions['deflection']:
+            eqs = deflection_curve.subs(x, position) - val
             deflection_eqs.append(eqs)
 
-        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions).args)[0])
-        solution = solution[2:]
+        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
+                                  + deflection_eqs, (C3, C4) + reactions + rotation_jumps + deflection_jumps).args)[0])
 
-        # Determining the equations and solving them.
-        self._ild_reactions = dict(zip(reactions, solution))
+        reaction_index = 2 + len(reactions)
+        rotation_index = reaction_index + len(rotation_jumps)
+        reaction_solution = solution[2:reaction_index]
+        rotation_solution = solution[reaction_index:rotation_index]
+        deflection_solution = solution[rotation_index:]
+
+        self._ild_reactions = dict(zip(reactions, reaction_solution))
+        self._ild_rotations_jumps = dict(zip(rotation_jumps, rotation_solution))
+        self._ild_deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
 
     def plot_ild_reactions(self, subs=None):
         """
