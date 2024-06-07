@@ -5,7 +5,7 @@ to 2D Cables.
 
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
-from sympy import sin, cos, pi, atan, diff, Piecewise, cosh, nsolve, asinh,solve
+from sympy import sin, cos, pi, atan, diff, Piecewise, cosh, nsolve, asinh, solve, rad
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solveset import linsolve
 from sympy.matrices import Matrix
@@ -593,6 +593,18 @@ class Cable:
         x = Symbol("x")
         annotations = []
         support_rectangles = self._draw_supports()
+
+        xmin = self._left_support[0]
+        xmax = self._right_support[0]
+        if(self._left_support[1]<self._right_support[1]):
+            ymin = self._left_support[1]
+            ymax = self.right_support[1]
+        else:
+            ymax = self._left_support[1]
+            ymin = self.right_support[1]
+
+        lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
+
         if len(self._loads_position) != 0:
             self._cable_eqn = self._draw_cable(-1)
             annotations += self._draw_loads(-1)
@@ -601,7 +613,7 @@ class Cable:
             self._cable_eqn = self._draw_cable(0)
             annotations += self._draw_loads(0)
 
-        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),rectangles=support_rectangles,show= False,annotations=annotations)
+        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),xlim=(xmin-0.05*lim, xmax*1.1), ylim=(xmin-0.05*lim, xmax*1.1),rectangles=support_rectangles,show= False,annotations=annotations, axis=False)
         return cab_plot
 
     def _draw_supports(self):
@@ -698,7 +710,33 @@ class Cable:
 
     def _draw_loads(self,order):
         if(order==-1):
-            pass
+            x_min = self._left_support[0]
+            xmax = self._right_support[0]
+            if(self._left_support[1]<self._right_support[1]):
+                y_min = self._left_support[1]
+                y_max = self.right_support[1]
+            else:
+                y_max = self._left_support[1]
+                y_min = self.right_support[1]
+
+            if abs(1.1*xmax-0.8*x_min)>abs(1.1*y_max-0.8*y_min):
+                max_diff = 1.1*xmax-0.8*x_min
+            else:
+                max_diff = 1.1*y_max-0.8*y_min
+
+            arrow_length = max_diff*0.05
+            force_arrows = []
+            for key in self._loads['point_load']:
+                force_arrows.append(
+                    {
+                        'text': '',
+                        'xy':(self._loads_position[key][0]+arrow_length*cos(rad(self._loads['point_load'][key][1])),self._loads_position[key][1] + arrow_length*sin(rad(self._loads['point_load'][key][1]))),
+                        'xytext': (self._loads_position[key][0],self._loads_position[key][1]),
+                        'arrowprops': {'width': 1.5, 'headlength':5, 'headwidth':5 , 'facecolor': 'black', }
+                    }
+                )
+            return force_arrows
+
         elif (order == 0):
             x = symbols('x')
             node_markers = []
