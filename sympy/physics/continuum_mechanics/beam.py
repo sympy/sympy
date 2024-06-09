@@ -1872,14 +1872,14 @@ class Beam:
         for position, val in self._boundary_conditions['shear_force']:
             eqs = self.shear_force().subs(x, position) - val
             eqs_without_inf = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
-            shear_sinc = value - value * SingularityFunction(a, position, 0)
+            shear_sinc = value * SingularityFunction(- a, - position, 0)
             eqs_with_shear_sinc = eqs_without_inf - shear_sinc
             shear_force_eqs.append(eqs_with_shear_sinc)
 
         for position, val in self._boundary_conditions['bending_moment']:
             eqs = self.bending_moment().subs(x, position) - val
             eqs_without_inf = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
-            moment_sinc = value * (position - a) - value * (position - a) * SingularityFunction(a, position, 0)
+            moment_sinc = value * SingularityFunction(- a, - position, 1)
             eqs_with_moment_sinc = eqs_without_inf - moment_sinc
             bending_moment_eqs.append(eqs_with_moment_sinc)
 
