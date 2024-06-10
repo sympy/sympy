@@ -16,7 +16,7 @@ class LazyExceptionMessage:
     error message that is only evaluated if the error is rendered."""
     callback: Callable[[], str]
 
-    def __init__(self, callback: Callable[[], str]): 
+    def __init__(self, callback: Callable[[], str]):
         self.callback = callback
 
     def __str__(self):
