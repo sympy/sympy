@@ -171,7 +171,7 @@ def _find_trivial_kronecker_products_broadcast(expr: ArrayTensorProduct):
     newargs: List[Basic] = []
     removed = []
     count_dims = 0
-    for i, arg in enumerate(expr.args):
+    for arg in expr.args:
         count_dims += get_rank(arg)
         shape = get_shape(arg)
         current_range = [count_dims-i for i in range(len(shape), 0, -1)]
@@ -443,7 +443,7 @@ def _(expr: PermuteDims):
     pinv = _af_invert(expr.permutation.array_form)
     shift = list(accumulate([1 if i in subremoved else 0 for i in range(len(p))]))
     premoved = [pinv[i] for i in subremoved]
-    p2 = [e - shift[e] for i, e in enumerate(p) if e not in subremoved]
+    p2 = [e - shift[e] for e in p if e not in subremoved]
     # TODO: check if subremoved should be permuted as well...
     newexpr = _permute_dims(subexpr, p2)
     premoved = sorted(premoved)

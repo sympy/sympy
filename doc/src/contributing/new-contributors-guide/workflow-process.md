@@ -598,18 +598,19 @@ Every author's name and email address is stored in the
 file should not be edited directly. The AUTHORS file is updated automatically
 when a new version of SymPy is released based on the name and email addresses
 that are recorded in the commits. Every commit made with git stores the name
-and email address that git is configured with (see "Configure git settings"
-above). The [.mailmap](https://github.com/sympy/sympy/blob/master/.mailmap)
+and email address that git is configured with (see [Configure git settings](#configure-git-settings)). The [.mailmap](https://github.com/sympy/sympy/blob/master/.mailmap)
 file is used to associate the name/email recorded in the commits with an
 author name and email address that will be listed in the AUTHORS file.
 
 The first time you make a pull request you will need to add your name and email address to the .mailmap file by adding a line like
 
 ```
-Joe Bloggs <joe@bloggs.com>
+Joe Bloggs <joe@bloggs.com>  joeb <joe@bloggs.com>
 ```
 
-This name and email should exactly match the name and email that you have configured with git before making the commits (see "Configure git settings" above). The `bin/mailmap_check.py` script can check that this has been done correctly. If you have made a commit but not yet added yourself to the .mailmap file then you will see this:
+This line in the .mailmap file associates the author name with the corresponding commits. The first name and email address is what will eventually go in the AUTHORS file. The second entry is what is recorded in the commit metadata. (see [Mapping user names to AUTHORS file entry](#mailmap-mapping-names))
+
+The commit metadata name and email should exactly match the name and email that you have configured with git before making the commits (see [Configure git settings](#configure-git-settings)). The `bin/mailmap_check.py` script can check that this has been done correctly. If you have made a commit but not yet added yourself to the .mailmap file then you will see this:
 
 ```bash
 $ python bin/mailmap_check.py
@@ -694,7 +695,9 @@ git add .mailmap
 git commit -m 'author: add Joe Bloggs to .mailmap'
 ```
 
-Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
+(mailmap-mapping-names)=
+### Mapping user names to AUTHORS file entry
+Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses or an author wishes to use a proper name that differs from their github name. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
 
 ```
 Joe Bloggs <joe@bloggs.com> joeb <wrong@email.com>

@@ -738,7 +738,8 @@ class MathematicaParser:
             else:
                 stack[-1].append(token)
             pointer += 1
-        assert len(stack) == 1
+        if len(stack) != 1:
+            raise RuntimeError("Stack should have only one element")
         return self._parse_after_braces(stack[0])
 
     def _util_remove_newlines(self, lines: list, tokens: list, inside_enclosure: bool):
@@ -875,14 +876,16 @@ class MathematicaParser:
                         else:
                             node.append(arg2)
                     elif op_type == self.PREFIX:
-                        assert grouping_strat is None
+                        if grouping_strat is not None:
+                            raise TypeError("'Prefix' op_type should not have a grouping strat")
                         if pointer == size - 1 or self._is_op(tokens[pointer + 1]):
                             tokens[pointer] = self._missing_arguments_default[token]()
                         else:
                             node.append(tokens.pop(pointer+1))
                             size -= 1
                     elif op_type == self.POSTFIX:
-                        assert grouping_strat is None
+                        if grouping_strat is not None:
+                            raise TypeError("'Prefix' op_type should not have a grouping strat")
                         if pointer == 0 or self._is_op(tokens[pointer - 1]):
                             tokens[pointer] = self._missing_arguments_default[token]()
                         else:

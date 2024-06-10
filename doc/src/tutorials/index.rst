@@ -17,22 +17,12 @@ If you are new to SymPy, start here.
 
    intro-tutorial/index.rst
 
-Biomechanics Tutorials
-======================
+:ref:`Physics Tutorial <physics_tutorials>`
+===========================================
+
+For physics features in SymPy, start here.
 
 .. toctree::
    :hidden:
 
-   biomechanics/biomechanics.rst
-   biomechanics/biomechanical-model-example.rst
-
-Duffing Spring Example
-======================
-.. toctree::
-   :hidden:
-
-   duffing-example.rst
-
-- :ref:`Introduction to Biomechanical Modeling <biomechanics-tutorial>`
-- :ref:`Biomechanical Model Example <biomechanical-model-example>`
-- :ref:`Duffing Spring Example <duffing-example>`
+   physics/index.rst

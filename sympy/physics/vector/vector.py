@@ -104,13 +104,13 @@ class Vector(Printable, EvalfMixin):
         if isinstance(other, Dyadic):
             other = _check_dyadic(other)
             ol = Vector(0)
-            for i, v in enumerate(other.args):
+            for v in other.args:
                 ol += v[0] * v[2] * (v[1].dot(self))
             return ol
         other = _check_vector(other)
         out = S.Zero
-        for i, v1 in enumerate(self.args):
-            for j, v2 in enumerate(other.args):
+        for v1 in self.args:
+            for v2 in other.args:
                 out += ((v2[0].T) * (v2[1].dcm(v1[1])) * (v1[0]))[0]
         if Vector.simp:
             return trigsimp(out, recursive=True)
@@ -205,8 +205,8 @@ class Vector(Printable, EvalfMixin):
         from sympy.physics.vector.dyadic import Dyadic
         other = _check_vector(other)
         ol = Dyadic(0)
-        for i, v in enumerate(self.args):
-            for i2, v2 in enumerate(other.args):
+        for v in self.args:
+            for v2 in other.args:
                 # it looks this way because if we are in the same frame and
                 # use the enumerate function on the same frame in a nested
                 # fashion, then bad things happen

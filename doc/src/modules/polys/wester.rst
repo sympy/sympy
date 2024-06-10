@@ -22,7 +22,7 @@ computations were done using the following setup::
 
     >>> from sympy import *
 
-    >>> init_printing(use_unicode=True, wrap_line=False)
+    >>> init_printing(use_unicode=True)
 
     >>> var('x,y,z,s,c')
     (x, y, z, s, c)
