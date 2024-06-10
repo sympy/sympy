@@ -933,11 +933,9 @@ def test_dummification():
 def test_lambdify__arguments_with_invalid_python_identifiers():
     # see sympy/sympy#26690
     N = CoordSys3D('N')
-    #i, j = N.base_vectors()
     xn, yn, zn = N.base_scalars()
     expr = xn + yn
     f = lambdify([xn, yn], expr)
-    print(f.__doc__)
     res = f(0.2, 0.3)
     ref = 0.2 + 0.3
     assert abs(res-ref) < 1e-15
@@ -1288,7 +1286,6 @@ def test_lambdify_Derivative_zeta():
 
 
 def test_lambdify_Derivative_custom_printer():
-
     func1 = Function('func1')
     func2 = Function('func2')
 
@@ -1300,7 +1297,6 @@ def test_lambdify_Derivative_custom_printer():
             return '42'
 
     expr1 = func1(x).diff(x)
-
     raises(PrintMethodNotImplementedError, lambda: lambdify([x], expr1))
     f1 = lambdify([x], expr1, printer=MyPrinter)
     assert f1(7) == 42
