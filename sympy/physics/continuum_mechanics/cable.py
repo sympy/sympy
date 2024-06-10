@@ -613,7 +613,7 @@ class Cable:
             self._cable_eqn = self._draw_cable(0)
             annotations += self._draw_loads(0)
 
-        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),xlim=(xmin-0.05*lim, xmax*1.1), ylim=(xmin-0.05*lim, xmax*1.1),rectangles=support_rectangles,show= False,annotations=annotations, axis=False)
+        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),rectangles=support_rectangles,show= False,annotations=annotations, axis=False)
         return cab_plot
 
     def _draw_supports(self):
@@ -723,16 +723,22 @@ class Cable:
                         'arrowprops': {'width': 1.5, 'headlength':5, 'headwidth':5 , 'facecolor': 'black', }
                     }
                 )
+                force_arrows.append(
+                    {
+                        'text':f'{self._loads['point_load'][key][0]} N',
+                        'xy': (self._loads_position[key][0]+arrow_length*1.6*cos(rad(self._loads['point_load'][key][1])),self._loads_position[key][1] + arrow_length*1.6*sin(rad(self._loads['point_load'][key][1]))),
+                    }
+                )
             return force_arrows
 
         elif (order == 0):
             x = symbols('x')
-            node_markers = []
+            force_arrows = []
             diff_force_height = max(abs(self._left_support[1]-self._right_support[1]),abs(self._left_support[0]-self._right_support[0]))*0.03
             x_val = [self._left_support[0] + ((self._right_support[0]-self._left_support[0])/10)*i for i in range(1,10)]
             print(x_val)
             for i in x_val:
-                node_markers.append(
+                force_arrows.append(
                     {
                         'text':'',
                         'xy':(
@@ -746,4 +752,11 @@ class Cable:
                         'arrowprops':{'width':diff_force_height*0.3, 'headlength':diff_force_height, 'headwidth':diff_force_height, 'facecolor':'black'}
                     }
                 )
-            return node_markers
+            for key in self._loads['distributed']:
+                force_arrows.append(
+                    {
+                        'text':f'{self._loads['distributed'][key]} N/m',
+                        'xy':(self._lowest_x_global,self._cable_eqn[1].subs(x,self._lowest_x_global)+diff_force_height)
+                    }
+                )
+            return force_arrows
