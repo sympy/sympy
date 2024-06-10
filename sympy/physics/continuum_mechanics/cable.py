@@ -5,7 +5,7 @@ to 2D Cables.
 
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
-from sympy import sin, cos, pi, atan, diff, Piecewise, cosh, nsolve, asinh, solve, rad
+from sympy import sin, cos, pi, atan, diff, Piecewise, solve, rad
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solveset import linsolve
 from sympy.matrices import Matrix
@@ -594,17 +594,6 @@ class Cable:
         annotations = []
         support_rectangles = self._draw_supports()
 
-        xmin = self._left_support[0]
-        xmax = self._right_support[0]
-        if(self._left_support[1]<self._right_support[1]):
-            ymin = self._left_support[1]
-            ymax = self.right_support[1]
-        else:
-            ymax = self._left_support[1]
-            ymin = self.right_support[1]
-
-        lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
-
         if len(self._loads_position) != 0:
             self._cable_eqn = self._draw_cable(-1)
             annotations += self._draw_loads(-1)
@@ -678,7 +667,7 @@ class Cable:
         elif order == 0:
             x1,y1 = self._left_support
             x2,y2 = self._right_support
-            x0,y0 = self._lowest_x_global , self._lowest_y_global
+            x0 = self._lowest_x_global
 
             span = float(x2-x1)
             height_diff = float(abs(y2-y1))
