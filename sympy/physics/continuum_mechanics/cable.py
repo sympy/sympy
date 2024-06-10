@@ -712,9 +712,10 @@ class Cable:
                         'arrowprops': {'width': 1.5, 'headlength':5, 'headwidth':5 , 'facecolor': 'black', }
                     }
                 )
+                mag = self._loads['point_load'][key][0]
                 force_arrows.append(
                     {
-                        'text':f'{self._loads['point_load'][key][0]} N',
+                        'text':f'{mag} N',
                         'xy': (self._loads_position[key][0]+arrow_length*1.6*cos(rad(self._loads['point_load'][key][1])),self._loads_position[key][1] + arrow_length*1.6*sin(rad(self._loads['point_load'][key][1]))),
                     }
                 )
@@ -742,9 +743,10 @@ class Cable:
                     }
                 )
             for key in self._loads['distributed']:
+                mag = self._loads['distributed'][key]
                 force_arrows.append(
                     {
-                        'text':f'{self._loads['distributed'][key]} N/m',
+                        'text':f'{mag} N/m',
                         'xy':(self._lowest_x_global,self._cable_eqn[1].subs(x,self._lowest_x_global)+diff_force_height)
                     }
                 )
