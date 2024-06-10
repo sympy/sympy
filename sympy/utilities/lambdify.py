@@ -1122,7 +1122,7 @@ class _EvaluatorPrinter:
             #    dummyrepr = printer._print_Dummy
 
         # Used to print the generated function arguments in a standard way
-        self._argrepr = LambdaPrinter().doprint
+        self._argrepr = LambdaPrinter({'strict': False}).doprint
 
     def doprint(self, funcname, args, expr, *, cses=()):
         """
