@@ -2023,7 +2023,7 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
-            Piecewise((a/8, a < 4), (a/8 - 1, a > 4))
+            a/8 - SingularityFunction(a, 4, 0)
 
         """
 
@@ -2040,7 +2040,7 @@ class Beam:
             shear_curve1 = shear_curve1.subs(reaction,self._ild_reactions[reaction])
             shear_curve2 = shear_curve2.subs(reaction,self._ild_reactions[reaction])
 
-        shear_eq = Piecewise((shear_curve1, a < distance), (shear_curve2, a > distance))
+        shear_eq = shear_curve1 - (shear_curve1 - shear_curve2) * SingularityFunction(a, distance, 0)
 
         self._ild_shear = shear_eq
 
@@ -2083,10 +2083,10 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
-            Piecewise((a/8, a < 4), (a/8 - 1, a > 4))
+            a/8 - SingularityFunction(a, 4, 0)
             >>> b.plot_ild_shear()
             Plot object containing:
-            [0]: cartesian line: Piecewise((a/8, a < 4), (a/8 - 1, a > 4)) for a over (0.0, 12.0)
+            [0]: cartesian line: a/8 - SingularityFunction(a, 4, 0) for a over (0.0, 12.0)
 
         """
 
@@ -2151,7 +2151,7 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
-            Piecewise((-a/2, a < 4), (a/2 - 4, a > 4))
+            -a/2 - (4 - a)*SingularityFunction(a, 4, 0)
 
         """
 
@@ -2168,7 +2168,8 @@ class Beam:
             moment_curve1 = moment_curve1.subs(reaction, self._ild_reactions[reaction])
             moment_curve2 = moment_curve2.subs(reaction, self._ild_reactions[reaction])
 
-        moment_eq = Piecewise((moment_curve1, a < distance), (moment_curve2, a > distance))
+        moment_eq = moment_curve1 - (moment_curve1 - moment_curve2) * SingularityFunction(a, distance, 0)
+
         self._ild_moment = moment_eq
 
     def plot_ild_moment(self,subs=None):
@@ -2210,10 +2211,10 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
-            Piecewise((-a/2, a < 4), (a/2 - 4, a > 4))
+            -a/2 - (4 - a)*SingularityFunction(a, 4, 0)
             >>> b.plot_ild_moment()
             Plot object containing:
-            [0]: cartesian line: Piecewise((-a/2, a < 4), (a/2 - 4, a > 4)) for a over (0.0, 12.0)
+            [0]: cartesian line: -a/2 - (4 - a)*SingularityFunction(a, 4, 0) for a over (0.0, 12.0)
 
         """
 

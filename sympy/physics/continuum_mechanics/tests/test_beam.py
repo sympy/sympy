@@ -800,8 +800,9 @@ def test_solve_for_ild_shear():
     rL = b.apply_support(L1 + L2, type="pin")
     b.solve_for_ild_reactions(F, r0, rL)
     b.solve_for_ild_shear(L1, F, r0, rL)
-    assert b.ild_shear == Piecewise((-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2) + F, L1 > a),
-                                    (F*a/(L1 + L2) - F, L1 < a))
+    expected_shear = (-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2) + F
+            - (-F*L1/(L1 + L2) - F*L2/(L1 + L2) + 2*F)*SingularityFunction(a, L1, 0))
+    assert b.ild_shear.expand() == expected_shear.expand()
 
     E = Symbol('E')
     I = Symbol('I')
@@ -812,14 +813,10 @@ def test_solve_for_ild_shear():
     r20, m20 = b.apply_support(20, type="fixed")
     b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
     b.solve_for_ild_shear(6, 1, r0, r5, r10, r20, m20)
-    assert b.ild_shear == Piecewise((-17*SingularityFunction(5, a, 3)/2375
-                                     + 59*SingularityFunction(10, a, 3)/9500
-                                     + 3*SingularityFunction(20, a, 2)/190
-                                     - 3*SingularityFunction(20, a, 3)/1900 + 1, a < 6),
-                                    (-17*SingularityFunction(5, a, 3)/2375
-                                     + 59*SingularityFunction(10, a, 3)/9500
-                                     + 3*SingularityFunction(20, a, 2)/190
-                                     - 3*SingularityFunction(20, a, 3)/1900, a > 6))
+    expected_shear = (-17*SingularityFunction(5, a, 3)/2375 + 59*SingularityFunction(10, a, 3)/9500
+                      + 3*SingularityFunction(20, a, 2)/190 - 3*SingularityFunction(20, a, 3)/1900
+                      - SingularityFunction(a, 6, 0) + 1)
+    assert b.ild_shear.expand() == expected_shear.expand()
 
 def test_solve_for_ild_moment():
     E = Symbol('E')
@@ -833,8 +830,10 @@ def test_solve_for_ild_moment():
     rL = b.apply_support(L1 + L2, type="pin")
     b.solve_for_ild_reactions(F, r0, rL)
     b.solve_for_ild_moment(L1, F, r0, rL)
-    assert b.ild_moment == Piecewise((F*(L1 - a) + L1*(-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2)), L1 > a),
-                                     (-F*(L1 + L2 - a) - L2*(-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2)), L1 < a))
+    expected_moment = (F*(L1 - a) + L1*(-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2))
+                       - (F*(L1 - a) + F*(L1 + L2 - a) + L1*(-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2))
+                          + L2*(-F*L1/(L1 + L2) - F*L2/(L1 + L2) + F*a/(L1 + L2)))*SingularityFunction(a, L1, 0))
+    assert b.ild_moment.expand() == expected_moment.expand()
 
     E = Symbol('E')
     I = Symbol('I')
@@ -845,14 +844,10 @@ def test_solve_for_ild_moment():
     r20, m20 = b.apply_support(20, type="fixed")
     b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
     b.solve_for_ild_moment(5, 1, r0, r5, r10, r20, m20)
-    assert b.ild_moment == Piecewise((-a + 11*SingularityFunction(5, a, 3)/475
-                                      - 27*SingularityFunction(10, a, 3)/1900
-                                      - 3*SingularityFunction(20, a, 2)/190
-                                      + 3*SingularityFunction(20, a, 3)/1900 + 5, a < 5),
-                                     (11*SingularityFunction(5, a, 3)/475
-                                      - 27*SingularityFunction(10, a, 3)/1900
-                                      - 3*SingularityFunction(20, a, 2)/190
-                                      + 3*SingularityFunction(20, a, 3)/1900, a > 5))
+    expected_moment = (-a - (5 - a)*SingularityFunction(a, 5, 0) + 11*SingularityFunction(5, a, 3)/475
+                       - 27*SingularityFunction(10, a, 3)/1900 - 3*SingularityFunction(20, a, 2)/190
+                       + 3*SingularityFunction(20, a, 3)/1900 + 5)
+    assert b.ild_moment.expand() == expected_moment.expand()
 
 def test_ild_with_rotation_hinge():
     E = Symbol('E')
@@ -876,24 +871,22 @@ def test_ild_with_rotation_hinge():
             + F*L3*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3))
     assert b.ild_reactions[r2] == F*L1/L3 + F*L2/L3 - F*a/L3 - F*SingularityFunction(-a, -L1 - L2, 1)/L3
     b.solve_for_ild_shear(L1, F, r0, r1, r2)
-    assert b.ild_shear == Piecewise((F - F*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2), L1 > a),
-                                    (F*L1**2/(L1*L3 + L2*L3) + 2*F*L1*L2/(L1*L3 + L2*L3) + F*L1*L3/(L1*L3 + L2*L3)
-                                     - F*L1*a/(L1*L3 + L2*L3)
-                                     - F*L1*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3)
-                                     - F*L1/L3 + F*L2**2/(L1*L3 + L2*L3) + F*L2*L3/(L1*L3 + L2*L3) - F*L2*a/(L1*L3 + L2*L3)
-                                     - F*L2*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3)
-                                     - F*L2/L3 - F*L3*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3)
-                                     - F + F*a/L3 + F*SingularityFunction(-a, -L1 - L2, 1)/L3, L1 < a))
+    assert (b.ild_shear == F - F*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2)
+            - (-F*L1**2/(L1*L3 + L2*L3) - 2*F*L1*L2/(L1*L3 + L2*L3) - F*L1*L3/(L1*L3 + L2*L3) + F*L1*a/(L1*L3 + L2*L3)
+               + F*L1*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3) + F*L1/L3 - F*L2**2/(L1*L3 + L2*L3)
+               - F*L2*L3/(L1*L3 + L2*L3) + F*L2*a/(L1*L3 + L2*L3) + F*L2*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3)
+               + F*L2/L3 + F*L3*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3) + 2*F
+               - F*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2)
+               - F*a/L3 - F*SingularityFunction(-a, -L1 - L2, 1)/L3)*SingularityFunction(a, L1, 0))
     b.solve_for_ild_moment(L1, F, r0, r1, r2)
-    assert b.ild_moment == Piecewise((-F*L1*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2) + F*(L1 - a), L1 > a),
-                                     (F*L2*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2)
-                                      + F*L3*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2)
-                                      - F*(L1 + L2 + L3 - a)
-                                      - L3*(-F*L1**2/(L1*L3 + L2*L3) - 2*F*L1*L2/(L1*L3 + L2*L3) - F*L1*L3/(L1*L3 + L2*L3)
-                                            + F*L1*a/(L1*L3 + L2*L3) + F*L1*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3)
-                                            - F*L2**2/(L1*L3 + L2*L3) - F*L2*L3/(L1*L3 + L2*L3) + F*L2*a/(L1*L3 + L2*L3)
-                                            + F*L2*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3)
-                                            + F*L3*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3)), L1 < a))
+    assert (b.ild_moment == -F*L1*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2) + F*(L1 - a)
+            - (-F*L1*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2) - F*L2*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2)
+               - F*L3*SingularityFunction(-a, -L1 - L2, 1)/(L1 + L2) + F*(L1 - a) + F*(L1 + L2 + L3 - a)
+               + L3*(-F*L1**2/(L1*L3 + L2*L3) - 2*F*L1*L2/(L1*L3 + L2*L3) - F*L1*L3/(L1*L3 + L2*L3) + F*L1*a/(L1*L3 + L2*L3)
+                     + F*L1*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3) - F*L2**2/(L1*L3 + L2*L3)
+                     - F*L2*L3/(L1*L3 + L2*L3) + F*L2*a/(L1*L3 + L2*L3)
+                     + F*L2*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3)
+                     + F*L3*SingularityFunction(-a, -L1 - L2, 1)/(L1*L3 + L2*L3)))*SingularityFunction(a, L1, 0))
 
 def test_ild_with_sliding_hinge():
     a = Symbol('a', positive=True)
@@ -917,17 +910,13 @@ def test_ild_with_sliding_hinge():
             - 3*SingularityFunction(13, a, 2)/80000 + 3*SingularityFunction(13, a, 3)/560000
             - 27*SingularityFunction(-a, -3, 0)/8000)
     b.solve_for_ild_shear(7, 1, r0, r6, r13, m13)
-    assert b.ild_shear == Piecewise((-SingularityFunction(6, a, 3)/686 - 3*SingularityFunction(13, a, 2)/98
-                                     + SingularityFunction(13, a, 3)/686
-                                     + 9*SingularityFunction(-a, -3, 0)/7 + 1, a < 7),
-                                    (-SingularityFunction(6, a, 3)/686 - 3*SingularityFunction(13, a, 2)/98
-                                     + SingularityFunction(13, a, 3)/686 + 9*SingularityFunction(-a, -3, 0)/7, a > 7))
+    assert (b.ild_shear == -SingularityFunction(6, a, 3)/686 - 3*SingularityFunction(13, a, 2)/98
+            + SingularityFunction(13, a, 3)/686 + 9*SingularityFunction(-a, -3, 0)/7
+            - SingularityFunction(a, 7, 0) + 1)
     b.solve_for_ild_moment(8, 1, r0, r6, r13, m13)
-    assert b.ild_moment == Piecewise((-a - SingularityFunction(6, a, 3)/343 - 3*SingularityFunction(13, a, 2)/49
-                                      + SingularityFunction(13, a, 3)/343
-                                      - 24*SingularityFunction(-a, -3, 0)/7 + 8, a < 8),
-                                     (-SingularityFunction(6, a, 3)/343 - 3*SingularityFunction(13, a, 2)/49
-                                      + SingularityFunction(13, a, 3)/343 - 24*SingularityFunction(-a, -3, 0)/7, a > 8))
+    assert (b.ild_moment == -a - (8 - a)*SingularityFunction(a, 8, 0) - SingularityFunction(6, a, 3)/343
+            - 3*SingularityFunction(13, a, 2)/49 + SingularityFunction(13, a, 3)/343
+            - 24*SingularityFunction(-a, -3, 0)/7 + 8)
 
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
