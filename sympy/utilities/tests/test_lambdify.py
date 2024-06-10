@@ -36,6 +36,7 @@ from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import numbered_symbols
+from sympy.vector import CoordSys3D
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
@@ -926,6 +927,19 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(F(t) * G(t), F(t) * G(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
+
+
+def test_lambdify__arguments_with_invalid_python_identifiers():
+    # see sympy/sympy#26690
+    N = CoordSys3D('N')
+    #i, j = N.base_vectors()
+    xn, yn, zn = N.base_scalars()
+    expr = xn + yn
+    f = lambdify([xn, yn], expr)
+    print(f.__doc__)
+    res = f(0.2, 0.3)
+    ref = 0.2 + 0.3
+    assert abs(res-ref) < 1e-15
 
 
 def test_curly_matrix_symbol():
