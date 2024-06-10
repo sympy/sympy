@@ -1136,9 +1136,10 @@ class _EvaluatorPrinter:
             args = [args]
 
         if cses:
+            cses = list(cses)
             subvars, subexprs = zip(*cses)
             exprs = [expr] + list(subexprs)
-            argstrs, exprs = self._preprocess(args, exprs)
+            argstrs, exprs = self._preprocess(args, exprs, cses=cses)
             expr, subexprs = exprs[0], exprs[1:]
             cses = zip(subvars, subexprs)
         else:
@@ -1184,7 +1185,7 @@ class _EvaluatorPrinter:
         return isinstance(ident, str) and ident.isidentifier() \
                 and not keyword.iskeyword(ident)
 
-    def _preprocess(self, args, expr):
+    def _preprocess(self, args, expr, cses=(), _dummies_dict=None):
         """Preprocess args, expr to replace arguments that do not map
         to valid Python identifiers.
 
@@ -1204,9 +1205,18 @@ class _EvaluatorPrinter:
             isinstance(arg, Dummy) for arg in flatten(args))
 
         argstrs = [None]*len(args)
+        if _dummies_dict is None:
+            _dummies_dict = {}
+
+        def update_dummies(arg, dummy):
+            _dummies_dict[arg] = dummy
+            for repl, sub in cses:
+                arg = arg.xreplace({sub: repl})
+                _dummies_dict[arg] = dummy
+
         for arg, i in reversed(list(ordered(zip(args, range(len(args)))))):
             if iterable(arg):
-                s, expr = self._preprocess(arg, expr)
+                s, expr = self._preprocess(arg, expr, cses=cses, _dummies_dict=_dummies_dict)
             elif isinstance(arg, DeferredVector):
                 s = str(arg)
             elif isinstance(arg, Basic) and arg.is_symbol:
@@ -1217,11 +1227,13 @@ class _EvaluatorPrinter:
                         dummy = uniquely_named_symbol(
                             dummy.name, expr, modify=lambda s: '_' + s)
                     s = self._argrepr(dummy)
-                    expr = self._subexpr(expr, {arg: dummy})
+                    update_dummies(arg, dummy)
+                    expr = self._subexpr(expr, _dummies_dict)
             elif dummify or isinstance(arg, (Function, Derivative)):
                 dummy = Dummy()
                 s = self._argrepr(dummy)
-                expr = self._subexpr(expr, {arg: dummy})
+                update_dummies(arg, dummy)
+                expr = self._subexpr(expr, _dummies_dict)
             else:
                 s = str(arg)
             argstrs[i] = s
