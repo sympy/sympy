@@ -46,6 +46,7 @@ from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
     assoc_legendre, assoc_laguerre, jacobi
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
+from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.numpy import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
@@ -1284,6 +1285,28 @@ def test_lambdify_Derivative_zeta():
     ans = f(2)
     ref = (zeta(2+1e-8).evalf()-zeta(2).evalf())/1e-8
     assert abs(ans - ref)/abs(ref) < 1e-7
+
+
+def test_lambdify_Derivative_custom_printer():
+
+    func1 = Function('func1')
+    func2 = Function('func2')
+
+    class MyPrinter(NumPyPrinter):
+
+        def _print_Derivative_func1(self, args, seq_orders):
+            arg, = args
+            order, = seq_orders
+            return '42'
+
+    expr1 = func1(x).diff(x)
+
+    raises(PrintMethodNotImplementedError, lambda: lambdify([x], expr1))
+    f1 = lambdify([x], expr1, printer=MyPrinter)
+    assert f1(7) == 42
+
+    expr2 = func2(x).diff(x)
+    raises(PrintMethodNotImplementedError, lambda: lambdify([x], expr2, printer=MyPrinter))
 
 
 def test_imag_real():
