@@ -197,7 +197,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - zero for `m_1 + m_2 + m_3 \neq 0`
 
     - zero for violating any one of the conditions
-      `j_1 \ge |m_1|`,  `j_2 \ge |m_2|`,  `j_3 \ge |m_3|`
+         `m_1  \in \{-|j_1|, \ldots, |j_1|\}`,
+         `m_2  \in \{-|j_2|, \ldots, |j_2|\}`,
+         `m_3  \in \{-|j_3|, \ldots, |j_3|\}`
 
     Algorithm
     =========
@@ -229,6 +231,10 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     if a3 < 0:
         return S.Zero
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
+        return S.Zero
+    if not (int_valued(j_1 - m_1) and \
+            int_valued(j_2 - m_2) and \
+            int_valued(j_3 - m_3)):
         return S.Zero
 
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),

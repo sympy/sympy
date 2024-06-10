@@ -1101,6 +1101,50 @@ class DomainMatrix:
         """
         return cls.from_rep(SDM.from_dok(dok, shape, domain))
 
+    def iter_values(self):
+        """
+        Iterate over nonzero elements of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> list(A.iter_values())
+        [1, 3, 4]
+
+        See Also
+        ========
+
+        iter_items
+        to_list_flat
+        sympy.matrices.matrixbase.MatrixBase.iter_values
+        """
+        return self.rep.iter_values()
+
+    def iter_items(self):
+        """
+        Iterate over indices and values of nonzero elements of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> list(A.iter_items())
+        [((0, 0), 1), ((1, 0), 3), ((1, 1), 4)]
+
+        See Also
+        ========
+
+        iter_values
+        to_dok
+        sympy.matrices.matrixbase.MatrixBase.iter_items
+        """
+        return self.rep.iter_items()
+
     def nnz(self):
         """
         Number of nonzero elements in the matrix.

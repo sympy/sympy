@@ -149,20 +149,8 @@ def _pivot(M, i, j):
 
 def _choose_pivot_row(A, B, candidate_rows, pivot_col, Y):
     # Choose row with smallest ratio
-    first_row = candidate_rows[0]
-    min_ratio = B[first_row] / A[first_row, pivot_col]
-    min_rows = [first_row]
-    for i in candidate_rows[1:]:
-        ratio = B[i] / A[i, pivot_col]
-        if ratio < min_ratio:
-            min_ratio = ratio
-            min_rows = [i]
-        elif ratio == min_ratio:
-            min_rows.append(i)
-
     # If there are ties, pick using Bland's rule
-    _, row = min((Y[i], i) for i in min_rows)
-    return row
+    return min(candidate_rows, key=lambda i: (B[i] / A[i, pivot_col], Y[i]))
 
 
 def _simplex(A, B, C, D=None, dual=False):

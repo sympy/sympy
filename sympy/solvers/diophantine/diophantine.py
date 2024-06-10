@@ -417,7 +417,7 @@ class Linear(DiophantineEquationType):
         for Ai, Bi in zip(A, B):
             tot_x, tot_y = [], []
 
-            for j, arg in enumerate(Add.make_args(c)):
+            for arg in Add.make_args(c):
                 if arg.is_Integer:
                     # example: 5 -> k = 5
                     k, p = arg, S.One
@@ -836,15 +836,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
         if not any(coeff[i**2] for i in var):
             if coeff[x*z]:
                 sols = diophantine(coeff[x*y]*x + coeff[y*z]*z - x*z)
-                s = sols.pop()
-                min_sum = abs(s[0]) + abs(s[1])
-
-                for r in sols:
-                    m = abs(r[0]) + abs(r[1])
-                    if m < min_sum:
-                        s = r
-                        min_sum = m
-
+                s = min(sols, key=lambda r: abs(r[0]) + abs(r[1]))
                 result.add(_remove_gcd(s[0], -coeff[x*z], s[1]))
                 return result
 

@@ -874,7 +874,7 @@ class PermutationGroup(Basic):
         base = self.base
         base_ordering = _base_ordering(base, self.degree)
         def step(l, x):
-            gamma = sorted(orbits[l], key = lambda y: base_ordering[y^x])[0]
+            gamma = min(orbits[l], key = lambda y: base_ordering[y^x])
             i = [base[l]^h for h in h_transversals[l]].index(gamma)
             x = h_transversals[l][i]*x
             if l < len(orbits)-1:

@@ -487,19 +487,21 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def __pow__(self, n):
         n = as_int(n)
-        group = self.group
+        result = self.group.identity
         if n == 0:
-            return group.identity
-
+            return result
         if n < 0:
             n = -n
-            return (self.inverse())**n
-
-        result = self
-        for i in range(n - 1):
-            result = result*self
-        # this method can be improved instead of just returning the
-        # multiplication of elements
+            x = self.inverse()
+        else:
+            x = self
+        while True:
+            if n % 2:
+                result *= x
+            n >>= 1
+            if not n:
+                break
+            x *= x
         return result
 
     def __mul__(self, other):

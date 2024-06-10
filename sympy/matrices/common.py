@@ -1528,8 +1528,8 @@ class MatrixProperties(MatrixRequired):
         simplified, this will speed things up. Here, we see that without
         simplification the matrix does not appear anti-symmetric:
 
-        >>> m.is_anti_symmetric(simplify=False)
-        False
+        >>> print(m.is_anti_symmetric(simplify=False))
+        None
 
         But if the matrix were already expanded, then it would appear
         anti-symmetric and simplification in the is_anti_symmetric routine

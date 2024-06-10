@@ -591,6 +591,34 @@ def test_XXM_from_dod(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_to_dok(DM):
+    dod = {(0, 0): ZZ(1), (0, 2): ZZ(4),
+           (1, 0): ZZ(4), (1, 1): ZZ(5), (1, 2): ZZ(6)}
+    assert DM([[1, 0, 4], [4, 5, 6]]).to_dok() == dod
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_from_dok(DM):
+    T = type(DM([[0]]))
+    dod = {(0, 0): ZZ(1), (0, 2): ZZ(4),
+           (1, 0): ZZ(4), (1, 1): ZZ(5), (1, 2): ZZ(6)}
+    assert T.from_dok(dod, (2, 3), ZZ) == DM([[1, 0, 4], [4, 5, 6]])
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_iter_values(DM):
+    values = [ZZ(1), ZZ(4), ZZ(4), ZZ(5), ZZ(6)]
+    assert sorted(DM([[1, 0, 4], [4, 5, 6]]).iter_values()) == values
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_iter_items(DM):
+    items = [((0, 0), ZZ(1)), ((0, 2), ZZ(4)),
+             ((1, 0), ZZ(4)), ((1, 1), ZZ(5)), ((1, 2), ZZ(6))]
+    assert sorted(DM([[1, 0, 4], [4, 5, 6]]).iter_items()) == items
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
 def test_XXM_from_ddm(DM):
     T = type(DM([[0]]))
     ddm = DDM([[1, 2, 4], [4, 5, 6]], (2, 3), ZZ)
