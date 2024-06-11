@@ -172,7 +172,7 @@ With the problem setup, the Lagrangian can be calculated, and the equations of m
    >>> LM.form_lagranges_equations()
    Matrix([
     [-g*l*m*q2(t)**2/((1 + q2(t)**2/q1(t)**2)**(3/2)*q1(t)**3) + k1*sqrt(q1(t)**2) + k2*(q1(t)**2)**(3/2)],
-    [g*l*m*q2(t)/((1 + q2(t)**2/q1(t)**2)**(3/2)*q1(t)**2) + 1.0*l*m*u1(t)*u2(t)*cos(q2(t))]])
+    [              g*l*m*q2(t)/((1 + q2(t)**2/q1(t)**2)**(3/2)*q1(t)**2) + 1.0*l*m*u1(t)*u2(t)*cos(q2(t))]])
 
 References
 ==========
