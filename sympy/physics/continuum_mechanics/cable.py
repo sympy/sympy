@@ -590,6 +590,40 @@ class Cable:
             self._reaction_loads[Symbol("R_"+label+"_y")] = self.tension_at(self._left_support[0]) * sin(atan(tangent_slope_to_curve.subs(X, self._right_support[0] - lowest_x)))
 
     def draw(self):
+        """
+        This method is used to obtain a plot for the specified cable with its supports,
+        shape and loads.
+
+        Examples
+        --------
+        --------
+        For point loads,
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c = Cable(("A", 0, 10), ("B", 10, 10))
+        >>> c.apply_load(-1, ('Z', 2, 7.26, 3, 270))
+        >>> c.apply_load(-1, ('X', 4, 6, 8, 270))
+        >>> c.solve()
+        >>> p = c.draw()
+        >>> p  # doctest: +ELLIPSIS
+        Plot object containing:
+        [0]: cartesian line: Piecewise((10 - 1.37*x, x <= 2), (8.52 - 0.63*x, x <= 4), (2*x/3 + 10/3, x <= 10)) for x over (0.0, 10.0)
+        ...
+        >>> p.show()
+
+        For uniformly distributed loads,
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c=Cable(("A", 0, 40),("B", 100, 20))
+        >>> c.apply_load(0, ("X", 850))
+        >>> c.solve(58.58, 0)
+        >>> p = c.draw()
+        >>> p # doctest: +ELLIPSIS
+        Plot object containing:
+        [0]: cartesian line: 39.9955291375291*(0.0170706725844998*x - 1)**2 + 0.00447086247086247 for x over (0.0, 100.0)
+        [1]: cartesian line: -7.50000000000000 for x over (0.0, 100.0)
+        ...
+        """
         x = Symbol("x")
         annotations = []
         support_rectangles = self._draw_supports()
