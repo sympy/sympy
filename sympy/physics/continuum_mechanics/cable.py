@@ -594,6 +594,7 @@ class Cable:
         annotations = []
         support_rectangles = self._draw_supports()
 
+        max_diff = max(abs(self._left_support[0]-self._right_support[0]),abs(self._right_support[1]-self._left_support[1]))
         if len(self._loads_position) != 0:
             self._cable_eqn = self._draw_cable(-1)
             annotations += self._draw_loads(-1)
@@ -602,32 +603,22 @@ class Cable:
             self._cable_eqn = self._draw_cable(0)
             annotations += self._draw_loads(0)
 
-        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),rectangles=support_rectangles,show= False,annotations=annotations, axis=False)
+        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),\
+                        ylim=(self._lowest_y_global-max_diff*0.2,max(self._left_support[1],self._right_support[1])+max_diff*0.2),\
+                        xlim=(self._left_support[0]-max_diff*0.2, self._right_support[0]+max_diff*0.2),\
+                        rectangles=support_rectangles,show= False,annotations=annotations, axis=False)
         return cab_plot
 
     def _draw_supports(self):
         member_rectangles = []
-        x_min = self._left_support[0]
-        xmax = self._right_support[0]
+        max_diff = max(abs(self._left_support[0]-self._right_support[0]),abs(self._right_support[1]-self._left_support[1]))
 
-        if(self._left_support[1]<self._right_support[1]):
-            y_min = self._left_support[1]
-            y_max = self.right_support[1]
-        else:
-            y_max = self._left_support[1]
-            y_min = self.right_support[1]
-
-        if abs(1.1*xmax-0.8*x_min)>abs(1.1*y_max-0.8*y_min):
-            max_diff = 1.1*xmax-0.8*x_min
-        else:
-            max_diff = 1.1*y_max-0.8*y_min
-
-        supp_width = 0.05*max_diff
+        supp_width = 0.075*max_diff
 
         member_rectangles.append(
             {
-                'xy': (self._left_support[0]-supp_width*1.5,self._left_support[1]),
-                'width': supp_width*1.5,
+                'xy': (self._left_support[0]-supp_width,self._left_support[1]),
+                'width': supp_width,
                 'height':supp_width,
                 'color':'brown',
                 'fill': False
@@ -637,7 +628,7 @@ class Cable:
         member_rectangles.append(
             {
                 'xy': (self._right_support[0],self._right_support[1]),
-                'width': supp_width*1.5,
+                'width': supp_width,
                 'height':supp_width,
                 'color':'brown',
                 'fill': False
@@ -687,27 +678,15 @@ class Cable:
 
     def _draw_loads(self,order):
         if(order==-1):
-            x_min = self._left_support[0]
-            xmax = self._right_support[0]
-            if(self._left_support[1]<self._right_support[1]):
-                y_min = self._left_support[1]
-                y_max = self.right_support[1]
-            else:
-                y_max = self._left_support[1]
-                y_min = self.right_support[1]
-
-            if abs(1.1*xmax-0.8*x_min)>abs(1.1*y_max-0.8*y_min):
-                max_diff = 1.1*xmax-0.8*x_min
-            else:
-                max_diff = 1.1*y_max-0.8*y_min
-
+            max_diff = max(abs(self._left_support[0]-self._right_support[0]),abs(self._right_support[1]-self._left_support[1]))
             arrow_length = max_diff*0.05
             force_arrows = []
             for key in self._loads['point_load']:
                 force_arrows.append(
                     {
                         'text': '',
-                        'xy':(self._loads_position[key][0]+arrow_length*cos(rad(self._loads['point_load'][key][1])),self._loads_position[key][1] + arrow_length*sin(rad(self._loads['point_load'][key][1]))),
+                        'xy':(self._loads_position[key][0]+arrow_length*cos(rad(self._loads['point_load'][key][1])),\
+                              self._loads_position[key][1] + arrow_length*sin(rad(self._loads['point_load'][key][1]))),
                         'xytext': (self._loads_position[key][0],self._loads_position[key][1]),
                         'arrowprops': {'width': 1.5, 'headlength':5, 'headwidth':5 , 'facecolor': 'black', }
                     }
@@ -716,7 +695,8 @@ class Cable:
                 force_arrows.append(
                     {
                         'text':f'{mag} N',
-                        'xy': (self._loads_position[key][0]+arrow_length*1.6*cos(rad(self._loads['point_load'][key][1])),self._loads_position[key][1] + arrow_length*1.6*sin(rad(self._loads['point_load'][key][1]))),
+                        'xy': (self._loads_position[key][0]+arrow_length*1.6*cos(rad(self._loads['point_load'][key][1])),\
+                               self._loads_position[key][1] + arrow_length*1.6*sin(rad(self._loads['point_load'][key][1]))),
                     }
                 )
             return force_arrows
