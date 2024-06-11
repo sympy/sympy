@@ -594,7 +594,9 @@ class Cable:
         annotations = []
         support_rectangles = self._draw_supports()
 
-        max_diff = max(abs(self._left_support[0]-self._right_support[0]),abs(self._right_support[1]-self._left_support[1]))
+        xy_min = min(self._left_support[0],self._lowest_y_global)
+        xy_max = max(self._right_support[0], max(self._right_support[1],self._left_support[1]))
+        max_diff = xy_max - xy_min
         if len(self._loads_position) != 0:
             self._cable_eqn = self._draw_cable(-1)
             annotations += self._draw_loads(-1)
@@ -603,15 +605,18 @@ class Cable:
             self._cable_eqn = self._draw_cable(0)
             annotations += self._draw_loads(0)
 
-        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),\
-                        ylim=(self._lowest_y_global-max_diff*0.2,max(self._left_support[1],self._right_support[1])+max_diff*0.2),\
-                        xlim=(self._left_support[0]-max_diff*0.2, self._right_support[0]+max_diff*0.2),\
+        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),
+                        xlim=(xy_min-0.5*max_diff,xy_max+0.5*max_diff),
+                        ylim=(xy_min-0.5*max_diff,xy_max+0.5*max_diff),
                         rectangles=support_rectangles,show= False,annotations=annotations, axis=False)
+        
         return cab_plot
 
     def _draw_supports(self):
         member_rectangles = []
-        max_diff = max(abs(self._left_support[0]-self._right_support[0]),abs(self._right_support[1]-self._left_support[1]))
+        xy_min = min(self._left_support[0],self._lowest_y_global)
+        xy_max = max(self._right_support[0], max(self._right_support[1],self._left_support[1]))
+        max_diff = xy_max - xy_min
 
         supp_width = 0.075*max_diff
 
@@ -638,12 +643,14 @@ class Cable:
         return member_rectangles
 
     def _draw_cable(self,order):
+        xy_min = min(self._left_support[0],self._lowest_y_global)
+        xy_max = max(self._right_support[0], max(self._right_support[1],self._left_support[1]))
+        max_diff = xy_max - xy_min
         if order == -1 :
             x,y = symbols('x y')
             line_func = []
             sorted_position = sorted(self._loads_position.items(), key = lambda item : item[1][0])
 
-            # print(sorted_position)
             for i in range(len(sorted_position)):
                 if(i==0):
                     y = ((sorted_position[i][1][1] - self._left_support[1])*(x-self._left_support[0]))/(sorted_position[i][1][0]- self._left_support[0]) + self._left_support[1]
@@ -656,13 +663,8 @@ class Cable:
             return [Piecewise(*line_func)]
 
         elif order == 0:
-            x1,y1 = self._left_support
-            x2,y2 = self._right_support
             x0 = self._lowest_x_global
-
-            span = float(x2-x1)
-            height_diff = float(abs(y2-y1))
-            diff_force_height = max(span,height_diff)*0.03
+            diff_force_height = max_diff*0.075
 
             a,c,x,y = symbols('a c x y')
             parabola_eqn = a*(x-x0)**2 + c - y
@@ -673,13 +675,14 @@ class Cable:
                 equations.append(parabola_eqn.subs({x: px, y: py}))
             solution = solve(equations, (a, c))
             parabola_eqn = solution[a]*(x-x0)**2 + solution[c]
-            diff_force_height = max(abs(self._left_support[1]-self._right_support[1]),abs(self._left_support[0]-self._right_support[0]))*0.03
-            return [parabola_eqn, parabola_eqn+diff_force_height]
+            return [parabola_eqn, self._lowest_y_global - diff_force_height]
 
     def _draw_loads(self,order):
+        xy_min = min(self._left_support[0],self._lowest_y_global)
+        xy_max = max(self._right_support[0], max(self._right_support[1],self._left_support[1]))
+        max_diff = xy_max - xy_min
         if(order==-1):
-            max_diff = max(abs(self._left_support[0]-self._right_support[0]),abs(self._right_support[1]-self._left_support[1]))
-            arrow_length = max_diff*0.05
+            arrow_length = max_diff*0.1
             force_arrows = []
             for key in self._loads['point_load']:
                 force_arrows.append(
@@ -688,13 +691,13 @@ class Cable:
                         'xy':(self._loads_position[key][0]+arrow_length*cos(rad(self._loads['point_load'][key][1])),\
                               self._loads_position[key][1] + arrow_length*sin(rad(self._loads['point_load'][key][1]))),
                         'xytext': (self._loads_position[key][0],self._loads_position[key][1]),
-                        'arrowprops': {'width': 1.5, 'headlength':5, 'headwidth':5 , 'facecolor': 'black', }
+                        'arrowprops': {'width': 1, 'headlength':3, 'headwidth':3 , 'facecolor': 'black', }
                     }
                 )
                 mag = self._loads['point_load'][key][0]
                 force_arrows.append(
                     {
-                        'text':f'{mag} N',
+                        'text':f'{mag}N',
                         'xy': (self._loads_position[key][0]+arrow_length*1.6*cos(rad(self._loads['point_load'][key][1])),\
                                self._loads_position[key][1] + arrow_length*1.6*sin(rad(self._loads['point_load'][key][1]))),
                     }
@@ -704,22 +707,20 @@ class Cable:
         elif (order == 0):
             x = symbols('x')
             force_arrows = []
-            diff_force_height = max(abs(self._left_support[1]-self._right_support[1]),abs(self._left_support[0]-self._right_support[0]))*0.03
             x_val = [self._left_support[0] + ((self._right_support[0]-self._left_support[0])/10)*i for i in range(1,10)]
-            print(x_val)
             for i in x_val:
                 force_arrows.append(
                     {
                         'text':'',
-                        'xy':(
+                        'xytext':(
                             i,
                             self._cable_eqn[0].subs(x,i)
                         ),
-                        'xytext':(
+                        'xy':(
                             i,
                             self._cable_eqn[1].subs(x,i)
                         ),
-                        'arrowprops':{'width':diff_force_height*0.3, 'headlength':diff_force_height, 'headwidth':diff_force_height, 'facecolor':'black'}
+                        'arrowprops':{'width':1, 'headlength':3.5, 'headwidth':3.5, 'facecolor':'black'}
                     }
                 )
             for key in self._loads['distributed']:
@@ -727,7 +728,7 @@ class Cable:
                 force_arrows.append(
                     {
                         'text':f'{mag} N/m',
-                        'xy':(self._lowest_x_global,self._cable_eqn[1].subs(x,self._lowest_x_global)+diff_force_height)
+                        'xy':((self._left_support[0]+self._right_support[0])/2,self._lowest_y_global - max_diff*0.15)
                     }
                 )
             return force_arrows
