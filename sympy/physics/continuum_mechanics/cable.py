@@ -595,8 +595,8 @@ class Cable:
         shape and loads.
 
         Examples
-        --------
-        --------
+        ========
+        
         For point loads,
 
         >>> from sympy.physics.continuum_mechanics.cable import Cable
