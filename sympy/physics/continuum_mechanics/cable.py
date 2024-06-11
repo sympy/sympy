@@ -596,7 +596,7 @@ class Cable:
 
         Examples
         ========
-        
+
         For point loads,
 
         >>> from sympy.physics.continuum_mechanics.cable import Cable
