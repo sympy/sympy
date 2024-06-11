@@ -609,7 +609,7 @@ class Cable:
                         xlim=(xy_min-0.5*max_diff,xy_max+0.5*max_diff),
                         ylim=(xy_min-0.5*max_diff,xy_max+0.5*max_diff),
                         rectangles=support_rectangles,show= False,annotations=annotations, axis=False)
-        
+
         return cab_plot
 
     def _draw_supports(self):
