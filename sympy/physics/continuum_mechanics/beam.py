@@ -1803,7 +1803,7 @@ class Beam:
         moment equations.
         """
         x = self.variable
-        a = Symbol('a', positive=True)
+        a = Symbol('a')
         load = self._load + value * SingularityFunction(x, a, -1)
         shear_force = -integrate(load, x)
         bending_moment = integrate(shear_force, x)
@@ -1847,13 +1847,14 @@ class Beam:
             >>> p10 = b.apply_support(10, 'roller')
             >>> b.solve_for_ild_reactions(1,R_0,R_10)
             >>> b.ild_reactions
-            {R_0: a/10 - 1, R_10: -a/10}
+            {R_0: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/10 - SingularityFunction(a, 10, 1)/10,
+            R_10: -SingularityFunction(a, 0, 1)/10 + SingularityFunction(a, 10, 0) + SingularityFunction(a, 10, 1)/10}
 
         """
         shear_force, bending_moment = self._solve_for_ild_equations(value)
         x = self.variable
         l = self.length
-        a = Symbol('a', positive=True)
+        a = Symbol('a')
 
         rotation_jumps = tuple(self._rotation_hinge_symbols)
         deflection_jumps = tuple(self._sliding_hinge_symbols)
@@ -1861,8 +1862,10 @@ class Beam:
         C3 = Symbol('C3')
         C4 = Symbol('C4')
 
-        shear_curve = limit(shear_force, x, l) - value
-        moment_curve = limit(bending_moment, x, l) - value*(l-a)
+        shear_curve = limit(shear_force, x, l) - value*(SingularityFunction(a, 0, 0) - SingularityFunction(a, l, 0))
+        moment_curve = (limit(bending_moment, x, l) - value * (l * SingularityFunction(a, 0, 0)
+                                                               - SingularityFunction(a, 0, 1)
+                                                               + SingularityFunction(a, l, 1)))
 
         shear_force_eqs = []
         bending_moment_eqs = []
@@ -1872,25 +1875,26 @@ class Beam:
         for position, val in self._boundary_conditions['shear_force']:
             eqs = self.shear_force().subs(x, position) - val
             eqs_without_inf = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
-            shear_sinc = value * SingularityFunction(- a, - position, 0)
+            shear_sinc = value * (SingularityFunction(- a, - position, 0) - SingularityFunction(-a, 0, 0))
             eqs_with_shear_sinc = eqs_without_inf - shear_sinc
             shear_force_eqs.append(eqs_with_shear_sinc)
 
         for position, val in self._boundary_conditions['bending_moment']:
             eqs = self.bending_moment().subs(x, position) - val
             eqs_without_inf = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
-            moment_sinc = value * SingularityFunction(- a, - position, 1)
+            moment_sinc = value * (position * SingularityFunction(a, 0, 0)
+                                   - SingularityFunction(a, 0, 1) + SingularityFunction(a, position, 1))
             eqs_with_moment_sinc = eqs_without_inf - moment_sinc
             bending_moment_eqs.append(eqs_with_moment_sinc)
 
         slope_curve = integrate(bending_moment, x) + C3
         for position, val in self._boundary_conditions['slope']:
-            eqs = slope_curve.subs(x, position) - val
+            eqs = slope_curve.subs(x, position) - val + value * (SingularityFunction(-a, 0, 1) + position * SingularityFunction(-a, 0, 0))**2 / 2
             slope_eqs.append(eqs)
 
         deflection_curve = integrate(slope_curve, x) + C4
         for position, val in self._boundary_conditions['deflection']:
-            eqs = deflection_curve.subs(x, position) - val
+            eqs = deflection_curve.subs(x, position) - val + value * (SingularityFunction(-a, 0, 1) + position * SingularityFunction(-a, 0, 0)) ** 3 / 6
             deflection_eqs.append(eqs)
 
         solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
@@ -1948,19 +1952,23 @@ class Beam:
             >>> b.apply_load(5,4,-1)
             >>> b.solve_for_ild_reactions(1,R_0,R_7)
             >>> b.ild_reactions
-            {R_0: a/7 - 22/7, R_7: -a/7 - 20/7}
+            {R_0: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/7
+            - 3*SingularityFunction(a, 10, 0)/7  - SingularityFunction(a, 10, 1)/7 - 15/7,
+            R_7: -SingularityFunction(a, 0, 1)/7 + 10*SingularityFunction(a, 10, 0)/7 + SingularityFunction(a, 10, 1)/7 - 20/7}
             >>> b.plot_ild_reactions()
             PlotGrid object containing:
             Plot[0]:Plot object containing:
-            [0]: cartesian line: a/7 - 22/7 for a over (0.0, 10.0)
+            [0]: cartesian line: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/7
+            - 3*SingularityFunction(a, 10, 0)/7 - SingularityFunction(a, 10, 1)/7 - 15/7 for a over (0.0, 10.0)
             Plot[1]:Plot object containing:
-            [0]: cartesian line: -a/7 - 20/7 for a over (0.0, 10.0)
+            [0]: cartesian line: -SingularityFunction(a, 0, 1)/7 + 10*SingularityFunction(a, 10, 0)/7
+            + SingularityFunction(a, 10, 1)/7 - 20/7 for a over (0.0, 10.0)
 
         """
         if not self._ild_reactions:
             raise ValueError("I.L.D. reaction equations not found. Please use solve_for_ild_reactions() to generate the I.L.D. reaction equations.")
 
-        a = Symbol('a', positive=True)
+        a = Symbol('a')
         ildplots = []
 
         if subs is None:
@@ -2023,13 +2031,15 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
-            a/8 - SingularityFunction(a, 4, 0)
+            -(-SingularityFunction(a, 0, 0) + SingularityFunction(a, 12, 0) + 2)*SingularityFunction(a, 4, 0)
+            - SingularityFunction(-a, 0, 0) - SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/8
+            + SingularityFunction(a, 12, 0)/2 - SingularityFunction(a, 12, 1)/8 + 1
 
         """
 
         x = self.variable
         l = self.length
-        a = Symbol('a', positive=True)
+        a = Symbol('a')
 
         shear_force, _ = self._solve_for_ild_equations(value)
 
@@ -2040,7 +2050,8 @@ class Beam:
             shear_curve1 = shear_curve1.subs(reaction,self._ild_reactions[reaction])
             shear_curve2 = shear_curve2.subs(reaction,self._ild_reactions[reaction])
 
-        shear_eq = shear_curve1 - (shear_curve1 - shear_curve2) * SingularityFunction(a, distance, 0)
+        shear_eq = (shear_curve1 - (shear_curve1 - shear_curve2) * SingularityFunction(a, distance, 0)
+                    - value * SingularityFunction(-a, 0, 0) + value * SingularityFunction(a, l, 0))
 
         self._ild_shear = shear_eq
 
@@ -2083,10 +2094,14 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
             >>> b.ild_shear
-            a/8 - SingularityFunction(a, 4, 0)
+            -(-SingularityFunction(a, 0, 0) + SingularityFunction(a, 12, 0) + 2)*SingularityFunction(a, 4, 0)
+            - SingularityFunction(-a, 0, 0) - SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/8
+            + SingularityFunction(a, 12, 0)/2 - SingularityFunction(a, 12, 1)/8 + 1
             >>> b.plot_ild_shear()
             Plot object containing:
-            [0]: cartesian line: a/8 - SingularityFunction(a, 4, 0) for a over (0.0, 12.0)
+            [0]: cartesian line: -(-SingularityFunction(a, 0, 0) + SingularityFunction(a, 12, 0) + 2)*SingularityFunction(a, 4, 0)
+            - SingularityFunction(-a, 0, 0) - SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/8
+            + SingularityFunction(a, 12, 0)/2 - SingularityFunction(a, 12, 1)/8 + 1 for a over (0.0, 12.0)
 
         """
 
@@ -2094,7 +2109,7 @@ class Beam:
             raise ValueError("I.L.D. shear equation not found. Please use solve_for_ild_shear() to generate the I.L.D. shear equations.")
 
         l = self._length
-        a = Symbol('a', positive=True)
+        a = Symbol('a')
 
         if subs is None:
             subs = {}
@@ -2151,18 +2166,23 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
-            -a/2 - (4 - a)*SingularityFunction(a, 4, 0)
+            -(4*SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1) + SingularityFunction(a, 4, 1))*SingularityFunction(a, 4, 0)
+            - SingularityFunction(a, 0, 1)/2 + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0)
+            - SingularityFunction(a, 12, 1)/2
 
         """
 
         x = self.variable
         l = self.length
-        a = Symbol('a', positive=True)
+        a = Symbol('a')
 
         _, moment = self._solve_for_ild_equations(value)
 
-        moment_curve1 = value*(distance-a) - limit(moment, x, distance)
-        moment_curve2 = (limit(moment, x, l)-limit(moment, x, distance))-value*(l-a)
+        moment_curve1 = value*(distance * SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1)
+                               + SingularityFunction(a, distance, 1)) - limit(moment, x, distance)
+        moment_curve2 = (limit(moment, x, l)-limit(moment, x, distance)
+                         - value * (l * SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1)
+                                    + SingularityFunction(a, l, 1)))
 
         for reaction in reactions:
             moment_curve1 = moment_curve1.subs(reaction, self._ild_reactions[reaction])
@@ -2211,17 +2231,21 @@ class Beam:
             >>> b.solve_for_ild_reactions(1, R_0, R_8)
             >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
             >>> b.ild_moment
-            -a/2 - (4 - a)*SingularityFunction(a, 4, 0)
+            -(4*SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1) + SingularityFunction(a, 4, 1))*SingularityFunction(a, 4, 0)
+            - SingularityFunction(a, 0, 1)/2 + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0)
+            - SingularityFunction(a, 12, 1)/2
             >>> b.plot_ild_moment()
             Plot object containing:
-            [0]: cartesian line: -a/2 - (4 - a)*SingularityFunction(a, 4, 0) for a over (0.0, 12.0)
+            [0]: cartesian line: -(4*SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1)
+            + SingularityFunction(a, 4, 1))*SingularityFunction(a, 4, 0) - SingularityFunction(a, 0, 1)/2
+            + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0) - SingularityFunction(a, 12, 1)/2 for a over (0.0, 12.0)
 
         """
 
         if not self._ild_moment:
             raise ValueError("I.L.D. moment equation not found. Please use solve_for_ild_moment() to generate the I.L.D. moment equations.")
 
-        a = Symbol('a', positive=True)
+        a = Symbol('a')
 
         if subs is None:
             subs = {}
