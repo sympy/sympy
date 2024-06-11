@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .basic import Atom, Basic
+from .coreerrors import LazyExceptionMessage
 from .sorting import ordered
 from .evalf import EvalfMixin
 from .function import AppliedUndef
@@ -513,7 +514,11 @@ class Relational(Boolean, EvalfMixin):
         return self.func(*args)
 
     def __bool__(self):
-        raise TypeError("cannot determine truth value of Relational")
+        raise TypeError(
+            LazyExceptionMessage(
+                lambda: f"cannot determine truth value of Relational: {self}"
+            )
+        )
 
     def _eval_as_set(self):
         # self is univariate and periodicity(self, x) in (0, None)
