@@ -623,6 +623,7 @@ class Cable:
         [0]: cartesian line: 39.9955291375291*(0.0170706725844998*x - 1)**2 + 0.00447086247086247 for x over (0.0, 100.0)
         [1]: cartesian line: -7.50000000000000 for x over (0.0, 100.0)
         ...
+        >>> p.show()
         """
         x = Symbol("x")
         annotations = []
