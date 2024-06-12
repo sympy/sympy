@@ -267,6 +267,7 @@ def test_lerchphi_leadterm():
     assert (lerchphi(S.One/10, h, x-2)._eval_as_leading_term(x)
             == 1 / (100*sqrt(x)))
     assert lerchphi(z+x, h/2, x-1)._eval_as_leading_term(x) == z / x**(h/2)
+    assert lerchphi(1-x, 2+x**2, a)._eval_as_leading_term(x) == zeta(2, a)
 
 
 def test_lerchphi_nseries():
