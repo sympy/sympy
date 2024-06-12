@@ -8,7 +8,8 @@ In this example we demonstrate the use of functionality provided in
 :obj:`sympy.physics.mechanics` for deriving the quations of motion (EOM) for a system
 consisting of a Duffing oscillator with a pendulum.
 
-(schematic diagram)
+.. _fig-duffing-oscillator-pendulum:
+.. figure:: duffing-oscillator-pendulum.svg
 
 The system will be modeled using Lagrange equations. `M` is mass of the Duffing oscillator,
 `m` is mass of the pendulum, `l` is length of the pendulum. `k_1` and `k_2` are linear and
