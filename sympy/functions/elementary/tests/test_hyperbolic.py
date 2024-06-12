@@ -1020,7 +1020,7 @@ def test_acsch_nseries():
     4*sqrt(3)*I*x/3 - 8*sqrt(3)*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
     assert acsch(x - I/2)._eval_nseries(x, 4, None, cdir=-1) == I*pi + \
     acsch(I/2) + 4*sqrt(3)*I*x/3 + 8*sqrt(3)*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
-    # TODO: Tests concerning re(ndir) == 0
+    # Tests concerning re(ndir) == 0
     assert acsch(I/2 + I*x - x**2)._eval_nseries(x, 4, None) == -I*pi/2 + \
     log(2 - sqrt(3)) + x*(12 - 8*sqrt(3))/(-6 + 3*sqrt(3)) + x**2*(-96 + \
     sqrt(3)*(56 - 84*I) + 144*I)/(-63 + 36*sqrt(3)) + x**3*(2688 - 2688*I + \
@@ -1548,6 +1548,6 @@ def test_issue_25847():
 
 def test_issue_25175():
     x = Symbol('x')
-    g1 = 2*acosh(1+2*x/3)-acosh(S(5)/3-S(8)/3/(x+4))
-    g2 = 2*log(sqrt((x+4)/3)*(sqrt(x+3)+sqrt(x))**2/(2*sqrt(x+3)+sqrt(x)))
+    g1 = 2*acosh(1 + 2*x/3) - acosh(S(5)/3 - S(8)/3/(x + 4))
+    g2 = 2*log(sqrt((x + 4)/3)*(sqrt(x + 3)+sqrt(x))**2/(2*sqrt(x + 3) + sqrt(x)))
     assert (g1 - g2).series(x) == O(x**6)
