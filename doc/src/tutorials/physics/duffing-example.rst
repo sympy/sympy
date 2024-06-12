@@ -64,7 +64,7 @@ Define all the reference frames and points.
 
    >>> # Define reference frames
    >>> N = me.ReferenceFrame('N')
-   >>> A = N.orientnew('A', 'axis', (q1, N.y)) # Duffing Oscillator Block
+   >>> A = N # Duffing Oscillator Block
    >>> B = N.orientnew('B', 'axis', (q2, N.z)) # Pendulum
 
 The angular velocity of the pendulum in the reference frame is:
