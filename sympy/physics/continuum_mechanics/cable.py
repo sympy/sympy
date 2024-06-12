@@ -455,13 +455,13 @@ class Cable:
         >>> from sympy.physics.continuum_mechanics.cable import Cable
         >>> c=Cable(("A", 0, 40),("B", 100, 20))
         >>> c.apply_load(0, ("X", 850))
-        >>> c.solve(58.58, 0)
+        >>> c.solve(58.58)
         >>> c.tension
-        {'distributed': 36456.8485*sqrt(0.000543529004799705*(X + 0.00135624381275735)**2 + 1)}
+        {'distributed': 36465.0*sqrt(0.00054335718671383*X**2 + 1)}
         >>> c.tension_at(0)
-        61709.0363315913
+        61717.4130533677
         >>> c.reaction_loads
-        {R_A_x: 36456.8485, R_A_y: -49788.5866682485, R_B_x: 44389.8401587246, R_B_y: 42866.621696333}
+        {R_A_x: 36465.0, R_A_y: -49793.0, R_B_x: 44399.9537590861, R_B_y: 42868.2071025955}
         """
 
         if len(self._loads_position) != 0:
@@ -541,30 +541,26 @@ class Cable:
                 raise ValueError("Provide the lowest point of the cable")
 
             lowest_x = sympify(args[0])
-            lowest_y = sympify(args[1])
             self._lowest_x_global = lowest_x
-            self._lowest_y_global = lowest_y
 
             a = Symbol('a')
-            b = Symbol('b')
             c = Symbol('c')
             # augmented matrix form of linsolve
 
             M = Matrix(
-                [[self._left_support[0]**2, self._left_support[0], 1, self._left_support[1]],
-                [self._right_support[0]**2, self._right_support[0], 1, self._right_support[1]],
-                [lowest_x**2, lowest_x, 1, lowest_y]  ]
-                       )
+                [[(self._left_support[0]-lowest_x)**2, 1, self._left_support[1]],
+                [(self._right_support[0]-lowest_x)**2, 1, self._right_support[1]],
+                ])
 
-            coefficient_solution = list(linsolve(M, (a, b, c)))
-
-            if len(coefficient_solution) == 0:
+            coefficient_solution = list(linsolve(M, (a, c)))
+            if len(coefficient_solution) ==0 or coefficient_solution[0][0]== 0:
                 raise ValueError("The lowest point is inconsistent with the supports")
 
             A = coefficient_solution[0][0]
-            B = coefficient_solution[0][1]
-            C = coefficient_solution[0][2]
-
+            C = coefficient_solution[0][1] + coefficient_solution[0][0]*lowest_x**2
+            B = -2*coefficient_solution[0][0]*lowest_x
+            self._lowest_y_global = coefficient_solution[0][1]
+            lowest_y = self._lowest_y_global
 
             # y = A*x**2 + B*x + C
             # shifting origin to lowest point
@@ -616,12 +612,12 @@ class Cable:
         >>> from sympy.physics.continuum_mechanics.cable import Cable
         >>> c=Cable(("A", 0, 40),("B", 100, 20))
         >>> c.apply_load(0, ("X", 850))
-        >>> c.solve(58.58, 0)
+        >>> c.solve(58.58)
         >>> p = c.draw()
         >>> p # doctest: +ELLIPSIS
         Plot object containing:
         [0]: cartesian line: 39.9955291375291*(0.0170706725844998*x - 1)**2 + 0.00447086247086247 for x over (0.0, 100.0)
-        [1]: cartesian line: -7.50000000000000 for x over (0.0, 100.0)
+        [1]: cartesian line: -7.49552913752915 for x over (0.0, 100.0)
         ...
         >>> p.show()
         """
