@@ -20,30 +20,36 @@ def groebner(seq, ring, method=None):
     if method is None:
         method = query('groebner')
 
-    _groebner_methods = {
-        'buchberger': _buchberger,
-        'f5b': _f5b,
-    }
-
-    try:
-        _groebner = _groebner_methods[method]
-    except KeyError:
+    if method == 'buchberger':
+        _groebner = _buchberger
+    elif method == 'f5b':
+        _groebner = _f5b
+    else:
         raise ValueError("'%s' is not a valid Groebner bases algorithm (valid are 'buchberger' and 'f5b')" % method)
 
-    domain, orig = ring.domain, None
+    domain = ring.domain
+    is_exact = domain.is_Exact
+    is_field = domain.is_Field
 
-    if not domain.is_Field or not domain.has_assoc_Field:
-        try:
-            orig, ring = ring, ring.clone(domain=domain.get_field())
-        except DomainError:
+    if not is_exact:
+        domain = domain.get_exact()
+
+    if not is_field:
+        if not domain.has_assoc_Field:
             raise DomainError("Cannot compute a Groebner basis over %s" % domain)
-        else:
-            seq = [ s.set_ring(ring) for s in seq ]
+        domain = domain.get_field()
 
-    G = _groebner(seq, ring)
+    if is_exact and is_field:
+        G = _groebner(seq, ring)
+    else:
+        new_ring = ring.clone(domain=domain)
+        seq = [ s.set_ring(new_ring) for s in seq ]
 
-    if orig is not None:
-        G = [ g.clear_denoms()[1].set_ring(orig) for g in G ]
+        G = _groebner(seq, new_ring)
+
+        if not is_field:
+            G = [ g.clear_denoms()[1] for g in G ]
+        G = [ g.set_ring(ring) for g in G ]
 
     return G
 

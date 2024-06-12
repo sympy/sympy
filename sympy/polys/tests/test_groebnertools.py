@@ -13,7 +13,7 @@ from sympy.polys.fglmtools import _representing_matrices
 from sympy.polys.orderings import lex, grlex
 
 from sympy.polys.rings import ring, xring
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ, RR
 
 from sympy.testing.pytest import slow
 from sympy.polys import polyconfig as config
@@ -122,6 +122,16 @@ def _do_test_groebner():
     assert groebner([f, g], R) == [
         x - 4*y**7 + 8*y**5 - 7*y**3 + 3*y,
         y**8 - 2*y**6 + QQ(3,2)*y**4 - QQ(1,2)*y**2 + QQ(1,16),
+    ]
+
+    # https://github.com/sympy/sympy/issues/26682
+    R, s,c = ring("s,c", RR, lex)
+    f = c**2 + s**2 - 1
+    g = -1.98079646822393*c - 0.887785747630113*s - 0.15634896910398
+
+    assert groebner([f, g], R) == [
+        2.2311649781622864*c + 1.0*s + 0.17611115015232395,
+        1.0*c**2 + 0.13145755914691168*c - 0.16208917936489728,
     ]
 
 def test_groebner_buchberger():

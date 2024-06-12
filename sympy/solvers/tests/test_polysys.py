@@ -1,5 +1,5 @@
 """Tests for solvers of systems of polynomial equations. """
-from sympy.core.numbers import (I, Integer, Rational)
+from sympy.core.numbers import I, Integer, Rational, all_close
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -74,6 +74,19 @@ def test_solve_poly_system():
     raises(UnsolvableFactorError,
            lambda: solve_poly_system([(x - 1)*(x**5 - x + 1), y**2-1],
                                      [x, y], strict=True))
+
+
+def test_solve_poly_system_inexact():
+    # https://github.com/sympy/sympy/issues/26682
+    eqns = [
+        x**2 + y**2 - 1,
+        -1.98079646822393*x - 0.887785747630113*y - 0.15634896910398,
+    ]
+    sols = [
+        (-0.939625548509079, 0.342204366700677),
+        (0.880706750287718, -0.473661925847589),
+    ]
+    assert all_close(solve_poly_system(eqns, y, x), sols)
 
 
 def test_solve_generic():
