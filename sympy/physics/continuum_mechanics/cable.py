@@ -69,7 +69,7 @@ class Cable:
         self._lowest_x_global = sympify(0)
         self._lowest_y_global = sympify(0)
         self._cable_eqn = None
-
+        self._tension_func = None
         if support_1[0] == support_2[0]:
             raise ValueError("Supports can not have the same label")
 
@@ -476,7 +476,8 @@ class Cable:
             F_x = 0
             F_y = 0
             self._length = 0
-
+            tension_func = []
+            x = symbols('x')
             for i in range(1, len(sorted_position)-1):
                 if i == 1:
                     self._length+=sqrt((self._left_support[0] - self._loads_position[sorted_position[i][0]][0])**2 + (self._left_support[1] - self._loads_position[sorted_position[i][0]][1])**2)
@@ -511,6 +512,7 @@ class Cable:
 
                 tension = -(moment_sum_from_left_support)/(abs(self._left_support[1] - self._loads_position[sorted_position[i][0]][1])*cos(angle_with_horizontal) + abs(self._left_support[0] - self._loads_position[sorted_position[i][0]][0])*sin(angle_with_horizontal))
                 self._tension[label] = tension
+                tension_func.append((tension, x<=x1))
                 moment_sum_from_right_support += self._loads['point_load'][sorted_position[i][0]][0] * cos(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180) * abs(self._right_support[1] - self._loads_position[sorted_position[i][0]][1])
                 moment_sum_from_right_support += self._loads['point_load'][sorted_position[i][0]][0] * sin(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180) * abs(self._right_support[0] - self._loads_position[sorted_position[i][0]][0])
 
@@ -524,6 +526,8 @@ class Cable:
             tension = -(moment_sum_from_right_support)/(abs(self._right_support[1] - self._loads_position[sorted_position[1][0]][1])*cos(angle_with_horizontal) + abs(self._right_support[0] - self._loads_position[sorted_position[1][0]][0])*sin(angle_with_horizontal))
             self._tension[label] = tension
 
+            tension_func.insert(0,(tension, x<=x2))
+            self._tension_func = Piecewise(*tension_func)
             angle_with_horizontal = pi/2 - angle_with_horizontal
             label = self._support_labels[0]
             self._reaction_loads[Symbol("R_"+label+"_x")] = -sin(angle_with_horizontal) * tension
@@ -763,3 +767,12 @@ class Cable:
                     }
                 )
             return force_arrows
+
+    def plot_tension(self):
+        if len(self._loads_position) != 0:
+            x = symbols('x')
+            tension_plot  = plot(self._tension_func, (x,self._left_support[0],self._right_support[0]), show=False)
+        else:
+            X = symbols('X')
+            tension_plot  = plot(self._tension['distributed'], (X,self._left_support[0],self._right_support[0]), show=False)
+        return tension_plot
