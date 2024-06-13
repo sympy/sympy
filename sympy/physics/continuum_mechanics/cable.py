@@ -640,6 +640,9 @@ class Cable:
             self._cable_eqn = self._draw_cable(0)
             annotations += self._draw_loads(0)
 
+        if not self._cable_eqn:
+            raise ValueError("solve method not called and/or values provided for loads and supports not adequate")
+
         cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),
                         xlim=(xy_min-0.5*max_diff,xy_max+0.5*max_diff),
                         ylim=(xy_min-0.5*max_diff,xy_max+0.5*max_diff),
