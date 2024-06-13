@@ -758,14 +758,16 @@ class Cable:
                         'arrowprops':{'width':1, 'headlength':3.5, 'headwidth':3.5, 'facecolor':'black'}
                     }
                 )
+            mag = 0
             for key in self._loads['distributed']:
-                mag = self._loads['distributed'][key]
-                force_arrows.append(
-                    {
-                        'text':f'{mag} N/m',
-                        'xy':((self._left_support[0]+self._right_support[0])/2,self._lowest_y_global - max_diff*0.15)
-                    }
-                )
+                mag += self._loads['distributed'][key]
+
+            force_arrows.append(
+                {
+                    'text':f'{mag} N/m',
+                    'xy':((self._left_support[0]+self._right_support[0])/2,self._lowest_y_global - max_diff*0.15)
+                }
+            )
             return force_arrows
 
     def plot_tension(self):
