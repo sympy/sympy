@@ -67,6 +67,8 @@ O is a fixed point in the inertial reference frame.
    >>> Pendulum.v2pt_theory(Block, N, B)
    Derivative(q1(t), t)*N.y - l*Derivative(q2(t), t)*B.x
 
+   >>> me.init_vprinting()
+
 Define inertia and rigid bodies.
 Here, we assume a simple pendulum which consists of a bob of mass m hanging from a massless string of length l
 and fixed at a pivot point (Duffing Oscillator Block).
@@ -77,55 +79,66 @@ and fixed at a pivot point (Duffing Oscillator Block).
    >>> par_block = me.RigidBody('block', Block, N, M, (I_block, Block))
    >>> par_pendulum = me.RigidBody('pendulum', Pendulum, B, m, (I_pendulum, Pendulum))
 
-Define Force, Energy
-====================
+Define Forces Using a Custom Actuator
+=====================================
 
-We obtain the Duffing force using the `DuffingSpring` actuator from ``sympy.physics.mechanics.actuator``.
-This force will be used to calculate the potential energy of the Duffing Oscillator block.
+We define a custom actuator class, `DuffingDamperPathway`, to calculate the forces acting on the system.
+This class combines the forces from a Duffing spring and a damper to model the dynamics of the Duffing oscillator block.
+We also consider gravity as a force acting on the pendulum.
 
-Define the Duffing spring force.
+   >>> class DufPenPathway(me.ActuatorBase):
+   ...     def __init__(self, P1, P2, P3, linear_stiffness, nonlinear_stiffness, damping, pendulum_mass, block_mass, g):
+   ...         self.P1 = P1
+   ...         self.P2 = P2
+   ...         self.P3 = P3
+   ...         self.k1 = linear_stiffness
+   ...         self.k2 = nonlinear_stiffness
+   ...         self.c1 = damping
+   ...         self.m = pendulum_mass
+   ...         self.M = block_mass
+   ...         self.g = g
+   ...
+   ...         self.pathway1 = me.LinearPathway(self.P1, self.P2)
+   ...         self.duffing_spring = me.DuffingSpring(self.k1, self.k2, self.pathway1, 0)
+   ...         self.pathway2 = me.LinearPathway(self.P2, self.P3)
+   ...
+   ...     def to_loads(self):
+   ...         duffing_force = self.duffing_spring.force * N.y
+   ...         damper_force = -self.c1 * q1d * N.y
+   ...         total_force_block = duffing_force + damper_force
+   ...         loads = [(self.P2, total_force_block), (self.P3, -self.m * self.g * N.y)]
+   ...         return loads
 
-   >>> pathway = me.LinearPathway(O, Block)
-   >>> duffing_spring = me.DuffingSpring(k1, k2, pathway, 0)
-   >>> duffing_force = -duffing_spring.force
-   >>> duffing_force
-   k1*sqrt(q1(t)**2) + k2*(q1(t)**2)**(3/2)
-
-Define Rayleigh dissipation.
-
-   >>> D = (1/2) * c1 * q1d**2
-
-In relation to Lagrange's Method, we derive both the kinetic and potential energies of the system.
-
-Kinetic Energy
-
-   >>> Kinetic = par_block.kinetic_energy(N) + par_pendulum.kinetic_energy(N)
-   >>> Kinetic
-   M*Derivative(q1(t), t)**2/2 + m*r**2*Derivative(q2(t), t)**2/5 + m*(l**2*Derivative(q2(t), t)**2 - 2*l*sin(q2(t))*Derivative(q1(t), t)*Derivative(q2(t), t) + Derivative(q1(t), t)**2)/2
-
-Potential Energy
-
-   >>> par_block.potential_energy = sm.integrate(duffing_force, q1)
-   >>> par_pendulum.potential_energy = m * g * (l - l/(sm.sqrt(1+q2**2/q1**2)))
-   >>> me.potential_energy(par_block, par_pendulum)
-   g*m*(l - l/sqrt(1 + q2(t)**2/q1(t)**2)) + k1*sqrt(q1(t)**2)*q1(t)/2 + k2*(q1(t)**2)**(3/2)*q1(t)/4
+   >>> pathway = DufPenPathway(O, Block, Pendulum, k1, k2, c1, m, M, g)
+   >>> loads = pathway.to_loads()
+   >>> loads
+             /                   _____           3/2\                            
+             |                  /   2       /  2\   |                            
+    [(Block, \-c1*q1'(t) - k1*\/  q1   - k2*\q1 /   / n_y), (Pendulum, -g*m n_y)]
 
 Lagrange's Method
 =================
 
 With the problem setup, the Lagrangian can be calculated, and the equations of motion formed.
-In the force list FL, we specify forces in the format (point, the force acting on the particle).
 
    >>> L = me.Lagrangian(N, par_block, par_pendulum)
    >>> me.Lagrangian(N, par_block, par_pendulum)
-   M*Derivative(q1(t), t)**2/2 - g*m*(l - l/sqrt(1 + q2(t)**2/q1(t)**2)) - k1*sqrt(q1(t)**2)*q1(t)/2 - k2*(q1(t)**2)**(3/2)*q1(t)/4 + m*r**2*Derivative(q2(t), t)**2/5 + m*(l**2*Derivative(q2(t), t)**2 - 2*l*sin(q2(t))*Derivative(q1(t), t)*Derivative(q2(t), t) + Derivative(q1(t), t)**2)/2
+            2      2       2     / 2       2                                     2\
+    M*q1'(t)    m*r *q2'(t)    m*\l *q2'(t)  - 2*l*sin(q2)*q1'(t)*q2'(t) + q1'(t) /
+    --------- + ------------ + ----------------------------------------------------
+        2            5                                  2
 
-   >>> FL = [(Block, duffing_force * N.y + D * N.y), (Pendulum, - m * g * N.y)]
-   >>> LM = me.LagrangesMethod(L, [q1, q2], forcelist = FL, frame = N)
+   >>> LM = me.LagrangesMethod(L, [q1, q2], forcelist = loads, frame = N)
    >>> LM.form_lagranges_equations()
-   Matrix([
-    [                                                                    M*Derivative(q1(t), (t, 2)) - 0.5*c1*Derivative(q1(t), t)**2 - g*l*m*q2(t)**2/((1 + q2(t)**2/q1(t)**2)**(3/2)*q1(t)**3) + g*m + m*(-2*l*sin(q2(t))*Derivative(q2(t), (t, 2)) - 2*l*cos(q2(t))*Derivative(q2(t), t)**2 + 2*Derivative(q1(t), (t, 2)))/2],
-    [-g*l*m*sin(q2(t)) + g*l*m*q2(t)/((1 + q2(t)**2/q1(t)**2)**(3/2)*q1(t)**2) + l*m*cos(q2(t))*Derivative(q1(t), t)*Derivative(q2(t), t) + 2*m*r**2*Derivative(q2(t), (t, 2))/5 + m*(2*l**2*Derivative(q2(t), (t, 2)) - 2*l*sin(q2(t))*Derivative(q1(t), (t, 2)) - 2*l*cos(q2(t))*Derivative(q1(t), t)*Derivative(q2(t), t))/2]])
+    [                                          _____           3/2     /                                         2            \      ]
+    [                                         /   2       /  2\      m*\-2*l*sin(q2)*q2''(t) - 2*l*cos(q2)*q2'(t)  + 2*q1''(t)/      ]
+    [      M*q1''(t) + c1*q1'(t) + g*m + k1*\/  q1   + k2*\q1 /    + ----------------------------------------------------------      ]
+    [                                                                                            2                                   ]
+    [                                                                                                                                ]
+    [                                                  2             /   2                                                          \]
+    [                                             2*m*r *q2''(t)   m*\2*l *q2''(t) - 2*l*sin(q2)*q1''(t) - 2*l*cos(q2)*q1'(t)*q2'(t)/]
+    [-g*l*m*sin(q2) + l*m*cos(q2)*q1'(t)*q2'(t) + -------------- + ------------------------------------------------------------------]
+    [                                                   5                                          2                                 ]
 
 References
 ==========
