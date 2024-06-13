@@ -75,7 +75,7 @@ The angular velocity of the pendulum in the reference frame is:
    :context: close-figs
    :nofigs:
 
-   >>> B.set_ang_vel(N, u2 * N.z)
+   >>> B.set_ang_vel(N, q2.diff() * N.z)
 
 Locations and velocities of the Duffing Oscillator block and the pendulum are:
 
