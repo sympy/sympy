@@ -10,5 +10,4 @@ updates:
         patterns:
           - "*"
     labels:
-      - "github-actions"
-      - "dependencies"
+      - "Github Actions"
