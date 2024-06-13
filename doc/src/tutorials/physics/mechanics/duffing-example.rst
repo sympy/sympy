@@ -112,8 +112,8 @@ We also consider gravity as a force acting on the pendulum.
    >>> pathway = DufPenPathway(O, Block, Pendulum, k1, k2, c1, m, M, g)
    >>> loads = pathway.to_loads()
    >>> loads
-             /                   _____           3/2\                            
-             |                  /   2       /  2\   |                            
+             /                   _____           3/2\
+             |                  /   2       /  2\   |
     [(Block, \-c1*q1'(t) - k1*\/  q1   - k2*\q1 /   / n_y), (Pendulum, -g*m n_y)]
 
 Lagrange's Method
