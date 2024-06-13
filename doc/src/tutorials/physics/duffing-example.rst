@@ -42,7 +42,7 @@ Define Variables
    >>> u1, u2 = me.dynamicsymbols('u1 u2')
    >>> u1d, u2d = me.dynamicsymbols('u1 u2', 1)
 
-- :math:`q1`: Generalized coordinate representing the position of the Duffing oscillator
+- :math:`q_1`: Generalized coordinate representing the position of the Duffing oscillator
 - :math:`q2`: Generalized coordinate representing the angle of the pendulum
 - :math:`q1d`: First time derivative of `q1`, representing the velocity of the Duffing oscillator
 - :math:`q2d`: First time derivative of `q2`, representing the angular velocity of the pendulum
