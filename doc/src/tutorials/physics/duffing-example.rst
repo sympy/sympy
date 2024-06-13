@@ -49,7 +49,7 @@ Define Variables
 - :math:`u1`: Generalized speed associated with the Duffing oscillator
 - :math:`u2`: Generalized speed associated with the pendulum
 - :math:`u1d`: First time derivative of `u1`, representing the acceleration of the Duffing oscillator
-- :math:`u2d`: First time derivative of `u2`, representing the angular acceleration of the pendulum
+- :math:`\dot{u}_2`: First time derivative of `u2`, representing the angular acceleration of the pendulum
 
 Define Kinematics
 =================
