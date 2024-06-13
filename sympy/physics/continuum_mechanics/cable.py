@@ -547,7 +547,7 @@ class Cable:
             lowest_x = sympify(args[0])
             self._lowest_x_global = lowest_x
 
-            a = Symbol('a')
+            a = Symbol('a', positive=True)
             c = Symbol('c')
             # augmented matrix form of linsolve
 
