@@ -79,12 +79,10 @@ and fixed at a pivot point (Duffing Oscillator Block).
    >>> par_block = me.RigidBody('block', Block, N, M, (I_block, Block))
    >>> par_pendulum = me.RigidBody('pendulum', Pendulum, B, m, (I_pendulum, Pendulum))
 
-Define Forces Using a Custom Actuator
-=====================================
+Define Forces
+=============
 
-We define a custom actuator class, `DuffingActuator`, to calculate the forces acting on the system.
-This class combines the forces from a Duffing spring and a damper to model the dynamics of the Duffing oscillator block.
-We also consider gravity as a force acting on the pendulum.
+We calculate the forces acting on the system.
 
    >>> path = me.LinearPathway(O, Block)
    >>> spring = me.DuffingSpring(k1, k2, path, 0)
