@@ -113,7 +113,7 @@ With the problem setup, the Lagrangian can be calculated, and the equations of m
     --------- + ------------ + ----------------------------------------------------
         2            5                                  2
 
-   >>> LM = me.LagrangesMethod(L, [q1, q2], forcelist = loads, frame = N)
+   >>> LM = me.LagrangesMethod(L, [q1, q2], bodies=bodies, forcelist=loads, frame=N)
    >>> LM.form_lagranges_equations()
     [                                                                                                 /        _____           3/2\   ]
     [                                      /                                         2            \   |       /   2       /  2\   |   ]
