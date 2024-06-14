@@ -90,9 +90,7 @@ We calculate the forces acting on the system.
    >>> bodies = [par_block, par_pendulum]
 
    >>> for body in bodies:
-   ...     gravitational_force = -body.mass * g * N.y
-   ...     gravitational_load = (body.masscenter, gravitational_force)
-   ...     loads.append(gravitational_load)
+   ...     loads.append(me.Force(body, -body.mass * g * N.y))
 
    >>> loads
          /      _____           3/2\                  /        _____           3/2\
