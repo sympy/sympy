@@ -54,8 +54,8 @@ The angular velocity of the pendulum in the reference frame is:
 Locations and velocities of the Duffing Oscillator block and the pendulum are:
 
    >>> O = me.Point('O')
-   >>> Block = O.locatenew('Block', q1 * N.y)
-   >>> Pendulum = Block.locatenew('Pendulum', l * B.y)
+   >>> block_point = O.locatenew('block', q1 * N.y)
+   >>> pendulum_point = block_point.locatenew('pendulum', l * B.y)
 
 O is a fixed point in the inertial reference frame.
 
