@@ -22,10 +22,7 @@ Define Variables
 ================
 
    >>> M, m, l, k1, k2, c1, g, h, w, d, r = sm.symbols('M, m, l, k1, k2, c1, g, h, w, d, r')
-   >>> q1, q2 = me.dynamicsymbols('q1 q2')
-   >>> q1d, q2d = me.dynamicsymbols('q1 q2', 1)
-   >>> u1, u2 = me.dynamicsymbols('u1 u2')
-   >>> u1d, u2d = me.dynamicsymbols('u1 u2', 1)
+   >>> q1, q2, u2, u2 = me.dynamicsymbols('q1 q2 u1 u2')
 
 - :math:`h`: Height of the Duffing oscillator
 - :math:`w`: Width of the Duffing oscillator
