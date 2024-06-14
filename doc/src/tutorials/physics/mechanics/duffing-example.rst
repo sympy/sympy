@@ -22,10 +22,7 @@ Define Variables
 ================
 
    >>> M, m, l, k1, k2, c1, g, h, w, d, r = sm.symbols('M, m, l, k1, k2, c1, g, h, w, d, r')
-   >>> q1, q2 = me.dynamicsymbols('q1 q2')
-   >>> q1d, q2d = me.dynamicsymbols('q1 q2', 1)
-   >>> u1, u2 = me.dynamicsymbols('u1 u2')
-   >>> u1d, u2d = me.dynamicsymbols('u1 u2', 1)
+   >>> q1, q2, u2, u2 = me.dynamicsymbols('q1 q2 u1 u2')
 
 - :math:`h`: Height of the Duffing oscillator
 - :math:`w`: Width of the Duffing oscillator
@@ -57,8 +54,8 @@ The angular velocity of the pendulum in the reference frame is:
 Locations and velocities of the Duffing Oscillator block and the pendulum are:
 
    >>> O = me.Point('O')
-   >>> Block = O.locatenew('Block', q1 * N.y)
-   >>> Pendulum = Block.locatenew('Pendulum', l * B.y)
+   >>> block_point = O.locatenew('block', q1 * N.y)
+   >>> pendulum_point = block_point.locatenew('pendulum', l * B.y)
 
 O is a fixed point in the inertial reference frame.
 
@@ -93,9 +90,7 @@ We calculate the forces acting on the system.
    >>> bodies = [par_block, par_pendulum]
 
    >>> for body in bodies:
-   ...     gravitational_force = -body.mass * g * N.y
-   ...     gravitational_load = (body.masscenter, gravitational_force)
-   ...     loads.append(gravitational_load)
+   ...     loads.append(me.Force(body, -body.mass * g * N.y))
 
    >>> loads
          /      _____           3/2\                  /        _____           3/2\
@@ -118,7 +113,7 @@ With the problem setup, the Lagrangian can be calculated, and the equations of m
     --------- + ------------ + ----------------------------------------------------
         2            5                                  2
 
-   >>> LM = me.LagrangesMethod(L, [q1, q2], forcelist = loads, frame = N)
+   >>> LM = me.LagrangesMethod(L, [q1, q2], bodies=bodies, forcelist=loads, frame=N)
    >>> LM.form_lagranges_equations()
     [                                                                                                 /        _____           3/2\   ]
     [                                      /                                         2            \   |       /   2       /  2\   |   ]
