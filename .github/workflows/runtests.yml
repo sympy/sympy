@@ -179,11 +179,12 @@ jobs:
                          'antlr4-python3-runtime==4.11.*'                 \
                          symengine                                        \
                          numba llvmlite pymc                              \
+                         'gmpy2>=2.2.0rc1'                                \
                          #
 
-      # Not available in CPython 3.12 (yet).
-      - if: ${{ ! contains(matrix.python-version, '3.12') }}
-        run: pip install gmpy2
+      ## Not available in CPython 3.13 (yet).
+      #- if: ${{ ! contains(matrix.python-version, '3.13') }}
+      #  run: pip install gmpy2
 
       # Test external imports
       - run: bin/test_external_imports.py
@@ -301,7 +302,7 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pip install python-flint==0.6 gmpy2
+      - run: pip install python-flint==0.6 'gmpy2>=2.2.0rc1'
       # Test the modules that most directly use python-flint
       - run: pytest sympy/polys sympy/ntheory sympy/matrices
         env:
