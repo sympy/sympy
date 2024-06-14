@@ -119,6 +119,25 @@ With the problem setup, the Lagrangian can be calculated, and the equations of m
     [                   ---------------------------------------------------------------------                   ]
     [                                                     5                                                     ]
 
+Equations of motion in [P.Brzeskia2012]_:
+
+.. math::
+
+   (M + m)q_1'' - mlq_2'' \sin(q_2) - ml(q_2')^2 \cos(q_2) + k_1 q_1 + k_2 (q_1)^3 + c_1 q_1' = F_0 \cos(\nu t)
+   
+   ml^2 q_2'' - mlq_1'' \sin(q_2) + mlg \sin(q_2) + c_2 q_2' = 0
+
+Equations of motion in this example:
+
+.. math::
+
+   (M + m)q_1'' - mlq_2'' \sin(q_2) - ml(q_2')^2 \cos(q_2) + k_1 q_1 + k_2 (q_1)^3 + c_1 q_1' - (M + m)g = 0
+   
+   ml^2 q_2'' - mlq_1'' \sin(q_2) + mlg \sin(q_2) + \frac{2r^2q_2''}{5} = 0
+
+The differences in the equations of motion are attributed to several factors: the gravitational force, a damping torque characterized by the damping coefficient `c_2`,
+and a periodically varying excitation :math:`F_0 \cos(\nu t)`.
+
 References
 ==========
 
