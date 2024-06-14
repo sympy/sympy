@@ -10,7 +10,7 @@ from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
                              FallingFactorial, harmonic, atan2, sec, acsc,
                              hermite, laguerre, assoc_laguerre, jacobi,
                              gegenbauer, chebyshevt, chebyshevu, legendre,
-                             assoc_legendre, Li, LambertW)
+                             assoc_legendre, Li, LambertW, lerchphi)
 
 from sympy.printing.mathematica import mathematica_code as mcode
 
