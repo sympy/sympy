@@ -82,39 +82,31 @@ and fixed at a pivot point (Duffing Oscillator Block).
 Define Forces Using a Custom Actuator
 =====================================
 
-We define a custom actuator class, `DuffingDamperPathway`, to calculate the forces acting on the system.
+We define a custom actuator class, `DuffingActuator`, to calculate the forces acting on the system.
 This class combines the forces from a Duffing spring and a damper to model the dynamics of the Duffing oscillator block.
 We also consider gravity as a force acting on the pendulum.
 
-   >>> class DufPenPathway(me.ActuatorBase):
-   ...     def __init__(self, P1, P2, P3, linear_stiffness, nonlinear_stiffness, damping, pendulum_mass, block_mass, g):
-   ...         self.P1 = P1
-   ...         self.P2 = P2
-   ...         self.P3 = P3
-   ...         self.k1 = linear_stiffness
-   ...         self.k2 = nonlinear_stiffness
-   ...         self.c1 = damping
-   ...         self.m = pendulum_mass
-   ...         self.M = block_mass
-   ...         self.g = g
-   ...
-   ...         self.pathway1 = me.LinearPathway(self.P1, self.P2)
-   ...         self.duffing_spring = me.DuffingSpring(self.k1, self.k2, self.pathway1, 0)
-   ...         self.pathway2 = me.LinearPathway(self.P2, self.P3)
-   ...
-   ...     def to_loads(self):
-   ...         duffing_force = self.duffing_spring.force * N.y
-   ...         damper_force = -self.c1 * q1d * N.y
-   ...         total_force_block = duffing_force + damper_force
-   ...         loads = [(self.P2, total_force_block), (self.P3, -self.m * self.g * N.y)]
-   ...         return loads
+   >>> path = me.LinearPathway(O, Block)
+   >>> spring = me.DuffingSpring(k1, k2, path, 0)
+   >>> damper = me.LinearDamper(c1, path)
 
-   >>> pathway = DufPenPathway(O, Block, Pendulum, k1, k2, c1, m, M, g)
-   >>> loads = pathway.to_loads()
+   >>> loads = spring.to_loads() + damper.to_loads()
+
+   >>> bodies = [par_block, par_pendulum]
+
+   >>> for body in bodies:
+   ...     gravitational_force = -body.mass * g * N.y
+   ...     gravitational_load = (body.masscenter, gravitational_force)
+   ...     loads.append(gravitational_load)
+
    >>> loads
-             /                   _____           3/2\
-             |                  /   2       /  2\   |
-    [(Block, \-c1*q1'(t) - k1*\/  q1   - k2*\q1 /   / n_y), (Pendulum, -g*m n_y)]
+         /      _____           3/2\                  /        _____           3/2\
+         |     /   2       /  2\   |                  |       /   2       /  2\   |
+         \k1*\/  q1   + k2*\q1 /   /*q1               \- k1*\/  q1   - k2*\q1 /   /*q1
+    [(O, ------------------------------ n_y), (Block, -------------------------------- n_y), (O, c1*q1'(t) n_y), (Block, -c1*q1'(t) n_y), (Block, -M*g n_y), (Pendulum, -g*m n_y)]
+                       _____                                         _____
+                      /   2                                         /   2
+                    \/  q1                                        \/  q1
 
 Lagrange's Method
 =================
@@ -130,15 +122,18 @@ With the problem setup, the Lagrangian can be calculated, and the equations of m
 
    >>> LM = me.LagrangesMethod(L, [q1, q2], forcelist = loads, frame = N)
    >>> LM.form_lagranges_equations()
-    [                                          _____           3/2     /                                         2            \      ]
-    [                                         /   2       /  2\      m*\-2*l*sin(q2)*q2''(t) - 2*l*cos(q2)*q2'(t)  + 2*q1''(t)/      ]
-    [      M*q1''(t) + c1*q1'(t) + g*m + k1*\/  q1   + k2*\q1 /    + ----------------------------------------------------------      ]
-    [                                                                                            2                                   ]
-    [                                                                                                                                ]
-    [                                                  2             /   2                                                          \]
-    [                                             2*m*r *q2''(t)   m*\2*l *q2''(t) - 2*l*sin(q2)*q1''(t) - 2*l*cos(q2)*q1'(t)*q2'(t)/]
-    [-g*l*m*sin(q2) + l*m*cos(q2)*q1'(t)*q2'(t) + -------------- + ------------------------------------------------------------------]
-    [                                                   5                                          2                                 ]
+    [                                                                                                 /        _____           3/2\   ]
+    [                                      /                                         2            \   |       /   2       /  2\   |   ]
+    [                                    m*\-2*l*sin(q2)*q2''(t) - 2*l*cos(q2)*q2'(t)  + 2*q1''(t)/   \- k1*\/  q1   - k2*\q1 /   /*q1]
+    [M*g + M*q1''(t) + c1*q1'(t) + g*m + ---------------------------------------------------------- - --------------------------------]
+    [                                                                2                                               _____            ]
+    [                                                                                                               /   2             ]
+    [                                                                                                             \/  q1              ]
+    [                                                                                                                                 ]
+    [                                                  2             /   2                                                          \ ]
+    [                                             2*m*r *q2''(t)   m*\2*l *q2''(t) - 2*l*sin(q2)*q1''(t) - 2*l*cos(q2)*q1'(t)*q2'(t)/ ]
+    [-g*l*m*sin(q2) + l*m*cos(q2)*q1'(t)*q2'(t) + -------------- + ------------------------------------------------------------------ ]
+    [                                                   5                                          2                                  ]
 
 References
 ==========
