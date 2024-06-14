@@ -6,7 +6,8 @@ Duffing Oscillator with a Pendulum
 
 In this example we demonstrate the use of functionality provided in
 :obj:`sympy.physics.mechanics` for deriving the quations of motion (EOM) for a system
-consisting of a Duffing oscillator with a pendulum.
+consisting of a Duffing oscillator with a pendulum. This example is inspired by the
+paper [P.Brzeskia2012]_ section 2.
 
 .. _fig-duffing-oscillator-pendulum:
 .. figure:: duffing-oscillator-pendulum.svg
@@ -17,12 +18,14 @@ non-linear parts of spring stiffness, and `c_1` is a viscous damping coefficient
 
    >>> import sympy as sm
    >>> import sympy.physics.mechanics as me
+   >>> me.init_vprinting()
 
 Define Variables
 ================
 
    >>> M, m, l, k1, k2, c1, g, h, w, d, r = sm.symbols('M, m, l, k1, k2, c1, g, h, w, d, r')
    >>> q1, q2, u2, u2 = me.dynamicsymbols('q1 q2 u1 u2')
+   >>> q1d = me.dynamicsymbols('q1', 1)
 
 - :math:`h`: Height of the Duffing oscillator
 - :math:`w`: Width of the Duffing oscillator
@@ -30,12 +33,8 @@ Define Variables
 - :math:`r`: Radius of the massive bob of the pendulum
 - :math:`q_1`: Generalized coordinate representing the position of the Duffing oscillator
 - :math:`q_2`: Generalized coordinate representing the angle of the pendulum
-- :math:`\dot{q}_1`: First time derivative of `q1`, representing the velocity of the Duffing oscillator
-- :math:`\dot{q}_2`: First time derivative of `q2`, representing the angular velocity of the pendulum
 - :math:`u_1`: Generalized speed associated with the Duffing oscillator
 - :math:`u_2`: Generalized speed associated with the pendulum
-- :math:`\dot{u}_1`: First time derivative of `u1`, representing the acceleration of the Duffing oscillator
-- :math:`\dot{u}_2`: First time derivative of `u2`, representing the angular acceleration of the pendulum
 
 Define Kinematics
 =================
@@ -47,9 +46,8 @@ Define all the reference frames and points.
 
 The angular velocity of the pendulum in the reference frame is:
 
-   >>> B.set_ang_vel(N, q2.diff() * N.z)
    >>> B.ang_vel_in(N)
-   Derivative(q2(t), t)*N.z
+   q2'(t) n_z
 
 Locations and velocities of the Duffing Oscillator block and the pendulum are:
 
@@ -60,11 +58,9 @@ Locations and velocities of the Duffing Oscillator block and the pendulum are:
 O is a fixed point in the inertial reference frame.
 
    >>> O.set_vel(N, 0)
-   >>> Block.set_vel(N, q1d * N.y)
-   >>> Pendulum.v2pt_theory(Block, N, B)
-   Derivative(q1(t), t)*N.y - l*Derivative(q2(t), t)*B.x
-
-   >>> me.init_vprinting()
+   >>> block_point.set_vel(N, q1d * N.y)
+   >>> pendulum_point.v2pt_theory(block_point, N, B)
+   q1'(t) n_y + -l*q2'(t) b_x
 
 Define inertia and rigid bodies.
 Here, we assume a simple pendulum which consists of a bob of mass m hanging from a massless string of length l
@@ -73,15 +69,15 @@ and fixed at a pivot point (Duffing Oscillator Block).
    >>> I_block = me.inertia(N, M*(h**2 + d**2)/12, M*(w**2 + h**2)/12, M*(w**2 + d**2)/12)
    >>> I_pendulum = me.inertia(B, 0, 0, 2*m*r**2/5)
 
-   >>> par_block = me.RigidBody('block', Block, N, M, (I_block, Block))
-   >>> par_pendulum = me.RigidBody('pendulum', Pendulum, B, m, (I_pendulum, Pendulum))
+   >>> par_block = me.RigidBody('block', block_point, N, M, (I_block, block_point))
+   >>> par_pendulum = me.RigidBody('pendulum', pendulum_point, B, m, (I_pendulum, pendulum_point))
 
 Define Forces
 =============
 
 We calculate the forces acting on the system.
 
-   >>> path = me.LinearPathway(O, Block)
+   >>> path = me.LinearPathway(O, block_point)
    >>> spring = me.DuffingSpring(k1, k2, path, 0)
    >>> damper = me.LinearDamper(c1, path)
 
@@ -90,13 +86,13 @@ We calculate the forces acting on the system.
    >>> bodies = [par_block, par_pendulum]
 
    >>> for body in bodies:
-   ...     loads.append(me.Force(body, -body.mass * g * N.y))
+   ...     loads.append(me.Force(body, body.mass * g * N.y))
 
    >>> loads
-         /      _____           3/2\                  /        _____           3/2\
+               /      _____           3/2\                  /        _____           3/2\
          |     /   2       /  2\   |                  |       /   2       /  2\   |
          \k1*\/  q1   + k2*\q1 /   /*q1               \- k1*\/  q1   - k2*\q1 /   /*q1
-    [(O, ------------------------------ n_y), (Block, -------------------------------- n_y), (O, c1*q1'(t) n_y), (Block, -c1*q1'(t) n_y), (Block, -M*g n_y), (Pendulum, -g*m n_y)]
+    [(O, ------------------------------ n_y), (block, -------------------------------- n_y), (O, c1*q1'(t) n_y), (block, -c1*q1'(t) n_y), (block, M*g n_y), (pendulum, g*m n_y)]
                        _____                                         _____
                       /   2                                         /   2
                     \/  q1                                        \/  q1
@@ -115,18 +111,13 @@ With the problem setup, the Lagrangian can be calculated, and the equations of m
 
    >>> LM = me.LagrangesMethod(L, [q1, q2], bodies=bodies, forcelist=loads, frame=N)
    >>> sm.simplify(LM.form_lagranges_equations())
-    [                                                                                                 /        _____           3/2\   ]
-    [                                      /                                         2            \   |       /   2       /  2\   |   ]
-    [                                    m*\-2*l*sin(q2)*q2''(t) - 2*l*cos(q2)*q2'(t)  + 2*q1''(t)/   \- k1*\/  q1   - k2*\q1 /   /*q1]
-    [M*g + M*q1''(t) + c1*q1'(t) + g*m + ---------------------------------------------------------- - --------------------------------]
-    [                                                                2                                               _____            ]
-    [                                                                                                               /   2             ]
-    [                                                                                                             \/  q1              ]
-    [                                                                                                                                 ]
-    [                                                  2             /   2                                                          \ ]
-    [                                             2*m*r *q2''(t)   m*\2*l *q2''(t) - 2*l*sin(q2)*q1''(t) - 2*l*cos(q2)*q1'(t)*q2'(t)/ ]
-    [-g*l*m*sin(q2) + l*m*cos(q2)*q1'(t)*q2'(t) + -------------- + ------------------------------------------------------------------ ]
-    [                                                   5                                          2                                  ]
+    [                                       /                                    2          \   /          2\   ]
+    [-M*g + M*q1''(t) + c1*q1'(t) - g*m - m*\l*sin(q2)*q2''(t) + l*cos(q2)*q2'(t)  - q1''(t)/ + \k1 + k2*q1 /*q1]
+    [                                                                                                           ]
+    [                     /                   2                                    2        \                   ]
+    [                   m*\5*g*l*sin(q2) + 5*l *q2''(t) - 5*l*sin(q2)*q1''(t) + 2*r *q2''(t)/                   ]
+    [                   ---------------------------------------------------------------------                   ]
+    [                                                     5                                                     ]
 
 References
 ==========
