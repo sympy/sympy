@@ -51,6 +51,10 @@ jobs:
           workflow_conclusion: success
           name: benchmarks
 
+      - run: '! test -L pr_number.txt'
+      - run: '! test -L pr_vs_master_changed.txt'
+      - run: '! test -L master_vs_release_changed.txt'
+
       - name: Read benchmark output 1
         if: ${{ steps.pr_number_reader.outputs.content != '' }}
         id: pr_vs_master_changed
