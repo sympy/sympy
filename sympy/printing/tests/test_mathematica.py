@@ -81,6 +81,7 @@ def test_Function():
     assert mcode(LambertW(x)) == "ProductLog[x]"
     assert mcode(LambertW(x, -1)) == "ProductLog[-1, x]"
     assert mcode(LambertW(x, y)) == "ProductLog[y, x]"
+    assert mcode(lerchphi(x, y, z)) == "HurwitzLerchPhi[x, y, z]"
 
 
 def test_special_polynomials():
