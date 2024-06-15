@@ -2294,10 +2294,10 @@ def test_all_close():
     assert all_close(1/3, 1/3.0001, 1e-3, 1e-3) is True
     assert all_close(1/3, Rational(1, 3)) is True
     assert all_close(0.1*exp(0.2*x), exp(x/5)/10) is True
-    # The expressions should be structurally the same:
+    # The expressions should be structurally the same modulo identity:
     assert all_close(1.4142135623730951, sqrt(2)) is False
     assert all_close(1.4142135623730951, sqrt(2).evalf()) is True
-    assert all_close(x + 1e-20, x) is False
+    assert all_close(x + 1e-20, x) is True
     # We should be able to match terms of an Add/Mul in any order
     assert all_close(Add(1, 2, evaluate=False), Add(2, 1, evaluate=False))
     # coverage
