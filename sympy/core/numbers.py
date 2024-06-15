@@ -17,6 +17,7 @@ from .decorators import _sympifyit
 from .intfunc import num_digits, igcd, ilcm, mod_inverse, integer_nthroot
 from .logic import fuzzy_not
 from .kind import NumberKind
+from .sorting import ordered
 from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
 import mpmath
@@ -4255,7 +4256,9 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
 
     The expressions must have the same structure, but any Rational, Integer, or
     Float numbers they contain are compared approximately using rtol and atol.
-    Any other parts of expressions are compared exactly.
+    Any other parts of expressions are compared exactly. However, allowance is
+    made to recognize a leading ``1`` on an expression so ``x`` will compare as equal
+    to ``1.0*x``.
 
     Relative tolerance is measured with respect to expr2 so when used in
     testing expr2 should be the expected correct answer.
@@ -4282,6 +4285,7 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
     def _all_close(obj1, obj2):
         if type(obj1) == type(obj2) and isinstance(obj1, (list, tuple)):
             if len(obj1) != len(obj2):
+                print(-1)
                 return False
             return all(_all_close(e1, e2) for e1, e2 in zip(obj1, obj2))
         else:
@@ -4293,28 +4297,84 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
         if num1 != num2:
             return False
         elif num1:
-            return bool(abs(expr1 - expr2) <= atol + rtol*abs(expr2))
-        elif expr1.is_Atom:
-            return expr1 == expr2
-        elif expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
+            return _close_num(expr1, expr2)
+        if ( # check whether a 1 should be added to args
+                expr1.is_Mul and expr2.is_Atom and len(expr1.args) == 2 or
+                expr1.is_Atom and expr2.is_Mul and len(expr2.args) == 2 or
+                expr1.is_Mul and expr2.is_Mul and abs(len(expr1.args) - len(expr2.args)) == 1):
+            if (cm:=expr1.as_coeff_mul(rational=False))[0] == 1 and (expr1.is_Atom or expr1.args[0] is not S.One):
+                expr1 = Mul(*((S.One,) + cm[1]), evaluate=False)
+            if (cm:=expr2.as_coeff_mul(rational=False))[0] == 1 and (expr2.is_Atom or expr2.args[0] is not S.One):
+                expr2 = Mul(*((S.One,) + cm[1]), evaluate=False)
+        if expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
             return False
-        elif expr1.is_Add or expr1.is_Mul:
+        if expr1.is_Mul or expr1.is_Add:
             return _all_close_ac(expr1, expr2)
         else:
             args = zip(expr1.args, expr2.args)
             return all(_all_close_expr(a1, a2) for a1, a2 in args)
 
+    def _close_num(num1, num2):
+        return bool(abs(num1 - num2) <= atol + rtol*abs(num2))
+
     def _all_close_ac(expr1, expr2):
-        # Compare expressions with associative commutative operators for
-        # approximate equality. This could be horribly inefficient for large
-        # expressions e.g. an Add with many terms.
-        args2 = list(expr2.args)
-        for arg1 in expr1.args:
-            for i, arg2 in enumerate(args2):
-                if _all_close_expr(arg1, arg2):
-                    args2.pop(i)
+        # expr1 and expr2 are of the same type with the same number of args;
+        # compare expressions with associative commutative operators for
+        # approximate equality by seeing that all terms have equivalent
+        # coefficients (which are always Rational or Float)
+        if expr1.is_Mul:
+            c1, e1 = expr1.as_coeff_mul(rational=False)
+            c2, e2 = expr2.as_coeff_mul(rational=False)
+            if not _close_num(c1, c2):
+                return False
+            if e1 == e2:
+                return True
+            s1 = set(e1)
+            s2 = set(e2)
+            common = s1 & s2
+            s1 -= common
+            s2 -= common
+            if not any(i.has(Float) for j in (s1, s2) for i in j):
+                return False
+            # factors might not be matching, e.g.
+            # x != x**1.0, exp(x) != exp(1.0*x), etc...
+            s1 = [i.as_base_exp() for i in ordered(s1)]
+            s2 = [i.as_base_exp() for i in ordered(s2)]
+            unmatched = list(range(len(s1)))
+            for be1 in s1:
+                for i in unmatched:
+                    be2 = s2[i]
+                    if _all_close(be1, be2):
+                        unmatched.remove(i)
+                        break
+                else:
+                    return False
+            return not(unmatched)
+        # expr1 is Add or function
+        cd1 = expr1.as_coefficients_dict()
+        cd2 = expr2.as_coefficients_dict()
+        for k in list(cd1):
+            if k in list(cd2):
+                if not _close_num(cd1.pop(k), cd2.pop(k)):
+                    return False
+            # k (or a close version in cd2) might have
+            # Floats in a factor of the term which will
+            # be handled below
+        if not cd1:
+            return True
+        for k1 in cd1:
+            for k2 in cd2:
+                if _all_close_ac(k1, k2):
+                    # found a matching key
+                    # XXX there could be a corner case where
+                    # more than 1 might match and the numbers are
+                    # such that one is better than the other
+                    # that is not being considered here
+                    if not _close_num(cd1[k1], cd2[k2]):
+                        return False
                     break
             else:
+                # no key matched
                 return False
         return True
 
