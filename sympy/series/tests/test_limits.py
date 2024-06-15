@@ -316,7 +316,7 @@ def test_heuristic():
     assert heuristics(sin(1/x) + atan(x), x, 0, '+') == AccumBounds(-1, 1)
     assert limit(log(2 + sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
     # https://github.com/sympy/sympy/issues/26523
-    assert heuristics(lerchphi(x, 1, a), x, 1, '-') != lerchphi(1, 1, a)
+    assert heuristics(lerchphi(x, 1, a) + log(x-1), x, 1, '-') is None
 
 
 def test_issue_3871():
