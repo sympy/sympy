@@ -4279,7 +4279,15 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
     """
     NUM_TYPES = (Rational, Float)
 
-    def _all_close(expr1, expr2, rtol, atol):
+    def _all_close(obj1, obj2):
+        if type(obj1) == type(obj2) and isinstance(obj1, (list, tuple)):
+            if len(obj1) != len(obj2):
+                return False
+            return all(_all_close(e1, e2) for e1, e2 in zip(obj1, obj2))
+        else:
+            return _all_close_expr(_sympify(obj1), _sympify(obj2))
+
+    def _all_close_expr(expr1, expr2):
         num1 = isinstance(expr1, NUM_TYPES)
         num2 = isinstance(expr2, NUM_TYPES)
         if num1 != num2:
@@ -4291,26 +4299,26 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
         elif expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
             return False
         elif expr1.is_Add or expr1.is_Mul:
-            return _all_close_ac(expr1, expr2, rtol, atol)
+            return _all_close_ac(expr1, expr2)
         else:
             args = zip(expr1.args, expr2.args)
-            return all(_all_close(a1, a2, rtol, atol) for a1, a2 in args)
+            return all(_all_close_expr(a1, a2) for a1, a2 in args)
 
-    def _all_close_ac(expr1, expr2, rtol, atol):
+    def _all_close_ac(expr1, expr2):
         # Compare expressions with associative commutative operators for
         # approximate equality. This could be horribly inefficient for large
         # expressions e.g. an Add with many terms.
         args2 = list(expr2.args)
         for arg1 in expr1.args:
             for i, arg2 in enumerate(args2):
-                if _all_close(arg1, arg2, rtol, atol):
+                if _all_close_expr(arg1, arg2):
                     args2.pop(i)
                     break
             else:
                 return False
         return True
 
-    return _all_close(_sympify(expr1), _sympify(expr2), rtol, atol)
+    return _all_close(expr1, expr2)
 
 
 @dispatch(Tuple, Number) # type:ignore
