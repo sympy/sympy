@@ -350,6 +350,8 @@ class Limit(Expr):
                 return coeff
             if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
                 return self
+            from sympy.simplify.gammasimp import gammasimp
+            coeff = gammasimp(coeff)
             if not coeff.has(z):
                 if ex.is_positive:
                     return S.Zero
