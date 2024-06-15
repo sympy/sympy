@@ -4350,33 +4350,36 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
                 else:
                     return False
             return not(unmatched)
-        # expr1 is Add or function
-        cd1 = expr1.as_coefficients_dict()
-        cd2 = expr2.as_coefficients_dict()
-        for k in list(cd1):
-            if k in list(cd2):
-                if not _close_num(cd1.pop(k), cd2.pop(k)):
-                    return False
-            # k (or a close version in cd2) might have
-            # Floats in a factor of the term which will
-            # be handled below
-        if not cd1:
-            return True
-        for k1 in cd1:
-            for k2 in cd2:
-                if _all_close_ac(k1, k2):
-                    # found a matching key
-                    # XXX there could be a corner case where
-                    # more than 1 might match and the numbers are
-                    # such that one is better than the other
-                    # that is not being considered here
-                    if not _close_num(cd1[k1], cd2[k2]):
+        if expr1.is_Add:
+            cd1 = expr1.as_coefficients_dict()
+            cd2 = expr2.as_coefficients_dict()
+            for k in list(cd1):
+                if k in list(cd2):
+                    if not _close_num(cd1.pop(k), cd2.pop(k)):
                         return False
-                    break
-            else:
-                # no key matched
-                return False
-        return True
+                # k (or a close version in cd2) might have
+                # Floats in a factor of the term which will
+                # be handled below
+            if not cd1:
+                return True
+            for k1 in cd1:
+                for k2 in cd2:
+                    if _all_close_ac(k1, k2):
+                        # found a matching key
+                        # XXX there could be a corner case where
+                        # more than 1 might match and the numbers are
+                        # such that one is better than the other
+                        # that is not being considered here
+                        if not _close_num(cd1[k1], cd2[k2]):
+                            return False
+                        break
+                else:
+                    # no key matched
+                    return False
+            return True
+
+        # Pow or other object: handle arg-wise
+        return _all_close_expr(expr1, expr2)
 
     return _all_close(expr1, expr2)
 
