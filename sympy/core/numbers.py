@@ -4257,8 +4257,7 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
     The expressions must have the same structure, but any Rational, Integer, or
     Float numbers they contain are compared approximately using rtol and atol.
     Any other parts of expressions are compared exactly. However, allowance is
-    made to recognize a leading ``1`` on an expression so ``x`` will compare as equal
-    to ``1.0*x``.
+    made to allow for the additive and multiplicative identities.
 
     Relative tolerance is measured with respect to expr2 so when used in
     testing expr2 should be the expected correct answer.
@@ -4279,13 +4278,22 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
     False
     >>> all_close(expr1, expr2)
     True
+
+    Identities are automatically supplied:
+
+    >>> all_close(x, x + 1e-10)
+    True
+    >>> all_close(x, 1.0*x)
+    True
+    >>> all_close(x, 1.0*x + 1e-10)
+    True
+
     """
     NUM_TYPES = (Rational, Float)
 
     def _all_close(obj1, obj2):
         if type(obj1) == type(obj2) and isinstance(obj1, (list, tuple)):
             if len(obj1) != len(obj2):
-                print(-1)
                 return False
             return all(_all_close(e1, e2) for e1, e2 in zip(obj1, obj2))
         else:
@@ -4298,42 +4306,33 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
             return False
         elif num1:
             return _close_num(expr1, expr2)
-        if ( # check whether a 1 should be added to args
-                expr1.is_Mul and expr2.is_Atom and len(expr1.args) == 2 or
-                expr1.is_Atom and expr2.is_Mul and len(expr2.args) == 2 or
-                expr1.is_Mul and expr2.is_Mul and abs(len(expr1.args) - len(expr2.args)) == 1):
-            if (cm:=expr1.as_coeff_mul(rational=False))[0] == 1 and (expr1.is_Atom or expr1.args[0] is not S.One):
-                expr1 = Mul(*((S.One,) + cm[1]), evaluate=False)
-            if (cm:=expr2.as_coeff_mul(rational=False))[0] == 1 and (expr2.is_Atom or expr2.args[0] is not S.One):
-                expr2 = Mul(*((S.One,) + cm[1]), evaluate=False)
+        if expr1.is_Add or expr1.is_Mul or expr2.is_Add or expr2.is_Mul:
+            return _all_close_ac(expr1, expr2)
         if expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
             return False
-        if expr1.is_Mul or expr1.is_Add:
-            return _all_close_ac(expr1, expr2)
-        else:
-            args = zip(expr1.args, expr2.args)
-            return all(_all_close_expr(a1, a2) for a1, a2 in args)
+        args = zip(expr1.args, expr2.args)
+        return all(_all_close_expr(a1, a2) for a1, a2 in args)
 
     def _close_num(num1, num2):
         return bool(abs(num1 - num2) <= atol + rtol*abs(num2))
 
     def _all_close_ac(expr1, expr2):
-        # expr1 and expr2 are of the same type with the same number of args;
         # compare expressions with associative commutative operators for
         # approximate equality by seeing that all terms have equivalent
         # coefficients (which are always Rational or Float)
-        if expr1.is_Mul:
+        if expr1.is_Mul or expr2.is_Mul:
+            # as_coeff_mul automatically will supply coeff of 1
             c1, e1 = expr1.as_coeff_mul(rational=False)
             c2, e2 = expr2.as_coeff_mul(rational=False)
             if not _close_num(c1, c2):
                 return False
-            if e1 == e2:
-                return True
             s1 = set(e1)
             s2 = set(e2)
             common = s1 & s2
             s1 -= common
             s2 -= common
+            if not s1:
+                return True
             if not any(i.has(Float) for j in (s1, s2) for i in j):
                 return False
             # factors might not be matching, e.g.
@@ -4350,36 +4349,42 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
                 else:
                     return False
             return not(unmatched)
-        if expr1.is_Add:
-            cd1 = expr1.as_coefficients_dict()
-            cd2 = expr2.as_coefficients_dict()
-            for k in list(cd1):
-                if k in list(cd2):
-                    if not _close_num(cd1.pop(k), cd2.pop(k)):
-                        return False
-                # k (or a close version in cd2) might have
-                # Floats in a factor of the term which will
-                # be handled below
+        assert expr1.is_Add or expr2.is_Add
+        cd1 = expr1.as_coefficients_dict()
+        cd2 = expr2.as_coefficients_dict()
+        # this test will asure that the key of 1 is in
+        # each dict and that they have equal values
+        if not _close_num(cd1[1], cd2[1]):
+            return False
+        if len(cd1) != len(cd2):
+            return False
+        for k in list(cd1):
+            if k in list(cd2):
+                if not _close_num(cd1.pop(k), cd2.pop(k)):
+                    return False
+            # k (or a close version in cd2) might have
+            # Floats in a factor of the term which will
+            # be handled below
+        else:
             if not cd1:
                 return True
-            for k1 in cd1:
-                for k2 in cd2:
-                    if _all_close_ac(k1, k2):
-                        # found a matching key
-                        # XXX there could be a corner case where
-                        # more than 1 might match and the numbers are
-                        # such that one is better than the other
-                        # that is not being considered here
-                        if not _close_num(cd1[k1], cd2[k2]):
-                            return False
-                        break
-                else:
-                    # no key matched
-                    return False
-            return True
+        for k1 in cd1:
+            for k2 in cd2:
+                if _all_close_expr(k1, k2):
+                    # found a matching key
+                    # XXX there could be a corner case where
+                    # more than 1 might match and the numbers are
+                    # such that one is better than the other
+                    # that is not being considered here
+                    if not _close_num(cd1[k1], cd2[k2]):
+                        return False
+                    break
+            else:
+                # no key matched
+                return False
+        return True
 
-        # Pow or other object: handle arg-wise
-        return _all_close_expr(expr1, expr2)
+        assert None  # should never get here
 
     return _all_close(expr1, expr2)
 
