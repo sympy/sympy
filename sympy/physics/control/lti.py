@@ -392,6 +392,17 @@ class LinearTimeInvariant(Basic, EvalfMixin):
 class SISOLinearTimeInvariant(LinearTimeInvariant):
     """A common class for all the SISO Linear Time-Invariant Dynamical Systems."""
     # Users should not directly interact with this class.
+
+    @property
+    def num_inputs(self):
+        """Return the number of inputs for SISOLinearTimeInvariant."""
+        return 1
+
+    @property
+    def num_outputs(self):
+        """Return the number of outputs for SISOLinearTimeInvariant."""
+        return 1
+
     _is_SISO = True
 
 
@@ -1354,7 +1365,8 @@ class Series(SISOLinearTimeInvariant):
     ========
 
     >>> from sympy.abc import s, p, a, b
-    >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
+    >>> from sympy import Matrix
+    >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel, StateSpace
     >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
     >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
     >>> tf3 = TransferFunction(p**2, p + s, s)
@@ -1383,6 +1395,28 @@ class Series(SISOLinearTimeInvariant):
     >>> S4.doit()
     TransferFunction((s**3 - 2)*(-p**2*(-p + s) + (p + s)*(a*p**2 + b*s)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
+    You can also connect StateSpace which results in SISO
+
+    >>> A1 = Matrix([[-1]])
+    >>> B1 = Matrix([[1]])
+    >>> C1 = Matrix([[-1]])
+    >>> D1 = Matrix([1])
+    >>> A2 = Matrix([[0]])
+    >>> B2 = Matrix([[1]])
+    >>> C2 = Matrix([[1]])
+    >>> D2 = Matrix([[0]])
+    >>> ss1 = StateSpace(A1, B1, C1, D1)
+    >>> ss2 = StateSpace(A2, B2, C2, D2)
+    >>> S5 = Series(ss1, ss2)
+    >>> S5
+    Series(StateSpace(Matrix([[-1]]), Matrix([[1]]), Matrix([[-1]]), Matrix([[1]])), StateSpace(Matrix([[0]]), Matrix([[1]]), Matrix([[1]]), Matrix([[0]])))
+    >>> S5.doit()
+    StateSpace(Matrix([
+    [-1,  0],
+    [-1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 1]]), Matrix([[0]]))
+
     Notes
     =====
 
@@ -1398,7 +1432,23 @@ class Series(SISOLinearTimeInvariant):
     def __new__(cls, *args, evaluate=False):
 
         args = _flatten_args(args, Series)
-        cls._check_args(args)
+        # For StateSpace series connection
+        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
+                                            and arg.is_StateSpace_object)for arg in args):
+            # Check for SISO
+            if (args[0].num_inputs == 1) and (args[-1].num_outputs == 1):
+                # Check the interconnection
+                for i in range(1, len(args)):
+                    if args[i].num_inputs != args[i-1].num_outputs:
+                        raise ValueError(filldedent("""Systems with incompatible inputs and outputs
+                            cannot be connected in Series."""))
+                cls._is_series_StateSpace = True
+            else:
+                raise ValueError("To use Series connection for MIMO systems use MIMOSeries instead.")
+        else:
+            cls._is_series_StateSpace = False
+            cls._check_args(args)
+
         obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
@@ -1426,8 +1476,8 @@ class Series(SISOLinearTimeInvariant):
 
     def doit(self, **hints):
         """
-        Returns the resultant transfer function obtained after evaluating
-        the transfer functions in series configuration.
+        Returns the resultant transfer function or StateSpace obtained after evaluating
+        the series interconnection.
 
         Examples
         ========
@@ -1441,7 +1491,28 @@ class Series(SISOLinearTimeInvariant):
         >>> Series(-tf1, -tf2).doit()
         TransferFunction((2 - s**3)*(-a*p**2 - b*s), (-p + s)*(s**4 + 5*s + 6), s)
 
+        Notes
+        =====
+
+        If a series connection contains only TransferFunction components, the equivalent system returned
+        will be a TransferFunction. However, if a StateSpace object is used in any of the arguments,
+        the output will be a StateSpace object.
+
         """
+        # Check if the system is a StateSpace
+        if self._is_series_StateSpace:
+            # Return the equivalent StateSpace model
+            res = self.args[0]
+            if not isinstance(res, StateSpace):
+                res = res.doit().rewrite(StateSpace)
+            for arg in self.args[1:]:
+                if not isinstance(arg, StateSpace):
+                    arg = arg.doit().rewrite(StateSpace)
+                else:
+                    arg = arg.doit()
+                arg = arg.doit()
+                res = arg * res
+                return res
 
         _num_arg = (arg.doit().num for arg in self.args)
         _den_arg = (arg.doit().den for arg in self.args)
@@ -1450,6 +1521,8 @@ class Series(SISOLinearTimeInvariant):
         return TransferFunction(res_num, res_den, self.var)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        if self._is_series_StateSpace:
+            return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
     @_check_other_SISO
@@ -1584,6 +1657,9 @@ class Series(SISOLinearTimeInvariant):
         """
         return self.doit().is_biproper
 
+    @property
+    def is_StateSpace_object(self):
+        return self._is_series_StateSpace
 
 def _mat_mul_compatible(*args):
     """To check whether shapes are compatible for matrix mul."""
@@ -1625,7 +1701,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     ========
 
     >>> from sympy.abc import s
-    >>> from sympy.physics.control.lti import MIMOSeries, TransferFunctionMatrix
+    >>> from sympy.physics.control.lti import MIMOSeries, TransferFunctionMatrix, StateSpace
     >>> from sympy import Matrix, pprint
     >>> mat_a = Matrix([[5*s], [5]])  # 2 Outputs 1 Input
     >>> mat_b = Matrix([[5, 1/(6*s**2)]])  # 1 Output 2 Inputs
@@ -1657,6 +1733,53 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     [ -----------    ---------- ]
     [        3             2    ]
     [     6*s           6*s     ]{t}
+    >>> a1 = Matrix([[4, 1], [2, -3]])
+    >>> b1 = Matrix([[5, 2], [-3, -3]])
+    >>> c1 = Matrix([[2, -4], [0, 1]])
+    >>> d1 = Matrix([[3, 2], [1, -1]])
+    >>> a2 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    >>> b2 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    >>> c2 = Matrix([[4, 2, -3], [1, 4, 3]])
+    >>> d2 = Matrix([[-2, 4], [0, 1]])
+    >>> ss1 = StateSpace(a1, b1, c1, d1) #2 inputs, 2 outputs
+    >>> ss2 = StateSpace(a2, b2, c2, d2) #2 inputs, 2 outputs
+    >>> S1 = MIMOSeries(ss1, ss2) #(2 inputs, 2 outputs) -> (2 inputs, 2 outputs)
+    >>> S1
+    MIMOSeries(StateSpace(Matrix([
+            [4,  1],
+            [2, -3]]), Matrix([
+            [ 5,  2],
+            [-3, -3]]), Matrix([
+            [2, -4],
+            [0,  1]]), Matrix([
+            [3,  2],
+            [1, -1]])), StateSpace(Matrix([
+            [-3,  4, 2],
+            [-1, -3, 0],
+            [ 2,  5, 3]]), Matrix([
+            [ 1,  4],
+            [-3, -3],
+            [-2,  1]]), Matrix([
+            [4, 2, -3],
+            [1, 4,  3]]), Matrix([
+            [-2, 4],
+            [ 0, 1]])))
+    >>> S1.doit()
+    StateSpace(Matrix([
+    [ 4,  1,  0,  0, 0],
+    [ 2, -3,  0,  0, 0],
+    [ 2,  0, -3,  4, 2],
+    [-6,  9, -1, -3, 0],
+    [-4,  9,  2,  5, 3]]), Matrix([
+    [  5,  2],
+    [ -3, -3],
+    [  7, -2],
+    [-12, -3],
+    [ -5, -5]]), Matrix([
+    [-4, 12, 4, 2, -3],
+    [ 0,  1, 1, 4,  3]]), Matrix([
+    [-2, -8],
+    [ 1, -1]]))
 
     Notes
     =====
@@ -1673,15 +1796,26 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     """
     def __new__(cls, *args, evaluate=False):
 
-        cls._check_args(args)
-
-        if _mat_mul_compatible(*args):
+        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
+                                            and arg.is_StateSpace_object) for arg in args):
+            # Check compatibility
+            for i in range(1, len(args)):
+                if args[i].num_inputs != args[i - 1].num_outputs:
+                    raise ValueError(filldedent("""Systems with incompatible inputs and outputs
+                        cannot be connected in MIMOSeries."""))
             obj = super().__new__(cls, *args)
-
+            cls._is_series_StateSpace = True
         else:
-            raise ValueError(filldedent("""
-                Number of input signals do not match the number
-                of output signals of adjacent systems for some args."""))
+            cls._check_args(args)
+            cls._is_series_StateSpace = False
+
+            if _mat_mul_compatible(*args):
+                obj = super().__new__(cls, *args)
+
+            else:
+                raise ValueError(filldedent("""
+                    Number of input signals do not match the number
+                    of output signals of adjacent systems for some args."""))
 
         return obj.doit() if evaluate else obj
 
@@ -1721,10 +1855,15 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         """Returns the shape of the equivalent MIMO system."""
         return self.num_outputs, self.num_inputs
 
+    @property
+    def is_StateSpace_object(self):
+        return self._is_series_StateSpace
+
     def doit(self, cancel=False, **kwargs):
         """
-        Returns the resultant transfer function matrix obtained after evaluating
-        the MIMO systems arranged in a series configuration.
+        Returns the resultant obtained after evaluating the MIMO systems arranged
+        in a series configuration. For TransferFunction systems it returns a TransferFunctionMatrix
+        and for StateSpace systems it returns the resultant StateSpace system.
 
         Examples
         ========
@@ -1739,6 +1878,19 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         TransferFunctionMatrix(((TransferFunction(2*(-p + s)*(s**3 - 2)*(a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)**2*(s**4 + 5*s + 6)**2, s), TransferFunction((-p + s)**2*(s**3 - 2)*(a*p**2 + b*s) + (-p + s)*(a*p**2 + b*s)**2*(s**4 + 5*s + 6), (-p + s)**3*(s**4 + 5*s + 6), s)), (TransferFunction((-p + s)*(s**3 - 2)**2*(s**4 + 5*s + 6) + (s**3 - 2)*(a*p**2 + b*s)*(s**4 + 5*s + 6)**2, (-p + s)*(s**4 + 5*s + 6)**3, s), TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s))))
 
         """
+        if self._is_series_StateSpace:
+            # Return the equivalent StateSpace model
+            res = self.args[0]
+            if not isinstance(res, StateSpace):
+                res = res.doit().rewrite(StateSpace)
+            for arg in self.args[1:]:
+                if not isinstance(arg, StateSpace):
+                    arg = arg.doit().rewrite(StateSpace)
+                else:
+                    arg = arg.doit()
+                res = arg * res
+            return res
+
         _arg = (arg.doit()._expr_mat for arg in reversed(self.args))
 
         if cancel:
@@ -1751,6 +1903,8 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         return temp_tfm.subs(_dummy_dict)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        if self._is_series_StateSpace:
+            return self.doit().rewrite(TransferFunction)
         return self.doit()
 
     @_check_other_MIMO

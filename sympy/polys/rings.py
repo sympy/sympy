@@ -2263,7 +2263,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         # multiplying top and bottom by a unit of the ring.
         u = q.canonical_unit()
         if u == domain.one:
-            p, q = p, q
+            pass
         elif u == -domain.one:
             p, q = -p, -q
         else:
