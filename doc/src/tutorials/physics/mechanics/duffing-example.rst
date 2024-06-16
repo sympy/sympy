@@ -66,11 +66,11 @@ Define inertia and rigid bodies.
 Here, we assume a simple pendulum which consists of a bob of mass m hanging from a massless string of length l
 and fixed at a pivot point (Duffing Oscillator Block).
 
-   >>> I_block = me.inertia(N, M*(h**2 + d**2)/12, M*(w**2 + h**2)/12, M*(w**2 + d**2)/12)
+   >>> I_block = M / 12 * me.inertia(N, h**2 + d**2, w**2 + d**2, w**2 + h**2)
    >>> I_pendulum = 2*m*r**2/5*me.inertia(B, 1, 1, 1)
 
-   >>> par_block = me.RigidBody('block', block_point, N, M, (I_block, block_point))
-   >>> par_pendulum = me.RigidBody('pendulum', pendulum_point, B, m, (I_pendulum, pendulum_point))
+   >>> block_body = me.RigidBody('block', block_point, N, M, (I_block, block_point))
+   >>> pendulum_body = me.RigidBody('pendulum', pendulum_point, B, m, (I_pendulum, pendulum_point))
 
 Define Forces
 =============
@@ -83,7 +83,7 @@ We calculate the forces acting on the system.
 
    >>> loads = spring.to_loads() + damper.to_loads()
 
-   >>> bodies = [par_block, par_pendulum]
+   >>> bodies = [block_body, pendulum_body]
 
    >>> for body in bodies:
    ...     loads.append(me.Force(body, body.mass * g * N.y))
@@ -102,8 +102,8 @@ Lagrange's Method
 
 With the problem setup, the Lagrangian can be calculated, and the equations of motion formed.
 
-   >>> L = me.Lagrangian(N, par_block, par_pendulum)
-   >>> me.Lagrangian(N, par_block, par_pendulum)
+   >>> L = me.Lagrangian(N, block_body, pendulum_body)
+   >>> me.Lagrangian(N, block_body, pendulum_body)
             2      2       2     / 2       2                                     2\
     M*q1'(t)    m*r *q2'(t)    m*\l *q2'(t)  - 2*l*sin(q2)*q1'(t)*q2'(t) + q1'(t) /
     --------- + ------------ + ----------------------------------------------------
@@ -123,15 +123,15 @@ Equations of motion in [P.Brzeskia2012]_:
 
 .. math::
 
-   (M + m)q_1'' - mlq_2'' \sin(q_2) - ml(q_2')^2 \cos(q_2) + k_1 q_1 + k_2 (q_1)^3 + c_1 q_1' = F_0 \cos(\nu t)
+   (M + m)y'' - ml \phi'' \sin(\phi) - ml(\phi')^2 \cos(\phi) + k_1 y + k_2 y^3 + c_1 y' = F_0 \cos(\nu t)
 
-   ml^2 q_2'' - mlq_1'' \sin(q_2) + mlg \sin(q_2) + c_2 q_2' = 0
+   ml^2 \phi'' - mly'' \sin(\phi) + mlg \sin(\phi) + c_2 \phi' = 0
 
 Equations of motion in this example:
 
 .. math::
 
-   (M + m)q_1'' - mlq_2'' \sin(q_2) - ml(q_2')^2 \cos(q_2) + k_1 q_1 + k_2 (q_1)^3 + c_1 q_1' - (M + m)g = 0
+   (M + m)q_1'' - mlq_2'' \sin(q_2) - ml(q_2')^2 \cos(q_2) + k_1 q_1 + k_2 q_1^3 + c_1 q_1' - (M + m)g = 0
 
    ml^2 q_2'' - mlq_1'' \sin(q_2) + mlg \sin(q_2) + \frac{2r^2q_2''}{5} = 0
 

@@ -22,4 +22,4 @@ write to our `mailing list
    :maxdepth: 2
 
    biomechanics/index.rst
-   mechanics/duffing-example.rst
+   mechanics/index.rst
