@@ -555,10 +555,7 @@ class LRASolver():
         M = self.A.copy()
         basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
         nonbasic = set(self.nonslack)
-        iteration = 0
         while True:
-            iteration += 1
-
             if self.run_checks:
                 # nonbasic variables must always be within bounds
                 assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in nonbasic)
