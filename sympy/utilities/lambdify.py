@@ -1210,7 +1210,7 @@ class _EvaluatorPrinter:
             elif isinstance(arg, DeferredVector):
                 s = str(arg)
             elif isinstance(arg, Basic) and arg.is_symbol:
-                s = self._argrepr(arg)
+                s = str(arg)
                 if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
                     if isinstance(expr, Expr):
