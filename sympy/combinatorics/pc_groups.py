@@ -196,7 +196,7 @@ class Collector(DefaultPrinting):
 
         (i, j)
             A tuple containing starting and ending index of ``w``
-            in the given word.
+            in the given word. If not exists, (-1,-1) is returned.
 
         Examples
         ========
@@ -214,6 +214,9 @@ class Collector(DefaultPrinting):
         >>> w = x1**7
         >>> collector.subword_index(word, w)
         (2, 9)
+        >>> w = x1**8
+        >>> collector.subword_index(word, w)
+        (-1, -1)
 
         """
         low = -1
