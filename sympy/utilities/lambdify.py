@@ -1299,11 +1299,9 @@ class _EvaluatorPrinter:
         def _replace(ex, variables, point):
             safe = {}
             for lhs, rhs in zip(variables, point):
-                if not self._is_safe_ident(lhs):
-                    dummy = Dummy()
-                    safe[lhs] = dummy
-                    lhs = dummy
-                out.append((lhs, rhs))
+                dummy = Dummy()
+                safe[lhs] = dummy
+                out.append((dummy, rhs))
             return ex.xreplace(safe)
 
         if isinstance(expr, (Basic, MatrixBase)):
