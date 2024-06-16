@@ -631,8 +631,7 @@ def _primepi(n:int) -> int:
         # phi(j, i) = phi(j, i-1) - phi(j/i, i-1) + phi(i-1, i-1)
         # where the range below i**2 is fixed and
         # does not need to be calculated.
-        lim2 = min(lim, i * i - 1)
-        for j in range(lim, lim2, -1):
+        for j in range(lim, min(lim, i*i - 1), -1):
             arr1[j] -= arr1[j // i] - p
     return arr2[1]
 
