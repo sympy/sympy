@@ -5,7 +5,7 @@ Duffing Oscillator with a Pendulum
 ==================================
 
 In this example we demonstrate the use of functionality provided in
-:obj:`sympy.physics.mechanics` for deriving the quations of motion (EOM) for a system
+:obj:`sympy.physics.mechanics` for deriving the equations of motion for a system
 consisting of a Duffing oscillator with a pendulum. This example is inspired by the
 paper [P.Brzeskia2012]_ section 2.
 
