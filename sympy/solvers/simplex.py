@@ -359,7 +359,6 @@ def _simplex(A, B, C, D=None, dual=False):
         C = M[-1, :-1]
 
         # Choose a pivot column, c
-        piv_cols = []
         piv_cols = [_ for _ in range(n) if C[_] < 0]
         if not piv_cols:
             break
