@@ -9,8 +9,8 @@ In this example we demonstrate the use of functionality provided in
 consisting of a Duffing oscillator with a pendulum. This example is inspired by the
 paper [P.Brzeskia2012]_ section 2.
 
-.. _fig-duffing-oscillator-pendulum:
-.. figure:: duffing-oscillator-pendulum.svg
+.. raw:: html
+   :file: duffing.svg
 
 The system will be modeled using Lagrange equations. `M` is mass of the Duffing oscillator,
 `m` is mass of the pendulum, `l` is length of the pendulum. `k_1` and `k_2` are linear and
@@ -24,7 +24,7 @@ Define Variables
 ================
 
    >>> M, m, l, k1, k2, c1, g, h, w, d, r = sm.symbols('M, m, l, k1, k2, c1, g, h, w, d, r')
-   >>> q1, q2, u2, u2 = me.dynamicsymbols('q1 q2 u1 u2')
+   >>> q1, q2 = me.dynamicsymbols('q1 q2')
    >>> q1d = me.dynamicsymbols('q1', 1)
 
 - :math:`h`: Height of the Duffing oscillator
@@ -33,8 +33,6 @@ Define Variables
 - :math:`r`: Radius of the massive bob of the pendulum
 - :math:`q_1`: Generalized coordinate representing the position of the Duffing oscillator
 - :math:`q_2`: Generalized coordinate representing the angle of the pendulum
-- :math:`u_1`: Generalized speed associated with the Duffing oscillator
-- :math:`u_2`: Generalized speed associated with the pendulum
 
 Define Kinematics
 =================
@@ -76,6 +74,8 @@ Define Forces
 =============
 
 We calculate the forces acting on the system.
+In this example, we set the potential energy to zero in the Lagrangian, and include the
+conservative forces (gravity and the Duffing spring) in the loads.
 
    >>> path = me.LinearPathway(O, block_point)
    >>> spring = me.DuffingSpring(k1, k2, path, 0)
