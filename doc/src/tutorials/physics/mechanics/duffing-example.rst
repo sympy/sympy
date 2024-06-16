@@ -66,7 +66,7 @@ Define inertia and rigid bodies.
 Here, we assume a simple pendulum which consists of a bob of mass m hanging from a massless string of length l
 and fixed at a pivot point (Duffing Oscillator Block).
 
-   >>> I_block = me.inertia(N, M*(h**2 + d**2)/12, M*(w**2 + h**2)/12, M*(w**2 + d**2)/12)
+   >>> I_block = me.Inertia.from_inertia_scalars(bock_point, N, M*(h**2 + d**2)/12, M*(w**2 + d**2)/12, M*(w**2 + h**2)/12)
    >>> I_pendulum = 2*m*r**2/5*me.inertia(B, 1, 1, 1)
 
    >>> par_block = me.RigidBody('block', block_point, N, M, (I_block, block_point))
