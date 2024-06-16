@@ -603,9 +603,9 @@ def _primepi(n:int) -> int:
     if n <= sieve._list[-1]:
         return sieve.search(n)[0]
     lim = sqrt(n)
-    arr1 = [0] + list(range(lim))
-    arr2 = [0] + [n // i - 1 for i in range(1, lim + 1)]
-    for i in range(2, lim + 1):
+    arr1 = [(i + 1) >> 1 for i in range(lim + 1)]
+    arr2 = [0] + [(n//i + 1) >> 1 for i in range(1, lim + 1)]
+    for i in range(3, lim + 1, 2):
         # Presently, arr1[k]=phi(k,i - 1),
         # arr2[k] = phi(n // k,i - 1)
         if arr1[i] == arr1[i - 1]:
