@@ -223,8 +223,6 @@ class Collector(DefaultPrinting):
                 low = i
                 high = i+len(w)
                 break
-        if low == high == -1:
-            return -1, -1
         return low, high
 
     def map_relation(self, w):
@@ -686,7 +684,7 @@ class Collector(DefaultPrinting):
                 for gen in z:
                     if gen != 1:
                         G.append(h**-1*gen**-1*h*gen)
-                z[d-1] = h;
+                z[d-1] = h
         z = [gen for gen in z if gen != 1]
         return z
 
