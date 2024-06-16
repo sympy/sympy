@@ -1122,7 +1122,7 @@ class _EvaluatorPrinter:
             #    dummyrepr = printer._print_Dummy
 
         # Used to print the generated function arguments in a standard way
-        self._argrepr = LambdaPrinter({'strict': False}).doprint
+        self._argrepr = LambdaPrinter().doprint
 
     def doprint(self, funcname, args, expr, *, cses=()):
         """
@@ -1226,7 +1226,7 @@ class _EvaluatorPrinter:
             elif isinstance(arg, DeferredVector):
                 s = str(arg)
             elif isinstance(arg, Basic) and arg.is_symbol:
-                s = self._argrepr(arg)
+                s = str(arg)
                 if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
                     if isinstance(expr, Expr):
