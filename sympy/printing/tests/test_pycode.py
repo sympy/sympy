@@ -4,6 +4,7 @@ from sympy.codegen.cfunctions import expm1, log1p
 from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
+from sympy.core.function import Derivative
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec
@@ -455,5 +456,12 @@ def test_custom_Derivative_methods():
         p.doprint(expm1(x).diff(x, evaluate=False))
     except PrintMethodNotImplementedError as e:
         assert '_print_Derivative_expm1' in repr(e)
+    else:
+        assert False  # should have thrown
+
+    try:
+        p.doprint(Derivative(cosm1(x**2),x))
+    except ValueError as e:
+        assert '_print_Derivative(' in repr(e)
     else:
         assert False  # should have thrown
