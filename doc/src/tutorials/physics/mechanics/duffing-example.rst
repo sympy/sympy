@@ -103,7 +103,7 @@ Lagrange's Method
 With the problem setup, the Lagrangian can be calculated, and the equations of motion formed.
 
    >>> L = me.Lagrangian(N, block_body, pendulum_body)
-   >>> me.Lagrangian(N, block_body, pendulum_body)
+   >>> L
             2      2       2     / 2       2                                     2\
     M*q1'(t)    m*r *q2'(t)    m*\l *q2'(t)  - 2*l*sin(q2)*q1'(t)*q2'(t) + q1'(t) /
     --------- + ------------ + ----------------------------------------------------
