@@ -65,7 +65,7 @@ Here, we assume a simple pendulum which consists of a bob of mass m hanging from
 and fixed at a pivot point (Duffing Oscillator Block).
 
    >>> I_block = M / 12 * me.inertia(N, h**2 + d**2, w**2 + d**2, w**2 + h**2)
-   >>> I_pendulum = 2*m*r**2/5*me.inertia(B, 1, 1, 1)
+   >>> I_pendulum = 2*m*r**2/5*me.inertia(B, 1, 0, 1)
 
    >>> block_body = me.RigidBody('block', block_point, N, M, (I_block, block_point))
    >>> pendulum_body = me.RigidBody('pendulum', pendulum_point, B, m, (I_pendulum, pendulum_point))
