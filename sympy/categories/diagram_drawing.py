@@ -1058,16 +1058,7 @@ class DiagramGrid:
         # graph of ``merged_morphisms``.
         adjlists = DiagramGrid._get_undirected_graph(objects, merged_morphisms)
 
-        # Find an object with the minimal degree.  This is going to be
-        # the root.
-        root = sorted_objects[0]
-        mindegree = len(adjlists[root])
-        for obj in sorted_objects:
-            current_degree = len(adjlists[obj])
-            if current_degree < mindegree:
-                root = obj
-                mindegree = current_degree
-
+        root = min(sorted_objects, key=lambda x: len(adjlists[x]))
         grid = _GrowableGrid(1, 1)
         grid[0, 0] = root
 

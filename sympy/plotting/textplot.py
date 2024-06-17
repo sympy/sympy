@@ -50,6 +50,12 @@ def textplot_str(expr, a, b, W=55, H=21):
             .format(free))
     x = free.pop() if free else Dummy()
     f = lambdify([x], expr)
+    if isinstance(a, complex):
+        if a.imag == 0:
+            a = a.real
+    if isinstance(b, complex):
+        if b.imag == 0:
+            b = b.real
     a = float(a)
     b = float(b)
 

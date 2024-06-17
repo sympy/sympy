@@ -503,7 +503,7 @@ def test_issue_11577():
     def check(eq):
         r, c = cse(eq)
         assert eq.count_ops() >= \
-            len(r) + sum([i[1].count_ops() for i in r]) + \
+            len(r) + sum(i[1].count_ops() for i in r) + \
             count_ops(c)
 
     eq = x**5*y**2 + x**5*y + x**5
@@ -574,7 +574,7 @@ def test_cse__performance():
 def test_issue_12070():
     exprs = [x + y, 2 + x + y, x + y + z, 3 + x + y + z]
     subst, red = cse(exprs)
-    assert 6 >= (len(subst) + sum([v.count_ops() for k, v in subst]) +
+    assert 6 >= (len(subst) + sum(v.count_ops() for k, v in subst) +
                  count_ops(red))
 
 

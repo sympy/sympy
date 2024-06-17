@@ -272,8 +272,7 @@ class Prufer(Basic):
         got = set()
         nmin = nmax = None
         for ei in e:
-            for i in ei:
-                got.add(i)
+            got.update(ei)
             nmin = min(ei[0], nmin) if nmin is not None else ei[0]
             nmax = max(ei[1], nmax) if nmax is not None else ei[1]
             rv.append(list(ei))

@@ -146,7 +146,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     q = best_q
 
     B = []
-    for idx, val in enumerate(q):
+    for val in q:
         q_l = factor_base[val].prime
         gamma = factor_base[val].tmem_p * invert(a // q_l, q_l) % q_l
         if gamma > q_l / 2:
