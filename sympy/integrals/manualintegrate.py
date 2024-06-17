@@ -754,7 +754,7 @@ def manual_diff(f, symbol):
         elif isinstance(f, csc):
             return -arg.diff(symbol) * csc(arg) * cot(arg)
         elif isinstance(f, Add):
-            return sum([manual_diff(arg, symbol) for arg in f.args])
+            return sum(manual_diff(arg, symbol) for arg in f.args)
         elif isinstance(f, Mul):
             if len(f.args) == 2 and isinstance(f.args[0], Number):
                 return f.args[0] * manual_diff(f.args[1], symbol)
@@ -810,8 +810,8 @@ def find_substitutions(integrand, symbol, u_var):
             return False
         # avoid increasing the degree of a rational function
         if integrand.is_rational_function(symbol) and substituted.is_rational_function(u_var):
-            deg_before = max([degree(t, symbol) for t in integrand.as_numer_denom()])
-            deg_after = max([degree(t, u_var) for t in substituted.as_numer_denom()])
+            deg_before = max(degree(t, symbol) for t in integrand.as_numer_denom())
+            deg_after = max(degree(t, u_var) for t in substituted.as_numer_denom())
             if deg_after > deg_before:
                 return False
         return substituted.as_independent(u_var, as_Add=False)
@@ -1430,7 +1430,12 @@ def quadratic_denom_rule(integral):
             if positive_cond is S.false:
                 return negative_step
             return PiecewiseRule(integrand, symbol, [(general_rule, positive_cond), (negative_step, S.true)])
-        return general_rule
+
+        power = PowerRule(integrand, symbol, symbol, -2)
+        if b != 1:
+            power = ConstantTimesRule(integrand, symbol, 1/b, symbol**-2, power)
+
+        return PiecewiseRule(integrand, symbol, [(general_rule, Ne(c, 0)), (power, True)])
 
     d = Wild('d', exclude=[symbol])
     match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))

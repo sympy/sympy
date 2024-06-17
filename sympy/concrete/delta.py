@@ -195,10 +195,9 @@ def deltaproduct(f, limit):
         newexpr = f.func(*terms)
         k = Dummy("kprime", integer=True)
         if isinstance(limit[1], int) and isinstance(limit[2], int):
-            result = deltaproduct(newexpr, limit) + sum([
-                deltaproduct(newexpr, (limit[0], limit[1], ik - 1)) *
+            result = deltaproduct(newexpr, limit) + sum(deltaproduct(newexpr, (limit[0], limit[1], ik - 1)) *
                 delta.subs(limit[0], ik) *
-                deltaproduct(newexpr, (limit[0], ik + 1, limit[2])) for ik in range(int(limit[1]), int(limit[2] + 1))]
+                deltaproduct(newexpr, (limit[0], ik + 1, limit[2])) for ik in range(int(limit[1]), int(limit[2] + 1))
             )
         else:
             result = deltaproduct(newexpr, limit) + deltasummation(

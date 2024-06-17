@@ -197,7 +197,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - zero for `m_1 + m_2 + m_3 \neq 0`
 
     - zero for violating any one of the conditions
-      `j_1 \ge |m_1|`,  `j_2 \ge |m_2|`,  `j_3 \ge |m_3|`
+         `m_1  \in \{-|j_1|, \ldots, |j_1|\}`,
+         `m_2  \in \{-|j_2|, \ldots, |j_2|\}`,
+         `m_3  \in \{-|j_3|, \ldots, |j_3|\}`
 
     Algorithm
     =========
@@ -229,6 +231,10 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     if a3 < 0:
         return S.Zero
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
+        return S.Zero
+    if not (int_valued(j_1 - m_1) and \
+            int_valued(j_2 - m_2) and \
+            int_valued(j_3 - m_3)):
         return S.Zero
 
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
@@ -584,11 +590,11 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     ========
 
     >>> from sympy.physics.wigner import wigner_9j
-    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0, prec=64) # ==1/18
-    0.05555555...
+    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0, prec=64)
+    0.05555555555555555555555555555555555555555555555555555555555555555
 
-    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1, prec=64) # ==1/6
-    0.1666666...
+    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1, prec=64)
+    0.1666666666666666666666666666666666666666666666666666666666666667
 
     It is an error to have arguments that are not integer or half
     integer values or do not fulfill the triangle relation::
@@ -665,7 +671,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     >>> gaunt(1,0,1,1,0,-1)
     -1/(2*sqrt(pi))
     >>> gaunt(1000,1000,1200,9,3,-12).n(64)
-    0.00689500421922113448...
+    0.006895004219221134484332976156744208248842039317638217822322799675
 
     It is an error to use non-integer values for `l` and `m`::
 
@@ -843,7 +849,7 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     >>> real_gaunt(2,2,4,-1,-1,0)
     -2/(7*sqrt(pi))
     >>> real_gaunt(10,10,20,-9,-9,0).n(64)
-    -0.00002480019791932209313156167...
+    -0.00002480019791932209313156167176797577821140084216297395518482071448
 
     It is an error to use non-integer values for `l` and `m`::
         real_gaunt(2.8,0.5,1.3,0,0,0)

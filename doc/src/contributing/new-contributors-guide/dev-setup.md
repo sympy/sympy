@@ -53,6 +53,7 @@ terminal.
 If you do decide to use the GitHub GUI, you should make sure that any "sync
 does rebase" option is disabled in the settings.
 
+(configure-git-settings)=
 ### Configure Your Name and Email in Git
 
 Git tracks who makes each commit by checking the user’s name and email.

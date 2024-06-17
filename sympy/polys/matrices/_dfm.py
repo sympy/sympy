@@ -39,6 +39,7 @@
 # and also to make some of the above methods simpler or more efficient e.g.
 # slicing, fancy indexing etc.
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.external.importtools import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -53,6 +54,11 @@ from .exceptions import (
     DMShapeError,
     DMValueError,
 )
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['*']
+
 
 flint = import_module('flint')
 
@@ -260,6 +266,31 @@ class DFM:
     def to_dok(self):
         """Convert to a DOK."""
         return self.to_ddm().to_dok()
+
+    @classmethod
+    def from_dok(cls, dok, shape, domain):
+        """Inverse of :math:`to_dod`."""
+        return DDM.from_dok(dok, shape, domain).to_dfm()
+
+    def iter_values(self):
+        """Iterater over the non-zero values of the matrix."""
+        m, n = self.shape
+        rep = self.rep
+        for i in range(m):
+            for j in range(n):
+                repij = rep[i, j]
+                if repij:
+                    yield rep[i, j]
+
+    def iter_items(self):
+        """Iterate over indices and values of nonzero elements of the matrix."""
+        m, n = self.shape
+        rep = self.rep
+        for i in range(m):
+            for j in range(n):
+                repij = rep[i, j]
+                if repij:
+                    yield ((i, j), repij)
 
     def convert_to(self, domain):
         """Convert to a new domain."""

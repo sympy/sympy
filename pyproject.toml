@@ -1,6 +1,10 @@
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
-addopts = "-m 'not slow'"
+addopts = "-m 'not slow and not tooslow'"
+filterwarnings = [
+    'ignore:More than 20 figures have been opened.*:RuntimeWarning',
+    'ignore:FigureCanvasAgg is non-interactive, and thus cannot be shown:UserWarning',
+]
 
 # Only run tests under the sympy/ directory. Otherwise pytest will attempt to
 # collect tests from e.g. the bin/ directory as well.
@@ -23,20 +27,20 @@ norecursedirs = [
 
 markers = [
     "nocache_fail",
+    "tooslow",
 ]
 
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
-    "C40",
-    "C416",
-    "C419",
+    "C4",
     "E",
     "F",
     "LOG",
     "PIE810",
     "PLE",
     "SIM101",
+    "TRY002",
 ]
 
 # Ignore rules that currently fail on the SymPy codebase

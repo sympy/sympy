@@ -2,6 +2,7 @@ from sympy.holonomic.recurrence import RecurrenceOperators, RecurrenceOperator
 from sympy.core.symbol import symbols
 from sympy.polys.domains.rationalfield import QQ
 
+
 def test_RecurrenceOperator():
     n = symbols('n', integer=True)
     R, Sn = RecurrenceOperators(QQ.old_poly_ring(n), 'Sn')
@@ -12,6 +13,7 @@ def test_RecurrenceOperator():
     q = (n**2 + 3*n + 2)*Sn**2 + (2*n**3 + 19*n**2 + 57*n + 52)*Sn**4 + (n**4 + 18*n**3 + \
         117*n**2 + 324*n + 324)*Sn**6
     assert p == q
+
 
 def test_RecurrenceOperatorEqPoly():
     n = symbols('n', integer=True)
@@ -27,3 +29,13 @@ def test_RecurrenceOperatorEqPoly():
 
     d2 = rr2.listofpoly[0]
     assert not rr2 == d2
+
+
+def test_RecurrenceOperatorPow():
+    n = symbols('n', integer=True)
+    R, _ = RecurrenceOperators(QQ.old_poly_ring(n), 'Sn')
+    rr = RecurrenceOperator([n**2, 0, 0], R)
+    a = RecurrenceOperator([R.base.one], R)
+    for m in range(10):
+        assert a == rr**m
+        a *= rr

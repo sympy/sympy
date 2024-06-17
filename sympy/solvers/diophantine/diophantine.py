@@ -417,7 +417,7 @@ class Linear(DiophantineEquationType):
         for Ai, Bi in zip(A, B):
             tot_x, tot_y = [], []
 
-            for j, arg in enumerate(Add.make_args(c)):
+            for arg in Add.make_args(c):
                 if arg.is_Integer:
                     # example: 5 -> k = 5
                     k, p = arg, S.One
@@ -630,8 +630,7 @@ class BinaryQuadratic(DiophantineEquationType):
                 # In this case equation can be transformed into a Pell equation
 
                 solns_pell = set(solns_pell)
-                for X, Y in list(solns_pell):
-                    solns_pell.add((-X, -Y))
+                solns_pell.update((-X, -Y) for X, Y in list(solns_pell))
 
                 a = diop_DN(D, 1)
                 T = a[0][0]
@@ -837,15 +836,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
         if not any(coeff[i**2] for i in var):
             if coeff[x*z]:
                 sols = diophantine(coeff[x*y]*x + coeff[y*z]*z - x*z)
-                s = sols.pop()
-                min_sum = abs(s[0]) + abs(s[1])
-
-                for r in sols:
-                    m = abs(r[0]) + abs(r[1])
-                    if m < min_sum:
-                        s = r
-                        min_sum = m
-
+                s = min(sols, key=lambda r: abs(r[0]) + abs(r[1]))
                 result.add(_remove_gcd(s[0], -coeff[x*z], s[1]))
                 return result
 
@@ -1480,8 +1471,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                 GeneralSumOfSquares.name,
                 GeneralSumOfEvenPowers.name,
                 Univariate.name]:
-            for sol in solution:
-                sols.add(merge_solution(var, var_t, sol))
+            sols.update(merge_solution(var, var_t, sol) for sol in solution)
 
         else:
             raise NotImplementedError('unhandled type: %s' % eq_type)
@@ -2699,7 +2689,7 @@ def diop_ternary_quadratic(eq, parameterize=False):
 
 
 def _diop_ternary_quadratic(_var, coeff):
-    eq = sum([i*coeff[i] for i in coeff])
+    eq = sum(i*coeff[i] for i in coeff)
     if HomogeneousTernaryQuadratic(eq).matches():
         return HomogeneousTernaryQuadratic(eq, free_symbols=_var).solve()
     elif HomogeneousTernaryQuadraticNormal(eq).matches():
@@ -2952,7 +2942,7 @@ def diop_ternary_quadratic_normal(eq, parameterize=False):
 
 
 def _diop_ternary_quadratic_normal(var, coeff):
-    eq = sum([i * coeff[i] for i in coeff])
+    eq = sum(i * coeff[i] for i in coeff)
     return HomogeneousTernaryQuadraticNormal(eq, free_symbols=var).solve()
 
 

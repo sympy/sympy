@@ -11,7 +11,7 @@ from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _primitive_root_prime_power_iter, _primitive_root_prime_power2_iter, \
     _nthroot_mod_prime_power, _discrete_log_trial_mul, _discrete_log_shanks_steps, \
-    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman, \
+    _discrete_log_pollard_rho, _discrete_log_index_calculus, _discrete_log_pohlig_hellman, \
     _binomial_mod_prime_power, binomial_mod
 from sympy.polys.domains import ZZ
 from sympy.testing.pytest import raises
@@ -256,7 +256,11 @@ def test_residue():
     assert _discrete_log_pollard_rho(24567899, 3**333, 3, rseed=0) == 333
     raises(ValueError, lambda: _discrete_log_pollard_rho(11, 7, 31, rseed=0))
     raises(ValueError, lambda: _discrete_log_pollard_rho(227, 3**7, 5, rseed=0))
-
+    assert _discrete_log_index_calculus(983, 948, 2, 491) == 183
+    assert _discrete_log_index_calculus(633383, 21794, 2, 316691) == 68048
+    assert _discrete_log_index_calculus(941762639, 68822582, 2, 470881319) == 338029275
+    assert _discrete_log_index_calculus(999231337607, 888188918786, 2, 499615668803) == 142811376514
+    assert _discrete_log_index_calculus(47747730623, 19410045286, 43425105668, 645239603) == 590504662
     assert _discrete_log_pohlig_hellman(98376431, 11**9, 11) == 9
     assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
     assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98
@@ -265,6 +269,10 @@ def test_residue():
     assert discrete_log(2456747, 3**51, 3) == 51
     assert discrete_log(32942478, 11**127, 11) == 127
     assert discrete_log(432751500361, 7**324, 7) == 324
+    assert discrete_log(265390227570863,184500076053622, 2) == 17835221372061
+    assert discrete_log(22708823198678103974314518195029102158525052496759285596453269189798311427475159776411276642277139650833937,
+                        17463946429475485293747680247507700244427944625055089103624311227422110546803452417458985046168310373075327,
+                        123456) == 2068031853682195777930683306640554533145512201725884603914601918777510185469769997054750835368413389728895
     args = 5779, 3528, 6215
     assert discrete_log(*args) == 687
     assert discrete_log(*Tuple(*args)) == 687
