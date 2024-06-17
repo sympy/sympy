@@ -876,7 +876,7 @@ class TorqueActuator(ActuatorBase):
             string += f', reaction_frame={self.reaction_frame})'
         else:
             string += ')'
-        return string    
+        return string
 
 
 class DuffingSpring(ForceActuator):
@@ -1005,14 +1005,14 @@ class CoulombFrictionActuator(ForceActuator):
     described by the following piecewise function:
 
     F_f = {
-        μ_k * F_n         if v < 0
-        f_r               if v = 0 and |f_r| < f_c
-        f_c * sign(f_r)   if v = 0 and |f_r| ≥ f_c
-        -μ_k * F_n        if v > 0
+        mu_k * F_n         if v < 0
+        f_r                if v = 0 and |f_r| < f_c
+        f_c * sign(f_r)    if v = 0 and |f_r| >= f_c
+        -mu_k * F_n        if v > 0
     }
 
-    where μ_k is the coefficient of kinetic friction, F_n is the normal force,
-    f_r is the resulting tangential friction force, f_c is the Coulomb friction constant, 
+    where mu_k is the coefficient of kinetic friction, F_n is the normal force,
+    f_r is the resulting tangential friction force, f_c is the Coulomb friction constant,
     and v is the velocity.
 
     Parameters
