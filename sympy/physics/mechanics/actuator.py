@@ -18,8 +18,8 @@ __all__ = [
     'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
-    'DuffingSpring'
-    'CoulombFrictionActuator'
+    'DuffingSpring',
+    'CoulombFrictionActuator',
 ]
 
 
