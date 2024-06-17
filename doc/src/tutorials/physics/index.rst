@@ -22,3 +22,4 @@ write to our `mailing list
    :maxdepth: 2
 
    biomechanics/index.rst
+   mechanics/index.rst
