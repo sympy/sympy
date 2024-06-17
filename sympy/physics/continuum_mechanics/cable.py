@@ -774,6 +774,38 @@ class Cable:
             return force_arrows
 
     def plot_tension(self):
+        """
+        Returns the diagram/plot of the tension generated in the cable at various points.
+
+        Examples
+        ========
+
+        For point loads,
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c = Cable(("A", 0, 10), ("B", 10, 10))
+        >>> c.apply_load(-1, ('Z', 2, 7.26, 3, 270))
+        >>> c.apply_load(-1, ('X', 4, 6, 8, 270))
+        >>> c.solve()
+        >>> p = c.plot_tension()
+        >>> p
+        Plot object containing:
+        [0]: cartesian line: Piecewise((8.91403453669861, x <= 2), (4.79150773600774, x <= 4), (19*sqrt(13)/10, x <= 10)) for x over (0.0, 10.0)
+        >>> p.show()
+
+        For uniformly distributed loads,
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c=Cable(("A", 0, 40),("B", 100, 20))
+        >>> c.apply_load(0, ("X", 850))
+        >>> c.solve(58.58)
+        >>> p = c.plot_tension()
+        >>> p
+        Plot object containing:
+        [0]: cartesian line: 36465.0*sqrt(0.00054335718671383*X**2 + 1) for X over (0.0, 100.0)
+        >>> p.show()
+
+        """
         if len(self._loads_position) != 0:
             x = symbols('x')
             tension_plot  = plot(self._tension_func, (x,self._left_support[0],self._right_support[0]), show=False)
