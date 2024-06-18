@@ -4359,7 +4359,7 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
         if len(cd1) != len(cd2):
             return False
         for k in list(cd1):
-            if k in list(cd2):
+            if k in cd2:
                 if not _close_num(cd1.pop(k), cd2.pop(k)):
                     return False
             # k (or a close version in cd2) might have
@@ -4383,8 +4383,6 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
                 # no key matched
                 return False
         return True
-
-        assert None  # should never get here
 
     return _all_close(expr1, expr2)
 
