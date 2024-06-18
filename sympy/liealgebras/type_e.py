@@ -251,11 +251,9 @@ class TypeE(Standard_Cartan):
 
         n = self.n
         m = 2*eye(n)
-        i = 3
-        while i < n-1:
+        for i in range(3, n - 1):
             m[i, i+1] = -1
             m[i, i-1] = -1
-            i += 1
         m[0, 2] = m[2, 0] = -1
         m[1, 3] = m[3, 1] = -1
         m[2, 3] = -1
