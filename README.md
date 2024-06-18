@@ -13,4 +13,5 @@ Report for Assignment 1 - Group 82
         Coverage Measurement
         Tool used to measure the coverage of the tests: coverage.py
         Coverage results: 88%
-        [TO DO: ADD HERE A SCREENSHOT OF THE RESULT OF coverage.py]
+        
+![Screenshot of Lizard Result](images/cov.png)
