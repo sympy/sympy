@@ -895,10 +895,10 @@ def radsimp(expr, symbolic=True, max_terms=4):
         # We do this by recursively calling handle on each piece.
         from sympy.simplify.simplify import nsimplify
 
-        if not isinstance(expr, Expr):
-            return expr.func(*[handle(a) for a in expr.args])
-        elif expr.is_Atom:
+        if expr.is_Atom:
             return expr
+        elif not isinstance(expr, Expr):
+            return expr.func(*[handle(a) for a in expr.args])
 
         n, d = fraction(expr)
 
