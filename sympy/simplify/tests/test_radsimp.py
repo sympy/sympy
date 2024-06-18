@@ -9,7 +9,6 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin)
-from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import factor
 from sympy.series.order import O
 from sympy.simplify.radsimp import (collect, collect_const, fraction, radsimp, rcollect)
@@ -161,8 +160,13 @@ def test_radsimp():
     assert radsimp(eq) == eq
 
     # handle non-Expr args
+    from sympy.integrals.integrals import Integral
     eq = Integral(x/(sqrt(2) - 1), (x, 0, 1/(sqrt(2) + 1)))
     assert radsimp(eq) == Integral((sqrt(2) + 1)*x , (x, 0, sqrt(2) - 1))
+
+    from sympy.sets import FiniteSet
+    eq = FiniteSet(x/(sqrt(2) - 1))
+    assert radsimp(eq) == FiniteSet((sqrt(2) + 1)*x)
 
 def test_radsimp_issue_3214():
     c, p = symbols('c p', positive=True)
