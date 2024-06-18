@@ -8,10 +8,11 @@
 ## Code Metrics
 - **Number of lines of code:** 50.9447 (50.9 KLOC)
 - **Tool used to measure the number of lines of code:** lizard
-
+![Screenshot of Coverage.py Result](lizard-number_of_lines.png)
 
 ## Coverage Measurement
 - **Tool used to measure the coverage of the tests:** coverage.py
 - **Coverage results:** 88%
 
-![Screenshot of Coverage.py Result](images/cov.png)
+![Screenshot of Coverage.py Result](coverage-part1.png)
+![](coverage-part2-results.png)
