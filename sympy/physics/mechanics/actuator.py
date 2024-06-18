@@ -1042,6 +1042,90 @@ class CoulombFrictionActuator(ForceActuator):
         super().__init__(self.force, pathway)
 
     @property
+    def coefficient_of_kinetic_friction(self):
+        return self._coefficient_of_kinetic_friction
+
+    @coefficient_of_kinetic_friction.setter
+    def coefficient_of_kinetic_friction(self, coefficient_of_kinetic_friction):
+        if hasattr(self, '_coefficient_of_kinetic_friction'):
+            msg = (
+                f'Can\'t set attribute `coefficient_of_kinetic_friction` to '
+                f'{repr(coefficient_of_kinetic_friction)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._coefficient_of_kinetic_friction = sympify(coefficient_of_kinetic_friction, strict=True)
+
+    @property
+    def normal_force(self):
+        return self._normal_force
+
+    @normal_force.setter
+    def normal_force(self, normal_force):
+        if hasattr(self, '_normal_force'):
+            msg = (
+                f'Can\'t set attribute `normal_force` to '
+                f'{repr(normal_force)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._normal_force = sympify(normal_force, strict=True)
+
+    @property
+    def tangential_friction_force(self):
+        return self._tangential_friction_force
+
+    @tangential_friction_force.setter
+    def tangential_friction_force(self, tangential_friction_force):
+        if hasattr(self, '_tangential_friction_force'):
+            msg = (
+                f'Can\'t set attribute `tangential_friction_force` to '
+                f'{repr(tangential_friction_force)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._tangential_friction_force = sympify(tangential_friction_force, strict=True)
+
+    @property
+    def coulomb_friction_constant(self):
+        return self._coulomb_friction_constant
+
+    @coulomb_friction_constant.setter
+    def coulomb_friction_constant(self, coulomb_friction_constant):
+        if hasattr(self, '_coulomb_friction_constant'):
+            msg = (
+                f'Can\'t set attribute `coulomb_friction_constant` to '
+                f'{repr(coulomb_friction_constant)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._coulomb_friction_constant = sympify(coulomb_friction_constant, strict=True)
+
+    @property
+    def velocity(self):
+        return self._velocity
+
+    @velocity.setter
+    def velocity(self, velocity):
+        if hasattr(self, '_velocity'):
+            msg = (
+                f'Can\'t set attribute `velocity` to '
+                f'{repr(velocity)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._velocity = sympify(velocity, strict=True)
+
+    @property
+    def pathway(self):
+        return self._pathway
+
+    @pathway.setter
+    def pathway(self, pathway):
+        if hasattr(self, '_pathway'):
+            msg = (
+                f'Can\'t set attribute `pathway` to '
+                f'{repr(pathway)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._pathway = sympify(pathway, strict=True)
+
+    @property
     def force(self):
         return Piecewise(
             (self._coefficient_of_kinetic_friction * self._normal_force, self._velocity < 0),
@@ -1049,6 +1133,16 @@ class CoulombFrictionActuator(ForceActuator):
             (self._coulomb_friction_constant * sign(self._tangential_friction_force), (self._velocity == 0) & (abs(self._tangential_friction_force) >= self._coulomb_friction_constant)),
             (-self._coefficient_of_kinetic_friction * self._normal_force, self._velocity > 0)
         )
+
+    @force.setter
+    def force(self, force):
+        if hasattr(self, '_force'):
+            msg = (
+                f'Can\'t set attribute `force` to {repr(force)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        self._force = sympify(force, strict=True)
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self._coefficient_of_kinetic_friction}, {self._normal_force}, {self._tangential_friction_force}, {self._coulomb_friction_constant}, {self._velocity}, {self.pathway})'
