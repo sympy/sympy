@@ -892,11 +892,15 @@ def radsimp(expr, symbolic=True, max_terms=4):
         # Handle first reduces to the case
         # expr = 1/d, where d is an add, or d is base**p/2.
         # We do this by recursively calling handle on each piece.
+        from sympy.core.expr import Expr
         from sympy.simplify.simplify import nsimplify
+
+        if (not isinstance(expr, Expr)) or expr.is_Atom:
+            return expr
 
         n, d = fraction(expr)
 
-        if expr.is_Atom or (d.is_Atom and n.is_Atom):
+        if d.is_Atom and n.is_Atom:
             return expr
         elif not n.is_Atom:
             n = n.func(*[handle(a) for a in n.args])
