@@ -173,11 +173,22 @@ jobs:
 
   # -------------------- Update the docs repository ---------------- #
 
+  # Dummy job to determine whether the release is final
+  check-final:
+    name: Check whether the release is final
+    needs: [build, pypi-publish]
+    runs-on: ubuntu-latest
+    outputs:
+      # The env context is not available in jobs.<job id>.if so we set it here
+      is-final: ${{ env.release_version == env.final_release_version }}
+    steps:
+      - run: echo "null"
+
   update-docs:
     name: Update the docs repository
-    needs: [build, pypi-publish]
+    needs: [check-final]
     # Only run for a final release
-    if: ${{ github.env.release_version == github.env.final_release_version }}
+    if: ${{ needs.check-final.outputs.is-final == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
