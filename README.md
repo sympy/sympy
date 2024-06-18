@@ -15,4 +15,4 @@
 - **Coverage results:** 88%
 
 ![Screenshot of Coverage.py Result](coverage-part1.png)
-![](coverage-part2-results.png)
+![Screenshot of Coverage.py Result](coverage-part2-results.png)
