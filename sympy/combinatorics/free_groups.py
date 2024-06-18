@@ -363,10 +363,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     @property
     def is_identity(self):
-        if self.array_form == ():
-            return True
-        else:
-            return False
+        return not self.array_form
 
     @property
     def array_form(self):
