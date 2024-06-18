@@ -895,7 +895,9 @@ def radsimp(expr, symbolic=True, max_terms=4):
         from sympy.core.expr import Expr
         from sympy.simplify.simplify import nsimplify
 
-        if (not isinstance(expr, Expr)) or expr.is_Atom:
+        if not isinstance(expr, Expr):
+            return expr.func(*[handle(a) for a in expr.args])
+        elif expr.is_Atom:
             return expr
 
         n, d = fraction(expr)
