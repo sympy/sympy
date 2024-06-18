@@ -14,4 +14,4 @@
 - **Tool used to measure the coverage of the tests:** coverage.py
 - **Coverage results:** 88%
 
-![Screenshot of Coverage.py Result](images/coverage_result.png)
+![Screenshot of Coverage.py Result](images/cov.png)
