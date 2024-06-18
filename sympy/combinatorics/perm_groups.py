@@ -1916,16 +1916,12 @@ class PermutationGroup(Basic):
         if order == sym_order:
             self._is_sym = True
             self._is_alt = False
-            if only_alt:
-                return False
-            return True
+            return not only_alt
 
-        elif 2*order == sym_order:
+        if 2*order == sym_order:
             self._is_sym = False
             self._is_alt = True
-            if only_sym:
-                return False
-            return True
+            return not only_sym
 
         return False
 
