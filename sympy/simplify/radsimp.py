@@ -841,6 +841,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     1/(a + b*sqrt(c))
 
     """
+    from sympy.core.expr import Expr
     from sympy.simplify.simplify import signsimp
 
     syms = symbols("a:d A:D")
@@ -892,7 +893,6 @@ def radsimp(expr, symbolic=True, max_terms=4):
         # Handle first reduces to the case
         # expr = 1/d, where d is an add, or d is base**p/2.
         # We do this by recursively calling handle on each piece.
-        from sympy.core.expr import Expr
         from sympy.simplify.simplify import nsimplify
 
         if not isinstance(expr, Expr):
@@ -998,6 +998,9 @@ def radsimp(expr, symbolic=True, max_terms=4):
         if not keep:
             return expr
         return _unevaluated_Mul(n, 1/d)
+
+    if not isinstance(expr, Expr):
+        return expr.func(*[radsimp(a, symbolic=symbolic, max_terms=max_terms) for a in expr.args])
 
     coeff, expr = expr.as_coeff_Add()
     expr = expr.normal()
