@@ -160,9 +160,9 @@ def test_radsimp():
     eq = sqrt(x)/y**2
     assert radsimp(eq) == eq
 
-    # skip non-Expr args
-    eq = Integral(x/(sqrt(2) - 1), (x, 0, 1))
-    assert radsimp(eq) == Integral((sqrt(2) + 1)*x , (x, 0, 1))
+    # handle non-Expr args
+    eq = Integral(x/(sqrt(2) - 1), (x, 0, 1/(sqrt(2) + 1)))
+    assert radsimp(eq) == Integral((sqrt(2) + 1)*x , (x, 0, sqrt(2) - 1))
 
 def test_radsimp_issue_3214():
     c, p = symbols('c p', positive=True)
