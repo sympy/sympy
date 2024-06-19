@@ -136,7 +136,7 @@ class Beam:
     (-5*L**2*q1 + 7*L**2*q2 - 8*L*P1 + 4*L*P2 + 32*M1 - 32*M2)/(32*L)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'),  base_char='C', ild_variable=Symbol('a')):
+    def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), base_char='C', ild_variable=Symbol('a')):
         """Initializes the class.
 
         Parameters
@@ -170,15 +170,15 @@ class Beam:
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
 
-        ild_variable : Symbol, optional
-            A Symbol object that will be used as the variable specifying the
-            location of the moving load in ILD calculations. By default, it
-            is set to ``Symbol('a')``.
-
         base_char : String, optional
             A String that will be used as base character to generate sequential
             symbols for integration constants in cases where boundary conditions
             are not sufficient to solve them.
+
+        ild_variable : Symbol, optional
+            A Symbol object that will be used as the variable specifying the
+            location of the moving load in ILD calculations. By default, it
+            is set to ``Symbol('a')``.
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
