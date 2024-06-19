@@ -2233,7 +2233,7 @@ class Beam:
 
         Warning
         =======
-        The values for a = 0 and a = l, with l the lenght of the beam, in
+        The values for a = 0 and a = l, with l the length of the beam, in
         the plot can be incorrect.
 
         Examples
