@@ -136,7 +136,7 @@ class Beam:
     (-5*L**2*q1 + 7*L**2*q2 - 8*L*P1 + 4*L*P2 + 32*M1 - 32*M2)/(32*L)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), ild_variable=Symbol('a'), base_char='C'):
+    def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'),  base_char='C', ild_variable=Symbol('a')):
         """Initializes the class.
 
         Parameters
