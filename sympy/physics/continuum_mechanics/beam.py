@@ -1826,7 +1826,7 @@ class Beam:
         Warning
         =======
         This method creates equations that can give incorrect results when
-        substituting a = 0 or a = l, with l the lenght of the beam.
+        substituting a = 0 or a = l, with l the length of the beam.
 
         Examples
         ========
