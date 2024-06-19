@@ -1823,6 +1823,11 @@ class Beam:
         reactions :
             The reaction forces applied on the beam.
 
+        Warning
+        =======
+        This method creates equations that can give incorrect results when
+        substituting a = 0 or a = l, with l the lenght of the beam.
+
         Examples
         ========
 
@@ -1924,6 +1929,11 @@ class Beam:
                Python dictionary containing Symbols as key and their
                corresponding values.
 
+        Warning
+        =======
+        The values for a = 0 and a = l, with l the lenght of the beam, in
+        the plot can be incorrect.
+
         Examples
         ========
 
@@ -1959,10 +1969,10 @@ class Beam:
             PlotGrid object containing:
             Plot[0]:Plot object containing:
             [0]: cartesian line: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/7
-            - 3*SingularityFunction(a, 10, 0)/7 - SingularityFunction(a, 10, 1)/7 - 15/7 for a over (-0.0001, 10.0)
+            - 3*SingularityFunction(a, 10, 0)/7 - SingularityFunction(a, 10, 1)/7 - 15/7 for a over (0.0, 10.0)
             Plot[1]:Plot object containing:
             [0]: cartesian line: -SingularityFunction(a, 0, 1)/7 + 10*SingularityFunction(a, 10, 0)/7
-            + SingularityFunction(a, 10, 1)/7 - 20/7 for a over (-0.0001, 10.0)
+            + SingularityFunction(a, 10, 1)/7 - 20/7 for a over (0.0, 10.0)
 
         """
         if not self._ild_reactions:
@@ -1985,7 +1995,7 @@ class Beam:
 
         for reaction in self._ild_reactions:
             ildplots.append(plot(self._ild_reactions[reaction].subs(subs),
-            (a, -0.0001, self._length.subs(subs)), title='I.L.D. for Reactions',
+            (a, 0, self._length.subs(subs)), title='I.L.D. for Reactions',
             xlabel=a, ylabel=reaction, line_color='blue', show=False))
 
         return PlotGrid(len(ildplots), 1, *ildplots)
@@ -2005,6 +2015,11 @@ class Beam:
             Magnitude of moving load
         reactions :
             The reaction forces applied on the beam.
+
+        Warning
+        =======
+        This method creates equations that can give incorrect results when
+        substituting a = 0 or a = l, with l the lenght of the beam.
 
         Examples
         ========
@@ -2069,6 +2084,11 @@ class Beam:
                Python dictionary containing Symbols as key and their
                corresponding values.
 
+        Warning
+        =======
+        The values for a = 0 and a = l, with l the lenght of the beam, in
+        the plot can be incorrect.
+
         Examples
         ========
 
@@ -2101,7 +2121,7 @@ class Beam:
             Plot object containing:
             [0]: cartesian line: -(-SingularityFunction(a, 0, 0) + SingularityFunction(a, 12, 0) + 2)*SingularityFunction(a, 4, 0)
             - SingularityFunction(-a, 0, 0) - SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/8
-            + SingularityFunction(a, 12, 0)/2 - SingularityFunction(a, 12, 1)/8 + 1 for a over (-0.0001, 12.0)
+            + SingularityFunction(a, 12, 0)/2 - SingularityFunction(a, 12, 1)/8 + 1 for a over (0.0, 12.0)
 
         """
 
@@ -2122,7 +2142,7 @@ class Beam:
             if sym != a and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
 
-        return plot(self._ild_shear.subs(subs), (a, -0.0001, l),  title='I.L.D. for Shear',
+        return plot(self._ild_shear.subs(subs), (a, 0, l),  title='I.L.D. for Shear',
                xlabel=r'$\mathrm{a}$', ylabel=r'$\mathrm{V}$', line_color='blue',show=True)
 
     def solve_for_ild_moment(self, distance, value, *reactions):
@@ -2140,6 +2160,11 @@ class Beam:
             Magnitude of moving load
         reactions :
             The reaction forces applied on the beam.
+
+        Warning
+        =======
+        This method creates equations that can give incorrect results when
+        substituting a = 0 or a = l, with l the lenght of the beam.
 
         Examples
         ========
@@ -2206,6 +2231,11 @@ class Beam:
                Python dictionary containing Symbols as key and their
                corresponding values.
 
+        Warning
+        =======
+        The values for a = 0 and a = l, with l the lenght of the beam, in
+        the plot can be incorrect.
+
         Examples
         ========
 
@@ -2238,7 +2268,7 @@ class Beam:
             Plot object containing:
             [0]: cartesian line: -(4*SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1)
             + SingularityFunction(a, 4, 1))*SingularityFunction(a, 4, 0) - SingularityFunction(a, 0, 1)/2
-            + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0) - SingularityFunction(a, 12, 1)/2 for a over (-0.0001, 12.0)
+            + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0) - SingularityFunction(a, 12, 1)/2 for a over (0.0, 12.0)
 
         """
 
@@ -2257,7 +2287,7 @@ class Beam:
         for sym in self._length.atoms(Symbol):
             if sym != a and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
-        return plot(self._ild_moment.subs(subs), (a, -0.0001, self._length), title='I.L.D. for Moment',
+        return plot(self._ild_moment.subs(subs), (a, 0, self._length), title='I.L.D. for Moment',
                xlabel=r'$\mathrm{a}$', ylabel=r'$\mathrm{M}$', line_color='blue', show=True)
 
     @doctest_depends_on(modules=('numpy',))
