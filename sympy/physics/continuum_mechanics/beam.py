@@ -136,7 +136,7 @@ class Beam:
     (-5*L**2*q1 + 7*L**2*q2 - 8*L*P1 + 4*L*P2 + 32*M1 - 32*M2)/(32*L)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), base_char='C'):
+    def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), ild_variable=Symbol('a'), base_char='C'):
         """Initializes the class.
 
         Parameters
@@ -170,6 +170,11 @@ class Beam:
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
 
+        ild_variable : Symbol, optional
+            A Symbol object that will be used as the variable specifying the
+            location of the moving load in ILD calculations. By default, it
+            is set to ``Symbol('a')``.
+
         base_char : String, optional
             A String that will be used as base character to generate sequential
             symbols for integration constants in cases where boundary conditions
@@ -183,6 +188,7 @@ class Beam:
             self.cross_section = None
             self.second_moment = second_moment
         self.variable = variable
+        self.ild_variable = ild_variable
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': [], 'bending_moment': [], 'shear_force': []}
         self._load = 0
@@ -1803,7 +1809,7 @@ class Beam:
         moment equations.
         """
         x = self.variable
-        a = Symbol('a')
+        a = self.ild_variable
         load = self._load + value * SingularityFunction(x, a, -1)
         shear_force = -integrate(load, x)
         bending_moment = integrate(shear_force, x)
@@ -1859,7 +1865,7 @@ class Beam:
         shear_force, bending_moment = self._solve_for_ild_equations(value)
         x = self.variable
         l = self.length
-        a = Symbol('a')
+        a = self.ild_variable
 
         rotation_jumps = tuple(self._rotation_hinge_symbols)
         deflection_jumps = tuple(self._sliding_hinge_symbols)
@@ -1978,7 +1984,7 @@ class Beam:
         if not self._ild_reactions:
             raise ValueError("I.L.D. reaction equations not found. Please use solve_for_ild_reactions() to generate the I.L.D. reaction equations.")
 
-        a = Symbol('a')
+        a = self.ild_variable
         ildplots = []
 
         if subs is None:
@@ -2054,7 +2060,7 @@ class Beam:
 
         x = self.variable
         l = self.length
-        a = Symbol('a')
+        a = self.ild_variable
 
         shear_force, _ = self._solve_for_ild_equations(value)
 
@@ -2129,7 +2135,7 @@ class Beam:
             raise ValueError("I.L.D. shear equation not found. Please use solve_for_ild_shear() to generate the I.L.D. shear equations.")
 
         l = self._length
-        a = Symbol('a')
+        a = self.ild_variable
 
         if subs is None:
             subs = {}
@@ -2199,7 +2205,7 @@ class Beam:
 
         x = self.variable
         l = self.length
-        a = Symbol('a')
+        a = self.ild_variable
 
         _, moment = self._solve_for_ild_equations(value)
 
@@ -2275,7 +2281,7 @@ class Beam:
         if not self._ild_moment:
             raise ValueError("I.L.D. moment equation not found. Please use solve_for_ild_moment() to generate the I.L.D. moment equations.")
 
-        a = Symbol('a')
+        a = self.ild_variable
 
         if subs is None:
             subs = {}
