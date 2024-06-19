@@ -22,6 +22,8 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.series import limit
 from sympy.utilities.misc import filldedent
+from sympy.solvers.ode.systems import linodesolve
+from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -3991,6 +3993,108 @@ class StateSpace(LinearTimeInvariant):
 
         """
         return self._D.rows
+
+    def state_vector(self, initial_conditions=None, input_vector=None, var=None):
+        r"""
+        Returns the State vector `x` given by the solution of the state equation
+            x'(t) = A * x(t) + B * u(t)
+
+        Parameters
+        ============
+
+        initial_conditions : Matrix
+            The initial conditions of `x` state vector.
+        input_vector : Matrix
+            The input vector for state space.
+        var : Symbol
+            The symbol representing time.
+
+        Examples
+        ==========
+
+        >>> from sympy import Matrix, Symbol
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-2, 0], [1, -1]])
+        >>> i = Matrix([2, 3])
+        >>> t = Symbol('t')
+        >>> ss = StateSpace(A)
+        >>> ss.state_vector(initial_conditions=i, var=t)
+        Matrix([
+        [            2*exp(-2*t)],
+        [5*exp(-t) - 2*exp(-2*t)]])
+
+        References
+        ==========
+        .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
+        .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
+        """
+
+        if not var:
+            var = Symbol('t')
+        elif not isinstance(var, Symbol):
+            raise ValueError("Variable for representing time must be a Symbol.")
+        if not initial_conditions:
+            initial_conditions = zeros(self._A.shape[0], 1)
+        elif initial_conditions.shape != (self._A.shape[0], 1):
+            raise ShapeError("Initial condition vector should have the same number of "
+                             "rows as the state matrix.")
+        if not input_vector:
+            input_vector = zeros(self._B.shape[1], 1)
+        elif input_vector.shape != (self._B.shape[1], 1):
+            raise ShapeError("Input vector should have the same number of "
+                             "columns as the input matrix.")
+        sol = linodesolve(self._A, var, self._B*input_vector, type='type2', doit=True)
+        mat1 = Matrix(sol)
+        mat2 = mat1.replace(var, 0)
+        # Get all the free symbols form the matrix
+        dummy_symbols = list(mat2.free_symbols)
+        # Convert the matrix to a Coefficient matrix
+        r1, r2 = linear_eq_to_matrix(mat2, dummy_symbols)
+        s = linsolve((r1, initial_conditions+r2))
+        res_tuple = next(iter(s))
+        for ind, v in enumerate(res_tuple):
+            mat1 = mat1.replace(dummy_symbols[ind], v)
+        return mat1
+
+    def output_vector(self, initial_conditions=None, input_vector=None, var=None):
+        r"""
+        Returns the Output vector `x` given by the solution of the output equation
+            y(t) = C * x(t) + D * u(t)
+
+        Parameters
+        ============
+
+        initial_conditions : Matrix
+            The initial conditions of `x` state vector.
+        input_vector : Matrix
+            The input vector for state space.
+        var : Symbol
+            The symbol representing time.
+
+        Examples
+        ==========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-2, 0], [1, -1]])
+        >>> B = Matrix([[1], [0]])
+        >>> C = Matrix([[2, 1]])
+        >>> ip = Matrix([5])
+        >>> i = Matrix([0, 0])
+        >>> ss = StateSpace(A, B, C)
+        >>> ss.output_vector(input_vector=ip, initial_conditions=i)
+        Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
+
+        References
+        ==========
+        .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
+        .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
+        """
+        if not input_vector:
+            input_vector = zeros(self._B.shape[1], 1)
+        sv = self.state_vector(initial_conditions, input_vector, var)
+        res = self._C*sv + self._D*input_vector
+        return res.simplify()
 
     def _eval_evalf(self, prec):
         """

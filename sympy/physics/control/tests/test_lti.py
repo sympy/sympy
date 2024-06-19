@@ -14,6 +14,7 @@ from sympy.polys.rootoftools import CRootOf
 from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
+from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
@@ -1703,6 +1704,30 @@ def test_conversion():
 
     # Transfer function has to be proper
     raises(ValueError, lambda: TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s).rewrite(StateSpace))
+
+
+def test_StateSpace_state_output_vector():
+    # https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
+    # https://lpsa.swarthmore.edu/Transient/TransMethSS.html
+    A1 = Matrix([[0, 1], [-2, -3]])
+    B1 = Matrix([[0], [1]])
+    C1 = Matrix([[1, -1]])
+    D1 = Matrix([0])
+    i1 = Matrix([[1], [2]])
+    t = symbols('t')
+    ss1 = StateSpace(A1, B1, C1, D1)
+    assert ss1.state_vector(initial_conditions=i1, var=t) == Matrix([[ 4*exp(-t) - 3*exp(-2*t)],
+                                                              [-4*exp(-t) + 6*exp(-2*t)]])
+    assert ss1.output_vector(initial_conditions=i1) == Matrix([[(8*exp(t) - 9)*exp(-2*t)]])
+    A2 = Matrix([[-1, 1], [-4, -4]])
+    B2 = Matrix([[0], [4]])
+    C2 = Matrix([[0, 1]])
+    D2 = Matrix([0])
+    u = Matrix([10])
+    ss2 = StateSpace(A2, B2, C2, D2)
+    op = ss2.output_vector(input_vector=u, var=t)
+    assert str(op.expand().evalf()[0]) == str(5.0 + 20.7880460155075*exp(-5*t/2)*sin(sqrt(7)*t/2)
+                                            - 5.0*exp(-5*t/2)*cos(sqrt(7)*t/2))
 
 
 def test_StateSpace_functions():
