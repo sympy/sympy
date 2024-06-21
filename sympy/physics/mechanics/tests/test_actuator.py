@@ -27,9 +27,13 @@ from sympy.physics.mechanics import (
     Vector,
     dynamicsymbols,
     DuffingSpring,
+    CoulombFrictionActuator,
 )
 
 from sympy.core.expr import Expr as ExprType
+
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.series.gruntz import sign
 
 target = RigidBody('target')
 reaction = RigidBody('reaction')
@@ -849,3 +853,55 @@ class TestDuffingSpring:
                 diff = (calculated_component - expected_component).subs(substitutions).evalf()
                 # Check if the absolute value of the difference is below a threshold
                 assert Abs(diff) < 1e-9, f"The forces do not match. Difference: {diff}"
+
+class TestCoulombFrictionActuator():
+    r"""A small block on a rotating disc
+
+    Notes
+    =====
+
+    A small block of mass m is placed at a distance r from central axis of a rotating disc.
+    The coefficient of static friction between the block and the table is $\mu_s$, and
+    the disc rotates with constant angular acceleration $\alpha$.
+    When the disc slides, the coefficient of kinetic friction is $\mu_k$.
+
+    """
+    @pytest.fixture(autouse=True)
+    def _coulomb_friction_fixture(self):
+        self.m = Symbol('m')
+        self.r = Symbol('r')
+        self.angular_acceleration = Symbol('alpha')
+        self.g = Symbol('g')
+        self.coefficient_of_static_friction = Symbol('mu')
+
+        self.q = dynamicsymbols('q')
+
+        self.frame = ReferenceFrame('N')
+        self.origin = Point('p0')
+        self.origin.set_vel(self.frame, 0)
+
+        self.block = Point('pA')
+        self.block.set_pos(self.origin, self.q*self.frame.x + self.q*self.frame.y)
+
+        self.pathway = LinearPathway(self.origin, self.block)
+
+        self.coefficient_of_kinetic_friction = Symbol('mu')
+        self.normal_force = self.m * self.g
+        self.tangential_friction_force = self.m * self.angular_acceleration * self.r
+        self.coulomb_friction_constant = self.normal_force * self.coefficient_of_static_friction
+
+    def test_force_actuator(self):
+        expected_friction = Piecewise(
+            (self.coefficient_of_kinetic_friction * self.normal_force, self.pathway.extension_velocity < 0),
+            (self.tangential_friction_force, (self.pathway.extension_velocity == 0) & (abs(self.tangential_friction_force) < self.coulomb_friction_constant)),
+            (self.coulomb_friction_constant * sign(self.tangential_friction_force), (self.pathway.extension_velocity == 0) & (abs(self.tangential_friction_force) >= self.coulomb_friction_constant)),
+            (-self.coefficient_of_kinetic_friction * self.normal_force, self.pathway.extension_velocity > 0)
+        )
+
+        friction = CoulombFrictionActuator(self.coefficient_of_kinetic_friction,
+                                           self.normal_force,
+                                           self.tangential_friction_force,
+                                           self.coulomb_friction_constant,
+                                           self.pathway)
+
+        assert friction == expected_friction
