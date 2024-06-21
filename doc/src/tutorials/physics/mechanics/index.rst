@@ -13,3 +13,8 @@ Each example includes clear explanations, mathematical formulations, and code to
    :maxdepth: 2
 
    duffing-example.rst
+   rollingdisc_example.rst
+   multi_degree_freedom_holonomic_system.rst
+   lin_pend_nonmin_example.rst
+   four_bar_linkage_example.rst
+   bicycle_example.rst

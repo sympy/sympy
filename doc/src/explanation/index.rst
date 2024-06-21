@@ -12,7 +12,7 @@ technical implementation details, and opinionated recommendations.
 **Content**
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    best-practices.md
    gotchas.rst
@@ -20,3 +20,6 @@ technical implementation details, and opinionated recommendations.
    special_topics/index.rst
    active-deprecations.md
    glossary.md
+   vectors/index.rst
+   mechanics/index.rst
+   biomechanics.rst
