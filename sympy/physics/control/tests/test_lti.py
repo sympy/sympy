@@ -2016,14 +2016,15 @@ def test_StateSpace_parallel():
     tf4 = TransferFunction(s, s + 2, s)
     tfm = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
     p4 = MIMOParallel(tfm, ss3)
-    assert p4 == MIMOParallel(TransferFunctionMatrix(((TransferFunction(s, s + 1, s), TransferFunction(1, s, s)),
-                                         (TransferFunction(1, s + 1, s), TransferFunction(s, s + 2, s)))),
-                 StateSpace(Matrix([
-                     [4, 1],
-                     [2, -3]]), Matrix([
-                     [5, 2],
-                     [-3, -3]]), Matrix([
-                     [2, -4],
-                     [0, 1]]), Matrix([
-                     [3, 2],
-                     [1, -1]])))
+    assert p4 == MIMOParallel(TransferFunctionMatrix((
+                    (TransferFunction(s, s + 1, s), TransferFunction(1, s, s)),
+                    (TransferFunction(1, s + 1, s), TransferFunction(s, s + 2, s)))),
+                    StateSpace(Matrix([
+                    [4, 1],
+                    [2, -3]]), Matrix([
+                    [5, 2],
+                    [-3, -3]]), Matrix([
+                    [2, -4],
+                    [0, 1]]), Matrix([
+                    [3, 2],
+                    [1, -1]])))
