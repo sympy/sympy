@@ -243,10 +243,9 @@ def multiset_partitions_taocp(multiplicities):
     while True:
         while True:
             # Step M2 (Subtract v from u)
-            j = a
             k = b
             x = False
-            while j < b:
+            for j in range(a, b):
                 pstack[k].u = pstack[j].u - pstack[j].v
                 if pstack[k].u == 0:
                     x = True
@@ -259,7 +258,6 @@ def multiset_partitions_taocp(multiplicities):
                     pstack[k].c = pstack[j].c
                     pstack[k].v = pstack[k].u
                     k = k + 1
-                j = j + 1
                 # Note: x is True iff v has changed
 
             # Step M3 (Push if nonzero.)

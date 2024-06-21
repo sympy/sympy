@@ -490,18 +490,11 @@ class Plane(GeometryEntity):
         if isinstance(l, LinearEntity3D):
             a = l.direction_ratio
             b = self.normal_vector
-            c = sum(i*j for i, j in zip(a, b))
-            if c == 0:
-                return True
-            else:
-                return False
-        elif isinstance(l, Plane):
+            return sum(i*j for i, j in zip(a, b)) == 0
+        if isinstance(l, Plane):
             a = Matrix(l.normal_vector)
             b = Matrix(self.normal_vector)
-            if a.cross(b).is_zero_matrix:
-                return True
-            else:
-                return False
+            return bool(a.cross(b).is_zero_matrix)
 
 
     def is_perpendicular(self, l):
