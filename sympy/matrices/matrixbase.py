@@ -188,8 +188,7 @@ class MatrixBase(Printable):
         sub_blocks = []
 
         def recurse_sub_blocks(M):
-            i = 1
-            while i <= M.shape[0]:
+            for i in range(1, M.shape[0] + 1):
                 if i == 1:
                     to_the_right = M[0, i:]
                     to_the_bottom = M[i:, 0]
@@ -197,15 +196,11 @@ class MatrixBase(Printable):
                     to_the_right = M[:i, i:]
                     to_the_bottom = M[i:, :i]
                 if any(to_the_right) or any(to_the_bottom):
-                    i += 1
                     continue
-                else:
-                    sub_blocks.append(M[:i, :i])
-                    if M.shape == M[:i, :i].shape:
-                        return
-                    else:
-                        recurse_sub_blocks(M[i:, i:])
-                        return
+                sub_blocks.append(M[:i, :i])
+                if M.shape != M[:i, :i].shape:
+                    recurse_sub_blocks(M[i:, i:])
+                return
 
         recurse_sub_blocks(self)
         return sub_blocks

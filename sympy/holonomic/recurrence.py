@@ -350,16 +350,8 @@ class HolonomicSequence:
     __str__ = __repr__
 
     def __eq__(self, other):
-        if self.recurrence == other.recurrence:
-            if self.n == other.n:
-                if self._have_init_cond and other._have_init_cond:
-                    if self.u0 == other.u0:
-                        return True
-                    else:
-                        return False
-                else:
-                    return True
-            else:
-                return False
-        else:
+        if self.recurrence != other.recurrence or self.n != other.n:
             return False
+        if self._have_init_cond and other._have_init_cond:
+            return self.u0 == other.u0
+        return True
