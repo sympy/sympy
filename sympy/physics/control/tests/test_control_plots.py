@@ -1,5 +1,5 @@
 from math import isclose
-from sympy.core.numbers import I
+from sympy.core.numbers import I, all_close
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import (Abs, arg)
 from sympy.functions.elementary.exponential import log
@@ -101,9 +101,9 @@ def test_pole_zero():
         skip("NumPy is required for this test")
 
     def pz_tester(sys, expected_value):
-        z, p = pole_zero_numerical_data(sys)
-        z_check = numpy.allclose(z, expected_value[0])
-        p_check = numpy.allclose(p, expected_value[1])
+        z, p = [list(i) for i in pole_zero_numerical_data(sys)]
+        z_check = all_close(z, expected_value[0], atol=0, rtol=1e-6)
+        p_check = all_close(p, expected_value[1], atol=0, rtol=1e-6)
         return p_check and z_check
 
     exp1 = [[], [-0.24999999999999994+1.3919410907075054j, -0.24999999999999994-1.3919410907075054j]]
