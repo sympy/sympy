@@ -1974,42 +1974,42 @@ def test_StateSpace_parallel():
     ss4 = StateSpace(a4, b4, c4, d4)
     p3 = MIMOParallel(ss3, ss4)
     assert p3 == MIMOParallel(StateSpace(Matrix([
-                    [4,  1],
-                    [2, -3]]), Matrix([
-                    [ 5,  2],
-                    [-3, -3]]), Matrix([
-                    [2, -4],
-                    [0,  1]]), Matrix([
-                    [3,  2],
-                    [1, -1]])), StateSpace(Matrix([
-                    [-3,  4, 2],
-                    [-1, -3, 0],
-                    [ 2,  5, 3]]), Matrix([
-                    [ 1,  4],
-                    [-3, -3],
-                    [-2,  1]]), Matrix([
-                    [4, 2, -3],
-                    [1, 4,  3]]), Matrix([
-                    [-2, 4],
-                    [ 0, 1]])))
+                        [4,  1],
+                        [2, -3]]), Matrix([
+                        [ 5,  2],
+                        [-3, -3]]), Matrix([
+                        [2, -4],
+                        [0,  1]]), Matrix([
+                        [3,  2],
+                        [1, -1]])), StateSpace(Matrix([
+                        [-3,  4, 2],
+                        [-1, -3, 0],
+                        [ 2,  5, 3]]), Matrix([
+                        [ 1,  4],
+                        [-3, -3],
+                        [-2,  1]]), Matrix([
+                        [4, 2, -3],
+                        [1, 4,  3]]), Matrix([
+                        [-2, 4],
+                        [ 0, 1]])))
     assert p3.doit() == StateSpace(Matrix([
-            [4, 1, 0, 0, 0],
-            [2, -3, 0, 0, 0],
-            [0, 0, -3, 4, 2],
-            [0, 0, -1, -3, 0],
-            [0, 0, 2, 5, 3]]),
-            Matrix([
-            [5, 2],
-            [-3, -3],
-            [1, 4],
-            [-3, -3],
-            [-2, 1]]),
-            Matrix([
-            [2, -4, 4, 2, -3],
-            [0, 1, 1, 4, 3]]),
-            Matrix([
-            [1, 6],
-            [1, 0]]))
+                        [4, 1, 0, 0, 0],
+                        [2, -3, 0, 0, 0],
+                        [0, 0, -3, 4, 2],
+                        [0, 0, -1, -3, 0],
+                        [0, 0, 2, 5, 3]]),
+                        Matrix([
+                        [5, 2],
+                        [-3, -3],
+                        [1, 4],
+                        [-3, -3],
+                        [-2, 1]]),
+                        Matrix([
+                        [2, -4, 4, 2, -3],
+                        [0, 1, 1, 4, 3]]),
+                        Matrix([
+                        [1, 6],
+                        [1, 0]]))
     # Using StateSpace with MIMOParallel.
     tf2 = TransferFunction(1, s, s)
     tf3 = TransferFunction(1, s + 1, s)
@@ -2017,14 +2017,14 @@ def test_StateSpace_parallel():
     tfm = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
     p4 = MIMOParallel(tfm, ss3)
     assert p4 == MIMOParallel(TransferFunctionMatrix((
-                    (TransferFunction(s, s + 1, s), TransferFunction(1, s, s)),
-                    (TransferFunction(1, s + 1, s), TransferFunction(s, s + 2, s)))),
-                    StateSpace(Matrix([
-                    [4, 1],
-                    [2, -3]]), Matrix([
-                    [5, 2],
-                    [-3, -3]]), Matrix([
-                    [2, -4],
-                    [0, 1]]), Matrix([
-                    [3, 2],
-                    [1, -1]])))
+                        (TransferFunction(s, s + 1, s), TransferFunction(1, s, s)),
+                        (TransferFunction(1, s + 1, s), TransferFunction(s, s + 2, s)))),
+                        StateSpace(Matrix([
+                        [4, 1],
+                        [2, -3]]), Matrix([
+                        [5, 2],
+                        [-3, -3]]), Matrix([
+                        [2, -4],
+                        [0, 1]]), Matrix([
+                        [3, 2],
+                        [1, -1]])))
