@@ -84,6 +84,10 @@ b         a         b     \
     assert ascii_vpretty(o) == expected
     assert unicode_vpretty(o) == uexpected
 
+    # https://github.com/sympy/sympy/issues/26731
+    assert ascii_vpretty(-A.x) == '-a_x'
+    assert unicode_vpretty(-A.x) == '-a_x'
+
 
 def test_vector_latex():
 
