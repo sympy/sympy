@@ -91,7 +91,7 @@ def pole_zero_numerical_data(system):
     >>> from sympy.physics.control.control_plots import pole_zero_numerical_data
     >>> tf1 = TransferFunction(s**2 + 1, s**4 + 4*s**3 + 6*s**2 + 5*s + 2, s)
     >>> pole_zero_numerical_data(tf1)
-    ([-0.0-1.j,  0.+1.j], [-2. + 0.j ,       -0.5+0.8660254j, -0.5-0.8660254j -1. +0.j])
+    ([-1j, 1j], [-2.0, (-1.5-0.8660254j), (-0.5+0.8660254j)])
 
     See Also
     ========
@@ -114,7 +114,7 @@ def pole_zero_numerical_data(system):
     # make ordering canonical
     def _sort(l):
         return [float(i) if i.is_real else complex(i) for i in
-                _nsort(*[_sympify(i) for i in l])]
+                _nsort([_sympify(i) for i in l])]
 
     return _sort(zeros), _sort(poles)
 
