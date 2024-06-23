@@ -275,7 +275,7 @@ class Vector(Printable, EvalfMixin):
                 elif M[i] == 1:
                     terms.append(prettyForm(N.pretty_vecs[i]))
                 elif M[i] == -1:
-                    terms.append(prettyForm.NEG + prettyForm(N.pretty_vecs[i]))
+                    terms.append(prettyForm("-1") * prettyForm(N.pretty_vecs[i]))
                 else:
                     terms.append(juxtapose(M[i], N.pretty_vecs[i]))
 
