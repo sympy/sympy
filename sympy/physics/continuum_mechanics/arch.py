@@ -50,6 +50,11 @@ class Arches:
         else:
             raise KeyError("please provide crown_x to contruct arch")
 
+    @property
+    def get_loads(self):
+        loads = {'distributed':self._distributed_loads, 'concentrated':self._conc_loads}
+        return loads, self._loads
+
     def apply_load(self,order,label,coord1,coord2,mag,*args):
         if label in self._loads:
             raise ValueError("load with the given label already exists")
@@ -70,3 +75,18 @@ class Arches:
             if coord2>y1 or coord2<y0:
                 raise ValueError(f"loads must be applied between y = {y0} and y = {y1}")
             self._conc_loads[label] = (coord1,coord2,args[0])
+
+    def remove_loads(self,order,label):
+        if label in self._loads:
+            mag = self._loads[label]
+            self._loads.pop(label)
+        else:
+            raise KeyError("no such load applied")
+
+        if order==0 and label in self._distributed_loads:
+            self._distributed_loads.pop(label)
+        elif order==1 and label in self._conc_loads:
+            self._conc_loads.pop(label)
+        else:
+            self._loads[label] = mag
+            raise KeyError("no such load in the provided load type or load type does not exist")
