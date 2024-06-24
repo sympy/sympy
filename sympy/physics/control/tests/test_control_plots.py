@@ -102,11 +102,12 @@ def test_pole_zero():
         skip("NumPy is required for this test")
 
     def pz_tester(sys, expected_value):
-        z, p = [list(i) for i in pole_zero_numerical_data(sys)]
+        zp = pole_zero_numerical_data(sys)
+        zp = [[_sympify(i).n(chop=True) for i in j] for j in zp]
+        z, p = [_sort(i) for i in zp]
         def check(a, b):
             if isinstance(a, (list, tuple)):
                 return all(check(i, j) for i,j in zip(a, b))
-            a = sympify(a).n(chop=1e-10)
             if not b:
                 return all_close(a, b, atol=1e-10, rtol=0)
             return all_close(a, b, atol=0, rtol=1e-6)
