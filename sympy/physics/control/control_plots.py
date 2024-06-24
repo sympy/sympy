@@ -114,7 +114,7 @@ def pole_zero_numerical_data(system):
     # make ordering canonical
     def _sort(l):
         return [float(i) if i.is_real else complex(i) for i in
-                _nsort([_sympify(i) for i in l])]
+                _nsort([_sympify(i) for i in l])] if len(l) else []
 
     return _sort(zeros), _sort(poles)
 
