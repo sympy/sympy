@@ -1280,9 +1280,9 @@ def elimination_technique_2(C):
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
                 rep_by = (bk*fw)**(-1*k)
-                del rels[i]; del gens[j]
-                for l in range(len(rels)):
-                    rels[l] = rels[l].eliminate_word(gen, rep_by)
+                del rels[i]
+                del gens[j]
+                rels = [rel.eliminate_word(gen, rep_by) for rel in rels]
                 break
     C._reidemeister_relators = rels
     C._schreier_generators = gens
@@ -1343,9 +1343,7 @@ def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False):
     C.reidemeister_relators = tuple(rels)
 
     if homomorphism:
-        _gens = []
-        for gen in gens:
-            _gens.append(C._schreier_gen_elem[str(gen)])
+        _gens = [C._schreier_gen_elem[str(gen)] for gen in gens]
         return C.schreier_generators, C.reidemeister_relators, _gens
 
     return C.schreier_generators, C.reidemeister_relators
