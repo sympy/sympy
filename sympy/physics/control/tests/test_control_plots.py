@@ -1,6 +1,6 @@
 from math import isclose
 from sympy.core.numbers import I, all_close
-from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import (Abs, arg)
 from sympy.functions.elementary.exponential import log
