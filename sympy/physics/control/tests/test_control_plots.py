@@ -4,6 +4,7 @@ from sympy.core.sympify import sympify
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import (Abs, arg)
 from sympy.functions.elementary.exponential import log
+from sympy.polys.polyutils import _nsort
 from sympy.abc import s, p, a
 from sympy.external import import_module
 from sympy.physics.control.control_plots import \
@@ -104,7 +105,7 @@ def test_pole_zero():
     def pz_tester(sys, expected_value):
         zp = pole_zero_numerical_data(sys)
         zp = [[_sympify(i).n(chop=True) for i in j] for j in zp]
-        z, p = [_sort(i) for i in zp]
+        z, p = [_nsort(i) for i in zp]
         def check(a, b):
             if isinstance(a, (list, tuple)):
                 return all(check(i, j) for i,j in zip(a, b))
