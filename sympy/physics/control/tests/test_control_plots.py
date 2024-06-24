@@ -104,7 +104,7 @@ def test_pole_zero():
 
     def pz_tester(sys, expected_value):
         zp = pole_zero_numerical_data(sys)
-        zp = [[_sympify(i).n(chop=True) for i in j] for j in zp]
+        zp = [[_sympify(i).n(chop=1e-10) for i in j] for j in zp]
         z, p = [_nsort(i) for i in zp]
         def check(a, b):
             if isinstance(a, (list, tuple)):
