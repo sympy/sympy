@@ -3840,10 +3840,11 @@ class StateSpace(LinearTimeInvariant):
         """
         return self._D.rows
 
-    def state_vector(self, initial_conditions=None, input_vector=None, var=Symbol('t')):
+    def dsolve(self, initial_conditions=None, input_vector=None, var=Symbol('t')):
         r"""
-        Returns the State vector `x` given by the solution of the state equation
+        Returns `y(t)` or output of StateSpace given by the solution of equations:
             x'(t) = A * x(t) + B * u(t)
+            y(t)  = C * x(t) + D * u(t)
 
         Parameters
         ============
@@ -3858,16 +3859,16 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ==========
 
-        >>> from sympy import Matrix, Symbol
+        >>> from sympy import Matrix
         >>> from sympy.physics.control import StateSpace
         >>> A = Matrix([[-2, 0], [1, -1]])
-        >>> i = Matrix([2, 3])
-        >>> t = Symbol('t')
-        >>> ss = StateSpace(A)
-        >>> ss.state_vector(initial_conditions=i, var=t)
-        Matrix([
-        [            2*exp(-2*t)],
-        [5*exp(-t) - 2*exp(-2*t)]])
+        >>> B = Matrix([[1], [0]])
+        >>> C = Matrix([[2, 1]])
+        >>> ip = Matrix([5])
+        >>> i = Matrix([0, 0])
+        >>> ss = StateSpace(A, B, C)
+        >>> ss.dsolve(input_vector=ip, initial_conditions=i).simplify()
+        Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
 
         References
         ==========
@@ -3891,11 +3892,7 @@ class StateSpace(LinearTimeInvariant):
         mat1 = Matrix(sol)
         mat2 = mat1.replace(var, 0)
         free1 = self._A.free_symbols | self._B.free_symbols | input_vector.free_symbols
-        print("Free 1 are : ")
-        print(free1)
         free2 = mat2.free_symbols
-        print("Free 2 are : ")
-        print(free2)
         # Get all the free symbols form the matrix
         dummy_symbols = list(free2-free1)
         # Convert the matrix to a Coefficient matrix
@@ -3904,47 +3901,8 @@ class StateSpace(LinearTimeInvariant):
         res_tuple = next(iter(s))
         for ind, v in enumerate(res_tuple):
             mat1 = mat1.replace(dummy_symbols[ind], v)
-        return mat1
-
-    def output_vector(self, initial_conditions=None, input_vector=None, var=Symbol('t')):
-        r"""
-        Returns the Output vector `x` given by the solution of the output equation
-            y(t) = C * x(t) + D * u(t)
-
-        Parameters
-        ============
-
-        initial_conditions : Matrix
-            The initial conditions of `x` state vector.
-        input_vector : Matrix
-            The input vector for state space.
-        var : Symbol
-            The symbol representing time.
-
-        Examples
-        ==========
-
-        >>> from sympy import Matrix
-        >>> from sympy.physics.control import StateSpace
-        >>> A = Matrix([[-2, 0], [1, -1]])
-        >>> B = Matrix([[1], [0]])
-        >>> C = Matrix([[2, 1]])
-        >>> ip = Matrix([5])
-        >>> i = Matrix([0, 0])
-        >>> ss = StateSpace(A, B, C)
-        >>> ss.output_vector(input_vector=ip, initial_conditions=i)
-        Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
-
-        References
-        ==========
-        .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
-        .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
-        """
-        if not input_vector:
-            input_vector = zeros(self._B.shape[1], 1)
-        sv = self.state_vector(initial_conditions, input_vector, var)
-        res = self._C*sv + self._D*input_vector
-        return res.simplify()
+        res = self._C*mat1 + self._D*input_vector
+        return res
 
     def _eval_evalf(self, prec):
         """
