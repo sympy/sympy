@@ -6,6 +6,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan
 from sympy.matrices.dense import eye
@@ -1713,21 +1714,40 @@ def test_StateSpace_state_output_vector():
     B1 = Matrix([[0], [1]])
     C1 = Matrix([[1, -1]])
     D1 = Matrix([0])
-    i1 = Matrix([[1], [2]])
+    I1 = Matrix([[1], [2]])
     t = symbols('t')
     ss1 = StateSpace(A1, B1, C1, D1)
-    assert ss1.state_vector(initial_conditions=i1, var=t) == Matrix([[ 4*exp(-t) - 3*exp(-2*t)],
+    assert ss1.state_vector(initial_conditions=I1, var=t) == Matrix([[ 4*exp(-t) - 3*exp(-2*t)],
                                                               [-4*exp(-t) + 6*exp(-2*t)]])
-    assert ss1.output_vector(initial_conditions=i1) == Matrix([[(8*exp(t) - 9)*exp(-2*t)]])
+    assert ss1.output_vector(initial_conditions=I1) == Matrix([[(8*exp(t) - 9)*exp(-2*t)]])
     A2 = Matrix([[-1, 1], [-4, -4]])
     B2 = Matrix([[0], [4]])
     C2 = Matrix([[0, 1]])
     D2 = Matrix([0])
-    u = Matrix([10])
+    U2 = Matrix([10])
     ss2 = StateSpace(A2, B2, C2, D2)
-    op = ss2.output_vector(input_vector=u, var=t)
+    op = ss2.output_vector(input_vector=U2, var=t)
     assert str(op.expand().evalf()[0]) == str(5.0 + 20.7880460155075*exp(-5*t/2)*sin(sqrt(7)*t/2)
                                             - 5.0*exp(-5*t/2)*cos(sqrt(7)*t/2))
+    # Test with Heaviside as input
+    A3 = Matrix([[-1, 1], [-4, -4]])
+    B3 = Matrix([[0], [4]])
+    C3 = Matrix([[0, 1]])
+    U3 = Matrix([[10*Heaviside(t)]])
+    ss3 = StateSpace(A3, B3, C3)
+    op3 = str(ss3.output_vector(var=t, input_vector=U3)[0].expand().evalf())
+    assert op3 == str(5.0*Heaviside(t) + 20.7880460155075*exp(-5*t/2)*sin(sqrt(7)*t/2)*Heaviside(t)
+                      - 5.0*exp(-5*t/2)*cos(sqrt(7)*t/2)*Heaviside(t))
+    # Test with Symbolic Matrices
+    m, a, x0 = symbols('m a x_0')
+    A4 = Matrix([[0, 1], [0, 0]])
+    B4 = Matrix([[0], [1 / m]])
+    C4 = Matrix([[1, 0]])
+    I4 = Matrix([[x0], [0]])
+    U4 = Matrix([[exp(-a * t)]])
+    ss4 = StateSpace(A4, B4, C4)
+    op4 = ss4.output_vector(initial_conditions=I4, input_vector=U4, var=t)
+    assert op4[0].args[0][0] == x0 + t/(a*m) - 1/(a**2*m) + exp(-a*t)/(a**2*m)
 
 
 def test_StateSpace_functions():
