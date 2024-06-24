@@ -2,12 +2,14 @@ from sympy.core.numbers import I, pi
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.polys.partfrac import apart
 from sympy.core.symbol import Dummy
+from sympy.core.sympify import _sympify
 from sympy.external import import_module
 from sympy.functions import arg, Abs
 from sympy.integrals.laplace import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.series import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
+from sympy.polys.polyutils import _nsort
 from sympy.printing.latex import latex
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
@@ -88,8 +90,8 @@ def pole_zero_numerical_data(system):
     >>> from sympy.physics.control.lti import TransferFunction
     >>> from sympy.physics.control.control_plots import pole_zero_numerical_data
     >>> tf1 = TransferFunction(s**2 + 1, s**4 + 4*s**3 + 6*s**2 + 5*s + 2, s)
-    >>> pole_zero_numerical_data(tf1)   # doctest: +SKIP
-    ([-0.+1.j  0.-1.j], [-2. +0.j        -0.5+0.8660254j -0.5-0.8660254j -1. +0.j       ])
+    >>> pole_zero_numerical_data(tf1)  # doctest: +SKIP
+    ([-1j, 1j], [-2.0, (-1.5-0.8660254j), (-0.5+0.8660254j)])
 
     See Also
     ========
@@ -109,7 +111,12 @@ def pole_zero_numerical_data(system):
     zeros = np.roots(num_poly)
     poles = np.roots(den_poly)
 
-    return zeros, poles
+    # make ordering canonical
+    def _sort(l):
+        return [float(i) if i.is_real else complex(i) for i in
+                _nsort([_sympify(i) for i in l])]
+
+    return _sort(zeros), _sort(poles)
 
 
 def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
