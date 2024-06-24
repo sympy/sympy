@@ -100,8 +100,7 @@ def _has_simple_delta(expr, index):
         if _is_simple_delta(expr, index):
             return True
         if expr.is_Add or expr.is_Mul:
-            if any(_has_simple_delta(arg, index) for arg in expr.args):
-                return True
+            return any(_has_simple_delta(arg, index) for arg in expr.args)
     return False
 
 
