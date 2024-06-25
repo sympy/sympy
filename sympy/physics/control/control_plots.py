@@ -1,15 +1,15 @@
 from sympy.core.numbers import I, pi
+from sympy.functions.elementary.complexes import re, im
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.polys.partfrac import apart
 from sympy.core.symbol import Dummy
-from sympy.core.sympify import _sympify
 from sympy.external import import_module
 from sympy.functions import arg, Abs
 from sympy.integrals.laplace import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.series import LineOver1DRangeSeries
+from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import Poly
-from sympy.polys.polyutils import _nsort
 from sympy.printing.latex import latex
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
@@ -23,13 +23,8 @@ matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
         catch=(RuntimeError,))
 
-numpy = import_module('numpy')
-
 if matplotlib:
     plt = matplotlib.pyplot
-
-if numpy:
-    np = numpy  # Matplotlib already has numpy as a compulsory dependency. No need to install it separately.
 
 
 def _check_system(system):
@@ -47,6 +42,15 @@ def _check_system(system):
         # Should test that exp is not part of a constant, in which case
         # no exception is required, compare exp(s) with s*exp(1)
         raise NotImplementedError("Time delay terms are not supported.")
+
+
+def _poly_roots(poly):
+    """Function to get the roots of a polynomial."""
+    if poly.domain in (QQ, ZZ):
+        return [_term.evalf() for _term in poly.all_roots()]
+    # XXX: Use all_roots() for irrational coefficients when possible
+    # See https://github.com/sympy/sympy/issues/22943
+    return [_term.evalf() for _term in poly.nroots()]
 
 
 def pole_zero_numerical_data(system):
@@ -67,8 +71,8 @@ def pole_zero_numerical_data(system):
     =======
 
     tuple : (zeros, poles)
-        zeros = Zeros of the system. NumPy array of complex numbers.
-        poles = Poles of the system. NumPy array of complex numbers.
+        zeros = Zeros of the system. Python list of complex numbers.
+        poles = Poles of the system. Python list of complex numbers.
 
     Raises
     ======
@@ -90,8 +94,8 @@ def pole_zero_numerical_data(system):
     >>> from sympy.physics.control.lti import TransferFunction
     >>> from sympy.physics.control.control_plots import pole_zero_numerical_data
     >>> tf1 = TransferFunction(s**2 + 1, s**4 + 4*s**3 + 6*s**2 + 5*s + 2, s)
-    >>> pole_zero_numerical_data(tf1)  # doctest: +SKIP
-    ([-1j, 1j], [-2.0, (-1.5-0.8660254j), (-0.5+0.8660254j)])
+    >>> pole_zero_numerical_data(tf1)
+    ([-1.0*I, 1.0*I], [-2.00000000000000, -1.00000000000000, -0.5 - 0.866025403784439*I, -0.5 + 0.866025403784439*I])
 
     See Also
     ========
@@ -102,21 +106,10 @@ def pole_zero_numerical_data(system):
     _check_system(system)
     system = system.doit()  # Get the equivalent TransferFunction object.
 
-    num_poly = Poly(system.num, system.var).all_coeffs()
-    den_poly = Poly(system.den, system.var).all_coeffs()
+    num_poly = Poly(system.num, system.var)
+    den_poly = Poly(system.den, system.var)
 
-    num_poly = np.array(num_poly, dtype=np.complex128)
-    den_poly = np.array(den_poly, dtype=np.complex128)
-
-    zeros = np.roots(num_poly)
-    poles = np.roots(den_poly)
-
-    # make ordering canonical
-    def _sort(l):
-        return [float(i) if i.is_real else complex(i) for i in
-                _nsort([_sympify(i) for i in l])]
-
-    return _sort(zeros), _sort(poles)
+    return _poly_roots(num_poly), _poly_roots(den_poly)
 
 
 def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
@@ -184,11 +177,11 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
     """
     zeros, poles = pole_zero_numerical_data(system)
 
-    zero_real = np.real(zeros)
-    zero_imag = np.imag(zeros)
+    zero_real = [re(_zero) for _zero in zeros]
+    zero_imag = [im(_zero) for _zero in zeros]
 
-    pole_real = np.real(poles)
-    pole_imag = np.imag(poles)
+    pole_real = [re(_pole) for _pole in poles]
+    pole_imag = [im(_pole) for _pole in poles]
 
     plt.plot(pole_real, pole_imag, 'x', mfc='none',
         markersize=pole_markersize, color=pole_color)
