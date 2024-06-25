@@ -81,6 +81,23 @@ redirects = {
     "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
     "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
 
+    "modules/physics/vector/index": "../explanation/Modules/Physics/vectors/index.html",
+    "modules/physics/vector/vectors": "../explanation/Modules/Physics/vectors/vectors.html",
+    "modules/physics/vector/kinematics": "../explanation/Modules/Physics/vectors/kinematics.html",
+    "modules/physics/vector/advanced": "../explanation/Modules/Physics/vectors/advanced.html",
+    "modules/physics/vector/fields": "../explanation/Modules/Physics/vectors/fields.html",
+    "modules/physics/mechanics/advanced": "../explanation/Modules/Physics/mechanics/advanced.html",
+    "modules/physics/mechanics/autolev_parser": "../explanation/Modules/Physics/mechanics/autolev_parser.html",
+    "modules/physics/mechanics/examples": "../tutorials/physics/mechanics/index.html",
+    "modules/physics/mechanics/joints": "../explanation/Modules/Physics/mechanics/joints.html",
+    "modules/physics/mechanics/kane": "../explanation/Modules/Physics/mechanics/kane.html",
+    "modules/physics/mechanics/lagrange": "../explanation/Modules/Physics/mechanics/lagrange.html",
+    "modules/physics/mechanics/masses": "../explanation/Modules/Physics/mechanics/masses.html",
+    "modules/physics/mechanics/reference": "../explanation/Modules/Physics/mechanics/reference.html",
+    "modules/physics/mechanics/symsystem": "../explanation/Modules/Physics/mechanics/symsystem.html",
+    "modules/physics/mechanics/examples": "../tutorials/physics/mechanics.html",
+    "tutorials/physics/biomechanics/biomechanics": "../explanation/Modules/Physics/biomechanics.html",
+
 }
 
 html_baseurl = "https://docs.sympy.org/latest/"
