@@ -17,9 +17,7 @@ technical implementation details, and opinionated recommendations.
    best-practices.md
    gotchas.rst
    solve_output.rst
+   Modules/Physics/index.rst
    special_topics/index.rst
    active-deprecations.md
    glossary.md
-   vectors/index.rst
-   mechanics/index.rst
-   biomechanics.rst
