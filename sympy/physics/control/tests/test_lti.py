@@ -1755,6 +1755,15 @@ def test_StateSpace_dsolve():
     ss5 = StateSpace(A5, B5, C5)
     op5 = ss5.dsolve(initial_conditions=I5, input_vector=U5, var=t).simplify()
     assert op5[0].args[0][0] == x0 + t/(a*m) - 1/(a**2*m) + exp(-a*t)/(a**2*m)
+    a11, a12, a21, a22, b1, b2, c1, c2, i1, i2 = symbols('a_11 a_12 a_21 a_22 b_1 b_2 c_1 c_2 i_1 i_2')
+    A6 = Matrix([[a11, a12], [a21, a22]])
+    B6 = Matrix([b1, b2])
+    C6 = Matrix([[c1, c2]])
+    I6 = Matrix([i1, i2])
+    ss6 = StateSpace(A6, B6, C6)
+    expr6 = ss6.dsolve(initial_conditions=I6)[0]
+    expr6 = expr6.subs([(a11, 0), (a12, 1), (a21, -2), (a22, -3), (b1, 0), (b2, 1), (c1, 1), (c2, -1), (i1, 1), (i2, 2)])
+    assert expr6 == 8*exp(-t) - 9*exp(-2*t)
 
 
 def test_StateSpace_functions():
