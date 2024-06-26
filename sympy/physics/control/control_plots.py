@@ -96,7 +96,7 @@ def pole_zero_numerical_data(system):
     >>> from sympy.physics.control.control_plots import pole_zero_numerical_data
     >>> tf1 = TransferFunction(s**2 + 1, s**4 + 4*s**3 + 6*s**2 + 5*s + 2, s)
     >>> pole_zero_numerical_data(tf1)
-    ([-1j, 1j], [-2.0, -1.0, (-1.5-0.8660254j), (-0.5+0.8660254j)])
+    ([-1j, 1j], [-2.0, -1.0, (-0.5-0.8660254037844386j), (-0.5+0.8660254037844386j)])
 
     See Also
     ========
