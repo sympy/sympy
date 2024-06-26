@@ -55,26 +55,26 @@ class Arches:
         loads = {'distributed':self._distributed_loads, 'concentrated':self._conc_loads}
         return loads, self._loads
 
-    def apply_load(self,order,label,coord1,coord2,mag,*args):
+    def apply_load(self,order,label,x1,mag,x2=None,angle=None):
         if label in self._loads:
             raise ValueError("load with the given label already exists")
 
         self._loads[label] = mag
         if order == 0:
-            x0 = min(coord1,coord2)
-            x1 = max(coord1,coord2)
-            if x0>self._right_support[0] or x1<self._left_support[0]:
-                raise ValueError(f"loads must be applied between {self._left_support[0]} and {self._right_support[0]}")
-            self._distributed_loads[label] = (x0,x1)
-        if order == 1:
-            y0 = min(self._right_support[1],self._left_support[1])
-            y1 = max(self._right_support[1],self._left_support[1])
+            if not x2 or x2<x1:
+                raise KeyError("provide x2 greater than x1")
 
-            if coord1>self._right_support[0] or coord1<self._left_support[0]:
+            if x1>self._right_support[0] or x2<self._left_support[0]:
+                raise ValueError(f"loads must be applied between {self._left_support[0]} and {self._right_support[0]}")
+            self._distributed_loads[label] = (x1,x2)
+        if order == 1:
+            if not angle:
+                raise TypeError("please provide direction of force")
+
+            y = self._shape_eqn.subs({'x':x1})
+            if x1>self._right_support[0] or x1<self._left_support[0]:
                 raise ValueError(f"loads must be applied between x = {self._left_support[0]} and x = {self._right_support[0]}")
-            if coord2>y1 or coord2<y0:
-                raise ValueError(f"loads must be applied between y = {y0} and y = {y1}")
-            self._conc_loads[label] = (coord1,coord2,args[0])
+            self._conc_loads[label] = (x1,y)
 
     def remove_loads(self,order,label):
         if label in self._loads:
