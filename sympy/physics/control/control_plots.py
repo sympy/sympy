@@ -46,11 +46,13 @@ def _check_system(system):
 
 def _poly_roots(poly):
     """Function to get the roots of a polynomial."""
+    def _eval(l):
+        return [float(i) if i.is_real else complex(i) for i in l]
     if poly.domain in (QQ, ZZ):
-        return [_term.evalf() for _term in poly.all_roots()]
+        return _eval(poly.all_roots())
     # XXX: Use all_roots() for irrational coefficients when possible
     # See https://github.com/sympy/sympy/issues/22943
-    return [_term.evalf() for _term in poly.nroots()]
+    return _eval(poly.nroots())
 
 
 def pole_zero_numerical_data(system):
@@ -71,8 +73,8 @@ def pole_zero_numerical_data(system):
     =======
 
     tuple : (zeros, poles)
-        zeros = Zeros of the system. Python list of complex numbers.
-        poles = Poles of the system. Python list of complex numbers.
+        zeros = Zeros of the system as a list of Python float/complex.
+        poles = Poles of the system as a list of Python float/complex.
 
     Raises
     ======
@@ -95,7 +97,7 @@ def pole_zero_numerical_data(system):
     >>> from sympy.physics.control.control_plots import pole_zero_numerical_data
     >>> tf1 = TransferFunction(s**2 + 1, s**4 + 4*s**3 + 6*s**2 + 5*s + 2, s)
     >>> pole_zero_numerical_data(tf1)
-    ([-1.0*I, 1.0*I], [-2.00000000000000, -1.00000000000000, -0.5 - 0.866025403784439*I, -0.5 + 0.866025403784439*I])
+    ([-1j, 1j], [-2.0, -1.0, (-1.5-0.8660254j), (-0.5+0.8660254j)])
 
     See Also
     ========
@@ -177,11 +179,11 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
     """
     zeros, poles = pole_zero_numerical_data(system)
 
-    zero_real = [re(_zero) for _zero in zeros]
-    zero_imag = [im(_zero) for _zero in zeros]
+    zero_real = [i.real for i in zeros]
+    zero_imag = [i.imag for i in zeros]
 
-    pole_real = [re(_pole) for _pole in poles]
-    pole_imag = [im(_pole) for _pole in poles]
+    pole_real = [i.real for i in poles]
+    pole_imag = [i.imag for i in poles]
 
     plt.plot(pole_real, pole_imag, 'x', mfc='none',
         markersize=pole_markersize, color=pole_color)
