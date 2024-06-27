@@ -4,7 +4,7 @@
 Biomechanics
 ============
 
-This documentation covers the components of :obj:`sympy.physics.biomechanics`. 
+This documentation covers the components of :obj:`sympy.physics.biomechanics`.
 The :obj:`sympy.physics.biomechanics` module offers features to augment models
 developed with :obj:`sympy.physics.mechanics` by incorporating force-generating elements
 that simulate biomechanical systems.
