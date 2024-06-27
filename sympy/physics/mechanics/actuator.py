@@ -1002,12 +1002,14 @@ class CoulombFrictionActuator(ForceActuator):
 
     This represents a model for Coulomb Friction, described by the following piecewise function:
 
-    F_f = {
+        F_f = {
+
         mu_k * F_n         if v < 0
         f_r                if v = 0 and abs(f_r) < f_c
         f_c * sign(f_r)    if v = 0 and abs(f_r) >= f_c
         -mu_k * F_n        if v > 0
-    }
+
+        }
 
     where mu_k is the coefficient of kinetic friction, F_n is the normal force,
     f_r is the resulting tangential friction force, f_c is the Coulomb friction constant,
