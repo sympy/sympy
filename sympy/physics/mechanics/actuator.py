@@ -2,14 +2,13 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import S, sympify
+from sympy import S, sympify, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
 from sympy.physics.mechanics.pathway import PathwayBase
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.vector import ReferenceFrame, Vector
-from sympy.series.gruntz import sign
 
 
 __all__ = [
