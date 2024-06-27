@@ -3850,11 +3850,11 @@ class StateSpace(LinearTimeInvariant):
         ============
 
         initial_conditions : Matrix
-            The initial conditions of `x` state vector.
+            The initial conditions of `x` state vector. If not provided, it defaults to a zero vector.
         input_vector : Matrix
-            The input vector for state space.
+            The input vector for state space. If not provided, it defaults to a zero vector.
         var : Symbol
-            The symbol representing time.
+            The symbol representing time. If not provided, it defaults to `t`.
 
         Examples
         ==========
@@ -3869,6 +3869,11 @@ class StateSpace(LinearTimeInvariant):
         >>> ss = StateSpace(A, B, C)
         >>> ss.dsolve(input_vector=ip, initial_conditions=i).simplify()
         Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
+
+        If no input is provided it defaults to solving the system with zero initial conditions and zero input.
+
+        >>> ss.dsolve()
+        Matrix([[0]])
 
         References
         ==========
