@@ -17,7 +17,7 @@ technical implementation details, and opinionated recommendations.
    best-practices.md
    gotchas.rst
    solve_output.rst
-   Modules/Physics/index.rst
+   modules/physics/index.rst
    special_topics/index.rst
    active-deprecations.md
    glossary.md

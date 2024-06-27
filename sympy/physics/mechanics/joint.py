@@ -557,7 +557,7 @@ class PinJoint(Joint):
     """Pin (Revolute) Joint.
 
     .. raw:: html
-        :file: ../../../doc/src/explanation/Modules/Physics/mechanics/PinJoint.svg
+        :file: ../../../doc/src/explanation/modules/physics/mechanics/PinJoint.svg
 
     Explanation
     ===========

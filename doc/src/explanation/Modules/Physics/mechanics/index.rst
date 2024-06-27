@@ -67,8 +67,8 @@ perform this step. It is for this reason that this explanation is a part of SymP
 Step 4 amounts to this specific explanation, sympy.physics.mechanics.
 
 
-Guide to Mechanics
-==================
+Guide to Classical Mechanics
+============================
 
 .. toctree::
    :maxdepth: 2
