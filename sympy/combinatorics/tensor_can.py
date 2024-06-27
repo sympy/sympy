@@ -618,8 +618,7 @@ def _get_map_slots(size, fixed_slots):
 def _lift_sgens(size, fixed_slots, free, s):
     a = []
     j = k = 0
-    fd = list(zip(fixed_slots, free))
-    fd = [y for x, y in sorted(fd)]
+    fd = [y for _, y in sorted(zip(fixed_slots, free))]
     num_free = len(free)
     for i in range(size):
         if i in fixed_slots:
