@@ -8,7 +8,8 @@ from sympy import (
     Symbol,
     SympifyError,
     sqrt,
-    Abs
+    Abs,
+    sign
 )
 from sympy.physics.mechanics import (
     ActuatorBase,
@@ -33,7 +34,6 @@ from sympy.physics.mechanics import (
 from sympy.core.expr import Expr as ExprType
 
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.series.gruntz import sign
 
 target = RigidBody('target')
 reaction = RigidBody('reaction')
@@ -854,54 +854,86 @@ class TestDuffingSpring:
                 # Check if the absolute value of the difference is below a threshold
                 assert Abs(diff) < 1e-9, f"The forces do not match. Difference: {diff}"
 
-class TestCoulombFrictionActuator():
-    r"""A small block on a rotating disc
+class TestCoulombFrictionActuator:
+    r"""A block on a rotating disc.
 
     Notes
     =====
 
-    A small block of mass m is placed at a distance r from central axis of a rotating disc.
-    The coefficient of static friction between the block and the table is $\mu_s$, and
-    the disc rotates with constant angular acceleration $\alpha$.
-    When the disc slides, the coefficient of kinetic friction is $\mu_k$.
+    The particle is located at a point on a disc surface and is subjected to gravitational
+    forces and frictional forces. The frictional forces are modeled using the
+    CoulombFrictionActuator, and the expected frictional force is defined using a
+    piecewise function.
+
+    The test validates the correctness of the CoulombFrictionActuator by comparing
+    the actuator's force to the expected friction force
 
     """
     @pytest.fixture(autouse=True)
-    def _coulomb_friction_fixture(self):
-        self.m = Symbol('m')
-        self.r = Symbol('r')
-        self.angular_acceleration = Symbol('alpha')
+    def _disc_block_fixture(self):
+        # Define Dynamics symbols and parameters
+        # q1: Generalized coordinate representing the rotation of the reference frame A about the z-axis of the inertial reference frame N
+        # q2: Generalized coordinate representing the horizontal displacement of the contact point along the x-axis of the rotated reference frame A
+        # q3: Generalized coordinate representing the vertical displacement of the contact point along the y-axis of the rotated reference frame A
+        self.q1 = dynamicsymbols('q1')
+        self.q2 = dynamicsymbols('q2')
+        self.q3 = dynamicsymbols('q3')
+        self.u1 = dynamicsymbols('u1')
+        self.u2 = dynamicsymbols('u2')
+        self.u3 = dynamicsymbols('u3')
+
+        self.m = Symbol('m') # Block mass
         self.g = Symbol('g')
-        self.coefficient_of_static_friction = Symbol('mu')
+        self.mu_s = Symbol('mu_s') # Coefficient of static frction
+        self.mu_k = Symbol('mu_k') # Coefficient of kinetic friction
 
-        self.q = dynamicsymbols('q')
+        # Define the reference frame
+        self.N = ReferenceFrame('N') # Inertial reference frame
+        self.A = ReferenceFrame('A') # Rotated reference frame
+        self.disc_center = Point('disc_center') # Center point of the disc (block)
+        self.disc_center.set_vel(self.N, 0)
+        self.disc_center.set_vel(self.A, 0)
+        self.surface_point = self.disc_center.locatenew('surface_point', 1 * self.A.y) # Fixed point on the surface in contact with the block
+        self.A.orient_axis(self.N, self.N.z, self.q1)
 
-        self.frame = ReferenceFrame('N')
-        self.origin = Point('p0')
-        self.origin.set_vel(self.frame, 0)
+        self.contact_point = self.disc_center.locatenew('contact_point', self.q2 * self.A.x + self.q3 * self.A.y) # Actual contact point between the block and the surface
 
-        self.block = Point('pA')
-        self.block.set_pos(self.origin, self.q*self.frame.x + self.q*self.frame.y)
+        self.particle = Particle('particle', self.contact_point, self.m) # Block
 
-        self.pathway = LinearPathway(self.origin, self.block)
-
-        self.coefficient_of_kinetic_friction = Symbol('mu')
         self.normal_force = self.m * self.g
-        self.tangential_friction_force = self.m * self.angular_acceleration * self.r
-        self.coulomb_friction_constant = self.normal_force * self.coefficient_of_static_friction
+
+        self.pathway = LinearPathway(self.surface_point, self.contact_point)
+
+        self.expected_friction_force = Piecewise(
+                (self.mu_k * self.normal_force, self.pathway.extension_velocity < 0),
+                (self.mu_s, (self.pathway.extension_velocity == 0) & (abs(self.mu_s) < self.normal_force)),
+                (self.normal_force * sign(self.mu_s), (self.pathway.extension_velocity == 0) & (abs(self.mu_s) >= self.normal_force)),
+                (-self.mu_k * self.normal_force, self.pathway.extension_velocity > 0)
+            )
+
+        # Kane's method
+        self.kanes_method = KanesMethod(
+            self.N,
+            q_ind=[self.q1, self.q2, self.q3],
+            u_ind=[self.u1, self.u2, self.u3],
+            kd_eqs=[self.q1.diff() - self.u1, self.q2.diff() - self.u2, self.q3.diff() - self.u3],
+            bodies=[self.particle]
+        )
+        self.bodies = [self.particle]
 
     def test_force_actuator(self):
-        expected_friction = Piecewise(
-            (self.coefficient_of_kinetic_friction * self.normal_force, self.pathway.extension_velocity < 0),
-            (self.tangential_friction_force, (self.pathway.extension_velocity == 0) & (abs(self.tangential_friction_force) < self.coulomb_friction_constant)),
-            (self.coulomb_friction_constant * sign(self.tangential_friction_force), (self.pathway.extension_velocity == 0) & (abs(self.tangential_friction_force) >= self.coulomb_friction_constant)),
-            (-self.coefficient_of_kinetic_friction * self.normal_force, self.pathway.extension_velocity > 0)
+        coefficient_of_kinetic_friction=self.mu_k
+        normal_force=self.normal_force
+        tangential_friction_force=self.mu_s
+        coulomb_friction_constant=self.normal_force
+        pathway=self.pathway
+
+        friction_actuator = CoulombFrictionActuator(
+            coefficient_of_kinetic_friction=coefficient_of_kinetic_friction,
+            normal_force=normal_force,
+            tangential_friction_force=tangential_friction_force,
+            coulomb_friction_constant=coulomb_friction_constant,
+            pathway=pathway
         )
-
-        friction = CoulombFrictionActuator(self.coefficient_of_kinetic_friction,
-                                           self.normal_force,
-                                           self.tangential_friction_force,
-                                           self.coulomb_friction_constant,
-                                           self.pathway)
-
-        assert friction == expected_friction
+        actuator_force = friction_actuator.force
+        assert actuator_force == self.expected_friction_force
