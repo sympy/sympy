@@ -12,6 +12,6 @@ to advanced biomechanical modeling.
 .. toctree::
    :maxdepth: 2
 
-   vectors/index.rst
+   vector/index.rst
    mechanics/index.rst
-   biomechanics.rst
+   biomechanics/index.rst

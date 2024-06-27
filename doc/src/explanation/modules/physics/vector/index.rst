@@ -1,8 +1,8 @@
 .. _physics_vector_explanation:
 
-==================
-The Physics Vector
-==================
+======
+Vector
+======
 
 In this documentation the components of the sympy.physics.vector
 have been discussed. :mod:`sympy.physics.vector` has been written to
@@ -26,7 +26,7 @@ Guide to Vector
 .. toctree::
    :maxdepth: 2
 
-   vectors.rst
-   kinematics.rst
+   vectors/vectors.rst
+   kinematics/kinematics.rst
    advanced.rst
    fields.rst
