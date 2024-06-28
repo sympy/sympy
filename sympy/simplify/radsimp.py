@@ -246,10 +246,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         while isinstance(expr, Derivative):
             s0 = expr.variables[0]
 
-            for s in expr.variables:
-                if s != s0:
-                    raise NotImplementedError(
-                        'Improve MV Derivative support in collect')
+            if any(s != s0 for s in expr.variables):
+                raise NotImplementedError(
+                    'Improve MV Derivative support in collect')
 
             if s0 == sym:
                 expr, order = expr.expr, order + len(expr.variables)
