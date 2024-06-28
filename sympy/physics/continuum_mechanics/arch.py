@@ -15,6 +15,8 @@ class Arches:
         self._loads = {}
         self._conc_loads = {}
         self._distributed_loads = {}
+        self._supports = {'left':None,'right':None}
+        self._rope = None
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
 
     @property
@@ -90,3 +92,21 @@ class Arches:
         else:
             self._loads[label] = mag
             raise KeyError("no such load in the provided load type or load type does not exist")
+
+    def add_support(self,left_support,right_support):
+        support_types = ['roller','hinge']
+        if left_support not in support_types or right_support not in support_types:
+            raise ValueError("supports must only be roller or hinged")
+        self._supports['left'] = left_support
+        self._right_support['right'] = right_support
+
+    def add_rope(self,start,end):
+        if start<self._left_support[0] or end >self._right_support[0]:
+            raise ValueError(f"start and end point of rope must be between {self._left_support[0]} and {self._right_support[0]}")
+
+        x = symbols('x')
+        y0 = self._shape_eqn.subs({'x': start})
+        y1 = self._shape_eqn.subs({'x': end})
+        a = (y1-y0)/(end-start)
+        y = a*(x-start) + y0
+        self._rope = y
