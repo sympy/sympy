@@ -1,4 +1,4 @@
-from sympy import sympify, symbols, solve
+from sympy import sympify, symbols, solve, Symbol
 
 class Arches:
     def __init__(self,left_support,right_support,**kwargs):
@@ -17,6 +17,7 @@ class Arches:
         self._distributed_loads = {}
         self._supports = {'left':None,'right':None}
         self._rope = None
+        self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
 
     @property
@@ -56,6 +57,10 @@ class Arches:
     def get_loads(self):
         loads = {'distributed':self._distributed_loads, 'concentrated':self._conc_loads}
         return loads, self._loads
+
+    @property
+    def get_reaction_force(self):
+        return self._reaction_force
 
     def apply_load(self,order,label,x1,mag,x2=None,angle=None):
         if label in self._loads:
