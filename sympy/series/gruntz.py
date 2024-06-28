@@ -414,7 +414,7 @@ def sign(e, x):
             return 1
         if e.exp.is_Integer:
             return s**e.exp
-    elif isinstance(e, log):
+    elif isinstance(e, log) and e.args[0].is_positive:
         return sign(e.args[0] - 1, x)
 
     # if all else fails, do it the hard way
