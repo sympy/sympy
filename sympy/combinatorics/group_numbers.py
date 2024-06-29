@@ -254,7 +254,7 @@ def groups_count(n):
         raise ValueError("n must be a positive integer, not %i" % n)
     factors = factorint(n)
     if len(factors) == 1:
-        (p, e) = list(factors.items())[0]
+        (p, e) = next(iter(factors.items()))
         if p == 2:
             A000679 = [1, 1, 2, 5, 14, 51, 267, 2328, 56092, 10494213, 49487367289]
             if e < len(A000679):

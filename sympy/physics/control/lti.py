@@ -705,7 +705,7 @@ class TransferFunction(SISOLinearTimeInvariant):
             _free_symbols = expr.free_symbols
             _len_free_symbols = len(_free_symbols)
             if _len_free_symbols == 1:
-                var = list(_free_symbols)[0]
+                var = next(iter(_free_symbols))
             elif _len_free_symbols == 0:
                 raise ValueError(filldedent("""
                     Positional argument `var` not found in the

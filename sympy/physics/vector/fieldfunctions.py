@@ -162,7 +162,7 @@ def is_conservative(field):
     # Take the first frame in the result of the separate method of Vector
     if field == Vector(0):
         return True
-    frame = list(field.separate())[0]
+    frame = next(iter(field.separate()))
     return curl(field, frame).simplify() == Vector(0)
 
 
@@ -193,7 +193,7 @@ def is_solenoidal(field):
     # Take the first frame in the result of the separate method in Vector
     if field == Vector(0):
         return True
-    frame = list(field.separate())[0]
+    frame = next(iter(field.separate()))
     return divergence(field, frame).simplify() is S.Zero
 
 

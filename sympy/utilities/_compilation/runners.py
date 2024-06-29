@@ -89,7 +89,7 @@ class CompilerRunner:
                     self.compiler_name = v
                     break
             else:
-                self.compiler_vendor, self.compiler_name = list(self.compiler_dict.items())[0]
+                self.compiler_vendor, self.compiler_name = next(iter(self.compiler_dict.items()))
                 warnings.warn("failed to determine what kind of compiler %s is, assuming %s" %
                               (self.compiler_binary, self.compiler_name))
         else:

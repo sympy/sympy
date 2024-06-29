@@ -4539,7 +4539,7 @@ class PermutationGroup(Basic):
             nu = block_homomorphism(self, blocks[1])
             return _sylow_reduce(mu, nu)
         elif len(blocks) == 1:
-            block = list(blocks)[0]
+            block = next(iter(blocks))
             if any(e != 0 for e in block):
                 # self is imprimitive
                 mu = block_homomorphism(self, block)

@@ -121,7 +121,7 @@ class SingleDomain(RandomDomain):
     def __contains__(self, other):
         if len(other) != 1:
             return False
-        sym, val = tuple(other)[0]
+        sym, val = next(iter(other))
         return self.symbol == sym and val in self.set
 
 
@@ -639,7 +639,7 @@ def pspace(expr):
     if isinstance(expr, RandomSymbol) and expr.pspace is not None:
         return expr.pspace
     if expr.has(RandomMatrixSymbol):
-        rm = list(expr.atoms(RandomMatrixSymbol))[0]
+        rm = next(iter(expr.atoms(RandomMatrixSymbol)))
         return rm.pspace
 
     rvs = random_symbols(expr)
@@ -679,7 +679,7 @@ def rs_swap(a, b):
     """
     d = {}
     for rsa in a:
-        d[rsa] = [rsb for rsb in b if rsa.symbol == rsb.symbol][0]
+        d[rsa] = next(rsb for rsb in b if rsa.symbol == rsb.symbol)
     return d
 
 
@@ -731,7 +731,7 @@ def given(expr, condition=None, **kwargs):
     condsymbols = random_symbols(condition)
     if (isinstance(condition, Eq) and len(condsymbols) == 1 and
         not isinstance(pspace(expr).domain, ConditionalDomain)):
-        rv = tuple(condsymbols)[0]
+        rv = next(iter(condsymbols))
 
         results = solveset(condition, rv)
         if isinstance(results, Intersection) and S.Reals in results.args:

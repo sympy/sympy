@@ -830,7 +830,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
 
         def unpack_sol(sol):
             if len(sol) > 0:
-                return list(sol)[0]
+                return next(iter(sol))
             return None, None, None
 
         if not any(coeff[i**2] for i in var):
@@ -1753,7 +1753,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
             result = result(*[0]*len(result.parameters))
 
         if len(result) > 0:
-            return list(result)[0]
+            return next(iter(result))
         else:
             return tuple([None]*len(result.parameters))
 
@@ -2678,7 +2678,7 @@ def diop_ternary_quadratic(eq, parameterize=False):
             HomogeneousTernaryQuadraticNormal.name):
         sol = _diop_ternary_quadratic(var, coeff)
         if len(sol) > 0:
-            x_0, y_0, z_0 = list(sol)[0]
+            x_0, y_0, z_0 = next(iter(sol))
         else:
             x_0, y_0, z_0 = None, None, None
 
@@ -2852,7 +2852,7 @@ def parametrize_ternary_quadratic(eq):
     if diop_type in (
             "homogeneous_ternary_quadratic",
             "homogeneous_ternary_quadratic_normal"):
-        x_0, y_0, z_0 = list(_diop_ternary_quadratic(var, coeff))[0]
+        x_0, y_0, z_0 = next(iter(_diop_ternary_quadratic(var, coeff)))
         return _parametrize_ternary_quadratic(
             (x_0, y_0, z_0), var, coeff)
 
@@ -2932,7 +2932,7 @@ def diop_ternary_quadratic_normal(eq, parameterize=False):
     if diop_type == HomogeneousTernaryQuadraticNormal.name:
         sol = _diop_ternary_quadratic_normal(var, coeff)
         if len(sol) > 0:
-            x_0, y_0, z_0 = list(sol)[0]
+            x_0, y_0, z_0 = next(iter(sol))
         else:
             x_0, y_0, z_0 = None, None, None
         if parameterize:
@@ -3351,7 +3351,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
             params = None
         else:
             params = symbols('%s1:%i' % (param, len(var)), integer=True)
-        return list(GeneralPythagorean(eq).solve(parameters=params))[0]
+        return next(iter(GeneralPythagorean(eq).solve(parameters=params)))
 
 
 def diop_general_sum_of_squares(eq, limit=1):

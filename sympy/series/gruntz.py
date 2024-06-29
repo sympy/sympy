@@ -336,7 +336,7 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     elif f.meets(g):
         return union, expsboth
 
-    c = compare(list(f.keys())[0], list(g.keys())[0], x)
+    c = compare(next(iter(f.keys())), next(iter(g.keys())), x)
     if c == ">":
         return f, expsf
     elif c == "<":
