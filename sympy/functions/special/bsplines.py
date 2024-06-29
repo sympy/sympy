@@ -330,8 +330,7 @@ def interpolating_spline(d, x, X, Y):
 
     A = [[b.subs(x, v) for b in basis] for v in X]
 
-    coeff = linsolve((Matrix(A), Matrix(Y)), symbols("c0:{}".format(len(X)), cls=Dummy))
-    coeff = next(iter(coeff))
+    (coeff,) = linsolve((Matrix(A), Matrix(Y)), symbols("c0:{}".format(len(X)), cls=Dummy))
     intervals = {c for b in basis for (e, c) in b.args if c != True}
 
     # Sorting the intervals

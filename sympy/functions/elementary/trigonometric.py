@@ -87,7 +87,7 @@ class TrigonometricFunction(Function):
     def _period(self, general_period, symbol=None):
         f = expand_mul(self.args[0])
         if symbol is None:
-            symbol = next(iter(f.free_symbols))
+            symbol = next(iter(f.free_symbols), None)
 
         if not f.has(symbol):
             return S.Zero
