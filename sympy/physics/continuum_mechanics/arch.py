@@ -22,11 +22,12 @@ class Arches:
 
     @property
     def get_parabola_eqn(self):
+        "returns the equation of the shape of arch developed"
         if self._shape_eqn:
             return self._shape_eqn
 
-        x,y,a,c = symbols('x y a c')
-
+        x,y,c = symbols('x y c')
+        a = Symbol('a' ,positive=True)
         if self._crown_x and self._crown_y:
             x0  = self._crown_x
             y0 = self._crown_y
@@ -34,7 +35,7 @@ class Arches:
             eq1 = parabola_eqn.subs({x:self._left_support[0], y:self._left_support[1]})
             solution = solve((eq1),(a))
             parabola_eqn = solution[0]*(x-x0)**2 + y0
-            if(parabola_eqn.subs({x:self._right_support[0]}) != self._right_support[1]) or solution[0]>=0:
+            if(parabola_eqn.subs({x:self._right_support[0]}) != self._right_support[1]):
                 raise ValueError("provided coordinates of crown and supports are not consistent with parabolic arch")
             self._shape_eqn = parabola_eqn
 
@@ -44,7 +45,7 @@ class Arches:
             eq1 = parabola_eqn.subs({x:self._left_support[0], y:self._left_support[1]})
             eq2 = parabola_eqn.subs({x:self._right_support[0], y:self._right_support[1]})
             solution = solve((eq1,eq2),(a,c))
-            if len(solution) <2:
+            if len(solution) <2 or solution[a] == 0:
                 raise ValueError("parabolic arch cannot be constructed with the provided coordinates")
             parabola_eqn = solution[a]*(x-x0)**2+ solution[c]
             self._crown_y = solution[c]
@@ -56,7 +57,28 @@ class Arches:
     @property
     def get_loads(self):
         loads = {'distributed':self._distributed_loads, 'concentrated':self._conc_loads}
-        return loads, self._loads
+        return loads
+
+    @property
+    def supports(self):
+        """
+        Returns the type of support
+        """
+        return self._supports
+
+    @property
+    def left_support(self):
+        """
+        Returns the position of the left support.
+        """
+        return self._left_support
+
+    @property
+    def right_support(self):
+        """
+        Returns the position of the right support.
+        """
+        return self._right_support
 
     @property
     def get_reaction_force(self):
