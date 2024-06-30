@@ -1,6 +1,19 @@
 from sympy import sympify, symbols, solve, Symbol
 
 class Arches:
+    """
+    Example
+    ========
+    >>> from sympy.physics.continuum_mechanics.arch import Arches
+    >>> a = Arches((0,0),(10,0),crown_x=5,crown_y=5)
+    >>> a.get_parabola_eqn
+    5 - (x - 5)**2/5
+
+    >>> from sympy.physics.continuum_mechanics.arch import Arches
+    >>> a = Arches((0,0),(10,1),crown_x=6)
+    >>> a.get_parabola_eqn
+    9/5 - (x - 6)**2/20
+    """
     def __init__(self,left_support,right_support,**kwargs):
         self._shape_eqn = None
         self._left_support  = (sympify(left_support[0]),sympify(left_support[1]))
@@ -27,7 +40,7 @@ class Arches:
             return self._shape_eqn
 
         x,y,c = symbols('x y c')
-        a = Symbol('a' ,positive=True)
+        a = Symbol('a',positive=False)
         if self._crown_x and self._crown_y:
             x0  = self._crown_x
             y0 = self._crown_y
@@ -82,6 +95,9 @@ class Arches:
 
     @property
     def get_reaction_force(self):
+        """
+        return the reaction forces generated
+        """
         return self._reaction_force
 
     def apply_load(self,order,label,x1,mag,x2=None,angle=None):

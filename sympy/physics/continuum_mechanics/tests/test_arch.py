@@ -12,5 +12,5 @@ def test_arch():
     assert a.right_support == (10,0)
     assert a.get_parabola_eqn == 5 - ((x-5)**2)/5
 
-    a = Arches((0,0),(10,1),crown_x=4)
-    # assert a.get_parabola_eqn == 
+    a = Arches((0,0),(10,1),crown_x=6)
+    assert a.get_parabola_eqn == 9/5 - (x - 6)**2/20
