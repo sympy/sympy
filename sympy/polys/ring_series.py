@@ -1546,6 +1546,79 @@ def rs_cos_sin(p, x, prec):
     p1 = rs_series_inversion(1 + t2, x, prec)
     return (rs_mul(p1, 1 - t2, x, prec), rs_mul(p1, 2*t, x, prec))
 
+def rs_sec(p, x, prec):
+    """
+    Secant of a series
+
+    Return the series expansion of the sec of ``p``, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_sec
+    >>> R, x = ring('x', QQ)
+    >>> rs_sec(x, x, 4)
+    1/2*x**2 + 1
+    >>> p = x**QQ(2,3) + x
+    >>> rs_sec(p, x, 3)
+    5/24*x**(8/3) + 1/2*x**2 + x**(5/3) + 1/2*x**(4/3) + 1
+
+    See Also
+    ========
+
+    csc
+    """
+    if rs_is_puiseux(p, x):
+        return rs_puiseux(rs_sec, p, x, prec)
+    if _has_constant_term(p, x):
+        raise NotImplementedError("Polynomial must not have constant term in "
+                                  "series variables")
+    i, m = _check_series_var(p, x, 'sec')
+    prec1 = prec + 2*int(m)
+    t = rs_cos(p, x, prec1)
+    t1 = rs_series_inversion(t, x, prec1)
+    t1 = rs_trunc(t1, x, prec)
+    return t1
+
+def rs_csc(p, x, prec):
+    """
+    Cosecant of a series
+
+    Return the series expansion of the cosecant of ``p``, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_csc
+    >>> R, x = ring('x', QQ)
+    >>> rs_csc(x, x, 4)
+    7/360*x**3 + 1/6*x + x**(-1)
+    >>> p = x**QQ(2,3) + x
+    >>> rs_csc(p, x, 3)
+    127/120*x**(8/3) - 113/120*x**(7/3) + 367/360*x**2 - x**(5/3) + \
+    x**(4/3) - 5/6*x + 7/6*x**(2/3) - x**(1/3) + 1 - x**(-1/3) + x**(-2/3)
+
+    See Also
+    ========
+
+    sec
+    """
+    if rs_is_puiseux(p, x):
+        return rs_puiseux(rs_csc, p, x, prec)
+    if _has_constant_term(p, x):
+        raise NotImplementedError("Polynomial must not have constant term in "
+                                  "series variables")
+    i, m = _check_series_var(p, x, 'csc')
+    prec1 = prec + 2*int(m)
+    t = rs_sin(p, x, prec1)
+    t1 = rs_series_inversion(t, x, prec1)
+    t1 = rs_trunc(t1, x, prec)
+    return t1
+
 def _atanh(p, x, prec):
     """
     Expansion using formula
