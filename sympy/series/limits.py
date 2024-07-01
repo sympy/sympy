@@ -273,16 +273,19 @@ class Limit(Expr):
             arg_flag = isinstance(expr, arg)
             sign_flag = isinstance(expr, sign)
             if abs_flag or sign_flag or arg_flag:
-                sig = limit(expr.args[0], z, z0, dir)
-                if sig.is_zero:
-                    sig = limit(1/expr.args[0], z, z0, dir)
-                if sig.is_extended_real:
-                    if (sig < 0) == True:
-                        return (-expr.args[0] if abs_flag else
-                                S.NegativeOne if sign_flag else S.Pi)
-                    elif (sig > 0) == True:
-                        return (expr.args[0] if abs_flag else
-                                S.One if sign_flag else S.Zero)
+                try:
+                    sig = limit(expr.args[0], z, z0, dir)
+                    if sig.is_zero:
+                        sig = limit(1/expr.args[0], z, z0, dir)
+                    if sig.is_extended_real:
+                        if (sig < 0) == True:
+                            return (-expr.args[0] if abs_flag else
+                                    S.NegativeOne if sign_flag else S.Pi)
+                        elif (sig > 0) == True:
+                            return (expr.args[0] if abs_flag else
+                                    S.One if sign_flag else S.Zero)
+                except NotImplementedError:
+                    pass
             return expr
 
         if e.has(Float):
@@ -365,8 +368,8 @@ class Limit(Expr):
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
-        # differs from gamma) so only rewrite for positive z0.
-        if z0.is_extended_positive:
+        # differs from gamma) so only rewrite for non-negative z0.
+        if z0.is_extended_nonnegative:
             e = e.rewrite(factorial, gamma)
 
         l = None

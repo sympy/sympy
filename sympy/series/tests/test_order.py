@@ -3,6 +3,7 @@ from sympy.core.function import (Function, expand)
 from sympy.core.numbers import (I, Rational, nan, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (conjugate, transpose)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -475,3 +476,9 @@ def test_issue_23231():
 
 def test_issue_9917():
     assert O(x*sin(x) + 1, (x, oo)) == O(x, (x, oo))
+
+
+def test_issue_22836():
+    assert O(2**x + factorial(x), (x, oo)) == O(factorial(x), (x, oo))
+    assert O(2**x + factorial(x) + x**x, (x, oo)) == O(exp(x*log(x)), (x, oo))
+    assert O(x + factorial(x), (x, oo)) == O(factorial(x), (x, oo))
