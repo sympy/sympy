@@ -518,3 +518,11 @@ def test_trigsimp_inverse():
             assert angle_inverted != angle  # assures simplification happened
             assert sin(angle_inverted) == trigsimp(sin(angle))
             assert cos(angle_inverted) == trigsimp(cos(angle))
+
+def test_trigsimp_inverse_26541():
+    '''
+    Some expressions would raise a TypeError due to a missing type(...).
+    See: https://github.com/sympy/sympy/pull/26541
+    '''
+    # this would throw before
+    trigsimp(cos('x')**2, inverse=True)
