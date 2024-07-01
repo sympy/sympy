@@ -410,12 +410,7 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
-
-    name: mpmath-master ${{ matrix.group }}/4 Tests
+    name: mpmath-master Tests
 
     steps:
       - uses: actions/checkout@v3
