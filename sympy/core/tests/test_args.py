@@ -1683,6 +1683,11 @@ def test_sympy__stats__drv_types__ZetaDistribution():
     assert _test_args(ZetaDistribution(1.5))
 
 
+def test_sympy__stats__drv_types__DelaporteDistribution():
+    from sympy.stats.drv_types import DelaporteDistribution
+    assert _test_args(DelaporteDistribution(1, 1, 1))
+
+
 def test_sympy__stats__joint_rv__JointDistribution():
     from sympy.stats.joint_rv import JointDistribution
     assert _test_args(JointDistribution(1, 2, 3, 4))
