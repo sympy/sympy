@@ -95,6 +95,14 @@ def test_svg():
     assert a._svg() == '<path fill-rule="evenodd" fill="#66cc99" stroke="#555555" stroke-width="2.0" opacity="0.6" d="M 2.00000000000000,3.00000000000000 L 3.00000000000000,5.00000000000000" marker-start="url(#markerCircle)" marker-end="url(#markerArrow)"/>'
 
 
+def test_closing_angle():
+    a = Ray((0, 0), angle=0)
+    b = Ray((1, 2), angle=pi/2)
+    assert a.closing_angle(b) == -pi/2
+    assert b.closing_angle(a) == pi/2
+    assert a.closing_angle(a) == 0
+
+
 def test_arbitrary_point():
     l1 = Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
     l2 = Line(Point(x1, x1), Point(y1, y1))
