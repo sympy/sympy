@@ -4,6 +4,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
     action, current, length, mass, time,
     velocity)
 from sympy.physics.units.dimensions import DimensionSystem
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 def test_extend():
@@ -18,8 +19,8 @@ def test_extend():
 
 def test_list_dims():
     dimsys = DimensionSystem((length, time, mass))
-
-    assert dimsys.list_can_dims == (length, mass, time)
+    with warns_deprecated_sympy():
+        assert dimsys.list_can_dims == (length, mass, time)
 
 
 def test_dim_can_vector():
@@ -92,4 +93,5 @@ def test_dim():
         {velocity: {length: 1, time: -1},
          action: {mass: 1, length: 2, time: -1}}
     )
-    assert dimsys.dim == 3
+    with warns_deprecated_sympy():
+        assert dimsys.dim == 3
