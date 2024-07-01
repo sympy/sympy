@@ -586,6 +586,19 @@ class besseli(BesselBase):
 
         return super(besseli, self)._eval_nseries(x, n, logx, cdir)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        nu, z = self.args
+        point = args0[1]
+
+        if point is S.Infinity:
+            s = [(RisingFactorial(S.Half-nu,k)*RisingFactorial(
+                S.Half+nu,k))/((2)**(k)*z**((2*k+1)/2)*factorial(k)) for k in range(n)] + [Order(1/z**((2*n+1)/2), x)]
+            return (exp(z)/sqrt((2*pi))) * Add(*s)
+
+        return super()._eval_aseries(n, args0, x, logx)
+
 
 class besselk(BesselBase):
     r"""
@@ -737,6 +750,19 @@ class besselk(BesselBase):
             return a + Add(*b) + Add(*c) # Order term comes from a
 
         return super(besselk, self)._eval_nseries(x, n, logx, cdir)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        nu, z = self.args
+        point = args0[1]
+
+        if point is S.Infinity:
+            s = [((RisingFactorial(S.Half - nu, k)*RisingFactorial(
+                S.Half + nu, k))/((-2)**(k)*z**((2*k+1)/2)*factorial(k))) for k in range(n)] +[Order(1/z**((2*n+1)/2), x)]
+            return ((exp(-z)*sqrt(pi/(2))) * Add(*s))
+
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 class hankel1(BesselBase):
