@@ -1142,6 +1142,34 @@ class GreaterThan(_Greater):
     def strict(self):
         return Gt(*self.args)
 
+    def _eval_simplify(self, **kwargs):
+        # standard simplify
+        eorg = e = super()._eval_simplify(**kwargs)
+        if isinstance(e, LessThan):
+            e = e.reversed
+        if not isinstance(e, GreaterThan):
+            return e
+        from .expr import Expr
+        if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
+            return e
+        from sympy.functions import ceiling, floor
+        lhs_is_int = e.lhs.is_integer
+        rhs_is_int = e.rhs.is_integer
+        r = e
+        if lhs_is_int is True:
+            if e.rhs.is_number or not e.lhs.is_number:
+                r = Ge(e.lhs, ceiling(e.rhs))
+        elif rhs_is_int is True:
+            if e.lhs.is_number or not e.rhs.is_number:
+                r = Ge(floor(e.lhs), e.rhs)
+        r = r.canonical
+        measure = kwargs['measure']
+        if measure(r) < kwargs['ratio'] * measure(eorg):
+            return r
+        else:
+            return eorg
+
+
 Ge = GreaterThan
 
 
@@ -1158,6 +1186,17 @@ class LessThan(_Less):
     @property
     def strict(self):
         return Lt(*self.args)
+
+    def _eval_simplify(self, **kwargs):
+        # Use GreaterThan simplification
+        r = self.reversed._eval_simplify(**kwargs)
+        r = r.canonical
+        measure = kwargs['measure']
+        if measure(r) < kwargs['ratio'] * measure(self):
+            return r
+        else:
+            return self
+
 
 Le = LessThan
 
@@ -1176,6 +1215,39 @@ class StrictGreaterThan(_Greater):
     def weak(self):
         return Ge(*self.args)
 
+    def _eval_simplify(self, **kwargs):
+        # standard simplify
+        eorg = e = super()._eval_simplify(**kwargs)
+        if isinstance(e, StrictLessThan):
+            e = e.reversed
+        if not isinstance(e, StrictGreaterThan):
+            return e
+        from .expr import Expr
+        if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
+            return e
+        from sympy.functions import ceiling, floor
+        lhs_is_int = e.lhs.is_integer
+        rhs_is_int = e.rhs.is_integer
+        r = e
+        if lhs_is_int is True:
+            if rhs_is_int is True:
+                if e.lhs.is_number:
+                    r = Ge(e.lhs - 1, e.rhs)
+                else:
+                    r = Ge(e.lhs, e.rhs + 1)
+            else:
+                if e.rhs.is_number or not e.lhs.is_number:
+                    r = Ge(e.lhs, ceiling(e.rhs))
+        elif rhs_is_int is True:
+            if e.lhs.is_number or not e.rhs.is_number:
+                r = Ge(floor(e.lhs), e.rhs)
+        r = r.canonical
+        measure = kwargs['measure']
+        if measure(r) < kwargs['ratio'] * measure(eorg):
+            return r
+        else:
+            return eorg
+
 
 Gt = StrictGreaterThan
 
@@ -1193,6 +1265,17 @@ class StrictLessThan(_Less):
     @property
     def weak(self):
         return Le(*self.args)
+
+    def _eval_simplify(self, **kwargs):
+        # Use StrictGreaterThan simplification
+        r = self.reversed._eval_simplify(**kwargs)
+        r = r.canonical
+        measure = kwargs['measure']
+        if measure(r) < kwargs['ratio'] * measure(self):
+            return r
+        else:
+            return self
+
 
 Lt = StrictLessThan
 
