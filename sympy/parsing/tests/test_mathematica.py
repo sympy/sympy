@@ -1,6 +1,6 @@
 from sympy import sin, Function, symbols, Dummy, Lambda, cos
 from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
-from sympy.core.sympify import sympify
+from sympy.core.sympify import SympifyError, sympify
 from sympy.abc import n, w, x, y, z
 from sympy.testing.pytest import raises
 
@@ -50,6 +50,11 @@ def test_mathematica():
         'Log[2,4]': 'log(4,2)',
         'Log[Log[2,4],4]': 'log(4,log(4,2))',
         'Exp[Sqrt[2]^2Log[2, 8]]': 'exp(sqrt(2)**2*log(8,2))',
+        '-2^-10*x':'x/1024',                         # Test case from the issue 24150
+        'a^-b*c':'c/a**b',                           # Test case from the issue 24150
+        '-2^-3':'-1/8',                              # Test case from the issue 24150
+        'd-Log[2*4^-3]':'d + log(32)',               # Test case from the issue 24150
+        'Tan[Pi]^Sin[3*Pi/2]':'zoo',                 # Test case from the issue 24150
         'ArcSin[Cos[0]]': 'asin(cos(0))',
         'Log2[16]': 'log(16,2)',
         'Max[1,-2,3,-4]': 'Max(1,-2,3,-4)',
@@ -73,6 +78,11 @@ def test_mathematica():
 
     for e in d:
         assert parse_mathematica(e) == sympify(d[e])
+
+    # Check syntax errors
+    raises(SyntaxError, parse_mathematica("{[x*(x-2)]-4}+8"))
+    raises(SyntaxError, parse_mathematica("-2**x"))
+    raises(SympifyError, parse_mathematica("log(2^x)"))
 
     # The parsed form of this expression should not evaluate the Lambda object:
     assert parse_mathematica("Sin[#]^2 + Cos[#]^2 &[x]") == sin(x)**2 + cos(x)**2
