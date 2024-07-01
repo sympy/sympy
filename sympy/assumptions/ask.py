@@ -66,7 +66,7 @@ class AssumptionKeys:
 
     @memoize_property
     def transcendental(self):
-        from .predicates.sets import TranscendentalPredicate
+        from .handlers.sets import TranscendentalPredicate
         return TranscendentalPredicate()
 
     @memoize_property
