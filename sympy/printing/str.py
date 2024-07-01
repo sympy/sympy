@@ -976,19 +976,55 @@ class StrPrinter(Printer):
 
 @print_function(StrPrinter)
 def sstr(expr, **settings):
-    """Returns the expression as a string.
+    """
+    Returns the expression *expr* as a string.
 
-    For large expressions where speed is a concern, use the setting
-    order='none'. If abbrev=True setting is used then units are printed in
-    abbreviated form.
+    Parameters
+    ==========
+    expr : :class:`.Expr`
+        Expression to be printed.
+    order : str or None, default: None
+        Any of the supported monomial orderings (currently 'lex',
+        'grlex', or 'grevlex'), 'old', and 'none'. This parameter does nothing
+        for :class:`.Mul` objects. Setting order to 'old' uses the
+        compatibility ordering for :class:`.Add` defined in :class:`.Printer`.
+        For very large expressions, set the *order* keyword to 'none' if
+        speed is a concern.
+    full_prec : bool or 'auto', default: 'auto'
+        Whether to print trailing zeros for :class:`.Float`. If 'auto', print
+        full precision for individual floats, but not when part of an
+        expression.
+    sympy_integers : bool, default: False
+        If True, an integer is printed surrounded by a call to S,
+        to get a SymPy :class:`.Integer` upon evaluation of the string.
+    abbrev : bool, default: False
+        Whether to print units in abbreviated form.
+    perm_cyclic : bool, default: True
+        See :class:`.Permutation` for info.
+    min : int or None, default: None
+    max : int or None, default: None
 
     Examples
     ========
 
-    >>> from sympy import symbols, Eq, sstr
+    >>> from sympy import symbols, Eq, sstr, S
     >>> a, b = symbols('a b')
     >>> sstr(Eq(a + b, 0))
     'Eq(a + b, 0)'
+    >>> sstr(Eq(a + b, 0), sympy_integers=True)
+    'Eq(a + b, S(0))'
+    >>> sstr(S(0.00001))
+    '1.00000000000000e-5'
+    >>> sstr(S(0.00001), min=-11)
+    '0.0000100000000000000'
+    >>> sstr(S(0.00001), min=-11, full_prec=False)
+    '0.00001'
+    >>> sstr(a + S(0.00001))
+    'a + 1.0e-5'
+    >>> sstr(a + S(0.00001), full_prec=False, min=-11)
+    'a + 0.00001'
+    >>> sstr(a + S(0.00001), full_prec=True, min=-11)
+    'a + 0.0000100000000000000'
     """
 
     p = StrPrinter(settings)
