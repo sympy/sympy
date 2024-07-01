@@ -300,11 +300,11 @@ class Application(Basic, metaclass=FunctionClass):
         # and we throw that value away here
         options.pop('nargs', None)
 
-        if options:
-            raise ValueError("Unknown options: %s" % options)
+        if not evaluate and options:
+            raise NotImplementedError("keyword arguments with evaluate=False are not supported")
 
         if evaluate:
-            evaluated = cls.eval(*args)
+            evaluated = cls.eval(*args, **options)
             if evaluated is not None:
                 return evaluated
 
