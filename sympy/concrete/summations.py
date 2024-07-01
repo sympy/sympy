@@ -255,6 +255,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     zeta_function = self.eval_zeta_function(f, (i, a, b))
                     if zeta_function is not None:
                         return zeta_function
+                    try:
+                       if not self.is_convergent():
+                           raise ValueError("Sum of following divergent series cannot be calculated")
+                    except NotImplementedError:
+                        pass
                     return self
                 else:
                     return self.func(f, *self.limits[n:])
@@ -455,7 +460,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             raise NotImplementedError("convergence checking for more than one symbol "
                                       "containing series is not handled")
 
-        if lower_limit.is_finite and upper_limit.is_finite:
+        if (lower_limit.is_finite and upper_limit.is_finite) or (upper_limit - lower_limit).is_real:
             return S.true
 
         # transform sym -> -sym and swap the upper_limit = S.Infinity
@@ -472,6 +477,17 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym_ = Dummy(sym.name, integer=True, positive=True)
         sequence_term = sequence_term.xreplace({sym: sym_})
         sym = sym_
+
+        if isinstance(lower_limit, Symbol) and isinstance(upper_limit, Symbol):
+            raise NotImplementedError (" Result depends on the values of %s and %s" % (lower_limit, upper_limit))
+        elif isinstance(upper_limit, Symbol) and lower_limit is not S.NegativeInfinity:
+            if Sum(sequence_term, (sym, lower_limit, S.Infinity)).is_convergent():
+                return True
+            raise NotImplementedError (" Result depends on the value of %s" % upper_limit)
+        elif isinstance(lower_limit, Symbol) and upper_limit is not S.Infinity:
+            if Sum(sequence_term, (sym, S.NegativeInfinity, upper_limit)).is_convergent():
+                return True
+            raise NotImplementedError (" Result depends on the value of %s" % lower_limit)
 
         interval = Interval(lower_limit, upper_limit)
 
