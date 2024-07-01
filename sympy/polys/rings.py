@@ -1189,7 +1189,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             else:
                 raise ValueError("0**0")
         elif len(self) == 1:
-            monom, coeff = list(self.items())[0]
+            monom, coeff = next(iter(self.items()))
             p = ring.zero
             if coeff == ring.domain.one:
                 p[ring.monomial_pow(monom, n)] = coeff
@@ -2172,7 +2172,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ground_quo = ring.domain.quo
         monomial_gcd = ring.monomial_gcd
         monomial_ldiv = ring.monomial_ldiv
-        mf, cf = list(f.iterterms())[0]
+        mf, cf = next(iter(f.iterterms()))
         _mgcd, _cgcd = mf, cf
         for mg, cg in g.iterterms():
             _mgcd = monomial_gcd(_mgcd, mg)

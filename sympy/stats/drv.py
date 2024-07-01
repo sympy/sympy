@@ -201,7 +201,7 @@ class ConditionalDiscreteDomain(DiscreteDomain, ConditionalDomain):
         if len(self.symbols) > 1:
             raise NotImplementedError(filldedent('''
                 Multivariate conditional domains are not yet implemented.'''))
-        rv = list(rv)[0]
+        rv = next(iter(rv))
         return reduce_rational_inequalities_wrap(self.condition,
             rv).intersect(self.fulldomain.set)
 
@@ -251,7 +251,7 @@ class DiscretePSpace(PSpace):
         return prob if not complement else S.One - prob
 
     def eval_prob(self, _domain):
-        sym = list(self.symbols)[0]
+        sym = next(iter(self.symbols))
         if isinstance(_domain, Range):
             n = symbols('n', integer=True)
             inf, sup, step = (r for r in _domain.args)

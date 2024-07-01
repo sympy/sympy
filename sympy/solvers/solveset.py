@@ -1221,7 +1221,7 @@ def solve_decomposition(f, symbol, domain):
 
             for iset in iter_iset:
                 new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
-                dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
+                dummy_var = next(iter(iset.lamda.expr.free_symbols))
                 (base_set,) = iset.base_sets
                 if isinstance(new_solutions, FiniteSet):
                     new_exprs = new_solutions
@@ -1649,7 +1649,7 @@ def _solve_modular(f, symbol, domain):
     """
     # extract modterm and g_y from f
     unsolved_result = ConditionSet(symbol, Eq(f, 0), domain)
-    modterm = list(f.atoms(Mod))[0]
+    modterm = next(iter(f.atoms(Mod)))
     rhs = -S.One*(f.subs(modterm, S.Zero))
     if f.as_coefficients_dict()[modterm].is_negative:
         # checks if coefficient of modterm is negative in main equation.

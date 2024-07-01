@@ -1212,7 +1212,7 @@ class SubModulePolyRing(SubModule):
             order="ilex", TOP=False)  # We want decreasing order!
         G = S._groebner_vec()
         # This list cannot not be empty since e is an element
-        e = [x for x in G if self.ring.is_unit(x[0])][0]
+        e = next(x for x in G if self.ring.is_unit(x[0]))
         return [-x/e[0] for x in e[1:]]
 
     def reduce_element(self, x, NF=None):

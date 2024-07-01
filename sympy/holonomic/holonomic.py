@@ -535,7 +535,7 @@ class HolonomicFunction:
         """
         Converts a singular initial condition to ordinary if possible.
         """
-        a = list(self.y0)[0]
+        a = next(iter(self.y0))
         b = self.y0[a]
 
         if len(self.y0) == 1 and a == int(a) and a > 0:
@@ -1084,7 +1084,7 @@ class HolonomicFunction:
             if self.y0 is None:
                 y0 = None
             else:
-                y0 = [list(self.y0)[0] ** n]
+                y0 = [next(iter(self.y0)) ** n]
 
             p0 = ann.listofpoly[0]
             p1 = ann.listofpoly[1]
@@ -1171,7 +1171,7 @@ class HolonomicFunction:
             if sol.is_zero_matrix is not True:
                 break
 
-        tau = list(taus)[0]
+        tau = next(iter(taus))
         sol = sol.subs(tau, 1)
         sol = _normalize(sol[0:], R, negative=False)
 
@@ -2716,7 +2716,7 @@ def _convert_meijerint(func, x, initcond=True, domain=QQ):
             z = z.subs(exp_polar, exp)
 
         d = z.collect(x, evaluate=False)
-        b = list(d)[0]
+        b = next(iter(d))
         a = d[b]
 
         t = b.as_base_exp()

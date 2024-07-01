@@ -125,7 +125,7 @@ def test_farthest_points_closest_points():
 
         for points in (p1, p2, p3, p4, p5, dup, s):
             d = how(i.distance(j) for i, j in subsets(set(points), 2))
-            ans = a, b = list(func(*points))[0]
+            ans = a, b = next(iter(func(*points)))
             assert a.distance(b) == d
             assert ans == _ordered_points(ans)
 
@@ -136,7 +136,7 @@ def test_farthest_points_closest_points():
             points.add(Point2D(randint(1, 100), randint(1, 100)))
         points = list(points)
         d = how(i.distance(j) for i, j in subsets(points, 2))
-        ans = a, b = list(func(*points))[0]
+        ans = a, b = next(iter(func(*points)))
         assert a.distance(b) == d
         assert ans == _ordered_points(ans)
 

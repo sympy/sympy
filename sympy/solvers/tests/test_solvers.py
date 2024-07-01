@@ -1659,8 +1659,8 @@ def test_float_handling():
     assert test(nfloat(1 + 2*x), 1.0 + 2.0*x)
     for contain in [list, tuple, set]:
         ans = nfloat(contain([1 + 2*x]))
-        assert type(ans) is contain and test(list(ans)[0], 1.0 + 2.0*x)
-    k, v = list(nfloat({2*x: [1 + 2*x]}).items())[0]
+        assert type(ans) is contain and test(next(iter(ans)), 1.0 + 2.0*x)
+    k, v = next(iter(nfloat({2*x: [1 + 2*x]}).items()))
     assert test(k, 2*x) and test(v[0], 1.0 + 2.0*x)
     assert test(nfloat(cos(2*x)), cos(2.0*x))
     assert test(nfloat(3*x**2), 3.0*x**2)

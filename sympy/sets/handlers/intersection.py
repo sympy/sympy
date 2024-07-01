@@ -449,7 +449,7 @@ def _(a, b):
                     #this is to ensure that if Eq(a.start, b.start) but
                     #type(a.start) != type(b.start) the order of a and b
                     #does not matter for the result
-                    start = list(ordered([a,b]))[0].start
+                    start = next(iter(ordered([a,b]))).start
             left_open = a.left_open or b.left_open
 
         if a.end < b.end:
@@ -467,7 +467,7 @@ def _(a, b):
                 elif a.end.has(Float) and not b.end.has(Float):
                     end = a.end
                 else:
-                    end = list(ordered([a,b]))[0].end
+                    end = next(iter(ordered([a,b]))).end
             right_open = a.right_open or b.right_open
 
         if end - start == 0 and (left_open or right_open):

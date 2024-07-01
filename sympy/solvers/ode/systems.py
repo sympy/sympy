@@ -331,7 +331,7 @@ def _first_order_type5_6_subs(A, t, b=None):
             A = factor_terms[1]
             if not is_homogeneous:
                 b = b / factor_terms[0]
-                b = b.subs(t, list(inverse)[0])
+                b = b.subs(t, next(iter(inverse)))
             type = "type{}".format(5 + (not is_homogeneous))
             match.update({'func_coeff': A, 'tau': F_t,
                           't_': t_, 'type_of_equation': type, 'rhs': b})
@@ -1895,7 +1895,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
 
             if isinstance(expr, Mul):
                 coeff = expr.args[0]
-                order = list(_get_coeffs_from_subs_expression(expr.args[1]).keys())[0]
+                order = next(iter(_get_coeffs_from_subs_expression(expr.args[1]).keys()))
                 return {order: coeff}
 
             if isinstance(expr, Add):
@@ -1906,7 +1906,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
                         coeffs.update(_get_coeffs_from_subs_expression(arg))
 
                     else:
-                        order = list(_get_coeffs_from_subs_expression(arg).keys())[0]
+                        order = next(iter(_get_coeffs_from_subs_expression(arg).keys()))
                         coeffs[order] = 1
 
                 return coeffs
@@ -2094,7 +2094,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
         '''))
 
     if t is None:
-        t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
+        t = next(iter(next(iter(eqs[0].atoms(Derivative))).atoms(Symbol)))
 
     sols = []
     canon_eqs = canonical_odes(eqs, funcs, t)

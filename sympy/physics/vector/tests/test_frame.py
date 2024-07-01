@@ -757,5 +757,5 @@ def test_pickle_frame():
     A.orient_axis(N, N.x, 1)
     A_C_N = A.dcm(N)
     N1 = pickle.loads(pickle.dumps(N))
-    A1 = tuple(N1._dcm_dict.keys())[0]
+    A1 = next(iter(N1._dcm_dict.keys()))
     assert A1.dcm(N1) == A_C_N

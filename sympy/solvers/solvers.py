@@ -1586,7 +1586,7 @@ def _solve(f, *symbols, **flags):
                     # if no Functions left, we can proceed with usual solve
                     if not ftry.has(symbol):
                         cv_sols = _solve(ftry, t, **flags)
-                        cv_inv = list(ordered(_vsolve(t - f1, symbol, **flags)))[0]
+                        cv_inv = next(iter(ordered(_vsolve(t - f1, symbol, **flags))))
                         result = [{symbol: cv_inv.subs(sol)} for sol in cv_sols]
 
                 if result is False:
@@ -3525,7 +3525,7 @@ def unrad(eq, *syms, **flags):
                 x = b.free_symbols
             else:
                 x = syms
-            x = list(ordered(x))[0]
+            x = next(iter(ordered(x)))
             try:
                 inv = _vsolve(covsym**lcm - b, x, **uflags)
                 if not inv:

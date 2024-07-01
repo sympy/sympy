@@ -1618,7 +1618,7 @@ class Derivative(Expr):
         """
         if len(self.free_symbols) != 1 or len(self.variables) != 1:
             raise NotImplementedError('partials and higher order derivatives')
-        z = list(self.free_symbols)[0]
+        z = next(iter(self.free_symbols))
 
         def eval(x):
             f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
@@ -2034,8 +2034,8 @@ class Lambda(Expr):
                    'argument%(plural)s (%(given)s given)')
             raise BadArgumentsError(temp % {
                 'name': self,
-                'args': list(self.nargs)[0],
-                'plural': 's'*(list(self.nargs)[0] != 1),
+                'args': next(iter(self.nargs)),
+                'plural': 's'*(next(iter(self.nargs)) != 1),
                 'given': n})
 
         d = self._match_signature(self.signature, args)

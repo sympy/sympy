@@ -163,7 +163,7 @@ def test_sample_continuous():
     if not scipy:
         skip('Scipy is not installed. Abort tests')
     assert sample(Z) in Z.pspace.domain.set
-    sym, val = list(Z.pspace.sample().items())[0]
+    sym, val = next(iter(Z.pspace.sample().items()))
     assert sym == Z and val in Interval(0, oo)
 
     libraries = ['scipy', 'numpy', 'pymc']

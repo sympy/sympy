@@ -163,7 +163,7 @@ def curl(vect, doit=True):
                 args = vect.args
             return VectorAdd.fromiter(curl(i, doit=doit) for i in args)
         elif isinstance(vect, (Mul, VectorMul)):
-            vector = [i for i in vect.args if isinstance(i, (Vector, Cross, Gradient))][0]
+            vector = next(i for i in vect.args if isinstance(i, (Vector, Cross, Gradient)))
             scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
             res = Cross(gradient(scalar), vector).doit() + scalar*curl(vector, doit=doit)
             if doit:
@@ -230,7 +230,7 @@ def divergence(vect, doit=True):
         if isinstance(vect, (Add, VectorAdd)):
             return Add.fromiter(divergence(i, doit=doit) for i in vect.args)
         elif isinstance(vect, (Mul, VectorMul)):
-            vector = [i for i in vect.args if isinstance(i, (Vector, Cross, Gradient))][0]
+            vector = next(i for i in vect.args if isinstance(i, (Vector, Cross, Gradient)))
             scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
             res = Dot(vector, gradient(scalar)) + scalar*divergence(vector, doit=doit)
             if doit:

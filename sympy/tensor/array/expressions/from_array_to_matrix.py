@@ -387,7 +387,7 @@ def _(expr: ArrayTensorProduct):
             else:
                 newargs.append(arg)
         elif 1 in arg.shape:
-            k = [i for i in arg.shape if i != 1][0]
+            k = next(i for i in arg.shape if i != 1)
             if pending is None:
                 pending = k
                 prev_i = i
@@ -489,8 +489,8 @@ def _remove_diagonalized_identity_matrices(expr: ArrayDiagonal):
         counter += len(arg_with_ind.indices)
         if isinstance(arg_with_ind.element, Identity):
             if None in arg_with_ind.indices and any(i is not None and (i < 0) == True for i in arg_with_ind.indices):
-                diag_ind = [j for j in arg_with_ind.indices if j is not None][0]
-                other = [j for j in mapping[diag_ind] if j != arg_with_ind][0]
+                diag_ind = next(j for j in arg_with_ind.indices if j is not None)
+                other = next(j for j in mapping[diag_ind] if j != arg_with_ind)
                 if not isinstance(other.element, MatrixExpr):
                     continue
                 if 1 not in other.element.shape:
@@ -819,7 +819,7 @@ def identify_removable_identity_matrices(expr):
                     # Free identity matrix, will be cleared by _remove_trivial_dims:
                     continue
                 elif None in arg_with_ind.indices:
-                    ind = [j for j in arg_with_ind.indices if j is not None][0]
+                    ind = next(j for j in arg_with_ind.indices if j is not None)
                     counted = editor.count_args_with_index(ind)
                     if counted == 1:
                         # Identity matrix contracted only on one index with itself,
@@ -883,7 +883,7 @@ def remove_identity_matrices(expr: ArrayContraction):
         if number_identity_matrices != len(args) - 1 or number_identity_matrices == 0:
             continue
         # Get the non-identity element:
-        non_identity = [i for i in args if not isinstance(i.element, Identity)][0]
+        non_identity = next(i for i in args if not isinstance(i.element, Identity))
         # Check that all identity matrices have at least one free index
         # (otherwise they would be contractions to some other elements)
         if any(None not in i.indices for i in identity_matrices):
@@ -979,7 +979,7 @@ def _array_contraction_to_diagonal_multiple_identity(expr: ArrayContraction):
             if None not in id1.indices:
                 flag = True
                 break
-            free_pos = list(range(*editor.get_absolute_free_range(id1)))[0]
+            free_pos = next(iter(range(*editor.get_absolute_free_range(id1))))
             editor._track_permutation[-1].append(free_pos) # type: ignore
             id1.element = None
             flag = False

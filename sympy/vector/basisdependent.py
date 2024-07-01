@@ -224,7 +224,7 @@ class BasisDependentAdd(BasisDependent, Add):
         assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
         obj._components = components
-        obj._sys = (list(components.keys()))[0]._sys
+        obj._sys = next(iter(components.keys()))._sys
 
         return obj
 

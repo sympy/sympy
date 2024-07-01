@@ -105,7 +105,7 @@ class ImplicitRegion(Basic):
         equation = self.equation
 
         if len(self.variables) == 1:
-            return (list(solveset(equation, self.variables[0], domain=S.Reals))[0],)
+            return (next(iter(solveset(equation, self.variables[0], domain=S.Reals))),)
         elif len(self.variables) == 2:
 
             if self.degree == 2:
@@ -123,7 +123,7 @@ class ImplicitRegion(Basic):
             for x_reg in range(-10, 10):
                 for y_reg in range(-10, 10):
                     if not solveset(equation.subs({x: x_reg, y: y_reg}), self.variables[2], domain=S.Reals).is_empty:
-                        return (x_reg, y_reg, list(solveset(equation.subs({x: x_reg, y: y_reg})))[0])
+                        return (x_reg, y_reg, next(iter(solveset(equation.subs({x: x_reg, y: y_reg})))))
 
         if len(self.singular_points()) != 0:
             return list[self.singular_points()][0]
@@ -395,7 +395,7 @@ class ImplicitRegion(Basic):
                 return (equation,)
             elif len(self.variables) == 2:
                 x, y = self.variables
-                y_par = list(solveset(equation, y))[0]
+                y_par = next(iter(solveset(equation, y)))
                 return x, y_par
             else:
                 raise NotImplementedError()
@@ -410,7 +410,7 @@ class ImplicitRegion(Basic):
                 point = reg_point
             else:
                 if len(self.singular_points()) != 0:
-                    point = list(self.singular_points())[0]
+                    point = next(iter(self.singular_points()))
                 else:
                     point = self.regular_point()
 

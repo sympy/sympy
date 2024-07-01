@@ -143,7 +143,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     def set(self):
         if len(self.symbols) == 1:
             return (self.fulldomain.set & reduce_rational_inequalities_wrap(
-                self.condition, tuple(self.symbols)[0]))
+                self.condition, next(iter(self.symbols))))
         else:
             raise NotImplementedError(
                 "Set of Conditional Domain not Implemented")
@@ -401,7 +401,7 @@ class ContinuousPSpace(PSpace):
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)
-            rv = [rv for rv in self.values if rv.symbol == domain.symbol][0]
+            rv = next(rv for rv in self.values if rv.symbol == domain.symbol)
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
             # return S.Zero if `domain` is empty set
@@ -438,7 +438,7 @@ class ContinuousPSpace(PSpace):
         if not (len(rvs) == 1 and rvs.issubset(self.values)):
             raise NotImplementedError(
                 "Multiple continuous random variables not supported")
-        rv = tuple(rvs)[0]
+        rv = next(iter(rvs))
         interval = reduce_rational_inequalities_wrap(condition, rv)
         interval = interval.intersect(self.domain.set)
         return SingleContinuousDomain(rv.symbol, interval)

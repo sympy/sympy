@@ -434,7 +434,7 @@ class Plane(GeometryEntity):
                 c = list(a.cross(b))
                 d = self.equation(x, y, z)
                 e = o.equation(x, y, z)
-                result = list(linsolve([d, e], x, y, z))[0]
+                result = next(iter(linsolve([d, e], x, y, z)))
                 for i in (x, y, z): result = result.subs(i, 0)
                 return [Line3D(Point3D(result), direction_ratio=c)]
 

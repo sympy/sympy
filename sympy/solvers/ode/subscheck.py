@@ -363,7 +363,7 @@ def checksysodesol(eqs, sols, func=None):
         raise ValueError("number of solutions provided does not match the number of equations")
     dictsol = {}
     for sol in sols:
-        func = list(sol.atoms(AppliedUndef))[0]
+        func = next(iter(sol.atoms(AppliedUndef)))
         if sol.rhs == func:
             sol = sol.reversed
         solved = sol.lhs == func and not sol.rhs.has(func)
@@ -386,7 +386,7 @@ def checksysodesol(eqs, sols, func=None):
         else:
             eq = 0
         checkeq.append(eq)
-    if len(set(checkeq)) == 1 and list(set(checkeq))[0] == 0:
+    if len(set(checkeq)) == 1 and set(checkeq).pop() == 0:
         return (True, checkeq)
     else:
         return (False, checkeq)
