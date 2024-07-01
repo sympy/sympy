@@ -318,7 +318,7 @@ def sort_lines_mailmap(lines):
 
 def read_lines(path):
     with open(path, 'r', encoding='utf-8') as fin:
-        return [line.strip() for line in fin.readlines()]
+        return [line.strip() for line in fin]
 
 
 def write_lines(path, lines):

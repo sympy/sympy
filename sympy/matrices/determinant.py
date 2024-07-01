@@ -919,7 +919,7 @@ def _det_bird(M):
         for i in reversed(range(1, n)):
             total -= X[i][i]
             diag_sums.append(total)
-        diag_sums = diag_sums[::-1]
+        diag_sums.reverse()
 
         elems = [[zero] * i + [diag_sums[i]] + X_i[i + 1:] for i, X_i in
                  enumerate(X)]
