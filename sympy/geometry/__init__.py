@@ -15,6 +15,7 @@ from sympy.geometry.line import Line, Ray, Segment, Line2D, Segment2D, Ray2D, \
     Line3D, Segment3D, Ray3D
 from sympy.geometry.plane import Plane
 from sympy.geometry.ellipse import Ellipse, Circle
+from sympy.geometry.hyperbola import Hyperbola
 from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle, rad, deg
 from sympy.geometry.util import are_similar, centroid, convex_hull, idiff, \
     intersection, closest_points, farthest_points
@@ -31,6 +32,8 @@ __all__ = [
     'Plane',
 
     'Ellipse', 'Circle',
+
+    'Hyperbola',
 
     'Polygon', 'RegularPolygon', 'Triangle', 'rad', 'deg',
 
