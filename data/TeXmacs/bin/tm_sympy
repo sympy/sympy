@@ -29,25 +29,29 @@ import traceback
 from sympy import __version__
 from sympy.printing import latex
 
+from sympy import Basic, MatrixBase
+
 BEGIN, END = chr(2), chr(5)
 
 DATA_COMMAND = chr(16)
 DATA_ESCAPE = chr(27)
 
 def send(kind, output=None):
-    if output is None:
-        output = ""
-    elif kind == "latex":
-        output = latex(output)
-
     message = "%s:%s" %  (kind, output)
+    
+    if kind == "latex":
+        message = "%s:$%s$" %  (kind, output)
 
+    if kind == "":
+        message = "%s%s" %  (kind, output)
+        
     os.sys.stdout.write(BEGIN)
     os.sys.stdout.write(message)
     os.sys.stdout.write(END)
     os.sys.stdout.flush()
 
 send("verbatim", "Welcome to SymPy " + __version__)
+send("", "prompt#SymPy] ")
 
 _globals = {}
 
@@ -84,14 +88,19 @@ while True:
     elif line[0] != DATA_COMMAND:
         line = re.sub(r' {2}(\s*)', r'\n \1', line)
 
-        try:
+        try: # Is it a Python expression?
             output = eval(line, _globals)
-        except SyntaxError:
-            try:
-                output = eval(compile(line, 'tm_sympy', 'exec'), _globals)
-            except (SyntaxError, TypeError) :
-                send("verbatim", traceback.format_exc(limit = 0))
-                continue
-
-        _globals['_'] = output
-        send("latex", output)
+        except Exception:
+            try: # Is it a statement?
+                eval(compile(line, 'tm_sympy', 'exec'), _globals)
+            except Exception as e:
+                send("verbatim", ''.join(traceback.format_exception_only(type(e), e)))
+            else:
+                send("verbatim", "")
+        else:
+            if isinstance(output, Basic) or isinstance(output, MatrixBase):
+                send("latex", latex(output))
+            else:
+                send("verbatim", str(output))
+            
+            _globals['_'] = output
