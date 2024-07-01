@@ -1746,9 +1746,19 @@ class Mul(Expr, AssocOp):
         # rv will be the default return value
         rv = None
         n, d = fraction(self)
+        n1, d1 = fraction(old)
+        n2, d2 = fraction(new)
         self2 = self
         if d is not S.One:
             self2 = n._subs(old, new)/d._subs(old, new)
+            # Following code handles expressions of the form (d*(a + b)/c).subs((a + b)/c, x) -> d*x
+            # which are often encountered (see issue 17225).
+            if self2 == self and not d1.is_Number and \
+                n1.free_symbols == n.free_symbols and d1.free_symbols.issubset(d.free_symbols):
+                    try:
+                        self2 = (n.extract_multiplicatively(n1) * n2) / (d.extract_multiplicatively(d1) * d2)
+                    except TypeError:
+                        pass
             if not self2.is_Mul:
                 return self2._subs(old, new)
             if self2 != self:
