@@ -18,7 +18,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
     acceleration, action, current, impedance, length, mass, time, velocity,
     amount_of_substance, temperature, information, frequency, force, pressure,
     energy, power, charge, voltage, capacitance, conductance, magnetic_flux,
-    magnetic_density, inductance, luminous_intensity
+    magnetic_density, inductance, luminous_intensity, volume, area,
 )
 from sympy.physics.units.definitions import (
     kilogram, newton, second, meter, gram, cd, K, joule, watt, pascal, hertz,
@@ -81,6 +81,8 @@ SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system
     current: ampere,
     voltage: volt,
     length: meter,
+    area: meter**2,
+    volume: meter**3,
     frequency: hertz,
     inductance: henry,
     temperature: kelvin,
