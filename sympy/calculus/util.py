@@ -797,7 +797,7 @@ def stationary_points(f, symbol, domain=S.Reals):
               2                                2
 
     >>> stationary_points(sin(x),x, Interval(0, 4*pi))
-    {pi/2, 3*pi/2, 5*pi/2, 7*pi/2}
+    FiniteSet(pi/2, 3*pi/2, 5*pi/2, 7*pi/2)
 
     """
     from sympy.solvers.solveset import solveset

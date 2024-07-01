@@ -159,7 +159,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     >>> invert_complex(exp(x), 1, x)
     (x, ImageSet(Lambda(_n, 2*_n*I*pi), Integers))
     >>> invert_real(exp(x), 1, x)
-    (x, {0})
+    (x, FiniteSet(0))
 
     See Also
     ========
@@ -1177,7 +1177,7 @@ def solve_decomposition(f, symbol, domain):
     >>> x = Symbol('x')
     >>> f1 = exp(2*x) - 3*exp(x) + 2
     >>> sd(f1, x, S.Reals)
-    {0, log(2)}
+    FiniteSet(0, log(2))
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
     >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
               3*pi
@@ -1765,9 +1765,9 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     >>> solve_expo(a**x - b**x, 0, x, S.Reals)  # solvable but incorrect assumptions
     ConditionSet(x, (a > 0) & (b > 0), {0})
     >>> solve_expo(3**(2*x) - 2**(x + 3), 0, x, S.Reals)
-    {-3*log(2)/(-2*log(3) + log(2))}
+    FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
     >>> solve_expo(2**x - 4**x, 0, x, S.Reals)
-    {0}
+    FiniteSet(0)
 
     * Proof of correctness of the method
 
@@ -1923,7 +1923,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     >>> x = symbols('x')
     >>> f = log(x - 3) + log(x + 3)
     >>> solve_log(f, 0, x, S.Reals)
-    {-sqrt(10), sqrt(10)}
+    FiniteSet(-sqrt(10), sqrt(10))
 
     * Proof of correctness
 
@@ -2169,7 +2169,7 @@ def _transolve(f, symbol, domain):
     >>> from sympy import symbols, S, pprint
     >>> x = symbols('x', real=True) # assumption added
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
-    {-(log(3) + 3*log(5))/(-log(5) + 2*log(3))}
+    FiniteSet(-(log(3) + 3*log(5))/(-log(5) + 2*log(3)))
 
     How ``_transolve`` works
     ========================
@@ -2411,9 +2411,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> R = S.Reals
     >>> x = Symbol('x')
     >>> solveset(exp(x) - 1, x, R)
-    {0}
+    FiniteSet(0)
     >>> solveset_real(exp(x) - 1, x)
-    {0}
+    FiniteSet(0)
 
     The solution is unaffected by assumptions on the symbol:
 
@@ -2985,7 +2985,7 @@ def linsolve(system, *symbols):
     [6],
     [9]])
     >>> linsolve((A, b), [x, y, z])
-    {(-1, 2, 0)}
+    FiniteSet((-1, 2, 0))
 
     * Parametric Solution: In case the system is underdetermined, the
       function will return a parametric solution in terms of the given
@@ -2996,20 +2996,20 @@ def linsolve(system, *symbols):
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> b = Matrix([3, 6, 9])
     >>> linsolve((A, b), x, y, z)
-    {(z - 1, 2 - 2*z, z)}
+    FiniteSet((z - 1, 2 - 2*z, z))
 
     If no symbols are given, internally generated symbols will be used.
     The ``tau0`` in the third position indicates (as before) that the third
     variable -- whatever it is named -- can take on any value:
 
     >>> linsolve((A, b))
-    {(tau0 - 1, 2 - 2*tau0, tau0)}
+    FiniteSet((tau0 - 1, 2 - 2*tau0, tau0))
 
     * List of equations as input
 
     >>> Eqns = [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, - x + y/2 - z]
     >>> linsolve(Eqns, x, y, z)
-    {(1, -2, -2)}
+    FiniteSet((1, -2, -2))
 
     * Augmented matrix as input
 
@@ -3020,21 +3020,21 @@ def linsolve(system, *symbols):
     [2, 6,  8, 3],
     [6, 8, 18, 5]])
     >>> linsolve(aug, x, y, z)
-    {(3/10, 2/5, 0)}
+    FiniteSet((3/10, 2/5, 0))
 
     * Solve for symbolic coefficients
 
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
     >>> linsolve(eqns, x, y)
-    {((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
+    FiniteSet(((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d)))
 
     * A degenerate system returns solution as set of given
       symbols.
 
     >>> system = Matrix(([0, 0, 0], [0, 0, 0], [0, 0, 0]))
     >>> linsolve(system, x, y)
-    {(x, y)}
+    FiniteSet((x, y))
 
     * For an empty system linsolve returns empty set
 
@@ -3231,33 +3231,34 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> from sympy import symbols, substitution
     >>> x, y = symbols('x, y', real=True)
     >>> substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y])
-    {(-1, 1)}
+    FiniteSet((-1, 1))
 
     * When you want a soln not satisfying $x + 1 = 0$
 
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
     EmptySet
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x - 1]), [y, x])
-    {(1, -1)}
+    FiniteSet((1, -1))
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])
-    {(-3, 4), (2, -1)}
+    FiniteSet((-3, 4), (2, -1))
 
     * Returns both real and complex solution
 
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    FiniteSet((ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers),
+     -2), (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2))
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
-    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
+    FiniteSet((-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
      (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
      (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers)),
-     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
+     ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))),
+     Integers)), (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
+     ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))),
+     Integers)))
 
     """
 
@@ -3950,7 +3951,7 @@ def nonlinsolve(system, *symbols):
     >>> from sympy import symbols, nonlinsolve
     >>> x, y, z = symbols('x, y, z', real=True)
     >>> nonlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
-    {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
+    FiniteSet((-1, -1), (-1/2, -2), (1/2, 2), (1, 1))
 
     1. Positive dimensional system and complements:
 
@@ -3969,7 +3970,7 @@ def nonlinsolve(system, *symbols):
     {(---, -d, -, {d} \ {0}), (-, -d, ---, {d} \ {0})}
        d       d               d       d
     >>> nonlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
-    {(2 - y, y)}
+    FiniteSet((2 - y, y))
 
     2. If some of the equations are non-polynomial then `nonlinsolve`
     will call the ``substitution`` function and return real and complex solutions,
@@ -3977,8 +3978,8 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    FiniteSet((ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers),
+    -2), (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2))
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using
@@ -3986,7 +3987,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import sqrt
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
-    {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
+    FiniteSet((-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I))
 
     4. ``nonlinsolve`` can solve some linear (zero or positive dimensional)
     system (because it uses the :func:`sympy.polys.polytools.groebner` function to get the
@@ -3995,7 +3996,7 @@ def nonlinsolve(system, *symbols):
     ``nonlinsolve``, because :func:`~.linsolve` is better for general linear systems.
 
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9, y + z - 4], [x, y, z])
-    {(3*z - 5, 4 - z, z)}
+    FiniteSet((3*z - 5, 4 - z, z))
 
     5. System having polynomial equations and only real solution is
     solved using :func:`~.solve_poly_system`:
@@ -4003,11 +4004,11 @@ def nonlinsolve(system, *symbols):
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
     >>> nonlinsolve((e1, e2), (x, y))
-    {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
+    FiniteSet((191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20))
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
-    {(1, 2), (1 - sqrt(5), 2 + sqrt(5)), (1 + sqrt(5), 2 - sqrt(5))}
+    FiniteSet((1, 2), (1 - sqrt(5), 2 + sqrt(5)), (1 + sqrt(5), 2 - sqrt(5)))
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
-    {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
+    FiniteSet((2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5)))
 
     6. It is better to use symbols instead of trigonometric functions or
     :class:`~.Function`. For example, replace $\sin(x)$ with a symbol, replace
