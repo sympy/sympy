@@ -1118,13 +1118,13 @@ def test_Pow_is_real():
     assert (2**I).is_real is False
     assert (2**-I).is_real is False
     assert (i**2).is_extended_real is True
-    assert (i**3).is_extended_real is False
+    assert (i**3).is_extended_real is None  # could be zero
     assert (i**x).is_real is None  # could be (-I)**(2/3)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
     k = Symbol('k', integer=True)
     assert (i**e).is_extended_real is True
-    assert (i**o).is_extended_real is False
+    assert (i**o).is_extended_real is None  # could be zero
     assert (i**k).is_real is None
     assert (i**(4*k)).is_extended_real is True
 
@@ -1465,10 +1465,11 @@ def test_Pow_is_nonpositive_nonnegative():
 
     assert (x**2).is_nonnegative is True
     i = symbols('i', imaginary=True)
-    assert (i**2).is_nonpositive is True
-    assert (i**4).is_nonpositive is False
-    assert (i**3).is_nonpositive is False
-    assert (I**i).is_nonnegative is True
+    assert (i**2).is_nonpositive is None
+    assert (i**4).is_nonpositive is None
+    assert (i**3).is_nonpositive is None
+    # XXX: Should this be True?
+    assert (I**i).is_nonnegative is None
     assert (exp(I)**i).is_nonnegative is True
 
     assert ((-l)**n).is_nonnegative is True
@@ -1512,16 +1513,16 @@ def test_Mul_is_imaginary_real():
     assert (e**5).is_real is False
     assert (e**3).is_complex
 
-    assert (r*i1).is_imaginary is None
+    assert (r*i1).is_imaginary is True
     assert (r*i1).is_real is None
 
     assert (x*i1).is_imaginary is None
     assert (x*i1).is_real is None
 
-    assert (i1*i2).is_imaginary is False
+    assert (i1*i2).is_imaginary is None
     assert (i1*i2).is_real is True
 
-    assert (r*i1*i2).is_imaginary is False
+    assert (r*i1*i2).is_imaginary is None
     assert (r*i1*i2).is_real is True
 
     # Github's issue 5874:
@@ -1535,7 +1536,7 @@ def test_Mul_is_imaginary_real():
     ni = Symbol('ni', imaginary=False, complex=True)  # e.g. 2 or 1 + I
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
-    assert (i1*ni).is_real is False
+    assert (i1*ni).is_real is None
     assert (a*ni).is_real is None
     assert (b*ni).is_real is None
 
@@ -2263,7 +2264,7 @@ def test_mul_zero_detection():
     assert e.is_imaginary is None
     assert e.is_extended_real is False
     e = nz*i*c
-    assert e.is_imaginary is False
+    assert e.is_imaginary is None
     assert e.is_extended_real is None
     # check for more than one complex; it is important to use
     # uniquely named Symbols to ensure that two factors appear
