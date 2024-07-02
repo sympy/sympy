@@ -638,17 +638,8 @@ class Mul(Expr, AssocOp):
             if q == 2:
                 c_part.append(S.ImaginaryUnit)
             elif p:
-                # see if there is any positive base this power of
-                # -1 can join
                 neg1e = Rational(p, q)
-                for e, b in pnew.items():
-                    if e == neg1e and b.is_positive:
-                        pnew[e] = -b
-                        break
-                else:
-                    # keep it separate; we've already evaluated it as
-                    # much as possible so evaluate=False
-                    c_part.append(Pow(S.NegativeOne, neg1e, evaluate=False))
+                c_part.append(Pow(S.NegativeOne, neg1e, evaluate=False))
 
         # add all the pnew powers
         c_part.extend([Pow(b, e) for e, b in pnew.items()])
