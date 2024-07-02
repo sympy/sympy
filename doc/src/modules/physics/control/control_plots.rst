@@ -47,3 +47,10 @@ Ramp-Response Plot
 .. automethod:: sympy.physics.control.control_plots.ramp_response_plot
 
 .. automethod:: sympy.physics.control.control_plots.ramp_response_numerical_data
+
+Nichols Plot
+------------------
+
+.. automethod:: sympy.physics.control.control_plots.nichols_plot
+
+.. automethod:: sympy.physics.control.control_plots.nichols_numerical_data
