@@ -162,6 +162,30 @@ def test_DMP_arithmetics():
 
     raises(ExactQuotientFailed, lambda: f.exquo(g))
 
+    f = DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ)
+    g = DMP([ZZ(2), ZZ(-2)], ZZ)
+
+    q = DMP([], ZZ)
+    r = f
+
+    pq = DMP([ZZ(2), ZZ(2)], ZZ)
+    pr = DMP([], ZZ)
+
+    assert f.div(g) == (q, r)
+    assert f.quo(g) == q
+    assert f.rem(g) == r
+
+    assert divmod(f, g) == (q, r)
+    assert f // g == q
+    assert f % g == r
+
+    raises(ExactQuotientFailed, lambda: f.exquo(g))
+
+    assert f.pdiv(g) == (pq, pr)
+    assert f.pquo(g) == pq
+    assert f.prem(g) == pr
+    assert f.pexquo(g) == pq
+
 
 def test_DMP_functionality():
     f = DMP([[ZZ(1)], [ZZ(2), ZZ(0)], [ZZ(1), ZZ(0), ZZ(0)]], ZZ)

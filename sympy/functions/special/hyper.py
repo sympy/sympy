@@ -274,8 +274,12 @@ class hyper(TupleParametersBase):
         ap = self.args[0]
         bq = self.args[1]
 
-        if x0 != 0:
-            return super()._eval_nseries(x, n, logx)
+        if not (arg == x and x0 == 0):
+            # It would be better to do something with arg.nseries here, rather
+            # than falling back on Function._eval_nseries. The code below
+            # though is not sufficient if arg is something like x/(x+1).
+            from sympy.simplify.hyperexpand import hyperexpand
+            return hyperexpand(super()._eval_nseries(x, n, logx))
 
         terms = []
 

@@ -2,6 +2,7 @@ import os
 from ctypes import c_long, sizeof
 from functools import reduce
 from typing import Tuple as tTuple, Type
+from warnings import warn
 
 from sympy.external import import_module
 
@@ -88,80 +89,118 @@ __all__ = [
 
 
 #
-# SYMPY_GROUND_TYPES can be gmpy, gmpy2, python or auto
+# Tested python-flint version. Future versions might work but we will only use
+# them if explicitly requested by SYMPY_GROUND_TYPES=flint.
 #
-GROUND_TYPES = os.environ.get('SYMPY_GROUND_TYPES', 'auto').lower()
+_PYTHON_FLINT_VERSION_NEEDED = "0.6.*"
 
+
+def _flint_version_okay(flint_version):
+    flint_ver = flint_version.split('.')[:2]
+    needed_ver = _PYTHON_FLINT_VERSION_NEEDED.split('.')[:2]
+    return flint_ver == needed_ver
 
 #
-# Try to import gmpy2 by default. If gmpy or gmpy2 is specified in
-# SYMPY_GROUND_TYPES then warn if gmpy2 is not found. In all cases there is a
-# fallback based on pure Python int and PythonMPQ that should still work fine.
+# We will only use gmpy2 >= 2.0.0
 #
-if GROUND_TYPES in ('auto', 'gmpy', 'gmpy2'):
+_GMPY2_MIN_VERSION = '2.0.0'
 
-    # Actually import gmpy2
-    gmpy = import_module('gmpy2', min_module_version='2.0.0',
-                module_version_attr='version', module_version_attr_call_args=())
-    flint = None
 
-    if gmpy is None:
-        # Warn if user explicitly asked for gmpy but it isn't available.
-        if GROUND_TYPES != 'auto':
-            from warnings import warn
-            warn("gmpy library is not installed, switching to 'python' ground types")
+def _get_flint(sympy_ground_types):
+    if sympy_ground_types not in ('auto', 'flint'):
+        return None
 
-        # Fall back to Python if gmpy2 is not available
-        GROUND_TYPES = 'python'
+    try:
+        import flint
+        # Earlier versions of python-flint may not have __version__.
+        from flint import __version__ as _flint_version
+    except ImportError:
+        if sympy_ground_types == 'flint':
+            warn("SYMPY_GROUND_TYPES was set to flint but python-flint is not "
+                 "installed. Falling back to other ground types.")
+        return None
+
+    if _flint_version_okay(_flint_version):
+        return flint
+    elif sympy_ground_types == 'auto':
+        warn(f"python-flint {_flint_version} is installed but only version "
+             f"{_PYTHON_FLINT_VERSION_NEEDED} will be used by default. "
+             f"Falling back to other ground types. Use "
+             f"SYMPY_GROUND_TYPES=flint to force the use of python-flint.")
+        return None
     else:
-        GROUND_TYPES = 'gmpy'
+        warn(f"Using python-flint {_flint_version} because SYMPY_GROUND_TYPES "
+             f"is set to flint but this version of SymPy has only been tested "
+             f"with python-flint {_PYTHON_FLINT_VERSION_NEEDED}.")
+        return flint
 
-elif GROUND_TYPES == 'flint':
 
-    # Try to use python_flint
-    flint = import_module('flint')
-    gmpy = None
+def _get_gmpy2(sympy_ground_types):
+    if sympy_ground_types not in ('auto', 'gmpy', 'gmpy2'):
+        return None
 
-    if flint is None:
-        from warnings import warn
-        warn("python_flint is not installed, switching to 'python' ground types")
-        GROUND_TYPES = 'python'
+    gmpy = import_module('gmpy2', min_module_version=_GMPY2_MIN_VERSION,
+            module_version_attr='version', module_version_attr_call_args=())
+
+    if sympy_ground_types != 'auto' and gmpy is None:
+        warn("gmpy2 library is not installed, switching to 'python' ground types")
+
+    return gmpy
+
+
+#
+# SYMPY_GROUND_TYPES can be flint, gmpy, gmpy2, python or auto (default)
+#
+_SYMPY_GROUND_TYPES = os.environ.get('SYMPY_GROUND_TYPES', 'auto').lower()
+_flint = None
+_gmpy = None
+
+#
+# First handle auto-detection of flint/gmpy2. We will prefer flint if available
+# or otherwise gmpy2 if available and then lastly the python types.
+#
+if _SYMPY_GROUND_TYPES in ('auto', 'flint'):
+    _flint = _get_flint(_SYMPY_GROUND_TYPES)
+    if _flint is not None:
+        _SYMPY_GROUND_TYPES = 'flint'
     else:
-        GROUND_TYPES = 'flint'
+        _SYMPY_GROUND_TYPES = 'auto'
 
-elif GROUND_TYPES == 'python':
+if _SYMPY_GROUND_TYPES in ('auto', 'gmpy', 'gmpy2'):
+    _gmpy = _get_gmpy2(_SYMPY_GROUND_TYPES)
+    if _gmpy is not None:
+        _SYMPY_GROUND_TYPES = 'gmpy'
+    else:
+        _SYMPY_GROUND_TYPES = 'python'
 
-    # The user asked for Python so ignore gmpy2/flint
-    gmpy = None
-    flint = None
-    GROUND_TYPES = 'python'
-
-else:
-
-    # Invalid value for SYMPY_GROUND_TYPES. Warn and default to Python.
-    from warnings import warn
+if _SYMPY_GROUND_TYPES not in ('flint', 'gmpy', 'python'):
     warn("SYMPY_GROUND_TYPES environment variable unrecognised. "
-         "Should be 'python', 'auto', 'gmpy', or 'gmpy2'")
-    gmpy = None
-    flint = None
-    GROUND_TYPES = 'python'
-
+         "Should be 'auto', 'flint', 'gmpy', 'gmpy2' or 'python'.")
+    _SYMPY_GROUND_TYPES = 'python'
 
 #
-# At this point gmpy will be None if gmpy2 was not successfully imported or if
-# the environment variable SYMPY_GROUND_TYPES was set to 'python' (or some
-# unrecognised value). The two blocks below define the values exported by this
-# module in each case.
+# At this point _SYMPY_GROUND_TYPES is either flint, gmpy or python. The blocks
+# below define the values exported by this module in each case.
 #
-SYMPY_INTS: tTuple[Type, ...]
 
 #
-# In gmpy2 and flint, there are functions that take a long (or unsigned long) argument.
-# That is, it is not possible to input a value larger than that.
+# In gmpy2 and flint, there are functions that take a long (or unsigned long)
+# argument. That is, it is not possible to input a value larger than that.
 #
 LONG_MAX = (1 << (8*sizeof(c_long) - 1)) - 1
 
-if GROUND_TYPES == 'gmpy':
+#
+# Type checkers are confused by what SYMPY_INTS is. There may be a better type
+# hint for this like Type[Integral] or something.
+#
+SYMPY_INTS: tTuple[Type, ...]
+
+if _SYMPY_GROUND_TYPES == 'gmpy':
+
+    assert _gmpy is not None
+
+    flint = None
+    gmpy = _gmpy
 
     HAS_GMPY = 2
     GROUND_TYPES = 'gmpy'
@@ -202,7 +241,12 @@ if GROUND_TYPES == 'gmpy':
     is_bpsw_prp = gmpy.is_bpsw_prp
     is_strong_bpsw_prp = gmpy.is_strong_bpsw_prp
 
-elif GROUND_TYPES == 'flint':
+elif _SYMPY_GROUND_TYPES == 'flint':
+
+    assert _flint is not None
+
+    flint = _flint
+    gmpy = None
 
     HAS_GMPY = 0
     GROUND_TYPES = 'flint'
@@ -260,7 +304,10 @@ elif GROUND_TYPES == 'flint':
     is_bpsw_prp = python_is_bpsw_prp
     is_strong_bpsw_prp = python_is_strong_bpsw_prp
 
-elif GROUND_TYPES == 'python':
+elif _SYMPY_GROUND_TYPES == 'python':
+
+    flint = None
+    gmpy = None
 
     HAS_GMPY = 0
     GROUND_TYPES = 'python'

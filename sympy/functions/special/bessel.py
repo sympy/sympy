@@ -8,7 +8,7 @@ from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
-from sympy.core.symbol import Dummy, Wild
+from sympy.core.symbol import Dummy, uniquely_named_symbol, Wild
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
@@ -2067,7 +2067,7 @@ class marcumq(Function):
 
     def _eval_rewrite_as_Integral(self, m, a, b, **kwargs):
         from sympy.integrals.integrals import Integral
-        x = kwargs.get('x', Dummy('x'))
+        x = kwargs.get('x', Dummy(uniquely_named_symbol('x').name))
         return a ** (1 - m) * \
                Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, S.Infinity])
 
@@ -2081,7 +2081,7 @@ class marcumq(Function):
             if m == 1:
                 return (1 + exp(-a**2) * besseli(0, a**2)) / 2
             if m.is_Integer and m >= 2:
-                s = sum([besseli(i, a**2) for i in range(1, m)])
+                s = sum(besseli(i, a**2) for i in range(1, m))
                 return S.Half + exp(-a**2) * besseli(0, a**2) / 2 + exp(-a**2) * s
 
     def _eval_is_zero(self):

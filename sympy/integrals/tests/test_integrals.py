@@ -38,8 +38,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import (raises, slow, skip, ON_CI,
-    warns_deprecated_sympy, warns)
+from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
@@ -1148,7 +1147,7 @@ def test_issue_3940():
     assert integrate(exp(-x**2 + I*c*x), x) == \
         -sqrt(pi)*exp(-c**2/4)*erf(I*c/2 - x)/2
     assert integrate(exp(a*x**2 + b*x + c), x) == \
-        sqrt(pi)*exp(c)*exp(-b**2/(4*a))*erfi(sqrt(a)*x + b/(2*sqrt(a)))/(2*sqrt(a))
+        sqrt(pi)*exp(c - b**2/(4*a))*erfi((2*a*x + b)/(2*sqrt(a)))/(2*sqrt(a))
 
     from sympy.core.function import expand_mul
     from sympy.abc import k
@@ -1435,8 +1434,6 @@ def test_issue_8945():
 
 @slow
 def test_issue_7130():
-    if ON_CI:
-        skip("Too slow for CI.")
     i, L, a, b = symbols('i L a b')
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
@@ -2130,3 +2127,15 @@ def test_issue_25886():
             - 1.13875255748434*exp(0.937098661*I))
     F = integrate(f, (x, y, 1.0))
     assert F.is_same(F_exp, math.isclose)
+
+
+def test_old_issues():
+    # https://github.com/sympy/sympy/issues/5212
+    I1 = integrate(cos(log(x**2))/x)
+    assert I1 == sin(log(x**2))/2
+    # https://github.com/sympy/sympy/issues/5462
+    I2 = integrate(1/(x**2+y**2)**(Rational(3,2)),x)
+    assert I2 == x/(y**3*sqrt(x**2/y**2 + 1))
+    # https://github.com/sympy/sympy/issues/6278
+    I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
+    assert I3 == 2*sqrt(3)*pi/3

@@ -555,10 +555,7 @@ class LRASolver():
         M = self.A.copy()
         basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
         nonbasic = set(self.nonslack)
-        iteration = 0
         while True:
-            iteration += 1
-
             if self.run_checks:
                 # nonbasic variables must always be within bounds
                 assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in nonbasic)
@@ -584,7 +581,7 @@ class LRASolver():
             if len(cand) == 0:
                 return True, {var: var.assign for var in self.all_var}
 
-            xi = sorted(cand, key=lambda v: v.col_idx)[0] # Bland's rule
+            xi = min(cand, key=lambda v: v.col_idx) # Bland's rule
             i = basic[xi]
 
             if xi.assign < xi.lower:
@@ -601,7 +598,7 @@ class LRASolver():
                     conflict.append(Boundary.from_lower(xi))
                     conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
-                xj = sorted(cand, key=lambda v: str(v))[0]
+                xj = min(cand, key=str)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
 
             if xi.assign > xi.upper:
@@ -620,7 +617,7 @@ class LRASolver():
 
                     conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
-                xj = sorted(cand, key=lambda v: v.col_idx)[0]
+                xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
 
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):

@@ -142,6 +142,8 @@ def check_matrix_delimiters(latex_str):
                    f"{eellipsis}")
             raise LaTeXParsingError(err)
 
+__doctest_requires__ = {('parse_latex',): ['antlr4', 'lark']}
+
 
 @doctest_depends_on(modules=('antlr4', 'lark'))
 def parse_latex(s, strict=False, backend="antlr"):

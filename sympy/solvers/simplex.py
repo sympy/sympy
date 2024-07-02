@@ -149,20 +149,8 @@ def _pivot(M, i, j):
 
 def _choose_pivot_row(A, B, candidate_rows, pivot_col, Y):
     # Choose row with smallest ratio
-    first_row = candidate_rows[0]
-    min_ratio = B[first_row] / A[first_row, pivot_col]
-    min_rows = [first_row]
-    for i in candidate_rows[1:]:
-        ratio = B[i] / A[i, pivot_col]
-        if ratio < min_ratio:
-            min_ratio = ratio
-            min_rows = [i]
-        elif ratio == min_ratio:
-            min_rows.append(i)
-
     # If there are ties, pick using Bland's rule
-    _, row = min((Y[i], i) for i in min_rows)
-    return row
+    return min(candidate_rows, key=lambda i: (B[i] / A[i, pivot_col], Y[i]))
 
 
 def _simplex(A, B, C, D=None, dual=False):
@@ -371,7 +359,6 @@ def _simplex(A, B, C, D=None, dual=False):
         C = M[-1, :-1]
 
         # Choose a pivot column, c
-        piv_cols = []
         piv_cols = [_ for _ in range(n) if C[_] < 0]
         if not piv_cols:
             break
@@ -1141,13 +1128,8 @@ def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     x = Matrix(symbols('x1:%s' % (A.cols+1)))
     f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)] + [Eq(i,j) for i,j in zip(A_eq*x,b_eq)]
     for i, (lo, hi) in enumerate(bounds):
-        if lo is None and hi is None:
-            continue
-        if lo is None:
-            c.append(x[i]<=hi)
-        elif hi is None:
+        if lo is not None:
             c.append(x[i]>=lo)
-        else:
-            c.append(x[i]>=lo)
+        if hi is not None:
             c.append(x[i]<=hi)
     return f,c

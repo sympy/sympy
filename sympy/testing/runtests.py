@@ -153,20 +153,27 @@ def get_sympy_dir():
     return os.path.normcase(sympy_dir)
 
 
-def setup_pprint():
+def setup_pprint(disable_line_wrap=True):
     from sympy.interactive.printing import init_printing
     from sympy.printing.pretty.pretty import pprint_use_unicode
     import sympy.interactive.printing as interactive_printing
+    from sympy.printing.pretty import stringpict
+
+    # Prevent init_printing() in doctests from affecting other doctests
+    interactive_printing.NO_GLOBAL = True
 
     # force pprint to be in ascii mode in doctests
     use_unicode_prev = pprint_use_unicode(False)
 
+    # disable line wrapping for pprint() outputs
+    wrap_line_prev = stringpict._GLOBAL_WRAP_LINE
+    if disable_line_wrap:
+        stringpict._GLOBAL_WRAP_LINE = False
+
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
 
-    # Prevent init_printing() in doctests from affecting other doctests
-    interactive_printing.NO_GLOBAL = True
-    return use_unicode_prev
+    return use_unicode_prev, wrap_line_prev
 
 
 @contextmanager
@@ -695,6 +702,8 @@ def _get_doctest_blacklist():
             "examples/intermediate/mplot3d.py",
             "doc/src/modules/numeric-computation.rst",
             "doc/src/explanation/best-practices.md",
+            "doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst",
+            "doc/src/tutorials/physics/biomechanics/biomechanics.rst",
         ])
     else:
         if import_module('matplotlib') is None:
@@ -787,6 +796,7 @@ def _doctest(*paths, **kwargs):
     ``doctest()`` and ``test()`` for more information.
     """
     from sympy.printing.pretty.pretty import pprint_use_unicode
+    from sympy.printing.pretty import stringpict
 
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
@@ -887,7 +897,7 @@ def _doctest(*paths, **kwargs):
             continue
         old_displayhook = sys.displayhook
         try:
-            use_unicode_prev = setup_pprint()
+            use_unicode_prev, wrap_line_prev = setup_pprint()
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
@@ -901,6 +911,7 @@ def _doctest(*paths, **kwargs):
             import sympy.interactive.printing as interactive_printing
             interactive_printing.NO_GLOBAL = False
             pprint_use_unicode(use_unicode_prev)
+            stringpict._GLOBAL_WRAP_LINE = wrap_line_prev
 
         rstfailed, tested = out
         if tested:
@@ -1406,6 +1417,7 @@ class SymPyDocTests:
         from io import StringIO
         import sympy.interactive.printing as interactive_printing
         from sympy.printing.pretty.pretty import pprint_use_unicode
+        from sympy.printing.pretty import stringpict
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1473,7 +1485,7 @@ class SymPyDocTests:
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
             old_displayhook = sys.displayhook
-            use_unicode_prev = setup_pprint()
+            use_unicode_prev, wrap_line_prev = setup_pprint()
 
             try:
                 f, t = runner.run(test,
@@ -1489,6 +1501,7 @@ class SymPyDocTests:
                 sys.displayhook = old_displayhook
                 interactive_printing.NO_GLOBAL = False
                 pprint_use_unicode(use_unicode_prev)
+                stringpict._GLOBAL_WRAP_LINE = wrap_line_prev
 
         self._reporter.leaving_filename()
 

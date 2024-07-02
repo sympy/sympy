@@ -16,6 +16,7 @@ __all__ = [
     'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
+    'DuffingSpring'
 ]
 
 
@@ -873,3 +874,119 @@ class TorqueActuator(ActuatorBase):
         else:
             string += ')'
         return string
+
+
+class DuffingSpring(ForceActuator):
+    """A nonlinear spring based on the Duffing equation.
+
+    Explanation
+    ===========
+
+    Here, ``DuffingSpring`` represents the force exerted by a nonlinear spring based on the Duffing equation:
+    F = -beta*x-alpha*x**3, where x is the displacement from the equilibrium position, beta is the linear spring constant,
+    and alpha is the coefficient for the nonlinear cubic term.
+
+    Parameters
+    ==========
+
+    linear_stiffness : Expr
+        The linear stiffness coefficient (beta).
+    nonlinear_stiffness : Expr
+        The nonlinear stiffness coefficient (alpha).
+    pathway : PathwayBase
+        The pathway that the actuator follows.
+    equilibrium_length : Expr, optional
+        The length at which the spring is in equilibrium (x).
+    """
+
+    def __init__(self, linear_stiffness, nonlinear_stiffness, pathway, equilibrium_length=S.Zero):
+        self.linear_stiffness = sympify(linear_stiffness, strict=True)
+        self.nonlinear_stiffness = sympify(nonlinear_stiffness, strict=True)
+        self.equilibrium_length = sympify(equilibrium_length, strict=True)
+
+        if not isinstance(pathway, PathwayBase):
+            raise TypeError("pathway must be an instance of PathwayBase.")
+        self._pathway = pathway
+
+    @property
+    def linear_stiffness(self):
+        return self._linear_stiffness
+
+    @linear_stiffness.setter
+    def linear_stiffness(self, linear_stiffness):
+        if hasattr(self, '_linear_stiffness'):
+            msg = (
+                f'Can\'t set attribute `linear_stiffness` to '
+                f'{repr(linear_stiffness)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._linear_stiffness = sympify(linear_stiffness, strict=True)
+
+    @property
+    def nonlinear_stiffness(self):
+        return self._nonlinear_stiffness
+
+    @nonlinear_stiffness.setter
+    def nonlinear_stiffness(self, nonlinear_stiffness):
+        if hasattr(self, '_nonlinear_stiffness'):
+            msg = (
+                f'Can\'t set attribute `nonlinear_stiffness` to '
+                f'{repr(nonlinear_stiffness)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._nonlinear_stiffness = sympify(nonlinear_stiffness, strict=True)
+
+    @property
+    def pathway(self):
+        return self._pathway
+
+    @pathway.setter
+    def pathway(self, pathway):
+        if hasattr(self, '_pathway'):
+            msg = (
+                f'Can\'t set attribute `pathway` to {repr(pathway)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        if not isinstance(pathway, PathwayBase):
+            msg = (
+                f'Value {repr(pathway)} passed to `pathway` was of type '
+                f'{type(pathway)}, must be {PathwayBase}.'
+            )
+            raise TypeError(msg)
+        self._pathway = pathway
+
+    @property
+    def equilibrium_length(self):
+        return self._equilibrium_length
+
+    @equilibrium_length.setter
+    def equilibrium_length(self, equilibrium_length):
+        if hasattr(self, '_equilibrium_length'):
+            msg = (
+                f'Can\'t set attribute `equilibrium_length` to '
+                f'{repr(equilibrium_length)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._equilibrium_length = sympify(equilibrium_length, strict=True)
+
+    @property
+    def force(self):
+        """The force produced by the Duffing spring."""
+        displacement = self.pathway.length - self.equilibrium_length
+        return -self.linear_stiffness * displacement - self.nonlinear_stiffness * displacement**3
+
+    @force.setter
+    def force(self, force):
+        if hasattr(self, '_force'):
+            msg = (
+                f'Can\'t set attribute `force` to {repr(force)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        self._force = sympify(force, strict=True)
+
+    def __repr__(self):
+        return (f"{self.__class__.__name__}("
+                f"{self.linear_stiffness}, {self.nonlinear_stiffness}, {self.pathway}, "
+                f"equilibrium_length={self.equilibrium_length})")

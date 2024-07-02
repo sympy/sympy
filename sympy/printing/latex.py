@@ -120,7 +120,7 @@ greek_letters_set = frozenset(greeks)
 
 _between_two_numbers_p = (
     re.compile(r'[0-9][} ]*$'),  # search
-    re.compile(r'[0-9]'),  # match
+    re.compile(r'(\d|\\frac{\d+}{\d+})'),  # match
 )
 
 
@@ -167,6 +167,7 @@ class LatexPrinter(Printer):
         "min": None,
         "max": None,
         "diff_operator": "d",
+        "adjoint_style": "dagger",
     }
 
     def __init__(self, settings=None):
@@ -547,7 +548,7 @@ class LatexPrinter(Printer):
                         term_tex = r"\left(%s\right)" % term_tex
 
                     if  _between_two_numbers_p[0].search(last_term_tex) and \
-                        _between_two_numbers_p[1].match(str(term)):
+                        _between_two_numbers_p[1].match(term_tex):
                         # between two numbers
                         _tex += numbersep
                     elif _tex:
@@ -695,6 +696,8 @@ class LatexPrinter(Printer):
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
         if expr.base.is_Symbol:
             base = self.parenthesize_super(base)
+        elif expr.base.is_Float:
+            base = r"{%s}" % base
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
@@ -1714,8 +1717,9 @@ class LatexPrinter(Printer):
         return out_str
 
     def _print_MatrixElement(self, expr):
-        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
-            + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
+        matrix_part = self.parenthesize(expr.parent, PRECEDENCE['Atom'], strict=True)
+        index_part = f"{self._print(expr.i)},{self._print(expr.j)}"
+        return f"{{{matrix_part}}}_{{{index_part}}}"
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x, dim):
@@ -1752,17 +1756,23 @@ class LatexPrinter(Printer):
         return r"\operatorname{tr}\left(%s \right)" % self._print(mat)
 
     def _print_Adjoint(self, expr):
+        style_to_latex = {
+            "dagger"   : r"\dagger",
+            "star"     : r"\ast",
+            "hermitian": r"\mathsf{H}"
+        }
+        adjoint_style = style_to_latex.get(self._settings["adjoint_style"], r"\dagger")
         mat = expr.arg
         from sympy.matrices import MatrixSymbol, BlockMatrix
         if (not isinstance(mat, MatrixSymbol) and
             not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
-            return r"\left(%s\right)^{\dagger}" % self._print(mat)
+            return r"\left(%s\right)^{%s}" % (self._print(mat), adjoint_style)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)
             if '^' in s:
-                return r"\left(%s\right)^{\dagger}" % s
+                return r"\left(%s\right)^{%s}" % (s, adjoint_style)
             else:
-                return r"%s^{\dagger}" % s
+                return r"%s^{%s}" % (s, adjoint_style)
 
     def _print_MatMul(self, expr):
         from sympy import MatMul
@@ -1879,7 +1889,8 @@ class LatexPrinter(Printer):
         block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         block_str = block_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
-            block_str= block_str.replace('%s','{}%s')
+            block_str = block_str.replace('%s', '{' + 'c'*expr.shape[0] + '}%s')
+
         if self._settings['mat_delim']:
             left_delim: str = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
@@ -3042,6 +3053,9 @@ def latex(expr, **settings):
     diff_operator: string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
+    adjoint_style: string, optional
+        String to use for the adjoint symbol. Defined options are ``'dagger'``
+        (default),``'star'``, and ``'hermitian'``.
 
     Notes
     =====
