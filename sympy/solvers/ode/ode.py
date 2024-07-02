@@ -241,8 +241,7 @@ from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 from sympy.core.traversal import preorder_traversal
 
-from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
-                                BooleanFalse)
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.functions import exp, log, sqrt
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral
@@ -564,6 +563,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         match = classify_sysode(eq, func)
 
         eq = match['eq']
+
+        if not 'order' in match:
+            raise NotImplementedError("dsolve cannot solve this system.")
+
         order = match['order']
         func = match['func']
         t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
@@ -789,15 +792,10 @@ def solve_ics(sols, funcs, constants, ics):
 
         for sol in S:
             if sol.has(matching_func):
-                sol2 = sol
-                sol2 = sol2.subs(x, x0)
+                sol2 = sol.subs(x, x0)
                 sol2 = sol2.subs(funcarg, value)
-                # This check is necessary because of issue #15724
-                if not isinstance(sol2, BooleanAtom) or not subs_sols:
-                    subs_sols = [s for s in subs_sols if not isinstance(s, BooleanAtom)]
-                    subs_sols.append(sol2)
+                subs_sols.append(sol2)
 
-    # TODO: Use solveset here
     try:
         solved_constants = solve(subs_sols, constants, dict=True)
     except NotImplementedError:
@@ -806,7 +804,7 @@ def solve_ics(sols, funcs, constants, ics):
     # XXX: We can't differentiate between the solution not existing because of
     # invalid initial conditions, and not existing because solve is not smart
     # enough. If we could use solveset, this might be improvable, but for now,
-    # we use NotImplementedError in this case.
+    # we use ValueError in this case.
     if not solved_constants:
         raise ValueError("Couldn't solve for initial conditions")
 
@@ -1219,29 +1217,36 @@ def classify_sysode(eq, funcs=None, **kwargs):
     def _sympify(eq):
         return list(map(sympify, eq if iterable(eq) else [eq]))
 
-    eq, funcs = (_sympify(w) for w in [eq, funcs])
+    eq = _sympify(eq)
+
+    # find all the functions if not given
+    if funcs is None:
+        funcs = _extract_funcs(eq)
+    else:
+        funcs = _sympify(funcs)
+
+    t = funcs[0].args[0]
+
     for i, fi in enumerate(eq):
         if isinstance(fi, Equality):
             eq[i] = fi.lhs - fi.rhs
 
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     matching_hints = {"no_of_equation":i+1}
     matching_hints['eq'] = eq
-    if i==0:
+
+    if len(eq) == 1:
         raise ValueError("classify_sysode() works for systems of ODEs. "
         "For scalar ODEs, classify_ode should be used")
 
-    # find all the functions if not given
-    order = {}
-    if funcs==[None]:
-        funcs = _extract_funcs(eq)
-
     funcs = list(set(funcs))
-    if len(funcs) != len(eq):
-        raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
+    if not (len(funcs) == len(eq) and all(e.has(Derivative) for e in eq)):
+        # The old systems solving code cannot handle any cases like this
+        # so we quit here.
+        return matching_hints
 
     # This logic of list of lists in funcs to
     # be replaced later.
+    order = {}
     func_dict = {}
     for func in funcs:
         if not order.get(func, False):
@@ -2163,7 +2168,8 @@ def constant_renumber(expr, variables=None, newconstants=None):
                 *[_constant_renumber(x) for x in expr.args])
         else:
             sortedargs = list(expr.args)
-            sortedargs.sort(key=sort_key)
+            if type(expr) in (Mul, Add) and expr.is_commutative:
+                sortedargs.sort(key=sort_key)
             return expr.func(*[_constant_renumber(x) for x in sortedargs])
     expr = _constant_renumber(expr)
 
