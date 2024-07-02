@@ -58,19 +58,10 @@ def test_PolyRing___hash__():
 
 def test_PolyRing___eq__():
     assert ring("x,y,z", QQ)[0] == ring("x,y,z", QQ)[0]
-    assert ring("x,y,z", QQ)[0] is ring("x,y,z", QQ)[0]
-
     assert ring("x,y,z", QQ)[0] != ring("x,y,z", ZZ)[0]
-    assert ring("x,y,z", QQ)[0] is not ring("x,y,z", ZZ)[0]
-
     assert ring("x,y,z", ZZ)[0] != ring("x,y,z", QQ)[0]
-    assert ring("x,y,z", ZZ)[0] is not ring("x,y,z", QQ)[0]
-
     assert ring("x,y,z", QQ)[0] != ring("x,y", QQ)[0]
-    assert ring("x,y,z", QQ)[0] is not ring("x,y", QQ)[0]
-
     assert ring("x,y", QQ)[0] != ring("x,y,z", QQ)[0]
-    assert ring("x,y", QQ)[0] is not ring("x,y,z", QQ)[0]
 
 def test_PolyRing_ring_new():
     R, x, y, z = ring("x,y,z", QQ)
@@ -288,23 +279,23 @@ def test_PolyElement_from_expr():
     R, X, Y, Z = ring((x, y, z), ZZ)
 
     f = R.from_expr(1)
-    assert f == 1 and isinstance(f, R.dtype)
+    assert f == 1 and R.is_element(f)
 
     f = R.from_expr(x)
-    assert f == X and isinstance(f, R.dtype)
+    assert f == X and R.is_element(f)
 
     f = R.from_expr(x*y*z)
-    assert f == X*Y*Z and isinstance(f, R.dtype)
+    assert f == X*Y*Z and R.is_element(f)
 
     f = R.from_expr(x*y*z + x*y + x)
-    assert f == X*Y*Z + X*Y + X and isinstance(f, R.dtype)
+    assert f == X*Y*Z + X*Y + X and R.is_element(f)
 
     f = R.from_expr(x**3*y*z + x**2*y**7 + 1)
-    assert f == X**3*Y*Z + X**2*Y**7 + 1 and isinstance(f, R.dtype)
+    assert f == X**3*Y*Z + X**2*Y**7 + 1 and R.is_element(f)
 
     r, F = sring([exp(2)])
     f = r.from_expr(exp(2))
-    assert f == F[0] and isinstance(f, r.dtype)
+    assert f == F[0] and r.is_element(f)
 
     raises(ValueError, lambda: R.from_expr(1/x))
     raises(ValueError, lambda: R.from_expr(2**x))
@@ -312,7 +303,7 @@ def test_PolyElement_from_expr():
 
     R, = ring("", ZZ)
     f = R.from_expr(1)
-    assert f == 1 and isinstance(f, R.dtype)
+    assert f == 1 and R.is_element(f)
 
 def test_PolyElement_degree():
     R, x,y,z = ring("x,y,z", ZZ)
@@ -1172,13 +1163,13 @@ def test_PolyElement_evaluate():
     f = (x*y)**3 + 4*(x*y)**2 + 2*x*y + 3
 
     r = f.evaluate(x, 0)
-    assert r == 3 and isinstance(r, R.drop(x).dtype)
+    assert r == 3 and R.drop(x).is_element(r)
     r = f.evaluate([(x, 0), (y, 0)])
-    assert r == 3 and isinstance(r, R.drop(x, y).dtype)
+    assert r == 3 and R.drop(x, y).is_element(r)
     r = f.evaluate(y, 0)
-    assert r == 3 and isinstance(r, R.drop(y).dtype)
+    assert r == 3 and R.drop(y).is_element(r)
     r = f.evaluate([(y, 0), (x, 0)])
-    assert r == 3 and isinstance(r, R.drop(y, x).dtype)
+    assert r == 3 and R.drop(y, x).is_element(r)
 
     r = f.evaluate([(x, 0), (y, 0), (z, 0)])
     assert r == 3 and not isinstance(r, PolyElement)
@@ -1192,7 +1183,7 @@ def test_PolyElement_subs():
     f = x**3 + 4*x**2 + 2*x + 3
 
     r = f.subs(x, 0)
-    assert r == 3 and isinstance(r, R.dtype)
+    assert r == 3 and R.is_element(r)
 
     raises(CoercionFailed, lambda: f.subs(x, QQ(1,7)))
 
@@ -1200,9 +1191,9 @@ def test_PolyElement_subs():
     f = x**3 + 4*x**2 + 2*x + 3
 
     r = f.subs(x, 0)
-    assert r == 3 and isinstance(r, R.dtype)
+    assert r == 3 and R.is_element(r)
     r = f.subs([(x, 0), (y, 0)])
-    assert r == 3 and isinstance(r, R.dtype)
+    assert r == 3 and R.is_element(r)
 
     raises(CoercionFailed, lambda: f.subs([(x, 1), (y, QQ(1,7))]))
     raises(CoercionFailed, lambda: f.subs([(x, QQ(1,7)), (y, 1)]))
@@ -1252,7 +1243,7 @@ def test_PolyElement_compose():
     f = x**3 + 4*x**2 + 2*x + 3
 
     r = f.compose(x, 0)
-    assert r == 3 and isinstance(r, R.dtype)
+    assert r == 3 and R.is_element(r)
 
     assert f.compose(x, x) == f
     assert f.compose(x, x**2) == x**6 + 4*x**4 + 2*x**2 + 3
@@ -1263,13 +1254,13 @@ def test_PolyElement_compose():
     f = x**3 + 4*x**2 + 2*x + 3
 
     r = f.compose(x, 0)
-    assert r == 3 and isinstance(r, R.dtype)
+    assert r == 3 and R.is_element(r)
     r = f.compose([(x, 0), (y, 0)])
-    assert r == 3 and isinstance(r, R.dtype)
+    assert r == 3 and R.is_element(r)
 
     r = (x**3 + 4*x**2 + 2*x*y*z + 3).compose(x, y*z**2 - 1)
     q = (y*z**2 - 1)**3 + 4*(y*z**2 - 1)**2 + 2*(y*z**2 - 1)*y*z + 3
-    assert r == q and isinstance(r, R.dtype)
+    assert r == q and R.is_element(r)
 
 def test_PolyElement_is_():
     R, x,y,z = ring("x,y,z", QQ)
@@ -1350,7 +1341,7 @@ def test_PolyElement_drop():
 
     assert R(1).drop(0).ring == PolyRing("y,z", ZZ, lex)
     assert R(1).drop(0).drop(0).ring == PolyRing("z", ZZ, lex)
-    assert isinstance(R(1).drop(0).drop(0).drop(0), R.dtype) is False
+    assert R.is_element(R(1).drop(0).drop(0).drop(0)) is False
 
     raises(ValueError, lambda: z.drop(0).drop(0).drop(0))
     raises(ValueError, lambda: x.drop(0))
