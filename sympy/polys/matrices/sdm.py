@@ -1430,10 +1430,21 @@ def sdm_transpose(M):
     MT = {}
     for i, Mi in M.items():
         for j, Mij in Mi.items():
+            # Operator class names are hardcoded instead of using
+            # issubclass() to avoid circular imports.
+            operator_class_names = [
+                "<class 'sympy.physics.quantum.operator.Operator'>",
+                "<class 'sympy.physics.quantum.operator.IdentityOperator'>",
+                "<class 'sympy.physics.quantum.operator.HermitianOperator'>",
+                "<class 'sympy.physics.quantum.operator.UnitaryOperator'>",
+                "<class 'sympy.physics.quantum.operator.OuterProduct'>",
+                "<class 'sympy.physics.quantum.operator.DifferentialOperator'>"
+            ]
+            is_operator = lambda x: str(x.__class__) in operator_class_names
             try:
-                MT[j][i] = Mij
+                MT[j][i] = Mij.transpose() if is_operator(Mij) else Mij
             except KeyError:
-                MT[j] = {i: Mij}
+                MT[j] = {i: Mij.transpose() if is_operator(Mij) else Mij}
     return MT
 
 

@@ -1,14 +1,19 @@
 from sympy.core.expr import Expr
+from sympy.core.function import Derivative, Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Integer)
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import conjugate
 from sympy.matrices.dense import Matrix
 
-from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module
 from sympy.testing.pytest import skip
-from sympy.physics.quantum.operator import Operator, IdentityOperator
+from sympy.physics.quantum.dagger import adjoint, Dagger
+from sympy.physics.quantum.operator import (
+    Operator, IdentityOperator, HermitianOperator,
+    OuterProduct, UnitaryOperator, DifferentialOperator
+)
+from sympy.physics.quantum.state import Ket, Bra
 
 
 def test_scalars():
@@ -33,6 +38,30 @@ def test_matrix():
     x = symbols('x')
     m = Matrix([[I, x*I], [2, 4]])
     assert Dagger(m) == m.H
+
+
+def test_dagger_matrix_operator():
+    A = Operator('A')
+    assert Dagger(Matrix([[A]])) == Matrix([[A.adjoint()]])
+
+    I = IdentityOperator()
+    assert Dagger(Matrix([[I]])) == Matrix([[I.adjoint()]])
+
+    H = HermitianOperator('H')
+    assert Dagger(Matrix([[H]])) == Matrix([[H.adjoint()]])
+
+    U = UnitaryOperator('U')
+    assert Dagger(Matrix([[U]])) == Matrix([[U.adjoint()]])
+
+    k = Ket('k')
+    b = Bra('b')
+    O = OuterProduct(k, b)
+    assert Dagger(Matrix([[O]])) == Matrix([[O.adjoint()]])
+
+    y = symbols('y')
+    f = Function('f')
+    D = DifferentialOperator(Derivative(f(y), y), f(y))
+    assert Dagger(Matrix([[D]])) == Matrix([[D.adjoint()]])
 
 
 def test_dagger_mul():
