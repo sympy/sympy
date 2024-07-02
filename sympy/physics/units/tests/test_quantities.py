@@ -272,9 +272,11 @@ def test_issue_5565():
 
 
 def test_find_unit():
-    assert find_unit('coulomb') == ['coulomb', 'coulombs', 'coulomb_constant']
+
+    assert find_unit('coulomb') == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
+    assert find_unit("ampere") == ['A', 'ampere', 'amperes', 'planck_current']
     assert find_unit(inch) == [
         'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um', 'yd',
         'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles', 'yards',
@@ -290,12 +292,19 @@ def test_find_unit():
         'L', 'l', 'cL', 'cl', 'dL', 'dl', 'mL', 'ml', 'liter', 'quart', 'liters', 'quarts',
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters', 'planck_volume']
+
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
-    assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'me', 'mg', 'ug', 'amu', 'mmu', 'amus',
-                                'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton', 'pounds',
-                                'kilogram', 'kilograms', 'microgram', 'milligram', 'metric_ton',
-                                'micrograms', 'milligrams', 'planck_mass', 'milli_mass_unit', 'atomic_mass_unit',
-                                'electron_rest_mass', 'atomic_mass_constant']
+    assert find_unit(grams)  == ['g', 't', 'Da', 'kg', 'me', 'mg', 'ug', 'amu', 'mmu', 'amus', 'gram', 'mmus',
+                                 'grams', 'pound', 'tonne', 'dalton', 'pounds', 'kilogram', 'kilograms',
+                                 'microgram', 'milligram', 'metric_ton', 'micrograms', 'milligrams', 'planck_mass',
+                                 'milli_mass_unit', 'atomic_mass_unit', 'electron_rest_mass', 'atomic_mass_constant']
+    assert find_unit('l') == ['L', 'l', 'cL', 'cl', 'dL', 'dl', 'lx', 'ly', 'mL', 'ml', 'lux', 'liter', 'quart',
+                              'length', 'liters', 'quarts', 'deciliter', 'lightyear', 'centiliter', 'deciliters',
+                              'lightyears', 'luminosity', 'milliliter', 'centiliters', 'milliliters', 'planck_volume',
+                              'luminous_intensity']
+    assert find_unit('e') == ['e0', 'eV', 'energy', 'exbibyte', 'exbibytes', 'electronvolt', 'electronvolts',
+                              'electric_constant', 'elementary_charge', 'electron_rest_mass', 'electric_force_constant']
+    assert find_unit('') == []
 
 
 def test_Quantity_derivative():
