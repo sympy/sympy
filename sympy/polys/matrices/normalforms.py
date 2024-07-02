@@ -7,13 +7,23 @@ from .exceptions import DMDomainError, DMShapeError
 from sympy.ntheory.modular import symmetric_residue
 from sympy.polys.domains import QQ, ZZ
 
+from sympy.polys.matrices import DomainMatrix
+from sympy.polys.domains import ZZ
+from sympy import Matrix
 
 # TODO (future work):
 #  There are faster algorithms for Smith and Hermite normal forms, which
 #  we should implement. See e.g. the Kannan-Bachem algorithm:
 #  <https://www.researchgate.net/publication/220617516_Polynomial_Algorithms_for_Computing_the_Smith_and_Hermite_Normal_Forms_of_an_Integer_Matrix>
 
-
+def extended_gcd(a, b):
+    """Return (gcd(a, b), x, y) such that a*x + b*y = gcd(a, b)"""
+    if not b:
+        return (a, 1, 0)
+    else:
+        d, x, y = extended_gcd(b, a % b)
+        return (d, y, x - (a // b) * y)
+        
 def smith_normal_form(m):
     '''
     Return the Smith Normal Form of a matrix `m` over the ring `domain`.
@@ -30,11 +40,59 @@ def smith_normal_form(m):
     ...                   [ZZ(2), ZZ(16), ZZ(14)]], (3, 3), ZZ)
     >>> print(smith_normal_form(m).to_Matrix())
     Matrix([[1, 0, 0], [0, 10, 0], [0, 0, -30]])
-
     '''
-    invs = invariant_factors(m)
-    smf = DomainMatrix.diag(invs, m.domain, m.shape)
-    return smf
+    '''
+    Return the Smith Normal Form of a matrix `m` over the ring `domain`.
+    This will only work if the ring is a principal ideal domain.
+    '''
+    # Ensure m is a DomainMatrix
+    m = DomainMatrix.from_Matrix(m, domain=ZZ)
+
+    # Get the shape of the matrix
+    rows, cols = m.shape
+
+    # Create identity matrices of the same dimensions as m
+    S = DomainMatrix.eye(rows, domain=ZZ)
+    T = DomainMatrix.eye(cols, domain=ZZ)
+
+    # Convert m to its dense representation
+    M = m.to_dense().rep.to_ddm()
+
+    # Now proceed with the algorithm as before
+    for i in range(min(rows, cols)):
+        while M[i][i] != 0:
+            # find a non-zero element in the current column
+            for j in range(i+1, rows):
+                if M[j][i]:
+                    break
+            else:
+                # if all elements in the current column below the diagonal are zero, move to the next column
+                continue
+
+            # swap rows to bring the non-zero element to the diagonal
+            M[i], M[j] = M[j], M[i]
+            S = S.row_swap(i, j)
+
+            # Now proceed with the row and column operations to zero out the other elements in the current row and column
+            for j in range(i+1, rows):
+                q, r = divmod(M[j][i], M[i][i])
+                if r:
+                    factor = -q
+                    S = S.row_add(j, i, factor)
+                    for k in range(cols):
+                        M[j][k] += factor * M[i][k]
+
+            for j in range(i+1, cols):
+                q, r = divmod(M[i][j], M[i][i])
+                if r:
+                    factor = -q
+                    T = T.col_add(j, i, factor)
+                    for k in range(rows):
+                        M[k][j] += factor * M[k][i]
+
+    # Convert the result back to a DomainMatrix
+    result = DomainMatrix.from_ddm(M, domain=ZZ)
+    return result, S, T
 
 
 def add_columns(m, i, j, a, b, c, d):
