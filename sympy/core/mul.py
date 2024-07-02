@@ -411,6 +411,10 @@ class Mul(Expr, AssocOp):
                             num_exp.append((b, e))
                             continue
 
+                    if b is S.ImaginaryUnit and e.is_Rational:
+                        neg1e += e*S.Half
+                        continue
+
                 c_powers.append((b, e))
 
             # NON-COMMUTATIVE
@@ -648,7 +652,7 @@ class Mul(Expr, AssocOp):
                 else:
                     # keep it separate; we've already evaluated it as
                     # much as possible so evaluate=False
-                    c_part.append(Pow(S.NegativeOne, neg1e, evaluate=False))
+                    c_part.append(Pow(S.ImaginaryUnit, 2*neg1e, evaluate=False))
 
         # add all the pnew powers
         c_part.extend([Pow(b, e) for e, b in pnew.items()])
