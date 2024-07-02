@@ -14,8 +14,7 @@ $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
   packages instead of SymPy:
     - NumPy's {external:func}`numpy.linalg.solve`
     - SciPy's {external:func}`scipy.linalg.solve`
-    - mpmath's
-      [lu_solve()](https://mpmath.org/doc/current/matrices.html#linear-equations)
+    - mpmath's {external:func}`mpmath.lu_solve` 
 - Solving a matrix equation is equivalent to solving a system of linear
   equations, so if you prefer you can
   [](solve-system-of-equations-algebraically.md)
