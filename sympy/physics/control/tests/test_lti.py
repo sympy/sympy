@@ -1838,6 +1838,8 @@ def test_StateSpace_symbolics():
                                        [a12*c1 + a22*c2]])]
     assert qc == Matrix([[0, 1], [1, -5]])
     assert qo == Matrix([[0, 1], [1, -5]])
+    assert ss.rewrite(TransferFunction) == [[TransferFunction(-c1*(a12*b2 - a22*b1 + b1*s) - c2*(-a11*b2 + a21*b1 + b2*s), 
+                                                              -a11*a22 + a11*s + a12*a21 + a22*s - s**2, s)]]
 
 
 def test_StateSpace_series():
