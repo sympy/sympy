@@ -1915,3 +1915,82 @@ def test_assoc_legendre_numerical_evaluation():
 
     assert all_close(sympy_result_integer, mpmath_result_integer, tol)
     assert all_close(sympy_result_complex, mpmath_result_complex, tol)
+
+def test_derivative_issue_26404():
+    r"""
+        test issue fixed when using cse in lambdify when some arguments
+        are Derivatives and they appear in the expression
+    """
+    from sympy import (cos, sin, Matrix, symbols)
+    from sympy.physics.mechanics import (dynamicsymbols)
+    t = symbols("t")
+    x = Function("x")(t)
+    xd = x.diff(t)
+    xdd= xd.diff(t)
+    assert lambdify((xd, x), xd, cse=True)(1, 1) == 1
+    assert lambdify((xd, x), xd + x, cse=True)(1, 1) == 2
+    assert lambdify((xdd, xd, x), xdd*xd + x, cse=True)(3,1, 1) == 4
+    assert lambdify((xd, xdd, x), xdd*xd + x, cse=True)(3,1, 1) == 4
+    assert lambdify((xdd, xd, x), cos(xdd*xd) + x, cse=True)(0,1, 1) == 2.0
+    #test for matrix and cases were Derivative(a,b) becomes x_n
+    #and cse makes a replacement x_m: x_n**2 or other
+    #and case where xn(n : int) is already the name of an
+    #element of the function
+    x0, m0 = symbols("x0 m0")
+    l1, m1 = symbols("l1 m1")
+    m2 = symbols("m2")
+    g = symbols("g")
+    q0, q1, q2 = Function("q0")(x0),Function("q1")(l1),Function("q2")(m0)
+    u1, u2 =q1.diff(l1), q2.diff(m0)
+    F, T1 = dynamicsymbols("F T1")
+    massmatrix1 = Matrix([[m0 + m1 + m2, -x0*m1*cos(q1) - x0*m2*cos(q1),
+                            -l1*m2*cos(q2)],
+                            [-x0*m1*cos(q1) - x0*m2*cos(q1), x0**2*m1 + x0**2*m2,
+                            x0*l1*m2*(sin(q1)*sin(q2) + cos(q1)*cos(q2))],
+                            [-l1*m2*cos(q2),
+                            x0*l1*m2*(sin(q1)*sin(q2) + cos(q1)*cos(q2)),
+                            l1**2*m2]])
+
+    forcing1 = Matrix([[-x0*m1*u1**2*sin(q1) - x0*m2*u1**2*sin(q1) -
+                            l1*m2*u2**2*sin(q2) + F,
+                        g*x0*m1*sin(q1) + g*x0*m2*sin(q1) -
+                            x0*l1*m2*(sin(q1)*cos(q2) - sin(q2)*cos(q1))*u2**2,
+                        g*l1*m2*sin(q2) - x0*l1*m2*(-sin(q1)*cos(q2) +
+                                                        sin(q2)*cos(q1))*u1**2],
+                    [-x0*m1*u1**2*sin(q1) - x0*m2*u1**2*sin(q1) -
+                            l1*m2*u2**2*sin(q2) + F,
+                        g*x0*m1*sin(q1) + g*x0*m2*sin(q1) -
+                            x0*l1*m2*(sin(q1)*cos(q2) - sin(q2)*cos(q1))*u2**2,
+                        g*l1*m2*sin(q2) - x0*l1*m2*(-sin(q1)*cos(q2) +
+                                                        sin(q2)*cos(q1))*u1**2],
+                    [-x0*m1*u1**2*sin(q1) - x0*m2*u1**2*sin(q1) -
+                            l1*m2*u2**2*sin(q2) + F,
+                        g*x0*m1*sin(q1) + g*x0*m2*sin(q1) -
+                            x0*l1*m2*(sin(q1)*cos(q2) - sin(q2)*cos(q1))*u2**2,
+                        g*l1*m2*sin(q2) - x0*l1*m2*(-sin(q1)*cos(q2) +
+                                                        sin(q2)*cos(q1))*u1**2]])
+    res_expected=Matrix([[ 1., 0, 0],[-1.,  0, 0],[-1.,  0,  0]])
+    res_lamdbify=Matrix((lambdify((x0, m0 ,l1, m1, m2, g, q0, q1, q2, u1, u2, F, T1), massmatrix1 -forcing1, \
+                  cse=True)( 0, 0 ,0, 1, 1, 1, 0, 1, 1 , 1, 1, 1, 1)))
+    equal=True
+    for i in range(res_lamdbify.rows*res_lamdbify.cols):
+        equal=equal and (res_expected[i]==res_lamdbify[i])
+    assert equal
+    # test in the case chen a list of expressions is given
+    expected=[[[0, 2, 18], 5], [18, 1], 0]
+    t1, t2, t3, t4, t5, t6, t7 = symbols("t1 t2 t3 t4 t5 t6 t7")
+    x1, x2, x3, x4, x5, x6, x7 = Function('x1')(t1), Function('x2')(t2), Function('x3')(t3),\
+                            Function('x4')(t4), Function('x5')(t5), Function('x6')(t6),\
+                            Function('x7')(t7)
+    d1, d2, d3, d4, d5, d6, d7 = x1.diff(t1), x2.diff(t2), x3.diff(t3), x4.diff(t4),\
+        x5.diff(t5), x6.diff(t6), x7.diff(t7)
+    list_of_list = [[[d5*d1, d3, d4*d7], d6], [d4*d7, d2],d5*d1]
+    res_list_of_list = lambdify((d1, d2, d3, d4, d5, d6, d7),list_of_list,\
+                                          cse=True)(0,1,2,3,4,5,6)
+    assert (expected[0][0][0] == res_list_of_list[0][0][0] and\
+          expected[0][0][1] == res_list_of_list[0][0][1] and\
+          expected[0][0][2] == res_list_of_list[0][0][2] and \
+          expected[0][1] == res_list_of_list[0][1] and\
+          expected[1][0] == res_list_of_list[1][0] and \
+          expected[1][1] == res_list_of_list[1][1] and \
+          expected[2] == res_list_of_list[2])
