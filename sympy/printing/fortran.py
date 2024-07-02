@@ -22,6 +22,7 @@ from typing import Any
 
 from collections import defaultdict
 from itertools import chain
+import re as _re
 import string
 
 from sympy.codegen.ast import (
@@ -116,6 +117,13 @@ class FCodePrinter(CodePrinter):
     _relationals = {
         '!=': '/=',
     }
+
+    @property
+    def _valid_var_name_pattern(self):
+        return {
+            77: _re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]{0,5}$"),
+            90: _re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]{0,30}$"),
+        }[77 if self._settings['standard'] <= 77 else 90]
 
     def __init__(self, settings=None):
         if not settings:

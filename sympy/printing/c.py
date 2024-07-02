@@ -16,6 +16,7 @@ from typing import Any
 
 from functools import wraps
 from itertools import chain
+import re as _re
 
 from sympy.core import S
 from sympy.core.numbers import equal_valued, Float
@@ -87,6 +88,7 @@ reserved_words = [
 ]
 
 reserved_words_c99 = ['inline', 'restrict']
+
 
 def get_math_macros():
     """ Returns a dictionary with math-related macros from math.h/cmath
@@ -218,6 +220,9 @@ class C89CodePrinter(CodePrinter):
     _ns = ''  # namespace, C++ uses 'std::'
     # known_functions-dict to copy
     _kf: dict[str, Any] = known_functions_C89
+
+    # 31 characters guaranteed to be supported by all C89 compilers:
+    _valid_var_name_pattern = _re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]{0,30}$")
 
     def __init__(self, settings=None):
         settings = settings or {}
