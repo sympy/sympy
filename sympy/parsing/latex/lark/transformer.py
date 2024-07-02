@@ -60,34 +60,44 @@ class TransformToSymPyExpr(Transformer):
 
         return sympy.Symbol(variable_name)
 
-    def BASIC_SUBSCRIPTED_SYMBOL(self, tokens):
-        symbol, sub = tokens.value.split("_")
+    def LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT(self, tokens):
+        base, sub = tokens.value.split("_")
         if sub.startswith("{"):
-            return sympy.Symbol("%s_{%s}" % (symbol, sub[1:-1]))
+            return sympy.Symbol("%s_{%s}" % (base, sub[1:-1]))
         else:
-            return sympy.Symbol("%s_{%s}" % (symbol, sub))
+            return sympy.Symbol("%s_{%s}" % (base, sub))
 
-    def GREEK_SUBSCRIPTED_SYMBOL(self, tokens):
-        greek_letter, sub = tokens.value.split("_")
-        greek_letter = re.sub("var", "", greek_letter[1:])
+    def GREEK_SYMBOL_WITH_LATIN_SUBSCRIPT(self, tokens):
+        base, sub = tokens.value.split("_")
+        greek_letter = re.sub("var", "", base[1:])
 
         if sub.startswith("{"):
             return sympy.Symbol("%s_{%s}" % (greek_letter, sub[1:-1]))
         else:
             return sympy.Symbol("%s_{%s}" % (greek_letter, sub))
 
-    def SYMBOL_WITH_GREEK_SUBSCRIPT(self, tokens):
-        symbol, sub = tokens.value.split("_")
+    def LATIN_SYMBOL_WITH_GREEK_SUBSCRIPT(self, tokens):
+        base, sub = tokens.value.split("_")
         if sub.startswith("{"):
             greek_letter = sub[2:-1]
-            greek_letter = re.sub("var", "", greek_letter)
-
-            return sympy.Symbol("%s_{%s}" % (symbol, greek_letter))
         else:
             greek_letter = sub[1:]
-            greek_letter = re.sub("var", "", greek_letter)
 
-            return sympy.Symbol("%s_{%s}" % (symbol, greek_letter))
+        greek_letter = re.sub("var", "", greek_letter)
+        return sympy.Symbol("%s_{%s}" % (base, greek_letter))
+
+
+    def GREEK_SYMBOL_WITH_GREEK_SUBSCRIPT(self, tokens):
+        base, sub = tokens.value.split("_")
+        greek_base = re.sub("var", "", base[1:])
+
+        if sub.startswith("{"):
+            greek_sub = sub[2:-1]
+        else:
+            greek_sub = sub[1:]
+
+        greek_sub = re.sub("var", "", greek_sub)
+        return sympy.Symbol("%s_{%s}" % (greek_base, greek_sub))
 
     def multi_letter_symbol(self, tokens):
         if len(tokens) == 4: # no primes (single quotes) on symbol

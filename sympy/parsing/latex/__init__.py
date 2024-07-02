@@ -73,7 +73,7 @@ END_DELIM_REPR = {fr"{END_AMS_MAT}{IGNORE_R}\\right\)": "\\end{matrix}\\right)",
 
 
 def check_matrix_delimiters(latex_str):
-    """Perform matrix delimiter sanity check."""
+    """Report mismatched, excess, or missing matrix delimiters."""
     spans = []
     for begin_delim in MATRIX_DELIMS:
         end_delim = MATRIX_DELIMS[begin_delim]
