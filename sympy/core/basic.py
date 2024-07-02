@@ -1620,7 +1620,7 @@ class Basic(Printable):
         >>> e.replace(*q, exact=False)
         f(1) + f(2)
         >>> e.replace(*q, exact=True)
-        f(0) + f(2)
+        f(0) + f(1)
 
         But here, the nature of matching makes selecting
         the right setting tricky:
@@ -1629,11 +1629,11 @@ class Basic(Printable):
         >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=False)
         x
         >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=True)
-        x**(-x - y + 1)
+        x**(y + 1)
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=False)
         x
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=True)
-        x**(1 - y)
+        x**y
 
         It is probably better to use a different form of the query
         that describes the target expression more precisely:
@@ -1693,7 +1693,7 @@ class Basic(Printable):
                 if exact:
                     _value = lambda expr, result: (value(**
                         {str(k)[:-1]: v for k, v in result.items()})
-                        if all(val for val in result.values()) else expr)
+                        if all(val is None for val in result.values()) else expr)
                 else:
                     _value = lambda expr, result: value(**
                         {str(k)[:-1]: v for k, v in result.items()})
