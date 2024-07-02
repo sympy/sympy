@@ -21,9 +21,8 @@ kinematic relationships between
 :class:`bodies<sympy.physics.mechanics.rigidbody.RigidBody>`. A joint is
 generally described as shown in the image below.
 
-.. image:: api/joint_explanation.svg
-   :align: center
-   :width: 600
+.. raw:: html
+   :file: joint_explanation.svg
 
 As can be seen in this image, each joint needs several objects in order to
 define the relationships. First off it needs two bodies: the parent body (shown
@@ -50,9 +49,8 @@ of the :class:`~.PinJoint`, also shown below, the ``joint_axis`` is the axis of
 rotation, with the generalized coordinate :math:`q` as the angle of
 rotation and the generalized speed :math:`u` as the angular velocity.
 
-.. image:: api/PinJoint.svg
-   :align: center
-   :width: 600
+.. raw:: html
+   :file: PinJoint.svg
 
 With the information listed above, the joint defines the following
 relationships. It first defines the kinematic differential equations, which

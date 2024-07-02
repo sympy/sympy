@@ -361,8 +361,4 @@ Further Examples
 The pendulum example used above was simple, but didn't include any dependent
 coordinates or speeds. For a more thorough example, the same pendulum
 was linearized with dependent coordinates using both Kane's and Lagrange's
-methods:
-
-.. toctree::
-
-    examples/lin_pend_nonmin_example.rst
+methods in ``Nonminimal Coordinates Pendulum`` example in ``Tutorials`` page.
