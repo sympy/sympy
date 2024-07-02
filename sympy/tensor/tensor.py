@@ -3728,7 +3728,7 @@ class TensMul(TensExpr, AssocOp):
 
     @property
     def nocoeff(self):
-        return self.func(*[t for t in self.args if isinstance(t, TensExpr)]).doit()
+        return self.func(*self.args, 1/self.coeff).doit(deep=False)
 
     @property
     def dum_in_args(self):
