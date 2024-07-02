@@ -92,11 +92,11 @@ def _test_this_file_encoding(
                 has_unicode = True
 
         if not has_unicode and not is_in_strict_whitelist:
-            assert False, message_unicode_D % fname
+            raise AssertionError(message_unicode_D % fname)
 
     else:
         for idx, line in enumerate(test_file):
             try:
                 line.encode(encoding='ascii')
             except (UnicodeEncodeError, UnicodeDecodeError):
-                assert False, message_unicode_B % (fname, idx + 1)
+                raise AssertionError(message_unicode_B % (fname, idx + 1))
