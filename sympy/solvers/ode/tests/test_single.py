@@ -40,7 +40,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh)
 from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sec, sin, tan)
@@ -1663,7 +1663,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
 def _get_examples_ode_sol_separable():
     # test_separable1-5 are from Ordinary Differential Equations, Tenenbaum and
     # Pollard, pg. 55
-    t,a = symbols('a,t')
+    a, t = symbols('a, t')
     m = 96
     g = 9.8
     k = .2
@@ -1813,7 +1813,7 @@ def _get_examples_ode_sol_separable():
     # https://github.com/sympy/sympy/issues/10379
     'separable_24': {
         'eq': f(t).diff(t)-(1-51.05*y*f(t)),
-        'sol': [Eq(f(t), (0.019588638589618023*exp(y*(C1 - 51.049999999999997*t)) + 0.019588638589618023)/y)],
+        'sol': [Eq(f(t), (1.0*exp(y*(C1 - 51.05*t)) + 0.019588638589618023)/y)],
         'func': f(t),
     },
 
@@ -1825,7 +1825,10 @@ def _get_examples_ode_sol_separable():
 
     'separable_26': {
         'eq': f1 - k * (v(t) ** 2) - m * Derivative(v(t)),
-        'sol': [Eq(v(t), -68.585712797928991/tanh(C1 - 0.14288690166235204*t))],
+        'sol': [Eq(v(t), (
+            -1.0*exp(0.2857738033247041*C1 - 0.2857738033247041*t) - 1.0)
+            /(0.014580296087995107*exp(0.2857738033247041*C1 - 0.2857738033247041*t)
+              - 0.014580296087995107))],
         'func': v(t),
         'checkodesol_XFAIL': True,
     },

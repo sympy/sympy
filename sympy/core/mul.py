@@ -1738,9 +1738,15 @@ class Mul(Expr, AssocOp):
             but not vice versa, and 2/5 does not divide 1/3) then return
             the integer number of times it divides, else return 0.
             """
-            if not b.q % a.q or not a.q % b.q:
-                return int(a/b)
-            return 0
+            if a.is_Rational and b.is_Rational:
+                if not b.q % a.q or not a.q % b.q:
+                    return int(a/b)
+                else:
+                    return 0
+            elif a.is_Float and b.is_Float:
+                return ndiv(Rational(a), Rational(b))
+            else:
+                assert False
 
         # give Muls in the denominator a chance to be changed (see issue 5651)
         # rv will be the default return value
@@ -2156,8 +2162,20 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         return coeff
     if coeff is S.One:
         return factors
-    elif coeff is S.NegativeOne and not sign:
+    elif coeff.is_Float and equal_valued(coeff, S.One):
+        c, a = factors.as_coeff_add()
+        if c.is_Number and c:
+            return coeff*c + a
+        else:
+            return Add(*[coeff*term for term in Add.make_args(factors)])
+    elif not sign and coeff is S.NegativeOne:
         return -factors
+    elif not sign and coeff.is_Float and equal_valued(coeff, S.NegativeOne):
+        c, a = factors.as_coeff_add()
+        if c.is_Number and c:
+            return coeff*c - a
+        else:
+            return Add(*[coeff*term for term in Add.make_args(factors)])
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
             args = [i.as_coeff_Mul() for i in factors.args]
@@ -2191,6 +2209,6 @@ def expand_2arg(e):
     return bottom_up(e, do)
 
 
-from .numbers import Rational
+from .numbers import Rational, equal_valued
 from .power import Pow
 from .add import Add, _unevaluated_Add
