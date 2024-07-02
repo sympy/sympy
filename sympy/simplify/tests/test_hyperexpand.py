@@ -12,7 +12,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
 from sympy.concrete.summations import Sum
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.numbers import I
+from sympy.core.numbers import I, Rational, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import binomial
@@ -21,8 +21,6 @@ from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.abc import z, a, b, c
 from sympy.testing.pytest import XFAIL, raises, slow, tooslow
 from sympy.core.random import verify_numerically as tn
-
-from sympy.core.numbers import (Rational, pi)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -30,6 +28,9 @@ from sympy.functions.elementary.trigonometric import (asin, cos, sin)
 from sympy.functions.special.bessel import besseli
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
+from sympy.polys.domains.realfield import RR
+from sympy.polys.domains.complexfield import CC
+from sympy.polys.polytools import factor_terms
 
 
 def test_branch_bug():
@@ -572,7 +573,6 @@ def test_meijerg_confluence():
 
 def test_meijerg_with_Floats():
     # see issue #10681
-    from sympy.polys.domains.realfield import RR
     f = meijerg(((3.0, 1), ()), ((Rational(3, 2),), (0,)), z)
     a = -2.3632718012073
     g = a*z**Rational(3, 2)*hyper((-0.5, Rational(3, 2)), (Rational(5, 2),), z*exp_polar(I*pi))
@@ -1061,3 +1061,45 @@ def test_omgissue_203():
     assert hyperexpand(h) == Rational(1, 30)
     h = hyper((-6, -7, -5), (-6, -6), 1)
     assert hyperexpand(h) == Rational(-1, 6)
+
+
+@slow
+def test_issue_26525_polarify_z():
+    x = symbols("x")
+
+    g = meijerg(((1, x + 2), ()), ((x + S(1)/2,), (0,)), -I*z)
+    h = hyperexpand(g)
+    assert h.replace(exp_polar, exp) == \
+           2*sqrt(pi)*z**(x + S.Half)*exp(3*I*pi*(x + S.Half)/2)*gamma(x + S.Half)*hyper(
+               (-S.Half, x + S.Half), (x + S(3)/2,), I*z)/gamma(x + S(3)/2)
+    for i in [g, h]:
+        assert CC.almosteq(i.subs({x: 0, z: 1}).evalf(),
+                           -4.32257296433943 + 5.92192068901469*I, 1e-12)
+
+    g = meijerg(((1, 2), ()), ((S(1)/2,), (0,)), -I)
+    h = hyperexpand(g)
+    for i in [g, h]:
+        assert CC.almosteq(i.evalf(),
+                           -4.32257296433943 + 5.92192068901469*I, 1e-12)
+
+    g = meijerg(((1, 2), ()), ((S(1)/2,), (0,)), -1)
+    h = hyperexpand(g)
+    assert h == -I*pi**(S(3)/2)
+
+    g = meijerg(((1, 2), ()), ((S(1)/2,), (0,)), 1)
+    assert hyperexpand(g) == sqrt(pi)*(-2*sqrt(2) - 2*log(1 + sqrt(2)))
+
+    g = meijerg(((0,), ()), ((S(1)/2,), (1,)), -1)
+    assert hyperexpand(g) == 3*exp(1)*I/2
+
+    g = meijerg(((0,), ()), ((S.Half,), (1,)), I)
+    assert hyperexpand(g) == (S.Half - I)*exp(-I)*exp(I*pi/4)
+
+    g = meijerg(((0,), ()), ((S.Half,), (1,)), -I)
+    assert factor_terms(hyperexpand(g)) == factor_terms((-S.Half - I)*exp(I)*exp(3*I*pi/4))
+
+    g = meijerg(((1,), ()), ((1,), ()), 0)
+    assert hyperexpand(g) == 0
+
+    g = meijerg(((S.Half,), ()), ((1,), ()), 0)
+    assert hyperexpand(g) == 0
