@@ -555,7 +555,7 @@ def test_issue_14815():
     assert sqrt(x).is_extended_negative is False
     x = Symbol('x', extended_real=True)
     assert sqrt(x).is_extended_negative is False
-    assert sqrt(zoo, evaluate=False).is_extended_negative is None
+    assert sqrt(zoo, evaluate=False).is_extended_negative is False
     assert sqrt(nan, evaluate=False).is_extended_negative is None
 
 
@@ -651,3 +651,13 @@ def test_powers_of_I():
 def test_issue_23918():
     b = S(2)/3
     assert (b**x).as_base_exp() == (1/b, -x)
+
+
+def test_issue_26546():
+    x = Symbol('x', real=True)
+    assert x.is_extended_real is True
+    assert sqrt(x+I).is_extended_real is False
+    assert Pow(x+I, S.Half).is_extended_real is False
+    assert Pow(x+I, Rational(1,2)).is_extended_real is False
+    assert Pow(x+I, Rational(1,13)).is_extended_real is False
+    assert Pow(x+I, Rational(2,3)).is_extended_real is None

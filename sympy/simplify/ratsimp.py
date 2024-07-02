@@ -152,9 +152,9 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
             ng = Cs + Ds
 
             c_hat = Poly(
-                sum([Cs[i] * M1[i] for i in range(len(M1))]), opt.gens + ng)
+                sum(Cs[i] * M1[i] for i in range(len(M1))), opt.gens + ng)
             d_hat = Poly(
-                sum([Ds[i] * M2[i] for i in range(len(M2))]), opt.gens + ng)
+                sum(Ds[i] * M2[i] for i in range(len(M2))), opt.gens + ng)
 
             r = reduced(a * d_hat - b * c_hat, G, opt.gens + ng,
                         order=opt.order, polys=True)[1]

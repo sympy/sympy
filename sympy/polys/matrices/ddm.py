@@ -63,6 +63,7 @@ representation is friendlier.
 """
 from itertools import chain
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 
 from .exceptions import (
@@ -92,6 +93,10 @@ from .dense import (
         )
 
 from .lll import ddm_lll, ddm_lll_transform
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['DDM.to_dfm', 'DDM.to_dfm_or_ddm']
 
 
 class DDM(list):
@@ -181,6 +186,7 @@ class DDM(list):
         ========
 
         to_list_flat
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_list
         """
         return list(self)
 
@@ -202,7 +208,7 @@ class DDM(list):
         See Also
         ========
 
-        from_list_flat
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_list_flat
         """
         flat = []
         for row in self:
@@ -229,6 +235,7 @@ class DDM(list):
         ========
 
         to_list_flat
+        sympy.polys.matrices.domainmatrix.DomainMatrix.from_list_flat
         """
         assert type(flat) is list
         rows, cols = shape
@@ -414,6 +421,54 @@ class DDM(list):
         for (i, j), element in dok.items():
             lol[i][j] = element
         return DDM(lol, shape, domain)
+
+    def iter_values(self):
+        """
+        Iterater over the non-zero values of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> A = DDM([[QQ(1), QQ(0)], [QQ(3), QQ(4)]], (2, 2), QQ)
+        >>> list(A.iter_values())
+        [1, 3, 4]
+
+        See Also
+        ========
+
+        iter_items
+        to_list_flat
+        sympy.polys.matrices.domainmatrix.DomainMatrix.iter_values
+        """
+        for row in self:
+            yield from filter(None, row)
+
+    def iter_items(self):
+        """
+        Iterate over indices and values of nonzero elements of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> A = DDM([[QQ(1), QQ(0)], [QQ(3), QQ(4)]], (2, 2), QQ)
+        >>> list(A.iter_items())
+        [((0, 0), 1), ((1, 0), 3), ((1, 1), 4)]
+
+        See Also
+        ========
+
+        iter_values
+        to_dok
+        sympy.polys.matrices.domainmatrix.DomainMatrix.iter_items
+        """
+        for i, row in enumerate(self):
+            for j, element in enumerate(row):
+                if element:
+                    yield (i, j), element
 
     def to_ddm(self):
         """

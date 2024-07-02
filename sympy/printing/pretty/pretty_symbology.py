@@ -243,30 +243,38 @@ BOT = lambda symb: U('%s BOTTOM' % symb_2txt[symb])
 _xobj_unicode = {
 
     # vertical symbols
-    #       (( ext, top, bot, mid ), c1)
-    '(':    (( EXT('('), HUP('('), HLO('(') ), '('),
-    ')':    (( EXT(')'), HUP(')'), HLO(')') ), ')'),
-    '[':    (( EXT('['), CUP('['), CLO('[') ), '['),
-    ']':    (( EXT(']'), CUP(']'), CLO(']') ), ']'),
-    '{':    (( EXT('{}'), HUP('{'), HLO('{'), MID('{') ), '{'),
-    '}':    (( EXT('{}'), HUP('}'), HLO('}'), MID('}') ), '}'),
-    '|':    U('BOX DRAWINGS LIGHT VERTICAL'),
+    #                       (( ext, top, bot, mid ), c1)
+    '(':                    (( EXT('('), HUP('('), HLO('(') ), '('),
+    ')':                    (( EXT(')'), HUP(')'), HLO(')') ), ')'),
+    '[':                    (( EXT('['), CUP('['), CLO('[') ), '['),
+    ']':                    (( EXT(']'), CUP(']'), CLO(']') ), ']'),
+    '{':                    (( EXT('{}'), HUP('{'), HLO('{'), MID('{') ), '{'),
+    '}':                    (( EXT('{}'), HUP('}'), HLO('}'), MID('}') ), '}'),
+    '|':                    U('BOX DRAWINGS LIGHT VERTICAL'),
+    'Tee':                  U('BOX DRAWINGS LIGHT UP AND HORIZONTAL'),
+    'UpTack':               U('BOX DRAWINGS LIGHT DOWN AND HORIZONTAL'),
+    'corner_up_centre'
+    '(_ext':                U('LEFT PARENTHESIS EXTENSION'),
+    ')_ext':                U('RIGHT PARENTHESIS EXTENSION'),
+    '(_lower_hook':         U('LEFT PARENTHESIS LOWER HOOK'),
+    ')_lower_hook':         U('RIGHT PARENTHESIS LOWER HOOK'),
+    '(_upper_hook':         U('LEFT PARENTHESIS UPPER HOOK'),
+    ')_upper_hook':         U('RIGHT PARENTHESIS UPPER HOOK'),
+    '<':                  ((U('BOX DRAWINGS LIGHT VERTICAL'),
+                            U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
+                            U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT')), '<'),
 
-    '<':    ((U('BOX DRAWINGS LIGHT VERTICAL'),
-              U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
-              U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT')), '<'),
+    '>':                  ((U('BOX DRAWINGS LIGHT VERTICAL'),
+                            U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
+                            U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), '>'),
 
-    '>':    ((U('BOX DRAWINGS LIGHT VERTICAL'),
-              U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
-              U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), '>'),
+    'lfloor':               (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
+    'rfloor':               (( EXT(']'), EXT(']'), CLO(']') ), U('RIGHT FLOOR')),
+    'lceil':                (( EXT('['), CUP('['), EXT('[') ), U('LEFT CEILING')),
+    'rceil':                (( EXT(']'), CUP(']'), EXT(']') ), U('RIGHT CEILING')),
 
-    'lfloor': (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
-    'rfloor': (( EXT(']'), EXT(']'), CLO(']') ), U('RIGHT FLOOR')),
-    'lceil':  (( EXT('['), CUP('['), EXT('[') ), U('LEFT CEILING')),
-    'rceil':  (( EXT(']'), CUP(']'), EXT(']') ), U('RIGHT CEILING')),
-
-    'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
-    'sum':  (( U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'), '_', U('OVERLINE'), U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), U('N-ARY SUMMATION')),
+    'int':                  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
+    'sum':                  (( U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'), '_', U('OVERLINE'), U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), U('N-ARY SUMMATION')),
 
     # horizontal objects
     #'-':   '-',
@@ -480,19 +488,49 @@ atoms_table = {
     'ImaginaryUnit':           U('DOUBLE-STRUCK ITALIC SMALL I'),
     'EmptySet':                U('EMPTY SET'),
     'Naturals':                U('DOUBLE-STRUCK CAPITAL N'),
-    'Naturals0':               (U('DOUBLE-STRUCK CAPITAL N') and
-                                (U('DOUBLE-STRUCK CAPITAL N') +
-                                 U('SUBSCRIPT ZERO'))),
+    'Naturals0':              (U('DOUBLE-STRUCK CAPITAL N') and
+                              (U('DOUBLE-STRUCK CAPITAL N') +
+                               U('SUBSCRIPT ZERO'))),
     'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
     'Rationals':               U('DOUBLE-STRUCK CAPITAL Q'),
     'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
     'Complexes':               U('DOUBLE-STRUCK CAPITAL C'),
+    'Universe':                U('MATHEMATICAL DOUBLE-STRUCK CAPITAL U'),
+    'IdentityMatrix':          U('MATHEMATICAL DOUBLE-STRUCK CAPITAL I'),
+    'ZeroMatrix':              U('MATHEMATICAL DOUBLE-STRUCK DIGIT ZERO'),
+    'OneMatrix':               U('MATHEMATICAL DOUBLE-STRUCK DIGIT ONE'),
+    'Differential':            U('DOUBLE-STRUCK ITALIC SMALL D'),
     'Union':                   U('UNION'),
+    'ElementOf':               U('ELEMENT OF'),
+    'SmallElementOf':          U('SMALL ELEMENT OF'),
     'SymmetricDifference':     U('INCREMENT'),
     'Intersection':            U('INTERSECTION'),
     'Ring':                    U('RING OPERATOR'),
+    'Multiplication':          U('MULTIPLICATION SIGN'),
+    'TensorProduct':           U('N-ARY CIRCLED TIMES OPERATOR'),
+    'Dots':                    U('HORIZONTAL ELLIPSIS'),
     'Modifier Letter Low Ring':U('Modifier Letter Low Ring'),
     'EmptySequence':           'EmptySequence',
+    'SuperscriptPlus':         U('SUPERSCRIPT PLUS SIGN'),
+    'SuperscriptMinus':        U('SUPERSCRIPT MINUS'),
+    'Dagger':                  U('DAGGER'),
+    'Degree':                  U('DEGREE SIGN'),
+    #Logic Symbols
+    'And':                     U('LOGICAL AND'),
+    'Or':                      U('LOGICAL OR'),
+    'Not':                     U('NOT SIGN'),
+    'Nor':                     U('NOR'),
+    'Nand':                    U('NAND'),
+    'Xor':                     U('XOR'),
+    'Equiv':                   U('LEFT RIGHT DOUBLE ARROW'),
+    'NotEquiv':                U('LEFT RIGHT DOUBLE ARROW WITH STROKE'),
+    'Implies':                 U('LEFT RIGHT DOUBLE ARROW'),
+    'NotImplies':              U('LEFT RIGHT DOUBLE ARROW WITH STROKE'),
+    'Arrow':                   U('RIGHTWARDS ARROW'),
+    'ArrowFromBar':            U('RIGHTWARDS ARROW FROM BAR'),
+    'NotArrow':                U('RIGHTWARDS ARROW WITH STROKE'),
+    'Tautology':               U('BOX DRAWINGS LIGHT UP AND HORIZONTAL'),
+    'Contradiction':           U('BOX DRAWINGS LIGHT DOWN AND HORIZONTAL')
 }
 
 

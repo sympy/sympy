@@ -3631,15 +3631,17 @@ class Expr(Basic, EvalfMixin):
            log=log, multinomial=multinomial, basic=basic)
 
         expr = self
+        # default matches fraction's default
+        _fraction = lambda x: fraction(x, hints.get('exact', False))
         if hints.pop('frac', False):
             n, d = [a.expand(deep=deep, modulus=modulus, **hints)
-                    for a in fraction(self)]
+                    for a in _fraction(self)]
             return n/d
         elif hints.pop('denom', False):
-            n, d = fraction(self)
+            n, d = _fraction(self)
             return n/d.expand(deep=deep, modulus=modulus, **hints)
         elif hints.pop('numer', False):
-            n, d = fraction(self)
+            n, d = _fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
 
         # Although the hints are sorted here, an earlier hint may get applied

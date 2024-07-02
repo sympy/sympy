@@ -179,7 +179,7 @@ class LagrangesMethod(_Methods):
         """
 
         qds = self._qdots
-        qdd_zero = {i: 0 for i in self._qdoubledots}
+        qdd_zero = dict.fromkeys(self._qdoubledots, 0)
         n = len(self.q)
 
         # Internally we represent the EOM as four terms:
@@ -214,7 +214,7 @@ class LagrangesMethod(_Methods):
             self._term4 = zeros(n, 1)
             for i, qd in enumerate(qds):
                 flist = zip(*_f_list_parser(self.forcelist, N))
-                self._term4[i] = sum(v.diff(qd, N) & f for (v, f) in flist)
+                self._term4[i] = sum(v.diff(qd, N).dot(f) for (v, f) in flist)
         else:
             self._term4 = zeros(n, 1)
 

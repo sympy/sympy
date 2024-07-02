@@ -13,10 +13,8 @@ Vector
 A vector is a geometric object that has a magnitude (or length) and a
 direction. Vectors in 3-space are often represented on paper as:
 
-.. image:: vec_rep.*
-   :height: 175
-   :width: 350
-   :align: center
+.. raw:: html
+   :file: vec_rep.svg
 
 Vector Algebra
 ==============
@@ -33,10 +31,8 @@ vectors, scalar multiplication, and vector multiplication.
 
 Vector addition as based on the parallelogram law.
 
-.. image:: vec_add.*
-   :height: 200
-   :width: 200
-   :align: center
+.. raw:: html
+   :file: vec_add.svg
 
 Vector addition is also commutative:
 
@@ -50,10 +46,8 @@ vector with the same orientation but whose magnitude is scaled by the scalar.
 Note that multiplication by -1 is equivalent to rotating the vector by 180
 degrees about an arbitrary axis in the plane perpendicular to the vector.
 
-.. image:: vec_mul.*
-   :height: 150
-   :width: 200
-   :align: center
+.. raw:: html
+   :file: vec_mul.svg
 
 A unit vector is simply a vector whose magnitude is equal to 1.  Given any
 vector :math:`\mathbf{v}` we can define a unit vector as:
@@ -81,10 +75,8 @@ direction; for other vectors, it is the product of the magnitude of the common
 direction and the two vectors' magnitudes. The dot product of two perpendicular
 is zero. The figure below shows some examples:
 
-.. image:: vec_dot.*
-   :height: 250
-   :width: 450
-   :align: center
+.. raw:: html
+   :file: vec_dot.svg
 
 The dot product is commutative:
 
@@ -105,10 +97,8 @@ is defined as :math:`\Vert \mathbf{c} \Vert = \Vert \mathbf{a} \Vert \Vert
 the right hand rule between :math:`\Vert \mathbf{a} \Vert \Vert \mathbf{b}
 \Vert`. The figure below shows this:
 
-.. image:: vec_cross.*
-   :height: 350
-   :width: 700
-   :align: center
+.. raw:: html
+   :file: vec_cross.svg
 
 The cross product has the following properties:
 
@@ -244,10 +234,8 @@ properties when observed from that frame. Calculus is the study of change, and
 in order to deal with the peculiarities of vectors fixed and not fixed in
 different reference frames, we need to be more explicit in our definitions.
 
-.. image:: vec_fix_notfix.*
-   :height: 300
-   :width: 450
-   :align: center
+.. raw:: html
+   :file: vec_fix_notfix.svg
 
 In the above figure, we have vectors :math:`\mathbf{c,d,e,f}`. If one were to
 take the derivative of :math:`\mathbf{e}` with respect to :math:`\theta`:
@@ -308,10 +296,8 @@ aligned, then one frame has all of its basis vectors rotated around an axis
 which is aligned with a basis vector, we say the frames are related by a simple
 rotation. The figure below shows this:
 
-.. image:: simp_rot.*
-   :height: 250
-   :width: 250
-   :align: center
+.. raw:: html
+   :file: simp_rot.svg
 
 The above rotation is a simple rotation about the Z axis by an angle
 :math:`\theta`. Note that after the rotation, the basis vectors
@@ -436,10 +422,8 @@ Examples
 
 An example of vector calculus:
 
-.. image:: vec_simp_der.*
-   :height: 500
-   :width: 350
-   :align: center
+.. raw:: html
+   :file: vec_simp_der.svg
 
 In this example we have two bodies, each with an attached reference frame.
 We will say that :math:`\theta` and :math:`x` are functions of time.
@@ -623,18 +607,18 @@ relationship between the two frames has been defined. ::
   >>> A.x + N.x
   N.x + A.x
 
-If we want to do vector multiplication, first we have to define and
+If we want to do vector multiplication, first we have to define an
 orientation. The ``orient`` method of ``ReferenceFrame`` provides that
 functionality. ::
 
   >>> A.orient(N, 'Axis', [x, N.y])
 
-If we desire, we can view the DCM between these two frames at any time. This
-can be calculated with the ``dcm`` method. This code: ``N.dcm(A)`` gives the
-dcm :math:`^{\mathbf{A}} \mathbf{C} ^{\mathbf{N}}`.
-
 This orients the :math:`\mathbf{A}` frame relative to the :math:`\mathbf{N}`
-frame by a simple rotation around the Y axis, by an amount x. Other, more
+frame by a simple rotation, around the Y axis, by an amount x.
+The DCM between these two frames can be viewed at any time with the
+``dcm`` method: ``A.dcm(N)`` gives the dcm :math:`^{\mathbf{A}} \mathbf{C} ^{\mathbf{N}}`.
+
+Other, more
 complicated rotation types include Body rotations, Space rotations,
 quaternions, and arbitrary axis rotations. Body and space rotations are
 equivalent to doing 3 simple rotations in a row, each about a basis vector in
