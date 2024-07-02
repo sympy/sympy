@@ -309,6 +309,10 @@ def test_unicode_names():
     assert parse_expr('α') == Symbol('α')
 
 
+def test_unicode_nfkc_names():
+    assert parse_expr('ϵ', {'ϵ': Symbol('ϵ')}) == Symbol('ϵ')
+
+
 def test_python3_features():
     # Make sure the tokenizer can handle Python 3-only features
     if sys.version_info < (3, 8):
