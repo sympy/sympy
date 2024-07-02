@@ -432,11 +432,13 @@ class Mul(Expr, AssocOp):
                     b1, e1 = o1.as_base_exp()
                     b2, e2 = o.as_base_exp()
                     new_exp = e1 + e2
+                    if hasattr(o, 'diff'):
+                        nc_part.extend([o1, o])
                     # Only allow powers to combine if the new exponent is
                     # not an Add. This allow things like a**2*b**3 == a**5
                     # if a.is_commutative == False, but prohibits
                     # a**x*a**y and x**a*x**b from combining (x,y commute).
-                    if b1 == b2 and (not new_exp.is_Add):
+                    elif b1 == b2 and (not new_exp.is_Add):
                         o12 = b1 ** new_exp
 
                         # now o12 could be a commutative object
