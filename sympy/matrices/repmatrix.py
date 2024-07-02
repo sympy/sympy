@@ -978,8 +978,7 @@ def _getitem_RepMatrix(self, key):
             return self._rep.getitem_sympy(index_(i), index_(j))
         except (TypeError, IndexError):
             if (isinstance(i, Expr) and not i.is_number) or (isinstance(j, Expr) and not j.is_number):
-                if ((j < 0) is True) or ((j >= self.shape[1]) is True) or\
-                   ((i < 0) is True) or ((i >= self.shape[0]) is True):
+                if (j < 0) or (j >= self.shape[1]) or (i < 0) or (i >= self.shape[0]):
                     raise ValueError("index out of boundary")
                 from sympy.matrices.expressions.matexpr import MatrixElement
                 return MatrixElement(self, i, j)
