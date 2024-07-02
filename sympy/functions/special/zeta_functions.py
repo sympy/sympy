@@ -214,6 +214,60 @@ class lerchphi(Function):
     def _eval_rewrite_as_polylog(self, z, s, a, **kwargs):
         return self._eval_rewrite_helper(polylog)
 
+    def _eval_is_finite(self):
+        z, s, a = self.args
+        if z.is_infinite or s.is_infinite or a.is_infinite:
+            # TODO: Write a valid implementation for infinite numbers.
+            return
+        if z == 0:
+            if a.is_zero and s.is_real:
+                return s.is_nonpositive
+            if a.is_nonzero:
+                return True
+            return
+        if a.is_integer and a.is_nonpositive:
+            if s.is_real:
+                return s.is_nonpositive
+        # This part assumes analytic continuation
+        if z == 1:
+            arg_is_one = (s - 1).is_zero
+            if arg_is_one is not None:
+                return not arg_is_one
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        '''
+        Use the relation lerchphi(1, s, a) = zeta(s, a) for z = 1 and the
+        expansions given in [1]
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Lerch_zeta_function#Series_representations
+
+        '''
+        from sympy.functions.special.gamma_functions import digamma, gamma
+        z, s, a = self.args
+        z0, s0, a0 = (arg.subs(x, 0).cancel() for arg in self.args)
+        lt = 0
+        if z == 1:
+            lt = zeta(s, a)
+        elif z0 == 1:
+            if s == 1:
+                if not a.has(x):
+                    # This could be generalised for arbitrary a if we check
+                    # that this term doesn't vanish.
+                    lt = -log(-log(z)) - S.EulerGamma - digamma(a)
+            elif s.is_integer and s.is_positive or re(s0 - 1).is_positive:
+                return zeta(s0, a0)
+            elif re(s0 - 1).is_negative:
+                lt = gamma(1-s)*(-log(z))**(s-1)
+        elif a0.is_integer and a0.is_nonpositive:
+            if s.is_real and s.is_positive:
+                lt = z**(-a0)/(a-a0)**s
+        if lt == 0:
+            return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
+        return lt._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
 ###############################################################################
@@ -579,7 +633,14 @@ class zeta(Function):
         if e.is_negative and not s.is_positive:
             raise NotImplementedError
 
-        return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
+        s0, a0 = (arg.subs(x, 0).cancel() for arg in self.args)
+        if (s0 - 1).is_nonzero:
+            if (lt := zeta(s0, a0)).is_nonzero:
+                return lt
+        elif s.has(x) and (s0 - 1).is_zero:
+            return (1 / (s - 1))._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+        return super(zeta, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
 
 class dirichlet_eta(Function):
