@@ -1811,6 +1811,35 @@ def test_StateSpace_functions():
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
 
 
+def test_StateSpace_symbolics():
+    # Test for using StateSpace with symbolic matrices.
+    a11, a12, a21, a22, b1, b2, c1, c2 = symbols('a_11 a_12 a_21 a_22 b_1 b_2 c_1 c_2')
+    A = Matrix([[a11, a12], [a21, a22]])
+    B = Matrix([[b1], [b2]])
+    C = Matrix([[c1, c2]])
+    ss = StateSpace(A, B, C)
+    assert ss.state_matrix == A
+    assert ss.input_matrix == B
+    assert ss.output_matrix == C
+    assert ss.feedforward_matrix == Matrix([[0]])
+    assert ss.shape == (1, 1)
+    assert ss.num_states == 2
+    qc = ss.controllability_matrix().subs([(a11, 0), (a12, 1), (a21, -6), (a22, -5), (b1, 0), (b2, 1)])
+    qo = ss.observability_matrix().subs([(a11, 0), (a12, -6), (a21, 1), (a22, -5), (c1, 0), (c2, 1)])
+    assert ss.controllable_subspace() == [Matrix([
+                                         [b1],
+                                         [b2]]), Matrix([
+                                         [a11*b1 + a12*b2],
+                                         [a21*b1 + a22*b2]])]
+    assert ss.observable_subspace() == [Matrix([
+                                       [             c1],
+                                       [a11*c1 + a21*c2]]), Matrix([
+                                       [             c2],
+                                       [a12*c1 + a22*c2]])]
+    assert qc == Matrix([[0, 1], [1, -5]])
+    assert qo == Matrix([[0, 1], [1, -5]])
+
+
 def test_StateSpace_series():
     # For SISO Systems
     a1 = Matrix([[0, 1], [1, 0]])
