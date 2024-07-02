@@ -64,7 +64,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     imagesize = 'tight'
     offset = "0cm,0cm"
     resolution = round(150*scale)
-    dvi = r"-T %s -D %d -bg %s -fg %s -O %s" % (
+    dvi = r"-T %s -D %d -bg %s -fg %s -O %s --nogs" % (
         imagesize, resolution, backcolor, forecolor, offset)
     dvioptions = dvi.split()
 
@@ -315,7 +315,7 @@ def _is_ipython(shell):
     except ImportError:
         # IPython < 0.11
         try:
-            from IPython.iplib import InteractiveShell
+            from IPython.iplib import InteractiveShell # type: ignore
         except ImportError:
             # Reaching this points means IPython has changed in a backward-incompatible way
             # that we don't know about. Warn?
@@ -498,7 +498,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     in_ipython = False
     if ip is None:
         try:
-            ip = get_ipython()
+            ip = get_ipython() # type: ignore
         except NameError:
             pass
         else:
@@ -516,7 +516,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             if version_tuple(IPython.__version__) >= version_tuple('1.0'):
                 from IPython.terminal.interactiveshell import TerminalInteractiveShell
             else:
-                from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
+                from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell # type: ignore
             from code import InteractiveConsole
         except ImportError:
             pass
