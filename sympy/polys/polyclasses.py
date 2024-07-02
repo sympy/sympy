@@ -125,14 +125,14 @@ from sympy.polys.polyerrors import (
     PolynomialError)
 
 
-_flint_domains: tuple[Domain, ...]
-
 if GROUND_TYPES == 'flint':
     import flint
-    _flint_domains = (ZZ, QQ)
+    def _supported_flint_domain(D):
+        return D.is_ZZ or D.is_QQ or D.is_FF
 else:
     flint = None
-    _flint_domains = ()
+    def _supported_flint_domain(D):
+        return False
 
 
 class DMP(CantSympify):
@@ -156,7 +156,7 @@ class DMP(CantSympify):
         #
         #cls._validate_args(rep, dom, lev)
         if flint is not None:
-            if lev == 0 and dom in _flint_domains:
+            if lev == 0 and _supported_flint_domain(dom):
                 return DUP_Flint._new(rep, dom, lev)
 
         return DMP_Python._new(rep, dom, lev)
@@ -185,7 +185,7 @@ class DMP(CantSympify):
         potentially becomes possible to convert from DMP_Python to DUP_Flint.
         """
         if flint is not None:
-            if isinstance(f, DMP_Python) and f.lev == 0 and f.dom in _flint_domains:
+            if isinstance(f, DMP_Python) and f.lev == 0 and _supported_flint_domain(f.dom):
                 return DUP_Flint.new(f._rep, f.dom, f.lev)
 
         return f
@@ -231,12 +231,12 @@ class DMP(CantSympify):
         elif f.lev or flint is None:
             return f._convert(dom)
         elif isinstance(f, DUP_Flint):
-            if dom in _flint_domains:
+            if _supported_flint_domain(dom):
                 return f._convert(dom)
             else:
                 return f.to_DMP_Python()._convert(dom)
         elif isinstance(f, DMP_Python):
-            if dom in _flint_domains:
+            if _supported_flint_domain(dom):
                 return f._convert(dom).to_DUP_Flint()
             else:
                 return f._convert(dom)
@@ -1750,7 +1750,7 @@ class DUP_Flint(DMP):
 
     @classmethod
     def _flint_poly(cls, rep, dom, lev):
-        assert dom in _flint_domains
+        assert _supported_flint_domain(dom)
         assert lev == 0
         flint_cls = cls._get_flint_poly_cls(dom)
         return flint_cls(rep)
@@ -1761,6 +1761,11 @@ class DUP_Flint(DMP):
             return flint.fmpz_poly
         elif dom.is_QQ:
             return flint.fmpq_poly
+        elif dom.is_FF:
+            if type(dom.one) is flint.nmod:
+                return lambda rep: flint.nmod_poly(rep, dom.characteristic())
+            else:
+                return lambda rep: flint.fmpz_mod_poly(rep, dom.characteristic())
         else:
             raise RuntimeError("Domain %s is not supported with flint" % dom)
 
@@ -1774,6 +1779,11 @@ class DUP_Flint(DMP):
         elif dom.is_QQ:
             assert isinstance(rep, flint.fmpq_poly)
             _cls = flint.fmpq_poly
+        elif dom.is_FF:
+            assert isinstance(rep, (flint.nmod_poly, flint.fmpz_mod_poly))
+            c = dom.characteristic()
+            __cls = type(rep)
+            _cls = lambda e: __cls(e, c)
         else:
             raise RuntimeError("Domain %s is not supported with flint" % dom)
 
@@ -1812,7 +1822,7 @@ class DUP_Flint(DMP):
         """Convert the ground domain of ``f``. """
         if dom == QQ and f.dom == ZZ:
             return f.from_rep(flint.fmpq_poly(f._rep), dom)
-        elif dom == ZZ and f.dom == QQ:
+        elif _supported_flint_domain(dom) and _supported_flint_domain(f.dom):
             # XXX: python-flint should provide a faster way to do this.
             return f.to_DMP_Python()._convert(dom).to_DUP_Flint()
         else:
@@ -2247,7 +2257,7 @@ class DUP_Flint(DMP):
     def factor_list(f):
         """Returns a list of irreducible factors of ``f``. """
 
-        if f.dom.is_ZZ:
+        if f.dom.is_ZZ or f.dom.is_FF:
             # python-flint matches polys here
             coeff, factors = f._rep.factor()
             factors = [ (f.from_rep(g, f.dom), k) for g, k in factors ]

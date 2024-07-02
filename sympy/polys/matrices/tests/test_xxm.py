@@ -239,10 +239,9 @@ def test_DFM_domains():
         flint_funcs = {
             ZZ: flint.fmpz_mat,
             QQ: flint.fmpq_mat,
+            GF(5): None,
         }
         not_supported = [
-            # This could be supported but not yet implemented in SymPy:
-            GF(5),
             # Other domains could be supported but not implemented as matrices
             # in python-flint:
             QQ[x],
@@ -257,7 +256,8 @@ def test_DFM_domains():
 
     for domain in supported:
         assert DFM._supports_domain(domain) is True
-        assert DFM._get_flint_func(domain) == flint_funcs[domain]
+        if flint_funcs[domain] is not None:
+            assert DFM._get_flint_func(domain) == flint_funcs[domain]
     for domain in not_supported:
         assert DFM._supports_domain(domain) is False
         raises(NotImplementedError, lambda: DFM._get_flint_func(domain))
