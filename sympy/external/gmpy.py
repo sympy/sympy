@@ -92,13 +92,13 @@ __all__ = [
 # Tested python-flint version. Future versions might work but we will only use
 # them if explicitly requested by SYMPY_GROUND_TYPES=flint.
 #
-_PYTHON_FLINT_VERSION_NEEDED = "0.6.*"
+_PYTHON_FLINT_VERSION_NEEDED = ["0.6", "0.7", "0.8", "0.9"]
 
 
 def _flint_version_okay(flint_version):
-    flint_ver = flint_version.split('.')[:2]
-    needed_ver = _PYTHON_FLINT_VERSION_NEEDED.split('.')[:2]
-    return flint_ver == needed_ver
+    major, minor = flint_version.split('.')[:2]
+    flint_ver = f'{major}.{minor}'
+    return flint_ver in _PYTHON_FLINT_VERSION_NEEDED
 
 #
 # We will only use gmpy2 >= 2.0.0
@@ -123,15 +123,11 @@ def _get_flint(sympy_ground_types):
     if _flint_version_okay(_flint_version):
         return flint
     elif sympy_ground_types == 'auto':
-        warn(f"python-flint {_flint_version} is installed but only version "
-             f"{_PYTHON_FLINT_VERSION_NEEDED} will be used by default. "
-             f"Falling back to other ground types. Use "
-             f"SYMPY_GROUND_TYPES=flint to force the use of python-flint.")
         return None
     else:
         warn(f"Using python-flint {_flint_version} because SYMPY_GROUND_TYPES "
-             f"is set to flint but this version of SymPy has only been tested "
-             f"with python-flint {_PYTHON_FLINT_VERSION_NEEDED}.")
+             f"is set to flint but this version of SymPy is only tested "
+             f"with python-flint versions {_PYTHON_FLINT_VERSION_NEEDED}.")
         return flint
 
 
