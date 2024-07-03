@@ -937,3 +937,29 @@ class TestCoulombFrictionActuator:
         )
         actuator_force = friction_actuator.force
         assert actuator_force == self.expected_friction_force
+
+    def test_zero_velocity_force(self):
+        class ZeroVelocityPathway(LinearPathway):
+            @property
+            def extension_velocity(self):
+                return 0
+
+        zero_velocity_pathway = ZeroVelocityPathway(self.surface_point, self.contact_point)
+
+        self.expected_friction_force = Piecewise(
+            (self.mu_k * self.normal_force, zero_velocity_pathway.extension_velocity < 0),
+            (self.mu_s, (zero_velocity_pathway.extension_velocity == 0) & (abs(self.mu_s) < self.normal_force)),
+            (self.normal_force * sign(self.mu_s), (zero_velocity_pathway.extension_velocity == 0) & (abs(self.mu_s) >= self.normal_force)),
+            (-self.mu_k * self.normal_force, zero_velocity_pathway.extension_velocity > 0)
+        )
+
+        friction_actuator = CoulombFrictionActuator(
+            coefficient_of_kinetic_friction=self.mu_k,
+            normal_force=self.normal_force,
+            tangential_friction_force=self.mu_s,
+            coulomb_friction_constant=self.normal_force,
+            pathway=zero_velocity_pathway
+        )
+
+        actuator_force = friction_actuator.force
+        assert actuator_force == self.expected_friction_force
