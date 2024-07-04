@@ -179,43 +179,13 @@ jobs:
                          'antlr4-python3-runtime==4.11.*'                 \
                          symengine                                        \
                          numba llvmlite pymc                              \
-                         'gmpy2>=2.2.0rc1'                                \
+                         gmpy2                                            \
                          #
-
-      ## Not available in CPython 3.13 (yet).
-      #- if: ${{ ! contains(matrix.python-version, '3.13') }}
-      #  run: pip install gmpy2
 
       # Test external imports
       - run: bin/test_external_imports.py
       - run: bin/test_submodule_imports.py
       - run: bin/test_executable.py
-
-      # Test modules with specific dependencies
-      - run: bin/test_optional_dependencies.py
-
-  # -------------------- NumPy 2.0 job ----------------------------- #
-
-  numpy-prerelease:
-    needs: code-quality
-
-    runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-
-    name: ${{ matrix.python-version }} NumPy Prerelease
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - run: pip install -r requirements-dev.txt
-      - run: pip install --pre numpy scipy
 
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
@@ -227,18 +197,13 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-
-    name: ${{ matrix.python-version }} NumPy nightly
+    name: NumPy/SciPy nightly
 
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.12
 
       - run: pip install -r requirements-dev.txt
       - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy
@@ -445,12 +410,7 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
-
-    name: mpmath-master ${{ matrix.group }}/4 Tests
+    name: mpmath-master Tests
 
     steps:
       - uses: actions/checkout@v3

@@ -1974,8 +1974,9 @@ class Parallel(SISOLinearTimeInvariant):
     Examples
     ========
 
+    >>> from sympy import Matrix
     >>> from sympy.abc import s, p, a, b
-    >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series
+    >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series, StateSpace
     >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
     >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
     >>> tf3 = TransferFunction(p**2, p + s, s)
@@ -2002,6 +2003,33 @@ class Parallel(SISOLinearTimeInvariant):
     >>> Parallel(tf2, Series(tf1, -tf3)).doit()
     TransferFunction(-p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6) + (-p + s)*(p + s)*(s**3 - 2), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
+    Parallel can be used to connect SISO ``StateSpace`` systems together.
+
+    >>> A1 = Matrix([[-1]])
+    >>> B1 = Matrix([[1]])
+    >>> C1 = Matrix([[-1]])
+    >>> D1 = Matrix([1])
+    >>> A2 = Matrix([[0]])
+    >>> B2 = Matrix([[1]])
+    >>> C2 = Matrix([[1]])
+    >>> D2 = Matrix([[0]])
+    >>> ss1 = StateSpace(A1, B1, C1, D1)
+    >>> ss2 = StateSpace(A2, B2, C2, D2)
+    >>> P4 = Parallel(ss1, ss2)
+    >>> P4
+    Parallel(StateSpace(Matrix([[-1]]), Matrix([[1]]), Matrix([[-1]]), Matrix([[1]])), StateSpace(Matrix([[0]]), Matrix([[1]]), Matrix([[1]]), Matrix([[0]])))
+
+    ``doit()`` can be used to find ``StateSpace`` equivalent for the system containing ``StateSpace`` objects.
+
+    >>> P4.doit()
+    StateSpace(Matrix([
+    [-1, 0],
+    [ 0, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[-1, 1]]), Matrix([[1]]))
+    >>> P4.rewrite(TransferFunction)
+    TransferFunction(s*(s + 1) + 1, s*(s + 1), s)
+
     Notes
     =====
 
@@ -2014,10 +2042,21 @@ class Parallel(SISOLinearTimeInvariant):
     Series, TransferFunction, Feedback
 
     """
+
     def __new__(cls, *args, evaluate=False):
 
         args = _flatten_args(args, Parallel)
-        cls._check_args(args)
+        # For StateSpace parallel connection
+        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
+                                                        and arg.is_StateSpace_object) for arg in args):
+            # Check for SISO
+            if all(arg.is_SISO for arg in args):
+                cls._is_parallel_StateSpace = True
+            else:
+                raise ValueError("To use Parallel connection for MIMO systems use MIMOParallel instead.")
+        else:
+            cls._is_parallel_StateSpace = False
+            cls._check_args(args)
         obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
@@ -2045,8 +2084,8 @@ class Parallel(SISOLinearTimeInvariant):
 
     def doit(self, **hints):
         """
-        Returns the resultant transfer function obtained after evaluating
-        the transfer functions in parallel configuration.
+        Returns the resultant transfer function or state space obtained by
+        parallel connection of transfer functions or state space objects.
 
         Examples
         ========
@@ -2061,12 +2100,24 @@ class Parallel(SISOLinearTimeInvariant):
         TransferFunction((2 - s**3)*(-p + s) + (-a*p**2 - b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
 
         """
+        if self._is_parallel_StateSpace:
+            # Return the equivalent StateSpace model
+            res = self.args[0].doit()
+            if not isinstance(res, StateSpace):
+                res = res.rewrite(StateSpace)
+            for arg in self.args[1:]:
+                if not isinstance(arg, StateSpace):
+                    arg = arg.doit().rewrite(StateSpace)
+                res += arg
+            return res
 
         _arg = (arg.doit().to_expr() for arg in self.args)
         res = Add(*_arg).as_numer_denom()
         return TransferFunction(*res, self.var)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        if self._is_parallel_StateSpace:
+            return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
     @_check_other_SISO
@@ -2175,6 +2226,10 @@ class Parallel(SISOLinearTimeInvariant):
         """
         return self.doit().is_biproper
 
+    @property
+    def is_StateSpace_object(self):
+        return self._is_parallel_StateSpace
+
 
 class MIMOParallel(MIMOLinearTimeInvariant):
     r"""
@@ -2209,7 +2264,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     ========
 
     >>> from sympy.abc import s
-    >>> from sympy.physics.control.lti import TransferFunctionMatrix, MIMOParallel
+    >>> from sympy.physics.control.lti import TransferFunctionMatrix, MIMOParallel, StateSpace
     >>> from sympy import Matrix, pprint
     >>> expr_1 = 1/s
     >>> expr_2 = s/(s**2-1)
@@ -2245,6 +2300,59 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     [              / 2    \                      2             ]
     [            s*\s  - 1/                     s  - 1         ]{t}
 
+    ``MIMOParallel`` can also be used to connect MIMO ``StateSpace`` systems.
+
+    >>> A1 = Matrix([[4, 1], [2, -3]])
+    >>> B1 = Matrix([[5, 2], [-3, -3]])
+    >>> C1 = Matrix([[2, -4], [0, 1]])
+    >>> D1 = Matrix([[3, 2], [1, -1]])
+    >>> A2 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    >>> B2 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    >>> C2 = Matrix([[4, 2, -3], [1, 4, 3]])
+    >>> D2 = Matrix([[-2, 4], [0, 1]])
+    >>> ss1 = StateSpace(A1, B1, C1, D1)
+    >>> ss2 = StateSpace(A2, B2, C2, D2)
+    >>> p1 = MIMOParallel(ss1, ss2)
+    >>> p1
+    MIMOParallel(StateSpace(Matrix([
+    [4,  1],
+    [2, -3]]), Matrix([
+    [ 5,  2],
+    [-3, -3]]), Matrix([
+    [2, -4],
+    [0,  1]]), Matrix([
+    [3,  2],
+    [1, -1]])), StateSpace(Matrix([
+    [-3,  4, 2],
+    [-1, -3, 0],
+    [ 2,  5, 3]]), Matrix([
+    [ 1,  4],
+    [-3, -3],
+    [-2,  1]]), Matrix([
+    [4, 2, -3],
+    [1, 4,  3]]), Matrix([
+    [-2, 4],
+    [ 0, 1]])))
+
+    ``doit()`` can be used to find ``StateSpace`` equivalent for the system containing ``StateSpace`` objects.
+
+    >>> p1.doit()
+    StateSpace(Matrix([
+    [4,  1,  0,  0, 0],
+    [2, -3,  0,  0, 0],
+    [0,  0, -3,  4, 2],
+    [0,  0, -1, -3, 0],
+    [0,  0,  2,  5, 3]]), Matrix([
+    [ 5,  2],
+    [-3, -3],
+    [ 1,  4],
+    [-3, -3],
+    [-2,  1]]), Matrix([
+    [2, -4, 4, 2, -3],
+    [0,  1, 1, 4,  3]]), Matrix([
+    [1, 6],
+    [1, 0]]))
+
     Notes
     =====
 
@@ -2257,15 +2365,24 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     Parallel, MIMOSeries
 
     """
+
     def __new__(cls, *args, evaluate=False):
 
         args = _flatten_args(args, MIMOParallel)
 
-        cls._check_args(args)
-
-        if any(arg.shape != args[0].shape for arg in args):
-             raise TypeError("Shape of all the args is not equal.")
-
+        # For StateSpace Parallel connection
+        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
+                                    and arg.is_StateSpace_object) for arg in args):
+            if any(arg.num_inputs != args[0].num_inputs or arg.num_outputs != args[0].num_outputs
+                   for arg in args[1:]):
+                raise ShapeError("Systems with incompatible inputs and outputs cannot be "
+                                 "connected in MIMOParallel.")
+            cls._is_parallel_StateSpace = True
+        else:
+            cls._check_args(args)
+            if any(arg.shape != args[0].shape for arg in args):
+                raise TypeError("Shape of all the args is not equal.")
+            cls._is_parallel_StateSpace = False
         obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
@@ -2307,9 +2424,13 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         """Returns the shape of the equivalent MIMO system."""
         return self.num_outputs, self.num_inputs
 
+    @property
+    def is_StateSpace_object(self):
+        return self._is_parallel_StateSpace
+
     def doit(self, **hints):
         """
-        Returns the resultant transfer function matrix obtained after evaluating
+        Returns the resultant transfer function matrix or StateSpace obtained after evaluating
         the MIMO systems arranged in a parallel configuration.
 
         Examples
@@ -2325,11 +2446,25 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         TransferFunctionMatrix(((TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)), (TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s))))
 
         """
+        if self._is_parallel_StateSpace:
+            # Return the equivalent StateSpace model.
+            res = self.args[0]
+            if not isinstance(res, StateSpace):
+                res = res.doit().rewrite(StateSpace)
+            for arg in self.args[1:]:
+                if not isinstance(arg, StateSpace):
+                    arg = arg.doit().rewrite(StateSpace)
+                else:
+                    arg = arg.doit()
+                res += arg
+            return res
         _arg = (arg.doit()._expr_mat for arg in self.args)
         res = MatAdd(*_arg, evaluate=True)
         return TransferFunctionMatrix.from_Matrix(res, self.var)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        if self._is_parallel_StateSpace:
+            return self.doit().rewrite(TransferFunction)
         return self.doit()
 
     @_check_other_MIMO
@@ -3994,82 +4129,27 @@ class StateSpace(LinearTimeInvariant):
         """
         return self._D.rows
 
-    def state_vector(self, initial_conditions=None, input_vector=None, var=None):
+
+    @property
+    def shape(self):
+        """Returns the shape of the equivalent StateSpace system."""
+        return self.num_outputs, self.num_inputs
+
+    def dsolve(self, initial_conditions=None, input_vector=None, var=Symbol('t')):
         r"""
-        Returns the State vector `x` given by the solution of the state equation
+        Returns `y(t)` or output of StateSpace given by the solution of equations:
             x'(t) = A * x(t) + B * u(t)
+            y(t)  = C * x(t) + D * u(t)
 
         Parameters
         ============
 
         initial_conditions : Matrix
-            The initial conditions of `x` state vector.
+            The initial conditions of `x` state vector. If not provided, it defaults to a zero vector.
         input_vector : Matrix
-            The input vector for state space.
+            The input vector for state space. If not provided, it defaults to a zero vector.
         var : Symbol
-            The symbol representing time.
-
-        Examples
-        ==========
-
-        >>> from sympy import Matrix, Symbol
-        >>> from sympy.physics.control import StateSpace
-        >>> A = Matrix([[-2, 0], [1, -1]])
-        >>> i = Matrix([2, 3])
-        >>> t = Symbol('t')
-        >>> ss = StateSpace(A)
-        >>> ss.state_vector(initial_conditions=i, var=t)
-        Matrix([
-        [            2*exp(-2*t)],
-        [5*exp(-t) - 2*exp(-2*t)]])
-
-        References
-        ==========
-        .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
-        .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
-        """
-
-        if not var:
-            var = Symbol('t')
-        elif not isinstance(var, Symbol):
-            raise ValueError("Variable for representing time must be a Symbol.")
-        if not initial_conditions:
-            initial_conditions = zeros(self._A.shape[0], 1)
-        elif initial_conditions.shape != (self._A.shape[0], 1):
-            raise ShapeError("Initial condition vector should have the same number of "
-                             "rows as the state matrix.")
-        if not input_vector:
-            input_vector = zeros(self._B.shape[1], 1)
-        elif input_vector.shape != (self._B.shape[1], 1):
-            raise ShapeError("Input vector should have the same number of "
-                             "columns as the input matrix.")
-        sol = linodesolve(self._A, var, self._B*input_vector, type='type2', doit=True)
-        mat1 = Matrix(sol)
-        mat2 = mat1.replace(var, 0)
-        # Get all the free symbols form the matrix
-        dummy_symbols = list(mat2.free_symbols)
-        # Convert the matrix to a Coefficient matrix
-        r1, r2 = linear_eq_to_matrix(mat2, dummy_symbols)
-        s = linsolve((r1, initial_conditions+r2))
-        res_tuple = next(iter(s))
-        for ind, v in enumerate(res_tuple):
-            mat1 = mat1.replace(dummy_symbols[ind], v)
-        return mat1
-
-    def output_vector(self, initial_conditions=None, input_vector=None, var=None):
-        r"""
-        Returns the Output vector `x` given by the solution of the output equation
-            y(t) = C * x(t) + D * u(t)
-
-        Parameters
-        ============
-
-        initial_conditions : Matrix
-            The initial conditions of `x` state vector.
-        input_vector : Matrix
-            The input vector for state space.
-        var : Symbol
-            The symbol representing time.
+            The symbol representing time. If not provided, it defaults to `t`.
 
         Examples
         ==========
@@ -4082,19 +4162,47 @@ class StateSpace(LinearTimeInvariant):
         >>> ip = Matrix([5])
         >>> i = Matrix([0, 0])
         >>> ss = StateSpace(A, B, C)
-        >>> ss.output_vector(input_vector=ip, initial_conditions=i)
+        >>> ss.dsolve(input_vector=ip, initial_conditions=i).simplify()
         Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
+
+        If no input is provided it defaults to solving the system with zero initial conditions and zero input.
+
+        >>> ss.dsolve()
+        Matrix([[0]])
 
         References
         ==========
         .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
         .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
         """
+
+        if not isinstance(var, Symbol):
+            raise ValueError("Variable for representing time must be a Symbol.")
+        if not initial_conditions:
+            initial_conditions = zeros(self._A.shape[0], 1)
+        elif initial_conditions.shape != (self._A.shape[0], 1):
+            raise ShapeError("Initial condition vector should have the same number of "
+                             "rows as the state matrix.")
         if not input_vector:
             input_vector = zeros(self._B.shape[1], 1)
-        sv = self.state_vector(initial_conditions, input_vector, var)
-        res = self._C*sv + self._D*input_vector
-        return res.simplify()
+        elif input_vector.shape != (self._B.shape[1], 1):
+            raise ShapeError("Input vector should have the same number of "
+                             "columns as the input matrix.")
+        sol = linodesolve(A=self._A, t=var, b=self._B*input_vector, type='type2', doit=True)
+        mat1 = Matrix(sol)
+        mat2 = mat1.replace(var, 0)
+        free1 = self._A.free_symbols | self._B.free_symbols | input_vector.free_symbols
+        free2 = mat2.free_symbols
+        # Get all the free symbols form the matrix
+        dummy_symbols = list(free2-free1)
+        # Convert the matrix to a Coefficient matrix
+        r1, r2 = linear_eq_to_matrix(mat2, dummy_symbols)
+        s = linsolve((r1, initial_conditions+r2))
+        res_tuple = next(iter(s))
+        for ind, v in enumerate(res_tuple):
+            mat1 = mat1.replace(dummy_symbols[ind], v)
+        res = self._C*mat1 + self._D*input_vector
+        return res
 
     def _eval_evalf(self, prec):
         """
