@@ -79,5 +79,3 @@ Guide to Mechanics
    :titlesonly:
 
    api/index.rst
-   quantum/index.rst
-   continuum_mechanics/index.rst
