@@ -1,8 +1,8 @@
 .. _physics_vector:
 
-=========================
-The Physics Vector Module
-=========================
+======
+Vector
+======
 
 .. topic:: Abstract
 
@@ -12,7 +12,6 @@ The Physics Vector Module
    of time or otherwise, in :mod:`sympy.physics`.
 
 .. module:: sympy.physics.vector
-
 
 References for Physics/Vector
 ================================

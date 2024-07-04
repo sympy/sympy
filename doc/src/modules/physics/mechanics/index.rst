@@ -1,14 +1,15 @@
-.. _classical_mechanics:
+.. _physics_mechanics:
 
-===================
-Classical Mechanics
-===================
+=========
+Mechanics
+=========
 
 .. topic:: Abstract
 
    In this documentation many components of the physics/mechanics module will
    be discussed. :mod:`sympy.physics.mechanics` has been written to allow for creation of
    symbolic equations of motion for complicated multibody systems.
+   We also introduce methods in quantum and continuum mechanics modules.
 
 .. module:: sympy.physics.mechanics
 
@@ -77,6 +78,6 @@ Guide to Mechanics
 .. toctree::
    :titlesonly:
 
-   linearize.rst
-   sympy_mechanics_for_autolev_users.rst
    api/index.rst
+   quantum/index.rst
+   continuum_mechanics/index.rst
