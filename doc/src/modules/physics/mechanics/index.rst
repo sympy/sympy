@@ -9,7 +9,6 @@ Mechanics
    In this documentation many components of the physics/mechanics module will
    be discussed. :mod:`sympy.physics.mechanics` has been written to allow for creation of
    symbolic equations of motion for complicated multibody systems.
-   We also introduce methods in quantum and continuum mechanics modules.
 
 .. module:: sympy.physics.mechanics
 
