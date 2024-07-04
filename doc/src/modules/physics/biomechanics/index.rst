@@ -1,5 +1,3 @@
-.. _biomechanics:
-
 ============
 Biomechanics
 ============

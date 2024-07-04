@@ -81,3 +81,5 @@ Guide to Classical Mechanics
    masses.rst
    reference.rst
    symsystem.rst
+   linearize.rst
+   sympy_mechanics_for_autolev_users.rst
