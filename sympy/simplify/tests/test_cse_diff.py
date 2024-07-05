@@ -51,4 +51,3 @@ def test_forward_jacobian(expr, wrt):
     jacobian = _forward_jacobian(expr, wrt, as_cse_expr=True)
     zeros = ImmutableDenseMatrix.zeros(*jacobian.shape)
     assert simplify(jacobian - expr.jacobian(wrt)) == zeros
-
