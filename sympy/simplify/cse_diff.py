@@ -9,9 +9,10 @@ from sympy.core.traversal import postorder_traversal
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.simplify.cse_main import CseExpr, cse
 from sympy.utilities.iterables import numbered_symbols
+from sympy.physics.mechanics import dynamicsymbols
 
 
-def forward_jacobian(
+def _forward_jacobian(
     expr: ImmutableDenseMatrix,
     wrt: ImmutableDenseMatrix,
     as_cse_expr: bool = True,
@@ -73,6 +74,10 @@ def forward_jacobian(
         elif not node.free_symbols:
             return node, node
 
+        # Modification to manage dynamicsymbols
+        elif node == dynamicsymbols._t:
+            return node, node
+
         replacement_symbol = replacement_symbols.__next__()
         replaced_subexpr = node.xreplace(expr_to_replacement_cache)
         replacement_to_reduced_expr_cache[replacement_symbol] = replaced_subexpr
@@ -95,6 +100,7 @@ def forward_jacobian(
         )
         raise NotImplementedError(msg)
 
+    symbols = expr.free_symbols
     replacement_symbols = numbered_symbols(
         prefix='_z',
         cls=Symbol,
@@ -131,6 +137,11 @@ def forward_jacobian(
         for free_symbol in free_symbols:
             replacement_symbol, partial_derivative = add_to_cache(subexpr.diff(free_symbol))
             absolute_derivative += partial_derivative * absolute_derivative_mapping.get(free_symbol, zeros)
+
+        # Modification to manage dynamicsymbols
+        if free_symbols == {dynamicsymbols._t}:
+            absolute_derivative_mapping[symbol] = ImmutableDenseMatrix([[subexpr.diff(sub) for sub in wrt]])
+            continue
         absolute_derivative_mapping[symbol] = ImmutableDenseMatrix([[add_to_cache(a)[0] for a in absolute_derivative]])
 
     replaced_jacobian = ImmutableDenseMatrix.vstack(*[absolute_derivative_mapping.get(e, ImmutableDenseMatrix.zeros(*wrt.shape).T) for e in reduced_matrix])
@@ -165,7 +176,15 @@ def forward_jacobian(
         else:
             required_replacements[replacement_symbol] = replaced_subexpr.xreplace(unrequired_replacements)
 
-    cse_expr = CseExpr((list(required_replacements.items()), replaced_jacobian.xreplace(unrequired_replacements)))
-    if as_cse_expr:
-        return cse_expr
-    return cse_expr.reduced_exprs.subs(reversed(cse_expr.replacements))
+    reduced_exprs = replaced_jacobian.xreplace(unrequired_replacements)
+
+    # Modified substitution by ricdigi
+    sub_dict = {}
+    for rep_sym, sub in required_replacements.items():
+        fs = sub.free_symbols - symbols
+        for sym in fs:
+            sub_dict[sym] = required_replacements[sym]
+        required_replacements[rep_sym] = required_replacements[rep_sym].xreplace(sub_dict)
+        sub_dict = {}
+
+    return reduced_exprs.xreplace(required_replacements)
