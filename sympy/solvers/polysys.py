@@ -596,7 +596,7 @@ def get_nice_roots(poly):
         >>> Poly(-15*z**4 + 120*z**2 + 16).real_roots()[0]
         2*CRootOf(15*x**4 - 30*x**2 - 1, 0)
 
-        To get around this, we use .has().
+        To get around this, we use .has(). 
         """
 
         if root.has(ComplexRootOf):
@@ -690,7 +690,7 @@ def projtwo(F, mvar):
 
     proj_set = set()
     for i in range(len(F)):
-        # impose linear ordering
+        # impose "linear ordering"
         for j in range(i, len(F)):
             f, g = F[i], F[j]
             for f_ in red_set(f, mvar):

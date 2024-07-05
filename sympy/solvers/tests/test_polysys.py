@@ -15,6 +15,10 @@ from sympy.solvers.polysys import (solve_poly_system,
                                    solve_triangulated,
                                    solve_biquadratic, SolveFailed,
                                    solve_generic)
+from sympy.solvers.polysys import (red, red_level, red_set, psc_set,
+                                   get_nice_roots, projone, projtwo,
+                                   hongproj, cylindrical_algebraic_decomposition,
+                                   solve_poly_system_cad)
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.testing.pytest import raises
 
@@ -176,3 +180,47 @@ def test_solve_issue_3686():
     assert roots[0][1].epsilon_eq(-499.474999374969, 1e12)
     assert roots[1][0] == 0
     assert roots[1][1].epsilon_eq(500.474999374969, 1e12)
+
+
+# NEW TESTS FOR CAD AND RELATED FUNCTIONS
+
+def test_red():
+    # simple univar degree-one example
+    assert red(x, x) == 0
+    # univar degree-two
+    assert red(x**2 + x + 1, x) == x+1
+    # bivar
+    assert red(x*y + x**2 * y**2, x) == x*y
+
+
+def test_red_level():
+    assert red_level(x, x, 0) == x
+    assert red_level(x, x, 1) == 0
+    assert red_level(x, x, 100) == 0 # level > degree
+
+    assert red_level(x**3 + x**2 + x + 1, x, 2) == x + 1
+
+    assert red_level(y*x**3 + y**2 * x**2 + 1, x, 1) == y**2 * x**2 + 1
+
+
+def test_red_set():
+    assert red_set(1, x) == []
+    assert red_set(x, x) == [x]
+
+    assert red_set(x**3 + x**2 + x + 1, x) == [x**3 + x**2 + x + 1,
+                                               x**2 + x + 1,
+                                               x + 1,
+                                               1]
+    
+    assert red_set(y*x + y, x) == [y*x + y, y]
+
+
+#def test_psc_set():
+    #assert psc_set(x, 1, x) == 
+
+
+
+
+
+
+
