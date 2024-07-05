@@ -3631,15 +3631,17 @@ class Expr(Basic, EvalfMixin):
            log=log, multinomial=multinomial, basic=basic)
 
         expr = self
+        # default matches fraction's default
+        _fraction = lambda x: fraction(x, hints.get('exact', False))
         if hints.pop('frac', False):
             n, d = [a.expand(deep=deep, modulus=modulus, **hints)
-                    for a in fraction(self)]
+                    for a in _fraction(self)]
             return n/d
         elif hints.pop('denom', False):
-            n, d = fraction(self)
+            n, d = _fraction(self)
             return n/d.expand(deep=deep, modulus=modulus, **hints)
         elif hints.pop('numer', False):
-            n, d = fraction(self)
+            n, d = _fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
 
         # Although the hints are sorted here, an earlier hint may get applied
@@ -3973,8 +3975,8 @@ class AtomicExpr(Atom, Expr):
     def _eval_derivative_n_times(self, s, n):
         from .containers import Tuple
         from sympy.matrices.expressions.matexpr import MatrixExpr
-        from sympy.matrices.common import MatrixCommon
-        if isinstance(s, (MatrixCommon, Tuple, Iterable, MatrixExpr)):
+        from sympy.matrices.matrixbase import MatrixBase
+        if isinstance(s, (MatrixBase, Tuple, Iterable, MatrixExpr)):
             return super()._eval_derivative_n_times(s, n)
         from .relational import Eq
         from sympy.functions.elementary.piecewise import Piecewise

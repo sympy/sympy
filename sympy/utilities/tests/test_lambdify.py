@@ -8,7 +8,7 @@ import pytest
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, Lambda, diff)
-from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
+from sympy.core.numbers import (E, Float, I, Rational, all_close, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
@@ -22,7 +22,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, cot, sin,
                                                       sinc, tan)
-from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
+from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely, jn, yn)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels, Si, Ci)
@@ -35,6 +35,7 @@ from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import numbered_symbols
+from sympy.vector import CoordSys3D
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
@@ -375,6 +376,18 @@ def test_double_integral():
     l = lambdify([z], i)
     d = l(1)
     assert 1.23370055 < d < 1.233700551
+
+def test_spherical_bessel():
+    if numpy and not scipy:
+        skip("scipy not installed.")
+    test_point = 4.2 #randomly selected
+    x = symbols("x")
+    jtest = jn(2, x)
+    assert abs(lambdify(x,jtest)(test_point) -
+            jtest.subs(x,test_point).evalf()) < 1e-8
+    ytest = yn(2, x)
+    assert abs(lambdify(x,ytest)(test_point) -
+            ytest.subs(x,test_point).evalf()) < 1e-8
 
 
 #================== Test vectors ===================================
@@ -915,6 +928,17 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
 
 
+def test_lambdify__arguments_with_invalid_python_identifiers():
+    # see sympy/sympy#26690
+    N = CoordSys3D('N')
+    xn, yn, zn = N.base_scalars()
+    expr = xn + yn
+    f = lambdify([xn, yn], expr)
+    res = f(0.2, 0.3)
+    ref = 0.2 + 0.3
+    assert abs(res-ref) < 1e-15
+
+
 def test_curly_matrix_symbol():
     # Issue #15009
     curlyv = sympy.MatrixSymbol("{v}", 2, 1)
@@ -1145,7 +1169,7 @@ def test_scipy_fns():
             if sympy_fn in (RisingFactorial, polygamma):
                 tv2 = numpy.real(tv2)
             if sympy_fn == polygamma:
-                tv1 = abs(int(tv1))  # first argument to polygamma must be a non-negative integral.
+                tv1 = abs(int(tv1))  # first argument to polygamma must be a non-negative integer.
             sympy_result = sympy_fn(tv1, tv2).evalf()
             assert abs(f(tv1, tv2) - sympy_result) < 1e-13*(1 + abs(sympy_result))
             assert abs(f(tv1, tv2) - scipy_fn(tv1, tv2)) < 1e-13*(1 + abs(sympy_result))
@@ -1241,7 +1265,7 @@ def test_lambdify_Derivative_arg_issue_16468():
     fx = f.diff()
     assert lambdify((f, fx), f + fx)(10, 5) == 15
     assert eval(lambdastr((f, fx), f/fx))(10, 5) == 2
-    raises(SyntaxError, lambda:
+    raises(Exception, lambda:
         eval(lambdastr((f, fx), f/fx, dummify=False)))
     assert eval(lambdastr((f, fx), f/fx, dummify=True))(10, 5) == 2
     assert eval(lambdastr((fx, f), f/fx, dummify=True))(S(10), 5) == S.Half
@@ -1871,6 +1895,27 @@ def test_lambdify_docstring_size_limit_matrix():
             docstring_limit=test_case.docstring_limit,
         )
         assert lambdified_expr.__doc__ == test_case.expected_docstring
+
+
+def test_lambdify_empty_tuple():
+    a = symbols("a")
+    expr = ((), (a,))
+    f = lambdify(a, expr)
+    result = f(1)
+    assert result == ((), (1,)), "Lambdify did not handle the empty tuple correctly."
+
+
+def test_assoc_legendre_numerical_evaluation():
+
+    tol = 1e-10
+
+    sympy_result_integer = assoc_legendre(1, 1/2, 0.1).evalf()
+    sympy_result_complex = assoc_legendre(2, 1, 3).evalf()
+    mpmath_result_integer = -0.474572528387641
+    mpmath_result_complex = -25.45584412271571*I
+
+    assert all_close(sympy_result_integer, mpmath_result_integer, tol)
+    assert all_close(sympy_result_complex, mpmath_result_complex, tol)
 
 
 def test_lambdify_cse_expr_sympy():

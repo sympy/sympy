@@ -120,8 +120,8 @@ class SATSolver:
 
         if 'simple' == clause_learning:
             self.add_learned_clause = self._simple_add_learned_clause
-            self.compute_conflict = self.simple_compute_conflict
-            self.update_functions.append(self.simple_clean_clauses)
+            self.compute_conflict = self._simple_compute_conflict
+            self.update_functions.append(self._simple_clean_clauses)
         elif 'none' == clause_learning:
             self.add_learned_clause = lambda x: None
             self.compute_conflict = lambda: None

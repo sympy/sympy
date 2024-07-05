@@ -357,6 +357,7 @@ avoided.
   function unevaluated in `eval()` and define a [`doit()`
   method](custom-functions-doit) to evaluate it.
 
+(custom-functions-automatic-evaluation)=
 - **Avoid too much automatic evaluation.**
 
   It is recommended to minimize what is evaluated automatically by `eval()`.

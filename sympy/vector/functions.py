@@ -455,10 +455,7 @@ def _path(from_object, to_object):
         from_path.append(obj)
         obj = obj._parent
     index = len(from_path)
-    i = other_path.index(obj)
-    while i >= 0:
-        from_path.append(other_path[i])
-        i -= 1
+    from_path.extend(other_path[other_path.index(obj)::-1])
     return index, from_path
 
 

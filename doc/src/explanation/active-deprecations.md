@@ -74,7 +74,159 @@ will need to either add a `warnings` filter as above or use pytest to filter
 SymPy deprecation warnings.
 ```
 
+## Version 1.14
+
+There are no deprecations yet for SymPy 1.14.
+
 ## Version 1.13
+
+(deprecated-mechanics-body-class)=
+### Deprecated mechanics Body class
+
+The ``Body`` class in the ``sympy.physics.mechanics`` module has been
+deprecated. It was introduced to support the joints framework. However, it
+causes several problems because it represents both rigid bodies and particles.
+``Body`` has now been fully replaced by ``RigidBody`` and ``Particle``.
+Previously, one could create a simple rigid body or particle using only the
+``Body`` class:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import Body
+>>> Body("rigid_body")  # doctest: +SKIP
+rigid_body
+>>> Body("particle", mass=symbols("m"))  # doctest: +SKIP
+particle
+```
+
+Now they should be created using the ``RigidBody`` and ``Particle`` class:
+
+```py
+>>> from sympy.physics.mechanics import RigidBody, Particle
+>>> RigidBody("rigid_body")
+rigid_body
+>>> Particle("particle")
+particle
+```
+
+(deprecated-mechanics-jointsmethod)=
+### Deprecated mechanics JointsMethod
+
+The ``JointsMethod`` class in the ``sympy.physics.mechanics`` module has been
+deprecated. It was introduced to support the joints framework, but it has been
+fully replaced due to limitations in its design. Previously, one could construct
+as system solely consisting out of bodies and joints, which were then parsed by
+``JointsMethod`` to a backend, like ``KanesMethod`` to form the equations of
+motion.
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import (
+...   Body, JointsMethod, PinJoint, PrismaticJoint)
+>>> g, l = symbols("g l")
+>>> wall = Body("wall")
+>>> cart = Body("cart")
+>>> pendulum = Body("Pendulum")
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
+...                child_point=l * pendulum.y)
+>>> pendulum.masscenter.set_vel(pendulum.frame, 0)
+>>> cart.apply_force(-g * cart.mass * wall.y)
+>>> pendulum.apply_force(-g * pendulum.mass * wall.y)
+>>> method = JointsMethod(wall, slider, pin)  # doctest: +SKIP
+>>> method.form_eoms()  # doctest: +SKIP
+Matrix([
+[ Pendulum_mass*l*u_j(t)**2*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_j(t), t) - (Pendulum_mass + cart_mass)*Derivative(u_s(t), t)],
+[-Pendulum_mass*g*l*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_s(t), t) - (Pendulum_izz + Pendulum_mass*l**2)*Derivative(u_j(t), t)]])
+```
+
+The replacement of ``JointsMethod`` is ``System``, which can be used to form the
+equations of motion of the same cart pole as follows:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import (
+...   Particle, PinJoint, PrismaticJoint, RigidBody, System)
+>>> g, l = symbols("g l")
+>>> wall = RigidBody("wall")
+>>> cart = RigidBody("cart")
+>>> pendulum = RigidBody("Pendulum")
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
+...                child_point=l * pendulum.y)
+>>> system = System.from_newtonian(wall)
+>>> system.add_joints(slider, pin)
+>>> system.apply_uniform_gravity(-g * wall.y)
+>>> system.form_eoms()
+Matrix([
+[ Pendulum_mass*l*u_j(t)**2*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_j(t), t) - (Pendulum_mass + cart_mass)*Derivative(u_s(t), t)],
+[-Pendulum_mass*g*l*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_s(t), t) - (Pendulum_izz + Pendulum_mass*l**2)*Derivative(u_j(t), t)]])
+```
+
+(deprecated-matrix-mixins)=
+### Deprecated matrix mixin classes
+
+The matrix mixin classes are deprecated. Previously the ``Matrix`` class (aka
+``MutableDenseMatrix``) was created through an inheritance hierarchy that
+looked like:
+```py
+class MatrixRequired:
+class MatrixShaping(MatrixRequired):
+class MatrixSpecial(MatrixRequired):
+class MatrixProperties(MatrixRequired):
+class MatrixOperations(MatrixRequired):
+class MatrixArithmetic(MatrixRequired):
+class MatrixCommon(
+    MatrixArithmetic,
+    MatrixOperations,
+    MatrixProperties,
+    MatrixSpecial,
+    MatrixShaping):
+class MatrixDeterminant(MatrixCommon):
+class MatrixReductions(MatrixDeterminant):
+class MatrixSubspaces(MatrixReductions):
+class MatrixEigen(MatrixSubspaces)
+class MatrixCalculus(MatrixCommon):
+class MatrixDeprecated(MatrixCommon):
+class MatrixBase(MatrixDeprecated,
+   MatrixCalculus,
+   MatrixEigen,
+   MatrixCommon,
+   Printable):
+class RepMatrix(MatrixBase):
+class DenseMatrix(RepMatrix):
+class MutableRepMatrix(RepMatrix):
+class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
+```
+As of SymPy 1.13 this has been simplified and all classes above
+``MatrixBase``are merged together so the hierarchy looks like:
+```py
+class MatrixBase(Printable):
+class RepMatrix(MatrixBase):
+class DenseMatrix(RepMatrix):
+class MutableRepMatrix(RepMatrix):
+class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
+```
+The matrix mixin classes like ``MatrixRequired`` etc are still available
+because downstream code might be subclassing these classes but these are all
+deprecated and will be removed in a future version of SymPy. Subclassing these
+classes is deprecated and anycode that does that should be changed to not
+subclass them.
+
+It is also deprecated to use these classes with ``isinstance`` like
+``isinstance(M, MatrixCommon)``. Any code doing this should be changed to use
+``isinstance(M, Matrixbase)`` instead which will also work with previous SymPy
+versions.
+
+More generally importing anything from the ``sympy.matrices.common`` or
+``sympy.matrices.matrices`` modules in which these classes are defined is
+deprecated. These modules will be removed in a future release of SymPy.
+
+The reason for this change is that the convoluted inheritance hierarchy made it
+difficult to improve ``Matrix`` for the majority of users while still providing
+all of these classes that could be subclassed. Since these mixin classes are no
+longer used as part of ``Matrix`` they no longer serve any function within
+SymPy and the removal of this now unused code will simplify the codebase.
 
 (deprecated-sympify-string-fallback)=
 ### The string fallback in `sympify()`
@@ -265,8 +417,30 @@ Now they should be imported from ``sympy.physics.mechanics``:
 >>> from sympy.physics.mechanics.loads import gravity
 ```
 
+(modularinteger-compare)=
+### Ordered comparisons like ``a < b`` with modular integers
 
-modularinteger-to-int=
+SymPy's ``GF`` domains represent modular integers. Previously it was possible
+to compare these with ordered comparisons like ``a < b``:
+```py
+>>> from sympy import GF
+>>> F5 = GF(5)
+>>> F5(2) < F5(3) # doctest: +SKIP
+True
+```
+This will now fail with ``TypeError`` when the ground types are set to
+``flint``. When the ground types are not ``flint`` these comparisons are now
+deprecated: they will still work but will give a deprecation warning when used.
+
+Ordered comparisons of modular integer or finite fields do not make sense
+because these are not ordered fields:
+```
+>>> e = F5(4)
+>>> e + 1 > e # doctest: +SKIP
+False
+```
+
+(modularinteger-to-int)=
 ### The ``ModularInteger.to_int()`` method
 
 SymPy's ``GF`` domains are for modular integers e.g. ``GF(n)`` is for the
@@ -341,6 +515,59 @@ considered to be "symmetric" or not. Instead the notion of "symmetric" is now
 purely a property of the domain object itself rather than of the elements and
 so the ``to_int`` method that depends on this must be a domain method rather
 than an element method.
+
+(deprecated-ntheory-symbolic-functions)=
+### Relocate symbolic functions from ``ntheory`` to ``functions``
+
+The following symbolic functions in ``ntheory`` have been moved to
+``functions``:
+
+* ``sympy.ntheory.factor_.divisor_sigma``
+* ``sympy.ntheory.factor_.primenu``
+* ``sympy.ntheory.factor_.primeomega``
+* ``sympy.ntheory.factor_.reduce_totient``
+* ``sympy.ntheory.factor_.totient``
+* ``sympy.ntheory.generate.primepi``
+* ``sympy.partitions_.npartitions``
+* ``sympy.ntheory.residue_ntheory.jacobi_symbol``
+* ``sympy.ntheory.residue_ntheory.legendre_symbol``
+* ``sympy.ntheory.residue_ntheory.mobius``
+
+Code that imports these functions from top-level like ``from sympy import
+mobius`` will continue to work fine. However code that imports these from the
+fully qualified module like ``from sympy.ntheory import mobius`` or ``from
+sympy.ntheory.residue_ntheory import mobius`` will now see a deprecation
+warning. The new location for these functions is in ``sympy.functions`` but the
+intended way to import them is still from top-level like ``from sympy import
+mobius``.
+
+The following symbolic functions in ``ntheory`` have been moved to
+``functions``, but cannot be imported at top-level.
+
+* ``sympy.ntheory.factor_.udivisor_sigma``
+
+The following functions have been moved from ``functions`` to ``ntheory``
+because they are numeric functions.
+
+* ``sympy.functions.combinatorial.numbers.carmichael.is_carmichael``
+* ``sympy.functions.combinatorial.numbers.carmichael.find_carmichael_numbers_in_range``
+* ``sympy.functions.combinatorial.numbers.carmichael.find_first_n_carmichaels``
+
+If you are using these functions, change from
+
+```py
+>>> from sympy import carmichael
+>>> carmichael.is_carmichael(561)
+True
+```
+
+to
+
+```py
+>>> from sympy import is_carmichael
+>>> is_carmichael(561)
+True
+```
 
 
 ## Version 1.12

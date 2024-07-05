@@ -9,6 +9,7 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, atan, atan2, cos, sin)
+from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.integrals.integrals import Integral
 from sympy.matrices.dense import Matrix
@@ -605,6 +606,15 @@ def test_arg():
     assert arg(exp_polar(4*pi*I)) == 4*pi
     assert arg(exp_polar(-7*pi*I)) == -7*pi
     assert arg(exp_polar(5 - 3*pi*I/4)) == pi*Rational(-3, 4)
+
+    assert arg(exp(I*pi/7)) == pi/7     # issue 17300
+    assert arg(exp(16*I)) == 16 - 6*pi
+    assert arg(exp(13*I*pi/12)) == -11*pi/12
+    assert arg(exp(123 - 5*I)) == -5 + 2*pi
+    assert arg(exp(sin(1 + 3*I))) == -2*pi + cos(1)*sinh(3)
+    r = Symbol('r', real=True)
+    assert arg(exp(r - 2*I)) == -2
+
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 

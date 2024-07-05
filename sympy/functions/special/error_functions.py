@@ -1,7 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from sympy.core import EulerGamma  # Must be imported from core, not core.numbers
+from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
@@ -9,7 +9,7 @@ from sympy.core.numbers import I, pi, Rational
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy, uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import  polar_lift, re, unpolarify
@@ -1216,6 +1216,11 @@ class Ei(Function):
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return exp(z) * _eis(z)
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
+        return Integral(S.Exp1**t/t, (t, S.NegativeInfinity, z))
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import re
         x0 = self.args[0].limit(x, 0)
@@ -1432,6 +1437,12 @@ class expint(Function):
             return (exp(-z)/z) * Add(*s)
 
         return super(expint, self)._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
+        from sympy.integrals.integrals import Integral
+        n, x = self.args
+        t = Dummy(uniquely_named_symbol('t', args).name)
+        return Integral(t**-n * exp(-t*x), (t, 1, S.Infinity))
 
 
 def E1(z):
@@ -1784,7 +1795,6 @@ class TrigonometricIntegral(Function):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE this is fairly inefficient
-        n += 1
         if self.args[0].subs(x, 0) != 0:
             return super()._eval_nseries(x, n, logx)
         baseseries = self._trigfunc(x)._eval_nseries(x, n, logx)
@@ -1845,7 +1855,7 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import sinc
     >>> Si(z).rewrite(sinc)
-    Integral(sinc(t), (t, 0, z))
+    Integral(sinc(_t), (_t, 0, z))
 
     See Also
     ========
@@ -1890,10 +1900,25 @@ class Si(TrigonometricIntegral):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
-    def _eval_rewrite_as_sinc(self, z, **kwargs):
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(sinc(t), (t, 0, z))
+
+    _eval_rewrite_as_sinc =  _eval_rewrite_as_Integral
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
+
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+        if arg0.is_zero:
+            return arg
+        elif not arg0.is_infinite:
+            return self.func(arg0)
+        else:
+            return self
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -1902,11 +1927,11 @@ class Si(TrigonometricIntegral):
         # Expansion at oo
         if point is S.Infinity:
             z = self.args[0]
-            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
-                    for k in range(int((n - 1)/2))] + [Order(1/z**n, x)]
-            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
-                    for k in range(int(n/2) - 1)] + [Order(1/z**n, x)]
-            return pi/2 - (cos(z)/z)*Add(*p) - (sin(z)/z)*Add(*q)
+            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k + 1)
+                    for k in range(n//2 + 1)] + [Order(1/z**n, x)]
+            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*(k + 1))
+                    for k in range(n//2)] + [Order(1/z**n, x)]
+            return pi/2 - cos(z)*Add(*p) - sin(z)*Add(*q)
 
         # All other points are not handled
         return super(Si, self)._eval_aseries(n, args0, x, logx)
@@ -2019,6 +2044,11 @@ class Ci(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
+        return S.EulerGamma + log(z) - Integral((1-cos(t))/t, (t, 0, z))
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
@@ -2038,18 +2068,19 @@ class Ci(TrigonometricIntegral):
         from sympy.series.order import Order
         point = args0[0]
 
-        # Expansion at oo
-        if point is S.Infinity:
+        if point in (S.Infinity, S.NegativeInfinity):
             z = self.args[0]
-            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
-                    for k in range(int((n - 1)/2))] + [Order(1/z**n, x)]
-            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
-                    for k in range(int(n/2) - 1)] + [Order(1/z**n, x)]
-            return (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
+            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k + 1)
+                    for k in range(n//2 + 1)] + [Order(1/z**n, x)]
+            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*(k + 1))
+                    for k in range(n//2)] + [Order(1/z**n, x)]
+            result = sin(z)*(Add(*p)) - cos(z)*(Add(*q))
 
-        # All other points are not handled
+            if point is S.NegativeInfinity:
+                result += I*pi
+            return result
+
         return super(Ci, self)._eval_aseries(n, args0, x, logx)
-
 
 class Shi(TrigonometricIntegral):
     r"""
@@ -2441,6 +2472,11 @@ class fresnels(FresnelIntegral):
         return (pi*z**Rational(9, 4) / (sqrt(2)*(z**2)**Rational(3, 4)*(-z)**Rational(3, 4))
                 * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
+        return Integral(sin(pi*t**2/2), (t, 0, z))
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
@@ -2596,6 +2632,11 @@ class fresnelc(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return (pi*z**Rational(3, 4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
+        return Integral(cos(pi*t**2/2), (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order

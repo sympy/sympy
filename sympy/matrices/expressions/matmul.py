@@ -7,8 +7,8 @@ from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
-from sympy.matrices.common import NonInvertibleMatrixError
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.exceptions import NonInvertibleMatrixError
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.matrices.expressions._shape import validate_matmul_integer as validate
 

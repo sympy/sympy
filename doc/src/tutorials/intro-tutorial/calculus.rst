@@ -222,7 +222,43 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎩
 
 This last example returned a ``Piecewise`` expression because the integral
-does not converge unless `\Re(y) > 1.`
+does not converge unless `\Re(y) > -1.`
+
+Numeric Integration
+===================
+
+Numeric integration is a method employed in mathematical analysis to estimate
+the definite integral of a function across a simplified range. SymPy not only
+facilitates symbolic integration but also provides support for numeric integration.
+It leverages the precision capabilities of the ``mpmath`` library to enhance the
+accuracy of numeric integration calculations.
+
+    >>> from sympy import Integral, Symbol, sqrt
+    >>> x = Symbol('x')
+    >>> integral = Integral(sqrt(2)*x, (x, 0, 1))
+    >>> integral
+    1
+    ⌠
+    ⎮ √2⋅x dx
+    ⌡
+    0
+    >>> integral.evalf()
+    0.707106781186548
+
+To compute the integral with a specified precision:
+
+    >>> integral.evalf(50)
+    0.70710678118654752440084436210484903928483593768847
+
+Numeric integration becomes a viable approach in situations where symbolic integration
+is impractical or impossible. This method allows for the computation of integrals
+through numerical techniques, even when dealing with infinite intervals or integrands:
+
+    >>> Integral(exp(-(x ** 2)), (x, -oo, oo)).evalf()
+    1.77245385090552
+
+    >>> Integral(1 / sqrt(x), (x, 0, 1)).evalf()
+    2.00000000000000
 
 Limits
 ======

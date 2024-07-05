@@ -9,7 +9,7 @@ from sympy.utilities.iterables import is_sequence, sift
 from sympy.utilities.misc import filldedent
 
 from sympy.matrices import Matrix, ShapeError
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matadd import MatAdd
@@ -76,7 +76,7 @@ class BlockMatrix(MatrixExpr):
 
     See Also
     ========
-    sympy.matrices.matrices.MatrixBase.irregular
+    sympy.matrices.matrixbase.MatrixBase.irregular
     """
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -111,7 +111,7 @@ class BlockMatrix(MatrixExpr):
             if not ok:
                 # same total cols in each row
                 ok = len({
-                    sum([i.cols for i in r]) for r in rows}) == 1
+                    sum(i.cols for i in r) for r in rows}) == 1
                 if blocky and ok:
                     raise ValueError(filldedent('''
                         Although this matrix is comprised of blocks,
@@ -313,7 +313,7 @@ class BlockMatrix(MatrixExpr):
         See Also
         ========
 
-        sympy.matrices.matrices.MatrixBase.pinv
+        sympy.matrices.matrixbase.MatrixBase.pinv
         """
 
         if self.blockshape == (2, 2):

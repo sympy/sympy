@@ -293,7 +293,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
 
     # The parametric and regular cases are identical, except for this part
     if parametric:
-        dc = max([i.degree(DE.t) for i in cQ])
+        dc = max(i.degree(DE.t) for i in cQ)
     else:
         dc = cQ.degree(DE.t)
 

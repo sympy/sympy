@@ -1489,7 +1489,19 @@ def dup_inner_gcd(f, g, K):
     (x - 1, x + 1, x - 2)
 
     """
-    if not K.is_Exact:
+    # XXX: This used to check for K.is_Exact but leads to awkward results when
+    # the domain is something like RR[z] e.g.:
+    #
+    # >>> g, p, q = Poly(1, x).cancel(Poly(51.05*x*y - 1.0, x))
+    # >>> g
+    # 1.0
+    # >>> p
+    # Poly(17592186044421.0, x, domain='RR[y]')
+    # >>> q
+    # Poly(898081097567692.0*y*x - 17592186044421.0, x, domain='RR[y]'))
+    #
+    # Maybe it would be better to flatten into multivariate polynomials first.
+    if K.is_RR or K.is_CC:
         try:
             exact = K.get_exact()
         except DomainError:
