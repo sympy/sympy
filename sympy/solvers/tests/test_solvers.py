@@ -434,7 +434,7 @@ def test_linear_system_symbols_doesnt_hang_1():
         y1s = symbols('y1_:{}'.format(wy), real=True)
         c = symbols('c_:{}'.format(order+1), real=True)
 
-        expr = sum([coeff*x**o for o, coeff in enumerate(c)])
+        expr = sum(coeff*x**o for o, coeff in enumerate(c))
         eqs = []
         for i in range(wy):
             eqs.append(expr.diff(x, i).subs({x: x0}) - y0s[i])
@@ -644,8 +644,11 @@ def test_solve_transcendental():
         assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)
     # don't allow massive expansion
     assert solve(cos(1000*x) - S.Half) == [pi/3000, pi/600]
-    assert solve(cos(x - 1000*y) - 1, x) == [2*atan(tan(500*y))]
-    assert solve(cos(x + y + z) - 1, x) == [-2*atan(tan(y/2 + z/2))]
+    assert solve(cos(x - 1000*y) - 1, x) == [1000*y, 1000*y + 2*pi]
+    assert solve(cos(x + y + z) - 1, x) == [-y - z, -y - z + 2*pi]
+
+    # issue 26008
+    assert solve(sin(x + pi/6)) == [-pi/6, 5*pi/6]
 
 
 def test_solve_for_functions_derivatives():
@@ -1838,7 +1841,7 @@ def test_issue_6792():
          CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_6819_6820_6821_6248_8692():
+def test_issues_6819_6820_6821_6248_8692_25777_25779():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
@@ -1852,9 +1855,21 @@ def test_issues_6819_6820_6821_6248_8692():
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
 
+    # 25777
+    assert solve(abs(x**3 + x + 2)/(x + 1)) == []
+
+    # 25779
+    assert solve(abs(x)) == [0]
+    assert solve(Eq(abs(x**2 - 2*x), 4), x) == [
+        1 - sqrt(5), 1 + sqrt(5)]
+    nn = symbols('nn', nonnegative=True)
+    assert solve(abs(sqrt(nn))) == [0]
+    nz = symbols('nz', nonzero=True)
+    assert solve(Eq(Abs(4 + 1 / (4*nz)), 0)) == [-Rational(1, 16)]
+
     x = symbols('x')
     assert solve([re(x) - 1, im(x) - 2], x) == [
-        {re(x): 1, x: 1 + 2*I, im(x): 2}]
+        {x: 1 + 2*I, re(x): 1, im(x): 2}]
 
     # check for 'dict' handling of solution
     eq = sqrt(re(x)**2 + im(x)**2) - 3
@@ -2112,7 +2127,7 @@ def test_issue_5114_6611():
     ans = solve(list(eqs), list(v), simplify=False)
     # If time is taken to simplify then then 2617 below becomes
     # 1168 and the time is about 50 seconds instead of 2.
-    assert sum([s.count_ops() for s in ans.values()]) <= 3270
+    assert sum(s.count_ops() for s in ans.values()) <= 3270
 
 
 def test_det_quick():
@@ -2619,6 +2634,12 @@ def test_issue_22768():
 def test_issue_22717():
     assert solve((-y**2 + log(y**2/x) + 2, -2*x*y + 2*x/y)) == [
         {y: -1, x: E}, {y: 1, x: E}]
+
+
+def test_issue_25176():
+    eq = (x - 5)**-8 - 3
+    sol = solve(eq)
+    assert not any(eq.subs(x, i) for i in sol)
 
 
 def test_issue_10169():

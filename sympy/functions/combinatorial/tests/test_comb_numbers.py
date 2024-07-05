@@ -15,9 +15,13 @@ from sympy.series.limits import limit, Limit
 from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, andre, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    genocchi, andre, partition, divisor_sigma, udivisor_sigma, legendre_symbol,
+    jacobi_symbol, kronecker_symbol, mobius,
+    primenu, primeomega, totient, reduced_totient, primepi,
+    motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
 from sympy.functions.combinatorial.numbers import _nT
+from sympy.ntheory.factor_ import factorint
 
 from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
@@ -27,14 +31,6 @@ from sympy.abc import x
 
 
 def test_carmichael():
-    assert carmichael.find_carmichael_numbers_in_range(0, 561) == []
-    assert carmichael.find_carmichael_numbers_in_range(561, 562) == [561]
-    assert carmichael.find_carmichael_numbers_in_range(561, 1105) == carmichael.find_carmichael_numbers_in_range(561,
-                                                                                                                 562)
-    assert carmichael.find_first_n_carmichaels(5) == [561, 1105, 1729, 2465, 2821]
-    raises(ValueError, lambda: carmichael.is_carmichael(-2))
-    raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(-2, 2))
-    raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(22, 2))
     with warns_deprecated_sympy():
         assert carmichael.is_prime(2821) == False
 
@@ -577,7 +573,389 @@ def test_partition():
     assert partition(p).is_positive
     assert partition(x).subs(x, 7) == 15
     assert partition(y).subs(y, 8) == 22
-    raises(ValueError, lambda: partition(Rational(5, 4)))
+    raises(TypeError, lambda: partition(Rational(5, 4)))
+
+
+def test_divisor_sigma():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: divisor_sigma(m))
+    raises(TypeError, lambda: divisor_sigma(4.5))
+    raises(TypeError, lambda: divisor_sigma(1, m))
+    raises(TypeError, lambda: divisor_sigma(1, 4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: divisor_sigma(m))
+    raises(ValueError, lambda: divisor_sigma(0))
+    m = Symbol('m', negative=True)
+    raises(ValueError, lambda: divisor_sigma(1, m))
+    raises(ValueError, lambda: divisor_sigma(1, -1))
+
+    # special case
+    p = Symbol('p', prime=True)
+    k = Symbol('k', integer=True)
+    assert divisor_sigma(p, 1) == p + 1
+    assert divisor_sigma(p, k) == p**k + 1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert divisor_sigma(n).is_integer is True
+    assert divisor_sigma(n).is_positive is True
+
+    # symbolic
+    k = Symbol('k', integer=True, zero=False)
+    assert divisor_sigma(4, k) == 2**(2*k) + 2**k + 1
+    assert divisor_sigma(6, k) == (2**k + 1) * (3**k + 1)
+
+    # Integer
+    assert divisor_sigma(23450) == 50592
+    assert divisor_sigma(23450, 0) == 24
+    assert divisor_sigma(23450, 1) == 50592
+    assert divisor_sigma(23450, 2) == 730747500
+    assert divisor_sigma(23450, 3) == 14666785333344
+
+
+def test_udivisor_sigma():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: udivisor_sigma(m))
+    raises(TypeError, lambda: udivisor_sigma(4.5))
+    raises(TypeError, lambda: udivisor_sigma(1, m))
+    raises(TypeError, lambda: udivisor_sigma(1, 4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: udivisor_sigma(m))
+    raises(ValueError, lambda: udivisor_sigma(0))
+    m = Symbol('m', negative=True)
+    raises(ValueError, lambda: udivisor_sigma(1, m))
+    raises(ValueError, lambda: udivisor_sigma(1, -1))
+
+    # special case
+    p = Symbol('p', prime=True)
+    k = Symbol('k', integer=True)
+    assert udivisor_sigma(p, 1) == p + 1
+    assert udivisor_sigma(p, k) == p**k + 1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert udivisor_sigma(n).is_integer is True
+    assert udivisor_sigma(n).is_positive is True
+
+    # Integer
+    A034444 = [1, 2, 2, 2, 2, 4, 2, 2, 2, 4, 2, 4, 2, 4, 4, 2, 2, 4, 2, 4,
+               4, 4, 2, 4, 2, 4, 2, 4, 2, 8, 2, 2, 4, 4, 4, 4, 2, 4, 4, 4,
+               2, 8, 2, 4, 4, 4, 2, 4, 2, 4, 4, 4, 2, 4, 4, 4, 4, 4, 2, 8]
+    for n, val in enumerate(A034444, 1):
+        assert udivisor_sigma(n, 0) == val
+    A034448 = [1, 3, 4, 5, 6, 12, 8, 9, 10, 18, 12, 20, 14, 24, 24, 17, 18,
+               30, 20, 30, 32, 36, 24, 36, 26, 42, 28, 40, 30, 72, 32, 33,
+               48, 54, 48, 50, 38, 60, 56, 54, 42, 96, 44, 60, 60, 72, 48]
+    for n, val in enumerate(A034448, 1):
+        assert udivisor_sigma(n, 1) == val
+    A034676 = [1, 5, 10, 17, 26, 50, 50, 65, 82, 130, 122, 170, 170, 250,
+               260, 257, 290, 410, 362, 442, 500, 610, 530, 650, 626, 850,
+               730, 850, 842, 1300, 962, 1025, 1220, 1450, 1300, 1394, 1370]
+    for n, val in enumerate(A034676, 1):
+        assert udivisor_sigma(n, 2) == val
+
+
+def test_legendre_symbol():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: legendre_symbol(m, 3))
+    raises(TypeError, lambda: legendre_symbol(4.5, 3))
+    raises(TypeError, lambda: legendre_symbol(1, m))
+    raises(TypeError, lambda: legendre_symbol(1, 4.5))
+    m = Symbol('m', prime=False)
+    raises(ValueError, lambda: legendre_symbol(1, m))
+    raises(ValueError, lambda: legendre_symbol(1, 6))
+    m = Symbol('m', odd=False)
+    raises(ValueError, lambda: legendre_symbol(1, m))
+    raises(ValueError, lambda: legendre_symbol(1, 2))
+
+    # special case
+    p = Symbol('p', prime=True)
+    k = Symbol('k', integer=True)
+    assert legendre_symbol(p*k, p) == 0
+    assert legendre_symbol(1, p) == 1
+
+    # property
+    n = Symbol('n')
+    m = Symbol('m')
+    assert legendre_symbol(m, n).is_integer is True
+    assert legendre_symbol(m, n).is_prime is False
+
+    # Integer
+    assert legendre_symbol(5, 11) == 1
+    assert legendre_symbol(25, 41) == 1
+    assert legendre_symbol(67, 101) == -1
+    assert legendre_symbol(0, 13) == 0
+    assert legendre_symbol(9, 3) == 0
+
+
+def test_jacobi_symbol():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: jacobi_symbol(m, 3))
+    raises(TypeError, lambda: jacobi_symbol(4.5, 3))
+    raises(TypeError, lambda: jacobi_symbol(1, m))
+    raises(TypeError, lambda: jacobi_symbol(1, 4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: jacobi_symbol(1, m))
+    raises(ValueError, lambda: jacobi_symbol(1, -6))
+    m = Symbol('m', odd=False)
+    raises(ValueError, lambda: jacobi_symbol(1, m))
+    raises(ValueError, lambda: jacobi_symbol(1, 2))
+
+    # special case
+    p = Symbol('p', integer=True)
+    k = Symbol('k', integer=True)
+    assert jacobi_symbol(p*k, p) == 0
+    assert jacobi_symbol(1, p) == 1
+    assert jacobi_symbol(1, 1) == 1
+    assert jacobi_symbol(0, 1) == 1
+
+    # property
+    n = Symbol('n')
+    m = Symbol('m')
+    assert jacobi_symbol(m, n).is_integer is True
+    assert jacobi_symbol(m, n).is_prime is False
+
+    # Integer
+    assert jacobi_symbol(25, 41) == 1
+    assert jacobi_symbol(-23, 83) == -1
+    assert jacobi_symbol(3, 9) == 0
+    assert jacobi_symbol(42, 97) == -1
+    assert jacobi_symbol(3, 5) == -1
+    assert jacobi_symbol(7, 9) == 1
+    assert jacobi_symbol(0, 3) == 0
+    assert jacobi_symbol(0, 1) == 1
+    assert jacobi_symbol(2, 1) == 1
+    assert jacobi_symbol(1, 3) == 1
+
+
+def test_kronecker_symbol():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: kronecker_symbol(m, 3))
+    raises(TypeError, lambda: kronecker_symbol(4.5, 3))
+    raises(TypeError, lambda: kronecker_symbol(1, m))
+    raises(TypeError, lambda: kronecker_symbol(1, 4.5))
+
+    # special case
+    p = Symbol('p', integer=True)
+    assert kronecker_symbol(1, p) == 1
+    assert kronecker_symbol(1, 1) == 1
+    assert kronecker_symbol(0, 1) == 1
+
+    # property
+    n = Symbol('n')
+    m = Symbol('m')
+    assert kronecker_symbol(m, n).is_integer is True
+    assert kronecker_symbol(m, n).is_prime is False
+
+    # Integer
+    for n in range(3, 10, 2):
+        for a in range(-n, n):
+            val = kronecker_symbol(a, n)
+            assert val == jacobi_symbol(a, n)
+            minus = kronecker_symbol(a, -n)
+            if a < 0:
+                assert -minus == val
+            else:
+                assert minus == val
+            even = kronecker_symbol(a, 2 * n)
+            if a % 2 == 0:
+                assert even == 0
+            elif a % 8 in [1, 7]:
+                assert even == val
+            else:
+                assert -even == val
+    assert kronecker_symbol(1, 0) == kronecker_symbol(-1, 0) == 1
+    assert kronecker_symbol(0, 0) == 0
+
+
+def test_mobius():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: mobius(m))
+    raises(TypeError, lambda: mobius(4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: mobius(m))
+    raises(ValueError, lambda: mobius(-3))
+
+    # special case
+    p = Symbol('p', prime=True)
+    assert mobius(p) == -1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert mobius(n).is_integer is True
+    assert mobius(n).is_prime is False
+
+    # symbolic
+    n = Symbol('n', integer=True, positive=True)
+    k = Symbol('k', integer=True, positive=True)
+    assert mobius(n**2) == 0
+    assert mobius(4*n) == 0
+    assert isinstance(mobius(n**k), mobius)
+    assert mobius(n**(k+1)) == 0
+    assert isinstance(mobius(3**k), mobius)
+    assert mobius(3**(k+1)) == 0
+    m = Symbol('m')
+    assert isinstance(mobius(4*m), mobius)
+
+    # Integer
+    assert mobius(13*7) == 1
+    assert mobius(1) == 1
+    assert mobius(13*7*5) == -1
+    assert mobius(13**2) == 0
+    A008683 = [1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1, 0,
+               -1, 0, 1, 1, -1, 0, 0, 1, 0, 0, -1, -1, -1, 0, 1, 1, 1, 0, -1,
+               1, 1, 0, -1, -1, -1, 0, 0, 1, -1, 0, 0, 0, 1, 0, -1, 0, 1, 0]
+    for n, val in enumerate(A008683, 1):
+        assert mobius(n) == val
+
+
+def test_primenu():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: primenu(m))
+    raises(TypeError, lambda: primenu(4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: primenu(m))
+    raises(ValueError, lambda: primenu(0))
+
+    # special case
+    p = Symbol('p', prime=True)
+    assert primenu(p) == 1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert primenu(n).is_integer is True
+    assert primenu(n).is_nonnegative is True
+
+    # Integer
+    assert primenu(7*13) == 2
+    assert primenu(2*17*19) == 3
+    assert primenu(2**3 * 17 * 19**2) == 3
+    A001221 = [0, 1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 2, 1, 1, 2,
+               1, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 3, 1, 1, 2, 2, 2, 2]
+    for n, val in enumerate(A001221, 1):
+        assert primenu(n) == val
+
+
+def test_primeomega():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: primeomega(m))
+    raises(TypeError, lambda: primeomega(4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: primeomega(m))
+    raises(ValueError, lambda: primeomega(0))
+
+    # special case
+    p = Symbol('p', prime=True)
+    assert primeomega(p) == 1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert primeomega(n).is_integer is True
+    assert primeomega(n).is_nonnegative is True
+
+    # Integer
+    assert primeomega(7*13) == 2
+    assert primeomega(2*17*19) == 3
+    assert primeomega(2**3 * 17 * 19**2) == 6
+    A001222 = [0, 1, 1, 2, 1, 2, 1, 3, 2, 2, 1, 3, 1, 2, 2, 4, 1, 3,
+               1, 3, 2, 2, 1, 4, 2, 2, 3, 3, 1, 3, 1, 5, 2, 2, 2, 4]
+    for n, val in enumerate(A001222, 1):
+        assert primeomega(n) == val
+
+
+def test_totient():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: totient(m))
+    raises(TypeError, lambda: totient(4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: totient(m))
+    raises(ValueError, lambda: totient(0))
+
+    # special case
+    p = Symbol('p', prime=True)
+    assert totient(p) == p - 1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert totient(n).is_integer is True
+    assert totient(n).is_positive is True
+
+    # Integer
+    assert totient(7*13) == totient(factorint(7*13)) == (7-1)*(13-1)
+    assert totient(2*17*19) == totient(factorint(2*17*19)) == (17-1)*(19-1)
+    assert totient(2**3 * 17 * 19**2) == totient({2: 3, 17: 1, 19: 2}) == 2**2 * (17-1) * 19*(19-1)
+    A000010 = [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10, 4, 12, 6, 8, 8, 16,
+               6, 18, 8, 12, 10, 22, 8, 20, 12, 18, 12, 28, 8, 30, 16,
+               20, 16, 24, 12, 36, 18, 24, 16, 40, 12, 42, 20, 24, 22]
+    for n, val in enumerate(A000010, 1):
+        assert totient(n) == val
+
+
+def test_reduced_totient():
+    # error
+    m = Symbol('m', integer=False)
+    raises(TypeError, lambda: reduced_totient(m))
+    raises(TypeError, lambda: reduced_totient(4.5))
+    m = Symbol('m', positive=False)
+    raises(ValueError, lambda: reduced_totient(m))
+    raises(ValueError, lambda: reduced_totient(0))
+
+    # special case
+    p = Symbol('p', prime=True)
+    assert reduced_totient(p) == p - 1
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert reduced_totient(n).is_integer is True
+    assert reduced_totient(n).is_positive is True
+
+    # Integer
+    assert reduced_totient(7*13) == reduced_totient(factorint(7*13)) == 12
+    assert reduced_totient(2*17*19) == reduced_totient(factorint(2*17*19)) == 144
+    assert reduced_totient(2**2 * 11) == reduced_totient({2: 2, 11: 1}) == 10
+    assert reduced_totient(2**3 * 17 * 19**2) == reduced_totient({2: 3, 17: 1, 19: 2}) == 2736
+    A002322 = [1, 1, 2, 2, 4, 2, 6, 2, 6, 4, 10, 2, 12, 6, 4, 4, 16, 6,
+               18, 4, 6, 10, 22, 2, 20, 12, 18, 6, 28, 4, 30, 8, 10, 16,
+               12, 6, 36, 18, 12, 4, 40, 6, 42, 10, 12, 22, 46, 4, 42]
+    for n, val in enumerate(A002322, 1):
+        assert reduced_totient(n) == val
+
+
+def test_primepi():
+    # error
+    z = Symbol('z', real=False)
+    raises(TypeError, lambda: primepi(z))
+    raises(TypeError, lambda: primepi(I))
+
+    # property
+    n = Symbol('n', integer=True, positive=True)
+    assert primepi(n).is_integer is True
+    assert primepi(n).is_nonnegative is True
+
+    # infinity
+    assert primepi(oo) == oo
+    assert primepi(-oo) == 0
+
+    # symbol
+    x = Symbol('x')
+    assert isinstance(primepi(x), primepi)
+
+    # Integer
+    assert primepi(0) == 0
+    A000720 = [0, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 8,
+               8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 11, 11, 11, 11, 11, 11,
+               12, 12, 12, 12, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15]
+    for n, val in enumerate(A000720, 1):
+        assert primepi(n) == primepi(n + 0.5) == val
 
 
 def test__nT():
@@ -850,3 +1228,14 @@ def test_nD_derangements():
     raises(TypeError, lambda: nD({1: x}))
     raises(TypeError, lambda: nD(m={1: x}))
     raises(TypeError, lambda: nD(m={x: 1}))
+
+
+def test_deprecated_ntheory_symbolic_functions():
+    from sympy.testing.pytest import warns_deprecated_sympy
+
+    with warns_deprecated_sympy():
+        assert not carmichael.is_carmichael(3)
+    with warns_deprecated_sympy():
+        assert carmichael.find_carmichael_numbers_in_range(10, 20) == []
+    with warns_deprecated_sympy():
+        assert carmichael.find_first_n_carmichaels(1)

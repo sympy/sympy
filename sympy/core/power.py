@@ -362,7 +362,7 @@ class Pow(Expr):
             if q.is_integer and base % q == 0:
                 return S.Zero
 
-            from sympy.ntheory.factor_ import totient
+            from sympy.functions.combinatorial.numbers import totient
 
             if base.is_Integer and exp.is_Integer and q.is_Integer:
                 b, e, m = int(base), int(exp), int(q)
@@ -560,6 +560,8 @@ class Pow(Expr):
                     return ok
 
         if real_b is False and real_e: # we already know it's not imag
+            if isinstance(self.exp, Rational) and self.exp.p == 1:
+                return False
             from sympy.functions.elementary.complexes import arg
             i = arg(self.base)*self.exp/S.Pi
             if i.is_complex: # finite
@@ -1837,6 +1839,6 @@ power = Dispatcher('power')
 power.add((object, object), Pow)
 
 from .add import Add
-from .numbers import Integer
+from .numbers import Integer, Rational
 from .mul import Mul, _keep_coeff
 from .symbol import Symbol, Dummy, symbols

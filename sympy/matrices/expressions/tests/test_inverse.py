@@ -1,6 +1,6 @@
 from sympy.core import symbols, S
 from sympy.matrices.expressions import MatrixSymbol, Inverse, MatPow, ZeroMatrix, OneMatrix
-from sympy.matrices.common import NonInvertibleMatrixError, NonSquareMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError, NonSquareMatrixError
 from sympy.matrices import eye, Identity
 from sympy.testing.pytest import raises
 from sympy.assumptions.ask import Q

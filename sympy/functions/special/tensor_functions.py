@@ -193,7 +193,7 @@ class KroneckerDelta(Function):
         # to make KroneckerDelta canonical
         # following lines will check if inputs are in order
         # if not, will return KroneckerDelta with correct order
-        if i != min(i, j, key=default_sort_key):
+        if default_sort_key(j) < default_sort_key(i):
             if delta_range:
                 return cls(j, i, delta_range)
             else:

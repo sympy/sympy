@@ -191,7 +191,7 @@ def _rec_degree_in(g, v, i, j):
 
     v, i = v - 1, i + 1
 
-    return max([ _rec_degree_in(c, v, i, j) for c in g ])
+    return max(_rec_degree_in(c, v, i, j) for c in g)
 
 
 def dmp_degree_in(f, j, u):
@@ -1826,6 +1826,9 @@ def dup_slice(f, m, n, K):
         N = 0
 
     f = f[N:M]
+
+    while f and f[0] == K.zero:
+        f.pop(0)
 
     if not f:
         return []

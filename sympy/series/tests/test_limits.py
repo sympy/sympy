@@ -2,15 +2,16 @@ from itertools import product
 
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
-from sympy.core import EulerGamma
+from sympy.core import EulerGamma, GoldenRatio
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, atanh, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (atanh, asinh, acosh, acoth, acsch, asech, tanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
@@ -30,6 +31,8 @@ from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.testing.pytest import XFAIL, raises
+
+from sympy import elliptic_e, elliptic_k
 
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
@@ -776,6 +779,10 @@ def test_issue_9471():
     assert limit(((27**(log(n,3)+1))/n**3),n,oo) == 27
 
 
+def test_issue_10382():
+    assert limit(fibonacci(n + 1)/fibonacci(n), n, oo) == GoldenRatio
+
+
 def test_issue_11496():
     assert limit(erfc(log(1/x)), x, oo) == 2
 
@@ -1331,3 +1338,77 @@ def test_issue_25582():
     assert limit(acot(exp(x)), x, oo, '-') == 0
     assert limit(asec(exp(x)), x, oo, '-') == pi/2
     assert limit(acsc(exp(x)), x, oo, '-') == 0
+
+
+def test_issue_25847():
+    #atan
+    assert limit(atan(sin(x)/x), x, 0, '+-') == pi/4
+    assert limit(atan(exp(1/x)), x, 0, '+') == pi/2
+    assert limit(atan(exp(1/x)), x, 0, '-') == 0
+
+    #asin
+    assert limit(asin(sin(x)/x), x, 0, '+-') == pi/2
+    assert limit(asin(exp(1/x)), x, 0, '+') == -oo*I
+    assert limit(asin(exp(1/x)), x, 0, '-') == 0
+
+    #acos
+    assert limit(acos(sin(x)/x), x, 0, '+-') == 0
+    assert limit(acos(exp(1/x)), x, 0, '+') == oo*I
+    assert limit(acos(exp(1/x)), x, 0, '-') == pi/2
+
+    #acot
+    assert limit(acot(sin(x)/x), x, 0, '+-') == pi/4
+    assert limit(acot(exp(1/x)), x, 0, '+') == 0
+    assert limit(acot(exp(1/x)), x, 0, '-') == pi/2
+
+    #asec
+    assert limit(asec(sin(x)/x), x, 0, '+-') == 0
+    assert limit(asec(exp(1/x)), x, 0, '+') == pi/2
+    assert limit(asec(exp(1/x)), x, 0, '-') == oo*I
+
+    #acsc
+    assert limit(acsc(sin(x)/x), x, 0, '+-') == pi/2
+    assert limit(acsc(exp(1/x)), x, 0, '+') == 0
+    assert limit(acsc(exp(1/x)), x, 0, '-') == -oo*I
+
+    #atanh
+    assert limit(atanh(sin(x)/x), x, 0, '+-') == oo
+    assert limit(atanh(exp(1/x)), x, 0, '+') == -I*pi/2
+    assert limit(atanh(exp(1/x)), x, 0, '-') == 0
+
+    #asinh
+    assert limit(asinh(sin(x)/x), x, 0, '+-') == log(1 + sqrt(2))
+    assert limit(asinh(exp(1/x)), x, 0, '+') == oo
+    assert limit(asinh(exp(1/x)), x, 0, '-') == 0
+
+    #acosh
+    assert limit(acosh(sin(x)/x), x, 0, '+-') == 0
+    assert limit(acosh(exp(1/x)), x, 0, '+') == oo
+    assert limit(acosh(exp(1/x)), x, 0, '-') == I*pi/2
+
+    #acoth
+    assert limit(acoth(sin(x)/x), x, 0, '+-') == oo
+    assert limit(acoth(exp(1/x)), x, 0, '+') == 0
+    assert limit(acoth(exp(1/x)), x, 0, '-') == -I*pi/2
+
+    #asech
+    assert limit(asech(sin(x)/x), x, 0, '+-') == 0
+    assert limit(asech(exp(1/x)), x, 0, '+') == I*pi/2
+    assert limit(asech(exp(1/x)), x, 0, '-') == oo
+
+    #acsch
+    assert limit(acsch(sin(x)/x), x, 0, '+-') == log(1 + sqrt(2))
+    assert limit(acsch(exp(1/x)), x, 0, '+') == 0
+    assert limit(acsch(exp(1/x)), x, 0, '-') == oo
+
+
+def test_issue_26040():
+    assert limit(besseli(0, x + 1)/besseli(0, x), x, oo) == S.Exp1
+
+
+def test_issue_26250():
+    e = elliptic_e(4*x/(x**2 + 2*x + 1))
+    k = elliptic_k(4*x/(x**2 + 2*x + 1))
+    e1 = ((1-3*x**2)*e**2/2 - (x**2-2*x+1)*e*k/2)
+    e2 = pi**2*(x**8 - 2*x**7 - x**6 + 4*x**5 - x**4 - 2*x**3 + x**2)
+    assert limit(e1/e2, x, 0) == -S(1)/8

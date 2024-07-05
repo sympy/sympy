@@ -103,7 +103,7 @@ def _construct_algebraic(coeffs, opt):
     exts = list(ordered(exts))
 
     g, span, H = primitive_element(exts, ex=True, polys=True)
-    root = sum([ s*ext for s, ext in zip(span, exts) ])
+    root = sum(s*ext for s, ext in zip(span, exts))
 
     domain, g = QQ.algebraic_field((g, root)), g.rep.to_list()
 

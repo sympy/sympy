@@ -1490,6 +1490,12 @@ def test_PolyElement_decompose():
 def test_PolyElement_shift():
     _, x = ring("x", ZZ)
     assert (x**2 - 2*x + 1).shift(2) == x**2 + 2*x + 1
+    assert (x**2 - 2*x + 1).shift_list([2]) == x**2 + 2*x + 1
+
+    R, x, y = ring("x, y", ZZ)
+    assert (x*y).shift_list([1, 2]) == (x+1)*(y+2)
+
+    raises(MultivariatePolynomialError, lambda: (x*y).shift(1))
 
 def test_PolyElement_sturm():
     F, t = field("t", ZZ)
@@ -1513,16 +1519,25 @@ def test_PolyElement_gff_list():
     f = x*(x - 1)**3*(x - 2)**2*(x - 4)**2*(x - 5)
     assert f.gff_list() == [(x**2 - 5*x + 4, 1), (x**2 - 5*x + 4, 2), (x, 3)]
 
+def test_PolyElement_norm():
+    k = QQ
+    K = QQ.algebraic_field(sqrt(2))
+    sqrt2 = K.unit
+    _, X, Y = ring("x,y", k)
+    _, x, y = ring("x,y", K)
+
+    assert (x*y + sqrt2).norm() == X**2*Y**2 - 2
+
 def test_PolyElement_sqf_norm():
     R, x = ring("x", QQ.algebraic_field(sqrt(3)))
     X = R.to_ground().x
 
-    assert (x**2 - 2).sqf_norm() == (1, x**2 - 2*sqrt(3)*x + 1, X**4 - 10*X**2 + 1)
+    assert (x**2 - 2).sqf_norm() == ([1], x**2 - 2*sqrt(3)*x + 1, X**4 - 10*X**2 + 1)
 
     R, x = ring("x", QQ.algebraic_field(sqrt(2)))
     X = R.to_ground().x
 
-    assert (x**2 - 3).sqf_norm() == (1, x**2 - 2*sqrt(2)*x - 1, X**4 - 10*X**2 + 1)
+    assert (x**2 - 3).sqf_norm() == ([1], x**2 - 2*sqrt(2)*x - 1, X**4 - 10*X**2 + 1)
 
 def test_PolyElement_sqf_list():
     _, x = ring("x", ZZ)

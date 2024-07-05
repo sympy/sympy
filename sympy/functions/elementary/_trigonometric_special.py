@@ -1,9 +1,9 @@
-r"""A module for special angle forumlas for trigonometric functions
+r"""A module for special angle formulas for trigonometric functions
 
 TODO
 ====
 
-This module should be developed in the future to contain direct squrae root
+This module should be developed in the future to contain direct square root
 representation of
 
 .. math
@@ -84,7 +84,7 @@ def migcdex(*x: int) -> tuple[tuple[int, ...], int]:
 
 
 def ipartfrac(*denoms: int) -> tuple[int, ...]:
-    r"""Compute the the partial fraction decomposition.
+    r"""Compute the partial fraction decomposition.
 
     Explanation
     ===========
@@ -105,7 +105,7 @@ def ipartfrac(*denoms: int) -> tuple[int, ...]:
 
     Where $q_1, \cdots, q_n$ being pairwise coprime implies
     $\gcd(\prod_{i \ne 1}q_i, \cdots, \prod_{i \ne n}q_i) = 1$,
-    which guarantees the existance of the solution.
+    which guarantees the existence of the solution.
 
     It is sufficient to compute partial fraction decomposition only
     for numerator $1$ because partial fraction decomposition for any

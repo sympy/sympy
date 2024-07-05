@@ -57,6 +57,39 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.partition
    :members:
 
+.. autoclass:: sympy.functions.combinatorial.numbers.divisor_sigma
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.udivisor_sigma
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.legendre_symbol
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.jacobi_symbol
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.kronecker_symbol
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.mobius
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.primenu
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.primeomega
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.totient
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.reduced_totient
+   :members:
+
+.. autoclass:: sympy.functions.combinatorial.numbers.primepi
+   :members:
+
 .. autoclass:: sympy.functions.combinatorial.factorials.MultiFactorial
    :members:
 

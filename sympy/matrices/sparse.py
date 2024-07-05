@@ -5,7 +5,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
 
-from .matrices import MatrixBase
+from .matrixbase import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
 
 from .utilities import _iszero
@@ -193,8 +193,8 @@ class SparseRepMatrix(RepMatrix):
 
             if rows is None:  # autosizing
                 keys = smat.keys()
-                rows = max([r for r, _ in keys]) + 1 if keys else 0
-                cols = max([c for _, c in keys]) + 1 if keys else 0
+                rows = max(r for r, _ in keys) + 1 if keys else 0
+                cols = max(c for _, c in keys) + 1 if keys else 0
 
             else:
                 for i, j in smat.keys():

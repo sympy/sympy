@@ -3,7 +3,7 @@ from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
 from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED
-from sympy.matrices.common import MatrixKind
+from sympy.matrices.kind import MatrixKind
 from sympy.core.kind import NumberKind
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.core.mul import Mul
@@ -219,8 +219,7 @@ def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
     for pred in enc_cnf.encoding.keys():
         if isinstance(pred, AppliedPredicate):
             all_pred.add(pred)
-            for expr in pred.arguments:
-                all_exprs.add(expr)
+            all_exprs.update(pred.arguments)
 
     return all_pred, all_exprs
 

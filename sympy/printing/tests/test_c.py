@@ -12,6 +12,7 @@ from sympy.sets import Range
 from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.testing.pytest import raises, XFAIL
+from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
@@ -139,12 +140,13 @@ def test_ccode_inline_function():
 
 def test_ccode_exceptions():
     assert ccode(gamma(x), standard='C99') == "tgamma(x)"
-    gamma_c89 = ccode(gamma(x), standard='C89')
-    assert 'not supported in c' in gamma_c89.lower()
-    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=False)
-    assert 'not supported in c' in gamma_c89.lower()
-    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
-    assert 'not supported in c' not in gamma_c89.lower()
+    with raises(PrintMethodNotImplementedError):
+        ccode(gamma(x), standard='C89')
+    with raises(PrintMethodNotImplementedError):
+        ccode(gamma(x), standard='C89', allow_unknown_functions=False)
+
+    ccode(gamma(x), standard='C89', allow_unknown_functions=True)
+
 
 
 def test_ccode_functions2():
@@ -568,7 +570,11 @@ def test_Matrix_printing():
 
 def test_sparse_matrix():
     # gh-15791
-    assert 'Not supported in C' in ccode(SparseMatrix([[1, 2, 3]]))
+    with raises(PrintMethodNotImplementedError):
+        ccode(SparseMatrix([[1, 2, 3]]))
+
+    assert 'Not supported in C' in C89CodePrinter({'strict': False}).doprint(SparseMatrix([[1, 2, 3]]))
+
 
 
 def test_ccode_reserved_words():
@@ -643,7 +649,7 @@ def test_C99CodePrinter():
 @XFAIL
 def test_C99CodePrinter__precision_f80():
     f80_printer = C99CodePrinter({"type_aliases": {real: float80}})
-    assert f80_printer.doprint(sin(x+Float('2.1'))) == 'sinl(x + 2.1L)'
+    assert f80_printer.doprint(sin(x + Float('2.1'))) == 'sinl(x + 2.1L)'
 
 
 def test_C99CodePrinter__precision():
@@ -699,8 +705,8 @@ def test_C99CodePrinter__precision():
         check(gamma(x), 'tgamma{s}(x)')
         check(loggamma(x), 'lgamma{s}(x)')
 
-        check(ceiling(x + 2.), "ceil{s}(x + 2.0{S})")
-        check(floor(x + 2.), "floor{s}(x + 2.0{S})")
+        check(ceiling(x + 2.), "ceil{s}(x) + 2")
+        check(floor(x + 2.), "floor{s}(x) + 2")
         check(fma(x, y, -z), 'fma{s}(x, y, -z)')
         check(Max(x, 8.0, x**4.0), 'fmax{s}(8.0{S}, fmax{s}(x, pow{s}(x, 4.0{S})))')
         check(Min(x, 2.0), 'fmin{s}(2.0{S}, x)')
