@@ -11,9 +11,9 @@ Physics
 .. toctree::
    :titlesonly:
 
-   ../../../modules/physics/vector/index.rst
-   ../../../modules/physics/mechanics/index.rst
-   ../../../modules/physics/biomechanics/index.rst
+   ../../../modules/physics/vector/api/index.rst
+   ../../../modules/physics/mechanics/api/index.rst
+   ../../../modules/physics/biomechanics/api/index.rst
    ../../../modules/physics/control/index.rst
    ../../../modules/physics/optics/index.rst
    ../../../modules/physics/units/index.rst

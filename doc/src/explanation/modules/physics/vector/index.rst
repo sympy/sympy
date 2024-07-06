@@ -28,5 +28,5 @@ Guide to Vector
 
    vectors/vectors.rst
    kinematics/kinematics.rst
-   advanced.rst
    fields.rst
+   advanced.rst

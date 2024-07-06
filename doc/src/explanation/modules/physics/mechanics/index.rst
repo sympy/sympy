@@ -73,13 +73,13 @@ Guide to Classical Mechanics
 .. toctree::
    :maxdepth: 2
 
-   advanced.rst
-   autolev_parser.rst
-   joints.rst
+   masses.rst
    kane.rst
    lagrange.rst
-   masses.rst
-   reference.rst
+   joints.rst
    symsystem.rst
    linearize.rst
+   reference.rst
+   autolev_parser.rst
    sympy_mechanics_for_autolev_users.rst
+   advanced.rst
