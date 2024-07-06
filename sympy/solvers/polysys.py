@@ -6,7 +6,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.function import diff
 from sympy.polys import Poly, groebner, roots, real_roots, nroots
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polytools import LT, LC, degree, subresultants
+from sympy.polys.polytools import LT, LC, degree, subresultants, resultant
 from sympy.polys.rootoftools import ComplexRootOf
 from sympy.polys.polyerrors import (ComputationFailed,
     PolificationFailed, CoercionFailed)
@@ -545,33 +545,89 @@ def red_set(f, mvar):
 """
 Principal subresultant coefficients
 
-In Basu, Pollack, and Roy (2006) this is defined as a subdeterminant
+In Basu, Pollack, and Roy (2006) this is defined as a determinant
 of the Sylvester-Habicht matrix. However, here we can just use the
-subresultants already built in to SymPy, and take coefficients.
+subresultant PRS already built in to SymPy, with trivial changes.
 """
 
-def psc_set(f, g, mvar):
-    subres_polys = subresultants(f, g, mvar)[::-1]
-    
-    # subresultants returns it in decreasing order of degree
-    # so we reverse it so that the ith subres is at most degree i
-    # to match with the definition in Basu book
-    # then the coefficient of ith subres of mvar^{i} is the ith psc
+def subresultant_polynomials(f, g, mvar):
+    """
+    Computes the subresultant polynomials themselves. It uses the 
+    subresultant PRS which is already built into SymPy. First, we 
+    exclude the first element. Second, we reverse the list of the PRS
+    as we want it to be in increasing degree. This matches the 
+    conventions in other computer algebra systems.
 
-    final_psc = []
+    Parameters
+    ==========
+
+    f: Expr or Poly
+        A polynomial
+    g: Expr or Poly
+        A polynomial
+    mvar: a generator
+        The "main variable".
+        Polynomials are treated as univariate in the mvar.
+
+
+    Returns
+    =======
+
+    List
+        The subresultants of f and g, in increasing degree. 
+        The 0th element is the resultant itself.
+
+    Examples
+    ========
+
+    ADD EXAMPLES HERE
+    """
+    prs = subresultants(f, g, mvar)
+
+    if degree(f, mvar) == degree(g, mvar):
+        return [resultant(f, g, mvar)] + prs[1:][::-1]
+    else:
+        return prs[1:][::-1]
+    
+
+def subresultant_coefficients(f, g, mvar):
+    """
+    Computes the principal subresultant coefficients (PSC). Given the
+    subresultant polynomials, in increasing degree, the ith PSC is
+    the coefficient of mvar^i in the ith subresultant.
+
+    Parameters
+    ==========
+
+    f: Expr or Poly
+        A polynomial
+    g: Expr or Poly
+        A polynomial
+    mvar: a generator
+        The "main variable".
+        Polynomials are treated as univariate in the mvar.
+
+
+    Returns
+    =======
+
+    List
+        The principal subresultant coefficients (PSC) of f and g.
+
+    Examples
+    ========
+
+    ADD EXAMPLES HERE
+    """
+    subres_polys = subresultant_polynomials(f, g, mvar)
+    
+    subres_coeffs = []
 
     for i in range(len(subres_polys)):
-        p = subres_polys[i]
-        if p == 0:
-            continue
-        
-        curr_coeff = Poly(p, mvar).nth(i)
-        if curr_coeff == 0:
-            continue
-        
-        final_psc.append(curr_coeff)
+        curr_coeff = Poly(subres_polys[i], mvar).nth(i)
+        subres_coeffs.append(curr_coeff)
     
-    return final_psc
+    return subres_coeffs
 
 
 # gets real roots, numeric if not algebraic
@@ -648,7 +704,9 @@ def projone(F, mvar):
     for f in F:
         for g in red_set(f, mvar):
             proj_set.add(LC(g, mvar))
-            proj_set.update(psc_set(g, diff(g, mvar), mvar))    
+            proj_set.update(
+                subresultant_coefficients(g, diff(g,mvar), mvar)
+                )    
     
     return proj_set
             
@@ -694,7 +752,9 @@ def projtwo(F, mvar):
         for j in range(i, len(F)):
             f, g = F[i], F[j]
             for f_ in red_set(f, mvar):
-                proj_set.update(psc_set(f_, g, mvar))
+                proj_set.update(
+                    subresultant_coefficients(f_, g, mvar)
+                    )
     
     return proj_set
 
