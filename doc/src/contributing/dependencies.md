@@ -319,7 +319,7 @@ is required to use the sampling functionality of `sympy.stats`.
   environment variable.
 
   Presently, the SymEngine backend is only used by the
-  [sympy.physics.mechanics](classical_mechanics) and
+  [sympy.physics.mechanics](physics_mechanics) and
   [sympy.liealgebras](lie-algebras) modules, although you can also interface
   with SymPy's SymEngine backend directly by importing things from
   `sympy.core.backend`:
