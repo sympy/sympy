@@ -1,7 +1,7 @@
 """Solvers of systems of polynomial equations. """
 import itertools
 
-from sympy.core import S, N
+from sympy.core import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.function import diff
 from sympy.polys import Poly, groebner, roots, real_roots, nroots
@@ -479,11 +479,11 @@ def solve_poly_system_cad(seq, gens, return_one_sample=True):
     valid_samples = []
 
     for sample in sample_points:
-        if all([expr.subs(sample) for expr in seq]):
+        if all(expr.subs(sample) for expr in seq):
             valid_samples.append(sample)
             if return_one_sample:
                 break
-    
+
     return valid_samples
 
 
@@ -512,6 +512,7 @@ We exclude 0 from the set by definition as well.
 def red(f, mvar):
     return f - LT(f, mvar)
 
+
 def red_level(f, mvar, level):
     if level == 0:
         return f
@@ -520,25 +521,30 @@ def red_level(f, mvar, level):
         for _ in range(level):
             red_curr = red(red_curr, mvar)
         return red_curr
-    
+
+
 def red_set(f, mvar):
     reds = []
 
-    # handle this case here because otherwise sympy says deg= -infty
-    if not f.free_symbols:
+    # handle the constant case here
+    # because otherwise sympy says deg= -infty
+    try:
+        if f.is_number:
+            return []
+    except: # if its not a sympy Basic object, then also return []
         return []
-    
+
     for i in range(degree(f, mvar) + 1):
         if i == 0:
             red_curr = f
         else:
             red_curr = red(reds[i-1], mvar)
-        
+
         if red_curr == 0:
             break
         else:
             reds.append(red_curr)
-    
+
     return reds
 
 
@@ -552,10 +558,10 @@ subresultant PRS already built in to SymPy, with trivial changes.
 
 def subresultant_polynomials(f, g, mvar):
     """
-    Computes the subresultant polynomials themselves. It uses the 
-    subresultant PRS which is already built into SymPy. First, we 
+    Computes the subresultant polynomials themselves. It uses the
+    subresultant PRS which is already built into SymPy. First, we
     exclude the first element. Second, we reverse the list of the PRS
-    as we want it to be in increasing degree. This matches the 
+    as we want it to be in increasing degree. This matches the
     conventions in other computer algebra systems.
 
     Parameters
@@ -574,7 +580,7 @@ def subresultant_polynomials(f, g, mvar):
     =======
 
     List
-        The subresultants of f and g, in increasing degree. 
+        The subresultants of f and g, in increasing degree.
         The 0th element is the resultant itself.
 
     Examples
@@ -594,15 +600,15 @@ def subresultant_polynomials(f, g, mvar):
 
     if resultant(f, g) != prs[0]: # add resultant back in
         prs = [res] + prs
-    
+
     # have to scale the last element based on LC(g) and deg diff
     power = degree(f, mvar) - degree(g, mvar) - 1
     # if LC is 1 or power is 0 then scaling won't change it anyways
-    if not(LC(g, mvar) == 1 or power == 0): 
+    if not(LC(g, mvar) == 1 or power == 0):
         prs[-1] = prs[-1] * (LC(g, mvar) ** power)
 
     return prs
-    
+
 
 def subresultant_coefficients(f, g, mvar):
     """
@@ -634,28 +640,28 @@ def subresultant_coefficients(f, g, mvar):
     ADD EXAMPLES HERE
     """
     subres_polys = subresultant_polynomials(f, g, mvar)
-    
+
     subres_coeffs = []
 
     for i in range(len(subres_polys)):
         curr_coeff = Poly(subres_polys[i], mvar).nth(i)
         subres_coeffs.append(curr_coeff)
-    
+
     return subres_coeffs
 
 
 # gets real roots, numeric if not algebraic
 def get_nice_roots(poly):
     # its a constant
-    if not poly.free_symbols:
+    if poly.is_number:
         return []
-    
+
     try:
         roots = real_roots(poly)
     except NotImplementedError:
         return [root for root in nroots(poly) if root.is_real]
 
-    
+
     roots_return = []
     for root in roots:
         """
@@ -666,7 +672,7 @@ def get_nice_roots(poly):
         >>> Poly(-15*z**4 + 120*z**2 + 16).real_roots()[0]
         2*CRootOf(15*x**4 - 30*x**2 - 1, 0)
 
-        To get around this, we use .has(). 
+        To get around this, we use .has().
         """
 
         if root.has(ComplexRootOf):
@@ -720,10 +726,10 @@ def projone(F, mvar):
             proj_set.add(LC(g, mvar))
             proj_set.update(
                 subresultant_coefficients(g, diff(g,mvar), mvar)
-                )    
-    
+                )
+
     return proj_set
-            
+
 
 def projtwo(F, mvar):
     """
@@ -735,8 +741,8 @@ def projtwo(F, mvar):
 
     PROJ2 = \cup_{f,g \in F, f < g} \cup_{f' \in RED(f)} PSC(f', g)
 
-    where RED is the reducta set, < indicates an arbitray "linear 
-    ordering" to not loop over redundant pairs, and PSC is the 
+    where RED is the reducta set, < indicates an arbitray "linear
+    ordering" to not loop over redundant pairs, and PSC is the
     principal subresultant coefficient set.
 
     Parameters
@@ -769,14 +775,14 @@ def projtwo(F, mvar):
                 proj_set.update(
                     subresultant_coefficients(f_, g, mvar)
                     )
-    
+
     return proj_set
 
 
 def hongproj(F, mvar):
     """
     The Hong projection operator, as defined in Hong(1990).
-    PROJH takes a set of k-variate polynomials F, with an mvar, and  
+    PROJH takes a set of k-variate polynomials F, with an mvar, and
     returns a set of (k-1)-variate polynomials F, with the mvar
     eliminated. These projection factors satisfy the property that a
     CAD of R^{k-1} can be lifted to a CAD of R^k.
@@ -832,7 +838,7 @@ def cylindrical_algebraic_decomposition(F, gens):
     =======
 
     ??: sample points
-        
+
     """
 
     # Compute the projection sets
@@ -853,7 +859,7 @@ def cylindrical_algebraic_decomposition(F, gens):
             roots = set()
             for proj in projs:
                 roots.update(get_nice_roots(proj.subs(point)))
-            roots = sorted(list(roots), reverse=False)
+            roots = sorted(roots, reverse=False)
 
             # Calculate sample points
             if not roots:
@@ -865,27 +871,13 @@ def cylindrical_algebraic_decomposition(F, gens):
                 for r1, r2 in zip(roots, roots[1:]):
                     samples.extend([r1, (r1 + r2) / 2])
                 samples.extend([roots[-1], roots[-1] + 1])  # Last root and point above it
-            
+
             for value in samples:
                 new_point = point.copy()
                 new_point[gen] = value
                 new_sample_points.append(new_point)
-        
+
         sample_points = new_sample_points
-    
+
 
     return sample_points
-            
-
-
-        
-
-
-
-
-
-
-
-
-        
-
