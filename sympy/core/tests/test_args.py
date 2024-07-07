@@ -20,7 +20,7 @@ from sympy.functions.elementary.trigonometric import sin
 
 from sympy.testing.pytest import SKIP
 
-a, b, c, x, y, z = symbols('a,b,c,x,y,z')
+a, b, c, x, y, z, s = symbols('a,b,c,x,y,z,s')
 
 
 whitelist = [
@@ -4324,6 +4324,21 @@ def test_sympy__physics__control__lti__MIMOLinearTimeInvariant():
 def test_sympy__physics__control__lti__TransferFunction():
     from sympy.physics.control.lti import TransferFunction
     assert _test_args(TransferFunction(2, 3, x))
+
+
+def _test_args_PIDController(obj):
+    from sympy.physics.control.lti import PIDController
+    if isinstance(obj, PIDController):
+        kp, ki, kd, tf = obj.kp, obj.ki, obj.kd, obj.tf
+        recreated_pid = PIDController(kp, ki, kd, tf, s)
+        return recreated_pid == obj
+    return False
+
+
+def test_sympy__physics__control__lti__PIDController():
+    from sympy.physics.control.lti import PIDController
+    kp, ki, kd, tf = 1, 0.1, 0.01, 0
+    assert _test_args_PIDController(PIDController(kp, ki, kd, tf, s))
 
 
 def test_sympy__physics__control__lti__Series():
