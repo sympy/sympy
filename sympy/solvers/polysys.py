@@ -582,12 +582,26 @@ def subresultant_polynomials(f, g, mvar):
 
     ADD EXAMPLES HERE
     """
-    prs = subresultants(f, g, mvar)
+    # ensure deg(f) \geq deg(g)
+    if degree(f, mvar) < degree(g, mvar):
+        f, g = g, f
 
-    if degree(f, mvar) == degree(g, mvar):
-        return [resultant(f, g, mvar)] + prs[1:][::-1]
-    else:
-        return prs[1:][::-1]
+    prs = subresultants(f, g, mvar)
+    # reverse to get correct degree sequence
+    prs = prs[1:][::-1]
+
+    res = resultant(f, g, mvar)
+
+    if resultant(f, g) != prs[0]: # add resultant back in
+        prs = [res] + prs
+    
+    # have to scale the last element based on LC(g) and deg diff
+    power = degree(f, mvar) - degree(g, mvar) - 1
+    # if LC is 1 or power is 0 then scaling won't change it anyways
+    if not(LC(g, mvar) == 1 or power == 0): 
+        prs[-1] = prs[-1] * (LC(g, mvar) ** power)
+
+    return prs
     
 
 def subresultant_coefficients(f, g, mvar):

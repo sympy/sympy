@@ -15,10 +15,12 @@ from sympy.solvers.polysys import (solve_poly_system,
                                    solve_triangulated,
                                    solve_biquadratic, SolveFailed,
                                    solve_generic)
-from sympy.solvers.polysys import (red, red_level, red_set, psc_set,
-                                   get_nice_roots, projone, projtwo,
-                                   hongproj, cylindrical_algebraic_decomposition,
-                                   solve_poly_system_cad)
+from sympy.solvers.polysys import (red, red_level, red_set, 
+                                    subresultant_polynomials,
+                                    subresultant_coefficients,
+                                    get_nice_roots, projone, projtwo,
+                                    hongproj, cylindrical_algebraic_decomposition,
+                                    solve_poly_system_cad)
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.testing.pytest import raises
 
@@ -215,8 +217,148 @@ def test_red_set():
     assert red_set(y*x + y, x) == [y*x + y, y]
 
 
-#def test_psc_set():
-    #assert psc_set(x, 1, x) == 
+def test_subresultant_polynomials():
+    # simple monic univariate examples
+    assert subresultant_polynomials(x**2+1, x**2-1, x) == [4, -2, -1+x**2]
+    assert subresultant_polynomials(x**3+1, x**2-1, x) == [0, 1+x, -1+x**2]
+
+    # should be order-invariant
+    assert subresultant_polynomials(x**3+1, x**2-1, x) == subresultant_polynomials(x**3+1, x**2-1, x)
+
+    # battery of univariate examples with diff degrees and coefficients
+    # all checked in Mathematica
+    # note scaling: 2nd example, the PRS element is 2-x+3x^3
+    #   but the corresponding subresultant is 6-3x+9x^3
+    #   ie times LC(g)^(deg(f)-deg(g)-1) = 3^1 = 3
+    fs = [
+        2*x**5 - 3*x**4 + x**3 - 7*x + 5,
+        -x**5 + 2*x**4 - 5*x**2 + x - 4,
+        4*x**4 - x**3 + 2*x**2 - x + 3,
+        x**3 - x**2 + x - 1,
+        5*x**2 + 3*x - 2
+    ]
+    gs = [
+        x**5 + 4*x**4 - x**3 + 2*x**2 - 3*x + 6,
+        3*x**3 - x + 2,
+        -2*x**3 + 3*x - 5,
+        2*x**2 + x - 3,
+        -x + 1
+    ]
+    answers = [
+        [
+            45695124, 
+            692022 - 809988*x, 
+            1349-743*x - 901*x**2,  
+            397 - 487*x + 43*x**2 - 24*x**3,
+            7 + x + 4*x**2 - 3*x**3 + 11*x**4,
+            6 - 3*x + 2*x**2 - x**3 + 4*x**4 + x**5
+        ],
+        [
+            31514,
+            862 - 1469*x,
+            102 + 12*x + 99*x**2,
+            6 - 3*x + 9*x**3
+        ],
+        [
+            21650,
+            -730 - 130*x,
+            22 - 50*x + 32*x**2,
+            -5 + 3*x - 2*x**3
+        ],
+        [
+            0,
+            13 + 13*x,
+            -3 + x + 2*x**2
+        ],
+        [
+            6,
+            1 - x
+        ]
+    ]
+    # unrolled it so we can see exactly which example fails
+    assert subresultant_polynomials(fs[0], gs[0], x) == answers[0]
+    assert subresultant_polynomials(fs[1], gs[1], x) == answers[1]
+    assert subresultant_polynomials(fs[2], gs[2], x) == answers[2]
+    assert subresultant_polynomials(fs[3], gs[3], x) == answers[3]
+    assert subresultant_polynomials(fs[4], gs[4], x) == answers[4]
+
+    # a multivariate example
+    # note the division by y^2!
+    assert subresultant_polynomials(y*x**2+1, y**2*x**2-1, x) ==\
+        [y**4 + 2*y**3 + y**2, -y**2 - y, (x**2*y**2 - 1)/y**2]
+    
+
+def test_subresultant_coefficients():
+    # simple monic univariate examples
+    assert subresultant_coefficients(x**2+1, x**2-1, x) == [4, 0, 1]
+    assert subresultant_polynomials(x**3+1, x**2-1, x) == [0, 1, 1]
+    
+    # should be order-invariant
+    assert subresultant_coefficients(x**3+1, x**2-1, x) == subresultant_coefficients(x**3+1, x**2-1, x)
+
+    # battery of univariate examples with diff degrees and coefficients
+    # all checked in Mathematica
+    # note scaling: 2nd example, the PRS element is 2-x+3x^3
+    #   but the corresponding subresultant is 6-3x+9x^3
+    #   ie times LC(g)^(deg(f)-deg(g)-1) = 3^1 = 3
+    fs = [
+        2*x**5 - 3*x**4 + x**3 - 7*x + 5,
+        -x**5 + 2*x**4 - 5*x**2 + x - 4,
+        4*x**4 - x**3 + 2*x**2 - x + 3,
+        x**3 - x**2 + x - 1,
+        5*x**2 + 3*x - 2
+    ]
+    gs = [
+        x**5 + 4*x**4 - x**3 + 2*x**2 - 3*x + 6,
+        3*x**3 - x + 2,
+        -2*x**3 + 3*x - 5,
+        2*x**2 + x - 3,
+        -x + 1
+    ]
+    answers = [
+        [
+            45695124, 
+            -809988, 
+            -901,  
+            -24,
+            11,
+            1
+        ],
+        [
+            31514,
+            -1469,
+            99,
+            9
+        ],
+        [
+            21650,
+            -130,
+            32,
+            -2
+        ],
+        [
+            0,
+            13,
+            2
+        ],
+        [
+            6,
+            -1
+        ]
+    ]
+    # unrolled it so we can see exactly which example fails
+    assert subresultant_coefficients(fs[0], gs[0], x) == answers[0]
+    assert subresultant_coefficients(fs[1], gs[1], x) == answers[1]
+    assert subresultant_coefficients(fs[2], gs[2], x) == answers[2]
+    assert subresultant_coefficients(fs[3], gs[3], x) == answers[3]
+    assert subresultant_coefficients(fs[4], gs[4], x) == answers[4]
+
+    # a multivariate example
+    # note the division by y^2!
+    assert subresultant_polynomials(y*x**2+1, y**2*x**2-1, x) ==\
+        [y**4 + 2*y**3 + y**2, 0, 1]
+    
+
 
 
 
