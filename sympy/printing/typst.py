@@ -337,8 +337,8 @@ class TypstPrinter(Printer):
     def _print_Pow(self, expr: Pow):
         # Treat x**Rational(1,n) as special case
         if expr.exp.is_Rational:
-            p: int = expr.exp.p
-            q: int = expr.exp.q
+            p: int = expr.exp.p  # type: ignore
+            q: int = expr.exp.q  # type: ignore
             if abs(p) == 1 and q != 1 and self._settings['root_notation']:
                 base = self._print(expr.base)
                 if q == 2:
