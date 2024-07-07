@@ -1,16 +1,25 @@
+"""
+This module can be used to solve probelsm related to 2D parabolic arches
+"""
 from sympy import sympify, symbols, solve, Symbol
 
-class Arches:
+class Arch:
     """
+    An arch is a curved vertical structure spanning an open space underneath it.
+    Arches can be used to reduce the bending moments in long-span structures.
+
+    Arches are used in structural engineering(over windows, door and even bridges)
+    because they can support a very large mass placed on top of them.
+    
     Example
     ========
-    >>> from sympy.physics.continuum_mechanics.arch import Arches
-    >>> a = Arches((0,0),(10,0),crown_x=5,crown_y=5)
+    >>> from sympy.physics.continuum_mechanics.arch import Arch
+    >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
     >>> a.get_parabola_eqn
     5 - (x - 5)**2/5
 
-    >>> from sympy.physics.continuum_mechanics.arch import Arches
-    >>> a = Arches((0,0),(10,1),crown_x=6)
+    >>> from sympy.physics.continuum_mechanics.arch import Arch
+    >>> a = Arch((0,0),(10,1),crown_x=6)
     >>> a.get_parabola_eqn
     9/5 - (x - 6)**2/20
     """
@@ -94,7 +103,7 @@ class Arches:
         return self._right_support
 
     @property
-    def get_reaction_force(self):
+    def reaction_force(self):
         """
         return the reaction forces generated
         """
@@ -121,7 +130,7 @@ class Arches:
                 raise ValueError(f"loads must be applied between x = {self._left_support[0]} and x = {self._right_support[0]}")
             self._conc_loads[label] = (x1,y)
 
-    def remove_loads(self,order,label):
+    def remove_load(self,order,label):
         if label in self._loads:
             mag = self._loads[label]
             self._loads.pop(label)
