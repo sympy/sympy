@@ -82,7 +82,7 @@ def heuristics(e, z, z0, dir):
         from sympy.simplify.simplify import together
         for a in e.args:
             l = limit(a, z, z0, dir)
-            if l.has(S.Infinity) and l.is_finite is None:
+            if (l.has(S.Infinity) or l.has(S.NegativeInfinity)) and l.is_finite is None:
                 if isinstance(e, Add):
                     m = factor_terms(e)
                     if not isinstance(m, Mul): # try together
@@ -121,7 +121,8 @@ def heuristics(e, z, z0, dir):
                     rat_e = ratsimp(e)
                 except PolynomialError:
                     return
-                if rat_e is S.NaN or rat_e == e:
+                from sympy.simplify.powsimp import powdenest
+                if rat_e is S.NaN or powdenest(rat_e) == e:
                     return
                 return limit(rat_e, z, z0, dir)
     return rv
@@ -273,19 +274,16 @@ class Limit(Expr):
             arg_flag = isinstance(expr, arg)
             sign_flag = isinstance(expr, sign)
             if abs_flag or sign_flag or arg_flag:
-                try:
-                    sig = limit(expr.args[0], z, z0, dir)
-                    if sig.is_zero:
-                        sig = limit(1/expr.args[0], z, z0, dir)
-                    if sig.is_extended_real:
-                        if (sig < 0) == True:
-                            return (-expr.args[0] if abs_flag else
-                                    S.NegativeOne if sign_flag else S.Pi)
-                        elif (sig > 0) == True:
-                            return (expr.args[0] if abs_flag else
-                                    S.One if sign_flag else S.Zero)
-                except NotImplementedError:
-                    pass
+                sig = limit(expr.args[0], z, z0, dir)
+                if sig.is_zero:
+                    sig = limit(1/expr.args[0], z, z0, dir)
+                if sig.is_extended_real:
+                    if (sig < 0) == True:
+                        return (-expr.args[0] if abs_flag else
+                                S.NegativeOne if sign_flag else S.Pi)
+                    elif (sig > 0) == True:
+                        return (expr.args[0] if abs_flag else
+                                S.One if sign_flag else S.Zero)
             return expr
 
         if e.has(Float):
@@ -378,7 +376,7 @@ class Limit(Expr):
             r = gruntz(e, z, z0, dir)
             if r is S.NaN or l is S.NaN:
                 raise PoleError()
-        except (PoleError, ValueError):
+        except (PoleError, ValueError, NotImplementedError):
             if l is not None:
                 raise
             r = heuristics(e, z, z0, dir)

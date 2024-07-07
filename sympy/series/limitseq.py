@@ -116,7 +116,10 @@ def dominant(expr, n):
 
 def _limit_inf(expr, n):
     try:
-        return Limit(expr, n, S.Infinity).doit(deep=False)
+        l = Limit(expr, n, S.Infinity).doit(deep=False)
+        if isinstance(l, Limit):
+            return None
+        return l
     except (NotImplementedError, PoleError):
         return None
 
@@ -127,23 +130,20 @@ def _limit_seq(expr, n, trials):
     for i in range(trials):
         if not expr.has(Sum):
             result = _limit_inf(expr, n)
-            if result is not None:
-                return result
+            return result
 
         num, den = expr.as_numer_denom()
         if not den.has(n) or not num.has(n):
             result = _limit_inf(expr.doit(), n)
-            if result is not None:
-                return result
-            return None
+            return result
+
 
         num, den = (difference_delta(t.expand(), n) for t in [num, den])
         expr = (num / den).gammasimp()
 
         if not expr.has(Sum):
             result = _limit_inf(expr, n)
-            if result is not None:
-                return result
+            return result
 
         num, den = expr.as_numer_denom()
 
