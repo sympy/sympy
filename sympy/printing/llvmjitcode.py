@@ -400,6 +400,7 @@ def llvm_callable(args, expr, callback_type=None):
 
 
     Callbacks for integration functions can be JIT compiled.
+
     >>> import sympy.printing.llvmjitcode as jit
     >>> from sympy.abc import a
     >>> from sympy import integrate
@@ -427,6 +428,7 @@ def llvm_callable(args, expr, callback_type=None):
     expressions are given to cse, the compiled function returns a tuple.
     The 'cubature' callback handles multiple expressions (set `fdim`
     to match in the integration call.)
+
     >>> import sympy.printing.llvmjitcode as jit
     >>> from sympy import cse
     >>> from sympy.abc import x,y

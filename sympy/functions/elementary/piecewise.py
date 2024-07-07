@@ -734,7 +734,7 @@ class Piecewise(Function):
             else:
                 return False, 'unrecognized condition: %s' % cond
 
-            lower, upper = lower, Max(lower, upper)
+            upper = Max(lower, upper)
             if err_on_Eq and lower == upper:
                 return False, 'encountered Eq condition'
             if (lower >= upper) is not S.true:
@@ -1121,7 +1121,7 @@ def _clip(A, B, k):
     a, b = B
     c, d = A
     c, d = Min(Max(c, a), b), Min(Max(d, a), b)
-    a, b = Min(a, b), b
+    a = Min(a, b)
     p = []
     if a != c:
         p.append((a, c, -1))

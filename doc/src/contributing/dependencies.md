@@ -69,7 +69,7 @@ These dependencies are not required for SymPy to function, but it is
 recommended that all users install them if they can, as they will improve the
 general performance of SymPy.
 
-- **gmpy2**: [gmpy2](https://gmpy2.readthedocs.io/en/latest/intro.html) is a
+- **gmpy2**: [gmpy2](https://gmpy2.readthedocs.io/en/latest/) is a
   Python wrapper for the [GMP multiple-precision
   library](https://gmplib.org/). It provides large integers that are faster
   than the built-in Python `int`. When gmpy2 is installed, it is used
@@ -319,7 +319,7 @@ is required to use the sampling functionality of `sympy.stats`.
   environment variable.
 
   Presently, the SymEngine backend is only used by the
-  [sympy.physics.mechanics](classical_mechanics) and
+  [sympy.physics.mechanics](physics_mechanics) and
   [sympy.liealgebras](lie-algebras) modules, although you can also interface
   with SymPy's SymEngine backend directly by importing things from
   `sympy.core.backend`:

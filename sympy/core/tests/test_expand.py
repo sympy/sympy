@@ -137,6 +137,13 @@ def test_expand_frac():
         y*(x + y)/(x**2 + x)
     eq = (x + 1)**2/y
     assert expand_numer(eq, multinomial=False) == eq
+    # issue 26329
+    eq = (exp(x*z) - exp(y*z))/exp(z*(x + y))
+    ans = exp(-y*z) - exp(-x*z)
+    assert eq.expand(numer=True) != ans
+    assert eq.expand(numer=True, exact=True) == ans
+    assert expand_numer(eq) != ans
+    assert expand_numer(eq, exact=True) == ans
 
 
 def test_issue_6121():
@@ -245,7 +252,7 @@ def test_expand_mul():
     e = Mul(2, 3, evaluate=False)
     assert e.expand() == 6
 
-    e = Mul(2, 3, 1/x, evaluate = False)
+    e = Mul(2, 3, 1/x, evaluate=False)
     assert e.expand() == 6/x
     e = Mul(2, R(1, 3), evaluate=False)
     assert e.expand() == R(2, 3)

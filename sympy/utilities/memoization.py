@@ -16,6 +16,10 @@ def recurrence_memo(initial):
     24
     >>> factorial(3) # use cache values
     6
+    >>> factorial.cache_length() # cache length can be obtained
+    5
+    >>> factorial.fetch_item(slice(2, 4))
+    [2, 6]
 
     """
     cache = initial
@@ -29,6 +33,8 @@ def recurrence_memo(initial):
             for i in range(L, n + 1):
                 cache.append(f(i, cache))
             return cache[-1]
+        g.cache_length = lambda: len(cache)
+        g.fetch_item = lambda x: cache[x]
         return g
     return decorator
 

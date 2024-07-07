@@ -25,6 +25,7 @@ from sympy.testing.pytest import (
     ignore_warnings, raises, skip, skip_under_pyodide, slow,
     warns_deprecated_sympy)
 from sympy.utilities.iterables import capture, iterable
+from importlib.metadata import version
 
 all_classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
 mutable_classes = (Matrix, SparseMatrix)
@@ -233,8 +234,8 @@ def test_is_anti_symmetric():
     assert Matrix(2, 1, [1, 2]).is_anti_symmetric() is False
     m = Matrix(3, 3, [0, x**2 + 2*x + 1, y, -(x + 1)**2, 0, x*y, -y, -x*y, 0])
     assert m.is_anti_symmetric() is True
-    assert m.is_anti_symmetric(simplify=False) is False
-    assert m.is_anti_symmetric(simplify=lambda x: x) is False
+    assert m.is_anti_symmetric(simplify=False) is None
+    assert m.is_anti_symmetric(simplify=lambda x: x) is None
 
     m = Matrix(3, 3, [x.expand() for x in m])
     assert m.is_anti_symmetric(simplify=False) is True
@@ -351,6 +352,17 @@ def test_replace_map():
     assert N == Matrix(2, 2, lambda i, j: G(i+j))
     assert d == {F(0): G(0), F(1): G(1), F(2): G(2)}
 
+def test_numpy_conversion():
+    try:
+        from numpy import array, array_equal
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+    A = Matrix([[1,2], [3,4]])
+    np_array = array([[1,2], [3,4]])
+    assert array_equal(array(A), np_array)
+    assert array_equal(array(A, copy=True), np_array)
+    if(int(version('numpy').split('.')[0]) >= 2): #run this test only if numpy is new enough that copy variable is passed properly.
+        raises(TypeError, lambda: array(A, copy=False))
 
 def test_rot90():
     A = Matrix([[1, 2], [3, 4]])
@@ -3188,12 +3200,12 @@ def test_anti_symmetric():
     assert Matrix([1, 2]).is_anti_symmetric() is False
     m = Matrix(3, 3, [0, x**2 + 2*x + 1, y, -(x + 1)**2, 0, x*y, -y, -x*y, 0])
     assert m.is_anti_symmetric() is True
-    assert m.is_anti_symmetric(simplify=False) is False
-    assert m.is_anti_symmetric(simplify=lambda x: x) is False
+    assert m.is_anti_symmetric(simplify=False) is None
+    assert m.is_anti_symmetric(simplify=lambda x: x) is None
 
     # tweak to fail
     m[2, 1] = -m[2, 1]
-    assert m.is_anti_symmetric() is False
+    assert m.is_anti_symmetric() is None
     # untweak
     m[2, 1] = -m[2, 1]
 

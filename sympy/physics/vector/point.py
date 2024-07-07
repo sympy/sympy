@@ -100,14 +100,14 @@ class Point:
         oldlist = [[]]
         while outlist != oldlist:
             oldlist = outlist[:]
-            for i, v in enumerate(outlist):
+            for v in outlist:
                 templist = v[-1]._pdlist[num].keys()
-                for i2, v2 in enumerate(templist):
+                for v2 in templist:
                     if not v.__contains__(v2):
                         littletemplist = v + [v2]
                         if not outlist.__contains__(littletemplist):
                             outlist.append(littletemplist)
-        for i, v in enumerate(oldlist):
+        for v in oldlist:
             if v[-1] != other:
                 outlist.remove(v)
         outlist.sort(key=len)
@@ -152,7 +152,7 @@ class Point:
         >>> B = ReferenceFrame('B')
         >>> B.set_ang_vel(N, 5 * B.y)
         >>> O = Point('O')
-        >>> P = O.locatenew('P', q * B.x)
+        >>> P = O.locatenew('P', q * B.x + q2 * B.y)
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.a1pt_theory(O, N, B)
@@ -169,8 +169,8 @@ class Point:
         a2 = self.acc(interframe)
         omega = interframe.ang_vel_in(outframe)
         alpha = interframe.ang_acc_in(outframe)
-        self.set_acc(outframe, a2 + 2 * (omega ^ v) + a1 + (alpha ^ dist) +
-                     (omega ^ (omega ^ dist)))
+        self.set_acc(outframe, a2 + 2 * (omega.cross(v)) + a1 +
+                     (alpha.cross(dist)) + (omega.cross(omega.cross(dist))))
         return self.acc(outframe)
 
     def a2pt_theory(self, otherpoint, outframe, fixedframe):
@@ -218,7 +218,8 @@ class Point:
         a = otherpoint.acc(outframe)
         omega = fixedframe.ang_vel_in(outframe)
         alpha = fixedframe.ang_acc_in(outframe)
-        self.set_acc(outframe, a + (alpha ^ dist) + (omega ^ (omega ^ dist)))
+        self.set_acc(outframe, a + (alpha.cross(dist)) +
+                     (omega.cross(omega.cross(dist))))
         return self.acc(outframe)
 
     def acc(self, frame):
@@ -434,7 +435,7 @@ class Point:
         >>> B = ReferenceFrame('B')
         >>> B.set_ang_vel(N, 5 * B.y)
         >>> O = Point('O')
-        >>> P = O.locatenew('P', q * B.x)
+        >>> P = O.locatenew('P', q * B.x + q2 * B.y)
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.v1pt_theory(O, N, B)
@@ -449,7 +450,7 @@ class Point:
         v1 = self.vel(interframe)
         v2 = otherpoint.vel(outframe)
         omega = interframe.ang_vel_in(outframe)
-        self.set_vel(outframe, v1 + v2 + (omega ^ dist))
+        self.set_vel(outframe, v1 + v2 + (omega.cross(dist)))
         return self.vel(outframe)
 
     def v2pt_theory(self, otherpoint, outframe, fixedframe):
@@ -496,7 +497,7 @@ class Point:
         dist = self.pos_from(otherpoint)
         v = otherpoint.vel(outframe)
         omega = fixedframe.ang_vel_in(outframe)
-        self.set_vel(outframe, v + (omega ^ dist))
+        self.set_vel(outframe, v + (omega.cross(dist)))
         return self.vel(outframe)
 
     def vel(self, frame):
@@ -622,8 +623,11 @@ class Point:
         (N.x, A.y)
 
         """
-        partials = [self.vel(frame).diff(speed, frame, var_in_dcm=False) for
-                    speed in gen_speeds]
+
+        from sympy.physics.vector.functions import partial_velocity
+
+        vel = self.vel(frame)
+        partials = partial_velocity([vel], gen_speeds, frame)[0]
 
         if len(partials) == 1:
             return partials[0]
