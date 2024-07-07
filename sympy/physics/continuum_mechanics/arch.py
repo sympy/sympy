@@ -33,7 +33,7 @@ class Arch:
             self._crown_x = sympify(kwargs['crown_x'])
         if 'crown_y' in kwargs:
             self._crown_y = sympify(kwargs['crown_y'])
-        self.get_parabola_eqn
+        self._shape_eqn = self.get_parabola_eqn
         self._loads = {}
         self._conc_loads = {}
         self._distributed_loads = {}
@@ -59,7 +59,6 @@ class Arch:
             parabola_eqn = solution[0]*(x-x0)**2 + y0
             if(parabola_eqn.subs({x:self._right_support[0]}) != self._right_support[1]):
                 raise ValueError("provided coordinates of crown and supports are not consistent with parabolic arch")
-            self._shape_eqn = parabola_eqn
 
         elif self._crown_x:
             x0  = self._crown_x
@@ -71,10 +70,11 @@ class Arch:
                 raise ValueError("parabolic arch cannot be constructed with the provided coordinates")
             parabola_eqn = solution[a]*(x-x0)**2+ solution[c]
             self._crown_y = solution[c]
-            self._shape_eqn = parabola_eqn
 
         else:
             raise KeyError("please provide crown_x to contruct arch")
+
+        return parabola_eqn
 
     @property
     def get_loads(self):
