@@ -2189,7 +2189,7 @@ def cornacchia(a:int, b:int, m:int) -> set[tuple[int, int]]:
             # x = 0
             s, _exact = iroot(m // b, 2)
             if _exact:
-                sols.add((int(0), int(s)))
+                sols.add((0, int(s)))
         return sols
 
     # the original cornacchia
