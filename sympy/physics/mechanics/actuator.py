@@ -995,7 +995,7 @@ class DuffingSpring(ForceActuator):
 
 
 class CoulombKineticFriction(ForceActuator):
-    """A friction force actuator for the Coulomb friction with static and dynamic friction.
+    """A friction force actuator for the Coulomb kinetic friction.
 
     Explanation
     ===========
