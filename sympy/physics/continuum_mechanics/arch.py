@@ -10,7 +10,7 @@ class Arch:
 
     Arches are used in structural engineering(over windows, door and even bridges)
     because they can support a very large mass placed on top of them.
-    
+
     Example
     ========
     >>> from sympy.physics.continuum_mechanics.arch import Arch
@@ -37,7 +37,7 @@ class Arch:
         self._loads = {}
         self._conc_loads = {}
         self._distributed_loads = {}
-        self._supports = {'left':None,'right':None}
+        self._supports = {'left':None, 'right':None}
         self._rope = None
         self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
@@ -150,7 +150,7 @@ class Arch:
         if left_support not in support_types or right_support not in support_types:
             raise ValueError("supports must only be roller or hinged")
         self._supports['left'] = left_support
-        self._right_support['right'] = right_support
+        self._supports['right'] = right_support
 
     def add_rope(self,start,end):
         if start<self._left_support[0] or end >self._right_support[0]:
