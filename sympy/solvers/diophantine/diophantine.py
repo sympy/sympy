@@ -2177,7 +2177,7 @@ def cornacchia(a:int, b:int, m:int) -> set[tuple[int, int]]:
 
     if a + b > m:
         # xy = 0 must hold if there exists a solution
-        if m % a == 0:
+        if a == 1:
             # y = 0
             s, _exact = iroot(m // a, 2)
             if _exact:
