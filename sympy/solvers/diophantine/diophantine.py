@@ -2174,6 +2174,25 @@ def cornacchia(a:int, b:int, m:int) -> set[tuple[int, int]]:
     """
     # Assume gcd(a, b) = gcd(a, m) = 1 and a, b > 0 but no error checking
     sols = set()
+
+    if a + b > m:
+        # a = 0 or b = 0 must hold if there is a solution
+        if m % a == 0:
+            # b = 0
+            s, _exact = iroot(m // a, 2)
+            if _exact:
+                sols.add((int(s), int(0)))
+            if a == b:
+            # only keep one solution
+                return sols
+        if m % b == 0:
+            # a = 0
+            s, _exact = iroot(m // b, 2)
+            if _exact:
+                sols.add((int(0), int(s)))
+        return sols
+
+    # the original cornacchia
     for t in sqrt_mod_iter(-b*invert(a, m), m):
         if t < m // 2:
             continue
