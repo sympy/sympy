@@ -2183,7 +2183,7 @@ def cornacchia(a:int, b:int, m:int) -> set[tuple[int, int]]:
             if _exact:
                 sols.add((int(s), 0))
             if a == b:
-            # only keep one solution
+                # only keep one solution
                 return sols
         if m % b == 0:
             # x = 0
