@@ -9,7 +9,6 @@ from sympy import (
     SympifyError,
     sqrt,
     Abs,
-    sign
 )
 from sympy.physics.mechanics import (
     ActuatorBase,

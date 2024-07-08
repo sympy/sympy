@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import S, sympify, sign
+from sympy import S, sympify
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
