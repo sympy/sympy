@@ -78,6 +78,9 @@ class Arch:
 
     @property
     def get_loads(self):
+        """
+        return the position of the applied load and angle (for concentrated loads)
+        """
         loads = {'distributed':self._distributed_loads, 'concentrated':self._conc_loads}
         return loads
 
@@ -110,6 +113,40 @@ class Arch:
         return self._reaction_force
 
     def apply_load(self,order,label,x1,mag,x2=None,angle=None):
+        """
+        This method adds load to the Arch.
+
+        Parameters
+        ==========
+
+            order : Integer
+                Order of the applied load.
+
+                    - For point/concentrated loads, order = -1
+                    - For distributed load, order = 0
+
+            label : String or Symbol
+                The label of the load
+
+            x1 : Sympifyable
+
+                    - For concentrated/point loads, x1 is the x coordinate
+                    - For distributed loads, x1 is the starting position of distributed load
+
+            mag : Sympifyable
+                Magnitude of the appliead load. Must be positive
+
+            x2 : Sympifyable
+                Required for distributed loads
+
+                    - For concentrated/point load , x2 is None(may not be given)
+                    - For distributed loads, x2 is the end position of distributed load
+
+            angle: Sympifyable
+                The angle in degrees, the load vector makes with the horizontal
+                in the counter-clockwise direction.
+
+        """
         if label in self._loads:
             raise ValueError("load with the given label already exists")
 
@@ -128,9 +165,24 @@ class Arch:
             y = self._shape_eqn.subs({'x':x1})
             if x1>self._right_support[0] or x1<self._left_support[0]:
                 raise ValueError(f"loads must be applied between x = {self._left_support[0]} and x = {self._right_support[0]}")
-            self._conc_loads[label] = (x1,y)
+            self._conc_loads[label] = (x1,y,angle)
 
     def remove_load(self,order,label):
+        """
+        This methods removes the load applied to the arch
+
+        Parameters
+        ==========
+
+        order : Integer
+            The order of the appplied load.
+
+                - For point loads, order = -1
+                - For distributed load, order = 0
+
+        label : String or Symbol
+            The label of the applied load
+        """
         if label in self._loads:
             mag = self._loads[label]
             self._loads.pop(label)
@@ -146,6 +198,10 @@ class Arch:
             raise KeyError("no such load in the provided load type or load type does not exist")
 
     def add_support(self,left_support,right_support):
+        """
+        Add the type for support at each end.
+        Can use roller or hinge support at each end.
+        """
         support_types = ['roller','hinge']
         if left_support not in support_types or right_support not in support_types:
             raise ValueError("supports must only be roller or hinged")
