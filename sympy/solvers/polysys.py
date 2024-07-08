@@ -1,7 +1,7 @@
 """Solvers of systems of polynomial equations. """
 import itertools
 
-from sympy.core import S
+from sympy.core import S, expand
 from sympy.core.sorting import default_sort_key
 from sympy.core.function import diff
 from sympy.polys import Poly, groebner, roots, real_roots, nroots
@@ -592,22 +592,33 @@ def subresultant_polynomials(f, g, mvar):
     if degree(f, mvar) < degree(g, mvar):
         f, g = g, f
 
+
     prs = subresultants(f, g, mvar)
-    # reverse to get correct degree sequence
-    prs = prs[1:][::-1]
+    if len(prs) <=1:
+        return []
 
-    res = resultant(f, g, mvar)
+    subres_polys = [0] * (degree(g, mvar) + 1)
 
-    if resultant(f, g) != prs[0]: # add resultant back in
-        prs = [res] + prs
+    for i in reversed(range(2, len(prs))):
 
-    # have to scale the last element based on LC(g) and deg diff
-    power = degree(f, mvar) - degree(g, mvar) - 1
-    # if LC is 1 or power is 0 then scaling won't change it anyways
-    if not(LC(g, mvar) == 1 or power == 0):
-        prs[-1] = prs[-1] * (LC(g, mvar) ** power)
+        subres_polys[ degree(prs[i-1], mvar) -1 ] = prs[i]
 
-    return prs
+        if degree(prs[i], mvar) < degree(prs[i-1], mvar) - 1:
+            degree_jump = degree(prs[i-1], mvar) - degree(prs[i], mvar) - 1
+            subres_polys[ degree(prs[i], mvar) ]  =\
+                prs[i] * LC(prs[i], mvar) ** degree_jump
+
+    # get last one
+    subres_polys[-1] = prs[1] * LC(g, mvar) ** (degree(f, mvar) - degree(g, mvar) - 1)
+
+    # try to expand to simplify
+    for i in range(len(subres_polys)):
+        try:
+            subres_polys[i] = expand(subres_polys[i])
+        except:
+            continue
+
+    return subres_polys
 
 
 def subresultant_coefficients(f, g, mvar):
@@ -653,7 +664,10 @@ def subresultant_coefficients(f, g, mvar):
 # gets real roots, numeric if not algebraic
 def get_nice_roots(poly):
     # its a constant
-    if poly.is_number:
+    try:
+        if poly.is_number:
+            return []
+    except:
         return []
 
     try:

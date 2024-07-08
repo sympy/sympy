@@ -21,6 +21,7 @@ from sympy.solvers.polysys import (red, red_level, red_set,
                                     get_nice_roots, projone, projtwo,
                                     hongproj, cylindrical_algebraic_decomposition,
                                     solve_poly_system_cad)
+from sympy.polys.rootoftools import ComplexRootOf
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.testing.pytest import raises
 
@@ -218,6 +219,10 @@ def test_red_set():
 
 
 def test_subresultant_polynomials():
+    # edge cases
+    assert subresultant_polynomials(x, 0, x) == []
+    assert subresultant_polynomials(x, 1, x) == [1]
+
     # simple monic univariate examples
     assert subresultant_polynomials(x**2+1, x**2-1, x) == [4, -2, -1+x**2]
     assert subresultant_polynomials(x**3+1, x**2-1, x) == [0, 1+x, -1+x**2]
@@ -227,9 +232,6 @@ def test_subresultant_polynomials():
 
     # battery of univariate examples with diff degrees and coefficients
     # all checked in Mathematica
-    # note scaling: 2nd example, the PRS element is 2-x+3x^3
-    #   but the corresponding subresultant is 6-3x+9x^3
-    #   ie times LC(g)^(deg(f)-deg(g)-1) = 3^1 = 3
     fs = [
         2*x**5 - 3*x**4 + x**3 - 7*x + 5,
         -x**5 + 2*x**4 - 5*x**2 + x - 4,
@@ -282,13 +284,57 @@ def test_subresultant_polynomials():
     assert subresultant_polynomials(fs[3], gs[3], x) == answers[3]
     assert subresultant_polynomials(fs[4], gs[4], x) == answers[4]
 
-    # a multivariate example
-    # note the division by y^2!
-    assert subresultant_polynomials(y*x**2+1, y**2*x**2-1, x) ==\
-        [y**4 + 2*y**3 + y**2, -y**2 - y, (x**2*y**2 - 1)/y**2]
+    # a battery of bivariate tests with varying deg and coeffs
+    # checked with mathematica
+    fs = [
+        2*x**3 + y**2 + 3*x*y - 4,
+        x**3 + 4*x**2*y + y - 1,
+        3*x**2 + 2*x*y**2 - y + 6,
+        x**3 - y**3 + x*y,
+        y*x**2+1
+    ]
+    gs = [
+        x**2 + 2*y**3 + 5*x*y,
+        x**2 + y**4 - x,
+        x + y**3 - 2*x*y + 1,
+        x**2 - 2*y**2 + 3*x*y**2,
+        y**2*x**2 - 1
+    ]
+    answers = [
+        [
+            16 + 52*y**2 + 1000*y**3 - 254*y**4 - 232*y**5 + 360*y**6 - 48*y**7 + 32*y**9,
+            -4 + 3*x*y + y**2 + 50*x*y**2 - 4*x*y**3 + 20*y**4,
+            x**2 + 5*x*y + 2*y**3,
+            -4 + 2*x**3 + 3*x*y + y**2
+        ],
+        [
+            -5*y + 5*y**2 + 3*y**4 + 5*y**5 - 8*y**6 + 4*y**9 + 16*y**10 + y**12,
+            -1 + x + y + 4*x*y - y**4 - x*y**4 - 4*y**5,
+            -x + x**2 + y**4
+        ],
+        [
+            9 - 25*y + 26*y**2 + 6*y**3 - 2*y**5 + 7*y**6,
+            1 + x - 2*x*y + y**3
+        ],
+        [
+            -2*y**4 - 8*y**5 - 4*y**6 + 27*y**9,
+            x*y + 2*x*y**2 - y**3 - 6*y**4 + 9*x*y**4,
+            x**2 - 2*y**2 + 3*x*y**2
+        ],
+        [
+            y**2 + 2*y**3 + y**4,
+            -y - y**2,
+            (-1 + x**2*y**2) / y**2
+        ]
+    ]
+
 
 
 def test_subresultant_coefficients():
+    # edge cases
+    assert subresultant_coefficients(x, 0, x) == []
+    assert subresultant_coefficients(x, 1, x) == [1]
+
     # simple monic univariate examples
     assert subresultant_coefficients(x**2+1, x**2-1, x) == [4, 0, 1]
     assert subresultant_coefficients(x**3+1, x**2-1, x) == [0, 1, 1]
@@ -298,9 +344,6 @@ def test_subresultant_coefficients():
 
     # battery of univariate examples with diff degrees and coefficients
     # all checked in Mathematica
-    # note scaling: 2nd example, the PRS element is 2-x+3x^3
-    #   but the corresponding subresultant is 6-3x+9x^3
-    #   ie times LC(g)^(deg(f)-deg(g)-1) = 3^1 = 3
     fs = [
         2*x**5 - 3*x**4 + x**3 - 7*x + 5,
         -x**5 + 2*x**4 - 5*x**2 + x - 4,
@@ -353,7 +396,73 @@ def test_subresultant_coefficients():
     assert subresultant_coefficients(fs[3], gs[3], x) == answers[3]
     assert subresultant_coefficients(fs[4], gs[4], x) == answers[4]
 
-    # a multivariate example
-    # note the division by y^2!
-    assert subresultant_coefficients(y*x**2+1, y**2*x**2-1, x) ==\
-        [y**4 + 2*y**3 + y**2, 0, 1]
+
+    # a battery of bivariate tests with varying deg and coeffs
+    # checked with mathematica
+    fs = [
+        2*x**3 + y**2 + 3*x*y - 4,
+        x**3 + 4*x**2*y + y - 1,
+        3*x**2 + 2*x*y**2 - y + 6,
+        x**3 - y**3 + x*y,
+        y*x**2+1
+    ]
+    gs = [
+        x**2 + 2*y**3 + 5*x*y,
+        x**2 + y**4 - x,
+        x + y**3 - 2*x*y + 1,
+        x**2 - 2*y**2 + 3*x*y**2,
+        y**2*x**2 - 1
+    ]
+    answers = [
+        [
+            16 + 52*y**2 + 1000*y**3 - 254*y**4 - 232*y**5 + 360*y**6 - 48*y**7 + 32*y**9,
+            -4 + 3*x*y + y**2 + 50*x*y**2 - 4*x*y**3 + 20*y**4,
+            x**2 + 5*x*y + 2*y**3,
+            -4 + 2*x**3 + 3*x*y + y**2
+        ],
+        [
+            -5*y + 5*y**2 + 3*y**4 + 5*y**5 - 8*y**6 + 4*y**9 + 16*y**10 + y**12,
+            -1 + x + y + 4*x*y - y**4 - x*y**4 - 4*y**5,
+            -x + x**2 + y**4
+        ],
+        [
+            9 - 25*y + 26*y**2 + 6*y**3 - 2*y**5 + 7*y**6,
+            1 + x - 2*x*y + y**3
+        ],
+        [
+            -2*y**4 - 8*y**5 - 4*y**6 + 27*y**9,
+            x*y + 2*x*y**2 - y**3 - 6*y**4 + 9*x*y**4,
+            x**2 - 2*y**2 + 3*x*y**2
+        ],
+        [
+            y**2 + 2*y**3 + y**4,
+            0,
+            1
+        ]
+    ]
+
+
+
+def test_get_nice_roots():
+    # constants have no roots
+    assert get_nice_roots(3) == []
+    assert get_nice_roots(Poly(3, x)) == []
+
+    # if not implemented, just solve numerically
+    # eg if coefficient is algebraic
+    # the answer here can be solved with basic algebra
+    assert get_nice_roots(sqrt(2) * x**2 - 1)[1] == sqrt(1 / sqrt(2)).evalf()
+
+    # if roots are CRootOf, then they should be numeric
+    assert get_nice_roots(x**5 + x**2 - 1)[0] ==\
+        ComplexRootOf(x**5 + x**2 - 1, 0).evalf()
+
+    # the algebraic roots should stay algebraic
+    # bc of the multiplication, we get the roots from x^2 - 1 of +- sqrt(2)
+    assert get_nice_roots((x**2 - 2) * (x**5 - x**2 - 1)) ==\
+        [-sqrt(2), ComplexRootOf(x**5 - x**2 - 1, 0).evalf(), sqrt(2)]
+
+
+
+
+
