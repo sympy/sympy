@@ -196,6 +196,23 @@ class Limit(Expr):
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
 
+    def piecewise_sub(self, e):
+        _, z, _, _ = self.args
+        at_infinity = []
+
+        for i, pair in enumerate(e.as_expr_set_pairs()):
+            if pair[1].inf == S.NegativeInfinity:
+                at_infinity.append((e.args[i][0].subs(z, 1/z), 1/z < 0))
+                break
+        for i, pair in enumerate(e.as_expr_set_pairs()):
+            if pair[1].sup == S.Infinity:
+                at_infinity.append((e.args[i][0].subs(z, 1/z), 1/z > 0))
+                break
+
+        if at_infinity[0][0] == at_infinity[1][0]:
+            at_infinity = [(at_infinity[0][0], True)]
+
+        return Piecewise(*tuple(at_infinity))
 
     def doit(self, **hints):
         """Evaluates the limit.
@@ -323,7 +340,7 @@ class Limit(Expr):
             if e.is_Mul:
                 e = factor_terms(e)
             if isinstance(e, Piecewise):
-                newe = e._at_infinity(z)
+                newe = self.piecewise_sub(e)
             else:
                 newe = e.subs(z, 1/z)
             # cdir changes sign as oo- should become 0+

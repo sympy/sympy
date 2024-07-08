@@ -240,23 +240,6 @@ class Piecewise(Function):
             if S.Zero in bound[1] and not S.Zero in bound[1].boundary:
                 return bound[0].as_leading_term(x)
 
-    def _at_infinity(self, x):
-        at_infinity = []
-
-        for i, pair in enumerate(self.as_expr_set_pairs()):
-            if pair[1].inf == S.NegativeInfinity:
-                at_infinity.append((self.args[i][0].subs(x, 1/x), 1/x < 0))
-                break
-        for i, pair in enumerate(self.as_expr_set_pairs()):
-            if pair[1].sup == S.Infinity:
-                at_infinity.append((self.args[i][0].subs(x, 1/x), 1/x > 0))
-                break
-
-        if at_infinity[0][0] == at_infinity[1][0]:
-            at_infinity = [(at_infinity[0][0], True)]
-
-        return Piecewise(*tuple(at_infinity))
-
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])
 
