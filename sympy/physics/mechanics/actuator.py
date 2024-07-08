@@ -18,7 +18,7 @@ __all__ = [
     'LinearSpring',
     'TorqueActuator',
     'DuffingSpring',
-    'CoulombFrictionActuator',
+    'CoulombKineticFriction',
 ]
 
 
@@ -994,47 +994,39 @@ class DuffingSpring(ForceActuator):
                 f"equilibrium_length={self.equilibrium_length})")
 
 
-class CoulombFrictionActuator(ForceActuator):
+class CoulombKineticFriction(ForceActuator):
     """A friction force actuator for the Coulomb friction with static and dynamic friction.
 
     Explanation
     ===========
 
-    This represents a model for Coulomb Friction, described by the following piecewise function:
+    This represents a Coulomb kinetic Friction, described by the following piecewise function:
 
         F_f = {
 
         mu_k * F_n         if v < 0
-        f_r                if v = 0 and abs(f_r) < f_c
-        f_c * sign(f_r)    if v = 0 and abs(f_r) >= f_c
+        0                  if v = 0
         -mu_k * F_n        if v > 0
 
         }
 
-    where mu_k is the coefficient of kinetic friction, F_n is the normal force,
-    f_r is the resulting tangential friction force, f_c is the Coulomb friction constant,
-    and v is the velocity.
+    where F_n is the normal force between the two objects, v is the relative speed
+    between two objects, and mu_k is the coefficient of kinetic friction.
 
     Parameters
     ==========
 
-    coefficient_of_kinetic_friction : Expr
-        The coefficient of kinetic friction.
     normal_force : Expr
         The normal force between the surfaces.
-    tangential_friction_force : Expr
-        The tangential friction force when the velocity is zero.
-    coulomb_friction_constant : Expr
-        The Coulomb friction constant.
+    coefficient_of_kinetic_friction : Expr
+        The coefficient of kinetic friction.
     pathway : PathwayBase
         The pathway that the actuator follows.
     """
 
-    def __init__(self, coefficient_of_kinetic_friction, normal_force, tangential_friction_force, coulomb_friction_constant, pathway):
+    def __init__(self, coefficient_of_kinetic_friction, normal_force, pathway):
         self._coefficient_of_kinetic_friction = coefficient_of_kinetic_friction
         self._normal_force = normal_force
-        self._tangential_friction_force = tangential_friction_force
-        self._coulomb_friction_constant = coulomb_friction_constant
         self._pathway = pathway
 
     @property
@@ -1066,39 +1058,10 @@ class CoulombFrictionActuator(ForceActuator):
         self._normal_force = sympify(normal_force, strict=True)
 
     @property
-    def tangential_friction_force(self):
-        return self._tangential_friction_force
-
-    @tangential_friction_force.setter
-    def tangential_friction_force(self, tangential_friction_force):
-        if hasattr(self, '_tangential_friction_force'):
-            msg = (
-                f'Can\'t set attribute `tangential_friction_force` to '
-                f'{repr(tangential_friction_force)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._tangential_friction_force = sympify(tangential_friction_force, strict=True)
-
-    @property
-    def coulomb_friction_constant(self):
-        return self._coulomb_friction_constant
-
-    @coulomb_friction_constant.setter
-    def coulomb_friction_constant(self, coulomb_friction_constant):
-        if hasattr(self, '_coulomb_friction_constant'):
-            msg = (
-                f'Can\'t set attribute `coulomb_friction_constant` to '
-                f'{repr(coulomb_friction_constant)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._coulomb_friction_constant = sympify(coulomb_friction_constant, strict=True)
-
-    @property
     def force(self):
         return Piecewise(
             (self._coefficient_of_kinetic_friction * self._normal_force, self._pathway.extension_velocity < 0),
-            (self._tangential_friction_force, (self._pathway.extension_velocity == 0) & (abs(self._tangential_friction_force) < self._coulomb_friction_constant)),
-            (self._coulomb_friction_constant * sign(self._tangential_friction_force), (self._pathway.extension_velocity == 0) & (abs(self._tangential_friction_force) >= self._coulomb_friction_constant)),
+            (0, self._pathway.extension_velocity == 0),
             (-self._coefficient_of_kinetic_friction * self._normal_force, self._pathway.extension_velocity > 0)
         )
 
@@ -1113,4 +1076,4 @@ class CoulombFrictionActuator(ForceActuator):
         self._force = sympify(force, strict=True)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self._coefficient_of_kinetic_friction}, {self._normal_force}, {self._tangential_friction_force}, {self._coulomb_friction_constant}, {self.pathway})'
+        return f'{self.__class__.__name__}({self._coefficient_of_kinetic_friction}, {self._normal_force}, {self.pathway})'
