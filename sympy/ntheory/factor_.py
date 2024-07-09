@@ -929,8 +929,7 @@ def _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
         for b, e in facs.items():
             if verbose:
                 print(factor_msg % (b, e))
-            # int() can be removed when https://github.com/flintlib/python-flint/issues/92 is resolved
-            factors[b] = int(exp*e)
+            factors[b] = exp*e
     if verbose:
         print(complete_msg)
     return True
