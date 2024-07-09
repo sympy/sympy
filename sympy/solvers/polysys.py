@@ -541,7 +541,7 @@ def red_set(f, mvar):
         else:
             red_curr = red(reds[i-1], mvar)
 
-        if red_curr == 0:
+        if red_curr == 0: # don't need to keep the 0s
             break
         else:
             reds.append(red_curr)
@@ -702,24 +702,6 @@ def get_nice_roots(poly):
     return sorted(roots, reverse=False)
 
 
-    '''
-    roots = solve(poly)
-
-    roots_return = []
-    for root in roots:
-        if not root.is_real:
-            continue
-
-        if root.has(ComplexRootOf):
-            roots_return.append(root.evalf())
-        else:
-            roots_return.append(root)
-
-    return roots_return
-    '''
-
-
-
 
 # HONG PROJECTION OPERATOR (1990)
 # input: set F of k-variate polynomials
@@ -807,7 +789,7 @@ def projtwo(F, mvar):
     proj_set = set()
     for i in range(len(F)):
         # impose "linear ordering"
-        for j in range(i, len(F)):
+        for j in range(i+1, len(F)):
             f, g = F[i], F[j]
             for f_ in red_set(f, mvar):
                 proj_set.update(
@@ -864,7 +846,7 @@ def hongproj(F, mvar):
             if -p not in proj_factors_clean:
                 proj_factors_clean.add(p)
 
-    return list(proj_factors_clean)
+    return proj_factors_clean
 
 
 def cylindrical_algebraic_decomposition(F, gens):

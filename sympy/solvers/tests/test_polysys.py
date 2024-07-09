@@ -1,4 +1,5 @@
 """Tests for solvers of systems of polynomial equations. """
+from sympy import sympify
 from sympy.core.numbers import (I, Integer, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -442,7 +443,6 @@ def test_subresultant_coefficients():
     ]
 
 
-
 def test_get_nice_roots():
     # constants have no roots
     assert get_nice_roots(3) == []
@@ -461,3 +461,123 @@ def test_get_nice_roots():
     # bc of the multiplication, we get the roots from x^2 - 1 of +- sqrt(2)
     assert get_nice_roots((x**2 - 2) * (x**5 - x**2 - 1)) ==\
         [-sqrt(2), ComplexRootOf(x**5 - x**2 - 1, 0).evalf(), sqrt(2)]
+
+
+def test_projone():
+    # simple example: work it out manually by looping through
+    # for x^2
+    #   red_set = [x^2]
+    #   LC = 1
+    #   subres coeffs of x^2 and 2x (deriv) = [0,2]
+    #   so add [0,1,2] to the proj factors
+    # for x
+    #   red_set = [x]
+    #   LC = 1
+    #   subres coeffs of x and 1 (deriv) = [1]
+    #   so add [1] to the proj factors
+    # hence return {0,1,2}
+    assert projone([x**2, x], x) == {0, 1, 2}
+
+    # slighly harder bivar example: loop through
+    # for y*x**2
+    #   red_set = [y*x^2]
+    #   LC = y
+    #   subres coeffs of y*x^2 and 2yx (deriv) = [0,2y]
+    #   so add [0,y,2y] to the proj factors
+    # for y**2*x
+    #   red_set = [y**2*x]
+    #   LC = y**2
+    #   subres coeffs of y**2*x and y**2 (deriv) = [y**2]
+    #   so add [y**2, y**2] to the proj factors
+    # hence return {0,y,2y,y**2}
+    assert projone([y*x**2, y**2*x], x) == {0, y**2, y, 2*y}
+
+
+def test_projtwo():
+    # simple example: loop through (pairs)
+    # for the pair (f,g) = (x^2, x)
+    #   red_set(f) = [x^2]
+    #   for f_ = x^2
+    #       subres coeffs of x^2 and x = [0,1]
+    #   so add [0,1] to the proj factors
+    # hence return {0,1}
+    assert projtwo([x**2, x], x) == {0, 1}
+
+    # slighly harder bivar example: loop through (pairs)
+    # for the pair (f,g) = (y*x^2, y**2*x)
+    #   red_set(f) = [y*x^2]
+    #   for f_ = y*x^2
+    #       subres coeffs of y*x^2 and y**2*x = [0,y**2]
+    #   so add [0,y**2] to the proj factors
+    # hence return {0,y**2}
+    assert projtwo([y*x**2, y**2*x], x) == {0, y**2}
+
+
+def test_hongproj():
+    # the same two examples as in test_projone and test_projtwo
+    # the tests here are really just testing the 'cleaning up'
+
+    # this should be empty as they are all constants
+    assert hongproj([x**2, x], x) == set()
+
+    assert hongproj([y*x**2, y**2*x], x) == {y**2, y, 2*y}
+
+
+def test_cylindrical_algebraic_decomposition():
+    # simple univar example
+    # x^2-1 has roots +-1, which implies these cells
+    assert cylindrical_algebraic_decomposition([x**2-1], [x]) ==\
+        [{x: val} for val in [-2, -1, 0, 1, 2]]
+
+    # harder univar example
+    # the collection of roots are (-1, 0, 1, 5**(1/3))
+    # have to do the sympify thing to do algebraic comparisons
+    # is there an easier way??
+    assert cylindrical_algebraic_decomposition([x**2-1,
+                                                x,
+                                                x**3-5], [x]) ==\
+        [{x: val} for val in
+         [-2, -1, sympify("-1/2"), 0, sympify("1/2"), 1,
+          sympify("(1+5**(1/3))/2"),
+          sympify("5**(1/3)"),
+          sympify("5**(1/3)+1")]]
+
+    # multivar example
+    # projecting on x gets [-y^2-1, y], only root is 0
+    # then lift on y=-1, y=0, y=1 -- easy but tedious
+    assert cylindrical_algebraic_decomposition([x+y, x*y-1], [x,y]) == [
+        {y: -1, x: -2},
+        {y: -1, x: -1},
+        {y: -1, x: 0},
+        {y: -1, x: 1},
+        {y: -1, x: 2},
+        {y: 0, x: -1},
+        {y: 0, x: 0},
+        {y: 0, x: 1},
+        {y: 1, x: -2},
+        {y: 1, x: -1},
+        {y: 1, x: 0},
+        {y: 1, x: 1},
+        {y: 1, x: 2}
+        ]
+
+
+def test_solve_poly_system_cad():
+    # no solution as this quadratic lies below x axis
+    solve_poly_system_cad([-x**2 - 1 >= 0], [x]) == []
+
+    # testing utility
+    # solves a system and then subs the sample points back in
+    def solve_and_sub(ineqs, vars, return_one_sample=True):
+        soln = solve_poly_system_cad(ineqs, vars, return_one_sample)
+
+        for sample in soln:
+            if not all(ineq.subs(sample) for ineq in ineqs):
+                return False
+        return True
+
+    assert(solve_and_sub([x**2-1 >= 3], [x])) == True
+    assert(solve_and_sub([x**2-1 >= 3], [x], False)) == True
+
+    # harder example
+    assert(solve_and_sub([x**2 * y**2 - 1 > 0, x<=0.2, x+y >= 1], [x,y])) == True
