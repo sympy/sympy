@@ -16,7 +16,7 @@ from sympy.solvers.polysys import (solve_poly_system,
                                    solve_triangulated,
                                    solve_biquadratic, SolveFailed,
                                    solve_generic)
-from sympy.solvers.polysys import (red, red_level, red_set,
+from sympy.solvers.polysys import (red, red_set,
                                     subresultant_polynomials,
                                     subresultant_coefficients,
                                     get_nice_roots, projone, projtwo,
@@ -197,19 +197,9 @@ def test_red():
     assert red(x*y + x**2 * y**2, x) == x*y
 
 
-def test_red_level():
-    assert red_level(x, x, 0) == x
-    assert red_level(x, x, 1) == 0
-    assert red_level(x, x, 100) == 0 # level > degree
-
-    assert red_level(x**3 + x**2 + x + 1, x, 2) == x + 1
-
-    assert red_level(y*x**3 + y**2 * x**2 + 1, x, 1) == y**2 * x**2 + 1
-
-
 def test_red_set():
     assert red_set(1, x) == []
-    assert red_set(x, x) == [x]
+    assert red_set(x, x) == [x,0]
 
     assert red_set(x**3 + x**2 + x + 1, x) == [x**3 + x**2 + x + 1,
                                                x**2 + x + 1,
@@ -466,12 +456,12 @@ def test_get_nice_roots():
 def test_projone():
     # simple example: work it out manually by looping through
     # for x^2
-    #   red_set = [x^2]
+    #   red_set = [x^2,0,0]
     #   LC = 1
     #   subres coeffs of x^2 and 2x (deriv) = [0,2]
     #   so add [0,1,2] to the proj factors
     # for x
-    #   red_set = [x]
+    #   red_set = [x,0]
     #   LC = 1
     #   subres coeffs of x and 1 (deriv) = [1]
     #   so add [1] to the proj factors
