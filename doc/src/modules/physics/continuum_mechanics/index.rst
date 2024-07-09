@@ -35,6 +35,6 @@ Arch
 ====
 
 .. toctree::
-   :titlesonly
+   :titlesonly:
 
    arches.rst
