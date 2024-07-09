@@ -6,7 +6,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.function import diff
 from sympy.polys import Poly, groebner, roots, real_roots, nroots
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polytools import LT, LC, degree, subresultants, resultant, factor_list
+from sympy.polys.polytools import LT, LC, degree, subresultants, factor_list
 from sympy.polys.rootoftools import ComplexRootOf
 from sympy.polys.polyerrors import (ComputationFailed,
     PolificationFailed, CoercionFailed)
@@ -497,9 +497,6 @@ def solve_poly_system_cad(seq, gens, return_one_sample=True):
 
 
 
-
-
-
 # HONG PROJECTOR OPERATOR AND OPERATIONS USED FOR IT
 
 
@@ -664,7 +661,7 @@ def subresultant_polynomials(f, g, mvar):
     for i in range(len(subres_polys)):
         try:
             subres_polys[i] = expand(subres_polys[i])
-        except:
+        except Exception:
             continue
 
     return subres_polys
@@ -723,7 +720,7 @@ def get_nice_roots(poly):
     try:
         if poly.is_number:
             return []
-    except:
+    except Exception:
         return []
 
     factors = factor_list(poly)[1] # the 0th is just a number

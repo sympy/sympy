@@ -295,8 +295,7 @@ def test_subresultant_polynomials():
         [
             16 + 52*y**2 + 1000*y**3 - 254*y**4 - 232*y**5 + 360*y**6 - 48*y**7 + 32*y**9,
             -4 + 3*x*y + y**2 + 50*x*y**2 - 4*x*y**3 + 20*y**4,
-            x**2 + 5*x*y + 2*y**3,
-            -4 + 2*x**3 + 3*x*y + y**2
+            x**2 + 5*x*y + 2*y**3
         ],
         [
             -5*y + 5*y**2 + 3*y**4 + 5*y**5 - 8*y**6 + 4*y**9 + 16*y**10 + y**12,
@@ -315,9 +314,15 @@ def test_subresultant_polynomials():
         [
             y**2 + 2*y**3 + y**4,
             -y - y**2,
-            (-1 + x**2*y**2) / y**2
+            x**2 - 1/y**2
         ]
     ]
+    # unrolled it so we can see exactly which example fails
+    assert subresultant_polynomials(fs[0], gs[0], x) == answers[0]
+    assert subresultant_polynomials(fs[1], gs[1], x) == answers[1]
+    assert subresultant_polynomials(fs[2], gs[2], x) == answers[2]
+    assert subresultant_polynomials(fs[3], gs[3], x) == answers[3]
+    assert subresultant_polynomials(fs[4], gs[4], x) == answers[4]
 
 
 
@@ -407,23 +412,22 @@ def test_subresultant_coefficients():
     answers = [
         [
             16 + 52*y**2 + 1000*y**3 - 254*y**4 - 232*y**5 + 360*y**6 - 48*y**7 + 32*y**9,
-            -4 + 3*x*y + y**2 + 50*x*y**2 - 4*x*y**3 + 20*y**4,
-            x**2 + 5*x*y + 2*y**3,
-            -4 + 2*x**3 + 3*x*y + y**2
+            3*y + 50*y**2 - 4*y**3,
+            1
         ],
         [
             -5*y + 5*y**2 + 3*y**4 + 5*y**5 - 8*y**6 + 4*y**9 + 16*y**10 + y**12,
-            -1 + x + y + 4*x*y - y**4 - x*y**4 - 4*y**5,
-            -x + x**2 + y**4
+            1 + 4*y - y**4,
+            1
         ],
         [
             9 - 25*y + 26*y**2 + 6*y**3 - 2*y**5 + 7*y**6,
-            1 + x - 2*x*y + y**3
+            1 - 2*y
         ],
         [
             -2*y**4 - 8*y**5 - 4*y**6 + 27*y**9,
-            x*y + 2*x*y**2 - y**3 - 6*y**4 + 9*x*y**4,
-            x**2 - 2*y**2 + 3*x*y**2
+            y + 2*y**2 + 9*y**4,
+            1
         ],
         [
             y**2 + 2*y**3 + y**4,
@@ -431,6 +435,12 @@ def test_subresultant_coefficients():
             1
         ]
     ]
+    # unrolled it so we can see exactly which example fails
+    assert subresultant_coefficients(fs[0], gs[0], x) == answers[0]
+    assert subresultant_coefficients(fs[1], gs[1], x) == answers[1]
+    assert subresultant_coefficients(fs[2], gs[2], x) == answers[2]
+    assert subresultant_coefficients(fs[3], gs[3], x) == answers[3]
+    assert subresultant_coefficients(fs[4], gs[4], x) == answers[4]
 
 
 def test_get_nice_roots():
@@ -554,7 +564,7 @@ def test_cylindrical_algebraic_decomposition():
 
 def test_solve_poly_system_cad():
     # no solution as this quadratic lies below x axis
-    solve_poly_system_cad([-x**2 - 1 >= 0], [x]) == []
+    assert solve_poly_system_cad([-x**2 - 1 >= 0], [x]) == []
 
     # testing utility
     # solves a system and then subs the sample points back in
