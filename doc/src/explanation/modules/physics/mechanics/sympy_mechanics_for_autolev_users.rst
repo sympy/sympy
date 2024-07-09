@@ -86,7 +86,7 @@ The tables below give rough equivalents for some common Autolev
 expressions. **These are not exact equivalents**, but rather should be
 taken as hints to get you going in the right direction. For more detail
 read the built-in documentation on :ref:`SymPy vectors <physics_vector>`,
-:ref:`SymPy mechanics <classical_mechanics>` and
+:ref:`SymPy mechanics <physics_mechanics>` and
 `PyDy <https://www.pydy.org/documentation.html>`_ .
 
 In the tables below, it is assumed that you have executed the following
@@ -712,7 +712,7 @@ Links
 Documentation <physics_vector>`
 
 :ref:`SymPy Mechanics
-Documentation <classical_mechanics>`
+Documentation <physics_mechanics>`
 
 `PyDy Documentation <https://www.pydy.org/documentation.html>`_
 

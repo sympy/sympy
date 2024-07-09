@@ -10,17 +10,17 @@ name: release
 on:
   push:
     branches:
-      - '1.13'
+      - '1.14'
     tags:
-      - 'sympy-1.13.*'
+      - 'sympy-1.14.*'
   pull_request:
     branches:
-      - '1.13'
+      - '1.14'
 env:
-  release_branch: '1.13'
-  release_version: '1.13.1'
-  final_release_version: '1.13.1'
-  previous_version: '1.13'
+  release_branch: '1.14'
+  release_version: '1.14.0-dev'
+  final_release_version: '1.14.0'
+  previous_version: '1.13.0'
   dev_version: '1.14-dev'
 
 jobs:
@@ -39,7 +39,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Build release files
         run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
@@ -79,8 +79,11 @@ jobs:
       - name: Install wheel
         run: pip install sympy-${{ env.release_version }}-py3-none-any.whl
 
+      - name: Install test-only dependencies
+        run: pip install pytest pytest-xdist hypothesis
+
       - name: Run tests after install
-        run: python -c 'import sympy; sympy.test()'
+        run: python -c 'import sympy; sympy.test(parallel=True)'
 
   # -------------------- Upload to Test-PyPI ----------------------- #
 
@@ -170,11 +173,22 @@ jobs:
 
   # -------------------- Update the docs repository ---------------- #
 
+  # Dummy job to determine whether the release is final
+  check-final:
+    name: Check whether the release is final
+    needs: [build, pypi-publish]
+    runs-on: ubuntu-latest
+    outputs:
+      # The env context is not available in jobs.<job id>.if so we set it here
+      is-final: ${{ env.release_version == env.final_release_version }}
+    steps:
+      - run: echo "null"
+
   update-docs:
     name: Update the docs repository
-    needs: [build, pypi-publish]
+    needs: [check-final]
     # Only run for a final release
-    if: ${{ github.env.release_version == github.env.final_release_version }}
+    if: ${{ needs.check-final.outputs.is-final == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
