@@ -6,7 +6,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.function import diff
 from sympy.polys import Poly, groebner, roots, real_roots, nroots
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polytools import LT, LC, degree, subresultants, resultant
+from sympy.polys.polytools import LT, LC, degree, subresultants, resultant, factor_list
 from sympy.polys.rootoftools import ComplexRootOf
 from sympy.polys.polyerrors import (ComputationFailed,
     PolificationFailed, CoercionFailed)
@@ -531,7 +531,8 @@ def red_set(f, mvar):
     try:
         if f.is_number:
             return []
-    except: # if its not a sympy Basic object, then also return []
+    except Exception as error: # if its not a sympy Basic object, then also return []
+        print(error)
         return []
 
     for i in range(degree(f, mvar) + 1):
@@ -662,7 +663,9 @@ def subresultant_coefficients(f, g, mvar):
 
 
 # gets real roots, numeric if not algebraic
+# returns them sorted
 def get_nice_roots(poly):
+
     # its a constant
     try:
         if poly.is_number:
@@ -670,31 +673,52 @@ def get_nice_roots(poly):
     except:
         return []
 
-    try:
-        roots = real_roots(poly)
-    except NotImplementedError:
-        return [root for root in nroots(poly) if root.is_real]
+    factors = factor_list(poly)[1] # the 0th is just a number
 
+    roots = set()
+    # get the roots of the factors that are polynomials
+    for factor in factors:
+        curr_factor = factor[0]
+
+        if curr_factor.is_number:
+            continue
+
+        try:
+            new_roots = real_roots(curr_factor)
+            for i, r in enumerate(new_roots):
+                # want to avoid CRootOf
+                if r.has(ComplexRootOf):
+                    new_roots[i] = r.evalf()
+        except NotImplementedError:
+            try:
+                new_roots = [root for root in nroots(curr_factor) if root.is_real]
+            except Exception as error:
+                print(poly, curr_factor)
+                print(error)
+
+        roots.update(new_roots)
+
+
+    return sorted(roots, reverse=False)
+
+
+    '''
+    roots = solve(poly)
 
     roots_return = []
     for root in roots:
-        """
-        Want to avoid CRootOf (for now?)
-
-        Note that we can't simply check for isinstance(ComplexRootOf)
-        Sometimes, expressions can involve ComplexRootOf, eg:
-        >>> Poly(-15*z**4 + 120*z**2 + 16).real_roots()[0]
-        2*CRootOf(15*x**4 - 30*x**2 - 1, 0)
-
-        To get around this, we use .has().
-        """
+        if not root.is_real:
+            continue
 
         if root.has(ComplexRootOf):
-            roots_return.append(root.evalf()) # not sure how precise?
+            roots_return.append(root.evalf())
         else:
             roots_return.append(root)
 
     return roots_return
+    '''
+
+
 
 
 # HONG PROJECTION OPERATOR (1990)
@@ -830,7 +854,17 @@ def hongproj(F, mvar):
         The set of projection factors.
     """
 
-    return list(projone(F, mvar).union(projtwo(F, mvar)))
+    proj_factors = projone(F, mvar).union(projtwo(F, mvar))
+    proj_factors_clean = set()
+
+    for p in proj_factors:
+        if p.is_number:
+            continue
+        else:
+            if -p not in proj_factors_clean:
+                proj_factors_clean.add(p)
+
+    return list(proj_factors_clean)
 
 
 def cylindrical_algebraic_decomposition(F, gens):
@@ -858,24 +892,39 @@ def cylindrical_algebraic_decomposition(F, gens):
     # Compute the projection sets
     projs_set = [F]
     for i in range(len(gens) - 1):
+        print("Projecting on {}".format(gens[i]))
         projs_set.append(hongproj(projs_set[-1], gens[i]))
+        print("Made {} projection factors".format(len(projs_set[-1])))
+
+    print("Done projection")
 
     # Lifting
     sample_points = [{}]
 
     for i in reversed(range(len(gens))):
+        print("Lifting on {}".format(gens[i]))
         projs = projs_set[i]
         gen = gens[i]
 
         new_sample_points = []
 
-        for point in sample_points:
+        for i, point in enumerate(sample_points):
+            print("\tLifting over point {} / {}".format(i+1, len(sample_points)))
+
+            print("\t\tGetting roots")
             roots = set()
             for proj in projs:
-                roots.update(get_nice_roots(proj.subs(point)))
+                subbed = proj.subs(point)
+                try:
+                    subbed = expand(subbed)
+                except Exception:
+                    pass
+                roots.update(get_nice_roots(subbed))
+            # have to sort them overall now
             roots = sorted(roots, reverse=False)
 
             # Calculate sample points
+            print("\t\tCalculating sample points")
             if not roots:
                 samples = [0]
             elif len(roots) == 1:

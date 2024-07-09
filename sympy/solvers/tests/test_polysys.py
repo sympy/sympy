@@ -461,8 +461,3 @@ def test_get_nice_roots():
     # bc of the multiplication, we get the roots from x^2 - 1 of +- sqrt(2)
     assert get_nice_roots((x**2 - 2) * (x**5 - x**2 - 1)) ==\
         [-sqrt(2), ComplexRootOf(x**5 - x**2 - 1, 0).evalf(), sqrt(2)]
-
-
-
-
-
