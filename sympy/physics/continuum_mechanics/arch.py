@@ -67,7 +67,7 @@ class Arch:
             eq2 = parabola_eqn.subs({x:self._right_support[0], y:self._right_support[1]})
             solution = solve((eq1,eq2),(a,c))
             if len(solution) <2 or solution[a] == 0:
-                raise ValueError("parabolic arch cannot be constructed with the provided coordinates")
+                raise ValueError("parabolic arch cannot be constructed with the provided coordinates, try providing crown_y")
             parabola_eqn = solution[a]*(x-x0)**2+ solution[c]
             self._crown_y = solution[c]
 
