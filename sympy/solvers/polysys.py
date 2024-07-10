@@ -634,7 +634,7 @@ def subresultant_polynomials(f, g, mvar):
     >>> subresultant_polynomials(x**2, x, x)
     [0, x]
     """
-    # ensure deg(f) \geq deg(g)
+    # ensure deg(f) >= deg(g)
     if degree(f, mvar) < degree(g, mvar):
         f, g = g, f
 
@@ -759,7 +759,7 @@ def projone(F, mvar):
 
     Let F be a set of polynomials with a given mvar. Then,
 
-    PROJ1 = \cup_{f \in F, g \in RED(f)} (ldcf(g) \cup PSC(g, D(g)))
+    PROJ1 = \\cup_{f \\in F, g \\in RED(f)} (ldcf(g) \\cup PSC(g, D(g)))
 
     where RED is the reducta set, ldcf is the leading coefficient,
     PSC is the principal subresultant coefficient set, and D is the
@@ -809,7 +809,7 @@ def projtwo(F, mvar):
 
     Let F be a set of polynomials with a given mvar. Then,
 
-    PROJ2 = \cup_{f,g \in F, f < g} \cup_{f' \in RED(f)} PSC(f', g)
+    PROJ2 = \\cup_{f,g \\in F, f < g} \\cup_{f' \\in RED(f)} PSC(f', g)
 
     where RED is the reducta set, < indicates an arbitray "linear
     ordering" to not loop over redundant pairs, and PSC is the
@@ -863,11 +863,11 @@ def hongproj(F, mvar):
 
     The Hong projector, PROJH, is defined as:
 
-    PROJH(F) = PROJ1(F) \cup PROJ2(F)
+    PROJH(F) = PROJ1(F) \\cup PROJ2(F)
 
-    PROJ1 = \cup_{f \in F, g \in RED(f)} (ldcf(g) \cup PSC(g, D(g)))
+    PROJ1 = \\cup_{f \\in F, g \\in RED(f)} (ldcf(g) \\cup PSC(g, D(g)))
 
-    PROJ2 = \cup_{f,g \in F, f < g} \cup_{f' \in RED(f)} PSC(f', g)
+    PROJ2 = \\cup_{f,g \\in F, f < g} \\cup_{f' \\in RED(f)} PSC(f', g)
 
     where RED is the reducta set, ldcf is the leading coefficient,
     PSC is the principal subresultant coefficient set, < indicates
@@ -920,7 +920,7 @@ def cylindrical_algebraic_decomposition(F, gens):
     """
     Calculates a cylindrical algebraic decomposition adapted to F.
     Uses the Hong projection operator. Returns sample points which
-    represent cells over which each f \in F is sign-invariant. It
+    represent cells over which each f in F is sign-invariant. It
     projects iteratively down to lower-dimension spaces according to
     the list of generators given in gens, in their order.
 
