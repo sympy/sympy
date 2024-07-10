@@ -1,5 +1,4 @@
 """Tests for solvers of systems of polynomial equations. """
-from sympy import sympify
 from sympy.core.numbers import (I, Integer, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
