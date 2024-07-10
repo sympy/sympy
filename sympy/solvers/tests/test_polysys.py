@@ -537,10 +537,10 @@ def test_cylindrical_algebraic_decomposition():
                                                 x,
                                                 x**3-5], [x]) ==\
         [{x: val} for val in
-         [-2, -1, sympify("-1/2"), 0, sympify("1/2"), 1,
-          sympify("(1+5**(1/3))/2"),
-          sympify("5**(1/3)"),
-          sympify("5**(1/3)+1")]]
+         [-2, -1, -S(1)/2, 0, S(1)/2, 1,
+          (1+ 5**(S(1)/3))/2,
+          5**(S(1)/3),
+          5**(S(1)/3) + 1]]
 
     # multivar example
     # projecting on x gets [-y^2-1, y], only root is 0
