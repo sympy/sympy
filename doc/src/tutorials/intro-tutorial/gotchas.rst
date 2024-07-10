@@ -248,8 +248,9 @@ object.
     <... 'int'>
 
 This is usually not a big deal. Python ints work much the same as SymPy
-Integers, but there is one important exception:  division.  In SymPy, the
-division of two Integers gives a Rational:
+Integers, but there is one important exception: division. In SymPy, the
+division of two Integers gives a Rational (which is similar to Python's `Fraction
+<https://docs.python.org/3/library/fractions.html>`_):
 
     >>> Integer(1)/Integer(3)
     1/3
