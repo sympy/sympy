@@ -1,5 +1,7 @@
 """Implementation of :class:`FiniteField` class. """
 
+import operator
+
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -43,10 +45,11 @@ def _modular_int_factory(mod, dom, symmetric, self):
             flint.nmod(0, mod)
         except OverflowError:
             # Use fmpz_mod
-            ctx = flint.fmpz_mod_ctx(mod)
+            fctx = flint.fmpz_mod_ctx(mod)
+            ctx = lambda x: fctx(operator.index(x))
         else:
             # Use nmod
-            ctx = lambda x: flint.nmod(x, mod)
+            ctx = lambda x: flint.nmod(operator.index(x), mod)
 
         return ctx
 
