@@ -365,7 +365,7 @@ you don't have to worry about this problem:
     >>> print(solve(7*x -22, x))
     [22/7]
     >>> 22/7  # If we just copy and paste we get int 3 or a float
-    3.142857142857143
+    3.142857142857143, depending on whether we use Python 2 or 3
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
     >>> a = solve(7*x - 22, x)[0]
@@ -718,6 +718,18 @@ square brackets.
 
     >>> (x)
     x
+
+    Actually parentheses are not needed for non-empty tuples; the commas are:
+
+    >>> x,y
+    (x,y)
+    >>> x,
+    (x,)
+
+    An empty tuple can be created with bare parentheses:
+
+    >>> ()
+    ()
 
     integrate takes a sequence as the second argument if you want to integrate
     with limits (and a tuple or list will work):
