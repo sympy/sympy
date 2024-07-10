@@ -332,11 +332,12 @@ automatically, but there is one gotcha you should be aware of.  If you
 do ``<number>/<number>`` inside of a SymPy expression, Python will
 evaluate the two numbers before SymPy has a chance to get
 to them.  The solution is to :func:`~.sympify` one of the numbers, or use
-:obj:`~.Rational`.
+:obj:`~.Rational` (or alternatively Python's `Fraction
+<https://docs.python.org/3/library/fractions.html>`_).
 
     >>> x**(1/2)  # evaluates to x**0 or x**0.5
     x**0.5
-    >>> x**(S(1)/2)  # sympyify one of the ints
+    >>> x**(S(1)/2)  # sympify one of the ints
     sqrt(x)
     >>> x**Rational(1, 2)  # use the Rational class
     sqrt(x)
