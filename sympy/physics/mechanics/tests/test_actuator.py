@@ -9,6 +9,10 @@ from sympy import (
     SympifyError,
     sqrt,
     Abs,
+    simplify,
+    sign,
+    exp,
+    symbols
 )
 from sympy.physics.mechanics import (
     ActuatorBase,
@@ -28,11 +32,10 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
     DuffingSpring,
     CoulombKineticFriction,
+    System,
 )
 
 from sympy.core.expr import Expr as ExprType
-
-from sympy.functions.elementary.piecewise import Piecewise
 
 target = RigidBody('target')
 reaction = RigidBody('reaction')
@@ -854,74 +857,109 @@ class TestDuffingSpring:
                 assert Abs(diff) < 1e-9, f"The forces do not match. Difference: {diff}"
 
 class TestCoulombKineticFriction:
-    r"""A block on the surface.
+    def test_block_on_surface(self):
+        r"""A block sliding on a surface.
 
-    Notes
-    =====
+        Notes
+        =====
+        A block slides with the Coulomb kinetic friction force, which is described by the following function:
 
-    A block slides with the Coulomb friction force acting on the block being:
-    f = mu_k * N, where mu_k is the coefficient of kinetic friction and N is the
-    normal force.
+            f_f(v) = f_c * sign(v) + (f_max - f_c) * exp(-(v / v_s)^2) + sigma * v
 
-    The test validates the correctness of the CoulombKineticFriction by comparing
-    the actuator's force to the expected friction force.
+        where f_c is the Coulomb friction constant, f_max is the maximum static friction
+        force, v_s is the Stribeck velocity, sigma is the viscous friction constant,
+        and v is the relative velocity.
 
-    """
-    @pytest.fixture(autouse=True)
-    def _disc_block_fixture(self):
+        This test validates the correctness of the CoulombKineticFriction by comparing
+        the actuator's force to the expected friction force under different velocity conditions.
+
+        Equations of Motion
+        ===================
+        The equations of motion for the block are derived considering
+        the applied force F, the mass m, the gravitational constant g, and the friction forces
+        as described above.
+
+        The general form of the equation of motion is:
+
+            F - F_friction = m * xdd
+
+        where F_friction is given by the friction force equation f_f(v).
+
+        Coordinate System
+        =================
+
+                x
+            --->
+            |
+            v y
+
+                    ---> v+ or v-
+                  _______
+              F   |     |       |
+            --->  |  m  |       | g
+                  |_____|       v
+                         <--- F_k = f_c * sign(v) + (f_max - f_c) * exp(-(v / v_s)^2) + sigma * v
+             N = m*g ^
+                     |
+
+        Velocity Cases
+        ==============
+
+        For positive velocity (v = 3.141):
+
+            F - m * Derivative(3.141, t) + (g * m * mu_k * sign(sqrt(q1(t)**2) / q1(t))
+            + 3.141 * sigma * sqrt(q1(t)**2) / q1(t)
+            + (-g * m * mu_k + g * m * mu_s) * exp(-9.865881 / v_s**2)) * q1(t) / sqrt(q1(t)**2)
+
+        For negative velocity (v = -3.141):
+
+            F - m * Derivative(-3.141, t) + (-g * m * mu_k * sign(sqrt(q1(t)**2) / q1(t))
+            - 3.141 * sigma * sqrt(q1(t)**2) / q1(t)
+            + (-g * m * mu_k + g * m * mu_s) * exp(-9.865881 / v_s**2)) * q1(t) / sqrt(q1(t)**2)
+
+        The test compares the derived equations of motion with the expected ones to
+        ensure the friction model is implemented correctly.
+
+        """
         # Define Dynamics symbols and parameters
-        self.q1 = dynamicsymbols('q1')
-        self.u1 = dynamicsymbols('u1')
+        q1, u1 = dynamicsymbols('q1 u1')
 
-        self.m = Symbol('m') # Block mass
-        self.g = Symbol('g')
-        self.mu_k = Symbol('mu_k') # Coefficient of kinetic friction
+        # Mass, gravity constant, friction coefficient, coefficient of sliding friction, viscous_coefficient
+        m, g, mu_k, mu_s, v_s, sigma, F = symbols('m g mu_k mu_s v_s sigma F')
 
         # Define the reference frame
-        self.N = ReferenceFrame('N')
-        self.O = Point('O')
-        self.P = self.O.locatenew('P', self.q1 * self.N.x)
-        self.O.set_vel(self.N, 0)
-        self.P.set_vel(self.N, self.u1 * self.N.x)
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q1 * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, u1 * N.x)
 
-        self.particle = Particle('particle', self.P, self.m) # Block
+        particle = Particle('particle', P, m) # Block
 
-        self.normal_force = self.m * self.g
-
-        self.pathway = LinearPathway(self.O, self.P)
-
-        self.expected_friction_force = Piecewise(
-            (self.mu_k * self.normal_force, self.pathway.extension_velocity < 0),
-            (0, self.pathway.extension_velocity == 0),
-            (-self.mu_k * self.normal_force, self.pathway.extension_velocity > 0)
+        friction = CoulombKineticFriction(
+            mu_k=mu_k,
+            mu_s=mu_s,
+            normal_force=m * g,
+            pathway=LinearPathway(O, P),
+            v_s=v_s,
+            viscous_coeffient=sigma,
         )
 
-        # Kane's method
-        self.kanes_method = KanesMethod(
-            self.N,
-            q_ind=[self.q1],
-            u_ind=[self.u1],
-            kd_eqs=[self.q1.diff() - self.u1],
-            bodies=[self.particle]
-        )
-        self.bodies = [self.particle]
+        system = System(N, O)
+        system.q_ind = [q1]
+        system.u_ind = [u1]
+        system.kdes = [q1.diff() - u1]
+        system.add_bodies(particle)
+        system.add_actuators(friction)
+        system.apply_uniform_gravity(-g * N.y)
+        system.add_loads(Force(particle, F * N.x))
 
-        self.mass_matrix = Matrix([[self.m]])
-        self.forcing = Matrix([[Piecewise((self.g*self.m*self.mu_k, sqrt(self.q1**2)*self.u1/self.q1 < 0), (-self.g*self.m*self.mu_k, sqrt(self.q1**2)*self.u1/self.q1 > 0))]])
+        eoms = system.form_eoms()
 
-    def test_force_actuator(self):
-        coefficient_of_kinetic_friction=self.mu_k
-        normal_force=self.normal_force
-        pathway=self.pathway
+        # Positive velocity case
+        expected_positive = F - m * 0 + (g * m * mu_k * sign(sqrt(q1**2) * 3.141 / q1) + sigma * sqrt(q1**2) * 3.141 / q1 + (-g * m * mu_k + g * m * mu_s) * exp(-9.865881 / v_s**2)) * q1 / sqrt(q1**2)
+        assert simplify(eoms[0].xreplace({u1: 3.141}) - expected_positive) == 0
 
-        friction_actuator = CoulombKineticFriction(
-            coefficient_of_kinetic_friction=coefficient_of_kinetic_friction,
-            normal_force=normal_force,
-            pathway=pathway
-        )
-
-        loads = [(self.P, friction_actuator.force * self.N.x)]
-        self.kanes_method.kanes_equations(self.bodies, loads)
-
-        assert self.kanes_method.mass_matrix == self.mass_matrix
-        assert self.kanes_method.forcing == self.forcing
+        # Negative velocity case:
+        expected_negative = F - m * 0 + (g * m * mu_k * sign(sqrt(q1**2) * (-3.141) / q1) + sigma * sqrt(q1**2) * (-3.141) / q1 + (-g * m * mu_k + g * m * mu_s) * exp(-9.865881 / v_s**2)) * q1 / sqrt(q1**2)
+        assert simplify(eoms[0].xreplace({u1: -3.141}) - expected_negative) == 0
