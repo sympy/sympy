@@ -12,7 +12,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.logic.boolalg import BooleanFunction
+from sympy.logic.boolalg import BooleanFunction, true, false
 
 def _expm1(x):
     return exp(x) - S.One
@@ -535,5 +535,24 @@ class hypot(Function):
 class isnan(BooleanFunction):
     nargs = 1
 
+    @classmethod
+    def eval(cls, arg):
+        if arg is S.NaN:
+            return true
+        elif arg.is_number:
+            return false
+        else:
+            return None
+
+
 class isinf(BooleanFunction):
     nargs = 1
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_infinite:
+            return true
+        elif arg.is_finite:
+            return false
+        else:
+            return None
