@@ -1,7 +1,7 @@
 """
 This module can be used to solve probelsm related to 2D parabolic arches
 """
-from sympy import sympify, symbols, solve, Symbol
+from sympy import sympify, symbols, solve, Symbol, diff,sqrt
 
 class Arch:
     """
@@ -81,7 +81,7 @@ class Arch:
         """
         return the position of the applied load and angle (for concentrated loads)
         """
-        loads = {'distributed':self._distributed_loads, 'concentrated':self._conc_loads}
+        loads = {'location':{'distributed':self._distributed_loads, 'concentrated':self._conc_loads},'vector':self._loads}
         return loads
 
     @property
@@ -150,7 +150,6 @@ class Arch:
         if label in self._loads:
             raise ValueError("load with the given label already exists")
 
-        self._loads[label] = mag
         if order == 0:
             if not x2 or x2<x1:
                 raise KeyError("provide x2 greater than x1")
@@ -158,14 +157,16 @@ class Arch:
             if x1>self._right_support[0] or x2<self._left_support[0]:
                 raise ValueError(f"loads must be applied between {self._left_support[0]} and {self._right_support[0]}")
             self._distributed_loads[label] = (x1,x2)
-        if order == 1:
+            self._loads[label] = (mag,270)
+
+        if order == -1:
             if not angle:
                 raise TypeError("please provide direction of force")
-
             y = self._shape_eqn.subs({'x':x1})
             if x1>self._right_support[0] or x1<self._left_support[0]:
                 raise ValueError(f"loads must be applied between x = {self._left_support[0]} and x = {self._right_support[0]}")
-            self._conc_loads[label] = (x1,y,angle)
+            self._conc_loads[label] = (x1,y)
+            self._loads[label] = (mag,angle)
 
     def remove_load(self,order,label):
         """
@@ -208,13 +209,15 @@ class Arch:
         self._supports['left'] = left_support
         self._supports['right'] = right_support
 
-    def add_rope(self,start,end):
-        if start<self._left_support[0] or end >self._right_support[0]:
-            raise ValueError(f"start and end point of rope must be between {self._left_support[0]} and {self._right_support[0]}")
+    def add_rope(self,y):
+        if y>=self._crown_y or y<=min(self._left_support[1],  self._right_support[1]):
+            raise ValueError(f"position of rope must be between y={min(self._left_support[1],  self._right_support[1])} and y={self._crown_y}")
+        x = Symbol('x')
+        a = diff(self._shape_eqn,x).subs(x,self._crown_x+1)/2
+        x_diff = sqrt((y - self._crown_y)/a)
+        x1 = self._crown_x + x_diff
+        x2 = self._crown_x - x_diff
+        self._rope = (x1,x2,y)
 
-        x = symbols('x')
-        y0 = self._shape_eqn.subs({'x': start})
-        y1 = self._shape_eqn.subs({'x': end})
-        a = (y1-y0)/(end-start)
-        y = a*(x-start) + y0
-        self._rope = y
+    def solve(self):
+        pass
