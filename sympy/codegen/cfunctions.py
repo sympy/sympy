@@ -12,7 +12,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
-
+from sympy.logic.boolalg import BooleanFunction
 
 def _expm1(x):
     return exp(x) - S.One
@@ -532,5 +532,8 @@ class hypot(Function):
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
 
 
-class isnan(Function):
+class isnan(BooleanFunction):
+    nargs = 1
+
+class isinf(BooleanFunction):
     nargs = 1
