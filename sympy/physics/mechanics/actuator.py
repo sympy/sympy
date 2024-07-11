@@ -1004,7 +1004,7 @@ class CoulombKineticFriction(ActuatorBase):
         f_f(v) = f_c * sign(v) + (f_max - f_c) * exp(-(v / v_s)^2) + sigma * v
 
     where f_c is the Coulomb friction constant, f_max is the maximum static friction force,
-    v_s is the Stribeck velocity, sigma is the viscous friction constant, and v is the relative velocity.
+    v_s is the coefficient of sliding friction, sigma is the viscous friction constant, and v is the relative velocity.
 
     Parameters
     ==========
@@ -1013,19 +1013,19 @@ class CoulombKineticFriction(ActuatorBase):
         The normal force between the surfaces.
     mu_k : Expr
         The coefficient of kinetic friction.
-    mu_s : Expr
-        The coefficient of static friction.
     pathway : PathwayBase
         The pathway that the actuator follows.
     v_s : Expr
         The coefficient of sliding friction (COF).
     viscous_coeffient : Expr
         The viscous friction coefficient.
+    mu_s : Expr, optional
+        The coefficient of static friction. Defaults to the value of mu_k.
     """
 
-    def __init__(self, mu_k, mu_s, normal_force, pathway, *, v_s, viscous_coeffient=None):
+    def __init__(self, mu_k, normal_force, pathway, *, v_s, viscous_coeffient=None, mu_s=None):
         self._mu_k = mu_k
-        self._mu_s = mu_s
+        self._mu_s = mu_s if mu_s is not None else mu_k
         self._normal_force = normal_force
         self._viscous_coeffient = viscous_coeffient
         self._v_s = v_s
