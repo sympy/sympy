@@ -13,6 +13,8 @@ from __future__ import print_function
 # listed relative to sympy (which contains bin, etc...)
 blacklist = [
     'doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst',
+    'doc/src/explanation/modules/physics/biomechanics/biomechanics.rst',
+    'doc/src/explanation/modules/physics/mechanics/autolev_parser.rst',
     'doc/src/tutorials/physics/biomechanics/biomechanics.rst',
 ]
 

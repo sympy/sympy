@@ -2100,8 +2100,10 @@ def _inverse_laplace_rational(fn, s, t, plane, *, simplify):
         dc = [x/dc_lead for x in dc]
         nc = [x/dc_lead for x in n.as_poly(s).all_coeffs()]
         if len(dc) == 1:
-            r = nc[0]*DiracDelta(t)
-            terms_t.append(r)
+            N = len(nc)-1
+            for c in enumerate(nc):
+                r = c[1]*DiracDelta(t, N-c[0])
+                terms_t.append(r)
         elif len(dc) == 2:
             r = nc[0]*exp(-dc[1]*t)
             terms_t.append(Heaviside(t)*r)

@@ -218,9 +218,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         for term, rat, sym, deriv in terms:
             if deriv is not None:
                 var, order = deriv
-
-                while order > 0:
-                    term, order = Derivative(term, var), order - 1
+                for _ in range(order):
+                    term = Derivative(term, var)
 
             if sym is None:
                 if rat is S.One:
@@ -247,10 +246,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         while isinstance(expr, Derivative):
             s0 = expr.variables[0]
 
-            for s in expr.variables:
-                if s != s0:
-                    raise NotImplementedError(
-                        'Improve MV Derivative support in collect')
+            if any(s != s0 for s in expr.variables):
+                raise NotImplementedError(
+                    'Improve MV Derivative support in collect')
 
             if s0 == sym:
                 expr, order = expr.expr, order + len(expr.variables)
@@ -841,6 +839,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     1/(a + b*sqrt(c))
 
     """
+    from sympy.core.expr import Expr
     from sympy.simplify.simplify import signsimp
 
     syms = symbols("a:d A:D")
@@ -894,9 +893,14 @@ def radsimp(expr, symbolic=True, max_terms=4):
         # We do this by recursively calling handle on each piece.
         from sympy.simplify.simplify import nsimplify
 
+        if expr.is_Atom:
+            return expr
+        elif not isinstance(expr, Expr):
+            return expr.func(*[handle(a) for a in expr.args])
+
         n, d = fraction(expr)
 
-        if expr.is_Atom or (d.is_Atom and n.is_Atom):
+        if d.is_Atom and n.is_Atom:
             return expr
         elif not n.is_Atom:
             n = n.func(*[handle(a) for a in n.args])
@@ -992,6 +996,9 @@ def radsimp(expr, symbolic=True, max_terms=4):
         if not keep:
             return expr
         return _unevaluated_Mul(n, 1/d)
+
+    if not isinstance(expr, Expr):
+        return expr.func(*[radsimp(a, symbolic=symbolic, max_terms=max_terms) for a in expr.args])
 
     coeff, expr = expr.as_coeff_Add()
     expr = expr.normal()
