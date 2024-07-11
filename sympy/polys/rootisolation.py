@@ -505,9 +505,7 @@ def dup_inner_isolate_positive_roots(f, K, eps=None, inf=None, sup=None, fast=Fa
             if result is not None:
                 results.append(result)
     elif not mobius:
-        for f, M in roots:
-            u, v = _mobius_to_interval(M, F)
-            results.append((u, v))
+        results.extend(_mobius_to_interval(M, F) for _, M in roots)
     else:
         results = roots
 
@@ -672,11 +670,7 @@ def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, strict=F
             else:
                 factors_dict[f][i] = k
 
-    factors_list = []
-
-    for f, indices in factors_dict.items():
-        factors_list.append((list(f), indices))
-
+    factors_list = [(list(f), indices) for f, indices in factors_dict.items()]
     I_neg, I_pos = _real_isolate_and_disjoin(factors_list, K, eps=eps,
         inf=inf, sup=sup, strict=strict, basis=basis, fast=fast)
 
