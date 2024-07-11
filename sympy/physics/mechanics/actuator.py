@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 
 from sympy import S, sympify, exp, sign
-from sympy.functions.elementary.piecewise import Piecewise
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
 from sympy.physics.mechanics.pathway import PathwayBase
@@ -1050,7 +1049,7 @@ class CoulombKineticFriction(ActuatorBase):
     def mu_s(self):
         return self._mu_s
 
-    @mu_k.setter
+    @mu_s.setter
     def mu_s(self, mu_s):
         if hasattr(self, '_mu_s'):
             msg = (
