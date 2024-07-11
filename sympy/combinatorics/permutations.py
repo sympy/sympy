@@ -1561,8 +1561,7 @@ class Permutation(Atom):
                 res.append(tuple(x))
             elif nx > 2:
                 first = x[0]
-                for y in x[nx - 1:0:-1]:
-                    res.append((first, y))
+                res.extend((first, y) for y in x[nx - 1:0:-1])
         return res
 
     @classmethod

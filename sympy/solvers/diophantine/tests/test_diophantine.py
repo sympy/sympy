@@ -1049,3 +1049,11 @@ def test_quadratic_parameter_passing():
     # test that parameters are passed all the way to the final solution
     assert solution == {(t, 11*t), (t, -22*t)}
     assert solution(0, 0) == {(0, 0)}
+
+def test_issue_18628():
+    eq1 = x**2 - 15*x + y**2 - 8*y
+    sol = diophantine(eq1)
+    assert sol == {(15, 0), (15, 8), (-1, 4), (0, 0), (0, 8), (16, 4)}
+    eq2 = 2*x**2 - 9*x + 4*y**2 - 8*y + 14
+    sol = diophantine(eq2)
+    assert sol == {(2, 1)}

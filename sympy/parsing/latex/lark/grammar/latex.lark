@@ -4,7 +4,7 @@
 %ignore "\\quad" | "\\qquad"
 %ignore "\\!" | "\\negthinspace" | "\\negmedspace" | "\\negthickspace"
 %ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
-%ignore "\\*" | "\\-" | "\\." | "\\/" | "\\\\" | "\\(" | "\\="
+%ignore "\\*" | "\\-" | "\\." | "\\/" | "\\(" | "\\="
 
 %ignore "\\left" | "\\right"
 %ignore "\\limits" | "\\nolimits"
@@ -110,27 +110,82 @@ UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
 DIFFERENTIAL_SYMBOL: "d" | UPRIGHT_DIFFERENTIAL_SYMBOL
 
 // disallow "d" as a variable name because we want to parse "d" as a differential symbol.
-SYMBOL: /[a-zA-Z]/
-BASIC_SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
-SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z])_/ GREEK_SYMBOL | /([a-zA-Z])_/ L_BRACE GREEK_SYMBOL R_BRACE
+SYMBOL: /[a-zA-Z]'*/
+GREEK_SYMBOL_WITH_PRIMES: GREEK_SYMBOL "'"*
+LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT: /([a-zA-Z]'*)_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+'*)\})/
+LATIN_SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z]'*)_/ GREEK_SYMBOL | /([a-zA-Z]'*)_/ L_BRACE GREEK_SYMBOL_WITH_PRIMES R_BRACE
 // best to define the variant with braces like that instead of shoving it all into one case like in
 // /([a-zA-Z])_/ L_BRACE? GREEK_SYMBOL R_BRACE? because then we can easily error out on input like
 // r"h_{\theta"
-GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
+GREEK_SYMBOL_WITH_LATIN_SUBSCRIPT: GREEK_SYMBOL_WITH_PRIMES /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+'*)\})/
+GREEK_SYMBOL_WITH_GREEK_SUBSCRIPT: GREEK_SYMBOL_WITH_PRIMES /_/ (GREEK_SYMBOL | L_BRACE GREEK_SYMBOL_WITH_PRIMES R_BRACE)
+MULTI_LETTER_SYMBOL: /[a-zA-Z]+(\s+[a-zA-Z]+)*'*/
 
 %import common.DIGIT -> DIGIT
+
+CMD_PRIME: "\\prime"
+CMD_ASTERISK: "\\ast"
+
+PRIMES: "'"+
+STARS: "*"+
+PRIMES_VIA_CMD: CMD_PRIME+
+STARS_VIA_CMD: CMD_ASTERISK+
+
+CMD_IMAGINARY_UNIT: "\\imaginaryunit"
+
+CMD_BEGIN: "\\begin"
+CMD_END: "\\end"
+
+// matrices
+IGNORE_L: /[ \t\n\r]*/ L_BRACE* /[ \t\n\r]*/
+IGNORE_R: /[ \t\n\r]*/ R_BRACE* /[ \t\n\r]*/
+ARRAY_MATRIX_BEGIN: L_BRACE "array" R_BRACE L_BRACE /[^}]*/ R_BRACE
+ARRAY_MATRIX_END: L_BRACE "array" R_BRACE
+AMSMATH_MATRIX: L_BRACE "matrix" R_BRACE
+AMSMATH_PMATRIX: L_BRACE "pmatrix" R_BRACE
+AMSMATH_BMATRIX: L_BRACE "bmatrix" R_BRACE
+// Without the (L|R)_PARENs and (L|R)_BRACKETs, a matrix defined using
+// \begin{array}...\end{array} or \begin{matrix}...\end{matrix} must
+// not qualify as a complete matrix expression; this is done so that
+// if we have \begin{array}...\end{array} or \begin{matrix}...\end{matrix}
+// between BAR pairs, then they should be interpreted as determinants as
+// opposed to sympy.Abs (absolute value) applied to a matrix.
+CMD_BEGIN_AMSPMATRIX_AMSBMATRIX: CMD_BEGIN (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
+CMD_BEGIN_ARRAY_AMSMATRIX: (L_PAREN | L_BRACKET) IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
+CMD_MATRIX_BEGIN: CMD_BEGIN_AMSPMATRIX_AMSBMATRIX | CMD_BEGIN_ARRAY_AMSMATRIX
+CMD_END_AMSPMATRIX_AMSBMATRIX: CMD_END (AMSMATH_PMATRIX | AMSMATH_BMATRIX)
+CMD_END_ARRAY_AMSMATRIX: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? (R_PAREN | R_BRACKET)
+CMD_MATRIX_END: CMD_END_AMSPMATRIX_AMSBMATRIX | CMD_END_ARRAY_AMSMATRIX
+MATRIX_COL_DELIM: "&"
+MATRIX_ROW_DELIM: "\\\\"
+FUNC_MATRIX_TRACE: "\\trace"
+FUNC_MATRIX_ADJUGATE: "\\adjugate"
+
+// determinants
+AMSMATH_VMATRIX: L_BRACE "vmatrix" R_BRACE
+CMD_DETERMINANT_BEGIN_SIMPLE: CMD_BEGIN AMSMATH_VMATRIX
+CMD_DETERMINANT_BEGIN_VARIANT: BAR IGNORE_L CMD_BEGIN (ARRAY_MATRIX_BEGIN | AMSMATH_MATRIX)
+CMD_DETERMINANT_BEGIN: CMD_DETERMINANT_BEGIN_SIMPLE | CMD_DETERMINANT_BEGIN_VARIANT
+CMD_DETERMINANT_END_SIMPLE: CMD_END AMSMATH_VMATRIX
+CMD_DETERMINANT_END_VARIANT: CMD_END (ARRAY_MATRIX_END | AMSMATH_MATRIX) IGNORE_R "\\right"? BAR
+CMD_DETERMINANT_END: CMD_DETERMINANT_END_SIMPLE | CMD_DETERMINANT_END_VARIANT
+FUNC_DETERMINANT: "\\det"
 
 //////////////////// grammar //////////////////////
 
 latex_string: _relation | _expression
 
 _one_letter_symbol: SYMBOL
-    | BASIC_SUBSCRIPTED_SYMBOL
-    | SYMBOL_WITH_GREEK_SUBSCRIPT
-    | GREEK_SUBSCRIPTED_SYMBOL
-    | GREEK_SYMBOL
-multi_letter_symbol: CMD_MATHIT L_BRACE /[a-zA-Z]+(\s+[a-zA-Z]+)*/ R_BRACE
-number: /\d+(\.\d*)?/
+    | LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT
+    | LATIN_SYMBOL_WITH_GREEK_SUBSCRIPT
+    | GREEK_SYMBOL_WITH_LATIN_SUBSCRIPT
+    | GREEK_SYMBOL_WITH_GREEK_SUBSCRIPT
+    | GREEK_SYMBOL_WITH_PRIMES
+// LuaTeX-generated outputs of \mathit{foo'} and \mathit{foo}'
+// seem to be the same on the surface. We allow both styles.
+multi_letter_symbol: CMD_MATHIT L_BRACE MULTI_LETTER_SYMBOL R_BRACE
+    | CMD_MATHIT L_BRACE MULTI_LETTER_SYMBOL R_BRACE /'+/
+number: /\d+(\.\d*)?/ | CMD_IMAGINARY_UNIT
 
 _atomic_expr: _one_letter_symbol
     | multi_letter_symbol
@@ -153,6 +208,7 @@ gte: _expression GTE _expression
 _expression_core: _atomic_expr | group_curly_parentheses
 
 add: _expression ADD _expression_mul
+    | ADD _expression_mul
 sub: _expression SUB _expression_mul
     | SUB _expression_mul
 mul: _expression_mul MUL_SYMBOL _expression_power
@@ -161,21 +217,22 @@ div: _expression_mul DIV_SYMBOL _expression_power
 adjacent_expressions: (_one_letter_symbol | number) _expression_mul
     | group_round_parentheses (group_round_parentheses | _one_letter_symbol)
     | _function _function
-    | fraction _expression
+    | fraction _expression_mul
 
 _expression_func: _expression_core
     | group_round_parentheses
     | fraction
     | binomial
     | _function
+    | _integral// | derivative
+    | limit
+    | matrix
 
-_expression_power: _expression_func | superscript
+_expression_power: _expression_func | superscript | matrix_prime | symbol_prime
 
 _expression_mul: _expression_power
     | mul | div | adjacent_expressions
-    | _integral// | derivative
     | summation | product
-    | limit
 
 _expression: _expression_mul | add | sub
 
@@ -216,16 +273,24 @@ summation: FUNC_SUM group_curly_parentheses_special _expression
 product: FUNC_PROD group_curly_parentheses_special _expression
     | FUNC_PROD group_curly_parentheses_special _expression
 
-superscript: _expression_func CARET _expression_power
+superscript: _expression_func CARET (_expression_power | CMD_PRIME | CMD_ASTERISK)
+    | _expression_func CARET L_BRACE (PRIMES | STARS | PRIMES_VIA_CMD | STARS_VIA_CMD) R_BRACE
+
+matrix_prime: (matrix | group_round_parentheses) PRIMES
+
+symbol_prime: (LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT
+    | LATIN_SYMBOL_WITH_GREEK_SUBSCRIPT
+    | GREEK_SYMBOL_WITH_LATIN_SUBSCRIPT
+    | GREEK_SYMBOL_WITH_GREEK_SUBSCRIPT) PRIMES
 
 fraction: _basic_fraction
     | _simple_fraction
     | _general_fraction
 
-_basic_fraction: CMD_FRAC DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL)
+_basic_fraction: CMD_FRAC DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
 
 _simple_fraction: CMD_FRAC DIGIT group_curly_parentheses
-    | CMD_FRAC group_curly_parentheses (DIGIT | SYMBOL | GREEK_SYMBOL)
+    | CMD_FRAC group_curly_parentheses (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
 
 _general_fraction: CMD_FRAC group_curly_parentheses group_curly_parentheses
 
@@ -233,10 +298,10 @@ binomial: _basic_binomial
     | _simple_binomial
     | _general_binomial
 
-_basic_binomial: CMD_BINOM DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL)
+_basic_binomial: CMD_BINOM DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
 
 _simple_binomial: CMD_BINOM DIGIT group_curly_parentheses
-    | CMD_BINOM group_curly_parentheses (DIGIT | SYMBOL | GREEK_SYMBOL)
+    | CMD_BINOM group_curly_parentheses (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
 
 _general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
 
@@ -266,6 +331,9 @@ _function: function_applied
     | conjugate
     | max | min
     | bra | ket | inner_product
+    | determinant
+    | trace
+    | adjugate
 
 exponential: FUNC_EXP _expression
 
@@ -325,3 +393,11 @@ atanh: FUNC_ARTANH _expression
 abs: BAR _expression BAR
 floor: L_FLOOR _expression R_FLOOR
 ceil: L_CEIL _expression R_CEIL
+
+matrix: CMD_MATRIX_BEGIN matrix_body CMD_MATRIX_END
+matrix_body: matrix_row (MATRIX_ROW_DELIM matrix_row)* (MATRIX_ROW_DELIM)?
+matrix_row: _expression (MATRIX_COL_DELIM _expression)*
+determinant: (CMD_DETERMINANT_BEGIN matrix_body CMD_DETERMINANT_END)
+    | FUNC_DETERMINANT _expression
+trace: FUNC_MATRIX_TRACE _expression
+adjugate: FUNC_MATRIX_ADJUGATE _expression

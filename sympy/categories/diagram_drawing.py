@@ -1028,9 +1028,7 @@ class DiagramGrid:
         returns the adjacency lists of the underlying undirected
         graph.
         """
-        adjlists = {}
-        for obj in objects:
-            adjlists[obj] = []
+        adjlists = {obj: [] for obj in objects}
 
         for morphism in merged_morphisms:
             adjlists[morphism.domain].append(morphism.codomain)
