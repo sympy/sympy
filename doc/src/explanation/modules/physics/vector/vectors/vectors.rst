@@ -2,7 +2,6 @@
 Vector & ReferenceFrame
 =======================
 
-
 In :mod:`sympy.physics.vector`, vectors and reference frames are the "building blocks" of
 dynamic systems. This document will describe these mathematically and describe
 how to use them with this module's code.

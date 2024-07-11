@@ -100,9 +100,7 @@ def _has_simple_delta(expr, index):
         if _is_simple_delta(expr, index):
             return True
         if expr.is_Add or expr.is_Mul:
-            for arg in expr.args:
-                if _has_simple_delta(arg, index):
-                    return True
+            return any(_has_simple_delta(arg, index) for arg in expr.args)
     return False
 
 
@@ -141,8 +139,7 @@ def _remove_multiple_delta(expr):
     if len(solns) == 0:
         return S.Zero
     elif len(solns) == 1:
-        for key in solns[0].keys():
-            newargs.append(KroneckerDelta(key, solns[0][key]))
+        newargs += [KroneckerDelta(k, v) for k, v in solns[0].items()]
         expr2 = expr.func(*newargs)
         if expr != expr2:
             return _remove_multiple_delta(expr2)
