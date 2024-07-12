@@ -1047,9 +1047,15 @@ def test_ModularInteger():
                 raises(TypeError, lambda: F5(n1) > F5(n2))
                 raises(TypeError, lambda: F5(n1) >= F5(n2))
 
+    # https://github.com/sympy/sympy/issues/26789
+    assert GF(Integer(5)) == F5
+    assert F5(Integer(3)) == F5(3)
+
+
 def test_QQ_int():
     assert int(QQ(2**2000, 3**1250)) == 455431
     assert int(QQ(2**100, 3)) == 422550200076076467165567735125
+
 
 def test_RR_double():
     assert RR(3.14) > 1e-50
@@ -1058,6 +1064,7 @@ def test_RR_double():
     assert RR(1e-15) > 1e-50
     assert RR(1e-20) > 1e-50
     assert RR(1e-40) > 1e-50
+
 
 def test_RR_Float():
     f1 = Float("1.01")
