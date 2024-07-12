@@ -364,8 +364,8 @@ you don't have to worry about this problem:
     >>> x = Symbol('x')
     >>> print(solve(7*x -22, x))
     [22/7]
-    >>> 22/7  #copy and paste gives int 3 (in Python 2) or a float
-    3.142857142857143 (in Python 3)
+    >>> 22/7  #copy and paste gives int (in Python 2) or a float (in Python 3)
+    3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
     >>> a = solve(7*x - 22, x)[0]
@@ -722,7 +722,7 @@ square brackets.
     Parentheses are not needed for non-empty tuples; the commas are:
 
     >>> x,y
-    (x,y)
+    (x, y)
     >>> x,
     (x,)
 
