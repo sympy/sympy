@@ -364,7 +364,7 @@ you don't have to worry about this problem:
     >>> x = Symbol('x')
     >>> print(solve(7*x -22, x))
     [22/7]
-    >>> 22/7  # If we just copy and paste we get int 3 or a float
+    >>> 22/7  #copy and paste gives int 3 (in Python 2) or a float (in Python 3)
     3.142857142857143, depending on whether we use Python 2 or 3
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
