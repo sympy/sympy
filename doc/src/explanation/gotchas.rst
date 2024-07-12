@@ -719,7 +719,7 @@ square brackets.
     >>> (x)
     x
 
-    Actually parentheses are not needed for non-empty tuples; the commas are:
+    Parentheses are not needed for non-empty tuples; the commas are:
 
     >>> x,y
     (x,y)
