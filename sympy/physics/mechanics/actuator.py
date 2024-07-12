@@ -1108,6 +1108,16 @@ class CoulombKineticFriction(ForceActuator):
         f_max = self._mu_s * self._normal_force
         return f_c * sign(v) + (f_max - f_c) * exp(-(v / self._v_s)**2) + self._viscous_coeffient * v
 
+    @force.setter
+    def force(self, force):
+        if hasattr(self, '_force'):
+            msg = (
+                f'Can\'t set attribute `force` to {repr(force)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        self._force = sympify(force, strict=True)
+
     def __repr__(self):
         return (f'{self.__class__.__name__}({self._mu_k}, {self.mu_s} '
                 f'{self._normal_force}, {self._pathway}, {self._v_s}, '
