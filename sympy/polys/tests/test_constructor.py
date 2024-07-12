@@ -1,6 +1,6 @@
 """Tests for tools for constructing domains for expressions. """
 
-from sympy.testing.pytest import tooslow, XFAIL
+from sympy.testing.pytest import tooslow
 
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
