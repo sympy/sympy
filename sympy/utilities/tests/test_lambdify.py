@@ -529,7 +529,7 @@ def test_numpy_old_matrix():
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
     f = lambdify((x, y, z), A, [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy'])
     with ignore_warnings(PendingDeprecationWarning):
-        numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
+        umpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
         assert isinstance(f(1, 2, 3), numpy.matrix)
 
 
@@ -1919,6 +1919,8 @@ def test_assoc_legendre_numerical_evaluation():
 
 
 def test_array_symbol():
+    if not numpy:
+        skip("numpy not installed.")
     a = ArraySymbol('a', (3,))
     f = lambdify((a), a)
     assert numpy.all(f(numpy.array([1,2,3])) == numpy.array([1,2,3]))
