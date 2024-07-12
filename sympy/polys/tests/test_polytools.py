@@ -79,7 +79,7 @@ from sympy.simplify.simplify import signsimp
 from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.testing.pytest import raises, warns_deprecated_sympy, warns
+from sympy.testing.pytest import raises, warns_deprecated_sympy, warns, tooslow
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 
@@ -298,6 +298,34 @@ def test_Poly_from_expr():
 
     assert Poly.from_expr(x + 5, x, y, domain=ZZ).rep == DMP([[ZZ(1)], [ZZ(5)]], ZZ)
     assert Poly.from_expr(y + 5, x, y, domain=ZZ).rep == DMP([[ZZ(1), ZZ(5)]], ZZ)
+
+
+def test_Poly_rootof_extension():
+    r1 = rootof(x**3 + x + 3, 0)
+    r2 = rootof(x**3 + x + 3, 1)
+    K1 = QQ.algebraic_field(r1)
+    K2 = QQ.algebraic_field(r2)
+    assert Poly(r1, y) == Poly(r1, y, domain=EX)
+    assert Poly(r2, y) == Poly(r2, y, domain=EX)
+    assert Poly(r1, y, extension=True) == Poly(r1, y, domain=K1)
+    assert Poly(r2, y, extension=True) == Poly(r2, y, domain=K2)
+
+
+@tooslow
+def test_Poly_rootof_extension_primitive_element():
+    r1 = rootof(x**3 + x + 3, 0)
+    r2 = rootof(x**3 + x + 3, 1)
+    K12 = QQ.algebraic_field(r1 + r2)
+    assert Poly(r1*y + r2, y, extension=True) == Poly(r1*y + r2, y, domain=K12)
+
+
+@XFAIL
+def test_Poly_rootof_same_symbol():
+    # XXX: This fails because r1 contains x.
+    r1 = rootof(x**3 + x + 3, 0)
+    K1 = QQ.algebraic_field(r1)
+    assert Poly(r1, x) == Poly(r1, x, domain=EX)
+    assert Poly(r1, x, extension=True) == Poly(r1, x, domain=K1)
 
 
 def test_poly_from_domain_element():
@@ -596,6 +624,7 @@ def test_Poly__eq__():
     g =  Poly((t0/2 + x**2)*t**2 - x**2*t, t, domain='ZZ(x,t0)')
 
     assert (f == g) is False
+
 
 def test_PurePoly__eq__():
     assert (PurePoly(x, x) == PurePoly(x, x)) is True
