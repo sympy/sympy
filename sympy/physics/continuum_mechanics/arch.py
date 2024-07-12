@@ -1,14 +1,15 @@
 """
 This module can be used to solve probelsm related to 2D parabolic arches
 """
-from sympy import sympify, symbols, solve, Symbol, diff,sqrt
+from sympy import sympify, symbols, solve, Symbol, diff, sqrt, cos , sin, rad
 
 class Arch:
     """
-    An arch is a curved vertical structure spanning an open space underneath it.
-    Arches can be used to reduce the bending moments in long-span structures.
+    This class is used to solve problems related to a three hinged arch(determinate) structure.\n
+    An arch is a curved vertical structure spanning an open space underneath it.\n
+    Arches can be used to reduce the bending moments in long-span structures.\n
 
-    Arches are used in structural engineering(over windows, door and even bridges)
+    Arches are used in structural engineering(over windows, door and even bridges)\n
     because they can support a very large mass placed on top of them.
 
     Example
@@ -34,12 +35,13 @@ class Arch:
         if 'crown_y' in kwargs:
             self._crown_y = sympify(kwargs['crown_y'])
         self._shape_eqn = self.get_parabola_eqn
-        self._loads = {}
         self._conc_loads = {}
         self._distributed_loads = {}
+        self._loads = {'concentrated': self._conc_loads, 'distributed':self._distributed_loads}
         self._supports = {'left':None, 'right':None}
         self._rope = None
         self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
+        self._points_disc = []
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
 
     @property
@@ -81,8 +83,7 @@ class Arch:
         """
         return the position of the applied load and angle (for concentrated loads)
         """
-        loads = {'location':{'distributed':self._distributed_loads, 'concentrated':self._conc_loads},'vector':self._loads}
-        return loads
+        return self._loads
 
     @property
     def supports(self):
@@ -146,6 +147,20 @@ class Arch:
                 The angle in degrees, the load vector makes with the horizontal
                 in the counter-clockwise direction.
 
+        Examples
+        ========
+        For applying distributed load
+
+        >>> from sympy.physics.continuum_mechanics.arch import Arch
+        >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
+        >>> a.apply_load(0,'A',x1=3,x2=5,mag=10)
+
+        For applying point/concentrated_loads
+
+        >>> from sympy.physics.continuum_mechanics.arch import Arch
+        >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
+        >>> a.apply_load(-1,'B',x1=2,mag=15,angle=45)
+
         """
         if label in self._loads:
             raise ValueError("load with the given label already exists")
@@ -156,8 +171,9 @@ class Arch:
 
             if x1>self._right_support[0] or x2<self._left_support[0]:
                 raise ValueError(f"loads must be applied between {self._left_support[0]} and {self._right_support[0]}")
-            self._distributed_loads[label] = (x1,x2)
-            self._loads[label] = (mag,270)
+            self._distributed_loads[label] = {'start':x1, 'end':x2, 'f_y': -mag}
+            self._points_disc.append(x1)
+            self._points_disc.append(x2)
 
         if order == -1:
             if not angle:
@@ -165,38 +181,27 @@ class Arch:
             y = self._shape_eqn.subs({'x':x1})
             if x1>self._right_support[0] or x1<self._left_support[0]:
                 raise ValueError(f"loads must be applied between x = {self._left_support[0]} and x = {self._right_support[0]}")
-            self._conc_loads[label] = (x1,y)
-            self._loads[label] = (mag,angle)
+            self._conc_loads[label] = {'x':x1, 'y':y, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle)), 'magnitude':mag, 'angle':angle}
+            self._points_disc.append(x1)
 
-    def remove_load(self,order,label):
+    def remove_load(self,label):
         """
         This methods removes the load applied to the arch
 
         Parameters
         ==========
 
-        order : Integer
-            The order of the appplied load.
-
-                - For point loads, order = -1
-                - For distributed load, order = 0
-
         label : String or Symbol
             The label of the applied load
         """
-        if label in self._loads:
-            mag = self._loads[label]
-            self._loads.pop(label)
-        else:
-            raise KeyError("no such load applied")
-
-        if order==0 and label in self._distributed_loads:
-            self._distributed_loads.pop(label)
-        elif order==1 and label in self._conc_loads:
-            self._conc_loads.pop(label)
-        else:
-            self._loads[label] = mag
-            raise KeyError("no such load in the provided load type or load type does not exist")
+        if label in self._distributed_loads :
+            val = self._distributed_loads.pop(label)
+            print(f"removed load {label}: {val}")
+        elif label in self._conc_loads :
+            val = self._conc_loads.pop(label)
+            print(f"removed load {label}: {val}")
+        else :
+            raise ValueError("label not found")
 
     def add_support(self,left_support,right_support):
         """
@@ -220,4 +225,29 @@ class Arch:
         self._rope = (x1,x2,y)
 
     def solve(self):
-        pass
+        """
+        This method solves for the reaction forces generated at the supports,\n
+        bending moment and shear force generated in the arch and tension produced in the rope if used.
+        """
+        discontinuity_points = sorted(self._points_disc)
+
+        # for reaction forces
+        net_x = 0
+        net_y = 0
+        moment_A = 0
+        for label in self._conc_loads:
+            net_x += self._conc_loads[label]['f_x']
+            net_y += self._conc_loads[label]['f_y']
+            moment_A -= self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._left_support[0]) + \
+                        self._conc_loads[label]['f_x']*(self._conc_loads[label]['y']-self._left_support[1])
+
+        for label in self._distributed_loads:
+            start = self._distributed_loads[label]['start']
+            end = self._distributed_loads[label]['end']
+            tot_force = self._distributed_loads[label]['f_y']*( end - start)
+            net_y += tot_force
+            moment_A -= tot_force*((end+start)/2 - self._left_support[0])
+
+        R_A_x, R_A_y, R_B_x, R_B_y = symbols('R_A_x R_A_y R_B_x R_B_y')
+        eq1 = R_A_x + R_B_x + net_x
+        eq2 = R_A_y + R_B_y + net_y
