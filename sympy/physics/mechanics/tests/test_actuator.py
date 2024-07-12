@@ -942,7 +942,7 @@ class TestCoulombKineticFriction:
             normal_force=m * g,
             pathway=LinearPathway(O, P),
             v_s=v_s,
-            viscous_coeffient=sigma,
+            viscous_coefficient=sigma,
         )
 
         system = System(N, O)
