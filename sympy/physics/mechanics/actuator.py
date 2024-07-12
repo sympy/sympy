@@ -1038,7 +1038,7 @@ class CoulombKineticFriction(ForceActuator):
     def mu_k(self, mu_k):
         if hasattr(self, '_mu_k'):
             msg = (
-                f'Can\'t set attribute `coefficient_of_kinetic_friction` to '
+                f'Can\'t set attribute `mu_k` to '
                 f'{repr(mu_k)} as it is immutable.'
             )
             raise AttributeError(msg)
@@ -1052,7 +1052,7 @@ class CoulombKineticFriction(ForceActuator):
     def mu_s(self, mu_s):
         if hasattr(self, '_mu_s'):
             msg = (
-                f'Can\'t set attribute `coefficient_of_kinetic_friction` to '
+                f'Can\'t set attribute `mu_s` to '
                 f'{repr(mu_s)} as it is immutable.'
             )
             raise AttributeError(msg)
@@ -1093,9 +1093,9 @@ class CoulombKineticFriction(ForceActuator):
 
     @v_s.setter
     def v_s(self, v_s):
-        if hasattr(self, '_stribeck_velocity'):
+        if hasattr(self, '_v_s'):
             msg = (
-                f'Can\'t set attribute `stribeck_velocity` to '
+                f'Can\'t set attribute `v_s` to '
                 f'{repr(v_s)} as it is immutable.'
             )
             raise AttributeError(msg)
@@ -1103,16 +1103,16 @@ class CoulombKineticFriction(ForceActuator):
 
     @property
     def force(self):
-        v = self._pathway.extension_velocity
-        f_c = self._mu_k * self._normal_force
-        f_max = self._mu_s * self._normal_force
-        return f_c * sign(v) + (f_max - f_c) * exp(-(v / self._v_s)**2) + self._viscous_coeffient * v
+        v = self.pathway.extension_velocity
+        f_c = self.mu_k * self.normal_force
+        f_max = self.mu_s * self.normal_force
+        return f_c * sign(v) + (f_max - f_c) * exp(-(v / self.v_s)**2) + self.viscous_coeffient * v
 
     @force.setter
     def force(self, force):
         raise AttributeError('Can\'t set computed attribute `force`.')
 
     def __repr__(self):
-        return (f'{self.__class__.__name__}({self._mu_k}, {self.mu_s} '
-                f'{self._normal_force}, {self._pathway}, {self._v_s}, '
-                f'{self._viscous_coeffient})')
+        return (f'{self.__class__.__name__}({self.mu_k}, {self.mu_s} '
+                f'{self.normal_force}, {self.pathway}, {self.v_s}, '
+                f'{self.viscous_coeffient})')
