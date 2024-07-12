@@ -279,7 +279,12 @@ class Vector(Printable, EvalfMixin):
                 else:
                     terms.append(juxtapose(M[i], N.pretty_vecs[i]))
 
-        return prettyForm.__add__(*terms)
+        if terms:
+            pretty_result = prettyForm.__add__(*terms)
+        else:
+            pretty_result = prettyForm("0")
+
+        return pretty_result
 
     def __rsub__(self, other):
         return (-1 * self) + other
