@@ -54,6 +54,8 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
+    _iterable = False
+
     def __new__(cls, symbol, shape: typing.Iterable) -> "ArraySymbol":
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
