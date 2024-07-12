@@ -1,5 +1,7 @@
 """Implementation of :class:`FiniteField` class. """
 
+import operator
+
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -33,20 +35,42 @@ def _modular_int_factory(mod, dom, symmetric, self):
 
     # Use flint if available
     if flint is not None:
+
+        nmod = flint.nmod
+        fmpz_mod_ctx = flint.fmpz_mod_ctx
+        index = operator.index
+
         try:
             mod = dom.convert(mod)
         except CoercionFailed:
             raise ValueError('modulus must be an integer, got %s' % mod)
 
+        # mod might be e.g. Integer
+        try:
+            fmpz_mod_ctx(mod)
+        except TypeError:
+            mod = index(mod)
+
         # flint's nmod is only for moduli up to 2^64-1 (on a 64-bit machine)
         try:
-            flint.nmod(0, mod)
+            nmod(0, mod)
         except OverflowError:
             # Use fmpz_mod
-            ctx = flint.fmpz_mod_ctx(mod)
+            fctx = fmpz_mod_ctx(mod)
+
+            def ctx(x):
+                try:
+                    return fctx(x)
+                except TypeError:
+                    # x might be Integer
+                    return fctx(index(x))
         else:
             # Use nmod
-            ctx = lambda x: flint.nmod(x, mod)
+            def ctx(x):
+                try:
+                    return nmod(x, mod)
+                except TypeError:
+                    return nmod(index(x), mod)
 
         return ctx
 
