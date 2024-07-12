@@ -1110,13 +1110,7 @@ class CoulombKineticFriction(ForceActuator):
 
     @force.setter
     def force(self, force):
-        if hasattr(self, '_force'):
-            msg = (
-                f'Can\'t set attribute `force` to {repr(force)} as it is '
-                f'immutable.'
-            )
-            raise AttributeError(msg)
-        self._force = sympify(force, strict=True)
+        raise AttributeError('Can\'t set computed attribute `force`.')
 
     def __repr__(self):
         return (f'{self.__class__.__name__}({self._mu_k}, {self.mu_s} '
