@@ -992,8 +992,7 @@ class DuffingSpring(ForceActuator):
                 f"{self.linear_stiffness}, {self.nonlinear_stiffness}, {self.pathway}, "
                 f"equilibrium_length={self.equilibrium_length})")
 
-
-class CoulombKineticFriction(ActuatorBase):
+class CoulombKineticFriction(ForceActuator):
     """A friction force actuator for the Coulomb kinetic friction with Stribeck and viscous effect.
 
     Explanation
@@ -1024,12 +1023,12 @@ class CoulombKineticFriction(ActuatorBase):
     """
 
     def __init__(self, mu_k, normal_force, pathway, *, v_s, viscous_coeffient=None, mu_s=None):
-        self._mu_k = mu_k
-        self._mu_s = mu_s if mu_s is not None else mu_k
-        self._normal_force = normal_force
-        self._viscous_coeffient = viscous_coeffient
-        self._v_s = v_s
-        self._pathway = pathway
+        self.mu_k = mu_k
+        self.mu_s = mu_s if mu_s is not None else mu_k
+        self.normal_force = normal_force
+        self.viscous_coeffient = viscous_coeffient
+        self.v_s = v_s
+        self.pathway = pathway
 
     @property
     def mu_k(self):
@@ -1103,45 +1102,11 @@ class CoulombKineticFriction(ActuatorBase):
         self._v_s = sympify(v_s, strict=True)
 
     @property
-    def pathway(self):
-        """The ``Pathway`` defining the actuator's line of action."""
-        return self._pathway
-
-    @pathway.setter
-    def pathway(self, pathway):
-        if hasattr(self, '_pathway'):
-            msg = (
-                f'Can\'t set attribute `pathway` to {repr(pathway)} as it is '
-                f'immutable.'
-            )
-            raise AttributeError(msg)
-        if not isinstance(pathway, PathwayBase):
-            msg = (
-                f'Value {repr(pathway)} passed to `pathway` was of type '
-                f'{type(pathway)}, must be {PathwayBase}.'
-            )
-            raise TypeError(msg)
-        self._pathway = pathway
-
-    @property
     def force(self):
         v = self._pathway.extension_velocity
         f_c = self._mu_k * self._normal_force
         f_max = self._mu_s * self._normal_force
         return f_c * sign(v) + (f_max - f_c) * exp(-(v / self._v_s)**2) + self._viscous_coeffient * v
-
-    @force.setter
-    def force(self, force):
-        if hasattr(self, '_force'):
-            msg = (
-                f'Can\'t set attribute `force` to {repr(force)} as it is '
-                f'immutable.'
-            )
-            raise AttributeError(msg)
-        self._force = sympify(force, strict=True)
-
-    def to_loads(self):
-        return self.pathway.to_loads(self.force)
 
     def __repr__(self):
         return (f'{self.__class__.__name__}({self._mu_k}, {self.mu_s} '
