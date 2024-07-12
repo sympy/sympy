@@ -1482,12 +1482,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     null = tuple([0]*len(var))
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)).is_zero:
-        null_feasible = True
-        for val, symb in zip(null, var):
-            if check_assumptions(val, **symb.assumptions0) is False:
-                null_feasible = False
-                break
-        if null_feasible:
+        if all(check_assumptions(val, **s.assumptions0) is not False for val, s in zip(null, var)):
             sols.add(null)
 
     final_soln = set()
