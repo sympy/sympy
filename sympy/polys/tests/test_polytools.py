@@ -79,7 +79,9 @@ from sympy.simplify.simplify import signsimp
 from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.testing.pytest import raises, warns_deprecated_sympy, warns, tooslow
+from sympy.testing.pytest import (
+    raises, warns_deprecated_sympy, warns, tooslow, XFAIL
+)
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 
