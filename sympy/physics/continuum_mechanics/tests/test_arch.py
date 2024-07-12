@@ -1,5 +1,5 @@
 from sympy.physics.continuum_mechanics.arch import Arch
-from sympy import Symbol
+from sympy import Symbol, simplify
 
 x = Symbol('x')
 
@@ -13,4 +13,4 @@ def test_arch():
     assert a.get_parabola_eqn == 5 - ((x-5)**2)/5
 
     a = Arch((0,0),(10,1),crown_x=6)
-    assert a.get_parabola_eqn == 9/5 - (x - 6)**2/20
+    assert simplify(a.get_parabola_eqn) == simplify(9/5 - (x - 6)**2/20)
