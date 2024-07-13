@@ -10,7 +10,6 @@ from sympy.polys.densearith import (
     dup_sqr,
     dup_div,
     dup_rem, dmp_rem,
-    dmp_expand,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
@@ -33,9 +32,9 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError
 )
-from sympy.utilities import variations
 
 from math import ceil as _ceil, log2 as _log2
+
 
 def dup_integrate(f, m, K):
     """
