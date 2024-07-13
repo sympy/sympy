@@ -490,7 +490,7 @@ def test_return_root_of():
     # equation only to get CRootOf solutions which are then numerically
     # evaluated. So for eq = x**5 + 3*x + 7 do Poly(eq).nroots() rather
     # than [i.n() for i in solve(eq)] to get the numerical roots of eq.
-    assert nfloat(list(solveset_complex(x**5 + 3*x**3 + 7, x))[0],
+    assert nfloat(next(iter(solveset_complex(x**5 + 3*x**3 + 7, x))),
                   exponent=False) == CRootOf(x**5 + 3*x**3 + 7, 0).n()
 
     sol = list(solveset_complex(x**6 - 2*x + 2, x))
@@ -2549,7 +2549,7 @@ def test_issue_10214():
 
     ans = FiniteSet(-2**Rational(2, 3))
     assert solveset(x**(S(3)) + 4, x, S.Reals) == ans
-    assert (x**(S(3)) + 4).subs(x,list(ans)[0]) == 0 # substituting ans and verifying the result.
+    assert (x**(S(3)) + 4).subs(x,next(iter(ans))) == 0 # substituting ans and verifying the result.
     assert (x**(S(3)) + 4).subs(x,-(-2)**Rational(2, 3)) == 0
 
 

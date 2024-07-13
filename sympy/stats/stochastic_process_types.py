@@ -644,7 +644,7 @@ class MarkovProcess(StochasticProcess):
                                     else (gc.lhs, gc.rhs)
                         gr = gp.args[0]
                         gset = Intersection(gr.as_set(), state_index)
-                        gstate = list(gset)[0]
+                        gstate = next(iter(gset))
                         prob[gset] = p
                     else:
                         _, gstate = (gc.lhs.key, gc.rhs) if isinstance(gc.lhs, RandomIndexedSymbol) \
@@ -662,11 +662,11 @@ class MarkovProcess(StochasticProcess):
             if prob:
                 gstates = Union(*prob.keys())
                 if len(gstates) == 1:
-                    gstate = list(gstates)[0]
-                    gprob = list(prob.values())[0]
+                    gstate = next(iter(gstates))
+                    gprob = next(iter(prob.values()))
                     prob[gstates] = gprob
                 elif len(gstates) == len(state_index) - 1:
-                    gstate = list(state_index - gstates)[0]
+                    gstate = next(iter(state_index - gstates))
                     gprob = S.One - sum(prob.values())
                     prob[state_index - gstates] = gprob
                 else:
@@ -691,7 +691,7 @@ class MarkovProcess(StochasticProcess):
             compute_later, state2cond, conds = [], {}, condition.args
             for expr in conds:
                 if isinstance(expr, Relational):
-                    ris = list(expr.atoms(RandomIndexedSymbol))[0]
+                    ris = next(iter(expr.atoms(RandomIndexedSymbol)))
                     if state2cond.get(ris, None) is None:
                         state2cond[ris] = S.true
                     state2cond[ris] &= expr
@@ -803,7 +803,7 @@ class MarkovProcess(StochasticProcess):
             # handle queries similar to E(f(X[i]), Eq(X[i-m], <some-state>))
             condition=self.replace_with_index(condition)
             state_index=self.replace_with_index(state_index)
-            rv = list(rvs)[0]
+            rv = next(iter(rvs))
             lhsg, rhsg = condition.lhs, condition.rhs
             if not isinstance(lhsg, RandomIndexedSymbol):
                 lhsg, rhsg = (rhsg, lhsg)
@@ -1256,7 +1256,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         b = zeros(n, 1)
         b[0, 0] = 1
 
-        soln = list(linsolve((a, b)))[0]
+        soln = next(iter(linsolve((a, b))))
         return ImmutableMatrix([soln])
 
     def fixed_row_vector(self):
@@ -1612,7 +1612,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
         wm = Matrix([wi])
         eqs = (wm*gen_mat).tolist()[0]
         eqs.append(sum(wi) - 1)
-        soln = list(linsolve(eqs, wi))[0]
+        soln = next(iter(linsolve(eqs, wi)))
         return ImmutableMatrix([soln])
 
 

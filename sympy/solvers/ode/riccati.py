@@ -271,7 +271,7 @@ def linsolve_dict(eq, syms):
     sol = linsolve(eq, syms)
     if not sol:
         return {}
-    return dict(zip(syms, list(sol)[0]))
+    return dict(zip(syms, next(iter(sol))))
 
 
 def match_riccati(eq, f, x):

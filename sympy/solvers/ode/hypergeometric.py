@@ -117,11 +117,11 @@ def equivalence_hypergeometric(A, B, func):
             if isinstance(arg, Pow):
                 # (x-a)**n
                 dem_pow.append(arg.as_base_exp()[1])
-                sing_point.append(list(roots(arg.as_base_exp()[0], x).keys())[0])
+                sing_point.append(next(iter(roots(arg.as_base_exp()[0], x).keys())))
             else:
                 # (x-a) type
                 dem_pow.append(arg.as_base_exp()[1])
-                sing_point.append(list(roots(arg, x).keys())[0])
+                sing_point.append(next(iter(roots(arg, x).keys())))
 
     dem_pow.sort()
     # checking if equivalence is exists or not.

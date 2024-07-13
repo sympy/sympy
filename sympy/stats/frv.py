@@ -121,7 +121,7 @@ class SingleFiniteDomain(FiniteDomain):
         return (frozenset(((self.symbol, elem),)) for elem in self.set)
 
     def __contains__(self, other):
-        sym, val = tuple(other)[0]
+        sym, val = next(iter(other))
         return sym == self.symbol and val in self.set
 
 
@@ -251,9 +251,9 @@ class FinitePSpace(PSpace):
     def prob_of(self, elem):
         elem = sympify(elem)
         density = self._density
-        if isinstance(list(density.keys())[0], FiniteSet):
+        if isinstance(next(iter(density.keys())), FiniteSet):
             return density.get(elem, S.Zero)
-        return density.get(tuple(elem)[0][1], S.Zero)
+        return density.get(next(iter(elem))[1], S.Zero)
 
     def where(self, condition):
         assert all(r.symbol in self.symbols for r in random_symbols(condition))
@@ -309,7 +309,7 @@ class FinitePSpace(PSpace):
         expr = rv_subs(expr, rvs)
         probs = [self.prob_of(elem) for elem in self.domain]
         if isinstance(expr, (Logic, Relational)):
-            parse_domain = [tuple(elem)[0][1] for elem in self.domain]
+            parse_domain = [next(iter(elem))[1] for elem in self.domain]
             bools = [expr.xreplace(dict(elem)) for elem in self.domain]
         else:
             parse_domain = [expr.xreplace(dict(elem)) for elem in self.domain]
@@ -335,7 +335,7 @@ class FinitePSpace(PSpace):
             (not cond.free_symbols.issubset(self.domain.free_symbols)):
             rv = condition.lhs if isinstance(condition.rhs, Symbol) else condition.rhs
             return sum(Piecewise(
-                       (self.prob_of(elem), condition.subs(rv, list(elem)[0][1])),
+                       (self.prob_of(elem), condition.subs(rv, next(iter(elem))[1])),
                        (S.Zero, True)) for elem in self.domain)
         return sympify(sum(self.prob_of(elem) for elem in self.where(condition)))
 
@@ -421,7 +421,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
 
     def compute_density(self, expr):
         if self._is_symbolic:
-            rv = list(random_symbols(expr))[0]
+            rv = next(iter(random_symbols(expr)))
             k = Dummy('k', integer=True)
             cond = True if not isinstance(expr, (Relational, Logic)) \
                      else expr.subs(rv, k)

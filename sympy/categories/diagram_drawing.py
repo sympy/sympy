@@ -483,7 +483,7 @@ class DiagramGrid:
         # This gets the set of objects of the triangle and then
         # subtracts the set of objects employed in ``edge`` to get the
         # vertex opposite to ``edge``.
-        return list(DiagramGrid._triangle_objects(triangle) - set(edge))[0]
+        return next(iter(DiagramGrid._triangle_objects(triangle) - set(edge)))
 
     @staticmethod
     def _empty_point(pt, grid):
@@ -763,7 +763,7 @@ class DiagramGrid:
 
                 # Get the object at the other end of the edge.
                 edge = edges[0]
-                other_obj = tuple(edge - frozenset([obj]))[0]
+                other_obj = next(iter(edge - frozenset([obj])))
 
                 # Now check for free directions.  When checking for
                 # free directions, prefer the horizontal and vertical
@@ -934,7 +934,7 @@ class DiagramGrid:
             # There only one object in the diagram, just put in on 1x1
             # grid.
             grid = _GrowableGrid(1, 1)
-            grid[0, 0] = tuple(all_objects)[0]
+            grid[0, 0] = next(iter(all_objects))
             return grid
 
         skeleton = DiagramGrid._build_skeleton(merged_morphisms)

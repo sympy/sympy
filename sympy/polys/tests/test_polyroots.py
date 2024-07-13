@@ -551,7 +551,7 @@ def test_roots0():
     }
 
     r = roots(x**3 + 40*x + 64)
-    real_root = [rx for rx in r if rx.is_real][0]
+    real_root = next(rx for rx in r if rx.is_real)
     cr = 108 + 6*sqrt(1074)
     assert real_root == -2*root(cr, 3)/3 + 20/root(cr, 3)
 

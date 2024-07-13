@@ -2120,7 +2120,7 @@ def _inverse_laplace_rational(fn, s, t, plane, *, simplify):
                 if b.is_negative:
                     b = -b
                     hyp = True
-                b2 = list(roots(x_**2-b, x_).keys())[0]
+                b2 = next(iter(roots(x_**2-b, x_).keys()))
                 bs = sqrt(b).simplify()
                 if hyp:
                     r = (

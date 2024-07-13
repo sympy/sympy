@@ -566,7 +566,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         eq = match['eq']
         order = match['order']
         func = match['func']
-        t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+        t = next(iter(next(iter(eq[0].atoms(Derivative))).atoms(Symbol)))
 
         # keep highest order term coefficient positive
         for i in range(len(eq)):
@@ -579,7 +579,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         match['eq'] = eq
         if len(set(order.values()))!=1:
             raise ValueError("It solves only those systems of equations whose orders are equal")
-        match['order'] = list(order.values())[0]
+        match['order'] = next(iter(order.values()))
         def recur_len(l):
             return sum(recur_len(item) if isinstance(item,list) else 1 for item in l)
         if recur_len(func) != len(eq):
@@ -762,7 +762,7 @@ def solve_ics(sols, funcs, constants, ics):
     for funcarg, value in ics.items():
         if isinstance(funcarg, AppliedUndef):
             x0 = funcarg.args[0]
-            matching_func = [f for f in funcs if f.func == funcarg.func][0]
+            matching_func = next(f for f in funcs if f.func == funcarg.func)
             S = sols
         elif isinstance(funcarg, (Subs, Derivative)):
             if isinstance(funcarg, Subs):
@@ -1224,7 +1224,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
         if isinstance(fi, Equality):
             eq[i] = fi.lhs - fi.rhs
 
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    t = next(iter(next(iter(eq[0].atoms(Derivative))).atoms(Symbol)))
     matching_hints = {"no_of_equation":i+1}
     matching_hints['eq'] = eq
     if i==0:
@@ -1319,7 +1319,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
 
     if len(set(order.values())) == 1:
-        order_eq = list(matching_hints['order'].values())[0]
+        order_eq = next(iter(matching_hints['order'].values()))
         if matching_hints['is_linear'] == True:
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
@@ -1358,7 +1358,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
     x = func[0].func
     y = func[1].func
     fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    t = next(iter(next(iter(eq[0].atoms(Derivative))).atoms(Symbol)))
     r = {}
     # for equations Eq(a1*diff(x(t),t), b1*x(t) + c1*y(t) + d1)
     # and Eq(a2*diff(y(t),t), b2*x(t) + c2*y(t) + d2)
@@ -1410,7 +1410,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
                 # Equations for type 7 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), h(t)*x(t) + p(t)*y(t))
                 return "type7"
 def check_nonlinear_2eq_order1(eq, func, func_coef):
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    t = next(iter(next(iter(eq[0].atoms(Derivative))).atoms(Symbol)))
     f = Wild('f')
     g = Wild('g')
     u, v = symbols('u, v', cls=Dummy)
@@ -1489,7 +1489,7 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
     y = func[1].func
     z = func[2].func
     fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    t = next(iter(next(iter(eq[0].atoms(Derivative))).atoms(Symbol)))
     u, v, w = symbols('u, v, w', cls=Dummy)
     a = Wild('a', exclude=[x(t), y(t), z(t), t])
     b = Wild('b', exclude=[x(t), y(t), z(t), t])
@@ -2884,7 +2884,7 @@ def sysode_linear_2eq_order1(match_):
     fc = match_['func_coeff']
     eq = match_['eq']
     r = {}
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    t = next(iter(next(iter(eq[0].atoms(Derivative))).atoms(Symbol)))
     for i in range(2):
         eq[i] = Add(*[terms/fc[i,func[i],1] for terms in Add.make_args(eq[i])])
 
@@ -3031,7 +3031,7 @@ def sysode_nonlinear_2eq_order1(match_):
     func = match_['func']
     eq = match_['eq']
     fc = match_['func_coeff']
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    t = next(iter(next(iter(eq[0].atoms(Derivative))).atoms(Symbol)))
     if match_['type_of_equation'] == 'type5':
         sol = _nonlinear_2eq_order1_type5(func, t, eq)
         return sol
@@ -3282,7 +3282,7 @@ def sysode_nonlinear_3eq_order1(match_):
     y = match_['func'][1].func
     z = match_['func'][2].func
     eq = match_['eq']
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    t = next(iter(next(iter(eq[0].atoms(Derivative))).atoms(Symbol)))
     if match_['type_of_equation'] == 'type1':
         sol = _nonlinear_3eq_order1_type1(x, y, z, t, eq)
     if match_['type_of_equation'] == 'type2':

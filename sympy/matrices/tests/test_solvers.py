@@ -554,7 +554,7 @@ def test_linsolve_underdetermined_AND_gauss_jordan_solve():
     [0,  0, 0,  0, 1,  1, 1,  1,  f]
     ])
 
-    sol_1=Matrix(list(linsolve(A))[0])
+    sol_1=Matrix(next(iter(linsolve(A))))
 
     tau0, tau1, tau2, tau3, tau4 = symbols('tau:5')
 
