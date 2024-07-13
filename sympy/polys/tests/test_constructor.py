@@ -1,5 +1,7 @@
 """Tests for tools for constructing domains for expressions. """
 
+from sympy.testing.pytest import tooslow
+
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
 from sympy.polys.domains.realfield import RealField
@@ -11,6 +13,8 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
+from sympy import rootof
+
 from sympy.abc import x, y
 
 
@@ -166,6 +170,30 @@ def test_complex_exponential():
          alg.convert(w),
          alg.convert(1)]
     )
+
+
+def test_rootof():
+    r1 = rootof(x**3 + x + 1, 0)
+    r2 = rootof(x**3 + x + 1, 1)
+    K1 = QQ.algebraic_field(r1)
+    K2 = QQ.algebraic_field(r2)
+    assert construct_domain([r1]) == (EX, [EX(r1)])
+    assert construct_domain([r2]) == (EX, [EX(r2)])
+    assert construct_domain([r1, r2]) == (EX, [EX(r1), EX(r2)])
+
+    assert construct_domain([r1], extension=True) == (
+            K1, [K1.from_sympy(r1)])
+    assert construct_domain([r2], extension=True) == (
+            K2, [K2.from_sympy(r2)])
+
+
+@tooslow
+def test_rootof_primitive_element():
+    r1 = rootof(x**3 + x + 1, 0)
+    r2 = rootof(x**3 + x + 1, 1)
+    K12 = QQ.algebraic_field(r1 + r2)
+    assert construct_domain([r1, r2], extension=True) == (
+            K12, [K12.from_sympy(r1), K12.from_sympy(r2)])
 
 
 def test_composite_option():
