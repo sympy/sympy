@@ -1154,7 +1154,11 @@ def dmp_alg_inject(f, u, K):
     >>> p = [K.from_sympy(sqrt(2)), K.zero, K.one]
     >>> P, lev, dom = dmp_alg_inject(p, 0, K)
     >>> P
-    ([[1, 0, 0], [1]], 1, QQ)
+    [[1, 0, 0], [1]]
+    >>> lev
+    1
+    >>> dom
+    QQ
 
     """
     if K.is_GaussianRing or K.is_GaussianField:
@@ -1210,7 +1214,7 @@ def dmp_lift(f, u, K):
     >>> f = x**2 + K([QQ(1), QQ(0)])*x + K([QQ(2), QQ(0)])
 
     >>> R.dmp_lift(f)
-    x**8 + 2*x**6 + 9*x**4 - 8*x**2 + 16
+    x**4 + x**2 + 4*x + 4
 
     """
     # Circular import. Probably dmp_lift should be moved to euclidtools
