@@ -32,6 +32,7 @@ from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.simplify.cse_main import cse
 from sympy.tensor.array import derive_by_array, Array
+from sympy.tensor.array.expressions import ArraySymbol
 from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import numbered_symbols
@@ -1939,3 +1940,11 @@ def test_Piecewise():
         g = lambdify(x, Piecewise((7.0, isnan(x)), (3.0, True)), mod)
         assert g(float('nan')) == 7.0
         assert g(42.) == 3.0
+
+
+def test_array_symbol():
+    if not numpy:
+        skip("numpy not installed.")
+    a = ArraySymbol('a', (3,))
+    f = lambdify((a), a)
+    assert numpy.all(f(numpy.array([1,2,3])) == numpy.array([1,2,3]))
