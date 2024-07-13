@@ -1184,9 +1184,8 @@ def test_Poly_as_expr():
 
 
 def test_Poly_lift():
-    assert Poly(x**4 - I*x + 17*I, x, gaussian=True).lift() == \
-        Poly(x**16 + 2*x**10 + 578*x**8 + x**4 - 578*x**2 + 83521,
-             x, domain='QQ')
+    p = Poly(x**4 - I*x + 17*I, x, gaussian=True)
+    assert p.lift() == Poly(x**8 + x**2 - 34*x + 289, x, domain='QQ')
 
 
 def test_Poly_deflate():
