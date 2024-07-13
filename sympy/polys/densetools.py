@@ -1242,10 +1242,32 @@ def dup_sign_variations(f, K):
     2
 
     """
+    # XXX: There should be a way to check for real numeric domains.
+    if K.is_ZZ or K.is_QQ or K.is_RR:
+        is_negative = K.is_negative
+    elif K.is_AlgebraicField and K.ext.is_comparable:
+        # XXX: AlgebraicField.is_negative only checks the sign of the leading
+        # coefficient. That is okay for making the sign canonical but not for
+        # e.g. Sturm's theorem.
+        #
+        # Ideally Domain.is_negative would be changed to only mean negative in
+        # the sense of negative numbers. That is not what it is mostly used for
+        # though and so other places need to be changed to use
+        # Domain.canonical_unit instead of Domain.is_negative first.
+        def is_negative(a):
+            if not a:
+                return False
+            else:
+                # XXX: This is inefficient. It should not be necessary to use
+                # a symbolic expression here.
+                return bool(K.to_sympy(a) < 0)
+    else:
+        raise DomainError("sign variation counting not supported over %s" % K)
+
     prev, k = K.zero, 0
 
     for coeff in f:
-        if K.is_negative(coeff*prev):
+        if is_negative(coeff*prev):
             k += 1
 
         if coeff:
