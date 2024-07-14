@@ -6,6 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import atan
+from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import cancel
 from sympy.polys.rootoftools import RootSum
@@ -373,8 +374,13 @@ def log_to_real(h, q, x, t):
 
     R_u = roots(R, filter='R')
 
-    if len(R_u) != R.count_roots():
-        return None
+    try:
+        num_roots_R = R.count_roots()
+    except DomainError:
+        pass
+    else:
+        if len(R_u) != num_roots_R:
+            return None
 
     result = S.Zero
 
@@ -393,8 +399,13 @@ def log_to_real(h, q, x, t):
 
         R_v = roots(C, filter='R')
 
-        if len(R_v) != C.count_roots():
-            return None
+        try:
+            num_roots_C = C.count_roots()
+        except DomainError:
+            pass
+        else:
+            if len(R_v) != num_roots_C:
+                return None
 
         R_v_paired = [] # take one from each pair of conjugate roots
         for r_v in R_v:
@@ -420,8 +431,13 @@ def log_to_real(h, q, x, t):
 
     R_q = roots(q, filter='R')
 
-    if len(R_q) != q.count_roots():
-        return None
+    try:
+        num_roots_q = q.count_roots()
+    except DomainError:
+        pass
+    else:
+        if len(R_q) != num_roots_q:
+            return None
 
     for r in R_q.keys():
         result += r*log(h.as_expr().subs(t, r))
