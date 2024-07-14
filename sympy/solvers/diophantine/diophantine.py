@@ -1560,8 +1560,8 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     Use of ``diophantine()`` is recommended over other helper functions.
     ``diop_solve()`` can return either a set or a tuple depending on the
-    nature of the equation. Solutions which DO NOT satisfy the assumptions
-    such as `positive=True` are returned as well.
+    nature of the equation. All non-trivial solutions are returned: assumptions
+    on symbols are ignored.
 
     Usage
     =====
