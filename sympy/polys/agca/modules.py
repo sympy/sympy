@@ -1186,7 +1186,7 @@ class SubModulePolyRing(SubModule):
         for j, f in enumerate(self.gens):
             m = [0]*(r + k)
             for i, v in enumerate(f):
-                m[i] = f[i]
+                m[i] = v
             for i in range(k):
                 m[r + i] = one if j == i else zero
             m = FreeModuleElement(Rkr, tuple(m))
