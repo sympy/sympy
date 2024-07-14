@@ -1,3 +1,4 @@
+from sympy.concrete.summations import Sum
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational)
 from sympy.core.power import Pow
@@ -42,3 +43,13 @@ def test_typst_basic():
     assert typst(Mul(Pow(x, 2), S.Half*x + 1)) == r"x^(2) (x/2 + 1)"
     assert typst(Mul(Pow(x, 3), Rational(2, 3)*x + 1)) == r"x^(3) ((2 x)/3 + 1)"
     assert typst(Mul(Pow(x, 11), 2*x + 1)) == r"x^(11) (2 x + 1)"
+
+def test_typst_sum():
+    assert typst(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
+        r"sum_(-2 <= x <= 2 \ -5 <= y <= 5) x y^(2)"
+    assert typst(Sum(x**2, (x, -2, 2))) == \
+        r"sum_(x=-2)^(2) x^(2)"
+    assert typst(Sum(x**2 + y, (x, -2, 2))) == \
+        r"sum_(x=-2)^(2) (x^(2) + y)"
+    assert typst(Sum(x**2 + y, (x, -2, 2))**2) == \
+        r"(sum_(x=-2)^(2) (x^(2) + y))^(2)"

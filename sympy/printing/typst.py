@@ -4,7 +4,7 @@ A Printer which converts an expression into its Typst equivalent.
 from __future__ import annotations
 from typing import Any
 
-from sympy.core import Mod, Mul, Number, S, Expr
+from sympy.core import Add, Mod, Mul, Number, S, Expr
 from sympy.core.power import Pow
 
 from sympy.printing.precedence import precedence_traditional
@@ -31,7 +31,7 @@ class TypstPrinter(Printer):
         "fold_func_brackets": False,
         "fold_short_frac": None,
         "inv_trig_style": "abbreviated",
-        "itex": False,
+        "itypst": False,
         "ln_notation": False,
         "long_frac_ratio": None,
         "mat_delim": "[",
@@ -84,10 +84,10 @@ class TypstPrinter(Printer):
             None: r"i",
             "i": r"i",
             "ri": r"\mathrm(i)",
-            "ti": r"text(i)",
+            "ti": r"typstt(i)",
             "j": r"j",
             "rj": r"bold(j)",
-            "tj": r"text(j)",
+            "tj": r"typstt(j)",
         }
         imag_unit = self._settings['imaginary_unit']
         self._settings['imaginary_unit_typst'] = imaginary_unit_table.get(imag_unit, imag_unit)
@@ -394,6 +394,24 @@ class TypstPrinter(Printer):
         #     base = base[6: -7]  # remove outermost added parens
         return template % (base, exp)
 
+    def _print_Sum(self, expr):
+        if len(expr.limits) == 1:
+            typst = r"sum_(%s=%s)^(%s) " % \
+                tuple([self._print(i) for i in expr.limits[0]])
+        else:
+            def _format_ineq(l):
+                return r"%s <= %s <= %s" % \
+                    tuple([self._print(s) for s in (l[1], l[0], l[2])])
+
+            typst = r"sum_(%s) " % \
+                str.join(" \\ ",[_format_ineq(l) for l in expr.limits])
+
+        if isinstance(expr.function, Add):
+            typst += r"(%s)" % self._print(expr.function)
+        else:
+            typst += self._print(expr.function)
+
+        return typst
 
 @print_function(TypstPrinter)
 def typst(expr, **settings):
