@@ -4124,6 +4124,9 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     def _latex(self, printer):
         return printer._settings['imaginary_unit_latex']
 
+    def _typst(self, printer):
+        return printer._settings['imaginary_unit_typst']
+
     @staticmethod
     def __abs__():
         return S.One
