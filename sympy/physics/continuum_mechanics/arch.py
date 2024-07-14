@@ -1,7 +1,11 @@
 """
 This module can be used to solve probelsm related to 2D parabolic arches
 """
-from sympy import sympify, symbols, solve, Symbol, diff, sqrt, cos , sin, rad
+from sympy.core.sympify import sympify
+from sympy.core.symbol import Symbol,symbols
+from sympy import diff, sqrt, cos , sin, rad
+from sympy.core.relational import Eq
+from sympy.solvers.solvers import solve
 
 class Arch:
     """
@@ -229,25 +233,40 @@ class Arch:
         This method solves for the reaction forces generated at the supports,\n
         bending moment and shear force generated in the arch and tension produced in the rope if used.
         """
-        discontinuity_points = sorted(self._points_disc)
+        # discontinuity_points = sorted(self._points_disc)
 
         # for reaction forces
         net_x = 0
         net_y = 0
         moment_A = 0
+        moment_hinge_right = 0
         for label in self._conc_loads:
             net_x += self._conc_loads[label]['f_x']
             net_y += self._conc_loads[label]['f_y']
-            moment_A -= self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._left_support[0]) + \
+            moment_A += self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._left_support[0]) - \
                         self._conc_loads[label]['f_x']*(self._conc_loads[label]['y']-self._left_support[1])
+
+            if self._conc_loads[label]['x']> self._crown_x:
+                moment_hinge_right += self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._crown_x) - \
+                        self._conc_loads[label]['f_x']*(self._conc_loads[label]['y']-self._crown_y)
 
         for label in self._distributed_loads:
             start = self._distributed_loads[label]['start']
             end = self._distributed_loads[label]['end']
             tot_force = self._distributed_loads[label]['f_y']*( end - start)
             net_y += tot_force
-            moment_A -= tot_force*((end+start)/2 - self._left_support[0])
+            moment_A += tot_force*((end+start)/2 - self._left_support[0])
+
+            if self._distributed_loads[label]['end']>self._crown_x:
+                st = max(start,self._crown_x)
+                force_right = self._distributed_loads[label]['f_y']*(end-st)
+                moment_hinge_right += force_right*((end+st)/2 - self._crown_x)
 
         R_A_x, R_A_y, R_B_x, R_B_y = symbols('R_A_x R_A_y R_B_x R_B_y')
-        eq1 = R_A_x + R_B_x + net_x
-        eq2 = R_A_y + R_B_y + net_y
+        eq1 = Eq(R_A_x + R_B_x + net_x,0)
+        eq2 = Eq(R_A_y + R_B_y + net_y,0)
+        eq3 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
+        eq4 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) + R_B_x*(self._right_support[1]-self._crown_y),0)
+
+        solution = solve((eq1,eq2,eq3,eq4),(R_A_x,R_A_y,R_B_x,R_B_y))
+        print(solution)
