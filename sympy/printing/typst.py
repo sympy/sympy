@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from sympy.core import Add, Mod, Mul, Number, S, Expr
+from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
 
 from sympy.printing.precedence import precedence_traditional
@@ -412,6 +413,20 @@ class TypstPrinter(Printer):
             typst += self._print(expr.function)
 
         return typst
+
+    def _print_Limit(self, expr):
+        e, z, z0, dir = expr.args
+
+        tex = r"lim_(%s -> " % self._print(z)
+        if str(dir) == '+-' or z0 in (S.Infinity, S.NegativeInfinity):
+            tex += r"%s)" % self._print(z0)
+        else:
+            tex += r"%s^%s)" % (self._print(z0), self._print(dir))
+
+        if isinstance(e, AssocOp):
+            return r"%s(%s)" % (tex, self._print(e))
+        else:
+            return r"%s %s" % (tex, self._print(e))
 
     def _print_log(self, expr, exp=None):
         if not self._settings["ln_notation"]:

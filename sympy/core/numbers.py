@@ -3048,6 +3048,9 @@ class Infinity(Number, metaclass=Singleton):
     def _latex(self, printer):
         return r"\infty"
 
+    def _typst(self, printer):
+        return r"infinity"
+
     def _eval_subs(self, old, new):
         if self == old:
             return new
