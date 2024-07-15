@@ -12,7 +12,7 @@ from .fu import FU, fu
 
 from .sqrtdenest import sqrtdenest
 
-from .cse_main import cse, CseExpr
+from .cse_main import cse
 
 from .epathtools import epath, EPath
 
@@ -39,7 +39,7 @@ __all__ = [
 
     'sqrtdenest',
 
-    'cse', 'CseExpr',
+    'cse',
 
     'epath', 'EPath',
 

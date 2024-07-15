@@ -281,9 +281,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         >>> f(1, (2, 3))
         6
 
-    expr : Expr or CseExpr
-        An expression, list of expressions, matrix, or CSEd expression to be
-        evaluated.
+    expr : Expr
+        An expression, list of expressions, or matrix to be evaluated.
 
         Lists may be nested.
         If the expression is a list, the output will also be a list.
@@ -299,23 +298,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         >>> f(1)
         [[1]
         [2]]
-
-        If a ``CseExpr`` is passed then ``lambdify`` use the replacements and
-        reduced expressions to build the evaluation trace.
-
-        >>> from sympy import cse, exp, sin, CseExpr
-        >>> expr = ((x/y) + sin(x/y) - exp(y)) * ((x/y) - exp(y))
-        >>> cse_expr = cse(expr, list=False)
-        >>> cse_expr
-        ([(x0, x/y), (x1, x0 - exp(y))], x1*(x1 + sin(x0)))
-        >>> isinstance(cse_expr, CseExpr)
-        True
-        >>> f = lambdify([x, y], cse_expr)
-        >>> print(f.__doc__.rsplit('Source code:\n\n')[1].rsplit('\n\n')[0])
-        def _lambdifygenerated(x, y):
-            x0 = x/y
-            x1 = x0 - exp(y)
-            return x1*(x1 + sin(x0))
 
         Note that the argument order here (variables then expression) is used
         to emulate the Python ``lambda`` keyword. ``lambdify(x, expr)`` works
