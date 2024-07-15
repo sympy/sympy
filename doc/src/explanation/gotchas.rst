@@ -332,11 +332,12 @@ automatically, but there is one gotcha you should be aware of.  If you
 do ``<number>/<number>`` inside of a SymPy expression, Python will
 evaluate the two numbers before SymPy has a chance to get
 to them.  The solution is to :func:`~.sympify` one of the numbers, or use
-:obj:`~.Rational`.
+:obj:`~.Rational` (or Python's `Fraction
+<https://docs.python.org/3/library/fractions.html>`_).
 
     >>> x**(1/2)  # evaluates to x**0 or x**0.5
     x**0.5
-    >>> x**(S(1)/2)  # sympyify one of the ints
+    >>> x**(S(1)/2)  # sympify one of the ints
     sqrt(x)
     >>> x**Rational(1, 2)  # use the Rational class
     sqrt(x)
@@ -363,7 +364,7 @@ you don't have to worry about this problem:
     >>> x = Symbol('x')
     >>> print(solve(7*x -22, x))
     [22/7]
-    >>> 22/7  # If we just copy and paste we get int 3 or a float
+    >>> 22/7  #copy and paste gives int (in Python 2) or a float (in Python 3)
     3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
@@ -377,7 +378,7 @@ you don't have to worry about this problem:
     >>> S("22/7")
     22/7
 
-Also, if you do not use :command:`isympy`, you could use ``from
+Also, if you use Python 2 and do not use :command:`isympy`, you could use ``from
 __future__ import division`` to prevent the ``/`` sign from performing
 `integer division <https://en.wikipedia.org/wiki/Integer_division>`_.
 
@@ -717,6 +718,18 @@ square brackets.
 
     >>> (x)
     x
+
+    Parentheses are not needed for non-empty tuples; the commas are:
+
+    >>> x,y
+    (x, y)
+    >>> x,
+    (x,)
+
+    An empty tuple can be created with bare parentheses:
+
+    >>> ()
+    ()
 
     integrate takes a sequence as the second argument if you want to integrate
     with limits (and a tuple or list will work):
