@@ -394,8 +394,8 @@ class Vector(Printable, EvalfMixin):
             tempz = v[1].z
             tempm = ([[tempx, tempy, tempz],
                       [self.dot(tempx), self.dot(tempy), self.dot(tempz)],
-                      [Vector([ar[i]]).dot(tempx), Vector([ar[i]]).dot(tempy),
-                       Vector([ar[i]]).dot(tempz)]])
+                      [Vector([v]).dot(tempx), Vector([v]).dot(tempy),
+                       Vector([v]).dot(tempz)]])
             outlist += _det(tempm).args
         return Vector(outlist)
 
