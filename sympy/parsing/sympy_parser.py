@@ -968,7 +968,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
     This feature allows one to tell exactly how the expression was entered:
 
     >>> a = parse_expr('1 + x', evaluate=False)
-    >>> b = parse_expr('x + 1', evaluate=0)
+    >>> b = parse_expr('x + 1', evaluate=False)
     >>> a == b
     False
     >>> a.args
