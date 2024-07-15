@@ -48,12 +48,6 @@ def _forward_jacobian(
         The vector to be differentiated.
     wrt : ``ImmutableDenseMatrix``
         The vector with respect to which to do the differentiation.
-    as_cse_expr : ``bool``
-        Influences the return type. If ``False``, then a matrix with fully-
-        replaced SymPy expressions for entries will be returned. If ``True``,
-        then the return type will be left as a ``CseExpr`` where the matrix's
-        entries are reduced expressions containing replacements. The default is
-        ``True``.
 
     See Also
     ========

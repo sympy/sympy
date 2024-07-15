@@ -763,14 +763,12 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     Returns
     =======
 
-    CseExpr
-        An instance of ``CseExpr``, which is essentially a tuple of length two
-        containing replacements and reduced expressions. The replacements are a
-        ``List[Tuple[Symbol, Expr]]`` detailing all of the common subexpressions
-        that were replaced. Subexpressions earlier in this ``list`` might show
-        up in subexpressions later in this ``list``. The reduced expressions are
-        a ``List[Expr]`` where the ``Expr``s have been substituted with all of
-        the replacements in the replacements ``list``.
+    replacements : list of (Symbol, expression) pairs
+         All of the common subexpressions that were replaced. Subexpressions
+         earlier in this list might show up in subexpressions later in this
+         list.
+     reduced_exprs : list of SymPy expressions
+         The reduced expressions with all of the replacements above.
 
     Examples
     ========
