@@ -159,7 +159,7 @@ from .discrete import (fft, ifft, ntt, intt, fwht, ifwht, mobius_transform,
 
 from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
         separatevars, posify, besselsimp, kroneckersimp, signsimp,
-        nsimplify, FU, fu, sqrtdenest, cse, CseExpr, epath, EPath, hyperexpand,
+        nsimplify, FU, fu, sqrtdenest, cse, epath, EPath, hyperexpand,
         collect, rcollect, radsimp, collect_const, fraction, numer, denom,
         trigsimp, exptrigsimp, powsimp, powdenest, combsimp, gammasimp,
         ratsimp, ratsimpmodprime)
@@ -393,7 +393,7 @@ __all__ = [
     # sympy.simplify
     'simplify', 'hypersimp', 'hypersimilar', 'logcombine', 'separatevars',
     'posify', 'besselsimp', 'kroneckersimp', 'signsimp',
-    'nsimplify', 'FU', 'fu', 'sqrtdenest', 'cse', 'CseExpr', 'epath', 'EPath',
+    'nsimplify', 'FU', 'fu', 'sqrtdenest', 'cse', 'epath', 'EPath',
     'hyperexpand', 'collect', 'rcollect', 'radsimp', 'collect_const',
     'fraction', 'numer', 'denom', 'trigsimp', 'exptrigsimp', 'powsimp',
     'powdenest', 'combsimp', 'gammasimp', 'ratsimp', 'ratsimpmodprime',

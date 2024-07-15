@@ -7,7 +7,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.traversal import postorder_traversal
 from sympy.matrices.immutable import ImmutableDenseMatrix
-from sympy.simplify.cse_main import CseExpr, cse
+from sympy.simplify.cse_main import cse
 from sympy.utilities.iterables import numbered_symbols
 from sympy.physics.mechanics import dynamicsymbols
 
@@ -15,7 +15,6 @@ from sympy.physics.mechanics import dynamicsymbols
 def _forward_jacobian(
     expr: ImmutableDenseMatrix,
     wrt: ImmutableDenseMatrix,
-    as_cse_expr: bool = True,
 ):
     """Returns the Jacobian matrix produced using a forward accumulation
     algorithm.

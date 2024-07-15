@@ -68,9 +68,6 @@ Simplify
 
 .. module:: sympy.simplify.cse_main
 
-.. autoclass:: CseExpr
-   :members:
-
 .. autofunction:: cse
 
 .. autofunction:: sympy.simplify.cse_main::opt_cse

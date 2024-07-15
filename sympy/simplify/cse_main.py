@@ -40,195 +40,6 @@ basic_optimizations = [(cse_opts.sub_pre, cse_opts.sub_post),
 # ===============================================================
 
 
-class CseExpr(tuple):
-    """Type of objects to be returned by the ``cse`` function.
-
-    ``CseExpr`` is compatible with objects that take the form:
-
-    ``Tuple[List[Tuple[Symbol, Expr]], List[Expr]]``
-
-    Examples
-    ========
-
-    A ``CseExpr`` can be constructed from a ``tuple`` containing two items, the
-    first being a ``list`` of replacements (symbol-expression substitution
-    pairs), and the second being a ``list`` of reduced expressions that contain
-    the substitution symbols:
-
-    >>> from sympy import symbols, sin, exp
-    >>> from sympy.simplify.cse_main import CseExpr
-    >>> x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
-    >>> cse_expr = CseExpr(([(x0, x1 / x2), (x3, x0 - exp(x2))],
-    ...                     [x3 * (x3 + sin(x0))]))
-    >>> print(cse_expr)
-    ([(x0, x1/x2), (x3, x0 - exp(x2))], [x3*(x3 + sin(x0))])
-
-    The ``list`` of symbol-expression replacement pairs can be accessed using
-    either the ``replacements`` attribute or using the zeroth index:
-
-    >>> print(cse_expr.replacements)
-    [(x0, x1/x2), (x3, x0 - exp(x2))]
-    >>> print(cse_expr[0])
-    [(x0, x1/x2), (x3, x0 - exp(x2))]
-
-    The ``list`` of reduced expressions can also be accessed using either the
-    ``reduced_exprs`` attribute or using the first index:
-
-    >>> print(cse_expr.reduced_exprs)
-    [x3*(x3 + sin(x0))]
-    >>> print(cse_expr[1])
-    [x3*(x3 + sin(x0))]
-
-    The symbol-expression replacement pairs can also be accessed as a ``dict``
-    mapping symbols as keys to expressions as values:
-
-    >>> print(cse_expr.replacements_mapping)
-    {x0: x1/x2, x3: x0 - exp(x2)}
-
-    Parameters
-    ==========
-
-    replacements : ``List[Tuple[Symbol, Expr]]``
-        The symbol-expression replacements pairs resulting from the CSE.
-    reduced_exprs : ``List[Expr]``
-        The replaced expressions resulting from the CSE.
-    replacements_mapping : ``Dict[Symbol, Expr]``
-        A mapping of replacements symbols to their corresponding expression.
-
-
-    See Also
-    ========
-
-    cse: Function for common subexpression elimination.
-
-    """
-
-    @classmethod
-    def from_reduced_exprs(cls, reduced_exprs, replacements_mapping, *,
-                           as_list=True):
-        """Alternate constructor to instantiate a ``CseExpr`` from a list of
-        reduced expressions and a mapping of replacements.
-
-        Examples
-        ========
-
-        A ``CseExpr`` can be constructed from a reduced expression and a
-        dictionary of replacements mapping SymPy symbols to SymPy expressions:
-
-        >>> from sympy import symbols, sin, exp
-        >>> from sympy.simplify.cse_main import CseExpr
-        >>> x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
-        >>> reduced_expr = x3 * (x3 + sin(x0))
-        >>> replacements_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
-        >>> cse_expr = CseExpr.from_reduced_exprs(reduced_expr,
-        ...                                       replacements_mapping)
-        >>> print(cse_expr)
-        ([(x0, x1/x2), (x3, x0 - exp(x2))], [x3*(x3 + sin(x0))])
-
-        As only a single expression is passed as an argument to
-        ``reduced_exprs``, this method will wrap it into a single-item ``list``.
-        Alternatively, the reduced expression can be kept unchanged using the
-        ``as_list`` parameter:
-
-        >>> cse_expr = CseExpr.from_reduced_exprs(reduced_expr,
-        ...                                       replacements_mapping,
-        ...                                       as_list=False)
-        >>> print(cse_expr)
-        ([(x0, x1/x2), (x3, x0 - exp(x2))], x3*(x3 + sin(x0)))
-
-        Parameters
-        ==========
-
-        reduced_exprs : ``Expr`` or ``List[Expr]``
-            The reduced expression(s).
-        replacements_mapping : ``Dict[Symbol, Expr]``
-            Pairs of replacements present in ``exprs``.
-        as_list : ``bool``, default is ``True``
-            Whether the argument passed to ``reduced_exprs`` should be converted
-            to a ``list``. With the default of ``True``, if an iterable is
-            passed to ``reduced_exprs`` then it is converted to a ``list``, or
-            if a single ``Expr`` is passed then it is wrapped into a single-item
-            ``list``. If ``False``, then the argument passed to
-            ``reduced_exprs`` is left as is, meaning that the value returned by
-            the ``reduced_exprs`` property is not necessarily a ``list``. This
-            parameter is similar to the ``list`` parameter of the ``cse``
-            function.
-
-        See Also
-        ========
-
-        cse: Function for common subexpression elimination.
-
-        """
-
-        # Handle the case if just one reduced expression was passed.
-        if as_list and isinstance(reduced_exprs, (Basic, MatrixBase)):
-            reduced_exprs = [reduced_exprs]
-
-        # Ensure items in argument passed to ``reduced_exprs`` are SymPy
-        # expressions
-        if not isinstance(reduced_exprs, (Basic, MatrixBase)):
-            for i, expr in enumerate(reduced_exprs):
-                if not isinstance(expr, (Basic, MatrixBase)):
-                    msg = (
-                        f'Expression {expr} passed at index {i} must be a '
-                        f'SymPy expression, not a {type(expr)}'
-                    )
-                    raise TypeError(msg)
-
-        # Ensure argument passed to ``replacements_mapping`` is a ``dict``
-        if not isinstance(replacements_mapping, dict):
-            msg = (
-                f'`replacements_mapping` must be a dictionary mapping SymPy '
-                f'symbols to SymPy expressions, not a '
-                f'{type(replacements_mapping)}'
-            )
-            raise TypeError(msg)
-
-        # Ensure symbol-expression pairs in ``replacements_mapping`` are correct
-        # types
-        for i, (symb, expr) in enumerate(replacements_mapping.items()):
-            if not isinstance(symb, Symbol):
-                msg = (
-                    f'Key {symb} at index {i} in `replacements_mapping` must '
-                    f'be a SymPy symbol, not a {type(symb)}'
-                )
-                raise TypeError(msg)
-            if not isinstance(expr, (Basic, MatrixBase)):
-                msg = (
-                    f'Value {expr} at index {i} in `replacements_mapping` must '
-                    f'be a SymPy expression, not a {type(expr)}'
-                )
-                raise TypeError(msg)
-
-        sorted_replacements = reps_toposort(list(replacements_mapping.items()))
-        return cls((sorted_replacements, reduced_exprs))
-
-    @property
-    def replacements(self):
-        """The symbol-expression replacement pairs resulting from the CSE."""
-        return self[0]
-
-    @property
-    def reduced_exprs(self):
-        """The reduced expressions resulting from the CSE."""
-        return self[1]
-
-    @property
-    def replacements_mapping(self):
-        """A mapping of replacement symbols to their corresponding expression."""
-        return dict(self.replacements)
-
-    def __str__(self):
-        return f'({self.replacements}, {self.reduced_exprs})'
-
-    def __repr__(self):
-        return (
-            f'{self.__class__.__name__}(({self.replacements}, '
-            f'{self.reduced_exprs}))'
-        )
-
-
 def reps_toposort(r):
     """Sort replacements ``r`` so (k1, v1) appears before (k2, v2)
     if k2 is in v1's free symbols. This orders items in the
@@ -997,15 +808,9 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     ([], x)
     """
     if not list:
-        if postprocess is cse_separate:
-            # ``cse_separate`` needs to be handled separately as for backwards
-            # compatibility it must return a ``list`` and not a ``tuple``.
-            return _cse_homogeneous(exprs,
-                symbols=symbols, optimizations=optimizations,
-                postprocess=postprocess, order=order, ignore=ignore)
-        return CseExpr(_cse_homogeneous(exprs,
+        return _cse_homogeneous(exprs,
             symbols=symbols, optimizations=optimizations,
-            postprocess=postprocess, order=order, ignore=ignore))
+            postprocess=postprocess, order=order, ignore=ignore)
 
     if isinstance(exprs, (int, float)):
         exprs = sympify(exprs)
@@ -1070,12 +875,10 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
             reduced_exprs[i] = m
 
     if postprocess is None:
-        return CseExpr((replacements, reduced_exprs))
-    elif postprocess is cse_separate:
-        # ``cse_separate`` needs to be handled separately as for backwards
-        # compatibility it must return a ``list`` and not a ``tuple``.
-        return postprocess(replacements, reduced_exprs)
-    return CseExpr(postprocess(replacements, reduced_exprs))
+        return replacements, reduced_exprs
+
+    return postprocess(replacements, reduced_exprs)
+
 
 
 def _cse_homogeneous(exprs, **kwargs):
