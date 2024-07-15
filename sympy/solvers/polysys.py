@@ -2,6 +2,7 @@
 import itertools
 
 from sympy.core import S, expand
+from sympy.core.numbers import Integer, Rational
 from sympy.core.sorting import default_sort_key
 from sympy.core.function import diff
 from sympy.polys import Poly, groebner, roots, real_roots, nroots
@@ -9,7 +10,8 @@ from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polytools import LT, LC, degree, subresultants, factor_list
 from sympy.polys.rootoftools import ComplexRootOf
 from sympy.polys.polyerrors import (ComputationFailed,
-    PolificationFailed, CoercionFailed)
+    PolificationFailed, CoercionFailed, PolynomialError)
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.simplify import rcollect
 from sympy.utilities import postfixes
 from sympy.utilities.misc import filldedent
@@ -572,6 +574,7 @@ def red_set(f, mvar):
     >>> red_set(x**3 + x**2 + 3*x, x)
     [x**3 + x**2 + 3*x, x**2 + 3*x, 3*x, 0]
     """
+
     reds = []
 
     # handle the constant case here
@@ -735,17 +738,71 @@ def get_nice_roots(poly):
 
         try:
             new_roots = real_roots(curr_factor)
-            for i, r in enumerate(new_roots):
+            #for i, r in enumerate(new_roots):
                 # want to avoid CRootOf
-                if r.has(ComplexRootOf):
-                    new_roots[i] = r.evalf()
+                #if r.has(ComplexRootOf):
+                #    new_roots[i] = r.evalf()
         except NotImplementedError:
-            new_roots = [root for root in nroots(curr_factor) if root.is_real]
+            new_roots = [Rational(root) for root in nroots(curr_factor) if root.is_real]
+        except PolynomialError:
+            new_roots = [Rational(root) for root in nroots(curr_factor) if root.is_real]
 
         roots.update(new_roots)
 
-
     return sorted(roots, reverse=False)
+
+
+def get_sample_point(left, right):
+    # Edge case check
+    if left == right:
+        return left
+
+    # Ensure left < right
+    if left > right:
+        left, right = right, left
+
+    # If they lie on either side of 0 then just return 0
+    if left < 0 and 0 < right:
+        return 0
+
+    # Ray cases
+    # always +- 1 in case integer
+    if left == S.NegativeInfinity:
+        return Integer(floor(right)) - 1
+    elif right == S.Infinity:
+        return Integer(ceiling(left)) + 1
+
+    # Finite interval
+
+    # Determine sign and handle negative intervals
+    if left < 0 and right < 0:
+        left, right = -right, -left  # note flipping signs flips order
+        sign = -1
+    else:
+        sign = 1
+
+    # Check if an integer is in the interval
+    if ceiling(left) < floor(right):
+        between = sign * Integer(ceiling(left).evalf())
+        # ensure that it's not equal to an endpoint
+        # this may happen for eg (1,2) as ceil(1) < floor(2)
+        if between != left and between != right:
+            return between
+
+    # Find a rational number if no integer is in the interval
+    # Uses Archimedean axiom of real numbers
+    #   Want left < m/n < right
+    #   Choose n st n(right-left) > 1
+    #   Then, m = floor(n*left)
+    #   So, m/n is rational between left and right
+    n = 1
+    while n * (right - left) <= 1:
+        n += 1
+
+    j = Integer(floor(n * left).evalf())
+    rational = S(j + 1) / n
+
+    return sign * rational
 
 
 
@@ -953,7 +1010,8 @@ def cylindrical_algebraic_decomposition(F, gens):
     # Compute the projection sets
     projs_set = [F]
     for i in range(len(gens) - 1):
-        projs_set.append(hongproj(projs_set[-1], gens[i]))
+        projs_set.append(list(hongproj(projs_set[-1], gens[i])))
+
 
     # Lifting
     sample_points = [{}]
@@ -976,16 +1034,21 @@ def cylindrical_algebraic_decomposition(F, gens):
             # have to sort them overall now
             roots = sorted(roots, reverse=False)
 
+
             # Calculate sample points
             if not roots:
                 samples = [0]
             elif len(roots) == 1:
-                samples = [roots[0] - 1, roots[0], roots[0] + 1]
+                samples = [get_sample_point(S.NegativeInfinity, roots[0]),
+                           roots[0],
+                           get_sample_point(roots[0], S.Infinity)]
             else:
-                samples = [roots[0] - 1]  # Point below the smallest root
+                samples = [get_sample_point(S.NegativeInfinity, roots[0])]
                 for r1, r2 in zip(roots, roots[1:]):
-                    samples.extend([r1, (r1 + r2) / 2])
-                samples.extend([roots[-1], roots[-1] + 1])  # Last root and point above it
+                    samples.extend([r1,
+                                    get_sample_point(r1, r2)])
+                samples.extend([roots[-1],
+                                get_sample_point(roots[-1], S.Infinity)])
 
             for value in samples:
                 new_point = point.copy()

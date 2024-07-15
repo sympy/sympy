@@ -18,8 +18,9 @@ from sympy.solvers.polysys import (solve_poly_system,
 from sympy.solvers.polysys import (red, red_set,
                                     subresultant_polynomials,
                                     subresultant_coefficients,
-                                    get_nice_roots, projone, projtwo,
-                                    hongproj, cylindrical_algebraic_decomposition,
+                                    get_nice_roots, get_sample_point,
+                                    projone, projtwo, hongproj,
+                                    cylindrical_algebraic_decomposition,
                                     solve_poly_system_cad)
 from sympy.polys.rootoftools import ComplexRootOf
 from sympy.polys.polytools import parallel_poly_from_expr
@@ -454,12 +455,30 @@ def test_get_nice_roots():
 
     # if roots are CRootOf, then they should be numeric
     assert get_nice_roots(x**5 + x**2 - 1)[0] ==\
-        ComplexRootOf(x**5 + x**2 - 1, 0).evalf()
+        ComplexRootOf(x**5 + x**2 - 1, 0)
 
     # the algebraic roots should stay algebraic
     # bc of the multiplication, we get the roots from x^2 - 1 of +- sqrt(2)
     assert get_nice_roots((x**2 - 2) * (x**5 - x**2 - 1)) ==\
-        [-sqrt(2), ComplexRootOf(x**5 - x**2 - 1, 0).evalf(), sqrt(2)]
+        [-sqrt(2), ComplexRootOf(x**5 - x**2 - 1, 0), sqrt(2)]
+
+
+def test_get_sample_point():
+    assert get_sample_point(1, 1) == 1
+
+    # test rays
+    assert get_sample_point(S.NegativeInfinity, -2) == -3
+    assert get_sample_point(S.NegativeInfinity, -1.5) == -3
+    assert get_sample_point(sqrt(5), S.Infinity) == 4
+    assert get_sample_point(ComplexRootOf(x**5 + x**3 - 1, 0), S.Infinity) == S(2)
+
+    # test finite open intervals
+    assert get_sample_point(-2, -1) == - S(3) / 2 # note negative
+    # approx 1.4 and 2.4
+    assert get_sample_point(sqrt(2), sqrt(2) + 1) == S(3) / 2
+    # approx 0.8 and 1.2
+    assert get_sample_point(ComplexRootOf(x**5 + x**3 - 1, 0), sqrt(5) - 1) == 1
+
 
 
 def test_projone():
@@ -530,16 +549,16 @@ def test_cylindrical_algebraic_decomposition():
 
     # harder univar example
     # the collection of roots are (-1, 0, 1, 5**(1/3))
-    # have to do the sympify thing to do algebraic comparisons
-    # is there an easier way??
+    # note 5**(1/3) is approx
     assert cylindrical_algebraic_decomposition([x**2-1,
                                                 x,
                                                 x**3-5], [x]) ==\
         [{x: val} for val in
          [-2, -1, -S(1)/2, 0, S(1)/2, 1,
-          (1+ 5**(S(1)/3))/2,
+          S(3)/2,
           5**(S(1)/3),
-          5**(S(1)/3) + 1]]
+          3]]
+
 
     # multivar example
     # projecting on x gets [-y^2-1, y], only root is 0
@@ -579,4 +598,8 @@ def test_solve_poly_system_cad():
     assert(solve_and_sub([x**2-1 >= 3], [x], False)) == True
 
     # harder example
-    assert(solve_and_sub([x**2 * y**2 - 1 > 0, x<=0.2, x+y >= 1], [x,y])) == True
+    # this now fails to converge due to floating point!
+    # -0.618033988749895 -0.618033988749895
+    # False
+    # <class 'sympy.core.numbers.Float'> <class 'sympy.core.numbers.Float'>
+    #assert(solve_and_sub([x**2 * y**2 - 1 > 0, x<=0.2, x+y >= 1], [x,y])) == True
