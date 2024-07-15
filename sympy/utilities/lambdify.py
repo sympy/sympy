@@ -870,10 +870,7 @@ or tuple for the function arguments.
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
-    from sympy.simplify.cse_main import CseExpr
-    if isinstance(expr, CseExpr):
-        cses, _expr = expr
-    elif cse == True:
+    if cse == True:
         from sympy.simplify.cse_main import cse as _cse
         cses, _expr = _cse(expr, list=False)
     elif callable(cse):
