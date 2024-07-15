@@ -413,6 +413,18 @@ class TypstPrinter(Printer):
 
         return typst
 
+    def _print_log(self, expr, exp=None):
+        if not self._settings["ln_notation"]:
+            typst = r"log(%s)" % self._print(expr.args[0])
+        else:
+            typst = r"ln(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^(%s)" % (typst, exp)
+        else:
+            return typst
+
+
 @print_function(TypstPrinter)
 def typst(expr, **settings):
     r"""Convert the given expression to Typst string representation.

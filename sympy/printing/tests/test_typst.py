@@ -5,6 +5,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import log
 from sympy.printing.typst import typst
 
 x, y = symbols('x, y')
@@ -43,6 +44,19 @@ def test_typst_basic():
     assert typst(Mul(Pow(x, 2), S.Half*x + 1)) == r"x^(2) (x/2 + 1)"
     assert typst(Mul(Pow(x, 3), Rational(2, 3)*x + 1)) == r"x^(3) ((2 x)/3 + 1)"
     assert typst(Mul(Pow(x, 11), 2*x + 1)) == r"x^(11) (2 x + 1)"
+
+
+def test_typst_log():
+    assert typst(log(x)) == r"log(x)"
+    assert typst(log(x), ln_notation=True) == r"ln(x)"
+    assert typst(log(x) + log(y)) == \
+        r"log(x) + log(y)"
+    assert typst(log(x) + log(y), ln_notation=True) == \
+        r"ln(x) + ln(y)"
+    assert typst(pow(log(x), x)) == r"log(x)^(x)"
+    assert typst(pow(log(x), x), ln_notation=True) == \
+        r"ln(x)^(x)"
+
 
 def test_typst_sum():
     assert typst(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
