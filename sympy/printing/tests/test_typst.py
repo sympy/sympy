@@ -4,8 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, Wild, symbols)
-from sympy.core.symbol import symbols
+from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import log
 from sympy.printing.typst import (typst, translate, greek_letters_set,
