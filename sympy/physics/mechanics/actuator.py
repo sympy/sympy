@@ -1042,12 +1042,12 @@ class CoulombKineticFriction(ForceActuator):
       https://odr.chalmers.se/server/api/core/bitstreams/6316ee50-2ffc-4c29-97c1-c5e7a2737a5f/content.
     """
 
-    def __init__(self, mu_k, normal_force, pathway, *, v_s, viscous_coefficient=None, mu_s=None):
+    def __init__(self, mu_k, normal_force, pathway, *, v_s=None, viscous_coefficient=None, mu_s=None):
         self.mu_k = mu_k
         self.mu_s = mu_s if mu_s is not None else mu_k
         self.normal_force = normal_force
-        self.viscous_coefficient = viscous_coefficient
-        self.v_s = v_s
+        self.viscous_coefficient = viscous_coefficient if viscous_coefficient is not None else 0
+        self.v_s = v_s if v_s is not None else 1
         self.pathway = pathway
 
     @property
