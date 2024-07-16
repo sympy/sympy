@@ -1036,7 +1036,7 @@ class CoulombKineticFriction(ForceActuator):
     References
     ==========
 
-    Moore-Pants, Learn Multibody Dynamics. Available at:
+    Learn Multibody Dynamics. Available at:
       https://moorepants.github.io/learn-multibody-dynamics/loads.html#friction.
     Chalmers University of Technology, Open Digital Repository. Available at:
       https://odr.chalmers.se/server/api/core/bitstreams/6316ee50-2ffc-4c29-97c1-c5e7a2737a5f/content.
