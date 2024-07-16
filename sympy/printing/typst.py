@@ -498,16 +498,16 @@ class TypstPrinter(Printer):
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
 
-        tex = r"lim_(%s -> " % self._print(z)
+        typst = r"lim_(%s -> " % self._print(z)
         if str(dir) == '+-' or z0 in (S.Infinity, S.NegativeInfinity):
-            tex += r"%s)" % self._print(z0)
+            typst += r"%s)" % self._print(z0)
         else:
-            tex += r"%s^%s)" % (self._print(z0), self._print(dir))
+            typst += r"%s^%s)" % (self._print(z0), self._print(dir))
 
         if isinstance(e, AssocOp):
-            return r"%s(%s)" % (tex, self._print(e))
+            return r"%s(%s)" % (typst, self._print(e))
         else:
-            return r"%s %s" % (tex, self._print(e))
+            return r"%s %s" % (typst, self._print(e))
 
     def _print_log(self, expr, exp=None):
         if not self._settings["ln_notation"]:
