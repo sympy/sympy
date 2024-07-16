@@ -857,21 +857,15 @@ class TestDuffingSpring:
                 assert Abs(diff) < 1e-9, f"The forces do not match. Difference: {diff}"
 
 class TestCoulombKineticFriction:
-    def test_block_on_surface(self):
+    @pytest.fixture(autouse=True)
+    def _block_on_surface(self):
         r"""A block sliding on a surface.
 
         Notes
         =====
-        A block slides with the Coulomb kinetic friction force, which is described by the following function:
-
-            f_f(v) = f_c * sign(v) + (f_max - f_c) * exp(-(v / v_s)^2) + sigma * v
-
-        where f_c is the Coulomb friction constant, f_max is the maximum static friction
-        force, v_s is the Stribeck velocity, sigma is the viscous friction constant,
-        and v is the relative velocity.
-
-        This test validates the correctness of the CoulombKineticFriction by comparing
-        the actuator's force to the expected friction force under different velocity conditions.
+        This test validates the correctness of the CoulombKineticFriction by simulating
+        a block sliding on a surface with the Coulomb kinetic friction force.
+        The test covers scenarios with both positive and negative velocities.
 
         Equations of Motion
         ===================
@@ -885,81 +879,133 @@ class TestCoulombKineticFriction:
 
         where F_friction is given by the friction force equation f_f(v).
 
-        Coordinate System
-        =================
-
-                x
-            --->
-            |
-            v y
-
-                    ---> v+ or v-
-                  _______
-              F   |     |       |
-            --->  |  m  |       | g
-                  |_____|       v
-                         <--- F_k = f_c * sign(v) + (f_max - f_c) * exp(-(v / v_s)^2) + sigma * v
-             N = m*g ^
-                     |
-
-        Velocity Cases
-        ==============
-
-        For positive velocity (v = 3.141):
-
-            F - m * Derivative(3.141, t) + (g * m * mu_k * sign(sqrt(q1(t)**2) / q1(t))
-            + 3.141 * sigma * sqrt(q1(t)**2) / q1(t)
-            + (-g * m * mu_k + g * m * mu_s) * exp(-9.865881 / v_s**2)) * q1(t) / sqrt(q1(t)**2)
-
-        For negative velocity (v = -3.141):
-
-            F - m * Derivative(-3.141, t) + (-g * m * mu_k * sign(sqrt(q1(t)**2) / q1(t))
-            - 3.141 * sigma * sqrt(q1(t)**2) / q1(t)
-            + (-g * m * mu_k + g * m * mu_s) * exp(-9.865881 / v_s**2)) * q1(t) / sqrt(q1(t)**2)
-
-        The test compares the derived equations of motion with the expected ones to
-        ensure the friction model is implemented correctly.
-
         """
         # Define Dynamics symbols and parameters
-        q1, u1 = dynamicsymbols('q1 u1')
+        self.q1, self.u1 = dynamicsymbols('q1 u1')
 
         # Mass, gravity constant, friction coefficient, coefficient of sliding friction, viscous_coefficient
-        m, g, mu_k, mu_s, v_s, sigma, F = symbols('m g mu_k mu_s v_s sigma F')
+        self.m, self.g, self.mu_k, self.mu_s, self.v_s, self.sigma, self.F = symbols('m g mu_k mu_s v_s sigma F', real=True)
 
         # Define the reference frame
-        N = ReferenceFrame('N')
-        O = Point('O')
-        P = O.locatenew('P', q1 * N.x)
-        O.set_vel(N, 0)
-        P.set_vel(N, u1 * N.x)
+        self.N = ReferenceFrame('N')
+        self.O = Point('O')
+        self.P = self.O.locatenew('P', self.q1 * self.N.x)
+        self.O.set_vel(self.N, 0)
+        self.P.set_vel(self.N, self.u1 * self.N.x)
+        self.pathway = LinearPathway(self.O, self.P)
 
-        particle = Particle('particle', P, m) # Block
+        self.particle = Particle('particle', self.P, self.m) # Block
 
+    def test_block_on_surface_default(self):
         friction = CoulombKineticFriction(
-            mu_k=mu_k,
-            mu_s=mu_s,
-            normal_force=m * g,
-            pathway=LinearPathway(O, P),
-            v_s=v_s,
-            viscous_coefficient=sigma,
+            self.mu_k,
+            self.m * self.g,
+            self.pathway,
         )
-
-        system = System(N, O)
-        system.q_ind = [q1]
-        system.u_ind = [u1]
-        system.kdes = [q1.diff() - u1]
-        system.add_bodies(particle)
+        system = System(self.N, self.O)
+        system.q_ind = [self.q1]
+        system.u_ind = [self.u1]
+        system.kdes = [self.q1.diff() - self.u1]
+        system.add_bodies(self.particle)
         system.add_actuators(friction)
-        system.apply_uniform_gravity(-g * N.y)
-        system.add_loads(Force(particle, F * N.x))
+        system.apply_uniform_gravity(-self.g * self.N.y)
+        system.add_loads(Force(self.particle, self.F * self.N.x))
 
         eoms = system.form_eoms()
 
         # Positive velocity case
-        expected_positive = F - m * 0 + (g * m * mu_k * sign(sqrt(q1**2) * 3.141 / q1) + sigma * sqrt(q1**2) * 3.141 / q1 + (-g * m * mu_k + g * m * mu_s) * exp(-9.865881 / v_s**2)) * q1 / sqrt(q1**2)
-        assert simplify(eoms[0].xreplace({u1: 3.141}) - expected_positive) == 0
+        positive_velocity = {self.u1: 3.141, self.q1: Abs(self.q1)}
+        expected_positive = self.F + self.g * self.m * self.mu_k
+        assert simplify(eoms[0].xreplace(positive_velocity) - expected_positive) == 0
 
-        # Negative velocity case:
-        expected_negative = F - m * 0 + (g * m * mu_k * sign(sqrt(q1**2) * (-3.141) / q1) + sigma * sqrt(q1**2) * (-3.141) / q1 + (-g * m * mu_k + g * m * mu_s) * exp(-9.865881 / v_s**2)) * q1 / sqrt(q1**2)
-        assert simplify(eoms[0].xreplace({u1: -3.141}) - expected_negative) == 0
+        # Negative velocity case
+        negative_velocity = {self.u1: -3.141, self.q1: -Abs(self.q1)}
+        expected_negative = self.F - self.g * self.m * self.mu_k
+        assert simplify(eoms[0].xreplace(negative_velocity) - expected_negative) == 0
+
+    def test_block_on_surface_viscous(self):
+        friction = CoulombKineticFriction(
+            self.mu_k,
+            self.m * self.g,
+            self.pathway,
+            viscous_coefficient=self.sigma
+        )
+        system = System(self.N, self.O)
+        system.q_ind = [self.q1]
+        system.u_ind = [self.u1]
+        system.kdes = [self.q1.diff() - self.u1]
+        system.add_bodies(self.particle)
+        system.add_actuators(friction)
+        system.apply_uniform_gravity(-self.g * self.N.y)
+        system.add_loads(Force(self.particle, self.F * self.N.x))
+
+        eoms = system.form_eoms()
+
+        # Positive velocity case
+        positive_velocity = {self.u1: 3.141, self.q1: Abs(self.q1)}
+        expected_positive = self.F + self.g * self.m * self.mu_k + self.sigma * 3.141
+        assert simplify(eoms[0].xreplace(positive_velocity) - expected_positive) == 0
+
+        # Negative velocity case
+        negative_velocity = {self.u1: -3.141, self.q1: -Abs(self.q1)}
+        expected_negative = self.F - self.g * self.m * self.mu_k - self.sigma * 3.141
+        assert simplify(eoms[0].xreplace(negative_velocity) - expected_negative) == 0
+
+    def test_block_on_surface_stribeck(self):
+        friction = CoulombKineticFriction(
+            self.mu_k,
+            self.m * self.g,
+            self.pathway,
+            v_s=self.v_s,
+            mu_s=self.mu_k
+        )
+        system = System(self.N, self.O)
+        system.q_ind = [self.q1]
+        system.u_ind = [self.u1]
+        system.kdes = [self.q1.diff() - self.u1]
+        system.add_bodies(self.particle)
+        system.add_actuators(friction)
+        system.apply_uniform_gravity(-self.g * self.N.y)
+        system.add_loads(Force(self.particle, self.F * self.N.x))
+
+        eoms = system.form_eoms()
+
+        # Positive velocity case
+        positive_velocity = {self.u1: 3.141, self.q1: Abs(self.q1)}
+        expected_positive = self.F + self.g * self.m * self.mu_k
+        assert simplify(eoms[0].xreplace(positive_velocity) - expected_positive) == 0
+
+        # Negative velocity case
+        negative_velocity = {self.u1: -3.141, self.q1: -Abs(self.q1)}
+        expected_negative = self.F - self.g * self.m * self.mu_k
+        assert simplify(eoms[0].xreplace(negative_velocity) - expected_negative) == 0
+
+    def test_block_on_surface_all(self):
+        friction = CoulombKineticFriction(
+            self.mu_k,
+            self.m * self.g,
+            self.pathway,
+            v_s=self.v_s,
+            viscous_coefficient=self.sigma,
+            mu_s=self.mu_k
+        )
+        system = System(self.N, self.O)
+        system.q_ind = [self.q1]
+        system.u_ind = [self.u1]
+        system.kdes = [self.q1.diff() - self.u1]
+        system.add_bodies(self.particle)
+        system.add_actuators(friction)
+        system.apply_uniform_gravity(-self.g * self.N.y)
+        system.add_loads(Force(self.particle, self.F * self.N.x))
+
+        eoms = system.form_eoms()
+
+        # Positive velocity case
+        positive_velocity = {self.u1: 3.141, self.q1: Abs(self.q1)}
+        expected_positive = self.F + self.g * self.m * self.mu_k + 3.141 * self.sigma
+        assert simplify(eoms[0].xreplace(positive_velocity) - expected_positive) == 0
+
+        # Negative velocity case
+        negative_velocity = {self.u1: -3.141, self.q1: -Abs(self.q1)}
+        expected_negative = self.F - self.g * self.m * self.mu_k - 3.141 * self.sigma
+        assert simplify(eoms[0].xreplace(negative_velocity) - expected_negative) == 0
