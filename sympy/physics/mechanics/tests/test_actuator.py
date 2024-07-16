@@ -10,8 +10,6 @@ from sympy import (
     sqrt,
     Abs,
     simplify,
-    sign,
-    exp,
     symbols
 )
 from sympy.physics.mechanics import (
