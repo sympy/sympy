@@ -4,6 +4,8 @@ import pytest
 
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Integer
+from sympy.core.function import Function
+from sympy.core import Derivative
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import sin, tan
 from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -17,6 +19,10 @@ y = Symbol('y')
 z = Symbol('z')
 
 q1, q2, q3 = dynamicsymbols('q1 q2 q3')
+
+# Define the custom functions
+k = Function('k')(x, y)
+f = Function('f')(k, z)
 
 zero = Integer(0)
 one = Integer(1)
@@ -42,9 +48,11 @@ neg_one = Integer(-1)
         ([zero, one, x, y, x*y, x + y], [x, y]),
         ([((x/y) + sin(x/y) - exp(y))*((x/y) - exp(y))], [x, y]),
         ([w*tan(y*z)/(x - tan(y*z)), w*x*tan(y*z)/(x - tan(y*z))], [w, x, y, z]),
-        ([q1**2 + q2, q2**2 + q3, q3**2 + q1], [q1, q2, q3])
+        ([q1**2 + q2, q2**2 + q3, q3**2 + q1], [q1, q2, q3]),
+        ([f + Derivative(f, x) + k + 2*x], [x])
     ]
 )
+
 def test_forward_jacobian(expr, wrt):
     expr = ImmutableDenseMatrix([expr]).T
     wrt = ImmutableDenseMatrix([wrt]).T

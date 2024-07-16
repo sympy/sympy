@@ -1,183 +1,188 @@
 """Module for differentiation using CSE."""
 
+from sympy import cse, Matrix, SparseMatrix, Derivative, MatrixBase
 from collections import Counter
 
-from sympy.core.containers import Tuple
-from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
-from sympy.core.traversal import postorder_traversal
-from sympy.matrices.immutable import ImmutableDenseMatrix
-from sympy.simplify.cse_main import cse
-from sympy.utilities.iterables import numbered_symbols
-from sympy.physics.mechanics import dynamicsymbols
+
+def postprocess(repl, reduced):
+    """
+    Postprocess the CSE output to remove any CSE replacement symbols from the arguments of Derivative terms.
+    """
+
+    repl_dict = dict(repl)
+
+    p_repl = [(rep_sym, traverse(sub_exp, repl_dict)) for rep_sym, sub_exp in repl]
+    p_reduced = [traverse(red_exp, repl_dict) for red_exp in reduced]
+
+    return p_repl, p_reduced
 
 
-def _forward_jacobian(
-    expr: ImmutableDenseMatrix,
-    wrt: ImmutableDenseMatrix,
-):
-    """Returns the Jacobian matrix produced using a forward accumulation
-    algorithm.
+def traverse(node, repl_dict):
+    """
+    Traverse the node in preorder fashion, and apply replace_all() if the node
+    is the argument of a Derivative.
+    """
 
-    Explanation
-    ===========
+    if isinstance(node, Derivative):
+        return replace_all(node, repl_dict)
 
-    Expressions often contain repeated subexpressions. If and expression is
-    represented as a tree structure then multiple copies of these subexpressions
-    will be present in the expanded form of the expression. During
-    differentiation these repeated subexpressions will be repeatedly and
-    differentiated multiple times, resulting in repeated and wasted work.
+    if not node.args:
+        return node
 
-    Instead, if a data structure called a directed acyclic graph (DAG) is used
-    then each of these repeated subexpressions will only exist a single time.
-    This function uses a combination of representing the expression as a DAG and
-    a forward accumulation algorithm (repeated application of the chain rule
-    symbolically) to more efficiently calculate the Jacobian matrix of a target
-    expression ``expr`` with respect to an expression or set of expressions
-    ``wrt``.
+    new_args = [traverse(arg, repl_dict) for arg in node.args]
+    return node.func(*new_args)
 
-    Note that this function is intended to improve performance when
-    differentiating large expressions that contain many common subexpressions.
-    For small and simple expressions it is likely less performant than using
-    SymPy's standard differentiation functions and methods.
 
-    Parameters
-    ==========
+def replace_all(node, repl_dict):
+    """
+    Bring the node to its form before the CSE operation, by iteratively substituting
+    the CSE replacement symbols in the node.
+    """
 
-    expr : ``ImmutableDenseMatrix``
-        The vector to be differentiated.
-    wrt : ``ImmutableDenseMatrix``
-        The vector with respect to which to do the differentiation.
+    result = node
+    while True:
+        fs = result.free_symbols
+        sl_dict = {k: repl_dict[k] for k in fs if k in repl_dict}
+        if not sl_dict:
+            break
+        result = result.xreplace(sl_dict)
+    return result
 
-    See Also
-    ========
 
-    Direct Acyclic Graph : https://en.wikipedia.org/wiki/Directed_acyclic_graph
+def dok_matrix_multiply(A, B):
+    """
+    Multiply two sparse matrices in dok format (i, k) and (k, j) to get a dictionary of keys (i, j).
+    """
+    result = Counter()
+    for (i, k), A_value in A.items():
+        for (k2, j), B_value in B.items():
+            if k == k2:
+                result[(i, j)] += A_value * B_value
+    return result
+
+
+def _forward_jacobian(expr, wrt):
+    """
+        Returns the Jacobian matrix produced using a forward accumulation
+        algorithm.
+
+        Explanation
+        ===========
+
+        Expressions often contain repeated subexpressions. If and expression is
+        represented as a tree structure then multiple copies of these subexpressions
+        will be present in the expanded form of the expression. During
+        differentiation these repeated subexpressions will be repeatedly and
+        differentiated multiple times, resulting in repeated and wasted work.
+
+        Instead, if a data structure called a directed acyclic graph (DAG) is used
+        then each of these repeated subexpressions will only exist a single time.
+        This function uses a combination of representing the expression as a DAG and
+        a forward accumulation algorithm (repeated application of the chain rule
+        symbolically) to more efficiently calculate the Jacobian matrix of a target
+        expression ``expr`` with respect to an expression or set of expressions
+        ``wrt``.
+
+        Note that this function is intended to improve performance when
+        differentiating large expressions that contain many common subexpressions.
+        For small and simple expressions it is likely less performant than using
+        SymPy's standard differentiation functions and methods.
+
+        NOTE: When Derivative terms are present in the expression, the CSE output
+        is post-processed to remove any CSE replacement symbols from the arguments of those terms.
+        Thus, in that case some derivatives might be repeated.
+
+        Parameters
+        ==========
+
+        expr : Matrix
+            The vector to be differentiated.
+
+        wrt : Matrix, list, or tuple
+            The vector with respect to which to do the differentiation. Can be a matrix or an iterable of variables.
+
+        See Also
+        ========
+
+        Direct Acyclic Graph : https://en.wikipedia.org/wiki/Directed_acyclic_graph
 
     """
 
-    def add_to_cache(node):
-        if node in expr_to_replacement_cache:
-            replacement_symbol = expr_to_replacement_cache[node]
-            return replacement_symbol, replacement_to_reduced_expr_cache[replacement_symbol]
-        elif node in replacement_to_reduced_expr_cache:
-            return node, replacement_to_reduced_expr_cache[node]
-        elif isinstance(node, Tuple):
-            return None, None
-        elif not node.free_symbols:
-            return node, node
+    # Check Inputs
+    if not isinstance(wrt, (MatrixBase, list, tuple)):
+        raise TypeError("``wrt`` must be an iterable of variables")
 
-        # Modification to manage dynamicsymbols
-        elif node == dynamicsymbols._t:
-            return node, node
+    elif isinstance(wrt, (list, tuple)):
+        wrt = Matrix(wrt)
 
-        replacement_symbol = replacement_symbols.__next__()
-        replaced_subexpr = node.xreplace(expr_to_replacement_cache)
-        replacement_to_reduced_expr_cache[replacement_symbol] = replaced_subexpr
-        expr_to_replacement_cache[node] = replacement_symbol
-        return replacement_symbol, replaced_subexpr
+    if not isinstance(expr, MatrixBase):
+        raise TypeError("``expr`` must be of matrix type")
 
-    if not isinstance(expr, ImmutableDenseMatrix):
-        msg = (
-            'The forward Jacobian differentiation algorithm can only be used '
-            'to differentiate a single matrix expression at a time.'
-        )
-        raise NotImplementedError(msg)
-    elif expr.shape[1] != 1:
-        msg = 'Can only compute the Jacobian for column matrices.'
-        raise NotImplementedError(msg)
-    elif not isinstance(wrt, ImmutableDenseMatrix) or wrt.shape[1] != 1:
-        msg = (
-            'The forward Jacobian differentiation algorithm can only compute '
-            'Jacobians with respect to column matrices.'
-        )
-        raise NotImplementedError(msg)
+    # Both ``wrt`` and ``expr`` can be a row or a column matrix, so we need to make
+    # sure all valid combinations work, but everything else fails:
+    if not (expr.shape[0] == 1 or expr.shape[1] == 1):
+        raise TypeError("``expr`` must be a row or a column matrix")
 
-    symbols = expr.free_symbols
-    replacement_symbols = numbered_symbols(
-        prefix='_z',
-        cls=Symbol,
-        exclude=expr.free_symbols,
-    )
+    if not (wrt.shape[0] == 1 or wrt.shape[1] == 1):
+        raise TypeError("``wrt`` must be a row or a column matrix")
 
-    expr_to_replacement_cache = {}
-    replacement_to_reduced_expr_cache = {}
+    replacements, reduced_expr = cse(expr)
+    replacements, reduced_expr = postprocess(replacements, reduced_expr)
 
-    replacements, reduced_exprs = cse(expr.args[2], replacement_symbols)
-    for replacement_symbol, reduced_subexpr in replacements:
-        replaced_subexpr = reduced_subexpr.xreplace(expr_to_replacement_cache)
-        replacement_to_reduced_expr_cache[replacement_symbol] = replaced_subexpr
-        expr_to_replacement_cache[reduced_subexpr] = replacement_symbol
-        for node in postorder_traversal(reduced_subexpr):
-            _ = add_to_cache(node)
-    for reduced_expr in reduced_exprs:
-        for node in reduced_expr:
-            _ = add_to_cache(node)
+    if replacements:
+        rep_sym, sub_expr = map(Matrix, zip(*replacements))
+    else:
+        rep_sym, sub_expr, reduced_expr = Matrix([]), Matrix([]), [expr]
 
-    reduced_matrix = ImmutableDenseMatrix(reduced_exprs).xreplace(expr_to_replacement_cache)
-    replacements = list(replacement_to_reduced_expr_cache.items())
+    l_sub, l_wrt, l_red = len(sub_expr), len(wrt), len(reduced_expr[0])
 
-    absolute_derivative_mapping = {}
-    for i, wrt_symbol in enumerate(wrt.args[2]):
-        absolute_derivative = [S.Zero] * len(wrt)
-        absolute_derivative[i] = S.One
-        absolute_derivative_mapping[wrt_symbol] = ImmutableDenseMatrix([absolute_derivative])
-
-    zeros = ImmutableDenseMatrix.zeros(1, len(wrt))
-    for symbol, subexpr in replacements:
-        free_symbols = subexpr.free_symbols
-        absolute_derivative = zeros
-        for free_symbol in free_symbols:
-            replacement_symbol, partial_derivative = add_to_cache(subexpr.diff(free_symbol))
-            absolute_derivative += partial_derivative * absolute_derivative_mapping.get(free_symbol, zeros)
-
-        # Modification to manage dynamicsymbols
-        if free_symbols == {dynamicsymbols._t}:
-            absolute_derivative_mapping[symbol] = ImmutableDenseMatrix([[subexpr.diff(sub) for sub in wrt]])
-            continue
-        absolute_derivative_mapping[symbol] = ImmutableDenseMatrix([[add_to_cache(a)[0] for a in absolute_derivative]])
-
-    replaced_jacobian = ImmutableDenseMatrix.vstack(*[absolute_derivative_mapping.get(e, ImmutableDenseMatrix.zeros(*wrt.shape).T) for e in reduced_matrix])
-
-    required_replacement_symbols = set()
-    stack = [entry for entry in replaced_jacobian if entry.free_symbols]
-    while stack:
-        entry = stack.pop()
-        if entry in required_replacement_symbols or entry in wrt:
-            continue
-        children = list(replacement_to_reduced_expr_cache.get(entry, entry).free_symbols)
-        for child in children:
-            if child not in required_replacement_symbols and child not in wrt:
-                stack.append(child)
-        required_replacement_symbols.add(entry)
-
-    required_replacements_dense = {
-        replacement_symbol: replaced_subexpr
-        for replacement_symbol, replaced_subexpr in replacement_to_reduced_expr_cache.items()
-        if replacement_symbol in required_replacement_symbols
+    f1 = {
+        (i, j): diff_value
+        for i, r in enumerate(reduced_expr[0])
+        for j, w in enumerate(wrt)
+        if (diff_value := r.diff(w)) != 0
     }
 
-    counter = Counter(replaced_jacobian.free_symbols)
-    for replaced_subexpr in required_replacements_dense.values():
-        counter.update(replaced_subexpr.free_symbols)
+    if not replacements:
+        return SparseMatrix(l_red, l_wrt, f1)
 
-    required_replacements = {}
-    unrequired_replacements = {}
-    for replacement_symbol, replaced_subexpr in required_replacements_dense.items():
-        if isinstance(replaced_subexpr, Symbol) or counter[replacement_symbol] == 1:
-            unrequired_replacements[replacement_symbol] = replaced_subexpr.xreplace(unrequired_replacements)
+    f2 = {
+        (i, j): diff_value
+        for i, (r, fs) in enumerate([(r, r.free_symbols) for r in reduced_expr[0]])
+        for j, s in enumerate(rep_sym)
+        if s in fs and (diff_value := r.diff(s)) != 0
+    }
+
+    symbols = expr.free_symbols
+    precomputed_fs = [s.free_symbols - symbols for s in sub_expr]
+
+    C = Counter({(0, j): diff_value for j, w in enumerate(wrt) if (diff_value := sub_expr[0].diff(w)) != 0})
+
+    for i in range(1, l_sub):
+        Bi = {(i, j): diff_value for j in range(i + 1)
+              if rep_sym[j] in precomputed_fs[i] and (diff_value := sub_expr[i].diff(rep_sym[j])) != 0}
+
+        Ai = Counter({(i, j): diff_value for j, w in enumerate(wrt)
+                      if (diff_value := sub_expr[i].diff(w)) != 0})
+
+        if Bi:
+            Ci = dok_matrix_multiply(Bi, C)
+            Ci.update(Ai)  # Use Counter's update method to add Ai to Ci
+            C.update(Ci)  # Update C with the result
         else:
-            required_replacements[replacement_symbol] = replaced_subexpr.xreplace(unrequired_replacements)
+            C.update(Ai)
 
-    reduced_exprs = replaced_jacobian.xreplace(unrequired_replacements)
+    J = dok_matrix_multiply(f2, C)
 
-    # Modified substitution by ricdigi
-    sub_dict = {}
-    for rep_sym, sub in required_replacements.items():
-        fs = sub.free_symbols - symbols
-        for sym in fs:
-            sub_dict[sym] = required_replacements[sym]
-        required_replacements[rep_sym] = required_replacements[rep_sym].xreplace(sub_dict)
-        sub_dict = {}
+    for (i, j), value in f1.items():
+        J[(i, j)] += value
 
-    return reduced_exprs.xreplace(required_replacements)
+    sub_rep = dict(replacements)
+    for i, ik in enumerate(precomputed_fs):
+        sub_dict = {j: sub_rep[j] for j in ik}
+        sub_rep[rep_sym[i]] = sub_rep[rep_sym[i]].xreplace(sub_dict)
+
+    J = {key: expr.xreplace(sub_rep) for key, expr in J.items()}
+    J = SparseMatrix(None, J)
+
+    return J
