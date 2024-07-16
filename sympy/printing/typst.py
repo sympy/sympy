@@ -564,7 +564,7 @@ def translate(s: str) -> str:
 
     >>> from sympy.printing.typst import translate
     >>> translate('alphahatdotprime')
-    "accent(accent(alpha, hat), dot)'"
+    "(accent(accent(alpha, hat), dot))'"
     '''
     # Process the rest
     typst = typst_greek_dictionary.get(s)
