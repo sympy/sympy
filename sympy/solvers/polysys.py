@@ -5,10 +5,12 @@ from sympy.core import S, expand
 from sympy.core.numbers import Integer, Rational
 from sympy.core.sorting import default_sort_key
 from sympy.core.function import diff
+from sympy.core.relational import Relational
+from sympy.polys.rootoftools import ComplexRootOf
 from sympy.polys import Poly, groebner, roots, real_roots, nroots
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polytools import LT, LC, degree, subresultants, factor_list
-from sympy.polys.rootoftools import ComplexRootOf
+from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (ComputationFailed,
     PolificationFailed, CoercionFailed, PolynomialError)
 from sympy.functions.elementary.integers import floor, ceiling
@@ -485,12 +487,15 @@ def solve_poly_system_cad(seq, gens, return_one_sample=True):
     """
     # prepare the atoms
     atoms = [Poly(p.lhs - p.rhs, gens) for p in seq]
+    rels = [p.rel_op for p in seq]
 
     sample_points = cylindrical_algebraic_decomposition(atoms, gens)
     valid_samples = []
 
     for sample in sample_points:
-        if all(expr.subs(sample) for expr in seq):
+        atoms_alg = [simplify_alg_sub(atom, sample) for atom in atoms]
+
+        if all(Relational(atom, 0, rel) for atom, rel in zip(atoms_alg, rels)):
             valid_samples.append(sample)
             if return_one_sample:
                 break
@@ -753,6 +758,7 @@ def get_nice_roots(poly):
 
 
 def get_sample_point(left, right):
+    left, right = S(left), S(right)
     # Edge case check
     if left == right:
         return left
@@ -774,36 +780,34 @@ def get_sample_point(left, right):
 
     # Finite interval
 
-    # Determine sign and handle negative intervals
-    if left < 0 and right < 0:
-        left, right = -right, -left  # note flipping signs flips order
-        sign = -1
+    between = (left + right) / 2
+
+    if between.is_Rational:
+        return between
+
+    current_precision = 1
+    between_num = Rational(between.evalf(current_precision))
+
+    while not left < between_num < right:
+        current_precision += 1
+        between_num = Rational(between.evalf(current_precision))
+
+    # check if an integer is in the interval
+    if left < floor(between_num) < right:
+        return floor(between_num)
+    elif left < ceiling(between_num) < right:
+        return ceiling(between_num)
     else:
-        sign = 1
+        return between_num
 
-    # Check if an integer is in the interval
-    if ceiling(left) < floor(right):
-        between = sign * Integer(ceiling(left).evalf())
-        # ensure that it's not equal to an endpoint
-        # this may happen for eg (1,2) as ceil(1) < floor(2)
-        if between != left and between != right:
-            return between
 
-    # Find a rational number if no integer is in the interval
-    # Uses Archimedean axiom of real numbers
-    #   Want left < m/n < right
-    #   Choose n st n(right-left) > 1
-    #   Then, m = floor(n*left)
-    #   So, m/n is rational between left and right
-    n = 1
-    while n * (right - left) <= 1:
-        n += 1
-
-    j = Integer(floor(n * left).evalf())
-    rational = S(j + 1) / n
-
-    return sign * rational
-
+# uses the new .lift() functionality to simplify substituting algebraic numbers in polynomials
+def simplify_alg_sub(poly, point):
+    alg_points = [p for p in point.values() if S(p).has(ComplexRootOf)]
+    if len(alg_points) == 0:
+        return poly.subs(point)
+    else:
+        return poly.as_poly(domain=QQ.algebraic_field(*alg_points)).subs(point)
 
 
 # HONG PROJECTION OPERATOR (1990)
@@ -1025,11 +1029,7 @@ def cylindrical_algebraic_decomposition(F, gens):
         for i, point in enumerate(sample_points):
             roots = set()
             for proj in projs:
-                subbed = proj.subs(point)
-                try:
-                    subbed = expand(subbed)
-                except Exception:
-                    pass
+                subbed = simplify_alg_sub(proj, point)
                 roots.update(get_nice_roots(subbed))
             # have to sort them overall now
             roots = sorted(roots, reverse=False)

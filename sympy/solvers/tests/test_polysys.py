@@ -19,6 +19,7 @@ from sympy.solvers.polysys import (red, red_set,
                                     subresultant_polynomials,
                                     subresultant_coefficients,
                                     get_nice_roots, get_sample_point,
+                                    simplify_alg_sub,
                                     projone, projtwo, hongproj,
                                     cylindrical_algebraic_decomposition,
                                     solve_poly_system_cad)
@@ -451,7 +452,7 @@ def test_get_nice_roots():
     # if not implemented, just solve numerically
     # eg if coefficient is algebraic
     # the answer here can be solved with basic algebra
-    assert get_nice_roots(sqrt(2) * x**2 - 1)[1] == sqrt(1 / sqrt(2)).evalf()
+    assert get_nice_roots(sqrt(2) * x**2 - 1)[1] == Rational(sqrt(1 / sqrt(2)).evalf())
 
     # if roots are CRootOf, then they should be numeric
     assert get_nice_roots(x**5 + x**2 - 1)[0] ==\
@@ -464,6 +465,7 @@ def test_get_nice_roots():
 
 
 def test_get_sample_point():
+    # edge case
     assert get_sample_point(1, 1) == 1
 
     # test rays
@@ -473,12 +475,28 @@ def test_get_sample_point():
     assert get_sample_point(ComplexRootOf(x**5 + x**3 - 1, 0), S.Infinity) == S(2)
 
     # test finite open intervals
-    assert get_sample_point(-2, -1) == - S(3) / 2 # note negative
+    assert get_sample_point(-2, -1) == - S(3) / 2
     # approx 1.4 and 2.4
-    assert get_sample_point(sqrt(2), sqrt(2) + 1) == S(3) / 2
+    assert get_sample_point(sqrt(2), sqrt(2) + 1) == 2
     # approx 0.8 and 1.2
     assert get_sample_point(ComplexRootOf(x**5 + x**3 - 1, 0), sqrt(5) - 1) == 1
+    # approx 0.8376 and 0.8164
+    assert get_sample_point(ComplexRootOf(x**5 + x**3 - 1, 0), 209 / 256) == S(53)/64
 
+    # differ in last digit, just to test accuracy with close numbers
+    # previous archimedian axiom technique took way too long on these
+    assert get_sample_point(0.1729847129041, 0.1729847129042) == S(6086358504499)/35184372088832
+
+def test_simplify_alg_sub():
+    assert simplify_alg_sub(x**3 + x**2 - 1, {})
+    assert simplify_alg_sub(x**3 + x**2 - 1, {x:2}) == 11
+    assert simplify_alg_sub(x**3 + x**2 - 1, {y:1}) == x**3 + x**2 - 1
+
+    r = ComplexRootOf(x**5 + x**3 - 1, 0)
+    assert simplify_alg_sub(x**5 + x**3 - 1, {x:r}) == 0
+    assert simplify_alg_sub(x**5 + x**3 + 5, {x:r}) == 6
+    # wow
+    assert simplify_alg_sub(x**3 + x**2 * y**5 + x**2 * y**3 - x**2, {y:r}) == x**3
 
 
 def test_projone():
@@ -549,13 +567,15 @@ def test_cylindrical_algebraic_decomposition():
 
     # harder univar example
     # the collection of roots are (-1, 0, 1, 5**(1/3))
-    # note 5**(1/3) is approx
+    # note the sample points here depend on the choices we make in get_sample_root
+    # eg, the point btwn 1 and 5**(1/3) could be 3/2 if we are looking for simple rationals
+    # but the way it is now it is based on decimal approximations and gives 87/64
     assert cylindrical_algebraic_decomposition([x**2-1,
                                                 x,
                                                 x**3-5], [x]) ==\
         [{x: val} for val in
          [-2, -1, -S(1)/2, 0, S(1)/2, 1,
-          S(3)/2,
+          S(87)/64,
           5**(S(1)/3),
           3]]
 
