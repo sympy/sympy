@@ -1004,7 +1004,18 @@ class CoulombKineticFriction(ForceActuator):
         F = f_c * sign(v) + (f_max - f_c) * exp(-(v / v_s)**2) + sigma * v
 
     where `f_c` is the Coulomb friction constant, `f_max` is the maximum static friction force,
-    `v_s` is the coefficient of sliding friction, `sigma` is the viscous friction constant, and `v` is the relative velocity.
+    `v_s` is the coefficient of sliding friction, `sigma` is the viscous friction constant,
+    and `v` is the relative velocity.
+
+    The default friction force is `F = mu_k * N`, where N is the normal force.
+    When specified, the actuator includes:
+    - Stribeck effect: `(mu_s - mu_k) * N * exp(-(v / v_s)**2)`
+    - Viscous effect: `sigma * v`
+
+    In case we include all effects, the full actuator represents:
+    `F = mu_k * N * sign(v) + (mu_s - mu_k) * N * exp(-(v / v_s)**2) + sigma * v`.
+
+    Please note that this actuator assumes slip and applies a force opposite to the velocity direction.
 
     Parameters
     ==========
@@ -1020,7 +1031,15 @@ class CoulombKineticFriction(ForceActuator):
     viscous_coefficient : Expr
         The viscous friction coefficient.
     mu_s : Expr, optional
-        The coefficient of static friction. Defaults to the value of mu_k.
+        The coefficient of static friction. Defaults to `mu_k`, meaning the Stribeck effect evaluates to 0 by default.
+
+    References
+    ==========
+
+    Moore-Pants, Learn Multibody Dynamics. Available at:
+      https://moorepants.github.io/learn-multibody-dynamics/loads.html#friction.
+    Chalmers University of Technology, Open Digital Repository. Available at:
+      https://odr.chalmers.se/server/api/core/bitstreams/6316ee50-2ffc-4c29-97c1-c5e7a2737a5f/content.
     """
 
     def __init__(self, mu_k, normal_force, pathway, *, v_s, viscous_coefficient=None, mu_s=None):
@@ -1075,7 +1094,6 @@ class CoulombKineticFriction(ForceActuator):
 
     @property
     def viscous_coefficient(self):
-        """...."""
         return self._viscous_coefficient
 
     @viscous_coefficient.setter
