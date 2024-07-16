@@ -2,14 +2,16 @@
 A Printer which converts an expression into its Typst equivalent.
 """
 from __future__ import annotations
-from typing import Any
+from typing import Any, Callable
 
-from sympy.core import Add, Mod, Mul, Number, S, Expr
+from sympy.core import Add, Mod, Mul, Number, S, Symbol, Expr
+from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
 
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
+from sympy.printing.conventions import split_super_sub
 from sympy.printing.precedence import PRECEDENCE
 
 from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
@@ -17,6 +19,85 @@ from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 from sympy.utilities.iterables import sift
 
 import re
+
+typst_greek_dictionary = {
+    'Alpha': 'Alpha',
+    'Beta': 'Beta',
+    'Gamma': 'Gamma',
+    'Delta': 'Delta',
+    'Epsilon': 'Epsilon',
+    'Zeta': 'Zeta',
+    'Eta': 'Eta',
+    'Theta': 'Theta',
+    'Iota': 'Iota',
+    'Kappa': 'Kappa',
+    'Lambda': 'Lambda',
+    'Mu': 'Mu',
+    'Nu': 'Nu',
+    'Xi': 'Xi',
+    'omicron': 'omicron',
+    'Omicron': 'Omicron',
+    'Pi': 'Pi',
+    'Rho': 'Rho',
+    'Sigma': 'Sigma',
+    'Tau': 'Tau',
+    'Upsilon': 'Upsilon',
+    'Phi': 'Phi',
+    'Chi': 'Chi',
+    'Psi': 'Psi',
+    'Omega': 'Omega',
+    'lamda': 'lambda',
+    'Lamda': 'Lambda',
+    'khi': 'chi',
+    'Khi': 'Chi',
+    'varepsilon': 'epsilon',
+    'epsilon': 'epsilon.alt',
+    'varkappa': 'kappa',
+    'varphi': 'phi',
+    'phi': 'phi.alt',
+    'varpi': 'pi.alt',
+    'varrho': 'rho.alt',
+    'varsigma': 'sigma.alt',
+    'vartheta': 'theta.alt',
+
+    'hbar': 'plank.reduce' # not greek, may need another dictionary
+}
+
+other_symbols = {'aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hslash',
+                     'mho', 'wp'}
+
+# Variable name modifiers
+modifier_dict: dict[str, Callable[[str], str]] = {
+    # Accents
+    'mathring': lambda s: 'accent('+s+', circle)',
+    'ddddot': lambda s: 'accent('+s+', dot.quad)',
+    'dddot': lambda s: 'accent('+s+', dot.triple)',
+    'ddot': lambda s: 'accent('+s+', dot.double)',
+    'dot': lambda s: 'accent('+s+', dot)',
+    'check': lambda s: 'accent('+s+', caron)',
+    'breve': lambda s: 'accent('+s+', breve)',
+    'acute': lambda s: 'accent('+s+', acute)',
+    'grave': lambda s: 'accent('+s+', grave)',
+    'tilde': lambda s: 'accent('+s+', tilde)',
+    'hat': lambda s: 'accent('+s+', hat)',
+    'bar': lambda s: 'accent('+s+', macron)',
+    'vec': lambda s: 'accent('+s+', arrow)',
+    'prime': lambda s: "("+s+")'",
+    'prm': lambda s: "("+s+")'",
+    # Faces
+    'bold': lambda s: r'bold('+s+r')',
+    'bm': lambda s: r'bold('+s+r')',
+    'cal': lambda s: r'cal('+s+r')',
+    'scr': lambda s: r'cal('+s+r')',
+    'frak': lambda s: r'frak('+s+r')',
+    # Brackets
+    'norm': lambda s: r'norm('+s+r')',
+    'avg': lambda s: r'lr(angle.l '+s+r' angle.r)', # "lr()" for size match
+    'abs': lambda s: r'abs('+s+r')',
+    'mag': lambda s: r'abs('+s+r')',
+}
+
+greek_letters_set = frozenset(greeks)
 
 _between_two_numbers_p = (
     re.compile(r'[0-9]$'),  # search
@@ -438,6 +519,67 @@ class TypstPrinter(Printer):
             return r"%s^(%s)" % (typst, exp)
         else:
             return typst
+
+    def _print_Symbol(self, expr: Symbol, style='plain'):
+        name: str = self._settings['symbol_names'].get(expr)
+        if name is not None:
+            return name
+
+        return self._deal_with_super_sub(expr.name, style=style)
+
+    _print_RandomSymbol = _print_Symbol
+
+    def _deal_with_super_sub(self, string: str, style='plain') -> str:
+        if '{' in string:
+            name, supers, subs = string, [], []
+        else:
+            name, supers, subs = split_super_sub(string)
+
+            name = translate(name)
+            supers = [translate(sup) for sup in supers]
+            subs = [translate(sub) for sub in subs]
+
+        # apply the style only to the name
+        if style == 'bold':
+            name = "bold({})".format(name)
+
+        # glue all items together:
+        if supers:
+            name += "^(%s)" % " ".join(supers)
+        if subs:
+            name += "_(%s)" % " ".join(subs)
+
+        return name
+
+
+def translate(s: str) -> str:
+    r'''
+    Check for a modifier ending the string.  If present, convert the
+    modifier to typst and translate the rest recursively.
+
+    Given a description of a Greek letter or other special character,
+    return the appropriate typst.
+
+    Let everything else pass as given.
+
+    >>> from sympy.printing.typst import translate
+    >>> translate('alphahatdotprime')
+    "accent(accent(alpha, hat), dot)'"
+    '''
+    # Process the rest
+    typst = typst_greek_dictionary.get(s)
+    if typst:
+        return typst
+    elif s.lower() in greek_letters_set:
+        return s.lower()
+    elif s in other_symbols:
+        return s
+    else:
+        # Process modifiers, if any, and recurse
+        for key in sorted(modifier_dict.keys(), key=len, reverse=True):
+            if s.lower().endswith(key) and len(s) > len(key):
+                return modifier_dict[key](translate(s[:-len(key)]))
+        return s
 
 
 @print_function(TypstPrinter)
