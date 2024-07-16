@@ -752,6 +752,18 @@ def test_assumptions():
     diof = diophantine(a*b + 2*a + 3*b - 6)
     assert diof == {(-15, -3), (-9, -4), (-7, -5), (-6, -6), (-5, -8), (-4, -14)}
 
+    x, y = symbols('x y', integer=True)
+    diof = diophantine(10*x**2 + 5*x*y - 3*y)
+    assert diof == {(1, -5), (-3, 5), (0, 0)}
+
+    x, y = symbols('x y', integer=True, positive=True)
+    diof = diophantine(10*x**2 + 5*x*y - 3*y)
+    assert diof == set()
+
+    x, y = symbols('x y', integer=True, negative=False)
+    diof = diophantine(10*x**2 + 5*x*y - 3*y)
+    assert diof == {(0, 0)}
+
 
 def check_solutions(eq):
     """
