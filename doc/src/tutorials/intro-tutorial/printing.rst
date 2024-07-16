@@ -41,18 +41,19 @@ create some common Symbols, setup plotting, and run ``init_printing()``.
 
     >>> from sympy import init_session
     >>> init_session() # doctest: +SKIP
+
     ::
-    
-        Python console for SymPy 1.13.0 (Python 3.12.4-64-bit) (ground types: gmpy)
 
-        These commands were executed:
-        >>> from sympy import *
-        >>> x, y, z, t = symbols('x y z t')
-        >>> k, m, n = symbols('k m n', integer=True)
-        >>> f, g, h = symbols('f g h', cls=Function)
-        >>> init_printing() # doctest: +SKIP
+       Python console for SymPy 1.13.0 (Python 3.12.4-64-bit) (ground types: gmpy)
 
-        Documentation can be found at https://docs.sympy.org/1.13.0/
+       These commands were executed:
+       >>> from sympy import *
+       >>> x, y, z, t = symbols('x y z t')
+       >>> k, m, n = symbols('k m n', integer=True)
+       >>> f, g, h = symbols('f g h', cls=Function)
+       >>> init_printing() # doctest: +SKIP
+
+       Documentation can be found at https://docs.sympy.org/1.13.0/
 
     >>>
 
