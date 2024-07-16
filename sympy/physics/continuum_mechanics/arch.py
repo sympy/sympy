@@ -42,7 +42,7 @@ class Arch:
         self._conc_loads = {}
         self._distributed_loads = {}
         self._loads = {'concentrated': self._conc_loads, 'distributed':self._distributed_loads}
-        self._supports = {'left':None, 'right':None}
+        self._supports = {'left':'hinged', 'right':'hinge'}
         self._rope = None
         self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
         self._points_disc = []
@@ -214,7 +214,7 @@ class Arch:
         """
         support_types = ['roller','hinge']
         if left_support not in support_types or right_support not in support_types:
-            raise ValueError("supports must only be roller or hinged")
+            raise ValueError("supports must only be roller or hinge")
         self._supports['left'] = left_support
         self._supports['right'] = right_support
 
@@ -262,11 +262,30 @@ class Arch:
                 force_right = self._distributed_loads[label]['f_y']*(end-st)
                 moment_hinge_right += force_right*((end+st)/2 - self._crown_x)
 
-        R_A_x, R_A_y, R_B_x, R_B_y = symbols('R_A_x R_A_y R_B_x R_B_y')
-        eq1 = Eq(R_A_x + R_B_x + net_x,0)
-        eq2 = Eq(R_A_y + R_B_y + net_y,0)
-        eq3 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
-        eq4 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) + R_B_x*(self._right_support[1]-self._crown_y),0)
+        R_A_x, R_A_y, R_B_x, R_B_y, T = symbols('R_A_x R_A_y R_B_x R_B_y T')
 
-        solution = solve((eq1,eq2,eq3,eq4),(R_A_x,R_A_y,R_B_x,R_B_y))
+        if self._supports['left'] == 'roller' and self._supports['right'] == 'roller':
+            if self._rope[2]>max(self._left_support[1],self._right_support[1]):
+                if net_x!=0:
+                    raise ValueError("net force in x direction not possible under the specified conditions")
+                else:
+                    eq1 = Eq(R_A_x ,0)
+                    eq2 = Eq(R_B_x, 0)
+                    eq3 = Eq(R_A_y + R_B_y + net_y,0)
+                    eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
+                    eq5 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) + T*(self._rope[2]-self._crown_y),0)
+                    solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
+            pass
+        elif self._supports['left'] == 'roller':
+            pass
+        elif self._supports['right'] == 'roller':
+            pass
+        else:
+            eq1 = Eq(R_A_x + R_B_x + net_x,0)
+            eq2 = Eq(R_A_y + R_B_y + net_y,0)
+            eq3 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
+            eq4 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) + R_B_x*(self._right_support[1]-self._crown_y),0)
+
+            solution = solve((eq1,eq2,eq3,eq4),(R_A_x,R_A_y,R_B_x,R_B_y))
+
         print(solution)
