@@ -325,6 +325,21 @@ def log_to_atan(f, g):
         return A + log_to_atan(s, t)
 
 
+def _get_real_roots(f, x):
+    """get real roots of f if possible"""
+    rs = roots(f, filter='R')
+
+    try:
+        num_roots = f.count_roots()
+    except DomainError:
+        return rs
+    else:
+        if len(rs) == num_roots:
+            return rs
+        else:
+            return None
+
+
 def log_to_real(h, q, x, t):
     r"""
     Convert complex logarithms to real functions.
@@ -372,15 +387,10 @@ def log_to_real(h, q, x, t):
 
     R = Poly(resultant(c, d, v), u)
 
-    R_u = roots(R, filter='R')
+    R_u = _get_real_roots(R, u)
 
-    try:
-        num_roots_R = R.count_roots()
-    except DomainError:
-        pass
-    else:
-        if len(R_u) != num_roots_R:
-            return None
+    if R_u is None:
+        return None
 
     result = S.Zero
 
@@ -397,15 +407,10 @@ def log_to_real(h, q, x, t):
             # nothing to check
             d = S.Zero
 
-        R_v = roots(C, filter='R')
+        R_v = _get_real_roots(C, v)
 
-        try:
-            num_roots_C = C.count_roots()
-        except DomainError:
-            pass
-        else:
-            if len(R_v) != num_roots_C:
-                return None
+        if R_v is None:
+            return None
 
         R_v_paired = [] # take one from each pair of conjugate roots
         for r_v in R_v:
@@ -429,15 +434,10 @@ def log_to_real(h, q, x, t):
 
             result += r_u*log(AB) + r_v*log_to_atan(A, B)
 
-    R_q = roots(q, filter='R')
+    R_q = _get_real_roots(q, t)
 
-    try:
-        num_roots_q = q.count_roots()
-    except DomainError:
-        pass
-    else:
-        if len(R_q) != num_roots_q:
-            return None
+    if R_q is None:
+        return None
 
     for r in R_q.keys():
         result += r*log(h.as_expr().subs(t, r))
