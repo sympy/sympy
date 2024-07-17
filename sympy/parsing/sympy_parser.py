@@ -686,8 +686,6 @@ def repeated_decimals(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
             elif is_digit(tokval)and  len(num) == 2:
                 num.append((toknum, tokval))
             elif is_digit(tokval) and len(num) == 3 and is_digit(num[-1][1]):
-                # Python 2 tokenizes 00123 as '00', '123'
-                # Python 3 tokenizes 01289 as '012', '89'
                 num.append((toknum, tokval))
             else:
                 num = []
