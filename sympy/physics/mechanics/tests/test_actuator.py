@@ -894,22 +894,23 @@ class TestCoulombKineticFriction:
 
         self.particle = Particle('particle', self.P, self.m) # Block
 
+        self.system = System(self.N, self.O)
+        self.system.q_ind = [self.q1]
+        self.system.u_ind = [self.u1]
+        self.system.kdes = [self.q1.diff() - self.u1]
+        self.system.add_bodies(self.particle)
+        self.system.apply_uniform_gravity(-self.g * self.N.y)
+        self.system.add_loads(Force(self.particle, self.F * self.N.x))
+
     def test_block_on_surface_default(self):
         friction = CoulombKineticFriction(
             self.mu_k,
             self.m * self.g,
             self.pathway,
         )
-        system = System(self.N, self.O)
-        system.q_ind = [self.q1]
-        system.u_ind = [self.u1]
-        system.kdes = [self.q1.diff() - self.u1]
-        system.add_bodies(self.particle)
-        system.add_actuators(friction)
-        system.apply_uniform_gravity(-self.g * self.N.y)
-        system.add_loads(Force(self.particle, self.F * self.N.x))
+        self.system.add_actuators(friction)
 
-        eoms = system.form_eoms()
+        eoms = self.system.form_eoms()
 
         # Positive velocity case
         positive_velocity = {self.u1: 3.141, self.q1: Abs(self.q1)}
@@ -928,16 +929,9 @@ class TestCoulombKineticFriction:
             self.pathway,
             viscous_coefficient=self.sigma
         )
-        system = System(self.N, self.O)
-        system.q_ind = [self.q1]
-        system.u_ind = [self.u1]
-        system.kdes = [self.q1.diff() - self.u1]
-        system.add_bodies(self.particle)
-        system.add_actuators(friction)
-        system.apply_uniform_gravity(-self.g * self.N.y)
-        system.add_loads(Force(self.particle, self.F * self.N.x))
+        self.system.add_actuators(friction)
 
-        eoms = system.form_eoms()
+        eoms = self.system.form_eoms()
 
         # Positive velocity case
         positive_velocity = {self.u1: 3.141, self.q1: Abs(self.q1)}
@@ -957,16 +951,9 @@ class TestCoulombKineticFriction:
             v_s=self.v_s,
             mu_s=self.mu_k
         )
-        system = System(self.N, self.O)
-        system.q_ind = [self.q1]
-        system.u_ind = [self.u1]
-        system.kdes = [self.q1.diff() - self.u1]
-        system.add_bodies(self.particle)
-        system.add_actuators(friction)
-        system.apply_uniform_gravity(-self.g * self.N.y)
-        system.add_loads(Force(self.particle, self.F * self.N.x))
+        self.system.add_actuators(friction)
 
-        eoms = system.form_eoms()
+        eoms = self.system.form_eoms()
 
         # Positive velocity case
         positive_velocity = {self.u1: 3.141, self.q1: Abs(self.q1)}
@@ -987,16 +974,9 @@ class TestCoulombKineticFriction:
             viscous_coefficient=self.sigma,
             mu_s=self.mu_k
         )
-        system = System(self.N, self.O)
-        system.q_ind = [self.q1]
-        system.u_ind = [self.u1]
-        system.kdes = [self.q1.diff() - self.u1]
-        system.add_bodies(self.particle)
-        system.add_actuators(friction)
-        system.apply_uniform_gravity(-self.g * self.N.y)
-        system.add_loads(Force(self.particle, self.F * self.N.x))
+        self.system.add_actuators(friction)
 
-        eoms = system.form_eoms()
+        eoms = self.system.form_eoms()
 
         # Positive velocity case
         positive_velocity = {self.u1: 3.141, self.q1: Abs(self.q1)}
