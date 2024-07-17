@@ -993,7 +993,7 @@ class DuffingSpring(ForceActuator):
                 f"equilibrium_length={self.equilibrium_length})")
 
 class CoulombKineticFriction(ForceActuator):
-    """Coulomb kinetic friction with Stribeck and viscous effect.
+    """Coulomb kinetic friction with Stribeck and viscous effects.
 
     Explanation
     ===========
@@ -1001,19 +1001,23 @@ class CoulombKineticFriction(ForceActuator):
     This represents a Coulomb kinetic friction with the Stribeck and viscous effect,
     described by the function:
 
-        F = f_c * sign(v) + (f_max - f_c) * exp(-(v / v_s)**2) + sigma * v
+    .. math::
+        F = f_c * sign(v) + (f_{max} - f_c) * exp(-(v / v_s)**2) + sigma * v
 
-    where `f_c` is the Coulomb friction constant, `f_max` is the maximum static friction force,
-    `v_s` is the coefficient of sliding friction, `sigma` is the viscous friction constant,
-    and `v` is the relative velocity.
+    where :math:`f_c` is the Coulomb friction constant, :math:`f_{max}` is the maximum static friction force,
+    :math:`v_s` is the coefficient of sliding friction, :math:`sigma` is the viscous friction constant,
+    and :math:`v` is the relative velocity.
 
-    The default friction force is `F = mu_k * N`, where N is the normal force.
+    The default friction force is :math:`F = mu_k * N`, where :math:`N` is the normal force.
     When specified, the actuator includes:
-    - Stribeck effect: `(mu_s - mu_k) * N * exp(-(v / v_s)**2)`
-    - Viscous effect: `sigma * v`
+
+    - Stribeck effect: :math:`(mu_s - mu_k) * N * exp(-(v / v_s)**2)`
+    - Viscous effect: :math:`sigma * v`
 
     In case we include all effects, the full actuator represents:
-    `F = mu_k * N * sign(v) + (mu_s - mu_k) * N * exp(-(v / v_s)**2) + sigma * v`.
+
+    .. math::
+        F = mu_k * N * sign(v) + (mu_s - mu_k) * N * exp(-(v / v_s)**2) + sigma * v
 
     Please note that this actuator assumes slip and applies a force opposite to the velocity direction.
 
@@ -1031,15 +1035,18 @@ class CoulombKineticFriction(ForceActuator):
     viscous_coefficient : Expr
         The viscous friction coefficient.
     mu_s : Expr, optional
-        The coefficient of static friction. Defaults to `mu_k`, meaning the Stribeck effect evaluates to 0 by default.
+        The coefficient of static friction. Defaults to mu_k, meaning the Stribeck effect evaluates to 0 by default.
 
     References
     ==========
 
-    Learn Multibody Dynamics. Available at:
-      https://moorepants.github.io/learn-multibody-dynamics/loads.html#friction.
-    Chalmers University of Technology, Open Digital Repository. Available at:
-      https://odr.chalmers.se/server/api/core/bitstreams/6316ee50-2ffc-4c29-97c1-c5e7a2737a5f/content.
+    .. [Moore2022] https://moorepants.github.io/learn-multibody-dynamics/loads.html#friction.
+    .. [Flores2023] Paulo Flores, Jorge Ambrósio, Hamid M. Lankarani,
+            “Contact-impact events with friction in mulitbody dynamics: Back to basics”,
+            Mechanism and Machine Theory, vol. 184, 2023. https://doi.org/10.1016/j.mechmachtheory.2023.105305.
+    .. [Rogner2017] I. Rogner, “Friction modelling for robotic applications with planar motion”,
+            Chalmers University of Technology, Department of Electrical Engineering, 2017.
+
     """
 
     def __init__(self, mu_k, normal_force, pathway, *, v_s=None, viscous_coefficient=None, mu_s=None):
