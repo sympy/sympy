@@ -9,7 +9,6 @@ from sympy import (
     SympifyError,
     sqrt,
     Abs,
-    simplify,
     symbols
 )
 from sympy.physics.mechanics import (

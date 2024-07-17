@@ -1042,9 +1042,9 @@ class CoulombKineticFriction(ForceActuator):
 
     .. [Moore2022] https://moorepants.github.io/learn-multibody-dynamics/loads.html#friction.
     .. [Flores2023] Paulo Flores, Jorge Ambrosio, Hamid M. Lankarani,
-            “Contact-impact events with friction in mulitbody dynamics: Back to basics”,
+            "Contact-impact events with friction in multibody dynamics: Back to basics",
             Mechanism and Machine Theory, vol. 184, 2023. https://doi.org/10.1016/j.mechmachtheory.2023.105305.
-    .. [Rogner2017] I. Rogner, “Friction modelling for robotic applications with planar motion”,
+    .. [Rogner2017] I. Rogner, "Friction modelling for robotic applications with planar motion",
             Chalmers University of Technology, Department of Electrical Engineering, 2017.
 
     """
