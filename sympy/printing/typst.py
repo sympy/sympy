@@ -249,6 +249,12 @@ class TypstPrinter(Printer):
 
         return False
 
+    def _do_exponent(self, expr: str, exp):
+        if exp is not None:
+            return r"(%s)^(%s)" % (expr, exp)
+        else:
+            return expr
+
     def _print_Add(self, expr, order=None):
         terms = self._as_ordered_terms(expr, order=order)
 
@@ -509,6 +515,22 @@ class TypstPrinter(Printer):
         else:
             return r"%s %s" % (typst, self._print(e))
 
+    def _print_floor(self, expr, exp=None):
+        typst = r"floor(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^(%s)" % (typst, exp)
+        else:
+            return typst
+
+    def _print_ceiling(self, expr, exp=None):
+        typst = r"ceil(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^(%s)" % (typst, exp)
+        else:
+            return typst
+
     def _print_log(self, expr, exp=None):
         if not self._settings["ln_notation"]:
             typst = r"log(%s)" % self._print(expr.args[0])
@@ -519,6 +541,21 @@ class TypstPrinter(Printer):
             return r"%s^(%s)" % (typst, exp)
         else:
             return typst
+
+    def _print_Abs(self, expr, exp=None):
+        typst = r"abs(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^(%s)" % (typst, exp)
+        else:
+            return typst
+
+    def _print_ExpBase(self, expr, exp=None):
+        typst = r"e^(%s)" % self._print(expr.args[0])
+        return self._do_exponent(typst, exp)
+
+    def _print_Exp1(self, expr, exp=None):
+        return "e"
 
     def _print_Symbol(self, expr: Symbol, style='plain'):
         name: str = self._settings['symbol_names'].get(expr)

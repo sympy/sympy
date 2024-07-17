@@ -6,7 +6,8 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.printing.typst import (typst, translate, greek_letters_set,
                                   typst_greek_dictionary)
 from sympy.series.limits import Limit
@@ -113,6 +114,20 @@ def test_typst_symbols():
     assert typst(Symbol('e^Alpha')) == r"e^(Alpha)"
     assert typst(Symbol('omega_alpha^beta')) == r"omega^(beta)_(alpha)"
     assert typst(Symbol('omega') ** Symbol('beta')) == r"omega^(beta)"
+
+
+def test_typst_functions():
+    assert typst(exp(x)) == r"e^(x)"
+    assert typst(exp(1) + exp(2)) == r"e + e^(2)"
+
+
+    assert typst(Abs(x)) == r"abs(x)"
+    assert typst(Abs(x)**2) == r"abs(x)^(2)"
+
+    assert typst(floor(x)) == r"floor(x)"
+    assert typst(ceiling(x)) == r"ceil(x)"
+    assert typst(floor(x)**2) == r"floor(x)^(2)"
+    assert typst(ceiling(x)**2) == r"ceil(x)^(2)"
 
 
 def test_translate():
