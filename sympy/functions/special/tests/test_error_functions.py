@@ -47,6 +47,12 @@ def test_erf():
     assert erf(erf2inv(0, x, evaluate=False)) == x # To cover code in erf
     assert erf(erf2inv(0, erf(erfcinv(1 - erf(erfinv(x)))))) == x
 
+    alpha = symbols('alpha', extended_real=False)
+    assert erf(alpha).is_finite is None
+    alpha = symbols('alpha', extended_positive=True)
+    assert erf(alpha).is_positive is True
+    alpha = symbols('alpha', extended_negative=True)
+    assert erf(alpha).is_negative is True
     assert erf(I).is_real is False
     assert erf(0, evaluate=False).is_real
     assert erf(0, evaluate=False).is_zero

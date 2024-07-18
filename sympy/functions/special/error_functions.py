@@ -5,6 +5,7 @@ from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
+from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import I, pi, Rational
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
@@ -192,13 +193,17 @@ class erf(Function):
         return self.args[0].is_extended_real
 
     def _eval_is_finite(self):
-        if self.args[0].is_finite:
-            return True
-        else:
-            return self.args[0].is_extended_real
+        z = self.args[0]
+        return fuzzy_or([z.is_finite, z.is_extended_real])
 
     def _eval_is_zero(self):
         return self.args[0].is_zero
+
+    def _eval_is_positive(self):
+        return self.args[0].is_extended_positive
+
+    def _eval_is_negative(self):
+        return self.args[0].is_extended_negative
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy.functions.special.gamma_functions import uppergamma
