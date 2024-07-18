@@ -1002,22 +1002,22 @@ class CoulombKineticFriction(ForceActuator):
     described by the function:
 
     .. math::
-        F = f_c * sign(v) + (f_{max} - f_c) * exp(-(v / v_s)**2) + sigma * v
+        F = f_c sign(v) + (f_{max} - f_c) e^{-(v / v_s)^2} + sigma v
 
     where :math:`f_c` is the Coulomb friction constant, :math:`f_{max}` is the maximum static friction force,
     :math:`v_s` is the coefficient of sliding friction, :math:`sigma` is the viscous friction constant,
     and :math:`v` is the relative velocity.
 
-    The default friction force is :math:`F = mu_k * N`, where :math:`N` is the normal force.
+    The default friction force is :math:`F = mu_k N`, where :math:`N` is the normal force.
     When specified, the actuator includes:
 
-    - Stribeck effect: :math:`(mu_s - mu_k) * N * exp(-(v / v_s)**2)`
-    - Viscous effect: :math:`sigma * v`
+    - Stribeck effect: :math:`(mu_s - mu_k) N e^{-(v / v_s)^2}`
+    - Viscous effect: :math:`sigma v`
 
     In case we include all effects, the full actuator represents:
 
     .. math::
-        F = mu_k * N * sign(v) + (mu_s - mu_k) * N * exp(-(v / v_s)**2) + sigma * v
+        F = mu_k N sign(v) + (mu_s - mu_k) N e^{-(v / v_s)^2} + sigma v
 
     Please note that this actuator assumes slip and applies a force opposite to the velocity direction.
 
