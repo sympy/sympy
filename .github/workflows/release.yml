@@ -18,8 +18,8 @@ on:
       - '1.13'
 env:
   release_branch: '1.13'
-  release_version: '1.13.1'
-  final_release_version: '1.13.1'
+  release_version: '1.13.2'
+  final_release_version: '1.13.2'
   previous_version: '1.12.1'
   dev_version: '1.14-dev'
 
