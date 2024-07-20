@@ -190,20 +190,26 @@ class erf(Function):
         return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
-        return self.args[0].is_extended_real
+        if self.args[0].is_extended_real is True:
+            return True
+        # There are cases where erf(z) becomes a real number
+        # even if z is a complex number
 
     def _eval_is_finite(self):
         z = self.args[0]
         return fuzzy_or([z.is_finite, z.is_extended_real])
 
     def _eval_is_zero(self):
-        return self.args[0].is_zero
+        if self.args[0].is_extended_real is True:
+            return self.args[0].is_zero
 
     def _eval_is_positive(self):
-        return self.args[0].is_extended_positive
+        if self.args[0].is_extended_real is True:
+            return self.args[0].is_extended_positive
 
     def _eval_is_negative(self):
-        return self.args[0].is_extended_negative
+        if self.args[0].is_extended_real is True:
+            return self.args[0].is_extended_negative
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy.functions.special.gamma_functions import uppergamma
@@ -414,7 +420,8 @@ class erfc(Function):
         return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
-        return self.args[0].is_extended_real
+        if self.args[0].is_extended_real is True:
+            return True
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=limitvar)
@@ -975,7 +982,8 @@ class erfcinv (Function):
         return (self.args[0] - 1).is_zero
 
     def _eval_is_infinite(self):
-        return self.args[0].is_zero
+        z = self.args[0]
+        return fuzzy_or([z.is_zero, (z - 2).is_zero])
 
 
 class erf2inv(Function):
