@@ -60,6 +60,7 @@ def test_erf():
     assert erf(alpha).is_positive is True
     alpha = symbols('alpha', extended_negative=True)
     assert erf(alpha).is_negative is True
+    assert erf(I).is_real is False
     assert erf(0, evaluate=False).is_real
     assert erf(0, evaluate=False).is_zero
 
@@ -153,6 +154,7 @@ def test_erfc():
     assert erfc(alpha).is_real is True
     alpha = symbols('alpha', extended_real=False)
     assert erfc(alpha).is_real is None
+    assert erfc(I).is_real is False
     assert erfc(0, evaluate=False).is_real
     assert erfc(0, evaluate=False).is_zero is False
 
@@ -293,6 +295,7 @@ def test_erf2():
     assert erf2(x, y).rewrite('uppergamma') == erf(y).rewrite(uppergamma) - erf(x).rewrite(uppergamma)
     assert erf2(x, y).rewrite('expint') == erf(y).rewrite(expint)-erf(x).rewrite(expint)
 
+    assert erf2(I, 0).is_real is False
     assert erf2(0, 0, evaluate=False).is_real
     assert erf2(0, 0, evaluate=False).is_zero
     assert erf2(x, x, evaluate=False).is_zero

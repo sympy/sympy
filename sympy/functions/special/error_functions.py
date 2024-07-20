@@ -195,6 +195,11 @@ class erf(Function):
         # There are cases where erf(z) becomes a real number
         # even if z is a complex number
 
+    def _eval_is_imaginary(self):
+        t = self.args[0].extract_multiplicatively(I)
+        if t is not None and t.is_real is True and t.is_zero is False:
+            return True
+
     def _eval_is_finite(self):
         z = self.args[0]
         return fuzzy_or([z.is_finite, z.is_extended_real])
@@ -421,6 +426,11 @@ class erfc(Function):
 
     def _eval_is_real(self):
         if self.args[0].is_extended_real is True:
+            return True
+
+    def _eval_is_imaginary(self):
+        t = self.args[0].extract_multiplicatively(I)
+        if t is not None and t.is_real is True and t.is_zero is False:
             return True
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
