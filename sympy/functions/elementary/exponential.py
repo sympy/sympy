@@ -11,7 +11,6 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
-from sympy.core.relational import Ge
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.sympify import sympify
