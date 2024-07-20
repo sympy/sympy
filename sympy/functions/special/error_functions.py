@@ -196,8 +196,7 @@ class erf(Function):
         # even if z is a complex number
 
     def _eval_is_imaginary(self):
-        t = self.args[0].extract_multiplicatively(I)
-        if t is not None and t.is_real is True and t.is_zero is False:
+        if self.args[0].is_imaginary is True:
             return True
 
     def _eval_is_finite(self):
@@ -427,11 +426,8 @@ class erfc(Function):
     def _eval_is_real(self):
         if self.args[0].is_extended_real is True:
             return True
-
-    def _eval_is_imaginary(self):
-        t = self.args[0].extract_multiplicatively(I)
-        if t is not None and t.is_real is True and t.is_zero is False:
-            return True
+        if self.args[0].is_imaginary is True:
+            return False
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=limitvar)
