@@ -6,7 +6,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
 from sympy.core.logic import fuzzy_or
-from sympy.core.numbers import I, pi, Rational
+from sympy.core.numbers import I, pi, Rational, Integer
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -983,7 +983,7 @@ class erfcinv (Function):
 
     def _eval_is_infinite(self):
         z = self.args[0]
-        return fuzzy_or([z.is_zero, (z - 2).is_zero])
+        return fuzzy_or([z.is_zero, is_eq(z, Integer(2))])
 
 
 class erf2inv(Function):
