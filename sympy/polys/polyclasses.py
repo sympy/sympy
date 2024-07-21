@@ -2138,19 +2138,28 @@ class DUP_Flint(DMP):
 
     def _cancel(f, g):
         """Cancel common factors in a rational function ``f/g``. """
+        assert f.dom == g.dom
+        R = f.dom
+
         # Think carefully about how to handle denominators and coefficient
         # canonicalisation if more domains are permitted...
-        assert f.dom == g.dom in (ZZ, QQ)
+        assert R.is_ZZ or R.is_QQ or R.is_FiniteField
 
-        if f.dom.is_QQ:
+        if R.is_FiniteField:
+            h = f._gcd(g)
+            F, G = f.exquo(h), g.exquo(h)
+            return R.one, R.one, F, G
+
+        if R.is_QQ:
             cG, F = f.clear_denoms()
             cF, G = g.clear_denoms()
         else:
-            cG, F = f.dom.one, f
-            cF, G = g.dom.one, g
+            cG, F = R.one, f
+            cF, G = R.one, g
 
-        cH = cF.gcd(cG)
-        cF, cG = cF // cH, cG // cH
+        if R.is_ZZ or R.is_QQ:
+            cH = cF.gcd(cG)
+            cF, cG = cF // cH, cG // cH
 
         H = F._gcd(G)
         F, G = F.exquo(H), G.exquo(H)
