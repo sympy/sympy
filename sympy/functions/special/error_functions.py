@@ -6,7 +6,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
 from sympy.core.logic import fuzzy_or
-from sympy.core.numbers import I, pi, Rational
+from sympy.core.numbers import I, pi, Rational, Integer
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -190,20 +190,30 @@ class erf(Function):
         return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
-        return self.args[0].is_extended_real
+        if self.args[0].is_extended_real is True:
+            return True
+        # There are cases where erf(z) becomes a real number
+        # even if z is a complex number
+
+    def _eval_is_imaginary(self):
+        if self.args[0].is_imaginary is True:
+            return True
 
     def _eval_is_finite(self):
         z = self.args[0]
         return fuzzy_or([z.is_finite, z.is_extended_real])
 
     def _eval_is_zero(self):
-        return self.args[0].is_zero
+        if self.args[0].is_extended_real is True:
+            return self.args[0].is_zero
 
     def _eval_is_positive(self):
-        return self.args[0].is_extended_positive
+        if self.args[0].is_extended_real is True:
+            return self.args[0].is_extended_positive
 
     def _eval_is_negative(self):
-        return self.args[0].is_extended_negative
+        if self.args[0].is_extended_real is True:
+            return self.args[0].is_extended_negative
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy.functions.special.gamma_functions import uppergamma
@@ -414,7 +424,10 @@ class erfc(Function):
         return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
-        return self.args[0].is_extended_real
+        if self.args[0].is_extended_real is True:
+            return True
+        if self.args[0].is_imaginary is True:
+            return False
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=limitvar)
@@ -975,7 +988,8 @@ class erfcinv (Function):
         return (self.args[0] - 1).is_zero
 
     def _eval_is_infinite(self):
-        return self.args[0].is_zero
+        z = self.args[0]
+        return fuzzy_or([z.is_zero, is_eq(z, Integer(2))])
 
 
 class erf2inv(Function):
