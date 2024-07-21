@@ -2157,9 +2157,8 @@ class DUP_Flint(DMP):
             cG, F = R.one, f
             cF, G = R.one, g
 
-        if R.is_ZZ or R.is_QQ:
-            cH = cF.gcd(cG)
-            cF, cG = cF // cH, cG // cH
+        cH = cF.gcd(cG)
+        cF, cG = cF // cH, cG // cH
 
         H = F._gcd(G)
         F, G = F.exquo(H), G.exquo(H)
