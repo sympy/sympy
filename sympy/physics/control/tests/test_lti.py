@@ -494,12 +494,18 @@ def test_PIDController():
 
     # Using PIDController with TransferFunction
     tf1 = TransferFunction(s, s + 1, s)
-    per1 = Parallel(p1, tf1)
+    par1 = Parallel(p1, tf1)
     ser1 = Series(p1, tf1)
     fed1 = Feedback(p1, tf1)
-    assert per1 == Parallel(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
+    assert par1 == Parallel(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
     assert ser1 == Series(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
     assert fed1 == Feedback(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
+    assert par1.doit() == TransferFunction(s*(s**2*tf + s) + (s + 1)*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s),
+                                           (s + 1)*(s**2*tf + s), s)
+    assert ser1.doit() == TransferFunction(s*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s),
+                                           (s + 1)*(s**2*tf + s), s)
+    assert fed1.doit() == TransferFunction((s + 1)*(s**2*tf + s)*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s),
+                                           (s*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s) + (s + 1)*(s**2*tf + s))*(s**2*tf + s), s)
 
 
 def test_Series_construction():
