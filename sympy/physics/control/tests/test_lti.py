@@ -488,7 +488,7 @@ def test_PIDController():
     # Functionality checking
     assert p1.doit() == TransferFunction(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s, s**2*tf + s, s)
     assert p1.is_proper == True
-    assert p1.is_biproper == False
+    assert p1.is_biproper == True
     assert p1.is_strictly_proper == False
     assert p2.doit() == TransferFunction(kd*s**2 + ki + kp*s, s, s)
 
