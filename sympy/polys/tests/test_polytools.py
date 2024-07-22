@@ -445,6 +445,9 @@ def test_Poly__new__():
         Poly(3*x**5 + 65536*x**4 + x**3 + 65536*x** 2 + 1, x,
              modulus=65537, symmetric=False)
 
+    N = 10**100
+    assert Poly(-1, x, modulus=N, symmetric=False).as_expr() == N - 1
+
     assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
     assert isinstance(Poly(x**2 + x + I + 1.0).get_domain(), ComplexField)
 
@@ -1540,6 +1543,10 @@ def test_Poly_clear_denoms():
     coeff, poly = Poly(x/2 + 1, x).clear_denoms()
     assert coeff == 2 and poly == Poly(
         x + 2, x, domain='QQ') and poly.get_domain() == QQ
+
+    coeff, poly = Poly(2*x**2 + 3, modulus=5).clear_denoms()
+    assert coeff == 1 and poly == Poly(
+        2*x**2 + 3, x, modulus=5) and poly.get_domain() == FF(5)
 
     coeff, poly = Poly(x/2 + 1, x).clear_denoms(convert=True)
     assert coeff == 2 and poly == Poly(
