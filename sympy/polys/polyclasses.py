@@ -128,7 +128,7 @@ from sympy.polys.polyerrors import (
 if GROUND_TYPES == 'flint':
     import flint
     def _supported_flint_domain(D):
-        return D.is_ZZ or D.is_QQ or D.is_FF
+        return D.is_ZZ or D.is_QQ or D.is_FF and D._is_flint
 else:
     flint = None
     def _supported_flint_domain(D):

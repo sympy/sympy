@@ -31,57 +31,78 @@ else:
     flint = None
 
 
-def _modular_int_factory(mod, dom, symmetric, self):
+def _modular_int_factory_nmod(mod):
+    # nmod only recognises int
+    index = operator.index
+    mod = index(mod)
+    nmod = flint.nmod
+    nmod_poly = flint.nmod_poly
 
-    if flint is None:
-        # Use the Python implementation
-        ctx = ModularIntegerFactory(mod, dom, symmetric, self)
-        poly_ctx = None  # not used
-    else:
-        # Use the flint implementation
-        nmod = flint.nmod
-        fmpz_mod_ctx = flint.fmpz_mod_ctx
-        fmpz_mod_poly_ctx = flint.fmpz_mod_poly_ctx
-        fmpz_mod_poly = flint.fmpz_mod_poly
-        index = operator.index
+    # flint's nmod is only for moduli up to 2^64-1 (on a 64-bit machine)
+    try:
+        nmod(0, mod)
+    except OverflowError:
+        return None, None
 
+    def ctx(x):
         try:
-            mod = dom.convert(mod)
-        except CoercionFailed:
-            raise ValueError('modulus must be an integer, got %s' % mod)
-
-        # mod might be e.g. Integer
-        try:
-            fmpz_mod_ctx(mod)
+            return nmod(x, mod)
         except TypeError:
-            mod = index(mod)
+            return nmod(index(x), mod)
 
-        # flint's nmod is only for moduli up to 2^64-1 (on a 64-bit machine)
-        try:
-            nmod(0, mod)
-        except OverflowError:
-            # Use fmpz_mod
-            fctx = fmpz_mod_ctx(mod)
-            fctx_poly = fmpz_mod_poly_ctx(mod)
-            poly_ctx = lambda cs: fmpz_mod_poly(cs, fctx_poly)
-
-            def ctx(x):
-                try:
-                    return fctx(x)
-                except TypeError:
-                    # x might be Integer
-                    return fctx(index(x))
-        else:
-            # Use nmod
-            def ctx(x):
-                try:
-                    return nmod(x, mod)
-                except TypeError:
-                    return nmod(index(x), mod)
-
-            poly_ctx = lambda cs: flint.nmod_poly(cs, mod)
+    def poly_ctx(cs):
+        return nmod_poly(cs, mod)
 
     return ctx, poly_ctx
+
+
+def _modular_int_factory_fmpz_mod(mod):
+    index = operator.index
+    fctx = flint.fmpz_mod_ctx(mod)
+    fctx_poly = flint.fmpz_mod_poly_ctx(mod)
+    fmpz_mod_poly = flint.fmpz_mod_poly
+
+    def ctx(x):
+        try:
+            return fctx(x)
+        except TypeError:
+            # x might be Integer
+            return fctx(index(x))
+
+    def poly_ctx(cs):
+        return fmpz_mod_poly(cs, fctx_poly)
+
+    return ctx, poly_ctx
+
+
+def _modular_int_factory(mod, dom, symmetric, self):
+    # Convert the modulus to ZZ
+    try:
+        mod = dom.convert(mod)
+    except CoercionFailed:
+        raise ValueError('modulus must be an integer, got %s' % mod)
+
+    ctx, poly_ctx, is_flint = None, None, False
+
+    # Don't use flint if the modulus is not prime as it often crashes.
+    if flint is not None and mod.is_prime():
+
+        is_flint = True
+
+        # Try to use flint's nmod first
+        ctx, poly_ctx = _modular_int_factory_nmod(mod)
+
+        if ctx is None:
+            # Use fmpz_mod for larger moduli
+            ctx, poly_ctx = _modular_int_factory_fmpz_mod(mod)
+
+    if ctx is None:
+        # Use the Python implementation if flint is not available or the
+        # modulus is not prime.
+        ctx = ModularIntegerFactory(mod, dom, symmetric, self)
+        poly_ctx = None  # not used
+
+    return ctx, poly_ctx, is_flint
 
 
 @public
@@ -194,15 +215,18 @@ class FiniteField(Field, SimpleDomain):
         if mod <= 0:
             raise ValueError('modulus must be a positive integer, got %s' % mod)
 
-        ctx, poly_ctx = _modular_int_factory(mod, dom, symmetric, self)
+        ctx, poly_ctx, is_flint = _modular_int_factory(mod, dom, symmetric, self)
+
         self.dtype = ctx
+        self._poly_ctx = poly_ctx
+        self._is_flint = is_flint
+
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
         self.dom = dom
         self.mod = mod
         self.sym = symmetric
         self._tp = type(self.zero)
-        self._poly_ctx = poly_ctx
 
     @property
     def tp(self):
