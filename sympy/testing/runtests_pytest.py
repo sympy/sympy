@@ -421,15 +421,11 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
             raise ModuleNotFoundError(msg)
         args.extend(['--timeout', str(int(timeout))])
 
-    # The use of `bool | None` for the `slow` kwarg allows a configuration file
-    # to take precedence if found by pytest, but if one isn't present (e.g. in
-    # the case when used with Pyodide) then a user can still explicitly ensure
-    # that only the slow tests are run.
-    if slow := kwargs.get('slow', None) is not None:
-        if slow:
-            args.extend(['-m', 'slow'])
-        else:
-            args.extend(['-m', 'not slow'])
+    # Skip slow tests by default and always skip tooslow tests
+    if kwargs.get('slow', False):
+        args.extend(['-m', 'slow and not tooslow'])
+    else:
+        args.extend(['-m', 'not slow and not tooslow'])
 
     if (split := kwargs.get('split')) is not None:
         if not pytest_plugin_manager.has_split:

@@ -350,8 +350,6 @@ class Sieve:
         """Return the nth prime number"""
         if isinstance(n, slice):
             self.extend_to_no(n.stop)
-            # Python 2.7 slices have 0 instead of None for start, so
-            # we can't default to 1.
             start = n.start if n.start is not None else 0
             if start < 1:
                 # sieve[:5] would be empty (starting at -1), let's

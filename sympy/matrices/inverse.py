@@ -284,6 +284,18 @@ def _try_DM(M, use_EX=False):
     else:
         return dM
 
+
+def _use_exact_domain(dom):
+    """Check whether to convert to an exact domain."""
+    # DomainMatrix can handle RR and CC with partial pivoting. Other inexact
+    # domains like RR[a,b,...] can only be handled by converting to an exact
+    # domain like QQ[a,b,...]
+    if dom.is_RR or dom.is_CC:
+        return False
+    else:
+        return not dom.is_Exact
+
+
 def _inv_DM(dM, cancel=True):
     """Calculates the inverse using ``DomainMatrix``.
 
@@ -298,13 +310,26 @@ def _inv_DM(dM, cancel=True):
     sympy.polys.matrices.domainmatrix.DomainMatrix.inv
     """
     m, n = dM.shape
+    dom = dM.domain
+
     if m != n:
         raise NonSquareMatrixError("A Matrix must be square to invert.")
+
+    # Convert RR[a,b,...] to QQ[a,b,...]
+    use_exact = _use_exact_domain(dom)
+
+    if use_exact:
+        dom_exact = dom.get_exact()
+        dM = dM.convert_to(dom_exact)
 
     try:
         dMi, den = dM.inv_den()
     except DMNonInvertibleMatrixError:
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+
+    if use_exact:
+        dMi = dMi.convert_to(dom)
+        den = dom.convert_from(den, dom_exact)
 
     if cancel:
         # Convert to field and cancel with the denominator.
