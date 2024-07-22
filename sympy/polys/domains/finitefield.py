@@ -33,11 +33,16 @@ else:
 
 def _modular_int_factory(mod, dom, symmetric, self):
 
-    # Use flint if available
-    if flint is not None:
-
+    if flint is None:
+        # Use the Python implementation
+        ctx = ModularIntegerFactory(mod, dom, symmetric, self)
+        poly_ctx = None  # not used
+    else:
+        # Use the flint implementation
         nmod = flint.nmod
         fmpz_mod_ctx = flint.fmpz_mod_ctx
+        fmpz_mod_poly_ctx = flint.fmpz_mod_poly_ctx
+        fmpz_mod_poly = flint.fmpz_mod_poly
         index = operator.index
 
         try:
@@ -57,6 +62,8 @@ def _modular_int_factory(mod, dom, symmetric, self):
         except OverflowError:
             # Use fmpz_mod
             fctx = fmpz_mod_ctx(mod)
+            fctx_poly = fmpz_mod_poly_ctx(mod)
+            poly_ctx = lambda cs: fmpz_mod_poly(cs, fctx_poly)
 
             def ctx(x):
                 try:
@@ -72,10 +79,9 @@ def _modular_int_factory(mod, dom, symmetric, self):
                 except TypeError:
                     return nmod(index(x), mod)
 
-        return ctx
+            poly_ctx = lambda cs: flint.nmod_poly(cs, mod)
 
-    # Use the Python implementation
-    return ModularIntegerFactory(mod, dom, symmetric, self)
+    return ctx, poly_ctx
 
 
 @public
@@ -188,13 +194,15 @@ class FiniteField(Field, SimpleDomain):
         if mod <= 0:
             raise ValueError('modulus must be a positive integer, got %s' % mod)
 
-        self.dtype = _modular_int_factory(mod, dom, symmetric, self)
+        ctx, poly_ctx = _modular_int_factory(mod, dom, symmetric, self)
+        self.dtype = ctx
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
         self.dom = dom
         self.mod = mod
         self.sym = symmetric
         self._tp = type(self.zero)
+        self._poly_ctx = poly_ctx
 
     @property
     def tp(self):
