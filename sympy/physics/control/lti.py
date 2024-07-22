@@ -1315,15 +1315,15 @@ class TransferFunction(SISOLinearTimeInvariant):
 
 class PIDController(TransferFunction):
     r"""
-    A class for representing PID (Proportional-Integral-Derivative) controllers in
-    control systems. The PIDController class is a subclass of TransferFunction,
-    representing the controller's transfer function in the Laplace domain. The
-    arguments are ``kp``, ``ki``, ``kd``, ``tf``, and ``var``, where ``kp``, ``ki``,
-    and ``kd`` are the proportional, integral, and derivative gains respectively.
-    ``tf`` is the derivative filter time constant, which can be used to filter out
-    the noise and ``var`` is the complex variable used in the transfer function.
-
-    .. image:: pid-controller.png
+    A class for representing PID (Proportional-Integral-Derivative)
+    controllers in control systems. The PIDController class is a subclass
+    of TransferFunction, representing the controller's transfer function
+    in the Laplace domain. The arguments are ``kp``, ``ki``, ``kd``,
+    ``tf``, and ``var``, where ``kp``, ``ki``, and ``kd`` are the
+    proportional, integral, and derivative gains respectively.``tf``
+    is the derivative filter time constant, which can be used to
+    filter out the noise and ``var`` is the complex variable used in
+    the transfer function.
 
     Parameters
     ==========
@@ -1567,7 +1567,7 @@ class Series(SISOLinearTimeInvariant):
 
     def __repr__(self):
         systems_repr = ', '.join(repr(system) for system in self.args)
-        return f"Parallel({systems_repr})"
+        return f"Series({systems_repr})"
 
     __str__ = __repr__
 
