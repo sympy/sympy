@@ -54,6 +54,8 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
+    _iterable = False
+
     def __new__(cls, symbol, shape: typing.Iterable) -> "ArraySymbol":
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
@@ -657,11 +659,11 @@ class PermuteDims(_CodegenArrayAbstract):
             for j in range(len(cumulative_subranks) - 1):
                 if cyclic_min[i] >= cumulative_subranks[j] and cyclic_max[i] < cumulative_subranks[j+1]:
                     # Found a sinkable cycle.
-                    args[j] = _permute_dims(args[j], Permutation([[k - cumulative_subranks[j] for k in cyclic_form[i]]]))
+                    args[j] = _permute_dims(args[j], Permutation([[k - cumulative_subranks[j] for k in cycle]]))
                     flag = False
                     break
             if flag:
-                cyclic_keep.append(cyclic_form[i])
+                cyclic_keep.append(cycle)
         return _array_tensor_product(*args), Permutation(cyclic_keep, size=permutation.size)
 
     def nest_permutation(self):

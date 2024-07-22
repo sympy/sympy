@@ -1,6 +1,6 @@
-==============
-Optics Module
-==============
+======
+Optics
+======
 
 .. topic:: Abstract
 

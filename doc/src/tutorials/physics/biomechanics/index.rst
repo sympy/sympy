@@ -22,5 +22,4 @@ In these tutorials, you can expect:
 .. toctree::
    :maxdepth: 2
 
-   biomechanics.rst
    biomechanical-model-example.rst
