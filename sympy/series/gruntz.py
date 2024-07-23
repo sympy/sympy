@@ -118,7 +118,7 @@ debug this function to figure out the exact problem.
 """
 from functools import reduce
 
-from sympy.core import Basic, S, Mul, PoleError, expand_mul
+from sympy.core import Basic, S, Mul, PoleError
 from sympy.core.cache import cacheit
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, oo
@@ -550,17 +550,10 @@ def mrv_leadterm(e, x):
     #
     w = Dummy("w", positive=True)
     f, logw = rewrite(exps, Omega, x, w)
-    from sympy.core.power import Pow
-    li =[]
 
-    for terms in f.atoms(Pow):
-        if terms.has(x):
-            b = terms.base
-            e = terms.exp
-            li.append((terms,exp(e*log(b))))
-
-    for a, b in li:
-        f = f.xreplace({a: b})
+    # Ensure expressions of the form exp(log(...)) don't get simplified automatically in the previous steps.
+    # see: https://github.com/sympy/sympy/issues/15323#issuecomment-478639399
+    f = f.replace(lambda f: f.is_Pow and f.has(x), lambda f: exp(log(f.base)*f.exp))
 
     try:
         lt = f.leadterm(w, logx=logw)
