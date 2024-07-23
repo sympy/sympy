@@ -314,7 +314,7 @@ def test_rewrite1():
     e = exp(x + 1/x)
     assert mrewrite(mrv(e, x), x, m) == (1/m, -x - 1/x)
     e = 1/exp(-x + exp(-x)) - exp(x)
-    assert mrewrite(mrv(e, x), x, m) == (1/(m*exp(m)) - 1/m, -x)
+    assert mrewrite(mrv(e, x), x, m) == ((-m*exp(m) + m)*exp(-m)/m**2, -x)
 
 
 def test_rewrite2():
@@ -329,7 +329,7 @@ def test_rewrite3():
     e = exp(-x + 1/x**2) - exp(x + 1/x)
     #both of these are correct and should be equivalent:
     assert mrewrite(mrv(e, x), x, m) in [(-1/m + m*exp(
-        1/x + 1/x**2), -x - 1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
+        (x**2 + x)/x**3), -x - 1/x), ((m**2 - exp((x**2 + x)/x**3))/m, x**(-2) - x)]
 
 
 def test_mrv_leadterm1():
