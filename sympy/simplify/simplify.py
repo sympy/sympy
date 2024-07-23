@@ -571,6 +571,20 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     sympy.assumptions.refine.refine : Simplification using assumptions.
     sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
+     # Extract relational expressions from the original expression
+    variables = expr.atoms(Relational) - {expr}
+
+    # Simplify each relational variable individually
+    simplified_vars = tuple(map(simplify, variables))
+
+    # Replace variables in the original expression with their simplified forms
+    expr = expr.xreplace(dict(zip(variables, simplified_vars)))
+
+    # Check if the expression's is_zero attribute is None and handle it accordingly
+    if expr.is_zero is None:
+        # If is_zero is None, return the expression without any further simplification
+        return expr
+
 
     def shorter(*choices):
         """

@@ -446,7 +446,7 @@ class Relational(Boolean, EvalfMixin):
                     x = free.pop()
                     dif = r.lhs - r.rhs
                     m, b = linear_coeffs(dif, x)
-                    if m.is_zero is False:
+                    if m.is_zero is False or m.is_zero is None:
                         if m.is_negative:
                             # Dividing with a negative number, so change order of arguments
                             # canonical will put the symbol back on the lhs later
