@@ -2,38 +2,38 @@
 
 from sympy import cse, Matrix, SparseMatrix, Derivative, MatrixBase
 from collections import Counter
+import re
 
-
-def postprocess(repl, reduced):
+def _postprocess(repl, reduced):
     """
     Postprocess the CSE output to remove any CSE replacement symbols from the arguments of Derivative terms.
     """
 
     repl_dict = dict(repl)
 
-    p_repl = [(rep_sym, traverse(sub_exp, repl_dict)) for rep_sym, sub_exp in repl]
-    p_reduced = [traverse(red_exp, repl_dict) for red_exp in reduced]
+    p_repl = [(rep_sym, _traverse(sub_exp, repl_dict)) for rep_sym, sub_exp in repl]
+    p_reduced = [Matrix([_traverse(exp, repl_dict) for exp in red_exp]) for red_exp in reduced]
 
     return p_repl, p_reduced
 
 
-def traverse(node, repl_dict):
+def _traverse(node, repl_dict):
     """
     Traverse the node in preorder fashion, and apply replace_all() if the node
     is the argument of a Derivative.
     """
 
     if isinstance(node, Derivative):
-        return replace_all(node, repl_dict)
+        return _replace_all(node, repl_dict)
 
     if not node.args:
         return node
 
-    new_args = [traverse(arg, repl_dict) for arg in node.args]
+    new_args = [_traverse(arg, repl_dict) for arg in node.args]
     return node.func(*new_args)
 
 
-def replace_all(node, repl_dict):
+def _replace_all(node, repl_dict):
     """
     Bring the node to its form before the CSE operation, by iteratively substituting
     the CSE replacement symbols in the node.
@@ -49,7 +49,7 @@ def replace_all(node, repl_dict):
     return result
 
 
-def dok_matrix_multiply(A, B):
+def _dok_matrix_multiply(A, B):
     """
     Multiply two sparse matrices in dok format (i, k) and (k, j) to get a dictionary of keys (i, j).
     """
@@ -62,49 +62,49 @@ def dok_matrix_multiply(A, B):
 
 
 def _forward_jacobian(expr, wrt):
-    """
-        Returns the Jacobian matrix produced using a forward accumulation
-        algorithm.
+    r"""
+    Returns the Jacobian matrix produced using a forward accumulation
+    algorithm.
 
-        Explanation
-        ===========
+    Explanation
+    ===========
 
-        Expressions often contain repeated subexpressions. If and expression is
-        represented as a tree structure then multiple copies of these subexpressions
-        will be present in the expanded form of the expression. During
-        differentiation these repeated subexpressions will be repeatedly and
-        differentiated multiple times, resulting in repeated and wasted work.
+    Expressions often contain repeated subexpressions. If and expression is
+    represented as a tree structure then multiple copies of these subexpressions
+    will be present in the expanded form of the expression. During
+    differentiation these repeated subexpressions will be repeatedly and
+    differentiated multiple times, resulting in repeated and wasted work.
 
-        Instead, if a data structure called a directed acyclic graph (DAG) is used
-        then each of these repeated subexpressions will only exist a single time.
-        This function uses a combination of representing the expression as a DAG and
-        a forward accumulation algorithm (repeated application of the chain rule
-        symbolically) to more efficiently calculate the Jacobian matrix of a target
-        expression ``expr`` with respect to an expression or set of expressions
-        ``wrt``.
+    Instead, if a data structure called a directed acyclic graph (DAG) is used
+    then each of these repeated subexpressions will only exist a single time.
+    This function uses a combination of representing the expression as a DAG and
+    a forward accumulation algorithm (repeated application of the chain rule
+    symbolically) to more efficiently calculate the Jacobian matrix of a target
+    expression ``expr`` with respect to an expression or set of expressions
+    ``wrt``.
 
-        Note that this function is intended to improve performance when
-        differentiating large expressions that contain many common subexpressions.
-        For small and simple expressions it is likely less performant than using
-        SymPy's standard differentiation functions and methods.
+    Note that this function is intended to improve performance when
+    differentiating large expressions that contain many common subexpressions.
+    For small and simple expressions it is likely less performant than using
+    SymPy's standard differentiation functions and methods.
 
-        NOTE: When Derivative terms are present in the expression, the CSE output
-        is post-processed to remove any CSE replacement symbols from the arguments of those terms.
-        Thus, in that case some derivatives might be repeated.
+    NOTE: When Derivative terms are present in the expression, the CSE output
+    is post-processed to remove any CSE replacement symbols from the arguments of those terms.
+    Thus, in that case some derivatives might be repeated.
 
-        Parameters
-        ==========
+    Parameters
+    ==========
 
-        expr : Matrix
-            The vector to be differentiated.
+    expr : Matrix
+        The vector to be differentiated.
 
-        wrt : Matrix, list, or tuple
-            The vector with respect to which to do the differentiation. Can be a matrix or an iterable of variables.
+    wrt : Matrix, list, or tuple
+        The vector with respect to which to do the differentiation. Can be a matrix or an iterable of variables.
 
-        See Also
-        ========
+    See Also
+    ========
 
-        Direct Acyclic Graph : https://en.wikipedia.org/wiki/Directed_acyclic_graph
+    Direct Acyclic Graph : https://en.wikipedia.org/wiki/Directed_acyclic_graph
 
     """
 
@@ -127,7 +127,7 @@ def _forward_jacobian(expr, wrt):
         raise TypeError("``wrt`` must be a row or a column matrix")
 
     replacements, reduced_expr = cse(expr)
-    replacements, reduced_expr = postprocess(replacements, reduced_expr)
+    replacements, reduced_expr = _postprocess(replacements, reduced_expr)
 
     if replacements:
         rep_sym, sub_expr = map(Matrix, zip(*replacements))
@@ -153,8 +153,10 @@ def _forward_jacobian(expr, wrt):
         if s in fs and (diff_value := r.diff(s)) != 0
     }
 
-    symbols = expr.free_symbols
-    precomputed_fs = [s.free_symbols - symbols for s in sub_expr]
+    precomputed_fs = [
+        {symbol for symbol in s.free_symbols if re.compile(r'x\d+').fullmatch(symbol.name)}
+        for s in sub_expr
+    ]
 
     C = Counter({(0, j): diff_value for j, w in enumerate(wrt) if (diff_value := sub_expr[0].diff(w)) != 0})
 
@@ -166,13 +168,13 @@ def _forward_jacobian(expr, wrt):
                       if (diff_value := sub_expr[i].diff(w)) != 0})
 
         if Bi:
-            Ci = dok_matrix_multiply(Bi, C)
+            Ci = _dok_matrix_multiply(Bi, C)
             Ci.update(Ai)  # Use Counter's update method to add Ai to Ci
             C.update(Ci)  # Update C with the result
         else:
             C.update(Ai)
 
-    J = dok_matrix_multiply(f2, C)
+    J = _dok_matrix_multiply(f2, C)
 
     for (i, j), value in f1.items():
         J[(i, j)] += value
@@ -183,6 +185,7 @@ def _forward_jacobian(expr, wrt):
         sub_rep[rep_sym[i]] = sub_rep[rep_sym[i]].xreplace(sub_dict)
 
     J = {key: expr.xreplace(sub_rep) for key, expr in J.items()}
-    J = SparseMatrix(None, J)
+    J = SparseMatrix(l_red, l_wrt, J)
+    J = expr.__class__(J)
 
     return J
