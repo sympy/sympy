@@ -304,8 +304,26 @@ class Arch:
                 eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
                 eq5 = Eq(R_A_y*(self._left_support[0]-self._crown_x)-T*(self._rope[2]-self._crown_y),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
-            else:
+
+            elif self._rope[2]>self._left_support[0]:
+                if net_x>0:
+                    eq1 = Eq(R_A_x,0)
+                    eq2 = Eq(T,0)
+                    eq3 = Eq(R_A_y + R_B_y + net_y, 0)
+                    eq4 = Eq(R_B_x+net_x,0)
+                    eq5 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
+                    solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_B_x,R_B_y,R_A_x,T))
+                else:
+                    eq1 = Eq(R_A_x ,0)
+                    eq2 = Eq(R_B_x+ T +net_x,0)
+                    eq3 = Eq(R_A_y + R_B_y + net_y,0)
+                    eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
+                    eq5 = Eq(R_A_y*(self._left_support[0]-self._crown_x)-T*(self._rope[2]-self._crown_y),0)
+                    solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
+
+            elif self._rope[2]>self._right_support[0]:
                 pass
+
         elif self._supports['right'] == 'roller':
             pass
         else:
