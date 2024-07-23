@@ -118,7 +118,7 @@ debug this function to figure out the exact problem.
 """
 from functools import reduce
 
-from sympy.core import Basic, S, Mul, PoleError, expand_mul
+from sympy.core import Basic, S, Mul, PoleError
 from sympy.core.cache import cacheit
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, oo
