@@ -1043,17 +1043,18 @@ class TestCoulombKineticFriction2:
             self.mu_k,
             self.m * self.g * self.N.y,
             self.pathway,
+            self.N,
         )
         self.system.add_actuators(friction)
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F + self.g * self.m * self.mu_k - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F - self.g * self.m * self.mu_k - self.m * self.u1.diff()
+        expected_negative = self.F + self.g * self.m * self.mu_k - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
 
 class TestCylinderFriction:

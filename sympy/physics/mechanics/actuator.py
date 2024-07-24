@@ -1203,12 +1203,13 @@ class CoulombKineticFriction2(ForceActuator):
 
     """
 
-    def __init__(self, mu_k, f_n, pathway, *, v_s=None, mu_s=None):
+    def __init__(self, mu_k, f_n, pathway, frame, *, v_s=None, mu_s=None):
         self.mu_k = mu_k
         self.mu_s = mu_s if mu_s is not None else mu_k
         self.f_n = f_n
         self.v_s = v_s if v_s is not None else 1
         self.pathway = pathway
+        self.frame = frame
 
     @property
     def mu_k(self):
@@ -1277,19 +1278,12 @@ class CoulombKineticFriction2(ForceActuator):
         v = self.pathway.extension_velocity
         n_dir = self.f_n.normalize()
 
-        N = self.f_n.args[0][1]
-        i = N.x
-        j = N.y
-        k = N.z
-
-        arbitrary_vector = i if n_dir.dot(i) != 1 else j
-
-        n_dir_perpendicular = cross(n_dir, arbitrary_vector).normalize()
+        perpendicular_dir = n_dir.cross(self.frame.z).normalize()
 
         f_c = self.mu_k * self.f_n.magnitude()
         f_max = self.mu_s * self.f_n.magnitude()
         stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2)
-        return (f_c * sign(v) + stribeck_term) * n_dir_perpendicular
+        return (f_c * -sign(v) + stribeck_term) * perpendicular_dir
 
     @force.setter
     def force(self, force):
