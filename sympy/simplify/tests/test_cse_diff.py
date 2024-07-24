@@ -1,4 +1,4 @@
-"""Tests for the ``sympy.simplify.cse_diff.py`` module."""
+"""Tests for the ``sympy.simplify._cse_diff.py`` module."""
 
 import pytest
 
@@ -10,7 +10,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import sin, tan
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.physics.mechanics import dynamicsymbols
-from sympy.simplify.cse_diff import _forward_jacobian
+from sympy.simplify._cse_diff import forward_jacobian
 from sympy.simplify.simplify import simplify
 
 w = Symbol('w')
@@ -56,6 +56,6 @@ neg_one = Integer(-1)
 def test_forward_jacobian(expr, wrt):
     expr = ImmutableDenseMatrix([expr]).T
     wrt = ImmutableDenseMatrix([wrt]).T
-    jacobian = _forward_jacobian(expr, wrt)
+    jacobian = forward_jacobian(expr, wrt)
     zeros = ImmutableDenseMatrix.zeros(*jacobian.shape)
     assert simplify(jacobian - expr.jacobian(wrt)) == zeros
