@@ -1,6 +1,10 @@
 <!-- (solving-guide-diophantine)= -->
-.. _solving-guide-diophantine:
-# Solve a Diophantine Equation Algebraically
+# [solving-guide-diophantine](https://github.com/sympy/sympy/blob/master/doc/src/guides/solving/solve-diophantine-equation.md)
+
+## Solve a Diophantine Equation Algebraically
+
+Use SymPy to solve a Diophantine equation (find integer solutions to a polynomial equation) :ref:`solving-guide-diophantine`.
+
 
 Use SymPy to solve a [Diophantine
 equation](https://en.wikipedia.org/wiki/Diophantine_equation) (find integer
