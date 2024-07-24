@@ -1142,7 +1142,8 @@ class CoulombKineticFriction(ForceActuator):
         v = self.pathway.extension_velocity
         f_c = self.mu_k * self.f_n
         f_max = self.mu_s * self.f_n
-        return f_c * sign(v) + (f_max - f_c) * exp(-(v / self.v_s)**2) + self.sigma * v
+        stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2)
+        return f_c * -sign(v) + stribeck_term + self.sigma * v
 
     @force.setter
     def force(self, force):
