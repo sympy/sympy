@@ -196,7 +196,7 @@ class Collector(DefaultPrinting):
 
         (i, j)
             A tuple containing starting and ending index of ``w``
-            in the given word.
+            in the given word. If not exists, (-1,-1) is returned.
 
         Examples
         ========
@@ -214,6 +214,9 @@ class Collector(DefaultPrinting):
         >>> w = x1**7
         >>> collector.subword_index(word, w)
         (2, 9)
+        >>> w = x1**8
+        >>> collector.subword_index(word, w)
+        (-1, -1)
 
         """
         low = -1
@@ -223,8 +226,6 @@ class Collector(DefaultPrinting):
                 low = i
                 high = i+len(w)
                 break
-        if low == high == -1:
-            return -1, -1
         return low, high
 
     def map_relation(self, w):
@@ -686,7 +687,7 @@ class Collector(DefaultPrinting):
                 for gen in z:
                     if gen != 1:
                         G.append(h**-1*gen**-1*h*gen)
-                z[d-1] = h;
+                z[d-1] = h
         z = [gen for gen in z if gen != 1]
         return z
 

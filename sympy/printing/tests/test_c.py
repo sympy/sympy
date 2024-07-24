@@ -19,7 +19,7 @@ from sympy.codegen.ast import (
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
     real, float32, float64, float80, float128, intc, Comment, CodeBlock, stderr, QuotedString
 )
-from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt, isnan, isinf
 from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
@@ -881,3 +881,7 @@ def test_ccode_UnevaluatedExpr():
 def test_ccode_array_like_containers():
     assert ccode([2,3,4]) == "{2, 3, 4}"
     assert ccode((2,3,4)) == "{2, 3, 4}"
+
+def test_ccode__isinf_isnan():
+    assert ccode(isinf(x)) == 'isinf(x)'
+    assert ccode(isnan(x)) == 'isnan(x)'

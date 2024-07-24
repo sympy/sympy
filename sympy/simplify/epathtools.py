@@ -125,13 +125,9 @@ class EPath:
         else:
             return expr.args
 
-    def _hasattrs(self, expr, attrs):
+    def _hasattrs(self, expr, attrs) -> bool:
         """Check if ``expr`` has any of ``attrs``. """
-        for attr in attrs:
-            if not hasattr(expr, attr):
-                return False
-
-        return True
+        return all(hasattr(expr, attr) for attr in attrs)
 
     def _hastypes(self, expr, types):
         """Check if ``expr`` is any of ``types``. """
