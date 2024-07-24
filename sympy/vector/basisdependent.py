@@ -154,8 +154,7 @@ class BasisDependent(Expr):
 
     def as_coeff_add(self, *deps):
         """Efficiently extract the coefficient of a summation."""
-        l = [x * self.components[x] for x in self.components]
-        return 0, tuple(l)
+        return 0, tuple(x * self.components[x] for x in self.components)
 
     def diff(self, *args, **kwargs):
         """

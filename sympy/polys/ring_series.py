@@ -444,10 +444,7 @@ def _has_constant_term(p, x):
     a = [0]*R.ngens
     a[iv] = 1
     miv = tuple(a)
-    for expv in p:
-        if monomial_min(expv, miv) == zm:
-            return True
-    return False
+    return any(monomial_min(expv, miv) == zm for expv in p)
 
 def _get_constant_term(p, x):
     """Return constant term in p with respect to x

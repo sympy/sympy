@@ -741,6 +741,153 @@ def test_max_deflection():
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
 
+def test_solve_for_ild_reactions():
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    b.apply_support(0, type="pin")
+    b.apply_support(10, type="pin")
+    R_0, R_10 = symbols('R_0, R_10')
+    b.solve_for_ild_reactions(1, R_0, R_10)
+    a = b.ild_variable
+    assert b.ild_reactions == {R_0: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/10
+                                    - SingularityFunction(a, 10, 1)/10,
+                               R_10: -SingularityFunction(a, 0, 1)/10 + SingularityFunction(a, 10, 0)
+                                     + SingularityFunction(a, 10, 1)/10}
+
+    E = Symbol('E')
+    I = Symbol('I')
+    F = Symbol('F')
+    L = Symbol('L', positive=True)
+    b = Beam(L, E, I)
+    b.apply_support(L, type="fixed")
+    b.apply_load(F, 0, -1)
+    R_L, M_L = symbols('R_L, M_L')
+    b.solve_for_ild_reactions(F, R_L, M_L)
+    a = b.ild_variable
+    assert b.ild_reactions == {R_L: -F*SingularityFunction(a, 0, 0) + F*SingularityFunction(a, L, 0) - F,
+                               M_L: -F*L*SingularityFunction(a, 0, 0) - F*L + F*SingularityFunction(a, 0, 1)
+                                    - F*SingularityFunction(a, L, 1)}
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(20, E, I)
+    r0 = b.apply_support(0, type="pin")
+    r5 = b.apply_support(5, type="pin")
+    r10 = b.apply_support(10, type="pin")
+    r20, m20 = b.apply_support(20, type="fixed")
+    b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
+    a = b.ild_variable
+    assert b.ild_reactions[r0].subs(a, 4) == -Rational(59, 475)
+    assert b.ild_reactions[r5].subs(a, 4) == -Rational(2296, 2375)
+    assert b.ild_reactions[r10].subs(a, 4) == Rational(243, 2375)
+    assert b.ild_reactions[r20].subs(a, 12) == -Rational(83, 475)
+    assert b.ild_reactions[m20].subs(a, 12) == -Rational(264, 475)
+
+def test_solve_for_ild_shear():
+    E = Symbol('E')
+    I = Symbol('I')
+    F = Symbol('F')
+    L1 = Symbol('L1', positive=True)
+    L2 = Symbol('L2', positive=True)
+    b = Beam(L1 + L2, E, I)
+    r0 = b.apply_support(0, type="pin")
+    rL = b.apply_support(L1 + L2, type="pin")
+    b.solve_for_ild_reactions(F, r0, rL)
+    b.solve_for_ild_shear(L1, F, r0, rL)
+    a = b.ild_variable
+    expected_shear = (-F*L1*SingularityFunction(a, 0, 0)/(L1 + L2) - F*L2*SingularityFunction(a, 0, 0)/(L1 + L2)
+                      - F*SingularityFunction(-a, 0, 0) + F*SingularityFunction(a, L1 + L2, 0) + F
+                      + F*SingularityFunction(a, 0, 1)/(L1 + L2) - F*SingularityFunction(a, L1 + L2, 1)/(L1 + L2)
+                      - (-F*L1*SingularityFunction(a, 0, 0)/(L1 + L2) + F*L1*SingularityFunction(a, L1 + L2, 0)/(L1 + L2)
+                         - F*L2*SingularityFunction(a, 0, 0)/(L1 + L2) + F*L2*SingularityFunction(a, L1 + L2, 0)/(L1 + L2)
+                         + 2*F)*SingularityFunction(a, L1, 0))
+    assert b.ild_shear.expand() == expected_shear.expand()
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(20, E, I)
+    r0 = b.apply_support(0, type="pin")
+    r5 = b.apply_support(5, type="pin")
+    r10 = b.apply_support(10, type="pin")
+    r20, m20 = b.apply_support(20, type="fixed")
+    b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
+    b.solve_for_ild_shear(6, 1, r0, r5, r10, r20, m20)
+    a = b.ild_variable
+    assert b.ild_shear.subs(a, 12) == Rational(96, 475)
+    assert b.ild_shear.subs(a, 4) == -Rational(216, 2375)
+
+def test_solve_for_ild_moment():
+    E = Symbol('E')
+    I = Symbol('I')
+    F = Symbol('F')
+    L1 = Symbol('L1', positive=True)
+    L2 = Symbol('L2', positive=True)
+    b = Beam(L1 + L2, E, I)
+    r0 = b.apply_support(0, type="pin")
+    rL = b.apply_support(L1 + L2, type="pin")
+    a = b.ild_variable
+    b.solve_for_ild_reactions(F, r0, rL)
+    b.solve_for_ild_moment(L1, F, r0, rL)
+    assert b.ild_moment.subs(a, 3).subs(L1, 5).subs(L2, 5) == -3*F/2
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(20, E, I)
+    r0 = b.apply_support(0, type="pin")
+    r5 = b.apply_support(5, type="pin")
+    r10 = b.apply_support(10, type="pin")
+    r20, m20 = b.apply_support(20, type="fixed")
+    b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
+    b.solve_for_ild_moment(5, 1, r0, r5, r10, r20, m20)
+    assert b.ild_moment.subs(a, 12) == -Rational(96, 475)
+    assert b.ild_moment.subs(a, 4) == Rational(36, 95)
+
+def test_ild_with_rotation_hinge():
+    E = Symbol('E')
+    I = Symbol('I')
+    F = Symbol('F')
+    L1 = Symbol('L1', positive=True)
+    L2 = Symbol('L2', positive=True)
+    L3 = Symbol('L3', positive=True)
+    b = Beam(L1 + L2 + L3, E, I)
+    r0 = b.apply_support(0, type="pin")
+    r1 = b.apply_support(L1 + L2, type="pin")
+    r2 = b.apply_support(L1 + L2 + L3, type="pin")
+    b.apply_rotation_hinge(L1 + L2)
+    b.solve_for_ild_reactions(F, r0, r1, r2)
+    a = b.ild_variable
+    assert b.ild_reactions[r0].subs(a, 4).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -3*F/5
+    assert b.ild_reactions[r0].subs(a, -10).subs(L1, 5).subs(L2, 5).subs(L3, 10) == 0
+    assert b.ild_reactions[r0].subs(a, 25).subs(L1, 5).subs(L2, 5).subs(L3, 10) == 0
+    assert b.ild_reactions[r1].subs(a, 4).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -2*F/5
+    assert b.ild_reactions[r2].subs(a, 18).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -4*F/5
+    b.solve_for_ild_shear(L1, F, r0, r1, r2)
+    assert b.ild_shear.subs(a, 7).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -3*F/10
+    assert b.ild_shear.subs(a, 70).subs(L1, 5).subs(L2, 5).subs(L3, 10) == 0
+    b.solve_for_ild_moment(L1, F, r0, r1, r2)
+    assert b.ild_moment.subs(a, 1).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -F/2
+    assert b.ild_moment.subs(a, 8).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -F
+
+def test_ild_with_sliding_hinge():
+    b = Beam(13, 200, 200)
+    r0 = b.apply_support(0, type="pin")
+    r6 = b.apply_support(6, type="pin")
+    r13, m13 = b.apply_support(13, type="fixed")
+    w3 = b.apply_sliding_hinge(3)
+    b.solve_for_ild_reactions(1, r0, r6, r13, m13)
+    a = b.ild_variable
+    assert b.ild_reactions[r0].subs(a, 3) == -1
+    assert b.ild_reactions[r6].subs(a, 3) == Rational(9, 14)
+    assert b.ild_reactions[r13].subs(a, 9) == -Rational(207, 343)
+    assert b.ild_reactions[m13].subs(a, 9) == -Rational(60, 49)
+    assert b.ild_reactions[m13].subs(a, 15) == 0
+    assert b.ild_reactions[m13].subs(a, -3) == 0
+    assert b.ild_deflection_jumps[w3].subs(a, 9) == -Rational(9, 35000)
+    b.solve_for_ild_shear(7, 1, r0, r6, r13, m13)
+    assert b.ild_shear.subs(a, 8) == -Rational(200, 343)
+    b.solve_for_ild_moment(8, 1, r0, r6, r13, m13)
+    assert b.ild_moment.subs(a, 3) == -Rational(12, 7)
 
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')

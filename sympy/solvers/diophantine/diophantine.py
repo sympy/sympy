@@ -1482,7 +1482,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     null = tuple([0]*len(var))
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)).is_zero:
-        sols.add(null)
+        if all(check_assumptions(val, **s.assumptions0) is not False for val, s in zip(null, var)):
+            sols.add(null)
+
     final_soln = set()
     for sol in sols:
         if all(int_valued(s) for s in sol):
@@ -1558,7 +1560,8 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     Use of ``diophantine()`` is recommended over other helper functions.
     ``diop_solve()`` can return either a set or a tuple depending on the
-    nature of the equation.
+    nature of the equation. All non-trivial solutions are returned: assumptions
+    on symbols are ignored.
 
     Usage
     =====
@@ -2174,6 +2177,25 @@ def cornacchia(a:int, b:int, m:int) -> set[tuple[int, int]]:
     """
     # Assume gcd(a, b) = gcd(a, m) = 1 and a, b > 0 but no error checking
     sols = set()
+
+    if a + b > m:
+        # xy = 0 must hold if there exists a solution
+        if a == 1:
+            # y = 0
+            s, _exact = iroot(m // a, 2)
+            if _exact:
+                sols.add((int(s), 0))
+            if a == b:
+                # only keep one solution
+                return sols
+        if m % b == 0:
+            # x = 0
+            s, _exact = iroot(m // b, 2)
+            if _exact:
+                sols.add((0, int(s)))
+        return sols
+
+    # the original cornacchia
     for t in sqrt_mod_iter(-b*invert(a, m), m):
         if t < m // 2:
             continue
