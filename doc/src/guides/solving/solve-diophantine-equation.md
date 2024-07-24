@@ -1,4 +1,5 @@
-(solving-guide-diophantine)=
+<!-- (solving-guide-diophantine)= -->
+.. _solving-guide-diophantine:
 # Solve a Diophantine Equation Algebraically
 
 Use SymPy to solve a [Diophantine
