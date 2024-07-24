@@ -1,6 +1,5 @@
 from sympy.core.function import PoleError
 from sympy.core.numbers import oo
-from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
