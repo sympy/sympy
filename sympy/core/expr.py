@@ -3236,7 +3236,8 @@ class Expr(Basic, EvalfMixin):
             logw = log(1/res)
 
         s = func.series(k, 0, n)
-
+        from sympy.core.function import expand_mul
+        s = expand_mul(s)
         # Hierarchical series
         if hir:
             return s.subs(k, exp(logw))
