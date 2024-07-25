@@ -1214,7 +1214,7 @@ class Permutation(Atom):
         [0, 1, 2, 3]
         """
         a = self.array_form
-        return [i for i, e in enumerate(a) if a[i] != i]
+        return [i for i, e in enumerate(a) if e != i]
 
     def __add__(self, other):
         """Return permutation that is other higher in rank than self.
@@ -1561,8 +1561,7 @@ class Permutation(Atom):
                 res.append(tuple(x))
             elif nx > 2:
                 first = x[0]
-                for y in x[nx - 1:0:-1]:
-                    res.append((first, y))
+                res.extend((first, y) for y in x[nx - 1:0:-1])
         return res
 
     @classmethod

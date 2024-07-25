@@ -693,7 +693,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     """
     from sympy.solvers.ode import dsolve
 
-    xi, eta = symbols("xi eta")
+    eta = symbols("eta")
     f = func.func
     x = func.args[0]
     y = func.args[1]

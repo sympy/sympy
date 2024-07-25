@@ -10,7 +10,6 @@ from sympy.polys.densearith import (
     dup_sqr,
     dup_div,
     dup_rem, dmp_rem,
-    dmp_expand,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
@@ -26,15 +25,16 @@ from sympy.polys.densebasic import (
     dmp_zero, dmp_ground,
     dmp_zero_p,
     dup_to_raw_dict, dup_from_raw_dict,
-    dmp_zeros
+    dmp_zeros,
+    dmp_include,
 )
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError
 )
-from sympy.utilities import variations
 
 from math import ceil as _ceil, log2 as _log2
+
 
 def dup_integrate(f, m, K):
     """
@@ -1139,6 +1139,65 @@ def dup_decompose(f, K):
     return [f] + F
 
 
+def dmp_alg_inject(f, u, K):
+    """
+    Convert polynomial from ``K(a)[X]`` to ``K[a,X]``.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.densetools import dmp_alg_inject
+    >>> from sympy import QQ, sqrt
+
+    >>> K = QQ.algebraic_field(sqrt(2))
+
+    >>> p = [K.from_sympy(sqrt(2)), K.zero, K.one]
+    >>> P, lev, dom = dmp_alg_inject(p, 0, K)
+    >>> P
+    [[1, 0, 0], [1]]
+    >>> lev
+    1
+    >>> dom
+    QQ
+
+    """
+    if K.is_GaussianRing or K.is_GaussianField:
+        return _dmp_alg_inject_gaussian(f, u, K)
+    elif K.is_Algebraic:
+        return _dmp_alg_inject_alg(f, u, K)
+    else:
+        raise DomainError('computation can be done only in an algebraic domain')
+
+
+def _dmp_alg_inject_gaussian(f, u, K):
+    """Helper function for :func:`dmp_alg_inject`."""
+    f, h = dmp_to_dict(f, u), {}
+
+    for f_monom, g in f.items():
+        x, y = g.x, g.y
+        if x:
+            h[(0,) + f_monom] = x
+        if y:
+            h[(1,) + f_monom] = y
+
+    F = dmp_from_dict(h, u + 1, K.dom)
+
+    return F, u + 1, K.dom
+
+
+def _dmp_alg_inject_alg(f, u, K):
+    """Helper function for :func:`dmp_alg_inject`."""
+    f, h = dmp_to_dict(f, u), {}
+
+    for f_monom, g in f.items():
+        for g_monom, c in g.to_dict().items():
+            h[g_monom + f_monom] = c
+
+    F = dmp_from_dict(h, u + 1, K.dom)
+
+    return F, u + 1, K.dom
+
+
 def dmp_lift(f, u, K):
     """
     Convert algebraic coefficients to integers in ``K[X]``.
@@ -1155,36 +1214,18 @@ def dmp_lift(f, u, K):
     >>> f = x**2 + K([QQ(1), QQ(0)])*x + K([QQ(2), QQ(0)])
 
     >>> R.dmp_lift(f)
-    x**8 + 2*x**6 + 9*x**4 - 8*x**2 + 16
+    x**4 + x**2 + 4*x + 4
 
     """
-    if K.is_GaussianField:
-        K1 = K.as_AlgebraicField()
-        f = dmp_convert(f, u, K, K1)
-        K = K1
+    # Circular import. Probably dmp_lift should be moved to euclidtools
+    from .euclidtools import dmp_resultant
 
-    if not K.is_Algebraic:
-        raise DomainError(
-            'computation can be done only in an algebraic domain')
+    F, v, K2 = dmp_alg_inject(f, u, K)
 
-    F, monoms, polys = dmp_to_dict(f, u), [], []
+    p_a = K.mod.to_list()
+    P_A = dmp_include(p_a, list(range(1, v + 1)), 0, K2)
 
-    for monom, coeff in F.items():
-        if not coeff.is_ground:
-            monoms.append(monom)
-
-    perms = variations([-1, 1], len(monoms), repetition=True)
-
-    for perm in perms:
-        G = dict(F)
-
-        for sign, monom in zip(perm, monoms):
-            if sign == -1:
-                G[monom] = -G[monom]
-
-        polys.append(dmp_from_dict(G, u, K))
-
-    return dmp_convert(dmp_expand(polys, u, K), u, K, K.dom)
+    return dmp_resultant(F, P_A, v, K2)
 
 
 def dup_sign_variations(f, K):
@@ -1201,10 +1242,39 @@ def dup_sign_variations(f, K):
     2
 
     """
+    def is_negative_sympy(a):
+        if not a:
+            # XXX: requires zero equivalence testing in the domain
+            return False
+        else:
+            # XXX: This is inefficient. It should not be necessary to use a
+            # symbolic expression here at least for algebraic fields. If the
+            # domain elements can be numerically evaluated to real values with
+            # precision then this should work. We first need to rule out zero
+            # elements though.
+            return bool(K.to_sympy(a) < 0)
+
+    # XXX: There should be a way to check for real numeric domains and
+    # Domain.is_negative should be fixed to handle all real numeric domains.
+    # It should not be necessary to special case all these different domains
+    # in this otherwise generic function.
+    if K.is_ZZ or K.is_QQ or K.is_RR:
+        is_negative = K.is_negative
+    elif K.is_AlgebraicField and K.ext.is_comparable:
+        is_negative = is_negative_sympy
+    elif ((K.is_PolynomialRing or K.is_FractionField) and len(K.symbols) == 1 and
+          (K.dom.is_ZZ or K.dom.is_QQ or K.is_AlgebraicField) and
+          K.symbols[0].is_transcendental and K.symbols[0].is_comparable):
+        # We can handle a polynomial ring like QQ[E] if there is a single
+        # transcendental generator because then zero equivalence is assured.
+        is_negative = is_negative_sympy
+    else:
+        raise DomainError("sign variation counting not supported over %s" % K)
+
     prev, k = K.zero, 0
 
     for coeff in f:
-        if K.is_negative(coeff*prev):
+        if is_negative(coeff*prev):
             k += 1
 
         if coeff:
