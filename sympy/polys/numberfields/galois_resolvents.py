@@ -25,7 +25,6 @@ from sympy.core.evalf import (
 from sympy.core.symbol import symbols, Dummy
 from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import ZZ
-from sympy.polys.numberfields.resolvent_lookup import resolvent_coeff_lambdas
 from sympy.polys.orderings import lex
 from sympy.polys.polyroots import preprocess_roots
 from sympy.polys.polytools import Poly
@@ -659,6 +658,7 @@ def get_resolvent_by_lookup(T, number):
     dup
 
     """
+    from sympy.polys.numberfields.resolvent_lookup import resolvent_coeff_lambdas
     degree = T.degree()
     L = resolvent_coeff_lambdas[(degree, number)]
     T_coeffs = T.rep.to_list()[1:]

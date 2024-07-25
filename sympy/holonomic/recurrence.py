@@ -174,12 +174,8 @@ class RecurrenceOperator:
 
         def _mul_dmp_diffop(b, listofother):
             if isinstance(listofother, list):
-                sol = []
-                for i in listofother:
-                    sol.append(i * b)
-                return sol
-            else:
-                return [b * listofother]
+                return [i * b for i in listofother]
+            return [b * listofother]
 
         sol = _mul_dmp_diffop(listofself[0], listofother)
 
@@ -215,10 +211,7 @@ class RecurrenceOperator:
             if not isinstance(other, self.parent.base.dtype):
                 other = (self.parent.base).from_sympy(other)
 
-            sol = []
-            for j in self.listofpoly:
-                sol.append(other * j)
-
+            sol = [other * j for j in self.listofpoly]
             return RecurrenceOperator(sol, self.parent)
 
     def __add__(self, other):
@@ -236,9 +229,7 @@ class RecurrenceOperator:
                 list_other = [((self.parent).base).from_sympy(other)]
             else:
                 list_other = [other]
-            sol = []
-            sol.append(list_self[0] + list_other[0])
-            sol += list_self[1:]
+            sol = [list_self[0] + list_other[0]] + list_self[1:]
 
             return RecurrenceOperator(sol, self.parent)
 
@@ -303,14 +294,8 @@ class RecurrenceOperator:
                 return True
             else:
                 return False
-        else:
-            if self.listofpoly[0] == other:
-                for i in self.listofpoly[1:]:
-                    if i is not self.parent.base.zero:
-                        return False
-                return True
-            else:
-                return False
+        return self.listofpoly[0] == other and \
+            all(i is self.parent.base.zero for i in self.listofpoly[1:])
 
 
 class HolonomicSequence:
@@ -350,16 +335,8 @@ class HolonomicSequence:
     __str__ = __repr__
 
     def __eq__(self, other):
-        if self.recurrence == other.recurrence:
-            if self.n == other.n:
-                if self._have_init_cond and other._have_init_cond:
-                    if self.u0 == other.u0:
-                        return True
-                    else:
-                        return False
-                else:
-                    return True
-            else:
-                return False
-        else:
+        if self.recurrence != other.recurrence or self.n != other.n:
             return False
+        if self._have_init_cond and other._have_init_cond:
+            return self.u0 == other.u0
+        return True

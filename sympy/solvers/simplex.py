@@ -359,7 +359,6 @@ def _simplex(A, B, C, D=None, dual=False):
         C = M[-1, :-1]
 
         # Choose a pivot column, c
-        piv_cols = []
         piv_cols = [_ for _ in range(n) if C[_] < 0]
         if not piv_cols:
             break
@@ -1129,13 +1128,8 @@ def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     x = Matrix(symbols('x1:%s' % (A.cols+1)))
     f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)] + [Eq(i,j) for i,j in zip(A_eq*x,b_eq)]
     for i, (lo, hi) in enumerate(bounds):
-        if lo is None and hi is None:
-            continue
-        if lo is None:
-            c.append(x[i]<=hi)
-        elif hi is None:
+        if lo is not None:
             c.append(x[i]>=lo)
-        else:
-            c.append(x[i]>=lo)
+        if hi is not None:
             c.append(x[i]<=hi)
     return f,c

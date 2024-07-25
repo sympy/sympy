@@ -1547,11 +1547,13 @@ def sdm_matmul_exraw(A, B, K, m, o):
                         Cij = Ci.get(j, zero) + Aik * Bkj
                         if Cij != zero:
                             Ci[j] = Cij
-                        else:  # pragma: no cover
-                            # Not sure how we could get here but let's raise an
-                            # exception just in case.
-                            raise RuntimeError
-                        C[i] = Ci
+                            C[i] = Ci
+                        else:
+                            Ci.pop(j, None)
+                            if Ci:
+                                C[i] = Ci
+                            else:
+                                C.pop(i, None)
 
     return C
 

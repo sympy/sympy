@@ -11,7 +11,6 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
-from sympy.core.relational import Ge
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.sympify import sympify
@@ -1002,7 +1001,7 @@ class log(Function):
             except ValueError:
                 a, b = s.removeO().as_leading_term(t, cdir=1), S.Zero
 
-        p = (z/(a*t**b) - 1)._eval_nseries(t, n=n, logx=logx, cdir=1)
+        p = (z/(a*t**b) - 1).cancel()._eval_nseries(t, n=n, logx=logx, cdir=1)
         if p.has(exp):
             p = logcombine(p)
         if isinstance(p, Order):
@@ -1047,14 +1046,13 @@ class log(Function):
         while k*d < n:
             coeff = -S.NegativeOne**k/k
             for ex in pk:
-                _ = terms.get(ex, S.Zero) + coeff*pk[ex]
-                terms[ex] = _.nsimplify()
+                terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
             pk = mul(pk, pterms)
             k += S.One
 
         res = log(a) - b*log(cdir) + b*logx
         for ex in terms:
-            res += terms[ex]*t**(ex)
+            res += terms[ex].cancel()*t**(ex)
 
         if a.is_negative and im(z) != 0:
             from sympy.functions.special.delta_functions import Heaviside
@@ -1162,24 +1160,12 @@ class LambertW(Function):
                 return S.Zero
             if x is S.Exp1:
                 return S.One
-            w = Wild('w')
-            # W(x*log(x)) = log(x) for x >= 1/e
-            # e.g., W(-1/e) = -1, W(2*log(2)) = log(2)
-            result = x.match(w*log(w))
-            if result is not None and Ge(result[w]*S.Exp1, S.One) is S.true:
-                return log(result[w])
+            if x == -1/S.Exp1:
+                return S.NegativeOne
             if x == -log(2)/2:
                 return -log(2)
-            # W(x**(x+1)*log(x)) = x*log(x) for x > 0
-            # e.g., W(81*log(3)) = 3*log(3)
-            result = x.match(w**(w+1)*log(w))
-            if result is not None and result[w].is_positive is True:
-                return result[w]*log(result[w])
-            # W(e**(1/n)/n) = 1/n
-            # e.g., W(sqrt(e)/2) = 1/2
-            result = x.match(S.Exp1**(1/w)/w)
-            if result is not None:
-                return 1 / result[w]
+            if x == 2*log(2):
+                return log(2)
             if x == -pi/2:
                 return I*pi/2
             if x == exp(1 + S.Exp1):

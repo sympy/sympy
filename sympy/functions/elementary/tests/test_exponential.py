@@ -524,7 +524,7 @@ def test_log_nseries():
     assert log(-2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, -1) == -I*pi + log(2) + log(x) - \
     x*(S(3)/2 - I/2) + x**2*(-1 + 3*I/4) + O(x**3)
     assert log(sqrt(-I*x**2 - 3)*sqrt(-I*x**2 - 1) - 2)._eval_nseries(x, 3, None, 1) == -I*pi + \
-    log(sqrt(3) + 2) + I*x**2*(-2 + 4*sqrt(3)/3) + O(x**3)
+    log(sqrt(3) + 2) + 2*sqrt(3)*I*x**2/(3*sqrt(3) + 6) + O(x**3)
     assert log(-1/(1 - x))._eval_nseries(x, 3, None, 1) == I*pi + x + x**2/2 + O(x**3)
     assert log(-1/(1 - x))._eval_nseries(x, 3, None, -1) == I*pi + x + x**2/2 + O(x**3)
 
@@ -605,10 +605,7 @@ def test_lambertw():
     assert LambertW(0) == 0
     assert LambertW(E) == 1
     assert LambertW(-1/E) == -1
-    assert LambertW(100*log(100)) == log(100)
     assert LambertW(-log(2)/2) == -log(2)
-    assert LambertW(81*log(3)) == 3*log(3)
-    assert LambertW(sqrt(E)/2) == S.Half
     assert LambertW(oo) is oo
     assert LambertW(0, 1) is -oo
     assert LambertW(0, 42) is -oo
@@ -630,7 +627,6 @@ def test_lambertw():
     assert LambertW(2, evaluate=False).is_real
     p = Symbol('p', positive=True)
     assert LambertW(p, evaluate=False).is_real
-    assert LambertW(p**(p+1)*log(p)) == p*log(p)
     assert LambertW(p - 1, evaluate=False).is_real is None
     assert LambertW(-p - 2/S.Exp1, evaluate=False).is_real is False
     assert LambertW(S.Half, -1, evaluate=False).is_real is False
