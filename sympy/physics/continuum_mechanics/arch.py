@@ -157,7 +157,7 @@ class Arch:
 
         >>> from sympy.physics.continuum_mechanics.arch import Arch
         >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
-        >>> a.apply_load(0,'A',x1=3,x2=5,mag=10)
+        >>> a.apply_load(0,'A',x1=3,x2=5,mag=-10)
 
         For applying point/concentrated_loads
 
@@ -175,7 +175,7 @@ class Arch:
 
             if x1>self._right_support[0] or x2<self._left_support[0]:
                 raise ValueError(f"loads must be applied between {self._left_support[0]} and {self._right_support[0]}")
-            self._distributed_loads[label] = {'start':x1, 'end':x2, 'f_y': -mag}
+            self._distributed_loads[label] = {'start':x1, 'end':x2, 'f_y': mag}
             self._points_disc.append(x1)
             self._points_disc.append(x2)
 
@@ -240,6 +240,8 @@ class Arch:
         net_y = 0
         moment_A = 0
         moment_hinge_right = 0
+        moment_hinge_left = 0
+
         for label in self._conc_loads:
             net_x += self._conc_loads[label]['f_x']
             net_y += self._conc_loads[label]['f_y']
@@ -249,6 +251,9 @@ class Arch:
             if self._conc_loads[label]['x']> self._crown_x:
                 moment_hinge_right += self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._crown_x) - \
                         self._conc_loads[label]['f_x']*(self._conc_loads[label]['y']-self._crown_y)
+            else:
+                moment_hinge_left += self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._crown_x) - \
+                        self._conc_loads[label]['f_x']*(self._conc_loads[label]['x']-self._crown_y)
 
         for label in self._distributed_loads:
             start = self._distributed_loads[label]['start']
@@ -261,6 +266,11 @@ class Arch:
                 st = max(start,self._crown_x)
                 force_right = self._distributed_loads[label]['f_y']*(end-st)
                 moment_hinge_right += force_right*((end+st)/2 - self._crown_x)
+
+            if self._distributed_loads[label]['start']<self._crown_x:
+                ed = min(end,self._crown_x)
+                force_left = self._distributed_loads['f_y']*(ed-start)
+                moment_hinge_left += force_left*((end+st)/2 - self._crown_x)
 
         R_A_x, R_A_y, R_B_x, R_B_y, T = symbols('R_A_x R_A_y R_B_x R_B_y T')
 
@@ -330,7 +340,7 @@ class Arch:
             eq1 = Eq(R_A_x + R_B_x + net_x,0)
             eq2 = Eq(R_A_y + R_B_y + net_y,0)
             eq3 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
-            eq4 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) + R_B_x*(self._right_support[1]-self._crown_y),0)
+            eq4 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) - R_B_x*(self._right_support[1]-self._crown_y),0)
 
             solution = solve((eq1,eq2,eq3,eq4),(R_A_x,R_A_y,R_B_x,R_B_y))
 
