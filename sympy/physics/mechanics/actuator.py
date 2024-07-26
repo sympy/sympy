@@ -2,12 +2,12 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import S, sympify, exp, sign
+from sympy import S, sympify, exp, tanh
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
 from sympy.physics.mechanics.pathway import PathwayBase
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.vector import ReferenceFrame, Vector, cross
+from sympy.physics.vector import ReferenceFrame, Vector
 
 
 __all__ = [
@@ -18,7 +18,6 @@ __all__ = [
     'TorqueActuator',
     'DuffingSpring',
     'CoulombKineticFriction',
-    'CoulombKineticFriction2',
 ]
 
 
@@ -994,7 +993,7 @@ class DuffingSpring(ForceActuator):
                 f"equilibrium_length={self.equilibrium_length})")
 
 class CoulombKineticFriction(ForceActuator):
-    """Coulomb kinetic friction with Stribeck and viscous effects.
+    r"""Coulomb kinetic friction with Stribeck and viscous effects.
 
     Explanation
     ===========
@@ -1003,49 +1002,76 @@ class CoulombKineticFriction(ForceActuator):
     described by the function:
 
     .. math::
-        F = f_c sign(v) + (f_{max} - f_c) e^{-(v / v_s)^2} + sigma v
+        F = f_c \cdot \tanh(s_t \cdot v) + (f_{\text{max}} - f_c) \cdot e^{-(\frac{v}{v_s})^2} + \tanh(s_t \cdot v) \cdot \sigma \cdot v
 
     where :math:`f_c` is the Coulomb friction constant, :math:`f_{max}` is the maximum static friction force,
-    :math:`v_s` is the coefficient of sliding friction, :math:`sigma` is the viscous friction constant,
-    and :math:`v` is the relative velocity.
+    :math:`v_s` is the Stribeck friction coefficient, :math:`\sigma` is the viscous friction constant,
+    :math:`v` is the relative velocity, and :math:`s_t` is the constant for smooth transition in the tanh function.
 
-    The default friction force is :math:`F = mu_k N`, where :math:`N` is the normal force.
+    The default friction force is :math:`F = \mu_k \cdot f_n`, where :math:`f_n` is the normal force.
     When specified, the actuator includes:
 
-    - Stribeck effect: :math:`(mu_s - mu_k) N e^{-(v / v_s)^2}`
-    - Viscous effect: :math:`sigma v`
+    - Stribeck effect: :math:`(\mu_s - \mu_k) \cdot f_n \cdot e^{-(\frac{v}{v_s})^2}`
+    - Viscous effect: :math:`\sigma \cdot v`
 
     In case we include all effects, the full actuator represents:
 
     .. math::
-        F = mu_k N sign(v) + (mu_s - mu_k) N e^{-(v / v_s)^2} + sigma v
+        F = \mu_k \cdot f_n \cdot \tanh(s_t \cdot v) + (\mu_s - \mu_k) \cdot f_n \cdot e^{-(\frac{v}{v_s})^2} + \tanh(s_t \cdot v) \cdot \sigma \cdot v
 
     Please note that this actuator assumes slip and applies a force opposite to the velocity direction.
 
-    Also, this actuator works well with basic, simple systems where the direction and magnitude
-    of the normal force are consistent and predictable, such as sliding blocks and straightforward
-    mechanical systems.
+    When using this friction actuator, please ensure that the normal force is a non-negative
+    scalar and is appropriate for the system being modeled. We have tested this actuator
+    for straightforward motions, including a block sliding on a surface, and it works well
+    with systems where the direction and magnitude of the normal force are consistent and predictable.
 
-    Since we assume the normal force is a positive scalar, this friction actuator is not
-    suitable for multi-body systems with complex interactions, such as rolling, and varying contact angles.
-    When the pathway changes dynamically in systems (e.g., curvilinear paths, rotating bodies,
-    or non-linear movements), the force calculation can be inaccurate.
+    Examples
+    ========
+
+    The below example shows how to generate the loads produced by a Coulomb kinetic
+    friction actuator in a mass-spring system with friction.
+
+    >>> import sympy as sm
+    >>> from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
+    ...     LinearPathway, CoulombKineticFriction, LinearSpring, KanesMethod, Particle)
+
+    >>> x, v = dynamicsymbols('x, v', real=True)
+    >>> m, g, k, mu_k, mu_s, v_s, sigma = sm.symbols('m, g, k, mu_k, mu_s, v_s, sigma')
+
+    >>> N = ReferenceFrame('N')
+    >>> O, P = Point('O'), Point('P')
+    >>> O.set_vel(N, 0)
+    >>> P.set_pos(O, x*N.x)
+    >>> P.set_vel(N, v*N.x)
+
+    >>> pathway = LinearPathway(O, P)
+    >>> friction = CoulombKineticFriction(mu_k, m*g, pathway, v_s=v_s, sigma=sigma, mu_s=mu_k)
+    >>> spring = LinearSpring(k, pathway)
+    >>> block = Particle('block', point=P, mass=m)
+
+    >>> kane = KanesMethod(N, (x,), (v,), kd_eqs=(x.diff() - v,))
+    >>> loads = friction.to_loads() + spring.to_loads()
+    >>> fr, frstar = kane.kanes_equations([block], loads)
+    >>> eom = sm.Matrix([fr, frstar])
 
     Parameters
     ==========
 
     f_n : Expr
-        The normal force between the surfaces.
+        The normal force between the surfaces. It should always be a non-negative scalar.
     mu_k : Expr
         The coefficient of kinetic friction.
     pathway : PathwayBase
         The pathway that the actuator follows.
     v_s : Expr
-        The coefficient of sliding friction (COF).
+        The Stribeck friction coefficient.
     sigma : Expr
         The viscous friction coefficient.
     mu_s : Expr, optional
         The coefficient of static friction. Defaults to mu_k, meaning the Stribeck effect evaluates to 0 by default.
+    s_t : float, optional
+        A constant for smooth transition in the tanh function. Defaults to 100.
 
     References
     ==========
@@ -1059,13 +1085,14 @@ class CoulombKineticFriction(ForceActuator):
 
     """
 
-    def __init__(self, mu_k, f_n, pathway, *, v_s=None, sigma=None, mu_s=None):
-        self.mu_k = mu_k
-        self.mu_s = mu_s if mu_s is not None else mu_k
+    def __init__(self, mu_k, f_n, pathway, *, v_s=None, sigma=0, mu_s=None, s_t=100):
+        self.mu_k = mu_k if mu_k is not None else 1
+        self.mu_s = mu_s if mu_s is not None else self.mu_k
         self.f_n = f_n
         self.sigma = sigma if sigma is not None else 0
-        self.v_s = v_s if v_s is not None else 1
+        self.v_s = v_s if v_s is not None or v_s == 0 else 0.01
         self.pathway = pathway
+        self.s_t = s_t if s_t != 100 else 100
 
     @property
     def mu_k(self):
@@ -1138,12 +1165,27 @@ class CoulombKineticFriction(ForceActuator):
         self._v_s = sympify(v_s, strict=True)
 
     @property
+    def s_t(self):
+        return self._s_t
+
+    @s_t.setter
+    def s_t(self, s_t):
+        if hasattr(self, '_s_t'):
+            msg = (
+                f'Can\'t set attribute `s_t` to '
+                f'{repr(s_t)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._s_t = sympify(s_t, strict=True)
+
+    @property
     def force(self):
         v = self.pathway.extension_velocity
         f_c = self.mu_k * self.f_n
         f_max = self.mu_s * self.f_n
-        stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2)
-        return f_c * -sign(v) + stribeck_term + self.sigma * v
+        stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2) if self.v_s != 0 else 0
+        viscous_term = self.sigma * v * -tanh(self.s_t * v) if self.f_n != 0 else 0
+        return f_c * -tanh(self.s_t * v) + stribeck_term + viscous_term
 
     @force.setter
     def force(self, force):
@@ -1152,154 +1194,4 @@ class CoulombKineticFriction(ForceActuator):
     def __repr__(self):
         return (f'{self.__class__.__name__}({self.mu_k}, {self.mu_s} '
                 f'{self.f_n}, {self.pathway}, {self.v_s}, '
-                f'{self.sigma})')
-
-class CoulombKineticFriction2(ForceActuator):
-    """Coulomb kinetic friction with Stribeck effect.
-
-    Explanation
-    ===========
-
-    This represents a Coulomb kinetic friction with the Stribeck, described by the function:
-
-    .. math::
-        F = f_c sign(v) + (f_{max} - f_c) e^{-(v / v_s)^2}
-
-    where :math:`f_c` is the Coulomb friction constant, :math:`f_{max}` is the maximum static friction force,
-    :math:`v_s` is the coefficient of sliding friction, and :math:`v` is the relative velocity.
-
-    The default friction force is :math:`F = mu_k N`, where :math:`N` is the normal force.
-    When specified, the actuator includes Stribeck effect: :math:`(mu_s - mu_k) N e^{-(v / v_s)^2}`,
-    and the full actuator represents:
-
-    .. math::
-        F = mu_k N sign(v) + (mu_s - mu_k) N e^{-(v / v_s)^2}
-
-    Please note that this actuator assumes slip and applies a force opposite to the velocity direction.
-
-    Parameters
-    ==========
-
-    f_n : Vector
-        The normal force between the surfaces.
-    mu_k : Expr
-        The coefficient of kinetic friction.
-    pathway : PathwayBase
-        The pathway that the actuator follows.
-    v_s : Expr
-        The coefficient of sliding friction (COF).
-    mu_s : Expr, optional
-        The coefficient of static friction. Defaults to mu_k, meaning the Stribeck effect evaluates to 0 by default.
-
-    References
-    ==========
-
-    .. [Moore2022] https://moorepants.github.io/learn-multibody-dynamics/loads.html#friction.
-    .. [Flores2023] Paulo Flores, Jorge Ambrosio, Hamid M. Lankarani,
-            "Contact-impact events with friction in multibody dynamics: Back to basics",
-            Mechanism and Machine Theory, vol. 184, 2023. https://doi.org/10.1016/j.mechmachtheory.2023.105305.
-    .. [Rogner2017] I. Rogner, "Friction modelling for robotic applications with planar motion",
-            Chalmers University of Technology, Department of Electrical Engineering, 2017.
-
-    """
-
-    def __init__(self, mu_k, f_n, pathway, frame, *, v_s=None, mu_s=None):
-        self.mu_k = mu_k
-        self.mu_s = mu_s if mu_s is not None else mu_k
-        self.f_n = f_n
-        self.v_s = v_s if v_s is not None else 1
-        self.pathway = pathway
-        self.frame = frame
-
-    @property
-    def mu_k(self):
-        return self._mu_k
-
-    @mu_k.setter
-    def mu_k(self, mu_k):
-        if hasattr(self, '_mu_k'):
-            msg = (
-                f'Can\'t set attribute `mu_k` to '
-                f'{repr(mu_k)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._mu_k = sympify(mu_k, strict=True)
-
-    @property
-    def mu_s(self):
-        return self._mu_s
-
-    @mu_s.setter
-    def mu_s(self, mu_s):
-        if hasattr(self, '_mu_s'):
-            msg = (
-                f'Can\'t set attribute `mu_s` to '
-                f'{repr(mu_s)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._mu_s = sympify(mu_s, strict=True)
-
-    @property
-    def f_n(self):
-        return self._f_n
-
-    @f_n.setter
-    def f_n(self, f_n):
-        if hasattr(self, '_f_n'):
-            msg = (
-                f'Can\'t set attribute `f_n` to '
-                f'{repr(f_n)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        if not isinstance(f_n, Vector):
-            msg = (
-                f'Value {repr(f_n)} passed to `f_n` was of type '
-                f'{type(f_n)}, must be {Vector}.'
-            )
-            raise TypeError(msg)
-        self._f_n = f_n
-
-    @property
-    def v_s(self):
-        return self._v_s
-
-    @v_s.setter
-    def v_s(self, v_s):
-        if hasattr(self, '_v_s'):
-            msg = (
-                f'Can\'t set attribute `v_s` to '
-                f'{repr(v_s)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._v_s = sympify(v_s, strict=True)
-
-    @property
-    def force(self):
-        v = self.pathway.extension_velocity
-        n_dir = self.f_n.normalize()
-
-        perpendicular_dir = n_dir.cross(self.frame.z).normalize()
-
-        f_c = self.mu_k * self.f_n.magnitude()
-        f_max = self.mu_s * self.f_n.magnitude()
-        stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2)
-        return (f_c * -sign(v) + stribeck_term) * perpendicular_dir
-
-    @force.setter
-    def force(self, force):
-        raise AttributeError('Can\'t set computed attribute `force`.')
-
-    def to_loads(self):
-        force = self.force
-        pA = self.pathway.attachments[0]
-        pB = self.pathway.attachments[1]
-
-        if isinstance(force, Vector):
-            loads = [(pA, force), (pB, -force)]
-        else:
-            loads = self.pathway.to_loads(force)
-        return loads
-
-    def __repr__(self):
-        return (f'{self.__class__.__name__}({self.mu_k}, {self.mu_s} '
-                f'{self.f_n}, {self.pathway}, {self.v_s})')
+                f'{self.sigma}, {self.k})')
