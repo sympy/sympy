@@ -10,6 +10,7 @@ from sympy import (
     sqrt,
     Abs,
     symbols,
+    exp,
 )
 from sympy.physics.mechanics import (
     ActuatorBase,
@@ -948,18 +949,18 @@ class TestCoulombKineticFriction:
             self.m * self.g,
             self.pathway,
             v_s=self.v_s,
-            mu_s=self.mu_k
+            mu_s=self.mu_s
         )
         self.system.add_actuators(friction)
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-self.u1**2/self.v_s**2) - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k - self.m * self.u1.diff()
+        expected_negative = self.F + self.g * self.m * self.mu_k - (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-self.u1**2/self.v_s**2) - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
 
     def test_block_on_surface_all(self):
@@ -969,18 +970,18 @@ class TestCoulombKineticFriction:
             self.pathway,
             v_s=self.v_s,
             sigma=self.sigma,
-            mu_s=self.mu_k
+            mu_s=self.mu_s
         )
         self.system.add_actuators(friction)
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-self.u1**2/self.v_s**2) + self.sigma * self.u1 - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
+        expected_negative = self.F + self.g * self.m * self.mu_k - (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-self.u1**2/self.v_s**2) + self.sigma * self.u1 - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
 
     def test_normal_force_zero(self):
