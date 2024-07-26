@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import S, sympify, exp, tanh
+from sympy import S, sympify, exp, sign
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
 from sympy.physics.mechanics.pathway import PathwayBase
@@ -1002,11 +1002,11 @@ class CoulombKineticFriction(ForceActuator):
     described by the function:
 
     .. math::
-        F = f_c \cdot \tanh(s_t \cdot v) + (f_{\text{max}} - f_c) \cdot e^{-(\frac{v}{v_s})^2} + \tanh(s_t \cdot v) \cdot \sigma \cdot v
+        F = f_c \cdot \text{sign}(v) + (f_{\text{max}} - f_c) \cdot e^{-(\frac{v}{v_s})^2} + \sigma \cdot v
 
     where :math:`f_c` is the Coulomb friction constant, :math:`f_{max}` is the maximum static friction force,
     :math:`v_s` is the Stribeck friction coefficient, :math:`\sigma` is the viscous friction constant,
-    :math:`v` is the relative velocity, and :math:`s_t` is the constant for smooth transition in the tanh function.
+    and :math:`v` is the relative velocity.
 
     The default friction force is :math:`F = \mu_k \cdot f_n`, where :math:`f_n` is the normal force.
     When specified, the actuator includes:
@@ -1017,7 +1017,7 @@ class CoulombKineticFriction(ForceActuator):
     In case we include all effects, the full actuator represents:
 
     .. math::
-        F = \mu_k \cdot f_n \cdot \tanh(s_t \cdot v) + (\mu_s - \mu_k) \cdot f_n \cdot e^{-(\frac{v}{v_s})^2} + \tanh(s_t \cdot v) \cdot \sigma \cdot v
+        F = \mu_k \cdot f_n \cdot \text{sign}(v) + (\mu_s - \mu_k) \cdot f_n \cdot e^{-(\frac{v}{v_s})^2} + \sigma \cdot v
 
     Please note that this actuator assumes slip and applies a force opposite to the velocity direction.
 
@@ -1070,8 +1070,6 @@ class CoulombKineticFriction(ForceActuator):
         The viscous friction coefficient.
     mu_s : Expr, optional
         The coefficient of static friction. Defaults to mu_k, meaning the Stribeck effect evaluates to 0 by default.
-    s_t : float, optional
-        A constant for smooth transition in the tanh function. Defaults to 100.
 
     References
     ==========
@@ -1085,14 +1083,13 @@ class CoulombKineticFriction(ForceActuator):
 
     """
 
-    def __init__(self, mu_k, f_n, pathway, *, v_s=None, sigma=0, mu_s=None, s_t=100):
+    def __init__(self, mu_k, f_n, pathway, *, v_s=None, sigma=0, mu_s=None):
         self.mu_k = mu_k if mu_k is not None else 1
         self.mu_s = mu_s if mu_s is not None else self.mu_k
         self.f_n = f_n
         self.sigma = sigma if sigma is not None else 0
         self.v_s = v_s if v_s is not None or v_s == 0 else 0.01
         self.pathway = pathway
-        self.s_t = s_t if s_t != 100 else 100
 
     @property
     def mu_k(self):
@@ -1165,27 +1162,13 @@ class CoulombKineticFriction(ForceActuator):
         self._v_s = sympify(v_s, strict=True)
 
     @property
-    def s_t(self):
-        return self._s_t
-
-    @s_t.setter
-    def s_t(self, s_t):
-        if hasattr(self, '_s_t'):
-            msg = (
-                f'Can\'t set attribute `s_t` to '
-                f'{repr(s_t)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._s_t = sympify(s_t, strict=True)
-
-    @property
     def force(self):
         v = self.pathway.extension_velocity
         f_c = self.mu_k * self.f_n
         f_max = self.mu_s * self.f_n
         stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2) if self.v_s != 0 else 0
-        viscous_term = self.sigma * v * -tanh(self.s_t * v) if self.f_n != 0 else 0
-        return f_c * -tanh(self.s_t * v) + stribeck_term + viscous_term
+        viscous_term = self.sigma * v if self.f_n != 0 else 0
+        return f_c * -sign(v) + stribeck_term + viscous_term
 
     @force.setter
     def force(self, force):
@@ -1194,4 +1177,4 @@ class CoulombKineticFriction(ForceActuator):
     def __repr__(self):
         return (f'{self.__class__.__name__}({self.mu_k}, {self.mu_s} '
                 f'{self.f_n}, {self.pathway}, {self.v_s}, '
-                f'{self.sigma}, {self.k})')
+                f'{self.sigma})')

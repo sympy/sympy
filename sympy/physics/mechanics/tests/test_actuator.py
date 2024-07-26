@@ -10,8 +10,6 @@ from sympy import (
     sqrt,
     Abs,
     symbols,
-    tanh,
-    sign,
 )
 from sympy.physics.mechanics import (
     ActuatorBase,
@@ -917,12 +915,12 @@ class TestCoulombKineticFriction:
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k * self.q1 * tanh(100 * self.u1 * sign(self.q1))/Abs(self.q1) - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F - self.g * self.m * self.mu_k * self.q1 * tanh(100 * self.u1 * sign(self.q1))/Abs(self.q1) - self.m * self.u1.diff()
+        expected_negative = self.F + self.g * self.m * self.mu_k - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
 
     def test_block_on_surface_viscous(self):
@@ -936,12 +934,12 @@ class TestCoulombKineticFriction:
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k * tanh(100 * self.u1 * sign(self.q1)) - self.sigma * self.u1 * tanh(100 * self.u1 * sign(self.q1)) * self.q1/Abs(self.q1) - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k * tanh(100 * self.u1 * sign(self.q1)) + self.sigma * self.u1 * tanh(100 * self.u1 * sign(self.q1)) * self.q1/Abs(self.q1) - self.m * self.u1.diff()
+        expected_negative = self.F + self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
 
     def test_block_on_surface_stribeck(self):
@@ -956,12 +954,12 @@ class TestCoulombKineticFriction:
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k * self.q1 * tanh(100 * self.u1 * sign(self.q1))/Abs(self.q1) - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F - self.g * self.m * self.mu_k * self.q1 * tanh(100 * self.u1 * sign(self.q1))/Abs(self.q1) - self.m * self.u1.diff()
+        expected_negative = self.F + self.g * self.m * self.mu_k - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
 
     def test_block_on_surface_all(self):
@@ -977,10 +975,21 @@ class TestCoulombKineticFriction:
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k * tanh(100 * self.u1 * sign(self.q1)) - self.sigma * self.u1 * tanh(100 * self.u1 * sign(self.q1)) * sign(self.q1) * self.q1/Abs(self.q1) - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k * tanh(100 * self.u1 * sign(self.q1)) - self.sigma * self.u1 * tanh(100 * self.u1 * sign(self.q1)) * sign(self.q1) * self.q1/Abs(self.q1) - self.m * self.u1.diff()
+        expected_negative = self.F + self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
+
+    def test_normal_force_zero(self):
+        friction = CoulombKineticFriction(
+            self.mu_k,
+            0,
+            self.pathway,
+            v_s=self.v_s,
+            sigma=self.sigma,
+            mu_s=self.mu_k
+        )
+        assert friction.force == 0
