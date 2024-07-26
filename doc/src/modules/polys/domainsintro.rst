@@ -604,16 +604,16 @@ fields but this is not yet available in SymPy (contributions welcome!).
 Real and complex fields
 =======================
 
-The fields :ref:`RR` and :ref:`CC` are intended mathematically to correspond
-to the `reals`_ and the `complex numbers`_, `\mathbb{R}` and `\mathbb{C}`
+The fields :ref:`RR` and :ref:`CC` are intended mathematically to correspond to
+the `reals`_ and the `complex numbers`_, `\mathbb{R}` and `\mathbb{C}`
 respectively. The implementation of these uses floating point arithmetic. In
 practice this means that these are the domains that are used to represent
 expressions containing floats. Elements of :ref:`RR` are instances of the
-class :py:class:`~.RealElement` and have an ``mpf`` tuple which is used to
-represent a float in ``mpmath``. Elements of :ref:`CC` are instances of
-:py:class:`~.ComplexElement` and have an ``mpc`` tuple which is a pair of
-``mpf`` tuples representing the real and imaginary parts. See the
-`mpmath docs`_ for more about how floating point numbers are represented::
+``mpmath`` class ``mpf`` and have an ``_mpf_`` tuple which is how arbitrary
+floating point real numbers are represented in ``mpmath``. Elements of
+:ref:`CC` are instances of ``mpc`` and have an ``_mpc_`` tuple which is a pair
+of ``_mpf_`` tuples representing the real and imaginary parts. See the `mpmath
+docs`_ for more about how floating point numbers are represented::
 
   >>> from sympy import RR, CC
   >>> xr = RR(3)
@@ -641,7 +641,7 @@ The default domains :ref:`RR` and :ref:`CC` use 53 binary digits of precision
 much like standard `double precision`_ floating point which corresponds to
 approximately 15 decimal digits::
 
-  >>> from sympy.polys.domains.realfield import RealField
+  >>> from sympy import RealField
   >>> RR.precision
   53
   >>> RR.dps
@@ -649,25 +649,12 @@ approximately 15 decimal digits::
   >>> RR(1) / RR(3)
   0.333333333333333
   >>> RR100 = RealField(100)
-  >>> RR100.precision
+  >>> RR100.precision   # precision in binary bits
   100
-  >>> RR100.dps
+  >>> RR100.dps         # precision in decimal places
   29
   >>> RR100(1) / RR100(3)
   0.33333333333333333333333333333
-
-There is however a bug in the implementation of this so that actually a global
-precision setting is used by all :py:class:`~.RealElement`. This means that
-just creating ``RR100`` above has altered the global precision and we will
-need to restore it in the doctest here::
-
-  >>> RR(1) / RR(3)  # wrong result!
-  0.33333333333333333333333333333
-  >>> dummy = RealField(53)  # hack to restore precision
-  >>> RR(1) / RR(3)  # restored
-  0.333333333333333
-
-(Obviously that should be fixed!)
 
 .. _reals: https://en.wikipedia.org/wiki/Real_number
 .. _complex numbers: https://en.wikipedia.org/wiki/Complex_number
