@@ -429,7 +429,7 @@ class Domain:
                 return self.convert_from(element, QQ)
 
         if isinstance(element, float):
-            parent = RealField(tol=False)
+            parent = RealField()
             return self.convert_from(parent(element), parent)
 
         if isinstance(element, complex):
@@ -772,14 +772,17 @@ class Domain:
 
         def mkinexact(cls, K0, K1):
             prec = max(K0.precision, K1.precision)
-            tol = max(K0.tolerance, K1.tolerance)
-            return cls(prec=prec, tol=tol)
+            return cls(prec=prec)
 
         if K1.is_ComplexField:
             K0, K1 = K1, K0
         if K0.is_ComplexField:
             if K1.is_ComplexField or K1.is_RealField:
-                return mkinexact(K0.__class__, K0, K1)
+                if K0.precision >= K1.precision:
+                    return K0
+                else:
+                    from sympy.polys.domains.complexfield import ComplexField
+                    return ComplexField(prec=K1.precision)
             else:
                 return K0
 
@@ -787,10 +790,13 @@ class Domain:
             K0, K1 = K1, K0
         if K0.is_RealField:
             if K1.is_RealField:
-                return mkinexact(K0.__class__, K0, K1)
+                if K0.precision >= K1.precision:
+                    return K0
+                else:
+                    return K1
             elif K1.is_GaussianRing or K1.is_GaussianField:
                 from sympy.polys.domains.complexfield import ComplexField
-                return ComplexField(prec=K0.precision, tol=K0.tolerance)
+                return ComplexField(prec=K0.precision)
             else:
                 return K0
 
