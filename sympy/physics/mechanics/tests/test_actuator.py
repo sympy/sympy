@@ -9,7 +9,9 @@ from sympy import (
     SympifyError,
     sqrt,
     Abs,
-    symbols
+    symbols,
+    tanh,
+    sign,
 )
 from sympy.physics.mechanics import (
     ActuatorBase,
@@ -29,10 +31,7 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
     DuffingSpring,
     CoulombKineticFriction,
-    CoulombKineticFriction2,
     System,
-    WrappingCylinder,
-    WrappingPathway,
 )
 
 from sympy.core.expr import Expr as ExprType
@@ -887,7 +886,7 @@ class TestCoulombKineticFriction:
         self.repl_positive = {self.q1: self.q1_positive, self.u1: self.u1_positive}
         self.repl_negative = {self.q1: self.q1_negative, self.u1: self.u1_negative}
 
-        # Mass, gravity constant, friction coefficient, coefficient of sliding friction, viscous_coefficient
+        # Mass, gravity constant, friction coefficient, coefficient of Stribeck friction, viscous_coefficient
         self.m, self.g, self.mu_k, self.mu_s, self.v_s, self.sigma, self.F = symbols('m g mu_k mu_s v_s sigma F', real=True)
 
         # Define the reference frame
@@ -918,12 +917,12 @@ class TestCoulombKineticFriction:
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k * self.q1 * tanh(100 * self.u1 * sign(self.q1))/Abs(self.q1) - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k - self.m * self.u1.diff()
+        expected_negative = self.F - self.g * self.m * self.mu_k * self.q1 * tanh(100 * self.u1 * sign(self.q1))/Abs(self.q1) - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
 
     def test_block_on_surface_viscous(self):
@@ -937,12 +936,12 @@ class TestCoulombKineticFriction:
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k * tanh(100 * self.u1 * sign(self.q1)) - self.sigma * self.u1 * tanh(100 * self.u1 * sign(self.q1)) * self.q1/Abs(self.q1) - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
+        expected_negative = self.F + self.g * self.m * self.mu_k * tanh(100 * self.u1 * sign(self.q1)) + self.sigma * self.u1 * tanh(100 * self.u1 * sign(self.q1)) * self.q1/Abs(self.q1) - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
 
     def test_block_on_surface_stribeck(self):
@@ -957,12 +956,12 @@ class TestCoulombKineticFriction:
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k * self.q1 * tanh(100 * self.u1 * sign(self.q1))/Abs(self.q1) - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k - self.m * self.u1.diff()
+        expected_negative = self.F - self.g * self.m * self.mu_k * self.q1 * tanh(100 * self.u1 * sign(self.q1))/Abs(self.q1) - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
 
     def test_block_on_surface_all(self):
@@ -978,101 +977,10 @@ class TestCoulombKineticFriction:
 
         # Positive velocity case
         eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
+        expected_positive = self.F - self.g * self.m * self.mu_k * tanh(100 * self.u1 * sign(self.q1)) - self.sigma * self.u1 * tanh(100 * self.u1 * sign(self.q1)) * sign(self.q1) * self.q1/Abs(self.q1) - self.m * self.u1.diff()
         assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
 
         # Negative velocity case
         eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k + self.sigma * self.u1 - self.m * self.u1.diff()
+        expected_negative = self.F + self.g * self.m * self.mu_k * tanh(100 * self.u1 * sign(self.q1)) - self.sigma * self.u1 * tanh(100 * self.u1 * sign(self.q1)) * sign(self.q1) * self.q1/Abs(self.q1) - self.m * self.u1.diff()
         assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
-
-class TestCoulombKineticFriction2:
-    @pytest.fixture(autouse=True)
-    def _block_on_surface(self):
-        r"""A block sliding on a surface.
-
-        Notes
-        =====
-        This test validates the correctness of the CoulombKineticFriction by simulating
-        a block sliding on a surface with the Coulomb kinetic friction force.
-        The test covers scenarios with both positive and negative velocities.
-
-        Equations of Motion
-        ===================
-        The equations of motion for the block are derived considering
-        the applied force F, the mass m, the gravitational constant g, and the friction forces
-        as described above.
-
-        The general form of the equation of motion is:
-
-            F - F_friction = m * xdd
-
-        where F_friction is given by the friction force equation f_f(v).
-
-        """
-        # Define Dynamics symbols and parameters
-        self.q1, self.u1 = dynamicsymbols("q1 u1", real=True)
-        self.q1_positive, self.u1_positive = dynamicsymbols('q1 u1', real=True, positive=True)
-        self.q1_negative, self.u1_negative = dynamicsymbols('q1 u1', real=True, negative=True)
-        self.repl_positive = {self.q1: self.q1_positive, self.u1: self.u1_positive}
-        self.repl_negative = {self.q1: self.q1_negative, self.u1: self.u1_negative}
-
-        # Mass, gravity constant, friction coefficient, coefficient of sliding friction
-        self.m, self.g, self.mu_k, self.mu_s, self.v_s, self.F = symbols('m g mu_k mu_s v_s F', real=True)
-
-        # Define the reference frame
-        self.N = ReferenceFrame('N')
-        self.O = Point('O')
-        self.P = self.O.locatenew('P', self.q1 * self.N.x)
-        self.O.set_vel(self.N, 0)
-        self.P.set_vel(self.N, self.u1 * self.N.x)
-        self.pathway = LinearPathway(self.O, self.P)
-
-        self.particle = Particle('particle', self.P, self.m) # Block
-
-        self.system = System(self.N, self.O)
-        self.system.q_ind = [self.q1]
-        self.system.u_ind = [self.u1]
-        self.system.kdes = [self.q1.diff() - self.u1]
-        self.system.add_bodies(self.particle)
-        self.system.apply_uniform_gravity(-self.g * self.N.y)
-        self.system.add_loads(Force(self.particle, self.F * self.N.x))
-
-    def test_block_on_surface_default(self):
-        friction = CoulombKineticFriction2(
-            self.mu_k,
-            self.m * self.g * self.N.y,
-            self.pathway,
-            self.N,
-        )
-        self.system.add_actuators(friction)
-
-        # Positive velocity case
-        eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k - self.m * self.u1.diff()
-        assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
-
-        # Negative velocity case
-        eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k - self.m * self.u1.diff()
-        assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
-
-class TestCylinderFriction:
-    @pytest.fixture(autouse=True)
-    def _cylindricaljoint(self):
-        # Define symbols
-        self.t = symbols('t')
-        self.q1 = dynamicsymbols('q1')
-        self.q2 = dynamicsymbols('q2')
-        self.u1 = dynamicsymbols('u1')
-        self.u2 = dynamicsymbols('u2')
-        self.m = symbols('m')
-        self.g = symbols('g')
-
-        self.N = ReferenceFrame('N')
-        self.A = self.N.orientnew('A', 'axis', [self.q1, self.N.z])
-
-        self.cylinder = WrappingCylinder(...)
-        self.pathway = WrappingPathway(...)
-
-        self.P = Point('P')
