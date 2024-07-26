@@ -445,6 +445,9 @@ def test_Poly__new__():
         Poly(3*x**5 + 65536*x**4 + x**3 + 65536*x** 2 + 1, x,
              modulus=65537, symmetric=False)
 
+    N = 10**100
+    assert Poly(-1, x, modulus=N, symmetric=False).as_expr() == N - 1
+
     assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
     assert isinstance(Poly(x**2 + x + I + 1.0).get_domain(), ComplexField)
 
@@ -1540,6 +1543,10 @@ def test_Poly_clear_denoms():
     coeff, poly = Poly(x/2 + 1, x).clear_denoms()
     assert coeff == 2 and poly == Poly(
         x + 2, x, domain='QQ') and poly.get_domain() == QQ
+
+    coeff, poly = Poly(2*x**2 + 3, modulus=5).clear_denoms()
+    assert coeff == 1 and poly == Poly(
+        2*x**2 + 3, x, modulus=5) and poly.get_domain() == FF(5)
 
     coeff, poly = Poly(x/2 + 1, x).clear_denoms(convert=True)
     assert coeff == 2 and poly == Poly(
@@ -3403,6 +3410,12 @@ def test_cancel():
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
     assert cancel((x**2 + 1)/(x - I)) == x + I
+
+
+def test_cancel_modulus():
+    assert cancel((x**2 - 1)/(x + 1), modulus=2) == x + 1
+    assert Poly(x**2 - 1, modulus=2).cancel(Poly(x + 1, modulus=2)) ==\
+            (1, Poly(x + 1, modulus=2), Poly(1, x, modulus=2))
 
 
 def test_make_monic_over_integers_by_scaling_roots():
