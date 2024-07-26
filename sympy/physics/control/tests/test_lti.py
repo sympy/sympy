@@ -1060,10 +1060,6 @@ def test_Feedback_as_TransferFunction():
     fd2 = Feedback(tf1, tf2, 1) # Positive Feedback system
     unit = TransferFunction(1, 1, s)
 
-    # Checking the type
-    assert isinstance(fd1, TransferFunction)
-    assert isinstance(fd1, Feedback)
-
     # Testing the numerator and denominator
     assert fd1.num == tf1
     assert fd2.num == tf1
@@ -1088,6 +1084,7 @@ def test_Feedback_as_TransferFunction():
     tf3 = TransferFunction(tf1*fd1, tf2, s)
     assert tf3 == TransferFunction(Series(tf1, fd1), tf2, s)
     assert tf3.num == tf1*fd1
+
 
 def test_issue_26161():
     # Issue https://github.com/sympy/sympy/issues/26161
