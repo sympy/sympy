@@ -1168,7 +1168,7 @@ class CoulombKineticFriction(ForceActuator):
         f_max = self.mu_s * self.f_n
         stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2) if self.v_s != 0 else 0
         viscous_term = self.sigma * v if self.f_n != 0 else 0
-        return f_c * -sign(v) + stribeck_term + viscous_term
+        return (f_c + stribeck_term) * -sign(v) - viscous_term
 
     @force.setter
     def force(self, force):
