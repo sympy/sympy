@@ -433,7 +433,15 @@ class Domain:
             return self.convert_from(parent(element), parent)
 
         if isinstance(element, complex):
-            parent = ComplexField(tol=False)
+            parent = ComplexField()
+            return self.convert_from(parent(element), parent)
+
+        if type(element).__name__ == 'mpf':
+            parent = RealField()
+            return self.convert_from(parent(element), parent)
+
+        if type(element).__name__ == 'mpc':
+            parent = ComplexField()
             return self.convert_from(parent(element), parent)
 
         if isinstance(element, DomainElement):
