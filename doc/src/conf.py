@@ -363,26 +363,20 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 
 # Additional stuff for the LaTeX preamble.
 # Tweaked to work with XeTeX.
+latex_engine = 'xelatex'
 latex_elements = {
-    'babel':     '',
-    'fontenc': r'''
-% Define version of \LaTeX that is usable in math mode
-\let\OldLaTeX\LaTeX
-\renewcommand{\LaTeX}{\text{\OldLaTeX}}
-
+    'babel': r'\usepackage[english]{babel}',
+    'fontpkg': r'''
 \usepackage{bm}
-\usepackage{amssymb}
-\usepackage{fontspec}
-\usepackage[english]{babel}
 \defaultfontfeatures{Mapping=tex-text}
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}
 ''',
-    'fontpkg':   '',
-    'inputenc':  '',
-    'utf8extra': '',
     'preamble':  r'''
+% Define version of \LaTeX that is usable in math mode
+\let\OldLaTeX\LaTeX
+\renewcommand{\LaTeX}{\text{\OldLaTeX}}
 '''
 }
 
