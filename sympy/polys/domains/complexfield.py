@@ -45,7 +45,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
     def tolerance(self):
         return self._tolerance
 
-    def __init__(self, prec=None, dps=None, tolerance=None):
+    def __init__(self, prec=None, dps=None, tol=None):
         # XXX: The tolerance parameter is ignored but is kept for backward
         # compatibility for now.
 
@@ -72,10 +72,10 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
 
     @property
     def tp(self):
-        # XXX: Domain treats tp as an alis of dtype. Here we need to two
-        # separate things: dtype is a callable to make/convert instances.
-        # We use tp with isinstance to check if an object is an instance
-        # of the domain already.
+        # XXX: Domain treats tp as an alias of dtype. Here we need two separate
+        # things: dtype is a callable to make/convert instances. We use tp with
+        # isinstance to check if an object is an instance of the domain
+        # already.
         return self._dtype
 
     def dtype(self, x, y=0):
