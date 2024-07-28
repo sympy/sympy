@@ -778,10 +778,6 @@ class Domain:
         if K0.is_Composite or K1.is_Composite:
             return K0.unify_composite(K1)
 
-        def mkinexact(cls, K0, K1):
-            prec = max(K0.precision, K1.precision)
-            return cls(prec=prec)
-
         if K1.is_ComplexField:
             K0, K1 = K1, K0
         if K0.is_ComplexField:
