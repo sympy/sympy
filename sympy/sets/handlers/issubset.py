@@ -24,7 +24,8 @@ def _(a, b):
         return False
     if fuzzy_bool(a.end > b.end):
         return False
-    if ((a.left_open or not b.left_open) and (a.right_open or not b.right_open)):
+    if ((a.left_open or not b.left_open or b.left.is_infinite)
+        and (a.right_open or not b.right_open or b.right.is_infinite)):
         start_ge = fuzzy_bool(a.start >= b.start)
         end_le = fuzzy_bool(a.end <= b.end)
         return fuzzy_and([start_ge, end_le])
