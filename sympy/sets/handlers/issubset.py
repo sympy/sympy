@@ -5,7 +5,6 @@ from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet
 from sympy.sets.fancysets import Complexes, Reals, Range, Rationals, Integers, ImageSet
 from sympy.multipledispatch import Dispatcher
-from sympy.polys.polyerrors import PolynomialError
 
 
 _inf_sets = [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals, S.Complexes]
