@@ -453,7 +453,10 @@ class Set(Basic, EvalfMixin):
 
         """
         if isinstance(other, Set):
-            return self != other and self.is_subset(other)
+            return fuzzy_and([
+                self.is_subset(other),
+                fuzzy_not(other.is_subset(self)),
+            ])
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
@@ -498,7 +501,7 @@ class Set(Basic, EvalfMixin):
 
         """
         if isinstance(other, Set):
-            return self != other and self.is_superset(other)
+            return other.is_proper_subset(self)
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
