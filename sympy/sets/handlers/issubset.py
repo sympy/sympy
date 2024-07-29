@@ -1,7 +1,6 @@
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
-from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet
 from sympy.sets.fancysets import Complexes, Reals, Range, Rationals, Integers, ImageSet
 from sympy.multipledispatch import Dispatcher
