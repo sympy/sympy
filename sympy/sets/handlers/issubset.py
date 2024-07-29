@@ -19,22 +19,25 @@ def _(a, b):
 
 @is_subset_sets.register(Interval, Interval)
 def _(a, b):
-    # This is correct but can be made more comprehensive...
-    if fuzzy_bool(a.start < b.start):
+
+    if (a.left_open or not b.left_open or b.left.is_infinite):
+        left_in = fuzzy_bool(a.start >= b.start)
+    else:
+        left_in = fuzzy_bool(a.start > b.start)
+
+    if fuzzy_bool(left_in) is False:
         return False
-    if fuzzy_bool(a.end > b.end):
+
+    if (a.right_open or not b.right_open or b.right.is_infinite):
+        right_in = fuzzy_bool(a.end <= b.end)
+    else:
+        right_in = fuzzy_bool(a.end < b.end)
+
+    if fuzzy_bool(right_in) is False:
         return False
-    if ((a.left_open or not b.left_open or b.left.is_infinite)
-        and (a.right_open or not b.right_open or b.right.is_infinite)):
-        start_ge = fuzzy_bool(a.start >= b.start)
-        end_le = fuzzy_bool(a.end <= b.end)
-        return fuzzy_and([start_ge, end_le])
-    if fuzzy_bool(b.start < a.start) and fuzzy_bool(a.end < b.end):
+
+    if left_in and right_in:
         return True
-    if (b.left_open and not a.left_open and fuzzy_bool(Eq(a.start, b.start))):
-        return False
-    if (b.right_open and not a.right_open and fuzzy_bool(Eq(a.end, b.end))):
-        return False
 
 @is_subset_sets.register(Interval, FiniteSet)
 def _(a_interval, b_fs):
