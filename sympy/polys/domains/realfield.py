@@ -1,14 +1,54 @@
 """Implementation of :class:`RealField` class. """
 
 
-from sympy.external.gmpy import SYMPY_INTS
+from sympy.external.gmpy import SYMPY_INTS, MPQ
 from sympy.core.numbers import Float
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
-from sympy.polys.domains.mpelements import MPContext
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+
+from mpmath import MPContext
+from mpmath.libmp import to_rational as _mpmath_to_rational
+
+
+def to_rational(s, max_denom, limit=True):
+
+    p, q = _mpmath_to_rational(s._mpf_)
+
+    # Needed for GROUND_TYPES=flint if gmpy2 is installed because mpmath's
+    # to_rational() function returns a gmpy2.mpz instance and if MPQ is
+    # flint.fmpq then MPQ(p, q) will fail.
+    p = int(p)
+
+    if not limit or q <= max_denom:
+        return p, q
+
+    p0, q0, p1, q1 = 0, 1, 1, 0
+    n, d = p, q
+
+    while True:
+        a = n//d
+        q2 = q0 + a*q1
+        if q2 > max_denom:
+            break
+        p0, q0, p1, q1 = p1, q1, p0 + a*p1, q2
+        n, d = d, n - a*d
+
+    k = (max_denom - q0)//q1
+
+    number = MPQ(p, q)
+    bound1 = MPQ(p0 + k*p1, q0 + k*q1)
+    bound2 = MPQ(p1, q1)
+
+    if not bound2 or not bound1:
+        return p, q
+    elif abs(bound2 - number) <= abs(bound1 - number):
+        return bound2.numerator, bound2.denominator
+    else:
+        return bound1.numerator, bound1.denominator
+
 
 @public
 class RealField(Field, CharacteristicZero, SimpleDomain):
@@ -41,16 +81,33 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     @property
     def tolerance(self):
-        return self._context.tolerance
+        return self._tolerance
 
-    def __init__(self, prec=_default_precision, dps=None, tol=None):
-        context = MPContext(prec, dps, tol, True)
-        context._parent = self
+    def __init__(self, prec=None, dps=None, tol=None):
+        # XXX: The tol parameter is ignored but is kept for now for backwards
+        # compatibility.
+
+        context = MPContext()
+
+        if prec is None and dps is None:
+            context.prec = self._default_precision
+        elif dps is None:
+            context.prec = prec
+        elif prec is None:
+            context.dps = dps
+        else:
+            raise TypeError("Cannot set both prec and dps")
+
         self._context = context
 
         self._dtype = context.mpf
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
+
+        # Only max_denom here is used for anything and is only used for
+        # to_rational.
+        self._max_denom = max(2**context.prec // 200, 99)
+        self._tolerance = self.one / self._max_denom
 
     @property
     def tp(self):
@@ -69,12 +126,10 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         return self._dtype(arg)
 
     def __eq__(self, other):
-        return (isinstance(other, RealField)
-           and self.precision == other.precision
-           and self.tolerance == other.tolerance)
+        return isinstance(other, RealField) and self.precision == other.precision
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self._dtype, self.precision, self.tolerance))
+        return hash((self.__class__.__name__, self._dtype, self.precision))
 
     def to_sympy(self, element):
         """Convert ``element`` to SymPy number. """
@@ -126,7 +181,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     def to_rational(self, element, limit=True):
         """Convert a real number to rational number. """
-        return self._context.to_rational(element, limit)
+        return to_rational(element, self._max_denom, limit=limit)
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """

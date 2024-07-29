@@ -175,6 +175,12 @@ def test_CRootOf_is_complex():
     assert rootof(x**3 + x + 3, 0).is_complex is True
 
 
+def test_CRootOf_is_algebraic():
+    assert rootof(x**3 + x + 3, 0).is_algebraic is True
+    assert rootof(x**3 + x + 3, 1).is_algebraic is True
+    assert rootof(x**3 + x + 3, 2).is_algebraic is True
+
+
 def test_CRootOf_subs():
     assert rootof(x**3 + x + 1, 0).subs(x, y) == rootof(y**3 + y + 1, 0)
 
