@@ -1002,29 +1002,27 @@ class CoulombKineticFriction(ForceActuator):
     described by the function:
 
     .. math::
-        F = (f_c + (f_{\text{max}} - f_c) \cdot e^{-(\frac{v}{v_s})^2}) \cdot \text{sign}(v) + \sigma \cdot v
+        F = (\mu_k f_n + (\mu_s - \mu_k) f_n e^{-(\frac{v}{v_s})^2}) \text{sign}(v) + \sigma  v
 
-    where :math:`f_c` is the Coulomb friction constant, :math:`f_{max}` is the maximum static friction force,
-    :math:`v_s` is the Stribeck friction coefficient, :math:`\sigma` is the viscous friction constant,
-    and :math:`v` is the relative velocity.
+    where :math:`\mu_k` is the coefficient of kinetic friction, :math:`\mu_s` is the
+    coefficient of static friction, :math:`f_n` is the normal force, :math:`v` is the
+    relative velocity, :math:`v_s` is the Stribeck friction coefficient, and
+    :math:`\sigma` is the viscous friction constant.
 
-    The default friction force is :math:`F = \mu_k \cdot f_n`, where :math:`f_n` is the normal force.
+    The default friction force is :math:`F = \mu_k f_n`.
     When specified, the actuator includes:
 
-    - Stribeck effect: :math:`(\mu_s - \mu_k) \cdot f_n \cdot e^{-(\frac{v}{v_s})^2}`
-    - Viscous effect: :math:`\sigma \cdot v`
+    - Stribeck effect: :math:`(\mu_s - \mu_k) f_n e^{-(\frac{v}{v_s})^2}`
+    - Viscous effect: :math:`\sigma v`
 
-    In case we include all effects, the full actuator represents:
-
-    .. math::
-        F = (\mu_k \cdot f_n + (\mu_s - \mu_k) \cdot f_n \cdot e^{-(\frac{v}{v_s})^2}) \cdot \text{sign}(v) + \sigma \cdot v
-
-    Please note that this actuator assumes slip and applies a force opposite to the velocity direction.
-
-    When using this friction actuator, please ensure that the normal force is a non-negative
-    scalar and is appropriate for the system being modeled. We have tested this actuator
-    for straightforward motions, including a block sliding on a surface, and it works well
-    with systems where the direction and magnitude of the normal force are consistent and predictable.
+    Notes
+    ======
+    The actuator makes the following assumptions:
+    - The actuator assumes slip.
+    - The normal force is assumed to be a non-negative scalar.
+    - The resultant friction force is opposite to the velocity direction.
+    This actuator has been tested for straightforward motions, like a block sliding
+    on a surface.
 
     Examples
     ========
