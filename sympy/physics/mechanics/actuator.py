@@ -1091,6 +1091,7 @@ class CoulombKineticFriction(ForceActuator):
 
     @property
     def mu_k(self):
+        """The coefficient of kinetic friction."""
         return self._mu_k
 
     @mu_k.setter
@@ -1105,6 +1106,7 @@ class CoulombKineticFriction(ForceActuator):
 
     @property
     def mu_s(self):
+        """The coefficient of static friction."""
         return self._mu_s
 
     @mu_s.setter
@@ -1119,6 +1121,7 @@ class CoulombKineticFriction(ForceActuator):
 
     @property
     def f_n(self):
+        """The normal force between the surfaces."""
         return self._f_n
 
     @f_n.setter
@@ -1133,6 +1136,7 @@ class CoulombKineticFriction(ForceActuator):
 
     @property
     def sigma(self):
+        """The viscous friction coefficient."""
         return self._sigma
 
     @sigma.setter
@@ -1147,6 +1151,7 @@ class CoulombKineticFriction(ForceActuator):
 
     @property
     def v_s(self):
+        """The Stribeck friction coefficient."""
         return self._v_s
 
     @v_s.setter
