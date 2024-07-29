@@ -519,6 +519,12 @@ class CodePrinter(StrPrinter):
     def _print_BooleanFunction(self, expr):
         return self._print(expr.to_nnf())
 
+    def _print_isnan(self, arg):
+        return 'isnan(%s)' % self._print(*arg.args)
+
+    def _print_isinf(self, arg):
+        return 'isinf(%s)' % self._print(*arg.args)
+
     def _print_Mul(self, expr):
 
         prec = precedence(expr)

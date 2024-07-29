@@ -5156,6 +5156,11 @@ def test_sympy__codegen__cfunctions__isnan():
     assert _test_args(isnan(x))
 
 
+def test_sympy__codegen__cfunctions__isinf():
+    from sympy.codegen.cfunctions import isinf
+    assert _test_args(isinf(x))
+
+
 def test_sympy__codegen__fnodes__FFunction():
     from sympy.codegen.fnodes import FFunction
     assert _test_args(FFunction('f'))
