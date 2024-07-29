@@ -1002,7 +1002,7 @@ class CoulombKineticFriction(ForceActuator):
     described by the function:
 
     .. math::
-        F = f_c \cdot \text{sign}(v) + (f_{\text{max}} - f_c) \cdot e^{-(\frac{v}{v_s})^2} + \sigma \cdot v
+        F = (f_c + (f_{\text{max}} - f_c) \cdot e^{-(\frac{v}{v_s})^2}) \cdot \text{sign}(v) + \sigma \cdot v
 
     where :math:`f_c` is the Coulomb friction constant, :math:`f_{max}` is the maximum static friction force,
     :math:`v_s` is the Stribeck friction coefficient, :math:`\sigma` is the viscous friction constant,
@@ -1017,7 +1017,7 @@ class CoulombKineticFriction(ForceActuator):
     In case we include all effects, the full actuator represents:
 
     .. math::
-        F = \mu_k \cdot f_n \cdot \text{sign}(v) + (\mu_s - \mu_k) \cdot f_n \cdot e^{-(\frac{v}{v_s})^2} + \sigma \cdot v
+        F = (\mu_k \cdot f_n + (\mu_s - \mu_k) \cdot f_n \cdot e^{-(\frac{v}{v_s})^2}) \cdot \text{sign}(v) + \sigma \cdot v
 
     Please note that this actuator assumes slip and applies a force opposite to the velocity direction.
 
