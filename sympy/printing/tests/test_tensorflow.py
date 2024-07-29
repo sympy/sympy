@@ -467,6 +467,8 @@ def test_tensorflow_Derivative():
         "tensorflow.gradients(tensorflow.math.sin(x), x)[0]"
 
 def test_tensorflow_isnan_isinf():
+    if not tf:
+        skip("TensorFlow not installed")
 
     # Test for isnan
     x = symbols("x")
