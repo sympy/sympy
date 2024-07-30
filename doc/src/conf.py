@@ -377,7 +377,7 @@ latex_elements = {
 % Define version of \LaTeX that is usable in math mode
 \usepackage{letltxmacro}
 \LetLtxMacro\OldLaTeX\LaTeX
-\renewcommand{\LaTeX}{\text{\OldLaTeX}}
+\AtBeginDocument{\DeclareRobustCommand{\LaTeX}{\text{\OldLaTeX}}}
 '''
 }
 
