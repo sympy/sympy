@@ -435,7 +435,7 @@ latex_elements = {
  }
  {\AtEndDocument{\typeout{%
     𝑅 and some like characters could not be rendered as^^J%
-    New Computer Modern Math font could not be found or fontspec^^J
+    New Computer Modern Math font could not be found or fontspec^^J%
     package is too old (we need 2.5c 2017/01/02 or later).%
     }%
    }%
@@ -450,7 +450,7 @@ latex_elements = {
  }
  {\AtEndDocument{\typeout{%
     于 and some like characters could not be rendered as^^J%
-    Harano Aji Mincho font could not be found or fontspec^^J
+    Harano Aji Mincho font could not be found or fontspec^^J%
     package is too old (we need 2.5c 2017/01/02 or later).%
     }%
    }%
