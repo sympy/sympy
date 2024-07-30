@@ -106,6 +106,10 @@ def test_gamma_series():
         -1/(x + 1) + EulerGamma - 1 + (x + 1)*(-1 - pi**2/12 - EulerGamma**2/2 + \
        EulerGamma) + (x + 1)**2*(-1 - pi**2/12 - EulerGamma**2/2 + EulerGamma**3/6 - \
        polygamma(2, 1)/6 + EulerGamma*pi**2/12 + EulerGamma) + O((x + 1)**3, (x, -1))
+    assert gamma(x + 1).series(x, oo, 3) == sqrt(2)*sqrt(pi)*sqrt(x + 1)*(-23/(288*x**2) + \
+            1/(12*x) + 1 + O(x**(-3), (x, oo)))*exp(x*log(x + 1) - x - 1)
+    assert gamma(x).series(x, oo, 3) == sqrt(2)*sqrt(pi)*(1/(288*x**2) + 1/(12*x) + 1 + \
+            O(x**(-3), (x, oo)))*sqrt(1/x)*exp(-x*log(1/x) - x)
 
 
 def tn_branch(s, func):
