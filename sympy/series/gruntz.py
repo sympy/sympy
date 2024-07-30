@@ -551,13 +551,13 @@ def mrv_leadterm(e, x):
     w = Dummy("w", positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     from sympy.core.power import Pow
-    li =[]
+    li = []
 
     for terms in f.atoms(Pow):
         if terms.has(x):
             b = terms.base
             e = terms.exp
-            li.append((terms,exp(e*log(b))))
+            li.append((terms, exp(e*log(b))))
 
     for a, b in li:
         f = f.xreplace({a: b})
