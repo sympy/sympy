@@ -372,7 +372,7 @@ latex_elements = {
 
 \usepackage{bm}
 \usepackage{amssymb}
-\usepackage{fontspec}
+\usepackage[no-math]{fontspec}
 \usepackage[english]{babel}
 \defaultfontfeatures{Mapping=tex-text}
 \setmainfont{DejaVu Serif}
@@ -383,7 +383,79 @@ latex_elements = {
     'inputenc':  '',
     'utf8extra': '',
     'preamble':  r'''
-'''
+\usepackage{newunicodechar}
+% Some Unicode characters need some re-mapping:
+% using \text to allow usage in math mode
+% Those turn out to be available in DejaVu Sans, but not Mono,
+% which caused Missing character.
+% Attention that if sans-serif font is modified in future, this
+% may need updates.
+\newunicodechar{ᵦ}{\text{\sffamily ᵦ}}%   (U+1D66)
+\newunicodechar{ᵧ}{\text{\sffamily ᵧ}}%   (U+1D67)
+\newunicodechar{ᵨ}{\text{\sffamily ᵨ}}%   (U+1D68)
+\newunicodechar{ᵩ}{\text{\sffamily ᵩ}}%   (U+1D69
+\newunicodechar{ᵪ}{\text{\sffamily ᵪ}}%   (U+1D6A)
+\newunicodechar{∧}{\text{\sffamily ∧}}%   (U+2227)
+\newunicodechar{∪}{\text{\sffamily ∪}}%   (U+222A)
+\newunicodechar{ⅆ}{\text{\sffamily ⅆ}}%   (U+2146)
+\newunicodechar{∊}{\text{\sffamily ∊}}%   (U+220A)
+\newunicodechar{⊻}{\text{\sffamily ⊻}}%   (U+22BB)
+\newunicodechar{⊼}{\text{\sffamily ⊼}}%   (U+22BC)
+\newunicodechar{⊽}{\text{\sffamily ⊽}}%   (U+22BD)
+\newunicodechar{⨂}{\text{\sffamily ⨂}}%   (U+2A02)
+% Those next two are not available in DejaVu Sans Bold,
+% we can find them in boldface in XITS or simply use \mdseries
+% Opting for the later here.
+\newunicodechar{┬}{\text{\sffamily\mdseries ┬}}%   (U+252C)
+\newunicodechar{┴}{\text{\sffamily\mdseries ┴}}%   (U+2534)
+% Next one (cross mark) is  used only once in sources (not in math mode).
+% Available in Emoji fonts such as Noto Emoji.
+% U+2715 is available in DejaVu Sans and DejaVu Sans Mono but not Serif
+\newunicodechar{❌}{\textcolor{red}{\sffamily\bfseries ✕}}% (U+274C --> U+2715)
+%
+% \IfFontExistsTF was added to fontspec at v2.5c 2017/01/02.
+% If it does not exist we take no risk.
+\makeatletter
+\ifdefined\IfFontExistsTF\else\let\IfFontExistsTF\@secondoftwo\fi
+\makeatother
+%
+%
+\IfFontExistsTF{NewCMMath-Regular.otf}
+ {%
+  \newfontfamily{\NCMMath}{NewCMMath-Regular}
+  % This one is available (on TeXLive 2024) only in New Computer Modern Math
+  % and OldStandard-Math.
+  \newunicodechar{⭯}{\text{\NCMMath ⭯}}%   (U+2B6F)
+  % Those next few are all available in New Computer Modern Math:
+  \newunicodechar{𝑅}{\text{\NCMMath 𝑅}}%   (U+1D445)
+  \newunicodechar{𝕀}{\text{\NCMMath 𝕀}}%   (U+1D540)
+  \newunicodechar{𝕌}{\text{\NCMMath 𝕌}}%   (U+1D54C)
+  \newunicodechar{𝟘}{\text{\NCMMath 𝟘}}%   (U+1D7D8)
+  \newunicodechar{𝟙}{\text{\NCMMath 𝟙}}%   (U+1D7D9)
+ }
+ {\AtEndDocument{\typeout{%
+    𝑅 and some like characters could not be rendered as^^J%
+    New Computer Modern Math font could not be found or fontspec^^J
+    package is too old (we need 2.5c 2017/01/02 or later).%
+    }%
+   }%
+ }%
+\IfFontExistsTF{HaranoAjiMincho-Regular.otf}
+ {%
+  % A few Asian ideograms:
+  \newfontfamily{\HaranoAjiMincho}{Harano Aji Mincho}
+  \newunicodechar{于}{\text{\HaranoAjiMincho 于}}%   (U+4E8E)
+  \newunicodechar{彭}{\text{\HaranoAjiMincho 彭}}%   (U+5F6D)
+  \newunicodechar{斌}{\text{\HaranoAjiMincho 斌}}%   (U+658C)
+ }
+ {\AtEndDocument{\typeout{%
+    于 and some like characters could not be rendered as^^J%
+    Harano Aji Mincho font could not be found or fontspec^^J
+    package is too old (we need 2.5c 2017/01/02 or later).%
+    }%
+   }%
+ }%
+''',
 }
 
 # SymPy logo on title page
