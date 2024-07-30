@@ -1426,9 +1426,8 @@ class Union(Set, LatticeOp):
     def _contains(self, other):
         return Or(*[s.contains(other) for s in self.args])
 
-    # XXX: This should be _eval_is_subset
-    def is_subset(self, other):
-        return fuzzy_and(s.is_subset(other) for s in self.args)
+    def _eval_is_subset(self, other):
+        return fuzzy_and(arg.is_subset(other) for arg in self.args)
 
     def _eval_is_superset(self, other):
         if fuzzy_or(arg.is_superset(other) for arg in self.args):
