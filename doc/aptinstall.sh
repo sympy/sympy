@@ -18,8 +18,6 @@ sudo apt-get install\
   texlive-fonts-recommended\
   texlive-fonts-extra\
   texlive-xetex\
-  xindy\
-  xindy-rules\
   latexmk\
   dvipng\
   librsvg2-bin\
