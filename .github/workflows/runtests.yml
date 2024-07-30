@@ -16,9 +16,9 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -64,8 +64,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -81,8 +81,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -97,11 +97,11 @@ jobs:
     needs: code-quality
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Clone full git history (needed for detecting authors)
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -115,8 +115,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -131,21 +131,16 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
-
-    name: Tests ${{ matrix.group }}/4
+    name: Tests
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4
+      - run: pytest -n auto
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -162,8 +157,8 @@ jobs:
     name: ${{ matrix.python-version }} Optional Dendendencies
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -179,44 +174,15 @@ jobs:
                          wurlitzer autowrap lxml lark z3-solver pycosat   \
                          jax jaxlib libclang scipy aesara                 \
                          'antlr4-python3-runtime==4.11.*'                 \
+                         symengine                                        \
+                         numba llvmlite pymc                              \
+                         gmpy2                                            \
                          #
-
-      - run: pip install symengine
-
-      # Not available in CPython 3.12 (yet).
-      - if: ${{ ! contains(matrix.python-version, '3.12') }}
-        run: pip install numba pymc gmpy2 llvmlite
 
       # Test external imports
       - run: bin/test_external_imports.py
       - run: bin/test_submodule_imports.py
       - run: bin/test_executable.py
-
-      # Test modules with specific dependencies
-      - run: bin/test_optional_dependencies.py
-
-  # -------------------- NumPy 2.0 job ----------------------------- #
-
-  numpy-prerelease:
-    needs: code-quality
-
-    runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-
-    name: ${{ matrix.python-version }} NumPy Prerelease
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - run: pip install -r requirements-dev.txt
-      - run: pip install --pre numpy scipy
 
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
@@ -228,18 +194,13 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-
-    name: ${{ matrix.python-version }} NumPy nightly
+    name: NumPy/SciPy nightly
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.12
 
       - run: pip install -r requirements-dev.txt
       - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy
@@ -255,12 +216,10 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          # python-flint is not yet available for Python 3.12
-          # https://github.com/flintlib/python-flint/issues/52
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
@@ -274,8 +233,6 @@ jobs:
           sympy/ntheory
           sympy/polys
           sympy/solvers
-        env:
-          SYMPY_GROUND_TYPES: flint
       - run: >-
           bin/doctest
           sympy/integrals
@@ -291,8 +248,6 @@ jobs:
           doc/src/modules/polys
           doc/src/modules/printing.rst
           doc/src/tutorials/intro-tutorial/
-        env:
-          SYMPY_GROUND_TYPES: flint
 
 
   # -------------------- FLINT+gmpy2 ------------------------------ #
@@ -302,10 +257,10 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint gmpy2
@@ -313,22 +268,31 @@ jobs:
       - run: pytest sympy/polys sympy/ntheory sympy/matrices
         env:
           SYMPY_GROUND_TYPES: flint
-      - run: bin/doctest                                  \
-                    sympy/integrals                       \
-                    sympy/holonomic                       \
-                    sympy/matrices                        \
-                    sympy/ntheory                         \
-                    sympy/polys                           \
-                    sympy/printing                        \
-                    doc/src/modules/integrals             \
-                    doc/src/modules/holonomic             \
-                    doc/src/modules/matrices              \
-                    doc/src/modules/ntheory.rst           \
-                    doc/src/modules/polys                 \
-                    doc/src/modules/printing.rst          \
-                    doc/src/tutorials/intro-tutorial/     \
-        env:
-          SYMPY_GROUND_TYPES: flint
+      # Test the modules that most directly use python-flint
+      - run: >-
+          pytest
+          sympy/crypto
+          sympy/integrals
+          sympy/holonomic
+          sympy/matrices
+          sympy/ntheory
+          sympy/polys
+          sympy/solvers
+      - run: >-
+          bin/doctest
+          sympy/integrals
+          sympy/holonomic
+          sympy/matrices
+          sympy/ntheory
+          sympy/polys
+          sympy/printing
+          doc/src/modules/integrals
+          doc/src/modules/holonomic
+          doc/src/modules/matrices
+          doc/src/modules/ntheory.rst
+          doc/src/modules/polys
+          doc/src/modules/printing.rst
+          doc/src/tutorials/intro-tutorial/
 
 
   # -------------------- Tensorflow tests -------------------------- #
@@ -338,8 +302,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           # tensorflow not yet available for 3.12
           python-version: '3.11'
@@ -356,8 +320,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           # symengine not yet available for 3.12
           python-version: '3.11'
@@ -376,19 +340,14 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
-
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
+      - run: pytest -m slow --timeout 595 -n auto
 
   # -------------------- Test older (and newer) Python --------------- #
 
@@ -401,18 +360,17 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
-        group: [1, 2, 3, 4]
 
-    name: ${{ matrix.python-version }} ${{ matrix.group }}/4 Tests
+    name: ${{ matrix.python-version }} Tests
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4
+      - run: pytest -n auto
 
   # -------------------- Doctests older (and newer) Python --------------------- #
 
@@ -429,8 +387,8 @@ jobs:
     name: ${{ matrix.python-version }} Doctests
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
@@ -445,22 +403,17 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
-
-    name: mpmath-master ${{ matrix.group }}/4 Tests
+    name: mpmath-master Tests
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
-      - run: bin/test --split ${{ matrix.group }}/4
+      - run: pytest -n auto
 
   # -------------------- Build the html/latex docs ----------------- #
 
@@ -469,8 +422,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: doc/aptinstall.sh
@@ -496,8 +449,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 'pypy2.7'
       - run: bin/test_py2_import.py
@@ -509,8 +462,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip build
@@ -524,11 +477,11 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Checkout repo with full history
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install asv virtualenv packaging
@@ -543,7 +496,7 @@ jobs:
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
       - run: git fetch upstream master
-      - run: git fetch upstream 1.12
+      - run: git fetch upstream 1.13
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -555,8 +508,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # This workflow does not have write permissions for the repository so
         # we save all outputs as artifacts that can be accessed by the

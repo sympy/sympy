@@ -1639,6 +1639,9 @@ def odesimp(ode, eq, func, hint):
     if not isinstance(eq, Equality):
         raise TypeError("eq should be an instance of Equality")
 
+    # allow simplifications under assumption that symbols are nonzero
+    eq = eq.xreplace((_:={i: Dummy(nonzero=True) for i in constants})).xreplace({_[i]: i for i in _})
+
     # Second, clean up the arbitrary constants.
     # Right now, nth linear hints can put as many as 2*order constants in an
     # expression.  If that number grows with another hint, the third argument

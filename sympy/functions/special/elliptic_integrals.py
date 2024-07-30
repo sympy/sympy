@@ -355,7 +355,7 @@ class elliptic_pi(Function):
     @classmethod
     def eval(cls, n, m, z=None):
         if z is not None:
-            n, z, m = n, m, z
+            z, m = m, z
             if n.is_zero:
                 return elliptic_f(z, m)
             elif n is S.One:

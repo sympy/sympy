@@ -1312,7 +1312,7 @@ assumptions queries is bad for performance compared to querying the desired
 property more directly.
 
 This generally means using methods like {meth}`~.as_independent` or
-`{meth}`~.as_coeff_mul` and checking
+{meth}`~.as_coeff_mul` and checking
 the `args` of expressions directly (see the [custom functions
 guide](custom-functions-assumptions) for an example).
 

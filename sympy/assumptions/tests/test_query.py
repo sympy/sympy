@@ -2167,8 +2167,7 @@ def test_known_facts_consistent():
     # test cnf clauses of fact between unary predicates
     cnf = CNF.to_CNF(fact)
     clauses = set()
-    for cl in cnf.clauses:
-        clauses.add(frozenset(Literal(lit.arg.function, lit.is_Not) for lit in sorted(cl, key=str)))
+    clauses.update(frozenset(Literal(lit.arg.function, lit.is_Not) for lit in sorted(cl, key=str)) for cl in cnf.clauses)
     assert get_all_known_facts() == clauses
     # test dictionary of fact between unary predicates
     keys = [pred(x) for pred in get_known_facts_keys()]
@@ -2178,9 +2177,9 @@ def test_known_facts_consistent():
 
 def test_Add_queries():
     assert ask(Q.prime(12345678901234567890 + (cos(1)**2 + sin(1)**2))) is True
-    assert ask(Q.even(Add(S(2), S(2), evaluate=0))) is True
-    assert ask(Q.prime(Add(S(2), S(2), evaluate=0))) is False
-    assert ask(Q.integer(Add(S(2), S(2), evaluate=0))) is True
+    assert ask(Q.even(Add(S(2), S(2), evaluate=False))) is True
+    assert ask(Q.prime(Add(S(2), S(2), evaluate=False))) is False
+    assert ask(Q.integer(Add(S(2), S(2), evaluate=False))) is True
 
 
 def test_positive_assuming():

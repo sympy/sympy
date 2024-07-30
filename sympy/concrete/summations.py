@@ -1602,7 +1602,7 @@ def eval_sum_residue(f, i_a_b):
 
 def _eval_matrix_sum(expression):
     f = expression.function
-    for n, limit in enumerate(expression.limits):
+    for limit in expression.limits:
         i, a, b = limit
         dif = b - a
         if dif.is_Integer:

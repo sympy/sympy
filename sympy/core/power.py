@@ -560,6 +560,8 @@ class Pow(Expr):
                     return ok
 
         if real_b is False and real_e: # we already know it's not imag
+            if isinstance(self.exp, Rational) and self.exp.p == 1:
+                return False
             from sympy.functions.elementary.complexes import arg
             i = arg(self.base)*self.exp/S.Pi
             if i.is_complex: # finite
@@ -1837,6 +1839,6 @@ power = Dispatcher('power')
 power.add((object, object), Pow)
 
 from .add import Add
-from .numbers import Integer
+from .numbers import Integer, Rational
 from .mul import Mul, _keep_coeff
 from .symbol import Symbol, Dummy, symbols

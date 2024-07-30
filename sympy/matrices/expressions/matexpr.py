@@ -388,7 +388,9 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().as_mutable()
 
-    def __array__(self):
+    def __array__(self, dtype=object, copy=None):
+        if copy is not None and not copy:
+            raise TypeError("Cannot implement copy=False when converting Matrix to ndarray")
         from numpy import empty
         a = empty(self.shape, dtype=object)
         for i in range(self.rows):
@@ -561,7 +563,7 @@ def _matrix_derivative_old_algorithm(expr, x):
         return 1, 1
 
     def get_rank(parts):
-        return sum([j not in (1, None) for i in parts for j in _get_shape(i)])
+        return sum(j not in (1, None) for i in parts for j in _get_shape(i))
 
     ranks = [get_rank(i) for i in parts]
     rank = ranks[0]
@@ -835,9 +837,9 @@ class _LeftRightArgs:
         """
         rank = 0
         if self.first != 1:
-            rank += sum([i != 1 for i in self.first.shape])
+            rank += sum(i != 1 for i in self.first.shape)
         if self.second != 1:
-            rank += sum([i != 1 for i in self.second.shape])
+            rank += sum(i != 1 for i in self.second.shape)
         if self.higher != 1:
             rank += 2
         return rank

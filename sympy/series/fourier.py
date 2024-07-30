@@ -15,6 +15,9 @@ from sympy.sets.sets import Interval
 from sympy.utilities.iterables import is_sequence
 
 
+__doctest_requires__ = {('fourier_series',): ['matplotlib']}
+
+
 def fourier_cos_seq(func, limits, n):
     """Returns the cos sequence in a Fourier series"""
     from sympy.integrals import integrate

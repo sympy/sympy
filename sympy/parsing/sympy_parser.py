@@ -683,11 +683,8 @@ def repeated_decimals(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
             if (not num and '.' in tokval and 'e' not in tokval.lower() and
                 'j' not in tokval.lower()):
                 num.append((toknum, tokval))
-            elif is_digit(tokval)and  len(num) == 2:
-                num.append((toknum, tokval))
-            elif is_digit(tokval) and len(num) == 3 and is_digit(num[-1][1]):
-                # Python 2 tokenizes 00123 as '00', '123'
-                # Python 3 tokenizes 01289 as '012', '89'
+            elif is_digit(tokval) and (len(num) == 2 or
+                    len(num) == 3 and is_digit(num[-1][1])):
                 num.append((toknum, tokval))
             else:
                 num = []
@@ -968,7 +965,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
     This feature allows one to tell exactly how the expression was entered:
 
     >>> a = parse_expr('1 + x', evaluate=False)
-    >>> b = parse_expr('x + 1', evaluate=0)
+    >>> b = parse_expr('x + 1', evaluate=False)
     >>> a == b
     False
     >>> a.args

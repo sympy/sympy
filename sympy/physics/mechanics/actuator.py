@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import S, sympify
+from sympy import S, sympify, exp, sign
 from sympy.physics.mechanics.joint import PinJoint
 from sympy.physics.mechanics.loads import Torque
 from sympy.physics.mechanics.pathway import PathwayBase
@@ -16,7 +16,8 @@ __all__ = [
     'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
-    'StaticFrictionActuator'
+    'DuffingSpring',
+    'CoulombKineticFriction',
 ]
 
 
@@ -881,27 +882,94 @@ class DuffingSpring(ForceActuator):
 
     Explanation
     ===========
+
     Here, ``DuffingSpring`` represents the force exerted by a nonlinear spring based on the Duffing equation:
-    F = -k*x-β*x**3, where x is the displacement from the equilibrium position, k is the linear spring constant,
-    and β is the coefficient for the nonlinear cubic term.
+    F = -beta*x-alpha*x**3, where x is the displacement from the equilibrium position, beta is the linear spring constant,
+    and alpha is the coefficient for the nonlinear cubic term.
 
     Parameters
     ==========
+
     linear_stiffness : Expr
-        The linear stiffness coefficient (k).
+        The linear stiffness coefficient (beta).
     nonlinear_stiffness : Expr
-        The nonlinear stiffness coefficient (beta).
+        The nonlinear stiffness coefficient (alpha).
     pathway : PathwayBase
         The pathway that the actuator follows.
     equilibrium_length : Expr, optional
-        The length at which the spring is in equilibrium.
+        The length at which the spring is in equilibrium (x).
     """
 
     def __init__(self, linear_stiffness, nonlinear_stiffness, pathway, equilibrium_length=S.Zero):
-        self.linear_stiffness = linear_stiffness
-        self.nonlinear_stiffness = nonlinear_stiffness
-        self.pathway = pathway
-        self.equilibrium_length = equilibrium_length
+        self.linear_stiffness = sympify(linear_stiffness, strict=True)
+        self.nonlinear_stiffness = sympify(nonlinear_stiffness, strict=True)
+        self.equilibrium_length = sympify(equilibrium_length, strict=True)
+
+        if not isinstance(pathway, PathwayBase):
+            raise TypeError("pathway must be an instance of PathwayBase.")
+        self._pathway = pathway
+
+    @property
+    def linear_stiffness(self):
+        return self._linear_stiffness
+
+    @linear_stiffness.setter
+    def linear_stiffness(self, linear_stiffness):
+        if hasattr(self, '_linear_stiffness'):
+            msg = (
+                f'Can\'t set attribute `linear_stiffness` to '
+                f'{repr(linear_stiffness)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._linear_stiffness = sympify(linear_stiffness, strict=True)
+
+    @property
+    def nonlinear_stiffness(self):
+        return self._nonlinear_stiffness
+
+    @nonlinear_stiffness.setter
+    def nonlinear_stiffness(self, nonlinear_stiffness):
+        if hasattr(self, '_nonlinear_stiffness'):
+            msg = (
+                f'Can\'t set attribute `nonlinear_stiffness` to '
+                f'{repr(nonlinear_stiffness)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._nonlinear_stiffness = sympify(nonlinear_stiffness, strict=True)
+
+    @property
+    def pathway(self):
+        return self._pathway
+
+    @pathway.setter
+    def pathway(self, pathway):
+        if hasattr(self, '_pathway'):
+            msg = (
+                f'Can\'t set attribute `pathway` to {repr(pathway)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        if not isinstance(pathway, PathwayBase):
+            msg = (
+                f'Value {repr(pathway)} passed to `pathway` was of type '
+                f'{type(pathway)}, must be {PathwayBase}.'
+            )
+            raise TypeError(msg)
+        self._pathway = pathway
+
+    @property
+    def equilibrium_length(self):
+        return self._equilibrium_length
+
+    @equilibrium_length.setter
+    def equilibrium_length(self, equilibrium_length):
+        if hasattr(self, '_equilibrium_length'):
+            msg = (
+                f'Can\'t set attribute `equilibrium_length` to '
+                f'{repr(equilibrium_length)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._equilibrium_length = sympify(equilibrium_length, strict=True)
 
     @property
     def force(self):
@@ -911,62 +979,208 @@ class DuffingSpring(ForceActuator):
 
     @force.setter
     def force(self, force):
-        raise AttributeError("Can't set computed attribute `force`.")
+        if hasattr(self, '_force'):
+            msg = (
+                f'Can\'t set attribute `force` to {repr(force)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        self._force = sympify(force, strict=True)
 
     def __repr__(self):
         return (f"{self.__class__.__name__}("
                 f"{self.linear_stiffness}, {self.nonlinear_stiffness}, {self.pathway}, "
                 f"equilibrium_length={self.equilibrium_length})")
-    
 
-class StaticFrictionActuator(ForceActuator):
-    """A friction force actuator that models static friction.
+class CoulombKineticFriction(ForceActuator):
+    r"""Coulomb kinetic friction with Stribeck and viscous effects.
 
     Explanation
     ===========
-    This represents a model for static friction force acting on a point,
-    parameterized by the coefficient of static friction and the normal force:
-    F_s = μ_s * N, where N is the normal force, and μ_s is the coefficient of static friction.
+
+    This represents a Coulomb kinetic friction with the Stribeck and viscous effect,
+    described by the function:
+
+    .. math::
+        F = (\mu_k f_n + (\mu_s - \mu_k) f_n e^{-(\frac{v}{v_s})^2}) \text{sign}(v) + \sigma  v
+
+    where :math:`\mu_k` is the coefficient of kinetic friction, :math:`\mu_s` is the
+    coefficient of static friction, :math:`f_n` is the normal force, :math:`v` is the
+    relative velocity, :math:`v_s` is the Stribeck friction coefficient, and
+    :math:`\sigma` is the viscous friction constant.
+
+    The default friction force is :math:`F = \mu_k f_n`.
+    When specified, the actuator includes:
+
+    - Stribeck effect: :math:`(\mu_s - \mu_k) f_n e^{-(\frac{v}{v_s})^2}`
+    - Viscous effect: :math:`\sigma v`
+
+    Notes
+    =====
+
+    The actuator makes the following assumptions:
+
+    - The actuator assumes slip.
+    - The normal force is assumed to be a non-negative scalar.
+    - The resultant friction force is opposite to the velocity direction.
+
+    This actuator has been tested for straightforward motions, like a block sliding
+    on a surface.
+
+    Examples
+    ========
+
+    The below example shows how to generate the loads produced by a Coulomb kinetic
+    friction actuator in a mass-spring system with friction.
+
+    >>> import sympy as sm
+    >>> from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
+    ...     LinearPathway, CoulombKineticFriction, LinearSpring, KanesMethod, Particle)
+
+    >>> x, v = dynamicsymbols('x, v', real=True)
+    >>> m, g, k, mu_k, mu_s, v_s, sigma = sm.symbols('m, g, k, mu_k, mu_s, v_s, sigma')
+
+    >>> N = ReferenceFrame('N')
+    >>> O, P = Point('O'), Point('P')
+    >>> O.set_vel(N, 0)
+    >>> P.set_pos(O, x*N.x)
+    >>> P.set_vel(N, v*N.x)
+
+    >>> pathway = LinearPathway(O, P)
+    >>> friction = CoulombKineticFriction(mu_k, m*g, pathway, v_s=v_s, sigma=sigma, mu_s=mu_k)
+    >>> spring = LinearSpring(k, pathway)
+    >>> block = Particle('block', point=P, mass=m)
+
+    >>> kane = KanesMethod(N, (x,), (v,), kd_eqs=(x.diff() - v,))
+    >>> loads = friction.to_loads() + spring.to_loads()
+    >>> fr, frstar = kane.kanes_equations([block], loads)
+    >>> eom = sm.Matrix([fr, frstar])
 
     Parameters
     ==========
-    coefficient_of_static_friction : Expr
-        The coefficient of static friction.
-    normal_force : Expr
-        The normal force between the surfaces.
+
+    f_n : Expr
+        The normal force between the surfaces. It should always be a non-negative scalar.
+    mu_k : Expr
+        The coefficient of kinetic friction.
     pathway : PathwayBase
         The pathway that the actuator follows.
+    v_s : Expr
+        The Stribeck friction coefficient.
+    sigma : Expr
+        The viscous friction coefficient.
+    mu_s : Expr, optional
+        The coefficient of static friction. Defaults to mu_k, meaning the Stribeck effect evaluates to 0 by default.
+
+    References
+    ==========
+
+    .. [Moore2022] https://moorepants.github.io/learn-multibody-dynamics/loads.html#friction.
+    .. [Flores2023] Paulo Flores, Jorge Ambrosio, Hamid M. Lankarani,
+            "Contact-impact events with friction in multibody dynamics: Back to basics",
+            Mechanism and Machine Theory, vol. 184, 2023. https://doi.org/10.1016/j.mechmachtheory.2023.105305.
+    .. [Rogner2017] I. Rogner, "Friction modelling for robotic applications with planar motion",
+            Chalmers University of Technology, Department of Electrical Engineering, 2017.
 
     """
 
-    def __init__(self, coefficient_of_static_friction, normal_force, pathway):
-        """Initializer for ``StaticFrictionActuator``."""
-        self.coefficient_of_static_friction = coefficient_of_static_friction
-        self._normal_force = normal_force
+    def __init__(self, mu_k, f_n, pathway, *, v_s=None, sigma=0, mu_s=None):
+        self.mu_k = mu_k if mu_k is not None else 1
+        self.mu_s = mu_s if mu_s is not None else self.mu_k
+        self.f_n = f_n
+        self.sigma = sigma if sigma is not None else 0
+        self.v_s = v_s if v_s is not None or v_s == 0 else 0.01
         self.pathway = pathway
-        force = -self.coefficient_of_static_friction * self.normal_force
-        super().__init__(force, pathway)
 
     @property
-        """The magnitude of the force produced by the actuator."""
-        return -self.coefficient_of_static_friction * self.normal_force
+    def mu_k(self):
+        """The coefficient of kinetic friction."""
+        return self._mu_k
+
+    @mu_k.setter
+    def mu_k(self, mu_k):
+        if hasattr(self, '_mu_k'):
+            msg = (
+                f'Can\'t set attribute `mu_k` to '
+                f'{repr(mu_k)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._mu_k = sympify(mu_k, strict=True)
 
     @property
-    def coefficient_of_static_friction(self):
-        """The coefficient of static friction for the actuator."""
-        return self._coefficient_of_static_friction
-    # No settler for coefficient of friction since it never changes
+    def mu_s(self):
+        """The coefficient of static friction."""
+        return self._mu_s
+
+    @mu_s.setter
+    def mu_s(self, mu_s):
+        if hasattr(self, '_mu_s'):
+            msg = (
+                f'Can\'t set attribute `mu_s` to '
+                f'{repr(mu_s)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._mu_s = sympify(mu_s, strict=True)
 
     @property
-    def normal_force(self):
-        """The normal force for the actuator."""
-        return self._normal_force
+    def f_n(self):
+        """The normal force between the surfaces."""
+        return self._f_n
 
-    @normal_force.setter
-    def normal_force(self, value):
-        self._normal_force = value
-        self.force = -self.coefficient_of_static_friction * self._normal_force  
+    @f_n.setter
+    def f_n(self, f_n):
+        if hasattr(self, '_f_n'):
+            msg = (
+                f'Can\'t set attribute `f_n` to '
+                f'{repr(f_n)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._f_n = sympify(f_n, strict=True)
+
+    @property
+    def sigma(self):
+        """The viscous friction coefficient."""
+        return self._sigma
+
+    @sigma.setter
+    def sigma(self, sigma):
+        if hasattr(self, '_sigma'):
+            msg = (
+                f'Can\'t set attribute `sigma` to '
+                f'{repr(sigma)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._sigma = sympify(sigma, strict=True)
+
+    @property
+    def v_s(self):
+        """The Stribeck friction coefficient."""
+        return self._v_s
+
+    @v_s.setter
+    def v_s(self, v_s):
+        if hasattr(self, '_v_s'):
+            msg = (
+                f'Can\'t set attribute `v_s` to '
+                f'{repr(v_s)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._v_s = sympify(v_s, strict=True)
+
+    @property
+    def force(self):
+        v = self.pathway.extension_velocity
+        f_c = self.mu_k * self.f_n
+        f_max = self.mu_s * self.f_n
+        stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2) if self.v_s != 0 else 0
+        viscous_term = self.sigma * v if self.f_n != 0 else 0
+        return (f_c + stribeck_term) * -sign(v) - viscous_term
+
+    @force.setter
+    def force(self, force):
+        raise AttributeError('Can\'t set computed attribute `force`.')
 
     def __repr__(self):
-        """Representation of a ``StaticFrictionActuator``."""
-        return f'{self.__class__.__name__}({self.coefficient_of_static_friction}, {self.normal_force}, {self.pathway})'
+        return (f'{self.__class__.__name__}({self.mu_k}, {self.mu_s} '
+                f'{self.f_n}, {self.pathway}, {self.v_s}, '
+                f'{self.sigma})')

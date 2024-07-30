@@ -14,7 +14,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
-from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import acosh
 from sympy.functions.elementary.integers import floor
@@ -22,7 +22,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, cot, sin,
                                                       sinc, tan)
-from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
+from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely, jn, yn)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels, Si, Ci)
@@ -32,11 +32,13 @@ from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.simplify.cse_main import cse
 from sympy.tensor.array import derive_by_array, Array
+from sympy.tensor.array.expressions import ArraySymbol
 from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import numbered_symbols
+from sympy.vector import CoordSys3D
 from sympy.core.expr import UnevaluatedExpr
-from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot, isnan, isinf
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.scipy_nodes import cosm1, powm1
 from sympy.functions.elementary.complexes import re, im, arg
@@ -375,6 +377,18 @@ def test_double_integral():
     l = lambdify([z], i)
     d = l(1)
     assert 1.23370055 < d < 1.233700551
+
+def test_spherical_bessel():
+    if numpy and not scipy:
+        skip("scipy not installed.")
+    test_point = 4.2 #randomly selected
+    x = symbols("x")
+    jtest = jn(2, x)
+    assert abs(lambdify(x,jtest)(test_point) -
+            jtest.subs(x,test_point).evalf()) < 1e-8
+    ytest = yn(2, x)
+    assert abs(lambdify(x,ytest)(test_point) -
+            ytest.subs(x,test_point).evalf()) < 1e-8
 
 
 #================== Test vectors ===================================
@@ -915,6 +929,17 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
 
 
+def test_lambdify__arguments_with_invalid_python_identifiers():
+    # see sympy/sympy#26690
+    N = CoordSys3D('N')
+    xn, yn, zn = N.base_scalars()
+    expr = xn + yn
+    f = lambdify([xn, yn], expr)
+    res = f(0.2, 0.3)
+    ref = 0.2 + 0.3
+    assert abs(res-ref) < 1e-15
+
+
 def test_curly_matrix_symbol():
     # Issue #15009
     curlyv = sympy.MatrixSymbol("{v}", 2, 1)
@@ -1145,7 +1170,7 @@ def test_scipy_fns():
             if sympy_fn in (RisingFactorial, polygamma):
                 tv2 = numpy.real(tv2)
             if sympy_fn == polygamma:
-                tv1 = abs(int(tv1))  # first argument to polygamma must be a non-negative integral.
+                tv1 = abs(int(tv1))  # first argument to polygamma must be a non-negative integer.
             sympy_result = sympy_fn(tv1, tv2).evalf()
             assert abs(f(tv1, tv2) - sympy_result) < 1e-13*(1 + abs(sympy_result))
             assert abs(f(tv1, tv2) - scipy_fn(tv1, tv2)) < 1e-13*(1 + abs(sympy_result))
@@ -1891,3 +1916,35 @@ def test_assoc_legendre_numerical_evaluation():
 
     assert all_close(sympy_result_integer, mpmath_result_integer, tol)
     assert all_close(sympy_result_complex, mpmath_result_complex, tol)
+
+
+def test_Piecewise():
+
+    modules = [math]
+    if numpy:
+        modules.append('numpy')
+
+    for mod in modules:
+        # test isinf
+        f = lambdify(x, Piecewise((7.0, isinf(x)), (3.0, True)), mod)
+        assert f(+float('inf')) == +7.0
+        assert f(-float('inf')) == +7.0
+        assert f(42.) == 3.0
+
+        f2 = lambdify(x, Piecewise((7.0*sign(x), isinf(x)), (3.0, True)), mod)
+        assert f2(+float('inf')) == +7.0
+        assert f2(-float('inf')) == -7.0
+        assert f2(42.) == 3.0
+
+        # test isnan (gh-26784)
+        g = lambdify(x, Piecewise((7.0, isnan(x)), (3.0, True)), mod)
+        assert g(float('nan')) == 7.0
+        assert g(42.) == 3.0
+
+
+def test_array_symbol():
+    if not numpy:
+        skip("numpy not installed.")
+    a = ArraySymbol('a', (3,))
+    f = lambdify((a), a)
+    assert numpy.all(f(numpy.array([1,2,3])) == numpy.array([1,2,3]))

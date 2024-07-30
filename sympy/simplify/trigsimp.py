@@ -311,8 +311,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                     fs.add(c)
                     fs.add(s)
             for fn in fs:
-                for k in range(1, n + 1):
-                    terms.append((fn, k))
+                terms.extend((fn, k) for k in range(1, n + 1))
             extra = []
             for fn, v in terms:
                 if fn == tan:
@@ -1114,7 +1113,7 @@ def __trigsimp(expr, deep=False):
             raise TypeError
         fnew = factor(new)
         if fnew != new:
-            new = sorted([new, factor(new)], key=count_ops)[0]
+            new = min([new, factor(new)], key=count_ops)
         # if all exp that were introduced disappeared then accept it
         if not (new.atoms(exp) - e):
             expr = new
