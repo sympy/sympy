@@ -1021,7 +1021,9 @@ class CoulombKineticFriction(ForceActuator):
     The actuator makes the following assumptions:
 
     - The actuator assumes slip.
+
     - The normal force is assumed to be a non-negative scalar.
+
     - The resultant friction force is opposite to the velocity direction.
 
     This actuator has been tested for straightforward motions, like a block sliding
