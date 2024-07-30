@@ -637,12 +637,6 @@ class Function(Application, Expr):
         return fuzzy_or(a.is_infinite if s is S.ComplexInfinity
                         else (a - s).is_zero for s in ss)
 
-    def as_base_exp(self):
-        """
-        Returns the method as the 2-tuple (base, exponent).
-        """
-        return self, S.One
-
     def _eval_aseries(self, n, args0, x, logx):
         """
         Compute an asymptotic expansion around args0, in terms of self.args.
