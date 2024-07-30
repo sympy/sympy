@@ -364,6 +364,7 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 # Additional stuff for the LaTeX preamble.
 # Tweaked to work with XeTeX.
 latex_engine = 'xelatex'
+latex_use_xindy = False
 latex_elements = {
     'babel': r'\usepackage[english]{babel}',
     'fontpkg': r'''
