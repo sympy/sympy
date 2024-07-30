@@ -43,7 +43,7 @@ class Arch:
         self._distributed_loads = {}
         self._loads = {'concentrated': self._conc_loads, 'distributed':self._distributed_loads}
         self._supports = {'left':'hinged', 'right':'hinge'}
-        self._rope = None
+        self._member = None
         self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
         self._points_disc = []
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
@@ -218,7 +218,7 @@ class Arch:
         self._supports['left'] = left_support
         self._supports['right'] = right_support
 
-    def add_rope(self,y):
+    def add_member(self,y):
         if y>=self._crown_y or y<=min(self._left_support[1],  self._right_support[1]):
             raise ValueError(f"position of rope must be between y={min(self._left_support[1],  self._right_support[1])} and y={self._crown_y}")
         x = Symbol('x')
@@ -226,7 +226,7 @@ class Arch:
         x_diff = sqrt((y - self._crown_y)/a)
         x1 = self._crown_x + x_diff
         x2 = self._crown_x - x_diff
-        self._rope = (x1,x2,y)
+        self._member = (x1,x2,y)
 
     def solve(self):
         """
@@ -275,7 +275,7 @@ class Arch:
         R_A_x, R_A_y, R_B_x, R_B_y, T = symbols('R_A_x R_A_y R_B_x R_B_y T')
 
         if self._supports['left'] == 'roller' and self._supports['right'] == 'roller':
-            if self._rope[2]>max(self._left_support[1],self._right_support[1]):
+            if self._member[2]>=max(self._left_support[1],self._right_support[1]):
                 if net_x!=0:
                     raise ValueError("net force in x direction not possible under the specified conditions")
                 else:
@@ -283,72 +283,74 @@ class Arch:
                     eq2 = Eq(R_B_x, 0)
                     eq3 = Eq(R_A_y + R_B_y + net_y,0)
                     eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
-                    eq5 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) + T*(self._rope[2]-self._crown_y),0)
-                    solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
-            elif self._rope[2]>self._left_support[1]:
-                if net_x>0:
-                    raise ValueError("net positive force in x direction is not possible under the specified conditions")
-                else:
-                    eq1 = Eq(R_A_x ,0)
-                    eq2 = Eq(R_B_x, 0)
-                    eq3 = Eq(R_A_y + R_B_y + net_y,0)
-                    eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-T*(self._rope[2]-self._left_support[1])+moment_A,0)
-                    eq5 = Eq(T+net_x,0)
-                    solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
-            elif self._rope[2]>self._right_support[1]:
-                if net_x>0:
-                    raise ValueError("net negative force in x direction is not possible under the specified conditions")
-                else:
-                    eq1 = Eq(R_A_x ,0)
-                    eq2 = Eq(R_B_x, 0)
-                    eq3 = Eq(R_A_y + R_B_y + net_y,0)
-                    eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])+T*(self._rope[2]-self._left_support[1])+moment_A,0)
-                    eq5 = Eq(T-net_x,0)
+                    eq5 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) + T*(self._member[2]-self._crown_y),0)
                     solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
+            elif self._member[2]>=self._left_support[1]:
+                eq1 = Eq(R_A_x ,0)
+                eq2 = Eq(R_B_x, 0)
+                eq3 = Eq(R_A_y + R_B_y + net_y,0)
+                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-T*(self._member[2]-self._left_support[1])+moment_A,0)
+                eq5 = Eq(T+net_x,0)
+                solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
+
+            elif self._member[2]>=self._right_support[1]:
+                eq1 = Eq(R_A_x ,0)
+                eq2 = Eq(R_B_x, 0)
+                eq3 = Eq(R_A_y + R_B_y + net_y,0)
+                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])+T*(self._member[2]-self._left_support[1])+moment_A,0)
+                eq5 = Eq(T-net_x,0)
+                solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
+
         elif self._supports['left'] == 'roller':
-            if self._rope[2]>max(self._left_support[1], self._right_support[1]):
+            if self._member[2]>=max(self._left_support[1], self._right_support[1]):
                 eq1 = Eq(R_A_x ,0)
                 eq2 = Eq(R_B_x+net_x,0)
                 eq3 = Eq(R_A_y + R_B_y + net_y,0)
                 eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
-                eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x) - T*(self._rope[2]-self._crown_y),0)
+                eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x) - T*(self._member[2]-self._crown_y),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
-            elif self._rope[2]>self._left_support[0]:
-                if net_x>0:
-                    eq1 = Eq(R_A_x,0)
-                    eq2 = Eq(T,0)
-                    eq3 = Eq(R_A_y + R_B_y + net_y, 0)
-                    eq4 = Eq(R_B_x+net_x,0)
-                    eq5 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
-                    solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_B_x,R_B_y,R_A_x,T))
-                else:
-                    eq1 = Eq(R_A_x ,0)
-                    eq2 = Eq(R_B_x+ T +net_x,0)
-                    eq3 = Eq(R_A_y + R_B_y + net_y,0)
-                    eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])-T*(self._rope[2]-self._left_support[0])+moment_A,0)
-                    eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x)-T*(self._rope[2]-self._crown_y),0)
-                    solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
+            elif self._member[2]>=self._left_support[1]:
+                eq1 = Eq(R_A_x ,0)
+                eq2 = Eq(R_B_x+ T +net_x,0)
+                eq3 = Eq(R_A_y + R_B_y + net_y,0)
+                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])-T*(self._member[2]-self._left_support[0])+moment_A,0)
+                eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x)-T*(self._member[2]-self._crown_y),0)
+                solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
-            elif self._rope[2]>self._right_support[0]:
-                if net_x<0:
-                    eq1 = Eq(R_A_x,0)
-                    eq2 = Eq(T,0)
-                    eq3 = Eq(R_A_y+R_B_y+net_y,0)
-                    eq4 = Eq(R_B_x+net_x,0)
-                    eq5 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
-                    solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
-                else:
-                    eq1 = Eq(R_A_x,0)
-                    eq2 = Eq(R_B_x- T +net_x,0)
-                    eq3 = Eq(R_A_y + R_B_y + net_y,0)
-                    eq4 = Eq(moment_hinge_left+R_A_y*(self._left_support[0]-self._crown_x),0)
-                    eq5 = Eq(moment_A+R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+T*(self._rope[2]-self._left_support[1]),0)
-                    solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
+            elif self._member[2]>=self._right_support[0]:
+                eq1 = Eq(R_A_x,0)
+                eq2 = Eq(R_B_x- T +net_x,0)
+                eq3 = Eq(R_A_y + R_B_y + net_y,0)
+                eq4 = Eq(moment_hinge_left+R_A_y*(self._left_support[0]-self._crown_x),0)
+                eq5 = Eq(moment_A+R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+T*(self._member[2]-self._left_support[1]),0)
+                solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
         elif self._supports['right'] == 'roller':
-            pass
+            if self._member[2]>max(self._left_support[1], self._right_support[1]):
+                eq1 = Eq(R_B_x,0)
+                eq2 = Eq(R_A_x+net_x,0)
+                eq3 = Eq(R_A_y+R_B_y+net_y,0)
+                eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x)+T*(self._member[2]-self._crown_y),0)
+                eq5 = Eq(moment_A+R_B_y(self._right_support[0]-self._left_support[0]),0)
+                solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
+
+            elif self._member[2]>=self._left_support[1]:
+                eq1 = Eq(R_B_x,0)
+                eq2 = Eq(R_A_x+T+net_x,0)
+                eq3 = Eq(R_A_y+R_B_y+net_y,0)
+                eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x),0)
+                eq5 = Eq(moment_A-T*(self._member[2]-self._left_support[1])+R_B_y*(self._right_support[0]-self._left_support[0]),0)
+                solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
+
+            elif self._member[2]>=self._right_support[1]:
+                eq1 = Eq(R_B_x,0)
+                eq2 = Eq(R_A_x-T+net_x,0)
+                eq3 = Eq(R_A_y+R_B_y+net_y,0)
+                eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x)+T*(self._member[2]-self._crown_y),0)
+                eq5 = Eq(moment_A+T*(self._member[2]-self._left_support[1])+R_B_y*(self._right_support[0]-self._left_support[0]))
+                solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
         else:
             eq1 = Eq(R_A_x + R_B_x + net_x,0)
             eq2 = Eq(R_A_y + R_B_y + net_y,0)
