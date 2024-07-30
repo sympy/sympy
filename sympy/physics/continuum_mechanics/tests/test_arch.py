@@ -3,7 +3,7 @@ from sympy import Symbol, simplify
 
 x = Symbol('x')
 
-def test_arch():
+def test_arch_init():
     a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
     assert a.get_loads == {'distributed': {}, 'concentrated': {}}
     assert a.reaction_force == {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
@@ -13,4 +13,17 @@ def test_arch():
     assert a.get_parabola_eqn == 5 - ((x-5)**2)/5
 
     a = Arch((0,0),(10,1),crown_x=6)
+    a.add_support(left_support='roller')
+    a.add_member(0.5)
+    assert a.supports == {'left':'roller', 'right':'hinge'}
     assert simplify(a.get_parabola_eqn) == simplify(9/5 - (x - 6)**2/20)
+
+def test_arch_support():
+    a = Arch((0,0),(40,0),crown_x=20,crown_y=12)
+    a.apply_load(-1,'C',8,150,angle=270)
+    a.apply_load(0,'D',x1=20,x2=40,mag=-4)
+    a.solve()
+    assert abs(a.reaction_force[Symbol("R_A_x")] - 83.33333333333333) < 10e-12
+    assert abs(a.reaction_force[Symbol("R_B_y")] - 90.00000000000000) < 10e-12
+    assert abs(a.reaction_force[Symbol("R_B_x")] + 83.33333333333333) < 10e-12
+    assert abs(a.reaction_force[Symbol("R_A_y")] - 140.00000000000000) < 10e-12

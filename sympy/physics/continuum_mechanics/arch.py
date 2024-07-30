@@ -42,8 +42,9 @@ class Arch:
         self._conc_loads = {}
         self._distributed_loads = {}
         self._loads = {'concentrated': self._conc_loads, 'distributed':self._distributed_loads}
-        self._supports = {'left':'hinged', 'right':'hinge'}
+        self._supports = {'left':'hinge', 'right':'hinge'}
         self._member = None
+        self._member_force = None
         self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
         self._points_disc = []
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
@@ -207,20 +208,27 @@ class Arch:
         else :
             raise ValueError("label not found")
 
-    def add_support(self,left_support,right_support):
+    def add_support(self,left_support=None,right_support=None):
         """
         Add the type for support at each end.
         Can use roller or hinge support at each end.
         """
         support_types = ['roller','hinge']
-        if left_support not in support_types or right_support not in support_types:
-            raise ValueError("supports must only be roller or hinge")
-        self._supports['left'] = left_support
-        self._supports['right'] = right_support
+        if left_support:
+            if left_support not in support_types:
+                raise ValueError("supports must only be roller or hinge")
+
+            self._supports['left'] = left_support
+
+        if right_support:
+            if right_support not in support_types:
+                raise ValueError("supports must only be roller or hinge")
+
+            self._supports['right'] = right_support
 
     def add_member(self,y):
         if y>=self._crown_y or y<=min(self._left_support[1],  self._right_support[1]):
-            raise ValueError(f"position of rope must be between y={min(self._left_support[1],  self._right_support[1])} and y={self._crown_y}")
+            raise ValueError(f"position of support must be between y={min(self._left_support[1],  self._right_support[1])} and y={self._crown_y}")
         x = Symbol('x')
         a = diff(self._shape_eqn,x).subs(x,self._crown_x+1)/2
         x_diff = sqrt((y - self._crown_y)/a)
@@ -359,4 +367,7 @@ class Arch:
 
             solution = solve((eq1,eq2,eq3,eq4),(R_A_x,R_A_y,R_B_x,R_B_y))
 
-        print(solution)
+        for symb in self._reaction_force:
+            self._reaction_force[symb] = solution[symb]
+
+        return solution
