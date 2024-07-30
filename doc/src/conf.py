@@ -375,7 +375,8 @@ latex_elements = {
 ''',
     'preamble':  r'''
 % Define version of \LaTeX that is usable in math mode
-\let\OldLaTeX\LaTeX
+\usepackage{letltxmacro}
+\LetLtxMacro\OldLaTeX\LaTeX
 \renewcommand{\LaTeX}{\text{\OldLaTeX}}
 '''
 }
