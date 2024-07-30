@@ -389,7 +389,7 @@ latex_elements = {
 \renewcommand{\@tocrmarg}{3.5em}%  default is 2.55em
 \makeatother
 ''',
-    'printindex': r'\footnotesize\raggedright\printindex',
+    'printindex': r'\def\twocolumn[#1]{#1}\raggedright\printindex',
 }
 
 # SymPy logo on title page
