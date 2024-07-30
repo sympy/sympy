@@ -416,7 +416,7 @@ latex_elements = {
 % \IfFontExistsTF was added to fontspec at v2.5c 2017/01/02.
 % If it does not exist we take no risk.
 \makeatletter
-\ifdefined\IfFontExistsTF\else\let\IfFontExistsTF\@secondoftwo\fi
+\ifdefined\IfFontExistsTF\else\let\IfFontExistsTF\@thirdofthree\fi
 \makeatother
 %
 %
