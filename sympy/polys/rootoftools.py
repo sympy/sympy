@@ -298,6 +298,7 @@ class ComplexRootOf(RootOf):
     is_complex = True
     is_number = True
     is_finite = True
+    is_algebraic = True
 
     def __new__(cls, f, x, index=None, radicals=False, expand=True):
         """ Construct an indexed complex root of a polynomial.
@@ -635,7 +636,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _count_roots(cls, roots):
         """Count the number of real or complex roots with multiplicities."""
-        return sum([k for _, _, k in roots])
+        return sum(k for _, _, k in roots)
 
     @classmethod
     def _indexed_root(cls, poly, index, lazy=False):

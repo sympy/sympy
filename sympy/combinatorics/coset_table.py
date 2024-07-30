@@ -716,14 +716,12 @@ class CosetTable(DefaultPrinting):
         table = self.table
         while len(self.deduction_stack) > 0:
             alpha, x = self.deduction_stack.pop()
-            for w in R_c_x:
-                if not self.scan_check(alpha, w):
-                    return False
+            if not all(self.scan_check(alpha, w) for w in R_c_x):
+                return False
             beta = table[alpha][self.A_dict[x]]
             if beta is not None:
-                for w in R_c_x_inv:
-                    if not self.scan_check(beta, w):
-                        return False
+                if not all(self.scan_check(beta, w) for w in R_c_x_inv):
+                    return False
         return True
 
     def switch(self, beta, gamma):

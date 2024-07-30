@@ -175,6 +175,12 @@ def test_CRootOf_is_complex():
     assert rootof(x**3 + x + 3, 0).is_complex is True
 
 
+def test_CRootOf_is_algebraic():
+    assert rootof(x**3 + x + 3, 0).is_algebraic is True
+    assert rootof(x**3 + x + 3, 1).is_algebraic is True
+    assert rootof(x**3 + x + 3, 2).is_algebraic is True
+
+
 def test_CRootOf_subs():
     assert rootof(x**3 + x + 1, 0).subs(x, y) == rootof(y**3 + y + 1, 0)
 
@@ -533,8 +539,8 @@ def test_issue_8316():
 def test__imag_count():
     from sympy.polys.rootoftools import _imag_count_of_factor
     def imag_count(p):
-        return sum([_imag_count_of_factor(f)*m for f, m in
-        p.factor_list()[1]])
+        return sum(_imag_count_of_factor(f)*m for f, m in
+        p.factor_list()[1])
     assert imag_count(Poly(x**6 + 10*x**2 + 1)) == 2
     assert imag_count(Poly(x**2)) == 0
     assert imag_count(Poly([1]*3 + [-1], x)) == 0

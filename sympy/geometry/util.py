@@ -336,10 +336,9 @@ def closest_points(*args):
 
     rv = [(0, 1)]
     best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
-    i = 2
     left = 0
     box = deque([0, 1])
-    while i < len(p):
+    for i in range(2, len(p)):
         while left < i and p[i][0] - p[left][0] > best_dist:
             box.popleft()
             left += 1
@@ -354,7 +353,6 @@ def closest_points(*args):
                 continue
             best_dist = d
         box.append(i)
-        i += 1
 
     return {tuple([p[i] for i in pair]) for pair in rv}
 

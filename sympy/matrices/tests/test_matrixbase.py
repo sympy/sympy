@@ -12,7 +12,7 @@ from sympy import (
     integrate, log, matrix_multiply_elementwise, nan, ones, oo, pi, randMatrix,
     rot_axis1, rot_axis2, rot_axis3, rot_ccw_axis1, rot_ccw_axis2,
     rot_ccw_axis3, signsimp, simplify, sin, sqrt, sstr, symbols, sympify, tan,
-    trigsimp, wronskian, zeros)
+    trigsimp, wronskian, zeros, cancel)
 from sympy.abc import a, b, c, d, t, x, y, z
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.matrices.determinant import _find_reasonable_pivot_naive
@@ -25,6 +25,7 @@ from sympy.testing.pytest import (
     ignore_warnings, raises, skip, skip_under_pyodide, slow,
     warns_deprecated_sympy)
 from sympy.utilities.iterables import capture, iterable
+from importlib.metadata import version
 
 all_classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
 mutable_classes = (Matrix, SparseMatrix)
@@ -233,8 +234,8 @@ def test_is_anti_symmetric():
     assert Matrix(2, 1, [1, 2]).is_anti_symmetric() is False
     m = Matrix(3, 3, [0, x**2 + 2*x + 1, y, -(x + 1)**2, 0, x*y, -y, -x*y, 0])
     assert m.is_anti_symmetric() is True
-    assert m.is_anti_symmetric(simplify=False) is False
-    assert m.is_anti_symmetric(simplify=lambda x: x) is False
+    assert m.is_anti_symmetric(simplify=False) is None
+    assert m.is_anti_symmetric(simplify=lambda x: x) is None
 
     m = Matrix(3, 3, [x.expand() for x in m])
     assert m.is_anti_symmetric(simplify=False) is True
@@ -351,6 +352,17 @@ def test_replace_map():
     assert N == Matrix(2, 2, lambda i, j: G(i+j))
     assert d == {F(0): G(0), F(1): G(1), F(2): G(2)}
 
+def test_numpy_conversion():
+    try:
+        from numpy import array, array_equal
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+    A = Matrix([[1,2], [3,4]])
+    np_array = array([[1,2], [3,4]])
+    assert array_equal(array(A), np_array)
+    assert array_equal(array(A, copy=True), np_array)
+    if(int(version('numpy').split('.')[0]) >= 2): #run this test only if numpy is new enough that copy variable is passed properly.
+        raises(TypeError, lambda: array(A, copy=False))
 
 def test_rot90():
     A = Matrix([[1, 2], [3, 4]])
@@ -1751,6 +1763,51 @@ def test_inverse():
              [ 9, 71, 94],
              [59, 28, 65]])
     assert all(type(m.inv(s)) is cls for s in 'GE ADJ LU CH LDL QR'.split())
+
+
+def test_inverse_symbolic_float_issue_26821():
+    Tau, Tau_syn_in, Tau_syn_ex, C_m, Tau_syn_gap = symbols("Tau Tau_syn_in Tau_syn_ex C_m Tau_syn_gap")
+    __h = symbols("__h")
+
+    M = Matrix([
+        [0,0,0,0,0,(1.0*Tau*__h-1.0*Tau_syn_in*__h)/(2.0*Tau-1.0*Tau_syn_in),-1.0*Tau*Tau_syn_in/(2.0*Tau-1.0*Tau_syn_in)],
+        [0,0,0,0,0,(-1.0*Tau*__h+1.0*Tau_syn_in*__h)/(2.0*Tau*Tau_syn_in-1.0*Tau_syn_in**2),1.0],
+        [0,(1.0*Tau*__h-1.0*Tau_syn_ex*__h)/(2.0*Tau-1.0*Tau_syn_ex),-1.0*Tau*Tau_syn_ex/(2.0*Tau-1.0*Tau_syn_ex),0,0,0,0],
+        [0,(-1.0*Tau*__h+1.0*Tau_syn_ex*__h)/(2.0*Tau*Tau_syn_ex-1.0*Tau_syn_ex**2),1.0,0,0,0,0],
+        [0,0,0,(1.0*Tau*__h-1.0*Tau_syn_gap*__h)/(2.0*Tau-1.0*Tau_syn_gap),-1.0*Tau*Tau_syn_gap/(2.0*Tau-1.0*Tau_syn_gap),0,0],
+        [0,0,0,(-1.0*Tau*__h+1.0*Tau_syn_gap*__h)/(2.0*Tau*Tau_syn_gap-1.0*Tau_syn_gap**2),1.0,0,0],
+        [1.0,-1.0*Tau*Tau_syn_ex*__h/(2.0*C_m*Tau-1.0*C_m*Tau_syn_ex),0,-1.0*Tau*Tau_syn_gap*__h/(2.0*C_m*Tau-1.0*C_m*Tau_syn_gap),0,-1.0*Tau*Tau_syn_in*__h/(2.0*C_m*Tau-1.0*C_m*Tau_syn_in),0]
+    ])
+
+    Mi = M.inv()
+
+    assert (M*Mi - eye(7)).applyfunc(cancel) == zeros(7)
+
+    # https://github.com/sympy/sympy/issues/26821
+    # Previously very large floats were in the result.
+    assert max(abs(f) for f in Mi.atoms(Float)) < 1e3
+
+
+@slow
+def test_matrix_exponential_issue_26821():
+    # The symbol names matter in the original bug...
+    a, b, c, d, e = symbols("Tau, Tau_syn_in, Tau_syn_ex, C_m, Tau_syn_gap")
+    t = symbols("__h")
+    M = Matrix([
+        [      0,  1.0,       0,    0,       0,    0,    0],
+        [-1/b**2, -2/b,       0,    0,       0,    0,    0],
+        [      0,    0,       0,  1.0,       0,    0,    0],
+        [      0,    0, -1/c**2, -2/c,       0,    0,    0],
+        [      0,    0,       0,    0,       0,    1,    0],
+        [      0,    0,       0,    0, -1/e**2, -2/e,    0],
+        [    1/d,    0,     1/d,    0,     1/d,    0, -1/a]
+    ])
+
+    Me = (t*M).exp()
+    assert (Me.diff(t) - M*Me).applyfunc(cancel) == zeros(7)
+    # https://github.com/sympy/sympy/issues/26821
+    # Previously very large floats were in the result.
+    assert max(abs(f) for f in Me.atoms(Float)) < 1e3
 
 
 def test_jacobian_hessian():
@@ -3188,12 +3245,12 @@ def test_anti_symmetric():
     assert Matrix([1, 2]).is_anti_symmetric() is False
     m = Matrix(3, 3, [0, x**2 + 2*x + 1, y, -(x + 1)**2, 0, x*y, -y, -x*y, 0])
     assert m.is_anti_symmetric() is True
-    assert m.is_anti_symmetric(simplify=False) is False
-    assert m.is_anti_symmetric(simplify=lambda x: x) is False
+    assert m.is_anti_symmetric(simplify=False) is None
+    assert m.is_anti_symmetric(simplify=lambda x: x) is None
 
     # tweak to fail
     m[2, 1] = -m[2, 1]
-    assert m.is_anti_symmetric() is False
+    assert m.is_anti_symmetric() is None
     # untweak
     m[2, 1] = -m[2, 1]
 

@@ -855,8 +855,7 @@ def topological_sort(graph, key=None):
     S = set(V)
     E = list(E)
 
-    for v, u in E:
-        S.discard(u)
+    S.difference_update(u for v, u in E)
 
     if key is None:
         def key(value):
@@ -1295,7 +1294,7 @@ def multiset_permutations(m, size=None, g=None):
             g = [list(i) for i in group(m, multiple=False)]
         del m
     do = [gi for gi in g if gi[1] > 0]
-    SUM = sum([gi[1] for gi in do])
+    SUM = sum(gi[1] for gi in do)
     if not do or size is not None and (size > SUM or size < 1):
         if not do and size is None or size == 0:
             yield []

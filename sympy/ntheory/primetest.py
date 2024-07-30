@@ -618,8 +618,6 @@ def isprime(n):
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
     True
-    >>> isprime(13.0)  # limited precision
-    False
     >>> isprime(15)
     False
 
@@ -667,10 +665,7 @@ def isprime(n):
            http://mpqs.free.fr/LucasPseudoprimes.pdf
     .. [3] https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
-    try:
-        n = as_int(n)
-    except ValueError:
-        return False
+    n = as_int(n)
 
     # Step 1, do quick composite testing via trial division.  The individual
     # modulo tests benchmark faster than one or two primorial igcds for me.

@@ -100,14 +100,14 @@ class Point:
         oldlist = [[]]
         while outlist != oldlist:
             oldlist = outlist[:]
-            for i, v in enumerate(outlist):
+            for v in outlist:
                 templist = v[-1]._pdlist[num].keys()
-                for i2, v2 in enumerate(templist):
+                for v2 in templist:
                     if not v.__contains__(v2):
                         littletemplist = v + [v2]
                         if not outlist.__contains__(littletemplist):
                             outlist.append(littletemplist)
-        for i, v in enumerate(oldlist):
+        for v in oldlist:
             if v[-1] != other:
                 outlist.remove(v)
         outlist.sort(key=len)
@@ -152,7 +152,7 @@ class Point:
         >>> B = ReferenceFrame('B')
         >>> B.set_ang_vel(N, 5 * B.y)
         >>> O = Point('O')
-        >>> P = O.locatenew('P', q * B.x)
+        >>> P = O.locatenew('P', q * B.x + q2 * B.y)
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.a1pt_theory(O, N, B)
@@ -435,7 +435,7 @@ class Point:
         >>> B = ReferenceFrame('B')
         >>> B.set_ang_vel(N, 5 * B.y)
         >>> O = Point('O')
-        >>> P = O.locatenew('P', q * B.x)
+        >>> P = O.locatenew('P', q * B.x + q2 * B.y)
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.v1pt_theory(O, N, B)
@@ -623,8 +623,11 @@ class Point:
         (N.x, A.y)
 
         """
-        partials = [self.vel(frame).diff(speed, frame, var_in_dcm=False) for
-                    speed in gen_speeds]
+
+        from sympy.physics.vector.functions import partial_velocity
+
+        vel = self.vel(frame)
+        partials = partial_velocity([vel], gen_speeds, frame)[0]
 
         if len(partials) == 1:
             return partials[0]

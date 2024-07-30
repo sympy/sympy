@@ -16,6 +16,9 @@ from .repmatrix import MutableRepMatrix, RepMatrix
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
 
+__doctest_requires__ = {('symarray',): ['numpy']}
+
+
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
