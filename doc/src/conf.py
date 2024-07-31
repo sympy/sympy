@@ -383,7 +383,8 @@ latex_elements = {
     'inputenc':  '',
     'utf8extra': '',
     'preamble':  r'''
-'''
+''',
+    'sphinxsetup': 'verbatimforcewraps',
 }
 
 # SymPy logo on title page
