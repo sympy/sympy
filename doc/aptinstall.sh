@@ -18,6 +18,7 @@ sudo apt-get install\
   texlive-fonts-recommended\
   texlive-fonts-extra\
   texlive-xetex\
+  texlive-lang-japanese\
   latexmk\
   dvipng\
   librsvg2-bin\

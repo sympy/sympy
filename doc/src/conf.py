@@ -419,12 +419,12 @@ latex_elements = {
 \ifdefined\IfFontExistsTF\else\let\IfFontExistsTF\@thirdofthree\fi
 \makeatother
 %
-%
+% This font is available from texlive-fonts-extra apt dependency
 \IfFontExistsTF{NewCMMath-Regular.otf}
  {%
   \newfontfamily{\NCMMath}{NewCMMath-Regular}
-  % This one is available (on TeXLive 2024) only in New Computer Modern Math
-  % and OldStandard-Math.
+  % This next character is available (on TeXLive 2024) only in
+  % New Computer Modern Math and OldStandard-Math.
   \newunicodechar{⭯}{\text{\NCMMath ⭯}}%   (U+2B6F)
   % Those next few are all available in New Computer Modern Math:
   \newunicodechar{𝑅}{\text{\NCMMath 𝑅}}%   (U+1D445)
@@ -440,6 +440,7 @@ latex_elements = {
     }%
    }%
  }%
+% This font is available from texlive-lang-japanese apt dependency
 \IfFontExistsTF{HaranoAjiMincho-Regular.otf}
  {%
   % A few Asian ideograms:
