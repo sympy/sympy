@@ -109,7 +109,7 @@ latex: logo
 	@echo "Run \`make all' in that directory to run these through xelatex."
 
 pdf pdflatex latexpdf: latex
-	$(MAKE) -C $(BUILDDIR)/latex all-pdf \
+	@$(MAKE) -C $(BUILDDIR)/latex all-pdf \
 	LATEXOPTS="-halt-on-error -interaction=batchmode" \
 	LATEXMKOPTS="-xelatex" \
 	|| echo "LaTeX error"'!'" Check .log in $(BUILDDIR)/latex for lineno in .tex file."
