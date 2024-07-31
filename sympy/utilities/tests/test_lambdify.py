@@ -33,7 +33,7 @@ from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.simplify.cse_main import cse
 from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.array.expressions import ArraySymbol
-from sympy.tensor.indexed import IndexedBase
+from sympy.tensor.indexed import IndexedBase, Idx
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import numbered_symbols
 from sympy.vector import CoordSys3D
@@ -1066,6 +1066,13 @@ def test_Indexed():
     i, j = symbols('i j')
     b = numpy.array([[1, 2], [3, 4]])
     assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10
+
+def test_Idx():
+    # Issue 26888
+    a = IndexedBase('a')
+    i = Idx('i')
+    b = [1,2,3]
+    assert lambdify([a, i], a[i])(b, 2) == 3
 
 
 def test_issue_12173():
