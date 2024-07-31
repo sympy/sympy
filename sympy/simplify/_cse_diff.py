@@ -3,6 +3,7 @@
 from sympy import cse, Matrix, SparseMatrix, Derivative, MatrixBase
 from collections import Counter
 import re
+from sympy import nan, S
 
 
 def _postprocess(repl, reduced):
@@ -51,17 +52,62 @@ def _replace_all(node, repl_dict):
     return result
 
 
-def _dok_matrix_multiply(A, B):
+def _check_nan(A, nan_idx, n):
     """
-    Multiply two sparse matrices in dok format (i, k) and (k, j) to get a dictionary
-    of keys (i, j).
+    Check if any element of Matrix A multiplied by zero doesn't return zero.
+    For each element which doesn't return zero, update the nan_idx set
+    to store either the row index (n=0) or column index (n=1).
     """
-    result = Counter()
+
+    zero = S.Zero
+
+    if n == 0:
+        for (i, k), value in A.items():
+            if zero * value != zero:
+                nan_idx.add(i)
+
+    elif n == 1:
+        for (k, j), value in A.items():
+            if zero * value != zero:
+                nan_idx.add(j)
+
+    return nan_idx
+
+
+def _dok_matmul_with_nan_handling(A, B, nan_idx_A, nan_idx_B, rows_A, cols_B):
+    """
+    Sparse matrix multiplication handling possible undefined results (e.g., 0 * infinity).
+    It uses the indexes of elements in A and B that produce NaN values, stored in nan_idx_A and nan_idx_B.
+    """
+
+    C = Counter()
+    C_int = Counter()
+
+    # Use set operations to handle NaN propagation
+    nan_rows = set(nan_idx_A)
+    nan_cols = set(nan_idx_B)
+
+    # Handle NaN propagation for A
+    for i in nan_rows:
+        for j in range(cols_B):
+            C[(i, j)] = nan
+
+    # Handle NaN propagation for B
+    for j in nan_cols:
+        for i in range(rows_A):
+            C[(i, j)] = nan
+
+    # Standard matrix multiplication to form C_int
     for (i, k), A_value in A.items():
         for (k2, j), B_value in B.items():
             if k == k2:
-                result[(i, j)] += A_value * B_value
-    return result
+                C_int[(i, j)] += A_value * B_value
+
+    # Combine C and C_int to form the final result C
+    for key, value in C_int.items():
+        C[key] = value
+
+    return C
 
 
 def _forward_jacobian_core(replacements, reduced_expr, wrt):
@@ -138,23 +184,35 @@ def _forward_jacobian_core(replacements, reduced_expr, wrt):
         for s in sub_expr
     ]
 
+
     C = Counter({(0, j): diff_value for j, w in enumerate(wrt) if (diff_value := sub_expr[0].diff(w)) != 0})
+
+    nan_idx_C = set()
+    nan_idx_C = _check_nan(C, nan_idx_C, 1)
 
     for i in range(1, l_sub):
         Bi = {(i, j): diff_value for j in range(i + 1)
               if rep_sym[j] in precomputed_fs[i] and (diff_value := sub_expr[i].diff(rep_sym[j])) != 0}
 
+        nan_idx_Bi = set()
+        nan_idx_Bi = _check_nan(Bi, nan_idx_Bi, 0)
+
         Ai = Counter({(i, j): diff_value for j, w in enumerate(wrt)
                       if (diff_value := sub_expr[i].diff(w)) != 0})
 
         if Bi:
-            Ci = _dok_matrix_multiply(Bi, C)
-            Ci.update(Ai)  # Use Counter's update method to add Ai to Ci
-            C.update(Ci)  # Update C with the result
+            Ci = _dok_matmul_with_nan_handling(Bi, C, nan_idx_Bi, nan_idx_C, 1, l_wrt)
+            nan_idx_C = _check_nan(Ci, nan_idx_C, 1)
+
+            Ci.update(Ai)
+            C.update(Ci)
         else:
             C.update(Ai)
 
-    J = _dok_matrix_multiply(f2, C)
+    nan_idx_f2 = set()
+    nan_idx_f2 = _check_nan(f2, nan_idx_f2, 0)
+    J = _dok_matmul_with_nan_handling(f2, C, nan_idx_f2, nan_idx_C, l_red, l_wrt)
+
 
     for (i, j), value in f1.items():
         J[(i, j)] += value
@@ -173,7 +231,7 @@ def _forward_jacobian_norm_in_dag_out(expr, wrt):
     return replacements, J
 
 
-def forward_jacobian(expr, wrt):
+def _forward_jacobian(expr, wrt):
     r"""
     Returns the Jacobian matrix produced using a forward accumulation
     algorithm.
