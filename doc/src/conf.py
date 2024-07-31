@@ -440,22 +440,6 @@ latex_elements = {
     }%
    }%
  }%
-% This font is available from texlive-lang-japanese apt dependency
-\IfFontExistsTF{HaranoAjiMincho-Regular.otf}
- {%
-  % A few Asian ideograms:
-  \newfontfamily{\HaranoAjiMincho}{Harano Aji Mincho}
-  \newunicodechar{于}{\text{\HaranoAjiMincho 于}}%   (U+4E8E)
-  \newunicodechar{彭}{\text{\HaranoAjiMincho 彭}}%   (U+5F6D)
-  \newunicodechar{斌}{\text{\HaranoAjiMincho 斌}}%   (U+658C)
- }
- {\AtEndDocument{\typeout{%
-    于 and some like characters could not be rendered as^^J%
-    Harano Aji Mincho font could not be found or fontspec^^J%
-    package is too old (we need 2.5c 2017/01/02 or later).%
-    }%
-   }%
- }%
 ''',
 }
 
