@@ -1435,7 +1435,6 @@ class expint(Function):
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.functions.special.gamma_functions import digamma
         nu, z = self.args
         if nu.is_real and nu >= 1:
             arg = 1/(nu - 1)

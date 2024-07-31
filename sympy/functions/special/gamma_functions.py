@@ -215,13 +215,13 @@ class gamma(Function):
         raise PoleError()
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy.series.order import Order
-        if args0[0] != oo:
-            return super()._eval_aseries(n, args0, x, logx)
-        z = self.args[0]
-        r = exp((log(z)*(z - S.Half) - z + log(2*pi)/2).expand())
-        l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, n)]
-        return (exp(Add(*l))._eval_nseries(x, n, logx))*r
+        point = args0[0]
+        if point is S.Infinity:
+            z = self.args[0]
+            r = exp((log(z)*(z - S.Half) - z + log(2*pi)/2).expand())
+            l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, n)]
+            return (exp(Add(*l))._eval_nseries(x, n, logx))*r
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 ###############################################################################
