@@ -102,7 +102,7 @@ htmlhelp:
 	      ".hhp project file in $(BUILDDIR)/htmlhelp."
 
 latex: logo
-	mkdir -p $(BUILDDIR)/latex $(BUILDDIR)/doctrees
+	mkdir -p $(BUILDDIR)/latex $(BUILDDIR)/doctrees-latex
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) $(BUILDDIR)/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
