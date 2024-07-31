@@ -7,7 +7,8 @@ RST2HTML     = rst2html
 SPHINXOPTS   =
 SPHINXVER    = 0.5
 SPHINXBUILD  = sphinx-build
-PAPER        =
+# This one can also be set in the environment
+PAPER        ?= letter
 BUILDDIR     = _build
 SOURCEDIR    = src
 LIVEHOST     = localhost
@@ -24,7 +25,7 @@ ALLSPHINXOPTS = -d $(BUILDDIR)/doctrees $(SPHINXOPTS)
 WARNINGSFILE = $(BUILDDIR)/.sphinx-warnings
 SPHINXSAVEWARNINGS = -w $(WARNINGSFILE)
 ALLSPHINXOPTSapi = -d $(BUILDDIR)/doctrees-api $(SPHINXOPTS) api
-ALLSPHINXOPTSlatex = -d $(BUILDDIR)/doctrees-latex -D latex_element.papersize=$(PAPER)paper \
+ALLSPHINXOPTSlatex = -d $(BUILDDIR)/doctrees-latex -D latex_elements.papersize=$(PAPER)paper \
                 $(SPHINXOPTS) src
 
 .PHONY: changes cheatsheet clean help html _html htmlapi htmlhelp info latex \
