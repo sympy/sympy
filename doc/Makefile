@@ -17,10 +17,6 @@ LIVEPORT     = 0
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
 
-# This must be set for the recursive make pdf build to work in make latexpdf
-export LATEXMKOPTS = -halt-on-error -xelatex
-
-
 ALLSPHINXOPTS = -d $(BUILDDIR)/doctrees $(SPHINXOPTS)
 WARNINGSFILE = $(BUILDDIR)/.sphinx-warnings
 SPHINXSAVEWARNINGS = -w $(WARNINGSFILE)
@@ -110,11 +106,13 @@ latex: logo
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) $(BUILDDIR)/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
-	@echo "Set the environment variable LATEXMKOPTS='-xelatex -silent'"
-	@echo "And run \`make all' in that directory to run these through xelatex."
+	@echo "Run \`make all' in that directory to run these through xelatex."
 
 pdf pdflatex latexpdf: latex
-	$(MAKE) -C $(BUILDDIR)/latex
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf \
+	LATEXOPTS="-halt-on-error -interaction=batchmode" \
+	LATEXMKOPTS="-xelatex" \
+	|| echo "LaTeX error"'!'" Check .log in $(BUILDDIR)/latex for lineno in .tex file."
 
 changes:
 	mkdir -p $(BUILDDIR)/changes $(BUILDDIR)/doctrees
