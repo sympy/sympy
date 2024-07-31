@@ -105,7 +105,7 @@ htmlhelp:
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in $(BUILDDIR)/htmlhelp."
 
-latex:
+latex: logo
 	mkdir -p $(BUILDDIR)/latex $(BUILDDIR)/doctrees
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) $(BUILDDIR)/latex
 	@echo
