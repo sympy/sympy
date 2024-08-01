@@ -362,6 +362,7 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 latex_engine = 'xelatex'
 latex_use_xindy = False
 latex_elements = {
+    'passoptionstopackages': r'\PassOptionsToPackage{no-math}{fontspec}',
     'fontpkg': r'''
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
