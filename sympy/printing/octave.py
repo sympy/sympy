@@ -379,10 +379,6 @@ class OctaveCodePrinter(CodePrinter):
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
-
     def _print_KroneckerDelta(self, expr):
         prec = PRECEDENCE["Pow"]
         return "double(%s == %s)" % tuple(self.parenthesize(x, prec)
