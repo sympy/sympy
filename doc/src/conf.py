@@ -377,8 +377,14 @@ latex_elements = {
 \AtBeginDocument{\sbox\sphinxcontinuationbox{\spx@opt@verbatimcontinued}}
 \makeatother
 \protected\def\_{\OldUnderscore\discretionary{}{\sphinxafterbreak}{}}
+% increase room on TOC page for page numbers going into the thousands
+\makeatletter
+\renewcommand{\@pnumwidth}{2.5em}% default is 1.55em
+\renewcommand{\@tocrmarg}{3.5em}%  default is 2.55em
+\makeatother
 ''',
     'sphinxsetup': 'verbatimforcewraps',
+    'printindex': r'\def\twocolumn[#1]{#1}\raggedright\printindex',
 }
 
 # SymPy logo on title page
