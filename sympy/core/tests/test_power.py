@@ -282,7 +282,7 @@ def test_pow_as_base_exp():
     p = (S(3)/2)**x
     assert p.base, p.exp == p.as_base_exp() == (3*S.Half, x)
     p = (S(2)/3)**x
-    assert p.as_base_exp() == (S(3)/2, -x)
+    assert p.as_base_exp() == (S(2)/3, x)
     assert p.base, p.exp == (S(2)/3, x)
     # issue 8344:
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
@@ -650,7 +650,7 @@ def test_powers_of_I():
 
 def test_issue_23918():
     b = S(2)/3
-    assert (b**x).as_base_exp() == (1/b, -x)
+    assert (b**x).as_base_exp() == (b, x)
 
 
 def test_issue_26546():
