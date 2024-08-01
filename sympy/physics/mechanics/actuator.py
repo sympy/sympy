@@ -1059,17 +1059,17 @@ class CoulombKineticFriction(ForceActuator):
     Parameters
     ==========
 
-    f_n : Expr
+    f_n : sympifiable
         The normal force between the surfaces. It should always be a non-negative scalar.
-    mu_k : Expr
+    mu_k : sympifiable
         The coefficient of kinetic friction.
     pathway : PathwayBase
         The pathway that the actuator follows.
-    v_s : Expr
+    v_s : sympifiable
         The Stribeck friction coefficient.
-    sigma : Expr
+    sigma : sympifiable
         The viscous friction coefficient.
-    mu_s : Expr, optional
+    mu_s : sympifiable, optional
         The coefficient of static friction. Defaults to mu_k, meaning the Stribeck effect evaluates to 0 by default.
 
     References
