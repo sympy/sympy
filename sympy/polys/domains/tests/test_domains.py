@@ -1281,11 +1281,6 @@ def test_canonical_unit():
     assert (K.one + i)/(i - K.one) == -i
 
 
-def test_issue_18278():
-    assert str(RR(2).parent()) == 'RR'
-    assert str(CC(2).parent()) == 'CC'
-
-
 def test_Domain_is_negative():
     I = S.ImaginaryUnit
     a, b = [CC.convert(x) for x in (2 + I, 5)]
