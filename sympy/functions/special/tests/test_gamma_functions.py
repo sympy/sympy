@@ -109,7 +109,7 @@ def test_gamma_series():
 
 
 def test_gamma_aseries():
-    assert gamma(x + 1).series(x, 0, 3) == sqrt(2)*sqrt(pi)*sqrt(x + 1)*(-23/(288*x**2) + \
+    assert gamma(x + 1).aseries(x, 3) == sqrt(2)*sqrt(pi)*sqrt(x + 1)*(-23/(288*x**2) + \
             1/(12*x) + 1 + O(x**(-3), (x, oo)))*exp(x*log(x + 1) - x - 1)
     assert gamma(x).aseries(x, 3) == sqrt(2)*sqrt(pi)*(1/(288*x**2) + 1/(12*x) + 1 + \
             O(x**(-3), (x, oo)))*exp(x*log(x) - x)/sqrt(x)
