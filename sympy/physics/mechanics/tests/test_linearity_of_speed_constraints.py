@@ -1,13 +1,13 @@
 from sympy import symbols, sin, cos
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
-                                     KanesMethod)
-from sympy.testing.pytest import raises
+    KanesMethod)
+from sympy.testing import pytest
 
 def test_linearity_of_motion_constraints():
     # Test that an error is raised if nonlinear velocity constraints are
     # supplied to the KanesMethod.
     # It is a simple pendulum.
-    t =dynamicsymbols._t
+    t = dynamicsymbols._t
     N, A = ReferenceFrame('N'), ReferenceFrame('A')
     O, P = Point('O'), Point('P')
     O.set_vel(N, 0)
@@ -33,15 +33,9 @@ def test_linearity_of_motion_constraints():
     speed_constr = [ux**2 - l * q.diff(t) * cos(q),sin(uy) +
         l * q.diff(t)**2 * sin(q)]
 
-    KM = KanesMethod(
-        N,
-        q_ind=q_ind,
-        q_dependent=q_dep,
-        u_ind=u_ind,
-        u_dependent=u_dep,
-        kd_eqs=kd,
-        configuration_constraints=config_constr,
-        velocity_constraints=speed_constr,
-    )
 
-    raises(ValueError, lambda: KM)
+    with pytest.raises(ValueError):
+        KanesMethod(N, q_ind=q_ind, q_dependent=q_dep, u_ind=u_ind,
+            u_dependent=u_dep, kd_eqs=kd,
+            configuration_constraints=config_constr,
+            velocity_constraints=speed_constr)
