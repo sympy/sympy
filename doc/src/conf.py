@@ -372,6 +372,11 @@ latex_elements = {
 \usepackage{letltxmacro}
 \LetLtxMacro\OldLaTeX\LaTeX
 \AtBeginDocument{\DeclareRobustCommand{\LaTeX}{\text{\OldLaTeX}}}
+\let\OldUnderscore\_
+\makeatletter
+\AtBeginDocument{\sbox\sphinxcontinuationbox{\spx@opt@verbatimcontinued}}
+\makeatother
+\protected\def\_{\OldUnderscore\discretionary{}{\sphinxafterbreak}{}}
 ''',
     'sphinxsetup': 'verbatimforcewraps',
 }
