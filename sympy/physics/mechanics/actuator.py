@@ -1020,12 +1020,22 @@ class CoulombKineticFriction(ForceActuator):
 
     The actuator makes the following assumptions:
 
-    - The actuator assumes slip.
+    - The actuator assumes relative motion is non-zero.
     - The normal force is assumed to be a non-negative scalar.
     - The resultant friction force is opposite to the velocity direction.
+    - Each point in the pathway is fixed in separate objects that are sliding relative to each other.
+    These two points represent contact points on the two sliding objects.
 
     This actuator has been tested for straightforward motions, like a block sliding
     on a surface.
+
+    The friction force is defined to always oppose the direction of relative velocity :math:`v`.
+    Specifically:
+
+    - The default Coulomb friction force :math:`\mu_k f_n \text{sign}(v)` is opposite to :math:`v`.
+    - The Stribeck effect :math:`(\mu_s - \mu_k) f_n e^{-(\frac{v}{v_s})^2} \text{sign}(v)`
+    is also opposite to :math:`v`.
+    - The viscous friction term :math:`\sigma v` is opposite to :math:`v`.
 
     Examples
     ========
@@ -1052,9 +1062,13 @@ class CoulombKineticFriction(ForceActuator):
     >>> block = Particle('block', point=P, mass=m)
 
     >>> kane = KanesMethod(N, (x,), (v,), kd_eqs=(x.diff() - v,))
+    >>> friction.to_loads()
+        [(O, (g*m*mu_k*sign(sign(x(t))*Derivative(x(t), t)) + sigma*sign(x(t))*Derivative(x(t), t))*x(t)/Abs(x(t))*N.x), (P, (-g*m*mu_k*sign(sign(x(t))*Derivative(x(t), t)) - sigma*sign(x(t))*Derivative(x(t), t))*x(t)/Abs(x(t))*N.x)]
     >>> loads = friction.to_loads() + spring.to_loads()
     >>> fr, frstar = kane.kanes_equations([block], loads)
-    >>> eom = sm.Matrix([fr, frstar])
+    >>> eom = fr + frstar
+    >>> eom
+        Matrix([[-k*x(t) - m*Derivative(v(t), t) + (-g*m*mu_k*sign(v(t)*sign(x(t))) - sigma*v(t)*sign(x(t)))*x(t)/Abs(x(t))]])
 
     Parameters
     ==========
@@ -1065,9 +1079,9 @@ class CoulombKineticFriction(ForceActuator):
         The coefficient of kinetic friction.
     pathway : PathwayBase
         The pathway that the actuator follows.
-    v_s : sympifiable
+    v_s : sympifiable, optional
         The Stribeck friction coefficient.
-    sigma : sympifiable
+    sigma : sympifiable, optional
         The viscous friction coefficient.
     mu_s : sympifiable, optional
         The coefficient of static friction. Defaults to mu_k, meaning the Stribeck effect evaluates to 0 by default.
@@ -1084,12 +1098,12 @@ class CoulombKineticFriction(ForceActuator):
 
     """
 
-    def __init__(self, mu_k, f_n, pathway, *, v_s=None, sigma=0, mu_s=None):
-        self.mu_k = mu_k if mu_k is not None else 1
-        self.mu_s = mu_s if mu_s is not None else self.mu_k
-        self.f_n = f_n
-        self.sigma = sigma if sigma is not None else 0
-        self.v_s = v_s if v_s is not None or v_s == 0 else 0.01
+    def __init__(self, mu_k, f_n, pathway, *, v_s=None, sigma=None, mu_s=None):
+        self._mu_k = sympify(mu_k, strict=True) if mu_k is not None else 1
+        self._mu_s = sympify(mu_s, strict=True) if mu_s is not None else self._mu_k
+        self._f_n = sympify(f_n, strict=True)
+        self._sigma = sympify(sigma, strict=True) if sigma is not None else 0
+        self._v_s = sympify(v_s, strict=True) if v_s is not None or v_s == 0 else 0.01
         self.pathway = pathway
 
     @property
@@ -1097,83 +1111,33 @@ class CoulombKineticFriction(ForceActuator):
         """The coefficient of kinetic friction."""
         return self._mu_k
 
-    @mu_k.setter
-    def mu_k(self, mu_k):
-        if hasattr(self, '_mu_k'):
-            msg = (
-                f'Can\'t set attribute `mu_k` to '
-                f'{repr(mu_k)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._mu_k = sympify(mu_k, strict=True)
-
     @property
     def mu_s(self):
         """The coefficient of static friction."""
         return self._mu_s
-
-    @mu_s.setter
-    def mu_s(self, mu_s):
-        if hasattr(self, '_mu_s'):
-            msg = (
-                f'Can\'t set attribute `mu_s` to '
-                f'{repr(mu_s)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._mu_s = sympify(mu_s, strict=True)
 
     @property
     def f_n(self):
         """The normal force between the surfaces."""
         return self._f_n
 
-    @f_n.setter
-    def f_n(self, f_n):
-        if hasattr(self, '_f_n'):
-            msg = (
-                f'Can\'t set attribute `f_n` to '
-                f'{repr(f_n)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._f_n = sympify(f_n, strict=True)
-
     @property
     def sigma(self):
         """The viscous friction coefficient."""
         return self._sigma
-
-    @sigma.setter
-    def sigma(self, sigma):
-        if hasattr(self, '_sigma'):
-            msg = (
-                f'Can\'t set attribute `sigma` to '
-                f'{repr(sigma)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._sigma = sympify(sigma, strict=True)
 
     @property
     def v_s(self):
         """The Stribeck friction coefficient."""
         return self._v_s
 
-    @v_s.setter
-    def v_s(self, v_s):
-        if hasattr(self, '_v_s'):
-            msg = (
-                f'Can\'t set attribute `v_s` to '
-                f'{repr(v_s)} as it is immutable.'
-            )
-            raise AttributeError(msg)
-        self._v_s = sympify(v_s, strict=True)
-
     @property
     def force(self):
         v = self.pathway.extension_velocity
         f_c = self.mu_k * self.f_n
         f_max = self.mu_s * self.f_n
-        stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2) if self.v_s != 0 else 0
-        viscous_term = self.sigma * v if self.f_n != 0 else 0
+        stribeck_term = (f_max - f_c) * exp(-(v / self.v_s)**2) if self.v_s is not None else 0
+        viscous_term = self.sigma * v if self.sigma is not None else 0
         return (f_c + stribeck_term) * -sign(v) - viscous_term
 
     @force.setter
@@ -1181,6 +1145,6 @@ class CoulombKineticFriction(ForceActuator):
         raise AttributeError('Can\'t set computed attribute `force`.')
 
     def __repr__(self):
-        return (f'{self.__class__.__name__}({self.mu_k}, {self.mu_s} '
-                f'{self.f_n}, {self.pathway}, {self.v_s}, '
-                f'{self.sigma})')
+        return (f'{self.__class__.__name__}({self._mu_k}, {self._mu_s} '
+                f'{self._f_n}, {self.pathway}, {self._v_s}, '
+                f'{self._sigma})')
