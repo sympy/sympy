@@ -366,10 +366,10 @@ class KanesMethod(_Methods):
             k_kqdot = kdeqs.jacobian(qdot)
             f_k = kdeqs.xreplace(u_zero).xreplace(qdot_zero)
 
-            # The kinematic differential equations should be linear in both q'
-            # and u, so check for u and q' in the components.
+            # The kinematic differential equations should be linear in u,
+            # so check for u in the components.
             dy_syms = find_dynamicsymbols(k_ku.row_join(k_kqdot).row_join(f_k))
-            nonlin_vars = [vari for vari in u[:] + qdot[:] if vari in dy_syms]
+            nonlin_vars = [vari for vari in u[:] if vari in dy_syms]
             if nonlin_vars:
                 msg = ('The provided kinematic differential equations are '
                        'nonlinear in {}. They must be linear in the '
