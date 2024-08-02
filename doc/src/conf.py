@@ -406,27 +406,6 @@ latex_elements = {
   \newunicodechar{𝟘}{\text{\TGDejaVuMath 𝟘}}%   (U+1D7D8)
   \newunicodechar{𝟙}{\text{\TGDejaVuMath 𝟙}}%   (U+1D7D9)
 %
-% \IfFontExistsTF was added to fontspec at v2.5c 2017/01/02.
-% If it does not exist we take no risk.
-\makeatletter
-\ifdefined\IfFontExistsTF\else\let\IfFontExistsTF\@thirdofthree\fi
-\makeatother
-%
-% This font is available from texlive-fonts-extra apt dependency
-\IfFontExistsTF{NewCMMath-Regular.otf}
- {%
-  \newfontfamily{\NCMMath}{NewCMMath-Regular.otf}
-  % This next character is available (on TeXLive 2024) only in
-  % New Computer Modern Math and OldStandard-Math.
-  \newunicodechar{⭯}{\text{\NCMMath ⭯}}%   (U+2B6F)
- }
- {\AtEndDocument{\typeout{%
-    U+2b6f ⭯ could not be rendered as^^J%
-    New Computer Modern Math font could not be found or fontspec^^J%
-    package is too old (we need 2.5c 2017/01/02 or later).%
-    }%
-   }%
- }%
 % Define version of \LaTeX that is usable in math mode
 \usepackage{letltxmacro}
 \LetLtxMacro\OldLaTeX\LaTeX
