@@ -1023,7 +1023,7 @@ class CoulombKineticFriction(ForceActuator):
     - The actuator assumes relative motion is non-zero.
     - The normal force is assumed to be a non-negative scalar.
     - The resultant friction force is opposite to the velocity direction.
-    - Each point in the pathway is fixed in separate objects that are sliding relative to each other. These two points represent contact points on the two sliding objects.
+    - Each point in the pathway is fixed within separate objects that are sliding relative to each other. In other words, these two points are fixed in the mutually sliding objects.
 
     This actuator has been tested for straightforward motions, like a block sliding
     on a surface.

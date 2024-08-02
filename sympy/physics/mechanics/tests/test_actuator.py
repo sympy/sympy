@@ -31,7 +31,6 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
     DuffingSpring,
     CoulombKineticFriction,
-    System,
 )
 
 from sympy.core.expr import Expr as ExprType
