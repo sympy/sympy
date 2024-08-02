@@ -408,7 +408,7 @@ latex_elements = {
 % This font is available from texlive-fonts-extra apt dependency
 \IfFontExistsTF{NewCMMath-Regular.otf}
  {%
-  \newfontfamily{\NCMMath}{NewCMMath-Regular}
+  \newfontfamily{\NCMMath}{NewCMMath-Regular.otf}
   % This next character is available (on TeXLive 2024) only in
   % New Computer Modern Math and OldStandard-Math.
   \newunicodechar{⭯}{\text{\NCMMath ⭯}}%   (U+2B6F)
