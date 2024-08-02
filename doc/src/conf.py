@@ -385,6 +385,7 @@ latex_elements = {
 ''',
     'sphinxsetup': 'verbatimforcewraps',
     'printindex': r'\def\twocolumn[#1]{#1}\raggedright\printindex',
+    'fvset': r'\fvset{fontsize=auto}',
 }
 
 # SymPy logo on title page
