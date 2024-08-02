@@ -399,6 +399,13 @@ latex_elements = {
 % U+2715 is available in DejaVu Sans and DejaVu Sans Mono but not Serif
 \newunicodechar{❌}{\textcolor{red}{\sffamily\bfseries ✕}}% (U+274C --> U+2715)
 %
+\newfontfamily{\TGDejaVuMath}{texgyredejavu-math.otf}
+  \newunicodechar{𝑅}{\text{\TGDejaVuMath 𝑅}}%   (U+1D445)
+  \newunicodechar{𝕀}{\text{\TGDejaVuMath 𝕀}}%   (U+1D540)
+  \newunicodechar{𝕌}{\text{\TGDejaVuMath 𝕌}}%   (U+1D54C)
+  \newunicodechar{𝟘}{\text{\TGDejaVuMath 𝟘}}%   (U+1D7D8)
+  \newunicodechar{𝟙}{\text{\TGDejaVuMath 𝟙}}%   (U+1D7D9)
+%
 % \IfFontExistsTF was added to fontspec at v2.5c 2017/01/02.
 % If it does not exist we take no risk.
 \makeatletter
@@ -412,15 +419,9 @@ latex_elements = {
   % This next character is available (on TeXLive 2024) only in
   % New Computer Modern Math and OldStandard-Math.
   \newunicodechar{⭯}{\text{\NCMMath ⭯}}%   (U+2B6F)
-  % Those next few are all available in New Computer Modern Math:
-  \newunicodechar{𝑅}{\text{\NCMMath 𝑅}}%   (U+1D445)
-  \newunicodechar{𝕀}{\text{\NCMMath 𝕀}}%   (U+1D540)
-  \newunicodechar{𝕌}{\text{\NCMMath 𝕌}}%   (U+1D54C)
-  \newunicodechar{𝟘}{\text{\NCMMath 𝟘}}%   (U+1D7D8)
-  \newunicodechar{𝟙}{\text{\NCMMath 𝟙}}%   (U+1D7D9)
  }
  {\AtEndDocument{\typeout{%
-    𝑅 and some like characters could not be rendered as^^J%
+    U+2b6f ⭯ could not be rendered as^^J%
     New Computer Modern Math font could not be found or fontspec^^J%
     package is too old (we need 2.5c 2017/01/02 or later).%
     }%
