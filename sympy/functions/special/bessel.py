@@ -677,12 +677,15 @@ class besselk(BesselBase):
         _, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
-            if nu is S.Zero:
+            if nu.is_zero:
                 # Equation 9.6.8 of Abramowitz and Stegun (10th ed, 1972).
                 term = -log(z) - S.EulerGamma + log(2)
-            else:
+            elif nu.is_nonzero:
                 # Equation 9.6.9 of Abramowitz and Stegun (10th ed, 1972).
                 term = gamma(Abs(nu))*(z/2)**(-Abs(nu))/2
+            else:
+                raise NotImplementedError(f"Cannot proceed without knowing if {nu} is zero or not.")
+
             return term.as_leading_term(x, logx=logx)
         elif e.is_negative:
             # Equation 9.7.2 of Abramowitz and Stegun (10th ed, 1972).

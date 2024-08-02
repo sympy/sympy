@@ -71,10 +71,12 @@ def test_besselk_leading_term():
     assert besselk(1, 2*sqrt(x)).as_leading_term(x) == 1/(2*sqrt(x))
     assert besselk(S(5)/3, x).as_leading_term(x) == 2**(S(2)/3)*gamma(S(5)/3)/x**(S(5)/3)
     assert besselk(S(2)/3, x).as_leading_term(x) == besselk(-S(2)/3, x).as_leading_term(x)
-    assert besselk(n, x).as_leading_term(x).subs({n:S(5)/7}) == besselk(S(5)/7, x).series(x).as_leading_term(x)
-    assert besselk(n, x).as_leading_term(x).subs({n:S(-15)/7}) == besselk(S(-15)/7, x).series(x).as_leading_term(x)
-    assert besselk(n, x).as_leading_term(x).subs({n:3}) == besselk(3, x).series(x).as_leading_term(x)
-    assert besselk(n, x).as_leading_term(x).subs({n:-2}) == besselk(-2, x).series(x).as_leading_term(x)
+
+    nz = Symbol("nz", nonzero=True)
+    assert besselk(nz, x).as_leading_term(x).subs({nz:S(5)/7}) == besselk(S(5)/7, x).series(x).as_leading_term(x)
+    assert besselk(nz, x).as_leading_term(x).subs({nz:S(-15)/7}) == besselk(S(-15)/7, x).series(x).as_leading_term(x)
+    assert besselk(nz, x).as_leading_term(x).subs({nz:3}) == besselk(3, x).series(x).as_leading_term(x)
+    assert besselk(nz, x).as_leading_term(x).subs({nz:-2}) == besselk(-2, x).series(x).as_leading_term(x)
 
 
 def test_besselj_series():
