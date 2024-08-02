@@ -317,8 +317,8 @@ class KanesMethod(_Methods):
                 self._f_dnh = msubs(acc, udot_zero)
                 self._k_dnh = (acc - self._f_dnh).jacobian(self._udot)
 
-            # The linear velocity constraints must be linear in both q'
-            # and u, so check for u and q' in the components.
+            # The linear velocity constraints must be linear in u so check
+            # for u in the components.
             dy_syms = find_dynamicsymbols(self._f_nh.row_join(self._k_nh))
             nonlin_vars = [vari for vari in self.u[:] + self._qdot[:]
                 if vari in dy_syms]
