@@ -120,10 +120,13 @@ class DenseNDimArray(NDimArray):
         [[1, 2], [3, 4], [5, 6]]
 
         """
-        new_total_size = functools.reduce(lambda x,y: x*y, newshape)
-        if new_total_size != self._loop_size:
-            raise ValueError('Expecting reshape size to %d but got prod(%s) = %d' % (
-                self._loop_size, str(newshape), new_total_size))
+        if not newshape:
+            newshape = ()
+        else:
+            new_total_size = functools.reduce(lambda x,y: x*y, newshape)
+            if new_total_size != self._loop_size:
+                raise ValueError('Expecting reshape size to %d but got prod(%s) = %d' % (
+                    self._loop_size, str(newshape), new_total_size))
 
         # there is no `.func` as this class does not subtype `Basic`:
         return type(self)(self._array, newshape)
