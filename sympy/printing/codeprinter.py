@@ -351,6 +351,9 @@ class CodePrinter(StrPrinter):
         else:
             return '%s_%d' % (expr.name, expr.dummy_index)
 
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
+
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
 
