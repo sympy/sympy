@@ -79,4 +79,3 @@ def test_reshape_to_scalar():
         assert A.shape == (1,)
         assert A.reshape().shape == ()
         assert str(A.reshape()) == "1"
-
