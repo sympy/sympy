@@ -11,6 +11,7 @@ from sympy import (
     Abs,
     symbols,
     exp,
+    sign,
 )
 from sympy.physics.mechanics import (
     ActuatorBase,
@@ -857,7 +858,7 @@ class TestDuffingSpring:
 class TestCoulombKineticFriction:
     @pytest.fixture(autouse=True)
     def _block_on_surface(self):
-        r"""A block sliding on a surface.
+        """A block sliding on a surface.
 
         Notes
         =====
@@ -865,132 +866,156 @@ class TestCoulombKineticFriction:
         a block sliding on a surface with the Coulomb kinetic friction force.
         The test covers scenarios with both positive and negative velocities.
 
-        Equations of Motion
-        ===================
-        The equations of motion for the block are derived considering
-        the applied force F, the mass m, the gravitational constant g, and the friction forces
-        as described above.
-
-        The general form of the equation of motion is:
-
-            F - F_friction = m * xdd
-
-        where F_friction is given by the friction force equation f_f(v).
-
         """
-        # Define Dynamics symbols and parameters
-        self.q1, self.u1 = dynamicsymbols("q1 u1", real=True)
-        self.q1_positive, self.u1_positive = dynamicsymbols('q1 u1', real=True, positive=True)
-        self.q1_negative, self.u1_negative = dynamicsymbols('q1 u1', real=True, negative=True)
-        self.repl_positive = {self.q1: self.q1_positive, self.u1: self.u1_positive}
-        self.repl_negative = {self.q1: self.q1_negative, self.u1: self.u1_negative}
 
         # Mass, gravity constant, friction coefficient, coefficient of Stribeck friction, viscous_coefficient
         self.m, self.g, self.mu_k, self.mu_s, self.v_s, self.sigma, self.F = symbols('m g mu_k mu_s v_s sigma F', real=True)
 
-        # Define the reference frame
-        self.N = ReferenceFrame('N')
-        self.O = Point('O')
-        self.P = self.O.locatenew('P', self.q1 * self.N.x)
-        self.O.set_vel(self.N, 0)
-        self.P.set_vel(self.N, self.u1 * self.N.x)
-        self.pathway = LinearPathway(self.O, self.P)
-
-        self.particle = Particle('particle', self.P, self.m) # Block
-
-        self.system = System(self.N, self.O)
-        self.system.q_ind = [self.q1]
-        self.system.u_ind = [self.u1]
-        self.system.kdes = [self.q1.diff() - self.u1]
-        self.system.add_bodies(self.particle)
-        self.system.apply_uniform_gravity(-self.g * self.N.y)
-        self.system.add_loads(Force(self.particle, self.F * self.N.x))
-
     def test_block_on_surface_default(self):
-        friction = CoulombKineticFriction(
-            self.mu_k,
-            self.m * self.g,
-            self.pathway,
-        )
-        self.system.add_actuators(friction)
+        # Positive
+        q = dynamicsymbols('q', positive=True)
 
-        # Positive velocity case
-        eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k - self.m * self.u1.diff()
-        assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, q.diff() * N.x)
 
-        # Negative velocity case
-        eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k - self.m * self.u1.diff()
-        assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
+        pathway = LinearPathway(O, P)
+        friction = CoulombKineticFriction(self.mu_k, self.m * self.g, pathway)
+        expected_positive = [Force(point=O, force=self.g * self.m * self.mu_k * sign(q.diff()) * N.x),
+                             Force(point=P, force=-self.g * self.m * self.mu_k * sign(q.diff()) * N.x)]
+
+        assert friction.to_loads() == expected_positive
+
+        # Negative
+        q = dynamicsymbols('q', positive=False)
+
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, q.diff() * N.x)
+
+        pathway = LinearPathway(O, P)
+        friction = CoulombKineticFriction(self.mu_k, self.m * self.g, pathway)
+        expected_negative = [Force(point=O, force=self.g * self.m * self.mu_k * q * sign(sqrt(q**2) * q.diff()/q)/sqrt(q**2)*N.x),
+                             Force(point=P, force=-self.g * self.m * self.mu_k * q * sign(sqrt(q**2) * q.diff()/q)/sqrt(q**2)*N.x)]
+
+        assert friction.to_loads() == expected_negative
 
     def test_block_on_surface_viscous(self):
-        friction = CoulombKineticFriction(
-            self.mu_k,
-            self.m * self.g,
-            self.pathway,
-            sigma=self.sigma
-        )
-        self.system.add_actuators(friction)
+        # Positive
+        q = dynamicsymbols('q', positive=True)
 
-        # Positive velocity case
-        eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k - self.sigma * self.u1 - self.m * self.u1.diff()
-        assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, q.diff() * N.x)
 
-        # Negative velocity case
-        eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k - self.sigma * self.u1 - self.m * self.u1.diff()
-        assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
+        pathway = LinearPathway(O, P)
+        friction = CoulombKineticFriction(self.mu_k, self.m * self.g, pathway, sigma=self.sigma)
+        expected_positive = [Force(point=O, force=(self.g * self.m * self.mu_k * sign(q.diff()) + self.sigma * q.diff()) * N.x),
+                             Force(point=P, force=(-self.g * self.m * self.mu_k * sign(q.diff()) - self.sigma * q.diff()) * N.x)]
+
+        assert friction.to_loads() == expected_positive
+
+        # Negative
+        q = dynamicsymbols('q', positive=False)
+
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, q.diff() * N.x)
+
+        pathway = LinearPathway(O, P)
+        friction = CoulombKineticFriction(self.mu_k, self.m * self.g, pathway, sigma=self.sigma)
+        expected_negative = [Force(point=O, force=(self.g * self.m * self.mu_k * sign(sqrt(q**2) * q.diff()/q) + self.sigma * sqrt(q**2) * q.diff()/q) * q/sqrt(q**2) * N.x),
+                             Force(point=P, force=(-self.g * self.m * self.mu_k * sign(sqrt(q**2) * q.diff()/q) - self.sigma * sqrt(q**2) * q.diff()/q) * q/sqrt(q**2) * N.x)]
+
+        assert friction.to_loads() == expected_negative
 
     def test_block_on_surface_stribeck(self):
-        friction = CoulombKineticFriction(
-            self.mu_k,
-            self.m * self.g,
-            self.pathway,
-            v_s=self.v_s,
-            mu_s=self.mu_s
-        )
-        self.system.add_actuators(friction)
+        # Positive
+        q = dynamicsymbols('q', positive=True)
 
-        # Positive velocity case
-        eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k - (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-self.u1**2/self.v_s**2) - self.m * self.u1.diff()
-        assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, q.diff() * N.x)
 
-        # Negative velocity case
-        eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-self.u1**2/self.v_s**2) - self.m * self.u1.diff()
-        assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
+        pathway = LinearPathway(O, P)
+        friction = CoulombKineticFriction(self.mu_k, self.m * self.g, pathway, v_s=self.v_s, mu_s=self.mu_s)
+        expected_positive = [Force(point=O, force=(self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-q.diff()**2/self.v_s**2)) * sign(q.diff()) * N.x),
+                             Force(point=P, force=- (self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-q.diff()**2/self.v_s**2)) * sign(q.diff()) * N.x)]
+
+        assert friction.to_loads() == expected_positive
+
+        # Negative
+        q = dynamicsymbols('q', positive=False)
+
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, q.diff() * N.x)
+
+        pathway = LinearPathway(O, P)
+        friction = CoulombKineticFriction(self.mu_k, self.m * self.g, pathway, v_s=self.v_s, mu_s=self.mu_s)
+        expected_negative = [Force(point=O, force=(self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-q.diff()**2/self.v_s**2)) * q * sign(sqrt(q**2) * q.diff()/q)/sqrt(q**2) * N.x),
+                             Force(point=P, force=- (self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-q.diff()**2/self.v_s**2)) * q * sign(sqrt(q**2) * q.diff()/q)/sqrt(q**2) * N.x)]
+
+        assert friction.to_loads() == expected_negative
 
     def test_block_on_surface_all(self):
-        friction = CoulombKineticFriction(
-            self.mu_k,
-            self.m * self.g,
-            self.pathway,
-            v_s=self.v_s,
-            sigma=self.sigma,
-            mu_s=self.mu_s
-        )
-        self.system.add_actuators(friction)
+        # Positive
+        q = dynamicsymbols('q', positive=True)
 
-        # Positive velocity case
-        eoms = self.system.form_eoms()
-        expected_positive = self.F - self.g * self.m * self.mu_k - (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-self.u1**2/self.v_s**2) - self.sigma * self.u1 - self.m * self.u1.diff()
-        assert (eoms[0] - expected_positive).subs(self.repl_positive) == 0
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, q.diff() * N.x)
 
-        # Negative velocity case
-        eoms = self.system.form_eoms()
-        expected_negative = self.F + self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-self.u1**2/self.v_s**2) - self.sigma * self.u1 - self.m * self.u1.diff()
-        assert (eoms[0] - expected_negative).subs(self.repl_negative) == 0
+        pathway = LinearPathway(O, P)
+        friction = CoulombKineticFriction(self.mu_k, self.m * self.g, pathway, v_s=self.v_s, sigma=self.sigma, mu_s=self.mu_s)
+        expected_positive = [Force(point=O, force=(self.sigma * q.diff() + (self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-q.diff()**2/self.v_s**2)) * sign(q.diff())) * N.x),
+                             Force(point=P, force=(-self.sigma * q.diff() - (self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-q.diff()**2/self.v_s**2)) * sign(q.diff())) * N.x)]
+
+        assert friction.to_loads() == expected_positive
+
+        # Negative
+        q = dynamicsymbols('q', positive=False)
+
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, q.diff() * N.x)
+
+        pathway = LinearPathway(O, P)
+        friction = CoulombKineticFriction(self.mu_k, self.m * self.g, pathway, v_s=self.v_s, sigma=self.sigma, mu_s=self.mu_s)
+        expected_negative = [Force(point=O, force=(self.sigma * sqrt(q**2) * q.diff()/q + (self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-q.diff()**2/self.v_s**2)) * sign(sqrt(q**2) * q.diff()/q)) * q/sqrt(q**2) * N.x),
+                             Force(point=P, force=(-self.sigma * sqrt(q**2) * q.diff()/q - (self.g * self.m * self.mu_k + (-self.g * self.m * self.mu_k + self.g * self.m * self.mu_s) * exp(-q.diff()**2/self.v_s**2)) * sign(sqrt(q**2) * q.diff()/q)) * q/sqrt(q**2) * N.x)]
+
+        assert friction.to_loads() == expected_negative
 
     def test_normal_force_zero(self):
+        q = dynamicsymbols('q')
+
+        N = ReferenceFrame('N')
+        O = Point('O')
+        P = O.locatenew('P', q * N.x)
+        O.set_vel(N, 0)
+        P.set_vel(N, q.diff() * N.x)
+
+        pathway = LinearPathway(O, P)
         friction = CoulombKineticFriction(
             self.mu_k,
             0,
-            self.pathway,
-            v_s=self.v_s,
-            sigma=self.sigma,
-            mu_s=self.mu_k
+            pathway
         )
         assert friction.force == 0
