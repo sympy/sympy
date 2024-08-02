@@ -740,7 +740,7 @@ class besselk(BesselBase):
                     term = p*(digamma(k + nu + 1) + digamma(k + 1))
                     c.append(term)
                 return a + Add(*b) + Add(*c) # Order term comes from a
-            else:
+            elif nu.is_noninteger:
                 # Reference: https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/01/04/01/01/0003/ (only for non-integer order)
                 newn_a = ceiling((n+nu)/exp)
                 newn_b = ceiling((n-nu)/exp)
