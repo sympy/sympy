@@ -1597,8 +1597,6 @@ class Rational(Number):
             # S(0) == S.false is False
             # S(0) == False is True
             return False
-        if not self:
-            return not other
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
