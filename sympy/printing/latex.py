@@ -645,6 +645,7 @@ class LatexPrinter(Printer):
         return rf'\left({p}, {alpha}\right)'
 
     def _print_Pow(self, expr: Pow):
+        from sympy.simplify import fraction
         # Treat x**Rational(1,n) as special case
         if expr.exp.is_Rational:
             p: int = expr.exp.p  # type: ignore
@@ -682,6 +683,13 @@ class LatexPrinter(Printer):
                             return r"\frac{1}{\frac{%s}{%s}}" % (base_p, base_q)
                         else:
                             return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (base_p, base_q, abs(expr.exp))
+                n, d = fraction(expr, exact=True)
+                if d is S.One and n.is_Pow and n.exp.is_Integer and n.exp < 0:
+                    # handle here or else Mul will have recursive error
+                    if n.exp is S.NegativeOne:
+                        return r"\frac{1}{%s}" % latex(n.base)
+                    d = latex(Pow(n.base, -n.exp, evaluate=False))
+                    return r"\frac{1}{%s}" % d
                 # things like 1/x
                 return self._print_Mul(expr)
         if expr.base.is_Function:

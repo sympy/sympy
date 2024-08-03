@@ -803,7 +803,7 @@ class Pow(Expr):
         Explanation
         ===========
 
-        If base a Rational less than 1, then return 1/Rational, -exp.
+        If base is a Rational less than 1, then return 1/Rational, -exp.
         If this extra processing is not needed, the base and exp
         properties will give the raw arguments.
 
