@@ -190,6 +190,8 @@ pygments_dark_style = 'styles.NativeHighContrastStyle'
 # Don't show the source code hyperlinks when using matplotlib plot directive.
 plot_html_show_source_link = False
 
+maximum_signature_line_length = 50
+
 # Options for HTML output
 # -----------------------
 
