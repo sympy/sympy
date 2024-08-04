@@ -369,12 +369,14 @@ latex_elements = {
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}
 \usepackage{unicode-math}
-\setmathfont{XITSMath-Regular.otf}[Scale=1.2,BoldFont=XITSMath-Bold.otf]
+\setmathfont{XITSMath-Regular.otf}[Scale=1.2,
+    BoldFont=XITSMath-Bold.otf,
+    NFSSFamily=XITS]
 \AtBeginDocument{%
-  \SetMathAlphabet{\mathrm}{normal}{TU}{XITSMath-Regular.otf(1)}{m}{n}
-  \SetMathAlphabet{\mathbf}{normal}{TU}{XITSMath-Regular.otf(1)}{b}{n}
-  \SetMathAlphabet{\mathrm}{bold}{TU}{XITSMath-Regular.otf(1)}{b}{n}
-  \SetMathAlphabet{\mathbf}{bold}{TU}{XITSMath-Regular.otf(1)}{b}{n}
+  \SetMathAlphabet{\mathrm}{normal}{TU}{XITS}{m}{n}
+  \SetMathAlphabet{\mathbf}{normal}{TU}{XITS}{b}{n}
+  \SetMathAlphabet{\mathrm}{bold}{TU}{XITS}{b}{n}
+  \SetMathAlphabet{\mathbf}{bold}{TU}{XITS}{b}{n}
 }
 ''',
     'preamble':  r'''
