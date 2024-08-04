@@ -5219,6 +5219,22 @@ def test_sympy__codegen__matrix_nodes__MatrixSolve():
     assert _test_args(MatrixSolve(A, v))
 
 
+def test_sympy__printing__rust__TypeCast():
+    from sympy.printing.rust import TypeCast
+    from sympy.codegen.ast import real
+    assert _test_args(TypeCast(x, real))
+
+
+def test_sympy__printing__rust__float_floor():
+    from sympy.printing.rust import float_floor
+    assert _test_args(float_floor(x))
+
+
+def test_sympy__printing__rust__float_ceiling():
+    from sympy.printing.rust import float_ceiling
+    assert _test_args(float_ceiling(x))
+
+
 def test_sympy__vector__coordsysrect__CoordSys3D():
     from sympy.vector.coordsysrect import CoordSys3D
     assert _test_args(CoordSys3D('C'))
