@@ -190,6 +190,8 @@ pygments_dark_style = 'styles.NativeHighContrastStyle'
 # Don't show the source code hyperlinks when using matplotlib plot directive.
 plot_html_show_source_link = False
 
+maximum_signature_line_length = 50
+
 # Options for HTML output
 # -----------------------
 
@@ -423,6 +425,7 @@ latex_elements = {
 ''',
     'sphinxsetup': 'verbatimforcewraps',
     'printindex': r'\def\twocolumn[#1]{#1}\raggedright\printindex',
+    'fvset': r'\fvset{fontsize=auto}',
 }
 
 # SymPy logo on title page
