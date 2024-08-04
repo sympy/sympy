@@ -41,7 +41,7 @@ def test_functions_extensions():
                 # a, b, x1, x2.
                 sig = {'arg1': 'a', 'arg2': 'b', 'arg3': 'x1',
                        'arg4': 'x2'}
-            keylist = [key for key in sig]
+            keylist = list(sig.keys())
             tempargs = [eq]
             largs = [eq.lhs]
             rargs = [eq.rhs]
@@ -76,7 +76,7 @@ def test_functions_extensions_eqn_not_arg1():
                 # a, b, x1, x2.
                 sig = {'arg1': 'a', 'arg2': 'b', 'arg3': 'x1',
                        'arg4': 'x2'}
-            keylist = [key for key in sig]
+            keylist = list(sig.keys())
             for j in range(1, len(sig)):
                 tempargs = [n]
                 largs = [n]
