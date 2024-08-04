@@ -373,8 +373,8 @@ latex_elements = {
 \AtBeginDocument{%
   \SetMathAlphabet{\mathrm}{normal}{TU}{XITSMath-Regular.otf(1)}{m}{n}
   \SetMathAlphabet{\mathbf}{normal}{TU}{XITSMath-Regular.otf(1)}{b}{n}
-  \SetMathAlphabet{\mathrm}{bold}{TU}{XITSMath-Bold.otf(1)}{m}{n}
-  \SetMathAlphabet{\mathbf}{bold}{TU}{XITSMath-Bold.otf(1)}{b}{n}
+  \SetMathAlphabet{\mathrm}{bold}{TU}{XITSMath-Regular.otf(1)}{b}{n}
+  \SetMathAlphabet{\mathbf}{bold}{TU}{XITSMath-Regular.otf(1)}{b}{n}
 }
 ''',
     'preamble':  r'''
