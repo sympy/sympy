@@ -368,6 +368,14 @@ latex_elements = {
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}
+\usepackage{unicode-math}
+\setmathfont{XITSMath-Regular.otf}[Scale=1.2,BoldFont=XITSMath-Bold.otf]
+\AtBeginDocument{%
+  \SetMathAlphabet{\mathrm}{normal}{TU}{XITSMath-Regular.otf(1)}{m}{n}
+  \SetMathAlphabet{\mathbf}{normal}{TU}{XITSMath-Regular.otf(1)}{b}{n}
+  \SetMathAlphabet{\mathrm}{bold}{TU}{XITSMath-Bold.otf(1)}{m}{n}
+  \SetMathAlphabet{\mathbf}{bold}{TU}{XITSMath-Bold.otf(1)}{b}{n}
+}
 ''',
     'preamble':  r'''
 % Define version of \LaTeX that is usable in math mode
