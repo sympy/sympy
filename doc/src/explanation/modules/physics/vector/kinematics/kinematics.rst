@@ -177,7 +177,7 @@ angular velocity is defined in a body fixed frame, becomes quite simple:
   {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}}&=\frac{d w_x}{dt}\mathbf{\hat{b}_x}
   + \frac{d w_y}{dt}\mathbf{\hat{b}_y} + \frac{d w_z}{dt}\mathbf{\hat{b}_z}\\
 
-  {}^{\mathbf{N}}\mathbf{\alpha}^{\mathbf{B}}&= \dot{w_x}\mathbf{\hat{b}_x} +
+  {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}}&= \dot{w_x}\mathbf{\hat{b}_x} +
   \dot{w_y}\mathbf{\hat{b}_y} + \dot{w_z}\mathbf{\hat{b}_z}\\
 
 Again, this is only for the case in which the angular velocity of the body is
@@ -320,7 +320,7 @@ point :math:`P` now.
   + u_3 \mathbf{\hat{b}_z} \times R \mathbf{\hat{b}_x} = u_1
   \mathbf{\hat{n}_x} + u_2 \mathbf{\hat{n}_y} + u_3 R \mathbf{\hat{b}_y}\\
   {}^{\mathbf{N}}\mathbf{a}^P &={}^\mathbf{N}\mathbf{a}^O +
-  {}^\mathbf{N}\mathbf{\alpha}^\mathbf{B} \times \mathbf{r}^{OP} +
+  {}^\mathbf{N}\boldsymbol{\alpha}^\mathbf{B} \times \mathbf{r}^{OP} +
   {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times
   (^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times \mathbf{r}^{OP})\\
   {}^{\mathbf{N}}\mathbf{a}^P &= \dot{u_1} \mathbf{\hat{n}_x} + \dot{u_2}
