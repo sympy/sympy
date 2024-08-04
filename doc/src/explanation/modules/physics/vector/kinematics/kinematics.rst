@@ -366,18 +366,18 @@ the ring.
   {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{C}} &= u_1 \mathbf{\hat{n}_x}\\
   \mathbf{r}^{OQ} &= -l \mathbf{\hat{c}_z}\\
   {}^{\mathbf{N}}\mathbf{v}^Q &= u_1 l \mathbf{\hat{c}_y}\\
-  \mathbf{r}^{QP} &= R(cos(q_2) \mathbf{\hat{c}_x}
-  + sin(q_2) \mathbf{\hat{c}_y} )\\
-  {}^{\mathbf{C}}\mathbf{v}^P &= R u_2 (-sin(q_2) \mathbf{\hat{c}_x}
-  + cos(q_2) \mathbf{\hat{c}_y} )\\
+  \mathbf{r}^{QP} &= R(\cos(q_2) \mathbf{\hat{c}_x}
+  + \sin(q_2) \mathbf{\hat{c}_y} )\\
+  {}^{\mathbf{C}}\mathbf{v}^P &= R u_2 (-\sin(q_2) \mathbf{\hat{c}_x}
+  + \cos(q_2) \mathbf{\hat{c}_y} )\\
   {}^{\mathbf{N}}\mathbf{v}^P &={}^{\mathbf{C}}\mathbf{v}^P +^{\mathbf{N}}\mathbf{v}^Q
   +{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{C}} \times \mathbf{r}^{QP}\\
-  {}^{\mathbf{N}}\mathbf{v}^P &= R u_2 (-sin(q_2) \mathbf{\hat{c}_x}
-  + cos(q_2) \mathbf{\hat{c}_y} ) + u_1 l \mathbf{\hat{c}_y} +
-  u_1 \mathbf{\hat{c}_x} \times R(cos(q_2) \mathbf{\hat{c}_x}
-  + sin(q_2) \mathbf{\hat{c}_y}\\
-  {}^{\mathbf{N}}\mathbf{v}^P &= - R u_2 sin(q_2) \mathbf{\hat{c}_x}
-  + (R u_2 cos(q_2)+u_1 l)\mathbf{\hat{c}_y} + R u_1 sin(q_2)
+  {}^{\mathbf{N}}\mathbf{v}^P &= R u_2 (-\sin(q_2) \mathbf{\hat{c}_x}
+  + \cos(q_2) \mathbf{\hat{c}_y} ) + u_1 l \mathbf{\hat{c}_y} +
+  u_1 \mathbf{\hat{c}_x} \times R(\cos(q_2) \mathbf{\hat{c}_x}
+  + \sin(q_2) \mathbf{\hat{c}_y}\\
+  {}^{\mathbf{N}}\mathbf{v}^P &= - R u_2 \sin(q_2) \mathbf{\hat{c}_x}
+  + (R u_2 \cos(q_2)+u_1 l)\mathbf{\hat{c}_y} + R u_1 \sin(q_2)
   \mathbf{\hat{c}_z}\\
 
 A final topic in the description of velocities of points is that of rolling, or
