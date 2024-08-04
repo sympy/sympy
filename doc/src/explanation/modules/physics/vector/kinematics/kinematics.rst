@@ -57,9 +57,9 @@ defined by:
 
 .. math::
   {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} =
-  (\frac{^{\mathbf{N}}d \mathbf{\hat{b}_y}}{dt}\cdot\mathbf{\hat{b}_z}
-  )\mathbf{\hat{b}_x} + (\frac{^{\mathbf{N}}d \mathbf{\hat{b}_z}}{dt}\cdot
-  \mathbf{\hat{b}_x})\mathbf{\hat{b}_y} + (\frac{^{\mathbf{N}}d
+  (\frac{{}^{\mathbf{N}}d \mathbf{\hat{b}_y}}{dt}\cdot\mathbf{\hat{b}_z}
+  )\mathbf{\hat{b}_x} + (\frac{{}^{\mathbf{N}}d \mathbf{\hat{b}_z}}{dt}\cdot
+  \mathbf{\hat{b}_x})\mathbf{\hat{b}_y} + (\frac{{}^{\mathbf{N}}d
   \mathbf{\hat{b}_x}}{dt}\cdot\mathbf{\hat{b}_y})\mathbf{\hat{b}_z}
 
 It is also common for a body's angular velocity to be written as:
@@ -120,7 +120,7 @@ alternative method (which can be easier) to calculate the time derivative of a
 vector in a reference frame:
 
 .. math::
-  \frac{^{\mathbf{N}} d \mathbf{v}}{dt} = \frac{^{\mathbf{B}} d \mathbf{v}}{dt}
+  \frac{{}^{\mathbf{N}} d \mathbf{v}}{dt} = \frac{{}^{\mathbf{B}} d \mathbf{v}}{dt}
   +{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times \mathbf{v}
 
 The vector :math:`\mathbf{v}` can be any vector quantity: a position vector,
@@ -150,7 +150,7 @@ Calculating the angular acceleration is relatively straight forward:
 
 .. math::
   {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}} =
-  \frac{^{\mathbf{N}} d{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}}{dt}
+  \frac{{}^{\mathbf{N}} d{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}}{dt}
 
 Note that this can be calculated with the derivative theorem, and when the
 angular velocity is defined in a body fixed frame, becomes quite simple:
@@ -158,10 +158,10 @@ angular velocity is defined in a body fixed frame, becomes quite simple:
 .. math::
 
   {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}} &=
-  \frac{^{\mathbf{N}} d{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}}{dt}\\
+  \frac{{}^{\mathbf{N}} d{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}}{dt}\\
 
   {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}} &=
-  \frac{^{\mathbf{B}} d{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}}{dt}
+  \frac{{}^{\mathbf{B}} d{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}}{dt}
   +{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times
   {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}\\
 
@@ -169,8 +169,8 @@ angular velocity is defined in a body fixed frame, becomes quite simple:
   w_x \mathbf{\hat{b}_x} + w_y \mathbf{\hat{b}_y} + w_z \mathbf{\hat{b}_z}\\
 
   \textrm{then }{}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}} &=
-  \frac{^{\mathbf{B}} d{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}}{dt}
-  + \underbrace{^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times
+  \frac{{}^{\mathbf{B}} d{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}}{dt}
+  + \underbrace{{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times
   {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}}}_{
   \textrm{this is 0 by definition}}\\
 
@@ -216,12 +216,12 @@ We can find these quantities for a simple example easily:
 .. math::
   \textrm{Let's define: }
   \mathbf{r}^{OP} &= q_x \mathbf{\hat{n}_x} + q_y \mathbf{\hat{n}_y}\\
-  {}^{\mathbf{N}}\mathbf{v}^P &= \frac{^{\mathbf{N}} d \mathbf{r}^{OP}}{dt}\\
+  {}^{\mathbf{N}}\mathbf{v}^P &= \frac{{}^{\mathbf{N}} d \mathbf{r}^{OP}}{dt}\\
   \textrm{then we can calculate: }
   {}^{\mathbf{N}}\mathbf{v}^P &= \dot{q}_x\mathbf{\hat{n}_x} +
   \dot{q}_y\mathbf{\hat{n}_y}\\
   \textrm{and :}
-  {}^{\mathbf{N}}\mathbf{a}^P &= \frac{^{\mathbf{N}} d
+  {}^{\mathbf{N}}\mathbf{a}^P &= \frac{{}^{\mathbf{N}} d
   {}^{\mathbf{N}}\mathbf{v}^P}{dt}\\
   {}^{\mathbf{N}}\mathbf{a}^P &= \ddot{q}_x\mathbf{\hat{n}_x} +
   \ddot{q}_y\mathbf{\hat{n}_y}\\
