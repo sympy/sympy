@@ -581,9 +581,9 @@ def _make_input_converter(K):
         from sympy.polys.numberfields import to_number_field
         try:
             res = K(to_number_field(a, K.ext).native_coeffs())
-        except (NotAlgebraic, IsomorphismFailed):
+        except (NotAlgebraic, IsomorphismFailed) as exc:
             raise CoercionFailed(
-                "%s is not a valid algebraic number in %s" % (a, K))
+                "%s is not a valid algebraic number in %s" % (a, K)) from exc
         return res
 
     cache = {}
