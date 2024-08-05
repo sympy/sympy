@@ -178,7 +178,7 @@ def test_helper_functions():
     tsteqn = Equation(a, b/c)
     raises(ValueError, lambda: integrate(tsteqn, c))
     raises(AttributeError, lambda: integrate(tsteqn, c, side='right'))
-    assert tsteqn.evalf(4, {b: 2.0, c: 4}) == Equation(a, 0.5000)
+    assert tsteqn.evalf(4, {b: 2.0, c: 4}) == Equation(a, 0.5000).n(4)
     assert diff(tsteqn, c) == Equation(diff(a, c, evaluate=False), -b/c**2)
     tsteqn = Equation(a*c, b/c)
     assert diff(tsteqn, c) == Equation(a, -b/c**2)
