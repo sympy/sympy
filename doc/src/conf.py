@@ -364,12 +364,50 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 latex_engine = 'xelatex'
 latex_use_xindy = False
 latex_elements = {
+    'passoptionstopackages': r'\PassOptionsToPackage{no-math}{fontspec}',
     'fontpkg': r'''
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}
 ''',
     'preamble':  r'''
+\usepackage{newunicodechar}
+% Some Unicode characters need some re-mapping:
+% using \text to allow usage in math mode
+% Those turn out to be available in DejaVu Sans, but not Mono,
+% which caused Missing character.
+% Attention that if sans-serif font is modified in future, this
+% may need updates.
+\newunicodechar{ᵦ}{\text{\sffamily ᵦ}}%   (U+1D66)
+\newunicodechar{ᵧ}{\text{\sffamily ᵧ}}%   (U+1D67)
+\newunicodechar{ᵨ}{\text{\sffamily ᵨ}}%   (U+1D68)
+\newunicodechar{ᵩ}{\text{\sffamily ᵩ}}%   (U+1D69
+\newunicodechar{ᵪ}{\text{\sffamily ᵪ}}%   (U+1D6A)
+\newunicodechar{∧}{\text{\sffamily ∧}}%   (U+2227)
+\newunicodechar{∪}{\text{\sffamily ∪}}%   (U+222A)
+\newunicodechar{ⅆ}{\text{\sffamily ⅆ}}%   (U+2146)
+\newunicodechar{∊}{\text{\sffamily ∊}}%   (U+220A)
+\newunicodechar{⊻}{\text{\sffamily ⊻}}%   (U+22BB)
+\newunicodechar{⊼}{\text{\sffamily ⊼}}%   (U+22BC)
+\newunicodechar{⊽}{\text{\sffamily ⊽}}%   (U+22BD)
+\newunicodechar{⨂}{\text{\sffamily ⨂}}%   (U+2A02)
+% Those next two are not available in DejaVu Sans Bold,
+% we can find them in boldface in XITS or simply use \mdseries
+% Opting for the later here.
+\newunicodechar{┬}{\text{\sffamily\mdseries ┬}}%   (U+252C)
+\newunicodechar{┴}{\text{\sffamily\mdseries ┴}}%   (U+2534)
+% Next one (cross mark) is  used only once in sources (not in math mode).
+% Available in Emoji fonts such as Noto Emoji.
+% U+2715 is available in DejaVu Sans and DejaVu Sans Mono but not Serif
+\newunicodechar{❌}{\textcolor{red}{\sffamily\bfseries ✕}}% (U+274C --> U+2715)
+%
+\newfontfamily{\TGDejaVuMath}{texgyredejavu-math.otf}
+  \newunicodechar{𝑅}{\text{\TGDejaVuMath 𝑅}}%   (U+1D445)
+  \newunicodechar{𝕀}{\text{\TGDejaVuMath 𝕀}}%   (U+1D540)
+  \newunicodechar{𝕌}{\text{\TGDejaVuMath 𝕌}}%   (U+1D54C)
+  \newunicodechar{𝟘}{\text{\TGDejaVuMath 𝟘}}%   (U+1D7D8)
+  \newunicodechar{𝟙}{\text{\TGDejaVuMath 𝟙}}%   (U+1D7D9)
+%
 % Define version of \LaTeX that is usable in math mode
 \usepackage{letltxmacro}
 \LetLtxMacro\OldLaTeX\LaTeX
