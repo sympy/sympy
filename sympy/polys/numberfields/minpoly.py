@@ -3,7 +3,7 @@
 from functools import reduce
 
 from sympy.core.add import Add
-from sympy.core.exprtools import Factors, factor_terms
+from sympy.core.exprtools import Factors
 from sympy.core.function import expand_mul, expand_multinomial, _mexpand
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational, pi, _illegal)
@@ -571,18 +571,13 @@ def _minpoly_compose(ex, x, dom):
         return x - ex
 
     if dom.is_QQ and _is_sum_surds(ex):
-        # extract gcd's from all radicals to confirm
-        # non-zero value
-        ex = _mexpand(factor_terms(ex, radical=True))
-        if not ex:
-            return x
         # eliminate the square roots
+        v = ex
         ex -= x
         while 1:
             ex1 = _separate_sq(ex)
             if ex1 is ex:
-                assert ex.is_Add, 'unexpected return value'
-                return ex
+                return _choose_factor(_factor_list(ex)[1], x, v)
             else:
                 ex = ex1
 
