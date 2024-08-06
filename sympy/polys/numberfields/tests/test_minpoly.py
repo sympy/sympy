@@ -8,6 +8,7 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.ntheory.generate import nextprime
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
 from sympy.solvers.solveset import nonlinsolve
@@ -174,6 +175,13 @@ def test_minimal_polynomial():
     # Wester H24
     phi = AlgebraicNumber(S.GoldenRatio.expand(func=True), alias='phi')
     assert minimal_polynomial(phi, x) == x**2 - x - 1
+
+
+def test_issue_26903():
+    p1 = nextprime(10**16)  # greater than 10**15
+    p2 = nextprime(p1)
+    assert sqrt(p1**2*p2).is_Pow  # square not extracted
+    assert minimal_polynomial(sqrt(p1**2*p2) - p1*sqrt(p2)).is_Symbol
 
 
 def test_minimal_polynomial_issue_19732():
