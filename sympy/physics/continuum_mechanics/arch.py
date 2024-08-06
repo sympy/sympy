@@ -6,6 +6,7 @@ from sympy.core.symbol import Symbol,symbols
 from sympy import diff, sqrt, cos , sin, rad
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
+from sympy.functions import SingularityFunction
 
 class Arch:
     """
@@ -47,6 +48,8 @@ class Arch:
         self._member_force = None
         self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
         self._points_disc = []
+        self._load_x  = 0
+        self._load_y = 0
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
 
     @property
@@ -118,7 +121,7 @@ class Arch:
         """
         return self._reaction_force
 
-    def apply_load(self,order,label,x1,mag,x2=None,angle=None):
+    def apply_load(self,order,label,start,mag,end=None,angle=None):
         """
         This method adds load to the Arch.
 
@@ -134,19 +137,19 @@ class Arch:
             label : String or Symbol
                 The label of the load
 
-            x1 : Sympifyable
+            start : Sympifyable
 
-                    - For concentrated/point loads, x1 is the x coordinate
-                    - For distributed loads, x1 is the starting position of distributed load
+                    - For concentrated/point loads, start is the x coordinate
+                    - For distributed loads, start is the starting position of distributed load
 
             mag : Sympifyable
                 Magnitude of the appliead load. Must be positive
 
-            x2 : Sympifyable
+            end : Sympifyable
                 Required for distributed loads
 
-                    - For concentrated/point load , x2 is None(may not be given)
-                    - For distributed loads, x2 is the end position of distributed load
+                    - For concentrated/point load , end is None(may not be given)
+                    - For distributed loads, end is the end position of distributed load
 
             angle: Sympifyable
                 The angle in degrees, the load vector makes with the horizontal
@@ -158,36 +161,43 @@ class Arch:
 
         >>> from sympy.physics.continuum_mechanics.arch import Arch
         >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
-        >>> a.apply_load(0,'A',x1=3,x2=5,mag=-10)
+        >>> a.apply_load(0,'A',start=3,end=5,mag=-10)
 
         For applying point/concentrated_loads
 
         >>> from sympy.physics.continuum_mechanics.arch import Arch
         >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
-        >>> a.apply_load(-1,'B',x1=2,mag=15,angle=45)
+        >>> a.apply_load(-1,'B',start=2,mag=15,angle=45)
 
         """
+        x = Symbol('x')
+        order= sympify(order)
+        mag = sympify(mag)
+        angle = sympify(angle)
+
         if label in self._loads:
             raise ValueError("load with the given label already exists")
 
         if order == 0:
-            if not x2 or x2<x1:
-                raise KeyError("provide x2 greater than x1")
+            if not end or end<start:
+                raise KeyError("provide end greater than start")
 
-            if x1>self._right_support[0] or x2<self._left_support[0]:
+            if start>self._right_support[0] or end<self._left_support[0]:
                 raise ValueError(f"loads must be applied between {self._left_support[0]} and {self._right_support[0]}")
-            self._distributed_loads[label] = {'start':x1, 'end':x2, 'f_y': mag}
-            self._points_disc.append(x1)
-            self._points_disc.append(x2)
+            self._distributed_loads[label] = {'start':start, 'end':end, 'f_y': mag}
+            self._load_y += mag*SingularityFunction(x,start,order)
+            self._load_y -= mag*SingularityFunction(x,end,order)
 
         if order == -1:
             if not angle:
                 raise TypeError("please provide direction of force")
-            y = self._shape_eqn.subs({'x':x1})
-            if x1>self._right_support[0] or x1<self._left_support[0]:
+            y = self._shape_eqn.subs({'x':start})
+            if start>self._right_support[0] or start<self._left_support[0]:
                 raise ValueError(f"loads must be applied between x = {self._left_support[0]} and x = {self._right_support[0]}")
-            self._conc_loads[label] = {'x':x1, 'y':y, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle)), 'magnitude':mag, 'angle':angle}
-            self._points_disc.append(x1)
+            self._conc_loads[label] = {'x':start, 'y':y, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle)), 'magnitude':mag, 'angle':angle}
+            self._points_disc.append(start)
+            self._load_y += self._conc_loads[label]['f_y']*SingularityFunction(x,start,order)
+
 
     def remove_load(self,label):
         """
@@ -199,12 +209,25 @@ class Arch:
         label : String or Symbol
             The label of the applied load
         """
+
+        x = Symbol('x')
+
         if label in self._distributed_loads :
+
+            start = self._distributed_loads[label]['start']
+            end = self._distributed_loads[label]['end']
+            mag  = self._distributed_loads[label]['f_y']
+
+            self._load_y -= mag*SingularityFunction(x,start,0)
+            self._load_y += mag*SingularityFunction(x,end,0)
+
             val = self._distributed_loads.pop(label)
             print(f"removed load {label}: {val}")
+
         elif label in self._conc_loads :
             val = self._conc_loads.pop(label)
             print(f"removed load {label}: {val}")
+
         else :
             raise ValueError("label not found")
 
@@ -241,7 +264,11 @@ class Arch:
         This method solves for the reaction forces generated at the supports,\n
         bending moment and shear force generated in the arch and tension produced in the rope if used.
         """
-        # discontinuity_points = sorted(self._points_disc)
+
+        discontinuity_points = sorted(self._points_disc)
+        if (self._supports['left']=='roller' or self._supports['right']=='roller') and not self._member:
+            print("member must be added if any of the supports is roller")
+            return
 
         # for reaction forces
         net_x = 0
@@ -261,7 +288,7 @@ class Arch:
                         self._conc_loads[label]['f_x']*(self._conc_loads[label]['y']-self._crown_y)
             else:
                 moment_hinge_left += self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._crown_x) - \
-                        self._conc_loads[label]['f_x']*(self._conc_loads[label]['x']-self._crown_y)
+                        self._conc_loads[label]['f_x']*(self._conc_loads[label]['y']-self._crown_y)
 
         for label in self._distributed_loads:
             start = self._distributed_loads[label]['start']
