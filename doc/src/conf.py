@@ -370,6 +370,7 @@ latex_elements = {
 \setmonofont{DejaVu Sans Mono}[Scale=0.94]
 \usepackage{unicode-math}
 \setmathfont{XITSMath-Regular.otf}[Scale=1.12,
+    StylisticSet=1,% choice of shape for "\mathcal"
     BoldFont=XITSMath-Bold.otf,
     NFSSFamily=XITS]
 \makeatletter
