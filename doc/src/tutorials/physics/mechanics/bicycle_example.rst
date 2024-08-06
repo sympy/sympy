@@ -8,12 +8,12 @@ linearized equations of motion of the Carvallo-Whipple bicycle model are
 presented and benchmarked in [Meijaard2007]_. This example will construct the
 same linear equations of motion using :mod:`sympy.physics.mechanics`. ::
 
-  >>> from sympy import *
-  >>> from sympy.physics.mechanics import *
+  >>> import sympy as sm
+  >>> import sympy.physics.mechanics as me
   >>> print('Calculation of Linearized Bicycle \"A\" Matrix, '
   ...       'with States: Roll, Steer, Roll Rate, Steer Rate')
   Calculation of Linearized Bicycle "A" Matrix, with States: Roll, Steer, Roll Rate, Steer Rate
-  >>> mechanics_printing(pretty_print=False)
+  >>> me.mechanics_printing(pretty_print=False)
 
 Declaration of Coordinates & Speeds
 ===================================
@@ -24,24 +24,23 @@ frame angular rate, roll frame angular rate, rear wheel frame angular rate
 rate, and front wheel angular rate (spinning motion).  Wheel positions are
 ignorable coordinates, so they are not introduced. ::
 
-  >>> q1, q2, q3, q4, q5 = dynamicsymbols('q1 q2 q3 q4 q5')
-  >>> q1d, q2d, q4d, q5d = dynamicsymbols('q1 q2 q4 q5', 1)
-  >>> u1, u2, u3, u4, u5, u6 = dynamicsymbols('u1 u2 u3 u4 u5 u6')
-  >>> u1d, u2d, u3d, u4d, u5d, u6d = dynamicsymbols('u1 u2 u3 u4 u5 u6', 1)
+  >>> q1, q2, q3, q4, q5 = me.dynamicsymbols('q1 q2 q3 q4 q5')
+  >>> q1d, q2d, q4d, q5d = me.dynamicsymbols('q1 q2 q4 q5', 1)
+  >>> u1, u2, u3, u4, u5, u6 = me.dynamicsymbols('u1 u2 u3 u4 u5 u6')
+  >>> u1d, u2d, u3d, u4d, u5d, u6d = me.dynamicsymbols('u1 u2 u3 u4 u5 u6', 1)
 
 Declaration of System's Parameters
 ==================================
 
 The below symbols should be fairly self-explanatory. ::
 
-  >>> WFrad, WRrad, htangle, forkoffset = symbols('WFrad WRrad htangle forkoffset')
-  >>> forklength, framelength, forkcg1 = symbols('forklength framelength forkcg1')
-  >>> forkcg3, framecg1, framecg3, Iwr11 = symbols('forkcg3 framecg1 framecg3 Iwr11')
-  >>> Iwr22, Iwf11, Iwf22, Iframe11 = symbols('Iwr22 Iwf11 Iwf22 Iframe11')
-  >>> Iframe22, Iframe33, Iframe31, Ifork11 = \
-  ...     symbols('Iframe22 Iframe33 Iframe31 Ifork11')
-  >>> Ifork22, Ifork33, Ifork31, g = symbols('Ifork22 Ifork33 Ifork31 g')
-  >>> mframe, mfork, mwf, mwr = symbols('mframe mfork mwf mwr')
+  >>> WFrad, WRrad, htangle, forkoffset = sm.symbols('WFrad WRrad htangle forkoffset')
+  >>> forklength, framelength, forkcg1 = sm.symbols('forklength framelength forkcg1')
+  >>> forkcg3, framecg1, framecg3, Iwr11 = sm.symbols('forkcg3 framecg1 framecg3 Iwr11')
+  >>> Iwr22, Iwf11, Iwf22, Iframe11 = sm.symbols('Iwr22 Iwf11 Iwf22 Iframe11')
+  >>> Iframe22, Iframe33, Iframe31, Ifork11 = sm.symbols('Iframe22 Iframe33 Iframe31 Ifork11')
+  >>> Ifork22, Ifork33, Ifork31, g = sm.symbols('Ifork22 Ifork33 Ifork31 g')
+  >>> mframe, mfork, mwf, mwr = sm.symbols('mframe mfork mwf mwr')
 
 Kinematics of the Bicycle
 =========================
@@ -59,28 +58,28 @@ Set up reference frames for the system
 - TempFork - statically rotated frame for easier reference inertia definition
 - WF - front wheel, again posses an ignorable coordinate ::
 
-  >>> N = ReferenceFrame('N')
+  >>> N = me.ReferenceFrame('N')
   >>> Y = N.orientnew('Y', 'Axis', [q1, N.z])
   >>> R = Y.orientnew('R', 'Axis', [q2, Y.x])
   >>> Frame = R.orientnew('Frame', 'Axis', [q4 + htangle, R.y])
-  >>> WR = ReferenceFrame('WR')
+  >>> WR = me.ReferenceFrame('WR')
   >>> TempFrame = Frame.orientnew('TempFrame', 'Axis', [-htangle, Frame.y])
   >>> Fork = Frame.orientnew('Fork', 'Axis', [q5, Frame.x])
   >>> TempFork = Fork.orientnew('TempFork', 'Axis', [-htangle, Fork.y])
-  >>> WF = ReferenceFrame('WF')
+  >>> WF = me.ReferenceFrame('WF')
 
 First block of code is forming the positions of the relevant points rear wheel
 contact -> rear wheel's center of mass -> frame's center of mass + frame/fork
 connection -> fork's center of mass + front wheel's center of mass -> front
 wheel contact point. ::
 
-  >>> WR_cont = Point('WR_cont')
+  >>> WR_cont = me.Point('WR_cont')
   >>> WR_mc = WR_cont.locatenew('WR_mc', WRrad * R.z)
   >>> Steer = WR_mc.locatenew('Steer', framelength * Frame.z)
   >>> Frame_mc = WR_mc.locatenew('Frame_mc', -framecg1 * Frame.x + framecg3 * Frame.z)
   >>> Fork_mc = Steer.locatenew('Fork_mc', -forkcg1 * Fork.x + forkcg3 * Fork.z)
   >>> WF_mc = Steer.locatenew('WF_mc', forklength * Fork.x + forkoffset * Fork.z)
-  >>> WF_cont = WF_mc.locatenew('WF_cont', WFrad*(dot(Fork.y, Y.z)*Fork.y -
+  >>> WF_cont = WF_mc.locatenew('WF_cont', WFrad*(me.dot(Fork.y, Y.z)*Fork.y -
   ...                                             Y.z).normalize())
 
 Set the angular velocity of each frame
@@ -137,9 +136,9 @@ constraint forces the front wheel contact point to not move away from the
 ground frame, essentially replicating the holonomic constraint which does not
 allow the frame pitch to change in an invalid fashion. ::
 
-  >>> conlist_speed = [dot(WF_cont.vel(N), Y.x),
-  ...                  dot(WF_cont.vel(N), Y.y),
-  ...                  dot(WF_cont.vel(N), Y.z)]
+  >>> conlist_speed = [me.dot(WF_cont.vel(N), Y.x),
+  ...                  me.dot(WF_cont.vel(N), Y.y),
+  ...                  me.dot(WF_cont.vel(N), Y.z)]
 
 The holonomic constraint is that the position from the rear wheel contact point
 to the front wheel contact point when dotted into the normal-to-ground plane
@@ -147,7 +146,7 @@ direction must be zero; effectively that the front and rear wheel contact
 points are always touching the ground plane. This is actually not part of the
 dynamic equations, but instead is necessary for the linearization process. ::
 
-  >>> conlist_coord = [dot(WF_cont.pos_from(WR_cont), Y.z)]
+  >>> conlist_coord = [me.dot(WF_cont.pos_from(WR_cont), Y.z)]
 
 Inertia and Rigid Bodies
 ========================
@@ -162,18 +161,18 @@ of the benchmark paper. Note that due to slightly different orientations, the
 products of inertia need to have their signs flipped; this is done later when
 entering the numerical value. ::
 
-  >>> Frame_I = (inertia(TempFrame, Iframe11, Iframe22, Iframe33, 0, 0,
-  ...                                                   Iframe31), Frame_mc)
-  >>> Fork_I = (inertia(TempFork, Ifork11, Ifork22, Ifork33, 0, 0, Ifork31), Fork_mc)
-  >>> WR_I = (inertia(Frame, Iwr11, Iwr22, Iwr11), WR_mc)
-  >>> WF_I = (inertia(Fork, Iwf11, Iwf22, Iwf11), WF_mc)
+  >>> Frame_I = (me.inertia(TempFrame, Iframe11, Iframe22, Iframe33, 0, 0,
+  ...                       Iframe31), Frame_mc)
+  >>> Fork_I = (me.inertia(TempFork, Ifork11, Ifork22, Ifork33, 0, 0, Ifork31), Fork_mc)
+  >>> WR_I = (me.inertia(Frame, Iwr11, Iwr22, Iwr11), WR_mc)
+  >>> WF_I = (me.inertia(Fork, Iwf11, Iwf22, Iwf11), WF_mc)
 
 Declaration of the RigidBody containers. ::
 
-  >>> BodyFrame = RigidBody('BodyFrame', Frame_mc, Frame, mframe, Frame_I)
-  >>> BodyFork = RigidBody('BodyFork', Fork_mc, Fork, mfork, Fork_I)
-  >>> BodyWR = RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
-  >>> BodyWF = RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
+  >>> BodyFrame = me.RigidBody('BodyFrame', Frame_mc, Frame, mframe, Frame_I)
+  >>> BodyFork = me.RigidBody('BodyFork', Fork_mc, Fork, mfork, Fork_I)
+  >>> BodyWR = me.RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
+  >>> BodyWF = me.RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
   >>> bodies = [BodyFrame, BodyFork, BodyWR, BodyWF]
   >>> print('Before Forming the List of Nonholonomic Constraints.')
   Before Forming the List of Nonholonomic Constraints.
@@ -201,7 +200,7 @@ coordinate is also provided, with the holonomic constraint. Again, this is only
 comes into play in the linearization process, but is necessary for the
 linearization to correctly work. ::
 
-  >>> kane = KanesMethod(
+  >>> kane = me.KanesMethod(
   ...     N,
   ...     q_ind=[q1, q2, q5],
   ...     q_dependent=[q4],
@@ -228,30 +227,30 @@ into the coordinate systems used in this model. ::
 
   >>> PaperRadRear  =  0.3
   >>> PaperRadFront =  0.35
-  >>> HTA           =  evalf.N(pi/2-pi/10)
+  >>> HTA           =  sm.evalf.N(sm.pi/2-sm.pi/10)
   >>> TrailPaper    =  0.08
-  >>> rake          =  evalf.N(-(TrailPaper*sin(HTA)-(PaperRadFront*cos(HTA))))
+  >>> rake          =  sm.evalf.N(-(TrailPaper*sm.sin(HTA)-(PaperRadFront*sm.cos(HTA))))
   >>> PaperWb       =  1.02
   >>> PaperFrameCgX =  0.3
   >>> PaperFrameCgZ =  0.9
   >>> PaperForkCgX  =  0.9
   >>> PaperForkCgZ  =  0.7
-  >>> FrameLength   =  evalf.N(PaperWb*sin(HTA) - (rake -
-  ...                         (PaperRadFront - PaperRadRear)*cos(HTA)))
-  >>> FrameCGNorm   =  evalf.N((PaperFrameCgZ - PaperRadRear -
-  ...                          (PaperFrameCgX/sin(HTA))*cos(HTA))*sin(HTA))
-  >>> FrameCGPar    =  evalf.N((PaperFrameCgX / sin(HTA) +
+  >>> FrameLength   =  sm.evalf.N(PaperWb*sm.sin(HTA) - (rake -
+  ...                         (PaperRadFront - PaperRadRear)*sm.cos(HTA)))
+  >>> FrameCGNorm   =  sm.evalf.N((PaperFrameCgZ - PaperRadRear -
+  ...                          (PaperFrameCgX/sm.sin(HTA))*sm.cos(HTA))*sm.sin(HTA))
+  >>> FrameCGPar    =  sm.evalf.N((PaperFrameCgX / sm.sin(HTA) +
   ...                          (PaperFrameCgZ - PaperRadRear -
-  ...                           PaperFrameCgX / sin(HTA) * cos(HTA)) * cos(HTA)))
-  >>> tempa         =  evalf.N((PaperForkCgZ - PaperRadFront))
-  >>> tempb         =  evalf.N((PaperWb-PaperForkCgX))
-  >>> tempc         =  evalf.N(sqrt(tempa**2 + tempb**2))
-  >>> PaperForkL    =  evalf.N((PaperWb*cos(HTA) -
-  ...                          (PaperRadFront - PaperRadRear)*sin(HTA)))
-  >>> ForkCGNorm    =  evalf.N(rake + (tempc * sin(pi/2 -
-  ...                          HTA - acos(tempa/tempc))))
-  >>> ForkCGPar     =  evalf.N(tempc * cos((pi/2 - HTA) -
-  ...                          acos(tempa/tempc)) - PaperForkL)
+  ...                           PaperFrameCgX / sm.sin(HTA) * sm.cos(HTA)) * sm.cos(HTA)))
+  >>> tempa         =  sm.evalf.N((PaperForkCgZ - PaperRadFront))
+  >>> tempb         =  sm.evalf.N((PaperWb-PaperForkCgX))
+  >>> tempc         =  sm.evalf.N(sm.sqrt(tempa**2 + tempb**2))
+  >>> PaperForkL    =  sm.evalf.N((PaperWb*sm.cos(HTA) -
+  ...                          (PaperRadFront - PaperRadRear)*sm.sin(HTA)))
+  >>> ForkCGNorm    =  sm.evalf.N(rake + (tempc * sm.sin(sm.pi/2 -
+  ...                          HTA - sm.acos(tempa/tempc))))
+  >>> ForkCGPar     =  sm.evalf.N(tempc * sm.cos((sm.pi/2 - HTA) -
+  ...                          sm.acos(tempa/tempc)) - PaperForkL)
 
 Here is the final assembly of the numerical values. The symbol 'v' is the
 forward speed of the bicycle (a concept which only makes sense in the upright,
@@ -259,7 +258,7 @@ static equilibrium case?). These are in a dictionary which will later be
 substituted in. Again the sign on the *product* of inertia values is flipped
 here, due to different orientations of coordinate systems. ::
 
-  >>> v = Symbol('v')
+  >>> v = sm.Symbol('v')
   >>> val_dict = {
   ...       WFrad: PaperRadFront,
   ...       WRrad: PaperRadRear,
@@ -296,12 +295,12 @@ here, due to different orientations of coordinate systems. ::
 Linearize the equations of motion::
 
   >>> eq_point = {
-  ...     u1.diff(): 0,
-  ...     u2.diff(): 0,
-  ...     u3.diff(): 0,
-  ...     u4.diff(): 0,
-  ...     u5.diff(): 0,
-  ...     u6.diff(): 0,
+  ...     u1d: 0,
+  ...     u2d: 0,
+  ...     u3d: 0,
+  ...     u4d: 0,
+  ...     u5d: 0,
+  ...     u6d: 0,
   ...     q1: 0,
   ...     q2: 0,
   ...     q4: 0,
@@ -315,7 +314,7 @@ Linearize the equations of motion::
   ... }
   ...
   >>> Amat, _, _ = kane.linearize(A_and_B=True, op_point=eq_point, linear_solver='CRAMER')
-  >>> Amat = msubs(Amat, val_dict)
+  >>> Amat = me.msubs(Amat, val_dict)
 
 Calculate the Eigenvalues
 -------------------------
