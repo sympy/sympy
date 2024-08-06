@@ -1052,7 +1052,6 @@ class CoulombKineticFriction(ForceActuator):
     >>> O, P = Point('O'), Point('P')
     >>> O.set_vel(N, 0)
     >>> P.set_pos(O, x*N.x)
-    >>> P.set_vel(N, v*N.x)
 
     >>> pathway = LinearPathway(O, P)
     >>> friction = CoulombKineticFriction(mu_k, m*g, pathway, v_s=v_s, sigma=sigma, mu_s=mu_k)
