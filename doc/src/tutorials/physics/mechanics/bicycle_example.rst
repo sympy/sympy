@@ -13,21 +13,16 @@ same linear equations of motion using :mod:`sympy.physics.mechanics`. ::
   >>> print('Calculation of Linearized Bicycle \"A\" Matrix, '
   ...       'with States: Roll, Steer, Roll Rate, Steer Rate')
   Calculation of Linearized Bicycle "A" Matrix, with States: Roll, Steer, Roll Rate, Steer Rate
-
-Note that this code has been crudely ported from Autolev, which is the reason
-for some of the unusual naming conventions. It was purposefully as similar as
-possible in order to aid initial porting & debugging.::
-
   >>> mechanics_printing(pretty_print=False)
 
 Declaration of Coordinates & Speeds
 ===================================
 
 A simple definition for qdots, qd = u, is used in this code. Speeds are: yaw
-frame ang. rate, roll frame ang. rate, rear wheel frame ang. rate (spinning
-motion), frame ang. rate (pitching motion), steering frame ang. rate, and front
-wheel ang. rate (spinning motion).  Wheel positions are ignorable coordinates,
-so they are not introduced. ::
+frame angular rate, roll frame angular rate, rear wheel frame angular rate
+(spinning motion), frame angular rate (pitching motion), steering frame angular
+rate, and front wheel angular rate (spinning motion).  Wheel positions are
+ignorable coordinates, so they are not introduced. ::
 
   >>> q1, q2, q3, q4, q5 = dynamicsymbols('q1 q2 q3 q4 q5')
   >>> q1d, q2d, q4d, q5d = dynamicsymbols('q1 q2 q4 q5', 1)
@@ -48,8 +43,11 @@ The below symbols should be fairly self-explanatory. ::
   >>> Ifork22, Ifork33, Ifork31, g = symbols('Ifork22 Ifork33 Ifork31 g')
   >>> mframe, mfork, mwf, mwr = symbols('mframe mfork mwf mwr')
 
+Kinematics of the Bicycle
+=========================
+
 Set up reference frames for the system
-======================================
+--------------------------------------
 
 - N - inertial
 - Y - yaw
@@ -70,9 +68,6 @@ Set up reference frames for the system
   >>> Fork = Frame.orientnew('Fork', 'Axis', [q5, Frame.x])
   >>> TempFork = Fork.orientnew('TempFork', 'Axis', [-htangle, Fork.y])
   >>> WF = ReferenceFrame('WF')
-
-Kinematics of the Bicycle
-=========================
 
 First block of code is forming the positions of the relevant points rear wheel
 contact -> rear wheel's center of mass -> frame's center of mass + frame/fork
@@ -125,36 +120,13 @@ again are calculated automatically when first needed. ::
   >>> WF_cont.v2pt_theory(WF_mc, N, WF)
   - WFrad*((-sin(q2)*sin(q5)*cos(htangle + q4) + cos(q2)*cos(q5))*u6 + u4*cos(q2) + u5*sin(htangle + q4)*sin(q2))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.x + WFrad*(u2 + u5*cos(htangle + q4) + u6*sin(htangle + q4)*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.y + WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + (-WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + (WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5)/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.z
 
-Sets the inertias of each body. Uses the inertia frame to construct the inertia
-dyadics. Wheel inertias are only defined by principal moments of inertia, and
-are in fact constant in the frame and fork reference frames; it is for this
-reason that the orientations of the wheels does not need to be defined. The
-frame and fork inertias are defined in the 'Temp' frames which are fixed to the
-appropriate body frames; this is to allow easier input of the reference values
-of the benchmark paper. Note that due to slightly different orientations, the
-products of inertia need to have their signs flipped; this is done later when
-entering the numerical value. ::
-
-  >>> Frame_I = (inertia(TempFrame, Iframe11, Iframe22, Iframe33, 0, 0,
-  ...                                                   Iframe31), Frame_mc)
-  >>> Fork_I = (inertia(TempFork, Ifork11, Ifork22, Ifork33, 0, 0, Ifork31), Fork_mc)
-  >>> WR_I = (inertia(Frame, Iwr11, Iwr22, Iwr11), WR_mc)
-  >>> WF_I = (inertia(Fork, Iwf11, Iwf22, Iwf11), WF_mc)
-
-Declaration of the RigidBody containers. ::
-
-  >>> BodyFrame = RigidBody('BodyFrame', Frame_mc, Frame, mframe, Frame_I)
-  >>> BodyFork = RigidBody('BodyFork', Fork_mc, Fork, mfork, Fork_I)
-  >>> BodyWR = RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
-  >>> BodyWF = RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
-
-  >>> print('Before Forming the List of Nonholonomic Constraints.')
-  Before Forming the List of Nonholonomic Constraints.
-
 The kinematic differential equations; they are defined quite simply. Each entry
 in this list is equal to zero. ::
 
   >>> kd = [q1d - u1, q2d - u2, q4d - u4, q5d - u5]
+
+Setup the constraints
+---------------------
 
 The nonholonomic constraints are the velocity of the front wheel contact point
 dotted into the X, Y, and Z directions; the yaw frame is used as it is "closer"
@@ -177,12 +149,49 @@ dynamic equations, but instead is necessary for the linearization process. ::
 
   >>> conlist_coord = [dot(WF_cont.pos_from(WR_cont), Y.z)]
 
+Inertia and Rigid Bodies
+========================
+
+Sets the inertias of each body. Uses the inertia frame to construct the inertia
+dyadics. Wheel inertias are only defined by principal moments of inertia, and
+are in fact constant in the frame and fork reference frames; it is for this
+reason that the orientations of the wheels does not need to be defined. The
+frame and fork inertias are defined in the 'Temp' frames which are fixed to the
+appropriate body frames; this is to allow easier input of the reference values
+of the benchmark paper. Note that due to slightly different orientations, the
+products of inertia need to have their signs flipped; this is done later when
+entering the numerical value. ::
+
+  >>> Frame_I = (inertia(TempFrame, Iframe11, Iframe22, Iframe33, 0, 0,
+  ...                                                   Iframe31), Frame_mc)
+  >>> Fork_I = (inertia(TempFork, Ifork11, Ifork22, Ifork33, 0, 0, Ifork31), Fork_mc)
+  >>> WR_I = (inertia(Frame, Iwr11, Iwr22, Iwr11), WR_mc)
+  >>> WF_I = (inertia(Fork, Iwf11, Iwf22, Iwf11), WF_mc)
+
+Declaration of the RigidBody containers. ::
+
+  >>> BodyFrame = RigidBody('BodyFrame', Frame_mc, Frame, mframe, Frame_I)
+  >>> BodyFork = RigidBody('BodyFork', Fork_mc, Fork, mfork, Fork_I)
+  >>> BodyWR = RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
+  >>> BodyWF = RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
+  >>> bodies = [BodyFrame, BodyFork, BodyWR, BodyWF]
+  >>> print('Before Forming the List of Nonholonomic Constraints.')
+  Before Forming the List of Nonholonomic Constraints.
+
+Gravitational Loads
+===================
+
 The force list; each body has the appropriate gravitational force applied at
 its center of mass. ::
 
-  >>> FL = [(Frame_mc, -mframe * g * Y.z), (Fork_mc, -mfork * g * Y.z),
-  ...       (WF_mc, -mwf * g * Y.z), (WR_mc, -mwr * g * Y.z)]
-  >>> BL = [BodyFrame, BodyFork, BodyWR, BodyWF]
+  >>> forces = [(Frame_mc, -mframe * g * Y.z),
+  ...           (Fork_mc, -mfork * g * Y.z),
+  ...           (WF_mc, -mwf * g * Y.z),
+  ...           (WR_mc, -mwr * g * Y.z)]
+  ...
+
+Nonlinear Equations of Motion
+=============================
 
 The N frame is the inertial frame, coordinates are supplied in the order of
 independent, dependent coordinates. The kinematic differential equations are
@@ -192,16 +201,24 @@ coordinate is also provided, with the holonomic constraint. Again, this is only
 comes into play in the linearization process, but is necessary for the
 linearization to correctly work. ::
 
-  >>> KM = KanesMethod(N, q_ind=[q1, q2, q5],
-  ...           q_dependent=[q4], configuration_constraints=conlist_coord,
-  ...           u_ind=[u2, u3, u5],
-  ...           u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
-  ...           kd_eqs=kd, constraint_solver='CRAMER')
+  >>> kane = KanesMethod(
+  ...     N,
+  ...     q_ind=[q1, q2, q5],
+  ...     q_dependent=[q4],
+  ...     configuration_constraints=conlist_coord,
+  ...     u_ind=[u2, u3, u5],
+  ...     u_dependent=[u1, u4, u6],
+  ...     velocity_constraints=conlist_speed,
+  ...     kd_eqs=kd,
+  ...     constraint_solver='CRAMER')
   >>> print('Before Forming Generalized Active and Inertia Forces, Fr and Fr*')
   Before Forming Generalized Active and Inertia Forces, Fr and Fr*
-  >>> (fr, frstar) = KM.kanes_equations(BL, FL)
+  >>> fr, frstar = kane.kanes_equations(bodies, loads=forces)
   >>> print('Base Equations of Motion Computed')
   Base Equations of Motion Computed
+
+Linearized Equations of Motion
+==============================
 
 This is the start of entering in the numerical values from the benchmark paper
 to validate the eigenvalues of the linearized equations from this model to the
@@ -297,8 +314,11 @@ Linearize the equations of motion::
   ...     u6: v/PaperRadFront,
   ... }
   ...
-  >>> Amat, B, r = KM.linearize(A_and_B=True, op_point=eq_point, linear_solver='CRAMER')
+  >>> Amat, _, _ = kane.linearize(A_and_B=True, op_point=eq_point, linear_solver='CRAMER')
   >>> Amat = msubs(Amat, val_dict)
+
+Calculate the Eigenvalues
+-------------------------
 
 Finally, we construct an "A" matrix for the form xdot = A x (x being the state
 vector, although in this case, the sizes are a little off). The following line
@@ -307,7 +327,7 @@ correspond to rows and columns for lean, steer, lean rate, and steer rate.
 (this is all commented out due to being dependent on the above code, which is
 also commented out)::
 
-  >>> A = Amat.extract([1,2,3,5],[1,2,3,5])
+  >>> A = Amat.extract([1, 2, 3, 5], [1, 2, 3, 5])
   >>> print(A)
   Matrix([[0, 0, 1, 0], [0, 0, 0, 1], [9.48977444677355, -0.891197738059089*v**2 - 0.571523173729245, -0.105522449805691*v, -0.330515398992311*v], [11.7194768719633, 30.9087533932407 - 1.97171508499972*v**2, 3.67680523332152*v, -3.08486552743311*v]])
   >>> print('v = 1')
