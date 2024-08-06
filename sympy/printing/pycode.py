@@ -41,6 +41,7 @@ _known_functions_math = {
     'floor': 'floor',
     'gamma': 'gamma',
     'hypot': 'hypot',
+    'isinf': 'isinf',
     'isnan': 'isnan',
     'loggamma': 'lgamma',
     'log': 'log',

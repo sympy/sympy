@@ -298,6 +298,7 @@ class ComplexRootOf(RootOf):
     is_complex = True
     is_number = True
     is_finite = True
+    is_algebraic = True
 
     def __new__(cls, f, x, index=None, radicals=False, expand=True):
         """ Construct an indexed complex root of a polynomial.

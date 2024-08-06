@@ -131,7 +131,7 @@ def gradient(scalar, frame):
     outvec = Vector(0)
     scalar = express(scalar, frame, variables=True)
     for i, x in enumerate(frame):
-        outvec += diff(scalar, frame[i]) * x
+        outvec += diff(scalar, frame[i]) * x  # noqa: PLR1736
     return outvec
 
 

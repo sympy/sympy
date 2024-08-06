@@ -12,11 +12,12 @@ technical implementation details, and opinionated recommendations.
 **Content**
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    best-practices.md
    gotchas.rst
    solve_output.rst
+   modules/physics/index.rst
    special_topics/index.rst
    active-deprecations.md
    glossary.md

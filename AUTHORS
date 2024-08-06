@@ -4,7 +4,7 @@ those who explicitly didn't want to be mentioned. People with a * next
 to their names are not found in the metadata of the git history. This
 file is generated automatically by running `./bin/authors_update.py`.
 
-There are a total of 1306 authors.
+There are a total of 1308 authors.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -1312,3 +1312,5 @@ James A. Preiss <jamesalanpreiss@gmail.com>
 Emile Fourcini <emile.fourcin1@gmail.com>
 Alberto Jiménez Ruiz <Alberto.Jimenez@uclm.es>
 João Bravo <joaocgbravo@tecnico.ulisboa.pt>
+Dean Price <dean1357price1357@gmail.com>
+Hugo Kerstens <hugo@kerstens.me>

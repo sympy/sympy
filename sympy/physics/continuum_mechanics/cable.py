@@ -4,12 +4,12 @@ to 2D Cables.
 """
 
 from sympy.core.sympify import sympify
-from sympy.core.symbol import Symbol
-from sympy import sin, cos, pi, atan, diff
+from sympy.core.symbol import Symbol,symbols
+from sympy import sin, cos, pi, atan, diff, Piecewise, solve, rad
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solveset import linsolve
 from sympy.matrices import Matrix
-
+from sympy.plotting import plot
 
 class Cable:
     """
@@ -67,7 +67,9 @@ class Cable:
         self._reaction_loads = {}
         self._tension = {}
         self._lowest_x_global = sympify(0)
-
+        self._lowest_y_global = sympify(0)
+        self._cable_eqn = None
+        self._tension_func = None
         if support_1[0] == support_2[0]:
             raise ValueError("Supports can not have the same label")
 
@@ -453,13 +455,13 @@ class Cable:
         >>> from sympy.physics.continuum_mechanics.cable import Cable
         >>> c=Cable(("A", 0, 40),("B", 100, 20))
         >>> c.apply_load(0, ("X", 850))
-        >>> c.solve(58.58, 0)
+        >>> c.solve(58.58)
         >>> c.tension
-        {'distributed': 36456.8485*sqrt(0.000543529004799705*(X + 0.00135624381275735)**2 + 1)}
+        {'distributed': 36465.0*sqrt(0.00054335718671383*X**2 + 1)}
         >>> c.tension_at(0)
-        61709.0363315913
+        61717.4130533677
         >>> c.reaction_loads
-        {R_A_x: 36456.8485, R_A_y: -49788.5866682485, R_B_x: 44389.8401587246, R_B_y: 42866.621696333}
+        {R_A_x: 36465.0, R_A_y: -49793.0, R_B_x: 44399.9537590861, R_B_y: 42868.2071025955}
         """
 
         if len(self._loads_position) != 0:
@@ -474,7 +476,8 @@ class Cable:
             F_x = 0
             F_y = 0
             self._length = 0
-
+            tension_func = []
+            x = symbols('x')
             for i in range(1, len(sorted_position)-1):
                 if i == 1:
                     self._length+=sqrt((self._left_support[0] - self._loads_position[sorted_position[i][0]][0])**2 + (self._left_support[1] - self._loads_position[sorted_position[i][0]][1])**2)
@@ -509,6 +512,7 @@ class Cable:
 
                 tension = -(moment_sum_from_left_support)/(abs(self._left_support[1] - self._loads_position[sorted_position[i][0]][1])*cos(angle_with_horizontal) + abs(self._left_support[0] - self._loads_position[sorted_position[i][0]][0])*sin(angle_with_horizontal))
                 self._tension[label] = tension
+                tension_func.append((tension, x<=x1))
                 moment_sum_from_right_support += self._loads['point_load'][sorted_position[i][0]][0] * cos(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180) * abs(self._right_support[1] - self._loads_position[sorted_position[i][0]][1])
                 moment_sum_from_right_support += self._loads['point_load'][sorted_position[i][0]][0] * sin(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180) * abs(self._right_support[0] - self._loads_position[sorted_position[i][0]][0])
 
@@ -522,6 +526,8 @@ class Cable:
             tension = -(moment_sum_from_right_support)/(abs(self._right_support[1] - self._loads_position[sorted_position[1][0]][1])*cos(angle_with_horizontal) + abs(self._right_support[0] - self._loads_position[sorted_position[1][0]][0])*sin(angle_with_horizontal))
             self._tension[label] = tension
 
+            tension_func.insert(0,(tension, x<=x2))
+            self._tension_func = Piecewise(*tension_func)
             angle_with_horizontal = pi/2 - angle_with_horizontal
             label = self._support_labels[0]
             self._reaction_loads[Symbol("R_"+label+"_x")] = -sin(angle_with_horizontal) * tension
@@ -539,29 +545,26 @@ class Cable:
                 raise ValueError("Provide the lowest point of the cable")
 
             lowest_x = sympify(args[0])
-            lowest_y = sympify(args[1])
             self._lowest_x_global = lowest_x
 
-            a = Symbol('a')
-            b = Symbol('b')
+            a = Symbol('a', positive=True)
             c = Symbol('c')
             # augmented matrix form of linsolve
 
             M = Matrix(
-                [[self._left_support[0]**2, self._left_support[0], 1, self._left_support[1]],
-                [self._right_support[0]**2, self._right_support[0], 1, self._right_support[1]],
-                [lowest_x**2, lowest_x, 1, lowest_y]  ]
-                       )
+                [[(self._left_support[0]-lowest_x)**2, 1, self._left_support[1]],
+                [(self._right_support[0]-lowest_x)**2, 1, self._right_support[1]],
+                ])
 
-            coefficient_solution = list(linsolve(M, (a, b, c)))
-
-            if len(coefficient_solution) == 0:
+            coefficient_solution = list(linsolve(M, (a, c)))
+            if len(coefficient_solution) ==0 or coefficient_solution[0][0]== 0:
                 raise ValueError("The lowest point is inconsistent with the supports")
 
             A = coefficient_solution[0][0]
-            B = coefficient_solution[0][1]
-            C = coefficient_solution[0][2]
-
+            C = coefficient_solution[0][1] + coefficient_solution[0][0]*lowest_x**2
+            B = -2*coefficient_solution[0][0]*lowest_x
+            self._lowest_y_global = coefficient_solution[0][1]
+            lowest_y = self._lowest_y_global
 
             # y = A*x**2 + B*x + C
             # shifting origin to lowest point
@@ -585,3 +588,228 @@ class Cable:
             label = self._support_labels[1]
             self._reaction_loads[Symbol("R_"+label+"_x")] = self.tension_at(self._left_support[0]) * cos(atan(tangent_slope_to_curve.subs(X, self._right_support[0] - lowest_x)))
             self._reaction_loads[Symbol("R_"+label+"_y")] = self.tension_at(self._left_support[0]) * sin(atan(tangent_slope_to_curve.subs(X, self._right_support[0] - lowest_x)))
+
+    def draw(self):
+        """
+        This method is used to obtain a plot for the specified cable with its supports,
+        shape and loads.
+
+        Examples
+        ========
+
+        For point loads,
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c = Cable(("A", 0, 10), ("B", 10, 10))
+        >>> c.apply_load(-1, ('Z', 2, 7.26, 3, 270))
+        >>> c.apply_load(-1, ('X', 4, 6, 8, 270))
+        >>> c.solve()
+        >>> p = c.draw()
+        >>> p  # doctest: +ELLIPSIS
+        Plot object containing:
+        [0]: cartesian line: Piecewise((10 - 1.37*x, x <= 2), (8.52 - 0.63*x, x <= 4), (2*x/3 + 10/3, x <= 10)) for x over (0.0, 10.0)
+        ...
+        >>> p.show()
+
+        For uniformly distributed loads,
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c=Cable(("A", 0, 40),("B", 100, 20))
+        >>> c.apply_load(0, ("X", 850))
+        >>> c.solve(58.58)
+        >>> p = c.draw()
+        >>> p # doctest: +ELLIPSIS
+        Plot object containing:
+        [0]: cartesian line: 39.9955291375291*(0.0170706725844998*x - 1)**2 + 0.00447086247086247 for x over (0.0, 100.0)
+        [1]: cartesian line: -7.49552913752915 for x over (0.0, 100.0)
+        ...
+        >>> p.show()
+        """
+        x = Symbol("x")
+        annotations = []
+        support_rectangles = self._draw_supports()
+
+        xy_min = min(self._left_support[0],self._lowest_y_global)
+        xy_max = max(self._right_support[0], max(self._right_support[1],self._left_support[1]))
+        max_diff = xy_max - xy_min
+        if len(self._loads_position) != 0:
+            self._cable_eqn = self._draw_cable(-1)
+            annotations += self._draw_loads(-1)
+
+        elif len(self._loads['distributed']) != 0 :
+            self._cable_eqn = self._draw_cable(0)
+            annotations += self._draw_loads(0)
+
+        if not self._cable_eqn:
+            raise ValueError("solve method not called and/or values provided for loads and supports not adequate")
+
+        cab_plot = plot(*self._cable_eqn,(x,self._left_support[0],self._right_support[0]),
+                        xlim=(xy_min-0.5*max_diff,xy_max+0.5*max_diff),
+                        ylim=(xy_min-0.5*max_diff,xy_max+0.5*max_diff),
+                        rectangles=support_rectangles,show= False,annotations=annotations, axis=False)
+
+        return cab_plot
+
+    def _draw_supports(self):
+        member_rectangles = []
+        xy_min = min(self._left_support[0],self._lowest_y_global)
+        xy_max = max(self._right_support[0], max(self._right_support[1],self._left_support[1]))
+        max_diff = xy_max - xy_min
+
+        supp_width = 0.075*max_diff
+
+        member_rectangles.append(
+            {
+                'xy': (self._left_support[0]-supp_width,self._left_support[1]),
+                'width': supp_width,
+                'height':supp_width,
+                'color':'brown',
+                'fill': False
+            }
+        )
+
+        member_rectangles.append(
+            {
+                'xy': (self._right_support[0],self._right_support[1]),
+                'width': supp_width,
+                'height':supp_width,
+                'color':'brown',
+                'fill': False
+            }
+        )
+
+        return member_rectangles
+
+    def _draw_cable(self,order):
+        xy_min = min(self._left_support[0],self._lowest_y_global)
+        xy_max = max(self._right_support[0], max(self._right_support[1],self._left_support[1]))
+        max_diff = xy_max - xy_min
+        if order == -1 :
+            x,y = symbols('x y')
+            line_func = []
+            sorted_position = sorted(self._loads_position.items(), key = lambda item : item[1][0])
+
+            for i in range(len(sorted_position)):
+                if(i==0):
+                    y = ((sorted_position[i][1][1] - self._left_support[1])*(x-self._left_support[0]))/(sorted_position[i][1][0]- self._left_support[0]) + self._left_support[1]
+                else:
+                    y = ((sorted_position[i][1][1] - sorted_position[i-1][1][1] )*(x-sorted_position[i-1][1][0]))/(sorted_position[i][1][0]- sorted_position[i-1][1][0]) + sorted_position[i-1][1][1]
+                line_func.append((y,x<=sorted_position[i][1][0]))
+
+            y = ((sorted_position[len(sorted_position)-1][1][1] - self._right_support[1])*(x-self._right_support[0]))/(sorted_position[i][1][0]- self._right_support[0]) + self._right_support[1]
+            line_func.append((y,x<=self._right_support[0]))
+            return [Piecewise(*line_func)]
+
+        elif order == 0:
+            x0 = self._lowest_x_global
+            diff_force_height = max_diff*0.075
+
+            a,c,x,y = symbols('a c x y')
+            parabola_eqn = a*(x-x0)**2 + c - y
+
+            points = [(self._left_support[0],self._left_support[1]),(self._right_support[0],self._right_support[1])]
+            equations = []
+            for px, py in points:
+                equations.append(parabola_eqn.subs({x: px, y: py}))
+            solution = solve(equations, (a, c))
+            parabola_eqn = solution[a]*(x-x0)**2 + solution[c]
+            return [parabola_eqn, self._lowest_y_global - diff_force_height]
+
+    def _draw_loads(self,order):
+        xy_min = min(self._left_support[0],self._lowest_y_global)
+        xy_max = max(self._right_support[0], max(self._right_support[1],self._left_support[1]))
+        max_diff = xy_max - xy_min
+        if(order==-1):
+            arrow_length = max_diff*0.1
+            force_arrows = []
+            for key in self._loads['point_load']:
+                force_arrows.append(
+                    {
+                        'text': '',
+                        'xy':(self._loads_position[key][0]+arrow_length*cos(rad(self._loads['point_load'][key][1])),\
+                              self._loads_position[key][1] + arrow_length*sin(rad(self._loads['point_load'][key][1]))),
+                        'xytext': (self._loads_position[key][0],self._loads_position[key][1]),
+                        'arrowprops': {'width': 1, 'headlength':3, 'headwidth':3 , 'facecolor': 'black', }
+                    }
+                )
+                mag = self._loads['point_load'][key][0]
+                force_arrows.append(
+                    {
+                        'text':f'{mag}N',
+                        'xy': (self._loads_position[key][0]+arrow_length*1.6*cos(rad(self._loads['point_load'][key][1])),\
+                               self._loads_position[key][1] + arrow_length*1.6*sin(rad(self._loads['point_load'][key][1]))),
+                    }
+                )
+            return force_arrows
+
+        elif (order == 0):
+            x = symbols('x')
+            force_arrows = []
+            x_val = [self._left_support[0] + ((self._right_support[0]-self._left_support[0])/10)*i for i in range(1,10)]
+            for i in x_val:
+                force_arrows.append(
+                    {
+                        'text':'',
+                        'xytext':(
+                            i,
+                            self._cable_eqn[0].subs(x,i)
+                        ),
+                        'xy':(
+                            i,
+                            self._cable_eqn[1].subs(x,i)
+                        ),
+                        'arrowprops':{'width':1, 'headlength':3.5, 'headwidth':3.5, 'facecolor':'black'}
+                    }
+                )
+            mag = 0
+            for key in self._loads['distributed']:
+                mag += self._loads['distributed'][key]
+
+            force_arrows.append(
+                {
+                    'text':f'{mag} N/m',
+                    'xy':((self._left_support[0]+self._right_support[0])/2,self._lowest_y_global - max_diff*0.15)
+                }
+            )
+            return force_arrows
+
+    def plot_tension(self):
+        """
+        Returns the diagram/plot of the tension generated in the cable at various points.
+
+        Examples
+        ========
+
+        For point loads,
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c = Cable(("A", 0, 10), ("B", 10, 10))
+        >>> c.apply_load(-1, ('Z', 2, 7.26, 3, 270))
+        >>> c.apply_load(-1, ('X', 4, 6, 8, 270))
+        >>> c.solve()
+        >>> p = c.plot_tension()
+        >>> p
+        Plot object containing:
+        [0]: cartesian line: Piecewise((8.91403453669861, x <= 2), (4.79150773600774, x <= 4), (19*sqrt(13)/10, x <= 10)) for x over (0.0, 10.0)
+        >>> p.show()
+
+        For uniformly distributed loads,
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c=Cable(("A", 0, 40),("B", 100, 20))
+        >>> c.apply_load(0, ("X", 850))
+        >>> c.solve(58.58)
+        >>> p = c.plot_tension()
+        >>> p
+        Plot object containing:
+        [0]: cartesian line: 36465.0*sqrt(0.00054335718671383*X**2 + 1) for X over (0.0, 100.0)
+        >>> p.show()
+
+        """
+        if len(self._loads_position) != 0:
+            x = symbols('x')
+            tension_plot  = plot(self._tension_func, (x,self._left_support[0],self._right_support[0]), show=False)
+        else:
+            X = symbols('X')
+            tension_plot  = plot(self._tension['distributed'], (X,self._left_support[0],self._right_support[0]), show=False)
+        return tension_plot

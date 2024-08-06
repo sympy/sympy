@@ -125,14 +125,14 @@ from sympy.polys.polyerrors import (
     PolynomialError)
 
 
-_flint_domains: tuple[Domain, ...]
-
 if GROUND_TYPES == 'flint':
     import flint
-    _flint_domains = (ZZ, QQ)
+    def _supported_flint_domain(D):
+        return D.is_ZZ or D.is_QQ or D.is_FF and D._is_flint
 else:
     flint = None
-    _flint_domains = ()
+    def _supported_flint_domain(D):
+        return False
 
 
 class DMP(CantSympify):
@@ -156,7 +156,7 @@ class DMP(CantSympify):
         #
         #cls._validate_args(rep, dom, lev)
         if flint is not None:
-            if lev == 0 and dom in _flint_domains:
+            if lev == 0 and _supported_flint_domain(dom):
                 return DUP_Flint._new(rep, dom, lev)
 
         return DMP_Python._new(rep, dom, lev)
@@ -185,7 +185,7 @@ class DMP(CantSympify):
         potentially becomes possible to convert from DMP_Python to DUP_Flint.
         """
         if flint is not None:
-            if isinstance(f, DMP_Python) and f.lev == 0 and f.dom in _flint_domains:
+            if isinstance(f, DMP_Python) and f.lev == 0 and _supported_flint_domain(f.dom):
                 return DUP_Flint.new(f._rep, f.dom, f.lev)
 
         return f
@@ -231,12 +231,12 @@ class DMP(CantSympify):
         elif f.lev or flint is None:
             return f._convert(dom)
         elif isinstance(f, DUP_Flint):
-            if dom in _flint_domains:
+            if _supported_flint_domain(dom):
                 return f._convert(dom)
             else:
                 return f.to_DMP_Python()._convert(dom)
         elif isinstance(f, DMP_Python):
-            if dom in _flint_domains:
+            if _supported_flint_domain(dom):
                 return f._convert(dom).to_DUP_Flint()
             else:
                 return f._convert(dom)
@@ -1750,7 +1750,7 @@ class DUP_Flint(DMP):
 
     @classmethod
     def _flint_poly(cls, rep, dom, lev):
-        assert dom in _flint_domains
+        assert _supported_flint_domain(dom)
         assert lev == 0
         flint_cls = cls._get_flint_poly_cls(dom)
         return flint_cls(rep)
@@ -1761,6 +1761,8 @@ class DUP_Flint(DMP):
             return flint.fmpz_poly
         elif dom.is_QQ:
             return flint.fmpq_poly
+        elif dom.is_FF:
+            return dom._poly_ctx
         else:
             raise RuntimeError("Domain %s is not supported with flint" % dom)
 
@@ -1774,6 +1776,11 @@ class DUP_Flint(DMP):
         elif dom.is_QQ:
             assert isinstance(rep, flint.fmpq_poly)
             _cls = flint.fmpq_poly
+        elif dom.is_FF:
+            assert isinstance(rep, (flint.nmod_poly, flint.fmpz_mod_poly))
+            c = dom.characteristic()
+            __cls = type(rep)
+            _cls = lambda e: __cls(e, c)
         else:
             raise RuntimeError("Domain %s is not supported with flint" % dom)
 
@@ -1812,7 +1819,7 @@ class DUP_Flint(DMP):
         """Convert the ground domain of ``f``. """
         if dom == QQ and f.dom == ZZ:
             return f.from_rep(flint.fmpq_poly(f._rep), dom)
-        elif dom == ZZ and f.dom == QQ:
+        elif _supported_flint_domain(dom) and _supported_flint_domain(f.dom):
             # XXX: python-flint should provide a faster way to do this.
             return f.to_DMP_Python()._convert(dom).to_DUP_Flint()
         else:
@@ -1903,7 +1910,7 @@ class DUP_Flint(DMP):
         return f.from_rep(f._rep // c, f.dom)
 
     def _exquo_ground(f, c):
-        """Exact quotient of ``f`` by a an element of the ground domain. """
+        """Exact quotient of ``f`` by an element of the ground domain. """
         q, r = divmod(f._rep, c)
         if r:
             raise ExactQuotientFailed(f, c)
@@ -2030,14 +2037,20 @@ class DUP_Flint(DMP):
 
     def clear_denoms(f):
         """Clear denominators, but keep the ground domain. """
-        denom = f._rep.denom()
-        numer = f.from_rep(f._cls(f._rep.numer()), f.dom)
-        return denom, numer
+        R = f.dom
+        if R.is_QQ:
+            denom = f._rep.denom()
+            numer = f.from_rep(f._cls(f._rep.numer()), f.dom)
+            return denom, numer
+        elif R.is_ZZ or R.is_FiniteField:
+            return R.one, f
+        else:
+            raise NotImplementedError
 
     def _integrate(f, m=1, j=0):
         """Computes the ``m``-th order indefinite integral of ``f`` in ``x_j``. """
         assert j == 0
-        if f.dom.is_QQ:
+        if f.dom.is_Field:
             rep = f._rep
             for i in range(m):
                 rep = rep.integral()
@@ -2054,6 +2067,10 @@ class DUP_Flint(DMP):
         return f.from_rep(rep, f.dom)
 
     def _eval(f, a):
+        # XXX: This method is called with many different input types. Ideally
+        # we could use e.g. fmpz_poly.__call__ here but more thought needs to
+        # go into which types this is supposed to be called with and what types
+        # it should return.
         return f.to_DMP_Python()._eval(a)
 
     def _eval_lev(f, a, j):
@@ -2072,34 +2089,45 @@ class DUP_Flint(DMP):
 
     def _invert(f, g):
         """Invert ``f`` modulo ``g``, if possible. """
-        if f.dom.is_QQ:
+        R = f.dom
+        if R.is_Field:
             gcd, F_inv, _ = f._rep.xgcd(g._rep)
-            if gcd != 1:
+            # XXX: Should be gcd != 1 but nmod_poly does not compare equal to
+            # other types.
+            if gcd != 0*gcd + 1:
                 raise NotInvertible("zero divisor")
-            return f.from_rep(F_inv, f.dom)
+            return f.from_rep(F_inv, R)
         else:
+            # fmpz_poly does not have xgcd or invert and this is not well
+            # defined in general.
             return f.to_DMP_Python()._invert(g.to_DMP_Python()).to_DUP_Flint()
 
     def _revert(f, n):
         """Compute ``f**(-1)`` mod ``x**n``. """
+        # XXX: Use fmpz_series etc for reversion?
+        # Maybe python-flint should provide revert for fmpz_poly...
         return f.to_DMP_Python()._revert(n).to_DUP_Flint()
 
     def _subresultants(f, g):
         """Computes subresultant PRS sequence of ``f`` and ``g``. """
+        # XXX: Maybe _fmpz_poly_pseudo_rem_cohen could be used...
         R = f.to_DMP_Python()._subresultants(g.to_DMP_Python())
         return [ g.to_DUP_Flint() for g in R ]
 
     def _resultant_includePRS(f, g):
         """Computes resultant of ``f`` and ``g`` via PRS. """
+        # XXX: Maybe _fmpz_poly_pseudo_rem_cohen could be used...
         res, R = f.to_DMP_Python()._resultant_includePRS(g.to_DMP_Python())
         return res, [ g.to_DUP_Flint() for g in R ]
 
     def _resultant(f, g):
         """Computes resultant of ``f`` and ``g``. """
+        # XXX: Use fmpz_mpoly etc when possible...
         return f.to_DMP_Python()._resultant(g.to_DMP_Python())
 
     def discriminant(f):
         """Computes discriminant of ``f``. """
+        # XXX: Use fmpz_mpoly etc when possible...
         return f.to_DMP_Python().discriminant()
 
     def _cofactors(f, g):
@@ -2128,16 +2156,24 @@ class DUP_Flint(DMP):
 
     def _cancel(f, g):
         """Cancel common factors in a rational function ``f/g``. """
+        assert f.dom == g.dom
+        R = f.dom
+
         # Think carefully about how to handle denominators and coefficient
         # canonicalisation if more domains are permitted...
-        assert f.dom == g.dom in (ZZ, QQ)
+        assert R.is_ZZ or R.is_QQ or R.is_FiniteField
 
-        if f.dom.is_QQ:
+        if R.is_FiniteField:
+            h = f._gcd(g)
+            F, G = f.exquo(h), g.exquo(h)
+            return R.one, R.one, F, G
+
+        if R.is_QQ:
             cG, F = f.clear_denoms()
             cF, G = g.clear_denoms()
         else:
-            cG, F = f.dom.one, f
-            cF, G = g.dom.one, g
+            cG, F = R.one, f
+            cF, G = R.one, g
 
         cH = cF.gcd(cG)
         cF, cG = cF // cH, cG // cH
@@ -2168,6 +2204,7 @@ class DUP_Flint(DMP):
 
     def monic(f):
         """Divides all coefficients by ``LC(f)``. """
+        # XXX: python-flint should add monic
         return f._exquo_ground(f.LC())
 
     def content(f):
@@ -2236,6 +2273,7 @@ class DUP_Flint(DMP):
 
     def sqf_list(f, all=False):
         """Returns a list of square-free factors of ``f``. """
+        # XXX: python-flint should provide square free factorisation.
         coeff, factors = f.to_DMP_Python().sqf_list(all=all)
         return coeff, [ (g.to_DUP_Flint(), k) for g, k in factors ]
 
@@ -2247,7 +2285,7 @@ class DUP_Flint(DMP):
     def factor_list(f):
         """Returns a list of irreducible factors of ``f``. """
 
-        if f.dom.is_ZZ:
+        if f.dom.is_ZZ or f.dom.is_FF:
             # python-flint matches polys here
             coeff, factors = f._rep.factor()
             factors = [ (f.from_rep(g, f.dom), k) for g, k in factors ]
@@ -2300,6 +2338,9 @@ class DUP_Flint(DMP):
         return f.to_DMP_Python()._isolate_real_roots_sqf(eps, inf, sup, fast)
 
     def _isolate_all_roots(f, eps, inf, sup, fast):
+        # fmpz_poly and fmpq_poly have a complex_roots method that could be
+        # used here. It probably makes more sense to add analogous methods in
+        # python-flint though.
         return f.to_DMP_Python()._isolate_all_roots(eps, inf, sup, fast)
 
     def _isolate_all_roots_sqf(f, eps, inf, sup, fast):
@@ -2344,7 +2385,8 @@ class DUP_Flint(DMP):
     @property
     def is_monomial(f):
         """Returns ``True`` if ``f`` is zero or has only one term. """
-        return f.to_DMP_Python().is_monomial
+        fr = f._rep
+        return fr.degree() < 0 or not any(fr[n] for n in range(fr.degree()))
 
     @property
     def is_monic(f):
@@ -2364,20 +2406,33 @@ class DUP_Flint(DMP):
     @property
     def is_sqf(f):
         """Returns ``True`` if ``f`` is a square-free polynomial. """
-        return f.to_DMP_Python().is_sqf
+        g = f._rep.gcd(f._rep.derivative())
+        return g.degree() <= 0
 
     @property
     def is_irreducible(f):
         """Returns ``True`` if ``f`` has no factors over its domain. """
-        return f.to_DMP_Python().is_irreducible
+        _, factors = f._rep.factor()
+        if len(factors) == 0:
+            return True
+        elif len(factors) == 1:
+            return factors[0][1] == 1
+        else:
+            return False
 
     @property
     def is_cyclotomic(f):
         """Returns ``True`` if ``f`` is a cyclotomic polynomial. """
+        if f.dom.is_QQ:
+            try:
+                f = f.convert(ZZ)
+            except CoercionFailed:
+                return False
         if f.dom.is_ZZ:
             return bool(f._rep.is_cyclotomic())
         else:
-            return f.to_DMP_Python().is_cyclotomic
+            # This is what dup_cyclotomic_p does...
+            return False
 
 
 def init_normal_DMF(num, den, lev, dom):

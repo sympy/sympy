@@ -717,6 +717,9 @@ def test_inverse_laplace_transform_old():
             Derivative(InverseLaplaceTransform(f(s), s, t, None), (t, 42)))
     assert ILT(cos(s), s, t) == InverseLaplaceTransform(cos(s), s, t, None)
     # Rules for testing different DiracDelta cases
+    assert (
+        ILT(1 + 2*s + 3*s**2 + 5*s**3, s, t) == DiracDelta(t) +
+        2*DiracDelta(t, 1) + 3*DiracDelta(t, 2) + 5*DiracDelta(t, 3))
     assert (ILT(2*exp(3*s) - 5*exp(-7*s), s, t) ==
             2*InverseLaplaceTransform(exp(3*s), s, t, None) -
             5*DiracDelta(t - 7))

@@ -79,7 +79,9 @@ from sympy.simplify.simplify import signsimp
 from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.testing.pytest import raises, warns_deprecated_sympy, warns
+from sympy.testing.pytest import (
+    raises, warns_deprecated_sympy, warns, tooslow, XFAIL
+)
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 
@@ -300,6 +302,43 @@ def test_Poly_from_expr():
     assert Poly.from_expr(y + 5, x, y, domain=ZZ).rep == DMP([[ZZ(1), ZZ(5)]], ZZ)
 
 
+def test_Poly_rootof_extension():
+    r1 = rootof(x**3 + x + 3, 0)
+    r2 = rootof(x**3 + x + 3, 1)
+    K1 = QQ.algebraic_field(r1)
+    K2 = QQ.algebraic_field(r2)
+    assert Poly(r1, y) == Poly(r1, y, domain=EX)
+    assert Poly(r2, y) == Poly(r2, y, domain=EX)
+    assert Poly(r1, y, extension=True) == Poly(r1, y, domain=K1)
+    assert Poly(r2, y, extension=True) == Poly(r2, y, domain=K2)
+
+
+@tooslow
+def test_Poly_rootof_extension_primitive_element():
+    r1 = rootof(x**3 + x + 3, 0)
+    r2 = rootof(x**3 + x + 3, 1)
+    K12 = QQ.algebraic_field(r1 + r2)
+    assert Poly(r1*y + r2, y, extension=True) == Poly(r1*y + r2, y, domain=K12)
+
+
+@XFAIL
+def test_Poly_rootof_same_symbol_issue_26808():
+    # XXX: This fails because r1 contains x.
+    r1 = rootof(x**3 + x + 3, 0)
+    K1 = QQ.algebraic_field(r1)
+    assert Poly(r1, x) == Poly(r1, x, domain=EX)
+    assert Poly(r1, x, extension=True) == Poly(r1, x, domain=K1)
+
+
+def test_Poly_rootof_extension_to_sympy():
+    # Verify that when primitive elements and RootOf are used, the expression
+    # is not exploded on the way back to sympy.
+    r1 = rootof(y**3 + y**2 - 1, 0)
+    r2 = rootof(z**5 + z**2 - 1, 0)
+    p = -x**5 + x**2 + x*r1 - r2 + 3*r1**2
+    assert p.as_poly(x, extension=True).as_expr() == p
+
+
 def test_poly_from_domain_element():
     dom = ZZ[x]
     assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
@@ -405,6 +444,9 @@ def test_Poly__new__():
     assert Poly(f, x, modulus=65537, symmetric=False) == \
         Poly(3*x**5 + 65536*x**4 + x**3 + 65536*x** 2 + 1, x,
              modulus=65537, symmetric=False)
+
+    N = 10**100
+    assert Poly(-1, x, modulus=N, symmetric=False).as_expr() == N - 1
 
     assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
     assert isinstance(Poly(x**2 + x + I + 1.0).get_domain(), ComplexField)
@@ -596,6 +638,7 @@ def test_Poly__eq__():
     g =  Poly((t0/2 + x**2)*t**2 - x**2*t, t, domain='ZZ(x,t0)')
 
     assert (f == g) is False
+
 
 def test_PurePoly__eq__():
     assert (PurePoly(x, x) == PurePoly(x, x)) is True
@@ -1153,9 +1196,36 @@ def test_Poly_as_expr():
 
 
 def test_Poly_lift():
-    assert Poly(x**4 - I*x + 17*I, x, gaussian=True).lift() == \
-        Poly(x**16 + 2*x**10 + 578*x**8 + x**4 - 578*x**2 + 83521,
-             x, domain='QQ')
+    p = Poly(x**4 - I*x + 17*I, x, gaussian=True)
+    assert p.lift() == Poly(x**8 + x**2 - 34*x + 289, x, domain='QQ')
+
+
+def test_Poly_lift_multiple():
+
+    r1 = rootof(y**3 + y**2 - 1, 0)
+    r2 = rootof(z**5 + z**2 - 1, 0)
+    p = Poly(r1*x + 3*r1**2 - r2 + x**2 - x**5, x, extension=True)
+
+    assert p.lift() == Poly(
+        -x**75 + 15*x**72 - 5*x**71 + 15*x**70 - 105*x**69 + 70*x**68 -
+        220*x**67 + 560*x**66 - 635*x**65 + 1495*x**64 - 2735*x**63 +
+        4415*x**62 - 7410*x**61 + 12741*x**60 - 22090*x**59 + 32125*x**58 -
+        56281*x**57 + 88157*x**56 - 126842*x**55 + 214223*x**54 - 311802*x**53
+        + 462667*x**52 - 700883*x**51 + 1006278*x**50 - 1480950*x**49 +
+        2078055*x**48 - 3004675*x**47 + 4140410*x**46 - 5664222*x**45 +
+        8029445*x**44 - 10528785*x**43 + 14309614*x**42 - 19032988*x**41 +
+        24570573*x**40 - 32530459*x**39 + 41239581*x**38 - 52968051*x**37 +
+        65891606*x**36 - 81997276*x**35 + 102530732*x**34 - 122009994*x**33 +
+        150227996*x**32 - 176452478*x**31 + 206393768*x**30 - 245291426*x**29 +
+        276598718*x**28 - 320005297*x**27 + 353649032*x**26
+        - 393246309*x**25 + 434566186*x**24 - 460608964*x**23 + 508052079*x**22
+        - 513976618*x**21 + 539374498*x**20 - 557851717*x**19 + 540788016*x**18
+        - 564949060*x**17 + 520866566*x**16
+        - 507861375*x**15 + 474999819*x**14 - 423619160*x**13 + 414540540*x**12
+        - 322522367*x**11 + 311586511*x**10 - 238812299*x**9 + 184482053*x**8
+        - 189265274*x**7 + 93619528*x**6 - 106852385*x**5 + 57294385*x**4 -
+        26486666*x**3 + 42614683*x**2 - 1511583*x + 15975845, x, domain='QQ'
+    )
 
 
 def test_Poly_deflate():
@@ -1473,6 +1543,10 @@ def test_Poly_clear_denoms():
     coeff, poly = Poly(x/2 + 1, x).clear_denoms()
     assert coeff == 2 and poly == Poly(
         x + 2, x, domain='QQ') and poly.get_domain() == QQ
+
+    coeff, poly = Poly(2*x**2 + 3, modulus=5).clear_denoms()
+    assert coeff == 1 and poly == Poly(
+        2*x**2 + 3, x, modulus=5) and poly.get_domain() == FF(5)
 
     coeff, poly = Poly(x/2 + 1, x).clear_denoms(convert=True)
     assert coeff == 2 and poly == Poly(
@@ -2941,6 +3015,25 @@ def test_count_roots():
     raises(PolynomialError, lambda: count_roots(1))
 
 
+def test_count_roots_extension():
+
+    p1 = Poly(sqrt(2)*x**2 - 2, x, extension=True)
+    assert p1.count_roots() == 2
+    assert p1.count_roots(inf=0) == 1
+    assert p1.count_roots(sup=0) == 1
+
+    p2 = Poly(x**2 + sqrt(2), x, extension=True)
+    assert p2.count_roots() == 0
+
+    p3 = Poly(x**2 + 2*sqrt(2)*x + 1, x, extension=True)
+    assert p3.count_roots() == 2
+    assert p3.count_roots(inf=-10, sup=10) == 2
+    assert p3.count_roots(inf=-10, sup=0) == 2
+    assert p3.count_roots(inf=-10, sup=-3) == 0
+    assert p3.count_roots(inf=-3, sup=-2) == 1
+    assert p3.count_roots(inf=-1, sup=0) == 1
+
+
 def test_Poly_root():
     f = Poly(2*x**3 - 7*x**2 + 4*x + 4)
 
@@ -3317,6 +3410,12 @@ def test_cancel():
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
     assert cancel((x**2 + 1)/(x - I)) == x + I
+
+
+def test_cancel_modulus():
+    assert cancel((x**2 - 1)/(x + 1), modulus=2) == x + 1
+    assert Poly(x**2 - 1, modulus=2).cancel(Poly(x + 1, modulus=2)) ==\
+            (1, Poly(x + 1, modulus=2), Poly(1, x, modulus=2))
 
 
 def test_make_monic_over_integers_by_scaling_roots():
