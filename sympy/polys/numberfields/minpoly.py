@@ -577,7 +577,7 @@ def _minpoly_compose(ex, x, dom):
         while 1:
             ex1 = _separate_sq(ex)
             if ex1 is ex:
-                return _choose_factor(_factor_list(ex)[1], x, v)
+                return _choose_factor(factor_list(ex)[1], x, v)
             else:
                 ex = ex1
 
