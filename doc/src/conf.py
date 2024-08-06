@@ -410,12 +410,12 @@ latex_elements = {
 % U+2715 is available in DejaVu Sans and DejaVu Sans Mono but not Serif
 \newunicodechar{❌}{\textcolor{red}{\sffamily\bfseries ✕}}% (U+274C --> U+2715)
 %
-\newfontfamily{\TGDejaVuMath}{texgyredejavu-math.otf}
-  \newunicodechar{𝑅}{\text{\TGDejaVuMath 𝑅}}%   (U+1D445)
-  \newunicodechar{𝕀}{\text{\TGDejaVuMath 𝕀}}%   (U+1D540)
-  \newunicodechar{𝕌}{\text{\TGDejaVuMath 𝕌}}%   (U+1D54C)
-  \newunicodechar{𝟘}{\text{\TGDejaVuMath 𝟘}}%   (U+1D7D8)
-  \newunicodechar{𝟙}{\text{\TGDejaVuMath 𝟙}}%   (U+1D7D9)
+% Those next are not available in DejaVu but are in XITS Math
+\newunicodechar{𝑅}{\ifmmode 𝑅\else{\fontfamily{XITS}\selectfont 𝑅}\fi}%   (U+1D445)
+\newunicodechar{𝕀}{\ifmmode 𝕀\else{\fontfamily{XITS}\selectfont 𝕀}\fi}%   (U+1D540)
+\newunicodechar{𝕌}{\ifmmode 𝕌\else{\fontfamily{XITS}\selectfont 𝕌}\fi}%   (U+1D54C)
+\newunicodechar{𝟘}{\ifmmode 𝟘\else{\fontfamily{XITS}\selectfont 𝟘}\fi}%   (U+1D7D8)
+\newunicodechar{𝟙}{\ifmmode 𝟙\else{\fontfamily{XITS}\selectfont 𝟙}\fi}%   (U+1D7D9)
 %
 % Define version of \LaTeX that is usable in math mode
 \usepackage{letltxmacro}
