@@ -1,11 +1,12 @@
-=========
-A bicycle
-=========
+=========================================
+Linearized Carvallo-Whipple Bicycle Model
+=========================================
 
-The bicycle is an interesting system in that it has multiple rigid bodies,
-non-holonomic constraints, and a holonomic constraint. The linearized equations
-of motion are presented in [Meijaard2007]_. This example will go through
-construction of the equations of motion in :mod:`sympy.physics.mechanics`. ::
+The bicycle is an interesting system in that it can be modeled with multiple
+rigid bodies, non-holonomic constraints, and a holonomic constraint. The
+linearized equations of motion of the Carvallo-Whipple bicycle model are
+presented and benchmarked in [Meijaard2007]_. This example will construct the
+same linear equations of motion using :mod:`sympy.physics.mechanics`. ::
 
   >>> from sympy import *
   >>> from sympy.physics.mechanics import *
@@ -13,16 +14,17 @@ construction of the equations of motion in :mod:`sympy.physics.mechanics`. ::
   ...       'with States: Roll, Steer, Roll Rate, Steer Rate')
   Calculation of Linearized Bicycle "A" Matrix, with States: Roll, Steer, Roll Rate, Steer Rate
 
-
 Note that this code has been crudely ported from Autolev, which is the reason
 for some of the unusual naming conventions. It was purposefully as similar as
 possible in order to aid initial porting & debugging.::
 
   >>> mechanics_printing(pretty_print=False)
 
-Declaration of Coordinates & Speeds:
-A simple definition for qdots, qd = u,is used in this code.  Speeds are: yaw
-frame ang. rate, roll frame ang. rate, rear wheel frame ang.  rate (spinning
+Declaration of Coordinates & Speeds
+===================================
+
+A simple definition for qdots, qd = u, is used in this code. Speeds are: yaw
+frame ang. rate, roll frame ang. rate, rear wheel frame ang. rate (spinning
 motion), frame ang. rate (pitching motion), steering frame ang. rate, and front
 wheel ang. rate (spinning motion).  Wheel positions are ignorable coordinates,
 so they are not introduced. ::
@@ -32,7 +34,9 @@ so they are not introduced. ::
   >>> u1, u2, u3, u4, u5, u6 = dynamicsymbols('u1 u2 u3 u4 u5 u6')
   >>> u1d, u2d, u3d, u4d, u5d, u6d = dynamicsymbols('u1 u2 u3 u4 u5 u6', 1)
 
-Declaration of System's Parameters:
+Declaration of System's Parameters
+==================================
+
 The below symbols should be fairly self-explanatory. ::
 
   >>> WFrad, WRrad, htangle, forkoffset = symbols('WFrad WRrad htangle forkoffset')
@@ -44,16 +48,18 @@ The below symbols should be fairly self-explanatory. ::
   >>> Ifork22, Ifork33, Ifork31, g = symbols('Ifork22 Ifork33 Ifork31 g')
   >>> mframe, mfork, mwf, mwr = symbols('mframe mfork mwf mwr')
 
-Set up reference frames for the system:
-N - inertial
-Y - yaw
-R - roll
-WR - rear wheel, rotation angle is ignorable coordinate so not oriented
-Frame - bicycle frame
-TempFrame - statically rotated frame for easier reference inertia definition
-Fork - bicycle fork
-TempFork - statically rotated frame for easier reference inertia definition
-WF - front wheel, again posses an ignorable coordinate ::
+Set up reference frames for the system
+======================================
+
+- N - inertial
+- Y - yaw
+- R - roll
+- WR - rear wheel, rotation angle is ignorable coordinate so not oriented
+- Frame - bicycle frame
+- TempFrame - statically rotated frame for easier reference inertia definition
+- Fork - bicycle fork
+- TempFork - statically rotated frame for easier reference inertia definition
+- WF - front wheel, again posses an ignorable coordinate ::
 
   >>> N = ReferenceFrame('N')
   >>> Y = N.orientnew('Y', 'Axis', [q1, N.z])
@@ -65,11 +71,13 @@ WF - front wheel, again posses an ignorable coordinate ::
   >>> TempFork = Fork.orientnew('TempFork', 'Axis', [-htangle, Fork.y])
   >>> WF = ReferenceFrame('WF')
 
+Kinematics of the Bicycle
+=========================
 
-Kinematics of the Bicycle:
 First block of code is forming the positions of the relevant points rear wheel
-contact -> rear wheel's center of mass -> frame's center of mass + frame/fork connection
--> fork's center of mass + front wheel's center of mass -> front wheel contact point. ::
+contact -> rear wheel's center of mass -> frame's center of mass + frame/fork
+connection -> fork's center of mass + front wheel's center of mass -> front
+wheel contact point. ::
 
   >>> WR_cont = Point('WR_cont')
   >>> WR_mc = WR_cont.locatenew('WR_mc', WRrad * R.z)
@@ -77,18 +85,21 @@ contact -> rear wheel's center of mass -> frame's center of mass + frame/fork co
   >>> Frame_mc = WR_mc.locatenew('Frame_mc', -framecg1 * Frame.x + framecg3 * Frame.z)
   >>> Fork_mc = Steer.locatenew('Fork_mc', -forkcg1 * Fork.x + forkcg3 * Fork.z)
   >>> WF_mc = Steer.locatenew('WF_mc', forklength * Fork.x + forkoffset * Fork.z)
-  >>> WF_cont = WF_mc.locatenew('WF_cont', WFrad*(dot(Fork.y, Y.z)*Fork.y - \
+  >>> WF_cont = WF_mc.locatenew('WF_cont', WFrad*(dot(Fork.y, Y.z)*Fork.y -
   ...                                             Y.z).normalize())
 
-Set the angular velocity of each frame:
+Set the angular velocity of each frame
+--------------------------------------
+
 Angular accelerations end up being calculated automatically by differentiating
-the angular velocities when first needed. ::
-u1 is yaw rate
-u2 is roll rate
-u3 is rear wheel rate
-u4 is frame pitch rate
-u5 is fork steer rate
-u6 is front wheel rate ::
+the angular velocities when first needed.
+
+- u1 is yaw rate
+- u2 is roll rate
+- u3 is rear wheel rate
+- u4 is frame pitch rate
+- u5 is fork steer rate
+- u6 is front wheel rate ::
 
   >>> Y.set_ang_vel(N, u1 * Y.z)
   >>> R.set_ang_vel(Y, u2 * R.x)
@@ -97,7 +108,7 @@ u6 is front wheel rate ::
   >>> Fork.set_ang_vel(Frame, u5 * Fork.x)
   >>> WF.set_ang_vel(Fork, u6 * Fork.y)
 
-Form the velocities of the points, using the 2-point theorem.  Accelerations
+Form the velocities of the points, using the 2-point theorem. Accelerations
 again are calculated automatically when first needed. ::
 
   >>> WR_cont.set_vel(N, 0)
@@ -113,7 +124,6 @@ again are calculated automatically when first needed. ::
   WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.z
   >>> WF_cont.v2pt_theory(WF_mc, N, WF)
   - WFrad*((-sin(q2)*sin(q5)*cos(htangle + q4) + cos(q2)*cos(q5))*u6 + u4*cos(q2) + u5*sin(htangle + q4)*sin(q2))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.x + WFrad*(u2 + u5*cos(htangle + q4) + u6*sin(htangle + q4)*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.y + WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + (-WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + (WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5)/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.z
-
 
 Sets the inertias of each body. Uses the inertia frame to construct the inertia
 dyadics. Wheel inertias are only defined by principal moments of inertia, and
@@ -209,21 +219,21 @@ into the coordinate systems used in this model. ::
   >>> PaperFrameCgZ =  0.9
   >>> PaperForkCgX  =  0.9
   >>> PaperForkCgZ  =  0.7
-  >>> FrameLength   =  evalf.N(PaperWb*sin(HTA) - (rake - \
+  >>> FrameLength   =  evalf.N(PaperWb*sin(HTA) - (rake -
   ...                         (PaperRadFront - PaperRadRear)*cos(HTA)))
-  >>> FrameCGNorm   =  evalf.N((PaperFrameCgZ - PaperRadRear - \
+  >>> FrameCGNorm   =  evalf.N((PaperFrameCgZ - PaperRadRear -
   ...                          (PaperFrameCgX/sin(HTA))*cos(HTA))*sin(HTA))
-  >>> FrameCGPar    =  evalf.N((PaperFrameCgX / sin(HTA) + \
-  ...                          (PaperFrameCgZ - PaperRadRear - \
+  >>> FrameCGPar    =  evalf.N((PaperFrameCgX / sin(HTA) +
+  ...                          (PaperFrameCgZ - PaperRadRear -
   ...                           PaperFrameCgX / sin(HTA) * cos(HTA)) * cos(HTA)))
   >>> tempa         =  evalf.N((PaperForkCgZ - PaperRadFront))
   >>> tempb         =  evalf.N((PaperWb-PaperForkCgX))
   >>> tempc         =  evalf.N(sqrt(tempa**2 + tempb**2))
-  >>> PaperForkL    =  evalf.N((PaperWb*cos(HTA) - \
+  >>> PaperForkL    =  evalf.N((PaperWb*cos(HTA) -
   ...                          (PaperRadFront - PaperRadRear)*sin(HTA)))
-  >>> ForkCGNorm    =  evalf.N(rake + (tempc * sin(pi/2 - \
+  >>> ForkCGNorm    =  evalf.N(rake + (tempc * sin(pi/2 -
   ...                          HTA - acos(tempa/tempc))))
-  >>> ForkCGPar     =  evalf.N(tempc * cos((pi/2 - HTA) - \
+  >>> ForkCGPar     =  evalf.N(tempc * cos((pi/2 - HTA) -
   ...                          acos(tempa/tempc)) - PaperForkL)
 
 Here is the final assembly of the numerical values. The symbol 'v' is the
@@ -266,14 +276,7 @@ here, due to different orientations of coordinate systems. ::
   >>> print('Before Linearization of the \"Forcing\" Term')
   Before Linearization of the "Forcing" Term
 
-Linearizes the forcing vector; the equations are set up as MM udot = forcing,
-where MM is the mass matrix, udot is the vector representing the time
-derivatives of the generalized speeds, and forcing is a vector which contains
-both external forcing terms and internal forcing terms, such as centripetal or
-Coriolis forces.  This actually returns a matrix with as many rows as *total*
-coordinates and speeds, but only as many columns as independent coordinates and
-speeds. (Note that below this is commented out, as it takes a few minutes to
-run, which is not good when performing the doctests) ::
+Linearize the equations of motion::
 
   >>> eq_point = {
   ...     u1.diff(): 0,
@@ -330,4 +333,4 @@ also commented out)::
 
 Upon running the above code yourself, enabling the commented out lines, compare
 the computed eigenvalues to those is the referenced paper. This concludes the
- bicycle example.
+bicycle example.
