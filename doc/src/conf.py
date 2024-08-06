@@ -414,8 +414,8 @@ latex_elements = {
 \newunicodechar{𝑅}{\ifmmode 𝑅\else{\fontfamily{XITS}\selectfont 𝑅}\fi}%   (U+1D445)
 \newunicodechar{𝕀}{\ifmmode 𝕀\else{\fontfamily{XITS}\selectfont 𝕀}\fi}%   (U+1D540)
 \newunicodechar{𝕌}{\ifmmode 𝕌\else{\fontfamily{XITS}\selectfont 𝕌}\fi}%   (U+1D54C)
-\newunicodechar{𝟘}{\ifmmode 𝟘\else{\fontfamily{XITS}\selectfont 𝟘}\fi}%   (U+1D7D8)
-\newunicodechar{𝟙}{\ifmmode 𝟙\else{\fontfamily{XITS}\selectfont 𝟙}\fi}%   (U+1D7D9)
+\newunicodechar{𝟘}{\ifmmode 𝟘\else{\fontfamily{XITS}\fontseries{m}\selectfont 𝟘}\fi}%   (U+1D7D8)
+\newunicodechar{𝟙}{\ifmmode 𝟙\else{\fontfamily{XITS}\fontseries{m}\selectfont 𝟙}\fi}%   (U+1D7D9)
 %
 % Define version of \LaTeX that is usable in math mode
 \usepackage{letltxmacro}
