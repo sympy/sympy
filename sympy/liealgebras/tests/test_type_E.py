@@ -20,4 +20,3 @@ def test_type_E():
     assert posroots[8] == [1, 0, 0, 0, 1, 0, 0, 0]
     assert posroots[21] == [Rational(1,2),Rational(1,2),Rational(1,2),Rational(1,2),
                             Rational(1,2),Rational(-1,2),Rational(-1,2),Rational(1,2)]
-    
