@@ -261,17 +261,8 @@ here, due to different orientations of coordinate systems. ::
   ...       mwf: 3,
   ...       mwr: 2,
   ...       g: 9.81,
-  ...       q1: 0,
-  ...       q2: 0,
-  ...       q4: 0,
-  ...       q5: 0,
-  ...       u1: 0,
-  ...       u2: 0,
-  ...       u3: v/PaperRadRear,
-  ...       u4: 0,
-  ...       u5: 0,
-  ...       u6: v/PaperRadFront}
-  >>> kdd = KM.kindiffdict()
+  ... }
+  ...
   >>> print('Before Linearization of the \"Forcing\" Term')
   Before Linearization of the "Forcing" Term
 
@@ -306,29 +297,6 @@ run, which is not good when performing the doctests) ::
   >>> Amat, B, r = KM.linearize(A_and_B=True, op_point=eq_point, linear_solver='CRAMER')
   >>> Amat = msubs(Amat, val_dict)
 
-As mentioned above, the size of the linearized forcing terms is expanded to
-include both q's and u's, so the mass matrix must have this done as well.  This
-will likely be changed to be part of the linearized process, for future
-reference. ::
-
-  >>> MM_full = (KM._k_kqdot).row_join(zeros(4, 6)).col_join(
-  ...           (zeros(6, 4)).row_join(KM.mass_matrix))
-  >>> print('Before Substitution of Numerical Values')
-  Before Substitution of Numerical Values
-
-I think this is pretty self explanatory. It takes a really long time though.
-I've experimented with using evalf with substitution, this failed due to
-maximum recursion depth being exceeded; I also tried lambdifying this, and it
-is also not successful. (again commented out due to speed) ::
-
-  >>> MM_full = MM_full.subs(val_dict)
-  >>> #forcing_lin = forcing_lin.subs(val_dict)
-  >>> print('Before .evalf() call')
-  Before .evalf() call
-
-  >>> MM_full = MM_full.evalf()
-  >>> #forcing_lin = forcing_lin.evalf()
-
 Finally, we construct an "A" matrix for the form xdot = A x (x being the state
 vector, although in this case, the sizes are a little off). The following line
 extracts only the minimum entries required for eigenvalue analysis, which
@@ -336,7 +304,6 @@ correspond to rows and columns for lean, steer, lean rate, and steer rate.
 (this is all commented out due to being dependent on the above code, which is
 also commented out)::
 
-  >>> #Amat = MM_full.inv() * forcing_lin
   >>> A = Amat.extract([1,2,3,5],[1,2,3,5])
   >>> print(A)
   Matrix([[0, 0, 1, 0], [0, 0, 0, 1], [9.48977444677355, -0.891197738059089*v**2 - 0.571523173729245, -0.105522449805691*v, -0.330515398992311*v], [11.7194768719633, 30.9087533932407 - 1.97171508499972*v**2, 3.67680523332152*v, -3.08486552743311*v]])
