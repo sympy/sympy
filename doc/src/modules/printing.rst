@@ -392,7 +392,7 @@ Rust code printing
 
    .. autoattribute:: RustCodePrinter.printmethod
 
-.. autofunction:: sympy.printing.rust.rust_code
+.. autofunction:: sympy.printing.codeprinter.rust_code
 
 Aesara Code printing
 --------------------

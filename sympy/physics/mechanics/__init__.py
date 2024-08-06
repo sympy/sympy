@@ -40,7 +40,7 @@ __all__ = [
     'PathwayBase', 'LinearPathway', 'ObstacleSetPathway', 'WrappingPathway',
 
     'ActuatorBase', 'ForceActuator', 'LinearDamper', 'LinearSpring',
-    'TorqueActuator', 'DuffingSpring'
+    'TorqueActuator', 'DuffingSpring', 'CoulombKineticFriction',
 ]
 
 from sympy.physics import vector
@@ -87,4 +87,4 @@ from .pathway import (PathwayBase, LinearPathway, ObstacleSetPathway,
                       WrappingPathway)
 
 from .actuator import (ActuatorBase, ForceActuator, LinearDamper, LinearSpring,
-                       TorqueActuator, DuffingSpring)
+                       TorqueActuator, DuffingSpring, CoulombKineticFriction)

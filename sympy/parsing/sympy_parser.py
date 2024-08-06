@@ -683,9 +683,8 @@ def repeated_decimals(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
             if (not num and '.' in tokval and 'e' not in tokval.lower() and
                 'j' not in tokval.lower()):
                 num.append((toknum, tokval))
-            elif is_digit(tokval)and  len(num) == 2:
-                num.append((toknum, tokval))
-            elif is_digit(tokval) and len(num) == 3 and is_digit(num[-1][1]):
+            elif is_digit(tokval) and (len(num) == 2 or
+                    len(num) == 3 and is_digit(num[-1][1])):
                 num.append((toknum, tokval))
             else:
                 num = []

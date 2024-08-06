@@ -6,6 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import atan
+from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import cancel
 from sympy.polys.rootoftools import RootSum
@@ -324,6 +325,21 @@ def log_to_atan(f, g):
         return A + log_to_atan(s, t)
 
 
+def _get_real_roots(f, x):
+    """get real roots of f if possible"""
+    rs = roots(f, filter='R')
+
+    try:
+        num_roots = f.count_roots()
+    except DomainError:
+        return rs
+    else:
+        if len(rs) == num_roots:
+            return rs
+        else:
+            return None
+
+
 def log_to_real(h, q, x, t):
     r"""
     Convert complex logarithms to real functions.
@@ -371,9 +387,9 @@ def log_to_real(h, q, x, t):
 
     R = Poly(resultant(c, d, v), u)
 
-    R_u = roots(R, filter='R')
+    R_u = _get_real_roots(R, u)
 
-    if len(R_u) != R.count_roots():
+    if R_u is None:
         return None
 
     result = S.Zero
@@ -391,9 +407,9 @@ def log_to_real(h, q, x, t):
             # nothing to check
             d = S.Zero
 
-        R_v = roots(C, filter='R')
+        R_v = _get_real_roots(C, v)
 
-        if len(R_v) != C.count_roots():
+        if R_v is None:
             return None
 
         R_v_paired = [] # take one from each pair of conjugate roots
@@ -418,9 +434,9 @@ def log_to_real(h, q, x, t):
 
             result += r_u*log(AB) + r_v*log_to_atan(A, B)
 
-    R_q = roots(q, filter='R')
+    R_q = _get_real_roots(q, t)
 
-    if len(R_q) != q.count_roots():
+    if R_q is None:
         return None
 
     for r in R_q.keys():

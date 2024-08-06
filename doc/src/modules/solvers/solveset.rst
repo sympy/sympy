@@ -105,7 +105,7 @@ containers in mathematics such as:
 
 Also, the predefined set classes such as:
 
- * :class:`~.Naturals`, $\mathbb{N}
+ * :class:`~.Naturals`, $\mathbb{N}$
 
    Represents the natural numbers (or counting numbers), which are all
    positive integers starting from 1.
