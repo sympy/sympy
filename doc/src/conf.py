@@ -372,12 +372,24 @@ latex_elements = {
 \setmathfont{XITSMath-Regular.otf}[Scale=1.12,
     BoldFont=XITSMath-Bold.otf,
     NFSSFamily=XITS]
+\makeatletter
 \AtBeginDocument{%
   \SetMathAlphabet{\mathrm}{normal}{TU}{XITS}{m}{n}
   \SetMathAlphabet{\mathbf}{normal}{TU}{XITS}{b}{n}
   \SetMathAlphabet{\mathrm}{bold}{TU}{XITS}{b}{n}
   \SetMathAlphabet{\mathbf}{bold}{TU}{XITS}{b}{n}
+  \def\defaultscriptratio{.8}
+  \def\defaultscriptscriptratio{.6}
+  \DeclareMathSizes{9}{9}{7}{5}
+  \DeclareMathSizes{\@xpt}{\@xpt}{8}{6}
+  \DeclareMathSizes{\@xipt}{\@xipt}{9}{7}
+  \DeclareMathSizes{\@xiipt}{\@xiipt}{10}{8}
+  \DeclareMathSizes{\@xivpt}{\@xivpt}{\@xiipt}{10}
+  \DeclareMathSizes{\@xviipt}{\@xviipt}{\@xivpt}{\@xiipt}
+  \DeclareMathSizes{\@xxpt}{\@xxpt}{\@xviipt}{\@xivpt}
+  \DeclareMathSizes{\@xxvpt}{\@xxvpt}{\@xxpt}{\@xviipt}
 }
+\makeatother
 ''',
     'preamble':  r'''
 \usepackage{newunicodechar}
