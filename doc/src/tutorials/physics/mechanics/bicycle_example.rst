@@ -186,7 +186,7 @@ linearization to correctly work. ::
   ...           q_dependent=[q4], configuration_constraints=conlist_coord,
   ...           u_ind=[u2, u3, u5],
   ...           u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
-  ...           kd_eqs=kd)
+  ...           kd_eqs=kd, constraint_solver='CRAMER')
   >>> print('Before Forming Generalized Active and Inertia Forces, Fr and Fr*')
   Before Forming Generalized Active and Inertia Forces, Fr and Fr*
   >>> (fr, frstar) = KM.kanes_equations(BL, FL)
@@ -284,7 +284,27 @@ coordinates and speeds, but only as many columns as independent coordinates and
 speeds. (Note that below this is commented out, as it takes a few minutes to
 run, which is not good when performing the doctests) ::
 
-  >>> # forcing_lin = KM.linearize()[0].subs(sub_dict)
+  >>> eq_point = {
+  ...     u1.diff(): 0,
+  ...     u2.diff(): 0,
+  ...     u3.diff(): 0,
+  ...     u4.diff(): 0,
+  ...     u5.diff(): 0,
+  ...     u6.diff(): 0,
+  ...     q1: 0,
+  ...     q2: 0,
+  ...     q4: 0,
+  ...     q5: 0,
+  ...     u1: 0,
+  ...     u2: 0,
+  ...     u3: v/PaperRadRear,
+  ...     u4: 0,
+  ...     u5: 0,
+  ...     u6: v/PaperRadFront,
+  ... }
+  ...
+  >>> Amat, B, r = KM.linearize(A_and_B=True, op_point=eq_point, linear_solver='CRAMER')
+  >>> Amat = msubs(Amat, val_dict)
 
 As mentioned above, the size of the linearized forcing terms is expanded to
 include both q's and u's, so the mass matrix must have this done as well.  This
@@ -301,12 +321,13 @@ I've experimented with using evalf with substitution, this failed due to
 maximum recursion depth being exceeded; I also tried lambdifying this, and it
 is also not successful. (again commented out due to speed) ::
 
-  >>> # MM_full = MM_full.subs(val_dict)
-  >>> # forcing_lin = forcing_lin.subs(val_dict)
-  >>> # print('Before .evalf() call')
+  >>> MM_full = MM_full.subs(val_dict)
+  >>> #forcing_lin = forcing_lin.subs(val_dict)
+  >>> print('Before .evalf() call')
+  Before .evalf() call
 
-  >>> # MM_full = MM_full.evalf()
-  >>> # forcing_lin = forcing_lin.evalf()
+  >>> MM_full = MM_full.evalf()
+  >>> #forcing_lin = forcing_lin.evalf()
 
 Finally, we construct an "A" matrix for the form xdot = A x (x being the state
 vector, although in this case, the sizes are a little off). The following line
@@ -315,20 +336,31 @@ correspond to rows and columns for lean, steer, lean rate, and steer rate.
 (this is all commented out due to being dependent on the above code, which is
 also commented out)::
 
-  >>> # Amat = MM_full.inv() * forcing_lin
-  >>> # A = Amat.extract([1,2,4,6],[1,2,3,5])
-  >>> # print(A)
-  >>> # print('v = 1')
-  >>> # print(A.subs(v, 1).eigenvals())
-  >>> # print('v = 2')
-  >>> # print(A.subs(v, 2).eigenvals())
-  >>> # print('v = 3')
-  >>> # print(A.subs(v, 3).eigenvals())
-  >>> # print('v = 4')
-  >>> # print(A.subs(v, 4).eigenvals())
-  >>> # print('v = 5')
-  >>> # print(A.subs(v, 5).eigenvals())
+  >>> #Amat = MM_full.inv() * forcing_lin
+  >>> A = Amat.extract([1,2,3,5],[1,2,3,5])
+  >>> print(A)
+  Matrix([[0, 0, 1, 0], [0, 0, 0, 1], [9.48977444677355, -0.891197738059089*v**2 - 0.571523173729245, -0.105522449805691*v, -0.330515398992311*v], [11.7194768719633, 30.9087533932407 - 1.97171508499972*v**2, 3.67680523332152*v, -3.08486552743311*v]])
+  >>> print('v = 1')
+  v = 1
+  >>> print(A.subs(v, 1).eigenvals())
+  {-3.13423125066578 - 1.05503732448615e-65*I: 1, 3.52696170990069 - 0.807740275199311*I: 1, 3.52696170990069 + 0.807740275199311*I: 1, -7.11008014637441: 1}
+  >>> print('v = 2')
+  v = 2
+  >>> print(A.subs(v, 2).eigenvals())
+  {2.68234517512745 - 1.68066296590676*I: 1, 2.68234517512745 + 1.68066296590676*I: 1, -3.07158645641514: 1, -8.67387984831737: 1}
+  >>> print('v = 3')
+  v = 3
+  >>> print(A.subs(v, 3).eigenvals())
+  {1.70675605663973 - 2.31582447384324*I: 1, 1.70675605663973 + 2.31582447384324*I: 1, -2.63366137253665: 1, -10.3510146724592: 1}
+  >>> print('v = 4')
+  v = 4
+  >>> print(A.subs(v, 4).eigenvals())
+  {0.413253315211239 - 3.07910818603205*I: 1, 0.413253315211239 + 3.07910818603205*I: 1, -1.42944427361326 + 1.65070329233125e-64*I: 1, -12.1586142657644: 1}
+  >>> print('v = 5')
+  v = 5
+  >>> print(A.subs(v, 5).eigenvals())
+  {-0.775341882195845 - 4.46486771378823*I: 1, -0.322866429004087 + 3.32140410564766e-64*I: 1, -0.775341882195845 + 4.46486771378823*I: 1, -14.0783896927982: 1}
 
 Upon running the above code yourself, enabling the commented out lines, compare
 the computed eigenvalues to those is the referenced paper. This concludes the
-bicycle example.
+ bicycle example.
