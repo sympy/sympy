@@ -10,9 +10,6 @@ same linear equations of motion using :mod:`sympy.physics.mechanics`. ::
 
   >>> import sympy as sm
   >>> import sympy.physics.mechanics as me
-  >>> print('Calculation of Linearized Bicycle \"A\" Matrix, '
-  ...       'with States: Roll, Steer, Roll Rate, Steer Rate')
-  Calculation of Linearized Bicycle "A" Matrix, with States: Roll, Steer, Roll Rate, Steer Rate
   >>> me.mechanics_printing(pretty_print=False)
 
 Declaration of Coordinates & Speeds
@@ -174,8 +171,6 @@ Declaration of the RigidBody containers. ::
   >>> BodyWR = me.RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
   >>> BodyWF = me.RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
   >>> bodies = [BodyFrame, BodyFork, BodyWR, BodyWF]
-  >>> print('Before Forming the List of Nonholonomic Constraints.')
-  Before Forming the List of Nonholonomic Constraints.
 
 Gravitational Loads
 ===================
@@ -210,11 +205,7 @@ linearization to correctly work. ::
   ...     velocity_constraints=conlist_speed,
   ...     kd_eqs=kd,
   ...     constraint_solver='CRAMER')
-  >>> print('Before Forming Generalized Active and Inertia Forces, Fr and Fr*')
-  Before Forming Generalized Active and Inertia Forces, Fr and Fr*
   >>> fr, frstar = kane.kanes_equations(bodies, loads=forces)
-  >>> print('Base Equations of Motion Computed')
-  Base Equations of Motion Computed
 
 Linearized Equations of Motion
 ==============================
@@ -289,8 +280,6 @@ here, due to different orientations of coordinate systems. ::
   ...       g: 9.81,
   ... }
   ...
-  >>> print('Before Linearization of the \"Forcing\" Term')
-  Before Linearization of the "Forcing" Term
 
 Linearize the equations of motion::
 
