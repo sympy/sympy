@@ -67,10 +67,7 @@ class RootSystem(Atom):
 
         """
         n = self.cartan_type.rank()
-        roots = {}
-        for i in range(1, n+1):
-            root = self.cartan_type.simple_root(i)
-            roots[i] = root
+        roots = {i: self.cartan_type.simple_root(i) for i in range(1, n+1)}
         return roots
 
 

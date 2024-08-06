@@ -30,3 +30,11 @@ Cable
    :titlesonly:
 
    cable.rst
+
+Arch
+====
+
+.. toctree::
+   :titlesonly:
+
+   arches.rst

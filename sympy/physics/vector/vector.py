@@ -275,11 +275,16 @@ class Vector(Printable, EvalfMixin):
                 elif M[i] == 1:
                     terms.append(prettyForm(N.pretty_vecs[i]))
                 elif M[i] == -1:
-                    terms.append(prettyForm.NEG + prettyForm(N.pretty_vecs[i]))
+                    terms.append(prettyForm("-1") * prettyForm(N.pretty_vecs[i]))
                 else:
                     terms.append(juxtapose(M[i], N.pretty_vecs[i]))
 
-        return prettyForm.__add__(*terms)
+        if terms:
+            pretty_result = prettyForm.__add__(*terms)
+        else:
+            pretty_result = prettyForm("0")
+
+        return pretty_result
 
     def __rsub__(self, other):
         return (-1 * self) + other
@@ -389,8 +394,8 @@ class Vector(Printable, EvalfMixin):
             tempz = v[1].z
             tempm = ([[tempx, tempy, tempz],
                       [self.dot(tempx), self.dot(tempy), self.dot(tempz)],
-                      [Vector([ar[i]]).dot(tempx), Vector([ar[i]]).dot(tempy),
-                       Vector([ar[i]]).dot(tempz)]])
+                      [Vector([v]).dot(tempx), Vector([v]).dot(tempy),
+                       Vector([v]).dot(tempz)]])
             outlist += _det(tempm).args
         return Vector(outlist)
 

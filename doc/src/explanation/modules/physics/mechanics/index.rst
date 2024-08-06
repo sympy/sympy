@@ -1,24 +1,20 @@
-.. _classical_mechanics:
+.. _classical_mechanics_explanations:
 
 ===================
 Classical Mechanics
 ===================
 
-.. topic:: Abstract
-
-   In this documentation many components of the physics/mechanics module will
-   be discussed. :mod:`sympy.physics.mechanics` has been written to allow for creation of
-   symbolic equations of motion for complicated multibody systems.
-
-.. module:: sympy.physics.mechanics
+In this documentation many components of the physics/mechanics will be discussed.
+:obj:`sympy.physics.mechanics` has been written to allow for creation of
+symbolic equations of motion for complicated multibody systems.
 
 Vector
 ======
 
-This module derives the vector-related abilities and related functionalities
-from :mod:`sympy.physics.vector`. Please have a look at the documentation of
-:mod:`sympy.physics.vector` and its necessary API to understand the vector capabilities
-of :mod:`sympy.physics.mechanics`.
+This explanation derives the vector-related abilities and related functionalities
+from :obj:`sympy.physics.vector`. Please have a look at the documentation of
+:obj:`sympy.physics.vector` and its necessary explanation to understand the vector capabilities
+of :obj:`sympy.physics.mechanics`.
 
 Mechanics
 =========
@@ -28,9 +24,9 @@ In physics, mechanics describes conditions of rest (statics) or motion
 idealized representation of a system is described. Next, we use physical laws
 to generate equations that define the system's behavior. Then, we solve these
 equations, sometimes analytically but usually numerically. Finally, we extract
-information from these equations and solutions. The current scope of the module
+information from these equations and solutions. The current scope of the explanation
 is multi-body dynamics: the motion of systems of multiple particles and/or
-rigid bodies. For example, this module could be used to understand the motion
+rigid bodies. For example, this explanation could be used to understand the motion
 of a double pendulum, planets, robotic manipulators, bicycles, and any
 other system of rigid bodies that may fascinate us.
 
@@ -45,7 +41,7 @@ equations.
 The term "equations of motion" is used to describe the application of Newton's
 second law to multi-body systems. The form of the equations of motion depends
 on the method used to generate them. This package implements two of these
-methods: Kane's method and Lagrange's method. This module facilitates the
+methods: Kane's method and Lagrange's method. This explanation facilitates the
 formulation of equations of motion, which can then be solved (integrated) using
 generic ordinary differential equation (ODE) solvers.
 
@@ -60,22 +56,22 @@ dynamics, has the following steps:
 5.  organizing the resulting equations so that they can be integrated to obtain
     the system's trajectory through time.
 
-Together with the rest of SymPy, this module performs steps 4 and 5,
-provided that the user can perform 1 through 3 for the module. That is to say,
+Together with the rest of SymPy, this explanation performs steps 4 and 5,
+provided that the user can perform 1 through 3 for the explanation. That is to say,
 the user must provide a complete representation of the free
 body diagrams that themselves represent the system, with which this code can
 provide equations of motion in a form amenable to numerical integration. Step
 5 above amounts to arduous algebra for even fairly simple multi-body systems.
 Thus, it is desirable to use a symbolic math package, such as SymPy, to
-perform this step. It is for this reason that this module is a part of SymPy.
-Step 4 amounts to this specific module, sympy.physics.mechanics.
+perform this step. It is for this reason that this explanation is a part of SymPy.
+Step 4 amounts to this specific explanation, sympy.physics.mechanics.
 
 
-Guide to Mechanics
-==================
+Guide to Classical Mechanics
+============================
 
 .. toctree::
-   :titlesonly:
+   :maxdepth: 2
 
    masses.rst
    kane.rst
@@ -83,9 +79,7 @@ Guide to Mechanics
    joints.rst
    symsystem.rst
    linearize.rst
-   examples.rst
-   advanced.rst
    reference.rst
    autolev_parser.rst
    sympy_mechanics_for_autolev_users.rst
-   api/index.rst
+   advanced.rst

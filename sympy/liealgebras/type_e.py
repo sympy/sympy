@@ -106,8 +106,7 @@ class TypeE(Standard_Cartan):
                     root[i] = 1
                     posroots[k] = root
 
-            root = [Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2),
-                    Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
+            root = [Rational(1, 2)]*5 + [Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
             for a in range(0, 2):
                 for b in range(0, 2):
                     for c in range(0, 2):
@@ -125,7 +124,7 @@ class TypeE(Standard_Cartan):
                                         root[3] = Rational(-1, 2)
                                     if e == 1:
                                         root[4] = Rational(-1, 2)
-                                    posroots[k] = root
+                                    posroots[k] = root[:]
 
             return posroots
         if n == 7:
@@ -143,8 +142,7 @@ class TypeE(Standard_Cartan):
 
             k += 1
             posroots[k] = [0, 0, 0, 0, 0, 1, 1, 0]
-            root = [Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2),
-                    Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
+            root = [Rational(1, 2)]*5 + [Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
             for a in range(0, 2):
                 for b in range(0, 2):
                     for c in range(0, 2):
@@ -165,7 +163,7 @@ class TypeE(Standard_Cartan):
                                             root[4] = Rational(-1, 2)
                                         if f == 1:
                                             root[5] = Rational(1, 2)
-                                        posroots[k] = root
+                                        posroots[k] = root[:]
 
             return posroots
         if n == 8:
@@ -181,8 +179,7 @@ class TypeE(Standard_Cartan):
                     root[i] = 1
                     posroots[k] = root
 
-            root = [Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2),
-                    Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
+            root = [Rational(1, 2)]*5 + [Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
             for a in range(0, 2):
                 for b in range(0, 2):
                     for c in range(0, 2):
@@ -206,7 +203,7 @@ class TypeE(Standard_Cartan):
                                                 root[5] = Rational(1, 2)
                                             if g == 1:
                                                 root[6] = Rational(1, 2)
-                                            posroots[k] = root
+                                            posroots[k] = root[:]
 
             return posroots
 
@@ -251,11 +248,9 @@ class TypeE(Standard_Cartan):
 
         n = self.n
         m = 2*eye(n)
-        i = 3
-        while i < n-1:
+        for i in range(3, n - 1):
             m[i, i+1] = -1
             m[i, i-1] = -1
-            i += 1
         m[0, 2] = m[2, 0] = -1
         m[1, 3] = m[3, 1] = -1
         m[2, 3] = -1
