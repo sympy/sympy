@@ -365,11 +365,11 @@ latex_engine = 'xelatex'
 latex_use_xindy = False
 latex_elements = {
     'fontpkg': r'''
-\setmainfont{DejaVu Serif}
-\setsansfont{DejaVu Sans}
-\setmonofont{DejaVu Sans Mono}
+\setmainfont{DejaVu Serif}[Scale=0.97]
+\setsansfont{DejaVu Sans}[Scale=0.97]
+\setmonofont{DejaVu Sans Mono}[Scale=0.94]
 \usepackage{unicode-math}
-\setmathfont{XITSMath-Regular.otf}[Scale=1.2,
+\setmathfont{XITSMath-Regular.otf}[Scale=1.12,
     BoldFont=XITSMath-Bold.otf,
     NFSSFamily=XITS]
 \AtBeginDocument{%
