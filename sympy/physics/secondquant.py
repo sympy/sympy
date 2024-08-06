@@ -232,8 +232,8 @@ class AntiSymmetricTensor(TensorSymbol):
     def _latex(self, printer):
         return "{%s^{%s}_{%s}}" % (
             self.symbol,
-            "".join([ i.name for i in self.args[1]]),
-            "".join([ i.name for i in self.args[2]])
+            "".join([ printer._print(i) for i in self.args[1]]),
+            "".join([ printer._print(i) for i in self.args[2]])
         )
 
     @property
@@ -432,7 +432,7 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
         if self.state is S.Zero:
             return "b_{0}"
         else:
-            return "b_{%s}" % self.state.name
+            return "b_{%s}" % printer._print(self.state)
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -473,7 +473,7 @@ class CreateBoson(BosonicOperator, Creator):
         if self.state is S.Zero:
             return "{b^\\dagger_{0}}"
         else:
-            return "{b^\\dagger_{%s}}" % self.state.name
+            return "{b^\\dagger_{%s}}" % printer._print(self.state)
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -791,7 +791,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         if self.state is S.Zero:
             return "a_{0}"
         else:
-            return "a_{%s}" % self.state.name
+            return "a_{%s}" % printer._print(self.state)
 
 
 class CreateFermion(FermionicOperator, Creator):
@@ -940,7 +940,7 @@ class CreateFermion(FermionicOperator, Creator):
         if self.state is S.Zero:
             return "{a^\\dagger_{0}}"
         else:
-            return "{a^\\dagger_{%s}}" % self.state.name
+            return "{a^\\dagger_{%s}}" % printer._print(self.state)
 
 Fd = CreateFermion
 F = AnnihilateFermion
@@ -3018,7 +3018,7 @@ class PermutationOperator(Expr):
             return expr
 
     def _latex(self, printer):
-        return "P(%s%s)" % self.args
+        return "P(%s%s)" % tuple(printer._print(i) for i in self.args)
 
 
 def simplify_index_permutations(expr, permutation_operators):

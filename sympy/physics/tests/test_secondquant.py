@@ -39,6 +39,8 @@ def test_PermutationOperator():
         P(p, q)*P(r, s)*f(p)*g(q)*h(r)*i(s))
     assert latex(P(p, q)) == 'P(pq)'
 
+    p1, p2 = symbols('p1,p2')
+    assert latex(P(p1,p2) == 'P(p_{1}p_{2})')
 
 def test_index_permutations_with_dummies():
     a, b, c, d = symbols('a b c d')
@@ -98,9 +100,10 @@ def test_operator():
 
 
 def test_create():
-    i, j, n, m = symbols('i,j,n,m')
+    i, j, n, m, p1 = symbols('i,j,n,m,p1')
     o = Bd(i)
     assert latex(o) == "{b^\\dagger_{i}}"
+    assert latex(Bd(p1)) == "{b^\\dagger_{p_{1}}}"
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
     assert o.atoms(Symbol) == {j}
@@ -111,9 +114,10 @@ def test_create():
 
 
 def test_annihilate():
-    i, j, n, m = symbols('i,j,n,m')
+    i, j, n, m, p1 = symbols('i,j,n,m,p1')
     o = B(i)
     assert latex(o) == "b_{i}"
+    assert latex(B(p1)) == "b_{p_{1}}"
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
     assert o.atoms(Symbol) == {j}
@@ -287,6 +291,7 @@ def test_create_f():
     i, j, k, l = symbols('i,j,k,l', below_fermi=True)
     a, b, c, d = symbols('a,b,c,d', above_fermi=True)
     p, q, r, s = symbols('p,q,r,s')
+    p1 = symbols("p1")
 
     assert Fd(i).apply_operator(FKet([i, j, k], 4)) == FKet([j, k], 4)
     assert Fd(a).apply_operator(FKet([i, b, k], 4)) == FKet([a, i, b, k], 4)
@@ -295,6 +300,7 @@ def test_create_f():
     assert repr(Fd(p)) == 'CreateFermion(p)'
     assert srepr(Fd(p)) == "CreateFermion(Symbol('p'))"
     assert latex(Fd(p)) == r'{a^\dagger_{p}}'
+    assert latex(Fd(p1)) == r'{a^\dagger_{p_{1}}}'
 
 
 def test_annihilate_f():
@@ -312,6 +318,8 @@ def test_annihilate_f():
     i, j, k, l = symbols('i,j,k,l', below_fermi=True)
     a, b, c, d = symbols('a,b,c,d', above_fermi=True)
     p, q, r, s = symbols('p,q,r,s')
+    p1 = symbols('p1')
+
     assert F(i).apply_operator(FKet([i, j, k], 4)) == 0
     assert F(a).apply_operator(FKet([i, b, k], 4)) == 0
     assert F(l).apply_operator(FKet([i, j, k], 3)) == 0
@@ -320,6 +328,7 @@ def test_annihilate_f():
     assert repr(F(p)) == 'AnnihilateFermion(p)'
     assert srepr(F(p)) == "AnnihilateFermion(Symbol('p'))"
     assert latex(F(p)) == 'a_{p}'
+    assert latex(F(p1)) == 'a_{p_{1}}'
 
 
 def test_create_b():
@@ -542,6 +551,12 @@ def test_Tensors():
 
     assert AT('t', (a, a), (i, j)).subs(a, b) == AT('t', (b, b), (i, j))
     assert AT('t', (a, i), (a, j)).subs(a, b) == AT('t', (b, i), (b, j))
+
+    a1, a2, a3, a4 = symbols('alpha1:5')
+    u_alpha1234 = AntiSymmetricTensor("u", (a1, a2), (a3, a4))
+
+    assert latex(u_alpha1234) == r'{u^{\alpha_{1}\alpha_{2}}_{\alpha_{3}\alpha_{4}}}'
+    assert str(u_alpha1234) == 'u((alpha1, alpha2),(alpha3, alpha4))'
 
 
 def test_fully_contracted():
