@@ -72,10 +72,16 @@ Set up reference frames for the system
   >>> TempFork = Fork.orientnew('TempFork', 'Axis', [-htangle, Fork.y])
   >>> WF = me.ReferenceFrame('WF')
 
-This block of code is forming the positions of the relevant points rear wheel
-contact -> rear wheel's center of mass -> frame's center of mass + frame/fork
-connection -> fork's center of mass + front wheel's center of mass -> front
-wheel contact point. ::
+Define relevant points for the system
+-------------------------------------
+
+``WR_cont`` - rear wheel contact
+``WR_mc``- rear wheel's center of mass
+``Steer`` - frame/fork connection ??? this is unclear
+``Frame_mc`` - frame's center of mass
+``Fork_mc`` - fork's center of mass
+``WF_mc`` - front wheel's center of mass
+``WF_cont`` - front wheel contact point
 
   >>> WR_cont = me.Point('WR_cont')
   >>> WR_mc = WR_cont.locatenew('WR_mc', WRrad*R.z)
