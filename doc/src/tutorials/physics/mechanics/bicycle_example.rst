@@ -327,8 +327,12 @@ columns for lean, steer, lean rate, and steer rate.
 ::
 
   >>> A = Amat.extract([1, 2, 3, 5], [1, 2, 3, 5])
-  >>> print(A)
-  Matrix([[0, 0, 1, 0], [0, 0, 0, 1], [9.48977444677355, -0.891197738059089*v**2 - 0.571523173729245, -0.105522449805691*v, -0.330515398992311*v], [11.7194768719633, 30.9087533932407 - 1.97171508499972*v**2, 3.67680523332152*v, -3.08486552743311*v]])
+  >>> A
+  Matrix([
+  [               0,                                           0,                    1,                    0],
+  [               0,                                           0,                    0,                    1],
+  [9.48977444677355, -0.891197738059089*v**2 - 0.571523173729245, -0.105522449805691*v, -0.330515398992311*v],
+  [11.7194768719633,    30.9087533932407 - 1.97171508499972*v**2,   3.67680523332152*v,  -3.08486552743311*v]])
   >>> print('v = 1')
   v = 1
   >>> print(A.subs(v, 1).eigenvals())
@@ -350,5 +354,14 @@ columns for lean, steer, lean rate, and steer rate.
   >>> print(A.subs(v, 5).eigenvals())
   {-0.775341882195845 - 4.46486771378823*I: 1, -0.322866429004087 + 3.32140410564766e-64*I: 1, -0.775341882195845 + 4.46486771378823*I: 1, -14.0783896927982: 1}
 
-Compare the computed eigenvalues to those is the referenced paper. They match.
-This concludes the bicycle example.
+The eigenvalues shown above match those in Table 2 on pg. 1971 of
+[Meijaard2007]_. This concludes the bicycle example.
+
+References
+==========
+
+.. [Meijaard2007] Meijaard, J. P., Papadopoulos, J. M., Ruina, A., & Schwab, A.
+   L. (2007). Linearized dynamics equations for the balance and steer of a
+   bicycle: A benchmark and review. Proceedings of the Royal Society A:
+   Mathematical, Physical and Engineering Sciences, 463(2084), 1955–1982.
+   https://doi.org/10.1098/rspa.2007.1857
