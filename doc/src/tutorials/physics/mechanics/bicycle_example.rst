@@ -77,7 +77,7 @@ Define relevant points for the system
 
 ``WR_cont`` - rear wheel contact
 ``WR_mc``- rear wheel's center of mass
-``Steer`` - frame/fork connection ??? this is unclear
+``Steer`` - frame/fork connection
 ``Frame_mc`` - frame's center of mass
 ``Fork_mc`` - fork's center of mass
 ``WF_mc`` - front wheel's center of mass
