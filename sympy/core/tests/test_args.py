@@ -5156,6 +5156,11 @@ def test_sympy__codegen__cfunctions__isnan():
     assert _test_args(isnan(x))
 
 
+def test_sympy__codegen__cfunctions__isinf():
+    from sympy.codegen.cfunctions import isinf
+    assert _test_args(isinf(x))
+
+
 def test_sympy__codegen__fnodes__FFunction():
     from sympy.codegen.fnodes import FFunction
     assert _test_args(FFunction('f'))
@@ -5212,6 +5217,22 @@ def test_sympy__codegen__matrix_nodes__MatrixSolve():
     A = MatrixSymbol('A', 3, 3)
     v = MatrixSymbol('x', 3, 1)
     assert _test_args(MatrixSolve(A, v))
+
+
+def test_sympy__printing__rust__TypeCast():
+    from sympy.printing.rust import TypeCast
+    from sympy.codegen.ast import real
+    assert _test_args(TypeCast(x, real))
+
+
+def test_sympy__printing__rust__float_floor():
+    from sympy.printing.rust import float_floor
+    assert _test_args(float_floor(x))
+
+
+def test_sympy__printing__rust__float_ceiling():
+    from sympy.printing.rust import float_ceiling
+    assert _test_args(float_ceiling(x))
 
 
 def test_sympy__vector__coordsysrect__CoordSys3D():
