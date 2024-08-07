@@ -5123,6 +5123,19 @@ def test_sympy__codegen__ast__Assignment():
     assert _test_args(Assignment(x, y))
 
 
+def test_sympy__codegen__ast__IndexedAssignment():
+    from sympy.codegen.ast import IndexedAssignment
+    from sympy.tensor.indexed import IndexedBase, Idx
+    A = IndexedBase('A')
+    i = Idx('i',(1, 4))
+    #Test argument invariance after normalisation
+    for assignment in [(x, A[i]*A[i])]:
+        for tensor in [True, False]:
+            for explicit in [True, False]:
+                assert _test_args(IndexedAssignment(assignment[0],
+                    assignment[1], tensor, explicit))
+
+
 def test_sympy__codegen__cfunctions__expm1():
     from sympy.codegen.cfunctions import expm1
     assert _test_args(expm1(x))
