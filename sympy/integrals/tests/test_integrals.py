@@ -2139,3 +2139,7 @@ def test_old_issues():
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3
+
+def test_issue_26523():
+    Int = Integral((1 - t**z) / (1 - t), (t, 0, 1))
+    assert Int.doit() == polygamma(0, z + 1) + EulerGamma

@@ -105,7 +105,7 @@ known_functions = {
     "airyaiprime": [(lambda x: True, "AiryAiPrime")],
     "airybiprime": [(lambda x: True, "AiryBiPrime")],
     "polylog": [(lambda *x: True, "PolyLog")],
-    "lerchphi": [(lambda *x: True, "LerchPhi")],
+    "lerchphi": [(lambda *x: True, "HurwitzLerchPhi")],
     "gcd": [(lambda *x: True, "GCD")],
     "lcm": [(lambda *x: True, "LCM")],
     "jn": [(lambda *x: True, "SphericalBesselJ")],
