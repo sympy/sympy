@@ -4175,6 +4175,11 @@ def test_sympy__physics__quantum__sho1d__SHOBra():
     assert _test_args(SHOBra(0))
 
 
+def test_sympy__physics__quantum__mappinggate__MappingGate():
+    from sympy.physics.quantum.mappinggate import MappingGate
+    assert _test_args(MappingGate('00','11'))
+
+
 def test_sympy__physics__secondquant__AnnihilateBoson():
     from sympy.physics.secondquant import AnnihilateBoson
     assert _test_args(AnnihilateBoson(0))
