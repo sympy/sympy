@@ -1,7 +1,7 @@
 """Tools for manipulation of rational expressions. """
 
 
-from sympy.core import Basic, Add, sympify
+from sympy.core import Basic, Add, sympify, symbols, nan, zoo
 from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
 from sympy.utilities.iterables import iterable
@@ -83,3 +83,68 @@ def together(expr, deep=False, fraction=True):
         return expr
 
     return _together(sympify(expr))
+
+
+def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
+    """
+    Build a rational function from a finite set of inputs in vector u
+    and their function values in vector v (both vectors must be of equal
+    lengths).
+
+    This algorithm might encounter division by zero
+    when values are equally spaced. For such cases, a better algorithm is
+    sympy.polys.polyfuncs.rational_interpolate.
+
+    Furthermore, the simplest solution is not always returned (see the last
+    example below).
+
+    An arbitrary symbol can optionally be provided as var
+    (default being 'x').
+
+    At each step of the algorithm, some simplification is done, which can
+    optionally be prevented by setting simplify as False.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.rationaltools import thiele_interpolate as thiele
+
+    >>> thiele([1, 2, 5, 6], [10, 12, 11, 13])
+    (9*x**2 + 29*x - 238)/(8*x - 28)
+
+    >>> from sympy import S
+    >>> thiele([1, 2, 3, 4], [S.One, S.One/2, S.One/3, S.One/4])
+    1/x
+
+    >>> thiele([1, 2, 3, 4], [S.One, S.One/4, S.One/9, S.One/16])
+    (x**2 - 10*x + 35)/(50*x - 24)
+
+    See Also
+    ========
+
+    sympy.polys.polyfuncs.rational_interpolate : another algorithm
+
+    """
+    n = len(u)
+    assert len(v) == n
+    u = sympify(u)
+    v = sympify(v)
+    rho = [v, [(u[i] - u[i + 1])/(v[i] - v[i + 1]) for i in range(n - 1)]]
+    for i in range(n - 2):
+        r = []
+        for j in range(n - i - 2):
+            r.append((u[j] - u[j + i + 2])/(rho[-1][j] - rho[-1][j + 1]) + rho[-2][j + 1])
+        rho.append(r)
+    a = 0
+    for i in range(n - 1, 1, -1):
+        a = (var - u[i - 1]) / (rho[i][0] - rho[i - 2][0] + a)
+        if simplify:
+            a = a.cancel()
+        if a.has(zoo, nan):
+            raise ZeroDivisionError("division by zero")
+    a = v[0] + (var - u[0]) / (rho[1][0] + a)
+    if simplify:
+        a = a.cancel()
+    if a.has(zoo, nan):
+        raise ZeroDivisionError("division by zero")
+    return a
