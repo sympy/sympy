@@ -267,7 +267,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             Printable._repr_svg_ = Printable._repr_disabled
 
         png_formatter = ip.display_formatter.formatters['image/png']
-        if use_latex in (True, 'png'):
+        if use_latex == 'png':
             debug("init_printing: using png formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_png)

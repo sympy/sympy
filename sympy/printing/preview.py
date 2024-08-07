@@ -366,6 +366,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             cmd.extend(commandend[cmd_variant])
 
             try:
+                debug("preview(): executing command %r" % cmd)
                 _check_output_no_window(cmd, cwd=workdir, stderr=STDOUT)
             except CalledProcessError as e:
                 raise RuntimeError(
