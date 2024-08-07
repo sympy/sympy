@@ -4,9 +4,9 @@
 API Reference
 =============
 
-This section contains a summary of SymPy modules, that is to say
-functions and methods. All functions and objects implemented in the ``sympy``
-core subpackage are documented below.
+This section contains a summary of SymPy modules, functions, classes, and
+methods. All functions and objects implemented in the ``sympy`` core
+subpackage are documented below.
 
 ..  rst-class:: column
 

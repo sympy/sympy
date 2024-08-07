@@ -1,4 +1,4 @@
-from sympy.physics.quantum.qasm import Qasm, prod, flip_index, trim,\
+from sympy.physics.quantum.qasm import Qasm, flip_index, trim,\
      get_index, nonblank, fullsplit, fixcommand, stripquotes, read_qasm
 from sympy.physics.quantum.gate import X, Z, H, S, T
 from sympy.physics.quantum.gate import CNOT, SWAP, CPHASE, CGate, CGateS
@@ -51,10 +51,6 @@ def test_qasm_2q():
 def test_qasm_3q():
     q = Qasm('qubit q0', 'qubit q1', 'qubit q2', 'toffoli q2,q1,q0')
     assert q.get_circuit() == CGateS((0,1),X(2))
-
-def test_qasm_prod():
-    assert prod([1, 2, 3]) == 6
-    assert prod([H(0), X(1)])== H(0)*X(1)
 
 def test_qasm_flip_index():
     assert flip_index(0, 2) == 1

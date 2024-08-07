@@ -1,11 +1,18 @@
+from sympy.core.function import Lambda
 from sympy.core.numbers import (E, I, Rational, oo, pi)
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.complexes import (Abs, re)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import frac
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, cot, csc, sec, sin, tan)
+from sympy.functions.elementary.trigonometric import (
+    cos, cot, csc, sec, sin, tan, asin, acos, atan, acot, asec, acsc)
+from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
+    sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
+from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.error_functions import expint
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.simplify.simplify import simplify
@@ -13,13 +20,14 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
                                  periodicity, lcim, is_convex,
                                  stationary_points, minimum, maximum)
 from sympy.sets.sets import (Interval, FiniteSet, Complement, Union)
-from sympy.testing.pytest import raises, _both_exp_pow
-from sympy.abc import x
+from sympy.sets.fancysets import ImageSet
+from sympy.sets.conditionset import ConditionSet
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow, slow
+from sympy.abc import x, y
 
 a = Symbol('a', real=True)
 
 def test_function_range():
-    x, y, a, b = symbols('x y a b')
     assert function_range(sin(x), x, Interval(-pi/2, pi/2)
         ) == Interval(-1, 1)
     assert function_range(sin(x), x, Interval(0, pi)
@@ -58,12 +66,18 @@ def test_function_range():
         sin(x)/2, x, S.Naturals))
 
 
+@slow
+def test_function_range1():
+    assert function_range(tan(x)**2 + tan(3*x)**2 + 1, x, S.Reals) == Interval(1,oo)
+
+
 def test_continuous_domain():
-    x = Symbol('x')
     assert continuous_domain(sin(x), x, Interval(0, 2*pi)) == Interval(0, 2*pi)
     assert continuous_domain(tan(x), x, Interval(0, 2*pi)) == \
         Union(Interval(0, pi/2, False, True), Interval(pi/2, pi*Rational(3, 2), True, True),
               Interval(pi*Rational(3, 2), 2*pi, True, False))
+    assert continuous_domain(cot(x), x, Interval(0, 2*pi)) == Union(
+        Interval.open(0, pi), Interval.open(pi, 2*pi))
     assert continuous_domain((x - 1)/((x - 1)**2), x, S.Reals) == \
         Union(Interval(-oo, 1, True, True), Interval(1, oo, True, True))
     assert continuous_domain(log(x) + log(4*x - 1), x, S.Reals) == \
@@ -73,11 +87,66 @@ def test_continuous_domain():
         Union(Interval.open(-oo, 0), Interval.open(0, oo))
     assert continuous_domain(1/(x**2 - 4) + 2, x, S.Reals) == \
         Union(Interval.open(-oo, -2), Interval.open(-2, 2), Interval.open(2, oo))
+    assert continuous_domain((x+1)**pi, x, S.Reals) == Interval(-1, oo)
+    assert continuous_domain((x+1)**(pi/2), x, S.Reals) == Interval(-1, oo)
+    assert continuous_domain(x**x, x, S.Reals) == Interval(0, oo)
+    assert continuous_domain((x+1)**log(x**2), x, S.Reals) == Union(
+        Interval.Ropen(-1, 0), Interval.open(0, oo))
     domain = continuous_domain(log(tan(x)**2 + 1), x, S.Reals)
     assert not domain.contains(3*pi/2)
     assert domain.contains(5)
     d = Symbol('d', even=True, zero=False)
     assert continuous_domain(x**(1/d), x, S.Reals) == Interval(0, oo)
+    n = Dummy('n')
+    assert continuous_domain(1/sin(x), x, S.Reals).dummy_eq(Complement(
+        S.Reals, Union(ImageSet(Lambda(n, 2*n*pi + pi), S.Integers),
+                       ImageSet(Lambda(n, 2*n*pi), S.Integers))))
+    assert continuous_domain(sin(x) + cos(x), x, S.Reals) == S.Reals
+    assert continuous_domain(asin(x), x, S.Reals) == Interval(-1, 1) # issue #21786
+    assert continuous_domain(1/acos(log(x)), x, S.Reals) == Interval.Ropen(exp(-1), E)
+    assert continuous_domain(sinh(x)+cosh(x), x, S.Reals) == S.Reals
+    assert continuous_domain(tanh(x)+sech(x), x, S.Reals) == S.Reals
+    assert continuous_domain(atan(x)+asinh(x), x, S.Reals) == S.Reals
+    assert continuous_domain(acosh(x), x, S.Reals) == Interval(1, oo)
+    assert continuous_domain(atanh(x), x, S.Reals) == Interval.open(-1, 1)
+    assert continuous_domain(atanh(x)+acosh(x), x, S.Reals) == S.EmptySet
+    assert continuous_domain(asech(x), x, S.Reals) == Interval.Lopen(0, 1)
+    assert continuous_domain(acoth(x), x, S.Reals) == Union(
+        Interval.open(-oo, -1), Interval.open(1, oo))
+    assert continuous_domain(asec(x), x, S.Reals) == Union(
+        Interval(-oo, -1), Interval(1, oo))
+    assert continuous_domain(acsc(x), x, S.Reals) == Union(
+        Interval(-oo, -1), Interval(1, oo))
+    for f in (coth, acsch, csch):
+        assert continuous_domain(f(x), x, S.Reals) == Union(
+            Interval.open(-oo, 0), Interval.open(0, oo))
+    assert continuous_domain(acot(x), x, S.Reals).contains(0) == False
+    assert continuous_domain(1/(exp(x) - x), x, S.Reals) == Complement(
+        S.Reals, ConditionSet(x, Eq(-x + exp(x), 0), S.Reals))
+    assert continuous_domain(frac(x**2), x, Interval(-2,-1)) == Union(
+        Interval.open(-2, -sqrt(3)), Interval.open(-sqrt(2), -1),
+        Interval.open(-sqrt(3), -sqrt(2)))
+    assert continuous_domain(frac(x), x, S.Reals) == Complement(
+        S.Reals, S.Integers)
+    raises(NotImplementedError, lambda : continuous_domain(
+        1/(x**2+1), x, S.Complexes))
+    raises(NotImplementedError, lambda : continuous_domain(
+        gamma(x), x, Interval(-5,0)))
+    assert continuous_domain(x + gamma(pi), x, S.Reals) == S.Reals
+
+
+@XFAIL
+def test_continuous_domain_acot():
+    acot_cont = Piecewise((pi+acot(x), x<0), (acot(x), True))
+    assert continuous_domain(acot_cont, x, S.Reals) == S.Reals
+
+@XFAIL
+def test_continuous_domain_gamma():
+    assert continuous_domain(gamma(x), x, S.Reals).contains(-1) == False
+
+@XFAIL
+def test_continuous_domain_neg_power():
+    assert continuous_domain((x-2)**(1-x), x, S.Reals) == Interval.open(2, oo)
 
 
 def test_not_empty_in():
@@ -115,10 +184,6 @@ def test_not_empty_in():
 
 @_both_exp_pow
 def test_periodicity():
-    x = Symbol('x')
-    y = Symbol('y')
-    z = Symbol('z', real=True)
-
     assert periodicity(sin(2*x), x) == pi
     assert periodicity((-2)*tan(4*x), x) == pi/4
     assert periodicity(sin(x)**2, x) == 2*pi
@@ -150,14 +215,14 @@ def test_periodicity():
 
     assert periodicity(exp(x), x) is None
     assert periodicity(exp(I*x), x) == 2*pi
-    assert periodicity(exp(I*z), z) == 2*pi
-    assert periodicity(exp(z), z) is None
-    assert periodicity(exp(log(sin(z) + I*cos(2*z)), evaluate=False), z) == 2*pi
-    assert periodicity(exp(log(sin(2*z) + I*cos(z)), evaluate=False), z) == 2*pi
-    assert periodicity(exp(sin(z)), z) == 2*pi
-    assert periodicity(exp(2*I*z), z) == pi
-    assert periodicity(exp(z + I*sin(z)), z) is None
-    assert periodicity(exp(cos(z/2) + sin(z)), z) == 4*pi
+    assert periodicity(exp(I*a), a) == 2*pi
+    assert periodicity(exp(a), a) is None
+    assert periodicity(exp(log(sin(a) + I*cos(2*a)), evaluate=False), a) == 2*pi
+    assert periodicity(exp(log(sin(2*a) + I*cos(a)), evaluate=False), a) == 2*pi
+    assert periodicity(exp(sin(a)), a) == 2*pi
+    assert periodicity(exp(2*I*a), a) == pi
+    assert periodicity(exp(a + I*sin(a)), a) is None
+    assert periodicity(exp(cos(a/2) + sin(a)), a) == 4*pi
     assert periodicity(log(x), x) is None
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
@@ -190,9 +255,6 @@ def test_periodicity():
 
 
 def test_periodicity_check():
-    x = Symbol('x')
-    y = Symbol('y')
-
     assert periodicity(tan(x), x, check=True) == pi
     assert periodicity(sin(x) + cos(x), x, check=True) == 2*pi
     assert periodicity(sec(x), x) == 2*pi
@@ -214,13 +276,13 @@ def test_is_convex():
     assert is_convex(x**2, x, domain=Interval(0, oo)) == True
     assert is_convex(1/x**3, x, domain=Interval.Lopen(0, oo)) == True
     assert is_convex(-1/x**3, x, domain=Interval.Ropen(-oo, 0)) == True
-    assert is_convex(log(x), x) == False
-    raises(NotImplementedError, lambda: is_convex(log(x), x, a))
+    assert is_convex(log(x) ,x) == False
+    assert is_convex(x**2+y**2, x, y) == True
+    assert is_convex(cos(x) + cos(y), x) == False
+    assert is_convex(8*x**2 - 2*y**2, x, y) == False
 
 
 def test_stationary_points():
-    x, y = symbols('x y')
-
     assert stationary_points(sin(x), x, Interval(-pi/2, pi/2)
         ) == {-pi/2, pi/2}
     assert  stationary_points(sin(x), x, Interval.Ropen(0, pi/4)
@@ -253,7 +315,6 @@ def test_stationary_points():
 
 
 def test_maximum():
-    x, y = symbols('x y')
     assert maximum(sin(x), x) is S.One
     assert maximum(sin(x), x, Interval(0, 1)) == sin(1)
     assert maximum(tan(x), x) is oo
@@ -286,8 +347,6 @@ def test_maximum():
 
 
 def test_minimum():
-    x, y = symbols('x y')
-
     assert minimum(sin(x), x) is S.NegativeOne
     assert minimum(sin(x), x, Interval(1, 4)) == sin(4)
     assert minimum(tan(x), x) is -oo
@@ -315,17 +374,19 @@ def test_minimum():
 
 
 def test_issue_19869():
-    t = symbols('t')
-    assert (maximum(sqrt(3)*(t - 1)/(3*sqrt(t**2 + 1)), t)
+    assert (maximum(sqrt(3)*(x - 1)/(3*sqrt(x**2 + 1)), x)
         ) == sqrt(3)/3
 
 
 def test_issue_16469():
-    x = Symbol("x", real=True)
-    f = abs(x)
-    assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
+    f = abs(a)
+    assert function_range(f, a, S.Reals) == Interval(0, oo, False, True)
 
 
 @_both_exp_pow
 def test_issue_18747():
-    assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8
+    assert periodicity(exp(pi*I*(x/4 + S.Half/2)), x) == 8
+
+
+def test_issue_25942():
+    assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)

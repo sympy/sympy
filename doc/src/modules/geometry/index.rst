@@ -201,13 +201,13 @@ Submodules
 ~~~~~~~~~~
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    entities.rst
-    utils.rst
-    points.rst
-    lines.rst
-    curves.rst
-    ellipses.rst
-    polygons.rst
-    plane.rst
+   entities.rst
+   utils.rst
+   points.rst
+   lines.rst
+   curves.rst
+   ellipses.rst
+   polygons.rst
+   plane.rst

@@ -186,8 +186,7 @@ def _lambert(eq, x):
                 continue
             rhs = -c/b + (a/d)*w
 
-            for xu in xusolns:
-                sol.append(xu.subs(u, rhs))
+            sol.extend(xu.subs(u, rhs) for xu in xusolns)
     return sol
 
 
@@ -274,7 +273,7 @@ def _solve_lambert(f, symbol, gens):
             sols.extend(_solve_lambert(plhs, symbol, gens))
         # uniq is needed for a case like
         # 2*log(t) - log(-z**2) + log(z + log(x) + log(z))
-        # where subtituting t with +/-x gives all the same solution;
+        # where substituting t with +/-x gives all the same solution;
         # uniq, rather than list(set()), is used to maintain canonical
         # order
         return list(uniq(sols))

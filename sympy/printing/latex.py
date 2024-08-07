@@ -15,7 +15,7 @@ from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
-from sympy.tensor.array import NDimArray
+
 
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -30,6 +30,7 @@ from sympy.utilities.iterables import has_variety, sift
 import re
 
 if TYPE_CHECKING:
+    from sympy.tensor.array import NDimArray
     from sympy.vector.basisdependent import BasisDependent
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
@@ -119,7 +120,7 @@ greek_letters_set = frozenset(greeks)
 
 _between_two_numbers_p = (
     re.compile(r'[0-9][} ]*$'),  # search
-    re.compile(r'[0-9]'),  # match
+    re.compile(r'(\d|\\frac{\d+}{\d+})'),  # match
 )
 
 
@@ -166,6 +167,7 @@ class LatexPrinter(Printer):
         "min": None,
         "max": None,
         "diff_operator": "d",
+        "adjoint_style": "dagger",
     }
 
     def __init__(self, settings=None):
@@ -515,8 +517,6 @@ class LatexPrinter(Printer):
         return r"\Delta %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr: Expr):
-        from sympy.physics.units import Quantity
-        from sympy.physics.units.prefixes import Prefix
         from sympy.simplify import fraction
         separator: str = self._settings['mul_symbol_latex']
         numbersep: str = self._settings['mul_symbol_latex_numbers']
@@ -530,11 +530,11 @@ class LatexPrinter(Printer):
                 else:
                     args = list(expr.args)
 
-                # If quantities are present append them at the back
-                units, nonunits = sift(args, lambda x: isinstance(x, (Quantity, Prefix)) or
+                # If there are quantities or prefixes, append them at the back.
+                units, nonunits = sift(args, lambda x: (hasattr(x, "_scale_factor") or hasattr(x, "is_physical_constant")) or
                               (isinstance(x, Pow) and
-                               isinstance(x.base, Quantity)), binary=True)
-                prefixes, units = sift(units, lambda x: isinstance(x, Prefix), binary=True)
+                               hasattr(x.base, "is_physical_constant")), binary=True)
+                prefixes, units = sift(units, lambda x: hasattr(x, "_scale_factor"), binary=True)
                 return convert_args(nonunits + prefixes + units)
 
         def convert_args(args) -> str:
@@ -542,14 +542,13 @@ class LatexPrinter(Printer):
 
             for i, term in enumerate(args):
                 term_tex = self._print(term)
-
-                if not isinstance(term, (Quantity, Prefix)):
+                if not (hasattr(term, "_scale_factor") or hasattr(term, "is_physical_constant")):
                     if self._needs_mul_brackets(term, first=(i == 0),
                                                 last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
 
                     if  _between_two_numbers_p[0].search(last_term_tex) and \
-                        _between_two_numbers_p[1].match(str(term)):
+                        _between_two_numbers_p[1].match(term_tex):
                         # between two numbers
                         _tex += numbersep
                     elif _tex:
@@ -697,6 +696,8 @@ class LatexPrinter(Printer):
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
         if expr.base.is_Symbol:
             base = self.parenthesize_super(base)
+        elif expr.base.is_Float:
+            base = r"{%s}" % base
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
@@ -1219,8 +1220,10 @@ class LatexPrinter(Printer):
             return r"\Pi%s" % tex
 
     def _print_beta(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
+        x = expr.args[0]
+        # Deal with unevaluated single argument beta
+        y = expr.args[0] if len(expr.args) == 1 else expr.args[1]
+        tex = rf"\left({x}, {y}\right)"
 
         if exp is not None:
             return r"\operatorname{B}^{%s}%s" % (exp, tex)
@@ -1707,15 +1710,16 @@ class LatexPrinter(Printer):
     def _print_MatrixBase(self, expr):
         out_str = self._print_matrix_contents(expr)
         if self._settings['mat_delim']:
-            left_delim: str = self._settings['mat_delim']
+            left_delim = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
         return out_str
 
     def _print_MatrixElement(self, expr):
-        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
-            + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
+        matrix_part = self.parenthesize(expr.parent, PRECEDENCE['Atom'], strict=True)
+        index_part = f"{self._print(expr.i)},{self._print(expr.j)}"
+        return f"{{{matrix_part}}}_{{{index_part}}}"
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x, dim):
@@ -1752,17 +1756,23 @@ class LatexPrinter(Printer):
         return r"\operatorname{tr}\left(%s \right)" % self._print(mat)
 
     def _print_Adjoint(self, expr):
+        style_to_latex = {
+            "dagger"   : r"\dagger",
+            "star"     : r"\ast",
+            "hermitian": r"\mathsf{H}"
+        }
+        adjoint_style = style_to_latex.get(self._settings["adjoint_style"], r"\dagger")
         mat = expr.arg
         from sympy.matrices import MatrixSymbol, BlockMatrix
         if (not isinstance(mat, MatrixSymbol) and
             not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
-            return r"\left(%s\right)^{\dagger}" % self._print(mat)
+            return r"\left(%s\right)^{%s}" % (self._print(mat), adjoint_style)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)
             if '^' in s:
-                return r"\left(%s\right)^{\dagger}" % s
+                return r"\left(%s\right)^{%s}" % (s, adjoint_style)
             else:
-                return r"%s^{\dagger}" % s
+                return r"%s^{%s}" % (s, adjoint_style)
 
     def _print_MatMul(self, expr):
         from sympy import MatMul
@@ -1812,7 +1822,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \circ '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_HadamardPower(self, expr):
         if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
@@ -1827,7 +1837,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \otimes '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -1879,7 +1889,8 @@ class LatexPrinter(Printer):
         block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         block_str = block_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
-            block_str= block_str.replace('%s','{}%s')
+            block_str = block_str.replace('%s', '{' + 'c'*expr.shape[0] + '}%s')
+
         if self._settings['mat_delim']:
             left_delim: str = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
@@ -2192,6 +2203,9 @@ class LatexPrinter(Printer):
     def _print_bernoulli(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "B", exp)
 
+    def _print_genocchi(self, expr, exp=None):
+        return self.__print_number_polynomial(expr, "G", exp)
+
     def _print_bell(self, expr, exp=None):
         if len(expr.args) == 3:
             tex1 = r"B_{%s, %s}" % (self._print(expr.args[0]),
@@ -2205,7 +2219,6 @@ class LatexPrinter(Printer):
             return tex
         return self.__print_number_polynomial(expr, "B", exp)
 
-
     def _print_fibonacci(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "F", exp)
 
@@ -2217,6 +2230,11 @@ class LatexPrinter(Printer):
 
     def _print_tribonacci(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "T", exp)
+
+    def _print_mobius(self, expr, exp=None):
+        if exp is None:
+            return r'\mu\left(%s\right)' % self._print(expr.args[0])
+        return r'\mu^{%s}\left(%s\right)' % (exp, self._print(expr.args[0]))
 
     def _print_SeqFormula(self, s):
         dots = object()
@@ -2729,12 +2747,20 @@ class LatexPrinter(Printer):
             '{' + self._print(x) + '}' for x in m))
 
     def _print_SubModule(self, m):
-        return r"\left\langle {} \right\rangle".format(",".join(
-            '{' + self._print(x) + '}' for x in m.gens))
+        gens = [[self._print(m.ring.to_sympy(x)) for x in g] for g in m.gens]
+        curly = lambda o: r"{" + o + r"}"
+        square = lambda o: r"\left[ " + o + r" \right]"
+        gens_latex = ",".join(curly(square(",".join(curly(x) for x in g))) for g in gens)
+        return r"\left\langle {} \right\rangle".format(gens_latex)
+
+    def _print_SubQuotientModule(self, m):
+        gens_latex = ",".join(["{" + self._print(g) + "}" for g in m.gens])
+        return r"\left\langle {} \right\rangle".format(gens_latex)
 
     def _print_ModuleImplementedIdeal(self, m):
-        return r"\left\langle {} \right\rangle".format(",".join(
-            '{' + self._print(x) + '}' for [x] in m._module.gens))
+        gens = [m.ring.to_sympy(x) for [x] in m._module.gens]
+        gens_latex = ",".join('{' + self._print(x) + '}' for x in gens)
+        return r"\left\langle {} \right\rangle".format(gens_latex)
 
     def _print_Quaternion(self, expr):
         # TODO: This expression is potentially confusing,
@@ -2750,11 +2776,15 @@ class LatexPrinter(Printer):
                  self._print(R.base_ideal))
 
     def _print_QuotientRingElement(self, x):
-        return r"{{{}}} + {{{}}}".format(self._print(x.data),
+        x_latex = self._print(x.ring.to_sympy(x))
+        return r"{{{}}} + {{{}}}".format(x_latex,
                  self._print(x.ring.base_ideal))
 
     def _print_QuotientModuleElement(self, m):
-        return r"{{{}}} + {{{}}}".format(self._print(m.data),
+        data = [m.module.ring.to_sympy(x) for x in m.data]
+        data_latex = r"\left[ {} \right]".format(",".join(
+            '{' + self._print(x) + '}' for x in data))
+        return r"{{{}}} + {{{}}}".format(data_latex,
                  self._print(m.module.killed_module))
 
     def _print_QuotientModule(self, M):
@@ -2875,6 +2905,12 @@ class LatexPrinter(Printer):
         return str(expr)
 
     def _print_mpq(self, expr):
+        return str(expr)
+
+    def _print_fmpz(self, expr):
+        return str(expr)
+
+    def _print_fmpq(self, expr):
         return str(expr)
 
     def _print_Predicate(self, expr):
@@ -3017,6 +3053,9 @@ def latex(expr, **settings):
     diff_operator: string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
+    adjoint_style: string, optional
+        String to use for the adjoint symbol. Defined options are ``'dagger'``
+        (default),``'star'``, and ``'hermitian'``.
 
     Notes
     =====

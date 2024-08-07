@@ -26,7 +26,7 @@ class Polyhedron(Basic):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/PolyhedralGroup.html
+    .. [1] https://mathworld.wolfram.com/PolyhedralGroup.html
 
     """
     _edges = None
@@ -674,7 +674,7 @@ def _pgroup_calcs():
     References
     ==========
 
-    .. [1] http://dogschool.tripod.com/trianglegroup.html
+    .. [1] https://dogschool.tripod.com/trianglegroup.html
 
     """
     def _pgroup_of_double(polyh, ordered_faces, pgroup):
@@ -687,7 +687,7 @@ def _pgroup_calcs():
                         range(len(ordered_faces))))
         flat_faces = flatten(ordered_faces)
         new_pgroup = []
-        for i, p in enumerate(pgroup):
+        for p in pgroup:
             h = polyh.copy()
             h.rotate(p)
             c = h.corners
@@ -1008,12 +1008,12 @@ icosahedron = Polyhedron(
         Perm(0, 8, 10)(1, 7, 6)(2, 11, 5)(3, 9, 4),
         Perm(0, 9, 6)(1, 3, 11)(2, 8, 7)(4, 10, 5)))
 
-tetrahedron_faces = list(tuple(arg) for arg in tetrahedron.faces)
+tetrahedron_faces = [tuple(arg) for arg in tetrahedron.faces]
 
-cube_faces = list(tuple(arg) for arg in cube.faces)
+cube_faces = [tuple(arg) for arg in cube.faces]
 
-octahedron_faces = list(tuple(arg) for arg in octahedron.faces)
+octahedron_faces = [tuple(arg) for arg in octahedron.faces]
 
-dodecahedron_faces = list(tuple(arg) for arg in dodecahedron.faces)
+dodecahedron_faces = [tuple(arg) for arg in dodecahedron.faces]
 
-icosahedron_faces = list(tuple(arg) for arg in icosahedron.faces)
+icosahedron_faces = [tuple(arg) for arg in icosahedron.faces]

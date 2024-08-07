@@ -13,10 +13,10 @@ class ManagedWindow(Window):
     which overrides setup, update, and/or draw.
     """
     fps_limit = 30
-    default_win_args = dict(width=600,
-                            height=500,
-                            vsync=False,
-                            resizable=True)
+    default_win_args = {"width": 600,
+                            "height": 500,
+                            "vsync": False,
+                            "resizable": True}
 
     def __init__(self, **win_args):
         """

@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-from sympy import SYMPY_DEBUG
-
 from sympy.core import sympify, S, Mul, Derivative, Pow
 from sympy.core.add import _unevaluated_Add, Add
 from sympy.core.assumptions import assumptions
@@ -125,7 +123,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ``exact`` to None:
 
         >>> collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None)
-        x*(exp(x) + 3) + (y + 2)*sin(x)
+        x*exp(x) + 3*x + (y + 2)*sin(x)
+        >>> collect(a*x*y + x*y + b*x + x, [x, y], exact=None)
+        x*y*(a + 1) + x*(b + 1)
 
     You can also apply this function to differential equations, where
     derivatives of arbitrary order can be collected. Note that if you
@@ -198,8 +198,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             if not i.is_Mul and i not in syms:
                 _syms.add(i)
             else:
-                g = i._new_rawargs(*[_ for _ in
-                    i.as_coeff_mul(*syms)[1] if _ not in syms])
+                # identify compound generators
+                g = i._new_rawargs(*i.as_coeff_mul(*syms)[1])
                 if g not in syms:
                     _syms.add(g)
         simple = all(i.is_Pow and i.base in syms for i in _syms)
@@ -218,9 +218,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         for term, rat, sym, deriv in terms:
             if deriv is not None:
                 var, order = deriv
-
-                while order > 0:
-                    term, order = Derivative(term, var), order - 1
+                for _ in range(order):
+                    term = Derivative(term, var)
 
             if sym is None:
                 if rat is S.One:
@@ -247,10 +246,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         while isinstance(expr, Derivative):
             s0 = expr.variables[0]
 
-            for s in expr.variables:
-                if s != s0:
-                    raise NotImplementedError(
-                        'Improve MV Derivative support in collect')
+            if any(s != s0 for s in expr.variables):
+                raise NotImplementedError(
+                    'Improve MV Derivative support in collect')
 
             if s0 == sym:
                 expr, order = expr.expr, order + len(expr.variables)
@@ -419,18 +417,10 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         small_first = True
 
         for symbol in syms:
-            if SYMPY_DEBUG:
-                print("DEBUG: parsing of expression %s with symbol %s " % (
-                    str(terms), str(symbol))
-                )
-
             if isinstance(symbol, Derivative) and small_first:
                 terms = list(reversed(terms))
                 small_first = not small_first
             result = parse_expression(terms, symbol)
-
-            if SYMPY_DEBUG:
-                print("DEBUG: returned %s" % str(result))
 
             if result is not None:
                 if not symbol.is_commutative:
@@ -849,6 +839,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     1/(a + b*sqrt(c))
 
     """
+    from sympy.core.expr import Expr
     from sympy.simplify.simplify import signsimp
 
     syms = symbols("a:d A:D")
@@ -902,9 +893,14 @@ def radsimp(expr, symbolic=True, max_terms=4):
         # We do this by recursively calling handle on each piece.
         from sympy.simplify.simplify import nsimplify
 
+        if expr.is_Atom:
+            return expr
+        elif not isinstance(expr, Expr):
+            return expr.func(*[handle(a) for a in expr.args])
+
         n, d = fraction(expr)
 
-        if expr.is_Atom or (d.is_Atom and n.is_Atom):
+        if d.is_Atom and n.is_Atom:
             return expr
         elif not n.is_Atom:
             n = n.func(*[handle(a) for a in n.args])
@@ -1001,6 +997,9 @@ def radsimp(expr, symbolic=True, max_terms=4):
             return expr
         return _unevaluated_Mul(n, 1/d)
 
+    if not isinstance(expr, Expr):
+        return expr.func(*[radsimp(a, symbolic=symbolic, max_terms=max_terms) for a in expr.args])
+
     coeff, expr = expr.as_coeff_Add()
     expr = expr.normal()
     old = fraction(expr)
@@ -1082,7 +1081,7 @@ def fraction(expr, exact=False):
        (x, y**(-k))
 
        If we know nothing about sign of some exponent and ``exact``
-       flag is unset, then structure this exponent's structure will
+       flag is unset, then the exponent's structure will
        be analyzed and pretty fraction will be returned:
 
        >>> from sympy import exp, Mul
@@ -1124,7 +1123,7 @@ def fraction(expr, exact=False):
             elif ex.is_positive:
                 numer.append(term)
             elif not exact and ex.is_Mul:
-                n, d = term.as_numer_denom()
+                n, d = term.as_numer_denom()  # this will cause evaluation
                 if n != 1:
                     numer.append(n)
                 denom.append(d)
@@ -1139,12 +1138,12 @@ def fraction(expr, exact=False):
     return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
-def numer(expr):
-    return fraction(expr)[0]
+def numer(expr, exact=False):  # default matches fraction's default
+    return fraction(expr, exact=exact)[0]
 
 
-def denom(expr):
-    return fraction(expr)[1]
+def denom(expr, exact=False):  # default matches fraction's default
+    return fraction(expr, exact=exact)[1]
 
 
 def fraction_expand(expr, **hints):
@@ -1152,12 +1151,14 @@ def fraction_expand(expr, **hints):
 
 
 def numer_expand(expr, **hints):
-    a, b = fraction(expr)
+    # default matches fraction's default
+    a, b = fraction(expr, exact=hints.get('exact', False))
     return a.expand(numer=True, **hints) / b
 
 
 def denom_expand(expr, **hints):
-    a, b = fraction(expr)
+    # default matches fraction's default
+    a, b = fraction(expr, exact=hints.get('exact', False))
     return a / b.expand(denom=True, **hints)
 
 

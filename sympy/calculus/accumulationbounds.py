@@ -12,7 +12,8 @@ from sympy.sets.sets import FiniteSet
 
 
 class AccumulationBounds(Expr):
-    r"""
+    r"""An accumulation bounds.
+
     # Note AccumulationBounds has an alias: AccumBounds
 
     AccumulationBounds represent an interval `[a, b]`, which is always closed
@@ -171,7 +172,7 @@ class AccumulationBounds(Expr):
 
     .. [1] https://en.wikipedia.org/wiki/Interval_arithmetic
 
-    .. [2] http://fab.cba.mit.edu/classes/S62.12/docs/Hickey_interval.pdf
+    .. [2] https://fab.cba.mit.edu/classes/S62.12/docs/Hickey_interval.pdf
 
     Notes
     =====
@@ -349,8 +350,7 @@ class AccumulationBounds(Expr):
                 v = set()
                 for a in self.args:
                     vi = other*a
-                    for i in vi.args or (vi,):
-                        v.add(i)
+                    v.update(vi.args or (vi,))
                 return AccumBounds(Min(*v), Max(*v))
             if other is S.Infinity:
                 if self.min.is_zero:
@@ -523,7 +523,7 @@ class AccumulationBounds(Expr):
                             return AccumBounds(self.max**other, oo)
                         if self.max.is_zero:
                             return AccumBounds(self.min**other, oo)
-                        return AccumBounds(0, oo)
+                        return (1/self)**(-other)
                     return AccumBounds(
                         S.Zero, Max(self.min**other, self.max**other))
                 elif other % 2 == 1:
@@ -532,7 +532,7 @@ class AccumulationBounds(Expr):
                             return AccumBounds(self.max**other, oo)
                         if self.max.is_zero:
                             return AccumBounds(-oo, self.min**other)
-                        return AccumBounds(-oo, oo)
+                        return (1/self)**(-other)
                     return AccumBounds(self.min**other, self.max**other)
 
             # non-integer exponent
@@ -634,9 +634,9 @@ class AccumulationBounds(Expr):
         Parameters
         ==========
 
-        other: AccumulationBounds
-             Another AccumulationBounds object with which the intersection
-             has to be computed.
+        other : AccumulationBounds
+            Another AccumulationBounds object with which the intersection
+            has to be computed.
 
         Returns
         =======

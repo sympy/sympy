@@ -6,7 +6,8 @@
   :ref:`theanocode-deprecated` for more information.
 
 """
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
@@ -17,7 +18,12 @@ from functools import partial
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
+
+__doctest_requires__ = {('theano_function',): ['theano']}
+
+
 theano = import_module('theano')
+
 
 if theano:
     ts = theano.scalar
@@ -105,7 +111,7 @@ class TheanoPrinter(Printer):
     printmethod = "_theano"
 
     def __init__(self, *args, **kwargs):
-        self.cache = kwargs.pop('cache', dict())
+        self.cache = kwargs.pop('cache', {})
         super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
@@ -313,7 +319,7 @@ class TheanoPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache = {}  # type: tDict[Any, Any]
+global_cache: dict[Any, Any] = {}
 
 
 def theano_code(expr, cache=None, **kwargs):
@@ -398,7 +404,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
         values (tuple of ``bool``\ s).
     """
     if dim is not None:
-        return {s: (False,) * dim for s in inputs}
+        return dict.fromkeys(inputs, (False,) * dim)
 
     if dims is not None:
         maxdim = max(dims.values())

@@ -1,3 +1,5 @@
+.. _module-printing:
+
 ========
 Printing
 ========
@@ -262,10 +264,11 @@ to introduce the names of user-defined functions in the Fortran expression.
           1 - mygamma(x)**2
 
 However, when the user_functions argument is not provided, ``fcode`` will
-generate code which assumes that a function of the same name will be provided
-by the user.  A comment will be added to inform the user of the issue:
+by default raise an Exception, but if the user intends to provide a function
+with the same name, code can still be generated, by passing the option
+``strict=False``. The code then contains a comment informing the user of the issue:
 
-    >>> print(fcode(1 - gamma(x)**2))
+    >>> print(fcode(1 - gamma(x)**2, strict=False))
     C     Not supported in Fortran:
     C     gamma
           1 - gamma(x)**2
@@ -288,6 +291,20 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     (set(), set(), '      1 - sin(x)**2')
     >>> fcode(x - pi**2, human=False)
     ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
+
+SMT-Lib printing
+---------------------------------
+
+.. module:: sympy.printing.smtlib
+
+.. autoclass:: sympy.printing.smtlib.SMTLibPrinter
+   :members:
+
+   .. autoattribute:: SMTLibPrinter.printmethod
+
+   .. autoattribute:: SMTLibPrinter._default_settings
+
+.. autofunction:: sympy.printing.smtlib.smtlib_code
 
 Mathematica code printing
 -------------------------
@@ -375,7 +392,7 @@ Rust code printing
 
    .. autoattribute:: RustCodePrinter.printmethod
 
-.. autofunction:: sympy.printing.rust.rust_code
+.. autofunction:: sympy.printing.codeprinter.rust_code
 
 Aesara Code printing
 --------------------
@@ -453,7 +470,7 @@ MathMLPrinter
 
 This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 
-More info on mathml : http://www.w3.org/TR/MathML2
+More info on mathml : https://www.w3.org/TR/MathML2
 
 .. autoclass:: MathMLPrinterBase
    :members:
@@ -514,7 +531,7 @@ Example::
 but for SymPy we don’t actually use ``srepr()`` for ``__repr__`` because it’s
 is so verbose, it is unlikely that anyone would want it called by default.
 Another reason is that lists call repr on their elements, like ``print([a, b, c])``
-calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for `` __repr__`` any list with
+calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for ``__repr__`` any list with
 SymPy objects would include the srepr form, even if we used ``str()`` or ``print()``.
 
 

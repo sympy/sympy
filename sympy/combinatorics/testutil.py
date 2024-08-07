@@ -193,8 +193,7 @@ def _verify_normal_closure(group, arg, closure=None):
     elif hasattr(arg, 'array_form'):
         subgr_gens = [arg]
     for el in group.generate_dimino():
-        for gen in subgr_gens:
-            conjugates.add(gen ^ el)
+        conjugates.update(gen ^ el for gen in subgr_gens)
     naive_closure = PermutationGroup(list(conjugates))
     return closure.is_subgroup(naive_closure)
 
@@ -219,7 +218,7 @@ def canonicalize_naive(g, dummies, sym, *v):
     msym : Symmetry of the metric.
     v : A list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`.
         base_i, gens_i BSGS for tensors of this type
-        n_i  number ot tensors of type `i`
+        n_i  number of tensors of type `i`
 
     Returns
     =======

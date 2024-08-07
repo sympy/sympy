@@ -388,7 +388,8 @@ def test_factor_nc():
     assert (2*n + 2*m).factor() == 2*(n + m)
 
     # issue 6701
-    assert factor_nc(n**k + n**(k + 1)) == n**k*(1 + n)
+    _n = symbols('nz', zero=False, commutative=False)
+    assert factor_nc(_n**k + _n**(k + 1)) == _n**k*(1 + _n)
     assert factor_nc((m*n)**k + (m*n)**(k + 1)) == (1 + m*n)*(m*n)**k
 
     # issue 6918

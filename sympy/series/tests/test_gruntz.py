@@ -5,6 +5,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acot, atan, cos, sin)
+from sympy.functions.elementary.complexes import sign as _sign
 from sympy.functions.special.error_functions import (Ei, erf)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
 from sympy.functions.special.zeta_functions import zeta
@@ -403,7 +404,7 @@ def test_gruntz_I():
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo) == y*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo).simplify().rewrite(_sign) == _sign(y)*I*oo
 
 
 def test_issue_4814():
@@ -473,3 +474,9 @@ def test_issue_6682():
 def test_issue_7096():
     from sympy.functions import sign
     assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
+
+def test_issue_24210_25885():
+    eq = exp(x)/(1+1/x)**x**2
+    ans = sqrt(E)
+    assert gruntz(eq, x, oo) == ans
+    assert gruntz(1/eq, x, oo) == 1/ans

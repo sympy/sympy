@@ -90,7 +90,7 @@ important points that have not been explained are:
 4. Why does the algorithm terminate?
 
 If you are interested, be sure to take a look at
-`Gruntz Thesis <http://www.cybertester.com/data/gruntz.pdf>`_.
+`Gruntz Thesis <https://www.cybertester.com/data/gruntz.pdf>`_.
 
 Reference
 """""""""

@@ -1,3 +1,4 @@
+from sympy.calculus.util import AccumBounds
 from sympy.core.function import (Derivative, PoleError)
 from sympy.core.numbers import (E, I, Integer, Rational, pi)
 from sympy.core.singleton import S
@@ -5,7 +6,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, cosh, coth, sinh, tanh)
-from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
 from sympy.functions.elementary.trigonometric import (asin, cos, cot, sin, tan)
 from sympy.series.limits import limit
@@ -370,7 +371,7 @@ def test_hyperbolic():
     assert acosh(x).nseries(x, n=6) == \
         pi*I/2 - I*x - 3*I*x**5/40 - I*x**3/6 + O(x**6)
     assert atanh(x).nseries(x, n=6) == x + x**3/3 + x**5/5 + O(x**6)
-    assert acoth(x).nseries(x, n=6) == x + x**3/3 + x**5/5 + pi*I/2 + O(x**6)
+    assert acoth(x).nseries(x, n=6) == -I*pi/2 + x + x**3/3 + x**5/5 + O(x**6)
 
 
 def test_series2():
@@ -444,6 +445,20 @@ def test_floor():
     assert floor(x + 1.5).series(x) == 1
 
 
+def test_frac():
+    assert frac(x).series(x, cdir=1) == x
+    assert frac(x).series(x, cdir=-1) == 1 + x
+    assert frac(2*x + 1).series(x, cdir=1) == 2*x
+    assert frac(2*x + 1).series(x, cdir=-1) == 1 + 2*x
+    assert frac(x**2).series(x, cdir=1) == x**2
+    assert frac(x**2).series(x, cdir=-1) == x**2
+    assert frac(sin(x) + 5).series(x, cdir=1) == x - x**3/6 + x**5/120 + O(x**6)
+    assert frac(sin(x) + 5).series(x, cdir=-1) == 1 + x - x**3/6 + x**5/120 + O(x**6)
+    assert frac(sin(x) + S.Half).series(x) == S.Half + x - x**3/6 + x**5/120 + O(x**6)
+    assert frac(x**8).series(x, cdir=1) == O(x**6)
+    assert frac(1/x).series(x) == AccumBounds(0, 1) + O(x**6)
+
+
 def test_ceiling():
     assert ceiling(x).series(x) == 1
     assert ceiling(-x).series(x) == 0
@@ -473,6 +488,16 @@ def test_dir():
     assert floor(x + 2.2).series(x, 0, dir='-') == 2
     assert ceiling(x + 2.2).series(x, 0, dir='-') == 3
     assert sin(x + y).series(x, 0, dir='-') == sin(x + y).series(x, 0, dir='+')
+
+
+def test_cdir():
+    assert abs(x).series(x, 0, cdir=1) == x
+    assert abs(x).series(x, 0, cdir=-1) == -x
+    assert floor(x + 2).series(x, 0, cdir=1) == 2
+    assert floor(x + 2).series(x, 0, cdir=-1) == 1
+    assert floor(x + 2.2).series(x, 0, cdir=1) == 2
+    assert ceiling(x + 2.2).series(x, 0, cdir=-1) == 3
+    assert sin(x + y).series(x, 0, cdir=-1) == sin(x + y).series(x, 0, cdir=1)
 
 
 def test_issue_3504():

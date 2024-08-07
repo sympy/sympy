@@ -5,7 +5,7 @@ Added kelvin, candela and mole.
 
 """
 
-from typing import List
+from __future__ import annotations
 
 from sympy.physics.units import DimensionSystem, Dimension, dHg0
 
@@ -25,7 +25,7 @@ from sympy.physics.units.definitions import (
     coulomb, volt, ohm, siemens, farad, henry, tesla, weber, dioptre, lux,
     katal, gray, becquerel, inch, liter, julian_year, gravitational_constant,
     speed_of_light, elementary_charge, planck, hbar, electronvolt,
-    avogadro_number, avogadro_constant, boltzmann_constant,
+    avogadro_number, avogadro_constant, boltzmann_constant, electron_rest_mass,
     stefan_boltzmann_constant, Da, atomic_mass_constant, molar_gas_constant,
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
@@ -52,7 +52,7 @@ units = [mol, cd, K, lux, hertz, newton, pascal, joule, watt, coulomb, volt,
         farad, ohm, siemens, weber, tesla, henry, candela, lux, becquerel,
         gray, katal]
 
-all_units = []  # type: List[Quantity]
+all_units: list[Quantity] = []
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 
@@ -229,6 +229,10 @@ SI.set_quantity_scale_factor(vacuum_permittivity, 1/(u0 * c**2))
 SI.set_quantity_dimension(vacuum_impedance, impedance)
 SI.set_quantity_scale_factor(vacuum_impedance, u0 * c)
 
+# Electron rest mass
+SI.set_quantity_dimension(electron_rest_mass, mass)
+SI.set_quantity_scale_factor(electron_rest_mass, 9.1093837015e-31*kilogram)
+
 # Coulomb's constant:
 SI.set_quantity_dimension(coulomb_constant, force * length ** 2 / charge ** 2)
 SI.set_quantity_scale_factor(coulomb_constant, 1/(4*pi*vacuum_permittivity))
@@ -364,7 +368,7 @@ __all__ = [
     'planck_angular_frequency', 'ohm', 'pound', 'planck_pressure', 'G', 'psi',
     'dHg0', 'von_klitzing_constant', 'planck_length', 'avogadro_number',
     'mole', 'acceleration', 'information', 'planck_energy_density',
-    'mebibyte', 's', 'acceleration_due_to_gravity',
+    'mebibyte', 's', 'acceleration_due_to_gravity', 'electron_rest_mass',
     'planck_temperature', 'units', 'mass', 'dimsys_MKSA', 'kelvin', 'kPa',
     'boltzmann', 'milli_mass_unit', 'planck_impedance', 'electric_constant',
     'derived_dims', 'kg', 'coulomb', 'siemens', 'byte', 'magnetic_flux',

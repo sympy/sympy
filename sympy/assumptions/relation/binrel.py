@@ -95,7 +95,7 @@ class BinaryRelation(Predicate):
     def _compare_reflexive(self, lhs, rhs):
         # quick exit for structurally same arguments
         # do not check != here because it cannot catch the
-        # equivalent arguements with different structures.
+        # equivalent arguments with different structures.
 
         # reflexivity does not hold to NaN
         if lhs is S.NaN or rhs is S.NaN:

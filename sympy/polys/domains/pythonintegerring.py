@@ -1,6 +1,7 @@
 """Implementation of :class:`PythonIntegerRing` class. """
 
 
+from sympy.core.numbers import int_valued
 from sympy.polys.domains.groundtypes import (
     PythonInteger, SymPyInteger, sqrt as python_sqrt,
     factorial as python_factorial, python_gcdex, python_gcd, python_lcm,
@@ -33,14 +34,14 @@ class PythonIntegerRing(IntegerRing):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return PythonInteger(a.p)
-        elif a.is_Float and int(a) == a:
+        elif int_valued(a):
             return PythonInteger(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
 
     def from_FF_python(K1, a, K0):
         """Convert ``ModularInteger(int)`` to Python's ``int``. """
-        return a.to_int()
+        return K0.to_int(a)
 
     def from_ZZ_python(K1, a, K0):
         """Convert Python's ``int`` to Python's ``int``. """
@@ -58,7 +59,7 @@ class PythonIntegerRing(IntegerRing):
 
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to Python's ``int``. """
-        return PythonInteger(a.to_int())
+        return PythonInteger(K0.to_int(a))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert GMPY's ``mpz`` to Python's ``int``. """

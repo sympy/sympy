@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import time
 import timeit
 
 
@@ -122,7 +121,7 @@ old_import = __builtins__.__import__
 __builtins__.__import__ = new_import
 old_sum = sum
 
-from sympy import *
+from sympy import *  # noqa
 
 sum = old_sum
 

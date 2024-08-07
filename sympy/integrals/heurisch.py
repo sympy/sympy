@@ -1,7 +1,8 @@
-from typing import Dict as tDict, List
+from __future__ import annotations
 
-from itertools import permutations
+from collections import defaultdict
 from functools import reduce
+from itertools import permutations
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -88,7 +89,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}  # type: tDict[str, List[Dummy]]
+_symbols_cache: dict[str, list[Dummy]] = {}
 
 
 # NB @cacheit is not convenient here
@@ -144,13 +145,18 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                    unnecessary_permutations, _try_heurisch)
     if not isinstance(res, Basic):
         return res
+
     # We consider each denominator in the expression, and try to find
     # cases where one or more symbolic denominator might be zero. The
     # conditions for these cases are stored in the list slns.
+    #
+    # Since denoms returns a set we use ordered. This is important because the
+    # ordering of slns determines the order of the resulting Piecewise so we
+    # need a deterministic order here to make the output deterministic.
     slns = []
-    for d in denoms(res):
+    for d in ordered(denoms(res)):
         try:
-            slns += solve(d, dict=True, exclude=(x,))
+            slns += solve([d], dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     if not slns:
@@ -160,7 +166,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     slns0 = []
     for d in denoms(f):
         try:
-            slns0 += solve(d, dict=True, exclude=(x,))
+            slns0 += solve([d], dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     slns = [s for s in slns if s not in slns0]
@@ -345,7 +351,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     References
     ==========
 
-    .. [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+    .. [1] https://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
     For more information on the implemented algorithm refer to:
 
@@ -477,6 +483,15 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     for g in set(terms):  # using copy of terms
         terms |= components(dcache.get_diff(g), x)
 
+    # XXX: The commented line below makes heurisch more deterministic wrt
+    # PYTHONHASHSEED and the iteration order of sets. There are other places
+    # where sets are iterated over but this one is possibly the most important.
+    # Theoretically the order here should not matter but different orderings
+    # can expose potential bugs in the different code paths so potentially it
+    # is better to keep the non-determinism.
+    #
+    # terms = list(ordered(terms))
+
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
 
@@ -489,7 +504,16 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         # optimizing the number of permutations of mapping              #
         assert mapping[-1][0] == x # if not, find it and correct this comment
         unnecessary_permutations = [mapping.pop(-1)]
-        mappings = permutations(mapping)
+        # only permute types of objects and let the ordering
+        # of types take care of the order of replacement
+        types = defaultdict(list)
+        for i in mapping:
+            types[type(i)].append(i)
+        mapping = [types[i] for i in types]
+        def _iter_mappings():
+            for i in permutations(mapping):
+                yield [j for i in i for j in i]
+        mappings = _iter_mappings()
     else:
         unnecessary_permutations = unnecessary_permutations or []
 
@@ -594,7 +618,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             else:
                 return 1
         elif not g.is_Atom and g.args:
-            return max([ _exponent(h) for h in g.args ])
+            return max(_exponent(h) for h in g.args)
         else:
             return 1
 
@@ -615,8 +639,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     for poly in ordered(polys):
         coeff, factors = factor_list(poly, *V)
         reducibles.add(coeff)
-        for fact, mul in factors:
-            reducibles.add(fact)
+        reducibles.update(fact for fact, mul in factors)
 
     def _integrate(field=None):
         atans = set()

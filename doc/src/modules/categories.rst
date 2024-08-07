@@ -16,7 +16,7 @@ The general reference work this module tries to follow is
 The latest version of this book should be available for free download
 from
 
-`katmat.math.uni-bremen.de/acc/acc.pdf <http://katmat.math.uni-bremen.de/acc/acc.pdf>`_
+`katmat.math.uni-bremen.de/acc/acc.pdf <https://web.archive.org/web/20220811222404/http://katmat.math.uni-bremen.de/acc/acc.pdf>`_
 
 The module is still in its pre-embryonic stage.
 

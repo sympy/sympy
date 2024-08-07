@@ -1,19 +1,20 @@
 __all__ = ['Linearizer']
 
-from sympy.core.backend import Matrix, eye, zeros
+from sympy import Matrix, eye, zeros
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
-from sympy.physics.mechanics.functions import msubs
+from sympy.physics.mechanics.functions import msubs, _parse_linear_solver
 
 from collections import namedtuple
 from collections.abc import Iterable
 
+
 class Linearizer:
-    """This object holds the general model form for a dynamic system.
-    This model is used for computing the linearized form of the system,
-    while properly dealing with constraints leading to  dependent
-    coordinates and speeds.
+    """This object holds the general model form for a dynamic system. This
+    model is used for computing the linearized form of the system, while
+    properly dealing with constraints leading to  dependent coordinates and
+    speeds. The notation and method is described in [1]_.
 
     Attributes
     ==========
@@ -29,10 +30,20 @@ class Linearizer:
         Matrices of the dependent generalized coordinates and speeds.
     perm_mat : Matrix
         Permutation matrix such that [q_ind, u_ind]^T = perm_mat*[q, u]^T
+
+    References
+    ==========
+
+    .. [1] D. L. Peterson, G. Gede, and M. Hubbard, "Symbolic linearization of
+           equations of motion of constrained multibody systems," Multibody
+           Syst Dyn, vol. 33, no. 2, pp. 143-161, Feb. 2015, doi:
+           10.1007/s11044-014-9436-5.
+
     """
 
-    def __init__(self, f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u,
-            q_i=None, q_d=None, u_i=None, u_d=None, r=None, lams=None):
+    def __init__(self, f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i=None,
+                 q_d=None, u_i=None, u_d=None, r=None, lams=None,
+                 linear_solver='LU'):
         """
         Parameters
         ==========
@@ -53,7 +64,19 @@ class Linearizer:
             The input variables.
         lams : array_like, optional
             The lagrange multipliers
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+
         """
+        self.linear_solver = _parse_linear_solver(linear_solver)
 
         # Generalized equation form
         self.f_0 = Matrix(f_0)
@@ -83,8 +106,8 @@ class Linearizer:
         # qd and u vectors have any intersecting variables, this can cause
         # problems. We'll fix this with some hackery, and Dummy variables
         dup_vars = set(self._qd).intersection(self.u)
-        self._qd_dup = Matrix([var if var not in dup_vars else Dummy()
-            for var in self._qd])
+        self._qd_dup = Matrix([var if var not in dup_vars else Dummy() for var
+                               in self._qd])
 
         # Derive dimesion terms
         l = len(self.f_c)
@@ -160,8 +183,9 @@ class Linearizer:
         # If not, C_0 is I_(nxn). Note that this works even if n=0
         if l > 0:
             f_c_jac_q = self.f_c.jacobian(self.q)
-            self._C_0 = (eye(n) - self._Pqd * (f_c_jac_q *
-                    self._Pqd).LUsolve(f_c_jac_q)) * self._Pqi
+            self._C_0 = (eye(n) - self._Pqd *
+                         self.linear_solver(f_c_jac_q*self._Pqd,
+                                            f_c_jac_q))*self._Pqi
         else:
             self._C_0 = eye(n)
         # If there are motion constraints (m > 0), form C_1 and C_2 as normal.
@@ -172,11 +196,11 @@ class Linearizer:
             temp = f_v_jac_u * self._Pud
             if n != 0:
                 f_v_jac_q = self.f_v.jacobian(self.q)
-                self._C_1 = -self._Pud * temp.LUsolve(f_v_jac_q)
+                self._C_1 = -self._Pud * self.linear_solver(temp, f_v_jac_q)
             else:
                 self._C_1 = zeros(o, n)
             self._C_2 = (eye(o) - self._Pud *
-                    temp.LUsolve(f_v_jac_u)) * self._Pui
+                         self.linear_solver(temp, f_v_jac_u))*self._Pui
         else:
             self._C_1 = zeros(o, n)
             self._C_2 = eye(o)
@@ -238,35 +262,42 @@ class Linearizer:
 
         Parameters
         ==========
-
         op_point : dict or iterable of dicts, optional
             Dictionary or iterable of dictionaries containing the operating
-            point conditions. These will be substituted in to the linearized
-            system before the linearization is complete. Leave blank if you
-            want a completely symbolic form. Note that any reduction in
-            symbols (whether substituted for numbers or expressions with a
-            common parameter) will result in faster runtime.
-
+            point conditions for all or a subset of the generalized
+            coordinates, generalized speeds, and time derivatives of the
+            generalized speeds. These will be substituted into the linearized
+            system before the linearization is complete. Leave set to ``None``
+            if you want the operating point to be an arbitrary set of symbols.
+            Note that any reduction in symbols (whether substituted for numbers
+            or expressions with a common parameter) will result in faster
+            runtime.
         A_and_B : bool, optional
-            If A_and_B=False (default), (M, A, B) is returned for forming
-            [M]*[q, u]^T = [A]*[q_ind, u_ind]^T + [B]r. If A_and_B=True,
-            (A, B) is returned for forming dx = [A]x + [B]r, where
-            x = [q_ind, u_ind]^T.
-
+            If A_and_B=False (default), (M, A, B) is returned and of
+            A_and_B=True, (A, B) is returned. See below.
         simplify : bool, optional
             Determines if returned values are simplified before return.
             For large expressions this may be time consuming. Default is False.
 
-        Potential Issues
-        ================
+        Returns
+        =======
+        M, A, B : Matrices, ``A_and_B=False``
+            Matrices from the implicit form:
+                ``[M]*[q', u']^T = [A]*[q_ind, u_ind]^T + [B]*r``
+        A, B : Matrices, ``A_and_B=True``
+            Matrices from the explicit form:
+                ``[q_ind', u_ind']^T = [A]*[q_ind, u_ind]^T + [B]*r``
 
-            Note that the process of solving with A_and_B=True is
-            computationally intensive if there are many symbolic parameters.
-            For this reason, it may be more desirable to use the default
-            A_and_B=False, returning M, A, and B. More values may then be
-            substituted in to these matrices later on. The state space form can
-            then be found as A = P.T*M.LUsolve(A), B = P.T*M.LUsolve(B), where
-            P = Linearizer.perm_mat.
+        Notes
+        =====
+
+        Note that the process of solving with A_and_B=True is computationally
+        intensive if there are many symbolic parameters. For this reason, it
+        may be more desirable to use the default A_and_B=False, returning M, A,
+        and B. More values may then be substituted in to these matrices later
+        on. The state space form can then be found as A = P.T*M.LUsolve(A), B =
+        P.T*M.LUsolve(B), where P = Linearizer.perm_mat.
+
         """
 
         # Run the setup if needed:
@@ -391,9 +422,9 @@ class Linearizer:
         # kwarg A_and_B indicates to return  A, B for forming the equation
         # dx = [A]x + [B]r, where x = [q_indnd, u_indnd]^T,
         if A_and_B:
-            A_cont = self.perm_mat.T * M_eq.LUsolve(Amat_eq)
+            A_cont = self.perm_mat.T * self.linear_solver(M_eq, Amat_eq)
             if Bmat_eq:
-                B_cont = self.perm_mat.T * M_eq.LUsolve(Bmat_eq)
+                B_cont = self.perm_mat.T * self.linear_solver(M_eq, Bmat_eq)
             else:
                 # Bmat = Matrix([]), so no need to sub
                 B_cont = Bmat_eq
@@ -434,8 +465,8 @@ def permutation_matrix(orig_vec, per_vec):
     if not isinstance(per_vec, (list, tuple)):
         per_vec = flatten(per_vec)
     if set(orig_vec) != set(per_vec):
-        raise ValueError("orig_vec and per_vec must be the same length, " +
-                "and contain the same symbols.")
+        raise ValueError("orig_vec and per_vec must be the same length, "
+                         "and contain the same symbols.")
     ind_list = [orig_vec.index(i) for i in per_vec]
     p_matrix = zeros(len(orig_vec))
     for i, j in enumerate(ind_list):
