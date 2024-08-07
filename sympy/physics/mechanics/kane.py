@@ -317,6 +317,18 @@ class KanesMethod(_Methods):
                 self._f_dnh = msubs(acc, udot_zero)
                 self._k_dnh = (acc - self._f_dnh).jacobian(self._udot)
 
+            # The linear velocity constraints must be linear in u, so check'
+            # for u in the components.
+            dy_syms = find_dynamicsymbols(self._f_nh.row_join(self._k_nh))
+            nonlin_vars = [vari for vari in self.u[:] if vari in dy_syms]
+            if nonlin_vars:
+                msg = ('The provided linear velocity constraints are '
+                       'nonlinear in {}. They must be linear in the '
+                       'generalized speeds and derivatives of the generalized '
+                       'coordinates.')
+                raise ValueError(msg.format(nonlin_vars))
+
+
             # Form of non-holonomic constraints is B*u + C = 0.
             # We partition B into independent and dependent columns:
             # Ars is then -B_dep.inv() * B_ind, and it relates dependent speeds
@@ -367,7 +379,7 @@ class KanesMethod(_Methods):
             f_k = kdeqs.xreplace(u_zero).xreplace(qdot_zero)
 
             # The kinematic differential equations should be linear in both q'
-            # and u, so check for u and q' in the components.
+            # and u so check for u and q' in the components.
             dy_syms = find_dynamicsymbols(k_ku.row_join(k_kqdot).row_join(f_k))
             nonlin_vars = [vari for vari in u[:] + qdot[:] if vari in dy_syms]
             if nonlin_vars:
