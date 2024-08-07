@@ -17,7 +17,7 @@ constraint equations and the dynamic equations.
 .. math::
   \mathbf{m_{c}}(q, t) \dot{q} + \mathbf{f_{c}}(q, t) &= 0\\
   \mathbf{m_{dc}}(\dot{q}, q, t) \ddot{q} + \mathbf{f_{dc}}(\dot{q}, q, t) &= 0\\
-  \mathbf{m_d}(\dot{q}, q, t) \ddot{q} + \boldsymbol{\Lambda}_{\mathbf{c}}(q, t)
+  \mathbf{m_d}(\dot{q}, q, t) \ddot{q} + \mathbf{\Lambda_c}(q, t)
   \lambda + \mathbf{f_d}(\dot{q}, q, t) &= 0\\
 
 In this module, the expressions formed by using Lagrange's equations of the
@@ -36,7 +36,7 @@ in the following fashion:
 .. math::
   x = \begin{bmatrix} \ddot{q} \\ \lambda \end{bmatrix} \\
   \mathbf{M}(q, t) &= \begin{bmatrix} \mathbf{m_d}(q, t) &
-  \boldsymbol{\Lambda}_{\mathbf{c}}(q, t) \end{bmatrix}\\
+  \mathbf{\Lambda_c}(q, t) \end{bmatrix}\\
   \mathbf{F}(\dot{q}, q, t) &= \begin{bmatrix} \mathbf{f_d}(q, \dot{q}, t)
   \end{bmatrix}\\
 
