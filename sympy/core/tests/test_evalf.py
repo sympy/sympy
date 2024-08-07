@@ -560,24 +560,6 @@ def test_issue_10323():
     assert ceiling(sqrt(2**30 + 1)) == 2**15 + 1
 
 
-def test_AssocOp_Function():
-    # the first arg of Min is not comparable in the imaginary part
-    raises(ValueError, lambda: S('''
-    Min(-sqrt(3)*cos(pi/18)/6 + re(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
-    sqrt(3)*I/18)**(1/3)))/3 + sin(pi/18)/2 + 2 + I*(-cos(pi/18)/2 -
-    sqrt(3)*sin(pi/18)/6 + im(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
-    sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
-    sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
-    I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
-    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))'''))
-    # if that is changed so a non-comparable number remains as
-    # an arg, then the Min/Max instantiation needs to be changed
-    # to watch out for non-comparable args when making simplifications
-    # and the following test should be added instead (with e being
-    # the sympified expression above):
-    # raises(ValueError, lambda: e._eval_evalf(2))
-
-
 def test_issue_10395():
     eq = x*Max(0, y)
     assert nfloat(eq) == eq

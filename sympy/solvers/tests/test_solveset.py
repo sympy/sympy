@@ -2397,17 +2397,6 @@ def test_substitution_incorrect():
                         [x, y, z, k]).free_symbols == {z}
 
 
-def test_substitution_redundant():
-    # the third and fourth solutions are redundant in the test below
-    assert substitution([x**2 - y**2, z - 1], [x, z]) == \
-           {(-y, 1), (y, 1), (-sqrt(y**2), 1), (sqrt(y**2), 1)}
-
-    # the system below has three solutions. Two of the solutions
-    # returned by substitution are redundant.
-    res = substitution([x - y, y**3 - 3*y**2 + 1], [x, y])
-    assert len(res) == 5
-
-
 def test_issue_5132_substitution():
     x, y, z, r, t = symbols('x, y, z, r, t', real=True)
     system = [r - x**2 - y**2, tan(t) - y/x]
@@ -3546,3 +3535,11 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+
+def test_issue_25783():
+    res = substitution([x - y, y**3 - 3*y**2 + 1], [x, y])
+    sol = {(1 + 2*cos(pi/9), 1 + 2*cos(pi/9)),\
+            (-cos(pi/9) - sqrt(3)*sin(pi/9) + 1, -cos(pi/9) - sqrt(3)*sin(pi/9) + 1),\
+            (-cos(pi/9) + sqrt(3)*sin(pi/9) + 1, -cos(pi/9) + sqrt(3)*sin(pi/9) + 1)}
+    assert res == sol

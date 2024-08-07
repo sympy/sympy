@@ -854,14 +854,18 @@ class Mul(Expr, AssocOp):
             elif a.is_commutative:
                 aconj = a.conjugate() if other else None
                 # search for complex conjugate pairs:
-                for i, x in enumerate(other):
+                for j, x in enumerate(other):
                     if x == aconj:
                         coeffr.append(Abs(x)**2)
-                        del other[i]
+                        del other[j]
                         break
                 else:
                     if a.is_Add:
                         addterms *= a
+                    elif a.has(re, im) or r.has(S.ImaginaryUnit) or i.has(S.ImaginaryUnit):
+                        other.append(a)
+                    elif a.is_Pow and a.base.is_Add:
+                        other.append(r + i*S.ImaginaryUnit)
                     else:
                         other.append(a)
             else:
