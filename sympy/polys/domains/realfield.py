@@ -21,6 +21,7 @@ def to_rational(s, max_denom, limit=True):
     # to_rational() function returns a gmpy2.mpz instance and if MPQ is
     # flint.fmpq then MPQ(p, q) will fail.
     p = int(p)
+    q = int(q)
 
     if not limit or q <= max_denom:
         return p, q
