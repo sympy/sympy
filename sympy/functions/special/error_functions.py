@@ -1224,7 +1224,7 @@ class Ei(Function):
         return li(exp(z))
 
     def _eval_rewrite_as_Si(self, z, **kwargs):
-        if z.is_negative:
+        if z.is_extended_negative:
             return Shi(z) + Chi(z) - I*pi
         else:
             return Shi(z) + Chi(z)
