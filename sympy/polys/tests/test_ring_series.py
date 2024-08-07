@@ -4,7 +4,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
-    rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
+    rs_cos_sin, rs_sec, rs_csc, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
     rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
@@ -370,6 +370,17 @@ def test_cos_sin():
     assert cos == rs_cos(x + x*y, x, 5)
     assert sin == rs_sin(x + x*y, x, 5)
 
+
+def test_sec_csc():
+    R, x = ring('x', QQ)
+    p = x**QQ(2,3) + x
+    assert rs_sec(x, x, 4) == 1/2*x**2 + 1
+    assert rs_sec(p, x, 3) == 5/24*x**QQ(8, 3) + 1/2*x**2 + x**QQ(5, 3) + 1/2*x**QQ(4, 3) + 1
+    assert rs_csc(x, x, 4) == 7/360*x**3 + 1/6*x + x**(-1)
+    assert rs_csc(p, x, 3) == 127/120*x**QQ(8, 3) - 113/120*x**QQ(7, 3) + 367/360*x**2 - \
+        x**QQ(5, 3) + x**QQ(4, 3) - 5/6*x + 7/6*x**QQ(2, 3) - x**QQ(1, 3) + 1 - x**QQ(-1, 3) + x**QQ(-2, 3)
+
+
 def test_atanh():
     R, x, y = ring('x, y', QQ)
     assert rs_atanh(x, x, 9)/x**5 == Rational(1, 7)*x**2 + Rational(1, 5) + Rational(1, 3)*x**(-2) + x**(-4)
@@ -501,6 +512,15 @@ def test_puiseux():
         x**QQ(4,3)/2 - x**QQ(16,15) - x**QQ(4,5)/2 + 1
     assert r[1] == -x**QQ(9,5)/2 - x**QQ(26,15)/2 - x**QQ(22,15)/2 - \
         x**QQ(6,5)/6 + x + x**QQ(2,3) + x**QQ(2,5)
+
+    r = rs_sec(p, x, 2)
+    assert r == 5/6*x**QQ(28, 15) + x**QQ(5, 3) + 5/24*x**QQ(8, 5) + \
+        x**QQ(7, 5) + 1/2*x**QQ(4, 3) + x**QQ(16, 15) + 1/2*x**QQ(4, 5) + 1
+
+    r = rs_csc(p, x, 1)
+    assert r == -x**QQ(14, 15) + x**QQ(4, 5) - 3*x**QQ(11, 15) + 7/6*x**QQ(2, 3) + \
+        2*x**QQ(7, 15) - 5/6*x**QQ(2, 5) - x**QQ(1, 5) + x**QQ(2, 15) - \
+        x**QQ(-2, 15) + x**QQ(-2, 5)
 
     r = rs_atanh(p, x, 2)
     assert r == x**QQ(9,5) + x**QQ(26,15) + x**QQ(22,15) + x**QQ(6,5)/3 + x + \
