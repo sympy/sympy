@@ -1,5 +1,5 @@
 from typing import Type
-from sympy import Interval, numer, Rational, solveset
+from sympy import Interval, Intersection, numer, Rational, solveset, sqrt
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -1103,6 +1103,44 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         """
         return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in self.poles())
+
+    def bandwidth(self, power_gain=0.5):
+        """
+        Returns the system bandwidth for a given power gain.
+        If power_gain is not provided, it returns the 3 dB Bandwidth or
+        more precisely called 3.01 dB Bandwidth, which means power gain is 0.5.
+        Examples
+        ========
+        >>> from sympy import Symbol
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> s = Symbol('s')
+        >>> tf1 = TransferFunction(1, s + 1, s)
+        >>> tf1.bandwidth()
+        1.00000000000000
+
+        We can also use this method with symbolic TransferFunction.
+
+        >>> a = Symbol('a', real=True, positive=True)
+        >>> tf2 = TransferFunction(1, s - a, s)
+        >>> tf2.bandwidth()
+        1.0*a
+
+        Notes
+        =====
+        When using symbolic TransferFunction, make sure to define symbols along with
+        their signs properly.
+
+        """
+        omega = Symbol('omega', real=True, positive=True)
+        sys_resp0 = Abs(self.dc_gain())
+        sys_resp1 = Abs(self.eval_frequency(I * omega))
+        res = solveset(sys_resp1 - sqrt(power_gain)*sys_resp0, omega, domain=S.Reals)
+        if isinstance(res, Intersection):
+            return res
+        freq = [sol.evalf() for sol in res if sol > 0]
+        if freq:
+            return freq[0]
+        return oo
 
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):

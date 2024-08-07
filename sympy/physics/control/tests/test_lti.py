@@ -351,6 +351,22 @@ def test_TransferFunction_functions():
     assert tf10.to_expr() == Mul(S(0), Pow(1, -1, evaluate=False), evaluate=False)
     assert tf11.to_expr() == Pow(1, -1, evaluate=False)
 
+    # Bandwidth of TransferFunction
+    tf12 = TransferFunction(2*(s+3), (s+6)*(s+1), s)
+    assert str(tf12.bandwidth()) == str(1.09195001097817)
+    tf13 = TransferFunction(1, s**2+s+1, s)
+    assert str(tf13.bandwidth()) == str(1.27201964951407)
+    tf14 = TransferFunction(s, s**2+s+1, s)
+    assert tf14.bandwidth() == oo
+    tf15 = TransferFunction(s+1, s**2+s+1, s)
+    assert str(tf15.bandwidth()) == str(1.81735402102397)
+    tf16 = TransferFunction(2*(s+3), (s+6)*(s+1), s)
+    assert str(tf16.bandwidth()) == str(1.09195001097817)
+    q, r1 = symbols('q r1', real=True, positive=True)
+    tf17 = TransferFunction(r1, s-q, s)
+    assert str(tf17.bandwidth()) == '1.0*q'
+
+
 def test_TransferFunction_addition_and_subtraction():
     tf1 = TransferFunction(s + 6, s - 5, s)
     tf2 = TransferFunction(s + 3, s + 1, s)
