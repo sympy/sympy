@@ -2139,3 +2139,10 @@ def test_old_issues():
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3
+
+
+def test_issue_26566():
+    x = symbols('x', real=True)
+    a = symbols('a', real=True, positive=True)
+    assert sin(a*(x+pi))**2 == simplify(pi/4 - sin(pi*a)/(4*a))
+    
