@@ -66,7 +66,7 @@ def build_parser(output_dir=dir_autolev_antlr):
         new_path = os.path.join(output_dir, os.path.basename(path).lower())
         with open(path, 'r') as f:
             lines = [line.rstrip().replace('AutolevParser import', 'autolevparser import') +'\n'
-                     for line in f.readlines()]
+                     for line in f]
 
         os.unlink(path)
 

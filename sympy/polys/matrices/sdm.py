@@ -2154,7 +2154,7 @@ def sdm_berk(M, n, K):
     # range then Tq[j] must be zero. We exploit this potential banded
     # structure and the potential sparsity of q to compute Tq more efficiently.
 
-    Tvals = Tvals[::-1]
+    Tvals.reverse()
 
     Tq = {}
 
