@@ -14,6 +14,7 @@ from .latex import latex
 
 __doctest_requires__ = {('preview',): ['pyglet']}
 
+CALLS_TIMEOUT = 10.0  # Time-out system command calls
 
 def _check_output_no_window(*args, **kwargs):
     # Avoid showing a cmd.exe window when running this
@@ -22,7 +23,7 @@ def _check_output_no_window(*args, **kwargs):
         creation_flag = 0x08000000 # CREATE_NO_WINDOW
     else:
         creation_flag = 0 # Default value
-    return check_output(*args, creationflags=creation_flag, **kwargs)
+    return check_output(*args, creationflags=creation_flag, timeout=CALLS_TIMEOUT, **kwargs)
 
 
 def system_default_viewer(fname, fmt):
@@ -346,7 +347,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     raise RuntimeError("%s is not installed" % cmd_variants[0])
 
             defaultoptions = {
-                "dvipng": ["-T", "tight", "-z", "9", "--truecolor"],
+                "dvipng": ["-T", "tight", "--nogs", "-z", "9", "--truecolor"],
                 "dvisvgm": ["--no-fonts"],
             }
 
