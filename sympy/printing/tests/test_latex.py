@@ -9,6 +9,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import (Derivative, Function, Lambda, Subs, diff)
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
+from sympy.core.add import Add
 from sympy.core.numbers import (AlgebraicNumber, Float, I, Integer, Rational, oo, pi)
 from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
@@ -2711,10 +2712,24 @@ def test_issue_9216():
     assert latex(expr_2) == r"1^{1^{-1}}"
 
     expr_3 = Pow(3, -2, evaluate=False)
-    assert latex(expr_3) == r"\frac{1}{9}"
+    assert latex(expr_3) == r"\frac{1}{3^{2}}"
 
     expr_4 = Pow(1, -2, evaluate=False)
     assert latex(expr_4) == r"1^{-2}"
+
+def test_issue_latex_22788():
+
+    expr1 = Pow(I, Integer(-8), evaluate=False)
+    assert latex(expr1) == r"\frac{1}{i^{8}}"
+
+    expr2 = Add(Integer(1), expr1, evaluate=False)
+    assert latex(expr2) == r'1 + \frac{1}{i^{8}}'
+
+    expr3 = Add(Integer(1), I, evaluate=False)
+    assert latex(expr3) == r'1 + i'
+
+    expr4 = Mul(Pow(Integer(2), Integer(-1), evaluate=False), expr3, expr2, evaluate=False)
+    assert latex(expr4) == r'\frac{\left(1 + \frac{1}{i^{8}}\right) \left(1 + i\right)}{2}'
 
 
 def test_latex_printer_tensor():
