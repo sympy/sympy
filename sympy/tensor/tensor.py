@@ -4286,6 +4286,21 @@ class TensMul(TensExpr, AssocOp):
                 exclude.update(get_indices(new_renamed))
         return newrule
 
+    def _eval_subs(self, old, new):
+        """
+        If new is an index which is already present in self as a dummy, the dummies in self should be renamed.
+        """
+
+        if not isinstance(new, TensorIndex):
+            return None
+
+        exclude = {new}
+        self_renamed = self._dedupe_indices(self, exclude)
+        if self_renamed is None:
+            return None
+        else:
+            return self_renamed._subs(old, new).doit(deep=False)
+
     def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         from sympy.concrete.summations import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
