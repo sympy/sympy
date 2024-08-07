@@ -872,7 +872,7 @@ def pde_separate_add(eq, fun, sep):
     Helper function for searching additive separable solutions.
 
     Consider an equation of two independent variables x, y and a dependent
-    variable w, we look for the product of two functions depending on different
+    variable w, we look for the sum of two functions depending on different
     arguments:
 
     `w(x, y, z) = X(x) + y(y, z)`
