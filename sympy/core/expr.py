@@ -1084,7 +1084,11 @@ class Expr(Basic, EvalfMixin):
         None
 
         """
-        from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
+        from sympy.polys.polyerrors import (
+            PolynomialError,
+            GeneratorsNeeded,
+            CoercionFailed,
+        )
         from sympy.polys.polytools import Poly
 
         try:
@@ -1094,9 +1098,10 @@ class Expr(Basic, EvalfMixin):
                 return None
             else:
                 return poly
-        except (PolynomialError, GeneratorsNeeded):
+        except (PolynomialError, GeneratorsNeeded, CoercionFailed):
             # PolynomialError is caught for e.g. exp(x).as_poly(x)
             # GeneratorsNeeded is caught for e.g. S(2).as_poly()
+            # CoercionFailed is caught for e.g. pi.as_poly(x, domain='QQ')
             return None
 
     def as_ordered_terms(self, order=None, data=False):

@@ -423,13 +423,6 @@ class Set(Basic, EvalfMixin):
         if ret is not None:
             return ret
 
-        # Fall back on computing the intersection
-        # XXX: We shouldn't do this. A query like this should be handled
-        # without evaluating new Set objects. It should be the other way round
-        # so that the intersect method uses is_subset for evaluation.
-        if self.intersect(other) == self:
-            return True
-
     def _eval_is_subset(self, other):
         '''Returns a fuzzy bool for whether self is a subset of other.'''
         return None
@@ -460,7 +453,10 @@ class Set(Basic, EvalfMixin):
 
         """
         if isinstance(other, Set):
-            return self != other and self.is_subset(other)
+            return fuzzy_and([
+                self.is_subset(other),
+                fuzzy_not(other.is_subset(self)),
+            ])
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
@@ -505,7 +501,7 @@ class Set(Basic, EvalfMixin):
 
         """
         if isinstance(other, Set):
-            return self != other and self.is_superset(other)
+            return other.is_proper_subset(self)
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
@@ -1430,8 +1426,12 @@ class Union(Set, LatticeOp):
     def _contains(self, other):
         return Or(*[s.contains(other) for s in self.args])
 
-    def is_subset(self, other):
-        return fuzzy_and(s.is_subset(other) for s in self.args)
+    def _eval_is_subset(self, other):
+        return fuzzy_and(arg.is_subset(other) for arg in self.args)
+
+    def _eval_is_superset(self, other):
+        if fuzzy_or(arg.is_superset(other) for arg in self.args):
+            return True
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
@@ -1744,6 +1744,11 @@ class Complement(Set):
         A = self.args[0]
         B = self.args[1]
         return And(A.contains(other), Not(B.contains(other)))
+
+    def _eval_is_subset(self, other):
+        A, B = self.args
+        if A.is_subset(other):
+            return True
 
     def as_relational(self, symbol):
         """Rewrite a complement in terms of equalities and logic
