@@ -3,8 +3,10 @@
 
 import math
 from functools import reduce
+from collections import defaultdict
 
 from sympy.core import S, I, pi
+from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
@@ -14,14 +16,14 @@ from sympy.core.numbers import Rational, comp
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Dummy, Symbol, symbols
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import exp, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root, sqrt
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.domains import EX
-from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
-    DomainError, UnsolvableFactorError)
+from sympy.polys.polyerrors import (PolynomialError, DomainError,
+    UnsolvableFactorError)
 from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.rationaltools import together
@@ -930,255 +932,256 @@ def roots(f, *gens,
     .. [1] https://en.wikipedia.org/wiki/Cubic_equation#Trigonometric_and_hyperbolic_solutions
 
     """
-    from sympy.polys.polytools import to_rational_coeffs
-    flags = dict(flags)
+    if filter not in (None, 'Z', 'Q', 'R', 'I', 'C'):
+        raise ValueError("Invalid filter: %s" % filter)
 
-    if isinstance(f, list):
-        if gens:
-            raise ValueError('redundant generators given')
+    handlers = {
+        'Z': lambda r: r.is_Integer,
+        'Q': lambda r: r.is_Rational,
+        'R': lambda r: all(a.is_real for a in r.as_numer_denom()),
+        'I': lambda r: r.is_imaginary,
+    }
+    filter_func = handlers.get(filter)
 
-        x = Dummy('x')
+    # Both predicate and filter are used to filter the roots.
 
-        poly, i = {}, len(f) - 1
-
-        for coeff in f:
-            poly[i], i = sympify(coeff), i - 1
-
-        f = Poly(poly, x, field=True)
+    if predicate is not None and filter_func is not None:
+        query = lambda r: predicate(r) and filter_func(r)
+    elif predicate is not None:
+        query = predicate
+    elif filter is not None:
+        query = filter_func
     else:
-        try:
-            F = Poly(f, *gens, **flags)
-            if not isinstance(f, Poly) and not F.gen.is_Symbol:
-                raise PolynomialError("generator must be a Symbol")
-            f = F
-        except GeneratorsNeeded:
-            if multiple:
-                return []
-            else:
-                return {}
-        else:
-            n = f.degree()
-            if f.length() == 2 and n > 2:
-                # check for foo**n in constant if dep is c*gen**m
-                con, dep = f.as_expr().as_independent(*f.gens)
-                fcon = -(-con).factor()
-                if fcon != con:
-                    con = fcon
-                    bases = []
-                    for i in Mul.make_args(con):
-                        if i.is_Pow:
-                            b, e = i.as_base_exp()
-                            if e.is_Integer and b.is_Add:
-                                bases.append((b, Dummy(positive=True)))
-                    if bases:
-                        rv = roots(Poly((dep + con).xreplace(dict(bases)),
-                            *f.gens), *F.gens,
-                            auto=auto,
-                            cubics=cubics,
-                            trig=trig,
-                            quartics=quartics,
-                            quintics=quintics,
-                            multiple=multiple,
-                            filter=filter,
-                            predicate=predicate,
-                            **flags)
-                        return {factor_terms(k.xreplace(
-                            {v: k for k, v in bases})
-                        ): v for k, v in rv.items()}
+        query = None
 
-        if f.is_multivariate:
-            raise PolynomialError('multivariate polynomials are not supported')
+    opts = {
+        'auto': auto,
+        'cubics': cubics,
+        'quartics': quartics,
+        'quintics': quintics,
+        'trig': trig,
+    }
 
-    def _update_dict(result, zeros, currentroot, k):
-        if currentroot == S.Zero:
-            if S.Zero in zeros:
-                zeros[S.Zero] += k
-            else:
-                zeros[S.Zero] = k
-        if currentroot in result:
-            result[currentroot] += k
-        else:
-            result[currentroot] = k
+    # Here sympify will handle any strings or unsympified int etc. After
+    # sympify we either have Expr or we have something else that we will pass
+    # to the Poly constructor. This could be a Poly or a list of coefficients
+    # or a coefficient dict or perhaps even other things. We will just pass
+    # these to Poly and let it figure out what to do but the Expr case should
+    # be handled separately because we can do some useful things before
+    # converting to Poly.
 
-    def _try_decompose(f):
-        """Find roots using functional decomposition. """
-        factors, roots = f.decompose(), []
+    if not isinstance(f, (Expr, Poly, list, dict)):
+        f = sympify(f)
 
-        for currentroot in _try_heuristics(factors[0]):
-            roots.append(currentroot)
+    if isinstance(f, Expr):
+        result, complete = _roots_expr(f, gens, flags, opts)
+    else:
+        result, complete = _roots_poly(f, gens, flags, opts)
 
-        for currentfactor in factors[1:]:
-            previous, roots = list(roots), []
+    if strict and not complete:
+        raise UnsolvableFactorError(filldedent('''
+            Strict mode: some factors cannot be solved in radicals, so
+            a complete list of solutions cannot be returned. Call
+            roots without strict=True to get solutions expressible in
+            radicals (if there are any).
+            '''))
 
-            for currentroot in previous:
-                g = currentfactor - Poly(currentroot, f.gen)
+    # Remove roots that do not satisfy predicate or filter.
+    if query:
+        result = {zero: m for zero, m in result.items() if query(zero)}
 
-                for currentroot in _try_heuristics(g):
-                    roots.append(currentroot)
+    if multiple:
+        result_list = []
 
-        return roots
+        for rootval in ordered(result):
+            multiplicity = result[rootval]
+            result_list.extend([rootval] * multiplicity)
 
-    def _try_heuristics(f):
-        """Find roots using formulas and some tricks. """
-        if f.is_ground:
-            return []
-        if f.is_monomial:
-            return [S.Zero]*f.degree()
-
-        if f.length() == 2:
-            if f.degree() == 1:
-                return list(map(cancel, roots_linear(f)))
-            else:
-                return roots_binomial(f)
-
-        result = []
-
-        for i in [-1, 1]:
-            if not f.eval(i):
-                f = f.quo(Poly(f.gen - i, f.gen))
-                result.append(i)
-                break
-
-        n = f.degree()
-
-        if n == 1:
-            result += list(map(cancel, roots_linear(f)))
-        elif n == 2:
-            result += list(map(cancel, roots_quadratic(f)))
-        elif f.is_cyclotomic:
-            result += roots_cyclotomic(f)
-        elif n == 3 and cubics:
-            result += roots_cubic(f, trig=trig)
-        elif n == 4 and quartics:
-            result += roots_quartic(f)
-        elif n == 5 and quintics:
-            result += roots_quintic(f)
-
+        return result_list
+    else:
         return result
 
-    # Convert the generators to symbols
-    dumgens = symbols('x:%d' % len(f.gens), cls=Dummy)
-    f = f.per(f.rep, dumgens)
 
-    (k,), f = f.terms_gcd()
+def _roots_expr(f, gens, flags, opts):
+    """Handle roots call where Expr has been given for f."""
+    if not gens:
+        gens = tuple(f.free_symbols)
 
-    if not k:
-        zeros = {}
+    if len(gens) == 1:
+        [gen] = gens
+    elif len(gens) > 1:
+        raise PolynomialError('multivariate polynomials are not supported')
     else:
-        zeros = {S.Zero: k}
+        gen = Dummy('x0')
 
-    coeff, f = preprocess_roots(f)
+    [gen] = gens
 
-    if auto and f.get_domain().is_Ring:
-        f = f.to_field()
+    # Later things like factor_terms should be used here before conversion to
+    # Poly but for now we leave this as it is to preserve the existing
+    # behaviour of roots.
+
+    F = Poly(f, gen, **flags)
+
+    result = _roots_poly_inner(F, opts)
+    complete = sum(result.values()) == F.degree()
+    return result, complete
+
+
+def _roots_poly(f, gens, flags, opts):
+    """Handle roots call where Poly (or convertible) has been given for f."""
+
+    if isinstance(f, (list, dict)):
+        if gens:
+            raise ValueError('redundant generators given')
+        gens = (Dummy('x'),)
+
+    F = Poly(f, *gens, **flags)
+
+    # Allow a non-symbol generator if the input was already explicitly a
+    # polynomial with a non-symbol generator like roots(Poly(sin(x), sin(x))).
+    if not F.gen.is_Symbol and not isinstance(f, Poly):
+        raise PolynomialError("generator must be a Symbol")
+
+    if F.is_multivariate:
+        raise PolynomialError('multivariate polynomials are not supported')
+
+    result = _roots_poly_inner(F, opts)
+    complete = sum(result.values()) == F.degree()
+    return result, complete
+
+
+def _roots_poly_inner(f, opts):
+    """Handle roots call for Poly after validating inputs."""
+
+    # Use a Dummy to avoid any assumptions on the original generator symbol.
+    f = f.per(f.rep, [Dummy('x0')])
 
     # Use EX instead of ZZ_I or QQ_I
     if f.get_domain().is_QQ_I:
         f = f.per(f.rep.convert(EX))
 
-    rescale_x = None
-    translate_x = None
+    if opts['auto'] and f.get_domain().is_Ring:
+        f = f.to_field()
 
-    result = {}
+    root_counts = defaultdict(int)
 
-    if not f.is_ground:
-        dom = f.get_domain()
-        if not dom.is_Exact and dom.is_Numerical:
-            for r in f.nroots():
-                _update_dict(result, zeros, r, 1)
-        elif f.degree() == 1:
-            _update_dict(result, zeros, roots_linear(f)[0], 1)
-        elif f.length() == 2:
-            roots_fun = roots_quadratic if f.degree() == 2 else roots_binomial
-            for r in roots_fun(f):
-                _update_dict(result, zeros, r, 1)
-        else:
-            _, factors = Poly(f.as_expr()).factor_list()
-            if len(factors) == 1 and f.degree() == 2:
-                for r in roots_quadratic(f):
-                    _update_dict(result, zeros, r, 1)
-            else:
-                if len(factors) == 1 and factors[0][1] == 1:
-                    if f.get_domain().is_EX:
-                        res = to_rational_coeffs(f)
-                        if res:
-                            if res[0] is None:
-                                translate_x, f = res[2:]
-                            else:
-                                rescale_x, f = res[1], res[-1]
-                            result = roots(f)
-                            if not result:
-                                for currentroot in _try_decompose(f):
-                                    _update_dict(result, zeros, currentroot, 1)
-                        else:
-                            for r in _try_heuristics(f):
-                                _update_dict(result, zeros, r, 1)
-                    else:
-                        for currentroot in _try_decompose(f):
-                            _update_dict(result, zeros, currentroot, 1)
-                else:
-                    for currentfactor, k in factors:
-                        for r in _try_heuristics(Poly(currentfactor, f.gen, field=True)):
-                            _update_dict(result, zeros, r, k)
+    # Factor out symbolic coefficients if possible.
+    coeff, f = preprocess_roots(f)
+
+    # Factor out monomials
+    (k,), f = f.terms_gcd()
+    if k:
+        root_counts[S.Zero] += k
+
+    if f.is_ground:
+        pass
+    elif not f.domain.is_Exact and f.domain.is_Numerical:
+        for r in f.nroots():
+            root_counts[r] += 1
+    elif f.degree() == 1:
+        root_counts[roots_linear(f)[0]] += 1
+    elif f.length() == 2:
+        roots_fun = roots_quadratic if f.degree() == 2 else roots_binomial
+        for r in roots_fun(f):
+            root_counts[r] += 1
+    else:
+        _, factors = Poly(f.as_expr()).factor_list()
+
+        for currentfactor, k in factors:
+            poly_factor = Poly(currentfactor, f.gen, field=True)
+            for r in _try_heuristics(poly_factor, opts):
+                root_counts[r] += k
+
+    result = dict(root_counts)
 
     if coeff is not S.One:
-        _result, result, = result, {}
+        result = {coeff*r: m for r, m in result.items()}
 
-        for currentroot, k in _result.items():
-            result[coeff*currentroot] = k
+    return result
 
-    if filter not in [None, 'C']:
-        handlers = {
-            'Z': lambda r: r.is_Integer,
-            'Q': lambda r: r.is_Rational,
-            'R': lambda r: all(a.is_real for a in r.as_numer_denom()),
-            'I': lambda r: r.is_imaginary,
-        }
 
-        try:
-            query = handlers[filter]
-        except KeyError:
-            raise ValueError("Invalid filter: %s" % filter)
+#
+# XXX: _try_decompose is not being used any more...
+#
+# It is not clear where is the best place to use it.
+#
+def _try_decompose(f, opts):
+    """Find roots using functional decomposition. """
+    factors, roots = f.decompose(), []
 
-        for zero in dict(result).keys():
-            if not query(zero):
-                del result[zero]
+    for currentroot in _try_heuristics(factors[0], opts):
+        roots.append(currentroot)
 
-    if predicate is not None:
-        for zero in dict(result).keys():
-            if not predicate(zero):
-                del result[zero]
-    if rescale_x:
-        result1 = {}
-        for k, v in result.items():
-            result1[k*rescale_x] = v
-        result = result1
-    if translate_x:
-        result1 = {}
-        for k, v in result.items():
-            result1[k + translate_x] = v
-        result = result1
+    for currentfactor in factors[1:]:
+        previous, roots = list(roots), []
 
-    # adding zero roots after non-trivial roots have been translated
-    result.update(zeros)
+        for currentroot in previous:
+            g = currentfactor - Poly(currentroot, f.gen)
 
-    if strict and sum(result.values()) < f.degree():
-        raise UnsolvableFactorError(filldedent('''
-            Strict mode: some factors cannot be solved in radicals, so
-            a complete list of solutions cannot be returned. Call
-            roots with strict=False to get solutions expressible in
-            radicals (if there are any).
-            '''))
+            for currentroot in _try_heuristics(g, opts):
+                roots.append(currentroot)
 
-    if not multiple:
-        return result
-    else:
-        zeros = []
+    return roots
 
-        for zero in ordered(result):
-            zeros.extend([zero]*result[zero])
 
-        return zeros
+def _try_heuristics(f, opts):
+    """Find roots using formulas and some tricks. """
+    from sympy.polys.polytools import to_rational_coeffs
+
+    if f.is_ground:
+        return []
+    if f.is_monomial:
+        return [S.Zero]*f.degree()
+
+    if f.length() == 2:
+        if f.degree() == 1:
+            return list(map(cancel, roots_linear(f)))
+        else:
+            return roots_binomial(f)
+
+    result = []
+
+    for i in [-1, 1]:
+        if not f.eval(i):
+            f = f.quo(Poly(f.gen - i, f.gen))
+            result.append(i)
+            break
+
+
+    if f.domain.is_EX:
+        res = to_rational_coeffs(f)
+        if res:
+            if res[0] is None:
+                translate_x, f = res[2:]
+                sub_result = roots(f)
+                if sub_result:
+                    for k, v in sub_result.items():
+                        result.extend([k + translate_x] * v)
+                    return result
+            else:
+                rescale_x, f = res[1], res[-1]
+                sub_result = roots(f)
+                if sub_result:
+                    for k, v in sub_result.items():
+                        result.extend([k * rescale_x] * v)
+                    return result
+
+    n = f.degree()
+
+    if n == 1:
+        result += list(map(cancel, roots_linear(f)))
+    elif n == 2:
+        result += list(map(cancel, roots_quadratic(f)))
+    elif f.is_cyclotomic:
+        result += roots_cyclotomic(f)
+    elif n == 3 and opts['cubics']:
+        result += roots_cubic(f, trig=opts['trig'])
+    elif n == 4 and opts['quartics']:
+        result += roots_quartic(f)
+    elif n == 5 and opts['quintics']:
+        result += roots_quintic(f)
+
+    return result
 
 
 def root_factors(f, *gens, filter=None, **args):
