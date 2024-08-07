@@ -35,7 +35,7 @@ from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
 from mpmath import inf, ninf, make_mpc
 from mpmath.libmp.libmpf import from_float, fzero
 from sympy.core.expr import unchanged
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, slow
 from sympy.abc import n, x, y
 
 
@@ -515,6 +515,19 @@ def test_evalf_integral():
     # test that workprec has to increase in order to get a result other than 0
     eps = Rational(1, 1000000)
     assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10
+
+
+def test_issue_21605_double_integral():
+    assert NS('Integral(x*y**2, (x, 0, 1), (y, 0, 1))', 10, quadmaxdims=2) == '0.1666666667'
+
+
+@slow
+def test_issue_21605_triple_integral():
+    assert NS('Integral(x*y**2*z**3, (x, 0, 1), (y, 0, 1), (z, 0, 1))', 10, quadmaxdims=3) == '0.04166666667'
+
+
+def test_issue_21605_skip_evalf_triple_integral():
+    assert NS('Integral(x*y**2*z**3, (x, 0, 1), (y, 0, 1), (z, 0, 1))', 10, quadmaxdims=1) == 'Integral(x*y**2*z**3, (x, 0, 1), (y, 0, 1), (z, 0, 1))'
 
 
 def test_issue_8821_highprec_from_str():
