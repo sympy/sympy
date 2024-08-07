@@ -2428,19 +2428,30 @@ class acos(InverseTrigonometricFunction):
         if i_coeff is not None:
             return pi/2 - asin(arg)
 
-        if isinstance(arg, cos):
-            ang = arg.args[0]
+        if arg.is_Mul and len(arg.args) == 2 and arg.args[0] == -1:
+            narg = arg.args[1]
+            minus = True
+        else:
+            narg = arg
+            minus = False
+
+        if isinstance(narg, cos):
+            # acos(cos(x)) = x or acos(-cos(x)) = pi - x
+            ang = narg.args[0]
             if ang.is_comparable:
+                if minus:
+                    ang = pi - ang
                 ang %= 2*pi # restrict to [0,2*pi)
                 if ang > pi: # restrict to [0,pi]
                     ang = 2*pi - ang
-
                 return ang
 
-        if isinstance(arg, sin): # acos(x) + asin(x) = pi/2
-            ang = arg.args[0]
+        if isinstance(narg, sin): # acos(x) + asin(x) = pi/2
+            ang = narg.args[0]
             if ang.is_comparable:
-                return pi/2 - asin(arg)
+                if minus:
+                    return pi/2 + asin(narg)
+                return pi/2 - asin(narg)
 
     @staticmethod
     @cacheit
@@ -3085,19 +3096,30 @@ class asec(InverseTrigonometricFunction):
         if arg.is_infinite:
             return pi/2
 
-        if isinstance(arg, sec):
-            ang = arg.args[0]
+        if arg.is_Mul and len(arg.args) == 2 and arg.args[0] == -1:
+            narg = arg.args[1]
+            minus = True
+        else:
+            narg = arg
+            minus = False
+
+        if isinstance(narg, sec):
+            # asec(sec(x)) = x or asec(-sec(x)) = pi - x
+            ang = narg.args[0]
             if ang.is_comparable:
+                if minus:
+                    ang = pi - ang
                 ang %= 2*pi # restrict to [0,2*pi)
                 if ang > pi: # restrict to [0,pi]
                     ang = 2*pi - ang
-
                 return ang
 
-        if isinstance(arg, csc): # asec(x) + acsc(x) = pi/2
-            ang = arg.args[0]
+        if isinstance(narg, csc): # asec(x) + acsc(x) = pi/2
+            ang = narg.args[0]
             if ang.is_comparable:
-                return pi/2 - acsc(arg)
+                if minus:
+                    pi/2 + acsc(narg)
+                return pi/2 - acsc(narg)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
