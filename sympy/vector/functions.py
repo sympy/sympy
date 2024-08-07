@@ -9,6 +9,7 @@ from sympy.integrals.integrals import integrate
 from sympy.simplify.simplify import simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
+from sympy import sin, cos, symbols
 
 
 def express(expr, system, system2=None, variables=False):
@@ -512,3 +513,49 @@ def orthogonalize(*vlist, orthonormal=False):
         ortho_vlist = [vec.normalize() for vec in ortho_vlist]
 
     return ortho_vlist
+
+
+def surface_param_eq(stype, coord_sys, *args):
+    """
+    Returns the parametric representation of common
+    geometric surfaces.
+
+    Parameters
+    ==========
+
+    stype : String
+        The type of surface.
+
+    u, v : Parametric variable
+        The variables to be used in parametric representation
+
+    args : Constant
+        The constants to be used in parametric representation
+
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, diff
+    >>> x, y = symbols('x y')
+    >>> from sympy.vector import surface_param_eq
+    >>> surface = surface_param_eq("ellipsoid", x, y, 1, 2, 3)
+    >>> surface
+    (cos(x)*cos(y))*N.i + (2*sin(x)*cos(y))*N.j + (3*sin(y))*N.k
+    >>> diff(surface, x)
+    (-sin(x)*cos(y))*N.i + (2*cos(x)*cos(y))*N.j
+
+    """
+    # Dictionary of surfaces valued with their parametric representation
+    param_equation = dict()
+    var = coord_sys.base_scalars()
+    vecs = coord_sys.base_vectors()
+    param_equation["cone"] = var[0]*cos(var[1])*vecs[0] + var[0]*sin(var[1])*vecs[1] + var[0]*vecs[2]
+    param_equation["cylinder"] = args[0]*cos(var[0])*vecs[0] + args[0]*sin(var[0])*vecs[1] \
+        + var[1]*vecs[2]
+    param_equation["ellipsoid"] = args[0]*cos(var[0])*cos(var[1])*vecs[0] \
+        + args[1]*sin(var[0])*cos(var[1])*vecs[1] + args[2]*sin(var[1])*vecs[2]
+    param_equation["paraboloid"] = var[0]*cos(var[1])*vecs[0] + var[0]*sin(var[1])*vecs[1] + var[0]**2*vecs[2]
+    param_equation["sphere"] = args[0]*cos(var[0])*cos(var[1])*vecs[0] \
+        + args[0]*sin(var[0])*cos(var[1])*vecs[1] + args[0]*sin(var[1])*vecs[2]
+    return param_equation[stype]
