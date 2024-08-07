@@ -1,5 +1,5 @@
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+#from sympy.core.symbol import Symbol
 from sympy.external import import_module
 from sympy.stats import Geometric, Poisson, Zeta, sample, Skellam, Logarithmic, NegativeBinomial, YuleSimon
 from sympy.testing.pytest import skip, raises, slow
