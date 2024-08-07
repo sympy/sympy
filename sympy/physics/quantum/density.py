@@ -14,7 +14,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
 from sympy.physics.quantum.trace import Tr
-
+from sympy import conjugate
 
 class Density(HermitianOperator):
     """Density operator for representing mixed states.
@@ -192,7 +192,7 @@ class Density(HermitianOperator):
         else:
             op = Mul(*nc_part1)*Dagger(Mul(*nc_part2))
 
-        return Mul(*c_part1)*Mul(*c_part2) * op
+        return Mul(*c_part1)*conjugate(Mul(*c_part2)) * op
 
     def _represent(self, **options):
         return represent(self.doit(), **options)
