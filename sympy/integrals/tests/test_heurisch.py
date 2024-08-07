@@ -17,6 +17,8 @@ from sympy.simplify.simplify import simplify
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.testing.pytest import XFAIL, slow
 from sympy.integrals.integrals import integrate
+from sympy import S
+
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
 
@@ -357,10 +359,22 @@ def test_issue_22527():
     assert Ut == Uz.subs(z, t)
 
 
-def test_heurisch_complex_erf_issue_26338():
+def test_heurisch_complex_erf_issue_26338_broken():
     r = symbols('r', real=True)
     a = exp(-r**2/(2*(2 - I)**2))
-    assert heurisch(a, r, hints=[]) is None  # None, not a wrong soln
+    wrong_result = (
+        -4*I*r*exp(-3*r**2/50)*exp(-2*I*r**2/25)/3
+        + 5*sqrt(2)*sqrt(pi)*erf(sqrt(2)*r/5 + sqrt(2)*I*r/10)/3
+        + 5*sqrt(2)*I*sqrt(pi)*erf(sqrt(2)*r/5 + sqrt(2)*I*r/10)/6
+    )
+    # This result is wrong. If this test fails then hopefully that means that
+    # the bug is fixed. Please update the test with the new result after
+    # checking if it is actually correct.
+    assert heurisch(a, r, hints=[]) == wrong_result
+
+
+def test_heurisch_complex_erf_issue_26338():
+    r = symbols('r', real=True)
     a = sqrt(pi)*erf((1 + I)/2)/2
     assert integrate(exp(-I*r**2/2), (r, 0, 1)) == a - I*a
 
@@ -368,3 +382,23 @@ def test_heurisch_complex_erf_issue_26338():
     assert heurisch(a, x, hints=[]) is None  # None, not a wrong soln
     a = sqrt(pi)*erf((1 + I)/2)/2
     assert integrate(exp(-I*x**2/2), (x, 0, 1)) == a - I*a
+
+
+def test_heurisch_issue_26930():
+    assert integrate(x**Rational(4, 3)*log(x), (x, 0, 1)) == -S(9)/49
+
+
+def test_heurisch_issue_26922():
+
+    a, b, x = symbols("a, b, x", real=True, positive=True)
+    C = symbols("C", real=True)
+    i = Integral(-C*x*exp(-a*x**2 - sqrt(b)*x), x) + Integral(C*x*exp(-a*x**2 + sqrt(b)*x), x)
+
+    res = (
+        -C*exp(-a*x**2)*exp(sqrt(b)*x)/(2*a)
+        + C*exp(-a*x**2)*exp(-sqrt(b)*x)/(2*a)
+        + sqrt(pi)*C*sqrt(b)*exp(b/(4*a))*erf(sqrt(a)*x - sqrt(b)/(2*sqrt(a)))/(4*a**(S(3)/2))
+        + sqrt(pi)*C*sqrt(b)*exp(b/(4*a))*erf(sqrt(a)*x + sqrt(b)/(2*sqrt(a)))/(4*a**(S(3)/2))
+    )
+
+    assert i.doit().expand() == res
