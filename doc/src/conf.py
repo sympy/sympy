@@ -298,6 +298,9 @@ html_theme_options = {
             "class": "",
         },
     ],
+    "source_repository": "https://github.com/sympy/sympy/",
+    "source_branch": "master",
+    "source_directory": "doc/src/",
 }
 
 # Add a header for PR preview builds. See the Circle CI configuration.
