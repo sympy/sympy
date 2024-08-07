@@ -368,7 +368,7 @@ latex_elements = {
 \setmainfont{DejaVu Serif}[Scale=0.97]
 \setsansfont{DejaVu Sans}[Scale=0.97]
 \setmonofont{DejaVu Sans Mono}[Scale=0.94]
-\usepackage{unicode-math}
+\usepackage[math-style=literal,bold-style=literal]{unicode-math}
 \setmathfont{XITSMath-Regular.otf}[Scale=1.12,
     StylisticSet=1,% choice of shape for "\mathcal"
     BoldFont=XITSMath-Bold.otf,
@@ -389,6 +389,17 @@ latex_elements = {
   \DeclareMathSizes{\@xviipt}{\@xviipt}{\@xivpt}{\@xiipt}
   \DeclareMathSizes{\@xxpt}{\@xxpt}{\@xviipt}{\@xivpt}
   \DeclareMathSizes{\@xxvpt}{\@xxvpt}{\@xxpt}{\@xviipt}
+  \def\Gamma{Γ}
+  \def\Delta{Δ}
+  \def\Theta{Θ}
+  \def\Lambda{Λ}
+  \def\Xi{Ξ}
+  \def\Pi{Π}
+  \def\Sigma{Σ}
+  \def\Upsilon{Υ}
+  \def\Phi{Φ}
+  \def\Psi{Ψ}
+  \def\Omega{Ω}
 }
 \makeatother
 ''',
