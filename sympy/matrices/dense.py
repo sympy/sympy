@@ -890,14 +890,14 @@ def hessian(f, varlist, constraints=()):
             raise ShapeError("`len(varlist)` must not be zero.")
     else:
         raise ValueError("Improper variable list in hessian function")
-    if not getattr(f, 'diff'):
+    if not f.diff:
         # check differentiability
         raise ValueError("Function `f` (%s) is not differentiable" % f)
     m = len(constraints)
     N = m + n
     out = zeros(N)
     for k, g in enumerate(constraints):
-        if not getattr(g, 'diff'):
+        if not g.diff:
             # check differentiability
             raise ValueError("Function `f` (%s) is not differentiable" % f)
         for i in range(n):
