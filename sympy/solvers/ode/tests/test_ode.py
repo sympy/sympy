@@ -324,6 +324,14 @@ def test_classify_ode():
         'lie_group', 'separable_Integral',
         '1st_exact_Integral')
 
+    # test issue 25882
+    a = classify_ode((x - 1)*Derivative(f(x), (x, 2)) - Derivative(f(x), x), f(x))
+    assert a == ('factorable',
+        'Liouville', '2nd_hypergeometric',
+        '2nd_hypergeometric_Integral',
+        'nth_order_reducible',
+        '2nd_power_series_ordinary',
+        'Liouville_Integral')
 
 def test_classify_ode_ics():
     # Dummy
