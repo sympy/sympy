@@ -3011,6 +3011,9 @@ class Infinity(Number, metaclass=Singleton):
     def _latex(self, printer):
         return r"\infty"
 
+    def _typst(self, printer):
+        return r"infinity"
+
     def _eval_subs(self, old, new):
         if self == old:
             return new
@@ -4086,6 +4089,9 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
 
     def _latex(self, printer):
         return printer._settings['imaginary_unit_latex']
+
+    def _typst(self, printer):
+        return printer._settings['imaginary_unit_typst']
 
     @staticmethod
     def __abs__():
