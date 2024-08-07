@@ -12,7 +12,7 @@ SymPy officially supports Python 3.8, 3.9, 3.10, and PyPy.
 
 ## Anaconda
 
-[Anaconda](https://www.anaconda.com/products/distribution) is a free Python distribution from
+[Anaconda](https://www.anaconda.com/download) is a free Python distribution from
 Continuum Analytics that includes SymPy, Matplotlib, IPython, NumPy, and many
 more useful packages for scientific computing. This is recommended because
 many nice features of SymPy are only enabled when certain libraries are
@@ -60,7 +60,7 @@ You may also install SymPy using pip or from source. In addition, most Linux
 and Python distributions have some SymPy version available to install using
 their package manager. Here is a list of several such Python distributions:
 
-- [Anaconda](https://www.anaconda.com/products/distribution)
+- [Anaconda](https://www.anaconda.com/download)
 - [Enthought Deployment Manager](https://assets.enthought.com/downloads/edm/)
 - [ActivePython](https://www.activestate.com/products/python/)
 - [Spack](https://spack.io/)
