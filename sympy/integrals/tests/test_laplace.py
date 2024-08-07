@@ -107,12 +107,11 @@ def test_laplace_transform():
             (sqrt(pi)*sqrt(1/s)*exp(-2*sqrt(a)*sqrt(s)), 0, True))
     assert (LT(exp(-a/t)/(t*sqrt(t)), t, s) ==
             (sqrt(pi)*sqrt(1/a)*exp(-2*sqrt(a)*sqrt(s)), 0, True))
-    assert (
-        LT(exp(-2*sqrt(a*t)), t, s) ==
-        (1/s - sqrt(pi)*sqrt(a) * exp(a/s)*erfc(sqrt(a)*sqrt(1/s)) /
-         s**(S(3)/2), 0, True))
+    assert (LT(exp(-2*sqrt(a*t)), t, s) ==
+        (sqrt(a)*(-sqrt(pi)*erfc(sqrt(a)/sqrt(s))
+        + sqrt(s)*exp(-a/s)/sqrt(a))*exp(a/s)/s**(S(3)/2), 0, True))
     assert LT(exp(-2*sqrt(a*t))/sqrt(t), t, s) == (
-        exp(a/s)*erfc(sqrt(a) * sqrt(1/s))*(sqrt(pi)*sqrt(1/s)), 0, True)
+        (sqrt(pi)*exp(a/s)*erfc(sqrt(a)/sqrt(s))/sqrt(s), 0, True))
     assert (LT(t**4*exp(-2/t), t, s) ==
             (8*sqrt(2)*(1/s)**(S(5)/2)*besselk(5, 2*sqrt(2)*sqrt(s)),
              0, True))
@@ -142,24 +141,35 @@ def test_laplace_transform():
     assert (LT(sinh(2*sqrt(a*t)), t, s) ==
             (sqrt(pi)*sqrt(a)*exp(a/s)/s**(S(3)/2), 0, True))
     assert (LT(sqrt(t)*sinh(2*sqrt(a*t)), t, s, simplify=True) ==
-            ((-sqrt(a)*s**(S(5)/2) + sqrt(pi)*s**2*(2*a + s)*exp(a/s) *
-              erf(sqrt(a)*sqrt(1/s))/2)/s**(S(9)/2), 0, True))
+            ((sqrt(a)*sqrt(s) + sqrt(pi)*(2*a + s)*exp(a/s)*
+              erf(sqrt(a)/sqrt(s))/2)/s**(S(5)/2), 0, True))
     assert (LT(sinh(2*sqrt(a*t))/sqrt(t), t, s) ==
-            (sqrt(pi)*exp(a/s)*erf(sqrt(a)*sqrt(1/s))/sqrt(s), 0, True))
+            (sqrt(pi)*exp(a/s)*erf(sqrt(a)/sqrt(s))/sqrt(s), 0, True))
     assert (LT(sinh(sqrt(a*t))**2/sqrt(t), t, s) ==
-            (sqrt(pi)*(exp(a/s) - 1)/(2*sqrt(s)), 0, True))
+            (sqrt(pi)*(2*exp(a/s) - 2)/(4*sqrt(s)), 0, True))
     assert (LT(t**(S(3)/7)*cosh(a*t), t, s) ==
             (((a + s)**(-S(10)/7) + (-a+s)**(-S(10)/7))*gamma(S(10)/7)/2,
              a, True))
     assert (LT(cosh(2*sqrt(a*t)), t, s) ==
-            (sqrt(pi)*sqrt(a)*exp(a/s)*erf(sqrt(a)*sqrt(1/s))/s**(S(3)/2) +
-             1/s, 0, True))
+            (2*((sqrt(a)*(sqrt(pi)*(2 - erfc(sqrt(a)/sqrt(s)))
+            + sqrt(s)*exp(-a/s)/sqrt(a))/(4*s**(S(3)/2))
+            + sqrt(a)*(-sqrt(pi)*erfc(sqrt(a)/sqrt(s))
+            + sqrt(s)*exp(-a/s)/sqrt(a))/(4*s**(S(3)/2)))*exp(a/s)), 0, True))
     assert (LT(sqrt(t)*cosh(2*sqrt(a*t)), t, s) ==
-            (sqrt(pi)*(a + s/2)*exp(a/s)/s**(S(5)/2), 0, True))
+            ((((sqrt(pi)*(2 - erfc(sqrt(a)/sqrt(s)))
+            + sqrt(s)*exp(-a/s)/sqrt(a))*(2*a/s + 1)/2
+            - (-sqrt(pi)*erfc(sqrt(a)/sqrt(s))
+            + sqrt(s)*exp(-a/s)/sqrt(a))*(2*a/s + 1)/2)*exp(a/s)
+            - sqrt(pi))/(4*s**(S(3)/2)) + (((sqrt(pi)*(2 - erfc(sqrt(a)/sqrt(s)))
+            + sqrt(s)*exp(-a/s)/sqrt(a))*(2*a/s + 1)/2
+            - (-sqrt(pi)*erfc(sqrt(a)/sqrt(s))
+            + sqrt(s)*exp(-a/s)/sqrt(a))*(2*a/s + 1)/2)*exp(a/s)
+            + sqrt(pi))/(4*s**(S(3)/2)), 0, True))
     assert (LT(cosh(2*sqrt(a*t))/sqrt(t), t, s) ==
-            (sqrt(pi)*exp(a/s)/sqrt(s), 0, True))
+            (sqrt(pi)*(2*exp(a/s) - 2)/(4*sqrt(s))
+             + sqrt(pi)*(2*exp(a/s) + 2)/(4*sqrt(s)), 0, True))
     assert (LT(cosh(sqrt(a*t))**2/sqrt(t), t, s) ==
-            (sqrt(pi)*(exp(a/s) + 1)/(2*sqrt(s)), 0, True))
+            (sqrt(pi)*(2*exp(a/s) + 2)/(4*sqrt(s)), 0, True))
     assert LT(log(t), t, s, simplify=True) == (
         (-log(s) - EulerGamma)/s, 0, True)
     assert (LT(-log(t/a), t, s, simplify=True) ==
@@ -187,14 +197,14 @@ def test_laplace_transform():
             (a*atan(2*a/s) - s*log(4*a**2/s**2 + 1)/4, 0, True))
     assert (LT(sin(2*sqrt(a*t)), t, s) ==
             (sqrt(pi)*sqrt(a)*exp(-a/s)/s**(S(3)/2), 0, True))
-    assert LT(sin(2*sqrt(a*t))/t, t, s) == (pi*erf(sqrt(a)*sqrt(1/s)), 0, True)
+    assert LT(sin(2*sqrt(a*t))/t, t, s) == (pi*erf(sqrt(a)/sqrt(s)), 0, True)
     assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), 0, True)
     assert (LT(cos(a*t)**2, t, s) ==
             ((2*a**2 + s**2)/(s*(4*a**2 + s**2)), 0, True))
     assert (LT(sqrt(t)*cos(2*sqrt(a*t)), t, s, simplify=True) ==
             (sqrt(pi)*(-a + s/2)*exp(-a/s)/s**(S(5)/2), 0, True))
     assert (LT(cos(2*sqrt(a*t))/sqrt(t), t, s) ==
-            (sqrt(pi)*sqrt(1/s)*exp(-a/s), 0, True))
+            (sqrt(pi)*exp(-a/s)/sqrt(s), 0, True))
     assert (LT(sin(a*t)*sin(b*t), t, s) ==
             (2*a*b*s/((s**2 + (a - b)**2)*(s**2 + (a + b)**2)), 0, True))
     assert (LT(cos(a*t)*sin(b*t), t, s) ==
@@ -214,16 +224,18 @@ def test_laplace_transform():
     assert L - (s*cos(3) - sin(3))/(s**2 + 1) == 0
     # Error functions (laplace7.pdf)
     assert LT(erf(a*t), t, s) == (exp(s**2/(4*a**2))*erfc(s/(2*a))/s, 0, True)
-    assert LT(erf(sqrt(a*t)), t, s) == (sqrt(a)/(s*sqrt(a + s)), 0, True)
+    assert LT(erf(sqrt(a*t)), t, s) == (1/(s*sqrt(1 + s/a)), 0, True)
     assert (LT(exp(a*t)*erf(sqrt(a*t)), t, s, simplify=True) ==
             (-sqrt(a)/(sqrt(s)*(a - s)), a, True))
     assert (LT(erf(sqrt(a/t)/2), t, s, simplify=True) ==
             (1/s - exp(-sqrt(a)*sqrt(s))/s, 0, True))
     assert (LT(erfc(sqrt(a*t)), t, s, simplify=True) ==
-            (-sqrt(a)/(s*sqrt(a + s)) + 1/s, -a, True))
+            (-sqrt(a)/(s*sqrt(a + s)) + 1/s, 0, True))
     assert (LT(exp(a*t)*erfc(sqrt(a*t)), t, s) ==
             (1/(sqrt(a)*sqrt(s) + s), 0, True))
-    assert LT(erfc(sqrt(a/t)/2), t, s) == (exp(-sqrt(a)*sqrt(s))/s, 0, True)
+    assert (LT(erfc(sqrt(a/t)/2), t, s) ==
+            (a*(-4*sqrt(pi)*sinh(sqrt(a)*sqrt(s))/(a*s)
+             + 4*sqrt(pi)*cosh(sqrt(a)*sqrt(s))/(a*s))/(4*sqrt(pi)), 0, True))
     # Bessel functions (laplace8.pdf)
     assert LT(besselj(0, a*t), t, s) == (1/sqrt(a**2 + s**2), 0, True)
     assert (LT(besselj(1, a*t), t, s, simplify=True) ==
@@ -272,7 +284,9 @@ def test_laplace_transform():
     assert (LT(exp(-a*t)*f(t), t, s) ==
             (LaplaceTransform(f(t), t, a + s), -oo, True))
     assert (LT(exp(-a*t)*erfc(sqrt(b/t)/2), t, s) ==
-            (exp(-sqrt(b)*sqrt(a + s))/(a + s), -a, True))
+            (b*(-4*sqrt(pi)*sinh(sqrt(b)*sqrt(a + s))/(b*(a + s))
+            + 4*sqrt(pi)*cosh(sqrt(b)*sqrt(a + s))/(b*(a + s)))/(4*sqrt(pi)),
+            -a, True))
     assert (LT(sinh(a*t)*f(t), t, s) ==
             (LaplaceTransform(f(t), t, -a + s)/2 -
              LaplaceTransform(f(t), t, a + s)/2, -oo, True))
