@@ -1102,3 +1102,10 @@ def test_issue_25820():
     y = Function('y')
     eq = y(x)**3*y(x).diff(x, 2) + 49
     assert dsolve(eq, y(x)) is not None  # doesn't raise
+
+def test_issue_26343():
+    t, m, g , c = symbols('t m g c')
+    v = Function('v')
+    diff_eq = Eq(m * v(t).diff(t), m * g - c * v(t)**2)
+    sol = dsolve(diff_eq, v(t), ics={v(0) : 0})
+    assert sol is not None
