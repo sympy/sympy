@@ -68,6 +68,10 @@ def test_tensor_product_simp():
     assert tensor_product_simp(x*(TP(A, B)**2)*TP(C,D)) == x*TP(A**2*C,B**2*D)
     assert tensor_product_simp(TP(A,B)-TP(C,D)**x) == TP(A,B)-TP(C**x,D**x)
 
+def test_tensor_product_associativity():
+    assert TP(TP(A,B),C) == TP(A,B,C)
+    assert TP(A,TP(B,C)) == TP(A,B,C)
+
 
 def test_issue_5923():
     # most of the issue regarding sympification of args has been handled
