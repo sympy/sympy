@@ -824,6 +824,61 @@ The trace object `sympy.core.trace.Tr()` was moved to
 `sympy.physics.quantum` submodule, so it was better to have it there than in
 the core.
 
+(list-can-dims-deprecated)=
+### `sympy.physics.units.dimensions.DimensionSystem.list_can_dims`
+
+The `sympy.physics.units.dimensions.DimensionSystem.list_can_dims` function is deprecated.
+
+This function listed canonical dimension names which can directly be accessed using properties.
+
+(can-transf-matrix-deprecated)=
+### `sympy.physics.units.dimensions.DimensionSystem.can_transf_matrix`
+
+The `sympy.physics.units.dimensions.DimensionSystem.can_transf_matrix` function is deprecated.
+
+This function returned canonical transformation matrix from the canonical to the base dimension matrix for which properties can directly be used.
+
+(inv-can-transf-matrix-deprecated)=
+### `sympy.physics.units.dimensions.DimensionSystem.inv_can_transf_matrix`
+
+The `sympy.physics.units.dimensions.DimensionSystem.inv_can_transf_matrix` function is deprecated.
+
+This function returned inverse of canonical transformation matrix from the canonical to the base dimension matrix for which properties can directly be used.
+
+(dim-can-vector-deprecated)=
+### `sympy.physics.units.dimensions.DimensionSystem.dim_can_vector`
+
+The `sympy.physics.units.dimensions.DimensionSystem.dim_can_vector` function is deprecated.
+
+This function returned dimensional representation in terms of canonical base dimensions.Use properties instead.
+
+(dim-vector-deprecated)=
+### `sympy.physics.units.dimensions.DimensionSystem.dim_vector`
+
+The `sympy.physics.units.dimensions.DimensionSystem.dim_vector` function is deprecated.
+
+This function returned vector representation of base dimensions.Use properties instead.
+
+(dim-deprecated)=
+### `sympy.physics.units.dimensions.DimensionSystem.dim`
+
+The `sympy.physics.units.dimensions.DimensionSystem.dim` function is deprecated.
+
+This function returned number of dimensions in base dimensions.Use properties instead.
+
+(print-dim-base-deprecated)=
+### `sympy.physics.units.dimensions.DimensionSystem.print_dim_base`
+
+The `sympy.physics.units.dimensions.DimensionSystem.print_dim_base` function is deprecated.
+
+This function the string expression of a dimension in term of the basis symbols.The base and derive dimensions are used instead.
+
+(is-consistent-deprecated)=
+### `sympy.physics.units.dimensions.DimensionSystem.is_consistent`
+
+The `sympy.physics.units.dimensions.DimensionSystem.is_consistent` function is deprecated.
+
+This function checks if system is well defined.The base and derive dimensions can be used to justify that instead.
 (deprecated-sympy-core-compatibility)=
 ### The `sympy.core.compatibility` submodule
 
