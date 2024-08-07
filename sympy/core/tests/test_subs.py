@@ -464,7 +464,8 @@ def test_add():
     assert ((-x - 1)*y).subs(x + 1, t) == -t*y
     assert ((x - 1)*y).subs(x + 1, t) == y*(t - 2)
     assert ((-x + 1)*y).subs(x + 1, t) == y*(-t + 2)
-
+    assert (2*(x + y)).subs(x + y, t) == 2*t
+    assert (2*(x + y + z)).subs(-x -y, t) ==  -2*t + 2*z
     # this should work every time:
     e = a**2 - b - c
     assert e.subs(Add(*e.args[:2]), d) == d + e.args[2]
@@ -858,6 +859,15 @@ def test_issue_11746():
     assert (1/(x**4)).subs(x**2, 1) == 1
     assert (1/(x**3)).subs(x**4, 1) == x**(-3)
     assert (1/(y**5)).subs(x**5, 1) == y**(-5)
+
+
+def test_issue_17725():
+    x, y, z, t, rho_0, v = symbols('x y z t rho_0 v')
+    expr = 4*x*(x**2 + y**2)*(7*(-1 + 2*(x**2 + y**2)/rho_0**2)**2 + 8 - 14*(x**2 + y**2)/rho_0**2)/rho_0**4 + \
+        (x**2 + y**2)**2*(56*x*(-1 + 2*(x**2 + y**2)/rho_0**2)/rho_0**2 - 28*x/rho_0**2)/rho_0**4
+    assert (2*(x + y)/z).subs((x + y)/z, v) == 2*v
+    assert (2*(x + y + z)/v).subs((x + y), t) == (2*t + 2*z)/v
+    assert expr.subs((x**2 + y**2)/rho_0**2, v) == v**2*(56*x*(2*v - 1)/rho_0**2 - 28*x/rho_0**2) + 4*v*x*(-14*v + 7*(2*v - 1)**2 + 8)/rho_0**2
 
 
 def test_issue_17823():
