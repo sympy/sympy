@@ -123,7 +123,7 @@ __all__ = [
     'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
 
     'FlorySchulz', 'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
-    'YuleSimon', 'Zeta', 'DiscreteRV', 'DiscreteDistributionHandmade',
+    'YuleSimon', 'Zeta', 'DiscreteRV', 'Delaporte', 'DiscreteDistributionHandmade',
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
     'GeneralizedMultivariateLogGammaOmega', 'Multinomial', 'MultivariateBeta',
@@ -173,7 +173,7 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         ContinuousDistributionHandmade)
 
 from .drv_types import (FlorySchulz, Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
-        Skellam, YuleSimon, Zeta, DiscreteRV, DiscreteDistributionHandmade)
+        Skellam, YuleSimon, Zeta, DiscreteRV, Delaporte, DiscreteDistributionHandmade)
 
 from .joint_rv_types import (JointRV, Dirichlet,
         GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,
