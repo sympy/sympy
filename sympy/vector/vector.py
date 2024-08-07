@@ -4,6 +4,7 @@ from itertools import product
 from sympy.core import Add, Basic
 from sympy.core.assumptions import StdFactKB
 from sympy.core.expr import AtomicExpr, Expr
+from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
@@ -589,6 +590,14 @@ def cross(vect1, vect2):
         return m1*cross(v1, vect2)
     if isinstance(vect2, VectorMul):
         v2, m2 = next(iter(vect2.components.items()))
+        return m2*cross(vect1, v2)
+    if isinstance(vect1, Mul):
+        v1 = next(arg for arg in vect1.args if isinstance(arg, Vector))
+        m1 = next(arg for arg in vect1.args if not isinstance(arg, Vector))
+        return m1*cross(v1, vect2)
+    if isinstance(vect2, Mul):
+        v2 = next(arg for arg in vect2.args if isinstance(arg, Vector))
+        m2 = next(arg for arg in vect2.args if not isinstance(arg, Vector))
         return m2*cross(vect1, v2)
 
     return Cross(vect1, vect2)
