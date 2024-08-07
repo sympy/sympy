@@ -66,6 +66,11 @@ def test_ccode_Pow():
     # For issue 14160
     assert ccode(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
                                                 evaluate=False)) == '-2*x/(y*y)'
+    # For issue 24495
+    class CommutativeUnevaluatedExpr(UnevaluatedExpr):
+        is_commutative = True
+    assert ccode(Mul(-2, x, Pow(CommutativeUnevaluatedExpr(Mul(y,y,evaluate=False)), -1, evaluate=False),
+                                                evaluate=False)) == '-2*x/(y*y)'
 
 
 def test_ccode_Max():

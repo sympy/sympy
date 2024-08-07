@@ -562,8 +562,6 @@ class CodePrinter(StrPrinter):
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
-        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
-
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()
         else:
@@ -576,8 +574,6 @@ class CodePrinter(StrPrinter):
                 if item.exp != -1:
                     b.append(Pow(item.base, -item.exp, evaluate=False))
                 else:
-                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
-                        pow_paren.append(item)
                     b.append(Pow(item.base, -item.exp))
             else:
                 a.append(item)
@@ -592,12 +588,14 @@ class CodePrinter(StrPrinter):
             a_str = [self.parenthesize(a[0], 0.5*(PRECEDENCE["Pow"]+PRECEDENCE["Mul"]))]
         else:
             a_str = [self.parenthesize(x, prec) for x in a]
-        b_str = [self.parenthesize(x, prec) for x in b]
-
-        # To parenthesize Pow with exp = -1 and having more than one Symbol
-        for item in pow_paren:
-            if item.base in b:
-                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+        if len(b) == 1:
+            # If len(b) == 1, the denominator will be b[0], and the result will be
+            # a / (b[0]).
+            # So we parenthesize b[0] exactly when b[0] has a precedence smaller
+            # than or equal to multiplication. See 14160 and 24495.
+            b_str = [self.parenthesize(x, PRECEDENCE["Mul"] + 0.5) for x in b]
+        else:
+            b_str = [self.parenthesize(x, prec) for x in b]
 
         if not b:
             return sign + '*'.join(a_str)
