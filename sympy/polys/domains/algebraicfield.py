@@ -351,25 +351,18 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def to_sympy(self, a):
         """Convert ``a`` of ``dtype`` to a SymPy object. """
         # Precompute a converter to be reused:
-        if not hasattr(self, '_converter'):
-            self._converter = _make_converter(self)
-
-        return self._converter(a)
+        conv = getattr(self, '_converter', None)
+        if conv is None:
+            conv = self._converter = _make_converter(self)
+        return conv(a)
 
     def from_sympy(self, a):
         """Convert SymPy's expression to ``dtype``. """
-        try:
-            return self([self.dom.from_sympy(a)])
-        except CoercionFailed:
-            pass
-
-        from sympy.polys.numberfields import to_number_field
-
-        try:
-            return self(to_number_field(a, self.ext).native_coeffs())
-        except (NotAlgebraic, IsomorphismFailed):
-            raise CoercionFailed(
-                "%s is not a valid algebraic number in %s" % (a, self))
+        # Precompute a converter to be reused:
+        conv = getattr(self, '_input_converter', None)
+        if conv is None:
+            conv = self._input_converter = _make_input_converter(self)
+        return conv(a)
 
     def from_ZZ(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """
@@ -567,6 +560,59 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         """
         return self.ext.minpoly_of_element().galois_group(
             by_name=by_name, max_tries=max_tries, randomize=randomize)
+
+
+def _make_input_converter(K):
+    """Construct the converter to convert from Expr to K"""
+    # to_number_field is expensive, so we will try to reduce the number of
+    # calls to it by reducing down to the basic algebraic elements and then
+    # cache the actual calls to to_number_field. E.g 2*sqrt(2) + 3*sqrt(3) will
+    # be reduced to sqrt(2) and sqrt(3) and then to_number_field will be called
+    # on those using the cached converter.
+    #
+    # XXX: Most of the time the calls to isomorphism_converter are unnecessary.
+    # They result from e.g. QQ.algebraic_field(sqrt(2), sqrt(3)) trying to
+    # convert sqrt(2) and sqrt(3) to the field. When primitive_element is
+    # called it computes the conversion for the original elements but by this
+    # point we have forgotten that conversion...
+
+    def isomorphism_converter(a):
+        """Convert a to K by solving the field membership problem."""
+        from sympy.polys.numberfields import to_number_field
+        try:
+            res = K(to_number_field(a, K.ext).native_coeffs())
+        except (NotAlgebraic, IsomorphismFailed) as exc:
+            raise CoercionFailed(
+                "%s is not a valid algebraic number in %s" % (a, K)) from exc
+        return res
+
+    cache = {}
+
+    def converter(a):
+        # First handle Rational, Add, Mul, Pow
+        if a.is_Rational:
+            return K([K.dom.from_sympy(a)])
+        elif a.is_Add:
+            result = K.zero
+            for ai in a.args:
+                result += converter(ai)
+            return result
+        elif a.is_Mul:
+            result = K.one
+            for ai in a.args:
+                result *= converter(ai)
+            return result
+        elif a.is_Pow and a.exp.is_Integer:
+            base, exp = a.as_base_exp()
+            return converter(base)**exp.p
+        else:
+            # Compute the field isomorphism if necessary but cache the result.
+            res = cache.get(a)
+            if res is None:
+                res = cache[a] = isomorphism_converter(a)
+            return res
+
+    return converter
 
 
 def _make_converter(K):
