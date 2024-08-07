@@ -217,6 +217,13 @@ def test_issue_9549():
     assert series(y, x, oo) == x**(-5) - 1/x**4 + x**(-3) + 1/x + O(x**(-6), (x, oo))
 
 
+def test_issue_9173():
+    p_0, p_1, p_2, p_3, b_0, b_1, b_2 = symbols('p_0 p_1 p_2 p_3 b_0 b_1 b_2')
+    Q = (p_0 + (p_1 + (p_2 + p_3/y)/y)/y)/(1 + ((p_3/(b_0*y) + (b_0*p_2 - b_1*p_3)/b_0**2)/y + (b_0**2*p_1 - b_0*b_1*p_2 - p_3*(b_0*b_2 - b_1**2))/b_0**3)/y)
+    assert Q.series(y, n=3) == y*(b_0*p_2/p_3 + b_0*(-p_2/p_3 + b_1/b_0)) + y**2*(b_0*p_1/p_3 + b_0*p_2*(-p_2/p_3 + b_1/b_0)/p_3 + b_0*(-p_1/p_3 + (p_2/p_3 - b_1/b_0)**2 + b_1*p_2/(b_0*p_3) + b_2/b_0 - b_1**2/b_0**2)) + b_0 + O(y**3)
+
+
+
 def test_issue_10761():
     assert series(1/(x**-2 + x**-3), x, 0) == x**3 - x**4 + x**5 + O(x**6)
 
