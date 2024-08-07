@@ -418,7 +418,7 @@ def test_arguments():
     a = Point(0, 1)
     assert a/10.0 == Point(0, 0.1, evaluate=False)
     a = Point(0, 1)
-    assert a*10.0 == Point(0.0, 10.0, evaluate=False)
+    assert a*10.0 == Point(0, 10.0, evaluate=False)
 
     # test evaluate=False when changing dimensions
     u = Point(.1, .2, evaluate=False)

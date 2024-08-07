@@ -2080,7 +2080,7 @@ def test_issue_20782():
     assert integrate(fun1, L) == 1
     assert integrate(fun2, L) == 0
     assert integrate(-fun1, L) == -1
-    assert integrate(-fun2, L) == 0.
+    assert integrate(-fun2, L) == 0
     assert integrate(fun_sum, L) == 1.
     assert integrate(-fun_sum, L) == -1.
 
