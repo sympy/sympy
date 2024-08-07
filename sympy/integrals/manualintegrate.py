@@ -1803,10 +1803,10 @@ def trig_substitution_rule(integral):
         a = match.get(A, S.Zero)
         b = match.get(B, S.Zero)
 
-        a_positive = ((a.is_number and a > 0) or a.is_positive)
-        b_positive = ((b.is_number and b > 0) or b.is_positive)
-        a_negative = ((a.is_number and a < 0) or a.is_negative)
-        b_negative = ((b.is_number and b < 0) or b.is_negative)
+        a_positive = a.is_number and a.is_positive
+        b_positive = b.is_number and b.is_positive
+        a_negative = a.is_number and a.is_negative
+        b_negative = b.is_number and b.is_negative
         x_func = None
         if a_positive and b_positive:
             # a**2 + b*x**2. Assume sec(theta) > 0, -pi/2 < theta < pi/2
