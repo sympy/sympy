@@ -5,12 +5,12 @@ from .basic import Basic, Atom
 from .cache import cacheit
 from .containers import Tuple
 from .expr import Expr, AtomicExpr
-from .function import AppliedUndef, FunctionClass
+from .function import AppliedUndef, FunctionClass, Function
 from .kind import NumberKind, UndefinedKind
 from .logic import fuzzy_bool
 from .singleton import S
 from .sorting import ordered
-from .sympify import sympify
+from .sympify import sympify, _sympy_converter
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import sift, is_sequence
 from sympy.utilities.misc import filldedent
@@ -633,6 +633,87 @@ class Wild(Symbol):
         repl_dict[self] = expr
         return repl_dict
 
+
+class FunctionSymbol(Symbol):
+    """
+    Object representing a function symbolically.
+    """
+
+    is_FunctionSymbol = True
+    is_Function = True
+
+    def __new__(cls, function):
+
+        if isinstance(function, Function):
+            function = type(function)
+
+        for nargs in function.nargs:
+                break
+        arguments = [Symbol('')]*nargs
+
+        #this is handled with a special case because `nargs` does not tell
+        #us what we should use as arguments
+        from sympy.functions.special.hyper import hyper, meijerg
+        try:
+            if issubclass(function, hyper):
+                obj = Basic.__new__(cls, function((1, 2, 3), [3, 4], Symbol('')))
+            elif issubclass(function, meijerg):
+                obj = Basic.__new__(cls, function((1, 2), (Symbol(''), 4), (5,), [], Symbol('')))
+            else:
+                obj = Basic.__new__(cls, function(*arguments))
+        except Exception as e:
+            #print(function, function.nargs)
+            #print(e)
+            raise e
+        return obj
+
+    def __call__(self, *args):
+        return self.function(*args)
+
+    def __instancecheck__(self, other):
+        return isinstance(other, self.function)
+
+    def __subclasscheck__(self, other):
+        if issubclass(other, self.function):
+            return True
+        return super().__subclasscheck__(other)
+
+    @property
+    def function(self):
+        return type(self.args[0])
+
+    @property
+    def name(self):
+        return self.function.__name__
+
+    def sort_key(self, order):
+        func = ( 0, 0, self.function.__class__.__name__)
+        args = (1, (str(self.function),))
+        return func, args, S.One.sort_key(), S.One
+
+    def __eq__(self, other):
+        if isinstance(other, FunctionClass):
+            return self.function == other
+        return super().__eq__(other)
+
+    def __hash__(self):
+        return hash(self.function)
+
+    def matches(self, expr, repl_dict=None, old=False):
+        if self == expr or isinstance(expr, self):
+            if repl_dict is None:
+                repl_dict = dict()
+            else:
+                repl_dict = repl_dict.copy()
+
+            return repl_dict
+        return
+
+    @property
+    def nargs(self):
+        return self.function.nargs
+
+_sympy_converter[FunctionClass] = FunctionSymbol
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
