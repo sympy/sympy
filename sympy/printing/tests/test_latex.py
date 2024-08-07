@@ -1559,12 +1559,37 @@ def test_latex_Matrix():
     assert latex(M, mat_delim=None, mat_str='bmatrix') == \
         r'\begin{bmatrix}x + 1 & y\\y & x - 1\end{bmatrix}'
 
-    M2 = Matrix(1, 11, range(11))
-    assert latex(M2) == \
-        r'\left[\begin{array}{ccccccccccc}' \
-        r'0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'
+    #diagonal dots
+    M1 = latex(Matrix(15, 15, lambda i,j : i + j))
+    assert M1 == \
+    r'\left[\begin{array}{ccccccccccccccc}0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & \cdots & 14'\
+    r'\\1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & \cdots & 15'\
+    r'\\2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & \cdots & 16'\
+    r'\\3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & \cdots & 17'\
+    r'\\4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & \cdots & 18'\
+    r'\\5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & \cdots & 19'\
+    r'\\6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & \cdots & 20'\
+    r'\\7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & \cdots & 21'\
+    r'\\\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots & \vdots'\
+    r'\\14 & 15 & 16 & 17 & 18 & 19 & 20 & 21 & \cdots & 28\end{array}\right]'
 
+    #horizontal dots only
+    M2 = latex(Matrix(5, 15, lambda i,j : i + j))
+    assert M2 == r'\left[\begin{array}{ccccccccccccccc}'\
+        r'0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & \cdots & '\
+        r'14\\1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & \cdots & '\
+        r'15\\2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & \cdots & '\
+        r'16\\3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & \cdots & '\
+        r'17\\4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & \cdots & '\
+        r'18\end{array}\right]'
 
+    #vertical dots only
+    M3 = latex(Matrix(15, 5, lambda i,j : i + j))
+    assert M3 == r'\left[\begin{matrix}0 & 1 & 2 & 3 & 4'\
+    r'\\1 & 2 & 3 & 4 & 5\\2 & 3 & 4 & 5 & 6\\3 & 4 & 5 & 6 & 7'\
+    r'\\4 & 5 & 6 & 7 & 8\\5 & 6 & 7 & 8 & 9\\6 & 7 & 8 & 9 & 10'\
+    r'\\7 & 8 & 9 & 10 & 11\\\vdots & \vdots & \vdots & \vdots &'\
+    r' \vdots\\14 & 15 & 16 & 17 & 18\end{matrix}\right]'
 def test_latex_matrix_with_functions():
     t = symbols('t')
     theta1 = symbols('theta1', cls=Function)

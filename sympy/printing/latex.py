@@ -166,6 +166,7 @@ class LatexPrinter(Printer):
         "parenthesize_super": True,
         "min": None,
         "max": None,
+        "full_output": False,
         "diff_operator": "d",
         "adjoint_style": "dagger",
     }
@@ -1686,10 +1687,37 @@ class LatexPrinter(Printer):
         return tex % r" \\".join(ecpairs)
 
     def _print_matrix_contents(self, expr):
-        lines = []
 
-        for line in range(expr.rows):  # horrible, should be 'rows'
-            lines.append(" & ".join([self._print(i) for i in expr[line, :]]))
+        visible_rows = 10
+        visible_cols = 10
+        compact = not(self._settings['full_output'])
+
+        row_compactify =  compact and expr.rows > visible_rows
+        col_compactify =  compact and expr.cols > visible_cols
+
+        row_bound = visible_rows if compact and row_compactify else expr.rows
+        col_bound = visible_cols if compact and col_compactify else expr.cols
+
+        lines = [[] for _ in range(row_bound)]
+
+        for i in range(row_bound):
+            lines[i] = [self._print(expr[i, j]) for j in range(col_bound)]
+
+            if col_compactify:
+                # horizental dots and add last element in the ith row
+                lines[i][-2:] = [r'\cdots', self._print(expr[i, -1])]
+
+        if row_compactify:
+            last_row = expr[-1, 0:col_bound]
+            lines[-2:] = [r'\vdots'] * col_bound, [self._print(i) for i in last_row]
+
+        if col_compactify:
+            lines[-1][-2:] = [r'\cdots', self._print(expr[-1, -1])]
+
+        if col_compactify and row_compactify:
+            lines[-2][-2] = r'\ddots' # diagonal dots
+
+        lines = [' & '.join(line) for line in lines]
 
         mat_str = self._settings['mat_str']
         if mat_str is None:
@@ -3050,6 +3078,9 @@ def latex(expr, **settings):
     max: Integer or None, optional
         Sets the upper bound for the exponent to print floating point numbers in
         fixed-point format.
+    full_output: boolean, optional
+        ``False``.  If set to False, output is truncated.  Else, the output
+        is printed normally
     diff_operator: string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
