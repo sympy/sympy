@@ -156,7 +156,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
             return x
 
         from sympy.simplify import fraction
-        numer, denom = fraction(expr)
+        numer, denom = fraction(expr, exact=True)
 
         if denom is not S.One:
             x = self.dom.createElement('apply')
@@ -634,7 +634,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
         def multiply(expr, mrow):
             from sympy.simplify import fraction
-            numer, denom = fraction(expr)
+            numer, denom = fraction(expr, exact=True)
             if denom is not S.One:
                 frac = self.dom.createElement('mfrac')
                 if self._settings["fold_short_frac"] and len(str(expr)) < 7:
