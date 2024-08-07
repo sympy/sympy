@@ -1,6 +1,7 @@
 """Calculus-related methods."""
 
 from .euler import euler_equations
+from .even_odd import is_even_function, is_odd_function
 from .singularities import (singularities, is_increasing,
                             is_strictly_increasing, is_decreasing,
                             is_strictly_decreasing, is_monotonic)
@@ -11,6 +12,8 @@ from .accumulationbounds import AccumBounds
 
 __all__ = [
 'euler_equations',
+
+'is_even_function', 'is_odd_function',
 
 'singularities', 'is_increasing',
 'is_strictly_increasing', 'is_decreasing',
