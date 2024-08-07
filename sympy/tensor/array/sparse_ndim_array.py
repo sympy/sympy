@@ -95,9 +95,12 @@ class SparseNDimArray(NDimArray):
         return SparseMatrix(self.shape[0], self.shape[1], mat_sparse)
 
     def reshape(self, *newshape):
-        new_total_size = functools.reduce(lambda x,y: x*y, newshape)
-        if new_total_size != self._loop_size:
-            raise ValueError("Invalid reshape parameters " + newshape)
+        if not newshape:
+            newshape = ()
+        else:
+            new_total_size = functools.reduce(lambda x,y: x*y, newshape)
+            if new_total_size != self._loop_size:
+                raise ValueError("Invalid reshape parameters " + newshape)
 
         return type(self)(self._sparse_array, newshape)
 
