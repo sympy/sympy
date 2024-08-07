@@ -9,7 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.zeta_functions import (dirichlet_eta, lerchphi, polylog, riemann_xi, stieltjes, zeta)
 from sympy.series.order import O
 from sympy.core.function import ArgumentIndexError
-from sympy.functions.combinatorial.numbers import bernoulli, factorial
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, genocchi, harmonic
 from sympy.testing.pytest import raises
 from sympy.core.random import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically)
@@ -36,18 +36,22 @@ def test_zeta_eval():
     assert zeta(1, x) is zoo
 
     assert zeta(2, 1) == pi**2/6
+    assert zeta(3, 1) == zeta(3)
 
     assert zeta(2) == pi**2/6
     assert zeta(4) == pi**4/90
     assert zeta(6) == pi**6/945
 
-    assert zeta(2, 2) == pi**2/6 - 1
     assert zeta(4, 3) == pi**4/90 - Rational(17, 16)
-    assert zeta(6, 4) == pi**6/945 - Rational(47449, 46656)
+    assert zeta(7, 4) == zeta(7) - Rational(282251, 279936)
+    assert zeta(S.Half, 2).func == zeta
+    assert expand_func(zeta(S.Half, 2)) == zeta(S.Half) - 1
+    assert zeta(x, 3).func == zeta
+    assert expand_func(zeta(x, 3)) == zeta(x) - 1 - 1/2**x
 
-    assert zeta(2, -2) == pi**2/6 + Rational(5, 4)
-    assert zeta(4, -3) == pi**4/90 + Rational(1393, 1296)
-    assert zeta(6, -4) == pi**6/945 + Rational(3037465, 2985984)
+    assert zeta(2, 0) is nan
+    assert zeta(3, -1) is nan
+    assert zeta(4, -2) is nan
 
     assert zeta(oo) == 1
 
@@ -59,8 +63,8 @@ def test_zeta_eval():
 
     assert zeta(-1, 3) == Rational(-37, 12)
     assert zeta(-1, 7) == Rational(-253, 12)
-    assert zeta(-1, -4) == Rational(119, 12)
-    assert zeta(-1, -9) == Rational(539, 12)
+    assert zeta(-1, -4) == Rational(-121, 12)
+    assert zeta(-1, -9) == Rational(-541, 12)
 
     assert zeta(-4, 3) == -17
     assert zeta(-4, -8) == 8772
@@ -76,17 +80,20 @@ def test_zeta_eval():
 
 
 def test_zeta_series():
-    assert zeta(x, a).series(a, 0, 2) == \
-        zeta(x, 0) - x*a*zeta(x + 1, 0) + O(a**2)
+    assert zeta(x, a).series(a, z, 2) == \
+        zeta(x, z) - x*(a-z)*zeta(x+1, z) + O((a-z)**2, (a, z))
 
 
 def test_dirichlet_eta_eval():
-
     assert dirichlet_eta(0) == S.Half
     assert dirichlet_eta(-1) == Rational(1, 4)
     assert dirichlet_eta(1) == log(2)
+    assert dirichlet_eta(1, S.Half).simplify() == pi/2
+    assert dirichlet_eta(1, 2) == 1 - log(2)
     assert dirichlet_eta(2) == pi**2/12
     assert dirichlet_eta(4) == pi**4*Rational(7, 720)
+    assert str(dirichlet_eta(I).evalf(n=10)) == '0.5325931818 + 0.2293848577*I'
+    assert str(dirichlet_eta(I, I).evalf(n=10)) == '3.462349253 + 0.220285771*I'
 
 
 def test_riemann_xi_eval():
@@ -98,10 +105,13 @@ def test_riemann_xi_eval():
 
 
 def test_rewriting():
-    assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)
+    from sympy.functions.elementary.piecewise import Piecewise
+    assert isinstance(dirichlet_eta(x).rewrite(zeta), Piecewise)
+    assert isinstance(dirichlet_eta(x).rewrite(genocchi), Piecewise)
     assert zeta(x).rewrite(dirichlet_eta) == dirichlet_eta(x)/(1 - 2**(1 - x))
     assert zeta(x).rewrite(dirichlet_eta, a=2) == zeta(x)
     assert verify_numerically(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
+    assert verify_numerically(dirichlet_eta(x), dirichlet_eta(x).rewrite(genocchi), x)
     assert verify_numerically(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
 
     assert zeta(x, a).rewrite(lerchphi) == lerchphi(1, x, a)
@@ -239,7 +249,7 @@ def test_stieltjes():
 def test_stieltjes_evalf():
     assert abs(stieltjes(0).evalf() - 0.577215664) < 1E-9
     assert abs(stieltjes(0, 0.5).evalf() - 1.963510026) < 1E-9
-    assert abs(stieltjes(1, 2).evalf() + 0.072815845 ) < 1E-9
+    assert abs(stieltjes(1, 2).evalf() + 0.072815845) < 1E-9
 
 
 def test_issue_10475():
@@ -261,10 +271,15 @@ def test_issue_10475():
 
 
 def test_issue_14177():
-    n = Symbol('n', positive=True, integer=True)
+    n = Symbol('n', nonnegative=True, integer=True)
 
-    assert zeta(2*n) == (-1)**(n + 1)*2**(2*n - 1)*pi**(2*n)*bernoulli(2*n)/factorial(2*n)
-    assert zeta(-n) == (-1)**(-n)*bernoulli(n + 1)/(n + 1)
+    assert zeta(-n).rewrite(bernoulli) == bernoulli(n+1) / (-n-1)
+    assert zeta(-n, a).rewrite(bernoulli) == bernoulli(n+1, a) / (-n-1)
+    z2n = -(2*I*pi)**(2*n)*bernoulli(2*n) / (2*factorial(2*n))
+    assert zeta(2*n).rewrite(bernoulli) == z2n
+    assert expand_func(zeta(s, n+1)) == zeta(s) - harmonic(n, s)
+    assert expand_func(zeta(-b, -n)) is nan
+    assert expand_func(zeta(-b, n)) == zeta(-b, n)
 
     n = Symbol('n')
 

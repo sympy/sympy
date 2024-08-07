@@ -52,7 +52,7 @@ class SymPyExpression:  # type: ignore
     Declaration(Variable(c, type=float32, value=2.0)),
     Declaration(Variable(d, type=float32, value=4.0))]
 
-    An example of variable definiton:
+    An example of variable definition:
 
     >>> from sympy.parsing.sym_expr import SymPyExpression
     >>> src2 = '''

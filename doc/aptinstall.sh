@@ -12,7 +12,8 @@
 
 set -o errexit
 
-sudo apt install\
+sudo apt-get update
+sudo apt-get install\
   texlive-latex-recommended\
   texlive-fonts-recommended\
   texlive-fonts-extra\
@@ -26,3 +27,5 @@ sudo apt install\
   docbook2x\
   graphviz\
   #
+
+sudo dot -c

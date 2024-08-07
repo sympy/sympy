@@ -9,7 +9,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import expand_2arg, Mul
-from sympy.core.numbers import Rational, igcd, comp
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import Rational, comp
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.sorting import ordered
@@ -27,6 +28,10 @@ from sympy.polys.rationaltools import together
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.utilities import public
 from sympy.utilities.misc import filldedent
+
+
+
+z = Symbol('z')  # importing from abc cause O to be lost as clashing symbol
 
 
 def roots_linear(f):
@@ -280,11 +285,11 @@ def roots_quartic(f):
 
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
     2. https://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
-    3. http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
-    4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
+    3. https://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
+    4. https://people.bath.ac.uk/masjhd/JHD-CA.pdf
     5. http://www.albmath.org/files/Math_5713.pdf
-    6. http://www.statemaster.com/encyclopedia/Quartic-equation
-    7. eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
+    6. https://web.archive.org/web/20171002081448/http://www.statemaster.com/encyclopedia/Quartic-equation
+    7. https://eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
     """
     _, a, b, c, d = f.monic().all_coeffs()
 
@@ -500,33 +505,40 @@ def roots_cyclotomic(f, factor=False):
 
 def roots_quintic(f):
     """
-    Calculate exact roots of a solvable quintic
+    Calculate exact roots of a solvable irreducible quintic with rational coefficients.
+    Return an empty list if the quintic is reducible or not solvable.
     """
     result = []
-    coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
 
-    # Eqn must be of the form x^5 + px^3 + qx^2 + rx + s
-    if coeff_4:
+    coeff_5, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
+
+    if not all(coeff.is_Rational for coeff in (coeff_5, coeff_4, p_, q_, r_, s_)):
         return result
 
     if coeff_5 != 1:
-        l = [p/coeff_5, q/coeff_5, r/coeff_5, s/coeff_5]
-        if not all(coeff.is_Rational for coeff in l):
-            return result
-        f = Poly(f/coeff_5)
-    elif not all(coeff.is_Rational for coeff in (p, q, r, s)):
-        return result
+        f = Poly(f / coeff_5)
+        _, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
+
+    # Cancel coeff_4 to form x^5 + px^3 + qx^2 + rx + s
+    if coeff_4:
+        p = p_ - 2*coeff_4*coeff_4/5
+        q = q_ - 3*coeff_4*p_/5 + 4*coeff_4**3/25
+        r = r_ - 2*coeff_4*q_/5 + 3*coeff_4**2*p_/25 - 3*coeff_4**4/125
+        s = s_ - coeff_4*r_/5 + coeff_4**2*q_/25 - coeff_4**3*p_/125 + 4*coeff_4**5/3125
+        x = f.gen
+        f = Poly(x**5 + p*x**3 + q*x**2 + r*x + s)
+    else:
+        p, q, r, s = p_, q_, r_, s_
+
     quintic = PolyQuintic(f)
 
     # Eqn standardized. Algo for solving starts here
     if not f.is_irreducible:
         return result
-
     f20 = quintic.f20
     # Check if f20 has linear factors over domain Z
     if f20.is_irreducible:
         return result
-
     # Now, we know that f is solvable
     for _factor in f20.factor_list()[1]:
         if _factor[0].is_linear:
@@ -568,7 +580,6 @@ def roots_quintic(f):
 
     Res = [None, [None]*5, [None]*5, [None]*5, [None]*5]
     Res_n = [None, [None]*5, [None]*5, [None]*5, [None]*5]
-    sol = Symbol('sol')
 
     # Simplifying improves performance a lot for exact expressions
     R1 = _quintic_simplify(R1)
@@ -576,23 +587,27 @@ def roots_quintic(f):
     R3 = _quintic_simplify(R3)
     R4 = _quintic_simplify(R4)
 
-    # Solve imported here. Causing problems if imported as 'solve'
-    # and hence the changed name
-    from sympy.solvers.solvers import solve as _solve
-    a, b = symbols('a b', cls=Dummy)
-    _sol = _solve( sol**5 - a - I*b, sol)
-    for i in range(5):
-        _sol[i] = factor(_sol[i])
+    # hard-coded results for [factor(i) for i in _vsolve(x**5 - a - I*b, x)]
+    x0 = z**(S(1)/5)
+    x1 = sqrt(2)
+    x2 = sqrt(5)
+    x3 = sqrt(5 - x2)
+    x4 = I*x2
+    x5 = x4 + I
+    x6 = I*x0/4
+    x7 = x1*sqrt(x2 + 5)
+    sol = [x0, -x6*(x1*x3 - x5), x6*(x1*x3 + x5), -x6*(x4 + x7 - I), x6*(-x4 + x7 + I)]
+
     R1 = R1.as_real_imag()
     R2 = R2.as_real_imag()
     R3 = R3.as_real_imag()
     R4 = R4.as_real_imag()
 
-    for i, currentroot in enumerate(_sol):
-        Res[1][i] = _quintic_simplify(currentroot.subs({ a: R1[0], b: R1[1] }))
-        Res[2][i] = _quintic_simplify(currentroot.subs({ a: R2[0], b: R2[1] }))
-        Res[3][i] = _quintic_simplify(currentroot.subs({ a: R3[0], b: R3[1] }))
-        Res[4][i] = _quintic_simplify(currentroot.subs({ a: R4[0], b: R4[1] }))
+    for i, s in enumerate(sol):
+        Res[1][i] = _quintic_simplify(s.xreplace({z: R1[0] + I*R1[1]}))
+        Res[2][i] = _quintic_simplify(s.xreplace({z: R2[0] + I*R2[1]}))
+        Res[3][i] = _quintic_simplify(s.xreplace({z: R3[0] + I*R3[1]}))
+        Res[4][i] = _quintic_simplify(s.xreplace({z: R4[0] + I*R4[1]}))
 
     for i in range(1, 5):
         for j in range(5):
@@ -628,7 +643,7 @@ def roots_quintic(f):
                 r2 = Res[2][i]
                 r3 = Res[3][j]
                 break
-        if r2:
+        if r2 is not None:
             break
     else:
         return []  # fall back to normal solve
@@ -651,6 +666,10 @@ def roots_quintic(f):
             # and fall back to usual solve
             return []
         saw.add(r)
+
+    # Restore to original equation where coeff_4 is nonzero
+    if coeff_4:
+        result = [x - coeff_4 / 5 for x in result]
     return result
 
 
@@ -908,7 +927,7 @@ def roots(f, *gens,
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
+    .. [1] https://en.wikipedia.org/wiki/Cubic_equation#Trigonometric_and_hyperbolic_solutions
 
     """
     from sympy.polys.polytools import to_rational_coeffs

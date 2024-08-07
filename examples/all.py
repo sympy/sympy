@@ -33,7 +33,6 @@ Example Usage:
    Obviously, we want to achieve the first result.
 """
 
-import imp
 import optparse
 import os
 import sys
@@ -86,37 +85,13 @@ WINDOWED_EXAMPLES = [
 EXAMPLE_DIR = os.path.dirname(__file__)
 
 
-def __import__(name, globals=None, locals=None, fromlist=None):
-    """An alternative to the import function so that we can import
-    modules defined as strings.
-
-    This code was taken from: http://docs.python.org/lib/examples-imp.html
-    """
-    # Fast path: see if the module has already been imported.
-    try:
-        return sys.modules[name]
-    except KeyError:
-        pass
-
-    # If any of the following calls raises an exception,
-    # there's a problem we can't handle -- let the caller handle it.
-    module_name = name.split('.')[-1]
-    module_path = os.path.join(EXAMPLE_DIR, *name.split('.')[:-1])
-
-    fp, pathname, description = imp.find_module(module_name, [module_path])
-
-    try:
-        return imp.load_module(module_name, fp, pathname, description)
-    finally:
-        # Since we may exit via an exception, close fp explicitly.
-        if fp:
-            fp.close()
-
-
 def load_example_module(example):
     """Loads modules based upon the given package name"""
-    mod = __import__(example)
-    return mod
+    from importlib import import_module
+
+    exmod = os.path.split(EXAMPLE_DIR)[1]
+    modname = exmod + '.' + example
+    return import_module(modname)
 
 
 def run_examples(*, windowed=False, quiet=False, summary=True):

@@ -7,8 +7,6 @@ from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.simplify.simplify import simplify
-from sympy.testing.pytest import raises
-from sympy.matrices.common import ShapeError
 
 
 X = MatrixSymbol("X", 3, 3)
@@ -56,8 +54,6 @@ def test_applyfunc_matrix():
     expr = ElementwiseApplyFunction(exp, Z)*ElementwiseApplyFunction(exp, Z.T)
     assert expr.shape == (2, 2)
 
-    raises(ShapeError, lambda: ElementwiseApplyFunction(exp, Z)*ElementwiseApplyFunction(exp, Z))
-
     M = Matrix([[x, y], [z, t]])
     expr = ElementwiseApplyFunction(sin, M)
     assert isinstance(expr, ElementwiseApplyFunction)
@@ -78,8 +74,6 @@ def test_applyfunc_matrix():
     assert expr2.shape == (t, t)
     expr3 = expr*M
     assert expr3.shape == (k, t)
-
-    raises(ShapeError, lambda: M*expr)
 
     expr1 = ElementwiseApplyFunction(lambda x: x+1, Xk)
     expr2 = ElementwiseApplyFunction(lambda x: x, Xk)

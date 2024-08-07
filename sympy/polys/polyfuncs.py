@@ -1,15 +1,15 @@
 """High-level polynomials manipulation functions. """
 
 
-from sympy.core import S, Basic, Add, Mul, symbols, Dummy
+from sympy.core import S, Basic, symbols, Dummy
 from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError, OptionError)
-from sympy.polys.polyoptions import allowed_flags
-from sympy.polys.polytools import (
-    poly_from_expr, parallel_poly_from_expr, Poly)
+from sympy.polys.polyoptions import allowed_flags, build_options
+from sympy.polys.polytools import poly_from_expr, Poly
 from sympy.polys.specialpolys import (
     symmetric_poly, interpolating_poly)
+from sympy.polys.rings import sring
 from sympy.utilities import numbered_symbols, take, public
 
 @public
@@ -53,81 +53,20 @@ def symmetrize(F, *gens, **args):
         iterable = False
         F = [F]
 
-    try:
-        F, opt = parallel_poly_from_expr(F, *gens, **args)
-    except PolificationFailed as exc:
-        result = []
+    R, F = sring(F, *gens, **args)
+    gens = R.symbols
 
-        for expr in exc.exprs:
-            if expr.is_Number:
-                result.append((expr, S.Zero))
-            else:
-                raise ComputationFailed('symmetrize', len(F), exc)
-
-        if not iterable:
-            result, = result
-
-        if not exc.opt.formal:
-            return result
-        else:
-            if iterable:
-                return result, []
-            else:
-                return result + ([],)
-
-    polys, symbols = [], opt.symbols
-    gens, dom = opt.gens, opt.domain
-
-    for i in range(len(gens)):
-        poly = symmetric_poly(i + 1, gens, polys=True)
-        polys.append((next(symbols), poly.set_domain(dom)))
-
-    indices = list(range(len(gens) - 1))
-    weights = list(range(len(gens), 0, -1))
+    opt = build_options(gens, args)
+    symbols = opt.symbols
+    symbols = [next(symbols) for i in range(len(gens))]
 
     result = []
 
     for f in F:
-        symmetric = []
+        p, r, m = f.symmetrize()
+        result.append((p.as_expr(*symbols), r.as_expr(*gens)))
 
-        if not f.is_homogeneous:
-            symmetric.append(f.TC())
-            f -= f.TC().as_poly(f.gens)
-
-        while f:
-            _height, _monom, _coeff = -1, None, None
-
-            for i, (monom, coeff) in enumerate(f.terms()):
-                if all(monom[i] >= monom[i + 1] for i in indices):
-                    height = max([n*m for n, m in zip(weights, monom)])
-
-                    if height > _height:
-                        _height, _monom, _coeff = height, monom, coeff
-
-            if _height != -1:
-                monom, coeff = _monom, _coeff
-            else:
-                break
-
-            exponents = []
-
-            for m1, m2 in zip(monom, monom[1:] + (0,)):
-                exponents.append(m1 - m2)
-
-            term = [s**n for (s, _), n in zip(polys, exponents)]
-            poly = [p**n for (_, p), n in zip(polys, exponents)]
-
-            symmetric.append(Mul(coeff, *term))
-            product = poly[0].mul(coeff)
-
-            for p in poly[1:]:
-                product = product.mul(p)
-
-            f -= product
-
-        result.append((Add(*symmetric), f.as_expr()))
-
-    polys = [(s, p.as_expr()) for s, p in polys]
+    polys = [(s, g.as_expr()) for s, (_, g) in zip(symbols, m)]
 
     if not opt.formal:
         for i, (sym, non_sym) in enumerate(result):

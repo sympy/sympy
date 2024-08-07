@@ -51,6 +51,9 @@ def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=
     \\*\\*kwargs: dict
         Default keyword arguments to pass to ``Runner``.
 
+    Returns
+    =======
+    List of strings (paths of object files).
     """
     _per_file_kwargs = {}
 
@@ -112,7 +115,7 @@ def get_mixed_fort_c_linker(vendor=None, cplus=False, cwd=None):
 
 
 def link(obj_files, out_file=None, shared=False, Runner=None,
-         cwd=None, cplus=False, fort=False, **kwargs):
+         cwd=None, cplus=False, fort=False, extra_objs=None, **kwargs):
     """ Link object files.
 
     Parameters
@@ -134,6 +137,8 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
         C++ objects? default: ``False``.
     fort: bool
         Fortran objects? default: ``False``.
+    extra_objs: list
+        List of paths to extra object files / static libraries.
     \\*\\*kwargs: dict
         Keyword arguments passed to ``Runner``.
 
@@ -176,13 +181,13 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
         raise ValueError("run_linker was set to False (nonsensical).")
 
     out_file = get_abspath(out_file, cwd=cwd)
-    runner = Runner(obj_files, out_file, flags, cwd=cwd, **kwargs)
+    runner = Runner(obj_files+(extra_objs or []), out_file, flags, cwd=cwd, **kwargs)
     runner.run()
     return out_file
 
 
 def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
-               cplus=False, fort=False, **kwargs):
+               cplus=False, fort=False, extra_objs=None, **kwargs):
     """ Link Python extension module (shared object) for importing
 
     Parameters
@@ -202,6 +207,8 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
         Any C++ objects? default: ``False``.
     fort: bool
         Any Fortran objects? default: ``False``.
+    extra_objs: list
+        List of paths of extra object files / static libraries to link against.
     kwargs**: dict
         Keyword arguments passed to ``link(...)``.
 
@@ -215,19 +222,39 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
     include_dirs = kwargs.pop('include_dirs', [])
     library_dirs = kwargs.pop('library_dirs', [])
 
-    # from distutils/command/build_ext.py:
+    # Add Python include and library directories
+    # PY_LDFLAGS does not available on all python implementations
+    # e.g. when with pypy, so it's LDFLAGS we need to use
     if sys.platform == "win32":
         warnings.warn("Windows not yet supported.")
     elif sys.platform == 'darwin':
-        # Don't use the default code below
-        pass
+        cfgDict = get_config_vars()
+        kwargs['linkline'] = kwargs.get('linkline', []) + [cfgDict['LDFLAGS']]
+        library_dirs += [cfgDict['LIBDIR']]
+
+        # In macOS, linker needs to compile frameworks
+        # e.g. "-framework CoreFoundation"
+        is_framework = False
+        for opt in cfgDict['LIBS'].split():
+            if is_framework:
+                kwargs['linkline'] = kwargs.get('linkline', []) + ['-framework', opt]
+                is_framework = False
+            elif opt.startswith('-l'):
+                libraries.append(opt[2:])
+            elif opt.startswith('-framework'):
+                is_framework = True
+        # The python library is not included in LIBS
+        libfile = cfgDict['LIBRARY']
+        libname = ".".join(libfile.split('.')[:-1])[3:]
+        libraries.append(libname)
+
     elif sys.platform[:3] == 'aix':
         # Don't use the default code below
         pass
     else:
         if get_config_var('Py_ENABLE_SHARED'):
             cfgDict = get_config_vars()
-            kwargs['linkline'] = kwargs.get('linkline', []) + [cfgDict['PY_LDFLAGS']] # PY_LDFLAGS or just LDFLAGS?
+            kwargs['linkline'] = kwargs.get('linkline', []) + [cfgDict['LDFLAGS']]
             library_dirs += [cfgDict['LIBDIR']]
             for opt in cfgDict['BLDLIBRARY'].split():
                 if opt.startswith('-l'):
@@ -241,9 +268,9 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
         if flag not in flags:
             flags.append(flag)
 
-    return link(obj_files, shared=True, flags=flags, cwd=cwd,
-                cplus=cplus, fort=fort, include_dirs=include_dirs,
-                libraries=libraries, library_dirs=library_dirs, **kwargs)
+    return link(obj_files, shared=True, flags=flags, cwd=cwd, cplus=cplus, fort=fort,
+                include_dirs=include_dirs, libraries=libraries,
+                library_dirs=library_dirs, extra_objs=extra_objs, **kwargs)
 
 
 def simple_cythonize(src, destdir=None, cwd=None, **cy_kwargs):
@@ -291,7 +318,11 @@ def simple_cythonize(src, destdir=None, cwd=None, **cy_kwargs):
         cy_result = cy_compile([src], cy_options)
         if cy_result.num_errors > 0:
             raise ValueError("Cython compilation failed.")
-        if os.path.abspath(os.path.dirname(src)) != os.path.abspath(destdir):
+
+        # Move generated C file to destination
+        # In macOS, the generated C file is in the same directory as the source
+        # but the /var is a symlink to /private/var, so we need to use realpath
+        if os.path.realpath(os.path.dirname(src)) != os.path.realpath(destdir):
             if os.path.exists(dstfile):
                 os.unlink(dstfile)
             shutil.move(os.path.join(os.path.dirname(src), c_name), destdir)
@@ -480,7 +511,7 @@ def any_cplus_src(srcs):
 
 
 def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwargs=None,
-                               link_kwargs=None):
+                               link_kwargs=None, extra_objs=None):
     """ Compiles sources to a shared object (Python extension) and imports it
 
     Sources in ``sources`` which is imported. If shared object is newer than the sources, they
@@ -489,7 +520,7 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
     Parameters
     ==========
 
-    sources : string
+    sources : list of strings
         List of paths to sources.
     extname : string
         Name of extension (default: ``None``).
@@ -500,6 +531,8 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
         keyword arguments passed to ``compile_sources``
     link_kwargs: dict
         keyword arguments passed to ``link_py_so``
+    extra_objs: list
+        List of paths to (prebuilt) object files / static libraries to link against.
 
     Returns
     =======
@@ -518,7 +551,7 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
         objs = compile_sources(list(map(get_abspath, sources)), destdir=build_dir,
                                cwd=build_dir, **compile_kwargs)
         so = link_py_so(objs, cwd=build_dir, fort=any_fortran_src(sources),
-                        cplus=any_cplus_src(sources), **link_kwargs)
+                        cplus=any_cplus_src(sources), extra_objs=extra_objs, **link_kwargs)
         mod = import_module_from_file(so)
     return mod
 
@@ -535,7 +568,8 @@ def _write_sources_to_build_dir(sources, build_dir):
         sha256_in_mem = sha256_of_string(src.encode('utf-8')).hexdigest()
         if os.path.exists(dest):
             if os.path.exists(dest + '.sha256'):
-                sha256_on_disk = open(dest + '.sha256').read()
+                with open(dest + '.sha256') as fh:
+                    sha256_on_disk = fh.read()
             else:
                 sha256_on_disk = sha256_of_file(dest).hexdigest()
 
@@ -543,7 +577,8 @@ def _write_sources_to_build_dir(sources, build_dir):
         if differs:
             with open(dest, 'wt') as fh:
                 fh.write(src)
-                open(dest + '.sha256', 'wt').write(sha256_in_mem)
+            with open(dest + '.sha256', 'wt') as fh:
+                fh.write(sha256_in_mem)
         source_files.append(dest)
     return source_files, build_dir
 
@@ -571,7 +606,7 @@ def compile_link_import_strings(sources, build_dir=None, **kwargs):
     """
     source_files, build_dir = _write_sources_to_build_dir(sources, build_dir)
     mod = compile_link_import_py_ext(source_files, build_dir=build_dir, **kwargs)
-    info = dict(build_dir=build_dir)
+    info = {"build_dir": build_dir}
     return mod, info
 
 
@@ -618,5 +653,5 @@ def compile_run_strings(sources, build_dir=None, clean=False, compile_kwargs=Non
         if clean and os.path.isdir(build_dir):
             shutil.rmtree(build_dir)
             build_dir = None
-    info = dict(exit_status=exit_status, build_dir=build_dir)
+    info = {"exit_status": exit_status, "build_dir": build_dir}
     return (stdout, stderr), info

@@ -18,6 +18,7 @@ from sympy.functions.special.bessel import (besseli, besselj, besselk)
 from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.error_functions import (erf, erfc, erfi, expint)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
+from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.hyper import hyper
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
@@ -30,7 +31,7 @@ from sympy.sets.sets import FiniteSet, Complement, Intersection
 from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis, median,
                          given, pspace, cdf, characteristic_function, moment_generating_function,
                          ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
-                         Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
+                         Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Davis, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
                          LogLogistic, LogitNormal, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
@@ -595,6 +596,17 @@ def test_dagum():
     raises(ValueError, lambda: Dagum('x', p, a, b))
     X = Dagum('x', 1, 1, 1)
     assert median(X) == FiniteSet(1)
+
+def test_davis():
+    b = Symbol("b", positive=True)
+    n = Symbol("n", positive=True)
+    mu = Symbol("mu", positive=True)
+
+    X = Davis('x', b, n, mu)
+    dividend = b**n*(x - mu)**(-1-n)
+    divisor = (exp(b/(x-mu))-1)*(gamma(n)*zeta(n))
+    assert density(X)(x) == dividend/divisor
+
 
 def test_erlang():
     k = Symbol("k", integer=True, positive=True)
@@ -1565,3 +1577,7 @@ def test_issue_16318():
     # test compute_expectation function of the SingleContinuousDomain
     N = SingleContinuousDomain(x, Interval(0, 1))
     raises(ValueError, lambda: SingleContinuousDomain.compute_expectation(N, x+1, {x, y}))
+
+def test_compute_density():
+    X = Normal('X', 0, Symbol("sigma")**2)
+    raises(ValueError, lambda: density(X**5 + X))

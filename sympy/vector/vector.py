@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import Type
+from itertools import product
 
-from sympy.core.add import Add
+from sympy.core import Add, Basic
 from sympy.core.assumptions import StdFactKB
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.power import Pow
@@ -14,6 +14,7 @@ from sympy.vector.basisdependent import (BasisDependentZero,
     BasisDependent, BasisDependentMul, BasisDependentAdd)
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
+from sympy.vector.kind import VectorKind
 
 
 class Vector(BasisDependent):
@@ -27,12 +28,14 @@ class Vector(BasisDependent):
     is_Vector = True
     _op_priority = 12.0
 
-    _expr_type = None  # type: Type[Vector]
-    _mul_func = None  # type: Type[Vector]
-    _add_func = None  # type: Type[Vector]
-    _zero_func = None  # type: Type[Vector]
-    _base_func = None  # type: Type[Vector]
+    _expr_type: type[Vector]
+    _mul_func: type[Vector]
+    _add_func: type[Vector]
+    _zero_func: type[Vector]
+    _base_func: type[Vector]
     zero: VectorZero
+
+    kind: VectorKind = VectorKind()
 
     @property
     def components(self):
@@ -214,10 +217,8 @@ class Vector(BasisDependent):
 
         # Iterate over components of both the vectors to generate
         # the required Dyadic instance
-        args = []
-        for k1, v1 in self.components.items():
-            for k2, v2 in other.components.items():
-                args.append((v1 * v2) * BaseDyadic(k1, k2))
+        args = [(v1 * v2) * BaseDyadic(k1, k2) for (k1, v1), (k2, v2)
+                in product(self.components.items(), other.components.items())]
 
         return DyadicAdd(*args)
 
@@ -346,6 +347,24 @@ class Vector(BasisDependent):
         else:
             raise TypeError("Invalid division involving a vector")
 
+# The following is adapted from the matrices.expressions.matexpr file
+
+def get_postprocessor(cls):
+    def _postprocessor(expr):
+        vec_class = {Add: VectorAdd}[cls]
+        vectors = []
+        for term in expr.args:
+            if isinstance(term.kind, VectorKind):
+                vectors.append(term)
+
+        if vec_class == VectorAdd:
+            return VectorAdd(*vectors).doit(deep=False)
+    return _postprocessor
+
+
+Basic._constructor_postprocessor_mapping[Vector] = {
+    "Add": [get_postprocessor(Add)],
+}
 
 class BaseVector(Vector, AtomicExpr):
     """
@@ -490,7 +509,7 @@ class Cross(Vector):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return cross(self._expr1, self._expr2)
 
 
@@ -523,7 +542,7 @@ class Dot(Expr):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return dot(self._expr1, self._expr2)
 
 

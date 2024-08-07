@@ -172,7 +172,7 @@ __all__ = [
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, \
     ArrayContraction, Reshape, ArraySymbol, ArrayElement, ZeroArray, OneArray, ArrayElementwiseApplyFunc
 from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
-from sympy.tensor.array.expressions.conv_array_to_indexed import convert_array_to_indexed
-from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
-from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_array_to_indexed import convert_array_to_indexed
+from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
+from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array

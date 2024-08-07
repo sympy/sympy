@@ -1,0 +1,155 @@
+[tool.pytest.ini_options]
+# Don't run the tests marked as slow by default.
+addopts = "-m 'not slow and not tooslow'"
+filterwarnings = [
+    'ignore:More than 20 figures have been opened.*:RuntimeWarning',
+    'ignore:FigureCanvasAgg is non-interactive, and thus cannot be shown:UserWarning',
+]
+
+# Only run tests under the sympy/ directory. Otherwise pytest will attempt to
+# collect tests from e.g. the bin/ directory as well.
+testpaths = [
+    "sympy",
+    "doc/src",
+]
+
+# Normalise output of doctests.
+doctest_optionflags = [
+    "NORMALIZE_WHITESPACE",
+    "IGNORE_EXCEPTION_DETAIL",
+    "ELLIPSIS",
+    "FLOAT_CMP",
+]
+
+norecursedirs = [
+    "sympy/parsing/autolev/test-examples",
+]
+
+markers = [
+    "nocache_fail",
+    "tooslow",
+]
+
+[tool.ruff]
+# Enable Pyflakes `E` and `F` codes by default.
+lint.select = [
+    "C4",
+    "E",
+    "F",
+    "LOG",
+    "PIE810",
+    "PLE",
+    "PLR1736",
+    "SIM101",
+    "TRY002",
+]
+
+# Ignore rules that currently fail on the SymPy codebase
+lint.ignore = [
+    "E401",  # Multiple imports on one line
+    "E402",  # Module level import not at top of file
+    "E501",  # Line too long (<LENGTH> > 88 characters)
+    "E701",  # Multiple statements on one line (colon)
+    "E702",  # Multiple statements on one line (semicolon)
+    "E703",  # Statement ends with an unnecessary semicolon
+    "E711",  # Comparison to `None` should be `cond is not None`
+    "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
+    "E713",  # Test for membership should be `not in`
+    "E714",  # Test for object identity should be `is not`
+    "E721",  # Do not compare types, use `isinstance()`
+    "E722",  # Do not use bare `except`
+    "E731",  # Do not assign a `lambda` expression, use a `def`
+    "E741",  # Ambiguous variable name: `<VARIABLE>`
+    "E743",  # Ambiguous function name: `<FUNCTION>`
+    "F401",  # `<TYPE>` imported but unused
+    "F403",  # `from <MODULE> import *` used; unable to detect undefined names
+    "F405",  # `<TYPE>` may be undefined, or defined from star imports: `<MODULE>`
+    "F523",  # `.format` call has unused arguments at position(s): <INDEX>
+    "F601",  # Dictionary key literal `'<KEY>'` repeated
+    "F811",  # Redefinition of unused `<VARIABLE>` from line <LINE>
+    "F821",  # Undefined name `VARIABLE`
+    "F823",  # Local variable `VARIABLE` referenced before assignment
+    "F841",  # Local variable `VARIABLE` is assigned to but never used
+]
+
+# Exclude paths currently excluded in the flake8 configuration
+exclude = [
+    "sympy/assumptions/*generated.py",
+    "sympy/core/*_generated.py",
+    "sympy/parsing/latex/_antlr/*",
+    "sympy/parsing/autolev/_antlr/*",
+    "sympy/parsing/autolev/test-examples/*",
+    "sympy/integrals/rubi/*",
+]
+
+# Black default, although irrelevant with E501 ignored
+line-length = 88
+
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Per-file ignores currently specified in the flake8 configuration
+[tool.ruff.lint.per-file-ignores]
+"sympy/interactive/session.py" = ["F821"]
+
+# Global mypy settings:
+[tool.mypy]
+warn_unused_configs = true
+exclude = [
+    "sympy/parsing/autolev/test-examples",
+]
+
+# Per module settings:
+[[tool.mypy.overrides]]
+module = [
+    "sympy.parsing.latex._antlr.*",
+    "sympy.parsing.autolev._antlr.*",
+    "sympy.benchmarks.*",
+    "sympy.plotting.pygletplot.*",
+]
+ignore_errors = true
+
+# Third-party untyped code:
+[[tool.mypy.overrides]]
+module = [
+    "antlr4.*",
+    "Cython.*",
+    "flint.*",
+    "gmpy.*",
+    "gmpy2.*",
+    "IPython.*",
+    "lxml.*",
+    "matchpy.*",
+    "matplotlib.*",
+    "mpmath.*",
+    "numpy.*",
+    "PIL.*",
+    "pycosat.*",
+    "pyglet.*",
+    "pymc.*",
+    "pymc3.*",
+    "python-sat.*",
+    "pytest.*",
+    "_pytest.*",
+    "sage.*",
+    "scipy.*",
+    "symengine.*",
+    "aesara.*",
+    "xml.*",
+    "pydy.*",
+    "theano.*",
+    "multiset.*",
+    "pysat.*",
+]
+ignore_missing_imports = true
+
+[tool.slotscheck]
+strict-imports = true
+exclude-modules = '''
+(
+    sympy.parsing.latex._antlr
+    |sympy.parsing.autolev._antlr
+    |sympy.galgebra
+    |sympy.plotting.pygletplot
+)
+'''

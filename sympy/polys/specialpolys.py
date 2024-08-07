@@ -90,13 +90,17 @@ def cyclotomic_poly(n, x=None, polys=False):
 
 
 @public
-def symmetric_poly(n, *gens, **args):
-    """Generates symmetric polynomial of order `n`.
-
-    Returns a Poly object when ``polys=True``, otherwise
-    (default) returns an expression.
+def symmetric_poly(n, *gens, polys=False):
     """
-    # TODO: use an explicit keyword argument
+    Generates symmetric polynomial of order `n`.
+
+    Parameters
+    ==========
+
+    polys: bool, optional (default: False)
+        Returns a Poly object when ``polys=True``, otherwise
+        (default) returns an expression.
+    """
     gens = _analyze_gens(gens)
 
     if n < 0 or n > len(gens) or not gens:
@@ -106,10 +110,7 @@ def symmetric_poly(n, *gens, **args):
     else:
         poly = Add(*[Mul(*s) for s in subsets(gens, int(n))])
 
-    if not args.get('polys', False):
-        return poly
-    else:
-        return Poly(poly, *gens)
+    return Poly(poly, *gens) if polys else poly
 
 
 @public
@@ -179,7 +180,7 @@ def fateman_poly_F_1(n):
 
     y_0, y_1 = Y[0], Y[1]
 
-    u = y_0 + Add(*[y for y in Y[1:]])
+    u = y_0 + Add(*Y[1:])
     v = y_0**2 + Add(*[y**2 for y in Y[1:]])
 
     F = ((u + 1)*(u + 2)).as_poly(*Y)
@@ -226,7 +227,7 @@ def fateman_poly_F_2(n):
 
     y_0 = Y[0]
 
-    u = Add(*[y for y in Y[1:]])
+    u = Add(*Y[1:])
 
     H = Poly((y_0 + u + 1)**2, *Y)
 

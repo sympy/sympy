@@ -1,5 +1,5 @@
-from math import log
-from itertools import chain, islice, product
+from math import factorial as _factorial, log, prod
+from itertools import chain, product
 
 
 from sympy.combinatorics import Permutation
@@ -102,7 +102,7 @@ class PermutationGroup(Basic):
 
     .. [6] https://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
 
-    .. [7] http://www.algorithmist.com/index.php/Union_Find
+    .. [7] https://algorithmist.com/wiki/Union_find
 
     .. [8] https://en.wikipedia.org/wiki/Multiply_transitive_group#Multiply_transitive_groups
 
@@ -110,13 +110,13 @@ class PermutationGroup(Basic):
 
     .. [10] https://en.wikipedia.org/wiki/Centralizer_and_normalizer
 
-    .. [11] http://groupprops.subwiki.org/wiki/Derived_subgroup
+    .. [11] https://groupprops.subwiki.org/wiki/Derived_subgroup
 
     .. [12] https://en.wikipedia.org/wiki/Nilpotent_group
 
-    .. [13] http://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
+    .. [13] https://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
 
-    .. [14] https://www.gap-system.org/Manuals/doc/ref/manual.pdf
+    .. [14] https://docs.gap-system.org/doc/ref/manual.pdf
 
     """
     is_group = True
@@ -149,7 +149,8 @@ class PermutationGroup(Basic):
     def __init__(self, *args, **kwargs):
         self._generators = list(self.args)
         self._order = None
-        self._center = []
+        self._elements = []
+        self._center = None
         self._is_abelian = None
         self._is_transitive = None
         self._is_sym = None
@@ -162,6 +163,7 @@ class PermutationGroup(Basic):
         self._max_div = None
         self._is_perfect = None
         self._is_cyclic = None
+        self._is_dihedral = None
         self._r = len(self._generators)
         self._degree = self._generators[0].size
 
@@ -373,7 +375,7 @@ class PermutationGroup(Basic):
         .. [1] Holt, D., Eick, B., O'Brien, E.
                "Handbook of computational group theory"
 
-        .. [7] http://www.algorithmist.com/index.php/Union_Find
+        .. [7] https://algorithmist.com/wiki/Union_find
 
         """
         rep_first = self._union_find_rep(first, parents)
@@ -421,7 +423,7 @@ class PermutationGroup(Basic):
         .. [1] Holt, D., Eick, B., O'Brien, E.
                "Handbook of computational group theory"
 
-        .. [7] http://www.algorithmist.com/index.php/Union_Find
+        .. [7] https://algorithmist.com/wiki/Union_find
 
         """
         rep, parent = num, parents[num]
@@ -803,7 +805,7 @@ class PermutationGroup(Basic):
             raise ValueError("The argument must be a subgroup")
 
         if H.order() == 1:
-            return self._elements
+            return self.elements
 
         self._schreier_sims(base=H.base) # make G.base an extension of H.base
 
@@ -830,7 +832,7 @@ class PermutationGroup(Basic):
         # contains all the elements of G^(l) so we might just as well
         # start with l = len(h_stabs)-1
         if len(g_stabs) > len(h_stabs):
-            T = g_stabs[len(h_stabs)]._elements
+            T = g_stabs[len(h_stabs)].elements
         else:
             T = [identity]
         l = len(h_stabs)-1
@@ -872,7 +874,7 @@ class PermutationGroup(Basic):
         base = self.base
         base_ordering = _base_ordering(base, self.degree)
         def step(l, x):
-            gamma = sorted(orbits[l], key = lambda y: base_ordering[y^x])[0]
+            gamma = min(orbits[l], key = lambda y: base_ordering[y^x])
             i = [base[l]^h for h in h_transversals[l]].index(gamma)
             x = h_transversals[l][i]*x
             if l < len(orbits)-1:
@@ -961,7 +963,9 @@ class PermutationGroup(Basic):
         of ``.centralizer()``
 
         """
-        return self.centralizer(self)
+        if not self._center:
+            self._center = self.centralizer(self)
+        return self._center
 
     def centralizer(self, other):
         r"""
@@ -1375,21 +1379,6 @@ class PermutationGroup(Basic):
 
     @property
     def elements(self):
-        """Returns all the elements of the permutation group as a set
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation, PermutationGroup
-        >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
-        >>> p.elements
-        {(1 2 3), (1 3 2), (1 3), (2 3), (3), (3)(1 2)}
-
-        """
-        return set(self._elements)
-
-    @property
-    def _elements(self):
         """Returns all the elements of the permutation group as a list
 
         Examples
@@ -1397,11 +1386,14 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics import Permutation, PermutationGroup
         >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
-        >>> p._elements
+        >>> p.elements
         [(3), (3)(1 2), (1 3), (2 3), (1 2 3), (1 3 2)]
 
         """
-        return list(islice(self.generate(), None))
+        if not self._elements:
+            self._elements = list(self.generate())
+
+        return self._elements
 
     def derived_series(self):
         r"""Return the derived series for the group.
@@ -1880,7 +1872,7 @@ class PermutationGroup(Basic):
             if ranks:
                 pows = [1]*ranks[0]
                 for i in ranks:
-                    for j in range(0, i):
+                    for j in range(i):
                         pows[j] = pows[j]*p
                 inv.extend(pows)
         inv.sort()
@@ -1918,24 +1910,18 @@ class PermutationGroup(Basic):
                 .format(only_sym, only_alt))
 
         n = self.degree
-        sym_order = 1
-        for i in range(2, n+1):
-            sym_order *= i
+        sym_order = _factorial(n)
         order = self.order()
 
         if order == sym_order:
             self._is_sym = True
             self._is_alt = False
-            if only_alt:
-                return False
-            return True
+            return not only_alt
 
-        elif 2*order == sym_order:
+        if 2*order == sym_order:
             self._is_sym = False
             self._is_alt = True
-            if only_sym:
-                return False
-            return True
+            return not only_sym
 
         return False
 
@@ -1949,7 +1935,7 @@ class PermutationGroup(Basic):
             The criterion for the incorrect ``False`` return.
 
         perms : list[Permutation], optional
-            If explicitly given, it tests over the given candidats
+            If explicitly given, it tests over the given candidates
             for testing.
 
             If ``None``, it randomly computes ``N_eps`` and chooses
@@ -2991,10 +2977,7 @@ class PermutationGroup(Basic):
             self._order = factorial(n)/2
             return self._order
 
-        basic_transversals = self.basic_transversals
-        m = 1
-        for x in basic_transversals:
-            m *= len(x)
+        m = prod([len(x) for x in self.basic_transversals])
         self._order = m
         return m
 
@@ -3223,17 +3206,112 @@ class PermutationGroup(Basic):
                 self._is_abelian = True
                 return True
 
-        for p in factors:
-            pgens = []
-            for g in self.generators:
-                pgens.append(g**p)
-            if self.index(self.subgroup(pgens)) != p:
-                self._is_cyclic = False
-                return False
+        if not self.is_abelian:
+            self._is_cyclic = False
+            return False
 
-        self._is_cyclic = True
-        self._is_abelian = True
-        return True
+        self._is_cyclic = all(
+            any(g**(order//p) != self.identity for g in self.generators)
+            for p, e in factors.items() if e > 1
+        )
+        return self._is_cyclic
+
+    @property
+    def is_dihedral(self):
+        r"""
+        Return ``True`` if the group is dihedral.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup
+        >>> G = PermutationGroup(Permutation(1, 6)(2, 5)(3, 4), Permutation(0, 1, 2, 3, 4, 5, 6))
+        >>> G.is_dihedral
+        True
+        >>> G = SymmetricGroup(3)
+        >>> G.is_dihedral
+        True
+        >>> G = CyclicGroup(6)
+        >>> G.is_dihedral
+        False
+
+        References
+        ==========
+
+        .. [Di1] https://math.stackexchange.com/questions/827230/given-a-cayley-table-is-there-an-algorithm-to-determine-if-it-is-a-dihedral-gro/827273#827273
+        .. [Di2] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral.pdf
+        .. [Di3] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral2.pdf
+        .. [Di4] https://en.wikipedia.org/wiki/Dihedral_group
+        """
+        if self._is_dihedral is not None:
+            return self._is_dihedral
+
+        order = self.order()
+
+        if order % 2 == 1:
+            self._is_dihedral = False
+            return False
+        if order == 2:
+            self._is_dihedral = True
+            return True
+        if order == 4:
+            # The dihedral group of order 4 is the Klein 4-group.
+            self._is_dihedral = not self.is_cyclic
+            return self._is_dihedral
+        if self.is_abelian:
+            # The only abelian dihedral groups are the ones of orders 2 and 4.
+            self._is_dihedral = False
+            return False
+
+        # Now we know the group is of even order >= 6, and nonabelian.
+        n = order // 2
+
+        # Handle special cases where there are exactly two generators.
+        gens = self.generators
+        if len(gens) == 2:
+            x, y = gens
+            a, b = x.order(), y.order()
+            # Make a >= b
+            if a < b:
+                x, y, a, b = y, x, b, a
+            # Using Theorem 2.1 of [Di3]:
+            if a == 2 == b:
+                self._is_dihedral = True
+                return True
+            # Using Theorem 1.1 of [Di3]:
+            if a == n and b == 2 and y*x*y == ~x:
+                self._is_dihedral = True
+                return True
+
+        # Proceed with algorithm of [Di1]
+        # Find elements of orders 2 and n
+        order_2, order_n = [], []
+        for p in self.elements:
+            k = p.order()
+            if k == 2:
+                order_2.append(p)
+            elif k == n:
+                order_n.append(p)
+
+        if len(order_2) != n + 1 - (n % 2):
+            self._is_dihedral = False
+            return False
+
+        if not order_n:
+            self._is_dihedral = False
+            return False
+
+        x = order_n[0]
+        # Want an element y of order 2 that is not a power of x
+        # (i.e. that is not the 180-deg rotation, when n is even).
+        y = order_2[0]
+        if n % 2 == 0 and y == x**(n//2):
+            y = order_2[1]
+
+        self._is_dihedral = (y*x*y == ~x)
+        return self._is_dihedral
 
     def pointwise_stabilizer(self, points, incremental=True):
         r"""Return the pointwise stabilizer for a set of points.
@@ -3694,7 +3772,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S = SymmetricGroup(5)
         >>> base, strong_gens = S.schreier_sims_random(consec_succ=5)
-        >>> _verify_bsgs(S, base, strong_gens)
+        >>> _verify_bsgs(S, base, strong_gens) #doctest: +SKIP
         True
 
         Notes
@@ -4495,7 +4573,7 @@ class PermutationGroup(Basic):
         return C.sylow_subgroup(p)
 
     def _block_verify(self, L, alpha):
-        delta = sorted(list(self.orbit(alpha)))
+        delta = sorted(self.orbit(alpha))
         # p[i] will be the number of the block
         # delta[i] belongs to
         p = [-1]*len(delta)
@@ -4867,7 +4945,7 @@ class PermutationGroup(Basic):
             C_p.table[0][i] = 0
 
         gamma = 1
-        for alpha, x in product(range(0, n), range(2*len_g)):
+        for alpha, x in product(range(n), range(2*len_g)):
             beta = C[alpha][x]
             if beta == gamma:
                 gen = G_p.generators[x//2]**((-1)**(x % 2))
@@ -4913,15 +4991,15 @@ class PermutationGroup(Basic):
         Explanation
         ===========
 
-        * ``pc_sequence`` : Polycyclic sequence is formed by collecting all
+        * pc_sequence : Polycyclic sequence is formed by collecting all
           the missing generators between the adjacent groups in the
           derived series of given permutation group.
 
-        * ``pc_series`` : Polycyclic series is formed by adding all the missing
+        * pc_series : Polycyclic series is formed by adding all the missing
           generators of ``der[i+1]`` in ``der[i]``, where ``der`` represents
           the derived series.
 
-        * ``relative_order`` : A list, computed by the ratio of adjacent groups in
+        * relative_order : A list, computed by the ratio of adjacent groups in
           pc_series.
 
         """

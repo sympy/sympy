@@ -22,10 +22,7 @@ def _evalf(func, points, derivatives=False, method='RK4'):
     else:
         meth = _rk4
 
-    dmf = []
-    for j in ann.listofpoly:
-        dmf.append(K.new(j.rep))
-
+    dmf = [K.new(j.to_list()) for j in ann.listofpoly]
     red = [-dmf[i] / dmf[a] for i in range(a)]
 
     y0 = func.y0
@@ -60,11 +57,7 @@ def _euler(red, x0, x1, y0, a):
         f_0_n += sympify(DMFsubs(red[i], A, mpm=True))._to_mpmath(mp.prec) * y_0[i]
     f_0.append(f_0_n)
 
-    sol = []
-    for i in range(a):
-        sol.append(y_0[i] + h * f_0[i])
-
-    return sol
+    return [y_0[i] + h * f_0[i] for i in range(a)]
 
 
 def _rk4(red, x0, x1, y0, a):
@@ -102,8 +95,4 @@ def _rk4(red, x0, x1, y0, a):
         f_3_n += sympify(DMFsubs(red[i], A + h, mpm=True))._to_mpmath(mp.prec) * (y_0[i] + f_2[i]*h)
     f_3.append(f_3_n)
 
-    sol = []
-    for i in range(a):
-        sol.append(y_0[i] + h * (f_0[i]+2*f_1[i]+2*f_2[i]+f_3[i])/6)
-
-    return sol
+    return [y_0[i] + h*(f_0[i]+2*f_1[i]+2*f_2[i]+f_3[i])/6 for i in range(a)]

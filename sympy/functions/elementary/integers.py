@@ -7,9 +7,8 @@ from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_or
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, int_valued
 from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
-from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import im, re
 from sympy.multipledispatch import dispatch
@@ -42,15 +41,17 @@ class RoundFunction(Function):
         ipart = npart = spart = S.Zero
 
         # Extract integral (or complex integral) terms
-        terms = Add.make_args(arg)
-
-        for t in terms:
-            if t.is_integer or (t.is_imaginary and im(t).is_integer):
-                ipart += t
-            elif t.has(Symbol):
-                spart += t
-            else:
+        intof = lambda x: int(x) if int_valued(x) else (
+            x if x.is_integer else None)
+        for t in Add.make_args(arg):
+            if t.is_imaginary and (i := intof(im(t))) is not None:
+                ipart += i*S.ImaginaryUnit
+            elif (i := intof(t)) is not None:
+                ipart += i
+            elif t.is_number:
                 npart += t
+            else:
+                spart += t
 
         if not (npart or spart):
             return ipart
@@ -125,7 +126,7 @@ class floor(RoundFunction):
     ==========
 
     .. [1] "Concrete mathematics" by Graham, pp. 87
-    .. [2] http://mathworld.wolfram.com/FloorFunction.html
+    .. [2] https://mathworld.wolfram.com/FloorFunction.html
 
     """
     _dir = -1
@@ -141,23 +142,22 @@ class floor(RoundFunction):
             return arg.approximation_interval(Integer)[0]
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
-        if arg0 is S.NaN:
+        if arg0 is S.NaN or isinstance(arg0, AccumBounds):
             arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
             r = floor(arg0)
         if arg0.is_finite:
             if arg0 == r:
-                if cdir == 0:
-                    ndirl = arg.dir(x, cdir=-1)
-                    ndir = arg.dir(x, cdir=1)
-                    if ndir != ndirl:
-                        raise ValueError("Two sided limit of %s around 0"
-                                    "does not exist" % self)
+                ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+                if ndir.is_negative:
+                    return r - 1
+                elif ndir.is_positive:
+                    return r
                 else:
-                    ndir = arg.dir(x, cdir=cdir)
-                return r - 1 if ndir.is_negative else r
+                    raise NotImplementedError("Not sure of sign of %s" % ndir)
             else:
                 return r
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
@@ -177,7 +177,12 @@ class floor(RoundFunction):
             return s + o
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
-            return r - 1 if ndir.is_negative else r
+            if ndir.is_negative:
+                return r - 1
+            elif ndir.is_positive:
+                return r
+            else:
+                raise NotImplementedError("Not sure of sign of %s" % ndir)
         else:
             return r
 
@@ -289,7 +294,7 @@ class ceiling(RoundFunction):
     ==========
 
     .. [1] "Concrete mathematics" by Graham, pp. 87
-    .. [2] http://mathworld.wolfram.com/CeilingFunction.html
+    .. [2] https://mathworld.wolfram.com/CeilingFunction.html
 
     """
     _dir = 1
@@ -305,23 +310,22 @@ class ceiling(RoundFunction):
             return arg.approximation_interval(Integer)[1]
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
-        if arg0 is S.NaN:
+        if arg0 is S.NaN or isinstance(arg0, AccumBounds):
             arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
             r = ceiling(arg0)
         if arg0.is_finite:
             if arg0 == r:
-                if cdir == 0:
-                    ndirl = arg.dir(x, cdir=-1)
-                    ndir = arg.dir(x, cdir=1)
-                    if ndir != ndirl:
-                        raise ValueError("Two sided limit of %s around 0"
-                                    "does not exist" % self)
+                ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+                if ndir.is_negative:
+                    return r
+                elif ndir.is_positive:
+                    return r + 1
                 else:
-                    ndir = arg.dir(x, cdir=cdir)
-                return r if ndir.is_negative else r + 1
+                    raise NotImplementedError("Not sure of sign of %s" % ndir)
             else:
                 return r
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
@@ -341,7 +345,12 @@ class ceiling(RoundFunction):
             return s + o
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
-            return r if ndir.is_negative else r + 1
+            if ndir.is_negative:
+                return r
+            elif ndir.is_positive:
+                return r + 1
+            else:
+                raise NotImplementedError("Not sure of sign of %s" % ndir)
         else:
             return r
 
@@ -465,7 +474,7 @@ class frac(Function):
     ===========
 
     .. [1] https://en.wikipedia.org/wiki/Fractional_part
-    .. [2] http://mathworld.wolfram.com/FractionalPart.html
+    .. [2] https://mathworld.wolfram.com/FractionalPart.html
 
     """
     @classmethod
@@ -486,9 +495,8 @@ class frac(Function):
                     return arg - floor(arg)
             return cls(arg, evaluate=False)
 
-        terms = Add.make_args(arg)
         real, imag = S.Zero, S.Zero
-        for t in terms:
+        for t in Add.make_args(arg):
             # Two checks are needed for complex arguments
             # see issue-7649 for details
             if t.is_imaginary or (S.ImaginaryUnit*t).is_real:
@@ -584,6 +592,43 @@ class frac(Function):
                     return S.true
             if other.is_integer and other.is_positive:
                 return S.true
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+
+        if arg0.is_finite:
+            if r.is_zero:
+                ndir = arg.dir(x, cdir=cdir)
+                if ndir.is_negative:
+                    return S.One
+                return (arg - arg0).as_leading_term(x, logx=logx, cdir=cdir)
+            else:
+                return r
+        elif arg0 in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
+            return AccumBounds(0, 1)
+        return arg.as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+
+        if arg0.is_infinite:
+            from sympy.calculus.accumulationbounds import AccumBounds
+            o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1) + Order(x**n, (x, 0))
+            return o
+        else:
+            res = (arg - arg0)._eval_nseries(x, n, logx=logx, cdir=cdir)
+            if r.is_zero:
+                ndir = arg.dir(x, cdir=cdir)
+                res += S.One if ndir.is_negative else S.Zero
+            else:
+                res += r
+            return res
 
 
 @dispatch(frac, Basic)  # type:ignore

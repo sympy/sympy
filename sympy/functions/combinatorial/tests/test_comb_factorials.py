@@ -534,6 +534,8 @@ def test_binomial_Mod():
     # binomial factorize
     assert Mod(binomial(253, 113, evaluate=False), r) == Mod(binomial(253, 113), r)
 
+    # using Granville's generalisation of Lucas' Theorem
+    assert Mod(binomial(10**18, 10**12, evaluate=False), p*p) == 3744312326
 
 
 @slow

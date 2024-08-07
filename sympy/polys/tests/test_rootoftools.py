@@ -124,7 +124,6 @@ def test_CRootOf_attributes():
     raises(NotImplementedError, lambda: rootof(Poly(x**3 + y*x + 1, x), 0))
 
 
-
 def test_CRootOf___eq__():
     assert (rootof(x**3 + x + 3, 0) == rootof(x**3 + x + 3, 0)) is True
     assert (rootof(x**3 + x + 3, 0) == rootof(x**3 + x + 3, 1)) is False
@@ -174,6 +173,12 @@ def test_CRootOf_is_real():
 
 def test_CRootOf_is_complex():
     assert rootof(x**3 + x + 3, 0).is_complex is True
+
+
+def test_CRootOf_is_algebraic():
+    assert rootof(x**3 + x + 3, 0).is_algebraic is True
+    assert rootof(x**3 + x + 3, 1).is_algebraic is True
+    assert rootof(x**3 + x + 3, 2).is_algebraic is True
 
 
 def test_CRootOf_subs():
@@ -249,8 +254,8 @@ def test_CRootOf_evalf():
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
-    assert r0.n(4) == -1.0*I
-    assert r1.n(4) == 1.0*I
+    assert r0.n(4) == Float(-1.0, 4) * I
+    assert r1.n(4) == Float(1.0, 4) * I
 
     # make sure verification is used in case a max/min traps the "root"
     assert str(rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'
@@ -275,6 +280,18 @@ def test_CRootOf_evalf():
         ri._reset()
         assert i == ri._get_interval()
         assert i == i.func(*i.args)
+
+
+def test_issue_24978():
+    # Irreducible poly with negative leading coeff is normalized
+    # (factor of -1 is extracted), before being stored as CRootOf.poly.
+    f = -x**2 + 2
+    r = CRootOf(f, 0)
+    assert r.poly.as_expr() == x**2 - 2
+    # An action that prompts calculation of an interval puts r.poly in
+    # the cache.
+    r.n()
+    assert r.poly in rootoftools._reals_cache
 
 
 def test_CRootOf_evalf_caching_bug():
@@ -522,8 +539,8 @@ def test_issue_8316():
 def test__imag_count():
     from sympy.polys.rootoftools import _imag_count_of_factor
     def imag_count(p):
-        return sum([_imag_count_of_factor(f)*m for f, m in
-        p.factor_list()[1]])
+        return sum(_imag_count_of_factor(f)*m for f, m in
+        p.factor_list()[1])
     assert imag_count(Poly(x**6 + 10*x**2 + 1)) == 2
     assert imag_count(Poly(x**2)) == 0
     assert imag_count(Poly([1]*3 + [-1], x)) == 0

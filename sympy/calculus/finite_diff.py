@@ -177,16 +177,16 @@ def finite_diff_weights(order, x_list, x0=S.One):
     c1 = S.One
     for n in range(1, N+1):
         c2 = S.One
-        for nu in range(0, n):
-            c3 = x_list[n]-x_list[nu]
+        for nu in range(n):
+            c3 = x_list[n] - x_list[nu]
             c2 = c2 * c3
             if n <= M:
                 delta[n][n-1][nu] = 0
-            for m in range(0, min(n, M)+1):
+            for m in range(min(n, M)+1):
                 delta[m][n][nu] = (x_list[n]-x0)*delta[m][n-1][nu] -\
                     m*delta[m-1][n-1][nu]
                 delta[m][n][nu] /= c3
-        for m in range(0, min(n, M)+1):
+        for m in range(min(n, M)+1):
             delta[m][n][n] = c1/c2*(m*delta[m-1][n-1][n-1] -
                                     (x_list[n-1]-x0)*delta[m][n-1][n-1])
         c1 = c2
@@ -275,7 +275,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     delta = finite_diff_weights(order, x_list, x0)
 
     derivative = 0
-    for nu in range(0, len(x_list)):
+    for nu in range(len(x_list)):
         derivative += delta[order][N][nu]*y_list[nu]
     return derivative
 

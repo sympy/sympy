@@ -30,11 +30,11 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union as tUnion
+from __future__ import annotations
+from typing import Any
 from collections.abc import Iterable
 
 from .add import Add
-from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
 from .containers import Tuple, Dict
@@ -150,7 +150,7 @@ def arity(cls):
         lambda p:p.default == p.empty, binary=True))
     return no if not yes else tuple(range(no, no + yes + 1))
 
-class FunctionClass(ManagedProperties):
+class FunctionClass(type):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
@@ -193,8 +193,6 @@ class FunctionClass(ManagedProperties):
             namespace = args[2]
             if 'eval' in namespace and not isinstance(namespace['eval'], classmethod):
                 raise TypeError("eval on Function subclasses should be a class method (defined with @classmethod)")
-
-        super().__init__(*args, **kwargs)
 
     @property
     def __signature__(self):
@@ -263,7 +261,7 @@ class FunctionClass(ManagedProperties):
         return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
     def _valid_nargs(self, n : int) -> bool:
-        """ Return True if the specified interger is a valid number of arguments
+        """ Return True if the specified integer is a valid number of arguments
 
         The number of arguments n is guaranteed to be an integer and positive
 
@@ -344,13 +342,12 @@ class Application(Basic, metaclass=FunctionClass):
         Explanation
         ===========
 
-        The eval() method is called when the class cls is about to be
+        The ``eval()`` method is called when the class ``cls`` is about to be
         instantiated and it should return either some simplified instance
-        (possible of some other class), or if the class cls should be
+        (possible of some other class), or if the class ``cls`` should be
         unmodified, return None.
 
-        Examples of eval() for the function "sign"
-        ---------------------------------------------
+        Examples of ``eval()`` for the function "sign"
 
         .. code-block:: python
 
@@ -381,16 +378,21 @@ class Application(Basic, metaclass=FunctionClass):
 
 
 class Function(Application, Expr):
-    """
+    r"""
     Base class for applied mathematical functions.
 
     It also serves as a constructor for undefined function classes.
 
+    See the :ref:`custom-functions` guide for details on how to subclass
+    ``Function`` and what methods can be defined.
+
     Examples
     ========
 
-    First example shows how to use Function as a constructor for undefined
-    function classes:
+    **Undefined Functions**
+
+    To create an undefined function, pass a string of the function name to
+    ``Function``.
 
     >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
@@ -407,8 +409,10 @@ class Function(Application, Expr):
     >>> g.diff(x)
     Derivative(g(x), x)
 
-    Assumptions can be passed to Function, and if function is initialized with a
-    Symbol, the function inherits the name and assumptions associated with the Symbol:
+    Assumptions can be passed to ``Function`` the same as with a
+    :class:`~.Symbol`. Alternatively, you can use a ``Symbol`` with
+    assumptions for the function name and the function will inherit the name
+    and assumptions associated with the ``Symbol``:
 
     >>> f_real = Function('f', real=True)
     >>> f_real(x).is_real
@@ -418,52 +422,16 @@ class Function(Application, Expr):
     True
 
     Note that assumptions on a function are unrelated to the assumptions on
-    the variable it is called on. If you want to add a relationship, subclass
-    Function and define the appropriate ``_eval_is_assumption`` methods.
+    the variables it is called on. If you want to add a relationship, subclass
+    ``Function`` and define custom assumptions handler methods. See the
+    :ref:`custom-functions-assumptions` section of the :ref:`custom-functions`
+    guide for more details.
 
-    In the following example Function is used as a base class for
-    ``my_func`` that represents a mathematical function *my_func*. Suppose
-    that it is well known, that *my_func(0)* is *1* and *my_func* at infinity
-    goes to *0*, so we want those two simplifications to occur automatically.
-    Suppose also that *my_func(x)* is real exactly when *x* is real. Here is
-    an implementation that honours those requirements:
+    **Custom Function Subclasses**
 
-    >>> from sympy import Function, S, oo, I, sin
-    >>> class my_func(Function):
-    ...
-    ...     @classmethod
-    ...     def eval(cls, x):
-    ...         if x.is_Number:
-    ...             if x.is_zero:
-    ...                 return S.One
-    ...             elif x is S.Infinity:
-    ...                 return S.Zero
-    ...
-    ...     def _eval_is_real(self):
-    ...         return self.args[0].is_real
-    ...
-    >>> x = S('x')
-    >>> my_func(0) + sin(0)
-    1
-    >>> my_func(oo)
-    0
-    >>> my_func(3.54).n() # Not yet implemented for my_func.
-    my_func(3.54)
-    >>> my_func(I).is_real
-    False
-
-    In order for ``my_func`` to become useful, several other methods would
-    need to be implemented. See source code of some of the already
-    implemented functions for more complete examples.
-
-    Also, if the function can take more than one argument, then ``nargs``
-    must be defined, e.g. if ``my_func`` can take one or two arguments
-    then,
-
-    >>> class my_func(Function):
-    ...     nargs = (1, 2)
-    ...
-    >>>
+    The :ref:`custom-functions` guide has several
+    :ref:`custom-functions-complete-examples` of how to subclass ``Function``
+    to create a custom function.
 
     """
 
@@ -654,7 +622,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # type: tUnion[FuzzyBool, tTuple[Expr, ...]]
+    _singularities: FuzzyBool | tuple[Expr, ...] = None
 
     @classmethod
     def is_singular(cls, a):
@@ -716,9 +684,7 @@ class Function(Application, Expr):
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_finite is False for t in args0):
             from .numbers import oo, zoo, nan
-            # XXX could use t.as_leading_term(x) here but it's a little
-            # slower
-            a = [t.compute_leading_term(x, logx=logx) for t in args]
+            a = [t.as_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any(t.has(oo, -oo, zoo, nan) for t in a0):
                 return self._eval_aseries(n, args0, x, logx)
@@ -768,8 +734,7 @@ class Function(Application, Expr):
 
                 _x = uniquely_named_symbol('xi', self)
                 e = e.subs(x, _x)
-                for i in range(n - 1):
-                    i += 1
+                for i in range(1, n):
                     fact *= Rational(i)
                     e = e.diff(_x)
                     subs = e.subs(_x, S.Zero)
@@ -847,7 +812,7 @@ class Function(Application, Expr):
             raise NotImplementedError(
                 '%s has no _eval_as_leading_term routine' % self.func)
         else:
-            return self.func(*args)
+            return self
 
 
 class AppliedUndef(Function):
@@ -943,7 +908,7 @@ class UndefinedFunction(FunctionClass):
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _kwargs = {}  # type: tDict[str, Optional[bool]]
+    _kwargs: dict[str, bool | None] = {}
 
     def __hash__(self):
         return hash((self.class_key(), frozenset(self._kwargs.items())))
@@ -1019,7 +984,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
     """
 
     # XXX: What is this class attribute used for?
-    include = set()  # type: tSet[Any]
+    include: set[Any] = set()
 
     def __init__(cls, name, **assumptions):
         from sympy.sets.sets import Set, FiniteSet
@@ -1041,7 +1006,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
             return None
 
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
         else:
             repl_dict = repl_dict.copy()
 
@@ -1443,14 +1408,14 @@ class Derivative(Expr):
         # -------------------------------------------------------------
         nderivs = 0  # how many derivatives were performed
         unhandled = []
-        from sympy.matrices.common import MatrixCommon
+        from sympy.matrices.matrixbase import MatrixBase
         for i, (v, count) in enumerate(variable_count):
 
             old_expr = expr
             old_v = None
 
             is_symbol = v.is_symbol or isinstance(v,
-                (Iterable, Tuple, MatrixCommon, NDimArray))
+                (Iterable, Tuple, MatrixBase, NDimArray))
 
             if not is_symbol:
                 old_v = v
@@ -1458,8 +1423,7 @@ class Derivative(Expr):
                 expr = expr.xreplace({old_v: v})
                 # Derivatives and UndefinedFunctions are independent
                 # of all others
-                clashing = not (isinstance(old_v, Derivative) or \
-                    isinstance(old_v, AppliedUndef))
+                clashing = not (isinstance(old_v, (Derivative, AppliedUndef)))
                 if v not in expr.free_symbols and not clashing:
                     return expr.diff(v)  # expr's version of 0
                 if not old_v.is_scalar and not hasattr(
@@ -1746,7 +1710,7 @@ class Derivative(Expr):
                 return _derivative_dispatch(new, *(self_vars - old_vars).items()).canonical
 
         args = list(self.args)
-        newargs = list(x._subs(old, new) for x in args)
+        newargs = [x._subs(old, new) for x in args]
         if args[0] == old:
             # complete replacement of self.expr
             # we already checked that the new is valid so we know
@@ -1934,10 +1898,10 @@ class Derivative(Expr):
 
 
 def _derivative_dispatch(expr, *variables, **kwargs):
-    from sympy.matrices.common import MatrixCommon
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.tensor.array import NDimArray
-    array_types = (MatrixCommon, MatrixExpr, NDimArray, list, tuple, Tuple)
+    array_types = (MatrixBase, MatrixExpr, NDimArray, list, tuple, Tuple)
     if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
         from sympy.tensor.array.array_derivatives import ArrayDerivative
         return ArrayDerivative(expr, *variables, **kwargs)
@@ -2124,25 +2088,6 @@ class Subs(Expr):
         A point or list of evaluation points
         corresponding to those variables.
 
-    Notes
-    =====
-
-    ``Subs`` objects are generally useful to represent unevaluated derivatives
-    calculated at a point.
-
-    The variables may be expressions, but they are subjected to the limitations
-    of subs(), so it is usually a good practice to use only symbols for
-    variables, since in that case there can be no ambiguity.
-
-    There's no automatic expansion - use the method .doit() to effect all
-    possible substitutions of the object and also of objects inside the
-    expression.
-
-    When evaluating derivatives at a point that is not a symbol, a Subs object
-    is returned. One is also able to calculate derivatives of Subs objects - in
-    this case the expression is always expanded (for the unevaluated form, use
-    Derivative()).
-
     Examples
     ========
 
@@ -2171,6 +2116,22 @@ class Subs(Expr):
 
     Notes
     =====
+
+    ``Subs`` objects are generally useful to represent unevaluated derivatives
+    calculated at a point.
+
+    The variables may be expressions, but they are subjected to the limitations
+    of subs(), so it is usually a good practice to use only symbols for
+    variables, since in that case there can be no ambiguity.
+
+    There's no automatic expansion - use the method .doit() to effect all
+    possible substitutions of the object and also of objects inside the
+    expression.
+
+    When evaluating derivatives at a point that is not a symbol, a Subs object
+    is returned. One is also able to calculate derivatives of Subs objects - in
+    this case the expression is always expanded (for the unevaluated form, use
+    Derivative()).
 
     In order to allow expressions to combine before doit is done, a
     representation of the Subs expression is used internally to make
@@ -2507,7 +2468,7 @@ def diff(f, *symbols, **kwargs):
     References
     ==========
 
-    .. [1] http://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+    .. [1] https://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
 
     See Also
     ========
@@ -2673,7 +2634,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     and ``cos(x)`` are not unique, due to the identity `\sin^2(x) + \cos^2(x)
     = 1`.  The current implementation uses the form obtained from Chebyshev
     polynomials, but this may change.  See `this MathWorld article
-    <http://mathworld.wolfram.com/Multiple-AngleFormulas.html>`_ for more
+    <https://mathworld.wolfram.com/Multiple-AngleFormulas.html>`_ for more
     information.
 
     Notes
@@ -2923,8 +2884,21 @@ def expand_log(expr, deep=True, force=False, factor=False):
 
     """
     from sympy.functions.elementary.exponential import log
+    from sympy.simplify.radsimp import fraction
     if factor is False:
-        def _handle(x):
+        def _handleMul(x):
+            # look for the simple case of expanded log(b**a)/log(b) -> a in args
+            n, d = fraction(x)
+            n = [i for i in n.atoms(log) if i.args[0].is_Integer]
+            d = [i for i in d.atoms(log) if i.args[0].is_Integer]
+            if len(n) == 1 and len(d) == 1:
+                n = n[0]
+                d = d[0]
+                from sympy import multiplicity
+                m = multiplicity(d.args[0], n.args[0])
+                if m:
+                    r = m + log(n.args[0]//d.args[0]**m)/d
+                    x = x.subs(n, d*r)
             x1 = expand_mul(expand_log(x, deep=deep, force=force, factor=True))
             if x1.count(log) <= x.count(log):
                 return x1
@@ -2933,7 +2907,7 @@ def expand_log(expr, deep=True, force=False, factor=False):
         expr = expr.replace(
         lambda x: x.is_Mul and all(any(isinstance(i, log) and i.args[0].is_Rational
         for i in Mul.make_args(j)) for j in x.as_numer_denom()),
-        _handle)
+        _handleMul)
 
     return sympify(expr).expand(deep=deep, log=True, mul=False,
         power_exp=False, power_base=False, multinomial=False,
@@ -3016,7 +2990,7 @@ def expand_power_base(expr, deep=True, force=False):
     only happen if the base is non-negative or the exponent is an integer.
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy import expand_power_base, sin, cos, exp
+    >>> from sympy import expand_power_base, sin, cos, exp, Symbol
 
     >>> (x*y)**2
     x**2*y**2
@@ -3055,7 +3029,24 @@ def expand_power_base(expr, deep=True, force=False):
     >>> expand_power_base((2*y)**(1+z))
     2**(z + 1)*y**(z + 1)
     >>> ((2*y)**(1+z)).expand()
-    2*2**z*y*y**z
+    2*2**z*y**(z + 1)
+
+    The power that is unexpanded can be expanded safely when
+    ``y != 0``, otherwise different values might be obtained for the expression:
+
+    >>> prev = _
+
+    If we indicate that ``y`` is positive but then replace it with
+    a value of 0 after expansion, the expression becomes 0:
+
+    >>> p = Symbol('p', positive=True)
+    >>> prev.subs(y, p).expand().subs(p, 0)
+    0
+
+    But if ``z = -1`` the expression would not be zero:
+
+    >>> prev.subs(y, 0).subs(z, -1)
+    1
 
     See Also
     ========
@@ -3077,9 +3068,18 @@ def expand_power_exp(expr, deep=True):
     Examples
     ========
 
-    >>> from sympy import expand_power_exp
+    >>> from sympy import expand_power_exp, Symbol
     >>> from sympy.abc import x, y
+    >>> expand_power_exp(3**(y + 2))
+    9*3**y
     >>> expand_power_exp(x**(y + 2))
+    x**(y + 2)
+
+    If ``x = 0`` the value of the expression depends on the
+    value of ``y``; if the expression were expanded the result
+    would be 0. So expansion is only done if ``x != 0``:
+
+    >>> expand_power_exp(Symbol('x', zero=False)**(y + 2))
     x**2*x**y
     """
     return sympify(expr).expand(deep=deep, complex=False, basic=False,
@@ -3243,11 +3243,7 @@ def count_ops(expr, visual=False):
                 # count the args
                 ops.append(o*(len(a.args) - 1))
             elif a.args and (
-                    a.is_Pow or
-                    a.is_Function or
-                    isinstance(a, Derivative) or
-                    isinstance(a, Integral) or
-                    isinstance(a, Sum)):
+                    a.is_Pow or a.is_Function or isinstance(a, (Derivative, Integral, Sum))):
                 # if it's not in the list above we don't
                 # consider a.func something to count, e.g.
                 # Tuple, MatrixSymbol, etc...
@@ -3327,9 +3323,9 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     >>> type(nfloat((1, 2))) is tuple
     True
     """
-    from sympy.matrices.matrices import MatrixBase
+    from sympy.matrices.matrixbase import MatrixBase
 
-    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+    kw = {"n": n, "exponent": exponent, "dkeys": dkeys}
 
     if isinstance(expr, MatrixBase):
         return expr.applyfunc(lambda e: nfloat(e, **kw))
@@ -3338,7 +3334,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     if iterable(expr, exclude=str):
         if isinstance(expr, (dict, Dict)):
             if dkeys:
-                args = [tuple(map(lambda i: nfloat(i, **kw), a))
+                args = [tuple((nfloat(i, **kw) for i in a))
                     for a in expr.items()]
             else:
                 args = [(k, nfloat(v, **kw)) for k, v in expr.items()]

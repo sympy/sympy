@@ -2,7 +2,7 @@
 
 qasm.py - Functions to parse a set of qasm commands into a SymPy Circuit.
 
-Examples taken from Chuang's page: http://www.media.mit.edu/quanta/qasm2circ/
+Examples taken from Chuang's page: https://web.archive.org/web/20220120121541/https://www.media.mit.edu/quanta/qasm2circ/
 
 The code returns a circuit and an associated list of labels.
 
@@ -20,6 +20,8 @@ __all__ = [
     'Qasm',
     ]
 
+from math import prod
+
 from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS, SWAP, S, T,CPHASE
 from sympy.physics.quantum.circuitplot import Mz
 
@@ -28,12 +30,6 @@ def read_qasm(lines):
 
 def read_qasm_file(filename):
     return Qasm(*open(filename).readlines())
-
-def prod(c):
-    p = 1
-    for ci in c:
-        p *= ci
-    return p
 
 def flip_index(i, n):
     """Reorder qubit indices from largest to smallest.

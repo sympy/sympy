@@ -1,7 +1,9 @@
 import random
+from sympy.core.random import random as rand, seed, shuffle, _assumptions_shuffle
 from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.trigonometric import sin, acos
 from sympy.abc import x
+
 
 def test_random():
     random.seed(42)
@@ -28,3 +30,32 @@ def test_random():
     for i in range(4):
         z += sin(random.uniform(-10,10) * x)
     assert y == z
+
+
+def test_seed():
+    assert rand() < 1
+    seed(1)
+    a = rand()
+    b = rand()
+    seed(1)
+    c = rand()
+    d = rand()
+    assert a == c
+    if not c == d:
+        assert a != b
+    else:
+        assert a == b
+
+    abc = 'abc'
+    first = list(abc)
+    second = list(abc)
+    third = list(abc)
+
+    seed(123)
+    shuffle(first)
+
+    seed(123)
+    shuffle(second)
+    _assumptions_shuffle(third)
+
+    assert first == second == third

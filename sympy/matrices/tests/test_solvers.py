@@ -1,14 +1,17 @@
+import pytest
 from sympy.core.function import expand_mul
 from sympy.core.numbers import (I, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.simplify.simplify import simplify
-from sympy.matrices.matrices import (ShapeError, NonSquareMatrixError)
+from sympy.matrices.exceptions import (ShapeError, NonSquareMatrixError)
 from sympy.matrices import (
     ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix, dotprodsimp)
+from sympy.matrices.determinant import _det_laplace
 from sympy.testing.pytest import raises
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
+from sympy.polys.matrices.exceptions import DMShapeError
 from sympy.solvers.solveset import linsolve
 from sympy.abc import x, y
 
@@ -51,6 +54,19 @@ def test_issue_17247_expression_blowup_30():
 #             [(x - 1)/(4*x)],
 #             [(x + 1)/(4*x)],
 #             [    1/(x + 1)]])
+
+
+def test_LUsolve_iszerofunc():
+    # taken from https://github.com/sympy/sympy/issues/24679
+
+    M = Matrix([[(x + 1)**2 - (x**2 + 2*x + 1), x], [x, 0]])
+    b = Matrix([1, 1])
+    is_zero_func = lambda e: False if e._random() else True
+
+    x_exp = Matrix([1/x, (1-(-x**2 - 2*x + (x+1)**2 - 1)/x)/x])
+
+    assert (x_exp - M.LUsolve(b, iszerofunc=is_zero_func)) == Matrix([0, 0])
+
 
 def test_issue_17247_expression_blowup_32():
     M = Matrix([
@@ -554,6 +570,27 @@ def test_linsolve_underdetermined_AND_gauss_jordan_solve():
     # https://github.com/sympy/sympy/issues/19815
     sol_2 = A[:, : -1 ] * sol_1 - A[:, -1 ]
     assert sol_2 == Matrix([[0], [0], [0]])
+
+
+@pytest.mark.parametrize("det_method", ["bird", "laplace"])
+@pytest.mark.parametrize("M, rhs", [
+    (Matrix([[2, 3, 5], [3, 6, 2], [8, 3, 6]]), Matrix(3, 1, [3, 7, 5])),
+    (Matrix([[2, 3, 5], [3, 6, 2], [8, 3, 6]]),
+     Matrix([[1, 2], [3, 4], [5, 6]])),
+    (Matrix(2, 2, symbols("a:4")), Matrix(2, 1, symbols("b:2"))),
+])
+def test_cramer_solve(det_method, M, rhs):
+    assert simplify(M.cramer_solve(rhs, det_method=det_method) - M.LUsolve(rhs)
+                    ) == Matrix.zeros(M.rows, rhs.cols)
+
+
+@pytest.mark.parametrize("det_method, error", [
+    ("bird", DMShapeError), (_det_laplace, NonSquareMatrixError)])
+def test_cramer_solve_errors(det_method, error):
+    # Non-square matrix
+    A = Matrix([[0, -1, 2], [5, 10, 7]])
+    b = Matrix([-2, 15])
+    raises(error, lambda: A.cramer_solve(b, det_method=det_method))
 
 
 def test_solve():

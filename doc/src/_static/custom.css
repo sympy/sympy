@@ -129,3 +129,17 @@ a:hover {
 html {
     scroll-behavior: auto;
 }
+
+/* Make checkboxes from the tasklist extension ('- [ ]' in Markdown) not add bullet points to the checkboxes.
+
+This can be removed once https://github.com/executablebooks/mdit-py-plugins/issues/59 is addressed.
+*/
+
+.contains-task-list {
+    list-style: none;
+}
+
+/* Make the checkboxes indented like they are bullets */
+.task-list-item-checkbox {
+    margin: 0 0.2em 0.25em -1.4em;
+}

@@ -15,6 +15,9 @@ from sympy.sets.sets import Interval
 from sympy.utilities.iterables import is_sequence
 
 
+__doctest_requires__ = {('fourier_series',): ['matplotlib']}
+
+
 def fourier_cos_seq(func, limits, n):
     """Returns the cos sequence in a Fourier series"""
     from sympy.integrals import integrate
@@ -526,8 +529,8 @@ class FiniteFourierSeries(FourierSeries):
             a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k is not S.Zero, ])
             b = Wild('b', properties=[lambda k: x not in k.free_symbols, ])
 
-            an = dict()
-            bn = dict()
+            an = {}
+            bn = {}
 
             # separates the coefficients of sin and cos terms in dictionaries an, and bn
             for p in exp_ls:
