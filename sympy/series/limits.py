@@ -82,7 +82,7 @@ def heuristics(e, z, z0, dir):
         from sympy.simplify.simplify import together
         for a in e.args:
             l = limit(a, z, z0, dir)
-            if l.has(S.Infinity) and l.is_finite is None:
+            if (l.has(S.Infinity) or l.has(S.NegativeInfinity)) and l.is_finite is None:
                 if isinstance(e, Add):
                     m = factor_terms(e)
                     if not isinstance(m, Mul): # try together
@@ -121,7 +121,8 @@ def heuristics(e, z, z0, dir):
                     rat_e = ratsimp(e)
                 except PolynomialError:
                     return
-                if rat_e is S.NaN or rat_e == e:
+                from sympy.simplify.powsimp import powdenest
+                if rat_e is S.NaN or powdenest(rat_e) == e:
                     return
                 return limit(rat_e, z, z0, dir)
     return rv
@@ -365,8 +366,8 @@ class Limit(Expr):
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
-        # differs from gamma) so only rewrite for positive z0.
-        if z0.is_extended_positive:
+        # differs from gamma) so only rewrite for non-negative z0.
+        if z0.is_extended_nonnegative:
             e = e.rewrite(factorial, gamma)
 
         l = None
@@ -375,7 +376,7 @@ class Limit(Expr):
             r = gruntz(e, z, z0, dir)
             if r is S.NaN or l is S.NaN:
                 raise PoleError()
-        except (PoleError, ValueError):
+        except (PoleError, ValueError, NotImplementedError):
             if l is not None:
                 raise
             r = heuristics(e, z, z0, dir)

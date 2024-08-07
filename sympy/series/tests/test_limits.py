@@ -544,8 +544,8 @@ def test_order_oo():
 
 
 def test_issue_5436():
-    raises(NotImplementedError, lambda: limit(exp(x*y), x, oo))
-    raises(NotImplementedError, lambda: limit(exp(-x*y), x, oo))
+    assert limit(exp(x*y), x, oo) == Limit(exp(x*y), x, oo, dir='-')
+    assert limit(exp(-x*y), x, oo) == Limit(exp(-x*y), x, oo, dir='-')
 
 
 def test_Limit_dir():
@@ -745,7 +745,7 @@ def test_issue_9252():
     c = Symbol('c', positive=True)
     assert limit((log(n))**(n/log(n)) / (1 + c)**n, n, oo) == 0
     # limit should depend on the value of c
-    raises(NotImplementedError, lambda: limit((log(n))**(n/log(n)) / c**n, n, oo))
+    assert limit((log(n))**(n/log(n)) / c**n, n, oo) == Limit(log(n)**(n/log(n))/c**n, n, oo, dir='-')
 
 
 def test_issue_9558():
@@ -913,7 +913,7 @@ def test_issue_10102():
 
 
 def test_issue_14377():
-    raises(NotImplementedError, lambda: limit(exp(I*x)*sin(pi*x), x, oo))
+    assert limit(exp(I*x)*sin(pi*x), x, oo) == Limit(exp(I*x)*sin(pi*x), x, oo, dir='-')
 
 
 def test_issue_15146():
@@ -1078,7 +1078,7 @@ def test_issue_18508():
 
 
 def test_issue_18521():
-    raises(NotImplementedError, lambda: limit(exp((2 - n) * x), x, oo))
+    assert limit(exp((2 - n) * x), x, oo) == Limit(exp(x*(2 - n)), x, oo, dir='-')
 
 
 def test_issue_18969():
@@ -1323,7 +1323,7 @@ def test_issue_25230():
     b = Symbol('b', positive = True)
     c = Symbol('c', negative = True)
     n = Symbol('n', integer = True)
-    raises(NotImplementedError, lambda: limit(Mod(x, a), x, a))
+    assert limit(Mod(x, a), x, a) == 0
     assert limit(Mod(x, b), x, n*b, '+') == 0
     assert limit(Mod(x, b), x, n*b, '-') == b
     assert limit(Mod(x, c), x, n*c, '+') == c
@@ -1412,3 +1412,12 @@ def test_issue_26250():
     e1 = ((1-3*x**2)*e**2/2 - (x**2-2*x+1)*e*k/2)
     e2 = pi**2*(x**8 - 2*x**7 - x**6 + 4*x**5 - x**4 - 2*x**3 + x**2)
     assert limit(e1/e2, x, 0) == -S(1)/8
+
+
+def test_issue_26513():
+    assert limit(abs((-n/(n+1))**n), n ,oo) == exp(-1)
+    assert limit((-n/(n+1))**n, n, oo) == Limit((-n/(n + 1))**n, n, oo, dir='-')
+
+
+def test_issue_22836_limit():
+    assert limit(2**(1/x)/factorial(1/(x)), x, 0) == S.Zero
