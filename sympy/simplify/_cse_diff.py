@@ -6,50 +6,55 @@ import re
 from sympy import nan, S
 
 
-def _postprocess(repl, reduced):
+def _process_cse(repl, reduced):
     """
-    Postprocess the CSE output to remove any CSE replacement symbols from the arguments
-    of Derivative terms.
+    The `process_cse` function is designed to postprocess the output of a common subexpression elimination (CSE)
+    operation. Specifically, it removes any CSE replacement symbols from the arguments of `Derivative` terms in
+    the expression. This is necessary to ensure that the forward Jacobian function correctly handles derivative terms.
+
+    Parameters
+    ==========
+
+    repl : list of (Symbol, expression) pairs
+         Replacement Symbols and relative Common Subexpressions that have been replaced during a CSE operation.
+
+    reduced : list of SymPy expressions
+         The reduced expressions with all the replacements from the repl list above.
+
+    Returns
+    =======
+
+    p_repl : list of (Symbol, expression) pairs
+        Processed replacement list, in the same format of the 'repl' input list.
+
+    p_reduced : list of SymPy expressions
+         Processed reduced list, in the same format of the 'reduced' input list.
+
     """
+
+    def _traverse(node, repl_dict):
+        if isinstance(node, Derivative):
+            return _replace_all(node, repl_dict)
+        if not node.args:
+            return node
+        new_args = [_traverse(arg, repl_dict) for arg in node.args]
+        return node.func(*new_args)
+
+    def _replace_all(node, repl_dict):
+        result = node
+        while True:
+            fs = result.free_symbols
+            sl_dict = {k: repl_dict[k] for k in fs if k in repl_dict}
+            if not sl_dict:
+                break
+            result = result.xreplace(sl_dict)
+        return result
 
     repl_dict = dict(repl)
-
     p_repl = [(rep_sym, _traverse(sub_exp, repl_dict)) for rep_sym, sub_exp in repl]
     p_reduced = [Matrix([_traverse(exp, repl_dict) for exp in red_exp]) for red_exp in reduced]
 
     return p_repl, p_reduced
-
-
-def _traverse(node, repl_dict):
-    """
-    Traverse the node in preorder fashion, and apply replace_all() if the node
-    is the argument of a Derivative.
-    """
-
-    if isinstance(node, Derivative):
-        return _replace_all(node, repl_dict)
-
-    if not node.args:
-        return node
-
-    new_args = [_traverse(arg, repl_dict) for arg in node.args]
-    return node.func(*new_args)
-
-
-def _replace_all(node, repl_dict):
-    """
-    Bring the node to its form before the CSE operation, by iteratively substituting
-    the CSE replacement symbols in the node.
-    """
-
-    result = node
-    while True:
-        fs = result.free_symbols
-        sl_dict = {k: repl_dict[k] for k in fs if k in repl_dict}
-        if not sl_dict:
-            break
-        result = result.xreplace(sl_dict)
-    return result
 
 
 def _check_nan(A, nan_idx, n):
@@ -153,7 +158,7 @@ def _forward_jacobian_core(replacements, reduced_expr, wrt):
     if not (wrt.shape[0] == 1 or wrt.shape[1] == 1):
         raise TypeError("``wrt`` must be a row or a column matrix")
 
-    replacements, reduced_expr = _postprocess(replacements, reduced_expr)
+    replacements, reduced_expr = _process_cse(replacements, reduced_expr)
 
     if replacements:
         rep_sym, sub_expr = map(Matrix, zip(*replacements))

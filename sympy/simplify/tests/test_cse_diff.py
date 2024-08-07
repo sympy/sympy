@@ -9,13 +9,15 @@ from sympy.core import Derivative
 from sympy.functions.elementary.exponential import exp
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.physics.mechanics import dynamicsymbols
-from sympy.simplify._cse_diff import _forward_jacobian
+from sympy.simplify._cse_diff import _forward_jacobian, _process_cse
 from sympy.simplify.simplify import simplify
 from sympy.matrices import Matrix, eye
 
 from sympy.testing.pytest import raises
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.simplify.trigsimp import trigsimp
+
+from sympy import cse
 
 
 w = Symbol('w')
@@ -65,6 +67,26 @@ def test_forward_jacobian(expr, wrt):
     jacobian = _forward_jacobian(expr, wrt)
     zeros = ImmutableDenseMatrix.zeros(*jacobian.shape)
     assert simplify(jacobian - expr.jacobian(wrt)) == zeros
+
+
+def test_process_cse():
+    x, y, z = symbols('x y z')
+    f = Function('f')
+    k = Function('k')
+    expr = Matrix([f(k(x,y), z) + Derivative(f(k(x,y), z), x) + k(x,y) + 2*x])
+    repl, reduced = cse(expr)
+    p_repl, p_reduced = _process_cse(repl, reduced)
+
+    x0 = symbols('x0')
+    x1 = symbols('x1')
+
+    expected_output = (
+        [(x0, k(x, y)), (x1, f(x0, z))],
+        [Matrix([2 * x + x0 + x1 + Derivative(f(k(x, y), z), x)])]
+    )
+
+    assert p_repl == expected_output[0], f"Expected {expected_output[0]}, but got {p_repl}"
+    assert p_reduced == expected_output[1], f"Expected {expected_output[1]}, but got {p_reduced}"
 
 
 def test_jacobian_hessian():
@@ -123,4 +145,3 @@ def test_nonvectorJacobian():
     Y = Matrix([[x, y], [x, z]])
     raises(TypeError, lambda: _forward_jacobian(X, Y))
     raises(TypeError, lambda: _forward_jacobian(X, Matrix([[x, y], [x, z]])))
-
