@@ -39,7 +39,7 @@ from sympy.simplify import simplify  # type: ignore
 from sympy.core import Add, S
 from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
-from sympy.core.symbol import Symbol, Wild, symbols
+from sympy.core.symbol import Symbol, Wild, symbols, Dummy
 from sympy.functions import exp
 from sympy.integrals.integrals import Integral, integrate
 from sympy.utilities.iterables import has_dups, is_sequence
@@ -616,7 +616,9 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     # TODO : For now homogeneous first order linear PDE's having
     # two variables are implemented. Once there is support for
     # solving systems of ODE's, this can be extended to n variables.
-    xi, eta = symbols("xi eta")
+    # xi, eta = symbols("xi eta")
+    xi = Dummy("xi")
+    eta = Dummy("eta")
     f = func.func
     x = func.args[0]
     y = func.args[1]
