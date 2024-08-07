@@ -2139,3 +2139,8 @@ def test_old_issues():
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3
+
+
+def test_issue_24879():
+    assert integrate(1/sqrt(1+x**3),(x,-1,oo)) == gamma(S(1)/3)*hyper((S(1)/3, S(1)/2), (S(4)/3,), 1)/(3*gamma(S(4)/3)) + \
+        gamma(S(1)/6)*gamma(S(1)/3)/(3*sqrt(pi))
