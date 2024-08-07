@@ -10,13 +10,15 @@ from sympy.plotting.series import LineOver1DRangeSeries
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+from sympy.plotting import plot_parametric
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'step_response_numerical_data', 'step_response_plot',
     'impulse_response_numerical_data', 'impulse_response_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
-    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot']
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot',
+    'nyquist_plot']
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -52,6 +54,19 @@ def _poly_roots(poly):
     # XXX: Use all_roots() for irrational coefficients when possible
     # See https://github.com/sympy/sympy/issues/22943
     return _eval(poly.nroots())
+
+
+def _get_nyquist_expr(system):
+    """Function to get the expression for Nyquist plot."""
+    s = system.var
+    w = Dummy('w', real=True)
+    repl = I * w
+    expr = system.to_expr()
+    w_expr = expr.subs({s: repl})
+    w_expr = w_expr.as_real_imag()
+    real_expr = w_expr[0]
+    imag_expr = w_expr[1]
+    return real_expr, imag_expr, w
 
 
 def pole_zero_numerical_data(system):
@@ -977,3 +992,61 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         return
 
     return plt
+
+
+def nyquist_plot(system, initial_omega=0.01, final_omega=100, color='b',
+                 grid=True, show=True, **kwargs):
+    r"""
+    Generates the Nyquist plot for a continuous-time system.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant
+        The LTI SISO system for which the Nyquist plot is to be generated.
+    initial_omega : float, optional
+        The starting frequency value. Defaults to 0.01.
+    final_omega : float, optional
+        The ending frequency value. Defaults to 100.
+    color : str, optional
+        The color of the Nyquist plot. Default is 'b' (blue).
+    grid : bool, optional
+        If True, grid lines are displayed. Default is False.
+    show : bool, optional
+        If True, the plot is displayed. Default is True.
+    **kwargs
+        Additional keyword arguments for customization.
+
+    Examples
+    ========
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import nyquist_plot
+        >>> tf1 = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
+        >>> nyquist_plot(tf1)   # doctest: +SKIP
+
+    See Also
+    ========
+
+    bode_plot, nyquist_numerical_data
+
+    """
+    real_expr, imag_expr, w = _get_nyquist_expr(system)
+    w_values = [(w, initial_omega, final_omega)]
+    plot_parametric(
+        (real_expr, imag_expr),   # The curve
+        (real_expr, -imag_expr),  # Its mirror image
+        *w_values,
+        line_color=color,
+        axes=True,
+        xlabel='Real Axis',
+        ylabel='Imaginary Axis',
+        title='Nyquist Plot (Phase)',
+        show=show
+    )
