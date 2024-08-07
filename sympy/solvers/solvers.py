@@ -800,7 +800,9 @@ def solve(f, *symbols, **flags):
             flag is False then nothing will be done to the Floats.
         manual=True (default is False)
             Do not use the polys/matrix method to solve a system of
-            equations, solve them one at a time as you might "manually."
+            equations, solve them one at a time as you might "manually"
+            and (if passing a list of equations) return a list of
+            solutions, even if all were linear.
         implicit=True (default is False)
             Allows ``solve`` to return a solution for a pattern in terms of
             other functions that contain that pattern; this is only
@@ -994,26 +996,15 @@ def solve(f, *symbols, **flags):
             return [], set()
         return []
 
+    # Abs handling
+    if any(fi.has(Abs) for fi in f):
+        solution = _solve_abs(f, symbols, flags, bare_f, ordered_symbols, as_set)
+        if solution is not None:
+            return solution
+
+    # arg
     for i, fi in enumerate(f):
-        # Abs
-        while True:
-            was = fi
-            fi = fi.replace(Abs, lambda arg:
-                separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
-                else Abs(arg))
-            if was == fi:
-                break
-
-        for e in fi.find(Abs):
-            if e.has(*symbols):
-                raise NotImplementedError('solving %s when the argument '
-                    'is not real or imaginary.' % e)
-
-        # arg
-        fi = fi.replace(arg, lambda a: arg(a).rewrite(atan2).rewrite(atan))
-
-        # save changes
-        f[i] = fi
+        f[i] = fi.replace(arg, lambda a: arg(a).rewrite(atan2).rewrite(atan))
 
     # see if re(s) or im(s) appear
     freim = [fi for fi in f if fi.has(re, im)]
@@ -1162,49 +1153,11 @@ def solve(f, *symbols, **flags):
     #
     # try to get a solution
     ###########################################################################
-    if bare_f:
-        solution = None
-        if len(symbols) != 1:
-            solution = _solve_undetermined(f[0], symbols, flags)
-        if not solution:
-            solution = _solve(f[0], *symbols, **flags)
-    else:
-        linear, solution = _solve_system(f, symbols, **flags)
-    assert type(solution) is list
-    assert not solution or type(solution[0]) is dict, solution
+    linear, solution = _get_solution(f, bare_f, symbols, flags)
+
     #
     # postprocessing
     ###########################################################################
-    # capture as_dict flag now (as_set already captured)
-    as_dict = flags.get('dict', False)
-
-    # define how solution will get unpacked
-    tuple_format = lambda s: [tuple([i.get(x, x) for x in symbols]) for i in s]
-    if as_dict or as_set:
-        unpack = None
-    elif bare_f:
-        if len(symbols) == 1:
-            unpack = lambda s: [i[symbols[0]] for i in s]
-        elif len(solution) == 1 and len(solution[0]) == len(symbols):
-            # undetermined linear coeffs solution
-            unpack = lambda s: s[0]
-        elif ordered_symbols:
-            unpack = tuple_format
-        else:
-            unpack = lambda s: s
-    else:
-        if solution:
-            if linear and len(solution) == 1:
-                # if you want the tuple solution for the linear
-                # case, use `set=True`
-                unpack = lambda s: s[0]
-            elif ordered_symbols:
-                unpack = tuple_format
-            else:
-                unpack = lambda s: s
-        else:
-            unpack = None
-
     # Restore masked-off objects
     if non_inverts and type(solution) is list:
         solution = [{k: v.subs(non_inverts) for k, v in s.items()}
@@ -1236,34 +1189,91 @@ def solve(f, *symbols, **flags):
         # nfloat might reveal more duplicates
         solution = _remove_duplicate_solutions(solution)
 
-    if check and solution:  # assumption checking
-        warn = flags.get('warn', False)
-        got_None = []  # solutions for which one or more symbols gave None
-        no_False = []  # solutions for which no symbols gave False
-        for sol in solution:
-            a_None = False
-            for symb, val in sol.items():
-                test = check_assumptions(val, **symb.assumptions0)
-                if test:
-                    continue
-                if test is False:
-                    break
-                a_None = True
-            else:
-                no_False.append(sol)
-                if a_None:
-                    got_None.append(sol)
-
-        solution = no_False
-        if warn and got_None:
-            warnings.warn(filldedent("""
-                \tWarning: assumptions concerning following solution(s)
-                cannot be checked:""" + '\n\t' +
-                ', '.join(str(s) for s in got_None)))
+    if check:
+        solution = _check_assumptions(solution, flags.get('warn', False))
 
     #
     # done
     ###########################################################################
+
+    as_dict = flags.get('dict', False)
+    return _legacy_output(solution, symbols, ordered_symbols, bare_f, bare_f or linear, as_dict, as_set)
+
+
+def _get_solution(f, bare_f, symbols, flags):
+    # return (linear, list of dictionaries) where, if bare_f,
+    # linear (=None) is to be ignored, else it will be True
+    # if the system of 1 or more equations was linear.
+    linear = None
+    if bare_f:
+        s = None
+        if len(symbols) != 1:
+            s = _solve_undetermined(f[0], symbols, flags)
+        if not s:
+            s = _solve(f[0], *symbols, **flags)
+    else:
+        linear, s = _solve_system(f, symbols, **flags)
+    assert type(s) is list
+    assert not s or type(s[0]) is dict, s
+    return linear, s
+
+
+def _check_assumptions(solution, warn):
+    # return solutions for which the solution matches the
+    # assumptions on the symbol; warn if check was
+    # indeterminant if `warn` is True; input is list of dicts
+    if not solution:
+        return solution
+    got_None = []  # solutions for which one or more symbols gave None
+    no_False = []  # solutions for which no symbols gave False
+    for sol in solution:
+        a_None = False
+        for symb, val in sol.items():
+            test = check_assumptions(val, **symb.assumptions0)
+            if test:
+                continue
+            if test is False:
+                break
+            a_None = True
+        else:
+            no_False.append(sol)
+            if a_None:
+                got_None.append(sol)
+
+    if warn and got_None:
+        warnings.warn(filldedent("""
+            \tWarning: assumptions concerning following solution(s)
+            cannot be checked:""" + '\n\t' +
+            ', '.join(str(s) for s in got_None)))
+    return no_False
+
+def _legacy_output(solution, symbols, ordered_symbols, bare_f, linear, as_dict, as_set):
+    # define how solution will get unpacked from input which is list of dicts
+    tuple_format = lambda s: [tuple([i.get(x, x) for x in symbols]) for i in s]
+    if as_dict or as_set:
+        unpack = None
+    elif bare_f:
+        if len(symbols) == 1:
+            unpack = lambda s: [i[symbols[0]] for i in s]
+        elif len(solution) == 1 and len(solution[0]) == len(symbols):
+            # undetermined linear coeffs solution
+            unpack = lambda s: s[0]
+        elif ordered_symbols:
+            unpack = tuple_format
+        else:
+            unpack = lambda s: s
+    else:
+        if solution:
+            if linear and len(solution) == 1:
+                # if you want the tuple solution for the linear
+                # case, use `set=True`
+                unpack = lambda s: s[0]
+            elif ordered_symbols:
+                unpack = tuple_format
+            else:
+                unpack = lambda s: s
+        else:
+            unpack = None
 
     if not solution:
         if as_set:
@@ -1295,6 +1305,86 @@ def solve(f, *symbols, **flags):
         # just unify the symbols for which solutions were found
         k = list(ordered(set(flatten(tuple(i.keys()) for i in solution))))
     return k, {tuple([s.get(ki, ki) for ki in k]) for s in solution}
+
+
+def _solve_abs(f, symbols, flags, bare_f, ordered_symbols, as_set):
+    abs_ = {}
+    for i, fi in enumerate(f):
+        ai = {i: separatevars(i)
+            for i in fi.atoms(Abs) if i.has_free(*symbols)}
+        if not all(isinstance(v, Abs) for v in ai.values()):
+            fi = f[i] = fi.xreplace(ai)
+            ai = {i for i in fi.atoms(Abs) if i.has_free(*symbols)}
+        anew = set(ai) - set(abs_)
+        for a in ordered(anew):
+            ri = a.args[0].as_real_imag()
+            if any(_.has(*symbols) for _ in ri for _ in  _.atoms(re, im)):
+                raise NotImplementedError('solving %s when the argument '
+                'is not real or imaginary.' % a)
+            if 0 not in ri:
+                # if real, ri will be (a.args[0], 0)
+                # if imaginary, ri will be (0,I*a.args[0])
+                raise NotImplementedError('solving %s with real and '
+                'imag parts.' % a)
+            abs_[a] = sum(ri)
+
+    if abs_:
+        abs_nodes, args = zip(*abs_.items())
+        abs_nodes = list(ordered(abs_nodes))
+        # identify the outermost abs that appear
+        absset = set(abs_nodes)
+        outer = {a: Dummy() for a in abs_nodes[::-1]}
+        douter = set(outer.values())
+        _outer = {v: k for k, v in outer.items()}
+        outer = set().union(*[{_outer[i] for i in fi.xreplace(outer).free_symbols & douter} for fi in f])
+        del abs_nodes, _outer, douter
+        # now figure out what values they can have while considering
+        # any nested abs within them
+        signed = []
+        for o in outer:
+            a = list(reversed(list(ordered([i for i in o.atoms(Abs)
+                if i in absset]))))
+            b = [abs_[a.pop(0)]]
+            b.append(-b[0])
+            for i in a:
+                b = [j.subs(i, abs_[i]) for j in b
+                    ] + [j.subs(i, -abs_[i]) for j in b]
+            signed.append(b)
+        # capture and set flags
+        check = flags.get('check', True)
+        as_dict = flags.get('dict', False)
+        new_flags = {**flags, 'check':False}
+        # now start finding possible solutions
+        sol = []
+        linear = True
+        for v in product(*signed):
+            reps = dict(zip(outer, v))
+            fi = [_.xreplace(reps) for _ in f]
+            _linear, s = _get_solution(fi, bare_f, symbols, new_flags)
+            if linear:
+                # it is possible that a nonlinear system
+                # will appear linear, e.g. the square terms
+                # can cancel in abs(x**2 - 1) - x**2 + x - 4
+                linear = _linear
+            sol.extend(s)
+
+        # remove redundant solutions before doing any checking
+        # since this is a costly step
+        solution = sol = list(uniq(sol))
+
+        if check:
+            # check assumptions
+            sol = _check_assumptions(sol, flags.get('warn', False))
+            # need to check in the original equation
+            solution = []
+            # don't force the solution because x in abs(x) will be
+            # replaced with positive x and evaluate to x
+            new_flags['force'] = False
+            for si in sol:
+                if checksol(f, si, **new_flags) is not False:
+                    solution.append(si)
+
+        return _legacy_output(solution, symbols, ordered_symbols, bare_f, linear, as_dict, as_set)
 
 
 def _solve_undetermined(g, symbols, flags):
