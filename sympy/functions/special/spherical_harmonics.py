@@ -1,6 +1,7 @@
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import I, pi
+from sympy.core.relational import is_le
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.functions import assoc_legendre
@@ -35,8 +36,8 @@ class Ynm(Function):
 
     >>> from sympy import Ynm, Symbol, simplify
     >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    >>> theta = Symbol("theta", real=True)
+    >>> phi = Symbol("phi", real=True)
 
     >>> Ynm(n, m, theta, phi)
     Ynm(n, m, theta, phi)
@@ -87,10 +88,7 @@ class Ynm(Function):
     We can differentiate the functions with respect
     to both angles:
 
-    >>> from sympy import Ynm, Symbol, diff
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    >>> from sympy import diff
 
     >>> diff(Ynm(n, m, theta, phi), theta)
     m*cot(theta)*Ynm(n, m, theta, phi) + sqrt((-m + n)*(m + n + 1))*exp(-I*phi)*Ynm(n, m + 1, theta, phi)
@@ -100,10 +98,7 @@ class Ynm(Function):
 
     Further we can compute the complex conjugation:
 
-    >>> from sympy import Ynm, Symbol, conjugate
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    >>> from sympy import conjugate
 
     >>> conjugate(Ynm(n, m, theta, phi))
     (-1)**(2*m)*exp(-2*I*m*phi)*Ynm(n, m, theta, phi)
@@ -111,10 +106,7 @@ class Ynm(Function):
     To get back the well known expressions in spherical
     coordinates, we use full expansion:
 
-    >>> from sympy import Ynm, Symbol, expand_func
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    >>> from sympy import expand_func
 
     >>> expand_func(Ynm(n, m, theta, phi))
     sqrt((2*n + 1)*factorial(-m + n)/factorial(m + n))*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
@@ -176,9 +168,12 @@ class Ynm(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, m, theta, phi, **kwargs):
-        # TODO: Make sure n \in N
-        # TODO: Assert |m| <= n ortherwise we should return 0
-        return self.expand(func=True)
+        if n in S.Naturals:
+            c = is_le(Abs(m), n)
+            if c == True:
+                return self.expand(func=True)
+            if c == False:
+                return S.Zero
 
     def _eval_rewrite_as_sin(self, n, m, theta, phi, **kwargs):
         return self.rewrite(cos)
@@ -186,9 +181,12 @@ class Ynm(Function):
     def _eval_rewrite_as_cos(self, n, m, theta, phi, **kwargs):
         # This method can be expensive due to extensive use of simplification!
         from sympy.simplify import simplify, trigsimp
-        # TODO: Make sure n \in N
-        # TODO: Assert |m| <= n ortherwise we should return 0
-        term = simplify(self.expand(func=True))
+        if n in S.Naturals:
+            c = is_le(Abs(m), n)
+            if c == True:
+                term = simplify(self.expand(func=True))
+            if c == False:
+                term = S.Zero
         # We can do this because of the range of theta
         term = term.xreplace({Abs(sin(theta)):sin(theta)})
         return simplify(trigsimp(term))
