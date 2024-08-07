@@ -1464,7 +1464,15 @@ def eval_sum_residue(f, i_a_b):
         return numer, denom
 
     def get_poles(denom):
+        # Previously roots_binomial would use expand(complex=True) internally
+        # but it was changed to return complex exponentials. That caused
+        # test_summation_by_residues_failing to fail so the call to expand here
+        # restores the previous result returned by all_roots. It might be
+        # better not to call expand here though and fix whatever problem
+        # prevents nseries from working when there are complex exponentials in
+        # the root expressions.
         roots = denom.sqf_part().all_roots()
+        roots = [r.expand(complex=True) for r in roots]
         roots = sift(roots, lambda x: x.is_integer)
         if None in roots:
             return None
