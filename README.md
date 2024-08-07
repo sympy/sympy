@@ -183,8 +183,10 @@ Our issue tracker is at <https://github.com/sympy/sympy/issues>. Please
 report any bugs that you find. Or, even better, fork the repository on
 GitHub and create a pull request. We welcome all changes, big or small,
 and we will help you make the pull request if you are new to git (just
-ask on our mailing list or Gitter Channel). If you further have any queries, you can find answers
-on Stack Overflow using the [sympy](https://stackoverflow.com/questions/tagged/sympy) tag.
+ask on our [mailing list](https://groups.google.com/g/sympy) or 
+[Gitter Channel](https://app.gitter.im/#/room/#sympy_sympy:gitter.im)). 
+If you further have any queries, you can find answers on Stack Overflow 
+using the [sympy](https://stackoverflow.com/questions/tagged/sympy) tag.
 
 ## Brief History
 
@@ -200,8 +202,8 @@ from scratch, which has made it from 10x to 100x faster. Jurjen N.E. Bos
 has contributed pretty-printing and other patches. Fredrik Johansson has
 written mpmath and contributed a lot of patches.
 
-SymPy has participated in every Google Summer of Code since 2007. You
-can see <https://github.com/sympy/sympy/wiki#google-summer-of-code> for
+SymPy has participated in every [Google Summer of Code](https://summerofcode.withgoogle.com/) 
+since 2007. You can see <https://github.com/sympy/sympy/wiki#google-summer-of-code> for
 full details. Each year has improved SymPy by bounds. Most of SymPy's
 development has come from Google Summer of Code students.
 
@@ -264,8 +266,9 @@ A BibTeX entry for LaTeX users is
 
 SymPy is BSD licensed, so you are free to use it whatever you like, be
 it academic, commercial, creating forks or derivatives, as long as you
-copy the BSD statement if you redistribute it (see the LICENSE file for
-details). That said, although not required by the SymPy license, if it
+copy the BSD statement if you redistribute it (see the 
+[LICENSE](https://github.com/sympy/sympy/blob/master/LICENSE) file fordetails). 
+That said, although not required by the SymPy license, if it
 is convenient for you, please cite SymPy when using it in your work and
 also consider contributing all your changes back, so that we can
 incorporate it and all of us will benefit in the end.
