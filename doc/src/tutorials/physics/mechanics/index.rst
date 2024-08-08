@@ -18,3 +18,4 @@ Each example includes clear explanations, mathematical formulations, and code to
    lin_pend_nonmin_example.rst
    four_bar_linkage_example.rst
    bicycle_example.rst
+   rotating_disc_block_friction.rst
