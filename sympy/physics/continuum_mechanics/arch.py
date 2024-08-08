@@ -6,7 +6,7 @@ from sympy.core.symbol import Symbol,symbols
 from sympy import diff, sqrt, cos , sin, rad
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
-from sympy.functions import SingularityFunction
+from sympy.functions import SingularityFunction, Piecewise
 
 class Arch:
     """
@@ -47,9 +47,10 @@ class Arch:
         self._member = None
         self._member_force = None
         self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
-        self._points_disc = []
-        self._load_x  = 0
+        self._points_disc = set()
+        self._load_x  = {}
         self._load_y = 0
+        self._load_y_func = Piecewise((0,True))
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
 
     @property
@@ -195,8 +196,12 @@ class Arch:
             if start>self._right_support[0] or start<self._left_support[0]:
                 raise ValueError(f"loads must be applied between x = {self._left_support[0]} and x = {self._right_support[0]}")
             self._conc_loads[label] = {'x':start, 'y':y, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle)), 'magnitude':mag, 'angle':angle}
-            self._points_disc.append(start)
+            self._points_disc.add(start)
             self._load_y += self._conc_loads[label]['f_y']*SingularityFunction(x,start,order)
+            if start in self._load_x:
+                self._load_x[start] += self._conc_loads[label]['f_x']
+            else:
+                self._load_x[start] = self._conc_loads[label]['f_x']
 
 
     def remove_load(self,label):
@@ -226,6 +231,7 @@ class Arch:
 
         elif label in self._conc_loads :
             val = self._conc_loads.pop(label)
+            self._load_x[self._conc_loads[label]['x']] -= self._conc_loads[label]['f_x']
             print(f"removed load {label}: {val}")
 
         else :
@@ -264,8 +270,17 @@ class Arch:
         This method solves for the reaction forces generated at the supports,\n
         bending moment and shear force generated in the arch and tension produced in the rope if used.
         """
-
+        y = Symbol('y')
+        x = Symbol('x')
         discontinuity_points = sorted(self._points_disc)
+        self._load_y_func = Piecewise((0,True))
+        accumulated_x_force = 0
+        for point in discontinuity_points:
+            cond = (x >= point)
+            force_comp = self._load_x[point] * SingularityFunction(y, self._shape_eqn.subs(x, point), -1)
+            accumulated_x_force += force_comp
+            self._load_y_func = Piecewise((accumulated_x_force,cond),(self._load_y_func,True))
+
         if (self._supports['left']=='roller' or self._supports['right']=='roller') and not self._member:
             print("member must be added if any of the supports is roller")
             return
