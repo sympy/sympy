@@ -2767,7 +2767,7 @@ class _eis(Function):
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
         if args0[0] != S.Infinity:
-            return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+            return super()._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
         l = [factorial(k) * (1/z)**(k + 1) for k in range(n)]
