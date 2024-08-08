@@ -6,7 +6,7 @@ A Block on a Rotating Disc
 
 This page demonstrates how to use the functionalities in :obj:`sympy.physics.mechanics`
 and the **CoulombKineticFriction** actuator to model a sliding block on a rotating disc.
-The particle is located at a point on the disc surface and is subjected to forces, including
+The block is located at a point on the disc surface and is subjected to forces, including
 friction force with additional Stribeck and viscous effects.
 
 .. raw:: html
