@@ -2,9 +2,8 @@ from itertools import product
 import math
 import inspect
 
-
-
 import mpmath
+
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, Lambda, diff)
@@ -1972,6 +1971,7 @@ def test_lambdify_empty_tuple():
     f = lambdify(a, expr)
     result = f(1)
     assert result == ((), (1,)), "Lambdify did not handle the empty tuple correctly."
+
 
 def test_assoc_legendre_numerical_evaluation():
 

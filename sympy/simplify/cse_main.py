@@ -764,11 +764,11 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     =======
 
     replacements : list of (Symbol, expression) pairs
-        All of the common subexpressions that were replaced. Subexpressions
-        earlier in this list might show up in subexpressions later in this
-        list.
-    reduced_exprs : list of SymPy expressions
-        The reduced expressions with all of the replacements above.
+         All of the common subexpressions that were replaced. Subexpressions
+         earlier in this list might show up in subexpressions later in this
+         list.
+     reduced_exprs : list of SymPy expressions
+         The reduced expressions with all of the replacements above.
 
     Examples
     ========
@@ -876,6 +876,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         return replacements, reduced_exprs
 
     return postprocess(replacements, reduced_exprs)
+
 
 
 def _cse_homogeneous(exprs, **kwargs):
