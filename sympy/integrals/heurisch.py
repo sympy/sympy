@@ -508,7 +508,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         # of types take care of the order of replacement
         types = defaultdict(list)
         for i in mapping:
-            types[type(i)].append(i)
+            e, _ = i
+            types[type(e)].append(i)
         mapping = [types[i] for i in types]
         def _iter_mappings():
             for i in permutations(mapping):
