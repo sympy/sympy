@@ -3,10 +3,12 @@ This module can be used to solve probelsm related to 2D parabolic arches
 """
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
-from sympy import diff, sqrt, cos , sin, rad
+from sympy import diff, sqrt, cos , sin, rad, Min
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
-from sympy.functions import SingularityFunction, Piecewise
+from sympy.functions import Piecewise
+from sympy.integrals import integrate
+
 
 class Arch:
     """
@@ -47,9 +49,11 @@ class Arch:
         self._member = None
         self._member_force = None
         self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
-        self._points_disc = set()
-        self._load_x  = {}
-        self._load_y = 0
+        self._points_disc_x = set()
+        self._point_disc_y = set()
+        self._moment_x  = {}
+        self._moment_y = {}
+        self._load_x_func = Piecewise((0,True))
         self._load_y_func = Piecewise((0,True))
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
 
@@ -171,7 +175,10 @@ class Arch:
         >>> a.apply_load(-1,'B',start=2,mag=15,angle=45)
 
         """
+        y = Symbol('y')
         x = Symbol('x')
+        x0 = Symbol('x0')
+        # y0 = Symbol('y0')
         order= sympify(order)
         mag = sympify(mag)
         angle = sympify(angle)
@@ -180,28 +187,39 @@ class Arch:
             raise ValueError("load with the given label already exists")
 
         if order == 0:
-            if not end or end<start:
+            if end is None or end<start:
                 raise KeyError("provide end greater than start")
 
             if start>self._right_support[0] or end<self._left_support[0]:
                 raise ValueError(f"loads must be applied between {self._left_support[0]} and {self._right_support[0]}")
             self._distributed_loads[label] = {'start':start, 'end':end, 'f_y': mag}
-            self._load_y += mag*SingularityFunction(x,start,order)
-            self._load_y -= mag*SingularityFunction(x,end,order)
+            self._point_disc_y.add(start)
+            if start in self._moment_y:
+                self._moment_y[start] -= mag*(Min(x,end)-start)*(x0-(start+(Min(x,end)))/2)
+            else:
+                self._moment_y[start] = -mag*(Min(x,end)-start)*(x0-(start+(Min(x,end)))/2)
+            # self._load_y += mag*SingularityFunction(x,start,order)
+            # self._load_y -= mag*SingularityFunction(x,end,order)
 
         if order == -1:
-            if not angle:
+            if angle is None:
                 raise TypeError("please provide direction of force")
-            y = self._shape_eqn.subs({'x':start})
+            height = self._shape_eqn.subs({'x':start})
             if start>self._right_support[0] or start<self._left_support[0]:
                 raise ValueError(f"loads must be applied between x = {self._left_support[0]} and x = {self._right_support[0]}")
-            self._conc_loads[label] = {'x':start, 'y':y, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle)), 'magnitude':mag, 'angle':angle}
-            self._points_disc.add(start)
-            self._load_y += self._conc_loads[label]['f_y']*SingularityFunction(x,start,order)
-            if start in self._load_x:
-                self._load_x[start] += self._conc_loads[label]['f_x']
+            self._conc_loads[label] = {'x':start, 'y':height, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle)), 'magnitude':mag, 'angle':angle}
+            self._points_disc_x.add(start)
+            self._point_disc_y.add(start)
+            # self._load_y += self._conc_loads[label]['f_y']*SingularityFunction(x,start,order)
+            if start in self._moment_x:
+                self._moment_x[start] += self._conc_loads[label]['f_x']*(y-self._conc_loads[label]['y'])
             else:
-                self._load_x[start] = self._conc_loads[label]['f_x']
+                self._moment_x[start] = self._conc_loads[label]['f_x']*(y-self._conc_loads[label]['y'])
+
+            if start in self._moment_y:
+                self._moment_y[start] -= self._conc_loads[label]['f_y']*(x0-start)
+            else:
+                self._moment_y[start] = -self._conc_loads[label]['f_y']*(x0-start)
 
 
     def remove_load(self,label):
@@ -214,24 +232,26 @@ class Arch:
         label : String or Symbol
             The label of the applied load
         """
-
+        y = Symbol('y')
         x = Symbol('x')
+        x0 = Symbol('x0')
 
         if label in self._distributed_loads :
 
             start = self._distributed_loads[label]['start']
             end = self._distributed_loads[label]['end']
             mag  = self._distributed_loads[label]['f_y']
-
-            self._load_y -= mag*SingularityFunction(x,start,0)
-            self._load_y += mag*SingularityFunction(x,end,0)
-
+            self._moment_y[start] += mag*(Min(x,end)-start)*(x0-(start+(Min(x,end)))/2)
             val = self._distributed_loads.pop(label)
             print(f"removed load {label}: {val}")
 
         elif label in self._conc_loads :
+            self._moment_y[start] += self._conc_loads[label]['f_y']*(x0-start)
+            self._moment_x[start] -= self._conc_loads[label]['f_x']*(y-self._conc_loads[label]['y'])
+
             val = self._conc_loads.pop(label)
-            self._load_x[self._conc_loads[label]['x']] -= self._conc_loads[label]['f_x']
+
+            # self._load_x[self._conc_loads[label]['x']] -= self._conc_loads[label]['f_x']
             print(f"removed load {label}: {val}")
 
         else :
@@ -272,14 +292,33 @@ class Arch:
         """
         y = Symbol('y')
         x = Symbol('x')
-        discontinuity_points = sorted(self._points_disc)
+        x0 = Symbol('x0')
+        discontinuity_points_x = sorted(self._points_disc_x)
+        discontinuity_points_y = sorted(self._point_disc_y)
+        self._load_x_func = Piecewise((0,True))
         self._load_y_func = Piecewise((0,True))
-        accumulated_x_force = 0
-        for point in discontinuity_points:
+        accumulated_x_moment = 0
+        accumulated_y_moment = 0
+        for point in discontinuity_points_x:
             cond = (x >= point)
-            force_comp = self._load_x[point] * SingularityFunction(y, self._shape_eqn.subs(x, point), -1)
-            accumulated_x_force += force_comp
-            self._load_y_func = Piecewise((accumulated_x_force,cond),(self._load_y_func,True))
+            accumulated_x_moment += self._moment_x[point]
+            self._load_x_func = Piecewise((accumulated_x_moment,cond),(self._load_x_func,True))
+
+        for point in discontinuity_points_y:
+            cond = (x >= point)
+            accumulated_y_moment += self._moment_y[point]
+            self._load_y_func = Piecewise((accumulated_y_moment,cond),(self._load_y_func,True))
+
+        moment_A = self._load_y_func.subs(x,self._right_support[0]).subs(x0,self._left_support[0]) +\
+                   self._load_x_func.subs(x,self._right_support[0]).subs(y,self._left_support[1])
+
+        moment_hinge_left = self._load_y_func.subs(x,self._crown_x).subs(x0,self._crown_x) +\
+                            self._load_x_func.subs(x,self._crown_x).subs(y,self._crown_y)
+
+        moment_hinge_right = self._load_y_func.subs(x,self._right_support[0]).subs(x0,self._crown_x)- \
+                             self._load_y_func.subs(x,self._crown_x).subs(x0,self._crown_x) +\
+                             self._load_x_func.subs(x,self._right_support[0]).subs(y,self._crown_y) -\
+                             self._load_x_func.subs(x,self._crown_x).subs(y,self._crown_y)
 
         if (self._supports['left']=='roller' or self._supports['right']=='roller') and not self._member:
             print("member must be added if any of the supports is roller")
@@ -288,39 +327,16 @@ class Arch:
         # for reaction forces
         net_x = 0
         net_y = 0
-        moment_A = 0
-        moment_hinge_right = 0
-        moment_hinge_left = 0
 
         for label in self._conc_loads:
             net_x += self._conc_loads[label]['f_x']
             net_y += self._conc_loads[label]['f_y']
-            moment_A += self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._left_support[0]) - \
-                        self._conc_loads[label]['f_x']*(self._conc_loads[label]['y']-self._left_support[1])
-
-            if self._conc_loads[label]['x']> self._crown_x:
-                moment_hinge_right += self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._crown_x) - \
-                        self._conc_loads[label]['f_x']*(self._conc_loads[label]['y']-self._crown_y)
-            else:
-                moment_hinge_left += self._conc_loads[label]['f_y']*(self._conc_loads[label]['x']-self._crown_x) - \
-                        self._conc_loads[label]['f_x']*(self._conc_loads[label]['y']-self._crown_y)
 
         for label in self._distributed_loads:
             start = self._distributed_loads[label]['start']
             end = self._distributed_loads[label]['end']
             tot_force = self._distributed_loads[label]['f_y']*( end - start)
             net_y += tot_force
-            moment_A += tot_force*((end+start)/2 - self._left_support[0])
-
-            if self._distributed_loads[label]['end']>self._crown_x:
-                st = max(start,self._crown_x)
-                force_right = self._distributed_loads[label]['f_y']*(end-st)
-                moment_hinge_right += force_right*((end+st)/2 - self._crown_x)
-
-            if self._distributed_loads[label]['start']<self._crown_x:
-                ed = min(end,self._crown_x)
-                force_left = self._distributed_loads['f_y']*(ed-start)
-                moment_hinge_left += force_left*((end+st)/2 - self._crown_x)
 
         R_A_x, R_A_y, R_B_x, R_B_y, T = symbols('R_A_x R_A_y R_B_x R_B_y T')
 
