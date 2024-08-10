@@ -1,7 +1,7 @@
 """Module for differentiation using CSE."""
 
 from sympy import cse, Matrix, Derivative, MatrixBase
-import re
+from sympy.utilities.iterables import iterable
 
 
 def _process_cse(replacements, reduced_expressions):
@@ -49,7 +49,7 @@ def _process_cse(replacements, reduced_expressions):
 
     repl_dict = dict(replacements)
     processed_replacements = [(rep_sym, traverse(sub_exp, repl_dict)) for rep_sym, sub_exp in replacements]
-    processed_reduced = [Matrix([traverse(exp, repl_dict) for exp in red_exp]) for red_exp in reduced_expressions]
+    processed_reduced = [red_exp.__class__([traverse(exp, repl_dict) for exp in red_exp]) for red_exp in reduced_expressions]
 
     return processed_replacements, processed_reduced
 
@@ -100,10 +100,10 @@ def _forward_jacobian_core(replacements, reduced_expr, wrt):
     if not (reduced_expr[0].shape[0] == 1 or reduced_expr[0].shape[1] == 1):
         raise TypeError("``expr`` must be a row or a column matrix")
 
-    if not isinstance(wrt, (MatrixBase, list, tuple)):
+    if not iterable(wrt):
         raise TypeError("``wrt`` must be an iterable of variables")
 
-    elif isinstance(wrt, (list, tuple)):
+    elif not isinstance(wrt, MatrixBase):
         wrt = Matrix(wrt)
 
     if not (wrt.shape[0] == 1 or wrt.shape[1] == 1):
@@ -127,10 +127,8 @@ def _forward_jacobian_core(replacements, reduced_expr, wrt):
                                         for i, (r, fs) in enumerate([(r, r.free_symbols) for r in reduced_expr[0]])
                                         for j, s in enumerate(rep_sym) if s in fs and (diff_value := r.diff(s)) != 0})
 
-    precomputed_fs = [
-        {symbol for symbol in s.free_symbols if re.compile(r'x\d+').fullmatch(symbol.name)}
-        for s in sub_expr
-    ]
+    rep_sym_set = set(rep_sym)
+    precomputed_fs = [s.free_symbols & rep_sym_set for s in sub_expr ]
 
     c_matrix = Matrix.from_dok(1, l_wrt, {(0, j): diff_value for j, w in enumerate(wrt)
                                    if (diff_value := sub_expr[0].diff(w)) != 0})
@@ -200,7 +198,7 @@ def _forward_jacobian_norm_in_dag_out(expr, wrt):
 def _forward_jacobian(expr, wrt):
     r"""
     Function to compute the Jacobian of an input Matrix of expressions through forward accumulation.
-    Takes a sympy Matrix of expression (expr) as input and an iterable of variables (with_respect_to) with respect to
+    Takes a sympy Matrix of expression (expr) as input and an iterable of variables (wrt) with respect to
     which to compute the Jacobian matrix.
 
     Explanation
@@ -245,9 +243,6 @@ def _forward_jacobian(expr, wrt):
     else:
         rep_sym = Matrix([])
 
-    l_wrt = len(wrt)
-    l_red = len(reduced_expr[0])
-
     replacements, jacobian, precomputed_fs = _forward_jacobian_core(replacements, reduced_expr, wrt)
 
     if not replacements: return jacobian[0]
@@ -257,7 +252,4 @@ def _forward_jacobian(expr, wrt):
         sub_dict = {j: sub_rep[j] for j in ik}
         sub_rep[rep_sym[i]] = sub_rep[rep_sym[i]].xreplace(sub_dict)
 
-    jacobian = {key: expr.xreplace(sub_rep) for key, expr in jacobian[0].todok().items()}
-    jacobian = expr.__class__.from_dok(l_red, l_wrt, jacobian)
-
-    return jacobian
+    return jacobian[0].xreplace(sub_rep)
