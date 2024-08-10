@@ -2627,6 +2627,7 @@ class Feedback(SISOLinearTimeInvariant):
 
         if not isinstance(sys1, (TransferFunction, Series, StateSpace, Feedback)):
             raise TypeError("Unsupported type for `sys1` in Feedback.")
+
         if not isinstance(sys2, (TransferFunction, Series, StateSpace, Feedback)):
             raise TypeError("Unsupported type for `sys2` in Feedback.")
 
@@ -3063,9 +3064,11 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     """
     def __new__(cls, sys1, sys2, sign=-1):
-        if not (isinstance(sys1, (TransferFunctionMatrix, MIMOSeries, StateSpace))
-            and isinstance(sys2, (TransferFunctionMatrix, MIMOSeries, StateSpace))):
-            raise TypeError("Unsupported type for `sys1` or `sys2` of MIMO Feedback.")
+        if not isinstance(sys1, (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+            raise TypeError("Unsupported type for `sys1` in MIMO Feedback.")
+
+        if not isinstance(sys2, (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+            raise TypeError("Unsupported type for `sys2` in MIMO Feedback.")
 
         if sys1.num_inputs != sys2.num_outputs or \
             sys1.num_outputs != sys2.num_inputs:
