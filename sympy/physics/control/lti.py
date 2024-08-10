@@ -1108,7 +1108,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Parallel(self, other)
-        if isinstance(other, (TransferFunction, Series, Feedback)):
+        elif isinstance(other, (TransferFunction, Series, Feedback)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex variable
@@ -1131,7 +1131,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __sub__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Parallel(self, -other)
-        if isinstance(other, (TransferFunction, Series)):
+        elif isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex variable
@@ -2707,7 +2707,7 @@ class Feedback(SISOLinearTimeInvariant):
     >>> -F2
     Feedback(Series(TransferFunction(-1, 1, s), TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s)), TransferFunction(-1, 1, s), -1)
 
-    Feedback can be used to connect SISO ``StateSpace`` systems together.
+    ``Feedback`` can also be used to connect SISO ``StateSpace`` systems together.
 
     >>> A1 = Matrix([[-1]])
     >>> B1 = Matrix([[1]])
@@ -2747,9 +2747,10 @@ class Feedback(SISOLinearTimeInvariant):
         if not sys2:
             sys2 = TransferFunction(1, 1, sys1.var)
 
-        if not (isinstance(sys1, (TransferFunction, Series, StateSpace, Feedback))
-                and isinstance(sys2, (TransferFunction, Series, StateSpace, Feedback))):
-            raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
+        if not isinstance(sys1, (TransferFunction, Series, StateSpace, Feedback)):
+            raise TypeError("Unsupported type for `sys1` in Feedback.")
+        if not isinstance(sys2, (TransferFunction, Series, StateSpace, Feedback)):
+            raise TypeError("Unsupported type for `sys2` in Feedback.")
 
         if not (sys1.num_inputs == sys1.num_outputs == sys2.num_inputs ==
                 sys2.num_outputs == 1):
@@ -2918,7 +2919,8 @@ class Feedback(SISOLinearTimeInvariant):
         ========
 
         >>> from sympy.abc import s
-        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback, StateSpace
         >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
@@ -2937,6 +2939,29 @@ class Feedback(SISOLinearTimeInvariant):
         TransferFunction(2*s**2 + 5*s + 1, 3*s**2 + 7*s + 4, s)
         >>> F2.doit(expand=True)
         TransferFunction(2*s**4 + 9*s**3 + 17*s**2 + 17*s + 3, 3*s**4 + 13*s**3 + 27*s**2 + 29*s + 12, s)
+
+        If the connection contain any ``StateSpace`` object then ``doit()``
+        will return the equivalent ``StateSpace`` object.
+
+        >>> A1 = Matrix([[-1.5, -2], [1, 0]])
+        >>> B1 = Matrix([0.5, 0])
+        >>> C1 = Matrix([[0, 1]])
+        >>> A2 = Matrix([[0, 1], [-5, -2]])
+        >>> B2 = Matrix([0, 3])
+        >>> C2 = Matrix([[0, 1]])
+        >>> ss1 = StateSpace(A1, B1, C1)
+        >>> ss2 = StateSpace(A2, B2, C2)
+        >>> F3 = Feedback(ss1, ss2)
+        >>> F3.doit()
+        StateSpace(Matrix([
+        [-1.5, -2,  0, -0.5],
+        [   1,  0,  0,    0],
+        [   0,  0,  0,    1],
+        [   0,  3, -5,   -2]]), Matrix([
+        [0.5],
+        [  0],
+        [  0],
+        [  0]]), Matrix([[0, 1, 0, 0]]), Matrix([[0]]))
 
         """
         if self.is_StateSpace_object:
@@ -2966,6 +2991,7 @@ class Feedback(SISOLinearTimeInvariant):
             C = Matrix.hstack(T1 * C1, self.sign * D1 * E_C2)
             D = D1 * T2
             return StateSpace(A, B, C, D)
+
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
         F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
@@ -3104,7 +3130,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     [ -    --- ]
     [ 1    11  ]{t}
 
-    ``MIMOParallel`` can also be used to connect MIMO ``StateSpace`` systems.
+    ``MIMOFeedback`` can also be used to connect MIMO ``StateSpace`` systems.
 
     >>> A1 = Matrix([[4, 1], [2, -3]])
     >>> B1 = Matrix([[5, 2], [-3, -3]])
@@ -3166,7 +3192,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     def __new__(cls, sys1, sys2, sign=-1):
         if not (isinstance(sys1, (TransferFunctionMatrix, MIMOSeries, StateSpace))
             and isinstance(sys2, (TransferFunctionMatrix, MIMOSeries, StateSpace))):
-            raise TypeError("Unsupported ty pe for `sys1` or `sys2` of MIMO Feedback.")
+            raise TypeError("Unsupported type for `sys1` or `sys2` of MIMO Feedback.")
 
         if sys1.num_inputs != sys2.num_outputs or \
             sys1.num_outputs != sys2.num_inputs:
@@ -3352,12 +3378,12 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     @property
     def num_inputs(self):
-        """Returns the number of inputs."""
+        """Returns the number of inputs of the system."""
         return self.sys1.num_inputs
 
     @property
     def num_outputs(self):
-        """Returns teh number of outputs."""
+        """Returns the number of outputs of the system."""
         return self.sys1.num_outputs
 
     def doit(self, cancel=True, expand=False, **hints):

@@ -10,6 +10,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan
 from sympy.matrices.dense import eye
+from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.polys.polytools import factor
 from sympy.polys.rootoftools import CRootOf
 from sympy.simplify.simplify import simplify
@@ -1059,6 +1060,10 @@ def test_Feedback_with_Series():
     fd1 = Feedback(tf1, tf2, -1) # Negative Feedback system
     fd2 = Feedback(tf1, tf2, 1) # Positive Feedback system
     unit = TransferFunction(1, 1, s)
+
+    # Checking the type
+    assert isinstance(fd1, SISOLinearTimeInvariant)
+    assert isinstance(fd1, Feedback)
 
     # Testing the numerator and denominator
     assert fd1.num == tf1
