@@ -368,7 +368,7 @@ latex_elements = {
 \setmainfont{DejaVu Serif}[Scale=0.97]
 \setsansfont{DejaVu Sans}[Scale=0.97]
 \setmonofont{DejaVu Sans Mono}[Scale=0.94]
-\usepackage[math-style=TeX,bold-style=TeX]{unicode-math}
+\usepackage{unicode-math}
 \setmathfont{XITSMath-Regular.otf}[Scale=1.12,
     StylisticSet=1,% choice of shape for "\mathcal"
     BoldFont=XITSMath-Bold.otf,
