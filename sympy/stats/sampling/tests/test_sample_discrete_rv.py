@@ -1,7 +1,17 @@
 from sympy.core.singleton import S
-#from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol
 from sympy.external import import_module
-from sympy.stats import Geometric, Poisson, Zeta, sample, Skellam, Logarithmic, NegativeBinomial, YuleSimon
+from sympy.stats import (
+    Geometric,
+    Poisson,
+    Zeta,
+    sample,
+    Skellam,
+    Logarithmic,
+    NegativeBinomial,
+    YuleSimon,
+    DiscreteRV,
+)
 from sympy.testing.pytest import skip, raises, slow
 
 
@@ -27,13 +37,11 @@ def test_sample_numpy():
 
 
 def test_sample_scipy():
-    #p = S(2)/3
-    #x = Symbol('x', integer=True, positive=True)
-    #pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
+    p = S(2)/3
+    x = Symbol('x', integer=True, positive=True)
+    pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
     distribs_scipy = [
-        # This one fails:
-        #    https://github.com/sympy/sympy/issues/26862
-        # DiscreteRV(x, pdf, set=S.Naturals),
+        DiscreteRV(x, pdf, set=S.Naturals),
         Geometric('G', 0.5),
         Logarithmic('L', 0.5),
         NegativeBinomial('N', 5, 0.4),
