@@ -493,7 +493,7 @@ def matrix_to_qubit(matrix):
             element = matrix[0, i]
         if format in ('numpy', 'scipy.sparse'):
             element = complex(element)
-        if element != 0.0:
+        if element:
             # Form Qubit array; 0 in bit-locations where i is 0, 1 in
             # bit-locations where i is 1
             qubit_array = [int(i & (1 << x) != 0) for x in range(nqubits)]
@@ -582,7 +582,7 @@ def measure_all(qubit, format='sympy', normalize=True):
         size = max(m.shape)  # Max of shape to account for bra or ket
         nqubits = int(math.log(size)/math.log(2))
         for i in range(size):
-            if m[i] != 0.0:
+            if m[i]:
                 results.append(
                     (Qubit(IntQubit(i, nqubits=nqubits)), m[i]*conjugate(m[i]))
                 )

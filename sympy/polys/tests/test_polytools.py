@@ -3033,7 +3033,7 @@ def test_nroots():
     eps = Float("1e-5")
 
     assert re(roots[0]).epsilon_eq(-0.75487, eps) is S.true
-    assert im(roots[0]) == 0.0
+    assert im(roots[0]) == 0
     assert re(roots[1]) == Float(-0.5, 5)
     assert im(roots[1]).epsilon_eq(-0.86602, eps) is S.true
     assert re(roots[2]) == Float(-0.5, 5)
@@ -3046,7 +3046,7 @@ def test_nroots():
     eps = Float("1e-6")
 
     assert re(roots[0]).epsilon_eq(-0.75487, eps) is S.false
-    assert im(roots[0]) == 0.0
+    assert im(roots[0]) == 0
     assert re(roots[1]) == Float(-0.5, 5)
     assert im(roots[1]).epsilon_eq(-0.86602, eps) is S.false
     assert re(roots[2]) == Float(-0.5, 5)
