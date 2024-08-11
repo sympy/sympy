@@ -775,9 +775,12 @@ class ComplexRootOf(RootOf):
                 poly = poly.xreplace({d: x})
                 break
 
-        # compute rational lift if algebraic
+        # compute rational lift if real algebraic
         has_alg_coeff = any(c.is_algebraic and not c.is_rational
                             for c in poly.all_coeffs())
+        has_alg_coeff = has_alg_coeff and all(c.is_real
+                            for c in poly.all_coeffs())
+
         if has_alg_coeff:
             poly_original = poly
             poly = Poly(poly.expr, poly.gen, extension=True)
