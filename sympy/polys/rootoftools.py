@@ -760,7 +760,6 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _get_roots(cls, method, poly, radicals):
-        print(poly)
         """Return postprocessed roots of specified kind. """
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
