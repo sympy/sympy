@@ -1495,6 +1495,9 @@ class airyai(AiryBase):
         pf2 = z / (root(3, 3)*gamma(Rational(1, 3)))
         return pf1 * hyper([], [Rational(2, 3)], z**3/9) - pf2 * hyper([], [Rational(4, 3)], z**3/9)
 
+    def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
+        return sqrt(pi)*z**Rational(1, 4)*exp(-Rational(2, 3)*z**Rational(3, 2))/2*_airyais(z)
+
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
         symbs = arg.free_symbols
@@ -1517,6 +1520,19 @@ class airyai(AiryBase):
                     pf = (d * z**n)**m / (d**m * z**(m*n))
                     newarg = c * d**m * z**(m*n)
                     return S.Half * ((pf + S.One)*airyai(newarg) - (pf - S.One)/sqrt(3)*airybi(newarg))
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+
+        point = args0[0]
+        if point in [S.Infinity, S.NegativeInfinity]:
+            z = self.args[0]
+            l = [gamma(k + Rational(5, 6))*gamma(k + Rational(1, 6))*\
+                 Rational(-3, 4)**k/(2*pi**2*factorial(k)* \
+                z**Rational(3*k + 1, 2)) for k in range(n)] + [Order(1/z**Rational(3*n, 2), x)]
+            return sqrt(pi)*z**(Rational(1, 4))*exp(-2*z**(Rational(3, 2))/3)/2*(Add(*l))._eval_nseries(x, n, logx)
+
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 class airybi(AiryBase):
@@ -1672,6 +1688,9 @@ class airybi(AiryBase):
         pf2 = z*root(3, 6) / gamma(Rational(1, 3))
         return pf1 * hyper([], [Rational(2, 3)], z**3/9) + pf2 * hyper([], [Rational(4, 3)], z**3/9)
 
+    def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
+        return exp(Rational(2, 3)*z**Rational(3, 2))*sqrt(pi)*(z)**Rational(1, 4)*_airybis(z)
+
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
         symbs = arg.free_symbols
@@ -1694,6 +1713,19 @@ class airybi(AiryBase):
                     pf = (d * z**n)**m / (d**m * z**(m*n))
                     newarg = c * d**m * z**(m*n)
                     return S.Half * (sqrt(3)*(S.One - pf)*airyai(newarg) + (S.One + pf)*airybi(newarg))
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+
+        point = args0[0]
+        if point in [S.Infinity, S.NegativeInfinity]:
+            z = self.args[0]
+            l = [gamma(k + Rational(5, 6))*gamma(k + Rational(1, 6))*\
+                 Rational(3, 4)**k/(2*pi**2*factorial(k)*\
+                z**Rational(3*k + 1, 2)) for k in range(n)] + [Order(1/z**Rational(3*n + 1, 2), x)]
+            return exp(2*z**Rational(3, 2)/3)*sqrt(pi*sqrt(z))*(Add(*l))._eval_nseries(x, n, logx)
+
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 class airyaiprime(AiryBase):
@@ -2178,6 +2210,70 @@ class _besselk(Function):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         x0 = self.args[0].limit(x, 0)
+        if x0.is_zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
+
+
+class _airyais(Function):
+    """
+    Helper function to make the $\\mathrm{Airyai}(z)$
+    function tractable for the Gruntz algorithm.
+
+    """
+
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+
+        point = args0[0]
+        if point in [S.Infinity, S.NegativeInfinity]:
+            z = self.args[0]
+            l = [gamma(k + Rational(5, 6))*gamma(k + Rational(1, 6))*\
+                 Rational(-3, 4)**k/(2*pi**2*factorial(k)*\
+                z**Rational(3*k + 1, 2)) for k in range(n)] + [Order(1/z**Rational(3*n + 1, 2), x)]
+            return (Add(*l))._eval_nseries(x, n, logx)
+
+        return super()._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_intractable(self, x):
+        return 2*airyai(x)*exp(2*x**Rational(3, 2)/3)/sqrt(pi*sqrt(x))
+
+    def _eval_nseries(self, x, n, logx, cdir):
+        x0 = self.args[0].limit(x, 0, "-" if cdir == -1 else "+")
+        if x0.is_zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
+
+
+class _airybis(Function):
+    """
+    Helper function to make the $\\mathrm{Airybi}(z)$
+    function tractable for the Gruntz algorithm.
+
+    """
+
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+
+        point = args0[0]
+        if point in [S.Infinity, S.NegativeInfinity]:
+            z = self.args[0]
+            l = [gamma(k + Rational(5, 6))*gamma(k + Rational(1, 6))*\
+                 Rational(3, 4)**k/(2*pi**2*factorial(k)*\
+                z**Rational(3*k + 1, 2)) for k in range(n)] + [Order(1/z**Rational(3*n + 1, 2), x)]
+            return (Add(*l))._eval_nseries(x, n, logx)
+
+        return super()._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_intractable(self, x):
+        return airybi(x)*exp(-2*x**Rational(3, 2)/3)/sqrt(pi*sqrt(x))
+
+    def _eval_nseries(self, x, n, logx, cdir):
+        x0 = self.args[0].limit(x, 0, "-" if cdir == -1 else "+")
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_nseries(x, n, logx)
