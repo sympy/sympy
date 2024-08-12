@@ -776,18 +776,20 @@ class ComplexRootOf(RootOf):
         for x in chain((symbols('x'),), numbered_symbols('x')):
             if x.name not in free_names:
                 # xreplace makes alg field domain back into EX
-                # so make sure it stays same
-                poly = Poly(poly.xreplace({d: x}), domain=dom)
+                # XXX: so make sure it stays same?
+                poly = poly.xreplace({d: x})
+                if dom.is_AlgebraicField:
+                    poly = Poly(poly, domain=dom)
                 break
 
         if dom.is_QQ or dom.is_ZZ:
             return cls._get_roots_qq(method, poly, radicals)
-            # any better way to check if real?
+            # XXX: any better way to check if real?
             # without this check, some doctests fail (with complex terms)
         if dom.is_AlgebraicField and all(c.is_real for c in poly.coeffs()):
             return cls._get_roots_alg(method, poly, radicals)
         else:
-            # not sure how to handle ZZ[x] which appears in some tests?
+            # XXX: not sure how to handle ZZ[x] which appears in some tests?
             # this makes the tests pass alright but has to be a better way?
             return cls._get_roots_qq(method, poly, radicals)
 
