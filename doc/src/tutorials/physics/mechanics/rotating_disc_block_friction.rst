@@ -30,13 +30,12 @@ of the **CoulombKineticFriction** actuator.
 
 Let's define the necessary variables and coordinates.
 
-   >>> m, g, r, mu_k, mu_s, v_s, sigma, v0 = sm.symbols('m, g, r, mu_k, mu_s, v_s, sigma, v0')
+   >>> m, g, r, mu_k, mu_s, v_s, sigma = sm.symbols('m, g, r, mu_k, mu_s, v_s, sigma')
    >>> q1, q2, q3 = me.dynamicsymbols('q1 q2 q3')
    >>> u1, u2, u3 = me.dynamicsymbols('q1 q2 u3', 1)
 
 - :math:`q1`: Generalized coordinate representing the angular velocity of the disc w.r.t. the inertial frame
 - :math:`q2, q3`: Generalized coordinates of the block w.r.t the disc
-- :math:`v0`: initial relative velocity of the block
 - :math:`mu_k`: coefficient of kinetic friction
 - :math:`mu_s`: coefficient of static friction
 - :math:`v_s`: Stribeck friction coefficient
@@ -49,7 +48,7 @@ We will also define the inertial reference frame :math:`N` and the rotating refe
 
 Next, we define the essential points and velocities.
 :math:`O` is the center of the disc, :math:`P` is a fixed point on the disc at a
-distance :math:`r` from the center and in contact with the block, and :math:`Q` is 
+distance :math:`r` from the center and in contact with the block, and :math:`Q` is
 the actual contact point between the block and the disc.
 
    >>> O = me.Point('O')
@@ -57,13 +56,13 @@ the actual contact point between the block and the disc.
    >>> Q = P.locatenew('Q', r * q2 * A.x + r * q3 * A.y)
 
 The point :math:`P` moves with the disk, having a tangential velocity due to the
-disc's rotation, and the point :math:`Q`has a velocity that includes the tangential
+disc's rotation, and the point :math:`Q` has a velocity that includes the tangential
 velocity of :math:`P` (from the disc's rotation) and the block's sliding velocity
 relative to the disc.
 
    >>> O.set_vel(N, 0)
    >>> P.set_vel(N, r * u1 * A.y)
-   >>> Q.set_vel(N, P.vel(N) + v0 * A.x + v0 * A.y)
+   >>> Q.set_vel(N, P.vel(N) + u2 * A.x + u3 * A.y)
 
 We define the particle, pathway, and forces using **CoulombKineticFriction**.
 The pathway should be able to represent the motion of the block along a plane, so we use
@@ -134,7 +133,7 @@ a unique custom pathway, SlidingPathway.
    >>> normal_force = m * g
    >>> pathway = SlidingPathway(P, Q, N)
    >>> friction = me.CoulombKineticFriction(mu_k, normal_force, pathway, v_s=v_s, sigma=sigma, mu_s=mu_k)
-   >>> loads = friction.to_loads() + pathway.to_loads(force=None)
+   >>> loads = friction.to_loads() + SlidingPathway.to_loads(force=None)
 
 Now, we're ready to use Kane's method to obtain the equations of motion.
 
