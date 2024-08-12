@@ -7,7 +7,7 @@ from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
 from sympy.core.cache import cacheit
 from sympy.core.relational import is_le
 from sympy.core.sorting import ordered
-from sympy.polys.domains import QQ, ZZ
+from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
@@ -763,6 +763,9 @@ class ComplexRootOf(RootOf):
         """Return postprocessed roots of specified kind. """
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
+
+        dom = poly.get_domain()
+
         # get rid of gen and it's free symbol
         d = Dummy()
         poly = poly.subs(poly.gen, d)
@@ -772,53 +775,85 @@ class ComplexRootOf(RootOf):
         free_names = {str(i) for i in poly.free_symbols}
         for x in chain((symbols('x'),), numbered_symbols('x')):
             if x.name not in free_names:
-                poly = poly.xreplace({d: x})
+                # xreplace makes alg field domain back into EX
+                # so make sure it stays same
+                poly = Poly(poly.xreplace({d: x}), domain=dom)
                 break
 
-        # compute rational lift if real algebraic
-        has_alg_coeff = any(c.is_algebraic and not c.is_rational
-                            for c in poly.all_coeffs())
-        has_alg_coeff = has_alg_coeff and all(c.is_real
-                            for c in poly.all_coeffs())
+        if dom.is_QQ or dom.is_ZZ:
+            return cls._get_roots_qq(method, poly, radicals)
+            # any better way to check if real?
+            # without this check, some doctests fail (with complex terms)
+        if dom.is_AlgebraicField and all(c.is_real for c in poly.coeffs()):
+            return cls._get_roots_alg(method, poly, radicals)
+        else:
+            # not sure how to handle ZZ[x] which appears in some tests?
+            # this makes the tests pass alright but has to be a better way?
+            return cls._get_roots_qq(method, poly, radicals)
 
-        if has_alg_coeff:
-            poly_original = poly
-            poly = Poly(poly.expr, poly.gen, extension=True)
-            poly = poly.lift()
 
+    @classmethod
+    def _get_roots_qq(cls, method, poly, radicals):
+        """Return postprocessed roots of specified kind
+         for polynomials with rational coefficients. """
         coeff, poly = cls._preprocess_roots(poly)
         roots = []
 
         for root in getattr(cls, method)(poly):
             roots.append(coeff*cls._postprocess_root(root, radicals))
 
-        # filter out extraneous roots if introduced from lifting
-        if has_alg_coeff:
-            if method == "_real_roots":
-                roots = cls._numerically_filter_roots(poly_original, roots, real=True)
-            elif method == "_all_roots":
-                roots = cls._numerically_filter_roots(poly_original, roots, real=False)
+        return roots
+
+    @classmethod
+    def _get_roots_alg(cls, method, poly, radicals):
+        """Return postprocessed roots of specified kind
+         for polynomials with algebraic coefficients It assumes
+         the domain is already an algebraic field. """
+
+        poly_lift = poly.lift()
+
+        coeff, poly_lift = cls._preprocess_roots(poly_lift)
+        roots = []
+
+        for root in getattr(cls, method)(poly_lift):
+            roots.append(coeff*cls._postprocess_root(root, radicals))
+
+        if method == "_real_roots":
+            roots = cls._numerically_filter_roots(poly, roots, real=True)
+        elif method == "_all_roots":
+            roots = cls._numerically_filter_roots(poly, roots, real=False)
 
         return roots
 
     @classmethod
-    def _numerically_filter_roots(cls, poly_alg, candidates, real):
-        # to get proper root counts
-        if poly_alg.domain not in (QQ, ZZ):
-            poly_alg = Poly(poly_alg.expr, poly_alg.gen, extension=True)
+    def _numerically_filter_roots(cls, poly, candidates, real):
+        # must be QQ, ZZ, or Alg for proper counting
+        dom = poly.get_domain()
+        if not (dom.is_ZZ or dom.is_QQ or dom.is_AlgebraicField):
+            raise NotImplementedError(
+                "root counting not supported over %s" % dom)
 
         if real:
-            num_roots = poly_alg.count_roots()
+            num_roots = poly.count_roots()
         else:
-            num_roots = poly_alg.degree()
+            num_roots = poly.degree()
 
         prec = 10
         # compare len(set()) bc expected behavior is for multiple roots
         while len(set(candidates)) > num_roots:
             candidates_filtered = []
+            processed = set() # track already seen
+
             for c in candidates:
-                r_f = poly_alg(c).evalf(prec, maxn=2*prec)
-                if abs(r_f)._prec < 2: candidates_filtered.append(c)
+                if c not in processed:
+                    r_f = poly(c).evalf(prec, maxn=2*prec)
+                    processed.add(c)
+                    if abs(r_f)._prec < 2: candidates_filtered.append(c)
+                else:
+                    if c in candidates_filtered:
+                        # already approved this candidate
+                        candidates_filtered.append(c)
+
             prec *= 2
             candidates = candidates_filtered
 
