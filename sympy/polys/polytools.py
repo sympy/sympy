@@ -6918,7 +6918,7 @@ def real_roots(f, multiple=True, radicals=True):
     polynomials of high degree which typically have many more complex roots
     than real roots.
 
-    Irrational algebraic or transcendental coefficients can now be handled by
+    Irrational algebraic or transcendental coefficients are handled by
     :func:`real_roots` (or :func:`~.rootof` more generally):
 
     >>> from sympy import sqrt, expand
