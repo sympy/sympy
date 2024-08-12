@@ -1,17 +1,13 @@
-.. _physics_vector:
+.. _physics_vector_explanation:
 
-=========================
-The Physics Vector Module
-=========================
+======
+Vector
+======
 
-.. topic:: Abstract
-
-   In this documentation the components of the sympy.physics.vector module
-   have been discussed. :mod:`sympy.physics.vector` has been written to
-   facilitate the operations pertaining to 3-dimensional vectors, as functions
-   of time or otherwise, in :mod:`sympy.physics`.
-
-.. module:: sympy.physics.vector
+In this documentation the components of the sympy.physics.vector
+have been discussed. :mod:`sympy.physics.vector` has been written to
+facilitate the operations pertaining to 3-dimensional vectors, as functions
+of time or otherwise, in :obj:`sympy.physics`.
 
 
 References for Physics/Vector
@@ -28,10 +24,9 @@ Guide to Vector
 ===============
 
 .. toctree::
-   :titlesonly:
+   :maxdepth: 2
 
-   vectors.rst
-   kinematics.rst
-   advanced.rst
+   vectors/vectors.rst
+   kinematics/kinematics.rst
    fields.rst
-   api/index.rst
+   advanced.rst

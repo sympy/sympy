@@ -27,7 +27,7 @@ from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-__all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
+__all__ = ['TransferFunction', 'PIDController', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
     'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'StateSpace', 'gbt', 'bilinear', 'forward_diff', 'backward_diff',
     'phase_margin', 'gain_margin']
 
@@ -452,8 +452,8 @@ class TransferFunction(SISOLinearTimeInvariant):
     Generally, a dynamical system representing a physical model can be described in terms of Linear
     Ordinary Differential Equations like -
 
-            $\small{b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y=
-            a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x}$
+            $b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y=
+            a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x$
 
     Here, $x$ is the input signal and $y$ is the output signal and superscript on both is the order of derivative
     (not exponent). Derivative is taken with respect to the independent variable, $t$. Also, generally $m$ is greater
@@ -463,20 +463,20 @@ class TransferFunction(SISOLinearTimeInvariant):
     mathematical tools like Laplace transform to get a better perspective. Taking the Laplace transform
     of both the sides in the equation (at zero initial conditions), we get -
 
-            $\small{\mathcal{L}[b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y]=
-            \mathcal{L}[a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x]}$
+            $\mathcal{L}[b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y]=
+            \mathcal{L}[a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x]$
 
     Using the linearity property of Laplace transform and also considering zero initial conditions
-    (i.e. $\small{y(0^{-}) = 0}$, $\small{y'(0^{-}) = 0}$ and so on), the equation
+    (i.e. $y(0^{-}) = 0$, $y'(0^{-}) = 0$ and so on), the equation
     above gets translated to -
 
-            $\small{b_{m}\mathcal{L}[y^{\left(m\right)}]+\dots+b_{1}\mathcal{L}[y^{\left(1\right)}]+b_{0}\mathcal{L}[y]=
-            a_{n}\mathcal{L}[x^{\left(n\right)}]+\dots+a_{1}\mathcal{L}[x^{\left(1\right)}]+a_{0}\mathcal{L}[x]}$
+            $b_{m}\mathcal{L}[y^{\left(m\right)}]+\dots+b_{1}\mathcal{L}[y^{\left(1\right)}]+b_{0}\mathcal{L}[y]=
+            a_{n}\mathcal{L}[x^{\left(n\right)}]+\dots+a_{1}\mathcal{L}[x^{\left(1\right)}]+a_{0}\mathcal{L}[x]$
 
     Now, applying Derivative property of Laplace transform,
 
-            $\small{b_{m}s^{m}\mathcal{L}[y]+\dots+b_{1}s\mathcal{L}[y]+b_{0}\mathcal{L}[y]=
-            a_{n}s^{n}\mathcal{L}[x]+\dots+a_{1}s\mathcal{L}[x]+a_{0}\mathcal{L}[x]}$
+            $b_{m}s^{m}\mathcal{L}[y]+\dots+b_{1}s\mathcal{L}[y]+b_{0}\mathcal{L}[y]=
+            a_{n}s^{n}\mathcal{L}[x]+\dots+a_{1}s\mathcal{L}[x]+a_{0}\mathcal{L}[x]$
 
     Here, the superscript on $s$ is **exponent**. Note that the zero initial conditions assumption, mentioned above, is very important
     and cannot be ignored otherwise the dynamical system cannot be considered time-independent and the simplified equation above
@@ -1313,6 +1313,116 @@ class TransferFunction(SISOLinearTimeInvariant):
             return Pow(self.den, -1, evaluate=False)
 
 
+class PIDController(TransferFunction):
+    r"""
+    A class for representing PID (Proportional-Integral-Derivative)
+    controllers in control systems. The PIDController class is a subclass
+    of TransferFunction, representing the controller's transfer function
+    in the Laplace domain. The arguments are ``kp``, ``ki``, ``kd``,
+    ``tf``, and ``var``, where ``kp``, ``ki``, and ``kd`` are the
+    proportional, integral, and derivative gains respectively.``tf``
+    is the derivative filter time constant, which can be used to
+    filter out the noise and ``var`` is the complex variable used in
+    the transfer function.
+
+    Parameters
+    ==========
+
+    kp : Expr, Number
+        Proportional gain. Defaults to ``Symbol('kp')`` if not specified.
+    ki : Expr, Number
+        Integral gain. Defaults to ``Symbol('ki')`` if not specified.
+    kd : Expr, Number
+        Derivative gain. Defaults to ``Symbol('kd')`` if not specified.
+    tf : Expr, Number
+        Derivative filter time constant.  Defaults to ``0`` if not specified.
+    var : Symbol
+        The complex frequency variable.  Defaults to ``s`` if not specified.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.control.lti import PIDController
+    >>> kp, ki, kd = symbols('kp ki kd')
+    >>> p1 = PIDController(kp, ki, kd)
+    >>> print(p1)
+    PIDController(kp, ki, kd, 0, s)
+    >>> p1.doit()
+    TransferFunction(kd*s**2 + ki + kp*s, s, s)
+    >>> p1.kp
+    kp
+    >>> p1.ki
+    ki
+    >>> p1.kd
+    kd
+    >>> p1.tf
+    0
+    >>> p1.var
+    s
+    >>> p1.to_expr()
+    (kd*s**2 + ki + kp*s)/s
+
+    See Also
+    ========
+
+    TransferFunction
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/PID_controller
+    .. [2] https://in.mathworks.com/help/control/ug/proportional-integral-derivative-pid-controllers.html
+
+    """
+    def __new__(cls, kp=Symbol('kp'), ki=Symbol('ki'), kd=Symbol('kd'), tf=0, var=Symbol('s')):
+        kp, ki, kd, tf = _sympify(kp), _sympify(ki), _sympify(kd), _sympify(tf)
+        num = kp*tf*var**2 + kp*var + ki*tf*var + ki + kd*var**2
+        den = tf*var**2 + var
+        obj = TransferFunction.__new__(cls, num, den, var)
+        obj._kp, obj._ki, obj._kd, obj._tf = kp, ki, kd, tf
+        return obj
+
+    def __repr__(self):
+        return f"PIDController({self.kp}, {self.ki}, {self.kd}, {self.tf}, {self.var})"
+
+    __str__ = __repr__
+
+    @property
+    def kp(self):
+        """
+        Returns the Proportional gain (kp) of the PIDController.
+        """
+        return self._kp
+
+    @property
+    def ki(self):
+        """
+        Returns the Integral gain (ki) of the PIDController.
+        """
+        return self._ki
+
+    @property
+    def kd(self):
+        """
+        Returns the Derivative gain (kd) of the PIDController.
+        """
+        return self._kd
+
+    @property
+    def tf(self):
+        """
+        Returns the Derivative filter time constant (tf) of the PIDController.
+        """
+        return self._tf
+
+    def doit(self):
+        """
+        Convert the PIDController into TransferFunction.
+        """
+        return TransferFunction(self.num, self.den, self.var)
+
+
 def _flatten_args(args, _cls):
     temp_args = []
     for arg in args:
@@ -1454,6 +1564,12 @@ class Series(SISOLinearTimeInvariant):
         obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
+
+    def __repr__(self):
+        systems_repr = ', '.join(repr(system) for system in self.args)
+        return f"Series({systems_repr})"
+
+    __str__ = __repr__
 
     @property
     def var(self):
@@ -2061,6 +2177,12 @@ class Parallel(SISOLinearTimeInvariant):
 
         return obj.doit() if evaluate else obj
 
+    def __repr__(self):
+        systems_repr = ', '.join(repr(system) for system in self.args)
+        return f"Parallel({systems_repr})"
+
+    __str__ = __repr__
+
     @property
     def var(self):
         """
@@ -2606,6 +2728,11 @@ class Feedback(TransferFunction):
                 same complex variable."""))
 
         return super(TransferFunction, cls).__new__(cls, sys1, sys2, _sympify(sign))
+
+    def __repr__(self):
+        return f"Feedback({self.sys1}, {self.sys2}, {self.sign})"
+
+    __str__ = __repr__
 
     @property
     def sys1(self):

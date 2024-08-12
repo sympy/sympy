@@ -384,11 +384,6 @@ class JuliaCodePrinter(CodePrinter):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s[%s]" % (self._print(expr.base.label), ",".join(inds))
 
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
-
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
 
