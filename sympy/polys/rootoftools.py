@@ -775,7 +775,7 @@ class ComplexRootOf(RootOf):
         free_names = {str(i) for i in poly.free_symbols}
         for x in chain((symbols('x'),), numbered_symbols('x')):
             if x.name not in free_names:
-                poly = poly.replace({d: x})
+                poly = poly.replace(d, x)
                 break
 
         if dom.is_QQ or dom.is_ZZ:
