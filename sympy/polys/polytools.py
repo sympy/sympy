@@ -6744,7 +6744,7 @@ def all_roots(f, multiple=True, radicals=True):
     >>> [r.evalf(3) for r in all_roots(p)]
     [1.17, -0.765 - 0.352*I, -0.765 + 0.352*I, 0.181 - 1.08*I, 0.181 + 1.08*I]
 
-    Irrational algebraic or transcendental coefficients can now be
+    Irrational algebraic or transcendental coefficients are
     handled by :func:`all_roots` (or :func:`~.rootof` more generally):
 
     >>> from sympy import sqrt, expand
