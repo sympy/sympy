@@ -1,6 +1,7 @@
 """Domains of Gaussian type."""
 
 from sympy.core.numbers import I
+from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ
@@ -424,6 +425,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
 
     """
     dom = ZZ
+    mod = DMP([ZZ.one, ZZ.zero, ZZ.one], ZZ)
     dtype = GaussianInteger
     zero = dtype(ZZ(0), ZZ(0))
     one = dtype(ZZ(1), ZZ(0))
@@ -613,6 +615,7 @@ class GaussianRationalField(GaussianDomain, Field):
     .. _Gaussian rationals: https://en.wikipedia.org/wiki/Gaussian_rational
     """
     dom = QQ
+    mod = DMP([QQ.one, QQ.zero, QQ.one], QQ)
     dtype = GaussianRational
     zero = dtype(QQ(0), QQ(0))
     one = dtype(QQ(1), QQ(0))

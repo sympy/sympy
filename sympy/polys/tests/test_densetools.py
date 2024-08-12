@@ -614,8 +614,7 @@ def test_dmp_lift():
     f_a = [ANP([QQ(1, 1)], q, QQ), ANP([], q, QQ), ANP([], q, QQ),
          ANP([QQ(1, 1), QQ(0, 1)], q, QQ), ANP([QQ(17, 1), QQ(0, 1)], q, QQ)]
 
-    f_lift = [QQ(1), QQ(0), QQ(0), QQ(0), QQ(0), QQ(0), QQ(2), QQ(0), QQ(578),
-              QQ(0), QQ(0), QQ(0), QQ(1), QQ(0), QQ(-578), QQ(0), QQ(83521)]
+    f_lift = QQ.map([1, 0, 0, 0, 0, 0, 1, 34, 289])
 
     assert dmp_lift(f_a, 0, QQ.algebraic_field(I)) == f_lift
 

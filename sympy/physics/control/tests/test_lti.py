@@ -16,7 +16,7 @@ from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
 from sympy.functions.elementary.trigonometric import sin, cos
-from sympy.physics.control import (TransferFunction, Series, Parallel,
+from sympy.physics.control import (TransferFunction, PIDController, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
@@ -351,6 +351,7 @@ def test_TransferFunction_functions():
     assert tf10.to_expr() == Mul(S(0), Pow(1, -1, evaluate=False), evaluate=False)
     assert tf11.to_expr() == Pow(1, -1, evaluate=False)
 
+
 def test_TransferFunction_addition_and_subtraction():
     tf1 = TransferFunction(s + 6, s - 5, s)
     tf2 = TransferFunction(s + 3, s + 1, s)
@@ -462,6 +463,49 @@ def test_TransferFunction_is_biproper():
     assert tf2.is_biproper
     assert not tf3.is_biproper
     assert not tf4.is_biproper
+
+
+def test_PIDController():
+    kp, ki, kd, tf = symbols("kp ki kd tf")
+    p1 = PIDController(kp, ki, kd, tf)
+    p2 = PIDController()
+
+    # Type Checking
+    assert isinstance(p1, PIDController)
+    assert isinstance(p1, TransferFunction)
+
+    # Properties checking
+    assert p1 == PIDController(kp, ki, kd, tf, s)
+    assert p2 == PIDController(kp, ki, kd, 0, s)
+    assert p1.num == kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s
+    assert p1.den == s**2*tf + s
+    assert p1.var == s
+    assert p1.kp == kp
+    assert p1.ki == ki
+    assert p1.kd == kd
+    assert p1.tf == tf
+
+    # Functionality checking
+    assert p1.doit() == TransferFunction(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s, s**2*tf + s, s)
+    assert p1.is_proper == True
+    assert p1.is_biproper == True
+    assert p1.is_strictly_proper == False
+    assert p2.doit() == TransferFunction(kd*s**2 + ki + kp*s, s, s)
+
+    # Using PIDController with TransferFunction
+    tf1 = TransferFunction(s, s + 1, s)
+    par1 = Parallel(p1, tf1)
+    ser1 = Series(p1, tf1)
+    fed1 = Feedback(p1, tf1)
+    assert par1 == Parallel(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
+    assert ser1 == Series(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
+    assert fed1 == Feedback(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
+    assert par1.doit() == TransferFunction(s*(s**2*tf + s) + (s + 1)*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s),
+                                           (s + 1)*(s**2*tf + s), s)
+    assert ser1.doit() == TransferFunction(s*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s),
+                                           (s + 1)*(s**2*tf + s), s)
+    assert fed1.doit() == TransferFunction((s + 1)*(s**2*tf + s)*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s),
+                                           (s*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s) + (s + 1)*(s**2*tf + s))*(s**2*tf + s), s)
 
 
 def test_Series_construction():
@@ -1669,6 +1713,7 @@ def test_conversion():
     C1 = Matrix([[1, 2]])
     D1 = Matrix([0])
     H1 = StateSpace(A1, B1, C1, D1)
+    H3 = StateSpace(Matrix([[a0, a1], [a2, a3]]), B = Matrix([[b1], [b2]]), C = Matrix([[c1, c2]]))
     tm1 = H1.rewrite(TransferFunction)
     tm2 = (-H1).rewrite(TransferFunction)
 
@@ -1691,7 +1736,8 @@ def test_conversion():
     assert tm3[0][0] == TransferFunction(2.0*s**3 + 1.0*s**2 - 10.5*s + 4.5, 1.0*s**3 + 0.5*s**2 - 6.5*s - 2.5, s)
     assert tm3[0][1] == TransferFunction(2.0*s**3 + 2.0*s**2 - 10.5*s - 3.5, 1.0*s**3 + 0.5*s**2 - 6.5*s - 2.5, s)
     assert tm3[0][2] == TransferFunction(2.0*s**2 + 5.0*s - 0.5, 1.0*s**3 + 0.5*s**2 - 6.5*s - 2.5, s)
-
+    assert H3.rewrite(TransferFunction) == [[TransferFunction(-c1*(a1*b2 - a3*b1 + b1*s) - c2*(-a0*b2 + a2*b1 + b2*s),
+                                                              -a0*a3 + a0*s + a1*a2 + a3*s - s**2, s)]]
     # TransferFunction to StateSpace
     SS = TF1.rewrite(StateSpace)
     assert SS == \
@@ -1717,6 +1763,7 @@ def test_StateSpace_dsolve():
     I1 = Matrix([[1], [2]])
     t = symbols('t')
     ss1 = StateSpace(A1, B1, C1, D1)
+
     # Zero input and Zero initial conditions
     assert ss1.dsolve() == Matrix([[0]])
     assert ss1.dsolve(initial_conditions=I1) == Matrix([[8*exp(-t) - 9*exp(-2*t)]])
@@ -1736,6 +1783,7 @@ def test_StateSpace_dsolve():
     op = ss3.dsolve(input_vector=U3, var=t)
     assert str(op.simplify().expand().evalf()[0]) == str(5.0 + 20.7880460155075*exp(-5*t/2)*sin(sqrt(7)*t/2)
                                             - 5.0*exp(-5*t/2)*cos(sqrt(7)*t/2))
+
     # Test with Heaviside as input
     A4 = Matrix([[-1, 1], [-4, -4]])
     B4 = Matrix([[0], [4]])
@@ -1745,6 +1793,7 @@ def test_StateSpace_dsolve():
     op4 = str(ss4.dsolve(var=t, input_vector=U4)[0].simplify().expand().evalf())
     assert op4 == str(5.0*Heaviside(t) + 20.7880460155075*exp(-5*t/2)*sin(sqrt(7)*t/2)*Heaviside(t)
                                             - 5.0*exp(-5*t/2)*cos(sqrt(7)*t/2)*Heaviside(t))
+
     # Test with Symbolic Matrices
     m, a, x0 = symbols('m a x_0')
     A5 = Matrix([[0, 1], [0, 0]])
@@ -1776,6 +1825,7 @@ def test_StateSpace_functions():
     SS1 = StateSpace(A_mat, B_mat, C_mat, D_mat)
     SS2 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[0, 1], [0, 2]]),Matrix([[-1, 1], [1, -1]]))
     SS3 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[1, -1], [1, -1]]))
+    SS4 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1], [b2]]), Matrix([[c1, c2]]))
 
     # Observability
     assert SS1.is_observable() == True
@@ -1784,6 +1834,8 @@ def test_StateSpace_functions():
     assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
     assert SS1.observable_subspace() == [Matrix([[0], [1]]), Matrix([[1], [0]])]
     assert SS2.observable_subspace() == [Matrix([[-1], [ 1], [ 3], [-3]])]
+    Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5), (c1, 0), (c2, 1)])
+    assert Qo == Matrix([[0, 1], [1, -5]])
 
     # Controllability
     assert SS1.is_controllable() == True
@@ -1792,6 +1844,13 @@ def test_StateSpace_functions():
     assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
     assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
     assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
+    assert SS4.controllable_subspace() == [Matrix([
+                                          [b1],
+                                          [b2]]), Matrix([
+                                          [a0*b1 + a1*b2],
+                                          [a2*b1 + a3*b2]])]
+    Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
+    assert Qc == Matrix([[0, 1], [1, -5]])
 
     # Append
     A1 = Matrix([[0, 1], [1, 0]])
@@ -1801,6 +1860,7 @@ def test_StateSpace_functions():
     ss1 = StateSpace(A1, B1, C1, D1)
     ss2 = StateSpace(Matrix([[1, 0], [0, 1]]), Matrix([[1], [0]]), Matrix([[1, 0]]), Matrix([[1]]))
     ss3 = ss1.append(ss2)
+    ss4 = SS4.append(ss1)
 
     assert ss3.num_states == ss1.num_states + ss2.num_states
     assert ss3.num_inputs == ss1.num_inputs + ss2.num_inputs
@@ -1809,6 +1869,15 @@ def test_StateSpace_functions():
     assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
     assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
     assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
+
+    # Using symbolic matrices
+    assert ss4.num_states == SS4.num_states + ss1.num_states
+    assert ss4.num_inputs == SS4.num_inputs + ss1.num_inputs
+    assert ss4.num_outputs == SS4.num_outputs + ss1.num_outputs
+    assert ss4.state_matrix == Matrix([[a0, a1, 0, 0], [a2, a3, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    assert ss4.input_matrix == Matrix([[b1, 0], [b2, 0], [0, 0], [0, 1]])
+    assert ss4.output_matrix == Matrix([[c1, c2, 0, 0], [0, 0, 0, 1]])
+    assert ss4.feedforward_matrix == Matrix([[0, 0], [0, 0]])
 
 
 def test_StateSpace_series():
@@ -1855,6 +1924,7 @@ def test_StateSpace_series():
     ser2 = Series(ss1)
     ser3 = Series(ser2, ss2)
     assert ser3.doit() == ser1.doit()
+
     # TransferFunction interconnection with StateSpace
     ser_tf = Series(tf1, ss1)
     assert ser_tf == Series(TransferFunction(s, s + 1, s), StateSpace(Matrix([
@@ -1874,6 +1944,7 @@ def test_StateSpace_series():
                             Matrix([[0, 0, 1]]),
                             Matrix([[0]]))
     assert ser_tf.rewrite(TransferFunction) == TransferFunction(s**2, s**3 + s**2 - s - 1, s)
+
     # For MIMO Systems
     a3 = Matrix([[4, 1], [2, -3]])
     b3 = Matrix([[5, 2], [-3, -3]])
@@ -1976,6 +2047,7 @@ def test_StateSpace_parallel():
                         Matrix([[0, 1, 1, 0]]),
                         Matrix([[1]]))
     assert p1.rewrite(TransferFunction) == TransferFunction(s*(s + 2), s**2 - 1, s)
+
     # Connecting StateSpace with TransferFunction
     tf1 = TransferFunction(s, s+1, s)
     p2 = Parallel(ss1, tf1)
@@ -2046,6 +2118,7 @@ def test_StateSpace_parallel():
                         Matrix([
                         [1, 6],
                         [1, 0]]))
+
     # Using StateSpace with MIMOParallel.
     tf2 = TransferFunction(1, s, s)
     tf3 = TransferFunction(1, s + 1, s)

@@ -41,6 +41,7 @@ _known_functions_math = {
     'floor': 'floor',
     'gamma': 'gamma',
     'hypot': 'hypot',
+    'isinf': 'isinf',
     'isnan': 'isnan',
     'loggamma': 'lgamma',
     'log': 'log',
@@ -745,6 +746,15 @@ class MpmathPrinter(PythonCodePrinter):
                 ", ".join(map(self._print, integration_vars)),
                 self._print(e.args[0]),
                 ", ".join("(%s, %s)" % tuple(map(self._print, l)) for l in limits))
+
+
+    def _print_Derivative_zeta(self, args, seq_orders):
+        arg, = args
+        deriv_order, = seq_orders
+        return '{}({}, derivative={})'.format(
+            self._module_format('mpmath.zeta'),
+            self._print(arg), deriv_order
+        )
 
 
 for k in MpmathPrinter._kf:
