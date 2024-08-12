@@ -819,47 +819,11 @@ class ComplexRootOf(RootOf):
             roots.append(coeff*cls._postprocess_root(root, radicals))
 
         if method == "_real_roots":
-            roots = cls._numerically_filter_roots(poly, roots, real=True)
+            roots = poly._numerically_filter_roots(roots, real=True)
         elif method == "_all_roots":
-            roots = cls._numerically_filter_roots(poly, roots, real=False)
+            roots = poly._numerically_filter_roots(roots, real=False)
 
         return roots
-
-    @classmethod
-    def _numerically_filter_roots(cls, poly, candidates, real):
-        # must be QQ, ZZ, or Alg for proper counting
-        dom = poly.get_domain()
-        if not (dom.is_ZZ or dom.is_QQ or dom.is_AlgebraicField):
-            raise NotImplementedError(
-                "root counting not supported over %s" % dom)
-
-        if real:
-            num_roots = poly.count_roots()
-        else:
-            num_roots = poly.degree()
-
-        prec = 10
-        # compare len(set()) bc expected behavior is for multiple roots
-        while len(set(candidates)) > num_roots:
-            candidates_filtered = []
-            processed = set() # track already seen
-
-            for c in candidates:
-                if c not in processed:
-                    r_f = poly(c).evalf(prec, maxn=2*prec)
-                    processed.add(c)
-                    if abs(r_f)._prec < 2: candidates_filtered.append(c)
-                else:
-                    if c in candidates_filtered:
-                        # already approved this candidate
-                        candidates_filtered.append(c)
-
-            prec *= 2
-            candidates = candidates_filtered
-
-        assert len(set(candidates)) == num_roots
-
-        return candidates
 
     @classmethod
     def clear_cache(cls):
