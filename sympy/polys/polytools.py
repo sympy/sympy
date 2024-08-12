@@ -3816,6 +3816,50 @@ class Poly(Basic):
 
         return r.replace(t, x)
 
+    def _numerically_filter_roots(f, candidates, real):
+        """
+        Given a superset of roots of f, finds which ones are roots of f.
+        Note this won't work properly if candidates is not a superset of roots!
+        This is not a public function, and is used internally for root-finding.
+        """
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+
+        # must be QQ, ZZ, or Alg for proper counting
+        dom = f.get_domain()
+        if not (dom.is_ZZ or dom.is_QQ or dom.is_AlgebraicField):
+            raise NotImplementedError(
+                "root counting not supported over %s" % dom)
+
+        if real:
+            num_roots = f.count_roots()
+        else:
+            num_roots = f.degree()
+
+        prec = 10
+        # compare len(set()) bc expected behavior is for multiple roots
+        while len(set(candidates)) > num_roots:
+            candidates_filtered = []
+            processed = set() # track already seen
+
+            for c in candidates:
+                if c not in processed:
+                    r_f = f(c).evalf(prec, maxn=2*prec)
+                    processed.add(c)
+                    if abs(r_f)._prec < 2:
+                        candidates_filtered.append(c)
+                else:
+                    if c in candidates_filtered:
+                        # already approved this candidate
+                        candidates_filtered.append(c)
+
+            prec *= 2
+            candidates = candidates_filtered
+
+        assert len(set(candidates)) == num_roots
+        return candidates
+
     def same_root(f, a, b):
         """
         Decide whether two roots of this polynomial are equal.
