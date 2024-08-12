@@ -784,9 +784,7 @@ class ComplexRootOf(RootOf):
 
         if dom.is_QQ or dom.is_ZZ:
             return cls._get_roots_qq(method, poly, radicals)
-            # XXX: any better way to check if real?
-            # without this check, some doctests fail (with complex terms)
-        if dom.is_AlgebraicField and all(c.is_real for c in poly.coeffs()):
+        if dom.is_AlgebraicField:
             return cls._get_roots_alg(method, poly, radicals)
         else:
             # XXX: not sure how to handle ZZ[x] which appears in some tests?
