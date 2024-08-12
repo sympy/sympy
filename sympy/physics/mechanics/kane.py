@@ -11,6 +11,7 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
+from sympy.simplify._cse_diff import _forward_jacobian
 
 __all__ = ['KanesMethod']
 
@@ -534,7 +535,7 @@ class KanesMethod(_Methods):
         self._f_d = -(self._fr - nonMM)
         return fr_star
 
-    def to_linearizer(self, linear_solver='LU'):
+    def to_linearizer(self, linear_solver='LU', jacobian_func=_forward_jacobian):
         """Returns an instance of the Linearizer class, initiated from the
         data in the KanesMethod class. This may be more desirable than using
         the linearize class method, as the Linearizer object will allow more
@@ -552,6 +553,12 @@ class KanesMethod(_Methods):
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
             divide-by-zero and thus ``nan`` results.
+        jacobian_func : callable
+            Function used to compute the Jacobian matrix. Default is
+            ``_forward_jacobian``. This function should have the signature
+            ``jacobian_func(expr, wrt)``, where ``expr`` is the expression to
+            differentiate and ``wrt`` is the iterable of variables with respect
+            to which to differentiate the expression.
 
         Returns
         =======
@@ -626,7 +633,7 @@ class KanesMethod(_Methods):
                 raise ValueError('Cannot have derivatives of specified \
                                  quantities when linearizing forcing terms.')
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
-                q_d, u_i, u_d, r, linear_solver=linear_solver)
+                q_d, u_i, u_d, r, linear_solver=linear_solver, jacobian_func=jacobian_func)
 
     # TODO : Remove `new_method` after 1.1 has been released.
     def linearize(self, *, new_method=None, linear_solver='LU', **kwargs):

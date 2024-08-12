@@ -6,6 +6,7 @@ from sympy.physics.mechanics.functions import (
     find_dynamicsymbols, msubs, _f_list_parser, _validate_coordinates)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
+from sympy.simplify._cse_diff import _forward_jacobian
 
 __all__ = ['LagrangesMethod']
 
@@ -290,7 +291,7 @@ class LagrangesMethod(_Methods):
             return self._qdots.col_join(self.forcing)
 
     def to_linearizer(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None,
-                      linear_solver='LU'):
+                      linear_solver='LU', jacobian_func=_forward_jacobian):
         """Returns an instance of the Linearizer class, initiated from the data
         in the LagrangesMethod class. This may be more desirable than using the
         linearize class method, as the Linearizer object will allow more
@@ -313,6 +314,12 @@ class LagrangesMethod(_Methods):
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
             divide-by-zero and thus ``nan`` results.
+        jacobian_func : callable
+            Function used to compute the Jacobian matrix. Default is
+            ``_forward_jacobian``. This function should have the signature
+            ``jacobian_func(expr, wrt)``, where ``expr`` is the expression to
+            differentiate and ``wrt`` is the iterable of variables with respect
+            to which to differentiate the expression.
 
         Returns
         =======
@@ -370,7 +377,7 @@ class LagrangesMethod(_Methods):
                                  quantities when linearizing forcing terms.')
 
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
-                          q_d, u_i, u_d, r, lams, linear_solver=linear_solver)
+                          q_d, u_i, u_d, r, lams, linear_solver=linear_solver, jacobian_func=jacobian_func)
 
     def linearize(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None,
                   linear_solver='LU', **kwargs):
