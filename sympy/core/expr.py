@@ -2967,6 +2967,11 @@ class Expr(Basic, EvalfMixin):
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
 
+        if n is not None:
+            n = int(n)
+            if n < 0:
+                raise ValueError("Number of terms should be nonnegative")
+
         x0 = sympify(x0)
         cdir = sympify(cdir)
         from sympy.functions.elementary.complexes import im, sign
