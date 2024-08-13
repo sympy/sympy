@@ -260,7 +260,7 @@ class ArrayComprehension(Basic):
 
         return loop_size
 
-    def doit(self):
+    def doit(self, **hints):
         if not self.is_shape_numeric:
             return self
 

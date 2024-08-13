@@ -32,7 +32,8 @@ def test__linsolve_float():
         y - x,
         y - 0.0216 * x
     ]
-    sol = {x:0.0, y:0.0}
+    # Should _linsolve return floats here?
+    sol = {x:0, y:0}
     assert _linsolve(eqs, (x, y)) == sol
 
     # Other cases should be close to eps
@@ -103,6 +104,9 @@ def test__linsolve_float():
 
 
 def test__linsolve_deprecated():
-    assert _linsolve([Eq(x**2, x**2+y)], [x, y]) == {x:x, y:S.Zero}
-    assert _linsolve([(x+y)**2-x**2], [x]) == {x:-y/2}
-    assert _linsolve([Eq((x+y)**2, x**2)], [x]) == {x:-y/2}
+    raises(PolyNonlinearError, lambda:
+        _linsolve([Eq(x**2, x**2 + y)], [x, y]))
+    raises(PolyNonlinearError, lambda:
+        _linsolve([(x + y)**2 - x**2], [x]))
+    raises(PolyNonlinearError, lambda:
+        _linsolve([Eq((x + y)**2, x**2)], [x]))

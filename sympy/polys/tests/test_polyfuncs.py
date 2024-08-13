@@ -88,7 +88,7 @@ def test_interpolate():
     assert interpolate((9, 4, 9), 3) == 9
     assert interpolate((1, 9, 16), 1) is S.One
     assert interpolate(((x, 1), (2, 3)), x) is S.One
-    assert interpolate(dict([(x, 1), (2, 3)]), x) is S.One
+    assert interpolate({x: 1, 2: 3}, x) is S.One
     assert interpolate(((2, x), (1, 3)), x) == x**2 - 4*x + 6
 
 

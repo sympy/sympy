@@ -7,9 +7,11 @@ Math object where possible.
 
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.core import S
+from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -47,15 +49,11 @@ class JavascriptCodePrinter(CodePrinter):
     printmethod = '_javascript'
     language = 'JavaScript'
 
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
-    }  # type: tDict[str, Any]
+    })
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -97,9 +95,9 @@ class JavascriptCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             return '1/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5:
+        elif equal_valued(expr.exp, 0.5):
             return 'Math.sqrt(%s)' % self._print(expr.base)
         elif expr.exp == S.One/3:
             return 'Math.cbrt(%s)' % self._print(expr.base)
@@ -138,9 +136,6 @@ class JavascriptCodePrinter(CodePrinter):
             elem += expr.indices[i]*offset
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     def _print_Exp1(self, expr):
         return "Math.E"

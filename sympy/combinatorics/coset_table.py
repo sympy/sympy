@@ -716,14 +716,12 @@ class CosetTable(DefaultPrinting):
         table = self.table
         while len(self.deduction_stack) > 0:
             alpha, x = self.deduction_stack.pop()
-            for w in R_c_x:
-                if not self.scan_check(alpha, w):
-                    return False
+            if not all(self.scan_check(alpha, w) for w in R_c_x):
+                return False
             beta = table[alpha][self.A_dict[x]]
             if beta is not None:
-                for w in R_c_x_inv:
-                    if not self.scan_check(beta, w):
-                        return False
+                if not all(self.scan_check(beta, w) for w in R_c_x_inv):
+                    return False
         return True
 
     def switch(self, beta, gamma):
@@ -1131,7 +1129,7 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     R = fp_grp.relators
     A_dict = C.A_dict
     p = C.p
-    for i in range(0, len(Y)):
+    for i in range(len(Y)):
         if modified:
             _scan_and_fill(0, Y[i], C._grp.generators[i])
         else:

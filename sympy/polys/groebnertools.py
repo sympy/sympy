@@ -596,7 +596,7 @@ def _f5b(F, ring):
     ==========
 
     .. [1] Yao Sun, Dingkang Wang: "A New Proof for the Correctness of F5
-           (F5-Like) Algorithm", http://arxiv.org/abs/1004.0084 (specifically
+           (F5-Like) Algorithm", https://arxiv.org/abs/1004.0084 (specifically
            v4)
 
     .. [2] Thomas Becker, Volker Weispfenning, Groebner bases: A computational

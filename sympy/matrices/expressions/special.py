@@ -3,7 +3,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from .matexpr import MatrixExpr
 
 
@@ -43,6 +43,9 @@ class ZeroMatrix(MatrixExpr):
     def _eval_transpose(self):
         return ZeroMatrix(self.cols, self.rows)
 
+    def _eval_adjoint(self):
+        return ZeroMatrix(self.cols, self.rows)
+
     def _eval_trace(self):
         return S.Zero
 
@@ -52,7 +55,10 @@ class ZeroMatrix(MatrixExpr):
     def _eval_inverse(self):
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-    def conjugate(self):
+    def _eval_as_real_imag(self):
+        return (self, self)
+
+    def _eval_conjugate(self):
         return self
 
     def _entry(self, i, j, **kwargs):
@@ -141,7 +147,13 @@ class Identity(MatrixExpr):
     def _eval_inverse(self):
         return self
 
-    def conjugate(self):
+    def _eval_as_real_imag(self):
+        return (self, ZeroMatrix(*self.shape))
+
+    def _eval_conjugate(self):
+        return self
+
+    def _eval_adjoint(self):
         return self
 
     def _entry(self, i, j, **kwargs):
@@ -182,6 +194,10 @@ class GenericIdentity(Identity):
     @property
     def shape(self):
         raise TypeError("GenericIdentity does not have a specified shape")
+
+    @property
+    def is_square(self):
+        return True
 
     # Avoid Matrix.__eq__ which might call .shape
     def __eq__(self, other):
@@ -242,6 +258,9 @@ class OneMatrix(MatrixExpr):
     def _eval_transpose(self):
         return OneMatrix(self.cols, self.rows)
 
+    def _eval_adjoint(self):
+        return OneMatrix(self.cols, self.rows)
+
     def _eval_trace(self):
         return S.One*self.rows
 
@@ -270,7 +289,10 @@ class OneMatrix(MatrixExpr):
             from .inverse import Inverse
             return Inverse(self)
 
-    def conjugate(self):
+    def _eval_as_real_imag(self):
+        return (self, ZeroMatrix(*self.shape))
+
+    def _eval_conjugate(self):
         return self
 
     def _entry(self, i, j, **kwargs):

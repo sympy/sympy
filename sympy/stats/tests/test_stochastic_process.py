@@ -80,7 +80,7 @@ def test_DiscreteMarkovChain():
 
         raises(ValueError, lambda: next(sample_stochastic_process(Y)))
 
-    raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
+    raises(TypeError, lambda: DiscreteMarkovChain("Y", {1: 1}))
     Y = DiscreteMarkovChain("Y", Range(1, t, 2))
     assert Y.number_of_states == ceiling((t-1)/2)
 
@@ -224,7 +224,7 @@ def test_DiscreteMarkovChain():
     assert periods == (1, 1, 1, 1, 1)
 
     # test canonical form
-    # see https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # see https://web.archive.org/web/20201230182007/https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     # example 11.13
     T = Matrix([[1, 0, 0, 0, 0],
                 [S(1) / 2, 0, S(1) / 2, 0, 0],
@@ -246,7 +246,7 @@ def test_DiscreteMarkovChain():
                                  [0, S(1)/2, 0, S(1)/2, 0]])
 
     # test regular and ergodic
-    # https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # https://web.archive.org/web/20201230182007/https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     T = Matrix([[0, 4, 0, 0, 0],
                 [1, 0, 3, 0, 0],
                 [0, 2, 0, 2, 0],
@@ -353,10 +353,10 @@ def test_DiscreteMarkovChain():
     assert query.subs({a:15, b:0, c:10, d:1}).evalf().round(4) == P(Eq(Y[15], 0), Eq(Y[10], 1)).round(4)
     query_gt = P(Gt(Y[a], b), Eq(Y[c], d))
     query_le = P(Le(Y[a], b), Eq(Y[c], d))
-    assert query_gt.subs({a:5, b:2, c:1, d:0}).evalf() + query_le.subs({a:5, b:2, c:1, d:0}).evalf() == 1
+    assert query_gt.subs({a:5, b:2, c:1, d:0}).evalf() + query_le.subs({a:5, b:2, c:1, d:0}).evalf() == 1.0
     query_ge = P(Ge(Y[a], b), Eq(Y[c], d))
     query_lt = P(Lt(Y[a], b), Eq(Y[c], d))
-    assert query_ge.subs({a:4, b:1, c:0, d:2}).evalf() + query_lt.subs({a:4, b:1, c:0, d:2}).evalf() == 1
+    assert query_ge.subs({a:4, b:1, c:0, d:2}).evalf() + query_lt.subs({a:4, b:1, c:0, d:2}).evalf() == 1.0
 
     #test issue 20078
     assert (2*Y[1] + 3*Y[1]).simplify() == 5*Y[1]
@@ -446,10 +446,10 @@ def test_ContinuousMarkovChain():
     assert query.subs({a:3.65, b:2, c:1.78, d:1}).evalf().round(10) == P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10)
     query_gt = P(Gt(C(a), b), Eq(C(c), d))
     query_le = P(Le(C(a), b), Eq(C(c), d))
-    assert query_gt.subs({a:13.2, b:0, c:3.29, d:2}).evalf() + query_le.subs({a:13.2, b:0, c:3.29, d:2}).evalf() == 1
+    assert query_gt.subs({a:13.2, b:0, c:3.29, d:2}).evalf() + query_le.subs({a:13.2, b:0, c:3.29, d:2}).evalf() == 1.0
     query_ge = P(Ge(C(a), b), Eq(C(c), d))
     query_lt = P(Lt(C(a), b), Eq(C(c), d))
-    assert query_ge.subs({a:7.43, b:1, c:1.45, d:0}).evalf() + query_lt.subs({a:7.43, b:1, c:1.45, d:0}).evalf() == 1
+    assert query_ge.subs({a:7.43, b:1, c:1.45, d:0}).evalf() + query_lt.subs({a:7.43, b:1, c:1.45, d:0}).evalf() == 1.0
 
     #test issue 20078
     assert (2*C(1) + 3*C(1)).simplify() == 5*C(1)
@@ -505,7 +505,7 @@ def test_BernoulliProcess():
     assert P(B[1] > 0, B[2] <= 1).round(2) == Float(0.60, 2)
     assert P(B[12] * B[5] > 0).round(2) == Float(0.36, 2)
     assert P(B[12] * B[5] > 0, B[4] < 1).round(2) == Float(0.36, 2)
-    assert P(Eq(B[2], 1), B[2] > 0) == 1
+    assert P(Eq(B[2], 1), B[2] > 0) == 1.0
     assert P(Eq(B[5], 3)) == 0
     assert P(Eq(B[1], 1), B[1] < 0) == 0
     assert P(B[2] > 0, Eq(B[2], 1)) == 1

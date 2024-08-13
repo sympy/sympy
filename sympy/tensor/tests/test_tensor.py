@@ -4,7 +4,7 @@ from sympy.core.numbers import Integer
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic, Add
+from sympy.core import S, Rational, Symbol, Basic, Add, Wild
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -13,7 +13,8 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensor_heads, \
     TensorManager, TensExpr, TensorHead, canon_bp, \
-    tensorhead, tensorsymmetry, TensorType, substitute_indices
+    tensorhead, tensorsymmetry, TensorType, substitute_indices, \
+    WildTensorIndex, WildTensorHead, _WildTensExpr
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.matrices import diag
 
@@ -600,6 +601,8 @@ def test_add1():
     assert t1 != t2
     assert t2 != TensMul.from_data(0, [], [], [])
 
+    #Test whether TensAdd.doit chokes on subterms that are zero.
+    assert TensAdd(p(a), TensMul(0, p(a)) ).doit() == p(a)
 
 def test_special_eq_ne():
     # test special equality cases:
@@ -992,6 +995,18 @@ def test_metric_contract3():
     assert _is_equal(t1, B(-a2,a1)*psi(-a1))
 
 
+def test_contract_metric4():
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r = tensor_indices("p q r", R3)
+    delta = R3.delta
+    eps = R3.epsilon
+    K = TensorHead("K", [R3])
+
+    #Check whether contract_metric chokes on an expandable expression which becomes zero on canonicalization (issue #24354)
+    expr = eps(p,q,r)*( K(-p)*K(-q) + delta(-p,-q) )
+    assert expr.contract_metric(delta) == 0
+
+
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
@@ -1179,7 +1194,7 @@ def test_hash():
     assert hash(t4.func(*t4.args)) == hash(t4)
 
     def check_all(obj):
-        return all([isinstance(_, Basic) for _ in obj.args])
+        return all(isinstance(_, Basic) for _ in obj.args)
 
     assert check_all(a)
     assert check_all(Lorentz)
@@ -1960,6 +1975,134 @@ def test_rewrite_tensor_to_Indexed():
     b2 = B(-i3)*a2
     assert b2.rewrite(Indexed) == Sum(Indexed(Symbol("B"), L_1)*Indexed(Symbol("A"), L_0, L_0, i2, L_1), (L_0, 0, 3), (L_1, 0, 3))
 
+def test_tensor_matching():
+    """
+    Test match and replace with the pattern being a WildTensor or a WildTensorIndex
+    """
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r = tensor_indices("p q r", R3)
+    a,b,c = symbols("a b c", cls = WildTensorIndex, tensor_index_type=R3, ignore_updown=True)
+    g = WildTensorIndex("g", R3)
+    delta = R3.delta
+    eps = R3.epsilon
+    K = TensorHead("K", [R3])
+    V = TensorHead("V", [R3])
+    A = TensorHead("A", [R3, R3])
+    W = WildTensorHead('W', unordered_indices=True)
+    U = WildTensorHead('U')
+
+    assert a.matches(q) == {a:q}
+    assert a.matches(-q) == {a:-q}
+    assert g.matches(-q) == None
+    assert g.matches(q) == {g:q}
+    assert eps(p,-a,a).matches( eps(p,q,r) ) == None
+    assert eps(p,-b,a).matches( eps(p,q,r) ) == {a: r, -b: q}
+    assert eps(p,-q,r).replace(eps(a,b,c), 1) == 1
+    assert W().matches( K(p)*V(q) ) == {W(): K(p)*V(q)}
+    assert W(a).matches( K(p) ) == {a:p, W(a).head: _WildTensExpr(K(p))}
+    assert W(a,p).matches( K(p)*V(q) ) == {a:q, W(a,p).head: _WildTensExpr(K(p)*V(q))}
+    assert W(p,q).matches( K(p)*V(q) ) == {W(p,q).head: _WildTensExpr(K(p)*V(q))}
+    assert W(p,q).matches( A(q,p) ) == {W(p,q).head: _WildTensExpr(A(q, p))}
+    assert U(p,q).matches( A(q,p) ) == None
+    assert ( K(q)*K(p) ).replace( W(q,p), 1) == 1
+
+    #Some tests for matching without Wild
+    assert delta(p,q).matches(delta(q,p)) == {}
+    assert eps(p,q,r).matches(eps(q,p,r)) is None
+    assert eps(p,q,r).matches(eps(q,r,p)) == {}
+
+def test_TensAdd_matching():
+    """
+    Test match and replace with the pattern being a TensAdd
+    """
+    R3 = TensorIndexType('R3', dim=3)
+    p, q = tensor_indices("p q", R3)
+    K = TensorHead("K", [R3])
+    V = TensorHead("V", [R3])
+    W = WildTensorHead('W', unordered_indices=True)
+
+    assert ( K(p)*K(q) + V(p)*V(q) ).matches( K(p)*K(q) + V(p)*V(q) ) == {}
+    assert ( K(p)*K(q) + V(p)*V(q) ).matches( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + V(p)*K(q) ) is None
+    assert ( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + K(q)*V(p) ).replace(
+        W(p,q) + K(p)*K(q) + V(p)*V(q),
+        W(p,q) + 3*K(p)*V(q)
+        ).doit() == K(q)*V(p) + 4*K(p)*V(q)
+
+def test_TensMul_matching():
+    """
+    Test match and replace with the pattern being a TensMul
+    """
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r, s, t = tensor_indices("p q r s t", R3)
+    wi = Wild("wi")
+    a,b,c,d,e,f = symbols("a b c d e f", cls = WildTensorIndex, tensor_index_type=R3, ignore_updown=True)
+    delta = R3.delta
+    eps = R3.epsilon
+    K = TensorHead("K", [R3])
+    V = TensorHead("V", [R3])
+    W = WildTensorHead('W', unordered_indices=True)
+    U = WildTensorHead('U')
+    k = Symbol("K")
+
+    assert ( wi*K(p) ).matches( K(p) ) == {wi: 1}
+    assert ( wi * eps(p,q,r) ).matches(eps(p,r,q)) == {wi:-1}
+    assert ( K(p)*V(-p) ).replace( W(a)*V(-a), 1) == 1
+    assert ( K(q)*K(p)*V(-p) ).replace( W(q,a)*V(-a), 1) == 1
+    assert ( K(p)*V(-p) ).replace( K(-a)*V(a), 1 ) == 1
+    assert ( K(q)*K(p)*V(-p) ).replace( W(q)*U(p)*V(-p), 1) == 1
+    assert (
+        (K(p)*V(q)).replace(W()*K(p)*V(q), W()*V(p)*V(q)).doit()
+        == V(p)*V(q)
+        )
+    assert (
+        ( eps(r,p,q)*eps(-r,-s,-t) ).replace(
+            eps(e,a,b)*eps(-e,c,d),
+            delta(a,c)*delta(b,d) - delta(a,d)*delta(b,c),
+            ).doit().canon_bp()
+        == delta(p,-s)*delta(q,-t) - delta(p,-t)*delta(q,-s)
+        )
+    assert (
+        ( eps(r,p,q)*eps(-r,-p,-q) ).replace(
+            eps(c,a,b)*eps(-c,d,f),
+            delta(a,d)*delta(b,f) - delta(a,f)*delta(b,d),
+            ).contract_delta(delta).doit()
+        == 6
+        )
+    assert ( V(-p)*V(q)*V(-q) ).replace( wi*W()*V(a)*V(-a), wi*W() ).doit() == V(-p)
+    assert ( k**4*K(r)*K(-r) ).replace( wi*W()*K(a)*K(-a), wi*W()*k**2 ).doit() == k**6
+
+    #Multiple occurrence of WildTensor in value
+    assert (
+        ( K(p)*V(q) ).replace(W(q)*K(p), W(p)*W(q))
+        == V(p)*V(q)
+        )
+    assert (
+        ( K(p)*V(q)*V(r) ).replace(W(q,r)*K(p), W(p,r)*W(q,s)*V(-s) )
+        == V(p)*V(r)*V(q)*V(s)*V(-s)
+        )
+
+    #Edge case involving automatic index relabelling
+    D0, D1, D2, D3 = tensor_indices("R_0 R_1 R_2 R_3", R3)
+    expr = delta(-D0, -D1)*K(D2)*K(D3)*K(-D3)
+    m = ( W()*K(a)*K(-a) ).matches(expr)
+    assert D2 not in m.values()
+
+def test_TensMul_subs():
+    """
+    Test subs and xreplace in TensMul. See bug #24337
+    """
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r = tensor_indices("p q r", R3)
+    K = TensorHead("K", [R3])
+    V = TensorHead("V", [R3])
+    A = TensorHead("A", [R3, R3])
+    C0 = TensorIndex(R3.dummy_name + "_0", R3, True)
+
+    assert ( K(p)*V(r)*K(-p) ).subs({V(r): K(q)*K(-q)}) == K(p)*K(q)*K(-q)*K(-p)
+    assert ( K(p)*V(r)*K(-p) ).xreplace({V(r): K(q)*K(-q)}) == K(p)*K(q)*K(-q)*K(-p)
+    assert ( K(p)*V(r) ).xreplace({p: C0, V(r): K(q)*K(-q)}) == K(C0)*K(q)*K(-q)
+    assert ( K(p)*A(q,-q)*K(-p) ).doit() == K(p)*A(q,-q)*K(-p)
+
 
 def test_tensorsymmetry():
     with warns_deprecated_sympy():
@@ -1979,3 +2122,22 @@ def test_TensorType():
 def test_dummy_fmt():
     with warns_deprecated_sympy():
         TensorIndexType('Lorentz', dummy_fmt='L')
+
+def test_postprocessor():
+    """
+    Test if substituting a Tensor into a Mul or Add automatically converts it
+    to TensMul or TensAdd respectively. See github issue #25051
+    """
+    R3 = TensorIndexType('R3', dim=3)
+    i = tensor_indices("i", R3)
+    K = TensorHead("K", [R3])
+    x,y,z = symbols("x y z")
+
+    assert isinstance((x*2).xreplace({x: K(i)}), TensMul)
+    assert isinstance((x+2).xreplace({x: K(i)*K(-i)}), TensAdd)
+
+    assert isinstance((x*2).subs({x: K(i)}), TensMul)
+    assert isinstance((x+2).subs({x: K(i)*K(-i)}), TensAdd)
+
+    assert isinstance((x*2).replace(x, K(i)), TensMul)
+    assert isinstance((x+2).replace(x, K(i)*K(-i)), TensAdd)

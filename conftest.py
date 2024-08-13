@@ -13,12 +13,10 @@ from sympy.testing.runtests import setup_pprint, _get_doctest_blacklist
 durations_path = os.path.join(os.path.dirname(__file__), '.ci', 'durations.json')
 blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.json')
 
-# Collecting tests from rubi_tests under pytest leads to errors even if the
-# tests will be skipped.
-collect_ignore = ["sympy/integrals/rubi"] + _get_doctest_blacklist()
+collect_ignore = _get_doctest_blacklist()
 
 # Set up printing for doctests
-setup_pprint()
+setup_pprint(disable_line_wrap=False)
 sys.__displayhook__ = sys.displayhook
 #from sympy import pprint_use_unicode
 #pprint_use_unicode(False)
@@ -28,7 +26,9 @@ def _mk_group(group_dict):
     return list(chain(*[[k+'::'+v for v in files] for k, files in group_dict.items()]))
 
 if os.path.exists(durations_path):
-    veryslow_group, slow_group = [_mk_group(group_dict) for group_dict in json.loads(open(durations_path, 'rt').read())]
+    with open(durations_path, 'rt') as fin:
+        text = fin.read()
+    veryslow_group, slow_group = [_mk_group(group_dict) for group_dict in json.loads(text)]
 else:
     # warnings in conftest has issues: https://github.com/pytest-dev/pytest/issues/2891
     warnings.warn("conftest.py:22: Could not find %s, --quickcheck and --veryquickcheck will have no effect.\n" % durations_path)

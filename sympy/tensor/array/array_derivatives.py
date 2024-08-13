@@ -1,9 +1,9 @@
-from typing import Optional
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.function import Derivative
 from sympy.core.numbers import Integer
-from sympy.matrices.common import MatrixCommon
+from sympy.matrices.matrixbase import MatrixBase
 from .ndim_array import NDimArray
 from .arrayop import derive_by_array
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -37,7 +37,7 @@ class ArrayDerivative(Derivative):
 
     @classmethod
     def _get_zero_with_shape_like(cls, expr):
-        if isinstance(expr, (MatrixCommon, NDimArray)):
+        if isinstance(expr, (MatrixBase, NDimArray)):
             return expr.zeros(*expr.shape)
         elif isinstance(expr, MatrixExpr):
             return ZeroMatrix(*expr.shape)
@@ -45,34 +45,34 @@ class ArrayDerivative(Derivative):
             raise RuntimeError("Unable to determine shape of array-derivative.")
 
     @staticmethod
-    def _call_derive_scalar_by_matrix(expr, v):  # type: (Expr, MatrixCommon) -> Expr
+    def _call_derive_scalar_by_matrix(expr: Expr, v: MatrixBase) -> Expr:
         return v.applyfunc(lambda x: expr.diff(x))
 
     @staticmethod
-    def _call_derive_scalar_by_matexpr(expr, v):  # type: (Expr, MatrixExpr) -> Expr
+    def _call_derive_scalar_by_matexpr(expr: Expr, v: MatrixExpr) -> Expr:
         if expr.has(v):
             return _matrix_derivative(expr, v)
         else:
             return ZeroMatrix(*v.shape)
 
     @staticmethod
-    def _call_derive_scalar_by_array(expr, v):  # type: (Expr, NDimArray) -> Expr
+    def _call_derive_scalar_by_array(expr: Expr, v: NDimArray) -> Expr:
         return v.applyfunc(lambda x: expr.diff(x))
 
     @staticmethod
-    def _call_derive_matrix_by_scalar(expr, v):  # type: (MatrixCommon, Expr) -> Expr
+    def _call_derive_matrix_by_scalar(expr: MatrixBase, v: Expr) -> Expr:
         return _matrix_derivative(expr, v)
 
     @staticmethod
-    def _call_derive_matexpr_by_scalar(expr, v):  # type: (MatrixExpr, Expr) -> Expr
+    def _call_derive_matexpr_by_scalar(expr: MatrixExpr, v: Expr) -> Expr:
         return expr._eval_derivative(v)
 
     @staticmethod
-    def _call_derive_array_by_scalar(expr, v):  # type: (NDimArray, Expr) -> Expr
+    def _call_derive_array_by_scalar(expr: NDimArray, v: Expr) -> Expr:
         return expr.applyfunc(lambda x: x.diff(v))
 
     @staticmethod
-    def _call_derive_default(expr, v):  # type: (Expr, Expr) -> Optional[Expr]
+    def _call_derive_default(expr: Expr, v: Expr) -> Expr | None:
         if expr.has(v):
             return _matrix_derivative(expr, v)
         else:
@@ -90,7 +90,7 @@ class ArrayDerivative(Derivative):
 
         # TODO: this could be done with multiple-dispatching:
         if expr.is_scalar:
-            if isinstance(v, MatrixCommon):
+            if isinstance(v, MatrixBase):
                 result = cls._call_derive_scalar_by_matrix(expr, v)
             elif isinstance(v, MatrixExpr):
                 result = cls._call_derive_scalar_by_matexpr(expr, v)
@@ -102,7 +102,7 @@ class ArrayDerivative(Derivative):
             else:
                 return None
         elif v.is_scalar:
-            if isinstance(expr, MatrixCommon):
+            if isinstance(expr, MatrixBase):
                 result = cls._call_derive_matrix_by_scalar(expr, v)
             elif isinstance(expr, MatrixExpr):
                 result = cls._call_derive_matexpr_by_scalar(expr, v)
@@ -112,7 +112,7 @@ class ArrayDerivative(Derivative):
                 return None
         else:
             # Both `expr` and `v` are some array/matrix type:
-            if isinstance(expr, MatrixCommon) or isinstance(expr, MatrixCommon):
+            if isinstance(expr, MatrixBase) or isinstance(v, MatrixBase):
                 result = derive_by_array(expr, v)
             elif isinstance(expr, MatrixExpr) and isinstance(v, MatrixExpr):
                 result = cls._call_derive_default(expr, v)

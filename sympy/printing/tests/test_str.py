@@ -27,12 +27,15 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (Equivalent, false, true, Xor)
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions import Identity
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices import SparseMatrix
 from sympy.polys.polytools import factor
 from sympy.series.limits import Limit
 from sympy.series.order import O
 from sympy.sets.sets import (Complement, FiniteSet, Interval, SymmetricDifference)
+from sympy.stats import (Covariance, Expectation, Probability, Variance)
+from sympy.stats.rv import RandomSymbol
 from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
@@ -87,6 +90,9 @@ def test_Add():
     assert str(x - z*y**2*z*w) == "-w*y**2*z**2 + x"
     assert str(x - 1*y*x*y) == "-x*y**2 + x"
     assert str(sin(x).series(x, 0, 15)) == "x - x**3/6 + x**5/120 - x**7/5040 + x**9/362880 - x**11/39916800 + x**13/6227020800 + O(x**15)"
+    assert str(Add(Add(-w, x, evaluate=False), Add(-y, z,  evaluate=False),  evaluate=False)) == "(-w + x) + (-y + z)"
+    assert str(Add(Add(-x, -y, evaluate=False), -z, evaluate=False)) == "-z + (-x - y)"
+    assert str(Add(Add(Add(-x, -y, evaluate=False), -z, evaluate=False), -t, evaluate=False)) == "-t + (-z + (-x - y))"
 
 
 def test_Catalan():
@@ -232,8 +238,8 @@ def test_Lambda():
 
 
 def test_Limit():
-    assert str(Limit(sin(x)/x, x, y)) == "Limit(sin(x)/x, x, y)"
-    assert str(Limit(1/x, x, 0)) == "Limit(1/x, x, 0)"
+    assert str(Limit(sin(x)/x, x, y)) == "Limit(sin(x)/x, x, y, dir='+')"
+    assert str(Limit(1/x, x, 0)) == "Limit(1/x, x, 0, dir='+')"
     assert str(
         Limit(sin(x)/x, x, y, dir="-")) == "Limit(sin(x)/x, x, y, dir='-')"
 
@@ -286,6 +292,10 @@ def test_Mul():
     # issue 21537
     assert str(Mul(x, Pow(1/y, -1, evaluate=False), evaluate=False)) == 'x/(1/y)'
 
+    # Issue 24108
+    from sympy.core.parameters import evaluate
+    with evaluate(False):
+        assert str(Mul(Pow(Integer(2), Integer(-1)), Add(Integer(-1), Mul(Integer(-1), Integer(1))))) == "(-1 - 1*1)/2"
 
     class CustomClass1(Expr):
         is_commutative = True
@@ -597,7 +607,7 @@ def test_Rational():
     assert sstr(x**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
     assert sstr(Eq(x, Rational(2, 3)), sympy_integers=True) == "Eq(x, S(2)/3)"
     assert sstr(Limit(x, x, Rational(7, 2)), sympy_integers=True) == \
-        "Limit(x, x, S(7)/2)"
+        "Limit(x, x, S(7)/2, dir='+')"
 
 
 def test_Float():
@@ -1166,3 +1176,24 @@ def test_printing_str_array_expressions():
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
     assert sstr(ArrayElement(M*N, [x, 0])) == "(M*N)[x, 0]"
+
+def test_printing_stats():
+    # issue 24132
+    x = RandomSymbol("x")
+    y = RandomSymbol("y")
+    z1 = Probability(x > 0)*Identity(2)
+    z2 = Expectation(x)*Identity(2)
+    z3 = Variance(x)*Identity(2)
+    z4 = Covariance(x, y) * Identity(2)
+
+    assert str(z1) == "Probability(x > 0)*I"
+    assert str(z2) == "Expectation(x)*I"
+    assert str(z3) == "Variance(x)*I"
+    assert str(z4) ==  "Covariance(x, y)*I"
+    assert z1.is_commutative == False
+    assert z2.is_commutative == False
+    assert z3.is_commutative == False
+    assert z4.is_commutative == False
+    assert z2._eval_is_commutative() == False
+    assert z3._eval_is_commutative() == False
+    assert z4._eval_is_commutative() == False

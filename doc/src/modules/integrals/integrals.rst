@@ -16,7 +16,7 @@ Examples
 SymPy can integrate a vast array of functions. It can integrate polynomial functions::
 
     >>> from sympy import *
-    >>> init_printing(use_unicode=False, wrap_line=False)
+    >>> init_printing(use_unicode=False)
     >>> x = Symbol('x')
     >>> integrate(x**2 + x + 1, x)
      3    2
@@ -67,12 +67,13 @@ SymPy has special support for definite integrals, and integral transforms.
 .. autoclass:: InverseMellinTransform
    :members:
 .. autofunction:: laplace_transform
+.. autofunction:: laplace_correspondence
+.. autofunction:: laplace_initial_conds
 .. autoclass:: LaplaceTransform
    :members:
 .. autofunction:: inverse_laplace_transform
 .. autoclass:: InverseLaplaceTransform
    :members:
-.. autofunction:: _fast_inverse_laplace
 .. autofunction:: fourier_transform
 .. autofunction:: _fourier_transform
 .. autoclass:: FourierTransform
@@ -201,7 +202,7 @@ TODO and Bugs
 There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=is%3Aissue+is%3Aopen+label%3Aintegrals
 
 Numeric Integrals
-=================
+-----------------
 
 SymPy has functions to calculate points and weights for Gaussian quadrature of
 any order and any precision:
@@ -265,7 +266,7 @@ For 2D Polygons
 Single Polynomial::
 
     >>> from sympy.integrals.intpoly import *
-    >>> init_printing(use_unicode=False, wrap_line=False)
+    >>> init_printing(use_unicode=False)
     >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), x)
     1/6
     >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), x + x*y + y**2)

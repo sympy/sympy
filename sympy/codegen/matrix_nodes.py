@@ -60,7 +60,12 @@ class MatrixSolve(Token, MatrixExpr):
     __slots__ = _fields = ('matrix', 'vector')
 
     _construct_matrix = staticmethod(sympify)
+    _construct_vector = staticmethod(sympify)
 
     @property
     def shape(self):
         return self.vector.shape
+
+    def _eval_derivative(self, x):
+        A, b = self.matrix, self.vector
+        return MatrixSolve(A, b.diff(x) - A.diff(x) * MatrixSolve(A, b))

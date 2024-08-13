@@ -60,7 +60,7 @@ class logaddexp(Function):
         return self.rewrite(log).evalf(*args, **kwargs)
 
     def _eval_simplify(self, *args, **kwargs):
-        a, b = map(lambda x: x.simplify(**kwargs), self.args)
+        a, b = (x.simplify(**kwargs) for x in self.args)
         candidate = _logaddexp(a, b)
         if candidate != _logaddexp(a, b, evaluate=False):
             return candidate
@@ -102,7 +102,7 @@ class logaddexp2(Function):
         return self.rewrite(log).evalf(*args, **kwargs)
 
     def _eval_simplify(self, *args, **kwargs):
-        a, b = map(lambda x: x.simplify(**kwargs).factor(), self.args)
+        a, b = (x.simplify(**kwargs).factor() for x in self.args)
         candidate = _logaddexp2(a, b)
         if candidate != _logaddexp2(a, b, evaluate=False):
             return candidate

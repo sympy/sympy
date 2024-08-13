@@ -9,7 +9,7 @@ FIXME: This module is still under actively developed. Some functions may be not 
 """
 
 from sympy.core import S
-from sympy.core.numbers import Integer, IntegerConstant
+from sympy.core.numbers import Integer, IntegerConstant, equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -88,17 +88,20 @@ class MapleCodePrinter(CodePrinter):
     printmethod = "_maple"
     language = "maple"
 
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
-        'human': True,
+    _operators = {
+        'and': 'and',
+        'or': 'or',
+        'not': 'not ',
+    }
+
+    _default_settings = dict(CodePrinter._default_settings, **{
         'inline': True,
         'allow_unknown_functions': True,
-    }
+    })
 
     def __init__(self, settings=None):
         if settings is None:
-            settings = dict()
+            settings = {}
         super().__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -130,11 +133,11 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr, **kwargs):
         PREC = precedence(expr)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             return '1/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp in (0.5, S.Half):
+        elif equal_valued(expr.exp, 0.5):
             return 'sqrt(%s)' % self._print(expr.base)
-        elif expr.exp in (-0.5, -S.Half):
+        elif equal_valued(expr.exp, -0.5):
             return '1/sqrt(%s)' % self._print(expr.base)
         else:
             return '{base}^{exp}'.format(
@@ -179,9 +182,6 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_Infinity(self, expr):
         return 'infinity'
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     def _print_BooleanTrue(self, expr):
         return "true"

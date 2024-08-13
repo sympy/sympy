@@ -1,6 +1,7 @@
 """Domains of Gaussian type."""
 
 from sympy.core.numbers import I
+from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ
@@ -13,8 +14,8 @@ from sympy.polys.domains.ring import Ring
 
 class GaussianElement(DomainElement):
     """Base class for elements of Gaussian type domains."""
-    base = None  # type: Domain
-    _parent = None  # type: Domain
+    base: Domain
+    _parent: Domain
 
     __slots__ = ('x', 'y')
 
@@ -424,6 +425,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
 
     """
     dom = ZZ
+    mod = DMP([ZZ.one, ZZ.zero, ZZ.one], ZZ)
     dtype = GaussianInteger
     zero = dtype(ZZ(0), ZZ(0))
     one = dtype(ZZ(1), ZZ(0))
@@ -437,6 +439,24 @@ class GaussianIntegerRing(GaussianDomain, Ring):
 
     def __init__(self):  # override Domain.__init__
         """For constructing ZZ_I."""
+
+    def __eq__(self, other):
+        """Returns ``True`` if two domains are equivalent. """
+        if isinstance(other, GaussianIntegerRing):
+            return True
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        """Compute hash code of ``self``. """
+        return hash('ZZ_I')
+
+    @property
+    def has_CharacteristicZero(self):
+        return True
+
+    def characteristic(self):
+        return 0
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
@@ -595,6 +615,7 @@ class GaussianRationalField(GaussianDomain, Field):
     .. _Gaussian rationals: https://en.wikipedia.org/wiki/Gaussian_rational
     """
     dom = QQ
+    mod = DMP([QQ.one, QQ.zero, QQ.one], QQ)
     dtype = GaussianRational
     zero = dtype(QQ(0), QQ(0))
     one = dtype(QQ(1), QQ(0))
@@ -608,6 +629,24 @@ class GaussianRationalField(GaussianDomain, Field):
 
     def __init__(self):  # override Domain.__init__
         """For constructing QQ_I."""
+
+    def __eq__(self, other):
+        """Returns ``True`` if two domains are equivalent. """
+        if isinstance(other, GaussianRationalField):
+            return True
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        """Compute hash code of ``self``. """
+        return hash('QQ_I')
+
+    @property
+    def has_CharacteristicZero(self):
+        return True
+
+    def characteristic(self):
+        return 0
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
@@ -641,5 +680,10 @@ class GaussianRationalField(GaussianDomain, Field):
     def from_GaussianRationalField(K1, a, K0):
         """Convert a QQ_I element to QQ_I."""
         return a
+
+    def from_ComplexField(K1, a, K0):
+        """Convert a ComplexField element to QQ_I."""
+        return K1.new(QQ.convert(a.real), QQ.convert(a.imag))
+
 
 QQ_I = GaussianRational._parent = GaussianRationalField()

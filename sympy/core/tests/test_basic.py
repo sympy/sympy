@@ -1,14 +1,14 @@
 """This tests sympy/core/basic.py with (ideally) no reference to subclasses
 of Basic or Atom."""
-
 import collections
+from typing import TypeVar, Generic
 
 from sympy.assumptions.ask import Q
 from sympy.core.basic import (Basic, Atom, as_Basic,
     _atomic, _aresame)
 from sympy.core.containers import Tuple
 from sympy.core.function import Function, Lambda
-from sympy.core.numbers import I, pi
+from sympy.core.numbers import I, pi, Float
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.concrete.summations import Sum
@@ -16,17 +16,22 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import Integral
 from sympy.functions.elementary.exponential import exp
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 b1 = Basic()
 b2 = Basic(b1)
 b3 = Basic(b2)
 b21 = Basic(b2, b1)
+T = TypeVar('T')
 
 
 def test__aresame():
     assert not _aresame(Basic(Tuple()), Basic())
-    assert not _aresame(Basic(S(2)), Basic(S(2.)))
+    for i, j in [(S(2), S(2.)), (1., Float(1))]:
+        for do in range(2):
+            assert not _aresame(Basic(i), Basic(j))
+            assert not _aresame(i, j)
+            i, j = j, i
 
 
 def test_structure():
@@ -294,3 +299,35 @@ def test_replace_exceptions():
     raises(TypeError, lambda: e.replace(b*c, c.is_real))
     raises(TypeError, lambda: e.replace(b.is_real, 1))
     raises(TypeError, lambda: e.replace(lambda d: d.is_Number, 1))
+
+
+def test_ManagedProperties():
+    # ManagedProperties is now deprecated. Here we do our best to check that if
+    # someone is using it then it does work in the way that it previously did
+    # but gives a deprecation warning.
+    from sympy.core.assumptions import ManagedProperties
+
+    myclasses = []
+
+    class MyMeta(ManagedProperties):
+        def __init__(cls, *args, **kwargs):
+            myclasses.append('executed')
+            super().__init__(*args, **kwargs)
+
+    code = """
+class MySubclass(Basic, metaclass=MyMeta):
+    pass
+"""
+    with warns_deprecated_sympy():
+        exec(code)
+
+    assert myclasses == ['executed']
+
+
+def test_generic():
+    # https://github.com/sympy/sympy/issues/25399
+    class A(Symbol, Generic[T]):
+        pass
+
+    class B(A[T]):
+        pass

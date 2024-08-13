@@ -46,8 +46,8 @@ def test_kronecker_delta():
     assert KroneckerDelta(i + k, i) == 0
     assert KroneckerDelta(i + k, i + k) == 1
     assert KroneckerDelta(i + k, i + 1 + k) == 0
-    assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0
-    assert KroneckerDelta(i, j).subs(dict(i=3, j=3)) == 1
+    assert KroneckerDelta(i, j).subs({"i": 1, "j": 0}) == 0
+    assert KroneckerDelta(i, j).subs({"i": 3, "j": 3}) == 1
 
     assert KroneckerDelta(i, j)**0 == 1
     for n in range(1, 10):

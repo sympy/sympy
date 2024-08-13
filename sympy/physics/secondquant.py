@@ -232,8 +232,8 @@ class AntiSymmetricTensor(TensorSymbol):
     def _latex(self, printer):
         return "{%s^{%s}_{%s}}" % (
             self.symbol,
-            "".join([ i.name for i in self.args[1]]),
-            "".join([ i.name for i in self.args[2]])
+            "".join([ printer._print(i) for i in self.args[1]]),
+            "".join([ printer._print(i) for i in self.args[2]])
         )
 
     @property
@@ -300,22 +300,6 @@ class AntiSymmetricTensor(TensorSymbol):
     def __str__(self):
         return "%s(%s,%s)" % self.args
 
-    def doit(self, **kw_args):
-        """
-        Returns self.
-
-        Examples
-        ========
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.secondquant import AntiSymmetricTensor
-        >>> i, j = symbols('i,j', below_fermi=True)
-        >>> a, b = symbols('a,b', above_fermi=True)
-        >>> AntiSymmetricTensor('v', (a, i), (b, j)).doit()
-        AntiSymmetricTensor(v, (a, i), (b, j))
-        """
-        return self
-
 
 class SqOperator(Expr):
     """
@@ -374,12 +358,6 @@ class SqOperator(Expr):
             return False
         else:
             return True
-
-    def doit(self, **kw_args):
-        """
-        FIXME: hack to prevent crash further up...
-        """
-        return self
 
     def __repr__(self):
         return NotImplemented
@@ -454,7 +432,7 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
         if self.state is S.Zero:
             return "b_{0}"
         else:
-            return "b_{%s}" % self.state.name
+            return "b_{%s}" % printer._print(self.state)
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -495,7 +473,7 @@ class CreateBoson(BosonicOperator, Creator):
         if self.state is S.Zero:
             return "{b^\\dagger_{0}}"
         else:
-            return "{b^\\dagger_{%s}}" % self.state.name
+            return "{b^\\dagger_{%s}}" % printer._print(self.state)
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -813,7 +791,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         if self.state is S.Zero:
             return "a_{0}"
         else:
-            return "a_{%s}" % self.state.name
+            return "a_{%s}" % printer._print(self.state)
 
 
 class CreateFermion(FermionicOperator, Creator):
@@ -962,7 +940,7 @@ class CreateFermion(FermionicOperator, Creator):
         if self.state is S.Zero:
             return "{a^\\dagger_{0}}"
         else:
-            return "{a^\\dagger_{%s}}" % self.state.name
+            return "{a^\\dagger_{%s}}" % printer._print(self.state)
 
 Fd = CreateFermion
 F = AnnihilateFermion
@@ -1472,7 +1450,7 @@ class InnerProduct(Basic):
         if not isinstance(bra, FockStateBra):
             raise TypeError("must be a bra")
         if not isinstance(ket, FockStateKet):
-            raise TypeError("must be a key")
+            raise TypeError("must be a ket")
         return cls.eval(bra, ket)
 
     @classmethod
@@ -1990,7 +1968,7 @@ class NO(Expr):
         """
         return self.args[0].args[-1].is_q_annihilator
 
-    def doit(self, **kw_args):
+    def doit(self, **hints):
         """
         Either removes the brackets or enables complex computations
         in its arguments.
@@ -2010,10 +1988,10 @@ class NO(Expr):
         _p)*AnnihilateFermion(_a)*CreateFermion(_i) - KroneckerDelta(_i,
         _p)*KroneckerDelta(_i, _q)*AnnihilateFermion(_i)*CreateFermion(_i)
         """
-        if kw_args.get("remove_brackets", True):
+        if hints.get("remove_brackets", True):
             return self._remove_brackets()
         else:
-            return self.__new__(type(self), self.args[0].doit(**kw_args))
+            return self.__new__(type(self), self.args[0].doit(**hints))
 
     def _remove_brackets(self):
         """
@@ -2615,7 +2593,7 @@ def _get_ordered_dummies(mul, verbose=False):
     Strategy
     --------
 
-    The canoncial order is given by an arbitrary sorting rule.  A sort key
+    The canonical order is given by an arbitrary sorting rule.  A sort key
     is determined for each dummy as a tuple that depends on all factors where
     the index is present.  The dummies are thereby sorted according to the
     contraction structure of the term, instead of sorting based solely on the
@@ -3040,7 +3018,7 @@ class PermutationOperator(Expr):
             return expr
 
     def _latex(self, printer):
-        return "P(%s%s)" % self.args
+        return "P(%s%s)" % tuple(printer._print(i) for i in self.args)
 
 
 def simplify_index_permutations(expr, permutation_operators):

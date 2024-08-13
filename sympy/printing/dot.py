@@ -93,7 +93,7 @@ def styleof(expr, styles=default_styles):
     >>> styleof(x + 1, styles)  # this is an Expr
     {'color': 'black', 'shape': 'ellipse'}
     """
-    style = dict()
+    style = {}
     for typ, sty in styles:
         if isinstance(expr, typ):
             style.update(sty)

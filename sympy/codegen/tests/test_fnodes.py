@@ -44,7 +44,7 @@ def test_size_assumed_shape():
             'program myprog\n'
             'use mod_rms, only: rms\n'
             'real*8, dimension(4), parameter :: x = [4, 2, 2, 2]\n'
-            'print *, dsqrt(7d0) - rms(x)\n'
+            'print "(f7.5)", dsqrt(7d0) - rms(x)\n'
             'end program\n'
         ))
     ], clean=True)

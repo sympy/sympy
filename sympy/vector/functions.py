@@ -74,11 +74,7 @@ def express(expr, system, system2=None, variables=False):
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
-            system_list = []
-            for x in expr.atoms(BaseScalar, BaseVector):
-                if x.system != system:
-                    system_list.append(x.system)
-            system_list = set(system_list)
+            system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {system}
             subs_dict = {}
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
@@ -459,10 +455,7 @@ def _path(from_object, to_object):
         from_path.append(obj)
         obj = obj._parent
     index = len(from_path)
-    i = other_path.index(obj)
-    while i >= 0:
-        from_path.append(other_path[i])
-        i -= 1
+    from_path.extend(other_path[other_path.index(obj)::-1])
     return index, from_path
 
 

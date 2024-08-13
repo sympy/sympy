@@ -280,7 +280,7 @@ def get_indices(expr):
             return set(), {}
         elif isinstance(expr, Function):
             # Support ufunc like behaviour by returning indices from arguments.
-            # Functions do not interpret repeated indices across argumnts
+            # Functions do not interpret repeated indices across arguments
             # as summation
             ind0 = set()
             for arg in expr.args:

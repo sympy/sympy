@@ -3,7 +3,8 @@
 TODO:
 * Address Issue 2251, printing of spin states
 """
-from typing import Dict as tDict, Any
+from __future__ import annotations
+from typing import Any
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.cg import CG, Wigner3j, Wigner6j, Wigner9j
@@ -40,7 +41,7 @@ from sympy.printing.latex import latex
 MutableDenseMatrix = Matrix
 
 
-ENV = {}  # type: tDict[str, Any]
+ENV: dict[str, Any] = {}
 exec('from sympy import *', ENV)
 exec('from sympy.physics.quantum import *', ENV)
 exec('from sympy.physics.quantum.cg import *', ENV)
