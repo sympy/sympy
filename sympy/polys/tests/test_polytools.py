@@ -3232,8 +3232,7 @@ def test_which_roots():
     assert f.which_roots([5, 10], real=True) == []
     assert f.which_roots([I, -I], real=False) == [I, -I]
 
-    # expectedly wrong, maybe change in future
-    assert f.which_roots([1, -1], real=False) == [1, -1]
+    assert f.which_roots([1, -1], real=False) == []
 
 def test_same_root():
     f = Poly(x**4 + x**3 + x**2 + x + 1)

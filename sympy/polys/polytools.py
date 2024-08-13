@@ -3845,6 +3845,12 @@ class Poly(Basic):
         2
         >>> f.root_multiplicity(2)
         1
+
+        See Also
+        =======
+
+        same_root
+        which_roots
         """
         p = f
         multiplicity = 0
@@ -3891,6 +3897,12 @@ class Poly(Basic):
         [sqrt(2)/2]
         >>> f.real_roots() # note this is already done internally
         [sqrt(2)/2]
+
+        See Also
+        =======
+
+        same_root
+        root_multiplicity
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
@@ -3954,6 +3966,11 @@ class Poly(Basic):
         PolynomialError
             If the polynomial is of degree < 2.
 
+        See Also
+        =======
+
+        which_root
+        root_multiplicity
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
