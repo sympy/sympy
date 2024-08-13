@@ -3817,6 +3817,46 @@ class Poly(Basic):
 
         return r.replace(t, x)
 
+    def root_multiplicity(f, root, prec=10):
+        """
+        Computes the multiplicity of a root for f, at a given
+        numerical precision. Works by evaluating derivatives of
+        f at the given root. If it is not a root of f (up to
+        numerical precision), returns zero.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, sqrt
+        >>> from sympy.abc import x
+
+        >>> f = Poly(x**2 - 1)
+        >>> f.root_multiplicity(1)
+        1
+        >>> f.root_multiplicity(-1)
+        1
+        >>> f.root_multiplicity(2)
+        0
+
+        >>> f = Poly((x-1)**2 * (x-2))
+        >>> f
+        Poly(x**3 - 4*x**2 + 5*x - 2, x, domain='ZZ')
+        >>> f.root_multiplicity(1)
+        2
+        >>> f.root_multiplicity(2)
+        1
+        """
+        p = f
+        multiplicity = 0
+        while p != 0:
+            p_r = p(root).evalf(prec, maxn=2*prec)
+            if abs(p_r)._prec >= 2:
+                break
+            multiplicity += 1
+            p = p.diff()
+
+        return multiplicity
+
     def which_roots(f, candidates, real=True):
         """
         Given a superset of roots of f, finds which ones are
@@ -3828,7 +3868,7 @@ class Poly(Basic):
         Examples
         ========
 
-        >>> from sympy import Poly, I
+        >>> from sympy import Poly, I, sqrt
         >>> from sympy.abc import x
 
         >>> f = Poly(x**4 - 1)
@@ -3837,8 +3877,20 @@ class Poly(Basic):
         [-1, 1]
         >>> f.which_roots([-1, 1, -I, I, 0], real=False)
         [-1, 1, -I, I]
-        >>> f.which_roots([2, 5], real=True) # expectedly wrong
-        [2, 5]
+        >>> f.which_roots([-1, 1, 1, 1, 1], real=True)
+        [-1, 1]
+
+        # lifting to rational coeffs produces extraneous roots
+        # which we can filter out with this method
+        >>> f = Poly(sqrt(2)*x**3 + x**2 - 1, x, extension=True)
+        >>> f.lift()
+        Poly(-2*x**6 + x**4 - 2*x**2 + 1, x, domain='QQ')
+        >>> f.lift().real_roots()
+        [-sqrt(2)/2, sqrt(2)/2]
+        >>> f.which_roots(f.lift().real_roots(), real=True)
+        [sqrt(2)/2]
+        >>> f.real_roots() # note this is already done internally
+        [sqrt(2)/2]
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
@@ -3850,6 +3902,8 @@ class Poly(Basic):
             raise NotImplementedError(
                 "root counting not supported over %s" % dom)
 
+        # note real count counts uniques
+        # but complex count counts with multiplicity
         if real:
             num_roots = f.count_roots()
         else:
@@ -3858,21 +3912,19 @@ class Poly(Basic):
         prec = 10
 
         root_counts = Counter(candidates)
-        roots_remaining = lambda: sum(root_counts.values())
 
-        while roots_remaining() > num_roots:
+        while len(root_counts) > num_roots:
             for r in list(root_counts.keys()):
                 # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
                 f_r = f(r).evalf(prec, maxn=2*prec)
                 if abs(f_r)._prec >= 2:
                     root_counts.pop(r)
+
             prec *= 2
 
-        if roots_remaining() != num_roots:
-            raise PolynomialError(
-                """
-                Number of roots found does not match expected root count.
-                """)
+        # handle multiplicity here
+        for r in list(root_counts.keys()):
+            root_counts[r] = f.root_multiplicity(r, prec)
 
         roots = sum([[r]*c for r, c in root_counts.items()], [])
         return roots
@@ -6813,7 +6865,7 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     >>> print(p)
     x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
     >>> all_roots(p, extension=True)
-    [sqrt(2), sqrt(2), sqrt(3), sqrt(3)]
+    [sqrt(2), sqrt(3)]
 
     In the case of algebraic or transcendental coefficients
     :func:`~.ground_roots` might be able to find some roots by factorisation:
@@ -6994,7 +7046,7 @@ def real_roots(f, multiple=True, radicals=True, extension=False):
     >>> print(p)
     x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
     >>> all_roots(p, extension=True)
-    [sqrt(2), sqrt(2), sqrt(3), sqrt(3)]
+    [sqrt(2), sqrt(3)]
 
     In the case of algebraic or transcendental coefficients
     :func:`~.ground_roots` might be able to find some roots by factorisation:
