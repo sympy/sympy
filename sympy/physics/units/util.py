@@ -12,7 +12,8 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.core.function import Function
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity
@@ -29,7 +30,7 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
     dim_dependencies = dimension_system.get_dimensional_dependencies(expr_dim, mark_dimensionless=True)
     target_dims = [Dimension(unit_system.get_dimensional_expr(x)) for x in target_units]
     canon_dim_units = [i for x in target_dims for i in dimension_system.get_dimensional_dependencies(x, mark_dimensionless=True)]
-    canon_expr_units = {i for i in dim_dependencies}
+    canon_expr_units = set(dim_dependencies)
 
     if not canon_expr_units.issubset(set(canon_dim_units)):
         return None
@@ -98,12 +99,20 @@ def convert_to(expr, target_units, unit_system="SI"):
     if not isinstance(target_units, (Iterable, Tuple)):
         target_units = [target_units]
 
-    if isinstance(expr, Add):
+    def handle_Adds(expr):
         return Add.fromiter(convert_to(i, target_units, unit_system)
             for i in expr.args)
 
+    if isinstance(expr, Add):
+        return handle_Adds(expr)
+    elif isinstance(expr, Pow) and isinstance(expr.base, Add):
+        return handle_Adds(expr.base) ** expr.exp
+
     expr = sympify(expr)
     target_units = sympify(target_units)
+
+    if isinstance(expr, Function):
+        expr = expr.together()
 
     if not isinstance(expr, Quantity) and expr.has(Quantity):
         expr = expr.replace(lambda x: isinstance(x, Quantity),

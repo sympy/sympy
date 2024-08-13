@@ -21,7 +21,7 @@ class Prufer(Basic):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/LabeledTree.html
+    .. [1] https://mathworld.wolfram.com/LabeledTree.html
 
     """
     _prufer_repr = None
@@ -272,8 +272,7 @@ class Prufer(Basic):
         got = set()
         nmin = nmax = None
         for ei in e:
-            for i in ei:
-                got.add(i)
+            got.update(ei)
             nmin = min(ei[0], nmin) if nmin is not None else ei[0]
             nmax = max(ei[1], nmax) if nmax is not None else ei[1]
             rv.append(list(ei))
@@ -283,7 +282,7 @@ class Prufer(Basic):
             if len(missing) == 1:
                 msg = 'Node %s is missing.' % missing.pop()
             else:
-                msg = 'Nodes %s are missing.' % list(sorted(missing))
+                msg = 'Nodes %s are missing.' % sorted(missing)
             raise ValueError(msg)
         if nmin != 0:
             for i, ei in enumerate(rv):
@@ -380,7 +379,7 @@ class Prufer(Basic):
                     if len(missing) == 1:
                         msg = 'Node %s is missing.' % missing.pop()
                     else:
-                        msg = 'Nodes %s are missing.' % list(sorted(missing))
+                        msg = 'Nodes %s are missing.' % sorted(missing)
                     raise ValueError(msg)
             ret_obj._tree_repr = [list(i) for i in args[0]]
             ret_obj._nodes = nnodes

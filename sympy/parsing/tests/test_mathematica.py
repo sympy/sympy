@@ -15,6 +15,7 @@ def test_mathematica():
         'x+y': 'x+y',
         '355/113': '355/113',
         '2.718281828': '2.718281828',
+        'Cos(1/2 * π)': 'Cos(π/2)',
         'Sin[12]': 'sin(12)',
         'Exp[Log[4]]': 'exp(log(4))',
         '(x+1)(x+3)': '(x+1)*(x+3)',
@@ -66,7 +67,8 @@ def test_mathematica():
         'LogIntegral[4]': ' li(4)',
         'PrimePi[7]': 'primepi(7)',
         'Prime[5]': 'prime(5)',
-        'PrimeQ[5]': 'isprime(5)'
+        'PrimeQ[5]': 'isprime(5)',
+        'Rational[2,19]': 'Rational(2,19)',    # test case for issue 25716
         }
 
     for e in d:
@@ -94,6 +96,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("+x") == "x"
     assert chain("-1") == "-1"
     assert chain("- 3") == "-3"
+    assert chain("α") == "α"
     assert chain("+Sin[x]") == ["Sin", "x"]
     assert chain("-Sin[x]") == ["Times", "-1", ["Sin", "x"]]
     assert chain("x(a+1)") == ["Times", "x", ["Plus", "a", "1"]]
@@ -261,10 +264,12 @@ def test_parser_mathematica_exp_alt():
     full_form1 = "Sin[Times[x, y]]"
     full_form2 = "Plus[Times[x, y], z]"
     full_form3 = "Sin[Times[x, Plus[y, z], Power[w, n]]]]"
+    full_form4 = "Rational[Rational[x, y], z]"
 
     assert parser._from_fullform_to_fullformlist(full_form1) == ["Sin", ["Times", "x", "y"]]
     assert parser._from_fullform_to_fullformlist(full_form2) == ["Plus", ["Times", "x", "y"], "z"]
     assert parser._from_fullform_to_fullformlist(full_form3) == ["Sin", ["Times", "x", ["Plus", "y", "z"], ["Power", "w", "n"]]]
+    assert parser._from_fullform_to_fullformlist(full_form4) == ["Rational", ["Rational", "x", "y"], "z"]
 
     assert convert_chain2(full_form1) == Sin(Times(x, y))
     assert convert_chain2(full_form2) == Plus(Times(x, y), z)

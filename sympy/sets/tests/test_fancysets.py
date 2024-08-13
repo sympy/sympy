@@ -114,7 +114,8 @@ def test_ImageSet():
     harmonics = ImageSet(Lambda(x, 1/x), S.Naturals)
     assert Rational(1, 5) in harmonics
     assert Rational(.25) in harmonics
-    assert 0.25 not in harmonics
+    assert harmonics.contains(.25) == Contains(
+        0.25, ImageSet(Lambda(x, 1/x), S.Naturals), evaluate=False)
     assert Rational(.3) not in harmonics
     assert (1, 2) not in harmonics
 
@@ -168,10 +169,15 @@ def test_halfcircle():
     assert (0, -1) not in halfcircle
     assert (0, 0) in halfcircle
     assert halfcircle._contains((r, 0)) is None
-    # This one doesn't work:
-    #assert (r, 2*pi) not in halfcircle
-
     assert not halfcircle.is_iterable
+
+
+@XFAIL
+def test_halfcircle_fail():
+    r, th = symbols('r, theta', real=True)
+    L = Lambda(((r, th),), (r*cos(th), r*sin(th)))
+    halfcircle = ImageSet(L, Interval(0, 1)*Interval(0, pi))
+    assert (r, 2*pi) not in halfcircle
 
 
 def test_ImageSet_iterator_not_injective():
@@ -252,6 +258,9 @@ def test_Range_set():
     raises(TypeError, lambda: next(it))
 
     assert empty.intersect(S.Integers) == empty
+    assert Range(-1, 10, 1).intersect(S.Complexes) == Range(-1, 10, 1)
+    assert Range(-1, 10, 1).intersect(S.Reals) == Range(-1, 10, 1)
+    assert Range(-1, 10, 1).intersect(S.Rationals) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals0) == Range(0, 10, 1)
@@ -517,6 +526,11 @@ def test_range_interval_intersection():
     assert Range(4).intersect(Interval(0.1, 3.1)) == Range(1, 4)
     assert Range(4).intersect(Interval.open(0, 3)) == Range(1, 3)
     assert Range(4).intersect(Interval.open(0.1, 0.5)) is S.EmptySet
+    assert Interval(-1, 5).intersect(S.Complexes) == Interval(-1, 5)
+    assert Interval(-1, 5).intersect(S.Reals) == Interval(-1, 5)
+    assert Interval(-1, 5).intersect(S.Integers) == Range(-1, 6)
+    assert Interval(-1, 5).intersect(S.Naturals) == Range(1, 6)
+    assert Interval(-1, 5).intersect(S.Naturals0) == Range(0, 6)
 
     # Null Range intersections
     assert Range(0).intersect(Interval(0.2, 0.8)) is S.EmptySet
@@ -544,7 +558,6 @@ def test_range_is_finite_set():
     assert Range(-oo, n).is_finite_set is False
     assert Range(n, -oo).is_finite_set is True
     assert Range(oo, n).is_finite_set is True
-
 
 
 def test_Range_is_iterable():
@@ -1256,7 +1269,8 @@ def test_Rationals():
         Rational(1, 3), 3, Rational(-1, 3), -3, Rational(2, 3)]
     assert Basic() not in S.Rationals
     assert S.Half in S.Rationals
-    assert S.Rationals.contains(0.5) == Contains(0.5, S.Rationals, evaluate=False)
+    assert S.Rationals.contains(0.5) == Contains(
+        0.5, S.Rationals, evaluate=False)
     assert 2 in S.Rationals
     r = symbols('r', rational=True)
     assert r in S.Rationals

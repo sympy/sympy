@@ -1,7 +1,14 @@
 from sympy.assumptions.ask import Q
-from sympy.core.symbol import Symbol
 from sympy.assumptions.wrapper import (AssumptionsWrapper, is_infinite,
     is_extended_real)
+from sympy.core.symbol import Symbol
+from sympy.core.assumptions import _assume_defined
+
+
+def test_all_predicates():
+    for fact in _assume_defined:
+        method_name = f'_eval_is_{fact}'
+        assert hasattr(AssumptionsWrapper, method_name)
 
 
 def test_AssumptionsWrapper():

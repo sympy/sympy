@@ -1,3 +1,4 @@
+from sympy.core.function import nfloat
 from sympy.core.numbers import (Float, I, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.symbol import (Symbol, symbols)
@@ -62,7 +63,7 @@ def test_nsolve():
         root = nsolve(f, (x, y, z), x0)
         assert mnorm(F(*root), 1) <= 1.e-8
         return root
-    assert list(map(round, getroot((1, 1, 1)))) == [2.0, 1.0, 0.0]
+    assert list(map(round, getroot((1, 1, 1)))) == [2, 1, 0]
     assert nsolve([Eq(
         f1, 0), Eq(f2, 0), Eq(f3, 0)], [x, y, z], (1, 1, 1))  # just see that it works
     a = Symbol('a')
@@ -70,15 +71,14 @@ def test_nsolve():
         mpf('0.31883011387318591')) < 1e-15
 
 
-
 def test_issue_6408():
     x = Symbol('x')
-    assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
+    assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0
 
 
 def test_issue_6408_integral():
     x, y = symbols('x y')
-    assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0
+    assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0
 
 
 @conserve_mpmath_dps
@@ -135,5 +135,5 @@ def test_issue_14950():
     x = Matrix(symbols('t s'))
     x0 = Matrix([17, 23])
     eqn = x + x0
-    assert nsolve(eqn, x, x0) == -x0
-    assert nsolve(eqn.T, x.T, x0.T) == -x0
+    assert nsolve(eqn, x, x0) == nfloat(-x0)
+    assert nsolve(eqn.T, x.T, x0.T) == nfloat(-x0)

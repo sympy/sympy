@@ -287,11 +287,11 @@ def interpolating_spline(d, x, X, Y):
 
     x : symbol
 
-    X : list of strictly increasing integer values
+    X : list of strictly increasing real values
         list of X coordinates through which the spline passes
 
-    Y : list of strictly increasing integer values
-        list of Y coordinates through which the spline passes
+    Y : list of real values
+        list of corresponding Y coordinates through which the spline passes
 
     See Also
     ========
@@ -336,10 +336,7 @@ def interpolating_spline(d, x, X, Y):
 
     # Sorting the intervals
     #  ival contains the end-points of each interval
-    ival = [_ivl(c, x) for c in intervals]
-    com = zip(ival, intervals)
-    com = sorted(com, key=lambda x: x[0])
-    intervals = [y for x, y in com]
+    intervals = sorted(intervals, key=lambda c: _ivl(c, x))
 
     basis_dicts = [{c: e for (e, c) in b.args} for b in basis]
     spline = []

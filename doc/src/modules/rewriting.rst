@@ -89,7 +89,7 @@ in the ``cse`` function. Examples::
     ⎝[(x₀, (x - y)⋅(-y + z))], ⎣╲╱ x₀  + x₀⎦⎠
 
 Optimizations to be performed before and after common subexpressions
-elimination can be passed in the``optimizations`` optional argument. A set of
+elimination can be passed in the ``optimizations`` optional argument. A set of
 predefined basic optimizations can be applied by passing
 ``optimizations='basic'``::
 

@@ -27,10 +27,7 @@ def iterargs(expr):
     args = [expr]
     for i in args:
         yield i
-        try:
-            args.extend(i.args)
-        except TypeError:
-            pass  # for cases like f being an arg
+        args.extend(i.args)
 
 
 def iterfreeargs(expr, _first=True):
@@ -41,6 +38,7 @@ def iterfreeargs(expr, _first=True):
 
     Examples
     ========
+
     >>> from sympy import Integral, Function
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -60,12 +58,7 @@ def iterfreeargs(expr, _first=True):
             for i in iterfreeargs(i.as_dummy(), _first=False):
                 if not i.has(*void):
                     yield i
-        try:
-            args.extend(i.args)
-        except TypeError:
-            pass  # for cases like f being an arg
-
-
+        args.extend(i.args)
 
 
 class preorder_traversal:
@@ -193,11 +186,7 @@ def use(expr, func, level=0, args=(), kwargs={}):
                 return expr
             else:
                 level -= 1
-                _args = []
-
-                for arg in expr.args:
-                    _args.append(_use(arg, level))
-
+                _args = [_use(arg, level) for arg in expr.args]
                 return expr.__class__(*_args)
 
     return _use(sympify(expr), level)

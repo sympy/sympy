@@ -27,7 +27,7 @@ class CompileError (Exception):
 
 
 def get_abspath(path, cwd='.'):
-    """ Returns the aboslute path.
+    """ Returns the absolute path.
 
     Parameters
     ==========
@@ -63,6 +63,33 @@ def make_dirs(path):
     else:
         assert os.path.isdir(path)
 
+def missing_or_other_newer(path, other_path, cwd=None):
+    """
+    Investigate if path is non-existant or older than provided reference
+    path.
+
+    Parameters
+    ==========
+    path: string
+        path to path which might be missing or too old
+    other_path: string
+        reference path
+    cwd: string
+        working directory (root of relative paths)
+
+    Returns
+    =======
+    True if path is older or missing.
+    """
+    cwd = cwd or '.'
+    path = get_abspath(path, cwd=cwd)
+    other_path = get_abspath(other_path, cwd=cwd)
+    if not os.path.exists(path):
+        return True
+    if os.path.getmtime(other_path) - 1e-6 >= os.path.getmtime(path):
+        # 1e-6 is needed beacuse http://stackoverflow.com/questions/17086426/
+        return True
+    return False
 
 def copy(src, dst, only_update=False, copystat=True, cwd=None,
          dest_is_dir=False, create_dest_dirs=False):
@@ -125,9 +152,7 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
             raise FileNotFoundError("You must create directory first.")
 
     if only_update:
-        # This function is not defined:
-        # XXX: This branch is clearly not tested!
-        if not missing_or_other_newer(dst, src): # noqa
+        if not missing_or_other_newer(dst, src):
             return
 
     if os.path.islink(dst):
@@ -192,15 +217,16 @@ def pyx_is_cplus(path):
 
     Returns True if such a file is present in the file, else False.
     """
-    for line in open(path):
-        if line.startswith('#') and '=' in line:
-            splitted = line.split('=')
-            if len(splitted) != 2:
-                continue
-            lhs, rhs = splitted
-            if lhs.strip().split()[-1].lower() == 'language' and \
-               rhs.strip().split()[0].lower() == 'c++':
-                    return True
+    with open(path) as fh:
+        for line in fh:
+            if line.startswith('#') and '=' in line:
+                splitted = line.split('=')
+                if len(splitted) != 2:
+                    continue
+                lhs, rhs = splitted
+                if lhs.strip().split()[-1].lower() == 'language' and \
+                       rhs.strip().split()[0].lower() == 'c++':
+                            return True
     return False
 
 def import_module_from_file(filename, only_if_newer_than=None):

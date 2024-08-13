@@ -8,8 +8,10 @@ using the functions defined in math.h where possible.
 
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
+from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
@@ -78,25 +80,19 @@ class RCodePrinter(CodePrinter):
     printmethod = "_rcode"
     language = "R"
 
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 15,
         'user_functions': {},
-        'human': True,
         'contract': True,
         'dereference': set(),
-        'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-    }  # type: tDict[str, Any]
+    })
     _operators = {
        'and': '&',
         'or': '|',
        'not': '!',
     }
 
-    _relationals = {
-    }  # type: tDict[str, str]
+    _relationals: dict[str, str] = {}
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -144,9 +140,9 @@ class RCodePrinter(CodePrinter):
         if "Pow" in self.known_functions:
             return self._print_Function(expr)
         PREC = precedence(expr)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5:
+        elif equal_valued(expr.exp, 0.5):
             return 'sqrt(%s)' % self._print(expr.base)
         else:
             return '%s^%s' % (self.parenthesize(expr.base, PREC),
@@ -160,9 +156,6 @@ class RCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     def _print_Exp1(self, expr):
         return "exp(1)"
@@ -261,9 +254,8 @@ class RCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
         body = self._print(expr.body)
-        return ('for ({target} = {start}; {target} < {stop}; {target} += '
-                '{step}) {{\n{body}\n}}').format(target=target, start=start,
-                stop=stop, step=step, body=body)
+        return 'for({target} in seq(from={start}, to={stop}, by={step}){{\n{body}\n}}'.format(target=target, start=start,
+                stop=stop-1, step=step, body=body)
 
 
     def indent_code(self, code):

@@ -1,4 +1,5 @@
-from typing import Dict as tDict, Callable
+from __future__ import annotations
+from typing import Callable
 
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
@@ -392,7 +393,7 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
-handlers_dict = {
+handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'atan2': refine_atan2,
@@ -401,4 +402,4 @@ handlers_dict = {
     'arg': refine_arg,
     'sign': refine_sign,
     'MatrixElement': refine_matrixelement
-}  # type: tDict[str, Callable[[Expr, Boolean], Expr]]
+}

@@ -100,6 +100,16 @@ def test_HolonomicFunction_multiplication():
     assert p*q == r
 
 
+def test_HolonomicFunction_power():
+    x = symbols('x')
+    R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
+    p = HolonomicFunction(Dx+x+x*Dx**2, x)
+    a = HolonomicFunction(Dx, x)
+    for n in range(10):
+        assert a == p**n
+        a *= p
+
+
 def test_addition_initial_condition():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
@@ -327,7 +337,7 @@ def test_evalf_euler():
     s = '0.699525841805253'  # approx. equal to log(2) i.e. 0.693147180559945
     assert sstr(p.evalf(r, method='Euler')[-1]) == s
 
-    # path taken is a traingle 0-->1+i-->2
+    # path taken is a triangle 0-->1+i-->2
     r = [0.1 + 0.1*I]
     for i in range(9):
         r.append(r[-1]+0.1+0.1*I)
@@ -404,7 +414,7 @@ def test_evalf_rk4():
     s = '0.693146363174626'  # approx. equal to log(2) i.e. 0.693147180559945
     assert sstr(p.evalf(r)[-1]) == s
 
-    # path taken is a traingle 0-->1+i-->2
+    # path taken is a triangle 0-->1+i-->2
     r = [0.1 + 0.1*I]
     for i in range(9):
         r.append(r[-1]+0.1+0.1*I)
@@ -814,6 +824,7 @@ def test_expr_in_power():
 
     assert h1 == h2
 
+
 def test_DifferentialOperatorEqPoly():
     x = symbols('x', integer=True)
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
@@ -828,3 +839,13 @@ def test_DifferentialOperatorEqPoly():
 
     p2 = do2.listofpoly[0]
     assert not do2 == p2
+
+
+def test_DifferentialOperatorPow():
+    x = symbols('x', integer=True)
+    R, _ = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    do = DifferentialOperator([x**2, R.base.zero, R.base.zero], R)
+    a = DifferentialOperator([R.base.one], R)
+    for n in range(10):
+        assert a == do**n
+        a *= do

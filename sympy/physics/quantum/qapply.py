@@ -143,8 +143,8 @@ def qapply_Mul(e, **options):
     lhs = args.pop()
 
     # Make sure we have two non-commutative objects before proceeding.
-    if (sympify(rhs).is_commutative and not isinstance(rhs, Wavefunction)) or \
-            (sympify(lhs).is_commutative and not isinstance(lhs, Wavefunction)):
+    if (not isinstance(rhs, Wavefunction) and sympify(rhs).is_commutative) or \
+            (not isinstance(lhs, Wavefunction) and sympify(lhs).is_commutative):
         return e
 
     # For a Pow with an integer exponent, apply one of them and reduce the
@@ -180,16 +180,22 @@ def qapply_Mul(e, **options):
     # Now try to actually apply the operator and build an inner product.
     try:
         result = lhs._apply_operator(rhs, **options)
-    except (NotImplementedError, AttributeError):
-        try:
-            result = rhs._apply_operator(lhs, **options)
-        except (NotImplementedError, AttributeError):
-            if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
-                result = InnerProduct(lhs, rhs)
-                if ip_doit:
-                    result = result.doit()
-            else:
+    except NotImplementedError:
+        result = None
+
+    if result is None:
+        _apply_right = getattr(rhs, '_apply_from_right_to', None)
+        if _apply_right is not None:
+            try:
+                result = _apply_right(lhs, **options)
+            except NotImplementedError:
                 result = None
+
+    if result is None:
+        if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
+            result = InnerProduct(lhs, rhs)
+            if ip_doit:
+                result = result.doit()
 
     # TODO: I may need to expand before returning the final result.
     if result == 0:

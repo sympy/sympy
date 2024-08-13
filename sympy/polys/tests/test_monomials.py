@@ -251,6 +251,10 @@ def test_Monomial():
     assert m**1 == m
     assert m**2 == Monomial((6, 8, 2))
     assert m**3 == Monomial((9, 12, 3))
+    _a = Monomial((0, 0, 0))
+    for n in range(10):
+        assert _a == m**n
+        _a *= m
 
     raises(ExactQuotientFailed, lambda: m/Monomial((5, 2, 0)))
 

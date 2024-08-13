@@ -1,20 +1,21 @@
 """
 A Printer which converts an expression into its LaTeX equivalent.
 """
-
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any, Callable, TYPE_CHECKING
 
 import itertools
 
-from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
+from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol, Expr
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
-from sympy.core.function import AppliedUndef, Derivative
+from sympy.core.function import Function, AppliedUndef, Derivative
 from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
-from sympy.logic.boolalg import true
+from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
+
 
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -24,9 +25,13 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 
-from sympy.utilities.iterables import has_variety
+from sympy.utilities.iterables import has_variety, sift
 
 import re
+
+if TYPE_CHECKING:
+    from sympy.tensor.array import NDimArray
+    from sympy.vector.basisdependent import BasisDependent
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
 # Complete list at
@@ -81,7 +86,7 @@ other_symbols = {'aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
                      'hslash', 'mho', 'wp'}
 
 # Variable name modifiers
-modifier_dict = {
+modifier_dict: dict[str, Callable[[str], str]] = {
     # Accents
     'mathring': lambda s: r'\mathring{'+s+r'}',
     'ddddot': lambda s: r'\ddddot{'+s+r'}',
@@ -115,11 +120,11 @@ greek_letters_set = frozenset(greeks)
 
 _between_two_numbers_p = (
     re.compile(r'[0-9][} ]*$'),  # search
-    re.compile(r'[0-9]'),  # match
+    re.compile(r'(\d|\\frac{\d+}{\d+})'),  # match
 )
 
 
-def latex_escape(s):
+def latex_escape(s: str) -> str:
     """
     Escape a string such that latex interprets it as plaintext.
 
@@ -137,7 +142,7 @@ def latex_escape(s):
 class LatexPrinter(Printer):
     printmethod = "_latex"
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         "full_prec": False,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
@@ -162,7 +167,8 @@ class LatexPrinter(Printer):
         "min": None,
         "max": None,
         "diff_operator": "d",
-    }  # type: tDict[str, Any]
+        "adjoint_style": "dagger",
+    }
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -225,14 +231,14 @@ class LatexPrinter(Printer):
         diff_operator = self._settings['diff_operator']
         self._settings["diff_operator_latex"] = diff_operator_table.get(diff_operator, diff_operator)
 
-    def _add_parens(self, s):
+    def _add_parens(self, s) -> str:
         return r"\left({}\right)".format(s)
 
     # TODO: merge this with the above, which requires a lot of test changes
-    def _add_parens_lspace(self, s):
+    def _add_parens_lspace(self, s) -> str:
         return r"\left( {}\right)".format(s)
 
-    def parenthesize(self, item, level, is_neg=False, strict=False):
+    def parenthesize(self, item, level, is_neg=False, strict=False) -> str:
         prec_val = precedence_traditional(item)
         if is_neg and strict:
             return self._add_parens(self._print(item))
@@ -256,7 +262,7 @@ class LatexPrinter(Printer):
                 return "{{{}}}".format(s)
         return s
 
-    def doprint(self, expr):
+    def doprint(self, expr) -> str:
         tex = Printer.doprint(self, expr)
 
         if self._settings['mode'] == 'plain':
@@ -269,7 +275,7 @@ class LatexPrinter(Printer):
             env_str = self._settings['mode']
             return r"\begin{%s}%s\end{%s}" % (env_str, tex, env_str)
 
-    def _needs_brackets(self, expr):
+    def _needs_brackets(self, expr) -> bool:
         """
         Returns True if the expression needs to be wrapped in brackets when
         printed, False otherwise. For example: a + b => True; a => False;
@@ -279,7 +285,7 @@ class LatexPrinter(Printer):
                     or (expr.is_Atom and (expr is not S.NegativeOne
                                           and expr.is_Rational is False)))
 
-    def _needs_function_brackets(self, expr):
+    def _needs_function_brackets(self, expr) -> bool:
         """
         Returns True if the expression needs to be wrapped in brackets when
         passed as an argument to a function, False otherwise. This is a more
@@ -302,7 +308,7 @@ class LatexPrinter(Printer):
             else:
                 return False
 
-    def _needs_mul_brackets(self, expr, first=False, last=False):
+    def _needs_mul_brackets(self, expr, first=False, last=False) -> bool:
         """
         Returns True if the expression needs to be wrapped in brackets when
         printed as part of a Mul, False otherwise. This is True for Add,
@@ -333,7 +339,7 @@ class LatexPrinter(Printer):
 
         return False
 
-    def _needs_add_brackets(self, expr):
+    def _needs_add_brackets(self, expr) -> bool:
         """
         Returns True if the expression needs to be wrapped in brackets when
         printed as part of an Add, False otherwise.  This is False for most
@@ -347,16 +353,16 @@ class LatexPrinter(Printer):
             return True
         return False
 
-    def _mul_is_clean(self, expr):
+    def _mul_is_clean(self, expr) -> bool:
         for arg in expr.args:
             if arg.is_Function:
                 return False
         return True
 
-    def _pow_is_clean(self, expr):
+    def _pow_is_clean(self, expr) -> bool:
         return not self._needs_brackets(expr.base)
 
-    def _do_exponent(self, expr, exp):
+    def _do_exponent(self, expr: str, exp):
         if exp is not None:
             return r"\left(%s\right)^{%s}" % (expr, exp)
         else:
@@ -371,7 +377,7 @@ class LatexPrinter(Printer):
         else:
             return r"\text{{{}}}".format(name)
 
-    def _print_bool(self, e):
+    def _print_bool(self, e: bool | BooleanTrue | BooleanFalse):
         return r"\text{%s}" % e
 
     _print_BooleanTrue = _print_bool
@@ -510,13 +516,12 @@ class LatexPrinter(Printer):
         func = expr._expr
         return r"\Delta %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
-    def _print_Mul(self, expr):
-        from sympy.physics.units import Quantity
+    def _print_Mul(self, expr: Expr):
         from sympy.simplify import fraction
-        separator = self._settings['mul_symbol_latex']
-        numbersep = self._settings['mul_symbol_latex_numbers']
+        separator: str = self._settings['mul_symbol_latex']
+        numbersep: str = self._settings['mul_symbol_latex_numbers']
 
-        def convert(expr):
+        def convert(expr) -> str:
             if not expr.is_Mul:
                 return str(self._print(expr))
             else:
@@ -525,33 +530,35 @@ class LatexPrinter(Printer):
                 else:
                     args = list(expr.args)
 
-                # If quantities are present append them at the back
-                args = sorted(args, key=lambda x: isinstance(x, Quantity) or
+                # If there are quantities or prefixes, append them at the back.
+                units, nonunits = sift(args, lambda x: (hasattr(x, "_scale_factor") or hasattr(x, "is_physical_constant")) or
                               (isinstance(x, Pow) and
-                               isinstance(x.base, Quantity)))
+                               hasattr(x.base, "is_physical_constant")), binary=True)
+                prefixes, units = sift(units, lambda x: hasattr(x, "_scale_factor"), binary=True)
+                return convert_args(nonunits + prefixes + units)
 
-                return convert_args(args)
+        def convert_args(args) -> str:
+            _tex = last_term_tex = ""
 
-        def convert_args(args):
-                _tex = last_term_tex = ""
-
-                for i, term in enumerate(args):
-                    term_tex = self._print(term)
-
+            for i, term in enumerate(args):
+                term_tex = self._print(term)
+                if not (hasattr(term, "_scale_factor") or hasattr(term, "is_physical_constant")):
                     if self._needs_mul_brackets(term, first=(i == 0),
                                                 last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
 
-                    if _between_two_numbers_p[0].search(last_term_tex) and \
-                            _between_two_numbers_p[1].match(str(term)):
+                    if  _between_two_numbers_p[0].search(last_term_tex) and \
+                        _between_two_numbers_p[1].match(term_tex):
                         # between two numbers
                         _tex += numbersep
                     elif _tex:
                         _tex += separator
+                elif _tex:
+                    _tex += separator
 
-                    _tex += term_tex
-                    last_term_tex = term_tex
-                return _tex
+                _tex += term_tex
+                last_term_tex = term_tex
+            return _tex
 
         # Check for unevaluated Mul. In this case we need to make sure the
         # identities are visible, multiple Rational factors are not combined
@@ -637,63 +644,60 @@ class LatexPrinter(Printer):
         alpha = self._print(expr.alpha.as_expr())
         return rf'\left({p}, {alpha}\right)'
 
-    def _print_Pow(self, expr):
+    def _print_Pow(self, expr: Pow):
         # Treat x**Rational(1,n) as special case
-        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1 \
-                and self._settings['root_notation']:
-            base = self._print(expr.base)
-            expq = expr.exp.q
-
-            if expq == 2:
-                tex = r"\sqrt{%s}" % base
-            elif self._settings['itex']:
-                tex = r"\root{%d}{%s}" % (expq, base)
-            else:
-                tex = r"\sqrt[%d]{%s}" % (expq, base)
-
-            if expr.exp.is_negative:
-                return r"\frac{1}{%s}" % tex
-            else:
-                return tex
-        elif self._settings['fold_frac_powers'] \
-            and expr.exp.is_Rational \
-                and expr.exp.q != 1:
-            base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
-            p, q = expr.exp.p, expr.exp.q
-            # issue #12886: add parentheses for superscripts raised to powers
-            if expr.base.is_Symbol:
-                base = self.parenthesize_super(base)
-            if expr.base.is_Function:
-                return self._print(expr.base, exp="%s/%s" % (p, q))
-            return r"%s^{%s/%s}" % (base, p, q)
-        elif expr.exp.is_Rational and expr.exp.is_negative and \
-                expr.base.is_commutative:
-            # special case for 1^(-x), issue 9216
-            if expr.base == 1:
-                return r"%s^{%s}" % (expr.base, expr.exp)
-            # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
-            if expr.base.is_Rational and \
-                    expr.base.p*expr.base.q == abs(expr.base.q):
-                if expr.exp == -1:
-                    return r"\frac{1}{\frac{%s}{%s}}" % (expr.base.p, expr.base.q)
+        if expr.exp.is_Rational:
+            p: int = expr.exp.p  # type: ignore
+            q: int = expr.exp.q  # type: ignore
+            if abs(p) == 1 and q != 1 and self._settings['root_notation']:
+                base = self._print(expr.base)
+                if q == 2:
+                    tex = r"\sqrt{%s}" % base
+                elif self._settings['itex']:
+                    tex = r"\root{%d}{%s}" % (q, base)
                 else:
-                    return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (expr.base.p, expr.base.q, abs(expr.exp))
-            # things like 1/x
-            return self._print_Mul(expr)
-        else:
-            if expr.base.is_Function:
-                return self._print(expr.base, exp=self._print(expr.exp))
-            else:
-                tex = r"%s^{%s}"
-                return self._helper_print_standard_power(expr, tex)
+                    tex = r"\sqrt[%d]{%s}" % (q, base)
+                if expr.exp.is_negative:
+                    return r"\frac{1}{%s}" % tex
+                else:
+                    return tex
+            elif self._settings['fold_frac_powers'] and q != 1:
+                base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
+                # issue #12886: add parentheses for superscripts raised to powers
+                if expr.base.is_Symbol:
+                    base = self.parenthesize_super(base)
+                if expr.base.is_Function:
+                    return self._print(expr.base, exp="%s/%s" % (p, q))
+                return r"%s^{%s/%s}" % (base, p, q)
+            elif expr.exp.is_negative and expr.base.is_commutative:
+                # special case for 1^(-x), issue 9216
+                if expr.base == 1:
+                    return r"%s^{%s}" % (expr.base, expr.exp)
+                # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
+                if expr.base.is_Rational:
+                    base_p: int = expr.base.p  # type: ignore
+                    base_q: int = expr.base.q  # type: ignore
+                    if base_p * base_q == abs(base_q):
+                        if expr.exp == -1:
+                            return r"\frac{1}{\frac{%s}{%s}}" % (base_p, base_q)
+                        else:
+                            return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (base_p, base_q, abs(expr.exp))
+                # things like 1/x
+                return self._print_Mul(expr)
+        if expr.base.is_Function:
+            return self._print(expr.base, exp=self._print(expr.exp))
+        tex = r"%s^{%s}"
+        return self._helper_print_standard_power(expr, tex)
 
-    def _helper_print_standard_power(self, expr, template):
+    def _helper_print_standard_power(self, expr, template: str) -> str:
         exp = self._print(expr.exp)
         # issue #12886: add parentheses around superscripts raised
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
         if expr.base.is_Symbol:
             base = self.parenthesize_super(base)
+        elif expr.base.is_Float:
+            base = r"{%s}" % base
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
@@ -743,10 +747,10 @@ class LatexPrinter(Printer):
 
         return tex
 
-    def _print_BasisDependent(self, expr):
+    def _print_BasisDependent(self, expr: 'BasisDependent'):
         from sympy.vector import Vector
 
-        o1 = []
+        o1: list[str] = []
         if expr == expr.zero:
             return expr.zero._latex_form
         if isinstance(expr, Vector):
@@ -890,7 +894,7 @@ class LatexPrinter(Printer):
         else:
             return r"%s %s" % (tex, self._print(e))
 
-    def _hprint_Function(self, func):
+    def _hprint_Function(self, func: str) -> str:
         r'''
         Logic to decide how to render a function to latex
           - if it is a recognized latex name, use the appropriate latex command
@@ -922,7 +926,7 @@ class LatexPrinter(Printer):
                 name = r"\operatorname{%s}" % func
         return name
 
-    def _print_Function(self, expr, exp=None):
+    def _print_Function(self, expr: Function, exp=None) -> str:
         r'''
         Render functions to LaTeX, handling functions that LaTeX knows about
         e.g., sin, cos, ... by using the proper LaTeX command (\sin, \cos, ...).
@@ -1042,7 +1046,7 @@ class LatexPrinter(Printer):
     def _print_IdentityFunction(self, expr):
         return r"\left( x \mapsto x \right)"
 
-    def _hprint_variadic_function(self, expr, exp=None):
+    def _hprint_variadic_function(self, expr, exp=None) -> str:
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
         tex = r"\%s\left(%s\right)" % (str(expr.func).lower(),
@@ -1216,8 +1220,10 @@ class LatexPrinter(Printer):
             return r"\Pi%s" % tex
 
     def _print_beta(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
+        x = expr.args[0]
+        # Deal with unevaluated single argument beta
+        y = expr.args[0] if len(expr.args) == 1 else expr.args[1]
+        tex = rf"\left({x}, {y}\right)"
 
         if exp is not None:
             return r"\operatorname{B}^{%s}%s" % (exp, tex)
@@ -1254,7 +1260,7 @@ class LatexPrinter(Printer):
         else:
             return r"\gamma%s" % tex
 
-    def _hprint_one_arg_func(self, expr, exp=None):
+    def _hprint_one_arg_func(self, expr, exp=None) -> str:
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
@@ -1346,7 +1352,7 @@ class LatexPrinter(Printer):
 
         return self._do_exponent(tex, exp)
 
-    def _hprint_BesselBase(self, expr, exp, sym):
+    def _hprint_BesselBase(self, expr, exp, sym: str) -> str:
         tex = r"%s" % (sym)
 
         need_exp = False
@@ -1363,7 +1369,7 @@ class LatexPrinter(Printer):
             tex = self._do_exponent(tex, exp)
         return tex
 
-    def _hprint_vec(self, vec):
+    def _hprint_vec(self, vec) -> str:
         if not vec:
             return ""
         s = ""
@@ -1402,7 +1408,7 @@ class LatexPrinter(Printer):
     def _print_hn2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'h^{(2)}')
 
-    def _hprint_airy(self, expr, exp=None, notation=""):
+    def _hprint_airy(self, expr, exp=None, notation="") -> str:
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
@@ -1410,7 +1416,7 @@ class LatexPrinter(Printer):
         else:
             return r"%s%s" % (notation, tex)
 
-    def _hprint_airy_prime(self, expr, exp=None, notation=""):
+    def _hprint_airy_prime(self, expr, exp=None, notation="") -> str:
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
@@ -1615,15 +1621,16 @@ class LatexPrinter(Printer):
                 s += self._print(expr.point[0])
         return r"O\left(%s\right)" % s
 
-    def _print_Symbol(self, expr, style='plain'):
-        if expr in self._settings['symbol_names']:
-            return self._settings['symbol_names'][expr]
+    def _print_Symbol(self, expr: Symbol, style='plain'):
+        name: str = self._settings['symbol_names'].get(expr)
+        if name is not None:
+            return name
 
         return self._deal_with_super_sub(expr.name, style=style)
 
     _print_RandomSymbol = _print_Symbol
 
-    def _deal_with_super_sub(self, string, style='plain'):
+    def _deal_with_super_sub(self, string: str, style='plain') -> str:
         if '{' in string:
             name, supers, subs = string, [], []
         else:
@@ -1710,8 +1717,9 @@ class LatexPrinter(Printer):
         return out_str
 
     def _print_MatrixElement(self, expr):
-        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
-            + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
+        matrix_part = self.parenthesize(expr.parent, PRECEDENCE['Atom'], strict=True)
+        index_part = f"{self._print(expr.i)},{self._print(expr.j)}"
+        return f"{{{matrix_part}}}_{{{index_part}}}"
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x, dim):
@@ -1748,17 +1756,23 @@ class LatexPrinter(Printer):
         return r"\operatorname{tr}\left(%s \right)" % self._print(mat)
 
     def _print_Adjoint(self, expr):
+        style_to_latex = {
+            "dagger"   : r"\dagger",
+            "star"     : r"\ast",
+            "hermitian": r"\mathsf{H}"
+        }
+        adjoint_style = style_to_latex.get(self._settings["adjoint_style"], r"\dagger")
         mat = expr.arg
         from sympy.matrices import MatrixSymbol, BlockMatrix
         if (not isinstance(mat, MatrixSymbol) and
             not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
-            return r"\left(%s\right)^{\dagger}" % self._print(mat)
+            return r"\left(%s\right)^{%s}" % (self._print(mat), adjoint_style)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)
             if '^' in s:
-                return r"\left(%s\right)^{\dagger}" % s
+                return r"\left(%s\right)^{%s}" % (s, adjoint_style)
             else:
-                return r"%s^{\dagger}" % s
+                return r"%s^{%s}" % (s, adjoint_style)
 
     def _print_MatMul(self, expr):
         from sympy import MatMul
@@ -1808,7 +1822,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \circ '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_HadamardPower(self, expr):
         if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
@@ -1823,7 +1837,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \otimes '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -1858,7 +1872,7 @@ class LatexPrinter(Printer):
         perm_str = self._print(P.args[0])
         return "P_{%s}" % perm_str
 
-    def _print_NDimArray(self, expr):
+    def _print_NDimArray(self, expr: NDimArray):
 
         if expr.rank() == 0:
             return self._print(expr[()])
@@ -1874,8 +1888,11 @@ class LatexPrinter(Printer):
                     mat_str = 'array'
         block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         block_str = block_str.replace('%MATSTR%', mat_str)
+        if mat_str == 'array':
+            block_str = block_str.replace('%s', '{' + 'c'*expr.shape[0] + '}%s')
+
         if self._settings['mat_delim']:
-            left_delim = self._settings['mat_delim']
+            left_delim: str = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
             block_str = r'\left' + left_delim + block_str + \
                         r'\right' + right_delim
@@ -1883,7 +1900,7 @@ class LatexPrinter(Printer):
         if expr.rank() == 0:
             return block_str % ""
 
-        level_str = [[]] + [[] for i in range(expr.rank())]
+        level_str: list[list[str]] = [[] for i in range(expr.rank() + 1)]
         shape_ranges = [list(range(i)) for i in expr.shape]
         for outer_i in itertools.product(*shape_ranges):
             level_str[-1].append(self._print(expr[outer_i]))
@@ -1910,7 +1927,7 @@ class LatexPrinter(Printer):
 
         return out_str
 
-    def _printer_tensor_indices(self, name, indices, index_map={}):
+    def _printer_tensor_indices(self, name, indices, index_map: dict):
         out_str = self._print(name)
         last_valence = None
         prev_map = None
@@ -1941,7 +1958,7 @@ class LatexPrinter(Printer):
     def _print_Tensor(self, expr):
         name = expr.args[0].args[0]
         indices = expr.get_indices()
-        return self._printer_tensor_indices(name, indices)
+        return self._printer_tensor_indices(name, indices, {})
 
     def _print_TensorElement(self, expr):
         name = expr.expr.args[0].args[0]
@@ -2186,6 +2203,9 @@ class LatexPrinter(Printer):
     def _print_bernoulli(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "B", exp)
 
+    def _print_genocchi(self, expr, exp=None):
+        return self.__print_number_polynomial(expr, "G", exp)
+
     def _print_bell(self, expr, exp=None):
         if len(expr.args) == 3:
             tex1 = r"B_{%s, %s}" % (self._print(expr.args[0]),
@@ -2199,7 +2219,6 @@ class LatexPrinter(Printer):
             return tex
         return self.__print_number_polynomial(expr, "B", exp)
 
-
     def _print_fibonacci(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "F", exp)
 
@@ -2211,6 +2230,11 @@ class LatexPrinter(Printer):
 
     def _print_tribonacci(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "T", exp)
+
+    def _print_mobius(self, expr, exp=None):
+        if exp is None:
+            return r'\mu\left(%s\right)' % self._print(expr.args[0])
+        return r'\mu^{%s}\left(%s\right)' % (exp, self._print(expr.args[0]))
 
     def _print_SeqFormula(self, s):
         dots = object()
@@ -2723,12 +2747,20 @@ class LatexPrinter(Printer):
             '{' + self._print(x) + '}' for x in m))
 
     def _print_SubModule(self, m):
-        return r"\left\langle {} \right\rangle".format(",".join(
-            '{' + self._print(x) + '}' for x in m.gens))
+        gens = [[self._print(m.ring.to_sympy(x)) for x in g] for g in m.gens]
+        curly = lambda o: r"{" + o + r"}"
+        square = lambda o: r"\left[ " + o + r" \right]"
+        gens_latex = ",".join(curly(square(",".join(curly(x) for x in g))) for g in gens)
+        return r"\left\langle {} \right\rangle".format(gens_latex)
+
+    def _print_SubQuotientModule(self, m):
+        gens_latex = ",".join(["{" + self._print(g) + "}" for g in m.gens])
+        return r"\left\langle {} \right\rangle".format(gens_latex)
 
     def _print_ModuleImplementedIdeal(self, m):
-        return r"\left\langle {} \right\rangle".format(",".join(
-            '{' + self._print(x) + '}' for [x] in m._module.gens))
+        gens = [m.ring.to_sympy(x) for [x] in m._module.gens]
+        gens_latex = ",".join('{' + self._print(x) + '}' for x in gens)
+        return r"\left\langle {} \right\rangle".format(gens_latex)
 
     def _print_Quaternion(self, expr):
         # TODO: This expression is potentially confusing,
@@ -2744,11 +2776,15 @@ class LatexPrinter(Printer):
                  self._print(R.base_ideal))
 
     def _print_QuotientRingElement(self, x):
-        return r"{{{}}} + {{{}}}".format(self._print(x.data),
+        x_latex = self._print(x.ring.to_sympy(x))
+        return r"{{{}}} + {{{}}}".format(x_latex,
                  self._print(x.ring.base_ideal))
 
     def _print_QuotientModuleElement(self, m):
-        return r"{{{}}} + {{{}}}".format(self._print(m.data),
+        data = [m.module.ring.to_sympy(x) for x in m.data]
+        data_latex = r"\left[ {} \right]".format(",".join(
+            '{' + self._print(x) + '}' for x in data))
+        return r"{{{}}} + {{{}}}".format(data_latex,
                  self._print(m.module.killed_module))
 
     def _print_QuotientModule(self, M):
@@ -2871,6 +2907,12 @@ class LatexPrinter(Printer):
     def _print_mpq(self, expr):
         return str(expr)
 
+    def _print_fmpz(self, expr):
+        return str(expr)
+
+    def _print_fmpq(self, expr):
+        return str(expr)
+
     def _print_Predicate(self, expr):
         return r"\operatorname{{Q}}_{{\text{{{}}}}}".format(latex_escape(str(expr.name)))
 
@@ -2888,7 +2930,7 @@ class LatexPrinter(Printer):
         return r"\mathtt{\text{%s}}" % latex_escape(s)
 
 
-def translate(s):
+def translate(s: str) -> str:
     r'''
     Check for a modifier ending the string.  If present, convert the
     modifier to latex and translate the rest recursively.
@@ -3011,6 +3053,9 @@ def latex(expr, **settings):
     diff_operator: string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
+    adjoint_style: string, optional
+        String to use for the adjoint symbol. Defined options are ``'dagger'``
+        (default),``'star'``, and ``'hermitian'``.
 
     Notes
     =====

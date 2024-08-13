@@ -7,7 +7,7 @@ Curve
 """
 
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.core import sympify, diff
+from sympy.core import diff
 from sympy.core.containers import Tuple
 from sympy.core.symbol import _symbol
 from sympy.geometry.entity import GeometryEntity, GeometrySet
@@ -74,15 +74,14 @@ class Curve(GeometrySet):
     """
 
     def __new__(cls, function, limits):
-        fun = sympify(function)
-        if not is_sequence(fun) or len(fun) != 2:
+        if not is_sequence(function) or len(function) != 2:
             raise ValueError("Function argument should be (x(t), y(t)) "
                 "but got %s" % str(function))
         if not is_sequence(limits) or len(limits) != 3:
             raise ValueError("Limit argument should be (t, tmin, tmax) "
                 "but got %s" % str(limits))
 
-        return GeometryEntity.__new__(cls, Tuple(*fun), Tuple(*limits))
+        return GeometryEntity.__new__(cls, Tuple(*function), Tuple(*limits))
 
     def __call__(self, f):
         return self.subs(self.parameter, f)

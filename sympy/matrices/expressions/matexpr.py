@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 from functools import wraps
 
 from sympy.core import S, Integer, Basic, Mul, Add
@@ -11,8 +11,9 @@ from sympy.core.sympify import SympifyError, _sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.common import NonSquareMatrixError
-from sympy.matrices.matrices import MatrixKind, MatrixBase
+from sympy.matrices.exceptions import NonSquareMatrixError
+from sympy.matrices.kind import MatrixKind
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.multipledispatch import dispatch
 from sympy.utilities.misc import filldedent
 
@@ -52,7 +53,7 @@ class MatrixExpr(Expr):
 
     MatrixSymbol, MatAdd, MatMul, Transpose, Inverse
     """
-    __slots__ = ()  # type: tTuple[str, ...]
+    __slots__: tuple[str, ...] = ()
 
     # Should not be considered iterable by the
     # sympy.utilities.iterables.iterable function. Subclass that actually are
@@ -61,9 +62,9 @@ class MatrixExpr(Expr):
 
     _op_priority = 11.0
 
-    is_Matrix = True  # type: bool
-    is_MatrixExpr = True  # type: bool
-    is_Identity = None  # type: FuzzyBool
+    is_Matrix: bool = True
+    is_MatrixExpr: bool = True
+    is_Identity: FuzzyBool = None
     is_Inverse = False
     is_Transpose = False
     is_ZeroMatrix = False
@@ -84,7 +85,7 @@ class MatrixExpr(Expr):
     # The following is adapted from the core Expr object
 
     @property
-    def shape(self) -> tTuple[Expr, Expr]:
+    def shape(self) -> tuple[Expr, Expr]:
         raise NotImplementedError
 
     @property
@@ -104,22 +105,22 @@ class MatrixExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatAdd(self, other, check=True).doit()
+        return MatAdd(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatAdd(other, self, check=True).doit()
+        return MatAdd(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatAdd(self, -other, check=True).doit()
+        return MatAdd(self, -other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatAdd(other, -self, check=True).doit()
+        return MatAdd(other, -self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
@@ -171,14 +172,22 @@ class MatrixExpr(Expr):
         return self.shape[1]
 
     @property
-    def is_square(self):
-        return self.rows == self.cols
+    def is_square(self) -> bool | None:
+        rows, cols = self.shape
+        if isinstance(rows, Integer) and isinstance(cols, Integer):
+            return rows == cols
+        if rows == cols:
+            return True
+        return None
 
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(Transpose(self))
 
     def as_real_imag(self, deep=True, **hints):
+        return self._eval_as_real_imag()
+
+    def _eval_as_real_imag(self):
         real = S.Half * (self + self._eval_conjugate())
         im = (self - self._eval_conjugate())/(2*S.ImaginaryUnit)
         return (real, im)
@@ -191,6 +200,9 @@ class MatrixExpr(Expr):
 
     def _eval_transpose(self):
         return Transpose(self)
+
+    def _eval_trace(self):
+        return None
 
     def _eval_power(self, exp):
         """
@@ -224,7 +236,8 @@ class MatrixExpr(Expr):
     @classmethod
     def _check_dim(cls, dim):
         """Helper function to check invalid matrix dimensions"""
-        ok = check_assumptions(dim, integer=True, nonnegative=True)
+        ok = not dim.is_Float and check_assumptions(
+            dim, integer=True, nonnegative=True)
         if ok is False:
             raise ValueError(
                 "The dimension specification {} should be "
@@ -239,7 +252,7 @@ class MatrixExpr(Expr):
         return adjoint(self)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return S.One, self
 
     def conjugate(self):
@@ -255,7 +268,7 @@ class MatrixExpr(Expr):
         return self.transpose()
 
     def inverse(self):
-        if not self.is_square:
+        if self.is_square is False:
             raise NonSquareMatrixError('Inverse of non-square matrix')
         return self._eval_inverse()
 
@@ -375,7 +388,9 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().as_mutable()
 
-    def __array__(self):
+    def __array__(self, dtype=object, copy=None):
+        if copy is not None and not copy:
+            raise TypeError("Cannot implement copy=False when converting Matrix to ndarray")
         from numpy import empty
         a = empty(self.shape, dtype=object)
         for i in range(self.rows):
@@ -398,7 +413,7 @@ class MatrixExpr(Expr):
         return self
 
     def as_coeff_mmul(self):
-        return 1, MatMul(self)
+        return S.One, MatMul(self)
 
     @staticmethod
     def from_index_summation(expr, first_index=None, last_index=None, dimensions=None):
@@ -442,8 +457,8 @@ class MatrixExpr(Expr):
         >>> MatrixExpr.from_index_summation(expr)
         A*B.T*A.T
         """
-        from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
-        from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+        from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
+        from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
         first_indices = []
         if first_index is not None:
             first_indices.append(first_index)
@@ -522,9 +537,9 @@ def _matrix_derivative(expr, x, old_algorithm=False):
     if old_algorithm:
         return _matrix_derivative_old_algorithm(expr, x)
 
-    from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+    from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
     from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
-    from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
 
     array_expr = convert_matrix_to_array(expr)
     diff_array_expr = array_derive(array_expr, x)
@@ -538,7 +553,7 @@ def _matrix_derivative_old_algorithm(expr, x):
 
     parts = [i.build() for i in lines]
 
-    from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
 
     parts = [[convert_array_to_matrix(j) for j in i] for i in parts]
 
@@ -548,7 +563,7 @@ def _matrix_derivative_old_algorithm(expr, x):
         return 1, 1
 
     def get_rank(parts):
-        return sum([j not in (1, None) for i in parts for j in _get_shape(i)])
+        return sum(j not in (1, None) for i in parts for j in _get_shape(i))
 
     ranks = [get_rank(i) for i in parts]
     rank = ranks[0]
@@ -589,7 +604,6 @@ class MatrixElement(Expr):
 
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
-        from sympy.matrices.matrices import MatrixBase
         if isinstance(name, str):
             name = Symbol(name)
         else:
@@ -610,10 +624,10 @@ class MatrixElement(Expr):
     def symbol(self):
         return self.args[0]
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return args[0][args[1], args[2]]
@@ -625,10 +639,7 @@ class MatrixElement(Expr):
     def _eval_derivative(self, v):
 
         if not isinstance(v, MatrixElement):
-            from sympy.matrices.matrices import MatrixBase
-            if isinstance(self.parent, MatrixBase):
-                return self.parent.diff(v)[self.i, self.j]
-            return S.Zero
+            return self.parent.diff(v)[self.i, self.j]
 
         M = self.args[0]
 
@@ -740,7 +751,7 @@ class _LeftRightArgs:
     """
 
     def __init__(self, lines, higher=S.One):
-        self._lines = [i for i in lines]
+        self._lines = list(lines)
         self._first_pointer_parent = self._lines
         self._first_pointer_index = 0
         self._first_line_index = 0
@@ -794,7 +805,7 @@ class _LeftRightArgs:
         data = [self._build(i) for i in self._lines]
         if self.higher != 1:
             data += [self._build(self.higher)]
-        data = [i for i in data]
+        data = list(data)
         return data
 
     def matrix_form(self):
@@ -826,9 +837,9 @@ class _LeftRightArgs:
         """
         rank = 0
         if self.first != 1:
-            rank += sum([i != 1 for i in self.first.shape])
+            rank += sum(i != 1 for i in self.first.shape)
         if self.second != 1:
-            rank += sum([i != 1 for i in self.second.shape])
+            rank += sum(i != 1 for i in self.second.shape)
         if self.higher != 1:
             rank += 2
         return rank

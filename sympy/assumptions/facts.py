@@ -56,6 +56,33 @@ def get_known_facts(x=None):
         x = Symbol('x')
 
     fact = And(
+        get_number_facts(x),
+        get_matrix_facts(x)
+    )
+    return fact
+
+
+@cacheit
+def get_number_facts(x = None):
+    """
+    Facts between unary number predicates.
+
+    Parameters
+    ==========
+
+    x : Symbol, optional
+        Placeholder symbol for unary facts. Default is ``Symbol('x')``.
+
+    Returns
+    =======
+
+    fact : Known facts in conjugated normal form.
+
+    """
+    if x is None:
+        x = Symbol('x')
+
+    fact = And(
         # primitive predicates for extended real exclude each other.
         Exclusive(Q.negative_infinite(x), Q.negative(x), Q.zero(x),
             Q.positive(x), Q.positive_infinite(x)),
@@ -90,7 +117,31 @@ def get_known_facts(x=None):
 
         # commutativity
         Implies(Q.finite(x) | Q.infinite(x), Q.commutative(x)),
+    )
+    return fact
 
+
+@cacheit
+def get_matrix_facts(x = None):
+    """
+    Facts between unary matrix predicates.
+
+    Parameters
+    ==========
+
+    x : Symbol, optional
+        Placeholder symbol for unary facts. Default is ``Symbol('x')``.
+
+    Returns
+    =======
+
+    fact : Known facts in conjugated normal form.
+
+    """
+    if x is None:
+        x = Symbol('x')
+
+    fact = And(
         # matrices
         Implies(Q.orthogonal(x), Q.positive_definite(x)),
         Implies(Q.orthogonal(x), Q.unitary(x)),
@@ -117,6 +168,7 @@ def get_known_facts(x=None):
         Implies(Q.real_elements(x), Q.complex_elements(x)),
     )
     return fact
+
 
 
 def generate_known_facts_dict(keys, fact):
@@ -178,10 +230,8 @@ def get_known_facts_keys():
     ``generate_known_facts_dict``.
 
     """
-    exclude = set()
-    for pred in [Q.eq, Q.ne, Q.gt, Q.lt, Q.ge, Q.le]:
-        # exclude polyadic predicates
-        exclude.add(pred)
+    # exclude polyadic predicates
+    exclude = {Q.eq, Q.ne, Q.gt, Q.lt, Q.ge, Q.le}
 
     result = []
     for attr in Q.__class__.__dict__:

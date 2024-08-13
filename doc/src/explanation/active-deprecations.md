@@ -74,7 +74,660 @@ will need to either add a `warnings` filter as above or use pytest to filter
 SymPy deprecation warnings.
 ```
 
+## Version 1.14
+
+There are no deprecations yet for SymPy 1.14.
+
+## Version 1.13
+
+(deprecated-mechanics-body-class)=
+### Deprecated mechanics Body class
+
+The ``Body`` class in the ``sympy.physics.mechanics`` module has been
+deprecated. It was introduced to support the joints framework. However, it
+causes several problems because it represents both rigid bodies and particles.
+``Body`` has now been fully replaced by ``RigidBody`` and ``Particle``.
+Previously, one could create a simple rigid body or particle using only the
+``Body`` class:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import Body
+>>> Body("rigid_body")  # doctest: +SKIP
+rigid_body
+>>> Body("particle", mass=symbols("m"))  # doctest: +SKIP
+particle
+```
+
+Now they should be created using the ``RigidBody`` and ``Particle`` class:
+
+```py
+>>> from sympy.physics.mechanics import RigidBody, Particle
+>>> RigidBody("rigid_body")
+rigid_body
+>>> Particle("particle")
+particle
+```
+
+(deprecated-mechanics-jointsmethod)=
+### Deprecated mechanics JointsMethod
+
+The ``JointsMethod`` class in the ``sympy.physics.mechanics`` module has been
+deprecated. It was introduced to support the joints framework, but it has been
+fully replaced due to limitations in its design. Previously, one could construct
+as system solely consisting out of bodies and joints, which were then parsed by
+``JointsMethod`` to a backend, like ``KanesMethod`` to form the equations of
+motion.
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import (
+...   Body, JointsMethod, PinJoint, PrismaticJoint)
+>>> g, l = symbols("g l")
+>>> wall = Body("wall")
+>>> cart = Body("cart")
+>>> pendulum = Body("Pendulum")
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
+...                child_point=l * pendulum.y)
+>>> pendulum.masscenter.set_vel(pendulum.frame, 0)
+>>> cart.apply_force(-g * cart.mass * wall.y)
+>>> pendulum.apply_force(-g * pendulum.mass * wall.y)
+>>> method = JointsMethod(wall, slider, pin)  # doctest: +SKIP
+>>> method.form_eoms()  # doctest: +SKIP
+Matrix([
+[ Pendulum_mass*l*u_j(t)**2*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_j(t), t) - (Pendulum_mass + cart_mass)*Derivative(u_s(t), t)],
+[-Pendulum_mass*g*l*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_s(t), t) - (Pendulum_izz + Pendulum_mass*l**2)*Derivative(u_j(t), t)]])
+```
+
+The replacement of ``JointsMethod`` is ``System``, which can be used to form the
+equations of motion of the same cart pole as follows:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.physics.mechanics import (
+...   Particle, PinJoint, PrismaticJoint, RigidBody, System)
+>>> g, l = symbols("g l")
+>>> wall = RigidBody("wall")
+>>> cart = RigidBody("cart")
+>>> pendulum = RigidBody("Pendulum")
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
+...                child_point=l * pendulum.y)
+>>> system = System.from_newtonian(wall)
+>>> system.add_joints(slider, pin)
+>>> system.apply_uniform_gravity(-g * wall.y)
+>>> system.form_eoms()
+Matrix([
+[ Pendulum_mass*l*u_j(t)**2*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_j(t), t) - (Pendulum_mass + cart_mass)*Derivative(u_s(t), t)],
+[-Pendulum_mass*g*l*sin(q_j(t)) - Pendulum_mass*l*cos(q_j(t))*Derivative(u_s(t), t) - (Pendulum_izz + Pendulum_mass*l**2)*Derivative(u_j(t), t)]])
+```
+
+(deprecated-matrix-mixins)=
+### Deprecated matrix mixin classes
+
+The matrix mixin classes are deprecated. Previously the ``Matrix`` class (aka
+``MutableDenseMatrix``) was created through an inheritance hierarchy that
+looked like:
+```py
+class MatrixRequired:
+class MatrixShaping(MatrixRequired):
+class MatrixSpecial(MatrixRequired):
+class MatrixProperties(MatrixRequired):
+class MatrixOperations(MatrixRequired):
+class MatrixArithmetic(MatrixRequired):
+class MatrixCommon(
+    MatrixArithmetic,
+    MatrixOperations,
+    MatrixProperties,
+    MatrixSpecial,
+    MatrixShaping):
+class MatrixDeterminant(MatrixCommon):
+class MatrixReductions(MatrixDeterminant):
+class MatrixSubspaces(MatrixReductions):
+class MatrixEigen(MatrixSubspaces)
+class MatrixCalculus(MatrixCommon):
+class MatrixDeprecated(MatrixCommon):
+class MatrixBase(MatrixDeprecated,
+   MatrixCalculus,
+   MatrixEigen,
+   MatrixCommon,
+   Printable):
+class RepMatrix(MatrixBase):
+class DenseMatrix(RepMatrix):
+class MutableRepMatrix(RepMatrix):
+class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
+```
+As of SymPy 1.13 this has been simplified and all classes above
+``MatrixBase``are merged together so the hierarchy looks like:
+```py
+class MatrixBase(Printable):
+class RepMatrix(MatrixBase):
+class DenseMatrix(RepMatrix):
+class MutableRepMatrix(RepMatrix):
+class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
+```
+The matrix mixin classes like ``MatrixRequired`` etc are still available
+because downstream code might be subclassing these classes but these are all
+deprecated and will be removed in a future version of SymPy. Subclassing these
+classes is deprecated and anycode that does that should be changed to not
+subclass them.
+
+It is also deprecated to use these classes with ``isinstance`` like
+``isinstance(M, MatrixCommon)``. Any code doing this should be changed to use
+``isinstance(M, Matrixbase)`` instead which will also work with previous SymPy
+versions.
+
+More generally importing anything from the ``sympy.matrices.common`` or
+``sympy.matrices.matrices`` modules in which these classes are defined is
+deprecated. These modules will be removed in a future release of SymPy.
+
+The reason for this change is that the convoluted inheritance hierarchy made it
+difficult to improve ``Matrix`` for the majority of users while still providing
+all of these classes that could be subclassed. Since these mixin classes are no
+longer used as part of ``Matrix`` they no longer serve any function within
+SymPy and the removal of this now unused code will simplify the codebase.
+
+(deprecated-sympify-string-fallback)=
+### The string fallback in `sympify()`
+
+The `sympify` function would previously convert an unrecognized object to a
+string and retry sympification. This was deprecated in SymPy 1.6 and was
+removed in SymPy 1.13.
+
+The behavior of {func}`~.sympify` is that `sympify(expr)` tries various methods
+to try to convert `expr` into a SymPy objects. Previously if all these methods
+would fail, it would take `str(expr)` and try to parse it using
+{func}`~.parse_expr`. This string fallback feature was deprecated in SymPy 1.6
+and was removed in SymPy 1.13.
+
+This behaviour was problematic for a few reasons:
+
+- It could affect performance in major ways. See for instance issues
+  [#18056](https://github.com/sympy/sympy/issues/18056) and
+  [#15416](https://github.com/sympy/sympy/issues/15416) where it caused up to
+  100x slowdowns. The issue is that SymPy functions automatically call
+  `sympify` on their arguments. Whenever a function is passed something that
+  `sympify` doesn't know how to convert to a SymPy object, for instance, a
+  Python function type, it passes the string to {func}`~.parse_expr`. This is
+  significantly slower than the direct conversions that happen by default.
+  This occurs specifically whenever `sympify()` is used in library code
+  instead of `_sympify()` (or equivalently `sympify(strict=True)`), but
+  presently this is done a lot. Using `strict=True` will at some point be the
+  default for all library code, but this is a [harder change to
+  make](https://github.com/sympy/sympy/issues/11003).
+
+- It can cause security issues, since strings are evaled, and objects can
+  return whatever string they want in their `__repr__`. See also
+  https://github.com/sympy/sympy/pull/12524.
+
+- It really wasn't very useful to begin with. Just because an object's string
+  form can be parsed into a SymPy expression doesn't mean it should be parsed
+  that way. This is usually correct for custom numeric types, but an object's
+  repr could be anything. For instance, if the string form of an object looks
+  like a valid Python identifier, it would parse as a `Symbol`.
+
+There are plenty of ways to make custom objects work inside of
+{func}`~.sympify`.
+
+- Firstly, if an object is intended to work alongside other SymPy expressions,
+  it should subclass from {class}`~.Basic` (or {class}`~.Expr`). If it does,
+  {func}`~.sympify` will just return it unchanged because it will already be a
+  valid SymPy object.
+
+- For objects that you control, you can add the `_sympy_` method. The [sympify
+  docstring](sympy.core.sympify.sympify) has an example of this.
+
+- For objects that you don't control, you can add a custom converter to the
+  `sympy.core.sympify.converter` dictionary. The {func}`~.sympify` docstring
+  also has an example of this.
+
+(dmp-rep)=
+### Deprecate the DMP.rep attribute.
+
+The internal type of ``Poly`` is the ``DMP`` class which previously could be
+used to access the coefficients of a polynomial as a list like:
+```pycon
+>>> from sympy import symbols, Poly
+>>> x = symbols('x')
+>>> p = Poly(x**2 + 2*x + 3)
+>>> p
+Poly(x**2 + 2*x + 3, x, domain='ZZ')
+>>> p.rep  # doctest: +SKIP
+DMP([1, 2, 3], ZZ)
+>>> p.rep.rep  # doctest: +SKIP
+[1, 2, 3]
+```
+
+As of SymPy 1.13 the ``DMP`` type may be implemented by one of two subclasses:
+
+- ``DMP_Python`` which is like the previous ``DMP`` type and has a list as its
+  internal representation.
+- ``DUP_Flint`` which wraps a Flint polynomial from python-flint.
+
+The ``DUP_Flint`` type does not have an attribute that is analogous to the list
+that ``DMP_Python`` has. Accessing ``.rep`` will still generate a list but now
+gives a deprecation warning.
+
+Instead of ``.rep`` use the ``DMP.to_list()`` method which returns an
+equivalent list:
+```pycon
+>>> p.rep.to_list()
+[1, 2, 3]
+```
+
+The ``.to_list()`` method is also available in previous versions of SymPy and
+its behaviour is unchanged.
+
+(pkgdata)=
+### Deprecate the pkgdata module
+
+The ``sympy.utilities.pkdata`` module is deprecated and will be removed. It is
+no longer used anywhere in SymPy and is unsuitable for use by any downstream
+code. Use the stdlib ``importlib.resources`` module instead.
+
+(eq-rewrite-Add)=
+### Deprecate Eq.rewrite(Add)
+The ability to rewrite ``eq = Eq(x, y)`` like ``eq.rewrite(Add)`` to give ``x - y``
+has been deprecated in favor of writing ``eq.lhs - eq.rhs``. A replacement
+property/method was not deemed necessary given the clarity of the explicit
+use of ``lhs`` and ``rhs``, and the inclusion of this functionality in the
+rewrite apparatus leads to failures when a node expecting a Boolean is re-
+written as an Expr.
+
+
+(deprecated-markers-annotations-fill-rectangles)=
+### Deprecate markers, annotations, fill, rectangles of the Plot class
+The properties ``markers, annotations, fill, rectangles`` (containing
+user-provided numerical data to be added on a plot) are deprecated.
+The new implementation saves user-provided numerical data into appropriate
+data series, which can easily be processed by ``MatplotlibBackend``.
+Instead of setting those properties directly, users should pass the homonym
+keyword arguments to the plotting functions.
+
+The supported behavior is to pass keyword arguments to the plotting functions,
+which works fine for all versions of SymPy (before and after 1.13):
+
+```py
+p = plot(x,
+  markers=[{"args":[[0, 1], [0, 1]], "marker": "*", "linestyle": "none"}],
+  annotations=[{"text": "test", "xy": (0, 0)}],
+  fill={"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]},
+  rectangles=[{"xy": (0, 0), "width": 5, "height": 1}])
+```
+
+Setting attributes on the plot object is deprecated and will raise warnings:
+
+```py
+p = plot(x, show=False)
+p.markers = [{"args":[[0, 1], [0, 1]], "marker": "*", "linestyle": "none"}]
+p.annotations = [{"text": "test", "xy": (0, 0)}]
+p.fill = {"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]}
+p.rectangles = [{"xy": (0, 0), "width": 5, "height": 1}]
+p.show()
+```
+
+Motivation for this deprecation: the implementation of the ``Plot`` class
+suggests that it is ok to add attributes and hard-coded if-statements in the
+``MatplotlibBackend`` class to provide more and more functionalities for
+user-provided numerical data (e.g. adding horizontal lines, or vertical
+lines, or bar plots, etc). However, in doing so one would reinvent the wheel:
+plotting libraries already implements the necessary API. There is no need to
+hard code these things. The plotting module should facilitate the visualization
+of symbolic expressions. The best way to add custom numerical data is to
+retrieve the figure created by the plotting module and use the API of a
+particular plotting library. For example:
+
+```py
+# plot symbolic expression
+p = plot(cos(x))
+# retrieve Matplotlib's figure and axes object
+fig, ax = p._backend.fig, p._backend.ax[0]
+# add the desired numerical data using Matplotlib's API
+ax.plot([0, 1, 2], [0, 1, -1], "*")
+ax.axhline(0.5)
+# visualize the figure
+fig
+```
+
+
+(moved-mechanics-functions)=
+### Moved mechanics functions
+With the introduction of some new objects like the ``Inertia`` and load objects
+in the ``sympy.physics.mechanics`` module, some functions from
+``sympy.physics.mechanics.functions`` have been moved to new modules. This
+removes some circular import errors and makes it easier to navigate through the
+source code, due to the parity between function names and module names. The
+following functions were moved:
+- ``inertia`` has been moved to ``sympy.physics.mechanics.inertia``
+- ``inertia_of_point_mass`` has been moved to ``sympy.physics.mechanics.inertia``
+- ``gravity`` has been moved to ``sympy.physics.mechanics.loads``
+
+Previously you could import the functions from
+``sympy.physics.mechanics.functions``:
+
+```py
+>>> from sympy.physics.mechanics.functions import inertia, inertia_of_point_mass, gravity
+```
+
+Now they should be imported from ``sympy.physics.mechanics``:
+
+```py
+>>> from sympy.physics.mechanics import inertia, inertia_of_point_mass
+>>> from sympy.physics.mechanics.loads import gravity
+```
+
+(modularinteger-compare)=
+### Ordered comparisons like ``a < b`` with modular integers
+
+SymPy's ``GF`` domains represent modular integers. Previously it was possible
+to compare these with ordered comparisons like ``a < b``:
+```py
+>>> from sympy import GF
+>>> F5 = GF(5)
+>>> F5(2) < F5(3) # doctest: +SKIP
+True
+```
+This will now fail with ``TypeError`` when the ground types are set to
+``flint``. When the ground types are not ``flint`` these comparisons are now
+deprecated: they will still work but will give a deprecation warning when used.
+
+Ordered comparisons of modular integer or finite fields do not make sense
+because these are not ordered fields:
+```
+>>> e = F5(4)
+>>> e + 1 > e # doctest: +SKIP
+False
+```
+
+(modularinteger-to-int)=
+### The ``ModularInteger.to_int()`` method
+
+SymPy's ``GF`` domains are for modular integers e.g. ``GF(n)`` is for the
+integers modulo ``n`` and can be used like:
+```py
+>>> from sympy import GF
+>>> K = GF(5)
+>>> a = K(7)
+>>> a
+2 mod 5
+```
+
+The elements of a modular integer domain have a ``to_int()`` method that is
+deprecated since SymPy 1.13:
+```py
+>>> # this is deprecated:
+>>> a.to_int()  # doctest: +SKIP
+2
+```
+
+Instead the preferred way to achieve equivalent behavior is to use the method
+on the domain (added in SymPy 1.13) or alternatively calling ``int`` might be
+better:
+```py
+>>> K.to_int(a)
+2
+>>> int(a)
+2
+```
+
+These two ways of converting to an ``int`` are not equivalent. The domain
+``GF(p)`` can be defined with ``symmetric=True`` or ``symmetric=False``. This
+difference affects the behavior of the ``to_int`` method:
+```py
+>>> KS = GF(5, symmetric=True)
+>>> KU = GF(5, symmetric=False)
+>>> [KS.to_int(KS(n)) for n in range(10)]
+[0, 1, 2, -2, -1, 0, 1, 2, -2, -1]
+>>> [KU.to_int(KU(n)) for n in range(10)]
+[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+>>> [int(KS(n)) for n in range(10)]
+[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+>>> [int(KU(n)) for n in range(10)]
+[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+```
+
+So if ``symmetric=True`` (which is the default) then the ``to_int`` method will
+sometimes return negative integers. If ``symmetric=False`` or if the ``int(a)``
+method is used the returned result is always a nonnegative integer. Note also
+that the behaviour of ``int(a)`` was changed in SymPy 1.13: in previous
+versions it was equivalent to ``a.to_int()``. To write code that behaves the
+same way in all SymPy versions you can:
+
+1. Use ``symmetric=False`` and use ``int(a)``.
+2. Define a function like
+    ```py
+    def to_int(K, a):
+        if hasattr(K, 'to_int'):
+            return K.to_int(a)
+        else:
+            return a.to_int()
+    ```
+
+The reason for this change is that it makes it possible to use python-flint's
+``nmod`` as an alternative (much faster) implementation for the elements of
+``GF(p)``. It is not possible to add a ``to_int`` method to python-flint's
+``nmod`` type or to capture the equivalent of ``symmetric=True/False`` by
+storing data in the ``nmod`` instance. Deprecating and removing the ``to_int``
+method and changing the behavior of the ``int`` method means that the element
+instances do not have any behavior that depends on whether the domain is
+considered to be "symmetric" or not. Instead the notion of "symmetric" is now
+purely a property of the domain object itself rather than of the elements and
+so the ``to_int`` method that depends on this must be a domain method rather
+than an element method.
+
+(deprecated-ntheory-symbolic-functions)=
+### Relocate symbolic functions from ``ntheory`` to ``functions``
+
+The following symbolic functions in ``ntheory`` have been moved to
+``functions``:
+
+* ``sympy.ntheory.factor_.divisor_sigma``
+* ``sympy.ntheory.factor_.primenu``
+* ``sympy.ntheory.factor_.primeomega``
+* ``sympy.ntheory.factor_.reduce_totient``
+* ``sympy.ntheory.factor_.totient``
+* ``sympy.ntheory.generate.primepi``
+* ``sympy.partitions_.npartitions``
+* ``sympy.ntheory.residue_ntheory.jacobi_symbol``
+* ``sympy.ntheory.residue_ntheory.legendre_symbol``
+* ``sympy.ntheory.residue_ntheory.mobius``
+
+Code that imports these functions from top-level like ``from sympy import
+mobius`` will continue to work fine. However code that imports these from the
+fully qualified module like ``from sympy.ntheory import mobius`` or ``from
+sympy.ntheory.residue_ntheory import mobius`` will now see a deprecation
+warning. The new location for these functions is in ``sympy.functions`` but the
+intended way to import them is still from top-level like ``from sympy import
+mobius``.
+
+The following symbolic functions in ``ntheory`` have been moved to
+``functions``, but cannot be imported at top-level.
+
+* ``sympy.ntheory.factor_.udivisor_sigma``
+
+The following functions have been moved from ``functions`` to ``ntheory``
+because they are numeric functions.
+
+* ``sympy.functions.combinatorial.numbers.carmichael.is_carmichael``
+* ``sympy.functions.combinatorial.numbers.carmichael.find_carmichael_numbers_in_range``
+* ``sympy.functions.combinatorial.numbers.carmichael.find_first_n_carmichaels``
+
+If you are using these functions, change from
+
+```py
+>>> from sympy import carmichael
+>>> carmichael.is_carmichael(561)
+True
+```
+
+to
+
+```py
+>>> from sympy import is_carmichael
+>>> is_carmichael(561)
+True
+```
+
+
+## Version 1.12
+
+(managedproperties)=
+### The ``ManagedProperties`` metaclass
+
+The ``ManagedProperties`` metaclass was previously the metaclass for ``Basic``.
+Now ``Basic`` does not use metaclasses and so its metaclass is just ``type``.
+Any code that previously subclassed ``Basic`` and wanted to do anything with
+metaclasses would have needed to subclass ``ManagedProperties`` to make the
+relevant metaclass. The only relevant method of ``ManagedProperties`` has been
+moved to ``Basic.__init_subclass__``. Since ``ManagedProperties`` is not used
+as the metaclass for ``Basic`` any more and no longer does anything useful it
+should be possible for such code to just subclass ``type`` instead for any
+metaclass.
+
+
+(deprecated-mechanics-joint-coordinate-format)=
+### New Joint coordinate format
+
+The format, i.e. type and auto generated name, of the generalized coordinates
+and generalized speeds of the joints in the ``sympy.physics.mechanics`` module
+has changed. The data type has changed from ``list`` to ``Matrix``, which is the
+same as the type for the generalized coordinates within the ``KanesMethod``.
+The auto naming of the generalized coordinates and generalized speeds of the
+``PinJoint`` and ``PrismaticJoint`` have also changed to ``q_<joint.name>`` and
+``u_<joint.name>``. Previously each of those joints had an unique template for
+auto generating these names.
+
+(deprecated-mechanics-joint-axis)=
+### New Joint intermediate frames
+
+The definition of the joint axis in the ``sympy.physics.mechanics`` module has
+changed. Instead of using the arguments ``parent_axis`` and ``child_axis`` to
+automatically determine the joint axis and an intermediate reference frame, the
+joints now use an intermediate frame argument for both the parent and the child
+body, i.e. ``parent_interframe`` and ``child_interframe``. This means that you
+can now fully define the joint attachment, consisting of a point and frame, for
+both bodies. Furthermore, if a joint like the ``PinJoint`` has a specific joint
+axis, e.g. the axis about which the rotation occurs, then this axis can be
+specified using the ``joint_axis`` argument. An advantage of this setup is that
+one can more accurately define the transformation from the parent body to the
+child body.
+
+For example, suppose you want a ``PinJoint`` that rotates the child body about
+the ``parent.z`` axis and ``-child.z`` axis. The previous way to specify this
+joint was:
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_axis=parent.z,
+...                child_axis=-child.z)   # doctest: +SKIP
+>>> parent.dcm(child)   # doctest: +SKIP
+Matrix([
+[-cos(q_pin(t)), -sin(q_pin(t)),  0],
+[-sin(q_pin(t)),  cos(q_pin(t)),  0],
+[             0,              0, -1]])
+```
+
+When inspecting this matrix you will notice that for ``theta_pin = 0`` the child
+body is rotated $\pi$ rad about the ``parent.y`` axis. In the new definition
+you can see that we get the same result, but this time we have also specified
+this exact rotation:
+
+```py
+>>> from sympy import pi
+>>> from sympy.physics.mechanics import Body, PinJoint, ReferenceFrame
+>>> parent, child, = Body('parent'), Body('child')
+>>> int_frame = ReferenceFrame('int_frame')
+>>> int_frame.orient_axis(child.frame, child.y, pi)
+>>> pin = PinJoint('pin', parent, child, joint_axis=parent.z,
+...                child_interframe=int_frame)
+>>> parent.dcm(child)
+Matrix([
+[-cos(q_pin(t)), -sin(q_pin(t)),  0],
+[-sin(q_pin(t)),  cos(q_pin(t)),  0],
+[             0,              0, -1]])
+```
+
+However if you liked the fact that the deprecated arguments aligned the frames
+for you, then you can still make use of this feature by providing vectors to
+``parent_interframe`` and ``child_interframe``, which are then oriented such
+that the joint axis expressed in the intermediate frame is aligned with the
+given vector:
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_interframe=parent.z,
+...                child_interframe=-child.z)
+>>> parent.dcm(child)
+Matrix([
+[-cos(q_pin(t)), -sin(q_pin(t)),  0],
+[-sin(q_pin(t)),  cos(q_pin(t)),  0],
+[             0,              0, -1]])
+```
+
+(deprecated-mechanics-joint-pos)=
+### Change in joint attachment point argument
+
+The argument names for specifying the attachment points of a joint in
+``sympy.physics.mechanics`` , i.e. ``parent_joint_pos`` and ``child_joint_pos``,
+have been changed to ``parent_point`` and ``child_point``. This is because these
+arguments can now also be ``Point`` objects, so they can be exactly the same as
+the ``parent_point`` and ``child_point`` attributes.
+
+For example, suppose you want a ``PinJoint`` in the parent to be positioned at
+``parent.frame.x`` with respect to the mass center, and in the child at
+``-child.frame.x``. The previous way to specify this was:
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_joint_pos=parent.frame.x,
+...                child_joint_pos=-child.frame.x)   # doctest: +SKIP
+>>> pin.parent_point.pos_from(parent.masscenter)   # doctest: +SKIP
+parent_frame.x
+>>> pin.child_point.pos_from(child.masscenter)   # doctest: +SKIP
+- child_frame.x
+```
+
+Now you can do the same with either
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_point=parent.frame.x,
+...                child_point=-child.frame.x)
+>>> pin.parent_point.pos_from(parent.masscenter)
+parent_frame.x
+>>> pin.child_point.pos_from(child.masscenter)
+- child_frame.x
+```
+
+Or
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint, Point
+>>> parent, child = Body('parent'), Body('child')
+>>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x)
+>>> child_point = child.masscenter.locatenew('child_point', -child.frame.x)
+>>> pin = PinJoint('pin', parent, child, parent_point=parent_point,
+...                child_point=child_point)
+>>> pin.parent_point.pos_from(parent.masscenter)
+parent_frame.x
+>>> pin.child_point.pos_from(child.masscenter)
+- child_frame.x
+```
+
 ## Version 1.11
+
+(deprecated-conv-array-expr-module-names)=
+### Modules `sympy.tensor.array.expressions.conv_*` renamed to `sympy.tensor.array.expressions.from_*`
+
+In order to avoid possible naming and tab-completion conflicts with
+functions with similar names to the names of the modules, all modules whose
+name starts with `conv_*` in `sympy.tensor.array.expressions` have been renamed
+to `from_*`.
 
 (mathematica-parser-new)=
 ### New Mathematica code parser
@@ -98,7 +751,7 @@ specify this conversion was:
 
 ```py
 >>> from sympy.parsing.mathematica import mathematica
->>> mathematica('F[7,5,3]', {'F[*x]': 'Max(*x)*Min(*x)'})
+>>> mathematica('F[7,5,3]', {'F[*x]': 'Max(*x)*Min(*x)'})   # doctest: +SKIP
 21
 ```
 
@@ -110,6 +763,26 @@ Now you can do the same with
 >>> parse_mathematica("F[7,5,3]").replace(Function("F"), lambda *x: Max(*x)*Min(*x))
 21
 ```
+
+(deprecated-carmichael-static-methods)=
+### Redundant static methods in `carmichael`
+
+A number of static methods in `~.carmichael` are just wrappers around other
+functions. Instead of ``carmichael.is_perfect_square`` use
+`sympy.ntheory.primetest.is_square` and instead of ``carmichael.is_prime`` use
+`~.isprime`. Finally, ``carmichael.divides`` can be replaced by instead checking
+
+```py
+n % p == 0
+```
+
+(remove-check-argument-from-matrix-operations)=
+### The `check` argument to `HadamardProduct`, `MatAdd` and `MatMul`
+
+This argument can be used to pass incorrect values to `~.HadamardProduct`,
+`~.MatAdd`, and `~.MatMul` leading to later problems. The `check` argument
+will be removed and the arguments will always be checked for correctness, i.e.,
+the arguments are matrices or matrix symbols.
 
 ## Version 1.10
 
@@ -339,17 +1012,17 @@ from the polys module, e.g.
 
 All of these matrix subclasses were broken in different ways and the
 introduction of {class}`~.DomainMatrix`
-([#20780](https://github.com/sympy/sympy/issues/20780),
-[#20759](https://github.com/sympy/sympy/issues/20759),
-[#20621](https://github.com/sympy/sympy/issues/20621),
-[#19882](https://github.com/sympy/sympy/issues/19882),
-[#18844](https://github.com/sympy/sympy/issues/18844)) provides a better
+([#20780](https://github.com/sympy/sympy/pull/20780),
+[#20759](https://github.com/sympy/sympy/pull/20759),
+[#20621](https://github.com/sympy/sympy/pull/20621),
+[#19882](https://github.com/sympy/sympy/pull/19882),
+[#18844](https://github.com/sympy/sympy/pull/18844)) provides a better
 solution for all cases. Previous PRs have removed the dependence of these
 other use cases on Matrix
-([#21441](https://github.com/sympy/sympy/issues/21441),
-[#21427](https://github.com/sympy/sympy/issues/21427),
-[#21402](https://github.com/sympy/sympy/issues/21402)) and now
-[#21496](https://github.com/sympy/sympy/issues/21496) has deprecated having
+([#21441](https://github.com/sympy/sympy/pull/21441),
+[#21427](https://github.com/sympy/sympy/pull/21427),
+[#21402](https://github.com/sympy/sympy/pull/21402)) and now
+[#21496](https://github.com/sympy/sympy/pull/21496) has deprecated having
 non-`Expr` in a `Matrix`.
 
 This change makes it possible to improve the internals of the Matrix class but
@@ -363,7 +1036,7 @@ just printing support then perhaps `TableForm` can be used.
 It isn't clear what to advise as a replacement here without knowing more about
 the usecase. If you are unclear how to update your code, please [open an
 issue](https://github.com/sympy/sympy/issues/new) or [write to our mailing
-list](http://groups.google.com/group/sympy) so we can discuss it.
+list](https://groups.google.com/g/sympy) so we can discuss it.
 
 (deprecated-get-segments)=
 ### The `get_segments` attribute of plotting objects
@@ -377,14 +1050,15 @@ Plotly, Mayavi, K3D only require lists of coordinates), this has been moved
 inside the `MatplotlibBackend` class.
 
 Note that previously, the method
-{meth}`~sympy.plotting.plot.Parametric2DLineSeries.get_points` always returned
+{meth}`~sympy.plotting.series.LineOver1DRangeSeries.get_points` always returned
 uniformly sampled points, which meant that some functions were not plotted
 correctly when using `get_points()` to plot with Matplotlib.
 
 To avoid this problem, the method `get_segments()` could be used, which used
 adaptive sampling and which could be used with Matplotlib's `LineCollection`.
 However, this has been changed, and now `get_points()` can also use adaptive
-sampling. The {meth}`~.get_data()` method can also be used.
+sampling. The {meth}`~sympy.plotting.series.Line2DBaseSeries.get_data()` method
+can also be used.
 
 
 (deprecated-physics-mdft)=
@@ -594,7 +1268,7 @@ Several parts of {mod}`sympy.diffgeom` have been updated to no longer be
 mutable, which better matches the immutable design used in the rest of SymPy.
 
 - Passing strings for symbol names in {class}`~.CoordSystem` is deprecated.
-  Instead you should be explicit and pass symbols with the appropiate
+  Instead you should be explicit and pass symbols with the appropriate
   assumptions, for instance, instead of
 
   ```py
@@ -632,19 +1306,6 @@ strings are the default in Python 3, these are not needed any more. `xstr()`
 should be replaced with just `str()`, the `unicode` argument to `prettyForm`
 should be omitted, and the `prettyForm.unicode` attribute should be replaced
 with the `prettyForm.s` attribute.
-
-(deprecated-printing-code-submodules)=
-### The `sympy.printing.fcode`, `sympy.printing.ccode`, and `sympy.printing.cxxcode` modules
-
-The submodules `sympy.printing.ccode`, `sympy.printing.fcode`, and
-`sympy.printing.cxxcode` were renamed to {mod}`sympy.printing.c`,
-{mod}`sympy.printing.fortran`, and {mod}`sympy.printing.cxx`, respectively.
-These modules were renamed because they conflict with the corresponding
-function names. This causes issues because `from sympy.printing import ccode`
-can give the function or the module, depending on whether the `ccode`
-submodule has been imported yet or not. See [this comment on issue
-#20234](https://github.com/sympy/sympy/issues/20234#issuecomment-707574283)
-for a technical discussion on why this happens.
 
 (deprecated-lambdify-arguments-set)=
 ### Passing the arguments to `lambdify` as a `set`
@@ -806,59 +1467,6 @@ first.
 
 See also {ref}`deprecated-poly-nonpoly-binary-operations` above.
 
-(deprecated-sympify-string-fallback)=
-### The string fallback in `sympify()`
-
-The current behavior of {func}`~.sympify` is that `sympify(expr)` tries
-various methods to try to convert `expr` into a SymPy objects. If all these
-methods fail, it takes `str(expr)` and tries to parse it using
-{func}`~.parse_expr`. This string fallback feature is deprecated. It is
-problematic for a few reasons:
-
-- It can affect performance in major ways. See for instance issues
-  [#18056](https://github.com/sympy/sympy/issues/18056) and
-  [#15416](https://github.com/sympy/sympy/issues/15416) where it caused up to
-  100x slowdowns. The issue is that SymPy functions automatically call
-  `sympify` on their arguments. Whenever a function is passed something that
-  `sympify` doesn't know how to convert to a SymPy object, for instance, a
-  Python function type, it passes the string to {func}`~.parse_expr`. This is
-  significantly slower than the direct conversions that happen by default.
-  This occurs specifically whenever `sympify()` is used in library code
-  instead of `_sympify()` (or equivalently `sympify(strict=True)`), but
-  presently this is done a lot. Using `strict=True` will at some point be the
-  default for all library code, but this is a [harder change to
-  make](https://github.com/sympy/sympy/issues/11003).
-
-- It can cause security issues, since strings are evaled, and objects can
-  return whatever string they want in their `__repr__`. See also
-  https://github.com/sympy/sympy/pull/12524.
-
-- It really isn't very useful to begin with. Just because an object's string
-  form can be parsed into a SymPy expression doesn't mean it should be parsed
-  that way. This is usually correct for custom numeric types, but an object's
-  repr could be anything. For instance, if the string form of an object looks
-  like a valid Python identifier, it will parse as a `Symbol`.
-
-There are plenty of ways to make custom objects work inside of
-{func}`~.sympify`.
-
-- Firstly, if an object is intended to work alongside other SymPy expressions,
-  it should subclass from {class}`~.Basic` (or {class}`~.Expr`). If it does,
-  {func}`~.sympify` will just return it unchanged because it will already be a
-  valid SymPy object.
-
-- For objects that you control, you can add the `_sympy_` method. The [sympify
-  docstring](sympy.core.sympify.sympify) has an example of this.
-
-- For objects that you don't control, you can add a custom converter to the
-  `sympy.core.sympify.converter` dictionary. The {func}`~.sympify` docstring
-  also has an example of this.
-
-To silence this deprecation warning in all cases, you can pass `strict=True`
-to `sympify()`. However, note that this will also disable some other
-conversions such as conversion of strings (for converting strings to SymPy
-types, you can explicitly use {func}`~.parse_expr`).
-
 (deprecated-indefinite-integral-eq)=
 ### Creating an indefinite `Integral` with an `Eq` argument
 
@@ -937,30 +1545,6 @@ The `tensorhead()` function is deprecated in favor of {func}`~.tensor_heads`.
 `tensor_heads()` is more consistent with other SymPy names (i.e., `Symbol` and
 `symbols()` or `TensorIndex` and `tensor_indices()`). It also does not use
 Young tableau to denote symmetries.
-
-(deprecated-quantity-methods)=
-### Methods to `sympy.physics.units.Quantity`
-
-The following methods of
-{class}`sympy.physics.units.quantities.Quantity` are deprecated.
-
-- `Quantity.set_dimension()`. This should be replaced with
-  `unit_system.set_quantity_dimension` or
-  `Quantity.set_global_dimension()`.
-
-- `Quantity.set_scale_factor()`. This should be replaced with
-  `unit_system.set_quantity_scale_factor` or {meth}`.Quantity.set_global_relative_scale_factor`
-
-- `Quantity.get_dimensional_expr()`. This is now associated with
-  {class}`~.UnitSystem` objects. The dimensional relations depend on the unit
-  system used. Use `unit_system.get_dimensional_expr()` instead.
-
-- `Quantity._collect_factor_and_dimension`. This has been moved to the
-  {class}`~.UnitSystem` class. Use
-  `unit_system._collect_factor_and_dimension(expr)` instead.
-
-See {ref}`deprecated-quantity-dimension-scale-factor` below for the motivation
-for this change.
 
 (deprecated-is-emptyset)=
 ### The `is_EmptySet` attribute of sets
@@ -1062,14 +1646,6 @@ The `max_degree` property and `get_upper_degree()` methods of `DixonResultant`
 are deprecated. See issue [#17749](https://github.com/sympy/sympy/pull/17749)
 for details.
 
-(deprecated-eq-expr)=
-### `Eq(expr)` with the rhs defaulting to 0
-
-Calling [`Eq`](sympy.core.relational.Equality) with a single argument is
-deprecated. This caused the right-hand side to default to `0`, but this
-behavior was confusing. You should explicitly use `Eq(expr, 0)` instead.
-
-
 (deprecated-non-tuple-lambda)=
 ### Non-tuple iterable for the first argument to `Lambda`
 
@@ -1118,159 +1694,3 @@ design flaw and not consistent with how the rest of SymPy works.
 
 Instead, the {meth}`.TensExpr.replace_with_arrays` method should be
 used.
-
-(deprecated-matrix-is_diagonalizable-cache)=
-### The `clear_cache` and `clear_subproducts` keywords to `Matrix.is_diagonalizable`
-
-The `clear_cache` and `clear_subproducts` keywords to
-[`Matrix.is_diagonalizable()`](sympy.matrices.matrices.MatrixEigen.is_diagonalizable)
-are deprecated. These used to clear cached entries, but this cache was removed
-because it was not actually safe given that `Matrix` is mutable. The keywords
-now do nothing.
-
-(deprecated-matrix-jordan_block-rows-cols)=
-### The `rows` and `cols` keyword arguments to `Matrix.jordan_block`
-
-The `rows` and `cols` keywords to
-[`Matrix.jordan_block`](sympy.matrices.common.MatrixCommon.jordan_block) are
-deprecated. The `size` parameter should be used to specify the (square) number
-of rows and columns.
-
-The non-square matrices created by setting `rows` and `cols` are not
-mathematically Jordan block matrices, which only make sense as square
-matrices.
-
-To emulate the deprecated `jordan_block(rows=n, cols=m)` behavior, use a
-general banded matrix constructor, like
-
-```py
->>> from sympy import Matrix, symbols
->>> eigenvalue = symbols('x')
->>> def entry(i, j):
-...     if i == j:
-...         return eigenvalue
-...     elif i + 1 == j: # use j + 1 == i for band='lower'
-...         return 1
-...     return 0
->>> # the same as the deprecated Matrix.jordan_block(rows=3, cols=5, eigenvalue=x)
->>> Matrix(3, 5, entry)
-Matrix([
-[x, 1, 0, 0, 0],
-[0, x, 1, 0, 0],
-[0, 0, x, 1, 0]])
-```
-
-## Version 1.3
-
-(deprecated-source)=
-### The `source()` function
-
-The {func}`~.source` function is deprecated. Use
-[`inspect.getsource(obj)`](https://docs.python.org/3/library/inspect.html#inspect.getsource)
-instead, or if you are in IPython or Jupyter, use `obj??`.
-
-(deprecated-quantity-dimension-scale-factor)=
-### The `dimension` and `scale_factor` arguments to `sympy.physics.units.Quanitity`
-
-The `dimension` and `scale_factor` arguments to
-{class}`sympy.physics.units.quantities.Quantity` are deprecated.
-
-The problem with these arguments is that **dimensions** are **not** an
-**absolute** association to a quantity. For example:
-
-- in natural units length and time are the same dimension (so you can sum
-  meters and seconds).
-
-- SI and cgs units have different dimensions for the same quantities.
-
-At this point a problem arises for scale factor as well: while it is always
-true that `kilometer / meter == 1000`, some other quantities may have a
-relative scale factor or not depending on which unit system is currently being
-used.
-
-Instead, things should be managed on the {class}`~.DimensionSystem` class. The
-`DimensionSystem.set_quantity_dimension()` method should be used instead of the
-`dimension` argument, and the
-`DimensionSystem.set_quantity_scale_factor()` method should be used
-instead of the `scale_factor` argument.
-
-See issue [#14318](https://github.com/sympy/sympy/issues/14318) for more
-details. See also {ref}`deprecated-quantity-methods` above.
-
-(deprecated-sympy-matrices-classof-a2idx)=
-### Importing `classof` and `a2idx` from `sympy.matrices.matrices`
-
-The functions `sympy.matrices.matrices.classof` and
-`sympy.matrices.matrices.a2idx` were duplicates of the same functions in
-`sympy.matrices.common`. The two functions should be used from the
-`sympy.matrices.common` module instead.
-
-## Version 1.2
-
-(deprecated-matrix-dot-non-vector)=
-### Dot product of non-row/column vectors
-
-The [`Matrix.dot()`](sympy.matrices.matrices.MatrixBase.dot) method has
-confusing behavior where `A.dot(B)` returns a list corresponding to
-`flatten(A.T*B.T)` when `A` and `B` are matrices that are not vectors (i.e.,
-neither dimension is size 1). This is confusing. The purpose of `Matrix.dot()`
-is to perform a mathematical dot product, which should only be defined for
-vectors (i.e., either a $n\times 1$ or $1\times n$ matrix), but in a way that
-works regardless of whether each argument is a row or column vector.
-Furthermore, returning a list here was much less useful than a matrix would
-be, and resulted in a polymorphic return type depending on the shapes of the
-inputs.
-
-This behavior is deprecated. `Matrix.dot` should only be used to do a
-mathematical dot product, which operates on row or column vectors. Use the
-`*` or `@` operators to do matrix multiplication.
-
-```py
->>> from sympy import Matrix
->>> A = Matrix([[1, 2], [3, 4]])
->>> B = Matrix([[2, 3], [1, 2]])
->>> A*B
-Matrix([
-[ 4,  7],
-[10, 17]])
->>> A@B
-Matrix([
-[ 4,  7],
-[10, 17]])
-```
-
-(deprecated-line3d-equation-k)=
-### `sympy.geometry.Line3D.equation` no longer needs the `k` argument
-
-The `k` argument to {meth}`sympy.geometry.line.Line3D.equation()` method is
-deprecated.
-
-Previously, the function `Line3D.equation` returned `(X, Y, Z, k)` which was
-changed to `(Y-X, Z-X)` (here `X`, `Y` and `Z` are expressions of `x`, `y` and
-`z` respectively). As in 2D an equation is returned relating `x` and `y` just
-like that in 3D two equations will be returned relating `x`, `y` and `z`.
-
-So in the new `Line3D.equation` the `k` argument is not needed anymore. Now
-the `k` argument is effectively ignored. A `k` variable is temporarily formed
-inside `equation()` and then gets substituted using `subs()` in terms of `x`
-and then `(Y-X, Z-X)` is returned.
-
-Previously:
-
-```py
->>> from sympy import Point3D,Line3D
->>> p1,p2 = Point3D(1, 2, 3), Point3D(5, 6, 7)
->>> l = Line3D(p1, p2)
->>> l.equation() # doctest: +SKIP
-(x/4 - 1/4, y/4 - 1/2, z/4 - 3/4, k)
-```
-
-Now:
-
-```py
->>> from sympy import Point3D, Line3D, solve
->>> p1,p2 = Point3D(1, 2, 3), Point3D(5, 6, 7)
->>> l = Line3D(p1,p2)
->>> l.equation()
-(-x + y - 1, -x + z - 2)
-```

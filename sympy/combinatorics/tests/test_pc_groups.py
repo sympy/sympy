@@ -79,7 +79,7 @@ def test_induced_pcgs():
     for g in G:
         PcGroup = g.polycyclic_group()
         collector = PcGroup.collector
-        gens = [gen for gen in g.generators]
+        gens = list(g.generators)
         ipcgs = collector.induced_pcgs(gens)
         m = []
         for i in ipcgs:

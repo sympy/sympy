@@ -1,3 +1,4 @@
+from sympy.external.gmpy import invert
 from sympy.ntheory.ecm import ecm, Point
 from sympy.testing.pytest import slow
 
@@ -17,11 +18,10 @@ def test_ecm():
 
 
 def test_Point():
-    from sympy.core.numbers import mod_inverse
     #The curve is of the form y**2 = x**3 + a*x**2 + x
     mod = 101
     a = 10
-    a_24 = (a + 2)*mod_inverse(4, mod)
+    a_24 = (a + 2)*invert(4, mod)
     p1 = Point(10, 17, a_24, mod)
     p2 = p1.double()
     assert p2 == Point(68, 56, a_24, mod)

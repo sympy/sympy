@@ -5,8 +5,8 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.expressions.hadamard import HadamardProduct, HadamardPower
 from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
-from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
     _combine_removed, identify_removable_identity_matrices, _array_contraction_to_diagonal_multiple_identity
 from sympy.matrices.expressions.matexpr import MatrixSymbol

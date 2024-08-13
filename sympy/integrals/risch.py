@@ -28,7 +28,8 @@ from functools import reduce
 
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, I, oo
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -42,7 +43,7 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
     tan, acot, cot, asin, acos)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
-from sympy.polys.polyerrors import DomainError, PolynomialError
+from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
 from sympy.polys.rootoftools import RootSum
@@ -305,13 +306,13 @@ class DifferentialExtension:
 
         # Things like sqrt(exp(x)) do not automatically simplify to
         # exp(x/2), so they will be viewed as algebraic.  The easiest way
-        # to handle this is to convert all instances of (a**b)**Rational
-        # to a**(Rational*b) before doing anything else.  Note that the
+        # to handle this is to convert all instances of exp(a)**Rational
+        # to exp(Rational*a) before doing anything else.  Note that the
         # _exp_part code can generate terms of this form, so we do need to
         # do this at each pass (or else modify it to not do that).
 
-        ratpows = [i for i in self.newf.atoms(Pow).union(self.newf.atoms(exp))
-            if (i.base.is_Pow or isinstance(i.base, exp) and i.exp.is_Rational)]
+        ratpows = [i for i in self.newf.atoms(Pow)
+                   if (isinstance(i.base, exp) and i.exp.is_Rational)]
 
         ratpows_repl = [
             (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
@@ -382,7 +383,7 @@ class DifferentialExtension:
                 # that, this will break, which maybe is a sign that you
                 # shouldn't be changing that.  Actually, if anything, this
                 # auto-simplification should be removed.  See
-                # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
+                # https://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
 
                 self.newf = self.newf.xreplace({i: newterm})
 
@@ -859,26 +860,18 @@ def as_poly_1t(p, t, z):
         # Either way, if you see this (from the Risch Algorithm) it indicates
         # a bug.
         raise PolynomialError("%s is not an element of K[%s, 1/%s]." % (p, t, t))
-    d = pd.degree(t)
-    one_t_part = pa.slice(0, d + 1)
-    r = pd.degree() - pa.degree()
-    t_part = pa - one_t_part
-    try:
-        t_part = t_part.to_field().exquo(pd)
-    except DomainError as e:
-        # issue 4950
-        raise NotImplementedError(e)
-    # Compute the negative degree parts.
-    one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
-        domain=one_t_part.domain)
-    if 0 < r < oo:
-        one_t_part *= Poly(t**r, t)
 
-    one_t_part = one_t_part.replace(t, z)  # z will be 1/t
-    if pd.nth(d):
-        one_t_part *= Poly(1/pd.nth(d), z, expand=False)
-    ans = t_part.as_poly(t, z, expand=False) + one_t_part.as_poly(t, z,
-        expand=False)
+    t_part, remainder = pa.div(pd)
+
+    ans = t_part.as_poly(t, z, expand=False)
+
+    if remainder:
+        one = remainder.one
+        tp = t*one
+        r = pd.degree() - remainder.degree()
+        z_part = remainder.transform(one, tp) * tp**r
+        z_part = z_part.replace(t, z).to_field().quo_ground(pd.LC())
+        ans += z_part.as_poly(t, z, expand=False)
 
     return ans
 
@@ -1254,8 +1247,8 @@ def recognize_log_derivative(a, d, DE, z=None):
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
     for s, _ in Sp:
-        # TODO also consider the complex roots
-        # incase we have complex roots it should turn the flag false
+        # TODO also consider the complex roots which should
+        # turn the flag false
         a = real_roots(s.as_poly(z))
 
         if not all(j.is_Integer for j in a):

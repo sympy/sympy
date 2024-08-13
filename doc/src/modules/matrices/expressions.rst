@@ -49,6 +49,7 @@ Matrix Expressions Core Reference
    :members:
 .. autoclass:: MatPow
    :members:
+.. autofunction:: hadamard_product
 .. autoclass:: HadamardProduct
    :members:
 .. autoclass:: HadamardPower

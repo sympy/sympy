@@ -1,4 +1,4 @@
-from typing import Dict as tDict, List
+from __future__ import annotations
 
 from sympy.core import S
 from sympy.core.expr import Expr
@@ -90,10 +90,10 @@ def vfree_group(symbols):
 
 def _parse_symbols(symbols):
     if not symbols:
-        return tuple()
+        return ()
     if isinstance(symbols, str):
         return _symbols(symbols, seq=True)
-    elif isinstance(symbols, Expr or FreeGroupElement):
+    elif isinstance(symbols, (Expr, FreeGroupElement)):
         return (symbols,)
     elif is_sequence(symbols):
         if all(isinstance(s, str) for s in symbols):
@@ -109,7 +109,7 @@ def _parse_symbols(symbols):
 #                          FREE GROUP                                        #
 ##############################################################################
 
-_free_group_cache = {}  # type: tDict[int, FreeGroup]
+_free_group_cache: dict[int, FreeGroup] = {}
 
 class FreeGroup(DefaultPrinting):
     """
@@ -125,7 +125,7 @@ class FreeGroup(DefaultPrinting):
     References
     ==========
 
-    .. [1] http://www.gap-system.org/Manuals/doc/ref/chap37.html
+    .. [1] https://www.gap-system.org/Manuals/doc/ref/chap37.html
 
     .. [2] https://en.wikipedia.org/wiki/Free_group
 
@@ -134,7 +134,7 @@ class FreeGroup(DefaultPrinting):
     is_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
-    relators = []  # type: List[Expr]
+    relators: list[Expr] = []
 
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))
@@ -363,10 +363,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     @property
     def is_identity(self):
-        if self.array_form == tuple():
-            return True
-        else:
-            return False
+        return not self.array_form
 
     @property
     def array_form(self):
@@ -487,19 +484,21 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def __pow__(self, n):
         n = as_int(n)
-        group = self.group
+        result = self.group.identity
         if n == 0:
-            return group.identity
-
+            return result
         if n < 0:
             n = -n
-            return (self.inverse())**n
-
-        result = self
-        for i in range(n - 1):
-            result = result*self
-        # this method can be improved instead of just returning the
-        # multiplication of elements
+            x = self.inverse()
+        else:
+            x = self
+        while True:
+            if n % 2:
+                result *= x
+            n >>= 1
+            if not n:
+                break
+            x *= x
         return result
 
     def __mul__(self, other):
@@ -841,7 +840,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         if len(gen) != 1:
             raise ValueError("gen must be a generator or inverse of a generator")
         s = gen.array_form[0]
-        return s[1]*sum([i[1] for i in self.array_form if i[0] == s[0]])
+        return s[1]*sum(i[1] for i in self.array_form if i[0] == s[0])
 
     def generator_count(self, gen):
         """
@@ -870,7 +869,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         if len(gen) != 1 or gen.array_form[0][1] < 0:
             raise ValueError("gen must be a generator")
         s = gen.array_form[0]
-        return s[1]*sum([abs(i[1]) for i in self.array_form if i[0] == s[0]])
+        return s[1]*sum(abs(i[1]) for i in self.array_form if i[0] == s[0])
 
     def subword(self, from_i, to_j, strict=True):
         """
@@ -985,10 +984,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         group = self.group
-        gens = set()
-        for syllable in self.array_form:
-            gens.add(group.dtype(((syllable[0], 1),)))
-        return set(gens)
+        gens = {group.dtype(((syllable[0], 1),)) for syllable in self.array_form}
+        return gens
 
     def cyclic_subword(self, from_i, to_j):
         group = self.group
@@ -1023,7 +1020,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        .. [1] http://planetmath.org/cyclicpermutation
+        .. [1] https://planetmath.org/cyclicpermutation
 
         """
         return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
@@ -1206,7 +1203,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        .. [1] http://planetmath.org/cyclicallyreduced
+        .. [1] https://planetmath.org/cyclicallyreduced
 
         """
         word = self.copy()

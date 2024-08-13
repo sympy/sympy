@@ -152,6 +152,12 @@ def test_FreeGroupElm__mul__pow__():
     assert x*(x**-1*y*z*y**-1) == y*z*y**-1
     assert x**2*(x**-2*y**-1*z**2*y) == y**-1*z**2*y
 
+    a = F.identity
+    for n in range(10):
+        assert a == x**n
+        assert a**-1 == x**-n
+        a *= x
+
 
 def test_FreeGroupElm__len__():
     assert len(x**5*y*x**2*y**-4*x) == 13

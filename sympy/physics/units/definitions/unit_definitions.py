@@ -56,6 +56,13 @@ candela.set_global_dimension(luminous_intensity)
 
 # derived units
 newton = newtons = N = Quantity("newton", abbrev="N")
+
+kilonewton = kilonewtons = kN = Quantity("kilonewton", abbrev="kN")
+kilonewton.set_global_relative_scale_factor(kilo, newton)
+
+meganewton = meganewtons = MN = Quantity("meganewton", abbrev="MN")
+meganewton.set_global_relative_scale_factor(mega, newton)
+
 joule = joules = J = Quantity("joule", abbrev="J")
 watt = watts = W = Quantity("watt", abbrev="W")
 pascal = pascals = Pa = pa = Quantity("pascal", abbrev="Pa")
@@ -122,6 +129,9 @@ Da = dalton = amu = amus = atomic_mass_unit = atomic_mass_constant = PhysicalCon
 t = metric_ton = tonne = Quantity("tonne", abbrev="t")
 tonne.set_global_relative_scale_factor(mega, gram)
 
+# Electron rest mass
+me = electron_rest_mass = Quantity("electron_rest_mass", abbrev="me")
+
 
 # Common length units
 
@@ -162,20 +172,23 @@ mi.set_global_relative_scale_factor(5280, feet)
 nmi = nautical_mile = nautical_miles = Quantity("nautical_mile")
 nmi.set_global_relative_scale_factor(6076, feet)
 
+angstrom = angstroms = Quantity("angstrom", latex_repr=r'\r{A}')
+angstrom.set_global_relative_scale_factor(Rational(1, 10**10), meter)
+
 
 # Common volume and area units
 
 ha = hectare = Quantity("hectare", abbrev="ha")
 
-l = L = liter = liters = Quantity("liter")
+l = L = liter = liters = Quantity("liter", abbrev="l")
 
-dl = dL = deciliter = deciliters = Quantity("deciliter")
+dl = dL = deciliter = deciliters = Quantity("deciliter", abbrev="dl")
 dl.set_global_relative_scale_factor(Rational(1, 10), liter)
 
-cl = cL = centiliter = centiliters = Quantity("centiliter")
+cl = cL = centiliter = centiliters = Quantity("centiliter", abbrev="cl")
 cl.set_global_relative_scale_factor(Rational(1, 100), liter)
 
-ml = mL = milliliter = milliliters = Quantity("milliliter")
+ml = mL = milliliter = milliliters = Quantity("milliliter", abbrev="ml")
 ml.set_global_relative_scale_factor(Rational(1, 1000), liter)
 
 
