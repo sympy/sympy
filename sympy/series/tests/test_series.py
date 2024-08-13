@@ -402,3 +402,7 @@ def test_issue_24266():
     #type3: f(y)**g(x)
     assert ((y)**(I*pi*(2*x+1))).series(x, 0, 2) == exp(I*pi*log(y)) + 2*I*pi*x*exp(I*pi*log(y))*log(y) + O(x**2)
     assert ((I*y)**(I*pi*(2*x+1))).series(x, 0, 2) == exp(I*pi*log(I*y)) + 2*I*pi*x*exp(I*pi*log(I*y))*log(I*y) + O(x**2)
+
+
+def test_issue_26856():
+    raises(ValueError, lambda: (2**x).series(x, oo, -1))
