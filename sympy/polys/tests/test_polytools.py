@@ -3073,6 +3073,15 @@ def test_real_roots():
     assert Poly(f).real_roots() == [Rational(-1, 2), 2, 2]
     assert Poly(g).real_roots() == [rootof(g, 0)]
 
+    # testing extension
+    f = x**2 - sqrt(2)
+    roots = [-2**(S(1)/4), 2**(S(1)/4)]
+    raises(NotImplementedError, lambda: real_roots(f))
+    raises(NotImplementedError, lambda: real_roots(Poly(f, x)))
+    assert real_roots(f, extension=True) == roots
+    assert real_roots(Poly(f, extension=True)) == roots
+    assert real_roots(Poly(f), extension=True) == roots
+
 
 def test_all_roots():
 
@@ -3095,6 +3104,15 @@ def test_all_roots():
     assert all_roots(p) == [
         rootof(p, 0), rootof(p, 1), rootof(p, 2), rootof(p, 3), rootof(p, 4)
     ]
+
+    # testing extension
+    f = x**2 + sqrt(2)
+    roots = [-2**(S(1)/4)*I, 2**(S(1)/4)*I]
+    raises(NotImplementedError, lambda: all_roots(f))
+    raises(NotImplementedError, lambda : all_roots(Poly(f, x)))
+    assert all_roots(f, extension=True) == roots
+    assert all_roots(Poly(f, extension=True)) == roots
+    assert all_roots(Poly(f), extension=True) == roots
 
 
 def test_nroots():
