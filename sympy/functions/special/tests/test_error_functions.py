@@ -437,6 +437,11 @@ def test_ei():
     assert Ei(x).series(x, 1, 3) == Ei(1) + E*(x - 1) + O((x - 1)**3, (x, 1))
     assert Ei(x).series(x, oo) == \
         (120/x**5 + 24/x**4 + 6/x**3 + 2/x**2 + 1/x + 1 + O(x**(-6), (x, oo)))*exp(x)/x
+    assert Ei(x).series(x, -oo) == \
+        (120/x**5 + 24/x**4 + 6/x**3 + 2/x**2 + 1/x + 1 + O(x**(-6), (x, -oo)))*exp(x)/x
+    assert Ei(-x).series(x, oo).expand() == \
+        120*exp(-x)/x**6 - 24*exp(-x)/x**5 + 6*exp(-x)/x**4 - 2*exp(-x)/x**3 + \
+        exp(-x)/x**2 - exp(-x)/x + O(exp(-x)/x**7, (x, oo))
 
     assert str(Ei(cos(2)).evalf(n=10)) == '-0.6760647401'
     raises(ArgumentIndexError, lambda: Ei(x).fdiff(2))
