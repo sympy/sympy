@@ -815,9 +815,9 @@ class ComplexRootOf(RootOf):
             roots.append(coeff*cls._postprocess_root(root, radicals))
 
         if method == "_real_roots":
-            roots = poly._numerically_filter_roots(roots, real=True)
+            roots = poly.which_roots(roots, real=True)
         elif method == "_all_roots":
-            roots = poly._numerically_filter_roots(roots, real=False)
+            roots = poly.which_roots(roots, real=False)
 
         return roots
 
