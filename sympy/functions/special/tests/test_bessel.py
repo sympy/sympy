@@ -145,6 +145,8 @@ def test_besseli_series():
     #test for aseries
     assert besseli(0,x).series(x, oo, n=4) == sqrt(2)*(sqrt(1/x) - (1/x)**(S(3)/2)/8 - \
         3*(1/x)**(S(5)/2)/128 - 15*(1/x)**(S(7)/2)/1024 + O((1/x)**(S(9)/2), (x, oo)))*exp(x)/(2*sqrt(pi))
+    assert besseli(0,x).series(x,-oo, n=4) == sqrt(2)*(sqrt(-1/x) - (-1/x)**(S(3)/2)/8 - 3*(-1/x)**(S(5)/2)/128 - \
+        15*(-1/x)**(S(7)/2)/1024 + O((-1/x)**(S(9)/2), (x, -oo)))*exp(-x)/(2*sqrt(pi))
 
 
 def test_besselk_series():
@@ -174,6 +176,9 @@ def test_besselk_series():
     #test for aseries
     assert besselk(0,x).series(x, oo, n=4) == sqrt(2)*sqrt(pi)*(sqrt(1/x) + (1/x)**(S(3)/2)/8 - \
             3*(1/x)**(S(5)/2)/128 + 15*(1/x)**(S(7)/2)/1024 + O((1/x)**(S(9)/2), (x, oo)))*exp(-x)/2
+    assert besselk(0,x).series(x, -oo, n=4) == sqrt(2)*sqrt(pi)*(-I*sqrt(-1/x) + I*(-1/x)**(S(3)/2)/8 + \
+            3*I*(-1/x)**(S(5)/2)/128 + 15*I*(-1/x)**(S(7)/2)/1024 + O((-1/x)**(S(9)/2), (x, -oo)))*exp(-x)/2
+
 
 
 def test_diff():
