@@ -12,11 +12,7 @@ friction force with additional Stribeck and viscous effects.
 .. raw:: html
    :file: rotating_disc_block.svg
 
-This system will be modeled using Kane's method. Here, :math:`m` is the mass of the block and the disc,
-:math:`r` represents the location of the block from the center of the disc, :math:`g` is the
-gravitational constant, :math:`F_f` is the friction force, :math:`F_{cp}` is the centripetal force,
-and :math:`F_{cf}` is the centrifugal force.
-
+This system will be modeled using Kane's method. Here, :math:`F_f` is the friction force.
 We assume that the block is initially sliding (relative motion is non-zero), moving
 in the direction opposite to the disc's rotation due to the relative motion, and the
 kinetic friction acts in the direction opposite to this relative motion.
@@ -30,10 +26,11 @@ of the **CoulombKineticFriction** actuator.
 
 Let's define the necessary variables and coordinates.
 
-   >>> m, g, r, mu_k, mu_s, v_s, sigma = sm.symbols('m, g, r, mu_k, mu_s, v_s, sigma')
-   >>> q1, q2, q3 = me.dynamicsymbols('q1 q2 q3')
-   >>> u1, u2, u3 = me.dynamicsymbols('q1 q2 u3', 1)
-   >>> t = me.dynamicsymbols._t
+   >>> m, g, mu_k, mu_s, v_s, sigma = sm.symbols('m, g, mu_k, mu_s, v_s, sigma')
+   >>> q1, q2, q3 = me.dynamicsymbols('q1:4')
+   >>> q1d, q2d, q3d = me.dynamicsymbols('q1:4', level=1)
+   >>> u1, u2, u3 = me.dynamicsymbols('u1:4')
+   >>> u1d, u2d, u3d = me.dynamicsymbols('u1:4', level=1)
 
 - :math:`q1`: Generalized coordinate representing the angular velocity of the disc w.r.t. the inertial frame
 - :math:`q2, q3`: Generalized coordinates of the block w.r.t the disc
@@ -41,42 +38,39 @@ Let's define the necessary variables and coordinates.
 - :math:`mu_s`: coefficient of static friction
 - :math:`v_s`: Stribeck friction coefficient
 - :math:`sigma`: viscous friction coefficient
+- :math:`m`: mass of the block
+- :math:`g`: gravitational constant
 
 We will also define the necessary reference frames, points, and velocities.
-:math:`N` is the inertial reference frame, :math:`A1` is the rotating reference frame,
-and :math:`A2` is the frame fixed to the block.
+:math:`N` is the inertial reference frame and :math:`A` is the rotating reference frame.
+:math:`O` is the center of the disc, :math:`P` is the actual contact point between
+the block and the disc.
 
-:math:`O` is the center of the disc, :math:`P` is a fixed point on the disc at a
-distance :math:`r` from the center and in contact with the block, and :math:`Q` is
-the actual contact point between the block and the disc.
+   >>> N = me.ReferenceFrame('N')
+   >>> A = me.ReferenceFrame('A')
+   >>> A.set_ang_vel(N, u1 * N.x)
+   >>> A.ang_vel_in(N)
+   u1 n_x
 
-   >>> N, A1, A2 = sm.symbols('N, A1, A2', cls=me.ReferenceFrame)
-   >>> O, P, Q = sm.symbols('O, P, Q', cls=me.Point)
+   >>> O = me.Point('O')
+   >>> P = O.locatenew('P', q2 * N.x + q3 * N.y)
    >>> O.set_vel(N, 0)
-
-   >>> A1.orient_axis(N, q1, N.z)
-   >>> A1.set_ang_vel(N, u1 * N.z)
-
-   >>> A2.set_ang_vel(A1, u2 * A1.x + u3 * A2.y)
-
-   >>> P.set_pos(O, q1 * N.z)
-   >>> P.set_vel(A2, u1 * N.z)
-
-   >>> Q.set_pos(O, q2 * A1.x + q3 * A1.y)
-   >>> Q.set_vel(A1, u2 * A1.x + u3 * A1.y)
+   >>> P.v2pt_theory(P, N, A)
+   q2'(t) n_x + q3'(t) n_y
 
 We define the particle, pathway, and forces using **CoulombKineticFriction**.
-The pathway should be able to represent the motion of the block along a plane, so we use
-a unique custom pathway, SlidingPathway.
+A unique custom pathway, SlidingPathway, represent the motion of the block along a plane.
 
    >>> class SlidingPathway(me.PathwayBase):
    ...
-   ...     def __init__(self, fixed_point, contact_point, frame, m):
+   ...     def __init__(self, fixed_point, contact_point, frame):
    ...         """A custom pathway that moves along a rotating disc.
    ...
-   ...         We assume that two points, which represent a block and a disc respectively,
-   ...         lie in the same plane, and ``SlidingPathway`` ensures that the forces and velocities
-   ...         are correctly related in this plane.
+   ...         Two points, ``fixed_point`` and ``contact_point``, start from the same
+   ...         location on the disc. ``contact_point``, the actual sliding point of the block,
+   ...         moves along the ``SlidingPathway`` and is subjected to the friction force.
+   ...         ``SlidingPathway`` is valid only as long as the two points lie within the
+   ...         same plane, and it ensures the direction of the force is accurate.
    ...
    ...         Parameters
    ...         ==========
@@ -87,17 +81,13 @@ a unique custom pathway, SlidingPathway.
    ...             actuator forces will be applied. This point is assumed to be fixed to
    ...             another body; the point on the block.
    ...         frame : ReferenceFrame
-   ...             Reference frame in which the ``fixed_point`` has a zero velocity. The pathway
-   ...             is only valid as long as two points lie within the same plane.
-   ...         m : sympifiable
-   ...             Mass of the block.
+   ...             Reference frame in which the ``fixed_point`` has a zero velocity.
    ...
    ...         """
    ...
    ...         self.fixed_point = fixed_point
    ...         self.contact_point = contact_point
    ...         self.frame = frame
-   ...         self.m = m
    ...
    ...     @property
    ...     def length(self):
@@ -118,37 +108,53 @@ a unique custom pathway, SlidingPathway.
    ...     def to_loads(self, force):
    ...         """Loads in the correct format to be supplied to `KanesMethod`.
    ...
-   ...         Forces and torques applied to the ``contact_point`` and ``fixed_point``
+   ...         Forces applied to the ``contact_point`` and ``fixed_point``
    ...         based on the friction force.
    ...
    ...         """
    ...
    ...         direction = -self.contact_point.vel(self.frame).normalize()
-   ...         acc = self.contact_point.vel(A1).diff(t, A1).magnitude()
-   ...         force = acc * self.m
+   ...         force = mu_k * m * g
    ...
    ...         return [
-   ...             me.Force(self.contact_point, force * direction),
    ...             me.Force(self.fixed_point, -force * direction),
-   ...             me.Torque(self.frame, me.cross(self.contact_point.pos_from(self.fixed_point), -force * direction)),
-   ...         ]
+   ...             me.Force(self.contact_point, force * direction),
+   ...             ]
 
-   >>> block = me.Particle('block', Q, m)
-   >>> disc = me.Particle('disc', P, m)
+   >>> block = me.Particle('block', P, m)
    >>> normal_force = m * g
-   >>> pathway = SlidingPathway(P, Q, N, m)
+   >>> pathway = SlidingPathway(O, P, N)
    >>> friction = me.CoulombKineticFriction(mu_k, normal_force, pathway, v_s=v_s, sigma=sigma, mu_s=mu_k)
    >>> loads = friction.to_loads()
+   >>> loads
+           g*m*mu_k*q2'(t)              g*m*mu_k*q3'(t)                 -g*m*mu_k*q2'(t)             -g*m*mu_k*q3'(t)
+    [(O, ---------------------- n_x + ---------------------- n_y), (P, ---------------------- n_x + ---------------------- n_y)]
+            ___________________          ___________________              ___________________          ___________________
+           /       2         2          /       2         2              /       2         2          /       2         2
+         \/  q2'(t)  + q3'(t)         \/  q2'(t)  + q3'(t)             \/  q2'(t)  + q3'(t)         \/  q2'(t)  + q3'(t)
 
 Now, we're ready to use Kane's method to obtain the equations of motion.
 
+   >>> BL = [block]
    >>> kane = me.KanesMethod(
    ...     N,
    ...     q_ind=[q2, q3],
    ...     u_ind=[u2, u3],
-   ...     kd_eqs=[q2.diff() - u2, q3.diff() - u3],
-   ...     bodies=[block]
+   ...     kd_eqs=[q2d - u2, q3d - u3],
+   ...     bodies=BL
    ...     )
 
-   >>> fr, frstar = kane.kanes_equations([block], loads)
+   >>> fr, frstar = kane.kanes_equations(BL, loads)
    >>> eom = fr + frstar
+   >>> eom
+   [   g*m*mu_k*u2             ]
+   [- -------------- - m*u2'(t)]
+   [     ___________           ]
+   [    /   2     2            ]
+   [  \/  u2  + u3             ]
+   [                           ]
+   [   g*m*mu_k*u3             ]
+   [- -------------- - m*u3'(t)]
+   [     ___________           ]
+   [    /   2     2            ]
+   [  \/  u2  + u3             ]
