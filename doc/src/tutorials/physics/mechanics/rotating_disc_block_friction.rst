@@ -113,8 +113,8 @@ A unique custom pathway, SlidingPathway, represent the motion of the block along
    ...
    ...         """
    ...
-   ...         direction = -self.contact_point.vel(self.frame).normalize()
-   ...         force = mu_k * m * g
+   ...         direction = self.contact_point.vel(self.frame).normalize()
+   ...         force = self.extension_velocity * force
    ...
    ...         return [
    ...             me.Force(self.fixed_point, -force * direction),
@@ -127,11 +127,9 @@ A unique custom pathway, SlidingPathway, represent the motion of the block along
    >>> friction = me.CoulombKineticFriction(mu_k, normal_force, pathway, v_s=v_s, sigma=sigma, mu_s=mu_k)
    >>> loads = friction.to_loads()
    >>> loads
-           g*m*mu_k*q2'(t)              g*m*mu_k*q3'(t)                 -g*m*mu_k*q2'(t)             -g*m*mu_k*q3'(t)
-    [(O, ---------------------- n_x + ---------------------- n_y), (P, ---------------------- n_x + ---------------------- n_y)]
-            ___________________          ___________________              ___________________          ___________________
-           /       2         2          /       2         2              /       2         2          /       2         2
-         \/  q2'(t)  + q3'(t)         \/  q2'(t)  + q3'(t)             \/  q2'(t)  + q3'(t)         \/  q2'(t)  + q3'(t)
+          /               /   ___________________\            ___________________\               /               /   ___________________\            ___________________\                  /               /   ___________________\            ___________________\              /               /   ___________________\            ___________________\
+          |               |  /       2         2 |           /       2         2 |               |               |  /       2         2 |           /       2         2 |                  |               |  /       2         2 |           /       2         2 |              |               |  /       2         2 |           /       2         2 |
+    [(O, -\- g*m*mu_k*sign\\/  q2'(t)  + q3'(t)  / - sigma*\/  q2'(t)  + q3'(t)  /*q2'(t) n_x + -\- g*m*mu_k*sign\\/  q2'(t)  + q3'(t)  / - sigma*\/  q2'(t)  + q3'(t)  /*q3'(t) n_y), (P, \- g*m*mu_k*sign\\/  q2'(t)  + q3'(t)  / - sigma*\/  q2'(t)  + q3'(t)  /*q2'(t) n_x + \- g*m*mu_k*sign\\/  q2'(t)  + q3'(t)  / - sigma*\/  q2'(t)  + q3'(t)  /*q3'(t) n_y)]
 
 Now, we're ready to use Kane's method to obtain the equations of motion.
 
@@ -147,14 +145,10 @@ Now, we're ready to use Kane's method to obtain the equations of motion.
    >>> fr, frstar = kane.kanes_equations(BL, loads)
    >>> eom = fr + frstar
    >>> eom
-   [   g*m*mu_k*u2             ]
-   [- -------------- - m*u2'(t)]
-   [     ___________           ]
-   [    /   2     2            ]
-   [  \/  u2  + u3             ]
-   [                           ]
-   [   g*m*mu_k*u3             ]
-   [- -------------- - m*u3'(t)]
-   [     ___________           ]
-   [    /   2     2            ]
-   [  \/  u2  + u3             ]
+   [            /               /   ___________\            ___________\   ]
+   [            |               |  /   2     2 |           /   2     2 |   ]
+   [-m*u2'(t) + \- g*m*mu_k*sign\\/  u2  + u3  / - sigma*\/  u2  + u3  /*u2]
+   [                                                                       ]
+   [            /               /   ___________\            ___________\   ]
+   [            |               |  /   2     2 |           /   2     2 |   ]
+   [-m*u3'(t) + \- g*m*mu_k*sign\\/  u2  + u3  / - sigma*\/  u2  + u3  /*u3]
