@@ -6767,7 +6767,7 @@ def count_roots(f, inf=None, sup=None):
 
 
 @public
-def all_roots(f, multiple=True, radicals=True):
+def all_roots(f, multiple=True, radicals=True, extension=False):
     """
     Returns the real and complex roots of ``f`` with multiplicities.
 
@@ -6810,14 +6810,14 @@ def all_roots(f, multiple=True, radicals=True):
     >>> [r.evalf(3) for r in all_roots(p)]
     [1.17, -0.765 - 0.352*I, -0.765 + 0.352*I, 0.181 - 1.08*I, 0.181 + 1.08*I]
 
-    Irrational algebraic or transcendental coefficients are
-    handled by :func:`all_roots` (or :func:`~.rootof` more generally):
+    Irrational algebraic coefficients are handled by :func:`all_roots`
+    if `extension=True` is set.
 
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
     x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
-    >>> all_roots(p)
+    >>> all_roots(p, extension=True)
     [sqrt(2), sqrt(2), sqrt(3), sqrt(3)]
 
     In the case of algebraic or transcendental coefficients
@@ -6855,6 +6855,10 @@ def all_roots(f, multiple=True, radicals=True):
     radicals : ``bool`` (default ``True``)
         Use simple radical formulae rather than :py:class:`~.ComplexRootOf` for
         some irrational roots.
+    extension: ``bool`` (default ``False``)
+        Whether to construct an algebraic extension domain before computing
+        the roots. Setting to ``True`` is necessary for finding roots of a
+        polynomial with (irrational) algebraic coefficients but can be slow.
 
     Returns
     =======
@@ -6894,7 +6898,10 @@ def all_roots(f, multiple=True, radicals=True):
     .. [1] https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem
     """
     try:
-        F = Poly(f, extension=True)
+        F = Poly(f, greedy=False)
+        if extension and not F.domain.is_AlgebraicField:
+            F = Poly(F.expr, extension=True)
+
         if not isinstance(f, Poly) and not F.gen.is_Symbol:
             # root of sin(x) + 1 is -1 but when someone
             # passes an Expr instead of Poly they may not expect
@@ -6908,7 +6915,7 @@ def all_roots(f, multiple=True, radicals=True):
 
 
 @public
-def real_roots(f, multiple=True, radicals=True):
+def real_roots(f, multiple=True, radicals=True, extension=False):
     """
     Returns the real roots of ``f`` with multiplicities.
 
@@ -6984,14 +6991,14 @@ def real_roots(f, multiple=True, radicals=True):
     polynomials of high degree which typically have many more complex roots
     than real roots.
 
-    Irrational algebraic or transcendental coefficients are handled by
-    :func:`real_roots` (or :func:`~.rootof` more generally):
+    Irrational algebraic coefficients are handled by :func:`all_roots`
+    if `extension=True` is set.
 
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
     x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
-    >>> real_roots(p)
+    >>> all_roots(p, extension=True)
     [sqrt(2), sqrt(2), sqrt(3), sqrt(3)]
 
     In the case of algebraic or transcendental coefficients
@@ -7029,6 +7036,10 @@ def real_roots(f, multiple=True, radicals=True):
     radicals : ``bool`` (default ``True``)
         Use simple radical formulae rather than :py:class:`~.ComplexRootOf` for
         some irrational roots.
+    extension: ``bool`` (default ``False``)
+        Whether to construct an algebraic extension domain before computing
+        the roots. Setting to ``True`` is necessary for finding roots of a
+        polynomial with (irrational) algebraic coefficients but can be slow.
 
     Returns
     =======
@@ -7065,7 +7076,10 @@ def real_roots(f, multiple=True, radicals=True):
     .. [1] https://en.wikipedia.org/wiki/Casus_irreducibilis
     """
     try:
-        F = Poly(f, extension=True)
+        F = Poly(f, greedy=False)
+        if extension and not F.domain.is_AlgebraicField:
+            F = Poly(F.expr, extension=True)
+
         if not isinstance(f, Poly) and not F.gen.is_Symbol:
             # root of sin(x) + 1 is -1 but when someone
             # passes an Expr instead of Poly they may not expect
