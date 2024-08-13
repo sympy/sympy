@@ -3827,7 +3827,7 @@ class Poly(Basic):
         Examples
         ========
 
-        >>> from sympy import Poly, sqrt
+        >>> from sympy import Poly
         >>> from sympy.abc import x
 
         >>> f = Poly(x**2 - 1)
