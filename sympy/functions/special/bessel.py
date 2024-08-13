@@ -595,10 +595,10 @@ class besseli(BesselBase):
         from sympy.series.order import Order
         point = args0[1]
 
-        if point is S.Infinity:
+        if point in [S.Infinity, S.NegativeInfinity]:
             nu, z = self.args
             s = [(RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(Rational(2*nu + 1, 2), k))/\
-                 ((2)**(k)*z**(Rational(2*k+1, 2))*factorial(k)) for k in range(n)] + [Order(1/z**(Rational(2*n+1, 2)), x)]
+            ((2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k)) for k in range(n)] + [Order(1/z**(Rational(2*n + 1, 2)), x)]
             return exp(z)/sqrt(2*pi) * (Add(*s))
 
         return super()._eval_aseries(n, args0, x, logx)
@@ -764,10 +764,10 @@ class besselk(BesselBase):
         from sympy.series.order import Order
         point = args0[1]
 
-        if point is S.Infinity:
+        if point in [S.Infinity, S.NegativeInfinity]:
             nu, z = self.args
-            s = [(RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(
-                Rational(2*nu + 1, 2), k))/((-2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k)) for k in range(n)] +[Order(1/z**(Rational(2*n + 1, 2)), x)]
+            s = [(RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(Rational(2*nu + 1, 2), k))/\
+            ((-2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k)) for k in range(n)] +[Order(1/z**(Rational(2*n + 1, 2)), x)]
             return (exp(-z)*sqrt(pi/2))*Add(*s)
 
         return super()._eval_aseries(n, args0, x, logx)
@@ -2132,8 +2132,9 @@ class _besseli(Function):
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.functions.combinatorial.factorials import RisingFactorial
         from sympy.series.order import Order
+        point = args0[1]
 
-        if args0[1] == S.Infinity:
+        if point in [S.Infinity, S.NegativeInfinity]:
             nu, z = self.args
             l = [((RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(
                     Rational(2*nu + 1, 2), k))/((2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k))) for k in range(n)]
@@ -2162,8 +2163,9 @@ class _besselk(Function):
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.functions.combinatorial.factorials import RisingFactorial
         from sympy.series.order import Order
+        point = args0[1]
 
-        if args0[1] is S.Infinity:
+        if point in [S.Infinity, S.NegativeInfinity]:
             nu, z = self.args
             l = [((RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(
                     Rational(2*nu + 1, 2), k))/((-2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k))) for k in range(n)]
