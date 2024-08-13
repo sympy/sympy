@@ -5,7 +5,7 @@ A Block on a Rotating Disc
 ==========================
 
 This page demonstrates how to use the functionalities in :obj:`sympy.physics.mechanics`
-and the **CoulombKineticFriction** actuator to model a sliding block on a rotating disc.
+and the :class:`~.CoulombKineticFriction` actuator to model a sliding block on a rotating disc.
 The block is located at a point on the disc surface and is subjected to forces, including
 friction force with additional Stribeck and viscous effects.
 
@@ -18,7 +18,7 @@ in the direction opposite to the disc's rotation due to the relative motion, and
 kinetic friction acts in the direction opposite to this relative motion.
 The disc has an infinite radius, preventing the block from flying off the disc at any
 point in this model. The normal force is a positive scalar, which allows the valid usage
-of the **CoulombKineticFriction** actuator.
+of the :class:`~.CoulombKineticFriction` actuator.
 
    >>> import sympy as sm
    >>> import sympy.physics.mechanics as me
@@ -58,7 +58,7 @@ the block and the disc.
    >>> P.v2pt_theory(P, N, A)
    q2'(t) n_x + q3'(t) n_y
 
-We define the particle, pathway, and forces using **CoulombKineticFriction**.
+We define the particle, pathway, and forces using :class:`~.CoulombKineticFriction`.
 A unique custom pathway, SlidingPathway, represent the motion of the block along a plane.
 
    >>> class SlidingPathway(me.PathwayBase):
