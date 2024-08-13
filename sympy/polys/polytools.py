@@ -4,6 +4,7 @@
 from functools import wraps, reduce
 from operator import mul
 from typing import Optional
+from collections import Counter
 
 from sympy.core import (
     S, Expr, Add, Tuple
@@ -3855,32 +3856,26 @@ class Poly(Basic):
             num_roots = f.degree()
 
         prec = 10
-        # compare len(set()) bc expected behavior is for multiple roots
-        while len(set(candidates)) > num_roots:
-            candidates_filtered = []
-            processed = set() # track already seen
 
-            for c in candidates:
-                if c not in processed:
-                    r_f = f(c).evalf(prec, maxn=2*prec)
-                    processed.add(c)
-                    if abs(r_f)._prec < 2:
-                        candidates_filtered.append(c)
-                else:
-                    if c in candidates_filtered:
-                        # already approved this candidate
-                        candidates_filtered.append(c)
+        root_counts = Counter(candidates)
+        roots_remaining = lambda: sum(root_counts.values())
 
+        while roots_remaining() > num_roots:
+            for r in list(root_counts.keys()):
+                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
+                f_r = f(r).evalf(prec, maxn=2*prec)
+                if abs(f_r)._prec >= 2:
+                    root_counts.pop(r)
             prec *= 2
-            candidates = candidates_filtered
 
-        if len(set(candidates)) != num_roots:
+        if roots_remaining() != num_roots:
             raise PolynomialError(
                 """
                 Number of roots found does not match expected root count.
                 """)
 
-        return candidates
+        roots = sum([[r]*c for r, c in root_counts.items()], [])
+        return roots
 
     def same_root(f, a, b):
         """
