@@ -6962,9 +6962,16 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     .. [1] https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem
     """
     try:
-        F = Poly(f, greedy=False)
-        if extension and not F.domain.is_AlgebraicField:
-            F = Poly(F.expr, extension=True)
+        if isinstance(f, Poly):
+            if extension and not f.domain.is_AlgebraicField:
+                F = Poly(f.expr, extension=True)
+            else:
+                F = f
+        else:
+            if extension:
+                F = Poly(f, extension=True)
+            else:
+                F = Poly(f, greedy=False)
 
         if not isinstance(f, Poly) and not F.gen.is_Symbol:
             # root of sin(x) + 1 is -1 but when someone
@@ -7140,9 +7147,16 @@ def real_roots(f, multiple=True, radicals=True, extension=False):
     .. [1] https://en.wikipedia.org/wiki/Casus_irreducibilis
     """
     try:
-        F = Poly(f, greedy=False)
-        if extension and not F.domain.is_AlgebraicField:
-            F = Poly(F.expr, extension=True)
+        if isinstance(f, Poly):
+            if extension and not f.domain.is_AlgebraicField:
+                F = Poly(f.expr, extension=True)
+            else:
+                F = f
+        else:
+            if extension:
+                F = Poly(f, extension=True)
+            else:
+                F = Poly(f, greedy=False)
 
         if not isinstance(f, Poly) and not F.gen.is_Symbol:
             # root of sin(x) + 1 is -1 but when someone
