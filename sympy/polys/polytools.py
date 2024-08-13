@@ -3816,11 +3816,28 @@ class Poly(Basic):
 
         return r.replace(t, x)
 
-    def _numerically_filter_roots(f, candidates, real):
+    def which_roots(f, candidates, real=True):
         """
-        Given a superset of roots of f, finds which ones are roots of f.
-        Note this won't work properly if candidates is not a superset of roots!
-        This is not a public function, and is used internally for root-finding.
+        Given a superset of roots of f, finds which ones are
+        roots of f. Note this won't work properly if candidates is
+        not a superset of the roots of f. The list returned is the
+        same length as the number of roots of f, counted with
+        multiplicity, and preserves the order of the original candidates list.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, I
+        >>> from sympy.abc import x
+
+        >>> f = Poly(x**4 - 1)
+
+        >>> f.which_roots([-1, 1, 0, -2, 2], real=True)
+        [-1, 1]
+        >>> f.which_roots([-1, 1, -I, I, 0], real=False)
+        [-1, 1, -I, I]
+        >>> f.which_roots([2, 5], real=True) # expectedly wrong
+        [2, 5]
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
@@ -3857,7 +3874,12 @@ class Poly(Basic):
             prec *= 2
             candidates = candidates_filtered
 
-        assert len(set(candidates)) == num_roots
+        if len(set(candidates)) != num_roots:
+            raise PolynomialError(
+                """
+                Number of roots found does not match expected root count.
+                """)
+
         return candidates
 
     def same_root(f, a, b):
