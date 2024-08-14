@@ -3969,7 +3969,7 @@ class Poly(Basic):
         See Also
         ========
 
-        which_root
+        which_roots
         root_multiplicity
         """
         if f.is_multivariate:
