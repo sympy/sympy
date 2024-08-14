@@ -813,7 +813,6 @@ class ComplexRootOf(RootOf):
         else:
             # XXX: not sure how to handle ZZ[x] which appears in some tests?
             # this makes the tests pass alright but has to be a better way?
-            print('hey')
             return cls._get_roots_qq(method, poly, radicals)
 
 

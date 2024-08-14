@@ -6839,6 +6839,7 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
 
     Algebraic coefficients can be complex as well.
 
+    >>> from sympy import I
     >>> all_roots(x**2 - I, extension=True)
     [-sqrt(2)/2 - sqrt(2)*I/2, sqrt(2)/2 + sqrt(2)*I/2]
     >>> all_roots(x**2 - sqrt(2)*I, extension=True)
