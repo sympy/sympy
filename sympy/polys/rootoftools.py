@@ -8,6 +8,7 @@ from sympy.core.cache import cacheit
 from sympy.core.relational import is_le
 from sympy.core.sorting import ordered
 from sympy.polys.domains import QQ
+from sympy.functions.elementary.complexes import re, im
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
@@ -407,6 +408,28 @@ class ComplexRootOf(RootOf):
             return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
         return False  # XXX is this necessary?
 
+    def _sort_roots(roots):
+        """
+        Sorts roots to be in the order that CRootOf uses.
+        Note that for proper sorting, the class methods
+        _real_sorted() and _complexes_sorted() use isolating
+        intervals, and these are typically used in the root
+        finding methods in this class. This method is used
+        internally if that data is not available.
+        """
+        real_roots = [r for r in roots if r.is_real]
+        complex_roots = [r for r in roots if not r.is_real and im(r) < 0]
+
+        real_roots.sort()
+        complex_roots.sort(key=lambda r: (re(r), -im(r)))
+
+        all_roots = real_roots
+        for cr in complex_roots:
+            all_roots.append(cr)
+            all_roots.append(cr.conjugate())
+
+        return all_roots
+
     @classmethod
     def real_roots(cls, poly, radicals=True):
         """Get real roots of a polynomial. """
@@ -803,23 +826,41 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _get_roots_alg(cls, method, poly, radicals):
         """Return postprocessed roots of specified kind
-         for polynomials with algebraic coefficients It assumes
-         the domain is already an algebraic field. """
+         for polynomials with algebraic coefficients. It assumes
+         the domain is already an algebraic field. First it
+         computes the square-free factorization, finds the
+         roots of each of these factor's lifts, and then filters
+         using which_roots(). Lastly, it puts them all together
+         and sorts them to be in the usual order.
+         """
 
-        poly_lift = poly.lift()
+        roots_mult = {}
 
-        coeff, poly_lift = cls._preprocess_roots(poly_lift)
-        roots = []
+        for f, m in poly.sqf_list()[1]:
+            f_lift = f.lift()
 
-        for root in getattr(cls, method)(poly_lift):
-            roots.append(coeff*cls._postprocess_root(root, radicals))
+            coeff, f_lift = cls._preprocess_roots(f_lift)
+            roots = []
 
-        if method == "_real_roots":
-            roots = poly.which_roots(roots, real=True)
-        elif method == "_all_roots":
-            roots = poly.which_roots(roots, real=False)
+            for root in getattr(cls, method)(f_lift):
+                roots.append(coeff*cls._postprocess_root(root, radicals))
 
-        return roots
+            if method == "_real_roots":
+                roots = f.which_roots(roots, real=True)
+            elif method == "_all_roots":
+                roots = f.which_roots(roots, real=False)
+
+            for r in roots:
+                roots_mult[r] = m
+
+        roots_sorted = ComplexRootOf._sort_roots(roots_mult.keys())
+
+        roots_list = []
+        for r in roots_sorted:
+            roots_list.extend([r] * roots_mult[r])
+
+        return roots_list
+
 
     @classmethod
     def clear_cache(cls):

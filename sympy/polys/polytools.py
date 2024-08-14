@@ -3817,59 +3817,14 @@ class Poly(Basic):
 
         return r.replace(t, x)
 
-    def root_multiplicity(f, root, prec=10):
-        """
-        Computes the multiplicity of a root for f, at a given
-        numerical precision. Works by evaluating derivatives of
-        f at the given root. If it is not a root of f (up to
-        numerical precision), returns zero.
-
-        Examples
-        ========
-
-        >>> from sympy import Poly
-        >>> from sympy.abc import x
-
-        >>> f = Poly(x**2 - 1)
-        >>> f.root_multiplicity(1)
-        1
-        >>> f.root_multiplicity(-1)
-        1
-        >>> f.root_multiplicity(2)
-        0
-
-        >>> f = Poly((x-1)**2 * (x-2))
-        >>> f
-        Poly(x**3 - 4*x**2 + 5*x - 2, x, domain='ZZ')
-        >>> f.root_multiplicity(1)
-        2
-        >>> f.root_multiplicity(2)
-        1
-
-        See Also
-        ========
-
-        same_root
-        which_roots
-        """
-        p = f
-        multiplicity = 0
-        while p != 0:
-            p_r = p(root).evalf(prec, maxn=2*prec)
-            if abs(p_r)._prec >= 2:
-                break
-            multiplicity += 1
-            p = p.diff()
-
-        return multiplicity
-
     def which_roots(f, candidates, real=True):
         """
         Given a superset of roots of f, finds which ones are
         roots of f. Note this won't work properly if candidates is
-        not a superset of the roots of f. The list returned is the
-        same length as the number of roots of f, counted with
-        multiplicity, and preserves the order of the original candidates list.
+        not a superset of the roots of f. The list returned has
+        unique elements, is at most the length of the number of
+        unique roots of f, and preserves the order of the original
+        list of candidates.
 
         Examples
         ========
@@ -3885,6 +3840,10 @@ class Poly(Basic):
         [-1, 1, -I, I]
         >>> f.which_roots([-1, 1, 1, 1, 1], real=True)
         [-1, 1]
+
+        # expected behaviour if not a superset of roots
+        >>> f.which_roots([2, 5], real=True)
+        [2, 5]
 
         # lifting to rational coeffs produces extraneous roots
         # which we can filter out with this method
@@ -3902,7 +3861,6 @@ class Poly(Basic):
         ========
 
         same_root
-        root_multiplicity
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
@@ -3922,7 +3880,7 @@ class Poly(Basic):
             num_roots = f.degree()
 
         prec = 10
-
+        # using Counter bc its like an ordered set
         root_counts = Counter(candidates)
 
         while len(root_counts) > num_roots:
@@ -3934,11 +3892,7 @@ class Poly(Basic):
 
             prec *= 2
 
-        # handle multiplicity here
-        for r in list(root_counts.keys()):
-            root_counts[r] = f.root_multiplicity(r, prec)
-
-        roots = sum([[r]*c for r, c in root_counts.items()], [])
+        roots = list(root_counts.keys())
         return roots
 
     def same_root(f, a, b):
@@ -3970,7 +3924,6 @@ class Poly(Basic):
         ========
 
         which_roots
-        root_multiplicity
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
