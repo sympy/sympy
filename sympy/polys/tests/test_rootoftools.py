@@ -190,6 +190,12 @@ def test_CRootOf_diff():
     assert rootof(x**3 + x + 1, 0).diff(y) == 0
 
 
+def test_CRootOf__sort_roots():
+    assert CRootOf._sort_roots([S(1), -S(1), S(0)]) == [-S(1), S(0), S(1)]
+    assert CRootOf._sort_roots([S(1), sqrt(2), I]) == [S(1), sqrt(2), I]
+    assert CRootOf._sort_roots([S(1), I, I/2, -I]) == [S(1), -I, I/2, I]
+
+
 @slow
 def test_CRootOf_evalf():
     real = rootof(x**3 + x + 3, 0).evalf(n=20)
