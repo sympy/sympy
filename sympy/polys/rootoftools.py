@@ -808,11 +808,12 @@ class ComplexRootOf(RootOf):
 
         if dom.is_QQ or dom.is_ZZ:
             return cls._get_roots_qq(method, poly, radicals)
-        if dom.is_AlgebraicField:
+        elif dom.is_AlgebraicField or dom.is_ZZ_I or dom.is_QQ_I:
             return cls._get_roots_alg(method, poly, radicals)
         else:
             # XXX: not sure how to handle ZZ[x] which appears in some tests?
             # this makes the tests pass alright but has to be a better way?
+            print('hey')
             return cls._get_roots_qq(method, poly, radicals)
 
 

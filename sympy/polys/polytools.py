@@ -3866,15 +3866,15 @@ class Poly(Basic):
             raise MultivariatePolynomialError(
                 "Must be a univariate polynomial")
 
-        # must be QQ, ZZ, or Alg for proper counting
         dom = f.get_domain()
-        if not (dom.is_ZZ or dom.is_QQ or dom.is_AlgebraicField):
-            raise NotImplementedError(
-                "root counting not supported over %s" % dom)
 
         # note real count counts uniques
         # but complex count counts with multiplicity
         if real:
+            # must be QQ, ZZ, or Alg for proper counting
+            if not (dom.is_ZZ or dom.is_QQ or dom.is_AlgebraicField):
+                raise NotImplementedError(
+                    "root counting not supported over %s" % dom)
             num_roots = f.count_roots()
         else:
             num_roots = f.degree()
@@ -6836,6 +6836,13 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
     >>> all_roots(p, extension=True)
     [sqrt(2), sqrt(3)]
+
+    Algebraic coefficients can be complex as well.
+
+    >>> all_roots(x**2 - I, extension=True)
+    [-sqrt(2)/2 - sqrt(2)*I/2, sqrt(2)/2 + sqrt(2)*I/2]
+    >>> all_roots(x**2 - sqrt(2)*I, extension=True)
+    [-2**(3/4)/2 - 2**(3/4)*I/2, 2**(3/4)/2 + 2**(3/4)*I/2]
 
     In the case of algebraic or transcendental coefficients
     :func:`~.ground_roots` might be able to find some roots by factorisation:
