@@ -326,6 +326,12 @@ def test_CRootOf_real_roots():
         rootof(x**25 - 5*x**20 + x**17 + 10*x**15 - 3*x**12 -
                10*x**10 + 3*x**7 + 6*x**5 - x**2 - 1, 0)
     ]
+    # roots with multiplicity
+    assert Poly((x-1) * (x-sqrt(2))**2, x, extension=True).real_roots() ==\
+    [
+        S(1), sqrt(2), sqrt(2)
+    ]
+
 
 
 def test_CRootOf_all_roots():
@@ -351,6 +357,11 @@ def test_CRootOf_all_roots():
         rootof(x**6 - 2*x**4 - 2*x**3 + 1, 0),
         rootof(x**6 - 2*x**4 - 2*x**3 + 1, 2),
         rootof(x**6 - 2*x**4 - 2*x**3 + 1, 3)
+    ]
+    # roots with multiplicity
+    assert Poly((x-1) * (x-sqrt(2))**2 * (x-I) * (x+I), x, extension=True).all_roots() ==\
+    [
+        S(1), sqrt(2), sqrt(2), -I, I
     ]
 
 def test_CRootOf_eval_rational():

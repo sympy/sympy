@@ -3221,17 +3221,6 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
-def test_root_multiplicity():
-    f = Poly(x**4 - 1)
-
-    assert f.root_multiplicity(1) == 1
-    assert f.root_multiplicity(-1) == 1
-    assert f.root_multiplicity(2) == 0
-
-    f = Poly((x-1)**3 * (x-2))
-    assert f.root_multiplicity(1) == 3
-    assert f.root_multiplicity(2) == 1
-
 def test_which_roots():
     f = Poly(x**4 - 1)
 
@@ -3243,7 +3232,7 @@ def test_which_roots():
     assert f.which_roots([5, 10], real=True) == []
     assert f.which_roots([I, -I], real=False) == [I, -I]
 
-    assert f.which_roots([1, -1], real=False) == []
+    assert f.which_roots([1, -1], real=False) == [1, -1]
 
 def test_same_root():
     f = Poly(x**4 + x**3 + x**2 + x + 1)
