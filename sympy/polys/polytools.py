@@ -3847,7 +3847,7 @@ class Poly(Basic):
         1
 
         See Also
-        =======
+        ========
 
         same_root
         which_roots
@@ -3899,7 +3899,7 @@ class Poly(Basic):
         [sqrt(2)/2]
 
         See Also
-        =======
+        ========
 
         same_root
         root_multiplicity
@@ -3967,7 +3967,7 @@ class Poly(Basic):
             If the polynomial is of degree < 2.
 
         See Also
-        =======
+        ========
 
         which_root
         root_multiplicity
