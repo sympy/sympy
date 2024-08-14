@@ -339,7 +339,6 @@ def test_CRootOf_real_roots():
     ]
 
 
-
 def test_CRootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
         rootof(x**3 - x**2 + 1, 0),
@@ -373,9 +372,10 @@ def test_CRootOf_all_roots():
     # imaginary algebraic coeffs (gaussian domain)
     assert Poly(x**2 - I/2, x, extension=True).all_roots() ==\
     [
-        -1/2 - I/2,
-        1/2 + I/2
+        -S(1)/2 - I/2,
+        S(1)/2 + I/2
     ]
+
 
 def test_CRootOf_eval_rational():
     p = legendre_poly(4, x, polys=True)
