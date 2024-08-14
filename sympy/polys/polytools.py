@@ -6834,6 +6834,10 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
     x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    >>> all_roots(p)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: sorted roots not supported over EX
     >>> all_roots(p, extension=True)
     [sqrt(2), sqrt(3)]
 
@@ -6845,7 +6849,8 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     >>> all_roots(x**2 - sqrt(2)*I, extension=True)
     [-2**(3/4)/2 - 2**(3/4)*I/2, 2**(3/4)/2 + 2**(3/4)*I/2]
 
-    In the case of algebraic or transcendental coefficients
+    Transcendental coefficients cannot currently be handled by
+    :func:`all_roots`. In the case of algebraic or transcendental coefficients
     :func:`~.ground_roots` might be able to find some roots by factorisation:
 
     >>> from sympy import ground_roots
@@ -7023,17 +7028,22 @@ def real_roots(f, multiple=True, radicals=True, extension=False):
     polynomials of high degree which typically have many more complex roots
     than real roots.
 
-    Irrational algebraic coefficients are handled by :func:`all_roots`
+    Irrational algebraic coefficients are handled by :func:`real_roots`
     if `extension=True` is set.
 
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
     x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
-    >>> all_roots(p, extension=True)
+    >>> real_roots(p)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: sorted roots not supported over EX
+    >>> real_roots(p, extension=True)
     [sqrt(2), sqrt(3)]
 
-    In the case of algebraic or transcendental coefficients
+    Transcendental coefficients cannot currently be handled by
+    :func:`real_roots`. In the case of algebraic or transcendental coefficients
     :func:`~.ground_roots` might be able to find some roots by factorisation:
 
     >>> from sympy import ground_roots
