@@ -329,10 +329,9 @@ def test_quintics_2():
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 3),
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 4)]
 
-@slow
 def test_quintics_3():
     y = x**5 + x**3 - 2**Rational(1, 3)
-    assert solve(y) == solve(-y)
+    assert solve(y) == solve(-y) == []
 
 
 def test_highorder_poly():
