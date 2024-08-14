@@ -415,20 +415,25 @@ class ComplexRootOf(RootOf):
         _real_sorted() and _complexes_sorted() use isolating
         intervals, and these are typically used in the root
         finding methods in this class. This method is used
-        internally if that data is not available.
+        internally if that data is not available. It falls
+        back on numerical evaluation if necessary.
         """
-        real_roots = [r for r in roots if r.is_real]
-        complex_roots = [r for r in roots if not r.is_real and im(r) < 0]
+        real_roots = sorted(r for r in roots if r.is_real)
 
-        real_roots.sort()
-        complex_roots.sort(key=lambda r: (re(r), -im(r)))
+        try:
+            complex_roots = sorted((r for r in roots if not r.is_real),
+                                key=lambda root: (re(root), im(root)))
+            """
+            Example error
+            TypeError: cannot determine truth value of Relational:
+            re(CRootOf(x**6 - 2*x**4 - 2*x**3 + 1, 3)) <
+                re(CRootOf(x**6 - 2*x**4 - 2*x**3 + 1, 2))
+            """
+        except TypeError:
+            complex_roots = sorted((r for r in roots if not r.is_real),
+                                key=lambda root: (re(root.evalf()), im(root.evalf())))
 
-        all_roots = real_roots
-        for cr in complex_roots:
-            all_roots.append(cr)
-            all_roots.append(cr.conjugate())
-
-        return all_roots
+        return real_roots + complex_roots
 
     @classmethod
     def real_roots(cls, poly, radicals=True):
