@@ -3824,7 +3824,10 @@ class Poly(Basic):
         not a superset of the roots of f. The list returned has
         unique elements, is at most the length of the number of
         unique roots of f, and preserves the order of the original
-        list of candidates.
+        list of candidates. The `real` argument only controls
+        the root counting: if `real=True`, the `.count_roots()` method
+        is used (only supported over ZZ, QQ, or AlgebraicField); if
+        `real=False`, the degree is used.
 
         Examples
         ========
@@ -3839,6 +3842,8 @@ class Poly(Basic):
         >>> f.which_roots([-1, 1, -I, I, 0], real=False)
         [-1, 1, -I, I]
         >>> f.which_roots([-1, 1, 1, 1, 1], real=True)
+        [-1, 1]
+        >>> f.which_roots([-1, -1, 1, 1], real=False)
         [-1, 1]
 
         # expected behaviour if not a superset of roots

@@ -8,7 +8,6 @@ from sympy.core.cache import cacheit
 from sympy.core.relational import is_le
 from sympy.core.sorting import ordered
 from sympy.polys.domains import QQ
-from sympy.functions.elementary.complexes import re, im
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
@@ -408,33 +407,6 @@ class ComplexRootOf(RootOf):
             return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
         return False  # XXX is this necessary?
 
-    def _sort_roots(roots):
-        """
-        Sorts roots to be in the order that CRootOf uses.
-        Note that for proper sorting, the class methods
-        _real_sorted() and _complexes_sorted() use isolating
-        intervals, and these are typically used in the root
-        finding methods in this class. This method is used
-        internally if that data is not available. It falls
-        back on numerical evaluation if necessary.
-        """
-        real_roots = sorted(r for r in roots if r.is_real)
-
-        try:
-            complex_roots = sorted((r for r in roots if not r.is_real),
-                                key=lambda root: (re(root), im(root)))
-            """
-            Example error
-            TypeError: cannot determine truth value of Relational:
-            re(CRootOf(x**6 - 2*x**4 - 2*x**3 + 1, 3)) <
-                re(CRootOf(x**6 - 2*x**4 - 2*x**3 + 1, 2))
-            """
-        except TypeError:
-            complex_roots = sorted((r for r in roots if not r.is_real),
-                                key=lambda root: (re(root.evalf()), im(root.evalf())))
-
-        return real_roots + complex_roots
-
     @classmethod
     def real_roots(cls, poly, radicals=True):
         """Get real roots of a polynomial. """
@@ -833,39 +805,33 @@ class ComplexRootOf(RootOf):
         """Return postprocessed roots of specified kind
          for polynomials with algebraic coefficients. It assumes
          the domain is already an algebraic field. First it
-         computes the square-free factorization, finds the
-         roots of each of these factor's lifts, and then filters
-         using which_roots(). Lastly, it puts them all together
-         and sorts them to be in the usual order.
+         finds the roots using _get_roots_qq, then uses the
+         square-free factors to filter roots and get the correct
+         multiplicity.
          """
 
-        roots_mult = {}
+        # Existing QQ code can find and sort the roots
+        roots = cls._get_roots_qq(method, poly.lift(), radicals)
 
+        subroots = {}
         for f, m in poly.sqf_list()[1]:
-            f_lift = f.lift()
-
-            coeff, f_lift = cls._preprocess_roots(f_lift)
-            roots = []
-
-            for root in getattr(cls, method)(f_lift):
-                roots.append(coeff*cls._postprocess_root(root, radicals))
-
             if method == "_real_roots":
-                roots = f.which_roots(roots, real=True)
+                roots_filt = f.which_roots(roots, real=True)
             elif method == "_all_roots":
-                roots = f.which_roots(roots, real=False)
+                roots_filt = f.which_roots(roots, real=False)
+            for r in roots_filt:
+                if r in subroots:
+                    subroots[r] += m
+                else:
+                    subroots[r] = m
 
-            for r in roots:
-                roots_mult[r] = m
+        # loop over unique roots, keep ones in subroots, and store multiplicity
+        roots_filtered_mult = [(r, subroots[r]) for r in list(dict.fromkeys(roots)) if r in subroots]
 
-        roots_sorted = ComplexRootOf._sort_roots(roots_mult.keys())
+        # flatten the roots list according to multiplicity
+        roots_flat = sum(([r] * m for r, m in roots_filtered_mult), [])
 
-        roots_list = []
-        for r in roots_sorted:
-            roots_list.extend([r] * roots_mult[r])
-
-        return roots_list
-
+        return roots_flat
 
     @classmethod
     def clear_cache(cls):
