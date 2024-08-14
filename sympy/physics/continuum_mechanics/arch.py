@@ -49,14 +49,14 @@ class Arch:
         self._member_force = None
         self._reaction_force = {Symbol('R_A_x'):0, Symbol('R_A_y'):0, Symbol('R_B_x'):0, Symbol('R_B_y'):0}
         self._points_disc_x = set()
-        self._point_disc_y = set()
+        self._points_disc_y = set()
         self._moment_x  = {}
         self._moment_y = {}
         self._load_x_func = Piecewise((0,True))
         self._load_y_func = Piecewise((0,True))
         self._net_x = 0
         self._net_y = 0
-        self._bending_moment = 0
+        self._bending_moment = None
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
 
     @property
@@ -151,15 +151,15 @@ class Arch:
             label : String or Symbol
                 The label of the load
 
-            start : Sympifyable
+            start : Float
 
                     - For concentrated/point loads, start is the x coordinate
                     - For distributed loads, start is the starting position of distributed load
 
             mag : Sympifyable
-                Magnitude of the appliead load. Must be positive
+                Magnitude of the applied load. Must be positive
 
-            end : Sympifyable
+            end : Float
                 Required for distributed loads
 
                     - For concentrated/point load , end is None(may not be given)
@@ -199,11 +199,8 @@ class Arch:
             if end is None or end<start:
                 raise KeyError("provide end greater than start")
 
-            if start>self._right_support[0] or end<self._left_support[0]:
-                raise ValueError(f"loads must be applied between {self._left_support[0]} and {self._right_support[0]}")
-
             self._distributed_loads[label] = {'start':start, 'end':end, 'f_y': mag}
-            self._point_disc_y.add(start)
+            self._points_disc_y.add(start)
 
             if start in self._moment_y:
                 self._moment_y[start] -= mag*(Min(x,end)-start)*(x0-(start+(Min(x,end)))/2)
@@ -219,12 +216,9 @@ class Arch:
                 raise TypeError("please provide direction of force")
             height = self._shape_eqn.subs({'x':start})
 
-            if start>self._right_support[0] or start<self._left_support[0]:
-                raise ValueError(f"loads must be applied between x = {self._left_support[0]} and x = {self._right_support[0]}")
-
             self._conc_loads[label] = {'x':start, 'y':height, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle))}
             self._points_disc_x.add(start)
-            self._point_disc_y.add(start)
+            self._points_disc_y.add(start)
 
             if start in self._moment_x:
                 self._moment_x[start] += self._conc_loads[label]['f_x']*(y-self._conc_loads[label]['y'])
@@ -260,6 +254,7 @@ class Arch:
             start = self._distributed_loads[label]['start']
             end = self._distributed_loads[label]['end']
             mag  = self._distributed_loads[label]['f_y']
+            self._points_disc_y.remove(start)
             self._net_y -= mag*(end-start)
             self._moment_y[start] += mag*(Min(x,end)-start)*(x0-(start+(Min(x,end)))/2)
             val = self._distributed_loads.pop(label)
@@ -268,7 +263,9 @@ class Arch:
         elif label in self._conc_loads :
 
             self._loads_applied.pop(label)
-            start = self._distributed_loads[label]['x']
+            start = self._conc_loads[label]['x']
+            self._points_disc_x.remove(start)
+            self._points_disc_y.remove(start)
             self._moment_y[start] += self._conc_loads[label]['f_y']*(x0-start)
             self._moment_x[start] -= self._conc_loads[label]['f_x']*(y-self._conc_loads[label]['y'])
             self._net_x -= self._conc_loads[label]['f_x']
@@ -283,6 +280,27 @@ class Arch:
         """
         Add the type for support at each end.
         Can use roller or hinge support at each end.
+        
+        Parameters
+        ==========
+        
+            left_support, right_support : string
+                Type of support at respective end
+
+                    - For roller support , left_support/right_support = "roller"
+                    - For hinged support, left_support/right_support = "hinge"
+                    - defaults to hinge if value not provided
+
+
+        Examples
+        ========
+
+        For applying roller support at right end
+
+        >>> from sympy.physics.continuum_mechanics.arch import Arch
+        >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
+        >>> a.apply_support(right_support="roller")
+        
         """
         support_types = ['roller','hinge']
         if left_support:
@@ -298,6 +316,10 @@ class Arch:
             self._supports['right'] = right_support
 
     def add_member(self,y):
+        """
+        This method adds a member/rod at a particular height y.
+        A rod is used for stability of the structure in case of a roller support.
+        """
         if y>self._crown_y or y<min(self._left_support[1],  self._right_support[1]):
             raise ValueError(f"position of support must be between y={min(self._left_support[1],  self._right_support[1])} and y={self._crown_y}")
         x = Symbol('x')
@@ -310,13 +332,14 @@ class Arch:
     def solve(self):
         """
         This method solves for the reaction forces generated at the supports,\n
-        bending moment and shear force generated in the arch and tension produced in the rope if used.
+        and bending moment and generated in the arch and tension produced in the member if used.
+        
         """
         y = Symbol('y')
         x = Symbol('x')
         x0 = Symbol('x0')
         discontinuity_points_x = sorted(self._points_disc_x)
-        discontinuity_points_y = sorted(self._point_disc_y)
+        discontinuity_points_y = sorted(self._points_disc_y)
         self._load_x_func = Piecewise((0,True))
         self._load_y_func = Piecewise((0,True))
         accumulated_x_moment = 0
@@ -436,5 +459,5 @@ class Arch:
         for symb in self._reaction_force:
             self._reaction_force[symb] = solution[symb]
 
-        self._bending_moment = self._load_x_func.subs(x,x0) + self._load_y_func.subs(x,x0) - solution[R_A_y]*(x0-self._left_support[0]) + solution[R_A_x]*(self._shape_eqn.subs({x:x0})-self._left_support[1])
+        self._bending_moment = - (self._load_x_func.subs(x,x0) + self._load_y_func.subs(x,x0) - solution[R_A_y]*(x0-self._left_support[0]) + solution[R_A_x]*(self._shape_eqn.subs({x:x0})-self._left_support[1]))
         return solution
