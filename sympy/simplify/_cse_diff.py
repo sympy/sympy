@@ -4,29 +4,35 @@ from sympy import cse, Matrix, Derivative, MatrixBase
 from sympy.utilities.iterables import iterable
 
 
-def _process_cse(replacements, reduced_expressions):
-    r"""
-    This function is designed to postprocess the output of a common subexpression elimination (CSE)
-    operation. Specifically, it removes any CSE replacement symbols from the arguments of `Derivative` terms in
-    the expression. This is necessary to ensure that the forward Jacobian function correctly handles derivative terms.
+def _remove_cse_from_derivative(replacements, reduced_expressions):
+    """
+    This function is designed to postprocess the output of a common subexpression
+    elimination (CSE) operation. Specifically, it removes any CSE replacement
+    symbols from the arguments of ``Derivative`` terms in the expression. This
+    is necessary to ensure that the forward Jacobian function correctly handles
+    derivative terms.
 
     Parameters
     ==========
 
     replacements : list of (Symbol, expression) pairs
-        Replacement Symbols and relative Common Subexpressions that have been replaced during a CSE operation.
+        Replacement symbols and relative common subexpressions that have been
+        replaced during a CSE operation.
 
     reduced_expressions : list of SymPy expressions
-        The reduced expressions with all the replacements from the replacements list above.
+        The reduced expressions with all the replacements from the
+        replacements list above.
 
     Returns
     =======
 
     processed_replacements : list of (Symbol, expression) pairs
-        Processed replacement list, in the same format of the 'replacements' input list.
+        Processed replacement list, in the same format of the
+        ``replacements`` input list.
 
     processed_reduced : list of SymPy expressions
-        Processed reduced list, in the same format of the 'reduced_expressions' input list.
+        Processed reduced list, in the same format of the
+        ``reduced_expressions`` input list.
     """
 
     def traverse(node, repl_dict):
@@ -48,50 +54,60 @@ def _process_cse(replacements, reduced_expressions):
         return result
 
     repl_dict = dict(replacements)
-    processed_replacements = [(rep_sym, traverse(sub_exp, repl_dict)) for rep_sym, sub_exp in replacements]
-    processed_reduced = [red_exp.__class__([traverse(exp, repl_dict) for exp in red_exp]) for red_exp in reduced_expressions]
+    processed_replacements = [
+        (rep_sym, traverse(sub_exp, repl_dict))
+        for rep_sym, sub_exp in replacements
+    ]
+    processed_reduced = [
+        red_exp.__class__([traverse(exp, repl_dict) for exp in red_exp])
+        for red_exp in reduced_expressions
+    ]
 
     return processed_replacements, processed_reduced
 
 
-def _forward_jacobian_core(replacements, reduced_expr, wrt):
-    r"""
-    Core function to compute the Jacobian of an input Matrix of expressions through forward accumulation.
-    Takes directly the output of a CSE operation (replacements and reduced_expr), and an iterable
-    of variables (wrt) with respect to which to differentiate the reduced expression and returns the
-    Jacobian matrix in DAG form.
+def _forward_jacobian_cse(replacements, reduced_expr, wrt):
+    """
+    Core function to compute the Jacobian of an input Matrix of expressions
+    through forward accumulation. Takes directly the output of a CSE operation
+    (replacements and reduced_expr), and an iterable of variables (wrt) with
+    respect to which to differentiate the reduced expression and returns the
+    reduced Jacobian matrix and the ``replacements`` list.
 
-    The function also returns a list of precomputed free symbols for each subexpression,
-    which are useful in the substitution process.
-
-    NOTE: The output Jacobian might not be always exactly in a DAG form, but close to it.
+    The function also returns a list of precomputed free symbols for each
+    subexpression, which are useful in the substitution process.
 
     Parameters
     ==========
 
     replacements : list of (Symbol, expression) pairs
-        Replacement Symbols and relative Common Subexpressions that have been replaced during a CSE operation.
+        Replacement symbols and relative common subexpressions that have been
+        replaced during a CSE operation.
 
     reduced_expr : list of SymPy expressions
-        The reduced expressions with all the replacements from the replacements list above.
+        The reduced expressions with all the replacements from the
+        replacements list above.
 
-    wrt : Matrix, tuple, or list
-        Iterable of expressions with respect to which to compute the Jacobian Matrix
+    wrt : iterable
+        Iterable of expressions with respect to which to compute the
+        Jacobian matrix
 
     Returns
     =======
 
     replacements : list of (Symbol, expression) pairs
-        Replacement Symbols and relative Common Subexpressions that have been replaced during a CSE operation.
-        Compared to the input replacement list, the output one doesn't contain replacement symbols inside
-        Derivative's arguments.
+        Replacement symbols and relative common subexpressions that have been
+        replaced during a CSE operation. Compared to the input replacement list,
+        the output one doesn't contain replacement symbols inside
+        ``Derivative``'s arguments.
 
     jacobian : list of SymPy expressions
-        The list only contains one element, which is the Jacobian Matrix with elements
-        in reduced form (replacement symbols are present)
+        The list only contains one element, which is the Jacobian matrix with
+        elements in reduced form (replacement symbols are present)
 
     precomputed_fs: list
-        List of sets, which store the free symbols present in each sub-expression. Useful in the substitution process.
+        List of sets, which store the free symbols present in each sub-expression.
+        Useful in the substitution process.
     """
 
     if not isinstance(reduced_expr[0], MatrixBase):
@@ -109,7 +125,7 @@ def _forward_jacobian_core(replacements, reduced_expr, wrt):
     if not (wrt.shape[0] == 1 or wrt.shape[1] == 1):
         raise TypeError("``wrt`` must be a row or a column matrix")
 
-    replacements, reduced_expr = _process_cse(replacements, reduced_expr)
+    replacements, reduced_expr = _remove_cse_from_derivative(replacements, reduced_expr)
 
     if replacements:
         rep_sym, sub_expr = map(Matrix, zip(*replacements))
@@ -118,29 +134,44 @@ def _forward_jacobian_core(replacements, reduced_expr, wrt):
 
     l_sub, l_wrt, l_red = len(sub_expr), len(wrt), len(reduced_expr[0])
 
-    f1 = Matrix.from_dok(l_red, l_wrt, {(i, j): diff_value for i, r in enumerate(reduced_expr[0])
-                                        for j, w in enumerate(wrt) if (diff_value := r.diff(w)) != 0})
+    f1 = reduced_expr[0].__class__.from_dok(l_red, l_wrt,
+        {
+            (i, j): diff_value
+            for i, r in enumerate(reduced_expr[0])
+            for j, w in enumerate(wrt)
+            if (diff_value := r.diff(w)) != 0
+        },
+    )
+
     if not replacements:
         return [], [f1], []
 
-    f2 = Matrix.from_dok(l_red, l_sub, {(i, j): diff_value
-                                        for i, (r, fs) in enumerate([(r, r.free_symbols) for r in reduced_expr[0]])
-                                        for j, s in enumerate(rep_sym) if s in fs and (diff_value := r.diff(s)) != 0})
+    f2 = Matrix.from_dok(l_red, l_sub,
+        {
+            (i, j): diff_value
+            for i, (r, fs) in enumerate([(r, r.free_symbols) for r in reduced_expr[0]])
+            for j, s in enumerate(rep_sym)
+            if s in fs and (diff_value := r.diff(s)) != 0
+        },
+    )
 
     rep_sym_set = set(rep_sym)
     precomputed_fs = [s.free_symbols & rep_sym_set for s in sub_expr ]
 
-    c_matrix = Matrix.from_dok(1, l_wrt, {(0, j): diff_value for j, w in enumerate(wrt)
-                                   if (diff_value := sub_expr[0].diff(w)) != 0})
+    c_matrix = Matrix.from_dok(1, l_wrt,
+                               {(0, j): diff_value for j, w in enumerate(wrt)
+                                if (diff_value := sub_expr[0].diff(w)) != 0})
 
     for i in range(1, l_sub):
 
-        bi_matrix = Matrix.from_dok(1, i, {(0, j): diff_value for j in range(i + 1)
-                                    if rep_sym[j] in precomputed_fs[i]
-                                    and (diff_value := sub_expr[i].diff(rep_sym[j])) != 0})
+        bi_matrix = Matrix.from_dok(1, i,
+                                    {(0, j): diff_value for j in range(i + 1)
+                                     if rep_sym[j] in precomputed_fs[i]
+                                     and (diff_value := sub_expr[i].diff(rep_sym[j])) != 0})
 
-        ai_matrix = Matrix.from_dok(1, l_wrt, {(0, j): diff_value for j, w in enumerate(wrt)
-                                        if (diff_value := sub_expr[i].diff(w)) != 0})
+        ai_matrix = Matrix.from_dok(1, l_wrt,
+                                    {(0, j): diff_value for j, w in enumerate(wrt)
+                                     if (diff_value := sub_expr[i].diff(w)) != 0})
 
         if bi_matrix._rep.nnz():
             ci_matrix = bi_matrix.multiply(c_matrix).add(ai_matrix)
@@ -154,16 +185,16 @@ def _forward_jacobian_core(replacements, reduced_expr, wrt):
     return replacements, jacobian, precomputed_fs
 
 
-def _forward_jacobian_norm_in_dag_out(expr, wrt):
-    r"""
-    Function to compute the Jacobian of an input Matrix of expressions through forward accumulation.
-    Takes a sympy Matrix of expression (expr) as input and an iterable of variables (wrt) with respect to
-    which to compute the Jacobian matrix in DAG form.
+def _forward_jacobian_norm_in_cse_out(expr, wrt):
+    """
+    Function to compute the Jacobian of an input Matrix of expressions through
+    forward accumulation. Takes a sympy Matrix of expressions (expr) as input
+    and an iterable of variables (wrt) with respect to which to compute the
+    Jacobian matrix. The matrix is returned in reduced form (containing
+    replacement symbols) along with the ``replacements`` list.
 
-    The function also returns a list of precomputed free symbols for each subexpression,
-    which are useful in the substitution process.
-
-    NOTE: The output Jacobian might not be always exactly in a DAG form, but close to it.
+    The function also returns a list of precomputed free symbols for each
+    subexpression, which are useful in the substitution process.
 
     Parameters
     ==========
@@ -171,35 +202,39 @@ def _forward_jacobian_norm_in_dag_out(expr, wrt):
     expr : Matrix
         The vector to be differentiated.
 
-    with_respect_to : Matrix, list, or tuple
-        The vector with respect to which to perform the differentiation. Can be a matrix or an iterable of variables.
+    wrt : iterable
+        The vector with respect to which to perform the differentiation.
+        Can be a matrix or an iterable of variables.
 
     Returns
     =======
 
     replacements : list of (Symbol, expression) pairs
-        Replacement Symbols and relative Common Subexpressions that have been replaced during a CSE operation.
-        The output replacement list doesn't contain replacement symbols inside Derivative's arguments.
+        Replacement symbols and relative common subexpressions that have been
+        replaced during a CSE operation. The output replacement list doesn't
+        contain replacement symbols inside ``Derivative``'s arguments.
 
     jacobian : list of SymPy expressions
-        The list only contains one element, which is the Jacobian Matrix with elements
-        in reduced form (replacement symbols are present)
+        The list only contains one element, which is the Jacobian matrix with
+        elements in reduced form (replacement symbols are present)
 
     precomputed_fs: list
-        List of sets, which store the free symbols present in each sub-expression. Useful in the substitution process.
+        List of sets, which store the free symbols present in each
+        sub-expression. Useful in the substitution process.
     """
 
     replacements, reduced_expr = cse(expr)
-    replacements, jacobian, precomputed_fs = _forward_jacobian_core(replacements, reduced_expr, wrt)
+    replacements, jacobian, precomputed_fs = _forward_jacobian_cse(replacements, reduced_expr, wrt)
 
     return replacements, jacobian, precomputed_fs
 
 
 def _forward_jacobian(expr, wrt):
-    r"""
-    Function to compute the Jacobian of an input Matrix of expressions through forward accumulation.
-    Takes a sympy Matrix of expression (expr) as input and an iterable of variables (wrt) with respect to
-    which to compute the Jacobian matrix.
+    """
+    Function to compute the Jacobian of an input Matrix of expressions through
+    forward accumulation. Takes a sympy Matrix of expressions (expr) as input
+    and an iterable of variables (wrt) with respect to which to compute the
+    Jacobian matrix.
 
     Explanation
     ===========
@@ -214,7 +249,7 @@ def _forward_jacobian(expr, wrt):
     a forward accumulation algorithm (repeated application of the chain rule
     symbolically) to more efficiently calculate the Jacobian matrix of a target
     expression ``expr`` with respect to an expression or set of expressions
-    ``with_respect_to``.
+    ``wrt``.
 
     Note that this function is intended to improve performance when
     differentiating large expressions that contain many common subexpressions.
@@ -227,8 +262,9 @@ def _forward_jacobian(expr, wrt):
     expr : Matrix
         The vector to be differentiated.
 
-    wrt : Matrix, list, or tuple
-        The vector with respect to which to do the differentiation. Can be a matrix or an iterable of variables.
+    wrt : iterable
+        The vector with respect to which to do the differentiation.
+        Can be a matrix or an iterable of variables.
 
     See Also
     ========
@@ -243,7 +279,7 @@ def _forward_jacobian(expr, wrt):
     else:
         rep_sym = Matrix([])
 
-    replacements, jacobian, precomputed_fs = _forward_jacobian_core(replacements, reduced_expr, wrt)
+    replacements, jacobian, precomputed_fs = _forward_jacobian_cse(replacements, reduced_expr, wrt)
 
     if not replacements: return jacobian[0]
 
