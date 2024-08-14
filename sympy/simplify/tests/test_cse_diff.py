@@ -9,8 +9,10 @@ from sympy.core import Derivative
 from sympy.functions.elementary.exponential import exp
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.physics.mechanics import dynamicsymbols
-from sympy.simplify._cse_diff import (_forward_jacobian, _process_cse, _forward_jacobian_core,
-                                      _forward_jacobian_norm_in_dag_out)
+from sympy.simplify._cse_diff import (_forward_jacobian,
+                                      _remove_cse_from_derivative,
+                                      _forward_jacobian_cse,
+                                      _forward_jacobian_norm_in_cse_out)
 from sympy.simplify.simplify import simplify
 from sympy.matrices import Matrix, eye
 
@@ -77,7 +79,7 @@ def test_process_cse():
     k = Function('k')
     expr = Matrix([f(k(x,y), z) + Derivative(f(k(x,y), z), x) + k(x,y) + 2*x])
     repl, reduced = cse(expr)
-    p_repl, p_reduced = _process_cse(repl, reduced)
+    p_repl, p_reduced = _remove_cse_from_derivative(repl, reduced)
 
     x0 = symbols('x0')
     x1 = symbols('x1')
@@ -89,6 +91,31 @@ def test_process_cse():
 
     assert p_repl == expected_output[0], f"Expected {expected_output[0]}, but got {p_repl}"
     assert p_reduced == expected_output[1], f"Expected {expected_output[1]}, but got {p_reduced}"
+
+
+def test_io_matrix_type():
+    x, y, z = symbols('x y z')
+    expr = ImmutableDenseMatrix([
+        x * y + y * z + x * y * z,
+        x ** 2 + y ** 2 + z ** 2,
+        x * y + x * z + y * z
+    ])
+    wrt = ImmutableDenseMatrix([x, y, z])
+
+    replacements, reduced_expr = cse(expr)
+
+    # Test _forward_jacobian_core
+    replacements_core, jacobian_core, precomputed_fs_core = _forward_jacobian_cse(replacements, reduced_expr, wrt)
+    assert isinstance(jacobian_core[0], type(reduced_expr[0])), "Jacobian should be a Matrix of the same type as the input"
+
+    # Test _forward_jacobian_norm_in_dag_out
+    replacements_norm, jacobian_norm, precomputed_fs_norm = _forward_jacobian_norm_in_cse_out(
+        expr, wrt)
+    assert isinstance(jacobian_norm[0], type(reduced_expr[0])), "Jacobian should be a Matrix of the same type as the input"
+
+    # Test _forward_jacobian
+    jacobian = _forward_jacobian(expr, wrt)
+    assert isinstance(jacobian, type(expr)), "Jacobian should be a Matrix of the same type as the input"
 
 
 def test_forward_jacobian_input_output():
@@ -103,7 +130,7 @@ def test_forward_jacobian_input_output():
     replacements, reduced_expr = cse(expr)
 
     # Test _forward_jacobian_core
-    replacements_core, jacobian_core, precomputed_fs_core = _forward_jacobian_core(replacements, reduced_expr, wrt)
+    replacements_core, jacobian_core, precomputed_fs_core = _forward_jacobian_cse(replacements, reduced_expr, wrt)
     assert isinstance(replacements_core, type(replacements)), "Replacements should be a list"
     assert isinstance(jacobian_core, type(reduced_expr)), "Jacobian should be a list"
     assert isinstance(precomputed_fs_core, list), "Precomputed free symbols should be a list"
@@ -112,7 +139,7 @@ def test_forward_jacobian_input_output():
     assert len(precomputed_fs_core) == len(replacements), "Length of precomputed free symbols does not match"
 
     # Test _forward_jacobian_norm_in_dag_out
-    replacements_norm, jacobian_norm, precomputed_fs_norm = _forward_jacobian_norm_in_dag_out(expr, wrt)
+    replacements_norm, jacobian_norm, precomputed_fs_norm = _forward_jacobian_norm_in_cse_out(expr, wrt)
     assert isinstance(replacements_norm, type(replacements)), "Replacements should be a list"
     assert isinstance(jacobian_norm, type(reduced_expr)), "Jacobian should be a list"
     assert isinstance(precomputed_fs_norm, list), "Precomputed free symbols should be a list"
