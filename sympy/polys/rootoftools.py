@@ -816,9 +816,9 @@ class ComplexRootOf(RootOf):
         subroots = {}
         for f, m in poly.sqf_list()[1]:
             if method == "_real_roots":
-                roots_filt = f.which_roots(roots, real=True)
+                roots_filt = f.which_real_roots(roots)
             elif method == "_all_roots":
-                roots_filt = f.which_roots(roots, real=False)
+                roots_filt = f.which_all_roots(roots)
             for r in roots_filt:
                 subroots[r] = m
 
