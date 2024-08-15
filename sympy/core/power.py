@@ -1584,7 +1584,7 @@ class Pow(Expr):
             # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
             # prevent rounding errors which can induce wrong values of d leading
             # to a NotImplementedError being returned from the block below.
-            g.replace(lambda x: x.is_Float, lambda x: Rational(x))
+            g = g.replace(lambda x: x.is_Float, lambda x: Rational(x))
             _, d = g.leadterm(x, logx=logx)
         if not d.is_positive:
             g = g.simplify()
