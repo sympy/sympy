@@ -26,7 +26,7 @@ of the :class:`~.CoulombKineticFriction` actuator.
 
 Let's define the necessary variables and coordinates.
 
-   >>> m, g, mu_k, mu_s, v_s, sigma = sm.symbols('m, g, mu_k, mu_s, v_s, sigma')
+   >>> m, g, mu_k, mu_s, v_s, sigma, Ix, Iy, M = sm.symbols('m, g, mu_k, mu_s, v_s, sigma, Ix, Iy, M')
    >>> q1, q2, q3 = me.dynamicsymbols('q1:4')
    >>> q1d, q2d, q3d = me.dynamicsymbols('q1:4', level=1)
    >>> u1, u2, u3 = me.dynamicsymbols('u1:4')
@@ -34,17 +34,18 @@ Let's define the necessary variables and coordinates.
 
 - :math:`q1`: Generalized coordinate representing the angular velocity of the disc w.r.t. the inertial frame
 - :math:`q2, q3`: Generalized coordinates of the block w.r.t the disc
-- :math:`mu_k`: coefficient of kinetic friction
-- :math:`mu_s`: coefficient of static friction
+- :math:`mu_k, mu_s`: coefficient of kinetic and static friction
 - :math:`v_s`: Stribeck friction coefficient
 - :math:`sigma`: viscous friction coefficient
-- :math:`m`: mass of the block
+- :math:`m, M`: mass of the block and disc
 - :math:`g`: gravitational constant
+- :math:`Ix, Iy`: x, y inertia elements of the disc
 
 We will also define the necessary reference frames, points, and velocities.
 :math:`N` is the inertial reference frame and :math:`A` is the rotating reference frame.
 :math:`O` is the center of the disc, :math:`P` is the actual contact point between
-the block and the disc.
+the block and the disc, and :math:`Q` is the point on the disc, starting from the same
+location as point :math:`P`.
 
    >>> N = me.ReferenceFrame('N')
    >>> A = me.ReferenceFrame('A')
@@ -54,8 +55,12 @@ the block and the disc.
 
    >>> O = me.Point('O')
    >>> P = O.locatenew('P', q2 * N.x + q3 * N.y)
+   >>> Q = P.locatenew('Q', 0 * N.x + 0 * N.y)
+
    >>> O.set_vel(N, 0)
    >>> P.v2pt_theory(P, N, A)
+   q2'(t) n_x + q3'(t) n_y
+   >>> Q.v2pt_theory(Q, N, A)
    q2'(t) n_x + q3'(t) n_y
 
 We define the particle, pathway, and forces using :class:`~.CoulombKineticFriction`.
@@ -122,18 +127,28 @@ A unique custom pathway, SlidingPathway, represent the motion of the block along
    ...             ]
 
    >>> block = me.Particle('block', P, m)
-   >>> normal_force = m * g
-   >>> pathway = SlidingPathway(O, P, N)
-   >>> friction = me.CoulombKineticFriction(mu_k, normal_force, pathway, v_s=v_s, sigma=sigma, mu_s=mu_k)
+   >>> disc = me.Particle('disc', Q, M)
+
+   >>> inertia_disc = me.inertia(A, Ix, Iy, 0)
+   >>> disc_body = me.RigidBody('disc_body', O, A, M, (inertia_disc, Q))
+
+   >>> normal_force = (m + M) * g
+
+   >>> pathway = SlidingPathway(P, Q, N)
+   >>> friction = me.CoulombKineticFriction(mu_k, normal_force, pathway, v_s=v_s, sigma=sigma, mu_s=mu_s)
+
    >>> loads = friction.to_loads()
    >>> loads
-          /               /   ___________________\            ___________________\               /               /   ___________________\            ___________________\                  /               /   ___________________\            ___________________\              /               /   ___________________\            ___________________\
-          |               |  /       2         2 |           /       2         2 |               |               |  /       2         2 |           /       2         2 |                  |               |  /       2         2 |           /       2         2 |              |               |  /       2         2 |           /       2         2 |
-    [(O, -\- g*m*mu_k*sign\\/  q2'(t)  + q3'(t)  / - sigma*\/  q2'(t)  + q3'(t)  /*q2'(t) n_x + -\- g*m*mu_k*sign\\/  q2'(t)  + q3'(t)  / - sigma*\/  q2'(t)  + q3'(t)  /*q3'(t) n_y), (P, \- g*m*mu_k*sign\\/  q2'(t)  + q3'(t)  / - sigma*\/  q2'(t)  + q3'(t)  /*q2'(t) n_x + \- g*m*mu_k*sign\\/  q2'(t)  + q3'(t)  / - sigma*\/  q2'(t)  + q3'(t)  /*q3'(t) n_y)]
+          /                                 /                                                      /      2         2\ \                             \               /                                 /                                                      /      2         2\ \                             \                  /                                 /                                                      /      2         2\ \                             \              /                                 /                                                      /      2         2\ \                             \
+          |                                 |                                                     -\q2'(t)  + q3'(t) / |                             |               |                                 |                                                     -\q2'(t)  + q3'(t) / |                             |                  |                                 |                                                     -\q2'(t)  + q3'(t) / |                             |              |                                 |                                                     -\q2'(t)  + q3'(t) / |                             |
+          |                                 |                                                     ---------------------|                             |               |                                 |                                                     ---------------------|                             |                  |                                 |                                                     ---------------------|                             |              |                                 |                                                     ---------------------|                             |
+          |           ___________________   |                                                                2         |     /   ___________________\|               |           ___________________   |                                                                2         |     /   ___________________\|                  |           ___________________   |                                                                2         |     /   ___________________\|              |           ___________________   |                                                                2         |     /   ___________________\|
+          |          /       2         2    |                                                             v_s          |     |  /       2         2 ||               |          /       2         2    |                                                             v_s          |     |  /       2         2 ||                  |          /       2         2    |                                                             v_s          |     |  /       2         2 ||              |          /       2         2    |                                                             v_s          |     |  /       2         2 ||
+    [(P, -\- sigma*\/  q2'(t)  + q3'(t)   - \g*mu_k*(M + m) + (-g*mu_k*(M + m) + g*mu_s*(M + m))*e                     /*sign\\/  q2'(t)  + q3'(t)  //*q2'(t) n_x + -\- sigma*\/  q2'(t)  + q3'(t)   - \g*mu_k*(M + m) + (-g*mu_k*(M + m) + g*mu_s*(M + m))*e                     /*sign\\/  q2'(t)  + q3'(t)  //*q3'(t) n_y), (Q, \- sigma*\/  q2'(t)  + q3'(t)   - \g*mu_k*(M + m) + (-g*mu_k*(M + m) + g*mu_s*(M + m))*e                     /*sign\\/  q2'(t)  + q3'(t)  //*q2'(t) n_x + \- sigma*\/  q2'(t)  + q3'(t)   - \g*mu_k*(M + m) + (-g*mu_k*(M + m) + g*mu_s*(M + m))*e                     /*sign\\/  q2'(t)  + q3'(t)  //*q3'(t) n_y)]
 
 Now, we're ready to use Kane's method to obtain the equations of motion.
 
-   >>> BL = [block]
+   >>> BL = [block, disc]
    >>> kane = me.KanesMethod(
    ...     N,
    ...     q_ind=[q2, q3],
@@ -145,10 +160,6 @@ Now, we're ready to use Kane's method to obtain the equations of motion.
    >>> fr, frstar = kane.kanes_equations(BL, loads)
    >>> eom = fr + frstar
    >>> eom
-   [            /               /   ___________\            ___________\   ]
-   [            |               |  /   2     2 |           /   2     2 |   ]
-   [-m*u2'(t) + \- g*m*mu_k*sign\\/  u2  + u3  / - sigma*\/  u2  + u3  /*u2]
-   [                                                                       ]
-   [            /               /   ___________\            ___________\   ]
-   [            |               |  /   2     2 |           /   2     2 |   ]
-   [-m*u3'(t) + \- g*m*mu_k*sign\\/  u2  + u3  / - sigma*\/  u2  + u3  /*u3]
+   [-(M + m)*u2'(t)]
+   [               ]
+   [-(M + m)*u3'(t)]
