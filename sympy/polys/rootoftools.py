@@ -820,10 +820,7 @@ class ComplexRootOf(RootOf):
             elif method == "_all_roots":
                 roots_filt = f.which_roots(roots, real=False)
             for r in roots_filt:
-                if r in subroots:
-                    subroots[r] += m
-                else:
-                    subroots[r] = m
+                subroots[r] = m
 
         # loop over unique roots, keep ones in subroots, and store multiplicity
         roots_filtered_mult = [(r, subroots[r]) for r in list(dict.fromkeys(roots)) if r in subroots]
