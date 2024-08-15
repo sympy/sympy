@@ -40,7 +40,7 @@ class Arch:
             self._crown_x = sympify(kwargs['crown_x'])
         if 'crown_y' in kwargs:
             self._crown_y = sympify(kwargs['crown_y'])
-        self._shape_eqn = self.get_parabola_eqn
+        self._shape_eqn = self.get_shape_eqn
         self._conc_loads = {}
         self._distributed_loads = {}
         self._loads = {'concentrated': self._conc_loads, 'distributed':self._distributed_loads}
@@ -65,7 +65,7 @@ class Arch:
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
 
     @property
-    def get_parabola_eqn(self):
+    def get_shape_eqn(self):
         "returns the equation of the shape of arch developed"
         if self._shape_eqn:
             return self._shape_eqn
@@ -132,13 +132,6 @@ class Arch:
         return the reaction forces generated
         """
         return self._reaction_force
-
-    def bending_moment_at(self,x):
-        """
-        return the bending moment at some x-coordinate
-        """
-        x0 = Symbol('x0')
-        return self._bending_moment.subs({x0:x})
 
     def apply_load(self,order,label,start,mag,end=None,angle=None):
         """
@@ -239,7 +232,7 @@ class Arch:
             else:
                 self._moment_y[start] = -self._conc_loads[label]['f_y']*(x0-start)
                 self._load_y[start] = self._conc_loads[label]['f_y']
-        
+
             self._loads_applied[label] = 'concentrated'
 
 
@@ -252,6 +245,15 @@ class Arch:
 
         label : String or Symbol
             The label of the applied load
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.arch import Arch
+        >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
+        >>> a.apply_load(0,'A',start=3,end=5,mag=-10)
+        >>> a.remove_load('A')
+        removed load A: {'start': 3, 'end': 5, 'f_y': -10}
         """
         y = Symbol('y')
         x = Symbol('x')
@@ -285,21 +287,70 @@ class Arch:
         else :
             raise ValueError("label not found")
 
-    def add_support(self,left_support=None,right_support=None):
+    def change_support_position(self, left_support=None, right_support=None):
+        """
+        Change position of supports.
+        If not provided , defaults to the old value.
+        Parameters
+        ==========
+
+            left_support: tuple (x, y)
+                x: float
+                    x-coordinate value of the left_support
+
+                y: float
+                    y-coordinate value of the left_support
+
+            right_support: tuple (x, y)
+                x: float
+                    x-coordinate value of the right_support
+
+                y: float
+                    y-coordinate value of the right_support
+        """
+        if left_support is not None:
+            self._left_support = (left_support[0],left_support[1])
+
+        if right_support is not None:
+            self._right_support = (right_support[0],right_support[1])
+
+        self._shape_eqn = None
+        self._shape_eqn = self.get_shape_eqn
+
+    def change_crown_position(self,crown_x=None,crown_y=None):
+        """
+        Change the position of the crown/hinge of the arch
+
+        Parameters
+        ==========
+
+            crown_x: Float
+                The x coordinate of the position of the hinge
+                - if not provided, defaults to old value
+
+            crown_y: Flaot
+                The y coordinate of the position of the hinge
+                - if not provided defaults to None
+        """
+        self._crown_x = crown_x
+        self._crown_y = crown_y
+        self._shape_eqn = None
+        self._shape_eqn = self.get_shape_eqn
+
+    def change_support_type(self,left_support=None,right_support=None):
         """
         Add the type for support at each end.
         Can use roller or hinge support at each end.
-        
+
         Parameters
         ==========
-        
+
             left_support, right_support : string
                 Type of support at respective end
 
                     - For roller support , left_support/right_support = "roller"
                     - For hinged support, left_support/right_support = "hinge"
                     - defaults to hinge if value not provided
-
 
         Examples
         ========
@@ -308,8 +359,8 @@ class Arch:
 
         >>> from sympy.physics.continuum_mechanics.arch import Arch
         >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
-        >>> a.apply_support(right_support="roller")
-        
+        >>> a.change_support_type(right_support="roller")
+
         """
         support_types = ['roller','hinge']
         if left_support:
@@ -338,25 +389,63 @@ class Arch:
         x2 = self._crown_x - x_diff
         self._member = (x1,x2,y)
 
+    def shear_force_at(self,*args):
+        """
+        return the shear at some x-coordinates
+        if no x value provided, returns the formula
+        """
+        if not args:
+            return self._shear_force
+        else:
+            x = Symbol('x')
+            return [self._shear_force.subs(x,y) for y in args]
+
+    def bending_moment_at(self,*args):
+        """
+        return the bending moment at some x-coordinates
+        if no x value provided, returns the formula
+        """
+        if not args:
+            return self._bending_moment
+        else:
+            x0 = Symbol('x0')
+            return [self._bending_moment.subs(x0,y) for y in args]
+
+    def axial_force_at(self,*args):
+        """
+        return the bending moment at some x-coordinates
+        if no x value provided, returns the formula
+        """
+        if not args:
+            return self._bending_moment
+        else:
+            x = Symbol('x')
+            return [self._axial_force.subs(x,y) for y in args]
+
     def solve(self):
         """
         This method solves for the reaction forces generated at the supports,\n
         and bending moment and generated in the arch and tension produced in the member if used.
-        
         """
         y = Symbol('y')
         x = Symbol('x')
         x0 = Symbol('x0')
+
         discontinuity_points_x = sorted(self._points_disc_x)
         discontinuity_points_y = sorted(self._points_disc_y)
+
         self._moment_x_func = Piecewise((0,True))
         self._moment_y_func = Piecewise((0,True))
+
         self._load_x_func = Piecewise((0,True))
         self._load_y_func = Piecewise((0,True))
+
         accumulated_x_moment = 0
         accumulated_y_moment = 0
+
         accumulated_x_load = 0
         accumulated_y_load = 0
+
         for point in discontinuity_points_x:
             cond = (x >= point)
             accumulated_x_load += self._load_x[point]
@@ -392,22 +481,30 @@ class Arch:
         R_A_x, R_A_y, R_B_x, R_B_y, T = symbols('R_A_x R_A_y R_B_x R_B_y T')
 
         if self._supports['left'] == 'roller' and self._supports['right'] == 'roller':
+
             if self._member[2]>=max(self._left_support[1],self._right_support[1]):
+
                 if net_x!=0:
                     raise ValueError("net force in x direction not possible under the specified conditions")
+
                 else:
                     eq1 = Eq(R_A_x ,0)
                     eq2 = Eq(R_B_x, 0)
                     eq3 = Eq(R_A_y + R_B_y + net_y,0)
-                    eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
-                    eq5 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) + T*(self._member[2]-self._crown_y),0)
+
+                    eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-\
+                             R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
+
+                    eq5 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) +\
+                             T*(self._member[2]-self._crown_y),0)
                     solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
             elif self._member[2]>=self._left_support[1]:
                 eq1 = Eq(R_A_x ,0)
                 eq2 = Eq(R_B_x, 0)
                 eq3 = Eq(R_A_y + R_B_y + net_y,0)
-                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-T*(self._member[2]-self._left_support[1])+moment_A,0)
+                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-\
+                         T*(self._member[2]-self._left_support[1])+moment_A,0)
                 eq5 = Eq(T+net_x,0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
@@ -415,7 +512,8 @@ class Arch:
                 eq1 = Eq(R_A_x ,0)
                 eq2 = Eq(R_B_x, 0)
                 eq3 = Eq(R_A_y + R_B_y + net_y,0)
-                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])+T*(self._member[2]-self._left_support[1])+moment_A,0)
+                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])+\
+                         T*(self._member[2]-self._left_support[1])+moment_A,0)
                 eq5 = Eq(T-net_x,0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
@@ -424,16 +522,21 @@ class Arch:
                 eq1 = Eq(R_A_x ,0)
                 eq2 = Eq(R_B_x+net_x,0)
                 eq3 = Eq(R_A_y + R_B_y + net_y,0)
-                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
-                eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x) - T*(self._member[2]-self._crown_y),0)
+                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-\
+                         R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
+                eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x) -\
+                         T*(self._member[2]-self._crown_y),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
             elif self._member[2]>=self._left_support[1]:
                 eq1 = Eq(R_A_x ,0)
                 eq2 = Eq(R_B_x+ T +net_x,0)
                 eq3 = Eq(R_A_y + R_B_y + net_y,0)
-                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])-T*(self._member[2]-self._left_support[0])+moment_A,0)
-                eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x)-T*(self._member[2]-self._crown_y),0)
+                eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-\
+                         R_B_x*(self._right_support[1]-self._left_support[1])-\
+                         T*(self._member[2]-self._left_support[0])+moment_A,0)
+                eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x)-\
+                         T*(self._member[2]-self._crown_y),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
             elif self._member[2]>=self._right_support[0]:
@@ -441,7 +544,9 @@ class Arch:
                 eq2 = Eq(R_B_x- T +net_x,0)
                 eq3 = Eq(R_A_y + R_B_y + net_y,0)
                 eq4 = Eq(moment_hinge_left+R_A_y*(self._left_support[0]-self._crown_x),0)
-                eq5 = Eq(moment_A+R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+T*(self._member[2]-self._left_support[1]),0)
+                eq5 = Eq(moment_A+R_B_y*(self._right_support[0]-self._left_support[0])-\
+                         R_B_x*(self._right_support[1]-self._left_support[1])+\
+                         T*(self._member[2]-self._left_support[1]),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
         elif self._supports['right'] == 'roller':
@@ -449,7 +554,8 @@ class Arch:
                 eq1 = Eq(R_B_x,0)
                 eq2 = Eq(R_A_x+net_x,0)
                 eq3 = Eq(R_A_y+R_B_y+net_y,0)
-                eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x)+T*(self._member[2]-self._crown_y),0)
+                eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x)+\
+                         T*(self._member[2]-self._crown_y),0)
                 eq5 = Eq(moment_A+R_B_y*(self._right_support[0]-self._left_support[0]),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
@@ -458,34 +564,39 @@ class Arch:
                 eq2 = Eq(R_A_x+T+net_x,0)
                 eq3 = Eq(R_A_y+R_B_y+net_y,0)
                 eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x),0)
-                eq5 = Eq(moment_A-T*(self._member[2]-self._left_support[1])+R_B_y*(self._right_support[0]-self._left_support[0]),0)
+                eq5 = Eq(moment_A-T*(self._member[2]-self._left_support[1])+\
+                         R_B_y*(self._right_support[0]-self._left_support[0]),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
             elif self._member[2]>=self._right_support[1]:
                 eq1 = Eq(R_B_x,0)
                 eq2 = Eq(R_A_x-T+net_x,0)
                 eq3 = Eq(R_A_y+R_B_y+net_y,0)
-                eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x)+T*(self._member[2]-self._crown_y),0)
-                eq5 = Eq(moment_A+T*(self._member[2]-self._left_support[1])+R_B_y*(self._right_support[0]-self._left_support[0]))
+                eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x)+\
+                         T*(self._member[2]-self._crown_y),0)
+                eq5 = Eq(moment_A+T*(self._member[2]-self._left_support[1])+\
+                         R_B_y*(self._right_support[0]-self._left_support[0]))
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
         else:
             eq1 = Eq(R_A_x + R_B_x + net_x,0)
             eq2 = Eq(R_A_y + R_B_y + net_y,0)
-            eq3 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
-            eq4 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) - R_B_x*(self._right_support[1]-self._crown_y),0)
-
+            eq3 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-\
+                     R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
+            eq4 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) -\
+                     R_B_x*(self._right_support[1]-self._crown_y),0)
             solution = solve((eq1,eq2,eq3,eq4),(R_A_x,R_A_y,R_B_x,R_B_y))
 
         for symb in self._reaction_force:
             self._reaction_force[symb] = solution[symb]
-
-        self._bending_moment = - (self._moment_x_func.subs(x,x0) + self._moment_y_func.subs(x,x0) - solution[R_A_y]*(x0-self._left_support[0]) + solution[R_A_x]*(self._shape_eqn.subs({x:x0})-self._left_support[1]))
+        self._bending_moment = - (self._moment_x_func.subs(x,x0) + self._moment_y_func.subs(x,x0) -\
+                                  solution[R_A_y]*(x0-self._left_support[0]) +\
+                                  solution[R_A_x]*(self._shape_eqn.subs({x:x0})-self._left_support[1]))
 
         angle  = atan(diff(self._shape_eqn,x))
         fx = -(self._load_x_func+solution[R_A_x])
         fy = -(self._load_y_func+solution[R_A_y])
-        vd = abs(fx*cos(angle) + fy*sin(angle))
-        sd = abs(fx*sin(angle)-fy*cos(angle))
-        self._shear_force = sd
-        self._axial_force = vd
-        return solution
+
+        axial_force = abs(fx*cos(angle) + fy*sin(angle))
+        shear_force = abs(fx*sin(angle) - fy*cos(angle))
+        self._axial_force = axial_force
+        self._shear_force = shear_force

@@ -10,13 +10,13 @@ def test_arch_init():
     assert a.supports == {'left':'hinge', 'right':'hinge'}
     assert a.left_support == (0,0)
     assert a.right_support == (10,0)
-    assert a.get_parabola_eqn == 5 - ((x-5)**2)/5
+    assert a.get_shape_eqn == 5 - ((x-5)**2)/5
 
     a = Arch((0,0),(10,1),crown_x=6)
-    a.add_support(left_support='roller')
+    a.change_support_type(left_support='roller')
     a.add_member(0.5)
     assert a.supports == {'left':'roller', 'right':'hinge'}
-    assert simplify(a.get_parabola_eqn) == simplify(9/5 - (x - 6)**2/20)
+    assert simplify(a.get_shape_eqn) == simplify(9/5 - (x - 6)**2/20)
 
 def test_arch_support():
     a = Arch((0,0),(40,0),crown_x=20,crown_y=12)
@@ -30,7 +30,7 @@ def test_arch_support():
 
 def test_arch_member():
     a = Arch((0,0),(40,0),crown_x=20,crown_y=15)
-    a.add_support(right_support='roller')
+    a.change_support_type(right_support='roller')
     a.add_member(0)
     a.apply_load(-1,'D',start=12,mag=3,angle=270)
     a.apply_load(-1,'B',start=6,mag=4,angle=270)
