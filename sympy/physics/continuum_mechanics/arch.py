@@ -3,11 +3,10 @@ This module can be used to solve probelsm related to 2D parabolic arches
 """
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
-from sympy import sqrt, cos , sin, atan, rad, Min
+from sympy import diff, sqrt, cos , sin, atan, rad, Min
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
 from sympy.functions import Piecewise
-from sympy.core.function import diff
 
 class Arch:
     """
