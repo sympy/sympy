@@ -3817,17 +3817,103 @@ class Poly(Basic):
 
         return r.replace(t, x)
 
-    def which_roots(f, candidates, real=True):
+    def which_real_roots(f, candidates):
         """
-        Given a superset of roots of f, finds which ones are
-        roots of f. Note this won't work properly if candidates is
-        not a superset of the roots of f. The list returned has
-        unique elements, is at most the length of the number of
-        unique roots of f, and preserves the order of the original
-        list of candidates. The `real` argument only controls
-        the root counting: if `real=True`, the `.count_roots()` method
-        is used (only supported over ZZ, QQ, or AlgebraicField); if
-        `real=False`, the degree is used.
+        Find roots of a square-free polynomial ``f`` from ``candidates``.
+
+        Explanation
+        ===========
+
+        If ``f`` is a square-free polynomial and ``candidates`` is a superset
+        of the roots of ``f``, then ``f.which_roots(candidates)`` returns a
+        list containing exactly the set of roots of ``f``. The domain must be
+        :ref:`ZZ`, :ref:`QQ`, or :ref:`QQ(a)` and``f`` must be univariate and
+        square-free.
+
+        The list ``candidates`` must be a superset of the real roots of ``f``
+        and ``f.which_real_roots(candidates)`` returns the set of real roots
+        of ``f``. The output preserves the order of the order of ``candidates``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, sqrt
+        >>> from sympy.abc import x
+
+        >>> f = Poly(x**4 - 1)
+        >>> f.which_real_roots([-1, 1, 0, -2, 2])
+        [-1, 1]
+        >>> f.which_real_roots([-1, 1, 1, 1, 1])
+        [-1, 1]
+
+        This method is useful as lifting to rational coefficients
+        produced extraneous roots, which we can filter out with
+        this method.
+
+        >>> f = Poly(sqrt(2)*x**3 + x**2 - 1, x, extension=True)
+        >>> f.lift()
+        Poly(-2*x**6 + x**4 - 2*x**2 + 1, x, domain='QQ')
+        >>> f.lift().real_roots()
+        [-sqrt(2)/2, sqrt(2)/2]
+        >>> f.which_real_roots(f.lift().real_roots())
+        [sqrt(2)/2]
+
+        This procedure is already done internally when calling
+        `.real_roots()` on a polynomial with algebraic coefficients.
+
+        >>> f.real_roots()
+        [sqrt(2)/2]
+
+        See Also
+        ========
+
+        same_root
+        which_all_roots
+        """
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+
+        dom = f.get_domain()
+
+        if not (dom.is_ZZ or dom.is_QQ or dom.is_AlgebraicField):
+            raise NotImplementedError(
+                "root counting not supported over %s" % dom)
+
+        num_roots = f.count_roots()
+
+        prec = 10
+        # using Counter bc its like an ordered set
+        root_counts = Counter(candidates)
+
+        while len(root_counts) > num_roots:
+            for r in list(root_counts.keys()):
+                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
+                f_r = f(r).evalf(prec, maxn=2*prec)
+                if abs(f_r)._prec >= 2:
+                    root_counts.pop(r)
+
+            prec *= 2
+
+        roots = list(root_counts.keys())
+        return roots
+
+    def which_all_roots(f, candidates):
+        """
+        Find roots of a square-free polynomial ``f`` from ``candidates``.
+
+        Explanation
+        ===========
+
+        If ``f`` is a square-free polynomial and ``candidates`` is a superset
+        of the roots of ``f``, then ``f.which_all_roots(candidates)`` returns a
+        list containing exactly the set of roots of ``f``. The polynomial``f``
+        must be univariate and square-free.
+
+        The list ``candidates`` must be a superset of the complex roots of
+        ``f`` and ``f.which_all_roots(candidates)`` returns exactly the
+        set of all complex roots of ``f``. The output preserves the order of
+        the order of ``candidates``.
 
         Examples
         ========
@@ -3836,53 +3922,44 @@ class Poly(Basic):
         >>> from sympy.abc import x
 
         >>> f = Poly(x**4 - 1)
-
-        >>> f.which_roots([-1, 1, 0, -2, 2], real=True)
-        [-1, 1]
-        >>> f.which_roots([-1, 1, -I, I, 0], real=False)
+        >>> f.which_all_roots([-1, 1, -I, I, 0])
         [-1, 1, -I, I]
-        >>> f.which_roots([-1, 1, 1, 1, 1], real=True)
-        [-1, 1]
-        >>> f.which_roots([-1, -1, 1, 1], real=False)
-        [-1, 1]
+        >>> f.which_all_roots([-1, 1, -I, I, I, I])
+        [-1, 1, -I, I]
 
-        # expected behaviour if not a superset of roots
-        >>> f.which_roots([2, 5], real=True)
-        [2, 5]
+        This method is useful as lifting to rational coefficients
+        produced extraneous roots, which we can filter out with
+        this method.
 
-        # lifting to rational coeffs produces extraneous roots
-        # which we can filter out with this method
-        >>> f = Poly(sqrt(2)*x**3 + x**2 - 1, x, extension=True)
+        >>> f = Poly(x**2 + I*x - 1, x, extension=True)
         >>> f.lift()
-        Poly(-2*x**6 + x**4 - 2*x**2 + 1, x, domain='QQ')
-        >>> f.lift().real_roots()
-        [-sqrt(2)/2, sqrt(2)/2]
-        >>> f.which_roots(f.lift().real_roots(), real=True)
-        [sqrt(2)/2]
-        >>> f.real_roots() # note this is already done internally
-        [sqrt(2)/2]
+        Poly(x**4 - x**2 + 1, x, domain='ZZ')
+        >>> f.lift().all_roots()
+        [CRootOf(x**4 - x**2 + 1, 0),
+        CRootOf(x**4 - x**2 + 1, 1),
+        CRootOf(x**4 - x**2 + 1, 2),
+        CRootOf(x**4 - x**2 + 1, 3)]
+        >>> f.which_all_roots(f.lift().all_roots())
+        [CRootOf(x**4 - x**2 + 1, 0), CRootOf(x**4 - x**2 + 1, 2)]
+
+        This procedure is already done internally when calling
+        `.all_roots()` on a polynomial with algebraic coefficients,
+        or polynomials with Gaussian domains.
+
+        >>> f.all_roots()
+        [CRootOf(x**4 - x**2 + 1, 0), CRootOf(x**4 - x**2 + 1, 2)]
 
         See Also
         ========
 
         same_root
+        which_real_roots
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
                 "Must be a univariate polynomial")
 
-        dom = f.get_domain()
-
-        # note real count counts uniques
-        # but complex count counts with multiplicity
-        if real:
-            # must be QQ, ZZ, or Alg for proper counting
-            if not (dom.is_ZZ or dom.is_QQ or dom.is_AlgebraicField):
-                raise NotImplementedError(
-                    "root counting not supported over %s" % dom)
-            num_roots = f.count_roots()
-        else:
-            num_roots = f.degree()
+        num_roots = f.degree()
 
         prec = 10
         # using Counter bc its like an ordered set

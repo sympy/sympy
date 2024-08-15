@@ -3221,18 +3221,43 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
-def test_which_roots():
+def test_which_real_roots():
     f = Poly(x**4 - 1)
 
-    assert f.which_roots([1, -1], real=True) == [1, -1]
-    assert f.which_roots([1, -1, I, -I], real=False) == [1, -1, I, -I]
+    assert f.which_real_roots([1, -1]) == [1, -1]
+    assert f.which_real_roots([1, -1, 2, 4]) == [1, -1]
+    assert f.which_real_roots([1, -1, -1, 1, 2, 5]) == [1, -1]
+    assert f.which_real_roots([10, 8, 7, -1, 1]) == [-1, 1]
+
+    # no real roots
+    # (technically its still a superset)
+    f = Poly(x**2 + 1)
+    assert f.which_real_roots([5, 10]) == []
+
+    # not square free
+    f = Poly((x-1)**2)
+    assert f.which_real_roots([1, 1, -1, 2]) == [1]
+
+    # candidates not superset
+    f = Poly(x**2 - 1)
+    assert f.which_real_roots([0, 2]) == [0, 2]
+
+def test_which_all_roots():
+    f = Poly(x**4 - 1)
+
+    assert f.which_all_roots([1, -1, I, -I]) == [1, -1, I, -I]
+    assert f.which_all_roots([I, I, -I, 1, -1]) == [I, -I, 1, -1]
 
     f = Poly(x**2 + 1)
+    assert f.which_all_roots([I, -I, I/2]) == [I, -I]
 
-    assert f.which_roots([5, 10], real=True) == []
-    assert f.which_roots([I, -I], real=False) == [I, -I]
+    # not square free
+    f = Poly((x-I)**2)
+    assert f.which_all_roots([I, I, 1, -1, 0]) == [I]
 
-    assert f.which_roots([1, 1, -1, -1], real=False) == [1, -1]
+    # candidates not superset
+    f = Poly(x**2 + 1)
+    assert f.which_all_roots([I/2, -I/2]) == [I/2, -I/2]
 
 def test_same_root():
     f = Poly(x**4 + x**3 + x**2 + x + 1)
