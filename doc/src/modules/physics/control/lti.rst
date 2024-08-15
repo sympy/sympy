@@ -19,6 +19,9 @@ lti
 .. autoclass:: Feedback
    :members:
 
+.. autoclass:: PIDController
+   :members:
+
 .. autoclass:: TransferFunctionMatrix
    :members:
 
@@ -29,6 +32,9 @@ lti
    :members:
 
 .. autoclass:: MIMOFeedback
+   :members:
+
+.. autoclass:: StateSpace
    :members:
 
 .. autofunction:: gbt
