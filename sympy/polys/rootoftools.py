@@ -822,11 +822,13 @@ class ComplexRootOf(RootOf):
             for r in roots_filt:
                 subroots[r] = m
 
-        # loop over unique roots, keep ones in subroots, and store multiplicity
-        roots_filtered_mult = [(r, subroots[r]) for r in list(dict.fromkeys(roots)) if r in subroots]
-
-        # flatten the roots list according to multiplicity
-        roots_flat = sum(([r] * m for r, m in roots_filtered_mult), [])
+        roots_seen = set()
+        roots_flat = []
+        for r in roots:
+            if r in subroots and r not in roots_seen:
+                m = subroots[r]
+                roots_flat.extend([r] * m)
+                roots_seen.add(r)
 
         return roots_flat
 
