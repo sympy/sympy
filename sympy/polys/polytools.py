@@ -4005,7 +4005,8 @@ class Poly(Basic):
         See Also
         ========
 
-        which_roots
+        which_real_roots
+        which_all_roots
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
