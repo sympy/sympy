@@ -3990,9 +3990,11 @@ class StateSpace(LinearTimeInvariant):
 
     Represents the standard state-space model with A, B, C, D as state-space matrices.
     This makes the linear control system:
+
         (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
         (2) y(t)  = C * x(t) + D * u(t);    y in R^m
-    where u(t) is any input signal, y(t) the corresponding output, and x(t) the system's state.
+
+    where u(t) is any input signal, y(t) is the corresponding output, and x(t) is the system's state.
 
     Parameters
     ==========
@@ -4025,7 +4027,6 @@ class StateSpace(LinearTimeInvariant):
     [1],
     [1]]), Matrix([[0, 1]]), Matrix([[0]]))
 
-
     One can use less matrices. The rest will be filled with a minimum of zeros:
 
     >>> StateSpace(A, B)
@@ -4035,7 +4036,6 @@ class StateSpace(LinearTimeInvariant):
     [1],
     [1]]), Matrix([[0, 0]]), Matrix([[0]]))
 
-
     See Also
     ========
 
@@ -4043,6 +4043,7 @@ class StateSpace(LinearTimeInvariant):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/State-space_representation
     .. [2] https://in.mathworks.com/help/control/ref/ss.html
 
@@ -4299,8 +4300,10 @@ class StateSpace(LinearTimeInvariant):
 
         References
         ==========
+
         .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
         .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
+
         """
 
         if not isinstance(var, Symbol):
