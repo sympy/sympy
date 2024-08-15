@@ -3,10 +3,11 @@ This module can be used to solve probelsm related to 2D parabolic arches
 """
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol,symbols
-from sympy import diff, sqrt, cos , sin, rad, Min
+from sympy import diff, sqrt, cos , sin, atan, rad, Min
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
 from sympy.functions import Piecewise
+from sympy.core.function import diff
 
 class Arch:
     """
@@ -52,11 +53,15 @@ class Arch:
         self._points_disc_y = set()
         self._moment_x  = {}
         self._moment_y = {}
+        self._load_x = {}
+        self._load_y = {}
+        self._moment_x_func = Piecewise((0,True))
+        self._moment_y_func = Piecewise((0,True))
         self._load_x_func = Piecewise((0,True))
         self._load_y_func = Piecewise((0,True))
-        self._net_x = 0
-        self._net_y = 0
         self._bending_moment = None
+        self._shear_force = None
+        self._axial_force = None
         # self._crown = (sympify(crown[0]),sympify(crown[1]))
 
     @property
@@ -204,10 +209,11 @@ class Arch:
 
             if start in self._moment_y:
                 self._moment_y[start] -= mag*(Min(x,end)-start)*(x0-(start+(Min(x,end)))/2)
+                self._load_y[start] += mag*(Min(end,x)-start)
             else:
                 self._moment_y[start] = -mag*(Min(x,end)-start)*(x0-(start+(Min(x,end)))/2)
+                self._load_y[start] = mag*(Min(end,x)-start)
 
-            self._net_y += mag*(end-start)
             self._loads_applied[label] = 'distributed'
 
         if order == -1:
@@ -222,15 +228,18 @@ class Arch:
 
             if start in self._moment_x:
                 self._moment_x[start] += self._conc_loads[label]['f_x']*(y-self._conc_loads[label]['y'])
+                self._load_x[start] += self._conc_loads[label]['f_x']
             else:
                 self._moment_x[start] = self._conc_loads[label]['f_x']*(y-self._conc_loads[label]['y'])
+                self._load_x[start] = self._conc_loads[label]['f_x']
 
             if start in self._moment_y:
                 self._moment_y[start] -= self._conc_loads[label]['f_y']*(x0-start)
+                self._load_y[start] += self._conc_loads[label]['f_y']
             else:
                 self._moment_y[start] = -self._conc_loads[label]['f_y']*(x0-start)
-            self._net_x += self._conc_loads[label]['f_x']
-            self._net_y += self._conc_loads[label]['f_y']
+                self._load_y[start] = self._conc_loads[label]['f_y']
+        
             self._loads_applied[label] = 'concentrated'
 
 
@@ -255,7 +264,7 @@ class Arch:
             end = self._distributed_loads[label]['end']
             mag  = self._distributed_loads[label]['f_y']
             self._points_disc_y.remove(start)
-            self._net_y -= mag*(end-start)
+            self._load_y[start] -= mag*(Min(x,end)-start)
             self._moment_y[start] += mag*(Min(x,end)-start)*(x0-(start+(Min(x,end)))/2)
             val = self._distributed_loads.pop(label)
             print(f"removed load {label}: {val}")
@@ -268,8 +277,8 @@ class Arch:
             self._points_disc_y.remove(start)
             self._moment_y[start] += self._conc_loads[label]['f_y']*(x0-start)
             self._moment_x[start] -= self._conc_loads[label]['f_x']*(y-self._conc_loads[label]['y'])
-            self._net_x -= self._conc_loads[label]['f_x']
-            self._net_y -= self._conc_loads[label]['f_y']
+            self._load_x[start] -= self._conc_loads[label]['f_x']
+            self._load_y[start] -= self._conc_loads[label]['f_y']
             val = self._conc_loads.pop(label)
             print(f"removed load {label}: {val}")
 
@@ -340,30 +349,41 @@ class Arch:
         x0 = Symbol('x0')
         discontinuity_points_x = sorted(self._points_disc_x)
         discontinuity_points_y = sorted(self._points_disc_y)
+        self._moment_x_func = Piecewise((0,True))
+        self._moment_y_func = Piecewise((0,True))
         self._load_x_func = Piecewise((0,True))
         self._load_y_func = Piecewise((0,True))
         accumulated_x_moment = 0
         accumulated_y_moment = 0
+        accumulated_x_load = 0
+        accumulated_y_load = 0
         for point in discontinuity_points_x:
             cond = (x >= point)
+            accumulated_x_load += self._load_x[point]
             accumulated_x_moment += self._moment_x[point]
-            self._load_x_func = Piecewise((accumulated_x_moment,cond),(self._load_x_func,True))
+            self._load_x_func = Piecewise((accumulated_x_load,cond),(self._load_x_func,True))
+            self._moment_x_func = Piecewise((accumulated_x_moment,cond),(self._moment_x_func,True))
 
         for point in discontinuity_points_y:
             cond = (x >= point)
             accumulated_y_moment += self._moment_y[point]
-            self._load_y_func = Piecewise((accumulated_y_moment,cond),(self._load_y_func,True))
+            accumulated_y_load += self._load_y[point]
+            self._load_y_func = Piecewise((accumulated_y_load,cond),(self._load_y_func,True))
+            self._moment_y_func = Piecewise((accumulated_y_moment,cond),(self._moment_y_func,True))
 
-        moment_A = self._load_y_func.subs(x,self._right_support[0]).subs(x0,self._left_support[0]) +\
-                   self._load_x_func.subs(x,self._right_support[0]).subs(y,self._left_support[1])
+        moment_A = self._moment_y_func.subs(x,self._right_support[0]).subs(x0,self._left_support[0]) +\
+                   self._moment_x_func.subs(x,self._right_support[0]).subs(y,self._left_support[1])
 
-        moment_hinge_left = self._load_y_func.subs(x,self._crown_x).subs(x0,self._crown_x) +\
-                            self._load_x_func.subs(x,self._crown_x).subs(y,self._crown_y)
+        moment_hinge_left = self._moment_y_func.subs(x,self._crown_x).subs(x0,self._crown_x) +\
+                            self._moment_x_func.subs(x,self._crown_x).subs(y,self._crown_y)
 
-        moment_hinge_right = self._load_y_func.subs(x,self._right_support[0]).subs(x0,self._crown_x)- \
-                             self._load_y_func.subs(x,self._crown_x).subs(x0,self._crown_x) +\
-                             self._load_x_func.subs(x,self._right_support[0]).subs(y,self._crown_y) -\
-                             self._load_x_func.subs(x,self._crown_x).subs(y,self._crown_y)
+        moment_hinge_right = self._moment_y_func.subs(x,self._right_support[0]).subs(x0,self._crown_x)- \
+                             self._moment_y_func.subs(x,self._crown_x).subs(x0,self._crown_x) +\
+                             self._moment_x_func.subs(x,self._right_support[0]).subs(y,self._crown_y) -\
+                             self._moment_x_func.subs(x,self._crown_x).subs(y,self._crown_y)
+
+        net_x = self._load_x_func.subs(x,self._right_support[0])
+        net_y = self._load_y_func.subs(x,self._right_support[0])
 
         if (self._supports['left']=='roller' or self._supports['right']=='roller') and not self._member:
             print("member must be added if any of the supports is roller")
@@ -373,12 +393,12 @@ class Arch:
 
         if self._supports['left'] == 'roller' and self._supports['right'] == 'roller':
             if self._member[2]>=max(self._left_support[1],self._right_support[1]):
-                if self._net_x!=0:
+                if net_x!=0:
                     raise ValueError("net force in x direction not possible under the specified conditions")
                 else:
                     eq1 = Eq(R_A_x ,0)
                     eq2 = Eq(R_B_x, 0)
-                    eq3 = Eq(R_A_y + R_B_y + self._net_y,0)
+                    eq3 = Eq(R_A_y + R_B_y + net_y,0)
                     eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
                     eq5 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) + T*(self._member[2]-self._crown_y),0)
                     solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
@@ -386,40 +406,40 @@ class Arch:
             elif self._member[2]>=self._left_support[1]:
                 eq1 = Eq(R_A_x ,0)
                 eq2 = Eq(R_B_x, 0)
-                eq3 = Eq(R_A_y + R_B_y + self._net_y,0)
+                eq3 = Eq(R_A_y + R_B_y + net_y,0)
                 eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-T*(self._member[2]-self._left_support[1])+moment_A,0)
-                eq5 = Eq(T+self._net_x,0)
+                eq5 = Eq(T+net_x,0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
             elif self._member[2]>=self._right_support[1]:
                 eq1 = Eq(R_A_x ,0)
                 eq2 = Eq(R_B_x, 0)
-                eq3 = Eq(R_A_y + R_B_y + self._net_y,0)
+                eq3 = Eq(R_A_y + R_B_y + net_y,0)
                 eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])+T*(self._member[2]-self._left_support[1])+moment_A,0)
-                eq5 = Eq(T-self._net_x,0)
+                eq5 = Eq(T-net_x,0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
         elif self._supports['left'] == 'roller':
             if self._member[2]>=max(self._left_support[1], self._right_support[1]):
                 eq1 = Eq(R_A_x ,0)
-                eq2 = Eq(R_B_x+self._net_x,0)
-                eq3 = Eq(R_A_y + R_B_y + self._net_y,0)
+                eq2 = Eq(R_B_x+net_x,0)
+                eq3 = Eq(R_A_y + R_B_y + net_y,0)
                 eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
                 eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x) - T*(self._member[2]-self._crown_y),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
             elif self._member[2]>=self._left_support[1]:
                 eq1 = Eq(R_A_x ,0)
-                eq2 = Eq(R_B_x+ T +self._net_x,0)
-                eq3 = Eq(R_A_y + R_B_y + self._net_y,0)
+                eq2 = Eq(R_B_x+ T +net_x,0)
+                eq3 = Eq(R_A_y + R_B_y + net_y,0)
                 eq4 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])-T*(self._member[2]-self._left_support[0])+moment_A,0)
                 eq5 = Eq(moment_hinge_left + R_A_y*(self._left_support[0]-self._crown_x)-T*(self._member[2]-self._crown_y),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
             elif self._member[2]>=self._right_support[0]:
                 eq1 = Eq(R_A_x,0)
-                eq2 = Eq(R_B_x- T +self._net_x,0)
-                eq3 = Eq(R_A_y + R_B_y + self._net_y,0)
+                eq2 = Eq(R_B_x- T +net_x,0)
+                eq3 = Eq(R_A_y + R_B_y + net_y,0)
                 eq4 = Eq(moment_hinge_left+R_A_y*(self._left_support[0]-self._crown_x),0)
                 eq5 = Eq(moment_A+R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+T*(self._member[2]-self._left_support[1]),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
@@ -427,30 +447,30 @@ class Arch:
         elif self._supports['right'] == 'roller':
             if self._member[2]>=max(self._left_support[1], self._right_support[1]):
                 eq1 = Eq(R_B_x,0)
-                eq2 = Eq(R_A_x+self._net_x,0)
-                eq3 = Eq(R_A_y+R_B_y+self._net_y,0)
+                eq2 = Eq(R_A_x+net_x,0)
+                eq3 = Eq(R_A_y+R_B_y+net_y,0)
                 eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x)+T*(self._member[2]-self._crown_y),0)
                 eq5 = Eq(moment_A+R_B_y*(self._right_support[0]-self._left_support[0]),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
             elif self._member[2]>=self._left_support[1]:
                 eq1 = Eq(R_B_x,0)
-                eq2 = Eq(R_A_x+T+self._net_x,0)
-                eq3 = Eq(R_A_y+R_B_y+self._net_y,0)
+                eq2 = Eq(R_A_x+T+net_x,0)
+                eq3 = Eq(R_A_y+R_B_y+net_y,0)
                 eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x),0)
                 eq5 = Eq(moment_A-T*(self._member[2]-self._left_support[1])+R_B_y*(self._right_support[0]-self._left_support[0]),0)
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
 
             elif self._member[2]>=self._right_support[1]:
                 eq1 = Eq(R_B_x,0)
-                eq2 = Eq(R_A_x-T+self._net_x,0)
-                eq3 = Eq(R_A_y+R_B_y+self._net_y,0)
+                eq2 = Eq(R_A_x-T+net_x,0)
+                eq3 = Eq(R_A_y+R_B_y+net_y,0)
                 eq4 = Eq(moment_hinge_right+R_B_y*(self._right_support[0]-self._crown_x)+T*(self._member[2]-self._crown_y),0)
                 eq5 = Eq(moment_A+T*(self._member[2]-self._left_support[1])+R_B_y*(self._right_support[0]-self._left_support[0]))
                 solution = solve((eq1,eq2,eq3,eq4,eq5),(R_A_x,R_A_y,R_B_x,R_B_y,T))
         else:
-            eq1 = Eq(R_A_x + R_B_x + self._net_x,0)
-            eq2 = Eq(R_A_y + R_B_y + self._net_y,0)
+            eq1 = Eq(R_A_x + R_B_x + net_x,0)
+            eq2 = Eq(R_A_y + R_B_y + net_y,0)
             eq3 = Eq(R_B_y*(self._right_support[0]-self._left_support[0])-R_B_x*(self._right_support[1]-self._left_support[1])+moment_A,0)
             eq4 = Eq(moment_hinge_right + R_B_y*(self._right_support[0]-self._crown_x) - R_B_x*(self._right_support[1]-self._crown_y),0)
 
@@ -459,5 +479,13 @@ class Arch:
         for symb in self._reaction_force:
             self._reaction_force[symb] = solution[symb]
 
-        self._bending_moment = - (self._load_x_func.subs(x,x0) + self._load_y_func.subs(x,x0) - solution[R_A_y]*(x0-self._left_support[0]) + solution[R_A_x]*(self._shape_eqn.subs({x:x0})-self._left_support[1]))
+        self._bending_moment = - (self._moment_x_func.subs(x,x0) + self._moment_y_func.subs(x,x0) - solution[R_A_y]*(x0-self._left_support[0]) + solution[R_A_x]*(self._shape_eqn.subs({x:x0})-self._left_support[1]))
+
+        angle  = atan(diff(self._shape_eqn,x))
+        fx = -(self._load_x_func+solution[R_A_x])
+        fy = -(self._load_y_func+solution[R_A_y])
+        vd = abs(fx*cos(angle) + fy*sin(angle))
+        sd = abs(fx*sin(angle)-fy*cos(angle))
+        self._shear_force = sd
+        self._axial_force = vd
         return solution
