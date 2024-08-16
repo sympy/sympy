@@ -828,7 +828,7 @@ def solve(f, *symbols, **flags):
     ========
 
     rsolve: For solving recurrence relationships
-    :py:meth:`~sympy.solvers.ode.dsolve`
+    dsolve: For solving differential equations
 
     """
     from .inequalities import reduce_inequalities
