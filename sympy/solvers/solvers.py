@@ -826,10 +826,9 @@ def solve(f, *symbols, **flags):
 
     See Also
     ========
-    
-    - :func:`sympy.solvers.recurrence.rsolve`: For solving recurrence relationships
-    - `For solving ordinary differential equations. <https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.dsolve>`_
 
+    rsolve: For solving recurrence relationships
+    sympy.solvers.ode.dsolve: For solving differential equations
 
     """
     from .inequalities import reduce_inequalities
