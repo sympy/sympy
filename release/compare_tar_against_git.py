@@ -98,6 +98,7 @@ git_whitelist = {
     'bin/test_symengine.py',
     'bin/test_tensorflow.py',
     'bin/test_pyodide.mjs',
+    'bin/update_notebooks.sh',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
