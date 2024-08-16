@@ -2,6 +2,7 @@ from sympy.physics.continuum_mechanics.arch import Arch
 from sympy import Symbol, simplify
 
 x = Symbol('x')
+t = Symbol('t')
 
 def test_arch_init():
     a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
@@ -40,3 +41,13 @@ def test_arch_member():
     assert abs(a.reaction_force[Symbol("R_A_y")] - 6.750000000000000) < 10e-12
     assert a.reaction_force[Symbol("R_B_x")] == 0
     assert abs(a.reaction_force[Symbol("R_B_y")] - 5.250000000000000) < 10e-12
+
+def test_symbol_magnitude():
+    a = Arch((0,0),(16,0),crown_x=8,crown_y=5)
+    a.apply_load(0,'C',start=3,end=5,mag=t)
+    a.solve()
+    assert a.reaction_force[Symbol("R_A_x")] == -(4*t)/5
+    assert a.reaction_force[Symbol("R_A_y")] == -(3*t)/2
+    assert a.reaction_force[Symbol("R_B_x")] == (4*t)/5
+    assert a.reaction_force[Symbol("R_B_y")] == -t/2
+    assert a.bending_moment_at(4) == [-5*t/2]
