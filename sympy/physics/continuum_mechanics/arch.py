@@ -21,12 +21,12 @@ class Arch:
     ========
     >>> from sympy.physics.continuum_mechanics.arch import Arch
     >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
-    >>> a.get_parabola_eqn
+    >>> a.get_shape_eqn
     5 - (x - 5)**2/5
 
     >>> from sympy.physics.continuum_mechanics.arch import Arch
     >>> a = Arch((0,0),(10,1),crown_x=6)
-    >>> a.get_parabola_eqn
+    >>> a.get_shape_eqn
     9/5 - (x - 6)**2/20
     """
     def __init__(self,left_support,right_support,**kwargs):
@@ -147,6 +147,7 @@ class Arch:
 
             label : String or Symbol
                 The label of the load
+                - should not use 'A' or 'B' as it is used for supports.
 
             start : Float
 
@@ -172,13 +173,13 @@ class Arch:
 
         >>> from sympy.physics.continuum_mechanics.arch import Arch
         >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
-        >>> a.apply_load(0,'A',start=3,end=5,mag=-10)
+        >>> a.apply_load(0,'C',start=3,end=5,mag=-10)
 
         For applying point/concentrated_loads
 
         >>> from sympy.physics.continuum_mechanics.arch import Arch
         >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
-        >>> a.apply_load(-1,'B',start=2,mag=15,angle=45)
+        >>> a.apply_load(-1,'C',start=2,mag=15,angle=45)
 
         """
         y = Symbol('y')
@@ -191,6 +192,9 @@ class Arch:
 
         if label in self._loads_applied:
             raise ValueError("load with the given label already exists")
+
+        if label in ['A','B']:
+            raise ValueError("cannot use the given label, reserved for supports")
 
         if order == 0:
             if end is None or end<start:
@@ -250,9 +254,9 @@ class Arch:
 
         >>> from sympy.physics.continuum_mechanics.arch import Arch
         >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
-        >>> a.apply_load(0,'A',start=3,end=5,mag=-10)
-        >>> a.remove_load('A')
-        removed load A: {'start': 3, 'end': 5, 'f_y': -10}
+        >>> a.apply_load(0,'C',start=3,end=5,mag=-10)
+        >>> a.remove_load('C')
+        removed load C: {'start': 3, 'end': 5, 'f_y': -10}
         """
         y = Symbol('y')
         x = Symbol('x')
@@ -425,6 +429,17 @@ class Arch:
         """
         This method solves for the reaction forces generated at the supports,\n
         and bending moment and generated in the arch and tension produced in the member if used.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.arch import Arch
+        >>> a = Arch((0,0),(10,0),crown_x=5,crown_y=5)
+        >>> a.apply_load(0,'C',start=3,end=5,mag=-10)
+        >>> a.solve()
+        >>> a.reaction_force
+        {R_A_x: 8, R_A_y: 12, R_B_x: -8, R_B_y: 8}
+
         """
         y = Symbol('y')
         x = Symbol('x')
