@@ -30,7 +30,7 @@ jobs:
         run: bin/test quality
 
       - name: Run Ruff on the sympy package
-        run: ruff check .
+        run: ruff check sympy
 
       - name: Run flake8 on the sympy package
         run: flake8 sympy
