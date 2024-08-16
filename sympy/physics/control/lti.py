@@ -4470,7 +4470,6 @@ class StateSpace(LinearTimeInvariant):
 
     def dsolve(self, initial_conditions=None, input_vector=None, var=Symbol('t')):
         r"""
-        .. nodoc::
         Returns `y(t)` or output of StateSpace given by the solution of equations:
             x'(t) = A * x(t) + B * u(t)
             y(t)  = C * x(t) + D * u(t)
