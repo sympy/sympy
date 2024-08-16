@@ -252,13 +252,7 @@ def test_rewrite_add():
 def test_rewrite():
     x = symbols("x")
     eq = Equation(exp(I*x),cos(x) + I*sin(x))
-
-    # NOTE: Must use `sexp` otherwise the test is going to fail.
-    # This reflects the fact that rewrite pulls the fuction exp internally
-    # from the definitions of functions in sympy and not from the globally
-    # redefined functions that are Equation aware.
-    from sympy import exp as sexp
-    assert eq.rewrite(exp) == Equation(exp(I*x), sexp(I*x))
+    assert eq.rewrite(exp) == Equation(exp(I*x), exp(I*x))
     assert eq.rewrite(Add) == Equation(exp(I*x) - I*sin(x) - cos(x), 0)
 
 
