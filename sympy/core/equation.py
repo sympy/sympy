@@ -632,21 +632,12 @@ class Equation(Basic, EvalfMixin):
     # Output helper functions
     #####
     def __repr__(self):
-        repstr = 'Equation(%s, %s)' % (
-        self.lhs.__repr__(), self.rhs.__repr__())
-        return repstr
-
-    def _latex(self, printer):
-        tempstr = ''
-        tempstr += printer._print(self.lhs)
-        tempstr += '='
-        tempstr += printer._print(self.rhs)
-        return tempstr
-
-    def __str__(self):
-        tempstr = ''
-        tempstr += str(self.lhs) + ' = ' + str(self.rhs)
-        return tempstr
+        # Included here because if put this into repr.py it is not possible to 
+        # access this executable representation, you only get the str(self), 
+        # even when calling repr(self). With it here this defines the 
+        # default output for command line python and allows access to
+        # str(self) and repr(self) independently.
+        return 'Equation(%s, %s)' % (repr(self.lhs), repr(self.rhs))
 
 
 Eqn = Equation
