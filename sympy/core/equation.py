@@ -236,21 +236,6 @@ class Equation(Basic, EvalfMixin):
             raise TypeError('lhs and rhs must be valid sympy expressions.')
         return super().__new__(cls, lhs, rhs)
 
-    def _get_eqn_name(self):
-        """
-        Tries to find the python string name that refers to the equation. In
-        IPython environments (IPython, Jupyter, etc...) looks in the user_ns.
-        If not in an IPython environment looks in __main__.
-        :return: string value if found or empty string.
-        """
-        import __main__ as shell
-        for k in dir(shell):
-            item = getattr(shell, k)
-            if isinstance(item, Equation):
-                if item == self and not k.startswith('_'):
-                    return k
-        return ''
-
     @property
     def lhs(self):
         """
