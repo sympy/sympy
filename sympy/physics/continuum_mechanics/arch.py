@@ -440,6 +440,17 @@ class Arch:
         >>> a.reaction_force
         {R_A_x: 8, R_A_y: 12, R_B_x: -8, R_B_y: 8}
 
+        >>> from sympy import Symbol
+        >>> t = Symbol('t')
+        >>> from sympy.physics.continuum_mechanics.arch import Arch
+        >>> a = Arch((0,0),(16,0),crown_x=8,crown_y=5)
+        >>> a.apply_load(0,'C',start=3,end=5,mag=t)
+        >>> a.solve()
+        >>> a.reaction_force
+        {R_A_x: -4*t/5, R_A_y: -3*t/2, R_B_x: 4*t/5, R_B_y: -t/2}
+
+        >>> a.bending_moment_at(4)
+        [-5*t/2]
         """
         y = Symbol('y')
         x = Symbol('x')
