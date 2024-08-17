@@ -4225,7 +4225,6 @@ class StateSpace(LinearTimeInvariant):
     [1],
     [1]]), Matrix([[0, 1]]), Matrix([[0]]))
 
-
     One can use less matrices. The rest will be filled with a minimum of zeros:
 
     >>> StateSpace(A, B)
@@ -4234,7 +4233,6 @@ class StateSpace(LinearTimeInvariant):
     [1, 0]]), Matrix([
     [1],
     [1]]), Matrix([[0, 0]]), Matrix([[0]]))
-
 
     See Also
     ========
