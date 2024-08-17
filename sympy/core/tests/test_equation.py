@@ -280,3 +280,8 @@ def test_subs():
     sd = {x + a: a, a: x + a}
     assert eq.subs(sd) == Equation(1, b * c)
     assert eq.subs(sd, simultaneous=True) == Equation(a / (x + a), b * c)
+
+def test_output_helpers():
+    a, b, c = symbols('a b c')
+    tsteqn = Equation(a, b / c)
+    assert repr(tsteqn) == 'Equation(a, b/c)'

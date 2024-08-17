@@ -6,6 +6,7 @@ from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.containers import Tuple, Dict
 from sympy.core.expr import UnevaluatedExpr
+from sympy.core.equation import Equation
 from sympy.core.function import (Derivative, Function, Lambda, Subs, diff)
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
@@ -440,7 +441,7 @@ def test_latex_symbols_failing():
 def test_latex_Equation():
     a, b, c = symbols('a b c')
     tsteqn = Equation(a, b/c)
-    assert latex(tsteqn) == r'a=\frac{b}{c}'
+    assert latex(tsteqn) == r'a = \frac{b}{c}'
 
 @_both_exp_pow
 def test_latex_functions():
