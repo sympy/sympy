@@ -183,9 +183,6 @@ class MapleCodePrinter(CodePrinter):
     def _print_Infinity(self, expr):
         return 'infinity'
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
     def _print_BooleanTrue(self, expr):
         return "true"
 
