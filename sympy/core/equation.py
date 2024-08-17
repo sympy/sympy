@@ -632,12 +632,13 @@ class Equation(Basic, EvalfMixin):
     # Output helper functions
     #####
     def __repr__(self):
-        # Included here because if put this into repr.py it is not possible to 
-        # access this executable representation, you only get the str(self), 
-        # even when calling repr(self). With it here this defines the 
+        # Included here because if put this into repr.py it is not possible to
+        # access this executable representation, you only get the str(self),
+        # even when calling repr(self). With it here this defines the
         # default output for command line python and allows access to
         # str(self) and repr(self) independently.
         return 'Equation(%s, %s)' % (repr(self.lhs), repr(self.rhs))
 
+    __srepr__ = __repr__
 
 Eqn = Equation

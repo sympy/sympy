@@ -458,10 +458,10 @@ class LatexPrinter(Printer):
     def _print_AppliedPermutation(self, expr):
         perm, var = expr.args
         return r"\sigma_{%s}(%s)" % (self._print(perm), self._print(var))
-    
+
     def _print_Equation(self, expr):
         return r'%s = %s' % (self._print(expr.lhs), self._print(expr.rhs))
-    
+
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
