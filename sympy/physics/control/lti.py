@@ -4190,6 +4190,7 @@ class StateSpace(LinearTimeInvariant):
 
     Represents the standard state-space model with A, B, C, D as state-space matrices.
     This makes the linear control system:
+
         (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
         (2) y(t)  = C * x(t) + D * u(t);    y in R^m
 
