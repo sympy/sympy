@@ -4505,6 +4505,7 @@ class StateSpace(LinearTimeInvariant):
         ==========
         .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
         .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
+    
         """
 
         if not isinstance(var, Symbol):
