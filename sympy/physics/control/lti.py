@@ -4192,6 +4192,7 @@ class StateSpace(LinearTimeInvariant):
     This makes the linear control system:
         (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
         (2) y(t)  = C * x(t) + D * u(t);    y in R^m
+
     where u(t) is any input signal, y(t) the corresponding output, and x(t) the system's state.
 
     Parameters
