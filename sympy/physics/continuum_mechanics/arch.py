@@ -618,6 +618,7 @@ class Arch:
                                   solution[R_A_x]*(self._shape_eqn.subs({x:x0})-self._left_support[1]))
 
         angle  = atan(diff(self._shape_eqn,x))
+
         fx = -(self._load_x_func+solution[R_A_x])
         fy = -(self._load_y_func+solution[R_A_y])
 
