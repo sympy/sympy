@@ -4243,6 +4243,7 @@ class StateSpace(LinearTimeInvariant):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/State-space_representation
     .. [2] https://in.mathworks.com/help/control/ref/ss.html
 
