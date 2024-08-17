@@ -15,8 +15,7 @@ with ``TransferFunctionMatrix`` as the base class for representing one. ``MIMOSe
 and ``Feedback`` classes.
 
 Alongside ``TransferFunction`` representations, the ``StateSpace`` class can be used
-to model state-space systems. These representations are more general and can handle
-both continuous-time and discrete-time systems. The ``StateSpace`` class supports
+to model state-space systems. The ``StateSpace`` class supports
 various methods for analyzing and manipulating systems, such as controllability,
 observability, and transformations between state-space and transfer function
 representations. MIMO state-space systems are also supported, making this module
