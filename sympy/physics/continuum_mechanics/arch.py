@@ -7,6 +7,8 @@ from sympy import diff, sqrt, cos , sin, atan, rad, Min
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
 from sympy.functions import Piecewise
+from sympy.core.evalf import INF
+from sympy.plotting import plot
 
 class Arch:
     """
@@ -625,3 +627,129 @@ class Arch:
         shear_force = abs(fx*sin(angle) - fy*cos(angle))
         self._axial_force = axial_force
         self._shear_force = shear_force
+
+    def draw(self):
+        """
+        """
+        x = Symbol('x')
+        markers = []
+        annotations = []
+        supports = self._draw_supports()
+        markers.append({
+            'args':[[self._crown_x],[self._crown_y]],
+            'marker':'o',
+            'markersize': 5,
+            'color':'black'
+        })
+        markers+=supports
+
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
+
+        if lim==xmax*1.1-xmin*0.8+1:
+            sing_plot = plot(self._shape_eqn-0.005*lim,self._shape_eqn+0.005*lim, (x, self._left_support[0], self._right_support[0]), markers=markers, show=False, annotations=annotations, xlim=(xmin-0.05*lim, xmax*1.1), ylim=(xmin-0.05*lim, xmax*1.1), axis=False,line_color='brown')
+
+        else:
+            sing_plot = plot(self._shape_eqn-0.005*lim,self._shape_eqn+0.005*lim, (x, self._left_support[0], self._right_support[0]), markers=markers, show=False, annotations=annotations, xlim=(ymin-0.05*lim, ymax*1.1), ylim=(ymin-0.05*lim, ymax*1.1), axis=False,line_color='brown')
+
+        return sing_plot
+
+
+    def _draw_supports(self):
+        support_markers = []
+
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        if self._supports['left']=='roller':
+            support_markers.append(
+                {
+                    'args':[
+                        [self._left_support[0]],
+                        [self._left_support[1]-0.02*max_diff]
+                    ],
+                    'marker':'o',
+                    'markersize':11,
+                    'color':'black',
+                    'markerfacecolor':'none'
+                }
+            )
+        else:
+            support_markers.append(
+                {
+                    'args':[
+                        [self._left_support[0]],
+                        [self._left_support[1]]
+                    ],
+                    'marker':6,
+                    'markersize':15,
+                    'color':'black',
+                    'markerfacecolor':'none'
+                }
+            )
+
+        if self._supports['right']=='roller':
+            support_markers.append(
+                {
+                    'args':[
+                        [self._right_support[0]],
+                        [self._right_support[1]-0.02*max_diff]
+                    ],
+                    'marker':'o',
+                    'markersize':11,
+                    'color':'black',
+                    'markerfacecolor':'none'
+                }
+            )
+        else:
+            support_markers.append(
+                {
+                    'args':[
+                        [self._right_support[0]],
+                        [self._right_support[1]]
+                    ],
+                    'marker':6,
+                    'markersize':15,
+                    'color':'black',
+                    'markerfacecolor':'none'
+                }
+            )
+
+        support_markers.append(
+            {
+                'args':[
+                    [self._right_support[0]],
+                    [self._right_support[1]-0.036*max_diff]
+                ],
+                'marker':'_',
+                'markersize':15,
+                'color':'black',
+                'markerfacecolor':'none'
+            }
+        )
+
+        support_markers.append(
+            {
+                'args':[
+                    [self._left_support[0]],
+                    [self._left_support[1]-0.036*max_diff]
+                ],
+                'marker':'_',
+                'markersize':15,
+                'color':'black',
+                'markerfacecolor':'none'
+            }
+        ) 
+
+        return support_markers
