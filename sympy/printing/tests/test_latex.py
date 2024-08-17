@@ -437,6 +437,10 @@ def test_latex_symbols_failing():
     assert latex(mass**3 * volume**3) == \
         r"{\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}"
 
+def test_latex_Equation():
+    a, b, c = symbols('a b c')
+    tsteqn = Equation(a, b/c)
+    assert latex(tsteqn) == r'a=\frac{b}{c}'
 
 @_both_exp_pow
 def test_latex_functions():
