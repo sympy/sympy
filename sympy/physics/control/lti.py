@@ -27,7 +27,7 @@ from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-__all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
+__all__ = ['TransferFunction', 'PIDController', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
     'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'StateSpace', 'gbt', 'bilinear', 'forward_diff', 'backward_diff',
     'phase_margin', 'gain_margin']
 
@@ -452,8 +452,8 @@ class TransferFunction(SISOLinearTimeInvariant):
     Generally, a dynamical system representing a physical model can be described in terms of Linear
     Ordinary Differential Equations like -
 
-            $\small{b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y=
-            a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x}$
+            $b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y=
+            a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x$
 
     Here, $x$ is the input signal and $y$ is the output signal and superscript on both is the order of derivative
     (not exponent). Derivative is taken with respect to the independent variable, $t$. Also, generally $m$ is greater
@@ -463,20 +463,20 @@ class TransferFunction(SISOLinearTimeInvariant):
     mathematical tools like Laplace transform to get a better perspective. Taking the Laplace transform
     of both the sides in the equation (at zero initial conditions), we get -
 
-            $\small{\mathcal{L}[b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y]=
-            \mathcal{L}[a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x]}$
+            $\mathcal{L}[b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y]=
+            \mathcal{L}[a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x]$
 
     Using the linearity property of Laplace transform and also considering zero initial conditions
-    (i.e. $\small{y(0^{-}) = 0}$, $\small{y'(0^{-}) = 0}$ and so on), the equation
+    (i.e. $y(0^{-}) = 0$, $y'(0^{-}) = 0$ and so on), the equation
     above gets translated to -
 
-            $\small{b_{m}\mathcal{L}[y^{\left(m\right)}]+\dots+b_{1}\mathcal{L}[y^{\left(1\right)}]+b_{0}\mathcal{L}[y]=
-            a_{n}\mathcal{L}[x^{\left(n\right)}]+\dots+a_{1}\mathcal{L}[x^{\left(1\right)}]+a_{0}\mathcal{L}[x]}$
+            $b_{m}\mathcal{L}[y^{\left(m\right)}]+\dots+b_{1}\mathcal{L}[y^{\left(1\right)}]+b_{0}\mathcal{L}[y]=
+            a_{n}\mathcal{L}[x^{\left(n\right)}]+\dots+a_{1}\mathcal{L}[x^{\left(1\right)}]+a_{0}\mathcal{L}[x]$
 
     Now, applying Derivative property of Laplace transform,
 
-            $\small{b_{m}s^{m}\mathcal{L}[y]+\dots+b_{1}s\mathcal{L}[y]+b_{0}\mathcal{L}[y]=
-            a_{n}s^{n}\mathcal{L}[x]+\dots+a_{1}s\mathcal{L}[x]+a_{0}\mathcal{L}[x]}$
+            $b_{m}s^{m}\mathcal{L}[y]+\dots+b_{1}s\mathcal{L}[y]+b_{0}\mathcal{L}[y]=
+            a_{n}s^{n}\mathcal{L}[x]+\dots+a_{1}s\mathcal{L}[x]+a_{0}\mathcal{L}[x]$
 
     Here, the superscript on $s$ is **exponent**. Note that the zero initial conditions assumption, mentioned above, is very important
     and cannot be ignored otherwise the dynamical system cannot be considered time-independent and the simplified equation above
@@ -633,6 +633,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         if (((isinstance(num, (Expr, TransferFunction, Series, Parallel)) and num.has(Symbol)) or num.is_number) and
             ((isinstance(den, (Expr, TransferFunction, Series, Parallel)) and den.has(Symbol)) or den.is_number)):
+            cls.is_StateSpace_object = False
             return super(TransferFunction, cls).__new__(cls, num, den, var)
 
         else:
@@ -1105,7 +1106,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in self.poles())
 
     def __add__(self, other):
-        if isinstance(other, (TransferFunction, Series)):
+        if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
+            return Parallel(self, other)
+        elif isinstance(other, (TransferFunction, Series, Feedback)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex variable
@@ -1126,7 +1129,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         return self + other
 
     def __sub__(self, other):
-        if isinstance(other, (TransferFunction, Series)):
+        if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
+            return Parallel(self, -other)
+        elif isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex variable
@@ -1147,7 +1152,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
-        if isinstance(other, (TransferFunction, Parallel)):
+        if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
+            return Series(self, other)
+        elif isinstance(other, (TransferFunction, Parallel, Feedback)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex variable
@@ -1313,6 +1320,116 @@ class TransferFunction(SISOLinearTimeInvariant):
             return Pow(self.den, -1, evaluate=False)
 
 
+class PIDController(TransferFunction):
+    r"""
+    A class for representing PID (Proportional-Integral-Derivative)
+    controllers in control systems. The PIDController class is a subclass
+    of TransferFunction, representing the controller's transfer function
+    in the Laplace domain. The arguments are ``kp``, ``ki``, ``kd``,
+    ``tf``, and ``var``, where ``kp``, ``ki``, and ``kd`` are the
+    proportional, integral, and derivative gains respectively.``tf``
+    is the derivative filter time constant, which can be used to
+    filter out the noise and ``var`` is the complex variable used in
+    the transfer function.
+
+    Parameters
+    ==========
+
+    kp : Expr, Number
+        Proportional gain. Defaults to ``Symbol('kp')`` if not specified.
+    ki : Expr, Number
+        Integral gain. Defaults to ``Symbol('ki')`` if not specified.
+    kd : Expr, Number
+        Derivative gain. Defaults to ``Symbol('kd')`` if not specified.
+    tf : Expr, Number
+        Derivative filter time constant.  Defaults to ``0`` if not specified.
+    var : Symbol
+        The complex frequency variable.  Defaults to ``s`` if not specified.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.control.lti import PIDController
+    >>> kp, ki, kd = symbols('kp ki kd')
+    >>> p1 = PIDController(kp, ki, kd)
+    >>> print(p1)
+    PIDController(kp, ki, kd, 0, s)
+    >>> p1.doit()
+    TransferFunction(kd*s**2 + ki + kp*s, s, s)
+    >>> p1.kp
+    kp
+    >>> p1.ki
+    ki
+    >>> p1.kd
+    kd
+    >>> p1.tf
+    0
+    >>> p1.var
+    s
+    >>> p1.to_expr()
+    (kd*s**2 + ki + kp*s)/s
+
+    See Also
+    ========
+
+    TransferFunction
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/PID_controller
+    .. [2] https://in.mathworks.com/help/control/ug/proportional-integral-derivative-pid-controllers.html
+
+    """
+    def __new__(cls, kp=Symbol('kp'), ki=Symbol('ki'), kd=Symbol('kd'), tf=0, var=Symbol('s')):
+        kp, ki, kd, tf = _sympify(kp), _sympify(ki), _sympify(kd), _sympify(tf)
+        num = kp*tf*var**2 + kp*var + ki*tf*var + ki + kd*var**2
+        den = tf*var**2 + var
+        obj = TransferFunction.__new__(cls, num, den, var)
+        obj._kp, obj._ki, obj._kd, obj._tf = kp, ki, kd, tf
+        return obj
+
+    def __repr__(self):
+        return f"PIDController({self.kp}, {self.ki}, {self.kd}, {self.tf}, {self.var})"
+
+    __str__ = __repr__
+
+    @property
+    def kp(self):
+        """
+        Returns the Proportional gain (kp) of the PIDController.
+        """
+        return self._kp
+
+    @property
+    def ki(self):
+        """
+        Returns the Integral gain (ki) of the PIDController.
+        """
+        return self._ki
+
+    @property
+    def kd(self):
+        """
+        Returns the Derivative gain (kd) of the PIDController.
+        """
+        return self._kd
+
+    @property
+    def tf(self):
+        """
+        Returns the Derivative filter time constant (tf) of the PIDController.
+        """
+        return self._tf
+
+    def doit(self):
+        """
+        Convert the PIDController into TransferFunction.
+        """
+        return TransferFunction(self.num, self.den, self.var)
+
+
 def _flatten_args(args, _cls):
     temp_args = []
     for arg in args:
@@ -1454,6 +1571,12 @@ class Series(SISOLinearTimeInvariant):
         obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
+
+    def __repr__(self):
+        systems_repr = ', '.join(repr(system) for system in self.args)
+        return f"Series({systems_repr})"
+
+    __str__ = __repr__
 
     @property
     def var(self):
@@ -2061,6 +2184,12 @@ class Parallel(SISOLinearTimeInvariant):
 
         return obj.doit() if evaluate else obj
 
+    def __repr__(self):
+        systems_repr = ', '.join(repr(system) for system in self.args)
+        return f"Parallel({systems_repr})"
+
+    __str__ = __repr__
+
     @property
     def var(self):
         """
@@ -2496,7 +2625,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return MIMOParallel(*arg_list)
 
 
-class Feedback(TransferFunction):
+class Feedback(SISOLinearTimeInvariant):
     r"""
     A class for representing closed-loop feedback interconnection between two
     SISO input/output systems.
@@ -2505,14 +2634,14 @@ class Feedback(TransferFunction):
     system or in simple words, the dynamical model representing the process
     to be controlled. The second argument, ``sys2``, is the feedback system
     and controls the fed back signal to ``sys1``. Both ``sys1`` and ``sys2``
-    can either be ``Series`` or ``TransferFunction`` objects.
+    can either be ``Series``, ``StateSpace`` or ``TransferFunction`` objects.
 
     Parameters
     ==========
 
-    sys1 : Series, TransferFunction
+    sys1 : Series, StateSpace, TransferFunction
         The feedforward path system.
-    sys2 : Series, TransferFunction, optional
+    sys2 : Series, StateSpace, TransferFunction, optional
         The feedback path system (often a feedback controller).
         It is the model sitting on the feedback path.
 
@@ -2534,14 +2663,15 @@ class Feedback(TransferFunction):
         zero denominator.
 
     TypeError
-        When either ``sys1`` or ``sys2`` is not a ``Series`` or a
+        When either ``sys1`` or ``sys2`` is not a ``Series``, ``StateSpace`` or
         ``TransferFunction`` object.
 
     Examples
     ========
 
+    >>> from sympy import Matrix
     >>> from sympy.abc import s
-    >>> from sympy.physics.control.lti import TransferFunction, Feedback
+    >>> from sympy.physics.control.lti import StateSpace, TransferFunction, Feedback
     >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
     >>> controller = TransferFunction(5*s - 10, s + 7, s)
     >>> F1 = Feedback(plant, controller)
@@ -2577,6 +2707,36 @@ class Feedback(TransferFunction):
     >>> -F2
     Feedback(Series(TransferFunction(-1, 1, s), TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s)), TransferFunction(-1, 1, s), -1)
 
+    ``Feedback`` can also be used to connect SISO ``StateSpace`` systems together.
+
+    >>> A1 = Matrix([[-1]])
+    >>> B1 = Matrix([[1]])
+    >>> C1 = Matrix([[-1]])
+    >>> D1 = Matrix([1])
+    >>> A2 = Matrix([[0]])
+    >>> B2 = Matrix([[1]])
+    >>> C2 = Matrix([[1]])
+    >>> D2 = Matrix([[0]])
+    >>> ss1 = StateSpace(A1, B1, C1, D1)
+    >>> ss2 = StateSpace(A2, B2, C2, D2)
+    >>> F3 = Feedback(ss1, ss2)
+    >>> F3
+    Feedback(StateSpace(Matrix([[-1]]), Matrix([[1]]), Matrix([[-1]]), Matrix([[1]])), StateSpace(Matrix([[0]]), Matrix([[1]]), Matrix([[1]]), Matrix([[0]])), -1)
+
+    ``doit()`` can be used to find ``StateSpace`` equivalent for the system containing ``StateSpace`` objects.
+
+    >>> F3.doit()
+    StateSpace(Matrix([
+    [-1, -1],
+    [-1, -1]]), Matrix([
+    [1],
+    [1]]), Matrix([[-1, -1]]), Matrix([[1]]))
+
+    We can also find the equivalent ``TransferFunction`` by using ``rewrite(TransferFunction)`` method.
+
+    >>> F3.rewrite(TransferFunction)
+    TransferFunction(s, s + 2, s)
+
     See Also
     ========
 
@@ -2587,9 +2747,16 @@ class Feedback(TransferFunction):
         if not sys2:
             sys2 = TransferFunction(1, 1, sys1.var)
 
-        if not (isinstance(sys1, (TransferFunction, Series, Feedback))
-            and isinstance(sys2, (TransferFunction, Series, Feedback))):
-            raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
+        if not isinstance(sys1, (TransferFunction, Series, StateSpace, Feedback)):
+            raise TypeError("Unsupported type for `sys1` in Feedback.")
+
+        if not isinstance(sys2, (TransferFunction, Series, StateSpace, Feedback)):
+            raise TypeError("Unsupported type for `sys2` in Feedback.")
+
+        if not (sys1.num_inputs == sys1.num_outputs == sys2.num_inputs ==
+                sys2.num_outputs == 1):
+            raise ValueError("""To use Feedback connection for MIMO systems
+                            use MIMOFeedback instead.""")
 
         if sign not in [-1, 1]:
             raise ValueError(filldedent("""
@@ -2597,15 +2764,22 @@ class Feedback(TransferFunction):
                 either be 1 (positive feedback loop) or -1
                 (negative feedback loop)."""))
 
-        if Mul(sys1.to_expr(), sys2.to_expr()).simplify() == sign:
-            raise ValueError("The equivalent system will have zero denominator.")
-
-        if sys1.var != sys2.var:
-            raise ValueError(filldedent("""
-                Both `sys1` and `sys2` should be using the
+        if sys1.is_StateSpace_object or sys2.is_StateSpace_object:
+            cls.is_StateSpace_object = True
+        else:
+            if Mul(sys1.to_expr(), sys2.to_expr()).simplify() == sign:
+                raise ValueError("The equivalent system will have zero denominator.")
+            if sys1.var != sys2.var:
+                raise ValueError(filldedent("""Both `sys1` and `sys2` should be using the
                 same complex variable."""))
+            cls.is_StateSpace_object = False
 
-        return super(TransferFunction, cls).__new__(cls, sys1, sys2, _sympify(sign))
+        return super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
+
+    def __repr__(self):
+        return f"Feedback({self.sys1}, {self.sys2}, {self.sign})"
+
+    __str__ = __repr__
 
     @property
     def sys1(self):
@@ -2739,14 +2913,15 @@ class Feedback(TransferFunction):
 
     def doit(self, cancel=False, expand=False, **hints):
         """
-        Returns the resultant transfer function obtained by the
-        feedback interconnection.
+        Returns the resultant transfer function or state space obtained by
+        feedback connection of transfer functions or state space objects.
 
         Examples
         ========
 
         >>> from sympy.abc import s
-        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback, StateSpace
         >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
@@ -2766,7 +2941,58 @@ class Feedback(TransferFunction):
         >>> F2.doit(expand=True)
         TransferFunction(2*s**4 + 9*s**3 + 17*s**2 + 17*s + 3, 3*s**4 + 13*s**3 + 27*s**2 + 29*s + 12, s)
 
+        If the connection contain any ``StateSpace`` object then ``doit()``
+        will return the equivalent ``StateSpace`` object.
+
+        >>> A1 = Matrix([[-1.5, -2], [1, 0]])
+        >>> B1 = Matrix([0.5, 0])
+        >>> C1 = Matrix([[0, 1]])
+        >>> A2 = Matrix([[0, 1], [-5, -2]])
+        >>> B2 = Matrix([0, 3])
+        >>> C2 = Matrix([[0, 1]])
+        >>> ss1 = StateSpace(A1, B1, C1)
+        >>> ss2 = StateSpace(A2, B2, C2)
+        >>> F3 = Feedback(ss1, ss2)
+        >>> F3.doit()
+        StateSpace(Matrix([
+        [-1.5, -2,  0, -0.5],
+        [   1,  0,  0,    0],
+        [   0,  0,  0,    1],
+        [   0,  3, -5,   -2]]), Matrix([
+        [0.5],
+        [  0],
+        [  0],
+        [  0]]), Matrix([[0, 1, 0, 0]]), Matrix([[0]]))
+
         """
+        if self.is_StateSpace_object:
+            sys1_ss = self.sys1.doit().rewrite(StateSpace)
+            sys2_ss = self.sys2.doit().rewrite(StateSpace)
+            A1, B1, C1, D1 = sys1_ss.A, sys1_ss.B, sys1_ss.C, sys1_ss.D
+            A2, B2, C2, D2 = sys2_ss.A, sys2_ss.B, sys2_ss.C, sys2_ss.D
+
+            # Create identity matrices
+            I_inputs = eye(self.num_inputs)
+            I_outputs = eye(self.num_outputs)
+
+            # Compute F and its inverse
+            F = I_inputs - self.sign * D2 * D1
+            E = F.inv()
+
+            # Compute intermediate matrices
+            E_D2 = E * D2
+            E_C2 = E * C2
+            T1 = I_outputs + self.sign * D1 * E_D2
+            T2 = I_inputs + self.sign * E_D2 * D1
+            A = Matrix.vstack(
+            Matrix.hstack(A1 + self.sign * B1 * E_D2 * C1, self.sign * B1 * E_C2),
+            Matrix.hstack(B2 * T1 * C1, A2 + self.sign * B2 * D1 * E_C2)
+            )
+            B = Matrix.vstack(B1 * T2, B2 * D1 * T2)
+            C = Matrix.hstack(T1 * C1, self.sign * D1 * E_C2)
+            D = D1 * T2
+            return StateSpace(A, B, C, D)
+
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
         F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
@@ -2786,6 +3012,8 @@ class Feedback(TransferFunction):
         return _resultant_tf
 
     def _eval_rewrite_as_TransferFunction(self, num, den, sign, **kwargs):
+        if self.is_StateSpace_object:
+            return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
     def to_expr(self):
@@ -2832,9 +3060,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     Parameters
     ==========
 
-    sys1 : MIMOSeries, TransferFunctionMatrix
+    sys1 : MIMOSeries, TransferFunctionMatrix, StateSpace
         The MIMO system placed on the feedforward path.
-    sys2 : MIMOSeries, TransferFunctionMatrix
+    sys2 : MIMOSeries, TransferFunctionMatrix, StateSpace
         The system placed on the feedback path
         (often a feedback controller).
     sign : int, optional
@@ -2857,15 +3085,15 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         When the equivalent MIMO system is not invertible.
 
     TypeError
-        When either ``sys1`` or ``sys2`` is not a ``MIMOSeries`` or a
-        ``TransferFunctionMatrix`` object.
+        When either ``sys1`` or ``sys2`` is not a ``MIMOSeries``,
+        ``TransferFunctionMatrix`` or a ``StateSpace`` object.
 
     Examples
     ========
 
     >>> from sympy import Matrix, pprint
     >>> from sympy.abc import s
-    >>> from sympy.physics.control.lti import TransferFunctionMatrix, MIMOFeedback
+    >>> from sympy.physics.control.lti import StateSpace, TransferFunctionMatrix, MIMOFeedback
     >>> plant_mat = Matrix([[1, 1/s], [0, 1]])
     >>> controller_mat = Matrix([[10, 0], [0, 10]])  # Constant Gain
     >>> plant = TransferFunctionMatrix.from_Matrix(plant_mat, s)
@@ -2903,6 +3131,59 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     [ -    --- ]
     [ 1    11  ]{t}
 
+    ``MIMOFeedback`` can also be used to connect MIMO ``StateSpace`` systems.
+
+    >>> A1 = Matrix([[4, 1], [2, -3]])
+    >>> B1 = Matrix([[5, 2], [-3, -3]])
+    >>> C1 = Matrix([[2, -4], [0, 1]])
+    >>> D1 = Matrix([[3, 2], [1, -1]])
+    >>> A2 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    >>> B2 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    >>> C2 = Matrix([[4, 2, -3], [1, 4, 3]])
+    >>> D2 = Matrix([[-2, 4], [0, 1]])
+    >>> ss1 = StateSpace(A1, B1, C1, D1)
+    >>> ss2 = StateSpace(A2, B2, C2, D2)
+    >>> F1 = MIMOFeedback(ss1, ss2)
+    >>> F1
+    MIMOFeedback(StateSpace(Matrix([
+    [4,  1],
+    [2, -3]]), Matrix([
+    [ 5,  2],
+    [-3, -3]]), Matrix([
+    [2, -4],
+    [0,  1]]), Matrix([
+    [3,  2],
+    [1, -1]])), StateSpace(Matrix([
+    [-3,  4, 2],
+    [-1, -3, 0],
+    [ 2,  5, 3]]), Matrix([
+    [ 1,  4],
+    [-3, -3],
+    [-2,  1]]), Matrix([
+    [4, 2, -3],
+    [1, 4,  3]]), Matrix([
+    [-2, 4],
+    [ 0, 1]])), -1)
+
+    ``doit()`` can be used to find ``StateSpace`` equivalent for the system containing ``StateSpace`` objects.
+
+    >>> F1.doit()
+    StateSpace(Matrix([
+    [   3,  -3/4, -15/4, -37/2, -15],
+    [ 7/2, -39/8,   9/8,  39/4,   9],
+    [   3, -41/4, -45/4, -51/2, -19],
+    [-9/2, 129/8,  73/8, 171/4,  36],
+    [-3/2,  47/8,  31/8,  85/4,  18]]), Matrix([
+    [-1/4,  19/4],
+    [ 3/8, -21/8],
+    [ 1/4,  29/4],
+    [ 3/8, -93/8],
+    [ 5/8, -35/8]]), Matrix([
+    [  1, -15/4,  -7/4, -21/2, -9],
+    [1/2, -13/8, -13/8, -19/4, -3]]), Matrix([
+    [-1/4, 11/4],
+    [ 1/8,  9/8]]))
+
     See Also
     ========
 
@@ -2910,9 +3191,11 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     """
     def __new__(cls, sys1, sys2, sign=-1):
-        if not (isinstance(sys1, (TransferFunctionMatrix, MIMOSeries))
-            and isinstance(sys2, (TransferFunctionMatrix, MIMOSeries))):
-            raise TypeError("Unsupported type for `sys1` or `sys2` of MIMO Feedback.")
+        if not isinstance(sys1, (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+            raise TypeError("Unsupported type for `sys1` in MIMO Feedback.")
+
+        if not isinstance(sys2, (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+            raise TypeError("Unsupported type for `sys2` in MIMO Feedback.")
 
         if sys1.num_inputs != sys2.num_outputs or \
             sys1.num_outputs != sys2.num_inputs:
@@ -2926,9 +3209,14 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
                 either be 1 (positive feedback loop) or -1
                 (negative feedback loop)."""))
 
-        if not _is_invertible(sys1, sys2, sign):
-            raise ValueError("Non-Invertible system inputted.")
-        if sys1.var != sys2.var:
+        if sys1.is_StateSpace_object or sys2.is_StateSpace_object:
+            cls.is_StateSpace_object = True
+        else:
+            if not _is_invertible(sys1, sys2, sign):
+                raise ValueError("Non-Invertible system inputted.")
+            cls.is_StateSpace_object = False
+
+        if not cls.is_StateSpace_object and sys1.var != sys2.var:
             raise ValueError(filldedent("""
                 Both `sys1` and `sys2` should be using the
                 same complex variable."""))
@@ -3091,6 +3379,16 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         return (eye(self.sys1.num_inputs) - \
             self.sign*_sys1_mat*_sys2_mat).inv()
 
+    @property
+    def num_inputs(self):
+        """Returns the number of inputs of the system."""
+        return self.sys1.num_inputs
+
+    @property
+    def num_outputs(self):
+        """Returns the number of outputs of the system."""
+        return self.sys1.num_outputs
+
     def doit(self, cancel=True, expand=False, **hints):
         r"""
         Returns the resultant transfer function matrix obtained by the
@@ -3156,6 +3454,34 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [             6*s  - s    ]{t}
 
         """
+        if self.is_StateSpace_object:
+            sys1_ss = self.sys1.doit().rewrite(StateSpace)
+            sys2_ss = self.sys2.doit().rewrite(StateSpace)
+            A1, B1, C1, D1 = sys1_ss.A, sys1_ss.B, sys1_ss.C, sys1_ss.D
+            A2, B2, C2, D2 = sys2_ss.A, sys2_ss.B, sys2_ss.C, sys2_ss.D
+
+            # Create identity matrices
+            I_inputs = eye(self.num_inputs)
+            I_outputs = eye(self.num_outputs)
+
+            # Compute F and its inverse
+            F = I_inputs - self.sign * D2 * D1
+            E = F.inv()
+
+            # Compute intermediate matrices
+            E_D2 = E * D2
+            E_C2 = E * C2
+            T1 = I_outputs + self.sign * D1 * E_D2
+            T2 = I_inputs + self.sign * E_D2 * D1
+            A = Matrix.vstack(
+            Matrix.hstack(A1 + self.sign * B1 * E_D2 * C1, self.sign * B1 * E_C2),
+            Matrix.hstack(B2 * T1 * C1, A2 + self.sign * B2 * D1 * E_C2)
+            )
+            B = Matrix.vstack(B1 * T2, B2 * D1 * T2)
+            C = Matrix.hstack(T1 * C1, self.sign * D1 * E_C2)
+            D = D1 * T2
+            return StateSpace(A, B, C, D)
+
         _mat = self.sensitivity * self.sys1.doit()._expr_mat
 
         _resultant_tfm = _to_TFM(_mat, self.var)
@@ -3570,6 +3896,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
+        obj.is_StateSpace_object = False
         return obj
 
     @classmethod
@@ -3972,7 +4299,7 @@ class StateSpace(LinearTimeInvariant):
             else:
                 obj._is_SISO = False
                 obj._clstype = MIMOLinearTimeInvariant
-
+            obj.is_StateSpace_object = True
             return obj
 
         else:
@@ -4065,6 +4392,11 @@ class StateSpace(LinearTimeInvariant):
 
         """
         return self._D
+
+    A = state_matrix
+    B = input_matrix
+    C = output_matrix
+    D = feedforward_matrix
 
     @property
     def num_states(self):

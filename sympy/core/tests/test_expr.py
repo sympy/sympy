@@ -1503,6 +1503,8 @@ def test_as_base_exp():
     assert (x*y*z).as_base_exp() == (x*y*z, S.One)
     assert (x + y + z).as_base_exp() == (x + y + z, S.One)
     assert ((x + y)**z).as_base_exp() == (x + y, z)
+    assert (x**2*y**2).as_base_exp() == (x*y, 2)
+    assert (x**z*y**z).as_base_exp() == (x**z*y**z, S.One)
 
 
 def test_issue_4963():
@@ -2009,7 +2011,7 @@ def test_round():
 
     assert S.Zero.round() == 0
 
-    a = (Add(1, Float('1.' + '9'*27, ''), evaluate=0))
+    a = (Add(1, Float('1.' + '9'*27, ''), evaluate=False))
     assert a.round(10) == Float('3.000000000000000000000000000', '')
     assert a.round(25) == Float('3.000000000000000000000000000', '')
     assert a.round(26) == Float('3.000000000000000000000000000', '')

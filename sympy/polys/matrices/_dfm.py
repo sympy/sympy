@@ -151,7 +151,7 @@ class DFM:
     @classmethod
     def _supports_domain(cls, domain):
         """Return True if the given domain is supported by DFM."""
-        return domain in (ZZ, QQ) or domain.is_FF
+        return domain in (ZZ, QQ) or domain.is_FF and domain._is_flint
 
     @classmethod
     def _get_flint_func(cls, domain):
