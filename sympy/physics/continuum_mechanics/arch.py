@@ -632,15 +632,10 @@ class Arch:
         """
         """
         x = Symbol('x')
+        y = Symbol('y')
         markers = []
         annotations = []
         supports = self._draw_supports()
-        markers.append({
-            'args':[[self._crown_x],[self._crown_y]],
-            'marker':'o',
-            'markersize': 5,
-            'color':'black'
-        })
         markers+=supports
 
         xmax = self._right_support[0]
@@ -650,11 +645,19 @@ class Arch:
 
         lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
 
+        markers.append({
+            'args':[[self._crown_x],[self._crown_y-0.005*lim]],
+            'marker':'o',
+            'markersize': 5,
+            'color':'black',
+            'markerfacecolor':'none',
+        })
+
         if lim==xmax*1.1-xmin*0.8+1:
-            sing_plot = plot(self._shape_eqn-0.005*lim,self._shape_eqn+0.005*lim, (x, self._left_support[0], self._right_support[0]), markers=markers, show=False, annotations=annotations, xlim=(xmin-0.05*lim, xmax*1.1), ylim=(xmin-0.05*lim, xmax*1.1), axis=False,line_color='brown')
+            sing_plot = plot(self._shape_eqn-0.01*lim, self._shape_eqn, (x, self._left_support[0], self._right_support[0]), markers=markers, show=False, annotations=annotations, xlim=(xmin-0.05*lim, xmax*1.1), ylim=(xmin-0.05*lim, xmax*1.1), axis=False,line_color='brown')
 
         else:
-            sing_plot = plot(self._shape_eqn-0.005*lim,self._shape_eqn+0.005*lim, (x, self._left_support[0], self._right_support[0]), markers=markers, show=False, annotations=annotations, xlim=(ymin-0.05*lim, ymax*1.1), ylim=(ymin-0.05*lim, ymax*1.1), axis=False,line_color='brown')
+            sing_plot = plot(self._shape_eqn-0.01*lim,self._shape_eqn, (x, self._left_support[0], self._right_support[0]), markers=markers, show=False, annotations=annotations, xlim=(ymin-0.05*lim, ymax*1.1), ylim=(ymin-0.05*lim, ymax*1.1), axis=False,line_color='brown')
 
         return sing_plot
 
