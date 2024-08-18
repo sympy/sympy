@@ -522,11 +522,8 @@ Solution
     Matrix([[0]]))
     >>> # We can convert the StateSpace to TransferFunction by rewrite method.
     >>> tf = ss.rewrite(TransferFunction)[0][0]
-    >>> pprint(tf)
-            1
-    ──────────────────
-         2
-    C⋅L⋅s  + C⋅R⋅s + 1
+    >>> tf
+    TransferFunction(1, C*L*s**2 + C*R*s + 1, s)
 
 
 Example 7
@@ -653,15 +650,11 @@ Solution
     >>> C = Matrix([[0, 1]])
     >>> ss = StateSpace(A, B, C)
     >>> ss
-    StateSpace(
-    Matrix([
+    StateSpace(Matrix([
     [-2/(C*R),  1/(C*R)],
-    [ 1/(C*R), -1/(C*R)]]),
-    Matrix([
+    [ 1/(C*R), -1/(C*R)]]), Matrix([
     [1/(C*R)],
-    [      0]]),
-    Matrix([[0, 1]]),
-    Matrix([[0]]))
+    [      0]]), Matrix([[0, 1]]), Matrix([[0]]))
 
 
 References
