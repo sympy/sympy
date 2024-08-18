@@ -511,15 +511,11 @@ Solution
     >>> D = Matrix([[0]])
     >>> ss = StateSpace(A, B, C, D)
     >>> ss
-    StateSpace(
-    Matrix([
+    StateSpace(Matrix([
     [-R/L, -1/L],
-    [ 1/C,    0]]),
-    Matrix([
+    [ 1/C,    0]]), Matrix([
     [1/L],
-    [  0]]),
-    Matrix([[0, 1]]),
-    Matrix([[0]]))
+    [  0]]), Matrix([[0, 1]]), Matrix([[0]]))
     >>> # We can convert the StateSpace to TransferFunction by rewrite method.
     >>> tf = ss.rewrite(TransferFunction)[0][0]
     >>> tf
