@@ -18,7 +18,7 @@ from functools import wraps
 from itertools import chain
 
 from sympy.core import S
-from sympy.core.numbers import equal_valued
+from sympy.core.numbers import equal_valued, Float
 from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,
@@ -76,7 +76,7 @@ known_functions_C99 = dict(known_functions_C89, **{
 })
 
 # These are the core reserved words in the C language. Taken from:
-# http://en.cppreference.com/w/c/keyword
+# https://en.cppreference.com/w/c/keyword
 
 reserved_words = [
     'auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do',
@@ -151,18 +151,13 @@ class C89CodePrinter(CodePrinter):
     standard = "C89"
     reserved_words = set(reserved_words)
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
         'dereference': set(),
         'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-    }
+    })
 
     type_aliases = {
         real: float64,
@@ -283,8 +278,7 @@ class C89CodePrinter(CodePrinter):
         PREC = precedence(expr)
         suffix = self._get_func_suffix(real)
         if equal_valued(expr.exp, -1):
-            literal_suffix = self._get_literal_suffix(real)
-            return '1.0%s/%s' % (literal_suffix, self.parenthesize(expr.base, PREC))
+            return '%s/%s' % (self._print_Float(Float(1.0)), self.parenthesize(expr.base, PREC))
         elif equal_valued(expr.exp, 0.5):
             return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
@@ -322,7 +316,7 @@ class C89CodePrinter(CodePrinter):
         if strides is None or isinstance(strides, str):
             dims = expr.shape
             shift = S.One
-            temp = tuple()
+            temp = ()
             if strides == 'C' or strides is None:
                 traversal = reversed(range(expr.rank))
                 indices = indices[::-1]
@@ -333,12 +327,9 @@ class C89CodePrinter(CodePrinter):
                 temp += (shift,)
                 shift *= dims[i]
             strides = temp
-        flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
+        flat_index = sum(x[0]*x[1] for x in zip(indices, strides)) + offset
         return "%s[%s]" % (self._print(expr.base.label),
                            self._print(flat_index))
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     @_as_macro_if_defined
     def _print_NumberSymbol(self, expr):
@@ -544,10 +535,9 @@ class C89CodePrinter(CodePrinter):
         if elem.strides == None: # Must be "== None", cannot be "is None"
             if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 raise ValueError("Expected strides when offset is given")
-            idxs = ']['.join(map(lambda arg: self._print(arg),
-                                 elem.indices))
+            idxs = ']['.join((self._print(arg) for arg in elem.indices))
         else:
-            global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
+            global_idx = sum(i*s for i, s in zip(elem.indices, elem.strides))
             if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 global_idx += elem.offset
             idxs = self._print(global_idx)
@@ -570,17 +560,24 @@ class C89CodePrinter(CodePrinter):
 
     @requires(headers={'stdio.h'})
     def _print_Print(self, expr):
-        return 'printf({fmt}, {pargs})'.format(
-            fmt=self._print(expr.format_string),
-            pargs=', '.join(map(lambda arg: self._print(arg), expr.print_args))
+        if expr.file == none:
+            template = 'printf({fmt}, {pargs})'
+        else:
+            template = 'fprintf(%(out)s, {fmt}, {pargs})' % {
+                'out': self._print(expr.file)
+            }
+        return template.format(
+            fmt="%s\n" if expr.format_string == none else self._print(expr.format_string),
+            pargs=', '.join((self._print(arg) for arg in expr.print_args))
         )
 
+    def _print_Stream(self, strm):
+        return strm.name
+
     def _print_FunctionPrototype(self, expr):
-        pars = ', '.join(map(lambda arg: self._print(Declaration(arg)),
-                             expr.parameters))
+        pars = ', '.join((self._print(Declaration(arg)) for arg in expr.parameters))
         return "%s %s(%s)" % (
-            tuple(map(lambda arg: self._print(arg),
-                      (expr.return_type, expr.name))) + (pars,)
+            tuple((self._print(arg) for arg in (expr.return_type, expr.name))) + (pars,)
         )
 
     def _print_FunctionDefinition(self, expr):
@@ -592,7 +589,7 @@ class C89CodePrinter(CodePrinter):
         return 'return %s' % self._print(arg)
 
     def _print_CommaOperator(self, expr):
-        return '(%s)' % ', '.join(map(lambda arg: self._print(arg), expr.args))
+        return '(%s)' % ', '.join((self._print(arg) for arg in expr.args))
 
     def _print_Label(self, expr):
         if expr.body == none:
@@ -621,10 +618,10 @@ class C89CodePrinter(CodePrinter):
         return '(%s)--' % self._print(arg)
 
     def _print_struct(self, expr):
-        return "%(keyword)s %(name)s {\n%(lines)s}" % dict(
-            keyword=expr.__class__.__name__, name=expr.name, lines=';\n'.join(
+        return "%(keyword)s %(name)s {\n%(lines)s}" % {
+            "keyword": expr.__class__.__name__, "name": expr.name, "lines": ';\n'.join(
                 [self._print(decl) for decl in expr.declarations] + [''])
-        )
+        }
 
     def _print_BreakToken(self, _):
         return 'break'
@@ -701,7 +698,7 @@ class C99CodePrinter(C89CodePrinter):
                     paren_pile
                 )
         else:
-            args = ', '.join(map(lambda arg: self._print(arg), expr.args))
+            args = ', '.join((self._print(arg) for arg in expr.args))
         return '{ns}{name}{suffix}({args})'.format(
             ns=self._ns,
             name=known,

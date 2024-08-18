@@ -393,7 +393,7 @@ def replace(string, *reps):
     References
     ==========
 
-    .. [1] https://stackoverflow.com/questions/6116978/python-replace-multiple-strings
+    .. [1] https://stackoverflow.com/questions/6116978/how-to-replace-multiple-substrings-of-a-string
     """
     if len(reps) == 1:
         kv = reps[0]
@@ -560,6 +560,6 @@ def as_int(n, strict=True):
             result = int(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        if n != result:
+        if n - result:
             raise ValueError('%s is not an integer' % (n,))
         return result

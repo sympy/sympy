@@ -35,7 +35,7 @@ def AbelianGroup(*cyclic_orders):
     References
     ==========
 
-    .. [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
+    .. [1] https://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
 
     """
     groups = []
@@ -111,6 +111,13 @@ def AlternatingGroup(n):
         gens = gens[:1]
     G = PermutationGroup([_af_new(a) for a in gens], dups=False)
 
+    set_alternating_group_properties(G, n, n)
+    G._is_alt = True
+    return G
+
+
+def set_alternating_group_properties(G, n, degree):
+    """Set known properties of an alternating group. """
     if n < 4:
         G._is_abelian = True
         G._is_nilpotent = True
@@ -121,11 +128,9 @@ def AlternatingGroup(n):
         G._is_solvable = True
     else:
         G._is_solvable = False
-    G._degree = n
+    G._degree = degree
     G._is_transitive = True
-    G._is_alt = True
     G._is_dihedral = False
-    return G
 
 
 def CyclicGroup(n):
@@ -292,6 +297,13 @@ def SymmetricGroup(n):
         a[0], a[1] = a[1], a[0]
         gen2 = _af_new(a)
         G = PermutationGroup([gen1, gen2])
+    set_symmetric_group_properties(G, n, n)
+    G._is_sym = True
+    return G
+
+
+def set_symmetric_group_properties(G, n, degree):
+    """Set known properties of a symmetric group. """
     if n < 3:
         G._is_abelian = True
         G._is_nilpotent = True
@@ -302,11 +314,9 @@ def SymmetricGroup(n):
         G._is_solvable = True
     else:
         G._is_solvable = False
-    G._degree = n
+    G._degree = degree
     G._is_transitive = True
-    G._is_sym = True
     G._is_dihedral = (n in [2, 3])  # cf Landau's func and Stirling's approx
-    return G
 
 
 def RubikGroup(n):

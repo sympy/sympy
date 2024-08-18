@@ -4,13 +4,13 @@ Number theory module (primes, etc)
 
 from .generate import nextprime, prevprime, prime, primepi, primerange, \
     randprime, Sieve, sieve, primorial, cycle_length, composite, compositepi
-from .primetest import isprime, is_gaussian_prime
+from .primetest import isprime, is_gaussian_prime, is_mersenne_prime
 from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
     multiplicity_in_factorial, perfect_power, pollard_pm1, pollard_rho, \
-    primefactors, totient, trailing, \
+    primefactors, totient, \
     divisor_count, proper_divisor_count, divisor_sigma, factorrat, \
     reduced_totient, primenu, primeomega, mersenne_prime_exponent, \
-    is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable, \
+    is_perfect, is_abundant, is_deficient, is_amicable, is_carmichael, \
     abundance, dra, drm
 
 from .partitions_ import npartitions
@@ -31,15 +31,15 @@ __all__ = [
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
 
-    'isprime', 'is_gaussian_prime',
+    'isprime', 'is_gaussian_prime', 'is_mersenne_prime',
 
 
     'divisors', 'proper_divisors', 'factorint', 'multiplicity', 'perfect_power',
-    'pollard_pm1', 'pollard_rho', 'primefactors', 'totient', 'trailing',
+    'pollard_pm1', 'pollard_rho', 'primefactors', 'totient',
     'divisor_count', 'proper_divisor_count', 'divisor_sigma', 'factorrat',
     'reduced_totient', 'primenu', 'primeomega', 'mersenne_prime_exponent',
-    'is_perfect', 'is_mersenne_prime', 'is_abundant', 'is_deficient', 'is_amicable',
-    'abundance', 'dra', 'drm', 'multiplicity_in_factorial',
+    'is_perfect', 'is_abundant', 'is_deficient', 'is_amicable',
+    'is_carmichael', 'abundance', 'dra', 'drm', 'multiplicity_in_factorial',
 
     'npartitions',
 

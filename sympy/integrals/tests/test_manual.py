@@ -8,7 +8,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
@@ -155,7 +155,8 @@ def test_manualintegrate_inversetrig():
                   ((log(x - sqrt(-ra)/2) - log(x + sqrt(-ra)/2))/(4*sqrt(-ra)), True))
     assert manualintegrate(1/(4 + 4*x**2), x) == atan(x) / 4
 
-    assert manualintegrate(1/(a + b*x**2), x) == atan(x/sqrt(a/b))/(b*sqrt(a/b))
+    assert manualintegrate(1/(a + b*x**2), x) == Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), Ne(a, 0)),
+                                                           (-1/(b*x), True))
 
     # asin
     assert manualintegrate(1/sqrt(1-x**2), x) == asin(x)
@@ -464,7 +465,8 @@ def test_issue_10847_slow():
 @slow
 def test_issue_10847():
 
-    assert manualintegrate(x**2 / (x**2 - c), x) == c*atan(x/sqrt(-c))/sqrt(-c) + x
+    assert manualintegrate(x**2 / (x**2 - c), x) == \
+        c*Piecewise((atan(x/sqrt(-c))/sqrt(-c), Ne(c, 0)), (-1/x, True)) + x
 
     rc = Symbol('c', real=True)
     assert manualintegrate(x**2 / (x**2 - rc), x) == \
@@ -472,7 +474,8 @@ def test_issue_10847():
                      ((log(-sqrt(rc) + x) - log(sqrt(rc) + x))/(2*sqrt(rc)), True)) + x
 
     assert manualintegrate(sqrt(x - y) * log(z / x), x) == \
-        4*y**Rational(3, 2)*atan(sqrt(x - y)/sqrt(y))/3 - 4*y*sqrt(x - y)/3 +\
+        4*y**2*Piecewise((atan(sqrt(x - y)/sqrt(y))/sqrt(y), Ne(y, 0)),
+                         (-1/sqrt(x - y), True))/3 - 4*y*sqrt(x - y)/3 + \
         2*(x - y)**Rational(3, 2)*log(z/x)/3 + 4*(x - y)**Rational(3, 2)/9
     ry = Symbol('y', real=True)
     rz = Symbol('z', real=True)
@@ -483,8 +486,17 @@ def test_issue_10847():
                          + 4*(x - ry)**Rational(3, 2)/9
 
     assert manualintegrate(sqrt(x) * log(x), x) == 2*x**Rational(3, 2)*log(x)/3 - 4*x**Rational(3, 2)/9
-    assert manualintegrate(sqrt(a*x + b) / x, x) == \
-        Piecewise((2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b), Ne(a, 0)), (sqrt(b)*log(x), True))
+
+    result = manualintegrate(sqrt(a*x + b) / x, x)
+    assert result == Piecewise((-2*b*Piecewise(
+        (-atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b), Ne(b, 0)),
+        (1/sqrt(a*x + b), True)) + 2*sqrt(a*x + b), Ne(a, 0)),
+        (sqrt(b)*log(x), True))
+    assert piecewise_fold(result) == Piecewise(
+        (2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b), Ne(a, 0) & Ne(b, 0)),
+        (-2*b/sqrt(a*x + b) + 2*sqrt(a*x + b), Ne(a, 0)),
+        (sqrt(b)*log(x), True))
+
     ra = Symbol('a', real=True)
     rb = Symbol('b', real=True)
     assert manualintegrate(sqrt(ra*x + rb) / x, x) == \
@@ -547,7 +559,7 @@ def test_issue_9858():
     assert not res.has(Integral)
     assert res.diff(x) == exp(10*x)*sin(exp(x))
     # an example with many similar integrations by parts
-    assert manualintegrate(sum([x*exp(k*x) for k in range(1, 8)]), x) == (
+    assert manualintegrate(sum(x*exp(k*x) for k in range(1, 8)), x) == (
         x*exp(7*x)/7 + x*exp(6*x)/6 + x*exp(5*x)/5 + x*exp(4*x)/4 +
         x*exp(3*x)/3 + x*exp(2*x)/2 + x*exp(x) - exp(7*x)/49 -exp(6*x)/36 -
         exp(5*x)/25 - exp(4*x)/16 - exp(3*x)/9 - exp(2*x)/4 - exp(x))
@@ -599,6 +611,20 @@ def test_issue_23566():
     i = Integral(1/sqrt(x**2 - 1), (x, -2, -1)).doit(manual=True)
     assert i == -log(4 - 2*sqrt(3)) + log(2)
     assert str(i.n()) == '1.31695789692482'
+
+
+def test_issue_25093():
+    ap = Symbol('ap', positive=True)
+    an = Symbol('an', negative=True)
+    assert manualintegrate(exp(a*x**2 + b), x) == sqrt(pi)*exp(b)*erfi(sqrt(a)*x)/(2*sqrt(a))
+    assert manualintegrate(exp(ap*x**2 + b), x) == sqrt(pi)*exp(b)*erfi(sqrt(ap)*x)/(2*sqrt(ap))
+    assert manualintegrate(exp(an*x**2 + b), x) == -sqrt(pi)*exp(b)*erf(an*x/sqrt(-an))/(2*sqrt(-an))
+    assert manualintegrate(sin(a*x**2 + b), x) == (
+        sqrt(2)*sqrt(pi)*(sin(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi))
+        + cos(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)))
+    assert manualintegrate(cos(a*x**2 + b), x) == (
+        sqrt(2)*sqrt(pi)*(-sin(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi))
+        + cos(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)))
 
 
 def test_nested_pow():

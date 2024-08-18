@@ -938,7 +938,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     n = A.rows
 
     # constants = numbered_symbols(prefix='C', cls=Dummy, start=const_idx+1)
-    Cvect = Matrix(list(Dummy() for _ in range(n)))
+    Cvect = Matrix([Dummy() for _ in range(n)])
 
     if b is None and any(type == typ for typ in ["type2", "type4", "type6"]):
         b = zeros(n, 1)
@@ -1746,7 +1746,7 @@ def _weak_component_solver(wcc, t):
 
     sol = []
 
-    for j, scc in enumerate(wcc):
+    for scc in wcc:
         eqs = scc
         funcs = _get_funcs_from_canon(eqs)
 
@@ -1830,20 +1830,20 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
         A1 = match.get("A1", None)
         A0 = match.get("A0", None)
 
-    sys_order = {func: 2 for func in funcs}
+    sys_order = dict.fromkeys(funcs, 2)
 
     if type == "type1":
         if b is None:
             b = zeros(len(eqs))
         eqs = _second_order_subs_type1(A1, b, funcs, t)
-        sys_order = {func: 1 for func in funcs}
+        sys_order = dict.fromkeys(funcs, 1)
 
     if type == "type2":
         if t_ is None:
             t_ = Symbol("{}_".format(t))
         t = t_
         eqs, funcs = _second_order_subs_type2(A0, funcs, t_)
-        sys_order = {func: 2 for func in funcs}
+        sys_order = dict.fromkeys(funcs, 2)
 
     return _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 
@@ -1882,7 +1882,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
         t_ = Symbol('{}_'.format(t))
         new_funcs = [Function(Dummy('{}_'.format(f.func.__name__)))(t_) for f in funcs]
         max_order = max(sys_order[func] for func in funcs)
-        subs_dict = {func: new_func for func, new_func in zip(funcs, new_funcs)}
+        subs_dict = dict(zip(funcs, new_funcs))
         subs_dict[t] = exp(t_)
 
         free_function = Function(Dummy())

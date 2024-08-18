@@ -20,7 +20,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
     xsym, pretty_symbol, pretty_atom, pretty_use_unicode, greek_unicode, U, \
-    pretty_try_use_unicode,  annotated
+    pretty_try_use_unicode, annotated, is_subscriptable_in_unicode, center_pad,  root as nth_root
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -233,14 +233,14 @@ class PrettyPrinter(Printer):
             arg = e.args[0]
             pform = self._print(arg)
             if isinstance(arg, Equivalent):
-                return self._print_Equivalent(arg, altchar="\N{LEFT RIGHT DOUBLE ARROW WITH STROKE}")
+                return self._print_Equivalent(arg, altchar=pretty_atom('NotEquiv'))
             if isinstance(arg, Implies):
-                return self._print_Implies(arg, altchar="\N{RIGHTWARDS ARROW WITH STROKE}")
+                return self._print_Implies(arg, altchar=pretty_atom('NotArrow'))
 
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
 
-            return prettyForm(*pform.left("\N{NOT SIGN}"))
+            return prettyForm(*pform.left(pretty_atom('Not')))
         else:
             return self._print_Function(e)
 
@@ -267,43 +267,43 @@ class PrettyPrinter(Printer):
 
     def _print_And(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, "\N{LOGICAL AND}")
+            return self.__print_Boolean(e, pretty_atom('And'))
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Or(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, "\N{LOGICAL OR}")
+            return self.__print_Boolean(e, pretty_atom('Or'))
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Xor(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, "\N{XOR}")
+            return self.__print_Boolean(e, pretty_atom("Xor"))
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Nand(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, "\N{NAND}")
+            return self.__print_Boolean(e, pretty_atom('Nand'))
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Nor(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, "\N{NOR}")
+            return self.__print_Boolean(e, pretty_atom('Nor'))
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Implies(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, altchar or "\N{RIGHTWARDS ARROW}", sort=False)
+            return self.__print_Boolean(e, altchar or pretty_atom('Arrow'), sort=False)
         else:
             return self._print_Function(e)
 
     def _print_Equivalent(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, altchar or "\N{LEFT RIGHT DOUBLE ARROW}")
+            return self.__print_Boolean(e, altchar or pretty_atom('Equiv'))
         else:
             return self._print_Function(e, sort=True)
 
@@ -511,7 +511,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             # use unicode corners
             horizontal_chr = xobj('-', 1)
-            corner_chr = '\N{BOX DRAWINGS LIGHT DOWN AND HORIZONTAL}'
+            corner_chr = xobj('UpTack', 1)
 
         func_height = pretty_func.height()
 
@@ -673,7 +673,7 @@ class PrettyPrinter(Printer):
 
         LimArg = self._print(z)
         if self._use_unicode:
-            LimArg = prettyForm(*LimArg.right('\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{RIGHTWARDS ARROW}'))
+            LimArg = prettyForm(*LimArg.right(f"{xobj('-', 1)}{pretty_atom('Arrow')}"))
         else:
             LimArg = prettyForm(*LimArg.right('->'))
         LimArg = prettyForm(*LimArg.right(self._print(z0)))
@@ -682,7 +682,7 @@ class PrettyPrinter(Printer):
             dir = ""
         else:
             if self._use_unicode:
-                dir = '\N{SUPERSCRIPT PLUS SIGN}' if str(dir) == "+" else '\N{SUPERSCRIPT MINUS}'
+                dir = pretty_atom('SuperscriptPlus') if str(dir) == "+" else pretty_atom('SuperscriptMinus')
 
         LimArg = prettyForm(*LimArg.right(self._print(dir)))
 
@@ -727,12 +727,10 @@ class PrettyPrinter(Printer):
                 # hcenter it, +0.5 to the right                        2
                 # ( it's better to align formula starts for say 0 and r )
                 # XXX this is not good in all cases -- maybe introduce vbaseline?
-                wdelta = maxw[j] - s.width()
-                wleft = wdelta // 2
-                wright = wdelta - wleft
+                left, right = center_pad(s.width(), maxw[j])
 
-                s = prettyForm(*s.right(' '*wright))
-                s = prettyForm(*s.left(' '*wleft))
+                s = prettyForm(*s.right(right))
+                s = prettyForm(*s.left(left))
 
                 # we don't need vcenter cells -- this is automatically done in
                 # a pretty way because when their baselines are taking into
@@ -866,7 +864,7 @@ class PrettyPrinter(Printer):
         mat = expr.arg
         pform = self._print(mat)
         if self._use_unicode:
-            dag = prettyForm('\N{DAGGER}')
+            dag = prettyForm(pretty_atom('Dagger'))
         else:
             dag = prettyForm('+')
         from sympy.matrices import MatrixSymbol, BlockMatrix
@@ -914,19 +912,19 @@ class PrettyPrinter(Printer):
 
     def _print_Identity(self, expr):
         if self._use_unicode:
-            return prettyForm('\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL I}')
+            return prettyForm(pretty_atom('IdentityMatrix'))
         else:
             return prettyForm('I')
 
     def _print_ZeroMatrix(self, expr):
         if self._use_unicode:
-            return prettyForm('\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ZERO}')
+            return prettyForm(pretty_atom('ZeroMatrix'))
         else:
             return prettyForm('0')
 
     def _print_OneMatrix(self, expr):
         if self._use_unicode:
-            return prettyForm('\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ONE}')
+            return prettyForm(pretty_atom("OneMatrix"))
         else:
             return prettyForm('1')
 
@@ -976,7 +974,7 @@ class PrettyPrinter(Printer):
         from sympy.matrices.expressions.matadd import MatAdd
         from sympy.matrices.expressions.matmul import MatMul
         if self._use_unicode:
-            delim = ' \N{N-ARY CIRCLED TIMES OPERATOR} '
+            delim = f" {pretty_atom('TensorProduct')} "
         else:
             delim = ' x '
         return self._print_seq(expr.args, None, None, delim,
@@ -1005,7 +1003,7 @@ class PrettyPrinter(Printer):
         from sympy.physics.control.lti import MIMOParallel
         args = list(expr.args)
         pretty_args = []
-        for i, a in enumerate(reversed(args)):
+        for a in reversed(args):
             if (isinstance(a, MIMOParallel) and len(expr.args) > 1):
                 expression = self._print(a)
                 expression.baseline = expression.height()//2
@@ -1107,6 +1105,15 @@ class PrettyPrinter(Printer):
         mat = prettyForm(*mat.right(subscript))
         return mat
 
+    def _print_StateSpace(self, expr):
+        from sympy.matrices.expressions.blockmatrix import BlockMatrix
+        A = expr._A
+        B = expr._B
+        C = expr._C
+        D = expr._D
+        mat = BlockMatrix([[A, B], [C, D]])
+        return self._print(mat.blocks)
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 
@@ -1159,28 +1166,28 @@ class PrettyPrinter(Printer):
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-                if '\N{RIGHT PARENTHESIS EXTENSION}' in tempstr:   # If scalar is a fraction
+                if xobj(')_ext', 1) in tempstr:   # If scalar is a fraction
                     for paren in range(len(tempstr)):
                         flag[i] = 1
-                        if tempstr[paren] == '\N{RIGHT PARENTHESIS EXTENSION}' and tempstr[paren + 1] == '\n':
+                        if tempstr[paren] == xobj(')_ext', 1) and tempstr[paren + 1] == '\n':
                             # We want to place the vector string after all the right parentheses, because
                             # otherwise, the vector will be in the middle of the string
-                            tempstr = tempstr[:paren] + '\N{RIGHT PARENTHESIS EXTENSION}'\
+                            tempstr = tempstr[:paren] + xobj(')_ext', 1)\
                                          + ' '  + vectstrs[i] + tempstr[paren + 1:]
                             break
-                elif '\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
+                elif xobj(')_lower_hook', 1) in tempstr:
                     # We want to place the vector string after all the right parentheses, because
                     # otherwise, the vector will be in the middle of the string. For this reason,
                     # we insert the vector string at the rightmost index.
-                    index = tempstr.rfind('\N{RIGHT PARENTHESIS LOWER HOOK}')
+                    index = tempstr.rfind(xobj(')_lower_hook', 1))
                     if index != -1: # then this character was found in this string
                         flag[i] = 1
-                        tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS LOWER HOOK}'\
+                        tempstr = tempstr[:index] + xobj(')_lower_hook', 1)\
                                      + ' '  + vectstrs[i] + tempstr[index + 1:]
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]
-        n_newlines = max([len(x) for x in o1])  # Width of part in its pretty form
+        n_newlines = max(len(x) for x in o1)  # Width of part in its pretty form
 
         if 1 in flag:                           # If there was a fractional scalar
             for i, parts in enumerate(o1):
@@ -1250,7 +1257,7 @@ class PrettyPrinter(Printer):
         last_valence = None
         prev_map = None
 
-        for i, index in enumerate(indices):
+        for index in indices:
             indpic = self._print(index.args[0])
             if ((index in index_map) or prev_map) and last_valence == index.is_up:
                 if index.is_up:
@@ -1362,7 +1369,7 @@ class PrettyPrinter(Printer):
         len_args = len(pexpr.args)
 
         # max widths
-        maxw = [max([P[i, j].width() for i in range(len_args)])
+        maxw = [max(P[i, j].width() for i in range(len_args))
                 for j in range(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.
@@ -1663,6 +1670,12 @@ class PrettyPrinter(Printer):
         # GeometryEntity is based on Tuple but should not print like a Tuple
         return self.emptyPrinter(expr)
 
+    def _print_polylog(self, e):
+        subscript = self._print(e.args[0])
+        if self._use_unicode and is_subscriptable_in_unicode(subscript):
+            return self._print_Function(Function('Li_%s' % subscript)(e.args[1]))
+        return self._print_Function(e)
+
     def _print_lerchphi(self, e):
         func_name = greek_unicode['Phi'] if self._use_unicode else 'lerchphi'
         return self._print_Function(e, func_name=func_name)
@@ -1717,7 +1730,7 @@ class PrettyPrinter(Printer):
         expr = e.expr
         sig = e.signature
         if self._use_unicode:
-            arrow = " \N{RIGHTWARDS ARROW FROM BAR} "
+            arrow = f" {pretty_atom('ArrowFromBar')} "
         else:
             arrow = " -> "
         if len(sig) == 1 and sig[0].is_symbol:
@@ -1736,7 +1749,7 @@ class PrettyPrinter(Printer):
             elif len(expr.variables):
                 pform = prettyForm(*pform.right(self._print(expr.variables[0])))
             if self._use_unicode:
-                pform = prettyForm(*pform.right(" \N{RIGHTWARDS ARROW} "))
+                pform = prettyForm(*pform.right(f" {pretty_atom('Arrow')} "))
             else:
                 pform = prettyForm(*pform.right(" -> "))
             if len(expr.point) > 1:
@@ -1806,8 +1819,9 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_expint(self, e):
-        if e.args[0].is_Integer and self._use_unicode:
-            return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
+        subscript = self._print(e.args[0])
+        if self._use_unicode and is_subscriptable_in_unicode(subscript):
+            return self._print_Function(Function('E_%s' % subscript)(e.args[1]))
         return self._print_Function(e)
 
     def _print_Chi(self, e):
@@ -2028,7 +2042,7 @@ class PrettyPrinter(Printer):
             and root == 2 and bpretty.height() == 1
             and (bpretty.width() == 1
                  or (base.is_Integer and base.is_nonnegative))):
-            return prettyForm(*bpretty.left('\N{SQUARE ROOT}'))
+            return prettyForm(*bpretty.left(nth_root[2]))
 
         # Construct root sign, start with the \/ shape
         _zZ = xobj('/', 1)
@@ -2123,7 +2137,7 @@ class PrettyPrinter(Printer):
         if len(p.sets) >= 1 and not has_variety(p.sets):
             return self._print(p.sets[0]) ** self._print(len(p.sets))
         else:
-            prod_char = "\N{MULTIPLICATION SIGN}" if self._use_unicode else 'x'
+            prod_char = pretty_atom('Multiplication') if self._use_unicode else 'x'
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,
                                    parenthesize=lambda set: set.is_Union or
                                    set.is_Intersection or set.is_ProductSet)
@@ -2135,7 +2149,7 @@ class PrettyPrinter(Printer):
     def _print_Range(self, s):
 
         if self._use_unicode:
-            dots = "\N{HORIZONTAL ELLIPSIS}"
+            dots = pretty_atom('Dots')
         else:
             dots = '...'
 
@@ -2214,7 +2228,7 @@ class PrettyPrinter(Printer):
 
     def _print_ImageSet(self, ts):
         if self._use_unicode:
-            inn = "\N{SMALL ELEMENT OF}"
+            inn = pretty_atom("SmallElementOf")
         else:
             inn = 'in'
         fun = ts.lamda
@@ -2243,10 +2257,10 @@ class PrettyPrinter(Printer):
 
     def _print_ConditionSet(self, ts):
         if self._use_unicode:
-            inn = "\N{SMALL ELEMENT OF}"
+            inn = pretty_atom('SmallElementOf')
             # using _and because and is a keyword and it is bad practice to
             # overwrite them
-            _and = "\N{LOGICAL AND}"
+            _and = pretty_atom('And')
         else:
             inn = 'in'
             _and = 'and'
@@ -2274,7 +2288,7 @@ class PrettyPrinter(Printer):
 
     def _print_ComplexRegion(self, ts):
         if self._use_unicode:
-            inn = "\N{SMALL ELEMENT OF}"
+            inn = pretty_atom('SmallElementOf')
         else:
             inn = 'in'
         variables = self._print_seq(ts.variables)
@@ -2289,7 +2303,7 @@ class PrettyPrinter(Printer):
     def _print_Contains(self, e):
         var, set = e.args
         if self._use_unicode:
-            el = " \N{ELEMENT OF} "
+            el = f" {pretty_atom('ElementOf')} "
             return prettyForm(*stringPict.next(self._print(var),
                                                el, self._print(set)), binding=8)
         else:
@@ -2299,7 +2313,7 @@ class PrettyPrinter(Printer):
         if s.an.formula is S.Zero and s.bn.formula is S.Zero:
             return self._print(s.a0)
         if self._use_unicode:
-            dots = "\N{HORIZONTAL ELLIPSIS}"
+            dots = pretty_atom('Dots')
         else:
             dots = '...'
         return self._print_Add(s.truncate()) + self._print(dots)
@@ -2314,7 +2328,7 @@ class PrettyPrinter(Printer):
 
     def _print_SeqFormula(self, s):
         if self._use_unicode:
-            dots = "\N{HORIZONTAL ELLIPSIS}"
+            dots = pretty_atom('Dots')
         else:
             dots = '...'
 
@@ -2339,41 +2353,20 @@ class PrettyPrinter(Printer):
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False, ifascii_nougly=True):
-        try:
-            pforms = []
-            for item in seq:
-                pform = self._print(item)
-                if parenthesize(item):
-                    pform = prettyForm(*pform.parens())
-                if pforms:
-                    pforms.append(delimiter)
-                pforms.append(pform)
 
-            if not pforms:
-                s = stringPict('')
-            else:
-                s = prettyForm(*stringPict.next(*pforms))
+        pforms = []
+        for item in seq:
+            pform = self._print(item)
+            if parenthesize(item):
+                pform = prettyForm(*pform.parens())
+            if pforms:
+                pforms.append(delimiter)
+            pforms.append(pform)
 
-                # XXX: Under the tests from #15686 the above raises:
-                # AttributeError: 'Fake' object has no attribute 'baseline'
-                # This is caught below but that is not the right way to
-                # fix it.
-
-        except AttributeError:
-            s = None
-            for item in seq:
-                pform = self.doprint(item)
-                if parenthesize(item):
-                    pform = prettyForm(*pform.parens())
-                if s is None:
-                    # first element
-                    s = pform
-                else :
-                    s = prettyForm(*stringPict.next(s, delimiter))
-                    s = prettyForm(*stringPict.next(s, pform))
-
-            if s is None:
-                s = stringPict('')
+        if not pforms:
+            s = stringPict('')
+        else:
+            s = prettyForm(*stringPict.next(*pforms))
 
         s = prettyForm(*s.parens(left, right, ifascii_nougly=ifascii_nougly))
         return s
@@ -2442,7 +2435,7 @@ class PrettyPrinter(Printer):
 
     def _print_UniversalSet(self, s):
         if self._use_unicode:
-            return prettyForm("\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL U}")
+            return prettyForm(pretty_atom('Universe'))
         else:
             return prettyForm('UniversalSet')
 
@@ -2486,7 +2479,7 @@ class PrettyPrinter(Printer):
 
     def _print_FiniteField(self, expr):
         if self._use_unicode:
-            form = '\N{DOUBLE-STRUCK CAPITAL Z}_%d'
+            form = f"{pretty_atom('Integers')}_%d"
         else:
             form = 'GF(%d)'
 
@@ -2494,19 +2487,19 @@ class PrettyPrinter(Printer):
 
     def _print_IntegerRing(self, expr):
         if self._use_unicode:
-            return prettyForm('\N{DOUBLE-STRUCK CAPITAL Z}')
+            return prettyForm(pretty_atom('Integers'))
         else:
             return prettyForm('ZZ')
 
     def _print_RationalField(self, expr):
         if self._use_unicode:
-            return prettyForm('\N{DOUBLE-STRUCK CAPITAL Q}')
+            return prettyForm(pretty_atom('Rationals'))
         else:
             return prettyForm('QQ')
 
     def _print_RealField(self, domain):
         if self._use_unicode:
-            prefix = '\N{DOUBLE-STRUCK CAPITAL R}'
+            prefix = pretty_atom("Reals")
         else:
             prefix = 'RR'
 
@@ -2517,7 +2510,7 @@ class PrettyPrinter(Printer):
 
     def _print_ComplexField(self, domain):
         if self._use_unicode:
-            prefix = '\N{DOUBLE-STRUCK CAPITAL C}'
+            prefix = pretty_atom('Complexes')
         else:
             prefix = 'CC'
 
@@ -2637,7 +2630,7 @@ class PrettyPrinter(Printer):
 
     def _print_stieltjes(self, e):
         if self._use_unicode:
-            return self._print_number_function(e, '\N{GREEK SMALL LETTER GAMMA}')
+            return self._print_number_function(e, greek_unicode['gamma'])
         else:
             return self._print_number_function(e, "stieltjes")
 
@@ -2751,19 +2744,21 @@ class PrettyPrinter(Printer):
         return self._print_seq(m, '[', ']')
 
     def _print_SubModule(self, M):
-        return self._print_seq(M.gens, '<', '>')
+        gens = [[M.ring.to_sympy(g) for g in gen] for gen in M.gens]
+        return self._print_seq(gens, '<', '>')
 
     def _print_FreeModule(self, M):
         return self._print(M.ring)**self._print(M.rank)
 
     def _print_ModuleImplementedIdeal(self, M):
-        return self._print_seq([x for [x] in M._module.gens], '<', '>')
+        sym = M.ring.to_sympy
+        return self._print_seq([sym(x) for [x] in M._module.gens], '<', '>')
 
     def _print_QuotientRing(self, R):
         return self._print(R.ring) / self._print(R.base_ideal)
 
     def _print_QuotientRingElement(self, R):
-        return self._print(R.data) + self._print(R.ring.base_ideal)
+        return self._print(R.ring.to_sympy(R)) + self._print(R.ring.base_ideal)
 
     def _print_QuotientModuleElement(self, m):
         return self._print(m.data) + self._print(m.module.killed_module)
@@ -2797,7 +2792,7 @@ class PrettyPrinter(Printer):
 
     def _print_Differential(self, diff):
         if self._use_unicode:
-            d = '\N{DOUBLE-STRUCK ITALIC SMALL D}'
+            d = pretty_atom('Differential')
         else:
             d = 'd'
         field = diff._form_field
@@ -2836,7 +2831,10 @@ class PrettyPrinter(Printer):
 
     def _print_Quantity(self, e):
         if e.name.name == 'degree':
-            pform = self._print("\N{DEGREE SIGN}")
+            if self._use_unicode:
+                pform = self._print(pretty_atom('Degree'))
+            else:
+                pform = self._print(chr(176))
             return pform
         else:
             return self.emptyPrinter(e)

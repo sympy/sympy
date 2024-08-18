@@ -1,6 +1,7 @@
 """Tests for dense recursive polynomials' basic tools. """
 
 from sympy.polys.densebasic import (
+    ninf,
     dup_LC, dmp_LC,
     dup_TC, dmp_TC,
     dmp_ground_LC, dmp_ground_TC,
@@ -95,24 +96,25 @@ def test_dmp_true_LT():
 
 
 def test_dup_degree():
-    assert dup_degree([]) is -oo
+    assert ninf == float('-inf')
+    assert dup_degree([]) is ninf
     assert dup_degree([1]) == 0
     assert dup_degree([1, 0]) == 1
     assert dup_degree([1, 0, 0, 0, 1]) == 4
 
 
 def test_dmp_degree():
-    assert dmp_degree([[]], 1) is -oo
-    assert dmp_degree([[[]]], 2) is -oo
+    assert dmp_degree([[]], 1) is ninf
+    assert dmp_degree([[[]]], 2) is ninf
 
     assert dmp_degree([[1]], 1) == 0
     assert dmp_degree([[2], [1]], 1) == 1
 
 
 def test_dmp_degree_in():
-    assert dmp_degree_in([[[]]], 0, 2) is -oo
-    assert dmp_degree_in([[[]]], 1, 2) is -oo
-    assert dmp_degree_in([[[]]], 2, 2) is -oo
+    assert dmp_degree_in([[[]]], 0, 2) is ninf
+    assert dmp_degree_in([[[]]], 1, 2) is ninf
+    assert dmp_degree_in([[[]]], 2, 2) is ninf
 
     assert dmp_degree_in([[[1]]], 0, 2) == 0
     assert dmp_degree_in([[[1]]], 1, 2) == 0
@@ -700,6 +702,10 @@ def test_dup_slice():
     assert dup_slice(f, 1, 4, ZZ) == [1, 2, 3, 0]
 
     assert dup_slice([1, 2], 0, 3, ZZ) == [1, 2]
+
+    g = [1, 0, 0, 2]
+
+    assert dup_slice(g, 0, 3, ZZ) == [2]
 
 
 def test_dup_random():

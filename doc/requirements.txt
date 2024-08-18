@@ -14,6 +14,6 @@ sphinxcontrib-applehelp
 sphinxcontrib-devhelp
 sphinxcontrib-htmlhelp
 sphinxcontrib-jsmath
+sphinxcontrib-jquery
 sphinxcontrib-qthelp
 sphinxcontrib-serializinghtml
-sphinx-reredirects

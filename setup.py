@@ -6,12 +6,12 @@ python mechanism for installing packages.
 For the easiest installation just type the command (you'll probably need
 root privileges for that):
 
-    python setup.py install
+    pip install .
 
 This will install the library in the default location. For instructions on
-how to customize the install procedure read the output of:
+how to customize the installation procedure read the output of:
 
-    python setup.py --help install
+    pip install --help
 
 In addition, there are some other commands:
 
@@ -28,12 +28,11 @@ sympy@googlegroups.com and ask for help.
 import sys
 import os
 import subprocess
+from pathlib import Path
 
 from setuptools import setup, Command
 from setuptools.command.sdist import sdist
 
-
-min_mpmath_version = '0.19'
 
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
@@ -99,7 +98,9 @@ modules = [
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
+    'sympy.parsing.latex.lark',
     'sympy.physics',
+    'sympy.physics.biomechanics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.control',
     'sympy.physics.hep',
@@ -111,6 +112,9 @@ modules = [
     'sympy.physics.units.systems',
     'sympy.physics.vector',
     'sympy.plotting',
+    'sympy.plotting.backends',
+    'sympy.plotting.backends.matplotlibbackend',
+    'sympy.plotting.backends.textbackend',
     'sympy.plotting.intervalmath',
     'sympy.plotting.pygletplot',
     'sympy.polys',
@@ -143,6 +147,7 @@ modules = [
     'sympy.utilities',
     'sympy.utilities._compilation',
     'sympy.utilities.mathml',
+    'sympy.utilities.mathml.data',
     'sympy.vector',
 ]
 
@@ -254,6 +259,7 @@ tests = [
     'sympy.multipledispatch.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.biomechanics.tests',
     'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.control.tests',
     'sympy.physics.hep.tests',
@@ -304,6 +310,8 @@ if __name__ == '__main__':
     setup(name='sympy',
           version=__version__,
           description='Computer algebra system (CAS) in Python',
+          long_description=(Path(__file__).parent / 'README.md').read_text("UTF-8"),
+          long_description_content_type='text/markdown',
           author='SymPy development team',
           author_email='sympy@googlegroups.com',
           license='BSD',
@@ -312,11 +320,15 @@ if __name__ == '__main__':
           project_urls={
               'Source': 'https://github.com/sympy/sympy',
           },
+          # Set upper bound when making the release branch.
+          install_requires=[
+              'mpmath >= 1.1.0',
+          ],
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
           package_data={
-              'sympy.utilities.mathml': ['data/*.xsl'],
+              'sympy.utilities.mathml.data': ['*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
               'sympy.parsing.autolev': [
                   '*.g4', 'test-examples/*.al', 'test-examples/*.py',
@@ -324,7 +336,7 @@ if __name__ == '__main__':
                   'test-examples/pydy-example-repo/*.py',
                   'test-examples/README.txt',
                   ],
-              'sympy.parsing.latex': ['*.txt', '*.g4'],
+              'sympy.parsing.latex': ['*.txt', '*.g4', 'lark/grammar/*.lark'],
               'sympy.plotting.tests': ['test_region_*.png'],
               'sympy': ['py.typed']
               },
@@ -350,8 +362,8 @@ if __name__ == '__main__':
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
             ],
-          install_requires=[
-            'mpmath>=%s' % min_mpmath_version,
-            ],
+          extras_require={
+              "dev": ["pytest>=7.1.0", "hypothesis>=6.70.0"],
+            },
           **extra_kwargs
           )

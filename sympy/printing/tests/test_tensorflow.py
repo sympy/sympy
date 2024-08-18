@@ -1,6 +1,7 @@
 import random
 from sympy.core.function import Derivative
 from sympy.core.symbol import symbols
+from sympy import Piecewise
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
@@ -9,6 +10,7 @@ from sympy.functions import \
     Abs, ceiling, exp, floor, sign, sin, asin, sqrt, cos, \
     acos, tan, atan, atan2, cosh, acosh, sinh, asinh, tanh, atanh, \
     re, im, arg, erf, loggamma, log
+from sympy.codegen.cfunctions import isnan, isinf
 from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
@@ -35,7 +37,7 @@ Q = MatrixSymbol("Q", 3, 3)
 x, y, z, t = symbols("x y z t")
 
 if tf is not None:
-    llo = [[j for j in range(i, i+3)] for i in range(0, 9, 3)]
+    llo = [list(range(i, i+3)) for i in range(0, 9, 3)]
     m3x3 = tf.constant(llo)
     m3x3sympy = Matrix(llo)
 
@@ -54,7 +56,7 @@ def _compare_tensorflow_matrix(variables, expr, use_float=False):
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*random_variables))
 
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = expr.subs(dict(zip(variables, random_matrices)))
     e = e.doit()
     if e.is_Matrix:
         if not isinstance(e, MatrixBase):
@@ -86,7 +88,7 @@ def _compare_tensorflow_matrix_inverse(variables, expr, use_float=False):
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*random_variables))
 
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = expr.subs(dict(zip(variables, random_matrices)))
     e = e.doit()
     if e.is_Matrix:
         if not isinstance(e, MatrixBase):
@@ -114,7 +116,7 @@ def _compare_tensorflow_matrix_scalar(variables, expr):
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*random_variables))
 
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = expr.subs(dict(zip(variables, random_matrices)))
     e = e.doit()
     assert abs(r-e) < 10**-6
 
@@ -131,7 +133,7 @@ def _compare_tensorflow_scalar(
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*tf_rvs))
 
-    e = expr.subs({k: v for k, v in zip(variables, rvs)}).evalf().doit()
+    e = expr.subs(dict(zip(variables, rvs))).evalf().doit()
     assert abs(r-e) < 10**-6
 
 
@@ -147,7 +149,7 @@ def _compare_tensorflow_relational(
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*tf_rvs))
 
-    e = expr.subs({k: v for k, v in zip(variables, rvs)}).doit()
+    e = expr.subs(dict(zip(variables, rvs))).doit()
     assert r == e
 
 
@@ -463,3 +465,29 @@ def test_tensorflow_Derivative():
     expr = Derivative(sin(x), x)
     assert tensorflow_code(expr) == \
         "tensorflow.gradients(tensorflow.math.sin(x), x)[0]"
+
+def test_tensorflow_isnan_isinf():
+    if not tf:
+        skip("TensorFlow not installed")
+
+    # Test for isnan
+    x = symbols("x")
+    # Return 0 if x is of nan value, and 1 otherwise
+    expression = Piecewise((0.0, isnan(x)), (1.0, True))
+    printed_code = tensorflow_code(expression)
+    expected_printed_code = "tensorflow.where(tensorflow.math.is_nan(x), 0.0, 1.0)"
+    assert tensorflow_code(expression) == expected_printed_code, f"Incorrect printed result {printed_code}, expected {expected_printed_code}"
+    for _input, _expected in [(float('nan'), 0.0), (float('inf'), 1.0), (float('-inf'), 1.0), (1.0, 1.0)]:
+        _output = lambdify((x), expression, modules="tensorflow")(x=tf.constant([_input]))
+        assert (_output == _expected).numpy().all()
+
+    # Test for isinf
+    x = symbols("x")
+    # Return 0 if x is of nan value, and 1 otherwise
+    expression = Piecewise((0.0, isinf(x)), (1.0, True))
+    printed_code = tensorflow_code(expression)
+    expected_printed_code = "tensorflow.where(tensorflow.math.is_inf(x), 0.0, 1.0)"
+    assert tensorflow_code(expression) == expected_printed_code, f"Incorrect printed result {printed_code}, expected {expected_printed_code}"
+    for _input, _expected in [(float('inf'), 0.0), (float('-inf'), 0.0), (float('nan'), 1.0), (1.0, 1.0)]:
+        _output = lambdify((x), expression, modules="tensorflow")(x=tf.constant([_input]))
+        assert (_output == _expected).numpy().all()

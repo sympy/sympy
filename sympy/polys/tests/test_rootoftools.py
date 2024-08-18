@@ -175,6 +175,12 @@ def test_CRootOf_is_complex():
     assert rootof(x**3 + x + 3, 0).is_complex is True
 
 
+def test_CRootOf_is_algebraic():
+    assert rootof(x**3 + x + 3, 0).is_algebraic is True
+    assert rootof(x**3 + x + 3, 1).is_algebraic is True
+    assert rootof(x**3 + x + 3, 2).is_algebraic is True
+
+
 def test_CRootOf_subs():
     assert rootof(x**3 + x + 1, 0).subs(x, y) == rootof(y**3 + y + 1, 0)
 
@@ -182,7 +188,6 @@ def test_CRootOf_subs():
 def test_CRootOf_diff():
     assert rootof(x**3 + x + 1, 0).diff(x) == 0
     assert rootof(x**3 + x + 1, 0).diff(y) == 0
-
 
 @slow
 def test_CRootOf_evalf():
@@ -276,6 +281,18 @@ def test_CRootOf_evalf():
         assert i == i.func(*i.args)
 
 
+def test_issue_24978():
+    # Irreducible poly with negative leading coeff is normalized
+    # (factor of -1 is extracted), before being stored as CRootOf.poly.
+    f = -x**2 + 2
+    r = CRootOf(f, 0)
+    assert r.poly.as_expr() == x**2 - 2
+    # An action that prompts calculation of an interval puts r.poly in
+    # the cache.
+    r.n()
+    assert r.poly in rootoftools._reals_cache
+
+
 def test_CRootOf_evalf_caching_bug():
     r = rootof(x**5 - 5*x + 12, 1)
     r.n()
@@ -295,6 +312,25 @@ def test_CRootOf_real_roots():
     p = Poly(-3*x**4 - 10*x**3 - 12*x**2 - 6*x - 1, x, domain='ZZ')
     assert CRootOf.real_roots(p) == [S(-1), S(-1), S(-1), S(-1)/3]
 
+    # with real algebraic coefficients
+    assert Poly(x**3 + sqrt(2)*x**2 - 1, x, extension=True).real_roots() == [
+        rootof(x**6 - 2*x**4 - 2*x**3 + 1, 0)
+    ]
+    assert Poly(x**5 + sqrt(2) * x**3 - 1, x, extension=True).real_roots() == [
+        rootof(x**10 - 2*x**6 - 2*x**5 + 1, 0)
+    ]
+    r = rootof(y**5 + y**3 - 1, 0)
+    assert Poly(x**5 + r*x - 1, x, extension=True).real_roots() ==\
+    [
+        rootof(x**25 - 5*x**20 + x**17 + 10*x**15 - 3*x**12 -
+               10*x**10 + 3*x**7 + 6*x**5 - x**2 - 1, 0)
+    ]
+    # roots with multiplicity
+    assert Poly((x-1) * (x-sqrt(2))**2, x, extension=True).real_roots() ==\
+    [
+        S(1), sqrt(2), sqrt(2)
+    ]
+
 
 def test_CRootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
@@ -311,6 +347,26 @@ def test_CRootOf_all_roots():
         rootof(x**2 + x + 1, 1, radicals=False),
         rootof(x**3 - x**2 + 1, 1),
         rootof(x**3 - x**2 + 1, 2),
+    ]
+
+    # with real algebraic coefficients
+    assert Poly(x**3 + sqrt(2)*x**2 - 1, x, extension=True).all_roots() ==\
+    [
+        rootof(x**6 - 2*x**4 - 2*x**3 + 1, 0),
+        rootof(x**6 - 2*x**4 - 2*x**3 + 1, 2),
+        rootof(x**6 - 2*x**4 - 2*x**3 + 1, 3)
+    ]
+    # roots with multiplicity
+    assert Poly((x-1) * (x-sqrt(2))**2 * (x-I) * (x+I), x, extension=True).all_roots() ==\
+    [
+        S(1), sqrt(2), sqrt(2), -I, I
+    ]
+
+    # imaginary algebraic coeffs (gaussian domain)
+    assert Poly(x**2 - I/2, x, extension=True).all_roots() ==\
+    [
+        S(1)/2 + I/2,
+        -S(1)/2 - I/2
     ]
 
 
@@ -521,8 +577,8 @@ def test_issue_8316():
 def test__imag_count():
     from sympy.polys.rootoftools import _imag_count_of_factor
     def imag_count(p):
-        return sum([_imag_count_of_factor(f)*m for f, m in
-        p.factor_list()[1]])
+        return sum(_imag_count_of_factor(f)*m for f, m in
+        p.factor_list()[1])
     assert imag_count(Poly(x**6 + 10*x**2 + 1)) == 2
     assert imag_count(Poly(x**2)) == 0
     assert imag_count(Poly([1]*3 + [-1], x)) == 0

@@ -5,7 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, Lambda, diff)
 from sympy.core import EulerGamma
-from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.numbers import (E, I, Rational, nan, oo, pi, zoo, all_close)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -38,8 +38,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import (raises, slow, skip, ON_CI,
-    warns_deprecated_sympy, warns)
+from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
@@ -438,13 +437,12 @@ def test_issue_18133():
 
 
 def test_issue_21741():
-    a = Float('3999999.9999999995', precision=53)
-    b = Float('2.5000000000000004e-7', precision=53)
-    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x),
-                   Ne(1.0*pi*x*exp(a*I*pi*t*y), 0)),
+    a = 4e6
+    b = 2.5e-7
+    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x), Ne(x, 0)),
                   (z*exp(-a*I*pi*t*y), True))
     fun = E**((-2*I*pi*(z*x+t*y))/(500*10**(-9)))
-    assert integrate(fun, z) == r
+    assert all_close(integrate(fun, z), r)
 
 
 def test_matrices():
@@ -1148,8 +1146,8 @@ def test_issue_3940():
     a, b, c, d = symbols('a:d', positive=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
         -sqrt(pi)*exp(-c**2/4)*erf(I*c/2 - x)/2
-    assert integrate(exp(a*x**2 + b*x + c), x) == \
-        sqrt(pi)*exp(c)*exp(-b**2/(4*a))*erfi(sqrt(a)*x + b/(2*sqrt(a)))/(2*sqrt(a))
+    assert integrate(exp(a*x**2 + b*x + c), x).equals(
+        sqrt(pi)*exp(c - b**2/(4*a))*erfi((2*a*x + b)/(2*sqrt(a)))/(2*sqrt(a)))
 
     from sympy.core.function import expand_mul
     from sympy.abc import k
@@ -1436,8 +1434,6 @@ def test_issue_8945():
 
 @slow
 def test_issue_7130():
-    if ON_CI:
-        skip("Too slow for CI.")
     i, L, a, b = symbols('i L a b')
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
@@ -1662,8 +1658,8 @@ def test_integrate_with_complex_constants():
     x = Symbol('x', real=True)
     m = Symbol('m', real=True)
     t = Symbol('t', real=True)
-    assert integrate(exp(-I*K*x**2+m*x), x) == sqrt(I)*sqrt(pi)*exp(-I*m**2
-                    /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K))
+    assert integrate(exp(-I*K*x**2+m*x), x) == sqrt(pi)*exp(-I*m**2
+                    /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K)*sqrt(-I))
     assert integrate(1/(1 + I*x**2), x) == (-I*(sqrt(-I)*log(x - I*sqrt(-I))/2
             - sqrt(-I)*log(x + I*sqrt(-I))/2))
     assert integrate(exp(-I*x**2), x) == sqrt(pi)*erf(sqrt(I)*x)/(2*sqrt(I))
@@ -1982,7 +1978,9 @@ def test_issue_11254b():
 
 
 def test_issue_11254d():
-    assert integrate((sech(x)**2).rewrite(sinh), x) == 2*tanh(x/2)/(tanh(x/2)**2 + 1)
+    # (sech(x)**2).rewrite(sinh)
+    assert integrate(-1/sinh(x + I*pi/2, evaluate=False)**2, x) == -2/(exp(2*x) + 1)
+    assert integrate(cosh(x)**(-2), x) == 2*tanh(x/2)/(tanh(x/2)**2 + 1)
 
 
 def test_issue_22863():
@@ -2071,3 +2069,73 @@ def test_mul_pow_derivative():
     assert integrate(x*sec(x)**2, x) == x*tan(x) + log(cos(x))
     assert integrate(x**3*Derivative(f(x), (x, 4))) == \
            x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) + 6*x*Derivative(f(x), x) - 6*f(x)
+
+
+def test_issue_20782():
+    fun1 = Piecewise((0, x < 0.0), (1, True))
+    fun2 = -Piecewise((0, x < 1.0), (1, True))
+    fun_sum = fun1 + fun2
+    L = (x, -float('Inf'), 1)
+
+    assert integrate(fun1, L) == 1
+    assert integrate(fun2, L) == 0
+    assert integrate(-fun1, L) == -1
+    assert integrate(-fun2, L) == 0
+    assert integrate(fun_sum, L) == 1.
+    assert integrate(-fun_sum, L) == -1.
+
+
+def test_issue_20781():
+    P = lambda a: Piecewise((0, x < a), (1, x >= a))
+    f = lambda a: P(int(a)) + P(float(a))
+    L = (x, -float('Inf'), x)
+    f1 = integrate(f(1), L)
+    assert f1 == 2*x - Min(1.0, x) - Min(x, Max(1.0, 1, evaluate=False))
+    # XXX is_zero is True for S(0) and Float(0) and this is baked into
+    # the code more deeply than the issue of Float(0) != S(0)
+    assert integrate(f(0), (x, -float('Inf'), x)
+        ) == 2*x - 2*Min(0, x)
+
+
+@slow
+def test_issue_19427():
+    # <https://github.com/sympy/sympy/issues/19427>
+    x = Symbol("x")
+
+    # Have always been okay:
+    assert integrate((x ** 4) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 16
+    assert integrate((-2 * x ** 2) * sqrt(1 - x ** 2), (x, -1, 1)) == -pi / 4
+    assert integrate((1) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 2
+
+    # Sum of the above, used to incorrectly return 0 for a while:
+    assert integrate((x ** 4 - 2 * x ** 2 + 1) * sqrt(1 - x ** 2), (x, -1, 1)) == 5 * pi / 16
+
+
+def test_issue_23942():
+    I1 = Integral(1/sqrt(a*(1 + x)**3 + (1 + x)**2), (x, 0, z))
+    assert I1.series(a, 1, n=1) == Integral(1/sqrt(x**3 + 4*x**2 + 5*x + 2), (x, 0, z)) + O(a - 1, (a, 1))
+    I2 = Integral(1/sqrt(a*(4 - x)**4 + (5 + x)**2), (x, 0, z))
+    assert I2.series(a, 2, n=1) == Integral(1/sqrt(2*x**4 - 32*x**3 + 193*x**2 - 502*x + 537), (x, 0, z)) + O(a - 2, (a, 2))
+
+
+def test_issue_25886():
+    # https://github.com/sympy/sympy/issues/25886
+    f = (1-x)*exp(0.937098661j*x)
+    F_exp = (1.0*(-1.0671234968289*I*y
+             + 1.13875255748434
+             + 1.0671234968289*I)*exp(0.937098661*I*y)
+            - 1.13875255748434*exp(0.937098661*I))
+    F = integrate(f, (x, y, 1.0))
+    assert F.is_same(F_exp, math.isclose)
+
+
+def test_old_issues():
+    # https://github.com/sympy/sympy/issues/5212
+    I1 = integrate(cos(log(x**2))/x)
+    assert I1 == sin(log(x**2))/2
+    # https://github.com/sympy/sympy/issues/5462
+    I2 = integrate(1/(x**2+y**2)**(Rational(3,2)),x)
+    assert I2 == x/(y**3*sqrt(x**2/y**2 + 1))
+    # https://github.com/sympy/sympy/issues/6278
+    I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
+    assert I3 == 2*sqrt(3)*pi/3

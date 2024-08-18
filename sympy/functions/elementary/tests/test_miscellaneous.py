@@ -328,13 +328,13 @@ def test_real_root():
     x = Symbol('x')
     n = Symbol('n')
     g = real_root(x, n)
-    assert g.subs(dict(x=-8, n=3)) == -2
-    assert g.subs(dict(x=8, n=3)) == 2
+    assert g.subs({"x": -8, "n": 3}) == -2
+    assert g.subs({"x": 8, "n": 3}) == 2
     # give principle root if there is no real root -- if this is not desired
     # then maybe a Root class is needed to raise an error instead
-    assert g.subs(dict(x=I, n=3)) == cbrt(I)
-    assert g.subs(dict(x=-8, n=2)) == sqrt(-8)
-    assert g.subs(dict(x=I, n=2)) == sqrt(I)
+    assert g.subs({"x": I, "n": 3}) == cbrt(I)
+    assert g.subs({"x": -8, "n": 2}) == sqrt(-8)
+    assert g.subs({"x": I, "n": 2}) == sqrt(I)
 
 
 def test_issue_11463():

@@ -12,9 +12,8 @@ Introduction
 SymPy runs under the `Python Programming Language <https://www.python.org/>`_,
 so there are some things that may behave differently than they do in other,
 independent computer algebra systems like Maple or Mathematica. These are some
-of the gotchas and pitfalls that you may encounter when using SymPy. See also
-the `FAQ <https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`introductory
-tutorial<intro-tutorial>`, the remainder of the SymPy Docs, and the `official
+of the gotchas and pitfalls that you may encounter when using SymPy. See also the :ref:`introductory
+tutorial <intro-tutorial>`, the remainder of the SymPy Docs, and the `official
 Python Tutorial <https://docs.python.org/3/tutorial/>`_.
 
 
@@ -74,8 +73,7 @@ equation reduces to 0.
 
 .. note::
 
-    See also `Why does SymPy say that two equal expressions are unequal?
-    <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
+    See also :term:`Structural Equality` in the :doc:`glossary`.
 
 
 Variables
@@ -173,8 +171,7 @@ If you define a circular relationship, you will get a
 
 
 .. note::
-    See also `Why doesn't changing one variable change another that depends on it?
-    <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
+    See also :term:`immutable` in the :doc:`glossary`.
 
 .. _symbols:
 
@@ -266,8 +263,9 @@ all built-in names and to autocomplete.  Also, see `this page
 trick for getting tab completion in the regular Python console.
 
 .. note::
-    See also `What is the best way to create symbols?
-    <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
+
+   See also the :ref:`best-practices-defining-symbols` section of the
+   :doc:`best-practices` page.
 
 .. _calling-functions:
 
@@ -322,8 +320,8 @@ to a Python expression.  Use the :func:`~.sympify` function, or just
 
     >>> 6.2  # Python float. Notice the floating point accuracy problems.
     6.2000000000000002
-    >>> type(6.2)  # <type 'float'> in Python 2.x,  <class 'float'> in Py3k
-    <... 'float'>
+    >>> type(6.2)  # <class 'float'>
+    <class 'float'>
     >>> S(6.2)  # SymPy Float has no such problems because of arbitrary precision.
     6.20000000000000
     >>> type(S(6.2))
@@ -334,11 +332,12 @@ automatically, but there is one gotcha you should be aware of.  If you
 do ``<number>/<number>`` inside of a SymPy expression, Python will
 evaluate the two numbers before SymPy has a chance to get
 to them.  The solution is to :func:`~.sympify` one of the numbers, or use
-:obj:`~.Rational`.
+:obj:`~.Rational` (or Python's `Fraction
+<https://docs.python.org/3/library/fractions.html>`_).
 
     >>> x**(1/2)  # evaluates to x**0 or x**0.5
     x**0.5
-    >>> x**(S(1)/2)  # sympyify one of the ints
+    >>> x**(S(1)/2)  # sympify one of the ints
     sqrt(x)
     >>> x**Rational(1, 2)  # use the Rational class
     sqrt(x)
@@ -365,7 +364,7 @@ you don't have to worry about this problem:
     >>> x = Symbol('x')
     >>> print(solve(7*x -22, x))
     [22/7]
-    >>> 22/7  # If we just copy and paste we get int 3 or a float
+    >>> 22/7  #copy and paste gives a float
     3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
@@ -379,21 +378,6 @@ you don't have to worry about this problem:
     >>> S("22/7")
     22/7
 
-Also, if you do not use :command:`isympy`, you could use ``from
-__future__ import division`` to prevent the ``/`` sign from performing
-`integer division <https://en.wikipedia.org/wiki/Integer_division>`_.
-
-    >>> from __future__ import division
-    >>> 1/2   # With division imported it evaluates to a python float
-    0.5
-    >>> 1//2  # You can still achieve integer division with //
-    0
-
-    But be careful: you will now receive floats where you might have desired
-    a Rational:
-
-    >>> x**(1/2)
-    x**0.5
 
 :obj:`~.Rational` only works for number/number and is only meant for
 rational numbers.  If you want a fraction with symbols or expressions in
@@ -719,6 +703,18 @@ square brackets.
 
     >>> (x)
     x
+
+    Parentheses are not needed for non-empty tuples; the commas are:
+
+    >>> x,y
+    (x, y)
+    >>> x,
+    (x,)
+
+    An empty tuple can be created with bare parentheses:
+
+    >>> ()
+    ()
 
     integrate takes a sequence as the second argument if you want to integrate
     with limits (and a tuple or list will work):

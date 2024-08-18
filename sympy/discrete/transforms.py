@@ -109,7 +109,7 @@ def fft(seq, dps=None):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm
-    .. [2] http://mathworld.wolfram.com/FastFourierTransform.html
+    .. [2] https://mathworld.wolfram.com/FastFourierTransform.html
 
     """
 
@@ -221,7 +221,7 @@ def ntt(seq, prime):
     ==========
 
     .. [1] http://www.apfloat.org/ntt.html
-    .. [2] http://mathworld.wolfram.com/NumberTheoreticTransform.html
+    .. [2] https://mathworld.wolfram.com/NumberTheoreticTransform.html
     .. [3] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general%29
 
     """

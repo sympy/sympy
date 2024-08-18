@@ -8,7 +8,7 @@ from sympy.core.function import (Function, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational, pi, I, ImaginaryUnit
+from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -63,6 +63,8 @@ class ExpBase(Function):
         """
         # this should be the same as Pow.as_numer_denom wrt
         # exponent handling
+        if not self.is_commutative:
+            return self, S.One
         exp = self.exp
         neg_exp = exp.is_negative
         if not neg_exp and not (-exp).is_negative:
@@ -273,7 +275,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.sets.setexpr import SetExpr
         from sympy.simplify.simplify import logcombine
         if isinstance(arg, MatrixBase):
@@ -493,8 +495,10 @@ class exp(ExpBase, metaclass=ExpMeta):
             return Order(x**n, x)
         if arg0 is S.Infinity:
             return self
+        if arg0.is_infinite:
+            raise PoleError("Cannot expand %s around 0" % (self))
         # checking for indecisiveness/ sign terms in arg0
-        if any(isinstance(arg, (sign, ImaginaryUnit)) for arg in arg0.args):
+        if any(isinstance(arg, sign) for arg in arg0.args):
             return self
         t = Dummy("t")
         nterms = n
@@ -779,12 +783,6 @@ class log(Function):
                         else:
                             return cls(modulus) + I * (pi - atan_table[t1])
 
-    def as_base_exp(self):
-        """
-        Returns this function in the form (base, exponent).
-        """
-        return self, S.One
-
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):  # of log(1+x)
@@ -997,7 +995,7 @@ class log(Function):
             except ValueError:
                 a, b = s.removeO().as_leading_term(t, cdir=1), S.Zero
 
-        p = (z/(a*t**b) - 1)._eval_nseries(t, n=n, logx=logx, cdir=1)
+        p = (z/(a*t**b) - 1).cancel()._eval_nseries(t, n=n, logx=logx, cdir=1)
         if p.has(exp):
             p = logcombine(p)
         if isinstance(p, Order):
@@ -1008,9 +1006,9 @@ class log(Function):
         if not d.is_positive:
             res = log(a) - b*log(cdir) + b*logx
             _res = res
-            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
-                power_base=False, multinomial=False, basic=False, force=True,
-                factor=False)
+            logflags = {"deep": True, "log": True, "mul": False, "power_exp": False,
+                "power_base": False, "multinomial": False, "basic": False, "force": True,
+                "factor": False}
             expr = self.expand(**logflags)
             if (not a.could_extract_minus_sign() and
                 logx.could_extract_minus_sign()):
@@ -1042,14 +1040,13 @@ class log(Function):
         while k*d < n:
             coeff = -S.NegativeOne**k/k
             for ex in pk:
-                _ = terms.get(ex, S.Zero) + coeff*pk[ex]
-                terms[ex] = _.nsimplify()
+                terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
             pk = mul(pk, pterms)
             k += S.One
 
         res = log(a) - b*log(cdir) + b*logx
         for ex in terms:
-            res += terms[ex]*t**(ex)
+            res += terms[ex].cancel()*t**(ex)
 
         if a.is_negative and im(z) != 0:
             from sympy.functions.special.delta_functions import Heaviside
@@ -1169,8 +1166,6 @@ class LambertW(Function):
                 return S.Exp1
             if x is S.Infinity:
                 return S.Infinity
-            if x.is_zero:
-                return S.Zero
 
         if fuzzy_not(k.is_zero):
             if x.is_zero:

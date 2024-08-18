@@ -58,16 +58,12 @@ class JuliaCodePrinter(CodePrinter):
         'not': '!',
     }
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
-    }
+    })
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Julia.
@@ -387,11 +383,6 @@ class JuliaCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s[%s]" % (self._print(expr.base.label), ",".join(inds))
-
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
 
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])

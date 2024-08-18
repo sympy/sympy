@@ -8,8 +8,6 @@ from sympy.physics.vector.vector import VectorTypeError
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
 
-
-Vector.simp = True
 A = ReferenceFrame('A')
 
 
@@ -111,10 +109,9 @@ def test_Vector_diffs():
     assert v3.dt(A) == (q2dd * A.x + (2 * q3d**2 + q3 * q3dd) * N.x + (q3dd -
                         q3 * q3d**2) * N.y + (q3 * sin(q3) * q2d * q3d -
                         cos(q3) * q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
-    assert v3.dt(B) == (q2dd * A.x - q3 * cos(q3) * q2d**2 * A.y + (2 *
-                        q3d**2 + q3 * q3dd) * N.x + (q3dd - q3 * q3d**2) *
-                        N.y + (2 * q3 * sin(q3) * q2d * q3d - 2 * cos(q3) *
-                        q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
+    assert (v3.dt(B) - (q2dd*A.x - q3*cos(q3)*q2d**2*A.y + (2*q3d**2 +
+        q3*q3dd)*N.x + (q3dd - q3*q3d**2)*N.y + (2*q3*sin(q3)*q2d*q3d -
+        2*cos(q3)*q2d*q3d - q3*cos(q3)*q2dd)*N.z)).express(B).simplify() == 0
     assert v4.dt(N) == (q2dd * A.x + q3d * (q2d + q3d) * A.y + q3dd * B.x +
                         (q3d**2 + q3 * q3dd) * N.x + q3dd * N.y + (q3 *
                         sin(q3) * q2d * q3d - cos(q3) * q2d * q3d - q3 *
@@ -123,10 +120,10 @@ def test_Vector_diffs():
                         N.x + (q3dd - q3 * q3d**2) * N.y + (q3 * sin(q3) *
                         q2d * q3d - cos(q3) * q2d * q3d - q3 * cos(q3) *
                         q2dd) * N.z)
-    assert v4.dt(B) == (q2dd * A.x - q3 * cos(q3) * q2d**2 * A.y + q3dd * B.x +
-                        (2 * q3d**2 + q3 * q3dd) * N.x + (q3dd - q3 * q3d**2) *
-                        N.y + (2 * q3 * sin(q3) * q2d * q3d - 2 * cos(q3) *
-                        q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
+    assert (v4.dt(B) - (q2dd*A.x - q3*cos(q3)*q2d**2*A.y + q3dd*B.x +
+                        (2*q3d**2 + q3*q3dd)*N.x + (q3dd - q3*q3d**2)*N.y +
+                        (2*q3*sin(q3)*q2d*q3d - 2*cos(q3)*q2d*q3d -
+                         q3*cos(q3)*q2dd)*N.z)).express(B).simplify() == 0
     assert v5.dt(B) == q1d*A.x + (q3*q2d + q2d)*A.y + (-q2*q2d + q3d)*A.z
     assert v5.dt(A) == q1d*A.x + q2d*A.y + q3d*A.z
     assert v5.dt(N) == (-q2*q3d + q1d)*A.x + (q1*q3d + q2d)*A.y + q3d*A.z
@@ -245,3 +242,33 @@ def test_issue_23366():
     N = ReferenceFrame('N')
     N_v_A = u1*N.x
     raises(VectorTypeError, lambda: N_v_A.diff(N, u1))
+
+
+def test_vector_outer():
+    a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    N = ReferenceFrame('N')
+    v1 = a*N.x + b*N.y + c*N.z
+    v2 = d*N.x + e*N.y + f*N.z
+    v1v2 = Matrix([[a*d, a*e, a*f],
+                   [b*d, b*e, b*f],
+                   [c*d, c*e, c*f]])
+    assert v1.outer(v2).to_matrix(N) == v1v2
+    assert (v1 | v2).to_matrix(N) == v1v2
+    v2v1 = Matrix([[d*a, d*b, d*c],
+                   [e*a, e*b, e*c],
+                   [f*a, f*b, f*c]])
+    assert v2.outer(v1).to_matrix(N) == v2v1
+    assert (v2 | v1).to_matrix(N) == v2v1
+
+
+def test_overloaded_operators():
+    a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    N = ReferenceFrame('N')
+    v1 = a*N.x + b*N.y + c*N.z
+    v2 = d*N.x + e*N.y + f*N.z
+
+    assert v1 + v2 == v2 + v1
+    assert v1 - v2 == -v2 + v1
+    assert v1 & v2 == v2 & v1
+    assert v1 ^ v2 == v1.cross(v2)
+    assert v2 ^ v1 == v2.cross(v1)

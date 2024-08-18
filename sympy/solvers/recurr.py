@@ -586,8 +586,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     p, q = coeffs[0], coeffs[r].subs(n, n - r + 1)
 
-    p_factors = [z for z in roots(p, n).keys()]
-    q_factors = [z for z in roots(q, n).keys()]
+    p_factors = list(roots(p, n).keys())
+    q_factors = list(roots(q, n).keys())
 
     factors = [(S.One, S.One)]
 
@@ -763,7 +763,7 @@ def rsolve(f, y, init=None):
     common = S.One
 
     if not i_part.is_zero and not i_part.is_hypergeometric(n) and \
-       not (i_part.is_Add and all(map(lambda x: x.is_hypergeometric(n), i_part.expand().args))):
+       not (i_part.is_Add and all((x.is_hypergeometric(n) for x in i_part.expand().args))):
         raise ValueError("The independent term should be a sum of hypergeometric functions, got '%s'" % i_part)
 
     for coeff in h_part.values():

@@ -5,6 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import unchanged
 from sympy.core.function import (Function, diff, expand)
 from sympy.core.mul import Mul
+from sympy.core.mod import Mod
 from sympy.core.numbers import (Float, I, Rational, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ge, Gt, Ne)
 from sympy.core.singleton import S
@@ -35,6 +36,7 @@ z = symbols('z', nonzero=True)
 def test_piecewise1():
 
     # Test canonicalization
+    assert Piecewise((x, x < 1.)).has(1.0)  # doesn't get changed to x < 1
     assert unchanged(Piecewise, ExprCondPair(x, x < 1), ExprCondPair(0, True))
     assert Piecewise((x, x < 1), (0, True)) == Piecewise(ExprCondPair(x, x < 1),
                                                          ExprCondPair(0, True))
@@ -523,8 +525,8 @@ def test_piecewise_simplify():
 
     # coverage
     nan = Undefined
-    covered = Piecewise((1, x > 3), (2, x < 2), (3, x > 1))
-    assert covered.simplify().args  == covered.args
+    assert Piecewise((1, x > 3), (2, x < 2), (3, x > 1)).simplify(
+        )  == Piecewise((1, x > 3), (2, x < 2), (3, True))
     assert Piecewise((1, x < 2), (2, x < 1), (3, True)).simplify(
         ) == Piecewise((1, x < 2), (3, True))
     assert Piecewise((1, x > 2)).simplify() == Piecewise((1, x > 2),
@@ -543,6 +545,27 @@ def test_piecewise_simplify():
     assert Piecewise((1, x < 1), (2, (x >= 2) & (x <= 3)), (3, True)
         ).simplify() == Piecewise((1, x < 1), (2, (x >= 2) & (x <= 3)),
         (3, True))
+    # https://github.com/sympy/sympy/issues/25603
+    assert Piecewise((log(x), (x <= 5) & (x > 3)), (x, True)
+        ).simplify() == Piecewise((log(x), (x <= 5) & (x > 3)), (x, True))
+
+    assert Piecewise((1, (x >= 1) & (x < 3)), (2, (x > 2) & (x < 4))
+        ).simplify() == Piecewise((1, (x >= 1) & (x < 3)), (
+        2, (x >= 3) & (x < 4)), (nan, True))
+    assert Piecewise((1, (x >= 1) & (x <= 3)), (2, (x > 2) & (x < 4))
+        ).simplify() == Piecewise((1, (x >= 1) & (x <= 3)), (
+        2, (x > 3) & (x < 4)), (nan, True))
+
+    # involves a symbolic range so cset.inf fails
+    L = Symbol('L', nonnegative=True)
+    p = Piecewise((nan, x <= 0), (0, (x >= 0) & (L > x) & (L - x <= 0)),
+        (x - L/2, (L > x) & (L - x <= 0)),
+        (L/2 - x, (x >= 0) & (L > x)),
+        (0, L > x), (nan, True))
+    assert p.simplify() == Piecewise(
+        (nan, x <= 0), (L/2 - x, L > x), (nan, True))
+    assert p.subs(L, y).simplify() == Piecewise(
+        (nan, x <= 0), (-x + y/2, x < Max(0, y)), (0, x < y), (nan, True))
 
 
 def test_piecewise_solve():
@@ -1338,6 +1361,43 @@ def test_issue_14787():
     x = Symbol('x')
     f = Piecewise((x, x < 1), ((S(58) / 7), True))
     assert str(f.evalf()) == "Piecewise((x, x < 1), (8.28571428571429, True))"
+
+def test_issue_21481():
+    b, e = symbols('b e')
+    C = Piecewise(
+        (2,
+        ((b > 1) & (e > 0)) |
+        ((b > 0) & (b < 1) & (e < 0)) |
+        ((e >= 2) & (b < -1) & Eq(Mod(e, 2), 0)) |
+        ((e <= -2) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 0))),
+        (S.Half,
+        ((b > 1) & (e < 0)) |
+        ((b > 0) & (e > 0) & (b < 1)) |
+        ((e <= -2) & (b < -1) & Eq(Mod(e, 2), 0)) |
+        ((e >= 2) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 0))),
+        (-S.Half,
+        Eq(Mod(e, 2), 1) &
+        (((e <= -1) & (b < -1)) | ((e >= 1) & (b > -1) & (b < 0)))),
+        (-2,
+        ((e >= 1) & (b < -1) & Eq(Mod(e, 2), 1)) |
+        ((e <= -1) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 1)))
+    )
+    A = Piecewise(
+        (1, Eq(b, 1) | Eq(e, 0) | (Eq(b, -1) & Eq(Mod(e, 2), 0))),
+        (0, Eq(b, 0) & (e > 0)),
+        (-1, Eq(b, -1) & Eq(Mod(e, 2), 1)),
+        (C, Eq(im(b), 0) & Eq(im(e), 0))
+    )
+
+    B = piecewise_fold(A)
+    sa = A.simplify()
+    sb = B.simplify()
+    v = (-2, -1, -S.Half, 0, S.Half, 1, 2)
+    for i in v:
+        for j in v:
+            r = {b:i, e:j}
+            ok = [k.xreplace(r) for k in (A, B, sa, sb)]
+            assert len(set(ok)) == 1
 
 
 def test_issue_8458():

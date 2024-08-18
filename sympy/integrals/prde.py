@@ -17,7 +17,8 @@ each function for more information.
 import itertools
 from functools import reduce
 
-from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
+from sympy.core.intfunc import ilcm
+from sympy.core import Dummy, Add, Mul, Pow, S
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
@@ -126,7 +127,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
             "'base'}, not %s." % case)
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
-    nc = min([order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t) for Ga, Gd in G])
+    nc = min(order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t) for Ga, Gd in G)
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
@@ -345,7 +346,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     if all(qi.is_zero for qi in Q):
         dc = -1
     else:
-        dc = max([qi.degree(DE.t) for qi in Q])
+        dc = max(qi.degree(DE.t) for qi in Q)
     M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
     A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
     c = eye(m, DE.t)
@@ -385,7 +386,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         if all(qi.is_zero for qi in Q):
             dc = -1
         else:
-            dc = max([qi.degree(DE.t) for qi in Q])
+            dc = max(qi.degree(DE.t) for qi in Q)
         M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
         A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
         c = eye(m, DE.t)
@@ -429,7 +430,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         # There are no constraints on d1.
 
     # Coefficients of t^j (j > 0) in Sum(ci*qi) must be zero.
-    d = max([qi.degree(DE.t) for qi in Q])
+    d = max(qi.degree(DE.t) for qi in Q)
     if d > 0:
         M = Matrix(d, m, lambda i, j: Q[j].nth(i + 1), DE.t)
         A, _ = constant_system(M, zeros(d, 1, DE.t), DE)
@@ -523,7 +524,7 @@ def param_poly_rischDE(a, b, q, n, DE):
         if all(qi.is_zero for qi in q):
             return [], zeros(1, m, DE.t)  # No constraints.
 
-        N = max([qi.degree(DE.t) for qi in q])
+        N = max(qi.degree(DE.t) for qi in q)
         M = Matrix(N + 1, m, lambda i, j: q[j].nth(i), DE.t)
         A, _ = constant_system(M, zeros(M.rows, 1, DE.t), DE)
 
@@ -811,8 +812,8 @@ def limited_integrate_reduce(fa, fd, G, DE):
         hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
         a = hn*hs
         b -= (hn*derivation(hs, DE)).quo(hs)
-        mu = min(order_at_oo(fa, fd, DE.t), min([order_at_oo(ga, gd, DE.t) for
-            ga, gd in G]))
+        mu = min(order_at_oo(fa, fd, DE.t), min(order_at_oo(ga, gd, DE.t) for
+            ga, gd in G))
         # So far, all the above are also nonlinear or Liouvillian, but if this
         # changes, then this will need to be updated to call bound_degree()
         # as per the docstring of this function (DE.case == 'other_linear').
@@ -848,8 +849,8 @@ def limited_integrate(fa, fd, G, DE):
         r = len(h)
         m = len(v) - r - 1
         C = list(v[1: m + 1])
-        y = -sum([v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr() \
-                for i in range(r)])
+        y = -sum(v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr() \
+                for i in range(r))
         y_num, y_den = y.as_numer_denom()
         Ya, Yd = Poly(y_num, DE.t), Poly(y_den, DE.t)
         Y = Ya*Poly(1/Yd.LC(), DE.t), Yd.monic()
@@ -1187,7 +1188,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
-            n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
+            n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u *= n
             terms = ([DE.T[i] for i in DE.indices('exp')] +
                     [DE.extargs[i] for i in DE.indices('log')])
@@ -1305,7 +1306,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
             return None
         # Note: if residueterms = [], returns (1, 1)
         # f had better be 0 in that case.
-        n = reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms], S.One)
+        n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms], 1)
         u = Mul(*[Pow(i, j*n) for i, j in residueterms])
         return (n, u)
 
@@ -1321,8 +1322,8 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         raise ValueError("case must be one of {'primitive', 'exp', 'tan', "
         "'base', 'auto'}, not %s" % case)
 
-    common_denom = reduce(ilcm, [i.as_numer_denom()[1] for i in [j for _, j in
-        residueterms]] + [n], S.One)
+    common_denom = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in [j for _, j in
+        residueterms]] + [n], 1)
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
     if common_denom != n*m:  # Verify exact division

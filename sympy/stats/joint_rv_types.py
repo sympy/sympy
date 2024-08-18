@@ -133,8 +133,8 @@ def JointRV(symbol, pdf, _set=None):
     """
     #TODO: Add support for sets provided by the user
     symbol = sympify(symbol)
-    syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
-        and i.base == IndexedBase(symbol))
+    syms = [i for i in pdf.free_symbols if isinstance(i, Indexed)
+        and i.base == IndexedBase(symbol)]
     syms = tuple(sorted(syms, key = lambda index: index.args[1]))
     _set = S.Reals**len(syms)
     pdf = Lambda(syms, pdf)
@@ -541,7 +541,7 @@ def MultivariateBeta(syms, *alpha):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Dirichlet_distribution
-    .. [2] http://mathworld.wolfram.com/DirichletDistribution.html
+    .. [2] https://mathworld.wolfram.com/DirichletDistribution.html
 
     """
     if not isinstance(alpha[0], list):
@@ -586,7 +586,7 @@ class MultivariateEwensDistribution(JointDistribution):
         if condi:
             term_2 = Mul.fromiter(theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
                                     for j in range(n))
-            cond = Eq(sum([(k + 1)*syms[k] for k in range(n)]), n)
+            cond = Eq(sum((k + 1)*syms[k] for k in range(n)), n)
             return Piecewise((term_1 * term_2, cond), (0, True))
         syms = syms[0]
         j, k = symbols('j, k', positive=True, integer=True)
@@ -633,8 +633,7 @@ def MultivariateEwens(syms, n, theta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Ewens%27s_sampling_formula
-    .. [2] http://www.stat.rutgers.edu/home/hcrane/Papers/STS529.pdf
-
+    .. [2] https://www.jstor.org/stable/24780825
     """
     return multivariate_rv(MultivariateEwensDistribution, syms, n, theta)
 
@@ -668,8 +667,8 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
                 ((gamma(v + n)**(k - 1))*gamma(v)*gamma(n + 1))
         sterm2 = Mul.fromiter(mui*li**(-v - n) for mui, li in zip(mu, l))
         term1 = sterm1 * sterm2
-        sterm3 = (v + n) * sum([mui * yi for mui, yi in zip(mu, y)])
-        sterm4 = sum([exp(mui * yi)/li for (mui, yi, li) in zip(mu, y, l)])
+        sterm3 = (v + n) * sum(mui * yi for mui, yi in zip(mu, y))
+        sterm4 = sum(exp(mui * yi)/li for (mui, yi, li) in zip(mu, y, l))
         term2 = exp(sterm3 - sterm4)
         return Pow(d, v) * Sum(term1 * term2, (n, 0, S.Infinity))
 
@@ -863,7 +862,7 @@ def Multinomial(syms, n, *p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Multinomial_distribution
-    .. [2] http://mathworld.wolfram.com/MultinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/MultinomialDistribution.html
 
     """
     if not isinstance(p[0], list):
@@ -938,7 +937,7 @@ def NegativeMultinomial(syms, k0, *p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Negative_multinomial_distribution
-    .. [2] http://mathworld.wolfram.com/NegativeBinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/NegativeBinomialDistribution.html
 
     """
     if not isinstance(p[0], list):

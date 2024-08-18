@@ -9,7 +9,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, pi, Rational
+from sympy.core.numbers import Float, I, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sorting import ordered
@@ -586,12 +586,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         return shorter(rv, collect_abs(rv))
 
     expr = sympify(expr, rational=rational)
-    kwargs = dict(
-        ratio=kwargs.get('ratio', ratio),
-        measure=kwargs.get('measure', measure),
-        rational=kwargs.get('rational', rational),
-        inverse=kwargs.get('inverse', inverse),
-        doit=kwargs.get('doit', doit))
+    kwargs = {
+        "ratio": kwargs.get('ratio', ratio),
+        "measure": kwargs.get('measure', measure),
+        "rational": kwargs.get('rational', rational),
+        "inverse": kwargs.get('inverse', inverse),
+        "doit": kwargs.get('doit', doit)}
     # no routine for Expr needs to check for is_zero
     if isinstance(expr, Expr) and expr.is_zero:
         return S.Zero if not expr.is_Number else expr
@@ -833,8 +833,8 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     y*Sum(x, (x, 1, 3))
     """
     # XXX deprecate in favor of direct call to factor_terms
-    kwargs = dict(radical=radical, clear=clear,
-        fraction=fraction, sign=sign)
+    kwargs = {"radical": radical, "clear": clear,
+        "fraction": fraction, "sign": sign}
     expr = Sum(self, *limits) if limits else self
     return factor_terms(expr, **kwargs)
 
@@ -1214,7 +1214,7 @@ def besselsimp(expr):
     works on the Bessel J and I functions, however. It works by looking at all
     such functions in turn, and eliminating factors of "I" and "-1" (actually
     their polar equivalents) in front of the argument. Then, functions of
-    half-integer order are rewritten using strigonometric functions and
+    half-integer order are rewritten using trigonometric functions and
     functions of integer order (> 1) are rewritten using functions
     of low order.  Finally, if the expression was changed, compute
     factorization of the result with factor().
@@ -1710,7 +1710,7 @@ def nc_simplify(expr, deep=True):
         inverses = []
         args = []
         for arg in _args:
-            if isinstance(arg, _Pow) and arg.args[1] < 0:
+            if isinstance(arg, _Pow) and arg.args[1].is_extended_negative:
                 inverses = [arg**-1] + inverses
                 inv_tot += 1
             else:
@@ -1733,7 +1733,7 @@ def nc_simplify(expr, deep=True):
         if isinstance(s, _Pow):
             return get_score(s.args[0])
         elif isinstance(s, (_Add, _Mul)):
-            return sum([get_score(a) for a in s.args])
+            return sum(get_score(a) for a in s.args)
         return 1
 
     def compare(s, alt_s):
@@ -1758,7 +1758,7 @@ def nc_simplify(expr, deep=True):
         # get the non-commutative part
         c_args, args = expr.args_cnc()
         com_coeff = Mul(*c_args)
-        if com_coeff != 1:
+        if not equal_valued(com_coeff, 1):
             return com_coeff*nc_simplify(expr/com_coeff, deep=deep)
 
     inv_tot, args = _reduce_inverses(args)

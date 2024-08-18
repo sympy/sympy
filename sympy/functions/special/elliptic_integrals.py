@@ -2,7 +2,7 @@
 
 from sympy.core import S, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy,uniquely_named_symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -51,7 +51,7 @@ class elliptic_k(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticK
+    .. [2] https://functions.wolfram.com/EllipticIntegrals/EllipticK
 
     """
 
@@ -93,9 +93,9 @@ class elliptic_k(Function):
         if m.is_infinite:
             return True
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         m = self.args[0]
         return Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2))
 
@@ -138,7 +138,7 @@ class elliptic_f(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticF
+    .. [2] https://functions.wolfram.com/EllipticIntegrals/EllipticF
 
     """
 
@@ -171,9 +171,9 @@ class elliptic_f(Function):
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(z.conjugate(), m.conjugate())
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         z, m = self.args[0], self.args[1]
         return Integral(1/(sqrt(1 - m*sin(t)**2)), (t, 0, z))
 
@@ -228,8 +228,8 @@ class elliptic_e(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticE2
-    .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticE
+    .. [2] https://functions.wolfram.com/EllipticIntegrals/EllipticE2
+    .. [3] https://functions.wolfram.com/EllipticIntegrals/EllipticE
 
     """
 
@@ -300,10 +300,10 @@ class elliptic_e(Function):
             return -meijerg(((S.Half, Rational(3, 2)), []), \
                             ((S.Zero,), (S.Zero,)), -m)/4
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         z, m = (pi/2, self.args[0]) if len(self.args) == 1 else self.args
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         return Integral(sqrt(1 - m*sin(t)**2), (t, 0, z))
 
 
@@ -347,15 +347,15 @@ class elliptic_pi(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticPi3
-    .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticPi
+    .. [2] https://functions.wolfram.com/EllipticIntegrals/EllipticPi3
+    .. [3] https://functions.wolfram.com/EllipticIntegrals/EllipticPi
 
     """
 
     @classmethod
     def eval(cls, n, m, z=None):
         if z is not None:
-            n, z, m = n, m, z
+            z, m = m, z
             if n.is_zero:
                 return elliptic_f(z, m)
             elif n is S.One:
@@ -435,11 +435,11 @@ class elliptic_pi(Function):
                 return (elliptic_e(m)/(m - 1) + elliptic_pi(n, m))/(2*(n - m))
         raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         if len(self.args) == 2:
             n, m, z = self.args[0], self.args[1], pi/2
         else:
             n, z, m = self.args
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         return Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z))

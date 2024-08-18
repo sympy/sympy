@@ -396,10 +396,7 @@ def solve_triangulated(polys, *gens, **args):
     dom = f.get_domain()
 
     zeros = f.ground_roots()
-    solutions = set()
-
-    for zero in zeros:
-        solutions.add(((zero,), dom))
+    solutions = {((zero,), dom) for zero in zeros}
 
     var_seq = reversed(gens[:-1])
     vars_seq = postfixes(gens[1:])
@@ -431,10 +428,4 @@ def solve_triangulated(polys, *gens, **args):
                 _solutions.add(((zero,) + values, dom_zero))
 
         solutions = _solutions
-
-    solutions = list(solutions)
-
-    for i, (solution, _) in enumerate(solutions):
-        solutions[i] = solution
-
-    return sorted(solutions, key=default_sort_key)
+    return sorted((s for s, _ in solutions), key=default_sort_key)

@@ -154,8 +154,7 @@ class BasisDependent(Expr):
 
     def as_coeff_add(self, *deps):
         """Efficiently extract the coefficient of a summation."""
-        l = [x * self.components[x] for x in self.components]
-        return 0, tuple(l)
+        return 0, tuple(x * self.components[x] for x in self.components)
 
     def diff(self, *args, **kwargs):
         """
@@ -191,7 +190,7 @@ class BasisDependentAdd(BasisDependent, Add):
         components = {}
 
         # Check each arg and simultaneously learn the components
-        for i, arg in enumerate(args):
+        for arg in args:
             if not isinstance(arg, cls._expr_type):
                 if isinstance(arg, Mul):
                     arg = cls._mul_func(*(arg.args))
@@ -312,7 +311,7 @@ class BasisDependentZero(BasisDependent):
         obj = super().__new__(cls)
         # Pre-compute a specific hash value for the zero vector
         # Use the same one always
-        obj._hash = tuple([S.Zero, cls]).__hash__()
+        obj._hash = (S.Zero, cls).__hash__()
         return obj
 
     def __hash__(self):

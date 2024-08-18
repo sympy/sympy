@@ -139,14 +139,13 @@ class Indexed(Expr):
     True
 
     """
-    is_commutative = True
     is_Indexed = True
     is_symbol = True
     is_Atom = True
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.tensor.array.ndim_array import NDimArray
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
 
         if not args:
             raise IndexException("Indexed needs at least one index.")
@@ -169,10 +168,8 @@ class Indexed(Expr):
 
         obj = Expr.__new__(cls, base, *args, **kw_args)
 
-        try:
-            IndexedBase._set_assumptions(obj, base.assumptions0)
-        except AttributeError:
-            IndexedBase._set_assumptions(obj, {})
+        IndexedBase._set_assumptions(obj, base.assumptions0)
+
         return obj
 
     def _hashable_content(self):
@@ -428,7 +425,6 @@ class IndexedBase(Expr, NotIterable):
     >>> C_inherit == C_explicit
     True
     """
-    is_commutative = True
     is_symbol = True
     is_Atom = True
 
@@ -442,7 +438,7 @@ class IndexedBase(Expr, NotIterable):
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
     def __new__(cls, label, shape=None, *, offset=S.Zero, strides=None, **kw_args):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array.ndim_array import NDimArray
 
         assumptions, kw_args = _filter_assumptions(kw_args)

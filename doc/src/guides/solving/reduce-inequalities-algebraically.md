@@ -32,9 +32,9 @@ reduced as a system:
 ```
 
 ```{note}
-While {func}`~.solve` currently accomplishes the same thing (by calling 
-{func}`~.reduce_inequalities` internally), that functionality may be 
-deprecated or removed from {func}`~.solve`. We thus recommend using 
+While {func}`~.solve` currently accomplishes the same thing (by calling
+{func}`~.reduce_inequalities` internally), that functionality may be
+deprecated or removed from {func}`~.solve`. We thus recommend using
 {func}`~.reduce_inequalities`.
 ```
 

@@ -45,6 +45,9 @@ def digits(n, b=10, digits=None):
         The number of digits to be returned (padded with zeros, if
         necessary).
 
+    See Also
+    ========
+    sympy.core.intfunc.num_digits, count_digits
     """
 
     b = as_int(b)
@@ -103,6 +106,10 @@ def count_digits(n, b=10):
     >>> c77 = count_digits(factorial(77))
     >>> [i for i in range(10) if c77[i] == 7]
     [1, 3, 7, 9]
+
+    See Also
+    ========
+    sympy.core.intfunc.num_digits, digits
     """
     rv = defaultdict(int, multiset(digits(n, b)).items())
     rv.pop(b) if b in rv else rv.pop(-b)  # b or -b is there

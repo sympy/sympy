@@ -205,26 +205,60 @@ _uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
     """
+    Symbol class is used to create symbolic variables.
+
+    Explanation
+    ===========
+
+    Symbolic variables are placeholders for mathematical symbols that can represent numbers, constants, or any other mathematical entities and can be used in mathematical expressions and to perform symbolic computations.
+
     Assumptions:
-       commutative = True
+
+    commutative = True
+    positive = True
+    real = True
+    imaginary = True
+    complex = True
+    complete list of more assumptions- :ref:`predicates`
 
     You can override the default assumptions in the constructor.
 
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> A,B = symbols('A,B', commutative = False)
-    >>> bool(A*B != B*A)
+    >>> from sympy import Symbol
+    >>> x = Symbol("x", positive=True)
+    >>> x.is_positive
     True
-    >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
-    True
+    >>> x.is_negative
+    False
 
+    passing in greek letters:
+
+    >>> from sympy import Symbol
+    >>> alpha = Symbol('alpha')
+    >>> alpha #doctest: +SKIP
+    α
+
+    Trailing digits are automatically treated like subscripts of what precedes them in the name.
+    General format to add subscript to a symbol :
+    ``<var_name> = Symbol('<symbol_name>_<subscript>')``
+
+    >>> from sympy import Symbol
+    >>> alpha_i = Symbol('alpha_i')
+    >>> alpha_i #doctest: +SKIP
+    αᵢ
+
+    Parameters
+    ==========
+
+    AtomicExpr: variable name
+    Boolean: Assumption with a boolean value(True or False)
     """
 
     is_comparable = False
 
-    __slots__ = ('name',)
+    __slots__ = ('name', '_assumptions_orig', '_assumptions0')
 
     name: str
 
@@ -244,10 +278,10 @@ class Symbol(AtomicExpr, Boolean):
         Examples
         ========
 
-            >>> from sympy import Symbol
-            >>> x = Symbol('x')
-            >>> x._diff_wrt
-            True
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> x._diff_wrt
+        True
         """
         return True
 
@@ -300,24 +334,45 @@ class Symbol(AtomicExpr, Boolean):
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
 
+        # This is retained purely so that srepr can include commutative=True if
+        # that was explicitly specified but not if it was not. Ideally srepr
+        # should not distinguish these cases because the symbols otherwise
+        # compare equal and are considered equivalent.
+        #
+        # See https://github.com/sympy/sympy/issues/8873
+        #
+        assumptions_orig = assumptions.copy()
+
+        # The only assumption that is assumed by default is comutative=True:
+        assumptions.setdefault('commutative', True)
+
+        assumptions_kb = StdFactKB(assumptions)
+        assumptions0 = dict(assumptions_kb)
+
         obj = Expr.__new__(cls)
         obj.name = name
 
-        # TODO: Issue #8873: Forcing the commutative assumption here means
-        # later code such as ``srepr()`` cannot tell whether the user
-        # specified ``commutative=True`` or omitted it.  To workaround this,
-        # we keep a copy of the assumptions dict, then create the StdFactKB,
-        # and finally overwrite its ``._generator`` with the dict copy.  This
-        # is a bit of a hack because we assume StdFactKB merely copies the
-        # given dict as ``._generator``, but future modification might, e.g.,
-        # compute a minimal equivalent assumption set.
-        tmp_asm_copy = assumptions.copy()
+        obj._assumptions = assumptions_kb
+        obj._assumptions_orig = assumptions_orig
+        obj._assumptions0 = assumptions0
 
-        # be strict about commutativity
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        assumptions['commutative'] = is_commutative
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
+        # The three assumptions dicts are all a little different:
+        #
+        #   >>> from sympy import Symbol
+        #   >>> x = Symbol('x', finite=True)
+        #   >>> x.is_positive  # query an assumption
+        #   >>> x._assumptions
+        #   {'finite': True, 'infinite': False, 'commutative': True, 'positive': None}
+        #   >>> x._assumptions0
+        #   {'finite': True, 'infinite': False, 'commutative': True}
+        #   >>> x._assumptions_orig
+        #   {'finite': True}
+        #
+        # Two symbols with the same name are equal if their _assumptions0 are
+        # the same. Arguably it should be _assumptions_orig that is being
+        # compared because that is more transparent to the user (it is
+        # what was passed to the constructor modulo changes made by _sanitize).
+
         return obj
 
     @staticmethod
@@ -326,7 +381,7 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew__(cls, name, **assumptions)
 
     def __getnewargs_ex__(self):
-        return ((self.name,), self.assumptions0)
+        return ((self.name,), self._assumptions_orig)
 
     # NOTE: __setstate__ is not needed for pickles created by __getnewargs_ex__
     # but was used before Symbol was changed to use __getnewargs_ex__ in v1.9.
@@ -351,8 +406,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @property
     def assumptions0(self):
-        return {key: value for key, value
-                in self._assumptions.items() if value is not None}
+        return self._assumptions0.copy()
 
     @cacheit
     def sort_key(self, order=None):
@@ -442,7 +496,7 @@ class Dummy(Symbol):
         return obj
 
     def __getnewargs_ex__(self):
-        return ((self.name, self.dummy_index), self.assumptions0)
+        return ((self.name, self.dummy_index), self._assumptions_orig)
 
     @cacheit
     def sort_key(self, order=None):
