@@ -461,7 +461,7 @@ class Arch:
         {R_A_x: -4*t/5, R_A_y: -3*t/2, R_B_x: 4*t/5, R_B_y: -t/2}
 
         >>> a.bending_moment_at(4)
-        [-5*t/2]
+        -5*t/2
         """
         y = Symbol('y')
         x = Symbol('x')
