@@ -50,4 +50,12 @@ def test_symbol_magnitude():
     assert a.reaction_force[Symbol("R_A_y")] == -(3*t)/2
     assert a.reaction_force[Symbol("R_B_x")] == (4*t)/5
     assert a.reaction_force[Symbol("R_B_y")] == -t/2
-    assert a.bending_moment_at(4) == [-5*t/2]
+    assert a.bending_moment_at(4) == -5*t/2
+
+def test_forces():
+    a = Arch((0,0),(40,0),crown_x=20,crown_y=12)
+    a.apply_load(-1,'C',8,150,angle=270)
+    a.apply_load(0,'D',start=20,end=40,mag=-4)
+    a.solve()
+    assert abs(a.axial_force_at(7.999999999999999)-149.430523405935) < 1e-12
+    assert abs(a.shear_force_at(7.999999999999999)-64.9227473161196) < 1e-12

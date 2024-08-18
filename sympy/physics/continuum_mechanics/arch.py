@@ -7,6 +7,7 @@ from sympy import diff, sqrt, cos , sin, atan, rad, Min
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
 from sympy.functions import Piecewise
+from sympy import limit
 
 class Arch:
     """
@@ -392,38 +393,48 @@ class Arch:
         x2 = self._crown_x - x_diff
         self._member = (x1,x2,y)
 
-    def shear_force_at(self,*args):
+    def shear_force_at(self, pos = None, **kwargs):
         """
         return the shear at some x-coordinates
         if no x value provided, returns the formula
         """
-        if not args:
+        if pos is None:
             return self._shear_force
         else:
             x = Symbol('x')
-            return [self._shear_force.subs(x,y) for y in args]
+            if 'dir' in kwargs:
+                dir = kwargs['dir']
+                return limit(self._shear_force,x,pos,dir=dir)
+            return self._shear_force.subs(x,pos)
 
-    def bending_moment_at(self,*args):
+    def bending_moment_at(self, pos = None, **kwargs):
         """
         return the bending moment at some x-coordinates
         if no x value provided, returns the formula
         """
-        if not args:
+        if pos is None:
             return self._bending_moment
         else:
             x0 = Symbol('x0')
-            return [self._bending_moment.subs(x0,y) for y in args]
+            if 'dir' in kwargs:
+                dir = kwargs['dir']
+                return limit(self._bending_moment,x0,pos,dir=dir)
+            return self._bending_moment.subs(x0,pos)
 
-    def axial_force_at(self,*args):
+
+    def axial_force_at(self,pos = None, **kwargs):
         """
         return the bending moment at some x-coordinates
         if no x value provided, returns the formula
         """
-        if not args:
-            return self._bending_moment
+        if pos is None:
+            return self._axial_force
         else:
             x = Symbol('x')
-            return [self._axial_force.subs(x,y) for y in args]
+            if 'dir' in kwargs:
+                dir = kwargs['dir']
+                return limit(self._axial_force,x,pos,dir=dir)
+            return self._axial_force.subs(x,pos)
 
     def solve(self):
         """
@@ -613,16 +624,18 @@ class Arch:
 
         for symb in self._reaction_force:
             self._reaction_force[symb] = solution[symb]
+
         self._bending_moment = - (self._moment_x_func.subs(x,x0) + self._moment_y_func.subs(x,x0) -\
                                   solution[R_A_y]*(x0-self._left_support[0]) +\
                                   solution[R_A_x]*(self._shape_eqn.subs({x:x0})-self._left_support[1]))
 
         angle  = atan(diff(self._shape_eqn,x))
 
-        fx = -(self._load_x_func+solution[R_A_x])
-        fy = -(self._load_y_func+solution[R_A_y])
+        fx = (self._load_x_func+solution[R_A_x])
+        fy = (self._load_y_func+solution[R_A_y])
 
-        axial_force = abs(fx*cos(angle) + fy*sin(angle))
-        shear_force = abs(fx*sin(angle) - fy*cos(angle))
+        axial_force = fx*cos(angle) + fy*sin(angle)
+        shear_force = -fx*sin(angle) + fy*cos(angle)
+
         self._axial_force = axial_force
         self._shear_force = shear_force
