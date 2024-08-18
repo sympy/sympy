@@ -5,6 +5,7 @@ from sympy.polys.polytools import Poly
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.normalforms import (
         smith_normal_form as _snf,
+        smith_normal_decomp as _snd,
         invariant_factors as _invf,
         hermite_normal_form as _hnf,
     )
@@ -41,6 +42,25 @@ def smith_normal_form(m, domain=None):
     '''
     dM = _to_domain(m, domain)
     return _snf(dM).to_Matrix()
+
+
+def smith_normal_decomp(m, domain=None):
+    '''
+    Return the Smith Normal Decomposition of a matrix `m` over the ring
+    `domain`. This will only work if the ring is a principal ideal domain.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix, ZZ
+    >>> from sympy.matrices.normalforms import smith_normal_form
+    >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
+    >>> a, s, t = smith_normal_form(m, domain=ZZ)
+    >>> assert a == m * s * t
+    '''
+    dM = _to_domain(m, domain)
+    a, s, t = _snd(dM)
+    return a.to_Matrix(), s.to_Matrix(), t.to_Matrix()
 
 
 def invariant_factors(m, domain=None):
