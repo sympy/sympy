@@ -630,11 +630,14 @@ class Arch:
 
     def draw(self):
         """
+        This method returns a plot object containing the diagram of the specified arch along with the supports
+        and forces applied to the structure.
         """
         x = Symbol('x')
         y = Symbol('y')
         markers = []
         annotations = []
+        rectangles = []
         supports = self._draw_supports()
         markers+=supports
 
@@ -645,6 +648,30 @@ class Arch:
 
         lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
 
+        if self._member is not None:
+            rectangles = self._draw_rectangles()
+            if(self._member[2]>=self._right_support[1]):
+                markers.append(
+                    {
+                        'args':[[self._member[1]+0.005*lim],[self._member[2]]],
+                        'marker':'o',
+                        'markersize': 4,
+                        'color': 'black'
+                    }
+                )
+
+            if(self._member[2]>=self._left_support[1]):
+                markers.append(
+                    {
+                        'args':[[self._member[0]-0.005*lim],[self._member[2]]],
+                        'marker':'o',
+                        'markersize': 4,
+                        'color': 'black'
+                    }
+                )
+
+
+
         markers.append({
             'args':[[self._crown_x],[self._crown_y-0.005*lim]],
             'marker':'o',
@@ -654,10 +681,31 @@ class Arch:
         })
 
         if lim==xmax*1.1-xmin*0.8+1:
-            sing_plot = plot(self._shape_eqn-0.01*lim, self._shape_eqn, (x, self._left_support[0], self._right_support[0]), markers=markers, show=False, annotations=annotations, xlim=(xmin-0.05*lim, xmax*1.1), ylim=(xmin-0.05*lim, xmax*1.1), axis=False,line_color='brown')
+
+            sing_plot = plot(self._shape_eqn-0.015*lim,
+                             self._shape_eqn,
+                             (x, self._left_support[0], self._right_support[0]),
+                             markers=markers,
+                             show=False,
+                             annotations=annotations,
+                             rectangles = rectangles,
+                             xlim=(xmin-0.05*lim, xmax*1.1),
+                             ylim=(xmin-0.05*lim, xmax*1.1),
+                             axis=False,
+                             line_color='brown')
 
         else:
-            sing_plot = plot(self._shape_eqn-0.01*lim,self._shape_eqn, (x, self._left_support[0], self._right_support[0]), markers=markers, show=False, annotations=annotations, xlim=(ymin-0.05*lim, ymax*1.1), ylim=(ymin-0.05*lim, ymax*1.1), axis=False,line_color='brown')
+            sing_plot = plot(self._shape_eqn-0.015*lim,
+                             self._shape_eqn,
+                             (x, self._left_support[0], self._right_support[0]),
+                             markers=markers,
+                             show=False,
+                             annotations=annotations,
+                             rectangles = rectangles,
+                             xlim=(ymin-0.05*lim, ymax*1.1),
+                             ylim=(ymin-0.05*lim, ymax*1.1),
+                             axis=False,
+                             line_color='brown')
 
         return sing_plot
 
@@ -753,6 +801,51 @@ class Arch:
                 'color':'black',
                 'markerfacecolor':'none'
             }
-        ) 
+        )
 
         return support_markers
+
+    def _draw_rectangles(self):
+        member = []
+
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        if self._member[2]>= max(self._left_support[1],self._right_support[1]):
+            member.append(
+                {
+                    'xy':(self._member[0],self._member[2]-0.005*max_diff),
+                    'width':self._member[1]-self._member[0],
+                    'height': 0.01*max_diff,
+                    'angle': 0,
+                }
+            )
+
+        elif self._member[2]>=self._left_support[1]:
+            member.append(
+                {
+                    'xy':(self._member[0],self._member[2]-0.005*max_diff),
+                    'width':self._right_support[0]-self._member[0],
+                    'height': 0.01*max_diff,
+                    'angle': 0,
+                }
+            )
+
+        else:
+            member.append(
+                {
+                    'xy':(self._member[1],self._member[2]-0.005*max_diff),
+                    'width':abs(self._left_support[0]-self._member[1]),
+                    'height': 0.01*max_diff,
+                    'angle': 180,
+                }
+            )
+
+        return member
