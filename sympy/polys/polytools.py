@@ -3825,7 +3825,7 @@ class Poly(Basic):
         ===========
 
         If ``f`` is a square-free polynomial and ``candidates`` is a superset
-        of the roots of ``f``, then ``f.which_roots(candidates)`` returns a
+        of the roots of ``f``, then ``f.which_real_roots(candidates)`` returns a
         list containing exactly the set of roots of ``f``. The domain must be
         :ref:`ZZ`, :ref:`QQ`, or :ref:`QQ(a)` and``f`` must be univariate and
         square-free.
@@ -3880,23 +3880,7 @@ class Poly(Basic):
             raise NotImplementedError(
                 "root counting not supported over %s" % dom)
 
-        num_roots = f.count_roots()
-
-        prec = 10
-        # using Counter bc its like an ordered set
-        root_counts = Counter(candidates)
-
-        while len(root_counts) > num_roots:
-            for r in list(root_counts.keys()):
-                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
-                f_r = f(r).evalf(prec, maxn=2*prec)
-                if abs(f_r)._prec >= 2:
-                    root_counts.pop(r)
-
-            prec *= 2
-
-        roots = list(root_counts.keys())
-        return roots
+        return f._which_roots(candidates, f.count_roots())
 
     def which_all_roots(f, candidates):
         """
@@ -3959,8 +3943,9 @@ class Poly(Basic):
             raise MultivariatePolynomialError(
                 "Must be a univariate polynomial")
 
-        num_roots = f.degree()
+        return f._which_roots(candidates, f.degree())
 
+    def _which_roots(f, candidates, num_roots):
         prec = 10
         # using Counter bc its like an ordered set
         root_counts = Counter(candidates)
@@ -3974,8 +3959,7 @@ class Poly(Basic):
 
             prec *= 2
 
-        roots = list(root_counts.keys())
-        return roots
+        return list(root_counts.keys())
 
     def same_root(f, a, b):
         """
