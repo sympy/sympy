@@ -433,7 +433,7 @@ We define the state vector `X(t)` as:
 
             X(t) = \begin{bmatrix} x_1(t) \\ x_2(t) \end{bmatrix} = \begin{bmatrix} i(t) \\ V_C(t) \end{bmatrix}
 
-Here `x_1(t) = i(t)` is the current through the inductor and math:`( x_2(t) = V_C(t) )` is the voltage across the capacitor.
+Here `x_1(t) = i(t)` is the current through the inductor and `x_2(t) = V_C(t)` is the voltage across the capacitor.
 
 The input vector `U(t)` is the input voltage:
 
