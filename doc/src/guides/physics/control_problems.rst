@@ -361,9 +361,9 @@ References
 Statespace approach
 -------------------
 
-The state-space approach is a powerful method used to model and analyze systems in control 
-theory. Instead of focusing solely on the input-output relationships like the transfer function 
-approach, the state-space approach represents systems as a set of first-order differential 
+The state-space approach is a powerful method used to model and analyze systems in control
+theory. Instead of focusing solely on the input-output relationships like the transfer function
+approach, the state-space approach represents systems as a set of first-order differential
 equations.
 
 The state-space representation of a system can be written as:
@@ -386,8 +386,8 @@ Example 6
         .. image:: Control_Problems_Q6.svg
            :align: center
 
-In a series RLC circuit, we have a resistor :math:`R`, an inductor :math:`L`, and a capacitor :math:`C` 
-connected in series with an input voltage :math:`v_{in}(t)`. The state variables are the current through 
+In a series RLC circuit, we have a resistor :math:`R`, an inductor :math:`L`, and a capacitor :math:`C`
+connected in series with an input voltage :math:`v_{in}(t)`. The state variables are the current through
 the inductor :math:`i(t)` and the voltage across the capacitor :math:`v_C(t)`.
 
 Applying **Kirchhoff's Voltage Law** (KVL) around the loop in the above diagram gives:
@@ -516,16 +516,16 @@ Solution
     [-R/L, -1/L],
     [ 1/C,    0]]),
     Matrix([
-    [1/L],  
+    [1/L],
     [  0]]),
     Matrix([[0, 1]]),
     Matrix([[0]]))
     >>> # We can convert the StateSpace to TransferFunction by rewrite method.
     >>> tf = ss.rewrite(TransferFunction)[0][0]
     >>> pprint(tf)
-            1         
+            1
     ──────────────────
-         2            
+         2
     C⋅L⋅s  + C⋅R⋅s + 1
 
 
