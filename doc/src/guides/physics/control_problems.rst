@@ -427,15 +427,15 @@ This is the first-order differential equation that describes the rate of change 
 
 The state-space representation expresses the system in terms of state variables, which are typically the variables that describe the energy stored in the circuit elements (such as current and voltage).
 
-We define the state vector math:`( X(t) )` as:
+We define the state vector `X(t)` as:
 
         .. math::
 
             X(t) = \begin{bmatrix} x_1(t) \\ x_2(t) \end{bmatrix} = \begin{bmatrix} i(t) \\ V_C(t) \end{bmatrix}
 
-Here math:`( x_1(t) = i(t) )` is the current through the inductor and math:`( x_2(t) = V_C(t) )` is the voltage across the capacitor.
+Here `x_1(t) = i(t)` is the current through the inductor and math:`( x_2(t) = V_C(t) )` is the voltage across the capacitor.
 
-The input vector math:`( U(t) )` is the input voltage:
+The input vector `U(t)` is the input voltage:
 
         .. math::
 
