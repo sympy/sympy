@@ -1,9 +1,9 @@
-r"""A module for special angle forumlas for trigonometric functions
+r"""A module for special angle formulas for trigonometric functions
 
 TODO
 ====
 
-This module should be developed in the future to contain direct squrae root
+This module should be developed in the future to contain direct square root
 representation of
 
 .. math
@@ -37,7 +37,8 @@ from typing import Callable
 from functools import reduce
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
-from sympy.core.numbers import igcdex, Integer
+from sympy.core.intfunc import igcdex
+from sympy.core.numbers import Integer
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.cache import cacheit
 
@@ -83,7 +84,7 @@ def migcdex(*x: int) -> tuple[tuple[int, ...], int]:
 
 
 def ipartfrac(*denoms: int) -> tuple[int, ...]:
-    r"""Compute the the partial fraction decomposition.
+    r"""Compute the partial fraction decomposition.
 
     Explanation
     ===========
@@ -104,7 +105,7 @@ def ipartfrac(*denoms: int) -> tuple[int, ...]:
 
     Where $q_1, \cdots, q_n$ being pairwise coprime implies
     $\gcd(\prod_{i \ne 1}q_i, \cdots, \prod_{i \ne n}q_i) = 1$,
-    which guarantees the existance of the solution.
+    which guarantees the existence of the solution.
 
     It is sufficient to compute partial fraction decomposition only
     for numerator $1$ because partial fraction decomposition for any
@@ -201,7 +202,7 @@ def cos_257() -> Expr:
     References
     ==========
 
-    .. [*] http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
+    .. [*] https://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
     .. [*] https://r-knott.surrey.ac.uk/Fibonacci/simpleTrig.html
     """
     def f1(a: Expr, b: Expr) -> tuple[Expr, Expr]:

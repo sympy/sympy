@@ -609,8 +609,8 @@ class Diagram(Basic):
     >>> pprint(premises_keys, use_unicode=False)
     [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
     >>> pprint(d.premises, use_unicode=False)
-    {g*f:A-->C: EmptySet, id:A-->A: EmptySet, id:B-->B: EmptySet, id:C-->C: EmptyS
-    et, f:A-->B: EmptySet, g:B-->C: EmptySet}
+    {g*f:A-->C: EmptySet, id:A-->A: EmptySet, id:B-->B: EmptySet,
+     id:C-->C: EmptySet, f:A-->B: EmptySet, g:B-->C: EmptySet}
     >>> d = Diagram([f, g], {g * f: "unique"})
     >>> pprint(d.conclusions,use_unicode=False)
     {g*f:A-->C: {unique}}
@@ -775,8 +775,7 @@ class Diagram(Basic):
                         Diagram._add_morphism_closure(
                             conclusions, morphism, empty, add_identities=False,
                             recurse_composites=False)
-            elif isinstance(conclusions_arg, dict) or \
-                    isinstance(conclusions_arg, Dict):
+            elif isinstance(conclusions_arg, (dict, Dict)):
                 # The user has supplied a dictionary of morphisms and
                 # their properties.
                 for morphism, props in conclusions_arg.items():

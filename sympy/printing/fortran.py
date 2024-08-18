@@ -10,7 +10,7 @@ https://en.wikipedia.org/wiki/Fortran
 Most of the code below is based on the "Professional Programmer\'s Guide to
 Fortran77" by Clive G. Page:
 
-http://www.star.le.ac.uk/~cgp/prof77.html
+https://www.star.le.ac.uk/~cgp/prof77.html
 
 Fortran is a case-insensitive language. This might cause trouble because
 SymPy is case sensitive. So, fcode adds underscores to variable names when
@@ -27,7 +27,7 @@ import string
 from sympy.codegen.ast import (
     Assignment, Declaration, Pointer, value_const,
     float32, float64, float80, complex64, complex128, int8, int16, int32,
-    int64, intc, real, integer,  bool_, complex_
+    int64, intc, real, integer,  bool_, complex_, none, stderr, stdout
 )
 from sympy.codegen.fnodes import (
     allocatable, isign, dsign, cmplx, merge, literal_dp, elemental, pure,
@@ -96,18 +96,14 @@ class FCodePrinter(CodePrinter):
         intc: {'iso_c_binding': 'c_int'}
     }
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
         'name_mangling': True,
-    }
+    })
 
     _operators = {
         'and': '.and.',
@@ -380,15 +376,11 @@ class FCodePrinter(CodePrinter):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         return self._get_statement("{0} = {0} {1} {2}".format(
-            *map(lambda arg: self._print(arg),
-                 [lhs_code, expr.binop, rhs_code])))
+            self._print(lhs_code), self._print(expr.binop), self._print(rhs_code)))
 
     def _print_sum_(self, sm):
         params = self._print(sm.array)
@@ -448,7 +440,7 @@ class FCodePrinter(CodePrinter):
     def _print_Element(self, elem):
         return '{symbol}({idxs})'.format(
             symbol=self._print(elem.symbol),
-            idxs=', '.join(map(lambda arg: self._print(arg), elem.indices))
+            idxs=', '.join((self._print(arg) for arg in elem.indices))
         )
 
     def _print_Extent(self, ext):
@@ -472,7 +464,7 @@ class FCodePrinter(CodePrinter):
             result = '{t}{vc}{dim}{intent}{alloc} :: {s}'.format(
                 t=self._print(var.type),
                 vc=', parameter' if value_const in var.attrs else '',
-                dim=', dimension(%s)' % ', '.join(map(lambda arg: self._print(arg), dim)) if dim else '',
+                dim=', dimension(%s)' % ', '.join((self._print(arg) for arg in dim)) if dim else '',
                 intent=intent,
                 alloc=', allocatable' if allocatable in var.attrs else '',
                 s=self._print(var.symbol)
@@ -482,7 +474,7 @@ class FCodePrinter(CodePrinter):
         else:
             if value_const in var.attrs or val:
                 raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
-            result = ' '.join(map(lambda arg: self._print(arg), [var.type, var.symbol]))
+            result = ' '.join((self._print(arg) for arg in [var.type, var.symbol]))
 
         return result
 
@@ -633,7 +625,7 @@ class FCodePrinter(CodePrinter):
     def _print_GoTo(self, goto):
         if goto.expr:  # computed goto
             return "go to ({labels}), {expr}".format(
-                labels=', '.join(map(lambda arg: self._print(arg), goto.labels)),
+                labels=', '.join((self._print(arg) for arg in goto.labels)),
                 expr=self._print(goto.expr)
             )
         else:
@@ -670,12 +662,16 @@ class FCodePrinter(CodePrinter):
                 return strm.name
 
     def _print_Print(self, ps):
-        if ps.format_string != None: # Must be '!= None', cannot be 'is not None'
-            fmt = self._print(ps.format_string)
+        if ps.format_string == none: # Must be '!= None', cannot be 'is not None'
+            template = "print {fmt}, {iolist}"
+            fmt = '*'
         else:
-            fmt = "*"
-        return "print {fmt}, {iolist}".format(fmt=fmt, iolist=', '.join(
-            map(lambda arg: self._print(arg), ps.print_args)))
+            template = 'write(%(out)s, fmt="{fmt}", advance="no"), {iolist}' % {
+                'out': {stderr: '0', stdout: '6'}.get(ps.file, '*')
+            }
+            fmt = self._print(ps.format_string)
+        return template.format(fmt=fmt, iolist=', '.join(
+            (self._print(arg) for arg in ps.print_args)))
 
     def _print_Return(self, rs):
         arg, = rs.args
@@ -707,7 +703,7 @@ class FCodePrinter(CodePrinter):
             arg_names=', '.join([self._print(arg.symbol) for arg in fp.parameters]),
             result=(' result(%s)' % result_name) if result_name else '',
             bind=bind,
-            arg_declarations='\n'.join(map(lambda arg: self._print(Declaration(arg)), fp.parameters))
+            arg_declarations='\n'.join((self._print(Declaration(arg)) for arg in fp.parameters))
         )
 
     def _print_FunctionPrototype(self, fp):
@@ -752,11 +748,11 @@ class FCodePrinter(CodePrinter):
     def _print_SubroutineCall(self, scall):
         return 'call {name}({args})'.format(
             name=self._print(scall.name),
-            args=', '.join(map(lambda arg: self._print(arg), scall.subroutine_args))
+            args=', '.join((self._print(arg) for arg in scall.subroutine_args))
         )
 
     def _print_use_rename(self, rnm):
-        return "%s => %s" % tuple(map(lambda arg: self._print(arg), rnm.args))
+        return "%s => %s" % tuple((self._print(arg) for arg in rnm.args))
 
     def _print_use(self, use):
         result = 'use %s' % self._print(use.namespace)
@@ -774,10 +770,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_ArrayConstructor(self, ac):
         fmtstr = "[%s]" if self._settings["standard"] >= 2003 else '(/%s/)'
-        return fmtstr % ', '.join(map(lambda arg: self._print(arg), ac.elements))
+        return fmtstr % ', '.join((self._print(arg) for arg in ac.elements))
 
     def _print_ArrayElement(self, elem):
         return '{symbol}({idxs})'.format(
             symbol=self._print(elem.name),
-            idxs=', '.join(map(lambda arg: self._print(arg), elem.indices))
+            idxs=', '.join((self._print(arg) for arg in elem.indices))
         )

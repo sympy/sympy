@@ -1,4 +1,4 @@
-from sympy.core.backend import diff, zeros, Matrix, eye, sympify
+from sympy import diff, zeros, Matrix, eye, sympify
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.method import _Methods
@@ -179,7 +179,7 @@ class LagrangesMethod(_Methods):
         """
 
         qds = self._qdots
-        qdd_zero = {i: 0 for i in self._qdoubledots}
+        qdd_zero = dict.fromkeys(self._qdoubledots, 0)
         n = len(self.q)
 
         # Internally we represent the EOM as four terms:
@@ -214,7 +214,7 @@ class LagrangesMethod(_Methods):
             self._term4 = zeros(n, 1)
             for i, qd in enumerate(qds):
                 flist = zip(*_f_list_parser(self.forcelist, N))
-                self._term4[i] = sum(v.diff(qd, N) & f for (v, f) in flist)
+                self._term4[i] = sum(v.diff(qd, N).dot(f) for (v, f) in flist)
         else:
             self._term4 = zeros(n, 1)
 
@@ -289,10 +289,11 @@ class LagrangesMethod(_Methods):
         else:
             return self._qdots.col_join(self.forcing)
 
-    def to_linearizer(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None):
-        """Returns an instance of the Linearizer class, initiated from the
-        data in the LagrangesMethod class. This may be more desirable than using
-        the linearize class method, as the Linearizer object will allow more
+    def to_linearizer(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None,
+                      linear_solver='LU'):
+        """Returns an instance of the Linearizer class, initiated from the data
+        in the LagrangesMethod class. This may be more desirable than using the
+        linearize class method, as the Linearizer object will allow more
         efficient recalculation (i.e. about varying operating points).
 
         Parameters
@@ -302,6 +303,23 @@ class LagrangesMethod(_Methods):
             The independent generalized coordinates and speeds.
         q_dep, qd_dep : array_like, optional
             The dependent generalized coordinates and speeds.
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+
+        Returns
+        =======
+        Linearizer
+            An instantiated
+            :class:`sympy.physics.mechanics.linearize.Linearizer`.
+
         """
 
         # Compose vectors
@@ -352,11 +370,27 @@ class LagrangesMethod(_Methods):
                                  quantities when linearizing forcing terms.')
 
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
-                q_d, u_i, u_d, r, lams)
+                          q_d, u_i, u_d, r, lams, linear_solver=linear_solver)
 
     def linearize(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None,
-            **kwargs):
+                  linear_solver='LU', **kwargs):
         """Linearize the equations of motion about a symbolic operating point.
+
+        Parameters
+        ==========
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+        **kwargs
+            Extra keyword arguments are passed to
+            :meth:`sympy.physics.mechanics.linearize.Linearizer.linearize`.
 
         Explanation
         ===========
@@ -383,7 +417,8 @@ class LagrangesMethod(_Methods):
 
         For more documentation, please see the ``Linearizer`` class."""
 
-        linearizer = self.to_linearizer(q_ind, qd_ind, q_dep, qd_dep)
+        linearizer = self.to_linearizer(q_ind, qd_ind, q_dep, qd_dep,
+                                        linear_solver=linear_solver)
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 
@@ -446,7 +481,7 @@ class LagrangesMethod(_Methods):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
         """
 
         if inv_method is None:

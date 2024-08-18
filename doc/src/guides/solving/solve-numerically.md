@@ -6,7 +6,7 @@ numerically solving $\cos(x) = x $ returns $ x \approx 0.739085133215161$.
 Solving numerically is useful if:
 - You only need a numeric solution, not a symbolic one
 - A closed-form solution is not available or is overly complicated; refer to
-  [](solving-guidance.md#when-you-might-prefer-a-numeric-solution)  
+  [](solving-guidance.md#when-you-might-prefer-a-numeric-solution)
 
 {func}`~.solve` and {func}`~.solveset` will not try to find a numeric solution,
 only a mathematically-exact symbolic solution. So if you want a numeric
@@ -138,7 +138,7 @@ SciPy's {external:func}`~scipy.optimize.root_scalar`. A recommended workflow is:
 >>> from sympy.abc import x, y
 >>> from scipy.optimize import root_scalar
 >>> expr = cos(x * (x + x**2)/(x*sin(y)**2 + x*cos(y)**2 + x))
->>> simplify(expr) # 1. symbolically simplify expression 
+>>> simplify(expr) # 1. symbolically simplify expression
 cos(x*(x + 1)/2)
 >>> lam_f = lambdify(x, cos(x*(x + 1)/2)) # 2. lambdify
 >>> sol = root_scalar(lam_f, bracket=[0, 2]) # 3. numerically solve using SciPy

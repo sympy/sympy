@@ -4,6 +4,7 @@
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, symbols
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -178,8 +179,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     sqrt(2) + sqrt(3)
     >>> K.orig_ext
     (sqrt(2), sqrt(3))
-    >>> K.mod
-    DMP([1, 0, -10, 0, 1], QQ, None)
+    >>> K.mod  # doctest: +SKIP
+    DMP_Python([1, 0, -10, 0, 1], QQ)
 
     The `discriminant`_ of the field can be obtained from the
     :py:meth:`~.discriminant` method, and an `integral basis`_ from the
@@ -214,6 +215,12 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     QQ<exp(2*I*pi/7)>
     >>> K.primes_above(11)
     [(11, _x**3 + 5*_x**2 + 4*_x - 1), (11, _x**3 - 4*_x**2 - 5*_x - 1)]
+
+    The Galois group of the Galois closure of the field can be computed (when
+    the minimal polynomial of the field is of sufficiently small degree).
+
+    >>> K.galois_group(by_name=True)[0]
+    S6TransitiveSubgroups.C6
 
     Notes
     =====
@@ -301,7 +308,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         >>> from sympy import QQ, sqrt
         >>> K = QQ.algebraic_field(sqrt(2))
         >>> K.mod
-        DMP([1, 0, -2], QQ, None)
+        DMP([1, 0, -2], QQ)
         """
 
         self.domain = self.dom = dom
@@ -310,15 +317,15 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         self.symbols = self.gens = (self.ext,)
         self.unit = self([dom(1), dom(0)])
 
-        self.zero = self.dtype.zero(self.mod.rep, dom)
-        self.one = self.dtype.one(self.mod.rep, dom)
+        self.zero = self.dtype.zero(self.mod.to_list(), dom)
+        self.one = self.dtype.one(self.mod.to_list(), dom)
 
         self._maximal_order = None
         self._discriminant = None
         self._nilradicals_mod_p = {}
 
     def new(self, element):
-        return self.dtype(element, self.mod.rep, self.dom)
+        return self.dtype(element, self.mod.to_list(), self.dom)
 
     def __str__(self):
         return str(self.dom) + '<' + str(self.ext) + '>'
@@ -328,8 +335,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        return isinstance(other, AlgebraicField) and \
-            self.dtype == other.dtype and self.ext == other.ext
+        if isinstance(other, AlgebraicField):
+            return self.dtype == other.dtype and self.ext == other.ext
+        else:
+            return NotImplemented
 
     def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
@@ -524,6 +533,41 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         rad = self._nilradicals_mod_p.get(p)
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
 
+    def galois_group(self, by_name=False, max_tries=30, randomize=False):
+        """
+        Compute the Galois group of the Galois closure of this field.
+
+        Examples
+        ========
+
+        If the field is Galois, the order of the group will equal the degree
+        of the field:
+
+        >>> from sympy import QQ
+        >>> from sympy.abc import x
+        >>> k = QQ.alg_field_from_poly(x**4 + 1)
+        >>> G, _ = k.galois_group()
+        >>> G.order()
+        4
+
+        If the field is not Galois, then its Galois closure is a proper
+        extension, and the order of the Galois group will be greater than the
+        degree of the field:
+
+        >>> k = QQ.alg_field_from_poly(x**4 - 2)
+        >>> G, _ = k.galois_group()
+        >>> G.order()
+        8
+
+        See Also
+        ========
+
+        sympy.polys.numberfields.galoisgroups.galois_group
+
+        """
+        return self.ext.minpoly_of_element().galois_group(
+            by_name=by_name, max_tries=max_tries, randomize=randomize)
+
 
 def _make_converter(K):
     """Construct the converter to convert back to Expr"""
@@ -533,16 +577,47 @@ def _make_converter(K):
     # each power of the generator and collect together the resulting algebraic
     # terms and the rational coefficients into a matrix.
 
-    gen = K.ext.as_expr()
+    ext = K.ext.as_expr()
     todom = K.dom.from_sympy
+    toexpr = K.dom.to_sympy
 
-    # We'll let Expr compute the expansions. We won't make any presumptions
-    # about what this results in except that it is QQ-linear in some terms
-    # that we will call algebraics. The final result will be expressed in
-    # terms of those.
-    powers = [S.One, gen]
-    for n in range(2, K.mod.degree()):
-        powers.append((gen * powers[-1]).expand())
+    if not ext.is_Add:
+        powers = [ext**n for n in range(K.mod.degree())]
+    else:
+        # primitive_element generates a QQ-linear combination of lower degree
+        # algebraic numbers to generate the higher degree extension e.g.
+        # QQ<sqrt(2)+sqrt(3)> That means that we end up having high powers of low
+        # degree algebraic numbers that can be reduced. Here we will use the
+        # minimal polynomials of the algebraic numbers to reduce those powers
+        # before converting to Expr.
+        from sympy.polys.numberfields.minpoly import minpoly
+
+        # Decompose ext as a linear combination of gens and make a symbol for
+        # each gen.
+        gens, coeffs = zip(*ext.as_coefficients_dict().items())
+        syms = symbols(f'a:{len(gens)}', cls=Dummy)
+        sym2gen = dict(zip(syms, gens))
+
+        # Make a polynomial ring that can express ext and minpolys of all gens
+        # in terms of syms.
+        R = K.dom[syms]
+        monoms = [R.ring.monomial_basis(i) for i in range(R.ngens)]
+        ext_dict = {m: todom(c) for m, c in zip(monoms, coeffs)}
+        ext_poly = R.ring.from_dict(ext_dict)
+        minpolys = [R.from_sympy(minpoly(g, s)) for s, g in sym2gen.items()]
+
+        # Compute all powers of ext_poly reduced modulo minpolys
+        powers = [R.one, ext_poly]
+        for n in range(2, K.mod.degree()):
+            ext_poly_n = (powers[-1] * ext_poly).rem(minpolys)
+            powers.append(ext_poly_n)
+
+        # Convert the powers back to Expr. This will recombine some things like
+        # sqrt(2)*sqrt(3) -> sqrt(6).
+        powers = [p.as_expr().xreplace(sym2gen) for p in powers]
+
+    # This also expands some rational powers
+    powers = [p.expand() for p in powers]
 
     # Collect the rational coefficients and algebraic Expr that can
     # map the ANP coefficients into an expanded SymPy expression
@@ -554,10 +629,9 @@ def _make_converter(K):
 
     def converter(a):
         """Convert a to Expr using converter"""
-        ai = a.rep[::-1]
-        tosympy = K.dom.to_sympy
+        ai = a.to_list()[::-1]
         coeffs_dom = [sum(mij*aj for mij, aj in zip(mi, ai)) for mi in matrix]
-        coeffs_sympy = [tosympy(c) for c in coeffs_dom]
+        coeffs_sympy = [toexpr(c) for c in coeffs_dom]
         res = Add(*(Mul(c, a) for c, a in zip(coeffs_sympy, algebraics)))
         return res
 

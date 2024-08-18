@@ -14,12 +14,12 @@ from sympy.simplify import simplify
 from sympy.matrices import (ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol,
         SparseMatrix, Transpose, Adjoint, MatrixSet)
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.expressions.determinant import Determinant, det
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
-from sympy.testing.pytest import raises, XFAIL
-
+from sympy.testing.pytest import raises, XFAIL, skip
+from importlib.metadata import version
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 x = symbols('x')
@@ -370,6 +370,18 @@ def test_factor_expand():
     # Ideally we get the first, but we at least don't want a wrong answer
     assert factor(expr) in [I - C, B**-1*(A**-1*(I - C)*B**-1)**-1*A**-1]
 
+def test_numpy_conversion():
+    try:
+        from numpy import array, array_equal
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+    A = MatrixSymbol('A', 2, 2)
+    np_array = array([[MatrixElement(A, 0, 0), MatrixElement(A, 0, 1)],
+    [MatrixElement(A, 1, 0), MatrixElement(A, 1, 1)]])
+    assert array_equal(array(A), np_array)
+    assert array_equal(array(A, copy=True), np_array)
+    if(int(version('numpy').split('.')[0]) >= 2): #run this test only if numpy is new enough that copy variable is passed properly.
+        raises(TypeError, lambda: array(A, copy=False))
 
 def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
@@ -402,6 +414,19 @@ def test_issue_21195():
     A = Matrix([[exp1], [exp2], [exp3]])
     B = Matrix([[exp1.diff(x)], [exp2.diff(x)], [exp3.diff(x)]])
     assert A.diff(x) == B
+
+
+def test_issue_24859():
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 2)
+    J = A*B
+    Jinv = Matrix(J).adjugate()
+    u = MatrixSymbol('u', 2, 3)
+    Jk = Jinv.subs(A, A + x*u)
+
+    expected = B[0, 1]*u[1, 0] + B[1, 1]*u[1, 1] + B[2, 1]*u[1, 2]
+    assert Jk[0, 0].diff(x) == expected
+    assert diff(Jk[0, 0], x).doit() == expected
 
 
 def test_MatMul_postprocessor():

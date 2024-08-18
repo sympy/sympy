@@ -120,7 +120,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         if all(variable.is_commutative for variable in variables):
             monomials_list_comm = []
             for item in combinations_with_replacement(variables, max_degree):
-                powers = {variable: 0 for variable in variables}
+                powers = dict.fromkeys(variables, 0)
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1
@@ -130,7 +130,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         else:
             monomials_list_non_comm = []
             for item in product(variables, repeat=max_degree):
-                powers = {variable: 0 for variable in variables}
+                powers = dict.fromkeys(variables, 0)
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1
@@ -416,7 +416,7 @@ class MonomialOps:
         A = self._vars("a")
         B = self._vars("b")
         AB = [ "%s + %s" % (a, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
     def pow(self):
@@ -428,7 +428,7 @@ class MonomialOps:
         """)
         A = self._vars("a")
         Ak = [ "%s*k" % a for a in A ]
-        code = template % dict(name=name, A=", ".join(A), Ak=", ".join(Ak))
+        code = template % {"name": name, "A": ", ".join(A), "Ak": ", ".join(Ak)}
         return self._build(code, name)
 
     def mulpow(self):
@@ -442,7 +442,7 @@ class MonomialOps:
         A = self._vars("a")
         B = self._vars("b")
         ABk = [ "%s + %s*k" % (a, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), ABk=", ".join(ABk))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "ABk": ", ".join(ABk)}
         return self._build(code, name)
 
     def ldiv(self):
@@ -456,7 +456,7 @@ class MonomialOps:
         A = self._vars("a")
         B = self._vars("b")
         AB = [ "%s - %s" % (a, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
     def div(self):
@@ -470,9 +470,9 @@ class MonomialOps:
         """)
         A = self._vars("a")
         B = self._vars("b")
-        RAB = [ "r%(i)s = a%(i)s - b%(i)s\n    if r%(i)s < 0: return None" % dict(i=i) for i in range(self.ngens) ]
+        RAB = [ "r%(i)s = a%(i)s - b%(i)s\n    if r%(i)s < 0: return None" % {"i": i} for i in range(self.ngens) ]
         R = self._vars("r")
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), RAB="\n    ".join(RAB), R=", ".join(R))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "RAB": "\n    ".join(RAB), "R": ", ".join(R)}
         return self._build(code, name)
 
     def lcm(self):
@@ -486,7 +486,7 @@ class MonomialOps:
         A = self._vars("a")
         B = self._vars("b")
         AB = [ "%s if %s >= %s else %s" % (a, a, b, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
     def gcd(self):
@@ -500,7 +500,7 @@ class MonomialOps:
         A = self._vars("a")
         B = self._vars("b")
         AB = [ "%s if %s <= %s else %s" % (a, a, b, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
 @public
@@ -593,18 +593,9 @@ class Monomial(PicklableWithSlots):
 
     def __pow__(self, other):
         n = int(other)
-
-        if not n:
-            return self.rebuild([0]*len(self))
-        elif n > 0:
-            exponents = self.exponents
-
-            for i in range(1, n):
-                exponents = monomial_mul(exponents, self.exponents)
-
-            return self.rebuild(exponents)
-        else:
+        if n < 0:
             raise ValueError("a non-negative integer expected, got %s" % other)
+        return self.rebuild(monomial_pow(self.exponents, n))
 
     def gcd(self, other):
         """Greatest common divisor of monomials. """

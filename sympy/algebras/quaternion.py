@@ -12,6 +12,7 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.utilities.misc import as_int
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -56,8 +57,8 @@ def _is_extrinsic(seq):
 
 class Quaternion(Expr):
     """Provides basic quaternion operations.
-    Quaternion objects can be instantiated as Quaternion(a, b, c, d)
-    as in (a + b*i + c*j + d*k).
+    Quaternion objects can be instantiated as ``Quaternion(a, b, c, d)``
+    as in $q = a + bi + cj + dk$.
 
     Parameters
     ==========
@@ -74,7 +75,7 @@ class Quaternion(Expr):
     >>> q
     1 + 2*i + 3*j + 4*k
 
-    Quaternions over complex fields can be defined as :
+    Quaternions over complex fields can be defined as:
 
     >>> from sympy import Quaternion
     >>> from sympy import symbols, I
@@ -87,6 +88,7 @@ class Quaternion(Expr):
     (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
 
     Defining symbolic unit quaternions:
+
     >>> from sympy import Quaternion
     >>> from sympy.abc import w, x, y, z
     >>> q = Quaternion(w, x, y, z, norm=1)
@@ -98,7 +100,7 @@ class Quaternion(Expr):
     References
     ==========
 
-    .. [1] http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
+    .. [1] https://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
     .. [2] https://en.wikipedia.org/wiki/Quaternion
 
     """
@@ -111,15 +113,10 @@ class Quaternion(Expr):
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
-        else:
-            obj = Expr.__new__(cls, a, b, c, d)
-            obj._a = a
-            obj._b = b
-            obj._c = c
-            obj._d = d
-            obj._real_field = real_field
-            obj.set_norm(norm)
-            return obj
+        obj = super().__new__(cls, a, b, c, d)
+        obj._real_field = real_field
+        obj.set_norm(norm)
+        return obj
 
     def set_norm(self, norm):
         """Sets norm of an already instantiated quaternion.
@@ -159,19 +156,19 @@ class Quaternion(Expr):
 
     @property
     def a(self):
-        return self._a
+        return self.args[0]
 
     @property
     def b(self):
-        return self._b
+        return self.args[1]
 
     @property
     def c(self):
-        return self._c
+        return self.args[2]
 
     @property
     def d(self):
-        return self._d
+        return self.args[3]
 
     @property
     def real_field(self):
@@ -284,9 +281,9 @@ class Quaternion(Expr):
 
     def to_Matrix(self, vector_only=False):
         """Returns elements of quaternion as a column vector.
-        By default, a Matrix of length 4 is returned, with the real part as the
+        By default, a ``Matrix`` of length 4 is returned, with the real part as the
         first element.
-        If vector_only is True, returns only imaginary part as a Matrix of
+        If ``vector_only`` is ``True``, returns only imaginary part as a Matrix of
         length 3.
 
         Parameters
@@ -386,9 +383,9 @@ class Quaternion(Expr):
             The Euler angles (in radians).
         seq : string of length 3
             Represents the sequence of rotations.
-            For intrinsic rotations, seq must be all lowercase and its elements
+            For extrinsic rotations, seq must be all lowercase and its elements
             must be from the set ``{'x', 'y', 'z'}``
-            For extrinsic rotations, seq must be all uppercase and its elements
+            For intrinsic rotations, seq must be all uppercase and its elements
             must be from the set ``{'X', 'Y', 'Z'}``
 
         Returns
@@ -451,9 +448,9 @@ class Quaternion(Expr):
 
         seq : string of length 3
             Represents the sequence of rotations.
-            For intrinsic rotations, seq must be all lowercase and its elements
+            For extrinsic rotations, seq must be all lowercase and its elements
             must be from the set ``{'x', 'y', 'z'}``
-            For extrinsic rotations, seq must be all uppercase and its elements
+            For intrinsic rotations, seq must be all uppercase and its elements
             must be from the set ``{'X', 'Y', 'Z'}``
 
         angle_addition : bool
@@ -686,7 +683,7 @@ class Quaternion(Expr):
         return self.pow(p)
 
     def __neg__(self):
-        return Quaternion(-self._a, -self._b, -self._c, -self.d)
+        return Quaternion(-self.a, -self.b, -self.c, -self.d)
 
     def __truediv__(self, other):
         return self * sympify(other)**-1
@@ -883,7 +880,7 @@ class Quaternion(Expr):
             q = self
             # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
             # arise when from_axis_angle is used).
-            self._norm = sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+            return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
 
         return self._norm
 
@@ -924,35 +921,34 @@ class Quaternion(Expr):
         668 + (-224)*i + (-336)*j + (-448)*k
 
         """
-        p = sympify(p)
-        q = self
-        if p == -1:
-            return q.inverse()
-        res = 1
-
-        if not p.is_Integer:
+        try:
+            q, p = self, as_int(p)
+        except ValueError:
             return NotImplemented
 
         if p < 0:
             q, p = q.inverse(), -p
 
-        while p > 0:
-            if p % 2 == 1:
-                res = q * res
+        if p == 1:
+            return q
 
-            p = p//2
-            q = q * q
+        res = Quaternion(1, 0, 0, 0)
+        while p > 0:
+            if p & 1:
+                res *= q
+            q *= q
+            p >>= 1
 
         return res
 
     def exp(self):
-        """Returns the exponential of q (e^q).
+        """Returns the exponential of $q$, given by $e^q$.
 
         Returns
         =======
 
         Quaternion
-            Exponential of q (e^q).
+            The exponential of the quaternion.
 
         Examples
         ========
@@ -976,22 +972,22 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
-    def _ln(self):
-        """Returns the natural logarithm of the quaternion (_ln(q)).
+    def log(self):
+        r"""Returns the logarithm of the quaternion, given by $\log q$.
 
         Examples
         ========
 
         >>> from sympy import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> q._ln()
+        >>> q.log()
         log(sqrt(30))
         + 2*sqrt(29)*acos(sqrt(30)/30)/29*i
         + 3*sqrt(29)*acos(sqrt(30)/30)/29*j
         + 4*sqrt(29)*acos(sqrt(30)/30)/29*k
 
         """
-        # _ln(q) = _ln||q|| + v/||v||*arccos(a/||q||)
+        # log(q) = log||q|| + v/||v||*arccos(a/||q||)
         q = self
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         q_norm = q.norm()
@@ -1005,10 +1001,8 @@ class Quaternion(Expr):
     def _eval_subs(self, *args):
         elements = [i.subs(*args) for i in self.args]
         norm = self._norm
-        try:
+        if norm is not None:
             norm = norm.subs(*args)
-        except AttributeError:
-            pass
         _check_norm(elements, norm)
         return Quaternion(*elements, norm=norm)
 
@@ -1107,7 +1101,7 @@ class Quaternion(Expr):
 
     @staticmethod
     def rotate_point(pin, r):
-        """Returns the coordinates of the point pin(a 3 tuple) after rotation.
+        """Returns the coordinates of the point pin (a 3 tuple) after rotation.
 
         Parameters
         ==========
@@ -1192,7 +1186,7 @@ class Quaternion(Expr):
 
     def to_rotation_matrix(self, v=None, homogeneous=True):
         """Returns the equivalent rotation transformation matrix of the quaternion
-        which represents rotation about the origin if v is not passed.
+        which represents rotation about the origin if ``v`` is not passed.
 
         Parameters
         ==========
@@ -1288,7 +1282,7 @@ class Quaternion(Expr):
 
     def vector_part(self):
         r"""
-        Returns vector part($\mathbf{V}(q)$) of the quaternion q.
+        Returns $\mathbf{V}(q)$, the vector part of the quaternion $q$.
 
         Explanation
         ===========
@@ -1313,7 +1307,7 @@ class Quaternion(Expr):
 
     def axis(self):
         r"""
-        Returns the axis($\mathbf{Ax}(q)$) of the quaternion.
+        Returns $\mathbf{Ax}(q)$, the axis of the quaternion $q$.
 
         Explanation
         ===========
@@ -1406,11 +1400,11 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        Given a quaternion $q = a + bi + cj + dk$ where $a$, $b$, $c$ and $d$
         are real numbers, returns the angle of the quaternion given by
 
         .. math::
-            angle := atan2(\sqrt{b^2 + c^2 + d^2}, {a})
+            \theta := 2 \operatorname{atan_2}\left(\sqrt{b^2 + c^2 + d^2}, {a}\right)
 
         Examples
         ========
@@ -1418,11 +1412,11 @@ class Quaternion(Expr):
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 4, 4, 4)
         >>> q.angle()
-        atan(4*sqrt(3))
+        2*atan(4*sqrt(3))
 
         """
 
-        return atan2(self.vector_part().norm(), self.scalar_part())
+        return 2 * atan2(self.vector_part().norm(), self.scalar_part())
 
 
     def arc_coplanar(self, other):
@@ -1476,7 +1470,7 @@ class Quaternion(Expr):
     def vector_coplanar(cls, q1, q2, q3):
         r"""
         Returns True if the axis of the pure quaternions seen as 3D vectors
-        q1, q2, and q3 are coplanar.
+        ``q1``, ``q2``, and ``q3`` are coplanar.
 
         Explanation
         ===========
@@ -1623,8 +1617,8 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Index vector is given by $\mathbf{T}(q)$ multiplied by $\mathbf{Ax}(q)$ where $\mathbf{Ax}(q)$ is the axis of the quaternion q,
-        and mod(q) is the $\mathbf{T}(q)$ (magnitude) of the quaternion.
+        The index vector is given by $\mathbf{T}(q)$, the norm (or magnitude) of
+        the quaternion $q$, multiplied by $\mathbf{Ax}(q)$, the axis of $q$.
 
         Returns
         =======

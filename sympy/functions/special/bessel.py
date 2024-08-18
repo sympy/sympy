@@ -8,7 +8,7 @@ from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
-from sympy.core.symbol import Dummy, Wild
+from sympy.core.symbol import Dummy, uniquely_named_symbol, Wild
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
@@ -168,7 +168,7 @@ class besselj(BesselBase):
     .. [2] Luke, Y. L. (1969), The Special Functions and Their
            Approximations, Volume 1
     .. [3] https://en.wikipedia.org/wiki/Bessel_function
-    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
+    .. [4] https://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
 
     """
 
@@ -316,7 +316,7 @@ class bessely(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
 
     """
 
@@ -471,7 +471,7 @@ class besseli(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
 
     """
 
@@ -517,6 +517,10 @@ class besseli(BesselBase):
         nnu = unpolarify(nu)
         if nu != nnu:
             return besseli(nnu, z)
+
+    def _eval_rewrite_as_tractable(self, nu, z, limitvar=None, **kwargs):
+        if z.is_extended_real:
+            return exp(z)*_besseli(nu, z)
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
@@ -586,6 +590,19 @@ class besseli(BesselBase):
 
         return super(besseli, self)._eval_nseries(x, n, logx, cdir)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        point = args0[1]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            nu, z = self.args
+            s = [(RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(Rational(2*nu + 1, 2), k))/\
+            ((2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k)) for k in range(n)] + [Order(1/z**(Rational(2*n + 1, 2)), x)]
+            return exp(z)/sqrt(2*pi) * (Add(*s))
+
+        return super()._eval_aseries(n, args0, x, logx)
+
 
 class besselk(BesselBase):
     r"""
@@ -621,7 +638,7 @@ class besselk(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
 
     """
 
@@ -667,6 +684,10 @@ class besselk(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
+
+    def _eval_rewrite_as_tractable(self, nu, z, limitvar=None, **kwargs):
+        if z.is_extended_real:
+            return exp(-z)*_besselk(nu, z)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
@@ -738,6 +759,19 @@ class besselk(BesselBase):
 
         return super(besselk, self)._eval_nseries(x, n, logx, cdir)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        point = args0[1]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            nu, z = self.args
+            s = [(RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(Rational(2*nu + 1, 2), k))/\
+            ((-2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k)) for k in range(n)] +[Order(1/z**(Rational(2*n + 1, 2)), x)]
+            return (exp(-z)*sqrt(pi/2))*Add(*s)
+
+        return super()._eval_aseries(n, args0, x, logx)
+
 
 class hankel1(BesselBase):
     r"""
@@ -772,7 +806,7 @@ class hankel1(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
 
     """
 
@@ -819,7 +853,7 @@ class hankel2(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
 
     """
 
@@ -934,7 +968,7 @@ class jn(SphericalBesselBase):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/10.47
+    .. [1] https://dlmf.nist.gov/10.47
 
     """
     @classmethod
@@ -1011,7 +1045,7 @@ class yn(SphericalBesselBase):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/10.47
+    .. [1] https://dlmf.nist.gov/10.47
 
     """
     @assume_integer_order
@@ -1135,7 +1169,7 @@ class hn1(SphericalHankelBase):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/10.47
+    .. [1] https://dlmf.nist.gov/10.47
 
     """
 
@@ -1191,7 +1225,7 @@ class hn2(SphericalHankelBase):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/10.47
+    .. [1] https://dlmf.nist.gov/10.47
 
     """
 
@@ -1212,11 +1246,11 @@ def jn_zeros(n, k, method="sympy", dps=15):
     This returns an array of zeros of $jn$ up to the $k$-th zero.
 
     * method = "sympy": uses `mpmath.besseljzero
-      <http://mpmath.org/doc/current/functions/bessel.html#mpmath.besseljzero>`_
+      <https://mpmath.org/doc/current/functions/bessel.html#mpmath.besseljzero>`_
     * method = "scipy": uses the
-      `SciPy's sph_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn_zeros.html>`_
+      `SciPy's sph_jn <https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn_zeros.html>`_
       and
-      `newton <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html>`_
+      `newton <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html>`_
       to find all
       roots, which is faster than computing the zeros using a general
       numerical solver, but it requires SciPy and only works with low
@@ -1396,9 +1430,9 @@ class airyai(AiryBase):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Airy_function
-    .. [2] http://dlmf.nist.gov/9
-    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
-    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    .. [2] https://dlmf.nist.gov/9
+    .. [3] https://encyclopediaofmath.org/wiki/Airy_functions
+    .. [4] https://mathworld.wolfram.com/AiryFunctions.html
 
     """
 
@@ -1475,7 +1509,7 @@ class airyai(AiryBase):
             if M is not None:
                 m = M[m]
                 # The transformation is given by 03.05.16.0001.01
-                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAi/16/01/01/0001/
+                # https://functions.wolfram.com/Bessel-TypeFunctions/AiryAi/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -1570,9 +1604,9 @@ class airybi(AiryBase):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Airy_function
-    .. [2] http://dlmf.nist.gov/9
-    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
-    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    .. [2] https://dlmf.nist.gov/9
+    .. [3] https://encyclopediaofmath.org/wiki/Airy_functions
+    .. [4] https://mathworld.wolfram.com/AiryFunctions.html
 
     """
 
@@ -1652,7 +1686,7 @@ class airybi(AiryBase):
             if M is not None:
                 m = M[m]
                 # The transformation is given by 03.06.16.0001.01
-                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBi/16/01/01/0001/
+                # https://functions.wolfram.com/Bessel-TypeFunctions/AiryBi/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -1738,9 +1772,9 @@ class airyaiprime(AiryBase):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Airy_function
-    .. [2] http://dlmf.nist.gov/9
-    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
-    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    .. [2] https://dlmf.nist.gov/9
+    .. [3] https://encyclopediaofmath.org/wiki/Airy_functions
+    .. [4] https://mathworld.wolfram.com/AiryFunctions.html
 
     """
 
@@ -1809,7 +1843,7 @@ class airyaiprime(AiryBase):
                 # The transformation is in principle
                 # given by 03.07.16.0001.01 but note
                 # that there is an error in this formula.
-                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAiPrime/16/01/01/0001/
+                # https://functions.wolfram.com/Bessel-TypeFunctions/AiryAiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -1897,9 +1931,9 @@ class airybiprime(AiryBase):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Airy_function
-    .. [2] http://dlmf.nist.gov/9
-    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
-    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    .. [2] https://dlmf.nist.gov/9
+    .. [3] https://encyclopediaofmath.org/wiki/Airy_functions
+    .. [4] https://mathworld.wolfram.com/AiryFunctions.html
 
     """
 
@@ -1973,7 +2007,7 @@ class airybiprime(AiryBase):
                 # The transformation is in principle
                 # given by 03.08.16.0001.01 but note
                 # that there is an error in this formula.
-                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBiPrime/16/01/01/0001/
+                # https://functions.wolfram.com/Bessel-TypeFunctions/AiryBiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -2028,7 +2062,7 @@ class marcumq(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Marcum_Q-function
-    .. [2] http://mathworld.wolfram.com/MarcumQ-Function.html
+    .. [2] https://mathworld.wolfram.com/MarcumQ-Function.html
 
     """
 
@@ -2067,7 +2101,7 @@ class marcumq(Function):
 
     def _eval_rewrite_as_Integral(self, m, a, b, **kwargs):
         from sympy.integrals.integrals import Integral
-        x = kwargs.get('x', Dummy('x'))
+        x = kwargs.get('x', Dummy(uniquely_named_symbol('x').name))
         return a ** (1 - m) * \
                Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, S.Infinity])
 
@@ -2081,9 +2115,70 @@ class marcumq(Function):
             if m == 1:
                 return (1 + exp(-a**2) * besseli(0, a**2)) / 2
             if m.is_Integer and m >= 2:
-                s = sum([besseli(i, a**2) for i in range(1, m)])
+                s = sum(besseli(i, a**2) for i in range(1, m))
                 return S.Half + exp(-a**2) * besseli(0, a**2) / 2 + exp(-a**2) * s
 
     def _eval_is_zero(self):
         if all(arg.is_zero for arg in self.args):
             return True
+
+class _besseli(Function):
+    """
+    Helper function to make the $\\mathrm{besseli}(nu, z)$
+    function tractable for the Gruntz algorithm.
+
+    """
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        point = args0[1]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            nu, z = self.args
+            l = [((RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(
+                    Rational(2*nu + 1, 2), k))/((2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k))) for k in range(n)]
+            return sqrt(pi/(2))*(Add(*l)) + Order(1/z**(Rational(2*n + 1, 2)), x)
+
+        return super()._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_intractable(self, nu, z, **kwargs):
+        return exp(-z)*besseli(nu, z)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        x0 = self.args[0].limit(x, 0)
+        if x0.is_zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
+
+
+class _besselk(Function):
+    """
+    Helper function to make the $\\mathrm{besselk}(nu, z)$
+    function tractable for the Gruntz algorithm.
+
+    """
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        point = args0[1]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            nu, z = self.args
+            l = [((RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(
+                    Rational(2*nu + 1, 2), k))/((-2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k))) for k in range(n)]
+            return sqrt(pi/(2))*(Add(*l)) + Order(1/z**(Rational(2*n + 1, 2)), x)
+
+        return super()._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_intractable(self,nu, z, **kwargs):
+        return exp(z)*besselk(nu, z)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        x0 = self.args[0].limit(x, 0)
+        if x0.is_zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)

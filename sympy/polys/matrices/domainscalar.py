@@ -55,6 +55,9 @@ class DomainScalar:
         domain = self.domain.unify(other.domain)
         return self.to_domain(domain), other.to_domain(domain)
 
+    def __bool__(self):
+        return bool(self.element)
+
     def __add__(self, other):
         if not isinstance(other, DomainScalar):
             return NotImplemented
@@ -103,6 +106,9 @@ class DomainScalar:
 
     def __pos__(self):
         return self.new(+self.element, self.domain)
+
+    def __neg__(self):
+        return self.new(-self.element, self.domain)
 
     def __eq__(self, other):
         if not isinstance(other, DomainScalar):

@@ -1,6 +1,6 @@
-==============
-Control Module
-==============
+=======
+Control
+=======
 
 .. module:: sympy.physics.control
 

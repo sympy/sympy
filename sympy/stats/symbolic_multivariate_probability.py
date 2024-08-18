@@ -5,7 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import expand as _expand
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.matrices.common import ShapeError
+from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.special import ZeroMatrix
@@ -175,7 +175,7 @@ class VarianceMatrix(Variance, MatrixExpr):
             for a in arg.args:
                 if is_random(a):
                     rv.append(a)
-            variances = Add(*map(lambda xv: Variance(xv, condition).expand(), rv))
+            variances = Add(*(Variance(xv, condition).expand() for xv in rv))
             map_to_covar = lambda x: 2*Covariance(*x, condition=condition).expand()
             covariances = Add(*map(map_to_covar, itertools.combinations(rv, 2)))
             return variances + covariances

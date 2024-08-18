@@ -26,6 +26,18 @@ class Mod(Function):
     The convention used is the same as Python's: the remainder always has the
     same sign as the divisor.
 
+    Many objects can be evaluated modulo ``n`` much faster than they can be
+    evaluated directly (or at all).  For this, ``evaluate=False`` is
+    necessary to prevent eager evaluation:
+
+    >>> from sympy import binomial, factorial, Mod, Pow
+    >>> Mod(Pow(2, 10**16, evaluate=False), 97)
+    61
+    >>> Mod(factorial(10**9, evaluate=False), 10**9 + 9)
+    712524808
+    >>> Mod(binomial(10**18, 10**12, evaluate=False), (10**5 + 3)**2)
+    3744312326
+
     Examples
     ========
 
@@ -152,8 +164,10 @@ class Mod(Function):
                 return prod_non_mod*cls(net, q)
 
             if q.is_Integer and q is not S.One:
-                non_mod_l = [i % q if i.is_Integer and (i % q is not S.Zero) else i for
-                             i in non_mod_l]
+                if all(t.is_integer for t in p.args):
+                    non_mod_l = [i % q if i.is_Integer else i for i in p.args]
+                    if any(iq is S.Zero for iq in non_mod_l):
+                        return S.Zero
 
             p = Mul(*(non_mod_l + mod_l))
 
@@ -236,3 +250,11 @@ class Mod(Function):
     def _eval_rewrite_as_floor(self, a, b, **kwargs):
         from sympy.functions.elementary.integers import floor
         return a - b*floor(a/b)
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.functions.elementary.integers import floor
+        return self.rewrite(floor)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.functions.elementary.integers import floor
+        return self.rewrite(floor)._eval_nseries(x, n, logx=logx, cdir=cdir)

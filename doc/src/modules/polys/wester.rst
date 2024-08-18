@@ -22,7 +22,7 @@ computations were done using the following setup::
 
     >>> from sympy import *
 
-    >>> init_printing(use_unicode=True, wrap_line=False)
+    >>> init_printing(use_unicode=True)
 
     >>> var('x,y,z,s,c')
     (x, y, z, s, c)
@@ -457,4 +457,4 @@ Literature
 ==========
 
 .. [Wester1999] Michael J. Wester, A Critique of the Mathematical Abilities of
-    CA Systems, 1999, `<http://www.math.unm.edu/~wester/cas/book/Wester.pdf>`_
+    CA Systems, 1999, `<https://www.math.unm.edu/~wester/cas/book/Wester.pdf>`_

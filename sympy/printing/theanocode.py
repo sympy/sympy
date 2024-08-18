@@ -18,7 +18,12 @@ from functools import partial
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
+
+__doctest_requires__ = {('theano_function',): ['theano']}
+
+
 theano = import_module('theano')
+
 
 if theano:
     ts = theano.scalar
@@ -106,7 +111,7 @@ class TheanoPrinter(Printer):
     printmethod = "_theano"
 
     def __init__(self, *args, **kwargs):
-        self.cache = kwargs.pop('cache', dict())
+        self.cache = kwargs.pop('cache', {})
         super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
@@ -399,7 +404,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
         values (tuple of ``bool``\ s).
     """
     if dim is not None:
-        return {s: (False,) * dim for s in inputs}
+        return dict.fromkeys(inputs, (False,) * dim)
 
     if dims is not None:
         maxdim = max(dims.values())

@@ -20,7 +20,9 @@ from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
 
+
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
+
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -67,6 +69,7 @@ MPMATH_TRANSLATIONS = {
     "ceiling": "ceil",
     "chebyshevt": "chebyt",
     "chebyshevu": "chebyu",
+    "assoc_legendre": "legenp",
     "E": "e",
     "I": "j",
     "ln": "log",
@@ -91,7 +94,10 @@ MPMATH_TRANSLATIONS = {
 NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
 }
-SCIPY_TRANSLATIONS: dict[str, str] = {}
+SCIPY_TRANSLATIONS: dict[str, str] = {
+    "jn" : "spherical_jn",
+    "yn" : "spherical_yn"
+}
 CUPY_TRANSLATIONS: dict[str, str] = {}
 JAX_TRANSLATIONS: dict[str, str] = {}
 
@@ -180,7 +186,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False):
+             dummify=False, cse=False, docstring_limit=1000):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -350,6 +356,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         When ``True``, ``sympy.simplify.cse`` is used, otherwise (the default)
         the user may pass a function matching the ``cse`` signature.
 
+    docstring_limit : int or None
+        When lambdifying large expressions, a significant proportion of the time
+        spent inside ``lambdify`` is spent producing a string representation of
+        the expression for use in the automatically generated docstring of the
+        returned function. For expressions containing hundreds or more nodes the
+        resulting docstring often becomes so long and dense that it is difficult
+        to read. To reduce the runtime of lambdify, the rendering of the full
+        expression inside the docstring can be disabled.
+
+        When ``None``, the full expression is rendered in the docstring. When
+        ``0`` or a negative ``int``, an ellipsis is rendering in the docstring
+        instead of the expression. When a strictly positive ``int``, if the
+        number of nodes in the expression exceeds ``docstring_limit`` an
+        ellipsis is rendered in the docstring, otherwise a string representation
+        of the expression is rendered as normal. The default is ``1000``.
 
     Examples
     ========
@@ -706,15 +727,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     But if we try to pass in a SymPy expression, it fails
 
-    >>> try:
-    ...     g(x + 1)
-    ... # NumPy release after 1.17 raises TypeError instead of
-    ... # AttributeError
-    ... except (AttributeError, TypeError):
-    ...     raise AttributeError() # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> g(x + 1)
     Traceback (most recent call last):
     ...
-    AttributeError:
+    TypeError: loop of ufunc does not support argument 0 of type Add which has
+               no callable sin method
 
     Now, let's look at what happened. The reason this fails is that ``g``
     calls ``numpy.sin`` on the input expression, and ``numpy.sin`` does not
@@ -895,9 +912,14 @@ or tuple for the function arguments.
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
-    expr_str = str(expr)
-    if len(expr_str) > 78:
-        expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+    if _too_large_for_docstring(expr, docstring_limit):
+        expr_str = "EXPRESSION REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+        src_str = "SOURCE CODE REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+    else:
+        expr_str = str(expr)
+        if len(expr_str) > 78:
+            expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+        src_str = funcstr
     func.__doc__ = (
         "Created with lambdify. Signature:\n\n"
         "{sig}\n\n"
@@ -907,7 +929,7 @@ or tuple for the function arguments.
         "{src}\n\n"
         "Imported modules:\n\n"
         "{imp_mods}"
-        ).format(sig=sig, expr=expr_str, src=funcstr, imp_mods='\n'.join(imp_mod_lines))
+        ).format(sig=sig, expr=expr_str, src=src_str, imp_mods='\n'.join(imp_mod_lines))
     return func
 
 def _module_present(modname, modlist):
@@ -937,16 +959,18 @@ def _recursive_to_string(doprint, arg):
     """Functions in lambdify accept both SymPy types and non-SymPy types such as python
     lists and tuples. This method ensures that we only call the doprint method of the
     printer with SymPy types (so that the printer safely can use SymPy-methods)."""
-    from sympy.matrices.common import MatrixOperations
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.core.basic import Basic
 
-    if isinstance(arg, (Basic, MatrixOperations)):
+    if isinstance(arg, (Basic, MatrixBase)):
         return doprint(arg)
     elif iterable(arg):
         if isinstance(arg, list):
             left, right = "[", "]"
         elif isinstance(arg, tuple):
             left, right = "(", ",)"
+            if not arg:
+                return "()"
         else:
             raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
         return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right
@@ -1112,9 +1136,10 @@ class _EvaluatorPrinter:
             args = [args]
 
         if cses:
+            cses = list(cses)
             subvars, subexprs = zip(*cses)
             exprs = [expr] + list(subexprs)
-            argstrs, exprs = self._preprocess(args, exprs)
+            argstrs, exprs = self._preprocess(args, exprs, cses=cses)
             expr, subexprs = exprs[0], exprs[1:]
             cses = zip(subvars, subexprs)
         else:
@@ -1140,9 +1165,15 @@ class _EvaluatorPrinter:
 
         for s, e in cses:
             if e is None:
-                funcbody.append('del {}'.format(s))
+                funcbody.append('del {}'.format(self._exprrepr(s)))
             else:
-                funcbody.append('{} = {}'.format(s, self._exprrepr(e)))
+                funcbody.append('{} = {}'.format(self._exprrepr(s), self._exprrepr(e)))
+
+        # Subs may appear in expressions generated by .diff()
+        subs_assignments = []
+        expr = self._handle_Subs(expr, out=subs_assignments)
+        for lhs, rhs in subs_assignments:
+            funcbody.append('{} = {}'.format(self._exprrepr(lhs), self._exprrepr(rhs)))
 
         str_expr = _recursive_to_string(self._exprrepr, expr)
 
@@ -1160,7 +1191,7 @@ class _EvaluatorPrinter:
         return isinstance(ident, str) and ident.isidentifier() \
                 and not keyword.iskeyword(ident)
 
-    def _preprocess(self, args, expr):
+    def _preprocess(self, args, expr, cses=(), _dummies_dict=None):
         """Preprocess args, expr to replace arguments that do not map
         to valid Python identifiers.
 
@@ -1180,24 +1211,35 @@ class _EvaluatorPrinter:
             isinstance(arg, Dummy) for arg in flatten(args))
 
         argstrs = [None]*len(args)
+        if _dummies_dict is None:
+            _dummies_dict = {}
+
+        def update_dummies(arg, dummy):
+            _dummies_dict[arg] = dummy
+            for repl, sub in cses:
+                arg = arg.xreplace({sub: repl})
+                _dummies_dict[arg] = dummy
+
         for arg, i in reversed(list(ordered(zip(args, range(len(args)))))):
             if iterable(arg):
-                s, expr = self._preprocess(arg, expr)
+                s, expr = self._preprocess(arg, expr, cses=cses, _dummies_dict=_dummies_dict)
             elif isinstance(arg, DeferredVector):
                 s = str(arg)
             elif isinstance(arg, Basic) and arg.is_symbol:
-                s = self._argrepr(arg)
+                s = str(arg)
                 if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
                     if isinstance(expr, Expr):
                         dummy = uniquely_named_symbol(
                             dummy.name, expr, modify=lambda s: '_' + s)
                     s = self._argrepr(dummy)
-                    expr = self._subexpr(expr, {arg: dummy})
+                    update_dummies(arg, dummy)
+                    expr = self._subexpr(expr, _dummies_dict)
             elif dummify or isinstance(arg, (Function, Derivative)):
                 dummy = Dummy()
                 s = self._argrepr(dummy)
-                expr = self._subexpr(expr, {arg: dummy})
+                update_dummies(arg, dummy)
+                expr = self._subexpr(expr, _dummies_dict)
             else:
                 s = str(arg)
             argstrs[i] = s
@@ -1246,6 +1288,27 @@ class _EvaluatorPrinter:
                 unpack_lhs(val) if iterable(val) else val for val in lvalues))
 
         return ['{} = {}'.format(unpack_lhs(unpackto), arg)]
+
+    def _handle_Subs(self, expr, out):
+        """Any instance of Subs is extracted and returned as assignment pairs."""
+        from sympy.core.basic import Basic
+        from sympy.core.function import Subs
+        from sympy.core.symbol import Dummy
+        from sympy.matrices.matrixbase import MatrixBase
+
+        def _replace(ex, variables, point):
+            safe = {}
+            for lhs, rhs in zip(variables, point):
+                dummy = Dummy()
+                safe[lhs] = dummy
+                out.append((dummy, rhs))
+            return ex.xreplace(safe)
+
+        if isinstance(expr, (Basic, MatrixBase)):
+            expr = expr.replace(Subs, _replace)
+        elif iterable(expr):
+            expr = type(expr)([self._handle_Subs(e, out) for e in expr])
+        return expr
 
 class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
     def _print_unpacking(self, lvalues, rvalue):
@@ -1394,3 +1457,113 @@ def implemented_function(symfunc, implementation):
             symfunc should be either a string or
             an UndefinedFunction instance.'''))
     return symfunc
+
+
+def _too_large_for_docstring(expr, limit):
+    """Decide whether an ``Expr`` is too large to be fully rendered in a
+    ``lambdify`` docstring.
+
+    This is a fast alternative to ``count_ops``, which can become prohibitively
+    slow for large expressions, because in this instance we only care whether
+    ``limit`` is exceeded rather than counting the exact number of nodes in the
+    expression.
+
+    Parameters
+    ==========
+    expr : ``Expr``, (nested) ``list`` of ``Expr``, or ``Matrix``
+        The same objects that can be passed to the ``expr`` argument of
+        ``lambdify``.
+    limit : ``int`` or ``None``
+        The threshold above which an expression contains too many nodes to be
+        usefully rendered in the docstring. If ``None`` then there is no limit.
+
+    Returns
+    =======
+    bool
+        ``True`` if the number of nodes in the expression exceeds the limit,
+        ``False`` otherwise.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import _too_large_for_docstring
+    >>> expr = x
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    False
+    >>> _too_large_for_docstring(expr, 1)
+    False
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    Does this split it?
+
+    >>> expr = [x, y, z]
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    False
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    >>> expr = [x, [y], z, [[x+y], [x*y*z, [x+y+z]]]]
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    False
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    >>> expr = ((x + y + z)**5).expand()
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    True
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    >>> from sympy import Matrix
+    >>> expr = Matrix([[(x + y + z), ((x + y + z)**2).expand(),
+    ...                 ((x + y + z)**3).expand(), ((x + y + z)**4).expand()]])
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 1000)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    True
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    """
+    # Must be imported here to avoid a circular import error
+    from sympy.core.traversal import postorder_traversal
+
+    if limit is None:
+        return False
+
+    i = 0
+    for _ in postorder_traversal(expr):
+        i += 1
+        if i > limit:
+            return True
+    return False

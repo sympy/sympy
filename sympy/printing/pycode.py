@@ -41,6 +41,8 @@ _known_functions_math = {
     'floor': 'floor',
     'gamma': 'gamma',
     'hypot': 'hypot',
+    'isinf': 'isinf',
+    'isnan': 'isnan',
     'loggamma': 'lgamma',
     'log': 'log',
     'ln': 'log',
@@ -52,7 +54,7 @@ _known_functions_math = {
     'Sqrt': 'sqrt',
     'tan': 'tan',
     'tanh': 'tanh'
-}  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp pow modf
+}  # Not used from ``math``: [copysign isclose isfinite isinf ldexp frexp pow modf
 # radians trunc fmod fsum gcd degrees fabs]
 _known_constants_math = {
     'Exp1': 'e',
@@ -66,7 +68,7 @@ _known_constants_math = {
 def _print_known_func(self, expr):
     known = self.known_functions[expr.__class__.__name__]
     return '{name}({args})'.format(name=self._module_format(known),
-                                   args=', '.join(map(lambda arg: self._print(arg), expr.args)))
+                                   args=', '.join((self._print(arg) for arg in expr.args)))
 
 
 def _print_known_const(self, expr):
@@ -200,7 +202,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
-        return ('{} % {}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
+        return ('{} % {}'.format(*(self.parenthesize(x, PREC) for x in expr.args)))
 
     def _print_Piecewise(self, expr):
         result = []
@@ -286,7 +288,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         return '\n'.join([self.tab + line for line in codestring.split('\n')])
 
     def _print_FunctionDefinition(self, fd):
-        body = '\n'.join(map(lambda arg: self._print(arg), fd.body))
+        body = '\n'.join((self._print(arg) for arg in fd.body))
         return "def {name}({parameters}):\n{body}".format(
             name=self._print(fd.name),
             parameters=', '.join([self._print(var.symbol) for var in fd.parameters]),
@@ -294,7 +296,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         )
 
     def _print_While(self, whl):
-        body = '\n'.join(map(lambda arg: self._print(arg), whl.body))
+        body = '\n'.join((self._print(arg) for arg in whl.body))
         return "while {cond}:\n{body}".format(
             cond=self._print(whl.condition),
             body=self._indent_codestring(body)
@@ -306,18 +308,31 @@ class AbstractPythonCodePrinter(CodePrinter):
             self._print(decl.variable.value)
         )
 
+    def _print_BreakToken(self, bt):
+        return 'break'
+
     def _print_Return(self, ret):
         arg, = ret.args
         return 'return %s' % self._print(arg)
 
+    def _print_Raise(self, rs):
+        arg, = rs.args
+        return 'raise %s' % self._print(arg)
+
+    def _print_RuntimeError_(self, re):
+        message, = re.args
+        return "RuntimeError(%s)" % self._print(message)
+
     def _print_Print(self, prnt):
-        print_args = ', '.join(map(lambda arg: self._print(arg), prnt.print_args))
-        if prnt.format_string != None: # Must be '!= None', cannot be 'is not None'
-            print_args = '{} % ({})'.format(
-                self._print(prnt.format_string), print_args)
+        print_args = ', '.join((self._print(arg) for arg in prnt.print_args))
+        from sympy.codegen.ast import none
+        if prnt.format_string != none:
+            print_args = '{} % ({}), end=""'.format(
+                self._print(prnt.format_string),
+                print_args
+            )
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
-
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm):
@@ -544,6 +559,9 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         PREC = precedence(expr)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
+    def _print_IndexedBase(self, expr):
+        return expr.name
+
     def _print_Indexed(self, expr):
         base = expr.args[0]
         index = expr.args[1:]
@@ -730,6 +748,15 @@ class MpmathPrinter(PythonCodePrinter):
                 ", ".join("(%s, %s)" % tuple(map(self._print, l)) for l in limits))
 
 
+    def _print_Derivative_zeta(self, args, seq_orders):
+        arg, = args
+        deriv_order, = seq_orders
+        return '{}({}, derivative={})'.format(
+            self._module_format('mpmath.zeta'),
+            self._print(arg), deriv_order
+        )
+
+
 for k in MpmathPrinter._kf:
     setattr(MpmathPrinter, '_print_%s' % k, _print_known_func)
 
@@ -741,10 +768,15 @@ class SymPyPrinter(AbstractPythonCodePrinter):
 
     language = "Python with SymPy"
 
+    _default_settings = dict(
+        AbstractPythonCodePrinter._default_settings,
+        strict=False   # any class name will per definition be what we target in SymPyPrinter.
+    )
+
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''
         return '%s(%s)' % (self._module_format(mod + ('.' if mod else '') + expr.func.__name__),
-                           ', '.join(map(lambda arg: self._print(arg), expr.args)))
+                           ', '.join((self._print(arg) for arg in expr.args)))
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='sympy.sqrt')

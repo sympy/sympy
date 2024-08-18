@@ -25,7 +25,7 @@ class SingularityFunction(Function):
 
     The singularity function will automatically evaluate to
     ``Derivative(DiracDelta(x - a), x, -n - 1)`` if ``n < 0``
-    and ``(x - a)**n*Heaviside(x - a)`` if ``n >= 0``.
+    and ``(x - a)**n*Heaviside(x - a, 1)`` if ``n >= 0``.
 
     Examples
     ========
@@ -52,7 +52,7 @@ class SingularityFunction(Function):
     >>> diff(SingularityFunction(x, 4, 0), x, 2)
     SingularityFunction(x, 4, -2)
     >>> SingularityFunction(x, 4, 5).rewrite(Piecewise)
-    Piecewise(((x - 4)**5, x > 4), (0, True))
+    Piecewise(((x - 4)**5, x >= 4), (0, True))
     >>> expr = SingularityFunction(x, a, n)
     >>> y = Symbol('y', positive=True)
     >>> n = Symbol('n', nonnegative=True)
@@ -65,11 +65,11 @@ class SingularityFunction(Function):
 
     >>> expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
     >>> expr.rewrite(Heaviside)
-    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(x + 3) - DiracDelta(x, 1)
     >>> expr.rewrite(DiracDelta)
-    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(x + 3) - DiracDelta(x, 1)
     >>> expr.rewrite('HeavisideDiracDelta')
-    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(x + 3) - DiracDelta(x, 1)
 
     See Also
     ========
@@ -103,7 +103,7 @@ class SingularityFunction(Function):
 
         if argindex == 1:
             x, a, n = self.args
-            if n in (S.Zero, S.NegativeOne):
+            if n in (S.Zero, S.NegativeOne, S(-2), S(-3)):
                 return self.func(x, a, n-1)
             elif n.is_positive:
                 return n*self.func(x, a, n-1)
@@ -164,13 +164,16 @@ class SingularityFunction(Function):
             raise ValueError("Singularity Functions are not defined for imaginary exponents.")
         if shift is S.NaN or n is S.NaN:
             return S.NaN
-        if (n + 2).is_negative:
-            raise ValueError("Singularity Functions are not defined for exponents less than -2.")
+        if (n + 4).is_negative:
+            raise ValueError("Singularity Functions are not defined for exponents less than -4.")
         if shift.is_extended_negative:
             return S.Zero
-        if n.is_nonnegative and shift.is_extended_nonnegative:
-            return (x - a)**n
-        if n in (S.NegativeOne, -2):
+        if n.is_nonnegative:
+            if shift.is_zero:  # use literal 0 in case of Symbol('z', zero=True)
+                return S.Zero**n
+            if shift.is_extended_nonnegative:
+                return shift**n
+        if n in (S.NegativeOne, -2, -3, -4):
             if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
@@ -183,10 +186,10 @@ class SingularityFunction(Function):
         '''
         x, a, n = self.args
 
-        if n in (S.NegativeOne, S(-2)):
-            return Piecewise((oo, Eq((x - a), 0)), (0, True))
+        if n in (S.NegativeOne, S(-2), S(-3), S(-4)):
+            return Piecewise((oo, Eq(x - a, 0)), (0, True))
         elif n.is_nonnegative:
-            return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
+            return Piecewise(((x - a)**n, x - a >= 0), (0, True))
 
     def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         '''
@@ -195,12 +198,16 @@ class SingularityFunction(Function):
         '''
         x, a, n = self.args
 
+        if n == -4:
+            return diff(Heaviside(x - a), x.free_symbols.pop(), 4)
+        if n == -3:
+            return diff(Heaviside(x - a), x.free_symbols.pop(), 3)
         if n == -2:
             return diff(Heaviside(x - a), x.free_symbols.pop(), 2)
         if n == -1:
             return diff(Heaviside(x - a), x.free_symbols.pop(), 1)
         if n.is_nonnegative:
-            return (x - a)**n*Heaviside(x - a)
+            return (x - a)**n*Heaviside(x - a, 1)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         z, a, n = self.args

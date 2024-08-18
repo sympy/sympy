@@ -714,7 +714,11 @@ static PyMethodDef ${module}Methods[] = {
 _ufunc_outcalls = Template("*((double *)out${outnum}) = ${funcname}(${call_args});")
 
 _ufunc_body = Template("""\
+#ifdef NPY_1_19_API_VERSION
+static void ${funcname}_ufunc(char **args, const npy_intp *dimensions, const npy_intp* steps, void* data)
+#else
 static void ${funcname}_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+#endif
 {
     npy_intp i;
     npy_intp n = dimensions[0];
@@ -1043,7 +1047,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     References
     ==========
 
-    .. [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
+    .. [1] https://numpy.org/doc/stable/reference/ufuncs.html
 
     Examples
     ========

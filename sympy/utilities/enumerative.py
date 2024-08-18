@@ -243,10 +243,9 @@ def multiset_partitions_taocp(multiplicities):
     while True:
         while True:
             # Step M2 (Subtract v from u)
-            j = a
             k = b
             x = False
-            while j < b:
+            for j in range(a, b):
                 pstack[k].u = pstack[j].u - pstack[j].v
                 if pstack[k].u == 0:
                     x = True
@@ -259,7 +258,6 @@ def multiset_partitions_taocp(multiplicities):
                     pstack[k].c = pstack[j].c
                     pstack[k].v = pstack[k].u
                     k = k + 1
-                j = j + 1
                 # Note: x is True iff v has changed
 
             # Step M3 (Push if nonzero.)
@@ -624,7 +622,7 @@ class MultisetPartitionTraverser():
         """
 
         if amt == 1:
-            # In this case we always need to increment, *before*
+            # In this case we always need to decrement, *before*
             # enforcing the "sufficient unallocated multiplicity"
             # constraint.  Easiest for this is just to call the
             # regular decrement method.
@@ -668,7 +666,7 @@ class MultisetPartitionTraverser():
         Parameters
         ==========
 
-         part
+        part
             part to be decremented (topmost part on the stack)
 
         ub

@@ -6,7 +6,8 @@ from sympy.core import (sympify, Basic, S, Expr, factor_terms,
 from sympy.core.cache import cacheit
 from sympy.core.function import (count_ops, _mexpand, FunctionClass, expand,
                                  expand_mul, _coeff_isneg, Derivative)
-from sympy.core.numbers import I, Integer, igcd
+from sympy.core.numbers import I, Integer
+from sympy.core.intfunc import igcd
 from sympy.core.sorting import _nodes
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.external.gmpy import SYMPY_INTS
@@ -310,8 +311,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                     fs.add(c)
                     fs.add(s)
             for fn in fs:
-                for k in range(1, n + 1):
-                    terms.append((fn, k))
+                terms.extend((fn, k) for k in range(1, n + 1))
             extra = []
             for fn, v in terms:
                 if fn == tan:
@@ -735,7 +735,7 @@ def trigsimp_old(expr, *, first=True, **opts):
                 d = separatevars(d, dict=True) or d
             if isinstance(d, dict):
                 expr = 1
-                for k, v in d.items():
+                for v in d.values():
                     # remove hollow factoring
                     was = v
                     v = expand_mul(v)
@@ -1113,7 +1113,7 @@ def __trigsimp(expr, deep=False):
             raise TypeError
         fnew = factor(new)
         if fnew != new:
-            new = sorted([new, factor(new)], key=count_ops)[0]
+            new = min([new, factor(new)], key=count_ops)
         # if all exp that were introduced disappeared then accept it
         if not (new.atoms(exp) - e):
             expr = new

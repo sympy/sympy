@@ -48,7 +48,8 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
-from sympy.core.numbers import Rational, igcd
+from sympy.core.numbers import Rational
+from sympy.core.intfunc import igcd
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
@@ -443,10 +444,7 @@ def _has_constant_term(p, x):
     a = [0]*R.ngens
     a[iv] = 1
     miv = tuple(a)
-    for expv in p:
-        if monomial_min(expv, miv) == zm:
-            return True
-    return False
+    return any(monomial_min(expv, miv) == zm for expv in p)
 
 def _get_constant_term(p, x):
     """Return constant term in p with respect to x

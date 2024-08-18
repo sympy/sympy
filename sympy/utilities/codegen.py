@@ -216,10 +216,8 @@ class Routine:
 
         """
         v = set(self.local_vars)
-        for arg in self.arguments:
-            v.add(arg.name)
-        for res in self.results:
-            v.add(res.result_var)
+        v.update(arg.name for arg in self.arguments)
+        v.update(res.result_var for res in self.results)
         return v
 
     @property
@@ -297,7 +295,7 @@ class Variable:
             When not given, the data type will be guessed based on the
             assumptions on the symbol argument.
 
-        dimension : sequence containing tupes, optional
+        dimensions : sequence containing tuples, optional
             If present, the argument is interpreted as an array, where this
             sequence of tuples specifies (lower, upper) bounds for each
             index of the array.
@@ -315,7 +313,7 @@ class Variable:
                             "instance of the DataType class.")
         if dimensions and not isinstance(dimensions, (tuple, list)):
             raise TypeError(
-                "The dimension argument must be a sequence of tuples")
+                "The dimensions argument must be a sequence of tuples")
 
         self._name = name
         self._datatype = {
@@ -419,7 +417,7 @@ class OutputArgument(Argument, ResultBase):
             When not given, the data type will be guessed based on the
             assumptions on the symbol argument.
 
-        dimension : sequence containing tupes, optional
+        dimensions : sequence containing tuples, optional
             If present, the argument is interpreted as an array, where this
             sequence of tuples specifies (lower, upper) bounds for each
             index of the array.
@@ -491,7 +489,7 @@ class Result(Variable, ResultBase):
             When not given, the data type will be guessed based on the
             assumptions on the expr argument.
 
-        dimension : sequence containing tupes, optional
+        dimensions : sequence containing tuples, optional
             If present, this variable is interpreted as an array,
             where this sequence of tuples specifies (lower, upper)
             bounds for each index of the array.
@@ -969,7 +967,7 @@ class CCodeGen(CodeGen):
                 prefix = "const {} ".format(t)
 
             constants, not_c, c_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False, dereference=dereference),
+                'doprint', {"human": False, "dereference": dereference, "strict": False},
                 result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
@@ -1002,14 +1000,14 @@ class CCodeGen(CodeGen):
 
             try:
                 constants, not_c, c_expr = self._printer_method_with_settings(
-                    'doprint', dict(human=False, dereference=dereference),
+                    'doprint', {"human": False, "dereference": dereference, "strict": False},
                     result.expr, assign_to=assign_to)
             except AssignmentError:
                 assign_to = result.result_var
                 code_lines.append(
                     "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
                 constants, not_c, c_expr = self._printer_method_with_settings(
-                    'doprint', dict(human=False, dereference=dereference),
+                    'doprint', {"human": False, "dereference": dereference, "strict": False},
                     result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
@@ -1226,7 +1224,7 @@ class FCodeGen(CodeGen):
                 assign_to = result.result_var
 
             constants, not_fortran, f_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False, source_format='free', standard=95),
+                'doprint', {"human": False, "source_format": 'free', "standard": 95, "strict": False},
                 result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
@@ -1246,7 +1244,7 @@ class FCodeGen(CodeGen):
 
     def _indent_code(self, codelines):
         return self._printer_method_with_settings(
-            'indent_code', dict(human=False, source_format='free'), codelines)
+            'indent_code', {"human": False, "source_format": 'free', "strict": False}, codelines)
 
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         # check that symbols are unique with ignorecase
@@ -1430,7 +1428,7 @@ class JuliaCodeGen(CodeGen):
 
         # Inputs
         args = []
-        for i, arg in enumerate(routine.arguments):
+        for arg in routine.arguments:
             if isinstance(arg, OutputArgument):
                 raise CodeGenError("Julia: invalid argument of type %s" %
                                    str(type(arg)))
@@ -1465,14 +1463,14 @@ class JuliaCodeGen(CodeGen):
     def _call_printer(self, routine):
         declarations = []
         code_lines = []
-        for i, result in enumerate(routine.results):
+        for result in routine.results:
             if isinstance(result, Result):
                 assign_to = result.result_var
             else:
                 raise CodeGenError("unexpected object in Routine results")
 
             constants, not_supported, jl_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False), result.expr, assign_to=assign_to)
+                'doprint', {"human": False, "strict": False}, result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
@@ -1490,7 +1488,7 @@ class JuliaCodeGen(CodeGen):
     def _indent_code(self, codelines):
         # Note that indenting seems to happen twice, first
         # statement-by-statement by JuliaPrinter then again here.
-        p = JuliaCodePrinter({'human': False})
+        p = JuliaCodePrinter({'human': False, "strict": False})
         return p.indent_code(codelines)
 
     def dump_jl(self, routines, f, prefix, header=True, empty=True):
@@ -1638,7 +1636,7 @@ class OctaveCodeGen(CodeGen):
 
         # Outputs
         outs = []
-        for i, result in enumerate(routine.results):
+        for result in routine.results:
             if isinstance(result, Result):
                 # Note: name not result_var; want `y` not `y(i)` for Indexed
                 s = self._get_symbol(result.name)
@@ -1653,7 +1651,7 @@ class OctaveCodeGen(CodeGen):
 
         # Inputs
         args = []
-        for i, arg in enumerate(routine.arguments):
+        for arg in routine.arguments:
             if isinstance(arg, (OutputArgument, InOutArgument)):
                 raise CodeGenError("Octave: invalid argument of type %s" %
                                    str(type(arg)))
@@ -1683,14 +1681,14 @@ class OctaveCodeGen(CodeGen):
     def _call_printer(self, routine):
         declarations = []
         code_lines = []
-        for i, result in enumerate(routine.results):
+        for result in routine.results:
             if isinstance(result, Result):
                 assign_to = result.result_var
             else:
                 raise CodeGenError("unexpected object in Routine results")
 
             constants, not_supported, oct_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False), result.expr, assign_to=assign_to)
+                'doprint', {"human": False, "strict": False}, result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
@@ -1707,7 +1705,7 @@ class OctaveCodeGen(CodeGen):
 
     def _indent_code(self, codelines):
         return self._printer_method_with_settings(
-            'indent_code', dict(human=False), codelines)
+            'indent_code', {"human": False, "strict": False}, codelines)
 
     def dump_m(self, routines, f, prefix, header=True, empty=True, inline=True):
         # Note used to call self.dump_code() but we need more control for header
@@ -1922,7 +1920,7 @@ class RustCodeGen(CodeGen):
             if isinstance(arg, ResultBase) and not arg.dimensions:
                 dereference.append(arg.name)
 
-        for i, result in enumerate(routine.results):
+        for result in routine.results:
             if isinstance(result, Result):
                 assign_to = result.result_var
                 returns.append(str(result.result_var))
@@ -1930,7 +1928,7 @@ class RustCodeGen(CodeGen):
                 raise CodeGenError("unexpected object in Routine results")
 
             constants, not_supported, rs_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False), result.expr, assign_to=assign_to)
+                'doprint', {"human": False, "strict": False}, result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
                 declarations.append("const %s: f64 = %s;\n" % (name, value))
@@ -1991,7 +1989,7 @@ def get_code_generator(language, project=None, standard=None, printer = None):
 
 def codegen(name_expr, language=None, prefix=None, project="project",
             to_files=False, header=True, empty=True, argument_sequence=None,
-            global_vars=None, standard=None, code_gen=None, printer = None):
+            global_vars=None, standard=None, code_gen=None, printer=None):
     """Generate source code for expressions in a given language.
 
     Parameters
@@ -2042,10 +2040,13 @@ def codegen(name_expr, language=None, prefix=None, project="project",
         Sequence of global variables used by the routine.  Variables
         listed here will not show up as function arguments.
 
-    standard : string
+    standard : string, optional
 
-    code_gen : CodeGen instance
+    code_gen : CodeGen instance, optional
         An instance of a CodeGen subclass. Overrides ``language``.
+
+    printer : Printer instance, optional
+        An instance of a Printer subclass.
 
     Examples
     ========

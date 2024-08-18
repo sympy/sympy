@@ -10,7 +10,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.sets.sets import Interval, Set
 from sympy.sets.fancysets import Range
 from sympy.tensor.indexed import Idx
@@ -338,7 +338,7 @@ class ExprWithLimits(Expr):
             for i in xab[1:]:
                 isyms.update(i.free_symbols)
         reps = {v: k for k, v in reps.items()}
-        return set([reps.get(_, _) for _ in isyms])
+        return {reps.get(_, _) for _ in isyms}
 
     @property
     def is_number(self):
