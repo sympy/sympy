@@ -424,7 +424,7 @@ class Arch:
 
     def axial_force_at(self,pos = None, **kwargs):
         """
-        return the bending moment at some x-coordinates
+        return the axial/normal force generated at some x-coordinate
         if no x value provided, returns the formula
         """
         if pos is None:
