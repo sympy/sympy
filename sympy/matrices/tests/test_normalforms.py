@@ -2,7 +2,7 @@ from sympy.testing.pytest import warns_deprecated_sympy
 
 from sympy.core.symbol import Symbol
 from sympy.polys.polytools import Poly
-from sympy.matrices import Matrix
+from sympy.matrices import Matrix, randMatrix
 from sympy.matrices.normalforms import (
     invariant_factors,
     smith_normal_form,
@@ -11,6 +11,8 @@ from sympy.matrices.normalforms import (
 )
 from sympy.polys.domains import ZZ, QQ
 from sympy.core.numbers import Integer
+
+import random
 
 
 def test_smith_normal():
@@ -32,6 +34,14 @@ def test_smith_normal():
     m = Matrix([[2, 4]])
     smf = Matrix([[2, 0]])
     assert smith_normal_form(m) == smf
+
+    prng = random.Random(0)
+    for i in range(6):
+        for j in range(6):
+            for _ in range(10 if i*j else 1):
+                m = randMatrix(i, j, max=5, percent=50, prng=prng)
+                a, s, t = smith_normal_decomp(m)
+                assert a == s * m * t
 
 
 def test_smith_normal_deprecated():

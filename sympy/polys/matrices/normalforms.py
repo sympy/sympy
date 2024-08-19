@@ -59,8 +59,9 @@ def invariant_factors(m):
 
     '''
     domain = m.domain
+    shape = m.shape
     m = list(m.to_dense().rep.to_ddm())
-    return _smith_normal_decomp(m, domain, full=False)
+    return _smith_normal_decomp(m, domain, shape=shape, full=False)
 
 
 def smith_normal_decomp(m):
@@ -80,18 +81,18 @@ def smith_normal_decomp(m):
     >>> assert a == s * m * t
     '''
     domain = m.domain
-    rows, cols = m.shape
+    rows, cols = shape = m.shape
     m = list(m.to_dense().rep.to_ddm())
 
-    invs, s, t = _smith_normal_decomp(m, domain, full=True)
-    smf = DomainMatrix.diag(invs, domain, (rows, cols)).to_dense()
+    invs, s, t = _smith_normal_decomp(m, domain, shape=shape, full=True)
+    smf = DomainMatrix.diag(invs, domain, shape).to_dense()
 
     s = DomainMatrix(s, domain=domain, shape=(rows, rows))
     t = DomainMatrix(t, domain=domain, shape=(cols, cols))
     return smf, s, t
 
 
-def _smith_normal_decomp(m, domain, full):
+def _smith_normal_decomp(m, domain, shape, full):
     '''
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form). If `full=True` then invertible matrices
@@ -102,16 +103,16 @@ def _smith_normal_decomp(m, domain, full):
         msg = "The matrix entries must be over a principal ideal domain"
         raise ValueError(msg)
 
-    if len(m) == 0 or len(m[0]) == 0:
-        if full:
-            return (), [], []
-        else:
-            return ()
-
-    rows, cols = shape = len(m), len(m[0])
+    rows, cols = shape
 
     def eye(n):
         return [[domain.one if i == j else domain.zero for i in range(n)] for j in range(n)]
+
+    if 0 in shape:
+        if full:
+            return (), eye(rows), eye(cols)
+        else:
+            return ()
 
     if full:
         s = eye(rows)
@@ -198,7 +199,8 @@ def _smith_normal_decomp(m, domain, full):
         invs = ()
     else:
         lower_right = [r[1:] for r in m[1:]]
-        ret = _smith_normal_decomp(lower_right, domain, full=full)
+        ret = _smith_normal_decomp(lower_right, domain,
+                shape=(rows - 1, cols - 1), full=full)
         if full:
             invs, s_small, t_small = ret
             s2 = [[1] + [0]*(rows-1)] + [[0] + row for row in s_small]
@@ -216,15 +218,24 @@ def _smith_normal_decomp(m, domain, full):
         result.extend(invs)
         # in case m[0] doesn't divide the invariants of the rest of the matrix
         for i in range(len(result)-1):
-            if result[i] and domain.div(result[i+1], result[i])[1] != 0:
-                g = domain.gcd(result[i+1], result[i])
-                p = domain.div(result[i], g)[0]
+            a, b = result[i], result[i+1]
+            if b and domain.div(a, b)[1] != 0:
                 if full:
-                    for j in range(rows):
-                        s[i+1][j] *= p
-                        s[i][j] *= result[i]/g
-                result[i+1] = p*result[i+1]
-                result[i] = g
+                    x, y, d = domain.gcdex(a, b)
+                else:
+                    d = domain.gcd(a, b)
+
+                alpha = domain.div(a, d)[0]
+                if full:
+                    beta = domain.div(b, d)[0]
+                    add_rows(s, i, i + 1, 1, 0, x, 1)
+                    add_columns(t, i, i + 1, 1, y, 0, 1)
+                    add_rows(s, i, i + 1, 1, -alpha, 0, 1)
+                    add_columns(t, i, i + 1, 1, 0, -beta, 1)
+                    add_rows(s, i, i + 1, 0, 1, -1, 0)
+
+                result[i+1] = b * alpha
+                result[i] = d
             else:
                 break
     else:
