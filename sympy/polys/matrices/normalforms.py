@@ -58,7 +58,9 @@ def invariant_factors(m):
     [2] https://web.archive.org/web/20200331143852/https://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
 
     '''
-    return _smith_normal_decomp(m, full=False)
+    domain = m.domain
+    m = list(m.to_dense().rep.to_ddm())
+    return _smith_normal_decomp(m, domain, full=False)
 
 
 def smith_normal_decomp(m):
@@ -77,32 +79,36 @@ def smith_normal_decomp(m):
     >>> a, s, t = smith_normal_decomp(m)
     >>> assert a == s * m * t
     '''
-    invs, s, t = _smith_normal_decomp(m, full=True)
-    smf = DomainMatrix.diag(invs, m.domain, m.shape).to_dense()
-
+    domain = m.domain
     rows, cols = m.shape
-    s = DomainMatrix(s, domain=m.domain, shape=(rows, rows))
-    t = DomainMatrix(t, domain=m.domain, shape=(cols, cols))
+    m = list(m.to_dense().rep.to_ddm())
+
+    invs, s, t = _smith_normal_decomp(m, domain, full=True)
+    smf = DomainMatrix.diag(invs, domain, (rows, cols)).to_dense()
+
+    s = DomainMatrix(s, domain=domain, shape=(rows, rows))
+    t = DomainMatrix(t, domain=domain, shape=(cols, cols))
     return smf, s, t
 
 
-def _smith_normal_decomp(m, full):
+def _smith_normal_decomp(m, domain, full):
     '''
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form). If `full=True` then invertible matrices
     ``s, t`` such that the product ``s, m, t`` is the Smith Normal Form
     are also returned.
     '''
-    domain = m.domain
     if not domain.is_PID:
         msg = "The matrix entries must be over a principal ideal domain"
         raise ValueError(msg)
 
-    if 0 in m.shape:
-        return ()
+    if len(m) == 0 or len(m[0]) == 0:
+        if full:
+            return (), [], []
+        else:
+            return ()
 
-    rows, cols = shape = m.shape
-    m = list(m.to_dense().rep.to_ddm())
+    rows, cols = shape = len(m), len(m[0])
 
     def eye(n):
         return [[domain.one if i == j else domain.zero for i in range(n)] for j in range(n)]
@@ -193,7 +199,8 @@ def _smith_normal_decomp(m, full):
     else:
         if full:
             invs, s_small, t_small = _smith_normal_decomp(
-                    to_domain_matrix([r[1:] for r in m[1:]]),
+                    [r[1:] for r in m[1:]],
+                    domain,
                     full=True)
 
             s2 = [[1] + [0]*(rows-1)] + [[0] + row for row in s_small]
@@ -204,8 +211,8 @@ def _smith_normal_decomp(m, full):
             s = list(s.to_dense().rep.to_ddm())
             t = list(t.to_dense().rep.to_ddm())
         else:
-            lower_right = to_domain_matrix([r[1:] for r in m[1:]])
-            invs = _smith_normal_decomp(lower_right, full=False)
+            lower_right = [r[1:] for r in m[1:]]
+            invs = _smith_normal_decomp(lower_right, domain, full=False)
 
     if m[0][0]:
         result = [m[0][0]]
