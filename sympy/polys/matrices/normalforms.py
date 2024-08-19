@@ -128,8 +128,6 @@ def _smith_normal_decomp(m, domain, shape, full):
 
     def clear_column():
         # make m[1:, 0] zero by row and column operations
-        if m[0][0] == 0:
-            return  # pragma: nocover
         pivot = m[0][0]
         for j in range(1, rows):
             if m[j][0] == 0:
@@ -141,8 +139,8 @@ def _smith_normal_decomp(m, domain, shape, full):
                     add_rows(s, 0, j, 1, 0, -d, 1)
             else:
                 a, b, g = domain.gcdex(pivot, m[j][0])
-                d_0 = domain.div(m[j][0], g)[0]
-                d_j = domain.div(pivot, g)[0]
+                d_0 = domain.exquo(m[j][0], g)
+                d_j = domain.exquo(pivot, g)
                 add_rows(m, 0, j, a, b, d_0, -d_j)
                 if full:
                     add_rows(s, 0, j, a, b, d_0, -d_j)
@@ -161,8 +159,8 @@ def _smith_normal_decomp(m, domain, shape, full):
                     add_columns(t, 0, j, 1, 0, -d, 1)
             else:
                 a, b, g = domain.gcdex(pivot, m[0][j])
-                d_0 = domain.div(m[0][j], g)[0]
-                d_j = domain.div(pivot, g)[0]
+                d_0 = domain.exquo(m[0][j], g)
+                d_j = domain.exquo(pivot, g)
                 add_columns(m, 0, j, a, b, d_0, -d_j)
                 if full:
                     add_columns(t, 0, j, a, b, d_0, -d_j)
