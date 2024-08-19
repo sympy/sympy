@@ -150,8 +150,6 @@ def _smith_normal_decomp(m, domain, shape, full):
 
     def clear_row():
         # make m[0, 1:] zero by row and column operations
-        if m[0][0] == 0:
-            return  # pragma: nocover
         pivot = m[0][0]
         for j in range(1, cols):
             if m[0][j] == 0:
@@ -184,7 +182,6 @@ def _smith_normal_decomp(m, domain, shape, full):
             if full:
                 for row in t:
                     row[0], row[ind[0]] = row[ind[0]], row[0]
-
 
     # make the first row and column except m[0,0] zero
     while (any(m[0][i] != 0 for i in range(1,cols)) or
