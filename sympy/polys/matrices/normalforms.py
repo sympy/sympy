@@ -29,7 +29,7 @@ def smith_normal_form(m):
     ...                   [ZZ(3), ZZ(9), ZZ(6)],
     ...                   [ZZ(2), ZZ(16), ZZ(14)]], (3, 3), ZZ)
     >>> print(smith_normal_form(m).to_Matrix())
-    Matrix([[1, 0, 0], [0, 10, 0], [0, 0, -30]])
+    Matrix([[1, 0, 0], [0, 10, 0], [0, 0, 30]])
 
     '''
     invs = invariant_factors(m)
@@ -218,6 +218,13 @@ def _smith_normal_decomp(m, domain, shape, full):
 
     def to_domain_matrix(m):
         return DomainMatrix(m, shape=(len(m), len(m[0])), domain=domain)
+
+    if m[0][0] != 0:
+        c = domain.canonical_unit(m[0][0])
+        if c != domain.one:
+            m[0][0] *= c
+            if full:
+                s[0] = [elem * c for elem in s[0]]
 
     if 1 in shape:
         invs = ()

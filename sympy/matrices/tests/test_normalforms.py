@@ -18,7 +18,7 @@ import random
 
 def test_smith_normal():
     m = Matrix([[12,6,4,8],[3,9,6,12],[2,16,14,28],[20,10,10,20]])
-    smf = Matrix([[1, 0, 0, 0], [0, 10, 0, 0], [0, 0, -30, 0], [0, 0, 0, 0]])
+    smf = Matrix([[1, 0, 0, 0], [0, 10, 0, 0], [0, 0, 30, 0], [0, 0, 0, 0]])
     assert smith_normal_form(m) == smf
 
     a, s, t = smith_normal_decomp(m)
@@ -53,7 +53,7 @@ def test_smith_normal_deprecated():
         m = Matrix([[12, 6, 4,8],[3,9,6,12],[2,16,14,28],[20,10,10,20]])
     setattr(m, 'ring', ZZ)
     with warns_deprecated_sympy():
-        smf = Matrix([[1, 0, 0, 0], [0, 10, 0, 0], [0, 0, -30, 0], [0, 0, 0, 0]])
+        smf = Matrix([[1, 0, 0, 0], [0, 10, 0, 0], [0, 0, 30, 0], [0, 0, 0, 0]])
     assert smith_normal_form(m) == smf
 
     x = Symbol('x')
