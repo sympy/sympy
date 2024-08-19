@@ -44,7 +44,7 @@ def is_smith_normal_form(m):
     domain = m.domain
     shape = m.shape
     zero = domain.zero
-    m = list(m.to_dense().rep.to_ddm())
+    m = m.to_list()
 
     for i in range(shape[0]):
         for j in range(shape[1]):
@@ -89,7 +89,7 @@ def invariant_factors(m):
     '''
     domain = m.domain
     shape = m.shape
-    m = list(m.to_dense().rep.to_ddm())
+    m = m.to_list()
     return _smith_normal_decomp(m, domain, shape=shape, full=False)
 
 
@@ -111,7 +111,7 @@ def smith_normal_decomp(m):
     '''
     domain = m.domain
     rows, cols = shape = m.shape
-    m = list(m.to_dense().rep.to_ddm())
+    m = m.to_list()
 
     invs, s, t = _smith_normal_decomp(m, domain, shape=shape, full=True)
     smf = DomainMatrix.diag(invs, domain, shape).to_dense()
@@ -232,8 +232,8 @@ def _smith_normal_decomp(m, domain, shape, full):
             s, s2, t, t2 = list(map(to_domain_matrix, [s, s2, t, t2]))
             s = s2 * s
             t = t * t2
-            s = list(s.to_dense().rep.to_ddm())
-            t = list(t.to_dense().rep.to_ddm())
+            s = s.to_list()
+            t = t.to_list()
         else:
             invs = ret
 
@@ -330,7 +330,7 @@ def _hermite_normal_form(A):
     # We work one row at a time, starting from the bottom row, and working our
     # way up.
     m, n = A.shape
-    A = A.to_dense().rep.to_ddm().copy()
+    A = A.to_ddm().copy()
     # Our goal is to put pivot entries in the rightmost columns.
     # Invariant: Before processing each row, k should be the index of the
     # leftmost column in which we have so far put a pivot.
@@ -437,7 +437,7 @@ def _hermite_normal_form_modulo_D(A, D):
     m, n = A.shape
     if n < m:
         raise DMShapeError('Matrix must have at least as many columns as rows.')
-    A = A.to_dense().rep.to_ddm().copy()
+    A = A.to_list()
     k = n
     R = D
     for i in range(m - 1, -1, -1):
