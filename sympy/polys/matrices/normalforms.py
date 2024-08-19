@@ -129,13 +129,15 @@ def _smith_normal_decomp(m, domain, shape, full):
     are also returned.
     '''
     if not domain.is_PID:
-        msg = "The matrix entries must be over a principal ideal domain"
+        msg = f"The matrix entries must be over a principal ideal domain, but got {domain}"
         raise ValueError(msg)
 
     rows, cols = shape
+    zero = domain.zero
+    one = domain.one
 
     def eye(n):
-        return [[domain.one if i == j else domain.zero for i in range(n)] for j in range(n)]
+        return [[one if i == j else zero for i in range(n)] for j in range(n)]
 
     if 0 in shape:
         if full:
@@ -146,6 +148,22 @@ def _smith_normal_decomp(m, domain, shape, full):
     if full:
         s = eye(rows)
         t = eye(cols)
+
+    def _gcdex(a, b):
+        # for fields we don't have gcdex implemented because
+        # it's trivial.
+        # TODO: SNF can also be computed more efficiently
+        # for fields with an LU.
+        if domain.is_Field:
+            if a == zero:
+                if b == zero:
+                    return zero, zero, zero
+                else:
+                    return zero, 1/b, one
+            else:
+                return 1/a, zero, one
+        else:
+            return domain.gcdex(a, b)
 
     def add_rows(m, i, j, a, b, c, d):
         # replace m[i, :] by a*m[i, :] + b*m[j, :]
@@ -159,10 +177,10 @@ def _smith_normal_decomp(m, domain, shape, full):
         # make m[1:, 0] zero by row and column operations
         pivot = m[0][0]
         for j in range(1, rows):
-            if m[j][0] == 0:
+            if m[j][0] == zero:
                 continue
             d, r = domain.div(m[j][0], pivot)
-            if r == 0:
+            if r == zero:
                 add_rows(m, 0, j, 1, 0, -d, 1)
                 if full:
                     add_rows(s, 0, j, 1, 0, -d, 1)
@@ -179,10 +197,10 @@ def _smith_normal_decomp(m, domain, shape, full):
         # make m[0, 1:] zero by row and column operations
         pivot = m[0][0]
         for j in range(1, cols):
-            if m[0][j] == 0:
+            if m[0][j] == zero:
                 continue
             d, r = domain.div(m[0][j], pivot)
-            if r == 0:
+            if r == zero:
                 add_columns(m, 0, j, 1, 0, -d, 1)
                 if full:
                     add_columns(t, 0, j, 1, 0, -d, 1)
@@ -196,14 +214,14 @@ def _smith_normal_decomp(m, domain, shape, full):
                 pivot = g
 
     # permute the rows and columns until m[0,0] is non-zero if possible
-    ind = [i for i in range(rows) if m[i][0] != 0]
-    if ind and ind[0] != 0:
+    ind = [i for i in range(rows) if m[i][0] != zero]
+    if ind and ind[0] != zero:
         m[0], m[ind[0]] = m[ind[0]], m[0]
         if full:
             s[0], s[ind[0]] = s[ind[0]], s[0]
     else:
-        ind = [j for j in range(cols) if m[0][j] != 0]
-        if ind and ind[0] != 0:
+        ind = [j for j in range(cols) if m[0][j] != zero]
+        if ind and ind[0] != zero:
             for row in m:
                 row[0], row[ind[0]] = row[ind[0]], row[0]
             if full:
@@ -211,8 +229,8 @@ def _smith_normal_decomp(m, domain, shape, full):
                     row[0], row[ind[0]] = row[ind[0]], row[0]
 
     # make the first row and column except m[0,0] zero
-    while (any(m[0][i] != 0 for i in range(1,cols)) or
-           any(m[i][0] != 0 for i in range(1,rows))):
+    while (any(m[0][i] != zero for i in range(1,cols)) or
+           any(m[i][0] != zero for i in range(1,rows))):
         clear_column()
         clear_row()
 
@@ -221,6 +239,8 @@ def _smith_normal_decomp(m, domain, shape, full):
 
     if m[0][0] != 0:
         c = domain.canonical_unit(m[0][0])
+        if domain.is_Field:
+            c = 1 / m[0][0]
         if c != domain.one:
             m[0][0] *= c
             if full:
@@ -250,9 +270,9 @@ def _smith_normal_decomp(m, domain, shape, full):
         # in case m[0] doesn't divide the invariants of the rest of the matrix
         for i in range(len(result)-1):
             a, b = result[i], result[i+1]
-            if b and domain.div(b, a)[1] != 0:
+            if b and domain.div(b, a)[1] != zero:
                 if full:
-                    x, y, d = domain.gcdex(a, b)
+                    x, y, d = _gcdex(a, b)
                 else:
                     d = domain.gcd(a, b)
 
