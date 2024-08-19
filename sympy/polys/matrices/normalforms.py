@@ -197,12 +197,10 @@ def _smith_normal_decomp(m, domain, full):
     if 1 in shape:
         invs = ()
     else:
+        lower_right = [r[1:] for r in m[1:]]
+        ret = _smith_normal_decomp(lower_right, domain, full=full)
         if full:
-            invs, s_small, t_small = _smith_normal_decomp(
-                    [r[1:] for r in m[1:]],
-                    domain,
-                    full=True)
-
+            invs, s_small, t_small = ret
             s2 = [[1] + [0]*(rows-1)] + [[0] + row for row in s_small]
             t2 = [[1] + [0]*(cols-1)] + [[0] + row for row in t_small]
             s, s2, t, t2 = list(map(to_domain_matrix, [s, s2, t, t2]))
@@ -211,8 +209,7 @@ def _smith_normal_decomp(m, domain, full):
             s = list(s.to_dense().rep.to_ddm())
             t = list(t.to_dense().rep.to_ddm())
         else:
-            lower_right = [r[1:] for r in m[1:]]
-            invs = _smith_normal_decomp(lower_right, domain, full=False)
+            invs = ret
 
     if m[0][0]:
         result = [m[0][0]]
