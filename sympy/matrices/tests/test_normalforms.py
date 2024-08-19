@@ -8,6 +8,7 @@ from sympy.matrices.normalforms import (
     smith_normal_form,
     smith_normal_decomp,
     hermite_normal_form,
+    is_smith_normal_form,
 )
 from sympy.polys.domains import ZZ, QQ
 from sympy.core.numbers import Integer
@@ -42,6 +43,7 @@ def test_smith_normal():
                 m = randMatrix(i, j, max=5, percent=50, prng=prng)
                 a, s, t = smith_normal_decomp(m)
                 assert a == s * m * t
+                assert is_smith_normal_form(a)
 
 
 def test_smith_normal_deprecated():

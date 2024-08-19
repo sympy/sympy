@@ -37,6 +37,35 @@ def smith_normal_form(m):
     return smf
 
 
+def is_smith_normal_form(m):
+    '''
+    Checks that the matrix is in Smith Normal Form
+    '''
+    domain = m.domain
+    shape = m.shape
+    zero = domain.zero
+    m = list(m.to_dense().rep.to_ddm())
+
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            if i == j:
+                continue
+            if not m[i][j] == zero:
+                return False
+
+    upper = min(shape[0], shape[1])
+    for i in range(1, upper):
+        if m[i-1][i-1] == zero:
+            if m[i][i] != zero:
+                return False
+        else:
+            r = domain.div(m[i][i], m[i-1][i-1])[1]
+            if r != zero:
+                return False
+
+    return True
+
+
 def add_columns(m, i, j, a, b, c, d):
     # replace m[:, i] by a*m[:, i] + b*m[:, j]
     # and m[:, j] by c*m[:, i] + d*m[:, j]
@@ -214,7 +243,7 @@ def _smith_normal_decomp(m, domain, shape, full):
         # in case m[0] doesn't divide the invariants of the rest of the matrix
         for i in range(len(result)-1):
             a, b = result[i], result[i+1]
-            if b and domain.div(a, b)[1] != 0:
+            if b and domain.div(b, a)[1] != 0:
                 if full:
                     x, y, d = domain.gcdex(a, b)
                 else:
