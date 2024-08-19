@@ -6,7 +6,6 @@ from sympy.physics.mechanics.functions import (
     find_dynamicsymbols, msubs, _f_list_parser, _validate_coordinates)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
-from sympy.simplify._cse_diff import _forward_jacobian
 
 __all__ = ['LagrangesMethod']
 
@@ -291,7 +290,7 @@ class LagrangesMethod(_Methods):
             return self._qdots.col_join(self.forcing)
 
     def to_linearizer(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None,
-                      linear_solver='LU', jacobian_func=_forward_jacobian):
+                      linear_solver='LU', jacobian_func='forward_jacobian'):
         """Returns an instance of the Linearizer class, initiated from the data
         in the LagrangesMethod class. This may be more desirable than using the
         linearize class method, as the Linearizer object will allow more
@@ -314,12 +313,13 @@ class LagrangesMethod(_Methods):
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
             divide-by-zero and thus ``nan`` results.
-        jacobian_func : callable
-            Function used to compute the Jacobian matrix. Default is
-            ``_forward_jacobian``. This function should have the signature
-            ``jacobian_func(expr, wrt)``, where ``expr`` is the expression to
-            differentiate and ``wrt`` is the iterable of variables with respect
-            to which to differentiate the expression.
+        jacobian_func : str, callable
+            Function used to compute the Jacobian matrix. If a string is
+            supplied, it should be a method between ``'forward_jacobian'``, or
+            ``'classic_jacobian'``. If a callable is supplied, it should
+            have the signature ``jacobian_func(expr, wrt)``, where ``expr``
+            is the expression to differentiate and ``wrt`` is the iterable of
+            variables with respect to which to differentiate the expression.
 
         Returns
         =======

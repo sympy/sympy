@@ -4,11 +4,11 @@ from sympy import Matrix, eye, zeros
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
-from sympy.physics.mechanics.functions import msubs, _parse_linear_solver
+from sympy.physics.mechanics.functions import (msubs, _parse_linear_solver,
+                                               _parse_jacobian_function)
 
 from collections import namedtuple
 from collections.abc import Iterable
-from sympy.simplify._cse_diff import _forward_jacobian
 
 
 class Linearizer:
@@ -44,7 +44,7 @@ class Linearizer:
 
     def __init__(self, f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i=None,
                  q_d=None, u_i=None, u_d=None, r=None, lams=None,
-                 linear_solver='LU', jacobian_func=_forward_jacobian):
+                 linear_solver='LU', jacobian_func='forward_jacobian'):
         """
         Parameters
         ==========
@@ -75,16 +75,17 @@ class Linearizer:
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
             divide-by-zero and thus ``nan`` results.
-        jacobian_func : callable
-            Function used to compute the Jacobian matrix. Default is
-            ``_forward_jacobian``. This function should have the signature
-            ``jacobian_func(expr, wrt)``, where ``expr`` is the expression to
-            differentiate and ``wrt`` is the iterable of variables with respect
-            to which to differentiate the expression.
+        jacobian_func : str, callable
+            Function used to compute the Jacobian matrix. If a string is
+            supplied, it should be a method between ``'forward_jacobian'``, or
+            ``'classic_jacobian'``. If a callable is supplied, it should
+            have the signature ``jacobian_func(expr, wrt)``, where ``expr``
+            is the expression to differentiate and ``wrt`` is the iterable of
+            variables with respect to which to differentiate the expression.
 
         """
         self.linear_solver = _parse_linear_solver(linear_solver)
-        self.jacobian_func = jacobian_func
+        self.jacobian_func = _parse_jacobian_function(jacobian_func)
 
         # Generalized equation form
         self.f_0 = Matrix(f_0)
