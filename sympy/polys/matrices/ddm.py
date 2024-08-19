@@ -188,7 +188,7 @@ class DDM(list):
         to_list_flat
         sympy.polys.matrices.domainmatrix.DomainMatrix.to_list
         """
-        return list(self)
+        return [row[:] for row in self]
 
     def to_list_flat(self):
         """
