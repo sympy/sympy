@@ -220,7 +220,7 @@ class Arch:
                 raise TypeError("please provide direction of force")
             height = self._shape_eqn.subs({'x':start})
 
-            self._conc_loads[label] = {'x':start, 'y':height, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle))}
+            self._conc_loads[label] = {'x':start, 'y':height, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle)), 'mag':mag, 'angle':angle}
             self._points_disc_x.add(start)
             self._points_disc_y.add(start)
 
@@ -636,7 +636,7 @@ class Arch:
         x = Symbol('x')
         y = Symbol('y')
         markers = []
-        annotations = []
+        annotations = self._draw_loads()
         rectangles = []
         supports = self._draw_supports()
         markers+=supports
@@ -648,8 +648,9 @@ class Arch:
 
         lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
 
+        rectangles = self._draw_rectangles()
+
         if self._member is not None:
-            rectangles = self._draw_rectangles()
             if(self._member[2]>=self._right_support[1]):
                 markers.append(
                     {
@@ -818,34 +819,97 @@ class Arch:
         else:
             max_diff = 1.1*ymax-0.8*ymin
 
-        if self._member[2]>= max(self._left_support[1],self._right_support[1]):
-            member.append(
-                {
-                    'xy':(self._member[0],self._member[2]-0.005*max_diff),
-                    'width':self._member[1]-self._member[0],
-                    'height': 0.01*max_diff,
-                    'angle': 0,
-                }
-            )
+        if self._member is not None:
+            if self._member[2]>= max(self._left_support[1],self._right_support[1]):
+                member.append(
+                    {
+                        'xy':(self._member[0],self._member[2]-0.005*max_diff),
+                        'width':self._member[1]-self._member[0],
+                        'height': 0.01*max_diff,
+                        'angle': 0,
+                        'color':'brown',
+                        'fill':False,
+                    }
+                )
 
-        elif self._member[2]>=self._left_support[1]:
-            member.append(
-                {
-                    'xy':(self._member[0],self._member[2]-0.005*max_diff),
-                    'width':self._right_support[0]-self._member[0],
-                    'height': 0.01*max_diff,
-                    'angle': 0,
-                }
-            )
+            elif self._member[2]>=self._left_support[1]:
+                member.append(
+                    {
+                        'xy':(self._member[0],self._member[2]-0.005*max_diff),
+                        'width':self._right_support[0]-self._member[0],
+                        'height': 0.01*max_diff,
+                        'angle': 0,
+                        'color':'brown',
+                        'fill':False,
 
-        else:
-            member.append(
-                {
-                    'xy':(self._member[1],self._member[2]-0.005*max_diff),
-                    'width':abs(self._left_support[0]-self._member[1]),
-                    'height': 0.01*max_diff,
-                    'angle': 180,
-                }
-            )
+                    }
+                )
+
+            else:
+                member.append(
+                    {
+                        'xy':(self._member[1],self._member[2]-0.005*max_diff),
+                        'width':abs(self._left_support[0]-self._member[1]),
+                        'height': 0.01*max_diff,
+                        'angle': 180,
+                        'color':'brown',
+                        'fill':False,
+
+                    }
+                )
+
+        if self._distributed_loads:
+            for loads in self._distributed_loads:
+
+                start = self._distributed_loads[loads]['start']
+                end = self._distributed_loads[loads]['end']
+
+                member.append(
+                    {
+                        'xy':(start,self._crown_y+max_diff*0.1),
+                        'width': (end-start),
+                        'height': max_diff*0.01,
+                        'color': 'orange'
+                    }
+                )
+
 
         return member
+
+    def _draw_loads(self):
+        load_annotations = []
+
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        for load in self._conc_loads:
+            x = self._conc_loads[load]['x']
+            y = self._conc_loads[load]['y']
+            angle = self._conc_loads[load]['angle']
+            mag = self._conc_loads[load]['mag']
+            load_annotations.append(
+                {
+                    'text':'',
+                    'xy':(
+                        x+cos(rad(angle))*max_diff*0.08,
+                        y+sin(rad(angle))*max_diff*0.08
+                    ),
+                    'xytext':(x,y),
+                    'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'blue'}
+                }
+            )
+            load_annotations.append(
+                {
+                    'text':f'{load}: {mag}',
+                    'xy': (x+cos(rad(angle))*max_diff*0.12,y+sin(rad(angle))*max_diff*0.12)
+                }
+            )
+
+        return load_annotations
