@@ -9,6 +9,10 @@ from sympy.solvers.solvers import solve
 from sympy.functions import Piecewise
 from sympy.plotting import plot
 from sympy import limit
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.external.importtools import import_module
+
+numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 class Arch:
     """
@@ -641,13 +645,13 @@ class Arch:
         self._axial_force = axial_force
         self._shear_force = shear_force
 
+    @doctest_depends_on(modules=('numpy',))
     def draw(self):
         """
         This method returns a plot object containing the diagram of the specified arch along with the supports
         and forces applied to the structure.
         """
         x = Symbol('x')
-        y = Symbol('y')
         markers = []
         annotations = self._draw_loads()
         rectangles = []
@@ -879,7 +883,7 @@ class Arch:
 
                 member.append(
                     {
-                        'xy':(start,self._crown_y+max_diff*0.1),
+                        'xy':(start,self._crown_y+max_diff*0.15),
                         'width': (end-start),
                         'height': max_diff*0.01,
                         'color': 'orange'
@@ -915,7 +919,7 @@ class Arch:
                         y+sin(rad(angle))*max_diff*0.08
                     ),
                     'xytext':(x,y),
-                    'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'blue'}
+                    'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'blue','edgecolor':'blue'}
                 }
             )
             load_annotations.append(
@@ -925,4 +929,43 @@ class Arch:
                 }
             )
 
+        for load in self._distributed_loads:
+            start = self._distributed_loads[load]['start']
+            end = self._distributed_loads[load]['end']
+            mag = self._distributed_loads[load]['f_y']
+            x_points = numpy.arange(start,end,(end-start)/(max_diff))
+            x_points = numpy.append(x_points,end)
+            for point in x_points:
+                if(mag<0):
+                    load_annotations.append(
+                        {
+                            'text':'',
+                            'xy':(point,self._crown_y+max_diff*0.05),
+                            'xytext': (point,self._crown_y+max_diff*0.15),
+                            'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'orange','edgecolor':'orange'}
+                        }
+                    )
+                else:
+                    load_annotations.append(
+                        {
+                            'text':'',
+                            'xy':(point,self._crown_y+max_diff*0.2),
+                            'xytext': (point,self._crown_y+max_diff*0.15),
+                            'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'orange','edgecolor':'orange'}
+                        }
+                    )
+            if(mag<0):
+                load_annotations.append(
+                    {
+                        'text':f'{load}: {abs(mag)}',
+                        'xy':((start+end)/2,self._crown_y+max_diff*0.175)
+                    }
+                )
+            else:
+                load_annotations.append(
+                    {
+                        'text':f'{load}: {abs(mag)}',
+                        'xy':((start+end)/2,self._crown_y+max_diff*0.125)
+                    }
+                )
         return load_annotations
