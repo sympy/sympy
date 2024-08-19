@@ -650,6 +650,25 @@ class Arch:
         """
         This method returns a plot object containing the diagram of the specified arch along with the supports
         and forces applied to the structure.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> t = Symbol('t')
+        >>> from sympy.physics.continuum_mechanics.arch import Arch
+        >>> a = Arch((0,0),(40,0),crown_x=20,crown_y=12)
+        >>> a.apply_load(-1,'C',8,150,angle=270)
+        >>> a.apply_load(0,'D',start=20,end=40,mag=-4)
+        >>> a.apply_load(-1,'E',10,t,angle=300)
+        >>> p = a.draw()
+        >>> p # doctest: +ELLIPSIS
+        Plot object containing:
+        [0]: cartesian line: 11.325 - 3*(x - 20)**2/100 for x over (0.0, 40.0)
+        [1]: cartesian line: 12 - 3*(x - 20)**2/100 for x over (0.0, 40.0)
+        ...
+        >>> p.show()
+
         """
         x = Symbol('x')
         markers = []
