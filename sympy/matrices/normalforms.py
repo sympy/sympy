@@ -38,7 +38,7 @@ def smith_normal_form(m, domain=None):
     >>> from sympy.matrices.normalforms import smith_normal_form
     >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
     >>> print(smith_normal_form(m, domain=ZZ))
-    Matrix([[1, 0, 0], [0, 10, 0], [0, 0, -30]])
+    Matrix([[1, 0, 0], [0, 10, 0], [0, 0, 30]])
 
     '''
     dM = _to_domain(m, domain)
