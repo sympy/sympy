@@ -44,6 +44,8 @@ def test_smith_normal():
                 a, s, t = smith_normal_decomp(m)
                 assert a == s * m * t
                 assert is_smith_normal_form(a)
+                s.inv().to_DM(ZZ)
+                t.inv().to_DM(ZZ)
 
 
 def test_smith_normal_deprecated():
