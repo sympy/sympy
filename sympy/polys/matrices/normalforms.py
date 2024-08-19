@@ -220,9 +220,9 @@ def _smith_normal_decomp(m, domain, full):
                 g = domain.gcd(result[i+1], result[i])
                 p = domain.div(result[i], g)[0]
                 if full:
-                    for j in rows:
+                    for j in range(rows):
                         s[i+1][j] *= p
-                        s[i][j] *= g/result[i]
+                        s[i][j] *= result[i]/g
                 result[i+1] = p*result[i+1]
                 result[i] = g
             else:
