@@ -7,8 +7,8 @@ from sympy import diff, sqrt, cos , sin, atan, rad, Min
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
 from sympy.functions import Piecewise
-from sympy.core.evalf import INF
 from sympy.plotting import plot
+from sympy import limit
 
 class Arch:
     """
