@@ -952,7 +952,7 @@ class Arch:
             start = self._distributed_loads[load]['start']
             end = self._distributed_loads[load]['end']
             mag = self._distributed_loads[load]['f_y']
-            x_points = numpy.arange(start,end,(end-start)/(max_diff))
+            x_points = numpy.arange(start,end,(end-start)/(max_diff*0.25))
             x_points = numpy.append(x_points,end)
             for point in x_points:
                 if(mag<0):
