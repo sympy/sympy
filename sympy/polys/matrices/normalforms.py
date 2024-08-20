@@ -149,22 +149,6 @@ def _smith_normal_decomp(m, domain, shape, full):
         s = eye(rows)
         t = eye(cols)
 
-    def _gcdex(a, b):
-        # for fields we don't have gcdex implemented because
-        # it's trivial.
-        # TODO: SNF can also be computed more efficiently
-        # for fields with an LU.
-        if domain.is_Field:
-            if a == zero:
-                if b == zero:
-                    return zero, zero, zero
-                else:
-                    return zero, 1/b, one
-            else:
-                return 1/a, zero, one
-        else:
-            return domain.gcdex(a, b)
-
     def add_rows(m, i, j, a, b, c, d):
         # replace m[i, :] by a*m[i, :] + b*m[j, :]
         # and m[j, :] by c*m[i, :] + d*m[j, :]
@@ -272,7 +256,7 @@ def _smith_normal_decomp(m, domain, shape, full):
             a, b = result[i], result[i+1]
             if b and domain.div(b, a)[1] != zero:
                 if full:
-                    x, y, d = _gcdex(a, b)
+                    x, y, d = domain.gcdex(a, b)
                 else:
                     d = domain.gcd(a, b)
 

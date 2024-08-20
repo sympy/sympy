@@ -1145,6 +1145,11 @@ def test_gaussian_domains():
         i, r = divmod(2, q)
         assert q*i + r == G(2, 0)
 
+        a, b = G(2, 0), G(1, -1)
+        c, d, g = G.gcdex(a, b)
+        assert g == G.gcd(a, b)
+        assert c * a + d * b == g
+
         raises(ZeroDivisionError, lambda: q % 0)
         raises(ZeroDivisionError, lambda: q / 0)
         raises(ZeroDivisionError, lambda: q // 0)
