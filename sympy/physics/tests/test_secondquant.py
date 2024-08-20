@@ -301,7 +301,6 @@ def test_create_f():
     assert srepr(Fd(p)) == "CreateFermion(Symbol('p'))"
     assert latex(Fd(p)) == r'{a^\dagger_{p}}'
     assert latex(Fd(p1)) == r'{a^\dagger_{p_{1}}}'
-    
     tex_strings = [r"\left|\left( a, \  i\right)\right\rangle", r"- \left|\left( i, \  a\right)\right\rangle"]
     assert latex(FKet([a,i], 1)) in tex_strings
 
