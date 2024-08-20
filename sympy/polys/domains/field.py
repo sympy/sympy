@@ -68,6 +68,30 @@ class Field(Ring):
 
         return self.convert(p, ring)/q
 
+    def gcdex(self, a, b):
+        """
+        Returns x, y, g such that a * x + b * y == g == gcd(a, b)
+        """
+        try:
+            ring = self.get_ring()
+        except DomainError:
+            if a == self.zero:
+                if b == self.zero:
+                    return self.zero, self.one, self.zero
+                else:
+                    return self.zero, self.one/b, self.one
+            else:
+                return self.one/a, self.zero, self.one
+
+        n1, n2 = self.numer(a), self.numer(b)
+        d1, d2 = self.denom(a), self.denom(b)
+        g = ring.gcd(d1, d2)
+        q = d1 * (d2 // g)
+        n1, n2 = n1 * (d2 // g), n2 * (d1 // g)
+
+        x, y, d = ring.gcdex(n1, n2)
+        return self.convert(x, ring)/q, self.convert(y, ring)/q, self.convert(d, ring)/q
+
     def lcm(self, a, b):
         """
         Returns LCM of ``a`` and ``b``.
