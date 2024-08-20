@@ -783,12 +783,6 @@ class log(Function):
                         else:
                             return cls(modulus) + I * (pi - atan_table[t1])
 
-    def as_base_exp(self):
-        """
-        Returns this function in the form (base, exponent).
-        """
-        return self, S.One
-
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):  # of log(1+x)

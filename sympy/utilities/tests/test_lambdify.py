@@ -27,6 +27,7 @@ from sympy.functions.special.beta_functions import (beta, betainc, betainc_regul
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels, Si, Ci)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, polygamma)
+from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
@@ -46,6 +47,7 @@ from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
     assoc_legendre, assoc_laguerre, jacobi
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
+from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.numpy import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
@@ -1279,6 +1281,65 @@ def test_lambdify_Derivative_arg_issue_16468():
     assert eval(lambdastr((fx, f), f/fx, dummify=True))(S(10), 5) == S.Half
     assert lambdify(fx, 1 + fx)(41) == 42
     assert eval(lambdastr(fx, 1 + fx, dummify=True))(41) == 42
+
+
+def test_lambdify_Derivative_zeta():
+    # This is related to gh-11802 (and to lesser extent gh-26663)
+    expr1 = zeta(x).diff(x, evaluate=False)
+    f1 = lambdify(x, expr1, modules=['mpmath'])
+    ans1 = f1(2)
+    ref1 = (zeta(2+1e-8).evalf()-zeta(2).evalf())/1e-8
+    assert abs(ans1 - ref1)/abs(ref1) < 1e-7
+
+    expr2 = zeta(x**2).diff(x)
+    f2 = lambdify(x, expr2, modules=['mpmath'])
+    ans2 = f2(2**0.5)
+    ref2 = 2*2**0.5*ref1
+    assert abs(ans2-ref2)/abs(ref2) < 1e-7
+
+
+def test_lambdify_Derivative_custom_printer():
+    func1 = Function('func1')
+    func2 = Function('func2')
+
+    class MyPrinter(NumPyPrinter):
+
+        def _print_Derivative_func1(self, args, seq_orders):
+            arg, = args
+            order, = seq_orders
+            return '42'
+
+    expr1 = func1(x).diff(x)
+    raises(PrintMethodNotImplementedError, lambda: lambdify([x], expr1))
+    f1 = lambdify([x], expr1, printer=MyPrinter)
+    assert f1(7) == 42
+
+    expr2 = func2(x).diff(x)
+    raises(PrintMethodNotImplementedError, lambda: lambdify([x], expr2, printer=MyPrinter))
+
+
+def test_lambdify_derivative_and_functions_as_arguments():
+    # see: https://github.com/sympy/sympy/issues/26663#issuecomment-2157179517
+    t, a, b = symbols('t, a, b')
+    f = Function('f')(t)
+    args = f.diff(t, 2), f.diff(t), f, a, b
+    expr1 = a*f.diff(t, 2) + b*f.diff(t) + a*b*f + a**2
+    num_args = 2.0, 3.0, 4.0, 5.0, 6.0
+    ref1 = 5*2 + 6*3 + 5*6*4 + 5**2
+
+    expr2 = a*f.diff(t, 2) + b*f.diff(t) - a*b*f + b**2 - a**2
+    ref2 = 5*2 + 6*3 - 5*6*4 + 6**2 - 5**2
+
+    for dummify, _cse in product([False, None, True], [False, True]):
+        func1 = lambdify(args, expr1, cse=_cse, dummify=dummify)
+        res1 = func1(*num_args)
+        assert abs(res1 - ref1) < 1e-12
+
+        func12 = lambdify(args, [expr1, expr2], cse=_cse, dummify=dummify)
+        res12 = func12(*num_args)
+        assert len(res12) == 2
+        assert abs(res12[0] - ref1) < 1e-12
+        assert abs(res12[1] - ref2) < 1e-12
 
 
 def test_imag_real():
