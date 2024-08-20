@@ -47,6 +47,12 @@ def test_smith_normal():
                 s.inv().to_DM(ZZ)
                 t.inv().to_DM(ZZ)
 
+                a, s, t = smith_normal_decomp(m, QQ)
+                assert a == s * m * t
+                assert is_smith_normal_form(a)
+                s.inv()
+                t.inv()
+
 
 def test_smith_normal_deprecated():
     from sympy.polys.solvers import RawMatrix as Matrix
