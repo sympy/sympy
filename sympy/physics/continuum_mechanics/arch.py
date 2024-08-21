@@ -686,6 +686,9 @@ class Arch:
 
         rectangles = self._draw_rectangles()
 
+        filler = self._draw_filler()
+        rectangles+=filler
+
         if self._member is not None:
             if(self._member[2]>=self._right_support[1]):
                 markers.append(
@@ -693,7 +696,8 @@ class Arch:
                         'args':[[self._member[1]+0.005*lim],[self._member[2]]],
                         'marker':'o',
                         'markersize': 4,
-                        'color': 'black'
+                        'color': 'white',
+                        'markerfacecolor':'none'
                     }
                 )
 
@@ -703,7 +707,8 @@ class Arch:
                         'args':[[self._member[0]-0.005*lim],[self._member[2]]],
                         'marker':'o',
                         'markersize': 4,
-                        'color': 'black'
+                        'color': 'white',
+                        'markerfacecolor':'none'
                     }
                 )
 
@@ -713,7 +718,7 @@ class Arch:
             'args':[[self._crown_x],[self._crown_y-0.005*lim]],
             'marker':'o',
             'markersize': 5,
-            'color':'black',
+            'color':'white',
             'markerfacecolor':'none',
         })
 
@@ -864,7 +869,6 @@ class Arch:
                         'height': 0.01*max_diff,
                         'angle': 0,
                         'color':'brown',
-                        'fill':False,
                     }
                 )
 
@@ -876,8 +880,6 @@ class Arch:
                         'height': 0.01*max_diff,
                         'angle': 0,
                         'color':'brown',
-                        'fill':False,
-
                     }
                 )
 
@@ -889,8 +891,6 @@ class Arch:
                         'height': 0.01*max_diff,
                         'angle': 180,
                         'color':'brown',
-                        'fill':False,
-
                     }
                 )
 
@@ -988,3 +988,30 @@ class Arch:
                     }
                 )
         return load_annotations
+
+    def _draw_filler(self):
+        x = Symbol('x')
+        filler = []
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        x_points = numpy.arange(self._left_support[0],self._right_support[0],(self._right_support[0]-self._left_support[0])/(max_diff*max_diff))
+
+        for point in x_points:
+            filler.append(
+                    {
+                        'xy':(point,self._shape_eqn.subs(x,point)-max_diff*0.015),
+                        'width': (self._right_support[0]-self._left_support[0])/(max_diff*max_diff),
+                        'height': max_diff*0.015,
+                        'color': 'brown'
+                    }
+            )
+
+        return filler
