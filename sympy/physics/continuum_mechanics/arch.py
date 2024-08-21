@@ -783,7 +783,7 @@ class Arch:
                 {
                     'args':[
                         [self._left_support[0]],
-                        [self._left_support[1]]
+                        [self._left_support[1]-0.007*max_diff]
                     ],
                     'marker':6,
                     'markersize':15,
@@ -810,7 +810,7 @@ class Arch:
                 {
                     'args':[
                         [self._right_support[0]],
-                        [self._right_support[1]]
+                        [self._right_support[1]-0.007*max_diff]
                     ],
                     'marker':6,
                     'markersize':15,
@@ -943,7 +943,7 @@ class Arch:
             )
             load_annotations.append(
                 {
-                    'text':f'{load}: {mag}',
+                    'text':f'{load}: {mag} N',
                     'xy': (x+cos(rad(angle))*max_diff*0.12,y+sin(rad(angle))*max_diff*0.12)
                 }
             )
@@ -976,7 +976,7 @@ class Arch:
             if(mag<0):
                 load_annotations.append(
                     {
-                        'text':f'{load}: {abs(mag)}',
+                        'text':f'{load}: {abs(mag)} N/m',
                         'xy':((start+end)/2,self._crown_y+max_diff*0.175)
                     }
                 )
