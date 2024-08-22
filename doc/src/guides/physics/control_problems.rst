@@ -394,10 +394,10 @@ Applying **Kirchhoff's Voltage Law** (KVL) around the loop in the above diagram 
 
         .. math::
 
-            V_{in}(t) = R \cdot i(t) + L \frac{di(t)}{dt} +  V_C(t)
+            v_{in}(t) = R \cdot i(t) + L \frac{di(t)}{dt} +  V_C(t)
 
-Where: :math:`V_{in}(t)` is the input voltage, :math:`i(t)` is the current through the inductor and
-:math:`V_C(t)` is the voltage across the capacitor.
+Where: :math:`v_{in}(t)` is the input voltage, :math:`i(t)` is the current through the inductor and
+:math:`v_C(t)` is the voltage across the capacitor.
 
 This equation relates the input voltage to the elements of the RLC circuit.
 
@@ -413,7 +413,7 @@ Taking the time derivative of both sides, we obtain the rate of change of the ca
 
         .. math::
 
-            \dot{v}_C(t) = \frac{d V_C(t)}{dt} = \frac{i(t)}{C}
+            \dot{v}_C(t) = \frac{d v_C(t)}{dt} = \frac{i(t)}{C}
 
 This equation shows that the rate of change of the capacitor voltage is proportional to the current through the circuit.
 
@@ -421,7 +421,7 @@ From the KVL equation, solving for the derivative of the current gives:
 
         .. math::
 
-            \frac{di(t)}{dt} = -\frac{R}{L} i(t) - \frac{1}{L} V_C(t) + \frac{1}{L} V_{in}(t)
+            \frac{di(t)}{dt} = -\frac{R}{L} i(t) - \frac{1}{L} v_C(t) + \frac{1}{L} v_{in}(t)
 
 This is the first-order differential equation that describes the rate of change of the current in terms of the circuit's components and input voltage.
 
@@ -431,15 +431,15 @@ We define the state vector `X(t)` as:
 
         .. math::
 
-            X(t) = \begin{bmatrix} x_1(t) \\ x_2(t) \end{bmatrix} = \begin{bmatrix} i(t) \\ V_C(t) \end{bmatrix}
+            X(t) = \begin{bmatrix} x_1(t) \\ x_2(t) \end{bmatrix} = \begin{bmatrix} i(t) \\ v_C(t) \end{bmatrix}
 
-Here `x_1(t) = i(t)` is the current through the inductor and `x_2(t) = V_C(t)` is the voltage across the capacitor.
+Here `x_1(t) = i(t)` is the current through the inductor and `x_2(t) = v_C(t)` is the voltage across the capacitor.
 
 The input vector `U(t)` is the input voltage:
 
         .. math::
 
-            U(t) = V_{in}(t)
+            U(t) = v_{in}(t)
 
 The system of differential equations in terms of the state variables becomes:
 
@@ -447,7 +447,7 @@ The system of differential equations in terms of the state variables becomes:
 
         .. math::
 
-            \dot{x}_1(t) = -\frac{R}{L} x_1(t) - \frac{1}{L} x_2(t) + \frac{1}{L} V_{in}(t)
+            \dot{x}_1(t) = -\frac{R}{L} x_1(t) - \frac{1}{L} x_2(t) + \frac{1}{L} v_{in}(t)
 
 2. The derivative of the capacitor voltage:
 
@@ -501,7 +501,6 @@ control systems.
 
 Solution
 
-    >>> # Imports
     >>> from sympy import Matrix, symbols, pprint
     >>> from sympy.physics.control import *
     >>> R, L, C = symbols('R L C')
@@ -516,7 +515,9 @@ Solution
     [ 1/C,    0]]), Matrix([
     [1/L],
     [  0]]), Matrix([[0, 1]]), Matrix([[0]]))
-    >>> # We can convert the StateSpace to TransferFunction by rewrite method.
+
+    We can convert the StateSpace to TransferFunction by rewrite method.
+
     >>> tf = ss.rewrite(TransferFunction)[0][0]
     >>> tf
     TransferFunction(1, C*L*s**2 + C*R*s + 1, s)
@@ -637,7 +638,6 @@ Thus, the output equation can be written as:
 
 Solution
 
-    >>> # Imports
     >>> from sympy import symbols, Matrix
     >>> from sympy.physics.control import *
     >>> R, C = symbols('R C')
