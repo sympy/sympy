@@ -1533,7 +1533,7 @@ class Pow(Expr):
                 return res
 
         f = b.as_leading_term(x, logx=logx)
-        g = (b.expand() - f).cancel()
+        g = (_mexpand(b) - f).cancel()
         g = g/f
         if not m.is_number:
             raise NotImplementedError()
