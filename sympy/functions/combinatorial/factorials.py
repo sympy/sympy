@@ -269,7 +269,7 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x)
         arg0 = arg.subs(x, 0)
         if arg0.is_zero:
@@ -1128,6 +1128,6 @@ class binomial(CombinatorialFunction):
             elif k.is_even is False:
                 return  False
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.special.gamma_functions import gamma
         return self.rewrite(gamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)
