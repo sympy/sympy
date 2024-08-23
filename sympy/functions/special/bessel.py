@@ -2122,7 +2122,7 @@ class marcumq(DefinedFunction):
         if all(arg.is_zero for arg in self.args):
             return True
 
-class _besseli(Function):
+class _besseli(DefinedFunction):
     """
     Helper function to make the $\\mathrm{besseli}(nu, z)$
     function tractable for the Gruntz algorithm.
@@ -2153,7 +2153,7 @@ class _besseli(Function):
         return super()._eval_nseries(x, n, logx)
 
 
-class _besselk(Function):
+class _besselk(DefinedFunction):
     """
     Helper function to make the $\\mathrm{besselk}(nu, z)$
     function tractable for the Gruntz algorithm.
