@@ -694,6 +694,15 @@ def test_issue_7224():
     assert limit(x*diff(expr, x, x)/expr, x, 1).evalf() == 2.0
 
 
+def test_issue_7391_8166():
+    f = Function('f')
+    func = x*y*y / (x*x + y**4)
+    func2 = func.subs(y, f(x))
+    # limit should depend on the continuity of the expression at the point passed
+    assert limit(f(x), x, 4) == Limit(f(x), x, 4, dir='+')
+    assert limit(func2, x, 0) == Limit(x*f(x)**2/(x**2 + f(x)**4), x, 0, dir='+')
+
+
 def test_issue_8208():
     assert limit(n**(Rational(1, 1e9) - 1), n, oo) == 0
 
