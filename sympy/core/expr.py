@@ -3500,7 +3500,7 @@ class Expr(Basic, EvalfMixin):
             return powsimp(obj, deep=True, combine='exp')
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         return self
 
     def as_coeff_exponent(self, x) -> tuple[Expr, Expr]:

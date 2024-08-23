@@ -221,7 +221,7 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         nu, z = self.args
         try:
             arg = z.as_leading_term(x)
@@ -240,7 +240,7 @@ class besselj(BesselBase):
                 return sqrt(2)*cos(z - pi*(2*nu + 1)/4)/sqrt(pi*z)
             return self
 
-        return super(besselj, self)._eval_as_leading_term(x, logx, cdir)
+        return super(besselj, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -355,7 +355,7 @@ class bessely(BesselBase):
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
         return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         nu, z = self.args
         try:
             arg = z.as_leading_term(x)
@@ -378,7 +378,7 @@ class bessely(BesselBase):
                 return sqrt(2)*(-sin(pi*nu/2 - z + pi/4) + 3*cos(pi*nu/2 - z + pi/4)/(8*z))*sqrt(1/z)/sqrt(pi)
             return self
 
-        return super(bessely, self)._eval_as_leading_term(x, logx, cdir)
+        return super(bessely, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -538,7 +538,7 @@ class besseli(BesselBase):
         if nu.is_integer and z.is_extended_real:
             return True
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         nu, z = self.args
         try:
             arg = z.as_leading_term(x)
@@ -557,7 +557,7 @@ class besseli(BesselBase):
                 return exp(z)/sqrt(2*pi*z)
             return self
 
-        return super(besseli, self)._eval_as_leading_term(x, logx, cdir)
+        return super(besseli, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselI/06/01/04/01/01/0003/
@@ -689,7 +689,7 @@ class besselk(BesselBase):
         if z.is_extended_real:
             return exp(-z)*_besselk(nu, z)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         nu, z = self.args
         try:
             arg = z.as_leading_term(x)
@@ -708,7 +708,7 @@ class besselk(BesselBase):
             # asymptotic approximation of besselk function.
             return sqrt(pi)*exp(-z)/sqrt(2*z)
 
-        return super(besselk, self)._eval_as_leading_term(x, logx, cdir)
+        return super(besselk, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/01/04/01/02/0008/

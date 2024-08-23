@@ -516,7 +516,7 @@ class sin(TrigonometricFunction):
                                       chebyshevu(n - 1, sin(x)), deep=False)
         return sin(arg)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -877,7 +877,7 @@ class cos(TrigonometricFunction):
                 return chebyshevt(coeff, cos(terms))
         return cos(arg)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -1207,7 +1207,7 @@ class tan(TrigonometricFunction):
         from sympy.functions.special.bessel import besselj
         return besselj(S.Half, arg)/besselj(-S.Half, arg)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
         arg = self.args[0]
@@ -1495,7 +1495,7 @@ class cot(TrigonometricFunction):
         from sympy.functions.special.bessel import besselj
         return besselj(-S.Half, arg)/besselj(S.Half, arg)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
         arg = self.args[0]
@@ -1679,8 +1679,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def _eval_is_extended_real(self):
         return self._reciprocal_of(self.args[0])._eval_is_extended_real()
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
+    def _eval_as_leading_term(self, x, logx, cdir):
+        return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_is_finite(self):
         return (1/self._reciprocal_of(self.args[0])).is_finite
@@ -1781,7 +1781,7 @@ class sec(ReciprocalTrigonometricFunction):
             k = n//2
             return S.NegativeOne**k*euler(2*k)/factorial(2*k)*x**(2*k)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
         arg = self.args[0]
@@ -1886,7 +1886,7 @@ class csc(ReciprocalTrigonometricFunction):
             return (S.NegativeOne**(k - 1)*2*(2**(2*k - 1) - 1)*
                     bernoulli(2*k)*x**(2*k - 1)/factorial(2*k))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
         arg = self.args[0]
@@ -2241,7 +2241,7 @@ class asin(InverseTrigonometricFunction):
                 F = factorial(k)
                 return R/F*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asin
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.NaN:
@@ -2471,7 +2471,7 @@ class acos(InverseTrigonometricFunction):
                 F = factorial(k)
                 return -R/F*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acos
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.NaN:
@@ -2712,7 +2712,7 @@ class atan(InverseTrigonometricFunction):
             x = sympify(x)
             return S.NegativeOne**((n - 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # atan
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.NaN:
@@ -2927,7 +2927,7 @@ class acot(InverseTrigonometricFunction):
             x = sympify(x)
             return S.NegativeOne**((n + 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acot
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.NaN:
@@ -3151,7 +3151,7 @@ class asec(InverseTrigonometricFunction):
                 F = factorial(k) * n // 2 * n // 2
                 return -S.ImaginaryUnit * R / F * x**n / 4
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asec
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.NaN:
@@ -3361,7 +3361,7 @@ class acsc(InverseTrigonometricFunction):
                 F = factorial(k) * n // 2 * n // 2
                 return S.ImaginaryUnit * R / F * x**n / 4
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acsc
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.NaN:

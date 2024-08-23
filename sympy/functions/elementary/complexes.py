@@ -797,7 +797,7 @@ class arg(Function):
         x, y = self.args[0].as_real_imag()
         return atan2(y, x)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg0 = self.args[0]
         t = Dummy('t', positive=True)
         if cdir == 0:
