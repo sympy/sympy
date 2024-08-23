@@ -938,12 +938,16 @@ class Arch:
                         y+sin(rad(angle))*max_diff*0.08
                     ),
                     'xytext':(x,y),
+                    'fontsize':10,
+                    'fontweight': 'bold',
                     'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'blue','edgecolor':'blue'}
                 }
             )
             load_annotations.append(
                 {
                     'text':f'{load}: {mag} N',
+                    'fontsize':10,
+                    'fontweight': 'bold',
                     'xy': (x+cos(rad(angle))*max_diff*0.12,y+sin(rad(angle))*max_diff*0.12)
                 }
             )
@@ -977,13 +981,17 @@ class Arch:
                 load_annotations.append(
                     {
                         'text':f'{load}: {abs(mag)} N/m',
+                        'fontsize':10,
+                        'fontweight': 'bold',
                         'xy':((start+end)/2,self._crown_y+max_diff*0.175)
                     }
                 )
             else:
                 load_annotations.append(
                     {
-                        'text':f'{load}: {abs(mag)}',
+                        'text':f'{load}: {abs(mag)} N/m',
+                        'fontsize':10,
+                        'fontweight': 'bold',
                         'xy':((start+end)/2,self._crown_y+max_diff*0.125)
                     }
                 )
