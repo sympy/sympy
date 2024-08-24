@@ -83,7 +83,7 @@ sample.tex
 .*cache
 
 # pytest related data file for slow tests
-.ci/durations.log
+.venv/.ci/durations.log
 
 # Files for pyodide test
 pyodide

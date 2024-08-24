@@ -63,12 +63,12 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     imagesize = 'tight'
     offset = "0cm,0cm"
-    resolution = round(150*scale)
+    resolution = round(150 * scale)
     dvi = r"-T %s -D %d -bg %s -fg %s -O %s" % (
         imagesize, resolution, backcolor, forecolor, offset)
     dvioptions = dvi.split()
 
-    svg_scale = 150/72*scale
+    svg_scale = 150 / 72 * scale
     dvioptions_svg = ["--no-fonts", "--scale={}".format(svg_scale)]
 
     debug("init_printing: DVIOPTIONS:", dvioptions)
@@ -116,16 +116,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         try:
             try:
                 return latex_to_png(o, color=forecolor, scale=scale)
-            except TypeError: #  Old IPython version without color and scale
+            except TypeError:  #  Old IPython version without color and scale
                 return latex_to_png(o)
         except ValueError as e:
             debug('matplotlib exception caught:', repr(e))
             return None
 
-
     # Hook methods for builtin SymPy printers
     printing_hooks = ('_latex', '_sympystr', '_pretty', '_sympyrepr')
-
 
     def _can_print(o):
         """Return True if type o can be printed with one of the SymPy printers.
@@ -252,7 +250,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             plaintext_formatter.for_type(cls, _print_plain)
 
         svg_formatter = ip.display_formatter.formatters['image/svg+xml']
-        if use_latex in ('svg', ):
+        if use_latex in ('svg',):
             debug("init_printing: using svg formatter")
             for cls in printable_types:
                 svg_formatter.for_type(cls, _print_latex_svg)
@@ -304,6 +302,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     else:
         ip.set_hook('result_display', _result_display)
 
+
 def _is_ipython(shell):
     """Is a shell instance an IPython shell?"""
     # shortcut, so we don't import IPython if we don't have to
@@ -322,8 +321,10 @@ def _is_ipython(shell):
             return False
     return isinstance(shell, InteractiveShell)
 
+
 # Used by the doctester to override the default for no_global
 NO_GLOBAL = False
+
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
@@ -523,7 +524,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         else:
             # This will be True if we are in the qtconsole or notebook
             if not isinstance(ip, (InteractiveConsole, TerminalInteractiveShell)) \
-                    and 'ipython-console' not in ''.join(sys.argv):
+                and 'ipython-console' not in ''.join(sys.argv):
                 if use_unicode is None:
                     debug("init_printing: Setting use_unicode to True")
                     use_unicode = True
@@ -539,11 +540,11 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
 
         if pretty_print:
             stringify_func = lambda expr, **settings: \
-                             _stringify_func(expr, order=order,
-                                             use_unicode=use_unicode,
-                                             wrap_line=wrap_line,
-                                             num_columns=num_columns,
-                                             **settings)
+                _stringify_func(expr, order=order,
+                                use_unicode=use_unicode,
+                                wrap_line=wrap_line,
+                                num_columns=num_columns,
+                                **settings)
         else:
             stringify_func = \
                 lambda expr, **settings: _stringify_func(
