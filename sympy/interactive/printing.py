@@ -485,7 +485,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
 
     if pretty_print:
         if pretty_printer is not None:
-            stringify_func = pretty_printer
+            stringify_func = lambda expr: pretty_printer(expr,**settings)
         else:
             from sympy.printing import pretty as stringify_func
     else:
