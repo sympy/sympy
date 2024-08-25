@@ -296,5 +296,5 @@ Solution
 
 
 References
-^^^^^^^^^^
+----------
 1. `bmsce.ac.in <https://bmsce.ac.in/Content/TE/STATE_SPACE_ANALYSIS.pdf>`_
