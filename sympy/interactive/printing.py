@@ -219,24 +219,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 return '$\\displaystyle %s$' % s
             return s
 
-    def _result_display(self, arg):
-        """IPython's pretty-printer display hook, for use in IPython 0.10
-
-           This function was adapted from:
-
-            ipython/IPython/hooks.py:155
-
-        """
-        if self.rc.pprint:
-            out = stringify_func(arg)
-
-            if '\n' in out:
-                print()
-
-            print(out)
-        else:
-            print(repr(arg))
-
     # Printable is our own type, so we handle it with methods instead of
     # the approach required by builtin types. This allows downstream
     # packages to override the methods in their own subclasses of Printable,
