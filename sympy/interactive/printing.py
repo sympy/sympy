@@ -8,8 +8,6 @@ from sympy.utilities.misc import debug
 from sympy.printing.defaults import Printable
 from sympy.external import import_module
 
-IPython = import_module("IPython", min_module_version="1.0")
-
 
 def _init_python_printing(stringify_func, **settings):
     """Setup printing in Python interactive session. """
@@ -36,6 +34,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                            backcolor, fontsize, latex_mode, print_builtin,
                            latex_printer, scale, **settings):
     """Setup printing in IPython interactive session. """
+    IPython = import_module("IPython", min_module_version="1.0")
     try:
         from IPython.lib.latextools import latex_to_png
     except ImportError:
