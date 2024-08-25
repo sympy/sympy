@@ -428,7 +428,7 @@ class sin(TrigonometricFunction):
             else:
                 return S.NegativeOne**(n//2)*x**n/factorial(n)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         arg = self.args[0]
         if logx is not None:
             arg = arg.subs(log(x), logx)
@@ -757,7 +757,7 @@ class cos(TrigonometricFunction):
             else:
                 return S.NegativeOne**(n//2)*x**n/factorial(n)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         arg = self.args[0]
         if logx is not None:
             arg = arg.subs(log(x), logx)
@@ -1110,11 +1110,11 @@ class tan(TrigonometricFunction):
 
             return S.NegativeOne**a*b*(b - 1)*B/F*x**n
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         i = self.args[0].limit(x, 0)*2/pi
         if i and i.is_Integer:
-            return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
-        return Function._eval_nseries(self, x, n=n, logx=logx)
+            return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+        return Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
 
     def _eval_rewrite_as_Pow(self, arg, **kwargs):
         if isinstance(arg, log):
@@ -1425,11 +1425,11 @@ class cot(TrigonometricFunction):
 
             return S.NegativeOne**((n + 1)//2)*2**(n + 1)*B/F*x**n
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         i = self.args[0].limit(x, 0)/pi
         if i and i.is_Integer:
-            return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
-        return self.rewrite(tan)._eval_nseries(x, n=n, logx=logx)
+            return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+        return self.rewrite(tan)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -1685,8 +1685,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def _eval_is_finite(self):
         return (1/self._reciprocal_of(self.args[0])).is_finite
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
-        return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx)
+    def _eval_nseries(self, x, n, logx, cdir):
+        return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx, cdir)
 
 
 class sec(ReciprocalTrigonometricFunction):
@@ -1994,9 +1994,9 @@ class sinc(Function):
             elif (2*pi_coeff).is_integer:
                 return S.NegativeOne**(pi_coeff - S.Half)/arg
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         x = self.args[0]
-        return (sin(x)/x)._eval_nseries(x, n, logx)
+        return (sin(x)/x)._eval_nseries(x, n, logx, cdir)
 
     def _eval_rewrite_as_jn(self, arg, **kwargs):
         from sympy.functions.special.bessel import jn
@@ -2265,7 +2265,7 @@ class asin(InverseTrigonometricFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # asin
+    def _eval_nseries(self, x, n, logx, cdir):  # asin
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
         # Handling branch points
@@ -2277,7 +2277,7 @@ class asin(InverseTrigonometricFunction):
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
                 return O(1) if n == 0 else pi/2 + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
@@ -2289,11 +2289,11 @@ class asin(InverseTrigonometricFunction):
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
                 return O(1) if n == 0 else -pi/2 + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
@@ -2501,7 +2501,7 @@ class acos(InverseTrigonometricFunction):
     def _eval_is_nonnegative(self):
         return self._eval_is_extended_real()
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # acos
+    def _eval_nseries(self, x, n, logx, cdir):  # acos
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
         # Handling branch points
@@ -2513,7 +2513,7 @@ class acos(InverseTrigonometricFunction):
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
                 return O(1) if n == 0 else O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
@@ -2525,11 +2525,11 @@ class acos(InverseTrigonometricFunction):
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
                 return O(1) if n == 0 else pi + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
@@ -2735,14 +2735,14 @@ class atan(InverseTrigonometricFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # atan
+    def _eval_nseries(self, x, n, logx, cdir):  # atan
         arg0 = self.args[0].subs(x, 0)
 
         # Handling branch points
         if arg0 in (S.ImaginaryUnit, S.NegativeOne*S.ImaginaryUnit):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         ndir = self.args[0].dir(x, cdir if cdir else 1)
         if arg0 is S.ComplexInfinity:
             if re(ndir) > 0:
@@ -2768,7 +2768,7 @@ class atan(InverseTrigonometricFunction):
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] in [S.Infinity, S.NegativeInfinity]:
-            return (pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
+            return (pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx, S.Zero)
         else:
             return super()._eval_aseries(n, args0, x, logx)
 
@@ -2950,14 +2950,14 @@ class acot(InverseTrigonometricFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # acot
+    def _eval_nseries(self, x, n, logx, cdir):  # acot
         arg0 = self.args[0].subs(x, 0)
 
         # Handling branch points
         if arg0 in (S.ImaginaryUnit, S.NegativeOne*S.ImaginaryUnit):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
         ndir = self.args[0].dir(x, cdir if cdir else 1)
@@ -2979,7 +2979,7 @@ class acot(InverseTrigonometricFunction):
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] in [S.Infinity, S.NegativeInfinity]:
-            return atan(1/self.args[0])._eval_nseries(x, n, logx)
+            return atan(1/self.args[0])._eval_nseries(x, n, logx, S.Zero)
         else:
             return super()._eval_aseries(n, args0, x, logx)
 
@@ -3174,7 +3174,7 @@ class asec(InverseTrigonometricFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # asec
+    def _eval_nseries(self, x, n, logx, cdir):  # asec
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
         # Handling branch points
@@ -3184,7 +3184,7 @@ class asec(InverseTrigonometricFunction):
             arg1 = S.NegativeOne + self.args[0]
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
@@ -3194,11 +3194,11 @@ class asec(InverseTrigonometricFunction):
             arg1 = S.NegativeOne - self.args[0]
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
         # Handling points lying on branch cuts (-1, 1)
@@ -3384,7 +3384,7 @@ class acsc(InverseTrigonometricFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # acsc
+    def _eval_nseries(self, x, n, logx, cdir):  # acsc
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
         # Handling branch points
@@ -3394,7 +3394,7 @@ class acsc(InverseTrigonometricFunction):
             arg1 = S.NegativeOne + self.args[0]
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
@@ -3404,11 +3404,11 @@ class acsc(InverseTrigonometricFunction):
             arg1 = S.NegativeOne - self.args[0]
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
         # Handling points lying on branch cuts (-1, 1)

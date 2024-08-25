@@ -648,7 +648,7 @@ class Function(Application, Expr):
             Asymptotic expansion of %s around %s is
             not implemented.''' % (type(self), args0)))
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
@@ -667,7 +667,7 @@ class Function(Application, Expr):
         and possible:
 
         >>> from sympy import loggamma
-        >>> loggamma(1/x)._eval_nseries(x,0,None)
+        >>> loggamma(1/x)._eval_nseries(x, 0, None, S.One)
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
@@ -688,7 +688,7 @@ class Function(Application, Expr):
             #      f(1+x+log(x))
             #     -> f(1+logx) + x*f'(1+logx) + O(x**2)
             # where 'logx' is given in the argument
-            a = [t._eval_nseries(x, n, logx) for t in args]
+            a = [t._eval_nseries(x, n, logx, cdir) for t in args]
             z = [r - r0 for (r, r0) in zip(a, a0)]
             p = [Dummy() for _ in z]
             q = []
@@ -704,7 +704,7 @@ class Function(Application, Expr):
             e1 = self.func(*q)
             if v is None:
                 return e1
-            s = e1._eval_nseries(v, n, logx)
+            s = e1._eval_nseries(v, n, logx, cdir)
             o = s.getO()
             s = s.removeO()
             s = s.subs(v, zi).expand() + Order(o.expr.subs(v, zi), x)
@@ -1771,7 +1771,7 @@ class Derivative(Expr):
         for term in self.expr.lseries(x, logx=logx, cdir=cdir):
             yield self.func(term, *dx)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         arg = self.expr.nseries(x, n=n, logx=logx)
         o = arg.getO()
         dx = self.variables
@@ -2379,7 +2379,7 @@ class Subs(Expr):
             val += Subs(f.diff(s), self.variables, self.point).doit()
         return val
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         if x in self.point:
             # x is the variable being substituted into
             apos = self.point.index(x)

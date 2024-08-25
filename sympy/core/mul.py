@@ -1941,7 +1941,7 @@ class Mul(Expr, AssocOp):
             margs = [Pow(new, cdid)] + margs
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         from .function import PoleError
         from sympy.functions.elementary.integers import ceiling
         from sympy.series.order import Order

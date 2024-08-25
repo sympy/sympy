@@ -1977,13 +1977,13 @@ def test_asin_nseries():
     assert asin(x - 2)._eval_nseries(x, 4, None, -I) == asin(2) - pi + \
     sqrt(3)*I*x/3 + sqrt(3)*I*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
     # testing nseries for asin at branch points
-    assert asin(1 + x)._eval_nseries(x, 3, None) == pi/2 - sqrt(2)*sqrt(-x) - \
+    assert asin(1 + x)._eval_nseries(x, 3, None, S.Zero) == pi/2 - sqrt(2)*sqrt(-x) - \
     sqrt(2)*(-x)**(S(3)/2)/12 - 3*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
-    assert asin(-1 + x)._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(x) + \
+    assert asin(-1 + x)._eval_nseries(x, 3, None, S.Zero) == -pi/2 + sqrt(2)*sqrt(x) + \
     sqrt(2)*x**(S(3)/2)/12 + 3*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
-    assert asin(exp(x))._eval_nseries(x, 3, None) == pi/2 - sqrt(2)*sqrt(-x) + \
+    assert asin(exp(x))._eval_nseries(x, 3, None, S.Zero) == pi/2 - sqrt(2)*sqrt(-x) + \
     sqrt(2)*(-x)**(S(3)/2)/6 - sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
-    assert asin(-exp(x))._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(-x) - \
+    assert asin(-exp(x))._eval_nseries(x, 3, None, S.Zero) == -pi/2 + sqrt(2)*sqrt(-x) - \
     sqrt(2)*(-x)**(S(3)/2)/6 + sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
 
 
@@ -1997,49 +1997,49 @@ def test_acos_nseries():
     assert acos(x - 2)._eval_nseries(x, 4, None, -I) == -acos(-2) + 2*pi - \
     sqrt(3)*I*x/3 - sqrt(3)*I*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
     # testing nseries for acos at branch points
-    assert acos(1 + x)._eval_nseries(x, 3, None) == sqrt(2)*sqrt(-x) + \
+    assert acos(1 + x)._eval_nseries(x, 3, None, S.Zero) == sqrt(2)*sqrt(-x) + \
     sqrt(2)*(-x)**(S(3)/2)/12 + 3*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
-    assert acos(-1 + x)._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(x) - \
+    assert acos(-1 + x)._eval_nseries(x, 3, None, S.Zero) == pi - sqrt(2)*sqrt(x) - \
     sqrt(2)*x**(S(3)/2)/12 - 3*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
-    assert acos(exp(x))._eval_nseries(x, 3, None) == sqrt(2)*sqrt(-x) - \
+    assert acos(exp(x))._eval_nseries(x, 3, None, S.Zero) == sqrt(2)*sqrt(-x) - \
     sqrt(2)*(-x)**(S(3)/2)/6 + sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
-    assert acos(-exp(x))._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(-x) + \
+    assert acos(-exp(x))._eval_nseries(x, 3, None, S.Zero) == pi - sqrt(2)*sqrt(-x) + \
     sqrt(2)*(-x)**(S(3)/2)/6 - sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
 
 
 def test_atan_nseries():
-    assert atan(x + 2*I)._eval_nseries(x, 4, None, 1) == I*atanh(2) - x/3 - \
+    assert atan(x + 2*I)._eval_nseries(x, 4, None, S.One) == I*atanh(2) - x/3 - \
     2*I*x**2/9 + 13*x**3/81 + O(x**4)
-    assert atan(x + 2*I)._eval_nseries(x, 4, None, -1) == I*atanh(2) - pi - \
+    assert atan(x + 2*I)._eval_nseries(x, 4, None, S.NegativeOne) == I*atanh(2) - pi - \
     x/3 - 2*I*x**2/9 + 13*x**3/81 + O(x**4)
-    assert atan(x - 2*I)._eval_nseries(x, 4, None, 1) == -I*atanh(2) + pi - \
+    assert atan(x - 2*I)._eval_nseries(x, 4, None, S.One) == -I*atanh(2) + pi - \
     x/3 + 2*I*x**2/9 + 13*x**3/81 + O(x**4)
-    assert atan(x - 2*I)._eval_nseries(x, 4, None, -1) == -I*atanh(2) - x/3 + \
+    assert atan(x - 2*I)._eval_nseries(x, 4, None, S.NegativeOne) == -I*atanh(2) - x/3 + \
     2*I*x**2/9 + 13*x**3/81 + O(x**4)
-    assert atan(1/x)._eval_nseries(x, 2, None, 1) == pi/2 - x + O(x**2)
-    assert atan(1/x)._eval_nseries(x, 2, None, -1) == -pi/2 - x + O(x**2)
+    assert atan(1/x)._eval_nseries(x, 2, None, S.One) == pi/2 - x + O(x**2)
+    assert atan(1/x)._eval_nseries(x, 2, None, S.NegativeOne) == -pi/2 - x + O(x**2)
     # testing nseries for atan at branch points
-    assert atan(x + I)._eval_nseries(x, 4, None) == I*log(2)/2 + pi/4 - \
+    assert atan(x + I)._eval_nseries(x, 4, None, S.Zero) == I*log(2)/2 + pi/4 - \
     I*log(x)/2 + x/4 + I*x**2/16 - x**3/48 + O(x**4)
-    assert atan(x - I)._eval_nseries(x, 4, None) == -I*log(2)/2 + pi/4 + \
+    assert atan(x - I)._eval_nseries(x, 4, None, S.Zero) == -I*log(2)/2 + pi/4 + \
     I*log(x)/2 + x/4 - I*x**2/16 - x**3/48 + O(x**4)
 
 
 def test_acot_nseries():
-    assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, 1) == -I*acoth(S(1)/2) + \
+    assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, S.One) == -I*acoth(S(1)/2) + \
     pi - 4*x/3 + 8*I*x**2/9 + 112*x**3/81 + O(x**4)
-    assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, -1) == -I*acoth(S(1)/2) - \
+    assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, S.NegativeOne) == -I*acoth(S(1)/2) - \
     4*x/3 + 8*I*x**2/9 + 112*x**3/81 + O(x**4)
-    assert acot(x - S(1)/2*I)._eval_nseries(x, 4, None, 1) == I*acoth(S(1)/2) - \
+    assert acot(x - S(1)/2*I)._eval_nseries(x, 4, None, S.One) == I*acoth(S(1)/2) - \
     4*x/3 - 8*I*x**2/9 + 112*x**3/81 + O(x**4)
-    assert acot(x - S(1)/2*I)._eval_nseries(x, 4, None, -1) == I*acoth(S(1)/2) - \
+    assert acot(x - S(1)/2*I)._eval_nseries(x, 4, None, S.NegativeOne) == I*acoth(S(1)/2) - \
     pi - 4*x/3 - 8*I*x**2/9 + 112*x**3/81 + O(x**4)
-    assert acot(x)._eval_nseries(x, 2, None, 1) == pi/2 - x + O(x**2)
-    assert acot(x)._eval_nseries(x, 2, None, -1) == -pi/2 - x + O(x**2)
+    assert acot(x)._eval_nseries(x, 2, None, S.One) == pi/2 - x + O(x**2)
+    assert acot(x)._eval_nseries(x, 2, None, S.NegativeOne) == -pi/2 - x + O(x**2)
     # testing nseries for acot at branch points
-    assert acot(x + I)._eval_nseries(x, 4, None) == -I*log(2)/2 + pi/4 + \
+    assert acot(x + I)._eval_nseries(x, 4, None, S.Zero) == -I*log(2)/2 + pi/4 + \
     I*log(x)/2 - x/4 - I*x**2/16 + x**3/48 + O(x**4)
-    assert acot(x - I)._eval_nseries(x, 4, None) == I*log(2)/2 + pi/4 - \
+    assert acot(x - I)._eval_nseries(x, 4, None, S.Zero) == I*log(2)/2 + pi/4 - \
     I*log(x)/2 - x/4 + I*x**2/16 + x**3/48 + O(x**4)
 
 
@@ -2053,13 +2053,13 @@ def test_asec_nseries():
     assert asec(x - S(1)/2)._eval_nseries(x, 4, None, -I) == asec(-S(1)/2) - \
     4*sqrt(3)*I*x/3 - 8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
     # testing nseries for asec at branch points
-    assert asec(1 + x)._eval_nseries(x, 3, None) == sqrt(2)*sqrt(x) - \
+    assert asec(1 + x)._eval_nseries(x, 3, None, S.Zero) == sqrt(2)*sqrt(x) - \
     5*sqrt(2)*x**(S(3)/2)/12 + 43*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
-    assert asec(-1 + x)._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(-x) + \
+    assert asec(-1 + x)._eval_nseries(x, 3, None, S.Zero) == pi - sqrt(2)*sqrt(-x) + \
     5*sqrt(2)*(-x)**(S(3)/2)/12 - 43*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
-    assert asec(exp(x))._eval_nseries(x, 3, None) == sqrt(2)*sqrt(x) - \
+    assert asec(exp(x))._eval_nseries(x, 3, None, S.Zero) == sqrt(2)*sqrt(x) - \
     sqrt(2)*x**(S(3)/2)/6 + sqrt(2)*x**(S(5)/2)/120 + O(x**3)
-    assert asec(-exp(x))._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(x) + \
+    assert asec(-exp(x))._eval_nseries(x, 3, None, S.Zero) == pi - sqrt(2)*sqrt(x) + \
     sqrt(2)*x**(S(3)/2)/6 - sqrt(2)*x**(S(5)/2)/120 + O(x**3)
 
 
@@ -2073,13 +2073,13 @@ def test_acsc_nseries():
     assert acsc(x - S(1)/2)._eval_nseries(x, 4, None, -I) == -acsc(S(1)/2) + \
     4*sqrt(3)*I*x/3 + 8*sqrt(3)*I*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
     # testing nseries for acsc at branch points
-    assert acsc(1 + x)._eval_nseries(x, 3, None) == pi/2 - sqrt(2)*sqrt(x) + \
+    assert acsc(1 + x)._eval_nseries(x, 3, None, S.Zero) == pi/2 - sqrt(2)*sqrt(x) + \
     5*sqrt(2)*x**(S(3)/2)/12 - 43*sqrt(2)*x**(S(5)/2)/160 + O(x**3)
-    assert acsc(-1 + x)._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(-x) - \
+    assert acsc(-1 + x)._eval_nseries(x, 3, None, S.Zero) == -pi/2 + sqrt(2)*sqrt(-x) - \
     5*sqrt(2)*(-x)**(S(3)/2)/12 + 43*sqrt(2)*(-x)**(S(5)/2)/160 + O(x**3)
-    assert acsc(exp(x))._eval_nseries(x, 3, None) == pi/2 - sqrt(2)*sqrt(x) + \
+    assert acsc(exp(x))._eval_nseries(x, 3, None, S.Zero) == pi/2 - sqrt(2)*sqrt(x) + \
     sqrt(2)*x**(S(3)/2)/6 - sqrt(2)*x**(S(5)/2)/120 + O(x**3)
-    assert acsc(-exp(x))._eval_nseries(x, 3, None) == -pi/2 + sqrt(2)*sqrt(x) - \
+    assert acsc(-exp(x))._eval_nseries(x, 3, None, S.Zero) == -pi/2 + sqrt(2)*sqrt(x) - \
     sqrt(2)*x**(S(3)/2)/6 + sqrt(2)*x**(S(5)/2)/120 + O(x**3)
 
 

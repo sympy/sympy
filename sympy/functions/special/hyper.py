@@ -265,7 +265,7 @@ class hyper(TupleParametersBase):
             return S.One
         return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
 
         from sympy.series.order import Order
 
@@ -279,7 +279,7 @@ class hyper(TupleParametersBase):
             # than falling back on Function._eval_nseries. The code below
             # though is not sufficient if arg is something like x/(x+1).
             from sympy.simplify.hyperexpand import hyperexpand
-            return hyperexpand(super()._eval_nseries(x, n, logx))
+            return hyperexpand(super()._eval_nseries(x, n, logx, cdir))
 
         terms = []
 

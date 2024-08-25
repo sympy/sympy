@@ -418,7 +418,7 @@ class sign(Function):
         ):
             return S.One
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         arg0 = self.args[0]
         x0 = arg0.subs(x, 0)
         if x0 != 0:
@@ -656,12 +656,12 @@ class Abs(Function):
                 return self.args[0]**(exponent - 1)*self
         return
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         from sympy.functions.elementary.exponential import log
         direction = self.args[0].leadterm(x)[0]
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
-        s = self.args[0]._eval_nseries(x, n=n, logx=logx)
+        s = self.args[0]._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         return (sign(direction)*s).expand()
 
     def _eval_derivative(self, x):
@@ -810,7 +810,7 @@ class arg(Function):
         else:
             raise PoleError("Cannot expand %s around 0" % (self))
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         from sympy.series.order import Order
         if n <= 0:
             return Order(1)

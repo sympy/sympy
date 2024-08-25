@@ -354,7 +354,7 @@ class polylog(Function):
         if z.is_zero:
             return True
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         from sympy.series.order import Order
         nu, z = self.args
 

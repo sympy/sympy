@@ -247,7 +247,7 @@ class besselj(BesselBase):
         if nu.is_integer and z.is_extended_real:
             return True
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/06/01/04/01/01/0003/
         # for more information on nseries expansion of besselj function.
         from sympy.series.order import Order
@@ -385,7 +385,7 @@ class bessely(BesselBase):
         if nu.is_integer and z.is_positive:
             return True
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/01/04/01/02/0008/
         # for more information on nseries expansion of bessely function.
         from sympy.series.order import Order
@@ -559,7 +559,7 @@ class besseli(BesselBase):
 
         return super(besseli, self)._eval_as_leading_term(x, logx, cdir)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselI/06/01/04/01/01/0003/
         # for more information on nseries expansion of besseli function.
         from sympy.series.order import Order
@@ -710,7 +710,7 @@ class besselk(BesselBase):
 
         return super(besselk, self)._eval_as_leading_term(x, logx, cdir)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/01/04/01/02/0008/
         # for more information on nseries expansion of besselk function.
         from sympy.series.order import Order
@@ -2145,12 +2145,12 @@ class _besseli(Function):
     def _eval_rewrite_as_intractable(self, nu, z, **kwargs):
         return exp(-z)*besseli(nu, z)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
-            return f._eval_nseries(x, n, logx)
-        return super()._eval_nseries(x, n, logx)
+            return f._eval_nseries(x, n, logx, cdir)
+        return super()._eval_nseries(x, n, logx, cdir)
 
 
 class _besselk(Function):
@@ -2176,9 +2176,9 @@ class _besselk(Function):
     def _eval_rewrite_as_intractable(self,nu, z, **kwargs):
         return exp(z)*besselk(nu, z)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
-            return f._eval_nseries(x, n, logx)
-        return super()._eval_nseries(x, n, logx)
+            return f._eval_nseries(x, n, logx, cdir)
+        return super()._eval_nseries(x, n, logx, cdir)

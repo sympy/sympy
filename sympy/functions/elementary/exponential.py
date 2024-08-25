@@ -478,7 +478,7 @@ class exp(ExpBase, metaclass=ExpMeta):
             arg2 = -I * self.args[0] / pi
             return arg2.is_even
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
         from sympy.functions.elementary.complexes import sign
@@ -487,7 +487,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         from sympy.series.order import Order
         from sympy.simplify.powsimp import powsimp
         arg = self.exp
-        arg_series = arg._eval_nseries(x, n=n, logx=logx)
+        arg_series = arg._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         if arg_series.is_Order:
             return 1 + arg_series
         arg0 = limit(arg_series.removeO(), x, 0)
@@ -944,7 +944,7 @@ class log(Function):
     def _eval_is_extended_nonnegative(self):
         return (self.args[0] - 1).is_extended_nonnegative
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
         from sympy.series.order import Order
@@ -1233,7 +1233,7 @@ class LambertW(Function):
                 return self.func(arg0)
             return arg.as_leading_term(x)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         if len(self.args) == 1:
             from sympy.functions.elementary.integers import ceiling
             from sympy.series.order import Order
@@ -1250,7 +1250,7 @@ class LambertW(Function):
                 s = S.Zero
 
             return s + Order(x**n, x)
-        return super()._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx, cdir)
 
     def _eval_is_zero(self):
         x = self.args[0]

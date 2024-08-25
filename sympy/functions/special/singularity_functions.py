@@ -220,7 +220,7 @@ class SingularityFunction(Function):
             return shift**n
         return S.Zero
 
-    def _eval_nseries(self, x, n, logx=None, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         z, a, n = self.args
         shift = (z - a).subs(x, 0)
         if n < 0:
