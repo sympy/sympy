@@ -4,12 +4,12 @@
 Control Tutorials
 =============================
 
-The `control` module in SymPy provides essential tools for symbolic control system 
-analysis. The `TransferFunction` class allows for creating transfer functions and 
-analyzing their properties, such as stability `is_stable()`, poles, and zeros. 
-`Series`, `Parallel`, and `Feedback` classes enable constructing and simplifying 
-system interconnections. The `TransferFunctionMatrix` handles multi-input, multi-output 
-(MIMO) systems, while `MIMOSeries`, `MIMOParallel`, and `MIMOFeedback` extend these 
+The `control` module in SymPy provides essential tools for symbolic control system
+analysis. The `TransferFunction` class allows for creating transfer functions and
+analyzing their properties, such as stability `is_stable()`, poles, and zeros.
+`Series`, `Parallel`, and `Feedback` classes enable constructing and simplifying
+system interconnections. The `TransferFunctionMatrix` handles multi-input, multi-output
+(MIMO) systems, while `MIMOSeries`, `MIMOParallel`, and `MIMOFeedback` extend these
 functionalities for complex systems.
 
 This tutorial contains a breif guide on how to solve Control Problems using
