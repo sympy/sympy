@@ -1,6 +1,5 @@
 """Tools for setting up printing in interactive sessions. """
 
-from sympy.external.importtools import version_tuple
 from io import BytesIO
 
 from sympy.printing.latex import latex as default_latex
