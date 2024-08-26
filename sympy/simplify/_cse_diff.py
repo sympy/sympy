@@ -90,7 +90,7 @@ def _forward_jacobian_cse(replacements, reduced_expr, wrt):
 
     wrt : iterable
         Iterable of expressions with respect to which to compute the
-        Jacobian matrix
+        Jacobian matrix.
 
     Returns
     =======
@@ -103,7 +103,7 @@ def _forward_jacobian_cse(replacements, reduced_expr, wrt):
 
     jacobian : list of SymPy expressions
         The list only contains one element, which is the Jacobian matrix with
-        elements in reduced form (replacement symbols are present)
+        elements in reduced form (replacement symbols are present).
 
     precomputed_fs: list
         List of sets, which store the free symbols present in each sub-expression.
@@ -216,7 +216,7 @@ def _forward_jacobian_norm_in_cse_out(expr, wrt):
 
     jacobian : list of SymPy expressions
         The list only contains one element, which is the Jacobian matrix with
-        elements in reduced form (replacement symbols are present)
+        elements in reduced form (replacement symbols are present).
 
     precomputed_fs: list
         List of sets, which store the free symbols present in each
