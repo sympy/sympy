@@ -12,4 +12,4 @@ Physics, Optics, Quantum Mechanics, Units and Vector algebra.
 .. toctree::
    :maxdepth: 1
 
-   ../../tutorials/physics/control/control_problems.rst
+   ../../tutorials/physics/control/index.rst
