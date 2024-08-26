@@ -9,7 +9,5 @@ The Python Package SymPy can be used to symbolically solve physics problems
 on Classical Mechanics, Continuum Mechanics, Control Systems, High-Energy
 Physics, Optics, Quantum Mechanics, Units and Vector algebra.
 
-.. toctree::
-   :maxdepth: 1
-
-   ../../tutorials/physics/control/index.rst
+For tutorials related to control, refer to
+`Control Tutorials <../../tutorials/physics/control/index.html>`_.
