@@ -389,16 +389,6 @@ class lowergamma(Function):
             return coeff*sum_expr + o
         return super()._eval_aseries(n, args0, x, logx)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy.series.order import O
-        s, z = self.args
-        if z.has(x):
-            coeff = z**s*exp(-z)*gamma(s)
-            sum_expr = sum(z**k/gamma(s + k + 1) for k in range(n - 1))
-            o = O(z**s*s**(-n))
-            return coeff*sum_expr + o
-        return super()._eval_nseries(x, n, logx)
-
     def _eval_rewrite_as_uppergamma(self, s, x, **kwargs):
         return gamma(s) - uppergamma(s, x)
 
@@ -410,7 +400,7 @@ class lowergamma(Function):
             return self
         return self.rewrite(uppergamma).rewrite(expint)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         return self.rewrite(uppergamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_is_zero(self):
@@ -580,7 +570,7 @@ class uppergamma(Function):
         from sympy.functions.special.error_functions import expint
         return expint(1 - s, x)*x**s
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.special.error_functions import expint
         return self.rewrite(expint)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
