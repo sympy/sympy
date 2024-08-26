@@ -878,7 +878,6 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     return postprocess(replacements, reduced_exprs)
 
 
-
 def _cse_homogeneous(exprs, **kwargs):
     """
     Same as ``cse`` but the ``reduced_exprs`` are returned
