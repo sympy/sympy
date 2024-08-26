@@ -25,7 +25,7 @@ Below are some examples to demonstrate the use of StateSpace to solve Electrical
 Example 1
 ---------
 
-        .. image:: Electrical_Problems_Q2.svg
+        .. image:: Electrical_Problems_Q1.svg
            :align: center
 
 In a series RLC circuit, we have a resistor :math:`R`, an inductor :math:`L`, and a capacitor :math:`C`
@@ -168,7 +168,7 @@ Solution
 Example 2
 ---------
 
-        .. image:: Electrical_Problems_Q1.svg
+        .. image:: Electrical_Problems_Q2.svg
            :align: center
 
 Obtain the state model for a system represented by an electrical
