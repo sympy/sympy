@@ -120,7 +120,7 @@ from functools import reduce
 
 from sympy.core import Basic, S, Mul, PoleError
 from sympy.core.cache import cacheit
-from sympy.core.function import UndefinedFunction
+from sympy.core.function import AppliedUndef
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, oo
 from sympy.core.symbol import Dummy, Wild
@@ -302,7 +302,7 @@ def mrv(e, x):
         else:
             s, expr = mrv(e.exp, x)
             return s, exp(expr)
-    elif isinstance(e.func, UndefinedFunction):
+    elif isinstance(e, AppliedUndef):
         raise ValueError("MRV set computation for UndefinedFunction is not allowed")
     elif e.is_Function:
         l = [mrv(a, x) for a in e.args]
