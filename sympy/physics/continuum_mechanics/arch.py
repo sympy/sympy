@@ -7,7 +7,12 @@ from sympy import diff, sqrt, cos , sin, atan, rad, Min
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
 from sympy.functions import Piecewise
+from sympy.plotting import plot
 from sympy import limit
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.external.importtools import import_module
+
+numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 class Arch:
     """
@@ -219,7 +224,7 @@ class Arch:
                 raise TypeError("please provide direction of force")
             height = self._shape_eqn.subs({'x':start})
 
-            self._conc_loads[label] = {'x':start, 'y':height, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle))}
+            self._conc_loads[label] = {'x':start, 'y':height, 'f_x':mag*cos(rad(angle)), 'f_y': mag*sin(rad(angle)), 'mag':mag, 'angle':angle}
             self._points_disc_x.add(start)
             self._points_disc_y.add(start)
 
@@ -639,3 +644,382 @@ class Arch:
 
         self._axial_force = axial_force
         self._shear_force = shear_force
+
+    @doctest_depends_on(modules=('numpy',))
+    def draw(self):
+        """
+        This method returns a plot object containing the diagram of the specified arch along with the supports
+        and forces applied to the structure.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> t = Symbol('t')
+        >>> from sympy.physics.continuum_mechanics.arch import Arch
+        >>> a = Arch((0,0),(40,0),crown_x=20,crown_y=12)
+        >>> a.apply_load(-1,'C',8,150,angle=270)
+        >>> a.apply_load(0,'D',start=20,end=40,mag=-4)
+        >>> a.apply_load(-1,'E',10,t,angle=300)
+        >>> p = a.draw()
+        >>> p # doctest: +ELLIPSIS
+        Plot object containing:
+        [0]: cartesian line: 11.325 - 3*(x - 20)**2/100 for x over (0.0, 40.0)
+        [1]: cartesian line: 12 - 3*(x - 20)**2/100 for x over (0.0, 40.0)
+        ...
+        >>> p.show()
+
+        """
+        x = Symbol('x')
+        markers = []
+        annotations = self._draw_loads()
+        rectangles = []
+        supports = self._draw_supports()
+        markers+=supports
+
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
+
+        rectangles = self._draw_rectangles()
+
+        filler = self._draw_filler()
+        rectangles+=filler
+
+        if self._member is not None:
+            if(self._member[2]>=self._right_support[1]):
+                markers.append(
+                    {
+                        'args':[[self._member[1]+0.005*lim],[self._member[2]]],
+                        'marker':'o',
+                        'markersize': 4,
+                        'color': 'white',
+                        'markerfacecolor':'none'
+                    }
+                )
+
+            if(self._member[2]>=self._left_support[1]):
+                markers.append(
+                    {
+                        'args':[[self._member[0]-0.005*lim],[self._member[2]]],
+                        'marker':'o',
+                        'markersize': 4,
+                        'color': 'white',
+                        'markerfacecolor':'none'
+                    }
+                )
+
+
+
+        markers.append({
+            'args':[[self._crown_x],[self._crown_y-0.005*lim]],
+            'marker':'o',
+            'markersize': 5,
+            'color':'white',
+            'markerfacecolor':'none',
+        })
+
+        if lim==xmax*1.1-xmin*0.8+1:
+
+            sing_plot = plot(self._shape_eqn-0.015*lim,
+                             self._shape_eqn,
+                             (x, self._left_support[0], self._right_support[0]),
+                             markers=markers,
+                             show=False,
+                             annotations=annotations,
+                             rectangles = rectangles,
+                             xlim=(xmin-0.05*lim, xmax*1.1),
+                             ylim=(xmin-0.05*lim, xmax*1.1),
+                             axis=False,
+                             line_color='brown')
+
+        else:
+            sing_plot = plot(self._shape_eqn-0.015*lim,
+                             self._shape_eqn,
+                             (x, self._left_support[0], self._right_support[0]),
+                             markers=markers,
+                             show=False,
+                             annotations=annotations,
+                             rectangles = rectangles,
+                             xlim=(ymin-0.05*lim, ymax*1.1),
+                             ylim=(ymin-0.05*lim, ymax*1.1),
+                             axis=False,
+                             line_color='brown')
+
+        return sing_plot
+
+
+    def _draw_supports(self):
+        support_markers = []
+
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        if self._supports['left']=='roller':
+            support_markers.append(
+                {
+                    'args':[
+                        [self._left_support[0]],
+                        [self._left_support[1]-0.02*max_diff]
+                    ],
+                    'marker':'o',
+                    'markersize':11,
+                    'color':'black',
+                    'markerfacecolor':'none'
+                }
+            )
+        else:
+            support_markers.append(
+                {
+                    'args':[
+                        [self._left_support[0]],
+                        [self._left_support[1]-0.007*max_diff]
+                    ],
+                    'marker':6,
+                    'markersize':15,
+                    'color':'black',
+                    'markerfacecolor':'none'
+                }
+            )
+
+        if self._supports['right']=='roller':
+            support_markers.append(
+                {
+                    'args':[
+                        [self._right_support[0]],
+                        [self._right_support[1]-0.02*max_diff]
+                    ],
+                    'marker':'o',
+                    'markersize':11,
+                    'color':'black',
+                    'markerfacecolor':'none'
+                }
+            )
+        else:
+            support_markers.append(
+                {
+                    'args':[
+                        [self._right_support[0]],
+                        [self._right_support[1]-0.007*max_diff]
+                    ],
+                    'marker':6,
+                    'markersize':15,
+                    'color':'black',
+                    'markerfacecolor':'none'
+                }
+            )
+
+        support_markers.append(
+            {
+                'args':[
+                    [self._right_support[0]],
+                    [self._right_support[1]-0.036*max_diff]
+                ],
+                'marker':'_',
+                'markersize':15,
+                'color':'black',
+                'markerfacecolor':'none'
+            }
+        )
+
+        support_markers.append(
+            {
+                'args':[
+                    [self._left_support[0]],
+                    [self._left_support[1]-0.036*max_diff]
+                ],
+                'marker':'_',
+                'markersize':15,
+                'color':'black',
+                'markerfacecolor':'none'
+            }
+        )
+
+        return support_markers
+
+    def _draw_rectangles(self):
+        member = []
+
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        if self._member is not None:
+            if self._member[2]>= max(self._left_support[1],self._right_support[1]):
+                member.append(
+                    {
+                        'xy':(self._member[0],self._member[2]-0.005*max_diff),
+                        'width':self._member[1]-self._member[0],
+                        'height': 0.01*max_diff,
+                        'angle': 0,
+                        'color':'brown',
+                    }
+                )
+
+            elif self._member[2]>=self._left_support[1]:
+                member.append(
+                    {
+                        'xy':(self._member[0],self._member[2]-0.005*max_diff),
+                        'width':self._right_support[0]-self._member[0],
+                        'height': 0.01*max_diff,
+                        'angle': 0,
+                        'color':'brown',
+                    }
+                )
+
+            else:
+                member.append(
+                    {
+                        'xy':(self._member[1],self._member[2]-0.005*max_diff),
+                        'width':abs(self._left_support[0]-self._member[1]),
+                        'height': 0.01*max_diff,
+                        'angle': 180,
+                        'color':'brown',
+                    }
+                )
+
+        if self._distributed_loads:
+            for loads in self._distributed_loads:
+
+                start = self._distributed_loads[loads]['start']
+                end = self._distributed_loads[loads]['end']
+
+                member.append(
+                    {
+                        'xy':(start,self._crown_y+max_diff*0.15),
+                        'width': (end-start),
+                        'height': max_diff*0.01,
+                        'color': 'orange'
+                    }
+                )
+
+
+        return member
+
+    def _draw_loads(self):
+        load_annotations = []
+
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        for load in self._conc_loads:
+            x = self._conc_loads[load]['x']
+            y = self._conc_loads[load]['y']
+            angle = self._conc_loads[load]['angle']
+            mag = self._conc_loads[load]['mag']
+            load_annotations.append(
+                {
+                    'text':'',
+                    'xy':(
+                        x+cos(rad(angle))*max_diff*0.08,
+                        y+sin(rad(angle))*max_diff*0.08
+                    ),
+                    'xytext':(x,y),
+                    'fontsize':10,
+                    'fontweight': 'bold',
+                    'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'blue','edgecolor':'blue'}
+                }
+            )
+            load_annotations.append(
+                {
+                    'text':f'{load}: {mag} N',
+                    'fontsize':10,
+                    'fontweight': 'bold',
+                    'xy': (x+cos(rad(angle))*max_diff*0.12,y+sin(rad(angle))*max_diff*0.12)
+                }
+            )
+
+        for load in self._distributed_loads:
+            start = self._distributed_loads[load]['start']
+            end = self._distributed_loads[load]['end']
+            mag = self._distributed_loads[load]['f_y']
+            x_points = numpy.arange(start,end,(end-start)/(max_diff*0.25))
+            x_points = numpy.append(x_points,end)
+            for point in x_points:
+                if(mag<0):
+                    load_annotations.append(
+                        {
+                            'text':'',
+                            'xy':(point,self._crown_y+max_diff*0.05),
+                            'xytext': (point,self._crown_y+max_diff*0.15),
+                            'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'orange','edgecolor':'orange'}
+                        }
+                    )
+                else:
+                    load_annotations.append(
+                        {
+                            'text':'',
+                            'xy':(point,self._crown_y+max_diff*0.2),
+                            'xytext': (point,self._crown_y+max_diff*0.15),
+                            'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'orange','edgecolor':'orange'}
+                        }
+                    )
+            if(mag<0):
+                load_annotations.append(
+                    {
+                        'text':f'{load}: {abs(mag)} N/m',
+                        'fontsize':10,
+                        'fontweight': 'bold',
+                        'xy':((start+end)/2,self._crown_y+max_diff*0.175)
+                    }
+                )
+            else:
+                load_annotations.append(
+                    {
+                        'text':f'{load}: {abs(mag)} N/m',
+                        'fontsize':10,
+                        'fontweight': 'bold',
+                        'xy':((start+end)/2,self._crown_y+max_diff*0.125)
+                    }
+                )
+        return load_annotations
+
+    def _draw_filler(self):
+        x = Symbol('x')
+        filler = []
+        xmax = self._right_support[0]
+        xmin = self._left_support[0]
+        ymin = min(self._left_support[1],self._right_support[1])
+        ymax = self._crown_y
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        x_points = numpy.arange(self._left_support[0],self._right_support[0],(self._right_support[0]-self._left_support[0])/(max_diff*max_diff))
+
+        for point in x_points:
+            filler.append(
+                    {
+                        'xy':(point,self._shape_eqn.subs(x,point)-max_diff*0.015),
+                        'width': (self._right_support[0]-self._left_support[0])/(max_diff*max_diff),
+                        'height': max_diff*0.015,
+                        'color': 'brown'
+                    }
+            )
+
+        return filler
