@@ -478,12 +478,9 @@ def test_issue_7096():
 
 def test_issue_7391_8166():
     f = Function('f')
-    y = Symbol('y')
-    func = x*y*y / (x*x + y**4)
-    func2 = func.subs(y, f(x))
     # limit should depend on the continuity of the expression at the point passed
     raises(ValueError, lambda: gruntz(f(x), x, 4))
-    raises(ValueError, lambda: gruntz(func2, x, 0))
+    raises(ValueError, lambda: gruntz(x*f(x)**2/(x**2 + f(x)**4), x, 0))
 
 
 def test_issue_24210_25885():
