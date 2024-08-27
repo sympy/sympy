@@ -655,7 +655,7 @@ class Heaviside(Function):
             return SingularityFunction(x, solve(args, x)[0], 0)
             # TODO
             # ((x - 5)**3*Heaviside(x - 5)).rewrite(SingularityFunction) should output
-            # SingularityFunction(x, 5, 0) instead of (x - 5)**3*SingularityFunction(x, 5, 0)
+            # SingularityFunction(x, 5, 3) instead of (x - 5)**3*SingularityFunction(x, 5, 0)
         else:
             # I don't know how to handle the case for Heaviside expressions
             # having arguments with more than one variable.
