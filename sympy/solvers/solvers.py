@@ -1872,7 +1872,7 @@ def _solve_system(exprs, symbols, **flags):
                 free = list(ordered(free.intersection(symbols)))
                 got_s = set()
                 result = []
-                for syms in subsets(free, len(polys)):
+                for syms in subsets(free, min(len(free), len(polys))):
                     try:
                         # returns [], None or list of tuples
                         res = solve_poly_system(polys, *syms)
