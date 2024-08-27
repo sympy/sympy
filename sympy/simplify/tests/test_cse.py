@@ -534,6 +534,7 @@ def test_cse_ignore():
     assert not any(y in sub.free_symbols for _, sub in subst2), "Sub-expressions containing y must be ignored"
     assert any(sub - sqrt(x + 1) == 0 for _, sub in subst2), "cse failed to identify sqrt(x + 1) as sub-expression"
 
+
 def test_cse_ignore_issue_15002():
     l = [
         w*exp(x)*exp(-z),
@@ -593,6 +594,7 @@ def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
 
+
 def test_cse_release_variables():
     from sympy.simplify.cse_main import cse_release_variables
     _0, _1, _2, _3, _4 = symbols('_:5')
@@ -608,6 +610,7 @@ def test_cse_release_variables():
     r.reverse()
     r = [(s, v) for s, v in r if v is not None]
     assert eqs == [i.subs(r) for i in e]
+
 
 def test_cse_list():
     _cse = lambda x: cse(x, list=False)
