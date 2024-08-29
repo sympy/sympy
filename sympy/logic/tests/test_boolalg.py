@@ -1362,7 +1362,7 @@ def test_issue_26985():
     # Applying to_anf
     result = Xor(Xor(d, And(x, y)), And(x, y))
     result_anf = to_anf(Xor(to_anf(Xor(d, And(x, y))), And(x, y)))
-    expected_result_anf = a * c ^ a * b * c ^ b * c ^ b ^ a * d ^ a * c * d ^ a * b * c * d ^ b * c * d ^ c * d ^ a
+    expected_result_anf = a*c^a*b*c^b*c^b^a*d^a*c*d^a*b*c*d^b*c*d^c*d^a
 
     assert (result_anf == expected_result_anf)
     assert (result == expected_result_anf)
