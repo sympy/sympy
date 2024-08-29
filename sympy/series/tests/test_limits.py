@@ -1415,8 +1415,9 @@ def test_issue_26250():
 
 
 def test_issue_26513():
-    assert limit(abs((-n/(n+1))**n), n ,oo) == exp(-1)
-    raises (NotImplementedError, lambda: limit((-n/(n+1))**n, n, oo))
+    assert limit(abs((-x/(x+1))**x), x ,oo) == exp(-1)
+    assert limit((x/(x + 1))**x, x, oo) == exp(-1)
+    raises (NotImplementedError, lambda: limit((-x/(x+1))**x, x, oo))
 
 
 def test_issue_26916():
