@@ -1296,6 +1296,10 @@ def test_issue_22334():
     assert limit((n+1)**k/(n*(-n**k + (n + 1)**k) + (n + 1)**k), n, oo) == 1/(k + 1)
 
 
+def test_issue_22836_limit():
+    assert limit(2**(1/x)/factorial(1/(x)), x, 0) == S.Zero
+
+
 def test_sympyissue_22986():
     assert limit(acosh(1 + 1/x)*sqrt(x), x, oo) == sqrt(2)
 

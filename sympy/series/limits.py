@@ -366,8 +366,8 @@ class Limit(Expr):
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
-        # differs from gamma) so only rewrite for positive z0.
-        if z0.is_extended_positive:
+        # differs from gamma) so only rewrite for non-negative z0.
+        if z0.is_extended_nonnegative:
             e = e.rewrite(factorial, gamma)
 
         l = None
