@@ -3609,7 +3609,7 @@ class MatrixBase(Printable):
         will fail.
 
         TODO: Implement algorithm for sparse matrices (SFF),
-        http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
+        https://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
 
         See Also
         ========
