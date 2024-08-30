@@ -1985,10 +1985,13 @@ def _solve_system(exprs, symbols, **flags):
                         # check that it is independent of previous solutions
                         iset = set(rnew.items())
                         for i in newresult:
-                            if len(i) < len(iset) and not set(i.items()) - iset:
-                                # this is a superset of a known solution that
-                                # is smaller
-                                break
+                            if len(i) < len(iset):
+                                # update i with what is known
+                                i_items_updated = {(k, v.xreplace(rnew)) for k, v in i.items()}
+                                if not i_items_updated - iset:
+                                    # this is a superset of a known solution that
+                                    # is smaller
+                                    break
                         else:
                             # keep it
                             newresult.append(rnew)
