@@ -15,13 +15,13 @@ def refine(expr, assumptions=True):
     Explanation
     ===========
 
-    Unlike :func:`~.simplify()` which performs structural simplification
+    Unlike :func:`~.simplify` which performs structural simplification
     without any assumption, this function transforms the expression into
     the form which is only valid under certain assumptions. Note that
     ``simplify()`` is generally not done in refining process.
 
     Refining boolean expression involves reducing it to ``S.true`` or
-    ``S.false``. Unlike :func:`~.ask()`, the expression will not be reduced
+    ``S.false``. Unlike :func:`~.ask`, the expression will not be reduced
     if the truth value cannot be determined.
 
     Examples
