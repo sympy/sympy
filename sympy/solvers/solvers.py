@@ -1893,7 +1893,7 @@ def _solve_system(exprs, symbols, **flags):
                 if got_s:
                     solved_syms = list(got_s)
                 else:
-                    raise NotImplementedError('no valid subset found')
+                    failed.extend([g.as_expr() for g in polys])
             else:
                 try:
                     result = solve_poly_system(polys, *symbols)
