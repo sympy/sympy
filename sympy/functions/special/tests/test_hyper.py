@@ -404,16 +404,11 @@ def test_eval_nseries():
 
 
 def test_aseries():
-    a = symbols('a', positive=True, integer=False)
-    b = symbols('b', positive=True, integer=True)
-    c = symbols('c')
-    assert hyper((a,b),(c,), x).series(x, oo, 2) == \
-    ((1 + b*(b - c + 1)/(x*(-a + b + 1)) + O(x**(-2), (x, oo)))*gamma(b)*\
-    gamma(a - b)/((-x)**b*gamma(-b + c)) + (1 + a*(a - c + 1)/(x*(a - b + 1)) + \
-    O(x**(-2), (x, oo)))*gamma(a)*gamma(-a + b)/((-x)**a*gamma(-a + c)))*gamma(c)/(gamma(a)*gamma(b))
-    assert hyper((S(1)/3, S(1)/2), (S(4)/3,), -x**3).series(x, oo, 2) == \
-    (sqrt(pi)*(-1/(14*x**3) + 1 + O(x**(-6), (x, oo)))*(1/x)**(S(3)/2)*gamma(-S(1)/6)/gamma(S(5)/6) + \
-    (1 + O(x**(-6), (x, oo)))*gamma(S(1)/6)*gamma(S(1)/3)/x)*gamma(S(4)/3)/(sqrt(pi)*gamma(S(1)/3))
-    assert hyper((S(1)/4,S(1)/2),(S(5)/4,), -x**4).series(x, oo, 2) == \
-    ((1 + O(x**(-8), (x, oo)))*gamma(S(1)/4)**2/x + sqrt(pi)*(-1/(10*x**4) + 1 + \
-    O(x**(-8), (x, oo)))*gamma(-S(1)/4)/(x**2*gamma(S(3)/4)))*gamma(S(5)/4)/(sqrt(pi)*gamma(S(1)/4))
+    assert hyper((S(1)/3, S(1)/2), (S(4)/3,), -x**3).series(x, oo) == \
+    gamma(S(1)/6)*gamma(S(4)/3)/(sqrt(pi)*x) + (1/x)**(S(3)/2)*gamma(S(4)/3)/(gamma(S(1)/3)*gamma(S(5)/6)) - \
+        (1/x)**(S(9)/2)*gamma(S(4)/3)/(14*gamma(S(1)/3)*gamma(S(5)/6)) + O(x**(-6), (x, oo))
+    assert hyper((S(1)/4,S(1)/2),(S(5)/4,), -x**4).series(x, oo) == \
+    gamma(S(5)/4)/(x**2*gamma(S(1)/4)*gamma(S(3)/4)) + gamma(S(1)/4)*gamma(S(5)/4)/(sqrt(pi)*x) + O(x**(-6), (x, oo))
+    assert hyper((-3, S(3)/2), (S(5)/2,), x).series(x, oo) == 1 + 3*I*sqrt(pi)*(1/x)**(S(3)/2)/4 - 9*x/5 + \
+        9*x**2/7 - x**3/3 + O(x**(-6), (x, oo))
+    assert hyper((-3, S(3)/2), (S(3)/2,), x).series(x, oo) == 1 - 3*x + 3*x**2 - x**3 + O(x**(-6), (x, oo))

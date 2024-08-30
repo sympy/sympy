@@ -308,7 +308,6 @@ class hyper(TupleParametersBase):
                 return super()._eval_aseries(n, args0, x, logx)
 
             from sympy.functions.special.gamma_functions import gamma
-            from sympy.series.order import Order
 
             z = unpolarify(self.args[2])
 
@@ -317,25 +316,24 @@ class hyper(TupleParametersBase):
 
             result = S.Zero
             for k in range(len(self.ap)):
-                term = gamma(ap[k])
-                num = Mul(*[gamma(a-ap[k]) for a in ap if a !=ap[k]])
-                den = Mul(*[gamma(b-ap[k]) for b in bq])
+                term = gamma(ap[k]) if ap[k]>0 else S.One
+                num = Mul(*[gamma(a-ap[k]) for a in ap if a>ap[k]])
+                den = Mul(*[gamma(b-ap[k]) for b in bq if b>ap[k]])
                 term *= (num/den)*(-z)**(-ap[k])
                 terms = [
-                    (Mul(*[RisingFactorial(ap[k] - b + 1, j) for b in bq]) /
+                    (Mul(*[RisingFactorial(ap[k] - b + 1, j) for b in bq if b != ap[k]]) /
                     Mul(*[RisingFactorial(ap[k] - a + 1, j) for a in ap if a != ap[k]]) *
                     (z ** -j) * RisingFactorial(ap[k], j) / factorial(j))
                     for j in range(n)
                 ]
-                terms.append(Order(z**(-n), x))
                 term *= Add(*terms)
                 result += term
 
-            num = Mul(*[gamma(b) for b in bq])
-            den = Mul(*[gamma(a) for a in ap])
+            num = Mul(*[gamma(b) for b in bq if b>0])
+            den = Mul(*[gamma(a) for a in ap if a>0])
             result *= num/den
 
-            return result
+            return result._eval_nseries(x, n, logx)
 
         return super()._eval_aseries(n, args0, x, logx)
 
