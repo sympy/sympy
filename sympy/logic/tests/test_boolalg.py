@@ -1363,5 +1363,5 @@ def test_issue_26985():
     result = Xor(Xor(d, And(x, y)), And(x, y))
     result_anf = to_anf(Xor(to_anf(Xor(d, And(x, y))), And(x, y)))
 
-    assert result_anf
-    assert result
+    assert result_anf == d
+    assert result == d
