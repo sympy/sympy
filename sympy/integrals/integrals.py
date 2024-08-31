@@ -217,7 +217,8 @@ class Integral(AddWithLimits):
         transform can perform u-substitution as long as a unique
         integrand is obtained:
 
-        >>> i.transform(x**2 - 1, u)
+        >>> ui = i.transform(x**2 - 1, u)
+        >>> ui
         Integral(cos(u)/2, (u, -1, 0))
 
         This attempt fails because x = +/-sqrt(u + 1) and the
@@ -233,8 +234,7 @@ class Integral(AddWithLimits):
         result is transformed back into the original expression
         using "u-substitution":
 
-        >>> ui = _
-        >>> _.transform(sqrt(u + 1), x) == i
+        >>> ui.transform(sqrt(u + 1), x) == i
         True
 
         We can accomplish the same with a regular substitution:
@@ -1251,9 +1251,10 @@ class Integral(AddWithLimits):
         intervals. This is equivalent to taking the average of the left and
         right hand rule results:
 
-        >>> e.as_sum(2, 'trapezoid')
+        >>> s = e.as_sum(2, 'trapezoid')
+        >>> s
         2*sin(5) + sin(3) + sin(7)
-        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
+        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == s
         True
 
         Here, the discontinuity at x = 0 can be avoided by using the

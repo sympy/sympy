@@ -1,7 +1,17 @@
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.external import import_module
-from sympy.stats import Geometric, Poisson, Zeta, sample, Skellam, DiscreteRV, Logarithmic, NegativeBinomial, YuleSimon
+from sympy.stats import (
+    Geometric,
+    Poisson,
+    Zeta,
+    sample,
+    Skellam,
+    Logarithmic,
+    NegativeBinomial,
+    YuleSimon,
+    DiscreteRV,
+)
 from sympy.testing.pytest import skip, raises, slow
 
 

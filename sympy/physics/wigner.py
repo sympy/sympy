@@ -56,7 +56,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.numbers import int_valued
 from sympy.core.function import Function
-from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.numbers import (Float, I, Integer, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -106,6 +106,25 @@ def _calc_factlist(nn):
         for ii in range(len(_Factlist), int(nn + 1)):
             _Factlist.append(_Factlist[ii - 1] * ii)
     return _Factlist[:int(nn) + 1]
+
+
+def _int_or_halfint(value):
+    """return Python int unless value is half-int (then return float)"""
+    if isinstance(value, int):
+        return value
+    elif type(value) is float:
+        if value.is_integer():
+            return int(value)  # an int
+        if (2*value).is_integer():
+            return value  # a float
+    elif isinstance(value, Rational):
+        if value.q == 2:
+            return value.p/value.q  # a float
+        elif value.q == 1:
+            return value.p  # an int
+    elif isinstance(value, Float):
+        return _int_or_halfint(float(value))
+    raise ValueError("expecting integer or half-integer, got %s" % value)
 
 
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
@@ -178,7 +197,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - zero for `m_1 + m_2 + m_3 \neq 0`
 
     - zero for violating any one of the conditions
-      `j_1 \ge |m_1|`,  `j_2 \ge |m_2|`,  `j_3 \ge |m_3|`
+         `m_1  \in \{-|j_1|, \ldots, |j_1|\}`,
+         `m_2  \in \{-|j_2|, \ldots, |j_2|\}`,
+         `m_3  \in \{-|j_3|, \ldots, |j_3|\}`
 
     Algorithm
     =========
@@ -194,16 +215,12 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    if int(j_1 * 2) != j_1 * 2 or int(j_2 * 2) != j_2 * 2 or \
-            int(j_3 * 2) != j_3 * 2:
-        raise ValueError("j values must be integer or half integer")
-    if int(m_1 * 2) != m_1 * 2 or int(m_2 * 2) != m_2 * 2 or \
-            int(m_3 * 2) != m_3 * 2:
-        raise ValueError("m values must be integer or half integer")
+
+    j_1, j_2, j_3, m_1, m_2, m_3 = map(_int_or_halfint,
+                                       [j_1, j_2, j_3, m_1, m_2, m_3])
+
     if m_1 + m_2 + m_3 != 0:
         return S.Zero
-    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
-    m_3 = -m_3
     a1 = j_1 + j_2 - j_3
     if a1 < 0:
         return S.Zero
@@ -214,6 +231,10 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     if a3 < 0:
         return S.Zero
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
+        return S.Zero
+    if not (int_valued(j_1 - m_1) and \
+            int_valued(j_2 - m_2) and \
+            int_valued(j_3 - m_3)):
         return S.Zero
 
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
@@ -247,6 +268,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             _Factlist[int(j_1 + j_2 - j_3 - ii)]
         sumres = sumres + Integer((-1) ** ii) / den
 
+    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
     res = ressqrt * sumres * prefid
     return res
 
@@ -337,6 +359,8 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
         1/2*sqrt(1/6)
     """
 
+    # the triangle test will only pass if a) all 3 values are ints or
+    # b) 1 is an int and the other two are half-ints
     if not int_valued(aa + bb - cc):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if not int_valued(aa + cc - bb):
@@ -517,10 +541,12 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 
       .. math::
 
+         \begin{aligned}
          \operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)
-          =\operatorname{Wigner6j}(j_1,j_5,j_6,j_4,j_2,j_3)
-          =\operatorname{Wigner6j}(j_4,j_2,j_6,j_1,j_5,j_3)
-          =\operatorname{Wigner6j}(j_4,j_5,j_3,j_1,j_2,j_6)
+          &=\operatorname{Wigner6j}(j_1,j_5,j_6,j_4,j_2,j_3)\\
+          &=\operatorname{Wigner6j}(j_4,j_2,j_6,j_1,j_5,j_3)\\
+          &=\operatorname{Wigner6j}(j_4,j_5,j_3,j_1,j_2,j_6)
+         \end{aligned}
 
     - additional 6 symmetries [Regge59]_ giving rise to 144 symmetries
       in total
@@ -566,11 +592,11 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     ========
 
     >>> from sympy.physics.wigner import wigner_9j
-    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0, prec=64) # ==1/18
-    0.05555555...
+    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0, prec=64)
+    0.05555555555555555555555555555555555555555555555555555555555555555
 
-    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1, prec=64) # ==1/6
-    0.1666666...
+    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1, prec=64)
+    0.1666666666666666666666666666666666666666666666666666666666666667
 
     It is an error to have arguments that are not integer or half
     integer values or do not fulfill the triangle relation::
@@ -647,7 +673,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     >>> gaunt(1,0,1,1,0,-1)
     -1/(2*sqrt(pi))
     >>> gaunt(1000,1000,1200,9,3,-12).n(64)
-    0.00689500421922113448...
+    0.006895004219221134484332976156744208248842039317638217822322799675
 
     It is an error to use non-integer values for `l` and `m`::
 
@@ -825,7 +851,7 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     >>> real_gaunt(2,2,4,-1,-1,0)
     -2/(7*sqrt(pi))
     >>> real_gaunt(10,10,20,-9,-9,0).n(64)
-    -0.00002480019791932209313156167...
+    -0.00002480019791932209313156167176797577821140084216297395518482071448
 
     It is an error to use non-integer values for `l` and `m`::
         real_gaunt(2.8,0.5,1.3,0,0,0)

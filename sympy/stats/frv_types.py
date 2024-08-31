@@ -149,7 +149,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
     @property  # type: ignore
     @cacheit
     def dict(self):
-        return {k: self.p for k in self.set}
+        return dict.fromkeys(self.set, self.p)
 
     @property
     def set(self):
@@ -345,6 +345,9 @@ def Bernoulli(name, p, succ=1, fail=0):
 def Coin(name, p=S.Half):
     r"""
     Create a Finite Random Variable representing a Coin toss.
+
+    This is an equivalent of a Bernoulli random variable with
+    "H" and "T" as success and failure events respectively.
 
     Parameters
     ==========

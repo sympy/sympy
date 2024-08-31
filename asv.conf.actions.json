@@ -17,12 +17,19 @@
     // project being benchmarked
     "repo": ".",
 
+    // The command to run to build the project.
+    // https://github.com/sympy/sympy/issues/26239
+    "build_command": [
+        "python -m pip install build",
+        "python -m build --wheel -o {build_cache_dir} {build_dir}"
+    ],
+
     // List of branches to benchmark. If not provided, defaults to "master"
     // (for git) or "tip" (for mercurial).
 
     // This list needs to be updated after each release of sympy. The branch to
     // be checked should always be the previous release.
-    "branches": ["upstream/1.12", "upstream/master", "HEAD"], // for git
+    "branches": ["upstream/1.13", "upstream/master", "HEAD"], // for git
     // "branches": ["tip"],    // for mercurial
 
     // The DVCS being used.  If not set, it will be automatically

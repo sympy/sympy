@@ -20,7 +20,7 @@ from sympy.functions.elementary.trigonometric import sin
 
 from sympy.testing.pytest import SKIP
 
-a, b, c, x, y, z = symbols('a,b,c,x,y,z')
+a, b, c, x, y, z, s = symbols('a,b,c,x,y,z,s')
 
 
 whitelist = [
@@ -2014,6 +2014,34 @@ def test_sympy__functions__combinatorial__numbers__carmichael():
     assert _test_args(carmichael(x))
 
 
+def test_sympy__functions__combinatorial__numbers__divisor_sigma():
+    from sympy.functions.combinatorial.numbers import divisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = divisor_sigma(n, k)
+    assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__fibonacci():
+    from sympy.functions.combinatorial.numbers import fibonacci
+    assert _test_args(fibonacci(x))
+
+
+def test_sympy__functions__combinatorial__numbers__jacobi_symbol():
+    from sympy.functions.combinatorial.numbers import jacobi_symbol
+    assert _test_args(jacobi_symbol(2, 3))
+
+
+def test_sympy__functions__combinatorial__numbers__kronecker_symbol():
+    from sympy.functions.combinatorial.numbers import kronecker_symbol
+    assert _test_args(kronecker_symbol(2, 3))
+
+
+def test_sympy__functions__combinatorial__numbers__legendre_symbol():
+    from sympy.functions.combinatorial.numbers import legendre_symbol
+    assert _test_args(legendre_symbol(2, 3))
+
+
 def test_sympy__functions__combinatorial__numbers__mobius():
     from sympy.functions.combinatorial.numbers import mobius
     assert _test_args(mobius(2))
@@ -2024,14 +2052,58 @@ def test_sympy__functions__combinatorial__numbers__motzkin():
     assert _test_args(motzkin(5))
 
 
-def test_sympy__functions__combinatorial__numbers__fibonacci():
-    from sympy.functions.combinatorial.numbers import fibonacci
-    assert _test_args(fibonacci(x))
+def test_sympy__functions__combinatorial__numbers__partition():
+    from sympy.core.symbol import Symbol
+    from sympy.functions.combinatorial.numbers import partition
+    assert _test_args(partition(Symbol('a', integer=True)))
+
+
+def test_sympy__functions__combinatorial__numbers__primenu():
+    from sympy.functions.combinatorial.numbers import primenu
+    n = symbols('n', integer=True)
+    t = primenu(n)
+    assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__primeomega():
+    from sympy.functions.combinatorial.numbers import primeomega
+    n = symbols('n', integer=True)
+    t = primeomega(n)
+    assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__primepi():
+    from sympy.functions.combinatorial.numbers import primepi
+    n = symbols('n')
+    t = primepi(n)
+    assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__reduced_totient():
+    from sympy.functions.combinatorial.numbers import reduced_totient
+    k = symbols('k', integer=True)
+    t = reduced_totient(k)
+    assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__totient():
+    from sympy.functions.combinatorial.numbers import totient
+    k = symbols('k', integer=True)
+    t = totient(k)
+    assert _test_args(t)
 
 
 def test_sympy__functions__combinatorial__numbers__tribonacci():
     from sympy.functions.combinatorial.numbers import tribonacci
     assert _test_args(tribonacci(x))
+
+
+def test_sympy__functions__combinatorial__numbers__udivisor_sigma():
+    from sympy.functions.combinatorial.numbers import udivisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = udivisor_sigma(n, k)
+    assert _test_args(t)
 
 
 def test_sympy__functions__combinatorial__numbers__harmonic():
@@ -2042,12 +2114,6 @@ def test_sympy__functions__combinatorial__numbers__harmonic():
 def test_sympy__functions__combinatorial__numbers__lucas():
     from sympy.functions.combinatorial.numbers import lucas
     assert _test_args(lucas(x))
-
-
-def test_sympy__functions__combinatorial__numbers__partition():
-    from sympy.core.symbol import Symbol
-    from sympy.functions.combinatorial.numbers import partition
-    assert _test_args(partition(Symbol('a', integer=True)))
 
 
 def test_sympy__functions__elementary__complexes__Abs():
@@ -4260,6 +4326,21 @@ def test_sympy__physics__control__lti__TransferFunction():
     assert _test_args(TransferFunction(2, 3, x))
 
 
+def _test_args_PIDController(obj):
+    from sympy.physics.control.lti import PIDController
+    if isinstance(obj, PIDController):
+        kp, ki, kd, tf = obj.kp, obj.ki, obj.kd, obj.tf
+        recreated_pid = PIDController(kp, ki, kd, tf, s)
+        return recreated_pid == obj
+    return False
+
+
+def test_sympy__physics__control__lti__PIDController():
+    from sympy.physics.control.lti import PIDController
+    kp, ki, kd, tf = 1, 0.1, 0.01, 0
+    assert _test_args_PIDController(PIDController(kp, ki, kd, tf, s))
+
+
 def test_sympy__physics__control__lti__Series():
     from sympy.physics.control import Series, TransferFunction
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
@@ -4965,57 +5046,6 @@ def test_sympy__categories__baseclasses__Category():
     assert _test_args(K)
 
 
-def test_sympy__ntheory__factor___totient():
-    from sympy.ntheory.factor_ import totient
-    k = symbols('k', integer=True)
-    t = totient(k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___reduced_totient():
-    from sympy.ntheory.factor_ import reduced_totient
-    k = symbols('k', integer=True)
-    t = reduced_totient(k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___divisor_sigma():
-    from sympy.ntheory.factor_ import divisor_sigma
-    k = symbols('k', integer=True)
-    n = symbols('n', integer=True)
-    t = divisor_sigma(n, k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___udivisor_sigma():
-    from sympy.ntheory.factor_ import udivisor_sigma
-    k = symbols('k', integer=True)
-    n = symbols('n', integer=True)
-    t = udivisor_sigma(n, k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___primenu():
-    from sympy.ntheory.factor_ import primenu
-    n = symbols('n', integer=True)
-    t = primenu(n)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___primeomega():
-    from sympy.ntheory.factor_ import primeomega
-    n = symbols('n', integer=True)
-    t = primeomega(n)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__generate__primepi():
-    from sympy.ntheory import primepi
-    n = symbols('n')
-    t = primepi(n)
-    assert _test_args(t)
-
-
 def test_sympy__physics__optics__waves__TWave():
     from sympy.physics.optics import TWave
     A, f, phi = symbols('A, f, phi')
@@ -5141,6 +5171,11 @@ def test_sympy__codegen__cfunctions__isnan():
     assert _test_args(isnan(x))
 
 
+def test_sympy__codegen__cfunctions__isinf():
+    from sympy.codegen.cfunctions import isinf
+    assert _test_args(isinf(x))
+
+
 def test_sympy__codegen__fnodes__FFunction():
     from sympy.codegen.fnodes import FFunction
     assert _test_args(FFunction('f'))
@@ -5197,6 +5232,22 @@ def test_sympy__codegen__matrix_nodes__MatrixSolve():
     A = MatrixSymbol('A', 3, 3)
     v = MatrixSymbol('x', 3, 1)
     assert _test_args(MatrixSolve(A, v))
+
+
+def test_sympy__printing__rust__TypeCast():
+    from sympy.printing.rust import TypeCast
+    from sympy.codegen.ast import real
+    assert _test_args(TypeCast(x, real))
+
+
+def test_sympy__printing__rust__float_floor():
+    from sympy.printing.rust import float_floor
+    assert _test_args(float_floor(x))
+
+
+def test_sympy__printing__rust__float_ceiling():
+    from sympy.printing.rust import float_ceiling
+    assert _test_args(float_ceiling(x))
 
 
 def test_sympy__vector__coordsysrect__CoordSys3D():

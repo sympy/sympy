@@ -2967,6 +2967,11 @@ class Expr(Basic, EvalfMixin):
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
 
+        if n is not None:
+            n = int(n)
+            if n < 0:
+                raise ValueError("Number of terms should be nonnegative")
+
         x0 = sympify(x0)
         cdir = sympify(cdir)
         from sympy.functions.elementary.complexes import im, sign
@@ -3236,7 +3241,8 @@ class Expr(Basic, EvalfMixin):
             logw = log(1/res)
 
         s = func.series(k, 0, n)
-
+        from sympy.core.function import expand_mul
+        s = expand_mul(s)
         # Hierarchical series
         if hir:
             return s.subs(k, exp(logw))
@@ -3631,15 +3637,17 @@ class Expr(Basic, EvalfMixin):
            log=log, multinomial=multinomial, basic=basic)
 
         expr = self
+        # default matches fraction's default
+        _fraction = lambda x: fraction(x, hints.get('exact', False))
         if hints.pop('frac', False):
             n, d = [a.expand(deep=deep, modulus=modulus, **hints)
-                    for a in fraction(self)]
+                    for a in _fraction(self)]
             return n/d
         elif hints.pop('denom', False):
-            n, d = fraction(self)
+            n, d = _fraction(self)
             return n/d.expand(deep=deep, modulus=modulus, **hints)
         elif hints.pop('numer', False):
-            n, d = fraction(self)
+            n, d = _fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
 
         # Although the hints are sorted here, an earlier hint may get applied

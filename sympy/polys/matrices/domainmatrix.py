@@ -13,6 +13,7 @@ from collections import Counter
 from functools import reduce
 from typing import Union as tUnion, Tuple as tTuple
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.core.sympify import _sympify
@@ -55,6 +56,12 @@ from .sdm import SDM
 from .dfm import DFM
 
 from .rref import _dm_rref, _dm_rref_den
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['DomainMatrix.to_dfm', 'DomainMatrix.to_dfm_or_ddm']
+else:
+    __doctest_skip__ = ['DomainMatrix.from_list']
 
 
 def DM(rows, domain):
@@ -274,6 +281,7 @@ class DomainMatrix:
         return self
 
     @classmethod
+    @doctest_depends_on(ground_types=['python', 'gmpy'])
     def from_list(cls, rows, domain):
         r"""
         Convert a list of lists into a DomainMatrix
@@ -1092,6 +1100,50 @@ class DomainMatrix:
         to_dok
         """
         return cls.from_rep(SDM.from_dok(dok, shape, domain))
+
+    def iter_values(self):
+        """
+        Iterate over nonzero elements of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> list(A.iter_values())
+        [1, 3, 4]
+
+        See Also
+        ========
+
+        iter_items
+        to_list_flat
+        sympy.matrices.matrixbase.MatrixBase.iter_values
+        """
+        return self.rep.iter_values()
+
+    def iter_items(self):
+        """
+        Iterate over indices and values of nonzero elements of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> list(A.iter_items())
+        [((0, 0), 1), ((1, 0), 3), ((1, 1), 4)]
+
+        See Also
+        ========
+
+        iter_values
+        to_dok
+        sympy.matrices.matrixbase.MatrixBase.iter_items
+        """
+        return self.rep.iter_items()
 
     def nnz(self):
         """

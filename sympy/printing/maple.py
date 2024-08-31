@@ -88,6 +88,12 @@ class MapleCodePrinter(CodePrinter):
     printmethod = "_maple"
     language = "maple"
 
+    _operators = {
+        'and': 'and',
+        'or': 'or',
+        'not': 'not ',
+    }
+
     _default_settings = dict(CodePrinter._default_settings, **{
         'inline': True,
         'allow_unknown_functions': True,
@@ -176,9 +182,6 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_Infinity(self, expr):
         return 'infinity'
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     def _print_BooleanTrue(self, expr):
         return "true"

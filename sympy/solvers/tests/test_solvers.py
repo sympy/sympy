@@ -329,7 +329,6 @@ def test_quintics_2():
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 3),
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 4)]
 
-
 def test_quintics_3():
     y = x**5 + x**3 - 2**Rational(1, 3)
     assert solve(y) == solve(-y) == []
@@ -434,7 +433,7 @@ def test_linear_system_symbols_doesnt_hang_1():
         y1s = symbols('y1_:{}'.format(wy), real=True)
         c = symbols('c_:{}'.format(order+1), real=True)
 
-        expr = sum([coeff*x**o for o, coeff in enumerate(c)])
+        expr = sum(coeff*x**o for o, coeff in enumerate(c))
         eqs = []
         for i in range(wy):
             eqs.append(expr.diff(x, i).subs({x: x0}) - y0s[i])
@@ -2127,7 +2126,7 @@ def test_issue_5114_6611():
     ans = solve(list(eqs), list(v), simplify=False)
     # If time is taken to simplify then then 2617 below becomes
     # 1168 and the time is about 50 seconds instead of 2.
-    assert sum([s.count_ops() for s in ans.values()]) <= 3270
+    assert sum(s.count_ops() for s in ans.values()) <= 3270
 
 
 def test_det_quick():
@@ -2568,6 +2567,10 @@ def test_issue_20747():
             / (1 - exp(c0/(DBH*c3 + THT*c4 + c2))))
     sol = [THT*term**(1/c1) - term**(1/c1) + 1]
     assert solve(eq, HT) == sol
+
+
+def test_issue_27001():
+    assert solve((x, x**2), (x, y, z), dict=True) == [{x: 0}]
 
 
 def test_issue_20902():

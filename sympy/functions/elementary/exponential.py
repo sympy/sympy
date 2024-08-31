@@ -589,7 +589,7 @@ def match_real_imag(expr):
 
     ``match_real_imag`` returns a tuple containing the real and imaginary
     parts of expr or ``(None, None)`` if direct matching is not possible. Contrary
-    to :func:`~.re()`, :func:`~.im()``, and ``as_real_imag()``, this helper will not force things
+    to :func:`~.re`, :func:`~.im``, and ``as_real_imag()``, this helper will not force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
     does not expand its argument either.
 
@@ -782,12 +782,6 @@ class log(Function):
                             return cls(modulus) + I * (-atan_table[t1])
                         else:
                             return cls(modulus) + I * (pi - atan_table[t1])
-
-    def as_base_exp(self):
-        """
-        Returns this function in the form (base, exponent).
-        """
-        return self, S.One
 
     @staticmethod
     @cacheit
@@ -1001,7 +995,7 @@ class log(Function):
             except ValueError:
                 a, b = s.removeO().as_leading_term(t, cdir=1), S.Zero
 
-        p = (z/(a*t**b) - 1)._eval_nseries(t, n=n, logx=logx, cdir=1)
+        p = (z/(a*t**b) - 1).cancel()._eval_nseries(t, n=n, logx=logx, cdir=1)
         if p.has(exp):
             p = logcombine(p)
         if isinstance(p, Order):
@@ -1046,14 +1040,13 @@ class log(Function):
         while k*d < n:
             coeff = -S.NegativeOne**k/k
             for ex in pk:
-                _ = terms.get(ex, S.Zero) + coeff*pk[ex]
-                terms[ex] = _.nsimplify()
+                terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
             pk = mul(pk, pterms)
             k += S.One
 
         res = log(a) - b*log(cdir) + b*logx
         for ex in terms:
-            res += terms[ex]*t**(ex)
+            res += terms[ex].cancel()*t**(ex)
 
         if a.is_negative and im(z) != 0:
             from sympy.functions.special.delta_functions import Heaviside
@@ -1173,8 +1166,6 @@ class LambertW(Function):
                 return S.Exp1
             if x is S.Infinity:
                 return S.Infinity
-            if x.is_zero:
-                return S.Zero
 
         if fuzzy_not(k.is_zero):
             if x.is_zero:

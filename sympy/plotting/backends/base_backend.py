@@ -3,6 +3,11 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 
 
+__doctest_requires__ = {
+    ('Plot.append', 'Plot.extend'): ['matplotlib'],
+}
+
+
 # Global variable
 # Set to False when running tests / doctests so that the plots don't show.
 _show = True
@@ -46,7 +51,7 @@ class Plot:
     which implements the necessary functionalities in order to use SymPy
     plotting functions.
 
-    For interactive work the function :func:`plot()` is better suited.
+    For interactive work the function :func:`plot` is better suited.
 
     This class permits the plotting of SymPy expressions using numerous
     backends (:external:mod:`matplotlib`, textplot, the old pyglet module for SymPy, Google
