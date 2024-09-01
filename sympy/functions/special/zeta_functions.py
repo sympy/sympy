@@ -7,8 +7,7 @@ from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.core.sympify import sympify
-from sympy.functions.combinatorial.numbers import bernoulli, factorial, genocchi, harmonic
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, binomial, genocchi, harmonic
 from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
 from sympy.functions.elementary.exponential import log, exp_polar, exp
 from sympy.functions.elementary.integers import ceiling, floor
@@ -555,6 +554,51 @@ class zeta(Function):
                 return S.NaN
         return self
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        if len(self.args) == 2:
+            s, a = self.args
+        else:
+            s, a = self.args + (S.One,)
+        try:
+            c, e = a.leadterm(x)
+        except NotImplementedError:
+            return self
+        if e.is_negative and not s.is_positive:
+            raise NotImplementedError
+        return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        if len(self.args) == 2:
+            s, a = self.args
+        else:
+            s, a = self.args + (S.One,)
+        d = s.subs(x, 0) # expansion point
+        e = (s-d).as_leading_term(x).as_coeff_exponent(x)[1]
+        if d == 1 and e.is_positive:
+            terms = [1/(s-1)]
+            for k in range(ceiling(n/e)):
+                terms.append((-1)**k * stieltjes(k, a) * (s-1)**k / factorial(k))
+            o = Order(x**n, x)
+            return Add(*terms)._eval_nseries(x, n, logx, cdir) + o
+        return super(zeta, self)._eval_nseries(x, n, logx, cdir)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        if len(self.args) == 2:
+            s, a = self.args
+        else:
+            return self
+        if args0[1] != S.Infinity or not (s.is_number and s.is_real and s != 1):
+            return super()._eval_aseries(n, args0, x, logx)
+        d, m = s-1, 2
+        terms = [1 / (d*a**d), 1 / (2*a**(1+d))]
+        while d + m < n:
+            terms.append(binomial(m+d, m) / (m+d) * bernoulli(m) / a**(m+d))
+            m += 2
+        o = Order(1 / a**n, x)
+        return Add(*terms)._eval_nseries(x, n, logx) + o
+
     def fdiff(self, argindex=1):
         if len(self.args) == 2:
             s, a = self.args
@@ -564,22 +608,6 @@ class zeta(Function):
             return -s*zeta(s + 1, a)
         else:
             raise ArgumentIndexError
-
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        if len(self.args) == 2:
-            s, a = self.args
-        else:
-            s, a = self.args + (S.One,)
-
-        try:
-            c, e = a.leadterm(x)
-        except NotImplementedError:
-            return self
-
-        if e.is_negative and not s.is_positive:
-            raise NotImplementedError
-
-        return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
 
 
 class dirichlet_eta(Function):
@@ -738,35 +766,21 @@ class stieltjes(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Stieltjes_constants
-
     """
 
     @classmethod
     def eval(cls, n, a=None):
-        if a is not None:
-            a = sympify(a)
-            if a is S.NaN:
-                return S.NaN
-            if a.is_Integer and a.is_nonpositive:
-                return S.ComplexInfinity
-
-        if n.is_Number:
-            if n is S.NaN:
-                return S.NaN
-            elif n < 0:
-                return S.ComplexInfinity
-            elif not n.is_Integer:
-                return S.ComplexInfinity
-            elif n is S.Zero and a in [None, 1]:
-                return S.EulerGamma
-
-        if n.is_extended_negative:
-            return S.ComplexInfinity
-
-        if n.is_zero and a in [None, 1]:
-            return S.EulerGamma
-
-        if n.is_integer == False:
+        if a is S.One:
+            return cls(n)
+        elif n is S.NaN or a is S.NaN:
+            return S.NaN
+        if a is None:
+            a = S.One
+        if n.is_zero:
+            from sympy.functions.special.gamma_functions import digamma
+            return -digamma(a)
+        elif (n.is_integer is False or n.is_nonnegative is False) or \
+                a.is_integer and a.is_nonpositive:
             return S.ComplexInfinity
 
 
