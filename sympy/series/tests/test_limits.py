@@ -163,6 +163,70 @@ def test_piecewise2():
     assert limit(func3, x, -1) == 2
 
 
+def test_piecewise_basic():
+    expr1 = Piecewise((x, x < 0), (10, True))
+    expr2 = Piecewise((x - 3, x <= 0), ((x + 1)**2, x < 10), (5, True))
+    assert limit(expr1, x, 0, dir = '+') == 10
+    assert limit(expr1, x, 0, dir = '-') == 0
+    assert limit(expr1, x, oo) == 10
+    assert limit(expr1, x, -oo) == -oo
+    assert limit(expr2, x, 0, dir = '+') == 1
+    assert limit(expr2, x, 0, dir = '-') == -3
+    assert limit(expr2, x, 10, dir = '+') == 5
+    assert limit(expr2, x, 10, dir = '-') == 121
+    assert limit(expr2, x, oo) == 5
+    assert limit(expr2, x, -oo) == -oo
+    raises(ValueError, lambda: limit(expr1, x, 0, dir='+-'))
+    raises(ValueError, lambda: limit(expr2, x, 0, dir='+-'))
+    raises(ValueError, lambda: limit(expr2, x, 10, dir='+-'))
+
+
+def test_piecewise_basic2():
+    from sympy.logic.boolalg import (And, Or)
+    p0 = Piecewise((0, Or(x < -2, x > 2)), (1, True))
+    p1 = Piecewise((0, x < -2), (0, x > 2), (1, True))
+    p2 = Piecewise((0, x > 2), (0, x < -2), (1, True))
+    p3 = Piecewise((0, x < -2), (1, x < 2), (0, True))
+    p4 = Piecewise((0, x > 2), (1, x > -2), (0, True))
+    p5 = Piecewise((1, And(-2< x, x < 2)), (0, True))
+    Functions = [p0, p1, p2, p3, p4, p5]
+    for function in Functions:
+        assert limit(function, x, -oo) == 0
+        assert limit(function, x, -2, '-') == 0
+        assert limit(function, x, -2, '+') == 1
+        raises(ValueError, lambda: limit(function, x, -2, dir='+-'))
+        assert limit(function, x, 0, '+-') == 1
+        assert limit(function, x, 2, '-') == 1
+        assert limit(function, x, 2, '+') == 0
+        raises(ValueError, lambda: limit(function, x, 2, dir='+-'))
+        assert limit(function, x, oo) == 0
+
+
+def test_piecewise_basic3():
+    p0 = Piecewise((0, x < -2), (2, x > 2), (1, True))
+    p1 = Piecewise((2, x > 2), (0, x < -2), (1, True))
+    p2 = Piecewise((0, x < -2), (1, x < 2), (2, True))
+    p3 = Piecewise((2, x > 2), (1, x > -2), (0, True))
+    Functions = [p0, p1, p2, p3]
+    for function in Functions:
+        assert limit(function, x, -oo) == 0
+        assert limit(function, x, -2, '-') == 0
+        assert limit(function, x, -2, '+') == 1
+        raises(ValueError, lambda: limit(function, x, -2, dir='+-'))
+        assert limit(function, x, 0, '+-') == 1
+        assert limit(function, x, 2, '-') == 1
+        assert limit(function, x, 2, '+') == 2
+        raises(ValueError, lambda: limit(function, x, 2, dir='+-'))
+        assert limit(function, x, oo) == 2
+
+
+def test_piecewise_basic4():
+    f = Piecewise((asinh(x), x < 1), ( x + 5, x < 5), (log(x), True))
+    assert limit(f, x, 10, dir = '+-') == log(10)
+    raises(ValueError, lambda: limit(f, x, 5, dir = '+-'))
+    raises(ValueError, lambda: limit(f, x, 1, dir = '+-'))
+
+
 def test_basic5():
     class my(Function):
         @classmethod
@@ -1435,3 +1499,16 @@ def test_issue_22982_15323():
     assert limit((1 - 1/x)**x*(log(1 - 1/x) + 1/(x*(1 - 1/x))), x, 1, dir='+') == 1
     assert limit((log(E + 1/x) )**(1 - sqrt(E + 1/x)), x, oo) == 1
     assert limit((log(E + 1/x) - 1)**(- sqrt(E + 1/x)), x, oo) == oo
+
+
+def test_issue_26313():
+    p = Piecewise((x**2, x <= 2), (5*x - 7, x > 2))
+    assert limit(p, x, 2, '+') == 3
+    assert limit(p, x, 2, '-') == 4
+
+
+def test_issue_23836():
+    p = Piecewise((x**3, x < 3), (-x**2, x > 3), (2, True))
+    assert limit(p, x, 3, '+') == -9
+    assert limit(p, x, 3, '-') == 27
+    raises(ValueError, lambda: limit(p, x, 3, dir='+-'))

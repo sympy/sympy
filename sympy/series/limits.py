@@ -6,6 +6,7 @@ from sympy.core.function import AppliedUndef
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
@@ -196,6 +197,23 @@ class Limit(Expr):
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
 
+    def piecewise_sub(self, e):
+        _, z, _, _ = self.args
+        at_infinity = []
+
+        for i, pair in enumerate(e.as_expr_set_pairs()):
+            if pair[1].inf == S.NegativeInfinity:
+                at_infinity.append((e.args[i][0].subs(z, 1/z), 1/z < 0))
+                break
+        for i, pair in enumerate(e.as_expr_set_pairs()):
+            if pair[1].sup == S.Infinity:
+                at_infinity.append((e.args[i][0].subs(z, 1/z), 1/z > 0))
+                break
+
+        if at_infinity[0][0] == at_infinity[1][0]:
+            at_infinity = [(at_infinity[0][0], True)]
+
+        return Piecewise(*tuple(at_infinity))
 
     def doit(self, **hints):
         """Evaluates the limit.
@@ -322,7 +340,10 @@ class Limit(Expr):
         if z0 is S.Infinity:
             if e.is_Mul:
                 e = factor_terms(e)
-            newe = e.subs(z, 1/z)
+            if isinstance(e, Piecewise):
+                newe = self.piecewise_sub(e)
+            else:
+                newe = e.subs(z, 1/z)
             # cdir changes sign as oo- should become 0+
             cdir = -cdir
         else:
