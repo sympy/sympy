@@ -29,6 +29,8 @@ from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.sets.setexpr import SetExpr
 from sympy.testing.pytest import XFAIL, slow, raises
+from sympy.functions.special.hyper import ( meijerg)
+from sympy.simplify.hyperexpand import hyperexpand
 
 
 x, y, z = symbols('x y z')
@@ -219,6 +221,14 @@ def test_sin_rewrite():
     assert sin(cos(x)).rewrite(Pow) == sin(cos(x))
     assert sin(x).rewrite(besselj) == sqrt(pi*x/2)*besselj(S.Half, x)
     assert sin(x).rewrite(besselj).subs(x, 0) == sin(0)
+    assert sin(x).rewrite(meijerg) == sqrt(pi)*meijerg(((), ()), ((S.Half,), (0,)), x**2/4)
+    assert sin(x).rewrite(meijerg).subs(x, 0) == sqrt(pi)*meijerg(((), ()), ((S.Half,), (0,)), 0)
+    assert hyperexpand(sin(x).rewrite(meijerg)) == sin(x)
+    assert hyperexpand(sin(x).rewrite(meijerg)).subs(x, 0) == sin(0)
+    assert hyperexpand(sin(x).rewrite(meijerg)).subs(x, pi/2) == sin(pi/2)
+    assert hyperexpand(sin(x).rewrite(meijerg)).subs(x, -pi/2) == sin(-pi/2)
+    assert hyperexpand(sin(x).rewrite(meijerg)).subs(x, I*(-pi/2)) == -sin(I*(pi/2))
+    assert hyperexpand(sin(x).rewrite(meijerg)).subs(x, I*(pi/2)) == sin(I*(pi/2))
 
 
 def _test_extrig(f, i, e):
@@ -449,6 +459,14 @@ def test_cos_rewrite():
                 (1, True)
             )
     assert cos(x).rewrite(besselj).subs(x, 0) == cos(0)
+    assert cos(x).rewrite(meijerg) == sqrt(pi)*meijerg(((), ()), ((0,), (S.Half,)), x**2/4)
+    assert cos(x).rewrite(meijerg).subs(x, 0) == sqrt(pi)*meijerg(((), ()), ((0,), (S.Half,)), 0)
+    assert hyperexpand(cos(x).rewrite(meijerg)) == cos(x)
+    assert hyperexpand(cos(x).rewrite(meijerg)).subs(x, 0) == cos(0)
+    assert hyperexpand(cos(x).rewrite(meijerg)).subs(x, pi/2) == cos(pi/2)
+    assert hyperexpand(cos(x).rewrite(meijerg)).subs(x, -pi/2) == cos(-pi/2)
+    assert hyperexpand(cos(x).rewrite(meijerg)).subs(x, I*(-pi/2)) == cos(I*(-pi/2))
+    assert hyperexpand(cos(x).rewrite(meijerg)).subs(x, I*(pi/2)) == cos(I*(pi/2))
 
 
 def test_cos_expansion():
@@ -1737,6 +1755,14 @@ def test_sec_rewrite():
                 (1, True)
             )
     assert sec(x).rewrite(besselj).subs(x, 0) == sec(0)
+    assert sec(x).rewrite(meijerg) == 1/(sqrt(pi)*meijerg(((), ()), ((0,), (S.Half,)), x**2/4))
+    assert sec(x).rewrite(meijerg).subs(x, 0) == 1/(sqrt(pi)*meijerg(((), ()), ((0,), (S.Half,)), 0))
+    assert hyperexpand(sec(x).rewrite(meijerg)) == 1/cos(x)
+    assert hyperexpand(sec(x).rewrite(meijerg)).subs(x, 0) == 1/cos(0)
+    assert hyperexpand(sec(x).rewrite(meijerg)).subs(x, pi/2) == 1/cos(pi/2)
+    assert hyperexpand(sec(x).rewrite(meijerg)).subs(x, -pi/2) == 1/cos(-pi/2)
+    assert hyperexpand(sec(x).rewrite(meijerg)).subs(x, I*(-pi/2)) == 1/cos(I*(-pi/2))
+    assert hyperexpand(sec(x).rewrite(meijerg)).subs(x, I*(pi/2)) == 1/cos(I*(pi/2))
 
 
 def test_sec_fdiff():
@@ -1939,7 +1965,14 @@ def test_csc_rewrite():
                   I*cos(-pi/2 + I*besselj(I, I), evaluate=False), evaluate=False)
     assert csc(x).rewrite(besselj) == sqrt(2)/(sqrt(pi*x)*besselj(S.Half, x))
     assert csc(x).rewrite(besselj).subs(x, 0) == csc(0)
-
+    assert csc(x).rewrite(meijerg) == 1/(sqrt(pi)*meijerg(((), ()), ((S.Half,), (0,)), x**2/4))
+    assert csc(x).rewrite(meijerg).subs(x, 0) == 1/(sqrt(pi)*meijerg(((), ()), ((S.Half,), (0,)), 0))
+    assert hyperexpand(csc(x).rewrite(meijerg)) == 1/sin(x)
+    assert hyperexpand(csc(x).rewrite(meijerg)).subs(x, 0) == 1/sin(0)
+    assert hyperexpand(csc(x).rewrite(meijerg)).subs(x, pi/2) == 1/sin(pi/2)
+    assert hyperexpand(csc(x).rewrite(meijerg)).subs(x, -pi/2) == 1/sin(-pi/2)
+    assert hyperexpand(csc(x).rewrite(meijerg)).subs(x, I*(-pi/2)) == 1/sin(I*(-pi/2))
+    assert hyperexpand(csc(x).rewrite(meijerg)).subs(x, I*(pi/2)) == 1/sin(I*(pi/2))
 
 def test_acsc_leading_term():
     assert acsc(1/x).as_leading_term(x) == x
