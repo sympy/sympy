@@ -1012,7 +1012,7 @@ class Add(Expr, AssocOp):
             im_part.append(im)
         return (self.func(*re_part), self.func(*im_part))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.core.symbol import Dummy, Symbol
         from sympy.series.order import Order
         from sympy.functions.elementary.exponential import log

@@ -141,7 +141,7 @@ class floor(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[0]
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
@@ -309,7 +309,7 @@ class ceiling(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[1]
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
@@ -593,7 +593,7 @@ class frac(Function):
             if other.is_integer and other.is_positive:
                 return S.true
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)

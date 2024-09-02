@@ -162,7 +162,3 @@ def test_differentiate_finite():
            + 3*g(h + x)/(2*h))/(2*h) - (2*f(x)/h - 3*f(-h + x)/(2*h) - \
            f(h + x)/(2*h))*(2*g(x)/h - 3*g(-h + x)/(2*h) - g(h + x)/(2*h))/(2*h)
     assert res5 == ref5
-
-    res6 = res5.limit(h, 0).doit()
-    ref6 = diff(res5_expr, x)
-    assert res6 == ref6

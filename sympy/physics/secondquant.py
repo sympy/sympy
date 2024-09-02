@@ -187,9 +187,9 @@ class AntiSymmetricTensor(TensorSymbol):
 
         try:
             upper, signu = _sort_anticommuting_fermions(
-                upper, key=cls._sortkey)
+                upper, key=_sqkey_index)
             lower, signl = _sort_anticommuting_fermions(
-                lower, key=cls._sortkey)
+                lower, key=_sqkey_index)
 
         except ViolationOfPauliPrinciple:
             return S.Zero
@@ -203,31 +203,6 @@ class AntiSymmetricTensor(TensorSymbol):
         else:
 
             return TensorSymbol.__new__(cls, symbol, upper, lower)
-
-    @classmethod
-    def _sortkey(cls, index):
-        """Key for sorting of indices.
-
-        particle < hole < general
-
-        FIXME: This is a bottle-neck, can we do it faster?
-        """
-        h = hash(index)
-        label = str(index)
-        if isinstance(index, Dummy):
-            if index.assumptions0.get('above_fermi'):
-                return (20, label, h)
-            elif index.assumptions0.get('below_fermi'):
-                return (21, label, h)
-            else:
-                return (22, label, h)
-
-        if index.assumptions0.get('above_fermi'):
-            return (10, label, h)
-        elif index.assumptions0.get('below_fermi'):
-            return (11, label, h)
-        else:
-            return (12, label, h)
 
     def _latex(self, printer):
         return "{%s^{%s}_{%s}}" % (
@@ -1051,7 +1026,7 @@ class FermionState(FockState):
         if len(occupations) > 1:
             try:
                 (occupations, sign) = _sort_anticommuting_fermions(
-                    occupations, key=hash)
+                    occupations, key=_sqkey_index)
             except ViolationOfPauliPrinciple:
                 return S.Zero
         else:
@@ -1221,14 +1196,19 @@ class FermionState(FockState):
         return self.__class__((i,) + self.args[0], self.fermi_level)
 
     @classmethod
-    def _count_holes(cls, list):
+    def _count_holes(cls, occupations):
         """
-        Returns the number of identified hole states in list.
+        Returns the number of identified hole states in occupations list.
         """
-        return len([i for i in list if cls._only_below_fermi(i)])
+        return len([i for i in occupations if cls._only_below_fermi(i)])
 
-    def _negate_holes(self, list):
-        return tuple([-i if i <= self.fermi_level else i for i in list])
+    def _negate_holes(self, occupations):
+        """
+        Returns the occupations list where states below the fermi level have negative labels.
+
+        For symbolic state labels, no sign is included.
+        """
+        return tuple([-i if self._only_below_fermi(i) and i.is_number else i for i in occupations])
 
     def __repr__(self):
         if self.fermi_level:
@@ -2223,12 +2203,37 @@ def contraction(a, b):
         raise ContractionAppliesOnlyToFermions(*t)
 
 
-def _sqkey(sq_operator):
+def _sqkey_operator(sq_operator):
     """Generates key for canonical sorting of SQ operators."""
     return sq_operator._sortkey()
 
+def _sqkey_index(index):
+    """Key for sorting of indices.
 
-def _sort_anticommuting_fermions(string1, key=_sqkey):
+    particle < hole < general
+
+    FIXME: This is a bottle-neck, can we do it faster?
+    """
+    h = hash(index)
+    label = str(index)
+    if isinstance(index, Dummy):
+        if index.assumptions0.get('above_fermi'):
+            return (20, label, h)
+        elif index.assumptions0.get('below_fermi'):
+            return (21, label, h)
+        else:
+            return (22, label, h)
+
+    if index.assumptions0.get('above_fermi'):
+        return (10, label, h)
+    elif index.assumptions0.get('below_fermi'):
+        return (11, label, h)
+    else:
+        return (12, label, h)
+
+
+
+def _sort_anticommuting_fermions(string1, key=_sqkey_operator):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
 
     Explanation

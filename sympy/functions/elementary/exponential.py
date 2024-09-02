@@ -534,7 +534,7 @@ class exp(ExpBase, metaclass=ExpMeta):
             l.append(g.removeO())
         return Add(*l)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.util import AccumBounds
         arg = self.args[0].cancel().as_leading_term(x, logx=logx)
         arg0 = arg.subs(x, 0)
@@ -589,7 +589,7 @@ def match_real_imag(expr):
 
     ``match_real_imag`` returns a tuple containing the real and imaginary
     parts of expr or ``(None, None)`` if direct matching is not possible. Contrary
-    to :func:`~.re()`, :func:`~.im()``, and ``as_real_imag()``, this helper will not force things
+    to :func:`~.re`, :func:`~.im``, and ``as_real_imag()``, this helper will not force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
     does not expand its argument either.
 
@@ -1060,7 +1060,7 @@ class log(Function):
         res = res.subs(t, x/cdir)
         return res + Order(x**n, x)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         # NOTE
         # Refer https://github.com/sympy/sympy/pull/23592 for more information
         # on each of the following steps involved in this method.
@@ -1225,7 +1225,7 @@ class LambertW(Function):
         else:
             return s.is_algebraic
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         if len(self.args) == 1:
             arg = self.args[0]
             arg0 = arg.subs(x, 0).cancel()

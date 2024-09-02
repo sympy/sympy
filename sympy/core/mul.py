@@ -2032,7 +2032,7 @@ class Mul(Expr, AssocOp):
             res += Order(x**n, x)
         return res
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         return self.func(*[t.as_leading_term(x, logx=logx, cdir=cdir) for t in self.args])
 
     def _eval_conjugate(self):

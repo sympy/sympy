@@ -251,7 +251,7 @@ class Mod(Function):
         from sympy.functions.elementary.integers import floor
         return a - b*floor(a/b)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.elementary.integers import floor
         return self.rewrite(floor)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 

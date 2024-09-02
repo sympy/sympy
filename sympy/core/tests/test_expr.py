@@ -18,6 +18,7 @@ from sympy.core.symbol import Symbol, symbols, Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import exp_polar, exp, log
+from sympy.functions.elementary.hyperbolic import sinh, tanh
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import tan, sin, cos
@@ -486,6 +487,9 @@ def test_as_leading_term():
     d = (1 + sqrt(5))/2
     assert e.subs(x, y + 1/d).as_leading_term(y) == \
         (-40*y - 16*sqrt(5)*y)/(16 + 8*sqrt(5))
+
+    # https://github.com/sympy/sympy/issues/26991
+    assert sinh(tanh(3/(100*x))).as_leading_term(x, cdir = 1) == sinh(1)
 
 
 def test_leadterm2():

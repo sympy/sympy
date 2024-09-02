@@ -2,6 +2,7 @@ from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float, _illegal
+from sympy.core.function import AppliedUndef
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -77,7 +78,7 @@ def heuristics(e, z, z0, dir):
         rv = limit(e.subs(z, 1/z), z, S.Zero, "+")
         if isinstance(rv, Limit):
             return
-    elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
+    elif (e.is_Mul or e.is_Add or e.is_Pow or (e.is_Function and not isinstance(e, AppliedUndef))):
         r = []
         from sympy.simplify.simplify import together
         for a in e.args:
@@ -257,11 +258,11 @@ class Limit(Expr):
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
 
-        cdir = 0
+        cdir = S.Zero
         if str(dir) == "+":
-            cdir = 1
+            cdir = S.One
         elif str(dir) == "-":
-            cdir = -1
+            cdir = S.NegativeOne
 
         def set_signs(expr):
             if not expr.args:
@@ -365,8 +366,8 @@ class Limit(Expr):
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
-        # differs from gamma) so only rewrite for positive z0.
-        if z0.is_extended_positive:
+        # differs from gamma) so only rewrite for non-negative z0.
+        if z0.is_extended_nonnegative:
             e = e.rewrite(factorial, gamma)
 
         l = None

@@ -3728,7 +3728,7 @@ class TensMul(TensExpr, AssocOp):
 
     @property
     def nocoeff(self):
-        return self.func(*[t for t in self.args if isinstance(t, TensExpr)]).doit()
+        return self.func(*self.args, 1/self.coeff).doit(deep=False)
 
     @property
     def dum_in_args(self):
@@ -4285,6 +4285,21 @@ class TensMul(TensExpr, AssocOp):
                 newrule[old] = new_renamed
                 exclude.update(get_indices(new_renamed))
         return newrule
+
+    def _eval_subs(self, old, new):
+        """
+        If new is an index which is already present in self as a dummy, the dummies in self should be renamed.
+        """
+
+        if not isinstance(new, TensorIndex):
+            return None
+
+        exclude = {new}
+        self_renamed = self._dedupe_indices(self, exclude)
+        if self_renamed is None:
+            return None
+        else:
+            return self_renamed._subs(old, new).doit(deep=False)
 
     def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         from sympy.concrete.summations import Sum
