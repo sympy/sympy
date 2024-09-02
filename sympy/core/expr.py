@@ -3489,6 +3489,7 @@ class Expr(Basic, EvalfMixin):
         elif not symbols:
             return self
         x = sympify(symbols[0])
+        cdir = sympify(cdir)
         if not x.is_symbol:
             raise ValueError('expecting a Symbol but got %s' % x)
         if x not in self.free_symbols:
@@ -3499,7 +3500,7 @@ class Expr(Basic, EvalfMixin):
             return powsimp(obj, deep=True, combine='exp')
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         return self
 
     def as_coeff_exponent(self, x) -> tuple[Expr, Expr]:

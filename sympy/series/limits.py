@@ -258,11 +258,11 @@ class Limit(Expr):
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
 
-        cdir = 0
+        cdir = S.Zero
         if str(dir) == "+":
-            cdir = 1
+            cdir = S.One
         elif str(dir) == "-":
-            cdir = -1
+            cdir = S.NegativeOne
 
         def set_signs(expr):
             if not expr.args:

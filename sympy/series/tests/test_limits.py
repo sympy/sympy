@@ -968,7 +968,6 @@ def test_issue_14313_comment():
     assert limit(floor(n/2), n, oo) is oo
 
 
-@XFAIL
 def test_issue_15323():
     d = ((1 - 1/x)**x).diff(x)
     assert limit(d, x, 1, dir='+') == 1
@@ -1435,3 +1434,7 @@ def test_issue_22982_15323():
     assert limit((1 - 1/x)**x*(log(1 - 1/x) + 1/(x*(1 - 1/x))), x, 1, dir='+') == 1
     assert limit((log(E + 1/x) )**(1 - sqrt(E + 1/x)), x, oo) == 1
     assert limit((log(E + 1/x) - 1)**(- sqrt(E + 1/x)), x, oo) == oo
+
+
+def test_issue_26991():
+    assert limit(x/((x - 6)*sinh(tanh(0.03*x)) + tanh(x) - 0.5), x, oo) == 1/sinh(1)

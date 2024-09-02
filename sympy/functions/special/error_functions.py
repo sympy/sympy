@@ -250,7 +250,7 @@ class erf(Function):
     def _eval_rewrite_as_erfi(self, z, **kwargs):
         return -I*erfi(I*z)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -462,7 +462,7 @@ class erfc(Function):
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -648,7 +648,7 @@ class erfi(Function):
 
     as_real_imag = real_to_real_as_real_imag
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -1240,7 +1240,7 @@ class Ei(Function):
         t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(S.Exp1**t/t, (t, S.NegativeInfinity, z))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy import re
         x0 = self.args[0].limit(x, 0)
         arg = self.args[0].as_leading_term(x, cdir=cdir)
@@ -1926,7 +1926,7 @@ class Si(TrigonometricIntegral):
 
     _eval_rewrite_as_sinc =  _eval_rewrite_as_Integral
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -2068,7 +2068,7 @@ class Ci(TrigonometricIntegral):
         t = Dummy(uniquely_named_symbol('t', [z]).name)
         return S.EulerGamma + log(z) - Integral((1-cos(t))/t, (t, 0, z))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -2193,7 +2193,7 @@ class Shi(TrigonometricIntegral):
         if z.is_zero:
             return True
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x)
         arg0 = arg.subs(x, 0)
 
@@ -2304,7 +2304,7 @@ class Chi(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -2496,7 +2496,7 @@ class fresnels(FresnelIntegral):
         t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(sin(pi*t**2/2), (t, 0, z))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
@@ -2657,7 +2657,7 @@ class fresnelc(FresnelIntegral):
         t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(cos(pi*t**2/2), (t, 0, z))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
@@ -2786,7 +2786,7 @@ class _eis(Function):
     def _eval_rewrite_as_intractable(self, z, **kwargs):
         return exp(-z)*Ei(z)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
