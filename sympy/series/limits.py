@@ -278,7 +278,7 @@ class Limit(Expr):
                     if sig.is_zero:
                         sig = limit(1/expr.args[0], z, z0, dir)
                 except NotImplementedError:
-                    pass
+                    return expr
                 else:
                     if sig.is_extended_real:
                         if (sig < 0) == True:
