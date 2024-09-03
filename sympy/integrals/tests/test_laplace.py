@@ -761,8 +761,7 @@ def test_expint():
             ((s - log(s + 1))/s**2, 0, True))
     assert (inverse_laplace_transform(-log(1 + s**2)/2/s, s, u).expand() ==
             Heaviside(u)*Ci(u))
-    assert (inverse_laplace_transform(log(s + 1)/s, s, x).rewrite(expint) ==
+    assert (inverse_laplace_transform(log(s + 1)/s, s, simplify=True).rewrite(expint) ==
             Heaviside(x)*E1(x))
     assert (inverse_laplace_transform((s - log(s + 1))/s**2, s, x, simplify=True).rewrite(expint).expand() ==
             (expint(2, x)*Heaviside(x)).rewrite(Ei).rewrite(expint).expand())
-
