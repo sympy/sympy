@@ -2015,16 +2015,16 @@ class TensExpr(Expr, ABC):
         raise NotImplementedError
 
     def __add__(self, other):
-        return TensAdd(self, other).doit()
+        return TensAdd(self, other).doit(deep=False)
 
     def __radd__(self, other):
-        return TensAdd(other, self).doit()
+        return TensAdd(other, self).doit(deep=False)
 
     def __sub__(self, other):
-        return TensAdd(self, -other).doit()
+        return TensAdd(self, -other).doit(deep=False)
 
     def __rsub__(self, other):
-        return TensAdd(other, -self).doit()
+        return TensAdd(other, -self).doit(deep=False)
 
     def __mul__(self, other):
         """
@@ -2049,16 +2049,16 @@ class TensExpr(Expr, ABC):
         >>> t1*t2
         p(L_0)*q(-L_0)
         """
-        return TensMul(self, other).doit()
+        return TensMul(self, other).doit(deep=False)
 
     def __rmul__(self, other):
-        return TensMul(other, self).doit()
+        return TensMul(other, self).doit(deep=False)
 
     def __truediv__(self, other):
         other = _sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
-        return TensMul(self, S.One/other).doit()
+        return TensMul(self, S.One/other).doit(deep=False)
 
     def __rtruediv__(self, other):
         raise ValueError('cannot divide by a tensor')
@@ -2597,7 +2597,7 @@ class TensAdd(TensExpr, AssocOp):
             # needs an implementation similar to .as_coeff_Mul()
             terms_dict[arg.nocoeff].append(arg.coeff)
 
-        new_args = [TensMul(Add(*coeff), t).doit() for t, coeff in terms_dict.items() if Add(*coeff) != 0]
+        new_args = [TensMul(Add(*coeff), t).doit(deep=False) for t, coeff in terms_dict.items() if Add(*coeff) != 0]
         if isinstance(scalars, Add):
             new_args = list(scalars.args) + new_args
         elif scalars != 0:
@@ -2623,7 +2623,7 @@ class TensAdd(TensExpr, AssocOp):
             return self
         index_tuples = list(zip(free_args, indices))
         a = [x.func(*x.substitute_indices(*index_tuples).args) for x in self.args]
-        res = TensAdd(*a).doit()
+        res = TensAdd(*a).doit(deep=False)
         return res
 
     def canon_bp(self):
@@ -2633,7 +2633,7 @@ class TensAdd(TensExpr, AssocOp):
         """
         expr = self.expand()
         args = [canon_bp(x) for x in expr.args]
-        res = TensAdd(*args).doit()
+        res = TensAdd(*args).doit(deep=False)
         return res
 
     def equals(self, other):
@@ -2664,7 +2664,7 @@ class TensAdd(TensExpr, AssocOp):
 
     def contract_delta(self, delta):
         args = [x.contract_delta(delta) for x in self.args]
-        t = TensAdd(*args).doit()
+        t = TensAdd(*args).doit(deep=False)
         return canon_bp(t)
 
     def contract_metric(self, g):
@@ -2685,7 +2685,7 @@ class TensAdd(TensExpr, AssocOp):
         """
 
         args = [contract_metric(x, g) for x in self.args]
-        t = TensAdd(*args).doit()
+        t = TensAdd(*args).doit(deep=False)
         return canon_bp(t)
 
     def substitute_indices(self, *index_tuples):
@@ -2694,7 +2694,7 @@ class TensAdd(TensExpr, AssocOp):
             if isinstance(arg, TensExpr):
                 arg = arg.substitute_indices(*index_tuples)
             new_args.append(arg)
-        return TensAdd(*new_args).doit()
+        return TensAdd(*new_args).doit(deep=False)
 
     def _print(self):
         a = []
@@ -2758,7 +2758,7 @@ class TensAdd(TensExpr, AssocOp):
             elif s._diff_wrt:
                 list_addends.append(a._eval_derivative(s))
 
-        return self.func(*list_addends)
+        return self.func(*list_addends).doit(deep=False)
 
     def matches(self, expr, repl_dict=None, old=False):
         expr = sympify(expr)
@@ -3395,7 +3395,7 @@ class Tensor(TensExpr):
                                     tensor_index_type.delta(-dummy, -iother))
                         )
                     kronecker_delta_list.append(kroneckerdelta)
-            return TensMul.fromiter(kronecker_delta_list).doit()
+            return TensMul.fromiter(kronecker_delta_list).doit(deep=False)
             # doit necessary to rename dummy indices accordingly
 
 
@@ -3670,7 +3670,7 @@ class TensMul(TensExpr, AssocOp):
     # TODO: should this method be renamed _from_components_free_dum ?
     @staticmethod
     def from_data(coeff, components, free, dum, **kw_args):
-        return TensMul(coeff, *TensMul._get_tensors_from_components_free_dum(components, free, dum), **kw_args).doit()
+        return TensMul(coeff, *TensMul._get_tensors_from_components_free_dum(components, free, dum), **kw_args).doit(deep=False)
 
     @staticmethod
     def _get_tensors_from_components_free_dum(components, free, dum):
@@ -3851,7 +3851,7 @@ class TensMul(TensExpr, AssocOp):
         )
 
     def __neg__(self):
-        return TensMul(S.NegativeOne, self, is_canon_bp=self._is_canon_bp).doit()
+        return TensMul(S.NegativeOne, self, is_canon_bp=self._is_canon_bp).doit(deep=False)
 
     def __getitem__(self, item):
         deprecate_data()
@@ -3908,7 +3908,7 @@ class TensMul(TensExpr, AssocOp):
         """
         Returns a tensor product with sorted components.
         """
-        return TensMul(*self._sort_args_for_sorted_components()).doit()
+        return TensMul(*self._sort_args_for_sorted_components()).doit(deep=False)
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
@@ -4130,7 +4130,7 @@ class TensMul(TensExpr, AssocOp):
         free = [(ind, p - shifts[pos_map[p]]) for (ind, p) in free if pos_map[p] not in elim]
         dum = [(p0 - shifts[pos_map[p0]], p1 - shifts[pos_map[p1]]) for p0, p1 in dum if pos_map[p0] not in elim and pos_map[p1] not in elim]
 
-        res = sign*TensMul(*args).doit()
+        res = ( sign*TensMul(*args) ).doit(deep=False)
         if not isinstance(res, TensExpr):
             return res
         im = _IndexStructure.from_components_free_dum(res.components, free, dum)
@@ -4152,7 +4152,7 @@ class TensMul(TensExpr, AssocOp):
             ext_rank = arg.ext_rank
             args[i] = arg._set_indices(*indices[pos:pos+ext_rank])
             pos += ext_rank
-        return TensMul(*args, is_canon_bp=is_canon_bp).doit()
+        return TensMul(*args, is_canon_bp=is_canon_bp).doit(deep=False)
 
     @staticmethod
     def _index_replacement_for_contract_metric(args, free, dum):
@@ -4167,7 +4167,7 @@ class TensMul(TensExpr, AssocOp):
             if isinstance(arg, TensExpr):
                 arg = arg.substitute_indices(*index_tuples)
             new_args.append(arg)
-        return TensMul(*new_args).doit()
+        return TensMul(*new_args).doit(deep=False)
 
     def __call__(self, *indices):
         deprecate_call()
@@ -4323,8 +4323,8 @@ class TensMul(TensExpr, AssocOp):
                 else:
                     d = S.Zero
             if d:
-                terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]))
-        return TensAdd.fromiter(terms)
+                terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]).doit(deep=False))
+        return TensAdd.fromiter(terms).doit(deep=False)
 
 
     def _matches_commutative(self, expr, repl_dict=None, old=False):
@@ -5067,7 +5067,7 @@ def riemann_cyclic(t2):
     a1 = [x.split() for x in args]
     a2 = [[riemann_cyclic_replace(tx) for tx in y] for y in a1]
     a3 = [tensor_mul(*v) for v in a2]
-    t3 = TensAdd(*a3).doit()
+    t3 = TensAdd(*a3).doit(deep=False)
     if not t3:
         return t3
     else:
