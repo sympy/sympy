@@ -1,6 +1,7 @@
 """Laplace Transforms"""
 import sys
 import sympy
+import sympy as sp
 from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -1461,6 +1462,32 @@ behavior.
         return LT, p, c
     else:
         return LT
+
+def laplace_and_inverse_square_wave(frequency, t_symbol=None, s_symbol=None):
+    # Define the time and Laplace domain symbols
+    t = t_symbol if t_symbol else sp.symbols('t')
+    s = s_symbol if s_symbol else sp.symbols('s')
+
+    # Define the period and half-period
+    period = 1 / frequency
+    half_period = period / 2
+
+    # Define the square wave using Heaviside step functions
+    square_wave = (sp.Heaviside(t) - sp.Heaviside(t - half_period)) - (
+            sp.Heaviside(t - half_period) - sp.Heaviside(t - period))
+
+    # Compute the Laplace transform of the square wave
+    laplace_transform = sp.laplace_transform(square_wave, t, s, noconds=True)
+
+    # Compute the inverse Laplace transform
+    inverse_laplace_transform = sp.inverse_laplace_transform(laplace_transform, s, t)
+
+    # Simplify the results
+    laplace_transform_simplified = laplace_transform.simplify()
+    inverse_laplace_transform_simplified = inverse_laplace_transform.simplify()
+
+    return laplace_transform_simplified, inverse_laplace_transform_simplified
+
 
 
 @DEBUG_WRAP
