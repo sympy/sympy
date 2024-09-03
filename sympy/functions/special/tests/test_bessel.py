@@ -57,6 +57,7 @@ def test_bessely_leading_term():
     assert bessely(0, x).as_leading_term(x) == (2*log(x) - 2*log(2) + 2*S.EulerGamma)/pi
     assert bessely(1, sin(x)).as_leading_term(x) == -2/(pi*x)
     assert bessely(1, 2*sqrt(x)).as_leading_term(x) == -1/(pi*sqrt(x))
+    assert bessely(S(5)/3, x).as_leading_term(x) == -2*2**(S(2)/3)*gamma(S(5)/3)/(pi*x**(S(5)/3))
 
 
 def test_besseli_leading_term():
@@ -124,6 +125,17 @@ def test_bessely_series():
         (S(5)/2 - 2*S.EulerGamma)/(2*pi)) + x**(S(5)/2)*(log(x)/(12*pi) - \
         (S(10)/3 - 2*S.EulerGamma)/(12*pi)) + O(x**3*log(x))
     assert bessely(-2, sin(x)).series(x, n=4) == bessely(2, sin(x)).series(x, n=4)
+    assert bessely(2, x**2).series(x, n=2) == -4/(pi*x**4) + O(x**2)
+
+
+def test_bessely_frac_order_series():
+    assert bessely(S(1)/2, x).series(x, n=2) == -sqrt(2)/(sqrt(pi)*sqrt(x)) + sqrt(2)*x**(S(3)/2)/\
+        (2*sqrt(pi)) + O(x**2)
+    assert bessely(S(5)/3, x).series(x, n=2) == -2*2**(S(2)/3)*gamma(S(5)/3)/(pi*x**(S(5)/3)) - 3*2**(S(2)/3)*x**(S(1)/3)\
+        *gamma(S(5)/3)/(4*pi) - 2**(S(1)/3)*x**(S(5)/3)*gamma(-S(5)/3)/(8*pi) + O(x**2)
+    assert bessely(S(1)/2, sqrt(x)).series(x, n=2) == -sqrt(2)/(sqrt(pi)*x**(S(1)/4)) + sqrt(2)*x**(S(3)/4)/\
+        (2*sqrt(pi)) - sqrt(2)*x**(S(7)/4)/(24*sqrt(pi)) + O(x**2)
+    assert bessely(S(1)/2, x**2).series(x, n=2) == -sqrt(2)/(sqrt(pi)*x) + O(x**2)
 
 
 def test_besseli_series():

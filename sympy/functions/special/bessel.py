@@ -278,6 +278,7 @@ class besselj(BesselBase):
 
         return super(besselj, self)._eval_nseries(x, n, logx, cdir)
 
+
 class bessely(BesselBase):
     r"""
     Bessel function of the second kind.
@@ -334,9 +335,9 @@ class bessely(BesselBase):
         if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
         if z == I*S.Infinity:
-            return exp(I*pi*(nu + 1)/2)*S.Infinity
+            return exp(I*pi*(nu + 1)/2) * S.Infinity
         if z == I*S.NegativeInfinity:
-            return exp(-I*pi*(nu + 1)/2)*S.Infinity
+            return exp(-I*pi*(nu + 1)/2) * S.Infinity
 
         if nu.is_integer:
             if nu.could_extract_minus_sign():
@@ -352,7 +353,7 @@ class bessely(BesselBase):
             return aj.rewrite(besseli)
 
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
-        return sqrt(2*z/pi)*yn(nu - S.Half, self.argument)
+        return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
     def _eval_as_leading_term(self, x, logx, cdir):
         nu, z = self.args
@@ -436,7 +437,7 @@ class bessely(BesselBase):
                     term = p*(digamma(k + nu + 1) + digamma(k + 1))
                     c.append(term)
                 return a - Add(*b) - Add(*c)  # Order term comes from a
-            else:
+            elif nu.is_noninteger:
                 # Reference - https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/01/04/01/01/0003/
                 newn_a = ceiling((n + nu)/exp)
                 newn_b = ceiling((n - nu)/exp)
@@ -446,8 +447,11 @@ class bessely(BesselBase):
                 b = [_mexpand(-gamma(-nu)*cos(nu*pi)*(-1)**k*r**(2*k + nu)/(pi*RisingFactorial(nu + 1, k)*\
                     factorial(k))) for k in range((newn_b + 1)//2)]
                 return Add(*a) + Add(*b) + o
+            else:
+                raise NotImplementedError("besselk expansion is only implemented for real order")
 
         return super(bessely, self)._eval_nseries(x, n, logx, cdir)
+
 
 class besseli(BesselBase):
     r"""
