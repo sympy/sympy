@@ -625,13 +625,13 @@ def test_airyai():
         -sqrt(3)*(-1 + (z**5)**Rational(1, 3)/z**Rational(5, 3))*airybi(2*3**Rational(1, 3)*z**Rational(5, 3))/6 +
          (1 + (z**5)**Rational(1, 3)/z**Rational(5, 3))*airyai(2*3**Rational(1, 3)*z**Rational(5, 3))/2)
 
-    assert airyai(x).series(x, oo) == sqrt(pi)*(-9*gamma(S(19)/6)*gamma(S(23)/6)/(256*pi**2*x**5) - 3*gamma(S(7)/6)*\
-            gamma(S(11)/6)/(8*pi**2*x**2) + sqrt(1/x)*gamma(S(1)/6)*gamma(S(5)/6)/(2*pi**2) + 9*(1/x)**(S(7)/2)*\
-            gamma(S(13)/6)*gamma(S(17)/6)/(64*pi**2) + O(x**(-6), (x, oo)))*exp(-2/(3*(1/x)**(S(3)/2)))/(2*(1/x)**(S(1)/4))
-    assert airyai(x).series(x, -oo) == (-1)**(S(1)/4)*sqrt(pi)*(-9*gamma(S(19)/6)*gamma(S(23)/6)/(256*pi**2*x**5) - \
-            3*gamma(S(7)/6)*gamma(S(11)/6)/(8*pi**2*x**2) - I*sqrt(-1/x)*gamma(S(1)/6)*gamma(S(5)/6)/(2*pi**2) + \
-            9*I*(-1/x)**(S(7)/2)*gamma(S(13)/6)*gamma(S(17)/6)/(64*pi**2) + O(x**(-6), (x, -oo)))*exp(2*I/(3*(-1/x)**\
-            (S(3)/2)))/(2*(-1/x)**(S(1)/4))
+    assert airyai(x).series(x, oo) == (385/(4608*x**3) + 1 - 5*(1/x)**(S(3)/2)/48 - 85085*(1/x)**(S(9)/2)/663552 + \
+            O(x**(-6), (x, oo)))*(1/x)**(S(1)/4)*exp(-2/(3*(1/x)**(S(3)/2)))/(2*sqrt(pi))
+    assert airyai(x).series(x, -oo, n=4) == (-1/x)**(S(1)/4)*((1 + 385/(4608*x**3) + 37182145/(127401984*x**6) + \
+            5849680962125/(1761205026816*x**9))*sin(pi/4 + 2/(3*(-1/x)**(S(3)/2))) + (-1267709431363375*(-1/x)**\
+            (S(21)/2)/84537841287168 + 5391411025*(-1/x)**(S(15)/2)/6115295232 - 85085*(-1/x)**(S(9)/2)/663552 + \
+            5*(-1/x)**(S(3)/2)/48)*cos(pi/4 + 2/(3*(-1/x)**(S(3)/2))))/sqrt(pi) + O(x**(-4), (x, -oo))
+
 
 
 def test_airybi():
@@ -669,12 +669,13 @@ def test_airybi():
         sqrt(3)*(1 - (z**5)**Rational(1, 3)/z**Rational(5, 3))*airyai(2*3**Rational(1, 3)*z**Rational(5, 3))/2 +
         (1 + (z**5)**Rational(1, 3)/z**Rational(5, 3))*airybi(2*3**Rational(1, 3)*z**Rational(5, 3))/2)
 
-    assert airybi(x).series(x, oo) == sqrt(pi)*(9*gamma(S(19)/6)*gamma(S(23)/6)/(256*pi**2*x**5) + 3*gamma(S(7)/6)*\
-            gamma(S(11)/6)/(8*pi**2*x**2) + sqrt(1/x)*gamma(S(1)/6)*gamma(S(5)/6)/(2*pi**2) + 9*(1/x)**(S(7)/2)*\
-            gamma(S(13)/6)*gamma(S(17)/6)/(64*pi**2) + O(x**(-6), (x, oo)))*exp(2/(3*(1/x)**(S(3)/2)))/(1/x)**(S(1)/4)
-    assert airybi(x).series(x, -oo) == sqrt(I)*sqrt(pi)*(9*gamma(S(19)/6)*gamma(S(23)/6)/(256*pi**2*x**5) + \
-            3*gamma(S(7)/6)*gamma(S(11)/6)/(8*pi**2*x**2) - I*sqrt(-1/x)*gamma(S(1)/6)*gamma(S(5)/6)/(2*pi**2) + \
-            9*I*(-1/x)**(S(7)/2)*gamma(S(13)/6)*gamma(S(17)/6)/(64*pi**2) + O(x**(-6), (x, -oo)))*exp(-2*I/(3*(-1/x)**(S(3)/2)))/(-1/x)**(S(1)/4)
+    assert airybi(x).series(x, oo) == (385/(4608*x**3) + 1 + 5*(1/x)**(S(3)/2)/48 + 85085*(1/x)**(S(9)/2)/663552 + \
+            O(x**(-6), (x, oo)))*(1/x)**(S(1)/4)*exp(2/(3*(1/x)**(S(3)/2)))/sqrt(pi)
+    assert airybi(x).series(x, -oo, n=4) == (-1/x)**(S(1)/4)*((1 + 385/(4608*x**3) + 37182145/(127401984*x**6) + \
+            5849680962125/(1761205026816*x**9))*cos(pi/4 + 2/(3*(-1/x)**(S(3)/2))) + (-1267709431363375*(-1/x)**\
+            (S(21)/2)/84537841287168 + 5391411025*(-1/x)**(S(15)/2)/6115295232 - 85085*(-1/x)**(S(9)/2)/663552 + \
+            5*(-1/x)**(S(3)/2)/48)*sin(pi/4 + 2/(3*(-1/x)**(S(3)/2))))/sqrt(pi) + O(x**(-4), (x, -oo))
+
 
 
 def test_airyaiprime():

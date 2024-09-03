@@ -1496,7 +1496,12 @@ class airyai(AiryBase):
         return pf1 * hyper([], [Rational(2, 3)], z**3/9) - pf2 * hyper([], [Rational(4, 3)], z**3/9)
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
-        return sqrt(pi)*z**Rational(1, 4)*exp(-Rational(2, 3)*z**Rational(3, 2))/2*_airyais(z)
+        from sympy.series.limits import limit
+        if limitvar:
+            lim = limit(z, limitvar, S.Infinity)
+            if lim is S.Infinity:
+                return pi**(-Rational(1, 2))*z**(-Rational(1, 4))*exp(-Rational(2, 3)*(z)**(Rational(3, 2)))/2*_airyais(z)
+        return self
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -1522,15 +1527,27 @@ class airyai(AiryBase):
                     return S.Half * ((pf + S.One)*airyai(newarg) - (pf - S.One)/sqrt(3)*airybi(newarg))
 
     def _eval_aseries(self, n, args0, x, logx):
+        # Refer Abramowitz and Stegun 1965, p. 448
         from sympy.series.order import Order
 
         point = args0[0]
-        if point in [S.Infinity, S.NegativeInfinity]:
+        if point is S.Infinity:
             z = self.args[0]
-            l = [gamma(k + Rational(5, 6))*gamma(k + Rational(1, 6))*\
-                 Rational(-3, 4)**k/(2*pi**2*factorial(k)* \
-                z**Rational(3*k + 1, 2)) for k in range(n)] + [Order(1/z**Rational(3*n, 2), x)]
-            return sqrt(pi)*z**(Rational(1, 4))*exp(-2*z**(Rational(3, 2))/3)/2*(Add(*l))._eval_nseries(x, n, logx)
+            zeta = Rational(2, 3)*(z)**(Rational(3, 2))
+            l = [zeta**(-k)*(-1)**k*gamma(3*k + Rational(1, 2))/(gamma(k + Rational(1, 2))*factorial(k)*(54)**k) \
+                    for k in range(n)] + [Order(1/z**Rational(3*n + 1, 2), x)]
+            return pi**(-Rational(1, 2))*z**(-Rational(1, 4))*exp(-zeta)/2*(Add(*l))._eval_nseries(x, n, logx)
+        elif point is S.NegativeInfinity:
+            z = self.args[0]
+            term1 = (pi)**(-Rational(1, 2))*(-z)**(-Rational(1, 4))
+            zeta = Rational(2, 3)*(-z)**(Rational(3, 2))
+            term2 = sin(zeta + pi/4)
+            p = [zeta**(-2*k)*(-1)**k*gamma(6*k + Rational(1, 2))/(gamma(2*k + \
+                Rational(1, 2))*factorial(2*k)*(54)**(2*k)) for k in range(n)]
+            term3 = cos(zeta + pi/4)
+            q = [zeta**(-2*k - 1)*(-1)**k*gamma(6*k + Rational(7, 2))/(gamma(2*k + \
+                Rational(3, 2))*factorial(2*k + 1)*(54)**(2*k + 1)) for k in range(n)]
+            return term1*(term2*Add(*p)+term3*Add(*q)) + Order(1/z**(n), x)
 
         return super()._eval_aseries(n, args0, x, logx)
 
@@ -1689,7 +1706,12 @@ class airybi(AiryBase):
         return pf1 * hyper([], [Rational(2, 3)], z**3/9) + pf2 * hyper([], [Rational(4, 3)], z**3/9)
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
-        return exp(Rational(2, 3)*z**Rational(3, 2))*sqrt(pi)*(z)**Rational(1, 4)*_airybis(z)
+        from sympy.series.limits import limit
+        if limitvar:
+            lim = limit(z, limitvar, S.Infinity)
+            if lim is S.Infinity:
+                return pi**(-Rational(1, 2))*z**(-Rational(1, 4))*exp(Rational(2, 3)*(z)**(Rational(3, 2)))*_airybis(z)
+        return self
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -1715,15 +1737,27 @@ class airybi(AiryBase):
                     return S.Half * (sqrt(3)*(S.One - pf)*airyai(newarg) + (S.One + pf)*airybi(newarg))
 
     def _eval_aseries(self, n, args0, x, logx):
+        # Refer Abramowitz and Stegun 1965, p. 449
         from sympy.series.order import Order
 
         point = args0[0]
-        if point in [S.Infinity, S.NegativeInfinity]:
+        if point is S.Infinity:
             z = self.args[0]
-            l = [gamma(k + Rational(5, 6))*gamma(k + Rational(1, 6))*\
-                 Rational(3, 4)**k/(2*pi**2*factorial(k)*\
-                z**Rational(3*k + 1, 2)) for k in range(n)] + [Order(1/z**Rational(3*n + 1, 2), x)]
-            return exp(2*z**Rational(3, 2)/3)*sqrt(pi*sqrt(z))*(Add(*l))._eval_nseries(x, n, logx)
+            zeta = Rational(2, 3)*(z)**(Rational(3, 2))
+            l = [zeta**(-k)*gamma(3*k + Rational(1, 2))/(gamma(k + Rational(1, 2))*factorial(k)*(54)**k) \
+                    for k in range(n)] + [Order(1/z**Rational(3*n + 1, 2), x)]
+            return pi**(-Rational(1, 2))*z**(-Rational(1, 4))*exp(zeta)*(Add(*l))._eval_nseries(x, n, logx)
+        if point is S.NegativeInfinity:
+            z = self.args[0]
+            term1 = (pi)**(-Rational(1, 2))*(-z)**(-Rational(1, 4))
+            zeta = Rational(2, 3)*(-z)**(Rational(3, 2))
+            term2 = cos(zeta + pi/4)
+            p = [zeta**(-2*k)*(-1)**k*gamma(6*k + Rational(1, 2))/(gamma(2*k + \
+                Rational(1, 2))*factorial(2*k)*(54)**(2*k)) for k in range(n)]
+            term3 = sin(zeta + pi/4)
+            q = [zeta**(-2*k - 1)*(-1)**k*gamma(6*k + Rational(7, 2))/(gamma(2*k + \
+                Rational(3, 2))*factorial(2*k + 1)*(54)**(2*k + 1)) for k in range(n)]
+            return term1*(term2*Add(*p)+term3*Add(*q)) + Order(1/z**(n), x)
 
         return super()._eval_aseries(n, args0, x, logx)
 
@@ -2228,11 +2262,10 @@ class _airyais(Function):
         from sympy.series.order import Order
 
         point = args0[0]
-        if point in [S.Infinity, S.NegativeInfinity]:
+        if point is S.Infinity:
             z = self.args[0]
-            l = [gamma(k + Rational(5, 6))*gamma(k + Rational(1, 6))*\
-                 Rational(-3, 4)**k/(2*pi**2*factorial(k)*\
-                z**Rational(3*k + 1, 2)) for k in range(n)] + [Order(1/z**Rational(3*n + 1, 2), x)]
+            zeta = Rational(2, 3)*(z)**(Rational(3, 2))
+            l = [zeta**(-k)*(-1)**k*gamma(3*k + Rational(1, 2))/(gamma(k + Rational(1, 2))*factorial(k)*(54)**k) for k in range(n)] + [Order(1/z**Rational(3*n, 2), x)]
             return (Add(*l))._eval_nseries(x, n, logx)
 
         return super()._eval_aseries(n, args0, x, logx)
@@ -2240,7 +2273,7 @@ class _airyais(Function):
     def _eval_rewrite_as_intractable(self, x):
         return 2*airyai(x)*exp(2*x**Rational(3, 2)/3)/sqrt(pi*sqrt(x))
 
-    def _eval_nseries(self, x, n, logx, cdir):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         x0 = self.args[0].limit(x, 0, "-" if cdir == -1 else "+")
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
@@ -2260,11 +2293,11 @@ class _airybis(Function):
         from sympy.series.order import Order
 
         point = args0[0]
-        if point in [S.Infinity, S.NegativeInfinity]:
+        if point is S.Infinity:
             z = self.args[0]
-            l = [gamma(k + Rational(5, 6))*gamma(k + Rational(1, 6))*\
-                 Rational(3, 4)**k/(2*pi**2*factorial(k)*\
-                z**Rational(3*k + 1, 2)) for k in range(n)] + [Order(1/z**Rational(3*n + 1, 2), x)]
+            zeta = Rational(2, 3)*(z)**(Rational(3, 2))
+            l = [zeta**(-k)*(-1)**k*gamma(3*k + Rational(1, 2))/(gamma(k + Rational(1, 2))*factorial(k)*(54)**k) \
+                    for k in range(n)] + [Order(1/z**Rational(3*n + 1, 2), x)]
             return (Add(*l))._eval_nseries(x, n, logx)
 
         return super()._eval_aseries(n, args0, x, logx)
@@ -2272,7 +2305,7 @@ class _airybis(Function):
     def _eval_rewrite_as_intractable(self, x):
         return airybi(x)*exp(-2*x**Rational(3, 2)/3)/sqrt(pi*sqrt(x))
 
-    def _eval_nseries(self, x, n, logx, cdir):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         x0 = self.args[0].limit(x, 0, "-" if cdir == -1 else "+")
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)

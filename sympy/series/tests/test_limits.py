@@ -809,8 +809,14 @@ def test_issue_10610():
 
 
 def test_issue_10804():
-    assert limit(airybi(x)*x**(S(1)/4)*exp(-2*x**Rational(3, 2)/3), x, oo)**2 == gamma(S(1)/6)**2*gamma(S(5)/6)**2/(4*pi**3)
-    assert limit(2*airyai(x)*x**(S(1)/4)*exp(2*x**Rational(3, 2)/3), x, oo)**2 == gamma(S(1)/6)**2*gamma(S(5)/6)**2/(4*pi**3)
+    assert limit(airybi(x)*x**(S(1)/4)*exp(-2*x**Rational(3, 2)/3), x, oo)**2 == 1/pi
+    assert limit(2*airyai(x)*x**(S(1)/4)*exp(2*x**Rational(3, 2)/3), x, oo)**2 == 1/pi
+    assert limit(airyai(x), x, oo) == S.Zero
+    assert limit(airyai(x), x, -oo) == S.Zero
+    assert limit(airybi(x), x, oo) ==  S.Infinity
+    assert limit(airybi(x), x, -oo) == S.Zero
+    assert limit(airyai(x), x, 0) == 3**(S(5)/6)*gamma(S(1)/3)/(6*pi)
+    assert limit(airybi(x), x, 0) == 3**(S(1)/3)*gamma(S(1)/3)/(2*pi)
 
 
 def test_issue_10868():
