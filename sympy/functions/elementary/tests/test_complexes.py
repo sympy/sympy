@@ -338,6 +338,10 @@ def test_sign():
     # test leading term
     assert sign(x).as_leading_term(x) == S.One
     assert sign(-x).as_leading_term(x) == -S.One
+    assert sign(sin(x)).as_leading_term(x) == S.One
+    assert sign(x + 2).as_leading_term(x) == S.One
+    assert sign(x + I).as_leading_term(x) == S.ImaginaryUnit
+    assert sign(x*I).as_leading_term(x) == S.ImaginaryUnit
 
 
 def test_as_real_imag():
