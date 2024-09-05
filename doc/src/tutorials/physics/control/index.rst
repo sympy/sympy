@@ -25,3 +25,4 @@ This tutorial contains a breif guide on how to solve Control Problems using
 
    control_problems.rst
    electrical_problems.rst
+   mechanics_problems.rst
