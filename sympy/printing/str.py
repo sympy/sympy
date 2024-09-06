@@ -27,6 +27,7 @@ class StrPrinter(Printer):
         "perm_cyclic": True,
         "min": None,
         "max": None,
+        "dps" : None
     }
 
     _relationals: dict[str, str] = {}
@@ -736,10 +737,13 @@ class StrPrinter(Printer):
 
     def _print_Float(self, expr):
         prec = expr._prec
-        if prec < 5:
-            dps = 0
+        if self._settings['dps'] :
+            dps = self._settings['dps'] 
         else:
-            dps = prec_to_dps(expr._prec)
+            if prec < 5:
+                dps = 0
+            else:
+                dps = prec_to_dps(expr._prec)
         if self._settings["full_prec"] is True:
             strip = False
         elif self._settings["full_prec"] is False:
