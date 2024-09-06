@@ -828,7 +828,7 @@ def solve(f, *symbols, **flags):
     ========
 
     rsolve: For solving recurrence relationships
-    dsolve: For solving differential equations
+    sympy.solvers.ode.dsolve: For solving differential equations
 
     """
     from .inequalities import reduce_inequalities
@@ -1872,7 +1872,7 @@ def _solve_system(exprs, symbols, **flags):
                 free = list(ordered(free.intersection(symbols)))
                 got_s = set()
                 result = []
-                for syms in subsets(free, len(polys)):
+                for syms in subsets(free, min(len(free), len(polys))):
                     try:
                         # returns [], None or list of tuples
                         res = solve_poly_system(polys, *syms)
@@ -1893,7 +1893,7 @@ def _solve_system(exprs, symbols, **flags):
                 if got_s:
                     solved_syms = list(got_s)
                 else:
-                    raise NotImplementedError('no valid subset found')
+                    failed.extend([g.as_expr() for g in polys])
             else:
                 try:
                     result = solve_poly_system(polys, *symbols)
@@ -1985,10 +1985,13 @@ def _solve_system(exprs, symbols, **flags):
                         # check that it is independent of previous solutions
                         iset = set(rnew.items())
                         for i in newresult:
-                            if len(i) < len(iset) and not set(i.items()) - iset:
-                                # this is a superset of a known solution that
-                                # is smaller
-                                break
+                            if len(i) < len(iset):
+                                # update i with what is known
+                                i_items_updated = {(k, v.xreplace(rnew)) for k, v in i.items()}
+                                if not i_items_updated - iset:
+                                    # this is a superset of a known solution that
+                                    # is smaller
+                                    break
                         else:
                             # keep it
                             newresult.append(rnew)

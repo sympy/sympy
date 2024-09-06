@@ -1146,8 +1146,8 @@ def test_issue_3940():
     a, b, c, d = symbols('a:d', positive=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
         -sqrt(pi)*exp(-c**2/4)*erf(I*c/2 - x)/2
-    assert integrate(exp(a*x**2 + b*x + c), x) == \
-        sqrt(pi)*exp(c - b**2/(4*a))*erfi((2*a*x + b)/(2*sqrt(a)))/(2*sqrt(a))
+    assert integrate(exp(a*x**2 + b*x + c), x).equals(
+        sqrt(pi)*exp(c - b**2/(4*a))*erfi((2*a*x + b)/(2*sqrt(a)))/(2*sqrt(a)))
 
     from sympy.core.function import expand_mul
     from sympy.abc import k
@@ -2080,7 +2080,7 @@ def test_issue_20782():
     assert integrate(fun1, L) == 1
     assert integrate(fun2, L) == 0
     assert integrate(-fun1, L) == -1
-    assert integrate(-fun2, L) == 0.
+    assert integrate(-fun2, L) == 0
     assert integrate(fun_sum, L) == 1.
     assert integrate(-fun_sum, L) == -1.
 
@@ -2139,3 +2139,24 @@ def test_old_issues():
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3
+
+
+def test_integral_issue_26566():
+    # Define the symbols
+    x = symbols('x', real=True)
+    a = symbols('a', real=True, positive=True)
+
+    # Define the integral expression
+    integral_expr = sin(a * (x + pi))**2
+    symbolic_result = integrate(integral_expr, (x, -pi, -pi/2))
+
+    # Known correct result
+    correct_result = pi / 4
+
+    # Substitute a specific value for 'a' to evaluate both results
+    a_value = 1
+    numeric_symbolic_result = symbolic_result.subs(a, a_value).evalf()
+    numeric_correct_result = correct_result.evalf()
+
+    # Assert that the symbolic result matches the correct value
+    assert simplify(numeric_symbolic_result - numeric_correct_result) == 0

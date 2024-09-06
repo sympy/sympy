@@ -47,6 +47,19 @@ def test_erf():
     assert erf(erf2inv(0, x, evaluate=False)) == x # To cover code in erf
     assert erf(erf2inv(0, erf(erfcinv(1 - erf(erfinv(x)))))) == x
 
+    alpha = symbols('alpha', extended_real=True)
+    assert erf(alpha).is_real is True
+    assert erf(alpha).is_finite is True
+    alpha = symbols('alpha', extended_real=False)
+    assert erf(alpha).is_real is None
+    assert erf(alpha).is_finite is None
+    assert erf(alpha).is_zero is None
+    assert erf(alpha).is_positive is None
+    assert erf(alpha).is_negative is None
+    alpha = symbols('alpha', extended_positive=True)
+    assert erf(alpha).is_positive is True
+    alpha = symbols('alpha', extended_negative=True)
+    assert erf(alpha).is_negative is True
     assert erf(I).is_real is False
     assert erf(0, evaluate=False).is_real
     assert erf(0, evaluate=False).is_zero
@@ -137,6 +150,10 @@ def test_erfc():
     assert erfc(-x) == S(2) - erfc(x)
     assert erfc(erfcinv(x)) == x
 
+    alpha = symbols('alpha', extended_real=True)
+    assert erfc(alpha).is_real is True
+    alpha = symbols('alpha', extended_real=False)
+    assert erfc(alpha).is_real is None
     assert erfc(I).is_real is False
     assert erfc(0, evaluate=False).is_real
     assert erfc(0, evaluate=False).is_zero is False
@@ -326,6 +343,8 @@ def test_erfinv_evalf():
 def test_erfcinv():
     assert erfcinv(1) is S.Zero
     assert erfcinv(0) is S.Infinity
+    assert erfcinv(0, evaluate=False).is_infinite is True
+    assert erfcinv(2, evaluate=False).is_infinite is True
     assert erfcinv(nan) is S.NaN
 
     assert erfcinv(x).diff() == -sqrt(pi)*exp(erfcinv(x)**2)/2
@@ -418,6 +437,10 @@ def test_ei():
     assert Ei(x).series(x, 1, 3) == Ei(1) + E*(x - 1) + O((x - 1)**3, (x, 1))
     assert Ei(x).series(x, oo) == \
         (120/x**5 + 24/x**4 + 6/x**3 + 2/x**2 + 1/x + 1 + O(x**(-6), (x, oo)))*exp(x)/x
+    assert Ei(x).series(x, -oo) == \
+        (120/x**5 + 24/x**4 + 6/x**3 + 2/x**2 + 1/x + 1 + O(x**(-6), (x, -oo)))*exp(x)/x
+    assert Ei(-x).series(x, oo) == \
+        -((-120/x**5 + 24/x**4 - 6/x**3 + 2/x**2 - 1/x + 1 + O(x**(-6), (x, oo)))*exp(-x)/x)
 
     assert str(Ei(cos(2)).evalf(n=10)) == '-0.6760647401'
     raises(ArgumentIndexError, lambda: Ei(x).fdiff(2))
@@ -613,12 +636,12 @@ def test_si():
     assert tn_arg(Si)
     assert tn_arg(Shi)
 
-    assert Si(x)._eval_as_leading_term(x) == x
-    assert Si(2*x)._eval_as_leading_term(x) == 2*x
-    assert Si(sin(x))._eval_as_leading_term(x) == x
-    assert Si(x + 1)._eval_as_leading_term(x) == Si(1)
-    assert Si(1/x)._eval_as_leading_term(x, cdir=1) == \
-        Si(1/x)._eval_as_leading_term(x, cdir=-1) == Si(1/x)
+    assert Si(x)._eval_as_leading_term(x, None, 1) == x
+    assert Si(2*x)._eval_as_leading_term(x, None, 1) == 2*x
+    assert Si(sin(x))._eval_as_leading_term(x, None, 1) == x
+    assert Si(x + 1)._eval_as_leading_term(x, None, 1) == Si(1)
+    assert Si(1/x)._eval_as_leading_term(x, None, 1) == \
+        Si(1/x)._eval_as_leading_term(x, None, -1) == Si(1/x)
 
     assert Si(x).nseries(x, n=8) == \
         x - x**3/18 + x**5/600 - x**7/35280 + O(x**8)

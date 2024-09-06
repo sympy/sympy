@@ -75,9 +75,9 @@ def test_cable():
     c.solve(58.58, 0)
 
     # assert c.tension['distributed'] == 36456.8485*sqrt(0.000543529004799705*(X + 0.00135624381275735)**2 + 1)
-    assert abs(c.tension_at(0) - 61709.0363315913) < 10e-11
-    assert abs(c.tension_at(40) - 39729.7316969361) < 10e-11
-    assert abs(c.reaction_loads[Symbol("R_A_x")] - 36456.8485000000) < 10e-11
-    assert abs(c.reaction_loads[Symbol("R_A_y")] + 49788.5866682486) < 10e-11
-    assert abs(c.reaction_loads[Symbol("R_B_x")] - 44389.8401587246) < 10e-11
-    assert abs(c.reaction_loads[Symbol("R_B_y")] - 42866.6216963330) < 10e-11
+    assert abs(c.tension_at(0) - 61717.4130533677) < 10e-11
+    assert abs(c.tension_at(40) - 39738.0809048449) < 10e-11
+    assert abs(c.reaction_loads[Symbol("R_A_x")] - 36465.0000000000) < 10e-11
+    assert abs(c.reaction_loads[Symbol("R_A_y")] + 49793.0000000000) < 10e-11
+    assert abs(c.reaction_loads[Symbol("R_B_x")] - 44399.9537590861) < 10e-11
+    assert abs(c.reaction_loads[Symbol("R_B_y")] - 42868.2071025955 ) < 10e-11

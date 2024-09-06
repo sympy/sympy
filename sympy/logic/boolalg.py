@@ -233,7 +233,6 @@ class BooleanAtom(Boolean):
     __rmod__ = _noop
     _eval_power = _noop
 
-    # /// drop when Py2 is no longer supported
     def __lt__(self, other):
         raise TypeError(filldedent('''
             A Boolean argument can only be used in
