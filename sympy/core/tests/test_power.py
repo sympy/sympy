@@ -18,6 +18,7 @@ from sympy.core.intfunc import integer_nthroot
 from sympy.testing.pytest import warns, _both_exp_pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.abc import a, b, c, x, y
+from sympy.core.numbers import all_close
 
 def test_rational():
     a = Rational(1, 5)
@@ -282,7 +283,7 @@ def test_pow_as_base_exp():
     p = (S(3)/2)**x
     assert p.base, p.exp == p.as_base_exp() == (3*S.Half, x)
     p = (S(2)/3)**x
-    assert p.as_base_exp() == (S(3)/2, -x)
+    assert p.as_base_exp() == (S(2)/3, x)
     assert p.base, p.exp == (S(2)/3, x)
     # issue 8344:
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
@@ -650,7 +651,7 @@ def test_powers_of_I():
 
 def test_issue_23918():
     b = S(2)/3
-    assert (b**x).as_base_exp() == (1/b, -x)
+    assert (b**x).as_base_exp() == (b, x)
 
 
 def test_issue_26546():
@@ -661,3 +662,9 @@ def test_issue_26546():
     assert Pow(x+I, Rational(1,2)).is_extended_real is False
     assert Pow(x+I, Rational(1,13)).is_extended_real is False
     assert Pow(x+I, Rational(2,3)).is_extended_real is None
+
+
+def test_issue_25165():
+    e1 = (1/sqrt(( - x + 1)**2 + (x - 0.23)**4)).series(x, 0, 2)
+    e2 = 0.998603724830355 + 1.02004923189934*x + O(x**2)
+    assert all_close(e1, e2)

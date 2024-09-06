@@ -311,8 +311,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                     fs.add(c)
                     fs.add(s)
             for fn in fs:
-                for k in range(1, n + 1):
-                    terms.append((fn, k))
+                terms.extend((fn, k) for k in range(1, n + 1))
             extra = []
             for fn, v in terms:
                 if fn == tan:

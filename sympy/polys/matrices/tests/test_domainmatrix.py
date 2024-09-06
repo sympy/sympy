@@ -92,8 +92,20 @@ def test_DomainMatrix_from_list():
     dom = FF(7)
     ddm = DDM([[dom(1), dom(2)], [dom(3), dom(4)]], (2, 2), dom)
     A = DomainMatrix.from_list([[1, 2], [3, 4]], dom)
-    # Not a DFM because FF(7) is not supported by DFM
-    assert A.rep == ddm
+    if GROUND_TYPES != 'flint':
+        assert A.rep == ddm
+    else:
+        assert A.rep == ddm.to_dfm()
+    assert A.shape == (2, 2)
+    assert A.domain == dom
+
+    dom = FF(2**127-1)
+    ddm = DDM([[dom(1), dom(2)], [dom(3), dom(4)]], (2, 2), dom)
+    A = DomainMatrix.from_list([[1, 2], [3, 4]], dom)
+    if GROUND_TYPES != 'flint':
+        assert A.rep == ddm
+    else:
+        assert A.rep == ddm.to_dfm()
     assert A.shape == (2, 2)
     assert A.domain == dom
 

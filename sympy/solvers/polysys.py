@@ -428,10 +428,4 @@ def solve_triangulated(polys, *gens, **args):
                 _solutions.add(((zero,) + values, dom_zero))
 
         solutions = _solutions
-
-    solutions = list(solutions)
-
-    for i, (solution, _) in enumerate(solutions):
-        solutions[i] = solution
-
-    return sorted(solutions, key=default_sort_key)
+    return sorted((s for s, _ in solutions), key=default_sort_key)

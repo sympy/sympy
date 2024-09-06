@@ -16,9 +16,9 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -30,7 +30,7 @@ jobs:
         run: bin/test quality
 
       - name: Run Ruff on the sympy package
-        run: ruff check .
+        run: ruff check sympy
 
       - name: Run flake8 on the sympy package
         run: flake8 sympy
@@ -64,8 +64,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -81,8 +81,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -97,11 +97,11 @@ jobs:
     needs: code-quality
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Clone full git history (needed for detecting authors)
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -115,14 +115,13 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
-      - run: examples/all.py -q
 
   # ------------------------- Test latest Python ------------------- #
 
@@ -131,14 +130,11 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-
     name: Tests
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -160,8 +156,8 @@ jobs:
     name: ${{ matrix.python-version }} Optional Dendendencies
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -179,11 +175,8 @@ jobs:
                          'antlr4-python3-runtime==4.11.*'                 \
                          symengine                                        \
                          numba llvmlite pymc                              \
+                         gmpy2                                            \
                          #
-
-      # Not available in CPython 3.12 (yet).
-      - if: ${{ ! contains(matrix.python-version, '3.12') }}
-        run: pip install gmpy2
 
       # Test external imports
       - run: bin/test_external_imports.py
@@ -193,58 +186,27 @@ jobs:
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
 
-  # -------------------- NumPy 2.0 job ----------------------------- #
+  # -------------------- Bleeding edge dependencies ----------------- #
 
-  numpy-prerelease:
+  bleeding-edge:
     needs: code-quality
-
-    runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-
-    name: ${{ matrix.python-version }} NumPy Prerelease
-
+    name: Bleeding edge dependencies
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-
-      - run: pip install -r requirements-dev.txt
-      - run: pip install --pre numpy scipy
-
-      # Test modules with specific dependencies
-      - run: bin/test_optional_dependencies.py
-
-  # -------------------- NumPy nightly ----------------------------- #
-
-  numpy-nightly:
-    needs: code-quality
-
-    runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-
-    name: ${{ matrix.python-version }} NumPy nightly
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - run: pip install -r requirements-dev.txt
+          python-version: '3.12'
+      - run: sudo apt-get update
+      - run: sudo apt-get install libgmp-dev libmpfr-dev libmpc-dev libflint-dev
+      - run: pip install git+https://github.com/flintlib/python-flint.git@master
+      - run: pip install git+https://github.com/aleaxit/gmpy.git@master
+      - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy
       - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scipy
-
-      # Test modules with specific dependencies
-      - run: bin/test_optional_dependencies.py
+      - run: pip install -r requirements-dev.txt
+      - run: pip install .
+      - run: pytest -n auto
 
   # -------------------- FLINT tests -------------------------------- #
 
@@ -253,13 +215,13 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pip install python-flint==0.6
+      - run: pip install python-flint
       # Test the modules that most directly use python-flint
       - run: >-
           pytest
@@ -294,14 +256,13 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          # gmpy2 is not yet available for Python 3.12
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pip install python-flint==0.6 gmpy2
+      - run: pip install python-flint gmpy2
       # Test the modules that most directly use python-flint
       - run: pytest sympy/polys sympy/ntheory sympy/matrices
         env:
@@ -340,8 +301,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           # tensorflow not yet available for 3.12
           python-version: '3.11'
@@ -358,8 +319,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           # symengine not yet available for 3.12
           python-version: '3.11'
@@ -378,12 +339,9 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -405,8 +363,8 @@ jobs:
     name: ${{ matrix.python-version }} Tests
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
@@ -428,14 +386,13 @@ jobs:
     name: ${{ matrix.python-version }} Doctests
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
-      - run: examples/all.py -q
 
   # -------------------- Test with mpmath master ------------------- #
 
@@ -444,16 +401,11 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
-
-    name: mpmath-master ${{ matrix.group }}/4 Tests
+    name: mpmath-master Tests
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
@@ -468,8 +420,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: doc/aptinstall.sh
@@ -495,8 +447,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 'pypy2.7'
       - run: bin/test_py2_import.py
@@ -508,8 +460,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip build
@@ -523,11 +475,11 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Checkout repo with full history
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install asv virtualenv packaging

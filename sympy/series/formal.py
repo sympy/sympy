@@ -554,9 +554,7 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         cond = Eq(k % c, j % c)
         sol_dict[cond] += res  # Group together formula for same conditions
 
-    sol = []
-    for cond, res in sol_dict.items():
-        sol.append((res, cond))
+    sol = [(res, cond) for cond, res in sol_dict.items()]
     sol.append((S.Zero, True))
     sol = Piecewise(*sol)
 
@@ -640,8 +638,7 @@ def _transform_explike_DE(DE, g, x, order, syms):
     for i in range(order):
         coeff = DE.coeff(Derivative(g(x), x, i))
         coeff = (coeff / highest_coeff).expand().collect(x)
-        for t in Add.make_args(coeff):
-            eq.append(t)
+        eq.extend(Add.make_args(coeff))
     temp = []
     for e in eq:
         if e.has(x):
@@ -665,10 +662,7 @@ def _transform_DE_RE(DE, g, k, order, syms):
 
     RE = hyper_re(DE, g, k)
 
-    eq = []
-    for i in range(1, order):
-        coeff = RE.coeff(g(k + i))
-        eq.append(coeff)
+    eq = [RE.coeff(g(k + i)) for i in range(1, order)]
     sol = dict(zip(syms, (i for s in linsolve(eq, list(syms)) for i in s)))
     if sol:
         m = Wild('m')
@@ -1140,7 +1134,7 @@ class FormalPowerSeries(SeriesBase):
         if old.has(x):
             return self
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         for t in self:
             if t is not S.Zero:
                 return t

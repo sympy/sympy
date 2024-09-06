@@ -12,7 +12,7 @@ from sympy import (
     integrate, log, matrix_multiply_elementwise, nan, ones, oo, pi, randMatrix,
     rot_axis1, rot_axis2, rot_axis3, rot_ccw_axis1, rot_ccw_axis2,
     rot_ccw_axis3, signsimp, simplify, sin, sqrt, sstr, symbols, sympify, tan,
-    trigsimp, wronskian, zeros)
+    trigsimp, wronskian, zeros, cancel)
 from sympy.abc import a, b, c, d, t, x, y, z
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.matrices.determinant import _find_reasonable_pivot_naive
@@ -1763,6 +1763,51 @@ def test_inverse():
              [ 9, 71, 94],
              [59, 28, 65]])
     assert all(type(m.inv(s)) is cls for s in 'GE ADJ LU CH LDL QR'.split())
+
+
+def test_inverse_symbolic_float_issue_26821():
+    Tau, Tau_syn_in, Tau_syn_ex, C_m, Tau_syn_gap = symbols("Tau Tau_syn_in Tau_syn_ex C_m Tau_syn_gap")
+    __h = symbols("__h")
+
+    M = Matrix([
+        [0,0,0,0,0,(1.0*Tau*__h-1.0*Tau_syn_in*__h)/(2.0*Tau-1.0*Tau_syn_in),-1.0*Tau*Tau_syn_in/(2.0*Tau-1.0*Tau_syn_in)],
+        [0,0,0,0,0,(-1.0*Tau*__h+1.0*Tau_syn_in*__h)/(2.0*Tau*Tau_syn_in-1.0*Tau_syn_in**2),1.0],
+        [0,(1.0*Tau*__h-1.0*Tau_syn_ex*__h)/(2.0*Tau-1.0*Tau_syn_ex),-1.0*Tau*Tau_syn_ex/(2.0*Tau-1.0*Tau_syn_ex),0,0,0,0],
+        [0,(-1.0*Tau*__h+1.0*Tau_syn_ex*__h)/(2.0*Tau*Tau_syn_ex-1.0*Tau_syn_ex**2),1.0,0,0,0,0],
+        [0,0,0,(1.0*Tau*__h-1.0*Tau_syn_gap*__h)/(2.0*Tau-1.0*Tau_syn_gap),-1.0*Tau*Tau_syn_gap/(2.0*Tau-1.0*Tau_syn_gap),0,0],
+        [0,0,0,(-1.0*Tau*__h+1.0*Tau_syn_gap*__h)/(2.0*Tau*Tau_syn_gap-1.0*Tau_syn_gap**2),1.0,0,0],
+        [1.0,-1.0*Tau*Tau_syn_ex*__h/(2.0*C_m*Tau-1.0*C_m*Tau_syn_ex),0,-1.0*Tau*Tau_syn_gap*__h/(2.0*C_m*Tau-1.0*C_m*Tau_syn_gap),0,-1.0*Tau*Tau_syn_in*__h/(2.0*C_m*Tau-1.0*C_m*Tau_syn_in),0]
+    ])
+
+    Mi = M.inv()
+
+    assert (M*Mi - eye(7)).applyfunc(cancel) == zeros(7)
+
+    # https://github.com/sympy/sympy/issues/26821
+    # Previously very large floats were in the result.
+    assert max(abs(f) for f in Mi.atoms(Float)) < 1e3
+
+
+@slow
+def test_matrix_exponential_issue_26821():
+    # The symbol names matter in the original bug...
+    a, b, c, d, e = symbols("Tau, Tau_syn_in, Tau_syn_ex, C_m, Tau_syn_gap")
+    t = symbols("__h")
+    M = Matrix([
+        [      0,  1.0,       0,    0,       0,    0,    0],
+        [-1/b**2, -2/b,       0,    0,       0,    0,    0],
+        [      0,    0,       0,  1.0,       0,    0,    0],
+        [      0,    0, -1/c**2, -2/c,       0,    0,    0],
+        [      0,    0,       0,    0,       0,    1,    0],
+        [      0,    0,       0,    0, -1/e**2, -2/e,    0],
+        [    1/d,    0,     1/d,    0,     1/d,    0, -1/a]
+    ])
+
+    Me = (t*M).exp()
+    assert (Me.diff(t) - M*Me).applyfunc(cancel) == zeros(7)
+    # https://github.com/sympy/sympy/issues/26821
+    # Previously very large floats were in the result.
+    assert max(abs(f) for f in Me.atoms(Float)) < 1e3
 
 
 def test_jacobian_hessian():

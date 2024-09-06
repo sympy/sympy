@@ -5,7 +5,8 @@ from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
-from sympy.core.numbers import I, pi, Rational
+from sympy.core.logic import fuzzy_or
+from sympy.core.numbers import I, pi, Rational, Integer
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -189,16 +190,30 @@ class erf(Function):
         return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
-        return self.args[0].is_extended_real
+        if self.args[0].is_extended_real is True:
+            return True
+        # There are cases where erf(z) becomes a real number
+        # even if z is a complex number
+
+    def _eval_is_imaginary(self):
+        if self.args[0].is_imaginary is True:
+            return True
 
     def _eval_is_finite(self):
-        if self.args[0].is_finite:
-            return True
-        else:
-            return self.args[0].is_extended_real
+        z = self.args[0]
+        return fuzzy_or([z.is_finite, z.is_extended_real])
 
     def _eval_is_zero(self):
-        return self.args[0].is_zero
+        if self.args[0].is_extended_real is True:
+            return self.args[0].is_zero
+
+    def _eval_is_positive(self):
+        if self.args[0].is_extended_real is True:
+            return self.args[0].is_extended_positive
+
+    def _eval_is_negative(self):
+        if self.args[0].is_extended_real is True:
+            return self.args[0].is_extended_negative
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy.functions.special.gamma_functions import uppergamma
@@ -235,7 +250,7 @@ class erf(Function):
     def _eval_rewrite_as_erfi(self, z, **kwargs):
         return -I*erfi(I*z)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -409,7 +424,10 @@ class erfc(Function):
         return self.func(self.args[0].conjugate())
 
     def _eval_is_real(self):
-        return self.args[0].is_extended_real
+        if self.args[0].is_extended_real is True:
+            return True
+        if self.args[0].is_imaginary is True:
+            return False
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=limitvar)
@@ -444,7 +462,7 @@ class erfc(Function):
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -630,7 +648,7 @@ class erfi(Function):
 
     as_real_imag = real_to_real_as_real_imag
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -970,7 +988,8 @@ class erfcinv (Function):
         return (self.args[0] - 1).is_zero
 
     def _eval_is_infinite(self):
-        return self.args[0].is_zero
+        z = self.args[0]
+        return fuzzy_or([z.is_zero, is_eq(z, Integer(2))])
 
 
 class erf2inv(Function):
@@ -1221,7 +1240,7 @@ class Ei(Function):
         t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(S.Exp1**t/t, (t, S.NegativeInfinity, z))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy import re
         x0 = self.args[0].limit(x, 0)
         arg = self.args[0].as_leading_term(x, cdir=cdir)
@@ -1244,7 +1263,7 @@ class Ei(Function):
         from sympy.series.order import Order
         point = args0[0]
 
-        if point is S.Infinity:
+        if point in (S.Infinity, S.NegativeInfinity):
             z = self.args[0]
             s = [factorial(k) / (z)**k for k in range(n)] + \
                     [Order(1/z**n, x)]
@@ -1907,7 +1926,7 @@ class Si(TrigonometricIntegral):
 
     _eval_rewrite_as_sinc =  _eval_rewrite_as_Integral
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -2049,7 +2068,7 @@ class Ci(TrigonometricIntegral):
         t = Dummy(uniquely_named_symbol('t', [z]).name)
         return S.EulerGamma + log(z) - Integral((1-cos(t))/t, (t, 0, z))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -2174,7 +2193,7 @@ class Shi(TrigonometricIntegral):
         if z.is_zero:
             return True
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x)
         arg0 = arg.subs(x, 0)
 
@@ -2285,7 +2304,7 @@ class Chi(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -2477,7 +2496,7 @@ class fresnels(FresnelIntegral):
         t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(sin(pi*t**2/2), (t, 0, z))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
@@ -2638,7 +2657,7 @@ class fresnelc(FresnelIntegral):
         t = Dummy(uniquely_named_symbol('t', [z]).name)
         return Integral(cos(pi*t**2/2), (t, 0, z))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
@@ -2747,8 +2766,8 @@ class _eis(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
-        if args0[0] != S.Infinity:
-            return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+        if args0[0] not in (S.Infinity, S.NegativeInfinity):
+            return super()._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
         l = [factorial(k) * (1/z)**(k + 1) for k in range(n)]
@@ -2767,7 +2786,7 @@ class _eis(Function):
     def _eval_rewrite_as_intractable(self, z, **kwargs):
         return exp(-z)*Ei(z)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
