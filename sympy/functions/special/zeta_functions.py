@@ -392,10 +392,10 @@ class polylog(Function):
                 return self
 
             if exp.is_nonnegative:
-                if (nu.is_integer and (1-nu).is_nonpositive) is not True:
+                if (nu.is_integer and (1-nu).is_nonpositive) is False:
                     self = self.expand()
-                    return gamma(1-nu)*(((log(1/z))**(nu-1))._eval_nseries(x, n, logx, cdir)) + \
-                        super()._eval_nseries(x, n, logx, cdir)
+                    f = gamma(1-nu)*(((log(1/z))**(nu-1))._eval_nseries(x, n, logx, cdir))
+                    return f + super()._eval_nseries(x, n, logx, cdir)
 
         return super()._eval_nseries(x, n, logx, cdir)
 
