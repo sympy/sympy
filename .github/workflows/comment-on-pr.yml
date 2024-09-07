@@ -25,7 +25,7 @@ jobs:
         # here to be able to comment on the PR
 
       - name: Download benchmarks
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: runtests.yml
           workflow_conclusion: success
@@ -33,7 +33,7 @@ jobs:
 
       - name: Read the PR number
         id: pr_number_reader
-        uses: juliangruber/read-file-action@v1.0.0
+        uses: juliangruber/read-file-action@v1.1.7
         with:
           path: pr_number.txt
 
@@ -45,7 +45,7 @@ jobs:
 
       - name: Download benchmarks
         if: ${{ steps.pr_number_reader.outputs.content != '' }}
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: runtests.yml
           workflow_conclusion: success
@@ -58,14 +58,14 @@ jobs:
       - name: Read benchmark output 1
         if: ${{ steps.pr_number_reader.outputs.content != '' }}
         id: pr_vs_master_changed
-        uses: juliangruber/read-file-action@v1.0.0
+        uses: juliangruber/read-file-action@v1.1.7
         with:
           path: pr_vs_master_changed.txt
 
       - name: Read benchmark output 2
         if: ${{ steps.pr_number_reader.outputs.content != '' }}
         id: master_vs_release_changed
-        uses: juliangruber/read-file-action@v1.0.0
+        uses: juliangruber/read-file-action@v1.1.7
         with:
           path: master_vs_release_changed.txt
 
@@ -76,7 +76,7 @@ jobs:
 
       - name: Find Comment
         if: ${{ steps.pr_number_reader.outputs.content != '' }}
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v3
         id: fc
         with:
           issue-number: ${{ steps.pr_number_reader.outputs.content }}
@@ -85,7 +85,7 @@ jobs:
 
       - name: Create or update comment
         if: ${{ steps.pr_number_reader.outputs.content != '' }}
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ steps.pr_number_reader.outputs.content }}
