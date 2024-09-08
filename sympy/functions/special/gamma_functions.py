@@ -202,7 +202,7 @@ class gamma(Function):
         t = self.args[0] - x0
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0)
 
@@ -787,7 +787,7 @@ class polygamma(Function):
             else:
                 return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.series.order import Order
         n, z = [a.as_leading_term(x) for a in self.args]
         o = Order(z, x)
@@ -1145,7 +1145,7 @@ class digamma(Function):
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
         return polygamma(0, z)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         z = self.args[0]
         return polygamma(0, z).as_leading_term(x)
 
@@ -1242,7 +1242,7 @@ class trigamma(Function):
     def _eval_rewrite_as_harmonic(self, z, **kwargs):
         return -harmonic(z - 1, 2) + pi**2 / 6
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         z = self.args[0]
         return polygamma(1, z).as_leading_term(x)
 

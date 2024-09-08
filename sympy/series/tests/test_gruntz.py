@@ -1,11 +1,11 @@
 from sympy.core import EulerGamma
+from sympy.core.function import Function
 from sympy.core.numbers import (E, I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acot, atan, cos, sin)
-from sympy.functions.elementary.complexes import sign as _sign
 from sympy.functions.special.error_functions import (Ei, erf)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
 from sympy.functions.special.zeta_functions import zeta
@@ -13,7 +13,7 @@ from sympy.polys.polytools import cancel
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
-from sympy.testing.pytest import XFAIL, skip, slow
+from sympy.testing.pytest import XFAIL, raises, skip, slow
 
 """
 This test suite is testing the limit algorithm using the bottom up approach.
@@ -314,7 +314,7 @@ def test_rewrite1():
     e = exp(x + 1/x)
     assert mrewrite(mrv(e, x), x, m) == (1/m, -x - 1/x)
     e = 1/exp(-x + exp(-x)) - exp(x)
-    assert mrewrite(mrv(e, x), x, m) == (1/(m*exp(m)) - 1/m, -x)
+    assert mrewrite(mrv(e, x), x, m) == ((-m*exp(m) + m)*exp(-m)/m**2, -x)
 
 
 def test_rewrite2():
@@ -329,7 +329,7 @@ def test_rewrite3():
     e = exp(-x + 1/x**2) - exp(x + 1/x)
     #both of these are correct and should be equivalent:
     assert mrewrite(mrv(e, x), x, m) in [(-1/m + m*exp(
-        1/x + 1/x**2), -x - 1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
+        (x**2 + x)/x**3), -x - 1/x), ((m**2 - exp((x**2 + x)/x**3))/m, x**(-2) - x)]
 
 
 def test_mrv_leadterm1():
@@ -404,7 +404,7 @@ def test_gruntz_I():
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo).simplify().rewrite(_sign) == _sign(y)*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo) == y*I*oo
 
 
 def test_issue_4814():
@@ -474,6 +474,14 @@ def test_issue_6682():
 def test_issue_7096():
     from sympy.functions import sign
     assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
+
+
+def test_issue_7391_8166():
+    f = Function('f')
+    # limit should depend on the continuity of the expression at the point passed
+    raises(ValueError, lambda: gruntz(f(x), x, 4))
+    raises(ValueError, lambda: gruntz(x*f(x)**2/(x**2 + f(x)**4), x, 0))
+
 
 def test_issue_24210_25885():
     eq = exp(x)/(1+1/x)**x**2

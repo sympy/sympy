@@ -1,3 +1,7 @@
+#
+# This module is deprecated and should not be used any more. The actual
+# implementation of RR and CC now uses mpmath's mpf and mpc types directly.
+#
 """Real and complex elements. """
 
 

@@ -1145,6 +1145,11 @@ def test_gaussian_domains():
         i, r = divmod(2, q)
         assert q*i + r == G(2, 0)
 
+        a, b = G(2, 0), G(1, -1)
+        c, d, g = G.gcdex(a, b)
+        assert g == G.gcd(a, b)
+        assert c * a + d * b == g
+
         raises(ZeroDivisionError, lambda: q % 0)
         raises(ZeroDivisionError, lambda: q / 0)
         raises(ZeroDivisionError, lambda: q // 0)
@@ -1279,11 +1284,6 @@ def test_canonical_unit():
     i = K.from_sympy(I)
     assert i / i == K.one
     assert (K.one + i)/(i - K.one) == -i
-
-
-def test_issue_18278():
-    assert str(RR(2).parent()) == 'RR'
-    assert str(CC(2).parent()) == 'CC'
 
 
 def test_Domain_is_negative():

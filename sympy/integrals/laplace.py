@@ -398,11 +398,13 @@ def _laplace_build_rules():
          re(a) > 0, S.Zero, dco),  # 4.5.28
         (t**n*exp(-a/t), 2*(a/s)**((n+1)/2)*besselk(n+1, 2*sqrt(a*s)),
          re(a) > 0, S.Zero, dco),  # 4.5.29
-        (exp(-2*sqrt(a*t)),
-         s**(-1)-sqrt(pi*a)*s**(-S(3)/2)*exp(a/s) * erfc(sqrt(a/s)),
-         Abs(arg(a)) < pi, S.Zero, dco),  # 4.5.31
-        (exp(-2*sqrt(a*t))/sqrt(t), (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
-         Abs(arg(a)) < pi, S.Zero, dco),  # 4.5.33
+        # TODO: rules with sqrt(a*t) and sqrt(a/t) have stopped working after
+        #       changes to as_base_exp
+        # (exp(-2*sqrt(a*t)),
+        #  s**(-1)-sqrt(pi*a)*s**(-S(3)/2)*exp(a/s) * erfc(sqrt(a/s)),
+        #  Abs(arg(a)) < pi, S.Zero, dco),  # 4.5.31
+        # (exp(-2*sqrt(a*t))/sqrt(t), (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
+        #  Abs(arg(a)) < pi, S.Zero, dco),  # 4.5.33
         (exp(-a*exp(-t)), a**(-s)*lowergamma(s, a),
          S.true, S.Zero, dco),  # 4.5.36
         (exp(-a*exp(t)), a**s*uppergamma(-s, a),
@@ -430,18 +432,18 @@ def _laplace_build_rules():
         (sin(omega*t)**2/t**2,
          omega*atan(2*omega/s)-s*log(1+4*omega**2/s**2)/4,
          S.true, 2*Abs(im(omega)), dco),  # 4.7.20
-        (sin(2*sqrt(a*t)), sqrt(pi*a)/s/sqrt(s)*exp(-a/s),
-         S.true, S.Zero, dco),  # 4.7.32
-        (sin(2*sqrt(a*t))/t, pi*erf(sqrt(a/s)),
-         S.true, S.Zero, dco),  # 4.7.34
+        # (sin(2*sqrt(a*t)), sqrt(pi*a)/s/sqrt(s)*exp(-a/s),
+        #  S.true, S.Zero, dco),  # 4.7.32
+        # (sin(2*sqrt(a*t))/t, pi*erf(sqrt(a/s)),
+        #  S.true, S.Zero, dco),  # 4.7.34
         (cos(omega*t), s/(s**2+omega**2),
          S.true, Abs(im(omega)), dco),  # 4.7.43
         (cos(omega*t)**2, (s**2+2*omega**2)/(s**2+4*omega**2)/s,
          S.true, 2*Abs(im(omega)), dco),  # 4.7.45
-        (sqrt(t)*cos(2*sqrt(a*t)), sqrt(pi)/2*s**(-S(5)/2)*(s-2*a)*exp(-a/s),
-         S.true, S.Zero, dco),  # 4.7.66
-        (cos(2*sqrt(a*t))/sqrt(t), sqrt(pi/s)*exp(-a/s),
-         S.true, S.Zero, dco),  # 4.7.67
+        # (sqrt(t)*cos(2*sqrt(a*t)), sqrt(pi)/2*s**(-S(5)/2)*(s-2*a)*exp(-a/s),
+        #  S.true, S.Zero, dco),  # 4.7.66
+        # (cos(2*sqrt(a*t))/sqrt(t), sqrt(pi/s)*exp(-a/s),
+        #  S.true, S.Zero, dco),  # 4.7.67
         (sin(a*t)*sin(b*t), 2*a*b*s/(s**2+(a+b)**2)/(s**2+(a-b)**2),
          S.true, Abs(im(a))+Abs(im(b)), dco),  # 4.7.78
         (cos(a*t)*sin(b*t), b*(s**2-a**2+b**2)/(s**2+(a+b)**2)/(s**2+(a-b)**2),
@@ -462,40 +464,41 @@ def _laplace_build_rules():
          n > -2, Abs(a), dco),  # 4.9.18
         (t**n*cosh(a*t), gamma(n+1)/2*((s-a)**(-n-1)+(s+a)**(-n-1)),
          n > -1, Abs(a), dco),  # 4.9.19
-        (sinh(2*sqrt(a*t)), sqrt(pi*a)/s/sqrt(s)*exp(a/s),
-         S.true, S.Zero, dco),  # 4.9.34
-        (cosh(2*sqrt(a*t)), 1/s+sqrt(pi*a)/s/sqrt(s)*exp(a/s)*erf(sqrt(a/s)),
-         S.true, S.Zero, dco),  # 4.9.35
-        (
-            sqrt(t)*sinh(2*sqrt(a*t)),
-            pi**(S(1)/2)*s**(-S(5)/2)*(s/2+a) *
-            exp(a/s)*erf(sqrt(a/s))-a**(S(1)/2)*s**(-2),
-            S.true, S.Zero, dco),  # 4.9.36
-        (sqrt(t)*cosh(2*sqrt(a*t)), pi**(S(1)/2)*s**(-S(5)/2)*(s/2+a)*exp(a/s),
-         S.true, S.Zero, dco),  # 4.9.37
-        (sinh(2*sqrt(a*t))/sqrt(t),
-         pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s) * erf(sqrt(a/s)),
-            S.true, S.Zero, dco),  # 4.9.38
-        (cosh(2*sqrt(a*t))/sqrt(t), pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s),
-         S.true, S.Zero, dco),  # 4.9.39
-        (sinh(sqrt(a*t))**2/sqrt(t), pi**(S(1)/2)/2*s**(-S(1)/2)*(exp(a/s)-1),
-         S.true, S.Zero, dco),  # 4.9.40
-        (cosh(sqrt(a*t))**2/sqrt(t), pi**(S(1)/2)/2*s**(-S(1)/2)*(exp(a/s)+1),
-         S.true, S.Zero, dco),  # 4.9.41
+        # TODO
+        # (sinh(2*sqrt(a*t)), sqrt(pi*a)/s/sqrt(s)*exp(a/s),
+        #  S.true, S.Zero, dco),  # 4.9.34
+        # (cosh(2*sqrt(a*t)), 1/s+sqrt(pi*a)/s/sqrt(s)*exp(a/s)*erf(sqrt(a/s)),
+        #  S.true, S.Zero, dco),  # 4.9.35
+        # (
+        #     sqrt(t)*sinh(2*sqrt(a*t)),
+        #     pi**(S(1)/2)*s**(-S(5)/2)*(s/2+a) *
+        #     exp(a/s)*erf(sqrt(a/s))-a**(S(1)/2)*s**(-2),
+        #     S.true, S.Zero, dco),  # 4.9.36
+        # (sqrt(t)*cosh(2*sqrt(a*t)), pi**(S(1)/2)*s**(-S(5)/2)*(s/2+a)*exp(a/s),
+        #   S.true, S.Zero, dco),  # 4.9.37
+        # (sinh(2*sqrt(a*t))/sqrt(t),
+        #  pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s) * erf(sqrt(a/s)),
+        #     S.true, S.Zero, dco),  # 4.9.38
+        # (cosh(2*sqrt(a*t))/sqrt(t), pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s),
+        #  S.true, S.Zero, dco),  # 4.9.39
+        # (sinh(sqrt(a*t))**2/sqrt(t), pi**(S(1)/2)/2*s**(-S(1)/2)*(exp(a/s)-1),
+        #  S.true, S.Zero, dco),  # 4.9.40
+        # (cosh(sqrt(a*t))**2/sqrt(t), pi**(S(1)/2)/2*s**(-S(1)/2)*(exp(a/s)+1),
+        #  S.true, S.Zero, dco),  # 4.9.41
         (erf(a*t), exp(s**2/(2*a)**2)*erfc(s/(2*a))/s,
          4*Abs(arg(a)) < pi, S.Zero, dco),  # 4.12.2
-        (erf(sqrt(a*t)), sqrt(a)/sqrt(s+a)/s,
-         S.true, Max(S.Zero, -re(a)), dco),  # 4.12.4
-        (exp(a*t)*erf(sqrt(a*t)), sqrt(a)/sqrt(s)/(s-a),
-         S.true, Max(S.Zero, re(a)), dco),  # 4.12.5
-        (erf(sqrt(a/t)/2), (1-exp(-sqrt(a*s)))/s,
-         re(a) > 0, S.Zero, dco),  # 4.12.6
-        (erfc(sqrt(a*t)), (sqrt(s+a)-sqrt(a))/sqrt(s+a)/s,
-         S.true, -re(a), dco),  # 4.12.9
-        (exp(a*t)*erfc(sqrt(a*t)), 1/(s+sqrt(a*s)),
-         S.true, S.Zero, dco),  # 4.12.10
-        (erfc(sqrt(a/t)/2), exp(-sqrt(a*s))/s,
-         re(a) > 0, S.Zero, dco),  # 4.2.11
+        # (erf(sqrt(a*t)), sqrt(a)/sqrt(s+a)/s,
+        #  S.true, Max(S.Zero, -re(a)), dco),  # 4.12.4
+        # (exp(a*t)*erf(sqrt(a*t)), sqrt(a)/sqrt(s)/(s-a),
+        #  S.true, Max(S.Zero, re(a)), dco),  # 4.12.5
+        # (erf(sqrt(a/t)/2), (1-exp(-sqrt(a*s)))/s,
+        #  re(a) > 0, S.Zero, dco),  # 4.12.6
+        # (erfc(sqrt(a*t)), (sqrt(s+a)-sqrt(a))/sqrt(s+a)/s,
+        #  S.true, -re(a), dco),  # 4.12.9
+        # (exp(a*t)*erfc(sqrt(a*t)), 1/(s+sqrt(a*s)),
+        #  S.true, S.Zero, dco),  # 4.12.10
+        # (erfc(sqrt(a/t)/2), exp(-sqrt(a*s))/s,
+        #  re(a) > 0, S.Zero, dco),  # 4.2.11
         (besselj(n, a*t), a**n/(sqrt(s**2+a**2)*(s+sqrt(s**2+a**2))**n),
          re(n) > -1, Abs(im(a)), dco),  # 4.14.1
         (t**b*besselj(n, a*t),
@@ -504,10 +507,10 @@ def _laplace_build_rules():
         (t**b*besselj(n, a*t),
          2**(n+1)/sqrt(pi)*gamma(n+S(3)/2)*a**n*s*(s**2+a**2)**(-n-S(3)/2),
          And(re(n) > -1, Eq(b, n+1)), Abs(im(a)), dco),  # 4.14.8
-        (besselj(0, 2*sqrt(a*t)), exp(-a/s)/s,
-         S.true, S.Zero, dco),  # 4.14.25
-        (t**(b)*besselj(n, 2*sqrt(a*t)), a**(n/2)*s**(-n-1)*exp(-a/s),
-         And(re(n) > -1, Eq(b, n*S.Half)), S.Zero, dco),  # 4.14.30
+        # (besselj(0, 2*sqrt(a*t)), exp(-a/s)/s,
+        #  S.true, S.Zero, dco),  # 4.14.25
+        # (t**(b)*besselj(n, 2*sqrt(a*t)), a**(n/2)*s**(-n-1)*exp(-a/s),
+        #  And(re(n) > -1, Eq(b, n*S.Half)), S.Zero, dco),  # 4.14.30
         (besselj(0, a*sqrt(t**2+b*t)),
          exp(b*s-b*sqrt(s**2+a**2))/sqrt(s**2+a**2),
          Abs(arg(b)) < pi, Abs(im(a)), dco),  # 4.15.19
@@ -519,8 +522,8 @@ def _laplace_build_rules():
         (t**b*besseli(n, a*t),
          2**(n+1)/sqrt(pi)*gamma(n+S(3)/2)*a**n*s*(s**2-a**2)**(-n-S(3)/2),
          And(re(n) > -1, Eq(b, n+1)), Abs(re(a)), dco),  # 4.16.7
-        (t**(b)*besseli(n, 2*sqrt(a*t)), a**(n/2)*s**(-n-1)*exp(a/s),
-         And(re(n) > -1, Eq(b, n*S.Half)), S.Zero, dco),  # 4.16.18
+        # (t**(b)*besseli(n, 2*sqrt(a*t)), a**(n/2)*s**(-n-1)*exp(a/s),
+        #  And(re(n) > -1, Eq(b, n*S.Half)), S.Zero, dco),  # 4.16.18
         (bessely(0, a*t), -2/pi*asinh(s/a)/sqrt(s**2+a**2),
          S.true, Abs(im(a)), dco),  # 4.15.44
         (besselk(0, a*t), log((s + sqrt(s**2-a**2))/a)/(sqrt(s**2-a**2)),
