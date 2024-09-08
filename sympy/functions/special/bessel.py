@@ -381,8 +381,8 @@ class bessely(BesselBase):
                 # asymptotic approximation of bessely function.
                return sqrt(2)*(-sin(pi*nu/2 - z + pi/4) + 3*cos(pi*nu/2 - z + pi/4)/(8*z))*sqrt(1/z)/sqrt(pi)
             return self
-
-        return super(bessely, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+        else:
+            return self.func(nu, arg)
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -420,11 +420,7 @@ class bessely(BesselBase):
                     term = r**(-nu)*factorial(nu - 1)/pi
                     b.append(term)
                     for k in range(1, nu):
-                        denom = (nu - k)*k
-                        if denom == S.Zero:
-                            term *= t/k
-                        else:
-                            term *= t/denom
+                        term *= t/((nu - k)*k)
                         term = (_mexpand(term) + o).removeO()
                         b.append(term)
 
@@ -448,7 +444,7 @@ class bessely(BesselBase):
                     factorial(k))) for k in range((newn_b + 1)//2)]
                 return Add(*a) + Add(*b) + o
             else:
-                raise NotImplementedError("besselk expansion is only implemented for real order")
+                raise NotImplementedError("bessely expansion is only implemented for real order")
 
         return super(bessely, self)._eval_nseries(x, n, logx, cdir)
 

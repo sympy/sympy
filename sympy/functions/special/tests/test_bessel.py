@@ -58,6 +58,10 @@ def test_bessely_leading_term():
     assert bessely(1, sin(x)).as_leading_term(x) == -2/(pi*x)
     assert bessely(1, 2*sqrt(x)).as_leading_term(x) == -1/(pi*sqrt(x))
     assert bessely(S(5)/3, x).as_leading_term(x) == -2*2**(S(2)/3)*gamma(S(5)/3)/(pi*x**(S(5)/3))
+    assert bessely(1,cos(x)).as_leading_term(x) == bessely(1,1)
+    assert bessely(3,1/x).as_leading_term(x) == sqrt(2)*sqrt(x)*(3*x*sin(pi/4 - 1/x)/8 + cos(pi/4 - 1/x))/sqrt(pi)
+    assert bessely(3,1/sin(x)).as_leading_term(x) == sqrt(2)*(3*sin(x)*sin(pi/4 - 1/sin(x))/8 + \
+            cos(pi/4 - 1/sin(x)))*sqrt(sin(x))/sqrt(pi)
 
 
 def test_besseli_leading_term():
