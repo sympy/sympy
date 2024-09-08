@@ -572,11 +572,12 @@ def _minpoly_compose(ex, x, dom):
 
     if dom.is_QQ and _is_sum_surds(ex):
         # eliminate the square roots
+        v = ex
         ex -= x
         while 1:
             ex1 = _separate_sq(ex)
             if ex1 is ex:
-                return ex
+                return _choose_factor(factor_list(ex)[1], x, v)
             else:
                 ex = ex1
 

@@ -221,7 +221,7 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         nu, z = self.args
         try:
             arg = z.as_leading_term(x)
@@ -240,7 +240,7 @@ class besselj(BesselBase):
                 return sqrt(2)*cos(z - pi*(2*nu + 1)/4)/sqrt(pi*z)
             return self
 
-        return super(besselj, self)._eval_as_leading_term(x, logx, cdir)
+        return super(besselj, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -355,7 +355,7 @@ class bessely(BesselBase):
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
         return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         nu, z = self.args
         try:
             arg = z.as_leading_term(x)
@@ -378,7 +378,7 @@ class bessely(BesselBase):
                 return sqrt(2)*(-sin(pi*nu/2 - z + pi/4) + 3*cos(pi*nu/2 - z + pi/4)/(8*z))*sqrt(1/z)/sqrt(pi)
             return self
 
-        return super(bessely, self)._eval_as_leading_term(x, logx, cdir)
+        return super(bessely, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -518,6 +518,10 @@ class besseli(BesselBase):
         if nu != nnu:
             return besseli(nnu, z)
 
+    def _eval_rewrite_as_tractable(self, nu, z, limitvar=None, **kwargs):
+        if z.is_extended_real:
+            return exp(z)*_besseli(nu, z)
+
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
@@ -534,7 +538,7 @@ class besseli(BesselBase):
         if nu.is_integer and z.is_extended_real:
             return True
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         nu, z = self.args
         try:
             arg = z.as_leading_term(x)
@@ -553,7 +557,7 @@ class besseli(BesselBase):
                 return exp(z)/sqrt(2*pi*z)
             return self
 
-        return super(besseli, self)._eval_as_leading_term(x, logx, cdir)
+        return super(besseli, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselI/06/01/04/01/01/0003/
@@ -585,6 +589,19 @@ class besseli(BesselBase):
             return Add(*s) + o
 
         return super(besseli, self)._eval_nseries(x, n, logx, cdir)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        point = args0[1]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            nu, z = self.args
+            s = [(RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(Rational(2*nu + 1, 2), k))/\
+            ((2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k)) for k in range(n)] + [Order(1/z**(Rational(2*n + 1, 2)), x)]
+            return exp(z)/sqrt(2*pi) * (Add(*s))
+
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 class besselk(BesselBase):
@@ -668,7 +685,11 @@ class besselk(BesselBase):
         if nu.is_integer and z.is_positive:
             return True
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_rewrite_as_tractable(self, nu, z, limitvar=None, **kwargs):
+        if z.is_extended_real:
+            return exp(-z)*_besselk(nu, z)
+
+    def _eval_as_leading_term(self, x, logx, cdir):
         nu, z = self.args
         try:
             arg = z.as_leading_term(x)
@@ -687,7 +708,7 @@ class besselk(BesselBase):
             # asymptotic approximation of besselk function.
             return sqrt(pi)*exp(-z)/sqrt(2*z)
 
-        return super(besselk, self)._eval_as_leading_term(x, logx, cdir)
+        return super(besselk, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/01/04/01/02/0008/
@@ -737,6 +758,19 @@ class besselk(BesselBase):
             return a + Add(*b) + Add(*c) # Order term comes from a
 
         return super(besselk, self)._eval_nseries(x, n, logx, cdir)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        point = args0[1]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            nu, z = self.args
+            s = [(RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(Rational(2*nu + 1, 2), k))/\
+            ((-2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k)) for k in range(n)] +[Order(1/z**(Rational(2*n + 1, 2)), x)]
+            return (exp(-z)*sqrt(pi/2))*Add(*s)
+
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 class hankel1(BesselBase):
@@ -2087,3 +2121,64 @@ class marcumq(Function):
     def _eval_is_zero(self):
         if all(arg.is_zero for arg in self.args):
             return True
+
+class _besseli(Function):
+    """
+    Helper function to make the $\\mathrm{besseli}(nu, z)$
+    function tractable for the Gruntz algorithm.
+
+    """
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        point = args0[1]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            nu, z = self.args
+            l = [((RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(
+                    Rational(2*nu + 1, 2), k))/((2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k))) for k in range(n)]
+            return sqrt(pi/(2))*(Add(*l)) + Order(1/z**(Rational(2*n + 1, 2)), x)
+
+        return super()._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_intractable(self, nu, z, **kwargs):
+        return exp(-z)*besseli(nu, z)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        x0 = self.args[0].limit(x, 0)
+        if x0.is_zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
+
+
+class _besselk(Function):
+    """
+    Helper function to make the $\\mathrm{besselk}(nu, z)$
+    function tractable for the Gruntz algorithm.
+
+    """
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        from sympy.series.order import Order
+        point = args0[1]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            nu, z = self.args
+            l = [((RisingFactorial(Rational(2*nu - 1, 2), k)*RisingFactorial(
+                    Rational(2*nu + 1, 2), k))/((-2)**(k)*z**(Rational(2*k + 1, 2))*factorial(k))) for k in range(n)]
+            return sqrt(pi/(2))*(Add(*l)) + Order(1/z**(Rational(2*n + 1, 2)), x)
+
+        return super()._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_intractable(self,nu, z, **kwargs):
+        return exp(z)*besselk(nu, z)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        x0 = self.args[0].limit(x, 0)
+        if x0.is_zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)

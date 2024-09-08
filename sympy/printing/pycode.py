@@ -748,6 +748,15 @@ class MpmathPrinter(PythonCodePrinter):
                 ", ".join("(%s, %s)" % tuple(map(self._print, l)) for l in limits))
 
 
+    def _print_Derivative_zeta(self, args, seq_orders):
+        arg, = args
+        deriv_order, = seq_orders
+        return '{}({}, derivative={})'.format(
+            self._module_format('mpmath.zeta'),
+            self._print(arg), deriv_order
+        )
+
+
 for k in MpmathPrinter._kf:
     setattr(MpmathPrinter, '_print_%s' % k, _print_known_func)
 

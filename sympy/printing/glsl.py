@@ -258,9 +258,6 @@ class GLSLPrinter(CodePrinter):
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape

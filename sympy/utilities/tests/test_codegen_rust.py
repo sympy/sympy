@@ -228,11 +228,11 @@ def test_piecewise_():
     source = result[1]
     expected = (
         "fn pwtest(x: f64) -> f64 {\n"
-        "    let out1 = if (x < -1) {\n"
+        "    let out1 = if (x < -1.0) {\n"
         "        0\n"
-        "    } else if (x <= 1) {\n"
+        "    } else if (x <= 1.0) {\n"
         "        x.powi(2)\n"
-        "    } else if (x > 1) {\n"
+        "    } else if (x > 1.0) {\n"
         "        2 - x\n"
         "    } else {\n"
         "        1\n"
