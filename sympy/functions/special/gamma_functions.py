@@ -392,8 +392,6 @@ class lowergamma(Function):
     def _eval_rewrite_as_uppergamma(self, s, x, **kwargs):
         return gamma(s) - uppergamma(s, x)
 
-    _eval_rewrite_as_tractable = _eval_rewrite_as_uppergamma
-
     def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy.functions.special.error_functions import expint
         if s.is_integer and s.is_nonpositive:
@@ -563,12 +561,12 @@ class uppergamma(Function):
     def _eval_rewrite_as_lowergamma(self, s, x, **kwargs):
         return gamma(s) - lowergamma(s, x)
 
-    def _eval_rewrite_as_tractable(self, s, x, **kwargs):
-        return exp(loggamma(s)) - lowergamma(s, x)
-
     def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy.functions.special.error_functions import expint
         return expint(1 - s, x)*x**s
+
+    def _eval_rewrite_as_tractable(self, s, x, **kwargs):
+        return exp(loggamma(s)) - lowergamma(s, x)
 
     def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.special.error_functions import expint
