@@ -161,6 +161,10 @@ class FreeGroup(DefaultPrinting):
 
         return obj
 
+    def __getnewargs__(self):
+        """Return a tuple of arguments that must be passed to __new__ in order to support pickling this object."""
+        return (self.symbols,)
+
     def _generators(group):
         """Returns the generators of the FreeGroup.
 
