@@ -1041,13 +1041,13 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, show=True,
         (real_expr, imag_expr),   # The curve
         (real_expr, -imag_expr),  # Its mirror image
         *w_values,
-        show = show,
+        show=show,
         line_color=color,
-        adaptive = True,
-        title = f'Unit Step Response of ${latex(system)}$',
+        adaptive=True,
+        title=f'Unit Step Response of ${latex(system)}$',
         xlabel='Real Axis',
         ylabel='Imaginary Axis',
-        size = (6, 5),
+        size=(6, 5),
         kwargs=kwargs
     )
     if show:
