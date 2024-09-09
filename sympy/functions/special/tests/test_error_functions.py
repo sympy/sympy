@@ -499,6 +499,7 @@ def test_expint():
     assert expint(n, x).series(x, oo, n=3) == (1/x - n/x**2 + O(x**(-3), (x, oo)))*exp(-x)
     assert expint(4, x).series(x, oo, n=4) == (20/x**3 - 4/x**2 + 1/x + O(x**(-4), (x, oo)))*exp(-x)
     assert expint(1, x).series(x, oo, n=4) == (2/x**3 - 1/x**2 + 1/x + O(x**(-4), (x, oo)))*exp(-x)
+    assert expint(4, x).series(x, -oo, n=4) == (20/x**3 - 4/x**2 + 1/x + O(x**(-4), (x, -oo)))*exp(-x)
 
     assert expint(z, y).series(z, 0, 2) == exp(-y)/y - z*meijerg(((), (1, 1)),
                                   ((0, 0, 1), ()), y)/y + O(z**2)
