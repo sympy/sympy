@@ -1041,7 +1041,7 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, show=True,
         (real_expr, imag_expr),   # The curve
         (real_expr, -imag_expr),  # Its mirror image
         *w_values,
-        show=show,
+        show=False,
         line_color=color,
         adaptive=True,
         title=f'Nyquist Plot of ${latex(system)}$',
