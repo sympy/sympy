@@ -377,6 +377,10 @@ class Mul(Expr, AssocOp):
                 coeff = S.ComplexInfinity
                 continue
 
+            elif not coeff and isinstance(o, Add) and o.has(S.ComplexInfinity):
+                # 0 * (x + zoo) = NaN
+                return [S.NaN], [], None
+
             elif o is S.ImaginaryUnit:
                 neg1e += S.Half
                 continue
