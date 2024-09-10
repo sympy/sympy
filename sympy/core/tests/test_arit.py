@@ -2355,6 +2355,10 @@ def test_Mul_does_not_distribute_infinity():
     assert ((1 - I)*z).expand() is oo
 
 
+def test_Mul_does_not_let_0_trump_zoo():
+    assert Mul(*[0, a + zoo]) is S.NaN
+
+
 def test_issue_8247_8354():
     from sympy.functions.elementary.trigonometric import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
