@@ -1458,19 +1458,19 @@ def test_issue_4463():
     assert solve(x**x - 2) == [exp(LambertW(log(2)))]
     assert solve(((x - 3)*(x - 2))**((x - 3)*(x - 4))) == [2]
 
-@slow
+
 def test_issue_5114_solvers():
-    a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
+    a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w = symbols('a:w')
 
     # there is no 'a' in the equation set but this is how the
     # problem was originally posed
     syms = a, b, c, f, h, k, n
-    eqs = [b + r/d - c/d,
-    c*(1/d + 1/e + 1/g) - f/g - r/d,
-        f*(1/g + 1/i + 1/j) - c/g - h/i,
-        h*(1/i + 1/l + 1/m) - f/i - k/m,
-        k*(1/m + 1/o + 1/p) - h/m - n/p,
-        n*(1/p + 1/q) - k/p]
+    # the structure is the same as the original issue, but expressions
+    # involving constant sums have been replaced with a single constant
+    # since the issue was with the structure of the problem, not the symbols;
+    # the extra symbols add significant time to obtaining a solution
+    eqs = [b + c*d + e, c*g + i*f + j, c*l + m*f + o*h,
+           p*h + q*f + r*k, s*k + t*h + u*n, v*n + w*k]
     assert len(solve(eqs, syms, manual=True, check=False, simplify=False)) == 1
 
 
@@ -2576,8 +2576,8 @@ def test_issue_27001():
         8*a2*a3**2 + 2*a2*a4**2 + 8*a2*a5, 12*a1**4 + 6*a1**2*a2**2 -
         8*a1**2*a4 + 3*a2**4/4 - 2*a2**2*a4 + 4*a3**2 + a4**2 + 4*a5, 16*a1**3
         + 4*a1*a2**2 - 8*a1*a4, -8*a1**2*a2 - 2*a2**3 + 4*a2*a4]
-    sol = [{a4: 2*a1**2 + a2**2/2, a5: -a3**2}, {a1: 0, a2: 0, a5: -a3**2 - a4**2/4}]
-    assert solve(eqs, s, dict=True) == sol
+    sol = [{a4: 2*a1**2 + a2**2/2, a5: -a3**2}]
+    assert (got:=solve(eqs, s, dict=True)) == sol, (got,sol)
     assert (g:=solve(groebner(eqs, s), dict=True)) == sol, g
 
 

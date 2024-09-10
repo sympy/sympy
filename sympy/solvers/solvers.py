@@ -1233,7 +1233,7 @@ def solve(f, *symbols, **flags):
     # restore floats
     if floats and solution and flags.get('rational', None) is None:
         solution = nfloat(solution, exponent=False)
-        # nfloat might reveal more duplicates
+        # nfloat might have revealed more duplicates
         solution = _remove_duplicate_solutions(solution)
 
     if check and solution:  # assumption checking
@@ -1407,6 +1407,7 @@ def _solve(f, *symbols, **flags):
             result = [s for s in result if
                 not any(checksol(den, s, **flags) for den in
                         dens)]
+
         # set flags for quick exit at end; solutions for each
         # factor were already checked and simplified
         check = False
@@ -1732,7 +1733,7 @@ def _solve(f, *symbols, **flags):
 
     if flags.get('simplify', True):
         result = [{k: d[k].simplify() for k in d} for d in result]
-        # Simplification might reveal more duplicates
+        # Simplification might have revealed more duplicates
         result = _remove_duplicate_solutions(result)
         # we just simplified the solution so we now set the flag to
         # False so the simplification doesn't happen again in checksol()
@@ -1749,12 +1750,16 @@ def _solve(f, *symbols, **flags):
         # keep only results if the check is not False
         result = [r for r in result if
                   checksol(f_num, r, **flags) is not False]
-    return result
+
+    return _remove_redundant_solutions(result)
 
 
 def _remove_duplicate_solutions(solutions: list[dict[Expr, Expr]]
                                 ) -> list[dict[Expr, Expr]]:
     """Remove duplicates from a list of dicts"""
+    if len(solutions) < 2:
+        return solutions[:]
+
     solutions_set = set()
     solutions_new = []
 
@@ -1765,6 +1770,42 @@ def _remove_duplicate_solutions(solutions: list[dict[Expr, Expr]]
             solutions_set.add(solset)
 
     return solutions_new
+
+
+def _remove_redundant_solutions(s):
+    "remove dict solutions that are implied by another"""
+    if len(s) < 2:
+        return s[:]
+
+    def update(d, r):
+        # update d with r and then d with updated d
+        n = {k: v if v.is_number else v.xreplace(r) for k,v in d.items()}
+        return {k: v if v.is_number else v.xreplace(n) for k,v in n.items()}
+    def free(d):
+        # return free symbols of a dictionary (keys and values)
+        return set(d)|set().union(*[v.free_symbols for v in d.values()])
+
+    rv = []
+    for d in sorted(s, key=len):
+        sd = set(d.items())
+        skd = set(d)
+        dfree = free(d)
+        for r in rv:
+            skr = set(r)
+            if not skr & skd:
+                continue
+            if all(i in sd for i in r.items()):
+                # ignore {a:0,b:c} if {a:0} already present
+                break
+            ud = update(d, r)
+            ur = update(r, d)
+            if all(ud[k] == ur[k] for k in skd & skr):
+                if dfree - free(r):
+                    continue  # contains extra information
+                break  # redundant
+        else:
+            rv.append(d)
+    return rv
 
 
 def _solve_system(exprs, symbols, **flags):
@@ -1982,19 +2023,8 @@ def _solve_system(exprs, symbols, **flags):
                             rnew[k] = v.subs(s, sol)
                         # and add this new solution
                         rnew[s] = sol
-                        # check that it is independent of previous solutions
-                        iset = set(rnew.items())
-                        for i in newresult:
-                            if len(i) < len(iset):
-                                # update i with what is known
-                                i_items_updated = {(k, v.xreplace(rnew)) for k, v in i.items()}
-                                if not i_items_updated - iset:
-                                    # this is a superset of a known solution that
-                                    # is smaller
-                                    break
-                        else:
-                            # keep it
-                            newresult.append(rnew)
+                        newresult.append(rnew)
+                    newresult = _remove_redundant_solutions(newresult)
                     hit = True
                     got_s.add(s)
                 if not hit:
