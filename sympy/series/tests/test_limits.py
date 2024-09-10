@@ -1424,6 +1424,12 @@ def test_issue_26250():
     assert limit(e1/e2, x, 0) == -S(1)/8
 
 
+def test_issue_26513():
+    assert limit(abs((-x/(x+1))**x), x ,oo) == exp(-1)
+    assert limit((x/(x + 1))**x, x, oo) == exp(-1)
+    raises (NotImplementedError, lambda: limit((-x/(x+1))**x, x, oo))
+
+
 def test_issue_26916():
     assert limit(Ei(x)*exp(-x), x, +oo) == 0
     assert limit(Ei(x)*exp(-x), x, -oo) == 0

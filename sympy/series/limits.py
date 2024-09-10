@@ -274,16 +274,20 @@ class Limit(Expr):
             arg_flag = isinstance(expr, arg)
             sign_flag = isinstance(expr, sign)
             if abs_flag or sign_flag or arg_flag:
-                sig = limit(expr.args[0], z, z0, dir)
-                if sig.is_zero:
-                    sig = limit(1/expr.args[0], z, z0, dir)
-                if sig.is_extended_real:
-                    if (sig < 0) == True:
-                        return (-expr.args[0] if abs_flag else
-                                S.NegativeOne if sign_flag else S.Pi)
-                    elif (sig > 0) == True:
-                        return (expr.args[0] if abs_flag else
-                                S.One if sign_flag else S.Zero)
+                try:
+                    sig = limit(expr.args[0], z, z0, dir)
+                    if sig.is_zero:
+                        sig = limit(1/expr.args[0], z, z0, dir)
+                except NotImplementedError:
+                    return expr
+                else:
+                    if sig.is_extended_real:
+                        if (sig < 0) == True:
+                            return (-expr.args[0] if abs_flag else
+                                    S.NegativeOne if sign_flag else S.Pi)
+                        elif (sig > 0) == True:
+                            return (expr.args[0] if abs_flag else
+                                    S.One if sign_flag else S.Zero)
             return expr
 
         if e.has(Float):
