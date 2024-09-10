@@ -204,6 +204,11 @@ def test_Singletons():
         for func in copiers:
             assert func(obj) is obj
 
+#================== combinatorics ===================
+from sympy.combinatorics.free_groups import FreeGroup
+
+def test_free_group():
+    check(FreeGroup("x, y, z"), check_attr=False)
 
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh, chebyshevu,
