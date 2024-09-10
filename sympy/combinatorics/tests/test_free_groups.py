@@ -15,6 +15,11 @@ def test_FreeGroup__init__():
     assert len(FreeGroup((x, y, z)).generators) == 3
 
 
+def test_FreeGroup__getnewargs__():
+    x, y, z = map(Symbol, "xyz")
+    assert FreeGroup("x, y, z").__getnewargs__() == ((x, y, z),)
+
+
 def test_free_group():
     G, a, b, c = free_group("a, b, c")
     assert F.generators == (x, y, z)
