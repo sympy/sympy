@@ -2357,7 +2357,6 @@ def test_Mul_does_not_distribute_infinity():
 
 def test_Mul_does_not_let_0_trump_zoo():
     assert Mul(*[0, a + zoo]) is S.NaN
-    Mul(*[0,zoo+x])
 
 
 def test_issue_8247_8354():
