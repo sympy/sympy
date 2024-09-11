@@ -1772,7 +1772,8 @@ def _remove_duplicate_solutions(solutions: list[dict[Expr, Expr]]
     return solutions_new
 
 
-def _remove_redundant_solutions(s):
+def _remove_redundant_solutions(s: list[dict[Expr, Expr]]
+                                ) -> list[dict[Expr, Expr]]:
     "remove dict solutions that are implied by another"""
     if len(s) < 2:
         return s[:]
@@ -1785,7 +1786,7 @@ def _remove_redundant_solutions(s):
         # return free symbols of a dictionary (keys and values)
         return set(d)|set().union(*[v.free_symbols for v in d.values()])
 
-    rv = []
+    rv: list[dict[Expr, Expr]] = []
     for d in sorted(s, key=len):
         sd = set(d.items())
         skd = set(d)
