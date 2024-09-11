@@ -1252,12 +1252,12 @@ class Ei(Function):
                 I*pi if re(cdir).is_negative else S.Zero)
         return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_Si(*self.args)
-            return f._eval_nseries(x, n, logx)
-        return super()._eval_nseries(x, n, logx)
+            return f._eval_nseries(x, n, logx, cdir)
+        return super()._eval_nseries(x, n, logx, cdir)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -1434,16 +1434,16 @@ class expint(Function):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         if not self.args[0].has(x):
             nu = self.args[0]
             if nu == 1:
                 f = self._eval_rewrite_as_Si(*self.args)
-                return f._eval_nseries(x, n, logx)
+                return f._eval_nseries(x, n, logx, cdir)
             elif nu.is_Integer and nu > 1:
                 f = self._eval_rewrite_as_Ei(*self.args)
-                return f._eval_nseries(x, n, logx)
-        return super()._eval_nseries(x, n, logx)
+                return f._eval_nseries(x, n, logx, cdir)
+        return super()._eval_nseries(x, n, logx, cdir)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -1656,7 +1656,7 @@ class li(Function):
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return z * _eis(log(z))
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         z = self.args[0]
         s = [(log(z))**k / (factorial(k) * k) for k in range(1, n)]
         return EulerGamma + log(log(z)) + Add(*s)
@@ -1754,9 +1754,9 @@ class Li(Function):
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(li).rewrite("tractable", deep=True)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         f = self._eval_rewrite_as_li(*self.args)
-        return f._eval_nseries(x, n, logx)
+        return f._eval_nseries(x, n, logx, cdir)
 
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
@@ -1812,17 +1812,17 @@ class TrigonometricIntegral(Function):
         from sympy.functions.special.gamma_functions import uppergamma
         return self._eval_rewrite_as_expint(z).rewrite(uppergamma)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         # NOTE this is fairly inefficient
         if self.args[0].subs(x, 0) != 0:
-            return super()._eval_nseries(x, n, logx)
-        baseseries = self._trigfunc(x)._eval_nseries(x, n, logx)
+            return super()._eval_nseries(x, n, logx, cdir)
+        baseseries = self._trigfunc(x)._eval_nseries(x, n, logx, cdir)
         if self._trigfunc(0) != 0:
             baseseries -= 1
         baseseries = baseseries.replace(Pow, lambda t, n: t**n/n, simultaneous=False)
         if self._trigfunc(0) != 0:
             baseseries += EulerGamma + log(x)
-        return baseseries.subs(x, self.args[0])._eval_nseries(x, n, logx)
+        return baseseries.subs(x, self.args[0])._eval_nseries(x, n, logx, cdir)
 
 
 class Si(TrigonometricIntegral):
@@ -2729,7 +2729,7 @@ class _erfs(Function):
                  4))**(-k)/factorial(k) * (1/z)**(2*k + 1) for k in range(n)]
             o = Order(1/z**(2*n + 1), x)
             # It is very inefficient to first add the order and then do the nseries
-            return (Add(*l))._eval_nseries(x, n, logx) + o
+            return (Add(*l))._eval_nseries(x, n, logx, S.Zero) + o
 
         # Expansion at I*oo
         t = point.extract_multiplicatively(I)
@@ -2740,7 +2740,7 @@ class _erfs(Function):
                  4))**(-k)/factorial(k) * (1/z)**(2*k + 1) for k in range(n)]
             o = Order(1/z**(2*n + 1), x)
             # It is very inefficient to first add the order and then do the nseries
-            return (Add(*l))._eval_nseries(x, n, logx) + o
+            return (Add(*l))._eval_nseries(x, n, logx, S.Zero) + o
 
         # All other points are not handled
         return super()._eval_aseries(n, args0, x, logx)
@@ -2773,7 +2773,7 @@ class _eis(Function):
         l = [factorial(k) * (1/z)**(k + 1) for k in range(n)]
         o = Order(1/z**(n + 1), x)
         # It is very inefficient to first add the order and then do the nseries
-        return (Add(*l))._eval_nseries(x, n, logx) + o
+        return (Add(*l))._eval_nseries(x, n, logx, S.Zero) + o
 
 
     def fdiff(self, argindex=1):
@@ -2793,9 +2793,9 @@ class _eis(Function):
             return f._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
-            return f._eval_nseries(x, n, logx)
-        return super()._eval_nseries(x, n, logx)
+            return f._eval_nseries(x, n, logx, cdir)
+        return super()._eval_nseries(x, n, logx, cdir)

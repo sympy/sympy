@@ -611,7 +611,7 @@ def test_loggamma():
     assert loggamma(2 + 3*I).is_real is None
 
     def tN(N, M):
-        assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M
+        assert loggamma(1/x)._eval_nseries(x, N, None, S.Zero).getn() == M
     tN(0, 0)
     tN(1, 1)
     tN(2, 2)

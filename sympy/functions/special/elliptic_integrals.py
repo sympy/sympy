@@ -78,9 +78,9 @@ class elliptic_k(Function):
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(m.conjugate())
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         from sympy.simplify import hyperexpand
-        return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
+        return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx, cdir=cdir))
 
     def _eval_rewrite_as_hyper(self, m, **kwargs):
         return pi*S.Half*hyper((S.Half, S.Half), (S.One,), m)
@@ -283,11 +283,11 @@ class elliptic_e(Function):
             if (m.is_real and (m - 1).is_positive) is False:
                 return self.func(m.conjugate())
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         from sympy.simplify import hyperexpand
         if len(self.args) == 1:
-            return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
-        return super()._eval_nseries(x, n=n, logx=logx)
+            return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx, cdir=cdir))
+        return super()._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
     def _eval_rewrite_as_hyper(self, *args, **kwargs):
         if len(args) == 1:

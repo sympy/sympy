@@ -3399,6 +3399,7 @@ class Expr(Basic, EvalfMixin):
         if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
             return self.series(x, x0, n, dir, cdir=cdir)
         else:
+            cdir = sympify(cdir)
             return self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir):
@@ -3455,7 +3456,7 @@ class Expr(Basic, EvalfMixin):
         res = Order(1)
         incr = S.One
         while res.is_Order:
-            res = expr._eval_nseries(x, n=1+incr, logx=logx).cancel().powsimp().trigsimp()
+            res = expr._eval_nseries(x, n=1+incr, logx=logx, cdir=cdir).cancel().powsimp().trigsimp()
             incr *= 2
 
         if _logx is None:
@@ -4005,7 +4006,7 @@ class AtomicExpr(Atom, Expr):
     def _eval_is_algebraic_expr(self, syms):
         return True
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         return self
 
     @property

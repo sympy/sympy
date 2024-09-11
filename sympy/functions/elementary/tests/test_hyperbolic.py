@@ -603,23 +603,23 @@ def test_asinh_series():
 def test_asinh_nseries():
     x = Symbol('x')
     # Tests concerning branch points
-    assert asinh(x + I)._eval_nseries(x, 4, None) == I*pi/2 - \
+    assert asinh(x + I)._eval_nseries(x, 4, None, S.Zero) == I*pi/2 - \
     sqrt(2)*sqrt(I)*I*sqrt(x) + sqrt(2)*sqrt(I)*x**(S(3)/2)/12 + 3*sqrt(2)*sqrt(I)*I*x**(S(5)/2)/160 - \
     5*sqrt(2)*sqrt(I)*x**(S(7)/2)/896 + O(x**4)
-    assert asinh(x - I)._eval_nseries(x, 4, None) == -I*pi/2 + \
+    assert asinh(x - I)._eval_nseries(x, 4, None, S.Zero) == -I*pi/2 + \
     sqrt(2)*I*sqrt(x)*sqrt(-I) + sqrt(2)*x**(S(3)/2)*sqrt(-I)/12 - \
     3*sqrt(2)*I*x**(S(5)/2)*sqrt(-I)/160 - 5*sqrt(2)*x**(S(7)/2)*sqrt(-I)/896 + O(x**4)
     # Tests concerning points lying on branch cuts
-    assert asinh(x + 2*I)._eval_nseries(x, 4, None, cdir=1) == I*asin(2) - \
+    assert asinh(x + 2*I)._eval_nseries(x, 4, None, S.One) == I*asin(2) - \
     sqrt(3)*I*x/3 + sqrt(3)*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
-    assert asinh(x + 2*I)._eval_nseries(x, 4, None, cdir=-1) == I*pi - I*asin(2) + \
+    assert asinh(x + 2*I)._eval_nseries(x, 4, None, S.NegativeOne) == I*pi - I*asin(2) + \
     sqrt(3)*I*x/3 - sqrt(3)*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
-    assert asinh(x - 2*I)._eval_nseries(x, 4, None, cdir=1) == I*asin(2) - I*pi + \
+    assert asinh(x - 2*I)._eval_nseries(x, 4, None, S.One) == I*asin(2) - I*pi + \
     sqrt(3)*I*x/3 + sqrt(3)*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
-    assert asinh(x - 2*I)._eval_nseries(x, 4, None, cdir=-1) == -I*asin(2) - \
+    assert asinh(x - 2*I)._eval_nseries(x, 4, None, S.NegativeOne) == -I*asin(2) - \
     sqrt(3)*I*x/3 - sqrt(3)*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
     # Tests concerning re(ndir) == 0
-    assert asinh(2*I + I*x - x**2)._eval_nseries(x, 4, None) == I*pi/2 + log(2 - sqrt(3)) + \
+    assert asinh(2*I + I*x - x**2)._eval_nseries(x, 4, None, S.Zero) == I*pi/2 + log(2 - sqrt(3)) + \
     x*(-3 + 2*sqrt(3))/(-6 + 3*sqrt(3)) + x**2*(12 - 36*I + sqrt(3)*(-7 + 21*I))/(-63 + \
     36*sqrt(3)) + x**3*(-168 + sqrt(3)*(97 - 388*I) + 672*I)/(-1746 + 1008*sqrt(3)) + O(x**4)
 
@@ -743,22 +743,22 @@ def test_acosh_series():
 def test_acosh_nseries():
     x = Symbol('x')
     # Tests concerning branch points
-    assert acosh(x + 1)._eval_nseries(x, 4, None) == sqrt(2)*sqrt(x) - \
+    assert acosh(x + 1)._eval_nseries(x, 4, None, S.Zero) == sqrt(2)*sqrt(x) - \
     sqrt(2)*x**(S(3)/2)/12 + 3*sqrt(2)*x**(S(5)/2)/160 - 5*sqrt(2)*x**(S(7)/2)/896 + O(x**4)
     # Tests concerning points lying on branch cuts
-    assert acosh(x - 1)._eval_nseries(x, 4, None) == I*pi - \
+    assert acosh(x - 1)._eval_nseries(x, 4, None, S.Zero) == I*pi - \
     sqrt(2)*I*sqrt(x) - sqrt(2)*I*x**(S(3)/2)/12 - 3*sqrt(2)*I*x**(S(5)/2)/160 - \
     5*sqrt(2)*I*x**(S(7)/2)/896 + O(x**4)
-    assert acosh(I*x - 2)._eval_nseries(x, 4, None, cdir=1) == acosh(-2) - \
+    assert acosh(I*x - 2)._eval_nseries(x, 4, None, S.One) == acosh(-2) - \
     sqrt(3)*I*x/3 + sqrt(3)*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
-    assert acosh(-I*x - 2)._eval_nseries(x, 4, None, cdir=1) == acosh(-2) - \
+    assert acosh(-I*x - 2)._eval_nseries(x, 4, None, S.One) == acosh(-2) - \
     2*I*pi + sqrt(3)*I*x/3 + sqrt(3)*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
-    assert acosh(1/(I*x - 3))._eval_nseries(x, 4, None, cdir=1) == -acosh(-S(1)/3) + \
+    assert acosh(1/(I*x - 3))._eval_nseries(x, 4, None, S.One) == -acosh(-S(1)/3) + \
     sqrt(2)*x/12 + 17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
-    assert acosh(1/(I*x - 3))._eval_nseries(x, 4, None, cdir=-1) == acosh(-S(1)/3) - \
+    assert acosh(1/(I*x - 3))._eval_nseries(x, 4, None, S.NegativeOne) == acosh(-S(1)/3) - \
     sqrt(2)*x/12 - 17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
     # Tests concerning im(ndir) == 0
-    assert acosh(-I*x**2 + x - 2)._eval_nseries(x, 4, None) == -I*pi + log(sqrt(3) + 2) + \
+    assert acosh(-I*x**2 + x - 2)._eval_nseries(x, 4, None, S.Zero) == -I*pi + log(sqrt(3) + 2) + \
     x*(-2*sqrt(3) - 3)/(3*sqrt(3) + 6) + x**2*(-12 + 36*I + sqrt(3)*(-7 + 21*I))/(36*sqrt(3) + \
     63) + x**3*(-168 + 672*I + sqrt(3)*(-97 + 388*I))/(1008*sqrt(3) + 1746) + O(x**4)
 
@@ -868,21 +868,21 @@ def test_asech_series():
 def test_asech_nseries():
     x = Symbol('x')
     # Tests concerning branch points
-    assert asech(x + 1)._eval_nseries(x, 4, None) == sqrt(2)*sqrt(-x) + 5*sqrt(2)*(-x)**(S(3)/2)/12 + \
+    assert asech(x + 1)._eval_nseries(x, 4, None, S.Zero) == sqrt(2)*sqrt(-x) + 5*sqrt(2)*(-x)**(S(3)/2)/12 + \
     43*sqrt(2)*(-x)**(S(5)/2)/160 + 177*sqrt(2)*(-x)**(S(7)/2)/896 + O(x**4)
     # Tests concerning points lying on branch cuts
-    assert asech(x - 1)._eval_nseries(x, 4, None) == I*pi + sqrt(2)*sqrt(x) + \
+    assert asech(x - 1)._eval_nseries(x, 4, None, S.Zero) == I*pi + sqrt(2)*sqrt(x) + \
     5*sqrt(2)*x**(S(3)/2)/12 + 43*sqrt(2)*x**(S(5)/2)/160 + 177*sqrt(2)*x**(S(7)/2)/896 + O(x**4)
-    assert asech(I*x + 3)._eval_nseries(x, 4, None) == -asech(3) + sqrt(2)*x/12 - \
+    assert asech(I*x + 3)._eval_nseries(x, 4, None, S.Zero) == -asech(3) + sqrt(2)*x/12 - \
     17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
-    assert asech(-I*x + 3)._eval_nseries(x, 4, None) == asech(3) + sqrt(2)*x/12 + \
+    assert asech(-I*x + 3)._eval_nseries(x, 4, None, S.Zero) == asech(3) + sqrt(2)*x/12 + \
     17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
-    assert asech(I*x - 3)._eval_nseries(x, 4, None) == -asech(-3) - sqrt(2)*x/12 - \
+    assert asech(I*x - 3)._eval_nseries(x, 4, None, S.Zero) == -asech(-3) - sqrt(2)*x/12 - \
     17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
-    assert asech(-I*x - 3)._eval_nseries(x, 4, None) == asech(-3) - sqrt(2)*x/12 + \
+    assert asech(-I*x - 3)._eval_nseries(x, 4, None, S.Zero) == asech(-3) - sqrt(2)*x/12 + \
     17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
     # Tests concerning im(ndir) == 0
-    assert asech(-I*x**2 + x - 2)._eval_nseries(x, 3, None) == 2*I*pi/3 + \
+    assert asech(-I*x**2 + x - 2)._eval_nseries(x, 3, None, S.Zero) == 2*I*pi/3 + \
     x*(-sqrt(3) + 3*I)/(6*sqrt(3) + 6*I) + x**2*(36 + sqrt(3)*(7 - 12*I) + 21*I)/(72*sqrt(3) - \
     72*I) + O(x**3)
 
@@ -1005,23 +1005,23 @@ def test_acsch_series():
 def test_acsch_nseries():
     x = Symbol('x')
     # Tests concerning branch points
-    assert acsch(x + I)._eval_nseries(x, 4, None) == -I*pi/2 + \
+    assert acsch(x + I)._eval_nseries(x, 4, None, S.Zero) == -I*pi/2 + \
     sqrt(2)*I*sqrt(x)*sqrt(-I) - 5*x**(S(3)/2)*(1 - I)/12 - \
     43*sqrt(2)*I*x**(S(5)/2)*sqrt(-I)/160 + 177*x**(S(7)/2)*(1 - I)/896 + O(x**4)
-    assert acsch(x - I)._eval_nseries(x, 4, None) == I*pi/2 - \
+    assert acsch(x - I)._eval_nseries(x, 4, None, S.Zero) == I*pi/2 - \
     sqrt(2)*sqrt(I)*I*sqrt(x) - 5*x**(S(3)/2)*(1 + I)/12 + \
     43*sqrt(2)*sqrt(I)*I*x**(S(5)/2)/160 + 177*x**(S(7)/2)*(1 + I)/896 + O(x**4)
     # Tests concerning points lying on branch cuts
-    assert acsch(x + I/2)._eval_nseries(x, 4, None, cdir=1) == -acsch(I/2) - \
+    assert acsch(x + I/2)._eval_nseries(x, 4, None, S.One) == -acsch(I/2) - \
     I*pi + 4*sqrt(3)*I*x/3 - 8*sqrt(3)*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
-    assert acsch(x + I/2)._eval_nseries(x, 4, None, cdir=-1) == acsch(I/2) - \
+    assert acsch(x + I/2)._eval_nseries(x, 4, None, S.NegativeOne) == acsch(I/2) - \
     4*sqrt(3)*I*x/3 + 8*sqrt(3)*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
-    assert acsch(x - I/2)._eval_nseries(x, 4, None, cdir=1) == -acsch(I/2) - \
+    assert acsch(x - I/2)._eval_nseries(x, 4, None, S.One) == -acsch(I/2) - \
     4*sqrt(3)*I*x/3 - 8*sqrt(3)*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
-    assert acsch(x - I/2)._eval_nseries(x, 4, None, cdir=-1) == I*pi + \
+    assert acsch(x - I/2)._eval_nseries(x, 4, None, S.NegativeOne) == I*pi + \
     acsch(I/2) + 4*sqrt(3)*I*x/3 + 8*sqrt(3)*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
     # Tests concerning re(ndir) == 0
-    assert acsch(I/2 + I*x - x**2)._eval_nseries(x, 4, None) == -I*pi/2 + \
+    assert acsch(I/2 + I*x - x**2)._eval_nseries(x, 4, None, S.Zero) == -I*pi/2 + \
     log(2 - sqrt(3)) + x*(12 - 8*sqrt(3))/(-6 + 3*sqrt(3)) + x**2*(-96 + \
     sqrt(3)*(56 - 84*I) + 144*I)/(-63 + 36*sqrt(3)) + x**3*(2688 - 2688*I + \
     sqrt(3)*(-1552 + 1552*I))/(-873 + 504*sqrt(3)) + O(x**4)
@@ -1144,25 +1144,25 @@ def test_atanh_series():
 def test_atanh_nseries():
     x = Symbol('x')
     # Tests concerning branch points
-    assert atanh(x + 1)._eval_nseries(x, 4, None, cdir=1) == -I*pi/2 + log(2)/2 - \
+    assert atanh(x + 1)._eval_nseries(x, 4, None, S.One) == -I*pi/2 + log(2)/2 - \
     log(x)/2 + x/4 - x**2/16 + x**3/48 + O(x**4)
-    assert atanh(x + 1)._eval_nseries(x, 4, None, cdir=-1) == I*pi/2 + log(2)/2 - \
+    assert atanh(x + 1)._eval_nseries(x, 4, None, S.NegativeOne) == I*pi/2 + log(2)/2 - \
     log(x)/2 + x/4 - x**2/16 + x**3/48 + O(x**4)
-    assert atanh(x - 1)._eval_nseries(x, 4, None, cdir=1) == -log(2)/2 + log(x)/2 + \
+    assert atanh(x - 1)._eval_nseries(x, 4, None, S.One) == -log(2)/2 + log(x)/2 + \
     x/4 + x**2/16 + x**3/48 + O(x**4)
-    assert atanh(x - 1)._eval_nseries(x, 4, None, cdir=-1) == -log(2)/2 + log(x)/2 + \
+    assert atanh(x - 1)._eval_nseries(x, 4, None, S.NegativeOne) == -log(2)/2 + log(x)/2 + \
     x/4 + x**2/16 + x**3/48 + O(x**4)
     # Tests concerning points lying on branch cuts
-    assert atanh(I*x + 2)._eval_nseries(x, 4, None, cdir=1) == I*pi + atanh(2) - \
+    assert atanh(I*x + 2)._eval_nseries(x, 4, None, S.One) == I*pi + atanh(2) - \
     I*x/3 - 2*x**2/9 + 13*I*x**3/81 + O(x**4)
-    assert atanh(I*x + 2)._eval_nseries(x, 4, None, cdir=-1) == atanh(2) - I*x/3 - \
+    assert atanh(I*x + 2)._eval_nseries(x, 4, None, S.NegativeOne) == atanh(2) - I*x/3 - \
     2*x**2/9 + 13*I*x**3/81 + O(x**4)
-    assert atanh(I*x - 2)._eval_nseries(x, 4, None, cdir=1) == -atanh(2) - I*x/3 + \
+    assert atanh(I*x - 2)._eval_nseries(x, 4, None, S.One) == -atanh(2) - I*x/3 + \
     2*x**2/9 + 13*I*x**3/81 + O(x**4)
-    assert atanh(I*x - 2)._eval_nseries(x, 4, None, cdir=-1) == -atanh(2) - I*pi - \
+    assert atanh(I*x - 2)._eval_nseries(x, 4, None, S.NegativeOne) == -atanh(2) - I*pi - \
     I*x/3 + 2*x**2/9 + 13*I*x**3/81 + O(x**4)
     # Tests concerning im(ndir) == 0
-    assert atanh(-I*x**2 + x - 2)._eval_nseries(x, 4, None) == -I*pi/2 - log(3)/2 - x/3 + \
+    assert atanh(-I*x**2 + x - 2)._eval_nseries(x, 4, None, S.Zero) == -I*pi/2 - log(3)/2 - x/3 + \
     x**2*(-S(1)/4 + I/2) + x**2*(S(1)/36 - I/6) + x**3*(-S(1)/6 + I/2) + x**3*(S(1)/162 - I/18) + O(x**4)
 
 
@@ -1257,23 +1257,23 @@ def test_acoth_series():
 def test_acoth_nseries():
     x = Symbol('x')
     # Tests concerning branch points
-    assert acoth(x + 1)._eval_nseries(x, 4, None) == log(2)/2 - log(x)/2 + x/4 - \
+    assert acoth(x + 1)._eval_nseries(x, 4, None, S.Zero) == log(2)/2 - log(x)/2 + x/4 - \
     x**2/16 + x**3/48 + O(x**4)
-    assert acoth(x - 1)._eval_nseries(x, 4, None, cdir=1) == I*pi/2 - log(2)/2 + \
+    assert acoth(x - 1)._eval_nseries(x, 4, None, S.One) == I*pi/2 - log(2)/2 + \
     log(x)/2 + x/4 + x**2/16 + x**3/48 + O(x**4)
-    assert acoth(x - 1)._eval_nseries(x, 4, None, cdir=-1) == -I*pi/2 - log(2)/2 + \
+    assert acoth(x - 1)._eval_nseries(x, 4, None, S.NegativeOne) == -I*pi/2 - log(2)/2 + \
     log(x)/2 + x/4 + x**2/16 + x**3/48 + O(x**4)
     # Tests concerning points lying on branch cuts
-    assert acoth(I*x + S(1)/2)._eval_nseries(x, 4, None, cdir=1) == acoth(S(1)/2) + \
+    assert acoth(I*x + S(1)/2)._eval_nseries(x, 4, None, S.One) == acoth(S(1)/2) + \
     4*I*x/3 - 8*x**2/9 - 112*I*x**3/81 + O(x**4)
-    assert acoth(I*x + S(1)/2)._eval_nseries(x, 4, None, cdir=-1) == I*pi + \
+    assert acoth(I*x + S(1)/2)._eval_nseries(x, 4, None, S.NegativeOne) == I*pi + \
     acoth(S(1)/2) + 4*I*x/3 - 8*x**2/9 - 112*I*x**3/81 + O(x**4)
-    assert acoth(I*x - S(1)/2)._eval_nseries(x, 4, None, cdir=1) == -acoth(S(1)/2) - \
+    assert acoth(I*x - S(1)/2)._eval_nseries(x, 4, None, S.One) == -acoth(S(1)/2) - \
     I*pi + 4*I*x/3 + 8*x**2/9 - 112*I*x**3/81 + O(x**4)
-    assert acoth(I*x - S(1)/2)._eval_nseries(x, 4, None, cdir=-1) == -acoth(S(1)/2) + \
+    assert acoth(I*x - S(1)/2)._eval_nseries(x, 4, None, S.NegativeOne) == -acoth(S(1)/2) + \
     4*I*x/3 + 8*x**2/9 - 112*I*x**3/81 + O(x**4)
     # Tests concerning im(ndir) == 0
-    assert acoth(-I*x**2 - x - S(1)/2)._eval_nseries(x, 4, None) == I*pi/2 - log(3)/2 - \
+    assert acoth(-I*x**2 - x - S(1)/2)._eval_nseries(x, 4, None, S.Zero) == I*pi/2 - log(3)/2 - \
     4*x/3 + x**2*(-S(8)/9 + 2*I/3) - 2*I*x**2 + x**3*(S(104)/81 - 16*I/9) - 8*x**3/3 + O(x**4)
 
 

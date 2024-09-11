@@ -195,12 +195,12 @@ class gamma(Function):
     def _eval_rewrite_as_factorial(self, z, **kwargs):
         return factorial(z - 1)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         x0 = self.args[0].limit(x, 0)
         if not (x0.is_Integer and x0 <= 0):
-            return super()._eval_nseries(x, n, logx)
+            return super()._eval_nseries(x, n, logx, cdir)
         t = self.args[0] - x0
-        return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
+        return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx, cdir)
 
     def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
@@ -824,7 +824,7 @@ class polygamma(Function):
                 l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
                 r -= Add(*l)
                 o = Order(1/z**n, x)
-            return r._eval_nseries(x, n, logx) + o
+            return r._eval_nseries(x, n, logx, S.Zero) + o
         else:
             # proper polygamma function
             # Abramowitz & Stegun, p. 260, 6.4.10
@@ -842,8 +842,8 @@ class polygamma(Function):
                 o = Order(1/z, x)
             elif n == 1:
                 o = Order(1/z**2, x)
-            r = e0._eval_nseries(z, n, logx) + o
-            return (-1 * (-1/z)**N * r)._eval_nseries(x, n, logx)
+            r = e0._eval_nseries(z, n, logx, S.Zero) + o
+            return (-1 * (-1/z)**N * r)._eval_nseries(x, n, logx, S.Zero)
 
     def _eval_evalf(self, prec):
         if not all(i.is_number for i in self.args):
@@ -1013,12 +1013,12 @@ class loggamma(Function):
 
         return self
 
-    def _eval_nseries(self, x, n, logx=None, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
-            return f._eval_nseries(x, n, logx)
-        return super()._eval_nseries(x, n, logx)
+            return f._eval_nseries(x, n, logx, cdir)
+        return super()._eval_nseries(x, n, logx, cdir)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -1033,7 +1033,7 @@ class loggamma(Function):
         else:
             o = Order(1/z**n, x)
         # It is very inefficient to first add the order and then do the nseries
-        return (r + Add(*l))._eval_nseries(x, n, logx) + o
+        return (r + Add(*l))._eval_nseries(x, n, logx, S.Zero) + o
 
     def _eval_rewrite_as_intractable(self, z, **kwargs):
         return log(gamma(z))

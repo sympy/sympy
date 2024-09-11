@@ -315,7 +315,7 @@ class Order(Expr):
         obj = Expr.__new__(cls, *args)
         return obj
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         return self
 
     @property

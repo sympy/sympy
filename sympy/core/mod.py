@@ -255,6 +255,6 @@ class Mod(Function):
         from sympy.functions.elementary.integers import floor
         return self.rewrite(floor)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         from sympy.functions.elementary.integers import floor
         return self.rewrite(floor)._eval_nseries(x, n, logx=logx, cdir=cdir)

@@ -1322,7 +1322,7 @@ class asinh(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # asinh
+    def _eval_nseries(self, x, n, logx, cdir):  # asinh
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
 
@@ -1330,7 +1330,7 @@ class asinh(InverseHyperbolicFunction):
         if arg0 in (I, -I):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -1508,7 +1508,7 @@ class acosh(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # acosh
+    def _eval_nseries(self, x, n, logx, cdir):  # acosh
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
 
@@ -1516,7 +1516,7 @@ class acosh(InverseHyperbolicFunction):
         if arg0 in (S.One, S.NegativeOne):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -1679,7 +1679,7 @@ class atanh(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # atanh
+    def _eval_nseries(self, x, n, logx, cdir):  # atanh
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
 
@@ -1687,7 +1687,7 @@ class atanh(InverseHyperbolicFunction):
         if arg0 in (S.One, S.NegativeOne):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -1831,7 +1831,7 @@ class acoth(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # acoth
+    def _eval_nseries(self, x, n, logx, cdir):  # acoth
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
 
@@ -1839,7 +1839,7 @@ class acoth(InverseHyperbolicFunction):
         if arg0 in (S.One, S.NegativeOne):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -2000,7 +2000,7 @@ class asech(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # asech
+    def _eval_nseries(self, x, n, logx, cdir):  # asech
         from sympy.series.order import O
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
@@ -2014,7 +2014,7 @@ class asech(InverseHyperbolicFunction):
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
                 return O(1) if n == 0 else O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
@@ -2026,11 +2026,11 @@ class asech(InverseHyperbolicFunction):
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
                 return O(1) if n == 0 else I*pi + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -2203,7 +2203,7 @@ class acsch(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):  # acsch
+    def _eval_nseries(self, x, n, logx, cdir):  # acsch
         from sympy.series.order import O
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
@@ -2217,7 +2217,7 @@ class acsch(InverseHyperbolicFunction):
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
                 return O(1) if n == 0 else -I*pi/2 + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             res = ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
             return res
@@ -2230,11 +2230,11 @@ class acsch(InverseHyperbolicFunction):
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
                 return O(1) if n == 0 else I*pi/2 + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
         if arg0 is S.ComplexInfinity:
             return res
 

@@ -746,8 +746,8 @@ class Piecewise(Function):
 
         return True, list(uniq(int_expr))
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
-        args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
+    def _eval_nseries(self, x, n, logx, cdir):
+        args = [(ec.expr._eval_nseries(x, n, logx, cdir), ec.cond) for ec in self.args]
         return self.func(*args)
 
     def _eval_power(self, s):

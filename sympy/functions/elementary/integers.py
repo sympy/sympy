@@ -162,7 +162,7 @@ class floor(RoundFunction):
                 return r
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
@@ -330,7 +330,7 @@ class ceiling(RoundFunction):
                 return r
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
@@ -611,7 +611,7 @@ class frac(Function):
             return AccumBounds(0, 1)
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir):
         from sympy.series.order import Order
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
