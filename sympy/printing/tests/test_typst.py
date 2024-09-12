@@ -1,5 +1,5 @@
 from sympy.concrete.summations import Sum
-from sympy.core.function import Function
+from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational, oo)
 from sympy.core.power import Pow
@@ -8,11 +8,15 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.miscellaneous import Max
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import Integral
 from sympy.printing.typst import (typst, translate, greek_letters_set,
                                   typst_greek_dictionary)
 from sympy.series.limits import Limit
 
 x, y = symbols('x, y')
+n = symbols('n', integer=True)
 
 def test_printmethod():
     class R(Abs):
@@ -267,3 +271,70 @@ def test_greek_symbols():
     assert typst(Symbol('varrho')) == 'rho.alt'
     assert typst(Symbol('varsigma')) == 'sigma.alt'
     assert typst(Symbol('vartheta')) == 'theta.alt'
+
+def test_typst_derivatives():
+    # regular "d" for ordinary derivatives
+    assert typst(diff(x**3, x, evaluate=False)) == \
+        r"d / (d x) x^(3)"
+    assert typst(diff(sin(x) + x**2, x, evaluate=False)) == \
+        r"d / (d x) (x^(2) + sin(x))"
+    assert typst(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False))\
+        == \
+        r"d^(2) / (d x^(2)) (x^(2) + sin(x))"
+    assert typst(diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)) == \
+        r"d^(3) / (d x^(3)) (x^(2) + sin(x))"
+
+    # # \partial for partial derivatives
+    # assert typst(diff(sin(x * y), x, evaluate=False)) == \
+    #     r"partial / (partial x) sin(x y)"
+    # assert typst(diff(sin(x * y) + x**2, x, evaluate=False)) == \
+    #     r"partial / (partial x) x^(2) + sin(x y)"
+    # assert typst(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
+    #     r"partial^(2) / (partial x^(2)) (x^(2) + sin(x y)"
+    # assert typst(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
+    #     r"partial^(3) / (partial x^(3)) (x^(2) + sin(x y)"
+
+    # mixed partial derivatives
+    f = Function("f")
+    assert typst(diff(diff(f(x, y), x, evaluate=False), y, evaluate=False)) == \
+        r"partial^(2) / (partial y partial x) " + typst(f(x, y))
+
+    assert typst(diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
+        r"partial^(3) / (partial y partial x^(2)) " + typst(f(x, y))
+
+    # for negative nested Derivative
+    assert typst(diff(-diff(y**2,x,evaluate=False),x,evaluate=False)) == r'd / (d x) (- d / (d x) y^(2))'
+    assert typst(diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)) == \
+        r'd^(2) / (d x^(2)) (- d^(2) / (d x^(2)) y)'
+
+    # # use ordinary d when one of the variables has been integrated out
+    # assert typst(diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)) == \
+    #     r"(d / d y) int(limits_(0)^(infty) e^(- x y), dx"
+
+    # Derivative wrapped in power:
+    assert typst(diff(x, x, evaluate=False)**2) == \
+        r"(d / (d x) x)^(2)"
+
+    assert typst(diff(f(x), x)**2) == \
+        r"(d / (d x) f(x))^(2)"
+
+    assert typst(diff(f(x), (x, n))) == \
+        r"d^(n) / (d x^(n)) f(x)"
+
+    x1 = Symbol('x1')
+    x2 = Symbol('x2')
+    # assert typst(diff(f(x1, x2), x1)) == r'partial / (partial x_(1)) f(x_(1),x_(2))'
+
+    n1 = Symbol('n1')
+    assert typst(diff(f(x), (x, n1))) == r'd^(n_(1)) / (d x^(n_(1))) f(x)'
+
+    # n2 = Symbol('n2')
+    # assert typst(diff(f(x), (x, Max(n1, n2)))) == \
+    #     r'd^(max(n_(1), n_(2))) / (d x^(max(n_(1), n_(2)))) f(x)'
+
+    # set diff operator
+    assert typst(diff(f(x), x), diff_operator="rd") == r'bold(d) / (bold(d) x) f(x)'
+
+def test_issue_17092():
+    x_star = Symbol('x^*')
+    assert typst(Derivative(x_star, x_star,2)) == r'd^(2) / (d (x^(*))^(2)) x^(*)'
