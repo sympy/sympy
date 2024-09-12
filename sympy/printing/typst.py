@@ -11,7 +11,7 @@ from sympy.core.power import Pow
 
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
-from sympy.printing.conventions import split_super_sub
+from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import PRECEDENCE
 
 from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
@@ -173,6 +173,15 @@ class TypstPrinter(Printer):
         }
         imag_unit = self._settings['imaginary_unit']
         self._settings['imaginary_unit_typst'] = imaginary_unit_table.get(imag_unit, imag_unit)
+
+        diff_operator_table = {
+            None: r"d",
+            "d": r"d",
+            "rd": r"bold(d)",
+            "td": r"upright(d)",
+        }
+        diff_operator = self._settings['diff_operator']
+        self._settings["diff_operator_typst"] = diff_operator_table.get(diff_operator, diff_operator)
 
 
     def _add_parens(self, s) -> str:
@@ -500,6 +509,46 @@ class TypstPrinter(Printer):
             typst += self._print(expr.function)
 
         return typst
+
+    def _print_Derivative(self, expr):
+        if requires_partial(expr.expr):
+            diff_symbol = r'partial'
+        else:
+            diff_symbol = self._settings["diff_operator_typst"]
+
+        typst = ""
+        dim = 0
+        for i, (x, num) in enumerate(reversed(expr.variable_count)):
+            # handle mixed diff
+            if i == 0:
+                separator = ""
+            else:
+                separator = " "
+            typst += separator
+
+            dim += num
+            if num == 1:
+                typst += r"%s %s" % (diff_symbol, self._print(x))
+            else:
+                typst += r"%s %s^(%s)" % (diff_symbol,
+                                        self.parenthesize_super(self._print(x)),
+                                        self._print(num))
+
+        if dim == 1:
+            typst = r"%s / (%s)" % (diff_symbol, typst)
+        else:
+            typst = r"%s^(%s) / (%s)" % (diff_symbol, self._print(dim), typst)
+
+        if any(i.could_extract_minus_sign() for i in expr.args):
+            return r"%s %s" % (typst, self.parenthesize(expr.expr,
+                                                  PRECEDENCE["Mul"],
+                                                  is_neg=True,
+                                                  strict=True))
+
+        return r"%s %s" % (typst, self.parenthesize(expr.expr,
+                                                  PRECEDENCE["Mul"],
+                                                  is_neg=False,
+                                                  strict=True))
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
