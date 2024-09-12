@@ -47,3 +47,8 @@ Ramp-Response Plot
 .. automethod:: sympy.physics.control.control_plots.ramp_response_plot
 
 .. automethod:: sympy.physics.control.control_plots.ramp_response_numerical_data
+
+Nyquist Plot
+------------
+
+.. automethod:: sympy.physics.control.control_plots.nyquist_plot
