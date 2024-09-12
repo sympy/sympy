@@ -215,8 +215,9 @@ class gamma(Function):
         raise PoleError()
 
     def _eval_aseries(self, n, args0, x, logx):
+        # Refer: https://functions.wolfram.com/GammaBetaErf/Gamma/06/02/0003/
         point = args0[0]
-        if point is S.Infinity:
+        if point in [S.Infinity, S.NegativeInfinity]:
             z = self.args[0]
             r = exp((log(z)*(z - S.Half) - z + log(2*pi)/2).expand())
             l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, n)]
@@ -1037,8 +1038,9 @@ class loggamma(Function):
         return super()._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
+        # Refer: https://functions.wolfram.com/GammaBetaErf/LogGamma/06/03/0001/
         from sympy.series.order import Order
-        if args0[0] != oo:
+        if args0[0] not in [S.Infinity, S.NegativeInfinity]:
             return super()._eval_aseries(n, args0, x, logx)
         z = self.args[0]
         r = log(z)*(z - S.Half) - z + log(2*pi)/2

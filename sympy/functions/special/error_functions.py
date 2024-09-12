@@ -2839,7 +2839,7 @@ class _expint(Function):
         point = args0[1]
         nu = self.args[0]
 
-        if point is S.Infinity:
+        if point in [S.Infinity, S.NegativeInfinity]:
             z = self.args[1]
             s = [S.NegativeOne**k * RisingFactorial(nu, k) / z**(k+1) for k in range(n)] + [Order(1/z**n, x)]
             return Add(*s)

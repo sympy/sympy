@@ -511,10 +511,16 @@ def test_expint():
     # test leading term
     assert expint(1, x).as_leading_term(x) == -log(x) - EulerGamma
     assert expint(3, x).as_leading_term(x) == S.Half
+    assert expint(1, 1/x).as_leading_term(x, logx=None, cdir=1) ==  expint(1, 1/x)
+    assert expint(1, 1/x).as_leading_term(x, logx=None, cdir=-1) ==  expint(1, 1/x)
 
     # test limits
     assert limit(expint(3, x), x, oo) == S.Zero
     assert limit(expint(1, x), x, oo) == S.Zero
+    assert limit(expint(3, x), x, -oo) == S.NegativeInfinity
+    assert limit(expint(1, x), x, -oo) == S.NegativeInfinity
+    assert limit(expint(1, 1/x), x, 0, dir='+') == S.Zero
+    assert limit(expint(1, 1/x), x, 0, dir='-') == S.NegativeInfinity
 
 def test__eis():
     assert _eis(z).diff(z) == -_eis(z) + 1/z
