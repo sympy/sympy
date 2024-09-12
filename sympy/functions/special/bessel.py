@@ -10,7 +10,7 @@ from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
 from sympy.core.symbol import Dummy, uniquely_named_symbol, Wild
 from sympy.core.sympify import sympify
-from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.exponential import exp, log
@@ -698,64 +698,88 @@ class besselk(BesselBase):
         _, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
-            term_one = ((-1)**(nu -1)*log(z/2)*besseli(nu, z))
-            term_two = (z/2)**(-nu)*factorial(nu - 1)/2 if (nu).is_positive else S.Zero
-            term_three = (-1)**nu*(z/2)**nu/(2*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
-            arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
-            return arg
-        elif e.is_negative:
-            # Refer Abramowitz and Stegun 1965, p. 378 for more information on
-            # asymptotic approximation of besselk function.
-            return sqrt(pi)*exp(-z)/sqrt(2*z)
+            if nu.is_zero:
+                # Equation 9.6.8 of Abramowitz and Stegun (10th ed, 1972).
+                term = -log(z) - S.EulerGamma + log(2)
+            elif nu.is_nonzero:
+                # Equation 9.6.9 of Abramowitz and Stegun (10th ed, 1972).
+                term = gamma(Abs(nu))*(z/2)**(-Abs(nu))/2
+            else:
+                raise NotImplementedError(f"Cannot proceed without knowing if {nu} is zero or not.")
 
-        return super(besselk, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+            return term.as_leading_term(x, logx=logx)
+        elif e.is_negative:
+            # Equation 9.7.2 of Abramowitz and Stegun (10th ed, 1972).
+            return sqrt(pi)*exp(-arg)/sqrt(2*arg)
+        else:
+            return self.func(nu, arg)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/01/04/01/02/0008/
-        # for more information on nseries expansion of besselk function.
         from sympy.series.order import Order
         nu, z = self.args
 
-        # In case of powers less than 1, number of terms need to be computed
-        # separately to avoid repeated callings of _eval_nseries with wrong n
         try:
             _, exp = z.leadterm(x)
         except (ValueError, NotImplementedError):
             return self
 
-        if exp.is_positive and nu.is_integer:
-            newn = ceiling(n/exp)
-            bn = besseli(nu, z)
-            a = ((-1)**(nu - 1)*log(z/2)*bn)._eval_nseries(x, n, logx, cdir)
-
-            b, c = [], []
-            o = Order(x**n, x)
+        # In case of powers less than 1, number of terms need to be computed
+        # separately to avoid repeated callings of _eval_nseries with wrong n
+        if exp.is_positive:
             r = (z/2)._eval_nseries(x, n, logx, cdir).removeO()
             if r is S.Zero:
-                return o
-            t = (_mexpand(r**2) + o).removeO()
+                return Order(z**(-nu) + z**nu, x)
 
-            if nu > S.Zero:
-                term = r**(-nu)*factorial(nu - 1)/2
-                b.append(term)
-                for k in range(1, nu):
-                    denom = (k - nu)*k
-                    if denom == S.Zero:
-                        term *= t/k
-                    else:
-                        term *= t/denom
-                    term = (_mexpand(term) + o).removeO()
+            o = Order(x**n, x)
+            if nu.is_integer:
+                # Reference: https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/01/04/01/02/0008/ (only for integer order)
+                newn = ceiling(n/exp)
+                bn = besseli(nu, z)
+                a = ((-1)**(nu - 1)*log(z/2)*bn)._eval_nseries(x, n, logx, cdir)
+
+                b, c = [], []
+                t = _mexpand(r**2)
+
+                if nu > S.Zero:
+                    term = r**(-nu)*factorial(nu - 1)/2
                     b.append(term)
+                    for k in range(1, nu):
+                        term *= t/((k - nu)*k)
+                        term = (_mexpand(term) + o).removeO()
+                        b.append(term)
 
-            p = r**nu*(-1)**nu/(2*factorial(nu))
-            term = p*(digamma(nu + 1) - S.EulerGamma)
-            c.append(term)
-            for k in range(1, (newn + 1)//2):
-                p *= t/(k*(k + nu))
-                p = (_mexpand(p) + o).removeO()
-                term = p*(digamma(k + nu + 1) + digamma(k + 1))
+                p = r**nu*(-1)**nu/(2*factorial(nu))
+                term = p*(digamma(nu + 1) - S.EulerGamma)
                 c.append(term)
-            return a + Add(*b) + Add(*c) # Order term comes from a
+                for k in range(1, (newn + 1)//2):
+                    p *= t/(k*(k + nu))
+                    p = (_mexpand(p) + o).removeO()
+                    term = p*(digamma(k + nu + 1) + digamma(k + 1))
+                    c.append(term)
+                return a + Add(*b) + Add(*c) + o
+            elif nu.is_noninteger:
+                # Reference: https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/01/04/01/01/0003/
+                # (only for non-integer order).
+                # While the expression in the reference above seems correct
+                # for non-real order as well, it would need some manipulation
+                # (not implemented) to be written as a power series in x with
+                # real exponents [e.g. Dunster 1990. "Bessel functions
+                # of purely imaginary order, with an application to second-order
+                # linear differential equations having a large parameter".
+                # SIAM J. Math. Anal. Vol 21, No. 4, pp 995-1018.].
+                newn_a = ceiling((n+nu)/exp)
+                newn_b = ceiling((n-nu)/exp)
+
+                a, b = [], []
+                for k in range((newn_a+1)//2):
+                    term = gamma(nu)*r**(2*k-nu)/(2*RisingFactorial(1-nu, k)*factorial(k))
+                    a.append(_mexpand(term))
+                for k in range((newn_b+1)//2):
+                    term = gamma(-nu)*r**(2*k+nu)/(2*RisingFactorial(nu+1, k)*factorial(k))
+                    b.append(_mexpand(term))
+                return Add(*a) + Add(*b) + o
+            else:
+                raise NotImplementedError("besselk expansion is only implemented for real order")
 
         return super(besselk, self)._eval_nseries(x, n, logx, cdir)
 
