@@ -1409,6 +1409,9 @@ def test_latex_log():
     assert latex(pow(log(x), x), ln_notation=True) == \
         r"\ln{\left(x \right)}^{x}"
 
+    # issue #26897
+    assert latex(log(x, y, evaluate=False)) == r"\log_y{\left(x \right)}"
+
 
 def test_issue_3568():
     beta = Symbol(r'\beta')
