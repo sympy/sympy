@@ -1426,6 +1426,12 @@ class Ray(LinearEntity):
             'marker-start="url(#markerCircle)" marker-end="url(#markerArrow)"/>'
         ).format(2.*scale_factor, path, fill_color)
 
+    def __add__(self, other):
+        raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self), type(other)))
+
+    def __sub__(self, other):
+        raise TypeError("unsupported operand type(s) for -: '%s' and '%s'" % (type(self), type(other)))
+
     def contains(self, other):
         """
         Is other GeometryEntity contained in this Ray?
@@ -1640,6 +1646,12 @@ class Segment(LinearEntity):
         elif dim == 3:
             return Segment3D(p1, p2, **kwargs)
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
+
+    def __add__(self, other):
+        raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self), type(other)))
+
+    def __sub__(self, other):
+        raise TypeError("unsupported operand type(s) for -: '%s' and '%s'" % (type(self), type(other)))
 
     def contains(self, other):
         """
