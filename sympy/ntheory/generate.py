@@ -373,9 +373,6 @@ def prime(nth):
     Return the nth prime number, where primes are indexed starting from 1:
     prime(1) = 2, prime(2) = 3, etc.
 
-    This function efficiently computes the nth prime using a combination of
-    direct sieving for smaller values of n(< 1000) and approximation techniques for larger values.
-
     Parameters
     ==========
 
@@ -387,14 +384,6 @@ def prime(nth):
 
     int
         The nth prime number.
-
-    Notes
-    =====
-
-    For n < 1000, an empirical approximation is used by extending a sieve to
-    find the nth prime. For larger values, the logarithmic integral function
-    li(x) is utilized to estimate an upper bound for the nth prime, after which
-    a search is conducted to locate the prime.
 
     Examples
     ========
@@ -432,8 +421,7 @@ def prime(nth):
     from sympy.functions.elementary.exponential import log
     from sympy.functions.special.error_functions import li
 
-    # Use approximations for smaller values of n to avoid li computation
-    if n < 1000:  # Threshold for approximation can be adjusted
+    if n < 1000:
         # Extend sieve up to 8*n as this is empirically sufficient
         sieve.extend(8 * n)
         return sieve[n]
