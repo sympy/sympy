@@ -284,6 +284,10 @@ def get_authors_from_git():
         "whitesource-bolt-for-github[bot] " +
         "<whitesource-bolt-for-github[bot]@users.noreply.github.com>")
     git_people.pop(index)
+    index = git_people.index(
+        "dependabot[bot] " +
+        "<49699333+dependabot[bot]@users.noreply.github.com>")
+    git_people.pop(index)
 
     return git_people
 
