@@ -1397,6 +1397,19 @@ def _solve(f, *symbols, **flags):
     # captured here (for reference below) in case flag value changes
     flags['check'] = checkdens = check = flags.pop('check', True)
 
+    if f.is_Add:
+        # give it a light touch of factoring
+        _f = factor_terms(f)
+        # only keep if it identified more than 1 factor with symbol
+        if _f.is_Mul:
+            hit = False
+            for i in _f.args:
+                if i.has_free(symbol):
+                    if hit:
+                        f = _f
+                        break
+                    hit = True
+
     # build up solutions if f is a Mul
     if f.is_Mul:
         result = set()

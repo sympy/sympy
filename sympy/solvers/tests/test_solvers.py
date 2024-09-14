@@ -1054,30 +1054,7 @@ def _make_example_24609():
 def test_issue_24609():
     # https://github.com/sympy/sympy/issues/24609
     eq, expected, x = _make_example_24609()
-    assert solve(eq, x, simplify=True) == [expected]
-    [solapprox] = solve(eq.n(), x)
-    assert abs(solapprox - expected.n()) < 1e-14
-
-
-@XFAIL
-def test_issue_24609_xfail():
-    #
-    # This returns 5 solutions when it should be 1 (with x positive).
-    # Simplification reveals all solutions to be equivalent. It is expected
-    # that solve without simplify=True returns duplicate solutions in some
-    # cases but the core of this equation is a simple quadratic that can easily
-    # be solved without introducing any redundant solutions:
-    #
-    #     >>> print(factor_terms(eq.as_numer_denom()[0]))
-    #     2**(2/3)*pi**(2/3)*D_c*V**(2/3)*x**(7/3)*(231361*x**2 - 20000*pi**2)
-    #
-    eq, expected, x = _make_example_24609()
-    assert len(solve(eq, x)) == [expected]
-    #
-    # We do not want to pass this test just by using simplify so if the above
-    # passes then uncomment the additional test below:
-    #
-    # assert len(solve(eq, x, simplify=False)) == 1
+    assert solve(eq, x, simplify=False) == [expected]
 
 
 def test_polysys():
@@ -2274,10 +2251,11 @@ def test_issue_8828():
 
 def test_issue_2840_8155():
     # with parameter-free solutions (i.e. no `n`), we want to avoid
-    # excessive periodic solutions
-    assert solve(sin(3*x) + sin(6*x)) == [0, -2*pi/9, 2*pi/9]
-    assert solve(sin(300*x) + sin(600*x)) == [0, -pi/450, pi/450]
-    assert solve(2*sin(x) - 2*sin(2*x)) == [0, -pi/3, pi/3]
+    # excessive periodic solutions; we want all solutions within
+    # one period of the function (each of these has 4 such solutions)
+    assert solve(sin(3*x) + sin(6*x)) == [0, 2*pi/9, pi/3, 4*pi/9]
+    assert solve(sin(300*x) + sin(600*x)) == [0, pi/450, pi/300, pi/225]
+    assert solve(2*sin(x) - 2*sin(2*x)) == [0, pi/3, pi, 5*pi/3]
 
 
 def test_issue_9567():
