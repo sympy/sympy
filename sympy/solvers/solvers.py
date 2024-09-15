@@ -1414,8 +1414,17 @@ def _solve(f, *symbols, **flags):
     if f.is_Mul:
         result = set()
         for m in f.args:
-            soln = _vsolve(m, symbol, **flags)
-            result.update(set(soln))
+            soln = set(_vsolve(m, symbol, **flags)) - result
+            reject = set()
+            if check:
+                # we must also check solution in f in
+                # case there are values at which functions cannot be
+                # evaluated (like x=0 in equation with log(x))
+                for s in soln:
+                    if checksol(f, {symbol: s}, **flags) is False:
+                        reject.add(s)
+                        break
+            result.update(soln - reject)
         result = [{symbol: v} for v in result]
         if check:
             # all solutions have been checked but now we must

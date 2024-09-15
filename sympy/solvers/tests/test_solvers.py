@@ -2302,10 +2302,13 @@ def test_issue_12114():
             d: -f/2 + s3/2, e: -f/2 - s5/2, g: 2}]
 
 
-def test_inf():
+def test_solve_with_inf_nan():
     assert solve(1 - oo*x) == []
     assert solve(oo*x, x) == []
     assert solve(oo*x - oo, x) == []
+    assert solve(x*(y + oo)) == []
+    assert solve(x*(y - oo)) == []
+    assert solve(x*log(x)) == [1]
 
 
 def test_issue_12448():
