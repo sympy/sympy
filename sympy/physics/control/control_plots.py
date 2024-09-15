@@ -1024,6 +1024,7 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, show=True,
         :context: close-figs
         :format: doctest
         :include-source: True
+
         >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunction
         >>> from sympy.physics.control.control_plots import nyquist_plot
@@ -1033,7 +1034,8 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, show=True,
     See Also
     ========
 
-    bode_plot, nyquist_numerical_data
+    bode_plot
+
     """
     real_expr, imag_expr, w = _get_nyquist_expr(system)
     w_values = [(w, initial_omega, final_omega)]
