@@ -323,9 +323,16 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    res = (-1) ** sympify(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
-        wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
-    return res
+    j_1 = sympify(j_1)
+    j_2 = sympify(j_2)
+    j_3 = sympify(j_3)
+    m_1 = sympify(m_1)
+    m_2 = sympify(m_2)
+    m_3 = sympify(m_3)
+
+    w = wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
+
+    return (-1) ** (j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * w
 
 
 def _big_delta_coeff(aa, bb, cc, prec=None):

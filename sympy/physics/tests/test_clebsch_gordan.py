@@ -8,7 +8,7 @@ from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import Matrix
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
         real_gaunt, racah, dot_rot_grad_Ynm, wigner_3j, wigner_d_small, wigner_d)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
 
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
@@ -53,6 +53,14 @@ def test_clebsch_gordan():
     assert clebsch_gordan(p, h, n, p, 1, n) == 1
     assert clebsch_gordan(p, h, p, p, 0, p) == sqrt(5)/sqrt(7)
     assert clebsch_gordan(p, h, l, k, 1, l) == 1/sqrt(15)
+
+
+def test_clebsch_gordan_numpy():
+    try:
+        import numpy as np
+    except ImportError:
+        skip("numpy not installed")
+    assert clebsch_gordan(*np.zeros(6).astype(np.int64)) == 1
 
 
 def test_wigner():
