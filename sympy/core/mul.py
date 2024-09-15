@@ -377,6 +377,14 @@ class Mul(Expr, AssocOp):
                 coeff = S.ComplexInfinity
                 continue
 
+            elif not coeff and isinstance(o, Add) and any(
+                    _ in (S.NegativeInfinity, S.ComplexInfinity, S.Infinity)
+                    for __ in o.args for _ in Mul.make_args(__)):
+                # e.g 0 * (x + oo) = NaN but not
+                # 0 * (1 + Integral(x, (x, 0, oo))) which is
+                # treated like 0 * x -> 0
+                return [S.NaN], [], None
+
             elif o is S.ImaginaryUnit:
                 neg1e += S.Half
                 continue
