@@ -1568,6 +1568,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         'heurisch': heurisch,
         'manual': manual
         }
+
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
@@ -1576,7 +1577,6 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         new_args = [a.doit(**doit_flags) if isinstance(a, Integral) else a
             for a in integral.args]
         return integral.func(*new_args)
-
 
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)
