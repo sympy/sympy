@@ -85,7 +85,7 @@ def test_DiscreteMarkovChain():
     assert Y.number_of_states == ceiling((t-1)/2)
 
     # pass name and transition_probabilities
-    chains = [DiscreteMarkovChain("Y", trans_probs=Matrix([[]])),
+    chains = [DiscreteMarkovChain("Y", trans_probs=Matrix([])),
               DiscreteMarkovChain("Y", trans_probs=Matrix([[0, 1], [1, 0]])),
               DiscreteMarkovChain("Y", trans_probs=Matrix([[pi, 1-pi], [sym, 1-sym]]))]
     for Z in chains:
@@ -169,12 +169,12 @@ def test_DiscreteMarkovChain():
                                                             [Rational(-14, 75), Rational(1, 25), Rational(86, 75)]])
 
     # test for zero-sized matrix functionality
-    X = DiscreteMarkovChain('X', trans_probs=Matrix([[]]))
+    X = DiscreteMarkovChain('X', trans_probs=Matrix([]))
     assert X.number_of_states == 0
     assert X.stationary_distribution() == Matrix([[]])
     assert X.communication_classes() == []
-    assert X.canonical_form() == ([], Matrix([[]]))
-    assert X.decompose() == ([], Matrix([[]]), Matrix([[]]), Matrix([[]]))
+    assert X.canonical_form() == ([], Matrix([]))
+    assert X.decompose() == ([], Matrix([]), Matrix([]), Matrix([]))
     assert X.is_regular() == False
     assert X.is_ergodic() == False
 
