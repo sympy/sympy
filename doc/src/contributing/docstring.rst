@@ -93,7 +93,7 @@ the end of this guide.
 Formatting
 -------------
 
-Docstrings are are written in `reStructuredText
+Docstrings are written in `reStructuredText
 <https://docutils.sourceforge.io/rst.html>`_ format extended by `Sphinx
 <https://www.sphinx-doc.org/en/master/>`_. Here is a concise guide to `Quick
 reStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickref.html>`_. More in-depth
@@ -742,7 +742,7 @@ Here are some troubleshooting tips to fix the errors:
   names that are specific to the text at hand. In general, if the object cannot
   be accessed as ``sympy.something.something.object``, it cannot be
   cross-referenced and you should not use the ``:obj:`` syntax.
-* If you are using are using one of the `type specific
+* If you are using one of the `type specific
   <https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#cross-referencing-python-objects>`_
   identifiers like ``:func:``, be sure that the type for it is correct.
   ``:func:`` only refers to Python functions. For classes, you need to use
