@@ -1026,7 +1026,7 @@ def nichols_plot(system, initial_omega=0.01, final_omega=100, show=True, color='
         :include-source: True
         >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunction
-        >>> from sympy.physics.control.control_plots import nyquist_plot
+        >>> from sympy.physics.control.control_plots import nichols_plot
         >>> tf1 = TransferFunction(1.5, s**2+14*s+40.02, s)
         >>> nichols_plot(tf1)   # doctest: +SKIP
     """
