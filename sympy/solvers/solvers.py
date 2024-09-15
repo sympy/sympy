@@ -1324,6 +1324,14 @@ def _solve(f, *symbols, **flags):
 
     not_impl_msg = "No algorithms are implemented to solve equation %s"
 
+
+    # don't allow solutions when there are added or multiplied infinities
+    for m in Mul.make_args(f):
+        for a in Add.make_args(m):
+            for _ in Mul.make_args(a):
+                if _ in _illegal:
+                    return []
+
     if len(symbols) != 1:
         # look for solutions for desired symbols that are independent
         # of symbols already solved for, e.g. if we solve for x = y
@@ -1393,9 +1401,6 @@ def _solve(f, *symbols, **flags):
     if f.is_Mul:
         result = set()
         for m in f.args:
-            if m in {S.NegativeInfinity, S.ComplexInfinity, S.Infinity}:
-                result = set()
-                break
             soln = _vsolve(m, symbol, **flags)
             result.update(set(soln))
         result = [{symbol: v} for v in result]
@@ -2197,9 +2202,11 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         if dnewn_dxi and (not free or any(dnewn_dxi.diff(s) for s in free) or free == symbols):
             all_zero = False
             if dnewn_dxi is S.NaN:
-                break
+                break  # not going to handle
             if xi not in dnewn_dxi.free_symbols:
                 vi = -1/dnewn_dxi*(newn.subs(xi, 0))
+                if vi is S.NaN:
+                    break  # not going to handle
                 if dens is None:
                     dens = _simple_dens(eq, symbols)
                 if not any(checksol(di, {xi: vi}, minimal=True) is True

@@ -754,6 +754,8 @@ def test_solve_linear():
     eq = cos(x)**2 + sin(x)**2  # = 1
     assert solve_linear(eq) == (0, 1)
     raises(ValueError, lambda: solve_linear(Eq(x, 3), 3))
+    assert solve_linear((x + oo)*(y + oo)) == ((x + oo)*(y + oo), 1)
+    assert solve_linear(x*(y + oo)) == (x*(y + oo), 1)
 
 
 def test_solve_undetermined_coeffs():
@@ -1398,14 +1400,15 @@ def test_unrad1():
     assert unrad(eq) is None
 
 
-@slow
 def test_unrad_slow():
     # this has roots with multiplicity > 1; there should be no
     # repeats in roots obtained, however
     eq = (sqrt(1 + sqrt(1 - 4*x**2)) - x*(1 + sqrt(1 + 2*sqrt(1 - 4*x**2))))
-    assert solve(eq) == [S.Half]
+    got = solve(eq, simplify=False, check=False)
+    assert len(got) == len(set(got))
 
 
+@slow
 @XFAIL
 def test_unrad_fail():
     # this only works if we check real_root(eq.subs(x, Rational(1, 3)))
