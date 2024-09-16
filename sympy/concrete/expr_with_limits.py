@@ -1,7 +1,7 @@
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import AppliedUndef, UndefinedFunction
+from sympy.core.function import AppliedUndef, UndefinedFunction, Derivative
 from sympy.core.mul import Mul
 from sympy.core.relational import Equality, Relational
 from sympy.core.singleton import S
@@ -61,7 +61,7 @@ def _common_new(cls, function, *symbols, discrete, **assumptions):
                 limits[i] = Tuple(*li[:-1])
     else:
         # symbol not provided -- we can still try to compute a general form
-        free = function.free_symbols
+        free = (function.expr if isinstance(function, Derivative) else function).free_symbols
         if len(free) != 1:
             raise ValueError(
                 "specify dummy variables for %s" % function)

@@ -6,6 +6,7 @@ import re
 
 from collections.abc import Iterable
 from sympy.core.function import Derivative
+from sympy.core.symbol import Dummy
 
 _name_with_digits_p = re.compile(r'^([^\W\d_]+)(\d+)$', re.U)
 
@@ -78,11 +79,21 @@ def requires_partial(expr):
     free variables. In that case, check its variable list explicitly to
     get the context of the expression.
     """
-
-    if isinstance(expr, Derivative):
-        return requires_partial(expr.expr)
-
     if not isinstance(expr.free_symbols, Iterable):
         return len(set(expr.variables)) > 1
 
-    return sum(not s.is_integer for s in expr.free_symbols) > 1
+    derivs = {}
+    free = expr.replace(
+        lambda x: isinstance(x, Derivative),
+        lambda x: derivs.setdefault(x, Dummy())).free_symbols - set(derivs.values())
+    for k in derivs:
+        free |= k.expr.free_symbols
+
+    # is more than 1 symbol not an integer?
+    one = False
+    for s in free:
+        if not s.is_integer:
+            if one:
+                return True
+            one = True
+    return False
