@@ -337,7 +337,7 @@ def _free_symbols(eq):
     >>> Derivative(1, x).free_symbols
     {x}
     >>> _free_symbols(Derivative(1, x))
-    {}
+    set()
     >>> _free_symbols([y + Derivative(1, x)])
     {y}
     """
