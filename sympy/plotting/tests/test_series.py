@@ -90,7 +90,8 @@ def test_detect_poles():
         assert not np.any(np.isnan(yy1))
         assert np.any(np.isnan(yy2)) and np.any(np.isnan(yy2))
         assert not np.allclose(yy1, yy2, equal_nan=True)
-        assert len(s3.poles_locations) == 0
+        # The poles below are actually step discontinuities.
+        assert len(s3.poles_locations) == 21
 
     s1 = LineOver1DRangeSeries(tan(u * x), (x, -pi, pi), params={u: 1},
         adaptive=False, n=1000, detect_poles=False)

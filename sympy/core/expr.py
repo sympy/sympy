@@ -2967,6 +2967,11 @@ class Expr(Basic, EvalfMixin):
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
 
+        if n is not None:
+            n = int(n)
+            if n < 0:
+                raise ValueError("Number of terms should be nonnegative")
+
         x0 = sympify(x0)
         cdir = sympify(cdir)
         from sympy.functions.elementary.complexes import im, sign
@@ -3236,7 +3241,8 @@ class Expr(Basic, EvalfMixin):
             logw = log(1/res)
 
         s = func.series(k, 0, n)
-
+        from sympy.core.function import expand_mul
+        s = expand_mul(s)
         # Hierarchical series
         if hir:
             return s.subs(k, exp(logw))
@@ -3483,6 +3489,7 @@ class Expr(Basic, EvalfMixin):
         elif not symbols:
             return self
         x = sympify(symbols[0])
+        cdir = sympify(cdir)
         if not x.is_symbol:
             raise ValueError('expecting a Symbol but got %s' % x)
         if x not in self.free_symbols:
@@ -3493,7 +3500,7 @@ class Expr(Basic, EvalfMixin):
             return powsimp(obj, deep=True, combine='exp')
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         return self
 
     def as_coeff_exponent(self, x) -> tuple[Expr, Expr]:
@@ -3631,15 +3638,17 @@ class Expr(Basic, EvalfMixin):
            log=log, multinomial=multinomial, basic=basic)
 
         expr = self
+        # default matches fraction's default
+        _fraction = lambda x: fraction(x, hints.get('exact', False))
         if hints.pop('frac', False):
             n, d = [a.expand(deep=deep, modulus=modulus, **hints)
-                    for a in fraction(self)]
+                    for a in _fraction(self)]
             return n/d
         elif hints.pop('denom', False):
-            n, d = fraction(self)
+            n, d = _fraction(self)
             return n/d.expand(deep=deep, modulus=modulus, **hints)
         elif hints.pop('numer', False):
-            n, d = fraction(self)
+            n, d = _fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
 
         # Although the hints are sorted here, an earlier hint may get applied
@@ -3973,8 +3982,8 @@ class AtomicExpr(Atom, Expr):
     def _eval_derivative_n_times(self, s, n):
         from .containers import Tuple
         from sympy.matrices.expressions.matexpr import MatrixExpr
-        from sympy.matrices.common import MatrixCommon
-        if isinstance(s, (MatrixCommon, Tuple, Iterable, MatrixExpr)):
+        from sympy.matrices.matrixbase import MatrixBase
+        if isinstance(s, (MatrixBase, Tuple, Iterable, MatrixExpr)):
             return super()._eval_derivative_n_times(s, n)
         from .relational import Eq
         from sympy.functions.elementary.piecewise import Piecewise

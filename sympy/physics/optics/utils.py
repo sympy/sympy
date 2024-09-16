@@ -196,8 +196,8 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
 
     eta = n1/n2  # Relative index of refraction
     # Calculating magnitude of the vectors
-    mag_incident = sqrt(sum([i**2 for i in _incident]))
-    mag_normal = sqrt(sum([i**2 for i in _normal]))
+    mag_incident = sqrt(sum(i**2 for i in _incident))
+    mag_normal = sqrt(sum(i**2 for i in _normal))
     # Converting vectors to unit vectors by dividing
     # them with their magnitudes
     _incident /= mag_incident
@@ -382,9 +382,9 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
         else:
             _normal = Matrix(plane.normal_vector)
 
-        mag_incident = sqrt(sum([i**2 for i in _incident]))
-        mag_normal = sqrt(sum([i**2 for i in _normal]))
-        mag_refracted = sqrt(sum([i**2 for i in refracted]))
+        mag_incident = sqrt(sum(i**2 for i in _incident))
+        mag_normal = sqrt(sum(i**2 for i in _normal))
+        mag_refracted = sqrt(sum(i**2 for i in refracted))
         _incident /= mag_incident
         _normal /= mag_normal
         refracted /= mag_refracted
@@ -671,8 +671,8 @@ def hyperfocal_distance(f, N, c):
 def transverse_magnification(si, so):
     """
 
-    Calculates the transverse magnification, which is the ratio of the
-    image size to the object size.
+    Calculates the transverse magnification upon reflection in a mirror,
+    which is the ratio of the image size to the object size.
 
     Parameters
     ==========

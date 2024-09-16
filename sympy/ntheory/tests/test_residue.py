@@ -2,16 +2,16 @@ from collections import defaultdict
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
-
+from sympy.functions.combinatorial.numbers import totient
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
-    legendre_symbol, jacobi_symbol, kronecker_symbol, totient, primerange, sqrt_mod, \
+    legendre_symbol, jacobi_symbol, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
     sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
     polynomial_congruence, sieve
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _primitive_root_prime_power_iter, _primitive_root_prime_power2_iter, \
     _nthroot_mod_prime_power, _discrete_log_trial_mul, _discrete_log_shanks_steps, \
-    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman, \
+    _discrete_log_pollard_rho, _discrete_log_index_calculus, _discrete_log_pohlig_hellman, \
     _binomial_mod_prime_power, binomial_mod
 from sympy.polys.domains import ZZ
 from sympy.testing.pytest import raises
@@ -240,57 +240,8 @@ def test_residue():
                 else:
                     assert ans2 in ans
 
-    assert legendre_symbol(5, 11) == 1
-    assert legendre_symbol(25, 41) == 1
-    assert legendre_symbol(67, 101) == -1
-    assert legendre_symbol(0, 13) == 0
-    assert legendre_symbol(9, 3) == 0
-    raises(ValueError, lambda: legendre_symbol(2, 4))
-
-    assert jacobi_symbol(25, 41) == 1
-    assert jacobi_symbol(-23, 83) == -1
-    assert jacobi_symbol(3, 9) == 0
-    assert jacobi_symbol(42, 97) == -1
-    assert jacobi_symbol(3, 5) == -1
-    assert jacobi_symbol(7, 9) == 1
-    assert jacobi_symbol(0, 3) == 0
-    assert jacobi_symbol(0, 1) == 1
-    assert jacobi_symbol(2, 1) == 1
-    assert jacobi_symbol(1, 3) == 1
-    raises(ValueError, lambda: jacobi_symbol(3, 8))
-
-    for n in range(3, 10, 2):
-        for a in range(-n, n):
-            val = kronecker_symbol(a, n)
-            assert val == jacobi_symbol(a, n)
-            minus = kronecker_symbol(a, -n)
-            if a < 0:
-                assert -minus == val
-            else:
-                assert minus == val
-            even = kronecker_symbol(a, 2 * n)
-            if a % 2 == 0:
-                assert even == 0
-            elif a % 8 in [1, 7]:
-                assert even == val
-            else:
-                assert -even == val
-    assert kronecker_symbol(1, 0) == kronecker_symbol(-1, 0) == 1
-    assert kronecker_symbol(0, 0) == 0
-
-    assert mobius(13*7) == 1
-    assert mobius(1) == 1
-    assert mobius(13*7*5) == -1
-    assert mobius(13**2) == 0
-    raises(ValueError, lambda: mobius(-3))
-
-    p = Symbol('p', integer=True, positive=True, prime=True)
     x = Symbol('x', positive=True)
     i = Symbol('i', integer=True)
-    assert mobius(p) == -1
-    raises(TypeError, lambda: mobius(x))
-    raises(ValueError, lambda: mobius(i))
-
     assert _discrete_log_trial_mul(587, 2**7, 2) == 7
     assert _discrete_log_trial_mul(941, 7**18, 7) == 18
     assert _discrete_log_trial_mul(389, 3**81, 3) == 81
@@ -305,7 +256,11 @@ def test_residue():
     assert _discrete_log_pollard_rho(24567899, 3**333, 3, rseed=0) == 333
     raises(ValueError, lambda: _discrete_log_pollard_rho(11, 7, 31, rseed=0))
     raises(ValueError, lambda: _discrete_log_pollard_rho(227, 3**7, 5, rseed=0))
-
+    assert _discrete_log_index_calculus(983, 948, 2, 491) == 183
+    assert _discrete_log_index_calculus(633383, 21794, 2, 316691) == 68048
+    assert _discrete_log_index_calculus(941762639, 68822582, 2, 470881319) == 338029275
+    assert _discrete_log_index_calculus(999231337607, 888188918786, 2, 499615668803) == 142811376514
+    assert _discrete_log_index_calculus(47747730623, 19410045286, 43425105668, 645239603) == 590504662
     assert _discrete_log_pohlig_hellman(98376431, 11**9, 11) == 9
     assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
     assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98
@@ -314,6 +269,10 @@ def test_residue():
     assert discrete_log(2456747, 3**51, 3) == 51
     assert discrete_log(32942478, 11**127, 11) == 127
     assert discrete_log(432751500361, 7**324, 7) == 324
+    assert discrete_log(265390227570863,184500076053622, 2) == 17835221372061
+    assert discrete_log(22708823198678103974314518195029102158525052496759285596453269189798311427475159776411276642277139650833937,
+                        17463946429475485293747680247507700244427944625055089103624311227422110546803452417458985046168310373075327,
+                        123456) == 2068031853682195777930683306640554533145512201725884603914601918777510185469769997054750835368413389728895
     args = 5779, 3528, 6215
     assert discrete_log(*args) == 687
     assert discrete_log(*Tuple(*args)) == 687
@@ -373,3 +332,14 @@ def test_binomial_p_pow():
     for _ in range(trials):
         m, prime, power = randint(0, n), choice(primes), randint(1, 10)
         assert _binomial_mod_prime_power(n, m, prime, power) == binomials[m] % prime**power
+
+
+def test_deprecated_ntheory_symbolic_functions():
+    from sympy.testing.pytest import warns_deprecated_sympy
+
+    with warns_deprecated_sympy():
+        assert mobius(3) == -1
+    with warns_deprecated_sympy():
+        assert legendre_symbol(2, 3) == -1
+    with warns_deprecated_sympy():
+        assert jacobi_symbol(2, 3) == -1

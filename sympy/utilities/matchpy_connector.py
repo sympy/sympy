@@ -23,7 +23,12 @@ from sympy.integrals.integrals import Integral
 from sympy.printing.repr import srepr
 from sympy.utilities.decorator import doctest_depends_on
 
+
 matchpy = import_module("matchpy")
+
+
+__doctest_requires__ = {('*',): ['matchpy']}
+
 
 if matchpy:
     from matchpy import Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation

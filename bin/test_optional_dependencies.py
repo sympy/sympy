@@ -128,6 +128,18 @@ doctest_list = [
 ]
 
 
+# This is just needed for the numpy nightly job which does not have matplotlib
+# Otherwise these could be added to doctest_list above
+try:
+    import matplotlib
+    doctest_list.extend([
+        'doc/src/tutorials/biomechanics/biomechanical-model-example.rst',
+        'doc/src/tutorials/biomechanics/biomechanics.rst',
+    ])
+except ImportError:
+    pass
+
+
 print('Testing optional dependencies')
 
 

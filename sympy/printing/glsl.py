@@ -38,7 +38,7 @@ class GLSLPrinter(CodePrinter):
     printmethod = "_glsl"
     language = "GLSL"
 
-    _default_settings = {
+    _default_settings = dict(CodePrinter._default_settings, **{
         'use_operators': True,
         'zero': 0,
         'mat_nested': False,
@@ -47,16 +47,10 @@ class GLSLPrinter(CodePrinter):
         'array_type': 'float',
         'glsl_types': True,
 
-        'order': None,
-        'full_prec': 'auto',
         'precision': 9,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
-        'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-    }
+    })
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -263,9 +257,6 @@ class GLSLPrinter(CodePrinter):
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array

@@ -41,6 +41,7 @@ _known_functions_math = {
     'floor': 'floor',
     'gamma': 'gamma',
     'hypot': 'hypot',
+    'isinf': 'isinf',
     'isnan': 'isnan',
     'loggamma': 'lgamma',
     'log': 'log',
@@ -558,6 +559,9 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         PREC = precedence(expr)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
+    def _print_IndexedBase(self, expr):
+        return expr.name
+
     def _print_Indexed(self, expr):
         base = expr.args[0]
         index = expr.args[1:]
@@ -744,6 +748,15 @@ class MpmathPrinter(PythonCodePrinter):
                 ", ".join("(%s, %s)" % tuple(map(self._print, l)) for l in limits))
 
 
+    def _print_Derivative_zeta(self, args, seq_orders):
+        arg, = args
+        deriv_order, = seq_orders
+        return '{}({}, derivative={})'.format(
+            self._module_format('mpmath.zeta'),
+            self._print(arg), deriv_order
+        )
+
+
 for k in MpmathPrinter._kf:
     setattr(MpmathPrinter, '_print_%s' % k, _print_known_func)
 
@@ -754,6 +767,11 @@ for k in _known_constants_mpmath:
 class SymPyPrinter(AbstractPythonCodePrinter):
 
     language = "Python with SymPy"
+
+    _default_settings = dict(
+        AbstractPythonCodePrinter._default_settings,
+        strict=False   # any class name will per definition be what we target in SymPyPrinter.
+    )
 
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''

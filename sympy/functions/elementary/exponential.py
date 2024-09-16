@@ -8,7 +8,7 @@ from sympy.core.function import (Function, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational, pi, I, ImaginaryUnit
+from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -275,7 +275,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.sets.setexpr import SetExpr
         from sympy.simplify.simplify import logcombine
         if isinstance(arg, MatrixBase):
@@ -495,8 +495,10 @@ class exp(ExpBase, metaclass=ExpMeta):
             return Order(x**n, x)
         if arg0 is S.Infinity:
             return self
+        if arg0.is_infinite:
+            raise PoleError("Cannot expand %s around 0" % (self))
         # checking for indecisiveness/ sign terms in arg0
-        if any(isinstance(arg, (sign, ImaginaryUnit)) for arg in arg0.args):
+        if any(isinstance(arg, sign) for arg in arg0.args):
             return self
         t = Dummy("t")
         nterms = n
@@ -532,7 +534,7 @@ class exp(ExpBase, metaclass=ExpMeta):
             l.append(g.removeO())
         return Add(*l)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.util import AccumBounds
         arg = self.args[0].cancel().as_leading_term(x, logx=logx)
         arg0 = arg.subs(x, 0)
@@ -587,7 +589,7 @@ def match_real_imag(expr):
 
     ``match_real_imag`` returns a tuple containing the real and imaginary
     parts of expr or ``(None, None)`` if direct matching is not possible. Contrary
-    to :func:`~.re()`, :func:`~.im()``, and ``as_real_imag()``, this helper will not force things
+    to :func:`~.re`, :func:`~.im``, and ``as_real_imag()``, this helper will not force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
     does not expand its argument either.
 
@@ -780,12 +782,6 @@ class log(Function):
                             return cls(modulus) + I * (-atan_table[t1])
                         else:
                             return cls(modulus) + I * (pi - atan_table[t1])
-
-    def as_base_exp(self):
-        """
-        Returns this function in the form (base, exponent).
-        """
-        return self, S.One
 
     @staticmethod
     @cacheit
@@ -999,7 +995,7 @@ class log(Function):
             except ValueError:
                 a, b = s.removeO().as_leading_term(t, cdir=1), S.Zero
 
-        p = (z/(a*t**b) - 1)._eval_nseries(t, n=n, logx=logx, cdir=1)
+        p = (z/(a*t**b) - 1).cancel()._eval_nseries(t, n=n, logx=logx, cdir=1)
         if p.has(exp):
             p = logcombine(p)
         if isinstance(p, Order):
@@ -1044,14 +1040,13 @@ class log(Function):
         while k*d < n:
             coeff = -S.NegativeOne**k/k
             for ex in pk:
-                _ = terms.get(ex, S.Zero) + coeff*pk[ex]
-                terms[ex] = _.nsimplify()
+                terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
             pk = mul(pk, pterms)
             k += S.One
 
         res = log(a) - b*log(cdir) + b*logx
         for ex in terms:
-            res += terms[ex]*t**(ex)
+            res += terms[ex].cancel()*t**(ex)
 
         if a.is_negative and im(z) != 0:
             from sympy.functions.special.delta_functions import Heaviside
@@ -1065,7 +1060,7 @@ class log(Function):
         res = res.subs(t, x/cdir)
         return res + Order(x**n, x)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         # NOTE
         # Refer https://github.com/sympy/sympy/pull/23592 for more information
         # on each of the following steps involved in this method.
@@ -1171,8 +1166,6 @@ class LambertW(Function):
                 return S.Exp1
             if x is S.Infinity:
                 return S.Infinity
-            if x.is_zero:
-                return S.Zero
 
         if fuzzy_not(k.is_zero):
             if x.is_zero:
@@ -1232,7 +1225,7 @@ class LambertW(Function):
         else:
             return s.is_algebraic
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         if len(self.args) == 1:
             arg = self.args[0]
             arg0 = arg.subs(x, 0).cancel()

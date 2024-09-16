@@ -92,8 +92,20 @@ def test_DomainMatrix_from_list():
     dom = FF(7)
     ddm = DDM([[dom(1), dom(2)], [dom(3), dom(4)]], (2, 2), dom)
     A = DomainMatrix.from_list([[1, 2], [3, 4]], dom)
-    # Not a DFM because FF(7) is not supported by DFM
-    assert A.rep == ddm
+    if GROUND_TYPES != 'flint':
+        assert A.rep == ddm
+    else:
+        assert A.rep == ddm.to_dfm()
+    assert A.shape == (2, 2)
+    assert A.domain == dom
+
+    dom = FF(2**127-1)
+    ddm = DDM([[dom(1), dom(2)], [dom(3), dom(4)]], (2, 2), dom)
+    A = DomainMatrix.from_list([[1, 2], [3, 4]], dom)
+    if GROUND_TYPES != 'flint':
+        assert A.rep == ddm
+    else:
+        assert A.rep == ddm.to_dfm()
     assert A.shape == (2, 2)
     assert A.domain == dom
 
@@ -327,6 +339,21 @@ def test_DomainMatrix_from_list_flat():
     raises(DMBadInputError, SDM.from_list_flat, nums, (2, 3), ZZ)
 
 
+def test_DomainMatrix_to_dod():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.to_dod() == {0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}
+    A = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(0), ZZ(4)]], (2, 2), ZZ)
+    assert A.to_dod() == {0: {0: ZZ(1)}, 1: {1: ZZ(4)}}
+
+
+def test_DomainMatrix_from_dod():
+    items = {0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}
+    A = DM([[1, 2], [3, 4]], ZZ)
+    assert DomainMatrix.from_dod(items, (2, 2), ZZ) == A.to_sparse()
+    assert A.from_dod_like(items) == A
+    assert A.from_dod_like(items, QQ) == A.convert_to(QQ)
+
+
 def test_DomainMatrix_to_dok():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     assert A.to_dok() == {(0, 0):ZZ(1), (0, 1):ZZ(2), (1, 0):ZZ(3), (1, 1):ZZ(4)}
@@ -556,10 +583,35 @@ def test_DomainMatrix_clear_denoms():
 
     den_Z = DomainScalar(ZZ(60), ZZ)
     Anum_Z = DM([[30, 20], [15, 12]], ZZ)
-    Anum_Q = DM([[30, 20], [15, 12]], QQ)
+    Anum_Q = Anum_Z.convert_to(QQ)
 
     assert A.clear_denoms() == (den_Z, Anum_Q)
     assert A.clear_denoms(convert=True) == (den_Z, Anum_Z)
+    assert A * den_Z == Anum_Q
+    assert A == Anum_Q / den_Z
+
+
+def test_DomainMatrix_clear_denoms_rowwise():
+    A = DM([[(1,2),(1,3)],[(1,4),(1,5)]], QQ)
+
+    den_Z = DM([[6, 0], [0, 20]], ZZ).to_sparse()
+    Anum_Z = DM([[3, 2], [5, 4]], ZZ)
+    Anum_Q = DM([[3, 2], [5, 4]], QQ)
+
+    assert A.clear_denoms_rowwise() == (den_Z, Anum_Q)
+    assert A.clear_denoms_rowwise(convert=True) == (den_Z, Anum_Z)
+    assert den_Z * A == Anum_Q
+    assert A == den_Z.to_field().inv() * Anum_Q
+
+    A = DM([[(1,2),(1,3),0,0],[0,0,0,0], [(1,4),(1,5),(1,6),(1,7)]], QQ)
+    den_Z = DM([[6, 0, 0], [0, 1, 0], [0, 0, 420]], ZZ).to_sparse()
+    Anum_Z = DM([[3, 2, 0, 0], [0, 0, 0, 0], [105, 84, 70, 60]], ZZ)
+    Anum_Q = Anum_Z.convert_to(QQ)
+
+    assert A.clear_denoms_rowwise() == (den_Z, Anum_Q)
+    assert A.clear_denoms_rowwise(convert=True) == (den_Z, Anum_Z)
+    assert den_Z * A == Anum_Q
+    assert A == den_Z.to_field().inv() * Anum_Q
 
 
 def test_DomainMatrix_cancel_denom():

@@ -51,10 +51,12 @@ def pytest_report_header(config):
 
         version = gmpy2.version()
     elif GROUND_TYPES == "flint":
-        # XXX: flint does not have a version() function
-        # import flint
-        # version = flint.version()
-        version = "unknown"
+        try:
+            from flint import __version__
+        except ImportError:
+            version = "unknown"
+        else:
+            version = f'(python-flint=={__version__})'
     s += "ground types: %s %s\n" % (GROUND_TYPES, version)
     return s
 

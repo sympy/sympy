@@ -298,6 +298,7 @@ class ComplexRootOf(RootOf):
     is_complex = True
     is_number = True
     is_finite = True
+    is_algebraic = True
 
     def __new__(cls, f, x, index=None, radicals=False, expand=True):
         """ Construct an indexed complex root of a polynomial.
@@ -424,7 +425,7 @@ class ComplexRootOf(RootOf):
         else:
             _reals_cache[currentfactor] = real_part = \
                 dup_isolate_real_roots_sqf(
-                    currentfactor.rep.rep, currentfactor.rep.dom, blackbox=True)
+                    currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
 
         return real_part
 
@@ -436,7 +437,7 @@ class ComplexRootOf(RootOf):
         else:
             _complexes_cache[currentfactor] = complex_part = \
                 dup_isolate_complex_roots_sqf(
-                currentfactor.rep.rep, currentfactor.rep.dom, blackbox=True)
+                currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
         return complex_part
 
     @classmethod
@@ -635,7 +636,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _count_roots(cls, roots):
         """Count the number of real or complex roots with multiplicities."""
-        return sum([k for _, _, k in roots])
+        return sum(k for _, _, k in roots)
 
     @classmethod
     def _indexed_root(cls, poly, index, lazy=False):
@@ -762,6 +763,9 @@ class ComplexRootOf(RootOf):
         """Return postprocessed roots of specified kind. """
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
+
+        dom = poly.get_domain()
+
         # get rid of gen and it's free symbol
         d = Dummy()
         poly = poly.subs(poly.gen, d)
@@ -771,14 +775,62 @@ class ComplexRootOf(RootOf):
         free_names = {str(i) for i in poly.free_symbols}
         for x in chain((symbols('x'),), numbered_symbols('x')):
             if x.name not in free_names:
-                poly = poly.xreplace({d: x})
+                poly = poly.replace(d, x)
                 break
+
+        if dom.is_QQ or dom.is_ZZ:
+            return cls._get_roots_qq(method, poly, radicals)
+        elif dom.is_AlgebraicField or dom.is_ZZ_I or dom.is_QQ_I:
+            return cls._get_roots_alg(method, poly, radicals)
+        else:
+            # XXX: not sure how to handle ZZ[x] which appears in some tests?
+            # this makes the tests pass alright but has to be a better way?
+            return cls._get_roots_qq(method, poly, radicals)
+
+
+    @classmethod
+    def _get_roots_qq(cls, method, poly, radicals):
+        """Return postprocessed roots of specified kind
+         for polynomials with rational coefficients. """
         coeff, poly = cls._preprocess_roots(poly)
         roots = []
 
         for root in getattr(cls, method)(poly):
             roots.append(coeff*cls._postprocess_root(root, radicals))
+
         return roots
+
+    @classmethod
+    def _get_roots_alg(cls, method, poly, radicals):
+        """Return postprocessed roots of specified kind
+         for polynomials with algebraic coefficients. It assumes
+         the domain is already an algebraic field. First it
+         finds the roots using _get_roots_qq, then uses the
+         square-free factors to filter roots and get the correct
+         multiplicity.
+         """
+
+        # Existing QQ code can find and sort the roots
+        roots = cls._get_roots_qq(method, poly.lift(), radicals)
+
+        subroots = {}
+        for f, m in poly.sqf_list()[1]:
+            if method == "_real_roots":
+                roots_filt = f.which_real_roots(roots)
+            elif method == "_all_roots":
+                roots_filt = f.which_all_roots(roots)
+            for r in roots_filt:
+                subroots[r] = m
+
+        roots_seen = set()
+        roots_flat = []
+        for r in roots:
+            if r in subroots and r not in roots_seen:
+                m = subroots[r]
+                roots_flat.extend([r] * m)
+                roots_seen.add(r)
+
+        return roots_flat
 
     @classmethod
     def clear_cache(cls):

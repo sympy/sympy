@@ -1,5 +1,7 @@
+.. _physics_high_energy_physics:
+
 ===================
-High energy physics
+High Energy Physics
 ===================
 
 .. topic:: Abstract

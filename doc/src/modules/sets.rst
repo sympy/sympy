@@ -26,9 +26,6 @@ Elementary Sets
 Compound Sets
 -------------
 
-.. module:: sympy.sets.sets
-   :noindex:
-
 .. autoclass:: Union
    :members:
 

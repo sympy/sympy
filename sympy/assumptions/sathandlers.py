@@ -184,8 +184,7 @@ class ClassFactRegistry:
 
         handlers1, handlers2 = self[type(expr)]
 
-        for h in handlers1:
-            ret.add(h(expr))
+        ret.update(h(expr) for h in handlers1)
         for h in handlers2:
             ret.update(h(expr))
         return ret

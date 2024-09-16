@@ -10,7 +10,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.sets.sets import Interval, Set
 from sympy.sets.fancysets import Range
 from sympy.tensor.indexed import Idx

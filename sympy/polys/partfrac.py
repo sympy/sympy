@@ -368,7 +368,7 @@ def apart_list_full_decomposition(P, Q, dummygen):
     .. [1] [Bronstein93]_
 
     """
-    f, x, U = P/Q, P.gen, []
+    P_orig, Q_orig, x, U = P, Q, P.gen, []
 
     u = Function('u')(x)
     a = Dummy('a')
@@ -379,7 +379,7 @@ def apart_list_full_decomposition(P, Q, dummygen):
         b = d.as_expr()
         U += [ u.diff(x, n - 1) ]
 
-        h = cancel(f*b**n) / u**n
+        h = cancel(P_orig/Q_orig.quo(d**n)) / u**n
 
         H, subs = [h], []
 

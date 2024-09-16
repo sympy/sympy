@@ -239,10 +239,9 @@ def test_DFM_domains():
         flint_funcs = {
             ZZ: flint.fmpz_mat,
             QQ: flint.fmpq_mat,
+            GF(5): None,
         }
         not_supported = [
-            # This could be supported but not yet implemented in SymPy:
-            GF(5),
             # Other domains could be supported but not implemented as matrices
             # in python-flint:
             QQ[x],
@@ -257,7 +256,8 @@ def test_DFM_domains():
 
     for domain in supported:
         assert DFM._supports_domain(domain) is True
-        assert DFM._get_flint_func(domain) == flint_funcs[domain]
+        if flint_funcs[domain] is not None:
+            assert DFM._get_flint_func(domain) == flint_funcs[domain]
     for domain in not_supported:
         assert DFM._supports_domain(domain) is False
         raises(NotImplementedError, lambda: DFM._get_flint_func(domain))
@@ -575,6 +575,47 @@ def test_XXM_from_flat_nz(DM):
     result = DM([[1, 2, 0], [0, 0, 0], [0, 0, 3]])
     assert T.from_flat_nz(elements, data, ZZ) == result
     raises(DMBadInputError, lambda: T.from_flat_nz(elements, (indices, (2, 3)), ZZ))
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_to_dod(DM):
+    dod = {0: {0: ZZ(1), 2: ZZ(4)}, 1: {0: ZZ(4), 1: ZZ(5), 2: ZZ(6)}}
+    assert DM([[1, 0, 4], [4, 5, 6]]).to_dod() == dod
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_from_dod(DM):
+    T = type(DM([[0]]))
+    dod = {0: {0: ZZ(1), 2: ZZ(4)}, 1: {0: ZZ(4), 1: ZZ(5), 2: ZZ(6)}}
+    assert T.from_dod(dod, (2, 3), ZZ) == DM([[1, 0, 4], [4, 5, 6]])
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_to_dok(DM):
+    dod = {(0, 0): ZZ(1), (0, 2): ZZ(4),
+           (1, 0): ZZ(4), (1, 1): ZZ(5), (1, 2): ZZ(6)}
+    assert DM([[1, 0, 4], [4, 5, 6]]).to_dok() == dod
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_from_dok(DM):
+    T = type(DM([[0]]))
+    dod = {(0, 0): ZZ(1), (0, 2): ZZ(4),
+           (1, 0): ZZ(4), (1, 1): ZZ(5), (1, 2): ZZ(6)}
+    assert T.from_dok(dod, (2, 3), ZZ) == DM([[1, 0, 4], [4, 5, 6]])
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_iter_values(DM):
+    values = [ZZ(1), ZZ(4), ZZ(4), ZZ(5), ZZ(6)]
+    assert sorted(DM([[1, 0, 4], [4, 5, 6]]).iter_values()) == values
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_iter_items(DM):
+    items = [((0, 0), ZZ(1)), ((0, 2), ZZ(4)),
+             ((1, 0), ZZ(4)), ((1, 1), ZZ(5)), ((1, 2), ZZ(6))]
+    assert sorted(DM([[1, 0, 4], [4, 5, 6]]).iter_items()) == items
 
 
 @pytest.mark.parametrize('DM', DMZ_all)

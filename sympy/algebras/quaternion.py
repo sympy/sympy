@@ -113,15 +113,10 @@ class Quaternion(Expr):
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
-        else:
-            obj = Expr.__new__(cls, a, b, c, d)
-            obj._a = a
-            obj._b = b
-            obj._c = c
-            obj._d = d
-            obj._real_field = real_field
-            obj.set_norm(norm)
-            return obj
+        obj = super().__new__(cls, a, b, c, d)
+        obj._real_field = real_field
+        obj.set_norm(norm)
+        return obj
 
     def set_norm(self, norm):
         """Sets norm of an already instantiated quaternion.
@@ -161,19 +156,19 @@ class Quaternion(Expr):
 
     @property
     def a(self):
-        return self._a
+        return self.args[0]
 
     @property
     def b(self):
-        return self._b
+        return self.args[1]
 
     @property
     def c(self):
-        return self._c
+        return self.args[2]
 
     @property
     def d(self):
-        return self._d
+        return self.args[3]
 
     @property
     def real_field(self):
@@ -388,9 +383,9 @@ class Quaternion(Expr):
             The Euler angles (in radians).
         seq : string of length 3
             Represents the sequence of rotations.
-            For intrinsic rotations, seq must be all lowercase and its elements
+            For extrinsic rotations, seq must be all lowercase and its elements
             must be from the set ``{'x', 'y', 'z'}``
-            For extrinsic rotations, seq must be all uppercase and its elements
+            For intrinsic rotations, seq must be all uppercase and its elements
             must be from the set ``{'X', 'Y', 'Z'}``
 
         Returns
@@ -453,9 +448,9 @@ class Quaternion(Expr):
 
         seq : string of length 3
             Represents the sequence of rotations.
-            For intrinsic rotations, seq must be all lowercase and its elements
+            For extrinsic rotations, seq must be all lowercase and its elements
             must be from the set ``{'x', 'y', 'z'}``
-            For extrinsic rotations, seq must be all uppercase and its elements
+            For intrinsic rotations, seq must be all uppercase and its elements
             must be from the set ``{'X', 'Y', 'Z'}``
 
         angle_addition : bool
@@ -688,7 +683,7 @@ class Quaternion(Expr):
         return self.pow(p)
 
     def __neg__(self):
-        return Quaternion(-self._a, -self._b, -self._c, -self.d)
+        return Quaternion(-self.a, -self.b, -self.c, -self.d)
 
     def __truediv__(self, other):
         return self * sympify(other)**-1
@@ -977,22 +972,22 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
-    def _ln(self):
-        """Returns the natural logarithm of the quaternion (_ln(q)).
+    def log(self):
+        r"""Returns the logarithm of the quaternion, given by $\log q$.
 
         Examples
         ========
 
         >>> from sympy import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> q._ln()
+        >>> q.log()
         log(sqrt(30))
         + 2*sqrt(29)*acos(sqrt(30)/30)/29*i
         + 3*sqrt(29)*acos(sqrt(30)/30)/29*j
         + 4*sqrt(29)*acos(sqrt(30)/30)/29*k
 
         """
-        # _ln(q) = _ln||q|| + v/||v||*arccos(a/||q||)
+        # log(q) = log||q|| + v/||v||*arccos(a/||q||)
         q = self
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         q_norm = q.norm()
@@ -1006,10 +1001,8 @@ class Quaternion(Expr):
     def _eval_subs(self, *args):
         elements = [i.subs(*args) for i in self.args]
         norm = self._norm
-        try:
+        if norm is not None:
             norm = norm.subs(*args)
-        except AttributeError:
-            pass
         _check_norm(elements, norm)
         return Quaternion(*elements, norm=norm)
 

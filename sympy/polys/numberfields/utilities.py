@@ -220,7 +220,7 @@ class AlgIntPowers:
         self.T = T
         self.modulus = modulus
         self.n = T.degree()
-        self.powers_n_and_up = [[-c % self for c in reversed(T.rep.rep)][:-1]]
+        self.powers_n_and_up = [[-c % self for c in reversed(T.rep.to_list())][:-1]]
         self.max_so_far = self.n
 
     def red(self, exp):

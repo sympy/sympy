@@ -637,7 +637,7 @@ def ddm_ilu(a):
 
     ddm_irref
     ddm_ilu_solve
-    sympy.matrices.matrices.MatrixBase.LUdecomposition
+    sympy.matrices.matrixbase.MatrixBase.LUdecomposition
     """
     m = len(a)
     if not m:

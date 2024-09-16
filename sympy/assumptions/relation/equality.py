@@ -32,7 +32,7 @@ class EqualityPredicate(BinaryRelation):
     use :obj:`~.Eq()` instead to construct the equality expression.
 
     Evaluating this predicate to ``True`` or ``False`` is done by
-    :func:`~.core.relational.is_eq()`
+    :func:`~.core.relational.is_eq`
 
     Examples
     ========
@@ -76,7 +76,7 @@ class UnequalityPredicate(BinaryRelation):
     use :obj:`~.Ne()` instead to construct the inequation expression.
 
     Evaluating this predicate to ``True`` or ``False`` is done by
-    :func:`~.core.relational.is_neq()`
+    :func:`~.core.relational.is_neq`
 
     Examples
     ========
@@ -120,7 +120,7 @@ class StrictGreaterThanPredicate(BinaryRelation):
     use :obj:`~.Gt()` instead to construct the equality expression.
 
     Evaluating this predicate to ``True`` or ``False`` is done by
-    :func:`~.core.relational.is_gt()`
+    :func:`~.core.relational.is_gt`
 
     Examples
     ========
@@ -168,7 +168,7 @@ class GreaterThanPredicate(BinaryRelation):
     use :obj:`~.Ge()` instead to construct the equality expression.
 
     Evaluating this predicate to ``True`` or ``False`` is done by
-    :func:`~.core.relational.is_ge()`
+    :func:`~.core.relational.is_ge`
 
     Examples
     ========
@@ -216,7 +216,7 @@ class StrictLessThanPredicate(BinaryRelation):
     use :obj:`~.Lt()` instead to construct the equality expression.
 
     Evaluating this predicate to ``True`` or ``False`` is done by
-    :func:`~.core.relational.is_lt()`
+    :func:`~.core.relational.is_lt`
 
     Examples
     ========
@@ -264,7 +264,7 @@ class LessThanPredicate(BinaryRelation):
     use :obj:`~.Le()` instead to construct the equality expression.
 
     Evaluating this predicate to ``True`` or ``False`` is done by
-    :func:`~.core.relational.is_le()`
+    :func:`~.core.relational.is_le`
 
     Examples
     ========

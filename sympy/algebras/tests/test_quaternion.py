@@ -1,3 +1,4 @@
+from sympy.testing.pytest import slow
 from sympy.core.function import diff
 from sympy.core.function import expand
 from sympy.core.numbers import (E, I, Rational, pi)
@@ -134,6 +135,11 @@ def test_quaternion_complex_real_addition():
     assert q1 - q1 == q0
 
 
+def test_quaternion_subs():
+    q = Quaternion.from_axis_angle((0, 0, 1), phi)
+    assert q.subs(phi, 0) == Quaternion(1, 0, 0, 0)
+
+
 def test_quaternion_evalf():
     assert (Quaternion(sqrt(2), 0, 0, sqrt(3)).evalf() ==
             Quaternion(sqrt(2).evalf(), 0, 0, sqrt(3).evalf()))
@@ -166,7 +172,7 @@ def test_quaternion_functions():
                2 * sqrt(29) * E * sin(sqrt(29)) / 29,
                3 * sqrt(29) * E * sin(sqrt(29)) / 29,
                4 * sqrt(29) * E * sin(sqrt(29)) / 29)
-    assert q1._ln() == \
+    assert q1.log() == \
     Quaternion(log(sqrt(30)),
                2 * sqrt(29) * acos(sqrt(30)/30) / 29,
                3 * sqrt(29) * acos(sqrt(30)/30) / 29,
@@ -355,6 +361,7 @@ def test_issue_16318():
     assert (axis, angle) == q.to_axis_angle()
 
 
+@slow
 def test_to_euler():
     q = Quaternion(w, x, y, z)
     q_normalized = q.normalize()
@@ -396,6 +403,7 @@ def test_to_euler_numerical_singilarities():
     test_one_case((pi/2,  -pi/2, 0), 'ZYX')
 
 
+@slow
 def test_to_euler_options():
     def test_one_case(q):
         angles1 = Matrix(q.to_euler(seq, True, True))

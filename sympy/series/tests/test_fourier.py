@@ -53,7 +53,7 @@ def test_FourierSeries():
 
     def _check_iter(f, i):
         for ind, t in enumerate(f):
-            assert t == f[ind]
+            assert t == f[ind]  # noqa: PLR1736
             if ind == i:
                 break
 

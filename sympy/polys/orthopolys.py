@@ -1,7 +1,7 @@
 """Efficient functions for generating orthogonal polynomials."""
 from sympy.core.symbol import Dummy
 from sympy.polys.densearith import (dup_mul, dup_mul_ground,
-    dup_lshift, dup_sub, dup_add)
+    dup_lshift, dup_sub, dup_add, dup_sub_term, dup_sub_ground, dup_sqr)
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import named_poly
 from sympy.utilities import public
@@ -72,10 +72,71 @@ def dup_chebyshevt(n, K):
     """Low-level implementation of Chebyshev polynomials of the first kind."""
     if n < 1:
         return [K.one]
+    # When n is small, it is faster to directly calculate the recurrence relation.
+    if n < 64: # The threshold serves as a heuristic
+        return _dup_chebyshevt_rec(n, K)
+    return _dup_chebyshevt_prod(n, K)
+
+def _dup_chebyshevt_rec(n, K):
+    r""" Chebyshev polynomials of the first kind using recurrence.
+
+    Explanation
+    ===========
+
+    Chebyshev polynomials of the first kind are defined by the recurrence
+    relation:
+
+    .. math::
+        T_0(x) &= 1\\
+        T_1(x) &= x\\
+        T_n(x) &= 2xT_{n-1}(x) - T_{n-2}(x)
+
+    This function calculates the Chebyshev polynomial of the first kind using
+    the above recurrence relation.
+
+    Parameters
+    ==========
+
+    n : int
+        n is a nonnegative integer.
+    K : domain
+
+    """
     m2, m1 = [K.one], [K.one, K.zero]
-    for i in range(2, n+1):
+    for _ in range(n - 1):
         m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(2), K), m2, K)
     return m1
+
+def _dup_chebyshevt_prod(n, K):
+    r""" Chebyshev polynomials of the first kind using recursive products.
+
+    Explanation
+    ===========
+
+    Computes Chebyshev polynomials of the first kind using
+
+    .. math::
+        T_{2n}(x) &= 2T_n^2(x) - 1\\
+        T_{2n+1}(x) &= 2T_{n+1}(x)T_n(x) - x
+
+    This is faster than ``_dup_chebyshevt_rec`` for large ``n``.
+
+    Parameters
+    ==========
+
+    n : int
+        n is a nonnegative integer.
+    K : domain
+
+    """
+    m2, m1 = [K.one, K.zero], [K(2), K.zero, -K.one]
+    for i in bin(n)[3:]:
+        c = dup_sub_term(dup_mul_ground(dup_mul(m1, m2, K), K(2), K), K.one, 1, K)
+        if  i  == '1':
+            m2, m1 = c, dup_sub_ground(dup_mul_ground(dup_sqr(m1, K), K(2), K), K.one, K)
+        else:
+            m2, m1 = dup_sub_ground(dup_mul_ground(dup_sqr(m2, K), K(2), K), K.one, K), c
+    return m2
 
 def dup_chebyshevu(n, K):
     """Low-level implementation of Chebyshev polynomials of the second kind."""

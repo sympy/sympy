@@ -1277,9 +1277,7 @@ class Separable(SinglePatternODESolver):
         # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
         self.m1 = separatevars(d, dict=True, symbols=(x, self.y))
         self.m2 = separatevars(e, dict=True, symbols=(x, self.y))
-        if self.m1 and self.m2:
-            return True
-        return False
+        return bool(self.m1 and self.m2)
 
     def _get_match_object(self):
         fx = self.ode_problem.func
@@ -1730,9 +1728,8 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
     order = [1]
 
     def _verify(self, fx):
-        if HomogeneousCoeffSubsIndepDivDep._verify(self, fx) and HomogeneousCoeffSubsDepDivIndep._verify(self, fx):
-            return True
-        return False
+        return HomogeneousCoeffSubsIndepDivDep._verify(self, fx) and \
+               HomogeneousCoeffSubsDepDivIndep._verify(self, fx)
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         # There are two substitutions that solve the equation, u1=y/x and u2=x/y
@@ -2753,7 +2750,7 @@ class SecondLinearBessel(SingleODESolver):
             # c3 maybe of very complex form so I am simply checking (a - b) form
             # if yes later I will match with the standerd form of bessel in a and b
             # a, b are wild variable defined above.
-            _coeff2 = r[c3].match(a - b)
+            _coeff2 = expand(r[c3]).match(a - b)
             if _coeff2 is None:
                 return False
             # matching with standerd form for c3

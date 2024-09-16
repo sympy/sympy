@@ -12,7 +12,7 @@ from .pycode import pycode
 
 from .codeprinter import print_ccode, print_fcode
 
-from .codeprinter import ccode, fcode, cxxcode # noqa:F811
+from .codeprinter import ccode, fcode, cxxcode, rust_code # noqa:F811
 
 from .smtlib import smtlib_code
 
@@ -27,8 +27,6 @@ from .julia import julia_code
 from .mathematica import mathematica_code
 
 from .octave import octave_code
-
-from .rust import rust_code
 
 from .gtk import print_gtk
 
@@ -64,7 +62,7 @@ __all__ = [
     'pycode',
 
     # sympy.printing.codeprinter
-    'ccode', 'print_ccode', 'cxxcode', 'fcode', 'print_fcode',
+    'ccode', 'print_ccode', 'cxxcode', 'fcode', 'print_fcode', 'rust_code',
 
     # sympy.printing.smtlib
     'smtlib_code',
@@ -86,9 +84,6 @@ __all__ = [
 
     # sympy.printing.octave
     'octave_code',
-
-    # sympy.printing.rust
-    'rust_code',
 
     # sympy.printing.gtk
     'print_gtk',

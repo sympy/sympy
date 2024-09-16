@@ -9,11 +9,14 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 
-from .common import ShapeError
+from .exceptions import ShapeError
 from .decompositions import _cholesky, _LDLdecomposition
-from .matrices import MatrixBase
+from .matrixbase import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
+
+
+__doctest_requires__ = {('symarray',): ['numpy']}
 
 
 def _iszero(x):
@@ -782,9 +785,9 @@ def diag(*values, strict=True, unpack=False, **kwargs):
 
     See Also
     ========
-    .common.MatrixCommon.eye
-    .common.MatrixCommon.diagonal
-    .common.MatrixCommon.diag
+    .matrixbase.MatrixBase.eye
+    .matrixbase.MatrixBase.diagonal
+    .matrixbase.MatrixBase.diag
     .expressions.blockmatrix.BlockMatrix
     """
     return Matrix.diag(*values, strict=strict, unpack=unpack, **kwargs)
@@ -819,7 +822,7 @@ def GramSchmidt(vlist, orthonormal=False):
     See Also
     ========
 
-    .matrices.MatrixSubspaces.orthogonalize
+    .matrixbase.MatrixBase.orthogonalize
 
     References
     ==========
@@ -871,7 +874,7 @@ def hessian(f, varlist, constraints=()):
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixCalculus.jacobian
+    sympy.matrices.matrixbase.MatrixBase.jacobian
     wronskian
     """
     # f is the expression representing a function f, return regular matrix
@@ -942,7 +945,7 @@ def matrix_multiply_elementwise(A, B):
     See Also
     ========
 
-    sympy.matrices.common.MatrixCommon.__mul__
+    sympy.matrices.matrixbase.MatrixBase.__mul__
     """
     return A.multiply_elementwise(B)
 
@@ -1060,7 +1063,7 @@ def wronskian(functions, var, method='bareiss'):
     See Also
     ========
 
-    sympy.matrices.matrices.MatrixCalculus.jacobian
+    sympy.matrices.matrixbase.MatrixBase.jacobian
     hessian
     """
 

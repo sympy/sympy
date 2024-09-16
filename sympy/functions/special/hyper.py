@@ -27,6 +27,16 @@ from sympy import ordered
 
 
 class TupleArg(Tuple):
+
+    # This method is only needed because hyper._eval_as_leading_term falls back
+    # (via super()) on using Function._eval_as_leading_term, which in turn
+    # calls as_leading_term on the args of the hyper. Ideally hyper should just
+    # have an _eval_as_leading_term method that handles all cases and this
+    # method should be removed because leading terms of tuples don't make
+    # sense.
+    def as_leading_term(self, *x, logx=None, cdir=0):
+        return TupleArg(*[f.as_leading_term(*x, logx=logx, cdir=cdir) for f in self.args])
+
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
         """
@@ -245,7 +255,7 @@ class hyper(TupleParametersBase):
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[2]
         x0 = arg.subs(x, 0)
         if x0 is S.NaN:
@@ -264,8 +274,12 @@ class hyper(TupleParametersBase):
         ap = self.args[0]
         bq = self.args[1]
 
-        if x0 != 0:
-            return super()._eval_nseries(x, n, logx)
+        if not (arg == x and x0 == 0):
+            # It would be better to do something with arg.nseries here, rather
+            # than falling back on Function._eval_nseries. The code below
+            # though is not sufficient if arg is something like x/(x+1).
+            from sympy.simplify.hyperexpand import hyperexpand
+            return hyperexpand(super()._eval_nseries(x, n, logx))
 
         terms = []
 
@@ -709,7 +723,7 @@ class meijerg(TupleParametersBase):
 
         return Expr._from_mpmath(v, prec)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self).as_leading_term(x, logx=logx, cdir=cdir)
 

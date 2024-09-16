@@ -683,11 +683,8 @@ def repeated_decimals(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
             if (not num and '.' in tokval and 'e' not in tokval.lower() and
                 'j' not in tokval.lower()):
                 num.append((toknum, tokval))
-            elif is_digit(tokval)and  len(num) == 2:
-                num.append((toknum, tokval))
-            elif is_digit(tokval) and len(num) == 3 and is_digit(num[-1][1]):
-                # Python 2 tokenizes 00123 as '00', '123'
-                # Python 3 tokenizes 01289 as '012', '89'
+            elif is_digit(tokval) and (len(num) == 2 or
+                    len(num) == 3 and is_digit(num[-1][1])):
                 num.append((toknum, tokval))
             else:
                 num = []
@@ -968,7 +965,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
     This feature allows one to tell exactly how the expression was entered:
 
     >>> a = parse_expr('1 + x', evaluate=False)
-    >>> b = parse_expr('x + 1', evaluate=0)
+    >>> b = parse_expr('x + 1', evaluate=False)
     >>> a == b
     False
     >>> a.args
@@ -1138,9 +1135,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],
-                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
-                starargs=None,
-                kwargs=None
+                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
             )
             return new_node
         return node
@@ -1171,9 +1166,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 right = ast.Call(
                     func=ast.Name(id='Mul', ctx=ast.Load()),
                     args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)), right],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
-                    starargs=None,
-                    kwargs=None
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
                 )
             elif isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.UnaryOp):
@@ -1182,17 +1175,13 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     left = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
-                    starargs=None,
-                    kwargs=None
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
                 )
                 else:
                     right = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
-                    starargs=None,
-                    kwargs=None
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
                 )
 
             if rev:  # undo reversal
@@ -1200,9 +1189,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],
-                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
-                starargs=None,
-                kwargs=None
+                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
             )
 
             if sympy_class in ('Add', 'Mul'):
@@ -1215,7 +1202,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
     def visit_Call(self, node):
         new_node = self.generic_visit(node)
         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
-            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load())))
+            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.Constant(value=False)))
         return new_node
 
 

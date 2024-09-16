@@ -59,7 +59,7 @@ from sympy.solvers.ode.single import (FirstLinear, ODEMatchError,
 
 from sympy.solvers.ode.subscheck import checkodesol
 
-from sympy.testing.pytest import raises, slow, ON_CI
+from sympy.testing.pytest import raises, slow
 import traceback
 
 
@@ -70,6 +70,7 @@ y = Symbol('y')
 f = Function('f')
 g = Function('g')
 C1, C2, C3, C4, C5, C6, C7, C8, C9, C10  = symbols('C1:11')
+a, b, c = symbols('a b c')
 
 
 hint_message = """\
@@ -274,7 +275,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
             if len(expected_sol) == 1:
                 expected_checkodesol = (True, 0)
 
-            if not (checkodesol_too_slow and ON_CI):
+            if not checkodesol_too_slow:
                 if not checkodesol_XFAIL:
                     if checkodesol(eq, dsolve_sol, func, solve_for_func=False) != expected_checkodesol:
                         result['unsolve_list'] = example
@@ -2101,6 +2102,10 @@ def _get_examples_ode_sol_2nd_linear_bessel():
         'eq': f(x).diff(x, x) + 2/x*f(x).diff(x) + f(x),
         'sol': [Eq(f(x), (C1*besselj(S(1)/2, x) + C2*bessely(S(1)/2, x))/sqrt(x))],
     },
+    '2nd_lin_bessel_12': {
+        'eq': x**2*f(x).diff(x, 2) + x*f(x).diff(x) + (a**2*x**2/c**2 - b**2)*f(x),
+        'sol': [Eq(f(x), C1*besselj(sqrt(b**2), x*sqrt(a**2/c**2)) + C2*bessely(sqrt(b**2), x*sqrt(a**2/c**2)))],
+    },
     }
     }
 
@@ -2859,7 +2864,7 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
 
     '1st_homogeneous_coeff_best_08': {
         'eq': f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x),
-        'sol': [Eq(f(x), -sqrt(-x*exp(2*C1)/(x - 2*exp(C1)))), Eq(f(x), sqrt(-x*exp(2*C1)/(x - 2*exp(C1))))],
+        'sol': [Eq(f(x), -C1*sqrt(-x/(x - 2*C1))), Eq(f(x), C1*sqrt(-x/(x - 2*C1)))],
         'checkodesol_XFAIL': True  # solutions are valid in a range
     },
     }

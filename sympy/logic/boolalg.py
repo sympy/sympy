@@ -233,7 +233,6 @@ class BooleanAtom(Boolean):
     __rmod__ = _noop
     _eval_power = _noop
 
-    # /// drop when Py2 is no longer supported
     def __lt__(self, other):
         raise TypeError(filldedent('''
             A Boolean argument can only be used in
@@ -323,15 +322,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     Python operators give a boolean result for true but a
     bitwise result for True
 
-    >>> ~true, ~True
-    (False, -2)
-    >>> true >> true, True >> True
-    (True, 0)
-
-    Python operators give a boolean result for true but a
-    bitwise result for True
-
-    >>> ~true, ~True
+    >>> ~true, ~True  # doctest: +SKIP
     (False, -2)
     >>> true >> true, True >> True
     (True, 0)
@@ -406,7 +397,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     Python operators give a boolean result for false but a
     bitwise result for False
 
-    >>> ~false, ~False
+    >>> ~false, ~False  # doctest: +SKIP
     (True, -1)
     >>> false >> false, False >> False
     (True, 0)
@@ -521,15 +512,13 @@ class BooleanFunction(Application, Boolean):
     @classmethod
     def _to_anf(cls, *args, **kwargs):
         deep = kwargs.get('deep', True)
-        argset = set()
+        new_args = []
         for arg in args:
             if deep:
                 if not is_literal(arg) or isinstance(arg, Not):
                     arg = arg.to_anf(deep=deep)
-                argset.add(arg)
-            else:
-                argset.add(arg)
-        return cls(*argset, remove_true=False)
+            new_args.append(arg)
+        return cls(*new_args, remove_true=False)
 
     # the diff method below is copied from Expr class
     def diff(self, *symbols, **assumptions):
@@ -662,7 +651,7 @@ class And(LatticeOp, BooleanFunction):
                     if (e.lhs != x or x in e.rhs.free_symbols) and x not in reps:
                         try:
                             m, b = linear_coeffs(
-                                e.rewrite(Add, evaluate=False), x)
+                                Add(e.lhs, -e.rhs, evaluate=False), x)
                             enew = e.func(x, -b/m)
                             if measure(enew) <= ratio*measure(e):
                                 e = enew
@@ -856,8 +845,11 @@ class Not(BooleanFunction):
       value of True.  To avoid this issue, use the SymPy boolean types
       ``true`` and ``false``.
 
+    - As of Python 3.12, the bitwise not operator ``~`` used on a
+      Python ``bool`` is deprecated and will emit a warning.
+
     >>> from sympy import true
-    >>> ~True
+    >>> ~True  # doctest: +SKIP
     -2
     >>> ~true
     False
@@ -1048,6 +1040,7 @@ class Xor(BooleanFunction):
         # And and Or, we only simplify the partial expressions before using
         # patterns
         rv = self.func(*[a.simplify(**kwargs) for a in self.args])
+        rv = rv.to_anf()
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
         patterns = _simplify_patterns_xor()
@@ -2174,7 +2167,7 @@ def _simplified_pairs(terms):
     # is at most a difference of a single one
     termdict = defaultdict(list)
     for n, term in enumerate(terms):
-        ones = sum([1 for t in term if t == 1])
+        ones = sum(1 for t in term if t == 1)
         termdict[ones].append(n)
 
     variables = len(terms[0])

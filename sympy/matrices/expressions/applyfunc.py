@@ -3,7 +3,7 @@ from sympy.core.function import (Function, FunctionClass, Lambda)
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices.expressions import MatrixExpr
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 
 
 class ElementwiseApplyFunction(MatrixExpr):

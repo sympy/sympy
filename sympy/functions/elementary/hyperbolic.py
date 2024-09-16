@@ -317,7 +317,7 @@ class sinh(HyperbolicFunction):
     def _eval_rewrite_as_csch(self, arg, **kwargs):
         return 1 / csch(arg)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -514,7 +514,7 @@ class cosh(HyperbolicFunction):
     def _eval_rewrite_as_sech(self, arg, **kwargs):
         return 1 / sech(arg)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -767,7 +767,7 @@ class tanh(HyperbolicFunction):
     def _eval_rewrite_as_coth(self, arg, **kwargs):
         return 1/coth(arg)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -964,7 +964,7 @@ class coth(HyperbolicFunction):
         if self.args[0].is_extended_real:
             return self.args[0].is_negative
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -1057,8 +1057,8 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
     def _eval_expand_trig(self, **hints):
         return self._calculate_reciprocal("_eval_expand_trig", **hints)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
+    def _eval_as_leading_term(self, x, logx, cdir):
+        return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_is_extended_real(self):
         return self._reciprocal_of(self.args[0]).is_extended_real
@@ -1293,11 +1293,19 @@ class asinh(InverseHyperbolicFunction):
                 F = factorial(k)
                 return S.NegativeOne**k * R / F * x**n / n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asinh
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
             return arg.as_leading_term(x)
+
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling branch points
         if x0 in (-I, I, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -1475,12 +1483,20 @@ class acosh(InverseHyperbolicFunction):
                 F = factorial(k)
                 return -R / F * I * x**n / n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acosh
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling branch points
         if x0 in (-S.One, S.Zero, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling points lying on branch cuts (-oo, 1)
         if (x0 - 1).is_negative:
             ndir = arg.dir(x, cdir if cdir else 1)
@@ -1635,11 +1651,18 @@ class atanh(InverseHyperbolicFunction):
             x = sympify(x)
             return x**n / n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # atanh
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
             return arg.as_leading_term(x)
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling branch points
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -1780,11 +1803,18 @@ class acoth(InverseHyperbolicFunction):
             x = sympify(x)
             return x**n / n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acoth
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling branch points
         if x0 in (-S.One, S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -1945,12 +1975,20 @@ class asech(InverseHyperbolicFunction):
                 F = factorial(k) * n // 2 * n // 2
                 return -1 * R / F * x**n / 4
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asech
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling branch points
         if x0 in (-S.One, S.Zero, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         # Handling points lying on branch cuts (-oo, 0] U (1, oo)
         if x0.is_negative or (1 - x0).is_negative:
             ndir = arg.dir(x, cdir if cdir else 1)
@@ -2136,12 +2174,20 @@ class acsch(InverseHyperbolicFunction):
                 F = factorial(k) * n // 2 * n // 2
                 return S.NegativeOne**(k +1) * R / F * x**n / 4
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acsch
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling branch points
         if x0 in (-I, I, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+        if x0 is S.NaN:
+            expr = self.func(arg.as_leading_term(x))
+            if expr.is_finite:
+                return expr
+            else:
+                return self
+
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
         # Handling points lying on branch cuts (-I, I)

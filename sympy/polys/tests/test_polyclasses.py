@@ -6,28 +6,35 @@ from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.polyerrors import (CoercionFailed, ExactQuotientFailed,
                                     NotInvertible)
 from sympy.polys.specialpolys import f_polys
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
 def test_DMP___init__():
     f = DMP([[ZZ(0)], [], [ZZ(0), ZZ(1), ZZ(2)], [ZZ(3)]], ZZ)
 
-    assert f.rep == [[1, 2], [3]]
+    assert f._rep == [[1, 2], [3]]
     assert f.dom == ZZ
     assert f.lev == 1
 
     f = DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ, 1)
 
-    assert f.rep == [[1, 2], [3]]
+    assert f._rep == [[1, 2], [3]]
     assert f.dom == ZZ
     assert f.lev == 1
 
-    f = DMP({(1, 1): ZZ(1), (0, 0): ZZ(2)}, ZZ, 1)
+    f = DMP.from_dict({(1, 1): ZZ(1), (0, 0): ZZ(2)}, 1, ZZ)
 
-    assert f.rep == [[1, 0], [2]]
+    assert f._rep == [[1, 0], [2]]
     assert f.dom == ZZ
     assert f.lev == 1
+
+
+def test_DMP_rep_deprecation():
+    f = DMP([1, 2, 3], ZZ)
+
+    with warns_deprecated_sympy():
+        assert f.rep == [1, 2, 3]
 
 
 def test_DMP___eq__():
@@ -155,6 +162,30 @@ def test_DMP_arithmetics():
 
     raises(ExactQuotientFailed, lambda: f.exquo(g))
 
+    f = DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ)
+    g = DMP([ZZ(2), ZZ(-2)], ZZ)
+
+    q = DMP([], ZZ)
+    r = f
+
+    pq = DMP([ZZ(2), ZZ(2)], ZZ)
+    pr = DMP([], ZZ)
+
+    assert f.div(g) == (q, r)
+    assert f.quo(g) == q
+    assert f.rem(g) == r
+
+    assert divmod(f, g) == (q, r)
+    assert f // g == q
+    assert f % g == r
+
+    raises(ExactQuotientFailed, lambda: f.exquo(g))
+
+    assert f.pdiv(g) == (pq, pr)
+    assert f.pquo(g) == pq
+    assert f.prem(g) == pr
+    assert f.pexquo(g) == pq
+
 
 def test_DMP_functionality():
     f = DMP([[ZZ(1)], [ZZ(2), ZZ(0)], [ZZ(1), ZZ(0), ZZ(0)]], ZZ)
@@ -200,6 +231,20 @@ def test_DMP_functionality():
 
     assert (4*f).content() == ZZ(4)
     assert (4*f).primitive() == (ZZ(4), f)
+
+    f = DMP([QQ(1,3), QQ(1)], QQ)
+    g = DMP([QQ(1,7), QQ(1)], QQ)
+
+    assert f.cancel(g) == f.cancel(g, include=True) == (
+        DMP([QQ(7), QQ(21)], QQ),
+        DMP([QQ(3), QQ(21)], QQ)
+    )
+    assert f.cancel(g, include=False) == (
+        QQ(7),
+        QQ(3),
+        DMP([QQ(1), QQ(3)], QQ),
+        DMP([QQ(1), QQ(7)], QQ)
+    )
 
     f = DMP([[ZZ(1)], [ZZ(2)], [ZZ(3)], [ZZ(4)], [ZZ(5)], [ZZ(6)]], ZZ)
 
@@ -415,8 +460,8 @@ def test_ANP___init__():
 
     f = ANP(rep, mod, QQ)
 
-    assert f.rep == [QQ(1), QQ(1)]
-    assert f.mod == [QQ(1), QQ(0), QQ(1)]
+    assert f.to_list() == [QQ(1), QQ(1)]
+    assert f.mod_to_list() == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
     rep = {1: QQ(1), 0: QQ(1)}
@@ -424,19 +469,19 @@ def test_ANP___init__():
 
     f = ANP(rep, mod, QQ)
 
-    assert f.rep == [QQ(1), QQ(1)]
-    assert f.mod == [QQ(1), QQ(0), QQ(1)]
+    assert f.to_list() == [QQ(1), QQ(1)]
+    assert f.mod_to_list() == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
     f = ANP(1, mod, QQ)
 
-    assert f.rep == [QQ(1)]
-    assert f.mod == [QQ(1), QQ(0), QQ(1)]
+    assert f.to_list() == [QQ(1)]
+    assert f.mod_to_list() == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
     f = ANP([1, 0.5], mod, QQ)
 
-    assert all(QQ.of_type(a) for a in f.rep)
+    assert all(QQ.of_type(a) for a in f.to_list())
 
     raises(CoercionFailed, lambda: ANP([sqrt(2)], mod, QQ))
 
@@ -526,12 +571,18 @@ def test_ANP_arithmetics():
     assert q == a/b # == c
 
 def test_ANP_unify():
-    mod = [QQ(1), QQ(0), QQ(-2)]
+    mod_z = [ZZ(1), ZZ(0), ZZ(-2)]
+    mod_q = [QQ(1), QQ(0), QQ(-2)]
 
-    a = ANP([QQ(1)], mod, QQ)
-    b = ANP([ZZ(1)], mod, ZZ)
+    a = ANP([QQ(1)], mod_q, QQ)
+    b = ANP([ZZ(1)], mod_z, ZZ)
 
     assert a.unify(b)[0] == QQ
     assert b.unify(a)[0] == QQ
     assert a.unify(a)[0] == QQ
     assert b.unify(b)[0] == ZZ
+
+    assert a.unify_ANP(b)[-1] == QQ
+    assert b.unify_ANP(a)[-1] == QQ
+    assert a.unify_ANP(a)[-1] == QQ
+    assert b.unify_ANP(b)[-1] == ZZ

@@ -10,7 +10,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import (mpf_norm, seterr,
     Integer, I, pi, comp, Rational, E, nan,
     oo, AlgebraicNumber, Number, Float, zoo, equal_valued,
-    int_valued)
+    int_valued, all_close)
 from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
     ilcm, integer_nthroot, isqrt, integer_log, mod_inverse)
 from sympy.core.power import Pow
@@ -32,6 +32,7 @@ from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
+from sympy import Add
 
 from mpmath import mpf
 import mpmath
@@ -454,13 +455,27 @@ def test_Float():
         t = Float("1.0E-15")
         return (-t < a - b < t)
 
-    zeros = (0, S.Zero, 0., Float(0))
-    for i, j in permutations(zeros[:-1], 2):
-        assert i == j
-    for i, j in permutations(zeros[-2:], 2):
-        assert i == j
-    for z in zeros:
-        assert z in zeros
+    equal_pairs = [
+        (0, 0.0), # This is just how Python works...
+        (0, S.Zero),
+        (0.0, Float(0)),
+    ]
+    unequal_pairs = [
+        (0.0, S.Zero),
+        (0, Float(0)),
+        (S.Zero, Float(0)),
+    ]
+    for p1, p2 in equal_pairs:
+        assert (p1 == p2) is True
+        assert (p1 != p2) is False
+        assert (p2 == p1) is True
+        assert (p2 != p1) is False
+    for p1, p2 in unequal_pairs:
+        assert (p1 == p2) is False
+        assert (p1 != p2) is True
+        assert (p2 == p1) is False
+        assert (p2 != p1) is True
+
     assert S.Zero.is_zero
 
     a = Float(2) ** Float(3)
@@ -504,7 +519,7 @@ def test_Float():
     # rationality properties
     # if the integer test fails then the use of intlike
     # should be removed from gamma_functions.py
-    assert Float(1).is_integer is False
+    assert Float(1).is_integer is None
     assert Float(1).is_rational is None
     assert Float(1).is_irrational is None
     assert sqrt(2).n(15).is_rational is None
@@ -2280,3 +2295,35 @@ def test_equal_valued():
                     continue
                 for value_j in values_n:
                     assert equal_valued(value_i, value_j) is False
+
+
+def test_all_close():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    assert all_close(2, 2) is True
+    assert all_close(2, 2.0000) is True
+    assert all_close(2, 2.0001) is False
+    assert all_close(1/3, 1/3.0001) is False
+    assert all_close(1/3, 1/3.0001, 1e-3, 1e-3) is True
+    assert all_close(1/3, Rational(1, 3)) is True
+    assert all_close(0.1*exp(0.2*x), exp(x/5)/10) is True
+    # The expressions should be structurally the same modulo identity:
+    assert all_close(1.4142135623730951, sqrt(2)) is False
+    assert all_close(1.4142135623730951, sqrt(2).evalf()) is True
+    assert all_close(x + 1e-20, x) is True
+    # We should be able to match terms of an Add/Mul in any order
+    assert all_close(Add(1, 2, evaluate=False), Add(2, 1, evaluate=False))
+    # coverage
+    assert not all_close(2*x, 3*x)
+    assert all_close(2*x, 3*x, 1)
+    assert not all_close(2*x, 3*x, 0, 0.5)
+    assert all_close(2*x, 3*x, 0, 1)
+    assert not all_close(y*x, z*x)
+    assert all_close(2*x*exp(1.0*x), 2.0*x*exp(x))
+    assert not all_close(2*x*exp(1.0*x), 2.0*x*exp(2.*x))
+    assert all_close(x + 2.*y, 1.*x + 2*y)
+    assert all_close(x + exp(2.*x)*y, 1.*x + exp(2*x)*y)
+    assert not all_close(x + exp(2.*x)*y, 1.*x + 2*exp(2*x)*y)
+    assert not all_close(x + exp(2.*x)*y, 1.*x + exp(3*x)*y)
+    assert not all_close(x + 2.*y, 1.*x + 3*y)

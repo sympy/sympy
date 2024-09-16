@@ -1027,16 +1027,16 @@ def test_failing_matrix_sum():
 def test_indexed_idx_sum():
     i = symbols('i', cls=Idx)
     r = Indexed('r', i)
-    assert Sum(r, (i, 0, 3)).doit() == sum([r.xreplace({i: j}) for j in range(4)])
+    assert Sum(r, (i, 0, 3)).doit() == sum(r.xreplace({i: j}) for j in range(4))
     assert Product(r, (i, 0, 3)).doit() == prod([r.xreplace({i: j}) for j in range(4)])
 
     j = symbols('j', integer=True)
-    assert Sum(r, (i, j, j+2)).doit() == sum([r.xreplace({i: j+k}) for k in range(3)])
+    assert Sum(r, (i, j, j+2)).doit() == sum(r.xreplace({i: j+k}) for k in range(3))
     assert Product(r, (i, j, j+2)).doit() == prod([r.xreplace({i: j+k}) for k in range(3)])
 
     k = Idx('k', range=(1, 3))
     A = IndexedBase('A')
-    assert Sum(A[k], k).doit() == sum([A[Idx(j, (1, 3))] for j in range(1, 4)])
+    assert Sum(A[k], k).doit() == sum(A[Idx(j, (1, 3))] for j in range(1, 4))
     assert Product(A[k], k).doit() == prod([A[Idx(j, (1, 3))] for j in range(1, 4)])
 
     raises(ValueError, lambda: Sum(A[k], (k, 1, 4)))
@@ -1057,6 +1057,7 @@ def test_is_convergent():
     assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() is S.false
     assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
     assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
+    assert Sum(sin(n), (n, 1, oo)).is_convergent() is S.false
 
     # Raabe's test --
     assert Sum(Product((3*m),(m,1,n))/Product((3*m+4),(m,1,n)),(n,1,oo)).is_convergent() is S.true
@@ -1155,6 +1156,11 @@ def test_issue_10156():
 
 def test_issue_10973():
     assert Sum((-n + (n**3 + 1)**(S(1)/3))/log(n), (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_14103():
+    assert Sum(sin(n)**2 + cos(n)**2 - 1, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sin(pi*n), (n, 1, oo)).is_convergent() is S.true
 
 
 def test_issue_14129():

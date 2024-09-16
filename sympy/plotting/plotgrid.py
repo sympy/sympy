@@ -8,6 +8,11 @@ import sympy.plotting.backends.base_backend as base_backend
 # the same in the `SymPyDocTestFinder`` in `sympy/testing/runtests.py`
 
 
+__doctest_requires__ = {
+    ("PlotGrid",): ["matplotlib"],
+}
+
+
 class PlotGrid:
     """This class helps to plot subplots from already created SymPy plots
     in a single figure.

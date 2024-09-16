@@ -179,8 +179,8 @@ def test_issue_2515():
 def test_issue_7663():
     x = Symbol('x')
     e = '2*(x+1)'
-    assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
-    assert parse_expr(e, evaluate=0).equals(2*(x+1))
+    assert parse_expr(e, evaluate=False) == parse_expr(e, evaluate=False)
+    assert parse_expr(e, evaluate=False).equals(2*(x+1))
 
 def test_recursive_evaluate_false_10560():
     inputs = {

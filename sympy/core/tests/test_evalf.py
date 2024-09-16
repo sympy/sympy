@@ -306,6 +306,8 @@ def test_evalf_integer_parts():
     # issue 20076
     assert 260515 - floor(260515/pi + 1/2) * pi == atan(tan(260515))
 
+    assert floor(x).evalf(subs={x: sqrt(2)}) == 1.0
+
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)

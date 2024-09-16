@@ -1,6 +1,6 @@
 from sympy.core import S
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, uniquely_named_symbol
 from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.combinatorial.numbers import catalan
 from sympy.functions.elementary.complexes import conjugate
@@ -163,7 +163,7 @@ class beta(Function):
 
     def _eval_rewrite_as_Integral(self, x, y, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', [x, y]).name)
         return Integral(t**(x - 1)*(1 - t)**(y - 1), (t, 0, 1))
 
 ###############################################################################
@@ -268,7 +268,7 @@ class betainc(Function):
 
     def _eval_rewrite_as_Integral(self, a, b, x1, x2, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', [a, b, x1, x2]).name)
         return Integral(t**(a - 1)*(1 - t)**(b - 1), (t, x1, x2))
 
     def _eval_rewrite_as_hyper(self, a, b, x1, x2, **kwargs):
@@ -378,7 +378,7 @@ class betainc_regularized(Function):
 
     def _eval_rewrite_as_Integral(self, a, b, x1, x2, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', [a, b, x1, x2]).name)
         integrand = t**(a - 1)*(1 - t)**(b - 1)
         expr = Integral(integrand, (t, x1, x2))
         return expr / Integral(integrand, (t, 0, 1))

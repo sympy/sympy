@@ -11,6 +11,7 @@ from sympy.physics.units import (
     second, speed_of_light, steradian, time, km)
 from sympy.physics.units.util import convert_to, check_dimensions
 from sympy.testing.pytest import raises
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 def NS(e, n=15, **options):
@@ -69,8 +70,16 @@ def test_convert_to_quantities():
     assert convert_to(pi*radians, degree) == 180*degree
     assert convert_to(pi, degree) == 180*degree
 
+    # https://github.com/sympy/sympy/issues/26263
+    assert convert_to(sqrt(meter**2 + meter**2.0), meter) == sqrt(meter**2 + meter**2.0)
+    assert convert_to((meter**2 + meter**2.0)**2, meter) == (meter**2 + meter**2.0)**2
+
 
 def test_convert_to_tuples_of_quantities():
+    from sympy.core.symbol import symbols
+
+    alpha, beta = symbols('alpha beta')
+
     assert convert_to(speed_of_light, [meter, second]) == 299792458 * meter / second
     assert convert_to(speed_of_light, (meter, second)) == 299792458 * meter / second
     assert convert_to(speed_of_light, Tuple(meter, second)) == 299792458 * meter / second
@@ -89,6 +98,13 @@ def test_convert_to_tuples_of_quantities():
     assert NS(convert_to(planck_temperature, kelvin), n=7) == '1.416784e+32*kelvin'
     assert NS(convert_to(convert_to(meter, [G, speed_of_light, planck]), meter), n=10) == '1.000000000*meter'
 
+    # similar to https://github.com/sympy/sympy/issues/26263
+    assert convert_to(sqrt(meter**2 + second**2.0), [meter, second]) == sqrt(meter**2 + second**2.0)
+    assert convert_to((meter**2 + second**2.0)**2, [meter, second]) == (meter**2 + second**2.0)**2
+
+    # similar to https://github.com/sympy/sympy/issues/21463
+    assert convert_to(1/(beta*meter + meter), 1/meter) == 1/(beta*meter + meter)
+    assert convert_to(1/(beta*meter + alpha*meter), 1/kilometer) == (1/(kilometer*beta/1000 + alpha*kilometer/1000))
 
 def test_eval_simplify():
     from sympy.physics.units import cm, mm, km, m, K, kilo

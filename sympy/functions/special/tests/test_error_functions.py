@@ -2,7 +2,7 @@ from sympy.core.function import (diff, expand, expand_func)
 from sympy.core import EulerGamma
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import (Symbol, symbols, Dummy)
 from sympy.functions.elementary.complexes import (conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
@@ -23,6 +23,7 @@ from sympy.testing.pytest import raises
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
 n = Symbol("n", integer=True)
+t = Dummy('t')
 
 
 def test_erf():
@@ -46,6 +47,19 @@ def test_erf():
     assert erf(erf2inv(0, x, evaluate=False)) == x # To cover code in erf
     assert erf(erf2inv(0, erf(erfcinv(1 - erf(erfinv(x)))))) == x
 
+    alpha = symbols('alpha', extended_real=True)
+    assert erf(alpha).is_real is True
+    assert erf(alpha).is_finite is True
+    alpha = symbols('alpha', extended_real=False)
+    assert erf(alpha).is_real is None
+    assert erf(alpha).is_finite is None
+    assert erf(alpha).is_zero is None
+    assert erf(alpha).is_positive is None
+    assert erf(alpha).is_negative is None
+    alpha = symbols('alpha', extended_positive=True)
+    assert erf(alpha).is_positive is True
+    alpha = symbols('alpha', extended_negative=True)
+    assert erf(alpha).is_negative is True
     assert erf(I).is_real is False
     assert erf(0, evaluate=False).is_real
     assert erf(0, evaluate=False).is_zero
@@ -136,6 +150,10 @@ def test_erfc():
     assert erfc(-x) == S(2) - erfc(x)
     assert erfc(erfcinv(x)) == x
 
+    alpha = symbols('alpha', extended_real=True)
+    assert erfc(alpha).is_real is True
+    alpha = symbols('alpha', extended_real=False)
+    assert erfc(alpha).is_real is None
     assert erfc(I).is_real is False
     assert erfc(0, evaluate=False).is_real
     assert erfc(0, evaluate=False).is_zero is False
@@ -325,6 +343,8 @@ def test_erfinv_evalf():
 def test_erfcinv():
     assert erfcinv(1) is S.Zero
     assert erfcinv(0) is S.Infinity
+    assert erfcinv(0, evaluate=False).is_infinite is True
+    assert erfcinv(2, evaluate=False).is_infinite is True
     assert erfcinv(nan) is S.NaN
 
     assert erfcinv(x).diff() == -sqrt(pi)*exp(erfcinv(x)**2)/2
@@ -417,6 +437,10 @@ def test_ei():
     assert Ei(x).series(x, 1, 3) == Ei(1) + E*(x - 1) + O((x - 1)**3, (x, 1))
     assert Ei(x).series(x, oo) == \
         (120/x**5 + 24/x**4 + 6/x**3 + 2/x**2 + 1/x + 1 + O(x**(-6), (x, oo)))*exp(x)/x
+    assert Ei(x).series(x, -oo) == \
+        (120/x**5 + 24/x**4 + 6/x**3 + 2/x**2 + 1/x + 1 + O(x**(-6), (x, -oo)))*exp(x)/x
+    assert Ei(-x).series(x, oo) == \
+        -((-120/x**5 + 24/x**4 - 6/x**3 + 2/x**2 - 1/x + 1 + O(x**(-6), (x, oo)))*exp(-x)/x)
 
     assert str(Ei(cos(2)).evalf(n=10)) == '-0.6760647401'
     raises(ArgumentIndexError, lambda: Ei(x).fdiff(2))
@@ -612,20 +636,26 @@ def test_si():
     assert tn_arg(Si)
     assert tn_arg(Shi)
 
+    assert Si(x)._eval_as_leading_term(x, None, 1) == x
+    assert Si(2*x)._eval_as_leading_term(x, None, 1) == 2*x
+    assert Si(sin(x))._eval_as_leading_term(x, None, 1) == x
+    assert Si(x + 1)._eval_as_leading_term(x, None, 1) == Si(1)
+    assert Si(1/x)._eval_as_leading_term(x, None, 1) == \
+        Si(1/x)._eval_as_leading_term(x, None, -1) == Si(1/x)
+
     assert Si(x).nseries(x, n=8) == \
-        x - x**3/18 + x**5/600 - x**7/35280 + O(x**9)
+        x - x**3/18 + x**5/600 - x**7/35280 + O(x**8)
     assert Shi(x).nseries(x, n=8) == \
-        x + x**3/18 + x**5/600 + x**7/35280 + O(x**9)
-    assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + 17*x**5/450 + O(x**6)
+        x + x**3/18 + x**5/600 + x**7/35280 + O(x**8)
+    assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + O(x**5)
     assert Si(x).nseries(x, 1, n=3) == \
         Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
 
-    assert Si(x).series(x, oo) == pi/2 - (- 6/x**3 + 1/x \
-        + O(x**(-7), (x, oo)))*sin(x)/x - (24/x**4 - 2/x**2 + 1 \
-        + O(x**(-7), (x, oo)))*cos(x)/x
+    assert Si(x).series(x, oo) == -sin(x)*(-6/x**4 + x**(-2) + O(x**(-6), (x, oo))) - \
+        cos(x)*(24/x**5 - 2/x**3 + 1/x + O(x**(-6), (x, oo))) + pi/2
 
     t = Symbol('t', Dummy=True)
-    assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
+    assert Si(x).rewrite(sinc).dummy_eq(Integral(sinc(t), (t, 0, x)))
 
     assert limit(Shi(x), x, S.Infinity) == S.Infinity
     assert limit(Shi(x), x, S.NegativeInfinity) == S.NegativeInfinity
@@ -667,13 +697,16 @@ def test_ci():
     assert tn_arg(Chi)
 
     assert Ci(x).nseries(x, n=4) == \
-        EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
+        EulerGamma + log(x) - x**2/4 + O(x**4)
     assert Chi(x).nseries(x, n=4) == \
-        EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
+        EulerGamma + log(x) + x**2/4 + O(x**4)
 
-    assert Ci(x).series(x, oo) == -cos(x)*(-6/x**3 + 1/x \
-        + O(x**(-7), (x, oo)))/x + (24/x**4 - 2/x**2 + 1 \
-        + O(x**(-7), (x, oo)))*sin(x)/x
+    assert Ci(x).series(x, oo) == -cos(x)*(-6/x**4 + x**(-2) + O(x**(-6), (x, oo))) + \
+        sin(x)*(24/x**5 - 2/x**3 + 1/x + O(x**(-6), (x, oo)))
+
+    assert Ci(x).series(x, -oo) == -cos(x)*(-6/x**4 + x**(-2) + O(x**(-6), (x, -oo))) + \
+        sin(x)*(24/x**5 - 2/x**3 + 1/x + O(x**(-6), (x, -oo))) + I*pi
+
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
     assert Ci(x).rewrite(uppergamma) == -expint(1, x*exp_polar(-I*pi/2))/2 -\
                                         expint(1, x*exp_polar(I*pi/2))/2
@@ -814,3 +847,14 @@ def test_fresnel_series():
     assert (fresnelc(1/z).series(z) - fc.subs(z, 1/z)).expand().is_Order
     assert ((2*fresnels(3*z)).series(z, oo) - 2*fs.subs(z, 3*z)).expand().is_Order
     assert ((3*fresnelc(2*z)).series(z, oo) - 3*fc.subs(z, 2*z)).expand().is_Order
+
+
+def test_integral_rewrites(): #issues 26134, 26144, 26306
+    assert expint(n, x).rewrite(Integral).dummy_eq(Integral(t**-n * exp(-t*x), (t, 1, oo)))
+    assert Si(x).rewrite(Integral).dummy_eq(Integral(sinc(t), (t, 0, x)))
+    assert Ci(x).rewrite(Integral).dummy_eq(log(x) - Integral((1 - cos(t))/t, (t, 0, x)) + EulerGamma)
+    assert fresnels(x).rewrite(Integral).dummy_eq(Integral(sin(pi*t**2/2), (t, 0, x)))
+    assert fresnelc(x).rewrite(Integral).dummy_eq(Integral(cos(pi*t**2/2), (t, 0, x)))
+    assert Ei(x).rewrite(Integral).dummy_eq(Integral(exp(t)/t, (t, -oo, x)))
+    assert fresnels(x).diff(x) == fresnels(x).rewrite(Integral).diff(x)
+    assert fresnelc(x).diff(x) == fresnelc(x).rewrite(Integral).diff(x)

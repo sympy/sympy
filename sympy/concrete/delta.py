@@ -100,9 +100,7 @@ def _has_simple_delta(expr, index):
         if _is_simple_delta(expr, index):
             return True
         if expr.is_Add or expr.is_Mul:
-            for arg in expr.args:
-                if _has_simple_delta(arg, index):
-                    return True
+            return any(_has_simple_delta(arg, index) for arg in expr.args)
     return False
 
 
@@ -141,8 +139,7 @@ def _remove_multiple_delta(expr):
     if len(solns) == 0:
         return S.Zero
     elif len(solns) == 1:
-        for key in solns[0].keys():
-            newargs.append(KroneckerDelta(key, solns[0][key]))
+        newargs += [KroneckerDelta(k, v) for k, v in solns[0].items()]
         expr2 = expr.func(*newargs)
         if expr != expr2:
             return _remove_multiple_delta(expr2)
@@ -195,10 +192,9 @@ def deltaproduct(f, limit):
         newexpr = f.func(*terms)
         k = Dummy("kprime", integer=True)
         if isinstance(limit[1], int) and isinstance(limit[2], int):
-            result = deltaproduct(newexpr, limit) + sum([
-                deltaproduct(newexpr, (limit[0], limit[1], ik - 1)) *
+            result = deltaproduct(newexpr, limit) + sum(deltaproduct(newexpr, (limit[0], limit[1], ik - 1)) *
                 delta.subs(limit[0], ik) *
-                deltaproduct(newexpr, (limit[0], ik + 1, limit[2])) for ik in range(int(limit[1]), int(limit[2] + 1))]
+                deltaproduct(newexpr, (limit[0], ik + 1, limit[2])) for ik in range(int(limit[1]), int(limit[2] + 1))
             )
         else:
             result = deltaproduct(newexpr, limit) + deltasummation(

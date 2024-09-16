@@ -23,7 +23,7 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
 from sympy.matrices.dense import Matrix
 from sympy.matrices import SparseMatrix
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, groebner
 from sympy.printing.str import sstr
 from sympy.simplify.radsimp import denom
 from sympy.solvers.solvers import (nsolve, solve, solve_linear)
@@ -329,7 +329,6 @@ def test_quintics_2():
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 3),
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 4)]
 
-
 def test_quintics_3():
     y = x**5 + x**3 - 2**Rational(1, 3)
     assert solve(y) == solve(-y) == []
@@ -434,7 +433,7 @@ def test_linear_system_symbols_doesnt_hang_1():
         y1s = symbols('y1_:{}'.format(wy), real=True)
         c = symbols('c_:{}'.format(order+1), real=True)
 
-        expr = sum([coeff*x**o for o, coeff in enumerate(c)])
+        expr = sum(coeff*x**o for o, coeff in enumerate(c))
         eqs = []
         for i in range(wy):
             eqs.append(expr.diff(x, i).subs({x: x0}) - y0s[i])
@@ -644,8 +643,11 @@ def test_solve_transcendental():
         assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)
     # don't allow massive expansion
     assert solve(cos(1000*x) - S.Half) == [pi/3000, pi/600]
-    assert solve(cos(x - 1000*y) - 1, x) == [2*atan(tan(500*y))]
-    assert solve(cos(x + y + z) - 1, x) == [-2*atan(tan(y/2 + z/2))]
+    assert solve(cos(x - 1000*y) - 1, x) == [1000*y, 1000*y + 2*pi]
+    assert solve(cos(x + y + z) - 1, x) == [-y - z, -y - z + 2*pi]
+
+    # issue 26008
+    assert solve(sin(x + pi/6)) == [-pi/6, 5*pi/6]
 
 
 def test_solve_for_functions_derivatives():
@@ -1838,7 +1840,7 @@ def test_issue_6792():
          CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_6819_6820_6821_6248_8692():
+def test_issues_6819_6820_6821_6248_8692_25777_25779():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
@@ -1852,9 +1854,21 @@ def test_issues_6819_6820_6821_6248_8692():
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
 
+    # 25777
+    assert solve(abs(x**3 + x + 2)/(x + 1)) == []
+
+    # 25779
+    assert solve(abs(x)) == [0]
+    assert solve(Eq(abs(x**2 - 2*x), 4), x) == [
+        1 - sqrt(5), 1 + sqrt(5)]
+    nn = symbols('nn', nonnegative=True)
+    assert solve(abs(sqrt(nn))) == [0]
+    nz = symbols('nz', nonzero=True)
+    assert solve(Eq(Abs(4 + 1 / (4*nz)), 0)) == [-Rational(1, 16)]
+
     x = symbols('x')
     assert solve([re(x) - 1, im(x) - 2], x) == [
-        {re(x): 1, x: 1 + 2*I, im(x): 2}]
+        {x: 1 + 2*I, re(x): 1, im(x): 2}]
 
     # check for 'dict' handling of solution
     eq = sqrt(re(x)**2 + im(x)**2) - 3
@@ -2112,7 +2126,7 @@ def test_issue_5114_6611():
     ans = solve(list(eqs), list(v), simplify=False)
     # If time is taken to simplify then then 2617 below becomes
     # 1168 and the time is about 50 seconds instead of 2.
-    assert sum([s.count_ops() for s in ans.values()]) <= 3270
+    assert sum(s.count_ops() for s in ans.values()) <= 3270
 
 
 def test_det_quick():
@@ -2555,6 +2569,18 @@ def test_issue_20747():
     assert solve(eq, HT) == sol
 
 
+def test_issue_27001():
+    assert solve((x, x**2), (x, y, z), dict=True) == [{x: 0}]
+    s = a1, a2, a3, a4, a5 = symbols('a1:6')
+    eqs = [8*a1**4*a2 + 4*a1**2*a2**3 - 8*a1**2*a2*a4 + a2**5/2 - 2*a2**3*a4 +
+        8*a2*a3**2 + 2*a2*a4**2 + 8*a2*a5, 12*a1**4 + 6*a1**2*a2**2 -
+        8*a1**2*a4 + 3*a2**4/4 - 2*a2**2*a4 + 4*a3**2 + a4**2 + 4*a5, 16*a1**3
+        + 4*a1*a2**2 - 8*a1*a4, -8*a1**2*a2 - 2*a2**3 + 4*a2*a4]
+    sol = [{a4: 2*a1**2 + a2**2/2, a5: -a3**2}, {a1: 0, a2: 0, a5: -a3**2 - a4**2/4}]
+    assert solve(eqs, s, dict=True) == sol
+    assert (g:=solve(groebner(eqs, s), dict=True)) == sol, g
+
+
 def test_issue_20902():
     f = (t / ((1 + t) ** 2))
     assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
@@ -2621,6 +2647,12 @@ def test_issue_22717():
         {y: -1, x: E}, {y: 1, x: E}]
 
 
+def test_issue_25176():
+    eq = (x - 5)**-8 - 3
+    sol = solve(eq)
+    assert not any(eq.subs(x, i) for i in sol)
+
+
 def test_issue_10169():
     eq = S(-8*a - x**5*(a + b + c + e) - x**4*(4*a - 2**Rational(3,4)*c + 4*c +
         d + 2**Rational(3,4)*e + 4*e + k) - x**3*(-4*2**Rational(3,4)*c + sqrt(2)*c -
@@ -2640,7 +2672,8 @@ def test_issue_10169():
 
 def test_solve_undetermined_coeffs_issue_23927():
     A, B, r, phi = symbols('A, B, r, phi')
-    eq = Eq(A*sin(t) + B*cos(t), r*sin(t - phi)).rewrite(Add).expand(trig=True)
+    e = Eq(A*sin(t) + B*cos(t), r*sin(t - phi))
+    eq = (e.lhs - e.rhs).expand(trig=True)
     soln = solve_undetermined_coeffs(eq, (r, phi), t)
     assert soln == [{
         phi: 2*atan((A - sqrt(A**2 + B**2))/B),

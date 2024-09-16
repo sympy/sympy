@@ -259,7 +259,7 @@ class RewritingSystem:
                     added = 0
                     if r:
                         # reset i since some elements were removed
-                        i = min([lhs.index(s) for s in r])
+                        i = min(lhs.index(s) for s in r)
                     lhs = [l for l in lhs if l not in r]
                     lhs.extend(a)
                     if r1 in r:

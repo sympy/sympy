@@ -1214,7 +1214,7 @@ class Permutation(Atom):
         [0, 1, 2, 3]
         """
         a = self.array_form
-        return [i for i, e in enumerate(a) if a[i] != i]
+        return [i for i, e in enumerate(a) if e != i]
 
     def __add__(self, other):
         """Return permutation that is other higher in rank than self.
@@ -1561,8 +1561,7 @@ class Permutation(Atom):
                 res.append(tuple(x))
             elif nx > 2:
                 first = x[0]
-                for y in x[nx - 1:0:-1]:
-                    res.append((first, y))
+                res.extend((first, y) for y in x[nx - 1:0:-1])
         return res
 
     @classmethod
@@ -2127,7 +2126,7 @@ class Permutation(Atom):
         pos = [i for i in range(len(a) - 1) if a[i] > a[i + 1]]
         return pos
 
-    def max(self):
+    def max(self) -> int:
         """
         The maximum element moved by the permutation.
 
@@ -2144,14 +2143,12 @@ class Permutation(Atom):
 
         min, descents, ascents, inversions
         """
-        max = 0
         a = self.array_form
-        for i in range(len(a)):
-            if a[i] != i and a[i] > max:
-                max = a[i]
-        return max
+        if not a:
+            return 0
+        return max(_a for i, _a in enumerate(a) if _a != i)
 
-    def min(self):
+    def min(self) -> int:
         """
         The minimum element moved by the permutation.
 
@@ -2169,11 +2166,9 @@ class Permutation(Atom):
         max, descents, ascents, inversions
         """
         a = self.array_form
-        min = len(a)
-        for i in range(len(a)):
-            if a[i] != i and a[i] < min:
-                min = a[i]
-        return min
+        if not a:
+            return 0
+        return min(_a for i, _a in enumerate(a) if _a != i)
 
     def inversions(self):
         """
@@ -2430,7 +2425,7 @@ class Permutation(Atom):
         """
         a = self.array_form
 
-        return sum([j for j in range(len(a) - 1) if a[j] > a[j + 1]])
+        return sum(j for j in range(len(a) - 1) if a[j] > a[j + 1])
 
     def runs(self):
         """
@@ -2829,7 +2824,7 @@ class Permutation(Atom):
         b = other.array_form
         if len(a) != len(b):
             raise ValueError("The permutations must be of the same size.")
-        return sum([abs(a[i] - b[i]) for i in range(len(a))])
+        return sum(abs(a[i] - b[i]) for i in range(len(a)))
 
     @classmethod
     def josephus(cls, m, n, s=1):

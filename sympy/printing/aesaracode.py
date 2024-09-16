@@ -147,7 +147,7 @@ class AesaraPrinter(Printer):
         if key in self.cache:
             return self.cache[key]
 
-        value = aet.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
+        value = aet.tensor(name=name, dtype=dtype, shape=broadcastable)
         self.cache[key] = value
         return value
 
@@ -387,7 +387,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
         values (tuple of ``bool``\ s).
     """
     if dim is not None:
-        return {s: (False,) * dim for s in inputs}
+        return dict.fromkeys(inputs, (False,) * dim)
 
     if dims is not None:
         maxdim = max(dims.values())

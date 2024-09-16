@@ -73,12 +73,12 @@ def test_nsolve():
 
 def test_issue_6408():
     x = Symbol('x')
-    assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
+    assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0
 
 
 def test_issue_6408_integral():
     x, y = symbols('x y')
-    assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0
+    assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0
 
 
 @conserve_mpmath_dps

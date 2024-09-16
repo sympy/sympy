@@ -19,15 +19,16 @@ _known_functions_numpy = dict(_in_numpy, **{
     'sign': 'sign',
     'logaddexp': 'logaddexp',
     'logaddexp2': 'logaddexp2',
-    'isnan': 'isnan'
+    'isinf': 'isinf',
+    'isnan': 'isnan',
+
 })
 _known_constants_numpy = {
     'Exp1': 'e',
     'Pi': 'pi',
     'EulerGamma': 'euler_gamma',
     'NaN': 'nan',
-    'Infinity': 'PINF',
-    'NegativeInfinity': 'NINF'
+    'Infinity': 'inf',
 }
 
 _numpy_known_functions = {k: 'numpy.' + v for k, v in _known_functions_numpy.items()}
@@ -63,6 +64,9 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         #     tuples in nopython mode.
         delimiter=', '
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
+
+    def _print_NegativeInfinity(self, expr):
+        return '-' + self._print(S.Infinity)
 
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
@@ -214,11 +218,10 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational, sqrt=self._module + '.sqrt')
 
     def _print_Min(self, expr):
-        return '{}(({}), axis=0)'.format(self._module_format(self._module + '.amin'), ','.join(self._print(i) for i in expr.args))
+        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amin'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
 
     def _print_Max(self, expr):
-        return '{}(({}), axis=0)'.format(self._module_format(self._module + '.amax'), ','.join(self._print(i) for i in expr.args))
-
+        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amax'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.angle'), self._print(expr.args[0]))
 
@@ -258,7 +261,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         if len(expr.shape) == 2:
             return self._print(expr.tomatrix())
         # Should be possible to extend to more dimensions
-        return CodePrinter._print_not_supported(self, expr)
+        return super()._print_not_supported(self, expr)
 
     _add = "add"
     _einsum = "einsum"

@@ -17,6 +17,7 @@ from .decorators import _sympifyit
 from .intfunc import num_digits, igcd, ilcm, mod_inverse, integer_nthroot
 from .logic import fuzzy_not
 from .kind import NumberKind
+from .sorting import ordered
 from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
 import mpmath
@@ -122,7 +123,7 @@ def comp(z1, z2, tol=None):
                 ca = pure_complex(a, or_real=True)
                 if not ca:
                     if fa:
-                        a = a.n(prec_to_dps(min([i._prec for i in fa])))
+                        a = a.n(prec_to_dps(min(i._prec for i in fa)))
                         ca = pure_complex(a, or_real=True)
                         break
                     else:
@@ -130,7 +131,7 @@ def comp(z1, z2, tol=None):
                         a, b = b, a
             cb = pure_complex(b)
             if not cb and fb:
-                b = b.n(prec_to_dps(min([i._prec for i in fb])))
+                b = b.n(prec_to_dps(min(i._prec for i in fb)))
                 cb = pure_complex(b, or_real=True)
             if ca and cb and (ca[1] or cb[1]):
                 return all(comp(i, j) for i, j in zip(ca, cb))
@@ -210,7 +211,7 @@ def _decimal_to_Rational_prec(dec):
         rv = Integer(int(dec))
     else:
         s = (-1)**s
-        d = sum([di*10**i for i, di in enumerate(reversed(d))])
+        d = sum(di*10**i for i, di in enumerate(reversed(d)))
         rv = Rational(s*d, 10**-e)
     return rv, prec
 
@@ -749,8 +750,11 @@ class Float(Number):
 
     _mpf_: tuple[int, int, int, int]
 
-    # A Float represents many real numbers,
-    # both rational and irrational.
+    # A Float, though rational in form, does not behave like
+    # a rational in all Python expressions so we deal with
+    # exceptions (where we want to deal with the rational
+    # form of the Float as a rational) at the source rather
+    # than assigning a mathematically loaded category of 'rational'
     is_rational = None
     is_irrational = None
     is_number = True
@@ -900,11 +904,10 @@ class Float(Number):
                     return Float._new(
                         (num[0], num[1], num[2], bitcount(num[1])),
                         precision)
+        elif isinstance(num, (Number, NumberSymbol)):
+            _mpf_ = num._as_mpf_val(precision)
         else:
-            try:
-                _mpf_ = num._as_mpf_val(precision)
-            except (NotImplementedError, AttributeError):
-                _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
+            _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
 
         return cls._new(_mpf_, precision, zero=False)
 
@@ -925,9 +928,11 @@ class Float(Number):
         obj._prec = _prec
         return obj
 
-    # mpz can't be pickled
     def __getnewargs_ex__(self):
-        return ((mlib.to_pickable(self._mpf_),), {'precision': self._prec})
+        sign, man, exp, bc = self._mpf_
+        arg = (sign, hex(man)[2:], exp, bc)
+        kwargs = {'precision': self._prec}
+        return ((arg,), kwargs)
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
@@ -970,7 +975,10 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
-        return self._mpf_ == fzero
+        if self._mpf_ == fzero:
+            return True
+        if not int_valued(self):
+            return False
 
     def _eval_is_negative(self):
         if self._mpf_ in (_mpf_ninf, _mpf_inf):
@@ -1590,8 +1598,6 @@ class Rational(Number):
             # S(0) == S.false is False
             # S(0) == False is True
             return False
-        if not self:
-            return not other
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
@@ -2427,7 +2433,7 @@ class AlgebraicNumber(Expr):
 
         if rep0 is not None:
             from sympy.polys.densetools import dup_compose
-            c = dup_compose(rep.rep, rep0.rep, dom)
+            c = dup_compose(rep.to_list(), rep0.to_list(), dom)
             rep = DMP.from_list(c, 0, dom)
             scoeffs = Tuple(*c)
 
@@ -3900,6 +3906,9 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
     def __int__(self):
         return 1
 
+    def _as_mpf_val(self, prec):
+        return self._eval_evalf(prec)._mpf_
+
     def _eval_evalf(self, prec):
         rv = self._eval_expand_func(function=True)._eval_evalf(prec + 4)
         return Float(rv, precision=prec)
@@ -4240,6 +4249,142 @@ def equal_valued(x, y):
         return (1 << neg_exp) == q
 
 
+def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
+    """Return True if expr1 and expr2 are numerically close.
+
+    The expressions must have the same structure, but any Rational, Integer, or
+    Float numbers they contain are compared approximately using rtol and atol.
+    Any other parts of expressions are compared exactly. However, allowance is
+    made to allow for the additive and multiplicative identities.
+
+    Relative tolerance is measured with respect to expr2 so when used in
+    testing expr2 should be the expected correct answer.
+
+    Examples
+    ========
+
+    >>> from sympy import exp
+    >>> from sympy.abc import x, y
+    >>> from sympy.core.numbers import all_close
+    >>> expr1 = 0.1*exp(x - y)
+    >>> expr2 = exp(x - y)/10
+    >>> expr1
+    0.1*exp(x - y)
+    >>> expr2
+    exp(x - y)/10
+    >>> expr1 == expr2
+    False
+    >>> all_close(expr1, expr2)
+    True
+
+    Identities are automatically supplied:
+
+    >>> all_close(x, x + 1e-10)
+    True
+    >>> all_close(x, 1.0*x)
+    True
+    >>> all_close(x, 1.0*x + 1e-10)
+    True
+
+    """
+    NUM_TYPES = (Rational, Float)
+
+    def _all_close(obj1, obj2):
+        if type(obj1) == type(obj2) and isinstance(obj1, (list, tuple)):
+            if len(obj1) != len(obj2):
+                return False
+            return all(_all_close(e1, e2) for e1, e2 in zip(obj1, obj2))
+        else:
+            return _all_close_expr(_sympify(obj1), _sympify(obj2))
+
+    def _all_close_expr(expr1, expr2):
+        num1 = isinstance(expr1, NUM_TYPES)
+        num2 = isinstance(expr2, NUM_TYPES)
+        if num1 != num2:
+            return False
+        elif num1:
+            return _close_num(expr1, expr2)
+        if expr1.is_Add or expr1.is_Mul or expr2.is_Add or expr2.is_Mul:
+            return _all_close_ac(expr1, expr2)
+        if expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
+            return False
+        args = zip(expr1.args, expr2.args)
+        return all(_all_close_expr(a1, a2) for a1, a2 in args)
+
+    def _close_num(num1, num2):
+        return bool(abs(num1 - num2) <= atol + rtol*abs(num2))
+
+    def _all_close_ac(expr1, expr2):
+        # compare expressions with associative commutative operators for
+        # approximate equality by seeing that all terms have equivalent
+        # coefficients (which are always Rational or Float)
+        if expr1.is_Mul or expr2.is_Mul:
+            # as_coeff_mul automatically will supply coeff of 1
+            c1, e1 = expr1.as_coeff_mul(rational=False)
+            c2, e2 = expr2.as_coeff_mul(rational=False)
+            if not _close_num(c1, c2):
+                return False
+            s1 = set(e1)
+            s2 = set(e2)
+            common = s1 & s2
+            s1 -= common
+            s2 -= common
+            if not s1:
+                return True
+            if not any(i.has(Float) for j in (s1, s2) for i in j):
+                return False
+            # factors might not be matching, e.g.
+            # x != x**1.0, exp(x) != exp(1.0*x), etc...
+            s1 = [i.as_base_exp() for i in ordered(s1)]
+            s2 = [i.as_base_exp() for i in ordered(s2)]
+            unmatched = list(range(len(s1)))
+            for be1 in s1:
+                for i in unmatched:
+                    be2 = s2[i]
+                    if _all_close(be1, be2):
+                        unmatched.remove(i)
+                        break
+                else:
+                    return False
+            return not(unmatched)
+        assert expr1.is_Add or expr2.is_Add
+        cd1 = expr1.as_coefficients_dict()
+        cd2 = expr2.as_coefficients_dict()
+        # this test will asure that the key of 1 is in
+        # each dict and that they have equal values
+        if not _close_num(cd1[1], cd2[1]):
+            return False
+        if len(cd1) != len(cd2):
+            return False
+        for k in list(cd1):
+            if k in cd2:
+                if not _close_num(cd1.pop(k), cd2.pop(k)):
+                    return False
+            # k (or a close version in cd2) might have
+            # Floats in a factor of the term which will
+            # be handled below
+        else:
+            if not cd1:
+                return True
+        for k1 in cd1:
+            for k2 in cd2:
+                if _all_close_expr(k1, k2):
+                    # found a matching key
+                    # XXX there could be a corner case where
+                    # more than 1 might match and the numbers are
+                    # such that one is better than the other
+                    # that is not being considered here
+                    if not _close_num(cd1[k1], cd2[k2]):
+                        return False
+                    break
+            else:
+                # no key matched
+                return False
+        return True
+
+    return _all_close(expr1, expr2)
+
+
 @dispatch(Tuple, Number) # type:ignore
 def _eval_is_eq(self, other): # noqa: F811
     return False
@@ -4273,13 +4418,6 @@ if flint is not None:
 
     _sympy_converter[type(flint.fmpz(1))] = sympify_fmpz
     _sympy_converter[type(flint.fmpq(1, 2))] = sympify_fmpq
-
-
-def sympify_mpmath_mpq(x):
-    p, q = x._mpq_
-    return Rational(p, q, 1)
-
-_sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
 
 
 def sympify_mpmath(x):

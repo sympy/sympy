@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.trigonometric import atan
     from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
 
-LG10 = math.log(10, 2)
+LG10 = math.log2(10)
 rnd = round_nearest
 
 
@@ -430,20 +430,21 @@ def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False
             # expression
             s = options.get('subs', False)
             if s:
-                doit = True
                 # use strict=False with as_int because we take
                 # 2.0 == 2
-                for v in s.values():
+                def is_int_reim(x):
+                    """Check for integer or integer + I*integer."""
                     try:
-                        as_int(v, strict=False)
+                        as_int(x, strict=False)
+                        return True
                     except ValueError:
                         try:
-                            [as_int(i, strict=False) for i in v.as_real_imag()]
-                            continue
-                        except (ValueError, AttributeError):
-                            doit = False
-                            break
-                if doit:
+                            [as_int(i, strict=False) for i in x.as_real_imag()]
+                            return True
+                        except ValueError:
+                            return False
+
+                if all(is_int_reim(v) for v in s.values()):
                     re_im = re_im.subs(s)
 
             re_im = Add(re_im, -nint, evaluate=False)
@@ -772,7 +773,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
             return fone, None, prec, None
         # Exponentiation by p magnifies relative error by |p|, so the
         # base must be evaluated with increased precision if p is large
-        prec += int(math.log(abs(p), 2))
+        prec += int(math.log2(abs(p)))
         result = evalf(base, prec + 5, options)
         if result is S.ComplexInfinity:
             if p < 0:
@@ -1493,7 +1494,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
         re, im = as_real_imag()
         if re.has(re_) or im.has(im_):
             raise NotImplementedError
-        if re == 0.0:
+        if not re:
             re = None
             reprec = None
         elif re.is_number:
@@ -1501,7 +1502,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
             reprec = prec
         else:
             raise NotImplementedError
-        if im == 0.0:
+        if not im:
             im = None
             imprec = None
         elif im.is_number:

@@ -1,11 +1,11 @@
 from typing import Tuple as tTuple
 from collections import defaultdict
-from functools import cmp_to_key, reduce
+from functools import reduce
 from itertools import product
 import operator
 
 from .sympify import sympify
-from .basic import Basic
+from .basic import Basic, _args_sortkey
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
@@ -29,8 +29,6 @@ class NC_Marker:
     is_commutative = False
 
 
-# Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -179,7 +177,6 @@ class Mul(Expr, AssocOp):
             return False  # e.g. zoo*x == -zoo*x
         c = self.args[0]
         return c.is_Number and c.is_extended_negative
-
     def __neg__(self):
         c, args = self.as_coeff_mul()
         if args[0] is not S.ComplexInfinity:
@@ -379,6 +376,14 @@ class Mul(Expr, AssocOp):
                     return [S.NaN], [], None
                 coeff = S.ComplexInfinity
                 continue
+
+            elif not coeff and isinstance(o, Add) and any(
+                    _ in (S.NegativeInfinity, S.ComplexInfinity, S.Infinity)
+                    for __ in o.args for _ in Mul.make_args(__)):
+                # e.g 0 * (x + oo) = NaN but not
+                # 0 * (1 + Integral(x, (x, 0, oo))) which is
+                # treated like 0 * x -> 0
+                return [S.NaN], [], None
 
             elif o is S.ImaginaryUnit:
                 neg1e += S.Half
@@ -583,6 +588,9 @@ class Mul(Expr, AssocOp):
         i = 0  # steps through num_rat which may grow
         while i < len(num_rat):
             bi, ei = num_rat[i]
+            if bi == 1:
+                i += 1
+                continue
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
@@ -919,7 +927,8 @@ class Mul(Expr, AssocOp):
         # Handle things like 1/(x*(x + 1)), which are automatically converted
         # to 1/x*1/(x + 1)
         expr = self
-        n, d = fraction(expr)
+        # default matches fraction's default
+        n, d = fraction(expr, hints.get('exact', False))
         if d.is_Mul:
             n, d = [i._eval_expand_mul(**hints) if i.is_Mul else i
                 for i in (n, d)]
@@ -1244,7 +1253,7 @@ class Mul(Expr, AssocOp):
                 nc += 1
             if e1 is None:
                 e1 = e
-            elif e != e1 or nc > 1:
+            elif e != e1 or nc > 1 or not e.is_Integer:
                 return self, S.One
             bases.append(b)
         return self.func(*bases), e1
@@ -1975,7 +1984,10 @@ class Mul(Expr, AssocOp):
                         n -= n1 - ns    # reduce n
                 facs.append(s)
 
-        except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
+        except (ValueError, NotImplementedError, TypeError, PoleError):
+            # XXX: Catching so many generic exceptions around a large block of
+            # code will mask bugs. Whatever purpose catching these exceptions
+            # serves should be handled in a different way.
             n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
             if n0.is_nonnegative:
                 n0 = S.Zero
@@ -2028,7 +2040,7 @@ class Mul(Expr, AssocOp):
             res += Order(x**n, x)
         return res
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         return self.func(*[t.as_leading_term(x, logx=logx, cdir=cdir) for t in self.args])
 
     def _eval_conjugate(self):

@@ -362,7 +362,7 @@ class Pow(Expr):
             if q.is_integer and base % q == 0:
                 return S.Zero
 
-            from sympy.ntheory.factor_ import totient
+            from sympy.functions.combinatorial.numbers import totient
 
             if base.is_Integer and exp.is_Integer and q.is_Integer:
                 b, e, m = int(base), int(exp), int(q)
@@ -560,6 +560,8 @@ class Pow(Expr):
                     return ok
 
         if real_b is False and real_e: # we already know it's not imag
+            if isinstance(self.exp, Rational) and self.exp.p == 1:
+                return False
             from sympy.functions.elementary.complexes import arg
             i = arg(self.base)*self.exp/S.Pi
             if i.is_complex: # finite
@@ -818,10 +820,9 @@ class Pow(Expr):
         (1/2, 2)
 
         """
-
         b, e = self.args
-        if b.is_Rational and b.p < b.q and b.p > 0:
-            return 1/b, -e
+        if b.is_Rational and b.p == 1 and b.q != 1:
+            return Integer(b.q), -e
         return b, e
 
     def _eval_adjoint(self):
@@ -1532,7 +1533,8 @@ class Pow(Expr):
                 return res
 
         f = b.as_leading_term(x, logx=logx)
-        g = (b/f - S.One).cancel(expand=False)
+        g = (_mexpand(b) - f).cancel()
+        g = g/f
         if not m.is_number:
             raise NotImplementedError()
         maxpow = n - m*e
@@ -1582,8 +1584,8 @@ class Pow(Expr):
             # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
             # prevent rounding errors which can induce wrong values of d leading
             # to a NotImplementedError being returned from the block below.
-            from sympy.simplify.simplify import nsimplify
-            _, d = nsimplify(g).leadterm(x, logx=logx)
+            g = g.replace(lambda x: x.is_Float, lambda x: Rational(x))
+            _, d = g.leadterm(x, logx=logx)
         if not d.is_positive:
             g = g.simplify()
             if g.is_zero:
@@ -1642,7 +1644,7 @@ class Pow(Expr):
                 return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         return res
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.elementary.exponential import exp, log
         e = self.exp
         b = self.base
@@ -1837,6 +1839,6 @@ power = Dispatcher('power')
 power.add((object, object), Pow)
 
 from .add import Add
-from .numbers import Integer
+from .numbers import Integer, Rational
 from .mul import Mul, _keep_coeff
 from .symbol import Symbol, Dummy, symbols

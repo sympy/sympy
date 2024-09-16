@@ -1,8 +1,8 @@
 from typing import Tuple as tTuple
 from collections import defaultdict
-from functools import cmp_to_key, reduce
+from functools import reduce
 from operator import attrgetter
-from .basic import Basic
+from .basic import _args_sortkey
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
@@ -13,10 +13,6 @@ from .intfunc import ilcm, igcd
 from .expr import Expr
 from .kind import UndefinedKind
 from sympy.utilities.iterables import is_sequence, sift
-
-# Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
-
 
 def _could_extract_minus_sign(expr):
     # assume expr is Add-like
@@ -1016,7 +1012,7 @@ class Add(Expr, AssocOp):
             im_part.append(im)
         return (self.func(*re_part), self.func(*im_part))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.core.symbol import Dummy, Symbol
         from sympy.series.order import Order
         from sympy.functions.elementary.exponential import log

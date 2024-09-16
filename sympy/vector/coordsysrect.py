@@ -6,7 +6,7 @@ from sympy.core import S, Dummy, Lambda
 from sympy.core.symbol import Str
 from sympy.core.symbol import symbols
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.solvers import solve
 from sympy.vector.scalar import BaseScalar
 from sympy.core.containers import Tuple
@@ -517,13 +517,10 @@ class CoordSys3D(Basic):
         # Else, use tree to calculate position
         rootindex, path = _path(self, other)
         result = eye(3)
-        i = -1
         for i in range(rootindex):
             result *= path[i]._parent_rotation_matrix
-        i += 2
-        while i < len(path):
+        for i in range(rootindex + 1, len(path)):
             result *= path[i]._parent_rotation_matrix.T
-            i += 1
         return result
 
     @cacheit

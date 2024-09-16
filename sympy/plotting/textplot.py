@@ -50,6 +50,12 @@ def textplot_str(expr, a, b, W=55, H=21):
             .format(free))
     x = free.pop() if free else Dummy()
     f = lambdify([x], expr)
+    if isinstance(a, complex):
+        if a.imag == 0:
+            a = a.real
+    if isinstance(b, complex):
+        if b.imag == 0:
+            b = b.real
     a = float(a)
     b = float(b)
 
@@ -76,7 +82,7 @@ def textplot_str(expr, a, b, W=55, H=21):
     else:
         mi, ma = -1, 1
     y_range = ma - mi
-    precision = math.floor(math.log(y_range, 10)) - 1
+    precision = math.floor(math.log10(y_range)) - 1
     precision *= -1
     mi = round(mi, precision)
     ma = round(ma, precision)

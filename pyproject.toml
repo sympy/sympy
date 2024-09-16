@@ -1,6 +1,10 @@
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
-addopts = "-m 'not slow'"
+addopts = "-m 'not slow and not tooslow'"
+filterwarnings = [
+    'ignore:More than 20 figures have been opened.*:RuntimeWarning',
+    'ignore:FigureCanvasAgg is non-interactive, and thus cannot be shown:UserWarning',
+]
 
 # Only run tests under the sympy/ directory. Otherwise pytest will attempt to
 # collect tests from e.g. the bin/ directory as well.
@@ -14,6 +18,7 @@ doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
     "ELLIPSIS",
+    "FLOAT_CMP",
 ]
 
 norecursedirs = [
@@ -22,21 +27,25 @@ norecursedirs = [
 
 markers = [
     "nocache_fail",
+    "tooslow",
 ]
 
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
-select = [
-    "C40",
-    "C419",
+lint.select = [
+    "C4",
     "E",
     "F",
+    "LOG",
     "PIE810",
+    "PLE",
+    "PLR1736",
     "SIM101",
+    "TRY002",
 ]
 
 # Ignore rules that currently fail on the SymPy codebase
-ignore = [
+lint.ignore = [
     "E401",  # Multiple imports on one line
     "E402",  # Module level import not at top of file
     "E501",  # Line too long (<LENGTH> > 88 characters)
@@ -77,10 +86,10 @@ exclude = [
 line-length = 88
 
 # Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Per-file ignores currently specified in the flake8 configuration
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "sympy/interactive/session.py" = ["F821"]
 
 # Global mypy settings:
@@ -133,3 +142,14 @@ module = [
     "pysat.*",
 ]
 ignore_missing_imports = true
+
+[tool.slotscheck]
+strict-imports = true
+exclude-modules = '''
+(
+    sympy.parsing.latex._antlr
+    |sympy.parsing.autolev._antlr
+    |sympy.galgebra
+    |sympy.plotting.pygletplot
+)
+'''

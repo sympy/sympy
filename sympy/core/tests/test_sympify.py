@@ -22,7 +22,7 @@ from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
     CantSympify, converter)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
-from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
@@ -180,7 +180,7 @@ def test_sympify_bool():
     assert sympify(False) is false
 
 
-def test_sympyify_iterables():
+def test_sympify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
     assert sympify({"x": 0, "y": 1}) == {x: 0, y: 1}
@@ -286,8 +286,7 @@ def test_sympify_raises():
         def __str__(self):
             return 'x'
 
-    with warns_deprecated_sympy():
-        assert sympify(A()) == Symbol('x')
+    raises(SympifyError, lambda: sympify(A()))
 
 
 def test__sympify():
@@ -648,8 +647,8 @@ def test_sympify_numpy():
     assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
 
-    lcprec = np.finfo(np.longcomplex(1)).nmant + 1
-    assert equal(sympify(np.longcomplex(1 + 2j)),
+    lcprec = np.finfo(np.clongdouble(1)).nmant + 1
+    assert equal(sympify(np.clongdouble(1 + 2j)),
                 Float(1.0, precision=lcprec) + Float(2.0, precision=lcprec)*I)
 
     #float96 does not exist on all platforms

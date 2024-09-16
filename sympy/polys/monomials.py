@@ -120,7 +120,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         if all(variable.is_commutative for variable in variables):
             monomials_list_comm = []
             for item in combinations_with_replacement(variables, max_degree):
-                powers = {variable: 0 for variable in variables}
+                powers = dict.fromkeys(variables, 0)
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1
@@ -130,7 +130,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         else:
             monomials_list_non_comm = []
             for item in product(variables, repeat=max_degree):
-                powers = {variable: 0 for variable in variables}
+                powers = dict.fromkeys(variables, 0)
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1
@@ -593,18 +593,9 @@ class Monomial(PicklableWithSlots):
 
     def __pow__(self, other):
         n = int(other)
-
-        if not n:
-            return self.rebuild([0]*len(self))
-        elif n > 0:
-            exponents = self.exponents
-
-            for i in range(1, n):
-                exponents = monomial_mul(exponents, self.exponents)
-
-            return self.rebuild(exponents)
-        else:
+        if n < 0:
             raise ValueError("a non-negative integer expected, got %s" % other)
+        return self.rebuild(monomial_pow(self.exponents, n))
 
     def gcd(self, other):
         """Greatest common divisor of monomials. """

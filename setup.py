@@ -34,8 +34,6 @@ from setuptools import setup, Command
 from setuptools.command.sdist import sdist
 
 
-min_mpmath_version = '0.19'
-
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
 
@@ -102,7 +100,7 @@ modules = [
     'sympy.parsing.latex._antlr',
     'sympy.parsing.latex.lark',
     'sympy.physics',
-    'sympy.physics._biomechanics',
+    'sympy.physics.biomechanics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.control',
     'sympy.physics.hep',
@@ -149,6 +147,7 @@ modules = [
     'sympy.utilities',
     'sympy.utilities._compilation',
     'sympy.utilities.mathml',
+    'sympy.utilities.mathml.data',
     'sympy.vector',
 ]
 
@@ -260,7 +259,7 @@ tests = [
     'sympy.multipledispatch.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
-    'sympy.physics._biomechanics.tests',
+    'sympy.physics.biomechanics.tests',
     'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.control.tests',
     'sympy.physics.hep.tests',
@@ -321,11 +320,15 @@ if __name__ == '__main__':
           project_urls={
               'Source': 'https://github.com/sympy/sympy',
           },
+          # Set upper bound when making the release branch.
+          install_requires=[
+              'mpmath >= 1.1.0',
+          ],
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
           package_data={
-              'sympy.utilities.mathml': ['data/*.xsl'],
+              'sympy.utilities.mathml.data': ['*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
               'sympy.parsing.autolev': [
                   '*.g4', 'test-examples/*.al', 'test-examples/*.py',
@@ -358,9 +361,6 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3 :: Only',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
-            ],
-          install_requires=[
-            'mpmath>=%s' % min_mpmath_version,
             ],
           extras_require={
               "dev": ["pytest>=7.1.0", "hypothesis>=6.70.0"],

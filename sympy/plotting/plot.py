@@ -53,6 +53,17 @@ from sympy.plotting.backends.matplotlibbackend import _matplotlib_list # noqa: F
 from sympy.plotting.textplot import textplot # noqa: F401
 
 
+__doctest_requires__ = {
+    ('plot3d',
+     'plot3d_parametric_line',
+     'plot3d_parametric_surface',
+     'plot_parametric'): ['matplotlib'],
+    # XXX: The plot doctest possibly should not require matplotlib. It fails at
+    # plot(x**2, (x, -5, 5)) which should be fine for text backend.
+    ('plot',): ['matplotlib'],
+}
+
+
 def _process_summations(sum_bound, *args):
     """Substitute oo (infinity) in the lower/upper bounds of a summation with
     some integer number.

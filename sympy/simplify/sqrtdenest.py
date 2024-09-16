@@ -12,7 +12,7 @@ def is_sqrt(expr):
     return expr.is_Pow and expr.exp.is_Rational and abs(expr.exp) is S.Half
 
 
-def sqrt_depth(p):
+def sqrt_depth(p) -> int:
     """Return the maximum depth of any square root argument of p.
 
     >>> from sympy.functions.elementary.miscellaneous import sqrt
@@ -34,12 +34,11 @@ def sqrt_depth(p):
         return 1
     if p.is_Atom:
         return 0
-    elif p.is_Add or p.is_Mul:
-        return max([sqrt_depth(x) for x in p.args], key=default_sort_key)
-    elif is_sqrt(p):
+    if p.is_Add or p.is_Mul:
+        return max(sqrt_depth(x) for x in p.args)
+    if is_sqrt(p):
         return sqrt_depth(p.base) + 1
-    else:
-        return 0
+    return 0
 
 
 def is_algebraic(p):

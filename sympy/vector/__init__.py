@@ -17,10 +17,13 @@ from sympy.vector.operators import Gradient, Divergence, Curl, Laplacian, gradie
 from sympy.vector.implicitregion import ImplicitRegion
 from sympy.vector.parametricregion import (ParametricRegion, parametric_region_list)
 from sympy.vector.integrals import (ParametricIntegral, vector_integrate)
+from sympy.vector.kind import VectorKind
 
 __all__ = [
     'Vector', 'VectorAdd', 'VectorMul', 'BaseVector', 'VectorZero', 'Cross',
     'Dot', 'cross', 'dot',
+
+    'VectorKind',
 
     'Dyadic', 'DyadicAdd', 'DyadicMul', 'BaseDyadic', 'DyadicZero',
 

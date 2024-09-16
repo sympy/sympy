@@ -2018,12 +2018,12 @@ def _to_ZZ_poly(f, ring):
     den = domain.one
 
     for coeff in f.itercoeffs():
-        for c in coeff.rep:
+        for c in coeff.to_list():
             if c:
                 den = domain.lcm(den, c.denominator)
 
     for monom, coeff in f.iterterms():
-        coeff = coeff.rep
+        coeff = coeff.to_list()
         m = ring.domain.one
         if isinstance(ring.domain, PolynomialRing):
             m = m.mul_monom(monom[1:])
@@ -2247,7 +2247,7 @@ def func_field_modgcd(f, g):
     if n == 1:
         f_ = _to_ZZ_poly(f, ZZring)
         g_ = _to_ZZ_poly(g, ZZring)
-        minpoly = ZZring.drop(0).from_dense(domain.mod.rep)
+        minpoly = ZZring.drop(0).from_dense(domain.mod.to_list())
 
         h = _func_field_modgcd_m(f_, g_, minpoly)
         h = _to_ANP_poly(h, ring)

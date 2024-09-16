@@ -3,7 +3,7 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.logic.boolalg import Boolean, And
 from sympy.matrices.expressions.matexpr import MatrixExpr
-from sympy.matrices.common import ShapeError
+from sympy.matrices.exceptions import ShapeError
 from typing import Union
 
 

@@ -1,5 +1,4 @@
 import itertools
-
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -59,6 +58,9 @@ class Probability(Expr):
     >>> prob.evaluate_integral()
     sqrt(2)*(-sqrt(2)*sqrt(pi)*erf(sqrt(2)/2) + sqrt(2)*sqrt(pi))/(4*sqrt(pi))
     """
+
+    is_commutative = True
+
     def __new__(cls, prob, condition=None, **kwargs):
         prob = _sympify(prob)
         if condition is None:
@@ -197,7 +199,7 @@ class Expectation(Expr):
     >>> Expectation(X + Expectation(Y)).doit(deep=False)
     mu + Expectation(Expectation(Y))
     >>> Expectation(X + Expectation(Y + Expectation(2*X))).doit(deep=False)
-    mu + Expectation(Expectation(Y + Expectation(2*X)))
+    mu + Expectation(Expectation(Expectation(2*X) + Y))
 
     """
 
@@ -215,6 +217,9 @@ class Expectation(Expr):
             obj = Expr.__new__(cls, expr, condition)
         obj._condition = condition
         return obj
+
+    def _eval_is_commutative(self):
+        return(self.args[0].is_commutative)
 
     def expand(self, **hints):
         expr = self.args[0]
@@ -385,6 +390,9 @@ class Variance(Expr):
         obj._condition = condition
         return obj
 
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
+
     def expand(self, **hints):
         arg = self.args[0]
         condition = self._condition
@@ -498,6 +506,9 @@ class Covariance(Expr):
             obj = Expr.__new__(cls, arg1, arg2, condition)
         obj._condition = condition
         return obj
+
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
 
     def expand(self, **hints):
         arg1 = self.args[0]
@@ -651,7 +662,7 @@ class CentralMoment(Expr):
     Rewrite the CentralMoment expression in terms of Expectation:
 
     >>> CM.rewrite(Expectation)
-    Expectation((X - Expectation(X))**4)
+    Expectation((-Expectation(X) + X)**4)
 
     Rewrite the CentralMoment expression in terms of Probability:
 

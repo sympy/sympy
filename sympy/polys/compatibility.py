@@ -101,6 +101,7 @@ from sympy.polys.densetools import dup_real_imag
 from sympy.polys.densetools import dup_mirror
 from sympy.polys.densetools import dup_scale
 from sympy.polys.densetools import dup_shift
+from sympy.polys.densetools import dmp_shift
 from sympy.polys.densetools import dup_transform
 from sympy.polys.densetools import dup_compose
 from sympy.polys.densetools import dmp_compose
@@ -209,9 +210,10 @@ from sympy.polys.rootisolation import dup_isolate_all_roots_sqf
 from sympy.polys.rootisolation import dup_isolate_all_roots
 
 from sympy.polys.sqfreetools import (
-    dup_sqf_p, dmp_sqf_p, dup_sqf_norm, dmp_sqf_norm, dup_gf_sqf_part, dmp_gf_sqf_part,
-    dup_sqf_part, dmp_sqf_part, dup_gf_sqf_list, dmp_gf_sqf_list, dup_sqf_list,
-    dup_sqf_list_include, dmp_sqf_list, dmp_sqf_list_include, dup_gff_list, dmp_gff_list)
+    dup_sqf_p, dmp_sqf_p, dmp_norm, dup_sqf_norm, dmp_sqf_norm,
+    dup_gf_sqf_part, dmp_gf_sqf_part, dup_sqf_part, dmp_sqf_part,
+    dup_gf_sqf_list, dmp_gf_sqf_list, dup_sqf_list, dup_sqf_list_include,
+    dmp_sqf_list, dmp_sqf_list_include, dup_gff_list, dmp_gff_list)
 
 from sympy.polys.galoistools import (
     gf_degree, gf_LC, gf_TC, gf_strip, gf_from_dict,
@@ -515,6 +517,8 @@ class IPolys:
         return self.from_dense(dup_scale(self.to_dense(f), a, self.domain))
     def dup_shift(self, f, a):
         return self.from_dense(dup_shift(self.to_dense(f), a, self.domain))
+    def dmp_shift(self, f, a):
+        return self.from_dense(dmp_shift(self.to_dense(f), a, self.ngens-1, self.domain))
     def dup_transform(self, f, p, q):
         return self.from_dense(dup_transform(self.to_dense(f), self.to_dense(p), self.to_dense(q), self.domain))
 
@@ -876,6 +880,10 @@ class IPolys:
         return dup_sqf_p(self.to_dense(f), self.domain)
     def dmp_sqf_p(self, f):
         return dmp_sqf_p(self.to_dense(f), self.ngens-1, self.domain)
+
+    def dmp_norm(self, f):
+        n = dmp_norm(self.to_dense(f), self.ngens-1, self.domain)
+        return self.to_ground().from_dense(n)
 
     def dup_sqf_norm(self, f):
         s, F, R = dup_sqf_norm(self.to_dense(f), self.domain)

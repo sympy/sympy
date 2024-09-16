@@ -796,7 +796,7 @@ class PowerBasis(Module):
             f = f % self.T
         if f == 0:
             return self.zero()
-        d, c = dup_clear_denoms(f.rep.rep, QQ, convert=True)
+        d, c = dup_clear_denoms(f.rep.to_list(), QQ, convert=True)
         c = list(reversed(c))
         ell = len(c)
         z = [ZZ(0)] * (n - ell)
@@ -824,17 +824,17 @@ class PowerBasis(Module):
         :py:class:`~.PowerBasisElement`
 
         """
-        if mod != self.T.rep.rep:
+        if mod != self.T.rep.to_list():
             raise UnificationFailed('Element does not appear to be in the same field.')
         return self.element_from_poly(Poly(rep, self.T.gen))
 
     def element_from_ANP(self, a):
         """Convert an ANP into a PowerBasisElement. """
-        return self._element_from_rep_and_mod(a.rep, a.mod)
+        return self._element_from_rep_and_mod(a.to_list(), a.mod_to_list())
 
     def element_from_alg_num(self, a):
         """Convert an AlgebraicNumber into a PowerBasisElement. """
-        return self._element_from_rep_and_mod(a.rep.rep, a.minpoly.rep.rep)
+        return self._element_from_rep_and_mod(a.rep.to_list(), a.minpoly.rep.to_list())
 
 
 class Submodule(Module, IntegerPowerable):
@@ -1706,7 +1706,7 @@ class PowerBasisElement(ModuleElement):
 
     def to_ANP(self):
         """Convert to an equivalent :py:class:`~.ANP`. """
-        return ANP(list(reversed(self.QQ_col.flat())), QQ.map(self.T.rep.rep), QQ)
+        return ANP(list(reversed(self.QQ_col.flat())), QQ.map(self.T.rep.to_list()), QQ)
 
     def to_alg_num(self):
         """

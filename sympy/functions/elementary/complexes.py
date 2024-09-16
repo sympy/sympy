@@ -4,7 +4,7 @@ from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
-    AppliedUndef, expand_mul)
+    AppliedUndef, expand_mul, PoleError)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
 from sympy.core.power import Pow
@@ -758,9 +758,17 @@ class arg(Function):
                 break
         else:
             return S.NaN
-        from sympy.functions.elementary.exponential import exp_polar
+        from sympy.functions.elementary.exponential import exp, exp_polar
         if isinstance(arg, exp_polar):
             return periodic_argument(arg, oo)
+        elif isinstance(arg, exp):
+            i_ = im(arg.args[0])
+            if i_.is_comparable:
+                i_ %= 2*S.Pi
+                if i_ > S.Pi:
+                    i_ -= 2*S.Pi
+                return i_
+
         if not arg.is_Atom:
             c, arg_ = factor_terms(arg).as_coeff_Mul()
             if arg_.is_Mul:
@@ -788,6 +796,25 @@ class arg(Function):
         from sympy.functions.elementary.trigonometric import atan2
         x, y = self.args[0].as_real_imag()
         return atan2(y, x)
+
+    def _eval_as_leading_term(self, x, logx, cdir):
+        arg0 = self.args[0]
+        t = Dummy('t', positive=True)
+        if cdir == 0:
+            cdir = 1
+        z = arg0.subs(x, cdir*t)
+        if z.is_positive:
+            return S.Zero
+        elif z.is_negative:
+            return S.Pi
+        else:
+            raise PoleError("Cannot expand %s around 0" % (self))
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        if n <= 0:
+            return Order(1)
+        return self._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
 
 class conjugate(Function):

@@ -22,7 +22,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.functions.combinatorial.factorials import (rf, binomial,
     factorial, factorial2)
-from sympy.functions.combinatorial.numbers import bernoulli, fibonacci
+from sympy.functions.combinatorial.numbers import bernoulli, fibonacci, totient, partition
 from sympy.functions.elementary.complexes import (conjugate, im, re,
     sign)
 from sympy.functions.elementary.exponential import LambertW, exp, log
@@ -50,9 +50,8 @@ from sympy.ntheory.continued_fraction import (
     continued_fraction_convergents as cf_c,
     continued_fraction_iterator as cf_i, continued_fraction_periodic as
     cf_p, continued_fraction_reduce as cf_r)
-from sympy.ntheory.factor_ import factorint, totient
+from sympy.ntheory.factor_ import factorint
 from sympy.ntheory.generate import primerange
-from sympy.ntheory.partitions_ import npartitions
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.partfrac import apart
@@ -77,8 +76,7 @@ from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
-from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_CI,
-    raises)
+from sympy.testing.pytest import (XFAIL, slow, SKIP, tooslow, raises)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -271,7 +269,7 @@ def test_C24():
 
 
 def test_D1():
-    assert 0.0 / sqrt(2) == 0.0
+    assert 0.0 / sqrt(2) == 0
 
 
 def test_D2():
@@ -371,7 +369,7 @@ def test_F6():
 
 
 def test_F7():
-    assert npartitions(4) == 5
+    assert partition(4) == 5
 
 
 def test_F8():
@@ -950,11 +948,12 @@ def test_M8():
 @XFAIL
 def test_M9():
     # x = symbols('x')
+    # solutions are 1/2*(1 +/- sqrt(9 + 8*I*pi*n)) for integer n
     raise NotImplementedError("solveset(exp(2-x**2)-exp(-x),x) has complex solutions.")
 
 
 def test_M10():
-    # TODO: Replace solve with solveset, as of now test fails for solveset
+    # TODO: Replace solve with solveset when it gives Lambert solution
     assert solve(exp(x) - x, x) == [-LambertW(-1)]
 
 
@@ -2608,10 +2607,8 @@ def test_W23b():
 
 
 @XFAIL
-@slow
+@tooslow
 def test_W24():
-    if ON_CI:
-        skip("Too slow for CI.")
     # Not that slow, but does not fully evaluate so simplify is slow.
     # Maybe also require doit()
     x, y = symbols('x y', real=True)
@@ -2620,10 +2617,8 @@ def test_W24():
 
 
 @XFAIL
-@slow
+@tooslow
 def test_W25():
-    if ON_CI:
-        skip("Too slow for CI.")
     a, x, y = symbols('a x y', real=True)
     i1 = integrate(
         sin(a)*sin(y)/sqrt(1 - sin(a)**2*sin(x)**2*sin(y)**2),

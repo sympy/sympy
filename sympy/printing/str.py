@@ -10,7 +10,6 @@ from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
-from sympy.core.sympify import SympifyError
 from sympy.utilities.iterables import sift
 from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
@@ -28,6 +27,7 @@ class StrPrinter(Printer):
         "perm_cyclic": True,
         "min": None,
         "max": None,
+        "dps" : None
     }
 
     _relationals: dict[str, str] = {}
@@ -737,10 +737,9 @@ class StrPrinter(Printer):
 
     def _print_Float(self, expr):
         prec = expr._prec
-        if prec < 5:
-            dps = 0
-        else:
-            dps = prec_to_dps(expr._prec)
+        dps = self._settings.get('dps', None)
+        if dps is None:
+            dps = 0 if prec < 5 else prec_to_dps(expr._prec)
         if self._settings["full_prec"] is True:
             strip = False
         elif self._settings["full_prec"] is False:
@@ -912,22 +911,19 @@ class StrPrinter(Printer):
         return self._print_Integer(Integer(0))
 
     def _print_DMP(self, p):
-        try:
-            if p.ring is not None:
-                # TODO incorporate order
-                return self._print(p.ring.to_sympy(p))
-        except SympifyError:
-            pass
-
         cls = p.__class__.__name__
-        rep = self._print(p.rep)
+        rep = self._print(p.to_list())
         dom = self._print(p.dom)
-        ring = self._print(p.ring)
 
-        return "%s(%s, %s, %s)" % (cls, rep, dom, ring)
+        return "%s(%s, %s)" % (cls, rep, dom)
 
     def _print_DMF(self, expr):
-        return self._print_DMP(expr)
+        cls = expr.__class__.__name__
+        num = self._print(expr.num)
+        den = self._print(expr.den)
+        dom = self._print(expr.dom)
+
+        return "%s(%s, %s, %s)" % (cls, num, den, dom)
 
     def _print_Object(self, obj):
         return 'Object("%s")' % obj.name
@@ -1010,7 +1006,6 @@ class StrReprPrinter(StrPrinter):
     def _print_Str(self, s):
         # Str does not to be printed same as str here
         return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
-
 
 @print_function(StrReprPrinter)
 def sstrrepr(expr, **settings):

@@ -57,7 +57,7 @@ def superposition_basis(nqubits):
     """
 
     amp = 1/sqrt(2**nqubits)
-    return sum([amp*IntQubit(n, nqubits=nqubits) for n in range(2**nqubits)])
+    return sum(amp*IntQubit(n, nqubits=nqubits) for n in range(2**nqubits))
 
 class OracleGateFunction(Atom):
     """Wrapper for python functions used in `OracleGate`s"""

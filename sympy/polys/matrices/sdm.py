@@ -7,6 +7,7 @@ Module for the SDM class.
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import _strongly_connected_components
 
@@ -15,6 +16,10 @@ from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 from sympy.polys.domains import QQ
 
 from .ddm import DDM
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['SDM.to_dfm', 'SDM.to_dfm_or_ddm']
 
 
 class SDM(dict):
@@ -446,6 +451,57 @@ class SDM(dict):
         dok = dict(zip(indices, elements))
         return cls.from_dok(dok, shape, domain)
 
+    def to_dod(M):
+        """
+        Convert to dictionary of dictionaries (dod) format.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0: {1: QQ(2)}, 1: {0: QQ(3)}}, (2, 2), QQ)
+        >>> A.to_dod()
+        {0: {1: 2}, 1: {0: 3}}
+
+        See Also
+        ========
+
+        from_dod
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dod
+        """
+        return {i: row.copy() for i, row in M.items()}
+
+    @classmethod
+    def from_dod(cls, dod, shape, domain):
+        """
+        Create :py:class:`~.SDM` from dictionary of dictionaries (dod) format.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> dod = {0: {1: QQ(2)}, 1: {0: QQ(3)}}
+        >>> A = SDM.from_dod(dod, (2, 2), QQ)
+        >>> A
+        {0: {1: 2}, 1: {0: 3}}
+        >>> A == SDM.from_dod(A.to_dod(), A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        to_dod
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dod
+        """
+        sdm = defaultdict(dict)
+        for i, row in dod.items():
+            for j, e in row.items():
+                if e:
+                    sdm[i][j] = e
+        return cls(sdm, shape, domain)
+
     def to_dok(M):
         """
         Convert to dictionary of keys (dok) format.
@@ -499,6 +555,45 @@ class SDM(dict):
             if e:
                 sdm[i][j] = e
         return cls(sdm, shape, domain)
+
+    def iter_values(M):
+        """
+        Iterate over the nonzero values of a :py:class:`~.SDM` matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0: {1: QQ(2)}, 1: {0: QQ(3)}}, (2, 2), QQ)
+        >>> list(A.iter_values())
+        [2, 3]
+
+        """
+        for row in M.values():
+            yield from row.values()
+
+    def iter_items(M):
+        """
+        Iterate over indices and values of the nonzero elements.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0: {1: QQ(2)}, 1: {0: QQ(3)}}, (2, 2), QQ)
+        >>> list(A.iter_items())
+        [((0, 1), 2), ((1, 0), 3)]
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.iter_items
+        """
+        for i, row in M.items():
+            for j, e in row.items():
+                yield (i, j), e
 
     def to_ddm(M):
         """
@@ -1452,11 +1547,13 @@ def sdm_matmul_exraw(A, B, K, m, o):
                         Cij = Ci.get(j, zero) + Aik * Bkj
                         if Cij != zero:
                             Ci[j] = Cij
-                        else:  # pragma: no cover
-                            # Not sure how we could get here but let's raise an
-                            # exception just in case.
-                            raise RuntimeError
-                        C[i] = Ci
+                            C[i] = Ci
+                        else:
+                            Ci.pop(j, None)
+                            if Ci:
+                                C[i] = Ci
+                            else:
+                                C.pop(i, None)
 
     return C
 
@@ -1754,6 +1851,13 @@ def sdm_rref_den(A, K):
         Aij = Ai[j]
         return ({0: Ai.copy()}, Aij, [j])
 
+    # For inexact domains like RR[x] we use quo and discard the remainder.
+    # Maybe it would be better for K.exquo to do this automatically.
+    if K.is_Exact:
+        exquo = K.exquo
+    else:
+        exquo = K.quo
+
     # Make sure we have the rows in order to make this deterministic from the
     # outset.
     _, rows_in_order = zip(*sorted(A.items()))
@@ -1850,7 +1954,7 @@ def sdm_rref_den(A, K):
                 for l, Akl in Ak.items():
                     Akl = Akl * Aij
                     if divisor is not None:
-                        Akl = K.exquo(Akl, divisor)
+                        Akl = exquo(Akl, divisor)
                     Ak[l] = Akl
                 continue
 
@@ -1861,19 +1965,19 @@ def sdm_rref_den(A, K):
             for l in Ai_nz - Ak_nz:
                 Ak[l] = - Akj * Ai[l]
                 if divisor is not None:
-                    Ak[l] = K.exquo(Ak[l], divisor)
+                    Ak[l] = exquo(Ak[l], divisor)
 
             # This loop also not needed in sdm_irref.
             for l in Ak_nz - Ai_nz:
                 Ak[l] = Aij * Ak[l]
                 if divisor is not None:
-                    Ak[l] = K.exquo(Ak[l], divisor)
+                    Ak[l] = exquo(Ak[l], divisor)
 
             for l in Ai_nz & Ak_nz:
                 Akl = Aij * Ak[l] - Akj * Ai[l]
                 if Akl:
                     if divisor is not None:
-                        Akl = K.exquo(Akl, divisor)
+                        Akl = exquo(Akl, divisor)
                     Ak[l] = Akl
                 else:
                     Ak.pop(l)
@@ -1897,7 +2001,7 @@ def sdm_rref_den(A, K):
                 denom *= Aij
 
         if divisor is not None:
-            denom = K.exquo(denom, divisor)
+            denom = exquo(denom, divisor)
 
         # Update the divisor.
         divisor = denom

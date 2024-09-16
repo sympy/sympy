@@ -15,13 +15,14 @@ DOCSDIR = join(ROOTDIR, 'doc')
 
 def main(version, outputdir):
     os.makedirs(outputdir, exist_ok=True)
+    run('bin/test_sphinx.sh')
     build_html(DOCSDIR, outputdir, version)
     build_latex(DOCSDIR, outputdir, version)
 
 
 def build_html(docsdir, outputdir, version):
-    run('make', 'clean', cwd=docsdir)
-    run('make', 'html', cwd=docsdir)
+    #run('make', 'clean', cwd=docsdir)
+    #run('make', 'html', cwd=docsdir)
 
     builddir = join(docsdir, '_build')
     docsname = 'sympy-docs-html-%s' % (version,)
@@ -37,8 +38,8 @@ def build_html(docsdir, outputdir, version):
 
 
 def build_latex(docsdir, outputdir, version):
-    run('make', 'clean', cwd=docsdir)
-    run('make', 'latexpdf', cwd=docsdir)
+    #run('make', 'clean', cwd=docsdir)
+    #run('make', 'latexpdf', cwd=docsdir)
 
     srcfilename = 'sympy-%s.pdf' % (version,)
     dstfilename = 'sympy-docs-pdf-%s.pdf' % (version,)

@@ -38,6 +38,9 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import flatten
 
 
+__doctest_requires__ = {'plot_implicit': ['matplotlib']}
+
+
 @doctest_depends_on(modules=('matplotlib',))
 def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
                   n=300, line_color="blue", show=True, **kwargs):
