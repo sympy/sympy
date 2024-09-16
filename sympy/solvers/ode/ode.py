@@ -341,7 +341,7 @@ def _free_symbols(eq):
     >>> _free_symbols([y + Derivative(1, x)])
     {y}
     """
-    if type(eq) is not list:
+    if not hasattr(eq, 'free_symbols'):
         eq = [eq]
     derivs = {}
     for eq in eq:
