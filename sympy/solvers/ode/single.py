@@ -149,9 +149,10 @@ class SingleODEProblem:
 
     @cached_property
     def is_autonomous(self):
+        from sympy.solvers.ode.ode import _free_symbols
         u = Dummy('u')
         x = self.sym
-        syms = self.eq.subs(self.func, u).free_symbols
+        syms = _free_symbols(self.eq.subs(self.func, u))
         return x not in syms
 
     def get_linear_coefficients(self, eq, func, order):

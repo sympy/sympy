@@ -324,6 +324,35 @@ allhints = (
 
 
 
+def _free_symbols(eq):
+    """return free symbols in eq or all in expressions in list `eq`
+    excluding free symbols in the variables of differentiation
+
+    EXAMPLES
+    ========
+
+    >>> from sympy import Derivative
+    >>> from sympy.abc import x, y
+    >>> from sympy.solvers.ode.ode import _free_symbols
+    >>> Derivative(1, x).free_symbols
+    {x}
+    >>> _free_symbols(Derivative(1, x))
+    {}
+    >>> _free_symbols([y + Derivative(1, x)])
+    {y}
+    """
+    if type(eq) is not list:
+        eq = [eq]
+    derivs = {}
+    for eq in eq:
+        free = eq.replace(
+            lambda x: isinstance(x, Derivative),
+            lambda x: derivs.setdefault(x, Dummy())).free_symbols - set(derivs.values())
+    for k in derivs:
+        free |= k.expr.free_symbols
+    return free
+
+
 def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     """
     Returns a list of constants that do not occur
@@ -346,7 +375,7 @@ def iter_numbered_constants(eq, start=1, prefix='C'):
     elif not iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
 
-    atom_set = set().union(*[i.free_symbols for i in eq])
+    atom_set = set().union(*[_free_symbols(i) for i in eq])
     func_set = set().union(*[i.atoms(Function) for i in eq])
     if func_set:
         atom_set |= {Symbol(str(f.func)) for f in func_set}
@@ -594,7 +623,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
                 solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
             sols = solvefunc(match)
             if ics:
-                constants = Tuple(*sols).free_symbols - Tuple(*eq).free_symbols
+                constants = Tuple(*sols).free_symbols - _free_symbols(list(eq))
                 solved_constants = solve_ics(sols, func, constants, ics)
                 return [sol.subs(solved_constants) for sol in sols]
             return sols
@@ -659,8 +688,8 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     else:
         solvefunc = globals()['ode_' + hint]
 
-    free = eq.free_symbols
-    cons = lambda s: s.free_symbols.difference(free)
+    free = _free_symbols(eq)
+    cons = lambda s: _free_symbols(s).difference(free)
 
     if simplify:
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
@@ -1630,7 +1659,7 @@ def odesimp(ode, eq, func, hint):
     x = func.args[0]
     f = func.func
     C1 = get_numbered_constants(eq, num=1)
-    constants = eq.free_symbols - ode.free_symbols
+    constants = _free_symbols(eq) - _free_symbols(ode)
 
     # First, integrate if the hint allows it.
     eq = _handle_Integral(eq, func, hint)
@@ -1699,7 +1728,7 @@ def odesimp(ode, eq, func, hint):
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
         eq[i] = constantsimp(eqi, constants)
-        eq[i] = constant_renumber(eq[i], ode.free_symbols)
+        eq[i] = constant_renumber(eq[i], _free_symbols(ode))
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
@@ -1850,20 +1879,20 @@ def _get_constant_subexpressions(expr, Cs):
     Cs = set(Cs)
     Ces = []
     def _recursive_walk(expr):
-        expr_syms = expr.free_symbols
+        expr_syms = _free_symbols(expr)
         if expr_syms and expr_syms.issubset(Cs):
             Ces.append(expr)
         else:
             if expr.func == exp:
                 expr = expr.expand(mul=True)
             if expr.func in (Add, Mul):
-                d = sift(expr.args, lambda i : i.free_symbols.issubset(Cs))
+                d = sift(expr.args, lambda i : _free_symbols(i).issubset(Cs))
                 if len(d[True]) > 1:
                     x = expr.func(*d[True])
                     if not x.is_number:
                         Ces.append(x)
             elif isinstance(expr, Integral):
-                if expr.free_symbols.issubset(Cs) and \
+                if _free_symbols(expr).issubset(Cs) and \
                             all(len(x) == 3 for x in expr.limits):
                     Ces.append(expr)
             for i in expr.args:
@@ -2002,7 +2031,7 @@ def constantsimp(expr, constants):
 
     constant_subexprs = _get_constant_subexpressions(expr, Cs)
     for xe in constant_subexprs:
-        xes = list(xe.free_symbols)
+        xes = list(_free_symbols(xe))
         if not xes:
             continue
         if all(expr.count(c) == xe.count(c) for c in xes):
@@ -2110,13 +2139,13 @@ def constant_renumber(expr, variables=None, newconstants=None):
     # Symbols in solution but not ODE are constants
     if variables is not None:
         variables = set(variables)
-        free_symbols = expr.free_symbols
+        free_symbols = _free_symbols(expr)
         constantsymbols = list(free_symbols - variables)
     # Any Cn is a constant...
     else:
         variables = set()
         isconstant = lambda s: s.startswith('C') and s[1:].isdigit()
-        constantsymbols = [sym for sym in expr.free_symbols if isconstant(sym.name)]
+        constantsymbols = [sym for sym in _free_symbols(expr) if isconstant(sym.name)]
 
     # Find new constants checking that they aren't already in the ODE
     if newconstants is None:
@@ -2268,7 +2297,7 @@ def homogeneous_order(eq, *symbols):
             newsyms.add(dummyvar)
     symset.update(newsyms)
 
-    if not eq.free_symbols & symset:
+    if not _free_symbols(eq) & symset:
         return None
 
     # assuming order of a nested function can only be equal to zero
@@ -2677,8 +2706,9 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     elif soln1.has(Order) or soln2.has(Order):
         return False
 
-    constants1 = soln1.free_symbols.difference(eq.free_symbols)
-    constants2 = soln2.free_symbols.difference(eq.free_symbols)
+    efree = _free_symbols(eq)
+    constants1 = soln1.free_symbols.difference(efree)
+    constants2 = soln2.free_symbols.difference(efree)
 
     constants1_new = get_numbered_constants(Tuple(soln1, soln2), len(constants1))
     if len(constants1) == 1:
