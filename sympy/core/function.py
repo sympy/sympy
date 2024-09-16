@@ -1659,8 +1659,8 @@ class Derivative(Expr):
     def free_symbols(self):
         ret = self.expr.free_symbols
         # Add symbolic counts to free_symbols
-        for _, count in self.variable_count:
-            ret.update(count.free_symbols)
+        for v, count in self.variable_count:
+            ret.update(count.free_symbols|v.free_symbols)
         return ret
 
     @property
