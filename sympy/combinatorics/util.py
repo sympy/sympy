@@ -457,7 +457,7 @@ def _strip(g, base, orbits, transversals):
     return _af_new(h), base_len + 1
 
 
-def _strip_af(h, base, orbits, transversals, j, slp=[], slps={}):
+def _strip_af(h, base, orbits, transversals, j, slp=None, slps=None):
     """
     optimized _strip, with h, transversals and result in array form
     if the stripped elements is the identity, it returns False, base_len + 1
@@ -465,6 +465,10 @@ def _strip_af(h, base, orbits, transversals, j, slp=[], slps={}):
     j    h[base[i]] == base[i] for i <= j
 
     """
+    if slp is None:
+        slp = []
+    if slps is None:
+        slps = {}
     base_len = len(base)
     for i in range(j+1, base_len):
         beta = h[base[i]]

@@ -2400,7 +2400,7 @@ def evaluate_deltas(e):
         return e
 
 
-def substitute_dummies(expr, new_indices=False, pretty_indices={}):
+def substitute_dummies(expr, new_indices=False, pretty_indices=None):
     """
     Collect terms by substitution of dummy variables.
 
@@ -2465,7 +2465,8 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     f(_p_0, _p_1)
 
     """
-
+    if pretty_indices is None:
+        pretty_indices = {}
     # setup the replacing dummies
     if new_indices:
         letters_above = pretty_indices.get('above', "")

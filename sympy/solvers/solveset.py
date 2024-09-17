@@ -3174,8 +3174,8 @@ def _return_conditionset(eqs, symbols):
     return condition_set
 
 
-def substitution(system, symbols, result=[{}], known_symbols=[],
-                 exclude=[], all_symbols=None):
+def substitution(system, symbols, result=None, known_symbols=None,
+                 exclude=None, all_symbols=None):
     r"""
     Solves the `system` using substitution method. It is used in
     :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
@@ -3260,7 +3260,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
       ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
 
     """
-
+    if result is None:
+        result = [{}]
+    if known_symbols is None:
+        known_symbols = []
+    if exclude is None:
+        exclude = []
     if not system:
         return S.EmptySet
 

@@ -298,7 +298,9 @@ class DimensionSystem(Basic, _QuantityMapper):
     may be omitted.
     """
 
-    def __new__(cls, base_dims, derived_dims=(), dimensional_dependencies={}):
+    def __new__(cls, base_dims, derived_dims=(), dimensional_dependencies=None):
+        if dimensional_dependencies is None:
+            dimensional_dependencies = {}
         dimensional_dependencies = dict(dimensional_dependencies)
 
         def parse_dim(dim):

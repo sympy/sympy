@@ -27,7 +27,9 @@ class UnitSystem(_QuantityMapper):
 
     _unit_systems = {}  # type: tDict[str, UnitSystem]
 
-    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: tDict[Dimension, Quantity]={}):
+    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: tDict[Dimension, Quantity]=None):
+        if derived_units is None:
+            derived_units = {}
 
         UnitSystem._unit_systems[name] = self
 
@@ -59,13 +61,15 @@ class UnitSystem(_QuantityMapper):
     def __repr__(self):
         return '<UnitSystem: %s>' % repr(self._base_units)
 
-    def extend(self, base, units=(), name="", description="", dimension_system=None, derived_units: tDict[Dimension, Quantity]={}):
+    def extend(self, base, units=(), name="", description="", dimension_system=None, derived_units: tDict[Dimension, Quantity]=None):
         """Extend the current system into a new one.
 
         Take the base and normal units of the current system to merge
         them to the base and normal units given in argument.
         If not provided, name and description are overridden by empty strings.
         """
+        if derived_units is None:
+            derived_units = {}
 
         base = self._base_units + tuple(base)
         units = self._units + tuple(units)

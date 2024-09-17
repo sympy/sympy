@@ -129,7 +129,7 @@ if __name__ == "__main__":
         else:
             sorted_messages.append(msg % args)
 
-    def tracking_import(module, globals=globals(), locals=[], fromlist=None, level=-1):
+    def tracking_import(module, globals=None, locals=None, fromlist=None, level=-1):
         """__import__ wrapper - does not change imports at all, but tracks them.
 
         Default order is implemented by doing output directly.
@@ -143,6 +143,11 @@ if __name__ == "__main__":
         question was already imported.
 
         Keeps the semantics of __import__ unchanged."""
+        if globals is None:
+            globals = globals()
+        if locals is None:
+            locals = []
+
         global options, symbol_definers
         caller_frame = inspect.getframeinfo(sys._getframe(1))
         importer_filename = caller_frame.filename

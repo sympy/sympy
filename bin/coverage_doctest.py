@@ -267,7 +267,10 @@ class FindInSphinx(HTMLParser):
         if tag == "div" and a.get('class', None) == "viewcode-block":
             self.is_imported.append(a['id'])
 
-def find_sphinx(name, mod_path, found={}):
+def find_sphinx(name, mod_path, found=None):
+    if found is None:
+        found = {}
+
     if mod_path in found: # Cache results
         return name in found[mod_path]
 

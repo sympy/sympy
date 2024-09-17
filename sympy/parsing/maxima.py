@@ -48,7 +48,9 @@ sub_dict = {
 var_name = re.compile(r'^\s*(\w+)\s*:')
 
 
-def parse_maxima(str, globals=None, name_dict={}):
+def parse_maxima(str, globals=None, name_dict=None):
+    if name_dict is None:
+        name_dict = {}
     str = str.strip()
     str = str.rstrip('; ')
 

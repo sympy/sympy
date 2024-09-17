@@ -10,7 +10,10 @@ from docscrape import NumpyDocString, FunctionDoc, ClassDoc
 
 
 class SphinxDocString(NumpyDocString):
-    def __init__(self, docstring, config={}):
+    def __init__(self, docstring, config=None):
+        if config is None:
+            config = {}
+
         NumpyDocString.__init__(self, docstring, config=config)
         self.load_config(config)
 
@@ -243,25 +246,37 @@ class SphinxDocString(NumpyDocString):
 
 
 class SphinxFunctionDoc(SphinxDocString, FunctionDoc):
-    def __init__(self, obj, doc=None, config={}):
+    def __init__(self, obj, doc=None, config=None):
+        if config is None:
+            config = {}
+
         self.load_config(config)
         FunctionDoc.__init__(self, obj, doc=doc, config=config)
 
 
 class SphinxClassDoc(SphinxDocString, ClassDoc):
-    def __init__(self, obj, doc=None, func_doc=None, config={}):
+    def __init__(self, obj, doc=None, func_doc=None, config=None):
+        if config is None:
+            config = {}
+
         self.load_config(config)
         ClassDoc.__init__(self, obj, doc=doc, func_doc=None, config=config)
 
 
 class SphinxObjDoc(SphinxDocString):
-    def __init__(self, obj, doc=None, config={}):
+    def __init__(self, obj, doc=None, config=None):
+        if config is None:
+            config = {}
+
         self._f = obj
         self.load_config(config)
         SphinxDocString.__init__(self, doc, config=config)
 
 
-def get_doc_object(obj, what=None, doc=None, config={}):
+def get_doc_object(obj, what=None, doc=None, config=None):
+    if config is None:
+        config = {}
+
     if inspect.isclass(obj):
         what = 'class'
     elif inspect.ismodule(obj):

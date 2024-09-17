@@ -299,7 +299,7 @@ def circuit_plot(c, nqubits, **kwargs):
     """
     return CircuitPlot(c, nqubits, **kwargs)
 
-def render_label(label, inits={}):
+def render_label(label, inits=None):
     """Slightly more flexible way to render labels.
 
     >>> from sympy.physics.quantum.circuitplot import render_label
@@ -308,6 +308,9 @@ def render_label(label, inits={}):
     >>> render_label('q0', {'q0':'0'})
     '$\\\\left|q0\\\\right\\\\rangle=\\\\left|0\\\\right\\\\rangle$'
     """
+    if inits is None:
+        inits = {}
+
     init = inits.get(label)
     if init:
         return r'$\left|%s\right\rangle=\left|%s\right\rangle$' % (label, init)

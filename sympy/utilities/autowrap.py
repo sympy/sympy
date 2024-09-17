@@ -123,10 +123,13 @@ class CodeWrapper:
     def module_name(self):
         return "%s_%s" % (self._module_basename, CodeWrapper._module_counter)
 
-    def __init__(self, generator, filepath=None, flags=[], verbose=False):
+    def __init__(self, generator, filepath=None, flags=None, verbose=False):
         """
         generator -- the code generator to use
         """
+        if flags is None:
+            flags = []
+
         self.generator = generator
         self.filepath = filepath
         self.flags = flags

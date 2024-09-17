@@ -43,9 +43,13 @@ deprecated_attrs = {
 }
 
 
-def check(a, exclude=[], check_attr=True, deprecated=()):
+def check(a, exclude=None, check_attr=True, deprecated=()):
     """ Check that pickling and copying round-trips.
     """
+
+    if exclude is None:
+        exclude = []
+
     # Pickling with protocols 0 and 1 is disabled for Basic instances:
     if isinstance(a, Basic):
         for protocol in [0, 1]:

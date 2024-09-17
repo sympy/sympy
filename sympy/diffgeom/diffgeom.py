@@ -270,7 +270,9 @@ class CoordSystem(Basic):
     .. [1] https://en.wikipedia.org/wiki/Coordinate_system
 
     """
-    def __new__(cls, name, patch, symbols=None, relations={}, **kwargs):
+    def __new__(cls, name, patch, symbols=None, relations=None, **kwargs):
+        if relations is None:
+            relations = {}
         if not isinstance(name, Str):
             name = Str(name)
 

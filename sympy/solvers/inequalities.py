@@ -926,7 +926,7 @@ def _reduce_inequalities(inequalities, symbols):
     return And(*(poly_reduced + abs_reduced + other))
 
 
-def reduce_inequalities(inequalities, symbols=[]):
+def reduce_inequalities(inequalities, symbols=None):
     """Reduce a system of inequalities with rational coefficients.
 
     Examples
@@ -941,6 +941,9 @@ def reduce_inequalities(inequalities, symbols=[]):
     >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
     (x < oo) & (x >= 1 - 2*y)
     """
+    if symbols is None:
+        symbols = []
+
     if not iterable(inequalities):
         inequalities = [inequalities]
     inequalities = [sympify(i) for i in inequalities]

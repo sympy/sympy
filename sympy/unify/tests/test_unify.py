@@ -12,7 +12,9 @@ def is_commutative(x):
     return isinstance(x, Compound) and (x.op in ('CAdd', 'CMul'))
 
 
-def unify(a, b, s={}):
+def unify(a, b, s=None):
+    if s is None:
+        s = {}
     return core.unify(a, b, s=s, is_associative=is_associative,
                           is_commutative=is_commutative)
 

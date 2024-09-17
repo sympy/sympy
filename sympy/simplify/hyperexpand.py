@@ -1951,7 +1951,7 @@ def hyperexpand_special(ap, bq, z):
 _collection = None
 
 
-def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
+def _hyperexpand(func, z, ops0=None, z0=Dummy('z0'), premult=1, prem=0,
                  rewrite='default'):
     """
     Try to find an expression for the hypergeometric function ``func``.
@@ -1964,6 +1964,8 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     ``premult`` must be a*z**prem for some a independent of ``z``.
     """
 
+    if ops0 is None:
+        ops0 = []
     if z.is_zero:
         return S.One
 

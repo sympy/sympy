@@ -25,7 +25,7 @@ from sympy.strategies.tree import greedy
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
-def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
+def trigsimp_groebner(expr, hints=None, quick=False, order="grlex",
                       polynomial=False):
     """
     Simplify trigonometric expressions using a groebner basis algorithm.
@@ -204,6 +204,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # sin(x + y) - sin(x)*cos(y) - sin(y)*cos(x), etc. Geometric primality is
     # preserved by the same argument as before.
 
+    if hints is None:
+        hints = []
     def parse_hints(hints):
         """Split hints into (n, funcs, iterables, gens)."""
         n = 1

@@ -160,7 +160,7 @@ class preorder_traversal:
         return self
 
 
-def use(expr, func, level=0, args=(), kwargs={}):
+def use(expr, func, level=0, args=(), kwargs=None):
     """
     Use ``func`` to transform ``expr`` at the given level.
 
@@ -178,6 +178,9 @@ def use(expr, func, level=0, args=(), kwargs={}):
     x**3 + 2*x**2*y + x*y**2 + 1
 
     """
+    if kwargs is None:
+        kwargs = {}
+
     def _use(expr, level):
         if not level:
             return func(expr, *args, **kwargs)

@@ -143,7 +143,7 @@ def dpll_int_repr(clauses, symbols, model):
 ### helper methods for DPLL
 
 
-def pl_true_int_repr(clause, model={}):
+def pl_true_int_repr(clause, model=None):
     """
     Lightweight version of pl_true.
     Argument clause represents the set of args of an Or clause. This is used
@@ -155,6 +155,9 @@ def pl_true_int_repr(clause, model={}):
     False
 
     """
+    if model is None:
+        model = {}
+
     result = False
     for lit in clause:
         if lit < 0:

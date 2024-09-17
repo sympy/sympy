@@ -198,8 +198,11 @@ class Options(dict):
                 raise RuntimeError(
                     "cycle detected in sympy.polys options framework")
 
-    def clone(self, updates={}):
+    def clone(self, updates=None):
         """Clone ``self`` and update specified options. """
+        if updates is None:
+            updates = {}
+
         obj = dict.__new__(self.__class__)
 
         for option, value in self.items():

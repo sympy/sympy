@@ -305,7 +305,9 @@ class HolonomicSequence:
     is Holonomic if and only if its generating function is a Holonomic Function.
     """
 
-    def __init__(self, recurrence, u0=[]):
+    def __init__(self, recurrence, u0=None):
+        if u0 is None:
+            u0 = []
         self.recurrence = recurrence
         if not isinstance(u0, list):
             self.u0 = [u0]

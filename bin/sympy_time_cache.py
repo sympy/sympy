@@ -94,7 +94,13 @@ pp = TreeNode(None)  # We have to use pp since there is a sage function
 seen = set()
 
 
-def new_import(name, globals={}, locals={}, fromlist=[]):
+def new_import(name, globals=None, locals=None, fromlist=None):
+    if globals is None:
+        globals = {}
+    if locals is None:
+        locals = {}
+    if fromlist is None:
+        fromlist = []
     global pp
     if name in seen:
         return old_import(name, globals, locals, fromlist)

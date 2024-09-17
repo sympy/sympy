@@ -55,7 +55,9 @@ class JavascriptCodePrinter(CodePrinter):
         'contract': True,
     })
 
-    def __init__(self, settings={}):
+    def __init__(self, settings=None):
+        if settings is None:
+            settings = {}
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})

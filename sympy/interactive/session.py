@@ -229,8 +229,10 @@ def enable_automatic_symbols(shell):
     shell.set_custom_exc((NameError,), _handler)
 
 
-def init_ipython_session(shell=None, argv=[], auto_symbols=False, auto_int_to_Integer=False):
+def init_ipython_session(shell=None, argv=None, auto_symbols=False, auto_int_to_Integer=False):
     """Construct new IPython session. """
+    if argv is None:
+        argv = []
     import IPython
 
     if version_tuple(IPython.__version__) >= version_tuple('0.11'):

@@ -1249,7 +1249,10 @@ class PrettyPrinter(Printer):
 
         return self._print(out_expr)
 
-    def _printer_tensor_indices(self, name, indices, index_map={}):
+    def _printer_tensor_indices(self, name, indices, index_map=None):
+        if index_map is None:
+            index_map = {}
+
         center = stringPict(name)
         top = stringPict(" "*center.width())
         bot = stringPict(" "*center.width())

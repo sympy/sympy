@@ -46,7 +46,7 @@ from sympy.utilities.misc import as_int
 import mpmath
 
 
-def separatevars(expr, symbols=[], dict=False, force=False):
+def separatevars(expr, symbols=None, dict=False, force=False):
     """
     Separates variables in an expression, if possible.  By
     default, it separates with respect to all symbols in an
@@ -113,6 +113,9 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     True
 
     """
+
+    if symbols is None:
+        symbols = []
     expr = sympify(expr)
     if dict:
         return _separatevars_dict(_separatevars(expr, force), symbols)

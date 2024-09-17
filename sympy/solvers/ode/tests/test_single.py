@@ -292,8 +292,8 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
     return result
 
 
-def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
-    if all_examples == []:
+def _test_all_examples_for_one_hint(our_hint, all_examples=None, runxfail=None):
+    if all_examples is None:
         all_examples = _get_all_examples()
     match_list, unsolve_list, exception_list = [], [], []
     for ode_example in all_examples:

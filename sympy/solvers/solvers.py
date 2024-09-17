@@ -2035,7 +2035,7 @@ def _solve_system(exprs, symbols, **flags):
     return linear, result
 
 
-def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
+def solve_linear(lhs, rhs=0, symbols=None, exclude=None):
     r"""
     Return a tuple derived from ``f = lhs - rhs`` that is one of
     the following: ``(0, 1)``, ``(0, 0)``, ``(symbol, solution)``, ``(n, d)``.
@@ -2142,6 +2142,11 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     solution.)
 
     """
+    if symbols is None:
+        symbols = []
+    if exclude is None:
+        exclude = []
+
     if isinstance(lhs, Eq):
         if rhs:
             raise ValueError(filldedent('''
