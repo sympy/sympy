@@ -11,6 +11,7 @@ from sympy.functions.elementary.complexes import (arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh, coth, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary._trigonometric_special import cos_table
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, atan2,
                                                       cos, cot, csc, sec, sin, sinc, tan)
 from sympy.functions.special.bessel import (besselj, jn)
@@ -2242,3 +2243,8 @@ def test_issue_23843():
     assert acot(x + I).series(x, -oo) == 16/(5*x**5) + 2*I/x**4 - 4/(3*x**3) - I/x**2 + 1/x + O(x**(-6), (x, -oo))
     assert acot(x - I).series(x, oo) == 16/(5*x**5) - 2*I/x**4 - 4/(3*x**3) + I/x**2 + 1/x + O(x**(-6), (x, oo))
     assert acot(x - I).series(x, -oo) == 16/(5*x**5) - 2*I/x**4 - 4/(3*x**3) + I/x**2 + 1/x + O(x**(-6), (x, -oo))
+
+
+def test_cos_table_keys():
+    # if this fails, _cos_table_keys in exponential needs updating
+    assert tuple(cos_table().keys()) == (3, 5, 17, 257)

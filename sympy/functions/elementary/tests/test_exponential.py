@@ -12,6 +12,7 @@ from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, lo
 from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.functions.elementary._trigonometric_special import cos_table
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.polytools import gcd
 from sympy.series.order import O
@@ -381,6 +382,18 @@ def test_log_symbolic():
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
+
+
+def test_special_exp():
+    for d in tuple(cos_table()) + (4, 6, 8, 10, 12):
+        # use 13 to affirm numerator does not need to be 1
+        d/=S(13)
+        assert d != 1
+        ans = cos(pi/d) + I*sin(pi/d)
+        assert not ans.has(cos)
+        assert exp(I*pi/d) == ans
+        d = -d
+        assert exp(I*pi/d) == cos(pi/d) + I*sin(pi/d)
 
 
 def test_log_exp():

@@ -32,6 +32,8 @@ from sympy.ntheory.factor_ import factorint
 # p.is_positive.]
 
 
+_cos_table_keys = (3, 5, 17, 257)
+
 class ExpBase(Function):
 
     unbranched = True
@@ -278,6 +280,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         from sympy.matrices.matrixbase import MatrixBase
         from sympy.sets.setexpr import SetExpr
         from sympy.simplify.simplify import logcombine
+        from sympy.functions.elementary.trigonometric import cos, sin
         if isinstance(arg, MatrixBase):
             return arg.exp()
         elif global_parameters.exp_is_pow:
@@ -314,6 +317,8 @@ class exp(ExpBase, metaclass=ExpMeta):
                     elif (coeff + S.Half).is_odd:
                         return I
                 elif coeff.is_Rational:
+                    if coeff.q in _cos_table_keys + (4, 6, 8, 10, 12):
+                        return cos(arg/I) + I*sin(arg/I)
                     ncoeff = coeff % 2 # restrict to [0, 2pi)
                     if ncoeff > 1: # restrict to (-pi, pi]
                         ncoeff -= 2
@@ -1284,3 +1289,4 @@ def _log_atan_table():
         2 + sqrt(3): pi * Rational(5, 12),
         (1 + sqrt(3)) / (-1 + sqrt(3)): pi * Rational(5, 12)
     }
+
