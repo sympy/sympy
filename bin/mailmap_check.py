@@ -230,17 +230,6 @@ def author_name(line):
 
 def get_authors_from_git():
     git_command = ["git", "log", "--topo-order", "--reverse", "--format=%aN <%aE>"]
-
-    parents = run(["git", "rev-list", "--no-walk", "--count", "HEAD^@"],
-                  stdout=PIPE, encoding='utf-8').stdout.strip()
-    if parents != '1':
-        # Skip the most recent commit. Used to ignore the merge commit created
-        # when this script runs in CI. If HEAD is a merge commit parents will
-        # typically be '2'. We use HEAD^2 rather than HEAD^1 to select the
-        # parent commit that is part of the PR rather than the parent commit
-        # that was the previous tip of master.
-        git_command.append("HEAD^"+parents)
-
     git_people = run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")
 
     # remove duplicates, keeping the original order
