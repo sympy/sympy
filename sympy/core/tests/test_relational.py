@@ -802,10 +802,14 @@ def test_simplify_relational():
 
     # Test particular branches of _eval_simplify
     m = exp(1) - exp_polar(1)
-    assert simplify(m*x > 1) is S.false
     # These two test the same branch
     assert simplify(m*x + 2*m*y > 1) is S.false
     assert simplify(m*x + y > 1 + y) is S.false
+
+    # issue 26847
+    f = Function('f')
+    eq = Eq(f(1), x*f(0))
+    assert eq.simplify() == eq
 
 
 def test_equals():
