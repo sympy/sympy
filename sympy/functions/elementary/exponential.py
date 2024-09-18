@@ -1289,4 +1289,3 @@ def _log_atan_table():
         2 + sqrt(3): pi * Rational(5, 12),
         (1 + sqrt(3)) / (-1 + sqrt(3)): pi * Rational(5, 12)
     }
-
