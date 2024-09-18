@@ -62,7 +62,7 @@ def test_DomainMatrix_init():
 
     # uses copy
     was = [i.copy() for i in lol]
-    A[0,0] = 42
+    A[0,0] = ZZ(42)
     assert was == lol
 
 
