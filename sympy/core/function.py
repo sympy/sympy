@@ -927,7 +927,7 @@ class UndefinedFunction(FunctionClass):
         return False
 
 
-# Using copyreg is the only way to make a dyanmically generated instance of a
+# Using copyreg is the only way to make a dynamically generated instance of a
 # metaclass picklable without using a custom pickler. It is not possible to
 # define e.g. __reduce__ on the metaclass because obj.__reduce__ will retrieve
 # the __reduce__ method for reducing instances of the type rather than for the
