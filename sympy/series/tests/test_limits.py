@@ -453,14 +453,7 @@ def test_issue_5183():
     for i, (args, res) in enumerate(zip(tests, results)):
         y, s, e, d = args
         eq = y**(s*e)
-        try:
-            assert limit(eq, x, 0, dir=d) == res
-        except AssertionError:
-            if 0:  # change to 1 if you want to see the failing tests
-                print()
-                print(i, res, eq, d, limit(eq, x, 0, dir=d))
-            else:
-                assert None
+        assert limit(eq, x, 0, dir=d) == res
 
 
 def test_issue_5184():
