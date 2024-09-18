@@ -5,6 +5,35 @@ from sympy.utilities.iterables import iterable
 
 
 
+def apply(f, e):
+    """apply f recursively to e; if e is a list or tuple, apply
+    f recursively to the elements and return the same type of iterable,
+    apply f to a Basic using bottom-up, else apply f to e.
+
+    Examples
+    ========
+
+    >>> from sympy.core.traversal import apply
+    >>> from sympy import Float, Rational, nsimplify
+    >>> from sympy.core.numbers import equal_valued
+
+    >>> apply(nsimplify, .1)
+    1/10
+    >>> apply(nsimplify, [.1])
+    [1/10]
+    >>> apply(nsimplify, [.1, (.1, .5)])
+    [1/10, (1/10, 1/2)]
+    >>> recast = lambda x: y if equal_valued(x, y:=Rational(str(x))) else x
+    >>> apply(recast, [0.1,0.5,1,1.0])
+    [0.1, 1/2, 1, 1]
+    """
+    if isinstance(e, (list, tuple)):
+        return type(e)([apply(f, i) for i in e])
+    if isinstance(e, Basic):
+        return bottom_up(e, f, atoms=True, nonbasic=True)
+    return f(e)
+
+
 def iterargs(expr):
     """Yield the args of a Basic object in a breadth-first traversal.
     Depth-traversal stops if `arg.args` is either empty or is not
@@ -235,10 +264,7 @@ def bottom_up(rv, F, atoms=False, nonbasic=False):
             rv = F(rv)
     else:
         if nonbasic:
-            try:
-                rv = F(rv)
-            except TypeError:
-                pass
+            rv = F(rv)
 
     return rv
 

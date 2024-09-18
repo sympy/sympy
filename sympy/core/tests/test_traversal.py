@@ -7,7 +7,8 @@ from sympy.core.function import expand, Function
 from sympy.core.numbers import I
 from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import factor
-from sympy.core.traversal import preorder_traversal, use, postorder_traversal, iterargs, iterfreeargs
+from sympy.core.traversal import (preorder_traversal, use,
+    postorder_traversal, iterargs, iterfreeargs, apply)
 from sympy.functions.elementary.piecewise import ExprCondPair, Piecewise
 from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.utilities.iterables import capture
@@ -117,3 +118,10 @@ def test_deprecated_imports():
     with warns_deprecated_sympy():
         from sympy.utilities.iterables import interactive_traversal
         capture(lambda: interactive_traversal(x))
+
+
+def test_trav_apply():
+    assert apply(lambda x: 42, 1) == 42
+    assert apply(lambda x: 42, [1]) == [42]
+    assert apply(lambda x: 42, ([], 1, [2])) == ([], 42, [42])
+    assert apply(lambda x: x%2, ([], 1, (2, 3))) == ([], 1, (0, 1))
