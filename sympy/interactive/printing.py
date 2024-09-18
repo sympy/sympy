@@ -400,11 +400,11 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         printer will only print SymPy types.
     str_printer : function, optional, default=None
         A custom string printer function. This should mimic
-        :func:`~.sstrrepr()`.
+        :func:`~.sstrrepr`.
     pretty_printer : function, optional, default=None
-        A custom pretty printer. This should mimic :func:`~.pretty()`.
+        A custom pretty printer. This should mimic :func:`~.pretty`.
     latex_printer : function, optional, default=None
-        A custom LaTeX printer. This should mimic :func:`~.latex()`.
+        A custom LaTeX printer. This should mimic :func:`~.latex`.
     scale : float, optional, default=1.0
         Scale the LaTeX output when using the ``'png'`` or ``'svg'`` backends.
         Useful for high dpi screens.

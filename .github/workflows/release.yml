@@ -18,9 +18,9 @@ on:
       - '1.13'
 env:
   release_branch: '1.13'            # e.g. 1.13
-  release_version: '1.13.2'         # e.g. 1.13.1rc1
-  final_release_version: '1.13.2'   # e.g. 1.13.1
-  previous_version: '1.13.1'        # e.g. 1.13.0
+  release_version: '1.13.3'         # e.g. 1.13.1rc1
+  final_release_version: '1.13.3'   # e.g. 1.13.1
+  previous_version: '1.13.2'        # e.g. 1.13.0
   dev_version: '1.14-dev'           # e.g. 1.14-dev
 
 jobs:
