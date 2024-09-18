@@ -2666,7 +2666,7 @@ class TensAdd(TensExpr, AssocOp):
             return self.data[item]
 
     def contract_delta(self, delta):
-        args = [contract_delta(x, delta) for x in self.args]
+        args = [x.contract_delta(delta) if isinstance(x, TensExpr) else x for x in self.args]
         t = TensAdd(*args).doit(deep=False)
         return canon_bp(t)
 
@@ -5234,12 +5234,6 @@ def contract_metric(t, g):
     if isinstance(t, TensExpr):
         return t.contract_metric(g)
     return t
-
-def contract_delta(t, delta):
-    if isinstance(t, TensExpr):
-        return t.contract_delta(delta)
-    else:
-        return t
 
 def perm2tensor(t, g, is_canon_bp=False):
     """
