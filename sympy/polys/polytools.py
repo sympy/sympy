@@ -2679,7 +2679,7 @@ class Poly(Basic):
         This uses the subresultant PRS. The remainder r_i is the deg(r_{i-1})-th
         subresultant polynomial. Additionally, if deg(r_i) < deg(r_{i-1}) - 1,
         then the deg(r_i) subresultant polynomial is r_i * LC(r_i) ^ c_i, where
-        c_i = deg(r_{i-1})-deg(r_i)-1).
+        c_i = deg(r_{i-1})-deg(r_i)-1.
 
         Examples
         ========
@@ -2719,7 +2719,7 @@ class Poly(Basic):
 
             # if there is a "degree jump"
             # if deg(r_i) < deg(r_{i-1}) - 1, then the deg(r_i) subres poly
-            # is r_i * LC(r_i) ^ c_i, where c_i = deg(r_{i-1})-deg(r_i)-1)
+            # is r_i * LC(r_i) ^ c_i, where c_i = deg(r_{i-1})-deg(r_i)-1
             if prs[i].degree() < prs[i-1].degree() - 1:
                 degree_jump = prs[i-1].degree() - prs[i].degree() - 1
                 subres_polys[ prs[i].degree() ]  =\
@@ -5557,7 +5557,7 @@ def subresultant_polys(f, g, *gens, **args):
     This uses the subresultant PRS. The remainder r_i is the deg(r_{i-1})-th
     subresultant polynomial. Additionally, if deg(r_i) < deg(r_{i-1}) - 1,
     then the deg(r_i) subresultant polynomial is r_i * LC(r_i) ^ c_i, where
-    c_i = deg(r_{i-1})-deg(r_i)-1).
+    c_i = deg(r_{i-1})-deg(r_i)-1.
 
     Examples
     ========
