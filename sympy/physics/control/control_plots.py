@@ -17,7 +17,8 @@ __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'impulse_response_numerical_data', 'impulse_response_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
-    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot', 'nyquist_plot']
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot',
+    'nyquist_plot_expr', 'nyquist_plot']
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -981,7 +982,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 
 
 
-def _get_nyquist_expr(system):
+def nyquist_plot_expr(system):
     """Function to get the expression for Nyquist plot."""
     s = system.var
     w = Dummy('w', real=True)
@@ -1037,7 +1038,9 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, show=True,
     bode_plot
 
     """
-    real_expr, imag_expr, w = _get_nyquist_expr(system)
+
+    _check_system(system)
+    real_expr, imag_expr, w = nyquist_plot_expr(system)
     w_values = [(w, initial_omega, final_omega)]
     p = plot_parametric(
         (real_expr, imag_expr),   # The curve
