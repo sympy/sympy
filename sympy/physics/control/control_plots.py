@@ -19,7 +19,7 @@ __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
     'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot',
-    'nichols_plot']
+    'nichols_plot_expr', 'nichols_plot']
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -982,7 +982,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
     return plt
 
 
-def _get_nichols_expr(system):
+def nichols_plot_expr(system):
     """Function to get the expression for Nichols plot."""
     s = system.var
     w = Dummy('w', real=True)
@@ -1038,7 +1038,8 @@ def nichols_plot(system, initial_omega=0.01, final_omega=100, show=True, color='
 
     """
 
-    magnitude_dB_expr, phase_deg_expr, w = _get_nichols_expr(system)
+    _check_system(system)
+    magnitude_dB_expr, phase_deg_expr, w = nichols_plot_expr(system)
     w_values = [(w, initial_omega, final_omega)]
     p = plot_parametric(
         (phase_deg_expr, magnitude_dB_expr),
