@@ -2669,6 +2669,124 @@ class Poly(Basic):
 
         return list(map(per, result))
 
+
+    def subresultant_polys(f, g):
+        """
+        Computes the subresultant polynomials of two polynomials ``f`` and ``g``.
+        The returned list has length min(deg(f), deg(g))+1, and is in order of
+        increasing degree. The first polynomial in the list is the resultant.
+
+        This uses the subresultant PRS. The remainder r_i is the deg(r_{i-1})-th
+        subresultant polynomial. Additionally, if deg(r_i) < deg(r_{i-1}) - 1,
+        then the deg(r_i) subresultant polynomial is r_i * LC(r_i) ^ c_i, where
+        c_i = deg(r_{i-1})-deg(r_i)-1).
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(x**2 + 1, x).subresultant_polys(Poly(x**2 - 1, x))
+        [Poly(4, x, domain='ZZ'),
+         Poly(-2, x, domain='ZZ'),
+         Poly(x**2 - 1, x, domain='ZZ')]
+
+        Observe that the first element is the resultant.
+
+        >>> Poly(x**2 + 1, x).resultant(Poly(x**2 - 1, x))
+        4
+
+        """
+
+        # ensure deg(f) >= deg(g)
+        n = f.degree()
+        m = g.degree()
+
+        if n < m:
+            f, g = g, f
+            n, m = m, n
+
+        prs = f.subresultants(g)
+        if len(prs) <= 1:
+            return []
+
+        subres_polys = [0] * (m + 1)
+
+        for i in reversed(range(2, len(prs))):
+            # remainder r_i is the deg(r_{i-1})-th subres poly
+            subres_polys[ prs[i-1].degree() -1 ] = prs[i]
+
+            # if there is a "degree jump"
+            # if deg(r_i) < deg(r_{i-1}) - 1, then the deg(r_i) subres poly
+            # is r_i * LC(r_i) ^ c_i, where c_i = deg(r_{i-1})-deg(r_i)-1)
+            if prs[i].degree() < prs[i-1].degree() - 1:
+                degree_jump = prs[i-1].degree() - prs[i].degree() - 1
+                subres_polys[ prs[i].degree() ]  =\
+                    prs[i] * prs[i].LC() ** degree_jump
+
+        # handle last one
+        subres_polys[-1] = prs[1] * g.LC() ** (n - m - 1)
+
+        # want it to always return Poly objects for consistency
+        # this basically just makes sure 0 is returned as Poly(0)
+        for i in range(len(subres_polys)):
+            if not isinstance(subres_polys[i], Poly):
+                subres_polys[i] = Poly(i, f.gen)
+
+        return subres_polys
+
+
+    def subresultant_coeffs(f, g):
+        """
+        Computes the subresultant coefficients of two polynomials ``f`` and ``g``.
+        These are sometimes called the principal subresultant coefficients (PSC). The
+        returned list has length min(deg(f), deg(g))+1.
+
+        This uses the subresultant polynomials: the coefficient of the ith subresultant
+        polynomial for x^{i-1} is the ith subresultant coefficient.
+
+        The first k subresultants are zero if ``f`` and ``g`` have k common roots.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(x**2 + 1, x).subresultant_coeffs(Poly(x**2 - 1, x))
+        [4, 0, 1]
+
+        >>> Poly((x-1)*(x-2), x).subresultant_coeffs(Poly((x-1)*(x+2), x))
+        [0, 4, 1]
+
+        The first element is 0, indicating they share one root.
+
+        >>> Poly((x-1)*(x-2), x).subresultant_coeffs(Poly((x-1)*(x-2)*x, x))
+        [0, 0, 1]
+
+        The first two elements are 0, indicating they share two roots.
+
+        The coefficients are taken from the subresultant polynomials.
+
+        >>> Poly((x-1)*(x-2), x).subresultant_polys(Poly((x-1)*(x-2)*x, x))
+        [Poly(0, x, domain='ZZ'),
+        Poly(1, x, domain='ZZ'),
+        Poly(x**2 - 3*x + 2, x, domain='ZZ')]
+
+        The coefficients are, in order, the coefficient of x^0, x^1, and x^2 in
+        the polynomials above.
+
+
+        """
+
+        subres_polys = f.subresultant_polys(g)
+
+        subres_coeffs = [subres_polys[i].nth(i) for i in range(len(subres_polys))]
+
+        return subres_coeffs
+
+
     def resultant(f, g, includePRS=False):
         """
         Computes the resultant of ``f`` and ``g`` via PRS.
@@ -5422,6 +5540,106 @@ def subresultants(f, g, *gens, **args):
         raise ComputationFailed('subresultants', 2, exc)
 
     result = F.subresultants(G)
+
+    if not opt.polys:
+        return [r.as_expr() for r in result]
+    else:
+        return result
+
+
+@public
+def subresultant_polys(f, g, *gens, **args):
+    """
+    Computes the subresultant polynomials of two polynomials ``f`` and ``g``.
+    The returned list has length min(deg(f), deg(g))+1, and is in order of
+    increasing degree. The first polynomial in the list is the resultant.
+
+    This uses the subresultant PRS. The remainder r_i is the deg(r_{i-1})-th
+    subresultant polynomial. Additionally, if deg(r_i) < deg(r_{i-1}) - 1,
+    then the deg(r_i) subresultant polynomial is r_i * LC(r_i) ^ c_i, where
+    c_i = deg(r_{i-1})-deg(r_i)-1).
+
+    Examples
+    ========
+
+    >>> from sympy.polys.polytools import subresultant_polys
+    >>> from sympy.abc import x
+
+    >>> subresultant_polys(x**2 + 1, x**2 - 1)
+    [4, -2, x**2 - 1]
+
+    Observe that the first element is the resultant.
+
+    >>> from sympy import resultant
+    >>> resultant(x**2 + 1, x**2 - 1)
+    4
+    """
+
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('subresultant_polys', 2, exc)
+
+    result = F.subresultant_polys(G)
+
+    if not opt.polys:
+        return [r.as_expr() for r in result]
+    else:
+        return result
+
+
+@public
+def subresultant_coeffs(f, g, *gens, **args):
+    """
+    Computes the subresultant coefficients of two polynomials ``f`` and ``g``.
+    These are sometimes called the principal subresultant coefficients (PSC). The
+    returned list has length min(deg(f), deg(g))+1.
+
+    This uses the subresultant polynomials: the coefficient of the ith subresultant
+    polynomial for x^{i-1} is the ith subresultant coefficient.
+
+    The first k subresultants are zero if ``f`` and ``g`` have k common roots.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.polytools import subresultant_coeffs
+    >>> from sympy.abc import x
+
+    >>> subresultant_coeffs(x**2 + 1, x**2 - 1)
+    [4, 0, 1]
+
+    >>> subresultant_coeffs((x-1)*(x-2), (x-1)*(x+2))
+    [0, 4, 1]
+
+    The first element is 0, indicating they share one root.
+
+    >>> subresultant_coeffs((x-1)*(x-2), (x-1)*(x-2)*x)
+    [0, 0, 1]
+
+    The first two elements are 0, indicating they share two roots.
+
+    The coefficients are taken from the subresultant polynomials.
+
+    >>> from sympy.polys.polytools import subresultant_polys
+    >>> subresultant_polys((x-1)*(x-2), (x-1)*(x-2)*x)
+    [0, 1, x**2 - 3*x + 2]
+
+    The coefficients are, in order, the coefficient of x^0, x^1, and x^2 in
+    the polynomials above.
+
+    """
+
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('subresultant_coeffs', 2, exc)
+
+    result = F.subresultant_coeffs(G)
 
     if not opt.polys:
         return [r.as_expr() for r in result]

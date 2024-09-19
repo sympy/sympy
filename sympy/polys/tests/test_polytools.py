@@ -12,6 +12,7 @@ from sympy.polys.polytools import (
     div, rem, quo, exquo,
     half_gcdex, gcdex, invert,
     subresultants,
+    subresultant_polys, subresultant_coeffs,
     resultant, discriminant,
     terms_gcd, cofactors,
     gcd, gcd_list,
@@ -1991,6 +1992,103 @@ def test_subresultants():
     assert subresultants(F, G, polys=False) == [f, g, h]
 
     raises(ComputationFailed, lambda: subresultants(4, 2))
+
+
+def test_subresultant_polys():
+    # edge cases
+    assert subresultant_polys(x, 0) == []
+    assert subresultant_polys(x, 1) == [1]
+
+    # simple monic univariate examples
+    assert subresultant_polys(x**2+1, x**2-1, x) == [4, -2, -1+x**2]
+    assert subresultant_polys(x**3+1, x**2-1, x) == [0, 1+x, -1+x**2]
+
+    # should be order-invariant
+    assert subresultant_polys(x**3+1, x**2-1, x) == subresultant_polys(x**3+1, x**2-1, x)
+
+    # some univariate examples
+    f = Poly(2*x**5 - 3*x**4 + x**3 - 7*x + 5, x)
+    g = Poly(x**5 + 4*x**4 - x**3 + 2*x**2 - 3*x + 6, x)
+    assert f.subresultant_polys(g) ==\
+        [
+            Poly(45695124, x),
+            Poly(692022 - 809988*x, x),
+            Poly(1349 - 743*x - 901*x**2, x),
+            Poly(397 - 487*x + 43*x**2 - 24*x**3, x),
+            Poly(7 + x + 4*x**2 - 3*x**3 + 11*x**4, x),
+            Poly(6 - 3*x + 2*x**2 - x**3 + 4*x**4 + x**5, x)
+        ]
+
+    f = Poly(5*x**2 + 3*x - 2, x)
+    g = Poly(-x + 1, x)
+    assert f.subresultant_polys(g) ==\
+        [Poly(6, x), Poly(1-x, x)]
+
+    # some bivariate examples
+    f = Poly(2*x**3 + y**2 + 3*x*y - 4, x)
+    g = Poly(x**2 + 2*y**3 + 5*x*y, x)
+    assert f.subresultant_polys(g) ==\
+        [
+            16 + 52*y**2 + 1000*y**3 - 254*y**4 - 232*y**5 + 360*y**6 - 48*y**7 + 32*y**9,
+            -4 + 3*x*y + y**2 + 50*x*y**2 - 4*x*y**3 + 20*y**4,
+            x**2 + 5*x*y + 2*y**3
+        ]
+
+    f = Poly(y*x**2+1, x)
+    g = Poly(y**2*x**2 - 1, x)
+    assert f.subresultant_polys(g) ==\
+        [
+            y**2 + 2*y**3 + y**4,
+            -y - y**2,
+            x**2 - 1/y**2
+        ]
+    # note above it can have rational terms in the other vars!
+
+
+def test_subresultant_coeffs():
+    # edge cases
+    assert subresultant_coeffs(x, 0, x) == []
+    assert subresultant_coeffs(x, 1, x) == [1]
+
+    # simple monic univariate examples
+    assert subresultant_coeffs(x**2+1, x**2-1, x) == [4, 0, 1]
+    assert subresultant_coeffs(x**3+1, x**2-1, x) == [0, 1, 1]
+
+    # should be order-invariant
+    assert subresultant_coeffs(x**3+1, x**2-1, x) == subresultant_coeffs(x**3+1, x**2-1, x)
+
+    # first k are 0 when f and g share k common roots
+    assert subresultant_coeffs((x-1)*(x-2), (x-1)*(x-2)*x) == [0, 0, 1]
+
+    # some univariate examples
+    f = Poly(2*x**5 - 3*x**4 + x**3 - 7*x + 5, x)
+    g = Poly(x**5 + 4*x**4 - x**3 + 2*x**2 - 3*x + 6, x)
+    assert f.subresultant_coeffs(g) ==\
+        [45695124, -809988, -901, -24, 11, 1]
+
+    f = Poly(5*x**2 + 3*x - 2, x)
+    g = Poly(-x + 1, x)
+    assert f.subresultant_coeffs(g) ==\
+        [6, -1]
+
+    # some bivariate examples
+    f = Poly(2*x**3 + y**2 + 3*x*y - 4, x)
+    g = Poly(x**2 + 2*y**3 + 5*x*y, x)
+    assert f.subresultant_coeffs(g) ==\
+        [
+            16 + 52*y**2 + 1000*y**3 - 254*y**4 - 232*y**5 + 360*y**6 - 48*y**7 + 32*y**9,
+            3*y + 50*y**2 - 4*y**3,
+            1
+        ]
+
+    f = Poly(y*x**2+1, x)
+    g = Poly(y**2*x**2 - 1, x)
+    assert f.subresultant_coeffs(g) ==\
+        [
+            y**2 + 2*y**3 + y**4,
+            0,
+            1
+        ]
 
 
 def test_resultant():
