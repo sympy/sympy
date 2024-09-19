@@ -909,3 +909,60 @@ shows six truncated polynomial loads across the surface of a beam.
    >>> for i in range(n):
    ...     b.apply_load(1 / (5**i), 10*i + 5, i, end=10*i + 10)
    >>> plot(b.load, (x, 0, 10*n))  # doctest: +SKIP
+
+Example 12
+----------
+
+The same Beam form Example 10 but using ``apply_rotation_hinge()`` and ``apply_support()`` methods.
+
+.. code:: pycon
+
+    >>> from sympy.physics.continuum_mechanics.beam import Beam
+    >>> from sympy import symbols
+    >>> E, I = symbols('E, I')
+    >>> l = symbols('l', positive=True)
+    >>> b = Beam(3*l, E, I)
+    >>> r0,m0 = b.apply_support(0, type='fixed')
+    >>> r3l,m3l = b.apply_support(3*l, type='fixed')
+    >>> b.apply_rotation_hinge(l)
+    >>> P = symbols('P')
+    >>> b.apply_load(P, 2*l, -1)
+    >>> b.solve_for_reaction_loads(r0,m0,r3l,m3l)
+    >>> b.reaction_loads
+    >>> b.reaction_loads
+    ⎧    5⋅P⋅l         -4⋅P⋅l       -5⋅P          -13⋅P ⎫
+    ⎨M₀: ─────, M_3*l: ───────, R₀: ─────, R_3*l: ──────⎬
+    ⎩     18              9          18             18  ⎭
+
+    >>> b.load
+         2         -3            -2                   -2          -1                                   -1
+      P⋅l ⋅<-l + x>     5⋅P⋅l⋅<x>     4⋅P⋅l⋅<-3⋅l + x>     5⋅P⋅<x>                 -1   13⋅P⋅<-3⋅l + x>
+    - ─────────────── + ─────────── - ────────────────── - ───────── + P⋅<-2⋅l + x>   - ─────────────────
+            12              18                9               18                               18
+
+    >>> b.shear_force()
+       2         -2            -1                   -1          0                                  0
+    P⋅l ⋅<-l + x>     5⋅P⋅l⋅<x>     4⋅P⋅l⋅<-3⋅l + x>     5⋅P⋅<x>                0   13⋅P⋅<-3⋅l + x>
+    ─────────────── - ─────────── + ────────────────── + ──────── - P⋅<-2⋅l + x>  + ────────────────
+          12              18                9               18                             18
+
+    >>> b.bending_moment()
+       2         -1            0                   0          1                                  1
+    P⋅l ⋅<-l + x>     5⋅P⋅l⋅<x>    4⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>                1   13⋅P⋅<-3⋅l + x>
+    ─────────────── - ────────── + ───────────────── + ──────── - P⋅<-2⋅l + x>  + ────────────────
+          12              18               9              18                             18
+
+    >>> b.slope()
+     ⎛   2         0            1                   1          2               2                  2⎞
+     ⎜P⋅l ⋅<-l + x>    5⋅P⋅l⋅<x>    4⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>    P⋅<-2⋅l + x>    13⋅P⋅<-3⋅l + x> ⎟
+    -⎜────────────── - ────────── + ───────────────── + ──────── - ───────────── + ────────────────⎟
+     ⎝      12             18               9              36            2                36       ⎠
+    ─────────────────────────────────────────────────────────────────────────────────────────────────
+                                                   E⋅I
+    >>> b.deflection()
+     ⎛   2         1            2                   2          3               3                  3⎞
+     ⎜P⋅l ⋅<-l + x>    5⋅P⋅l⋅<x>    2⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>    P⋅<-2⋅l + x>    13⋅P⋅<-3⋅l + x> ⎟
+    -⎜────────────── - ────────── + ───────────────── + ──────── - ───────────── + ────────────────⎟
+     ⎝      12             36               9             108            6               108       ⎠
+    ─────────────────────────────────────────────────────────────────────────────────────────────────
+                                                   E⋅I
