@@ -232,6 +232,8 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
                     except KeyError:
                         if not factor.has_free(*opt.gens):
                             coeff.append(factor)
+                        elif opt.extension is True and factor.is_algebraic:
+                            coeff.append(factor)
                         else:
                             raise PolynomialError("%s contains an element of "
                                                   "the set of generators." % factor)
