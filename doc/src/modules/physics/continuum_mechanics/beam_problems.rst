@@ -959,7 +959,7 @@ The same Beam form Example 10 but using ``apply_rotation_hinge()`` and ``apply_s
      ⎝      12             18               9              36            2                36       ⎠
     ─────────────────────────────────────────────────────────────────────────────────────────────────
                                                    E⋅I
-    
+
     >>> b.deflection()
      ⎛   2         1            2                   2          3               3                  3⎞
      ⎜P⋅l ⋅<-l + x>    5⋅P⋅l⋅<x>    2⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>    P⋅<-2⋅l + x>    13⋅P⋅<-3⋅l + x> ⎟
@@ -971,12 +971,12 @@ The same Beam form Example 10 but using ``apply_rotation_hinge()`` and ``apply_s
 Example 13
 ----------
 
-There is a beam of length ``3*l`` fixed at both ends. A load is applied at ``l/3`` and a distributed load ``q1`` 
+There is a beam of length ``3*l`` fixed at both ends. A load is applied at ``l/3`` and a distributed load ``q1``
 is applied between ``2*l`` and ``3*l``. The beam has a sliding hinge located at ``l*5/2`` using the ``apply_sliding_hinge()`` method.
 
 .. note::
 
-    It is possible to use l*5/2 as input however it good practise to use Rational(5, 2) instead. This helps the solver to understand 
+    It is possible to use l*5/2 as input however it good practise to use Rational(5, 2) instead. This helps the solver to understand
     the input as a fraction and will output exact solutions instead of floating point numbers.
 
 
