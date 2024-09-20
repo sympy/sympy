@@ -1368,7 +1368,10 @@ class SymPyTests:
         if not self._kw:
             return True
         for kw in self._kw:
-            if x.__name__.lower().find(kw.lower()) != -1:
+            if len(kw) > 1 and kw[-1] in "$(":
+                if x.__name__.lower().endswith(kw.lower()[:-1]):
+                    return True
+            elif x.__name__.lower().find(kw.lower()) != -1:
                 return True
         return False
 
