@@ -975,7 +975,7 @@ is applied between ``2*l`` and ``3*l``. The beam has a sliding hinge located at 
 
 .. note::
 
-    It is possible to use l*5/2 as input however it good practise to use Rational(5, 2) instead. This helps the solver to understand
+    It is possible to use ``l*5/2`` as input however it good practise to use ``Rational(5, 2)`` instead. This helps the solver to understand
     the input as a fraction and will output exact solutions instead of floating point numbers.
 
 
@@ -988,8 +988,8 @@ is applied between ``2*l`` and ``3*l``. The beam has a sliding hinge located at 
     >>> b = Beam(3*l, E, I)
     >>> r0, m0 = b.apply_support(0, type='fixed')
     >>> r3l, m3l = b.apply_support(3*l, type='fixed')
-    >>> p1 = b.apply_sliding_hinge(l*Rational(5, 2))
-    >>> P1, P2, P3, q1 = symbols('P1 P2 P3 q1')
+    >>> s1 = b.apply_sliding_hinge(l*Rational(5, 2))
+    >>> P1, q1 = symbols('P1 q1')
     >>> b.apply_load(P1, l*Rational(1, 3), -1)
     >>> b.apply_load(q1, 2*l, 0, 3*l)
     >>> b.solve_for_reaction_loads(r0, r3l, m0, m3l)
