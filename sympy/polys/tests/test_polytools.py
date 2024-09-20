@@ -3298,9 +3298,15 @@ def test_cancel():
 
     assert cancel(oo) is oo
 
-    assert cancel((2, 3)) == (1, 2, 3)
+    raises(ValueError, lambda: cancel((1, 2, 3)))
 
-    assert cancel((1, 0), x) == (1, 1, 0)
+    # test first tuple returnr
+    assert (t:=cancel((2, 3))) == (1, 2, 3)
+    assert isinstance(t, tuple)
+
+    # tests 2nd tuple return
+    assert (t:=cancel((1, 0), x)) == (1, 1, 0)
+    assert isinstance(t, tuple)
     assert cancel((0, 1), x) == (1, 0, 1)
 
     f, g, p, q = 4*x**2 - 4, 2*x - 2, 2*x + 2, 1
@@ -3310,7 +3316,9 @@ def test_cancel():
     assert cancel((f, g)) == (1, p, q)
     assert cancel((f, g), x) == (1, p, q)
     assert cancel((f, g), (x,)) == (1, p, q)
-    assert cancel((F, G)) == (1, P, Q)
+    # tests 3rd tuple return
+    assert (t:=cancel((F, G))) == (1, P, Q)
+    assert isinstance(t, tuple)
     assert cancel((f, g), polys=True) == (1, P, Q)
     assert cancel((F, G), polys=False) == (1, p, q)
 
