@@ -959,6 +959,7 @@ The same Beam form Example 10 but using ``apply_rotation_hinge()`` and ``apply_s
      ⎝      12             18               9              36            2                36       ⎠
     ─────────────────────────────────────────────────────────────────────────────────────────────────
                                                    E⋅I
+    
     >>> b.deflection()
      ⎛   2         1            2                   2          3               3                  3⎞
      ⎜P⋅l ⋅<-l + x>    5⋅P⋅l⋅<x>    2⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>    P⋅<-2⋅l + x>    13⋅P⋅<-3⋅l + x> ⎟
@@ -966,3 +967,72 @@ The same Beam form Example 10 but using ``apply_rotation_hinge()`` and ``apply_s
      ⎝      12             36               9             108            6               108       ⎠
     ─────────────────────────────────────────────────────────────────────────────────────────────────
                                                    E⋅I
+
+Example 13
+----------
+
+There is a beam of length ``3*l`` fixed at both ends. A load is applied at ``l/3`` and a distributed load ``q1`` 
+is applied between ``2*l`` and ``3*l``. The beam has a sliding hinge located at ``l*5/2`` using the ``apply_sliding_hinge()`` method.
+
+.. note::
+
+    It is possible to use l*5/2 as input however it good practise to use Rational(5, 2) instead. This helps the solver to understand 
+    the input as a fraction and will output exact solutions instead of floating point numbers.
+
+
+.. code:: pycon
+
+    >>> from sympy.physics.continuum_mechanics.beam import Beam
+    >>> from sympy import symbols, Rational
+    >>> E, I = symbols('E, I')
+    >>> l = symbols('l', positive=True)
+    >>> b = Beam(3*l, E, I)
+    >>> r0, m0 = b.apply_support(0, type='fixed')
+    >>> r3l, m3l = b.apply_support(3*l, type='fixed')
+    >>> b.apply_sliding_hinge(l*Rational(5, 2))
+    >>> P1, P2, P3, q1 = symbols('P1 P2 P3 q1')
+    >>> b.apply_load(P1, l*Rational(1, 3), -1)
+    >>> b.apply_load(q1, 2*l, 0, 3*l)
+    >>> b.solve_for_reaction_loads(r0, r3l, m0, m3l)
+    >>> b.reaction_loads
+    ⎧                  2                       2                                  ⎫
+    ⎪    17⋅P₁⋅l   25⋅l ⋅q₁         P₁⋅l   11⋅l ⋅q₁            l⋅q₁         -l⋅q₁ ⎪
+    ⎨M₀: ─────── + ────────, M_3*l: ──── + ────────, R₀: -P₁ - ────, R_3*l: ──────⎬
+    ⎪      54         36             54       36                2             2   ⎪
+    ⎩                                                                             ⎭
+
+    >>> b.load
+                                                                                                                                                                                                        -4
+                                                                                                                                                                ⎛         3        4   ⎞    5⋅l
+                    -1                  -1                                                          ⎛           2   ⎞                ⎛              2   ⎞         ⎝- 25⋅P₁⋅l  - 297⋅l ⋅q₁⎠⋅<- ─── + x>
+            l          l⋅q₁⋅<-3⋅l + x>                  0                0   ⎛      l⋅q₁⎞    -1   ⎜P₁⋅l   11⋅l ⋅q₁⎟           -2   ⎜17⋅P₁⋅l   25⋅l ⋅q₁⎟    -2                                2
+        P₁⋅<- ─ + x>   - ───────────────── + q₁⋅<-2⋅l + x>  - q₁⋅<-3⋅l + x>  + ⎜-P₁ - ────⎟⋅<x>   + ⎜──── + ────────⎟⋅<-3⋅l + x>   + ⎜─────── + ────────⎟⋅<x>   + ──────────────────────────────────────
+            3                  2                                             ⎝       2  ⎠         ⎝ 54       36   ⎠                ⎝  54         36   ⎠                          324
+
+    >>> b.shear_force()
+        2         -2            -1                   -1          0                                  0
+        P⋅l ⋅<-l + x>     5⋅P⋅l⋅<x>     4⋅P⋅l⋅<-3⋅l + x>     5⋅P⋅<x>                0   13⋅P⋅<-3⋅l + x>
+        ─────────────── - ─────────── + ────────────────── + ──────── - P⋅<-2⋅l + x>  + ────────────────
+            12              18                9               18                             18
+
+    >>> b.bending_moment()
+        2         -1            0                   0          1                                  1
+        P⋅l ⋅<-l + x>     5⋅P⋅l⋅<x>    4⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>                1   13⋅P⋅<-3⋅l + x>
+        ─────────────── - ────────── + ───────────────── + ──────── - P⋅<-2⋅l + x>  + ────────────────
+            12              18               9              18                             18
+
+    >>> b.slope()
+        ⎛   2         0            1                   1          2               2                  2⎞
+        ⎜P⋅l ⋅<-l + x>    5⋅P⋅l⋅<x>    4⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>    P⋅<-2⋅l + x>    13⋅P⋅<-3⋅l + x> ⎟
+        -⎜────────────── - ────────── + ───────────────── + ──────── - ───────────── + ────────────────⎟
+        ⎝      12             18               9              36            2                36       ⎠
+        ─────────────────────────────────────────────────────────────────────────────────────────────────
+                                                    E⋅I
+
+    >>> b.deflection()
+        ⎛   2         1            2                   2          3               3                  3⎞
+        ⎜P⋅l ⋅<-l + x>    5⋅P⋅l⋅<x>    2⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>    P⋅<-2⋅l + x>    13⋅P⋅<-3⋅l + x> ⎟
+        -⎜────────────── - ────────── + ───────────────── + ──────── - ───────────── + ────────────────⎟
+        ⎝      12             36               9             108            6               108       ⎠
+        ─────────────────────────────────────────────────────────────────────────────────────────────────
+                                                    E⋅I
