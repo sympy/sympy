@@ -924,7 +924,7 @@ The same Beam form Example 10 but using ``apply_rotation_hinge()`` and ``apply_s
     >>> b = Beam(3*l, E, I)
     >>> r0,m0 = b.apply_support(0, type='fixed')
     >>> r3l,m3l = b.apply_support(3*l, type='fixed')
-    >>> F,P = symbols('F P')
+    >>> F = symbols('F')
     >>> p1 = b.apply_rotation_hinge(l)
     >>> b.apply_load(F, 2*l, -1)
     >>> b.solve_for_reaction_loads(r0,m0,r3l,m3l)
