@@ -7352,7 +7352,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     if 'polys' in args:
         opt['polys'] = args['polys']
 
-    if not isinstance(f, (tuple, Tuple)):
+    if not isinstance(f, Tuple):
         if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
             return f
         f = factor_terms(f, radical=True)
@@ -7365,8 +7365,6 @@ def cancel(f, *gens, _signsimp=True, **args):
             opt['domain'] = p.domain
             opt['polys'] = opt.get('polys', True)
         p, q = p.as_expr(), q.as_expr()
-    elif isinstance(f, Tuple):
-        return factor_terms(f)
     else:
         raise ValueError('unexpected argument: %s' % f)
 
@@ -7376,7 +7374,7 @@ def cancel(f, *gens, _signsimp=True, **args):
             raise PolynomialError()
         R, (F, G) = sring((p, q), *gens, **args)
         if not R.ngens:
-            if not isinstance(f, (tuple, Tuple)):
+            if not isinstance(f, Tuple):
                 return f.expand()
             else:
                 return S.One, p, q
@@ -7395,8 +7393,7 @@ def cancel(f, *gens, _signsimp=True, **args):
             pot = preorder_traversal(f)
             next(pot)
             for e in pot:
-                # XXX: This should really skip anything that's not Expr.
-                if isinstance(e, (tuple, Tuple, BooleanAtom)):
+                if isinstance(e, BooleanAtom) or not isinstance(e, Expr):
                     continue
                 try:
                     reps.append((e, cancel(e)))
@@ -7409,7 +7406,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     if opt.get('polys', False) and 'gens' not in opt:
         opt['gens'] = R.symbols
 
-    if not isinstance(f, (tuple, Tuple)):
+    if not isinstance(f, Tuple):
         return c*(P.as_expr()/Q.as_expr())
     else:
         P, Q = P.as_expr(), Q.as_expr()
