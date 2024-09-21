@@ -2778,7 +2778,7 @@ class Poly(Basic):
 
         >>> Poly((x-1)*(x-2), x).subresultant_polys(Poly((x-1)*(x-2)*x, x))
         [Poly(0, x, domain='ZZ'),
-        Poly(1, x, domain='ZZ'),
+        Poly(0, x, domain='ZZ'),
         Poly(x**2 - 3*x + 2, x, domain='ZZ')]
 
         The coefficients are, in order, the coefficient of x^0, x^1, and x^2 in
@@ -5635,7 +5635,7 @@ def subresultant_coeffs(f, g, *gens, **args):
 
     >>> from sympy.polys.polytools import subresultant_polys
     >>> subresultant_polys((x-1)*(x-2), (x-1)*(x-2)*x)
-    [0, 1, x**2 - 3*x + 2]
+    [0, 0, x**2 - 3*x + 2]
 
     The coefficients are, in order, the coefficient of x^0, x^1, and x^2 in
     the polynomials above.
