@@ -2659,6 +2659,12 @@ class Poly(Basic):
          Poly(x**2 - 1, x, domain='ZZ'),
          Poly(-2, x, domain='ZZ')]
 
+        See also
+        ========
+
+        subresultant_polys
+        subresultant_coeffs
+
         """
         _, per, F, G = f._unify(g)
 
@@ -2695,6 +2701,12 @@ class Poly(Basic):
 
         >>> Poly(x**2 + 1, x).resultant(Poly(x**2 - 1, x))
         4
+
+        See also
+        ========
+
+        subresultants
+        subresultant_coeffs
 
         """
 
@@ -2775,6 +2787,11 @@ class Poly(Basic):
         The coefficients are, in order, the coefficient of x^0, x^1, and x^2 in
         the polynomials above.
 
+        See also
+        ========
+
+        subresultants
+        subresultant_polys
 
         """
 
