@@ -2669,7 +2669,6 @@ class Poly(Basic):
 
         return list(map(per, result))
 
-
     def subresultant_polys(f, g):
         """
         Computes the subresultant polynomials of two polynomials ``f`` and ``g``.
@@ -2736,7 +2735,6 @@ class Poly(Basic):
 
         return subres_polys
 
-
     def subresultant_coeffs(f, g):
         """
         Computes the subresultant coefficients of two polynomials ``f`` and ``g``.
@@ -2785,7 +2783,6 @@ class Poly(Basic):
         subres_coeffs = [subres_polys[i].nth(i) for i in range(len(subres_polys))]
 
         return subres_coeffs
-
 
     def resultant(f, g, includePRS=False):
         """
