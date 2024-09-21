@@ -5541,6 +5541,12 @@ def subresultants(f, g, *gens, **args):
     >>> subresultants(x**2 + 1, x**2 - 1)
     [x**2 + 1, x**2 - 1, -2]
 
+    See also
+    ========
+
+    subresultant_polys
+    subresultant_coeffs
+
     """
     options.allowed_flags(args, ['polys'])
 
@@ -5583,6 +5589,13 @@ def subresultant_polys(f, g, *gens, **args):
     >>> from sympy import resultant
     >>> resultant(x**2 + 1, x**2 - 1)
     4
+
+    See also
+    ========
+
+    subresultants
+    subresultant_coeffs
+
     """
 
     options.allowed_flags(args, ['polys'])
@@ -5639,6 +5652,12 @@ def subresultant_coeffs(f, g, *gens, **args):
 
     The coefficients are, in order, the coefficient of x^0, x^1, and x^2 in
     the polynomials above.
+
+    See also
+    ========
+
+    subresultants
+    subresultant_polys
 
     """
 
