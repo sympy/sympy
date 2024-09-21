@@ -2722,7 +2722,7 @@ class Poly(Basic):
         if len(prs) <= 1:
             return []
 
-        subres_polys = [0] * (m + 1)
+        subres_polys = [Poly(0, f.gen) for _ in range(m + 1)]
 
         for i in reversed(range(2, len(prs))):
             # remainder r_i is the deg(r_{i-1})-th subres poly
@@ -2738,12 +2738,6 @@ class Poly(Basic):
 
         # handle last one
         subres_polys[-1] = prs[1] * g.LC() ** (n - m - 1)
-
-        # want it to always return Poly objects for consistency
-        # this basically just makes sure 0 is returned as Poly(0)
-        for i in range(len(subres_polys)):
-            if not isinstance(subres_polys[i], Poly):
-                subres_polys[i] = Poly(i, f.gen)
 
         return subres_polys
 
@@ -2796,7 +2790,6 @@ class Poly(Basic):
         """
 
         subres_polys = f.subresultant_polys(g)
-
         subres_coeffs = [subres_polys[i].nth(i) for i in range(len(subres_polys))]
 
         return subres_coeffs

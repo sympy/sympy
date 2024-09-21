@@ -2006,6 +2006,10 @@ def test_subresultant_polys():
     # should be order-invariant
     assert subresultant_polys(x**3+1, x**2-1, x) == subresultant_polys(x**3+1, x**2-1, x)
 
+    # test that 0 is still being returned as poly
+    assert Poly(x**3+1, x).subresultant_polys(Poly(x**2-1, x)) ==\
+        [Poly(0, x), Poly(1+x, x), Poly(-1+x**2, x)]
+
     # some univariate examples
     f = Poly(2*x**5 - 3*x**4 + x**3 - 7*x + 5, x)
     g = Poly(x**5 + 4*x**4 - x**3 + 2*x**2 - 3*x + 6, x)
