@@ -2724,20 +2724,23 @@ class Poly(Basic):
 
         subres_polys = [Poly(0, f.gen) for _ in range(m + 1)]
 
-        for i in reversed(range(2, len(prs))):
+        subres_polys[-1] = g * g.LC() ** (n - m - 1)
+
+        for i in range(2, len(prs)):
+            curr = prs[i]
+            prev = prs[i-1]
+            curr_deg = curr.degree()
+            prev_deg = prev.degree()
+
             # remainder r_i is the deg(r_{i-1})-th subres poly
-            subres_polys[ prs[i-1].degree() -1 ] = prs[i]
+            subres_polys[ prev_deg -1 ] = curr
 
             # if there is a "degree jump"
             # if deg(r_i) < deg(r_{i-1}) - 1, then the deg(r_i) subres poly
             # is r_i * LC(r_i) ^ c_i, where c_i = deg(r_{i-1})-deg(r_i)-1
-            if prs[i].degree() < prs[i-1].degree() - 1:
-                degree_jump = prs[i-1].degree() - prs[i].degree() - 1
-                subres_polys[ prs[i].degree() ]  =\
-                    prs[i] * prs[i].LC() ** degree_jump
-
-        # handle last one
-        subres_polys[-1] = prs[1] * g.LC() ** (n - m - 1)
+            degree_jump = prev_deg - curr_deg - 1
+            if degree_jump > 0:
+                subres_polys[curr_deg] = curr * curr.LC() ** degree_jump
 
         return subres_polys
 
