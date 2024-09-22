@@ -2028,6 +2028,12 @@ def test_subresultant_polys():
     assert f.subresultant_polys(g) ==\
         [Poly(6, x), Poly(1-x, x)]
 
+    # a univariate example with a degree jump
+    f = Poly(x**5 + x**3 - 1, x)
+    g = Poly(2*x**3, x)
+    assert f.subresultant_polys(g) ==\
+        [Poly(32, x), Poly(0, x), Poly(8, x), Poly(4*x**3, x)]
+
     # some bivariate examples
     f = Poly(2*x**3 + y**2 + 3*x*y - 4, x)
     g = Poly(x**2 + 2*y**3 + 5*x*y, x)
@@ -2047,6 +2053,12 @@ def test_subresultant_polys():
             x**2 - 1/y**2
         ]
     # note above it can have rational terms in the other vars!
+
+    # a bivariate example with a degree jump
+    f = Poly(x**5 + x**3 - 1, x)
+    g = Poly(y*x**3, x)
+    assert f.subresultant_polys(g) ==\
+        [Poly(y**5, x), Poly(0, x), Poly(y**3, x), Poly(y**2*x**3, x)]
 
 
 def test_subresultant_coeffs():
