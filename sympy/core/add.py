@@ -325,6 +325,9 @@ class Add(Expr, AssocOp):
                 if s.is_Mul:
                     # Mul, already keeps its arguments in perfect order.
                     # so we can simply put c in slot0 and go the fast way.
+                    #
+                    # XXX: This breaks VectorMul unless it overrides
+                    # _new_rawargs
                     cs = s._new_rawargs(*((c,) + s.args))
                     newseq.append(cs)
                 elif s.is_Add:
