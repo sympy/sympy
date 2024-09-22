@@ -2664,6 +2664,7 @@ class Poly(Basic):
 
         subresultant_polys
         subresultant_coeffs
+        resultant
 
         """
         _, per, F, G = f._unify(g)
@@ -2707,6 +2708,7 @@ class Poly(Basic):
 
         subresultants
         subresultant_coeffs
+        resultant
 
         """
 
@@ -2797,6 +2799,7 @@ class Poly(Basic):
 
         subresultants
         subresultant_polys
+        resultant
 
         """
 
@@ -5554,6 +5557,7 @@ def subresultants(f, g, *gens, **args):
 
     subresultant_polys
     subresultant_coeffs
+    resultant
 
     """
     options.allowed_flags(args, ['polys'])
@@ -5603,6 +5607,7 @@ def subresultant_polys(f, g, *gens, **args):
 
     subresultants
     subresultant_coeffs
+    resultant
 
     """
 
@@ -5666,6 +5671,7 @@ def subresultant_coeffs(f, g, *gens, **args):
 
     subresultants
     subresultant_polys
+    resultant
 
     """
 
