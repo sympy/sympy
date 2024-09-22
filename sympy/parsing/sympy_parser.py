@@ -12,7 +12,7 @@ import builtins
 import types
 from typing import Tuple as tTuple, Dict as tDict, Any, Callable, \
     List, Optional, Union as tUnion
-
+from functools import reduce
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
 from sympy.core import Symbol
@@ -1128,17 +1128,30 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.Eq: 'Eq'
     }
     def visit_Compare(self, node):
-        if node.ops[0].__class__ in self.relational_operators:
-            sympy_class = self.relational_operators[node.ops[0].__class__]
-            right = self.visit(node.comparators[0])
-            left = self.visit(node.left)
-            new_node = ast.Call(
-                func=ast.Name(id=sympy_class, ctx=ast.Load()),
-                args=[left, right],
-                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
+        def reducer(acc, op_right):
+            result, left = acc
+            op, right = op_right
+            if op.__class__ not in self.relational_operators:
+                raise ValueError("Only equation or inequality operators are supported")
+            new = ast.Call(
+                func=ast.Name(
+                    id=self.relational_operators[op.__class__], ctx=ast.Load()
+                ),
+                args=[self.visit(left), self.visit(right)],
+                keywords=[ast.keyword(arg="evaluate", value=ast.Constant(value=False))],
             )
-            return new_node
-        return node
+            return result + [new], right
+
+        args, _ = reduce(
+            reducer, zip(node.ops, node.comparators), ([], node.left)
+        )
+        if len(args) == 1:
+            return args[0]
+        return ast.Call(
+            func=ast.Name(id=self.operators[ast.BitAnd], ctx=ast.Load()),
+            args=args,
+            keywords=[ast.keyword(arg="evaluate", value=ast.Constant(value=False))],
+        )
 
     def flatten(self, args, func):
         result = []
