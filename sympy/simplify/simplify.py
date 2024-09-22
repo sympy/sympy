@@ -632,7 +632,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
 
-
     # rationalize Floats
     floats = False
     if rational is not False and expr.has(Float):
