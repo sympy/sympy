@@ -290,11 +290,11 @@ def test_issue_24288():
     assert parse_expr("1 <= 2 <= 3", evaluate=False) == And(Le(1, 2, evaluate=False), Le(2, 3, evaluate=False), evaluate=False)
     assert parse_expr("1 < 2 <= 3 < 4", evaluate=False) == \
         And(Lt(1, 2, evaluate=False), Le(2, 3, evaluate=False), Lt(3, 4, evaluate=False), evaluate=False)
-    # Valid Python relational operators that SymPy does not decide how to handle them yet
-    raises(ValueError, lambda: parse_expr("1 in 2", evaluate=False))
-    raises(ValueError, lambda: parse_expr("1 is 2", evaluate=False))
-    raises(ValueError, lambda: parse_expr("1 not in 2", evaluate=False))
-    raises(ValueError, lambda: parse_expr("1 is not 2", evaluate=False))
+    # parse_expr with evaluate=True also falls back to Python comparison for them
+    assert parse_expr(r"1 in {1}", evaluate=False)
+    assert parse_expr(r"1 not in {2}", evaluate=False)
+    assert parse_expr(r"1 is 1", evaluate=False)
+    assert parse_expr(r"1 is not 2", evaluate=False)
 
 def test_split_symbols_numeric():
     transformations = (

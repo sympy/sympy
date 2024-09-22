@@ -1128,11 +1128,12 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.Eq: 'Eq'
     }
     def visit_Compare(self, node):
+        if any(op.__class__ not in self.relational_operators for op in node.ops):
+            return node
+
         def reducer(acc, op_right):
             result, left = acc
             op, right = op_right
-            if op.__class__ not in self.relational_operators:
-                raise ValueError("Only equation or inequality operators are supported")
             new = ast.Call(
                 func=ast.Name(
                     id=self.relational_operators[op.__class__], ctx=ast.Load()
