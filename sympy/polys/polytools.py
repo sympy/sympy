@@ -2729,6 +2729,8 @@ class Poly(Basic):
         if m == 0:
             return subres_polys
 
+        zero = f.zero
+
         for i in range(len(prs)-1, 1, -1):
             p, d = prs[i], prs[i].degree() # r_i and deg(r_i)
             e = prs[i-1].degree() # deg(r_{i-1})
@@ -2737,7 +2739,7 @@ class Poly(Basic):
             # so we need to first append enough 0s
             # only if not already computed (happens if deg(f) = deg(g))
             if len(subres_polys) != e:
-                subres_polys.extend([Poly(0, f.gen)] * (e - len(subres_polys) - 1))
+                subres_polys.extend([f.zero] * (e - len(subres_polys) - 1))
                 subres_polys.append(p)
 
             # if there is a "degree jump"
@@ -2749,7 +2751,7 @@ class Poly(Basic):
                 subres_polys[d] = p * p.LC() ** jump
 
         # should be length m+1 so pad 0s
-        subres_polys.extend([Poly(0, f.gen)] * (m - len(subres_polys)))
+        subres_polys.extend([f.zero] * (m - len(subres_polys)))
         subres_polys.append(g * g.LC() ** (n - m - 1))
 
         return subres_polys
