@@ -6,7 +6,6 @@ from sympy.vector.operators import gradient, curl, divergence
 from sympy.core.function import diff
 from sympy.core.singleton import S
 from sympy.integrals.integrals import integrate
-from sympy.simplify.simplify import simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
 
