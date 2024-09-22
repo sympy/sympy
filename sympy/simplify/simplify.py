@@ -44,7 +44,7 @@ from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 from sympy.utilities.misc import as_int
 
 import mpmath
-
+import signal
 
 def separatevars(expr, symbols=[], dict=False, force=False):
     """
@@ -416,8 +416,10 @@ def signsimp(expr, evaluate=None):
         e = e.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
     return e
 
+def timeout_handler(signum, frame):
+    raise TimeoutError("Simplification process timed out")
 
-def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, timeout=30, **kwargs):
     """Simplifies the given expression.
 
     Explanation
@@ -571,194 +573,210 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     sympy.assumptions.refine.refine : Simplification using assumptions.
     sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
+    try:
+        # Set up a signal handler to interrupt the process after a timeout
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(timeout)
+        def shorter(*choices):
+            """
+            Return the choice that has the fewest ops. In case of a tie,
+            the expression listed first is selected.
+            """
+            if not has_variety(choices):
+                signal.alarm(0)
+                return choices[0]
+            signal.alarm(0)
+            return min(choices, key=measure)
 
-    def shorter(*choices):
-        """
-        Return the choice that has the fewest ops. In case of a tie,
-        the expression listed first is selected.
-        """
-        if not has_variety(choices):
-            return choices[0]
-        return min(choices, key=measure)
+        def done(e):
+            rv = e.doit() if doit else e
+            signal.alarm(0)
+            return shorter(rv, collect_abs(rv))
 
-    def done(e):
-        rv = e.doit() if doit else e
-        return shorter(rv, collect_abs(rv))
+        expr = sympify(expr, rational=rational)
+        kwargs = {
+            "ratio": kwargs.get('ratio', ratio),
+            "measure": kwargs.get('measure', measure),
+            "rational": kwargs.get('rational', rational),
+            "inverse": kwargs.get('inverse', inverse),
+            "doit": kwargs.get('doit', doit)}
+        # no routine for Expr needs to check for is_zero
+        if isinstance(expr, Expr) and expr.is_zero:
+            signal.alarm(0)
+            return S.Zero if not expr.is_Number else expr
 
-    expr = sympify(expr, rational=rational)
-    kwargs = {
-        "ratio": kwargs.get('ratio', ratio),
-        "measure": kwargs.get('measure', measure),
-        "rational": kwargs.get('rational', rational),
-        "inverse": kwargs.get('inverse', inverse),
-        "doit": kwargs.get('doit', doit)}
-    # no routine for Expr needs to check for is_zero
-    if isinstance(expr, Expr) and expr.is_zero:
-        return S.Zero if not expr.is_Number else expr
+        _eval_simplify = getattr(expr, '_eval_simplify', None)
+        if _eval_simplify is not None:
+            signal.alarm(0)
+            return _eval_simplify(**kwargs)
 
-    _eval_simplify = getattr(expr, '_eval_simplify', None)
-    if _eval_simplify is not None:
-        return _eval_simplify(**kwargs)
+        original_expr = expr = collect_abs(signsimp(expr))
 
-    original_expr = expr = collect_abs(signsimp(expr))
-
-    if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
-        return expr
-
-    if inverse and expr.has(Function):
-        expr = inversecombine(expr)
-        if not expr.args:  # simplified to atomic
+        if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
+            signal.alarm(0)
             return expr
 
-    # do deep simplification
-    handled = Add, Mul, Pow, ExpBase
-    expr = expr.replace(
-        # here, checking for x.args is not enough because Basic has
-        # args but Basic does not always play well with replace, e.g.
-        # when simultaneous is True found expressions will be masked
-        # off with a Dummy but not all Basic objects in an expression
-        # can be replaced with a Dummy
-        lambda x: isinstance(x, Expr) and x.args and not isinstance(
-            x, handled),
-        lambda x: x.func(*[simplify(i, **kwargs) for i in x.args]),
-        simultaneous=False)
-    if not isinstance(expr, handled):
-        return done(expr)
+        if inverse and expr.has(Function):
+            expr = inversecombine(expr)
+            if not expr.args:  # simplified to atomic
+                signal.alarm(0)
+                return expr
 
-    if not expr.is_commutative:
-        expr = nc_simplify(expr)
+        # do deep simplification
+        handled = Add, Mul, Pow, ExpBase
+        expr = expr.replace(
+            # here, checking for x.args is not enough because Basic has
+            # args but Basic does not always play well with replace, e.g.
+            # when simultaneous is True found expressions will be masked
+            # off with a Dummy but not all Basic objects in an expression
+            # can be replaced with a Dummy
+            lambda x: isinstance(x, Expr) and x.args and not isinstance(
+                x, handled),
+            lambda x: x.func(*[simplify(i, **kwargs) for i in x.args]),
+            simultaneous=False)
+        if not isinstance(expr, handled):
+            signal.alarm(0)
+            return done(expr)
 
-    # TODO: Apply different strategies, considering expression pattern:
-    # is it a purely rational function? Is there any trigonometric function?...
-    # See also https://github.com/sympy/sympy/pull/185.
+        if not expr.is_commutative:
+            expr = nc_simplify(expr)
+
+        # TODO: Apply different strategies, considering expression pattern:
+        # is it a purely rational function? Is there any trigonometric function?...
+        # See also https://github.com/sympy/sympy/pull/185.
 
 
-    # rationalize Floats
-    floats = False
-    if rational is not False and expr.has(Float):
-        floats = True
-        expr = nsimplify(expr, rational=True)
+        # rationalize Floats
+        floats = False
+        if rational is not False and expr.has(Float):
+            floats = True
+            expr = nsimplify(expr, rational=True)
 
-    expr = _bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
-    expr = Mul(*powsimp(expr).as_content_primitive())
-    _e = cancel(expr)
-    expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
-    expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
+        expr = _bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
+        expr = Mul(*powsimp(expr).as_content_primitive())
+        _e = cancel(expr)
+        expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
+        expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
 
-    if ratio is S.Infinity:
-        expr = expr2
-    else:
-        expr = shorter(expr2, expr1, expr)
-    if not isinstance(expr, Basic):  # XXX: temporary hack
-        return expr
+        if ratio is S.Infinity:
+            expr = expr2
+        else:
+            expr = shorter(expr2, expr1, expr)
+        if not isinstance(expr, Basic):  # XXX: temporary hack
+            signal.alarm(0)
+            return expr
 
-    expr = factor_terms(expr, sign=False)
+        expr = factor_terms(expr, sign=False)
 
-    # must come before `Piecewise` since this introduces more `Piecewise` terms
-    if expr.has(sign):
-        expr = expr.rewrite(Abs)
+        # must come before `Piecewise` since this introduces more `Piecewise` terms
+        if expr.has(sign):
+            expr = expr.rewrite(Abs)
 
-    # Deal with Piecewise separately to avoid recursive growth of expressions
-    if expr.has(Piecewise):
-        # Fold into a single Piecewise
-        expr = piecewise_fold(expr)
-        # Apply doit, if doit=True
-        expr = done(expr)
-        # Still a Piecewise?
+        # Deal with Piecewise separately to avoid recursive growth of expressions
         if expr.has(Piecewise):
-            # Fold into a single Piecewise, in case doit lead to some
-            # expressions being Piecewise
+            # Fold into a single Piecewise
             expr = piecewise_fold(expr)
-            # kroneckersimp also affects Piecewise
-            if expr.has(KroneckerDelta):
-                expr = kroneckersimp(expr)
+            # Apply doit, if doit=True
+            expr = done(expr)
             # Still a Piecewise?
             if expr.has(Piecewise):
-                # Do not apply doit on the segments as it has already
-                # been done above, but simplify
-                expr = piecewise_simplify(expr, deep=True, doit=False)
+                # Fold into a single Piecewise, in case doit lead to some
+                # expressions being Piecewise
+                expr = piecewise_fold(expr)
+                # kroneckersimp also affects Piecewise
+                if expr.has(KroneckerDelta):
+                    expr = kroneckersimp(expr)
                 # Still a Piecewise?
                 if expr.has(Piecewise):
-                    # Try factor common terms
-                    expr = shorter(expr, factor_terms(expr))
-                    # As all expressions have been simplified above with the
-                    # complete simplify, nothing more needs to be done here
-                    return expr
+                    # Do not apply doit on the segments as it has already
+                    # been done above, but simplify
+                    expr = piecewise_simplify(expr, deep=True, doit=False)
+                    # Still a Piecewise?
+                    if expr.has(Piecewise):
+                        # Try factor common terms
+                        expr = shorter(expr, factor_terms(expr))
+                        # As all expressions have been simplified above with the
+                        # complete simplify, nothing more needs to be done here
+                        signal.alarm(0)
+                        return expr
 
-    # hyperexpand automatically only works on hypergeometric terms
-    # Do this after the Piecewise part to avoid recursive expansion
-    expr = hyperexpand(expr)
+        # hyperexpand automatically only works on hypergeometric terms
+        # Do this after the Piecewise part to avoid recursive expansion
+        expr = hyperexpand(expr)
 
-    if expr.has(KroneckerDelta):
-        expr = kroneckersimp(expr)
+        if expr.has(KroneckerDelta):
+            expr = kroneckersimp(expr)
 
-    if expr.has(BesselBase):
-        expr = besselsimp(expr)
+        if expr.has(BesselBase):
+            expr = besselsimp(expr)
 
-    if expr.has(TrigonometricFunction, HyperbolicFunction):
-        expr = trigsimp(expr, deep=True)
+        if expr.has(TrigonometricFunction, HyperbolicFunction):
+            expr = trigsimp(expr, deep=True)
 
-    if expr.has(log):
-        expr = shorter(expand_log(expr, deep=True), logcombine(expr))
+        if expr.has(log):
+            expr = shorter(expand_log(expr, deep=True), logcombine(expr))
 
-    if expr.has(CombinatorialFunction, gamma):
-        # expression with gamma functions or non-integer arguments is
-        # automatically passed to gammasimp
-        expr = combsimp(expr)
+        if expr.has(CombinatorialFunction, gamma):
+            # expression with gamma functions or non-integer arguments is
+            # automatically passed to gammasimp
+            expr = combsimp(expr)
 
-    if expr.has(Sum):
-        expr = sum_simplify(expr, **kwargs)
+        if expr.has(Sum):
+            expr = sum_simplify(expr, **kwargs)
 
-    if expr.has(Integral):
-        expr = expr.xreplace({
-            i: factor_terms(i) for i in expr.atoms(Integral)})
+        if expr.has(Integral):
+            expr = expr.xreplace({
+                i: factor_terms(i) for i in expr.atoms(Integral)})
 
-    if expr.has(Product):
-        expr = product_simplify(expr, **kwargs)
+        if expr.has(Product):
+            expr = product_simplify(expr, **kwargs)
 
-    from sympy.physics.units import Quantity
+        from sympy.physics.units import Quantity
 
-    if expr.has(Quantity):
-        from sympy.physics.units.util import quantity_simplify
-        expr = quantity_simplify(expr)
+        if expr.has(Quantity):
+            from sympy.physics.units.util import quantity_simplify
+            expr = quantity_simplify(expr)
 
-    short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
-    short = shorter(short, cancel(short))
-    short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
-    if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase, exp):
-        short = exptrigsimp(short)
+        short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
+        short = shorter(short, cancel(short))
+        short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
+        if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase, exp):
+            short = exptrigsimp(short)
 
-    # get rid of hollow 2-arg Mul factorization
-    hollow_mul = Transform(
-        lambda x: Mul(*x.args),
-        lambda x:
-        x.is_Mul and
-        len(x.args) == 2 and
-        x.args[0].is_Number and
-        x.args[1].is_Add and
-        x.is_commutative)
-    expr = short.xreplace(hollow_mul)
+        # get rid of hollow 2-arg Mul factorization
+        hollow_mul = Transform(
+            lambda x: Mul(*x.args),
+            lambda x:
+            x.is_Mul and
+            len(x.args) == 2 and
+            x.args[0].is_Number and
+            x.args[1].is_Add and
+            x.is_commutative)
+        expr = short.xreplace(hollow_mul)
 
-    numer, denom = expr.as_numer_denom()
-    if denom.is_Add:
-        n, d = fraction(radsimp(1/denom, symbolic=False, max_terms=1))
-        if n is not S.One:
-            expr = (numer*n).expand()/d
+        numer, denom = expr.as_numer_denom()
+        if denom.is_Add:
+            n, d = fraction(radsimp(1/denom, symbolic=False, max_terms=1))
+            if n is not S.One:
+                expr = (numer*n).expand()/d
 
-    if expr.could_extract_minus_sign():
-        n, d = fraction(expr)
-        if d != 0:
-            expr = signsimp(-n/(-d))
+        if expr.could_extract_minus_sign():
+            n, d = fraction(expr)
+            if d != 0:
+                expr = signsimp(-n/(-d))
 
-    if measure(expr) > ratio*measure(original_expr):
-        expr = original_expr
+        if measure(expr) > ratio*measure(original_expr):
+            expr = original_expr
 
-    # restore floats
-    if floats and rational is None:
-        expr = nfloat(expr, exponent=False)
-
-    return done(expr)
-
+        # restore floats
+        if floats and rational is None:
+            expr = nfloat(expr, exponent=False)
+        signal.alarm(0)
+        return done(expr)
+    # handle the timeout error if one occurs
+    except TimeoutError as e:
+        print("Timeout occurred:", e)
+        return "Simplification Timed Out"  # return string stating that a timeout occured
 
 def sum_simplify(s, **kwargs):
     """Main function for Sum simplification"""
