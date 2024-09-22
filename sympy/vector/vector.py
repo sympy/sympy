@@ -84,7 +84,7 @@ class Vector(BasisDependent):
         ========
 
         >>> from sympy.vector import CoordSys3D
-        >>> from sympy.abc import x, y, z
+        >>> from sympy.abc import x, y
         >>> from sympy import pi
         >>> C = CoordSys3D('C')
 
