@@ -804,7 +804,7 @@ def measure_all_oneshot(qubit, format='sympy'):
             if total > random_number:
                 break
             result += 1
-        return Qubit(IntQubit(result, int(math.log2(max(m.shape)) + .1)))
+        return Qubit(IntQubit(result, nqubits=int(math.log2(max(m.shape)) + .1)))
     else:
         raise NotImplementedError(
             "This function cannot handle non-SymPy matrix formats yet"
