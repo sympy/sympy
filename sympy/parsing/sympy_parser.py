@@ -1131,7 +1131,6 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         def reducer(acc, op_right):
             result, left = acc
             op, right = op_right
-            right = self.visit(right)
             if op.__class__ not in self.relational_operators:
                 raise ValueError("Only equation or inequality operators are supported")
             new = ast.Call(
