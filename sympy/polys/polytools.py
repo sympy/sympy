@@ -2739,7 +2739,7 @@ class Poly(Basic):
             # so we need to first append enough 0s
             # only if not already computed (happens if deg(f) = deg(g))
             if len(subres_polys) != e:
-                subres_polys.extend([f.zero] * (e - len(subres_polys) - 1))
+                subres_polys.extend([zero] * (e - len(subres_polys) - 1))
                 subres_polys.append(p)
 
             # if there is a "degree jump"
@@ -2751,7 +2751,7 @@ class Poly(Basic):
                 subres_polys[d] = p * p.LC() ** jump
 
         # should be length m+1 so pad 0s
-        subres_polys.extend([f.zero] * (m - len(subres_polys)))
+        subres_polys.extend([zero] * (m - len(subres_polys)))
         subres_polys.append(g * g.LC() ** (n - m - 1))
 
         return subres_polys
