@@ -2718,29 +2718,37 @@ class Poly(Basic):
             f, g = g, f
             n, m = m, n
 
-        prs = f.subresultants(g)
+        res, prs = f.resultant(g, includePRS=True)
         if len(prs) <= 1:
             return []
 
-        subres_polys = [Poly(0, f.gen) for _ in range(m + 1)]
+        subres_polys = [Poly(res, f.gen)]
 
-        subres_polys[-1] = g * g.LC() ** (n - m - 1)
+        if m == 0:
+            return subres_polys
 
-        for i in range(2, len(prs)):
-            curr = prs[i]
-            prev = prs[i-1]
-            curr_deg = curr.degree()
-            prev_deg = prev.degree()
+        for i in range(len(prs)-1, 1, -1):
+            p, d = prs[i], prs[i].degree() # r_i and deg(r_i)
+            e = prs[i-1].degree() # deg(r_{i-1})
 
             # remainder r_i is the deg(r_{i-1})-th subres poly
-            subres_polys[ prev_deg -1 ] = curr
+            # so we need to first append enough 0s
+            # only if not already computed (happens if deg(f) = deg(g))
+            if len(subres_polys) != e:
+                subres_polys.extend([Poly(0, f.gen)] * (e - len(subres_polys) - 1))
+                subres_polys.append(p)
 
             # if there is a "degree jump"
             # if deg(r_i) < deg(r_{i-1}) - 1, then the deg(r_i) subres poly
             # is r_i * LC(r_i) ^ c_i, where c_i = deg(r_{i-1})-deg(r_i)-1
-            degree_jump = prev_deg - curr_deg - 1
-            if degree_jump > 0:
-                subres_polys[curr_deg] = curr * curr.LC() ** degree_jump
+            # note bc d <= e, the index is valid
+            jump = e - d - 1
+            if jump > 0 and d != 0:
+                subres_polys[d] = p * p.LC() ** jump
+
+        # should be length m+1 so pad 0s
+        subres_polys.extend([Poly(0, f.gen)] * (m - len(subres_polys)))
+        subres_polys.append(g * g.LC() ** (n - m - 1))
 
         return subres_polys
 
