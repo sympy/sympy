@@ -10,6 +10,7 @@ from sympy.plotting.series import LineOver1DRangeSeries
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+from sympy.plotting import plot_parametric
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'step_response_numerical_data', 'step_response_plot',
@@ -156,7 +157,6 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
 
     .. plot::
         :context: close-figs
-        :format: doctest
         :include-source: True
 
         >>> from sympy.abc import s
@@ -952,9 +952,10 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 
         >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunction
-        >>> from sympy.physics.control.control_plots import bode_plot
-        >>> tf1 = TransferFunction(1*s**2 + 0.1*s + 7.5, 1*s**4 + 0.12*s**3 + 9*s**2, s)
-        >>> bode_plot(tf1, initial_exp=0.2, final_exp=0.7)   # doctest: +SKIP
+        >>> from sympy.physics.control.control_plots import nyquist_plot
+        >>> tf1 = TransferFunction(2*s**2 + 5*s + 1,s**2 + 2*s + 3, s)
+        >>> nyquist_plot(tf1)   # doctest: +SKIP
+
 
     See Also
     ========
@@ -977,3 +978,128 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         return
 
     return plt
+
+def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_points=1000, **kwargs):
+    """
+    Returns the numerical data of the Nyuist plot of the system.
+    It is internally used by ``nyquist_plot`` to get the data
+    for plotting Nyquist plot. Users can use this data to further
+    analyse the dynamics of the system or plot using a different
+    backend/plotting-module.
+
+    Parameters
+    ==========
+    system : SISOLinearTimeInvariant
+        The system for which the Bode phase plot data is to be computed.
+    initial_omega : Number, optional
+        The initial value of frequency. Defaults to 0.01.
+    final_omega : Number, optional
+        The final value of frequency. Defaults to 100.
+    nb_of_points: Number, optional
+        The number of points sampled for the data. Defaults to 1000.
+
+    Returns
+    =======
+
+    tuple : (real_expr, imag_expr, w)
+        real_expr = The real part of the transfer function evaluated at various frequencies.
+        imag_points = The imaginary part of the transfer function evaluated at various frequencies.
+        w = A placeholder variable representing the frequency variable in Laplace domain.
+
+    Raises
+    ======
+
+    NotImplementedError
+        When a SISO LTI system is not passed.
+        When time delay terms are present in the system.
+    ValueError
+        When more than one free symbol is present in the system.
+        The only variable in the transfer function should be
+        the variable of the Laplace transform.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import TransferFunction
+    >>> from sympy.physics.control.control_plots import nyquist_numerical_data
+    >>> tf1 = TransferFunction(s, s**2 + 5*s + 8, s)
+    >>> nyquist_numerical_data(tf1)   # doctest: +SKIP
+    (([0.0, 0.12166980856813935,..., 9.861246379582118, 10.0],
+    [1.4504508011325967e-09, 0.006046440489058766,..., 0.12499999999568202, 0.12499999999661349]))
+
+    See Also
+    ========
+
+    nyquist_plot, nyquist_numerical_data
+
+    """
+    _check_system(system)
+    s = system.var
+    w = Dummy('w',real=True)
+    repl = I * w
+    expr = system.to_expr()
+    w_expr = expr.subs({s: repl})
+    w_expr = w_expr.as_real_imag()
+    real_expr = w_expr[0]
+    imag_expr = w_expr[1]
+    return real_expr, imag_expr, w
+def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
+                 color='b', grid=False, show=True, **kwargs):
+    r"""
+    Returns the Nyquist plot of a continuous-time system.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant type
+        The LTI SISO system for which the Bode Plot is to be computed.
+    initial_omega : float, optional
+        The initial exponent of 10 of the semilog plot. Defaults to -5.
+    final_omega : float, optional
+        The final exponent of 10 of the semilog plot. Defaults to 5.
+    nb_of_points: int, optional
+        Number of points to plot between initial and final frequencies. Default is 1000.
+    color: str, optional
+        Color of the Nyquist plot. Default is 'b' (blue).
+    grid: bool, optional
+        If True, grid lines are displayed. Default is False.
+    show: bool, optional
+        If True, the plot is displayed. Default is True.
+    **kwargs:
+        Additional keyword arguments to be passed to the plot.
+
+    Examples
+    ========
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import nyquist_plot
+        >>> tf1 = TransferFunction(2*s**2 + 5*s + 1,s**2 + 2*s + 3, s)
+        >>> nyquist_plot(tf1)   # doctest: +SKIP
+
+    See Also
+    ========
+
+    nyquist_plot, nyquist_numerical_data
+
+    """
+    real_expr, imag_expr, w = nyquist_numerical_data(system)
+    w_values = [(w, initial_omega, final_omega)]
+    plot_parametric(
+        (real_expr, imag_expr),   # The curve
+        (real_expr, -imag_expr),  # Its mirror image
+        *w_values,
+        line_color=color,
+        aspect_ratio=(1, 1),
+        axes=True,
+        xlabel='Real Axis',
+        ylabel='Imaginary Axis',
+        title='Nyquist Plot (Phase)',
+        show=show
+    )
