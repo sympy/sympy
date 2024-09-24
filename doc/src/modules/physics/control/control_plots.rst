@@ -52,3 +52,8 @@ Nyquist Plot
 ------------
 
 .. automethod:: sympy.physics.control.control_plots.nyquist_plot
+
+Nichols Plot
+------------
+
+.. automethod:: sympy.physics.control.control_plots.nichols_plot
