@@ -60,6 +60,11 @@ def test_DomainMatrix_init():
 
     raises(DMBadInputError, lambda: DomainMatrix([[ZZ(1), ZZ(2)]], (2, 2), ZZ))
 
+    # uses copy
+    was = [i.copy() for i in lol]
+    A[0,0] = ZZ(42)
+    assert was == lol
+
 
 def test_DomainMatrix_from_rep():
     ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
