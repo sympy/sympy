@@ -1114,7 +1114,7 @@ def nichols_plot(system, initial_omega=0.01, final_omega=100, show=True, color='
     ========
 
     nyquist_plot, bode_plot
- 
+
     """
     _check_system(system)
     magnitude_dB_expr, phase_deg_expr, w = nichols_plot_expr(system)
