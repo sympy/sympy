@@ -312,6 +312,10 @@ def test_Poly_rootof_extension():
     assert Poly(r1, y, extension=True) == Poly(r1, y, domain=K1)
     assert Poly(r2, y, extension=True) == Poly(r2, y, domain=K2)
 
+    # https://github.com/sympy/sympy/issues/26808
+    assert Poly(r1, x) == Poly(r1, x, domain=EX)
+    assert Poly(r1, x, extension=True) == Poly(r1, x, domain=K1)
+
 
 @tooslow
 def test_Poly_rootof_extension_primitive_element():
@@ -319,15 +323,6 @@ def test_Poly_rootof_extension_primitive_element():
     r2 = rootof(x**3 + x + 3, 1)
     K12 = QQ.algebraic_field(r1 + r2)
     assert Poly(r1*y + r2, y, extension=True) == Poly(r1*y + r2, y, domain=K12)
-
-
-@XFAIL
-def test_Poly_rootof_same_symbol_issue_26808():
-    # XXX: This fails because r1 contains x.
-    r1 = rootof(x**3 + x + 3, 0)
-    K1 = QQ.algebraic_field(r1)
-    assert Poly(r1, x) == Poly(r1, x, domain=EX)
-    assert Poly(r1, x, extension=True) == Poly(r1, x, domain=K1)
 
 
 def test_Poly_rootof_extension_to_sympy():
