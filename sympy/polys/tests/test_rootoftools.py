@@ -7,7 +7,6 @@ from sympy.polys.rootoftools import (rootof, RootOf, CRootOf, RootSum,
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
-    GeneratorsNeeded,
     PolynomialError,
 )
 
