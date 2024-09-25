@@ -697,8 +697,8 @@ def solve(f, *symbols, **flags):
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
         >>> solve(eq)  # this gives 2 solutions but misses a 3rd
-        [CRootOf(7*x**5 - 7*x**3 + 1, 1)**15,
-        CRootOf(7*x**5 - 7*x**3 + 1, 2)**15]
+        [CRootOf(7*_x**5 - 7*_x**3 + 1, 1)**15,
+        CRootOf(7*_x**5 - 7*_x**3 + 1, 2)**15]
         >>> sol = solve(eq, check=False)
         >>> [abs(eq.subs(x,i).n(2)) for i in sol]
         [0.48, 0.e-110, 0.e-110, 0.052, 0.052]
