@@ -3073,7 +3073,8 @@ class Expr(Basic, EvalfMixin):
 
             try:
                 from sympy.simplify.radsimp import collect
-                return collect(s1, x) + o
+                from sympy.simplify.ratsimp import ratsimp
+                return collect(ratsimp(s1), x) + o
             except NotImplementedError:
                 return s1 + o
 

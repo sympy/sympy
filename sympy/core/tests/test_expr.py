@@ -2291,3 +2291,10 @@ def test_format():
 
 def test_issue_24045():
     assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
+
+def test_issue_9173():
+    p_0, p_1, p_2, p_3, b_0, b_1, b_2 = symbols('p_0:4, b_0:3')
+    Q = (p_0 + (p_1 + (p_2 + p_3/y)/y)/y)/(1 + ((p_3/(b_0*y) +
+        (b_0*p_2 - b_1*p_3)/b_0**2)/y + (b_0**2*p_1 - b_0*b_1*p_2 -
+            p_3*(b_0*b_2 - b_1**2))/b_0**3)/y)
+    assert Q.series(y, n=3) == b_2*y**2 + b_1*y + b_0 + O(y**3)
