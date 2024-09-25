@@ -35,6 +35,9 @@ jobs:
         id: pr_number_reader
         run: echo "pr_number=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
 
+      - name: Show PR number
+        run: echo ${{ steps.pr_number_reader.outputs.pr_number }}
+
         # This may be running after a push with no associated PR in which case
         # the PR number variable is empty. All further steps will be skipped in
         # that case.
