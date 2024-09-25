@@ -2291,3 +2291,14 @@ def test_format():
 
 def test_issue_24045():
     assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
+
+
+def test_25328():
+    x = Symbol('x')
+    expr = Piecewise((15 - x, x > 7), (7 - x, True))
+
+    def fn(a, b, c):
+        return Piecewise((a, b), (c, True))
+
+    assert expr.replace(Piecewise((Wild("a"), Wild("b")), (Wild("c"), True)), fn,
+                 exact = False) == Piecewise((15 - x, x > 7), (7 - x, True))
