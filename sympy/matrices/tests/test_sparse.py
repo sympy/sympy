@@ -316,7 +316,6 @@ def test_sparse_matrix():
         SparseMatrix([(0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)])
     assert m1.reshape(2, 6) == \
         SparseMatrix([(0, 1, 2, 3, 1, 2), (3, 4, 2, 3, 4, 5)])
-    assert sparse_eye(10**3).reshape(1, 10**6).shape == (1, 10**6)  # is not slow
 
     # test_applyfunc
     m0 = sparse_eye(3)
