@@ -14,7 +14,7 @@ def apply(f, e):
     ========
 
     >>> from sympy.core.traversal import apply
-    >>> from sympy import Float, Rational, nsimplify
+    >>> from sympy import Rational, nsimplify
     >>> from sympy.core.numbers import equal_valued
 
     >>> apply(nsimplify, .1)
