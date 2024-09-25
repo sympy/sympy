@@ -659,9 +659,9 @@ def solve(f, *symbols, **flags):
         -(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
         1/(3*sqrt(69)/2 + 27/2)**(1/3)]
         >>> solve(x**3 - x + 1, cubics=False)
-        [CRootOf(x**3 - x + 1, 0),
-         CRootOf(x**3 - x + 1, 1),
-         CRootOf(x**3 - x + 1, 2)]
+        [CRootOf(_x**3 - _x + 1, 0),
+         CRootOf(_x**3 - _x + 1, 1),
+         CRootOf(_x**3 - _x + 1, 2)]
 
     If the expression is multivariate, no solution might be returned:
 
