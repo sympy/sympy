@@ -23,8 +23,11 @@ def pade(f, M, N):
     '''
     The coefficients are calculated and returned to the user
     
-    I want to extract the coefficients from solve_undetermined_coeffs(t, coeffs) and then create the polynomials p and q and then return (p,q) to the user, but I don't know how to extract the p_i and the q_j from solve_undetermined_coeffs(t, coeffs)
-    I saw on the net that if y = solve_undetermined_coeffs() and y = {a: 1, b: 1/2, c: 1/12} then the values can be accessed by doing c_0 = y[a]
+    I want to extract the coefficients from solve_undetermined_coeffs(t, coeffs) and then create the
+    polynomials p and q and then return (p,q) to the user, but I don't know how to extract the p_i and
+    the q_j from solve_undetermined_coeffs(t, coeffs)
+    I saw on the net that if y = solve_undetermined_coeffs() and y = {a: 1, b: 1/2, c: 1/12} then the
+    values can be accessed by doing c_0 = y[a]
     But I tried v_2 = u[p_2] and it didn't work
     '''    
         
