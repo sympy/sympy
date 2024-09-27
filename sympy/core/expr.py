@@ -1889,7 +1889,7 @@ class Expr(Basic, EvalfMixin):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
-            return _unevaluated_Mul(*indep), _unevaluated_Mul(*depend)
+            return Mul(*indep), _unevaluated_Mul(*depend)
 
     def as_real_imag(self, deep=True, **hints):
         """Performs complex expansion on 'self' and returns a tuple
