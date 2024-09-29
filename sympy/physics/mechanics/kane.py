@@ -328,7 +328,6 @@ class KanesMethod(_Methods):
                        'coordinates.')
                 raise ValueError(msg.format(nonlin_vars))
 
-
             # Form of non-holonomic constraints is B*u + C = 0.
             # We partition B into independent and dependent columns:
             # Ars is then -B_dep.inv() * B_ind, and it relates dependent speeds
