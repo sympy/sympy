@@ -4050,7 +4050,23 @@ class Poly(Basic):
             cp = dom.to_sympy(cp)
             cq = dom.to_sympy(cq)
 
-            return cp/cq, per(p), per(q)
+            quo = cp / cq
+
+            if quo.is_rational:
+                numerator, denominator = quo.as_numer_denom()
+
+                p = per(p) * numerator
+                q = per(q) * denominator
+
+                try:
+                    p = p.set_domain('ZZ')
+                    q = q.set_domain('ZZ')
+                except Exception as e:
+                    pass
+
+                quo = 1
+
+            return quo, p, q
         else:
             return tuple(map(per, result))
 
