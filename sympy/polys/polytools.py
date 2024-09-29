@@ -4061,7 +4061,7 @@ class Poly(Basic):
                 try:
                     p = p.set_domain('ZZ')
                     q = q.set_domain('ZZ')
-                except Exception as e:
+                except Exception:
                     pass
 
                 quo = 1
