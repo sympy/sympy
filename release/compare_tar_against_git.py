@@ -34,6 +34,7 @@ git_whitelist = {
     '.mailmap',
     # CI
     '.github/PULL_REQUEST_TEMPLATE.md',
+    '.github/dependabot.yml',
     '.github/workflows/runtests.yml',
     '.github/workflows/ci-sage.yml',
     '.github/workflows/comment-on-pr.yml',

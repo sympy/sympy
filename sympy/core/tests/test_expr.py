@@ -18,6 +18,7 @@ from sympy.core.symbol import Symbol, symbols, Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import exp_polar, exp, log
+from sympy.functions.elementary.hyperbolic import sinh, tanh
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import tan, sin, cos
@@ -479,14 +480,16 @@ def test_as_leading_term():
     # https://github.com/sympy/sympy/issues/21177
     e = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
         - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
-    assert e.as_leading_term(x) == \
-        (12*sqrt(3)*x - 12*S.ImaginaryUnit*x)/(4*sqrt(3) + 12*S.ImaginaryUnit)
+    assert e.as_leading_term(x) == -sqrt(3)*I*x
 
     # https://github.com/sympy/sympy/issues/21245
     e = 1 - x - x**2
     d = (1 + sqrt(5))/2
     assert e.subs(x, y + 1/d).as_leading_term(y) == \
-        (-576*sqrt(5)*y - 1280*y)/(256*sqrt(5) + 576)
+        (-40*y - 16*sqrt(5)*y)/(16 + 8*sqrt(5))
+
+    # https://github.com/sympy/sympy/issues/26991
+    assert sinh(tanh(3/(100*x))).as_leading_term(x, cdir = 1) == sinh(1)
 
 
 def test_leadterm2():
@@ -1503,6 +1506,8 @@ def test_as_base_exp():
     assert (x*y*z).as_base_exp() == (x*y*z, S.One)
     assert (x + y + z).as_base_exp() == (x + y + z, S.One)
     assert ((x + y)**z).as_base_exp() == (x + y, z)
+    assert (x**2*y**2).as_base_exp() == (x*y, 2)
+    assert (x**z*y**z).as_base_exp() == (x**z*y**z, S.One)
 
 
 def test_issue_4963():

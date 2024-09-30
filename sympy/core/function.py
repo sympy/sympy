@@ -637,12 +637,6 @@ class Function(Application, Expr):
         return fuzzy_or(a.is_infinite if s is S.ComplexInfinity
                         else (a - s).is_zero for s in ss)
 
-    def as_base_exp(self):
-        """
-        Returns the method as the 2-tuple (base, exponent).
-        """
-        return self, S.One
-
     def _eval_aseries(self, n, args0, x, logx):
         """
         Compute an asymptotic expansion around args0, in terms of self.args.
@@ -786,7 +780,7 @@ class Function(Application, Expr):
         args = self.args[:ix] + (D,) + self.args[ix + 1:]
         return Subs(Derivative(self.func(*args), D), D, A)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         """Stub that should be overridden by new Functions to return
         the first non-zero term in a series if ever an x-dependent
         argument whose leading term vanishes as x -> 0 might be encountered.
@@ -832,7 +826,7 @@ class AppliedUndef(Function):
         obj = super().__new__(cls, *args, **options)
         return obj
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         return self
 
     @property
@@ -1786,7 +1780,7 @@ class Derivative(Expr):
             rv.append(o/x)
         return Add(*rv)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         series_gen = self.expr.lseries(x)
         d = S.Zero
         for leading_term in series_gen:
@@ -2400,7 +2394,7 @@ class Subs(Expr):
             rv += o.subs(other, x)
         return rv
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         if x in self.point:
             ipos = self.point.index(x)
             xvar = self.variables[ipos]

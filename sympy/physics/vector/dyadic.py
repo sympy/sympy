@@ -173,28 +173,28 @@ class Dyadic(Printable, EvalfMixin):
         ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
-            if ar[i][0] == 1:
-                ol.append(' + ' + printer._print(ar[i][1]) + r"\otimes " +
-                          printer._print(ar[i][2]))
+            if v[0] == 1:
+                ol.append(' + ' + printer._print(v[1]) + r"\otimes " +
+                          printer._print(v[2]))
             # if the coef of the dyadic is -1, we skip the 1
-            elif ar[i][0] == -1:
+            elif v[0] == -1:
                 ol.append(' - ' +
-                          printer._print(ar[i][1]) +
+                          printer._print(v[1]) +
                           r"\otimes " +
-                          printer._print(ar[i][2]))
+                          printer._print(v[2]))
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
-            elif ar[i][0] != 0:
-                arg_str = printer._print(ar[i][0])
-                if isinstance(ar[i][0], Add):
+            elif v[0] != 0:
+                arg_str = printer._print(v[0])
+                if isinstance(v[0], Add):
                     arg_str = '(%s)' % arg_str
                 if arg_str.startswith('-'):
                     arg_str = arg_str[1:]
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + printer._print(ar[i][1]) +
-                          r"\otimes " + printer._print(ar[i][2]))
+                ol.append(str_start + arg_str + printer._print(v[1]) +
+                          r"\otimes " + printer._print(v[2]))
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -217,36 +217,36 @@ class Dyadic(Printable, EvalfMixin):
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
-                    if ar[i][0] == 1:
+                    if v[0] == 1:
                         ol.extend([" + ",
-                                  mpp.doprint(ar[i][1]),
+                                  mpp.doprint(v[1]),
                                   bar,
-                                  mpp.doprint(ar[i][2])])
+                                  mpp.doprint(v[2])])
 
                     # if the coef of the dyadic is -1, we skip the 1
-                    elif ar[i][0] == -1:
+                    elif v[0] == -1:
                         ol.extend([" - ",
-                                  mpp.doprint(ar[i][1]),
+                                  mpp.doprint(v[1]),
                                   bar,
-                                  mpp.doprint(ar[i][2])])
+                                  mpp.doprint(v[2])])
 
                     # If the coefficient of the dyadic is not 1 or -1,
                     # we might wrap it in parentheses, for readability.
-                    elif ar[i][0] != 0:
-                        if isinstance(ar[i][0], Add):
+                    elif v[0] != 0:
+                        if isinstance(v[0], Add):
                             arg_str = mpp._print(
-                                ar[i][0]).parens()[0]
+                                v[0]).parens()[0]
                         else:
-                            arg_str = mpp.doprint(ar[i][0])
+                            arg_str = mpp.doprint(v[0])
                         if arg_str.startswith("-"):
                             arg_str = arg_str[1:]
                             str_start = " - "
                         else:
                             str_start = " + "
                         ol.extend([str_start, arg_str, " ",
-                                  mpp.doprint(ar[i][1]),
+                                  mpp.doprint(v[1]),
                                   bar,
-                                  mpp.doprint(ar[i][2])])
+                                  mpp.doprint(v[2])])
 
                 outstr = "".join(ol)
                 if outstr.startswith(" + "):
@@ -267,18 +267,18 @@ class Dyadic(Printable, EvalfMixin):
         ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
-            if ar[i][0] == 1:
-                ol.append(' + (' + printer._print(ar[i][1]) + '|' +
-                          printer._print(ar[i][2]) + ')')
+            if v[0] == 1:
+                ol.append(' + (' + printer._print(v[1]) + '|' +
+                          printer._print(v[2]) + ')')
             # if the coef of the dyadic is -1, we skip the 1
-            elif ar[i][0] == -1:
-                ol.append(' - (' + printer._print(ar[i][1]) + '|' +
-                          printer._print(ar[i][2]) + ')')
+            elif v[0] == -1:
+                ol.append(' - (' + printer._print(v[1]) + '|' +
+                          printer._print(v[2]) + ')')
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
-            elif ar[i][0] != 0:
-                arg_str = printer._print(ar[i][0])
-                if isinstance(ar[i][0], Add):
+            elif v[0] != 0:
+                arg_str = printer._print(v[0])
+                if isinstance(v[0], Add):
                     arg_str = "(%s)" % arg_str
                 if arg_str[0] == '-':
                     arg_str = arg_str[1:]
@@ -286,8 +286,8 @@ class Dyadic(Printable, EvalfMixin):
                 else:
                     str_start = ' + '
                 ol.append(str_start + arg_str + '*(' +
-                          printer._print(ar[i][1]) +
-                          '|' + printer._print(ar[i][2]) + ')')
+                          printer._print(v[1]) +
+                          '|' + printer._print(v[2]) + ')')
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]

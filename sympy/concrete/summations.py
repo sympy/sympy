@@ -536,7 +536,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         try:
             lim_ratio = limit_seq(ratio, sym)
-            if lim_ratio is not None and lim_ratio.is_number:
+            if lim_ratio is not None and lim_ratio.is_number and lim_ratio is not S.NaN:
                 if abs(lim_ratio) > 1:
                     return S.false
                 if abs(lim_ratio) < 1:

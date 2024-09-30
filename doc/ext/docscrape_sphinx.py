@@ -129,6 +129,8 @@ class SphinxDocString(NumpyDocString):
             #     out += [''] + autosum
 
             if others:
+                out += [r'.. tabularcolumns:: p{3cm}p{\dimexpr\linewidth-3cm-4\tabcolsep\relax}']
+                out += ['.. rst-class:: longtable']
                 maxlen_0 = max(3, max(len(x[0]) for x in others))
                 hdr = "="*maxlen_0 + "  " + "="*10
                 fmt = '%%%ds  %%s  ' % (maxlen_0,)

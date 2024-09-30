@@ -23,3 +23,4 @@ write to our `mailing list
 
    biomechanics/index.rst
    mechanics/index.rst
+   control/index.rst

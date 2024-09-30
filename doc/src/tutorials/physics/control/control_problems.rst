@@ -176,7 +176,7 @@ Solution
     [[[-1, 0], []], [[-3/4], [4, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]]]
     >>> pole_zero_plot(G[0, 0])   # doctest: +SKIP
 
-    .. plot:: guides/physics/generate_plots.py q3_3
+    .. plot:: tutorials/physics/control/generate_plots.py q3_3
 
     Subpart 4
 
@@ -189,18 +189,18 @@ Solution
          (s + 1)
     >>> step_response_plot(tf1)  # doctest: +SKIP
 
-    .. plot:: guides/physics/generate_plots.py q3_4
+    .. plot:: tutorials/physics/control/generate_plots.py q3_4
 
     Subpart 5
 
     >>> tf2 = G[0, 1]
     >>> bode_magnitude_plot(tf2)  # doctest: +SKIP
 
-    .. plot:: guides/physics/generate_plots.py q3_5_1
+    .. plot:: tutorials/physics/control/generate_plots.py q3_5_1
 
     >>> bode_phase_plot(tf2)  # doctest: +SKIP
 
-    .. plot:: guides/physics/generate_plots.py q3_5_2
+    .. plot:: tutorials/physics/control/generate_plots.py q3_5_2
 
 
 
@@ -344,11 +344,11 @@ Solution
     TransferFunction(s**4 + 3*s**3 + 3*s**2 + 3*s + 2, 12*s**5 + 193*s**4 + 873*s**3 + 1644*s**2 + 1484*s + 712, s)
     >>> pole_zero_plot(sys6)  # doctest: +SKIP
 
-    .. plot:: guides/physics/generate_plots.py q5
+    .. plot:: tutorials/physics/control/generate_plots.py q5
 
 
 
 References
-----------
+^^^^^^^^^^
 1. `testbook.com <https://testbook.com/objective-questions/mcq-on-transfer-function--5eea6a1039140f30f369e952>`_
 2. `www.vssut.ac.in <https://www.vssut.ac.in/lecture_notes/lecture1423904331.pdf>`_

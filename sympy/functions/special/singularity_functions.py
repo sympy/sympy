@@ -209,7 +209,7 @@ class SingularityFunction(Function):
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a, 1)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         z, a, n = self.args
         shift = (z - a).subs(x, 0)
         if n < 0:

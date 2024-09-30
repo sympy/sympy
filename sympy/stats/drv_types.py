@@ -179,7 +179,7 @@ def FlorySchulz(name, a):
     >>> X = FlorySchulz("x", a)
 
     >>> density(X)(z)
-    (5/4)**(1 - z)*z/25
+    (4/5)**(z - 1)*z/25
 
     >>> E(X)
     9
@@ -252,7 +252,7 @@ def Geometric(name, p):
     >>> X = Geometric("x", p)
 
     >>> density(X)(z)
-    (5/4)**(1 - z)/5
+    (4/5)**(z - 1)/5
 
     >>> E(X)
     5

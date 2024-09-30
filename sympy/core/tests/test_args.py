@@ -20,7 +20,7 @@ from sympy.functions.elementary.trigonometric import sin
 
 from sympy.testing.pytest import SKIP
 
-a, b, c, x, y, z = symbols('a,b,c,x,y,z')
+a, b, c, x, y, z, s = symbols('a,b,c,x,y,z,s')
 
 
 whitelist = [
@@ -4326,6 +4326,21 @@ def test_sympy__physics__control__lti__TransferFunction():
     assert _test_args(TransferFunction(2, 3, x))
 
 
+def _test_args_PIDController(obj):
+    from sympy.physics.control.lti import PIDController
+    if isinstance(obj, PIDController):
+        kp, ki, kd, tf = obj.kp, obj.ki, obj.kd, obj.tf
+        recreated_pid = PIDController(kp, ki, kd, tf, s)
+        return recreated_pid == obj
+    return False
+
+
+def test_sympy__physics__control__lti__PIDController():
+    from sympy.physics.control.lti import PIDController
+    kp, ki, kd, tf = 1, 0.1, 0.01, 0
+    assert _test_args_PIDController(PIDController(kp, ki, kd, tf, s))
+
+
 def test_sympy__physics__control__lti__Series():
     from sympy.physics.control import Series, TransferFunction
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
@@ -5217,6 +5232,22 @@ def test_sympy__codegen__matrix_nodes__MatrixSolve():
     A = MatrixSymbol('A', 3, 3)
     v = MatrixSymbol('x', 3, 1)
     assert _test_args(MatrixSolve(A, v))
+
+
+def test_sympy__printing__rust__TypeCast():
+    from sympy.printing.rust import TypeCast
+    from sympy.codegen.ast import real
+    assert _test_args(TypeCast(x, real))
+
+
+def test_sympy__printing__rust__float_floor():
+    from sympy.printing.rust import float_floor
+    assert _test_args(float_floor(x))
+
+
+def test_sympy__printing__rust__float_ceiling():
+    from sympy.printing.rust import float_ceiling
+    assert _test_args(float_ceiling(x))
 
 
 def test_sympy__vector__coordsysrect__CoordSys3D():
