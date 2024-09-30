@@ -562,7 +562,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     :obj:`~.Eq()` or :obj:`~.Or()`), simplification will return ``True`` or
     ``False`` if truth value can be determined. If the expression is not
     evaluated by default (such as :obj:`~.Predicate()`), simplification will
-    not reduce it and you should use :func:`~.refine()` or :func:`~.ask()`
+    not reduce it and you should use :func:`~.refine` or :func:`~.ask`
     function. This inconsistency will be resolved in future version.
 
     See Also

@@ -639,7 +639,6 @@ index 3af6dc1..7fa63b1 100644
 @@ -1307,3 +1307,4 @@ zsc347 <zsc347@gmail.com>
  Øyvind Jensen <jensen.oyvind@gmail.com>
  Łukasz Pankowski <lukpank@o2.pl>
- 彭于斌 <1931127624@qq.com>
 +Joe Bloggs <joe@bloggs.com>
 ```
 

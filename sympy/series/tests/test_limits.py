@@ -694,6 +694,13 @@ def test_issue_7224():
     assert limit(x*diff(expr, x, x)/expr, x, 1).evalf() == 2.0
 
 
+def test_issue_7391_8166():
+    f = Function('f')
+    # limit should depend on the continuity of the expression at the point passed
+    assert limit(f(x), x, 4) == Limit(f(x), x, 4, dir='+')
+    assert limit(x*f(x)**2/(x**2 + f(x)**4), x, 0) == Limit(x*f(x)**2/(x**2 + f(x)**4), x, 0, dir='+')
+
+
 def test_issue_8208():
     assert limit(n**(Rational(1, 1e9) - 1), n, oo) == 0
 
@@ -961,7 +968,6 @@ def test_issue_14313_comment():
     assert limit(floor(n/2), n, oo) is oo
 
 
-@XFAIL
 def test_issue_15323():
     d = ((1 - 1/x)**x).diff(x)
     assert limit(d, x, 1, dir='+') == 1
@@ -1289,6 +1295,10 @@ def test_issue_22334():
     assert limit((n+1)**k/(n*(-n**k + (n + 1)**k) + (n + 1)**k), n, oo) == 1/(k + 1)
 
 
+def test_issue_22836_limit():
+    assert limit(2**(1/x)/factorial(1/(x)), x, 0) == S.Zero
+
+
 def test_sympyissue_22986():
     assert limit(acosh(1 + 1/x)*sqrt(x), x, oo) == sqrt(2)
 
@@ -1412,3 +1422,19 @@ def test_issue_26250():
     e1 = ((1-3*x**2)*e**2/2 - (x**2-2*x+1)*e*k/2)
     e2 = pi**2*(x**8 - 2*x**7 - x**6 + 4*x**5 - x**4 - 2*x**3 + x**2)
     assert limit(e1/e2, x, 0) == -S(1)/8
+
+
+def test_issue_26916():
+    assert limit(Ei(x)*exp(-x), x, +oo) == 0
+    assert limit(Ei(x)*exp(-x), x, -oo) == 0
+
+
+def test_issue_22982_15323():
+    assert limit((log(E + 1/x) - 1)**(1 - sqrt(E + 1/x)), x, oo) == oo
+    assert limit((1 - 1/x)**x*(log(1 - 1/x) + 1/(x*(1 - 1/x))), x, 1, dir='+') == 1
+    assert limit((log(E + 1/x) )**(1 - sqrt(E + 1/x)), x, oo) == 1
+    assert limit((log(E + 1/x) - 1)**(- sqrt(E + 1/x)), x, oo) == oo
+
+
+def test_issue_26991():
+    assert limit(x/((x - 6)*sinh(tanh(0.03*x)) + tanh(x) - 0.5), x, oo) == 1/sinh(1)

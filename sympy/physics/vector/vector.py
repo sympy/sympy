@@ -231,23 +231,23 @@ class Vector(Printable, EvalfMixin):
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
                 # if the coef of the basis vector is 1, we skip the 1
-                if ar[i][0][j] == 1:
-                    ol.append(' + ' + ar[i][1].latex_vecs[j])
+                if v[0][j] == 1:
+                    ol.append(' + ' + v[1].latex_vecs[j])
                 # if the coef of the basis vector is -1, we skip the 1
-                elif ar[i][0][j] == -1:
-                    ol.append(' - ' + ar[i][1].latex_vecs[j])
-                elif ar[i][0][j] != 0:
+                elif v[0][j] == -1:
+                    ol.append(' - ' + v[1].latex_vecs[j])
+                elif v[0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = printer._print(ar[i][0][j])
-                    if isinstance(ar[i][0][j], Add):
+                    arg_str = printer._print(v[0][j])
+                    if isinstance(v[0][j], Add):
                         arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':
                         arg_str = arg_str[1:]
                         str_start = ' - '
                     else:
                         str_start = ' + '
-                    ol.append(str_start + arg_str + ar[i][1].latex_vecs[j])
+                    ol.append(str_start + arg_str + v[1].latex_vecs[j])
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -305,23 +305,23 @@ class Vector(Printable, EvalfMixin):
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
                 # if the coef of the basis vector is 1, we skip the 1
-                if ar[i][0][j] == 1:
-                    ol.append(' + ' + ar[i][1].str_vecs[j])
+                if v[0][j] == 1:
+                    ol.append(' + ' + v[1].str_vecs[j])
                 # if the coef of the basis vector is -1, we skip the 1
-                elif ar[i][0][j] == -1:
-                    ol.append(' - ' + ar[i][1].str_vecs[j])
-                elif ar[i][0][j] != 0:
+                elif v[0][j] == -1:
+                    ol.append(' - ' + v[1].str_vecs[j])
+                elif v[0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = printer._print(ar[i][0][j])
-                    if isinstance(ar[i][0][j], Add):
+                    arg_str = printer._print(v[0][j])
+                    if isinstance(v[0][j], Add):
                         arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':
                         arg_str = arg_str[1:]
                         str_start = ' - '
                     else:
                         str_start = ' + '
-                    ol.append(str_start + arg_str + '*' + ar[i][1].str_vecs[j])
+                    ol.append(str_start + arg_str + '*' + v[1].str_vecs[j])
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]

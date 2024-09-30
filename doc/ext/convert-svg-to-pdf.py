@@ -65,7 +65,7 @@ class Converter(ImageConverter):
         if not chrome:
             return 1
         command = f'{chrome} --headless --disable-gpu --disable-software-rasterizer --print-to-pdf={_to} {temp_name}'
-        logger.error(command)
+        logger.info(command)
         return os.system(command)
 
     def convert(self, _from: str, _to: str) -> bool:

@@ -2097,11 +2097,13 @@ def test_TensMul_subs():
     V = TensorHead("V", [R3])
     A = TensorHead("A", [R3, R3])
     C0 = TensorIndex(R3.dummy_name + "_0", R3, True)
+    a = WildTensorIndex("a", R3, ignore_updown=True)
 
     assert ( K(p)*V(r)*K(-p) ).subs({V(r): K(q)*K(-q)}) == K(p)*K(q)*K(-q)*K(-p)
     assert ( K(p)*V(r)*K(-p) ).xreplace({V(r): K(q)*K(-q)}) == K(p)*K(q)*K(-q)*K(-p)
     assert ( K(p)*V(r) ).xreplace({p: C0, V(r): K(q)*K(-q)}) == K(C0)*K(q)*K(-q)
     assert ( K(p)*A(q,-q)*K(-p) ).doit() == K(p)*A(q,-q)*K(-p)
+    assert ( K(p)*V(-p) ).replace( K(a), V(a)*V(q)*V(-q) ) == V(p)*V(q)*V(-q)*V(-p)
 
 
 def test_tensorsymmetry():
@@ -2141,3 +2143,16 @@ def test_postprocessor():
 
     assert isinstance((x*2).replace(x, K(i)), TensMul)
     assert isinstance((x+2).replace(x, K(i)*K(-i)), TensAdd)
+
+def test_TensMul_nocoeff():
+    """
+    Ensure that for any TensMul instance, self.coeff * self.nocoeff == self
+    """
+
+    R3 = TensorIndexType('R3', dim=3)
+    i, j = tensor_indices("i j", R3)
+    K = TensorHead("K", [R3])
+    P = TensorHead("P", [R3])
+
+    expr = TensMul(2, K(i), P(j))
+    assert expr.coeff * expr.nocoeff == expr

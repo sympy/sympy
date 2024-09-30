@@ -32,7 +32,8 @@ def test__linsolve_float():
         y - x,
         y - 0.0216 * x
     ]
-    sol = {x:0.0, y:0.0}
+    # Should _linsolve return floats here?
+    sol = {x:0, y:0}
     assert _linsolve(eqs, (x, y)) == sol
 
     # Other cases should be close to eps

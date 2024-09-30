@@ -137,9 +137,6 @@ class JavascriptCodePrinter(CodePrinter):
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
     def _print_Exp1(self, expr):
         return "Math.E"
 

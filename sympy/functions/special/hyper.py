@@ -255,7 +255,7 @@ class hyper(TupleParametersBase):
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[2]
         x0 = arg.subs(x, 0)
         if x0 is S.NaN:
@@ -723,7 +723,7 @@ class meijerg(TupleParametersBase):
 
         return Expr._from_mpmath(v, prec)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self).as_leading_term(x, logx=logx, cdir=cdir)
 

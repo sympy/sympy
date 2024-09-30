@@ -541,10 +541,12 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 
       .. math::
 
+         \begin{aligned}
          \operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)
-          =\operatorname{Wigner6j}(j_1,j_5,j_6,j_4,j_2,j_3)
-          =\operatorname{Wigner6j}(j_4,j_2,j_6,j_1,j_5,j_3)
-          =\operatorname{Wigner6j}(j_4,j_5,j_3,j_1,j_2,j_6)
+          &=\operatorname{Wigner6j}(j_1,j_5,j_6,j_4,j_2,j_3)\\
+          &=\operatorname{Wigner6j}(j_4,j_2,j_6,j_1,j_5,j_3)\\
+          &=\operatorname{Wigner6j}(j_4,j_5,j_3,j_1,j_2,j_6)
+         \end{aligned}
 
     - additional 6 symmetries [Regge59]_ giving rise to 144 symmetries
       in total

@@ -6,10 +6,12 @@ from sympy.core.numbers import Float, I
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.gaussiandomains import QQ_I
-from sympy.polys.domains.mpelements import MPContext
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import DomainError, CoercionFailed
 from sympy.utilities import public
+
+from mpmath import MPContext
+
 
 @public
 class ComplexField(Field, CharacteristicZero, SimpleDomain):
@@ -41,23 +43,39 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
 
     @property
     def tolerance(self):
-        return self._context.tolerance
+        return self._tolerance
 
-    def __init__(self, prec=_default_precision, dps=None, tol=None):
-        context = MPContext(prec, dps, tol, False)
-        context._parent = self
+    def __init__(self, prec=None, dps=None, tol=None):
+        # XXX: The tolerance parameter is ignored but is kept for backward
+        # compatibility for now.
+
+        context = MPContext()
+
+        if prec is None and dps is None:
+            context.prec = self._default_precision
+        elif dps is None:
+            context.prec = prec
+        elif prec is None:
+            context.dps = dps
+        else:
+            raise TypeError("Cannot set both prec and dps")
+
         self._context = context
 
         self._dtype = context.mpc
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
 
+        # XXX: Neither of these is actually used anywhere.
+        self._max_denom = max(2**context.prec // 200, 99)
+        self._tolerance = self.one / self._max_denom
+
     @property
     def tp(self):
-        # XXX: Domain treats tp as an alis of dtype. Here we need to two
-        # separate things: dtype is a callable to make/convert instances.
-        # We use tp with isinstance to check if an object is an instance
-        # of the domain already.
+        # XXX: Domain treats tp as an alias of dtype. Here we need two separate
+        # things: dtype is a callable to make/convert instances. We use tp with
+        # isinstance to check if an object is an instance of the domain
+        # already.
         return self._dtype
 
     def dtype(self, x, y=0):
@@ -71,12 +89,10 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         return self._dtype(x, y)
 
     def __eq__(self, other):
-        return (isinstance(other, ComplexField)
-           and self.precision == other.precision
-           and self.tolerance == other.tolerance)
+        return isinstance(other, ComplexField) and self.precision == other.precision
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self._dtype, self.precision, self.tolerance))
+        return hash((self.__class__.__name__, self._dtype, self.precision))
 
     def to_sympy(self, element):
         """Convert ``element`` to SymPy number. """

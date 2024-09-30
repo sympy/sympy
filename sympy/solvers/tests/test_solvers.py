@@ -23,7 +23,7 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
 from sympy.matrices.dense import Matrix
 from sympy.matrices import SparseMatrix
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, groebner
 from sympy.printing.str import sstr
 from sympy.simplify.radsimp import denom
 from sympy.solvers.solvers import (nsolve, solve, solve_linear)
@@ -328,7 +328,6 @@ def test_quintics_2():
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 2),
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 3),
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 4)]
-
 
 def test_quintics_3():
     y = x**5 + x**3 - 2**Rational(1, 3)
@@ -2568,6 +2567,18 @@ def test_issue_20747():
             / (1 - exp(c0/(DBH*c3 + THT*c4 + c2))))
     sol = [THT*term**(1/c1) - term**(1/c1) + 1]
     assert solve(eq, HT) == sol
+
+
+def test_issue_27001():
+    assert solve((x, x**2), (x, y, z), dict=True) == [{x: 0}]
+    s = a1, a2, a3, a4, a5 = symbols('a1:6')
+    eqs = [8*a1**4*a2 + 4*a1**2*a2**3 - 8*a1**2*a2*a4 + a2**5/2 - 2*a2**3*a4 +
+        8*a2*a3**2 + 2*a2*a4**2 + 8*a2*a5, 12*a1**4 + 6*a1**2*a2**2 -
+        8*a1**2*a4 + 3*a2**4/4 - 2*a2**2*a4 + 4*a3**2 + a4**2 + 4*a5, 16*a1**3
+        + 4*a1*a2**2 - 8*a1*a4, -8*a1**2*a2 - 2*a2**3 + 4*a2*a4]
+    sol = [{a4: 2*a1**2 + a2**2/2, a5: -a3**2}, {a1: 0, a2: 0, a5: -a3**2 - a4**2/4}]
+    assert solve(eqs, s, dict=True) == sol
+    assert (g:=solve(groebner(eqs, s), dict=True)) == sol, g
 
 
 def test_issue_20902():

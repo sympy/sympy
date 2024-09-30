@@ -331,9 +331,6 @@ class C89CodePrinter(CodePrinter):
         return "%s[%s]" % (self._print(expr.base.label),
                            self._print(flat_index))
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
     @_as_macro_if_defined
     def _print_NumberSymbol(self, expr):
         return super()._print_NumberSymbol(expr)

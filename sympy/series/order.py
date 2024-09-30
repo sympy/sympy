@@ -476,7 +476,12 @@ class Order(Expr):
                     # First, try to substitute self.point in the "new"
                     # expr to see if this is a fixed point.
                     # E.g.  O(y).subs(y, sin(x))
-                    point = new.subs(var, self.point[i])
+                    from sympy import limit
+                    if new.has(Order) and limit(new.getO().expr, var, new.getO().point[0]) == self.point[i]:
+                        point = new.getO().point[0]
+                        return Order(newexpr, *zip([var], [point]))
+                    else:
+                        point = new.subs(var, self.point[i])
                     if point != self.point[i]:
                         from sympy.solvers.solveset import solveset
                         d = Dummy()

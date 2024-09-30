@@ -367,9 +367,9 @@ def test_issue_20697():
 def test_issue_21245():
     fi = (1 + sqrt(5))/2
     assert (1/(1 - x - x**2)).series(x, 1/fi, 1).factor() == \
-        (-4812 - 2152*sqrt(5) + 1686*x + 754*sqrt(5)*x\
-        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))\
-        *(20 + 9*sqrt(5))**2*(x + sqrt(5)*x - 2))
+        (-37*sqrt(5) - 83 + 13*sqrt(5)*x + 29*x + O((x - 2/(1 + sqrt(5)))**2, (x\
+            , 2/(1 + sqrt(5)))))/((2*sqrt(5) + 5)**2*(x + sqrt(5)*x - 2))
+
 
 
 def test_issue_21938():
@@ -402,3 +402,7 @@ def test_issue_24266():
     #type3: f(y)**g(x)
     assert ((y)**(I*pi*(2*x+1))).series(x, 0, 2) == exp(I*pi*log(y)) + 2*I*pi*x*exp(I*pi*log(y))*log(y) + O(x**2)
     assert ((I*y)**(I*pi*(2*x+1))).series(x, 0, 2) == exp(I*pi*log(I*y)) + 2*I*pi*x*exp(I*pi*log(I*y))*log(I*y) + O(x**2)
+
+
+def test_issue_26856():
+    raises(ValueError, lambda: (2**x).series(x, oo, -1))

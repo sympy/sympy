@@ -269,7 +269,7 @@ def test_C24():
 
 
 def test_D1():
-    assert 0.0 / sqrt(2) == 0.0
+    assert 0.0 / sqrt(2) == 0
 
 
 def test_D2():
