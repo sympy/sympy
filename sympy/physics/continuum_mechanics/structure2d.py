@@ -20,6 +20,18 @@ plt = import_module(
     },
 )
 
+patches = import_module(
+    "matplotlib.patches",
+    import_kwargs={
+        "fromlist": [
+            "FancyArrow",
+            "Circle",
+            "Rectangle",
+            "Polygon",
+        ]
+    },
+)
+
 class Member:
     def __init__(self,x1, y1, x2, y2, E, I, A, member_id):
 
@@ -192,8 +204,12 @@ class Structure2d:
         elif 'm' in load.applied_to:
             self.members[int(load.applied_to.split('_')[1])].member_loads.append(load)
 
-        # self._unwrap_structure()
+        # build load equation
         ########################
+        self._unwrap_structure()
+        current_load = 0
+        for load_p in self.unwrapped_loadpoints:
+            a = load_p['locals'][0]
 
     def _unwrap_structure(self):
         unwrapped_len = 0
@@ -201,7 +217,7 @@ class Structure2d:
         unwrapped_loadpoints = []
 
         for member in self.members:
-            unwrapped_bendpoints.append({'bend_point':unwrapped_len,'angle':member.angle})
+            unwrapped_bendpoints.append({'bend_point':[unwrapped_len,unwrapped_len+member.length],'angle':member.angle})
 
             for load in member.member_loads:
                 if load.end_x is not None and load.end_y is not None:
@@ -220,7 +236,7 @@ class Structure2d:
 
         ### UGLY CODE
         #manualy do the last node
-        unwrapped_bendpoints.append({'bend_point':unwrapped_len,'angle':0})
+        # unwrapped_bendpoints.append({'bend_point':[unwrapped_len,unwrapped_len+member.length],'angle':0})
 
         x = member.x1
         y = member.y1
@@ -257,12 +273,12 @@ class Structure2d:
         # Draw each member
         for member in self.members:
             x1, y1, x2, y2 = float(member.x1), float(member.y1), float(member.x2), float(member.y2)
-            ax.plot([x1, x2], [y1, y2], color='black')
+            ax.plot([x1, x2], [y1, y2], color='black',linewidth=3)
 
         # Draw each node
         for node in self.nodes:
             x, y = float(node.x), float(node.y)
-            ax.plot(x, y, 'o', color='k')
+            ax.plot(x, y, color='k')
 
         # Draw each load (point and distributed loads)
         for load in self.loads:
@@ -283,6 +299,7 @@ class Structure2d:
                     xy=(x, y),
                     xytext=(arrow_x, arrow_y),
                     arrowprops=dict(arrowstyle='->', color='red',shrinkA=0, shrinkB=0)  # noqa: C408
+                ,zorder=200
                 )
             else:
                 # Distributed load
@@ -323,14 +340,35 @@ class Structure2d:
                         xy=(x, y),
                         xytext=(arrow_x, arrow_y),
                         arrowprops=dict(arrowstyle='->', color='green',shrinkA=0, shrinkB=0)  # noqa: C408
+                    ,zorder=100
                     )
                 for i in range(len(arrow_coords)-1):
-                    ax.plot([arrow_coords[i][0], arrow_coords[i+1][0]], [arrow_coords[i][1], arrow_coords[i+1][1]], color='green')
+                    ax.plot([arrow_coords[i][0], arrow_coords[i+1][0]], [arrow_coords[i][1], arrow_coords[i+1][1]], color='green',zorder=100)
+                # print(arrow_coords)
+                if load.end_x is not None and load.end_y is not None:
+                    square_coords = [(x1, y1), arrow_coords[0], arrow_coords[-1], (x2, y2)]
+                    square = patches.Polygon(square_coords, closed=True, color='green', alpha=0.15,zorder=10)
+
+                    ax.add_patch(square)
 
         # Draw each support
         for support in self.supports:
             x, y = float(support.x), float(support.y)
-            ax.plot(x, y, 's', color='blue')
+            if support.node_type == "pin":
+                ax.plot(x, y, 'o', color='red')
+            elif support.node_type == "fixed":
+                ax.plot(x, y, 's', color='blue')
+
+            # make y tick the same step as x tick
+            x_ticks = plt.xticks()[0]
+            x_step = x_ticks[1] - x_ticks[0]
+            y_min, y_max = plt.ylim()
+
+            num_ticks_up = int((y_max // x_step) + 1)
+            num_ticks_down = int((-y_min // x_step) + 1)
+            new_y_ticks = [i * x_step for i in range(-num_ticks_down, num_ticks_up + 1)]
+
+            plt.yticks(new_y_ticks)
 
     def draw_unwrapped(self):
         fig, ax = plt.subplots()
