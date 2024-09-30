@@ -411,7 +411,7 @@ class KanesMethod(_Methods):
 
         N = self._inertial
         # pull out relevant velocities for constructing partial velocities
-        vel_list, f_list = _f_list_parser(fl, N)
+        vel_list, f_list, func_list = _f_list_parser(fl, N)
         vel_list = [msubs(i, self._qdot_u_map) for i in vel_list]
         f_list = [msubs(i, self._qdot_u_map) for i in f_list]
 
@@ -421,7 +421,7 @@ class KanesMethod(_Methods):
         FR = zeros(o, 1)
         partials = partial_velocity(vel_list, self.u, N)
         for i in range(o):
-            FR[i] = sum(partials[j][i].dot(f_list[j]) for j in range(b))
+            FR[i] = sum(func_list[j](partials[j][i].dot(f_list[j])) for j in range(b))
 
         # In case there are dependent speeds
         if self._udep:

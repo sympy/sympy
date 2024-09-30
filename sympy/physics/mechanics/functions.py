@@ -617,32 +617,37 @@ def _fraction_decomp(expr):
 
 def _f_list_parser(fl, ref_frame):
     """Parses the provided forcelist composed of items
-    of the form (obj, force).
+    of the form (obj, force) or (obj, force, func).
     Returns a tuple containing:
         vel_list: The velocity (ang_vel for Frames, vel for Points) in
                 the provided reference frame.
         f_list: The forces.
+        func_list: The function applied to (vel.dot(f)).
 
     Used internally in the KanesMethod and LagrangesMethod classes.
 
     """
     def flist_iter():
         for pair in fl:
-            obj, force = pair
+            if len (pair) == 2:
+                obj, force = pair
+                func = lambda x: x
+            else:
+                obj, force, func = pair
             if isinstance(obj, ReferenceFrame):
-                yield obj.ang_vel_in(ref_frame), force
+                yield obj.ang_vel_in(ref_frame), force, func
             elif isinstance(obj, Point):
-                yield obj.vel(ref_frame), force
+                yield obj.vel(ref_frame), force, func
             else:
                 raise TypeError('First entry in each forcelist pair must '
                                 'be a point or frame.')
 
     if not fl:
-        vel_list, f_list = (), ()
+        vel_list, f_list, func_list = (), (), ()
     else:
-        unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
-        vel_list, f_list = unzip(list(flist_iter()))
-    return vel_list, f_list
+        unzip = lambda l: list(zip(*l)) if l[0] else [(), (), ()]
+        vel_list, f_list, func_list = unzip(list(flist_iter()))
+    return vel_list, f_list, func_list
 
 
 def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,

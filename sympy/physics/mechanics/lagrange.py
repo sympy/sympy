@@ -214,7 +214,7 @@ class LagrangesMethod(_Methods):
             self._term4 = zeros(n, 1)
             for i, qd in enumerate(qds):
                 flist = zip(*_f_list_parser(self.forcelist, N))
-                self._term4[i] = sum(v.diff(qd, N).dot(f) for (v, f) in flist)
+                self._term4[i] = sum(func(v.diff(qd, N).dot(f)) for (v, f, func) in flist)
         else:
             self._term4 = zeros(n, 1)
 
