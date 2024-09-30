@@ -544,6 +544,7 @@ class Poly(Basic):
         Poly(y + 1, y, domain='ZZ')
 
         """
+        # mnemonic: "per" is the reverse of "rep"
         if gens is None:
             gens = f.gens
 
