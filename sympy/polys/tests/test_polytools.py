@@ -3291,7 +3291,7 @@ def test_torational_factor_list():
     assert _torational_factor_list(p, x) is None
 
 
-def test_cancel():
+def test_ptcancel():
     assert cancel(0) == 0
     assert cancel(7) == 7
     assert cancel(x) == x
@@ -3300,7 +3300,7 @@ def test_cancel():
 
     raises(ValueError, lambda: cancel((1, 2, 3)))
 
-    # test first tuple returnr
+    # tests first tuple return
     assert (t:=cancel((2, 3))) == (1, 2, 3)
     assert isinstance(t, tuple)
 
@@ -3308,6 +3308,22 @@ def test_cancel():
     assert (t:=cancel((1, 0), x)) == (1, 1, 0)
     assert isinstance(t, tuple)
     assert cancel((0, 1), x) == (1, 0, 1)
+
+    # issue 27906
+    p, q = Poly(x**2/4 - 1), Poly(x/2 - 1)
+    zz = (1, Poly(x + 2), Poly(2, x))
+    qq = (1, Poly(x + 2, domain=QQ), Poly(2, x, domain=QQ))
+    assert p.cancel(q, include=False) == qq
+    case1 = p.cancel(q)
+    p, q = [Poly(i) for i in (p/q).as_expr().as_numer_denom()]
+    assert p.cancel(q, include=False) == zz
+    case2 = p.cancel(q)
+    c,n,d = case1
+    C,N,D = case2
+    assert (c*n/d).equals(C*N/D)
+    # case1 and 2 output is consistent with their input so we don't
+    # want the following assertion
+    # assert case1 == case2
 
     f, g, p, q = 4*x**2 - 4, 2*x - 2, 2*x + 2, 1
     F, G, P, Q = [ Poly(u, x) for u in (f, g, p, q) ]

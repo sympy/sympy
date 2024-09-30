@@ -1880,6 +1880,7 @@ def dmp_cancel(f, g, u, K, include=True):
 
         cq, f = dmp_clear_denoms(f, u, K0, K, convert=True)
         cp, g = dmp_clear_denoms(g, u, K0, K, convert=True)
+        # domain is now K
     else:
         cp, cq = K.one, K.one
 
@@ -1903,10 +1904,12 @@ def dmp_cancel(f, g, u, K, include=True):
     elif q_neg:
         cp, q = -cp, dmp_neg(q, u, K)
 
+    if include or (c:=(cp,cq)).count(1) == 1 and c.count(-1) == 0:
+        p = dmp_mul_ground(p, cp, u, K)
+        q = dmp_mul_ground(q, cq, u, K)
+        cp = cq = 1
+
     if not include:
         return cp, cq, p, q
-
-    p = dmp_mul_ground(p, cp, u, K)
-    q = dmp_mul_ground(q, cq, u, K)
 
     return p, q
