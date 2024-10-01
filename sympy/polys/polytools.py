@@ -4020,7 +4020,10 @@ class Poly(Basic):
 
     def cancel(f, g, include=False):
         """
-        Cancel common factors in a rational function ``f/g``.
+        Cancel common factors in a rational function ``f/g``, returning
+        ``(p/q, n, d)`` if ``include`` is False, else ``(N, D)`` where
+        ``N/D = (p*n)/(q*d)``, i.e. ``p`` and ``q`` are included in ``N``
+        and ``D``.
 
         Examples
         ========
