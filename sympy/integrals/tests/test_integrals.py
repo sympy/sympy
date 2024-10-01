@@ -1691,6 +1691,8 @@ def test_issue_8614():
     assert integrate(exp(t)/t, (t, -oo, x)) == Ei(x)
     assert integrate((exp(-x) - exp(-2*x))/x, (x, 0, oo)) == log(2)
 
+def test_issue_25310():
+    assert integrate(a**x/(b**x),x) == Piecewise((a**x/(b**x*log(a) - b**x*log(b)), Ne(a, b)), (x, True))
 
 @slow
 def test_issue_15494():

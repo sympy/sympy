@@ -358,8 +358,12 @@ def checksol(f, symbol, sol=None, **flags):
             break
         if val.is_Rational:
             return val == 0
+        if val.atoms() & illegal:
+            return False
         if numerical and val.is_number:
             return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
+            else:
+                return test is S.true
 
     if flags.get('warn', False):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
