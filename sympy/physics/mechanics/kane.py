@@ -306,7 +306,7 @@ class KanesMethod(_Methods):
 
             # If no acceleration constraints given, calculate them.
                 if not acc:
-                    _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
+                    _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u -
                         self._f_nh.diff(dynamicsymbols._t))
                     if self._qdot_u_map is not None:
                         _f_dnh = msubs(_f_dnh, self._qdot_u_map)
@@ -317,7 +317,7 @@ class KanesMethod(_Methods):
                         acc = msubs(acc, self._qdot_u_map)
                     acc_test = list(acc)
                     udot_test = list(self._udot)
-                    self._k_nh, self._f_nh = linear_eq_to_matrix(acc_test, udot_test)
+                    self._k_dnh, self._f_dnh = linear_eq_to_matrix(acc_test, udot_test)
             except (NonlinearError):
                 raise NonlinearError('Velocity constraints must be linear in the '
                                  'generalized speeds.')
