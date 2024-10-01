@@ -1,7 +1,8 @@
 from sympy import symbols, sin, cos
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
-    KanesMethod)
+            KanesMethod)
 from sympy.testing import pytest
+from sympy.solvers.solveset import NonlinearError
 
 def test_linearity_of_motion_constraints():
     # Test that an error is raised by KanesMethod if nonlinear velocity
@@ -30,11 +31,10 @@ def test_linearity_of_motion_constraints():
 
     # Make sure an error is raised if nonlinear velocity constraints are
     # supplied.
-    speed_constr = [ux**2 - l * sin(q.diff(t)) * cos(q), sin(uy) +
-        l * q.diff(t)**2 * sin(q)]
+    speed_constr = [ux - l * q.diff(t) * cos(q), sin(uy) +
+        l * q.diff(t) * sin(q)]
 
-
-    with pytest.raises(ValueError):
+    with pytest.raises(NonlinearError):
         KanesMethod(N, q_ind=q_ind, q_dependent=q_dep, u_ind=u_ind,
             u_dependent=u_dep, kd_eqs=kd,
             configuration_constraints=config_constr,
