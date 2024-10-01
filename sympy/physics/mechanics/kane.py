@@ -292,36 +292,31 @@ class KanesMethod(_Methods):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and acceleration constraints.')
         if vel:
-            try:
-                # When calling kanes_equations, another class instance will be
-                # created if auxiliary u's are present. In this case, the
-                # computation of kinetic differential equation matrices will be
-                # skipped as this was computed during the original KanesMethod
-                # object, and the qd_u_map will not be available.
-                if self._qdot_u_map is not None:
-                    vel = msubs(vel, self._qdot_u_map)
-                vel_test = list(vel)
-                u_test = list(self.u)
-                self._k_nh, self._f_nh = linear_eq_to_matrix(vel_test, u_test)
+
+            # When calling kanes_equations, another class instance will be
+            # created if auxiliary u's are present. In this case, the
+            # computation of kinetic differential equation matrices will be
+            # skipped as this was computed during the original KanesMethod
+            # object, and the qd_u_map will not be available.
+            if self._qdot_u_map is not None:
+                vel = msubs(vel, self._qdot_u_map)
+            self._k_nh, f_nh_neg = linear_eq_to_matrix(vel, self.u[:])
+            self._f_nh = -f_nh_neg
 
             # If no acceleration constraints given, calculate them.
-                if not acc:
-                    _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u -
-                        self._f_nh.diff(dynamicsymbols._t))
-                    if self._qdot_u_map is not None:
-                        _f_dnh = msubs(_f_dnh, self._qdot_u_map)
-                    self._f_dnh = _f_dnh
-                    self._k_dnh = self._k_nh
-                else:
-                    if self._qdot_u_map is not None:
-                        acc = msubs(acc, self._qdot_u_map)
-                    acc_test = list(acc)
-                    udot_test = list(self._udot)
-                    self._k_dnh, self._f_dnh = linear_eq_to_matrix(acc_test, udot_test)
-                    self._f_dnh = -self._f_dnh
-            except (NonlinearError):
-                raise NonlinearError('Velocity constraints must be linear in the '
-                                 'generalized speeds.')
+            if not acc:
+                _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
+                    self._f_nh.diff(dynamicsymbols._t))
+                if self._qdot_u_map is not None:
+                    _f_dnh = msubs(_f_dnh, self._qdot_u_map)
+                self._f_dnh = _f_dnh
+                self._k_dnh = self._k_nh
+            else:
+                if self._qdot_u_map is not None:
+                    acc = msubs(acc, self._qdot_u_map)
+
+                self._k_dnh, f_dnh_neg = linear_eq_to_matrix(acc, self._udot[:])
+                self._f_dnh = -f_dnh_neg
             # Form of non-holonomic constraints is B*u + C = 0.
             # We partition B into independent and dependent columns:
             # Ars is then -B_dep.inv() * B_ind, and it relates dependent speeds
