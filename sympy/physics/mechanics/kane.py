@@ -11,7 +11,6 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
-from sympy.solvers.solveset import NonlinearError
 
 
 __all__ = ['KanesMethod']
