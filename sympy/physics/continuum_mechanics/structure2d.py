@@ -11,6 +11,8 @@ from sympy.geometry.polygon import deg, rad
 from sympy.core import Expr
 from sympy.external import import_module
 
+from sympy.functions import SingularityFunction
+
 plt = import_module(
     "matplotlib.pyplot",
     import_kwargs={
@@ -54,11 +56,13 @@ class Member:
     def _compute_eq(self):
         x1, y1, x2, y2 = self.x1, self.y1, self.x2, self.y2
         x_mem = Symbol('x')
-
-        a = (y2 - y1) / (x2 - x1)
-        b = y1 - a * x1
-        eq = a * x_mem + b
-        return eq
+        if x2 == x1:
+            return 'vertical'
+        else:
+            a = (y2 - y1) / (x2 - x1)
+            b = y1 - a * x1
+            eq = a * x_mem + b
+            return eq
 
         # loads
         # self.loads = []
@@ -130,6 +134,7 @@ class Structure2d:
         self.unwrapped_bendpoints = []
         self.unwrapped_loadpoints = []
         self.beam = self._init_beam()
+        self.test = 0
 
     def __repr__(self):
         return f"Structure2d(Members={len(self.members)}, Nodes={len(self.nodes)}, Supports={len(self.supports)})"
@@ -161,30 +166,46 @@ class Structure2d:
         return new_node
 
 
-    def _find_applied_to(self, x, y,x_end=None,y_end=None):
-
+    def _find_applied_to(self, x, y, x_end=None, y_end=None):
         if x_end is not None and y_end is not None:
             x_start = x
             y_start = y
             x = (x + x_end) / 2
             y = (y + y_end) / 2
 
+
         for node in self.nodes:
             if node.x == x and node.y == y:
-                return f'n_{node.node_id}',0,None
+                return f'n_{node.node_id}', 0, None
 
-
+        # Check if point corresponds to a member
         for member in self.members:
-            member_y = member.member_eq.subs({'x':x})
-            if member.x1 <= x <= member.x2 or member.x2 <= x <= member.x1:
-                if simplify(member_y - y)== 0:
-                    local_x_start = sqrt((member.x1 - x)**2 + (member.y1 - y)**2)
-                    if x_end is not None and y_end is not None:
-                        local_x_start = sqrt((member.x1 - x_start)**2 + (member.y1 - y_start)**2)
-                        local_x_end = member.length - sqrt((member.x2 - x_end)**2 + (member.y2 - y_end)**2)
-                    else:
-                        local_x_end = None
-                    return f'm_{member.member_id}',local_x_start,local_x_end
+            if member.member_eq != 'vertical':
+                # Handle non-vertical members
+                member_y = member.member_eq.subs({'x': x})
+                if member.x1 <= x <= member.x2 or member.x2 <= x <= member.x1:
+                    if simplify(member_y - y) == 0:
+                        local_x_start = sqrt((member.x1 - x) ** 2 + (member.y1 - y) ** 2)
+                        if x_end is not None and y_end is not None:
+                            local_x_start = sqrt((member.x1 - x_start) ** 2 + (member.y1 - y_start) ** 2)
+                            local_x_end = member.length - sqrt((member.x2 - x_end) ** 2 + (member.y2 - y_end) ** 2)
+                        else:
+                            local_x_end = None
+                        return f'm_{member.member_id}', local_x_start, local_x_end
+            else:
+                # Handle vertical members
+                if simplify(member.x1 - x) ==0:
+                    if member.y1 <= y <= member.y2 or member.y2 <= y <= member.y1:
+                        local_x_start = abs(member.y1 - y)
+                        if x_end is not None and y_end is not None:
+                            local_x_start = abs(member.y1 - y_start)
+                            local_x_end = member.length - abs(member.y2 - y_end)
+                        else:
+                            local_x_end = None
+                        return f'm_{member.member_id}', local_x_start, local_x_end
+
+
+
 
 
 
@@ -206,10 +227,100 @@ class Structure2d:
 
         # build load equation
         ########################
-        self._unwrap_structure()
-        current_load = 0
-        for load_p in self.unwrapped_loadpoints:
-            a = load_p['locals'][0]
+
+        aa,oo,L = self._unwrap_structure()
+
+        if end_x is None and end_y is None:
+            Fv = load.y_component
+            Fh = load.x_component
+            B = [Fv,Fh]
+            bb = [self.unwrapped_loadpoints[-1]['locals'][0],self.unwrapped_loadpoints[-1]['locals'][0]]
+            # T = 1, Fv = 2, Fh = 3, qv = 4, qh = 5
+            nn = [2,3]
+        else:
+            qv = load.y_component
+            qh = load.x_component
+            B = [qv,-qv,qh,-qh]
+            bb = [self.unwrapped_loadpoints[-1]['locals'][0],
+                  self.unwrapped_loadpoints[-1]['locals'][1],
+                  self.unwrapped_loadpoints[-1]['locals'][0],
+                  self.unwrapped_loadpoints[-1]['locals'][1],
+                ]
+            nn = [4,4,5,5]
+
+        print(aa,oo,L)
+        #qz opstellen
+        qz = 0
+        x = Symbol('x')
+
+        # beginpunten
+        for i in range(len(B)):
+            for j in range(len(aa)):
+                if bb[i] == aa[-1]:
+                    if nn[i] == 1:
+                        qz += B[i] * SingularityFunction(x,bb[i],-2)
+                        self.beam.apply_load(B[i], bb[i], -2)  # apply_load here
+                    if nn[i] == 2:
+                        qz += B[i] * SingularityFunction(x,bb[i],-1) * cos(oo[-1])
+                        self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], -1)  # apply_load here
+                    if nn[i] == 3:
+                        qz += B[i] * SingularityFunction(x,bb[i],-1) * sin(oo[-1])
+                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], -1)  # apply_load here
+                    if nn[i] == 4:
+                        qz += B[i] * SingularityFunction(x,bb[i],0) * cos(oo[-1])
+                        self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], 0)  # apply_load here
+                    if nn[i] == 5:
+                        qz += B[i] * SingularityFunction(x,bb[i],0) * sin(oo[-1])
+                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], 0)  # apply_load here
+                    break
+                else:
+                    if bb[i] < aa[j]:
+                        if nn[i] == 1:
+                            qz += B[i] * SingularityFunction(x,bb[i],-2)
+                            self.beam.apply_load(B[i], bb[i], -2)  # apply_load here
+                        if nn[i] == 2:
+                            qz += B[i] * SingularityFunction(x,bb[i],-1) * cos(oo[j-1])
+                            self.beam.apply_load(B[i] * cos(oo[j-1]), bb[i], -1)  # apply_load here
+                        if nn[i] == 3:
+                            qz += B[i] * SingularityFunction(x,bb[i],-1) * sin(oo[j-1])
+                            self.beam.apply_load(B[i] * sin(oo[j-1]), bb[i], -1)  # apply_load here
+                        if nn[i] == 4:
+                            qz += B[i] * SingularityFunction(x,bb[i],0) * cos(oo[j-1])
+                            self.beam.apply_load(B[i] * cos(oo[j-1]), bb[i], 0)  # apply_load here
+                        if nn[i] == 5:
+                            qz += B[i] * SingularityFunction(x,bb[i],0) * sin(oo[j-1])
+                            self.beam.apply_load(B[i] * sin(oo[j-1]), bb[i], 0)  # apply_load here
+                        break
+
+        # knikpunten
+        for i in range(len(B)):
+            for j in range(len(aa)-1):
+                if bb[i] < aa[j]:
+                    if nn[i] == 2:
+                        qz += B[i] * SingularityFunction(x,aa[j],-1) * (cos(oo[j]) - cos(oo[j-1]))
+                        self.beam.apply_load(B[i] * (cos(oo[j]) - cos(oo[j-1])), aa[j], -1)  # apply_load here
+                    if nn[i] == 3:
+                        qz += B[i] * SingularityFunction(x,aa[j],-1) * (sin(oo[j]) - sin(oo[j-1]))
+                        self.beam.apply_load(B[i] * (sin(oo[j]) - sin(oo[j-1])), aa[j], -1)  # apply_load here
+                    if nn[i] == 4:
+                        # qz += B[i] * ((SingularityFunction(x,aa[j],0) + (SingularityFunction(x,aa[j],-1) * (aa[j] - bb[i]))) * (cos(oo[j]) - cos(oo[j-1])))
+                        qz += B[i] * (SingularityFunction(x,aa[j],0)) * (cos(oo[j]) - cos(oo[j-1]))
+                        qz += B[i] * ( SingularityFunction(x,aa[j],-1) * (aa[j] - bb[i])) * (cos(oo[j]) - cos(oo[j-1]))
+
+                        value = B[i] * (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j-1]))
+                        self.beam.apply_load(B[i]*(cos(oo[j]) - cos(oo[j-1])), aa[j], 0)
+                        self.beam.apply_load(B[i]* (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j-1])), aa[j], -1)
+
+                    if nn[i] == 5:
+                        qz += B[i] * ((SingularityFunction(x,aa[j],0) + SingularityFunction(x,aa[j],-1) * (aa[j] - bb[i])) * (sin(oo[j]) - sin(oo[j-1])))
+                        value = B[i] * (aa[j] - bb[i]) * (sin(oo[j]) - sin(oo[j-1]))
+                        self.beam.apply_load(value, aa[j], 0)
+                        self.beam.apply_load(value, aa[j], -1)
+
+
+        self.test += qz
+
+
 
     def _unwrap_structure(self):
         unwrapped_len = 0
@@ -243,19 +354,33 @@ class Structure2d:
         for node in self.nodes:
             if node.x == x and node.y == y:
                 for load in node.node_loads:
-                    unwrapped_loadpoints.append({'l_id':load.load_id,'locals':[unwrapped_len]})
+                    unwrapped_loadpoints.append({'l_id':load.load_id+1,'locals':[unwrapped_len]})
                 break
 
         self.unwrapped_bendpoints = unwrapped_bendpoints
-        #sort based on load id
         self.unwrapped_loadpoints = sorted(unwrapped_loadpoints,key=lambda x: x['l_id'])
-        # self.unwrapped_loadpoints = unwrapped_loadpoints
+######################################################################
+        aa = []
+        oo = []
+
+        for i in range(len(unwrapped_bendpoints)):
+            aa.append(unwrapped_bendpoints[i]['bend_point'][0])
+            oo.append(unwrapped_bendpoints[i]['angle'])
+        aa.append(unwrapped_bendpoints[-1]['bend_point'][1])
+
+        L = unwrapped_len
 
 
+
+
+        return aa,oo,L
 
     def apply_support(self, x, y, type="pin"):
         support = self.add_or_update_node(x, y, type)
         self.supports.append(support)
+        ### support needs to know where it is unfolded at
+
+        self.beam.apply_support(14, type)
         pass
 
 
@@ -269,6 +394,8 @@ class Structure2d:
         fig, ax = plt.subplots()
         # Set aspect ratio to 'equal' so that the members are plotted proportionally
         ax.set_aspect('equal')
+        point_load_color = '#38812F'
+        distributed_load_color = '#A30000'
 
         # Draw each member
         for member in self.members:
@@ -298,7 +425,7 @@ class Structure2d:
                     "",
                     xy=(x, y),
                     xytext=(arrow_x, arrow_y),
-                    arrowprops=dict(arrowstyle='->', color='red',shrinkA=0, shrinkB=0)  # noqa: C408
+                    arrowprops=dict(arrowstyle='->', color=point_load_color,shrinkA=0, shrinkB=0)  # noqa: C408
                 ,zorder=200
                 )
             else:
@@ -339,15 +466,15 @@ class Structure2d:
                         "",
                         xy=(x, y),
                         xytext=(arrow_x, arrow_y),
-                        arrowprops=dict(arrowstyle='->', color='green',shrinkA=0, shrinkB=0)  # noqa: C408
+                        arrowprops=dict(arrowstyle='->', color=distributed_load_color,shrinkA=0, shrinkB=0)  # noqa: C408
                     ,zorder=100
                     )
                 for i in range(len(arrow_coords)-1):
-                    ax.plot([arrow_coords[i][0], arrow_coords[i+1][0]], [arrow_coords[i][1], arrow_coords[i+1][1]], color='green',zorder=100)
+                    ax.plot([arrow_coords[i][0], arrow_coords[i+1][0]], [arrow_coords[i][1], arrow_coords[i+1][1]], color=distributed_load_color,zorder=100)
                 # print(arrow_coords)
                 if load.end_x is not None and load.end_y is not None:
                     square_coords = [(x1, y1), arrow_coords[0], arrow_coords[-1], (x2, y2)]
-                    square = patches.Polygon(square_coords, closed=True, color='green', alpha=0.15,zorder=10)
+                    square = patches.Polygon(square_coords, closed=True, color=distributed_load_color, alpha=0.15,zorder=10)
 
                     ax.add_patch(square)
 
