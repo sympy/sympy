@@ -318,6 +318,7 @@ class KanesMethod(_Methods):
                     acc_test = list(acc)
                     udot_test = list(self._udot)
                     self._k_dnh, self._f_dnh = linear_eq_to_matrix(acc_test, udot_test)
+                    self._f_dnh = -self._f_dnh
             except (NonlinearError):
                 raise NonlinearError('Velocity constraints must be linear in the '
                                  'generalized speeds.')
