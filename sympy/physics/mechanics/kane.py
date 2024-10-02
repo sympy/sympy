@@ -86,6 +86,9 @@ class KanesMethod(_Methods):
         The particles and rigid bodies in the system.
     forcelist : iterable of tuple[Point | ReferenceFrame, Vector], optional
         Forces and torques applied on the system.
+    reaction_forces: iterable containing the reaction forces, optional.
+        Needed only to eliminate them in dynamic part of (fr + frstar)
+        and the force vector
     explicit_kinematics : bool
         Boolean whether the mass matrices and forcing vectors should use the
         explicit form (default) or implicit form for kinematics.
@@ -209,6 +212,7 @@ class KanesMethod(_Methods):
                  configuration_constraints=None, u_dependent=None,
                  velocity_constraints=None, acceleration_constraints=None,
                  u_auxiliary=None, bodies=None, forcelist=None,
+                 reaction_forces=None,
                  explicit_kinematics=True, kd_eqs_solver='LU',
                  constraint_solver='LU'):
 
@@ -226,6 +230,7 @@ class KanesMethod(_Methods):
 
         self._forcelist = forcelist
         self._bodylist = bodies
+        self._reaction_forces = reaction_forces
 
         self.explicit_kinematics = explicit_kinematics
         self._constraint_solver = constraint_solver
@@ -291,7 +296,7 @@ class KanesMethod(_Methods):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and acceleration constraints.')
         if vel:
-
+            print('guten morgen')
             # When calling kanes_equations, another class instance will be
             # created if auxiliary u's are present. In this case, the
             # computation of kinetic differential equation matrices will be
@@ -717,6 +722,14 @@ class KanesMethod(_Methods):
         fr = self._form_fr(loads)
         frstar = self._form_frstar(bodies)
         if self._uaux:
+            uaux_zero = dict.fromkeys(self._uaux, 0)
+            fr = msubs(self._form_fr(loads), uaux_zero)
+            frstar = msubs(self._form_frstar(bodies), uaux_zero)
+            if self._reaction_forces:
+                react_zero = dict.fromkeys(self._reaction_forces, 0)
+                fr = msubs(fr, react_zero)
+                frstar = msubs(frstar, react_zero)
+
             if not self._udep:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                              u_auxiliary=self._uaux, constraint_solver=self._constraint_solver)
@@ -731,8 +744,8 @@ class KanesMethod(_Methods):
                         )
             km._qdot_u_map = self._qdot_u_map
             self._km = km
-            fraux = km._form_fr(loads)
-            frstaraux = km._form_frstar(bodies)
+            fraux = msubs(km._form_fr(loads), uaux_zero)
+            frstaraux = msubs(km._form_frstar(bodies))
             self._aux_eq = fraux + frstaraux
             self._fr = fr.col_join(fraux)
             self._frstar = frstar.col_join(frstaraux)
@@ -816,7 +829,15 @@ class KanesMethod(_Methods):
         """The forcing vector of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
-        return -Matrix([self._f_d, self._f_dnh])
+        if self._uaux:
+            uaux_zero = dict.fromkeys(self._uaux, 0)
+            force_int = msubs(-Matrix([self._f_d, self._f_dnh]), uaux_zero)
+            if self._reaction_forces:
+                react_zero = dict.fromkeys(self._reaction_forces, 0)
+                force_int = msubs(force_int, react_zero)
+            return force_int
+        else:
+            return -Matrix([self._f_d, self._f_dnh])
 
     @property
     def mass_matrix_full(self):
