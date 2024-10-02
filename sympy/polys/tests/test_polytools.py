@@ -3315,8 +3315,8 @@ def test_ptcancel():
     qq = (S.Half, Poly(x + 2, domain=QQ), Poly(1, x, domain=QQ))
     assert p.cancel(q, include=False) == qq
     case1 = p.cancel(q)
-    p, q = [Poly(4*i) for i in (p, q)]
-    assert p.cancel(q, include=False) == zz
+    p, q = [Poly(4*i.as_expr()) for i in (p, q)]
+    assert p.cancel(q, include=False) == zz,p.cancel(q, include=False)
     case2 = p.cancel(q)
     c,n,d = case1
     C,N,D = case2

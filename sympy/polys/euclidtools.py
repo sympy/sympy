@@ -1861,7 +1861,7 @@ def dup_cancel(f, g, K, include=True):
 
 def dmp_ZZ_gcd(f, K):
         from sympy.core.intfunc import igcd
-        assert not f or set([type(i) for i in f]) in [{int},{list}],f
+        assert not f or {type(i) for i in f} in [{int}, {list}], f
         def flat(i):
             if type(i) is list:
                 for i in i:
