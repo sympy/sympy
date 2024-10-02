@@ -134,7 +134,8 @@ class Structure2d:
         self.unwrapped_bendpoints = []
         self.unwrapped_loadpoints = []
         self.beam = self._init_beam()
-        self.test = 0
+
+        self.load_qz = 0
 
     def __repr__(self):
         return f"Structure2d(Members={len(self.members)}, Nodes={len(self.nodes)}, Supports={len(self.supports)})"
@@ -248,60 +249,60 @@ class Structure2d:
                 ]
             nn = [4,4,5,5]
 
-        print(aa,oo,L)
-        #qz opstellen
+        # print(aa,oo,L)
+        # qz ############################################################################################
         qz = 0
         x = Symbol('x')
 
-        # beginpunten
+        # bendpoints
         for i in range(len(B)):
             for j in range(len(aa)):
                 if bb[i] == aa[-1]:
                     if nn[i] == 1:
                         qz += B[i] * SingularityFunction(x,bb[i],-2)
-                        self.beam.apply_load(B[i], bb[i], -2)  # apply_load here
+                        self.beam.apply_load(B[i], bb[i], -2)
                     if nn[i] == 2:
                         qz += B[i] * SingularityFunction(x,bb[i],-1) * cos(oo[-1])
-                        self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], -1)  # apply_load here
+                        self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
                     if nn[i] == 3:
                         qz += B[i] * SingularityFunction(x,bb[i],-1) * sin(oo[-1])
-                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], -1)  # apply_load here
+                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], -1)
                     if nn[i] == 4:
                         qz += B[i] * SingularityFunction(x,bb[i],0) * cos(oo[-1])
-                        self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], 0)  # apply_load here
+                        self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
                     if nn[i] == 5:
                         qz += B[i] * SingularityFunction(x,bb[i],0) * sin(oo[-1])
-                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], 0)  # apply_load here
+                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], 0)
                     break
                 else:
                     if bb[i] < aa[j]:
                         if nn[i] == 1:
                             qz += B[i] * SingularityFunction(x,bb[i],-2)
-                            self.beam.apply_load(B[i], bb[i], -2)  # apply_load here
+                            self.beam.apply_load(B[i], bb[i], -2)
                         if nn[i] == 2:
                             qz += B[i] * SingularityFunction(x,bb[i],-1) * cos(oo[j-1])
-                            self.beam.apply_load(B[i] * cos(oo[j-1]), bb[i], -1)  # apply_load here
+                            self.beam.apply_load(B[i] * cos(oo[j-1]), bb[i], -1)
                         if nn[i] == 3:
                             qz += B[i] * SingularityFunction(x,bb[i],-1) * sin(oo[j-1])
-                            self.beam.apply_load(B[i] * sin(oo[j-1]), bb[i], -1)  # apply_load here
+                            self.beam.apply_load(B[i] * sin(oo[j-1]), bb[i], -1)
                         if nn[i] == 4:
                             qz += B[i] * SingularityFunction(x,bb[i],0) * cos(oo[j-1])
-                            self.beam.apply_load(B[i] * cos(oo[j-1]), bb[i], 0)  # apply_load here
+                            self.beam.apply_load(B[i] * cos(oo[j-1]), bb[i], 0)
                         if nn[i] == 5:
                             qz += B[i] * SingularityFunction(x,bb[i],0) * sin(oo[j-1])
-                            self.beam.apply_load(B[i] * sin(oo[j-1]), bb[i], 0)  # apply_load here
+                            self.beam.apply_load(B[i] * sin(oo[j-1]), bb[i], 0)
                         break
 
-        # knikpunten
+
         for i in range(len(B)):
             for j in range(len(aa)-1):
                 if bb[i] < aa[j]:
                     if nn[i] == 2:
                         qz += B[i] * SingularityFunction(x,aa[j],-1) * (cos(oo[j]) - cos(oo[j-1]))
-                        self.beam.apply_load(B[i] * (cos(oo[j]) - cos(oo[j-1])), aa[j], -1)  # apply_load here
+                        self.beam.apply_load(B[i] * (cos(oo[j]) - cos(oo[j-1])), aa[j], -1)
                     if nn[i] == 3:
                         qz += B[i] * SingularityFunction(x,aa[j],-1) * (sin(oo[j]) - sin(oo[j-1]))
-                        self.beam.apply_load(B[i] * (sin(oo[j]) - sin(oo[j-1])), aa[j], -1)  # apply_load here
+                        self.beam.apply_load(B[i] * (sin(oo[j]) - sin(oo[j-1])), aa[j], -1)
                     if nn[i] == 4:
                         # qz += B[i] * ((SingularityFunction(x,aa[j],0) + (SingularityFunction(x,aa[j],-1) * (aa[j] - bb[i]))) * (cos(oo[j]) - cos(oo[j-1])))
                         qz += B[i] * (SingularityFunction(x,aa[j],0)) * (cos(oo[j]) - cos(oo[j-1]))
@@ -318,7 +319,7 @@ class Structure2d:
                         self.beam.apply_load(value, aa[j], -1)
 
 
-        self.test += qz
+        self.load_qz += qz
 
 
 
@@ -369,21 +370,66 @@ class Structure2d:
         aa.append(unwrapped_bendpoints[-1]['bend_point'][1])
 
         L = unwrapped_len
-
-
-
+        self.beam.length = L
 
         return aa,oo,L
 
+    def _find_unwrapped_position(self, x, y):
+        aa, oo, L = self._unwrap_structure()
+
+        unwrapped_position_x = 0
+        current_length = 0
+
+        for member in self.members:
+            if (member.x1 <= x <= member.x2 or member.x2 <= x <= member.x1) and \
+            (member.y1 <= y <= member.y2 or member.y2 <= y <= member.y1):
+
+                local_x = sqrt((member.x1 - x)**2 + (member.y1 - y)**2)
+                unwrapped_position_x = current_length + local_x
+                break
+
+            current_length += member.length
+
+        if unwrapped_position_x == 0:
+            unwrapped_position_x = current_length
+
+        return unwrapped_position_x
+
+
     def apply_support(self, x, y, type="pin"):
+        # support needs to be done manually because the reaction loads also need to be adjusted for by other loads
+
+
         support = self.add_or_update_node(x, y, type)
         self.supports.append(support)
-        ### support needs to know where it is unfolded at
 
-        self.beam.apply_support(14, type)
-        pass
+        unwarap_x = self._find_unwrapped_position(x, y)
 
+        if type == "pin":
+            R1 = self.beam.apply_support(unwarap_x, type)
+            return R1
+        elif type == "roller":
+            R1 = self.beam.apply_support(unwarap_x, type)
+            return R1
 
+        elif type == "fixed":
+            T1, R1 = self.beam.apply_support(unwarap_x, type)
+            return T1, R1
+
+    def solve_for_reaction_loads(self, *args):
+        self.beam.solve_for_reaction_loads(*args)
+
+    def shear_force(self):
+        return self.beam.shear_force()
+
+    def plot_shear_force(self):
+        self.beam.plot_shear_force()
+
+    def bending_moment(self):
+        return self.beam.bending_moment()
+
+    def plot_bending_moment(self):
+        self.beam.plot_bending_moment()
 
 
 
@@ -486,16 +532,18 @@ class Structure2d:
             elif support.node_type == "fixed":
                 ax.plot(x, y, 's', color='blue')
 
-            # make y tick the same step as x tick
-            x_ticks = plt.xticks()[0]
-            x_step = x_ticks[1] - x_ticks[0]
-            y_min, y_max = plt.ylim()
+        # make y tick the same step as x tick
+        x_ticks = plt.xticks()[0]
+        x_step = x_ticks[1] - x_ticks[0]
+        y_min, y_max = plt.ylim()
 
-            num_ticks_up = int((y_max // x_step) + 1)
-            num_ticks_down = int((-y_min // x_step) + 1)
-            new_y_ticks = [i * x_step for i in range(-num_ticks_down, num_ticks_up + 1)]
+        num_ticks_up = int((y_max // x_step) + 1)
+        num_ticks_down = int((-y_min // x_step) + 1)
+        new_y_ticks = [i * x_step for i in range(-num_ticks_down, num_ticks_up + 1)]
 
-            plt.yticks(new_y_ticks)
+        plt.yticks(new_y_ticks)
+        plt.grid()
+        plt.show()
 
     def draw_unwrapped(self):
         fig, ax = plt.subplots()
