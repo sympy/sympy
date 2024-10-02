@@ -3301,7 +3301,7 @@ def test_ptcancel():
     raises(ValueError, lambda: cancel((1, 2, 3)))
 
     # tests first tuple return
-    assert (t:=cancel((2, 3))) == (1, 2, 3)
+    assert (t:=cancel((2, 3))) == (S(2)/3, 1, 1)
     assert isinstance(t, tuple)
 
     # tests 2nd tuple return
@@ -3311,11 +3311,11 @@ def test_ptcancel():
 
     # issue 27906
     p, q = Poly(x**2/4 - 1), Poly(x/2 - 1)
-    zz = (1, Poly(x + 2), Poly(2, x))
-    qq = (1, Poly(x + 2, domain=QQ), Poly(2, x, domain=QQ))
+    zz = (S.Half, Poly(x + 2), Poly(1, x))
+    qq = (S.Half, Poly(x + 2, domain=QQ), Poly(1, x, domain=QQ))
     assert p.cancel(q, include=False) == qq
     case1 = p.cancel(q)
-    p, q = [Poly(i) for i in (p/q).as_expr().as_numer_denom()]
+    p, q = [Poly(4*i) for i in (p, q)]
     assert p.cancel(q, include=False) == zz
     case2 = p.cancel(q)
     c,n,d = case1
@@ -3328,15 +3328,15 @@ def test_ptcancel():
     f, g, p, q = 4*x**2 - 4, 2*x - 2, 2*x + 2, 1
     F, G, P, Q = [ Poly(u, x) for u in (f, g, p, q) ]
 
-    assert F.cancel(G) == (1, P, Q)
-    assert cancel((f, g)) == (1, p, q)
-    assert cancel((f, g), x) == (1, p, q)
-    assert cancel((f, g), (x,)) == (1, p, q)
+    assert F.cancel(G) == (2, P/2, Q)
+    assert cancel((f, g)) == (2, p/2, q)
+    assert cancel((f, g), x) == (2, p/2, q)
+    assert cancel((f, g), (x,)) == (2, p/2, q)
     # tests 3rd tuple return
-    assert (t:=cancel((F, G))) == (1, P, Q)
+    assert (t:=cancel((F, G))) == (2, P/2, Q)
     assert isinstance(t, tuple)
-    assert cancel((f, g), polys=True) == (1, P, Q)
-    assert cancel((F, G), polys=False) == (1, p, q)
+    assert cancel((f, g), polys=True) == (2, P/2, Q)
+    assert cancel((F, G), polys=False) == (2, p/2, q)
 
     f = (x**2 - 2)/(x + sqrt(2))
 
@@ -3348,8 +3348,7 @@ def test_ptcancel():
     assert cancel(f) == f
     assert cancel(f, greedy=False) == x + sqrt(2)
 
-    assert cancel((x**2/4 - 1, x/2 - 1)) == (1, x + 2, 2)
-    # assert cancel((x**2/4 - 1, x/2 - 1)) == (S.Half, x + 2, 1)
+    assert cancel((x**2/4 - 1, x/2 - 1)) == (S.Half, x + 2, 1)
 
     assert cancel((x**2 - y)/(x - y)) == 1/(x - y)*(x**2 - y)
 
