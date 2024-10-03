@@ -1,4 +1,3 @@
-# %%
 import sympy as sm
 import sympy.physics.mechanics as me
 
@@ -73,10 +72,3 @@ def test_removal_of_reaction_forces():
     eom_d_DS = me.find_dynamicsymbols(eom_d)
     for i in reaction_forces + aux:
         assert i not in eom_d_DS
-
-test = test_removal_of_reaction_forces()
-
-# %% [markdown]
-#
-
-

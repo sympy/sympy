@@ -296,7 +296,6 @@ class KanesMethod(_Methods):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and acceleration constraints.')
         if vel:
-            print('guten morgen')
             # When calling kanes_equations, another class instance will be
             # created if auxiliary u's are present. In this case, the
             # computation of kinetic differential equation matrices will be
