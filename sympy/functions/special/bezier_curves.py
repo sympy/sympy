@@ -1,9 +1,8 @@
 from sympy.core import S, sympify
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise, piecewise_fold
-from sympy.logic.boolalg import And
 from sympy.sets.sets import Interval
-from sympy import binomial
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.geometry import Point
 from sympy import expand, simplify
 from sympy import interpolate
