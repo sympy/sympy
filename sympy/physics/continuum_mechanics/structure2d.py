@@ -1,9 +1,9 @@
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.core import Symbol
 
-# from sympy.core.numbers import pi
+from sympy.core.numbers import pi
 from sympy.functions.elementary.miscellaneous import sqrt
-# from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.trigonometric import sin, cos, atan2
 # from sympy.simplify import nsimplify
 from sympy.simplify.simplify import simplify
@@ -174,9 +174,8 @@ class Structure2d:
             x = (x + x_end) / 2
             y = (y + y_end) / 2
 
-
         for node in self.nodes:
-            if node.x == x and node.y == y:
+            if simplify(node.x - x) == 0 and simplify(node.y - y) == 0:
                 return f'n_{node.node_id}', 0, None
 
         # Check if point corresponds to a member
@@ -184,19 +183,18 @@ class Structure2d:
             if member.member_eq != 'vertical':
                 # Handle non-vertical members
                 member_y = member.member_eq.subs({'x': x})
-                if member.x1 <= x <= member.x2 or member.x2 <= x <= member.x1:
-                    if simplify(member_y - y) == 0:
-                        local_x_start = sqrt((member.x1 - x) ** 2 + (member.y1 - y) ** 2)
-                        if x_end is not None and y_end is not None:
-                            local_x_start = sqrt((member.x1 - x_start) ** 2 + (member.y1 - y_start) ** 2)
-                            local_x_end = member.length - sqrt((member.x2 - x_end) ** 2 + (member.y2 - y_end) ** 2)
-                        else:
-                            local_x_end = None
-                        return f'm_{member.member_id}', local_x_start, local_x_end
+                if (member.x1 <= x <= member.x2 or member.x2 <= x <= member.x1) and simplify(member_y - y) == 0:
+                    local_x_start = sqrt((member.x1 - x) ** 2 + (member.y1 - y) ** 2)
+                    if x_end is not None and y_end is not None:
+                        local_x_start = sqrt((member.x1 - x_start) ** 2 + (member.y1 - y_start) ** 2)
+                        local_x_end = member.length - sqrt((member.x2 - x_end) ** 2 + (member.y2 - y_end) ** 2)
+                    else:
+                        local_x_end = None
+                    return f'm_{member.member_id}', local_x_start, local_x_end
             else:
                 # Handle vertical members
-                if simplify(member.x1 - x) ==0:
-                    if member.y1 <= y <= member.y2 or member.y2 <= y <= member.y1:
+                if simplify(member.x1 - x) == 0:
+                    if (member.y1 <= y <= member.y2 or member.y2 <= y <= member.y1):
                         local_x_start = abs(member.y1 - y)
                         if x_end is not None and y_end is not None:
                             local_x_start = abs(member.y1 - y_start)
@@ -204,6 +202,7 @@ class Structure2d:
                         else:
                             local_x_end = None
                         return f'm_{member.member_id}', local_x_start, local_x_end
+
 
 
 
@@ -230,24 +229,32 @@ class Structure2d:
         ########################
 
         aa,oo,L = self._unwrap_structure()
+        if load.order != -2:
+            if end_x is None and end_y is None:
+                Fv = load.y_component
+                Fh = load.x_component
+                B = [Fv,Fh]
+                bb = [self.unwrapped_loadpoints[-1]['locals'][0],self.unwrapped_loadpoints[-1]['locals'][0]]
+                # T = 1, Fv = 2, Fh = 3, qv = 4, qh = 5
+                nn = [2,3]
+            else:
+                qv = load.y_component
+                qh = load.x_component
+                B = [qv,-qv,qh,-qh]
+                bb = [self.unwrapped_loadpoints[-1]['locals'][0],
+                    self.unwrapped_loadpoints[-1]['locals'][1],
+                    self.unwrapped_loadpoints[-1]['locals'][0],
+                    self.unwrapped_loadpoints[-1]['locals'][1],
+                    ]
+                nn = [4,4,5,5]
+        elif load.order == -2:
+            qz = load.value
+            B = [qz]
+            bb = [self.unwrapped_loadpoints[-1]['locals'][0]]
+            nn = [1]
+            # print('T=',B,'@',bb)
 
-        if end_x is None and end_y is None:
-            Fv = load.y_component
-            Fh = load.x_component
-            B = [Fv,Fh]
-            bb = [self.unwrapped_loadpoints[-1]['locals'][0],self.unwrapped_loadpoints[-1]['locals'][0]]
-            # T = 1, Fv = 2, Fh = 3, qv = 4, qh = 5
-            nn = [2,3]
-        else:
-            qv = load.y_component
-            qh = load.x_component
-            B = [qv,-qv,qh,-qh]
-            bb = [self.unwrapped_loadpoints[-1]['locals'][0],
-                  self.unwrapped_loadpoints[-1]['locals'][1],
-                  self.unwrapped_loadpoints[-1]['locals'][0],
-                  self.unwrapped_loadpoints[-1]['locals'][1],
-                ]
-            nn = [4,4,5,5]
+
 
         # print(aa,oo,L)
         # qz ############################################################################################
@@ -330,37 +337,35 @@ class Structure2d:
         unwrapped_loadpoints = []
 
         for member in self.members:
-            unwrapped_bendpoints.append({'bend_point':[unwrapped_len,unwrapped_len+member.length],'angle':member.angle})
+            unwrapped_bendpoints.append({'bend_point': [unwrapped_len, unwrapped_len + member.length], 'angle': member.angle})
 
+            # Process loads on the member
             for load in member.member_loads:
                 if load.end_x is not None and load.end_y is not None:
-                    unwrapped_loadpoints.append({'l_id':load.load_id,'locals':[unwrapped_len+load.local_start,unwrapped_len+load.local_end]})
+                    unwrapped_loadpoints.append({'l_id': load.load_id, 'locals': [unwrapped_len + load.local_start, unwrapped_len + load.local_end]})
                 else:
-                    unwrapped_loadpoints.append({'l_id':load.load_id,'locals':[unwrapped_len+load.local_start]})
+                    unwrapped_loadpoints.append({'l_id': load.load_id, 'locals': [unwrapped_len + load.local_start]})
 
-            x = member.x1
-            y = member.y1
+            # Process loads at the start node
+            x_start, y_start = member.x1, member.y1
             for node in self.nodes:
-                if node.x == x and node.y == y:
+                if simplify(node.x - x_start) == 0 and simplify(node.y - y_start) == 0:
                     for load in node.node_loads:
-                        unwrapped_loadpoints.append({'l_id':load.load_id,'locals':[unwrapped_len]})
+                        unwrapped_loadpoints.append({'l_id': load.load_id, 'locals': [unwrapped_len]})
                     break
+
             unwrapped_len += member.length
 
-        ### UGLY CODE
-        #manualy do the last node
-        # unwrapped_bendpoints.append({'bend_point':[unwrapped_len,unwrapped_len+member.length],'angle':0})
-
-        x = member.x1
-        y = member.y1
-        for node in self.nodes:
-            if node.x == x and node.y == y:
-                for load in node.node_loads:
-                    unwrapped_loadpoints.append({'l_id':load.load_id+1,'locals':[unwrapped_len]})
-                break
+            # Process loads at the end node
+            x_end, y_end = member.x2, member.y2
+            for node in self.nodes:
+                if simplify(node.x - x_end) == 0 and simplify(node.y - y_end) == 0:
+                    for load in node.node_loads:
+                        unwrapped_loadpoints.append({'l_id': load.load_id, 'locals': [unwrapped_len]})
+                    break
 
         self.unwrapped_bendpoints = unwrapped_bendpoints
-        self.unwrapped_loadpoints = sorted(unwrapped_loadpoints,key=lambda x: x['l_id'])
+        self.unwrapped_loadpoints = sorted(unwrapped_loadpoints, key=lambda x: x['l_id'])
 ######################################################################
         aa = []
         oo = []
@@ -407,18 +412,77 @@ class Structure2d:
         unwarap_x = self._find_unwrapped_position(x, y)
 
         if type == "pin":
-            R1 = self.beam.apply_support(unwarap_x, type)
-            return R1
+            Rh = Symbol(f'R_h-{unwarap_x}')
+            Rv = Symbol(f'R_v-{unwarap_x}')
+
+
+            vertical = self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
+            horizontal = self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=180, order=1)
+
+            self.beam.bc_deflection.append((unwarap_x, 0))
+            # defvection horizontal also 0 but this is not yet needed
+
+            # T1 = Symbol('T1')
+            return Rv, Rh
+
+
         elif type == "roller":
-            R1 = self.beam.apply_support(unwarap_x, type)
-            return R1
+            Rv = Symbol(f'R_v-{unwarap_x}')
+
+            vertical = self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
+
+            self.beam.bc_deflection.append((unwarap_x, 0))
+
+
+
+            return Rv
 
         elif type == "fixed":
-            T1, R1 = self.beam.apply_support(unwarap_x, type)
-            return T1, R1
+            Rh = Symbol(f'R_h-{unwarap_x}')
+            Rv = Symbol(f'R_v-{unwarap_x}')
+            T = Symbol(f'T_{unwarap_x}')
+
+            moment = self.apply_load(start_x=x, start_y=y, value=T, global_angle=0, order=-2)
+            vertical = self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
+            horizontal = self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=180, order=1)
+
+            self.beam.bc_deflection.append((unwarap_x, 0))
+            self.beam.bc_slope.append((unwarap_x, 0))
+
+            # T1 = Symbol('T1')
+            return T, Rv, Rh
 
     def solve_for_reaction_loads(self, *args):
+        #solve for moment and vertical reaction load
         self.beam.solve_for_reaction_loads(*args)
+
+        ######## TEMPORARY
+        #solve fot horizontal reaction load
+        #needs custom calculation
+
+        #need to compute horizontal reaction load Hacke in 15kN now
+        sum_horizontal = 0
+
+        for load in self.loads:
+            # print(load.x_component)
+            if isinstance(load.value, Symbol):
+                pass
+            else:
+                if load.order == -1:
+                    sum_horizontal += load.x_component
+                elif load.order >= 0:
+                    a = load.x_component
+                    dy = abs(load.end_y - load.start_y)
+                    sum_horizontal += a * dy
+                    # print(load.x_component)
+        horizontal_reactions = {args[-1]:sum_horizontal}
+        # print(horizontal_reactions,sum_horizontal)
+
+
+        # horizontal_reactions = {'R_h-14':-15}
+        self.beam._load = self.beam._load.subs(self.beam.reaction_loads).subs(horizontal_reactions)
+
+
 
     def shear_force(self):
         return self.beam.shear_force()
@@ -438,113 +502,133 @@ class Structure2d:
 
 #################################################################################
     def draw(self):
-        fig, ax = plt.subplots()
-        # Set aspect ratio to 'equal' so that the members are plotted proportionally
-        ax.set_aspect('equal')
-        point_load_color = '#38812F'
-        distributed_load_color = '#A30000'
+            fig, ax = plt.subplots()
 
-        # Draw each member
-        for member in self.members:
-            x1, y1, x2, y2 = float(member.x1), float(member.y1), float(member.x2), float(member.y2)
-            ax.plot([x1, x2], [y1, y2], color='black',linewidth=3)
+            ax.set_aspect('equal')
+            point_load_color = '#38812F'
+            distributed_load_color = '#A30000'
 
-        # Draw each node
-        for node in self.nodes:
-            x, y = float(node.x), float(node.y)
-            ax.plot(x, y, color='k')
 
-        # Draw each load (point and distributed loads)
-        for load in self.loads:
-            if load.order < 0:
-                # Point load
+            # Draw each member
+            for member in self.members:
+                x1, y1, x2, y2 = float(member.x1), float(member.y1), float(member.x2), float(member.y2)
+                ax.plot([x1, x2], [y1, y2], color='black', linewidth=3)
+
+            # Draw each load
+            for load in self.loads:
                 x, y = float(load.start_x), float(load.start_y)
-                load_value = float(load.value)
-                angle = float(load.global_angle)
 
-                load_value = load_value / 10
-                # Compute the start point for the arrow (away from the load's application point)
-                arrow_x = x + load_value * cos(angle)
-                arrow_y = y + load_value * sin(angle)
+                if load.order == -2:
+                    # Draw moment as circular arrow with fixed size
+                    radius = 0.5
 
-                # Add arrow annotations for the load
-                ax.annotate(
-                    "",
-                    xy=(x, y),
-                    xytext=(arrow_x, arrow_y),
-                    arrowprops=dict(arrowstyle='->', color=point_load_color,shrinkA=0, shrinkB=0)  # noqa: C408
-                ,zorder=200
-                )
-            else:
-                # Distributed load
-                x1, y1 = float(load.start_x), float(load.start_y)
-                if load.end_x is not None and load.end_y is not None:
-                    x2, y2 = float(load.end_x), float(load.end_y)
-                else:
-                    member = next(m for m in self.members if m.x1 == load.start_x and m.y1 == load.start_y)
-                    x2, y2 = float(member.x2), float(member.y2)
+                    circle = patches.Arc((x, y), radius*2, radius*2, angle=0, theta1=0, theta2=270, color=point_load_color)
+                    ax.add_patch(circle)
+                    # Add arrowhead manually
+                    arrow_x = x + radius * float(cos(pi *3/2))
+                    arrow_y = y + radius * float(sin(pi * 3/2))
+                    dx = -radius * 0.1  # Small offset for arrowhead
+                    dy = 0
+                    ax.arrow(arrow_x, arrow_y, dx, dy, shape='full', lw=0, length_includes_head=True,
+                            head_width=radius*0.5, color=point_load_color)
+                elif load.order < 0 or load.order == 1:
+                    # Point load
+                    if isinstance(load.value, Symbol):
+                        load_length = 1
+                    else:
+                        load_length = float(load.value) / 10
 
-                member_length = sqrt((x2 - x1)**2 + (y2 - y1)**2)
-                arrow_spacing = 0.5  # Define a consistent arrow spacing
-                num_arrows = int(member_length / arrow_spacing)
-
-                dx = (x2 - x1) / num_arrows
-                dy = (y2 - y1) / num_arrows
-
-                # Plot the load line that the arrows will originate from
-
-                arrow_coords = []
-                for i in range(num_arrows + 1):
-                    x = x1 + i * dx
-                    y = y1 + i * dy
-
-                    arrow_length = load.value * (x) ** load.order
-                    # print(arrow_length)
-
-                    arrow_length = arrow_length / 10  # Scale the arrow length for better visualization
-                    # Arrows originate from the load line, pointing in the direction of the load
-                    arrow_x = x + arrow_length * cos(float(load.global_angle))
-                    arrow_y = y + arrow_length * sin(float(load.global_angle))
-
-                    arrow_coords.append((arrow_x, arrow_y))
-
+                    angle = float(load.global_angle)
+                    arrow_x = x + load_length * cos(angle)
+                    arrow_y = y + load_length * sin(angle)
 
                     ax.annotate(
                         "",
                         xy=(x, y),
                         xytext=(arrow_x, arrow_y),
-                        arrowprops=dict(arrowstyle='->', color=distributed_load_color,shrinkA=0, shrinkB=0)  # noqa: C408
-                    ,zorder=100
+                        arrowprops={"arrowstyle": '->', "color": point_load_color, "shrinkA": 0, "shrinkB": 0},
+                        zorder=200
                     )
-                for i in range(len(arrow_coords)-1):
-                    ax.plot([arrow_coords[i][0], arrow_coords[i+1][0]], [arrow_coords[i][1], arrow_coords[i+1][1]], color=distributed_load_color,zorder=100)
-                # print(arrow_coords)
-                if load.end_x is not None and load.end_y is not None:
-                    square_coords = [(x1, y1), arrow_coords[0], arrow_coords[-1], (x2, y2)]
-                    square = patches.Polygon(square_coords, closed=True, color=distributed_load_color, alpha=0.15,zorder=10)
+                else:
+                    # Distributed load
+                    x1, y1 = float(load.start_x), float(load.start_y)
+                    if load.end_x is not None and load.end_y is not None:
+                        x2, y2 = float(load.end_x), float(load.end_y)
+                    else:
+                        # Find the member associated with the load
+                        member = next((m for m in self.members if (float(m.x1) == x1 and float(m.y1) == y1) or
+                                    (float(m.x2) == x1 and float(m.y2) == y1)), None)
+                        if member is not None:
+                            x2, y2 = float(member.x2), float(member.y2)
+                        else:
+                            continue  # Skip if member not found
 
-                    ax.add_patch(square)
+                    member_length = sqrt((x2 - x1)**2 + (y2 - y1)**2)
+                    arrow_spacing = 0.5  # Define a consistent arrow spacing
+                    num_arrows = max(int(member_length / arrow_spacing), 1)
 
-        # Draw each support
-        for support in self.supports:
-            x, y = float(support.x), float(support.y)
-            if support.node_type == "pin":
-                ax.plot(x, y, 'o', color='red')
-            elif support.node_type == "fixed":
-                ax.plot(x, y, 's', color='blue')
+                    dx = (x2 - x1) / num_arrows
+                    dy = (y2 - y1) / num_arrows
 
-        # make y tick the same step as x tick
-        x_ticks = plt.xticks()[0]
-        x_step = x_ticks[1] - x_ticks[0]
-        y_min, y_max = plt.ylim()
+                    arrow_coords = []
+                    for i in range(num_arrows + 1):
+                        x_arrow = x1 + i * dx
+                        y_arrow = y1 + i * dy
 
-        num_ticks_up = int((y_max // x_step) + 1)
-        num_ticks_down = int((-y_min // x_step) + 1)
-        new_y_ticks = [i * x_step for i in range(-num_ticks_down, num_ticks_up + 1)]
+                        if isinstance(load.value, Symbol):
+                            arrow_length = float(10 * (x_arrow) ** load.order)
+                        else:
+                            arrow_length = float(load.value * (x_arrow) ** load.order)
 
-        plt.yticks(new_y_ticks)
-        plt.grid()
-        plt.show()
+                        arrow_length_scaled = arrow_length / 10  # Scale the arrow length
+                        # Arrows originate from the load line, pointing in the direction of the load
+                        arrow_x = x_arrow + arrow_length_scaled * cos(float(load.global_angle))
+                        arrow_y = y_arrow + arrow_length_scaled * sin(float(load.global_angle))
+
+                        arrow_coords.append((arrow_x, arrow_y))
+
+                        ax.annotate(
+                            "",
+                            xy=(x_arrow, y_arrow),
+                            xytext=(arrow_x, arrow_y),
+                            arrowprops={"arrowstyle": '->', "color": distributed_load_color, "shrinkA": 0, "shrinkB": 0},
+                            zorder=100
+                        )
+
+                    # Plot the load line that the arrows will originate from
+                    for i in range(len(arrow_coords) - 1):
+                        ax.plot([arrow_coords[i][0], arrow_coords[i + 1][0]],
+                                [arrow_coords[i][1], arrow_coords[i + 1][1]],
+                                color=distributed_load_color, zorder=100)
+
+                    if load.end_x is not None and load.end_y is not None:
+                        square_coords = [(x1, y1), arrow_coords[0], arrow_coords[-1], (x2, y2)]
+                        square = patches.Polygon(square_coords, closed=True, color=distributed_load_color,
+                                                alpha=0.15, zorder=10)
+                        ax.add_patch(square)
+
+            # Draw each support
+            for support in self.supports:
+                x, y = float(support.x), float(support.y)
+                if support.node_type == "pin":
+                    ax.plot(x, y, 'o', color='red')
+                elif support.node_type == "fixed":
+                    ax.plot(x, y, 's', color='blue')
+                elif support.node_type == "roller":
+                    ax.plot(x, y, 'o', color='yellow')
+
+            # Adjust y-ticks to have the same step as x-ticks
+            x_ticks = plt.xticks()[0]
+            if len(x_ticks) > 1:
+                x_step = x_ticks[1] - x_ticks[0]
+                y_min, y_max = plt.ylim()
+                num_ticks_up = int((y_max // x_step) + 1)
+                num_ticks_down = int((-y_min // x_step) + 1)
+                new_y_ticks = [i * x_step for i in range(-num_ticks_down, num_ticks_up + 1)]
+                plt.yticks(new_y_ticks)
+
+            plt.grid()
+            plt.show()
 
     def draw_unwrapped(self):
         fig, ax = plt.subplots()
