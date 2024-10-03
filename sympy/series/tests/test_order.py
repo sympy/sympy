@@ -501,3 +501,13 @@ def test_issue_22836():
     assert O(2**x + factorial(x), (x, oo)) == O(factorial(x), (x, oo))
     assert O(2**x + factorial(x) + x**x, (x, oo)) == O(exp(x*log(x)), (x, oo))
     assert O(x + factorial(x), (x, oo)) == O(factorial(x), (x, oo))
+
+def test_issue_27031():
+    assert ((1 + O(x)) * exp(x)).getO() == O(x)
+    assert ((1 + O(x)) * exp(x)).removeO() == exp(x)
+    assert ((1 + O(x * y) - O(x - 1, (x, 1))) * exp(y)).getO() == O(x*y) + O(x - 1, (x, 1))
+    assert ((1 + O(x * y) - O(x - 1, (x, 1))) * exp(y)).removeO() == exp(y)
+    assert ((x**2 + O(x**3) ) * (exp(x) + x + O(x) + O(y))).getO() == O(x**3) + O(y)
+    assert ((x**2 + O(x**3) ) * (exp(x) + x + O(x) + O(y))).removeO() == x**2 * exp(x)
+    assert ((1 + x**2 + O(x**3)) * (-1 + O(x))).getO() == O(x)
+    assert ((1 + x**2 + O(x**3)) * (-1 + O(x))).removeO() == -1

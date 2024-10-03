@@ -818,6 +818,13 @@ class Mul(Expr, AssocOp):
         else:
             return args[0], self._new_rawargs(*args[1:])
 
+    def removeO(self):
+        from .function import expand
+        return expand(self).removeO()
+    def getO(self):
+        from .function import expand
+        return expand(self).getO()
+
     @cacheit
     def as_coeff_mul(self, *deps, rational=True, **kwargs):
         if deps:
