@@ -230,22 +230,25 @@ class KanesMethod(_Methods):
 
         self._forcelist = forcelist
         self._bodylist = bodies
-        self._reaction_forces = reaction_forces
 
         self.explicit_kinematics = explicit_kinematics
         self._constraint_solver = constraint_solver
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
-                u_auxiliary)
+                u_auxiliary, reaction_forces)
         _validate_coordinates(self.q, self.u)
         self._initialize_kindiffeq_matrices(kd_eqs, kd_eqs_solver)
         self._initialize_constraint_matrices(
             configuration_constraints, velocity_constraints,
             acceleration_constraints, constraint_solver)
 
-    def _initialize_vectors(self, q_ind, q_dep, u_ind, u_dep, u_aux):
+    def _initialize_vectors(self, q_ind, q_dep, u_ind, u_dep, u_aux,
+                        reaction_forces):
         """Initialize the coordinate and speed vectors."""
 
         none_handler = lambda x: Matrix(x) if x else Matrix()
+
+        # Initialize reaction_forces
+        self._reaction_forces = none_handler(reaction_forces)
 
         # Initialize generalized coordinates
         q_dep = none_handler(q_dep)
