@@ -1859,27 +1859,6 @@ def dup_cancel(f, g, K, include=True):
     return dmp_cancel(f, g, 0, K, include=include)
 
 
-def dmp_ZZ_gcd(f, K):
-        from sympy.core.intfunc import igcd
-        assert not f or {type(i) for i in f} in [{int}, {list}], f
-        def flat(i):
-            if type(i) is list:
-                for i in i:
-                    for j in flat(i):
-                        yield j
-            else:
-                yield i
-        _flat = list(flat(f))
-        if not _flat:
-            return K.one, f
-        if len(_flat) == 1:
-            c = _flat[0]
-        else:
-            c = igcd(*_flat)
-        if c - 1:
-            f = [i//c for i in f] if f and type(f[0]) is int else [[i//c for i in j] for j in f]
-        return c, f
-
 def dmp_cancel(f, g, u, K, include=True):
     """
     Cancel common factors in a rational function `f/g`.
@@ -1902,12 +1881,10 @@ def dmp_cancel(f, g, u, K, include=True):
         cq, f = dmp_clear_denoms(f, u, K0, K, convert=True)
         cp, g = dmp_clear_denoms(g, u, K0, K, convert=True)
         # domain is now K
-    elif K.is_ZZ:
-        # remove gcd
-        cp, f = dmp_ZZ_gcd(f, K)
-        cq, g = dmp_ZZ_gcd(g, K)
     else:
-        cp, cq = K.one, K.one
+        # remove gcd
+        cp, f = dmp_ground_primitive(f, u, K)
+        cq, g = dmp_ground_primitive(g, u, K)
 
     _, p, q = dmp_inner_gcd(f, g, u, K)
 
