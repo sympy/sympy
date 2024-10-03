@@ -58,17 +58,19 @@ def test_removal_of_reaction_forces():
     force = KM.forcing_full
 
     fr+frstar
+
     force_DS = me.find_dynamicsymbols(force)
     for i in reaction_forces + aux:
-        assert i not in force_DS
+        assert i not in force_DS, f"{i} found in force_DS"
 
     eom_dynamic = sm.Matrix([(fr+frstar)[0], (fr+frstar)[1]])
     eom_DS = me.find_dynamicsymbols(eom_dynamic)
     for i in reaction_forces + aux:
-        assert i not in eom_DS
+        assert i not in eom_DS, f"{i} found in eom_DS"
 
     eom_dynamic = KM._form_eoms()
     eom_d = sm.Matrix([eom_dynamic[0], eom_dynamic[1]])
     eom_d_DS = me.find_dynamicsymbols(eom_d)
     for i in reaction_forces + aux:
-        assert i not in eom_d_DS
+        assert i not in eom_d_DS, f"{i} found in eom_d_DS"
+
