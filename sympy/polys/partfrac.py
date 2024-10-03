@@ -330,6 +330,14 @@ def apart_list(f, x=None, dummies=None, **options):
             "multivariate partial fraction decomposition")
 
     common, P, Q = P.cancel(Q)
+    if common.is_Rational:
+        Q *= common.q
+        if common < 0:
+            P *= -common.p
+            common = S.NegativeOne
+        else:
+            P *= common.p
+            common =  S.One
 
     poly, P = P.div(Q, auto=True)
     P, Q = P.rat_clear_denoms(Q)

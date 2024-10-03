@@ -1929,12 +1929,10 @@ def dmp_cancel(f, g, u, K, include=True):
     elif q_neg:
         cp, q = -cp, dmp_neg(q, u, K)
 
-    if include:
-        p = dmp_mul_ground(p, cp, u, K)
-        q = dmp_mul_ground(q, cq, u, K)
-        cp = cq = 1
-
     if not include:
         return cp, cq, p, q
+
+    p = dmp_mul_ground(p, cp, u, K)
+    q = dmp_mul_ground(q, cq, u, K)
 
     return p, q
