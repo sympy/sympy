@@ -308,15 +308,16 @@ class Structure2d:
                         qz += B[i] * (SingularityFunction(x,aa[j],0)) * (cos(oo[j]) - cos(oo[j-1]))
                         qz += B[i] * ( SingularityFunction(x,aa[j],-1) * (aa[j] - bb[i])) * (cos(oo[j]) - cos(oo[j-1]))
 
-                        value = B[i] * (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j-1]))
                         self.beam.apply_load(B[i]*(cos(oo[j]) - cos(oo[j-1])), aa[j], 0)
                         self.beam.apply_load(B[i]* (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j-1])), aa[j], -1)
 
                     if nn[i] == 5:
-                        qz += B[i] * ((SingularityFunction(x,aa[j],0) + SingularityFunction(x,aa[j],-1) * (aa[j] - bb[i])) * (sin(oo[j]) - sin(oo[j-1])))
-                        value = B[i] * (aa[j] - bb[i]) * (sin(oo[j]) - sin(oo[j-1]))
-                        self.beam.apply_load(value, aa[j], 0)
-                        self.beam.apply_load(value, aa[j], -1)
+                        # qz += B[i] * ((SingularityFunction(x,aa[j],0) + SingularityFunction(x,aa[j],-1) * (aa[j] - bb[i])) * (sin(oo[j]) - sin(oo[j-1])))
+                        qz += B[i] * (SingularityFunction(x,aa[j],0)) * (sin(oo[j]) - sin(oo[j-1]))
+                        qz += B[i] * ( SingularityFunction(x,aa[j],-1) * (aa[j] - bb[i])) * (sin(oo[j]) - sin(oo[j-1]))
+
+                        self.beam.apply_load(B[i]*(sin(oo[j]) - sin(oo[j-1])), aa[j], 0)
+                        self.beam.apply_load(B[i]* (aa[j] - bb[i]) * (sin(oo[j]) - sin(oo[j-1])), aa[j], -1)
 
 
         self.load_qz += qz
@@ -556,4 +557,3 @@ class Structure2d:
         for member in self.members:
             plt.plot([x_start, x_start + member.length], [0, 0], 'o-', color='black')
             x_start += member.length
-
