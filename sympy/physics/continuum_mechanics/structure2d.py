@@ -76,7 +76,7 @@ class Member:
         return atan2(self.y2 - self.y1, self.x2 - self.x1)
 
     def __repr__(self):
-        return f"Member(ID={self.member_id}, Length={self.length}, Global_Angle={float(self.angle_deg):.02f}°)"
+        return f"Member(ID={self.member_id}, Length={self.length}, Global_Angle={float(self.angle_deg):.02f}deg)"
 
 class Node:
     def __init__(self, x, y, node_type, node_id):
