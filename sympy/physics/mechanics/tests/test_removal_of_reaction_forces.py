@@ -53,11 +53,8 @@ def test_removal_of_reaction_forces():
         velocity_constraints=speed_constr,
     )
 
-    (fr, frstar) = KM.kanes_equations(BODY, FL)
-    fr + frstar
+    fr, frstar = KM.kanes_equations(BODY, FL)
     force = KM.forcing_full
-
-    fr+frstar
 
     force_DS = me.find_dynamicsymbols(force)
     for i in reaction_forces + aux:
