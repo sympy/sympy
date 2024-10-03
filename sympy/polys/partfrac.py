@@ -255,9 +255,9 @@ def apart_list(f, x=None, dummies=None, **options):
     >>> f = (2*x**3 - 2*x) / (x**2 - 2*x + 1)
     >>> pfd = apart_list(f)
     >>> pfd
-    (1,
-    Poly(2*x + 4, x, domain='ZZ'),
-    [(Poly(_w - 1, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1)])
+    (2,
+    Poly(x + 2, x, domain='ZZ'),
+    [(Poly(_w - 1, _w, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
 
     >>> assemble_partfrac_list(pfd)
     2*x + 4 + 4/(x - 1)
@@ -267,9 +267,9 @@ def apart_list(f, x=None, dummies=None, **options):
     >>> f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
     >>> pfd = apart_list(f)
     >>> pfd
-    (-1,
-    Poly(2/3, x, domain='QQ'),
-    [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
+    (-2/3,
+    Poly(1, x, domain='ZZ'),
+    [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 3), Lambda(_a, -_a + x), 1)])
 
     >>> assemble_partfrac_list(pfd)
     -2/3 - 2/(x - 2)
@@ -293,11 +293,11 @@ def apart_list(f, x=None, dummies=None, **options):
     >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
     >>> pfd = apart_list(f)
     >>> pfd
-    (1,
+    (36,
     Poly(0, x, domain='ZZ'),
-    [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
-    (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
-    (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
+    [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 1/9), Lambda(_a, -_a + x), 1),
+    (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -_a/12 - 1/6), Lambda(_a, -_a + x), 2),
+    (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -1/9), Lambda(_a, -_a + x), 1)])
 
     >>> assemble_partfrac_list(pfd)
     -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
@@ -330,18 +330,9 @@ def apart_list(f, x=None, dummies=None, **options):
             "multivariate partial fraction decomposition")
 
     common, P, Q = P.cancel(Q)
-    if common.is_Rational:
-        Q *= common.q
-        if common < 0:
-            P *= -common.p
-            common = S.NegativeOne
-        else:
-            P *= common.p
-            common =  S.One
 
     poly, P = P.div(Q, auto=True)
     P, Q = P.rat_clear_denoms(Q)
-
     polypart = poly
 
     if dummies is None:
@@ -440,11 +431,11 @@ def assemble_partfrac_list(partial_list):
     >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
     >>> pfd = apart_list(f)
     >>> pfd
-    (1,
+    (36,
     Poly(0, x, domain='ZZ'),
-    [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
-    (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
-    (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
+    [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 1/9), Lambda(_a, -_a + x), 1),
+    (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -_a/12 - 1/6), Lambda(_a, -_a + x), 2),
+    (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -1/9), Lambda(_a, -_a + x), 1)])
 
     >>> assemble_partfrac_list(pfd)
     -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
@@ -453,10 +444,10 @@ def assemble_partfrac_list(partial_list):
 
     >>> pfd = apart_list(2/(x**2-2))
     >>> pfd
-    (1,
+    (2,
     Poly(0, x, domain='ZZ'),
     [(Poly(_w**2 - 2, _w, domain='ZZ'),
-    Lambda(_a, _a/2),
+    Lambda(_a, _a/4),
     Lambda(_a, -_a + x),
     1)])
 

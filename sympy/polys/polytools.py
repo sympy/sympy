@@ -4032,7 +4032,7 @@ class Poly(Basic):
         >>> from sympy.abc import x
 
         >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x))
-        (1, Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
+        (2, Poly(x + 1, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
 
         >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x), include=True)
         (Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
