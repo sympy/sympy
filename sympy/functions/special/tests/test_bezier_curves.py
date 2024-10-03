@@ -1,8 +1,7 @@
-from sympy.core import S, sympify
 from sympy.core.symbol import (Dummy, symbols)
-from sympy import binomial
 from sympy.geometry import Point
 from sympy.functions.special import bezier_curves
+from sympy.functions.combinatorial.factorials import binomial
 from sympy import Piecewise
 
 def test_bernstein_basis_10():
