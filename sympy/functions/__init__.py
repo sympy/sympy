@@ -37,6 +37,7 @@ from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set, interpolating_spline
+from sympy.functions.special.bezier_curves import bernstein_basis_polynomial, bezier_curve_point, bernstein_coeffecients, bezier_subdivision_half
 from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
         hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime, marcumq)
 from sympy.functions.special.hyper import hyper, meijerg, appellf1
@@ -94,6 +95,8 @@ __all__ = [
     'DiracDelta', 'Heaviside',
 
     'bspline_basis', 'bspline_basis_set', 'interpolating_spline',
+
+    'bernstein_basis_polynomial', 'bezier_curve_point', 'bezier_subdivision_half', 'bernstein_coeffecients',
 
     'besselj', 'bessely', 'besseli', 'besselk', 'hankel1', 'hankel2', 'jn',
     'yn', 'jn_zeros', 'hn1', 'hn2', 'airyai', 'airybi', 'airyaiprime',
