@@ -195,10 +195,10 @@ class Structure2d:
                 # Handle vertical members
                 if simplify(member.x1 - x) == 0:
                     if (member.y1 <= y <= member.y2 or member.y2 <= y <= member.y1):
-                        local_x_start = abs(member.y1 - y)
+                        local_x_start = Abs(member.y1 - y)
                         if x_end is not None and y_end is not None:
-                            local_x_start = abs(member.y1 - y_start)
-                            local_x_end = member.length - abs(member.y2 - y_end)
+                            local_x_start = Abs(member.y1 - y_start)
+                            local_x_end = member.length - Abs(member.y2 - y_end)
                         else:
                             local_x_end = None
                         return f'm_{member.member_id}', local_x_start, local_x_end
@@ -416,8 +416,8 @@ class Structure2d:
             Rv = Symbol(f'R_v-{unwarap_x}')
 
 
-            vertical = self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
-            horizontal = self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=180, order=1)
+            self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
+            self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=180, order=1)
 
             self.beam.bc_deflection.append((unwarap_x, 0))
             # defvection horizontal also 0 but this is not yet needed
@@ -429,7 +429,7 @@ class Structure2d:
         elif type == "roller":
             Rv = Symbol(f'R_v-{unwarap_x}')
 
-            vertical = self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
+            self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
 
             self.beam.bc_deflection.append((unwarap_x, 0))
 
@@ -442,9 +442,9 @@ class Structure2d:
             Rv = Symbol(f'R_v-{unwarap_x}')
             T = Symbol(f'T_{unwarap_x}')
 
-            moment = self.apply_load(start_x=x, start_y=y, value=T, global_angle=0, order=-2)
-            vertical = self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
-            horizontal = self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=180, order=1)
+            self.apply_load(start_x=x, start_y=y, value=T, global_angle=0, order=-2)
+            self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
+            self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=180, order=1)
 
             self.beam.bc_deflection.append((unwarap_x, 0))
             self.beam.bc_slope.append((unwarap_x, 0))
@@ -472,7 +472,7 @@ class Structure2d:
                     sum_horizontal += load.x_component
                 elif load.order >= 0:
                     a = load.x_component
-                    dy = abs(load.end_y - load.start_y)
+                    dy = Abs(load.end_y - load.start_y)
                     sum_horizontal += a * dy
                     # print(load.x_component)
         horizontal_reactions = {args[-1]:sum_horizontal}
