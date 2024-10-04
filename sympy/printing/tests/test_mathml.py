@@ -1303,16 +1303,16 @@ def test_print_polylog():
 def test_print_set_frozenset():
     f = frozenset({1, 5, 3})
     assert mpp.doprint(f) == \
-        '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mn>5</mn></mfenced>'
+        '<mrow><mo>{</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>5</mn><mo>}</mo></mrow>'
     s = set({1, 2, 3})
     assert mpp.doprint(s) == \
-        '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mn>3</mn></mfenced>'
+        '<mrow><mo>{</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>}</mo></mrow>'
 
 
 def test_print_FiniteSet():
     f1 = FiniteSet(x, 1, 3)
     assert mpp.doprint(f1) == \
-        '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced>'
+        '<mrow><mo>{</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>,</mo><mi>x</mi><mo>}</mo></mrow>'
 
 
 def test_print_LambertW():
@@ -1357,21 +1357,21 @@ def test_print_SetOp():
     prntr = lambda x: mathml(x, printer='presentation')
 
     assert prntr(Union(f1, f2, evaluate=False)) == \
-    '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
-    '</mfenced><mo>&#x222A;</mo><mfenced close="}" open="{"><mn>2</mn>'\
-    '<mn>4</mn><mi>y</mi></mfenced></mrow>'
+    '<mrow><mrow><mo>{</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>,</mo><mi>x</mi>'\
+    '<mo>}</mo></mrow><mo>&#x222A;</mo><mrow><mo>{</mo><mn>2</mn><mo>,</mo>'\
+    '<mn>4</mn><mo>,</mo><mi>y</mi><mo>}</mo></mrow></mrow>'
     assert prntr(Intersection(f1, f2, evaluate=False)) == \
-    '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
-    '</mfenced><mo>&#x2229;</mo><mfenced close="}" open="{"><mn>2</mn>'\
-    '<mn>4</mn><mi>y</mi></mfenced></mrow>'
+    '<mrow><mrow><mo>{</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>,</mo><mi>x</mi>'\
+    '<mo>}</mo></mrow><mo>&#x2229;</mo><mrow><mo>{</mo><mn>2</mn>'\
+    '<mo>,</mo><mn>4</mn><mo>,</mo><mi>y</mi><mo>}</mo></mrow></mrow>'
     assert prntr(Complement(f1, f2, evaluate=False)) == \
-    '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
-    '</mfenced><mo>&#x2216;</mo><mfenced close="}" open="{"><mn>2</mn>'\
-    '<mn>4</mn><mi>y</mi></mfenced></mrow>'
+    '<mrow><mrow><mo>{</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>,</mo><mi>x</mi>'\
+    '<mo>}</mo></mrow><mo>&#x2216;</mo><mrow><mo>{</mo><mn>2</mn>'\
+    '<mo>,</mo><mn>4</mn><mo>,</mo><mi>y</mi><mo>}</mo></mrow></mrow>'
     assert prntr(SymmetricDifference(f1, f2, evaluate=False)) == \
-    '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
-    '</mfenced><mo>&#x2206;</mo><mfenced close="}" open="{"><mn>2</mn>'\
-    '<mn>4</mn><mi>y</mi></mfenced></mrow>'
+    '<mrow><mrow><mo>{</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>,</mo><mi>x</mi>'\
+    '<mo>}</mo></mrow><mo>&#x2206;</mo><mrow><mo>{</mo><mn>2</mn>'\
+    '<mo>,</mo><mn>4</mn><mo>,</mo><mi>y</mi><mo>}</mo></mrow></mrow>'
 
     A = FiniteSet(a)
     C = FiniteSet(c)
@@ -1385,30 +1385,30 @@ def test_print_SetOp():
     P1 = ProductSet(C, D)
 
     assert prntr(Union(A, I1, evaluate=False)) == \
-        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
-        '<mo>&#x222A;</mo><mrow><mo>(</mo><mrow><mfenced close="}" open="{">' \
-        '<mi>c</mi></mfenced><mo>&#x2229;</mo><mfenced close="}" open="{">' \
-        '<mi>d</mi></mfenced></mrow><mo>)</mo></mrow></mrow>'
+        '<mrow><mrow><mo>{</mo><mi>a</mi><mo>}</mo></mrow>' \
+        '<mo>&#x222A;</mo><mrow><mo>(</mo><mrow><mrow><mo>{</mo>' \
+        '<mi>c</mi><mo>}</mo></mrow><mo>&#x2229;</mo><mrow><mo>{</mo>' \
+        '<mi>d</mi><mo>}</mo></mrow></mrow><mo>)</mo></mrow></mrow>'
     assert prntr(Intersection(A, C1, evaluate=False)) == \
-        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
-        '<mo>&#x2229;</mo><mrow><mo>(</mo><mrow><mfenced close="}" open="{">' \
-        '<mi>c</mi></mfenced><mo>&#x2216;</mo><mfenced close="}" open="{">' \
-        '<mi>d</mi></mfenced></mrow><mo>)</mo></mrow></mrow>'
+        '<mrow><mrow><mo>{</mo><mi>a</mi><mo>}</mo></mrow>' \
+        '<mo>&#x2229;</mo><mrow><mo>(</mo><mrow><mrow><mo>{</mo>' \
+        '<mi>c</mi><mo>}</mo></mrow><mo>&#x2216;</mo><mrow><mo>{</mo>' \
+        '<mi>d</mi><mo>}</mo></mrow></mrow><mo>)</mo></mrow></mrow>'
     assert prntr(Complement(A, D1, evaluate=False)) == \
-        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
-        '<mo>&#x2216;</mo><mrow><mo>(</mo><mrow><mfenced close="}" open="{">' \
-        '<mi>c</mi></mfenced><mo>&#x2206;</mo><mfenced close="}" open="{">' \
-        '<mi>d</mi></mfenced></mrow><mo>)</mo></mrow></mrow>'
+        '<mrow><mrow><mo>{</mo><mi>a</mi><mo>}</mo></mrow>' \
+        '<mo>&#x2216;</mo><mrow><mo>(</mo><mrow><mrow><mo>{</mo>' \
+        '<mi>c</mi><mo>}</mo></mrow><mo>&#x2206;</mo><mrow><mo>{</mo>' \
+        '<mi>d</mi><mo>}</mo></mrow></mrow><mo>)</mo></mrow></mrow>'
     assert prntr(SymmetricDifference(A, P1, evaluate=False)) == \
-        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
-        '<mo>&#x2206;</mo><mrow><mo>(</mo><mrow><mfenced close="}" open="{">' \
-        '<mi>c</mi></mfenced><mo>&#x00d7;</mo><mfenced close="}" open="{">' \
-        '<mi>d</mi></mfenced></mrow><mo>)</mo></mrow></mrow>'
+        '<mrow><mrow><mo>{</mo><mi>a</mi><mo>}</mo></mrow>' \
+        '<mo>&#x2206;</mo><mrow><mo>(</mo><mrow><mrow><mo>{</mo>' \
+        '<mi>c</mi><mo>}</mo></mrow><mo>&#x00d7;</mo><mrow><mo>{</mo>' \
+        '<mi>d</mi><mo>}</mo></mrow></mrow><mo>)</mo></mrow></mrow>'
     assert prntr(ProductSet(A, U1)) == \
-        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
-        '<mo>&#x00d7;</mo><mrow><mo>(</mo><mrow><mfenced close="}" open="{">' \
-        '<mi>c</mi></mfenced><mo>&#x222A;</mo><mfenced close="}" open="{">' \
-        '<mi>d</mi></mfenced></mrow><mo>)</mo></mrow></mrow>'
+        '<mrow><mrow><mo>{</mo><mi>a</mi><mo>}</mo></mrow>' \
+        '<mo>&#x00d7;</mo><mrow><mo>(</mo><mrow><mrow><mo>{</mo>' \
+        '<mi>c</mi><mo>}</mo></mrow><mo>&#x222A;</mo><mrow><mo>{</mo>' \
+        '<mi>d</mi><mo>}</mo></mrow></mrow><mo>)</mo></mrow></mrow>'
 
 
 def test_print_logic():

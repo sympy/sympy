@@ -631,6 +631,16 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mo.appendChild(self.dom.createTextNode(')'))
         return mo
 
+    def _l_brace(self):
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('{'))
+        return mo
+
+    def _r_brace(self):
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('}'))
+        return mo
+
     def _comma(self):
         mo = self.dom.createElement('mo')
         mo.appendChild(self.dom.createTextNode(','))
@@ -1349,11 +1359,13 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
-        brac = self.dom.createElement('mfenced')
-        brac.setAttribute('close', '}')
-        brac.setAttribute('open', '{')
-        for item in items:
+        brac = self.dom.createElement('mrow')
+        brac.appendChild(self._l_brace())
+        for i, item in enumerate(items):
+            if i:
+                brac.appendChild(self._comma())
             brac.appendChild(self._print(item))
+        brac.appendChild(self._r_brace())
         return brac
 
     _print_frozenset = _print_set
@@ -1467,12 +1479,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_Range(self, s):
         dots = "\u2026"
-        left = self.dom.createElement('mo')
-        left.appendChild(self.dom.createTextNode('{'))
-        right = self.dom.createElement('mo')
-        right.appendChild(self.dom.createTextNode('}'))
-        brac = self.dom.createElement('mrow')
-
         if s.start.is_infinite and s.stop.is_infinite:
             if s.step.is_positive:
                 printset = dots, -1, 0, 1, dots
@@ -1488,8 +1494,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             printset = next(it), next(it), dots, s[-1]
         else:
             printset = tuple(s)
-
-        brac.appendChild(left)
+        brac = self.dom.createElement('mrow')
+        brac.appendChild(self._l_brace())
         for i, el in enumerate(printset):
             if i:
                 brac.appendChild(self._comma())
@@ -1499,7 +1505,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 brac.appendChild(mi)
             else:
                 brac.appendChild(self._print(el))
-        brac.appendChild(right)
+        brac.appendChild(self._r_brace())
         return brac
 
     def _hprint_variadic_function(self, expr):
