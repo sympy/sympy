@@ -1463,9 +1463,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_Range(self, s):
         dots = "\u2026"
-        brac = self.dom.createElement('mfenced')
-        brac.setAttribute('close', '}')
-        brac.setAttribute('open', '{')
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('{'))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode('}'))
+        brac = self.dom.createElement('mrow')
 
         if s.start.is_infinite and s.stop.is_infinite:
             if s.step.is_positive:
@@ -1483,14 +1485,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         else:
             printset = tuple(s)
 
-        for el in printset:
+        brac.appendChild(left)
+        for i, el in enumerate(printset):
+            if i:
+                sep = self.dom.createElement('mo')
+                sep.appendChild(self.dom.createTextNode(','))
+                brac.appendChild(sep)
             if el == dots:
                 mi = self.dom.createElement('mi')
                 mi.appendChild(self.dom.createTextNode(dots))
                 brac.appendChild(mi)
             else:
                 brac.appendChild(self._print(el))
-
+        brac.appendChild(right)
         return brac
 
     def _hprint_variadic_function(self, expr):
