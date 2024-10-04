@@ -624,9 +624,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
         if (prec_val < level) or ((not strict) and prec_val <= level):
-            brac = self.dom.createElement('mfenced')
-            brac.appendChild(self._print(item))
-            return brac
+            left = self.dom.createElement('mo')
+            left.appendChild(self.dom.createTextNode('('))
+            right = self.dom.createElement('mo')
+            right.appendChild(self.dom.createTextNode(')'))
+            mrow = self.dom.createElement('mrow')
+            mrow.appendChild(left)
+            mrow.appendChild(self._print(item))
+            mrow.appendChild(right)
+            return mrow
         else:
             return self._print(item)
 
