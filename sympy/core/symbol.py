@@ -329,11 +329,10 @@ class Symbol(AtomicExpr, Boolean):
         cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
-    @staticmethod
-    def __xnew__(cls, name, **assumptions):  # never cached (e.g. dummy)
-        if not isinstance(name, str):
-            raise TypeError("name should be a string, not %s" % repr(type(name)))
 
+    @staticmethod
+    @cacheit
+    def _canonical_assumptions(**assumptions):
         # This is retained purely so that srepr can include commutative=True if
         # that was explicitly specified but not if it was not. Ideally srepr
         # should not distinguish these cases because the symbols otherwise
@@ -349,8 +348,18 @@ class Symbol(AtomicExpr, Boolean):
         assumptions_kb = StdFactKB(assumptions)
         assumptions0 = dict(assumptions_kb)
 
+        return assumptions_kb, assumptions_orig, assumptions0
+
+    @staticmethod
+    def __xnew__(cls, name, **assumptions):  # never cached (e.g. dummy)
+        if not isinstance(name, str):
+            raise TypeError("name should be a string, not %s" % repr(type(name)))
+
+
         obj = Expr.__new__(cls)
         obj.name = name
+
+        assumptions_kb, assumptions_orig, assumptions0 = Symbol._canonical_assumptions(**assumptions)
 
         obj._assumptions = assumptions_kb
         obj._assumptions_orig = assumptions_orig
