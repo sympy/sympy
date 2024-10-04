@@ -1009,12 +1009,18 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return self._print_operator_after('!!', expr.args[0])
 
     def _print_binomial(self, expr):
-        brac = self.dom.createElement('mfenced')
         frac = self.dom.createElement('mfrac')
         frac.setAttribute('linethickness', '0')
         frac.appendChild(self._print(expr.args[0]))
         frac.appendChild(self._print(expr.args[1]))
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('('))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode(')'))
+        brac = self.dom.createElement('mrow')
+        brac.appendChild(left)
         brac.appendChild(frac)
+        brac.appendChild(right)
         return brac
 
     def _print_Pow(self, e):
