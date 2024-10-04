@@ -712,14 +712,22 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 y.appendChild(self._print(m[i, j]))
                 x.appendChild(y)
             table.appendChild(x)
-        if self._settings["mat_delim"] == '':
+        mat_delim = self._settings["mat_delim"]
+        if mat_delim == '':
             return table
-        brac = self.dom.createElement('mfenced')
-        if self._settings["mat_delim"] == "[":
-            brac.setAttribute('close', ']')
-            brac.setAttribute('open', '[')
-        brac.appendChild(table)
-        return brac
+        left = self.dom.createElement('mo')
+        right = self.dom.createElement('mo')
+        if mat_delim == "[":
+            left.appendChild(self.dom.createTextNode("["))
+            right.appendChild(self.dom.createTextNode("]"))
+        else:
+            left.appendChild(self.dom.createTextNode("("))
+            right.appendChild(self.dom.createTextNode(")"))
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(left)
+        mrow.appendChild(table)
+        mrow.appendChild(right)
+        return mrow
 
     def _get_printed_Rational(self, e, folded=None):
         if e.p < 0:
