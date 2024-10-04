@@ -1173,16 +1173,16 @@ def test_print_intervals():
 
 def test_print_tuples():
     assert mpp.doprint(Tuple(0,)) == \
-        '<mrow><mfenced><mn>0</mn></mfenced></mrow>'
+        '<mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow>'
     assert mpp.doprint(Tuple(0, a)) == \
-        '<mrow><mfenced><mn>0</mn><mi>a</mi></mfenced></mrow>'
+        '<mrow><mo>(</mo><mn>0</mn><mo>,</mo><mi>a</mi><mo>)</mo></mrow>'
     assert mpp.doprint(Tuple(0, a, a)) == \
-        '<mrow><mfenced><mn>0</mn><mi>a</mi><mi>a</mi></mfenced></mrow>'
+        '<mrow><mo>(</mo><mn>0</mn><mo>,</mo><mi>a</mi><mo>,</mo><mi>a</mi><mo>)</mo></mrow>'
     assert mpp.doprint(Tuple(0, 1, 2, 3, 4)) == \
-        '<mrow><mfenced><mn>0</mn><mn>1</mn><mn>2</mn><mn>3</mn><mn>4</mn></mfenced></mrow>'
+        '<mrow><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>4</mn><mo>)</mo></mrow>'
     assert mpp.doprint(Tuple(0, 1, Tuple(2, 3, 4))) == \
-        '<mrow><mfenced><mn>0</mn><mn>1</mn><mrow><mfenced><mn>2</mn><mn>3'\
-        '</mn><mn>4</mn></mfenced></mrow></mfenced></mrow>'
+        '<mrow><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mrow><mo>(</mo><mn>2</mn><mo>,</mo><mn>3'\
+        '</mn><mo>,</mo><mn>4</mn><mo>)</mo></mrow><mo>)</mo></mrow>'
 
 
 def test_print_re_im():
@@ -1509,12 +1509,10 @@ def test_print_ceiling():
 def test_print_Lambda():
     expr = Lambda(x, x+1)
     assert mathml(expr, printer='presentation') == \
-        '<mfenced><mrow><mi>x</mi><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo>'\
-        '<mn>1</mn></mrow></mrow></mfenced>'
+        '<mrow><mo>(</mo><mi>x</mi><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow><mo>)</mo></mrow>'
     expr = Lambda((x, y), x + y)
     assert mathml(expr, printer='presentation') == \
-        '<mfenced><mrow><mrow><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow>'\
-        '<mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mrow></mfenced>'
+        '<mrow><mo>(</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow><mo>)</mo></mrow>'
 
 
 def test_print_conjugate():
@@ -1718,7 +1716,7 @@ def test_print_Indexed():
     assert mathml(IndexedBase(a/b), printer='presentation') == \
         '<mrow><mfrac><mi>a</mi><mi>b</mi></mfrac></mrow>'
     assert mathml(IndexedBase((a, b)), printer='presentation') == \
-        '<mrow><mfenced><mi>a</mi><mi>b</mi></mfenced></mrow>'
+        '<mrow><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></mrow>'
 
 def test_print_MatrixElement():
     i, j = symbols('i j')

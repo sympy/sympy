@@ -1234,11 +1234,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_Tuple(self, e):
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('('))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode(')'))
         mrow = self.dom.createElement('mrow')
-        x = self.dom.createElement('mfenced')
-        for arg in e.args:
-            x.appendChild(self._print(arg))
-        mrow.appendChild(x)
+        mrow.appendChild(left)
+        for i, arg in enumerate(e.args):
+            if i:
+                sep = self.dom.createElement('mo')
+                sep.appendChild(self.dom.createTextNode(','))
+                mrow.appendChild(sep)
+            mrow.appendChild(self._print(arg))
+        mrow.appendChild(right)
         return mrow
 
     def _print_Interval(self, i):
@@ -1908,20 +1916,24 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_Lambda(self, e):
-        x = self.dom.createElement('mfenced')
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('('))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode(')'))
         mrow = self.dom.createElement('mrow')
         symbols = e.args[0]
         if len(symbols) == 1:
             symbols = self._print(symbols[0])
         else:
             symbols = self._print(symbols)
+        mrow.appendChild(left)
         mrow.appendChild(symbols)
         mo = self.dom.createElement('mo')
         mo.appendChild(self.dom.createTextNode('&#x21A6;'))
         mrow.appendChild(mo)
         mrow.appendChild(self._print(e.args[1]))
-        x.appendChild(mrow)
-        return x
+        mrow.appendChild(right)
+        return mrow
 
     def _print_tuple(self, e):
         x = self.dom.createElement('mfenced')
