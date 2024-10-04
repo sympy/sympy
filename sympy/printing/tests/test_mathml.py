@@ -1498,13 +1498,13 @@ def test_print_factorials():
 def test_print_floor():
     expr = floor(x)
     assert mathml(expr, printer='presentation') == \
-        '<mrow><mfenced close="&#8971;" open="&#8970;"><mi>x</mi></mfenced></mrow>'
+        '<mrow><mo>&#8970;</mo><mi>x</mi><mo>&#8971;</mo></mrow>'
 
 
 def test_print_ceiling():
     expr = ceiling(x)
     assert mathml(expr, printer='presentation') == \
-        '<mrow><mfenced close="&#8969;" open="&#8968;"><mi>x</mi></mfenced></mrow>'
+        '<mrow><mo>&#8968;</mo><mi>x</mi><mo>&#8969;</mo></mrow>'
 
 
 def test_print_Lambda():
