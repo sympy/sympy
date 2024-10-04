@@ -1083,11 +1083,18 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_AccumulationBounds(self, i):
-        brac = self.dom.createElement('mfenced')
-        brac.setAttribute('close', '\u27e9')
-        brac.setAttribute('open', '\u27e8')
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('\u27e8'))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode('\u27e9'))
+        sep = self.dom.createElement('mo')
+        sep.appendChild(self.dom.createTextNode(','))
+        brac = self.dom.createElement('mrow')
+        brac.appendChild(left)
         brac.appendChild(self._print(i.min))
+        brac.appendChild(sep)
         brac.appendChild(self._print(i.max))
+        brac.appendChild(right)
         return brac
 
     def _print_Derivative(self, e):
