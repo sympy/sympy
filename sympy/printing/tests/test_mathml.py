@@ -807,40 +807,40 @@ def test_presentation_mathml_matrices():
     A = Matrix([1, 2, 3])
     B = Matrix([[0, 5, 4], [2, 3, 1], [9, 7, 9]])
     mll_1 = mpp._print(A)
-    assert mll_1.childNodes[0].nodeName == 'mtable'
-    assert mll_1.childNodes[0].childNodes[0].nodeName == 'mtr'
-    assert len(mll_1.childNodes[0].childNodes) == 3
-    assert mll_1.childNodes[0].childNodes[0].childNodes[0].nodeName == 'mtd'
-    assert len(mll_1.childNodes[0].childNodes[0].childNodes) == 1
-    assert mll_1.childNodes[0].childNodes[0].childNodes[0
+    assert mll_1.childNodes[1].nodeName == 'mtable'
+    assert mll_1.childNodes[1].childNodes[0].nodeName == 'mtr'
+    assert len(mll_1.childNodes[1].childNodes) == 3
+    assert mll_1.childNodes[1].childNodes[0].childNodes[0].nodeName == 'mtd'
+    assert len(mll_1.childNodes[1].childNodes[0].childNodes) == 1
+    assert mll_1.childNodes[1].childNodes[0].childNodes[0
         ].childNodes[0].childNodes[0].nodeValue == '1'
-    assert mll_1.childNodes[0].childNodes[1].childNodes[0
+    assert mll_1.childNodes[1].childNodes[1].childNodes[0
         ].childNodes[0].childNodes[0].nodeValue == '2'
-    assert mll_1.childNodes[0].childNodes[2].childNodes[0
+    assert mll_1.childNodes[1].childNodes[2].childNodes[0
         ].childNodes[0].childNodes[0].nodeValue == '3'
     mll_2 = mpp._print(B)
-    assert mll_2.childNodes[0].nodeName == 'mtable'
-    assert mll_2.childNodes[0].childNodes[0].nodeName == 'mtr'
-    assert len(mll_2.childNodes[0].childNodes) == 3
-    assert mll_2.childNodes[0].childNodes[0].childNodes[0].nodeName == 'mtd'
-    assert len(mll_2.childNodes[0].childNodes[0].childNodes) == 3
-    assert mll_2.childNodes[0].childNodes[0].childNodes[0
+    assert mll_2.childNodes[1].nodeName == 'mtable'
+    assert mll_2.childNodes[1].childNodes[0].nodeName == 'mtr'
+    assert len(mll_2.childNodes[1].childNodes) == 3
+    assert mll_2.childNodes[1].childNodes[0].childNodes[0].nodeName == 'mtd'
+    assert len(mll_2.childNodes[1].childNodes[0].childNodes) == 3
+    assert mll_2.childNodes[1].childNodes[0].childNodes[0
         ].childNodes[0].childNodes[0].nodeValue == '0'
-    assert mll_2.childNodes[0].childNodes[0].childNodes[1
+    assert mll_2.childNodes[1].childNodes[0].childNodes[1
         ].childNodes[0].childNodes[0].nodeValue == '5'
-    assert mll_2.childNodes[0].childNodes[0].childNodes[2
+    assert mll_2.childNodes[1].childNodes[0].childNodes[2
         ].childNodes[0].childNodes[0].nodeValue == '4'
-    assert mll_2.childNodes[0].childNodes[1].childNodes[0
+    assert mll_2.childNodes[1].childNodes[1].childNodes[0
         ].childNodes[0].childNodes[0].nodeValue == '2'
-    assert mll_2.childNodes[0].childNodes[1].childNodes[1
+    assert mll_2.childNodes[1].childNodes[1].childNodes[1
         ].childNodes[0].childNodes[0].nodeValue == '3'
-    assert mll_2.childNodes[0].childNodes[1].childNodes[2
+    assert mll_2.childNodes[1].childNodes[1].childNodes[2
         ].childNodes[0].childNodes[0].nodeValue == '1'
-    assert mll_2.childNodes[0].childNodes[2].childNodes[0
+    assert mll_2.childNodes[1].childNodes[2].childNodes[0
         ].childNodes[0].childNodes[0].nodeValue == '9'
-    assert mll_2.childNodes[0].childNodes[2].childNodes[1
+    assert mll_2.childNodes[1].childNodes[2].childNodes[1
         ].childNodes[0].childNodes[0].nodeValue == '7'
-    assert mll_2.childNodes[0].childNodes[2].childNodes[2
+    assert mll_2.childNodes[1].childNodes[2].childNodes[2
         ].childNodes[0].childNodes[0].nodeValue == '9'
 
 
@@ -1206,7 +1206,7 @@ def test_print_Abs():
 
 def test_print_Determinant():
     assert mpp.doprint(Determinant(Matrix([[1, 2], [3, 4]]))) == \
-        '<mrow><mfenced close="|" open="|"><mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced></mfenced></mrow>'
+        '<mrow><mfenced close="|" open="|"><mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable><mo>]</mo></mrow></mfenced></mrow>'
 
 
 def test_presentation_settings():
@@ -1254,12 +1254,12 @@ def test_print_basic():
 def test_mat_delim_print():
     expr = Matrix([[1, 2], [3, 4]])
     assert mathml(expr, printer='presentation', mat_delim='[') == \
-        '<mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd>'\
+        '<mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd>'\
         '<mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn>'\
-        '</mtd></mtr></mtable></mfenced>'
+        '</mtd></mtr></mtable><mo>]</mo></mrow>'
     assert mathml(expr, printer='presentation', mat_delim='(') == \
-        '<mfenced><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd>'\
-        '</mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
+        '<mrow><mo>(</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd>'\
+        '</mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable><mo>)</mo></mrow>'
     assert mathml(expr, printer='presentation', mat_delim='') == \
         '<mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr>'\
         '<mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable>'
