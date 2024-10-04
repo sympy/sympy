@@ -1564,22 +1564,21 @@ def test_mathml_builtins():
 
 def test_mathml_Range():
     assert mpp.doprint(Range(1, 51)) == \
-        '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mi>&#8230;</mi><mn>50</mn></mfenced>'
+        '<mrow><mo>{</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mi>&#8230;</mi><mo>,</mo><mn>50</mn><mo>}</mo></mrow>'
     assert mpp.doprint(Range(1, 4)) == \
-        '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mn>3</mn></mfenced>'
+        '<mrow><mo>{</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>}</mo></mrow>'
     assert mpp.doprint(Range(0, 3, 1)) == \
-        '<mfenced close="}" open="{"><mn>0</mn><mn>1</mn><mn>2</mn></mfenced>'
+        '<mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>}</mo></mrow>'
     assert mpp.doprint(Range(0, 30, 1)) == \
-        '<mfenced close="}" open="{"><mn>0</mn><mn>1</mn><mi>&#8230;</mi><mn>29</mn></mfenced>'
+        '<mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mi>&#8230;</mi><mo>,</mo><mn>29</mn><mo>}</mo></mrow>'
     assert mpp.doprint(Range(30, 1, -1)) == \
-        '<mfenced close="}" open="{"><mn>30</mn><mn>29</mn><mi>&#8230;</mi>'\
-        '<mn>2</mn></mfenced>'
+        '<mrow><mo>{</mo><mn>30</mn><mo>,</mo><mn>29</mn><mo>,</mo><mi>&#8230;</mi><mo>,</mo><mn>2</mn><mo>}</mo></mrow>'
     assert mpp.doprint(Range(0, oo, 2)) == \
-        '<mfenced close="}" open="{"><mn>0</mn><mn>2</mn><mi>&#8230;</mi></mfenced>'
+        '<mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo>,</mo><mi>&#8230;</mi><mo>}</mo></mrow>'
     assert mpp.doprint(Range(oo, -2, -2)) == \
-        '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>2</mn><mn>0</mn></mfenced>'
+        '<mrow><mo>{</mo><mi>&#8230;</mi><mo>,</mo><mn>2</mn><mo>,</mo><mn>0</mn><mo>}</mo></mrow>'
     assert mpp.doprint(Range(-2, -oo, -1)) == \
-        '<mfenced close="}" open="{"><mn>-2</mn><mn>-3</mn><mi>&#8230;</mi></mfenced>'
+        '<mrow><mo>{</mo><mn>-2</mn><mo>,</mo><mn>-3</mn><mo>,</mo><mi>&#8230;</mi><mo>}</mo></mrow>'
 
 
 def test_print_exp():
@@ -2026,9 +2025,9 @@ def test_mathml_piecewise():
 
 def test_issue_17857():
     assert mathml(Range(-oo, oo), printer='presentation') == \
-        '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>-1</mn><mn>0</mn><mn>1</mn><mi>&#8230;</mi></mfenced>'
+        '<mrow><mo>{</mo><mi>&#8230;</mi><mo>,</mo><mn>-1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mi>&#8230;</mi><mo>}</mo></mrow>'
     assert mathml(Range(oo, -oo, -1), printer='presentation') == \
-        '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>1</mn><mn>0</mn><mn>-1</mn><mi>&#8230;</mi></mfenced>'
+        '<mrow><mo>{</mo><mi>&#8230;</mi><mo>,</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>-1</mn><mo>,</mo><mi>&#8230;</mi><mo>}</mo></mrow>'
 
 
 def test_float_roundtrip():
