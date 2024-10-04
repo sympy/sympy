@@ -1373,8 +1373,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_LogOp(self, args, symbol):
         mrow = self.dom.createElement('mrow')
         if args[0].is_Boolean and not args[0].is_Not:
-            brac = self.dom.createElement('mfenced')
+            brac = self.dom.createElement('mrow')
+            brac.appendChild(self._l_paren())
             brac.appendChild(self._print(args[0]))
+            brac.appendChild(self._r_paren())
             mrow.appendChild(brac)
         else:
             mrow.appendChild(self._print(args[0]))
@@ -1382,8 +1384,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             x = self.dom.createElement('mo')
             x.appendChild(self.dom.createTextNode(symbol))
             if arg.is_Boolean and not arg.is_Not:
-                y = self.dom.createElement('mfenced')
+                y = self.dom.createElement('mrow')
+                y.appendChild(self._l_paren())
                 y.appendChild(self._print(arg))
+                y.appendChild(self._r_paren())
             else:
                 y = self._print(arg)
             mrow.appendChild(x)
@@ -1457,8 +1461,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mo.appendChild(self.dom.createTextNode('&#xAC;'))
         mrow.appendChild(mo)
         if (e.args[0].is_Boolean):
-            x = self.dom.createElement('mfenced')
+            x = self.dom.createElement('mrow')
+            x.appendChild(self._l_paren())
             x.appendChild(self._print(e.args[0]))
+            x.appendChild(self._r_paren())
         else:
             x = self._print(e.args[0])
         mrow.appendChild(x)
