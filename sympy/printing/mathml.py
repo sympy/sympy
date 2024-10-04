@@ -1814,8 +1814,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         base, exp = expr.base, expr.exp
         sup = self.dom.createElement('msup')
         if not isinstance(base, MatrixSymbol):
-            brac = self.dom.createElement('mfenced')
+            left = self.dom.createElement('mo')
+            left.appendChild(self.dom.createTextNode('('))
+            right = self.dom.createElement('mo')
+            right.appendChild(self.dom.createTextNode(')'))
+            brac = self.dom.createElement('mrow')
+            brac.appendChild(left)
             brac.appendChild(self._print(base))
+            brac.appendChild(right)
             sup.appendChild(brac)
         else:
             sup.appendChild(self._print(base))
