@@ -334,6 +334,9 @@ class Symbol(AtomicExpr, Boolean):
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
 
+        # XXX: If making any changes here make sure that __setstate__ below is
+        # updated for unpickling symbols pickled with SymPy 1.8 or older.
+
         # This is retained purely so that srepr can include commutative=True if
         # that was explicitly specified but not if it was not. Ideally srepr
         # should not distinguish these cases because the symbols otherwise
@@ -386,11 +389,16 @@ class Symbol(AtomicExpr, Boolean):
     # NOTE: __setstate__ is not needed for pickles created by __getnewargs_ex__
     # but was used before Symbol was changed to use __getnewargs_ex__ in v1.9.
     # Pickles created in previous SymPy versions will still need __setstate__
-    # so that they can be unpickled in SymPy > v1.9.
+    # so that they can be unpickled in SymPy >= v1.9.
 
     def __setstate__(self, state):
-        for name, value in state.items():
-            setattr(self, name, value)
+        for name, assumptions in state.items():
+            if name != '_assumptions':
+                raise TypeError(f"No attribute: {name!r}")
+            assumptions0 = {k: v for k, v in assumptions.items() if v is not None}
+            self._assumptions = assumptions
+            self._assumptions0 = assumptions0
+            self._assumptions_orig = assumptions0
 
     def _hashable_content(self):
         # Note: user-specified assumptions not hashed, just derived ones
