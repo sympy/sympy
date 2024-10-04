@@ -1249,12 +1249,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_Abs(self, expr, exp=None):
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('|'))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode('|'))
         mrow = self.dom.createElement('mrow')
-        x = self.dom.createElement('mfenced')
-        x.setAttribute('close', '|')
-        x.setAttribute('open', '|')
-        x.appendChild(self._print(expr.args[0]))
-        mrow.appendChild(x)
+        mrow.appendChild(left)
+        mrow.appendChild(self._print(expr.args[0]))
+        mrow.appendChild(right)
         return mrow
 
     _print_Determinant = _print_Abs
