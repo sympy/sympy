@@ -1724,8 +1724,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mat = expr.arg
         sup = self.dom.createElement('msup')
         if not isinstance(mat, MatrixSymbol):
-            brac = self.dom.createElement('mfenced')
+            left = self.dom.createElement('mo')
+            left.appendChild(self.dom.createTextNode('('))
+            right = self.dom.createElement('mo')
+            right.appendChild(self.dom.createTextNode(')'))
+            brac = self.dom.createElement('mrow')
+            brac.appendChild(left)
             brac.appendChild(self._print(mat))
+            brac.appendChild(right)
             sup.appendChild(brac)
         else:
             sup.appendChild(self._print(mat))
@@ -1739,8 +1745,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mat = expr.arg
         sup = self.dom.createElement('msup')
         if not isinstance(mat, MatrixSymbol):
-            brac = self.dom.createElement('mfenced')
+            left = self.dom.createElement('mo')
+            left.appendChild(self.dom.createTextNode('('))
+            right = self.dom.createElement('mo')
+            right.appendChild(self.dom.createTextNode(')'))
+            brac = self.dom.createElement('mrow')
+            brac.appendChild(left)
             brac.appendChild(self._print(mat))
+            brac.appendChild(right)
             sup.appendChild(brac)
         else:
             sup.appendChild(self._print(mat))
@@ -1754,8 +1766,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mat = expr.arg
         sup = self.dom.createElement('msup')
         if not isinstance(mat, MatrixSymbol):
-            brac = self.dom.createElement('mfenced')
+            left = self.dom.createElement('mo')
+            left.appendChild(self.dom.createTextNode('('))
+            right = self.dom.createElement('mo')
+            right.appendChild(self.dom.createTextNode(')'))
+            brac = self.dom.createElement('mrow')
+            brac.appendChild(left)
             brac.appendChild(self._print(mat))
+            brac.appendChild(right)
             sup.appendChild(brac)
         else:
             sup.appendChild(self._print(mat))
