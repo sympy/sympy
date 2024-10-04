@@ -1139,15 +1139,25 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_Function(self, e):
-        mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mi')
         if self.mathml_tag(e) == 'log' and self._settings["ln_notation"]:
             x.appendChild(self.dom.createTextNode('ln'))
         else:
             x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-        y = self.dom.createElement('mfenced')
-        for arg in e.args:
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('('))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode(')'))
+        y = self.dom.createElement('mrow')
+        y.appendChild(left)
+        for i, arg in enumerate(e.args):
+            if i:
+                sep = self.dom.createElement('mo')
+                sep.appendChild(self.dom.createTextNode(','))
+                y.appendChild(sep)
             y.appendChild(self._print(arg))
+        y.appendChild(right)
+        mrow = self.dom.createElement('mrow')
         mrow.appendChild(x)
         mrow.appendChild(y)
         return mrow
