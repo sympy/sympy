@@ -1588,15 +1588,13 @@ def test_print_exp():
 
 def test_print_MinMax():
     assert mpp.doprint(Min(x, y)) == \
-        '<mrow><mo>min</mo><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow>'
+        '<mrow><mo>min</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow></mrow>'
     assert mpp.doprint(Min(x, 2, x**3)) == \
-        '<mrow><mo>min</mo><mfenced><mn>2</mn><mi>x</mi><msup><mi>x</mi>'\
-        '<mn>3</mn></msup></mfenced></mrow>'
+        '<mrow><mo>min</mo><mrow><mo>(</mo><mn>2</mn><mo>,</mo><mi>x</mi><mo>,</mo><msup><mi>x</mi><mn>3</mn></msup><mo>)</mo></mrow></mrow>'
     assert mpp.doprint(Max(x, y)) == \
-        '<mrow><mo>max</mo><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow>'
+        '<mrow><mo>max</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow></mrow>'
     assert mpp.doprint(Max(x, 2, x**3)) == \
-        '<mrow><mo>max</mo><mfenced><mn>2</mn><mi>x</mi><msup><mi>x</mi>'\
-        '<mn>3</mn></msup></mfenced></mrow>'
+        '<mrow><mo>max</mo><mrow><mo>(</mo><mn>2</mn><mo>,</mo><mi>x</mi><mo>,</mo><msup><mi>x</mi><mn>3</mn></msup><mo>)</mo></mrow></mrow>'
 
 
 def test_mathml_presentation_numbers():

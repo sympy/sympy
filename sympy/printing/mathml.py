@@ -1508,10 +1508,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mo = self.dom.createElement('mo')
         mo.appendChild(self.dom.createTextNode((str(expr.func)).lower()))
         mrow.appendChild(mo)
-        brac = self.dom.createElement('mfenced')
-        for symbol in args:
-            brac.appendChild(self._print(symbol))
-        mrow.appendChild(brac)
+        mrow.appendChild(self._paren_comma_separated(*args))
         return mrow
 
     _print_Min = _print_Max = _hprint_variadic_function
