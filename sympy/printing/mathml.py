@@ -646,6 +646,26 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mo.appendChild(self.dom.createTextNode(';'))
         return mo
 
+    def _paren_comma_separated(self, *args):
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(self._l_paren())
+        for i, arg in enumerate(args):
+            if i:
+                mrow.appendChild(self._comma())
+            mrow.appendChild(self._print(arg))
+        mrow.appendChild(self._r_paren())
+        return mrow
+
+    def _paren_bar_separated(self, *args):
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(self._l_paren())
+        for i, arg in enumerate(args):
+            if i:
+                mrow.appendChild(self._bar())
+            mrow.appendChild(self._print(arg))
+        mrow.appendChild(self._r_paren())
+        return mrow
+
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
         if (prec_val < level) or ((not strict) and prec_val <= level):
@@ -1165,16 +1185,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             x.appendChild(self.dom.createTextNode('ln'))
         else:
             x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-        y = self.dom.createElement('mrow')
-        y.appendChild(self._l_paren())
-        for i, arg in enumerate(e.args):
-            if i:
-                y.appendChild(self._comma())
-            y.appendChild(self._print(arg))
-        y.appendChild(self._r_paren())
         mrow = self.dom.createElement('mrow')
         mrow.appendChild(x)
-        mrow.appendChild(y)
+        mrow.appendChild(self._paren_comma_separated(*e.args))
         return mrow
 
     def _print_Float(self, expr):
@@ -1237,21 +1250,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mi = self.dom.createElement('mi')
         mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow.appendChild(mi)
-        brac = self.dom.createElement('mfenced')
-        for arg in e.args:
-            brac.appendChild(self._print(arg))
-        mrow.appendChild(brac)
+        mrow.appendChild(self._paren_comma_separated(*e.args))
         return mrow
 
     def _print_Tuple(self, e):
-        mrow = self.dom.createElement('mrow')
-        mrow.appendChild(self._l_paren())
-        for i, arg in enumerate(e.args):
-            if i:
-                mrow.appendChild(self._comma())
-            mrow.appendChild(self._print(arg))
-        mrow.appendChild(self._r_paren())
-        return mrow
+        return self._paren_comma_separated(*e.args)
 
     def _print_Interval(self, i):
         right = self.dom.createElement('mo')
@@ -1935,22 +1938,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(brac)
         return x
 
-    def _elliptic_args(self, *args):
-        mrow = self.dom.createElement('mrow')
-        mrow.appendChild(self._l_paren())
-        for i, arg in enumerate(args):
-            if i:
-                mrow.appendChild(self._bar())
-            mrow.appendChild(self._print(arg))
-        mrow.appendChild(self._r_paren())
-        return mrow
-
     def _print_elliptic_f(self, e):
         x = self.dom.createElement('mrow')
         mi = self.dom.createElement('mi')
         mi.appendChild(self.dom.createTextNode('&#x1d5a5;'))
         x.appendChild(mi)
-        x.appendChild(self._elliptic_args(*e.args))
+        x.appendChild(self._paren_bar_separated(*e.args))
         return x
 
     def _print_elliptic_e(self, e):
@@ -1958,7 +1951,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mi = self.dom.createElement('mi')
         mi.appendChild(self.dom.createTextNode('&#x1d5a4;'))
         x.appendChild(mi)
-        x.appendChild(self._elliptic_args(*e.args))
+        x.appendChild(self._paren_bar_separated(*e.args))
         return x
 
     def _print_elliptic_pi(self, e):
