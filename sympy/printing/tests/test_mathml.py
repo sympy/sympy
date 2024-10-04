@@ -1614,15 +1614,14 @@ def test_mathml_presentation_numbers():
     assert mathml(tribonacci(n), printer='presentation') == \
         '<msub><mi>T</mi><mi>n</mi></msub>'
     assert mathml(bernoulli(n, x), printer='presentation') == \
-        '<mrow><msub><mi>B</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
-    assert mathml(bell(n, x), printer='presentation') == \
-        '<mrow><msub><mi>B</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+        mathml(bell(n, x), printer='presentation') == \
+        '<mrow><msub><mi>B</mi><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
     assert mathml(euler(n, x), printer='presentation') == \
-        '<mrow><msub><mi>E</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msub><mi>E</mi><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
     assert mathml(fibonacci(n, x), printer='presentation') == \
-        '<mrow><msub><mi>F</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msub><mi>F</mi><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
     assert mathml(tribonacci(n, x), printer='presentation') == \
-        '<mrow><msub><mi>T</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msub><mi>T</mi><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 
 def test_mathml_presentation_mathieu():
@@ -1640,7 +1639,7 @@ def test_mathml_presentation_stieltjes():
     assert mathml(stieltjes(n), printer='presentation') == \
          '<msub><mi>&#x03B3;</mi><mi>n</mi></msub>'
     assert mathml(stieltjes(n, x), printer='presentation') == \
-         '<mrow><msub><mi>&#x03B3;</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+         '<mrow><msub><mi>&#x03B3;</mi><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 
 def test_print_matrix_symbol():
