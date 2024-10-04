@@ -1187,14 +1187,13 @@ def test_print_tuples():
 
 def test_print_re_im():
     assert mpp.doprint(re(x)) == \
-        '<mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><mi mathvariant="fraktur">R</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
     assert mpp.doprint(im(x)) == \
-        '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
-    assert mpp.doprint(re(x + 1)) == \
-        '<mrow><mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi>'\
-        '</mfenced></mrow><mo>+</mo><mn>1</mn></mrow>'
-    assert mpp.doprint(im(x + 1)) == \
-        '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><mi mathvariant="fraktur">I</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+    assert mpp.doprint(re(x + 1, evaluate=False)) == \
+        '<mrow><mi mathvariant="fraktur">R</mi><mrow><mo>(</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow><mo>)</mo></mrow></mrow>'
+    assert mpp.doprint(im(x + 1, evaluate=False)) == \
+        '<mrow><mi mathvariant="fraktur">I</mi><mrow><mo>(</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow><mo>)</mo></mrow></mrow>'
 
 
 def test_print_Abs():
