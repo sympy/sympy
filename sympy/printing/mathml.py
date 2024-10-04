@@ -1217,8 +1217,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         m.appendChild(mi)
         m.appendChild(self._print(expr.args[0]))
         mrow.appendChild(m)
-        brac = self.dom.createElement('mfenced')
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('('))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode(')'))
+        brac = self.dom.createElement('mrow')
+        brac.appendChild(left)
         brac.appendChild(self._print(expr.args[1]))
+        brac.appendChild(right)
         mrow.appendChild(brac)
         return mrow
 
