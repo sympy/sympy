@@ -1882,21 +1882,21 @@ def test_print_Vector():
 
 def test_print_elliptic_f():
     assert mathml(elliptic_f(x, y), printer = 'presentation') == \
-        '<mrow><mi>&#x1d5a5;</mi><mfenced separators="|"><mi>x</mi><mi>y</mi></mfenced></mrow>'
+        '<mrow><mi>&#x1d5a5;</mi><mrow><mo>(</mo><mi>x</mi><mo>|</mo><mi>y</mi><mo>)</mo></mrow></mrow>'
     assert mathml(elliptic_f(x/y, y), printer = 'presentation') == \
-        '<mrow><mi>&#x1d5a5;</mi><mfenced separators="|"><mrow><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><mi>y</mi></mfenced></mrow>'
+        '<mrow><mi>&#x1d5a5;</mi><mrow><mo>(</mo><mrow><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><mo>|</mo><mi>y</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_elliptic_e():
     assert mathml(elliptic_e(x), printer = 'presentation') == \
-        '<mrow><mi>&#x1d5a4;</mi><mfenced separators="|"><mi>x</mi></mfenced></mrow>'
+        '<mrow><mi>&#x1d5a4;</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
     assert mathml(elliptic_e(x, y), printer = 'presentation') == \
-        '<mrow><mi>&#x1d5a4;</mi><mfenced separators="|"><mi>x</mi><mi>y</mi></mfenced></mrow>'
+        '<mrow><mi>&#x1d5a4;</mi><mrow><mo>(</mo><mi>x</mi><mo>|</mo><mi>y</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_elliptic_pi():
     assert mathml(elliptic_pi(x, y), printer = 'presentation') == \
-        '<mrow><mi>&#x1d6f1;</mi><mfenced separators="|"><mi>x</mi><mi>y</mi></mfenced></mrow>'
+        '<mrow><mi>&#x1d6f1;</mi><mrow><mo>(</mo><mi>x</mi><mo>|</mo><mi>y</mi><mo>)</mo></mrow></mrow>'
     assert mathml(elliptic_pi(x, y, z), printer = 'presentation') == \
-        '<mrow><mi>&#x1d6f1;</mi><mfenced separators=";|"><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+        '<mrow><mi>&#x1d6f1;</mi><mrow><mo>(</mo><mi>x</mi><mo>;</mo><mi>y</mi><mo>|</mo><mi>z</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_Ei():
     assert mathml(Ei(x), printer = 'presentation') == \
