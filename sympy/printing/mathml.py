@@ -1831,21 +1831,25 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_floor(self, e):
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('\u230A'))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode('\u230B'))
         mrow = self.dom.createElement('mrow')
-        x = self.dom.createElement('mfenced')
-        x.setAttribute('close', '\u230B')
-        x.setAttribute('open', '\u230A')
-        x.appendChild(self._print(e.args[0]))
-        mrow.appendChild(x)
+        mrow.appendChild(left)
+        mrow.appendChild(self._print(e.args[0]))
+        mrow.appendChild(right)
         return mrow
 
     def _print_ceiling(self, e):
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('\u2308'))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode('\u2309'))
         mrow = self.dom.createElement('mrow')
-        x = self.dom.createElement('mfenced')
-        x.setAttribute('close', '\u2309')
-        x.setAttribute('open', '\u2308')
-        x.appendChild(self._print(e.args[0]))
-        mrow.appendChild(x)
+        mrow.appendChild(left)
+        mrow.appendChild(self._print(e.args[0]))
+        mrow.appendChild(right)
         return mrow
 
     def _print_Lambda(self, e):
