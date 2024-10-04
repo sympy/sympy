@@ -1227,33 +1227,23 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_Interval(self, i):
         mrow = self.dom.createElement('mrow')
         brac = self.dom.createElement('mfenced')
-        if i.start == i.end:
-            # Most often, this type of Interval is converted to a FiniteSet
-            left = self.dom.createElement('mo')
-            left.appendChild(self.dom.createTextNode('{'))
-            right = self.dom.createElement('mo')
-            right.appendChild(self.dom.createTextNode('}'))
-            mrow.appendChild(left)
-            mrow.appendChild(self._print(i.start))
-            mrow.appendChild(right)
+        right = self.dom.createElement('mo')
+        if i.right_open:
+            right.appendChild(self.dom.createTextNode(')'))
         else:
-            right = self.dom.createElement('mo')
-            if i.right_open:
-                right.appendChild(self.dom.createTextNode(')'))
-            else:
-                right.appendChild(self.dom.createTextNode(']'))
-            left = self.dom.createElement('mo')
-            if i.left_open:
-                left.appendChild(self.dom.createTextNode('('))
-            else:
-                left.appendChild(self.dom.createTextNode('['))
-            sep = self.dom.createElement('mo')
-            sep.appendChild(self.dom.createTextNode(','))
-            brac.appendChild(left)
-            brac.appendChild(self._print(i.start))
-            brac.appendChild(sep)
-            brac.appendChild(self._print(i.end))
-            brac.appendChild(right)
+            right.appendChild(self.dom.createTextNode(']'))
+        left = self.dom.createElement('mo')
+        if i.left_open:
+            left.appendChild(self.dom.createTextNode('('))
+        else:
+            left.appendChild(self.dom.createTextNode('['))
+        sep = self.dom.createElement('mo')
+        sep.appendChild(self.dom.createTextNode(','))
+        brac.appendChild(left)
+        brac.appendChild(self._print(i.start))
+        brac.appendChild(sep)
+        brac.appendChild(self._print(i.end))
+        brac.appendChild(right)
         mrow.appendChild(brac)
         return mrow
 
