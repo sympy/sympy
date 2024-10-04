@@ -1695,13 +1695,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         sub.appendChild(self._print(e.args[0]))
         if len(e.args) == 1:
             return sub
-        # TODO: copy-pasted from _print_Function: can we do better?
         mrow = self.dom.createElement('mrow')
-        y = self.dom.createElement('mfenced')
-        for arg in e.args[1:]:
-            y.appendChild(self._print(arg))
         mrow.appendChild(sub)
-        mrow.appendChild(y)
+        mrow.appendChild(self._paren_comma_separated(*e.args[1:]))
         return mrow
 
     def _print_bernoulli(self, e):
