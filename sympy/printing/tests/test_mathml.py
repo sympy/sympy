@@ -1489,10 +1489,10 @@ def test_print_factorials():
     assert mpp.doprint(factorial2(x + 1)) == \
         '<mrow><mrow><mo>(</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow><mo>)</mo></mrow><mo>!!</mo></mrow>'
     assert mpp.doprint(binomial(x, y)) == \
-        '<mfenced><mfrac linethickness="0"><mi>x</mi><mi>y</mi></mfrac></mfenced>'
+        '<mrow><mo>(</mo><mfrac linethickness="0"><mi>x</mi><mi>y</mi></mfrac><mo>)</mo></mrow>'
     assert mpp.doprint(binomial(4, x + y)) == \
-        '<mfenced><mfrac linethickness="0"><mn>4</mn><mrow><mi>x</mi>'\
-        '<mo>+</mo><mi>y</mi></mrow></mfrac></mfenced>'
+        '<mrow><mo>(</mo><mfrac linethickness="0"><mn>4</mn><mrow><mi>x</mi>'\
+        '<mo>+</mo><mi>y</mi></mrow></mfrac><mo>)</mo></mrow>'
 
 
 def test_print_floor():
