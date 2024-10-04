@@ -1297,7 +1297,7 @@ def test_print_polylog():
     assert mp.doprint(polylog(x, y)) == \
         '<apply><polylog/><ci>x</ci><ci>y</ci></apply>'
     assert mpp.doprint(polylog(x, y)) == \
-        '<mrow><msub><mi>Li</mi><mi>x</mi></msub><mfenced><mi>y</mi></mfenced></mrow>'
+        '<mrow><msub><mi>Li</mi><mi>x</mi></msub><mrow><mo>(</mo><mi>y</mi><mo>)</mo></mrow></mrow>'
 
 
 def test_print_set_frozenset():
