@@ -1160,15 +1160,15 @@ def test_presentation_mathml_order():
 def test_print_intervals():
     a = Symbol('a', real=True)
     assert mpp.doprint(Interval(0, a)) == \
-        '<mrow><mfenced close="]" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
+        '<mrow><mfenced><mo>[</mo><mn>0</mn><mo>,</mo><mi>a</mi><mo>]</mo></mfenced></mrow>'
     assert mpp.doprint(Interval(0, a, False, False)) == \
-        '<mrow><mfenced close="]" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
+        '<mrow><mfenced><mo>[</mo><mn>0</mn><mo>,</mo><mi>a</mi><mo>]</mo></mfenced></mrow>'
     assert mpp.doprint(Interval(0, a, True, False)) == \
-        '<mrow><mfenced close="]" open="("><mn>0</mn><mi>a</mi></mfenced></mrow>'
+        '<mrow><mfenced><mo>(</mo><mn>0</mn><mo>,</mo><mi>a</mi><mo>]</mo></mfenced></mrow>'
     assert mpp.doprint(Interval(0, a, False, True)) == \
-        '<mrow><mfenced close=")" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
+        '<mrow><mfenced><mo>[</mo><mn>0</mn><mo>,</mo><mi>a</mi><mo>)</mo></mfenced></mrow>'
     assert mpp.doprint(Interval(0, a, True, True)) == \
-        '<mrow><mfenced close=")" open="("><mn>0</mn><mi>a</mi></mfenced></mrow>'
+        '<mrow><mfenced><mo>(</mo><mn>0</mn><mo>,</mo><mi>a</mi><mo>)</mo></mfenced></mrow>'
 
 
 def test_print_tuples():

@@ -1229,22 +1229,31 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac = self.dom.createElement('mfenced')
         if i.start == i.end:
             # Most often, this type of Interval is converted to a FiniteSet
-            brac.setAttribute('close', '}')
-            brac.setAttribute('open', '{')
-            brac.appendChild(self._print(i.start))
+            left = self.dom.createElement('mo')
+            left.appendChild(self.dom.createTextNode('{'))
+            right = self.dom.createElement('mo')
+            right.appendChild(self.dom.createTextNode('}'))
+            mrow.appendChild(left)
+            mrow.appendChild(self._print(i.start))
+            mrow.appendChild(right)
         else:
+            right = self.dom.createElement('mo')
             if i.right_open:
-                brac.setAttribute('close', ')')
+                right.appendChild(self.dom.createTextNode(')'))
             else:
-                brac.setAttribute('close', ']')
-
+                right.appendChild(self.dom.createTextNode(']'))
+            left = self.dom.createElement('mo')
             if i.left_open:
-                brac.setAttribute('open', '(')
+                left.appendChild(self.dom.createTextNode('('))
             else:
-                brac.setAttribute('open', '[')
+                left.appendChild(self.dom.createTextNode('['))
+            sep = self.dom.createElement('mo')
+            sep.appendChild(self.dom.createTextNode(','))
+            brac.appendChild(left)
             brac.appendChild(self._print(i.start))
+            brac.appendChild(sep)
             brac.appendChild(self._print(i.end))
-
+            brac.appendChild(right)
         mrow.appendChild(brac)
         return mrow
 
