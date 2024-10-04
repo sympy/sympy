@@ -1235,8 +1235,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_Interval(self, i):
-        mrow = self.dom.createElement('mrow')
-        brac = self.dom.createElement('mfenced')
         right = self.dom.createElement('mo')
         if i.right_open:
             right.appendChild(self.dom.createTextNode(')'))
@@ -1249,12 +1247,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             left.appendChild(self.dom.createTextNode('['))
         sep = self.dom.createElement('mo')
         sep.appendChild(self.dom.createTextNode(','))
-        brac.appendChild(left)
-        brac.appendChild(self._print(i.start))
-        brac.appendChild(sep)
-        brac.appendChild(self._print(i.end))
-        brac.appendChild(right)
-        mrow.appendChild(brac)
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(left)
+        mrow.appendChild(self._print(i.start))
+        mrow.appendChild(sep)
+        mrow.appendChild(self._print(i.end))
+        mrow.appendChild(right)
         return mrow
 
     def _print_Abs(self, expr, exp=None):
