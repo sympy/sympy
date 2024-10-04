@@ -1261,13 +1261,21 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     _print_Determinant = _print_Abs
 
     def _print_re_im(self, c, expr):
-        mrow = self.dom.createElement('mrow')
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('('))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode(')'))
+        brac = self.dom.createElement('mrow')
+        brac.appendChild(left)
+        brac.appendChild(self._print(expr))
+        brac.appendChild(right)
+
         mi = self.dom.createElement('mi')
+        # TODO fraktur is deprecated
         mi.setAttribute('mathvariant', 'fraktur')
         mi.appendChild(self.dom.createTextNode(c))
+        mrow = self.dom.createElement('mrow')
         mrow.appendChild(mi)
-        brac = self.dom.createElement('mfenced')
-        brac.appendChild(self._print(expr))
         mrow.appendChild(brac)
         return mrow
 
