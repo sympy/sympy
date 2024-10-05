@@ -1938,11 +1938,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_MatrixElement(self, e):
         x = self.dom.createElement('msub')
         x.appendChild(self.parenthesize(e.parent, PRECEDENCE["Atom"], strict = True))
-        brac = self.dom.createElement('mfenced')
-        brac.setAttribute("close", "")
-        brac.setAttribute("open", "")
-        for i in e.indices:
-            brac.appendChild(self._print(i))
+        brac = self.dom.createElement('mrow')
+        for i, arg in enumerate(e.indices):
+            if i:
+                brac.appendChild(self._comma())
+            brac.appendChild(self._print(arg))
         x.appendChild(brac)
         return x
 
