@@ -1943,24 +1943,17 @@ def test_print_hermite():
 
 def test_mathml_SingularityFunction():
     assert mathml(SingularityFunction(x, 4, 5), printer='presentation') == \
-        '<msup><mfenced close="&#10217;" open="&#10216;"><mrow><mi>x</mi>' \
-        '<mo>-</mo><mn>4</mn></mrow></mfenced><mn>5</mn></msup>'
+        '<msup><mrow><mo>&#10216;</mo><mrow><mi>x</mi><mo>-</mo><mn>4</mn></mrow><mo>&#10217;</mo></mrow><mn>5</mn></msup>'
     assert mathml(SingularityFunction(x, -3, 4), printer='presentation') == \
-        '<msup><mfenced close="&#10217;" open="&#10216;"><mrow><mi>x</mi>' \
-        '<mo>+</mo><mn>3</mn></mrow></mfenced><mn>4</mn></msup>'
+        '<msup><mrow><mo>&#10216;</mo><mrow><mi>x</mi><mo>+</mo><mn>3</mn></mrow><mo>&#10217;</mo></mrow><mn>4</mn></msup>'
     assert mathml(SingularityFunction(x, 0, 4), printer='presentation') == \
-        '<msup><mfenced close="&#10217;" open="&#10216;"><mi>x</mi></mfenced>' \
-        '<mn>4</mn></msup>'
+        '<msup><mrow><mo>&#10216;</mo><mi>x</mi><mo>&#10217;</mo></mrow><mn>4</mn></msup>'
     assert mathml(SingularityFunction(x, a, n), printer='presentation') == \
-        '<msup><mfenced close="&#10217;" open="&#10216;"><mrow><mrow>' \
-        '<mo>-</mo><mi>a</mi></mrow><mo>+</mo><mi>x</mi></mrow></mfenced>' \
-        '<mi>n</mi></msup>'
+        '<msup><mrow><mo>&#10216;</mo><mrow><mrow><mo>-</mo><mi>a</mi></mrow><mo>+</mo><mi>x</mi></mrow><mo>&#10217;</mo></mrow><mi>n</mi></msup>'
     assert mathml(SingularityFunction(x, 4, -2), printer='presentation') == \
-        '<msup><mfenced close="&#10217;" open="&#10216;"><mrow><mi>x</mi>' \
-        '<mo>-</mo><mn>4</mn></mrow></mfenced><mn>-2</mn></msup>'
+        '<msup><mrow><mo>&#10216;</mo><mrow><mi>x</mi><mo>-</mo><mn>4</mn></mrow><mo>&#10217;</mo></mrow><mn>-2</mn></msup>'
     assert mathml(SingularityFunction(x, 4, -1), printer='presentation') == \
-        '<msup><mfenced close="&#10217;" open="&#10216;"><mrow><mi>x</mi>' \
-        '<mo>-</mo><mn>4</mn></mrow></mfenced><mn>-1</mn></msup>'
+        '<msup><mrow><mo>&#10216;</mo><mrow><mi>x</mi><mo>-</mo><mn>4</mn></mrow><mo>&#10217;</mo></mrow><mn>-1</mn></msup>'
 
 
 def test_mathml_matrix_functions():

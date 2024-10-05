@@ -1685,11 +1685,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_SingularityFunction(self, expr):
         shift = expr.args[0] - expr.args[1]
         power = expr.args[2]
-        sup = self.dom.createElement('msup')
-        brac = self.dom.createElement('mfenced')
-        brac.setAttribute('close', '\u27e9')
-        brac.setAttribute('open', '\u27e8')
+        left = self.dom.createElement('mo')
+        left.appendChild(self.dom.createTextNode('\u27e8'))
+        right = self.dom.createElement('mo')
+        right.appendChild(self.dom.createTextNode('\u27e9'))
+        brac = self.dom.createElement('mrow')
+        brac.appendChild(left)
         brac.appendChild(self._print(shift))
+        brac.appendChild(right)
+        sup = self.dom.createElement('msup')
         sup.appendChild(brac)
         sup.appendChild(self._print(power))
         return sup
