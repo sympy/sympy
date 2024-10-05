@@ -1700,7 +1700,7 @@ def test_print_IndexedBase():
     assert mathml(IndexedBase(a)[b], printer='presentation') == \
         '<msub><mi>a</mi><mi>b</mi></msub>'
     assert mathml(IndexedBase(a)[b, c, d], printer='presentation') == \
-        '<msub><mi>a</mi><mfenced><mi>b</mi><mi>c</mi><mi>d</mi></mfenced></msub>'
+        '<msub><mi>a</mi><mrow><mo>(</mo><mi>b</mi><mo>,</mo><mi>c</mi><mo>,</mo><mi>d</mi><mo>)</mo></mrow></msub>'
     assert mathml(IndexedBase(a)[b]*IndexedBase(c)[d]*IndexedBase(e),
                   printer='presentation') == \
                   '<mrow><msub><mi>a</mi><mi>b</mi></msub><mo>&InvisibleTimes;'\
@@ -1895,51 +1895,51 @@ def test_print_elliptic_pi():
 
 def test_print_Ei():
     assert mathml(Ei(x), printer = 'presentation') == \
-        '<mrow><mi>Ei</mi><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><mi>Ei</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
     assert mathml(Ei(x**y), printer = 'presentation') == \
-        '<mrow><mi>Ei</mi><mfenced><msup><mi>x</mi><mi>y</mi></msup></mfenced></mrow>'
+        '<mrow><mi>Ei</mi><mrow><mo>(</mo><msup><mi>x</mi><mi>y</mi></msup><mo>)</mo></mrow></mrow>'
 
 def test_print_expint():
     assert mathml(expint(x, y), printer = 'presentation') == \
-        '<mrow><msub><mo>E</mo><mi>x</mi></msub><mfenced><mi>y</mi></mfenced></mrow>'
+        '<mrow><msub><mo>E</mo><mi>x</mi></msub><mrow><mo>(</mo><mi>y</mi><mo>)</mo></mrow></mrow>'
     assert mathml(expint(IndexedBase(x)[1], IndexedBase(x)[2]), printer = 'presentation') == \
-        '<mrow><msub><mo>E</mo><msub><mi>x</mi><mn>1</mn></msub></msub><mfenced><msub><mi>x</mi><mn>2</mn></msub></mfenced></mrow>'
+        '<mrow><msub><mo>E</mo><msub><mi>x</mi><mn>1</mn></msub></msub><mrow><mo>(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>)</mo></mrow></mrow>'
 
 def test_print_jacobi():
     assert mathml(jacobi(n, a, b, x), printer = 'presentation') == \
-        '<mrow><msubsup><mo>P</mo><mi>n</mi><mfenced><mi>a</mi><mi>b</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msubsup><mo>P</mo><mi>n</mi><mrow><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></mrow></msubsup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_gegenbauer():
     assert mathml(gegenbauer(n, a, x), printer = 'presentation') == \
-        '<mrow><msubsup><mo>C</mo><mi>n</mi><mfenced><mi>a</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msubsup><mo>C</mo><mi>n</mi><mrow><mo>(</mo><mi>a</mi><mo>)</mo></mrow></msubsup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_chebyshevt():
     assert mathml(chebyshevt(n, x), printer = 'presentation') == \
-        '<mrow><msub><mo>T</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msub><mo>T</mo><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_chebyshevu():
     assert mathml(chebyshevu(n, x), printer = 'presentation') == \
-        '<mrow><msub><mo>U</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msub><mo>U</mo><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_legendre():
     assert mathml(legendre(n, x), printer = 'presentation') == \
-        '<mrow><msub><mo>P</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msub><mo>P</mo><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_assoc_legendre():
     assert mathml(assoc_legendre(n, a, x), printer = 'presentation') == \
-        '<mrow><msubsup><mo>P</mo><mi>n</mi><mfenced><mi>a</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msubsup><mo>P</mo><mi>n</mi><mrow><mo>(</mo><mi>a</mi><mo>)</mo></mrow></msubsup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_laguerre():
     assert mathml(laguerre(n, x), printer = 'presentation') == \
-        '<mrow><msub><mo>L</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msub><mo>L</mo><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_assoc_laguerre():
     assert mathml(assoc_laguerre(n, a, x), printer = 'presentation') == \
-        '<mrow><msubsup><mo>L</mo><mi>n</mi><mfenced><mi>a</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msubsup><mo>L</mo><mi>n</mi><mrow><mo>(</mo><mi>a</mi><mo>)</mo></mrow></msubsup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 def test_print_hermite():
     assert mathml(hermite(n, x), printer = 'presentation') == \
-        '<mrow><msub><mo>H</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+        '<mrow><msub><mo>H</mo><mi>n</mi></msub><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
 
 def test_mathml_SingularityFunction():
     assert mathml(SingularityFunction(x, 4, 5), printer='presentation') == \

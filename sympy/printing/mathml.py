@@ -1917,10 +1917,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_tuple(self, e):
-        x = self.dom.createElement('mfenced')
-        for i in e:
-            x.appendChild(self._print(i))
-        return x
+        return self._paren_comma_separated(*e)
 
     def _print_IndexedBase(self, e):
         return self._print(e.label)
