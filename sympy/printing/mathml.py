@@ -1294,8 +1294,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac.appendChild(self._print(expr))
         brac.appendChild(self._r_paren())
         mi = self.dom.createElement('mi')
-        # TODO fraktur is deprecated
-        mi.setAttribute('mathvariant', 'fraktur')
         mi.appendChild(self.dom.createTextNode(c))
         mrow = self.dom.createElement('mrow')
         mrow.appendChild(mi)
@@ -1303,10 +1301,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_re(self, expr, exp=None):
-        return self._print_re_im('R', expr.args[0])
+        return self._print_re_im('\u211C', expr.args[0])
 
     def _print_im(self, expr, exp=None):
-        return self._print_re_im('I', expr.args[0])
+        return self._print_re_im('\u2111', expr.args[0])
 
     def _print_AssocOp(self, e):
         mrow = self.dom.createElement('mrow')
