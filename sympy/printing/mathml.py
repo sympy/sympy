@@ -969,13 +969,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
         mrow = self.dom.createElement('mrow')
         mrow.appendChild(subsup)
-        if len(str(e.function)) == 1:
-            mrow.appendChild(self._print(e.function))
-        else:
-            fence = self.dom.createElement('mfenced')
-            fence.appendChild(self._print(e.function))
-            mrow.appendChild(fence)
-
+        mrow.appendChild(self.parenthesize(e.function, precedence_traditional(e)))
         return mrow
 
     def _print_Symbol(self, sym, style='plain'):
