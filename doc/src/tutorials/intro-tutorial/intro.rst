@@ -153,6 +153,7 @@ Solve `x^2 - 2 = 0`.
 
 Solve the differential equation `y'' - y = e^t`.
 
+ >>> t = Symbol('t')
  >>> y = Function('y')
  >>> dsolve(Eq(y(t).diff(t, t) - y(t), exp(t)), y(t))
             -t   ⎛     t⎞  t
