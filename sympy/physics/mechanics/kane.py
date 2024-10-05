@@ -220,7 +220,7 @@ class KanesMethod(_Methods):
         if not isinstance(frame, ReferenceFrame):
             raise TypeError('An inertial ReferenceFrame must be supplied')
         self._inertial = frame
-
+        print('wie geht es')
         self._fr = None
         self._frstar = None
 
