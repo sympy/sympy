@@ -1730,9 +1730,9 @@ def test_print_Vector():
     assert mathml(Cross(ACS.i, ACS.j*ACS.x*3 + ACS.k), printer='presentation') == \
         '<mrow><msub><mover><mi mathvariant="bold">i</mi><mo>^</mo></mover>'\
         '<mi mathvariant="bold">A</mi></msub><mo>&#xD7;</mo><mrow><mo>(</mo><mrow>'\
-        '<mfenced><mrow><mn>3</mn><mo>&InvisibleTimes;</mo><msub>'\
+        '<mrow><mo>(</mo><mrow><mn>3</mn><mo>&InvisibleTimes;</mo><msub>'\
         '<mi mathvariant="bold">x</mi><mi mathvariant="bold">A</mi></msub>'\
-        '</mrow></mfenced><mo>&InvisibleTimes;</mo><msub><mover>'\
+        '</mrow><mo>)</mo></mrow><mo>&InvisibleTimes;</mo><msub><mover>'\
         '<mi mathvariant="bold">j</mi><mo>^</mo></mover>'\
         '<mi mathvariant="bold">A</mi></msub><mo>+</mo><msub><mover>'\
         '<mi mathvariant="bold">k</mi><mo>^</mo></mover><mi mathvariant="bold">'\
@@ -1751,71 +1751,70 @@ def test_print_Vector():
     assert mathml(Cross(x*ACS.i, ACS.j), printer='presentation') == \
         '<mrow><mo>-</mo><mrow><msub><mover><mi mathvariant="bold">j</mi>'\
         '<mo>^</mo></mover><mi mathvariant="bold">A</mi></msub>'\
-        '<mo>&#xD7;</mo><mrow><mo>(</mo><mrow><mfenced><mi>x</mi></mfenced>'\
+        '<mo>&#xD7;</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow>'\
         '<mo>&InvisibleTimes;</mo><msub><mover><mi mathvariant="bold">i</mi>'\
         '<mo>^</mo></mover><mi mathvariant="bold">A</mi></msub></mrow>'\
         '<mo>)</mo></mrow></mrow></mrow>'
     assert mathml(Curl(3*ACS.x*ACS.j), printer='presentation') == \
-        '<mrow><mo>&#x2207;</mo><mo>&#xD7;</mo><mrow><mo>(</mo><mrow><mfenced><mrow>'\
-        '<mn>3</mn><mo>&InvisibleTimes;</mo><msub>'\
-        '<mi mathvariant="bold">x</mi><mi mathvariant="bold">A</mi></msub>'\
-        '</mrow></mfenced><mo>&InvisibleTimes;</mo><msub><mover>'\
-        '<mi mathvariant="bold">j</mi><mo>^</mo></mover>'\
+        '<mrow><mo>&#x2207;</mo><mo>&#xD7;</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo>'\
+        '<mrow><mn>3</mn><mo>&InvisibleTimes;</mo><msub><mi mathvariant="bold">x</mi>'\
+        '<mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo></mrow><mo>&InvisibleTimes;</mo>'\
+        '<msub><mover><mi mathvariant="bold">j</mi><mo>^</mo></mover>'\
         '<mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo></mrow></mrow>'
     assert mathml(Curl(3*x*ACS.x*ACS.j), printer='presentation') == \
-        '<mrow><mo>&#x2207;</mo><mo>&#xD7;</mo><mrow><mo>(</mo><mrow><mfenced><mrow>'\
+        '<mrow><mo>&#x2207;</mo><mo>&#xD7;</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo><mrow>'\
         '<mn>3</mn><mo>&InvisibleTimes;</mo><msub><mi mathvariant="bold">x'\
         '</mi><mi mathvariant="bold">A</mi></msub><mo>&InvisibleTimes;</mo>'\
-        '<mi>x</mi></mrow></mfenced><mo>&InvisibleTimes;</mo><msub><mover>'\
+        '<mi>x</mi></mrow><mo>)</mo></mrow><mo>&InvisibleTimes;</mo><msub><mover>'\
         '<mi mathvariant="bold">j</mi><mo>^</mo></mover>'\
         '<mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo></mrow></mrow>'
     assert mathml(x*Curl(3*ACS.x*ACS.j), printer='presentation') == \
         '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mrow><mo>(</mo><mrow><mo>&#x2207;</mo>'\
-        '<mo>&#xD7;</mo><mrow><mo>(</mo><mrow><mfenced><mrow><mn>3</mn>'\
+        '<mo>&#xD7;</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo><mrow><mn>3</mn>'\
         '<mo>&InvisibleTimes;</mo><msub><mi mathvariant="bold">x</mi>'\
-        '<mi mathvariant="bold">A</mi></msub></mrow></mfenced>'\
+        '<mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo></mrow>'\
         '<mo>&InvisibleTimes;</mo><msub><mover><mi mathvariant="bold">j</mi>'\
         '<mo>^</mo></mover><mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo>'\
         '</mrow></mrow><mo>)</mo></mrow></mrow>'
     assert mathml(Curl(3*x*ACS.x*ACS.j + ACS.i), printer='presentation') == \
         '<mrow><mo>&#x2207;</mo><mo>&#xD7;</mo><mrow><mo>(</mo><mrow><msub><mover>'\
         '<mi mathvariant="bold">i</mi><mo>^</mo></mover>'\
-        '<mi mathvariant="bold">A</mi></msub><mo>+</mo><mfenced><mrow>'\
+        '<mi mathvariant="bold">A</mi></msub><mo>+</mo><mrow><mo>(</mo><mrow>'\
         '<mn>3</mn><mo>&InvisibleTimes;</mo><msub><mi mathvariant="bold">x'\
         '</mi><mi mathvariant="bold">A</mi></msub><mo>&InvisibleTimes;</mo>'\
-        '<mi>x</mi></mrow></mfenced><mo>&InvisibleTimes;</mo><msub><mover>'\
+        '<mi>x</mi></mrow><mo>)</mo></mrow><mo>&InvisibleTimes;</mo><msub><mover>'\
         '<mi mathvariant="bold">j</mi><mo>^</mo></mover>'\
         '<mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo></mrow></mrow>'
     assert mathml(Divergence(3*ACS.x*ACS.j), printer='presentation') == \
-        '<mrow><mo>&#x2207;</mo><mo>&#xB7;</mo><mrow><mo>(</mo><mrow><mfenced><mrow>'\
-        '<mn>3</mn><mo>&InvisibleTimes;</mo><msub><mi mathvariant="bold">x'\
-        '</mi><mi mathvariant="bold">A</mi></msub></mrow></mfenced>'\
+        '<mrow><mo>&#x2207;</mo><mo>&#xB7;</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo>'\
+        '<mrow><mn>3</mn><mo>&InvisibleTimes;</mo><msub><mi mathvariant="bold">x'\
+        '</mi><mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo></mrow>'\
         '<mo>&InvisibleTimes;</mo><msub><mover><mi mathvariant="bold">j</mi>'\
         '<mo>^</mo></mover><mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo></mrow></mrow>'
     assert mathml(x*Divergence(3*ACS.x*ACS.j), printer='presentation') == \
         '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mrow><mo>(</mo><mrow><mo>&#x2207;</mo>'\
-        '<mo>&#xB7;</mo><mrow><mo>(</mo><mrow><mfenced><mrow><mn>3</mn>'\
+        '<mo>&#xB7;</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo><mrow><mn>3</mn>'\
         '<mo>&InvisibleTimes;</mo><msub><mi mathvariant="bold">x</mi>'\
-        '<mi mathvariant="bold">A</mi></msub></mrow></mfenced>'\
+        '<mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo></mrow>'\
         '<mo>&InvisibleTimes;</mo><msub><mover><mi mathvariant="bold">j</mi>'\
         '<mo>^</mo></mover><mi mathvariant="bold">A</mi></msub></mrow>'\
         '<mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow>'
     assert mathml(Divergence(3*x*ACS.x*ACS.j + ACS.i), printer='presentation') == \
         '<mrow><mo>&#x2207;</mo><mo>&#xB7;</mo><mrow><mo>(</mo><mrow><msub><mover>'\
         '<mi mathvariant="bold">i</mi><mo>^</mo></mover>'\
-        '<mi mathvariant="bold">A</mi></msub><mo>+</mo><mfenced><mrow>'\
+        '<mi mathvariant="bold">A</mi></msub><mo>+</mo><mrow><mo>(</mo><mrow>'\
         '<mn>3</mn><mo>&InvisibleTimes;</mo><msub>'\
         '<mi mathvariant="bold">x</mi><mi mathvariant="bold">A</mi></msub>'\
-        '<mo>&InvisibleTimes;</mo><mi>x</mi></mrow></mfenced>'\
+        '<mo>&InvisibleTimes;</mo><mi>x</mi></mrow><mo>)</mo></mrow>'\
         '<mo>&InvisibleTimes;</mo><msub><mover><mi mathvariant="bold">j</mi>'\
         '<mo>^</mo></mover><mi mathvariant="bold">A</mi></msub></mrow>'\
         '<mo>)</mo></mrow></mrow>'
     assert mathml(Dot(ACS.i, ACS.j*ACS.x*3+ACS.k), printer='presentation') == \
         '<mrow><msub><mover><mi mathvariant="bold">i</mi><mo>^</mo></mover>'\
         '<mi mathvariant="bold">A</mi></msub><mo>&#xB7;</mo><mrow><mo>(</mo><mrow>'\
-        '<mfenced><mrow><mn>3</mn><mo>&InvisibleTimes;</mo><msub>'\
+        '<mrow><mo>(</mo><mrow><mn>3</mn><mo>&InvisibleTimes;</mo><msub>'\
         '<mi mathvariant="bold">x</mi><mi mathvariant="bold">A</mi></msub>'\
-        '</mrow></mfenced><mo>&InvisibleTimes;</mo><msub><mover>'\
+        '</mrow><mo>)</mo></mrow><mo>&InvisibleTimes;</mo><msub><mover>'\
         '<mi mathvariant="bold">j</mi><mo>^</mo></mover>'\
         '<mi mathvariant="bold">A</mi></msub><mo>+</mo><msub><mover>'\
         '<mi mathvariant="bold">k</mi><mo>^</mo></mover>'\
@@ -1828,7 +1827,7 @@ def test_print_Vector():
     assert mathml(Dot(x*ACS.i, ACS.j), printer='presentation') == \
         '<mrow><msub><mover><mi mathvariant="bold">j</mi><mo>^</mo></mover>'\
         '<mi mathvariant="bold">A</mi></msub><mo>&#xB7;</mo><mrow><mo>(</mo><mrow>'\
-        '<mfenced><mi>x</mi></mfenced><mo>&InvisibleTimes;</mo><msub><mover>'\
+        '<mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mo>&InvisibleTimes;</mo><msub><mover>'\
         '<mi mathvariant="bold">i</mi><mo>^</mo></mover>'\
         '<mi mathvariant="bold">A</mi></msub></mrow><mo>)</mo></mrow></mrow>'
     assert mathml(x*Dot(ACS.i, ACS.j), printer='presentation') == \
