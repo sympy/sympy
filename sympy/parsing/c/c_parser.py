@@ -180,6 +180,7 @@ if cin:
             """
             file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.cpp')
             file.write(source)
+            file.flush()
             file.seek(0)
             self.tu = self.index.parse(
                 file.name,

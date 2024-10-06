@@ -505,7 +505,9 @@ class MatrixBase(Printable):
         """
         if self.rows * self.cols != rows * cols:
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
-        return self._new(rows, cols, lambda i, j: self[i * cols + j])
+        dok = {divmod(i*self.cols + j, cols):
+            v for (i, j), v in self.todok().items()}
+        return self._eval_from_dok(rows, cols, dok)
 
     def row_del(self, row):
         """Delete the specified row."""

@@ -117,7 +117,7 @@ class DDM(list):
         if len(rowslist) != m or any(len(row) != n for row in rowslist):
             raise DMBadInputError("Inconsistent row-list/shape")
 
-        super().__init__(rowslist)
+        super().__init__([i.copy() for i in rowslist])
         self.shape = (m, n)
         self.rows = m
         self.cols = n

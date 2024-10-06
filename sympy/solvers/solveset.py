@@ -2765,30 +2765,36 @@ def linear_coeffs(eq, *syms, dict=False):
 
 def linear_eq_to_matrix(equations, *symbols):
     r"""
-    Converts a given System of Equations into Matrix form.
-    Here `equations` must be a linear system of equations in
-    `symbols`. Element ``M[i, j]`` corresponds to the coefficient
-    of the jth symbol in the ith equation.
+    Converts a given System of Equations into Matrix form. Here ``equations``
+    must be a linear system of equations in ``symbols``. Element ``M[i, j]``
+    corresponds to the coefficient of the jth symbol in the ith equation.
 
-    The Matrix form corresponds to the augmented matrix form.
-    For example:
+    The Matrix form corresponds to the augmented matrix form. For example:
 
-    .. math:: 4x + 2y + 3z  = 1
-    .. math:: 3x +  y +  z  = -6
-    .. math:: 2x + 4y + 9z  = 2
+    .. math::
 
-    This system will return $A$ and $b$ as:
+       4x + 2y + 3z & = 1 \\
+       3x +  y +  z & = -6 \\
+       2x + 4y + 9z & = 2
 
-    $$ A = \left[\begin{array}{ccc}
-        4 & 2 & 3 \\
-        3 & 1 & 1 \\
-        2 & 4 & 9
-        \end{array}\right] \ \  b = \left[\begin{array}{c}
-        1 \\ -6 \\ 2
-        \end{array}\right] $$
+    This system will return :math:`A` and :math:`b` as:
+
+    .. math::
+
+       A = \left[\begin{array}{ccc}
+       4 & 2 & 3 \\
+       3 & 1 & 1 \\
+       2 & 4 & 9
+       \end{array}\right] \\
+
+    .. math::
+
+       b = \left[\begin{array}{c}
+       1 \\ -6 \\ 2
+       \end{array}\right]
 
     The only simplification performed is to convert
-    ``Eq(a, b)`` $\Rightarrow a - b$.
+    ``Eq(a, b)`` :math:`\Rightarrow a - b`.
 
     Raises
     ======
@@ -2807,39 +2813,40 @@ def linear_eq_to_matrix(equations, *symbols):
     The coefficients (numerical or symbolic) of the symbols will
     be returned as matrices:
 
-        >>> eqns = [c*x + z - 1 - c, y + z, x - y]
-        >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
-        >>> A
-        Matrix([
-        [c,  0, 1],
-        [0,  1, 1],
-        [1, -1, 0]])
-        >>> b
-        Matrix([
-        [c + 1],
-        [    0],
-        [    0]])
+    >>> eqns = [c*x + z - 1 - c, y + z, x - y]
+    >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
+    >>> A
+    Matrix([
+    [c,  0, 1],
+    [0,  1, 1],
+    [1, -1, 0]])
+    >>> b
+    Matrix([
+    [c + 1],
+    [    0],
+    [    0]])
 
     This routine does not simplify expressions and will raise an error
     if nonlinearity is encountered:
 
-            >>> eqns = [
-            ...     (x**2 - 3*x)/(x - 3) - 3,
-            ...     y**2 - 3*y - y*(y - 4) + x - 4]
-            >>> linear_eq_to_matrix(eqns, [x, y])
-            Traceback (most recent call last):
-            ...
-            NonlinearError:
-            symbol-dependent term can be ignored using `strict=False`
+    >>> eqns = [
+    ...     (x**2 - 3*x)/(x - 3) - 3,
+    ...     y**2 - 3*y - y*(y - 4) + x - 4]
+    >>> linear_eq_to_matrix(eqns, [x, y])
+    Traceback (most recent call last):
+    ...
+    NonlinearError:
+    symbol-dependent term can be ignored using `strict=False`
 
-        Simplifying these equations will discard the removable singularity
-        in the first and reveal the linear structure of the second:
+    Simplifying these equations will discard the removable singularity in the
+    first and reveal the linear structure of the second:
 
-            >>> [e.simplify() for e in eqns]
-            [x - 3, x + y - 4]
+    >>> [e.simplify() for e in eqns]
+    [x - 3, x + y - 4]
 
-        Any such simplification needed to eliminate nonlinear terms must
-        be done *before* calling this routine.
+    Any such simplification needed to eliminate nonlinear terms must be done
+    *before* calling this routine.
+
     """
     if not symbols:
         raise ValueError(filldedent('''

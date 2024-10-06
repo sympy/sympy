@@ -15,8 +15,8 @@ from .expr import Expr
 from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
-
 from sympy.utilities.iterables import sift
+
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -65,27 +65,25 @@ def _unevaluated_Mul(*args):
     False
 
     """
-    args = list(args)
-    newargs = []
+    cargs = []
     ncargs = []
+    args = list(args)
     co = S.One
-    while args:
-        a = args.pop()
+    for a in args:
         if a.is_Mul:
-            c, nc = a.args_cnc()
-            args.extend(c)
-            if nc:
-                ncargs.append(Mul._from_args(nc))
+            a_c, a_nc = a.args_cnc()
+            args.extend(a_c)  # grow args
+            ncargs.extend(a_nc)
         elif a.is_Number:
             co *= a
+        elif a.is_commutative:
+            cargs.append(a)
         else:
-            newargs.append(a)
-    _mulsort(newargs)
+            ncargs.append(a)
+    _mulsort(cargs)
     if co is not S.One:
-        newargs.insert(0, co)
-    if ncargs:
-        newargs.append(Mul._from_args(ncargs))
-    return Mul._from_args(newargs)
+        cargs.insert(0, co)
+    return Mul._from_args(cargs+ncargs)
 
 
 class Mul(Expr, AssocOp):
