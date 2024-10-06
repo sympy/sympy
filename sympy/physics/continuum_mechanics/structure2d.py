@@ -1,5 +1,5 @@
 from sympy.physics.continuum_mechanics.beam import Beam
-from sympy.core import Symbol
+from sympy.core import Symbol, Basic
 
 from sympy.core.numbers import pi
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -96,6 +96,7 @@ class Load:
         self.start_x = start_x
         self.start_y = start_y
         self.value = value
+        # print(float(global_angle))
         self.global_angle = rad(global_angle)
         self.order = order
         self.end_x = end_x
@@ -114,10 +115,25 @@ class Load:
         return f"Load(applied_to={self.applied_to},X1={self.start_x}, Y1={self.start_y},X2={self.end_x},Y2={self.end_y} Load={self.value}, Global_Angle={self.global_angle}, Order={self.order}, X-Component={self.x_component}, Y-Component={self.y_component})"
 
     def _compute_x_component(self):
-        return self.value * cos(self.global_angle) * -1
+        # if isinstance(self.value, Symbol):
+        #     return self.value * cos(self.global_angle)
+        # else:
+        #     # print(float(self.value * cos(self.global_angle) * -1),float(self.global_angle))
+        #     pass
+        return self.value * cos(self.global_angle)
 
     def _compute_y_component(self):
-        return self.value * sin(self.global_angle)
+        # if isinstance(self.value, Symbol):
+        #     return self.value * sin(self.global_angle) *- 1
+        # else:
+        #     # print(float(self.value * cos(self.global_angle) * -1),float(self.global_angle))
+        #     pass
+        return self.value * sin(self.global_angle) *- 1
+
+    # def update_components(self):
+    #     """Update x and y components when the value is changed."""
+    #     self.x_component = self._compute_x_component()
+    #     self.y_component = self._compute_y_component()
 
     def _compute_local_loc(self):
         pass
@@ -134,6 +150,7 @@ class Structure2d:
         self.unwrapped_bendpoints = []
         self.unwrapped_loadpoints = []
         self.beam = self._init_beam()
+        self.reaction_loads = {}
 
         self.load_qz = 0
 
@@ -246,6 +263,10 @@ class Structure2d:
                     self.unwrapped_loadpoints[-1]['locals'][0],
                     self.unwrapped_loadpoints[-1]['locals'][1],
                     ]
+                # if self.unwrapped_loadpoints[-1]['locals'][1] == L:
+                #     B[-1] = 0
+                    # B[-2] = -qh
+
                 nn = [4,4,5,5]
         elif load.order == -2:
             qz = load.value
@@ -255,8 +276,9 @@ class Structure2d:
             # print('T=',B,'@',bb)
 
 
-
-        # print(aa,oo,L)
+        #sees like if q is turned off at the end of the structure it will not give the right result
+        # print(aa,oo,L,bb,value)
+        # print(f'Fv={load.y_component},Fh={load.x_component}')
         # qz ############################################################################################
         qz = 0
         x = Symbol('x')
@@ -403,8 +425,6 @@ class Structure2d:
 
 
     def apply_support(self, x, y, type="pin"):
-        # support needs to be done manually because the reaction loads also need to be adjusted for by other loads
-
 
         support = self.add_or_update_node(x, y, type)
         self.supports.append(support)
@@ -412,12 +432,12 @@ class Structure2d:
         unwarap_x = self._find_unwrapped_position(x, y)
 
         if type == "pin":
-            Rh = Symbol(f'R_h-{unwarap_x}')
-            Rv = Symbol(f'R_v-{unwarap_x}')
+            Rh = Symbol(f'Rh_{unwarap_x}')
+            Rv = Symbol(f'Rv_{unwarap_x}')
 
 
-            self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
-            self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=180, order=1)
+            self.apply_load(start_x=x, start_y=y, value=-1*Rv, global_angle=90, order=-1)
+            self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=0, order=-1)
 
             self.beam.bc_deflection.append((unwarap_x, 0))
             # defvection horizontal also 0 but this is not yet needed
@@ -427,9 +447,9 @@ class Structure2d:
 
 
         elif type == "roller":
-            Rv = Symbol(f'R_v-{unwarap_x}')
+            Rv = Symbol(f'Rv_{unwarap_x}')
 
-            self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
+            self.apply_load(start_x=x, start_y=y, value=-1*Rv, global_angle=90, order=-1)
 
             self.beam.bc_deflection.append((unwarap_x, 0))
 
@@ -438,13 +458,13 @@ class Structure2d:
             return Rv
 
         elif type == "fixed":
-            Rh = Symbol(f'R_h-{unwarap_x}')
-            Rv = Symbol(f'R_v-{unwarap_x}')
+            Rh = Symbol(f'Rh_{unwarap_x}')
+            Rv = Symbol(f'Rv_{unwarap_x}')
             T = Symbol(f'T_{unwarap_x}')
 
             self.apply_load(start_x=x, start_y=y, value=T, global_angle=0, order=-2)
-            self.apply_load(start_x=x, start_y=y, value=Rv, global_angle=90, order=1)
-            self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=180, order=1)
+            self.apply_load(start_x=x, start_y=y, value=-1*Rv, global_angle=90, order=-1)
+            self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=0, order=-1)
 
             self.beam.bc_deflection.append((unwarap_x, 0))
             self.beam.bc_slope.append((unwarap_x, 0))
@@ -453,45 +473,114 @@ class Structure2d:
             return T, Rv, Rh
 
     def solve_for_reaction_loads(self, *args):
-        #solve for moment and vertical reaction load
+        # Solve for moment and vertical reaction loads
         self.beam.solve_for_reaction_loads(*args)
+        # print(self.beam._reaction_loads)
 
-        ######## TEMPORARY
-        #solve fot horizontal reaction load
-        #needs custom calculation
-
-        #need to compute horizontal reaction load Hacke in 15kN now
+        # Compute the horizontal reaction load by summing up all horizontal forces
         sum_horizontal = 0
-
         for load in self.loads:
-            # print(load.x_component)
-            if isinstance(load.value, Symbol):
-                pass
-            else:
+            if isinstance(load.value, (int, float)):
                 if load.order == -1:
                     sum_horizontal += load.x_component
-                elif load.order >= 0:
-                    a = load.x_component
-                    dy = Abs(load.end_y - load.start_y)
-                    sum_horizontal += a * dy
-                    # print(load.x_component)
-        horizontal_reactions = {args[-1]:sum_horizontal}
-        # print(horizontal_reactions,sum_horizontal)
+                elif load.order == 0:
+                    length = sqrt((load.end_y - load.start_y)**2 + (load.end_x - load.start_x)**2)
+                    sum_horizontal += length * load.x_component
+
+        # Create a dictionary of substitutions for horizontal reactions
+        horizontal_key = {arg: float(-1 * sum_horizontal) for arg in args if 'Rh_' in str(arg)}
+        # print(horizontal_key)
+        # Update solved reaction loads with horizontal reactions
+        for key in self.beam._reaction_loads.items():
+                key =  key[0]
+                self.beam._reaction_loads[key] = self.beam._reaction_loads[key].subs(horizontal_key)
+
+        # print(self.beam._reaction_loads)
+
+        # Store reaction loads in the structure's state
+        self.reaction_loads = self.beam.reaction_loads
+
+        # Substitute solved reactions into the beam's load equation
+        self.beam._load = self.beam._load.subs(self.beam.reaction_loads)
+
+################################### make this so it only runs when reaction loads are analiticly solved and can be a value or can have
+# a symbol that is not in the reaction loads
 
 
-        # horizontal_reactions = {'R_h-14':-15}
-        self.beam._load = self.beam._load.subs(self.beam.reaction_loads).subs(horizontal_reactions)
+        list_of_symbols = []
+        for key in self.reaction_loads.items():
+            list_of_symbols.append(str(key[0]))
+        # print(list_of_symbols)
+        # print(self.reaction_loads)
+        list_of_symbols_reactions = []
+        for load in self.loads:
+            if isinstance(load.value, Basic):
+                list_of_symbols_reactions.append(str(load.value.as_coeff_Mul()[1]))
+        # print(list_of_symbols,list_of_symbols_reactions)
+
+        #check if the reaction loads are in the loads
+        # opposite of intersection
+        test = set(list_of_symbols).union(list_of_symbols_reactions)
+        if len(test) == len(list_of_symbols):
+            print('not symbolic')
+            vertical_key = {arg: self.beam._reaction_loads[arg] for arg in args if 'Rv_' in str(arg)}
+            for load in self.loads:
+                if isinstance(load.value, Basic) and load.order != -2:
+                    # Substitute horizontal and vertical reaction loads
+                    load.value = load.value.subs(vertical_key).subs(horizontal_key)
+                    load.y_component = load.y_component.subs(vertical_key).subs(horizontal_key)
+                    load.x_component = load.x_component.subs(vertical_key).subs(horizontal_key)
+
+
+                    if load.y_component > 0:
+                        load.global_angle = load.global_angle + pi
+
+                    # print(load.x_component,load.y_component)
+                    if load.x_component < 0:
+                        load.global_angle = load.global_angle + pi
+        else:
+            print('symbolic')
+        # # test = set(list_of_symbols).intersection(list_of_symbols_reactions)
+        # print(len(test),'dsad')
 
 
 
-    def shear_force(self):
-        return self.beam.shear_force()
 
-    def plot_shear_force(self):
+        # vertical_key = {arg: self.beam._reaction_loads[arg] for arg in args if 'Rv_' in str(arg)}
+        # for load in self.loads:
+        #     if isinstance(load.value, Basic) and load.order != -2:
+        #         # Substitute horizontal and vertical reaction loads
+        #         load.value = load.value.subs(vertical_key).subs(horizontal_key)
+        #         load.y_component = load.y_component.subs(vertical_key).subs(horizontal_key)
+        #         load.x_component = load.x_component.subs(vertical_key).subs(horizontal_key)
+
+
+        #         if load.y_component > 0:
+        #             load.global_angle = load.global_angle + pi
+
+        #         # print(load.x_component,load.y_component)
+        #         if load.x_component < 0:
+        #             load.global_angle = load.global_angle + pi
+
+
+
+    def shear_force(self,x=None):
+        if x is None:
+            self.beam.shear_force()
+        else:
+            x_symbol = Symbol('x')
+            return self.beam.shear_force().subs(x_symbol,x)
+
+    def plot_shear_force(self,x=None):
         self.beam.plot_shear_force()
 
-    def bending_moment(self):
-        return self.beam.bending_moment()
+    def bending_moment(self,x=None):
+        if x is None:
+            return self.beam.bending_moment()
+        else:
+            x_symbol = Symbol('x')
+            return self.beam.bending_moment().subs(x_symbol,x)
+
 
     def plot_bending_moment(self):
         self.beam.plot_bending_moment()
@@ -502,133 +591,142 @@ class Structure2d:
 
 #################################################################################
     def draw(self):
-            fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
 
-            ax.set_aspect('equal')
-            point_load_color = '#38812F'
-            distributed_load_color = '#A30000'
+        ax.set_aspect('equal')
+        point_load_color = '#38812F'
+        distributed_load_color = '#A30000'
 
+        # Draw each member
+        for member in self.members:
+            x1, y1, x2, y2 = float(member.x1), float(member.y1), float(member.x2), float(member.y2)
+            ax.plot([x1, x2], [y1, y2], color='black', linewidth=3)
 
-            # Draw each member
-            for member in self.members:
-                x1, y1, x2, y2 = float(member.x1), float(member.y1), float(member.x2), float(member.y2)
-                ax.plot([x1, x2], [y1, y2], color='black', linewidth=3)
+        # Draw each load
+        for load in self.loads:
+            x, y = float(load.start_x), float(load.start_y)
 
-            # Draw each load
-            for load in self.loads:
-                x, y = float(load.start_x), float(load.start_y)
+            if load.order == -2:
+                # Draw moment as circular arrow with fixed size
+                radius = 0.5
 
-                if load.order == -2:
-                    # Draw moment as circular arrow with fixed size
-                    radius = 0.5
+                circle = patches.Arc((x, y), radius*2, radius*2, angle=0, theta1=0+10, theta2=270-10, color=point_load_color)
+                ax.add_patch(circle)
+                # Add arrowhead manually
+                arrow_x = x + radius*1 * float(cos(rad(10)))
+                arrow_y = y + radius * float(sin(rad(10)))
+                dx = 0  # Small offset for arrowhead
+                dy = -radius*0.45
+                ax.arrow(arrow_x, arrow_y, dx, dy, shape='full', lw=0, length_includes_head=True,
+                        head_width=radius*0.4, color=point_load_color)
 
-                    circle = patches.Arc((x, y), radius*2, radius*2, angle=0, theta1=0, theta2=270, color=point_load_color)
-                    ax.add_patch(circle)
-                    # Add arrowhead manually
-                    arrow_x = x + radius * float(cos(pi *3/2))
-                    arrow_y = y + radius * float(sin(pi * 3/2))
-                    dx = -radius * 0.1  # Small offset for arrowhead
-                    dy = 0
-                    ax.arrow(arrow_x, arrow_y, dx, dy, shape='full', lw=0, length_includes_head=True,
-                            head_width=radius*0.5, color=point_load_color)
-                elif load.order < 0 or load.order == 1:
-                    # Point load
-                    if isinstance(load.value, Symbol):
+            elif load.order < 0 or load.order == 1:
+                # Point load
+                # Assign a default value to load_length
+                load_length = 1
+
+                # check if it contains any sympy symbol or not
+                if isinstance(load.value, Basic):  # Basic is the base class for all SymPy expressions
+                    if load.value.has(Symbol):
                         load_length = 1
-                    else:
-                        load_length = float(load.value) / 10
+                else:
+                    # Ensure load.value is numeric and assign load_length accordingly
+                    load_length = float(load.value) / 10 if load.value != 0 else 0
 
-                    angle = float(load.global_angle)
-                    arrow_x = x + load_length * cos(angle)
-                    arrow_y = y + load_length * sin(angle)
+                angle = float(load.global_angle+ pi)
+                arrow_x = x + load_length * cos(angle)
+                arrow_y = y + load_length * sin(angle)
+
+                ax.annotate(
+                    "",
+                    xy=(x, y),
+                    xytext=(arrow_x, arrow_y),
+                    arrowprops={"arrowstyle": '->', "color": point_load_color, "shrinkA": 0, "shrinkB": 0, 'lw': 2.5},
+                    zorder=200
+                )
+
+            else:
+                # Distributed load
+                x1, y1 = float(load.start_x), float(load.start_y)
+                if load.end_x is not None and load.end_y is not None:
+                    x2, y2 = float(load.end_x), float(load.end_y)
+                else:
+                    # Find the member associated with the load
+                    member = next((m for m in self.members if (float(m.x1) == x1 and float(m.y1) == y1) or
+                                (float(m.x2) == x1 and float(m.y2) == y1)), None)
+                    if member is not None:
+                        x2, y2 = float(member.x2), float(member.y2)
+                    else:
+                        continue  # Skip if member not found
+
+                member_length = sqrt((x2 - x1)**2 + (y2 - y1)**2)
+                arrow_spacing = 0.5  # Define a consistent arrow spacing
+                num_arrows = max(int(member_length / arrow_spacing), 1)
+
+                dx = (x2 - x1) / num_arrows
+                dy = (y2 - y1) / num_arrows
+
+                arrow_coords = []
+                for i in range(num_arrows + 1):
+                    x_arrow = x1 + i * dx
+                    y_arrow = y1 + i * dy
+
+                    # Check if load.value is symbolic or numeric
+                    if isinstance(load.value, Symbol):
+                        arrow_length = float(10 * (x_arrow) ** load.order)
+                    else:
+                        arrow_length = float(load.value * (x_arrow) ** load.order)
+
+                    arrow_length_scaled = arrow_length / 10  # Scale the arrow length
+                    # Arrows originate from the load line, pointing in the direction of the load
+                    arrow_x = x_arrow + arrow_length_scaled * cos(float(load.global_angle+ pi))
+                    arrow_y = y_arrow + arrow_length_scaled * sin(float(load.global_angle+ pi))
+
+                    arrow_coords.append((arrow_x, arrow_y))
 
                     ax.annotate(
                         "",
-                        xy=(x, y),
+                        xy=(x_arrow, y_arrow),
                         xytext=(arrow_x, arrow_y),
-                        arrowprops={"arrowstyle": '->', "color": point_load_color, "shrinkA": 0, "shrinkB": 0},
-                        zorder=200
+                        arrowprops={"arrowstyle": '->', "color": distributed_load_color, "shrinkA": 0, "shrinkB": 0},
+                        zorder=100
                     )
-                else:
-                    # Distributed load
-                    x1, y1 = float(load.start_x), float(load.start_y)
-                    if load.end_x is not None and load.end_y is not None:
-                        x2, y2 = float(load.end_x), float(load.end_y)
-                    else:
-                        # Find the member associated with the load
-                        member = next((m for m in self.members if (float(m.x1) == x1 and float(m.y1) == y1) or
-                                    (float(m.x2) == x1 and float(m.y2) == y1)), None)
-                        if member is not None:
-                            x2, y2 = float(member.x2), float(member.y2)
-                        else:
-                            continue  # Skip if member not found
 
-                    member_length = sqrt((x2 - x1)**2 + (y2 - y1)**2)
-                    arrow_spacing = 0.5  # Define a consistent arrow spacing
-                    num_arrows = max(int(member_length / arrow_spacing), 1)
+                # Plot the load line that the arrows will originate from
+                for i in range(len(arrow_coords) - 1):
+                    ax.plot([arrow_coords[i][0], arrow_coords[i + 1][0]],
+                            [arrow_coords[i][1], arrow_coords[i + 1][1]],
+                            color=distributed_load_color, zorder=100)
 
-                    dx = (x2 - x1) / num_arrows
-                    dy = (y2 - y1) / num_arrows
+                if load.end_x is not None and load.end_y is not None:
+                    square_coords = [(x1, y1), arrow_coords[0], arrow_coords[-1], (x2, y2)]
+                    square = patches.Polygon(square_coords, closed=True, color=distributed_load_color,
+                                            alpha=0.15, zorder=10)
+                    ax.add_patch(square)
 
-                    arrow_coords = []
-                    for i in range(num_arrows + 1):
-                        x_arrow = x1 + i * dx
-                        y_arrow = y1 + i * dy
+        # Draw each support
+        for support in self.supports:
+            x, y = float(support.x), float(support.y)
+            if support.node_type == "pin":
+                ax.plot(x, y, 'o', color='red')
+            elif support.node_type == "fixed":
+                ax.plot(x, y, 's', color='blue')
+            elif support.node_type == "roller":
+                ax.plot(x, y, 'o', color='yellow')
 
-                        if isinstance(load.value, Symbol):
-                            arrow_length = float(10 * (x_arrow) ** load.order)
-                        else:
-                            arrow_length = float(load.value * (x_arrow) ** load.order)
+        # Adjust y-ticks to have the same step as x-ticks
+        x_ticks = plt.xticks()[0]
+        if len(x_ticks) > 1:
+            x_step = x_ticks[1] - x_ticks[0]
+            y_min, y_max = plt.ylim()
+            num_ticks_up = int((y_max // x_step) + 1)
+            num_ticks_down = int((-y_min // x_step) + 1)
+            new_y_ticks = [i * x_step for i in range(-num_ticks_down, num_ticks_up + 1)]
+            plt.yticks(new_y_ticks)
 
-                        arrow_length_scaled = arrow_length / 10  # Scale the arrow length
-                        # Arrows originate from the load line, pointing in the direction of the load
-                        arrow_x = x_arrow + arrow_length_scaled * cos(float(load.global_angle))
-                        arrow_y = y_arrow + arrow_length_scaled * sin(float(load.global_angle))
+        plt.grid()
+        plt.show()
 
-                        arrow_coords.append((arrow_x, arrow_y))
-
-                        ax.annotate(
-                            "",
-                            xy=(x_arrow, y_arrow),
-                            xytext=(arrow_x, arrow_y),
-                            arrowprops={"arrowstyle": '->', "color": distributed_load_color, "shrinkA": 0, "shrinkB": 0},
-                            zorder=100
-                        )
-
-                    # Plot the load line that the arrows will originate from
-                    for i in range(len(arrow_coords) - 1):
-                        ax.plot([arrow_coords[i][0], arrow_coords[i + 1][0]],
-                                [arrow_coords[i][1], arrow_coords[i + 1][1]],
-                                color=distributed_load_color, zorder=100)
-
-                    if load.end_x is not None and load.end_y is not None:
-                        square_coords = [(x1, y1), arrow_coords[0], arrow_coords[-1], (x2, y2)]
-                        square = patches.Polygon(square_coords, closed=True, color=distributed_load_color,
-                                                alpha=0.15, zorder=10)
-                        ax.add_patch(square)
-
-            # Draw each support
-            for support in self.supports:
-                x, y = float(support.x), float(support.y)
-                if support.node_type == "pin":
-                    ax.plot(x, y, 'o', color='red')
-                elif support.node_type == "fixed":
-                    ax.plot(x, y, 's', color='blue')
-                elif support.node_type == "roller":
-                    ax.plot(x, y, 'o', color='yellow')
-
-            # Adjust y-ticks to have the same step as x-ticks
-            x_ticks = plt.xticks()[0]
-            if len(x_ticks) > 1:
-                x_step = x_ticks[1] - x_ticks[0]
-                y_min, y_max = plt.ylim()
-                num_ticks_up = int((y_max // x_step) + 1)
-                num_ticks_down = int((-y_min // x_step) + 1)
-                new_y_ticks = [i * x_step for i in range(-num_ticks_down, num_ticks_up + 1)]
-                plt.yticks(new_y_ticks)
-
-            plt.grid()
-            plt.show()
 
     def draw_unwrapped(self):
         fig, ax = plt.subplots()
