@@ -2,7 +2,7 @@ from sympy.physics.continuum_mechanics.structure2d import Structure2d
 from sympy.core.symbol import Symbol, symbols
 from sympy.functions import SingularityFunction
 from sympy.simplify.simplify import simplify
-from sympy import pi, cos, sin, rad, sympify
+# from sympy import pi, cos, sin, rad, sympify
 import pytest
 import math
 
@@ -388,7 +388,7 @@ def test_structure2d_symbolic_onebend(beam_fixture_one_bend, test_data):
 
     # Extract test data
     s = beam_fixture_one_bend
-    angle = test_data['angle']
+    # angle = test_data['angle']
     value = test_data['value']
 
     reaction_loads = test_data['reaction_loads']
