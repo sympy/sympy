@@ -681,4 +681,3 @@ class Structure2d:
     #     for member in self.members:
     #         plt.plot([x_start, x_start + member.length], [0, 0], 'o-', color='black')
     #         x_start += member.length
-
