@@ -23,18 +23,18 @@ symbolic_test_data = [
 
 
 @pytest.fixture
-def beam_fixture():
+def test_beam_fixture():
     E, I, A = symbols('E I A')
     s = Structure2d()
     s.add_member(0, 0, 4, 0, E, I, A)
     return s, E, I, A
 
 @pytest.mark.parametrize('test_data', symbolic_test_data, ids=[data['id'] for data in symbolic_test_data])
-def test_structure2d_symbolic(beam_fixture, test_data):
+def test_structure2d_symbolic(test_beam_fixture, test_data):
     """Test symbolic calculations for a horizontal beam with a point load at the center."""
 
     # Extract test data
-    s, E, I, A = beam_fixture
+    s, E, I, A = test_beam_fixture
     angle = test_data['angle']
     value = test_data['value']
     reaction_loads = test_data['reaction_loads']
@@ -373,7 +373,7 @@ numerical_test_data = [
 
 
 @pytest.fixture
-def beam_fixture_one_bend():
+def test_beam_fixture_one_bend():
     E = 3e4
     I = 1
     A = 1e4
@@ -383,11 +383,11 @@ def beam_fixture_one_bend():
     return s
 
 @pytest.mark.parametrize('test_data', numerical_test_data, ids=[data['id'] for data in numerical_test_data])
-def test_structure2d_symbolic_onebend(beam_fixture_one_bend, test_data):
+def test_structure2d_symbolic_onebend(test_beam_fixture_one_bend, test_data):
     """This one has a bend in the middle"""
 
     # Extract test data
-    s = beam_fixture_one_bend
+    s = test_beam_fixture_one_bend
     # angle = test_data['angle']
     value = test_data['value']
 
