@@ -168,10 +168,10 @@ numerical_test_data = [
 ]
 
 @pytest.mark.parametrize('test_data', numerical_test_data, ids=[data['id'] for data in numerical_test_data])
-def test_numerical_pointload(beam_fixture, test_data):
+def test_numerical_pointload(test_beam_fixture, test_data):
     """Test numerical calculations for a horizontal beam with a point load at the center. angles are 0-360 in 30 degree increments"""
     # Extract test data
-    s, E, I, A = beam_fixture
+    s, E, I, A = test_beam_fixture
     angle = test_data['angle']
     value = test_data['value']
     reaction_loads = test_data['reaction_loads']
@@ -309,10 +309,10 @@ numerical_test_data_2 = [
 ]
 
 @pytest.mark.parametrize('test_data', numerical_test_data_2, ids=[data['id'] for data in numerical_test_data_2])
-def test_numerical_distload(beam_fixture, test_data):
+def test_numerical_distload(test_beam_fixture, test_data):
     """Test numerical calculations for a horizontal beam with a distributed load at the center 1m distance from both ends. angles are 0-360 in 30 degree increments"""
     # Extract test data
-    s, E, I, A = beam_fixture
+    s, E, I, A = test_beam_fixture
     angle = test_data['angle']
     value = test_data['value']
     reaction_loads = test_data['reaction_loads']
