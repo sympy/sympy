@@ -1791,6 +1791,11 @@ class LatexPrinter(Printer):
         else:
             return ' '.join(map(parens, args))
 
+    def _print_DotProduct(self, expr):
+        level = precedence_traditional(expr)
+        left, right = expr.args
+        return rf"{self.parenthesize(left, level)} \cdot {self.parenthesize(right, level)}"
+
     def _print_Determinant(self, expr):
         mat = expr.arg
         if mat.is_MatrixExpr:

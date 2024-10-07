@@ -7,7 +7,7 @@ from sympy.core.expr import (ExprBuilder, unchanged, Expr,
     UnevaluatedExpr)
 from sympy.core.function import (Function, expand, WildFunction,
     AppliedUndef, Derivative, diff, Subs)
-from sympy.core.mul import Mul
+from sympy.core.mul import Mul, _unevaluated_Mul
 from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
     Rational, nan, Integer, Number, pi, _illegal)
 from sympy.core.power import Pow
@@ -2291,3 +2291,9 @@ def test_format():
 
 def test_issue_24045():
     assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
+
+
+def test__unevaluated_Mul():
+    A, B = symbols('A B', commutative=False)
+    assert _unevaluated_Mul(x, A, B, S(2), A).args == (2, x, A, B, A)
+    assert _unevaluated_Mul(-x*A*B, S(2), A).args == (-2, x, A, B, A)

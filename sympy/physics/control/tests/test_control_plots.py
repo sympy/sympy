@@ -3,14 +3,18 @@ from sympy.core.numbers import I, all_close
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import (Abs, arg)
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.abc import s, p, a
+from sympy import pi
 from sympy.external import import_module
 from sympy.physics.control.control_plots import \
     (pole_zero_numerical_data, pole_zero_plot, step_response_numerical_data,
     step_response_plot, impulse_response_numerical_data,
     impulse_response_plot, ramp_response_numerical_data,
     ramp_response_plot, bode_magnitude_numerical_data,
-    bode_phase_numerical_data, bode_plot)
+    bode_phase_numerical_data, bode_plot, nyquist_plot_expr,
+    nichols_plot_expr)
+
 from sympy.physics.control.lti import (TransferFunction,
     Series, Parallel, TransferFunctionMatrix)
 from sympy.testing.pytest import raises, skip
@@ -296,3 +300,33 @@ def test_ramp_response():
     assert ramp_res_tester(tf4, 10, exp4, 3)
     assert ramp_res_tester(tf5, 10, exp5, 9)
     assert ramp_res_tester(tf6, 10, exp6)
+
+
+def test_nyquist_plot_expr():
+    r1, i1, w1 = nyquist_plot_expr(tf1)
+    r2, i2, w2 = nyquist_plot_expr(tf2)
+    r3, i3, w3 = nyquist_plot_expr(tf3)
+    r4, i4, w4 = nyquist_plot_expr(tf4)
+    assert r1 == (2 - w1**2)/(0.25*w1**2 + (2 - w1**2)**2)
+    assert i1 == -0.5*w1/(0.25*w1**2 + (2 - w1**2)**2)
+    assert r2 == 3*w2**2/(9*w2**2 + (1 - 6*w2**2)**2)
+    assert i2 == w2*(1 - 6*w2**2)/(9*w2**2 + (1 - 6*w2**2)**2)
+    assert r3 == -w3**4/(w3**6 + 1)
+    assert i3 == -w3/(w3**6 + 1)
+    assert r4 == 0
+    assert i4 == 10/w4**3
+
+
+def test_nichols_expr():
+    m1, p1, w1 = nichols_plot_expr(tf1)
+    m2, p2, w2 = nichols_plot_expr(tf2)
+    m3, p3, w3 = nichols_plot_expr(tf3)
+    m4, p4, w4 = nichols_plot_expr(tf4)
+    assert m1 == 20*log(1/(2*sqrt(w1**4/4 - 0.9375*w1**2 + 1)))/log(10)
+    assert p1 == 180*arg(1/(-w1**2 + 0.5*w1*I + 2))/pi
+    assert m2 == 20*log(Abs(w2)/sqrt(36*w2**4 - 3*w2**2 + 1))/log(10)
+    assert p2 == 180*arg(w2*I/(-6*w2**2 + 3*w2*I + 1))/pi
+    assert m3 == 20*log(Abs(w3)/sqrt(w3**6 + 1))/log(10)
+    assert p3 == 180*arg(-w3*I/(w3**3*I + 1))/pi
+    assert m4 == 20*log(10/(w4**2*Abs(w4)))/log(10)
+    assert p4 == 180*arg(I/w4**3)/pi

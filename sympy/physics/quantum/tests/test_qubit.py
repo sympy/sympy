@@ -5,7 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import Matrix
-from sympy.physics.quantum.qubit import (measure_all, measure_partial,
+from sympy.physics.quantum.qubit import (measure_all, measure_all_oneshot, measure_partial,
                                          matrix_to_qubit, matrix_to_density,
                                          qubit_to_matrix, IntQubit,
                                          IntQubitBra, QubitBra)
@@ -191,6 +191,15 @@ def test_measure_all():
 
     # from issue #12585
     assert measure_all(qapply(Qubit('0'))) == [(Qubit('0'), 1)]
+
+
+def test_measure_all_oneshot():
+    random.seed(42)
+    # for issue #27092
+    assert measure_all_oneshot(Qubit('11')) == Qubit('11')
+    assert measure_all_oneshot(Qubit('1')) == Qubit('1')
+    assert measure_all_oneshot(Qubit('0')/sqrt(2) + Qubit('1')/sqrt(2)) == \
+            Qubit('0')
 
 
 def test_eval_trace():
