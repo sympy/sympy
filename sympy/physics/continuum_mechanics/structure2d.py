@@ -96,7 +96,6 @@ class Load:
         self.start_x = start_x
         self.start_y = start_y
         self.value = value
-        # print(float(global_angle))
         self.global_angle = rad(global_angle)
         self.order = order
         self.end_x = end_x
@@ -109,31 +108,14 @@ class Load:
         self.local_start = None
         self.local_end = None
 
-        # self.relative_loc = None
-
     def __repr__(self):
         return f"Load(applied_to={self.applied_to},X1={self.start_x}, Y1={self.start_y},X2={self.end_x},Y2={self.end_y} Load={self.value}, Global_Angle={self.global_angle}, Order={self.order}, X-Component={self.x_component}, Y-Component={self.y_component})"
 
     def _compute_x_component(self):
-        # if isinstance(self.value, Symbol):
-        #     return self.value * cos(self.global_angle)
-        # else:
-        #     # print(float(self.value * cos(self.global_angle) * -1),float(self.global_angle))
-        #     pass
         return self.value * cos(self.global_angle)
 
     def _compute_y_component(self):
-        # if isinstance(self.value, Symbol):
-        #     return self.value * sin(self.global_angle) *- 1
-        # else:
-        #     # print(float(self.value * cos(self.global_angle) * -1),float(self.global_angle))
-        #     pass
         return self.value * sin(self.global_angle) *- 1
-
-    # def update_components(self):
-    #     """Update x and y components when the value is changed."""
-    #     self.x_component = self._compute_x_component()
-    #     self.y_component = self._compute_y_component()
 
     def _compute_local_loc(self):
         pass
@@ -276,7 +258,7 @@ class Structure2d:
             # print('T=',B,'@',bb)
 
 
-        #sees like if q is turned off at the end of the structure it will not give the right result
+
         # print(aa,oo,L,bb,value)
         # print(f'Fv={load.y_component},Fh={load.x_component}')
         # qz ############################################################################################
@@ -388,7 +370,7 @@ class Structure2d:
 
         self.unwrapped_bendpoints = unwrapped_bendpoints
         self.unwrapped_loadpoints = sorted(unwrapped_loadpoints, key=lambda x: x['l_id'])
-######################################################################
+        ### emulate Alexes input for his algorithm
         aa = []
         oo = []
 
@@ -401,6 +383,7 @@ class Structure2d:
         self.beam.length = L
 
         return aa,oo,L
+        ### emulate Alexes input for his algorithm
 
     def _find_unwrapped_position(self, x, y):
         aa, oo, L = self._unwrap_structure()
@@ -430,52 +413,48 @@ class Structure2d:
         self.supports.append(support)
 
         unwarap_x = self._find_unwrapped_position(x, y)
+        # print(f'support at {x}')
+        Rh = Symbol(f'Rh_{x}')
+        Rv = Symbol(f'Rv_{x}')
+        T = Symbol(f'T_{x}')
 
         if type == "pin":
-            Rh = Symbol(f'Rh_{unwarap_x}')
-            Rv = Symbol(f'Rv_{unwarap_x}')
-
-
             self.apply_load(start_x=x, start_y=y, value=-1*Rv, global_angle=90, order=-1)
             self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=0, order=-1)
 
             self.beam.bc_deflection.append((unwarap_x, 0))
             # defvection horizontal also 0 but this is not yet needed
-
-            # T1 = Symbol('T1')
             return Rv, Rh
 
 
         elif type == "roller":
-            Rv = Symbol(f'Rv_{unwarap_x}')
-
             self.apply_load(start_x=x, start_y=y, value=-1*Rv, global_angle=90, order=-1)
 
             self.beam.bc_deflection.append((unwarap_x, 0))
-
-
-
             return Rv
 
         elif type == "fixed":
-            Rh = Symbol(f'Rh_{unwarap_x}')
-            Rv = Symbol(f'Rv_{unwarap_x}')
-            T = Symbol(f'T_{unwarap_x}')
-
             self.apply_load(start_x=x, start_y=y, value=T, global_angle=0, order=-2)
             self.apply_load(start_x=x, start_y=y, value=-1*Rv, global_angle=90, order=-1)
             self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=0, order=-1)
 
             self.beam.bc_deflection.append((unwarap_x, 0))
             self.beam.bc_slope.append((unwarap_x, 0))
-
-            # T1 = Symbol('T1')
             return T, Rv, Rh
 
     def solve_for_reaction_loads(self, *args):
-        # Solve for moment and vertical reaction loads
-        self.beam.solve_for_reaction_loads(*args)
-        # print(self.beam._reaction_loads)
+
+        # Split arguments into vertical and horizontal reaction loads
+        reaction_loads_vertical = [arg for arg in args if 'Rv_' in str(arg)]
+        reaction_loads_horizontal = [arg for arg in args if 'Rh_' in str(arg)]
+        reaction_moments = [arg for arg in args if 'T_' in str(arg)]
+
+        args_for_beam_solver = tuple(reaction_loads_vertical + reaction_loads_horizontal + reaction_moments)
+
+        # print("Debug - reaction load arguments:", test)
+
+        # Solve for moment and vertical reaction loads using the beam solver
+        self.beam.solve_for_reaction_loads(*args_for_beam_solver)
 
         # Compute the horizontal reaction load by summing up all horizontal forces
         sum_horizontal = 0
@@ -487,15 +466,13 @@ class Structure2d:
                     length = sqrt((load.end_y - load.start_y)**2 + (load.end_x - load.start_x)**2)
                     sum_horizontal += length * load.x_component
 
-        # Create a dictionary of substitutions for horizontal reactions
+        # Substitute horizontal reactions with their solved values
         horizontal_key = {arg: float(-1 * sum_horizontal) for arg in args if 'Rh_' in str(arg)}
-        # print(horizontal_key)
-        # Update solved reaction loads with horizontal reactions
-        for key in self.beam._reaction_loads.items():
-                key =  key[0]
-                self.beam._reaction_loads[key] = self.beam._reaction_loads[key].subs(horizontal_key)
 
-        # print(self.beam._reaction_loads)
+        # Update solved reaction loads dictionary with horizontal reaction values
+        for key in self.beam._reaction_loads.items():
+            key = key[0]
+            self.beam._reaction_loads[key] = self.beam._reaction_loads[key].subs(horizontal_key)
 
         # Store reaction loads in the structure's state
         self.reaction_loads = self.beam.reaction_loads
@@ -503,26 +480,20 @@ class Structure2d:
         # Substitute solved reactions into the beam's load equation
         self.beam._load = self.beam._load.subs(self.beam.reaction_loads)
 
-################################### make this so it only runs when reaction loads are analiticly solved and can be a value or can have
-# a symbol that is not in the reaction loads
-
-
+        # Check for symbolic or numerical reaction load solution
         list_of_symbols = []
         for key in self.reaction_loads.items():
             list_of_symbols.append(str(key[0]))
-        # print(list_of_symbols)
-        # print(self.reaction_loads)
+
         list_of_symbols_reactions = []
         for load in self.loads:
             if isinstance(load.value, Basic):
                 list_of_symbols_reactions.append(str(load.value.as_coeff_Mul()[1]))
-        # print(list_of_symbols,list_of_symbols_reactions)
 
-        #check if the reaction loads are in the loads
-        # opposite of intersection
-        test = set(list_of_symbols).union(list_of_symbols_reactions)
-        if len(test) == len(list_of_symbols):
-            print('not symbolic')
+        # If all symbols are resolved
+        to_ignore_list = set(list_of_symbols).union(list_of_symbols_reactions)
+        if len(to_ignore_list) == len(list_of_symbols):
+            # print('Debug - Reaction loads are numerical')
             vertical_key = {arg: self.beam._reaction_loads[arg] for arg in args if 'Rv_' in str(arg)}
             for load in self.loads:
                 if isinstance(load.value, Basic) and load.order != -2:
@@ -531,37 +502,14 @@ class Structure2d:
                     load.y_component = load.y_component.subs(vertical_key).subs(horizontal_key)
                     load.x_component = load.x_component.subs(vertical_key).subs(horizontal_key)
 
-
+                    # Adjust load direction
                     if load.y_component > 0:
                         load.global_angle = load.global_angle + pi
-
-                    # print(load.x_component,load.y_component)
                     if load.x_component < 0:
                         load.global_angle = load.global_angle + pi
         else:
-            print('symbolic')
-        # # test = set(list_of_symbols).intersection(list_of_symbols_reactions)
-        # print(len(test),'dsad')
-
-
-
-
-        # vertical_key = {arg: self.beam._reaction_loads[arg] for arg in args if 'Rv_' in str(arg)}
-        # for load in self.loads:
-        #     if isinstance(load.value, Basic) and load.order != -2:
-        #         # Substitute horizontal and vertical reaction loads
-        #         load.value = load.value.subs(vertical_key).subs(horizontal_key)
-        #         load.y_component = load.y_component.subs(vertical_key).subs(horizontal_key)
-        #         load.x_component = load.x_component.subs(vertical_key).subs(horizontal_key)
-
-
-        #         if load.y_component > 0:
-        #             load.global_angle = load.global_angle + pi
-
-        #         # print(load.x_component,load.y_component)
-        #         if load.x_component < 0:
-        #             load.global_angle = load.global_angle + pi
-
+            # print('Debug - Reaction loads are symbolic')
+            pass
 
 
     def shear_force(self,x=None):
@@ -581,13 +529,8 @@ class Structure2d:
             x_symbol = Symbol('x')
             return self.beam.bending_moment().subs(x_symbol,x)
 
-
     def plot_bending_moment(self):
         self.beam.plot_bending_moment()
-
-
-
-
 
 #################################################################################
     def draw(self):
@@ -727,15 +670,15 @@ class Structure2d:
         plt.grid()
         plt.show()
 
+    # def draw_unwrapped(self):
+    #     fig, ax = plt.subplots()
+    #     # Set aspect ratio to 'equal' for correct proportions
+    #     ax.set_aspect('equal', adjustable='datalim')
 
-    def draw_unwrapped(self):
-        fig, ax = plt.subplots()
-        # Set aspect ratio to 'equal' for correct proportions
-        ax.set_aspect('equal', adjustable='datalim')
+    #     x_start = 0
 
-        x_start = 0
+    #     # Draw each member in the unwrapped configuration
+    #     for member in self.members:
+    #         plt.plot([x_start, x_start + member.length], [0, 0], 'o-', color='black')
+    #         x_start += member.length
 
-        # Draw each member in the unwrapped configuration
-        for member in self.members:
-            plt.plot([x_start, x_start + member.length], [0, 0], 'o-', color='black')
-            x_start += member.length
