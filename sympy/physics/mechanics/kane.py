@@ -1,4 +1,4 @@
-from sympy import zeros, Matrix, diff, eye, linear_eq_to_matrix
+from sympy import zeros, Matrix, diff, eye, linear_eq_to_matrix, count_ops
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
@@ -12,13 +12,13 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 import sympy.physics.mechanics as me
-
+import time
 __all__ = ['KanesMethod']
 
 
 class KanesMethod(_Methods):
 #-------------------------
-# 05.10.24
+# 07.10.24
 #-------------------------
 
     r"""Kane's method object.
@@ -369,13 +369,9 @@ class KanesMethod(_Methods):
 
         # Initialize complex constraints
         # The idea is this:
-        # 0 = complex.diff(t) is linnar in uddot.
+        # 0 = complex.diff(t) is linnar in udot.
         if complex:
-            u_zero = dict.fromkeys(self.u, 0)
             udot_zero = dict.fromkeys(self._udot, 0)
-            aux_zero = dict.fromkeys(self._uaux, 0)
-            auxdot_zero = dict.fromkeys([aux.diff(me.dynamicsymbols._t)
-                for aux in self._uaux], 0)
 
             # When calling kanes_equations, another class instance will be
             # computation of kinetic differential equation matrices will be
@@ -383,31 +379,9 @@ class KanesMethod(_Methods):
             # object, and the qd_u_map will not be available.
             if self._qdot_u_map is not None:
                 complex = msubs(complex, self._qdot_u_map)
-
             complexdt = complex.diff(dynamicsymbols._t)
-            complexdt = msubs(complexdt, auxdot_zero)
-            self._f_c = msubs(complexdt, udot_zero)
-            print('complextdt', me.find_dynamicsymbols(complexdt))
             self._k_c, self._f_c_neg = linear_eq_to_matrix(complexdt, self._udot[:])
             self._f_c = -self._f_c_neg
-
-        #    complexdt = msubs(complexdt, auxdot_zero)
-        #    if self._qdot_u_map is not None:
-        #        complex = msubs(complex, self._qdot_u_map)
-        #    complexdt = complex.diff(dynamicsymbols._t)
-        #    self._f_c = msubs(complexdt, udot_zero)
-        #    self._k_c = (complexdt - self._f_c).jacobian(self._udot)
-        #    print('fc, fk', me.find_dynamicsymbols(self._f_c), me.find_dynamicsymbols(self._k_c))
-            # The complex velocity constraints must be linear in both q''
-            # and udot, so check for udot and q'' in the components.
-        #    dy_syms = find_dynamicsymbols(self._f_c.row_join(self._k_c))
-        #    nonlin_vars = ([vari for vari in self._udot[:] +
-        #        [k.diff(me.dynamicsymbols._t) for k in self._qdot] if vari in dy_syms])
-        #    if nonlin_vars:
-        #        msg = ('The provided complex velocity constraints are '
-        #               'nonlinear in {}. They must be linear in the '
-        #               'generalized accelerations and q.diff(t, 2).')
-        #        raise ValueError(msg.format(nonlin_vars))
 
             # Form of non-holonomic constraints is B*u' + C = 0.
             # We partition B into independent and dependent columns:
@@ -542,7 +516,6 @@ class KanesMethod(_Methods):
         l = len(self._nonlin_vel_constr)
 
         if self._lin_vel_constr:
-#            p = o - len(self._udep)
             FRtilde = FR[:o-m, 0]
             FRold = FR[o-m:o, 0]
             FRtilde += self._Ars.T * FRold
@@ -553,7 +526,6 @@ class KanesMethod(_Methods):
             FRold = FR[o-(m+l):o, 0]
             FRtilde += self._Arstilde.T * FRold
             FR = msubs(FRtilde, self._qdot_u_map)
-
 
         self._forcelist = fl
         self._fr = FR
@@ -890,6 +862,7 @@ class KanesMethod(_Methods):
                         )
             km._qdot_u_map = self._qdot_u_map
             self._km = km
+            # remove virtual speeds in the auxiliary equations
             fraux = msubs(km._form_fr(loads), aux_zero)
             frstaraux = msubs(km._form_frstar(bodies), aux_zero)
             self._aux_eq = fraux + frstaraux
@@ -978,13 +951,14 @@ class KanesMethod(_Methods):
         """The forcing vector of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
+
         if self._nonlin_vel_constr:
             udot_zero = dict.fromkeys(self._udot, 0)
             self._f_d = msubs(self._f_d, udot_zero, self._qdot_u_map)
             self._f_dnh = msubs(self._f_dnh, udot_zero, self._qdot_u_map)
 
-        uaux_zero = dict.fromkeys(self._uaux, 0)
         if self._uaux:
+            uaux_zero = dict.fromkeys(self._uaux, 0)
             uauxdt_zero = dict.fromkeys([i.diff(dynamicsymbols._t) for i in self._uaux], 0)
             return -msubs(Matrix([self._f_d, self._f_dnh]), uaux_zero, uauxdt_zero)
         else:
