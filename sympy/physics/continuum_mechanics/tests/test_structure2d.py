@@ -415,4 +415,3 @@ def test_structure2d_symbolic_onebend(test_beam_fixture_one_bend, test_data):
         print(math.isclose(float(s.bending_moment(loc)),float(expected_bm),rel_tol=1e-2,abs_tol=1e-2))
 
         assert math.isclose(float(s.bending_moment(loc)),float(expected_bm),rel_tol=1e-2,abs_tol=1e-2) == True
-
