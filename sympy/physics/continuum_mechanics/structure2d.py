@@ -1068,4 +1068,3 @@ class Structure2d:
 
         ax.grid(True,zorder=10)
         plt.show()
-
