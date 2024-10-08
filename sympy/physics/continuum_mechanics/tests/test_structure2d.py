@@ -8,7 +8,12 @@ import math
 
 x = Symbol('x')
 F = Symbol('F')
-Rv_0, Rh_0, Rv_4 = symbols('Rv_0 Rh_0 Rv_4')
+# Rv_0, Rh_0, Rv_4 = symbols('R_v__0,__0 R_h__0,__0 R_v__4,__0')
+Rv_0 = Symbol('R_v__0,__0')
+Rh_0 = Symbol('R_h__0,__0')
+Rv_4 = Symbol('R_v__4,__0')
+
+
 
 # Test Data Definitions
 symbolic_test_data = [
@@ -358,7 +363,10 @@ def test_numerical_distload(test_beam_fixture, test_data):
 
 
 # Test Data Definitions
-Rv_7, Rh_7, T_7 = symbols('Rv_7 Rh_7 T_7')
+# Rv_7, Rh_7, T_7 = symbols('R_v__7,__-1 R_h__7,__-1 T__7,__-1')
+Rv_7 = Symbol('R_v__7,__-1')
+Rh_7 = Symbol('R_h__7,__-1')
+T_7 = Symbol('T__7,__-1')
 
 numerical_test_data = [
     {
