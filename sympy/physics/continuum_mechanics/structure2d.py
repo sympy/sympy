@@ -4,7 +4,7 @@ from sympy.core import Symbol, Basic
 from sympy.core.numbers import pi
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.trigonometric import sin, cos, atan2
+from sympy.functions.elementary.trigonometric import sin, cos, atan2, tan
 # from sympy.simplify import nsimplify
 from sympy.simplify.simplify import simplify
 from sympy.geometry.polygon import deg, rad
@@ -30,6 +30,15 @@ patches = import_module(
             "Circle",
             "Rectangle",
             "Polygon",
+        ]
+    },
+)
+
+np = import_module(
+    "numpy",
+    import_kwargs={
+        "fromlist": [
+            "numpy",
         ]
     },
 )
@@ -408,35 +417,50 @@ class Structure2d:
 
 
     def apply_support(self, x, y, type="pin"):
-
         support = self.add_or_update_node(x, y, type)
         self.supports.append(support)
 
         unwarap_x = self._find_unwrapped_position(x, y)
-        # print(f'support at {x}')
-        Rh = Symbol(f'Rh_{x}')
-        Rv = Symbol(f'Rv_{x}')
-        T = Symbol(f'T_{x}')
+
+        Rh = Symbol(f'R_h__{round(x,2)},__{round(y,2)}')
+        Rv = Symbol(f'R_v__{round(x,2)},__{round(y,2)}')
+        T = Symbol(f'T__{round(x,2)},__{round(y,2)}')
 
         if type == "pin":
-            self.apply_load(start_x=x, start_y=y, value=-1*Rv, global_angle=90, order=-1)
-            self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=0, order=-1)
+            load_v = -1 * Rv
+            load_h = Rh
+            self.apply_load(start_x=x, start_y=y, value=load_v, global_angle=90, order=-1)
+            self.apply_load(start_x=x, start_y=y, value=load_h, global_angle=0, order=-1)
+
+            # Mark these loads as support reactions
+            self.loads[-1].is_support_reaction = True
+            self.loads[-2].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
-            # defvection horizontal also 0 but this is not yet needed
             return Rv, Rh
 
-
         elif type == "roller":
-            self.apply_load(start_x=x, start_y=y, value=-1*Rv, global_angle=90, order=-1)
+            load_v = -1 * Rv
+            self.apply_load(start_x=x, start_y=y, value=load_v, global_angle=90, order=-1)
+
+            # Mark this load as a support reaction
+            self.loads[-1].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
             return Rv
 
         elif type == "fixed":
-            self.apply_load(start_x=x, start_y=y, value=T, global_angle=0, order=-2)
-            self.apply_load(start_x=x, start_y=y, value=-1*Rv, global_angle=90, order=-1)
-            self.apply_load(start_x=x, start_y=y, value=Rh, global_angle=0, order=-1)
+            load_t = T
+            load_v = -1 * Rv
+            load_h = Rh
+            self.apply_load(start_x=x, start_y=y, value=load_t, global_angle=0, order=-2)
+            self.apply_load(start_x=x, start_y=y, value=load_v, global_angle=90, order=-1)
+            self.apply_load(start_x=x, start_y=y, value=load_h, global_angle=0, order=-1)
+
+            # Mark these loads as support reactions
+            self.loads[-1].is_support_reaction = True
+            self.loads[-2].is_support_reaction = True
+            self.loads[-3].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
             self.beam.bc_slope.append((unwarap_x, 0))
@@ -445,8 +469,8 @@ class Structure2d:
     def solve_for_reaction_loads(self, *args):
 
         # Split arguments into vertical and horizontal reaction loads
-        reaction_loads_vertical = [arg for arg in args if 'Rv_' in str(arg)]
-        reaction_loads_horizontal = [arg for arg in args if 'Rh_' in str(arg)]
+        reaction_loads_vertical = [arg for arg in args if 'R_v' in str(arg)]
+        reaction_loads_horizontal = [arg for arg in args if 'R_h' in str(arg)]
         reaction_moments = [arg for arg in args if 'T_' in str(arg)]
 
         args_for_beam_solver = tuple(reaction_loads_vertical + reaction_loads_horizontal + reaction_moments)
@@ -467,7 +491,7 @@ class Structure2d:
                     sum_horizontal += length * load.x_component
 
         # Substitute horizontal reactions with their solved values
-        horizontal_key = {arg: float(-1 * sum_horizontal) for arg in args if 'Rh_' in str(arg)}
+        horizontal_key = {arg: float(-1 * sum_horizontal) for arg in args if 'R_h' in str(arg)}
 
         # Update solved reaction loads dictionary with horizontal reaction values
         for key in self.beam._reaction_loads.items():
@@ -494,7 +518,9 @@ class Structure2d:
         to_ignore_list = set(list_of_symbols).union(list_of_symbols_reactions)
         if len(to_ignore_list) == len(list_of_symbols):
             # print('Debug - Reaction loads are numerical')
-            vertical_key = {arg: self.beam._reaction_loads[arg] for arg in args if 'Rv_' in str(arg)}
+            vertical_key = {arg: self.beam._reaction_loads[arg] for arg in args if 'R_v' in str(arg)}
+            bending_moment_key = {arg: self.beam._reaction_loads[arg] for arg in args if 'T_' in str(arg)}
+
             for load in self.loads:
                 if isinstance(load.value, Basic) and load.order != -2:
                     # Substitute horizontal and vertical reaction loads
@@ -507,177 +533,540 @@ class Structure2d:
                         load.global_angle = load.global_angle + pi
                     if load.x_component < 0:
                         load.global_angle = load.global_angle + pi
+                elif isinstance(load.value, Basic) and load.order == -2:
+                    load.value = load.value.subs(bending_moment_key)
+
+
         else:
             # print('Debug - Reaction loads are symbolic')
             pass
 
 
-    def shear_force(self,x=None):
+    def shear_force(self,x=None,y=None):
+        """
+        Compute the shear force at a given point on the beam.
+
+        If no arguments are provided, it returns the shear force equation.
+
+        if x is provided, it returns the shear force at the UNWRAPPED LOC.
+
+        if x AND y are provided, it returns the shear force at the given x and y coordinates.
+        """
+
         if x is None:
             self.beam.shear_force()
         else:
-            x_symbol = Symbol('x')
-            return self.beam.shear_force().subs(x_symbol,x)
+            if y is None:
+                x_symbol = Symbol('x')
+                return self.beam.shear_force().subs(x_symbol,x)
+            else:
+                unwarap_x = self._find_unwrapped_position(x, y)
+                return self.beam.shear_force().subs(Symbol('x'),unwarap_x)
 
-    def plot_shear_force(self,x=None):
+    def plot_shear_force(self):
         self.beam.plot_shear_force()
 
-    def bending_moment(self,x=None):
+    def bending_moment(self,x=None,y=None):
+        """
+        Compute the bending moment at a given point on the beam.
+
+        If no arguments are provided, it returns the bending moment equation.
+
+        if x is provided, it returns the bending moment at the UNWRAPPED LOC.
+
+        if x AND y are provided, it returns the bending moment at the given x and y coordinates.
+        """
+
         if x is None:
             return self.beam.bending_moment()
         else:
-            x_symbol = Symbol('x')
-            return self.beam.bending_moment().subs(x_symbol,x)
+            if y is None:
+                x_symbol = Symbol('x')
+                return self.beam.bending_moment().subs(x_symbol,x)
+            else:
+                unwarap_x = self._find_unwrapped_position(x, y)
+                return self.beam.bending_moment().subs(Symbol('x'),unwarap_x)
 
     def plot_bending_moment(self):
         self.beam.plot_bending_moment()
 
+    def summary(self, verbose=True, round_digits=None):
+        title = 'Structure Summary'
+        line_length = 50
+
+        print(f'{"=" * ((line_length - len(title)) // 2)} {title} {"=" * ((line_length - len(title)) // 2)}')
+
+        if len(self.reaction_loads) == 0:
+            print('\nPlease solve for reaction loads first')
+        elif verbose and len(self.reaction_loads) != 0:
+            dx = 1e-5
+
+            print('\nReaction Loads:')
+            for key, value in self.reaction_loads.items():
+                support_name = str(key).split('__')[0]
+                support_x_loc = float(str(key).split('__')[1].strip(','))
+                support_y_loc = float(str(key).split('__')[2].strip(','))
+                unwrapped_xl_loc = self._find_unwrapped_position(support_x_loc, support_y_loc)
+
+                # Check if the value contains any symbols. If not, round it.
+                if round_digits is not None and not value.has(Symbol):
+                    value = round(float(value), round_digits)
+
+                support_str = f'{support_name:<5} [{support_x_loc:.2f},{support_y_loc:.2f}]  ({unwrapped_xl_loc:.2f})'
+                print(f'{support_str:<40} = {value}')
+
+            print('\nPoints of Interest - Bending Moment:')
+            bend_points = [float(point) for item in self.unwrapped_bendpoints for point in item['bend_point']]
+            bend_points = set(bend_points)
+            bend_points = sorted(bend_points)
+            for point in bend_points:
+                bending_moment_value = self.bending_moment(point)
+                if round_digits is not None and not bending_moment_value.has(Symbol):
+                    bending_moment_value = round(float(bending_moment_value), round_digits)
+                string_text = f'bending_moment at [x.xx,y.yy]  ({point:.02f})'
+                print(f'{string_text:<40} = {bending_moment_value}')
+
+            print('\nPoints of Interest - Shear Force:')
+            load_points = [float(local) for point in self.unwrapped_loadpoints for local in point['locals']]
+            load_points = set(load_points + bend_points)
+            load_points = sorted(load_points)
+
+            for point in load_points:
+                shear_force_value = self.shear_force(point)
+                if round_digits is not None and not shear_force_value.has(Symbol):
+                    shear_force_value = round(float(shear_force_value), round_digits)
+
+                if point == load_points[0]:
+                    string_text = f'shear_force at [x.xx,y.yy]  ({point:.02f}+)'
+                    print(f'{string_text:<40} = {shear_force_value}')
+                elif point == load_points[-1]:
+                    string_text = f'shear_force at [x.xx,y.yy]  ({point:.02f}-)'
+                    print(f'{string_text:<40} = {shear_force_value}')
+                else:
+                    string_text = f'shear_force at [x.xx,y.yy]  ({point:.02f}-)'
+                    print(f'{string_text:<40} = {shear_force_value}')
+                    string_text = f'shear_force at [x.xx,y.yy]  ({point:.02f}+)'
+                    print(f'{string_text:<40} = {shear_force_value}')
+
+
+
 #################################################################################
-    def draw(self):
+    def draw(self,forced_load_size=None,show_load_values=False):
         fig, ax = plt.subplots()
-
         ax.set_aspect('equal')
-        point_load_color = '#38812F'
-        distributed_load_color = '#A30000'
 
-        # Draw each member
+        # Define colors
+        point_load_color = 'blue'          # Point load color
+        distributed_load_color = '#A30000'    # Distributed load color
+        support_reaction_color = 'darkorange'    # Support reaction load color (blue)
+        uncomputed_color = '#696969'
+        scale = 0.75
+
+
+        # Draw members
         for member in self.members:
-            x1, y1, x2, y2 = float(member.x1), float(member.y1), float(member.x2), float(member.y2)
-            ax.plot([x1, x2], [y1, y2], color='black', linewidth=3)
+            x1, y1 = float(member.x1), float(member.y1)
+            x2, y2 = float(member.x2), float(member.y2)
+            ax.plot([x1, x2], [y1, y2], color='black', linewidth=3, zorder=10)
 
-        # Draw each load
+        # Draw loads
         for load in self.loads:
             x, y = float(load.start_x), float(load.start_y)
+            is_support_reaction = getattr(load, 'is_support_reaction', False)
+
+            # Set color based on whether it's a support reaction
+            if is_support_reaction:
+                load_color = support_reaction_color
+            else:
+                if load.order < 0 or load.order == 1:
+                    load_color = point_load_color
+                else:
+                    load_color = distributed_load_color
+
+            # Set transparency based on whether the load has unsolved symbols
+            alpha_value = 1.0
+            if isinstance(load.value, Basic) and load.value.has(Symbol):
+                # alpha_value = 0.5
+                # uncomputed_color = '#696969'
+                load_color = uncomputed_color
 
             if load.order == -2:
-                # Draw moment as circular arrow with fixed size
                 radius = 0.5
 
-                circle = patches.Arc((x, y), radius*2, radius*2, angle=0, theta1=0+10, theta2=270-10, color=point_load_color)
-                ax.add_patch(circle)
-                # Add arrowhead manually
-                arrow_x = x + radius*1 * float(cos(rad(10)))
-                arrow_y = y + radius * float(sin(rad(10)))
-                dx = 0  # Small offset for arrowhead
-                dy = -radius*0.45
-                ax.arrow(arrow_x, arrow_y, dx, dy, shape='full', lw=0, length_includes_head=True,
-                        head_width=radius*0.4, color=point_load_color)
+                if load.value.is_negative:
+                    angle_start = 180+30
+                    angle_end = 270-10
+                    angle_moment_icon = angle_start
+                    angle2moment_icon = angle_start -90
+
+                else:
+                    angle_start = 180+10
+                    angle_end = 270-30
+                    angle_moment_icon = angle_end
+                    angle2moment_icon = angle_end +90
+
+
+                arc = patches.Arc(
+                    (x, y),
+                    width=2.5*radius,
+                    height=2.5*radius,
+                    theta1=angle_start,
+                    theta2=angle_end,
+                    color=load_color,
+                    alpha=alpha_value,
+                    linewidth=2,
+                )
+                ax.add_patch(arc)
+                # Add arrowhead at staty of arc
+                arrowhead = patches.FancyArrow(
+                    x + radius*1.25 * np.cos(np.radians(angle_moment_icon)),
+                    y + radius*1.25 * np.sin(np.radians(angle_moment_icon)),
+                    0.1 * np.cos(np.radians(angle2moment_icon)),
+                    0.1 * np.sin(np.radians(angle2moment_icon)),
+                    width=0.02,
+                    head_width=0.1,
+                    head_length=0.2,
+                    color=load_color,
+                    alpha=alpha_value,
+                )
+                ax.add_patch(arrowhead)
+                if show_load_values:
+                    if load_color == uncomputed_color:
+                        color_text = 'black'
+                    else:
+                        color_text = load_color
+
+                    if isinstance(load.value, Basic):
+                        if not load.value.has(Symbol):
+                            plt.text(x - radius*2, y-radius*2, f'{float(load.value):0.2f}', fontsize=8, color=color_text, zorder=100,
+                                    ha="center", va="center", bbox={"facecolor": "lightgrey", "alpha": 0.85, "edgecolor": "none"})
+                        else:
+                            plt.text(x - radius*2, y-radius*2, f'{str(load.value).split("__")[0]}', fontsize=8, color=color_text, zorder=100,
+                                    ha="center", va="center", bbox={"facecolor": "lightgrey", "alpha": 0.85, "edgecolor": "none"})
+                    else:
+                        plt.text(x - radius*2, y-radius*2, f'{float(load.value):0.2f}', fontsize=8, color=color_text, zorder=100,
+                                ha="center", va="center", bbox={"facecolor": "lightgrey", "alpha": 0.85, "edgecolor": "none"})
+
+
 
             elif load.order < 0 or load.order == 1:
                 # Point load
-                # Assign a default value to load_length
-                load_length = 1
-
-                # check if it contains any sympy symbol or not
-                if isinstance(load.value, Basic):  # Basic is the base class for all SymPy expressions
-                    if load.value.has(Symbol):
-                        load_length = 1
+                if forced_load_size is not None:
+                    load_length = forced_load_size
                 else:
-                    # Ensure load.value is numeric and assign load_length accordingly
-                    load_length = float(load.value) / 10 if load.value != 0 else 0
+                    if isinstance(load.value, (int, float)):
+                        load_length = abs(float(load.value)) / 10.0
+                    else:
+                        if is_support_reaction and isinstance(load.value, Basic) and load.value.has(Symbol):
+                            # If the load is an unsolved support reaction, set the length to 0.5
+                            load_length = 1.0
+                        else:
+                            # Default length for other symbolic or unsolved loads
+                            load_length = 1.0
 
-                angle = float(load.global_angle+ pi)
-                arrow_x = x + load_length * cos(angle)
-                arrow_y = y + load_length * sin(angle)
+                # Only apply the offset if it is a support reaction
+                if is_support_reaction:
+                    support_offset = scale * 0.65
+                    if load.y_component.has(Symbol):
+                        sign = load.y_component
+                        if sign.is_negative:
+                            y = y + support_offset
+                        else:
+                            y = y - support_offset
+                    elif load.x_component.has(Symbol):
+                        sign2 = load.x_component
+                        if sign2.is_negative:
+                            x = x + support_offset
+                        else:
+                            x = x - support_offset
 
-                ax.annotate(
-                    "",
-                    xy=(x, y),
-                    xytext=(arrow_x, arrow_y),
-                    arrowprops={"arrowstyle": '->', "color": point_load_color, "shrinkA": 0, "shrinkB": 0, 'lw': 2.5},
-                    zorder=200
+                    elif load.y_component.has(Symbol) == False and load.x_component.has(Symbol) == False:
+                        if is_support_reaction and float(load.y_component) == 0:
+                            if float(load.x_component) > 0:
+                                x = x -support_offset
+                            else:
+                                x = x + support_offset
+                        if is_support_reaction and float(load.x_component) == 0:
+                            if float(load.y_component) > 0:
+                                y = y  + support_offset
+                            else:
+                                y = y - support_offset
+
+
+                angle = float(load.global_angle)
+                dx = load_length * np.cos(angle)
+                dy = load_length * np.sin(angle)
+
+                arrow_patch = patches.FancyArrow(
+                    x - dx,
+                    y - dy,
+                    dx,
+                    dy,
+                    length_includes_head=True,
+                    width=0.02,
+                    head_width=0.1,
+                    head_length=0.2,
+                    color=load_color,
+                    alpha=alpha_value,
+                    zorder=100,
                 )
+                ax.add_patch(arrow_patch)
+                if load_color == uncomputed_color:
+                    color_text = 'black'
+                else:
+                    color_text = load_color
+
+                if show_load_values:
+                    if isinstance(load.value, Basic):
+                        if not load.value.has(Symbol):
+                            plt.text(x - dx, y - dy, f'{float(load.value):0.2f}', fontsize=8, color=color_text, zorder=100,
+                                    ha="center",
+                                    va="center",
+                                    bbox={"facecolor": "lightgrey", "alpha": 0.850, "edgecolor": "none"},)
+                        else:
+                            plt.text(x - dx, y - dy, f'{str(load.value).split("__")[0]}', fontsize=8, color=color_text, zorder=100,
+                                    ha="center",
+                                    va="center",
+                                    bbox={"facecolor": "lightgrey", "alpha": 0.850, "edgecolor": "none"},)
+                    else:
+                        plt.text(x - dx, y - dy, f'{float(load.value):0.2f}', fontsize=8, color=color_text, zorder=100,
+                                ha="center",
+                                va="center",
+                                bbox={"facecolor": "lightgrey", "alpha": 0.850, "edgecolor": "none"},)
+
 
             else:
                 # Distributed load
+                if forced_load_size is not None:
+                    load_length = forced_load_size
+                else:
+                    if isinstance(load.value, (int, float)):
+                        load_length = abs(float(load.value)) / 10.0
+                    else:
+                        # Default length for other symbolic or unsolved loads
+                        load_length = 1.0
+
                 x1, y1 = float(load.start_x), float(load.start_y)
                 if load.end_x is not None and load.end_y is not None:
                     x2, y2 = float(load.end_x), float(load.end_y)
                 else:
-                    # Find the member associated with the load
-                    member = next((m for m in self.members if (float(m.x1) == x1 and float(m.y1) == y1) or
-                                (float(m.x2) == x1 and float(m.y2) == y1)), None)
+                    member = next((m for m in self.members if
+                                   (float(m.x1) == x1 and float(m.y1) == y1) or
+                                   (float(m.x2) == x1 and float(m.y2) == y1)), None)
                     if member is not None:
                         x2, y2 = float(member.x2), float(member.y2)
                     else:
                         continue  # Skip if member not found
 
-                member_length = sqrt((x2 - x1)**2 + (y2 - y1)**2)
-                arrow_spacing = 0.5  # Define a consistent arrow spacing
-                num_arrows = max(int(member_length / arrow_spacing), 1)
+                member_length = np.hypot(x2 - x1, y2 - y1)
+                num_arrows = max(int(member_length / 0.5), 1)
 
-                dx = (x2 - x1) / num_arrows
-                dy = (y2 - y1) / num_arrows
+                arrow_tails_x = []
+                arrow_tails_y = []
 
-                arrow_coords = []
+                arrow_heads_x = []
+                arrow_heads_y = []
+
                 for i in range(num_arrows + 1):
-                    x_arrow = x1 + i * dx
-                    y_arrow = y1 + i * dy
+                    t = i / num_arrows
+                    x_point = x1 + t * (x2 - x1)
+                    y_point = y1 + t * (y2 - y1)
 
-                    # Check if load.value is symbolic or numeric
-                    if isinstance(load.value, Symbol):
-                        arrow_length = float(10 * (x_arrow) ** load.order)
-                    else:
-                        arrow_length = float(load.value * (x_arrow) ** load.order)
+                    # load_length = 0.5
+                    angle = float(load.global_angle)
+                    dx = load_length * np.cos(angle)
+                    dy = load_length * np.sin(angle)
 
-                    arrow_length_scaled = arrow_length / 10  # Scale the arrow length
-                    # Arrows originate from the load line, pointing in the direction of the load
-                    arrow_x = x_arrow + arrow_length_scaled * cos(float(load.global_angle+ pi))
-                    arrow_y = y_arrow + arrow_length_scaled * sin(float(load.global_angle+ pi))
-
-                    arrow_coords.append((arrow_x, arrow_y))
-
-                    ax.annotate(
-                        "",
-                        xy=(x_arrow, y_arrow),
-                        xytext=(arrow_x, arrow_y),
-                        arrowprops={"arrowstyle": '->', "color": distributed_load_color, "shrinkA": 0, "shrinkB": 0},
-                        zorder=100
+                    arrow_patch = patches.FancyArrow(
+                        x_point - dx,
+                        y_point - dy,
+                        dx,
+                        dy,
+                        length_includes_head=True,
+                        width=0.02,
+                        head_width=0.1,
+                        head_length=0.2,
+                        color=load_color,
+                        alpha=alpha_value,
+                        zorder=90,
                     )
+                    ax.add_patch(arrow_patch)
+                    arrow_tails_x.append(x_point - dx)
+                    arrow_tails_y.append(y_point - dy)
 
-                # Plot the load line that the arrows will originate from
-                for i in range(len(arrow_coords) - 1):
-                    ax.plot([arrow_coords[i][0], arrow_coords[i + 1][0]],
-                            [arrow_coords[i][1], arrow_coords[i + 1][1]],
-                            color=distributed_load_color, zorder=100)
+                    arrow_heads_x.append(x_point)
+                    arrow_heads_y.append(y_point)
 
-                if load.end_x is not None and load.end_y is not None:
-                    square_coords = [(x1, y1), arrow_coords[0], arrow_coords[-1], (x2, y2)]
-                    square = patches.Polygon(square_coords, closed=True, color=distributed_load_color,
-                                            alpha=0.15, zorder=10)
-                    ax.add_patch(square)
+                plt.plot(arrow_tails_x, arrow_tails_y, color=load_color, alpha=alpha_value)
 
-        # Draw each support
+                arrow_coords = [
+                    (arrow_tails_x[0], arrow_tails_y[0]),   # First tail point
+                    (arrow_tails_x[-1], arrow_tails_y[-1]), # Last tail point
+                    (arrow_heads_x[-1], arrow_heads_y[-1]), # Last head point
+                    (arrow_heads_x[0], arrow_heads_y[0])    # First head point
+]
+                # make grey when unsolved
+                if isinstance(load.value, Basic) and load.value.has(Symbol):
+                    distributed_load_color = '#696969'
+
+                polygon = plt.Polygon(arrow_coords, closed=True, fill=True, color=distributed_load_color, edgecolor=None, alpha=0.25,zorder=89)
+                ax.add_patch(polygon)
+
+
+                if show_load_values:
+                    avrage_x = (arrow_tails_x[0] + arrow_tails_x[-1]) / 2
+                    avrage_y = (arrow_tails_y[0] + arrow_tails_y[-1]) / 2
+
+                    if load_color == uncomputed_color:
+                        color_text = 'black'
+                    else:
+                        color_text = load_color
+                    if isinstance(load.value, Basic):
+                        if not load.value.has(Symbol):
+                            plt.text(avrage_x, avrage_y, f'{float(load.value):0.2f}', fontsize=8, color=color_text, zorder=100,
+                                    ha="center",
+                                    va="center",
+                                    bbox={"facecolor": "lightgrey", "alpha": 0.850, "edgecolor": "none"},)
+                        else:
+                            plt.text(avrage_x, avrage_y, f'{str(load.value).split("__")[0]}', fontsize=8, color=color_text, zorder=100,
+                                    ha="center",
+                                    va="center",
+                                    bbox={"facecolor": "lightgrey", "alpha": 0.850, "edgecolor": "none"},)
+                    else:
+                        plt.text(avrage_x, avrage_y, f'{float(load.value):0.2f}', fontsize=8, color=color_text, zorder=100,
+                                ha="center",
+                                va="center",
+                                bbox={"facecolor": "lightgrey", "alpha": 0.850, "edgecolor": "none"},)
+
+
+
+
+        # Draw supports
+
         for support in self.supports:
             x, y = float(support.x), float(support.y)
-            if support.node_type == "pin":
-                ax.plot(x, y, 'o', color='red')
-            elif support.node_type == "fixed":
-                ax.plot(x, y, 's', color='blue')
-            elif support.node_type == "roller":
-                ax.plot(x, y, 'o', color='yellow')
+            # x, y = float(support.x), float(support.y)
 
-        # Adjust y-ticks to have the same step as x-ticks
+            if support.node_type == "pin":
+                # scale = 0.5  # Adjust this to make the polygon larger or smaller
+                triangle_height = 0.5 * scale  # The height of the triangle
+                angle = 34 * (pi / 180)  # Convert degrees to radians
+
+                # Calculate the half-width of the triangle using tan(angle)
+                half_width = triangle_height * float(tan(angle))
+
+                # Define triangle vertices for the pin support (top point is at x, y)
+                triangle_vertices = [
+                    [x, y],  # Top point (pivot)
+                    [x - half_width, y - triangle_height],  # Bottom-left corner
+                    [x + half_width, y - triangle_height]   # Bottom-right corner
+                ]
+
+
+                # Create the triangle with scaled vertices
+                triangle = patches.Polygon(
+                    triangle_vertices,
+                    edgecolor='k',
+                    facecolor='none',
+                    linewidth=1.5,
+                    zorder = 20
+                )
+                ax.add_patch(triangle)
+
+                # Draw a small circle on top to represent the pivot point
+                pivot_circle = patches.Circle(
+                    (x, y), 0.1 * scale, edgecolor='k', facecolor='white', linewidth=1.5,zorder=20,
+                )
+                ax.add_patch(pivot_circle)
+
+
+            elif support.node_type == "roller":
+                # scale = 1  # Adjust this to make the polygon larger or smaller
+                triangle_height = 0.5 * scale  # The height of the triangle
+                angle = 34 * (pi / 180)  # Convert degrees to radians
+
+                # Calculate the half-width of the triangle using tan(angle)
+                half_width = triangle_height * float(tan(angle))
+
+                # Define triangle vertices for the pin support (top point is at x, y)
+                triangle_vertices = [
+                    [x, y],  # Top point (pivot)
+                    [x - half_width, y - triangle_height],  # Bottom-left corner
+                    [x + half_width, y - triangle_height]   # Bottom-right corner
+                ]
+
+                # Create the triangle with scaled vertices
+                triangle = patches.Polygon(
+                    triangle_vertices,
+                    edgecolor='k',
+                    facecolor='none',
+                    linewidth=1.5,
+                    zorder = 20,
+                )
+                ax.add_patch(triangle)
+
+                # Draw a small circle on top to represent the pivot point
+                pivot_circle = patches.Circle(
+                    (x, y), 0.1 * scale, edgecolor='k', facecolor='white', linewidth=1.5,zorder=20,
+                )
+                ax.add_patch(pivot_circle)
+
+                plt.plot([x - half_width,x + half_width], [y - triangle_height - (scale*0.1),y - triangle_height - (scale*0.1)], color='k', zorder=20)
+
+            elif support.node_type == "fixed":
+                box_size =  scale*0.5
+                x_box = x - box_size / 2
+                y_box = y - box_size / 2
+
+
+                scaled_vertices = [
+                    [x_box, y_box],                      # Bottom-left corner
+                    [(x_box + box_size), y_box],          # Bottom-right corner
+                    [(x_box + box_size), (y_box + box_size)],  # Top-right corner
+                    [x_box, (y_box + box_size)]           # Top-left corner
+                ]
+
+                # Create the polygon with scaled vertices
+                polygon = patches.Polygon(
+                    scaled_vertices,     # Vertices scaled by the scale factor
+                    edgecolor='k',
+                    facecolor="none",
+                    linewidth=1.5       # Optional: set the thickness of the border
+                )
+                ax.add_patch(polygon)
+
+                # Add the short lines inside the bottom edge of the box
+                num_lines = 4  # Number of diagonal lines (can adjust for more or fewer lines)
+                for i in range(num_lines):
+                    # Start on the bottom edge
+                    x_start = x_box + i * (box_size / num_lines)  # Divide the bottom edge into equal segments
+                    y_start = y_box  # Start from the bottom edge of the box
+
+                    # End inside the box with a diagonal angle
+                    x_end = x_box + (i + 1) * (box_size / num_lines)  # Slight shift in x
+                    y_end = y_box + (box_size / num_lines)  # Slight shift in y to create a diagonal
+
+                    ax.plot([x_start, x_end], [y_start, y_end], color='black', linewidth=1)  # Diagonal lines
+
         x_ticks = plt.xticks()[0]
-        if len(x_ticks) > 1:
+        y_ticks = plt.yticks()[0]
+
+        if len(x_ticks) > 1 and len(y_ticks) > 1:
             x_step = x_ticks[1] - x_ticks[0]
+            y_step = y_ticks[1] - y_ticks[0]
+
+            step = min(x_step, y_step)
+
+            x_min, x_max = plt.xlim()
             y_min, y_max = plt.ylim()
-            num_ticks_up = int((y_max // x_step) + 1)
-            num_ticks_down = int((-y_min // x_step) + 1)
-            new_y_ticks = [i * x_step for i in range(-num_ticks_down, num_ticks_up + 1)]
+
+            new_x_ticks = [i * step for i in range(int(x_min // step), int(x_max // step) + 1)]
+            new_y_ticks = [i * step for i in range(int(y_min // step), int(y_max // step) + 1)]
+
+            plt.xticks(new_x_ticks)
             plt.yticks(new_y_ticks)
 
-        plt.grid()
+        ax.grid(True,zorder=10)
         plt.show()
 
-    # def draw_unwrapped(self):
-    #     fig, ax = plt.subplots()
-    #     # Set aspect ratio to 'equal' for correct proportions
-    #     ax.set_aspect('equal', adjustable='datalim')
 
-    #     x_start = 0
-
-    #     # Draw each member in the unwrapped configuration
-    #     for member in self.members:
-    #         plt.plot([x_start, x_start + member.length], [0, 0], 'o-', color='black')
-    #         x_start += member.length
