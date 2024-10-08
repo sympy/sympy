@@ -632,21 +632,49 @@ class Structure2d:
             load_points = sorted(load_points)
 
             for point in load_points:
-                shear_force_value = self.shear_force(point)
-                if round_digits is not None and not shear_force_value.has(Symbol):
-                    shear_force_value = round(float(shear_force_value), round_digits)
+                # Calculate shear force at point - dx and point + dx
+                shear_force_value_minus = self.shear_force(point - dx)
+                shear_force_value_plus = self.shear_force(point + dx)
 
+                # Apply rounding if no symbols are present and if it's an expression
+                if round_digits is not None:
+                    if isinstance(shear_force_value_minus, Basic) and not shear_force_value_minus.has(Symbol):
+                        shear_force_value_minus = round(float(shear_force_value_minus), round_digits)
+                    if isinstance(shear_force_value_plus, Basic) and not shear_force_value_plus.has(Symbol):
+                        shear_force_value_plus = round(float(shear_force_value_plus), round_digits)
+
+                # Handle the first point with the shear force after the point (+ dx)
                 if point == load_points[0]:
                     string_text = f'shear_force at [x.xx,y.yy]  ({point:.02f}+)'
-                    print(f'{string_text:<40} = {shear_force_value}')
+                    if isinstance(shear_force_value_plus, Basic) and shear_force_value_plus.has(Symbol):
+                        print(f'{string_text:<40} = {shear_force_value_plus}')
+                    else:
+                        print(f'{string_text:<40} = {float(shear_force_value_plus)}')
+
+                # Handle the last point with the shear force before the point (- dx)
                 elif point == load_points[-1]:
                     string_text = f'shear_force at [x.xx,y.yy]  ({point:.02f}-)'
-                    print(f'{string_text:<40} = {shear_force_value}')
+                    if isinstance(shear_force_value_minus, Basic) and shear_force_value_minus.has(Symbol):
+                        print(f'{string_text:<40} = {shear_force_value_minus}')
+                    else:
+                        print(f'{string_text:<40} = {float(shear_force_value_minus)}')
+
+                # Handle intermediate points
                 else:
+                    # Print for point - dx
                     string_text = f'shear_force at [x.xx,y.yy]  ({point:.02f}-)'
-                    print(f'{string_text:<40} = {shear_force_value}')
+                    if isinstance(shear_force_value_minus, Basic) and shear_force_value_minus.has(Symbol):
+                        print(f'{string_text:<40} = {shear_force_value_minus}')
+                    else:
+                        print(f'{string_text:<40} = {float(shear_force_value_minus)}')
+
+                    # Print for point + dx
                     string_text = f'shear_force at [x.xx,y.yy]  ({point:.02f}+)'
-                    print(f'{string_text:<40} = {shear_force_value}')
+                    if isinstance(shear_force_value_plus, Basic) and shear_force_value_plus.has(Symbol):
+                        print(f'{string_text:<40} = {shear_force_value_plus}')
+                    else:
+                        print(f'{string_text:<40} = {float(shear_force_value_plus)}')
+
 
 
 
