@@ -4,6 +4,9 @@ Several methods to simplify expressions involving unit objects.
 from functools import reduce
 from collections.abc import Iterable
 from typing import Optional
+from matplotlib.pyplot import sca
+
+from matplotlib.style import available
 
 from sympy import default_sort_key
 from sympy.core.add import Add
@@ -15,7 +18,7 @@ from sympy.core.sympify import sympify
 from sympy.core.function import Function
 from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
-from sympy.physics.units.prefixes import Prefix
+from sympy.physics.units.prefixes import Prefix, PREFIXES
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.utilities.iterables import sift
@@ -138,11 +141,14 @@ def convert_to(expr, target_units, unit_system="SI"):
         zip(target_units, depmat))
 
 
-def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
+def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None, add_prefix=False):
     """Return an equivalent expression in which prefixes are replaced
     with numerical values and all units of a given dimension are the
     unified in a canonical manner by default. `across_dimensions` allows
     for units of different dimensions to be simplified together.
+
+    `add_prefix` allows for determining the most appropriate prefix to
+    use for the units in the expression.
 
     `unit_system` must be specified if `across_dimensions` is True.
 
@@ -158,6 +164,8 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
     foot/2
     >>> quantity_simplify(5*joule/coulomb, across_dimensions=True, unit_system="SI")
     5*volt
+    >>> quantity_simplify(200000*centi*meter, add_prefix=True, unit_system="SI")
+    2*kilometer
     """
 
     if expr.is_Atom or not expr.has(Prefix, Quantity):
@@ -202,6 +210,40 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
         target_unit = unit_system.derived_units.get(target_dimension)
         if target_unit:
             expr = convert_to(expr, target_unit, unit_system)
+
+    if add_prefix:
+        if unit_system is None:
+            raise ValueError("unit_system must be specified if add_prefix is True")
+
+        unit_system = UnitSystem.get_unit_system(unit_system)
+
+        if isinstance(expr, Mul) and expr.args[0].is_Number:
+            scale, unit = expr.as_coeff_Mul()
+        else:
+            scale, unit = 1, expr
+
+        power = 0
+        for i in range(-24, 25): # TODO: derive possible powers from PREFIXES
+            if scale / 10**i <= 1:
+                power = i
+                break
+
+        if power == 0:
+            return expr
+
+        available_prefix_powers = list(map(lambda p: p.exponent, PREFIXES.values()))
+        closest_power = available_prefix_powers[min(range(len(available_prefix_powers)), key=lambda i: abs(available_prefix_powers[i] - power))]
+        closest_prefix = list(PREFIXES.values())[available_prefix_powers.index(closest_power)]
+
+        # find the prefixed unit that matches
+        matching_units = list(filter(lambda u: u.is_prefixed and u.scale_factor == closest_prefix.scale_factor and u.name.name.endswith(unit.name.name), unit_system._units))
+        assert len(matching_units) == 1
+        prefixed_unit: Quantity = matching_units[0]
+
+        scale /= closest_prefix.scale_factor
+        print("before:", expr)
+        expr = scale * prefixed_unit
+        print("after:", expr)
 
     return expr
 
