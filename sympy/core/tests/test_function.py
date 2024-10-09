@@ -1379,6 +1379,9 @@ def test_Subs_Derivative():
     assert all(subs(i).doit().expand() == ans for i in eqs)
     assert all(subs(i.doit()).doit().expand() == ans for i in eqs)
 
+def test_issue_15796():
+    assert log(4, base = 2, evaluate=True) == 2
+
 def test_issue_15360():
     f = Function('f')
     assert f.name == 'f'
