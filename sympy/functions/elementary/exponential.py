@@ -5,7 +5,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, ArgumentIndexError, expand_log,
-    expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
+    expand_mul, FunctionClass, PoleError, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational, pi, I
@@ -1227,30 +1227,58 @@ class LambertW(Function):
 
     def _eval_as_leading_term(self, x, logx, cdir):
         if len(self.args) == 1:
-            arg = self.args[0]
-            arg0 = arg.subs(x, 0).cancel()
-            if not arg0.is_zero:
-                return self.func(arg0)
-            return arg.as_leading_term(x)
+            try:
+                _, ex = self.args[0].leadterm(x)
+            except (ValueError, NotImplementedError):
+                return self
+
+            if ex.is_nonnegative:
+                arg0 = arg.subs(x, 0).cancel()
+                if not arg0.is_zero:
+                    return self.func(arg0)
+                return arg.as_leading_term(x)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         if len(self.args) == 1:
             from sympy.functions.elementary.integers import ceiling
             from sympy.series.order import Order
-            arg = self.args[0].nseries(x, n=n, logx=logx)
-            lt = arg.as_leading_term(x, logx=logx)
-            lte = 1
-            if lt.is_Pow:
-                lte = lt.exp
-            if ceiling(n/lte) >= 1:
-                s = Add(*[(-S.One)**(k - 1)*Integer(k)**(k - 2)/
-                          factorial(k - 1)*arg**k for k in range(1, ceiling(n/lte))])
-                s = expand_multinomial(s)
-            else:
-                s = S.Zero
+            z = self.args[0]
+            try:
+                _, lte = z.leadterm(x)
+            except (ValueError, NotImplementedError):
+                return self
 
-            return s + Order(x**n, x)
+            if lte.is_positive:
+                if (ceiling(n/lte) >= 1) is S.true:
+                    s = Add(*[(S.NegativeOne)**(k - 1)*Integer(k)**(k - 2)/
+                              factorial(k - 1)*z**k for k in range(1, ceiling(n/lte))])
+                    s = s._eval_nseries(x, n=n, logx=logx)
+                else:
+                    s = S.Zero
+                return s + Order(x**n, x)
         return super()._eval_nseries(x, n, logx)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        from sympy.functions.combinatorial.numbers import stirling
+        if len(self.args) == 1:
+            point = args0[0]
+            if point is S.Infinity:
+                z = self.args[0]
+                result = S.Zero
+                l1 = log(z)
+                l2 = log(l1)
+                result = l1 - l2
+                for i in range(n):
+                    term = (-1/l1)**i
+                    terms = []
+                    for j in range(1, n):
+                        terms.append(stirling(i + j, i + 1)*(l2/l1)**j/factorial(j))
+                    term *= Add(*terms)
+                    result += term
+                result += Order(1/z**n, x)
+                return result
+        return super()._eval_aseries(n, args0, x, logx)
 
     def _eval_is_zero(self):
         x = self.args[0]
