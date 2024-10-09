@@ -31,45 +31,63 @@ community.
 
 ## Download
 
-The recommended installation method is through Anaconda,
+The recommended installation method is through Anaconda:
 <https://www.anaconda.com/products/distribution>
 
-You can also get the latest version of SymPy from
+Alternatively, SymPy can be installed using `pip` from PyPI:
 <https://pypi.python.org/pypi/sympy/>
 
-To get the git version do
+To get the latest development version from GitHub:
 
-    $ git clone https://github.com/sympy/sympy.git
+```bash
+$ git clone https://github.com/sympy/sympy.git
+```
 
-For other options (tarballs, debs, etc.), see
-<https://docs.sympy.org/dev/install.html>.
+For more installation options (tarballs, debs, etc.), visit: https://docs.sympy.org/dev/install.html
+
+## Troubleshooting Installation Issues
+
+If you encounter permission errors during pip installation, try using:
+
+```bash
+$ pip install --user sympy
+```
+
+For issues with conda, ensure you have added the necessary channels:
+
+```bash
+$ conda install -c anaconda sympy
+```
 
 ## Documentation and Usage
 
-For in-depth instructions on installation and building the
-documentation, see the [SymPy Documentation Style Guide](https://docs.sympy.org/dev/documentation-style-guide.html).
+For in-depth instructions on installation and building the documentation, visit: https://docs.sympy.org/
 
-Everything is at:
-
-<https://docs.sympy.org/>
-
-You can generate everything at the above site in your local copy of
-SymPy by:
-
-    $ cd doc
-    $ make html
+If you prefer to generate the documentation locally, you can do so with:
+```bash
+$ cd doc
+$ make html
+```
 
 Then the docs will be in <span class="title-ref">\_build/html</span>. If
 you don't want to read that, here is a short usage:
 
-From this directory, start Python and:
+## Quick Python Example
+Here's a basic example to get you started with SymPy:
 
 ``` python
->>> from sympy import Symbol, cos
->>> x = Symbol('x')
->>> e = 1/cos(x)
->>> print(e.series(x, 0, 10))
-1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
+from sympy import symbols, cos, diff
+
+# Define a symbol 'x'
+x = symbols('x')
+
+# Define an expression
+expr = cos(x)
+
+# Perform a symbolic differentiation
+derivative = diff(expr, x)
+
+print("The derivative of cos(x) is:", derivative)
 ```
 
 SymPy also comes with a console that is a simple wrapper around the
