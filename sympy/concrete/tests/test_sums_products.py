@@ -269,7 +269,7 @@ def test_geometric_sums():
         Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**n, (n, 0, oo)), True))
 
     assert summation(-2**n, (n, 0, oo)) is -oo
-    assert summation(I**n, (n, 0, oo)) == Sum(I**n, (n, 0, oo))
+    raises (ValueError, lambda:  summation(I**n, (n, 0, oo)))
 
     # issue 6802:
     assert summation((-1)**(2*x + 2), (x, 0, n)) == n + 1
@@ -1124,6 +1124,15 @@ def test_is_convergent():
 
     # issue 19836
     assert Sum(4/(n + 2) - 5/(n + 1) + 1/n,(n, 7, oo)).is_convergent() is S.true
+
+    # should raise NotImplementedError when result depends on value of x
+    raises(NotImplementedError, lambda: Sum(z ,(z, x, y)))
+    raises(NotImplementedError, lambda: Sum(z ,(z, x, 10)))
+    raises(NotImplementedError, lambda: Sum(z ,(z, 1, x)))
+    raises(NotImplementedError, lambda: Sum(1/x ,(x, 1, y)))
+
+    # gives correct output when upper-limit or lower-limit is -oo / oo and
+    assert Sum(z ,(z, x, oo)).is_convergent() is S.false
 
 
 def test_is_absolutely_convergent():
