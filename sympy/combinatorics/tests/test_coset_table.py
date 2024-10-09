@@ -139,6 +139,28 @@ def test_coset_enumeration():
     assert C_r.table == table1
     assert C_c.table == table1
 
+    # Example 5.4 from [1]
+    # Fibonacci group F(2,5)
+    F, a, b, c, d, e = free_group("a, b, c, d, e")
+    f = FpGroup(F, [a*b*(c**-1), b*c*(d**-1), c*d*(e**-1), d*e*(a**-1), e*a*(b**-1)])
+    C_r = coset_enumeration_r(f, [])
+    C_r.compress(); C_r.standardize()
+    C_c = coset_enumeration_c(f, [])
+    C_c.compress(); C_c.standardize()
+    table1 = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [8, 0, 5, 10, 6, 4, 2, 9, 3, 7], [0, 7, 9, 6, 3, 5, 10, 1, 8, 4], [5, 9, 10, 0, 7, 2, 8, 6, 4, 1], [10, 6, 0, 9, 1, 8, 5, 7, 2, 3], [6, 3, 7, 1, 2, 0, 9, 4, 10, 8], [4, 5, 2, 8, 0, 1, 3, 10, 7, 9], [2, 10, 8, 5, 9, 3, 4, 0, 1, 6], [9, 1, 6, 7, 4, 10, 0, 3, 5, 2], [3, 8, 4, 2, 10, 7, 1, 5, 6, 0], [7, 4, 1, 3, 8, 9, 6, 2, 0, 5]]
+    assert C_r.table == table1
+    assert C_c.table == table1
+
+    F, a, b, c, d, e = free_group("a, b, c, d, e")
+    f = FpGroup(F, [a*b*(c**-1), b*c*(d**-1), c*d*(e**-1), d*e*(a**-1), e*a*(b**-1)])
+    C_r = coset_enumeration_r(f, [a])
+    C_r.compress(); C_r.standardize()
+    C_c = coset_enumeration_c(f, [a])
+    C_c.compress(); C_c.standardize()
+    table1 = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+    assert C_r.table == table1
+    assert C_c.table == table1
+
     # E1 from [2] Pg. 474
     F, r, s, t = free_group("r, s, t")
     E1 = FpGroup(F, [t**-1*r*t*r**-2, r**-1*s*r*s**-2, s**-1*t*s*t**-2])
