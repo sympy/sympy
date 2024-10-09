@@ -143,6 +143,15 @@ module = [
 ]
 ignore_missing_imports = true
 
+# pyright type checker settings:
+[tool.pyright]
+include = ["sympy"]
+
+# This complains when self or cls is not used as the parameter name for an
+# instance method or class method. Since this is used a lot in SymPy we disable
+# this check.
+reportSelfClsParameterName = false
+
 [tool.slotscheck]
 strict-imports = true
 exclude-modules = '''

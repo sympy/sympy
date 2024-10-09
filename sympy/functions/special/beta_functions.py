@@ -1,5 +1,5 @@
 from sympy.core import S
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.symbol import Dummy, uniquely_named_symbol
 from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.combinatorial.numbers import catalan
@@ -17,7 +17,7 @@ def betainc_mpmath_fix(a, b, x1, x2, reg=0):
 ############################ COMPLETE BETA  FUNCTION ##########################
 ###############################################################################
 
-class beta(Function):
+class beta(DefinedFunction):
     r"""
     The beta integral is called the Eulerian integral of the first kind by
     Legendre:
@@ -170,7 +170,7 @@ class beta(Function):
 ########################## INCOMPLETE BETA FUNCTION ###########################
 ###############################################################################
 
-class betainc(Function):
+class betainc(DefinedFunction):
     r"""
     The Generalized Incomplete Beta function is defined as
 
@@ -279,7 +279,7 @@ class betainc(Function):
 #################### REGULARIZED INCOMPLETE BETA FUNCTION #####################
 ###############################################################################
 
-class betainc_regularized(Function):
+class betainc_regularized(DefinedFunction):
     r"""
     The Generalized Regularized Incomplete Beta function is given by
 
@@ -353,7 +353,7 @@ class betainc_regularized(Function):
     unbranched = True
 
     def __new__(cls, a, b, x1, x2):
-        return Function.__new__(cls, a, b, x1, x2)
+        return super().__new__(cls, a, b, x1, x2)
 
     def _eval_mpmath(self):
         return betainc_mpmath_fix, (*self.args, S(1))
