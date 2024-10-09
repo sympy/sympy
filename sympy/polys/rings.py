@@ -1259,6 +1259,32 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return poly
 
+
+    def sparse_free_sym(self, p):
+            """Returns the set of indices where the sum of exponents is non-zero.
+
+            Examples
+            ========
+            >>> from sympy.polys.domains import QQ
+
+            >>> x, y = symbols('x, y')
+            >>> K = QQ[x, y]
+            >>> sparse_free_sym(K(y))
+            {1}
+
+            >>> sparse_free_sym(K(x + y))
+            {0, 1}
+
+            """
+
+            exponents = list(map(sum, zip(*p)))
+            # Only look at the first two terms to see if all of the generators are in the polynomial.
+            if len(p) > 2 or exponents[0] or exponents[1]:
+                return {n for n, e in enumerate(exponents) if e}
+            else:
+                return {0}
+
+
     def square(self):
         """square of a polynomial
 
