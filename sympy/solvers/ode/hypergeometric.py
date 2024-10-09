@@ -146,7 +146,7 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     delta = Wild("delta")
     # I0 of the standerd 2F1 equation.
     I0 = ((a-b+1)*(a-b-1)*x**2 + 2*((1-a-b)*c + 2*a*b)*x + c*(c-2))/(4*x**2*(x-1)**2)
-    if sing_point != [0, 1]:
+    if len(sing_point) >= 2 and sing_point != [0, 1]:
         # If singular point is [0, 1] then we have standerd equation.
         eqs = []
         sing_eqs = [-beta/alpha, -delta/gamma, (delta-beta)/(alpha-gamma)]
