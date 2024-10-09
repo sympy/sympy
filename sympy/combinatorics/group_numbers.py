@@ -220,7 +220,7 @@ def groups_count(n):
     ValueError
         Number of groups of order ``n`` is unknown or not implemented.
         For example, gnu(`2^{11}`) is not yet known.
-        On the other hand, gnu(12) is known to be 5,
+        On the other hand, gnu(99) is known to be 2,
         but this has not yet been implemented in this function.
 
     Examples
@@ -289,8 +289,6 @@ def groups_count(n):
             return small[n]
         raise ValueError("Number of groups of order n is unknown or not implemented")
     if len(factors) == 2: # n is squarefree semiprime
-        p, q = list(factors.keys())
-        if p > q:
-            p, q = q, p
+        p, q = sorted(factors.keys())
         return 2 if q % p == 1 else 1
     return _holder_formula(set(factors.keys()))
