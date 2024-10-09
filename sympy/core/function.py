@@ -2168,13 +2168,31 @@ class Subs(Expr):
         if not point:
             return sympify(expr)
 
-        # denest
-        if isinstance(expr, Subs):
-            variables = expr.variables + variables
-            point = expr.point + point
-            expr = expr.expr
-        else:
-            expr = sympify(expr)
+        def denest(expr, variables, point):
+            # Helper function to denest expressions involving Subs in some form.
+            # if expression isn't related to Subs, the sympified expression is returned.
+            # Currently it can deal with expressions of type Mul(expr, Subs(...)).
+            # where expr could be of type Constant, Mul, Number, Pow, Symbol.
+            # Check out functions: test_denesting_for_Subs1 and test_denesting_for_Subs2
+            # in core/tests/test_function.py for more information.
+            # Refer https://github.com/sympy/sympy/pull/22806#issue-1095031567
+            # for more information on implementation of this function.
+            if isinstance(expr, Subs):
+                variables = expr.variables + variables
+                point = expr.point + point
+                expr = expr.expr
+            elif isinstance(expr, Mul):
+                subs_arg = [arg for arg in expr.args if isinstance(arg, Subs)]
+                if subs_arg and len(subs_arg) == S.One:
+                    subs_arg = subs_arg[0]
+                    mul_arg = expr.extract_multiplicatively(subs_arg)
+                    expr, variables, point = denest(subs_arg, variables, point)
+                    expr = expr*mul_arg
+            else:
+                expr = sympify(expr)
+            return expr, variables, point
+
+        expr, variables, point = denest(expr, variables, point)
 
         # use symbols with names equal to the point value (with prepended _)
         # to give a variable-independent expression
