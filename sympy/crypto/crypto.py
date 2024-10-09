@@ -3365,3 +3365,130 @@ def decipher_bg(message, key):
         orig_msg += (m ^ b)
 
     return orig_msg
+
+def create_matrix(key):
+    #helper function for enciphering and deciphering playfair cipher
+
+    alphabet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+    temp = ''
+
+    key = key.lower()
+
+    for i in range(0, len(key)):
+        if key[i] not in temp:
+            temp += key[i]
+
+    temp.replace(" ","")
+
+    for i in alphabet:
+        if i not in temp and i != 'j':
+            temp += i
+
+    matrix = [[0]*5 for i in range(5)]
+
+    for i in range(0, len(temp)):
+        row = int(i / 5)
+        col = i % 5
+        matrix[row][col] = temp[i]
+
+    return matrix
+
+
+def group_letters(text):
+    #helper function for enciphering and deciphering playfair cipher
+
+    text = text.lower()
+
+    if len(text)%2 != 0:
+        text += 'z'
+
+    groups = []
+
+    for i in range(0, int(len(text)/2)):
+        groups.append(text[2*i] + text[2*i + 1])
+
+    return groups
+
+def encipher_playfair(key, plaintext):
+    #encrypt text
+
+    key_matrix = create_matrix(key)
+    text = group_letters(plaintext)
+
+    ciphertext = []
+
+    for i in text:
+        for j in range(0, 5):
+            try:
+                fcoords = ( j, key_matrix[j].index(i[0]) )
+                if fcoords[0] != -1:
+                    break
+            except ValueError:
+                continue
+
+        for j in range(0, 5):
+            try:
+                scoords = ( j, key_matrix[j].index(i[1]) )
+                if scoords[0] != -1:
+                    break
+            except ValueError:
+                continue
+
+        if fcoords[0] == scoords[0]:
+            flet = key_matrix[ int(fcoords[0]) ][ int((fcoords[1]+1)) %5]
+            slet = key_matrix[ int(scoords[0]) ][ int((scoords[1]+1)) %5]
+
+        elif fcoords[1] == scoords[1]:
+            flet = key_matrix[ int((fcoords[0] + 1)) %5][ int(fcoords[1]) ]
+            slet = key_matrix[ int((scoords[0] + 1)) %5][ int(scoords[1]) ]
+
+        else:
+            flet = key_matrix[ int(fcoords[0]) ][ int(scoords[1]) ]
+            slet = key_matrix[ int(scoords[0]) ][ int(fcoords[1]) ]
+
+        ciphertext.append(flet+slet)
+
+    return ''.join(ciphertext)
+
+def decipher_playfair(key, ciphertext):
+    #decrypt text
+
+    key_matrix = create_matrix(key)
+    text = group_letters(ciphertext)
+
+    plaintext = []
+
+    for i in text:
+        for j in range(0, 5):
+            try:
+                fcoords = ( j, key_matrix[j].index(i[0]) )
+                if fcoords[0] != -1:
+                    break
+            except ValueError:
+                continue
+
+        for j in range(0, 5):
+            try:
+                scoords = ( j, key_matrix[j].index(i[1]) )
+                if scoords[0] != -1:
+                    break
+            except ValueError:
+                continue
+
+        if fcoords[0] == scoords[0]:
+            flet = key_matrix[ int(scoords[0]) ][ int((scoords[1] - 1)) %5]
+            slet = key_matrix[ int(fcoords[0]) ][ int((fcoords[1] - 1)) %5]
+
+
+        elif fcoords[1] == scoords[1]:
+            flet = key_matrix[ int((fcoords[0] - 1)) %5][ int(fcoords[1]) ]
+            slet = key_matrix[ int((scoords[0] - 1)) %5][ int(scoords[1]) ]
+
+
+        else:
+            flet = key_matrix[ int(fcoords[0]) ][ int(scoords[1]) ]
+            slet = key_matrix[ int(scoords[0]) ][ int(fcoords[1]) ]
+
+        plaintext.append(flet+slet)
+
+    return ''.join(plaintext)
