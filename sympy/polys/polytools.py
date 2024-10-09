@@ -2648,6 +2648,14 @@ class Poly(Basic):
         """
         Computes the subresultant PRS of ``f`` and ``g``.
 
+        Computes the subresultant polynomial remainder sequence (PRS)
+        and the non-zero scalar subresultants of `f` and `g`.
+        By [1] Thm. 3, these are the constants '-c' (- to optimize
+        computation of sign).
+        The first subdeterminant is set to 1 by convention to match
+        the polynomial and the scalar subdeterminants.
+        If 'deg(f) < deg(g)', the subresultants of '(g,f)' are computed.
+
         Examples
         ========
 
@@ -2659,6 +2667,11 @@ class Poly(Basic):
          Poly(x**2 - 1, x, domain='ZZ'),
          Poly(-2, x, domain='ZZ')]
 
+        References
+        ==========
+
+        .. [1] W.S. Brown, The Subresultant PRS Algorithm.
+           ACM Transaction of Mathematical Software 4 (1978) 237-249
         """
         _, per, F, G = f._unify(g)
 
@@ -2910,6 +2923,7 @@ class Poly(Basic):
         """
         Returns the polynomial GCD of ``f`` and ``g``.
 
+        Not specifically in `Z[x]`
         Examples
         ========
 
