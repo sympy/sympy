@@ -418,7 +418,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
         for symbol in syms:
             if isinstance(symbol, Derivative) and small_first:
-                terms = list(reversed(terms))
+                terms.reverse()
                 small_first = not small_first
             result = parse_expression(terms, symbol)
 
