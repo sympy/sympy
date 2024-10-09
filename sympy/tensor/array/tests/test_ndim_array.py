@@ -15,6 +15,11 @@ mutable_array_types = [
     MutableSparseNDimArray
 ]
 
+immutable_array_types = [
+    ImmutableDenseNDimArray,
+    ImmutableSparseNDimArray
+]
+
 array_types = [
     ImmutableDenseNDimArray,
     ImmutableSparseNDimArray,
@@ -71,3 +76,19 @@ def test_issue_and_18715():
         A = array_type([0, 1, 2])
         A[0] += 5
         assert A[0] == 5
+
+def test_reshape_to_scalar():
+    for array_type in array_types:
+        A = array_type([1])
+
+        assert A.shape == (1,)
+        assert A.reshape().shape == ()
+        assert str(A.reshape()) == "1"
+
+def test_reshape_to_scalar_should_fail():
+    for array_type in immutable_array_types:
+        A = array_type([1,2])
+
+        assert A.shape == (2,)
+        with raises(ValueError):
+            A.reshape()
