@@ -1722,12 +1722,12 @@ def test_zoo():
             assert i - zoo is zoo
             assert zoo + i is zoo
             assert zoo - i is zoo
-        elif i.is_finite is not False:
+        elif i.is_finite is None:
             assert (i + zoo).is_Add
             assert (i - zoo).is_Add
             assert (zoo + i).is_Add
             assert (zoo - i).is_Add
-        else:
+        elif i.is_finite is False:
             assert (i + zoo) is S.NaN
             assert (i - zoo) is S.NaN
             assert (zoo + i) is S.NaN
@@ -1743,12 +1743,10 @@ def test_zoo():
             assert (i*zoo).is_Mul
             assert (zoo*i).is_Mul
 
-        if fuzzy_not((1/i).is_zero) and (i.is_real or i.is_imaginary):
+        if fuzzy_not((1/i).is_zero):
             assert zoo/i is zoo
         elif (1/i).is_zero:
             assert zoo/i is S.NaN
-        elif i.is_zero:
-            assert zoo/i is zoo
         else:
             assert (zoo/i).is_Mul
 

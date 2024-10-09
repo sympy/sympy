@@ -4074,9 +4074,11 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     is_commutative = True
     is_imaginary = True
     is_finite = True
-    is_number = True
     is_algebraic = True
     is_transcendental = False
+    is_zero = False
+
+    is_number = True
 
     kind = NumberKind
 
