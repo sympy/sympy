@@ -1430,6 +1430,8 @@ def sdm_transpose(M):
     MT = {}
     for i, Mi in M.items():
         for j, Mij in Mi.items():
+            if hasattr(Mij, "transpose"):
+                Mij =  Mij.transpose()
             try:
                 MT[j][i] = Mij
             except KeyError:
