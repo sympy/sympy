@@ -7,26 +7,32 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.core.numbers import I
 
 from sympy.testing.pytest import raises, XFAIL
-x, y, z = symbols("x y z", real=True)
+x, y, z = symbols("x y z")
 
 def test_lra_satask():
     im = Symbol('im', imaginary=True)
 
     # test preprocessing of unequalities is working correctly
-    assert lra_satask(Q.eq(x, 1), ~Q.ne(x, 0)) is False
-    assert lra_satask(Q.eq(x, 0), ~Q.ne(x, 0)) is True
-    assert lra_satask(~Q.ne(x, 0), Q.eq(x, 0)) is True
-    assert lra_satask(~Q.eq(x, 0), Q.eq(x, 0)) is False
-    assert lra_satask(Q.ne(x, 0), Q.eq(x, 0)) is False
+    assert lra_satask(Q.eq(x, 1), ~Q.ne(x, 0) & Q.real(x)) is False
+    assert lra_satask(Q.eq(x, 0), ~Q.ne(x, 0) & Q.real(x)) is True
+    assert lra_satask(~Q.ne(x, 0), Q.eq(x, 0) & Q.real(x)) is True
+    assert lra_satask(~Q.eq(x, 0), Q.eq(x, 0) & Q.real(x)) is False
+    assert lra_satask(Q.ne(x, 0), Q.eq(x, 0) & Q.real(x)) is False
+
+    # test possibly non-real variables
+    raises(UnhandledInput, lambda: lra_satask(~Q.le(x, 0), ~Q.le(x, 1)) is None)
+    raises(UnhandledInput, lambda: lra_satask(Q.gt(x, 0), ~Q.le(x, 1)) is None)
 
     # basic tests
-    assert lra_satask(Q.ne(x, x)) is False
-    assert lra_satask(Q.eq(x, x)) is True
+    assert lra_satask(Q.ne(x, x),  Q.real(x)) is False
+    assert lra_satask(Q.eq(x, x), Q.real(x)) is True
     assert lra_satask(Q.gt(x, 0), Q.gt(x, 1)) is True
+    assert lra_satask(~Q.le(x, 0), ~Q.le(x, 1) & Q.real(x)) is True
 
     # check that True/False are handled
-    assert lra_satask(Q.gt(x, 0), True) is None
-    assert raises(ValueError, lambda: lra_satask(Q.gt(x, 0), False))
+    x_real = symbols("x", real=True)
+    assert lra_satask(Q.gt(x_real, 0), True) is None
+    assert raises(ValueError, lambda: lra_satask(Q.gt(x_real, 0), False))
 
     # check imaginary numbers are correctly handled
     # (im * I).is_real returns True so this is an edge case
@@ -38,6 +44,10 @@ def test_lra_satask():
 
 
 def test_old_assumptions():
+    # test using old assumptios to specify symbols are real
+    w = symbols("w", real=True)
+    assert lra_satask(Q.eq(w, 1), ~Q.ne(w, 0)) is False
+
     # test unhandled old assumptions
     w = symbols("w")
     raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
@@ -78,9 +88,9 @@ def test_old_assumptions():
 
 
 def test_rel_queries():
-    assert ask(Q.lt(x, 2) & Q.gt(x, 3)) is False
-    assert ask(Q.positive(x - z), (x > y) & (y > z)) is True
-    assert ask(x + y > 2, (x < 0) & (y <0)) is False
+    assert ask(Q.lt(x, 2) & Q.gt(x, 3),  Q.real(x)) is False
+    assert ask(Q.positive(x - z), (x > y) & (y > z) & Q.real(x - z)) is True
+    assert ask(x + y > 2, (x < 0) & (y < 0) & Q.real(x) & Q.real(y)) is False
     assert ask(x > z, (x > y) & (y > z)) is True
 
 
@@ -90,12 +100,9 @@ def test_unhandled_queries():
 
 
 def test_all_pred():
-    # test usable pred
-    assert lra_satask(Q.extended_positive(x), (x > 2)) is True
-    assert lra_satask(Q.positive_infinite(x)) is False
-    assert lra_satask(Q.negative_infinite(x)) is False
-
     # test disallowed pred
+    raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.positive_infinite(x)))
+    raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.negative_infinite(x)))
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.prime(x)))
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.composite(x)))
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.odd(x)))
@@ -151,12 +158,12 @@ def test_failing_number_line_properties():
 
 def test_equality():
     # test symetry and reflexivity
-    assert ask(Q.eq(x, x)) is True
-    assert ask(Q.eq(y, x), Q.eq(x, y)) is True
-    assert ask(Q.eq(y, x), ~Q.eq(z, z) | Q.eq(x, y)) is True
+    assert ask(Q.eq(x, x), Q.real(x)) is True
+    assert ask(Q.eq(y, x), Q.eq(x, y) & Q.real(x) & Q.real(y)) is True
+    assert ask(Q.eq(y, x), (~Q.eq(z, z) | Q.eq(x, y)) & Q.real(x) & Q.real(y) & Q.real(z)) is True
 
     # test transitivity
-    assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z)) is True
+    assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z) & Q.real(x) & Q.real(y) & Q.real(z)) is True
 
 
 @XFAIL
