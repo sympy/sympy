@@ -1016,11 +1016,6 @@ def test_issue_15913():
     assert checkodesol(eq, sol, f(x)) == (True, 0)
 
 
-def test_issue_16146():
-    raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x), g(x), h(x)]))
-    raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x)]))
-
-
 def test_dsolve_remove_redundant_solutions():
 
     eq = (f(x)-2)*f(x).diff(x)

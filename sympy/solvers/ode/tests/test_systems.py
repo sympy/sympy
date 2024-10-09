@@ -2070,6 +2070,235 @@ def test_linodesolve():
     assert constant_renumber(linodesolve(A, x, type="type4", doit=True), variables=Tuple(*eq).free_symbols) == sol1
 
 
+def test_dsolve_dae():
+    # Test that dsolve can solve a mixture of ODEs and algebraic equations (at
+    # least in simple cases).
+    funcs = [f(x), g(x)]
+
+    eqs123 = [f(x).diff(x) - g(x), g(x)]
+    sol1 = [Eq(f(x), C1), Eq(g(x), 0)]
+    assert dsolve(eqs123, funcs) == sol1
+    assert checksysodesol(eqs123, sol1) == (True, [0, 0])
+
+    ics2 = {f(0):1, g(0): 0}
+    sol2 = [Eq(f(x), 1), Eq(g(x), 0)]
+    assert dsolve(eqs123, funcs, ics=ics2) == sol2
+    assert checksysodesol(eqs123, sol2) == (True, [0, 0])
+
+    # With DAEs it is possible that the initial conditions are inconsistent and
+    # so the existence of a solution to an IVP is not guaranteed. Here the
+    # initial condition for g contradicts the algebraic equation for g:
+    ics3 = {f(0):1, g(0): 1}
+    raises(ValueError, lambda: dsolve(eqs123, funcs, ics=ics3))
+
+    # Purely algebraic equations should be handled at least if linear. Really
+    # something like this should use solve/linsolve et al but simple cases can
+    # be can also be handled here as a base case of DAE systems.
+    eqs4 = [f(x) - g(x), g(x)]
+    sol4 = [Eq(f(x), 0), Eq(g(x), 0)]
+    assert dsolve(eqs4, funcs) == sol4
+    assert checksysodesol(eqs4, sol4) == (True, [0, 0])
+
+    C1f, C2f, C3f, C4f = symbols('C1:5', cls=Function)
+
+    eqs5 = [f(x).diff(x)*g(x)]
+    sol5 = [
+        [Eq(f(x), C1f(x)), Eq(g(x), 0)],
+        [Eq(f(x), C1), Eq(g(x), C2f(x))],
+    ]
+    assert dsolve(eqs5, funcs) == sol5
+    for sol5i in sol5:
+        assert checksysodesol(eqs5, sol5i) == (True, [0])
+
+    eqs6 = [f(x) - g(x), g(x).diff(x)]
+    sol6 = [Eq(f(x), C1), Eq(g(x), C1)]
+    assert dsolve(eqs6, funcs) == sol6
+    assert checksysodesol(eqs6, sol6) == (True, [0, 0])
+
+    eqs7 = [f(x).diff(x) - g(x).diff(x)]
+    sol7 = [
+        Eq(f(x), C1 + Integral(C2f(x), x)),
+        Eq(g(x), C3 + Integral(C2f(x), x)),
+    ]
+    assert dsolve(eqs7, funcs) == sol7
+    assert checksysodesol(eqs7, sol7) == (True, [0])
+
+    eqs8 = [f(x).diff(x) - g(x)]
+    sol8 = [
+        Eq(f(x), C1 + Integral(C2f(x), x)),
+        Eq(g(x), C2f(x)),
+    ]
+    assert dsolve(eqs8, funcs) == sol8
+    assert checksysodesol(eqs8, sol8) == (True, [0])
+
+    # Check that function symbols do not clobber existing symbols or functions.
+    eqs9 = [f(x).diff(x) - g(x).diff(x) - C1f(x) - C2f(x)]
+    sol9 = [
+        Eq(f(x), C3 + Integral(C1f(x) + C2f(x) + C4f(x), x)),
+        Eq(g(x), C5 + Integral(C4f(x), x)),
+    ]
+    assert dsolve(eqs9, funcs) == sol9
+
+    eqs10 = [f(x).diff(x) - g(x).diff(x) - C1 - C2]
+    sol10 = [
+        Eq(f(x), C3 + x*(C1 + C2) + Integral(C4f(x), x)),
+        Eq(g(x), C5 + Integral(C4f(x), x)),
+    ]
+    assert dsolve(eqs10, funcs) == sol10
+
+    eqs11 = [f(x).diff(x) - x, f(x).diff(x) + x]
+    assert dsolve(eqs11, [f(x)]) == []
+
+    eqs12 = [f(x).diff(x) - g(x).diff(x), f(x)]
+    sol12 = [Eq(f(x), 0), Eq(g(x), C1)]
+    assert dsolve(eqs12, funcs) == sol12
+    assert checksysodesol(eqs12, sol12) == (True, [0, 0])
+
+    eqs13 = [f(x).diff(x), f(x).diff(x) + g(x), g(x).diff(x)]
+    sol13 = [Eq(f(x), C1), Eq(g(x), 0)]
+    assert dsolve(eqs13, funcs) == sol13
+    assert checksysodesol(eqs13, sol13) == (True, [0, 0, 0])
+
+    eqs14 = [f(x).diff(x)*g(x), g(x).diff(x)*(f(x)-x)]
+    sol14 = [
+        [Eq(f(x), x), Eq(g(x), 0)],
+        [Eq(f(x), C1f(x)), Eq(g(x), 0)],
+        [Eq(f(x), C1), Eq(g(x), C2)],
+    ]
+    assert dsolve(eqs14, funcs) == sol14
+    for sol14i in sol14:
+        assert checksysodesol(eqs14, sol14i) == (True, [0, 0])
+
+    eqs15 = [f(x).diff(x)*g(x), g(x).diff(x)*(f(x)-1)]
+    sol15 = [
+        [Eq(f(x), 1), Eq(g(x), 0)],
+        [Eq(f(x), 1), Eq(g(x), C1f(x))],
+        [Eq(f(x), C1f(x)), Eq(g(x), 0)],
+        [Eq(f(x), C1), Eq(g(x), C2)],
+    ]
+    assert dsolve(eqs15, funcs) == sol15
+    for sol15i in sol15:
+        assert checksysodesol(eqs15, sol15i) == (True, [0, 0])
+
+    eqs16 = [f(x).diff(x, 2), f(x).diff(x)]
+    sol16 = [Eq(f(x), C1)]
+    assert dsolve(eqs16, [f(x)]) == sol16
+    assert checksysodesol(eqs16, sol16) == (True, [0, 0])
+
+    eqs17 = [f(x).diff(x, 2), f(x).diff(x), f(x)]
+    sol17 = [Eq(f(x), 0)]
+    assert dsolve(eqs17, [f(x)]) == sol17
+    assert checksysodesol(eqs17, sol17) == (True, [0, 0, 0])
+
+    eqs18 = [f(x).diff(x) - g(x)*h(x) - 1, g(x).diff(x)]
+    sol18 = [
+        Eq(f(x), C1 + C2*Integral(C3f(x), x) + x),
+        Eq(g(x), C2),
+        Eq(h(x), C3f(x))
+    ]
+    assert dsolve(eqs18, [f(x), g(x), h(x)]) == sol18
+    assert checksysodesol(eqs18, sol18) == (True, [0, 0])
+
+
+def test_dsolve_dae_bad():
+    C1f = Function('C1')
+
+    eqs = [Eq(f(x).diff(x), f(x) + g(x)), Eq(g(x).diff(x), f(x) + g(x))]
+    sol = [
+        Eq(f(x), -C1 + C2*exp(2*x)),
+        Eq(g(x), +C1 + C2*exp(2*x)),
+    ]
+    sol_f = [Eq(f(x), -g(x) + Derivative(g(x), x))]
+
+    # XXX: The solution sol_f is valid for the second equation if g(x) is
+    # considered to be just an arbitrary function (since it isn't an unknown).
+    # Both equations can only be satisfied simultaneously by placing
+    # assumptions on g(x) that would not hold in general. Ideally dsolve should
+    # just return no solutions which it would if solve handled overdetermined
+    # systems properly.
+    assert dsolve(eqs, [f(x), g(x)]) == sol  # good
+    assert dsolve(eqs, [f(x)]) == sol_f      # bad
+    # assert dsolve(eqs, [f(x)]) == []      # <-- this is what it should be
+
+    res = g(x).diff(x, 2) -2*g(x).diff(x)
+
+    assert checksysodesol(eqs, sol) == (True, [0, 0])
+
+    # Valid solution if first equation is ignored:
+    assert checksysodesol(eqs[1:], sol_f, [f(x)]) == (True, [0])
+
+    # Does not satisfy the first equation:
+    assert checksysodesol(eqs, sol_f, [f(x)]) == (False, [res, 0])
+
+    # Another bad example caused by a solve bug:
+    #
+    #   >>> f, g = symbols('f, g', cls=Function)
+    #   >>> x = symbols('x')
+    #   >>> g1, f1, fp1 = symbols('g1, f1, fp1')
+    #   >>> g2, f2, fp2 = g(x), f(x), f(x).diff(x)
+    #   >>> solve([g1*fp1, g1-f1], [f1, g1, fp1], dict=True)
+    #   [{f1: 0, g1: 0}, {f1: g1, fp1: 0}]
+    #   >>> solve([g2*fp2, g2-f2], [f2, g2, fp2], dict=True)
+    #   [{f(x): 0, g(x): 0}]
+    #
+    # There should be two solutions...
+
+    eqs2 = [f(x).diff(x, 2)*g(x), g(x) - f(x)]
+    sol2_bad = [Eq(f(x), 0), Eq(g(x), 0)]
+    sol2_good = [
+        [Eq(f(x), 0), Eq(g(x), 0)],
+        [Eq(f(x), C1 + C2*x), Eq(g(x), C1 + C2*x)],
+    ]
+    assert dsolve(eqs2, [f(x), g(x)]) == sol2_bad
+    assert checksysodesol(eqs2, sol2_bad) == (True, [0, 0])
+    for sol2i in sol2_good:
+        assert checksysodesol(eqs2, sol2i) == (True, [0, 0])
+
+    # XXX: This one should be easy but fails because solve cannot handle the
+    # equations:
+    #
+    #   >>> In [2]: solve([Eq(-x + A, 0), Eq((-x + A)*B, 0)], [A, B, C])
+    #   ...
+    #   NotImplementedError: no valid subset found
+    eqs16 = [f(x) - x, g(x).diff(x)*(f(x) - x)]
+    sol16 = [Eq(f(x), x), Eq(g(x), C1f(x))]
+    raises(NotImplementedError, lambda: dsolve(eqs16, [f(x), g(x)]))
+    assert checksysodesol(eqs16, sol16) == (True, [0, 0])
+
+    # This fails because it falls back to classify_sysode which rejects a
+    # single equation:
+    # dsolve([f(x).diff(x)-exp(x)*h(x)/f(x)], [f(x), g(x), h(x)])
+
+
+def test_dsolve_dae_issue_gh24841():
+    # Regression test for https://github.com/sympy/sympy/discussions/24841
+    #
+    # This system has two ODEs and two linear algebaic equations.
+
+    v_x, v_y, v_C, i_L = symbols('v_x, v_y, v_C, i_L', cls=Function)
+    t = symbols('t')
+
+    eqs = [
+        Eq(v_C(t)/3 - v_x(t)/6 - v_y(t)/6 + 0.125*Derivative(v_C(t), t), 0),
+        Eq(v_y(t) - 15, 0.5*Derivative(i_L(t), t)),
+        Eq(-v_C(t)/6 + v_x(t)/3 - v_y(t)/6, 0),
+        Eq(i_L(t) - v_C(t)/6 - v_x(t)/6 + v_y(t)/3, 0),
+    ]
+
+    funcs = [v_x(t), v_y(t), v_C(t), i_L(t)]
+    ics = {i_L(0): 15/2, v_C(0): 30, v_x(0): 15, v_y(0): 0}
+
+    sol = [
+        Eq(v_x(t), 15.0),
+        Eq(v_y(t), 15.0 - 15.0*exp(-4.0*t)),
+        Eq(v_C(t), 15.0 + 15.0*exp(-4.0*t)),
+        Eq(i_L(t), 7.5*exp(-4.0*t)),
+    ]
+
+    assert dsolve(eqs, funcs, ics=ics) == sol
+    assert checksysodesol(eqs, sol) == (True, [0, 0, 0, 0])
+
+
 @slow
 def test_linear_3eq_order1_type4_slow():
     x, y, z = symbols('x, y, z', cls=Function)
@@ -2284,7 +2513,6 @@ def test_dsolve_system():
     raises(ValueError, lambda: dsolve_system(1))
     raises(ValueError, lambda: dsolve_system(eqs, 1))
     raises(ValueError, lambda: dsolve_system(eqs, funcs, 1))
-    raises(ValueError, lambda: dsolve_system(eqs, funcs[:1], x))
 
     eq = (Eq(f(x).diff(x), 12 * f(x) - 6 * g(x)), Eq(g(x).diff(x) ** 2, 11 * f(x) + 3 * g(x)))
     raises(NotImplementedError, lambda: dsolve_system(eq) == ([], []))
@@ -2296,14 +2524,11 @@ def test_dsolve_system():
     raises(NotImplementedError, lambda: dsolve_system(eq, ics={f(0): 1, g(0): 1}) == ([], []))
     raises(NotImplementedError, lambda: dsolve_system(eq, funcs=[f(x), g(x)], ics={f(0): 1, g(0): 1}) == ([], []))
 
+
 def test_dsolve():
 
     f, g = symbols('f g', cls=Function)
     x, y = symbols('x y')
-
-    eqs = [f(x).diff(x) - x, f(x).diff(x) + x]
-    with raises(ValueError):
-        dsolve(eqs)
 
     eqs = [f(x, y).diff(x)]
     with raises(ValueError):
