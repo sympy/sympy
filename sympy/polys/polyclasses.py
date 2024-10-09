@@ -80,6 +80,7 @@ from sympy.polys.densetools import (
     dmp_ground_monic,
     dmp_compose,
     dup_decompose,
+    dup_real_imag,
     dup_shift,
     dmp_shift,
     dup_transform,
@@ -891,6 +892,13 @@ class DMP(CantSympify):
     def _decompose(f):
         raise NotImplementedError
 
+    def real_imag(f):
+        """Find f1 and f2 such that ``f(x+i*y) = f1(x,y) + i*f2(x,y)``. """
+        if f.lev:
+            raise ValueError('univariate polynomial expected')
+
+        return f._real_imag()
+
     def shift(f, a):
         """Efficiently compute Taylor shift ``f(x + a)``. """
         if f.lev:
@@ -1576,6 +1584,11 @@ class DMP_Python(DMP):
         """Computes functional decomposition of ``f``. """
         return list(map(f.per, dup_decompose(f._rep, f.dom)))
 
+    def _real_imag(f):
+        """Find f1 and f2 such that ``f(x+i*y) = f1(x,y) + i*f2(x,y)``. """
+        p_real, p_imag = dup_real_imag(f._rep, f.dom)
+        return f.new(p_real, f.dom, 1), f.new(p_imag, f.dom, 1)
+
     def _shift(f, a):
         """Efficiently compute Taylor shift ``f(x + a)``. """
         return f.per(dup_shift(f._rep, a, f.dom))
@@ -2225,6 +2238,11 @@ class DUP_Flint(DMP):
     def _decompose(f):
         """Computes functional decomposition of ``f``. """
         return [ g.to_DUP_Flint() for g in f.to_DMP_Python()._decompose() ]
+
+    def _real_imag(f):
+        """Find f1 and f2 such that ``f(x+i*y) = f1(x,y) + i*f2(x,y)``. """
+        p_real, p_imag = f.to_DMP_Python()._real_imag()
+        return p_real.to_best(), p_imag.to_best()
 
     def _shift(f, a):
         """Efficiently compute Taylor shift ``f(x + a)``. """

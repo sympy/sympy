@@ -3090,6 +3090,37 @@ class Poly(Basic):
 
         return list(map(f.per, result))
 
+    def real_imag(f, *gens):
+        """
+        Find ``p1``, ``p2`` such that ``f(x+I*y) = p1(x,y) + I*p2(x,y)``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, I
+        >>> from sympy.abc import x, y, z
+
+        >>> f = Poly(z**2 + z + 1, z)
+        >>> p1, p2 = f.real_imag(x, y)
+
+        >>> p1
+        Poly(x**2 - y**2 + x + 1, x, y, domain='ZZ')
+        >>> p2
+        Poly(2*x*y + y, x, y, domain='ZZ')
+        >>> f(x + I*y).expand() == p1(x, y) + I*p2(x, y)
+        True
+
+        """
+        if not f.is_univariate:
+            raise MultivariatePolynomialError("only univariate polynomials are allowed")
+        dom = f.domain
+        if not (dom.is_ZZ or dom.is_QQ):
+            raise DomainError("only rational and integer domains are allowed")
+
+        p1, p2 = f.rep.real_imag()
+
+        return f.per(p1, gens), f.per(p2, gens)
+
     def shift(f, a):
         """
         Efficiently compute Taylor shift ``f(x + a)``.
