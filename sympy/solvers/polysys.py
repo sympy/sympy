@@ -78,6 +78,98 @@ def solve_poly_system(seq, *gens, strict=False, **args):
     return solve_generic(polys, opt, strict=strict)
 
 
+def _solve_poly_system_underdetermined(gb, lex_sym, **args):
+    """
+    Solve an underdetermined system of polynomial equations using factorization.
+
+    Parameters:
+    -----------
+    gb : list of Poly
+        The Groebner basis of system of polynomial equations to solve.
+    lex_sym : list of Symbol
+        The symbols to solve for, in lexicographical order.
+    **args : keyword arguments
+        Additional arguments to customize the solving process.
+
+    Returns:
+    --------
+    list of dict
+        A list of dictionaries, each representing a solution to the system.
+        Each dictionary maps solved symbols to their respective values.
+        If there are unspecified symbols, they are mapped to themselves.
+    """
+    from sympy.polys.polytools import factor_list
+
+    def factors(*args, **kwargs):
+        return list(dict(factor_list(*args, **kwargs)[1]))
+
+    def factor_poly_system(eqs):
+        return [set(factors(eq)) for eq in eqs]
+
+    def factors_system(eqs):
+        def _factors_system(eqs):
+            if not eqs:
+                return [set()]
+            elif len(eqs) == 1:
+                return [{f} for f in eqs[0]]
+            else:
+                eq1, eqs_rest = eqs[0], eqs[1:]
+                sets = []
+                for f in eq1:
+                    eqs_rest_2 = [eq for eq in eqs_rest if f not in eq]
+                    sets.extend(s | {f} for s in factors_system(eqs_rest_2))
+                return sets
+
+        sets = _factors_system(eqs)
+        return [s for s in sets if not any(s > s2 for s2 in sets)]
+
+    def solve_subsystem(subsystem):
+        sub_gb = groebner(subsystem, lex_sym)
+        solved_symbols = []
+        solutions = {}
+        unspecified_symbols = list(lex_sym)
+
+        for poly in reversed(sub_gb):
+            for symbol in reversed(lex_sym):
+                if symbol in poly.free_symbols:
+                    if all(s not in poly.free_symbols for s in lex_sym[:lex_sym.index(symbol)]):
+                        solved_symbols.append(symbol)
+                        solutions[symbol] = poly
+                        unspecified_symbols.remove(symbol)
+                        break
+
+        if not solved_symbols:
+            return []
+        solved_symbols.reverse()
+
+        determined_system = [solutions[sym] for sym in solved_symbols]
+        determined_solution = solve_poly_system(determined_system, *solved_symbols)
+
+        final_solution = []
+        for sol in determined_solution:
+            result = dict(zip(solved_symbols, sol))
+            for s in unspecified_symbols:
+                result[s] = s
+            final_solution.append(result)
+
+        return final_solution
+
+    factored_system = factor_poly_system(gb)
+    subsystems = factors_system(factored_system)
+
+    all_solutions = []
+    for subsystem in subsystems:
+        subsystem_solutions = solve_subsystem(subsystem)
+        all_solutions.extend(subsystem_solutions)
+
+    unique_solutions = []
+    for sol in all_solutions:
+        if not any(set(sol.items()).issubset(set(existing_sol.items())) for existing_sol in unique_solutions):
+            unique_solutions.append(sol)
+
+    return unique_solutions
+
+
 def solve_biquadratic(f, g, opt):
     """Solve a system of two bivariate quadratic polynomial equations.
 
