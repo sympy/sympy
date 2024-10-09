@@ -1929,6 +1929,12 @@ def test_sympy__core__symbol__Dummy():
     assert _test_args(Dummy('t'))
 
 
+def test_sympy__core__symbol__FunctionSymbol():
+    from sympy.core.symbol import FunctionSymbol
+    from sympy.core.function import Function
+    assert _test_args(FunctionSymbol(Function('f')))
+
+
 def test_sympy__core__symbol__Symbol():
     from sympy.core.symbol import Symbol
     assert _test_args(Symbol('t'))

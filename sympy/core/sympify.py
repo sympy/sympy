@@ -363,22 +363,14 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         and the result will be returned.
 
     """
-    # XXX: If a is a Basic subclass rather than instance (e.g. sin rather than
-    # sin(x)) then a.__sympy__ will be the property. Only on the instance will
-    # a.__sympy__ give the *value* of the property (True). Since sympify(sin)
-    # was used for a long time we allow it to pass. However if strict=True as
-    # is the case in internal calls to _sympify then we only allow
-    # is_sympy=True.
-    #
-    # https://github.com/sympy/sympy/issues/20124
     is_sympy = getattr(a, '__sympy__', None)
     if is_sympy is True:
         return a
-    elif is_sympy is not None:
-        if not strict:
-            return a
-        else:
-            raise SympifyError(a)
+#    elif is_sympy is not None:
+#        if not strict:
+#            return a
+#        else:
+#            raise SympifyError(a)
 
     if isinstance(a, CantSympify):
         raise SympifyError(a)
