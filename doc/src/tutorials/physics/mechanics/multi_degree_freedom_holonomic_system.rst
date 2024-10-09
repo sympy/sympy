@@ -8,7 +8,7 @@ holonomic system that includes both particles and rigid bodies with contributing
 forces and torques, some of which are specified forces and torques. The system
 is shown below:
 
-.. image:: multidof-holonomic.*
+.. image:: multidof-holonomic.svg
    :align: center
 
 The system will be modeled using :class:`~.System`. First we need to create the
