@@ -126,12 +126,23 @@ class TensorProduct(Expr):
             return matrix_tensor_product(*args)
         c_part, new_args = cls.flatten(sympify(args))
         c_part = Mul(*c_part)
+
         if len(new_args) == 0:
             return c_part
         elif len(new_args) == 1:
             return c_part * new_args[0]
         else:
-            tp = Expr.__new__(cls, *new_args)
+            # Making the TensorProduct associative.
+            flat_args = []
+            for n_arg in new_args:
+                if isinstance(n_arg, TensorProduct):
+                    new_c_part, new_new_args = n_arg.flatten(sympify(n_arg.args))
+                    new_c_part = Mul(*new_c_part)
+                    c_part = c_part*new_c_part
+                    flat_args = flat_args + new_new_args
+                else:
+                    flat_args.append(n_arg)
+            tp = Expr.__new__(cls, *flat_args)
             return c_part * tp
 
     @classmethod
