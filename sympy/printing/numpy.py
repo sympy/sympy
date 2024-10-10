@@ -240,11 +240,11 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
 
     def _print_MatrixBase(self, expr):
         if 0 in expr.shape:
-            func = self._module_format(self._module + '.zeros')
+            func = self._module_format(f'{self._module}.{self._zeros}')
             return f"{func}({self._print(expr.shape)})"
         func = self.known_functions.get(expr.__class__.__name__, None)
         if func is None:
-            func = self._module_format(self._module + '.array')
+            func = self._module_format(f'{self._module}.array')
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
     def _print_Identity(self, expr):
@@ -260,12 +260,12 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
 
     def _print_NDimArray(self, expr):
         if expr.rank() == 0:
-            func = self._module_format(self._module + '.array')
+            func = self._module_format(f'{self._module}.array')
             return f"{func}({self._print(expr[()])})"
         if 0 in expr.shape:
-            func = self._module_format(self._module + '.zeros')
+            func = self._module_format(f'{self._module}.{self._zeros}')
             return f"{func}({self._print(expr.shape)})"
-        func = self._module_format(self._module + '.array')
+        func = self._module_format(f'{self._module}.array')
         return f"{func}({self._print(expr.tolist())})"
 
     _add = "add"
