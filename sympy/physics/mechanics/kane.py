@@ -821,7 +821,7 @@ class KanesMethod(_Methods):
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
-        none_handler = lambda x: Matrix(x) if x else Matrix()
+
         if bodies is None:
             bodies = self.bodies
         if  loads is None and self._forcelist is not None:
