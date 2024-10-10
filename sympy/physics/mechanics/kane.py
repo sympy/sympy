@@ -306,7 +306,6 @@ class KanesMethod(_Methods):
         o = len(self.u)
         m = len(vel)
         l = len(complex)
-        p = o - m
 
         # Initialize configuration constraints
         config = none_handler(config)
@@ -365,7 +364,6 @@ class KanesMethod(_Methods):
         # The idea is this:
         # 0 = complex.diff(t) is linear in udot, just like cel is linear in u.
         if complex:
-            udot_zero = dict.fromkeys(self._udot, 0)
 
             # When calling kanes_equations, another class instance will be
             # computation of kinetic differential equation matrices will be
