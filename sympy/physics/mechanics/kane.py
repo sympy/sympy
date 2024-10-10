@@ -1,4 +1,4 @@
-from sympy import zeros, Matrix, diff, eye, linear_eq_to_matrix, count_ops
+from sympy import zeros, Matrix, diff, eye, linear_eq_to_matrix
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
@@ -11,8 +11,7 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
-import sympy.physics.mechanics as me
-import time
+
 __all__ = ['KanesMethod']
 
 
@@ -308,7 +307,6 @@ class KanesMethod(_Methods):
         m = len(vel)
         l = len(complex)
         p = o - m
-        c = p - l
 
         # Initialize configuration constraints
         config = none_handler(config)
@@ -324,8 +322,6 @@ class KanesMethod(_Methods):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and acceleration constraints.')
         if vel:
-            u_zero = dict.fromkeys(self.u, 0)
-            udot_zero = dict.fromkeys(self._udot, 0)
             # When calling kanes_equations, another class instance will be
             # computation of kinetic differential equation matrices will be
             # skipped as this was computed during the original KanesMethod
