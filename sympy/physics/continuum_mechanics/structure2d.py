@@ -973,6 +973,12 @@ class Structure2d:
                 member_length = np.hypot(x2 - x1, y2 - y1)
                 num_arrows = max(int(member_length / 0.5), 1)
 
+                arrow_tails_x = []
+                arrow_tails_y = []
+
+                arrow_heads_x = []
+                arrow_heads_y = []
+
                 for i in range(num_arrows + 1):
                     t = i / num_arrows
                     x_point = x1 + t * (x2 - x1)
@@ -997,9 +1003,32 @@ class Structure2d:
                     )
                     ax.add_patch(arrow_patch)
 
+                    arrow_tails_x.append(x_point - dx)
+                    arrow_tails_y.append(y_point - dy)
+
+                    arrow_heads_x.append(x_point)
+                    arrow_heads_y.append(y_point)
+                    plt.plot(arrow_tails_x, arrow_tails_y, color=load_color, alpha=1)
+
+                    arrow_coords = [
+                    (arrow_tails_x[0], arrow_tails_y[0]),   # First tail point
+                    (arrow_tails_x[-1], arrow_tails_y[-1]), # Last tail point
+                    (arrow_heads_x[-1], arrow_heads_y[-1]), # Last head point
+                    (arrow_heads_x[0], arrow_heads_y[0])    # First head point
+]
+                # make grey when unsolved
+                # if isinstance(load.value, Basic) and load.value.has(Symbol):
+                #     distributed_load_color = '#696969'
+
+                polygon = plt.Polygon(arrow_coords, closed=True, fill=True, color=load_color, edgecolor=None, alpha=0.25,zorder=89)
+                ax.add_patch(polygon)
+
+
                 if show_load_values:
-                    avrage_x = (x1 + x2) / 2
-                    avrage_y = (y1 + y2) / 2
+                    dx = load_length * np.cos(angle)
+                    dy = load_length * np.sin(angle)
+                    avrage_x = (x1-dx + x2-dx) / 2
+                    avrage_y = (y1-dy + y2-dy) / 2
                     color_text = (
                         "black" if load_color == colors["uncomputed"] else load_color
                     )
