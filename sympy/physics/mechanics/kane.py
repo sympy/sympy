@@ -26,7 +26,7 @@ class KanesMethod(_Methods):
     equations of motion in the way Kane presents in:
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
-    The portion relating to complex (nonlinear) motion constraints is taken from
+    The portion relating to nonlinear motion constraints is taken from
     Rothmayr, C., Hodges, D. Dynamics Theory and Application of Kane's Method.
     2016 Cambridge University Press
 
@@ -76,8 +76,8 @@ class KanesMethod(_Methods):
     configuration_constraints : iterable of Expr, optional
         Constraints on the system's configuration, i.e. holonomic constraints.
     u_dependent : iterable of dynamicsymbols, optional
-        Dependent generalized speeds. If complex constraints are used, observe
-        the comments further down.
+        Dependent generalized speeds. If nonlinear velocity constraints are used,
+        observe the comments further down.
     velocity_constraints : iterable of Expr, optional
         Constraints on the system's velocity, i.e. the combination of the
         nonholonomic constraints and the time-derivative of the holonomic
@@ -85,7 +85,7 @@ class KanesMethod(_Methods):
     acceleration_constraints : iterable of Expr, optional
         Constraints on the system's acceleration, by default these are the
         time-derivative of the velocity constraints.
-    complex_constraints : iterable of Expr, optional
+    nonlinear_velocity_constraints : iterable of Expr, optional
         They may be nonlinear in u and q', but must be linear in the time
         derivatives of u and of q'.
     u_auxiliary : iterable of dynamicsymbols, optional
@@ -148,11 +148,11 @@ class KanesMethod(_Methods):
     solution as our system should have only one unique solution.
 
     Care must be taken in the arrangement of the generalized coordinates when
-    linear and complex constraints are used: the generalized speeds on which the
-    complex constraints depend must be at the end of the list of the dependent
-    generalized speeds. This affects the arrangement of the generalized
-    coordinates. KanesMethod internally aranges the the generalized coordinates
-    in the following order:
+    linear and nonlinear velocity constraints are used: the generalized speeds
+    on which the nonlinear velocity constraints depend must be at the end of
+    the iterable of the dependent generalized speeds. This affects the
+    arrangement of the generalized coordinates. KanesMethod internally aranges
+    the the generalized coordinates in the following order:
     y = q_independent + q_dependent +u_independent + u_dependent, and naturally
     d/dt(q_independent + q_dependent) = u_independent + u_dependent)
     must hold.
@@ -226,7 +226,7 @@ class KanesMethod(_Methods):
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
                  configuration_constraints=None, u_dependent=None,
                  velocity_constraints=None, acceleration_constraints=None,
-                 complex_constraints=None,
+                 nonlinear_velocity_constraints=None,
                  u_auxiliary=None, bodies=None, forcelist=None,
                  explicit_kinematics=True, kd_eqs_solver='LU',
                  constraint_solver='LU'):
@@ -247,7 +247,7 @@ class KanesMethod(_Methods):
         self._bodylist = bodies
 
         self._lin_vel_constr = velocity_constraints
-        self._nonlin_vel_constr = complex_constraints
+        self._nonlin_vel_constr = nonlinear_velocity_constraints
         self._acc_constraints = acceleration_constraints
 
         self.explicit_kinematics = explicit_kinematics
@@ -259,7 +259,7 @@ class KanesMethod(_Methods):
         self._initialize_constraint_matrices(
             configuration_constraints,
             velocity_constraints,
-            complex_constraints,
+            nonlinear_velocity_constraints,
             acceleration_constraints,
             constraint_solver)
 
@@ -291,7 +291,7 @@ class KanesMethod(_Methods):
         self._udot = self.u.diff(dynamicsymbols._t)
         self._uaux = none_handler(u_aux)
 
-    def _initialize_constraint_matrices(self, config, vel, complex, acc,
+    def _initialize_constraint_matrices(self, config, vel, nonlin_vel, acc,
          linear_solver='LU'):
         """Initializes constraint matrices."""
         linear_solver = _parse_linear_solver(linear_solver)
@@ -299,13 +299,13 @@ class KanesMethod(_Methods):
         # Initialize linear and nonlinear velocity and acceleration constraints
         none_handler = lambda x: Matrix(x) if x else Matrix()
         vel     = none_handler(vel)
-        complex = none_handler(complex)
+        nonlin_vel = none_handler(nonlin_vel)
         acc     = none_handler(acc)
 
         # Define vector dimensions
         o = len(self.u)
         m = len(vel)
-        l = len(complex)
+        l = len(nonlin_vel)
 
         # Initialize configuration constraints
         config = none_handler(config)
@@ -314,7 +314,7 @@ class KanesMethod(_Methods):
                              'coordinates and configuration constraints.')
         self._f_h = none_handler(config)
 
-        if len(vel) + len(complex) != len(self._udep):
+        if len(vel) + len(nonlin_vel) != len(self._udep):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and velocity constraints.')
         if acc and (len(acc) != m):
@@ -360,19 +360,19 @@ class KanesMethod(_Methods):
             self._k_dnh = Matrix()
             self._Ars = Matrix()
 
-        # Initialize complex constraints
+        # Initialize nonlinear velocity constraints
         # The idea is this:
-        # 0 = complex.diff(t) is linear in udot, just like cel is linear in u.
-        if complex:
+        # 0 = nonlin_vel.diff(t) is linear in udot, just like vel is linear in u.
+        if nonlin_vel:
 
             # When calling kanes_equations, another class instance will be
             # computation of kinetic differential equation matrices will be
             # skipped as this was computed during the original KanesMethod
             # object, and the qd_u_map will not be available.
             if self._qdot_u_map is not None:
-                complex = msubs(complex, self._qdot_u_map)
-            complexdt = complex.diff(dynamicsymbols._t)
-            self._k_c, self._f_c_neg = linear_eq_to_matrix(complexdt, self._udot[:])
+                nonlin_vel = msubs(nonlin_vel, self._qdot_u_map)
+            nonlin_veldt = nonlin_vel.diff(dynamicsymbols._t)
+            self._k_c, self._f_c_neg = linear_eq_to_matrix(nonlin_veldt, self._udot[:])
             self._f_c = -self._f_c_neg
 
             # Form of non-holonomic constraints is B*u' + C = 0.
@@ -392,13 +392,13 @@ class KanesMethod(_Methods):
 
         # combine the "mass matrices for the dependent udots" and the force
         # vectors
-        if vel and complex:
+        if vel and nonlin_vel:
             self._k_dnh = self._k_dnh.col_join(self._k_c)
             self._f_dnh = self._f_dnh.col_join(self._f_c)
 
         elif vel:
             pass
-        elif complex:
+        elif nonlin_vel:
             self._k_dnh = self._k_c
             self._f_dnh = self._f_c
         else:
@@ -797,7 +797,7 @@ class KanesMethod(_Methods):
 
         Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
         present (say, s auxiliary speeds, o generalized speeds, m linear
-        motion constraints and l nonliner (=complex) motion constraints)
+        motion constraints and l nonliner motion constraints)
         the length of the returned vectors will be o -(m + l) + s in
         length. The first o - (m + l) equations will be the constrained Kane's
         equations, then the s auxiliary Kane's equations. These auxiliary
@@ -841,19 +841,19 @@ class KanesMethod(_Methods):
                              constraint_solver=self._constraint_solver)
             else:
                 velocity_constraints = Matrix()
-                complex_constraints = Matrix()
+                nonlinear_velocity_constraints = Matrix()
                 acceleration_constraints = Matrix()
                 if self._lin_vel_constr:
                     velocity_constraints = self._k_nh * self.u + self._f_nh
                 if self._nonlin_vel_constr:
-                    complex_constraints = self._nonlin_vel_constr
+                    nonlinear_velocity_constraints = self._nonlin_vel_constr
                 if self._acc_constraints:
                     acceleration_constraints = self._k_dnh * self._udot + self._f_dnh
 
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                         u_auxiliary=self._uaux, u_dependent=self._udep,
                         velocity_constraints=velocity_constraints,
-                        complex_constraints=complex_constraints,
+                        nonlinear_velocity_constraints=nonlinear_velocity_constraints,
                         acceleration_constraints=acceleration_constraints,
                         constraint_solver=self._constraint_solver
                         )

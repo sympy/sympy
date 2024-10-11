@@ -38,7 +38,7 @@ def test_nonlinear_motion_constraints():
 
     forces = [(P1, sigma1 * N.x + sigma2 * N.y), (P2, sigma3 * N.x + sigma4 * N.y)]
 
-    nonlin_const = Matrix([P1.vel(N).dot(P2.vel(N))])
+    nonlin_constr = Matrix([P1.vel(N).dot(P2.vel(N))])
 
     kd = Matrix([u1 - q1.diff(t), u2 - q2.diff(t), u3 - q3.diff(t), u4 - q4.diff(t)])
 
@@ -52,7 +52,7 @@ def test_nonlinear_motion_constraints():
                 u_ind,
                 u_dependent=u_dep,
                 kd_eqs=kd,
-                complex_constraints=nonlin_const,
+                nonlinear_velocity_constraints=nonlin_constr,
     )
 
     fr, frstar = KM.kanes_equations(bodies, forces)
@@ -60,7 +60,7 @@ def test_nonlinear_motion_constraints():
 
     #In the paper, uddot is solved for, using equation (33) und used when setting up
     #fr and frstar. As this is not done in Kane's method, I have to do it here.
-    veldt = nonlin_const.diff(t)
+    veldt = nonlin_constr.diff(t)
     repl = solve(veldt, [u4.diff(t)])
     frstar = (frstar.subs(repl))
     FR_sim = fr.col_join(frstar)
@@ -85,12 +85,12 @@ def test_nonlinear_motion_constraints():
         assert FR_sim[i] == j
 
     # This non-linear constraint is non-linear in udot
-    nonlin_const = Matrix([P1.vel(N).dot(P2.vel(N).diff(t, N))])
+    nonlin_constr = Matrix([P1.vel(N).dot(P2.vel(N).diff(t, N))])
 
     with pytest.raises(NonlinearError):
         KanesMethod(N,
                     q_ind=q_ind,
                     u_ind=u_ind,
                     u_dependent=u_dep, kd_eqs=kd,
-                    complex_constraints=nonlin_const
+                    nonlinear_velocity_constraints=nonlin_constr
     )
