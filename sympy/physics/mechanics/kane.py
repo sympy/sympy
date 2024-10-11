@@ -86,8 +86,8 @@ class KanesMethod(_Methods):
         Constraints on the system's acceleration, by default these are the
         time-derivative of the velocity constraints.
     nonlinear_velocity_constraints : iterable of Expr, optional
-        They may be nonlinear in u and q', but must be linear in the time
-        derivatives of u and of q'.
+        Constraints on the system's velocities. They may be nonlinear in u
+        and q', but must be linear in the time derivatives of u and of q'.
     u_auxiliary : iterable of dynamicsymbols, optional
         Auxiliary generalized speeds.
     bodies : iterable of Particle and/or RigidBody, optional
@@ -372,8 +372,8 @@ class KanesMethod(_Methods):
             if self._qdot_u_map is not None:
                 nonlin_vel = msubs(nonlin_vel, self._qdot_u_map)
             nonlin_veldt = nonlin_vel.diff(dynamicsymbols._t)
-            self._k_c, self._f_c_neg = linear_eq_to_matrix(nonlin_veldt, self._udot[:])
-            self._f_c = -self._f_c_neg
+            self._k_c, _f_c_neg = linear_eq_to_matrix(nonlin_veldt, self._udot[:])
+            self._f_c = _f_c_neg
 
             # Form of non-holonomic constraints is B*u' + C = 0.
             # We partition B into independent and dependent columns:
