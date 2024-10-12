@@ -373,7 +373,7 @@ class KanesMethod(_Methods):
                 nonlin_vel = msubs(nonlin_vel, self._qdot_u_map)
             nonlin_veldt = nonlin_vel.diff(dynamicsymbols._t)
             self._k_c, _f_c_neg = linear_eq_to_matrix(nonlin_veldt, self._udot[:])
-            self._f_c = _f_c_neg
+            self._f_c = -_f_c_neg
 
             # Form of non-holonomic constraints is B*u' + C = 0.
             # We partition B into independent and dependent columns:
