@@ -17,7 +17,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
     preprocess_roots, roots)
-from sympy.polys.polytools import Poly, PurePoly, factor
+from sympy.polys.polytools import Poly, PurePoly, factor, resultant
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
@@ -1054,6 +1054,25 @@ class ComplexRootOf(RootOf):
         # less) don't have much work to do to recompute the root
         self._set_interval(interval)
         return real + I*imag
+
+    def as_real_imag(self, deep=True, **hints):
+        """Return the real and imaginary part of the root."""
+        if self.is_real:
+            return self, S.Zero
+        if self.is_imaginary:
+            return S.Zero, self
+        x = Dummy('x')
+        y = Dummy('y')
+        p = self.poly.as_poly()
+        p_re, p_im = p.real_imag(x, y)
+        p_x = resultant(p_re, p_im, y).as_poly(x)
+        p_y = resultant(p_re, p_im, x).as_poly(y)
+        for rx in p_x.real_roots():
+            for ry in p_y.real_roots():
+                if p.same_root(self, rx + I*ry):
+                    return rx, ry
+        else:
+            assert False
 
 
 CRootOf = ComplexRootOf
