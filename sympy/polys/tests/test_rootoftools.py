@@ -13,6 +13,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.core.function import (Function, Lambda)
 from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import (exp, log)
@@ -163,6 +164,17 @@ def test_CRootOf___eval_Eq__():
     assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol
         ].count(True) == 3
     assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False
+
+
+def test_CRootOf_eval_power():
+    r = rootof(x**3 + x + 3, 0)
+    assert isinstance(r**2, Pow)
+    assert r**3 == -r - 3
+    assert r**4 == -r**2 - 3*r
+    r = rootof(x**5 - x + 1, 0)
+    assert isinstance(r**4, Pow)
+    assert r**5 == r - 1
+    assert r**6 == r**2 - r
 
 
 def test_CRootOf_is_real():

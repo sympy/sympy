@@ -17,7 +17,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
     preprocess_roots, roots)
-from sympy.polys.polytools import Poly, PurePoly, factor
+from sympy.polys.polytools import Poly, PurePoly, degree, factor, LT, LC
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
@@ -393,6 +393,20 @@ class ComplexRootOf(RootOf):
         # whose poly attribute should be a PurePoly with no free
         # symbols
         return set()
+
+    def _eval_power(self, other):
+        if not isinstance(other, (Integer, int)):
+            return None
+        d = degree(self.expr)
+        if other < d:
+            return None
+        _x = list(self.expr.free_symbols)[0]
+        _expr = expr = (LT(self.expr) - self.expr) / LC(self.expr)
+        for _ in range(other - d):
+            _expr = (_x*_expr).expand()
+            if degree(_expr) >= d:
+                _expr += (LC(_expr) * expr).expand() - LT(_expr)
+        return _expr.subs({_x: self})
 
     def _eval_is_real(self):
         """Return ``True`` if the root is real. """
