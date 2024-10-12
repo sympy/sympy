@@ -168,13 +168,26 @@ def test_CRootOf___eval_Eq__():
 
 def test_CRootOf_eval_power():
     r = rootof(x**3 + x + 3, 0)
+    assert r**0 == S.One
+    assert r**1 == r
     assert isinstance(r**2, Pow)
     assert r**3 == -r - 3
     assert r**4 == -r**2 - 3*r
+    for i in range(3, 5):
+        m = r**(-i)
+        assert not isinstance(m, Pow)
+        assert abs(1 - m.n() * (r**i).n()) < 1e-10
+
     r = rootof(x**5 - x + 1, 0)
+    assert r**0 == S.One
+    assert r**1 == r
     assert isinstance(r**4, Pow)
     assert r**5 == r - 1
     assert r**6 == r**2 - r
+    for i in range(5, 10):
+        m = r**(-i)
+        assert not isinstance(m, Pow)
+        assert abs(1 - m.n() * (r**i).n()) < 1e-10
 
 
 def test_CRootOf_is_real():
