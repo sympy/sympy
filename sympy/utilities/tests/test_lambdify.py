@@ -1068,6 +1068,12 @@ def test_Indexed():
     b = numpy.array([[1, 2], [3, 4]])
     assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10
 
+def test_Sum():
+    e = Sum(z, (y, 0, x), (x, 0, 10))
+    ref = 66*z
+    assert e.doit() == ref
+    assert lambdify([z], e)(7) == ref.subs(z, 7)
+
 def test_Idx():
     # Issue 26888
     a = IndexedBase('a')
