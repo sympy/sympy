@@ -31,8 +31,6 @@ import tempfile
 import subprocess
 
 
-pyodide_js = import_module('pyodide_js')
-
 # templates for the main program that will test the generated code.
 
 main_template = {}
