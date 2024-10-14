@@ -25,6 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        splits: [4] # keep in sync with number of groups below
         group: [1, 2, 3, 4]
     env:
       PYODIDE_VERSION: 0.27.0a2
@@ -53,27 +54,95 @@ jobs:
       - name: Install pyodide-build
         run: pip install pyodide-build
 
-      - name: Build SymPy wheel for Pyodide
-        run: pyodide build
-
       - name: Set up Node.js
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Retrieve previous test durations from GHA cache
+        id: restore-test-durations
+        uses: actions/cache/restore@v4
+        with:
+          path: test_durations_merged.json
+          key: sympy_pyodide_test_durations_gha_cache
+
+      - name: Rename test duration artifacts
+        if: steps.restore-test-durations.outputs.cache-hit == 'true'
+        run: mv test_durations_merged.json .test_durations
+
       - name: Set up Pyodide virtual environment and test SymPy for Pyodide
+        id: test-sympy
         run: |
           # Set up Pyodide virtual environment
           pyodide xbuildenv install ${{ env.PYODIDE_VERSION }}
           pyodide venv .venv-pyodide
 
-          # Activate the virtual environment and install the built SymPy wheel
+          # Activate the virtual environment and install SymPy
           source .venv-pyodide/bin/activate
-          pip install dist/*.whl
+          pip install .
+
           # Change to a different directory to avoid importing the local sympy folder
           # package instead of the installed one
           cd doc
+
+          # Install dependencies and optional test dependencies
           pip install pytest pytest-split hypothesis
-          # Don't use the cache provider plugin, as it doesn't work with Pyodide
-          # right now: https://github.com/pypa/cibuildwheel/issues/1966
-          pytest -svra -p no:cacheprovider --pyargs sympy -m 'not slow' --durations 20
+          pip install matplotlib numpy scipy
+
+          # Trigger test suite (slow and tooslow tests are skipped by default)
+          pytest -svra --pyargs sympy \
+          --durations 20 \
+          --splits ${{ matrix.splits }} --group ${{ matrix.group }} \
+          --store-durations
+
+      - name: Move and rename test duration artifacts
+        if: always()
+        run: mv doc/.test_durations test_durations_group_${{ matrix.group }}.json
+
+      - name: Upload test duration artifacts
+        if: always()
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: pytest_durations_${{ matrix.group }}
+          path: test_durations_group_${{ matrix.group }}.json
+          if-no-files-found: error
+          # dotfiles are hidden by default, so we rename them above
+          # post actions/upload-artifact@v4.4.0 to make them visible
+          # and to avoid needing the `include-hidden-files` option
+
+  # We will collect the test durations from all groups in this job
+  # and merge them into a single file. Once all groups have finished,
+  # we will save the merged file as a persistent cache that GHA will
+  # retrieve in the next run.
+  handle-test-durations:
+    name: Merge and cache test durations
+    runs-on: ubuntu-22.04
+    needs: [pyodide-test]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4.1.8
+        with:
+          path: all_test_durations
+          merge-multiple: true
+
+      - name: Merge test duration artifacts
+        shell: bash
+        run: |
+          # Move all test duration files to the root directory
+          mv all_test_durations/*.json .
+          # All four files are JSON. We use JQ to merge them into one JSON file.
+          jq -s 'add' test_durations_group_*.json > test_durations_merged.json
+
+      - name: Save test durations as an artifact for debugging
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: test_durations_merged
+          path: test_durations_merged.json
+          if-no-files-found: error
+
+      - name: Cache test durations file for subsequent runs
+        uses: actions/cache/save@v4
+        with:
+          path: test_durations_merged.json
+          key: sympy_pyodide_test_durations_gha_cache
