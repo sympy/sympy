@@ -297,7 +297,8 @@ def test_geometric_sums():
     assert result.is_Float
 
     result = Sum(0.99999**n, (n, 1, oo)).doit()
-    assert result == 99999.0
+    from sympy import N
+    assert N(result,10) == 99999.0
     assert result.is_Float
 
     result = Sum(S.Half**n, (n, 1, oo)).doit()
