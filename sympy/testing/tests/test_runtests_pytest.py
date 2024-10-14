@@ -7,14 +7,7 @@ from sympy.testing.runtests_pytest import (
     make_absolute_path,
     sympy_dir,
     update_args_with_paths,
-    update_args_with_rootdir,
 )
-
-
-def test_update_args_with_rootdir():
-    """`--rootdir` and directory three above this added as arguments."""
-    args = update_args_with_rootdir([])
-    assert args == ['--rootdir', str(pathlib.Path(__file__).parents[3])]
 
 
 class TestMakeAbsolutePath:
