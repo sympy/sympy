@@ -1075,9 +1075,11 @@ def _get_examples_ode_sol_almost_linear():
             'examples':{
     'almost_lin_01': {
         'eq': x**2*f(x)**2*d + f(x)**3 + 1,
-        'sol': [Eq(f(x), (C1*exp(3/x) - 1)**Rational(1, 3)),
-        Eq(f(x), (-1 - sqrt(3)*I)*(C1*exp(3/x) - 1)**Rational(1, 3)/2),
-        Eq(f(x), (-1 + sqrt(3)*I)*(C1*exp(3/x) - 1)**Rational(1, 3)/2)],
+        'sol': [
+            Eq(f(x), -(-1)**(S(1)/3)*(C1*exp(3/x) - 1)**(S(1)/3)),
+            Eq(f(x), (-1)**(S(2)/3)*(C1*exp(3/x) - 1)**(S(1)/3)),
+            Eq(f(x), (C1*exp(3/x) - 1)**(S(1)/3))
+        ]
 
     },
 
