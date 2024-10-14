@@ -34,7 +34,15 @@ def test_beam_fixture():
     s.add_member(0, 0, 4, 0, E, I, A)
     return s, E, I, A
 
-@pytest.mark.parametrize('test_data', symbolic_test_data, ids=[data['id'] for data in symbolic_test_data])
+@pytest.mark.parametrize(
+    'test_data',
+    symbolic_test_data,
+    ids=[
+        data['id'] if isinstance(data['id'], (str, float, int, type(None))) else str(data['id'])
+        for data in symbolic_test_data
+    ]
+)
+
 def test_structure2d_symbolic(test_beam_fixture, test_data):
     """Test symbolic calculations for a horizontal beam with a point load at the center."""
 
@@ -172,7 +180,15 @@ numerical_test_data = [
     },
 ]
 
-@pytest.mark.parametrize('test_data', numerical_test_data, ids=[data['id'] for data in numerical_test_data])
+@pytest.mark.parametrize(
+    'test_data',
+    numerical_test_data,
+    ids=[
+        data['id'] if isinstance(data['id'], (str, float, int, type(None))) else str(data['id'])
+        for data in numerical_test_data
+    ]
+)
+
 def test_numerical_pointload(test_beam_fixture, test_data):
     """Test numerical calculations for a horizontal beam with a point load at the center. angles are 0-360 in 30 degree increments"""
     # Extract test data
@@ -313,7 +329,15 @@ numerical_test_data_2 = [
     },
 ]
 
-@pytest.mark.parametrize('test_data', numerical_test_data_2, ids=[data['id'] for data in numerical_test_data_2])
+@pytest.mark.parametrize(
+    'test_data',
+    numerical_test_data_2,
+    ids=[
+        data['id'] if isinstance(data['id'], (str, float, int, type(None))) else str(data['id'])
+        for data in numerical_test_data_2
+    ]
+)
+
 def test_numerical_distload(test_beam_fixture, test_data):
     """Test numerical calculations for a horizontal beam with a distributed load at the center 1m distance from both ends. angles are 0-360 in 30 degree increments"""
     # Extract test data
@@ -390,7 +414,14 @@ def test_beam_fixture_one_bend():
     s.add_member(3, 4, 7, -1, E, I, A)
     return s
 
-@pytest.mark.parametrize('test_data', numerical_test_data, ids=[data['id'] for data in numerical_test_data])
+@pytest.mark.parametrize(
+    'test_data',
+    numerical_test_data,
+    ids=[
+        data['id'] if isinstance(data['id'], (str, float, int, type(None))) else str(data['id'])
+        for data in numerical_test_data
+    ]
+)
 def test_structure2d_symbolic_onebend(test_beam_fixture_one_bend, test_data):
     """This one has a bend in the middle"""
 
