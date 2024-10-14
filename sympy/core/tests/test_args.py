@@ -5118,6 +5118,14 @@ def test_sympy__tensor__array__expressions__array_expressions__Reshape():
     assert _test_args(Reshape(A, (2, 2)))
 
 
+def test_sympy__tensor__array__expressions__einsum_sympy__Einsum():
+    from sympy.tensor.array.expressions.array_expressions import ArraySymbol
+    from sympy.tensor.array.expressions.einsum_sympy import Einsum
+    A = ArraySymbol("A", (4, 3))
+    ei = Einsum("ab->a", A)
+    assert _test_args(ei)
+
+
 def test_sympy__codegen__ast__Assignment():
     from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))
