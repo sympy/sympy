@@ -1037,6 +1037,7 @@ def test_issue_5767():
 
 
 def _make_example_24609():
+    # used by two tests below
     D, R, H, B_g, V, D_c = symbols("D, R, H, B_g, V, D_c", real=True, positive=True)
     Sigma_f, Sigma_a, nu = symbols("Sigma_f, Sigma_a, nu", real=True, positive=True)
     x = symbols("x", real=True, positive=True)
@@ -1050,7 +1051,6 @@ def _make_example_24609():
 
 
 def test_issue_24609():
-    # https://github.com/sympy/sympy/issues/24609
     eq, expected, x = _make_example_24609()
     assert solve(eq, x, simplify=True) == [expected]
     [solapprox] = solve(eq.n(), x)
@@ -1796,12 +1796,12 @@ def test_issue_6528():
     assert len(solve(eqs, y, x, check=False)) == 4
 
 
-def test_overdetermined():
+def test_abs_overdetermined():
     x = symbols('x', real=True)
     eqs = [Abs(4*x - 7) - 5, Abs(3 - 8*x) - 1]
-    assert solve(eqs, x) == [(S.Half,)]
+    assert solve(eqs, x) == {x: S.Half}
     assert solve(eqs, x, manual=True) == [(S.Half,)]
-    assert solve(eqs, x, manual=True, check=False) == [(S.Half,), (S(3),)]
+    assert solve(eqs, x, manual=True, check=False) == [(S.Half,), (3,)]
 
 
 def test_issue_6605():
@@ -1840,7 +1840,7 @@ def test_issue_6792():
          CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_6819_6820_6821_6248_8692_25777_25779():
+def test_abs_issues_6819_6820_6821_6248_8692_25777_25779_25895():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
@@ -1856,8 +1856,20 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
     # 25777
     assert solve(abs(x**3 + x + 2)/(x + 1)) == []
+    # you can get an imaginary value for x, however:
+    v = symbols('v')
+    assert solve((abs(y)/(v + 1), v**3 + v + 2 - y)) == [
+        {v: S.Half - sqrt(7)*I/2, y: 0}, {v: S.Half + sqrt(7)*I/2, y: 0}]
 
-    # 25779
+    # issues 25779, 25895
+    assert solve([Eq(x - abs(y), 3), Eq(4*x + 5*abs(y), 21)]
+        ) == [{x: 4, y: -1}, {x: 4, y: 1}]
+    eq1 = Eq(abs(-S(1)/6 - x) - y, 0)
+    eq2 = Eq(abs(S(5)/6 - x) - y, 0)
+    assert solve((eq1, eq2), (x, y)) == {x: S(1)/3, y: S(1)/2}
+    assert solve(abs(x - I) - 4) == [-sqrt(15), sqrt(15)]
+    assert solve(abs(x + 1) - abs(1 - x) - 2) == [1]
+
     assert solve(abs(x)) == [0]
     assert solve(Eq(abs(x**2 - 2*x), 4), x) == [
         1 - sqrt(5), 1 + sqrt(5)]
@@ -1899,6 +1911,7 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
 
 def test_issue_17638():
 
@@ -2401,7 +2414,7 @@ def test_issue_14721():
     assert solve((a + b**2 - 1, a + b**2 - 2)) == []
 
 
-def test_issue_14779():
+def test_abs_issue_14779():
     x = symbols('x', real=True)
     assert solve(sqrt(x**4 - 130*x**2 + 1089) + sqrt(x**4 - 130*x**2
                  + 3969) - 96*Abs(x)/x,x) == [sqrt(130)]
@@ -2464,9 +2477,21 @@ def test_issue_10933():
     assert solve(I*x**4 + x**3 + x**2 + 1.)  # doesn't fail
 
 
-def test_Abs_handling():
-    x = symbols('x', real=True)
+def test_abs_handling():
+    x, y = symbols('x y', real=True)
     assert solve(abs(x/y), x) == [0]
+    assert solve([abs(x - 1) + x - 4], x) == {x: S(5)/2}
+    assert solve([abs(x - 1) + x - 4], x, dict=True) == [{x: S(5)/2}]
+    assert solve([abs(x**2 - 1) - x**2 + x - 4]) == [{x: 5}]
+    assert solve(abs(y) + abs(abs(abs(y) - 2) - 2)) == [0]
+    # When solutions are symbolic they need to be tested with
+    # actual values since all might not be valid.
+    # `solve` doesn't currently return conditions under
+    # which solution is valid (though Piecewise could be used for
+    # this purpose).
+    assert solve(abs(x) + y, x) == [-y, y]  # if y < 0
+    eq = abs(abs(x + 1) - 2) + abs(y)
+    assert solve(eq, x) == [1 - abs(y), -abs(y) - 3, abs(y) - 3, abs(y) + 1]  # if y == 0
 
 
 def test_issue_7982():
@@ -2498,9 +2523,14 @@ def test_issue_17799():
     assert solve(-erf(x**(S(1)/3))**pi + I, x) == []
 
 
-def test_issue_17650():
-    x = Symbol('x', real=True)
-    assert solve(abs(abs(x**2 - 1) - x) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
+def test_abs_issue_17650():
+    x, y = symbols('x y', real=True)
+    assert solve(abs(abs(x**2 - 1) - x) - x) == [
+        1, -1 + sqrt(2), 1 + sqrt(2)]
+    nest = [-Abs(y) + Abs(3*x + Abs(Abs(x - 1) - 2) - 5),
+        x - Abs(y + Abs(x))]
+    assert solve(nest) == [{x: S(2)/3, y: -S(4)/3},
+        {x: 1, y: 0}, {x: 4, y: -8}]
 
 
 def test_issue_17882():
@@ -2629,10 +2659,19 @@ def test_issue_21942():
         d**(1 - e))/a)**(1/(1 - e))]
 
 
-def test_solver_flags():
+def test_solver_cubics_flags():
     root = solve(x**5 + x**2 - x - 1, cubics=False)
     rad = solve(x**5 + x**2 - x - 1, cubics=True)
     assert root != rad
+
+
+def test_solver_flags():
+    assert solve([x - 1]) == {x: 1}
+    # manual treats all equations as nonlinear; it could
+    # be otherwise, but rather than change, just use
+    # dict=True and avoid mutating output
+    assert solve([x - 1], manual=True) == [{x: 1}]
+    assert solve([x - 1], x, manual=True) == [(1,)]
 
 
 def test_issue_22768():

@@ -544,12 +544,22 @@ def test_separable():
 @slow
 def test_factorable():
     assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
-    _ode_solver_test(_get_examples_ode_sol_factorable)
+    _ode_solver_test(_get_examples_ode_sol_factorable_1)
+
+
+@slow
+def test_factorable_11():
+    _ode_solver_test(_get_examples_ode_sol_factorable_11)
 
 
 @slow
 def test_slow_examples_factorable():
-    _ode_solver_test(_get_examples_ode_sol_factorable, run_slow_test=True)
+    _ode_solver_test(_get_examples_ode_sol_factorable_1, run_slow_test=True)
+
+
+@slow
+def test_slow_examples_factorable_11():
+    _ode_solver_test(_get_examples_ode_sol_factorable_11, run_slow_test=True)
 
 
 def test_Riccati_special_minus2():
@@ -908,12 +918,11 @@ def _get_examples_ode_sol_1st_linear():
 
 
 @_add_example_keys
-def _get_examples_ode_sol_factorable():
+def _get_examples_ode_sol_factorable_1():
     """ some hints are marked as xfail for examples because they missed additional algebraic solution
     which could be found by Factorable hint. Fact_01 raise exception for
     nth_linear_constant_coeff_undetermined_coefficients"""
 
-    y = Dummy('y')
     a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
     return {
             'hint': "factorable",
@@ -993,7 +1002,22 @@ def _get_examples_ode_sol_factorable():
         ],
         'slow': True,
     },
+    }
+    }
 
+
+@_add_example_keys
+def _get_examples_ode_sol_factorable_11():
+    """ some hints are marked as xfail for examples because they missed additional algebraic solution
+    which could be found by Factorable hint. Fact_01 raise exception for
+    nth_linear_constant_coeff_undetermined_coefficients"""
+
+    y = Dummy('y')
+    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
+    return {
+            'hint': "factorable",
+            'func': f(x),
+            'examples':{
     'fact_11': {
         'eq': (f(x).diff(x, 2)-exp(f(x)))*(f(x).diff(x, 2)+exp(f(x))),
         'sol': [
@@ -1027,7 +1051,21 @@ def _get_examples_ode_sol_factorable():
         'eq': f(x).diff(x)**2 - f(x)**2,
         'sol': [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
     },
+    }
+    }
 
+
+@_add_example_keys
+def _get_examples_ode_sol_factorable_16():
+    """ some hints are marked as xfail for examples because they missed additional algebraic solution
+    which could be found by Factorable hint. Fact_01 raise exception for
+    nth_linear_constant_coeff_undetermined_coefficients"""
+
+    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
+    return {
+            'hint': "factorable",
+            'func': f(x),
+            'examples':{
     'fact_16': {
         'eq': f(x).diff(x)**2 - f(x)**3,
         'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
@@ -1059,7 +1097,6 @@ def _get_examples_ode_sol_factorable():
     },
     }
     }
-
 
 
 @_add_example_keys
@@ -2875,7 +2912,8 @@ def _get_all_examples():
     all_examples = _get_examples_ode_sol_euler_homogeneous + \
     _get_examples_ode_sol_euler_undetermined_coeff + \
     _get_examples_ode_sol_euler_var_para + \
-    _get_examples_ode_sol_factorable + \
+    _get_examples_ode_sol_factorable_1 + \
+    _get_examples_ode_sol_factorable_11 + \
     _get_examples_ode_sol_bernoulli + \
     _get_examples_ode_sol_nth_algebraic + \
     _get_examples_ode_sol_riccati + \
