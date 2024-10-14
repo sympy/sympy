@@ -36,6 +36,7 @@ git_whitelist = {
     '.github/PULL_REQUEST_TEMPLATE.md',
     '.github/dependabot.yml',
     '.github/workflows/runtests.yml',
+    '.github/workflows/emscripten.yml',
     '.github/workflows/ci-sage.yml',
     '.github/workflows/comment-on-pr.yml',
     '.github/workflows/release.yml',
