@@ -43,6 +43,10 @@ class PolynomialRing(Ring, CompositeDomain):
     def new(self, element):
         return self.ring.ring_new(element)
 
+    def of_type(self, element):
+        """Check if ``a`` is of type ``dtype``. """
+        return self.ring.is_element(element)
+
     @property
     def zero(self):
         return self.ring.zero
@@ -59,13 +63,13 @@ class PolynomialRing(Ring, CompositeDomain):
         return str(self.domain) + '[' + ','.join(map(str, self.symbols)) + ']'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype.ring, self.domain, self.symbols))
+        return hash((self.__class__.__name__, self.ring, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        return isinstance(other, PolynomialRing) and \
-            (self.dtype.ring, self.domain, self.symbols) == \
-            (other.dtype.ring, other.domain, other.symbols)
+        if not isinstance(other, PolynomialRing):
+            return NotImplemented
+        return self.ring == other.ring
 
     def is_unit(self, a):
         """Returns ``True`` if ``a`` is a unit of ``self``"""
