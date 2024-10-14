@@ -277,8 +277,11 @@ def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
     (exp(x/2), -3)
 
     """
-    _ = base, exp = expr.as_base_exp()
-    return _ if exp.is_Rational else decompose_power(expr)
+    base, exp = expr.as_base_exp()
+    if not exp.is_Rational:
+        base, exp_i = decompose_power(expr)
+        exp = Integer(exp_i)
+    return base, exp # type: ignore
 
 
 class Factors:
