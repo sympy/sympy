@@ -1,6 +1,6 @@
 """
 This module can be used to solve 2D problems with
-singularity functions in mechanics..
+singularity functions in mechanics.
 """
 
 from sympy.core import Basic, Symbol
@@ -46,13 +46,13 @@ np = import_module(
 
 class Member:
     def __init__(self, x1, y1, x2, y2, E, I, A, member_id):
-        self.x1 = simplify(x1)
-        self.y1 = simplify(y1)
-        self.x2 = simplify(x2)
-        self.y2 = simplify(y2)
-        self.E = simplify(E)
-        self.I = simplify(I)
-        self.A = simplify(A)
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+        self.E = E
+        self.I = I
+        self.A = A
         self.member_id = member_id
 
         # properties that are auto computed
@@ -111,7 +111,8 @@ class Load:
     ):
         self.start_x = start_x
         self.start_y = start_y
-        self.value = value
+        self.value = value  # simplify this breaks plotter
+        # self.value = simplify(value)
         self.global_angle = rad(global_angle)
         self.order = order
         self.end_x = end_x
@@ -139,24 +140,130 @@ class Load:
 
 class Structure2d:
     """
-    TEXT
+    Represents a 2D structure composed of members, supports, and loads.
 
     .. note::
-       note
+        A consistent sign convention should be maintained for all forces and reactions.
+        The positive direction for the x-axis is to the right, and the positive direction for the y-axis is downwards.
 
-    .. image:: allowed-sign-conventions.png
+        Limitations:
+            - Only bending moments and shear forces are considered in the analysis.
+            - Only non-branching or non-intersecting structures are supported. (All members must either connected ONE other member at each end or to nothing)
+            - All E, A, I values must be the same for all members.
+            - Supports can only have ONE unknown reaction force in the horizontal direction.
+            - Members must be added in order of the unwrapping of the structure, from left to right or right to left.
+            - Support must be added at the end of the a member.
+
+
+    Examples
+    ========
+    There is a structure containing 2 members. A constant distributed load is applied over the length of the first member.
+    The structure is supported by a pin support at one end and a roller support at the other end.
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+        >>> E = 3e4
+        >>> I = 1
+        >>> A = 1e4
+        >>> F = 15
+        >>> s = Structure2d()
+        >>> s.add_member(x1=0, y1=0, x2=3, y2=4, E=E, I=I, A=A)  # doctest: +ELLIPSIS
+        >>> s.add_member(x1=3, y1=4, x2=7, y2=-1, E=E, I=I, A=A)  # doctest: +ELLIPSIS
+        >>> s.apply_load(start_x=1.5, start_y=2, value=F, global_angle=0, order=-1)
+        >>> s.apply_load(
+        ...     start_x=5,
+        ...     start_y=1.5,
+        ...     value=F / 2,
+        ...     global_angle=s.members[1].angle_deg + 270,
+        ...     order=0,
+        ...     end_x=7,
+        ...     end_y=-1,
+        ... )
+        >>> s.apply_load(
+        ...     start_x=0,
+        ...     start_y=0,
+        ...     value=F * 0.8,
+        ...     global_angle=270,
+        ...     order=0,
+        ...     end_x=3,
+        ...     end_y=4,
+        ... )
+        >>> Rv1 = s.apply_support(x=7, y=-1, type="roller")
+        >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
+        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)  # doctest: +ELLIPSIS
+        >>> s.summary(round_digits=2)
+        >>> s.draw(show_load_values=True)
+
+
+    There is a structure containing 3 members. A point load is applied at 1/4 L of the first member.
+    A constant distributed load is applied over the second half of the first member and a second distributed load is applied over first hald of the third member.
+    The structure is supported by a pin support at one end and a roller support at the other end.
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+        >>> E = 3e4
+        >>> I = 1
+        >>> A = 1e4
+        >>> F = 15
+        >>> s = Structure2d()
+        >>> s.add_member(x1=0, y1=0, x2=12, y2=5, E=E, I=I, A=A) # doctest: +ELLIPSIS
+        >>> s.add_member(x1=12, y1=5, x2=12, y2=2, E=E, I=I, A=A) # doctest: +ELLIPSIS
+        >>> s.add_member(x1=12, y1=2, x2=15, y2=2, E=E, I=I, A=A) # doctest: +ELLIPSIS
+        >>> s.apply_load(
+        ...     start_x=6,
+        ...     start_y=2.5,
+        ...     value=20,
+        ...     global_angle=270,
+        ...     order=0,
+        ...     end_x=12,
+        ...     end_y=5,
+        ... )
+        >>> s.apply_load(
+        ...     start_x=12,
+        ...     start_y=2,
+        ...     value=50,
+        ...     global_angle=270,
+        ...     order=0,
+        ...     end_x=13.5,
+        ...     end_y=2,
+        ... )
+        >>> s.apply_load(
+        ...     start_x=3,
+        ...     start_y=1.25,
+        ...     value=100,
+        ...     global_angle=s.members[0].angle_deg + 270,
+        ...     order=-1,
+        ... )
+        >>> Rv1 = s.apply_support(x=15, y=2, type="roller")
+        >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
+        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2) # doctest: +ELLIPSIS
+        >>> s.summary(round_digits=2)
+        >>> s.draw(show_load_values=True, forced_load_size=2)
     """
+
     def __init__(self):
+        """
+        Initializes the Structure2d class with empty lists for members, supports, nodes, and loads.
+
+        This method sets up the internal structure and prepares it for adding members,
+        supports, nodes, and loads.
+        """
         self.members = []
         self.supports = []
         self.nodes = []
         self.loads = []
-        # self.unwrapped_len = 0
         self.unwrapped_bendpoints = []
         self.unwrapped_loadpoints = []
         self.beam = self._init_beam()
         self.reaction_loads = {}
-
         self.load_qz = 0
 
     def __repr__(self):
@@ -179,6 +286,54 @@ class Structure2d:
         )
 
     def add_member(self, x1, y1, x2, y2, E, I, A):
+        """
+        Adds a member to the structure on a x and y grid.
+
+        This method creates a Member object with the specified coordinates and properties.
+        It also adds the corresponding nodes to the structure and updates their types based on the member's location.
+
+        Parameters
+        ==========
+
+        x1 : Sympifyable
+            X coordinate of the start of the member.
+
+        y1 : Sympifyable
+            Y coordinate of the start of the member.
+
+        x2 : Sympifyable
+            X coordinate of the end of the member.
+
+        y2 : Sympifyable
+            Y coordinate of the end of the member.
+
+        E : Sympifyable
+            A SymPy expression representing the Beam's Modulus of Elasticity (Young's modulues).
+
+        I : Sympifyable
+            Describes the cross-section of the member via a SymPy expression
+            representing the members's second moment of area.
+
+        A : Sympifyable
+            Describes the cross-section of the member via a SymPy expression
+            representing the members's area.
+
+        Returns:
+            Member: The newly created Member object that has been added to the structure.
+
+        Examples
+        ========
+        A simple horizontal member with coordinates x1=0, y1=0, x2=4, y2=0 is added to the structure.
+
+        >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+        >>> E = 3e4
+        >>> I = 1
+        >>> A = 1e4
+        >>> F = 15
+        >>> s = Structure2d()
+        >>> s.add_member(0, 0, 4, 0, E, I, A)  # doctest: +ELLIPSIS
+        """
+
         member_id = len(self.members)
         member = Member(x1, y1, x2, y2, E, I, A, member_id)
         self.members.append(member)
@@ -187,6 +342,8 @@ class Structure2d:
         return member
 
     def _add_or_update_node(self, x, y, new_node_type, overwrite_type=True):
+        """Adds a node to the structure at a specified location."""
+
         for node in self.nodes:
             if node.x == x and node.y == y:
                 # If you overwrite here, make sure the correct coordinates are being passed
@@ -201,6 +358,7 @@ class Structure2d:
         return new_node
 
     def _find_applied_to(self, x, y, x_end=None, y_end=None):
+        """ Finds the member or node to which the load is applied. """
         # Calculate the midpoint if end coordinates are provided
         if x_end is not None and y_end is not None:
             x_start, y_start = x, y
@@ -247,10 +405,76 @@ class Structure2d:
     def apply_load(
         self, start_x, start_y, value, global_angle, order, end_x=None, end_y=None
     ):
+        """
+        This method adds up the force load to a particular beam object.
+
+        .. note::
+           The ``value`` parameter can be negative to represent a force in the opposite direction. However,
+           note that the ``global_angle`` parameter automatically adjusts the sign. This means that when ``value = 10`` and ``global_angle = 0``, it is equivalent to ``value = -10`` and ``global_angle = 180``.
+
+        Parameters
+        ==========
+        start_x : Sympifyable
+            X coordinate of the start of the load.
+
+        start_y : Sympifyable
+            Y coordinate of the start of the load.
+
+        value : Sympifyable
+            The magnitude of an applied load.
+
+        global_angle : Sympifyable
+            The angle of the applied load with respect to the positive global x-axis.
+
+        order : Integer
+            The order of the applied load.
+            - For point loads, order=-1
+            - For constant distributed load, order=0
+            - For ramp loads, order=1
+            - For parabolic ramp loads, order=2
+            - ... so on.
+
+        end_x : Sympifyable, optional
+            X coordinate of the end of the load. Defaults to None.
+
+        end_y : Sympifyable, optional
+            Y coordinate of the end of the load. Defaults to None.
+
+        Returns:
+            Load: The newly created Load object that has been added to the structure.
+
+
+        Examples
+        ========
+        A point load of 15 units is applied at coordinates (2, 0) with an angle of 225 degrees from the positive x-axis.
+
+        >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+        >>> E = 3e4
+        >>> I = 1
+        >>> A = 1e4
+        >>> F = 15
+        >>> s = Structure2d()
+        >>> s.add_member(0, 0, 4, 0, E, I, A)  # doctest: +ELLIPSIS
+        >>> s.apply_load(2, 0, F, global_angle=270, order=-1)
+
+        A constant distributed load of 15 units is applied from (2, 0) to (3, 0) with an angle of 225 degrees from the positive x-axis.
+
+        >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+        >>> E = 3e4
+        >>> I = 1
+        >>> A = 1e4
+        >>> F = 15
+        >>> s = Structure2d()
+        >>> s.add_member(0, 0, 4, 0, E, I, A)  # doctest: +ELLIPSIS
+        >>> s.apply_load(2, 0, F, global_angle=225, order=0, end_x=3, end_y=0)
+        """
+
+        # Create a new load object
         load_id = len(self.loads)
         load = Load(start_x, start_y, value, global_angle, order, end_x, end_y, load_id)
         self.loads.append(load)
 
+        # Find the member or node to which the load is applied
         if end_x is not None and end_y is not None:
             load.applied_to, load.local_start, load.local_end = self._find_applied_to(
                 start_x, start_y, end_x, end_y
@@ -270,30 +494,31 @@ class Structure2d:
         ########################
 
         aa, oo, L = self._unwrap_structure()
+        # Convert to alexes input
         # T = 1, Fv = 2, Fh = 3, qv = 4, qh = 5
         if load.order == -2:
             qz = load.value
-            B = [qz]
-            bb = [self.unwrapped_loadpoints[-1]["locals"][0]]
+            B = [nsimplify(qz)]
+            bb = [nsimplify(self.unwrapped_loadpoints[-1]["locals"][0])]
             nn = [1]
         elif end_x is None and end_y is None:
             Fv = load.y_component
             Fh = load.x_component
-            B = [Fv, Fh]
+            B = [nsimplify(Fv), nsimplify(Fh)]
             bb = [
-                self.unwrapped_loadpoints[-1]["locals"][0],
-                self.unwrapped_loadpoints[-1]["locals"][0],
+                nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
+                nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
             ]
             nn = [2, 3]
         else:
             qv = load.y_component
             qh = load.x_component
-            B = [qv, -qv, qh, -qh]
+            B = [nsimplify(qv), nsimplify(-qv), nsimplify(qh), nsimplify(-qh)]
             bb = [
-                self.unwrapped_loadpoints[-1]["locals"][0],
-                self.unwrapped_loadpoints[-1]["locals"][1],
-                self.unwrapped_loadpoints[-1]["locals"][0],
-                self.unwrapped_loadpoints[-1]["locals"][1],
+                nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
+                nsimplify(self.unwrapped_loadpoints[-1]["locals"][1]),
+                nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
+                nsimplify(self.unwrapped_loadpoints[-1]["locals"][1]),
             ]
             nn = [4, 4, 5, 5]
 
@@ -374,10 +599,12 @@ class Structure2d:
     ###################################################################################################################
 
     def _unwrap_structure(self):
+        """Unwraps the structure to a 1D beam for analysis."""
         unwrapped_len = 0
         unwrapped_bendpoints = []
         unwrapped_loadpoints = []
 
+        # Process members
         for member in self.members:
             unwrapped_bendpoints.append(
                 {
@@ -393,8 +620,8 @@ class Structure2d:
                         {
                             "l_id": load.load_id,
                             "locals": [
-                                unwrapped_len + load.local_start,
-                                unwrapped_len + load.local_end,
+                                nsimplify(unwrapped_len + load.local_start),
+                                nsimplify(unwrapped_len + load.local_end),
                             ],
                         }
                     )
@@ -402,7 +629,7 @@ class Structure2d:
                     unwrapped_loadpoints.append(
                         {
                             "l_id": load.load_id,
-                            "locals": [unwrapped_len + load.local_start],
+                            "locals": [nsimplify(unwrapped_len + load.local_start)],
                         }
                     )
 
@@ -412,7 +639,7 @@ class Structure2d:
                 if simplify(node.x - x_start) == 0 and simplify(node.y - y_start) == 0:
                     for load in node.node_loads:
                         unwrapped_loadpoints.append(
-                            {"l_id": load.load_id, "locals": [unwrapped_len]}
+                            {"l_id": load.load_id, "locals": [nsimplify(unwrapped_len)]}
                         )
                     break
 
@@ -424,7 +651,7 @@ class Structure2d:
                 if simplify(node.x - x_end) == 0 and simplify(node.y - y_end) == 0:
                     for load in node.node_loads:
                         unwrapped_loadpoints.append(
-                            {"l_id": load.load_id, "locals": [unwrapped_len]}
+                            {"l_id": load.load_id, "locals": [nsimplify(unwrapped_len)]}
                         )
                     break
 
@@ -432,7 +659,7 @@ class Structure2d:
         self.unwrapped_loadpoints = sorted(
             unwrapped_loadpoints, key=lambda x: x["l_id"]
         )
-        ### emulate Alexes input for his algorithm
+        ### Emulate Alexes input for his algorithm
         aa = []
         oo = []
 
@@ -445,9 +672,10 @@ class Structure2d:
         self.beam.length = L
 
         return aa, oo, L
-        ### emulate Alexes input for his algorithm
+        ### Emulate Alexes input for his algorithm
 
     def _find_unwrapped_position(self, x, y):
+        """Finds the unwrapped position based on the x and y from the grid."""
         self._unwrap_structure()
 
         unwrapped_position_x = 0
@@ -465,10 +693,50 @@ class Structure2d:
 
         if unwrapped_position_x == 0:
             unwrapped_position_x = current_length
-
-        return unwrapped_position_x
+        # print("Debug - unwrapped position:", unwrapped_position_x)
+        return nsimplify(unwrapped_position_x)  # ALSO NEEDS SIMPLIFY
 
     def apply_support(self, x, y, type="pin"):
+        """
+        Applies a support at a specified location in the structure.
+
+        This method adds a support node at the given coordinates and applies the corresponding loads
+        based on the type of support (pin, roller, or fixed). It updates the beam's boundary conditions
+        and marks the loads as support reactions.
+
+        Parameters
+        ==========
+        x : Sympifyable
+            X coordinate of the support location.
+
+        y : Sympifyable
+            Y coordinate of the support location.
+
+        type : str
+            The type of support to be applied. It can be one of the following (Default is "pin").
+            - "pin": Pin support that restricts vertical and horizontal movement.
+            - "roller": Roller support that restricts vertical movement.
+            - "fixed": Fixed support that restricts vertical, horizontal, and rotational movement.
+
+        Returns:
+            SymPy Symbol(s): The reaction loads at the support location. The return value depends on the type of support applied.
+
+        Examples
+        ========
+        A pin support is applied at coordinates (0, 0) and a roller support is applied at coordinates (4, 0).
+
+        >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+        >>> E = 3e4
+        >>> I = 1
+        >>> A = 1e4
+        >>> F = 15
+        >>> s = Structure2d()
+        >>> s.add_member(0, 0, 4, 0, E, I, A)  # doctest: +ELLIPSIS
+        >>> s.apply_load(2, 0, F, global_angle=225, order=0, end_x=3, end_y=0)
+        >>> Rv1, Rh1 = s.apply_support(x=0, y=0, type="pin")
+        >>> Rv2 = s.apply_support(x=4, y=0, type="roller")
+        """
+
         support = self._add_or_update_node(x, y, type)
         self.supports.append(support)
 
@@ -478,6 +746,14 @@ class Structure2d:
         Rv = Symbol(f"R_v__{round(x,2)},__{round(y,2)}")
         T = Symbol(f"T__{round(x,2)},__{round(y,2)}")
 
+        if type == "pin" or type == "roller" or type == "fixed":
+            pass
+        else:
+            raise ValueError(
+                "Invalid support type. Choose from 'pin', 'roller', or 'fixed'."
+            )
+
+        # Apply support loads based on the type of support
         if type == "pin":
             load_v = -1 * Rv
             load_h = Rh
@@ -527,24 +803,78 @@ class Structure2d:
             self.loads[-3].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
+            # This i think sould be slope of the beam at this point beacause 0 is assuming supports and horizontal members
+            # unwrap is already called so it should be extaracatble from the unwrapped position
             self.beam.bc_slope.append((unwarap_x, 0))
             return T, Rv, Rh
 
     def solve_for_reaction_loads(self, *args):
+        """
+        Solves for the reaction loads in the structure based on the applied loads and applied support reactions.
+
+        Parameters
+        ==========
+        *args : dict
+            Variables representing the reaction loads.
+
+        Returns:
+            dict: A dictionary containing the solved reaction loads for the structure
+
+        Examples
+        ========
+        >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+        >>> E = 3e4
+        >>> I = 1
+        >>> A = 1e4
+        >>> s = Structure2d()
+        >>> s.add_member(x1=0, y1=0, x2=12, y2=5, E=E, I=I, A=A) # doctest: +ELLIPSIS
+        >>> s.add_member(x1=12, y1=5, x2=12, y2=2, E=E, I=I, A=A) # doctest: +ELLIPSIS
+        >>> s.add_member(x1=12, y1=2, x2=15, y2=2, E=E, I=I, A=A) # doctest: +ELLIPSIS
+        >>> s.apply_load(
+        ...     start_x=6,
+        ...     start_y=2.5,
+        ...     value=20,
+        ...     global_angle=270,
+        ...     order=0,
+        ...     end_x=12,
+        ...     end_y=5,
+        ... )
+        >>> s.apply_load(
+        ...     start_x=12,
+        ...     start_y=2,
+        ...     value=50,
+        ...     global_angle=270,
+        ...     order=0,
+        ...     end_x=13.5,
+        ...     end_y=2,
+        ... )
+        >>> s.apply_load(
+        ...     start_x=3,
+        ...     start_y=1.25,
+        ...     value=10,
+        ...     global_angle=s.members[0].angle_deg + 270,
+        ...     order=-1,
+        ... )
+        >>> Rv1 = s.apply_support(x=15, y=2, type="roller")
+        >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
+        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+        {R_v__15,__2: -143.916666666667, R_v__0,__0: -70.3141025641026, R_h__0,__0: -3.84615384615385}
+        """
+
         # Split arguments into vertical and horizontal reaction loads
         reaction_loads_vertical = [arg for arg in args if "R_v" in str(arg)]
         reaction_loads_horizontal = [arg for arg in args if "R_h" in str(arg)]
         reaction_moments = [arg for arg in args if "T_" in str(arg)]
 
         args_for_beam_solver = tuple(
-            reaction_loads_vertical + reaction_loads_horizontal + reaction_moments
+            reaction_loads_vertical + reaction_moments + reaction_loads_horizontal
         )
 
-        # print("Debug - reaction load arguments:", test)
+        # display(self.beam.load)
         # display(self.beam.shear_force(),'--')
         # Solve for moment and vertical reaction loads using the beam solver
+        # print(args_for_beam_solver)
         self.beam.solve_for_reaction_loads(*args_for_beam_solver)
-        # display(self.beam.shear_force())
 
         # Compute the horizontal reaction load by summing up all horizontal forces
         sum_horizontal = 0
@@ -608,28 +938,42 @@ class Structure2d:
                     load.x_component = load.x_component.subs(vertical_key).subs(
                         horizontal_key
                     )
+                    if isinstance(load.value, Basic):
+                        pass
+                    else:
+                        # Adjust load direction
+                        if load.y_component > 0:
+                            load.global_angle = load.global_angle + pi
+                        if load.x_component < 0:
+                            load.global_angle = load.global_angle + pi
 
-                    # Adjust load direction
-                    if load.y_component > 0:
-                        load.global_angle = load.global_angle + pi
-                    if load.x_component < 0:
-                        load.global_angle = load.global_angle + pi
                 elif isinstance(load.value, Basic) and load.order == -2:
                     load.value = load.value.subs(bending_moment_key)
 
         else:
             # print('Debug - Reaction loads are symbolic')
             pass
+        return self.reaction_loads
 
     def shear_force(self, x=None, y=None):
         """
-        Compute the shear force at a given point on the beam.
+        Calculates the shear force at a specified point on the beam.
 
-        If no arguments are provided, it returns the shear force equation.
+        This method returns the shear force equation if no arguments are provided.
+        When both x and y coordinates are provided, it calculates the shear force at the specified (x, y) coordinates.
+        (If the x-coordinate is provided, it returns the shear force at the unwrapped location, this for debugging purposes)
 
-        if x is provided, it returns the shear force at the UNWRAPPED LOC.
+        Parameters
+        ==========
+        x : Sympifyable, optional
+            X coordinate of the point to calculate the shear force. Defaults to None.
+        y : Sympifyable, optional
+            Y coordinate of the point to calculate the shear force. Defaults to None.
 
-        if x AND y are provided, it returns the shear force at the given x and y coordinates.
+        Returns:
+            If no arguments are provided: The shear force equation.
+            If both x and y coordinates are provided: The shear force at the specified (x, y) coordinates.
+            (If only the x-coordinate is given: The shear force at the unwrapped location.)
         """
 
         if x is None:
@@ -642,17 +986,34 @@ class Structure2d:
             return self.beam.shear_force().subs(Symbol("x"), unwarap_x)
 
     def plot_shear_force(self):
+        """
+        Plots the shear force diagram for the beam.
+
+        Returns:
+            Matplotlib plot: A plot showing the shear force distribution along the structure.
+        """
+
         self.beam.plot_shear_force()
 
     def bending_moment(self, x=None, y=None):
         """
-        Compute the bending moment at a given point on the beam.
+        Calculates the bending moment at a specified point on the beam.
 
-        If no arguments are provided, it returns the bending moment equation.
+        This method returns the bending moment equation if no arguments are provided.
+        When both x and y coordinates are provided, it computes the bending moment at the specified (x, y) coordinates.
+        (If only the x-coordinate is given, it calculates the bending moment at the unwrapped location.)
 
-        if x is provided, it returns the bending moment at the UNWRAPPED LOC.
+        Parameters
+        ==========
+        x : Sympifyable, optional
+            X coordinate of the point to calculate the bending moment. Defaults to None.
+        y : Sympifyable, optional
+            Y coordinate of the point to calculate the bending moment. Defaults to None.
 
-        if x AND y are provided, it returns the bending moment at the given x and y coordinates.
+        Returns:
+            If no arguments are provided: The bending moment equation.
+            If both x and y coordinates are provided: The bending moment at the specified (x, y) coordinates.
+            (If only the x-coordinate is given: The bending moment at the unwrapped location.)
         """
 
         if x is None:
@@ -665,9 +1026,64 @@ class Structure2d:
             return self.beam.bending_moment().subs(Symbol("x"), unwarap_x)
 
     def plot_bending_moment(self):
+        """
+        Plots the bending moment diagram for the beam.
+
+        Returns:
+            Matplotlib plot: A plot showing the bending moment distribution along the structure.
+        """
+
         self.beam.plot_bending_moment()
 
     def summary(self, verbose=True, round_digits=None):
+        """
+        Provides a summary of the structure, including reaction loads and points of interest.
+
+        This method prints a formatted summary of the structure's members, nodes, and supports,
+        along with the reaction loads and points of interest related to bending moments and shear forces.
+        It allows for a quick overview of the structural state and key values for analysis.
+
+        Parameters
+        ==========
+        verbose : bool, optional
+            If True, the summary will be printed. Defaults to True.
+        round_digits : int, optional
+            The number of decimal places to round the values in the summary. Defaults to None (exact solution).
+        Returns:
+            A formatted summary of the structure's key values.
+
+        Examples
+        ========
+        >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+        >>> E = 3e4
+        >>> I = 1
+        >>> A = 1e4
+        >>> F = 10
+        >>> s = Structure2d()
+        >>> s.add_member(0, 0, 4, 0, E, I, A) # doctest: +ELLIPSIS
+        >>> s.apply_load(2, 0, F, global_angle=270, order=-1)
+        >>> Rv1, Rh1 = s.apply_support(x=0, y=0, type="pin")
+        >>> Rv2 = s.apply_support(x=4, y=0, type="roller")
+        >>> s.solve_for_reaction_loads(Rh1, Rv1, Rv2)
+        >>> s.summary(round_digits=2)
+        ===================== Structure Summary =====================
+        <BLANKLINE>
+        Reaction Loads:
+        R_v   [0.00,0.00]  (0.00)                = -5.0
+        R_v   [4.00,0.00]  (4.00)                = -5.0
+        R_h   [0.00,0.00]  (0.00)                = 0.0
+        <BLANKLINE>
+        Points of Interest - Bending Moment:
+        bending_moment at [x.xx,y.yy]  (0.00)    = 0.0
+        bending_moment at [x.xx,y.yy]  (4.00)-   = 0.0
+        <BLANKLINE>
+        Points of Interest - Shear Force:
+        shear_force at [x.xx,y.yy]  (0.00+)      = 5.0
+        shear_force at [x.xx,y.yy]  (2.00-)      = 5.0
+        shear_force at [x.xx,y.yy]  (2.00+)      = -5.0
+        shear_force at [x.xx,y.yy]  (4.00-)      = -5.0
+        """
+
         title = "Structure Summary"
         line_length = 60
 
@@ -684,6 +1100,7 @@ class Structure2d:
             self._print_points_of_interest(round_digits)
 
     def _print_reaction_loads(self, round_digits):
+        """Prints the reaction loads in the structure."""
         print("\nReaction Loads:")
         for key, value in self.reaction_loads.items():
             support_name = str(key).split("__")[0]
@@ -697,38 +1114,60 @@ class Structure2d:
                 value = round(float(value), round_digits)
 
             support_str = f"{support_name:<5} [{support_x_loc:.2f},{support_y_loc:.2f}]  ({unwrapped_xl_loc:.2f})"
-            print(f"{support_str:<40} = {nsimplify(value)}")
+            print(f"{support_str:<40} = {(value)}")
 
     def _print_points_of_interest(self, round_digits):
-        dx = 1e-18
+        """Prints the points of interest for shear force and bending moment."""
+        dx = 1e-6
+        # dx = 0
 
         print("\nPoints of Interest - Bending Moment:")
         bend_points = sorted(
             {
-                float(point)
+                nsimplify(point)
                 for item in self.unwrapped_bendpoints
                 for point in item["bend_point"]
             }
         )
         for point in bend_points:
-            bending_moment_value = self.bending_moment(point)
-            if round_digits is not None and not bending_moment_value.has(Symbol):
-                bending_moment_value = round(float(bending_moment_value), round_digits)
-            string_text = f"bending_moment at [x.xx,y.yy]  ({point:.02f})"
-            print(f"{string_text:<40} = {bending_moment_value}")
+            if point == bend_points[-1]:
+                bending_moment_value = self.bending_moment(point - dx)
+                if round_digits is not None and not bending_moment_value.has(Symbol):
+                    bending_moment_value = round(
+                        float(bending_moment_value), round_digits
+                    )
+                string_text = f"bending_moment at [x.xx,y.yy]  ({point:.02f})-"
+                print(f"{string_text:<40} = {bending_moment_value}")
+
+            else:
+                bending_moment_value = self.bending_moment(nsimplify(point))
+
+                if round_digits is not None and not bending_moment_value.has(Symbol):
+                    bending_moment_value = round(
+                        float(bending_moment_value), round_digits
+                    )
+                string_text = f"bending_moment at [x.xx,y.yy]  ({point:.02f})"
+                print(f"{string_text:<40} = {bending_moment_value}")
 
         print("\nPoints of Interest - Shear Force:")
         load_points = sorted(
             {
-                float(local)
+                nsimplify(local)
                 for point in self.unwrapped_loadpoints
                 for local in point["locals"]
-            }.union(bend_points)
+            }
         )
+        load_points = []
+        for item in self.unwrapped_loadpoints:
+            # print(item["locals"])
+            if len(item["locals"]) == 1:
+                load_points.append(item["locals"][0])
+        load_points = sorted(set(load_points + bend_points))
+        # print(load_points)
 
-        for point in load_points:
-            shear_force_value_minus = nsimplify(self.shear_force(point - dx))
-            shear_force_value_plus = nsimplify(self.shear_force(point + dx))
+        for point in sorted(load_points):
+            shear_force_value_minus = self.shear_force(point - dx)
+            shear_force_value_plus = self.shear_force(nsimplify(point))
 
             if round_digits is not None:
                 if isinstance(
@@ -757,17 +1196,140 @@ class Structure2d:
                 print(f"{string_text:<40} = {shear_force_value_plus}")
 
     #################################################################################
-    def draw(self, forced_load_size=None, show_load_values=False):
+    def draw(
+        self, forced_load_size=None, show_load_values=False, draw_support_icons=False
+    ):
+        """
+        Draws the structure, including members, loads, and supports.
+
+        This method creates a visual representation of the structure using matplotlib, displaying
+        the members, applied loads, and support types. Loads that are symbolic and remail symbolic after solving are displayed in a grey color.
+
+        Parameters
+        ==========
+        forced_load_size : float, optional
+            This caps the size of all loads to this value, uses the grid units not value units.
+            Default is None which scales the loads on the plot based on their value.
+
+        show_load_values : bool, optional
+            If True, the load values will be displayed on the plot. Default is False.
+
+        Returns:
+            Plot of the structure including members, loads, and supports.
+
+        Examples
+        ========
+        A structure with two members and multiple loads symbolic loads is created and visualized using the draw method.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> from sympy.core.symbol import symbols
+            >>> E = 3e4
+            >>> I = 1
+            >>> A = 1e4
+            >>> F = symbols("F")
+            >>> s = Structure2d()
+            >>> s.add_member(x1=0, y1=0, x2=3, y2=4, E=E, I=I, A=A) # doctest: +ELLIPSIS
+            >>> s.add_member(x1=3, y1=4, x2=7, y2=-1, E=E, I=I, A=A) # doctest: +ELLIPSIS
+            >>> s.apply_load(start_x=1.5, start_y=2, value=F, global_angle=0, order=-1)
+            >>> s.apply_load(
+            ...     start_x=5,
+            ...     start_y=1.5,
+            ...     value=F / 2,
+            ...     global_angle=s.members[1].angle_deg + 270,
+            ...     order=0,
+            ...     end_x=7,
+            ...     end_y=-1,
+            ... )
+            >>> s.apply_load(
+            ...     start_x=0,
+            ...     start_y=0,
+            ...     value=F * 0.8,
+            ...     global_angle=270,
+            ...     order=0,
+            ...     end_x=3,
+            ...     end_y=4,
+            ... )
+            >>> Rv1 = s.apply_support(x=7, y=-1, type="roller")
+            >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
+            >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2) # doctest: +ELLIPSIS
+            >>> s.draw(show_load_values=True)
+
+        The same plot can be generated without symbols using nummeric values.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> E = 3e4
+            >>> I = 1
+            >>> A = 1e4
+            >>> F = 15
+            >>> s = Structure2d()
+            >>> s.add_member(x1=0, y1=0, x2=3, y2=4, E=E, I=I, A=A) # doctest: +ELLIPSIS
+            >>> s.add_member(x1=3, y1=4, x2=7, y2=-1, E=E, I=I, A=A) # doctest: +ELLIPSIS
+            >>> s.apply_load(start_x=1.5, start_y=2, value=F, global_angle=0, order=-1)
+            >>> s.apply_load(
+            ...     start_x=5,
+            ...     start_y=1.5,
+            ...     value=F / 2,
+            ...     global_angle=s.members[1].angle_deg + 270,
+            ...     order=0,
+            ...     end_x=7,
+            ...     end_y=-1,
+            ... )
+            >>> s.apply_load(
+            ...     start_x=0,
+            ...     start_y=0,
+            ...     value=F * 0.8,
+            ...     global_angle=270,
+            ...     order=0,
+            ...     end_x=3,
+            ...     end_y=4,
+            ... )
+            >>> Rv1 = s.apply_support(x=7, y=-1, type="roller")
+            >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
+            >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2) # doctest: +ELLIPSIS
+            >>> s.draw(show_load_values=True)
+
+        The optional parameter ``draw_support_icons`` will draw the following icons for the supports:
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> E = 3e4
+            >>> I = 1
+            >>> A = 1e4
+            >>> s = Structure2d()
+            >>> s.add_member(x1=0, y1=0, x2=7, y2=0, E=E, I=I, A=A) # doctest: +ELLIPSIS
+            >>> Rv1, Rh1 = s.apply_support(x=0, y=0, type="pin")
+            >>> Rv2 = s.apply_support(x=7/2, y=0, type="roller")
+            >>> Rv3, Rh3, T1 = s.apply_support(x=7, y=0, type="fixed")
+            >>> s.draw(show_load_values=True, forced_load_size=2, draw_support_icons=True)
+        """
+
         fig, ax = plt.subplots()
         ax.set_aspect("equal")
 
         # Define colors
         colors = {
             "point_load": "blue",
+            "point_load_symbolic": "lightblue",
             "distributed_load": "#A30000",
-            "support_reaction": "darkorange",
+            "distributed_load_symbolic": "lightred",
+            "support_reaction": "#e6772d",
+            "support_reaction_symbolic": "yellow",
             "uncomputed": "#696969",
-        }
+        }  # symbolic colors not yet implemented uncomputed is used for now
         scale = 0.75
 
         # Draw members
@@ -833,14 +1395,14 @@ class Structure2d:
                         "black" if load_color == colors["uncomputed"] else load_color
                     )
                     value_text = (
-                        f"{float(load.value):0.2f}"
+                        f"{float(abs(load.value)):0.2f}"
                         if not isinstance(load.value, Basic)
                         or not load.value.has(Symbol)
-                        else f'{str(load.value).split("__")[0]}'
+                        else f'{str((load.value)).split("__")[0]}'
                     )
                     plt.text(
                         x - radius * 2,
-                        y - radius * 2,
+                        y - radius,
                         value_text,
                         fontsize=8,
                         color=color_text,
@@ -849,7 +1411,7 @@ class Structure2d:
                         va="center",
                         bbox={
                             "facecolor": "lightgrey",
-                            "alpha": 0.85,
+                            "alpha": 0.75,
                             "edgecolor": "none",
                         },
                     )
@@ -867,7 +1429,11 @@ class Structure2d:
                 )
 
                 if is_support_reaction:
-                    support_offset = scale * 0.65
+                    if draw_support_icons:
+                        support_offset = scale * 0.65
+                    else:
+                        support_offset = 0
+
                     if load.y_component.has(Symbol):
                         y += (
                             support_offset
@@ -895,8 +1461,14 @@ class Structure2d:
                                 if float(load.y_component) > 0
                                 else -support_offset
                             )
-
-                angle = float(load.global_angle)
+                if not isinstance(load.value, Basic) or not load.value.has(Symbol):
+                    if float(load.value) < 0:
+                        angle = float(load.global_angle + pi)
+                    else:
+                        angle = float(load.global_angle)
+                else:
+                    angle = float(load.global_angle)
+                # angle = float(load.global_angle)
                 dx = load_length * np.cos(angle)
                 dy = load_length * np.sin(angle)
 
@@ -920,10 +1492,10 @@ class Structure2d:
                         "black" if load_color == colors["uncomputed"] else load_color
                     )
                     value_text = (
-                        f"{float(load.value):0.2f}"
+                        f"{float(abs(load.value)):0.2f}"
                         if not isinstance(load.value, Basic)
                         or not load.value.has(Symbol)
-                        else f'{str(load.value).split("__")[0]}'
+                        else f'{str((load.value)).split("__")[0]}'
                     )
                     plt.text(
                         x - dx,
@@ -936,7 +1508,7 @@ class Structure2d:
                         va="center",
                         bbox={
                             "facecolor": "lightgrey",
-                            "alpha": 0.85,
+                            "alpha": 0.75,
                             "edgecolor": "none",
                         },
                     )
@@ -984,7 +1556,12 @@ class Structure2d:
                     x_point = x1 + t * (x2 - x1)
                     y_point = y1 + t * (y2 - y1)
 
-                    angle = float(load.global_angle)
+                    if not isinstance(load.value, Basic) or not load.value.has(Symbol):
+                        if float(load.value) < 0:
+                            angle = float(load.global_angle + pi)
+                        else:
+                            angle = float(load.global_angle)
+
                     dx = load_length * np.cos(angle)
                     dy = load_length * np.sin(angle)
 
@@ -1011,32 +1588,36 @@ class Structure2d:
                     plt.plot(arrow_tails_x, arrow_tails_y, color=load_color, alpha=1)
 
                     arrow_coords = [
-                    (arrow_tails_x[0], arrow_tails_y[0]),   # First tail point
-                    (arrow_tails_x[-1], arrow_tails_y[-1]), # Last tail point
-                    (arrow_heads_x[-1], arrow_heads_y[-1]), # Last head point
-                    (arrow_heads_x[0], arrow_heads_y[0])    # First head point
-]
-                # make grey when unsolved
-                # if isinstance(load.value, Basic) and load.value.has(Symbol):
-                #     distributed_load_color = '#696969'
+                        (arrow_tails_x[0], arrow_tails_y[0]),  # First tail point
+                        (arrow_tails_x[-1], arrow_tails_y[-1]),  # Last tail point
+                        (arrow_heads_x[-1], arrow_heads_y[-1]),  # Last head point
+                        (arrow_heads_x[0], arrow_heads_y[0]),  # First head point
+                    ]
 
-                polygon = plt.Polygon(arrow_coords, closed=True, fill=True, color=load_color, edgecolor=None, alpha=0.25,zorder=89)
+                polygon = plt.Polygon(
+                    arrow_coords,
+                    closed=True,
+                    fill=True,
+                    color=load_color,
+                    edgecolor=None,
+                    alpha=0.25,
+                    zorder=89,
+                )
                 ax.add_patch(polygon)
-
 
                 if show_load_values:
                     dx = load_length * np.cos(angle)
                     dy = load_length * np.sin(angle)
-                    avrage_x = (x1-dx + x2-dx) / 2
-                    avrage_y = (y1-dy + y2-dy) / 2
+                    avrage_x = (x1 - dx + x2 - dx) / 2
+                    avrage_y = (y1 - dy + y2 - dy) / 2
                     color_text = (
                         "black" if load_color == colors["uncomputed"] else load_color
                     )
                     value_text = (
-                        f"{float(load.value):0.2f}"
+                        f"{float(abs(load.value)):0.2f}"
                         if not isinstance(load.value, Basic)
                         or not load.value.has(Symbol)
-                        else f'{str(load.value).split("__")[0]}'
+                        else f'{str(abs(load.value)).split("__")[0]}'
                     )
                     plt.text(
                         avrage_x,
@@ -1049,111 +1630,115 @@ class Structure2d:
                         va="center",
                         bbox={
                             "facecolor": "lightgrey",
-                            "alpha": 0.85,
+                            "alpha": 0.75,
                             "edgecolor": "none",
                         },
                     )
 
         # Draw supports
-        for support in self.supports:
-            x, y = float(support.x), float(support.y)
+        if draw_support_icons:
+            for support in self.supports:
+                x, y = float(support.x), float(support.y)
 
-            if support.node_type == "pin":
-                triangle_height = 0.5 * scale
-                angle = 34 * (pi / 180)
-                half_width = triangle_height * float(tan(angle))
+                if support.node_type == "pin":
+                    triangle_height = 0.5 * scale
+                    angle = 34 * (pi / 180)
+                    half_width = triangle_height * float(tan(angle))
 
-                triangle_vertices = [
-                    [x, y],
-                    [x - half_width, y - triangle_height],
-                    [x + half_width, y - triangle_height],
-                ]
+                    triangle_vertices = [
+                        [x, y],
+                        [x - half_width, y - triangle_height],
+                        [x + half_width, y - triangle_height],
+                    ]
 
-                triangle = patches.Polygon(
-                    triangle_vertices,
-                    edgecolor="k",
-                    facecolor="none",
-                    linewidth=1.5,
-                    zorder=20,
-                )
-                ax.add_patch(triangle)
-
-                pivot_circle = patches.Circle(
-                    (x, y),
-                    0.1 * scale,
-                    edgecolor="k",
-                    facecolor="white",
-                    linewidth=1.5,
-                    zorder=20,
-                )
-                ax.add_patch(pivot_circle)
-
-            elif support.node_type == "roller":
-                triangle_height = 0.5 * scale
-                angle = 34 * (pi / 180)
-                half_width = triangle_height * float(tan(angle))
-
-                triangle_vertices = [
-                    [x, y],
-                    [x - half_width, y - triangle_height],
-                    [x + half_width, y - triangle_height],
-                ]
-
-                triangle = patches.Polygon(
-                    triangle_vertices,
-                    edgecolor="k",
-                    facecolor="none",
-                    linewidth=1.5,
-                    zorder=20,
-                )
-                ax.add_patch(triangle)
-
-                pivot_circle = patches.Circle(
-                    (x, y),
-                    0.1 * scale,
-                    edgecolor="k",
-                    facecolor="white",
-                    linewidth=1.5,
-                    zorder=20,
-                )
-                ax.add_patch(pivot_circle)
-
-                plt.plot(
-                    [x - half_width, x + half_width],
-                    [
-                        y - triangle_height - (scale * 0.1),
-                        y - triangle_height - (scale * 0.1),
-                    ],
-                    color="k",
-                    zorder=20,
-                )
-
-            elif support.node_type == "fixed":
-                box_size = scale * 0.5
-                x_box = x - box_size / 2
-                y_box = y - box_size / 2
-
-                scaled_vertices = [
-                    [x_box, y_box],
-                    [(x_box + box_size), y_box],
-                    [(x_box + box_size), (y_box + box_size)],
-                    [x_box, (y_box + box_size)],
-                ]
-
-                polygon = patches.Polygon(
-                    scaled_vertices, edgecolor="k", facecolor="none", linewidth=1.5
-                )
-                ax.add_patch(polygon)
-
-                num_lines = 4
-                for i in range(num_lines):
-                    x_start = x_box + i * (box_size / num_lines)
-                    y_start = y_box
-                    x_end = x_box + (i + 1) * (box_size / num_lines)
-                    y_end = y_box + (box_size / num_lines)
-                    ax.plot(
-                        [x_start, x_end], [y_start, y_end], color="black", linewidth=1
+                    triangle = patches.Polygon(
+                        triangle_vertices,
+                        edgecolor="k",
+                        facecolor="none",
+                        linewidth=1.5,
+                        zorder=20,
                     )
+                    ax.add_patch(triangle)
+
+                    pivot_circle = patches.Circle(
+                        (x, y),
+                        0.1 * scale,
+                        edgecolor="k",
+                        facecolor="white",
+                        linewidth=1.5,
+                        zorder=20,
+                    )
+                    ax.add_patch(pivot_circle)
+
+                elif support.node_type == "roller":
+                    triangle_height = 0.5 * scale
+                    angle = 34 * (pi / 180)
+                    half_width = triangle_height * float(tan(angle))
+
+                    triangle_vertices = [
+                        [x, y],
+                        [x - half_width, y - triangle_height],
+                        [x + half_width, y - triangle_height],
+                    ]
+
+                    triangle = patches.Polygon(
+                        triangle_vertices,
+                        edgecolor="k",
+                        facecolor="none",
+                        linewidth=1.5,
+                        zorder=20,
+                    )
+                    ax.add_patch(triangle)
+
+                    pivot_circle = patches.Circle(
+                        (x, y),
+                        0.1 * scale,
+                        edgecolor="k",
+                        facecolor="white",
+                        linewidth=1.5,
+                        zorder=20,
+                    )
+                    ax.add_patch(pivot_circle)
+
+                    plt.plot(
+                        [x - half_width, x + half_width],
+                        [
+                            y - triangle_height - (scale * 0.1),
+                            y - triangle_height - (scale * 0.1),
+                        ],
+                        color="k",
+                        zorder=20,
+                    )
+
+                elif support.node_type == "fixed":
+                    box_size = scale * 0.5
+                    x_box = x - box_size / 2
+                    y_box = y - box_size / 2
+
+                    scaled_vertices = [
+                        [x_box, y_box],
+                        [(x_box + box_size), y_box],
+                        [(x_box + box_size), (y_box + box_size)],
+                        [x_box, (y_box + box_size)],
+                    ]
+
+                    polygon = patches.Polygon(
+                        scaled_vertices, edgecolor="k", facecolor="none", linewidth=1.5
+                    )
+                    ax.add_patch(polygon)
+
+                    num_lines = 4
+                    for i in range(num_lines):
+                        x_start = x_box + i * (box_size / num_lines)
+                        y_start = y_box
+                        x_end = x_box + (i + 1) * (box_size / num_lines)
+                        y_end = y_box + (box_size / num_lines)
+                        ax.plot(
+                            [x_start, x_end],
+                            [y_start, y_end],
+                            color="black",
+                            linewidth=1,
+                        )
 
         x_ticks = plt.xticks()[0]
         y_ticks = plt.yticks()[0]
@@ -1161,11 +1746,16 @@ class Structure2d:
         if len(x_ticks) > 1 and len(y_ticks) > 1:
             x_step = x_ticks[1] - x_ticks[0]
             y_step = y_ticks[1] - y_ticks[0]
+
             step = min(x_step, y_step)
+
+            if step < 1:
+                step = 1
 
             x_min, x_max = plt.xlim()
             y_min, y_max = plt.ylim()
 
+            # Generate new ticks using the updated step
             new_x_ticks = [
                 i * step for i in range(int(x_min // step), int(x_max // step) + 1)
             ]
@@ -1177,4 +1767,3 @@ class Structure2d:
             plt.yticks(new_y_ticks)
 
         ax.grid(True, zorder=10)
-        plt.show()
