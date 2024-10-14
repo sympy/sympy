@@ -134,7 +134,6 @@ def extract_predargs(proposition, assumptions=None, context=None):
     {x, y, Abs(x*y)}
 
     """
-    req_keys = find_symbols(proposition)
     keys = proposition.all_predicates()
     # XXX: We need this since True/False are not Basic
     lkeys = set()
@@ -144,16 +143,7 @@ def extract_predargs(proposition, assumptions=None, context=None):
         lkeys |= context.all_predicates()
 
     lkeys = lkeys - {S.true, S.false}
-    tmp_keys = None
-    while tmp_keys != set():
-        tmp = set()
-        for l in lkeys:
-            syms = find_symbols(l)
-            if (syms & req_keys) != set():
-                tmp |= syms
-        tmp_keys = tmp - req_keys
-        req_keys |= tmp_keys
-    keys |= {l for l in lkeys if find_symbols(l) & req_keys != set()}
+    keys |= lkeys
 
     exprs = set()
     for key in keys:
