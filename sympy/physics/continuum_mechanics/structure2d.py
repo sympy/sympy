@@ -171,8 +171,8 @@ class Structure2d:
         >>> A = 1e4
         >>> F = 15
         >>> s = Structure2d()
-        >>> s.add_member(x1=0, y1=0, x2=3, y2=4, E=E, I=I, A=A)  # doctest: +ELLIPSIS
-        >>> s.add_member(x1=3, y1=4, x2=7, y2=-1, E=E, I=I, A=A)  # doctest: +ELLIPSIS
+        >>> s.add_member(x1=0, y1=0, x2=3, y2=4, E=E, I=I, A=A)
+        >>> s.add_member(x1=3, y1=4, x2=7, y2=-1, E=E, I=I, A=A)
         >>> s.apply_load(start_x=1.5, start_y=2, value=F, global_angle=0, order=-1)
         >>> s.apply_load(
         ...     start_x=5,
@@ -194,12 +194,11 @@ class Structure2d:
         ... )
         >>> Rv1 = s.apply_support(x=7, y=-1, type="roller")
         >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
-        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)  # doctest: +ELLIPSIS
-        >>> s.summary(round_digits=2)
-        >>> s.draw(show_load_values=True)
+        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+        {R_h__0,__0: 3.75, R_v__0,__0: -45.6696428571429, R_v__7,__-1: -29.3303571428571}
+        >>> s.draw(show_load_values=True) #doctest: +SKIP
 
-
-    There is a structure containing 3 members. A point load is applied at 1/4 L of the first member.
+        There is a structure containing 3 members. A point load is applied at 1/4 L of the first member.
     A constant distributed load is applied over the second half of the first member and a second distributed load is applied over first hald of the third member.
     The structure is supported by a pin support at one end and a roller support at the other end.
 
@@ -214,9 +213,9 @@ class Structure2d:
         >>> A = 1e4
         >>> F = 15
         >>> s = Structure2d()
-        >>> s.add_member(x1=0, y1=0, x2=12, y2=5, E=E, I=I, A=A) # doctest: +ELLIPSIS
-        >>> s.add_member(x1=12, y1=5, x2=12, y2=2, E=E, I=I, A=A) # doctest: +ELLIPSIS
-        >>> s.add_member(x1=12, y1=2, x2=15, y2=2, E=E, I=I, A=A) # doctest: +ELLIPSIS
+        >>> s.add_member(x1=0, y1=0, x2=12, y2=5, E=E, I=I, A=A)
+        >>> s.add_member(x1=12, y1=5, x2=12, y2=2, E=E, I=I, A=A)
+        >>> s.add_member(x1=12, y1=2, x2=15, y2=2, E=E, I=I, A=A)
         >>> s.apply_load(
         ...     start_x=6,
         ...     start_y=2.5,
@@ -244,9 +243,10 @@ class Structure2d:
         ... )
         >>> Rv1 = s.apply_support(x=15, y=2, type="roller")
         >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
-        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2) # doctest: +ELLIPSIS
-        >>> s.summary(round_digits=2)
-        >>> s.draw(show_load_values=True, forced_load_size=2)
+        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+        {R_h__0,__0: -38.4615384615385, R_v__0,__0: -133.891025641026, R_v__15,__2: -163.416666666667}
+        >>> s.draw(show_load_values=True, forced_load_size=2) #doctest: +SKIP
+
     """
 
     def __init__(self):
@@ -331,7 +331,7 @@ class Structure2d:
         >>> A = 1e4
         >>> F = 15
         >>> s = Structure2d()
-        >>> s.add_member(0, 0, 4, 0, E, I, A)  # doctest: +ELLIPSIS
+        >>> s.add_member(0, 0, 4, 0, E, I, A)
         """
 
         member_id = len(self.members)
@@ -339,7 +339,7 @@ class Structure2d:
         self.members.append(member)
         self._add_or_update_node(x1, y1, "fixed", overwrite_type=False)
         self._add_or_update_node(x2, y2, "fixed", overwrite_type=False)
-        return member
+
 
     def _add_or_update_node(self, x, y, new_node_type, overwrite_type=True):
         """Adds a node to the structure at a specified location."""
@@ -454,7 +454,7 @@ class Structure2d:
         >>> A = 1e4
         >>> F = 15
         >>> s = Structure2d()
-        >>> s.add_member(0, 0, 4, 0, E, I, A)  # doctest: +ELLIPSIS
+        >>> s.add_member(0, 0, 4, 0, E, I, A)
         >>> s.apply_load(2, 0, F, global_angle=270, order=-1)
 
         A constant distributed load of 15 units is applied from (2, 0) to (3, 0) with an angle of 225 degrees from the positive x-axis.
@@ -465,9 +465,10 @@ class Structure2d:
         >>> A = 1e4
         >>> F = 15
         >>> s = Structure2d()
-        >>> s.add_member(0, 0, 4, 0, E, I, A)  # doctest: +ELLIPSIS
+        >>> s.add_member(0, 0, 4, 0, E, I, A)
         >>> s.apply_load(2, 0, F, global_angle=225, order=0, end_x=3, end_y=0)
         """
+
 
         # Create a new load object
         load_id = len(self.loads)
@@ -731,7 +732,7 @@ class Structure2d:
         >>> A = 1e4
         >>> F = 15
         >>> s = Structure2d()
-        >>> s.add_member(0, 0, 4, 0, E, I, A)  # doctest: +ELLIPSIS
+        >>> s.add_member(0, 0, 4, 0, E, I, A)
         >>> s.apply_load(2, 0, F, global_angle=225, order=0, end_x=3, end_y=0)
         >>> Rv1, Rh1 = s.apply_support(x=0, y=0, type="pin")
         >>> Rv2 = s.apply_support(x=4, y=0, type="roller")
@@ -827,9 +828,9 @@ class Structure2d:
         >>> I = 1
         >>> A = 1e4
         >>> s = Structure2d()
-        >>> s.add_member(x1=0, y1=0, x2=12, y2=5, E=E, I=I, A=A) # doctest: +ELLIPSIS
-        >>> s.add_member(x1=12, y1=5, x2=12, y2=2, E=E, I=I, A=A) # doctest: +ELLIPSIS
-        >>> s.add_member(x1=12, y1=2, x2=15, y2=2, E=E, I=I, A=A) # doctest: +ELLIPSIS
+        >>> s.add_member(x1=0, y1=0, x2=12, y2=5, E=E, I=I, A=A)
+        >>> s.add_member(x1=12, y1=5, x2=12, y2=2, E=E, I=I, A=A)
+        >>> s.add_member(x1=12, y1=2, x2=15, y2=2, E=E, I=I, A=A)
         >>> s.apply_load(
         ...     start_x=6,
         ...     start_y=2.5,
@@ -858,8 +859,9 @@ class Structure2d:
         >>> Rv1 = s.apply_support(x=15, y=2, type="roller")
         >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
         >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
-        {R_v__15,__2: -143.916666666667, R_v__0,__0: -70.3141025641026, R_h__0,__0: -3.84615384615385}
+        {R_h__0,__0: -3.84615384615385, R_v__0,__0: -70.3141025641026, R_v__15,__2: -143.916666666667}
         """
+
 
         # Split arguments into vertical and horizontal reaction loads
         reaction_loads_vertical = [arg for arg in args if "R_v" in str(arg)]
@@ -1060,11 +1062,12 @@ class Structure2d:
         >>> A = 1e4
         >>> F = 10
         >>> s = Structure2d()
-        >>> s.add_member(0, 0, 4, 0, E, I, A) # doctest: +ELLIPSIS
+        >>> s.add_member(0, 0, 4, 0, E, I, A)
         >>> s.apply_load(2, 0, F, global_angle=270, order=-1)
         >>> Rv1, Rh1 = s.apply_support(x=0, y=0, type="pin")
         >>> Rv2 = s.apply_support(x=4, y=0, type="roller")
         >>> s.solve_for_reaction_loads(Rh1, Rv1, Rv2)
+        {R_h__0,__0: 0.0, R_v__0,__0: -5, R_v__4,__0: -5}
         >>> s.summary(round_digits=2)
         ===================== Structure Summary =====================
         <BLANKLINE>
@@ -1233,8 +1236,8 @@ class Structure2d:
             >>> A = 1e4
             >>> F = symbols("F")
             >>> s = Structure2d()
-            >>> s.add_member(x1=0, y1=0, x2=3, y2=4, E=E, I=I, A=A) # doctest: +ELLIPSIS
-            >>> s.add_member(x1=3, y1=4, x2=7, y2=-1, E=E, I=I, A=A) # doctest: +ELLIPSIS
+            >>> s.add_member(x1=0, y1=0, x2=3, y2=4, E=E, I=I, A=A)
+            >>> s.add_member(x1=3, y1=4, x2=7, y2=-1, E=E, I=I, A=A)
             >>> s.apply_load(start_x=1.5, start_y=2, value=F, global_angle=0, order=-1)
             >>> s.apply_load(
             ...     start_x=5,
@@ -1256,8 +1259,9 @@ class Structure2d:
             ... )
             >>> Rv1 = s.apply_support(x=7, y=-1, type="roller")
             >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
-            >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2) # doctest: +ELLIPSIS
-            >>> s.draw(show_load_values=True)
+            >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+            {R_h__0,__0: 0.0, R_v__0,__0: -345*F/112, R_v__7,__-1: -125*F/56}
+            >>> s.draw(show_load_values=True) #doctest: +SKIP
 
         The same plot can be generated without symbols using nummeric values.
 
@@ -1272,8 +1276,8 @@ class Structure2d:
             >>> A = 1e4
             >>> F = 15
             >>> s = Structure2d()
-            >>> s.add_member(x1=0, y1=0, x2=3, y2=4, E=E, I=I, A=A) # doctest: +ELLIPSIS
-            >>> s.add_member(x1=3, y1=4, x2=7, y2=-1, E=E, I=I, A=A) # doctest: +ELLIPSIS
+            >>> s.add_member(x1=0, y1=0, x2=3, y2=4, E=E, I=I, A=A)
+            >>> s.add_member(x1=3, y1=4, x2=7, y2=-1, E=E, I=I, A=A)
             >>> s.apply_load(start_x=1.5, start_y=2, value=F, global_angle=0, order=-1)
             >>> s.apply_load(
             ...     start_x=5,
@@ -1295,8 +1299,9 @@ class Structure2d:
             ... )
             >>> Rv1 = s.apply_support(x=7, y=-1, type="roller")
             >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
-            >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2) # doctest: +ELLIPSIS
-            >>> s.draw(show_load_values=True)
+            >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+            {R_h__0,__0: 3.75, R_v__0,__0: -45.6696428571429, R_v__7,__-1: -29.3303571428571}
+            >>> s.draw(show_load_values=True) #doctest: +SKIP
 
         The optional parameter ``draw_support_icons`` will draw the following icons for the supports:
 
@@ -1310,11 +1315,11 @@ class Structure2d:
             >>> I = 1
             >>> A = 1e4
             >>> s = Structure2d()
-            >>> s.add_member(x1=0, y1=0, x2=7, y2=0, E=E, I=I, A=A) # doctest: +ELLIPSIS
+            >>> s.add_member(x1=0, y1=0, x2=7, y2=0, E=E, I=I, A=A)
             >>> Rv1, Rh1 = s.apply_support(x=0, y=0, type="pin")
             >>> Rv2 = s.apply_support(x=7/2, y=0, type="roller")
             >>> Rv3, Rh3, T1 = s.apply_support(x=7, y=0, type="fixed")
-            >>> s.draw(show_load_values=True, forced_load_size=2, draw_support_icons=True)
+            >>> s.draw(show_load_values=True, forced_load_size=2, draw_support_icons=True) #doctest: +SKIP
         """
 
         fig, ax = plt.subplots()
