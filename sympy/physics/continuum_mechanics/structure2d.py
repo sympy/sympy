@@ -340,7 +340,6 @@ class Structure2d:
         self._add_or_update_node(x1, y1, "fixed", overwrite_type=False)
         self._add_or_update_node(x2, y2, "fixed", overwrite_type=False)
 
-        # return member
 
     def _add_or_update_node(self, x, y, new_node_type, overwrite_type=True):
         """Adds a node to the structure at a specified location."""
