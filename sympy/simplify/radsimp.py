@@ -12,6 +12,7 @@ from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.symbol import Dummy, Wild, symbols
 from sympy.functions import exp, sqrt, log
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import (Min, Max)
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.utilities.iterables import iterable, sift
@@ -627,6 +628,7 @@ def collect_abs(expr):
             lambda x: _abs(x))
 
 
+
 def collect_const(expr, *vars, Numbers=True):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
@@ -762,6 +764,80 @@ def collect_const(expr, *vars, Numbers=True):
 
     return expr
 
+def collect_minmax(expr, *vars, Numbers=True):
+    if not isinstance(expr,(Min,Max)):
+        raise AttributeError("Expression Type is Not of Min/Max")
+    recurse = False
+    init_expr = expr
+
+    if not vars:
+        recurse = True
+        vars = set()
+        for a in expr.args:
+            for m in Mul.make_args(a):
+                if m.is_number:
+                    vars.add(m)
+    else:
+        vars = sympify(vars)
+    vars = list(ordered(vars))
+    for v in vars:
+        # First, collect constant terms with the same factor v.
+        expr = collect_const(expr, v, Numbers=Numbers)
+
+        terms = defaultdict(list)
+        Fv = Factors(v)
+        for m in expr.args:
+            f = Factors(m)
+            q, r = f.div(Fv)
+            if r.is_one:
+                # only accept this as a true factor if
+                # it didn't change an exponent from an Integer
+                # to a non-Integer, e.g. 2/sqrt(2) -> sqrt(2)
+                # -- we aren't looking for this sort of change
+                fwas = f.factors.copy()
+                fnow = q.factors
+                if not any(k in fwas and fwas[k].is_Integer and not
+                        fnow[k].is_Integer for k in fnow):
+                    terms[v].append(q.as_expr())
+                    continue
+            terms[S.One].append(m)
+
+        args = []
+        hit = False
+        uneval = False
+        for k in ordered(terms):
+            v = terms[k]
+            if k is S.One:
+                args.extend(v)
+                continue
+
+            if len(v) > 1:
+                if init_expr.has(Min):
+                    v = Min(*v)
+                else:
+                    v = Max(*v)
+                hit = True
+                if recurse and v != expr:
+                    vars.append(v)
+            else:
+                v = v[0]
+
+            # be careful not to let uneval become True unless
+            # it must be because it's going to be more expensive
+            # to rebuild the expression as an unevaluated one
+            if Numbers and k.is_Number and v.is_Add:
+                args.append(_keep_coeff(k, v, sign=True))
+                uneval = True
+            else:
+                args.append(k*v)
+
+        if hit:
+            if uneval:
+                expr = _unevaluated_Add(*args)
+            else:
+                expr = Add(*args)
+
+    return expr
 
 def radsimp(expr, symbolic=True, max_terms=4):
     r"""
