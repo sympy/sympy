@@ -1,3 +1,4 @@
+from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
@@ -10,10 +11,12 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import Max
 from sympy.functions.elementary.trigonometric import sin
-from sympy.integrals.integrals import Integral
 from sympy.printing.typst import (typst, translate, greek_letters_set,
                                   typst_greek_dictionary)
 from sympy.series.limits import Limit
+
+
+from sympy.testing.pytest import warns_deprecated_sympy
 
 x, y = symbols('x, y')
 n = symbols('n', integer=True)
@@ -53,6 +56,43 @@ def test_typst_basic():
     assert typst(Mul(Pow(x, 3), Rational(2, 3)*x + 1)) == r"x^(3) ((2 x)/3 + 1)"
     assert typst(Mul(Pow(x, 11), 2*x + 1)) == r"x^(11) (2 x + 1)"
 
+
+def test_typst_cycle():
+    assert typst(Cycle(1, 2, 4)) == r"(1 space 2 space 4)"
+    assert typst(Cycle(1, 2)(4, 5, 6)) == \
+        r"(1 space 2)(4 space 5 space 6)"
+    assert typst(Cycle()) == r"()"
+
+
+def test_typst_permutation():
+    assert typst(Permutation(1, 2, 4)) == r"(1 space 2 space 4)"
+    assert typst(Permutation(1, 2)(4, 5, 6)) == \
+        r"(1 space 2)(4 space 5 space 6)"
+    assert typst(Permutation()) == r"()"
+    assert typst(Permutation(2, 4)*Permutation(5)) == \
+        r"(2 space 4)(5)"
+    assert typst(Permutation(5)) == r"(5)"
+
+    assert typst(Permutation(0, 1), perm_cyclic=False) == \
+        r"mat(0, 1; 1, 0)"
+    assert typst(Permutation(0, 1)(2, 3), perm_cyclic=False) == \
+        r"mat(0, 1, 2, 3; 1, 0, 3, 2)"
+    assert typst(Permutation(), perm_cyclic=False) == \
+        r"()"
+
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        assert typst(Permutation(0, 1)(2, 3)) == \
+            r"mat(0, 1, 2, 3; 1, 0, 3, 2)"
+        Permutation.print_cyclic = old_print_cyclic
+
+
+def test_AppliedPermutation():
+    p = Permutation(0, 1, 2)
+    x = Symbol('x')
+    assert typst(AppliedPermutation(p, x)) == \
+        r'sigma_((0 space 1 space 2))(x)'
 
 def test_typst_limits():
     assert typst(Limit(x, x, oo)) == r"lim_(x -> infinity) x"

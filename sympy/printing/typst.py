@@ -292,6 +292,58 @@ class TypstPrinter(Printer):
 
         return typ
 
+    def _print_Cycle(self, expr):
+        from sympy.combinatorics.permutations import Permutation
+        if expr.size == 0:
+            return r"()"
+        expr = Permutation(expr)
+        expr_perm = expr.cyclic_form
+        siz = expr.size
+        if expr.array_form[-1] == siz - 1:
+            expr_perm = expr_perm + [[siz - 1]]
+        term_tex = ''
+        for i in expr_perm:
+            term_tex += str(i).replace(',', r" space")
+        term_tex = term_tex.replace('[', r"(")
+        term_tex = term_tex.replace(']', r")")
+        return term_tex
+
+    def _print_Permutation(self, expr):
+        from sympy.combinatorics.permutations import Permutation
+        from sympy.utilities.exceptions import sympy_deprecation_warning
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            sympy_deprecation_warning(
+                f"""
+                Setting Permutation.print_cyclic is deprecated. Instead use
+                init_printing(perm_cyclic={perm_cyclic}).
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-permutation-print_cyclic",
+                stacklevel=8,
+            )
+        else:
+            perm_cyclic = self._settings.get("perm_cyclic", True)
+
+        if perm_cyclic:
+            return self._print_Cycle(expr)
+
+        if expr.size == 0:
+            return r"()"
+
+        lower = [self._print(arg) for arg in expr.array_form]
+        upper = [self._print(arg) for arg in range(len(lower))]
+
+        row1 = ", ".join(upper)
+        row2 = ", ".join(lower)
+        mat = r"; ".join((row1, row2))
+        return r"mat(%s)" % mat
+
+    def _print_AppliedPermutation(self, expr):
+        perm, var = expr.args
+        return r"sigma_(%s)(%s)" % (self._print(perm), self._print(var))
+
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
