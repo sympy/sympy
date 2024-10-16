@@ -116,10 +116,10 @@ practice. As a result, you may want to set the {func}`~.solve` parameter
  sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2 + sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2]
 >>> # If you set quartics=False, solve() uses RootOf()
 >>> solve(x**4 - x + 1, x, quartics=False)
-[CRootOf(x**4 - x + 1, 0),
- CRootOf(x**4 - x + 1, 1),
- CRootOf(x**4 - x + 1, 2),
- CRootOf(x**4 - x + 1, 3)]
+[CRootOf(_x**4 - _x + 1, 0),
+ CRootOf(_x**4 - _x + 1, 1),
+ CRootOf(_x**4 - _x + 1, 2),
+ CRootOf(_x**4 - _x + 1, 3)]
 ```
 
 Writing the first root from {func}`~.solve` in standard mathematical notation
@@ -454,11 +454,11 @@ get solutions expressible in radicals (if there are any).
 ```py
 >>> fifth_order_solved = solve(fifth_order, x, dict=True)
 >>> fifth_order_solved
-[{x: CRootOf(x**5 - x + 1, 0)},
-{x: CRootOf(x**5 - x + 1, 1)},
-{x: CRootOf(x**5 - x + 1, 2)},
-{x: CRootOf(x**5 - x + 1, 3)},
-{x: CRootOf(x**5 - x + 1, 4)}]
+[{x: CRootOf(_x**5 - _x + 1, 0)},
+{x: CRootOf(_x**5 - _x + 1, 1)},
+{x: CRootOf(_x**5 - _x + 1, 2)},
+{x: CRootOf(_x**5 - _x + 1, 3)},
+{x: CRootOf(_x**5 - _x + 1, 4)}]
 ```
 
 where the second argument in each `CRootOf` is the index of the root.
@@ -483,7 +483,7 @@ If you are only interested in the sole real root, it is faster to use
 ```py
 >>> real_root = real_roots(fifth_order, x)
 >>> real_root
-[CRootOf(x**5 - x + 1, 0)]
+[CRootOf(_x**5 - _x + 1, 0)]
 >>> real_root[0].n(10)
 -1.167303978
 ```
