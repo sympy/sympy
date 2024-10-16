@@ -2,7 +2,7 @@ from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutat
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.numbers import (Float, I, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -14,6 +14,7 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.printing.typst import (typst, translate, greek_letters_set,
                                   typst_greek_dictionary)
 from sympy.series.limits import Limit
+from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
 
 from sympy.testing.pytest import warns_deprecated_sympy
@@ -87,6 +88,68 @@ def test_typst_permutation():
             r"mat(0, 1, 2, 3; 1, 0, 3, 2)"
         Permutation.print_cyclic = old_print_cyclic
 
+def test_latex_Float():
+    assert typst(Float(1.0e100)) == r"1.0 dot 10^(100)"
+    assert typst(Float(1.0e-100)) == r"1.0 dot 10^(-100)"
+    assert typst(Float(1.0e-100), mul_symbol="times") == \
+        r"1.0 times 10^(-100)"
+    assert typst(Float('10000.0'), full_prec=False, min=-2, max=2) == \
+        r"1.0 dot 10^(4)"
+    assert typst(Float('10000.0'), full_prec=False, min=-2, max=4) == \
+        r"1.0 dot 10^(4)"
+    assert typst(Float('10000.0'), full_prec=False, min=-2, max=5) == \
+        r"10000.0"
+    assert typst(Float('0.099999'), full_prec=True,  min=-2, max=5) == \
+        r"9.99990000000000 dot 10^(-2)"
+
+def test_latex_vector_expressions():
+    A = CoordSys3D('A')
+
+    assert typst(Cross(A.i, A.j*A.x*3+A.k)) == \
+        r"bold(hat(i)_(A)) times ((3 bold(x_(A)))bold(hat(j)_(A)) + bold(hat(k)_(A)))"
+    assert typst(Cross(A.i, A.j)) == \
+        r"bold(hat(i)_(A)) times bold(hat(j)_(A))"
+    assert typst(x*Cross(A.i, A.j)) == \
+        r"x (bold(hat(i)_(A)) times bold(hat(j)_(A)))"
+    assert typst(Cross(x*A.i, A.j)) == \
+        r'- bold(hat(j)_(A)) times ((x)bold(hat(i)_(A)))'
+
+    assert typst(Curl(3*A.x*A.j)) == \
+        r"nabla times ((3 bold(x_(A)))bold(hat(j)_(A)))"
+    assert typst(Curl(3*A.x*A.j+A.i)) == \
+        r"nabla times (bold(hat(i)_(A)) + (3 bold(x_(A)))bold(hat(j)_(A)))"
+    assert typst(Curl(3*x*A.x*A.j)) == \
+        r"nabla times ((3 bold(x_(A)) x)bold(hat(j)_(A)))"
+    assert typst(x*Curl(3*A.x*A.j)) == \
+        r"x (nabla times ((3 bold(x_(A)))bold(hat(j)_(A))))"
+
+    assert typst(Divergence(3*A.x*A.j+A.i)) == \
+        r"nabla dot (bold(hat(i)_(A)) + (3 bold(x_(A)))bold(hat(j)_(A)))"
+    assert typst(Divergence(3*A.x*A.j)) == \
+        r"nabla dot ((3 bold(x_(A)))bold(hat(j)_(A)))"
+    assert typst(x*Divergence(3*A.x*A.j)) == \
+        r"x (nabla dot ((3 bold(x_(A)))bold(hat(j)_(A))))"
+
+    assert typst(Dot(A.i, A.j*A.x*3+A.k)) == \
+        r"bold(hat(i)_(A)) dot ((3 bold(x_(A)))bold(hat(j)_(A)) + bold(hat(k)_(A)))"
+    assert typst(Dot(A.i, A.j)) == \
+        r"bold(hat(i)_(A)) dot bold(hat(j)_(A))"
+    assert typst(Dot(x*A.i, A.j)) == \
+        r"bold(hat(j)_(A)) dot ((x)bold(hat(i)_(A)))"
+    assert typst(x*Dot(A.i, A.j)) == \
+        r"x (bold(hat(i)_(A)) dot bold(hat(j)_(A)))"
+
+    assert typst(Gradient(A.x)) == r"nabla bold(x_(A))"
+    assert typst(Gradient(A.x + 3*A.y)) == \
+        r"nabla (bold(x_(A)) + 3 bold(y_(A)))"
+    assert typst(x*Gradient(A.x)) == r"x (nabla bold(x_(A)))"
+    assert typst(Gradient(x*A.x)) == r"nabla (bold(x_(A)) x)"
+
+    assert typst(Laplacian(A.x)) == r"Delta bold(x_(A))"
+    assert typst(Laplacian(A.x + 3*A.y)) == \
+        r"Delta (bold(x_(A)) + 3 bold(y_(A)))"
+    assert typst(x*Laplacian(A.x)) == r"x (Delta bold(x_(A)))"
+    assert typst(Laplacian(x*A.x)) == r"Delta (bold(x_(A)) x)"
 
 def test_AppliedPermutation():
     p = Permutation(0, 1, 2)

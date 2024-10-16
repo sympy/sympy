@@ -372,13 +372,16 @@ class BaseVector(Vector, AtomicExpr):
 
     """
 
-    def __new__(cls, index, system, pretty_str=None, latex_str=None):
+    def __new__(cls, index, system, pretty_str=None, latex_str=None, typst_str=None):
         if pretty_str is None:
             pretty_str = "x{}".format(index)
         if latex_str is None:
             latex_str = "x_{}".format(index)
+        if typst_str is None:
+            typst_str = "x_{}".format(index)
         pretty_str = str(pretty_str)
         latex_str = str(latex_str)
+        typst_str = str(typst_str)
         # Verify arguments
         if index not in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
@@ -394,6 +397,7 @@ class BaseVector(Vector, AtomicExpr):
         obj._name = system._name + '.' + name
         obj._pretty_form = '' + pretty_str
         obj._latex_form = latex_str
+        obj._typst_form = typst_str
         obj._system = system
         # The _id is used for printing purposes
         obj._id = (index, system)
@@ -475,6 +479,7 @@ class VectorZero(BasisDependentZero, Vector):
     _op_priority = 12.1
     _pretty_form = '0'
     _latex_form = r'\mathbf{\hat{0}}'
+    _typst_form = 'bold(hat(0))'
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)
