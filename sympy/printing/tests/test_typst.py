@@ -6,11 +6,12 @@ from sympy.core.numbers import (Float, I, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
-from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import Max
 from sympy.functions.elementary.trigonometric import sin
+from sympy.logic.boolalg import (And, Or, Xor, Equivalent, false, Not, true)
 from sympy.printing.typst import (typst, translate, greek_letters_set,
                                   typst_greek_dictionary)
 from sympy.series.limits import Limit
@@ -56,6 +57,14 @@ def test_typst_basic():
     assert typst(Mul(Pow(x, 2), S.Half*x + 1)) == r"x^(2) (x/2 + 1)"
     assert typst(Mul(Pow(x, 3), Rational(2, 3)*x + 1)) == r"x^(3) ((2 x)/3 + 1)"
     assert typst(Mul(Pow(x, 11), 2*x + 1)) == r"x^(11) (2 x + 1)"
+
+
+def test_latex_builtins():
+    assert typst(True) == r'upright("True")'
+    assert typst(False) == r'upright("False")'
+    assert typst(None) == r'upright("None")'
+    assert typst(true) == r'upright("True")'
+    assert typst(false) == r'upright("False")'
 
 
 def test_typst_cycle():
@@ -157,6 +166,21 @@ def test_AppliedPermutation():
     assert typst(AppliedPermutation(p, x)) == \
         r'sigma_((0 space 1 space 2))(x)'
 
+def test_imaginary_unit():
+    assert typst(1 + I) == r'1 + i'
+    assert typst(1 + I, imaginary_unit='i') == r'1 + i'
+    assert typst(1 + I, imaginary_unit='j') == r'1 + j'
+    assert typst(1 + I, imaginary_unit='foo') == r'1 + foo'
+    assert typst(I, imaginary_unit="ti") == r'text(i)'
+    assert typst(I, imaginary_unit="tj") == r'text(j)'
+
+
+def test_text_re_im():
+    assert typst(im(x), gothic_re_im=True) == r'Im(x)'
+    assert typst(im(x), gothic_re_im=False) == r'upright("im")(x)'
+    assert typst(re(x), gothic_re_im=True) == r'Re(x)'
+    assert typst(re(x), gothic_re_im=False) == r'upright("re")(x)'
+
 def test_typst_limits():
     assert typst(Limit(x, x, oo)) == r"lim_(x -> infinity) x"
 
@@ -235,6 +259,41 @@ def test_typst_functions():
     assert typst(ceiling(x)) == r"ceil(x)"
     assert typst(floor(x)**2) == r"floor(x)^(2)"
     assert typst(ceiling(x)**2) == r"ceil(x)^(2)"
+
+    assert typst(conjugate(x)) == r"overline(x)"
+    assert typst(conjugate(x)**2) == r"overline(x)^(2)"
+    assert typst(conjugate(x**2)) == r"overline(x)^(2)"
+
+    assert typst(arg(x)) == r'arg(x)'
+
+    # Test latex printing of function names with "_"
+    assert typst(polar_lift(0)) == \
+        r'upright("polar_lift")(0)'
+    assert typst(polar_lift(0)**3) == \
+        r'upright("polar_lift")^(3)(0)'
+
+
+
+def test_boolean_args_order():
+    syms = symbols('a:f')
+
+    expr = And(*syms)
+    assert typst(expr) == r'a and b and c and d and e and f'
+
+    expr = Or(*syms)
+    assert typst(expr) == r'a or b or c or d or e or f'
+
+    expr = Equivalent(*syms)
+    assert typst(expr) == \
+        r'a <=> b <=> c <=> d <=> e <=> f'
+
+    expr = Xor(*syms)
+    assert typst(expr) == \
+        r'a \u{22BB} b \u{22BB} c \u{22BB} d \u{22BB} e \u{22BB} f'
+
+def test_issue_7180():
+    assert typst(Equivalent(x, y)) == r"x <=> y"
+    assert typst(Not(Equivalent(x, y))) == r"x arrow.l.r.double.not y"
 
 
 def test_translate():

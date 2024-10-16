@@ -259,36 +259,6 @@ class TypstPrinter(Printer):
             else:
                 return False
 
-    def _needs_mul_brackets(self, expr, first=False, last=False) -> bool:
-        """
-        Returns True if the expression needs to be wrapped in brackets when
-        printed as part of a Mul, False otherwise. This is True for Add,
-        but also for some container objects that would not need brackets
-        when appearing last in a Mul, e.g. an Integral. ``last=True``
-        specifies that this expr is the last to appear in a Mul.
-        ``first=True`` specifies that this expr is the first to appear in
-        a Mul.
-        """
-        from sympy.concrete.products import Product
-        from sympy.concrete.summations import Sum
-        from sympy.integrals.integrals import Integral
-
-        if expr.is_Mul:
-            if not first and expr.could_extract_minus_sign():
-                return True
-        elif precedence_traditional(expr) < PRECEDENCE["Mul"]:
-            return True
-        elif expr.is_Relational:
-            return True
-        if expr.is_Piecewise:
-            return True
-        if any(expr.has(x) for x in (Mod,)):
-            return True
-        if (not last and
-                any(expr.has(x) for x in (Integral, Product, Sum))):
-            return True
-
-        return False
 
     def _needs_add_brackets(self, expr) -> bool:
         """
@@ -983,6 +953,84 @@ class TypstPrinter(Printer):
             return r"%s^(%s)" % (typst, exp)
         else:
             return typst
+
+    def _print_re(self, expr, exp=None):
+        if self._settings['gothic_re_im']:
+            tex = r"Re(%s)" % expr.args[0]
+        else:
+            tex = r'upright("re")({})'.format(expr.args[0])
+
+        return self._do_exponent(tex, exp)
+
+    def _print_im(self, expr, exp=None):
+        if self._settings['gothic_re_im']:
+            tex = r"Im(%s)" % expr.args[0]
+        else:
+            tex = r'upright("im")({})'.format(expr.args[0])
+
+        return self._do_exponent(tex, exp)
+
+    def _print_Not(self, e):
+        from sympy.logic.boolalg import (Equivalent, Implies)
+        if isinstance(e.args[0], Equivalent):
+            return self._print_Equivalent(e.args[0], r"arrow.l.r.double.not")
+        if isinstance(e.args[0], Implies):
+            return self._print_Implies(e.args[0], r"arrow.r.double.not")
+        if (e.args[0].is_Boolean):
+            return r"not (%s)" % self._print(e.args[0])
+        else:
+            return r"not %s" % self._print(e.args[0])
+
+    def _print_LogOp(self, args, char):
+        arg = args[0]
+        if arg.is_Boolean and not arg.is_Not:
+            tex = r"(%s)" % self._print(arg)
+        else:
+            tex = r"%s" % self._print(arg)
+
+        for arg in args[1:]:
+            if arg.is_Boolean and not arg.is_Not:
+                tex += r" %s (%s)" % (char, self._print(arg))
+            else:
+                tex += r" %s %s" % (char, self._print(arg))
+
+        return tex
+
+    def _print_And(self, e):
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, r"and")
+
+    def _print_Or(self, e):
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, r"or")
+
+    def _print_Xor(self, e):
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, r"\u{22BB}")
+
+    def _print_Implies(self, e, altchar=None):
+        return self._print_LogOp(e.args, altchar or r"=>")
+
+    def _print_Equivalent(self, e, altchar=None):
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, altchar or r"<=>")
+
+    def _print_conjugate(self, expr, exp=None):
+        typ = r"overline(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^(%s)" % (typ, exp)
+        else:
+            return typ
+
+    def _print_polar_lift(self, expr, exp=None):
+        func = r'upright("polar_lift")'
+        arg = r'(%s)' % self._print(expr.args[0])
+
+        if exp is not None:
+            return r'%s^(%s)%s' % (func, exp, arg)
+        else:
+            return r'%s%s' % (func, arg)
 
     def _print_ExpBase(self, expr, exp=None):
         typst = r"e^(%s)" % self._print(expr.args[0])
