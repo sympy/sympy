@@ -6,6 +6,7 @@ from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
+from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import oo
 from sympy.core.sympify import CantSympify
 from sympy.polys.polyutils import PicklableWithSlots, _sort_factors
@@ -2171,9 +2172,10 @@ class DUP_Flint(DMP):
         if R.is_QQ:
             cG, F = f.clear_denoms()
             cF, G = g.clear_denoms()
-        else:
-            cG, F = R.one, f
-            cF, G = R.one, g
+        elif R.is_ZZ:
+            print(f,g)
+            cG, F = factor_terms(f).as_coeff_Mul()  # or similar for type of f,g
+            cF, G = factor_terms(g).as_coeff_Mul()
 
         cH = cF.gcd(cG)
         cF, cG = cF // cH, cG // cH
