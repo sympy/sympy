@@ -222,6 +222,70 @@ class TypstPrinter(Printer):
 
         return typ
 
+    def _needs_brackets(self, expr) -> bool:
+        """
+        Returns True if the expression needs to be wrapped in brackets when
+        printed, False otherwise. For example: a + b => True; a => False;
+        10 => False; -10 => True.
+        """
+        return not ((expr.is_Integer and expr.is_nonnegative)
+                    or (expr.is_Atom and (expr is not S.NegativeOne
+                                          and expr.is_Rational is False)))
+
+    def _needs_function_brackets(self, expr) -> bool:
+        """
+        Returns True if the expression needs to be wrapped in brackets when
+        passed as an argument to a function, False otherwise. This is a more
+        liberal version of _needs_brackets, in that many expressions which need
+        to be wrapped in brackets when added/subtracted/raised to a power do
+        not need them when passed to a function. Such an example is a*b.
+        """
+        if not self._needs_brackets(expr):
+            return False
+        else:
+            # Muls of the form a*b*c... can be folded
+            if expr.is_Mul and not self._mul_is_clean(expr):
+                return True
+            # Pows which don't need brackets can be folded
+            elif expr.is_Pow and not self._pow_is_clean(expr):
+                return True
+            # Add and Function always need brackets
+            elif expr.is_Add or expr.is_Function:
+                return True
+            else:
+                return False
+
+    def _needs_mul_brackets(self, expr, first=False, last=False) -> bool:
+        """
+        Returns True if the expression needs to be wrapped in brackets when
+        printed as part of a Mul, False otherwise. This is True for Add,
+        but also for some container objects that would not need brackets
+        when appearing last in a Mul, e.g. an Integral. ``last=True``
+        specifies that this expr is the last to appear in a Mul.
+        ``first=True`` specifies that this expr is the first to appear in
+        a Mul.
+        """
+        from sympy.concrete.products import Product
+        from sympy.concrete.summations import Sum
+        from sympy.integrals.integrals import Integral
+
+        if expr.is_Mul:
+            if not first and expr.could_extract_minus_sign():
+                return True
+        elif precedence_traditional(expr) < PRECEDENCE["Mul"]:
+            return True
+        elif expr.is_Relational:
+            return True
+        if expr.is_Piecewise:
+            return True
+        if any(expr.has(x) for x in (Mod,)):
+            return True
+        if (not last and
+                any(expr.has(x) for x in (Integral, Product, Sum))):
+            return True
+
+        return False
+
     def _needs_add_brackets(self, expr) -> bool:
         """
         Returns True if the expression needs to be wrapped in brackets when
