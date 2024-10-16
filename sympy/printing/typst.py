@@ -6,8 +6,10 @@ from typing import Any, Callable
 
 from sympy.core import Add, Mod, Mul, Number, S, Symbol, Expr
 from sympy.core.alphabets import greeks
+from sympy.core.function import Function, AppliedUndef
 from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
+from sympy.core.sorting import default_sort_key
 
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
@@ -19,6 +21,13 @@ from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 from sympy.utilities.iterables import sift
 
 import re
+
+# need further check
+accepted_typst_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
+                            'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
+                            'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
+                            'arg',
+                            ]
 
 typst_greek_dictionary = {
     'Alpha': 'Alpha',
@@ -563,6 +572,170 @@ class TypstPrinter(Printer):
             return r"%s(%s)" % (typst, self._print(e))
         else:
             return r"%s %s" % (typst, self._print(e))
+
+    def _hprint_Function(self, func: str) -> str:
+        r'''
+        Logic to decide how to render a function to latex
+          - if it is a recognized typst name, use the appropriate typst function
+          - if it is a single letter, excluding sub- and superscripts, just use that letter
+          - if it is a longer name, then put upright() around it and be
+            mindful of undercores in the name
+        '''
+        func = self._deal_with_super_sub(func)
+        superscriptidx = func.find("^")
+        subscriptidx = func.find("_")
+        if func in accepted_typst_functions:
+            name = r"%s" % func
+        elif len(func) == 1 or func.startswith('\\') or subscriptidx == 1 or superscriptidx == 1:
+            name = func
+        else:
+            if superscriptidx > 0 and subscriptidx > 0:
+                name = r"upright(%s)%s" %(
+                    func[:min(subscriptidx,superscriptidx)],
+                    func[min(subscriptidx,superscriptidx):])
+            elif superscriptidx > 0:
+                name = r"upright(%s)%s" %(
+                    func[:superscriptidx],
+                    func[superscriptidx:])
+            elif subscriptidx > 0:
+                name = r"upright(%s)%s" %(
+                    func[:subscriptidx],
+                    func[subscriptidx:])
+            else:
+                name = r"upright(%s)" % func
+        return name
+
+    def _print_Function(self, expr: Function, exp=None) -> str:
+        r'''
+        Render functions to Typst, handling functions that typst knows about
+        e.g., sin, cos, ... by using the proper typst function (sin, cos, ...).
+        For single-letter function names, render them as regular Typst math
+        symbols. For multi-letter function names that Typst does not know
+        about, (e.g., Li, sech) use upright() so that the function name
+        is rendered in Roman font and Typst handles spacing properly.
+
+        expr is the expression involving the function
+        exp is an exponent
+        '''
+        func = expr.func.__name__
+        if hasattr(self, '_print_' + func) and \
+                not isinstance(expr, AppliedUndef):
+            return getattr(self, '_print_' + func)(expr, exp)
+        else:
+            args = [str(self._print(arg)) for arg in expr.args]
+            # How inverse trig functions should be displayed, formats are:
+            # abbreviated: asin, full: arcsin, power: sin^-1
+            inv_trig_style = self._settings['inv_trig_style']
+            # If we are dealing with a power-style inverse trig function
+            inv_trig_power_case = False
+            # If it is applicable to fold the argument brackets
+            can_fold_brackets = self._settings['fold_func_brackets'] and \
+                len(args) == 1 and \
+                not self._needs_function_brackets(expr.args[0])
+
+            inv_trig_table = [
+                "asin", "acos", "atan",
+                "acsc", "asec", "acot",
+                "asinh", "acosh", "atanh",
+                "acsch", "asech", "acoth",
+            ]
+
+            # If the function is an inverse trig function, handle the style
+            if func in inv_trig_table:
+                if inv_trig_style == "abbreviated":
+                    pass
+                elif inv_trig_style == "full":
+                    func = ("ar" if func[-1] == "h" else "arc") + func[1:]
+                elif inv_trig_style == "power":
+                    func = func[1:]
+                    inv_trig_power_case = True
+
+                    # Can never fold brackets if we're raised to a power
+                    if exp is not None:
+                        can_fold_brackets = False
+
+            if inv_trig_power_case:
+                if func in accepted_typst_functions:
+                    name = r"%s^(-1)" % func
+                else:
+                    name = r"upright(%s)^(-1)" % func
+            elif exp is not None:
+                func_tex = self._hprint_Function(func)
+                func_tex = self.parenthesize_super(func_tex)
+                name = r'%s^(%s)' % (func_tex, exp)
+            else:
+                name = self._hprint_Function(func)
+
+            if can_fold_brackets:
+                if func in accepted_typst_functions:
+                    # Wrap argument safely to avoid parse-time conflicts
+                    # with the function name itself
+                    name += r" (%s)"
+                else:
+                    name += r"%s"
+            else:
+                name += r"(%s)"
+
+            if inv_trig_power_case and exp is not None:
+                name += r"^(%s)" % exp
+
+            return name % ",".join(args)
+
+    def _print_UndefinedFunction(self, expr):
+        return self._hprint_Function(str(expr))
+
+    def _print_ElementwiseApplyFunction(self, expr):
+        return r"%s_circle.stroked.small (%s)" % (
+            self._print(expr.function),
+            self._print(expr.expr),
+        )
+
+    @property
+    def _special_function_classes(self):
+        from sympy.functions.special.tensor_functions import KroneckerDelta
+        from sympy.functions.special.gamma_functions import gamma, lowergamma
+        from sympy.functions.special.beta_functions import beta
+        from sympy.functions.special.delta_functions import DiracDelta
+        from sympy.functions.special.error_functions import Chi
+        return {KroneckerDelta: r'delta',
+                gamma:  r'Gamma',
+                lowergamma: r'gamma',
+                beta: r'Beta',
+                DiracDelta: r'delta',
+                Chi: r'Chi'}
+
+    def _print_FunctionClass(self, expr):
+        for cls in self._special_function_classes:
+            if issubclass(expr, cls) and expr.__name__ == cls.__name__:
+                return self._special_function_classes[cls]
+        return self._hprint_Function(str(expr))
+
+    def _print_Lambda(self, expr):
+        symbols, expr = expr.args
+
+        if len(symbols) == 1:
+            symbols = self._print(symbols[0])
+        else:
+            symbols = self._print(tuple(symbols))
+
+        tex = r"( %s arrow.r.bar %s )" % (symbols, self._print(expr))
+
+        return tex
+
+    def _print_IdentityFunction(self, expr):
+        return r"( x arrow.r.bar x )"
+
+    def _hprint_variadic_function(self, expr, exp=None) -> str:
+        args = sorted(expr.args, key=default_sort_key)
+        texargs = [r"%s" % self._print(symbol) for symbol in args]
+        tex = r"%s(%s)" % (str(expr.func).lower(),
+                                       ", ".join(texargs))
+        if exp is not None:
+            return r"%s^(%s)" % (tex, exp)
+        else:
+            return tex
+
+    _print_Min = _print_Max = _hprint_variadic_function
 
     def _print_floor(self, expr, exp=None):
         typst = r"floor(%s)" % self._print(expr.args[0])
