@@ -284,15 +284,15 @@ def test_typst_derivatives():
     assert typst(diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)) == \
         r"d^(3) / (d x^(3)) (x^(2) + sin(x))"
 
-    # # \partial for partial derivatives
-    # assert typst(diff(sin(x * y), x, evaluate=False)) == \
-    #     r"partial / (partial x) sin(x y)"
-    # assert typst(diff(sin(x * y) + x**2, x, evaluate=False)) == \
-    #     r"partial / (partial x) x^(2) + sin(x y)"
-    # assert typst(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
-    #     r"partial^(2) / (partial x^(2)) (x^(2) + sin(x y)"
-    # assert typst(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
-    #     r"partial^(3) / (partial x^(3)) (x^(2) + sin(x y)"
+    # partial for partial derivatives
+    assert typst(diff(sin(x * y), x, evaluate=False)) == \
+        r"partial / (partial x) sin(x y)"
+    assert typst(diff(sin(x * y) + x**2, x, evaluate=False)) == \
+        r"partial / (partial x) (x^(2) + sin(x y))"
+    assert typst(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
+        r"partial^(2) / (partial x^(2)) (x^(2) + sin(x y))"
+    assert typst(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
+        r"partial^(3) / (partial x^(3)) (x^(2) + sin(x y))"
 
     # mixed partial derivatives
     f = Function("f")
@@ -323,14 +323,14 @@ def test_typst_derivatives():
 
     x1 = Symbol('x1')
     x2 = Symbol('x2')
-    # assert typst(diff(f(x1, x2), x1)) == r'partial / (partial x_(1)) f(x_(1),x_(2))'
+    assert typst(diff(f(x1, x2), x1)) == r'partial / (partial x_(1)) f(x_(1),x_(2))'
 
     n1 = Symbol('n1')
     assert typst(diff(f(x), (x, n1))) == r'd^(n_(1)) / (d x^(n_(1))) f(x)'
 
-    # n2 = Symbol('n2')
-    # assert typst(diff(f(x), (x, Max(n1, n2)))) == \
-    #     r'd^(max(n_(1), n_(2))) / (d x^(max(n_(1), n_(2)))) f(x)'
+    n2 = Symbol('n2')
+    assert typst(diff(f(x), (x, Max(n1, n2)))) == \
+        r'd^(max(n_(1), n_(2))) / (d x^(max(n_(1), n_(2)))) f(x)'
 
     # set diff operator
     assert typst(diff(f(x), x), diff_operator="rd") == r'bold(d) / (bold(d) x) f(x)'
