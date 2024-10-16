@@ -2,7 +2,7 @@
 A Printer which converts an expression into its Typst equivalent.
 """
 from __future__ import annotations
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING
 
 from sympy.core import Add, Mod, Mul, Number, S, Symbol, Expr
 from sympy.core.alphabets import greeks
@@ -22,6 +22,9 @@ from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 from sympy.utilities.iterables import sift
 
 import re
+
+if TYPE_CHECKING:
+    from sympy.vector.basisdependent import BasisDependent
 
 # need further check
 accepted_typst_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
@@ -457,6 +460,34 @@ class TypstPrinter(Printer):
                 str_real = str_real.replace('.',',')
             return str_real
 
+    def _print_Cross(self, expr):
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        return r"%s times %s" % (self.parenthesize(vec1, PRECEDENCE['Mul']),
+                                  self.parenthesize(vec2, PRECEDENCE['Mul']))
+
+    def _print_Curl(self, expr):
+        vec = expr._expr
+        return r"nabla times %s" % self.parenthesize(vec, PRECEDENCE['Mul'])
+
+    def _print_Divergence(self, expr):
+        vec = expr._expr
+        return r"nabla dot %s" % self.parenthesize(vec, PRECEDENCE['Mul'])
+
+    def _print_Dot(self, expr):
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        return r"%s dot %s" % (self.parenthesize(vec1, PRECEDENCE['Mul']),
+                                 self.parenthesize(vec2, PRECEDENCE['Mul']))
+
+    def _print_Gradient(self, expr):
+        func = expr._expr
+        return r"nabla %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+
+    def _print_Laplacian(self, expr):
+        func = expr._expr
+        return r"Delta %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+
     def _print_Mul(self, expr: Expr):
         from sympy.simplify import fraction
         separator: str = self._settings['mul_symbol_typst']
@@ -654,6 +685,52 @@ class TypstPrinter(Printer):
 
         return typst
 
+    def _print_BasisDependent(self, expr: 'BasisDependent'):
+        from sympy.vector import Vector
+
+        o1: list[str] = []
+        if expr == expr.zero:
+            return expr.zero._typst_form
+        if isinstance(expr, Vector):
+            items = expr.separate().items()
+        else:
+            items = [(0, expr)]
+
+        for system, vect in items:
+            inneritems = list(vect.components.items())
+            inneritems.sort(key=lambda x: x[0].__str__())
+            for k, v in inneritems:
+                if v == 1:
+                    o1.append(' + ' + k._typst_form)
+                elif v == -1:
+                    o1.append(' - ' + k._typst_form)
+                else:
+                    arg_str = r'(' + self._print(v) + r')'
+                    o1.append(' + ' + arg_str + k._typst_form)
+
+        outstr = (''.join(o1))
+        if outstr[1] != '-':
+            outstr = outstr[3:]
+        else:
+            outstr = outstr[1:]
+        return outstr
+
+    def _print_CoordSystem(self, coordsys):
+        return r'upright(%s)^(upright(%s))_(%s)' % (
+            self._print(coordsys.name), self._print(coordsys.patch.name), self._print(coordsys.manifold)
+        )
+
+    def _print_CovarDerivativeOp(self, cvd):
+        return r'nabla_(%s)' % self._print(cvd._wrt)
+
+    def _print_BaseScalarField(self, field):
+        string = field._coord_sys.symbols[field._index].name
+        return r'bold({})'.format(self._print(Symbol(string)))
+
+    def _print_BaseVectorField(self, field):
+        string = field._coord_sys.symbols[field._index].name
+        return r'partial_({})'.format(self._print(Symbol(string)))
+
     def _print_Derivative(self, expr):
         if requires_partial(expr.expr):
             diff_symbol = r'partial'
@@ -710,7 +787,7 @@ class TypstPrinter(Printer):
 
     def _hprint_Function(self, func: str) -> str:
         r'''
-        Logic to decide how to render a function to latex
+        Logic to decide how to render a function to typst
           - if it is a recognized typst name, use the appropriate typst function
           - if it is a single letter, excluding sub- and superscripts, just use that letter
           - if it is a longer name, then put upright() around it and be
@@ -913,6 +990,19 @@ class TypstPrinter(Printer):
 
     def _print_Exp1(self, expr, exp=None):
         return "e"
+
+    def _print_Rational(self, expr):
+        if expr.q != 1:
+            sign = ""
+            p = expr.p
+            if expr.p < 0:
+                sign = "- "
+                p = -p
+            if self._settings['fold_short_frac']:
+                return r"%s%d / %d" % (sign, p, expr.q)
+            return r"%s%d/%d" % (sign, p, expr.q)
+        else:
+            return self._print(expr.p)
 
     def _print_Symbol(self, expr: Symbol, style='plain'):
         name: str = self._settings['symbol_names'].get(expr)

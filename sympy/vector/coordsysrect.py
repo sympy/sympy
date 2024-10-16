@@ -199,12 +199,14 @@ class CoordSys3D(Basic):
         latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
                            x in vector_names]
         pretty_vects = ['%s_%s' % (x, name) for x in vector_names]
+        typst_vects = [(r'bold(hat(%s)_(%s))' % (x, name)) for x
+                            in vector_names]
 
         obj._vector_names = vector_names
 
-        v1 = BaseVector(0, obj, pretty_vects[0], latex_vects[0])
-        v2 = BaseVector(1, obj, pretty_vects[1], latex_vects[1])
-        v3 = BaseVector(2, obj, pretty_vects[2], latex_vects[2])
+        v1 = BaseVector(0, obj, pretty_vects[0], latex_vects[0], typst_vects[0])
+        v2 = BaseVector(1, obj, pretty_vects[1], latex_vects[1], typst_vects[1])
+        v3 = BaseVector(2, obj, pretty_vects[2], latex_vects[2], typst_vects[2])
 
         obj._base_vectors = (v1, v2, v3)
 
@@ -215,13 +217,14 @@ class CoordSys3D(Basic):
         latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
                          x in variable_names]
         pretty_scalars = ['%s_%s' % (x, name) for x in variable_names]
+        typst_scalars = ['bold(%s_(%s))' % (x, name) for x in variable_names]
 
         obj._variable_names = variable_names
         obj._vector_names = vector_names
 
-        x1 = BaseScalar(0, obj, pretty_scalars[0], latex_scalars[0])
-        x2 = BaseScalar(1, obj, pretty_scalars[1], latex_scalars[1])
-        x3 = BaseScalar(2, obj, pretty_scalars[2], latex_scalars[2])
+        x1 = BaseScalar(0, obj, pretty_scalars[0], latex_scalars[0], typst_scalars[0])
+        x2 = BaseScalar(1, obj, pretty_scalars[1], latex_scalars[1], typst_scalars[1])
+        x3 = BaseScalar(2, obj, pretty_scalars[2], latex_scalars[2], typst_scalars[2])
 
         obj._base_scalars = (x1, x2, x3)
 
