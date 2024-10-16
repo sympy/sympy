@@ -368,7 +368,7 @@ class Expr(Basic, EvalfMixin):
         if not self.is_number:
             raise TypeError("Cannot truncate symbols and expressions")
         else:
-            return Integer(self)
+            return int(self)
 
     def __format__(self, format_spec: str):
         if self.is_number:
