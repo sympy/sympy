@@ -855,7 +855,7 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     ========
     >>> from sympy.physics.wigner import real_gaunt
     >>> real_gaunt(1,1,2,-1,1,-2)
-    0.1*sqrt(15)/sqrt(pi)
+    sqrt(15)/(10*sqrt(pi))
     >>> real_gaunt(10,10,20,-9,-9,0,prec=64)
     -0.00002480019791932209313156167176797577821140084216297395518482071448
 
@@ -928,7 +928,7 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     t = lambda x: 1 if x > 0 else 0
     A = lambda mu, m: t(-mu) * (s(m) * kron_del(m, mu) - kron_del(m, -mu))
     B = lambda mu, m: t(mu) * (kron_del(m, mu) + s(m) * kron_del(m, -mu))
-    U = lambda mu, m: kron_del(abs(mu), abs(m)) * (kron_del(mu, 0) * kron_del(m, 0) + (B(mu, m) + 1j * A(mu, m))/sqrt(2))
+    U = lambda mu, m: kron_del(abs(mu), abs(m)) * (kron_del(mu, 0) * kron_del(m, 0) + (B(mu, m) + I * A(mu, m))/sqrt(2))
 
     ugnt = 0
     for m1 in range(-l_1, l_1+1):
