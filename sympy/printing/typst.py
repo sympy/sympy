@@ -10,6 +10,7 @@ from sympy.core.function import Function, AppliedUndef
 from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
@@ -336,6 +337,24 @@ class TypstPrinter(Printer):
             return r"(%s)^(%s)" % (expr, exp)
         else:
             return expr
+
+    def _print_Basic(self, expr):
+        name = self._deal_with_super_sub(expr.__class__.__name__)
+        if expr.args:
+            ls = [self._print(o) for o in expr.args]
+            s = r'upright("{}")("{}")'
+            return s.format(name, ", ".join(ls))
+        else:
+            return r'upright("{}")'.format(name)
+
+    def _print_bool(self, e: bool | BooleanTrue | BooleanFalse):
+        return r'upright("%s")' % e
+
+    _print_BooleanTrue = _print_bool
+    _print_BooleanFalse = _print_bool
+
+    def _print_NoneType(self, e):
+        return r'upright("%s")' % e
 
     def _print_Add(self, expr, order=None):
         terms = self._as_ordered_terms(expr, order=order)
