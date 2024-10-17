@@ -445,11 +445,11 @@ def solve(f, *symbols, **flags):
         >>> # ******************************************************* #
         >>> TableForm(t, headings=h, alignments="<")
         e              | s      | solve(e, s)  | solve(e, s, dict=True) | solve(e, s, set=True)
-        ---------------------------------------------------------------------------------------
-        x - y          | y      | [x]          | [{y: x}]               | ([y], {(x,)})
-        x - y          | [x, y] | [(y, y)]     | [{x: y}]               | ([x, y], {(y, y)})
-        x**2 - y       | [x, y] | [(x, x**2)]  | [{y: x**2}]            | ([x, y], {(x, x**2)})
-        [x - 3, y - 1] | [x, y] | {x: 3, y: 1} | [{x: 3, y: 1}]         | ([x, y], {(3, 1)})
+        ------------------------------------------------------------------------------------------------
+        x - y          | y      | [x]          | [{y: x}]               | ([y], FiniteSet((x,)))
+        x - y          | [x, y] | [(y, y)]     | [{x: y}]               | ([x, y], FiniteSet((y, y)))
+        x**2 - y       | [x, y] | [(x, x**2)]  | [{y: x**2}]            | ([x, y], FiniteSet((x, x**2)))
+        [x - 3, y - 1] | [x, y] | {x: 3, y: 1} | [{x: 3, y: 1}]         | ([x, y], FiniteSet((3, 1)))
 
         * If any equation does not depend on the symbol(s) given, it will be
           eliminated from the equation set and an answer may be given
