@@ -18,12 +18,12 @@ from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued
-from sympy.core.relational import Relational, Equality
+from sympy.core.relational import Relational, Equality, Ne
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
-from sympy.logic.boolalg import BooleanAtom
+from sympy.logic.boolalg import BooleanAtom, Or
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import FF, QQ, ZZ
@@ -56,7 +56,6 @@ from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
-
 
 # Required to avoid errors
 import sympy.polys
@@ -7938,3 +7937,258 @@ def named_poly(n, f, K, name, x, polys):
     else:
         poly = Poly.new(poly, head)
     return poly if polys else poly.as_expr()
+
+
+def factor_system_poly(polys, **kwargs):
+    """
+        Factor a system of polynomials and find their minimal factor combinations.
+
+        This function takes a list of polynomials and returns all minimal combinations
+        of factors that, when set to zero, satisfy the system of equations.
+
+        Parameters
+        ==========
+        polys : list of Poly
+            A list of polynomial instances to be factored. All polynomials must share
+            the same domain and generators.
+        **kwargs : dict
+            Additional keyword arguments to be passed to the factorization routines.
+
+        Returns
+        =======
+        list of, list of tuples
+            A list where each inner list represents a valid combination of factors.
+
+        Raises
+        ======
+        TypeError
+            If any element in polys is not a Poly instance
+        DomainError
+            If all polynomials don't share the same domain and generators
+
+        Example
+        =======
+        >>> from sympy import symbols, Poly, ZZ
+        >>> from sympy.polys.polytools import factor_system_poly
+        >>> a, b, x = symbols('a b x')
+        >>> factor_system_poly([Poly((a - 1)*(x - 2), x, domain=ZZ[a,b]), Poly((b - 3)*(x - 2), x, domain=ZZ[a,b])])
+        [[(Poly(x - 2, x, domain='ZZ[a,b]'), [Poly(a - 1, x, domain='ZZ[a]'), Poly(b - 3, x, domain='ZZ[b]')])]]
+
+        Notes
+        =====
+        - Returns [[]] if the input list is empty
+        - Returns [] if any polynomial has degree 0 and is non-zero
+        - Returns [] if any non-zero polynomial has no factors but a non-zero constant term
+        - The function finds minimal combinations of factors, meaning no combination
+          is a proper superset of another
+    """
+    if not polys:
+        return [[]]
+
+    if not all(isinstance(poly, Poly) for poly in polys):
+        raise TypeError("polys should be a list of Poly instances")
+
+    base_domain = polys[0].domain
+    base_gens = polys[0].gens
+
+    if not all(poly.domain == base_domain and poly.gens == base_gens for poly in polys[1:]):
+        raise DomainError("All polynomials must have the same domain and generators")
+
+    if any(poly.total_degree() == 0 and not poly.is_zero for poly in polys):
+        return []
+
+    factored_eqs = []
+    for poly in polys:
+        constant, factors = poly.factor_list()
+
+        if constant.is_zero and not factors:
+            continue
+
+        current_factors = []
+        if factors:
+            if constant.is_number and constant != 0:
+                current_factors.extend((Poly(factor, *base_gens), []) for factor, _ in factors)
+            else:
+                current_factors.extend((Poly(factor, *base_gens), [Poly(constant, *base_gens)])
+                                       for factor, _ in factors)
+        elif not constant.is_zero:
+            return []
+
+        if current_factors:
+            factored_eqs.append(current_factors)
+
+    if not factored_eqs:
+        return [[]]
+
+    return _combine_factor_systems_poly(factored_eqs)
+
+
+def _combine_factor_systems_poly(factored_eqs):
+    """ Helper function to combine factored polynomial
+        equations into minimal factor systems. """
+    factor_dict = {}
+    for eq in factored_eqs:
+        for factor, conditions in eq:
+            if factor not in factor_dict:
+                factor_dict[factor] = []
+            factor_dict[factor].extend(conditions)
+
+    eq_factors = [{factor for factor, _ in eq} for eq in factored_eqs]
+
+    def _factors_system(eqs):
+
+        if not eqs:
+            return [set()]
+        elif len(eqs) == 1:
+            return [{f} for f in eqs[0]]
+
+        eq1, eqs_rest = eqs[0], eqs[1:]
+        sets = []
+        for f in eq1:
+            eqs_rest_2 = [eq for eq in eqs_rest if f not in eq]
+            sets.extend(s | {f} for s in _factors_system(eqs_rest_2))
+        return sets
+
+    all_combinations = _factors_system(eq_factors)
+
+    minimal_combinations = []
+    for combo in all_combinations:
+        if not any(combo > other for other in all_combinations):
+            minimal_combinations.append(combo)
+
+    return [[(factor, factor_dict[factor]) for factor in combo]
+            for combo in minimal_combinations]
+
+
+def factor_system_cond(eqs, gens=None, **kwargs):
+    """
+        Factor a system of equations and return factors with conditions.
+
+        Converts equations to polynomials, factors them, and returns factors
+        along with Boolean conditions for their validity.
+
+        Parameters
+        ==========
+        eqs : list
+            List of equations or expressions to be factored
+        gens : list, optional
+            List of generators (variables). If None, will be determined from
+            the free symbols in the equations
+        **kwargs : dict
+            Additional keyword arguments to be passed to the factorization routines
+
+        Returns
+        =======
+        list of list of tuples
+            A list where each inner list represents a solution set.
+            Each tuple contains (factor, condition) where:
+            - factor is an expression (not a Poly)
+            - condition is either:
+              * True if no conditions were associated with the factor
+              * Or(Ne(c1, 0), Ne(c2, 0), ...) if conditions were present
+
+        Example
+        =======
+        >>> from sympy import symbols
+        >>> from sympy.polys.polytools import factor_system_cond
+        >>> x, a, b, y = symbols('x a b y')
+        >>> factor_system_cond([(a - 1)*(x - 2), (b - 3)*(x - 2)], [x, y])
+        [[(x - 2, Ne(a - 1, 0) | Ne(b - 3, 0))]]
+    """
+    if not eqs:
+        return []
+
+    exprs = [sympify(eq) for eq in eqs]
+
+    if gens is None:
+        gens = list(set().union(*[expr.free_symbols for expr in exprs]))
+
+    if not gens:
+        if any(expr.is_zero for expr in exprs):
+            return []
+        return [[]]
+
+    polys, _ = parallel_poly_from_expr(exprs, *gens, **kwargs)
+
+    if not polys:
+        return []
+
+    poly_results = factor_system_poly(polys, **kwargs)
+
+    results = []
+    for combo in poly_results:
+        factor_conditions = {}
+        for factor, conditions in combo:
+            expr = factor.as_expr()
+            if expr not in factor_conditions:
+                factor_conditions[expr] = []
+            factor_conditions[expr].extend(conditions)
+
+        boolean_combo = []
+        for factor, conditions in factor_conditions.items():
+            if not conditions:
+                boolean_combo.append((factor, True))
+            else:
+                bool_cond = Or(*[Ne(cond.as_expr(), 0) for cond in conditions])
+                boolean_combo.append((factor, bool_cond))
+
+        results.append(boolean_combo)
+
+    return results
+
+
+def factor_system(eqs, gens=None, **kwargs):
+    """
+        Factor a system of equations and returns a list of sets of factors.
+        The union of solutions of the sets of factors is the solution of the
+        system(eqs)
+
+        Parameters
+        ==========
+        eqs : list
+            List of equations or expressions to be factored
+        gens : list, optional
+            List of generators (variables). If None, will be determined from
+            the free symbols in the equations
+        **kwargs : dict
+            Additional keyword arguments to be passed to the factorization routines
+
+        Returns
+        =======
+        list of set
+            A list where each set contains expressions representing factors.
+            Each set of factors, when set to zero, represents a solution to the system.
+
+        Notes
+        =====
+        - Returns [] if input list is empty
+        - Returns [] if any non-zero constant in system.
+        - Returns [set()] if all expressions are zero
+        - Ignores zero expressions in the input
+    """
+    if not eqs:
+        return []
+
+    exprs = [sympify(eq) for eq in eqs]
+
+    if gens is None:
+        gens = list(set().union(*[expr.free_symbols for expr in exprs]))
+
+    if not gens:
+        if all(expr.is_zero for expr in exprs):
+            return [set()]
+        return []
+
+    non_zero_exprs = [expr for expr in exprs if not expr.is_zero]
+
+    if not non_zero_exprs:
+        return [set()]
+
+    polys, _ = parallel_poly_from_expr(non_zero_exprs, *gens, **kwargs)
+
+    if not polys:
+        return []
+
+    poly_results = factor_system_poly(polys, **kwargs)
+
+    return [{factor.as_expr() for factor, _ in combo} for combo in poly_results]
