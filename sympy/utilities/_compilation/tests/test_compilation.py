@@ -65,8 +65,10 @@ def test_compile_link_import_strings():
             shutil.rmtree(info['build_dir'])
 
 
-@skip_under_pyodide("Emscripten does not support process spawning")
-def test_compile_sources(tmpdir):
+@skip_under_pyodide("Emscripten does not support subprocesses")
+def test_compile_sources():
+    tmpdir = tempfile.mkdtemp()
+
     from sympy.utilities._compilation import has_c
     if not has_c():
         skip("No C compiler found.")
