@@ -769,9 +769,9 @@ def test_numpy_sympify_args():
 
 
 def test_issue_5939():
-     a = Symbol('a')
-     b = Symbol('b')
-     assert sympify('''a+\nb''') == a + b
+    a = Symbol('a')
+    b = Symbol('b')
+    assert sympify('''a+\nb''') == a + b
 
 
 def test_issue_16759():

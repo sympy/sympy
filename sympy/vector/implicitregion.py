@@ -421,7 +421,7 @@ class ImplicitRegion(Basic):
                 rep = dict.fromkeys(syms, 2)
 
                 if len(syms) != 0:
-                   spoint = tuple(s.subs(rep) for s in spoint)
+                    spoint = tuple(s.subs(rep) for s in spoint)
 
                 if self.multiplicity(spoint) == degree - 1:
                     point = spoint

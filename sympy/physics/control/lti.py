@@ -278,10 +278,10 @@ def phase_margin(system):
     mag_sol = list(solveset(mag, _w, Interval(0, oo, left_open=True)))
 
     if (len(mag_sol) == 0):
-      pm = S(-180)
+        pm = S(-180)
     else:
-      wcp = mag_sol[0]
-      pm = ((arg(w_expr)*S(180)/pi).subs({_w:wcp}) + S(180)) % 360
+        wcp = mag_sol[0]
+        pm = ((arg(w_expr)*S(180)/pi).subs({_w:wcp}) + S(180)) % 360
 
     if(pm >= 180):
         pm = pm - 360

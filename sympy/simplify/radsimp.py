@@ -593,32 +593,32 @@ def collect_abs(expr):
     Abs(1/x)
     """
     def _abs(mul):
-      c, nc = mul.args_cnc()
-      a = []
-      o = []
-      for i in c:
-          if isinstance(i, Abs):
-              a.append(i.args[0])
-          elif isinstance(i, Pow) and isinstance(i.base, Abs) and i.exp.is_real:
-              a.append(i.base.args[0]**i.exp)
-          else:
-              o.append(i)
-      if len(a) < 2 and not any(i.exp.is_negative for i in a if isinstance(i, Pow)):
-          return mul
-      absarg = Mul(*a)
-      A = Abs(absarg)
-      args = [A]
-      args.extend(o)
-      if not A.has(Abs):
-          args.extend(nc)
-          return Mul(*args)
-      if not isinstance(A, Abs):
-          # reevaluate and make it unevaluated
-          A = Abs(absarg, evaluate=False)
-      args[0] = A
-      _mulsort(args)
-      args.extend(nc)  # nc always go last
-      return Mul._from_args(args, is_commutative=not nc)
+        c, nc = mul.args_cnc()
+        a = []
+        o = []
+        for i in c:
+            if isinstance(i, Abs):
+                a.append(i.args[0])
+            elif isinstance(i, Pow) and isinstance(i.base, Abs) and i.exp.is_real:
+                a.append(i.base.args[0]**i.exp)
+            else:
+                o.append(i)
+        if len(a) < 2 and not any(i.exp.is_negative for i in a if isinstance(i, Pow)):
+            return mul
+        absarg = Mul(*a)
+        A = Abs(absarg)
+        args = [A]
+        args.extend(o)
+        if not A.has(Abs):
+            args.extend(nc)
+            return Mul(*args)
+        if not isinstance(A, Abs):
+            # reevaluate and make it unevaluated
+            A = Abs(absarg, evaluate=False)
+        args[0] = A
+        _mulsort(args)
+        args.extend(nc)  # nc always go last
+        return Mul._from_args(args, is_commutative=not nc)
 
     return expr.replace(
         lambda x: isinstance(x, Mul),
