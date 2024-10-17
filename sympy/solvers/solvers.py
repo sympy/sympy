@@ -49,16 +49,16 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
-from sympy.polys.polytools import gcd
+from sympy.polys.polytools import gcd, groebner
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
-    generate_bell, uniq, iterable, is_sequence, subsets, flatten, sift)
+    generate_bell, uniq, iterable, is_sequence, flatten, sift)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
 
-from sympy.solvers.polysys import solve_poly_system
+from sympy.solvers.polysys import solve_poly_system, _solve_poly_system_underdetermined
 
 from types import GeneratorType
 from collections import defaultdict
@@ -1860,40 +1860,35 @@ def _solve_system(exprs, symbols, **flags):
             result = [result] if result else []
             if failed:
                 if result:
-                    solved_syms = list(result[0].keys())  # there is only one result dict
+                    solved_syms = list(result[0].keys())
                 else:
                     solved_syms = []
             # linear doesn't change
         else:
             linear = False
-            if len(symbols) > len(polys):
+            lex_syms = sorted(symbols, key=lambda s: s.sort_key())
+            gb = groebner(polys, lex_syms)
+            independent_polys = [simplify(poly) for poly in gb if poly != 0]
+            rank = len(independent_polys)
 
-                free = set().union(*[p.free_symbols for p in polys])
-                free = list(ordered(free.intersection(symbols)))
-                got_s = set()
-                result = []
-                for syms in subsets(free, min(len(free), len(polys))):
-                    try:
-                        # returns [], None or list of tuples
-                        res = solve_poly_system(polys, *syms)
-                        if res:
-                            for r in set(res):
-                                skip = False
-                                for r1 in r:
-                                    if got_s and any(ss in r1.free_symbols
-                                           for ss in got_s):
-                                        # sol depends on previously
-                                        # solved symbols: discard it
-                                        skip = True
-                                if not skip:
-                                    got_s.update(syms)
-                                    result.append(dict(list(zip(syms, r))))
-                    except NotImplementedError:
-                        pass
-                if got_s:
-                    solved_syms = list(got_s)
+            if rank < len(symbols) and 1 not in gb:
+                final_solution = _solve_poly_system_underdetermined(gb, lex_syms)
+
+                reordered_solution = []
+                for result in final_solution:
+                    simplified_result = {}
+                    for s in symbols:
+                        if result[s] != s:
+                            simplified_result[s] = result[s]
+                    reordered_solution.append(simplified_result)
+
+                result = reordered_solution
+
+                if result:
+                    solved_syms = list(result[0].keys())
                 else:
                     failed.extend([g.as_expr() for g in polys])
+
             else:
                 try:
                     result = solve_poly_system(polys, *symbols)
@@ -1902,6 +1897,7 @@ def _solve_system(exprs, symbols, **flags):
                         result = [dict(list(zip(solved_syms, r))) for r in set(result)]
                 except NotImplementedError:
                     failed.extend([g.as_expr() for g in polys])
+
                     solved_syms = []
 
     # convert None or [] to [{}]
