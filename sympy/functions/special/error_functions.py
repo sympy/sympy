@@ -4,7 +4,7 @@
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import Function, ArgumentIndexError, expand_mul
+from sympy.core.function import DefinedFunction, ArgumentIndexError, expand_mul
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import I, pi, Rational, Integer
 from sympy.core.relational import is_eq
@@ -46,7 +46,7 @@ def real_to_real_as_real_imag(self, deep=True, **hints):
 ###############################################################################
 
 
-class erf(Function):
+class erf(DefinedFunction):
     r"""
     The Gauss error function.
 
@@ -285,7 +285,7 @@ class erf(Function):
     as_real_imag = real_to_real_as_real_imag
 
 
-class erfc(Function):
+class erfc(DefinedFunction):
     r"""
     Complementary Error Function.
 
@@ -479,7 +479,7 @@ class erfc(Function):
         return S.One - erf(*self.args)._eval_aseries(n, args0, x, logx)
 
 
-class erfi(Function):
+class erfi(DefinedFunction):
     r"""
     Imaginary error function.
 
@@ -671,7 +671,7 @@ class erfi(Function):
         return super(erfi, self)._eval_aseries(n, args0, x, logx)
 
 
-class erf2(Function):
+class erf2(DefinedFunction):
     r"""
     Two-argument error function.
 
@@ -816,7 +816,7 @@ class erf2(Function):
     def _eval_is_zero(self):
         return is_eq(*self.args)
 
-class erfinv(Function):
+class erfinv(DefinedFunction):
     r"""
     Inverse Error Function. The erfinv function is defined as:
 
@@ -909,7 +909,7 @@ class erfinv(Function):
         return self.args[0].is_zero
 
 
-class erfcinv (Function):
+class erfcinv (DefinedFunction):
     r"""
     Inverse Complementary Error Function. The erfcinv function is defined as:
 
@@ -992,7 +992,7 @@ class erfcinv (Function):
         return fuzzy_or([z.is_zero, is_eq(z, Integer(2))])
 
 
-class erf2inv(Function):
+class erf2inv(DefinedFunction):
     r"""
     Two-argument Inverse error function. The erf2inv function is defined as:
 
@@ -1089,7 +1089,7 @@ class erf2inv(Function):
 #################### EXPONENTIAL INTEGRALS ####################################
 ###############################################################################
 
-class Ei(Function):
+class Ei(DefinedFunction):
     r"""
     The classical exponential integral.
 
@@ -1202,8 +1202,8 @@ class Ei(Function):
 
     def _eval_evalf(self, prec):
         if (self.args[0]/polar_lift(-1)).is_positive:
-            return Function._eval_evalf(self, prec) + (I*pi)._eval_evalf(prec)
-        return Function._eval_evalf(self, prec)
+            return super()._eval_evalf(prec) + (I*pi)._eval_evalf(prec)
+        return super()._eval_evalf(prec)
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy.functions.special.gamma_functions import uppergamma
@@ -1272,7 +1272,7 @@ class Ei(Function):
         return super(Ei, self)._eval_aseries(n, args0, x, logx)
 
 
-class expint(Function):
+class expint(DefinedFunction):
     r"""
     Generalized exponential integral.
 
@@ -1499,7 +1499,7 @@ def E1(z):
     return expint(1, z)
 
 
-class li(Function):
+class li(DefinedFunction):
     r"""
     The classical logarithmic integral.
 
@@ -1666,7 +1666,7 @@ class li(Function):
         if z.is_zero:
             return True
 
-class Li(Function):
+class Li(DefinedFunction):
     r"""
     The offset logarithmic integral.
 
@@ -1762,7 +1762,7 @@ class Li(Function):
 #################### TRIGONOMETRIC INTEGRALS ##################################
 ###############################################################################
 
-class TrigonometricIntegral(Function):
+class TrigonometricIntegral(DefinedFunction):
     """ Base class for trigonometric integrals. """
 
 
@@ -2324,7 +2324,7 @@ class Chi(TrigonometricIntegral):
 #################### FRESNEL INTEGRALS ########################################
 ###############################################################################
 
-class FresnelIntegral(Function):
+class FresnelIntegral(DefinedFunction):
     """ Base class for the Fresnel integrals."""
 
     unbranched = True
@@ -2707,7 +2707,7 @@ class fresnelc(FresnelIntegral):
 ###############################################################################
 
 
-class _erfs(Function):
+class _erfs(DefinedFunction):
     """
     Helper function to make the $\\mathrm{erf}(z)$ function
     tractable for the Gruntz algorithm.
@@ -2756,7 +2756,7 @@ class _erfs(Function):
         return (S.One - erf(z))*exp(z**2)
 
 
-class _eis(Function):
+class _eis(DefinedFunction):
     """
     Helper function to make the $\\mathrm{Ei}(z)$ and $\\mathrm{li}(z)$
     functions tractable for the Gruntz algorithm.

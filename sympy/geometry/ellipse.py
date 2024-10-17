@@ -15,7 +15,8 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
-from sympy.simplify import simplify, trigsimp
+from sympy.simplify.simplify import simplify
+from sympy.simplify.trigsimp import trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_integrals import elliptic_e

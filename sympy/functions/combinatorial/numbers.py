@@ -14,7 +14,7 @@ from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import ArgumentIndexError, Function, expand_mul
+from sympy.core.function import ArgumentIndexError, DefinedFunction, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
@@ -55,7 +55,7 @@ _sym = Symbol('x')
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class carmichael(Function):
+class carmichael(DefinedFunction):
     r"""
     Carmichael Numbers:
 
@@ -185,7 +185,7 @@ directly instead.
 #----------------------------------------------------------------------------#
 
 
-class fibonacci(Function):
+class fibonacci(DefinedFunction):
     r"""
     Fibonacci numbers / Fibonacci polynomials
 
@@ -273,7 +273,7 @@ class fibonacci(Function):
 #----------------------------------------------------------------------------#
 
 
-class lucas(Function):
+class lucas(DefinedFunction):
     """
     Lucas numbers
 
@@ -325,7 +325,7 @@ class lucas(Function):
 #----------------------------------------------------------------------------#
 
 
-class tribonacci(Function):
+class tribonacci(DefinedFunction):
     r"""
     Tribonacci numbers / Tribonacci polynomials
 
@@ -415,7 +415,7 @@ class tribonacci(Function):
 #----------------------------------------------------------------------------#
 
 
-class bernoulli(Function):
+class bernoulli(DefinedFunction):
     r"""
     Bernoulli numbers / Bernoulli polynomials / Bernoulli function
 
@@ -605,7 +605,7 @@ class bernoulli(Function):
 #----------------------------------------------------------------------------#
 
 
-class bell(Function):
+class bell(DefinedFunction):
     r"""
     Bell numbers / Bell polynomials
 
@@ -758,7 +758,7 @@ class bell(Function):
 #----------------------------------------------------------------------------#
 
 
-class harmonic(Function):
+class harmonic(DefinedFunction):
     r"""
     Harmonic numbers
 
@@ -1023,7 +1023,7 @@ class harmonic(Function):
 #----------------------------------------------------------------------------#
 
 
-class euler(Function):
+class euler(DefinedFunction):
     r"""
     Euler numbers / Euler polynomials / Euler function
 
@@ -1180,7 +1180,7 @@ class euler(Function):
 #----------------------------------------------------------------------------#
 
 
-class catalan(Function):
+class catalan(DefinedFunction):
     r"""
     Catalan numbers
 
@@ -1326,7 +1326,7 @@ class catalan(Function):
 #----------------------------------------------------------------------------#
 
 
-class genocchi(Function):
+class genocchi(DefinedFunction):
     r"""
     Genocchi numbers / Genocchi polynomials / Genocchi function
 
@@ -1466,7 +1466,7 @@ class genocchi(Function):
 #----------------------------------------------------------------------------#
 
 
-class andre(Function):
+class andre(DefinedFunction):
     r"""
     Andre numbers / Andre function
 
@@ -1580,8 +1580,7 @@ class andre(Function):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-
-class partition(Function):
+class partition(DefinedFunction):
     r"""
     Partition numbers
 
@@ -1632,7 +1631,7 @@ class partition(Function):
             return True
 
 
-class divisor_sigma(Function):
+class divisor_sigma(DefinedFunction):
     r"""
     Calculate the divisor function `\sigma_k(n)` for positive integer n
 
@@ -1699,7 +1698,7 @@ class divisor_sigma(Function):
                 return Mul(*[cancel((p**(k*(e + 1)) - 1) / (p**k - 1)) for p, e in factorint(n).items()])
 
 
-class udivisor_sigma(Function):
+class udivisor_sigma(DefinedFunction):
     r"""
     Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
 
@@ -1771,7 +1770,7 @@ class udivisor_sigma(Function):
             return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
 
 
-class legendre_symbol(Function):
+class legendre_symbol(DefinedFunction):
     r"""
     Returns the Legendre symbol `(a / p)`.
 
@@ -1819,7 +1818,7 @@ class legendre_symbol(Function):
             return S(legendre(as_int(a), as_int(p)))
 
 
-class jacobi_symbol(Function):
+class jacobi_symbol(DefinedFunction):
     r"""
     Returns the Jacobi symbol `(m / n)`.
 
@@ -1890,7 +1889,7 @@ class jacobi_symbol(Function):
             return S(jacobi(as_int(m), as_int(n)))
 
 
-class kronecker_symbol(Function):
+class kronecker_symbol(DefinedFunction):
     r"""
     Returns the Kronecker symbol `(a / n)`.
 
@@ -1929,7 +1928,7 @@ class kronecker_symbol(Function):
             return S(kronecker(as_int(a), as_int(n)))
 
 
-class mobius(Function):
+class mobius(DefinedFunction):
     """
     Mobius function maps natural number to {-1, 0, 1}
 
@@ -2009,7 +2008,7 @@ class mobius(Function):
         return result
 
 
-class primenu(Function):
+class primenu(DefinedFunction):
     r"""
     Calculate the number of distinct prime factors for a positive integer n.
 
@@ -2061,7 +2060,7 @@ class primenu(Function):
             return S(len(factorint(n)))
 
 
-class primeomega(Function):
+class primeomega(DefinedFunction):
     r"""
     Calculate the number of prime factors counting multiplicities for a
     positive integer n.
@@ -2114,7 +2113,7 @@ class primeomega(Function):
             return S(sum(factorint(n).values()))
 
 
-class totient(Function):
+class totient(DefinedFunction):
     r"""
     Calculate the Euler totient function phi(n)
 
@@ -2164,7 +2163,7 @@ class totient(Function):
             return S(prod(p**(k-1)*(p-1) for p, k in factorint(n).items()))
 
 
-class reduced_totient(Function):
+class reduced_totient(DefinedFunction):
     r"""
     Calculate the Carmichael reduced totient function lambda(n)
 
@@ -2222,7 +2221,7 @@ class reduced_totient(Function):
             return S(lcm(t, *((p-1)*p**(k-1) for p, k in factorint(n).items())))
 
 
-class primepi(Function):
+class primepi(DefinedFunction):
     r""" Represents the prime counting function pi(n) = the number
     of prime numbers less than or equal to n.
 
@@ -2925,7 +2924,7 @@ def nT(n, k=None):
 #-----------------------------------------------------------------------------#
 
 
-class motzkin(Function):
+class motzkin(DefinedFunction):
     """
     The nth Motzkin number is the number
     of ways of drawing non-intersecting chords
