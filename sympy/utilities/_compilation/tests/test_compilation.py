@@ -3,7 +3,7 @@ import os
 import subprocess
 import tempfile
 from sympy.external import import_module
-from sympy.testing.pytest import skip
+from sympy.testing.pytest import skip, skip_under_pyodide
 
 from sympy.utilities._compilation.compilation import compile_link_import_py_ext, compile_link_import_strings, compile_sources, get_abspath
 
@@ -65,6 +65,7 @@ def test_compile_link_import_strings():
             shutil.rmtree(info['build_dir'])
 
 
+@skip_under_pyodide("Emscripten does not support process spawning")
 def test_compile_sources(tmpdir):
     from sympy.utilities._compilation import has_c
     if not has_c():
