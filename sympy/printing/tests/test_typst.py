@@ -1,17 +1,23 @@
+from sympy import MatAdd, MatMul
 from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Rational, oo)
 from sympy.core.power import Pow
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
-from sympy.functions.elementary.miscellaneous import Max
-from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.elementary.miscellaneous import (Max, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (And, Or, Xor, Equivalent, false, Not, true)
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.printing.typst import (typst, translate, greek_letters_set,
                                   typst_greek_dictionary)
 from sympy.series.limits import Limit
@@ -59,7 +65,7 @@ def test_typst_basic():
     assert typst(Mul(Pow(x, 11), 2*x + 1)) == r"x^(11) (2 x + 1)"
 
 
-def test_latex_builtins():
+def test_typst_builtins():
     assert typst(True) == r'upright("True")'
     assert typst(False) == r'upright("False")'
     assert typst(None) == r'upright("None")'
@@ -97,7 +103,7 @@ def test_typst_permutation():
             r"mat(0, 1, 2, 3; 1, 0, 3, 2)"
         Permutation.print_cyclic = old_print_cyclic
 
-def test_latex_Float():
+def test_typst_Float():
     assert typst(Float(1.0e100)) == r"1.0 dot 10^(100)"
     assert typst(Float(1.0e-100)) == r"1.0 dot 10^(-100)"
     assert typst(Float(1.0e-100), mul_symbol="times") == \
@@ -111,7 +117,7 @@ def test_latex_Float():
     assert typst(Float('0.099999'), full_prec=True,  min=-2, max=5) == \
         r"9.99990000000000 dot 10^(-2)"
 
-def test_latex_vector_expressions():
+def test_typst_vector_expressions():
     A = CoordSys3D('A')
 
     assert typst(Cross(A.i, A.j*A.x*3+A.k)) == \
@@ -500,3 +506,117 @@ def test_typst_derivatives():
 def test_issue_17092():
     x_star = Symbol('x^*')
     assert typst(Derivative(x_star, x_star,2)) == r'd^(2) / (d (x^(*))^(2)) x^(*)'
+
+def test_typst_Piecewise():
+    p = Piecewise((x, x < 1), (x**2, True))
+    assert typst(p) == r'cases( x & upright("for") x < 1, x^(2) &' \
+                       r' upright("otherwise") )'
+    p = Piecewise((x, x < 0), (0, x >= 0))
+    assert typst(p) == r'cases( x & upright("for") x < 0, 0 &' \
+                       r' upright("otherwise") )'
+    A, B = symbols("A B", commutative=False)
+    p = Piecewise((A**2, Eq(A, B)), (A*B, True))
+    s = r'cases( A^(2) & upright("for") A = B, A B & upright("otherwise") )'
+    assert typst(p) == s
+    assert typst(A*p) == r'A (%s)' % s
+    assert typst(p*A) == r'(%s) A' % s
+    assert typst(Piecewise((x, x < 1), (x**2, x < 2))) == \
+        r'cases( x & ' \
+        r'upright("for") x < 1, x^(2) & upright("for") x < 2 )'
+
+def test_typst_Matrix():
+    M = Matrix([[1 + x, y], [y, x - 1]])
+    assert typst(M) == \
+        r'mat(delim: "[", x + 1, y; y, x - 1)'
+    assert typst(M, mat_delim=None) == \
+        r'mat(delim: #none, x + 1, y; y, x - 1)'
+
+    M2 = Matrix(1, 11, range(11))
+    assert typst(M2) == \
+        r'mat(delim: "[", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)'
+
+
+def test_typst_matrix_with_functions():
+    t = symbols('t')
+    theta1 = symbols('theta1', cls=Function)
+
+    M = Matrix([[sin(theta1(t)), cos(theta1(t))],
+                [cos(theta1(t).diff(t)), sin(theta1(t).diff(t))]])
+
+    expected = (r'mat(delim: "[", sin(upright(theta)_(1)(t)), '\
+                r'cos(upright(theta)_(1)(t)); '\
+                r'cos(d / (d t) upright(theta)_(1)(t)), '\
+                r'sin(d / (d t) upright(theta)_(1)(t)))')
+
+    assert typst(M) == expected
+
+def test_matAdd():
+    C = MatrixSymbol('C', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+
+    n = symbols("n")
+    h = MatrixSymbol("h", 1, 1)
+
+    assert typst(C - 2*B) in [r'- 2 B + C', r'C -2 B']
+    assert typst(C + 2*B) in [r'2 B + C', r'C + 2 B']
+    assert typst(B - 2*C) in [r'B - 2 C', r'- 2 C + B']
+    assert typst(B + 2*C) in [r'B + 2 C', r'2 C + B']
+
+    assert typst(n * h - (-h + h.T) * (h + h.T)) == r'n h - (- h + h^(T)) (h + h^(T))'
+    assert typst(MatAdd(MatAdd(h, h), MatAdd(h, h))) == r'(h + h) + (h + h)'
+    assert typst(MatMul(MatMul(h, h), MatMul(h, h))) == r'(h h) (h h)'
+
+
+def test_matMul():
+    A = MatrixSymbol('A', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+    x = Symbol('x')
+    assert typst(2*A) == r'2 A'
+    assert typst(2*x*A) == r'2 x A'
+    assert typst(-2*A) == r'- 2 A'
+    assert typst(1.5*A) == r'1.5 A'
+    assert typst(sqrt(2)*A) == r'sqrt(2) A'
+    assert typst(-sqrt(2)*A) == r'- sqrt(2) A'
+    assert typst(2*sqrt(2)*x*A) == r'2 sqrt(2) x A'
+    assert typst(-2*A*(A + 2*B)) in [r'- 2 A (A + 2 B)',
+                                        r'- 2 A (2 B + A)']
+
+
+def test_typst_MatrixSlice():
+    n = Symbol('n', integer=True)
+    x, y, z, w, t, = symbols('x y z w t')
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    assert typst(MatrixSlice(X, (None, None, None), (None, None, None))) == r'X[:, :]'
+    assert typst(X[x:x + 1, y:y + 1]) == r'X[x:x + 1, y:y + 1]'
+    assert typst(X[x:x + 1:2, y:y + 1:2]) == r'X[x:x + 1:2, y:y + 1:2]'
+    assert typst(X[:x, y:]) == r'X[:x, y:]'
+    assert typst(X[:x, y:]) == r'X[:x, y:]'
+    assert typst(X[x:, :y]) == r'X[x:, :y]'
+    assert typst(X[x:y, z:w]) == r'X[x:y, z:w]'
+    assert typst(X[x:y:t, w:t:x]) == r'X[x:y:t, w:t:x]'
+    assert typst(X[x::y, t::w]) == r'X[x::y, t::w]'
+    assert typst(X[:x:y, :t:w]) == r'X[:x:y, :t:w]'
+    assert typst(X[::x, ::y]) == r'X[::x, ::y]'
+    assert typst(MatrixSlice(X, (0, None, None), (0, None, None))) == r'X[:, :]'
+    assert typst(MatrixSlice(X, (None, n, None), (None, n, None))) == r'X[:, :]'
+    assert typst(MatrixSlice(X, (0, n, None), (0, n, None))) == r'X[:, :]'
+    assert typst(MatrixSlice(X, (0, n, 2), (0, n, 2))) == r'X[::2, ::2]'
+    assert typst(X[1:2:3, 4:5:6]) == r'X[1:2:3, 4:5:6]'
+    assert typst(X[1:3:5, 4:6:8]) == r'X[1:3:5, 4:6:8]'
+    assert typst(X[1:10:2]) == r'X[1:10:2, :]'
+    assert typst(Y[:5, 1:9:2]) == r'Y[:5, 1:9:2]'
+    assert typst(Y[:5, 1:10:2]) == r'Y[:5, 1::2]'
+    assert typst(Y[5, :5:2]) == r'Y[5:6, :5:2]'
+    assert typst(X[0:1, 0:1]) == r'X[:1, :1]'
+    assert typst(X[0:1:2, 0:1:2]) == r'X[:1:2, :1:2]'
+    assert typst((Y + Z)[2:, 2:]) == r'(Y + Z)[2:, 2:]'
+
+def test_trace():
+    # Issue 15303
+    from sympy.matrices.expressions.trace import trace
+    A = MatrixSymbol("A", 2, 2)
+    assert typst(trace(A)) == r'upright("tr")(A )'
+    assert typst(trace(A**2)) == r'upright("tr")(A^(2) )'

@@ -10,7 +10,7 @@ from sympy.core.function import Function, AppliedUndef
 from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
-from sympy.logic.boolalg import BooleanTrue, BooleanFalse
+from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
 
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
@@ -173,6 +173,8 @@ class TypstPrinter(Printer):
             else:
                 self._settings['mul_symbol_typst_numbers'] = \
                     self._settings['mul_symbol']
+
+        self._delim_dict = {'(': ')', '[': ']', '{': '}'}
 
         # TODO need to be checked when implementing settings
         imaginary_unit_table = {
@@ -631,7 +633,7 @@ class TypstPrinter(Printer):
         # elif (isinstance(expr.base, Derivative)
         #     and base.startswith(r'(')
         #     and re.match(r'(\d?d?dot', base)
-        #     and base.endswith(r'\right)')):
+        #     and base.endswith(r')')):
         #     # don't use parentheses around dotted derivative
         #     base = base[6: -7]  # remove outermost added parens
         return template % (base, exp)
@@ -1052,6 +1054,19 @@ class TypstPrinter(Printer):
         else:
             return self._print(expr.p)
 
+    def _print_Piecewise(self, expr):
+        ecpairs = [r'%s & upright("for") %s' % (self._print(e), self._print(c))
+                   for e, c in expr.args[:-1]]
+        if expr.args[-1].cond == true:
+            ecpairs.append(r'%s & upright("otherwise")' %
+                           self._print(expr.args[-1].expr))
+        else:
+            ecpairs.append(r'%s & upright("for") %s' %
+                           (self._print(expr.args[-1].expr),
+                            self._print(expr.args[-1].cond)))
+        typ = r'cases( %s )'
+        return typ % r', '.join(ecpairs)
+
     def _print_Symbol(self, expr: Symbol, style='plain'):
         name: str = self._settings['symbol_names'].get(expr)
         if name is not None:
@@ -1082,6 +1097,155 @@ class TypstPrinter(Printer):
             name += "_(%s)" % " ".join(subs)
 
         return name
+
+    def _print_Relational(self, expr):
+        charmap = {
+            "==": "=",
+            ">": ">",
+            "<": "<",
+            ">=": ">=",
+            "<=": "<=",
+            "!=": "!=",
+        }
+
+        return "%s %s %s" % (self._print(expr.lhs),
+                             charmap[expr.rel_op], self._print(expr.rhs))
+
+    def _print_matrix_contents(self, expr):
+        lines = []
+
+        for line in range(expr.rows):  # horrible, should be 'rows'
+            lines.append(", ".join([self._print(i) for i in expr[line, :]]))
+
+        out_str = r'%s'
+        return out_str % r"; ".join(lines)
+
+    def _print_MatrixBase(self, expr):
+        out_str = self._print_matrix_contents(expr)
+        if self._settings['mat_delim']:
+            left_delim = self._settings['mat_delim']
+            out_str = r'mat(delim: "' + left_delim + '", ' + \
+                        out_str + ")"
+        else:
+            out_str = r'mat(delim: #none, ' + out_str + ')'
+        return out_str
+
+    def _print_MatrixElement(self, expr):
+        matrix_part = self.parenthesize(expr.parent, PRECEDENCE['Atom'], strict=True)
+        index_part = f"{self._print(expr.i)},{self._print(expr.j)}"
+        return f"{{{matrix_part}}}_{{{index_part}}}"
+
+    def _print_MatrixSlice(self, expr):
+        def latexslice(x, dim):
+            x = list(x)
+            if x[2] == 1:
+                del x[2]
+            if x[0] == 0:
+                x[0] = None
+            if x[1] == dim:
+                x[1] = None
+            return ':'.join(self._print(xi) if xi is not None else '' for xi in x)
+        return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + r'[' +
+                latexslice(expr.rowslice, expr.parent.rows) + ', ' +
+                latexslice(expr.colslice, expr.parent.cols) + r']')
+
+    def _print_BlockMatrix(self, expr):
+        return self._print(expr.blocks)
+
+    def _print_Transpose(self, expr):
+        mat = expr.arg
+        from sympy.matrices import MatrixSymbol, BlockMatrix
+        if (not isinstance(mat, MatrixSymbol) and
+            not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
+            return r"(%s)^(T)" % self._print(mat)
+        else:
+            s = self.parenthesize(mat, precedence_traditional(expr), True)
+            if '^' in s:
+                return r"(%s)^(T)" % s
+            else:
+                return "%s^(T)" % s
+
+    def _print_Trace(self, expr):
+        mat = expr.arg
+        return r'upright("tr")(%s )' % self._print(mat)
+
+    def _print_Adjoint(self, expr):
+        style_to_latex = {
+            "dagger"   : r"dagger",
+            "star"     : r"ast",
+            "hermitian": r"sans(upright(H))"
+        }
+        adjoint_style = style_to_latex.get(self._settings["adjoint_style"], r"dagger")
+        mat = expr.arg
+        from sympy.matrices import MatrixSymbol, BlockMatrix
+        if (not isinstance(mat, MatrixSymbol) and
+            not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
+            return r"(%s)^(%s)" % (self._print(mat), adjoint_style)
+        else:
+            s = self.parenthesize(mat, precedence_traditional(expr), True)
+            if '^' in s:
+                return r"(%s)^(%s)" % (s, adjoint_style)
+            else:
+                return r"%s^(%s)" % (s, adjoint_style)
+
+    def _print_MatMul(self, expr):
+        from sympy import MatMul
+
+        # Parenthesize nested MatMul but not other types of Mul objects:
+        parens = lambda x: self._print(x) if isinstance(x, Mul) and not isinstance(x, MatMul) else \
+            self.parenthesize(x, precedence_traditional(expr), False)
+
+        args = list(expr.args)
+        if expr.could_extract_minus_sign():
+            if args[0] == -1:
+                args = args[1:]
+            else:
+                args[0] = -args[0]
+            return '- ' + ' '.join(map(parens, args))
+        else:
+            return ' '.join(map(parens, args))
+
+    def _print_Determinant(self, expr):
+        mat = expr.arg
+        if mat.is_MatrixExpr:
+            from sympy.matrices.expressions.blockmatrix import BlockMatrix
+            if isinstance(mat, BlockMatrix):
+                return r"|(%s)|" % self._print_matrix_contents(mat.blocks)
+            return r"|(%s)|" % self._print(mat)
+        return r"|(%s)|" % self._print_matrix_contents(mat)
+
+    def _print_MatPow(self, expr):
+        base, exp = expr.base, expr.exp
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(base, MatrixSymbol) and base.is_MatrixExpr:
+            return "(%s)^(%s)" % (self._print(base),
+                                              self._print(exp))
+        else:
+            base_str = self._print(base)
+            if '^' in base_str:
+                return r"(%s)^(%s)" % (base_str, self._print(exp))
+            else:
+                return "%s^(%s)" % (base_str, self._print(exp))
+
+    def _print_MatrixSymbol(self, expr):
+        return self._print_Symbol(expr, style=self._settings[
+            'mat_symbol_style'])
+
+    def _print_ZeroMatrix(self, Z):
+        return "0" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"bold(0)"
+
+    def _print_OneMatrix(self, O):
+        return "1" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"bold(1)"
+
+    def _print_Identity(self, I):
+        return r"II" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"bold(I)"
+
+    def _print_PermutationMatrix(self, P):
+        perm_str = self._print(P.args[0])
+        return "P_(%s)" % perm_str
 
 
 def translate(s: str) -> str:
