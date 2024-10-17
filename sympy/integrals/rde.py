@@ -249,9 +249,9 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
                 if recognize_log_derivative(Poly(2, DE.t)*betaa, betad, DE):
                     A = parametric_log_deriv(alphaa*Poly(sqrt(-1), DE.t)*betad+alphad*betaa, alphad*betad, etaa, etad, DE)
                     if A is not None:
-                       Q, m, z = A
-                       if Q == 1:
-                           n = min(n, m)
+                        Q, m, z = A
+                        if Q == 1:
+                            n = min(n, m)
     N = max(0, -nb, n - nc)
     pN = p**N
     pn = p**-n

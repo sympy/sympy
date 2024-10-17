@@ -705,7 +705,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
 
     if not d:
          # To deal with cases like b*ux = e or c*uy = e
-         if not (b and c):
+        if not (b and c):
             if c:
                 try:
                     tsol = integrate(e/c, y)

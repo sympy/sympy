@@ -257,7 +257,7 @@ class floor(RoundFunction):
 
 @dispatch(floor, Expr)
 def _eval_is_eq(lhs, rhs): # noqa:F811
-   return is_eq(lhs.rewrite(ceiling), rhs) or \
+    return is_eq(lhs.rewrite(ceiling), rhs) or \
         is_eq(lhs.rewrite(frac),rhs)
 
 

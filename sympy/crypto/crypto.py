@@ -1010,7 +1010,7 @@ def encipher_bifid(msg, key, symbols=None):
             'Length of alphabet (%s) is not a square number.' % len(A))
     N = int(n)
     if len(long_key) < N**2:
-      long_key = list(long_key) + [x for x in A if x not in long_key]
+        long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the fractionalization
     row_col = {ch: divmod(i, N) for i, ch in enumerate(long_key)}

@@ -3735,45 +3735,45 @@ class MatrixBase(Printable):
 
     @classmethod
     def irregular(cls, ntop, *matrices, **kwargs):
-      """Return a matrix filled by the given matrices which
-      are listed in order of appearance from left to right, top to
-      bottom as they first appear in the matrix. They must fill the
-      matrix completely.
+        """Return a matrix filled by the given matrices which
+        are listed in order of appearance from left to right, top to
+        bottom as they first appear in the matrix. They must fill the
+        matrix completely.
 
-      Examples
-      ========
+        Examples
+        ========
 
-      >>> from sympy import ones, Matrix
-      >>> Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
-      ...   ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7)
-      Matrix([
-        [1, 2, 2, 2, 3, 3],
-        [1, 2, 2, 2, 3, 3],
-        [4, 2, 2, 2, 5, 5],
-        [6, 6, 7, 7, 5, 5]])
-      """
-      ntop = as_int(ntop)
-      # make sure we are working with explicit matrices
-      b = [i.as_explicit() if hasattr(i, 'as_explicit') else i
-          for i in matrices]
-      q = list(range(len(b)))
-      dat = [i.rows for i in b]
-      active = [q.pop(0) for _ in range(ntop)]
-      cols = sum(b[i].cols for i in active)
-      rows = []
-      while any(dat):
-          r = []
-          for a, j in enumerate(active):
-              r.extend(b[j][-dat[j], :])
-              dat[j] -= 1
-              if dat[j] == 0 and q:
-                  active[a] = q.pop(0)
-          if len(r) != cols:
-            raise ValueError(filldedent('''
-                Matrices provided do not appear to fill
-                the space completely.'''))
-          rows.append(r)
-      return cls._new(rows)
+        >>> from sympy import ones, Matrix
+        >>> Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
+        ...   ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7)
+        Matrix([
+            [1, 2, 2, 2, 3, 3],
+            [1, 2, 2, 2, 3, 3],
+            [4, 2, 2, 2, 5, 5],
+            [6, 6, 7, 7, 5, 5]])
+        """
+        ntop = as_int(ntop)
+        # make sure we are working with explicit matrices
+        b = [i.as_explicit() if hasattr(i, 'as_explicit') else i
+            for i in matrices]
+        q = list(range(len(b)))
+        dat = [i.rows for i in b]
+        active = [q.pop(0) for _ in range(ntop)]
+        cols = sum(b[i].cols for i in active)
+        rows = []
+        while any(dat):
+            r = []
+            for a, j in enumerate(active):
+                r.extend(b[j][-dat[j], :])
+                dat[j] -= 1
+                if dat[j] == 0 and q:
+                    active[a] = q.pop(0)
+            if len(r) != cols:
+                raise ValueError(filldedent('''
+                    Matrices provided do not appear to fill
+                    the space completely.'''))
+            rows.append(r)
+        return cls._new(rows)
 
     @classmethod
     def _handle_ndarray(cls, arg):

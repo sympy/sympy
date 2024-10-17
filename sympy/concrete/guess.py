@@ -462,7 +462,7 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
             if ((denom(ri).subs({s:n}) != 0)
                     and (ri.subs({s:n}) - g[k][-1] == 0)
                     and ri not in r):
-              r.append(ri)
+                r.append(ri)
         if r:
             for i in range(k-1, -1, -1):
                 r = [g[i][0]

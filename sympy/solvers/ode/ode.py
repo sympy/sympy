@@ -2520,7 +2520,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
             # Only one series solution exists in this case.
             m1 = m2 = sollist.pop()
             if terms-m1-1 <= 0:
-              return Eq(f(x), Order(terms))
+                return Eq(f(x), Order(terms))
             serdict1 = _frobenius(terms-m1-1, m1, p0, q0, p, q, x0, x, C0)
 
         else:

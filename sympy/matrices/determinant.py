@@ -555,7 +555,7 @@ def _per(M):
         prod = 1
         sub_len = len(subset)
         for i in range(m):
-             prod *= sum(M[i, j] for j in subset)
+            prod *= sum(M[i, j] for j in subset)
         perm += prod * S.NegativeOne**sub_len * nC(n - sub_len, m - sub_len)
     perm *= S.NegativeOne**m
     return perm.simplify()

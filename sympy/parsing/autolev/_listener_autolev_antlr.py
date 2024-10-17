@@ -567,7 +567,7 @@ if AutolevListener:
                         for j in range(num3, num4):
                             declare_phy_entities(self, ctx, self.getValue(ctx.parentCtx.varType()), i, j)
                     except Exception:
-                       declare_phy_entities(self, ctx, self.getValue(ctx.parentCtx.varType()), i)
+                        declare_phy_entities(self, ctx, self.getValue(ctx.parentCtx.varType()), i)
         # ================== Subrules of parser rule expr (Start) ====================== #
 
         def exitId(self, ctx):

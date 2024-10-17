@@ -415,8 +415,8 @@ def split_symbols_custom(predicate: Callable[[str], bool]):
                             chars = [char]
                             for i in range(i + 1, len(symbol)):
                                 if not symbol[i].isdigit():
-                                  i -= 1
-                                  break
+                                    i -= 1
+                                    break
                                 chars.append(symbol[i])
                             char = ''.join(chars)
                             result.extend([(NAME, 'Number'), (OP, '('),
