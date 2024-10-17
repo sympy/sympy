@@ -239,9 +239,12 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         return "%s(%s)" % (self._module_format(self._module + '.sinc'), self._print(expr.args[0]/S.Pi))
 
     def _print_MatrixBase(self, expr):
+        if 0 in expr.shape:
+            func = self._module_format(f'{self._module}.{self._zeros}')
+            return f"{func}({self._print(expr.shape)})"
         func = self.known_functions.get(expr.__class__.__name__, None)
         if func is None:
-            func = self._module_format(self._module + '.array')
+            func = self._module_format(f'{self._module}.array')
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
     def _print_Identity(self, expr):
@@ -256,12 +259,14 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
                                  self._print(expr.args[0].tolist()))
 
     def _print_NDimArray(self, expr):
-        if len(expr.shape) == 1:
-            return self._module + '.array(' + self._print(expr.args[0]) + ')'
-        if len(expr.shape) == 2:
-            return self._print(expr.tomatrix())
-        # Should be possible to extend to more dimensions
-        return super()._print_not_supported(self, expr)
+        if expr.rank() == 0:
+            func = self._module_format(f'{self._module}.array')
+            return f"{func}({self._print(expr[()])})"
+        if 0 in expr.shape:
+            func = self._module_format(f'{self._module}.{self._zeros}')
+            return f"{func}({self._print(expr.shape)})"
+        func = self._module_format(f'{self._module}.array')
+        return f"{func}({self._print(expr.tolist())})"
 
     _add = "add"
     _einsum = "einsum"
