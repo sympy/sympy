@@ -1,0 +1,51 @@
+# ---- Check for Broken/Redirected URL Links and provide a list of them in the Summary Tab ---- #
+name: "Check for Broken/Redirected Links"
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  check-broken-urls:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Upgrade Pip
+        run: python -m pip install --upgrade pip
+      - name: Install python packages
+        run: python -m pip install -r doc/requirements.txt
+      - name: Scanning for Broken and Redirected Links
+        run: cd doc/ && make linkcheck
+      - name: Saving summary of build results
+        if: always()
+        run: |
+          brokenNum=$(grep broken doc/_build/linkcheck/output.txt -c)
+          redirectPermaNum=$(grep 'redirected permanently' doc/_build/linkcheck/output.txt -c)
+          redirectFoundNum=$(grep 'redirected with Found' doc/_build/linkcheck/output.txt -c)
+          totalWarnings=$(wc doc/_build/linkcheck/output.txt -l | cut -d ' ' -f 1)
+          echo "
+            # Summary
+            | Links Error Type | Number of Links |
+            | :-- | :--: |
+            | Broken Links | $brokenNum |
+            | Redirected Permanently | $redirectPermaNum |
+            | Redirected With Found | $redirectFoundNum |
+            | Total Errors/Warnings | $totalWarnings |
+
+            ## List of Broken and Redirected Links ($totalWarnings)
+            Displaying output of 'make linkcheck'
+            ### Broken Links ($brokenNum)
+            $(grep broken doc/_build/linkcheck/output.txt -n)
+
+            ### Links that were 'redirected permanently' ($redirectPermaNum)
+            $(grep 'redirected permanently' doc/_build/linkcheck/output.txt -n)
+
+            ### Links that were 'redirected with Found' ($redirectFoundNum)
+            $(grep 'redirected with Found' doc/_build/linkcheck/output.txt -n)
+          " >> $GITHUB_STEP_SUMMARY
+      - name: Print Summary URL
+        if: always()
+        run: |
+          GITHUB_WORKFLOW_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          echo "Check log summary here:- $GITHUB_WORKFLOW_URL"
