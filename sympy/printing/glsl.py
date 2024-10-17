@@ -112,7 +112,7 @@ class GLSLPrinter(CodePrinter):
         array_constructor = "{}[{}]".format(array_type, array_size)
 
         if A.cols == 1:
-            return self._print(A[0]);
+            return self._print(A[0])
         if A.rows <= 4 and A.cols <= 4 and glsl_types:
             if A.rows == 1:
                 return "vec{}{}".format(
@@ -160,9 +160,9 @@ class GLSLPrinter(CodePrinter):
 
     def _print_MatrixElement(self, expr):
         # print('begin _print_MatrixElement')
-        nest = self._settings['mat_nested'];
-        glsl_types = self._settings['glsl_types'];
-        mat_transpose = self._settings['mat_transpose'];
+        nest = self._settings['mat_nested']
+        glsl_types = self._settings['glsl_types']
+        mat_transpose = self._settings['mat_transpose']
         if mat_transpose:
             cols,rows = expr.parent.shape
             i,j = expr.j,expr.i
