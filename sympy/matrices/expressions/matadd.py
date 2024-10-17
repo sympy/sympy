@@ -10,7 +10,7 @@ from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr
-from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
+from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.matrices.expressions._shape import validate_matadd_integer as validate
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -32,8 +32,6 @@ class MatAdd(MatrixExpr, Add):
     A + B + C
     """
     is_MatAdd = True
-
-    identity = GenericZeroMatrix()
 
     def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
         if not args:
