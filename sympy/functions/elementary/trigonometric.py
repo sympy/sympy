@@ -2905,7 +2905,7 @@ class acot(InverseTrigonometricFunction):
             if ang.is_comparable:
                 ang %= pi # restrict to [0,pi)
                 if ang > pi/2: # restrict to (-pi/2,pi/2]
-                    ang -= pi;
+                    ang -= pi
                 return ang
 
         if isinstance(arg, tan): # atan(x) + acot(x) = pi/2

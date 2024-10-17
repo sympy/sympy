@@ -441,7 +441,8 @@ def test_classify_sysode():
     P1, P2, P3, Q1, Q2, R1, R2 = symbols('P1, P2, P3, Q1, Q2, R1, R2', cls=Function)
     x, y, z = symbols('x, y, z', cls=Function)
     t = symbols('t')
-    x1 = diff(x(t),t) ; y1 = diff(y(t),t) ;
+    x1 = diff(x(t),t)
+    y1 = diff(y(t),t)
 
     eq6 = (Eq(x1, exp(k*x(t))*P(x(t),y(t))), Eq(y1,r(y(t))*P(x(t),y(t))))
     sol6 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): 0, (1, x(t), 1): 0, (0, x(t), 1): 1, (1, y(t), 0): 0, \
