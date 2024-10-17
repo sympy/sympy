@@ -833,7 +833,7 @@ def test_coset_transvesal():
 
 def test_coset_table():
     G = PermutationGroup(Permutation(0,1,2,3), Permutation(0,1,2),
-         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7));
+         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7))
     H = PermutationGroup(Permutation(0,1,2,3), Permutation(0,7))
     assert G.coset_table(H) == \
         [[0, 0, 0, 0, 1, 2, 3, 3, 0, 0], [4, 5, 2, 5, 6, 0, 7, 7, 1, 1],
