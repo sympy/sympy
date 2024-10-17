@@ -91,6 +91,14 @@ Systems of Polynomial Equations
 
 .. autofunction:: sympy.solvers.polysys::solve_triangulated
 
+.. autofunction:: sympy.solvers.polysys::factor_system
+
+.. autofunction:: sympy.solvers.polysys::factor_system_bool
+
+.. autofunction:: sympy.solvers.polysys::factor_system_cond
+
+.. autofunction:: sympy.solvers.polysys::factor_system_poly
+
 Diophantine Equations (DEs)
 ---------------------------
 
