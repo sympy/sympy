@@ -1940,7 +1940,7 @@ class RustCodeGen(CodeGen):
                     name = obj
                 declarations.append("// unsupported: %s\n" % (name))
 
-            code_lines.append("let %s\n" % rs_expr);
+            code_lines.append("let %s\n" % rs_expr)
 
         if len(returns) > 1:
             returns = ['(' + ', '.join(returns) + ')']
