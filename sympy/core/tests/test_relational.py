@@ -1172,7 +1172,7 @@ def test_EvalEq():
 
     class PowTest(Expr):
         def __new__(cls, base, exp):
-           return Basic.__new__(PowTest, _sympify(base), _sympify(exp))
+            return Basic.__new__(PowTest, _sympify(base), _sympify(exp))
 
         def _eval_Eq(lhs, rhs):
             if type(lhs) == PowTest and type(rhs) == PowTest:

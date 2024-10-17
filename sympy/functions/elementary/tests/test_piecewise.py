@@ -1277,10 +1277,10 @@ def test_issue_8919():
     ans = I.doit()
     assert ans == Piecewise((0, b > c), (a*Min(y, z) - a*Min(0, z), True))
     for cond in (True, False):
-         for yy in range(1, 3):
-             for zz in range(-yy, 0, yy):
-                 reps = [(b > c, cond), (y, yy), (z, zz)]
-                 assert ans.subs(reps) == I.subs(reps).doit()
+        for yy in range(1, 3):
+            for zz in range(-yy, 0, yy):
+                reps = [(b > c, cond), (y, yy), (z, zz)]
+                assert ans.subs(reps) == I.subs(reps).doit()
 
 
 def test_unevaluated_integrals():
