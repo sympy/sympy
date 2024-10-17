@@ -3933,3 +3933,35 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
+
+
+def test_factor_system():
+    from sympy.polys.polytools import factor_system
+    from sympy import symbols, sqrt
+
+    x, y = symbols('x y')
+
+    def assert_equal_unordered(actual, expected):
+        assert len(actual) == len(expected)
+        actual_set = {frozenset(s) for s in actual}
+        expected_set = {frozenset(s) for s in expected}
+        assert actual_set == expected_set
+
+    assert_equal_unordered(factor_system([x**2 + 2*x + 1]), [{x + 1}])
+    assert_equal_unordered(factor_system([x**2 + 2*x + 1, y**2 + 2*y + 1]), [{x + 1, y + 1}])
+
+    assert_equal_unordered(factor_system([x**2 + 1]), [{x**2 + 1}])
+
+    assert_equal_unordered(factor_system([]), [set()])
+
+    assert_equal_unordered(factor_system([x**2 + 1, y**2 + 1], modulus=2), [{x + 1, y + 1}])
+    assert_equal_unordered(factor_system([x**2 + y**2 + 2*x*y, x**2 - 2], extension=sqrt(2)),
+                           [{x + sqrt(2), x + y}, {x + y, x - sqrt(2)}])
+
+    assert_equal_unordered(factor_system([0]), [])
+
+    assert_equal_unordered(factor_system([x**4 - 1, y**6 - 1]),
+                           [{x**2 + 1, y - 1}, {x**2 + 1, y + 1}, {x**2 + 1, y**2 + y + 1},
+                            {x**2 + 1, y**2 - y + 1}, {x - 1, y - 1}, {y - 1, x + 1},
+                            {x - 1, y**2 + y + 1}, {x + 1, y**2 + y + 1}, {x - 1, y + 1},
+                            {x - 1, y**2 - y + 1}, {x + 1, y + 1}, {x + 1, y**2 - y + 1}])

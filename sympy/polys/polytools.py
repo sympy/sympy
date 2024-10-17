@@ -7938,3 +7938,110 @@ def named_poly(n, f, K, name, x, polys):
     else:
         poly = Poly.new(poly, head)
     return poly if polys else poly.as_expr()
+
+
+def factor_system(eqs, *gens, extension=None, modulus=None, **kwargs):
+    """
+        Factor a system of equations and find all possible combinations of factors.
+
+        This function takes a system of equations, factors each equation, and then
+        determines all possible combinations of factors that could simultaneously
+        be zero to satisfy the system.
+
+        Parameters:
+        ===========
+        eqs : iterable of sympy expressions
+            The system of equations to be factored.
+        *gens : symbols, optional
+            Specifies the generators (variables) to be used in the factorization.
+        extension : algebraic extension, optional
+             Allows factorization over an algebraic extension of the rational numbers.
+        modulus : integer, optional
+            Enables factorization over a finite field of given modulus.
+        domain : Domain instance, optional
+            The domain over which the factorization should be performed.
+        **kwargs :
+            Additional keyword arguments to be passed to the factorization function.
+
+        Returns:
+        ========
+        list of sets
+            Each set in the list represents a combination of factors that, if set to zero,
+            would satisfy the system of equations. The factors are represented as SymPy
+            expressions.
+
+        Notes:
+        ======
+        - This function uses recursive backtracking to explore all possible factor combinations.
+        - The factorization is performed using SymPy's `factor_list` function.
+        - If no valid factor combination is found, an empty list is returned.
+        - If the system is trivially satisfied (e.g., 0 == 0), a list containing an empty set
+          is returned.
+
+        Examples:
+        =========
+        >>> from sympy import symbols, sqrt
+        >>> from sympy.polys.polytools import factor_system
+        >>> x, y = symbols('x y')
+
+        # Basic usage with polynomial equations
+        >>> eqs = [x**2 - y**2, x**2 - 1]
+        >>> result = factor_system(eqs)
+        >>> sorted(sorted(str(elem) for elem in s) for s in result)
+        [['x + 1', 'x + y'], ['x + 1', 'x - y'], ['x + y', 'x - 1'], ['x - 1', 'x - y']]
+
+        # Using algebraic extension
+        >>> result = factor_system([x**2 + y**2 + 2*x*y, x**2 - 2], extension=sqrt(2))
+        >>> sorted(sorted(str(elem) for elem in s) for s in result)
+        [['x + sqrt(2)', 'x + y'], ['x + y', 'x - sqrt(2)']]
+
+        # Factoring over a finite field
+        >>> result = factor_system([x**2 + 1, y**2 + 1], modulus=2)
+        >>> sorted(sorted(str(elem) for elem in s) for s in result)
+        [['x + 1', 'y + 1']]
+
+        NOTE: The order of combinations of factors upon subsequent runs of factor_system with
+        the same system of equations can be different as it uses set functionality of python
+        which is unordered. This is why sorting has been done for results in the examples above.
+
+        See Also:
+        =========
+        sympy.polys.polytools.factor_list : The underlying factorization function used.
+    """
+    def factors_system(factored_eqs):
+        if not factored_eqs:
+            return [set()]
+
+        if any(not eq for _, eq in factored_eqs):
+            return []
+
+        all_factors = set().union(*(eq for _, eq in factored_eqs))
+        if not all_factors:
+            return [set()]
+
+        A = all_factors.pop()
+
+        eqs_without_A = [(const, eq) for const, eq in factored_eqs if A not in eq]
+        sets_with_A = [{A} | s for s in factors_system(eqs_without_A)]
+
+        all_eqs_A_removed = [(const, eq - {A}) for const, eq in factored_eqs]
+        sets_without_A = factors_system(all_eqs_A_removed)
+
+        return sets_with_A + sets_without_A
+
+    factor_args = {
+        'extension': extension,
+        'modulus': modulus,
+        **kwargs
+    }
+
+    if gens:
+        factor_args['gens'] = gens
+
+    factored_eqs = []
+    for eq in eqs:
+        eq = sympify(eq)
+        constant, factors = factor_list(eq, **factor_args)
+        factored_eqs.append((constant, set(dict(factors).keys())))
+
+    return factors_system(factored_eqs)
