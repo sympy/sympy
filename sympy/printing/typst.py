@@ -4,6 +4,8 @@ A Printer which converts an expression into its Typst equivalent.
 from __future__ import annotations
 from typing import Any, Callable, TYPE_CHECKING
 
+import itertools
+
 from sympy.core import Add, Mod, Mul, Number, S, Symbol, Expr
 from sympy.core.alphabets import greeks
 from sympy.core.function import Function, AppliedUndef
@@ -15,7 +17,7 @@ from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.conventions import split_super_sub, requires_partial
-from sympy.printing.precedence import PRECEDENCE
+from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 
@@ -24,6 +26,7 @@ from sympy.utilities.iterables import sift
 import re
 
 if TYPE_CHECKING:
+    from sympy.tensor.array import NDimArray
     from sympy.vector.basisdependent import BasisDependent
 
 # need further check
@@ -569,14 +572,30 @@ class TypstPrinter(Printer):
                 else:
                     typ += r"1/%s %s%s" % (sdenom, separator, snumer)
             else:
-                if numer.is_number or numer.is_symbol:
-                    typ += r"%s/%s" % (snumer, sdenom)
+                if numer.is_number or numer.is_symbol or numer.is_Pow:
+                    if denom.is_number or denom.is_symbol or denom.is_Pow:
+                        typ += r"%s/%s" % (snumer, sdenom)
+                    else:
+                        typ += r"%s/(%s)" % (snumer, sdenom)
                 else:
                     typ += r"(%s)/%s" % (snumer, sdenom)
 
         if include_parens:
             typ += ")"
         return typ
+
+    def _print_AlgebraicNumber(self, expr):
+        if expr.is_aliased:
+            return self._print(expr.as_poly().as_expr())
+        else:
+            return self._print(expr.as_expr())
+
+    def _print_PrimeIdeal(self, expr):
+        p = self._print(expr.p)
+        if expr.is_inert:
+            return rf'({p})'
+        alpha = self._print(expr.alpha.as_expr())
+        return rf'({p}, {alpha})'
 
     def _print_Pow(self, expr: Pow):
         # Treat x**Rational(1,n) as special case
@@ -1246,6 +1265,131 @@ class TypstPrinter(Printer):
     def _print_PermutationMatrix(self, P):
         perm_str = self._print(P.args[0])
         return "P_(%s)" % perm_str
+
+    def _print_NDimArray(self, expr: NDimArray):
+
+        if expr.rank() == 0:
+            return self._print(expr[()])
+
+
+        if self._settings['mat_delim']:
+            left_delim: str = self._settings['mat_delim']
+            block_str = r'mat(delim: "' + left_delim + '", ' + \
+                         "%s )"
+        else:
+            block_str = out_str = r'mat(delim: #none, ' + '%s )'
+
+        if expr.rank() == 0:
+            return block_str % ""
+
+        level_str: list[list[str]] = [[] for i in range(expr.rank() + 1)]
+        shape_ranges = [list(range(i)) for i in expr.shape]
+        for outer_i in itertools.product(*shape_ranges):
+            level_str[-1].append(self._print(expr[outer_i]))
+            even = True
+            for back_outer_i in range(expr.rank()-1, -1, -1):
+                if len(level_str[back_outer_i+1]) < expr.shape[back_outer_i]:
+                    break
+                if even:
+                    level_str[back_outer_i].append(
+                        r", ".join(level_str[back_outer_i+1]))
+                else:
+                    level_str[back_outer_i].append(
+                        block_str % (r"; ".join(level_str[back_outer_i+1])))
+                    if len(level_str[back_outer_i+1]) == 1:
+                        level_str[back_outer_i][-1] = r"[" + \
+                            level_str[back_outer_i][-1] + r"]"
+                even = not even
+                level_str[back_outer_i+1] = []
+
+        out_str = level_str[0][0]
+
+        if expr.rank() % 2 == 1:
+            out_str = block_str % out_str
+
+        return out_str
+
+    def _printer_tensor_indices(self, name, indices, index_map: dict):
+        out_str = self._print(name)
+        last_valence = None
+        prev_map = None
+        for index in indices:
+            new_valence = index.is_up
+            if index.is_up:
+                out_str += ' scripts("")^('
+            else:
+                out_str += ' scripts("")_('
+
+            # add "," if needed
+            if ((index in index_map) or prev_map) and \
+                    last_valence == new_valence:
+                out_str += ","
+
+            out_str += self._print(index.args[0])
+            if index in index_map:
+                out_str += "="
+                out_str += self._print(index_map[index])
+                prev_map = True
+            else:
+                prev_map = False
+            last_valence = new_valence
+            out_str += ')'
+        return out_str
+
+    def _print_Tensor(self, expr):
+        name = expr.args[0].args[0]
+        indices = expr.get_indices()
+        return self._printer_tensor_indices(name, indices, {})
+
+    def _print_TensorElement(self, expr):
+        name = expr.expr.args[0].args[0]
+        indices = expr.expr.get_indices()
+        index_map = expr.index_map
+        return self._printer_tensor_indices(name, indices, index_map)
+
+    def _print_TensMul(self, expr):
+        # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
+        sign, args = expr._get_args_for_traditional_printer()
+        return sign + "".join(
+            [self.parenthesize(arg, precedence(expr)) for arg in args]
+        )
+
+    def _print_TensAdd(self, expr):
+        a = []
+        args = expr.args
+        for x in args:
+            a.append(self.parenthesize(x, precedence(expr)))
+        a.sort()
+        s = ' + '.join(a)
+        s = s.replace('+ -', '- ')
+        return s
+
+    def _print_TensorIndex(self, expr):
+        return 'scripts("")%s(%s)' % (
+            "^" if expr.is_up else "_",
+            self._print(expr.args[0])
+        )
+
+    def _print_PartialDerivative(self, expr):
+        if len(expr.variables) == 1:
+            return r"partial / (partial %s) %s" % (
+                self._print(expr.variables[0]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
+        else:
+            return r"partial^(%s) / (%s) %s" % (
+                len(expr.variables),
+                " ".join([r"partial %s" % self._print(i) for i in expr.variables]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
+
+    def _print_ArraySymbol(self, expr):
+        return self._print(expr.name)
+
+    def _print_ArrayElement(self, expr):
+        return r'%s_(%s)' % (
+            self.parenthesize(expr.name, PRECEDENCE["Func"], True),
+            ", ".join([f"{self._print(i)}" for i in expr.indices]))
 
 
 def translate(s: str) -> str:

@@ -3,7 +3,7 @@ from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutat
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (Float, I, Rational, oo)
+from sympy.core.numbers import (AlgebraicNumber, Float, I, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -18,16 +18,24 @@ from sympy.logic.boolalg import (And, Or, Xor, Equivalent, false, Not, true)
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.slice import MatrixSlice
+from sympy.polys.domains.integerring import ZZ
 from sympy.printing.typst import (typst, translate, greek_letters_set,
                                   typst_greek_dictionary)
 from sympy.series.limits import Limit
+from sympy.tensor.array import (ImmutableDenseNDimArray,
+                                ImmutableSparseNDimArray,
+                                MutableSparseNDimArray,
+                                MutableDenseNDimArray,
+                                tensorproduct)
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
+from sympy.tensor.toperators import PartialDerivative
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
 
 from sympy.testing.pytest import warns_deprecated_sympy
 
 x, y = symbols('x, y')
-n = symbols('n', integer=True)
+k, m, n = symbols('k m n', integer=True)
 
 def test_printmethod():
     class R(Abs):
@@ -64,6 +72,22 @@ def test_typst_basic():
     assert typst(Mul(Pow(x, 3), Rational(2, 3)*x + 1)) == r"x^(3) ((2 x)/3 + 1)"
     assert typst(Mul(Pow(x, 11), 2*x + 1)) == r"x^(11) (2 x + 1)"
 
+    assert typst(AlgebraicNumber(sqrt(2), alias='alpha')) == r"alpha"
+    assert typst(AlgebraicNumber(sqrt(2), [3, -7], alias='alpha')) == \
+        r"3 alpha - 7"
+    assert typst(AlgebraicNumber(2**(S(1)/3), [1, 3, -7], alias='beta')) == \
+        r"beta^(2) + 3 beta - 7"
+
+    k = ZZ.cyclotomic_field(5)
+    assert typst(k.ext.field_element([1, 2, 3, 4])) == \
+        r"zeta^(3) + 2 zeta^(2) + 3 zeta + 4"
+    assert typst(k.ext.field_element([1, 2, 3, 4]), order='old') == \
+        r"4 + 3 zeta + 2 zeta^(2) + zeta^(3)"
+    assert typst(k.primes_above(19)[0]) == \
+        r"(19, zeta^(2) + 5 zeta + 1)"
+    assert typst(k.primes_above(19)[0], order='old') == \
+           r"(19, 1 + 5 zeta + zeta^(2))"
+    assert typst(k.primes_above(7)[0]) == r"(7)"
 
 def test_typst_builtins():
     assert typst(True) == r'upright("True")'
@@ -550,6 +574,47 @@ def test_typst_matrix_with_functions():
 
     assert typst(M) == expected
 
+def test_typst_NDimArray():
+    x, y, z, w = symbols("x y z w")
+
+    for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
+                      MutableDenseNDimArray, MutableSparseNDimArray):
+        # Basic: scalar array
+        M = ArrayType(x)
+
+        assert typst(M) == r"x"
+
+        M = ArrayType([[1 / x, y], [z, w]])
+        M1 = ArrayType([1 / x, y, z])
+
+        M2 = tensorproduct(M1, M)
+        M3 = tensorproduct(M, M)
+
+        assert typst(M) == \
+            r'mat(delim: "[", 1/x, y; z, w )'
+        assert typst(M1) == \
+            r'mat(delim: "[", 1/x, y, z )'
+        assert typst(M2) == \
+            r'mat(delim: "[", mat(delim: "[", 1/x^(2), y/x; z/x, w/x ), '\
+            r'mat(delim: "[", y/x, y^(2); y z, w y ), '\
+            r'mat(delim: "[", z/x, y z; z^(2), w z ) )'
+        assert typst(M3) == \
+            r'mat(delim: "[", mat(delim: "[", 1/x^(2), y/x; z/x, w/x ), '\
+            r'mat(delim: "[", y/x, y^(2); y z, w y ); '\
+            r'mat(delim: "[", z/x, y z; z^(2), w z ), '\
+            r'mat(delim: "[", w/x, w y; w z, w^(2) ) )'
+
+        Mrow = ArrayType([[x, y, 1/z]])
+        Mcolumn = ArrayType([[x], [y], [1/z]])
+        Mcol2 = ArrayType([Mcolumn.tolist()])
+
+        assert typst(Mrow) == \
+            r'[mat(delim: "[", x, y, 1/z )]'
+        assert typst(Mcolumn) == \
+            r'mat(delim: "[", x; y; 1/z )'
+        assert typst(Mcol2) == \
+            r'mat(delim: "[", mat(delim: "[", x; y; 1/z ) )'
+
 def test_matAdd():
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
@@ -614,9 +679,109 @@ def test_typst_MatrixSlice():
     assert typst(X[0:1:2, 0:1:2]) == r'X[:1:2, :1:2]'
     assert typst((Y + Z)[2:, 2:]) == r'(Y + Z)[2:, 2:]'
 
+def test_typst_printer_tensor():
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
+    L = TensorIndexType("L")
+    i, j, k, l = tensor_indices("i j k l", L)
+    i0 = tensor_indices("i_0", L)
+    A, B, C, D = tensor_heads("A B C D", [L])
+    H = TensorHead("H", [L, L])
+    K = TensorHead("K", [L, L, L, L])
+
+    assert typst(i) == r'scripts("")^(i)'
+    assert typst(-i) == r'scripts("")_(i)'
+
+    expr = A(i)
+    assert typst(expr) == r'A scripts("")^(i)'
+
+    expr = A(i0)
+    assert typst(expr) == r'A scripts("")^(i_(0))'
+
+    expr = A(-i)
+    assert typst(expr) == r'A scripts("")_(i)'
+
+    expr = -3*A(i)
+    assert typst(expr) == r'-3A scripts("")^(i)'
+
+    expr = K(i, j, -k, -i0)
+    assert typst(expr) == r'K scripts("")^(i) scripts("")^(j) scripts("")_(k) scripts("")_(i_(0))'
+
+    expr = K(i, -j, -k, i0)
+    assert typst(expr) == r'K scripts("")^(i) scripts("")_(j) scripts("")_(k) scripts("")^(i_(0))'
+
+    expr = K(i, -j, k, -i0)
+    assert typst(expr) == r'K scripts("")^(i) scripts("")_(j) scripts("")^(k) scripts("")_(i_(0))'
+
+    expr = H(i, -j)
+    assert typst(expr) == r'H scripts("")^(i) scripts("")_(j)'
+
+    expr = H(i, j)
+    assert typst(expr) == r'H scripts("")^(i) scripts("")^(j)'
+
+    expr = H(-i, -j)
+    assert typst(expr) == r'H scripts("")_(i) scripts("")_(j)'
+
+    expr = (1+x)*A(i)
+    assert typst(expr) == r'(x + 1)A scripts("")^(i)'
+
+    expr = H(i, -i)
+    assert typst(expr) == r'H scripts("")^(L_(0)) scripts("")_(L_(0))'
+
+    expr = H(i, -j)*A(j)*B(k)
+    assert typst(expr) == r'H scripts("")^(i) scripts("")_(L_(0))A scripts("")^(L_(0))B scripts("")^(k)'
+
+    expr = A(i) + 3*B(i)
+    assert typst(expr) == r'3B scripts("")^(i) + A scripts("")^(i)'
+
+    # Test ``TensorElement``:
+    from sympy.tensor.tensor import TensorElement
+
+    expr = TensorElement(K(i, j, k, l), {i: 3, k: 2})
+    assert typst(expr) == r'K scripts("")^(i=3) scripts("")^(,j) scripts("")^(,k=2) scripts("")^(,l)'
+
+    expr = TensorElement(K(i, j, k, l), {i: 3})
+    assert typst(expr) == r'K scripts("")^(i=3) scripts("")^(,j) scripts("")^(k) scripts("")^(l)'
+
+    expr = TensorElement(K(i, -j, k, l), {i: 3, k: 2})
+    assert typst(expr) == r'K scripts("")^(i=3) scripts("")_(j) scripts("")^(k=2) scripts("")^(,l)'
+
+    expr = TensorElement(K(i, -j, k, -l), {i: 3, k: 2})
+    assert typst(expr) == r'K scripts("")^(i=3) scripts("")_(j) scripts("")^(k=2) scripts("")_(l)'
+
+    expr = TensorElement(K(i, j, -k, -l), {i: 3, -k: 2})
+    assert typst(expr) == r'K scripts("")^(i=3) scripts("")^(,j) scripts("")_(k=2) scripts("")_(,l)'
+
+    expr = TensorElement(K(i, j, -k, -l), {i: 3})
+    assert typst(expr) == r'K scripts("")^(i=3) scripts("")^(,j) scripts("")_(k) scripts("")_(l)'
+
+    expr = PartialDerivative(A(i), A(i))
+    assert typst(expr) == r'partial / (partial A scripts("")^(L_(0))) A scripts("")^(L_(0))'
+
+    expr = PartialDerivative(A(-i), A(-j))
+    assert typst(expr) == r'partial / (partial A scripts("")_(j)) A scripts("")_(i)'
+
+    expr = PartialDerivative(K(i, j, -k, -l), A(m), A(-n))
+    assert typst(expr) == r'partial^(2) / (partial A scripts("")^(m) partial A scripts("")_(n)) '\
+                          r'K scripts("")^(i) scripts("")^(j) scripts("")_(k) scripts("")_(l)'
+
+    expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
+    assert typst(expr) == r'partial^(2) / (partial A scripts("")_(j) partial A scripts("")_(n)) '\
+                          r'(A scripts("")_(i) + B scripts("")_(i))'
+
+    expr = PartialDerivative(3*A(-i), A(-j), A(-n))
+    assert typst(expr) == r'partial^(2) / (partial A scripts("")_(j) partial A scripts("")_(n)) '\
+                          r'(3A scripts("")_(i))'
+
 def test_trace():
     # Issue 15303
     from sympy.matrices.expressions.trace import trace
     A = MatrixSymbol("A", 2, 2)
     assert typst(trace(A)) == r'upright("tr")(A )'
     assert typst(trace(A**2)) == r'upright("tr")(A^(2) )'
+
+def test_printing_typst_array_expressions():
+    assert typst(ArraySymbol("A", (2, 3, 4))) == "A"
+    assert typst(ArrayElement("A", (2, 1/(1-x), 0))) == r"A_(2, 1/(1 - x), 0)"
+    M = MatrixSymbol("M", 3, 3)
+    N = MatrixSymbol("N", 3, 3)
+    assert typst(ArrayElement(M*N, [x, 0])) == r"(M N)_(x, 0)"
