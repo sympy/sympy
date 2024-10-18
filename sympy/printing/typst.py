@@ -279,6 +279,15 @@ class TypstPrinter(Printer):
             return True
         return False
 
+    def _mul_is_clean(self, expr) -> bool:
+        for arg in expr.args:
+            if arg.is_Function:
+                return False
+        return True
+
+    def _pow_is_clean(self, expr) -> bool:
+        return not self._needs_brackets(expr.base)
+
     def _needs_mul_brackets(self, expr, first=False, last=False) -> bool:
         """
         Returns True if the expression needs to be wrapped in brackets when
