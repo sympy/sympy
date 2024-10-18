@@ -886,7 +886,7 @@ class Ellipse(GeometrySet):
 
         >>> e.normal_lines((3, 3), prec=2)
         [Line2D(Point2D(-0.81, -2.7), Point2D(0.19, -1.2)),
-        Line2D(Point2D(1.5, -2.0), Point2D(2.5, -2.7))]
+        Line2D(Point2D(1.5, 2.0), Point2D(2.5, 2.7))]
 
         Whereas the above solution has an operation count of 12, the exact
         solution has an operation count of 2020.
