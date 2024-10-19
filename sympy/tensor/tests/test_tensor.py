@@ -4,10 +4,11 @@ from sympy.core.numbers import Integer
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic, Add, Wild
+from sympy.core import S, Rational, Symbol, Basic, Add, Wild, Function
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.integrals import integrate
 from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
@@ -430,6 +431,16 @@ def test_canonicalize4():
     K = TensorHead("K", [Cartesian])
     expr = TensAdd( K(p) , - 2*K(p) )
     assert expr.canon_bp() == -K(p)
+
+def test_canonicalize5():
+    R3 = TensorIndexType('R3', dim=3)
+    p = tensor_indices("p", R3)
+    K = TensorHead("K", [R3])
+    f = symbols("f", cls=Function)
+    x = symbols("x")
+
+    expr = integrate(f(x), (x,0,1)) * K(p)
+    assert expr.as_dummy().canon_bp() == integrate(f(x), (x,0,1)).as_dummy() * K(p)
 
 def test_TensorIndexType():
     D = Symbol('D')
@@ -1012,6 +1023,20 @@ def test_contract_metric4():
     #Check whether contract_metric chokes on an expandable expression which becomes zero on canonicalization (issue #24354)
     expr = eps(p,q,r)*( K(-p)*K(-q) + delta(-p,-q) )
     assert expr.contract_metric(delta) == 0
+
+
+def test_contract_metric5():
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r = tensor_indices("p q r", R3)
+    delta = R3.delta
+    K = TensorHead("K", [R3])
+
+    F = Function("F")
+    x = Symbol("x")
+
+    #Check if contract_metric gets into an infinite loop when given a TensMul whose coeff is an Add
+    expr = (2+F(x))*K(-p)*K(-q)
+    assert expr.contract_metric(delta) == expr
 
 
 def test_epsilon():
@@ -1787,6 +1812,9 @@ def test_tensor_expand():
 
     A, B, C, D = tensor_heads("A B C D", [L])
 
+    F = Function("F")
+    x = Symbol("x")
+
     assert isinstance(Add(A(i), B(i)), TensAdd)
     assert isinstance(expand(A(i)+B(i)), TensAdd)
 
@@ -1830,6 +1858,21 @@ def test_tensor_expand():
 
     expr = C(-i)*(B(j)*B(-j) + B(j)*C(-j))
     assert expr.expand() == C(-i)*B(j)*B(-j) + C(-i)*B(j)*C(-j)
+
+    """
+    Test whether expand correctly handles the case where the coeff of a TensMul
+    is an add. We do not directly check expr_expand == 2*A(i) + F(x)*A(i) since
+    __add__ currently consolidates the coefficients automatically
+    """
+    expr = (2 + F(x))*A(i)
+    expr_expand = expr.expand()
+    assert isinstance(expr_expand, TensAdd)
+    assert expr_expand.args == (2*A(i), F(x)*A(i))
+
+    expr = (2 + F(x))*A(i) + B(i)
+    expr_expand = expr.expand()
+    assert isinstance(expr_expand, TensAdd)
+    assert expr_expand.args == (2*A(i), F(x)*A(i), B(i))
 
 
 def test_tensor_alternative_construction():
