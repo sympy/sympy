@@ -1651,8 +1651,8 @@ def discrete_log(n, a, b, order=None, prime_order=None):
             i = 0
             for _ in range(e):
                 if pow(b, order // p, n) == 1:
-                   order //= p
-                   i += 1
+                    order //= p
+                    i += 1
                 else:
                     break
             if i < e:

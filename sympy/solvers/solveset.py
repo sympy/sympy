@@ -321,7 +321,7 @@ def _invert_real(f, g_ys, symbol):
                     return (expo, S.EmptySet)
 
     if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
-         return _invert_trig_hyp_real(f, g_ys, symbol)
+        return _invert_trig_hyp_real(f, g_ys, symbol)
 
     return (f, g_ys)
 
@@ -575,7 +575,7 @@ def _invert_complex(f, g_ys, symbol):
             return _invert_complex(f.exp, exp_invs, symbol)
 
     if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
-         return _invert_trig_hyp_complex(f, g_ys, symbol)
+        return _invert_trig_hyp_complex(f, g_ys, symbol)
 
     return (f, g_ys)
 

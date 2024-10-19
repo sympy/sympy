@@ -314,8 +314,8 @@ class lucas(Function):
             return fibonacci(n + 1) + fibonacci(n - 1)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
-       from sympy.functions.elementary.miscellaneous import sqrt
-       return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
+        from sympy.functions.elementary.miscellaneous import sqrt
+        return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 
 #----------------------------------------------------------------------------#
@@ -2969,22 +2969,22 @@ class motzkin(Function):
         except ValueError:
             return False
         if n > 0:
-             if n in (1, 2):
+            if n in (1, 2):
                 return True
 
-             tn1 = 1
-             tn = 2
-             i = 3
-             while tn < n:
-                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
-                 i += 1
-                 tn1 = tn
-                 tn = a
+            tn1 = 1
+            tn = 2
+            i = 3
+            while tn < n:
+                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                i += 1
+                tn1 = tn
+                tn = a
 
-             if tn == n:
-                 return True
-             else:
-                 return False
+            if tn == n:
+                return True
+            else:
+                return False
 
         else:
             return False
