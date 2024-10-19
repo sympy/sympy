@@ -148,7 +148,7 @@ class Structure2d:
 
         Limitations:
             - Only bending moments and shear forces are considered in the analysis.
-            - Only non-branching or non-intersecting structures are supported. (All members must either connected ONE other member at each end or to nothing)
+            - Only non-branching or non-intersecting structures are supported. (All members must either be connected to ONE other member at each end or to nothing)
             - All E, A, I values must be the same for all members.
             - Supports can only have ONE unknown reaction force in the horizontal direction.
             - Members must be added in order of the unwrapping of the structure, from left to right or right to left.
@@ -198,7 +198,7 @@ class Structure2d:
         {R_h__0,__0: 3.75, R_v__0,__0: -45.6696428571429, R_v__7,__-1: -29.3303571428571}
         >>> s.draw(show_load_values=True) #doctest: +SKIP
 
-        There is a structure containing 3 members. A point load is applied at 1/4 L of the first member.
+    There is a structure containing 3 members. A point load is applied at 1/4 L of the first member.
     A constant distributed load is applied over the second half of the first member and a second distributed load is applied over first hald of the third member.
     The structure is supported by a pin support at one end and a roller support at the other end.
 
