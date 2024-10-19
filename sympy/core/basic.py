@@ -1869,35 +1869,7 @@ class Basic(Printable):
 
         """
         pattern = sympify(pattern)
-        # match non-bound symbols
-        canonical = lambda x: x if x.is_Symbol else x.as_dummy()
-        m = canonical(pattern).matches(canonical(self), old=old)
-        if m is None:
-            return m
-        from .symbol import Wild
-        from .function import WildFunction
-        from ..tensor.tensor import WildTensor, WildTensorIndex, WildTensorHead
-        wild = pattern.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead)
-        # sanity check
-        if set(m) - wild:
-            raise ValueError(filldedent('''
-            Some `matches` routine did not use a copy of repl_dict
-            and injected unexpected symbols. Report this as an
-            error at https://github.com/sympy/sympy/issues'''))
-        # now see if bound symbols were requested
-        bwild = wild - set(m)
-        if not bwild:
-            return m
-        # replace free-Wild symbols in pattern with match result
-        # so they will match but not be in the next match
-        wpat = pattern.xreplace(m)
-        # identify remaining bound wild
-        w = wpat.matches(self, old=old)
-        # add them to m
-        if w:
-            m.update(w)
-        # done
-        return m
+        return pattern.matches(self, old=old)
 
     def count_ops(self, visual=None):
         """Wrapper for count_ops that returns the operation count."""
