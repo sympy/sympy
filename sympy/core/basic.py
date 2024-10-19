@@ -648,7 +648,7 @@ class Basic(Printable):
     def free_symbols(self) -> set[Basic]:
         """Return from the atoms of self those which are free symbols.
 
-        Not all free symbols are ``Symbol``. Eg: IndexedBase('I')[0].free_symbols
+        Not all free symbols are ``Symbol`` (see examples)
 
         For most expressions, all symbols are free symbols. For some classes
         this is not true. e.g. Integrals use Symbols for the dummy variables
@@ -658,7 +658,39 @@ class Basic(Printable):
         bound variables, too, so it has its own free_symbols method.
 
         Any other method that uses bound variables should implement a
-        free_symbols method."""
+        free_symbols method.
+
+        Examples
+        ========
+
+        >>> from sympy import Derivative, Integral, IndexedBase
+        >>> from sympy.abc import x, y, n
+        >>> (x + 1).free_symbols
+        {x}
+        >>> Integral(x, y).free_symbols
+        {x, y}
+
+        Not all free symbols are actually symbols:
+
+        >>> IndexedBase('F')[0].free_symbols
+        {F, F[0]}
+
+        The symbols of differentiation are not included unless they
+        appear in the expression being differentiated.
+
+        >>> Derivative(x + y, y).free_symbols
+        {x, y}
+        >>> Derivative(x, y).free_symbols
+        {x}
+        >>> Derivative(x, (y, n)).free_symbols
+        {n, x}
+
+        If you want to know if a symbol is in the variables of the
+        Derivative you can do so as follows:
+
+        >>> Derivative(x, y).has_free(y)
+        True
+        """
         empty: set[Basic] = set()
         return empty.union(*(a.free_symbols for a in self.args))
 
