@@ -2299,5 +2299,6 @@ def test__unevaluated_Mul():
     assert _unevaluated_Mul(-x*A*B, S(2), A).args == (-2, x, A, B, A)
 
 
+# issue 27165
 def test_Float_zero_division_error():
     assert Float('1.7567e-1417').round(15) == Float(0)
