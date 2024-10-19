@@ -4041,8 +4041,8 @@ def _mag(x):
     except (ValueError, OverflowError):
         mag_first_dig = int(ceil(Float(mpf_log(xpos._mpf_, 53))/log(10)))
     # check that we aren't off by 1
-    if (xpos/10**mag_first_dig) >= 1:
-        assert 1 <= (xpos/10**mag_first_dig) < 10
+    if (xpos/S(10)**mag_first_dig) >= 1:
+        assert 1 <= (xpos/S(10)**mag_first_dig) < 10
         mag_first_dig += 1
     return mag_first_dig
 
