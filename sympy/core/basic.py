@@ -1856,8 +1856,8 @@ class Basic(Printable):
 
         Wild symbols match all.
 
-        Return ``None`` when expression (self) does not match
-        with pattern. Otherwise return a dictionary such that::
+        Return ``None`` when expression (self) does not match with pattern.
+        Otherwise return a dictionary such that::
 
           pattern.xreplace(self.match(pattern)) == self
 
@@ -1880,56 +1880,37 @@ class Basic(Printable):
         >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
-        Structurally bound symbols are ignored during matching:
+        Since match is purely structural expressions that are equivalent up to
+        bound symbols will not match:
 
-        >>> Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, p)))
-        {p_: 2}
+        >>> print(Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, p))))
+        None
 
-        But they can be identified if desired:
+        An expression with bound symbols can be matched if the pattern uses
+        a distinct ``Wild`` for each bound symbol:
 
         >>> Sum(x, (x, 1, 2)).match(Sum(q, (q, 1, p)))
         {p_: 2, q_: x}
 
         The ``old`` flag will give the old-style pattern matching where
-        expressions and patterns are essentially solved to give the
-        match. Both of the following give None unless ``old=True``:
+        expressions and patterns are essentially solved to give the match. Both
+        of the following give None unless ``old=True``:
 
         >>> (x - 2).match(p - x, old=True)
         {p_: 2*x - 2}
         >>> (2/x).match(p*x, old=True)
         {p_: 2/x**2}
 
+        See Also
+        ========
+
+        matches: pattern.matches(expr) is the same as expr.match(pattern)
+        xreplace: exact structural replacement
+        replace: structural replacement with pattern matching
+        Wild: symbolic placeholders for expressions in pattern matching
         """
         pattern = sympify(pattern)
-        # match non-bound symbols
-        canonical = lambda x: x if x.is_Symbol else x.as_dummy()
-        m = canonical(pattern).matches(canonical(self), old=old)
-        if m is None:
-            return m
-        from .symbol import Wild
-        from .function import WildFunction
-        from ..tensor.tensor import WildTensor, WildTensorIndex, WildTensorHead
-        wild = pattern.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead)
-        # sanity check
-        if set(m) - wild:
-            raise ValueError(filldedent('''
-            Some `matches` routine did not use a copy of repl_dict
-            and injected unexpected symbols. Report this as an
-            error at https://github.com/sympy/sympy/issues'''))
-        # now see if bound symbols were requested
-        bwild = wild - set(m)
-        if not bwild:
-            return m
-        # replace free-Wild symbols in pattern with match result
-        # so they will match but not be in the next match
-        wpat = pattern.xreplace(m)
-        # identify remaining bound wild
-        w = wpat.matches(self, old=old)
-        # add them to m
-        if w:
-            m.update(w)
-        # done
-        return m
+        return pattern.matches(self, old=old)
 
     def count_ops(self, visual=None):
         """Wrapper for count_ops that returns the operation count."""
