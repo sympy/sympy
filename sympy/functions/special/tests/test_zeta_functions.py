@@ -284,3 +284,12 @@ def test_issue_14177():
     n = Symbol('n')
 
     assert zeta(2*n) == zeta(2*n) # As sign of z (= 2*n) is not determined
+
+
+def test_issue_25159():
+    assert polylog(Rational(3, 2), exp(-x)).series(x, 0, 2) == zeta(Rational(3, 2)) - x*zeta(Rational(1, 2)) -\
+          2*sqrt(pi)*sqrt(x) + O(x**2)
+    assert polylog(Rational(3, 2), (x-1)**2).series(x, 0, 2) == zeta(Rational(3, 2)) -\
+          2*sqrt(pi)*(sqrt(2)*sqrt(x) + sqrt(2)*x**(Rational(3, 2))/4 + O(x**2)) - 2*x*zeta(Rational(1, 2)) + O(x**2)
+    assert polylog(Rational(3, 2), (x+1)**2).series(x, 0, 2) == zeta(Rational(3, 2)) -\
+          2*sqrt(pi)*(sqrt(2)*I*sqrt(x) - sqrt(2)*I*x**(Rational(3, 2))/4 + O(x**2)) + 2*x*zeta(Rational(1, 2)) + O(x**2)
