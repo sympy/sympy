@@ -1115,11 +1115,11 @@ def fraction(expr, exact=False):
                     denom.append(b)
                 elif exact:
                     if ex.is_constant():
-                        denom.append(Pow(b, -ex))
+                        denom.append(Pow(b, -ex, evaluate=False))
                     else:
                         numer.append(term)
                 else:
-                    denom.append(Pow(b, -ex))
+                    denom.append(Pow(b, -ex, evaluate=True))
             elif ex.is_positive:
                 numer.append(term)
             elif not exact and ex.is_Mul:
