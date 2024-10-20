@@ -997,6 +997,14 @@ def test_issue_6167_6151():
         assert sign(e.subs(x, xi)) == 1
 
 
+def test_refine_abs():
+    x = Symbol('x', real=True)
+    assert Abs(x).refine(x > 0) == x
+    assert Abs(x).refine(x >= 0) == x
+    assert Abs(x).refine(x < 0) == -x
+    assert Abs(x).refine(x <= 0) == -x
+
+
 def test_issue_14216():
     from sympy.functions.elementary.complexes import unpolarify
     A = MatrixSymbol("A", 2, 2)
