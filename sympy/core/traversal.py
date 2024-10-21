@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 from .basic import Basic
 from .sorting import ordered
 from .sympify import sympify
@@ -27,6 +29,8 @@ def iterargs(expr):
     args = [expr]
     for i in args:
         yield i
+        if not isinstance(i.args, Iterable):
+            continue
         args.extend(i.args)
 
 
