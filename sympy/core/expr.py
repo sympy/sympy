@@ -16,6 +16,7 @@ from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
+from sympy import Order, collect, sympify, Mul, S
 from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
@@ -3408,13 +3409,27 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you do not
         have to write docstrings for _eval_nseries().
         """
-        raise NotImplementedError(filldedent("""
-                     The _eval_nseries method should be added to
-                     %s to give terms up to O(x**n) at x=0
-                     from the positive direction so it is available when
-                     nseries calls it.""" % self.func)
-                     )
-
+        series_terms = []
+        for direction in ["+", "-"]:
+            s = self._series_in_direction(x, n, direction, logx, cdir)
+            series_terms.append(s)
+        
+        # Combine series terms from both directions
+        combined_series = collect(sum(series_terms), x)
+        return combined_series
+        # raise NotImplementedError(filldedent("""
+        #              The _eval_nseries method should be added to
+        #              %s to give terms up to O(x**n) at x=0
+        #              from the positive direction so it is available when
+        #              nseries calls it.""" % self.func)
+        #              )
+    def _series_in_direction(self, x, n, direction, logx, cdir):
+        """
+        Helper method to perform series expansion in a specified direction.
+        """
+        # Call the appropriate SymPy method to get series
+        return self.series(x, 0, n, direction, cdir=cdir)
+    
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
         """
