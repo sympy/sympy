@@ -4,9 +4,7 @@
 
 name: Pyodide
 
-on:
-  pull_request:
-  # push:
+on: [push, pull_request]
 
 env:
   FORCE_COLOR: 3
@@ -71,7 +69,6 @@ jobs:
         run: mv test_durations_merged.json .test_durations
 
       - name: Set up Pyodide virtual environment and test SymPy for Pyodide
-        id: test-sympy
         run: |
           # Set up Pyodide virtual environment
           pyodide xbuildenv install ${{ env.PYODIDE_VERSION }}
@@ -80,10 +77,6 @@ jobs:
           # Activate the virtual environment and install SymPy
           source .venv-pyodide/bin/activate
           pip install .
-
-          # Change to a different directory to avoid importing the local sympy folder
-          # package instead of the installed one
-          cd doc
 
           # Install dependencies and optional test dependencies
           pip install pytest pytest-split hypothesis
@@ -97,7 +90,7 @@ jobs:
 
       - name: Move and rename test duration artifacts
         if: always()
-        run: mv doc/.test_durations test_durations_group_${{ matrix.group }}.json
+        run: mv .test_durations test_durations_group_${{ matrix.group }}.json
 
       - name: Upload test duration artifacts
         if: always()
