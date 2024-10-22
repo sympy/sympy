@@ -136,7 +136,7 @@ jobs:
           gh extension install actions/gh-actions-cache
           gh actions-cache delete ${{ env.DURATIONS_CACHE_NAME }} \
           --confirm \
-          -R ${{ github.repository }} \
+          -R ${{ github.event.pull_request.head.repo.full_name }} \
           -B refs/pull/${{ github.event.pull_request.number }}/merge \
 
   # We will collect the test durations from all groups in this job
