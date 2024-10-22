@@ -8,6 +8,7 @@ on: [push, pull_request]
 
 env:
   FORCE_COLOR: 3
+  DURATIONS_CACHE_NAME: sympy_pyodide_test_durations_gha_cache
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -62,7 +63,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: test_durations_merged.json
-          key: sympy_pyodide_test_durations_gha_cache
+          key: ${{ env.DURATIONS_CACHE_NAME }}
 
       - name: Rename test duration artifacts
         if: steps.restore-test-durations.outputs.cache-hit == 'true'
@@ -103,14 +104,44 @@ jobs:
           # post actions/upload-artifact@v4.4.0 to make them visible
           # and to avoid needing the `include-hidden-files` option
 
+  # We delete the previous cache to avoid storing outdated test durations.
+  # This is currently not possible to do with the actions/cache action:
+  # https://github.com/actions/toolkit/issues/505
+  # https://github.com/actions/cache/issues/342
+  # so we use the gh cache CLI to get around this limitation and delete
+  # any previous test durations before saving new ones. The only downside
+  # with this is that simultaneous PRs that run this job might delete
+  # each other's cache(s). This is a minor issue since the cache is not
+  # used for anything else and is only used to store test durations, and
+  # the caches are scoped to the workflow and the branch (or PR), while
+  # the default cache is scoped to the repository (default branch).
+  #
+  # This exists as a separate job in order to scope run permissions
+  # differently from other jobs for security reasons.
+  delete-test-durations-caches:
+    name: Delete test duration caches
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write # to allow deletion of caches
+    needs: [pyodide-test]
+    if: always()
+    steps:
+      - name: Delete previous cached test durations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete ${{ env.DURATIONS_CACHE_NAME }} --confirm
+
   # We will collect the test durations from all groups in this job
   # and merge them into a single file. Once all groups have finished,
   # we will save the merged file as a persistent cache that GHA will
   # retrieve in the next run.
-  handle-test-durations:
+  handle-test-durations-files:
     name: Merge and cache test durations
     runs-on: ubuntu-22.04
-    needs: [pyodide-test]
+    needs: [delete-test-durations-caches]
     if: always()
     steps:
       - name: Download all artifacts
@@ -138,4 +169,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: test_durations_merged.json
-          key: sympy_pyodide_test_durations_gha_cache
+          key: ${{ env.DURATIONS_CACHE_NAME }}
