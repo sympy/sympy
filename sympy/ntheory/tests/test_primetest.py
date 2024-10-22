@@ -76,6 +76,7 @@ def test_is_extra_strong_lucas_prp():
 
 @slow
 def test_prps():
+    assert [mr(i) for i in (1, 2, 4)] == [False, True, False]
     oddcomposites = [n for n in range(1, 10**5) if
         n % 2 and not isprime(n)]
     # A checksum would be better.
