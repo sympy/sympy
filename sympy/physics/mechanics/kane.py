@@ -1,4 +1,4 @@
-from sympy import zeros, Matrix, diff, eye, linear_eq_to_matrix
+from sympy import zeros, Matrix, diff, eye, linear_eq_to_matrix, det
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
@@ -147,15 +147,11 @@ class KanesMethod(_Methods):
     done using `lambda A, b: tuple(linsolve((A, b)))[0]`, where we select the first
     solution as our system should have only one unique solution.
 
-    Care must be taken in the arrangement of the generalized coordinates when
-    linear and nonlinear velocity constraints are used: the generalized speeds
-    on which the nonlinear velocity constraints depend must be at the end of
-    the iterable of the dependent generalized speeds. This affects the
-    arrangement of the generalized coordinates. KanesMethod internally aranges
-    the the generalized coordinates in the following order:
-    y = q_independent + q_dependent +u_independent + u_dependent, and naturally
-    d/dt(q_independent + q_dependent) = u_independent + u_dependent)
-    must hold.
+    The generalized coordinates must be arranged in such a way, that if m :=
+    len(velocity_constraints), the (m x m) matrix:
+    velocity_constraints.jacobian(u[-m:])
+    is invertible.
+
 
     Examples
     ========
@@ -315,18 +311,28 @@ class KanesMethod(_Methods):
         self._f_h = none_handler(config)
 
         if len(vel) + len(nonlin_vel) != len(self._udep):
-            raise ValueError('There must be an equal number of dependent '
-                             'speeds and velocity constraints.')
+            raise ValueError('number of dependent speeds must be equal to '
+                            'number of linear + nonlinear velocity constraints.')
         if acc and (len(acc) != m):
-            raise ValueError('There must be an equal number of dependent '
+            raise ValueError('There must be at least an equal number of dependent '
                              'speeds and acceleration constraints.')
         if vel:
-            # When calling kanes_equations, another class instance will be
+            # When calling kanes_equations, another class instance will be created.
             # computation of kinetic differential equation matrices will be
             # skipped as this was computed during the original KanesMethod
             # object, and the qd_u_map will not be available.
             if self._qdot_u_map is not None:
                 vel = msubs(vel, self._qdot_u_map)
+
+            # unfortunate arrangement of the generalized coodinates and speeds
+            # may prevent the linear velocity constraints from being solved for
+            # the last m dependent speeds.
+            jakob = vel.jacobian(self._u[-m:])
+            if det(jakob) == 0:
+                raise ValueError('Please rearrange the dependent speeds so that '
+                    'the linear velocity constraints can be solved for the '
+                    'last len(linear_velocity_constraints) dependent speeds.')
+
             self._k_nh, f_nh_neg = linear_eq_to_matrix(vel, self.u[:])
             self._f_nh = -f_nh_neg
 
@@ -364,13 +370,29 @@ class KanesMethod(_Methods):
         # The idea is this:
         # 0 = nonlin_vel.diff(t) is linear in udot, just like vel is linear in u.
         if nonlin_vel:
-
-            # When calling kanes_equations, another class instance will be
+            # When calling kanes_equations, another class instance will be created.
             # computation of kinetic differential equation matrices will be
             # skipped as this was computed during the original KanesMethod
             # object, and the qd_u_map will not be available.
             if self._qdot_u_map is not None:
                 nonlin_vel = msubs(nonlin_vel, self._qdot_u_map)
+
+                if vel:
+                    # If the nonlinear velocity constraints have an 'unfortunate'
+                    # dependency on the last m dependent speeds, Arstilde may become
+                    # singular. To avoid this problem, we can solve the linear
+                    # velocity constraintsfor the last m dependent speeds, and
+                    # substitute them into the nonlinear velocity constraints.
+                    relevant_udep = self._u[o-m:]
+                    AA = vel.jacobian(relevant_udep)
+                    bb = msubs(vel, {i: 0 for i in relevant_udep})
+                    CC = linear_solver(AA, -bb)
+                    udep_m_map = {relevant_udep[-m+i]: CC[i] for i in range(m)}
+                    nonlin_vel = msubs(nonlin_vel, udep_m_map)
+
+                    # Redefine the nonlinear velosity constraints where ther last m
+                    # dependent speeds are substituted.
+                    self._nonlin_vel_constr = nonlin_vel
             nonlin_veldt = nonlin_vel.diff(dynamicsymbols._t)
             self._k_c, _f_c_neg = linear_eq_to_matrix(nonlin_veldt, self._udot[:])
             self._f_c = -_f_c_neg
