@@ -385,7 +385,7 @@ class KanesMethod(_Methods):
                     # substitute them into the nonlinear velocity constraints.
                     relevant_udep = self._u[o-m:]
                     AA = vel.jacobian(relevant_udep)
-                    bb = msubs(vel, {i: 0 for i in relevant_udep})
+                    bb = msubs(vel, dict.fromkeys(relevant_udep, 0))
                     CC = linear_solver(AA, -bb)
                     udep_m_map = {relevant_udep[-m+i]: CC[i] for i in range(m)}
                     nonlin_vel = msubs(nonlin_vel, udep_m_map)
