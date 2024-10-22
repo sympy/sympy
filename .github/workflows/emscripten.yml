@@ -134,7 +134,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh extension install actions/gh-actions-cache
-          gh actions-cache delete ${{ env.DURATIONS_CACHE_NAME }} --confirm
+          gh actions-cache delete ${{ env.DURATIONS_CACHE_NAME }} \
+          --confirm \
+          -R ${{ github.repository }} \
+          -B refs/pull/${{ github.event.pull_request.number }}/merge \
 
   # We will collect the test durations from all groups in this job
   # and merge them into a single file. Once all groups have finished,
