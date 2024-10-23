@@ -15,7 +15,7 @@ class BaseScalar(AtomicExpr):
 
     kind = NumberKind
 
-    def __new__(cls, index, system, pretty_str=None, latex_str=None):
+    def __new__(cls, index, system, pretty_str=None, latex_str=None, typst_str=None):
         from sympy.vector.coordsysrect import CoordSys3D
         if pretty_str is None:
             pretty_str = "x{}".format(index)
@@ -25,6 +25,10 @@ class BaseScalar(AtomicExpr):
             latex_str = "x_{}".format(index)
         elif isinstance(latex_str, Symbol):
             latex_str = latex_str.name
+        if typst_str is None:
+            typst_str = "x_{}".format(index)
+        elif isinstance(typst_str, Symbol):
+            typst_str = typst_str.name
 
         index = _sympify(index)
         system = _sympify(system)
@@ -38,6 +42,7 @@ class BaseScalar(AtomicExpr):
         obj._name = obj.name = system._name + '.' + system._variable_names[index]
         obj._pretty_form = '' + pretty_str
         obj._latex_form = latex_str
+        obj._typst_form = typst_str
         obj._system = system
 
         return obj
@@ -61,6 +66,9 @@ class BaseScalar(AtomicExpr):
 
     def _pretty(self, printer=None):
         return prettyForm(self._pretty_form)
+
+    def _typst(self, printer=None):
+        return self._typst_form
 
     precedence = PRECEDENCE['Atom']
 
