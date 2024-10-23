@@ -870,7 +870,10 @@ class KanesMethod(_Methods):
                 if self._nonlin_vel_constr:
                     nonlinear_velocity_constraints = self._nonlin_vel_constr
                 if self._acc_constraints:
-                    acceleration_constraints = self._k_dnh * self._udot + self._f_dnh
+                    if not self._nonlin_vel_constr:
+                        acceleration_constraints = self._k_dnh * self._udot + self._f_dnh
+                    else:
+                        acceleration_constraints = self._acc_constraints
 
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                         u_auxiliary=self._uaux, u_dependent=self._udep,
