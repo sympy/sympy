@@ -24,7 +24,7 @@ from sympy.plotting.plot import (
 from sympy.plotting.series import (
     LineOver1DRangeSeries, Parametric2DLineSeries, Parametric3DLineSeries,
     ParametricSurfaceSeries, SurfaceOver2DRangeSeries)
-from sympy.testing.pytest import skip, warns, raises, warns_deprecated_sympy
+from sympy.testing.pytest import skip, skip_under_pyodide, warns, raises, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.exceptions import ignore_warnings
 
@@ -630,6 +630,7 @@ def test_issue_11865(adaptive):
     assert len(p[0].get_data()[0]) >= 30
 
 
+@skip_under_pyodide("Warnings not emitted in Pyodide because of lack of WASM fp exception support")
 def test_issue_11461():
     if not matplotlib:
         skip("Matplotlib not the default backend")
