@@ -122,7 +122,6 @@ jobs:
     name: Delete test duration caches
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       actions: write # to allow deletion of caches
     needs: [pyodide-test]
     if: always()
@@ -135,9 +134,8 @@ jobs:
         run: |
           gh extension install actions/gh-actions-cache
           gh actions-cache delete ${{ env.DURATIONS_CACHE_NAME }} \
-          --confirm \
           -R ${{ github.event.pull_request.head.repo.full_name }} \
-          -B refs/pull/${{ github.event.pull_request.number }}/merge \
+          --confirm
 
   # We will collect the test durations from all groups in this job
   # and merge them into a single file. Once all groups have finished,
