@@ -406,3 +406,12 @@ def test_issue_24266():
 
 def test_issue_26856():
     raises(ValueError, lambda: (2**x).series(x, oo, -1))
+
+
+def test_issue_25682():
+    x = Symbol('x', negative=True)
+    y = Symbol('y', positive=True)
+    assert (1/abs(sqrt(1 - (-1 + 1/x)**2))).series(x) == -x - x**2 - 3*x**3/2 - 5*x**4/2 - 35*x**5/8 + O(x**6)
+    assert (1/abs(sqrt(1 - (-1 + 1/y)**2))).series(y) == y + y**2 + 3*y**3/2 + 5*y**4/2 + 35*y**5/8 + O(y**6)
+    assert abs(sqrt(sin(x))).series(x) == sqrt(-x) - (-x)**(S(5)/2)/12 + (-x)**(S(9)/2)/1440 + O(x**6)
+    assert abs(sqrt(sin(y))).series(y) == sqrt(y) - y**(S(5)/2)/12 + y**(S(9)/2)/1440 + O(y**6)
