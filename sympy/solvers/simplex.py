@@ -889,84 +889,53 @@ def _handle_bounds(bounds):
     # introduce auxilliary variables as needed for univariate
     # inequalities
 
+    def _make_list(length: int, index_value_pairs):
+        li = [0] * length
+        for idx, val in index_value_pairs:
+            li[idx] = val
+        return li
+
     unbound = []
-    R = [0] * len(bounds)  # a (growing) row of zeros
-
-    def n():
-        return len(R) - 1
-
-    def Arow(inc=1):
-        R.extend([0] * inc)
-        return R[:]
-
     row = []
+    row2 = []
+    b_len = len(bounds)
     for x, (a, b) in enumerate(bounds):
         if a is None and b is None:
             unbound.append(x)
         elif a is None:
             # r[x] = b - u
-            A = Arow()
-            A[x] = 1
-            A[n()] = 1
-            B = [b]
-            row.append((A, B))
-            A = [0] * len(A)
-            A[x] = -1
-            A[n()] = -1
-            B = [-b]
-            row.append((A, B))
+            b_len += 1
+            row.append(_make_list(b_len, [(x, 1), (-1, 1)]))
+            row.append(_make_list(b_len, [(x, -1), (-1, -1)]))
+            row2.extend([[b], [-b]])
         elif b is None:
             if a:
                 # r[x] = a + u
-                A = Arow()
-                A[x] = 1
-                A[n()] = -1
-                B = [a]
-                row.append((A, B))
-                A = [0] * len(A)
-                A[x] = -1
-                A[n()] = 1
-                B = [-a]
-                row.append((A, B))
+                b_len += 1
+                row.append(_make_list(b_len, [(x, 1), (-1, -1)]))
+                row.append(_make_list(b_len, [(x, -1), (-1, 1)]))
+                row2.extend([[a], [-a]])
             else:
                 # standard nonnegative relationship
                 pass
         else:
             # r[x] = u + a
-            A = Arow()
-            A[x] = 1
-            A[n()] = -1
-            B = [a]
-            row.append((A, B))
-            A = [0] * len(A)
-            A[x] = -1
-            A[n()] = 1
-            B = [-a]
-            row.append((A, B))
+            b_len += 1
+            row.append(_make_list(b_len, [(x, 1), (-1, -1)]))
+            row.append(_make_list(b_len, [(x, -1), (-1, 1)]))
             # u <= b - a
-            A = [0] * len(A)
-            A[x] = 0
-            A[n()] = 1
-            B = [b - a]
-            row.append((A, B))
+            row.append(_make_list(b_len, [(-1, 1)]))
+            row2.extend([[a], [-a], [b - a]])
 
     # make change of variables for unbound variables
     for x in unbound:
         # r[x] = u - v
-        A = Arow(2)
-        B = [0]
-        A[x] = 1
-        A[n()] = 1
-        A[n() - 1] = -1
-        row.append((A, B))
-        A = [0] * len(A)
-        A[x] = -1
-        A[n()] = -1
-        A[n() - 1] = 1
-        row.append((A, B))
+        b_len += 2
+        row.append(_make_list(b_len, [(x, 1), (-1, 1), (-2, -1)]))
+        row.append(_make_list(b_len, [(x, -1), (-1, -1), (-2, 1)]))
+        row2.extend([[0], [0]])
 
-    return Matrix([r+[0]*(len(R) - len(r)) for r,_ in row]
-        ), Matrix([i[1] for i in row])
+    return Matrix([r + [0]*(b_len - len(r)) for r in row]), Matrix(row2)
 
 
 def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
