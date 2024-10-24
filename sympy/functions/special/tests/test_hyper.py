@@ -401,3 +401,14 @@ def test_eval_nseries():
         1 - x + x**2/4 - 3*x**3/4 - 15*x**4/64 - 93*x**5/64 + O(x**6)
     assert (pi/2*hyper((-S(1)/2, S(1)/2), (1,), 4*x/(x + 1))).nseries(x) == \
         pi/2 - pi*x/2 + pi*x**2/8 - 3*pi*x**3/8 - 15*pi*x**4/128 - 93*pi*x**5/128 + O(x**6)
+
+
+def test_aseries():
+    assert hyper((S(1)/3, S(1)/2), (S(4)/3,), -x**3).series(x, oo) == \
+    gamma(S(1)/6)*gamma(S(4)/3)/(sqrt(pi)*x) + (1/x)**(S(3)/2)*gamma(S(4)/3)/(gamma(S(1)/3)*gamma(S(5)/6)) - \
+        (1/x)**(S(9)/2)*gamma(S(4)/3)/(14*gamma(S(1)/3)*gamma(S(5)/6)) + O(x**(-6), (x, oo))
+    assert hyper((S(1)/4,S(1)/2),(S(5)/4,), -x**4).series(x, oo) == \
+    gamma(S(5)/4)/(x**2*gamma(S(1)/4)*gamma(S(3)/4)) + gamma(S(1)/4)*gamma(S(5)/4)/(sqrt(pi)*x) + O(x**(-6), (x, oo))
+    assert hyper((-3, S(3)/2), (S(5)/2,), x).series(x, oo) == 1 + 3*I*sqrt(pi)*(1/x)**(S(3)/2)/4 - 9*x/5 + \
+        9*x**2/7 - x**3/3 + O(x**(-6), (x, oo))
+    assert hyper((-3, S(3)/2), (S(3)/2,), x).series(x, oo) == 1 - 3*x + 3*x**2 - x**3 + O(x**(-6), (x, oo))
