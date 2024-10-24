@@ -2911,11 +2911,7 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
             if expt is S.Half:
                 return S.ImaginaryUnit
             if isinstance(expt, Rational):
-                if expt.q == 2:
-                    return S.ImaginaryUnit**Integer(expt.p)
-                i, r = divmod(expt.p, expt.q)
-                if i:
-                    return self**i*self**Rational(r, expt.q)
+                return S.ImaginaryUnit**(2*expt)
         return
 
 
