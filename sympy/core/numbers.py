@@ -2029,9 +2029,9 @@ class Integer(Rational):
             return super()._eval_power(expt)
         if not isinstance(expt, Rational):
             return
-        if expt is S.Half and self.is_negative:
-            # we extract I for this special case since everyone is doing so
-            return S.ImaginaryUnit*Pow(-self, expt)
+        if self.is_negative:
+            # Extract rational powers of -1
+            return Pow(S.NegativeOne, expt) * Pow(-self, expt)
         if expt.is_negative:
             # invert base and change sign on exponent
             ne = -expt
@@ -2908,14 +2908,16 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
                 return S.NaN
             if expt in (S.Infinity, S.NegativeInfinity):
                 return S.NaN
-            if expt is S.Half:
-                return S.ImaginaryUnit
             if isinstance(expt, Rational):
-                if expt.q == 2:
-                    return S.ImaginaryUnit**Integer(expt.p)
                 i, r = divmod(expt.p, expt.q)
-                if i:
-                    return self**i*self**Rational(r, expt.q)
+                expt2 = Rational(r, expt.q)
+                if expt2 is S.Half:
+                    rv = S.ImaginaryUnit
+                else:
+                    rv = Pow(S.NegativeOne, expt2, evaluate=False)
+                if i & 1:
+                    rv = Mul(S.NegativeOne, rv, evaluate=False)
+                return rv
         return
 
 
@@ -4118,11 +4120,7 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
             elif expt == 3:
                 return -S.ImaginaryUnit
         if isinstance(expt, Rational):
-            i, r = divmod(expt, 2)
-            rv = Pow(S.ImaginaryUnit, r, evaluate=False)
-            if i % 2:
-                return Mul(S.NegativeOne, rv, evaluate=False)
-            return rv
+            return S.NegativeOne**(expt/2)
 
     def as_base_exp(self):
         return S.NegativeOne, S.Half
