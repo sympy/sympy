@@ -697,11 +697,14 @@ def solve(f, *symbols, **flags):
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
         >>> solve(eq)  # this gives 2 solutions but misses a 3rd
-        [CRootOf(7*x**5 - 7*x**3 + 1, 1)**15,
-        CRootOf(7*x**5 - 7*x**3 + 1, 2)**15]
+        [-50/343 - 4*CRootOf(7*x**5 - 7*x**3 + 1, 1)**4/7 - CRootOf(7*x**5 - 7*x**3 + 1, 1)**2/7
+         + 3*CRootOf(7*x**5 - 7*x**3 + 1, 1)/49 + 52*CRootOf(7*x**5 - 7*x**3 + 1, 1)**3/49,
+         -4*CRootOf(7*x**5 - 7*x**3 + 1, 2)**4/7 - 50/343 - CRootOf(7*x**5 - 7*x**3 + 1, 2)**2/7
+         + 3*CRootOf(7*x**5 - 7*x**3 + 1, 2)/49 + 52*CRootOf(7*x**5 - 7*x**3 + 1, 2)**3/49]
+        >>> # It can also be written as [CRootOf(7*x**5 - 7*x**3 + 1, 1)**15, CRootOf(7*x**5 - 7*x**3 + 1, 2)**15]
         >>> sol = solve(eq, check=False)
-        >>> [abs(eq.subs(x,i).n(2)) for i in sol]
-        [0.48, 0.e-110, 0.e-110, 0.052, 0.052]
+        >>> sorted(abs(eq.subs(x,i).n(2)) for i in sol)
+        [0.e-110, 0.e-110, 0.052, 0.052, 0.48]
 
     The first solution is negative so ``real_root`` must be used to see that it
     satisfies the expression:
