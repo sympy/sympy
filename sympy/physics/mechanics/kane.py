@@ -407,6 +407,7 @@ class KanesMethod(_Methods):
             B_ind = self._k_c[:, :o-(m+l)]
             B_dep = self._k_c[:, o-(m+l):o-m]
             self._Arstilde = -linear_solver(B_dep, B_ind)
+
         else:
             self._f_c = Matrix()
             self._k_c = Matrix()
