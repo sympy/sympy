@@ -29,7 +29,10 @@ from sympy.polys.polytools import (
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
-    to_rational_coeffs)
+    to_rational_coeffs,
+    factor_system,
+    factor_system_poly,
+    factor_system_cond)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -63,7 +66,7 @@ from sympy.core.function import (Derivative, diff, expand)
 from sympy.core.mul import _keep_coeff, Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (im, re)
@@ -3933,3 +3936,167 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
+
+
+
+
+def test_factor_system():
+
+    def assert_equal_unordered(actual, expected):
+        assert len(actual) == len(expected)
+        actual_set = {frozenset(s) for s in actual}
+        expected_set = {frozenset(s) for s in expected}
+        assert actual_set == expected_set
+
+    assert_equal_unordered(factor_system([x**2 + 2*x + 1]), [{x + 1}])
+    assert_equal_unordered(factor_system([x**2 + 2*x + 1, y**2 + 2*y + 1]), [{x + 1, y + 1}])
+
+    assert_equal_unordered(factor_system([x**2 + 1]), [{x**2 + 1}])
+
+    assert_equal_unordered(factor_system([]), [])
+    assert_equal_unordered(factor_system([x**2 + y**2 + 2*x*y, x**2 - 2], extension=sqrt(2)),
+                           [{x + sqrt(2), x + y}, {x + y, x - sqrt(2)}])
+
+    assert_equal_unordered(factor_system([x ** 2 + 1, y ** 2 + 1], gaussian=True),
+                           [{y + I, x - I}, {x - I, y - I}, {y + I, x + I}, {y - I, x + I}])
+
+    assert_equal_unordered(factor_system([x ** 2 + 1, y ** 2 + 1], domain=QQ_I),
+                           [{y + I, x - I}, {x - I, y - I}, {y + I, x + I}, {y - I, x + I}])
+
+    assert_equal_unordered(factor_system([0]), [set()])
+    assert_equal_unordered(factor_system([1]), [])
+    assert_equal_unordered(factor_system([0 , x]), [{x}])
+    assert_equal_unordered(factor_system([1, 0, x]), [])
+    assert_equal_unordered(factor_system([x**4 - 1, y**6 - 1]),
+                           [{x**2 + 1, y - 1}, {x**2 + 1, y + 1}, {x**2 + 1, y**2 + y + 1},
+                            {x**2 + 1, y**2 - y + 1}, {x - 1, y - 1}, {y - 1, x + 1},
+                            {x - 1, y**2 + y + 1}, {x + 1, y**2 + y + 1}, {x - 1, y + 1},
+                            {x - 1, y**2 - y + 1}, {x + 1, y + 1}, {x + 1, y**2 - y + 1}])
+
+    assert_equal_unordered(factor_system([(x - 1)*(y - 2), (y  - 2)*(z - 3)]),
+                           [{y - 2}, {z - 3, x - 1}])
+
+def _poly_pair_to_tuple(pair):
+    poly, conditions = pair
+    poly_tuple = (str(poly.rep), str(poly.domain), poly.gens)
+    conditions_tuple = tuple(str(cond) for cond in conditions)
+    return (poly_tuple, conditions_tuple)
+
+
+def _expr_pair_to_tuple(pair):
+    expr, condition = pair
+    return (str(expr), str(condition))
+
+def test_factor_system_poly():
+
+    def assert_equal_factor_systems(actual, expected):
+        assert len(actual) == len(expected)
+        def system_to_hashable(system):
+            return frozenset(
+                frozenset(_poly_pair_to_tuple(pair) for pair in combo)
+                for combo in system
+            )
+
+        actual_set = system_to_hashable(actual)
+        expected_set = system_to_hashable(expected)
+        assert actual_set == expected_set
+
+    p1 = Poly(x ** 2 - 1, x)
+    p2 = Poly(x ** 2 - 4, x)
+    result = factor_system_poly([p1, p2])
+    expected = [[(Poly(x + 2, x, domain='ZZ'), []), (Poly(x + 1, x, domain='ZZ'), [])],
+                [(Poly(x + 1, x, domain='ZZ'), []), (Poly(x - 2, x, domain='ZZ'), [])],
+                [(Poly(x + 2, x, domain='ZZ'), []), (Poly(x - 1, x, domain='ZZ'), [])],
+                [(Poly(x - 1, x, domain='ZZ'), []), (Poly(x - 2, x, domain='ZZ'), [])]]
+
+    assert_equal_factor_systems(result, expected)
+
+
+    p = Poly(x ** 2 - 1, x)
+    result = factor_system_poly([p])
+    expected = [[(Poly(x + 1, x, domain='ZZ'), [])], [(Poly(x - 1, x, domain='ZZ'), [])]]
+    assert_equal_factor_systems(result, expected)
+
+    p1 = Poly(x**2*y - y, x, y, z)
+    p2 = Poly(x**2*z - z, x, y, z)
+    result = factor_system_poly([p1, p2])
+    expected = [[(Poly(x - 1, x, y, z, domain='ZZ'), [])],
+                [(Poly(z, x, y, z, domain='ZZ'), []), (Poly(y, x, y, z, domain='ZZ'), [])],
+                [(Poly(x + 1, x, y, z, domain='ZZ'), [])]]
+
+    assert_equal_factor_systems(result, expected)
+
+    p1 = Poly(x ** 2 * (x - 1) ** 2, x)
+    p2 = Poly(x * (x - 1), x)
+    result = factor_system_poly([p1, p2])
+    expected = [[(Poly(x - 1, x, domain='ZZ'), [])], [(Poly(x, x, domain='ZZ'), [])]]
+    assert_equal_factor_systems(result, expected)
+
+    p1 = Poly(x ** 2 + y * x, x, y, z)
+    p2 = Poly(x ** 2 + z * x, x, y, z)
+    result = factor_system_poly([p1, p2])
+    expected = [[(Poly(x, x, y, z, domain='ZZ'), [])],
+                [(Poly(x + z, x, y, z, domain='ZZ'), []), (Poly(x + y, x, y, z, domain='ZZ'), [])]]
+    assert_equal_factor_systems(result, expected)
+
+    p1 = Poly((a - 1)*(x - 2), x, domain=ZZ[a,b])
+    p2 = Poly((b - 3)*(x - 2), x, domain=ZZ[a,b])
+    result = factor_system_poly([p1, p2])
+    expected = [[(Poly(x - 2, x, domain='ZZ[a,b]'), [Poly(a - 1, x, domain='ZZ[a,b]'), Poly(b - 3, x, domain='ZZ[a,b]')])]]
+    assert_equal_factor_systems(result , expected)
+
+    assert_equal_factor_systems(factor_system_poly([Poly(x ** 2 + 1, x, domain=QQ_I)]),
+                                [[(Poly(x + I, x, domain='QQ_I'), [])], [(Poly(x - I, x, domain='QQ_I'), [])]])
+
+
+
+    assert factor_system_poly([]) == [[]]
+
+    assert factor_system_poly([Poly(1, x), Poly(x , x)]) == []
+
+    assert factor_system_poly([Poly(0, x), Poly(x , x)]) == [[(Poly(x, x, domain='ZZ'), [])]]
+
+
+def test_factor_system_cond():
+
+    def assert_equal_cond_systems(actual, expected):
+        assert len(actual) == len(expected)
+
+        def system_to_hashable(system):
+            return frozenset(
+                frozenset(_expr_pair_to_tuple(pair) for pair in combo)
+                for combo in system
+            )
+
+        actual_set = system_to_hashable(actual)
+        expected_set = system_to_hashable(expected)
+        assert actual_set == expected_set
+
+    result = factor_system_cond([x ** 2 - 1, x ** 2 - 4])
+    expected = [[(x - 2, True), (x - 1, True)],
+                [(x - 1, True), (x + 2, True)],
+                [(x - 2, True), (x + 1, True)],
+                [(x + 1, True), (x + 2, True)]]
+    assert_equal_cond_systems(result, expected)
+
+    assert factor_system_cond([1]) == []
+    assert factor_system_cond([0]) == [[]]
+    assert factor_system_cond([1, x]) == []
+    assert factor_system_cond([0, x]) == [[(x, True)]]
+
+    result = factor_system_cond([x ** 2 + y * x])
+    expected = [[(x, True)], [(x + y, True)]]
+    assert_equal_cond_systems(result , expected)
+
+    eq1 = (x - 1) * (x + 1)
+    eq2 = (x - 2) * (x + 2)
+    result = factor_system_cond([eq1, eq2])
+    expected = [[(x + 2, True), (x - 1, True)],
+                [(x - 2, True), (x - 1, True)],
+                [(x + 2, True), (x + 1, True)],
+                [(x - 2, True), (x + 1, True)]]
+    assert_equal_cond_systems(result, expected)
+
+    result = factor_system_cond([(a - 1)*(x - 2), (b - 3)*(x - 2)], [x])
+    expected = [[(x - 2, Ne(a - 1, 0) | Ne(b - 3, 0))]]
+    assert_equal_cond_systems(result, expected)
