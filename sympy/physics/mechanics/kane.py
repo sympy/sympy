@@ -245,6 +245,7 @@ class KanesMethod(_Methods):
         self._lin_vel_constr = velocity_constraints
         self._nonlin_vel_constr = nonlinear_velocity_constraints
         self._acc_constraints = acceleration_constraints
+        self.kd_eqs = kd_eqs
 
         self.explicit_kinematics = explicit_kinematics
         self._constraint_solver = constraint_solver
@@ -394,6 +395,7 @@ class KanesMethod(_Methods):
                     # dependent speeds are substituted.
                     self._nonlin_vel_constr = nonlin_vel
             nonlin_veldt = nonlin_vel.diff(dynamicsymbols._t)
+            nonlin_veldt = msubs(nonlin_veldt, self._qdot_u_map)
             self._k_c, _f_c_neg = linear_eq_to_matrix(nonlin_veldt, self._udot[:])
             self._f_c = -_f_c_neg
 
@@ -866,10 +868,16 @@ class KanesMethod(_Methods):
                 velocity_constraints = Matrix()
                 nonlinear_velocity_constraints = Matrix()
                 acceleration_constraints = Matrix()
+                kd_eqs = None
                 if self._lin_vel_constr:
                     velocity_constraints = self._k_nh * self.u + self._f_nh
                 if self._nonlin_vel_constr:
                     nonlinear_velocity_constraints = self._nonlin_vel_constr
+                    # kd_eqs is needed in case of nonlinear constraintsalso in
+                    # the second pass, because when nonlinear_constr.diff(t)
+                    # is formed q.diff(t) might appear in it. They must be
+                    #repalced by u to form Arstilde.
+                    kd_eqs = self.kd_eqs
                 if self._acc_constraints:
                     if not self._nonlin_vel_constr:
                         acceleration_constraints = (self._k_dnh * self._udot +
@@ -882,7 +890,8 @@ class KanesMethod(_Methods):
                         velocity_constraints=velocity_constraints,
                         nonlinear_velocity_constraints=nonlinear_velocity_constraints,
                         acceleration_constraints=acceleration_constraints,
-                        constraint_solver=self._constraint_solver
+                        constraint_solver=self._constraint_solver,
+                        kd_eqs=kd_eqs,
                         )
             km._qdot_u_map = self._qdot_u_map
             self._km = km
