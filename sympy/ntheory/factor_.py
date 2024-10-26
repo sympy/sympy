@@ -1,6 +1,7 @@
 """
 Integer factorization
 """
+from __future__ import annotations
 
 from collections import defaultdict, OrderedDict
 from collections.abc import MutableMapping
