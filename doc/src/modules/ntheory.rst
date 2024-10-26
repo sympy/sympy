@@ -4,16 +4,21 @@
 Number Theory
 =============
 
-.. module:: sympy.ntheory.generate
+
 
 Ntheory Class Reference
 =======================
 
-.. autoclass:: Sieve
+.. autoclass:: sympy.ntheory.generate.Sieve
+   :members:
+
+.. autoclass:: sympy.ntheory.factor_.FactorCache
    :members:
 
 Ntheory Functions Reference
 ===========================
+
+.. module:: sympy.ntheory.generate
 
 .. autofunction:: prime
 

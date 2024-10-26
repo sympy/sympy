@@ -16,7 +16,7 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_abundant,
     is_deficient, is_amicable, is_carmichael, find_carmichael_numbers_in_range,
-    find_first_n_carmichaels, dra, drm, _perfect_power)
+    find_first_n_carmichaels, dra, drm, _perfect_power, factor_cache)
 
 from sympy.testing.pytest import raises, slow
 
@@ -169,6 +169,43 @@ def test_perfect_power():
     assert perfect_power(-8) == (-2, 3)
     assert perfect_power(Rational(1, 2)**3) == (S.Half, 3)
     assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
+
+
+def test_factor_cache():
+    factor_cache.cache_clear()
+    raises(ValueError, lambda: factor_cache.__setitem__(1, 5))
+    raises(ValueError, lambda: factor_cache.__setitem__(10, 1))
+    raises(ValueError, lambda: factor_cache.__setitem__(10, 10))
+    raises(ValueError, lambda: factor_cache.__setitem__(10, 3))
+    raises(ValueError, lambda: factor_cache.__setitem__(20, 4))
+    factor_cache.maxsize = 3
+    for i in range(2, 10):
+        factor_cache[5*i] = 5
+    assert len(factor_cache) == 3
+    factor_cache.maxsize = 5
+    for i in range(2, 10):
+        factor_cache[5*i] = 5
+    assert len(factor_cache) == 5
+    factor_cache.maxsize = 2
+    assert len(factor_cache) == 2
+    factor_cache.maxsize =1000
+
+    factor_cache.cache_clear()
+    factor_cache[40] = 5
+    assert factor_cache.get(40) == 5
+    assert factor_cache.get(20) is None
+    assert factor_cache[40] == 5
+    raises(KeyError, lambda: factor_cache[10])
+    del factor_cache[40]
+    assert len(factor_cache) == 0
+    raises(KeyError, lambda: factor_cache.__delitem__(40))
+    factor_cache.add(100, [5, 2])
+    assert len(factor_cache) == 2
+    assert factor_cache[100] == 5
+
+    # Restore the initial state
+    factor_cache.cache_clear()
+    factor_cache.maxsize = 1000
 
 
 @slow

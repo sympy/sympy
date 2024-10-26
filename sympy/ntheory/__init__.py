@@ -6,8 +6,8 @@ from .generate import nextprime, prevprime, prime, primepi, primerange, \
     randprime, Sieve, sieve, primorial, cycle_length, composite, compositepi
 from .primetest import isprime, is_gaussian_prime, is_mersenne_prime
 from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
-    multiplicity_in_factorial, perfect_power, pollard_pm1, pollard_rho, \
-    primefactors, totient, \
+    multiplicity_in_factorial, perfect_power, factor_cache, pollard_pm1, \
+    pollard_rho, primefactors, totient, \
     divisor_count, proper_divisor_count, divisor_sigma, factorrat, \
     reduced_totient, primenu, primeomega, mersenne_prime_exponent, \
     is_perfect, is_abundant, is_deficient, is_amicable, is_carmichael, \
@@ -35,7 +35,7 @@ __all__ = [
 
 
     'divisors', 'proper_divisors', 'factorint', 'multiplicity', 'perfect_power',
-    'pollard_pm1', 'pollard_rho', 'primefactors', 'totient',
+    'pollard_pm1', 'factor_cache', 'pollard_rho', 'primefactors', 'totient',
     'divisor_count', 'proper_divisor_count', 'divisor_sigma', 'factorrat',
     'reduced_totient', 'primenu', 'primeomega', 'mersenne_prime_exponent',
     'is_perfect', 'is_abundant', 'is_deficient', 'is_amicable',
