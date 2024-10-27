@@ -16,7 +16,6 @@ $ python bin/ask_update.py
 # hook in-tree SymPy into Python path, if possible
 import os
 import sys
-import pprint
 
 isympy_path = os.path.abspath(__file__)
 isympy_dir = os.path.dirname(isympy_path)

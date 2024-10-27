@@ -1,4 +1,4 @@
-from sympy import Matrix, laplace_transform, inverse_laplace_transform, exp, cos, sqrt, sin
+from sympy import Matrix, laplace_transform, exp, cos, sqrt, sin
 from sympy.abc import s, t
 from sympy.physics.control import *
 

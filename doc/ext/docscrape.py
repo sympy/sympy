@@ -7,7 +7,6 @@ import textwrap
 import re
 import pydoc
 from collections.abc import Mapping
-import sys
 
 
 class Reader:
