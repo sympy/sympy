@@ -60,7 +60,6 @@ lint.ignore = [
     "E731",  # Do not assign a `lambda` expression, use a `def`
     "E741",  # Ambiguous variable name: `<VARIABLE>`
     "E743",  # Ambiguous function name: `<FUNCTION>`
-    "F401",  # `<TYPE>` imported but unused
     "F403",  # `from <MODULE> import *` used; unable to detect undefined names
     "F405",  # `<TYPE>` may be undefined, or defined from star imports: `<MODULE>`
     "F523",  # `.format` call has unused arguments at position(s): <INDEX>
