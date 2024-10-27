@@ -999,7 +999,8 @@ def _trial(factors, n, candidates, verbose=False):
     nfactors = len(factors)
     for d in candidates:
         if n % d == 0:
-            factor_cache[n] = d
+            if n != d:
+                factor_cache[n] = d
             n, m = remove(n // d, d)
             factors[d] = m + 1
     if verbose:
