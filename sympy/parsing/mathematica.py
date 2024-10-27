@@ -983,7 +983,6 @@ class MathematicaParser:
         "Log": lambda *a: log(*reversed(a)),
         "Log2": lambda x: log(x, 2),
         "Log10": lambda x: log(x, 10),
-        "Rational": Rational,
         "Exp": exp,
         "Sqrt": sqrt,
 

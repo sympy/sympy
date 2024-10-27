@@ -56,18 +56,9 @@ lint.ignore = [
     "E713",  # Test for membership should be `not in`
     "E714",  # Test for object identity should be `is not`
     "E721",  # Do not compare types, use `isinstance()`
-    "E722",  # Do not use bare `except`
     "E731",  # Do not assign a `lambda` expression, use a `def`
     "E741",  # Ambiguous variable name: `<VARIABLE>`
     "E743",  # Ambiguous function name: `<FUNCTION>`
-    "F403",  # `from <MODULE> import *` used; unable to detect undefined names
-    "F405",  # `<TYPE>` may be undefined, or defined from star imports: `<MODULE>`
-    "F523",  # `.format` call has unused arguments at position(s): <INDEX>
-    "F601",  # Dictionary key literal `'<KEY>'` repeated
-    "F811",  # Redefinition of unused `<VARIABLE>` from line <LINE>
-    "F821",  # Undefined name `VARIABLE`
-    "F823",  # Local variable `VARIABLE` referenced before assignment
-    "F841",  # Local variable `VARIABLE` is assigned to but never used
 ]
 
 # Exclude paths currently excluded in the flake8 configuration

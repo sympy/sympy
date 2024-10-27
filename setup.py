@@ -212,7 +212,7 @@ class sdist_sympy(sdist):
             commit_hash = commit_hash.rstrip()
             print('Commit hash found : {}.'.format(commit_hash))
             print('Writing it to {}.'.format(commit_hash_filepath))
-        except:
+        except Exception:
             pass
 
         if commit_hash:
@@ -308,7 +308,7 @@ with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
 
 if __name__ == '__main__':
     setup(name='sympy',
-          version=__version__,
+          version=__version__, # noqa: F821
           description='Computer algebra system (CAS) in Python',
           long_description=(Path(__file__).parent / 'README.md').read_text("UTF-8"),
           long_description_content_type='text/markdown',

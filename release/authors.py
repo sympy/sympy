@@ -43,6 +43,10 @@ def blue(text):
     return "\033[34m%s\033[0m" % text
 
 
+def red(text):
+    return "\033[31m%s\033[0m" % text
+
+
 def get_authors(version, prevversion):
     """
     Get the list of authors since the previous release
@@ -118,7 +122,7 @@ def get_previous_version_tag(version):
             # never happens, so just error
             cmdline = f'git rev-list --parents -n 1 {curtag}'
             print(cmdline)
-            parents = check_output(cmdline.split()).decode('utf-8').strip().split()
+            check_output(cmdline.split()).decode('utf-8').strip().split()
             # rev-list prints the current commit and then all its parents
             # If the tagged commit *is* a merge commit, just comment this
             # out, and manually make sure `get_previous_version_tag` is correct
