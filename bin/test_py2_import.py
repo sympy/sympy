@@ -15,7 +15,7 @@ parentdir = os.path.normpath(os.path.join(thisdir, '..'))
 sys.path.append(parentdir)
 
 try:
-    import sympy
+    import sympy # noqa: F401
 except ImportError as exc:
     message = str(exc)
     # e.g. "Python version 3.5 or above is required for SymPy."
