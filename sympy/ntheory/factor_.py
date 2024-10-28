@@ -3,6 +3,7 @@ Integer factorization
 """
 from __future__ import annotations
 
+from bisect import bisect_left
 from collections import defaultdict, OrderedDict
 from collections.abc import MutableMapping
 import math
@@ -636,7 +637,7 @@ class FactorCache(MutableMapping):
             if res.status_code != requests.codes.ok:
                 return None
             j = res.json()
-            if j.get("status") == "FF":
+            if j.get("status") in ["FF", "P"]:
                 return list(int(p) for p, _ in j.get("factors"))
 
         factor_cache.get_external = get_external
@@ -662,7 +663,7 @@ class FactorCache(MutableMapping):
         return factor
 
     def __setitem__(self, n: int, factor: int):
-        if not (1 < factor < n and n % factor == 0 and isprime(factor)):
+        if not (1 < factor <= n and n % factor == 0 and isprime(factor)):
             raise ValueError(f"{factor} is not a prime factor of {n}")
         self._cache[n] = max(self._cache.get(n, 0), factor)
         if self.maxsize is not None and len(self._cache) > self.maxsize:
@@ -698,6 +699,9 @@ class FactorCache(MutableMapping):
         """ Return the prime factor of ``n``.
         If it does not exist in the cache, return the value of ``default``.
         """
+        if n <= sieve._list[-1]:
+            if sieve._list[bisect_left(sieve._list, n)] == n:
+                return n
         if n in self._cache:
             self._cache.move_to_end(n)
             return self._cache[n]
@@ -1022,6 +1026,7 @@ def _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
             print(complete_msg)
         return True
     if n < next_p**2 or isprime(n):
+        factor_cache[n] = n
         factors[int(n)] = 1
         if verbose:
             print(complete_msg)
@@ -1034,6 +1039,7 @@ def _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
         return False
     base, exp = p
     if base < next_p**2 or isprime(base):
+        factor_cache[n] = base
         factors[base] = exp
     else:
         facs = factorint(base, limit, use_trial, use_rho, use_pm1,
@@ -1436,6 +1442,10 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         if verbose:
             print(complete_msg)
         return factors
+    # Check if it exists in the cache
+    while p := factor_cache.get(n):
+        n, e = remove(n, p)
+        factors[int(p)] = int(e)
     # first check if the simplistic run didn't finish
     # because of the limit and check for a perfect
     # power before exiting
@@ -1449,16 +1459,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             factors[int(n)] = 1
         return factors
     if _check_termination(factors, n, limit, use_trial,
-                          use_rho, use_pm1, verbose, next_p):
-        return factors
-
-    # Check if it exists in the cache
-    hit = False
-    while p := factor_cache.get(n):
-        hit = True
-        n, e = remove(n, p)
-        factors[int(p)] = int(e)
-    if hit and _check_termination(factors, n, limit, use_trial,
                           use_rho, use_pm1, verbose, next_p):
         return factors
 
