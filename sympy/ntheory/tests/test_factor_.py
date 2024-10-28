@@ -203,6 +203,10 @@ def test_factor_cache():
     assert len(factor_cache) == 2
     assert factor_cache[100] == 5
 
+    for n in [1000000007, 10000019*20000003]:
+        factorint(n)
+        assert n in factor_cache
+
     # Restore the initial state
     factor_cache.cache_clear()
     factor_cache.maxsize = 1000
