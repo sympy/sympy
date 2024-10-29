@@ -139,7 +139,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -n auto
+      - run: pytest -n auto --timeout 595
 
   # -------------------- Optional dependency tests ----------------- #
 
