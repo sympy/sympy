@@ -1,6 +1,6 @@
 from math import prod
 
-from sympy.core import Add, S, Dummy, expand_func
+from sympy.core import Add, S, Dummy, expand_func, expand_mul
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
@@ -158,6 +158,8 @@ class gamma(Function):
                 n = arg.p // arg.q
                 p = arg.p - n*arg.q
                 return self.func(x + n)._eval_expand_func().subs(x, Rational(p, arg.q))
+
+        arg = expand_mul(arg)
 
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()
