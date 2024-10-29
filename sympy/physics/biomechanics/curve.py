@@ -1020,9 +1020,9 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     canonical form and won't simplify any constants.
 
     >>> fl_M.doit(evaluate=False)
-    0.814*exp(-19.0519737844841*(l_M/l_M_opt
-    - 1.06)**2/(0.390740740740741*l_M/l_M_opt + 1)**2)
-    + 0.433*exp(-12.5*(l_M/l_M_opt - 0.717)**2/(l_M/l_M_opt - 0.1495)**2)
+    0.814*exp(-(l_M/l_M_opt
+    - 1.06)**2/(2*(0.0633*l_M/l_M_opt + 0.162)**2))
+    + 0.433*exp(-(l_M/l_M_opt - 0.717)**2/(2*(0.2*l_M/l_M_opt - 0.0299)**2))
     + 0.1*exp(-3.98991349867535*(l_M/l_M_opt - 1.0)**2)
 
     The function can also be differentiated. We'll differentiate with respect
@@ -1032,14 +1032,14 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     >>> fl_M.diff(l_M)
     ((-0.79798269973507*l_M/l_M_opt
     + 0.79798269973507)*exp(-3.98991349867535*(l_M/l_M_opt - 1.0)**2)
-    + (10.825*(-l_M/l_M_opt + 0.717)/(l_M/l_M_opt - 0.1495)**2
-    + 10.825*(l_M/l_M_opt - 0.717)**2/(l_M/l_M_opt
-    - 0.1495)**3)*exp(-12.5*(l_M/l_M_opt - 0.717)**2/(l_M/l_M_opt - 0.1495)**2)
-    + (31.0166133211401*(-l_M/l_M_opt + 1.06)/(0.390740740740741*l_M/l_M_opt
-    + 1)**2 + 13.6174190361677*(0.943396226415094*l_M/l_M_opt
-    - 1)**2/(0.390740740740741*l_M/l_M_opt
-    + 1)**3)*exp(-21.4067977442463*(0.943396226415094*l_M/l_M_opt
-    - 1)**2/(0.390740740740741*l_M/l_M_opt + 1)**2))/l_M_opt
+    + (0.433*(-l_M/l_M_opt + 0.717)/(0.2*l_M/l_M_opt - 0.0299)**2
+    + 0.0866*(l_M/l_M_opt - 0.717)**2/(0.2*l_M/l_M_opt
+    - 0.0299)**3)*exp(-(l_M/l_M_opt - 0.717)**2/(2*(0.2*l_M/l_M_opt - 0.0299)**2))
+    + (0.814*(-l_M/l_M_opt + 1.06)/(0.0633*l_M/l_M_opt
+    + 0.162)**2 + 0.0515262*(l_M/l_M_opt
+    - 1.06)**2/(0.0633*l_M/l_M_opt
+    + 0.162)**3)*exp(-(l_M/l_M_opt
+    - 1.06)**2/(2*(0.0633*l_M/l_M_opt + 0.162)**2)))/l_M_opt
 
     References
     ==========
