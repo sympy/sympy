@@ -590,7 +590,7 @@ def exptrigsimp(expr):
         # functions
         choices = [e]
         if e.has(*_trigs):
-            choices.append(e.rewrite(exp))
+            choices.append(expand_mul(e.rewrite(exp)))
         choices.append(e.rewrite(cos))
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
