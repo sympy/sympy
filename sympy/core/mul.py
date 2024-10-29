@@ -12,7 +12,6 @@ from .cache import cacheit
 from .intfunc import integer_nthroot, trailing
 from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
-from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
 from sympy.utilities.iterables import sift
@@ -271,29 +270,15 @@ class Mul(Expr, AssocOp):
 
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
-        rv = None
+
         if len(seq) == 2:
-            a, b = seq
-            if b.is_Rational:
-                a, b = b, a
-                seq = [a, b]
-            assert a is not S.One
-            if a.is_Rational and not a.is_zero:
-                r, b = b.as_coeff_Mul()
-                if b.is_Add:
-                    if r is not S.One:  # 2-arg hack
-                        # leave the Mul as a Mul?
-                        ar = a*r
-                        if ar is S.One:
-                            arb = b
-                        else:
-                            arb = cls(a*r, b, evaluate=False)
-                        rv = [arb], [], None
-                    elif global_parameters.distribute and b.is_commutative:
-                        newb = Add(*[_keep_coeff(a, bi) for bi in b.args])
-                        rv = [newb], [], None
-            if rv:
-                return rv
+            c, s = seq
+            if s.is_Rational:
+                c, s = s, c
+            if s.is_Add and c is S.NegativeOne:
+                # -(x + y) -> -x - y
+                res = Add(*[-a for a in s.args])
+                return [res], [], None
 
         # apply associativity, separate commutative part of seq
         c_part = []         # out: commutative factors
@@ -714,12 +699,6 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (global_parameters.distribute and not nc_part and len(c_part) == 2 and
-                c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
-            # 2*(1+a) -> 2 + 2 * a
-            coeff = c_part[0]
-            c_part = [Add(*[coeff*f for f in c_part[1].args])]
-
         return c_part, nc_part, order_symbols
 
     def _eval_power(self, e):
