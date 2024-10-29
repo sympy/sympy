@@ -211,7 +211,7 @@ jobs:
 
       - run: pip install -r requirements-dev.txt
       - run: pip install .
-      - run: pytest -n auto
+      - run: pytest -n auto --timeout 595
 
   # -------------------- FLINT tests -------------------------------- #
 
@@ -228,7 +228,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
       - run: pip install .
-      - run: pytest -n auto
+      - run: pytest -n auto --timeout 595
 
   # -------------------- FLINT+gmpy2 ------------------------------ #
 
@@ -245,7 +245,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint gmpy2
       - run: pip install .
-      - run: pytest -n auto
+      - run: pytest -n auto --timeout 595
 
   # -------------------- Tensorflow tests -------------------------- #
 
@@ -322,7 +322,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -n auto
+      - run: pytest -n auto --timeout 595
 
   # -------------------- Doctests older (and newer) Python --------------------- #
 
@@ -364,7 +364,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
-      - run: pytest -n auto
+      - run: pytest -n auto --timeout 595
 
   # -------------------- Build the html/latex docs ----------------- #
 
