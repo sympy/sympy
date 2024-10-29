@@ -309,7 +309,7 @@ def hypersimp(f, k):
     """
     f = sympify(f)
 
-    g = f.subs(k, k + 1) / f
+    g = expand_mul(f.subs(k, k + 1)) / f
 
     g = g.rewrite(gamma)
     if g.has(Piecewise):
@@ -317,6 +317,7 @@ def hypersimp(f, k):
         g = g.args[-1][0]
     g = expand_func(g)
     g = powsimp(g, deep=True, combine='exp')
+    g = g.cancel()
 
     if g.is_rational_function(k):
         return simplify(g, ratio=S.Infinity)
