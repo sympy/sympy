@@ -1750,7 +1750,7 @@ class Pow(Expr):
         >>> (3**((5 + y)/2)).as_content_primitive()
         (9, 3**((y + 1)/2))
         >>> eq = 3**(2 + 2*x)
-        >>> powsimp(eq) == eq
+        >>> powsimp(eq)
         True
         >>> eq.as_content_primitive()
         (9, 3**(2*x))

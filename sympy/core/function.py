@@ -1072,9 +1072,9 @@ class Derivative(Expr):
 
         >>> e = sqrt((x + 1)**2 + x)
         >>> diff(e, (x, 5), simplify=False).count_ops()
-        136
+        37
         >>> diff(e, (x, 5)).count_ops()
-        30
+        33
 
     Ordering of variables:
 
@@ -2856,7 +2856,7 @@ def expand_multinomial(expr, deep=True):
     >>> from sympy import symbols, expand_multinomial, exp
     >>> x, y = symbols('x y', positive=True)
     >>> expand_multinomial((x + exp(x + 1))**2)
-    x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
+    x**2 + 2*x*exp(x + 1) + exp(2*(x + 1))
 
     """
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,

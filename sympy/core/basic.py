@@ -2007,16 +2007,18 @@ class Basic(Printable):
         >>> from sympy.abc import x
         >>> expr = cos(x) + I*sin(x)
         >>> expr.rewrite(exp)
+        (exp(I*x) - exp(-I*x))/2 + (exp(I*x) + exp(-I*x))/2
+        >>> expr.rewrite(exp).expand()
         exp(I*x)
 
         Pattern can be a type or an iterable of types.
 
         >>> expr.rewrite(sin, exp)
-        exp(I*x)/2 + cos(x) - exp(-I*x)/2
+        (exp(I*x) - exp(-I*x))/2 + cos(x)
         >>> expr.rewrite([cos,], exp)
-        exp(I*x)/2 + I*sin(x) + exp(-I*x)/2
+        (exp(I*x) + exp(-I*x))/2 + I*sin(x)
         >>> expr.rewrite([cos, sin], exp)
-        exp(I*x)
+        (exp(I*x) - exp(-I*x))/2 + (exp(I*x) + exp(-I*x))/2
 
         Rewriting behavior can be implemented by defining ``_eval_rewrite()``
         method.

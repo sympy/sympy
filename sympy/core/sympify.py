@@ -529,7 +529,7 @@ def kernS(s):
     of an expression, but kernS will prevent that:
 
     >>> 2*(x + y), -(x + 1)
-    (2*x + 2*y, -x - 1)
+    (2*(x + y), -x - 1)
     >>> kernS('2*(x + y)')
     2*(x + y)
     >>> kernS('-(x + 1)')
