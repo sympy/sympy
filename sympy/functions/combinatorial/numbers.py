@@ -1631,6 +1631,13 @@ class partition(Function):
         if self.args[0].is_nonnegative is True:
             return True
 
+    def _eval_Mod(self, q):
+        # Ramanujan's congruences
+        n = self.args[0]
+        for p, rem in [(5, 4), (7, 5), (11, 6)]:
+            if q == p and n % q == rem:
+                return S.Zero
+
 
 class divisor_sigma(Function):
     r"""
