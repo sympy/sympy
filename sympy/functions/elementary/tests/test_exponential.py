@@ -641,6 +641,24 @@ def test_lambertw():
     n = Symbol('n', negative=True)
     assert LambertW(n).is_zero is False
 
+    #test nseries
+    assert LambertW(x).series(x) == x - x**2 + 3*x**3/2 - 8*x**4/3 + 125*x**5/24 + O(x**6)
+    assert LambertW(exp(x)).series(x, n=3) == LambertW(1) + x*LambertW(1)/(LambertW(1) + 1) + \
+        x**2*(-LambertW(1)**2/(2*LambertW(1)**3 + 6*LambertW(1)**2 + 2 + 6*LambertW(1)) + \
+        LambertW(1)/(2*LambertW(1)**2 + 2 + 4*LambertW(1))) + O(x**3)
+    assert LambertW(x+1).series(x, n=3) == LambertW(1) + x*LambertW(1)/(LambertW(1) + 1) + \
+        x**2*(-LambertW(1)/(2*LambertW(1) + 2) - LambertW(1)**2/(2*LambertW(1)**3 + 6*LambertW(1)**2 + \
+        2 + 6*LambertW(1)) + LambertW(1)/(2*LambertW(1)**2 + 2 + 4*LambertW(1))) + O(x**3)
+    assert LambertW(sqrt(x)).series(x) == -x - 8*x**2/3 - 54*x**3/5 - 16384*x**4/315 - 156250*x**5/567 + \
+        sqrt(x) + 3*x**(S(3)/2)/2 + 125*x**(S(5)/2)/24 + 16807*x**(S(7)/2)/720 + 531441*x**(S(9)/2)/4480 + \
+        2357947691*x**(S(11)/2)/3628800 + O(x**6)
+
+    #test aseries
+    assert LambertW(x).series(x, oo, n=2) == -log(log(x))/log(x)**2 + log(log(x))/log(x) - log(log(x)) + \
+        log(x) + O(x**(-2), (x, oo))
+    assert LambertW(exp(x)).series(x, oo, n=3) == 3*log(x)**2/x**4 + log(x)/x**3 - 3*log(x)**2/(2*x**3) - \
+        log(x)/x**2 + log(x)**2/(2*x**2) + log(x)/x - log(x) + x + O(exp(-3*x), (x, oo))
+
 
 def test_issue_5673():
     e = LambertW(-1)
