@@ -508,10 +508,8 @@ jobs:
       - run: asv compare upstream/1.12 upstream/1.13 --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
       - run: asv compare upstream/1.12 upstream/1.13 --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
-        # This workflow does not have write permissions for the repository so
-        # we save all outputs as artifacts that can be accessed by the
-        # comment-on-pr workflow which is triggered by workflow_run to run when
-        # this one completes.
+        # we save all outputs as artifacts that can be downloaded from the
+        # GitHub Actions summary page.
 
       - name: Upload results as artifacts
         uses: actions/upload-artifact@v3
@@ -522,27 +520,3 @@ jobs:
             pr_vs_master_changed.txt
             master_vs_release.txt
             master_vs_release_changed.txt
-
-  # -------------------- Save PR number ---------------------------- #
-
-  save-pr-number:
-    needs: [doctests-latest, tests-latest]
-
-    # The comment-on-pr workflow needs the issue number of the PR to be able to
-    # comment so we output that to a file and pass it over as an artifact.
-
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Write PR number to file
-        if: ${{ github.event_name == 'pull_request' }}
-        run: echo -n ${{ github.event.number }} > pr_number.txt
-
-      - name: Write empty file for PR number
-        if: ${{ github.event_name != 'pull_request' }}
-        run: echo -n > pr_number.txt
-
-      - name: Upload results as artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: pr_number
-          path: pr_number.txt
