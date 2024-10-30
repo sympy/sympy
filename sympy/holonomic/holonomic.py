@@ -2099,39 +2099,25 @@ def from_hyper(func, x0=0, evalf=False):
     if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
-    def _find_conditions(simp, x, x0, order, evalf=False):
-        y0 = []
-        for i in range(order):
-            if evalf:
-                val = simp.subs(x, x0).evalf()
-            else:
-                val = simp.subs(x, x0)
-            # return None if it is Infinite or NaN
-            if val.is_finite is False or isinstance(val, NaN):
-                return None
-            y0.append(val)
-            simp = simp.diff(x)
-        return y0
-
     # if the function is known symbolically
     if not isinstance(simp, hyper):
-        y0 = _find_conditions(simp, x, x0, sol.order)
+        y0 = _find_conditions(simp, x, x0, sol.order, use_limit=False)
         while not y0:
             # if values don't exist at 0, then try to find initial
             # conditions at 1. If it doesn't exist at 1 too then
             # try 2 and so on.
             x0 += 1
-            y0 = _find_conditions(simp, x, x0, sol.order)
+            y0 = _find_conditions(simp, x, x0, sol.order, use_limit=False)
 
         return HolonomicFunction(sol, x).composition(z, x0, y0)
 
     if isinstance(simp, hyper):
         x0 = 1
         # use evalf if the function can't be simplified
-        y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+        y0 = _find_conditions(simp, x, x0, sol.order, evalf, use_limit=False)
         while not y0:
             x0 += 1
-            y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+            y0 = _find_conditions(simp, x, x0, sol.order, evalf, use_limit=False)
         return HolonomicFunction(sol, x).composition(z, x0, y0)
 
     return HolonomicFunction(sol, x).composition(z)
@@ -2183,34 +2169,21 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
-    def _find_conditions(simp, x, x0, order, evalf=False):
-        y0 = []
-        for i in range(order):
-            if evalf:
-                val = simp.subs(x, x0).evalf()
-            else:
-                val = simp.subs(x, x0)
-            if val.is_finite is False or isinstance(val, NaN):
-                return None
-            y0.append(val)
-            simp = simp.diff(x)
-        return y0
-
     # computing initial conditions
     if not isinstance(simp, meijerg):
-        y0 = _find_conditions(simp, x, x0, sol.order)
+        y0 = _find_conditions(simp, x, x0, sol.order, use_limit=False)
         while not y0:
             x0 += 1
-            y0 = _find_conditions(simp, x, x0, sol.order)
+            y0 = _find_conditions(simp, x, x0, sol.order, use_limit=False)
 
         return HolonomicFunction(sol, x).composition(z, x0, y0)
 
     if isinstance(simp, meijerg):
         x0 = 1
-        y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+        y0 = _find_conditions(simp, x, x0, sol.order, evalf, use_limit=False)
         while not y0:
             x0 += 1
-            y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+            y0 = _find_conditions(simp, x, x0, sol.order, evalf, use_limit=False)
 
         return HolonomicFunction(sol, x).composition(z, x0, y0)
 
@@ -2777,11 +2750,13 @@ def _create_table(table, domain=QQ):
     add(Shi(x_1), -x_1*Dx + 2*Dx**2 + x_1*Dx**3, x_1)
 
 
-def _find_conditions(func, x, x0, order):
+def _find_conditions(func, x, x0, order, evalf=False, use_limit=True):
     y0 = []
-    for i in range(order):
+    for _ in range(order):
         val = func.subs(x, x0)
-        if isinstance(val, NaN):
+        if evalf:
+            val = val.evalf()
+        if use_limit and isinstance(val, NaN):
             val = limit(func, x, x0)
         if val.is_finite is False or isinstance(val, NaN):
             return None
