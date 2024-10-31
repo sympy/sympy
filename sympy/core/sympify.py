@@ -7,6 +7,9 @@ import mpmath.libmp as mlib
 
 from inspect import getmro
 import string
+
+from sympy.external.gmpy import SYMPY_INTS_MOD
+
 from sympy.core.random import choice
 
 from .parameters import global_parameters
@@ -93,6 +96,9 @@ def _convert_numpy_types(a, **sympify_args):
         p, q = a.as_integer_ratio()
         a = mlib.from_rational(p, q, prec)
         return Float(a, precision=prec)
+
+
+DONT_SYMPIFY_TYPES = (CantSympify,) + SYMPY_INTS_MOD
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
@@ -380,7 +386,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         else:
             raise SympifyError(a)
 
-    if isinstance(a, CantSympify):
+    if isinstance(a, DONT_SYMPIFY_TYPES):
         raise SympifyError(a)
 
     cls = getattr(a, "__class__", None)
