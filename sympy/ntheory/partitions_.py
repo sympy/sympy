@@ -1,7 +1,6 @@
 from mpmath.libmp import (fzero, from_int, from_rational,
     fone, fhalf, bitcount, to_int, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
-from sympy.external.gmpy import gcd, legendre, jacobi
 from .residue_ntheory import _sqrt_mod_prime_power, is_quad_residue
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.memoization import recurrence_memo
@@ -65,7 +64,7 @@ def _a(n, k, prec):
             arg = mpf_div(mpf_mul(
                 from_int(4*m), pi, prec), from_int(mod), prec)
             return mpf_mul(mpf_mul(
-                from_int((-1)**e*jacobi(m - 1, m)),
+                from_int((-1)**e*(2 - (m % 4))),
                 mpf_sqrt(from_int(k), prec), prec),
                 mpf_sin(arg, prec), prec)
         if p == 3:
@@ -77,14 +76,15 @@ def _a(n, k, prec):
             arg = mpf_div(mpf_mul(from_int(4*m), pi, prec),
                 from_int(mod), prec)
             return mpf_mul(mpf_mul(
-                from_int(2*(-1)**(e + 1)*legendre(m, 3)),
+                from_int(2*(-1)**(e + 1)*(3 - 2*(m % 3))),
                 mpf_sqrt(from_int(k//3), prec), prec),
                 mpf_sin(arg, prec), prec)
         v = k + v % k
+        jacobi3 = -1 if k % 12 in [5, 7] else 1
         if v % p == 0:
             if e == 1:
                 return mpf_mul(
-                    from_int(jacobi(3, k)),
+                    from_int(jacobi3),
                     mpf_sqrt(from_int(k), prec), prec)
             return fzero
         if not is_quad_residue(v, p):
@@ -96,12 +96,12 @@ def _a(n, k, prec):
             mpf_mul(from_int(4*m), pi, prec),
             from_int(k), prec)
         return mpf_mul(mpf_mul(
-            from_int(2*jacobi(3, k)),
+            from_int(2*jacobi3),
             mpf_sqrt(from_int(k), prec), prec),
             mpf_cos(arg, prec), prec)
 
     if p != 2 or e >= 3:
-        d1, d2 = gcd(k1, 24), gcd(k2, 24)
+        d1, d2 = math.gcd(k1, 24), math.gcd(k2, 24)
         e = 24//(d1*d2)
         n1 = ((d2*e*n + (k2**2 - 1)//d1)*
             pow(e*k2*k2*d2, _totient[k1] - 1, k1)) % k1
