@@ -3,7 +3,7 @@ from typing import Tuple as tTuple
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (Function, Derivative, ArgumentIndexError,
+from sympy.core.function import (DefinedFunction, Derivative, ArgumentIndexError,
     AppliedUndef, expand_mul, PoleError)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
@@ -17,7 +17,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 ###############################################################################
 
 
-class re(Function):
+class re(DefinedFunction):
     """
     Returns real part of expression. This function performs only
     elementary analysis and so it will fail to decompose properly
@@ -139,7 +139,7 @@ class re(Function):
             return True
 
 
-class im(Function):
+class im(DefinedFunction):
     """
     Returns imaginary part of expression. This function performs only
     elementary analysis and so it will fail to decompose properly more
@@ -262,7 +262,7 @@ class im(Function):
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
 ###############################################################################
 
-class sign(Function):
+class sign(DefinedFunction):
     """
     Returns the complex sign of an expression:
 
@@ -443,7 +443,7 @@ class sign(Function):
         return self.func(factor_terms(self.args[0]))  # XXX include doit?
 
 
-class Abs(Function):
+class Abs(DefinedFunction):
     """
     Return the absolute value of the argument.
 
@@ -693,7 +693,7 @@ class Abs(Function):
         return sqrt(arg*conjugate(arg))
 
 
-class arg(Function):
+class arg(DefinedFunction):
     r"""
     Returns the argument (in radians) of a complex number. The argument is
     evaluated in consistent convention with ``atan2`` where the branch-cut is
@@ -817,7 +817,7 @@ class arg(Function):
         return self._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
 
-class conjugate(Function):
+class conjugate(DefinedFunction):
     """
     Returns the *complex conjugate* [1]_ of an argument.
     In mathematics, the complex conjugate of a complex number
@@ -894,7 +894,7 @@ class conjugate(Function):
         return self.args[0].is_algebraic
 
 
-class transpose(Function):
+class transpose(DefinedFunction):
     """
     Linear map transposition.
 
@@ -951,7 +951,7 @@ class transpose(Function):
         return self.args[0]
 
 
-class adjoint(Function):
+class adjoint(DefinedFunction):
     """
     Conjugate transpose or Hermite conjugation.
 
@@ -1017,7 +1017,7 @@ class adjoint(Function):
 ###############################################################################
 
 
-class polar_lift(Function):
+class polar_lift(DefinedFunction):
     """
     Lift argument to the Riemann surface of the logarithm, using the
     standard branch.
@@ -1102,7 +1102,7 @@ class polar_lift(Function):
         return Abs(self.args[0], evaluate=True)
 
 
-class periodic_argument(Function):
+class periodic_argument(DefinedFunction):
     r"""
     Represent the argument on a quotient of the Riemann surface of the
     logarithm. That is, given a period $P$, always return a value in
@@ -1230,7 +1230,7 @@ def unbranched_argument(arg):
     return periodic_argument(arg, oo)
 
 
-class principal_branch(Function):
+class principal_branch(DefinedFunction):
     """
     Represent a polar number reduced to its principal branch on a quotient
     of the Riemann surface of the logarithm.
