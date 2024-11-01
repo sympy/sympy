@@ -5,8 +5,19 @@ The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from functools import wraps
 from .sympify import SympifyError, sympify
+
+
+if TYPE_CHECKING:
+    from typing import Callable, TypeVar, Union
+    T1 = TypeVar('T1')
+    T2 = TypeVar('T2')
+    T3 = TypeVar('T3')
 
 
 def _sympifyit(arg, retval=None):
@@ -69,7 +80,8 @@ def __sympifyit(func, arg, retval=None):
     return __sympifyit_wrapper
 
 
-def call_highest_priority(method_name):
+def call_highest_priority(method_name: str
+    ) -> Callable[[Callable[[T1, T2], T3]], Callable[[T1, T2], T3]]:
     """A decorator for binary special methods to handle _op_priority.
 
     Explanation
@@ -95,12 +107,12 @@ def call_highest_priority(method_name):
         def __rmul__(self, other):
         ...
     """
-    def priority_decorator(func):
+    def priority_decorator(func: Callable[[T1, T2], T3]) -> Callable[[T1, T2], T3]:
         @wraps(func)
-        def binary_op_wrapper(self, other):
+        def binary_op_wrapper(self: T1, other: T2) -> T3:
             if hasattr(other, '_op_priority'):
-                if other._op_priority > self._op_priority:
-                    f = getattr(other, method_name, None)
+                if other._op_priority > self._op_priority:  # type: ignore
+                    f: Union[Callable[[T1], T3], None] = getattr(other, method_name, None)
                     if f is not None:
                         return f(self)
             return func(self, other)
@@ -187,8 +199,8 @@ def sympify_return(*args):
     See the docstring of sympify_method_args for explanation.
     '''
     # Store a wrapper object for the decorated method
-    def wrapper(func):
-        return _SympifyWrapper(func, args)
+    def wrapper(func: Callable[[T1, T2], T3]) -> Callable[[T1, T2], T3]:
+        return _SympifyWrapper(func, args)  # type: ignore
     return wrapper
 
 
