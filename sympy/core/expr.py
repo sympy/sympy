@@ -446,6 +446,40 @@ class Expr(Basic, EvalfMixin):
         """
         return all(obj.is_number for obj in self.args)
 
+    def _eval_is_comparable(self):
+        # Basic._eval_is_comparable always returns False, so we override it
+        # here
+        is_extended_real = self.is_extended_real
+        if is_extended_real is False:
+            return False
+        if not self.is_number:
+            return False
+
+        # XXX: as_real_imag() can be a very expensive operation. It should not
+        # be used here because is_comparable is used implicitly in many places.
+        # Probably this method should just return self.evalf(2).is_Number.
+
+        n, i = self.as_real_imag()
+
+        if not n.is_Number:
+            n = n.evalf(2)
+            if not n.is_Number:
+                return False
+
+        if not i.is_Number:
+            i = i.evalf(2)
+            if not i.is_Number:
+                return False
+
+        if i:
+            # if _prec = 1 we can't decide and if not,
+            # the answer is False because numbers with
+            # imaginary parts can't be compared
+            # so return False
+            return False
+        else:
+            return n._prec != 1
+
     def _random(self, n=None, re_min=-1, im_min=-1, re_max=1, im_max=1):
         """Return self evaluated, if possible, replacing free symbols with
         random complex values, if necessary.
