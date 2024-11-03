@@ -704,7 +704,7 @@ class Basic(Printable):
             active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
-    def as_dummy(self) -> Self:
+    def as_dummy(self) -> "Self":
         """Return the expression with any objects having structurally
         bound symbols replaced with unique, canonical symbols within
         the object in which they appear and having only the default
@@ -729,7 +729,7 @@ class Basic(Printable):
         =====
 
         Any object that has structurally bound variables should have
-        a property, `bound_symbols` that returns those symbols
+        a property, ``bound_symbols`` that returns those symbols
         appearing in the object.
         """
         from .symbol import Dummy, Symbol
