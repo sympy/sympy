@@ -27,7 +27,7 @@ jobs:
             sudo apt update
             sudo apt install imagemagick graphviz librsvg2-bin
             cd doc
-            pip install -r requirements.txt
+            pip install -r requirements.txt typing_extensions
       - run:
           name: Build docs
           no_output_timeout: 25m
