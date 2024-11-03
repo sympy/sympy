@@ -1,11 +1,16 @@
 """Useful utility decorators. """
 
+from typing import TypeVar
 import sys
 import types
 import inspect
 from functools import wraps, update_wrapper
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
+_T = TypeVar('_T')
+
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
@@ -175,7 +180,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
     return depends_on_deco
 
 
-def public(obj):
+def public(obj: _T) -> _T:
     """
     Append ``obj``'s name to global ``__all__`` variable (call site).
 

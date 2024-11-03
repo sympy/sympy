@@ -336,7 +336,7 @@ def sylvester(f, g, x, method = 1):
         return M
 
     # Sylvester's matrix of 1853 (a.k.a sylvester2)
-    if method >= 2:
+    else:
         if len(fp) < len(gp):
             h = []
             for i in range(len(gp) - len(fp)):
