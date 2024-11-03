@@ -3,7 +3,7 @@
 
 # This is separate from the GitHub Actions build that builds the docs, which
 # also builds the docs PDF.
-version: 2
+version: 2.1
 
 # Aliases to reuse
 _defaults: &defaults
