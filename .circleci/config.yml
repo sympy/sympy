@@ -10,7 +10,7 @@ _defaults: &defaults
   docker:
     # CircleCI maintains a library of pre-built images
     # documented at https://circleci.com/docs/2.0/circleci-images/
-    - image: cimg/python:3.10.2
+    - image: cimg/python:3.13.0
   working_directory: ~/repo
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
             sudo apt update
             sudo apt install imagemagick graphviz librsvg2-bin
             cd doc
-            pip install -r requirements.txt typing_extensions
+            pip install -r requirements.txt
       - run:
           name: Build docs
           no_output_timeout: 25m
