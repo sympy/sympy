@@ -22,7 +22,9 @@ from sympy.utilities.misc import filldedent, func_name
 
 if TYPE_CHECKING:
     from typing import ClassVar
+    from typing_extensions import Self
     from .assumptions import StdFactKB
+    from .symbol import Symbol
 
 
 def as_Basic(expr):
@@ -702,9 +704,7 @@ class Basic(Printable):
             active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
-    # XXX: The as_dummy() return type should be Self but need Python >= 3.11
-
-    def as_dummy(self) -> Basic:
+    def as_dummy(self) -> Self:
         """Return the expression with any objects having structurally
         bound symbols replaced with unique, canonical symbols within
         the object in which they appear and having only the default
@@ -748,10 +748,10 @@ class Basic(Printable):
         return self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
             can,
-            simultaneous=False)
+            simultaneous=False) # type:ignore
 
     @property
-    def canonical_variables(self):
+    def canonical_variables(self) -> dict[Basic, Symbol]:
         """Return a dictionary mapping any variable defined in
         ``self.bound_symbols`` to Symbols that do not clash
         with any free symbols in the expression.
