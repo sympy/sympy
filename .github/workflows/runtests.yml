@@ -197,13 +197,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: sudo apt-get update
-      - run: sudo apt-get install libgmp-dev libmpfr-dev libmpc-dev libflint-dev
-      - run: pip install git+https://github.com/flintlib/python-flint.git@master
-      - run: pip install git+https://github.com/aleaxit/gmpy.git@master
+      - run: pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
-      - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy
-      - run: pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scipy
+      - run: |
+          python -m pip install \
+              --pre \
+              --index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \
+              --upgrade --only-binary=:all: \
+                          python-flint      \
+                          numpy             \
+                          scipy             \
+                          #
+
       - run: pip install -r requirements-dev.txt
       - run: pip install .
       - run: pytest -n auto
@@ -222,32 +227,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
-      # Test the modules that most directly use python-flint
-      - run: >-
-          pytest
-          sympy/crypto
-          sympy/integrals
-          sympy/holonomic
-          sympy/matrices
-          sympy/ntheory
-          sympy/polys
-          sympy/solvers
-      - run: >-
-          bin/doctest
-          sympy/integrals
-          sympy/holonomic
-          sympy/matrices
-          sympy/ntheory
-          sympy/polys
-          sympy/printing
-          doc/src/modules/integrals
-          doc/src/modules/holonomic
-          doc/src/modules/matrices
-          doc/src/modules/ntheory.rst
-          doc/src/modules/polys
-          doc/src/modules/printing.rst
-          doc/src/tutorials/intro-tutorial/
-
+      - run: pip install .
+      - run: pytest -n auto
 
   # -------------------- FLINT+gmpy2 ------------------------------ #
 
@@ -263,36 +244,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint gmpy2
-      # Test the modules that most directly use python-flint
-      - run: pytest sympy/polys sympy/ntheory sympy/matrices
-        env:
-          SYMPY_GROUND_TYPES: flint
-      # Test the modules that most directly use python-flint
-      - run: >-
-          pytest
-          sympy/crypto
-          sympy/integrals
-          sympy/holonomic
-          sympy/matrices
-          sympy/ntheory
-          sympy/polys
-          sympy/solvers
-      - run: >-
-          bin/doctest
-          sympy/integrals
-          sympy/holonomic
-          sympy/matrices
-          sympy/ntheory
-          sympy/polys
-          sympy/printing
-          doc/src/modules/integrals
-          doc/src/modules/holonomic
-          doc/src/modules/matrices
-          doc/src/modules/ntheory.rst
-          doc/src/modules/polys
-          doc/src/modules/printing.rst
-          doc/src/tutorials/intro-tutorial/
-
+      - run: pip install .
+      - run: pytest -n auto
 
   # -------------------- Tensorflow tests -------------------------- #
 
@@ -509,10 +462,8 @@ jobs:
       - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
       - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
-        # This workflow does not have write permissions for the repository so
-        # we save all outputs as artifacts that can be accessed by the
-        # comment-on-pr workflow which is triggered by workflow_run to run when
-        # this one completes.
+        # we save all outputs as artifacts that can be downloaded from the
+        # GitHub Actions summary page.
 
       - name: Upload results as artifacts
         uses: actions/upload-artifact@v4
@@ -523,27 +474,3 @@ jobs:
             pr_vs_master_changed.txt
             master_vs_release.txt
             master_vs_release_changed.txt
-
-  # -------------------- Save PR number ---------------------------- #
-
-  save-pr-number:
-    needs: [doctests-latest, tests-latest]
-
-    # The comment-on-pr workflow needs the issue number of the PR to be able to
-    # comment so we output that to a file and pass it over as an artifact.
-
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Write PR number to file
-        if: ${{ github.event_name == 'pull_request' }}
-        run: echo -n ${{ github.event.number }} > pr_number.txt
-
-      - name: Write empty file for PR number
-        if: ${{ github.event_name != 'pull_request' }}
-        run: echo -n > pr_number.txt
-
-      - name: Upload results as artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr_number
-          path: pr_number.txt

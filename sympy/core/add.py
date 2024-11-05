@@ -8,7 +8,6 @@ from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
-from .numbers import equal_valued
 from .intfunc import ilcm, igcd
 from .expr import Expr
 from .kind import UndefinedKind
@@ -325,6 +324,9 @@ class Add(Expr, AssocOp):
                 if s.is_Mul:
                     # Mul, already keeps its arguments in perfect order.
                     # so we can simply put c in slot0 and go the fast way.
+                    #
+                    # XXX: This breaks VectorMul unless it overrides
+                    # _new_rawargs
                     cs = s._new_rawargs(*((c,) + s.args))
                     newseq.append(cs)
                 elif s.is_Add:
@@ -484,20 +486,6 @@ class Add(Expr, AssocOp):
                     return _unevaluated_Mul(
                         r - i*S.ImaginaryUnit,
                         1/(r**2 + i**2))
-        elif e.is_Number and abs(e) != 1:
-            # handle the Float case: (2.0 + 4*x)**e -> 4**e*(0.5 + x)**e
-            c, m = zip(*[i.as_coeff_Mul() for i in self.args])
-            if any(i.is_Float for i in c):  # XXX should this always be done?
-                big = -1
-                for i in c:
-                    if abs(i) >= big:
-                        big = abs(i)
-                if big > 0 and not equal_valued(big, 1):
-                    from sympy.functions.elementary.complexes import sign
-                    bigs = (big, -big)
-                    c = [sign(i) if i in bigs else i/big for i in c]
-                    addpow = Add(*[c*m for c, m in zip(c, m)])**e
-                    return big**e*addpow
 
     @cacheit
     def _eval_derivative(self, s):

@@ -99,7 +99,6 @@ redirects = {
     "modules/physics/mechanics/symsystem": "../explanation/modules/physics/mechanics/symsystem.html",
     "modules/physics/mechanics/linearize": "../explanation/modules/physics/mechanics/linearize.html",
     "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_uses.html",
-    "modules/physics/mechanics/examples": "../tutorials/physics/mechanics.html",
     "tutorials/physics/biomechanics/biomechanics": "../explanation/modules/physics/biomechanics/biomechanics.html",
 
 }
@@ -477,7 +476,7 @@ if not commit_hash:
         commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
         commit_hash = commit_hash.decode('ascii')
         commit_hash = commit_hash.rstrip()
-    except:
+    except Exception:
         import warnings
         warnings.warn(
             "Failed to get the git commit hash as the command " \

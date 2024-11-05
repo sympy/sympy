@@ -11,6 +11,6 @@ Physics, Optics, Quantum Mechanics, Units and Vector algebra.
 
 For physics tutorials, please check out:
 
-* `Biomechanics Tutorials <../../tutorials/physics/biomechanics/index.html>`_
-* `Mechanics Tutorials <../../tutorials/physics/mechanics/index.html>`_
-* `Control Tutorials <../../tutorials/physics/control/index.html>`_
+* `Biomechanics Tutorials <../../tutorials/physics/biomechanics/index.rst>`_
+* `Mechanics Tutorials <../../tutorials/physics/mechanics/index.rst>`_
+* `Control Tutorials <../../tutorials/physics/control/index.rst>`_

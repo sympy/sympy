@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 
 import os
+import stat
 import json
 from subprocess import check_output
 from collections import OrderedDict, defaultdict
 from collections.abc import Mapping
 import glob
 from contextlib import contextmanager
+from getpass import getpass
 
 import requests
+from requests.auth import HTTPBasicAuth
 from requests_oauthlib import OAuth2
 
 
