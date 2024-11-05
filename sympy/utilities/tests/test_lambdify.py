@@ -2,6 +2,7 @@ from itertools import product
 import math
 import inspect
 import linecache
+import gc
 
 import mpmath
 
@@ -991,6 +992,7 @@ def test_lambdify_linecache():
     assert filename in linecache.cache
     assert linecache.cache[filename] == (len(source), None, source.splitlines(True), filename)
     del func
+    gc.collect()
     assert filename not in linecache.cache
 
 #================== Test special printers ==========================
