@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
 from functools import cmp_to_key
+from typing import TYPE_CHECKING
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -19,6 +20,11 @@ from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
 from inspect import getmro
+
+
+if TYPE_CHECKING:
+    from typing import ClassVar
+    from .assumptions import StdFactKB
 
 
 def as_Basic(expr):
@@ -218,11 +224,40 @@ class Basic(Printable):
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
-    is_real: bool | None
-    is_extended_real: bool | None
-    is_zero: bool | None
+
+    default_assumptions: ClassVar[StdFactKB]
+
+    is_composite: bool | None
+    is_noninteger: bool | None
+    is_extended_positive: bool | None
     is_negative: bool | None
+    is_complex: bool | None
+    is_extended_nonpositive: bool | None
+    is_integer: bool | None
+    is_positive: bool | None
+    is_rational: bool | None
+    is_extended_nonnegative: bool | None
+    is_infinite: bool | None
+    is_antihermitian: bool | None
+    is_extended_negative: bool | None
+    is_extended_real: bool | None
+    is_finite: bool | None
+    is_polar: bool | None
+    is_imaginary: bool | None
+    is_transcendental: bool | None
+    is_extended_nonzero: bool | None
+    is_nonzero: bool | None
+    is_odd: bool | None
+    is_algebraic: bool | None
+    is_prime: bool | None
     is_commutative: bool | None
+    is_nonnegative: bool | None
+    is_nonpositive: bool | None
+    is_hermitian: bool | None
+    is_irrational: bool | None
+    is_real: bool | None
+    is_zero: bool | None
+    is_even: bool | None
 
     kind: Kind = UndefinedKind
 
@@ -1856,8 +1891,8 @@ class Basic(Printable):
 
         Wild symbols match all.
 
-        Return ``None`` when expression (self) does not match
-        with pattern. Otherwise return a dictionary such that::
+        Return ``None`` when expression (self) does not match with pattern.
+        Otherwise return a dictionary such that::
 
           pattern.xreplace(self.match(pattern)) == self
 
@@ -1880,56 +1915,37 @@ class Basic(Printable):
         >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
-        Structurally bound symbols are ignored during matching:
+        Since match is purely structural expressions that are equivalent up to
+        bound symbols will not match:
 
-        >>> Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, p)))
-        {p_: 2}
+        >>> print(Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, p))))
+        None
 
-        But they can be identified if desired:
+        An expression with bound symbols can be matched if the pattern uses
+        a distinct ``Wild`` for each bound symbol:
 
         >>> Sum(x, (x, 1, 2)).match(Sum(q, (q, 1, p)))
         {p_: 2, q_: x}
 
         The ``old`` flag will give the old-style pattern matching where
-        expressions and patterns are essentially solved to give the
-        match. Both of the following give None unless ``old=True``:
+        expressions and patterns are essentially solved to give the match. Both
+        of the following give None unless ``old=True``:
 
         >>> (x - 2).match(p - x, old=True)
         {p_: 2*x - 2}
         >>> (2/x).match(p*x, old=True)
         {p_: 2/x**2}
 
+        See Also
+        ========
+
+        matches: pattern.matches(expr) is the same as expr.match(pattern)
+        xreplace: exact structural replacement
+        replace: structural replacement with pattern matching
+        Wild: symbolic placeholders for expressions in pattern matching
         """
         pattern = sympify(pattern)
-        # match non-bound symbols
-        canonical = lambda x: x if x.is_Symbol else x.as_dummy()
-        m = canonical(pattern).matches(canonical(self), old=old)
-        if m is None:
-            return m
-        from .symbol import Wild
-        from .function import WildFunction
-        from ..tensor.tensor import WildTensor, WildTensorIndex, WildTensorHead
-        wild = pattern.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead)
-        # sanity check
-        if set(m) - wild:
-            raise ValueError(filldedent('''
-            Some `matches` routine did not use a copy of repl_dict
-            and injected unexpected symbols. Report this as an
-            error at https://github.com/sympy/sympy/issues'''))
-        # now see if bound symbols were requested
-        bwild = wild - set(m)
-        if not bwild:
-            return m
-        # replace free-Wild symbols in pattern with match result
-        # so they will match but not be in the next match
-        wpat = pattern.xreplace(m)
-        # identify remaining bound wild
-        w = wpat.matches(self, old=old)
-        # add them to m
-        if w:
-            m.update(w)
-        # done
-        return m
+        return pattern.matches(self, old=old)
 
     def count_ops(self, visual=None):
         """Wrapper for count_ops that returns the operation count."""
