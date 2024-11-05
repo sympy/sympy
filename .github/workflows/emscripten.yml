@@ -123,12 +123,13 @@ jobs:
     if: always() && github.event_name == 'pull_request'
     steps:
       # Don't fail if the cache doesn't exist or if there are
-      # insufficient permissions to delete it. his is a best-effort
+      # insufficient permissions to delete it. This is a best-effort
       # attempt to delete the cache.
       #
       # This will fail for PRs from forks opened by contributors
       # who do not have write permissions to the repository, but PRs
-      # via branches from the main repository should succeed.
+      # via branches from the main repository and PRs from users
+      # with write access to the repository will succeed.
       - name: Delete previous cached test durations
         run: |
           gh extension install actions/gh-actions-cache
