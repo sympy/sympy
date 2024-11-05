@@ -1,4 +1,4 @@
-# Copied from NumPy https://github.com/numpy/numpy/pull/25894
+# Adapted from NumPy https://github.com/numpy/numpy/pull/25894
 # https://github.com/numpy/numpy/blob/d2d2c25fa81b47810f5cbd85ea6485eb3a3ffec3/.github/workflows/emscripten.yml
 #
 
@@ -119,7 +119,7 @@ jobs:
   # This exists as a separate job in order to scope run permissions
   # differently from other jobs for security reasons.
   delete-test-durations-caches:
-    name: Delete test duration caches
+    name: Delete previous test duration caches
     runs-on: ubuntu-latest
     permissions:
       actions: write # to allow deletion of caches
@@ -142,7 +142,7 @@ jobs:
   # we will save the merged file as a persistent cache that GHA will
   # retrieve in the next run.
   handle-test-durations-files:
-    name: Merge and cache test durations
+    name: Merge and cache new test durations
     runs-on: ubuntu-22.04
     needs: [delete-test-durations-caches]
     if: always()
