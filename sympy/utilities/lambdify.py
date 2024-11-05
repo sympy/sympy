@@ -11,6 +11,7 @@ import inspect
 import keyword
 import textwrap
 import linecache
+import weakref
 
 # Required despite static analysis claiming it is not used
 from sympy.external import import_module # noqa:F401
@@ -907,7 +908,16 @@ or tuple for the function arguments.
     # mtime has to be None or else linecache.checkcache will remove it
     linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename) # type: ignore
 
+    # Remove the entry from the linecache when the object is garbage collected
+    def cleanup_linecache(filename):
+        def _cleanup():
+            if filename in linecache.cache:
+                del linecache.cache[filename]
+        return _cleanup
+
     func = funclocals[funcname]
+
+    weakref.finalize(func, cleanup_linecache(filename))
 
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
