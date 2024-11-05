@@ -1,6 +1,7 @@
 from itertools import product
 import math
 import inspect
+import linecache
 
 import mpmath
 
@@ -980,6 +981,15 @@ def test_lambdify_docstring():
     ).splitlines()
     assert func.__doc__.splitlines()[:len(ref)] == ref
 
+
+def test_lambdify_linecache():
+    func = lambdify(x, x + 1)
+    assert inspect.getsource(func) == 'def _lambdifygenerated(x):\n    return x + 1\n'
+    filename = inspect.getsourcefile(func)
+    assert filename.startswith('<lambdifygenerated-')
+    assert filename in linecache.cache
+    del func
+    assert filename not in linecache.cache
 
 #================== Test special printers ==========================
 
