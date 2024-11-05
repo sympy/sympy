@@ -122,6 +122,7 @@ jobs:
     name: Delete previous test duration caches
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       actions: write # to allow deletion of caches
     needs: [pyodide-test]
     if: always()
