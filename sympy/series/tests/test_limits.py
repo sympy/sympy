@@ -1444,3 +1444,12 @@ def test_issue_22982_15323():
 
 def test_issue_26991():
     assert limit(x/((x - 6)*sinh(tanh(0.03*x)) + tanh(x) - 0.5), x, oo) == 1/sinh(1)
+
+
+def test_issue_25681():
+    x = Symbol('x')
+    expr = x/abs(sqrt(x**2 - 1))
+    assert limit(expr, x, 1, '+') == oo
+    assert limit(expr, x, -1, '-') == -oo
+    assert limit(expr, x, 1, '-') == oo
+    assert limit(expr, x, -1, '+') == -oo
