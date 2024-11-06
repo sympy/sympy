@@ -331,11 +331,11 @@ class KanesMethod(_Methods):
             jakob = vel.jacobian(self._u[-m:])
             if det(jakob) == 0:
                 raise ValueError(
-                    f'The linear velocity constraints cannot be solved for the ' +
+                    'The linear velocity constraints cannot be solved for the ' +
                     f'last {len(vel)} dependent speeds. \n If nonlinear velocity' +
-                    f' constraints are used try to rearrange the generalized ' +
-                    f'coordinates. \n Otherwise use different linear velocity'+
-                    f' constraints.')
+                    ' constraints are used try to rearrange the generalized ' +
+                    'coordinates. \n Otherwise use different linear velocity'+
+                    ' constraints.')
 
             self._k_nh, f_nh_neg = linear_eq_to_matrix(vel, self.u[:])
             self._f_nh = -f_nh_neg
