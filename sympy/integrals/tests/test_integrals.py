@@ -2160,3 +2160,8 @@ def test_integral_issue_26566():
 
     # Assert that the symbolic result matches the correct value
     assert simplify(numeric_symbolic_result - numeric_correct_result) == 0
+
+
+def test_issue_24879():
+    assert integrate(1/sqrt(1+x**3),(x,-1,oo)) == gamma(S(1)/3)*hyper((S(1)/3, S(1)/2), (S(4)/3,), 1)/(3*gamma(S(4)/3)) + \
+        gamma(S(1)/6)*gamma(S(1)/3)/(3*sqrt(pi))
