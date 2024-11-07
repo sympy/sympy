@@ -993,7 +993,7 @@ def test_lambdify_linecache():
     assert linecache.cache[filename] == (len(source), None, source.splitlines(True), filename)
     del func
     gc.collect()
-    assert filename not in linecache.cache
+    assert linecache.cache[filename] == (0, None, [], filename)
 
 #================== Test special printers ==========================
 

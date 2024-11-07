@@ -912,7 +912,7 @@ or tuple for the function arguments.
     def cleanup_linecache(filename):
         def _cleanup():
             if filename in linecache.cache:
-                del linecache.cache[filename]
+                linecache.cache[filename] = (0, None, [], filename)
         return _cleanup
 
     func = funclocals[funcname]
