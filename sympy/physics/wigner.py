@@ -215,7 +215,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    
+
     j_1 = sympify(j_1)
     j_2 = sympify(j_2)
     j_3 = sympify(j_3)
