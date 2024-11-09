@@ -167,6 +167,38 @@ def test_perfect_power():
     # negatives and non-integer rationals
     assert perfect_power(-4) is False
     assert perfect_power(-8) == (-2, 3)
+    assert perfect_power(-5**15) == (-5, 15)
+    assert perfect_power(-5**15, big=False) == (-3125, 3)
+    assert perfect_power(-5**15, [15]) == (-5, 15)
+
+    n = -3 ** 60
+    assert perfect_power(n) == (-81, 15)
+    assert perfect_power(n, big=False) == (-3486784401, 3)
+    assert perfect_power(n, [3, 5], big=True) == (-531441, 5)
+    assert perfect_power(n, [3, 5], big=False) == (-3486784401, 3)
+    assert perfect_power(n, [2]) == False
+    assert perfect_power(n, [2, 15]) == (-81, 15)
+    assert perfect_power(n, [2, 13]) == False
+    assert perfect_power(n, [17]) == False
+    assert perfect_power(n, [3]) == (-3486784401, 3)
+    assert perfect_power(n + 1) == False
+
+    r = S(2) ** (2 * 5 * 7) / S(3) ** (2 * 7)
+    assert perfect_power(r) == (S(32) / 3, 14)
+    assert perfect_power(-r) == (-S(1024) / 9, 7)
+    assert perfect_power(r, big=False) == (S(34359738368) / 2187, 2)
+    assert perfect_power(r, [2, 5]) == (S(34359738368) / 2187, 2)
+    assert perfect_power(r, [5, 7]) == (S(1024) / 9, 7)
+    assert perfect_power(r, [5, 7], big=False) == (S(1024) / 9, 7)
+    assert perfect_power(r, [2, 5, 7], big=False) == (S(34359738368) / 2187, 2)
+    assert perfect_power(-r, [5, 7], big=False) == (-S(1024) / 9, 7)
+
+    assert perfect_power(-S(1) / 8) == (-S(1) / 2, 3)
+
+    assert perfect_power((-3)**60) == (3, 60)
+    assert perfect_power((-3)**61) == (-3, 61)
+
+    assert perfect_power(S(2 ** 9) / 3 ** 12) == (S(8)/81, 3)
     assert perfect_power(Rational(1, 2)**3) == (S.Half, 3)
     assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
 

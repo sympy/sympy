@@ -502,30 +502,85 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     sympy.core.intfunc.integer_nthroot
     sympy.ntheory.primetest.is_square
     """
-    if isinstance(n, Rational) and not n.is_Integer:
-        p, q = n.as_numer_denom()
-        if p is S.One:
-            pp = perfect_power(q)
-            if pp:
-                pp = (n.func(1, pp[0]), pp[1])
-        else:
-            pp = perfect_power(p)
-            if pp:
-                num, e = pp
-                pq = perfect_power(q, [e])
-                if pq:
-                    den, _ = pq
-                    pp = n.func(num, den), e
-        return pp
-
-    n = as_int(n)
+    # negative handling
     if n < 0:
-        pp = perfect_power(-n)
-        if pp:
+        if candidates is None:
+            pp = perfect_power(-n, big=True, factor=factor)
+            if not pp:
+                return False
+
             b, e = pp
-            if e % 2:
+            e2 = e & (-e)
+            b, e = b ** e2, e // e2
+
+            if e <= 1:
+                return False
+
+            if big or isprime(e):
                 return -b, e
+
+            for p in primerange(3, e + 1):
+                if e % p == 0:
+                    return - b ** (e // p), p
+
+        odd_candidates = {i for i in candidates if i % 2}
+        if not odd_candidates:
+            return False
+
+        pp = perfect_power(-n, odd_candidates, big, factor)
+        if pp:
+            return -pp[0], pp[1]
+
         return False
+
+    # non-integer handling
+    if isinstance(n, Rational) and not isinstance(n, Integer):
+        p, q = n.p, n.q
+
+        if p == 1:
+            qq = perfect_power(q, candidates, big, factor)
+            return (S.One / qq[0], qq[1]) if qq is not None else False
+
+        pq = [perfect_power(i) for i in (p, q)]
+        if not all(pq):
+            return False
+
+        num_result, den_result = pq
+
+        if num_result and den_result:
+            num_base, num_exp = num_result
+            den_base, den_exp = den_result
+
+        def compute_tuple(exponent):
+            """Helper to compute final result given an exponent"""
+            new_num = num_base ** (num_exp // exponent)
+            new_den = den_base ** (den_exp // exponent)
+            return n.func(new_num, new_den), exponent
+
+        if candidates:
+            valid_candidates = [i for i in candidates
+                                if num_exp % i == 0 and den_exp % i == 0]
+            if not valid_candidates:
+                return False
+
+            e = max(valid_candidates) if big else min(valid_candidates)
+            return compute_tuple(e)
+
+        g = math.gcd(num_exp, den_exp)
+        if g == 1:
+            return False
+
+        if big:
+            return compute_tuple(g)
+
+        e = next(p for p in primerange(2, g + 1) if g % p == 0)
+        return compute_tuple(e)
+
+    if candidates is not None:
+        candidates = set(candidates)
+
+    # positive integer handling
+    n = as_int(n)
 
     if candidates is None and big:
         return _perfect_power(n)
