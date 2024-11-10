@@ -47,6 +47,7 @@ known_functions_C89 = {
     "atan2": "atan2",
     "exp": "exp",
     "log": "log",
+    "log10": "log10",
     "sinh": "sinh",
     "cosh": "cosh",
     "tanh": "tanh",
@@ -58,7 +59,6 @@ known_functions_C89 = {
 known_functions_C99 = dict(known_functions_C89, **{
     'exp2': 'exp2',
     'expm1': 'expm1',
-    'log10': 'log10',
     'log2': 'log2',
     'log1p': 'log1p',
     'Cbrt': 'cbrt',
