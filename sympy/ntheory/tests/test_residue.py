@@ -287,6 +287,7 @@ def test_residue():
     assert quadratic_congruence(5, 10, 14, 2) == [0]
     assert quadratic_congruence(10, 17, 19, 2) == [1]
     assert quadratic_congruence(10, 14, 20, 2) == [0, 1]
+    assert quadratic_congruence(2**48-7, 2**48-1, 4, 2**48) == [8249717183797, 31960993774868]
     assert polynomial_congruence(6*x**5 + 10*x**4 + 5*x**3 + x**2 + x + 1,
         972000) == [220999, 242999, 463999, 485999, 706999, 728999, 949999, 971999]
 
