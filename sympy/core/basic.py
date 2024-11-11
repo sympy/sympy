@@ -19,12 +19,12 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
-from inspect import getmro
-
 
 if TYPE_CHECKING:
     from typing import ClassVar
+    from typing_extensions import Self
     from .assumptions import StdFactKB
+    from .symbol import Symbol
 
 
 def as_Basic(expr):
@@ -393,41 +393,6 @@ class Basic(Printable):
                 return c
         return 0
 
-    @staticmethod
-    def _compare_pretty(a, b):
-        """return -1, 0, 1 if a is canonically less, equal or
-        greater than b. This is used when 'order=old' is selected
-        for printing. This puts Order last, orders Rationals
-        according to value, puts terms in order wrt the power of
-        the last power appearing in a term. Ties are broken using
-        Basic.compare.
-        """
-        from sympy.series.order import Order
-        if isinstance(a, Order) and not isinstance(b, Order):
-            return 1
-        if not isinstance(a, Order) and isinstance(b, Order):
-            return -1
-
-        if a.is_Rational and b.is_Rational:
-            l = a.p * b.q
-            r = b.p * a.q
-            return (l > r) - (l < r)
-        else:
-            from .symbol import Wild
-            p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
-            r_a = a.match(p1 * p2**p3)
-            if r_a and p3 in r_a:
-                a3 = r_a[p3]
-                r_b = b.match(p1 * p2**p3)
-                if r_b and p3 in r_b:
-                    b3 = r_b[p3]
-                    c = Basic.compare(a3, b3)
-                    if c != 0:
-                        return c
-
-        # break ties
-        return Basic.compare(a, b)
-
     @classmethod
     def fromiter(cls, args, **assumptions):
         """
@@ -447,7 +412,7 @@ class Basic(Printable):
         return cls(*tuple(args), **assumptions)
 
     @classmethod
-    def class_key(cls):
+    def class_key(cls) -> tuple[int, int, str]:
         """Nice order of classes."""
         return 5, 0, cls.__name__
 
@@ -739,7 +704,7 @@ class Basic(Printable):
             active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
-    def as_dummy(self):
+    def as_dummy(self) -> "Self":
         """Return the expression with any objects having structurally
         bound symbols replaced with unique, canonical symbols within
         the object in which they appear and having only the default
@@ -764,7 +729,7 @@ class Basic(Printable):
         =====
 
         Any object that has structurally bound variables should have
-        a property, `bound_symbols` that returns those symbols
+        a property, ``bound_symbols`` that returns those symbols
         appearing in the object.
         """
         from .symbol import Dummy, Symbol
@@ -783,10 +748,10 @@ class Basic(Printable):
         return self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
             can,
-            simultaneous=False)
+            simultaneous=False) # type:ignore
 
     @property
-    def canonical_variables(self):
+    def canonical_variables(self) -> dict[Basic, Symbol]:
         """Return a dictionary mapping any variable defined in
         ``self.bound_symbols`` to Symbols that do not clash
         with any free symbols in the expression.
@@ -799,14 +764,18 @@ class Basic(Printable):
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
         """
-        if not hasattr(self, 'bound_symbols'):
+        bound: list[Basic] | None = getattr(self, 'bound_symbols', None)
+        if bound is None:
             return {}
         dums = numbered_symbols('_')
         reps = {}
         # watch out for free symbol that are not in bound symbols;
         # those that are in bound symbols are about to get changed
-        bound = self.bound_symbols
-        names = {i.name for i in self.free_symbols - set(bound)}
+
+        # XXX: free_symbols only returns particular kinds of expressions that
+        # generally have a .name attribute. There is not a proper class/type
+        # that represents this.
+        names = {i.name for i in self.free_symbols - set(bound)} # type: ignore
         for b in bound:
             d = next(dums)
             if b.is_Symbol:
@@ -830,28 +799,13 @@ class Basic(Printable):
         >>> (x + Lambda(y, 2*y)).rcall(z)
         x + 2*z
         """
-        return Basic._recursive_call(self, args)
-
-    @staticmethod
-    def _recursive_call(expr_to_call, on_args):
-        """Helper for rcall method."""
-        from .symbol import Symbol
-        def the_call_method_is_overridden(expr):
-            for cls in getmro(type(expr)):
-                if '__call__' in cls.__dict__:
-                    return cls != Basic
-
-        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
-            if isinstance(expr_to_call, Symbol):  # XXX When you call a Symbol it is
-                return expr_to_call               # transformed into an UndefFunction
-            else:
-                return expr_to_call(*on_args)
-        elif expr_to_call.args:
-            args = [Basic._recursive_call(
-                sub, on_args) for sub in expr_to_call.args]
-            return type(expr_to_call)(*args)
+        if callable(self):
+            return self(*args)
+        elif self.args:
+            newargs = [sub.rcall(*args) for sub in self.args]
+            return self.func(*newargs)
         else:
-            return expr_to_call
+            return self
 
     def is_hypergeometric(self, k):
         from sympy.simplify.simplify import hypersimp
@@ -887,25 +841,11 @@ class Basic(Printable):
         1
 
         """
-        is_extended_real = self.is_extended_real
-        if is_extended_real is False:
-            return False
-        if not self.is_number:
-            return False
-        # don't re-eval numbers that are already evaluated since
-        # this will create spurious precision
-        n, i = [p.evalf(2) if not p.is_Number else p
-            for p in self.as_real_imag()]
-        if not (i.is_Number and n.is_Number):
-            return False
-        if i:
-            # if _prec = 1 we can't decide and if not,
-            # the answer is False because numbers with
-            # imaginary parts can't be compared
-            # so return False
-            return False
-        else:
-            return n._prec != 1
+        return self._eval_is_comparable()
+
+    def _eval_is_comparable(self):
+        # Expr.is_comparable overrides this
+        return False
 
     @property
     def func(self):
@@ -1558,7 +1498,7 @@ class Basic(Printable):
         # no success
         return False
 
-    def replace(self, query, value, map=False, simultaneous=True, exact=None):
+    def replace(self, query, value, map=False, simultaneous=True, exact=None) -> Basic:
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
@@ -1814,7 +1754,7 @@ class Basic(Printable):
             return expr
 
         rv = walk(self, rec_replace)
-        return (rv, mapping) if map else rv
+        return (rv, mapping) if map else rv # type: ignore
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query."""
@@ -1947,7 +1887,7 @@ class Basic(Printable):
         pattern = sympify(pattern)
         return pattern.matches(self, old=old)
 
-    def count_ops(self, visual=None):
+    def count_ops(self, visual=False):
         """Wrapper for count_ops that returns the operation count."""
         from .function import count_ops
         return count_ops(self, visual)
@@ -1999,11 +1939,13 @@ class Basic(Printable):
         if isinstance(n, (int, Integer)):
             obj = self
             for i in range(n):
-                obj2 = obj._eval_derivative(s)
-                if obj == obj2 or obj2 is None:
+                prev = obj
+                obj = obj._eval_derivative(s)
+                if obj is None:
+                    return None
+                elif obj == prev:
                     break
-                obj = obj2
-            return obj2
+            return obj
         else:
             return None
 
@@ -2171,7 +2113,7 @@ class Basic(Printable):
         This version of the method is merely a placeholder.
         """
         old_method = self._sage_
-        from sage.interfaces.sympy import sympy_init
+        from sage.interfaces.sympy import sympy_init # type: ignore
         sympy_init()  # may monkey-patch _sage_ method into self's class or superclasses
         if old_method == self._sage_:
             raise NotImplementedError('conversion to SageMath is not implemented')
