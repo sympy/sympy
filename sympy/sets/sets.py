@@ -57,7 +57,7 @@ class Set(Basic, EvalfMixin):
     :class:`EmptySet` class and available as a singleton as ``S.EmptySet``.
     """
 
-    __slots__ = ()
+    __slots__: tuple[()] = ()
 
     is_number = False
     is_iterable = False

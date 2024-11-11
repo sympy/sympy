@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
 from functools import cmp_to_key
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
+    from .expr import Expr
 
 
 def as_Basic(expr):
@@ -843,7 +844,7 @@ class Basic(Printable):
         """
         return self._eval_is_comparable()
 
-    def _eval_is_comparable(self):
+    def _eval_is_comparable(self) -> bool:
         # Expr.is_comparable overrides this
         return False
 
@@ -924,6 +925,15 @@ class Basic(Printable):
         sympy.core.expr.Expr.as_content_primitive
         """
         return S.One, self
+
+    @overload
+    def subs(self: Expr, arg1: dict[Expr, Expr | int], arg2: None=None) -> Expr: ... # type: ignore
+    @overload
+    def subs(self: Expr, arg1: Expr, arg2: Expr | int) -> Expr: ... # type: ignore
+    @overload
+    def subs(self: Basic, arg1: dict[Basic, Basic], arg2: None=None) -> Basic: ...
+    @overload
+    def subs(self: Basic, arg1: Basic, arg2: Basic) -> Basic: ...
 
     def subs(self, *args, **kwargs):
         """
@@ -1244,7 +1254,7 @@ class Basic(Printable):
             rv = fallback(self, old, new)
         return rv
 
-    def _eval_subs(self, old, new):
+    def _eval_subs(self, old, new) -> Basic | None:
         """Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
@@ -1918,6 +1928,11 @@ class Basic(Printable):
         else:
             return self
 
+    @overload
+    def simplify(self: Expr, **kwargs) -> Expr: ... # type: ignore
+    @overload
+    def simplify(self: Basic, **kwargs) -> Basic: ...
+
     def simplify(self, **kwargs):
         """See the simplify function in sympy.simplify"""
         from sympy.simplify.simplify import simplify
@@ -2121,7 +2136,7 @@ class Basic(Printable):
             # call the freshly monkey-patched method
             return self._sage_()
 
-    def could_extract_minus_sign(self):
+    def could_extract_minus_sign(self) -> bool:
         return False  # see Expr.could_extract_minus_sign
 
     def is_same(a, b, approx=None):

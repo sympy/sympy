@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from typing import overload, TYPE_CHECKING
+
 from operator import attrgetter
 from collections import defaultdict
 
@@ -14,6 +17,13 @@ from sympy.utilities.iterables import sift
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_register_error_ignore_dup,
     str_signature, RaiseNotImplementedError)
+
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.core.add import Add
+    from sympy.core.mul import Mul
+    from sympy.logic.boolalg import Boolean, And, Or
 
 
 class AssocOp(Basic):
@@ -426,8 +436,21 @@ this object, use the * or + operator instead.
                 args.append(newa)
         return self.func(*args)
 
+    @overload
     @classmethod
-    def make_args(cls, expr):
+    def make_args(cls: type[Add], expr: Expr) -> tuple[Expr, ...]: ... # type: ignore
+    @overload
+    @classmethod
+    def make_args(cls: type[Mul], expr: Expr) -> tuple[Expr, ...]: ... # type: ignore
+    @overload
+    @classmethod
+    def make_args(cls: type[And], expr: Boolean) -> tuple[Boolean, ...]: ... # type: ignore
+    @overload
+    @classmethod
+    def make_args(cls: type[Or], expr: Boolean) -> tuple[Boolean, ...]: ... # type: ignore
+
+    @classmethod
+    def make_args(cls: type[Basic], expr: Basic) -> tuple[Basic, ...]:
         """
         Return a sequence of elements `args` such that cls(*args) == expr
 
