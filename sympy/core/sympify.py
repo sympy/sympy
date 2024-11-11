@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, overload, TYPE_CHECKING, TypeVar, Optional
+from typing import Any, Callable, overload, TYPE_CHECKING, TypeVar
 
 import mpmath.libmp as mlib
 
