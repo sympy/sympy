@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from sympy.core.expr import Expr
     from sympy.core.numbers import Integer, Float
 
-    Tbasic = TypeVar('Tbasic', bound='Basic')
+    Tbasic = TypeVar('Tbasic', bound=Basic)
 
 
 class SympifyError(ValueError):
