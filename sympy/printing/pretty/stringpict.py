@@ -328,6 +328,27 @@ class stringPict:
         # Add spacers between sub-pictures
         return "\n\n".join(pictures)
 
+
+    def subindex(self, index):
+        """
+        Add a `sub index`.
+        """
+        with_self = self.width()
+        width_index = index.width()
+        extended_self = self.right(width_subindex*stringPict(" "))
+        index = index.left(width_self*stringPict(" "))
+        return extended_self.bellow(index)
+
+    def superindex(self, index):
+        """
+        Add a `super index`.
+        """
+        with_self = self.width()
+        width_index = index.width()
+        extended_self = self.right(width_subindex*stringPict(" "))
+        index = index.left(width_self*stringPict(" "))
+        return extended_self.above(index)
+
     def terminal_width(self):
         """Return the terminal width if possible, otherwise return 0.
         """
