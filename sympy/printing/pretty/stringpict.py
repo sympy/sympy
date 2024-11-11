@@ -8,8 +8,7 @@ Updates by Jason Gedge (email <my last name> at cs mun ca)
     - minor fixes and changes (mostly to prettyForm)
 
 TODO:
-    - Allow left/center/right alignment options for above/below and
-      top/center/bottom alignment options for left/right
+    - top/center/bottom alignment options for left/right
 """
 
 import shutil
@@ -101,16 +100,16 @@ class stringPict:
              2
 
         """
-        return stringPict.next(self, *args)
+        return self.__class__(*stringPict.next(self, *args))
 
     def left(self, *args):
         """Put pictures (left to right) at left.
         Returns string, baseline arguments for stringPict.
         """
-        return stringPict.next(*(args + (self,)))
+        return self.__class__(*stringPict.next(*(args + (self,))))
 
     @staticmethod
-    def stack(*args):
+    def stack(*args, align="c"):
         """Put pictures on top of each other,
         from top to bottom.
         Returns string, baseline arguments for stringPict.
@@ -141,11 +140,18 @@ class stringPict:
                 objects[i] = lineObj
 
         #stack the pictures, and center the result
-        newPicture = [center(line, newWidth) for obj in objects for line in obj.picture]
+        if align=="c":
+            newPicture = [center(line, newWidth) for obj in objects for line in obj.picture]
+        elif align=="l":
+            newPicture = [line + (newWidth-line.width())*" " for obj in objects for line in obj.picture]
+        elif align=="r":
+            newPicture = [(newWidth-line.width())*" "+ line  for obj in objects for line in obj.picture]
+        else:
+            raise ValueError(f"the align parameter must be one of 'l'(left), 'r'(right) or 'c' (center). Got {align}.")
         newBaseline = objects[0].height() + objects[1].baseline
         return '\n'.join(newPicture), newBaseline
 
-    def below(self, *args):
+    def below(self, *args, align="c"):
         """Put pictures under this picture.
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of top picture
@@ -161,17 +167,17 @@ class stringPict:
          3
 
         """
-        s, baseline = stringPict.stack(self, *args)
-        return s, self.baseline
+        s, baseline = stringPict.stack(self, *args, align=align)
+        return self.__class__(s, self.baseline)
 
-    def above(self, *args):
+    def above(self, *args, align="c"):
         """Put pictures above this picture.
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of bottom picture.
         """
-        string, baseline = stringPict.stack(*(args + (self,)))
+        string, baseline = stringPict.stack(*(args + (self,)), align=align)
         baseline = len(string.splitlines()) - self.height() + self.baseline
-        return string, baseline
+        return self.__class__(string, baseline)
 
     def parens(self, left='(', right=')', ifascii_nougly=False):
         """Put parentheses around self.
