@@ -541,7 +541,6 @@ def perfect_power(n, candidates=None, big=True, factor=True):
             qq = perfect_power(q, candidates, big, factor)
             return (S.One / qq[0], qq[1]) if qq is not None else False
 
-```suggestion
         if not (pp:=perfect_power(p, factor=factor)):
                 return False
         if not (qq:=perfect_power(q, factor=factor)):
