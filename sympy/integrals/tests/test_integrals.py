@@ -10,6 +10,7 @@ from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
+from sympy.simplify import nsimplify
 from sympy.functions.elementary.complexes import (Abs, im, polar_lift, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
@@ -2160,3 +2161,10 @@ def test_integral_issue_26566():
 
     # Assert that the symbolic result matches the correct value
     assert simplify(numeric_symbolic_result - numeric_correct_result) == 0
+
+def test_issue_27231():
+    # https://github.com/sympy/sympy/issues/27231
+    i2 = Integral(sqrt(1 - 0.5625*(x + 0.333333333333333)**2),(x,-1,1))
+    result=i2.doit().evalf()
+    expected_result = nsimplify(i2).doit().evalf()
+    assert abs(result - expected_result) < 1e-8
