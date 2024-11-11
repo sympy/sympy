@@ -541,15 +541,9 @@ def perfect_power(n, candidates=None, big=True, factor=True):
             qq = perfect_power(q, candidates, big, factor)
             return (S.One / qq[0], qq[1]) if qq is not None else False
 
-        pq = [perfect_power(i) for i in (p, q)]
-        if not all(pq):
-            return False
-
-        num_result, den_result = pq
-
-        if num_result and den_result:
-            num_base, num_exp = num_result
-            den_base, den_exp = den_result
+        if not all(nd := (perfect_power(i, factor=factor) for i in (p, q))):
+                return False
+        (num_base, num_exp), (den_base, den_exp) = nd
 
         def compute_tuple(exponent):
             """Helper to compute final result given an exponent"""
