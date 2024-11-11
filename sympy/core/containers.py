@@ -252,6 +252,9 @@ class Dict(Basic):
 
     """
 
+    elements: frozenset[Tuple]
+    _dict: dict[Basic, Basic]
+
     def __new__(cls, *args):
         if len(args) == 1 and isinstance(args[0], (dict, Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]

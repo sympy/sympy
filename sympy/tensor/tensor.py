@@ -2503,12 +2503,12 @@ class TensAdd(TensExpr, AssocOp):
         else:
             return set()
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Expr:
         deep = hints.get('deep', True)
         if deep:
             args = [arg.doit(**hints) for arg in self.args]
         else:
-            args = self.args
+            args = self.args # type: ignore
 
         # if any of the args are zero (after doit), drop them. Otherwise, _tensAdd_check will complain about non-matching indices, even though the TensAdd is correctly formed.
         args = [arg for arg in args if arg != S.Zero]

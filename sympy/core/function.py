@@ -31,6 +31,7 @@ There are three types of functions implemented in SymPy:
 """
 
 from __future__ import annotations
+
 from typing import Any
 from collections.abc import Iterable
 
@@ -1958,7 +1959,7 @@ class Lambda(Expr):
     """
     is_Function = True
 
-    def __new__(cls, signature, expr):
+    def __new__(cls, signature, expr) -> Lambda:
         if iterable(signature) and not isinstance(signature, (tuple, Tuple)):
             sympy_deprecation_warning(
                 """
@@ -1969,8 +1970,8 @@ class Lambda(Expr):
                 active_deprecations_target="deprecated-non-tuple-lambda",
             )
             signature = tuple(signature)
-        sig = signature if iterable(signature) else (signature,)
-        sig = sympify(sig)
+        _sig = signature if iterable(signature) else (signature,)
+        sig: Tuple = sympify(_sig) # type: ignore
         cls._check_signature(sig)
 
         if len(sig) == 1 and sig[0] == expr:

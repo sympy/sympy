@@ -513,7 +513,7 @@ class Relational(Boolean, EvalfMixin):
         args = (arg.expand(**kwargs) for arg in self.args)
         return self.func(*args)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise TypeError(
             LazyExceptionMessage(
                 lambda: f"cannot determine truth value of Relational: {self}"

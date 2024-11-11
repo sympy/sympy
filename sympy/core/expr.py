@@ -117,13 +117,13 @@ class Expr(Basic, EvalfMixin):
         coeff, expr = self.as_coeff_Mul()
 
         if expr.is_Pow:
-            if expr.base is S.Exp1:
+            base, exp = expr.as_base_exp()
+            if base is S.Exp1:
                 # If we remove this, many doctests will go crazy:
                 # (keeps E**x sorted like the exp(x) function,
                 #  part of exp(x) to E**x transition)
-                expr, exp = Function("exp")(expr.exp), S.One
-            else:
-                expr, exp = expr.args
+                base, exp = Function("exp")(exp), S.One
+            expr = base
         else:
             exp = S.One
 
@@ -754,6 +754,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.polys.numberfields import minimal_polynomial
 
         other = sympify(other)
+
+        if not isinstance(other, Expr):
+            return False
+
         if self == other:
             return True
 
@@ -997,7 +1001,7 @@ class Expr(Basic, EvalfMixin):
 
         return value
 
-    def _eval_power(self, other):
+    def _eval_power(self, expt) -> Expr | None:
         # subclass to compute self**other for cases when
         # other is not NaN, 0, or 1
         return None
@@ -1241,11 +1245,11 @@ class Expr(Basic, EvalfMixin):
 
         return result, gens
 
-    def removeO(self):
+    def removeO(self) -> Expr:
         """Removes the additive O(..) symbol if there is one"""
         return self
 
-    def getO(self):
+    def getO(self) -> Expr | None:
         """Returns the additive O(..) symbol if there is one, else None."""
         return None
 
@@ -1337,11 +1341,8 @@ class Expr(Basic, EvalfMixin):
         >>> (-oo).args_cnc() # -oo is a singleton
         [[-1, oo], []]
         """
+        args = list(Mul.make_args(self))
 
-        if self.is_Mul:
-            args = list(self.args)
-        else:
-            args = [self]
         for i, mi in enumerate(args):
             if not mi.is_commutative:
                 c = args[:i]
@@ -1365,7 +1366,7 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
-    def coeff(self, x, n=1, right=False, _first=True):
+    def coeff(self, x: Expr, n=1, right=False, _first=True):
         """
         Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
@@ -1667,7 +1668,7 @@ class Expr(Basic, EvalfMixin):
         """
         return self
 
-    def as_coefficient(self, expr):
+    def as_coefficient(self, expr: Expr) -> Expr | None:
         """
         Extracts symbolic coefficient at the given expression. In
         other words, this functions separates 'self' into the product
@@ -1734,6 +1735,8 @@ class Expr(Basic, EvalfMixin):
         r = self.extract_multiplicatively(expr)
         if r and not r.has(expr):
             return r
+        else:
+            return None
 
     def as_independent(self, *deps, **hint) -> tuple[Expr, Expr]:
         """
@@ -1925,7 +1928,7 @@ class Expr(Basic, EvalfMixin):
                 indep.append(n)
             return Mul(*indep), _unevaluated_Mul(*depend)
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Expr, Expr]:
         """Performs complex expansion on 'self' and returns a tuple
            containing collected both real and imaginary parts. This
            method cannot be confused with re() and im() functions,
@@ -1949,7 +1952,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         if hints.get('ignore') == self:
-            return None
+            return None  # type: ignore
         else:
             from sympy.functions.elementary.complexes import im, re
             return (re(self), im(self))
@@ -2102,7 +2105,7 @@ class Expr(Basic, EvalfMixin):
                 return self, ()
         return S.Zero, (self,)
 
-    def primitive(self):
+    def primitive(self) -> tuple[Number, Expr]:
         """Return the positive Rational that can be extracted non-recursively
         from every term of self (i.e., self is treated like an Add). This is
         like the as_coeff_Mul() method but primitive always extracts a positive
@@ -2185,7 +2188,7 @@ class Expr(Basic, EvalfMixin):
         """
         return S.One, self
 
-    def as_numer_denom(self):
+    def as_numer_denom(self) -> tuple[Expr, Expr]:
         """Return the numerator and the denominator of an expression.
 
         expression -> a/b -> a, b
@@ -2221,7 +2224,7 @@ class Expr(Basic, EvalfMixin):
         else:
             return n/d
 
-    def extract_multiplicatively(self, c):
+    def extract_multiplicatively(self, c: Expr) -> Expr | None:
         """Return None if it's not possible to make self in the form
            c * something in a nice way, i.e. preserving the properties
            of arguments of self.
@@ -2263,7 +2266,7 @@ class Expr(Basic, EvalfMixin):
                 c = Mul(cc, pc, evaluate=False)
 
         if c.is_Mul:
-            a, b = c.as_two_terms()
+            a, b = c.as_two_terms() # type: ignore
             x = self.extract_multiplicatively(a)
             if x is not None:
                 return x.extract_multiplicatively(b)
@@ -2317,20 +2320,23 @@ class Expr(Basic, EvalfMixin):
                 # assert c != 1 (handled at top)
                 if cs is not S.One:
                     if c.is_negative:
-                        xc = -(cs.extract_multiplicatively(-c))
+                        xc = cs.extract_multiplicatively(-c)
+                        if xc is not None:
+                            xc = -xc
                     else:
                         xc = cs.extract_multiplicatively(c)
                     if xc is not None:
                         return xc*ps  # rely on 2-arg Mul to restore Add
-                return  # |c| != 1 can only be extracted from cs
+                return None # |c| != 1 can only be extracted from cs
             if c == ps:
                 return cs
             # check args of ps
             newargs = []
-            for arg in ps.args:
+            arg: Expr
+            for arg in ps.args: # type: ignore
                 newarg = arg.extract_multiplicatively(c)
                 if newarg is None:
-                    return  # all or nothing
+                    return None # all or nothing
                 newargs.append(newarg)
             if cs is not S.One:
                 args = [cs*t for t in newargs]
@@ -2339,7 +2345,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 return Add._from_args(newargs)
         elif self.is_Mul:
-            args = list(self.args)
+            args: list[Expr] = list(self.args) # type: ignore
             for i, arg in enumerate(args):
                 newarg = arg.extract_multiplicatively(c)
                 if newarg is not None:
@@ -2353,9 +2359,11 @@ class Expr(Basic, EvalfMixin):
                 if new_exp is not None:
                     return Pow(sb, new_exp)
             elif c == sb:
-                new_exp = self.exp.extract_additively(1)
+                new_exp = se.extract_additively(1)
                 if new_exp is not None:
                     return Pow(sb, new_exp)
+
+        return None
 
     def extract_additively(self, c):
         """Return self - c if it's possible to subtract c from self and
@@ -2483,7 +2491,7 @@ class Expr(Basic, EvalfMixin):
             active_deprecations_target="deprecated-expr-free-symbols")
         return {j for i in self.args for j in i.expr_free_symbols}
 
-    def could_extract_minus_sign(self):
+    def could_extract_minus_sign(self) -> bool:
         """Return True if self has -1 as a leading factor or has
         more literal negative signs than positive signs in a sum,
         otherwise False.
@@ -2664,13 +2672,14 @@ class Expr(Basic, EvalfMixin):
 
         return self._eval_is_polynomial(syms)
 
-    def _eval_is_polynomial(self, syms):
+    def _eval_is_polynomial(self, syms) -> bool | None:
         if self in syms:
             return True
         if not self.has_free(*syms):
             # constant polynomial
             return True
         # subclasses should return True or False
+        return None
 
     def is_rational_function(self, *syms):
         """
@@ -2732,12 +2741,13 @@ class Expr(Basic, EvalfMixin):
 
         return self._eval_is_rational_function(syms)
 
-    def _eval_is_rational_function(self, syms):
+    def _eval_is_rational_function(self, syms) -> bool | None:
         if self in syms:
             return True
         if not self.has_xfree(syms):
             return True
         # subclasses should return True or False
+        return None
 
     def is_meromorphic(self, x, a):
         """
@@ -2800,12 +2810,13 @@ class Expr(Basic, EvalfMixin):
 
         return self._eval_is_meromorphic(x, a)
 
-    def _eval_is_meromorphic(self, x, a):
+    def _eval_is_meromorphic(self, x, a) -> bool | None:
         if self == x:
             return True
         if not self.has_free(x):
             return True
         # subclasses should return True or False
+        return None
 
     def is_algebraic_expr(self, *syms):
         """
@@ -2859,12 +2870,13 @@ class Expr(Basic, EvalfMixin):
 
         return self._eval_is_algebraic_expr(syms)
 
-    def _eval_is_algebraic_expr(self, syms):
+    def _eval_is_algebraic_expr(self, syms) -> bool | None:
         if self in syms:
             return True
         if not self.has_free(*syms):
             return True
         # subclasses should return True or False
+        return None
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
