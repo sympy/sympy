@@ -1711,7 +1711,6 @@ def quadratic_congruence(a, b, c, n):
     polynomial_congruence : Solve the polynomial congruence
 
     """
-    from sympy.polys.polytools import gcdex
     a = as_int(a)
     b = as_int(b)
     c = as_int(c)
@@ -1742,16 +1741,10 @@ def quadratic_congruence(a, b, c, n):
         return sorted((i - b) % n for i in sqrt_mod_iter(b**2 - c, n))
     res = set()
     for i in sqrt_mod_iter(b**2 - 4*a*c, 4*a*n):
-        # Compute linear congruence for (2*a)x = i-b (mod 4*a*n)
-        la = 2*a
-        lb = i - b
-        lm = 4*a*n
-        r, _, g = gcdex(la, lm)
-        if lb % g != 0:
-            continue
+        q, rem = divmod(i - b, 2*a)
+        if rem == 0:
+            res.add(q % n)
 
-        delta = lm // g
-        res.update((r * lb // g + t * delta) % n for t in range(n // gcd(n, delta)))
     return sorted(res)
 
 
