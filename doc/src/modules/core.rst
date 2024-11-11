@@ -6,9 +6,12 @@ Core
 
 sympify
 -------
+
 .. module:: sympy.core.sympify
 
 .. autofunction:: sympify
+
+.. py:class:: Tbasic
 
 assumptions
 -----------
