@@ -7,9 +7,13 @@ Updates by Jason Gedge (email <my last name> at cs mun ca)
     - terminal_string() method
     - minor fixes and changes (mostly to prettyForm)
 
-TODO:
-    - Allow left/center/right alignment options for above/below and
-      top/center/bottom alignment options for left/right
+Updates by Juan Mauricio Matera (email <my last name> at ar_ude_plnu_acisif):
+    - support for align attribute in `left`, `right`, `above` and `below`
+      methods
+    - adding the v_align() method
+    - Methods `parens`, `left`, `right`, `above` and `below` now returns
+      objects of the caller object class.
+    - The method `root` now works.
 """
 
 import shutil
@@ -19,10 +23,12 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 
 _GLOBAL_WRAP_LINE = None
 
+
 class stringPict:
     """An ASCII picture.
     The pictures are represented as a list of equal length strings.
     """
+
     #special value for stringPict.below
     LINE = 'line'
 
@@ -30,6 +36,8 @@ class stringPict:
         """Initialize from string.
         Multiline strings are centered.
         """
+        assert isinstance(s, str)
+        assert isinstance(baseline, int)
         self.s = s
         #picture is a string that just can be printed
         self.picture = stringPict.equalLengths(s.splitlines())
@@ -39,7 +47,7 @@ class stringPict:
 
     @staticmethod
     def equalLengths(lines):
-        # empty lines
+        #empty lines
         if not lines:
             return ['']
 
@@ -67,26 +75,59 @@ class stringPict:
             objects.append(arg)
 
         #make a list of pictures, with equal height and baseline
-        newBaseline = max(obj.baseline for obj in objects)
-        newHeightBelowBaseline = max(
-            obj.height() - obj.baseline
-            for obj in objects)
+        newBaseline = max((obj.baseline for obj in objects))
+        newHeightBelowBaseline = max(obj.height() - obj.baseline for obj in objects)
         newHeight = newBaseline + newHeightBelowBaseline
 
         pictures = []
         for obj in objects:
-            oneEmptyLine = [' '*obj.width()]
+            oneEmptyLine = [' ' * obj.width()]
             basePadding = newBaseline - obj.baseline
             totalPadding = newHeight - obj.height()
             pictures.append(
-                oneEmptyLine * basePadding +
-                obj.picture +
-                oneEmptyLine * (totalPadding - basePadding))
+                oneEmptyLine * basePadding
+                + obj.picture
+                + oneEmptyLine * (totalPadding - basePadding)
+            )
 
         result = [''.join(lines) for lines in zip(*pictures)]
         return '\n'.join(result), newBaseline
 
-    def right(self, *args):
+
+    def v_align(self, *args, align="t"):
+        """
+        Align a list of elements, keeping
+        the baseline relative to self.
+        """
+        objects = []
+        for arg in args:
+            if isinstance(arg, str):
+                arg = self.__class__(arg)
+            objects.append(arg)
+
+        baseline = self.baseline
+        height = self.height()
+        max_height = max((height, max(arg.height() for obj in objects)))
+        texts = (str(obj) for obj in objects)
+
+        if align=="b":
+            if max_height > height:
+                baseline = baseline + max_height - height
+
+            offsets = (max_height-obj.height() for obj in objects)
+            texts = (offset*"\n"+ text if offset>0 else text for offset, obj, text in  zip(offsets, objects, texts))
+        elif align=="c":
+            if max_height > height:
+                baseline = baseline + (max_height - height+1)//2
+            offsets = ( (max_height-obj.height()+1)//2 for obj in objects)
+            texts = (offset*"\n"+ text if offset>0 else text for offset, obj, text in  zip(offsets, objects, texts))
+        elif align!="t":
+            raise ValueError()
+
+        result = [self.__class__(text, baseline) for text in texts]
+        return result
+
+    def right(self, *args, align=""):
         r"""Put pictures next to this one.
         Returns string, baseline arguments for stringPict.
         (Multiline) strings are allowed, and are given a baseline of 0.
@@ -95,27 +136,65 @@ class stringPict:
         ========
 
         >>> from sympy.printing.pretty.stringpict import stringPict
-        >>> print(stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0])
+        >>> print(stringPict("10").right(" + ",stringPict("1\r-\r2",1)))
              1
         10 + -
              2
 
         """
-        return stringPict.next(self, *args)
 
-    def left(self, *args):
-        """Put pictures (left to right) at left.
-        Returns string, baseline arguments for stringPict.
+        if align=="":
+            return self.__class__(*stringPict.next(self, *args))
+
+        return self.__class__(*stringPict.next(*self.v_align( *((self,) + args), align=align)))
+
+    def left(self, *args, align=""):
         """
-        return stringPict.next(*(args + (self,)))
+        Put pictures (left to right) at left.
+        Returns string, baseline arguments for stringPict.
+
+        The parameter `align` controls the relative alignments
+        of the elements. By default (`align=""`) aligns the
+        elements regarding the base line.
+
+        The other possible values for the `align` parameter
+        are
+
+            - "t": tops are aligned
+            - "c": centers are aligned
+            - "b": bottoms are aligned
+
+        In all the cases, the resulting baseline is localized
+        on to the `self` baseline.
+
+        Examples
+        ========
+
+        >>> from sympy.printing.pretty.stringpict import stringPict
+        >>> stringPict('a\\n-\\nb', 1).left(
+        ...     "numerator-> ",align="t").right(" <-denominator",
+        ...      align="b").parens("","}").right(" fraction")
+        numerator-> a              \\
+                    -              > fraction
+                    b <-denominator/
+        """
+
+        if align=="":
+            return self.__class__(*stringPict.next(*(args + (self,))))
+        return self.__class__(
+            *stringPict.next(
+                *self.v_align( *(args + (self,)), align=align)
+            )
+        )
 
     @staticmethod
-    def stack(*args):
+    def stack(*args, align="c"):
         """Put pictures on top of each other,
         from top to bottom.
         Returns string, baseline arguments for stringPict.
         The baseline is the baseline of the second picture.
-        Everything is centered.
+        By default, everything is centered. If `align` is set to
+        'l' ('r') the elements are aligned to the  left (right) margin.
         Baseline is the baseline of the second picture.
         Strings are allowed.
         The special value stringPict.LINE is a row of '-' extended to the width.
@@ -128,10 +207,7 @@ class stringPict:
             objects.append(arg)
 
         #compute new width
-        newWidth = max(
-            obj.width()
-            for obj in objects
-            if obj is not stringPict.LINE)
+        newWidth = max(obj.width() for obj in objects if obj is not stringPict.LINE)
 
         lineObj = stringPict(hobj('-', newWidth))
 
@@ -141,11 +217,31 @@ class stringPict:
                 objects[i] = lineObj
 
         #stack the pictures, and center the result
-        newPicture = [center(line, newWidth) for obj in objects for line in obj.picture]
-        newBaseline = objects[0].height() + objects[1].baseline
-        return '\n'.join(newPicture), newBaseline
+        if align == "c":
+            newPicture = [
+                center(line, newWidth) for obj in objects for line in obj.picture
+            ]
+        elif align == "l":
+            newPicture = [
+                line + (newWidth - len(line)) * ' '
+                for obj in objects
+                for line in obj.picture
+            ]
+        elif align == "r":
+            newPicture = [
+                (newWidth - len(line)) * ' ' + line
+                for obj in objects
+                for line in obj.picture
+            ]
+        else:
+            raise ValueError(
+                f"the align parameter must be one of 'l'(left), 'r'(right) or 'c' (center). Got {align}."
+            )
 
-    def below(self, *args):
+        newBaseline = objects[0].height() + objects[1].baseline
+        return "\n".join(newPicture), newBaseline
+
+    def below(self, *args, align="c"):
         """Put pictures under this picture.
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of top picture
@@ -153,27 +249,50 @@ class stringPict:
         Examples
         ========
 
-        >>> from sympy.printing.pretty.stringpict import stringPict
-        >>> print(stringPict("x+3").below(
-        ...       stringPict.LINE, '3')[0]) #doctest: +NORMALIZE_WHITESPACE
-        x+3
-        ---
-         3
+        Let' s consider first how to draw a fraction::
+
+            >>> from sympy.printing.pretty.stringpict import stringPict
+            >>> print(stringPict("x+3").below(
+            ...       stringPict.LINE, '3')) #doctest: +NORMALIZE_WHITESPACE
+            x+3
+            ---
+             3
+
+        The optional argument `align` controls the alignment.
+        The default value is `'c'`. For `align='l'`,
+        the text is left aligned::
+
+            >>> print(stringPict("Humpty Dumpty").below(
+            ...       stringPict("falls off the wall..."), align="l"))
+            Humpty Dumpty
+            falls off the wall...
+
+        and for `align='r'`, the elements are right aligned::
+
+            >>> print(stringPict("Humpty Dumpty").below(
+            ...       stringPict("falls off the wall..."), align="r"))
+                    Humpty Dumpty
+            falls off the wall...
 
         """
-        s, baseline = stringPict.stack(self, *args)
-        return s, self.baseline
+        s, baseline = stringPict.stack(self, *args, align=align)
+        return self.__class__(s, self.baseline)
 
-    def above(self, *args):
-        """Put pictures above this picture.
+    def above(self, *args, align="c"):
+        """
+        Put pictures above this picture.
+
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of bottom picture.
+        the horizontal alignment is controlled by the keyword
+        parameter `align`. See stringPict.below() for details and
+        examples.
         """
-        string, baseline = stringPict.stack(*(args + (self,)))
+        string, baseline = stringPict.stack(*(args + (self,)), align=align)
         baseline = len(string.splitlines()) - self.height() + self.baseline
-        return string, baseline
+        return self.__class__(string, baseline)
 
-    def parens(self, left='(', right=')', ifascii_nougly=False):
+    def parens(self, left="(", right=")", ifascii_nougly=False):
         """Put parentheses around self.
         Returns string, baseline arguments for stringPict.
 
@@ -192,61 +311,108 @@ class stringPict:
 
         if left:
             lparen = stringPict(vobj(left, h), baseline=b)
-            res = stringPict(*lparen.right(self))
+            res = lparen.right(self)
         if right:
             rparen = stringPict(vobj(right, h), baseline=b)
-            res = stringPict(*res.right(rparen))
+            res = res.right(rparen)
 
-        return ('\n'.join(res.picture), res.baseline)
+        return self.__class__("\n".join(res.picture), res.baseline)
 
     def leftslash(self):
-        """Precede object by a slash of the proper size.
-        """
+        """Precede object by a slash of the proper size."""
         # XXX not used anywhere ?
-        height = max(
-            self.baseline,
-            self.height() - 1 - self.baseline)*2 + 1
+        height = max(self.baseline, self.height() - 1 - self.baseline) * 2 + 1
         slash = '\n'.join(
-            ' '*(height - i - 1) + xobj('/', 1) + ' '*i
-            for i in range(height)
+            ' ' * (height - i - 1) + xobj('/', 1) + ' ' * i for i in range(height)
         )
-        return self.left(stringPict(slash, height//2))
+        return self.left(stringPict(slash, height // 2))
 
     def root(self, n=None):
-        """Produce a nice root symbol.
-        Produces ugly results for big n inserts.
         """
-        # XXX not used anywhere
-        # XXX duplicate of root drawing in pretty.py
-        #put line over expression
-        result = self.above('_'*self.width())
+        Produce a nice root symbol.
+        Produces ugly results for big n inserts.
+
+        Examples
+        ========
+
+        >>> from sympy.printing.pretty.stringpict import stringPict, prettyForm
+        >>> print(stringPict("x+3").root().right(" + a"))
+          ___
+        \\/x+3 + a
+
+        >>> print(stringPict("x+3").root(stringPict("3")).right(" + a"))
+        3 ___
+        \\/x+3 + a
+
+        >>> print((prettyForm("x")**stringPict("a")).root().right(" + a"))
+           __
+          / a
+        \\/ x + a
+
+        >>> print((prettyForm("x")**stringPict("a")).root(stringPict("3")).right(" + a"))
+           __
+        3 / a
+        \\/ x + a
+
+        >>> print((prettyForm("x+3")/prettyForm("y")).root().right(" + a"))
+            ___
+           /x+3
+          / --- + a
+        \\/   y
+
+        >>> print((prettyForm("x+3")/prettyForm("y")).root(stringPict("3")).right(" + a"))
+            ___
+           /x+3
+        3 / --- + a
+        \\/   y
+
+        For indices with more than one line, use the Pow form:
+
+        >>> print((prettyForm("x+3")/prettyForm("y")).root(
+        ...       prettyForm("3")/prettyForm("5")).right(" + a"))
+                 /3\\
+             1 / |-|
+                 \\5/
+        /x+3\\
+        |---|         + a
+        \\ y /
+        """
+        # TODO: use it in root drawing in PrettyPrinter.
+        #
+        # put line over expression
+        if n is not None:
+            if isinstance(n, str):
+                n = stringPict(n)
+            if n.height() > 1:
+                exponent =  n.parens().left(stringPict("1 / "))
+                return self ** exponent
+
+        result = self.above('_' * self.width())
         #construct right half of root symbol
         height = self.height()
-        slash = '\n'.join(
-            ' ' * (height - i - 1) + '/' + ' ' * i
-            for i in range(height)
-        )
-        slash = stringPict(slash, height - 1)
-        #left half of root symbol
-        if height > 2:
-            downline = stringPict('\\ \n \\', 1)
-        else:
-            downline = stringPict('\\')
-        #put n on top, as low as possible
-        if n is not None and n.width() > downline.width():
-            downline = downline.left(' '*(n.width() - downline.width()))
-            downline = downline.above(n)
-        #build root symbol
-        root = downline.right(slash)
-        #glue it on at the proper height
-        #normally, the root symbel is as high as self
-        #which is one less than result
-        #this moves the root symbol one down
-        #if the root became higher, the baseline has to grow too
-        root.baseline = result.baseline - result.height() + root.height()
-        return result.left(root)
 
-    def render(self, * args, **kwargs):
+        root_sign = prettyForm(xobj('\\', 1))
+        if n is not None:
+            root_sign = root_sign.above(n, align="r")
+
+        _zZ = xobj('/', 1)
+        slash = '\n'.join(' ' * (height - i - 1) + _zZ + ' ' * i for i in range(height))
+        # TODO: To improve the use of the space, consider
+        # using a vertical line instead '/', like
+        #    -
+        #   |x
+        # 20|-
+        #  \|2
+        #
+        # _zZ = xobj('|', 1)
+        # slash = "\n".join(height*[_zZ])
+        #
+        # but this requires to change many tests.
+        slash = stringPict(slash, self.baseline)
+        root_sign = root_sign.right(slash, align="b")
+        return result.left(root_sign, align="b")
+
+    def render(self, *args, **kwargs):
         """Return the string form of self.
 
            Unless the argument line_break is set to False, it will
@@ -257,7 +423,7 @@ class stringPict:
             kwargs["wrap_line"] = _GLOBAL_WRAP_LINE
 
         if kwargs["wrap_line"] is False:
-            return "\n".join(self.picture)
+            return '\n'.join(self.picture)
 
         if kwargs["num_columns"] is not None:
             # Read the argument num_columns if it is not None
@@ -293,10 +459,10 @@ class stringPict:
         overflow_first = ""
         if kwargs["use_unicode"] or pretty_use_unicode():
             overflow_start = "\N{RIGHTWARDS ARROW WITH HOOK} "
-            overflow_end   = " \N{RIGHTWARDS ARROW WITH HOOK}"
+            overflow_end = " \N{RIGHTWARDS ARROW WITH HOOK}"
         else:
             overflow_start = "> "
-            overflow_end   = " >"
+            overflow_end = " >"
 
         def chunks(line):
             """Yields consecutive chunks of line_width ncols"""
@@ -317,14 +483,76 @@ class stringPict:
         pictures = zip(*map(chunks, self.picture))
 
         # Join lines of each screen into sub-pictures
-        pictures = ["\n".join(picture) for picture in pictures]
+        pictures = ['\n'.join(picture) for picture in pictures]
 
-        # Add spacers between sub-pictures
+        #Add spacers between sub-pictures
         return "\n\n".join(pictures)
 
-    def terminal_width(self):
-        """Return the terminal width if possible, otherwise return 0.
+    def subindex(self, sub_index):
+        """Add a `subindex`.
+
+        Examples
+        ========
+
+        >>> from sympy.printing.pretty.stringpict import stringPict
+        >>> print( (stringPict("a").below("-").below(stringPict("b"))
+        ...         ).parens().subindex(stringPict("a=4")))
+        /a\\
+        |-|
+        \\b/
+            a=4
         """
+        width_self = self.width()
+        width_index = sub_index.width()
+        extended_self = self.right(stringPict(width_index * ' '))
+        sub_index = sub_index.left(stringPict(width_self * ' '))
+        return extended_self.below(sub_index)
+
+    def subsuperindices(self, sub_index, super_index):
+        """
+        Add  sub and super indices.
+
+        Examples
+        ========
+
+        >>> from sympy.printing.pretty.stringpict import stringPict
+        >>> print(stringPict("T").subsuperindices(
+        ...       stringPict("a"),stringPict("b,c")))
+         b,c
+        T
+         a
+        """
+        width_self = self.width()
+        width_index = max(sub_index.width() ,super_index.width())
+        extended_self = self.right(stringPict(width_index * ' '))
+        super_index = super_index.left(stringPict(width_self * ' '))
+        sub_index = sub_index.left(stringPict(width_self * ' '))
+        return extended_self.above(super_index,
+                                   align="l").below(
+                                       sub_index,
+                                       align="l")
+
+    def superindex(self, super_index):
+        """
+        Add a `super index`.
+
+        Examples
+        ========
+
+        >>> from sympy.printing.pretty.stringpict import stringPict
+        >>> print(stringPict("e").superindex(stringPict("-s(x)")))
+         -s(x)
+        e
+
+        """
+        width_self = self.width()
+        width_index = super_index.width()
+        extended_self = self.right(stringPict(width_index * ' '))
+        super_index = super_index.left(stringPict(width_self * ' '))
+        return extended_self.above(super_index)
+
+    def terminal_width(self):
+        """Return the terminal width if possible, otherwise return 0."""
         size = shutil.get_terminal_size(fallback=(0, 0))
         return size.columns
 
@@ -369,10 +597,13 @@ class prettyForm(stringPict):
         OPEN this is an open object: parenthesize if added, multiplied, or
              powered (example: Piecewise)
     """
+
     ATOM, FUNC, DIV, POW, MUL, ADD, NEG, OPEN = range(8)
 
     def __init__(self, s, baseline=0, binding=0, unicode=None):
         """Initialize from stringPict and binding power."""
+        assert isinstance(s, str)
+        assert isinstance(baseline, int)
         stringPict.__init__(self, s, baseline)
         self.binding = binding
         if unicode is not None:
@@ -404,12 +635,12 @@ class prettyForm(stringPict):
         """
         arg = self
         if arg.binding > prettyForm.NEG:
-            arg = stringPict(*arg.parens())
+            arg = arg.parens()
         result = [arg]
         for arg in others:
-            #add parentheses for weak binders
+            # add parentheses for weak binders
             if arg.binding > prettyForm.NEG:
-                arg = stringPict(*arg.parens())
+                arg = arg.parens()
             #use existing minus sign if available
             if arg.binding != prettyForm.NEG:
                 result.append(' + ')
@@ -417,51 +648,47 @@ class prettyForm(stringPict):
         return prettyForm(binding=prettyForm.ADD, *stringPict.next(*result))
 
     def __truediv__(self, den, slashed=False):
-        """Make a pretty division; stacked or slashed.
-        """
+        """Make a pretty division; stacked or slashed."""
         if slashed:
             raise NotImplementedError("Can't do slashed fraction yet")
         num = self
         if num.binding == prettyForm.DIV:
-            num = stringPict(*num.parens())
+            num = num.parens()
         if den.binding == prettyForm.DIV:
-            den = stringPict(*den.parens())
+            den = den.parens()
 
-        if num.binding==prettyForm.NEG:
-            num = num.right(" ")[0]
+        if num.binding == prettyForm.NEG:
+            num = num.right(' ')
 
-        return prettyForm(binding=prettyForm.DIV, *stringPict.stack(
-            num,
-            stringPict.LINE,
-            den))
+        return prettyForm(
+            binding=prettyForm.DIV, *stringPict.stack(num, stringPict.LINE, den)
+        )
 
     def __mul__(self, *others):
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
         """
-        quantity = {
-            'degree': "\N{DEGREE SIGN}"
-        }
+        quantity = {"degree": "\N{DEGREE SIGN}"}
 
         if len(others) == 0:
-            return self  # We aren't actually multiplying... So nothing to do here.
+            return self  #We aren't actually multiplying... So nothing to do here.
 
-        # add parens on args that need them
+        #add parens on args that need them
         arg = self
         if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
-            arg = stringPict(*arg.parens())
+            arg = arg.parens()
         result = [arg]
         for arg in others:
             if arg.picture[0] not in quantity.values():
                 result.append(xsym('*'))
             #add parentheses for weak binders
             if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
-                arg = stringPict(*arg.parens())
+                arg = arg.parens()
             result.append(arg)
 
         len_res = len(result)
         for i in range(len_res):
-            if i < len_res - 1 and result[i] == '-1' and result[i + 1] == xsym('*'):
+            if i < len_res - 1 and result[i] == "-1" and result[i + 1] == xsym('*'):
                 # substitute -1 by -, like in -1*x -> -x
                 result.pop(i)
                 result.pop(i)
@@ -482,56 +709,67 @@ class prettyForm(stringPict):
         return "prettyForm(%r,%d,%d)" % (
             '\n'.join(self.picture),
             self.baseline,
-            self.binding)
+            self.binding,
+        )
 
     def __pow__(self, b):
-        """Make a pretty power.
-        """
+        """Make a pretty power."""
         a = self
         use_inline_func_form = False
         if b.binding == prettyForm.POW:
-            b = stringPict(*b.parens())
+            b = b.parens()
         if a.binding > prettyForm.FUNC:
-            a = stringPict(*a.parens())
+            a = a.parens()
         elif a.binding == prettyForm.FUNC:
             # heuristic for when to use inline power
             if b.height() > 1:
-                a = stringPict(*a.parens())
+                a = a.parens()
             else:
                 use_inline_func_form = True
 
         if use_inline_func_form:
             #         2
             #  sin  +   + (x)
-            b.baseline = a.prettyFunc.baseline + b.height()
-            func = stringPict(*a.prettyFunc.right(b))
-            return prettyForm(*func.right(a.prettyArgs))
+            # b.baseline = a.prettyFunc.baseline + b.height()
+            # func = a.prettyFunc.right(b)
+            # return func.right(a.prettyArgs)
+            func = a.prettyFunc.superindex(b)
+            return func.right(a.prettyArgs)
         else:
             #      2    <-- top
             # (x+y)     <-- bot
-            top = stringPict(*b.left(' '*a.width()))
-            bot = stringPict(*a.right(' '*b.width()))
+            # top = b.left(' ' * a.width())
+            # bot = a.right(' ' * b.width())
 
-        return prettyForm(binding=prettyForm.POW, *bot.above(top))
+            # result = bot.above(top)
+            result = a.superindex(b)
+            result.binding = prettyForm.POW
+            return result
 
     simpleFunctions = ["sin", "cos", "tan"]
 
     @staticmethod
     def apply(function, *args):
-        """Functions of one or more variables.
-        """
+        """Functions of one or more variables."""
         if function in prettyForm.simpleFunctions:
             #simple function: use only space if possible
-            assert len(
-                args) == 1, "Simple function %s must have 1 argument" % function
+            assert len(args) == 1, "Simple function %s must have 1 argument" % function
             arg = args[0].__pretty__()
             if arg.binding <= prettyForm.DIV:
                 #optimization: no parentheses necessary
-                return prettyForm(binding=prettyForm.FUNC, *arg.left(function + ' '))
+                result = arg.left(function + ' ')
+                result.binding = prettyForm.FUNC
+                return result
         argumentList = []
         for arg in args:
             argumentList.append(',')
             argumentList.append(arg.__pretty__())
-        argumentList = stringPict(*stringPict.next(*argumentList[1:]))
-        argumentList = stringPict(*argumentList.parens())
-        return prettyForm(binding=prettyForm.ATOM, *argumentList.left(function))
+        if argumentList:
+            first_arg, *rest = argumentList
+            argument_pict = first_arg.right(*rest)
+        else:
+            argument_pict = stringPict("")
+        argument_pict = argument_pict.parens()
+        func_pict = argument_pict.left(function)
+        func_pict.binding = prettyForm.ATOM
+        return func_pict

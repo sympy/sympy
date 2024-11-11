@@ -227,22 +227,23 @@ class QExpr(Expr):
     def _print_sequence_pretty(self, seq, sep, printer, *args):
         pform = printer._print(seq[0], *args)
         for item in seq[1:]:
-            pform = prettyForm(*pform.right(sep))
-            pform = prettyForm(*pform.right(printer._print(item, *args)))
+            pform = pform.right(sep)
+            pform = pform.right(printer._print(item, *args))
         return pform
 
     # Utilities for printing: these operate prettyForm objects
 
     def _print_subscript_pretty(self, a, b):
-        top = prettyForm(*b.left(' '*a.width()))
-        bot = prettyForm(*a.right(' '*b.width()))
-        return prettyForm(binding=prettyForm.POW, *bot.below(top))
+        result = b.left(' '*a.width())
+        result = a.right(' '*b.width()).below(result)
+        result.binding = prettyForm.POW
+        return result
 
     def _print_superscript_pretty(self, a, b):
         return a**b
 
     def _print_parens_pretty(self, pform, left='(', right=')'):
-        return prettyForm(*pform.parens(left=left, right=right))
+        return pform.parens(left=left, right=right)
 
     # Printing of labels (i.e. args)
 

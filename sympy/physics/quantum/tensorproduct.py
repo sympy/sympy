@@ -7,7 +7,6 @@ from sympy.core.power import Pow
 from sympy.core.sympify import sympify
 from sympy.matrices.dense import DenseMatrix as Matrix
 from sympy.matrices.immutable import ImmutableDenseMatrix as ImmutableMatrix
-from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.dagger import Dagger
@@ -177,19 +176,18 @@ class TensorProduct(Expr):
                 length_i = len(self.args[i].args)
                 for j in range(length_i):
                     part_pform = printer._print(self.args[i].args[j], *args)
-                    next_pform = prettyForm(*next_pform.right(part_pform))
+                    next_pform = next_pform.right(part_pform)
                     if j != length_i - 1:
-                        next_pform = prettyForm(*next_pform.right(', '))
+                        next_pform = next_pform.right(', ')
 
                 if len(self.args[i].args) > 1:
-                    next_pform = prettyForm(
-                        *next_pform.parens(left='{', right='}'))
-                pform = prettyForm(*pform.right(next_pform))
+                    next_pform = next_pform.parens(left='{', right='}')
+                pform = pform.right(next_pform)
                 if i != length - 1:
-                    pform = prettyForm(*pform.right(',' + ' '))
+                    pform = pform.right(',' + ' ')
 
-            pform = prettyForm(*pform.left(self.args[0].lbracket))
-            pform = prettyForm(*pform.right(self.args[0].rbracket))
+            pform = pform.left(self.args[0].lbracket)
+            pform = pform.right(self.args[0].rbracket)
             return pform
 
         length = len(self.args)
@@ -197,15 +195,13 @@ class TensorProduct(Expr):
         for i in range(length):
             next_pform = printer._print(self.args[i], *args)
             if isinstance(self.args[i], (Add, Mul)):
-                next_pform = prettyForm(
-                    *next_pform.parens(left='(', right=')')
-                )
-            pform = prettyForm(*pform.right(next_pform))
+                next_pform = next_pform.parens(left='(', right=')')
+            pform = pform.right(next_pform)
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right('\N{N-ARY CIRCLED TIMES OPERATOR}' + ' '))
+                    pform = pform.right('\N{N-ARY CIRCLED TIMES OPERATOR}' + ' ')
                 else:
-                    pform = prettyForm(*pform.right('x' + ' '))
+                    pform = pform.right('x' + ' ')
         return pform
 
     def _latex(self, printer, *args):
