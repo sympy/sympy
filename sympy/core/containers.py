@@ -6,6 +6,8 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
+from __future__ import annotations
+
 from collections import OrderedDict
 from collections.abc import MutableSet
 from typing import Any, Callable
