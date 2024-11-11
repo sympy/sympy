@@ -167,6 +167,7 @@ def test_perfect_power():
     # negatives and non-integer rationals
     assert perfect_power(-4) is False
     assert perfect_power(-8) == (-2, 3)
+    assert perfect_power(-S(1)/8) == (-S(1)/2, 3)
     assert perfect_power(-5**15) == (-5, 15)
     assert perfect_power(-5**15, big=False) == (-3125, 3)
     assert perfect_power(-5**15, [15]) == (-5, 15)
