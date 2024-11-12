@@ -539,12 +539,12 @@ def perfect_power(n, candidates=None, big=True, factor=True):
 
         if p == 1:
             qq = perfect_power(q, candidates, big, factor)
-            return (S.One / qq[0], qq[1]) if qq is not None else False
+            return (S.One / qq[0], qq[1]) if qq is not False else False
 
         if not (pp:=perfect_power(p, factor=factor)):
-                return False
+            return False
         if not (qq:=perfect_power(q, factor=factor)):
-                return False
+            return False
         (num_base, num_exp), (den_base, den_exp) = pp, qq
 
         def compute_tuple(exponent):
