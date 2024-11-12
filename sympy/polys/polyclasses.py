@@ -140,6 +140,9 @@ class DMP(CantSympify):
 
     __slots__ = ()
 
+    lev: int
+    dom: Domain
+
     def __new__(cls, rep, dom, lev=None):
 
         if lev is None:
