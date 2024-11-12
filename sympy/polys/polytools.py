@@ -1,5 +1,6 @@
 """User-friendly public interface to polynomial functions. """
 
+from __future__ import annotations
 
 from functools import wraps, reduce
 from operator import mul
@@ -164,7 +165,7 @@ class Poly(Basic):
     is_Poly = True
     _op_priority = 10.001
 
-    def __new__(cls, rep, *gens, **args):
+    def __new__(cls, rep, *gens, **args) -> Poly:
         """Create a new polynomial instance out of something useful. """
         opt = options.build_options(gens, args)
 

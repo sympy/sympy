@@ -15,11 +15,12 @@ from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.compatibility import IPolys
 from sympy.polys.constructor import construct_domain
 from sympy.polys.densebasic import ninf, dmp_to_dict, dmp_from_dict
+from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps
-from sympy.polys.orderings import lex
+from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import (
     CoercionFailed, GeneratorsError,
     ExactQuotientFailed, MultivariatePolynomialError)
@@ -33,7 +34,7 @@ from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
 
 @public
-def ring(symbols, domain, order=lex):
+def ring(symbols, domain, order: MonomialOrder|str = lex):
     """Construct a polynomial ring returning ``(ring, x_1, ..., x_n)``.
 
     Parameters
@@ -195,6 +196,12 @@ _ring_cache: dict[Any, Any] = {}
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """
+
+    gens: tuple[PolyElement, ...]
+    symbols: tuple[Expr, ...]
+    ngens: int
+    domain: Domain
+    order: MonomialOrder
 
     def __new__(cls, symbols, domain, order=lex):
         symbols = tuple(_parse_symbols(symbols))

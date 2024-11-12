@@ -13,15 +13,16 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
+from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.constructor import construct_domain
-from sympy.polys.orderings import lex
+from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import _parallel_dict_from_expr
-from sympy.polys.rings import PolyElement
+from sympy.polys.rings import PolyRing, PolyElement
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence
@@ -104,8 +105,14 @@ _field_cache: dict[Any, Any] = {}
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """
 
+    ring: PolyRing
+    gens: tuple[FracElement, ...]
+    symbols: tuple[Expr, ...]
+    ngens: int
+    domain: Domain
+    order: MonomialOrder
+
     def __new__(cls, symbols, domain, order=lex):
-        from sympy.polys.rings import PolyRing
         ring = PolyRing(symbols, domain, order)
         symbols = ring.symbols
         ngens = ring.ngens
@@ -280,7 +287,6 @@ class FracField(DefaultPrinting):
         return FractionField(self)
 
     def to_ring(self):
-        from sympy.polys.rings import PolyRing
         return PolyRing(self.symbols, self.domain, self.order)
 
 class FracElement(DomainElement, DefaultPrinting, CantSympify):
