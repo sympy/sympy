@@ -180,7 +180,7 @@ class Poly(Basic):
             else:
                 return cls._from_list(list(rep), opt)
         else:
-            rep = sympify(rep, evaluate=type(rep) is not str)
+            rep = sympify(rep, evaluate=type(rep) is not str) # type: ignore
 
             if rep.is_Poly:
                 return cls._from_poly(rep, opt)
