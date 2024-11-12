@@ -530,3 +530,21 @@ def linkcode_resolve(domain, info):
 
     fn = os.path.relpath(fn, start=os.path.dirname(sympy.__file__))
     return blobpath + fn + linespec
+
+
+def resolve_type_aliases(app, env, node, contnode):
+    """Resolve :class: references to our type aliases as :attr: instead."""
+    # A sphinx bug means that TypeVar doesn't work:
+    # https://github.com/sphinx-doc/sphinx/issues/10785
+    if (
+        node["refdomain"] == "py"
+        and node["reftype"] == "class"
+        and node["reftarget"] in ["sympy.utilities.decorator.T"]
+    ):
+        return app.env.get_domain("py").resolve_xref(
+            env, node["refdoc"], app.builder, "attr", node["reftarget"], node, contnode
+        )
+
+
+def setup(app):
+    app.connect("missing-reference", resolve_type_aliases)
