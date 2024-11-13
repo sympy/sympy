@@ -216,8 +216,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - Jens Rasch (2009-03-24): initial version
     """
 
-    j_1, j_2, j_3, m_1, m_2, m_3 = map(_int_or_halfint,
-                                       [j_1, j_2, j_3, m_1, m_2, m_3])
+    j_1, j_2, j_3, m_1, m_2, m_3 = \
+        map(_int_or_halfint, map(sympify,
+            [j_1, j_2, j_3, m_1, m_2, m_3]))
 
     if m_1 + m_2 + m_3 != 0:
         return S.Zero
