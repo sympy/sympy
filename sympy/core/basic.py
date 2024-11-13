@@ -122,6 +122,7 @@ def _cmp_name(x: type, y: type) -> int:
     return (i1 > i2) - (i1 < i2)
 
 
+
 @cacheit
 def _get_postprocessors(clsname, arg_type):
     # Since only Add, Mul, Pow can be clsname, this cache
@@ -139,7 +140,7 @@ def _get_postprocessors(clsname, arg_type):
 
 @cacheit
 def _get_postprocessors_for_type(arg_type):
-    return (
+    return tuple(
         Basic._constructor_postprocessor_mapping[cls]
         for cls in arg_type.mro()
         if cls in Basic._constructor_postprocessor_mapping
