@@ -1,8 +1,11 @@
 """
 Integer factorization
 """
+from __future__ import annotations
 
-from collections import defaultdict
+from bisect import bisect_left
+from collections import defaultdict, OrderedDict
+from collections.abc import MutableMapping
 import math
 
 from sympy.core.containers import Dict
@@ -659,6 +662,117 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     return False
 
 
+class FactorCache(MutableMapping):
+    """ Provides a cache for prime factors.
+    ``factor_cache`` is pre-prepared as an instance of ``FactorCache``,
+    and ``factorint`` internally references it to speed up
+    the factorization of prime factors.
+
+    While cache is automatically added during the execution of ``factorint``,
+    users can also manually add prime factors independently.
+
+    >>> from sympy import factor_cache
+    >>> factor_cache[15] = 5
+
+    Furthermore, by customizing ``get_external``,
+    it is also possible to use external databases.
+    The following is an example using http://factordb.com .
+
+    .. code-block:: python
+
+        import requests
+        from sympy import factor_cache
+
+        def get_external(self, n: int) -> list[int] | None:
+            res = requests.get("http://factordb.com/api", params={"query": str(n)})
+            if res.status_code != requests.codes.ok:
+                return None
+            j = res.json()
+            if j.get("status") in ["FF", "P"]:
+                return list(int(p) for p, _ in j.get("factors"))
+
+        factor_cache.get_external = get_external
+
+    Be aware that writing this code will trigger internet access
+    to factordb.com when calling ``factorint``.
+
+    """
+    def __init__(self, maxsize: int | None = None):
+        self._cache: OrderedDict[int, int] = OrderedDict()
+        self.maxsize = maxsize
+
+    def __len__(self) -> int:
+        return len(self._cache)
+
+    def __contains__(self, n) -> bool:
+        return n in self._cache
+
+    def __getitem__(self, n: int) -> int:
+        factor = self.get(n)
+        if factor is None:
+            raise KeyError(f"{n} does not exist.")
+        return factor
+
+    def __setitem__(self, n: int, factor: int):
+        if not (1 < factor <= n and n % factor == 0 and isprime(factor)):
+            raise ValueError(f"{factor} is not a prime factor of {n}")
+        self._cache[n] = max(self._cache.get(n, 0), factor)
+        if self.maxsize is not None and len(self._cache) > self.maxsize:
+            self._cache.popitem(False)
+
+    def __delitem__(self, n: int):
+        if n not in self._cache:
+            raise KeyError(f"{n} does not exist.")
+        del self._cache[n]
+
+    def __iter__(self):
+        return self._cache.__iter__()
+
+    def cache_clear(self) -> None:
+        """ Clear the cache """
+        self._cache = OrderedDict()
+
+    @property
+    def maxsize(self) -> int | None:
+        """ Returns the maximum cache size; if ``None``, it is unlimited. """
+        return self._maxsize
+
+    @maxsize.setter
+    def maxsize(self, value: int | None) -> None:
+        if value is not None and value <= 0:
+            raise ValueError("maxsize must be None or a non-negative integer.")
+        self._maxsize = value
+        if value is not None:
+            while len(self._cache) > value:
+                self._cache.popitem(False)
+
+    def get(self, n: int, default=None):
+        """ Return the prime factor of ``n``.
+        If it does not exist in the cache, return the value of ``default``.
+        """
+        if n <= sieve._list[-1]:
+            if sieve._list[bisect_left(sieve._list, n)] == n:
+                return n
+        if n in self._cache:
+            self._cache.move_to_end(n)
+            return self._cache[n]
+        if factors := self.get_external(n):
+            self.add(n, factors)
+            return self._cache[n]
+        return default
+
+    def add(self, n: int, factors: list[int]) -> None:
+        for p in sorted(factors, reverse=True):
+            self[n] = p
+            n, _ = remove(n, p)
+
+    def get_external(self, n: int) -> list[int] | None:
+        return None
+
+
+factor_cache = FactorCache(maxsize=1000)
+
+
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     r"""
     Use Pollard's rho method to try to extract a nontrivial factor
@@ -940,6 +1054,8 @@ def _trial(factors, n, candidates, verbose=False):
     nfactors = len(factors)
     for d in candidates:
         if n % d == 0:
+            if n != d:
+                factor_cache[n] = d
             n, m = remove(n // d, d)
             factors[d] = m + 1
     if verbose:
@@ -961,6 +1077,7 @@ def _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
             print(complete_msg)
         return True
     if n < next_p**2 or isprime(n):
+        factor_cache[n] = n
         factors[int(n)] = 1
         if verbose:
             print(complete_msg)
@@ -973,6 +1090,7 @@ def _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
         return False
     base, exp = p
     if base < next_p**2 or isprime(base):
+        factor_cache[n] = base
         factors[base] = exp
     else:
         facs = factorint(base, limit, use_trial, use_rho, use_pm1,
@@ -1375,6 +1493,10 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         if verbose:
             print(complete_msg)
         return factors
+    # Check if it exists in the cache
+    while p := factor_cache.get(n):
+        n, e = remove(n, p)
+        factors[int(p)] = int(e)
     # first check if the simplistic run didn't finish
     # because of the limit and check for a perfect
     # power before exiting
@@ -1414,6 +1536,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                  verbose=verbose)
                 for k, v in facs.items():
                     factors[k] = factors.get(k, 0) + v
+                factor_cache.add(n, facs)
             if verbose:
                 print(complete_msg)
             return factors
