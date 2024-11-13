@@ -693,6 +693,9 @@ def isprime(n):
     if n <= s._list[-1]:
         l, u = s.search(n)
         return l == u
+    from sympy.ntheory.factor_ import factor_cache
+    if (ret := factor_cache.get(n)) is not None:
+        return ret == n
 
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
