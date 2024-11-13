@@ -27,6 +27,10 @@ pprint_use_unicode = pretty_use_unicode
 pprint_try_use_unicode = pretty_try_use_unicode
 
 
+# TODO: use high-level methods from stringPict
+# instead of stack/next methods to simplify
+# this code.
+
 class PrettyPrinter(Printer):
     """Printer, which converts an expression into 2D ASCII-art figure."""
     printmethod = "_pretty"
@@ -2044,39 +2048,13 @@ class PrettyPrinter(Printer):
                  or (base.is_Integer and base.is_nonnegative))):
             return bpretty.left(nth_root[2])
 
-        # Construct root sign, start with the \/ shape
-        _zZ = xobj('/', 1)
-        rootsign = xobj('\\', 1) + _zZ
-        # Constructing the number to put on root
         rpretty = self._print(root)
-        # roots look bad if they are not a single line
         if rpretty.height() != 1:
             return self._print(base)**self._print(1/root)
-        # If power is half, no number should appear on top of root sign
-        exp = '' if root == 2 else str(rpretty).ljust(2)
-        if len(exp) > 2:
-            rootsign = ' '*(len(exp) - 2) + rootsign
-        # Stack the exponent
-        rootsign = stringPict(exp + '\n' + rootsign)
-        rootsign.baseline = 0
-        # Diagonal: length is one less than height of base
-        linelength = bpretty.height() - 1
-        diagonal = stringPict('\n'.join(
-            ' '*(linelength - i - 1) + _zZ + ' '*i
-            for i in range(linelength)
-        ))
-        # Put baseline just below lowest line: next to exp
-        diagonal.baseline = linelength - 1
-        # Make the root symbol
-        rootsign = rootsign.right(diagonal)
-        # Det the baseline to match contents to fix the height
-        # but if the height of bpretty is one, the rootsign must be one higher
-        rootsign.baseline = max(1, bpretty.baseline)
-        #build result
-        s = prettyForm(hobj('_', 2 + bpretty.width()))
-        s = bpretty.above(s)
-        s = s.left(rootsign)
-        return s
+
+        if root == 2:
+            return bpretty.root()
+        return bpretty.root(rpretty)
 
     def _print_Pow(self, power):
         from sympy.simplify.simplify import fraction

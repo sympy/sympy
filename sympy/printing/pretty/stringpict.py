@@ -337,34 +337,34 @@ class stringPict:
 
         >>> from sympy.printing.pretty.stringpict import stringPict, prettyForm
         >>> print(stringPict("x+3").root().right(" + a"))
-          ___
-        \\/x+3 + a
+          _____
+        \\/ x+3 + a
 
         >>> print(stringPict("x+3").root(stringPict("3")).right(" + a"))
-        3 ___
-        \\/x+3 + a
+        3 _____
+        \\/ x+3 + a
 
         >>> print((prettyForm("x")**stringPict("a")).root().right(" + a"))
-           __
-          / a
-        \\/ x + a
+           ____
+          /  a
+        \\/  x + a
 
         >>> print((prettyForm("x")**stringPict("a")).root(stringPict("3")).right(" + a"))
-           __
-        3 / a
-        \\/ x + a
+           ____
+        3 /  a
+        \\/  x + a
 
         >>> print((prettyForm("x+3")/prettyForm("y")).root().right(" + a"))
-            ___
-           /x+3
-          / --- + a
+            _____
+           / x+3
+          /  --- + a
         \\/   y
 
         >>> print((prettyForm("x+3")/prettyForm("y")).root(stringPict("3")).right(" + a"))
-            ___
-           /x+3
-        3 / --- + a
-        \\/   y
+            _____
+           / x+3
+        3 /  --- + a
+        \\/    y
 
         For indices with more than one line, use the Pow form:
 
@@ -377,39 +377,44 @@ class stringPict:
         |---|         + a
         \\ y /
         """
-        # TODO: use it in root drawing in PrettyPrinter.
-        #
-        # put line over expression
+        # Decide if using a square root symbol or
+        # an base - exponent form:
         if n is not None:
             if isinstance(n, str):
+                n = n.ljust(2)
                 n = stringPict(n)
+            elif n.width()<2:
+                n = stringPict(str(n).ljust(2))
             if n.height() > 1:
-                exponent =  n.parens().left(stringPict("1 / "))
+                exponent =  n.parens().left(stringPict("1 / "), align="c")
                 return self ** exponent
 
-        result = self.above('_' * self.width())
+        # put line over expression
+        result = self.above(hobj('_', 2 + self.width()))
         #construct right half of root symbol
         height = self.height()
-
-        root_sign = prettyForm(xobj('\\', 1))
+        _zZ = xobj('/', 1)
+        root_sign = prettyForm(xobj('\\', 1)+ _zZ)
         if n is not None:
             root_sign = root_sign.above(n, align="r")
+        if height>1:
+            slash = '\n'.join(' ' * (height - i - 2) + _zZ + ' ' * i for i in range(height-1))
+            # TODO: To improve the use of the space, consider
+            # using a vertical line instead '/', like
+            #    -
+            #   |x
+            # 20|-
+            #  \|2
+            #
+            # # remove the `.ljust.(2)` in `n` and
+            # # replace the previous line by
+            # _zZ = xobj('|', 1)
+            # slash = "\n".join(height*[_zZ])
+            #
+            # but this requires to change many tests.
+            slash = stringPict(" ").above(slash, align='l')
+            root_sign = root_sign.right(slash, align="b")
 
-        _zZ = xobj('/', 1)
-        slash = '\n'.join(' ' * (height - i - 1) + _zZ + ' ' * i for i in range(height))
-        # TODO: To improve the use of the space, consider
-        # using a vertical line instead '/', like
-        #    -
-        #   |x
-        # 20|-
-        #  \|2
-        #
-        # _zZ = xobj('|', 1)
-        # slash = "\n".join(height*[_zZ])
-        #
-        # but this requires to change many tests.
-        slash = stringPict(slash, self.baseline)
-        root_sign = root_sign.right(slash, align="b")
         return result.left(root_sign, align="b")
 
     def render(self, *args, **kwargs):
