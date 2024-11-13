@@ -134,7 +134,7 @@ myst_enable_extensions = ["dollarmath", "linkify", "tasklist"]
 myst_heading_anchors = 6
 # Make - [ ] checkboxes from the tasklist extension checkable
 # Requires https://github.com/executablebooks/MyST-Parser/pull/686
-# myst_enable_checkboxes = True
+myst_enable_checkboxes = True
 # myst_update_mathjax = False
 
 # Don't linkify links unless they start with "https://". This is needed
