@@ -106,14 +106,14 @@ def _cmp_name(x: type, y: type) -> int:
     >>> basic.ordering_of_classes = save
 
     """
-    # If the other object is not a Basic subclass, then we are not equal to it.
-    if not issubclass(y, Basic):
-        return -1
-
     n1 = x.__name__
     n2 = y.__name__
     if n1 == n2:
         return 0
+
+    # If the other object is not a Basic subclass, then we are not equal to it.
+    if not issubclass(y, Basic):
+        return -1
 
     UNKNOWN = len(ordering_of_classes) + 1
     try:
