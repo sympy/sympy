@@ -77,7 +77,7 @@ class PrettyPrinter(Printer):
         return prettyForm(e)
 
     def _print_atan2(self, e):
-        pform = self._print_seq(e.args).parens()
+        pform = self._print_seq(e.args).parenthesis()
         pform = pform.left('atan2')
         return pform
 
@@ -185,7 +185,7 @@ class PrettyPrinter(Printer):
         pform = self._print(x)
         # Add parentheses if needed
         if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol):
-            pform = pform.parens()
+            pform = pform.parenthesis()
         pform = pform.left('!')
         return pform
 
@@ -194,7 +194,7 @@ class PrettyPrinter(Printer):
         pform = self._print(x)
         # Add parentheses if needed
         if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol):
-            pform = pform.parens()
+            pform = pform.parenthesis()
         pform = pform.right('!')
         return pform
 
@@ -203,7 +203,7 @@ class PrettyPrinter(Printer):
         pform = self._print(x)
         # Add parentheses if needed
         if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol):
-            pform = pform.parens()
+            pform = pform.parenthesis()
         pform = pform.right('!!')
         return pform
 
@@ -217,7 +217,7 @@ class PrettyPrinter(Printer):
 
         pform = k_pform.above(bar)
         pform = pform.above(n_pform)
-        pform = pform.parens('(', ')')
+        pform = pform.parenthesis('(', ')')
 
         pform.baseline = (pform.baseline + 1)//2
 
@@ -242,7 +242,7 @@ class PrettyPrinter(Printer):
                 return self._print_Implies(arg, altchar=pretty_atom('NotArrow'))
 
             if arg.is_Boolean and not arg.is_Not:
-                pform = pform.parens()
+                pform = pform.parenthesis()
 
             return pform.left(pretty_atom('Not'))
         else:
@@ -256,13 +256,13 @@ class PrettyPrinter(Printer):
         pform = self._print(arg)
 
         if arg.is_Boolean and not arg.is_Not:
-            pform = pform.parens()
+            pform = pform.parenthesis()
 
         for arg in args[1:]:
             pform_arg = self._print(arg)
 
             if arg.is_Boolean and not arg.is_Not:
-                pform_arg = pform_arg.parens()
+                pform_arg = pform_arg.parenthesis()
 
             pform = pform.right(' %s ' % char)
             pform = pform.right(pform_arg)
@@ -317,13 +317,13 @@ class PrettyPrinter(Printer):
 
     def _print_Abs(self, e):
         pform = self._print(e.args[0])
-        pform = pform.parens('|', '|')
+        pform = pform.parenthesis('|', '|')
         return pform
 
     def _print_floor(self, e):
         if self._use_unicode:
             pform = self._print(e.args[0])
-            pform = pform.parens('lfloor', 'rfloor')
+            pform = pform.parenthesis('lfloor', 'rfloor')
             return pform
         else:
             return self._print_Function(e)
@@ -331,7 +331,7 @@ class PrettyPrinter(Printer):
     def _print_ceiling(self, e):
         if self._use_unicode:
             pform = self._print(e.args[0])
-            pform = pform.parens('lceil', 'rceil')
+            pform = pform.parenthesis('lceil', 'rceil')
             return pform
         else:
             return self._print_Function(e)
@@ -358,7 +358,7 @@ class PrettyPrinter(Printer):
                 x = x.right(' ')
                 x = x.right(ds)
 
-        f = self._print(deriv.expr).parens()
+        f = self._print(deriv.expr).parenthesis()
         f.binding=prettyForm.FUNC
 
         pform = prettyForm(deriv_symbol)
@@ -378,13 +378,13 @@ class PrettyPrinter(Printer):
         # for Empty Cycle
         if dc == Cycle():
             cyc = stringPict('')
-            return cyc.parens()
+            return cyc.parenthesis()
 
         dc_list = Permutation(dc.list()).cyclic_form
         # for Identity Cycle
         if dc_list == []:
             cyc = self._print(dc.size - 1)
-            return cyc.parens()
+            return cyc.parenthesis()
 
         cyc = stringPict('')
         for i in dc_list:
@@ -426,7 +426,7 @@ class PrettyPrinter(Printer):
             else:
                 col = col.left(" ")
             result = result.right(col)
-        return result.parens()
+        return result.parenthesis()
 
 
     def _print_Integral(self, integral):
@@ -437,7 +437,7 @@ class PrettyPrinter(Printer):
         prettyF = self._print(f)
         # XXX generalize parens
         if f.is_Add:
-            prettyF = prettyF.parens()
+            prettyF = prettyF.parenthesis()
 
         # dx dy dz ...
         arg = prettyF
@@ -445,7 +445,7 @@ class PrettyPrinter(Printer):
             prettyArg = self._print(x[0])
             # XXX qparens (parens if needs-parens)
             if prettyArg.width() > 1:
-                prettyArg = prettyArg.parens()
+                prettyArg = prettyArg.parenthesis()
 
             arg = arg.right(' d', prettyArg)
 
@@ -620,7 +620,7 @@ class PrettyPrinter(Printer):
         prettyF = self._print(f)
 
         if f.is_Add:  # add parens
-            prettyF = prettyF.parens()
+            prettyF = prettyF.parenthesis()
 
         H = prettyF.height() + 2
 
@@ -672,7 +672,7 @@ class PrettyPrinter(Printer):
 
         E = self._print(e)
         if precedence(e) <= PRECEDENCE["Mul"]:
-            E = E.parens('(', ')')
+            E = E.parenthesis('(', ')')
         Lim = prettyForm('lim')
 
         LimArg = self._print(z)
@@ -766,7 +766,7 @@ class PrettyPrinter(Printer):
     def _print_MatrixBase(self, e, lparens='[', rparens=']'):
         D = self._print_matrix_contents(e)
         D.baseline = D.height()//2
-        D = D.parens(lparens, rparens)
+        D = D.parenthesis(lparens, rparens)
         return D
 
     def _print_Determinant(self, e):
@@ -777,7 +777,7 @@ class PrettyPrinter(Printer):
                 return self._print_MatrixBase(mat.blocks, lparens='|', rparens='|')
             D = self._print(mat)
             D.baseline = D.height()//2
-            return D.parens('|', '|')
+            return D.parenthesis('|', '|')
         else:
             return self._print_MatrixBase(mat, lparens='|', rparens='|')
 
@@ -801,7 +801,7 @@ class PrettyPrinter(Printer):
 
     def _print_Trace(self, e):
         D = self._print(e.arg)
-        D = D.parens('(',')')
+        D = D.parenthesis('(',')')
         D.baseline = D.height()//2
         D = D.left('\n'*(0) + 'tr')
         return D
@@ -815,9 +815,9 @@ class PrettyPrinter(Printer):
                     Symbol(expr.parent.name + '_%d%d' % (expr.i, expr.j)))
         else:
             prettyFunc = self._print(expr.parent)
-            prettyFunc = prettyFunc.parens()
+            prettyFunc = prettyFunc.parenthesis()
             prettyIndices = self._print_seq((expr.i, expr.j), delimiter=', '
-                    ).parens(left='[', right=']')
+                    ).parenthesis(left='[', right=']')
             pform = prettyForm(binding=prettyForm.FUNC,
                     *stringPict.next(prettyFunc, prettyIndices))
 
@@ -833,7 +833,7 @@ class PrettyPrinter(Printer):
         from sympy.matrices import MatrixSymbol
         prettyFunc = self._print(m.parent)
         if not isinstance(m.parent, MatrixSymbol):
-            prettyFunc = prettyFunc.parens()
+            prettyFunc = prettyFunc.parenthesis()
         def ppslice(x, dim):
             x = list(x)
             if x[2] == 1:
@@ -844,7 +844,7 @@ class PrettyPrinter(Printer):
                 x[1] = ''
             return self._print_seq(x, delimiter=':')
         prettyArgs = str(self._print_seq((ppslice(m.rowslice, m.parent.rows),
-            ppslice(m.colslice, m.parent.cols)), delimiter=', ').parens(left='[', right=']'))
+            ppslice(m.colslice, m.parent.cols)), delimiter=', ').parenthesis(left='[', right=']'))
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -861,7 +861,7 @@ class PrettyPrinter(Printer):
         from sympy.matrices import MatrixSymbol, BlockMatrix
         if (not isinstance(mat, MatrixSymbol) and
             not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
-            pform = pform.parens()
+            pform = pform.parenthesis()
         pform = pform**(prettyForm('T'))
         return pform
 
@@ -875,7 +875,7 @@ class PrettyPrinter(Printer):
         from sympy.matrices import MatrixSymbol, BlockMatrix
         if (not isinstance(mat, MatrixSymbol) and
             not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
-            pform = pform.parens()
+            pform = pform.parenthesis()
         pform = pform**dag
         return pform
 
@@ -909,7 +909,7 @@ class PrettyPrinter(Printer):
         for i, a in enumerate(args):
             if (isinstance(a, (Add, MatAdd, HadamardProduct, KroneckerProduct))
                     and len(expr.args) > 1):
-                args[i] = self._print(a).parens()
+                args[i] = self._print(a).parenthesis()
             else:
                 args[i] = self._print(a)
 
@@ -944,7 +944,7 @@ class PrettyPrinter(Printer):
         pform = self._print(expr.base)
         from sympy.matrices import MatrixSymbol
         if not isinstance(expr.base, MatrixSymbol) and expr.base.is_MatrixExpr:
-            pform = pform.parens()
+            pform = pform.parenthesis()
         pform = pform**(self._print(expr.exp))
         return pform
 
@@ -968,7 +968,7 @@ class PrettyPrinter(Printer):
         pretty_base = self._print(expr.base)
         pretty_exp = self._print(expr.exp)
         if precedence(expr.exp) < PRECEDENCE["Mul"]:
-            pretty_exp = pretty_exp.parens()
+            pretty_exp = pretty_exp.parenthesis()
         pretty_circ_exp = prettyForm(
             binding=prettyForm.LINE,
             *stringPict.next(circ, pretty_exp)
@@ -987,7 +987,7 @@ class PrettyPrinter(Printer):
 
     def _print_FunctionMatrix(self, X):
         D = self._print(X.lamda.expr)
-        D = D.parens('[', ']')
+        D = D.parenthesis('[', ']')
         return D
 
     def _print_TransferFunction(self, expr):
@@ -1001,7 +1001,7 @@ class PrettyPrinter(Printer):
     def _print_Series(self, expr):
         args = list(expr.args)
         for i, a in enumerate(expr.args):
-            args[i] = self._print(a).parens()
+            args[i] = self._print(a).parenthesis()
         return prettyForm.__mul__(*args)
 
     def _print_MIMOSeries(self, expr):
@@ -1012,7 +1012,7 @@ class PrettyPrinter(Printer):
             if (isinstance(a, MIMOParallel) and len(expr.args) > 1):
                 expression = self._print(a)
                 expression.baseline = expression.height()//2
-                pretty_args.append(expression.parens())
+                pretty_args.append(expression.parenthesis())
             else:
                 expression = self._print(a)
                 expression.baseline = expression.height()//2
@@ -1093,7 +1093,7 @@ class PrettyPrinter(Printer):
         _feedback = prettyForm(*stringPict.next(inv_mat))
         _feedback = stringPict.right(prettyForm("I + "), _feedback)  if expr.sign == -1 \
             else stringPict.right(prettyForm("I - "), _feedback)
-        _feedback = stringPict.parens(_feedback)
+        _feedback = stringPict.parenthesis(_feedback)
         _feedback.baseline = 0
         _feedback = stringPict.right(_feedback, stringPict('-1 '))
         _feedback.baseline = _feedback.height()//2
@@ -1151,7 +1151,7 @@ class PrettyPrinter(Printer):
                     #We always wrap the measure numbers in
                     #parentheses
                     arg_str = str(self._print(
-                        v).parens())
+                        v).parenthesis())
 
                     o1.append(arg_str + ' ' + k._pretty_form)
                 vectstrs.append(k._pretty_form)
@@ -1303,7 +1303,7 @@ class PrettyPrinter(Printer):
     def _print_TensMul(self, expr):
         sign, args = expr._get_args_for_traditional_printer()
         args = [
-            self._print(i).parens() if
+            self._print(i).parenthesis() if
             precedence_traditional(i) < PRECEDENCE["Mul"] else self._print(i)
             for i in args
         ]
@@ -1315,7 +1315,7 @@ class PrettyPrinter(Printer):
 
     def _print_TensAdd(self, expr):
         args = [
-            self._print(i).parens() if
+            self._print(i).parenthesis() if
             precedence_traditional(i) < PRECEDENCE["Mul"] else self._print(i)
             for i in expr.args
         ]
@@ -1344,7 +1344,7 @@ class PrettyPrinter(Printer):
                 x = x.right(' ')
                 x = x.right(ds)
 
-        f = self._print(deriv.expr).parens()
+        f = self._print(deriv.expr).parenthesis()
         f.binding = prettyForm.FUNC
 
         pform = prettyForm(deriv_symbol)
@@ -1409,7 +1409,7 @@ class PrettyPrinter(Printer):
 
             D = D.below(D_row)
 
-        D = D.parens('{', '')
+        D = D.parenthesis('{', '')
         D.baseline = D.height()//2
         D.binding = prettyForm.OPEN
         return D
@@ -1471,7 +1471,7 @@ class PrettyPrinter(Printer):
         D = self._hprint_vseparator(D, P)
 
         # add parens
-        D = D.parens('(', ')')
+        D = D.parenthesis('(', ')')
 
         # create the F symbol
         above = D.height()//2 - 1
@@ -1532,7 +1532,7 @@ class PrettyPrinter(Printer):
         D = self._hprint_vseparator(D, P)
 
         # add parens
-        D = D.parens('(', ')')
+        D = D.parenthesis('(', ')')
 
         # create the G symbol
         above = D.height()//2 - 1
@@ -1613,7 +1613,7 @@ class PrettyPrinter(Printer):
         if func_name:
             prettyFunc = self._print(Symbol(func_name))
         else:
-            prettyFunc = self._print(func).parens()
+            prettyFunc = self._print(func).parenthesis()
 
         if elementwise:
             if self._use_unicode:
@@ -1626,7 +1626,7 @@ class PrettyPrinter(Printer):
                 *stringPict.next(prettyFunc, circ)
             )
 
-        prettyArgs = self._print_seq(args, delimiter=delimiter).parens(
+        prettyArgs = self._print_seq(args, delimiter=delimiter).parenthesis(
                                                  left=left, right=right)
 
         pform = prettyForm(
@@ -1691,7 +1691,7 @@ class PrettyPrinter(Printer):
     def _print_Heaviside(self, e):
         func_name = greek_unicode['theta'] if self._use_unicode else 'Heaviside'
         if e.args[1] is S.Half:
-            pform = self._print(e.args[0]).parens()
+            pform = self._print(e.args[0]).parenthesis()
             pform = pform.left(func_name)
             return pform
         else:
@@ -1760,7 +1760,7 @@ class PrettyPrinter(Printer):
                 pform = pform.right(self._print(expr.point))
             else:
                 pform = pform.right(self._print(expr.point[0]))
-        pform = pform.parens()
+        pform = pform.parenthesis()
         pform = pform.left("O")
         return pform
 
@@ -1808,15 +1808,15 @@ class PrettyPrinter(Printer):
             if len(e.args) == 2:
                 a = prettyForm(greek_unicode['delta'])
                 b = self._print(e.args[1])
-                b = b.parens()
+                b = b.parenthesis()
                 c = self._print(e.args[0])
-                c = c.parens()
+                c = c.parenthesis()
                 pform = a**b
                 pform = pform.right(' ')
                 pform = pform.right(c)
                 return pform
             pform = self._print(e.args[0])
-            pform = pform.parens()
+            pform = pform.parenthesis()
             pform = pform.left(greek_unicode['delta'])
             return pform
         else:
@@ -1832,7 +1832,7 @@ class PrettyPrinter(Printer):
         # This needs a special case since otherwise it comes out as greek
         # letter chi...
         prettyFunc = prettyForm("Chi")
-        prettyArgs = self._print_seq(e.args).parens()
+        prettyArgs = self._print_seq(e.args).parenthesis()
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1850,13 +1850,13 @@ class PrettyPrinter(Printer):
         else:
             pforma1 = self._print(e.args[1])
             pform = self._hprint_vseparator(pforma0, pforma1)
-        pform = pform.parens()
+        pform = pform.parenthesis()
         pform = pform.left('E')
         return pform
 
     def _print_elliptic_k(self, e):
         pform = self._print(e.args[0])
-        pform = pform.parens()
+        pform = pform.parenthesis()
         pform = pform.left('K')
         return pform
 
@@ -1864,7 +1864,7 @@ class PrettyPrinter(Printer):
         pforma0 = self._print(e.args[0])
         pforma1 = self._print(e.args[1])
         pform = self._hprint_vseparator(pforma0, pforma1)
-        pform = pform.parens()
+        pform = pform.parenthesis()
         pform = pform.left('F')
         return pform
 
@@ -1879,7 +1879,7 @@ class PrettyPrinter(Printer):
             pforma = self._hprint_vseparator(pforma1, pforma2, ifascii_nougly=False)
             pforma = pforma.left('; ')
             pform = pforma.left(pforma0)
-        pform = pform.parens()
+        pform = pform.parenthesis()
         pform = pform.left(name)
         return pform
 
@@ -1899,7 +1899,7 @@ class PrettyPrinter(Printer):
     def _print_Mod(self, expr):
         pform = self._print(expr.args[0])
         if pform.binding > prettyForm.MUL:
-            pform = pform.parens()
+            pform = pform.parenthesis()
         pform = pform.right(' mod ')
         pform = pform.right(self._print(expr.args[1]))
         pform.binding = prettyForm.OPEN
@@ -1922,7 +1922,7 @@ class PrettyPrinter(Printer):
 
             if (pform.binding > prettyForm.NEG
                 or pform.binding == prettyForm.ADD):
-                p = pform.parens()
+                p = pform.parenthesis()
             else:
                 p = pform
             p = stringPict.next(pform_neg, p)
@@ -1946,7 +1946,7 @@ class PrettyPrinter(Printer):
                 pform = self._print(-term)
                 pforms.append(pretty_negative(pform, i))
             elif term.is_Relational:
-                pforms.append(self._print(term).parens())
+                pforms.append(self._print(term).parenthesis())
             else:
                 pforms.append(self._print(term))
 
@@ -2070,7 +2070,7 @@ class PrettyPrinter(Printer):
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
 
         if b.is_Relational:
-            return self._print(b).parens().__pow__(self._print(e))
+            return self._print(b).parenthesis().__pow__(self._print(e))
 
         return self._print(b)**self._print(e)
 
@@ -2251,7 +2251,7 @@ class PrettyPrinter(Printer):
             cond = self._print(ts.condition)
             if self._use_unicode:
                 cond = self._print(cond)
-                cond = cond.parens()
+                cond = cond.parenthesis()
 
         if ts.base_set is S.UniversalSet:
             return self._hprint_vseparator(variables, cond, left="{",
@@ -2300,7 +2300,7 @@ class PrettyPrinter(Printer):
         return self._print_Add(s.infinite)
 
     def _print_SetExpr(self, se):
-        pretty_set = self._print(se.set).parens()
+        pretty_set = self._print(se.set).parenthesis()
         pretty_name = self._print(Symbol("SetExpr"))
         return pretty_name.right(pretty_set)
 
@@ -2336,7 +2336,7 @@ class PrettyPrinter(Printer):
         for item in seq:
             pform = self._print(item)
             if parenthesize(item):
-                pform = pform.parens()
+                pform = pform.parenthesis()
             if pforms:
                 pforms.append(delimiter)
             pforms.append(pform)
@@ -2346,7 +2346,7 @@ class PrettyPrinter(Printer):
         else:
             s = prettyForm(*stringPict.next(*pforms))
 
-        s = s.parens(left, right, ifascii_nougly=ifascii_nougly)
+        s = s.parenthesis(left, right, ifascii_nougly=ifascii_nougly)
         return s
 
     def join(self, delimiter, args):
@@ -2370,7 +2370,7 @@ class PrettyPrinter(Printer):
     def _print_tuple(self, t):
         if len(t) == 1:
             ptuple = prettyForm(*stringPict.next(self._print(t[0]), ','))
-            return ptuple.parens('(', ')', ifascii_nougly=True)
+            return ptuple.parenthesis('(', ')', ifascii_nougly=True)
         else:
             return self._print_seq(t, '(', ')')
 
@@ -2398,7 +2398,7 @@ class PrettyPrinter(Printer):
             return prettyForm('set()')
         items = sorted(s, key=default_sort_key)
         pretty = self._print_seq(items)
-        pretty = pretty.parens('{', '}', ifascii_nougly=True)
+        pretty = pretty.parenthesis('{', '}', ifascii_nougly=True)
         return pretty
 
     def _print_frozenset(self, s):
@@ -2406,8 +2406,8 @@ class PrettyPrinter(Printer):
             return prettyForm('frozenset()')
         items = sorted(s, key=default_sort_key)
         pretty = self._print_seq(items)
-        pretty = pretty.parens('{', '}', ifascii_nougly=True)
-        pretty = pretty.parens('(', ')', ifascii_nougly=True)
+        pretty = pretty.parenthesis('{', '}', ifascii_nougly=True)
+        pretty = pretty.parenthesis('(', ')', ifascii_nougly=True)
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
 
@@ -2440,7 +2440,7 @@ class PrettyPrinter(Printer):
 
     def _print_ComplexRootOf(self, expr):
         args = [self._print_Add(expr.expr, order='lex'), expr.index]
-        pform = self._print_seq(args).parens()
+        pform = self._print_seq(args).parenthesis()
         pform = pform.left('CRootOf')
         return pform
 
@@ -2450,7 +2450,7 @@ class PrettyPrinter(Printer):
         if expr.fun is not S.IdentityFunction:
             args.append(self._print(expr.fun))
 
-        pform = self._print_seq(args).parens()
+        pform = self._print_seq(args).parenthesis()
         pform = pform.left('RootSum')
 
         return pform
@@ -2533,7 +2533,7 @@ class PrettyPrinter(Printer):
     def _print_GroebnerBasis(self, basis):
         exprs = [ self._print_Add(arg, order=basis.order)
                   for arg in basis.exprs ]
-        exprs = self.join(", ", exprs).parens(left="[", right="]")
+        exprs = self.join(", ", exprs).parenthesis(left="[", right="]")
 
         gens = [ self._print(gen) for gen in basis.gens ]
 
@@ -2542,14 +2542,14 @@ class PrettyPrinter(Printer):
 
         pform = self.join(", ", [exprs] + gens + [domain, order])
 
-        pform = pform.parens()
+        pform = pform.parenthesis()
         pform = pform.left(basis.__class__.__name__)
 
         return pform
 
     def _print_Subs(self, e):
         pform = self._print(e.expr)
-        pform = pform.parens()
+        pform = pform.parenthesis()
 
         h = pform.height() if pform.height() > 1 else 2
         rvert = stringPict(vobj('|', h), baseline=pform.baseline)
@@ -2577,7 +2577,7 @@ class PrettyPrinter(Printer):
         m, x = e.args
         # TODO: copy-pasted from _print_Function: can we do better?
         prettyFunc = pform
-        prettyArgs = self._print_seq([x]).parens()
+        prettyArgs = self._print_seq([x]).parenthesis()
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
         pform.prettyFunc = prettyFunc
@@ -2778,7 +2778,7 @@ class PrettyPrinter(Printer):
             return self._print(d + ' ' + pretty_symbol(string))
         else:
             pform = self._print(field)
-            pform = pform.parens()
+            pform = pform.parenthesis()
             return pform.left(d)
 
     def _print_Tr(self, p):
@@ -2790,7 +2790,7 @@ class PrettyPrinter(Printer):
 
     def _print_primenu(self, e):
         pform = self._print(e.args[0])
-        pform = pform.parens()
+        pform = pform.parenthesis()
         if self._use_unicode:
             pform = pform.left(greek_unicode['nu'])
         else:
@@ -2799,7 +2799,7 @@ class PrettyPrinter(Printer):
 
     def _print_primeomega(self, e):
         pform = self._print(e.args[0])
-        pform = pform.parens()
+        pform = pform.parenthesis()
         if self._use_unicode:
             pform = pform.left(greek_unicode['Omega'])
         else:

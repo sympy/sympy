@@ -243,7 +243,7 @@ class QExpr(Expr):
         return a**b
 
     def _print_parens_pretty(self, pform, left='(', right=')'):
-        return pform.parens(left=left, right=right)
+        return pform.parenthesis(left=left, right=right)
 
     # Printing of labels (i.e. args)
 

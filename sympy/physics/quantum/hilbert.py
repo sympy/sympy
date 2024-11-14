@@ -414,7 +414,7 @@ class TensorProductHilbertSpace(HilbertSpace):
             next_pform = printer._print(self.args[i], *args)
             if isinstance(self.args[i], (DirectSumHilbertSpace,
                           TensorProductHilbertSpace)):
-                next_pform = next_pform.parens(left='(', right=')')
+                next_pform = next_pform.parenthesis(left='(', right=')')
             pform = pform.right(next_pform)
             if i != length - 1:
                 if printer._use_unicode:
@@ -522,7 +522,7 @@ class DirectSumHilbertSpace(HilbertSpace):
             next_pform = printer._print(self.args[i], *args)
             if isinstance(self.args[i], (DirectSumHilbertSpace,
                           TensorProductHilbertSpace)):
-                next_pform = next_pform.parens(left='(', right=')')
+                next_pform = next_pform.parenthesis(left='(', right=')')
             pform = pform.right(next_pform)
             if i != length - 1:
                 if printer._use_unicode:

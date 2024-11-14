@@ -141,7 +141,7 @@ class AntiCommutator(Expr):
         pform = printer._print(self.args[0], *args)
         pform = pform.right(prettyForm(','))
         pform = pform.right(printer._print(self.args[1], *args))
-        pform = pform.parens(left='{', right='}')
+        pform = pform.parenthesis(left='{', right='}')
         return pform
 
     def _latex(self, printer, *args):

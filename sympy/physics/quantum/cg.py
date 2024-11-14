@@ -143,7 +143,7 @@ class Wigner3j(Expr):
             for _ in range(vsep):
                 D = D.below(' ')
             D = D.below(D_row)
-        D = D.parens()
+        D = D.parenthesis()
         return D
 
     def _latex(self, printer, *args):
@@ -318,7 +318,7 @@ class Wigner6j(Expr):
             for _ in range(vsep):
                 D = D.below(' ')
             D = D.below(D_row)
-        D = D.parens(left='{', right='}')
+        D = D.parenthesis(left='{', right='}')
         return D
 
     def _latex(self, printer, *args):
@@ -422,7 +422,7 @@ class Wigner9j(Expr):
             for _ in range(vsep):
                 D = D.below(' ')
             D = D.below(D_row)
-        D = D.parens(left='{', right='}')
+        D = D.parenthesis(left='{', right='}')
         return D
 
     def _latex(self, printer, *args):

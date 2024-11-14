@@ -851,7 +851,7 @@ class WignerD(Expr):
 
             s = prettyForm('D' + ' '*pad)
 
-        args = args.parens()
+        args = args.parenthesis()
         s = s.above(top)
         s = s.below(bot)
         s = s.right(args)

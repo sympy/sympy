@@ -136,7 +136,7 @@ class Operator(QExpr):
         else:
             pform = self._print_operator_name_pretty(printer, *args)
             label_pform = self._print_label_pretty(printer, *args)
-            label_pform = label_pform.parens(left='(', right=')')
+            label_pform = label_pform.parenthesis(left='(', right=')')
             pform = pform.right(label_pform)
             return pform
 
@@ -649,7 +649,7 @@ class DifferentialOperator(Operator):
         pform = self._print_operator_name_pretty(printer, *args)
         label_pform = self._print_label_pretty(printer, *args)
         label_pform = prettyForm(
-            *label_pform.parens(left='(', right=')')
+            *label_pform.parenthesis(left='(', right=')')
         )
         pform = pform.right(label_pform)
         return pform

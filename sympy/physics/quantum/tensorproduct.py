@@ -181,7 +181,7 @@ class TensorProduct(Expr):
                         next_pform = next_pform.right(', ')
 
                 if len(self.args[i].args) > 1:
-                    next_pform = next_pform.parens(left='{', right='}')
+                    next_pform = next_pform.parenthesis(left='{', right='}')
                 pform = pform.right(next_pform)
                 if i != length - 1:
                     pform = pform.right(',' + ' ')
@@ -195,7 +195,7 @@ class TensorProduct(Expr):
         for i in range(length):
             next_pform = printer._print(self.args[i], *args)
             if isinstance(self.args[i], (Add, Mul)):
-                next_pform = next_pform.parens(left='(', right=')')
+                next_pform = next_pform.parenthesis(left='(', right=')')
             pform = pform.right(next_pform)
             if i != length - 1:
                 if printer._use_unicode:

@@ -1,19 +1,7 @@
-"""Prettyprinter by Jurjen Bos.
-(I hate spammers: mail me at pietjepuk314 at the reverse of ku.oc.oohay).
-All objects have a method that create a "stringPict",
-that can be used in the str method for pretty printing.
+"""
+Prettyprinter by Jurjen Bos.
 
-Updates by Jason Gedge (email <my last name> at cs mun ca)
-    - terminal_string() method
-    - minor fixes and changes (mostly to prettyForm)
-
-Updates by Juan Mauricio Matera (email <my last name> at ar_ude_plnu_acisif):
-    - support for align attribute in `left`, `right`, `above` and `below`
-      methods
-    - adding the v_align() method
-    - Methods `parens`, `left`, `right`, `above` and `below` now returns
-      objects of the caller object class.
-    - The method `root` now works.
+Classes used to render mathematical expressions as text-based pictures.
 """
 
 import shutil
@@ -173,7 +161,7 @@ class stringPict:
         >>> from sympy.printing.pretty.stringpict import stringPict
         >>> stringPict('a\\n-\\nb', 1).left(
         ...     "numerator-> ",align="t").right(" <-denominator",
-        ...      align="b").parens("","}").right(" fraction")
+        ...      align="b").parenthesis("","}").right(" fraction")
         numerator-> a              \\
                     -              > fraction
                     b <-denominator/
@@ -292,11 +280,43 @@ class stringPict:
         baseline = len(string.splitlines()) - self.height() + self.baseline
         return self.__class__(string, baseline)
 
+
     def parens(self, left="(", right=")", ifascii_nougly=False):
         """Put parentheses around self.
         Returns string, baseline arguments for stringPict.
 
         left or right can be None or empty string which means 'no paren from
+        that side'
+        """
+
+        # TODO: Add a deprecation warning in favor of
+        # `self.parenthesis(...)`?
+
+        h = self.height()
+        b = self.baseline
+
+        # XXX this is a hack -- ascii parens are ugly!
+        if ifascii_nougly and not pretty_use_unicode():
+            h = 1
+            b = 0
+
+        res = self
+
+        if left:
+            lparen = stringPict(vobj(left, h), baseline=b)
+            res = lparen.right(self)
+        if right:
+            rparen = stringPict(vobj(right, h), baseline=b)
+            res = res.right(rparen)
+
+        return "\n".join(res.picture), res.baseline
+    
+    def parenthesis(self, left="(", right=")", ifascii_nougly=False):
+        """Returns a new object of the same type than self,
+        sorrounded by parenthesis of the type specified by 
+        the arguments `left` and `right`.
+
+        `left` or `right` can be None or empty string which means 'no paren from
         that side'
         """
         h = self.height()
@@ -386,7 +406,7 @@ class stringPict:
             elif n.width()<2:
                 n = stringPict(str(n).ljust(2))
             if n.height() > 1:
-                exponent =  n.parens().left(stringPict("1 / "), align="c")
+                exponent =  n.parenthesis().left(stringPict("1 / "), align="c")
                 return self ** exponent
 
         # put line over expression
@@ -501,7 +521,7 @@ class stringPict:
 
         >>> from sympy.printing.pretty.stringpict import stringPict
         >>> print( (stringPict("a").below("-").below(stringPict("b"))
-        ...         ).parens().subindex(stringPict("a=4")))
+        ...         ).parenthesis().subindex(stringPict("a=4")))
         /a\\
         |-|
         \\b/
@@ -640,12 +660,12 @@ class prettyForm(stringPict):
         """
         arg = self
         if arg.binding > prettyForm.NEG:
-            arg = arg.parens()
+            arg = arg.parenthesis()
         result = [arg]
         for arg in others:
             # add parentheses for weak binders
             if arg.binding > prettyForm.NEG:
-                arg = arg.parens()
+                arg = arg.parenthesis()
             #use existing minus sign if available
             if arg.binding != prettyForm.NEG:
                 result.append(' + ')
@@ -658,9 +678,9 @@ class prettyForm(stringPict):
             raise NotImplementedError("Can't do slashed fraction yet")
         num = self
         if num.binding == prettyForm.DIV:
-            num = num.parens()
+            num = num.parenthesis()
         if den.binding == prettyForm.DIV:
-            den = den.parens()
+            den = den.parenthesis()
 
         if num.binding == prettyForm.NEG:
             num = num.right(' ')
@@ -681,14 +701,14 @@ class prettyForm(stringPict):
         #add parens on args that need them
         arg = self
         if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
-            arg = arg.parens()
+            arg = arg.parenthesis()
         result = [arg]
         for arg in others:
             if arg.picture[0] not in quantity.values():
                 result.append(xsym('*'))
             #add parentheses for weak binders
             if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
-                arg = arg.parens()
+                arg = arg.parenthesis()
             result.append(arg)
 
         len_res = len(result)
@@ -722,13 +742,13 @@ class prettyForm(stringPict):
         a = self
         use_inline_func_form = False
         if b.binding == prettyForm.POW:
-            b = b.parens()
+            b = b.parenthesis()
         if a.binding > prettyForm.FUNC:
-            a = a.parens()
+            a = a.parenthesis()
         elif a.binding == prettyForm.FUNC:
             # heuristic for when to use inline power
             if b.height() > 1:
-                a = a.parens()
+                a = a.parenthesis()
             else:
                 use_inline_func_form = True
 
@@ -774,7 +794,7 @@ class prettyForm(stringPict):
             argument_pict = first_arg.right(*rest)
         else:
             argument_pict = stringPict("")
-        argument_pict = argument_pict.parens()
+        argument_pict = argument_pict.parenthesis()
         func_pict = argument_pict.left(function)
         func_pict.binding = prettyForm.ATOM
         return func_pict
