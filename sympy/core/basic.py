@@ -379,13 +379,17 @@ class Basic(Printable):
         #
         st = self._hashable_content()
         ot = other._hashable_content()
-        c = (len(st) > len(ot)) - (len(st) < len(ot))
+        len_st = len(st)
+        len_ot = len(ot)
+        c = (len_st > len_ot) - (len_st < len_ot)
         if c:
             return c
         for l, r in zip(st, ot):
-            l = Basic(*l) if isinstance(l, frozenset) else l
-            r = Basic(*r) if isinstance(r, frozenset) else r
             if isinstance(l, Basic):
+                c = l.compare(r)
+            elif isinstance(l, frozenset):
+                l = Basic(*l) if isinstance(l, frozenset) else l
+                r = Basic(*r) if isinstance(r, frozenset) else r
                 c = l.compare(r)
             else:
                 c = (l > r) - (l < r)
