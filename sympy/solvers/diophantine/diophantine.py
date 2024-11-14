@@ -985,7 +985,7 @@ class GeneralSumOfSquares(DiophantineEquationType):
 
     .. [1] Representing an integer as a sum of three squares, [online],
         Available:
-        https://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
+        https://proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
 
     name = 'general_sum_of_squares'
@@ -3408,7 +3408,7 @@ def diop_general_sum_of_squares(eq, limit=1):
 
     .. [1] Representing an integer as a sum of three squares, [online],
         Available:
-        https://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
+        https://proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
