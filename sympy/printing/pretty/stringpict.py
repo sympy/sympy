@@ -280,13 +280,12 @@ class stringPict:
         baseline = len(string.splitlines()) - self.height() + self.baseline
         return self.__class__(string, baseline)
 
-
     def parens(self, left="(", right=")", ifascii_nougly=False):
         """Put parentheses around self.
         Returns string, baseline arguments for stringPict.
 
         left or right can be None or empty string which means 'no paren from
-        that side'
+        that side'.
         """
 
         # TODO: Add a deprecation warning in favor of
@@ -310,10 +309,10 @@ class stringPict:
             res = res.right(rparen)
 
         return "\n".join(res.picture), res.baseline
-    
+
     def parenthesis(self, left="(", right=")", ifascii_nougly=False):
         """Returns a new object of the same type than self,
-        sorrounded by parenthesis of the type specified by 
+        sorrounded by parenthesis of the type specified by
         the arguments `left` and `right`.
 
         `left` or `right` can be None or empty string which means 'no paren from
