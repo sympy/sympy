@@ -2159,7 +2159,7 @@ class GenericDataSeries(BaseSeries):
        :include-source: True
 
        p = plot(cos(x), backend="matplotlib")
-       fig, ax = p._backend.fig, p._backend.ax[0]
+       fig, ax = p._backend.fig, p._backend.ax
        ax.plot([0, 1, 2], [0, 1, -1], "*")
        fig
 
