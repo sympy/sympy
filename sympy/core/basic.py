@@ -1,9 +1,8 @@
 """Base class for all the objects in SymPy"""
 from __future__ import annotations
 
-from collections import defaultdict
 from collections.abc import Mapping
-from itertools import chain, zip_longest
+from itertools import zip_longest
 from functools import cmp_to_key
 from typing import TYPE_CHECKING
 
@@ -127,6 +126,28 @@ def _cmp_name(x: type, y: type) -> int:
     if i1 == UNKNOWN and i2 == UNKNOWN:
         return (n1 > n2) - (n1 < n2)
     return (i1 > i2) - (i1 < i2)
+
+
+
+@cacheit
+def _get_postprocessors(clsname, arg_type):
+    # Since only Add, Mul, Pow can be clsname, this cache
+    # is not quadratic.
+    postprocessors = set()
+    mappings = _get_postprocessors_for_type(arg_type)
+    for mapping in mappings:
+        f = mapping.get(clsname, None)
+        if f is not None:
+            postprocessors.update(f)
+    return postprocessors
+
+@cacheit
+def _get_postprocessors_for_type(arg_type):
+    return tuple(
+        Basic._constructor_postprocessor_mapping[cls]
+        for cls in arg_type.mro()
+        if cls in Basic._constructor_postprocessor_mapping
+    )
 
 
 class Basic(Printable):
@@ -2092,20 +2113,12 @@ class Basic(Printable):
         # functions for matching expression node names.
 
         clsname = obj.__class__.__name__
-        postprocessors = defaultdict(list)
+        postprocessors = set()
         for i in obj.args:
-            try:
-                postprocessor_mappings = (
-                    Basic._constructor_postprocessor_mapping[cls].items()
-                    for cls in type(i).mro()
-                    if cls in Basic._constructor_postprocessor_mapping
-                )
-                for k, v in chain.from_iterable(postprocessor_mappings):
-                    postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
-            except TypeError:
-                pass
+            for f in _get_postprocessors(clsname, type(i)):
+                postprocessors.add(f)
 
-        for f in postprocessors.get(clsname, []):
+        for f in postprocessors:
             obj = f(obj)
 
         return obj
