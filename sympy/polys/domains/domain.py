@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from sympy.core.numbers import AlgebraicNumber
+from sympy.core.expr import Expr
 from sympy.core import Basic, sympify
 from sympy.core.sorting import ordered
 from sympy.external.gmpy import GROUND_TYPES
@@ -482,7 +483,7 @@ class Domain:
 
         return True
 
-    def to_sympy(self, a):
+    def to_sympy(self, a) -> Expr:
         """Convert domain element *a* to a SymPy expression (Expr).
 
         Explanation

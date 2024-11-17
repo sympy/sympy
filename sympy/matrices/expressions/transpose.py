@@ -76,7 +76,7 @@ class Transpose(MatrixExpr):
         return [i.transpose() for i in lines]
 
 
-def transpose(expr):
+def transpose(expr: MatrixExpr) -> MatrixExpr:
     """Matrix transpose"""
     return Transpose(expr).doit(deep=False)
 

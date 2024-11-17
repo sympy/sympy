@@ -180,7 +180,7 @@ class MatrixExpr(Expr):
             return True
         return None
 
-    def _eval_conjugate(self):
+    def _eval_conjugate(self) -> MatrixExpr:
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(Transpose(self))
 
@@ -192,16 +192,16 @@ class MatrixExpr(Expr):
         im = (self - self._eval_conjugate())/(2*S.ImaginaryUnit)
         return (real, im)
 
-    def _eval_inverse(self):
+    def _eval_inverse(self) -> MatrixExpr:
         return Inverse(self)
 
-    def _eval_determinant(self):
+    def _eval_determinant(self) -> Expr:
         return Determinant(self)
 
-    def _eval_transpose(self):
+    def _eval_transpose(self) -> MatrixExpr:
         return Transpose(self)
 
-    def _eval_trace(self):
+    def _eval_trace(self) -> Expr | None:
         return None
 
     def _eval_power(self, exp):
@@ -211,14 +211,14 @@ class MatrixExpr(Expr):
         """
         return MatPow(self, exp)
 
-    def _eval_simplify(self, **kwargs):
+    def _eval_simplify(self, **kwargs) -> MatrixExpr:
         if self.is_Atom:
             return self
         else:
             from sympy.simplify import simplify
             return self.func(*[simplify(x, **kwargs) for x in self.args])
 
-    def _eval_adjoint(self):
+    def _eval_adjoint(self) -> MatrixExpr:
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(self)
 

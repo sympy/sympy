@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import overload, TYPE_CHECKING, Self, TypeVar
+
 from collections import defaultdict
 from collections.abc import Iterable
 from inspect import isfunction
@@ -86,6 +90,12 @@ from .graph import (
     _strongly_connected_components, _strongly_connected_components_decomposition)
 
 
+if TYPE_CHECKING:
+    from .dense import Matrix
+    from .immutable import ImmutableMatrix
+    Tmat = TypeVar('Tmat', bound='MatrixBase')
+
+
 __doctest_requires__ = {
     ('MatrixBase.is_indefinite',
      'MatrixBase.is_positive_definite',
@@ -107,8 +117,8 @@ class MatrixBase(Printable):
     is_Matrix = True
     _class_priority = 3
     _sympify = staticmethod(sympify)
-    zero = S.Zero
-    one = S.One
+    zero: Expr = S.Zero
+    one: Expr = S.One
 
     _diff_wrt = True  # type: bool
     rows = None  # type: int
@@ -116,7 +126,7 @@ class MatrixBase(Printable):
     _simplify = None
 
     @classmethod
-    def _new(cls, *args, **kwargs):
+    def _new(cls, *args, **kwargs) -> Self:
         """`_new` must, at minimum, be callable as
         `_new(rows, cols, mat) where mat is a flat list of the
         elements of the matrix."""
@@ -124,6 +134,17 @@ class MatrixBase(Printable):
 
     def __eq__(self, other):
         raise NotImplementedError("Subclasses must implement this.")
+
+    @overload
+    def __getitem__(self, key: tuple[int, int]) -> Expr: ...
+    @overload
+    def __getitem__(self, key: int) -> Expr: ...
+    @overload
+    def __getitem__(self, key: tuple[int, slice]) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, int]) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, slice]) -> Self: ...
 
     def __getitem__(self, key):
         """Implementations of __getitem__ should accept ints, in which
@@ -1185,6 +1206,13 @@ class MatrixBase(Printable):
 
         return klass._eval_ones(rows, cols)
 
+    @overload
+    @classmethod
+    def zeros(kls, rows: int, cols: int|None = None) -> Self: ...
+    @overload
+    @classmethod
+    def zeros(kls, rows: int, cols: int|None = None, *, cls: type[Tmat]) -> Tmat: ...
+
     @classmethod
     def zeros(kls, rows, cols=None, **kwargs):
         """Returns a matrix of zeros.
@@ -1295,13 +1323,13 @@ class MatrixBase(Printable):
     # The RepMatrix subclass uses more efficient sparse implementations of
     # _eval_iter_values and other things.
 
-    def _eval_iter_values(self):
-        return (i for i in self if i is not S.Zero)
+    def _eval_iter_values(self) -> Iterable[Expr]:
+        return (i for i in self if i is not S.Zero) # type: ignore
 
     def _eval_values(self):
         return list(self.iter_values())
 
-    def _eval_iter_items(self):
+    def _eval_iter_items(self) -> Iterable[tuple[tuple[int, int], Expr]]:
         for i in range(self.rows):
             for j in range(self.cols):
                 if self[i, j]:
@@ -2751,8 +2779,13 @@ class MatrixBase(Printable):
         """Returns a new matrix with entry-wise absolute values."""
         return self._eval_Abs()
 
+    @overload
+    def __add__(self, other: Matrix) -> Matrix: ...
+    @overload
+    def __add__(self, other: ImmutableMatrix) -> ImmutableMatrix: ...
+
     @call_highest_priority('__radd__')
-    def __add__(self, other):
+    def __add__(self, other: MatrixBase) -> MatrixBase:
         """Return self + other, raising ShapeError if shapes do not match."""
 
         other, T = _coerce_operand(self, other)
@@ -2771,23 +2804,28 @@ class MatrixBase(Printable):
         return a._eval_add(b)
 
     @call_highest_priority('__rtruediv__')
-    def __truediv__(self, other):
+    def __truediv__(self, other: Expr) -> Self:
         return self * (self.one / other)
 
     @call_highest_priority('__rmatmul__')
-    def __matmul__(self, other):
+    def __matmul__(self, other: MatrixBase) -> Self:
         self, other, T = _unify_with_other(self, other)
 
         if T != "is_matrix":
             return NotImplemented
 
-        return self.__mul__(other)
+        return self.__mul__(other) # type: ignore
 
     def __mod__(self, other):
         return self.applyfunc(lambda x: x % other)
 
+    @overload
+    def __mul__(self, other: Self) -> Self: ...
+    @overload
+    def __mul__(self, other: MatrixBase) -> MatrixBase: ... # type: ignore
+
     @call_highest_priority('__rmul__')
-    def __mul__(self, other):
+    def __mul__(self, other: Expr | MatrixBase) -> MatrixBase:
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
 
@@ -2817,7 +2855,7 @@ class MatrixBase(Printable):
 
         return self.multiply(other)
 
-    def multiply(self, other, dotprodsimp=None):
+    def multiply(self, other, dotprodsimp=None) -> Self:
         """Same as __mul__() but with optional simplification.
 
         Parameters
@@ -2880,15 +2918,19 @@ class MatrixBase(Printable):
 
         return self._eval_matrix_mul_elementwise(other)
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         return self._eval_scalar_mul(-1)
 
+    @overload
+    def __pow__(self, exp: int) -> Self:...
+    @overload
+    def __pow__(self, exp: Expr) -> Expr: ...
+
     @call_highest_priority('__rpow__')
-    def __pow__(self, exp):
+    def __pow__(self, exp: Expr | int) -> Self | Expr:
         """Return self**exp a scalar or symbol."""
 
         return self.pow(exp)
-
 
     def pow(self, exp, method=None):
         r"""Return self**exp a scalar or symbol.
@@ -5311,7 +5353,7 @@ def _coerce_operand(self, other):
     if isinstance(other, NDimArray):
         return INVALID
 
-    is_Matrix = getattr(other, 'is_Matrix', None)
+    is_Matrix = isinstance(other, MatrixBase)
 
     # Return a Matrix as-is
     if is_Matrix:

@@ -1,8 +1,9 @@
 from .matexpr import MatrixExpr
 from .special import Identity
 from sympy.core import S
-from sympy.core.expr import ExprBuilder
+from sympy.core.expr import Expr, ExprBuilder
 from sympy.core.cache import cacheit
+from sympy.core.numbers import Integer
 from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
@@ -10,6 +11,9 @@ from sympy.matrices.exceptions import NonSquareMatrixError
 
 
 class MatPow(MatrixExpr):
+
+    args: tuple[MatrixExpr, Expr] # type: ignore
+
     def __new__(cls, base, exp, evaluate=False, **options):
         base = _sympify(base)
         if not base.is_Matrix:
@@ -47,7 +51,7 @@ class MatPow(MatrixExpr):
         A = self.doit()
         if isinstance(A, MatPow):
             # We still have a MatPow, make an explicit MatMul out of it.
-            if A.exp.is_Integer and A.exp.is_positive:
+            if isinstance(A.exp, Integer) and A.exp.is_positive:
                 A = MatMul(*[A.base for k in range(A.exp)])
             elif not self._is_shape_symbolic():
                 return A._get_explicit_matrix()[i, j]
@@ -57,7 +61,7 @@ class MatPow(MatrixExpr):
                 return MatrixElement(self, i, j)
         return A[i, j]
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> MatrixExpr:
         if hints.get('deep', True):
             base, exp = (arg.doit(**hints) for arg in self.args)
         else:

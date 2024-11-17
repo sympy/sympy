@@ -128,7 +128,8 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
             self[i, j] = _simplify(element, **kwargs)
 
 
-MutableMatrix = Matrix = MutableDenseMatrix
+MutableMatrix = MutableDenseMatrix
+Matrix = MutableDenseMatrix
 
 ###########
 # Numpy Utility Functions:
