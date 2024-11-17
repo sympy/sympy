@@ -93,7 +93,7 @@ from .graph import (
 if TYPE_CHECKING:
     from typing_extensions import Self
     from .dense import Matrix
-    from .immutable import ImmutableMatrix
+    from .immutable import ImmutableDenseMatrix
 
 
 __doctest_requires__ = {
@@ -2775,7 +2775,7 @@ class MatrixBase(Printable):
     @overload
     def __add__(self, other: Matrix) -> Matrix: ...
     @overload
-    def __add__(self, other: ImmutableMatrix) -> ImmutableMatrix: ...
+    def __add__(self, other: ImmutableDenseMatrix) -> ImmutableDenseMatrix: ...
 
     @call_highest_priority('__radd__')
     def __add__(self, other: MatrixBase) -> MatrixBase:
