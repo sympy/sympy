@@ -1207,15 +1207,8 @@ class MatrixBase(Printable):
 
         return klass._eval_ones(rows, cols)
 
-    @overload
     @classmethod
-    def zeros(kls, rows: int, cols: int|None = None) -> Self: ...
-    @overload
-    @classmethod
-    def zeros(kls, rows: int, cols: int|None = None, *, cls: type[Tmat]) -> Tmat: ...
-
-    @classmethod
-    def zeros(kls, rows, cols=None, **kwargs):
+    def zeros(kls, rows, cols=None, **kwargs) -> Self:
         """Returns a matrix of zeros.
 
         Parameters
