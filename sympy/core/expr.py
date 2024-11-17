@@ -3526,8 +3526,7 @@ class Expr(Basic, EvalfMixin):
             raise ValueError('expecting a Symbol but got %s' % x)
         if x not in self.free_symbols:
             return self
-        obj = self
-
+        obj = self._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if obj is not None:
             from sympy.simplify.powsimp import powsimp
             return powsimp(obj, deep=True, combine='exp')
