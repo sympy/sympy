@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload, TYPE_CHECKING, Self, TypeVar
+from typing import overload, TYPE_CHECKING, TypeVar
 
 from collections import defaultdict
 from collections.abc import Iterable
@@ -91,6 +91,7 @@ from .graph import (
 
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
     from .dense import Matrix
     from .immutable import ImmutableMatrix
     Tmat = TypeVar('Tmat', bound='MatrixBase')
