@@ -418,7 +418,6 @@ class CodePrinter(StrPrinter):
         return self._print(expr.symbol)
 
     def _print_Symbol(self, expr):
-
         name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:
@@ -428,7 +427,8 @@ class CodePrinter(StrPrinter):
                 raise ValueError(msg.format(name))
             return name + self._settings['reserved_word_suffix']
         else:
-            return name
+            # Remove curly braces from subscripted variables. x_{1} -> x_1
+            return name.replace('{', '').replace('}', '')
 
     def _can_print(self, name):
         """ Check if function ``name`` is either a known function or has its own
