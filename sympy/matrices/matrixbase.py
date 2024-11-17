@@ -92,7 +92,7 @@ from .graph import (
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from .dense import Matrix
+    from .dense import MutableDenseMatrix
     from .immutable import ImmutableDenseMatrix
 
 
@@ -2773,7 +2773,7 @@ class MatrixBase(Printable):
         return self._eval_Abs()
 
     @overload
-    def __add__(self, other: Matrix) -> Matrix: ...
+    def __add__(self, other: MutableDenseMatrix) -> MutableDenseMatrix: ...
     @overload
     def __add__(self, other: ImmutableDenseMatrix) -> ImmutableDenseMatrix: ...
 
