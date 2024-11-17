@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.core import Basic, Expr
 from sympy.core.sympify import _sympify
 from sympy.matrices.expressions.matexpr import MatrixExpr

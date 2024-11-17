@@ -5346,7 +5346,7 @@ def _coerce_operand(self, other):
     if isinstance(other, NDimArray):
         return INVALID
 
-    is_Matrix = isinstance(other, MatrixBase)
+    is_Matrix = getattr(other, 'is_Matrix', None)
 
     # Return a Matrix as-is
     if is_Matrix:
