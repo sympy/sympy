@@ -1046,7 +1046,6 @@ class PrettyPrinter(Printer):
                 if isinstance(item, TransferFunctionMatrix):
                     s.baseline = s.height() - 1
                 s = prettyForm(*stringPict.next(s, pform))
-            # s.baseline = s.height()//2
         return s
 
     def _print_Feedback(self, expr):

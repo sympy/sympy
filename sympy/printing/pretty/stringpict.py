@@ -35,7 +35,7 @@ class stringPict:
 
     @staticmethod
     def equalLengths(lines):
-        #empty lines
+        # empty lines
         if not lines:
             return ['']
 
@@ -509,7 +509,7 @@ class stringPict:
         # Join lines of each screen into sub-pictures
         pictures = ['\n'.join(picture) for picture in pictures]
 
-        #Add spacers between sub-pictures
+        # Add spacers between sub-pictures
         return "\n\n".join(pictures)
 
     def subindex(self, sub_index):
@@ -754,18 +754,9 @@ class prettyForm(stringPict):
         if use_inline_func_form:
             #         2
             #  sin  +   + (x)
-            # b.baseline = a.prettyFunc.baseline + b.height()
-            # func = a.prettyFunc.right(b)
-            # return func.right(a.prettyArgs)
             func = a.prettyFunc.superindex(b)
             return func.right(a.prettyArgs)
         else:
-            #      2    <-- top
-            # (x+y)     <-- bot
-            # top = b.left(' ' * a.width())
-            # bot = a.right(' ' * b.width())
-
-            # result = bot.above(top)
             result = a.superindex(b)
             result.binding = prettyForm.POW
             return result
