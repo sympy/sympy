@@ -33,6 +33,7 @@ There are three types of functions implemented in SymPy:
 from __future__ import annotations
 from typing import Any
 from collections.abc import Iterable
+import copyreg
 
 from .add import Add
 from .basic import Basic, _atomic
@@ -924,6 +925,20 @@ class UndefinedFunction(FunctionClass):
     @property
     def _diff_wrt(self):
         return False
+
+
+# Using copyreg is the only way to make a dynamically generated instance of a
+# metaclass picklable without using a custom pickler. It is not possible to
+# define e.g. __reduce__ on the metaclass because obj.__reduce__ will retrieve
+# the __reduce__ method for reducing instances of the type rather than for the
+# type itself.
+def _reduce_undef(f):
+    return (_rebuild_undef, (f.name, f._kwargs))
+
+def _rebuild_undef(name, kwargs):
+    return Function(name, **kwargs)
+
+copyreg.pickle(UndefinedFunction, _reduce_undef)
 
 
 # XXX: The type: ignore on WildFunction is because mypy complains:
