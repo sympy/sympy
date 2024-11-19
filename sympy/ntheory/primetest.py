@@ -799,7 +799,7 @@ def is_gaussian_prime(num):
 
 def is_fermat_prime(num):
     r"""
-    Test if num is a Fermat prime number (True) or not (False). 
+    Test if num is a Fermat prime number (True) or not (False).
 
     Examples
     ========
@@ -825,4 +825,3 @@ def is_fermat_prime(num):
         return True
 
     return False
-
