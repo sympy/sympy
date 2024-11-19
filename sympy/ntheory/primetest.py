@@ -824,4 +824,12 @@ def is_fermat_prime(num):
     if num in FERMAT_PRIMES:
         return True
 
-    return False
+    e = num - 1
+    for do in range(2):
+        be = perfect_power(e)
+        if not be:
+            return False
+        b, e = be
+        if b != 2:
+            return False
+    return False if (e < 65537) else None  # it seems unlikely that any more will be found, but not proven
