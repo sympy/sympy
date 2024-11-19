@@ -795,3 +795,34 @@ def is_gaussian_prime(num):
         a = abs(a)
         return isprime(a) and a % 4 == 3
     return isprime(a**2 + b**2)
+
+
+def is_fermat_prime(num):
+    r"""
+    Test if num is a Fermat prime number (True) or not (False). 
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import is_fermat_prime
+    >>> is_fermat_prime(3)
+    True
+    >>> is_fermat_prime(15)
+    False
+    
+    References
+    ==========
+    .. [1] https://oeis.org/A019434
+    .. [2] https://mathworld.wolfram.com/FermatPrime.html
+    .. [3] https://mathworld.wolfram.com/FermatNumber.html
+    """
+
+    num = as_int(num)
+    
+    FERMAT_PRIMES = (3, 5, 17, 257, 65537)
+    
+    if num in FERMAT_PRIMES:
+        return True
+
+    return False
+
