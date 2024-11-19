@@ -722,15 +722,15 @@ class Mul(Expr, AssocOp):
 
         return c_part, nc_part, order_symbols
 
-    def _eval_power(self, e):
+    def _eval_power(self, expt):
 
         # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B
         cargs, nc = self.args_cnc(split_1=False)
 
-        if e.is_Integer:
-            return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
-                Pow(Mul._from_args(nc), e, evaluate=False)
-        if e.is_Rational and e.q == 2:
+        if expt.is_Integer:
+            return Mul(*[Pow(b, expt, evaluate=False) for b in cargs]) * \
+                Pow(Mul._from_args(nc), expt, evaluate=False)
+        if expt.is_Rational and expt.q == 2:
             if self.is_imaginary:
                 a = self.as_real_imag()[1]
                 if a.is_Rational:
@@ -741,11 +741,11 @@ class Mul(Expr, AssocOp):
                         if t:
                             from sympy.functions.elementary.complexes import sign
                             r = sympify(n)/d
-                            return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
+                            return _unevaluated_Mul(r**expt.p, (1 + sign(a)*S.ImaginaryUnit)**expt.p)
 
-        p = Pow(self, e, evaluate=False)
+        p = Pow(self, expt, evaluate=False)
 
-        if e.is_Rational or e.is_Float:
+        if expt.is_Rational or expt.is_Float:
             return p._eval_expand_power_base()
 
         return p

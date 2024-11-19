@@ -1260,9 +1260,11 @@ def hypsum(expr: 'Expr', n: 'Symbol', start: int, prec: int) -> mpf:
     if h < 0:
         raise ValueError("Sum diverges like (n!)^%i" % (-h))
 
-    term = expr.subs(n, 0)
-    if not term.is_Rational:
+    eterm = expr.subs(n, 0)
+    if not eterm.is_Rational:
         raise NotImplementedError("Non rational term functionality is not implemented.")
+
+    term: Rational = eterm # type: ignore
 
     # Direct summation if geometric or faster
     if h > 0 or (h == 0 and abs(g) > 1):
@@ -1321,7 +1323,7 @@ def evalf_prod(expr: 'Product', prec: int, options: OPT_DICT) -> TMP_RES:
 def evalf_sum(expr: 'Sum', prec: int, options: OPT_DICT) -> TMP_RES:
     from .numbers import Float
     if 'subs' in options:
-        expr = expr.subs(options['subs'])
+        expr = expr.subs(options['subs']) # type: ignore
     func = expr.function
     limits = expr.limits
     if len(limits) != 1 or len(limits[0]) != 3:
