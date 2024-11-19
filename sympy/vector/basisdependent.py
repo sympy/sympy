@@ -79,7 +79,7 @@ class BasisDependent(Expr):
 
     evalf.__doc__ += Expr.evalf.__doc__  # type: ignore
 
-    n = evalf
+    n = evalf # type: ignore
 
     def simplify(self, **kwargs):
         """
