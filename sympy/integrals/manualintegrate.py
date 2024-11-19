@@ -504,7 +504,7 @@ class TrigSubstitutionRule(Rule):
             (theta, inverse)
         ]
         return Piecewise(
-            (self.substep.eval().subs(substitution).trigsimp(), self.restriction)
+                (self.substep.eval().subs(substitution).trigsimp(), self.restriction) # type: ignore
         )
 
     def contains_dont_know(self) -> bool:
@@ -1866,7 +1866,7 @@ def dirac_delta_rule(integral: IntegralInfo):
     if len(integrand.args) == 1:
         n = S.Zero
     else:
-        n = integrand.args[1]
+        n = integrand.args[1] # type: ignore
     if not n.is_Integer or n < 0:
         return
     a, b = Wild('a', exclude=[x]), Wild('b', exclude=[x, 0])

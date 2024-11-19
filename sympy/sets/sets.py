@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Callable
 from functools import reduce
 from collections import defaultdict
@@ -57,7 +59,7 @@ class Set(Basic, EvalfMixin):
     :class:`EmptySet` class and available as a singleton as ``S.EmptySet``.
     """
 
-    __slots__ = ()
+    __slots__: tuple[()] = ()
 
     is_number = False
     is_iterable = False
