@@ -28,6 +28,8 @@ from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import PhysicalConstant, Quantity
 from sympy.physics.units.systems import SI
 from sympy.testing.pytest import raises
+import sympy.physics.units as u
+from sympy import symbols, latex
 
 k = PREFIXES["k"]
 
@@ -573,3 +575,15 @@ def test_physics_constant():
 
     assert not meter.is_physical_constant
     assert not joule.is_physical_constant
+
+
+def test_quantity_substitution():
+    # Define symbol m and quantity expressions
+    m = symbols('m')
+    h = 10 * u.m
+    U = m * u.acceleration_due_to_gravity * h
+    # Substitute m with 10 * u.kg
+    result = U.subs(m, 10 * u.kg)
+    # latex output is as expected
+    expected_latex = '100 \\text{g} \\text{kg} \\text{m}'
+    assert latex(result) == expected_latex, f"Expected: {expected_latex}, got: {latex(result)}"
