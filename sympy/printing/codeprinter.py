@@ -427,8 +427,7 @@ class CodePrinter(StrPrinter):
                 raise ValueError(msg.format(name))
             return name + self._settings['reserved_word_suffix']
         else:
-            # Remove curly braces from subscripted variables. x_{1} -> x_1
-            return name.replace('{', '').replace('}', '')
+            return name
 
     def _can_print(self, name):
         """ Check if function ``name`` is either a known function or has its own
