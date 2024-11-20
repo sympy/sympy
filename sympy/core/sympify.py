@@ -100,9 +100,14 @@ def _convert_numpy_types(a, **sympify_args):
         prec = np.finfo(a).nmant + 1
         # E.g. double precision means prec=53 but nmant=52
         # Leading bit of mantissa is always 1, so is not stored
-        p, q = a.as_integer_ratio()
-        a = mlib.from_rational(p, q, prec)
-        return Float(a, precision=prec)
+        if np.isposinf(a):
+            return Float('inf')
+        elif np.isneginf(a):
+            return Float('-inf')
+        else:
+            p, q = a.as_integer_ratio()
+            a = mlib.from_rational(p, q, prec)
+            return Float(a, precision=prec)
 
 
 @overload
