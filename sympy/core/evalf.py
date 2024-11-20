@@ -30,6 +30,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import as_int
 
 if TYPE_CHECKING:
+    from sympy.core.expr import Basic
     from sympy.core.expr import Expr
     from sympy.core.add import Add
     from sympy.core.mul import Mul
@@ -1558,6 +1559,15 @@ class EvalfMixin:
 
     __slots__ = ()  # type: tTuple[str, ...]
 
+    @overload
+    def evalf(self: Expr, n: int = 15, subs: dict[Basic, Basic | float] | None = None, # type: ignore
+              maxn: int = 100, chop: bool = False, strict: bool  = False,
+              quad: str | None = None, verbose: bool = False) -> Expr: ...
+    @overload
+    def evalf(self: Basic, n: int = 15, subs: dict[Basic, Basic | float] | None = None, # type: ignore
+              maxn: int = 100, chop: bool = False, strict: bool  = False,
+              quad: str | None = None, verbose: bool = False) -> Basic: ...
+
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
         Evaluate the given formula to an accuracy of *n* digits.
@@ -1683,15 +1693,15 @@ class EvalfMixin:
 
     n = evalf
 
-    def _evalf(self, prec):
+    def _evalf(self, prec: int) -> Expr:
         """Helper for evalf. Does the same thing but takes binary precision"""
         r = self._eval_evalf(prec)
         if r is None:
-            r = self
-        return r
+            r = self # type: ignore
+        return r # type: ignore
 
-    def _eval_evalf(self, prec):
-        return
+    def _eval_evalf(self, prec: int) -> Expr | None:
+        return None
 
     def _to_mpmath(self, prec, allow_ints=True):
         # mpmath functions accept ints as input
