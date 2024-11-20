@@ -885,5 +885,8 @@ def test_issue_21536():
     assert sympify(["x+3*x+2", "2*x+4*x+2+4"]) == [u, v]
 
 def test_issue_27284():
+    if not numpy:
+        skip("numpy not installed.")
+
     assert Float(numpy.float32(float('inf'))) == S.Infinity
     assert Float(numpy.float32(float('-inf'))) == S.NegativeInfinity
