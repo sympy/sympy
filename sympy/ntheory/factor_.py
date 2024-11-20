@@ -2839,3 +2839,231 @@ def drm(n, b):
             mul *= r
         n = mul
     return n
+
+
+def is_kth_power_free(n, k=2):
+    r"""
+    Checks if a given integer `n` is `k`-th power-free.
+
+    A positive integer `n` is said to be k-th power-free if no prime factor
+    of `n` appears with an exponent greater than or equal to `k`. By default,
+    this function checks for square-freeness (k=2), meaning no prime factor
+    appears with an exponent of 2 or greater.
+
+    Parameters
+    ==========
+
+    n : int
+        A positive integer to be checked for k-th power-freeness.
+    k : int, optional
+        The value of `k` for k-th power-freeness. Defaults to 2.
+
+    Returns
+    =======
+
+    bool
+        True if `n` is k-th power-free, False otherwise.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import is_kth_power_free
+    >>> is_kth_power_free(10)  # 10 = 2^1 * 5^1 (k=2)
+    True
+    >>> is_kth_power_free(12)  # 12 = 2^2 * 3^1 (k=2)
+    False
+    >>> is_kth_power_free(18, k=3)  # 18 = 2^1 * 3^2
+    True
+    >>> is_kth_power_free(16, k=3)  # 16 = 2^4
+    False
+
+    Notes
+    =====
+
+    - `n` must be a positive integer; otherwise, a `ValueError` is raised.
+    - If `k < 2`, a `ValueError` is raised as k-th power-freeness is only
+      meaningful for `k >= 2`.
+    - For `n = 1`, the function always returns True, as 1 is k-th power-free
+      for all values of `k`.
+    """
+
+    if n <= 0:
+        raise ValueError(
+            "Only positive integers can be checked for k-th power-freeness."
+        )
+    if n == 1:
+        return True
+    if k < 2:
+        raise ValueError("k must be at least 2 for meaningful k-th power-freeness.")
+
+    factors = factorint(n)
+
+    # Check if any prime factor has an exponent >= k
+    for exponent in factors.values():
+        if exponent >= k:
+            return False
+
+    return True
+
+
+def is_square_free(n):
+    r"""
+    Checks if a given integer `n` is square-free.
+
+    A positive integer `n` is said to be square-free if no prime factor
+    of `n` appears with an exponent greater than or equal to 2.
+
+    Parameters
+    ==========
+
+    n : int
+        A positive integer to be checked for square-freeness.
+
+    Returns
+    =======
+
+    bool
+        True if `n` is square-free, False otherwise.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import is_square_free
+    >>> is_square_free(10)  # 10 = 2^1 * 5^1
+    True
+    >>> is_square_free(12)  # 12 = 2^2 * 3^1
+    False
+    >>> is_square_free(18)  # 18 = 2^1 * 3^2
+    False
+    >>> is_square_free(11)  # 11 = 11^1
+    True
+    >>> is_square_free(16)  # 16 = 2^4
+    False
+
+    Notes
+    =====
+
+    - `n` must be a positive integer; otherwise, a `ValueError` is raised.
+    - For `n = 1`, the function always returns True, as 1 is square-free.
+
+    See Also
+    ========
+
+    is_kth_power_free
+    """
+
+    if n <= 0:
+        raise ValueError("Only positive integers can be checked for square-freeness.")
+
+    if n == 1:
+        return True
+
+    return is_kth_power_free(n, k=2)
+
+
+def kth_power_free_range(a, b, k=2):
+    r"""
+    Generates a list of k-th power-free numbers in the range [a, b)
+
+    Parameters
+    ==========
+
+    a : int
+        A positive integer that is the start of the range (inclusive).
+    b : int
+        A positive integer that is the end of the range (exclusive).
+    k : int, optional
+        The value of `k` for k-th power-freeness. Defaults to 2.
+
+    Returns
+    =======
+
+    List
+        List having k-th power-free numbers in range [a, b).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import kth_power_free_range
+    >>> kth_power_free_range(1, 10, 2)
+    [1, 2, 3, 5, 6, 7]
+    >>> kth_power_free_range(10, 20, 3)
+    [10, 11, 12, 13, 14, 15, 17, 18, 19]
+
+    Notes
+    =====
+
+    - `a` and `b` must be positive integers; otherwise, a `ValueError` is raised.
+    - Empty list is returned if there are no k-th power free integers in given range.
+
+    See Also
+    ========
+
+    is_kth_power_free
+    """
+
+    if not (a > 0 and b > 0):
+        raise ValueError("Both 'a' and 'b' must be positive integers.")
+
+    if a >= b:
+        raise ValueError("'a' has to be less than 'b'.")
+
+    if k < 2:
+        raise ValueError("'k' must be an integer greater than or equal to 2.")
+
+    return [n for n in range(a, b) if is_kth_power_free(n, k)]
+
+
+def square_free_range(a, b):
+    r"""
+    Generates a list of square-free numbers in the range [a, b)
+
+    A square-free number is an integer that is not divisible by
+    any perfect square other than 1.
+
+    Parameters
+    ==========
+
+    a : int
+        A positive integer that is the start of the range (inclusive).
+    b : int
+        A positive integer that is the end of the range (exclusive).
+
+    Returns
+    =======
+
+    List
+        List having square-free numbers in range [a, b).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import square_free_range
+    >>> square_free_range(1, 10)
+    [1, 2, 3, 5, 6, 7]
+    >>> square_free_range(10, 20)
+    [10, 11, 13, 14, 15, 17, 19]
+    >>> square_free_range(15, 16)
+    [15]
+    >>> square_free_range(1, 2)
+    [1]
+
+    Notes
+    =====
+
+    - `a` and `b` must be positive integers; otherwise, a `ValueError` is raised.
+    - Empty list is returned if there are no k-th power free integers in given range.
+
+    See Also
+    ========
+
+    is_square_free
+    """
+
+    if not (a > 0 and b > 0):
+        raise ValueError("Both 'a' and 'b' must be positive integers.")
+
+    if a >= b:
+        raise ValueError("'a' has to be less than 'b'.")
+
+    return [n for n in range(a, b) if is_square_free(n)]

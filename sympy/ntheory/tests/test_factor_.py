@@ -16,7 +16,8 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_abundant,
     is_deficient, is_amicable, is_carmichael, find_carmichael_numbers_in_range,
-    find_first_n_carmichaels, dra, drm, _perfect_power, factor_cache)
+    find_first_n_carmichaels, dra, drm, _perfect_power, factor_cache,
+    is_kth_power_free, is_square_free, kth_power_free_range, square_free_range)
 
 from sympy.testing.pytest import raises, slow
 
@@ -700,3 +701,40 @@ def test_deprecated_ntheory_symbolic_functions():
         assert divisor_sigma(3) == 4
     with warns_deprecated_sympy():
         assert udivisor_sigma(3) == 4
+
+
+def test_is_kth_power_free():
+    assert is_kth_power_free(1) == True
+    assert is_kth_power_free(10) == True
+    assert is_kth_power_free(12) == False
+    assert is_kth_power_free(18, k=3) == True
+    assert is_kth_power_free(16, k=3) == False
+    raises(ValueError, lambda: is_kth_power_free(10, k=-5))
+    raises(ValueError, lambda: is_kth_power_free(-5))
+
+
+def test_is_square_free():
+    assert is_square_free(11) == True
+    assert is_square_free(10) == True
+    assert is_square_free(12) == False
+    assert is_square_free(18) == False
+    assert is_square_free(16) == False
+    assert is_square_free(11) == True
+    raises(ValueError, lambda: is_square_free(-5))
+
+
+def test_kth_power_free_range():
+    assert kth_power_free_range(1, 10, k=2) == [1, 2, 3, 5, 6, 7]
+    assert kth_power_free_range(10, 20, k=3) == [10, 11, 12, 13, 14, 15, 17, 18, 19]
+    raises(ValueError, lambda: kth_power_free_range(-1, 5))
+    raises(ValueError, lambda: kth_power_free_range(20, 1, k=3))
+    raises(ValueError, lambda: kth_power_free_range(1, 10, k=-5))
+
+
+def test_square_free_range():
+    assert square_free_range(1, 10) == [1, 2, 3, 5, 6, 7]
+    assert square_free_range(10, 20) == [10, 11, 13, 14, 15, 17, 19]
+    assert square_free_range(15, 16) == [15]
+    assert square_free_range(1, 2) == [1]
+    raises(ValueError, lambda: square_free_range(20, 1))
+    raises(ValueError, lambda: square_free_range(-1, 5))
