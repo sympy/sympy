@@ -817,7 +817,6 @@ def is_fermat_prime(num):
     """
 
     num = as_int(num)
-    
     FERMAT_PRIMES = (3, 5, 17, 257, 65537)
     
     if num in FERMAT_PRIMES:
