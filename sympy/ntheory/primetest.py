@@ -5,6 +5,7 @@ Primality testing
 
 from itertools import count
 
+from sympy.core.intfunc import integer_log
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_square as gmpy_is_square,
