@@ -29,7 +29,7 @@ from sympy.physics.units.quantities import PhysicalConstant, Quantity
 from sympy.physics.units.systems import SI
 from sympy.testing.pytest import raises
 import sympy.physics.units as u
-from sympy import symbols, latex
+from sympy import latex
 
 k = PREFIXES["k"]
 
