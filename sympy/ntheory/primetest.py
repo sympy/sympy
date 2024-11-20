@@ -809,7 +809,6 @@ def is_fermat_prime(num):
     True
     >>> is_fermat_prime(15)
     False
-    
     References
     ==========
     .. [1] https://oeis.org/A019434
