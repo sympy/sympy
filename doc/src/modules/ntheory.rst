@@ -110,6 +110,14 @@ Ntheory Functions Reference
 
 .. autofunction:: find_first_n_carmichaels
 
+.. autofunction:: is_kth_power_free
+
+.. autofunction:: is_square_free
+
+.. autofunction:: kth_power_free_range
+
+.. autofunction:: square_free_range
+
 .. module:: sympy.ntheory.modular
 
 .. autofunction:: symmetric_residue
