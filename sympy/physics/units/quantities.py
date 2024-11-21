@@ -111,12 +111,9 @@ class Quantity(AtomicExpr):
             return self
         # Use parent class substitution
         expr = super()._eval_subs(old, new)
-        # If the substitution results in None, return self
-        if expr is None:
+        # Prevent substitution in unit symbols directly
+        if isinstance(self, Quantity):
             return self
-        # Handle cases where the substitution leaves `old` inside unit expressions
-        if old in expr.free_symbols:
-            expr = expr.xreplace({old: new})
         return expr
 
     def _latex(self, printer):
