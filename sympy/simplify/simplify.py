@@ -46,7 +46,7 @@ from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 from sympy.utilities.misc import as_int
-from sympy import Mod
+from sympy import Mod, symbols, simplify
 from sympy.core.logic import fuzzy_and
 import mpmath
 
