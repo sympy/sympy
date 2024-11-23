@@ -20,11 +20,13 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar
+    from typing import ClassVar, TypeVar
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
     from .expr import Expr
+
+    Tbasic = TypeVar("Tbasic", bound='Basic')
 
 
 def as_Basic(expr):
@@ -591,7 +593,12 @@ class Basic(Printable):
 
         return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
 
-    def atoms(self, *types):
+    @overload
+    def atoms(self) -> set[Basic]: ...
+    @overload
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Tbasic]: ...
+
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Basic] | set[Tbasic]:
         """Returns the atoms that form the current object.
 
         By default, only objects that are truly atomic and cannot
@@ -660,15 +667,12 @@ class Basic(Printable):
         {I*pi, 2*sin(y + I*pi)}
 
         """
-        if types:
-            types = tuple(
-                [t if isinstance(t, type) else type(t) for t in types])
         nodes = _preorder_traversal(self)
         if types:
-            result = {node for node in nodes if isinstance(node, types)}
+            types2 = tuple([t if isinstance(t, type) else type(t) for t in types])
+            return {node for node in nodes if isinstance(node, types2)}
         else:
-            result = {node for node in nodes if not node.args}
-        return result
+            return {node for node in nodes if not node.args}
 
     @property
     def free_symbols(self) -> set[Basic]:
