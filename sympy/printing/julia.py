@@ -25,7 +25,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asin", "acos", "atan", "acot", "asec", "acsc",
                    "sinh", "cosh", "tanh", "coth", "sech", "csch",
                    "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
-                   "sinc", "atan2", "sign", "floor", "log", "exp",
+                   "atan2", "sign", "floor", "log", "exp",
                    "cbrt", "sqrt", "erf", "erfc", "erfi",
                    "factorial", "gamma", "digamma", "trigamma",
                    "polygamma", "beta",
@@ -417,6 +417,9 @@ class JuliaCodePrinter(CodePrinter):
         expr2 = sqrt(S.Pi/(2*x))*bessely(expr.order + S.Half, x)
         return self._print(expr2)
 
+    def _print_sinc(self, expr):
+        # Julia has the normalized sinc function
+        return "sinc({})".format(self._print(expr.args[0] / S.Pi))
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
