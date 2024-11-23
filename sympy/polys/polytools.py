@@ -19,12 +19,12 @@ from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued
-from sympy.core.relational import Relational, Equality
+from sympy.core.relational import Relational, Equality, Eq
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
-from sympy.logic.boolalg import BooleanAtom
+from sympy.logic.boolalg import BooleanAtom, Or, And
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import FF, QQ, ZZ
@@ -56,8 +56,7 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
-from sympy.utilities.iterables import iterable, sift
-
+from sympy.utilities.iterables import iterable, sift, cartes
 
 # Required to avoid errors
 import sympy.polys
@@ -7939,3 +7938,399 @@ def named_poly(n, f, K, name, x, polys):
     else:
         poly = Poly.new(poly, head)
     return poly if polys else poly.as_expr()
+
+
+def factor_system(eqs, *gens, **kwargs):
+    """
+    Given a system of polynomial equations, this function returns a list of sets,
+    where each set contains irreducible factors of the equations in the system.
+    The union of solutions to each set gives the complete solution to the original system.
+
+    Parameters
+    ==========
+
+    eqs : list
+        List of expressions to be factored. Each expression is assumed to be equal to zero.
+    *gens : Symbol or sequence of Symbols, optional
+        Generator(s) of the polynomial ring. If not provided, all free symbols will be used.
+    **kwargs : dict, optional
+        Optional keyword arguments passed to polynomial manipulation functions.
+
+    Returns
+    =======
+
+    list of sets
+        Each set in the list contains expressions that, when all set to zero,
+        form one component of the solution. The complete solution is the union
+        of solutions to each set.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.polytools import factor_system
+    >>> from sympy.abc import x, y
+    >>> result = factor_system([x**2 - 1])
+    >>> sorted_result = sorted([sorted(s, key=str) for s in result], key=lambda x: [str(i) for i in x])
+    >>> sorted_result
+    [[x + 1], [x - 1]]
+
+    >>> result = factor_system([x**2 - 1, y - 1])
+    >>> sorted_result = sorted([sorted(s, key=str) for s in result], key=lambda x: [str(i) for i in x])
+    >>> sorted_result
+    [[x + 1, y - 1], [x - 1, y - 1]]
+
+    >>> result = factor_system([x*(x - 1), x*y])
+    >>> sorted_result = sorted([sorted(s, key=str) for s in result], key=lambda x: [str(i) for i in x])
+    >>> sorted_result
+    [[x], [x - 1, y]]
+
+    The order of sets in the result list and the order of expressions within
+    each set is not guaranteed since set functionality used by factor_system
+    is unordered.
+    The examples above sort the results for consistent display purposes.
+
+    Notes
+    =====
+
+    - A return of an empty set ``[set()]`` means any value of the symbol(s) is a solution
+    - A return of an empty list ``[]`` means no solution for the system exists.
+
+    See Also
+    ========
+
+    factor_system_cond, factor_system_bool
+    """
+    systems, conds = factor_system_cond(eqs, *gens, **kwargs)
+    systems = [{f.as_expr() for f, c in system} for system in systems]
+    return systems
+
+
+def factor_system_bool(eqs, *gens, **kwargs):
+    """
+    Takes a system of expressions and returns a Boolean combination of equations
+    that represents the same solution set. The result is in disjunctive normal form
+    (OR of ANDs).
+
+    Parameters
+    ==========
+
+    eqs : list
+        List of expressions to be factored. Each expression is assumed to be equal to zero.
+    *gens : Symbol or sequence of Symbols, optional
+        Generator(s) of the polynomial ring. If not provided, all free symbols will be used.
+    **kwargs : dict, optional
+        Optional keyword arguments
+
+    Returns
+    =======
+
+    Expr:
+        A Boolean combination of equations in disjunctive normal form.
+
+    Examples
+    ========
+    >>> from sympy.polys.polytools import factor_system_bool
+    >>> from sympy.abc import x, y, a, b, c
+    >>> factor_system_bool([x**2 - 1])
+    Eq(x - 1, 0) | Eq(x + 1, 0)
+
+    >>> factor_system_bool([x**2 - 1, y - 1])
+    (Eq(x - 1, 0) & Eq(y - 1, 0)) | (Eq(x + 1, 0) & Eq(y - 1, 0))
+
+    >>> eqs = [a * (x - 1), b]
+    >>> factor_system_bool(eqs, [x])
+    Eq(b, 0) & (Eq(a, 0) | Eq(x - 1, 0))
+
+    >>> eqs = [a * x ** 2 - a, b * (x + 1), c]
+    >>> factor_system_bool(eqs, [x])
+    Eq(c, 0) & (Eq(x + 1, 0) | (Eq(a, 0) & Eq(b, 0)))
+
+    >>> factor_system_bool([x**2 + 2*x + 1 - (x + 1)**2])
+    True
+
+    Notes
+    =====
+
+    - Function returns ``True`` when all values of the symbol(s) is a solution.
+    - Function returns ``False`` when the system cannot be solved.
+
+    See Also
+    ========
+
+    factor_system, factor_system_cond
+    """
+    systems, conds = factor_system_cond(eqs, *gens, **kwargs)
+    sys = Or(*[And(*[_eq2bool(eq) for eq in sys]) for sys in systems])
+    if conds:
+        sys &= And(*[Eq(c.as_expr(), 0) for c in conds])
+    return sys
+
+
+def _eq2bool(eq):
+    """Convert a (factor, conditions) pair to a Boolean equation."""
+    f, cs = eq
+    b = Eq(f.as_expr(), 0)
+    if cs:
+        b |= And(*[Eq(c.as_expr(), 0) for c in cs])
+    return b
+
+
+def factor_system_cond(eqs, *gens, **kwargs):
+    """
+    Factors a system of polynomial equations and return both factors and conditions.
+
+    This function is similar to factor_system but preserves information about
+    conditions that arise from constant factors. It's particularly useful when
+    dealing with parametric systems.
+
+    Parameters
+    ==========
+
+    eqs : list
+        List of expressions to be factored.
+    *gens : Symbol or sequence of Symbols, optional
+        Generator(s) of the polynomial ring. If not provided, all free symbols will be used.
+    **kwargs : dict, optional
+        Optional keyword arguments.
+
+    Returns
+    =======
+
+    tuple
+        A pair (systems, conditions) where:
+        - systems is a list of lists of (factor, conditions) pairs
+        - conditions is a list of additional conditions that must be satisfied
+
+    Examples
+    ========
+
+    >>> from sympy.polys.polytools import factor_system_cond
+    >>> from sympy.abc import x, a, b, c
+    >>> eqs = [a * x ** 2 - a, b * (x + 1), c]
+    >>> systems, constant_conds = factor_system_cond(eqs, [x])
+
+    Here the equation to be solved for x is x + 1 as it's a common factor
+    in the system with the parameters ``a`` and ``b`` and the constant
+    parameter ``c`` which must be zero for any solution to exist.
+
+    >>> systems
+    [{(Poly(x + 1, x, domain='ZZ[a,b,c]'), (Poly(a, x, domain='ZZ[a,b,c]'), Poly(b, x, domain='ZZ[a,b,c]')))}]
+    >>> constant_conds
+    [Poly(c, x, domain='ZZ[a,b,c]')]
+
+    Notes
+    =====
+
+    - In the return of the (systems, constant_conds) pair, systems is [[]] when the system implies
+      tautology. Eg. x - x = 0,
+      And returns [] when the system of equations is unatisfiable. Eg. 1 = 0
+
+    See Also
+    ========
+
+    factor_system, factor_system_bool
+    """
+    try:
+        polys, opts = parallel_poly_from_expr(eqs, *gens, **kwargs)
+        only_numbers = False
+    except (GeneratorsNeeded, PolificationFailed):
+        _u = Dummy('u')
+        polys, opts = parallel_poly_from_expr(eqs, [_u], **kwargs)
+        assert opts['domain'].is_Numerical
+        only_numbers = True
+
+    if only_numbers:
+        if all(p == 0 for p in polys):
+            systems = [[]]
+            conditions = []
+        else:
+            systems = []
+            conditions = []
+    else:
+        systems, conditions = factor_system_poly(polys)
+
+    return systems, conditions
+
+
+def factor_system_poly(polys):
+    """
+    Factors a system of polynomials into irreducible factors with conditions.
+
+    Core implementation that works directly with Poly instances.
+    Returns factored systems and conditions in polynomial form
+
+    Parameters
+    ==========
+
+    polys : list
+          A list of Poly instances to be factored.
+
+    Returns
+    =======
+
+    tuple
+        Constitutes:
+        - A list of factored systems
+        - A list of constant equation conditions
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Poly, ZZ
+    >>> from sympy.polys.polytools import factor_system_poly
+    >>> a, b, c, x = symbols('a b c x')
+    >>> p1 = Poly((a - 1)*(x - 2), x, domain=ZZ[a,b,c])
+    >>> p2 = Poly((b - 3)*(x - 2), x, domain=ZZ[a,b,c])
+    >>> p3 = Poly(c, x, domain=ZZ[a,b,c])
+
+    The equation to be solved for x is ``x - 2 = 0`` provided either
+    of the two conditions on the parameters ``a`` and ``b`` is nonzero
+    and the constant parameter ``c`` should be zero.
+
+    >>> result = factor_system_poly([p1, p2, p3])
+    >>> ([set_elem], constant_conditions) = result
+    >>> (eq, (cond1, cond2)) = next(iter(set_elem))
+    >>> eq
+    Poly(x - 2, x, domain='ZZ[a,b,c]')
+    >>> cond1
+    Poly(a - 1, x, domain='ZZ[a,b,c]')
+    >>> cond2
+    Poly(b - 3, x, domain='ZZ[a,b,c]')
+    >>> constant_conditions
+    [Poly(c, x, domain='ZZ[a,b,c]')]
+    """
+    if not all(isinstance(poly, Poly) for poly in polys):
+        raise TypeError("polys should be a list of Poly instances")
+    if not polys:
+        return [[]], []
+    else:
+        base_domain = polys[0].domain
+        base_gens = polys[0].gens
+        if not all(poly.domain == base_domain and poly.gens == base_gens for poly in polys[1:]):
+            raise DomainError("All polynomials must have the same domain and generators")
+
+    constant_eqs = []
+    eqs_factors = []
+    conds_factor = defaultdict(set)
+
+    for poly in polys:
+        constant, factors_mult = poly.factor_list()
+
+        factors = [f for f, m in factors_mult]
+
+        if factors:
+            eqs_factors.append(factors)
+            if constant.is_zero is not False:
+                constp = constant.as_poly(base_gens, domain=base_domain)
+                for f in factors:
+                    conds_factor[f].add(constp)
+        elif constant.is_zero is True:
+            pass
+        elif constant.is_zero is False:
+            return ([], [])
+
+        else:
+            constp = constant.as_poly(base_gens, domain=base_domain)
+            constant_eqs.append(constp)
+
+    fac2conds = {f: tuple(ordered(conds)) for f, conds in conds_factor.items()}
+
+    cnf = [[(f, fac2conds.get(f, ())) for f in eq] for eq in eqs_factors]
+
+    dnf = _cnf2dnf(cnf)
+
+    return dnf, constant_eqs
+
+
+def _cnf2dnf(eqs):
+    """Return the minimal dnf form sufficient to satisfy the cnf
+    arguments. This is different than a mechanical rewrite
+    to dnf form in that only the terms necessary to satisfy
+    the cnf expression are returned; when there are redundant
+    factors, they will not be present in the returned value.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.polytools import _cnf2dnf as f
+    >>> from sympy.abc import a, b, c, x, y
+
+    Any hashable object can be used to represent the factors, e.g.
+    ints, symbols, expressions. For ``(a|b) & c```` symbols,
+    integers representing the symbols, or expressions could be used:
+
+    >>> result = f([[x - 1, y], [y + 2]])
+    >>> sorted_result = sorted([sorted(s, key=str) for s in result], key=lambda x: [str(i) for i in x])
+    >>> sorted_result
+    [[x - 1, y + 2], [y, y + 2]]
+
+    >>> result = f([[1, 2], [3]])
+    >>> sorted_result = sorted([sorted(s, key=str) for s in result], key=lambda x: [str(i) for i in x])
+    >>> sorted_result
+    [[1, 3], [2, 3]]
+
+    >>> result = f([[a, b], [c]])
+    >>> sorted_result = sorted([sorted(s, key=str) for s in result], key=lambda x: [str(i) for i in x])
+    >>> sorted_result
+    [[a, c], [b, c]]
+
+    These are the arguments for the dnf expression ``a&c | b&c``.
+    These sets can also be interpreted as the different factors that
+    must be zero to give a solution to the equations ``[a*b=0, c=0]``,
+    ``[{a: 0, c: 0}, {b: 0, c: 0}]``.
+
+    Only the subset(s) needed to satisfy the expression are
+    returned. For `a & (a|b)`` the set {a, b} will satisfy
+    the expression, but the set ``{a}`` is sufficient.
+
+    >>> f([[1], [1, 2]])
+    [{1}]
+
+    Note, The order of sets in the result list and the order of expressions within
+    each set is not guaranteed since set functionality used by _cnf2dnf
+    is unordered.
+    The examples above sort the results for consistent display purposes.
+
+    """
+    # remove equations that are independent of all others
+    # and generate the Cartesian product for them
+    eqs = [set(i) for i in eqs]
+    indep = []
+    for i in range(len(eqs)):
+        for j in range(len(eqs)):
+            if i != j and eqs[i] & eqs[j]:
+                # it is dependent
+                break
+        else:
+            indep.append(i)
+    if not indep:
+        return list(_dnf(eqs))
+    else:
+        sets = []
+        for t in cartes(*[eqs.pop(i) for i in indep[::-1]]):
+            s = set(t)
+            for d in _dnf(eqs):
+                sets.append(s|d)
+        return sets
+
+
+def _dnf(eqs):
+    # helper for _cnf2dnf that recursively enumerates the
+    # minimal dnf args that satisfy the cnf expression;
+    # a list of sets is expected
+    if not eqs:
+        return [set()]
+    elif len(eqs) == 1:
+        return [{f} for f in eqs[0]]
+    else:
+        f = list(eqs[0])[0]
+        eqs_f_zero = [_ for _ in eqs if f not in _]
+        dnf_f = _dnf(eqs_f_zero)
+        f_free_eqs = [_ - {f} for _ in eqs]
+        if not all(f_free_eqs):
+            dnf = [s | {f} for s in dnf_f]
+        else:
+            eqs_f_nonzero = list(filter(None, f_free_eqs))
+            dnf_no_f = _dnf(eqs_f_nonzero)
+            dnf = dnf_no_f + [s | {f} for s in dnf_f if s not in dnf_no_f]
+        return dnf
