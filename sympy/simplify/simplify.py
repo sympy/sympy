@@ -46,7 +46,8 @@ from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 from sympy.utilities.misc import as_int
-
+from sympy import Mod
+from sympy.core.logic import fuzzy_and
 import mpmath
 
 
@@ -426,7 +427,30 @@ def simplify(expr: Expr, **kwargs) -> Expr: ...
 @overload
 def simplify(expr: Basic, **kwargs) -> Basic: ...
 
+
+def simplify_mod_addition(expr):
+    """
+    Simplifies expressions involving addition of Mod terms e.g
+    Mod(a - b, c) + Mod(b - a, c) simplifies to c if symbols are real.
+    """
+    if isinstance(expr, Add):
+        terms = list(expr.args)
+        if len(terms) == 2 and all(isinstance(term, Mod) and len(term.args) == 2 for term in terms):
+            mod1, mod2 = terms
+            a1, c1 = mod1.args
+            a2, c2 = mod2.args
+            # Ensure moduli are the same
+            if c1 == c2:
+                # Check if terms are additive inverses modulo c
+                if a1 == -a2:
+                    # Only simplify if all involved symbols are real
+                    if fuzzy_and([a1.is_real, a2.is_real, c1.is_real]):
+                        return c1
+    return expr
+
+
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
+    expr = simplify_mod_addition(expr)
     """Simplifies the given expression.
 
     Explanation

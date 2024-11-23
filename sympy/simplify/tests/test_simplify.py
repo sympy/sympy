@@ -33,6 +33,7 @@ from sympy.solvers.solvers import solve
 from sympy.testing.pytest import XFAIL, slow, _both_exp_pow
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, n
 
+from sympy import Mod
 
 def test_issue_7263():
     assert abs((simplify(30.8**2 - 82.5**2 * sin(rad(11.6))**2)).evalf() - \
@@ -1085,3 +1086,32 @@ def test_nc_recursion_coeff():
     X = symbols("X", commutative = False)
     assert (2 * cos(pi/3) * X).simplify() == X
     assert (2.0 * cos(pi/3) * X).simplify() == X
+
+
+def test_simplify_mod_issue_27304():
+    # Test case 1: Real numbers
+    a, b, c = symbols('a b c', real=True)
+    expr = Mod(a - b, c) + Mod(b - a, c)
+    result = simplify(expr)
+    # Expect c when symbols are real
+    assert result == c
+
+    # Test case 2: Complex numbers (should remain unchanged)
+    a, b, c = symbols('a b c', complex=True)
+    expr = Mod(a - b, c) + Mod(b - a, c)
+    result = simplify(expr)
+    # No simplification for complex numbers
+    assert result == expr
+
+    # Test case 3: Different moduli (should remain unchanged)
+    a, b, c1, c2 = symbols('a b c1 c2', real=True)
+    expr = Mod(a - b, c1) + Mod(b - a, c2)
+    result = simplify(expr)
+    # No simplification if moduli are different
+    assert result == expr
+
+    # Test case 4: Single Mod term (should remain unchanged)
+    a, b, c = symbols('a b c', real=True)
+    expr = Mod(a - b, c)
+    result = simplify(expr)
+    assert result == Mod(a - b, c)
