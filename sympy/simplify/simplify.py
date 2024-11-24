@@ -450,7 +450,6 @@ def simplify_mod_addition(expr):
 
 
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
-    expr = simplify_mod_addition(expr)
     """Simplifies the given expression.
 
     Explanation
@@ -604,7 +603,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     sympy.assumptions.refine.refine : Simplification using assumptions.
     sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
-
+    expr = simplify_mod_addition(expr)
     def shorter(*choices):
         """
         Return the choice that has the fewest ops. In case of a tie,
