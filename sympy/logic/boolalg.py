@@ -16,7 +16,7 @@ from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
-from sympy.utilities.iterables import sift, ibin
+from sympy.utilities.iterables import sift, ibin, cartes
 from sympy.utilities.misc import filldedent
 
 
@@ -2788,6 +2788,7 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
 
     if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
+    # sympify and handle quick simplifications
     expr = sympify(expr)
     # check for quick exit if form is given: right form and all args are
     # literal and do not involve Not
@@ -2798,10 +2799,13 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         elif form == 'dnf':
             form_ok = is_dnf(expr)
 
-        if form_ok and all(is_literal(a)
-                for a in expr.args) and not any(
+        expr = simpler(expr)
+        plain = all(i.is_Symbol for a in expr.args for i in a.args or [a])
+        if plain or all(is_literal(a) for a in expr.args) and not any(
                 ~v in ao.args for ao in expr.atoms(And, Or)
                 for v in ao.args):
+            if not form_ok:
+                expr = change_form(expr)
             return expr
     from sympy.core.relational import Relational
     if deep:
@@ -2863,6 +2867,184 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
     if form == 'dnf' or form is None and big:
         return _sop_form(variables, truthtable, dctruthtable).xreplace(undo)
     return POSform(variables, truthtable, dctruthtable).xreplace(undo)
+
+
+def simpler(expr):
+    """Return an expression whose And arguments are free of
+    supersets and for which no conjugate pairs appear in any
+    And or Or.
+
+    This is a good function to use even for expressions having
+    a large number of variables since complete logical
+    simplification can be very slow for many variables. To only
+    remove conjugate pairs like ``x`` and ``~x`` from arguments,
+    use `to_nnf`.
+
+    Examples
+    ========
+
+    >>> from sympy import Implies
+    >>> from sympy.logic.boolalg import simpler
+    >>> from sympy.abc import A, B, C
+    >>> simpler(A & B & (A | B) & (~B | ~C))
+    A & B & (~B | ~C)
+    >>> _.simplify()
+    A & B & ~C
+
+    >>> simpler(A & Implies(A,B))
+    A & (B | ~A)
+    >>> _.simplify()
+    A & B
+    """
+    from sympy.utilities.iterables import remove_supersets
+    from sympy.core.symbol import Symbol
+
+    if not isinstance(expr, BooleanFunction):
+        return expr
+    def remove_super_from_And(a):
+        args, other = sift(a.args, lambda x: isinstance(x, (Or, Symbol, Not)), binary=True)
+        args = remove_supersets([set(i.args) if isinstance(i, Or) else {i} for i in args])
+        return And(*([Or(*i, evaluate=False) for i in args] + other), evaluate=False)
+    # handle negated symbols in same term
+    n = to_nnf(expr)
+    # remove supersets from args of And
+    return n.replace(
+        lambda x: isinstance(x, And),
+        lambda x: remove_super_from_And(x))
+
+
+def _cnf2dnf(eqs):
+    """Return the dnf form obtained from the cnf args.
+    This is different than a mechanical rewriting
+    to dnf form in that the result will be consistent with
+    input that was free of supersets (though the input need not
+    be so).
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import _cnf2dnf as f
+    >>> from sympy.abc import a, b, c, x, y
+
+    Any hashable object can be used to represent the factors, e.g.
+    ints, symbols, expressions. For ``(a|b) & c```` symbols,
+    integers representing the symbols, or expressions could be used.
+
+    >>> f([[x - 1, y], [y + 2]]) #doctest: +SKIP
+    [{x - 1, y + 2}, {y, y + 2}]
+
+    >>> f([[1, 2], [3]]) #doctest: +SKIP
+    [{1, 3}, {2, 3}]
+
+    >>> f([[a, b], [c]]) #doctest: +SKIP
+    [{b, c}, {a, c}]
+
+    These are the arguments for the dnf expression ``a&c | b&c``.
+    These sets can also be interpreted as the different factors that
+    must be zero to give a solution to the equations ``[a*b=0, c=0]``,
+    ``[{a: 0, c: 0}, {b: 0, c: 0}]``.
+
+    Only the subset(s) needed to satisfy the expression are
+    returned. For `a & (a|b)`` the set {a, b} will satisfy
+    the expression, but the set ``{a}`` is sufficient.
+
+    >>> f([[1], [1, 2]])
+    [{1}]
+
+    """
+    # remove equations that are independent of all others
+    # and generate the Cartesian product for them
+    eqs = [set(i) for i in eqs]
+    indep = []
+    for i in range(len(eqs)):
+        for j in range(len(eqs)):
+            if i != j and eqs[i] & eqs[j]:
+                # it is dependent
+                break
+        else:
+            indep.append(i)
+    if not indep:
+        return _dnf(eqs)
+    else:
+        sets = []
+        for t in cartes(*[eqs.pop(i) for i in indep[::-1]]):
+            s = set(t)
+            for d in _dnf(eqs):
+                sets.append(s|d)
+        return sets
+
+
+def _dnf(eqs):
+    # convert cnf args, given as a list of sets, to the
+    # list of dnf arg sets. This automatically
+    # eliminates any supersets present at the start
+    if not eqs:
+        return [set()]
+    elif len(eqs) == 1:
+        return [{f} for f in eqs[0]]
+    else:
+        f = list(eqs[0])[0]
+        eqs_f_zero = [_ for _ in eqs if f not in _]
+        dnf_f = _dnf(eqs_f_zero)
+        if {f} in eqs:
+            dnf = [s | {f} for s in dnf_f]
+        else:
+            eqs_f_nonzero = list(filter(None, [_ - {f} for _ in eqs]))
+            dnf_no_f = _dnf(eqs_f_nonzero)
+            dnf = dnf_no_f + [s | {f} for s in dnf_f if s not in dnf_no_f]
+        return dnf
+
+
+def dual(x):
+    """return expression with And/Or and True/False interchanged.
+
+    Examples
+    =======
+
+    >>> from sympy.logic.boolalg import dual
+    >>> from sympy.abc import x, y
+    >>> dual(x | y)
+    x & y
+    >>> dual(True)
+    False
+    """
+    if isinstance(x, And):
+        return Or(*[dual(i) for i in x.args])
+    if isinstance(x, Or):
+        return And(*[dual(i) for i in x.args])
+    if x == True:
+        return S.false
+    if x == False:
+        return S.true
+    return x
+
+
+def change_form(expr):
+    """return opposite form of expression, free of supersets in And arguments, but
+    otherwise unsimplified.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import change_form, to_dnf
+    >>> from sympy.abc import x, y, z
+    >>> eq = (x | y) & (x | y | z) & ~x
+    >>> change_form(eq)
+    (x & ~x) | (y & ~x)
+
+    The naive ``to_dnf``` will be much slower for large expressions
+    and does not remove redundant arguments (so produces larger
+    expressions).
+
+    >>> to_dnf(eq)
+    (x & ~x) | (y & ~x) | (x & y & ~x) | (x & z & ~x) | (y & z & ~x)
+    """
+    if isinstance(expr, Or):
+        return dual(change_form(dual(expr)))
+    if isinstance(expr, And):
+        args = [set(i.args) if isinstance(i, Or) else {i} for i in expr.args]
+        return (Or(*[And(*i, evaluate=False) for i in _cnf2dnf(args)], evaluate=False))
+    return expr
 
 
 def _get_truthtable(variables, expr, const):

@@ -318,6 +318,13 @@ def test_simplification_boolalg():
     assert simplify_logic(x & ~x, 'cnf') == False
     assert simplify_logic(x | ~x, 'dnf') == True
 
+    # handle simple large cnf to dnf quickly
+    expr = And(*[Or(Dummy(''), Dummy('')) for _ in range(9)])
+    assert len(simplify_logic(expr, 'dnf', force=True).args) == 2**9
+    sy = [Dummy() for i in range(26)]
+    expr = And(*[Or(*sy[i: i + 3]) for i in range(0, len(sy), 2)])
+    assert len(simplify_logic(expr, 'dnf', force=True).args) == 2632
+
     # Check that expressions with nine variables or more are not simplified
     # (without the force-flag)
     a, b, c, d, e, f, g, h, j = symbols('a b c d e f g h j')
