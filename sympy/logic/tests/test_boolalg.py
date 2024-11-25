@@ -308,6 +308,7 @@ def test_simplification_boolalg():
     b = (~x & ~y & ~z) | (~x & ~y & z)
     e = And(A, b)
     assert simplify_logic(e) == A & ~x & ~y
+    assert e.equals(A & ~x & ~y)
     raises(ValueError, lambda: simplify_logic(A & (B | C), form='blabla'))
     assert simplify(Or(x <= y, And(x < y, z))) == (x <= y)
     assert simplify(Or(x <= y, And(y > x, z))) == (x <= y)
