@@ -426,6 +426,29 @@ def variations(seq, n, repetition=False):
             return product(seq, repeat=n)
 
 
+def remove_supersets(it):
+    """return a list of sets from which supersets are removed.
+
+    Examples
+    ========
+
+    >>> from symps.utilities.iterables import remove_supersets
+    >>> remove_supersets([{1}, {1, 2}])
+    [{1}]
+    """
+    s = sorted([set(i) for i in it], key=len)
+    out = []
+    while s:
+        sup = []
+        for j in range(1, len(s)):
+            if s[0] <= s[j]:
+                sup.append(j)
+        for j in sup[::-1]:
+            s.pop(j)
+        out.append(s.pop(0))
+    return out
+
+
 def subsets(seq, k=None, repetition=False):
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
