@@ -314,6 +314,10 @@ def test_simplification_boolalg():
     assert simplify(Or(x <= y, And(y > x, z))) == (x <= y)
     assert simplify(Or(x >= y, And(y < x, z))) == (x >= y)
 
+    # handle negated variables even when form is ok and literal
+    assert simplify_logic(x & ~x, 'cnf') == False
+    assert simplify_logic(x | ~x, 'dnf') == True
+
     # Check that expressions with nine variables or more are not simplified
     # (without the force-flag)
     a, b, c, d, e, f, g, h, j = symbols('a b c d e f g h j')

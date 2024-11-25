@@ -126,8 +126,8 @@ class Boolean(Basic):
 
         if self.has(Relational) or other.has(Relational):
             raise NotImplementedError('handling of relationals')
-        more = self.atoms()
-        less = other.atoms()
+        more = self.free_symbols
+        less = other.free_symbols
         if len(more) < len(less):
             more, less = less, more
         return not less - more and \
@@ -2799,7 +2799,9 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
             form_ok = is_dnf(expr)
 
         if form_ok and all(is_literal(a)
-                for a in expr.args):
+                for a in expr.args) and not any(
+                ~v in ao.args for ao in expr.atoms(And, Or)
+                for v in ao.args):
             return expr
     from sympy.core.relational import Relational
     if deep:
