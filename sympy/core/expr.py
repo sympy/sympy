@@ -11,6 +11,7 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
+from .logic import fuzzy_or, fuzzy_not
 from .intfunc import mod_inverse
 from .sorting import default_sort_key
 from .kind import NumberKind
@@ -633,20 +634,6 @@ class Expr(Basic, EvalfMixin):
         True
         """
 
-        def check_denominator_zeros(expression):
-            from sympy.solvers.solvers import denoms
-
-            retNone = False
-            for den in denoms(expression):
-                z = den.is_zero
-                if z is True:
-                    return True
-                if z is None:
-                    retNone = True
-            if retNone:
-                return None
-            return False
-
         simplify = flags.get('simplify', True)
 
         if self.is_number:
@@ -723,12 +710,8 @@ class Expr(Basic, EvalfMixin):
                     if flags.get('failing_number', False):
                         return failing_number
                 return False
-        cd = check_denominator_zeros(self)
-        if cd is True:
-            return False
-        elif cd is None:
-            return None
-        return True
+        from sympy.solvers.solvers import denoms
+        return fuzzy_not(fuzzy_or(den.is_zero for den in denoms(self)))
 
     def equals(self, other, failing_expression=False):
         """Return True if self == other, False if it does not, or None. If
