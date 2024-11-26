@@ -1377,3 +1377,14 @@ def test_issue_26985():
 
     assert result_anf == d
     assert result == d
+
+
+def test_change_form():
+    assert change_form(x) == x
+    eq = (x | y) & (x | y | z) & ~x
+    a = change_form(eq)
+    b = change_form(a)
+    assert a == (x & ~x) | (y & ~x)
+    assert b == ~x & (x | y)
+    assert eq.equals(a)
+    assert eq.equals(b)
