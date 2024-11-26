@@ -108,6 +108,10 @@ class Boolean(Basic):
         For two formulas to be equal one must have the all the literals
         of the other.
 
+        Note: if there is a possibility that self is only a symbol, then
+        it is better to test as ``BooleanFunction.equals(self, other)``
+        otherwise the ``Expr.equals`` will return False.
+
         Examples
         ========
 
