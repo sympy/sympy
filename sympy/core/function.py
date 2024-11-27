@@ -831,6 +831,8 @@ class AppliedUndef(Function):
 
     is_number = False
 
+    name: str
+
     def __new__(cls, *args, **options) -> Expr:  # type: ignore
         args = tuple(map(sympify, args))
         u = [a.name for a in args if isinstance(a, UndefinedFunction)]
