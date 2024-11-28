@@ -11,7 +11,7 @@ from sympy.physics             import units as u
 # `Source txt2sympy2 <https://stackoverflow.com/questions/15895819/how-to-parse-and-simplify-a-string-like-3cm-%C2%B5s%C2%B2-4e-4-sqmiles-km-h2-treatin>`_
 def str2sympy(sympy_str):
     """Convert string to Sympy object."""
-    
+
     if isinstance(sympy_str, Basic) or sympy_str is None:
         return sympy_str
     subs = {} 
