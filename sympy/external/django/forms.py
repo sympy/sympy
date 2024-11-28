@@ -13,7 +13,7 @@ from sympy.external.django.validators import SympyValidator
 class SympyCharField(CharField):
     description = _("Sympy Char Field")
     widget      = TextInput
-    
+
     def __init__(self, *, max_value=None, min_value=None, max_length=None,
                  min_length=None, strip=True, empty_value=0, **kwargs):
         # It is not possible to use MaxLengthValidator with Sympy
@@ -25,13 +25,13 @@ class SympyCharField(CharField):
         self.strip       = strip
         self.empty_value = empty_value
         Field.__init__(self, **kwargs)
-        
+
         self.validators.append(SympyValidator())
         if min_value is not None:
             self.validators.append(MinValueValidator(str2sympy(min_value)))
         if max_value is not None:
             self.validators.append(MaxValueValidator(str2sympy(max_value)))
-    
+
     def to_python(self, value):
         """Return a Sympy object."""
         return str2sympy(super().to_python(value))
