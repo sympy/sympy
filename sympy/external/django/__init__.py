@@ -14,12 +14,11 @@ def str2sympy(sympy_str):
 
     if isinstance(sympy_str, Basic) or sympy_str is None:
         return sympy_str
-    subs = {} 
-    for k, v in u.__dict__.items(): 
-        if (isinstance(v, Expr) and v.has(u.Unit)) or isinstance(v, Integer): 
+    subs = {}
+    for k, v in u.__dict__.items():
+        if (isinstance(v, Expr) and v.has(u.Unit)) or isinstance(v, Integer):
             subs[Symbol(k)] = v
     if sympify(sympy_str) is None:
         return None
     else:
         return sympify(sympy_str).subs(subs)
-
