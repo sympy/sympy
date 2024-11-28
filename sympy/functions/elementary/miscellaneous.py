@@ -644,7 +644,7 @@ class MinMaxBase(Expr, LatticeOp):
         from sympy.functions.elementary.complexes import Abs
         target = kwargs.get("target", None)
         if target == abs:
-            target = Abs  
+            target = Abs
         s = (args[0] + self.func(*args[1:]))/2
         d = abs(args[0] - self.func(*args[1:]))/2
         return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
