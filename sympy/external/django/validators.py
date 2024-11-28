@@ -76,4 +76,3 @@ class SympyValidator:
 #             super().__eq__(other) and
 #             self.dimension == other.dimension
 #         )
-
