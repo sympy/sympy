@@ -642,6 +642,9 @@ class MinMaxBase(Expr, LatticeOp):
 
     def _eval_rewrite_as_Abs(self, *args, **kwargs):
         from sympy.functions.elementary.complexes import Abs
+        target = kwargs.get("target", None)
+        if target == abs:
+            target = Abs  
         s = (args[0] + self.func(*args[1:]))/2
         d = abs(args[0] - self.func(*args[1:]))/2
         return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
