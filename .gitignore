@@ -91,3 +91,6 @@ sample.tex
 # Ignore hypothesis files
 .hypothesis
 
+/.project
+/.pydevproject
+/.settings/
