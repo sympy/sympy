@@ -34,7 +34,6 @@ class SympyValidator:
     def __eq__(self, other):
         return (isinstance(other, self.__class__))
 
-# 
 # Unfortunately, it is impossible to implement the validator below because
 # Sympy did not implement 
 # raising the TypeError:
