@@ -17,6 +17,7 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import Integral
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.functions.elementary.complexes import Abs, sign
 
 b1 = Basic()
 b2 = Basic(b1)
@@ -331,3 +332,32 @@ def test_generic():
 
     class B(A[T]):
         pass
+
+def test_rewrite_abs():
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.core.symbol import Symbol
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.core.relational import Eq
+    #https://github.com/sympy/sympy/issues/27323
+
+    # Define two symbolic variables
+    x = Symbol('x')
+    y = Symbol('y')
+
+    # Create an expression involving absolute values
+    expr = Abs(x - y) + Abs(x + y)
+
+    # Expected result in a more generalized form (Piecewise)
+    expected = Piecewise(
+        (2*x, Eq(y, 0)),  # Case where y = 0
+        (Abs(x - y) + Abs(x + y), True)  # General case
+    )
+
+    # Rewrite the expression using the "abs" rule
+    rewritten_expr = expr.rewrite(abs)
+
+    # Verify that the rewritten expression still contains Abs
+    assert rewritten_expr.has(Abs), "Expression should contain Abs after rewrite"
+
+    # Check if the rewritten expression matches the original
+    assert rewritten_expr == expr, "Rewrite(abs) did not preserve the expression structure"
