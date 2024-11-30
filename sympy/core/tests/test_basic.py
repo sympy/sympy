@@ -348,10 +348,7 @@ def test_rewrite_abs():
     expr = Abs(x - y) + Abs(x + y)
 
     # Expected result in a more generalized form (Piecewise)
-    expected = Piecewise(
-        (2*x, Eq(y, 0)),  # Case where y = 0
-        (Abs(x - y) + Abs(x + y), True)  # General case
-    )
+    expected = Piecewise((2*x, Eq(y, 0)),(Abs(x - y) + Abs(x + y), True))
 
     # Rewrite the expression using the "abs" rule
     rewritten_expr = expr.rewrite(abs)
