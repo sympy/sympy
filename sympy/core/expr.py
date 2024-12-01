@@ -3828,6 +3828,48 @@ class Expr(Basic, EvalfMixin):
         from sympy.polys.polytools import invert
         return invert(self, g, *gens, **args)
 
+
+
+    from sympy import S, pi, I, Symbol, Function
+
+    def sympy_round(expr, n=None):
+        """
+        Custom rounding function that handles SymPy objects.
+
+        Parameters:
+            expr: The input expression (can be a number, symbol, or compound expression).
+            n: The precision for rounding (default is None).
+
+        Returns:
+            A rounded expression or a symbolic round function.
+
+        Examples:
+            >>> from sympy import S, pi, I, Symbol
+            >>> x = Symbol('x', positive=True)
+            >>> sympy_round(S(123), -2)
+            100
+            >>> sympy_round(pi, 3)
+            3.142
+            >>> sympy_round(2 * pi + I, 1)
+            6.3 + 1.0*I
+            >>> sympy_round(x)
+            round(x)
+        """
+        if expr.is_number:
+            
+            return expr.round(n)
+        elif expr.is_symbol:
+            
+            round_func = Function('round')
+            return round_func(expr) if n is None else round_func(expr, n)
+        elif expr.is_Add or expr.is_Mul:
+            
+            return expr.func(*(sympy_round(arg, n) for arg in expr.args))
+        else:
+            raise TypeError(f"Cannot round unsupported type: {type(expr)}")
+
+
+
     def round(self, n=None):
         """Return x rounded to the given decimal place.
 
