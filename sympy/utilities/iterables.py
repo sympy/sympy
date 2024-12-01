@@ -432,7 +432,7 @@ def remove_supersets(it):
     Examples
     ========
 
-    >>> from symps.utilities.iterables import remove_supersets
+    >>> from sympy.utilities.iterables import remove_supersets
     >>> remove_supersets([{1}, {1, 2}])
     [{1}]
     """
