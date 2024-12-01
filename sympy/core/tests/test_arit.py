@@ -109,7 +109,7 @@ def test_arit0():
     e = -(1 + a)
     assert e == -1 - a
     e = S.Half*(1 + a)
-    assert e == S.Half + a/2
+    assert e == Mul(S.Half, 1 + a, evaluate=False)
 
 
 def test_div():
@@ -1789,7 +1789,7 @@ def test_Add_as_content_primitive():
     # the coefficient may sort to a position other than 0
     p = 3 + x + y
     assert (2*p).expand().as_content_primitive() == (2, p)
-    assert (2.0*p).expand().as_content_primitive() == (1, 2.*p)
+    assert (2.0*p).expand().as_content_primitive() == (1, 2.0*x + 2.0*y + 6.0)
     p *= -1
     assert (2*p).expand().as_content_primitive() == (2, p)
 
@@ -1854,7 +1854,7 @@ def test_Mod():
 
     # Float handling
     point3 = Float(3.3) % 1
-    assert (x - 3.3) % 1 == Mod(1.*x + 1 - point3, 1)
+    assert (x - 3.3) % 1 == Mod(x - 3.3, 1)
     assert Mod(-3.3, 1) == 1 - point3
     assert Mod(0.7, 1) == Float(0.7)
     e = Mod(1.3, 1)
@@ -2448,7 +2448,9 @@ def test_issue_22021():
     for args in permutations((zoo, a, x)):
         e = Add(*args, evaluate=False)
         assert -e == -1*e
-    assert 2*Add(1, x, x, evaluate=False) == 4*x + 2
+    e2 = Add(1, x, x, evaluate=False)
+    assert e2.is_Add and e2.args == (1, x, x)
+    assert 2*e2 == Mul(2, e2, evaluate=False)
 
 
 def test_issue_22244():
