@@ -475,10 +475,12 @@ What is the plan for solve and solveset?
 ----------------------------------------
 
 There are still a few things ``solveset`` can't do, which ``solve`` can, such
-as solving nonlinear multivariate & LambertW type equations.  Hence, it's not
- a perfect replacement for ``solve``. As the algorithms in ``solveset``
+as solving nonlinear multivariate & LambertW type equations.  Hence, it's not a
+perfect replacement for ``solve``. As the algorithms in ``solveset``
 mature, ``solveset`` may be able to be used within ``solve`` to replace some of
-its algorithms. However, there are no current plans to remove ``solve``.
+its algorithms.
+
+However, there are no current plans to remove ``solve``.
 
 How are symbolic parameters handled in solveset?
 ------------------------------------------------
