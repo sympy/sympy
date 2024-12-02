@@ -56,6 +56,11 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solvers::unrad
 
+Univariate Equations
+--------------------
+
+See :ref:`solveset`.
+
 Ordinary Differential equations (ODEs)
 --------------------------------------
 
