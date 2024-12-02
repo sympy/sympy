@@ -1674,7 +1674,7 @@ def try_shifted_sum(func, z):
     nbq = [x - k for x in nbq]
 
     ops = []
-    for n in range(r - 1):
+    for n in range(int(r) - 1):
         ops.append(ShiftA(n + 1))
     ops.reverse()
 
