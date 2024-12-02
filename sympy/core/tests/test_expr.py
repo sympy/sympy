@@ -1325,6 +1325,8 @@ def test_extractions():
     assert (2*x).extract_multiplicatively(1) == 2*x
     assert (-oo).extract_multiplicatively(5) is -oo
     assert (oo).extract_multiplicatively(5) is oo
+    assert (-2*x + -2*y).extract_multiplicatively(x + y) == -2
+
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1

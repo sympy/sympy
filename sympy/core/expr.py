@@ -2313,6 +2313,8 @@ class Expr(Basic, EvalfMixin):
                 return None # |c| != 1 can only be extracted from cs
             if c == ps:
                 return cs
+            if c == -ps:
+                return -cs
             # check args of ps
             newargs = []
             arg: Expr
