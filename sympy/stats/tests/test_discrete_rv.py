@@ -22,7 +22,7 @@ from sympy.stats import (P, E, variance, density, characteristic_function,
                          kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
-                                    NegativeBinomial, Skellam, YuleSimon, Zeta,
+                                    NegativeBinomial, Skellam, YuleSimon, Zeta, Delaporte,
                                     DiscreteRV)
 from sympy.testing.pytest import slow, nocache_fail, raises
 from sympy.stats.symbolic_probability import Expectation
@@ -160,6 +160,15 @@ def test_zeta():
         zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
 
 
+def test_delaporte():
+    lamda = 5
+    alpha = 5
+    beta = 5
+    x = Delaporte('x', lamda, alpha, beta)
+    assert E(x) == lamda + alpha * beta
+    assert variance(x) == lamda + alpha * beta * (1 + beta)
+
+
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))
     Y = Poisson('Y', 4)
@@ -256,6 +265,9 @@ def test_moment_generating_functions():
 
     zeta_mgf = moment_generating_function(Zeta('z', 5))(t)
     assert zeta_mgf.diff(t).subs(t, 0) == pi**4/(90*zeta(5))
+
+    delaporte_mgf = moment_generating_function(Delaporte('d', 5, 5, 5))(t)
+    assert delaporte_mgf.diff(t).subs(t, 0) == 30
 
 
 def test_Or():
