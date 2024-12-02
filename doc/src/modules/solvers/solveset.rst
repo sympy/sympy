@@ -14,31 +14,44 @@ equations.
    For a beginner-friendly guide focused on solving common types of equations,
    refer to :ref:`solving-guide`.
 
-What's wrong with solve():
---------------------------
+How solve() is different from solveset()
+----------------------------------------
 
-SymPy already has a pretty powerful ``solve`` function. But it has some
-deficiencies. For example:
+SymPy already has a pretty powerful ``solve`` function. But it has different
+goals. For example:
 
-1. It doesn't have a consistent output for various types of solutions
+1. It has a generalized output to handle various types of solutions.
    It needs to return a lot of types of solutions consistently:
 
    * Single solution : `x = 1`
    * Multiple solutions: `x^2 = 1`
    * No Solution: `x^2 + 1 = 0 ; x \in \mathbb{R}`
    * Interval of solution: `\lfloor x \rfloor = 0`
-   * Infinitely many solutions: `\sin(x) = 0`
+   * Finite list (even though there are infinitely many solutions): `\sin(x) = 0`
+
+     *Compare the* ``solve`` *output of* `[0, \pi ]` *to the* ``solveset`` *output shown in the* :ref:`why-solveset` *section below.*
+
    * Multivariate functions with point solutions: `x^2 + y^2 = 0`
    * Multivariate functions with non-point solution: `x^2 + y^2 = 1`
    * System of equations: `x + y = 1` and `x - y = 0`
    * Relational: `x > 0`
    * And the most important case: "We don't Know"
 
-2. The input API has a lot of parameters and it can be difficult to use.
+2. The input API has a lot of parameters. It is a facade around
+   more specialized solvers. *It is analogous to how* ``simplify``
+   *is a facade around more specialized simplification functions.*
 
 3. There are cases like finding the maxima and minima of function using
    critical points where it is important to know if it has returned all the
    solutions. ``solve`` does not guarantee this.
+
+The main differences are the ability to provide a finite list of substitutions
+without introducing new symbols; provides solutions for multivariate
+systems of equations and acts as an on ramp to using the SymPy
+``solver`` sub-system.
+
+Please see the `solving guide </guides/solving/>`_ for more details on using SymPy solvers.
+
 
 .. _why-solveset:
 
