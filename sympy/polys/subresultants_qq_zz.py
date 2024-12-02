@@ -2275,7 +2275,7 @@ def find_degree(M, deg_f):
         if M[M.rows - 1, i] == 0:
             j = j - 1
         else:
-            return j if j >= 0 else 0
+            return max(j, 0)
 
 def final_touches(s2, r, deg_g):
     """
