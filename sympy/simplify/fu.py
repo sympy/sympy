@@ -452,7 +452,7 @@ def TR8(rv, first=True):
                 if rv.is_Mul and rv.args[0].is_Rational and \
                         len(rv.args) == 2 and rv.args[1].is_Add:
                     rv = Mul(*rv.as_coeff_Mul())
-            return rv
+            return expand_mul(rv)
 
         args = {cos: [], sin: [], None: []}
         for a in Mul.make_args(rv):
@@ -571,16 +571,16 @@ def TR9(rv):
             # application of rule if possible
             if iscos:
                 if n1 == n2:
-                    return gcd*n1*2*cos((a + b)/2)*cos((a - b)/2)
+                    return expand_mul(gcd*n1*2*cos((a + b)/2)*cos((a - b)/2))
                 if n1 < 0:
                     a, b = b, a
-                return -2*gcd*sin((a + b)/2)*sin((a - b)/2)
+                return expand_mul(-2*gcd*sin((a + b)/2)*sin((a - b)/2))
             else:
                 if n1 == n2:
-                    return gcd*n1*2*sin((a + b)/2)*cos((a - b)/2)
+                    return expand_mul(gcd*n1*2*sin((a + b)/2)*cos((a - b)/2))
                 if n1 < 0:
                     a, b = b, a
-                return 2*gcd*cos((a + b)/2)*sin((a - b)/2)
+                return expand_mul(2*gcd*cos((a + b)/2)*sin((a - b)/2))
 
         return process_common_addends(rv, do)  # DON'T sift by free symbols
 
