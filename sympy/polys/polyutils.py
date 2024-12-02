@@ -231,7 +231,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
                         monom[indices[base]] = exp
                     except KeyError:
                         if not factor.has_free(*opt.gens):
-                            coeff.append(factor)
+                            coeff.append(base**exp)
                         else:
                             raise PolynomialError("%s contains an element of "
                                                   "the set of generators." % factor)
