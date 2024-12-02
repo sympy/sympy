@@ -6,7 +6,7 @@ from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
 from sympy.core.numbers import equal_valued
 from sympy.core.relational import Relational
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.symbol import Symbol, Dummy, _dummy_with_inherited_properties_from_domain
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log
@@ -209,6 +209,9 @@ def function_range(f, symbol, domain):
         OR if the critical points of the function on the domain cannot be found.
     """
 
+    if not domain.issubset(S.Reals):
+        raise NotImplementedError("The domain must be real.")
+
     if domain is S.EmptySet:
         return S.EmptySet
 
@@ -263,7 +266,25 @@ def function_range(f, symbol, domain):
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
-            solution = solveset(f.diff(symbol), symbol, interval)
+            # Replace symbol with dummy with proper assumptions if the symbol
+            # not already has it
+            d = _dummy_with_inherited_properties_from_domain(symbol, interval)
+            # Rename to enable sensible exception messages
+            if d:
+                func = f.subs(symbol, d)
+                sym = d
+            else:
+                func = f
+                sym = symbol
+            if func.is_number:
+                # Expression may have evaluated to a constant when assumptions
+                # are added
+                solution = FiniteSet(func)
+            else:
+                try:
+                    solution = solveset(func.diff(sym), sym, interval)
+                except NotImplementedError:
+                    solution = None
 
             if not iterable(solution):
                 raise NotImplementedError(
@@ -275,7 +296,7 @@ def function_range(f, symbol, domain):
             critical_points += solution
 
             for critical_point in critical_points:
-                vals += FiniteSet(f.subs(symbol, critical_point))
+                vals += FiniteSet(func.subs(sym, critical_point))
 
             left_open, right_open = False, False
 
