@@ -366,11 +366,44 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 latex_engine = 'xelatex'
 latex_use_xindy = False
 latex_elements = {
-    'passoptionstopackages': r'\PassOptionsToPackage{no-math}{fontspec}',
     'fontpkg': r'''
-\setmainfont{DejaVu Serif}
-\setsansfont{DejaVu Sans}
-\setmonofont{DejaVu Sans Mono}
+\setmainfont{DejaVu Serif}[Scale=0.97]
+\setsansfont{DejaVu Sans}[Scale=0.97]
+\setmonofont{DejaVu Sans Mono}[Scale=0.94]
+\usepackage{unicode-math}
+\setmathfont{XITSMath-Regular.otf}[Scale=1.12,
+    StylisticSet=1,% choice of shape for "\mathcal"
+    BoldFont=XITSMath-Bold.otf,
+    NFSSFamily=XITS]
+\makeatletter
+\AtBeginDocument{%
+  \SetMathAlphabet{\mathrm}{normal}{TU}{XITS}{m}{n}
+  \SetMathAlphabet{\mathbf}{normal}{TU}{XITS}{b}{n}
+  \SetMathAlphabet{\mathrm}{bold}{TU}{XITS}{b}{n}
+  \SetMathAlphabet{\mathbf}{bold}{TU}{XITS}{b}{n}
+  \def\defaultscriptratio{.8}
+  \def\defaultscriptscriptratio{.6}
+  \DeclareMathSizes{9}{9}{7}{5}
+  \DeclareMathSizes{\@xpt}{\@xpt}{8}{6}
+  \DeclareMathSizes{\@xipt}{\@xipt}{9}{7}
+  \DeclareMathSizes{\@xiipt}{\@xiipt}{10}{8}
+  \DeclareMathSizes{\@xivpt}{\@xivpt}{\@xiipt}{10}
+  \DeclareMathSizes{\@xviipt}{\@xviipt}{\@xivpt}{\@xiipt}
+  \DeclareMathSizes{\@xxpt}{\@xxpt}{\@xviipt}{\@xivpt}
+  \DeclareMathSizes{\@xxvpt}{\@xxvpt}{\@xxpt}{\@xviipt}
+  \def\Gamma{Γ}
+  \def\Delta{Δ}
+  \def\Theta{Θ}
+  \def\Lambda{Λ}
+  \def\Xi{Ξ}
+  \def\Pi{Π}
+  \def\Sigma{Σ}
+  \def\Upsilon{Υ}
+  \def\Phi{Φ}
+  \def\Psi{Ψ}
+  \def\Omega{Ω}
+}
+\makeatother
 ''',
     'preamble':  r'''
 \usepackage{newunicodechar}
@@ -403,12 +436,12 @@ latex_elements = {
 % U+2715 is available in DejaVu Sans and DejaVu Sans Mono but not Serif
 \newunicodechar{❌}{\textcolor{red}{\sffamily\bfseries ✕}}% (U+274C --> U+2715)
 %
-\newfontfamily{\TGDejaVuMath}{texgyredejavu-math.otf}
-  \newunicodechar{𝑅}{\text{\TGDejaVuMath 𝑅}}%   (U+1D445)
-  \newunicodechar{𝕀}{\text{\TGDejaVuMath 𝕀}}%   (U+1D540)
-  \newunicodechar{𝕌}{\text{\TGDejaVuMath 𝕌}}%   (U+1D54C)
-  \newunicodechar{𝟘}{\text{\TGDejaVuMath 𝟘}}%   (U+1D7D8)
-  \newunicodechar{𝟙}{\text{\TGDejaVuMath 𝟙}}%   (U+1D7D9)
+% Those next are not available in DejaVu but are in XITS Math
+\newunicodechar{𝑅}{\ifmmode 𝑅\else{\fontfamily{XITS}\selectfont 𝑅}\fi}%   (U+1D445)
+\newunicodechar{𝕀}{\ifmmode 𝕀\else{\fontfamily{XITS}\selectfont 𝕀}\fi}%   (U+1D540)
+\newunicodechar{𝕌}{\ifmmode 𝕌\else{\fontfamily{XITS}\selectfont 𝕌}\fi}%   (U+1D54C)
+\newunicodechar{𝟘}{\ifmmode 𝟘\else{\fontfamily{XITS}\fontseries{m}\selectfont 𝟘}\fi}%   (U+1D7D8)
+\newunicodechar{𝟙}{\ifmmode 𝟙\else{\fontfamily{XITS}\fontseries{m}\selectfont 𝟙}\fi}%   (U+1D7D9)
 %
 % Define version of \LaTeX that is usable in math mode
 \usepackage{letltxmacro}
