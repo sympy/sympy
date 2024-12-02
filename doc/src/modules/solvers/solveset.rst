@@ -474,13 +474,11 @@ How do we deal with cases where only some of the solutions are known?
 What is the plan for solve and solveset?
 ----------------------------------------
 
-There are still a few things ``solveset`` can't do, which ``solve`` can, such
-as solving nonlinear multivariate & LambertW type equations.  Hence, it's not
-a perfect replacement for ``solve``. As the algorithms in ``solveset`` mature,
-``solveset`` may be able to be used within ``solve`` to replace some of
-its algorithms.
+Since the goals for ``solveset`` are different from ``solve``,
+``solveset`` is not intended to be a perfect replacement
+for ``solve``. Rather, ``solveset`` should be viewed as complimentary.
 
-However, there are no current plans to remove ``solve``.
+As such, there are no current plans to remove ``solve``.
 
 
 How are symbolic parameters handled in solveset?
