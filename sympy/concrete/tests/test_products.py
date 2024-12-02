@@ -200,7 +200,7 @@ def test_simple_products():
 
     assert product(1, (n, 1, oo)) == 1  # issue 8301
     assert product(2, (n, 1, oo)) is oo
-    assert product(-1, (n, 1, oo)).func is Product
+    assert isinstance(product(-1, (n, 1, oo)), Product)
 
 
 def test_multiple_products():

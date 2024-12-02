@@ -174,7 +174,7 @@ def test_isnan_isinf():
     assert isinf(S.Pi) == False
     isinfx = isinf(x)
     assert isinfx not in (False, True)
-    assert isinfx.func is isinf
+    assert isinstance(isinfx, isinf)
     assert isinfx.args == (x,)
 
     # isnan
@@ -182,5 +182,5 @@ def test_isnan_isinf():
     assert isnan(S.Pi) == False
     isnanx = isnan(x)
     assert isnanx not in (False, True)
-    assert isnanx.func is isnan
+    assert isinstance(isnanx, isnan)
     assert isnanx.args == (x,)

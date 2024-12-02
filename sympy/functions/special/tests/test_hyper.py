@@ -67,7 +67,7 @@ def test_hyper():
 
     # hyper does not automatically evaluate anyway, but the test is to make
     # sure that the evaluate keyword is accepted
-    assert hyper((1, 2), (1,), z, evaluate=False).func is hyper
+    assert isinstance(hyper((1, 2), (1,), z, evaluate=False), hyper)
 
 
 def test_expand_func():
@@ -376,7 +376,7 @@ def test_appellf1():
     assert appellf1(a, b1, b2, c, S.Zero, S.Zero) is S.One
 
     f = appellf1(a, b1, b2, c, S.Zero, S.Zero, evaluate=False)
-    assert f.func is appellf1
+    assert isinstance(f, appellf1)
     assert f.doit() is S.One
 
 

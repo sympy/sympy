@@ -325,7 +325,7 @@ def test_issue_6100_12942_4473():
     # if the following gets distributed as a Mul (x**1.0*y**1.0 then
     # __eq__ methods could be added to Symbol and Pow to detect the
     # power-of-1.0 case.
-    assert ((x*y)**1.0).func is Pow
+    assert isinstance(((x*y)**1.0), Pow)
 
 
 def test_issue_6208():

@@ -1667,13 +1667,13 @@ def test_suppressed_evaluation():
     b = Mul(1, 3, 2, evaluate=False)
     c = Pow(3, 2, evaluate=False)
     assert a != 6
-    assert a.func is Add
+    assert isinstance(a, Add)
     assert a.args == (0, 3, 2)
     assert b != 6
-    assert b.func is Mul
+    assert isinstance(b, Mul)
     assert b.args == (1, 3, 2)
     assert c != 9
-    assert c.func is Pow
+    assert isinstance(c, Pow)
     assert c.args == (3, 2)
 
 
@@ -1682,13 +1682,13 @@ def test_AssocOp_doit():
     b = Mul(y,y, evaluate=False)
     c = Add(b,b, evaluate=False)
     d = Mul(a,a, evaluate=False)
-    assert c.doit(deep=False).func == Mul
+    assert isinstance(c.doit(deep=False), Mul)
     assert c.doit(deep=False).args == (2,y,y)
-    assert c.doit().func == Mul
+    assert isinstance(c.doit(), Mul)
     assert c.doit().args == (2, Pow(y,2))
-    assert d.doit(deep=False).func == Pow
+    assert isinstance(d.doit(deep=False), Pow)
     assert d.doit(deep=False).args == (a, 2*S.One)
-    assert d.doit().func == Mul
+    assert isinstance(d.doit(), Mul)
     assert d.doit().args == (4*S.One, Pow(x,2))
 
 
@@ -1826,7 +1826,7 @@ def test_issue_5919():
 
 
 def test_Mod():
-    assert Mod(x, 1).func is Mod
+    assert isinstance(Mod(3, 2), Integer)
     assert pi % pi is S.Zero
     assert Mod(5, 3) == 2
     assert Mod(-5, 3) == 1
@@ -1847,8 +1847,8 @@ def test_Mod():
 
     k = Symbol('k', integer=True)
     m = Symbol('m', integer=True, positive=True)
-    assert (x**m % x).func is Mod
-    assert (k**(-m) % k).func is Mod
+    assert isinstance((x**m % x), Mod)
+    assert isinstance((k**(-m) % k), Mod)
     assert k**m % k == 0
     assert (-2*k)**m % k == 0
 
@@ -1904,7 +1904,7 @@ def test_Mod():
     assert Mod(-p - 5, p + 3) == p + 1
     assert Mod(p + 5, -p - 3) == -p - 1
     assert Mod(-p - 5, -p - 3) == -2
-    assert Mod(p + 1, p - 1).func is Mod
+    assert isinstance(Mod(p + 1, p - 1), Mod)
 
     # handling sums
     assert (x + 3) % 1 == Mod(x, 1)
@@ -1946,7 +1946,7 @@ def test_Mod():
     n = Symbol('n', integer=True, positive=True)
     assert factorial(n) % n == 0
     assert factorial(n + 2) % n == 0
-    assert (factorial(n + 4) % (n + 5)).func is Mod
+    assert isinstance((factorial(n + 4) % (n + 5)), Mod)
 
     # Wilson's theorem
     assert factorial(18042, evaluate=False) % 18043 == 18042

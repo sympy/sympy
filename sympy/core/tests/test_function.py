@@ -494,7 +494,7 @@ def test_func_deriv():
 def test_suppressed_evaluation():
     a = sin(0, evaluate=False)
     assert a != 0
-    assert a.func is sin
+    assert isinstance(a, sin)
     assert a.args == (0,)
 
 
