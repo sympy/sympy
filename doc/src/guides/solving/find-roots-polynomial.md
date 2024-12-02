@@ -20,8 +20,8 @@ Here is an example of finding the roots of a polynomial algebraically:
 >>> from sympy import roots
 >>> from sympy.abc import x, a, b, c
 >>> roots(a*x**2 + b*x + c, x)
-{-b/(2*a) - sqrt(-4*a*c + b**2)/(2*a): 1,
- -b/(2*a) + sqrt(-4*a*c + b**2)/(2*a): 1}
+{(-b - sqrt(-4*a*c + b**2))/(2*a): 1,
+ (-b + sqrt(-4*a*c + b**2))/(2*a): 1}
 ```
 
 This example reproduces the [quadratic
