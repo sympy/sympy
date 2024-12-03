@@ -18,10 +18,11 @@ How solveset() is different from solve()
 SymPy already has a pretty powerful ``solve`` function. But it has different
 goals. For example:
 
-* It has a generalized output to handle various types of solutions.
-  It needs to return a lot of types of solutions consistently. It can deal with
-  univariate as well as multivariate equations as well as various other sorts
-  of variability in the system of equations passed into it.
+* It has a generalized output interface to handle various types of solutions.
+  It needs to return many types of solutions consistently. It can deal with
+  univariate as well as multivariate equations as well as other kinds
+  of variability due to the system of equations and options passed into it,
+  producing associated outputs. See :ref:`solve_output` for more details.
 
 * The input API has a lot of parameters. It is a facade around
   more specialized solvers. *This feature of* ``solve`` *could be viewed as analogous
@@ -30,10 +31,10 @@ goals. For example:
   See :func:`~sympy.solvers.solvers.solve` for more details about the available parameters
   and output options.
 
-* There are cases where :func:`~sympy.solvers.solvers.solve` returns an empty list.
+* There are cases where ``solve`` returns an empty list.
 
   This might mean that there are no solutions or no solution could be found
-  given its current supported feature set. In other cases, there is no way
+  given its currently supported features. In other cases, there is no way
   (given the output interface of ``solve``) to communicate whether or not:
 
   * all possible solutions to the system were found
@@ -41,11 +42,11 @@ goals. For example:
   * or that the real set of solutions are finite or infinite
   * etc.
 
-* :func:`~sympy.solvers.solvers.solve` may return a few solutions
-  when more solutions (potentially infinitely many) also exist.
+* ``solve`` may return a few solutions when more solutions (potentially
+  infinitely many) also exist.
 
-  It is to some extent inherent to the API of :func:`~sympy.solvers.solvers.solve`
-  that it does not have a way to represent these different cases distinctly.
+  It is to some extent inherent to the API of ``solve`` that it does not
+  have a way to represent these different cases distinctly.
 
 Whereas ``solveset`` returns a ``Set`` representing all of the solutions
 of a univariate equation.
@@ -56,11 +57,11 @@ of a univariate equation.
 Why Solveset?
 -------------
 
-* ``solveset`` has an alternative consistent input and output interface:
-  ``solveset`` returns a set object that takes
-  care of all types of output.
+``solveset`` has a consistent input and output interface:
 
-  For cases where it does not "know" all the solutions a ``ConditionSet``
+* ``solveset`` returns a ``Set`` object in a way that takes care of all types of output.
+
+  For cases where it does not "know" all of the solutions a ``ConditionSet``
   with a partial solution is returned.
 
   For input it only takes the equation, the variables to solve for and the optional
@@ -491,16 +492,6 @@ How do we deal with cases where only some of the solutions are known?
  We can represent it as:
 
  `\{-2, 2\} ∪ \{x | x \in \mathbb{R} ∧ x + \sin(x) = 0\}`
-
-
-What is the plan for solve and solveset?
-----------------------------------------
-
-Since the goals for ``solveset`` are different from ``solve``,
-``solveset`` is not intended to be a perfect replacement
-for ``solve``. Rather, ``solveset`` should be viewed as complimentary.
-
-As such, there are no current plans to remove ``solve``.
 
 
 How are symbolic parameters handled in solveset?
