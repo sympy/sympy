@@ -2075,6 +2075,11 @@ class Basic(Printable):
         pattern = args[:-1]
         rule = args[-1]
 
+        # Special case: map `abs` to `Abs`
+        if rule is abs:
+            from sympy.functions.elementary.complexes import Abs
+            rule = Abs
+
         # support old design by _eval_rewrite_as_[...] method
         if isinstance(rule, str):
             method = "_eval_rewrite_as_%s" % rule
