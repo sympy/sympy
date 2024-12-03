@@ -1,7 +1,7 @@
 """ Integral Transforms """
 from functools import reduce, wraps
 from itertools import repeat
-from sympy.core import S, pi
+from sympy.core import S, pie
 from sympy.core.add import Add
 from sympy.core.function import (
     AppliedUndef, count_ops, expand, expand_mul, Function)
