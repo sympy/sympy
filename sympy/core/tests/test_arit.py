@@ -1826,7 +1826,7 @@ def test_issue_5919():
 
 
 def test_Mod():
-    assert isinstance(Mod(3, 2), Integer)
+    assert isinstance(Mod(x, 1), Mod)
     assert pi % pi is S.Zero
     assert Mod(5, 3) == 2
     assert Mod(-5, 3) == 1
