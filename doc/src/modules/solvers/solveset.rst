@@ -81,6 +81,22 @@ Why Solveset?
   the set of all solutions, that is `\{2 n i \pi | n \in \mathbb{Z}\}`, whereas
   if `x` is to be solved in the real domain then only `\{0\}` is returned.
 
+* As mentioned above, ``solveset`` will return a ``ConditionSet`` where not all
+  parts of an equation can be solved. Consider this example.
+
+  ``expr = (x**2 - 1) * (x**5 + y*x + 1)`` where ``x`` and ``y`` are defined as being
+  in `\mathbb{C}`.
+
+  ``solve(expr, [x], dict=True)`` gives us the solutions it can find. However it gives
+  us no indication that there may be more solutions that it did not return.
+
+  ``[{x: -1},{x: 1}]``
+
+  However, with ``solveset(expr, x)`` the partial solution becomes clear. The quadratic factor
+  was solved, but the quintic factor is not solvable and so a ``ConditionSet`` is returned.
+
+  `\displaystyle \left\{-1, 1\right\} \cup \left\{x\; \middle|\; x \in \mathbb{C} \wedge x^{5} + x y + 1 = 0 \right\}`
+
 
 .. _why-set-output:
 
