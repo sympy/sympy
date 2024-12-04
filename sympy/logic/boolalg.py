@@ -121,6 +121,7 @@ class Boolean(Basic):
         False
 
         """
+        from sympy.logic.inference import satisfiable
         from sympy.core.symbol import Symbol
 
         def ok(f):
