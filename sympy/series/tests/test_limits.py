@@ -25,7 +25,6 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.series.limits import (Limit, limit)
 from sympy.simplify.simplify import (logcombine, simplify)
 from sympy.simplify.hyperexpand import hyperexpand
-from sympy.vector.coordsysrect import CoordSys3D
 
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
