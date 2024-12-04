@@ -122,7 +122,6 @@ class Boolean(Basic):
 
         """
         from sympy.logic.inference import satisfiable
-        from sympy.core.relational import Relational
 
         if not all(is_literal(i) for i in (self, other)):
             raise NotImplementedError('non-literal BooleanFunction')
