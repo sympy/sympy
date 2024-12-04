@@ -309,6 +309,10 @@ def test_simplification_boolalg():
     e = And(A, b)
     assert simplify_logic(e) == A & ~x & ~y
     assert e.equals(A & ~x & ~y)
+    a1 = Contains(x, Interval(1, 2))
+    a2 = Contains(x, Interval(2, 3))
+    a3 =  Contains(x, Interval(1, 3))
+    raises(NotImplementedError, lambda: (a1 | a2).equals(a3))
     raises(ValueError, lambda: simplify_logic(A & (B | C), form='blabla'))
     assert simplify(Or(x <= y, And(x < y, z))) == (x <= y)
     assert simplify(Or(x <= y, And(y > x, z))) == (x <= y)
