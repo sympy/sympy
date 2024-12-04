@@ -9,6 +9,7 @@ from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import factor as fctr
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
+from sympy.series.limits import limit
 
 if TYPE_CHECKING:
     from sympy.vector.vector import BaseVector
@@ -179,6 +180,12 @@ class BasisDependent(Expr):
                            for x in self.components]
         return self._add_func(*doit_components)
 
+    def limit(self, *args, **kwargs):
+        """Calls limit() on each component"""
+        limit_components = [limit(v, *args, **kwargs) * k for
+                           k, v in self.components.items()]
+        return self._add_func(*limit_components)
+
 
 class BasisDependentAdd(BasisDependent, Add):
     """
@@ -191,9 +198,6 @@ class BasisDependentAdd(BasisDependent, Add):
 
         # Check each arg and simultaneously learn the components
         for arg in args:
-            # If argument is zero, ignore
-            if arg == S.Zero:
-                continue
             if not isinstance(arg, cls._expr_type):
                 if isinstance(arg, Mul):
                     arg = cls._mul_func(*(arg.args))
@@ -202,7 +206,7 @@ class BasisDependentAdd(BasisDependent, Add):
                 else:
                     raise TypeError(str(arg) +
                                     " cannot be interpreted correctly")
-            # If argument is a vector-zero-element, ignore
+            # If argument is zero, ignore
             if arg == cls.zero:
                 continue
             # Else, update components accordingly
