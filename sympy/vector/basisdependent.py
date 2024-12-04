@@ -191,6 +191,9 @@ class BasisDependentAdd(BasisDependent, Add):
 
         # Check each arg and simultaneously learn the components
         for arg in args:
+            # If argument is zero, ignore
+            if arg == S.Zero:
+                continue
             if not isinstance(arg, cls._expr_type):
                 if isinstance(arg, Mul):
                     arg = cls._mul_func(*(arg.args))
@@ -199,7 +202,7 @@ class BasisDependentAdd(BasisDependent, Add):
                 else:
                     raise TypeError(str(arg) +
                                     " cannot be interpreted correctly")
-            # If argument is zero, ignore
+            # If argument is a vector-zero-element, ignore
             if arg == cls.zero:
                 continue
             # Else, update components accordingly

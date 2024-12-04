@@ -127,6 +127,7 @@ def test_vector():
 
     assert isinstance(v1, VectorAdd)
     assert v1 - v1 == Vector.zero
+    assert v1 + 0 == v1
     assert v1 + Vector.zero == v1
     assert v1.dot(i) == a
     assert v1.dot(j) == b

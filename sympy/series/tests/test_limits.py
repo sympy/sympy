@@ -25,6 +25,7 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.series.limits import (Limit, limit)
 from sympy.simplify.simplify import (logcombine, simplify)
 from sympy.simplify.hyperexpand import hyperexpand
+from sympy.vector.coordsysrect import CoordSys3D
 
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
@@ -1448,3 +1449,8 @@ def test_issue_26991():
 def test_issue_27278():
     expr = (1/(x*log((x + 3)/x)))**x*((x + 1)*log((x + 4)/(x + 1)))**(x + 1)/3
     assert limit(expr, x, oo) == 1
+
+def test_vector():
+    C = CoordSys3D('C')
+    assert limit(x*C.i, x, 0) == 0
+    assert limit(x*C.i + C.j, x, 0) == C.j
