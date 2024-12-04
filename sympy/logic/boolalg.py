@@ -124,8 +124,8 @@ class Boolean(Basic):
         from sympy.logic.inference import satisfiable
         from sympy.core.relational import Relational
 
-        if self.has(Relational) or other.has(Relational):
-            raise NotImplementedError('handling of relationals')
+        if not all(is_literal(i) for i in (self, other)):
+            raise NotImplementedError('non-literal BooleanFunction')
         more = self.atoms()
         less = other.atoms()
         if len(more) < len(less):
