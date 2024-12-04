@@ -15,7 +15,6 @@ from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
@@ -122,7 +121,7 @@ class Boolean(Basic):
         False
 
         """
-        from sympy.logic.inference import satisfiable
+        from sympy.core.symbol import Symbol
 
         def ok(f):
             return isinstance(f, (BooleanFunction, Symbol)) and (not f.args or
