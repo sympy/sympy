@@ -123,7 +123,10 @@ class Boolean(Basic):
         """
         from sympy.logic.inference import satisfiable
 
-        if not all(is_literal(i) for i in (self, other)):
+        def ok(f):
+            return isinstance(f, (BooleanFunction, Symbol)) and (not f.args or
+                all(ok(a) for a in f.args))
+        if not ok(self) or not ok(other):
             raise NotImplementedError('non-literal BooleanFunction')
         more = self.atoms()
         less = other.atoms()
