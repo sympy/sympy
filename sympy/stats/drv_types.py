@@ -544,8 +544,13 @@ class PoissonDistribution(SingleDiscreteDistribution):
         if evaluate:
             if expr == var:
                 return self.lamda
-            if isinstance(expr, FallingFactorial) and expr.args[1].is_integer and expr.args[1].is_positive and expr.args[0] == var:
-                return self.lamda**expr.args[1]
+            if (
+                isinstance(expr, FallingFactorial)
+                and expr.args[1].is_integer
+                and expr.args[1].is_positive
+                and expr.args[0] == var
+            ):
+                return self.lamda ** expr.args[1]
         return super().expectation(expr, var, evaluate, **kwargs)
 
 def Poisson(name, lamda):
