@@ -571,6 +571,8 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     algebra system [Rasch03]_.
 
     """
+    j_1, j_2, j_3, j_4, j_5, j_6 = map(sympify, \
+                [j_1, j_2, j_3, j_4, j_5, j_6])
     res = (-1) ** int(j_1 + j_2 + j_4 + j_5) * \
         racah(j_1, j_2, j_5, j_4, j_3, j_6, prec)
     return res
@@ -627,6 +629,8 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
     """
+    j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9 = map(sympify, \
+                [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9])
     imax = int(min(j_1 + j_9, j_2 + j_6, j_4 + j_8) * 2)
     imin = imax % 2
     sumres = 0

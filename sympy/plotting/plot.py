@@ -301,8 +301,8 @@ def plot(*args, show=True, **kwargs):
         :external:meth:`~matplotlib.axes.Axes.fill_between` method.
 
     adaptive : bool, optional
-        The default value is set to ``True``. Set adaptive to ``False``
-        and specify ``n`` if uniform sampling is required.
+        The default value for the ``adaptive`` parameter is now ``False``.
+        To enable adaptive sampling, set ``adaptive=True`` and specify ``n`` if uniform sampling is required.
 
         The plotting uses an adaptive algorithm which samples
         recursively to accurately plot. The adaptive algorithm uses a
@@ -377,14 +377,14 @@ def plot(*args, show=True, **kwargs):
        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
        [1]: cartesian line: x for x over (-5.0, 5.0)
 
-    No adaptive sampling.
+    No adaptive sampling by default. If adaptive sampling is required, set ``adaptive=True``.
 
     .. plot::
        :context: close-figs
        :format: doctest
        :include-source: True
 
-       >>> plot(x**2, adaptive=False, n=400)
+       >>> plot(x**2, adaptive=True, n=400)
        Plot object containing:
        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
 

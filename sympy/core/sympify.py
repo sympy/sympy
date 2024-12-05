@@ -1,7 +1,8 @@
 """sympify -- convert objects SymPy internal format"""
 
 from __future__ import annotations
-from typing import Any, Callable
+
+from typing import Any, Callable, overload, TYPE_CHECKING, TypeVar
 
 import mpmath.libmp as mlib
 
@@ -12,6 +13,15 @@ from sympy.core.random import choice
 from .parameters import global_parameters
 
 from sympy.utilities.iterables import iterable
+
+
+if TYPE_CHECKING:
+
+    from sympy.core.basic import Basic
+    from sympy.core.expr import Expr
+    from sympy.core.numbers import Integer, Float
+
+    Tbasic = TypeVar('Tbasic', bound=Basic)
 
 
 class SympifyError(ValueError):
@@ -90,10 +100,26 @@ def _convert_numpy_types(a, **sympify_args):
         prec = np.finfo(a).nmant + 1
         # E.g. double precision means prec=53 but nmant=52
         # Leading bit of mantissa is always 1, so is not stored
-        p, q = a.as_integer_ratio()
-        a = mlib.from_rational(p, q, prec)
-        return Float(a, precision=prec)
+        if np.isposinf(a):
+            return Float('inf')
+        elif np.isneginf(a):
+            return Float('-inf')
+        else:
+            p, q = a.as_integer_ratio()
+            a = mlib.from_rational(p, q, prec)
+            return Float(a, precision=prec)
 
+
+@overload
+def sympify(a: int, *, strict: bool = False) -> Integer: ... # type: ignore
+@overload
+def sympify(a: float, *, strict: bool = False) -> Float: ...
+@overload
+def sympify(a: complex, *, strict: bool = False) -> Expr: ...
+@overload
+def sympify(a: Tbasic, *, strict: bool = False) -> Tbasic: ...
+@overload
+def sympify(a: Any, *, strict: bool = False) -> Basic: ...
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate=None):

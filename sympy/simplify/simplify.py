@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import overload
+
 from collections import defaultdict
 
 from sympy.concrete.products import Product
@@ -416,6 +420,11 @@ def signsimp(expr, evaluate=None):
         e = e.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
     return e
 
+
+@overload
+def simplify(expr: Expr, **kwargs) -> Expr: ...
+@overload
+def simplify(expr: Basic, **kwargs) -> Basic: ...
 
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
     """Simplifies the given expression.

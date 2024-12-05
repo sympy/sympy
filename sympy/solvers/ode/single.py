@@ -2657,8 +2657,8 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
 
         self.const_undet_instance = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq, f(x), x))
         sol = self.const_undet_instance.get_general_solution(simplify = simplify_flag)[0]
-        sol = sol.subs(x, log(x))
-        sol = sol.subs(f(log(x)), f(x)).expand()
+        sol = sol.subs(x, log(x)) # type: ignore
+        sol = sol.subs(f(log(x)), f(x)).expand() # type: ignore
 
         return [sol]
 

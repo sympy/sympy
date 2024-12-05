@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import overload
+
 import numbers
 import decimal
 import fractions
@@ -440,8 +442,16 @@ class Number(AtomicExpr):
     def sort_key(self, order=None):
         return self.class_key(), (0, ()), (), self
 
+    def __neg__(self) -> Number:
+        raise NotImplementedError
+
+    @overload
+    def __add__(self, other: Number | int | float) -> Number: ...
+    @overload
+    def __add__(self, other: Expr) -> Expr: ...
+
     @_sympifyit('other', NotImplemented)
-    def __add__(self, other):
+    def __add__(self, other) -> Expr:
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.NaN:
                 return S.NaN

@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
@@ -37,9 +37,9 @@ class Integral(AddWithLimits):
 
     __slots__ = ()
 
-    args: tTuple[Expr, Tuple]
+    args: tuple[Expr, Tuple] # type: ignore
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Integral:
         """Create an unevaluated integral.
 
         Explanation
