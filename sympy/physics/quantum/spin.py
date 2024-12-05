@@ -16,7 +16,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.simplify import simplify
 from sympy.matrices import zeros
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.pretty.stringpict import prettyForm
 from sympy.printing.pretty.pretty_symbology import pretty_symbol
 
 from sympy.physics.quantum.qexpr import QExpr
@@ -91,8 +91,8 @@ class SpinOpBase:
         return '%s%s' % (self.name, self._coord)
 
     def _print_contents_pretty(self, printer, *args):
-        a = stringPict(str(self.name))
-        b = stringPict(self._coord)
+        a = prettyForm(str(self.name))
+        b = prettyForm(self._coord)
         return self._print_subscript_pretty(a, b)
 
     def _print_contents_latex(self, printer, *args):
@@ -841,7 +841,7 @@ class WignerD(Expr):
             bot = prettyForm(*bot.right(' '*(pad - bot.width())))
         if self.alpha == 0 and self.gamma == 0:
             args = printer._print(self.beta)
-            s = stringPict('d' + ' '*pad)
+            s = prettyForm('d' + ' '*pad)
         else:
             args = printer._print(self.alpha)
             args = prettyForm(*args.right(','))
@@ -849,12 +849,12 @@ class WignerD(Expr):
             args = prettyForm(*args.right(','))
             args = prettyForm(*args.right(printer._print(self.gamma)))
 
-            s = stringPict('D' + ' '*pad)
+            s = prettyForm('D' + ' '*pad)
 
-        args = prettyForm(*args.parens())
-        s = prettyForm(*s.above(top))
-        s = prettyForm(*s.below(bot))
-        s = prettyForm(*s.right(args))
+        args = args.parenthesis()
+        s = s.above(top)
+        s = s.below(bot)
+        s = s.right(args)
         return s
 
     def doit(self, **hints):
