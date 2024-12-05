@@ -26,6 +26,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                     DiscreteRV)
 from sympy.testing.pytest import slow, nocache_fail, raises, skip
 from sympy.stats.symbolic_probability import Expectation
+from sympy.functions.combinatorial.factorials import FallingFactorial
 
 x = Symbol('x')
 
@@ -56,6 +57,11 @@ def test_Poisson():
         skip("numpy not installed")
     y = Poisson('y', np.float64(4.72544290380919e-11))
     assert E(y) == 4.72544290380919e-11
+    l2 = 5
+    z = Poisson('z', l2)
+    assert E(z) == l2
+    assert E(FallingFactorial(z, 3)) == l2**3
+    assert E(z**2) == l2 + l2**2
 
 
 def test_FlorySchulz():
