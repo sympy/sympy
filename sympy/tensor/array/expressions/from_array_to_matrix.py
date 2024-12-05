@@ -784,7 +784,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
             make_trace = True
             first_element = v[0].element
             if not check_transpose(v[0].indices):
-                first_element = first_element.T
+                first_element = first_element.T # type: ignore
             hadamard_factors = v[1:]
         else:
             hadamard_factors = v

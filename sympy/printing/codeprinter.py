@@ -418,7 +418,6 @@ class CodePrinter(StrPrinter):
         return self._print(expr.symbol)
 
     def _print_Symbol(self, expr):
-
         name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:

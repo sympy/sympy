@@ -248,13 +248,13 @@ class Pow(Expr):
             elif ask(Q.odd(e), assumptions):
                 return -Pow(-b, e)
 
-    def _eval_power(self, other):
+    def _eval_power(self, expt):
         b, e = self.as_base_exp()
         if b is S.NaN:
-            return (b**e)**other  # let __new__ handle it
+            return (b**e)**expt  # let __new__ handle it
 
         s = None
-        if other.is_integer:
+        if expt.is_integer:
             s = 1
         elif b.is_polar:  # e.g. exp_polar, besselj, var('p', polar=True)...
             s = 1
@@ -282,18 +282,18 @@ class Pow(Expr):
                     pass
             # ===================================================
             if e.is_extended_real:
-                # we need _half(other) with constant floor or
+                # we need _half(expt) with constant floor or
                 # floor(S.Half - e*arg(b)/2/pi) == 0
 
 
                 # handle -1 as special case
                 if e == -1:
                     # floor arg. is 1/2 + arg(b)/2/pi
-                    if _half(other):
+                    if _half(expt):
                         if b.is_negative is True:
-                            return S.NegativeOne**other*Pow(-b, e*other)
+                            return S.NegativeOne**expt*Pow(-b, e*expt)
                         elif b.is_negative is False:  # XXX ok if im(b) != 0?
-                            return Pow(b, -other)
+                            return Pow(b, -expt)
                 elif e.is_even:
                     if b.is_extended_real:
                         b = abs(b)
@@ -306,8 +306,8 @@ class Pow(Expr):
                     s = 1  # floor = 0
                 elif re(b).is_extended_nonnegative and (abs(e) < 2) == True:
                     s = 1  # floor = 0
-                elif _half(other):
-                    s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(
+                elif _half(expt):
+                    s = exp(2*S.Pi*S.ImaginaryUnit*expt*floor(
                         S.Half - e*arg(b)/(2*S.Pi)))
                     if s.is_extended_real and _n2(sign(s) - s) == 0:
                         s = sign(s)
@@ -315,10 +315,10 @@ class Pow(Expr):
                         s = None
             else:
                 # e.is_extended_real is False requires:
-                #     _half(other) with constant floor or
+                #     _half(expt) with constant floor or
                 #     floor(S.Half - im(e*log(b))/2/pi) == 0
                 try:
-                    s = exp(2*S.ImaginaryUnit*S.Pi*other*
+                    s = exp(2*S.ImaginaryUnit*S.Pi*expt*
                         floor(S.Half - im(e*log(b))/2/S.Pi))
                     # be careful to test that s is -1 or 1 b/c sign(I) == I:
                     # so check that s is real
@@ -330,7 +330,7 @@ class Pow(Expr):
                     s = None
 
         if s is not None:
-            return s*Pow(b, e*other)
+            return s*Pow(b, e*expt)
 
     def _eval_Mod(self, q):
         r"""A dispatched function to compute `b^e \bmod q`, dispatched

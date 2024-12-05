@@ -31,8 +31,10 @@ There are three types of functions implemented in SymPy:
 """
 
 from __future__ import annotations
+
 from typing import Any
 from collections.abc import Iterable
+import copyreg
 
 from .add import Add
 from .basic import Basic, _atomic
@@ -829,6 +831,8 @@ class AppliedUndef(Function):
 
     is_number = False
 
+    name: str
+
     def __new__(cls, *args, **options) -> Expr:  # type: ignore
         args = tuple(map(sympify, args))
         u = [a.name for a in args if isinstance(a, UndefinedFunction)]
@@ -934,6 +938,20 @@ class UndefinedFunction(FunctionClass):
     @property
     def _diff_wrt(self):
         return False
+
+
+# Using copyreg is the only way to make a dynamically generated instance of a
+# metaclass picklable without using a custom pickler. It is not possible to
+# define e.g. __reduce__ on the metaclass because obj.__reduce__ will retrieve
+# the __reduce__ method for reducing instances of the type rather than for the
+# type itself.
+def _reduce_undef(f):
+    return (_rebuild_undef, (f.name, f._kwargs))
+
+def _rebuild_undef(name, kwargs):
+    return Function(name, **kwargs)
+
+copyreg.pickle(UndefinedFunction, _reduce_undef)
 
 
 # XXX: The type: ignore on WildFunction is because mypy complains:
@@ -1958,7 +1976,7 @@ class Lambda(Expr):
     """
     is_Function = True
 
-    def __new__(cls, signature, expr):
+    def __new__(cls, signature, expr) -> Lambda:
         if iterable(signature) and not isinstance(signature, (tuple, Tuple)):
             sympy_deprecation_warning(
                 """
@@ -1969,8 +1987,8 @@ class Lambda(Expr):
                 active_deprecations_target="deprecated-non-tuple-lambda",
             )
             signature = tuple(signature)
-        sig = signature if iterable(signature) else (signature,)
-        sig = sympify(sig)
+        _sig = signature if iterable(signature) else (signature,)
+        sig: Tuple = sympify(_sig) # type: ignore
         cls._check_signature(sig)
 
         if len(sig) == 1 and sig[0] == expr:

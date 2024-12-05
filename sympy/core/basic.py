@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from itertools import zip_longest
 from functools import cmp_to_key
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -20,10 +20,13 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar
+    from typing import ClassVar, TypeVar
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
+    from .expr import Expr
+
+    Tbasic = TypeVar("Tbasic", bound='Basic')
 
 
 def as_Basic(expr):
@@ -590,7 +593,12 @@ class Basic(Printable):
 
         return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
 
-    def atoms(self, *types):
+    @overload
+    def atoms(self) -> set[Basic]: ...
+    @overload
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Tbasic]: ...
+
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Basic] | set[Tbasic]:
         """Returns the atoms that form the current object.
 
         By default, only objects that are truly atomic and cannot
@@ -659,15 +667,12 @@ class Basic(Printable):
         {I*pi, 2*sin(y + I*pi)}
 
         """
-        if types:
-            types = tuple(
-                [t if isinstance(t, type) else type(t) for t in types])
         nodes = _preorder_traversal(self)
         if types:
-            result = {node for node in nodes if isinstance(node, types)}
+            types2 = tuple([t if isinstance(t, type) else type(t) for t in types])
+            return {node for node in nodes if isinstance(node, types2)}
         else:
-            result = {node for node in nodes if not node.args}
-        return result
+            return {node for node in nodes if not node.args}
 
     @property
     def free_symbols(self) -> set[Basic]:
@@ -868,7 +873,7 @@ class Basic(Printable):
         """
         return self._eval_is_comparable()
 
-    def _eval_is_comparable(self):
+    def _eval_is_comparable(self) -> bool:
         # Expr.is_comparable overrides this
         return False
 
@@ -949,6 +954,15 @@ class Basic(Printable):
         sympy.core.expr.Expr.as_content_primitive
         """
         return S.One, self
+
+    @overload
+    def subs(self: Expr, arg1: dict[Expr, Expr | int], arg2: None=None) -> Expr: ... # type: ignore
+    @overload
+    def subs(self: Expr, arg1: Expr, arg2: Expr | int) -> Expr: ... # type: ignore
+    @overload
+    def subs(self: Basic, arg1: dict[Basic, Basic], arg2: None=None) -> Basic: ...
+    @overload
+    def subs(self: Basic, arg1: Basic, arg2: Basic) -> Basic: ...
 
     def subs(self, *args, **kwargs):
         """
@@ -1269,7 +1283,7 @@ class Basic(Printable):
             rv = fallback(self, old, new)
         return rv
 
-    def _eval_subs(self, old, new):
+    def _eval_subs(self, old, new) -> Basic | None:
         """Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
@@ -1943,6 +1957,11 @@ class Basic(Printable):
         else:
             return self
 
+    @overload
+    def simplify(self: Expr, **kwargs) -> Expr: ... # type: ignore
+    @overload
+    def simplify(self: Basic, **kwargs) -> Basic: ...
+
     def simplify(self, **kwargs):
         """See the simplify function in sympy.simplify"""
         from sympy.simplify.simplify import simplify
@@ -2056,6 +2075,11 @@ class Basic(Printable):
         pattern = args[:-1]
         rule = args[-1]
 
+        # Special case: map `abs` to `Abs`
+        if rule is abs:
+            from sympy.functions.elementary.complexes import Abs
+            rule = Abs
+
         # support old design by _eval_rewrite_as_[...] method
         if isinstance(rule, str):
             method = "_eval_rewrite_as_%s" % rule
@@ -2138,7 +2162,7 @@ class Basic(Printable):
             # call the freshly monkey-patched method
             return self._sage_()
 
-    def could_extract_minus_sign(self):
+    def could_extract_minus_sign(self) -> bool:
         return False  # see Expr.could_extract_minus_sign
 
     def is_same(a, b, approx=None):

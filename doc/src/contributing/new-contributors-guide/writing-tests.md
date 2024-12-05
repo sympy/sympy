@@ -113,7 +113,7 @@ The bit in between `_________________` is the name of the test. You can
 reproduce the test locally by copying and pasting this:
 
 ```
-./bin/test sympy/printing/pretty/tests/test_pretty.py::test_upretty_sub_super
+./bin/test sympy/printing/pretty/tests/test_pretty.py -k test_upretty_sub_super
 ```
 
 or

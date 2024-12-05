@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     T3 = TypeVar('T3')
 
 
-def _sympifyit(arg, retval=None):
+def _sympifyit(arg, retval=None) -> Callable[[Callable[[T1, T2], T3]], Callable[[T1, T2], T3]]:
     """
     decorator to smartly _sympify function arguments
 
@@ -120,7 +120,7 @@ def call_highest_priority(method_name: str
     return priority_decorator
 
 
-def sympify_method_args(cls):
+def sympify_method_args(cls: type[T1]) -> type[T1]:
     '''Decorator for a class with methods that sympify arguments.
 
     Explanation
