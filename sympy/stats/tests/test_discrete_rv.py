@@ -51,6 +51,7 @@ def test_Poisson():
     assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
+    # issue 27344
     try:
         import numpy as np
     except ImportError:
