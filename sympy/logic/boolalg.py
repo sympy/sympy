@@ -2,6 +2,10 @@
 Boolean algebra module for SymPy
 """
 
+from __future__ import annotations
+from typing import TYPE_CHECKING, overload, Any
+from collections.abc import Iterable, Mapping
+
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
 from sympy.core.add import Add
@@ -68,6 +72,28 @@ class Boolean(Basic):
     __slots__ = ()
 
     kind = BooleanKind
+
+    if TYPE_CHECKING:
+
+        @overload # type: ignore
+        def subs(self, arg1: Mapping[Basic | complex, Boolean | complex], arg2: None=None) -> Boolean: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
+        @overload
+        def subs(self, arg1: Boolean | complex, arg2: Boolean | complex) -> Boolean: ...
+        @overload
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
+
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
+                 arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
+            assert False
+
+        def simplify(self, **kwargs) -> Boolean:
+            assert False
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
     def __and__(self, other):

@@ -1,7 +1,7 @@
 """Base class for all the objects in SymPy"""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable
 from itertools import zip_longest
 from functools import cmp_to_key
 from typing import TYPE_CHECKING, overload
@@ -20,11 +20,10 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar, TypeVar
+    from typing import ClassVar, TypeVar, Any
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
-    from .expr import Expr
 
     Tbasic = TypeVar("Tbasic", bound='Basic')
 
@@ -956,15 +955,15 @@ class Basic(Printable):
         return S.One, self
 
     @overload
-    def subs(self: Expr, arg1: dict[Expr, Expr | int], arg2: None=None) -> Expr: ... # type: ignore
+    def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
     @overload
-    def subs(self: Expr, arg1: Expr, arg2: Expr | int) -> Expr: ... # type: ignore
+    def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
     @overload
-    def subs(self: Basic, arg1: dict[Basic, Basic], arg2: None=None) -> Basic: ...
-    @overload
-    def subs(self: Basic, arg1: Basic, arg2: Basic) -> Basic: ...
+    def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
 
-    def subs(self, *args, **kwargs):
+    def subs(self, arg1: Mapping[Basic | complex, Basic | complex]
+            | Iterable[tuple[Basic | complex, Basic | complex]] | Basic | complex,
+             arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
         """
         Substitutes old for new in an expression after sympifying args.
 
@@ -1081,26 +1080,28 @@ class Basic(Printable):
         from .symbol import Dummy, Symbol
         from .numbers import _illegal
 
-        unordered = False
-        if len(args) == 1:
+        items: Iterable[tuple[Basic | complex, Basic | complex]]
 
-            sequence = args[0]
-            if isinstance(sequence, set):
+        unordered = False
+        if arg2 is None:
+
+            if isinstance(arg1, set):
+                items = arg1
                 unordered = True
-            elif isinstance(sequence, (Dict, Mapping)):
+            elif isinstance(arg1, (Dict, Mapping)):
                 unordered = True
-                sequence = sequence.items()
-            elif not iterable(sequence):
+                items = arg1.items() # type: ignore
+            elif not iterable(arg1):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
                    it should be a dictionary of old: new pairs or an iterable
                    of (old, new) tuples."""))
-        elif len(args) == 2:
-            sequence = [args]
+            else:
+                items = arg1 # type: ignore
         else:
-            raise ValueError("subs accepts either 1 or 2 arguments")
+            items = [(arg1, arg2)] # type: ignore
 
-        def sympify_old(old):
+        def sympify_old(old) -> Basic:
             if isinstance(old, str):
                 # Use Symbol rather than parse_expr for old
                 return Symbol(old)
@@ -1110,14 +1111,14 @@ class Basic(Printable):
             else:
                 return sympify(old, strict=True)
 
-        def sympify_new(new):
+        def sympify_new(new) -> Basic:
             if isinstance(new, (str, type)):
                 # Allow a type or parse a string input
                 return sympify(new, strict=False)
             else:
                 return sympify(new, strict=True)
 
-        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in sequence]
+        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in items]
 
         # skip if there is no change
         sequence = [(s1, s2) for s1, s2 in sequence if not _aresame(s1, s2)]
@@ -1126,18 +1127,18 @@ class Basic(Printable):
 
         if unordered:
             from .sorting import _nodes, default_sort_key
-            sequence = dict(sequence)
+            sequence_dict = dict(sequence)
             # order so more complex items are first and items
             # of identical complexity are ordered so
             # f(x) < f(y) < x < y
             # \___ 2 __/    \_1_/  <- number of nodes
             #
             # For more complex ordering use an unordered sequence.
-            k = list(ordered(sequence, default=False, keys=(
+            k = list(ordered(sequence_dict, default=False, keys=(
                 lambda x: -_nodes(x),
                 default_sort_key,
                 )))
-            sequence = [(k, sequence[k]) for k in k]
+            sequence = [(k, sequence_dict[k]) for k in k]
             # do infinities first
             if not simultaneous:
                 redo = [i for i, seq in enumerate(sequence) if seq[1] in _illegal]
@@ -1957,12 +1958,7 @@ class Basic(Printable):
         else:
             return self
 
-    @overload
-    def simplify(self: Expr, **kwargs) -> Expr: ... # type: ignore
-    @overload
-    def simplify(self: Basic, **kwargs) -> Basic: ...
-
-    def simplify(self, **kwargs):
+    def simplify(self, **kwargs) -> Basic:
         """See the simplify function in sympy.simplify"""
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)

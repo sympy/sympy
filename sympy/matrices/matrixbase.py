@@ -5396,7 +5396,7 @@ def a2idx(j, n=None):
     return int(j)
 
 
-class DeferredVector(Symbol, NotIterable):
+class DeferredVector(Symbol, NotIterable): # type: ignore
     """A vector whose components are deferred (e.g. for use with lambdify).
 
     Examples

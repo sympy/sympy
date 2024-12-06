@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-from collections.abc import Iterable
+from typing import TYPE_CHECKING, overload
+from collections.abc import Iterable, Mapping
 from functools import reduce
 import re
 
@@ -23,6 +23,7 @@ from mpmath.libmp.libintmath import giant_steps
 
 
 if TYPE_CHECKING:
+    from typing import Any
     from .numbers import Number
 
 from collections import defaultdict
@@ -66,6 +67,35 @@ class Expr(Basic, EvalfMixin):
     """
 
     __slots__: tuple[str, ...] = ()
+
+    if TYPE_CHECKING:
+
+        @overload # type: ignore
+        def subs(self, arg1: Mapping[Basic | complex, Expr | complex], arg2: None=None) -> Expr: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Expr | complex]], arg2: None=None, **kwargs: Any) -> Expr: ...
+        @overload
+        def subs(self, arg1: Expr | complex, arg2: Expr | complex) -> Expr: ...
+        @overload
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
+
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
+                 arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
+            assert False
+
+        def simplify(self, **kwargs) -> Expr:
+            assert False
+
+        def evalf(self, n: int = 15, subs: dict[Basic, Basic | float] | None = None,
+                  maxn: int = 100, chop: bool = False, strict: bool  = False,
+                  quad: str | None = None, verbose: bool = False) -> Expr:
+            assert False
+
+        n = evalf
 
     is_scalar = True  # self derivative is 1
 

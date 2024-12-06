@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING, overload
 from functools import reduce
 from collections import defaultdict
+from collections.abc import Mapping, Iterable
 import inspect
 
 from sympy.core.kind import Kind, UndefinedKind, NumberKind
@@ -88,6 +89,35 @@ class Set(Basic, EvalfMixin):
     )
     def is_EmptySet(self):
         return None
+
+    if TYPE_CHECKING:
+
+        @overload # type: ignore
+        def subs(self, arg1: Mapping[Basic | complex, Set | complex], arg2: None=None) -> Set: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Set | complex]], arg2: None=None, **kwargs: Any) -> Set: ...
+        @overload
+        def subs(self, arg1: Set | complex, arg2: Set | complex) -> Set: ...
+        @overload
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
+
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
+                 arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
+            assert False
+
+        def simplify(self, **kwargs) -> Set:
+            assert False
+
+        def evalf(self, n: int = 15, subs: dict[Basic, Basic | float] | None = None,
+                  maxn: int = 100, chop: bool = False, strict: bool  = False,
+                  quad: str | None = None, verbose: bool = False) -> Set:
+            assert False
+
+        n = evalf
 
     @staticmethod
     def _infimum_key(expr):
