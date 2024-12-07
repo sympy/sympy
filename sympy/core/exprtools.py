@@ -1217,7 +1217,7 @@ def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=Fals
     gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
-    def do(expr: Expr) -> Expr:
+    def do(expr):
         from sympy.concrete.summations import Sum
         from sympy.integrals.integrals import Integral
         is_iterable = iterable(expr)
