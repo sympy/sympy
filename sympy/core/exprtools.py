@@ -1,5 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
+from __future__ import annotations
+
 from .add import Add
 from .mul import Mul, _keep_coeff
 from .power import Pow
