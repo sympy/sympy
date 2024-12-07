@@ -24,6 +24,7 @@ from mpmath.libmp.libintmath import giant_steps
 
 if TYPE_CHECKING:
     from typing import Any
+    from typing_extensions import Self
     from .numbers import Number
 
 from collections import defaultdict
@@ -69,6 +70,9 @@ class Expr(Basic, EvalfMixin):
     __slots__: tuple[str, ...] = ()
 
     if TYPE_CHECKING:
+
+        def __new__(cls, *args: Basic) -> Self:
+            ...
 
         @overload # type: ignore
         def subs(self, arg1: Mapping[Basic | complex, Expr | complex], arg2: None=None) -> Expr: ...
@@ -1505,12 +1509,13 @@ class Expr(Basic, EvalfMixin):
                 return S.One
             return S.Zero
 
+        co2: list[Expr]
+
         if x is S.One:
-            co = [a for a in Add.make_args(self)
-                  if a.as_coeff_Mul()[0] is S.One]
-            if not co:
+            co2 = [a for a in Add.make_args(self) if a.as_coeff_Mul()[0] is S.One]
+            if not co2:
                 return S.Zero
-            return Add(*co)
+            return Add(*co2)
 
         if n == 0:
             if x.is_Add and self.is_Add:
@@ -1569,7 +1574,8 @@ class Expr(Basic, EvalfMixin):
                 i = len(l) - (i + n)
             return i
 
-        co = []
+        co2 = []
+        co: list[tuple[set[Expr], list[Expr]]] = []
         args = Add.make_args(self)
         self_c = self.is_commutative
         x_c = x.is_commutative
@@ -1600,14 +1606,14 @@ class Expr(Basic, EvalfMixin):
             resid = margs.difference(xargs)
             if len(resid) + len(xargs) == len(margs):
                 if one_c:
-                    co.append(Mul(*(list(resid) + nc)))
+                    co2.append(Mul(*(list(resid) + nc)))
                 else:
                     co.append((resid, nc))
         if one_c:
-            if co == []:
+            if co2 == []:
                 return S.Zero
-            elif co:
-                return Add(*co)
+            elif co2:
+                return Add(*co2)
         else:  # both nc
             # now check the non-comm parts
             if not co:
@@ -1893,6 +1899,7 @@ class Expr(Basic, EvalfMixin):
             return (self, self)
 
         func = self.func
+        want: type[Add] | type[Mul]
         if hint.get('as_Add', isinstance(self, Add) ):
             want = Add
         else:

@@ -1,4 +1,6 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
+from typing import TYPE_CHECKING, ClassVar
+
 from collections import defaultdict
 from functools import reduce
 from itertools import product
@@ -158,23 +160,33 @@ class Mul(Expr, AssocOp):
     """
     __slots__ = ()
 
-    args: tTuple[Expr, ...]
-
     is_Mul = True
 
     _args_type = Expr
     _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+
+    identity: ClassVar[Expr]
 
     @property
     def kind(self):
         arg_kinds = (a.kind for a in self.args)
         return self._kind_dispatcher(*arg_kinds)
 
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Expr | complex, evaluate: bool=True) -> Expr: # type: ignore
+            ...
+
+        @property
+        def args(self) -> tuple[Expr, ...]:
+            ...
+
     def could_extract_minus_sign(self):
         if self == (-self):
             return False  # e.g. zoo*x == -zoo*x
         c = self.args[0]
         return c.is_Number and c.is_extended_negative
+
     def __neg__(self):
         c, args = self.as_coeff_mul()
         if args[0] is not S.ComplexInfinity:
