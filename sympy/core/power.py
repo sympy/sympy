@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 from itertools import product
 
 from .sympify import _sympify
@@ -112,11 +112,29 @@ class Pow(Expr):
 
     __slots__ = ('is_commutative',)
 
-    args: tuple[Expr, Expr]
-    _args: tuple[Expr, Expr]
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
+
+    @property
+    def base(self) -> Expr:
+        return self.args[0]
+
+    @property
+    def exp(self) -> Expr:
+        return self.args[1]
+
+    @property
+    def kind(self):
+        if self.exp.kind is NumberKind:
+            return self.base.kind
+        else:
+            return UndefinedKind
 
     @cacheit
-    def __new__(cls, b, e, evaluate=None):
+    def __new__(cls, b: Expr | complex, e: Expr | complex, evaluate=None) -> Expr:
         if evaluate is None:
             evaluate = global_parameters.evaluate
 
@@ -219,21 +237,6 @@ class Pow(Expr):
             from sympy.functions.elementary.exponential import log
             return log
         return None
-
-    @property
-    def base(self) -> Expr:
-        return self._args[0]
-
-    @property
-    def exp(self) -> Expr:
-        return self._args[1]
-
-    @property
-    def kind(self):
-        if self.exp.kind is NumberKind:
-            return self.base.kind
-        else:
-            return UndefinedKind
 
     @classmethod
     def class_key(cls):

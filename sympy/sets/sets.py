@@ -92,6 +92,9 @@ class Set(Basic, EvalfMixin):
 
     if TYPE_CHECKING:
 
+        def __new__(cls, *args: Basic | complex) -> Set:
+            ...
+
         @overload # type: ignore
         def subs(self, arg1: Mapping[Basic | complex, Set | complex], arg2: None=None) -> Set: ...
         @overload
@@ -107,7 +110,7 @@ class Set(Basic, EvalfMixin):
 
         def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
-            assert False
+            ...
 
         def simplify(self, **kwargs) -> Set:
             assert False
@@ -115,7 +118,7 @@ class Set(Basic, EvalfMixin):
         def evalf(self, n: int = 15, subs: dict[Basic, Basic | float] | None = None,
                   maxn: int = 100, chop: bool = False, strict: bool  = False,
                   quad: str | None = None, verbose: bool = False) -> Set:
-            assert False
+            ...
 
         n = evalf
 

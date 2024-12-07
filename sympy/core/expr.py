@@ -89,15 +89,15 @@ class Expr(Basic, EvalfMixin):
 
         def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
-            assert False
+            ...
 
         def simplify(self, **kwargs) -> Expr:
-            assert False
+            ...
 
         def evalf(self, n: int = 15, subs: dict[Basic, Basic | float] | None = None,
                   maxn: int = 100, chop: bool = False, strict: bool  = False,
                   quad: str | None = None, verbose: bool = False) -> Expr:
-            assert False
+            ...
 
         n = evalf
 

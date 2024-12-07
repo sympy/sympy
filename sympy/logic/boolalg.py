@@ -75,6 +75,9 @@ class Boolean(Basic):
 
     if TYPE_CHECKING:
 
+        def __new__(cls, *args: Basic | complex) -> Boolean:
+            ...
+
         @overload # type: ignore
         def subs(self, arg1: Mapping[Basic | complex, Boolean | complex], arg2: None=None) -> Boolean: ...
         @overload
@@ -90,10 +93,10 @@ class Boolean(Basic):
 
         def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
-            assert False
+            ...
 
         def simplify(self, **kwargs) -> Boolean:
-            assert False
+            ...
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
     def __and__(self, other):
@@ -598,6 +601,15 @@ class And(LatticeOp, BooleanFunction):
 
     nargs = None
 
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Boolean | bool) -> Boolean: # type: ignore
+            ...
+
+        @property
+        def args(self) -> tuple[Boolean, ...]:
+            ...
+
     @classmethod
     def _new_args_filter(cls, args):
         args = BooleanFunction.binary_check_and_simplify(*args)
@@ -755,6 +767,15 @@ class Or(LatticeOp, BooleanFunction):
     """
     zero = true
     identity = false
+
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Boolean | bool) -> Boolean: # type: ignore
+            ...
+
+        @property
+        def args(self) -> tuple[Boolean, ...]:
+            ...
 
     @classmethod
     def _new_args_filter(cls, args):
