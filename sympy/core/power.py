@@ -134,21 +134,21 @@ class Pow(Expr):
             return UndefinedKind
 
     @cacheit
-    def __new__(cls, b: Expr | complex, e: Expr | complex, evaluate=None) -> Expr:
+    def __new__(cls, b: Expr | complex, e: Expr | complex, evaluate=None) -> Expr: # type: ignore
         if evaluate is None:
             evaluate = global_parameters.evaluate
 
-        b = _sympify(b)
-        e = _sympify(e)
+        base = _sympify(b)
+        exp = _sympify(e)
 
         # XXX: This can be removed when non-Expr args are disallowed rather
         # than deprecated.
         from .relational import Relational
-        if isinstance(b, Relational) or isinstance(e, Relational):
+        if isinstance(base, Relational) or isinstance(exp, Relational):
             raise TypeError('Relational cannot be used in Pow')
 
         # XXX: This should raise TypeError once deprecation period is over:
-        for arg in [b, e]:
+        for arg in [base, exp]:
             if not isinstance(arg, Expr):
                 sympy_deprecation_warning(
                     f"""
@@ -163,73 +163,73 @@ class Pow(Expr):
                 )
 
         if evaluate:
-            if e is S.ComplexInfinity:
+            if exp is S.ComplexInfinity:
                 return S.NaN
-            if e is S.Infinity:
-                if is_gt(b, S.One):
+            if exp is S.Infinity:
+                if is_gt(base, S.One):
                     return S.Infinity
-                if is_gt(b, S.NegativeOne) and is_lt(b, S.One):
+                if is_gt(base, S.NegativeOne) and is_lt(base, S.One):
                     return S.Zero
-                if is_lt(b, S.NegativeOne):
-                    if b.is_finite:
+                if is_lt(base, S.NegativeOne):
+                    if base.is_finite:
                         return S.ComplexInfinity
-                    if b.is_finite is False:
+                    if base.is_finite is False:
                         return S.NaN
-            if e is S.Zero:
+            if exp is S.Zero:
                 return S.One
-            elif e is S.One:
-                return b
-            elif e == -1 and not b:
+            elif exp is S.One:
+                return base
+            elif exp == -1 and not base:
                 return S.ComplexInfinity
-            elif e.__class__.__name__ == "AccumulationBounds":
-                if b == S.Exp1:
+            elif exp.__class__.__name__ == "AccumulationBounds":
+                if base == S.Exp1:
                     from sympy.calculus.accumulationbounds import AccumBounds
-                    return AccumBounds(Pow(b, e.min), Pow(b, e.max))
+                    return AccumBounds(Pow(base, exp.min), Pow(base, exp.max))
             # autosimplification if base is a number and exp odd/even
             # if base is Number then the base will end up positive; we
             # do not do this with arbitrary expressions since symbolic
             # cancellation might occur as in (x - 1)/(1 - x) -> -1. If
             # we returned Piecewise((-1, Ne(x, 1))) for such cases then
             # we could do this...but we don't
-            elif (e.is_Symbol and e.is_integer or e.is_Integer
-                    ) and (b.is_number and b.is_Mul or b.is_Number
-                    ) and b.could_extract_minus_sign():
-                if e.is_even:
-                    b = -b
-                elif e.is_odd:
-                    return -Pow(-b, e)
-            if S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
+            elif (exp.is_Symbol and exp.is_integer or exp.is_Integer
+                    ) and (base.is_number and base.is_Mul or base.is_Number
+                    ) and base.could_extract_minus_sign():
+                if exp.is_even:
+                    base = -base
+                elif exp.is_odd:
+                    return -Pow(-base, exp)
+            if S.NaN in (base, exp):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
                 return S.NaN
-            elif b is S.One:
-                if abs(e).is_infinite:
+            elif base is S.One:
+                if abs(exp).is_infinite:
                     return S.NaN
                 return S.One
             else:
                 # recognize base as E
                 from sympy.functions.elementary.exponential import exp_polar
-                if not e.is_Atom and b is not S.Exp1 and not isinstance(b, exp_polar):
+                if not exp.is_Atom and base is not S.Exp1 and not isinstance(base, exp_polar):
                     from .exprtools import factor_terms
                     from sympy.functions.elementary.exponential import log
                     from sympy.simplify.radsimp import fraction
-                    c, ex = factor_terms(e, sign=False).as_coeff_Mul()
+                    c, ex = factor_terms(exp, sign=False).as_coeff_Mul()
                     num, den = fraction(ex)
-                    if isinstance(den, log) and den.args[0] == b:
+                    if isinstance(den, log) and den.args[0] == base:
                         return S.Exp1**(c*num)
                     elif den.is_Add:
                         from sympy.functions.elementary.complexes import sign, im
-                        s = sign(im(b))
+                        s = sign(im(base))
                         if s.is_Number and s and den == \
-                                log(-factor_terms(b, sign=False)) + s*S.ImaginaryUnit*S.Pi:
+                                log(-factor_terms(base, sign=False)) + s*S.ImaginaryUnit*S.Pi:
                             return S.Exp1**(c*num)
 
-                obj = b._eval_power(e)
+                obj = base._eval_power(exp)
                 if obj is not None:
                     return obj
-        obj = Expr.__new__(cls, b, e)
+        obj = Expr.__new__(cls, base, exp)
         obj = cls._exec_constructor_postprocessors(obj)
         if not isinstance(obj, Pow):
             return obj
-        obj.is_commutative = (b.is_commutative and e.is_commutative)
+        obj.is_commutative = (base.is_commutative and exp.is_commutative)
         return obj
 
     def inverse(self, argindex=1):

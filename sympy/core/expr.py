@@ -1316,7 +1316,7 @@ class Expr(Basic, EvalfMixin):
 
         raise NotImplementedError('not sure of order of %s' % o)
 
-    def count_ops(self, visual=None):
+    def count_ops(self, visual=False):
         from .function import count_ops
         return count_ops(self, visual)
 

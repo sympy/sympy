@@ -1156,7 +1156,7 @@ def _factor_sum_int(expr, **kwargs):
         return i * expr.func(d, *limits)
 
 
-def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
+def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=False, sign=True) -> Expr:
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
@@ -1217,7 +1217,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
-    def do(expr):
+    def do(expr: Expr) -> Expr:
         from sympy.concrete.summations import Sum
         from sympy.integrals.integrals import Integral
         is_iterable = iterable(expr)
@@ -1266,8 +1266,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 *[do(a) for a in p.args])
         rv = _keep_coeff(cont, p, clear=clear, sign=sign)
         return rv
-    expr = sympify(expr)
-    return do(expr)
+    expr2 = sympify(expr)
+    return do(expr2)
 
 
 def _mask_nc(eq, name=None):
