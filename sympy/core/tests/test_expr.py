@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.assumptions.refine import refine
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
