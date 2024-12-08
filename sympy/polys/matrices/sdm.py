@@ -1065,6 +1065,19 @@ class SDM(dict):
         L, U, swaps = A.to_ddm().lu()
         return A.from_ddm(L), A.from_ddm(U), swaps
 
+    def qr(self):
+        """
+        QR decomposition for SDM (Sparse Domain Matrix).
+
+        Returns:
+            - Q: Orthogonal matrix as a SDM.
+            - R: Upper triangular matrix as a SDM.
+        """
+        ddm_q, ddm_r = self.to_ddm().qr()
+        Q = ddm_q.to_sdm()
+        R = ddm_r.to_sdm()
+        return Q, R
+
     def lu_solve(A, b):
         """
 
