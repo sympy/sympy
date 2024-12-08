@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Tuple as tTuple
 
 from sympy.calculus.singularities import is_decreasing
@@ -174,7 +176,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Sum:
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         if not hasattr(obj, 'limits'):
             return obj

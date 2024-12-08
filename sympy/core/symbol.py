@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, overload
 
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
@@ -13,14 +14,19 @@ from .singleton import S
 from .sorting import ordered
 from .sympify import sympify
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import sift, is_sequence
+from sympy.utilities.iterables import is_sequence, _sift_true_false
 from sympy.utilities.misc import filldedent
 
 import string
 import re as _re
 import random
 from itertools import product
-from typing import Any
+
+
+if TYPE_CHECKING:
+
+    from typing import Any, Literal, Iterable, Callable
+    from typing_extensions import Self
 
 
 class Str(Atom):
@@ -37,10 +43,12 @@ class Str(Atom):
     """
     __slots__ = ('name',)
 
+    name: str
+
     def __new__(cls, name, **kwargs):
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
-        obj = Expr.__new__(cls, **kwargs)
+        obj = super().__new__(cls, **kwargs)
         obj.name = name
         return obj
 
@@ -51,18 +59,22 @@ class Str(Atom):
         return (self.name,)
 
 
-def _filter_assumptions(kwargs):
+def _filter_assumptions(kwargs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     """Split the given dict into assumptions and non-assumptions.
     Keys are taken as assumptions if they correspond to an
     entry in ``_assume_defined``.
     """
-    assumptions, nonassumptions = map(dict, sift(kwargs.items(),
-        lambda i: i[0] in _assume_defined,
-        binary=True))
+    true, false = _sift_true_false(kwargs.items(), lambda i: i[0] in _assume_defined)
+    assumptions = dict(true)
+    nonassumptions = dict(false)
     Symbol._sanitize(assumptions)
     return assumptions, nonassumptions
 
-def _symbol(s, matching_symbol=None, **assumptions):
+
+def _symbol(s: str | Symbol,
+            matching_symbol: Symbol | None = None,
+            **assumptions: bool | None,
+            ) -> Symbol:
     """Return s if s is a Symbol, else if s is a string, return either
     the matching_symbol if the names are the same or else a new symbol
     with the same assumptions as the matching symbol (or the
@@ -128,7 +140,8 @@ def _symbol(s, matching_symbol=None, **assumptions):
     else:
         raise ValueError('symbol must be string for symbol name or Symbol')
 
-def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
+
+def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions) -> Symbol:
     """
     Return a symbol whose name is derivated from *xname* but is unique
     from any other symbols in *exprs*.
@@ -202,6 +215,8 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     while any(x == compare(s) for s in names):
         x = modify(x)
     return _symbol(x, default, **assumptions)
+
+
 _uniquely_named_symbol = uniquely_named_symbol
 
 
@@ -267,6 +282,9 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     __slots__ = ('name', '_assumptions_orig', '_assumptions0')
 
     name: str
+    _assumptions_orig: dict[str, bool | None]
+    _assumptions0: tuple[tuple[str, bool | None], ...]
+    _assumptions: StdFactKB
 
     is_Symbol = True
     is_symbol = True
@@ -278,7 +296,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
         return UndefinedKind
 
     @property
-    def _diff_wrt(self):
+    def _diff_wrt(self) -> bool:
         """Allow derivatives wrt Symbols.
 
         Examples
@@ -322,7 +340,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
         base.update(assumptions)
         return base
 
-    def __new__(cls, name, **assumptions):
+    def __new__(cls, name: str, **assumptions: bool | None) -> Self:
         """Symbols are identified by name and assumptions::
 
         >>> from sympy import Symbol
@@ -431,9 +449,10 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
         return Dummy(self.name) if self.is_commutative is not False \
             else Dummy(self.name, commutative=self.is_commutative)
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Expr, Expr]:
+        # XXX: Remove the ignore flag
         if hints.get('ignore') == self:
-            return None
+            return None # type: ignore
         else:
             from sympy.functions.elementary.complexes import im, re
             return (re(self), im(self))
@@ -444,7 +463,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
         return self not in wrt
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic]:
         return {self}
 
     binary_symbols = free_symbols  # in this case, not always
@@ -491,7 +510,9 @@ class Dummy(Symbol):
 
     is_Dummy = True
 
-    def __new__(cls, name=None, dummy_index=None, **assumptions):
+    def __new__(cls, name: str | None = None,
+                     dummy_index: int | None = None,
+                     **assumptions: bool | None) -> Self:
         if dummy_index is not None:
             assert name is not None, "If you specify a dummy_index, you must also provide a name"
 
@@ -614,7 +635,11 @@ class Wild(Symbol):
 
     __slots__ = ('exclude', 'properties')
 
-    def __new__(cls, name, exclude=(), properties=(), **assumptions):
+    def __new__(cls, name: str,
+                exclude: Iterable[Expr | complex] = (),
+                properties: Iterable[Callable[[Expr], bool | None]] = (),
+                **assumptions: bool | None
+            ) -> Self:
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
         cls._sanitize(assumptions, cls)
@@ -650,6 +675,15 @@ class Wild(Symbol):
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
+
+@overload
+def symbols(names: str, *, cls: Any = Symbol,
+            seq: Literal[False] = False,
+            **kwargs: bool | int) -> Any: ...
+@overload
+def symbols(names: str, *, cls: Any = Symbol,
+            seq: Literal[True],
+            **kwargs: bool | int) -> tuple[Symbol, ...]: ...
 
 def symbols(names, *, cls=Symbol, **args) -> Any:
     r"""
