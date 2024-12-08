@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-from collections.abc import Iterable
+from typing import TYPE_CHECKING, overload
+from collections.abc import Iterable, Mapping
 from functools import reduce
 import re
 
@@ -23,6 +23,8 @@ from mpmath.libmp.libintmath import giant_steps
 
 
 if TYPE_CHECKING:
+    from typing import Any
+    from typing_extensions import Self
     from .numbers import Number
 
 from collections import defaultdict
@@ -66,6 +68,38 @@ class Expr(Basic, EvalfMixin):
     """
 
     __slots__: tuple[str, ...] = ()
+
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Basic) -> Self:
+            ...
+
+        @overload # type: ignore
+        def subs(self, arg1: Mapping[Basic | complex, Expr | complex], arg2: None=None) -> Expr: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Expr | complex]], arg2: None=None, **kwargs: Any) -> Expr: ...
+        @overload
+        def subs(self, arg1: Expr | complex, arg2: Expr | complex) -> Expr: ...
+        @overload
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
+
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
+                 arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
+            ...
+
+        def simplify(self, **kwargs) -> Expr:
+            ...
+
+        def evalf(self, n: int = 15, subs: dict[Basic, Basic | float] | None = None,
+                  maxn: int = 100, chop: bool = False, strict: bool  = False,
+                  quad: str | None = None, verbose: bool = False) -> Expr:
+            ...
+
+        n = evalf
 
     is_scalar = True  # self derivative is 1
 
@@ -1282,7 +1316,7 @@ class Expr(Basic, EvalfMixin):
 
         raise NotImplementedError('not sure of order of %s' % o)
 
-    def count_ops(self, visual=None):
+    def count_ops(self, visual=False):
         from .function import count_ops
         return count_ops(self, visual)
 
@@ -1475,12 +1509,13 @@ class Expr(Basic, EvalfMixin):
                 return S.One
             return S.Zero
 
+        co2: list[Expr]
+
         if x is S.One:
-            co = [a for a in Add.make_args(self)
-                  if a.as_coeff_Mul()[0] is S.One]
-            if not co:
+            co2 = [a for a in Add.make_args(self) if a.as_coeff_Mul()[0] is S.One]
+            if not co2:
                 return S.Zero
-            return Add(*co)
+            return Add(*co2)
 
         if n == 0:
             if x.is_Add and self.is_Add:
@@ -1539,7 +1574,8 @@ class Expr(Basic, EvalfMixin):
                 i = len(l) - (i + n)
             return i
 
-        co = []
+        co2 = []
+        co: list[tuple[set[Expr], list[Expr]]] = []
         args = Add.make_args(self)
         self_c = self.is_commutative
         x_c = x.is_commutative
@@ -1570,14 +1606,14 @@ class Expr(Basic, EvalfMixin):
             resid = margs.difference(xargs)
             if len(resid) + len(xargs) == len(margs):
                 if one_c:
-                    co.append(Mul(*(list(resid) + nc)))
+                    co2.append(Mul(*(list(resid) + nc)))
                 else:
                     co.append((resid, nc))
         if one_c:
-            if co == []:
+            if co2 == []:
                 return S.Zero
-            elif co:
-                return Add(*co)
+            elif co2:
+                return Add(*co2)
         else:  # both nc
             # now check the non-comm parts
             if not co:
@@ -1863,6 +1899,7 @@ class Expr(Basic, EvalfMixin):
             return (self, self)
 
         func = self.func
+        want: type[Add] | type[Mul]
         if hint.get('as_Add', isinstance(self, Add) ):
             want = Add
         else:

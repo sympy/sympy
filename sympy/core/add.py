@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple as tTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 from collections import defaultdict
 from functools import reduce
 from operator import attrgetter
@@ -179,11 +179,20 @@ class Add(Expr, AssocOp):
 
     __slots__ = ()
 
-    args: tTuple[Expr, ...] # type: ignore
-
     is_Add = True
 
     _args_type = Expr
+
+    identity: ClassVar[Expr]
+
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Expr | complex, evaluate: bool=True) -> Expr: # type: ignore
+            ...
+
+        @property
+        def args(self) -> tuple[Expr, ...]:
+            ...
 
     @classmethod
     def flatten(cls, seq: list[Expr]) -> tuple[list[Expr], list[Expr], None]:
@@ -592,14 +601,10 @@ class Add(Expr, AssocOp):
                 *[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
 
         # sum up the terms having a common denominator
-        for d, n in nd.items():
-            if len(n) == 1:
-                nd[d] = n[0]
-            else:
-                nd[d] = self.func(*n)
+        nd2 = {d: self.func(*n) if len(n) > 1 else n[0] for d, n in nd.items()}
 
         # assemble single numerator and denominator
-        denoms, numers = [list(i) for i in zip(*iter(nd.items()))]
+        denoms, numers = [list(i) for i in zip(*iter(nd2.items()))]
         n, d = self.func(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
                    for i in range(len(numers))]), Mul(*denoms)
 

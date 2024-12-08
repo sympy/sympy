@@ -110,7 +110,7 @@ class SingleODEProblem:
                 if r and r[c1]:
                     den = self.func**r[c1]
                     reduced_eq = Add(*[arg/den for arg in self.eq.args])
-        if not reduced_eq:
+        if reduced_eq is None:
             reduced_eq = expand(self.eq)
         return reduced_eq
 
@@ -1741,7 +1741,8 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
         if simplify_flag:
             sol1 = odesimp(self.ode_problem.eq, *sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
             sol2 = odesimp(self.ode_problem.eq, *sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
-        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify))
+        # XXX: not simplify should be not simplify_flag. mypy correctly complains
+        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify)) # type: ignore
 
 
 class LinearCoefficients(HomogeneousCoeffBest):
@@ -2180,8 +2181,8 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
         roots, collectterms = _get_const_characteristic_eq_sols(self.r, fx, order)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(roots))
-        gsol = Add(*[i*j for (i, j) in zip(constants, roots)])
-        gsol = Eq(fx, gsol)
+        gsol_rhs = Add(*[i*j for (i, j) in zip(constants, roots)])
+        gsol = Eq(fx, gsol_rhs)
         if simplify_flag:
             gsol = _get_simplified_sol([gsol], fx, collectterms)
 
@@ -2282,8 +2283,8 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
         roots, collectterms = _get_const_characteristic_eq_sols(self.r, f(x), order)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(roots))
-        homogen_sol = Add(*[i*j for (i, j) in zip(constants, roots)])
-        homogen_sol = Eq(f(x), homogen_sol)
+        homogen_sol_rhs = Add(*[i*j for (i, j) in zip(constants, roots)])
+        homogen_sol = Eq(f(x), homogen_sol_rhs)
         homogen_sol = _solve_variation_of_parameters(eq, f(x), roots, homogen_sol, order, self.r, simplify_flag)
         if simplify_flag:
             homogen_sol = _get_simplified_sol([homogen_sol], f(x), collectterms)
@@ -2374,8 +2375,8 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         roots, collectterms = _get_const_characteristic_eq_sols(self.r, f(x), order)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(roots))
-        homogen_sol = Add(*[i*j for (i, j) in zip(constants, roots)])
-        homogen_sol = Eq(f(x), homogen_sol)
+        homogen_sol_rhs = Add(*[i*j for (i, j) in zip(constants, roots)])
+        homogen_sol = Eq(f(x), homogen_sol_rhs)
         self.r.update({'list': roots, 'sol': homogen_sol, 'simpliy_flag': simplify_flag})
         gsol = _solve_undetermined_coefficients(eq, f(x), order, self.r, self.trialset)
         if simplify_flag:
