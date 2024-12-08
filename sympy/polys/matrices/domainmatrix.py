@@ -3256,6 +3256,19 @@ class DomainMatrix:
         L, U, swaps = self.rep.lu()
         return self.from_rep(L), self.from_rep(U), swaps
 
+    def qr(self):
+        """
+        QR decomposition for DomainMatrix.
+
+        Returns:
+            - Q: Orthogonal DomainMatrix.
+            - R: Upper triangular DomainMatrix.
+        """
+        ddm_q, ddm_r = self.rep.qr()
+        Q = DomainMatrix.from_rep(ddm_q)
+        R = DomainMatrix.from_rep(ddm_r)
+        return Q, R
+
     def lu_solve(self, rhs):
         r"""
         Solver for DomainMatrix x in the A*x = B
