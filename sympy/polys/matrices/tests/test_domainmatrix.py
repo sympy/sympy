@@ -1367,3 +1367,4 @@ def test_qr():
     Q, R = A.qr()
     assert Q.shape == (2, 2)
     assert R.shape == (2, 2)
+    assert Q * R == A

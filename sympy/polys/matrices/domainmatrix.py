@@ -3264,7 +3264,11 @@ class DomainMatrix:
             - Q: Orthogonal DomainMatrix.
             - R: Upper triangular DomainMatrix.
         """
-        ddm_q, ddm_r = self.rep.qr()
+        if isinstance(self.rep, DFM):
+            ddm_q, ddm_r = self.rep.qr()
+        else:
+            ddm_q, ddm_r = self.rep.qr()
+
         Q = DomainMatrix.from_rep(ddm_q)
         R = DomainMatrix.from_rep(ddm_r)
         return Q, R
