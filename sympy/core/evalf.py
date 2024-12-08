@@ -30,7 +30,6 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import as_int
 
 if TYPE_CHECKING:
-    from sympy.core.expr import Basic
     from sympy.core.expr import Expr
     from sympy.core.add import Add
     from sympy.core.mul import Mul
@@ -1558,15 +1557,6 @@ class EvalfMixin:
     """Mixin class adding evalf capability."""
 
     __slots__ = ()  # type: tTuple[str, ...]
-
-    @overload
-    def evalf(self: Expr, n: int = 15, subs: dict[Basic, Basic | float] | None = None, # type: ignore
-              maxn: int = 100, chop: bool = False, strict: bool  = False,
-              quad: str | None = None, verbose: bool = False) -> Expr: ...
-    @overload
-    def evalf(self: Basic, n: int = 15, subs: dict[Basic, Basic | float] | None = None, # type: ignore
-              maxn: int = 100, chop: bool = False, strict: bool  = False,
-              quad: str | None = None, verbose: bool = False) -> Basic: ...
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """

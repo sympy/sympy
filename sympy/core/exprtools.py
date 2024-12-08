@@ -1,5 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
+from __future__ import annotations
+
 from .add import Add
 from .mul import Mul, _keep_coeff
 from .power import Pow
@@ -1156,7 +1158,7 @@ def _factor_sum_int(expr, **kwargs):
         return i * expr.func(d, *limits)
 
 
-def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
+def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=False, sign=True) -> Expr:
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
@@ -1266,8 +1268,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 *[do(a) for a in p.args])
         rv = _keep_coeff(cont, p, clear=clear, sign=sign)
         return rv
-    expr = sympify(expr)
-    return do(expr)
+    expr2 = sympify(expr)
+    return do(expr2)
 
 
 def _mask_nc(eq, name=None):

@@ -1225,7 +1225,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
                 args = [arg for arg in integrand.args
                         if any(isinstance(arg, cls) for cls in functions)]
                 if args:
-                    u = Mul(*args)
+                    u = Mul(*args) # type: ignore
                     dv = integrand / u
                     return u, dv
             return None

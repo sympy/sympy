@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
 from .cache import cacheit
@@ -203,7 +204,12 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     return _symbol(x, default, **assumptions)
 _uniquely_named_symbol = uniquely_named_symbol
 
-class Symbol(AtomicExpr, Boolean):
+
+# XXX: We need type: ignore below because Expr and Boolean are incompatible as
+# superclasses. Really Symbol should not be a subclass of Boolean.
+
+
+class Symbol(AtomicExpr, Boolean): # type: ignore
     """
     Symbol class is used to create symbolic variables.
 
