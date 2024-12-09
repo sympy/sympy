@@ -28,6 +28,11 @@ if TYPE_CHECKING:
         ComplexInfinity as _ComplexInfinity,
         NaN as _NaN,
     )
+    from sympy.logic.boolalg import (
+        BooleanTrue as _BooleanTrue,
+        BooleanFalse as _BooleanFalse,
+    )
+
     from .basic import Basic
     from .expr import Expr
     from .numbers import Float, Integer
@@ -127,6 +132,9 @@ class SingletonRegistry(Registry):
     NegativeInfinity: _NegativeInfinity
     ComplexInfinity: _ComplexInfinity
     NaN: _NaN
+
+    true: _BooleanTrue
+    false: _BooleanFalse
 
     # Also allow things like S(5)
     @overload

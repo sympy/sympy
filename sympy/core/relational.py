@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from .basic import Atom, Basic
 from .coreerrors import LazyExceptionMessage
 from .sorting import ordered
@@ -14,6 +16,12 @@ from sympy.logic.boolalg import Boolean, BooleanAtom
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
+if TYPE_CHECKING:
+    from typing import ClassVar
+    from typing_extensions import Self
+    from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 
 __all__ = (
@@ -146,12 +154,14 @@ class Relational(Boolean, EvalfMixin):
 
     ValidRelationOperator: dict[str | None, type[Relational]] = {}
 
+    rel_op: ClassVar[str]
+
     is_Relational = True
 
     # ValidRelationOperator - Defined below, because the necessary classes
     #   have not yet been defined
 
-    def __new__(cls, lhs, rhs, rop=None, **assumptions):
+    def __new__(cls, lhs, rhs, rop=None, **assumptions) -> Self:
         # If called by a subclass, do nothing special and pass on to Basic.
         if cls is not Relational:
             return Basic.__new__(cls, lhs, rhs, **assumptions)
@@ -161,7 +171,7 @@ class Relational(Boolean, EvalfMixin):
         #
         # If called directly with an operator, look up the subclass
         # corresponding to that operator and delegate to it
-        cls = cls.ValidRelationOperator.get(rop, None)
+        cls = cls.ValidRelationOperator.get(rop, None) # type: ignore
         if cls is None:
             raise ValueError("Invalid relational operator symbol: %r" % rop)
 
@@ -177,15 +187,15 @@ class Relational(Boolean, EvalfMixin):
                     real expressions.
                 '''))
 
-        return cls(lhs, rhs, **assumptions)
+        return cls(lhs, rhs, **assumptions) # type: ignore
 
     @property
-    def lhs(self):
+    def lhs(self) -> Basic:
         """The left-hand side of the relation."""
         return self._args[0]
 
     @property
-    def rhs(self):
+    def rhs(self) -> Basic:
         """The right-hand side of the relation."""
         return self._args[1]
 
@@ -620,7 +630,7 @@ class Equality(Relational):
 
     is_Equality = True
 
-    def __new__(cls, lhs, rhs, **options):
+    def __new__(cls, lhs, rhs, **options) -> Equality | BooleanFalse | BooleanTrue: # type: ignore
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
@@ -784,7 +794,7 @@ class Unequality(Relational):
 
     __slots__ = ()
 
-    def __new__(cls, lhs, rhs, **options):
+    def __new__(cls, lhs, rhs, **options) -> Unequality | BooleanFalse | BooleanTrue: # type: ignore
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         evaluate = options.pop('evaluate', global_parameters.evaluate)
@@ -831,17 +841,31 @@ class _Inequality(Relational):
     """
     __slots__ = ()
 
-    def __new__(cls, lhs, rhs, **options):
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
+
+        @property
+        def lhs(self) -> Expr:
+            ...
+
+        @property
+        def rhs(self) -> Expr:
+            ...
+
+    def __new__(cls, lhs: Expr | complex, rhs: Expr | complex, **options) -> Self | BooleanTrue | BooleanFalse: # type: ignore
 
         try:
-            lhs = _sympify(lhs)
-            rhs = _sympify(rhs)
+            lhs_e = _sympify(lhs)
+            rhs_e = _sympify(rhs)
         except SympifyError:
             return NotImplemented
 
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         if evaluate:
-            for me in (lhs, rhs):
+            for me in (lhs_e, rhs_e):
                 if me.is_extended_real is False:
                     raise TypeError("Invalid comparison of non-real %s" % me)
                 if me is S.NaN:
@@ -854,10 +878,10 @@ class _Inequality(Relational):
             # nor a subclass was able to reduce to boolean or raise an
             # exception).  In that case, it must call us with
             # `evaluate=False` to prevent infinite recursion.
-            return cls._eval_relation(lhs, rhs, **options)
+            return cls._eval_relation(lhs_e, rhs_e, **options)
 
         # make a "non-evaluated" Expr for the inequality
-        return Relational.__new__(cls, lhs, rhs, **options)
+        return Relational.__new__(cls, lhs_e, rhs_e, **options)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs, **options):
@@ -1417,7 +1441,7 @@ def is_neq(lhs, rhs, assumptions=None):
     return fuzzy_not(is_eq(lhs, rhs, assumptions))
 
 
-def is_eq(lhs, rhs, assumptions=None):
+def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
     """
     Fuzzy bool representing mathematical equality between *lhs* and *rhs*.
 
@@ -1566,7 +1590,7 @@ def is_eq(lhs, rhs, assumptions=None):
         if not (arglhs == S.NaN and argrhs == S.NaN):
             return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
 
-    if all(isinstance(i, Expr) for i in (lhs, rhs)):
+    if isinstance(lhs, Expr) and isinstance(rhs, Expr):
         # see if the difference evaluates
         dif = lhs - rhs
         _dif = AssumptionsWrapper(dif, assumptions)
@@ -1608,9 +1632,10 @@ def is_eq(lhs, rhs, assumptions=None):
                     # True then False can be returned
                     from sympy.simplify.simplify import clear_coefficients
                     l, r = clear_coefficients(d, S.Infinity)
-                    args = [_.subs(l, r) for _ in (lhs, rhs)]
-                    if args != [lhs, rhs]:
-                        rv = fuzzy_bool(is_eq(*args, assumptions))
+                    lhs2 = lhs.subs(l, r)
+                    rhs2 = rhs.subs(l, r)
+                    if lhs2 != lhs or rhs2 != rhs:
+                        rv = fuzzy_bool(is_eq(lhs2, rhs2, assumptions))
                         if rv is True:
                             rv = None
         elif any(is_infinite(a, assumptions) for a in Add.make_args(n)):
@@ -1618,3 +1643,5 @@ def is_eq(lhs, rhs, assumptions=None):
             rv = False
         if rv is not None:
             return rv
+
+    return None
