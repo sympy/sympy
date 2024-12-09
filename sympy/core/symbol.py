@@ -677,15 +677,16 @@ _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 
 @overload
-def symbols(names: str, *, cls: Any = Symbol,
-            seq: Literal[False] = False,
-            **kwargs: bool | int) -> Any: ...
-@overload
-def symbols(names: str, *, cls: Any = Symbol,
-            seq: Literal[True],
+def symbols(names: str, *, cls: type[Symbol] = Symbol, seq: Literal[True],
             **kwargs: bool | int) -> tuple[Symbol, ...]: ...
+@overload
+def symbols(names: str, *, cls: Any = Symbol, seq: Literal[True],
+            **kwargs: bool | int) -> tuple[Any, ...]: ...
+@overload
+def symbols(names: str, *, cls: Any = Symbol, seq: Literal[False] = False,
+            **kwargs: bool | int) -> Any: ...
 
-def symbols(names, *, cls=Symbol, **args) -> Any:
+def symbols(names, *, cls: Any = Symbol, **args) -> Any:
     r"""
     Transform strings into instances of :class:`Symbol` class.
 
