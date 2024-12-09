@@ -58,6 +58,8 @@ def test_Poisson():
         skip("numpy not installed")
     y = Poisson('y', np.float64(4.72544290380919e-11))
     assert E(y) == 4.72544290380919e-11
+    y = Poisson('y', np.float64(4.725442903809197e-11))
+    assert E(y) == 4.725442903809197e-11
     l2 = 5
     z = Poisson('z', l2)
     assert E(z) == l2
