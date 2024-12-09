@@ -961,6 +961,7 @@ class DDM(list):
     def qr(self):
         """
         Fraction-free QR decomposition for DDM.
+
         Returns:
             - Q: Orthogonal matrix as a DDM.
             - R: Upper triangular matrix as a DDM.
@@ -977,7 +978,16 @@ class DDM(list):
                 if is_zero_col(i):
                     continue
 
-                R[i][j] = dot_cols(i, j) // dot_cols(i, i)
+                dot_ii = dot_cols(i, i)
+                dot_ij = dot_cols(i, j)
+
+                if dot_ii != self.domain.zero and dot_ij != self.domain.zero:
+                    # Check if division is exact (no remainder)
+                    if dot_ij % dot_ii == self.domain.zero:
+                        R[i][j] = self.domain.exquo(dot_ij, dot_ii)
+                    else:
+                        R[i][j] = self.domain.zero  # Handle non-exact division cases
+
                 for k in range(rows):
                     Q[k][j] -= R[i][j] * Q[k][i]
 
