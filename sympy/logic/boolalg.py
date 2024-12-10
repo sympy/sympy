@@ -134,7 +134,8 @@ class Boolean(Basic):
     def equals(self, other):
         """
         Returns ``True`` if the given formulas have the same truth table.
-        For two formulas to be equal they must have the same literals.
+        For two formulas to be equal one must have the all the literals
+        of the other.
 
         Examples
         ========
@@ -150,11 +151,18 @@ class Boolean(Basic):
 
         """
         from sympy.logic.inference import satisfiable
-        from sympy.core.relational import Relational
+        from sympy.core.symbol import Symbol
 
-        if self.has(Relational) or other.has(Relational):
-            raise NotImplementedError('handling of relationals')
-        return self.atoms() == other.atoms() and \
+        def ok(f):
+            return isinstance(f, (BooleanFunction, Symbol)) and (not f.args or
+                all(ok(a) for a in f.args))
+        if not ok(self) or not ok(other):
+            raise NotImplementedError('non-literal BooleanFunction')
+        more = self.atoms()
+        less = other.atoms()
+        if len(more) < len(less):
+            more, less = less, more
+        return not less - more and \
             not satisfiable(Not(Equivalent(self, other)))
 
     def to_nnf(self, simplify=True):
