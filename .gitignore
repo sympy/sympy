@@ -91,3 +91,5 @@ sample.tex
 # Ignore hypothesis files
 .hypothesis
 
+# Interactive docs with JupyterLite
+doc/src/.jupyterlite.doit.db
