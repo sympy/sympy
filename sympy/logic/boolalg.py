@@ -138,6 +138,7 @@ class Boolean(Basic):
 
         Examples
         ========
+        .. try_examples::
 
         >>> from sympy.abc import A, B, C
         >>> from sympy import And, Or, Not
