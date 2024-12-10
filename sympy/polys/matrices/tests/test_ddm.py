@@ -7,6 +7,7 @@ from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.exceptions import (
     DMShapeError, DMNonInvertibleMatrixError, DMDomainError,
     DMBadInputError)
+from sympy.polys.matrices import DomainMatrix
 
 
 def test_DDM_init():
@@ -556,3 +557,15 @@ def test_DDM_is_lower():
     ], (4, 3), QQ).transpose()
     assert A.is_lower() is True
     assert B.is_lower() is False
+
+
+def test_ddm_qr():
+    # Create a sample matrix in DomainMatrix
+    A = DomainMatrix([[ZZ(3), ZZ(1)], [ZZ(4), ZZ(3)]], (2, 2), ZZ)
+    # Perform QR decomposition
+    Q, R = A.qr()
+    # Check that the shapes are correct
+    assert Q.shape == (2, 2)
+    assert R.shape == (2, 2)
+    # Check that A = Q * R (within the domain of integers)
+    assert Q * R == A
