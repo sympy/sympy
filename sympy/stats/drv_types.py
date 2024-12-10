@@ -14,11 +14,11 @@ Zeta
 """
 
 
-
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.numbers import I
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
@@ -147,6 +147,11 @@ class FlorySchulzDistribution(SingleDiscreteDistribution):
         a = self.a
         return a**2*exp(t)/((1 + (a - 1)*exp(t))**2)
 
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate and expr == var:
+            return (2 - self.a) / self.a
+        return super().expectation(expr, var, evaluate, **kwargs)
+
 
 def FlorySchulz(name, a):
     r"""
@@ -216,6 +221,11 @@ class GeometricDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         p = self.p
         return p * exp(t) / (1 - (1 - p) * exp(t))
+
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate and expr == var:
+            return S.One / self.p
+        return super().expectation(expr, var, evaluate, **kwargs)
 
 
 def Geometric(name, p):
@@ -303,6 +313,12 @@ class HermiteDistribution(SingleDiscreteDistribution):
         term2 = a2 * (exp(2*I*t) - 1)
         return exp(term1 + term2)
 
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate and expr == var:
+            return self.a1 + 2*self.a2
+        return super().expectation(expr, var, evaluate, **kwargs)
+
+
 def Hermite(name, a1, a2):
     r"""
     Create a discrete random variable with a Hermite distribution.
@@ -381,6 +397,11 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         p = self.p
         return log(1 - p * exp(t)) / log(1 - p)
+
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate and expr == var:
+            return -self.p / (log(S.One - self.p)*(S.One - self.p))
+        return super().expectation(expr, var, evaluate, **kwargs)
 
 
 def Logarithmic(name, p):
@@ -464,6 +485,12 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
         p = self.p
 
         return ((1 - p) / (1 - p * exp(t)))**r
+
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate and expr == var:
+            return self.r * self.p / (S.One - self.p)
+        return super().expectation(expr, var, evaluate, **kwargs)
+
 
 def NegativeBinomial(name, r, p):
     r"""
@@ -553,6 +580,7 @@ class PoissonDistribution(SingleDiscreteDistribution):
                 return self.lamda ** expr.args[1]
         return super().expectation(expr, var, evaluate, **kwargs)
 
+
 def Poisson(name, lamda):
     r"""
     Create a discrete random variable with a Poisson distribution.
@@ -635,6 +663,11 @@ class SkellamDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         (mu1, mu2) = (self.mu1, self.mu2)
         return exp(-(mu1 + mu2) + mu1 * exp(t) + mu2 * exp(-t))
+
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate and expr == var:
+            return self.mu1 - self.mu2
+        return super().expectation(expr, var, evaluate, **kwargs)
 
 
 def Skellam(name, mu1, mu2):
@@ -722,6 +755,11 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
         rho = self.rho
         return rho * hyper((1, 1), (rho + 2,), exp(t)) * exp(t) / (rho + 1)
 
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate and expr == var:
+            return self.rho / (self.rho - S.One)
+        return super().expectation(expr, var, evaluate, **kwargs)
+
 
 def YuleSimon(name, rho):
     r"""
@@ -794,6 +832,18 @@ class ZetaDistribution(SingleDiscreteDistribution):
 
     def _moment_generating_function(self, t):
         return polylog(self.s, exp(t)) / zeta(self.s)
+
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate:
+            if expr == var:
+                return Piecewise((zeta(self.s - 1) / zeta(self.s), self.s > 2),
+                                 (S.Infinity, True))
+            if isinstance(expr, Pow) and expr.base == var and \
+                expr.exp.is_integer and expr.exp > 1:
+                return Piecewise((zeta(self.s - expr.exp) / zeta(self.s),
+                                        self.s > expr.exp + S.One),
+                                 (S.Infinity, True))
+        return super().expectation(expr, var, evaluate, **kwargs)
 
 
 def Zeta(name, s):
