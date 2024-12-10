@@ -1,5 +1,7 @@
 furo
 intersphinx-registry
+jupyterlite-sphinx
+jupyterlite-pyodide-kernel
 linkify-it-py
 matplotlib
 matplotlib-inline
