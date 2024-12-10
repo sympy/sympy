@@ -496,7 +496,7 @@ blobpath = \
 # See https://jupyterlite-sphinx.readthedocs.io/en/stable/ for options
 
 jupyterlite_silence = False # temporary, for debugging
-global_enable_try_examples = False # not working because of one particular offending file I'm yet to find
+global_enable_try_examples = True # True is not working because of one particular offending file I'm yet to find
 try_examples_global_button_text = "Try it!"
 try_examples_global_height = "400px"
 try_examples_global_warning_text = (
