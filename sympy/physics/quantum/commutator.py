@@ -229,9 +229,9 @@ class Commutator(Expr):
 
     def _pretty(self, printer, *args):
         pform = printer._print(self.args[0], *args)
-        pform = prettyForm(*pform.right(prettyForm(',')))
-        pform = prettyForm(*pform.right(printer._print(self.args[1], *args)))
-        pform = prettyForm(*pform.parens(left='[', right=']'))
+        pform = pform.right(prettyForm(','))
+        pform = pform.right(printer._print(self.args[1], *args))
+        pform = pform.parenthesis(left='[', right=']')
         return pform
 
     def _latex(self, printer, *args):

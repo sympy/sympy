@@ -26,7 +26,7 @@ from sympy.core.singleton import S as _S
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.pretty.stringpict import stringPict
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
@@ -431,7 +431,7 @@ class CGate(Gate):
         gate_name = stringPict(self.gate_name)
         first = self._print_subscript_pretty(gate_name, controls)
         gate = self._print_parens_pretty(gate)
-        final = prettyForm(*first.right(gate))
+        final = first.right(gate)
         return final
 
     def _latex(self, printer, *args):

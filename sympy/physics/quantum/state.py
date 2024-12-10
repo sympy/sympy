@@ -183,14 +183,13 @@ class StateBase(QExpr):
         return '%s%s%s' % (getattr(self, 'lbracket', ""), contents, getattr(self, 'rbracket', ""))
 
     def _pretty(self, printer, *args):
-        from sympy.printing.pretty.stringpict import prettyForm
         # Get brackets
         pform = self._print_contents_pretty(printer, *args)
         lbracket, rbracket = self._pretty_brackets(
             pform.height(), printer._use_unicode)
         # Put together state
-        pform = prettyForm(*pform.left(lbracket))
-        pform = prettyForm(*pform.right(rbracket))
+        pform = pform.left(lbracket)
+        pform = pform.right(rbracket)
         return pform
 
     def _latex(self, printer, *args):
