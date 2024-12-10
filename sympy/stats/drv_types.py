@@ -441,7 +441,7 @@ def Logarithmic(name, p):
     -1/(5**z*z*log(4/5))
 
     >>> E(X)
-    -1/(-4*log(5) + 8*log(2))
+    -1/(4*log(4/5))
 
     >>> variance(X)
     -1/((-4*log(5) + 8*log(2))*(-2*log(5) + 4*log(2))) + 1/(-64*log(2)*log(5) + 64*log(2)**2 + 16*log(5)**2) - 10/(-32*log(5) + 64*log(2))
