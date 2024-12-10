@@ -37,7 +37,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'sphinx_reredirects', 'sphinx_copybutton',
               'sphinx.ext.graphviz', 'sphinxcontrib.jquery',
               'matplotlib.sphinxext.plot_directive', 'myst_parser',
-              'convert-svg-to-pdf', 'sphinx.ext.intersphinx', ]
+              'convert-svg-to-pdf', 'sphinx.ext.intersphinx', 'jupyterlite_sphinx']
 
 # Add redirects here. This should be done whenever a page that is in the
 # existing release docs is moved somewhere else so that the URLs don't break.
@@ -490,6 +490,20 @@ if not commit_hash:
 fork = 'sympy'
 blobpath = \
     "https://github.com/{}/sympy/blob/{}/sympy/".format(fork, commit_hash)
+
+
+# Configuration for interactive documentation using jupyterlite-sphinx and Pyodide
+# See https://jupyterlite-sphinx.readthedocs.io/en/stable/ for options
+
+jupyterlite_silence = False # temporary, for debugging
+global_enable_try_examples = False # not working because of one particular offending file I'm yet to find
+try_examples_global_button_text = "Try it!"
+try_examples_global_height = "400px"
+try_examples_global_warning_text = (
+    "Interactive examples are experimental and may not always work as "
+    "expected. If you encounter any issues, please report them on the "
+    "[SymPy issue tracker](https://github.com/sympy/sympy/issues/new)."
+)
 
 
 def linkcode_resolve(domain, info):
