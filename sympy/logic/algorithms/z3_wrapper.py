@@ -77,10 +77,10 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
     for sym in symbols:
         declarations.append(f"(declare-const {sym} Real)")
 
-    declarations = "\n".join(declarations)
-    assertions = "\n".join(assertions)
-    s.from_string(declarations)
-    s.from_string(assertions)
+    declarations = z3.parse_smt2_string("\n".join(declarations))
+    assertions = z3.parse_smt2_string("\n".join(assertions))
+    s.add(declarations)
+    s.add(assertions)
 
     return s
 
