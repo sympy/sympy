@@ -125,6 +125,7 @@ class Boolean(Basic):
 
         """
         from sympy.logic.inference import satisfiable
+        from sympy.core.symbol import Symbol
 
         def ok(f):
             return isinstance(f, (BooleanFunction, Symbol)) and (not f.args or
