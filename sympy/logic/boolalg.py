@@ -105,12 +105,11 @@ class Boolean(Basic):
     def equals(self, other):
         """
         Returns ``True`` if the given formulas have the same truth table.
-        For two formulas to be equal one must have the all the literals
-        of the other.
 
         Note: if there is a possibility that self is only a symbol, then
         it is better to test as ``BooleanFunction.equals(self, other)``
-        otherwise the ``Expr.equals`` will return False.
+        otherwise the ``Expr.equals`` will return False if other is not
+        the same symbol.
 
         Examples
         ========
@@ -126,16 +125,16 @@ class Boolean(Basic):
 
         """
         from sympy.logic.inference import satisfiable
-        from sympy.core.relational import Relational
 
-        if self.has(Relational) or other.has(Relational):
-            raise NotImplementedError('handling of relationals')
-        more = self.free_symbols
-        less = other.free_symbols
-        if len(more) < len(less):
-            more, less = less, more
-        return not less - more and \
-            not satisfiable(Not(Equivalent(self, other)))
+        def ok(f):
+            return isinstance(f, (BooleanFunction, Symbol)) and (not f.args or
+                all(ok(a) for a in f.args))
+        if not ok(self) or not ok(other):
+            raise NotImplementedError('non-literal BooleanFunction')
+
+        # simplification can remove redundant symbols
+        args = simpler(self), simpler(other)
+        return not satisfiable(Not(Equivalent(*args)))
 
     def to_nnf(self, simplify=True):
         # override where necessary
