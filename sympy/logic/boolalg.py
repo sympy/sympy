@@ -134,7 +134,7 @@ class Boolean(Basic):
             raise NotImplementedError('non-literal BooleanFunction')
 
         # simplification can remove redundant symbols
-        args = [simplify_logic(simpler(i)) for i in (self, other)]
+        args = [simplify_logic(i) for i in (self, other)]
         return not satisfiable(Not(Equivalent(*args)))
 
     def to_nnf(self, simplify=True):
