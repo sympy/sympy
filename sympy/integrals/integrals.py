@@ -1221,7 +1221,7 @@ class Integral(AddWithLimits):
                         result = integrate(expr, var,
                                        meijerg=meijerg, risch=risch,
                                        manual=manual, heurisch=heurisch,
-                                       conds=conds) 
+                                       conds=conds)
                     return result
                 except Exception:
                     return None
