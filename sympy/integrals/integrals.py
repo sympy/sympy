@@ -1167,30 +1167,30 @@ class Integral(AddWithLimits):
                 heurisch = kwargs.get('heurisch', None)
                 conds = kwargs.get('conds', 'piecewise')
                 current_expr = f
-                for lim in self.limits:
-                    result = self._handle_single_limit(current_expr, lim, meijerg, risch, manual, heurisch, conds)
+                for integration_limit in self.limits:
+                    result = self._handle_single_limit(current_expr, integration_limit, meijerg, risch, manual, heurisch, conds)
                     if result is None:
-                        return self.func(current_expr, lim[0])
+                        return self.func(current_expr, integration_limit[0])
                     current_expr = result
                     if current_expr == f:
                         break
                 return current_expr
-            def _handle_single_limit(self, expr, limit, meijerg, risch, manual, heurisch, conds):
+            def _handle_single_limit(self, expr, integration_limit, meijerg, risch, manual, heurisch, conds):
                 """Handle integration for a single limit"""
-                if len(limit) == 3:
-                    var, a, b = limit
+                if len(integration_limit) == 3:
+                    var, a, b = integration_limit
                     return integrate(expr, (var, a, b),
                                    meijerg=meijerg, risch=risch,
                                    manual=manual, heurisch=heurisch,
                                    conds=conds)
-                elif len(limit) == 2:
-                    var, b = limit
+                elif len(integration_limit) == 2:
+                    var, b = integration_limit
                     return integrate(expr, (var, None, b),
                                    meijerg=meijerg, risch=risch,
                                    manual=manual, heurisch=heurisch,
                                    conds=conds)
                 else:
-                    var = limit[0]
+                    var = integration_limit[0]
                     return integrate(expr, var,
                                    meijerg=meijerg, risch=risch,
                                    manual=manual, heurisch=heurisch,
