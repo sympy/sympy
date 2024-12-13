@@ -1161,45 +1161,45 @@ class Integral(AddWithLimits):
             else:
                 return None
             current_expr = f
-                for limit in self.limits:
-                    if len(limit) == 3:
-                        var, a, b = limit
-                        is_definite = True
-                    elif len(limit) == 2:
-                        var, b = limit
-                        a = None
-                        is_definite = True
-                    else:
-                        var = limit[0]
-                        a = b = None
-                        is_definite = False
+            for limit in self.limits:
+                if len(limit) == 3:
+                    var, a, b = limit
+                    is_definite = True
+                elif len(limit) == 2:
+                    var, b = limit
+                    a = None
+                    is_definite = True
+                else:
+                    var = limit[0]
+                    a = b = None
+                    is_definite = False
             
-                    if is_definite and a is not None and b is not None:
-                        attempted = integrate(current_expr, (var, a, b), meijerg=meijerg, risch=risch,
-                                                                       manual=manual, heurisch=heurisch, conds=conds)
-                        current_expr = attempted
-                    else:
-                        if is_definite and (a is None or b is None):
-                            A = a if a is not None else -oo
-                            B = b if b is not None else oo
-                            attempted = integrate(current_expr, (var, A, B), 
-                                               meijerg=meijerg, risch=risch,
-                                               manual=manual, heurisch=heurisch, 
-                                               conds=conds)
-                            if attempted.has(Integral):
-                                current_expr = attempted
-                            else:
-                                current_expr = attempted
+                if is_definite and a is not None and b is not None:
+                    attempted = integrate(current_expr, (var, a, b), meijerg=meijerg, risch=risch,
+                                                                   manual=manual, heurisch=heurisch, conds=conds)
+                    current_expr = attempted
+                else:
+                    if is_definite and (a is None or b is None):
+                        A = a if a is not None else -oo
+                        B = b if b is not None else oo
+                        attempted = integrate(current_expr, (var, A, B), 
+                                           meijerg=meijerg, risch=risch,
+                                           manual=manual, heurisch=heurisch, 
+                                           conds=conds)
+                        if attempted.has(Integral):
+                            current_expr = attempted
                         else:
-                            attempted = integrate(current_expr, var, 
-                                               meijerg=meijerg, risch=risch,
-                                               manual=manual, heurisch=heurisch, 
-                                               conds=conds)
-                            if attempted is not None:
-                                current_expr = attempted
-                            else:
-                                current_expr = self.func(*([function] + [xab]))
-                return current_expr
+                            current_expr = attempted
+                    else:
+                        attempted = integrate(current_expr, var, 
+                                           meijerg=meijerg, risch=risch,
+                                           manual=manual, heurisch=heurisch, 
+                                           conds=conds)
+                        if attempted is not None:
+                            current_expr = attempted
+                        else:
+                            current_expr = self.func(*([function] + [xab]))
+            return current_expr
 
     def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
