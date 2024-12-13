@@ -1159,50 +1159,45 @@ class Integral(AddWithLimits):
                 parts.append(coeff * h)
             else:
                 return None
-            current_expr = f
-            for lim in self.limits:
-                if len(lim) == 3:
-                    var, a, b = lim
-                    is_definite = True
-                elif len(lim) == 2:
-                    var, b = lim
-                    a = None
-                    is_definite = True
-                else:
-                    var = lim[0]
-                    a = b = None
-                    is_definite = False
-                if is_definite and a is not None and b is not None:
-                    attempted = integrate(current_expr, (var, a, b), meijerg=meijerg, risch=risch,
-                                       manual=manual, heurisch=heurisch, conds=conds)
-                    if attempted == current_expr:
+            
+            def _eval_integral(self, f, **kwargs):
+                """Helper method to evaluate the integral"""
+                meijerg = kwargs.get('meijerg', None)
+                risch = kwargs.get('risch', None)
+                manual = kwargs.get('manual', None)
+                heurisch = kwargs.get('heurisch', None)
+                conds = kwargs.get('conds', 'piecewise')
+            
+                current_expr = f
+                for lim in self.limits:
+                    result = self._handle_single_limit(current_expr, lim, meijerg, risch, manual, heurisch, conds)
+                    if result is None:
+                        return self.func(current_expr, lim[0])
+                    current_expr = result
+                    if current_expr == f:
                         break
-                    current_expr = attempted
+                return current_expr
+            
+            def _handle_single_limit(self, expr, limit, meijerg, risch, manual, heurisch, conds):
+                """Handle integration for a single limit"""
+                if len(limit) == 3:
+                    var, a, b = limit
+                    return integrate(expr, (var, a, b), 
+                                   meijerg=meijerg, risch=risch,
+                                   manual=manual, heurisch=heurisch, 
+                                   conds=conds)
+                elif len(limit) == 2:
+                    var, b = limit
+                    return integrate(expr, (var, None, b),
+                                   meijerg=meijerg, risch=risch, 
+                                   manual=manual, heurisch=heurisch,
+                                   conds=conds)
                 else:
-                    if is_definite and (a is None or b is None):
-                        A = a if a is not None else -oo
-                        B = b if b is not None else oo
-                        attempted = integrate(current_expr, (var, A, B),
-                                           meijerg=meijerg, risch=risch,
-                                           manual=manual, heurisch=heurisch,
-                                           conds=conds)
-                        if attempted.has(Integral):
-                            current_expr = attempted
-                            break
-                        current_expr = attempted
-                    else:
-                        attempted = integrate(current_expr, var,
-                                           meijerg=meijerg, risch=risch,
-                                           manual=manual, heurisch=heurisch,
-                                           conds=conds)
-                        if attempted is not None:
-                            if attempted == current_expr:
-                                break
-                            current_expr = attempted
-                        else:
-                            current_expr = self.func(current_expr, var)
-                            break
-            return current_expr
+                    var = limit[0]
+                    return integrate(expr, var,
+                                   meijerg=meijerg, risch=risch,
+                                   manual=manual, heurisch=heurisch, 
+                                   conds=conds)
 
     def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
