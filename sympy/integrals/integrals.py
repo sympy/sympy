@@ -1175,6 +1175,8 @@ class Integral(AddWithLimits):
                 if is_definite and a is not None and b is not None:
                     attempted = integrate(current_expr, (var, a, b), meijerg=meijerg, risch=risch,
                                        manual=manual, heurisch=heurisch, conds=conds)
+                    if attempted == current_expr:
+                        break
                     current_expr = attempted
                 else:
                     if is_definite and (a is None or b is None):
@@ -1186,17 +1188,20 @@ class Integral(AddWithLimits):
                                            conds=conds)
                         if attempted.has(Integral):
                             current_expr = attempted
-                        else:
-                            current_expr = attempted
+                            break
+                        current_expr = attempted
                     else:
                         attempted = integrate(current_expr, var,
                                            meijerg=meijerg, risch=risch,
                                            manual=manual, heurisch=heurisch,
                                            conds=conds)
                         if attempted is not None:
+                            if attempted == current_expr:
+                                break
                             current_expr = attempted
                         else:
                             current_expr = self.func(current_expr, var)
+                            break
             return current_expr
 
     def _eval_lseries(self, x, logx=None, cdir=0):
