@@ -10,14 +10,14 @@ from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
-from sympy.core.relational import Ne
+from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions.elementary.complexes import Abs, sign, re
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
@@ -30,7 +30,7 @@ from sympy.tensor.functions import shape
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
-from sympy import re, exp, Eq
+
 
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
@@ -1160,31 +1160,46 @@ class Integral(AddWithLimits):
                 parts.append(coeff * h)
             else:
                 return None
-      # Extract integration limits
-        if len(self.limits) == 1:
-            limit = self.limits[0]
-            if len(limit) == 3:
-                var, a, b = limit
-            elif len(limit) == 2:
-                var, b = limit
-                a = None
-            else:
-                a = b = None
-        else:
-            raise NotImplementedError(
-                "Multiple integration limits not implemented")
-
-        if a is not None and b is not None:
-            diff_re = re(b) - re(a)
-            if diff_re.is_zero:
-                result = (b - a) * exp(re(a))
-            else:
-                result = (b - a) * (exp(re(b)) - exp(re(a))) / diff_re
-            return Piecewise(
-                ((b - a) * exp(re(a)), Eq(re(a), re(b))),
-                (result, True)
-            )
-        return Add(*parts)
+            current_expr = f
+                for limit in self.limits:
+                    if len(limit) == 3:
+                        var, a, b = limit
+                        is_definite = True
+                    elif len(limit) == 2:
+                        var, b = limit
+                        a = None
+                        is_definite = True
+                    else:
+                        var = limit[0]
+                        a = b = None
+                        is_definite = False
+            
+                    if is_definite and a is not None and b is not None:
+                        attempted = integrate(current_expr, (var, a, b), meijerg=meijerg, risch=risch,
+                                                                       manual=manual, heurisch=heurisch, conds=conds)
+                        current_expr = attempted
+                    else:
+                        if is_definite and (a is None or b is None):
+                            A = a if a is not None else -oo
+                            B = b if b is not None else oo
+                            attempted = integrate(current_expr, (var, A, B), 
+                                               meijerg=meijerg, risch=risch,
+                                               manual=manual, heurisch=heurisch, 
+                                               conds=conds)
+                            if attempted.has(Integral):
+                                current_expr = attempted
+                            else:
+                                current_expr = attempted
+                        else:
+                            attempted = integrate(current_expr, var, 
+                                               meijerg=meijerg, risch=risch,
+                                               manual=manual, heurisch=heurisch, 
+                                               conds=conds)
+                            if attempted is not None:
+                                current_expr = attempted
+                            else:
+                                current_expr = self.func(*([function] + [xab]))
+                return current_expr
 
     def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
