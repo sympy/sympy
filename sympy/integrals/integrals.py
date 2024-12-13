@@ -1159,7 +1159,6 @@ class Integral(AddWithLimits):
                 parts.append(coeff * h)
             else:
                 return None
-            
             def _eval_integral(self, f, **kwargs):
                 """Helper method to evaluate the integral"""
                 meijerg = kwargs.get('meijerg', None)
@@ -1167,7 +1166,6 @@ class Integral(AddWithLimits):
                 manual = kwargs.get('manual', None)
                 heurisch = kwargs.get('heurisch', None)
                 conds = kwargs.get('conds', 'piecewise')
-            
                 current_expr = f
                 for lim in self.limits:
                     result = self._handle_single_limit(current_expr, lim, meijerg, risch, manual, heurisch, conds)
@@ -1177,19 +1175,18 @@ class Integral(AddWithLimits):
                     if current_expr == f:
                         break
                 return current_expr
-            
             def _handle_single_limit(self, expr, limit, meijerg, risch, manual, heurisch, conds):
                 """Handle integration for a single limit"""
                 if len(limit) == 3:
                     var, a, b = limit
-                    return integrate(expr, (var, a, b), 
+                    return integrate(expr, (var, a, b),
                                    meijerg=meijerg, risch=risch,
-                                   manual=manual, heurisch=heurisch, 
+                                   manual=manual, heurisch=heurisch,
                                    conds=conds)
                 elif len(limit) == 2:
                     var, b = limit
                     return integrate(expr, (var, None, b),
-                                   meijerg=meijerg, risch=risch, 
+                                   meijerg=meijerg, risch=risch,
                                    manual=manual, heurisch=heurisch,
                                    conds=conds)
                 else:
@@ -1198,7 +1195,6 @@ class Integral(AddWithLimits):
                                    meijerg=meijerg, risch=risch,
                                    manual=manual, heurisch=heurisch, 
                                    conds=conds)
-
     def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
         symb = x
