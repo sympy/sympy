@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -32,7 +34,8 @@ from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
 
-SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
+if TYPE_CHECKING:
+    SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
 
 
 class Integral(AddWithLimits):
