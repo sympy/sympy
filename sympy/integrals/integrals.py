@@ -1173,7 +1173,6 @@ class Integral(AddWithLimits):
                     var = limit[0]
                     a = b = None
                     is_definite = False
-            
                 if is_definite and a is not None and b is not None:
                     attempted = integrate(current_expr, (var, a, b), meijerg=meijerg, risch=risch,
                                                                    manual=manual, heurisch=heurisch, conds=conds)
@@ -1182,18 +1181,18 @@ class Integral(AddWithLimits):
                     if is_definite and (a is None or b is None):
                         A = a if a is not None else -oo
                         B = b if b is not None else oo
-                        attempted = integrate(current_expr, (var, A, B), 
+                        attempted = integrate(current_expr, (var, A, B),
                                            meijerg=meijerg, risch=risch,
-                                           manual=manual, heurisch=heurisch, 
+                                           manual=manual, heurisch=heurisch,
                                            conds=conds)
                         if attempted.has(Integral):
                             current_expr = attempted
                         else:
                             current_expr = attempted
                     else:
-                        attempted = integrate(current_expr, var, 
+                        attempted = integrate(current_expr, var,
                                            meijerg=meijerg, risch=risch,
-                                           manual=manual, heurisch=heurisch, 
+                                           manual=manual, heurisch=heurisch,
                                            conds=conds)
                         if attempted is not None:
                             current_expr = attempted
