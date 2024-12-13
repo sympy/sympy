@@ -159,7 +159,7 @@ def test_issue_15227():
     # assert i == -5*zeta(3)/4
 
 @XFAIL
-def test_issue_3880():
+def test_issue_3890():
     # the current limitations in the integration method is gonna make this test fail
     assert not integrate(exp(x)*cos(2*x)*sin(2*x) * (x**3 + x**2)/(2*(x**2 + x + 1)), x).has(Integral)
 

@@ -1166,7 +1166,7 @@ class Integral(AddWithLimits):
             if len(limit) == 3:
                 var, a, b = limit
             elif len(limit) == 2:
-                var, b = limit 
+                var, b = limit
                 a = None
             else:
                 var = limit[0]
