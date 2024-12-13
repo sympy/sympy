@@ -1166,21 +1166,32 @@ class IntegralEvaluator:
         self.func = func
         self.limits = limits
 
+class IntegralEvaluator:
+    def __init__(self, func, limits):
+        self.func = func
+        self.limits = limits
+
     def _eval_integral(self, f, **kwargs):
-        """Helper method to evaluate the integral"""
+        """Helper method to evaluate the integral."""
         meijerg = kwargs.get('meijerg', None)
         risch = kwargs.get('risch', None)
         manual = kwargs.get('manual', None)
         heurisch = kwargs.get('heurisch', None)
         conds = kwargs.get('conds', 'piecewise')
+
         current_expr = f
         for integration_limit in self.limits:
             result = self._handle_single_limit(
                 current_expr, integration_limit, meijerg, risch, manual, heurisch, conds
             )
+
             if result is None:
+                # Return an unevaluated integral if no further simplification is possible
                 return self.func(current_expr, integration_limit[0])
+
+            # If result is still an Integral, try additional attempts
             if isinstance(result, Integral):
+                # Try integrate again directly
                 try:
                     res_int = integrate(result.function, *result.limits,
                                         meijerg=meijerg, risch=risch,
@@ -1188,6 +1199,7 @@ class IntegralEvaluator:
                     if not isinstance(res_int, Integral):
                         result = res_int
                     else:
+                        # If still Integral, try manualintegrate
                         try:
                             manual_res = manualintegrate(result.function, result.limits[0])
                             if manual_res != result.function:
@@ -1195,27 +1207,37 @@ class IntegralEvaluator:
                         except Exception:
                             pass
                 except Exception:
+                    # If direct integrate fails, fallback to manualintegrate
                     try:
                         manual_res = manualintegrate(result.function, result.limits[0])
                         if manual_res != result.function:
                             result = manual_res
                     except Exception:
                         pass
+
+            # Try 'doit' to force evaluation
             try:
                 if hasattr(result, 'doit'):
                     result = result.doit(deep=True)
             except Exception:
                 pass
+
+            # Attempt simplification
             try:
                 result = simplify(result)
             except Exception:
                 pass
+
             current_expr = result
+
+            # If no progress, break
             if current_expr == f:
                 break
+
         return current_expr
+
     def _handle_single_limit(self, expr, integration_limit, meijerg, risch, manual, heurisch, conds):
-        """Handle integration for a single limit"""
+        """Handle integration for a single limit."""
         try:
             if len(integration_limit) == 3:
                 var, a, b = integration_limit
@@ -1238,6 +1260,7 @@ class IntegralEvaluator:
                     except Exception:
                         pass
                     return None
+
             elif len(integration_limit) == 2:
                 var, b = integration_limit
                 try:
@@ -1259,6 +1282,7 @@ class IntegralEvaluator:
                     except Exception:
                         pass
                     return None
+
             else:
                 var = integration_limit[0]
                 try:
@@ -1280,6 +1304,7 @@ class IntegralEvaluator:
                     except Exception:
                         pass
                     return None
+
         except Exception:
             return None
     def _eval_lseries(self, x, logx=None, cdir=0):
