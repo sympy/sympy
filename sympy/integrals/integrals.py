@@ -1160,16 +1160,16 @@ class Integral(AddWithLimits):
             else:
                 return None
             current_expr = f
-            for limit in self.limits:
-                if len(limit) == 3:
-                    var, a, b = limit
+            for lim in self.limits:
+                if len(lim) == 3:
+                    var, a, b = lim
                     is_definite = True
-                elif len(limit) == 2:
-                    var, b = limit
+                elif len(lim) == 2:
+                    var, b = lim
                     a = None
                     is_definite = True
                 else:
-                    var = limit[0]
+                    var = lim[0]
                     a = b = None
                     is_definite = False
                 if is_definite and a is not None and b is not None:
@@ -1196,7 +1196,7 @@ class Integral(AddWithLimits):
                         if attempted is not None:
                             current_expr = attempted
                         else:
-                            current_expr = self.func(*([function] + [xab]))
+                            current_expr = self.func(current_expr, var)
             return current_expr
 
     def _eval_lseries(self, x, logx=None, cdir=0):
