@@ -1159,9 +1159,6 @@ class Integral(AddWithLimits):
                 parts.append(coeff * h)
             else:
                 return None
-from sympy.integrals.manualintegrate import manualintegrate
-from sympy.simplify import simplify
-
 class IntegralEvaluator:
     def __init__(self, func, limits):
         self.func = func
@@ -1189,13 +1186,17 @@ class IntegralEvaluator:
             if isinstance(result, Integral):
                 # Try integrate again directly
                 try:
+            if isinstance(result, Integral):
+                # Try integrate again directly
+                try:
                     res_int = integrate(result.function, *result.limits,
-                                        meijerg=meijerg, risch=risch,
-                                        manual=manual, heurisch=heurisch, conds=conds)
+                                      meijerg=meijerg, risch=risch,
+                                      manual=manual, heurisch=heurisch, conds=conds)
                     if not isinstance(res_int, Integral):
                         result = res_int
                     else:
-                        # If still Integral, try manualintegrate
+                        # If still Integral, try manual integration
+                        from sympy.integrals.manualintegrate import manualintegrate
                         try:
                             manual_res = manualintegrate(result.function, result.limits[0])
                             if manual_res != result.function:
@@ -1203,16 +1204,14 @@ class IntegralEvaluator:
                         except Exception:
                             pass
                 except Exception:
-                    # If direct integrate fails, fallback to manualintegrate
+                    # If direct integrate fails, try manual integration
+                    from sympy.integrals.manualintegrate import manualintegrate
                     try:
                         manual_res = manualintegrate(result.function, result.limits[0])
                         if manual_res != result.function:
                             result = manual_res
                     except Exception:
                         pass
-
-            # Try 'doit' to force evaluation
-            try:
                 if hasattr(result, 'doit'):
                     result = result.doit(deep=True)
             except Exception:
@@ -1220,10 +1219,11 @@ class IntegralEvaluator:
 
             # Attempt simplification
             try:
+            try:
+                from sympy.simplify import simplify
                 result = simplify(result)
             except Exception:
                 pass
-
             current_expr = result
 
             # If no progress, break
@@ -1242,6 +1242,7 @@ class IntegralEvaluator:
                                     manual=manual, heurisch=heurisch, conds=conds)
                     if res is None or isinstance(res, Integral):
                         try:
+                            from sympy.integrals.manualintegrate import manualintegrate
                             manual_res = manualintegrate(expr, (var, a, b))
                             if manual_res is not None and manual_res != expr:
                                 return manual_res
