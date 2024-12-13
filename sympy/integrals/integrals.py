@@ -1181,12 +1181,10 @@ class Integral(AddWithLimits):
                 result = (b - a) * exp(re(a))
             else:
                 result = (b - a) * (exp(re(b)) - exp(re(a))) / diff_re
-            
             return Piecewise(
                 ((b - a) * exp(re(a)), Eq(re(a), re(b))),
                 (result, True)
             )
-
         return Add(*parts)
 
     def _eval_lseries(self, x, logx=None, cdir=0):
