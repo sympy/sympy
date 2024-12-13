@@ -1733,7 +1733,11 @@ def test_issue_17671():
     assert integrate(log(log(x)) / x**3, [x, 1, oo]) == -log(2)/2 - EulerGamma/2
     assert integrate(log(log(x)) / x**10, [x, 1, oo]) == -log(9)/9 - EulerGamma/9
 
-
+def test_principal_value():
+    d = 1 / (x ** 2 - 1)
+    assert Integral(d, (x, -oo, oo)).principal_value() == 0
+    assert Integral(d, (x, -2, 2)).principal_value() == -log(3)
+    
 def test_issue_2975():
     w = Symbol('w')
     C = Symbol('C')

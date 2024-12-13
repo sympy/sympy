@@ -1160,6 +1160,32 @@ class Integral(AddWithLimits):
                 parts.append(coeff * h)
             else:
                 return None
+        # Extract integration limits 
+        if len(self.limits) == 1:
+            limit = self.limits[0]
+            if len(limit) == 3:
+                var, a, b = limit
+            elif len(limit) == 2:
+                var, b = limit 
+                a = None
+            else:
+                var = limit[0]
+                a = b = None
+        else:
+            raise NotImplementedError(
+                "Multiple integration limits not implemented")
+
+        if a is not None and b is not None:
+            diff_re = re(b) - re(a)
+            if diff_re.is_zero:
+                result = (b - a) * exp(re(a))
+            else:
+                result = (b - a) * (exp(re(b)) - exp(re(a))) / diff_re
+            
+            return Piecewise(
+                ((b - a) * exp(re(a)), Eq(re(a), re(b))),
+                (result, True)
+            )
 
         return Add(*parts)
 
