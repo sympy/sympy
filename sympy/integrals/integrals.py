@@ -1159,12 +1159,8 @@ class Integral(AddWithLimits):
                 parts.append(coeff * h)
             else:
                 return None
-class IntegralEvaluator:
-    def __init__(self, func, limits):
-        # func: a callable to reconstruct an unevaluated integral if needed
-        # limits: a list of integration limits, e.g. [(x, 0, 1), (y, 0, 2)]
-        self.func = func
-        self.limits = limits
+from sympy.integrals.manualintegrate import manualintegrate
+from sympy.simplify import simplify
 
 class IntegralEvaluator:
     def __init__(self, func, limits):
