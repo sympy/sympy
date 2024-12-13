@@ -1159,8 +1159,12 @@ class Integral(AddWithLimits):
                 parts.append(coeff * h)
             else:
                 return None
-from sympy.integrals.manualintegrate import manualintegrate
-from sympy.simplify.simplify import simplify
+from sympy.core import Symbol, S
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import Number
+from sympy.core.function import Function
+from sympy.core.singleton import Singleton
 
 class IntegralEvaluator:
     def __init__(self, func, limits):
@@ -1169,9 +1173,14 @@ class IntegralEvaluator:
 
     def _eval_integral(self, f, **kwargs):
         """Helper method to evaluate the integral."""
+        # Deferred imports to break circular dependencies
+        from sympy.integrals import integrate
+        from sympy.integrals.manualintegrate import manualintegrate
+        from sympy.simplify.simplify import simplify
+
         meijerg = kwargs.get('meijerg', None)
         risch = kwargs.get('risch', None)
-        manual = kwargs.get('manual', None)
+        manual = kwargs.get('manual', None) 
         heurisch = kwargs.get('heurisch', None)
         conds = kwargs.get('conds', 'piecewise')
 
@@ -1184,30 +1193,26 @@ class IntegralEvaluator:
             if result is None:
                 return self.func(current_expr, integration_limit[0])
 
-            if isinstance(result, Integral):
+            if isinstance(result, Function) and result.func == self.func:
                 try:
-                    # Try direct integration first
-                    res_int = integrate(result.function, *result.limits,
+                    res_int = integrate(result.args[0], *result.args[1:],
                                       meijerg=meijerg, risch=risch,
                                       manual=manual, heurisch=heurisch, conds=conds)
-                    if not isinstance(res_int, Integral):
+                    if not isinstance(res_int, Function) or res_int.func != self.func:
                         result = res_int
                     else:
-                        # Try manual integration if direct fails
-                        manual_res = manualintegrate(result.function, result.limits[0])
-                        if manual_res != result.function:
+                        manual_res = manualintegrate(result.args[0], result.args[1])
+                        if manual_res != result.args[0]:
                             result = manual_res
                 except Exception:
                     pass
 
-                # Try evaluating with doit
                 try:
                     if hasattr(result, 'doit'):
                         result = result.doit(deep=True)
                 except Exception:
                     pass
 
-            # Attempt simplification
             try:
                 result = simplify(result)
             except Exception:
@@ -1221,12 +1226,15 @@ class IntegralEvaluator:
 
     def _handle_single_limit(self, expr, integration_limit, meijerg, risch, manual, heurisch, conds):
         """Handle integration for a single limit."""
+        # Import integrate inside method to avoid circular imports
+        from sympy.integrals import integrate
+        
         try:
             if len(integration_limit) == 3:
                 var, a, b = integration_limit
                 return self._try_integration(expr, (var, a, b), meijerg, risch, manual, heurisch, conds)
             elif len(integration_limit) == 2:
-                var, b = integration_limit
+                var, b = integration_limit 
                 return self._try_integration(expr, (var, None, b), meijerg, risch, manual, heurisch, conds)
             else:
                 var = integration_limit[0]
@@ -1236,10 +1244,14 @@ class IntegralEvaluator:
 
     def _try_integration(self, expr, limits, meijerg, risch, manual, heurisch, conds):
         """Helper method to try different integration methods."""
+        # Import needed functions inside method
+        from sympy.integrals import integrate
+        from sympy.integrals.manualintegrate import manualintegrate
+        
         try:
             res = integrate(expr, limits, meijerg=meijerg, risch=risch,
                           manual=manual, heurisch=heurisch, conds=conds)
-            if res is None or isinstance(res, Integral):
+            if res is None or (isinstance(res, Function) and res.func == self.func):
                 try:
                     manual_res = manualintegrate(expr, limits)
                     if manual_res is not None and manual_res != expr:
