@@ -304,6 +304,8 @@ class TWave(Expr):
         other = sympify(other)
         if isinstance(other, Number):
             return TWave(self.amplitude*other, *self.args[1:])
+        elif isinstance(other, Symbol):
+            return TWave(self.amplitude*other, *self.args[1:])
         else:
             raise TypeError(type(other).__name__ + " and TWave objects cannot be multiplied.")
 

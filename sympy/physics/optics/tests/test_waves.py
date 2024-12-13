@@ -80,3 +80,28 @@ def test_twave():
 
     raises(ValueError, lambda:TWave(A1))
     raises(ValueError, lambda:TWave(A1, f, phi1, t))
+
+    A, f, phi, n, A2, f2, phi2 = symbols('A, f, phi, n, A2, f2, phi2')
+    s = symbols('s') # scaling factor
+
+    w8 = TWave(A, f, phi)
+    w9 = w8*s
+    assert w9.amplitude == A*s
+    assert w9.frequency == f
+    assert w9.phase == phi
+    assert w9.wavelength == c/(f*n)
+    assert w9.time_period == 1/f
+    assert w9.angular_velocity == 2*pi*f
+    assert w9.wavenumber == 2*pi*f*n/c
+    assert w9.speed == c/n
+
+    w10 = TWave(A2, f2, phi2)
+    w11 = w9 + w10
+    assert w11.amplitude == sqrt(A**2*s**2 + 2*A*A2*s*cos(phi- phi2) + A2**2)
+    assert w11.frequency == f
+    assert w11.phase == atan2(A*s*sin(phi) + A2*sin(phi2), A*s*cos(phi) + A2*cos(phi2))
+    assert w11.wavelength == c/(f*n)
+    assert w11.time_period == 1/f
+    assert w11.angular_velocity == 2*pi*f
+    assert w11.wavenumber == 2*pi*f*n/c
+    assert w11.speed == c/n
