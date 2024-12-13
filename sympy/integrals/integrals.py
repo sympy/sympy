@@ -1161,7 +1161,8 @@ class Integral(AddWithLimits):
                 return None
             def _eval_integral(self, f, **kwargs):
                 """Helper method to evaluate the integral"""
-                from sympy import manualintegrate, simplify
+                from sympy.integrals.manualintegrate import manualintegrate
+                from sympy.simplify.simplify import simplify
                 meijerg = kwargs.get('meijerg', None)
                 risch = kwargs.get('risch', None)
                 manual = kwargs.get('manual', None)
@@ -1196,7 +1197,6 @@ class Integral(AddWithLimits):
                 return current_expr
             def _handle_single_limit(self, expr, integration_limit, meijerg, risch, manual, heurisch, conds):
                 """Handle integration for a single limit"""
-                from sympy import manualintegrate
                 try:
                     if len(integration_limit) == 3:
                         var, a, b = integration_limit
@@ -1206,23 +1206,22 @@ class Integral(AddWithLimits):
                                 return result
                         except Exception:
                             pass
-                        result = integrate(expr, (var, a, b),
+                        return integrate(expr, (var, a, b),
                                        meijerg=meijerg, risch=risch,
                                        manual=manual, heurisch=heurisch,
                                        conds=conds)
                     elif len(integration_limit) == 2:
                         var, b = integration_limit
-                        result = integrate(expr, (var, None, b),
+                        return integrate(expr, (var, None, b),
                                        meijerg=meijerg, risch=risch,
                                        manual=manual, heurisch=heurisch,
                                        conds=conds)
                     else:
                         var = integration_limit[0]
-                        result = integrate(expr, var,
+                        return integrate(expr, var,
                                        meijerg=meijerg, risch=risch,
                                        manual=manual, heurisch=heurisch,
                                        conds=conds)
-                    return result
                 except Exception:
                     return None
     def _eval_lseries(self, x, logx=None, cdir=0):
@@ -1234,7 +1233,6 @@ class Integral(AddWithLimits):
                 break
         for term in expr.function.lseries(symb, logx):
             yield integrate(term, *expr.limits)
-
     def _eval_nseries(self, x, n, logx=None, cdir=0):
         symb = x
         for l in self.limits:
