@@ -1168,33 +1168,49 @@ class Integral(AddWithLimits):
                 conds = kwargs.get('conds', 'piecewise')
                 current_expr = f
                 for integration_limit in self.limits:
-                    result = self._handle_single_limit(current_expr, integration_limit, meijerg, risch, manual, heurisch, conds)
+                    result = self._handle_single_limit(current_expr, integration_limit,
+                                                     meijerg, risch, manual, heurisch, conds)
                     if result is None:
                         return self.func(current_expr, integration_limit[0])
+                    try:
+                        if hasattr(result, 'doit'):
+                            result = result.doit()
+                        if hasattr(result, 'simplify'):
+                            result = result.simplify()
+                    except Exception:
+                        pass
                     current_expr = result
                     if current_expr == f:
                         break
                 return current_expr
             def _handle_single_limit(self, expr, integration_limit, meijerg, risch, manual, heurisch, conds):
                 """Handle integration for a single limit"""
-                if len(integration_limit) == 3:
-                    var, a, b = integration_limit
-                    return integrate(expr, (var, a, b),
-                                   meijerg=meijerg, risch=risch,
-                                   manual=manual, heurisch=heurisch,
-                                   conds=conds)
-                elif len(integration_limit) == 2:
-                    var, b = integration_limit
-                    return integrate(expr, (var, None, b),
-                                   meijerg=meijerg, risch=risch,
-                                   manual=manual, heurisch=heurisch,
-                                   conds=conds)
-                else:
-                    var = integration_limit[0]
-                    return integrate(expr, var,
-                                   meijerg=meijerg, risch=risch,
-                                   manual=manual, heurisch=heurisch,
-                                   conds=conds)
+                try:
+                    if len(integration_limit) == 3:
+                        var, a, b = integration_limit
+                        result = integrate(expr, (var, a, b),
+                                       meijerg=meijerg, risch=risch,
+                                       manual=manual, heurisch=heurisch,
+                                       conds=conds)
+                    elif len(integration_limit) == 2:
+                        var, b = integration_limit
+                        result = integrate(expr, (var, None, b),
+                                       meijerg=meijerg, risch=risch,
+                                       manual=manual, heurisch=heurisch,
+                                       conds=conds)
+                    else:
+                        var = integration_limit[0]
+                        result = integrate(expr, var,
+                                       meijerg=meijerg, risch=risch,
+                                       manual=manual, heurisch=heurisch,
+                                       conds=conds)
+                    if hasattr(result, 'doit'):
+                        result = result.doit()
+                    if hasattr(result, 'simplify'):
+                        result = result.simplify()
+                    return result
+                except Exception:
+                    return None
     def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
         symb = x
