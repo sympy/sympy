@@ -10,14 +10,14 @@ from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
-from sympy.core.relational import Ne, Eq
+from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
-from sympy.functions.elementary.exponential import log, exp
+from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.complexes import Abs, sign, re
+from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
@@ -30,7 +30,6 @@ from sympy.tensor.functions import shape
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
-
 
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
