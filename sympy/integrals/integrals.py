@@ -30,7 +30,7 @@ from sympy.tensor.functions import shape
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
-
+from sympy import re, exp, Eq
 
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
@@ -1169,7 +1169,6 @@ class Integral(AddWithLimits):
                 var, b = limit
                 a = None
             else:
-                var = limit[0]
                 a = b = None
         else:
             raise NotImplementedError(
