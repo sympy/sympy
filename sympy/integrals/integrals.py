@@ -1193,7 +1193,7 @@ class Integral(AddWithLimits):
                     var = limit[0]
                     return integrate(expr, var,
                                    meijerg=meijerg, risch=risch,
-                                   manual=manual, heurisch=heurisch, 
+                                   manual=manual, heurisch=heurisch,
                                    conds=conds)
     def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
