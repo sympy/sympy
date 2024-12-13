@@ -1172,9 +1172,10 @@ class Integral(AddWithLimits):
                     var = lim[0]
                     a = b = None
                     is_definite = False
+            
                 if is_definite and a is not None and b is not None:
                     attempted = integrate(current_expr, (var, a, b), meijerg=meijerg, risch=risch,
-                                                                   manual=manual, heurisch=heurisch, conds=conds)
+                                       manual=manual, heurisch=heurisch, conds=conds)
                     current_expr = attempted
                 else:
                     if is_definite and (a is None or b is None):
