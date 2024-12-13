@@ -1161,6 +1161,7 @@ class Integral(AddWithLimits):
                 return None
             def _eval_integral(self, f, **kwargs):
                 """Helper method to evaluate the integral"""
+                from sympy import manualintegrate, simplify
                 meijerg = kwargs.get('meijerg', None)
                 risch = kwargs.get('risch', None)
                 manual = kwargs.get('manual', None)
@@ -1172,11 +1173,21 @@ class Integral(AddWithLimits):
                                                      meijerg, risch, manual, heurisch, conds)
                     if result is None:
                         return self.func(current_expr, integration_limit[0])
+                    if isinstance(result, Integral):
+                        try:
+                            manual_result = manualintegrate(result.function, result.limits[0])
+                            if manual_result != result.function:
+                                result = manual_result
+                        except Exception:
+                            pass
                     try:
                         if hasattr(result, 'doit'):
-                            result = result.doit()
+                            result = result.doit(deep=True)
+                    except Exception:
+                        pass
+                    try:
                         if hasattr(result, 'simplify'):
-                            result = result.simplify()
+                            result = simplify(result, ratio=1.0)
                     except Exception:
                         pass
                     current_expr = result
@@ -1185,9 +1196,16 @@ class Integral(AddWithLimits):
                 return current_expr
             def _handle_single_limit(self, expr, integration_limit, meijerg, risch, manual, heurisch, conds):
                 """Handle integration for a single limit"""
+                from sympy import manualintegrate
                 try:
                     if len(integration_limit) == 3:
                         var, a, b = integration_limit
+                        try:
+                            result = manualintegrate(expr, (var, a, b))
+                            if result is not None:
+                                return result
+                        except Exception:
+                            pass
                         result = integrate(expr, (var, a, b),
                                        meijerg=meijerg, risch=risch,
                                        manual=manual, heurisch=heurisch,
@@ -1203,11 +1221,7 @@ class Integral(AddWithLimits):
                         result = integrate(expr, var,
                                        meijerg=meijerg, risch=risch,
                                        manual=manual, heurisch=heurisch,
-                                       conds=conds)
-                    if hasattr(result, 'doit'):
-                        result = result.doit()
-                    if hasattr(result, 'simplify'):
-                        result = result.simplify()
+                                       conds=conds) 
                     return result
                 except Exception:
                     return None
