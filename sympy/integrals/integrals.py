@@ -1160,7 +1160,7 @@ class Integral(AddWithLimits):
                 parts.append(coeff * h)
             else:
                 return None
-        # Extract integration limits 
+      # Extract integration limits
         if len(self.limits) == 1:
             limit = self.limits[0]
             if len(limit) == 3:
