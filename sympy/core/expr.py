@@ -230,32 +230,32 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__radd__')
-    def __add__(self, other) -> Expr:
+    def __add__(self, other: complex) -> Expr:
         return Add(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__add__')
-    def __radd__(self, other) -> Expr:
+    def __radd__(self, other: Expr | complex) -> Expr:
         return Add(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rsub__')
-    def __sub__(self, other) -> Expr:
+    def __sub__(self, other: complex) -> Expr:
         return Add(self, -other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__sub__')
-    def __rsub__(self, other) -> Expr:
+    def __rsub__(self, other: Expr | complex) -> Expr:
         return Add(other, -self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmul__')
-    def __mul__(self, other) -> Expr:
+    def __mul__(self, other: complex) -> Expr:
         return Mul(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__mul__')
-    def __rmul__(self, other) -> Expr:
+    def __rmul__(self, other: Expr | complex) -> Expr:
         return Mul(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -3641,7 +3641,7 @@ class Expr(Basic, EvalfMixin):
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
 
-    def diff(self, *symbols, **assumptions):
+    def diff(self, *symbols, **assumptions) -> Expr:
         assumptions.setdefault("evaluate", True)
         return _derivative_dispatch(self, *symbols, **assumptions)
 

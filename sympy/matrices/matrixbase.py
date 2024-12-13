@@ -3073,7 +3073,7 @@ class MatrixBase(Printable):
     def cofactor_matrix(self, method="berkowitz"):
         return _cofactor_matrix(self, method=method)
 
-    def det(self, method="bareiss", iszerofunc=None):
+    def det(self, method="bareiss", iszerofunc=None) -> Expr:
         return _det(self, method=method, iszerofunc=iszerofunc)
 
     def per(self):
