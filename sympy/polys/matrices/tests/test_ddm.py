@@ -1,5 +1,6 @@
 from sympy.testing.pytest import raises
 from sympy.external.gmpy import GROUND_TYPES
+
 import pytest
 from sympy.polys import ZZ, QQ
 

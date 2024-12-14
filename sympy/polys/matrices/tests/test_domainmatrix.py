@@ -1360,4 +1360,3 @@ def test_DomainMatrix_pickling():
     assert pickle.loads(pickle.dumps(dM)) == dM
     dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     assert pickle.loads(pickle.dumps(dM)) == dM
-
