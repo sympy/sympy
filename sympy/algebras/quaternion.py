@@ -586,16 +586,20 @@ class Quaternion(Expr):
             else:
                 angles0 = atan2(b*c + a*d, a*c - b*d)
                 angles2 = atan2(b*c - a*d, a*c + b*d)
-
         elif case == 1:
-            angles0 = S.Zero
-            angles2 = S.Zero
-        elif extrinsic:
-            angles0 = S.Zero
-            angles2 = -2 * atan2(d, c)
+            if extrinsic:
+                angles0 = S.Zero
+                angles2 = 2 * atan2(b, a)
+            else:
+                angles0 = 2 * atan2(b, a)
+                angles2 = S.Zero
         else:
-            angles0 = 2 * atan2(d, c)
-            angles2 = S.Zero
+            if extrinsic:
+                angles0 = S.Zero
+                angles2 = -2 * atan2(d, c)
+            else:
+                angles0 = 2*atan2(d,c)
+                angles2 = S.Zero
 
         # for Tait-Bryan angles
         if not symmetric:
