@@ -970,6 +970,10 @@ class DDM(list):
         Q = self.copy()
         R = self.zeros((rows, cols), self.domain)
 
+        # Check that the domain is a field
+        if not self.domain.is_Field:
+            raise DMDomainError("QR decomposition requires a field (e.g. QQ).")
+
         is_zero_col = lambda j: not any(Q[i][j] for i in range(rows))
         dot_cols = lambda i, j: self.domain.sum(Q[k][i] * Q[k][j] for k in range(rows))
 
@@ -978,15 +982,7 @@ class DDM(list):
                 if is_zero_col(i):
                     continue
 
-                dot_ii = dot_cols(i, i)
-                dot_ij = dot_cols(i, j)
-
-                if dot_ii != self.domain.zero and dot_ij != self.domain.zero:
-                    # Check if division is exact (no remainder)
-                    if dot_ij % dot_ii == self.domain.zero:
-                        R[i][j] = self.domain.exquo(dot_ij, dot_ii)
-                    else:
-                        R[i][j] = self.domain.zero  # Handle non-exact division cases
+                R[i][j] = dot_cols(i, j) / dot_cols(i, i)
 
                 for k in range(rows):
                     Q[k][j] -= R[i][j] * Q[k][i]

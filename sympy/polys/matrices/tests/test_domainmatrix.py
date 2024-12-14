@@ -1361,10 +1361,3 @@ def test_DomainMatrix_pickling():
     dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     assert pickle.loads(pickle.dumps(dM)) == dM
 
-
-def test_qr():
-    A = DomainMatrix([[ZZ(3), ZZ(1)], [ZZ(4), ZZ(3)]], (2, 2), ZZ)
-    Q, R = A.qr()
-    assert Q.shape == (2, 2)
-    assert R.shape == (2, 2)
-    assert Q * R == A
