@@ -16,7 +16,7 @@ from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
-from sympy.utilities.iterables import sift, ibin, cartes
+from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 
@@ -125,17 +125,12 @@ class Boolean(Basic):
 
         """
         from sympy.logic.inference import satisfiable
-        from sympy.core.symbol import Symbol
+        from sympy.core.relational import Relational
 
-        def ok(f):
-            return isinstance(f, (BooleanFunction, Symbol)) and (not f.args or
-                all(ok(a) for a in f.args))
-        if not ok(self) or not ok(other):
-            raise NotImplementedError('non-literal BooleanFunction')
-
-        # simplification can remove redundant symbols
-        args = [simplify_logic(i) for i in (self, other)]
-        return not satisfiable(Not(Equivalent(*args)))
+        if self.has(Relational) or other.has(Relational):
+            raise NotImplementedError('handling of relationals')
+        return self.atoms() == other.atoms() and \
+            not satisfiable(Not(Equivalent(self, other)))
 
     def to_nnf(self, simplify=True):
         # override where necessary
