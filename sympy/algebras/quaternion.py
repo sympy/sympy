@@ -124,7 +124,7 @@ class Quaternion(Expr):
         _real_field: bool
         _norm: Expr | None
 
-    def __new__(cls, a: SExpr, b: SExpr, c: SExpr, d: SExpr,
+    def __new__(cls, a: SExpr = 0, b: SExpr = 0, c: SExpr = 0, d: SExpr = 0,
                      real_field: bool = True,
                      norm: SExpr | None = None) -> Quaternion:
 
