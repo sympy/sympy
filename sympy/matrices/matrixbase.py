@@ -98,6 +98,7 @@ else:
 
 
 if TYPE_CHECKING:
+
     from typing import Literal, TypeVar, Iterator, Mapping, Any
     from typing_extensions import Self
     from sympy.combinatorics import Permutation
@@ -106,13 +107,12 @@ if TYPE_CHECKING:
     from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.matrices.expressions.permutation import PermutationMatrix
     from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix, BlockMatrix
+
     Tmat = TypeVar('Tmat', bound='MatrixBase')
     Tbasic = TypeVar('Tbasic', bound=Basic)
-
-
-SExpr = Expr | complex
-SBasic = Basic | complex
-Slice = slice | list[int]
+    SExpr = Expr | complex
+    SBasic = Basic | complex
+    Slice = slice | list[int]
 
 
 __doctest_requires__ = {
@@ -1308,21 +1308,21 @@ class MatrixBase(Printable):
         """
         klass = cls if cls is not None else kls
 
-        if eigenvalue is not None and eigenval is None:
-            pass
-        elif eigenvalue is None and eigenval is not None:
-            eigenvalue = eigenval
-        elif eigenvalue is None and eigenval is None:
+        if eigenvalue is not None:
+            if eigenval is not None and eigenvalue != eigenval:
+                raise ValueError("Cannot supply both 'eigenvalue' and 'eigenval'")
+            e = eigenvalue
+        elif eigenval is not None:
+            e = eigenval
+        else:
             raise ValueError("Must supply an eigenvalue")
-        elif eigenvalue != eigenval:
-            raise ValueError("Cannot supply both 'eigenvalue' and 'eigenval'")
 
         if size is None:
             raise ValueError("Must supply a matrix size")
         else:
             size2 = as_int(size)
 
-        return klass._eval_jordan_block(size2, eigenvalue, band)
+        return klass._eval_jordan_block(size2, e, band)
 
     @overload
     @classmethod
@@ -3658,9 +3658,8 @@ class MatrixBase(Printable):
     def rowspace(self, simplify=False) -> list[Self]:
         return _rowspace(self, simplify=simplify)
 
-    # This is a classmethod but is converted to such later in order to allow
-    # assignment of __doc__ since that does not work for already wrapped
-    # classmethods in Python 3.6.
+    # XXX: Somehow replacing this with an ordinary use of classmethod breaks
+    # sphinx ...
     def orthogonalize(cls, *vecs: Self, **kwargs) -> list[Self]:
         return _orthogonalize(cls, *vecs, **kwargs)
 
@@ -3669,7 +3668,7 @@ class MatrixBase(Printable):
     rowspace.__doc__      = _rowspace.__doc__
     orthogonalize.__doc__ = _orthogonalize.__doc__
 
-    orthogonalize = classmethod(orthogonalize)
+    orthogonalize = classmethod(orthogonalize) # type: ignore
 
     def eigenvals(self,
                   error_when_incomplete: bool = True,
