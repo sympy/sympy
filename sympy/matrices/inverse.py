@@ -486,7 +486,7 @@ def _inv(M: Tmat,
         If the determinant of the matrix is zero.
     """
 
-    from sympy.matrices import diag, SparseMatrix
+    from sympy.matrices import SparseMatrix
 
     if not M.is_square:
         raise NonSquareMatrixError("A Matrix must be square to invert.")

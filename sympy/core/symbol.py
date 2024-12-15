@@ -24,7 +24,7 @@ from itertools import product
 
 
 if TYPE_CHECKING:
-    from typing import Any, Callable
+    from typing import Any
 
 
 class Str(Atom):
