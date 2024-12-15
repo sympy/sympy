@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
@@ -20,7 +21,10 @@ import string
 import re as _re
 import random
 from itertools import product
-from typing import Any
+
+
+if TYPE_CHECKING:
+    from typing import Any, Callable
 
 
 class Str(Atom):

@@ -46,7 +46,7 @@ class ArrayDerivative(Derivative):
 
     @staticmethod
     def _call_derive_scalar_by_matrix(expr: Expr, v: MatrixBase) -> Expr:
-        return v.applyfunc(lambda x: expr.diff(x))
+        return v.applyfunc(lambda x: expr.diff(x)) # type: ignore
 
     @staticmethod
     def _call_derive_scalar_by_matexpr(expr: Expr, v: MatrixExpr) -> Expr:

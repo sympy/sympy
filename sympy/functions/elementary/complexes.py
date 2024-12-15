@@ -15,7 +15,10 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 
 if TYPE_CHECKING:
+    from typing import TypeVar
     from sympy.algebras.quaternion import Quaternion
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -69,6 +72,17 @@ class re(DefinedFunction):
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
     _singularities = True  # non-holomorphic
+
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(cls, arg: Tmat, evaluate: bool = True) -> Tmat: ... # type: ignore
+        @overload
+        def __new__(cls, arg: Expr, evaluate: bool = True) -> Expr: ... # type: ignore
+
+        def __new__(cls, arg: MatrixBase | Expr, evaluate: bool = True # type: ignore
+                    ) -> MatrixBase | Expr:
+            ...
 
     @classmethod
     def eval(cls, arg):

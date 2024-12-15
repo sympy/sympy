@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import random
 
 from sympy.core.basic import Basic
@@ -14,6 +18,10 @@ from .decompositions import _cholesky, _LDLdecomposition
 from .matrixbase import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
+
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 __doctest_requires__ = {('symarray',): ['numpy']}
@@ -82,7 +90,7 @@ class DenseMatrix(RepMatrix):
     def cholesky(self, hermitian=True):
         return _cholesky(self, hermitian=hermitian)
 
-    def LDLdecomposition(self, hermitian=True):
+    def LDLdecomposition(self, hermitian: bool = True) -> tuple[Self, Self]:
         return _LDLdecomposition(self, hermitian=hermitian)
 
     def lower_triangular_solve(self, rhs):
@@ -97,6 +105,7 @@ class DenseMatrix(RepMatrix):
     upper_triangular_solve.__doc__ = _upper_triangular_solve.__doc__
 
 
+# XXX: This function doesn't seem to be used anywhere. Delete it.
 def _force_mutable(x):
     """Return a matrix as a Matrix, otherwise return x."""
     if getattr(x, 'is_Matrix', False):
@@ -113,7 +122,10 @@ def _force_mutable(x):
 
 class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
 
-    def simplify(self, **kwargs):
+    # The simplify method for mutable mattrices is inconsistent with the
+    # one for immutable matrices.
+
+    def simplify(self, **kwargs) -> None: # type: ignore
         """Applies simplify to the elements of a matrix in place.
 
         This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))
@@ -128,7 +140,9 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
             self[i, j] = _simplify(element, **kwargs)
 
 
-MutableMatrix = Matrix = MutableDenseMatrix
+MutableMatrix = MutableDenseMatrix
+Matrix = MutableDenseMatrix
+
 
 ###########
 # Numpy Utility Functions:
@@ -822,7 +836,7 @@ def GramSchmidt(vlist, orthonormal=False):
     See Also
     ========
 
-    .matrixbase.MatrixBase.orthogonalize
+    sympy.matrices.matrixbase.MatrixBase.orthogonalize
 
     References
     ==========

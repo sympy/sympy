@@ -1,7 +1,13 @@
 Matrices (linear algebra)
 =========================
 
+.. class:: collections.abc.Callable
+.. class:: collections.abc.Sequence
+
 .. module:: sympy.matrices.matrixbase
+
+.. class:: SBasic
+.. class:: Tmat
 
 Creating Matrices
 -----------------

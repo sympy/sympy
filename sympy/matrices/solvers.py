@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
+
 from sympy.core.function import expand_mul
 from sympy.core.symbol import Dummy, uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
@@ -5,6 +9,12 @@ from sympy.utilities.iterables import numbered_symbols
 from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
 from .eigen import _fuzzy_positive_definite
 from .utilities import _get_intermediate_simp, _iszero
+
+
+if TYPE_CHECKING:
+    from typing import TypeVar, Literal
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
 
 
 def _diagonal_solve(M, rhs):
@@ -207,7 +217,7 @@ def _upper_triangular_solve_sparse(M, rhs):
     return M._new(X)
 
 
-def _cholesky_solve(M, rhs):
+def _cholesky_solve(M: Tmat, rhs: MatrixBase) -> Tmat:
     """Solves ``Ax = B`` using Cholesky decomposition,
     for a general square non-singular matrix.
     For a non-square matrix with rows > cols,
@@ -254,7 +264,7 @@ def _cholesky_solve(M, rhs):
         return (L.T).upper_triangular_solve(Y)
 
 
-def _LDLsolve(M, rhs):
+def _LDLsolve(M: Tmat, rhs: MatrixBase) -> Tmat:
     """Solves ``Ax = B`` using LDL decomposition,
     for a general square and non-singular matrix.
 
@@ -433,8 +443,32 @@ def _QRsolve(M, b):
 
     return M.vstack(*x[::-1])
 
+@overload
+def _gauss_jordan_solve(
+    M: Tmat,
+    B: Tmat,
+    freevar: Literal[False] = False,
+) -> tuple[Tmat, Tmat]:
+    ...
 
-def _gauss_jordan_solve(M, B, freevar=False):
+@overload
+def _gauss_jordan_solve(
+    M: Tmat,
+    B: Tmat,
+    freevar: Literal[True],
+) -> tuple[Tmat, Tmat, list[int]]:
+    ...
+
+@overload
+def _gauss_jordan_solve(
+    M: Tmat,
+    B: Tmat,
+    freevar: bool,
+) -> tuple[Tmat, Tmat] | tuple[Tmat, Tmat, list[int]]:
+    ...
+
+def _gauss_jordan_solve(M: Tmat, B: Tmat, freevar: bool = False,
+                        ) -> tuple[Tmat, Tmat] | tuple[Tmat, Tmat, list[int]]:
     """
     Solves ``Ax = B`` using Gauss Jordan elimination.
 
@@ -571,9 +605,9 @@ def _gauss_jordan_solve(M, B, freevar=False):
     row, col = aug[:, :-B_cols].shape
 
     # solve by reduced row echelon form
-    A, pivots = aug.rref(simplify=True)
+    A, pivots_t = aug.rref(simplify=True)
     A, v      = A[:, :-B_cols], A[:, -B_cols:]
-    pivots    = list(filter(lambda p: p < col, pivots))
+    pivots    = list(filter(lambda p: p < col, pivots_t))
     rank      = len(pivots)
 
     # Get index of free symbols (free parameters)
@@ -591,10 +625,10 @@ def _gauss_jordan_solve(M, B, freevar=False):
     # Free parameters
     # what are current unnumbered free symbol names?
     name = uniquely_named_symbol('tau', [aug],
-            compare=lambda i: str(i).rstrip('1234567890'),
+            compare=lambda i: str(i).rstrip('1234567890'), # type: ignore
             modify=lambda s: '_' + s).name
     gen  = numbered_symbols(name)
-    tau  = Matrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
+    tau  = cls._new([next(gen) for k in range((col - rank)*B_cols)]).reshape(
             col - rank, B_cols)
 
     # Full parametric solution
@@ -608,7 +642,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
     for k in range(col):
         sol[permutation[k], :] = free_sol[k,:]
 
-    sol, tau = cls(sol), cls(tau)
+    sol = cls._as_type(sol)
 
     if freevar:
         return sol, tau, free_var_index
@@ -616,7 +650,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
         return sol, tau
 
 
-def _pinv_solve(M, B, arbitrary_matrix=None):
+def _pinv_solve(M: Tmat, B: Tmat, arbitrary_matrix: Tmat | None = None) -> Tmat:
     """Solve ``Ax = B`` using the Moore-Penrose pseudoinverse.
 
     There may be zero, one, or infinite solutions.  If one solution
@@ -702,7 +736,7 @@ def _pinv_solve(M, B, arbitrary_matrix=None):
     if arbitrary_matrix is None:
         rows, cols       = A.cols, B.cols
         w                = symbols('w:{}_:{}'.format(rows, cols), cls=Dummy)
-        arbitrary_matrix = M.__class__(cols, rows, w).T
+        arbitrary_matrix = M._new(cols, rows, w).T
 
     return A_pinv.multiply(B) + (eye(A.cols) -
             A_pinv.multiply(A)).multiply(arbitrary_matrix)
@@ -853,7 +887,7 @@ def _solve(M, rhs, method='GJ'):
         return M.inv(method=method).multiply(rhs)
 
 
-def _solve_least_squares(M, rhs, method='CH'):
+def _solve_least_squares(M: Tmat, rhs: Tmat, method: str = 'CH') -> Tmat:
     """Return the least-square fit to the data.
 
     Parameters

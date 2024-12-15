@@ -1,7 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from .utilities import _iszero
 
+if TYPE_CHECKING:
+    from typing import TypeVar
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
 
-def _columnspace(M, simplify=False):
+
+def _columnspace(M: Tmat, simplify=False) -> list[Tmat]:
     """Returns a list of vectors (Matrix objects) that span columnspace of ``M``
 
     Examples

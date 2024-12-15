@@ -1,8 +1,19 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
 from sympy.polys.domains import EX
 
 from .exceptions import MatrixError, NonSquareMatrixError, NonInvertibleMatrixError
 from .utilities import _iszero
+
+
+if TYPE_CHECKING:
+    from typing import TypeVar, Callable
+    from sympy.core.expr import Expr
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
 
 
 def _pinv_full_rank(M):
@@ -321,13 +332,15 @@ def _inv_DM(dM, cancel=True):
     if use_exact:
         dom_exact = dom.get_exact()
         dM = dM.convert_to(dom_exact)
+    else:
+        dom_exact = None
 
     try:
         dMi, den = dM.inv_den()
     except DMNonInvertibleMatrixError:
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-    if use_exact:
+    if dom_exact is not None:
         dMi = dMi.convert_to(dom)
         den = dom.convert_from(den, dom_exact)
 
@@ -342,7 +355,7 @@ def _inv_DM(dM, cancel=True):
 
     return Mi
 
-def _inv_block(M, iszerofunc=_iszero):
+def _inv_block(M: MatrixBase, iszerofunc: Callable[[Expr], bool | None] = _iszero) -> MatrixBase:
     """Calculates the inverse using BLOCKWISE inversion.
 
     See Also
@@ -380,7 +393,11 @@ def _inv_block(M, iszerofunc=_iszero):
     nn = BlockMatrix([[A_n, B_n], [C_n, D_n]]).as_explicit()
     return nn
 
-def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
+def _inv(M: Tmat,
+         method: str | None = None,
+         iszerofunc: Callable[[Expr], bool | None] = _iszero,
+         try_block_diag: bool = False
+    ) -> Tmat:
     """
     Return the inverse of a matrix using the method indicated. The default
     is DM if a suitable domain is found or otherwise GE for dense matrices
@@ -481,16 +498,16 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
         for block in blocks:
             r.append(block.inv(method=method, iszerofunc=iszerofunc))
 
-        return diag(*r)
+        return M.diag(*r)
 
     # Default: Use DomainMatrix if the domain is not EX.
     # If DM is requested explicitly then use it even if the domain is EX.
     if method is None and iszerofunc is _iszero:
         dM = _try_DM(M, use_EX=False)
-        if dM is not None:
-            method = 'DM'
     elif method in ("DM", "DMNC"):
         dM = _try_DM(M, use_EX=True)
+    else:
+        dM = None
 
     # A suitable domain was not found, fall back to GE for dense matrices
     # and LDL for sparse matrices.
@@ -500,7 +517,7 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
         else:
             method = 'GE'
 
-    if method == "DM":
+    if dM is not None:
         rv = _inv_DM(dM)
     elif method == "DMNC":
         rv = _inv_DM(dM, cancel=False)
