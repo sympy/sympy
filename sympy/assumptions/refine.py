@@ -11,8 +11,6 @@ from sympy.assumptions import ask, Q  # type: ignore
 
 if TYPE_CHECKING:
     from typing import Callable
-    from sympy.core.basic import Basic
-    from sympy.core.expr import Expr
 
 
 @overload

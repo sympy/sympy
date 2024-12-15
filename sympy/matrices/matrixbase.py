@@ -98,7 +98,7 @@ else:
 
 
 if TYPE_CHECKING:
-    from typing import Callable, Literal, TypeVar, Iterator, Mapping, Any
+    from typing import Literal, TypeVar, Iterator, Mapping, Any
     from typing_extensions import Self
     from sympy.combinatorics import Permutation
     from sympy.logic.boolalg import Boolean
