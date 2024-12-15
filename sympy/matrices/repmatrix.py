@@ -29,8 +29,7 @@ from .kind import MatrixKind
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-
-Slice = slice | list[int]
+    Slice = slice | list[int]
 
 
 class RepMatrix(MatrixBase):
