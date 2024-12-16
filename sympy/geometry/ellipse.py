@@ -1475,7 +1475,7 @@ class Ellipse(GeometrySet):
 
 
 class Circle(Ellipse):
-    """A circle in space.
+    r"""A circle in space.
 
     Constructed simply from a center and a radius, from three
     non-collinear points, or the equation of a circle.
@@ -1526,7 +1526,7 @@ class Circle(Ellipse):
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point2D(1/2, 1/2))
 
     A circle can be constructed from an equation in the form
-    `a*x**2 + by**2 + gx + hy + c = 0`, too:
+    `ax^2 + by^2 + gx + hy + c = 0`, too:
 
     >>> Circle(x**2 + y**2 - 25)
     Circle(Point2D(0, 0), 5)
