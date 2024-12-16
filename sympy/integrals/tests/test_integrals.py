@@ -2182,15 +2182,18 @@ def test_issue_27374():
     #https://github.com/sympy/sympy/issues/27374
     # Define the symbols
     x, z, R, a = symbols('x z R a')
+
     # Define expressions
     r = sqrt(x**2 + z**2)
     u = erf(a*r/sqrt(2))/r
     Ec = diff(u, z, z).subs([(x, sqrt(R*R-z*z))])
+
     # Perform the integration
     numeric_result=simplify(integrate(Ec, (z, -R, R)))
+
     # Define expected result
     expected_result=-2*sqrt(2)*R*a**3*exp(-R**2*a**2/2)/(3*sqrt(pi))
+
     # Assert that the difference between the expected and numeric result is zero
     assert (expected_result-numeric_result) == 0
-    
-    
+
