@@ -306,12 +306,12 @@ def init_python_session():
 
 
 def init_bpython_session():
-    import bpython
-    import bpython.curtsiesfrontend
-    import bpython.curtsiesfrontend.interpreter
-    import bpython.curtsies
-    import bpython.config
-    import bpython.translations
+    import bpython  # type: ignore
+    import bpython.curtsiesfrontend  # type: ignore
+    import bpython.curtsiesfrontend.interpreter  # type: ignore
+    import bpython.curtsies  # type: ignore
+    import bpython.config  # type: ignore
+    import bpython.translations  # type: ignore
 
     bpython.translations.init()
 
