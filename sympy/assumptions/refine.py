@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Callable
+
+from typing import TYPE_CHECKING, overload
 
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
@@ -8,7 +9,16 @@ from sympy.logic.boolalg import Boolean
 from sympy.assumptions import ask, Q  # type: ignore
 
 
-def refine(expr, assumptions=True):
+if TYPE_CHECKING:
+    from typing import Callable
+
+
+@overload
+def refine(expr: Expr, assumptions: Boolean | bool = True) -> Expr: ...
+@overload
+def refine(expr: Basic, assumptions: Boolean | bool = True) -> Basic: ...
+
+def refine(expr: Basic, assumptions: Boolean | bool = True) -> Basic:
     """
     Simplify an expression using assumptions.
 
@@ -393,7 +403,7 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
-handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
+handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'atan2': refine_atan2,

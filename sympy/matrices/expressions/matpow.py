@@ -10,7 +10,7 @@ from sympy.matrices.exceptions import NonSquareMatrixError
 
 
 class MatPow(MatrixExpr):
-    def __new__(cls, base, exp, evaluate=False, **options):
+    def __new__(cls, base, exp, evaluate=False, **options) -> MatrixExpr: # type: ignore
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("MatPow base should be a matrix")

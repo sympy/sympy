@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -30,6 +32,10 @@ from sympy.tensor.functions import shape
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
+
+
+if TYPE_CHECKING:
+    SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
 
 
 class Integral(AddWithLimits):
@@ -1403,7 +1409,8 @@ class Integral(AddWithLimits):
 
 
 
-def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
+def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
+                        risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
 
     .. deprecated:: 1.6
@@ -1569,7 +1576,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         'manual': manual
         }
 
-    integral = Integral(*args, **kwargs)
+    integral = Integral(function, *symbols, **kwargs)
 
     if isinstance(integral, Integral):
         return integral.doit(**doit_flags)
