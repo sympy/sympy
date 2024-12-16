@@ -2177,6 +2177,7 @@ def test_definite_integral_with_floats_issue_27231():
     # Verify that the result is approximately equal within a larger tolerance
     assert abs(result_numeric - expected_result.evalf()) < 1e-8
 
+
 def test_issue_27374():
     #https://github.com/sympy/sympy/issues/27374
     # Define the symbols
@@ -2191,4 +2192,5 @@ def test_issue_27374():
     expected_result=-2*sqrt(2)*R*a**3*exp(-R**2*a**2/2)/(3*sqrt(pi))
     # Assert that the difference between the expected and numeric result is zero
     assert (expected_result-numeric_result)==0
+    
     
