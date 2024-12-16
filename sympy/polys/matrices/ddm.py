@@ -958,6 +958,40 @@ class DDM(list):
 
         return L, U, swaps
 
+    def qr(self):
+        """
+        Fraction-free QR decomposition for DDM.
+
+        Returns:
+            - Q: Orthogonal matrix as a DDM.
+            - R: Upper triangular matrix as a DDM.
+        """
+        rows, cols = self.shape
+        Q = self.copy()
+        R = self.zeros((rows, cols), self.domain)
+
+        # Check that the domain is a field
+        if not self.domain.is_Field:
+            raise DMDomainError("QR decomposition requires a field (e.g. QQ).")
+
+        is_zero_col = lambda j: not any(Q[i][j] for i in range(rows))
+        dot_cols = lambda i, j: self.domain.sum(Q[k][i] * Q[k][j] for k in range(rows))
+
+        for j in range(cols):
+            for i in range(j):
+                if is_zero_col(i):
+                    continue
+
+                R[i][j] = dot_cols(i, j) / dot_cols(i, i)
+
+                for k in range(rows):
+                    Q[k][j] -= R[i][j] * Q[k][i]
+
+            if not is_zero_col(j):
+                R[j][j] = self.domain.one
+
+        return Q, R
+
     def lu_solve(a, b):
         """x where a*x = b"""
         m, n = a.shape
