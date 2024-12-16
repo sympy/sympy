@@ -2,8 +2,6 @@
 import enum
 from code import InteractiveConsole
 
-import bpython.curtsies
-
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.external.importtools import version_tuple
 
