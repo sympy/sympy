@@ -2179,7 +2179,6 @@ def test_definite_integral_with_floats_issue_27231():
 
 def test_issue_27374():
     #https://github.com/sympy/sympy/issues/27374
-    
     # Define the symbols
     x, z, R, a = symbols('x z R a')
     
