@@ -166,7 +166,6 @@ COMMAND LINE OPTIONS
 
 See also isympy --help.
 """
-import enum
 import os
 import sys
 
