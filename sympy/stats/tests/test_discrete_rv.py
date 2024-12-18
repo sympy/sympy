@@ -1,5 +1,5 @@
 from sympy.concrete.summations import Sum
-from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.numbers import (I, Rational, Integer, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (im, re)
@@ -89,6 +89,8 @@ def test_GeometricDistribution():
 
     X = Geometric('X', Rational(1, 5))
     Y = Geometric('Y', Rational(3, 10))
+    assert E(X) == Integer(5)
+    assert E(Y) == Rational(10, 3)
     assert coskewness(X, X + Y, X + 2*Y).simplify() == sqrt(230)*Rational(81, 1150)
 
 
@@ -173,6 +175,8 @@ def test_zeta():
     assert E(x) == zeta(s-1) / zeta(s)
     assert simplify(variance(x)) == (
         zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
+    assert E(Zeta('x', Rational(3, 2))) == oo
+    assert E(Zeta('x', Rational(5, 2))**2) == oo
 
 
 def test_discrete_probability():
