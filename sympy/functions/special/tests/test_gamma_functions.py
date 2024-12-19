@@ -320,7 +320,7 @@ def test_polygamma():
     assert polygamma(-1, x) == loggamma(x) - log(2*pi) / 2
 
     # But smaller orders are iterated integrals and don't have a special name
-    assert polygamma(-2, x).func is polygamma
+    assert isinstance(polygamma(-2, x), polygamma)
 
     # Test a bug
     assert polygamma(0, -x).expand(func=True) == polygamma(0, -x)
