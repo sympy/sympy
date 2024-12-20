@@ -17,6 +17,8 @@ from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
+from sympy.core.numbers import Float, Integer, Rational
+from fractions import Fraction
 
 
 class Pow(Expr):
@@ -125,7 +127,7 @@ class Pow(Expr):
     @property
     def exp(self) -> Expr:
         return self.args[1]
-
+            
     @property
     def kind(self):
         if self.exp.kind is NumberKind:
@@ -140,6 +142,18 @@ class Pow(Expr):
 
         base = _sympify(b)
         exp = _sympify(e)
+
+        if evaluate and isinstance(base, Float):
+        # Special handling for 1.0
+            if abs(float(base) - 1.0) < 1e-10:
+                return S.One
+            try:
+                # Convert other floats to exact rational if possible
+                frac = Fraction(str(float(base))).limit_denominator()
+                if abs(float(frac) - float(base)) < 1e-10:
+                    base = Rational(frac.numerator, frac.denominator)
+            except (ValueError, OverflowError):
+                pass
 
         # XXX: This can be removed when non-Expr args are disallowed rather
         # than deprecated.
