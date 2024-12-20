@@ -127,7 +127,7 @@ class Pow(Expr):
     @property
     def exp(self) -> Expr:
         return self.args[1]
-            
+
     @property
     def kind(self):
         if self.exp.kind is NumberKind:
