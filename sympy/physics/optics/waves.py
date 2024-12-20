@@ -302,7 +302,7 @@ class TWave(Expr):
         Multiplying a wave by a scalar rescales the amplitude of the wave.
         """
         other = sympify(other)
-        if isinstance(other, Number):
+        if isinstance(other, (Number, Symbol)):
             return TWave(self.amplitude*other, *self.args[1:])
         else:
             raise TypeError(type(other).__name__ + " and TWave objects cannot be multiplied.")
