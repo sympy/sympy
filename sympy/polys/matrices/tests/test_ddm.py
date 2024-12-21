@@ -1,16 +1,12 @@
 from sympy.testing.pytest import raises
 from sympy.external.gmpy import GROUND_TYPES
 
-import pytest
 from sympy.polys import ZZ, QQ
 
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.exceptions import (
     DMShapeError, DMNonInvertibleMatrixError, DMDomainError,
     DMBadInputError)
-from sympy.polys.matrices import DomainMatrix
-DMZ_all = [DomainMatrix]
-DMQ_all = [DomainMatrix]
 
 
 def test_DDM_init():
@@ -560,28 +556,3 @@ def test_DDM_is_lower():
     ], (4, 3), QQ).transpose()
     assert A.is_lower() is True
     assert B.is_lower() is False
-
-
-@pytest.mark.parametrize('DM', DMQ_all)
-def test_qr_field(DM):
-    """
-    Test the QR decomposition for a matrix over a field (QQ).
-    """
-    # Create a sample DomainMatrix over QQ
-    A = DM([[QQ(3), QQ(1)], [QQ(4), QQ(3)]], (2, 2), QQ)
-    Q, R = A.qr()
-    assert Q.shape == (2, 2)
-    assert R.shape == (2, 2)
-    assert Q * R == A
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_qr_non_field(DM):
-    """
-    Test that QR decomposition raises an error for non-field domains (ZZ).
-    """
-    # Create a sample DomainMatrix over ZZ
-    A = DM([[ZZ(3), ZZ(1)], [ZZ(4), ZZ(3)]], (2, 2), ZZ)
-    # Ensure it raises an error
-    with pytest.raises(DMDomainError):
-        A.qr()
