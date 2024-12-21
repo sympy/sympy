@@ -862,3 +862,126 @@ def test_XXM_lll(DM):
     assert M.lll() == M_lll
     assert M.lll_transform() == (M_lll, T)
     assert T.matmul(M) == M_lll
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_mixed_signs(DM):
+    lol = [[QQ(1), QQ(-2)], [QQ(-3), QQ(4)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_large_matrix(DM):
+    lol = [[QQ(i + j) for j in range(10)] for i in range(10)]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_identity_matrix(DM):
+    T = type(DM([[0]]))
+    A = T.eye(3, QQ)
+    Q, R = A.qr()
+    assert Q == A
+    assert R == A
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_square_matrix(DM):
+    lol = [[QQ(3), QQ(1)], [QQ(4), QQ(3)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.shape == (2, 2)
+    assert R.shape == (2, 2)
+    assert Q.matmul(R) == A
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_matrix_with_zero_columns(DM):
+    lol = [[QQ(3), QQ(0)], [QQ(4), QQ(0)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.shape == (2, 2)
+    assert R.shape == (2, 2)
+    assert Q.matmul(R) == A
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_linearly_dependent_columns(DM):
+    lol = [[QQ(1), QQ(2)], [QQ(2), QQ(4)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.shape == (2, 2)
+    assert R.shape == (2, 2)
+    assert Q.matmul(R) == A
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_qr_non_field(DM):
+    lol = [[ZZ(3), ZZ(1)], [ZZ(4), ZZ(3)]]
+    A = DM(lol)
+    with pytest.raises(DMDomainError):
+        A.qr()
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_field(DM):
+    lol = [[QQ(3), QQ(1)], [QQ(4), QQ(3)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.shape == (2, 2)
+    assert R.shape == (2, 2)
+    assert Q.matmul(R) == A
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_tall_matrix(DM):
+    lol = [[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.shape == (3, 2)
+    assert R.shape == (2, 2)
+    assert Q.matmul(R) == A
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_wide_matrix(DM):
+    lol = [[QQ(1), QQ(2), QQ(3)], [QQ(4), QQ(5), QQ(6)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.shape == (2, 2)
+    assert R.shape == (2, 3)
+    assert Q.matmul(R) == A
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_empty_matrix_0x0(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((0, 0), QQ)
+    Q, R = A.qr()
+    assert Q.shape == (0, 0)
+    assert R.shape == (0, 0)
+    assert Q.matmul(R).shape == A.shape
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_empty_matrix_2x0(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((2, 0), QQ)
+    Q, R = A.qr()
+    assert Q.shape == (2, 0)
+    assert R.shape == (0, 0)
+    assert Q.matmul(R).shape == A.shape
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_empty_matrix_0x2(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((0, 2), QQ)
+    Q, R = A.qr()
+    assert Q.shape == (0, 0)
+    assert R.shape == (0, 2)
+    assert Q.matmul(R).shape == A.shape
