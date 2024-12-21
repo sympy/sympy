@@ -3274,6 +3274,7 @@ class DomainMatrix:
 
         Examples:
             >>> from sympy.polys.matrices import DomainMatrix
+            >>> from sympy import QQ
             >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), QQ)
             >>> Q, R = A.qr()
             >>> Q
