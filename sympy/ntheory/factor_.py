@@ -1359,7 +1359,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
-    
+
     Checking if a number is k-th power free:
 
     To check if an integer is k-th power free, the function will return `True` if no prime factor has an exponent greater than or equal to `k` in its prime factorization. A k-th power free number is one where no prime factor has an exponent of k or more in its factorization. This can be easily determined by examining the exponents in the output of `factorint(n)`.
