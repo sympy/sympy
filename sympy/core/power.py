@@ -17,7 +17,6 @@ from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
-from sympy.core.numbers import Float, Integer, Rational
 from fractions import Fraction
 
 
@@ -1856,6 +1855,6 @@ power = Dispatcher('power')
 power.add((object, object), Pow)
 
 from .add import Add
-from .numbers import Integer, Rational
+from .numbers import Float, Integer, Rational
 from .mul import Mul, _keep_coeff
 from .symbol import Symbol, Dummy, symbols
