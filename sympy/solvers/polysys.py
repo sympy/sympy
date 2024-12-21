@@ -1,15 +1,20 @@
 """Solvers of systems of polynomial equations. """
 import itertools
+from collections import defaultdict
 
+from sympy import Dummy
 from sympy.core import S
 from sympy.core.sorting import default_sort_key
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyerrors import (ComputationFailed,
-    PolificationFailed, CoercionFailed)
+                                    PolificationFailed, CoercionFailed, GeneratorsNeeded, DomainError)
 from sympy.simplify import rcollect
 from sympy.utilities import postfixes
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import cartes
+from sympy.logic.boolalg import Or, And
+from sympy.core.relational import Eq
 
 
 class SolveFailed(Exception):
@@ -429,3 +434,144 @@ def solve_triangulated(polys, *gens, **args):
 
         solutions = _solutions
     return sorted((s for s, _ in solutions), key=default_sort_key)
+
+
+def factor_poly_system(eqs, *gens, **kwargs):
+
+    systems, conds = factor_system_cond(eqs, *gens, **kwargs)
+    systems = [[f.as_expr() for f, c in system] for system in systems]
+    return systems, And(*conds)
+
+
+def factor_system_bool(eqs, *gens, **kwargs):
+
+    systems, conds = factor_system_cond(eqs, *gens, **kwargs)
+    sys = Or(*[And(*[_eq2bool(eq) for eq in sys]) for sys in systems])
+    if conds:
+        sys &= And(*[Eq(c.as_expr(), 0) for c in conds])
+    return sys
+
+
+def _eq2bool(eq):
+    """Convert a (factor, conditions) pair to a Boolean equation."""
+    f, cs = eq
+    b = Eq(f.as_expr(), 0)
+    if cs:
+        b |= And(*[Eq(c.as_expr(), 0) for c in cs])
+    return b
+
+
+def factor_system_cond(eqs, *gens, **kwargs):
+
+    try:
+        polys, opts = parallel_poly_from_expr(eqs, *gens, **kwargs)
+        only_numbers = False
+    except (GeneratorsNeeded, PolificationFailed):
+        _u = Dummy('u')
+        polys, opts = parallel_poly_from_expr(eqs, [_u], **kwargs)
+        assert opts['domain'].is_Numerical
+        only_numbers = True
+
+    if only_numbers:
+        if all(p == 0 for p in polys):
+            systems = [[]]
+            conditions = []
+        else:
+            systems = []
+            conditions = []
+    else:
+        systems, conditions = factor_system_poly(polys)
+
+    return systems, conditions
+
+
+def factor_system_poly(polys):
+
+    if not all(isinstance(poly, Poly) for poly in polys):
+        raise TypeError("polys should be a list of Poly instances")
+    if not polys:
+        return [[]], []
+    else:
+        base_domain = polys[0].domain
+        base_gens = polys[0].gens
+        if not all(poly.domain == base_domain and poly.gens == base_gens for poly in polys[1:]):
+            raise DomainError("All polynomials must have the same domain and generators")
+
+    constant_eqs = []
+    eqs_factors = []
+    conds_factor = defaultdict(list)
+
+    for poly in polys:
+        constant, factors_mult = poly.factor_list()
+
+        factors = [f for f, m in factors_mult]
+
+        if factors:
+            eqs_factors.append(factors)
+            if constant.is_zero is not False:
+                constp = constant.as_poly(base_gens, domain=base_domain)
+                for f in factors:
+                    if constp not in conds_factor[f]:
+                        conds_factor[f].append(constp)
+        elif constant.is_zero is True:
+            pass
+        elif constant.is_zero is False:
+            return ([], [])
+        else:
+            constp = constant.as_poly(base_gens, domain=base_domain)
+            constant_eqs.append(constp)
+
+    fac2conds = {f: tuple(conds) for f, conds in conds_factor.items()}
+
+    cnf = [[(f, fac2conds.get(f, ())) for f in eq] for eq in eqs_factors]
+
+    dnf = _cnf2dnf(cnf)
+
+    return dnf, constant_eqs
+
+
+def _cnf2dnf(eqs):
+    # remove equations that are independent of all others
+    # and generate the Cartesian product for them
+    eqs = [list(i) for i in eqs]
+    indep = []
+    for i in range(len(eqs)):
+        for j in range(len(eqs)):
+            if i != j and any(x[0] == y[0] for x in eqs[i] for y in eqs[j]):
+                break
+        else:
+            indep.append(i)
+
+    if not indep:
+        return list(_dnf(eqs))
+    else:
+        result = []
+        indep_eqs = [eqs.pop(i) for i in indep[::-1]]
+        for t in cartes(*indep_eqs):
+            t_list = list(t)
+            for d in _dnf(eqs):
+                result.append(t_list + d)
+        return result
+
+
+def _dnf(eqs):
+    # helper for _cnf2dnf that recursively enumerates the
+    # minimal dnf args that satisfy the cnf expression;
+    if not eqs:
+        return [[]]
+    elif len(eqs) == 1:
+        return [[f] for f in eqs[0]]
+    else:
+        f = eqs[0][0]
+        eqs_f_zero = [eq for eq in eqs if f not in eq]
+        dnf_f = _dnf(eqs_f_zero)
+
+        f_free_eqs = [[x for x in eq if x != f] for eq in eqs]
+        if not all(f_free_eqs):
+            dnf = [[f] + s for s in dnf_f]
+        else:
+            eqs_f_nonzero = list(filter(None, f_free_eqs))
+            dnf_no_f = _dnf(eqs_f_nonzero)
+            dnf = dnf_no_f + [[f] + s for s in dnf_f if s not in dnf_no_f]
+
+        return dnf
