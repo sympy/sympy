@@ -3265,7 +3265,9 @@ class DomainMatrix:
         where Q is an orthogonal matrix, and R is an upper triangular matrix.
 
         Returns:
-            (Q, R): Tuple of DomainMatrix instances.
+            (Q, R):
+                Tuple of DomainMatrix instances.
+
                 - Q: Orthogonal matrix with the same domain as self.
                 - R: Upper triangular matrix with the same domain as self.
 
