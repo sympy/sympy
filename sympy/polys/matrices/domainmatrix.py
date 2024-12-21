@@ -3257,32 +3257,33 @@ class DomainMatrix:
         return self.from_rep(L), self.from_rep(U), swaps
 
     def qr(self):
-        """
+        r"""
         QR decomposition of the DomainMatrix.
 
-        This method computes the QR decomposition of the matrix such that:
-            self = Q * R
-        where Q is an orthogonal matrix, and R is an upper triangular matrix.
+        Returns
+        =======
 
-        Returns:
-            (Q, R):
-                Tuple of DomainMatrix instances.
+        (Q, R)
+            Q is the orthogonal matrix and R is the upper triangular matrix
+            resulting from the QR decomposition of the DomainMatrix.
 
-                - Q: Orthogonal matrix with the same domain as self.
-                - R: Upper triangular matrix with the same domain as self.
+        Raises
+        ======
 
-        Raises:
-            DMDomainError: If the domain is not a field (e.g., QQ).
+        DMDomainError
+            If the domain of the DomainMatrix is not a field (e.g., QQ).
 
-        Examples:
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> from sympy import QQ
-            >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), QQ)
-            >>> Q, R = A.qr()
-            >>> Q
-            DomainMatrix([...], (3, 2), QQ)
-            >>> R
-            DomainMatrix([...], (2, 2), QQ)
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), QQ)
+        >>> Q, R = A.qr()
+        >>> Q
+        DomainMatrix([...], (3, 2), QQ)
+        >>> R
+        DomainMatrix([...], (2, 2), QQ)
         """
         ddm_q, ddm_r = self.rep.qr()
         Q = self.from_rep(ddm_q)
