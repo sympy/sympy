@@ -219,6 +219,8 @@ class floor(RoundFunction):
                 return self.args[0] >= other
             if other.is_number and other.is_real:
                 return self.args[0] >= ceiling(other)
+        if self.args[0] == other and other.is_real and other.is_noninteger:
+            return S.false
         if other is S.NegativeInfinity and self.is_finite:
             return S.true
 
@@ -245,6 +247,8 @@ class floor(RoundFunction):
                 return self.args[0] < other
             if other.is_number and other.is_real:
                 return self.args[0] < ceiling(other)
+        if self.args[0] == other and other.is_real and other.is_noninteger:
+            return S.true
         if other is S.Infinity and self.is_finite:
             return S.true
 
@@ -383,6 +387,8 @@ class ceiling(RoundFunction):
                 return self.args[0] > other
             if other.is_number and other.is_real:
                 return self.args[0] > floor(other)
+        if self.args[0] == other and other.is_real and other.is_noninteger:
+            return S.true
         if other is S.NegativeInfinity and self.is_finite:
             return S.true
 
@@ -409,6 +415,8 @@ class ceiling(RoundFunction):
                 return self.args[0] <= other
             if other.is_number and other.is_real:
                 return self.args[0] <= floor(other)
+        if self.args[0] == other and other.is_real and other.is_noninteger:
+            return S.false
         if other is S.Infinity and self.is_finite:
             return S.true
 

@@ -21,6 +21,7 @@ x = Symbol('x')
 i = Symbol('i', imaginary=True)
 y = Symbol('y', real=True)
 k, n = symbols('k,n', integer=True)
+b = Symbol('b', real=True, noninteger=True)
 
 
 def test_floor():
@@ -133,6 +134,10 @@ def test_floor():
     assert (floor(y) < oo) == True
     assert (floor(y) >= -oo) == True
     assert (floor(y) > -oo) == True
+    assert (floor(b) < b) == True
+    assert (floor(b) <= b) == True
+    assert (floor(b) > b) == False
+    assert (floor(b) >= b) == False
 
     assert floor(y).rewrite(frac) == y - frac(y)
     assert floor(y).rewrite(ceiling) == -ceiling(-y)
@@ -322,6 +327,10 @@ def test_ceiling():
     assert (ceiling(y) > -oo) == True
     assert (ceiling(y) <= oo) == True
     assert (ceiling(y) < oo) == True
+    assert (ceiling(b) < b) == False
+    assert (ceiling(b) <= b) == False
+    assert (ceiling(b) > b) == True
+    assert (ceiling(b) >= b) == True
 
     assert ceiling(y).rewrite(floor) == -floor(-y)
     assert ceiling(y).rewrite(frac) == y + frac(-y)
