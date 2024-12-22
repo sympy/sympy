@@ -1366,14 +1366,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     >>> from sympy.ntheory import factorint  # Importing the factorint function from sympy
 
-    >>> all(exp < 2 for exp in factorint(30).values()) # Check if 30 is 2nd power free (square-free)
-    True  # 30 = 2 * 3 * 5 (no prime factor appears with exponent >= 2)
+    >>> all(exp < 2 for exp in factorint(30).values())
+    True
 
     >>> all(exp < 2 for exp in factorint(36).values()) # Check if 36 is 2nd power free (square-free)
-    False  # 36 = 2^2 * 3^2 (both 2 and 3 appear with exponent >= 2)
+    False
 
-    >>> all(exp < 3 for exp in factorint(60).values()) # Check if 60 is 3rd power free
-    True  # 60 = 2^2 * 3 * 5 (no prime factor appears with exponent >= 3)
+    >>> all(exp < 3 for exp in factorint(60).values())
+    True
 
 
     See Also
