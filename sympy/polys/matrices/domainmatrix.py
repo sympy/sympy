@@ -3293,9 +3293,9 @@ class DomainMatrix:
         ], (2, 2), QQ)
         >>> Q * R == A
         True
-        >>> Q.transpose() * Q == DomainMatrix.eye(2, QQ)
+        >>> Q.transpose().matmul(Q).is_diagonal
         True
-        >>> R.is_upper()
+        >>> R.is_upper
         True
 
         See Also
