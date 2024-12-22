@@ -3293,7 +3293,7 @@ class DomainMatrix:
         ], (2, 2), QQ)
         >>> Q * R == A
         True
-        >>> Q.transpose().matmul(Q).is_diagonal
+        >>> (Q.transpose().matmul(Q)).is_diagonal
         True
         >>> R.is_upper
         True
