@@ -3281,9 +3281,30 @@ class DomainMatrix:
         >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), QQ)
         >>> Q, R = A.qr()
         >>> Q
-        DomainMatrix([...], (3, 2), QQ)
+        DomainMatrix([
+            [-1/6, -1/3],
+            [-1/2, -1/3],
+            [-5/6, 2/3]
+        ], (3, 2), QQ)
         >>> R
-        DomainMatrix([...], (2, 2), QQ)
+        DomainMatrix([
+            [-6, -7],
+            [0, 1]
+        ], (2, 2), QQ)
+        >>> Q * R == A
+        True
+        >>> Q.transpose() * Q == DomainMatrix.eye(2, QQ)
+        True
+        >>> R.is_upper()
+        True
+
+        See Also
+        ========
+
+        lu
+            Computes the LU decomposition of a matrix.
+        QR
+            Computes the QR decomposition for matrices.
         """
         ddm_q, ddm_r = self.rep.qr()
         Q = self.from_rep(ddm_q)

@@ -963,31 +963,37 @@ class DDM(list):
         Division-based QR decomposition for DDM.
 
         Returns:
-            - Q: Orthogonal matrix as a DDM.
+            - Q: Orthogonal matrix as a DDM (columns are orthogonal but not necessarily unit vectors).
             - R: Upper triangular matrix as a DDM.
+
+        Note:
+            This implementation differs from traditional QR decomposition in that the orthogonal vectors in Q
+            are not normalized to unit vectors. Instead, the columns of Q are orthogonal but may have different
+            magnitudes. This avoids unnecessary divisions and is particularly suited for exact arithmetic domains.
         """
         rows, cols = self.shape
+        K = self.domain
         Q = self.copy()
-        R = self.zeros((min(rows, cols), cols), self.domain)
+        R = self.zeros((min(rows, cols), cols), K)
 
         # Check that the domain is a field
-        if not self.domain.is_Field:
+        if not K.is_Field:
             raise DMDomainError("QR decomposition requires a field (e.g. QQ).")
 
-        dot_cols = lambda i, j: self.domain.sum(Q[k][i] * Q[k][j] for k in range(rows))
+        dot_cols = lambda i, j: K.sum(Q[k][i] * Q[k][j] for k in range(rows))
 
         for j in range(cols):
             for i in range(min(j, rows)):
                 dot_ii = dot_cols(i, i)
-                if dot_ii != self.domain.zero:
+                if dot_ii != K.zero:
                     R[i][j] = dot_cols(i, j) / dot_ii
                     for k in range(rows):
                         Q[k][j] -= R[i][j] * Q[k][i]
 
             if j < rows:
                 dot_jj = dot_cols(j, j)
-                if dot_jj != self.domain.zero:
-                    R[j][j] = self.domain.one
+                if dot_jj != K.zero:
+                    R[j][j] = K.one
 
         Q = Q.extract(range(rows), range(min(rows, cols)))
 
