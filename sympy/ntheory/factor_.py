@@ -1360,6 +1360,21 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
 
+    Checking if a number is k-th power free:
+
+    To check if an integer is k-th power free, verify that no prime factor in its prime factorization has an exponent greater than or equal to k. A k-th power free number is one where no prime factor has an exponent of k or more in its factorization. This can be easily determined by examining the exponents in the output of factorint(n).The result will be True if the number is k-th power free, and False otherwise.
+
+    >>> from sympy.ntheory import factorint
+
+    >>> all(exp < 2 for exp in factorint(30).values()) # Check if 30 is 2nd power free (square-free)
+    True
+
+    >>> all(exp < 2 for exp in factorint(36).values()) # Check if 36 is 2nd power free (square-free)
+    False
+
+    >>> all(exp < 3 for exp in factorint(60).values()) # Check if 60 is 3rd power free
+    True
+
     See Also
     ========
 
