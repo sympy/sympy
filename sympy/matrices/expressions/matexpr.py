@@ -85,7 +85,7 @@ class MatrixExpr(Expr):
     # The following is adapted from the core Expr object
 
     @property
-    def shape(self) -> tuple[Expr, Expr]:
+    def shape(self) -> tuple[Expr | int, Expr | int]:
         raise NotImplementedError
 
     @property

@@ -1,3 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
+
+if TYPE_CHECKING:
+    from typing import Literal, Callable, TypeVar
+    from sympy.core.expr import Expr
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
+
 from types import FunctionType
 
 from sympy.polys.polyerrors import CoercionFailed
@@ -5,6 +15,10 @@ from sympy.polys.domains import ZZ, QQ
 
 from .utilities import _get_intermediate_simp, _iszero, _dotprodsimp, _simplify
 from .determinant import _find_reasonable_pivot
+
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
@@ -147,7 +161,34 @@ def _is_echelon(M, iszerofunc=_iszero):
     return zeros_below and _is_echelon(M[1:, 1:], iszerofunc)
 
 
-def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False):
+@overload
+def _echelon_form(M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool = False,
+        *,
+        with_pivots: Literal[False] = False
+    ) -> Tmat: ...
+@overload
+def _echelon_form(M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool = False,
+        *,
+        with_pivots: Literal[True],
+    ) -> tuple[Tmat, tuple[int]]: ...
+@overload
+def _echelon_form(M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool = False,
+        *,
+        with_pivots: bool = False,
+    ) -> Tmat | tuple[Tmat, tuple[int]]: ...
+
+def _echelon_form(M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool = False,
+        *,
+        with_pivots: bool = False,
+    ) -> Tmat | tuple[Tmat, tuple[int]]:
     """Returns a matrix row-equivalent to ``M`` that is in echelon form. Note
     that echelon form of a matrix is *not* unique, however, properties like the
     row space and the null space are preserved.
@@ -292,8 +333,41 @@ def _rref_dm(dM):
     return M_rref, pivots
 
 
-def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
-        normalize_last=True):
+@overload
+def _rref(
+        M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = False,
+        *,
+        pivots: Literal[False],
+        normalize_last: bool = True,
+        ) -> Tmat: ...
+@overload
+def _rref(
+        M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = False,
+        *,
+        pivots: Literal[True] = True,
+        normalize_last: bool = True,
+    ) -> tuple[Tmat, tuple[int]]: ...
+@overload
+def _rref(
+        M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = False,
+        *,
+        pivots: bool = True,
+        normalize_last: bool = True,
+    ) -> Tmat | tuple[Tmat, tuple[int]]: ...
+
+def _rref(
+        M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = False,
+        pivots: bool = True,
+        normalize_last: bool = True,
+    ) -> Tmat | tuple[Tmat, tuple[int]]:
     """Return reduced row-echelon form of matrix and indices
     of pivot vars.
 
@@ -374,7 +448,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     else:
         # Use the generic Matrix routine.
         if isinstance(simplify, FunctionType):
-            simpfunc = simplify
+            simpfunc: Callable[[Any], Any] = simplify
         else:
             simpfunc = _simplify
 
