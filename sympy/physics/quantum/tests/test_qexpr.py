@@ -38,7 +38,7 @@ def test_qexpr_commutative():
 
 def test_qexpr_free_symbols():
     q1 = QExpr(x, y)
-    assert q1.free_symbols == set([x, y])
+    assert q1.free_symbols == {x, y}
 
 
 def test_qexpr_sum():
