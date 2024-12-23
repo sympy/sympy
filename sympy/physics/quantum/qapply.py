@@ -213,9 +213,13 @@ def qapply_Mul(e, **options):
         return qapply_Mul(e.func(*args)*result, **options)
 
     # Now try to actually apply the operator and build an inner product.
-    try:
-        result = lhs._apply_operator(rhs, **options)
-    except (NotImplementedError, AttributeError):
+    _apply = getattr(lhs, '_apply_operator', None)
+    if _apply is not None:
+        try:
+            result = _apply(rhs, **options)
+        except NotImplementedError:
+            result = None
+    else:
         result = None
 
     if result is None:
@@ -223,7 +227,7 @@ def qapply_Mul(e, **options):
         if _apply_right is not None:
             try:
                 result = _apply_right(lhs, **options)
-            except (NotImplementedError, AttributeError):
+            except NotImplementedError:
                 result = None
 
     if result is None:
