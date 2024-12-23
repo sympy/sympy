@@ -827,10 +827,6 @@ class Wavefunction(Function):
         return self
 
     @property
-    def free_symbols(self):
-        return self.expr.free_symbols
-
-    @property
     def is_commutative(self):
         """
         Override Function's is_commutative so that order is preserved in
