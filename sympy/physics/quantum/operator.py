@@ -20,6 +20,7 @@ from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 from sympy.matrices import eye
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = [
     'Operator',
@@ -258,6 +259,10 @@ class IdentityOperator(Operator):
     """An identity operator I that satisfies op * I == I * op == op for any
     operator op.
 
+    .. deprecated:: 1.14.
+        Use the scalar S.One instead as the multiplicative identity for
+        operators and states.
+
     Parameters
     ==========
 
@@ -283,6 +288,14 @@ class IdentityOperator(Operator):
         return (oo,)
 
     def __init__(self, *args, **hints):
+        sympy_deprecation_warning(
+            """
+            IdentityOperator has been deprecated. In the future, please use
+            S.One as the identity for quantum operators and states.
+            """,
+            deprecated_since_version="1.14",
+            active_deprecations_target='deprecated-operator-identity',
+        )
         if not len(args) in (0, 1):
             raise ValueError('0 or 1 parameters expected, got %s' % args)
 

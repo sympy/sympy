@@ -17,6 +17,7 @@ from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 j, jp, m, mp = symbols("j j' m m'")
@@ -146,5 +147,6 @@ def test_issue24158_ket_times_op():
     P2 = qapply(P2, dagger = True) # unsatisfactorily -> <0|*X(0), expect <1| since dagger=True
     assert qapply(P2, dagger = True) == QubitBra(1) # qapply(P1) -> 0 before fix
     # Pull Request 24237: IdentityOperator from the right without dagger=True option
-    assert qapply(QubitBra(1)*IdentityOperator()) == QubitBra(1)
-    assert qapply(IdentityGate(0)*(Qubit(0) + Qubit(1))) == Qubit(0) + Qubit(1)
+    with warns_deprecated_sympy():
+        assert qapply(QubitBra(1)*IdentityOperator()) == QubitBra(1)
+        assert qapply(IdentityGate(0)*(Qubit(0) + Qubit(1))) == Qubit(0) + Qubit(1)

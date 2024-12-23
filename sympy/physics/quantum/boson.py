@@ -7,7 +7,7 @@ from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.quantum import Operator
-from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra, IdentityOperator
+from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
@@ -93,9 +93,6 @@ class BosonOp(Operator):
         return BosonOp(str(self.name), not self.is_annihilation)
 
     def __mul__(self, other):
-
-        if other == IdentityOperator(2):
-            return self
 
         if isinstance(other, Mul):
             args1 = tuple(arg for arg in other.args if arg.is_commutative)
