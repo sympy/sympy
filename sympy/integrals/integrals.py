@@ -504,7 +504,8 @@ class Integral(AddWithLimits):
                     period = periodicity(self.function, x)
                 except RecursionError:
                     period = None
-            if  period and  Min(a,b)!=0 and len(sympify(x+Min(a,b)).free_symbols)==1:
+            if  (period and a and b and Min(a,b)!=0
+                    and len(sympify(x+Min(a,b)).free_symbols)==1):
                 self = self.transform(x,x+Min(a,b))
                 function = self.function
                 xab = self.limits[0]
@@ -742,7 +743,8 @@ class Integral(AddWithLimits):
                             period = None
                             if not isinstance(self.function, Poly)  and x.kind is NumberKind:
                                 period = periodicity(self.function, x)
-                            if period and len(sympify(x+Min(a,b)).free_symbols)==1:
+                            if (period and a and b
+                                and len(sympify(x+Min(a,b)).free_symbols)==1):
                                 _sign = 1
                                 if a.evalf() > b.evalf():
                                     a,b = b,a
