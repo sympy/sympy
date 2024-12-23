@@ -3260,11 +3260,20 @@ class DomainMatrix:
         r"""
         QR decomposition of the DomainMatrix.
 
+        Explanation
+        ===========
+
+        The QR decomposition expresses a matrix as the product of an orthogonal
+        matrix (Q) and an upper triangular matrix (R). In this implementation,
+        Q is not orthonormal: its columns are orthogonal but not normalized to
+        unit vectors. This avoids unnecessary divisions and is particularly
+        suited for exact arithmetic domains.
+
         Returns
         =======
 
         (Q, R)
-            Q is the orthogonal matrix and R is the upper triangular matrix
+            Q is the orthogonal matrix, and R is the upper triangular matrix
             resulting from the QR decomposition of the DomainMatrix.
 
         Raises
@@ -3286,7 +3295,7 @@ class DomainMatrix:
         DomainMatrix([[1, 44/35], [0, 1]], (2, 2), QQ)
         >>> Q * R == A
         True
-        >>> (Q.transpose().matmul(Q)).is_diagonal
+        >>> (Q.transpose() * Q).is_diagonal
         True
         >>> R.is_upper
         True
