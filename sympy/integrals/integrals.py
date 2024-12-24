@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sympy.calculus.util import periodicity
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -19,6 +20,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.special.hyper import meijerg as MeijerG
 from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
@@ -30,6 +32,7 @@ from sympy.tensor.functions import shape
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
+from sympy.core.kind import NumberKind
 
 
 class Integral(AddWithLimits):
@@ -448,7 +451,6 @@ class Integral(AddWithLimits):
 
         # now compute and check the function
         function = self.function
-
         # hack to use a consistent Heaviside(x, 1/2)
         function = function.replace(
             lambda x: isinstance(x, Heaviside) and x.args[1]*2 != 1,
@@ -490,6 +492,24 @@ class Integral(AddWithLimits):
                 #     reps[x] = Dummy(real=True)
                 continue
             x, a, b = xab
+            # The code adjusts the integration limits
+            # from 0 to an appropriate value based on
+            # the function's periodicity and
+            # transforms the function accordingly.
+            period=None
+            if (not isinstance(self.function, Poly)
+                    and not self.function.has(MeijerG)
+                    and x.kind is NumberKind):
+                try:
+                    period = periodicity(self.function, x)
+                except RecursionError:
+                    period = None
+            if (period and a is not None and b is not None
+                and Min(a,b)!=0 and len((x + Min(a, b)).free_symbols) == 1):
+                self = self.transform(x,x+Min(a,b))
+                function = self.function
+                xab = self.limits[0]
+                x, a, b = xab
             l = (a, b)
             if all(i.is_nonnegative for i in l) and not x.is_nonnegative:
                 d = Dummy(positive=True)
@@ -623,7 +643,6 @@ class Integral(AddWithLimits):
                         if ret is not None:
                             function = ret
                             continue
-
             final = hints.get('final', True)
             # dotit may be iterated but floor terms making atan and acot
             # continuous should only be added in the final round
@@ -715,8 +734,29 @@ class Integral(AddWithLimits):
                                        for f in integrals])
                         try:
                             evalued = Add(*others)._eval_interval(x, a, b)
-                            evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
-                            function = uneval + evalued + evalued_pw
+                            # Handles periodic functions by adjusting
+                            # integration limits and splitting the interval
+                            # into periodic segments and a remainder. Evaluates
+                            # the integral over one period and the
+                            # remainder, combining these results with proper
+                            # handling of integration direction.
+                            period = None
+                            if not isinstance(self.function, Poly)  and x.kind is NumberKind:
+                                period = periodicity(self.function, x)
+                            if (period and a is not None and b is not None
+                                and len((x + Min(a, b)).free_symbols) == 1):
+                                _sign = 1
+                                if a.evalf() > b.evalf():
+                                    a,b = b,a
+                                    _sign = -1
+                                int_len = b-a
+                                rem = int_len-(int_len//period)*period
+                                evalued_pw_1 = piecewise_fold(Add(*piecewises))._eval_interval(x, S(0), period)
+                                evalued_pw_2 = piecewise_fold(Add(*piecewises))._eval_interval(x, S(0), rem)
+                                function = uneval + evalued + _sign*((int_len//period)*evalued_pw_1+evalued_pw_2)
+                            else:
+                                evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
+                                function = uneval + evalued + evalued_pw
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
