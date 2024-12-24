@@ -504,8 +504,8 @@ class Integral(AddWithLimits):
                     period = periodicity(self.function, x)
                 except RecursionError:
                     period = None
-            if  (period and a and b and Min(a,b)!=0
-                    and len(sympify(x+Min(a,b)).free_symbols)==1):
+            if (period and a is not None and b is not None
+                and Min(a,b)!=0 and len((x + Min(a, b)).free_symbols) == 1):
                 self = self.transform(x,x+Min(a,b))
                 function = self.function
                 xab = self.limits[0]
@@ -743,19 +743,19 @@ class Integral(AddWithLimits):
                             period = None
                             if not isinstance(self.function, Poly)  and x.kind is NumberKind:
                                 period = periodicity(self.function, x)
-                            if (period and a and b
-                                and len(sympify(x+Min(a,b)).free_symbols)==1):
+                            if (period and a is not None and b is not None
+                                and len((x + Min(a, b)).free_symbols) == 1):
                                 _sign = 1
                                 if a.evalf() > b.evalf():
                                     a,b = b,a
                                     _sign = -1
                                 int_len = b-a
                                 rem = int_len-(int_len//period)*period
-                                evalued_pw_1 = piecewise_fold(Add(*piecewises))._eval_interval(x, 0, period)
-                                evalued_pw_2 = piecewise_fold(Add(*piecewises))._eval_interval(x, 0, rem)
+                                evalued_pw_1 = piecewise_fold(Add(*piecewises))._eval_interval(x, S(0), period)
+                                evalued_pw_2 = piecewise_fold(Add(*piecewises))._eval_interval(x, S(0), rem)
                                 function = uneval + evalued + _sign*((int_len//period)*evalued_pw_1+evalued_pw_2)
                             else:
-                                evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a,b)
+                                evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
                                 function = uneval + evalued + evalued_pw
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
