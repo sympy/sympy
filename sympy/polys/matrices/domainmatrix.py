@@ -3256,6 +3256,68 @@ class DomainMatrix:
         L, U, swaps = self.rep.lu()
         return self.from_rep(L), self.from_rep(U), swaps
 
+    def qr(self):
+        r"""
+        QR decomposition of the DomainMatrix.
+
+        Explanation
+        ===========
+
+        The QR decomposition expresses a matrix as the product of an orthogonal
+        matrix (Q) and an upper triangular matrix (R). In this implementation,
+        Q is not orthonormal: its columns are orthogonal but not normalized to
+        unit vectors. This avoids unnecessary divisions and is particularly
+        suited for exact arithmetic domains.
+
+        Note
+        ====
+
+        This implementation is valid only for matrices over real domains. For
+        matrices over complex domains, a proper QR decomposition would require
+        handling conjugation to ensure orthogonality.
+
+        Returns
+        =======
+
+        (Q, R)
+            Q is the orthogonal matrix, and R is the upper triangular matrix
+            resulting from the QR decomposition of the DomainMatrix.
+
+        Raises
+        ======
+
+        DMDomainError
+            If the domain of the DomainMatrix is not a field (e.g., QQ).
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), QQ)
+        >>> Q, R = A.qr()
+        >>> Q
+        DomainMatrix([[1, 26/35], [3, 8/35], [5, -2/7]], (3, 2), QQ)
+        >>> R
+        DomainMatrix([[1, 44/35], [0, 1]], (2, 2), QQ)
+        >>> Q * R == A
+        True
+        >>> (Q.transpose() * Q).is_diagonal
+        True
+        >>> R.is_upper
+        True
+
+        See Also
+        ========
+
+        lu
+
+        """
+        ddm_q, ddm_r = self.rep.qr()
+        Q = self.from_rep(ddm_q)
+        R = self.from_rep(ddm_r)
+        return Q, R
+
     def lu_solve(self, rhs):
         r"""
         Solver for DomainMatrix x in the A*x = B
