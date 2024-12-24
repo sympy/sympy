@@ -17,7 +17,6 @@ from sympy.testing.pytest import raises
 import math
 from itertools import permutations, product
 
-from sympy import diff
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
 
