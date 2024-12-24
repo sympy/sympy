@@ -16,7 +16,7 @@ from sympy.utilities.misc import as_int
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy import diff, Matrix, symbols
+from sympy import diff
 def _check_norm(elements, norm):
     """validate if input norm is consistent"""
     if norm is not None and norm.is_number:
