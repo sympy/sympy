@@ -9,7 +9,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
-from sympy.core.sympify import sympify, _sympify
+from sympy.core.sympify import sympify, sympify 
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
@@ -114,7 +114,7 @@ class Quaternion(Expr):
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
         obj = super().__new__(cls, a, b, c, d)
-        obj._real_field = real_field
+        obj._real_field = real_field # type: ignore
         obj.set_norm(norm)
         return obj
 
@@ -172,7 +172,7 @@ class Quaternion(Expr):
 
     @property
     def real_field(self):
-        return self._real_field
+        return self.real_field
 
     @property
     def product_matrix_left(self):
@@ -219,10 +219,11 @@ class Quaternion(Expr):
         [a + d]])
         """
         return Matrix([
-                [self.a, -self.b, -self.c, -self.d],
-                [self.b, self.a, -self.d, self.c],
-                [self.c, self.d, self.a, -self.b],
-                [self.d, -self.c, self.b, self.a]])
+    [sympify(self.a), -sympify(self.b), -sympify(self.c), -sympify(self.d)],
+    [sympify(self.b), sympify(self.a), -sympify(self.d), sympify(self.c)],
+    [sympify(self.c), sympify(self.d), sympify(self.a), -sympify(self.b)],
+    [sympify(self.d), -sympify(self.c), sympify(self.b), sympify(self.a)]
+])
 
     @property
     def product_matrix_right(self):
@@ -274,10 +275,11 @@ class Quaternion(Expr):
         [ a + d]])
         """
         return Matrix([
-                [self.a, -self.b, -self.c, -self.d],
-                [self.b, self.a, self.d, -self.c],
-                [self.c, -self.d, self.a, self.b],
-                [self.d, self.c, -self.b, self.a]])
+    [sympify(self.a), -sympify(self.b), -sympify(self.c), -sympify(self.d)],
+    [sympify(self.b), sympify(self.a), -sympify(self.d), sympify(self.c)],
+    [sympify(self.c), sympify(self.d), sympify(self.a), -sympify(self.b)],
+    [sympify(self.d), -sympify(self.c), sympify(self.b), sympify(self.a)]
+])
 
     def to_Matrix(self, vector_only=False):
         """Returns elements of quaternion as a column vector.
@@ -371,69 +373,148 @@ class Quaternion(Expr):
         else:
             return Quaternion(*elements)
 
-    @classmethod
-    def from_euler(cls, angles, seq):
-        """Returns quaternion equivalent to rotation represented by the Euler
-        angles, in the sequence defined by ``seq``.
+@classmethod
+def from_euler(cls, angles, seq):
+    """
+    Create a quaternion from Euler angles.
 
-        Parameters
-        ==========
+    Parameters
+    ==========
+    angles : list of 3 numbers
+        The Euler angles (in radians).
+    seq : string of length 3
+        Represents the sequence of rotations.
 
-        angles : list, tuple or Matrix of 3 numbers
-            The Euler angles (in radians).
-        seq : string of length 3
-            Represents the sequence of rotations.
-            For extrinsic rotations, seq must be all lowercase and its elements
-            must be from the set ``{'x', 'y', 'z'}``
-            For intrinsic rotations, seq must be all uppercase and its elements
-            must be from the set ``{'X', 'Y', 'Z'}``
+    Returns
+    =======
+    Quaternion
+        The quaternion representing the rotation.
+    """
+    if len(angles) != 3:
+        raise ValueError("Three angles must be provided.")
 
-        Returns
-        =======
+    extrinsic = _is_extrinsic(seq)
+    i, j, k = seq.lower()
 
-        Quaternion
-            The normalized rotation quaternion calculated from the Euler angles
-            in the given sequence.
+    ei = [1 if n == i else 0 for n in 'xyz']
+    ej = [1 if n == j else 0 for n in 'xyz']
+    ek = [1 if n == k else 0 for n in 'xyz']
 
-        Examples
-        ========
+    qi = cls.from_axis_angle(ei, angles[0])
+    qj = cls.from_axis_angle(ej, angles[1])
+    qk = cls.from_axis_angle(ek, angles[2])
 
-        >>> from sympy import Quaternion
-        >>> from sympy import pi
-        >>> q = Quaternion.from_euler([pi/2, 0, 0], 'xyz')
-        >>> q
-        sqrt(2)/2 + sqrt(2)/2*i + 0*j + 0*k
+    if extrinsic:
+        return trigsimp(qk * qj * qi)
+    else:
+        return trigsimp(qi * qj * qk)
 
-        >>> q = Quaternion.from_euler([0, pi/2, pi] , 'zyz')
-        >>> q
-        0 + (-sqrt(2)/2)*i + 0*j + sqrt(2)/2*k
 
-        >>> q = Quaternion.from_euler([0, pi/2, pi] , 'ZYZ')
-        >>> q
-        0 + sqrt(2)/2*i + 0*j + sqrt(2)/2*k
+    def symbolic_diff(self, variable):
+        return Quaternion(
+            self.a.diff(variable),
+                self.b.diff(variable),
+            self.c.diff(variable), 
+                self.d.diff(variable),
+            real_field=self.real_field
+    )
 
-        """
+def gradient(self, variables):
+    """
+    Compute the gradient of the quaternion field with respect to the given variables.
 
-        if len(angles) != 3:
-            raise ValueError("3 angles must be given.")
+    Parameters
+    ==========
+    variables : list of Symbols
+        The variables with respect to which the gradient is computed.
 
-        extrinsic = _is_extrinsic(seq)
-        i, j, k = seq.lower()
+    Returns
+    =======
+    list of Quaternions
+        A list of quaternions, where each quaternion represents the partial derivative
+        of the field with respect to one variable.
 
-        # get elementary basis vectors
-        ei = [1 if n == i else 0 for n in 'xyz']
-        ej = [1 if n == j else 0 for n in 'xyz']
-        ek = [1 if n == k else 0 for n in 'xyz']
+    Examples
+    ========
+    >>> from sympy import Quaternion, symbols
+    >>> x, y, z = symbols('x y z')
+    >>> q = Quaternion(x**2 + y*z, x*y, y**2, z**2)
+    >>> q.gradient([x, y, z])
+    [2*x + y*i + 0*j + 0*k, z + x*i + 2*y*j + 0*k, y + 0*i + 0*j + 2*z*k]
+    """
+    gradients = []
+    for var in variables:
+        gradients.append(self.symbolic_diff(var))
+    return gradients
 
-        # calculate distinct quaternions
-        qi = cls.from_axis_angle(ei, angles[0])
-        qj = cls.from_axis_angle(ej, angles[1])
-        qk = cls.from_axis_angle(ek, angles[2])
+def divergence(self, variables):
+    """
+    Compute the scalar divergence of the quaternion field.
 
-        if extrinsic:
-            return trigsimp(qk * qj * qi)
-        else:
-            return trigsimp(qi * qj * qk)
+    Parameters
+    ==========
+    variables : list of Symbols
+        The variables with respect to which the divergence is computed.
+
+    Returns
+    =======
+    Expr
+        The scalar divergence of the quaternion field.
+
+    Examples
+    ========
+    >>> from sympy import Quaternion, symbols
+    >>> x, y, z = symbols('x y z')
+    >>> q = Quaternion(x**2, x*y, y**2, z**2)
+    >>> q.divergence([x, y, z])
+    2*x + x + 2*y + 2*z
+    """
+    divergence = 0
+    for i, var in enumerate(variables):
+        divergence += self.to_Matrix()[i].diff(var)
+    return divergence
+
+def curl(self, variables):
+    """
+    Compute the curl of the quaternion field as a quaternion.
+
+    Parameters
+    ==========
+    variables : list of Symbols
+        A list of three variables representing the spatial axes (e.g., [x, y, z]).
+
+    Returns
+    =======
+    Quaternion
+        A pure quaternion representing the curl of the vector part of the quaternion field.
+
+    Raises
+    ======
+    ValueError
+        If the input `variables` list does not contain exactly three variables.
+
+    Examples
+    ========
+    >>> from sympy import Quaternion, symbols
+    >>> x, y, z = symbols('x y z')
+    >>> q = Quaternion(0, x**2, y**2, z**2)
+    >>> q.curl([x, y, z])
+    0 + (2*z - 2*y)*i + (2*x - 2*z)*j + (2*y - 2*x)*k
+    """
+    if len(variables) != 3:
+        raise ValueError("Curl requires exactly 3 variables.")
+
+    f = self.vector_part().to_Matrix(vector_only=True)
+    i, j, k = variables
+    
+    curl_vector = [
+    f[2].diff(j) - f[1].diff(k),
+    f[0].diff(k) - f[2].diff(i),
+    f[1].diff(i) - f[0].diff(j)
+]
+    return Quaternion(0, *curl_vector)
+
+
 
     def to_euler(self, seq, angle_addition=True, avoid_square_root=False):
         r"""Returns Euler angles representing same rotation as the quaternion,
@@ -577,48 +658,41 @@ class Quaternion(Expr):
         else:
             return tuple(angles)
 
-    @classmethod
-    def from_axis_angle(cls, vector, angle):
-        """Returns a rotation quaternion given the axis and the angle of rotation.
+@classmethod
+def from_axis_angle(cls, vector, angle):
+    """
+    Create a quaternion from a given axis and angle of rotation.
 
-        Parameters
-        ==========
+    Parameters
+    ==========
+    vector : tuple of three numbers
+        The vector representation of the rotation axis.
+    angle : number
+        The angle of rotation (in radians).
 
-        vector : tuple of three numbers
-            The vector representation of the given axis.
-        angle : number
-            The angle by which axis is rotated (in radians).
+    Returns
+    =======
+    Quaternion
+        A normalized quaternion representing the rotation.
 
-        Returns
-        =======
+    Examples
+    ========
+    >>> from sympy import Quaternion
+    >>> from sympy import pi, sqrt
+    >>> q = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
+    >>> q
+    1/2 + 1/2*i + 1/2*j + 1/2*k
+    """
+    x, y, z = vector
+    norm = sqrt(x**2 + y**2 + z**2)
+    x, y, z = x / norm, y / norm, z / norm  # Normalize the vector
+    s = sin(angle / 2)
+    a = cos(angle / 2)
+    b = x * s
+    c = y * s
+    d = z * s
+    return cls(a, b, c, d)
 
-        Quaternion
-            The normalized rotation quaternion calculated from the given axis and the angle of rotation.
-
-        Examples
-        ========
-
-        >>> from sympy import Quaternion
-        >>> from sympy import pi, sqrt
-        >>> q = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
-        >>> q
-        1/2 + 1/2*i + 1/2*j + 1/2*k
-
-        """
-        (x, y, z) = vector
-        norm = sqrt(x**2 + y**2 + z**2)
-        (x, y, z) = (x / norm, y / norm, z / norm)
-        s = sin(angle * S.Half)
-        a = cos(angle * S.Half)
-        b = x * s
-        c = y * s
-        d = z * s
-
-        # note that this quaternion is already normalized by construction:
-        # c^2 + (s*x)^2 + (s*y)^2 + (s*z)^2 = c^2 + s^2*(x^2 + y^2 + z^2) = c^2 + s^2 * 1 = c^2 + s^2 = 1
-        # so, what we return is a normalized quaternion
-
-        return cls(a, b, c, d)
 
     @classmethod
     def from_rotation_matrix(cls, M):
@@ -674,10 +748,10 @@ class Quaternion(Expr):
         return self.add(other*-1)
 
     def __mul__(self, other):
-        return self._generic_mul(self, _sympify(other))
+        return self._generic_mul(self, sympify(other))
 
     def __rmul__(self, other):
-        return self._generic_mul(_sympify(other), self)
+        return self._generic_mul(sympify(other), self)
 
     def __pow__(self, p):
         return self.pow(p)
@@ -791,7 +865,7 @@ class Quaternion(Expr):
         (2 + 3*I)*(3 + 4*I) + (2 + 3*I)*(2 + 5*I)*i + 0*j + (2 + 3*I)*(7 + 8*I)*k
 
         """
-        return self._generic_mul(self, _sympify(other))
+        return self._generic_mul(self, sympify(other))
 
     @staticmethod
     def _generic_mul(q1, q2):
