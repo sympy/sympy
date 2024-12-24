@@ -3269,6 +3269,13 @@ class DomainMatrix:
         unit vectors. This avoids unnecessary divisions and is particularly
         suited for exact arithmetic domains.
 
+        Note
+        ====
+
+        This implementation is valid only for matrices over real domains. For
+        matrices over complex domains, a proper QR decomposition would require
+        handling conjugation to ensure orthogonality.
+
         Returns
         =======
 

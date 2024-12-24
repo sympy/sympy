@@ -960,19 +960,17 @@ class DDM(list):
 
     def qr(self):
         """
-        Division-based QR decomposition for DDM.
+        QR decomposition for DDM.
 
         Returns:
-            - Q: Orthogonal matrix as a DDM (columns are orthogonal but not
-              necessarily unit vectors).
+            - Q: Orthogonal matrix as a DDM.
             - R: Upper triangular matrix as a DDM.
 
-        Note:
-            This implementation differs from traditional QR decomposition in
-            that the orthogonal vectors in Q are not normalized to unit vectors.
-            Instead, the columns of Q are orthogonal but may have different
-            magnitudes. This avoids unnecessary divisions and is particularly
-            suited for exact arithmetic domains.
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.qr
+            The higher-level interface to this function.
         """
         rows, cols = self.shape
         K = self.domain
