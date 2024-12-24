@@ -70,8 +70,6 @@ def test_gradient():
     x, y, z = symbols('x y z')
     q = Quaternion(x*y*z, x**2, y**2, z**2)
     grad = Quaternion.gradient(q, (x, y, z))
-
-    # Expected gradient (as a placeholder, verify correct values separately)
     expected_grad = [
         diff(x*y*z, x), diff(x*y*z, y), diff(x*y*z, z),
         diff(x**2, x), diff(x**2, y), diff(x**2, z),
@@ -84,8 +82,6 @@ def test_quaternion_divergence():
     x, y, z = symbols('x y z')
     q = Quaternion(0, x, y, z)
     div = Quaternion.divergence(q, (x, y, z))
-
-    # Divergence is ∂x/∂x + ∂y/∂y + ∂z/∂z = 1 + 1 + 1 = 3
     expected_div = 3
 
     assert div == expected_div, f"Expected {expected_div}, but got {div}"
@@ -94,11 +90,6 @@ def test_quaternion_curl():
     x, y, z = symbols('x y z')
     q = Quaternion(0, x, y, z)
     curl = Quaternion.curl(q, (x, y, z))
-
-    # Curl is computed as:
-    # [∂z/∂y - ∂y/∂z, ∂x/∂z - ∂z/∂x, ∂y/∂x - ∂x/∂y]
-    # For q = Quaternion(0, x, y, z), this simplifies to:
-    # [0, 0, 0]
     expected_curl = Matrix([[0], [0], [0]])
     assert curl == expected_curl, f"Expected {expected_curl}, but got {curl}"
 
