@@ -1365,6 +1365,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     A square-free number is a number where no prime factor in its factorization has an exponent >= 2. Returns True if the number is square-free; otherwise, returns False.
 
     Example
+
     >>> from sympy.ntheory import factorint
     >>> all(exp < 2 for exp in factorint(30).values()) # Check if 30 is square-free
     True
