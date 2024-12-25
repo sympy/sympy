@@ -694,6 +694,11 @@ class DFM:
         L, U, swaps = self.to_ddm().lu()
         return L.to_dfm(), U.to_dfm(), swaps
 
+    def qr(self):
+        """Return the QR decomposition of the matrix."""
+        Q, R = self.to_ddm().qr()
+        return Q.to_dfm(), R.to_dfm()
+
     # XXX: The lu_solve function should be renamed to solve. Whether or not it
     # uses an LU decomposition is an implementation detail. A method called
     # lu_solve would make sense for a situation in which an LU decomposition is

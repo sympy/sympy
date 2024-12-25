@@ -18,7 +18,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 
-from sympy.testing.pytest import SKIP
+from sympy.testing.pytest import SKIP, warns_deprecated_sympy
 
 a, b, c, x, y, z, s = symbols('a,b,c,x,y,z,s')
 
@@ -3754,8 +3754,9 @@ def test_sympy__physics__quantum__operator__HermitianOperator():
 
 
 def test_sympy__physics__quantum__operator__IdentityOperator():
-    from sympy.physics.quantum.operator import IdentityOperator
-    assert _test_args(IdentityOperator(5))
+    with warns_deprecated_sympy():
+        from sympy.physics.quantum.operator import IdentityOperator
+        assert _test_args(IdentityOperator(5))
 
 
 def test_sympy__physics__quantum__operator__Operator():
