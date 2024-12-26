@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from functools import wraps, reduce
 from operator import mul
 from typing import Optional
@@ -18,7 +20,7 @@ from sympy.core.evalf import (
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, Integer, equal_valued
+from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -58,13 +60,15 @@ from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
 
-
 # Required to avoid errors
 import sympy.polys
 
 import mpmath
 from mpmath.libmp.libhyper import NoConvergence
 
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 def _polifyit(func):
@@ -165,7 +169,9 @@ class Poly(Basic):
     is_Poly = True
     _op_priority = 10.001
 
-    def __new__(cls, rep, *gens, **args) -> Poly:
+    rep: DMP
+
+    def __new__(cls, rep, *gens, **args) -> Self:
         """Create a new polynomial instance out of something useful. """
         opt = options.build_options(gens, args)
 
@@ -1869,7 +1875,7 @@ class Poly(Basic):
                 raise PolynomialError(
                     "a valid generator expected, got %s" % gen)
 
-    def degree(f, gen=0):
+    def degree(f, gen: int = 0) -> int | NegativeInfinity:
         """
         Returns degree of ``f`` in ``x_j``.
 
