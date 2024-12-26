@@ -422,26 +422,31 @@ def signsimp(expr, evaluate=None):
         e = e.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
     return e
 
-def simplify_nested_floor(expr):
+def simplify_nested_floor_ceil(expr):
     """
-    Simplifies nested floor divisions (//) in a SymPy expression.
+    Simplifies nested floor divisions (//) and ceiling operations in a SymPy expression.
 
     Args:
         expr: A SymPy expression.
 
     Returns:
-        A simplified SymPy expression with nested floor divisions collapsed.
+        A simplified SymPy expression with nested floor and ceiling operations collapsed.
     """
-    if isinstance(expr, floor):
+    if isinstance(expr, (floor, ceiling)):
         arg = expr.args[0]
 
-        if arg.is_Mul:
+        if isinstance(arg, Expr):
             numerator, denominator = arg.as_numer_denom()
 
-            if isinstance(numerator, floor):
-                inner_floor = numerator.args[0]
+            if denominator.is_integer and denominator.is_positive:
+                if isinstance(numerator, (floor, ceiling)):
+                    inner_function = numerator.args[0]
 
-                return floor(inner_floor / denominator)
+                    if isinstance(expr, floor):
+                        return floor(inner_function / denominator)
+
+                    elif isinstance(expr, ceiling):
+                        return ceiling(inner_function / denominator)
 
     return expr
 
@@ -624,8 +629,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     expr = sympify(expr, rational=rational)
 
-    # Preprocess nested floor divisions
-    expr = expr.replace(lambda x: True, simplify_nested_floor)
+    # Preprocess nested floor/ceiling divisions
+    expr = expr.replace(lambda x: True, simplify_nested_floor_ceil)
 
     kwargs = {
         "ratio": kwargs.get('ratio', ratio),

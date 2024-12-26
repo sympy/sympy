@@ -12,7 +12,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
 from sympy.functions.elementary.complexes import (Abs, sign)
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -144,19 +144,24 @@ def test_simplify_expr():
     assert simplify(hyper([], [], x)) == exp(x)
 
     # issue 27400
+    a_pos_int = symbols('a_pos_int', integer=True, positive=True)
+    b_pos_int = symbols('b_pos_int', integer=True, positive=True)
+
     assert simplify(floor(floor(a))) == floor(a)
+    assert simplify(floor(floor(a) / 2)) == floor(a / 2)
+    assert simplify(floor(floor(floor(a) / b) / c)) == floor(floor(floor(a) / b) / c)
+    assert simplify(floor(floor(floor(a) / a_pos_int) / b_pos_int)) == floor(a / (a_pos_int * b_pos_int))
+    assert simplify(floor(a) + b) == floor(a) + b
+    assert simplify(floor(floor(a + b) / floor(c + d))) == floor(floor(a + b) / floor(c + d))
+    assert simplify(floor(floor(a + b) / floor(a_pos_int + b_pos_int))) == floor((a + b) / floor(a_pos_int + b_pos_int))
 
-    expr = floor(floor(a) / 2)
-    assert simplify(expr) == floor(a / 2)
-
-    expr = floor(floor(floor(a) / b) / c)
-    assert simplify(expr) == floor(a / (b * c))
-
-    expr = floor(a) + b
-    assert simplify(expr) == floor(a) + b
-
-    expr = floor(floor(a + b) / floor(c + d))
-    assert simplify(expr) == floor((a + b) / floor(c + d))
+    assert simplify(ceiling(ceiling(a))) == ceiling(a)
+    assert simplify(ceiling(ceiling(a) / 2)) == ceiling(a / 2)
+    assert simplify(ceiling(ceiling(ceiling(a) / b) / c)) == ceiling(ceiling(ceiling(a) / b) / c)
+    assert simplify(ceiling(ceiling(ceiling(a) / a_pos_int) / b_pos_int)) == ceiling(a / (a_pos_int * b_pos_int))
+    assert simplify(ceiling(a) + b) == ceiling(a) + b
+    assert simplify(ceiling(ceiling(a + b) / ceiling(c + d))) == ceiling(ceiling(a + b) / ceiling(c + d))
+    assert simplify(ceiling(ceiling(a + b) / ceiling(a_pos_int + b_pos_int))) == ceiling((a + b) / ceiling(a_pos_int + b_pos_int))
 
 
 def test_issue_3557():
