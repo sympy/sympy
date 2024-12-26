@@ -24,7 +24,7 @@ from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify, Abs, sign
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold,
                                                   piecewise_simplify)
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -422,6 +422,28 @@ def signsimp(expr, evaluate=None):
         e = e.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
     return e
 
+def simplify_nested_floor(expr):
+    """
+    Simplifies nested floor divisions (//) in a SymPy expression.
+
+    Args:
+        expr: A SymPy expression.
+
+    Returns:
+        A simplified SymPy expression with nested floor divisions collapsed.
+    """
+    if isinstance(expr, floor):
+        arg = expr.args[0]
+
+        if arg.is_Mul:
+            numerator, denominator = arg.as_numer_denom()
+
+            if isinstance(numerator, floor):
+                inner_floor = numerator.args[0]
+
+                return floor(inner_floor / denominator)
+
+    return expr
 
 @overload
 def simplify(expr: Expr, **kwargs) -> Expr: ...
@@ -601,6 +623,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         return shorter(rv, collect_abs(rv))
 
     expr = sympify(expr, rational=rational)
+
+    # Preprocess nested floor divisions
+    expr = expr.replace(lambda x: True, simplify_nested_floor)
+
     kwargs = {
         "ratio": kwargs.get('ratio', ratio),
         "measure": kwargs.get('measure', measure),

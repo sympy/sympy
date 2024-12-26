@@ -12,6 +12,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
 from sympy.functions.elementary.complexes import (Abs, sign)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -141,6 +142,21 @@ def test_simplify_expr():
     assert simplify(log(2*x) - log(2)) == log(x)
 
     assert simplify(hyper([], [], x)) == exp(x)
+
+    # issue 27400
+    assert simplify(floor(floor(a))) == floor(a)
+
+    expr = floor(floor(a) / 2)
+    assert simplify(expr) == floor(a / 2)
+
+    expr = floor(floor(floor(a) / b) / c)
+    assert simplify(expr) == floor(a / (b * c))
+
+    expr = floor(a) + b
+    assert simplify(expr) == floor(a) + b
+
+    expr = floor(floor(a + b) / floor(c + d))
+    assert simplify(expr) == floor((a + b) / floor(c + d))
 
 
 def test_issue_3557():
