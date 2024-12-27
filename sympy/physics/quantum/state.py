@@ -1,16 +1,23 @@
 """Dirac notation for states."""
 
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Function
+from sympy.core.kind import _NumberKind
 from sympy.core.numbers import oo, equal_valued
+from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.integrals.integrals import integrate
+from sympy.multipledispatch.dispatcher import Dispatcher
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
+from sympy.physics.quantum.statekind import KetKind, _KetKind, BraKind, _BraKind
+from sympy.utilities.misc import debug
+
 
 __all__ = [
     'KetBase',
@@ -223,22 +230,6 @@ class KetBase(StateBase):
     def dual_class(self):
         return BraBase
 
-    def __mul__(self, other):
-        """KetBase*other"""
-        from sympy.physics.quantum.operator import OuterProduct
-        if isinstance(other, BraBase):
-            return OuterProduct(self, other)
-        else:
-            return Expr.__mul__(self, other)
-
-    def __rmul__(self, other):
-        """other*KetBase"""
-        from sympy.physics.quantum.innerproduct import InnerProduct
-        if isinstance(other, BraBase):
-            return InnerProduct(other, self)
-        else:
-            return Expr.__rmul__(self, other)
-
     #-------------------------------------------------------------------------
     # _eval_* methods
     #-------------------------------------------------------------------------
@@ -314,22 +305,6 @@ class BraBase(StateBase):
     def dual_class(self):
         return KetBase
 
-    def __mul__(self, other):
-        """BraBase*other"""
-        from sympy.physics.quantum.innerproduct import InnerProduct
-        if isinstance(other, KetBase):
-            return InnerProduct(self, other)
-        else:
-            return Expr.__mul__(self, other)
-
-    def __rmul__(self, other):
-        """other*BraBase"""
-        from sympy.physics.quantum.operator import OuterProduct
-        if isinstance(other, KetBase):
-            return OuterProduct(other, self)
-        else:
-            return Expr.__rmul__(self, other)
-
     def _represent(self, **options):
         """A default represent that uses the Ket's version."""
         from sympy.physics.quantum.dagger import Dagger
@@ -339,6 +314,11 @@ class BraBase(StateBase):
 class State(StateBase):
     """General abstract quantum state used as a base class for Ket and Bra."""
     pass
+
+
+@Mul._kind_dispatcher.register(_NumberKind, _KetKind)
+def _mul_ket_kind(lhs, rhs):
+    return KetKind
 
 
 class Ket(State, KetBase):
@@ -401,9 +381,16 @@ class Ket(State, KetBase):
     .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
+    kind = KetKind
+
     @classmethod
     def dual_class(self):
         return Bra
+
+
+@Mul._kind_dispatcher.register(_NumberKind, _BraKind)
+def _mul_bra_kind(lhs, rhs):
+    return BraKind
 
 
 class Bra(State, BraBase):
@@ -461,6 +448,8 @@ class Bra(State, BraBase):
 
     .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
+
+    kind = BraKind
 
     @classmethod
     def dual_class(self):
@@ -1011,3 +1000,121 @@ class Wavefunction(Function):
         """
 
         return Wavefunction(self.expr*conjugate(self.expr), *self.variables)
+
+
+#-----------------------------------------------------------------------------
+# Use the kind and _constructor_postprocessor_mapping APIs to transform
+# Bras and Kets to Inner/Outer/TensorProducts.
+#-----------------------------------------------------------------------------
+
+from sympy.physics.quantum.innerproduct import InnerProduct
+from sympy.physics.quantum.operator import OuterProduct
+from sympy.physics.quantum.tensorproduct import TensorProduct
+
+
+transform_state_pair = Dispatcher('transform_state_pair')
+
+@transform_state_pair.register(Expr, Expr)
+def transform_expr(a, b):
+    return None
+
+@transform_state_pair.register(Bra, Ket)
+def transform_bra_ket(a, b):
+    return (InnerProduct(a, b),)
+
+@transform_state_pair.register(Ket, Bra)
+def transform_ket_bra(a, b):
+    return (OuterProduct(a, b),)
+
+@transform_state_pair.register(Ket, Ket)
+def transform_ket_ket(a, b):
+    return (TensorProduct(a, b),)
+
+@transform_state_pair.register(Bra, Bra)
+def transform_bra_bra(a, b):
+    return (TensorProduct(a, b),)
+
+@transform_state_pair.register(OuterProduct, Ket)
+def transform_op_ket(a, b):
+    return (a.ket, InnerProduct(a.bra, b))
+
+@transform_state_pair.register(Bra, OuterProduct)
+def transform_bra_op(a, b):
+    return (InnerProduct(a, b.ket), b.bra)
+
+@transform_state_pair.register(TensorProduct, Ket)
+def transform_tp_ket(a, b):
+    if a.kind == KetKind:
+        return (TensorProduct(*(a.args + (b,))),)
+
+@transform_state_pair.register(Ket, TensorProduct)
+def transform_ket_tp(a, b):
+    if b.kind == KetKind:
+        return (TensorProduct(*((a,) + b.args)),)
+
+@transform_state_pair.register(TensorProduct, Bra)
+def transform_tp_bra(a, b):
+    if a.kind == BraKind:
+        return (TensorProduct(*(a.args + (b,))),)
+
+@transform_state_pair.register(Bra, TensorProduct)
+def transform_bra_tp(a, b):
+    if b.kind == BraKind:
+        return (TensorProduct(*((a,) + b.args)),)
+
+@transform_state_pair.register(TensorProduct, TensorProduct)
+def transform_tp_tp(a, b):
+    if a.kind == BraKind and b.kind == KetKind:
+        if len(a.args) == len(b.args):
+            return tuple([InnerProduct(i, j) for (i, j) in zip(a.args, b.args)])
+
+@transform_state_pair.register(OuterProduct, OuterProduct)
+def transform_op_op(a, b):
+    return (a.ket, InnerProduct(a.bra, b.ket), b.bra)
+
+
+def postprocess_state_mul(expr):
+    args = list(expr.args)
+    result = []
+    
+    # Continue as long as we have at least 2 elements
+    while len(args) > 1:
+        # Get first two elements
+        first = args.pop(0)
+        second = args[0]  # Look at second element without popping yet
+        
+        transformed = transform_state_pair(first, second)
+        
+        if transformed is None:
+            # If transform returns None, append first element
+            result.append(first)
+        else:
+            args.pop(0) # This item was transformed, pop and discard
+            args.insert(0, transformed[-1])
+            result.extend(transformed[:-1])
+
+    # Append any remaining element
+    if args:
+        result.append(args[0])
+        
+    return Mul._from_args(result, is_commutative=False)
+
+
+def postprocess_state_pow(expr):
+    base, exp = expr.as_base_exp()
+    if exp.is_integer and exp.is_positive:
+        return TensorProduct(*(base for i in range(int(exp))))
+
+
+Basic._constructor_postprocessor_mapping[State] = {
+    "Mul": [postprocess_state_mul],
+    "Pow": [postprocess_state_pow]
+}
+
+Basic._constructor_postprocessor_mapping[TensorProduct] = {
+    "Mul": [postprocess_state_mul]
+}
+
+Basic._constructor_postprocessor_mapping[OuterProduct] = {
+    "Mul": [postprocess_state_mul]
+}
