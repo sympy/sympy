@@ -2,6 +2,7 @@
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr
+from sympy.core.kind import KindDispatcher
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sympify import sympify
@@ -13,7 +14,10 @@ from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.operator import OperatorKind, _OperatorKind
+from sympy.physics.quantum.state import Ket, _KetKind, KetKind
+from sympy.physics.quantum.state import Bra, _BraKind, BraKind
+
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray,
     scipy_sparse_matrix,
@@ -119,6 +123,13 @@ class TensorProduct(Expr):
         AxC + BxC
     """
     is_commutative = False
+
+    _kind_dispatcher = KindDispatcher("TensorProduct_kind_dispatcher", commutative=True)
+
+    @property
+    def kind(self):
+        arg_kinds = (a.kind for a in self.args)
+        return self._kind_dispatcher(*arg_kinds)
 
     def __new__(cls, *args):
         if isinstance(args[0], (Matrix, ImmutableMatrix, numpy_ndarray,
@@ -423,3 +434,18 @@ def tensor_product_simp(e, **hints):
         return AntiCommutator(*[tensor_product_simp(arg) for arg in e.args])
     else:
         return e
+
+
+@TensorProduct._kind_dispatcher.register(_OperatorKind, _OperatorKind)
+def find_op_kind(e1, e2):
+    return OperatorKind
+
+
+@TensorProduct._kind_dispatcher.register(_KetKind, _KetKind)
+def find_ket_kind(e1, e2):
+    return KetKind
+
+
+@TensorProduct._kind_dispatcher.register(_BraKind, _BraKind)
+def find_bra_kind(e1, e2):
+    return BraKind

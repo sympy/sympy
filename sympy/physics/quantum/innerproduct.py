@@ -1,10 +1,11 @@
 """Symbolic inner product."""
 
 from sympy.core.expr import Expr
+from sympy.core.kind import NumberKind
 from sympy.functions.elementary.complexes import conjugate
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.state import KetBase, BraBase
+
 
 __all__ = [
     'InnerProduct'
@@ -71,9 +72,13 @@ class InnerProduct(Expr):
 
     .. [1] https://en.wikipedia.org/wiki/Inner_product
     """
+
+    kind = NumberKind
+
     is_complex = True
 
     def __new__(cls, bra, ket):
+        from sympy.physics.quantum.state import KetBase, BraBase
         if not isinstance(ket, KetBase):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):

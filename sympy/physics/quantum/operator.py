@@ -13,14 +13,18 @@ from typing import Optional
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, expand)
+from sympy.core.kind import _NumberKind
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo
 from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.operatorkind import OperatorKind, _OperatorKind
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 from sympy.matrices import eye
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
 
 __all__ = [
     'Operator',
@@ -34,6 +38,11 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # Operators and outer products
 #-----------------------------------------------------------------------------
+ 
+
+@Mul._kind_dispatcher.register(_NumberKind, _OperatorKind)
+def _mul_operator_kind(lhs, rhs):
+    return OperatorKind
 
 
 class Operator(QExpr):
@@ -107,6 +116,8 @@ class Operator(QExpr):
     @classmethod
     def default_args(self):
         return ("O",)
+
+    kind = OperatorKind
 
     #-------------------------------------------------------------------------
     # Printing
@@ -184,13 +195,6 @@ class Operator(QExpr):
 
     def _eval_inverse(self):
         return self**(-1)
-
-    def __mul__(self, other):
-
-        if isinstance(other, IdentityOperator):
-            return self
-
-        return Mul(self, other)
 
 
 class HermitianOperator(Operator):
@@ -331,12 +335,12 @@ class IdentityOperator(Operator):
     def _print_contents_latex(self, printer, *args):
         return r'{\mathcal{I}}'
 
-    def __mul__(self, other):
+    # def __mul__(self, other):
 
-        if isinstance(other, (Operator, Dagger)):
-            return other
+    #     if isinstance(other, (Operator, Dagger)):
+    #         return other
 
-        return Mul(self, other)
+    #     return Mul(self, other)
 
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:

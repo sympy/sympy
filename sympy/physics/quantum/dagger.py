@@ -79,19 +79,16 @@ class Dagger(adjoint):
     .. [2] https://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
+    @property
+    def kind(self):
+        return self.args[0].kind
+
     def __new__(cls, arg, evaluate=True):
         if hasattr(arg, 'adjoint') and evaluate:
             return arg.adjoint()
         elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose') and evaluate:
             return arg.conjugate().transpose()
         return Expr.__new__(cls, sympify(arg))
-
-    def __mul__(self, other):
-        from sympy.physics.quantum import IdentityOperator
-        if isinstance(other, IdentityOperator):
-            return self
-
-        return Mul(self, other)
 
 adjoint.__name__ = "Dagger"
 adjoint._sympyrepr = lambda a, b: "Dagger(%s)" % b._print(a.args[0])
