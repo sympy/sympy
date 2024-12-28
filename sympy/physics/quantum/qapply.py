@@ -33,6 +33,10 @@ def ip_doit_func(e):
     return e.replace(InnerProduct, lambda *args: InnerProduct(*args).doit())
 
 
+def sum_doit_func(e):
+    return e.replace(Sum, lambda *args: Sum(*args).doit())
+
+
 def qapply(e, **options):
     """Apply operators to states in a quantum expression.
 
@@ -123,8 +127,7 @@ def qapply(e, **options):
     # For a Sum, call qapply on its function.
     elif isinstance(e, Sum):
         result = Sum(qapply(e.function, **options), *e.limits)
-        if sum_doit:
-            result = result.doit()
+        result = sum_doit_func(result) if sum_doit else result
         return result
 
     # For a Pow, call qapply on its base.
@@ -144,7 +147,9 @@ def qapply(e, **options):
             result = c_mul*qapply(nc_mul, **options)
         if result == e and dagger:
             result = Dagger(qapply_Mul(Dagger(e), **options))
-        return ip_doit_func(result) if ip_doit else result
+        result = ip_doit_func(result) if ip_doit else result
+        result = sum_doit_func(result) if sum_doit else result
+        return result
 
     # In all other cases (State, Operator, Pow, Commutator, InnerProduct,
     # OuterProduct) we won't ever have operators to apply to kets.
@@ -154,13 +159,9 @@ def qapply(e, **options):
 
 def qapply_Mul(e, **options):
 
-    ip_doit = options.get('ip_doit', True)
-    sum_doit = options.get('sum_doit', False)
-
     args = list(e.args)
     extra = S.One
     result = None
-
 
     # If we only have 0 or 1 args, we have nothing to do and return.
     if len(args) <= 1 or not isinstance(e, Mul):
@@ -214,41 +215,13 @@ def qapply_Mul(e, **options):
                 raise ValueError('Duplicated dummy indices in separate sums in qapply.')
             limits = lhs.limits + rhs.limits
             result = Sum(qapply(lhs.function*rhs.function, **options), *limits)
-            if sum_doit:
-                result = result.doit()
             return qapply_Mul(e.func(*args)*result, **options)
         else:
-            result = Sum(qapply(lhs*rhs.function, **options), rhs.limits)
-            if sum_doit:
-                result = result.doit()
+            result = Sum(qapply(lhs*rhs.function, **options), *rhs.limits)
             return qapply_Mul(e.func(*args)*result, **options)
 
     if isinstance(lhs, Sum):
-        result = Sum(qapply(lhs.function*rhs, **options), lhs.limits)
-        if sum_doit:
-            result = result.doit()
-        return qapply_Mul(e.func(*args)*result, **options)
-
-    # For Sums, move the Sum to the right.
-    if isinstance(rhs, Sum):
-        if isinstance(lhs, Sum):
-            if set(lhs.variables).intersection(set(rhs.variables)):
-                raise ValueError('Duplicated dummy indices in separate sums in qapply.')
-            limits = lhs.limits + rhs.limits
-            result = Sum(qapply(lhs.function*rhs.function, **options), *limits)
-            if sum_doit:
-                result = result.doit()
-            return qapply_Mul(e.func(*args)*result, **options)
-        else:
-            result = Sum(qapply(lhs*rhs.function, **options), rhs.limits)
-            if sum_doit:
-                result = result.doit()
-            return qapply_Mul(e.func(*args)*result, **options)
-
-    if isinstance(lhs, Sum):
-        result = Sum(qapply(lhs.function*rhs, **options), lhs.limits)
-        if sum_doit:
-            result = result.doit()
+        result = Sum(qapply(lhs.function*rhs, **options), *lhs.limits)
         return qapply_Mul(e.func(*args)*result, **options)
 
     # Now try to actually apply the operator and build an inner product.
