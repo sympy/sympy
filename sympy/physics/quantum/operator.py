@@ -19,7 +19,7 @@ from sympy.core.numbers import oo
 from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operatorkind import OperatorKind, _OperatorKind
+from sympy.physics.quantum.kind import OperatorKind, _OperatorKind
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 from sympy.matrices import eye
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -38,11 +38,6 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # Operators and outer products
 #-----------------------------------------------------------------------------
-
-
-@Mul._kind_dispatcher.register(_NumberKind, _OperatorKind)
-def _mul_operator_kind(lhs, rhs):
-    return OperatorKind
 
 
 class Operator(QExpr):
