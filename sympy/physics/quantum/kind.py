@@ -1,4 +1,4 @@
-"""Kinds for Bras and Kets."""
+"""Kinds for Operators, Bras, and Kets."""
 
 from sympy.core.kind import Kind
 
@@ -24,3 +24,17 @@ class _BraKind(Kind):
         return "BraKind"
 
 BraKind = _BraKind()
+
+
+from sympy.core.kind import Kind
+
+class _OperatorKind(Kind):
+
+    def __new__(cls):
+        obj = super().__new__(cls)
+        return obj
+
+    def __repr__(self):
+        return "OperatorKind"
+
+OperatorKind = _OperatorKind()
