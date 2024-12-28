@@ -1082,7 +1082,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             check1 = check.subs({x: point, y: value}).simplify()
             if not check1.has(oo) and not check1.has(zoo) and \
                 not check1.has(nan) and not check1.has(-oo):
-                check2 = (check1.diff(x)).subs({x: point, y: value})
+                check2 = check.diff(x).subs({x: point, y: value}).simplify()
                 if not check2.has(oo) and not check2.has(zoo) and \
                     not check2.has(nan) and not check2.has(-oo):
                     rseries = r.copy()
