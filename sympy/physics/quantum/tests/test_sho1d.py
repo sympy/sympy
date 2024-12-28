@@ -171,6 +171,6 @@ def test_issue_26495():
     n = Symbol('n', is_integer=True)
     i = Symbol('i', is_integer=True, nonnegative=True)
     j = Symbol('j', is_integer=True, nonnegative=True)
-    rho = (1/(1+nbar))*Sum((nbar/(1+nbar))**n*SHOKet(n)*SHOBra(n), (n,0,oo))
+    rho = Sum((nbar/(1+nbar))**n*SHOKet(n)*SHOBra(n), (n,0,oo))
     result = qapply(SHOBra(i)*rho*SHOKet(j), sum_doit=True)
-    assert simplify(result) == nbar**j*(nbar+1)**(-j-1)*KroneckerDelta(i,j)
+    assert simplify(result) == (nbar/(nbar+1))**i*KroneckerDelta(i,j)

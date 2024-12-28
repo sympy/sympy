@@ -113,7 +113,8 @@ def test_identity():
     assert qapply(I * O) == O
     assert qapply(O * I) == O
 
-        for n in [2, 3, 5]:
+    for n in [2, 3, 5]:
+        with warns_deprecated_sympy():
             assert represent(IdentityOperator(n)) == eye(n)
 
 
