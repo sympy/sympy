@@ -15,6 +15,11 @@ def test_FreeGroup__init__():
     assert len(FreeGroup((x, y, z)).generators) == 3
 
 
+def test_FreeGroup__getnewargs__():
+    x, y, z = map(Symbol, "xyz")
+    assert FreeGroup("x, y, z").__getnewargs__() == ((x, y, z),)
+
+
 def test_free_group():
     G, a, b, c = free_group("a, b, c")
     assert F.generators == (x, y, z)
@@ -151,6 +156,12 @@ def test_FreeGroupElm__mul__pow__():
 
     assert x*(x**-1*y*z*y**-1) == y*z*y**-1
     assert x**2*(x**-2*y**-1*z**2*y) == y**-1*z**2*y
+
+    a = F.identity
+    for n in range(10):
+        assert a == x**n
+        assert a**-1 == x**-n
+        a *= x
 
 
 def test_FreeGroupElm__len__():

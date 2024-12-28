@@ -54,8 +54,9 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
+from sympy.core.numbers import int_valued
 from sympy.core.function import Function
-from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.numbers import (Float, I, Integer, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -105,6 +106,25 @@ def _calc_factlist(nn):
         for ii in range(len(_Factlist), int(nn + 1)):
             _Factlist.append(_Factlist[ii - 1] * ii)
     return _Factlist[:int(nn) + 1]
+
+
+def _int_or_halfint(value):
+    """return Python int unless value is half-int (then return float)"""
+    if isinstance(value, int):
+        return value
+    elif type(value) is float:
+        if value.is_integer():
+            return int(value)  # an int
+        if (2*value).is_integer():
+            return value  # a float
+    elif isinstance(value, Rational):
+        if value.q == 2:
+            return value.p/value.q  # a float
+        elif value.q == 1:
+            return value.p  # an int
+    elif isinstance(value, Float):
+        return _int_or_halfint(float(value))
+    raise ValueError("expecting integer or half-integer, got %s" % value)
 
 
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
@@ -177,7 +197,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - zero for `m_1 + m_2 + m_3 \neq 0`
 
     - zero for violating any one of the conditions
-      `j_1 \ge |m_1|`,  `j_2 \ge |m_2|`,  `j_3 \ge |m_3|`
+         `m_1  \in \{-|j_1|, \ldots, |j_1|\}`,
+         `m_2  \in \{-|j_2|, \ldots, |j_2|\}`,
+         `m_3  \in \{-|j_3|, \ldots, |j_3|\}`
 
     Algorithm
     =========
@@ -193,16 +215,13 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    if int(j_1 * 2) != j_1 * 2 or int(j_2 * 2) != j_2 * 2 or \
-            int(j_3 * 2) != j_3 * 2:
-        raise ValueError("j values must be integer or half integer")
-    if int(m_1 * 2) != m_1 * 2 or int(m_2 * 2) != m_2 * 2 or \
-            int(m_3 * 2) != m_3 * 2:
-        raise ValueError("m values must be integer or half integer")
+
+    j_1, j_2, j_3, m_1, m_2, m_3 = \
+        map(_int_or_halfint, map(sympify,
+            [j_1, j_2, j_3, m_1, m_2, m_3]))
+
     if m_1 + m_2 + m_3 != 0:
         return S.Zero
-    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
-    m_3 = -m_3
     a1 = j_1 + j_2 - j_3
     if a1 < 0:
         return S.Zero
@@ -213,6 +232,10 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     if a3 < 0:
         return S.Zero
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
+        return S.Zero
+    if not (int_valued(j_1 - m_1) and \
+            int_valued(j_2 - m_2) and \
+            int_valued(j_3 - m_3)):
         return S.Zero
 
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
@@ -246,6 +269,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             _Factlist[int(j_1 + j_2 - j_3 - ii)]
         sumres = sumres + Integer((-1) ** ii) / den
 
+    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
     res = ressqrt * sumres * prefid
     return res
 
@@ -300,9 +324,16 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    res = (-1) ** sympify(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
-        wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
-    return res
+    j_1 = sympify(j_1)
+    j_2 = sympify(j_2)
+    j_3 = sympify(j_3)
+    m_1 = sympify(m_1)
+    m_2 = sympify(m_2)
+    m_3 = sympify(m_3)
+
+    w = wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
+
+    return (-1) ** (j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * w
 
 
 def _big_delta_coeff(aa, bb, cc, prec=None):
@@ -336,11 +367,13 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
         1/2*sqrt(1/6)
     """
 
-    if int(aa + bb - cc) != (aa + bb - cc):
+    # the triangle test will only pass if a) all 3 values are ints or
+    # b) 1 is an int and the other two are half-ints
+    if not int_valued(aa + bb - cc):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
-    if int(aa + cc - bb) != (aa + cc - bb):
+    if not int_valued(aa + cc - bb):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
-    if int(bb + cc - aa) != (bb + cc - aa):
+    if not int_valued(bb + cc - aa):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if (aa + bb - cc) < 0:
         return S.Zero
@@ -516,10 +549,12 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 
       .. math::
 
+         \begin{aligned}
          \operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)
-          =\operatorname{Wigner6j}(j_1,j_5,j_6,j_4,j_2,j_3)
-          =\operatorname{Wigner6j}(j_4,j_2,j_6,j_1,j_5,j_3)
-          =\operatorname{Wigner6j}(j_4,j_5,j_3,j_1,j_2,j_6)
+          &=\operatorname{Wigner6j}(j_1,j_5,j_6,j_4,j_2,j_3)\\
+          &=\operatorname{Wigner6j}(j_4,j_2,j_6,j_1,j_5,j_3)\\
+          &=\operatorname{Wigner6j}(j_4,j_5,j_3,j_1,j_2,j_6)
+         \end{aligned}
 
     - additional 6 symmetries [Regge59]_ giving rise to 144 symmetries
       in total
@@ -536,6 +571,8 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     algebra system [Rasch03]_.
 
     """
+    j_1, j_2, j_3, j_4, j_5, j_6 = map(sympify, \
+                [j_1, j_2, j_3, j_4, j_5, j_6])
     res = (-1) ** int(j_1 + j_2 + j_4 + j_5) * \
         racah(j_1, j_2, j_5, j_4, j_3, j_6, prec)
     return res
@@ -565,11 +602,11 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     ========
 
     >>> from sympy.physics.wigner import wigner_9j
-    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0, prec=64) # ==1/18
-    0.05555555...
+    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0, prec=64)
+    0.05555555555555555555555555555555555555555555555555555555555555555
 
-    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1, prec=64) # ==1/6
-    0.1666666...
+    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1, prec=64)
+    0.1666666666666666666666666666666666666666666666666666666666666667
 
     It is an error to have arguments that are not integer or half
     integer values or do not fulfill the triangle relation::
@@ -592,6 +629,8 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
     """
+    j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9 = map(sympify, \
+                [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9])
     imax = int(min(j_1 + j_9, j_2 + j_6, j_4 + j_8) * 2)
     imin = imax % 2
     sumres = 0
@@ -646,7 +685,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     >>> gaunt(1,0,1,1,0,-1)
     -1/(2*sqrt(pi))
     >>> gaunt(1000,1000,1200,9,3,-12).n(64)
-    0.00689500421922113448...
+    0.006895004219221134484332976156744208248842039317638217822322799675
 
     It is an error to use non-integer values for `l` and `m`::
 
@@ -753,7 +792,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     return res
 
 
-def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
+def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     r"""
     Calculate the real Gaunt coefficient.
 
@@ -765,23 +804,23 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     .. math::
         \begin{aligned}
-        \operatorname{RealGaunt}(l_1,l_2,l_3,m_1,m_2,m_3)
-        &=\int Z^{m_1}_{l_1}(\Omega)
-         Z^{m_2}_{l_2}(\Omega) Z^{m_3}_{l_3}(\Omega) \,d\Omega \\
+        \operatorname{RealGaunt}(l_1,l_2,l_3,\mu_1,\mu_2,\mu_3)
+        &=\int Z^{\mu_1}_{l_1}(\Omega)
+         Z^{\mu_2}_{l_2}(\Omega) Z^{\mu_3}_{l_3}(\Omega) \,d\Omega \\
         \end{aligned}
 
     Alternatively, it can be defined in terms of the standard Gaunt
     coefficient by relating the real spherical harmonics to the standard
     spherical harmonics via a unitary transformation `U`, i.e.
-    `Z^{m}_{l}(\Omega)=\sum_{m'}U^{m}_{m'}Y^{m'}_{l}(\Omega)` [Homeier96]_.
+    `Z^{\mu}_{l}(\Omega)=\sum_{m'}U^{\mu}_{m'}Y^{m'}_{l}(\Omega)` [Homeier96]_.
     The real Gaunt coefficient is then defined as
 
     .. math::
         \begin{aligned}
-        \operatorname{RealGaunt}(l_1,l_2,l_3,m_1,m_2,m_3)
-        &=\int Z^{m_1}_{l_1}(\Omega)
-         Z^{m_2}_{l_2}(\Omega) Z^{m_3}_{l_3}(\Omega) \,d\Omega \\
-        &=\sum_{m'_1 m'_2 m'_3} U^{m_1}_{m'_1}U^{m_2}_{m'_2}U^{m_3}_{m'_3}
+        \operatorname{RealGaunt}(l_1,l_2,l_3,\mu_1,\mu_2,\mu_3)
+        &=\int Z^{\mu_1}_{l_1}(\Omega)
+         Z^{\mu_2}_{l_2}(\Omega) Z^{\mu_3}_{l_3}(\Omega) \,d\Omega \\
+        &=\sum_{m'_1 m'_2 m'_3} U^{\mu_1}_{m'_1}U^{\mu_2}_{m'_2}U^{\mu_3}_{m'_3}
          \operatorname{Gaunt}(l_1,l_2,l_3,m'_1,m'_2,m'_3)
         \end{aligned}
 
@@ -789,10 +828,10 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     .. math::
         \begin{aligned}
-        U^m_{m'} = \delta_{|m||m'|}*(\delta_{m'0}\delta_{m0} + \frac{1}{\sqrt{2}}\big[\Theta(m)
-        \big(\delta_{m'm}+(-1)^{m'}\delta_{m'-m}\big)+i\Theta(-m)\big((-1)^{-m}
-        \delta_{m'-m}-\delta_{m'm}*(-1)^{m'-m}\big)\big])
+        U^\mu_{m} = \delta_{|\mu||m|}*(\delta_{m0}\delta_{\mu 0} + \frac{1}{\sqrt{2}}\big[\Theta(\mu)\big(\delta_{m\mu}+(-1)^{m}\delta_{m-\mu}\big)
+        +i \Theta(-\mu)\big((-1)^{m}\delta_{m\mu}-\delta_{m-\mu}\big)\big])
         \end{aligned}
+
 
     where `\delta_{ij}` is the Kronecker delta symbol and `\Theta` is a step
     function defined as
@@ -805,8 +844,8 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     Parameters
     ==========
 
-    l_1, l_2, l_3, m_1, m_2, m_3 :
-        Integer.
+    l_1, l_2, l_3, mu_1, mu_2, mu_3 :
+        Integer degree and order
 
     prec - precision, default: ``None``.
         Providing a precision can
@@ -819,28 +858,28 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     Examples
     ========
-
     >>> from sympy.physics.wigner import real_gaunt
-    >>> real_gaunt(2,2,4,-1,-1,0)
-    -2/(7*sqrt(pi))
-    >>> real_gaunt(10,10,20,-9,-9,0).n(64)
-    -0.00002480019791932209313156167...
+    >>> real_gaunt(1,1,2,-1,1,-2)
+    sqrt(15)/(10*sqrt(pi))
+    >>> real_gaunt(10,10,20,-9,-9,0,prec=64)
+    -0.00002480019791932209313156167176797577821140084216297395518482071448
 
-    It is an error to use non-integer values for `l` and `m`::
+    It is an error to use non-integer values for `l` and `\mu`::
         real_gaunt(2.8,0.5,1.3,0,0,0)
         Traceback (most recent call last):
         ...
         ValueError: l values must be integer
+
         real_gaunt(2,2,4,0.7,1,-3.4)
         Traceback (most recent call last):
         ...
-        ValueError: m values must be integer
+        ValueError: mu values must be integer
 
     Notes
     =====
 
     The real Gaunt coefficient inherits from the standard Gaunt coefficient,
-    the invariance under any permutation of the pairs `(l_i, m_i)` and the
+    the invariance under any permutation of the pairs `(l_i, \mu_i)` and the
     requirement that the sum of the `l_i` be even to yield a non-zero value.
     It also obeys the following symmetry rules:
 
@@ -850,16 +889,16 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
       .. math::
           \begin{aligned}
-          l_{\text{min}} = \begin{cases} \kappa(l_2, l_3, m_2, m_3) & \text{if}\,
-          \kappa(l_2, l_3, m_2, m_3) + l_{\text{max}}\, \text{is even} \\
-          \kappa(l_2, l_3, m_2, m_3)+1 & \text{if}\, \kappa(l_2, l_3, m_2, m_3) +
+          l_{\text{min}} = \begin{cases} \kappa(l_2, l_3, \mu_2, \mu_3) & \text{if}\,
+          \kappa(l_2, l_3, \mu_2, \mu_3) + l_{\text{max}}\, \text{is even} \\
+          \kappa(l_2, l_3, \mu_2, \mu_3)+1 & \text{if}\, \kappa(l_2, l_3, \mu_2, \mu_3) +
           l_{\text{max}}\, \text{is odd}\end{cases}
           \end{aligned}
 
-      and `\kappa(l_2, l_3, m_2, m_3) = \max{\big(|l_2-l_3|, \min{\big(|m_2+m_3|,
-      |m_2-m_3|\big)}\big)}`
+      and `\kappa(l_2, l_3, \mu_2, \mu_3) = \max{\big(|l_2-l_3|, \min{\big(|\mu_2+\mu_3|,
+      |\mu_2-\mu_3|\big)}\big)}`
 
-    - zero for an odd number of negative `m_i`
+    - zero for an odd number of negative `\mu_i`
 
     Algorithms
     ==========
@@ -873,16 +912,16 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     coefficient, so it is suitable for finite precision arithmetic in so far
     as the algorithm which computes the Gaunt coefficient is.
     """
-    l_1, l_2, l_3, m_1, m_2, m_3 = [
-        as_int(i) for i in (l_1, l_2, l_3, m_1, m_2, m_3)]
+    l_1, l_2, l_3, mu_1, mu_2, mu_3 = [
+        as_int(i) for i in (l_1, l_2, l_3, mu_1, mu_2, mu_3)]
 
     # check for quick exits
-    if sum(1 for i in (m_1, m_2, m_3) if i < 0) % 2:
+    if sum(1 for i in (mu_1, mu_2, mu_3) if i < 0) % 2:
         return S.Zero  # odd number of negative m
     if (l_1 + l_2 + l_3) % 2:
         return S.Zero  # sum of l is odd
     lmax = l_2 + l_3
-    lmin = max(abs(l_2 - l_3), min(abs(m_2 + m_3), abs(m_2 - m_3)))
+    lmin = max(abs(l_2 - l_3), min(abs(mu_2 + mu_3), abs(mu_2 - mu_3)))
     if (lmin + lmax) % 2:
         lmin += 1
     if lmin not in range(lmax, lmin - 2, -2):
@@ -890,21 +929,20 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     kron_del = lambda i, j: 1 if i == j else 0
     s = lambda e: -1 if e % 2 else 1  #  (-1)**e to give +/-1, avoiding float when e<0
-    A = lambda a, b: (-kron_del(a, b)*s(a-b) + kron_del(a, -b)*
-                      s(b)) if b < 0 else 0
-    B = lambda a, b: (kron_del(a, b) + kron_del(a, -b)*s(a)) if b > 0 else 0
-    C = lambda a, b: kron_del(abs(a), abs(b))*(kron_del(a, 0)*kron_del(b, 0) +
-                                          (B(a, b) + I*A(a, b))/sqrt(2))
-    ugnt = 0
-    for i in range(-l_1, l_1+1):
-        U1 = C(i, m_1)
-        for j in range(-l_2, l_2+1):
-            U2 = C(j, m_2)
-            U3 = C(-i-j, m_3)
-            ugnt = ugnt + re(U1*U2*U3)*gaunt(l_1, l_2, l_3, i, j, -i-j)
 
-    if prec is not None:
-        ugnt = ugnt.n(prec)
+    t = lambda x: 1 if x > 0 else 0
+    A = lambda mu, m: t(-mu) * (s(m) * kron_del(m, mu) - kron_del(m, -mu))
+    B = lambda mu, m: t(mu) * (kron_del(m, mu) + s(m) * kron_del(m, -mu))
+    U = lambda mu, m: kron_del(abs(mu), abs(m)) * (kron_del(mu, 0) * kron_del(m, 0) + (B(mu, m) + I * A(mu, m))/sqrt(2))
+
+    ugnt = 0
+    for m1 in range(-l_1, l_1+1):
+        U1 = U(mu_1, m1)
+        for m2 in range(-l_2, l_2+1):
+            U2 = U(mu_2, m2)
+            U3 = U(mu_3,-m1-m2)
+            ugnt = ugnt + re(U1*U2*U3)*gaunt(l_1, l_2, l_3, m1, m2, -m1 - m2, prec=prec)
+
     return ugnt
 
 
@@ -1084,8 +1122,8 @@ def wigner_d_small(J, beta):
         for j, Mj in enumerate(M):
 
             # We get the maximum and minimum value of sigma.
-            sigmamax = max([-Mi-Mj, J-Mj])
-            sigmamin = min([0, J-Mi])
+            sigmamax = min([J-Mi, J-Mj])
+            sigmamin = max([0, -Mi-Mj])
 
             dij = sqrt(factorial(J+Mi)*factorial(J-Mi) /
                        factorial(J+Mj)/factorial(J-Mj))

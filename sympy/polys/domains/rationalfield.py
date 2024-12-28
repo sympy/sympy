@@ -45,6 +45,17 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
     def __init__(self):
         pass
 
+    def __eq__(self, other):
+        """Returns ``True`` if two domains are equivalent. """
+        if isinstance(other, RationalField):
+            return True
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        """Returns hash code of ``self``. """
+        return hash('QQ')
+
     def get_ring(self):
         """Returns ring associated with ``self``. """
         from sympy.polys.domains import ZZ

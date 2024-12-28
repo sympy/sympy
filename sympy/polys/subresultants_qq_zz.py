@@ -336,7 +336,7 @@ def sylvester(f, g, x, method = 1):
         return M
 
     # Sylvester's matrix of 1853 (a.k.a sylvester2)
-    if method >= 2:
+    else:
         if len(fp) < len(gp):
             h = []
             for i in range(len(gp) - len(fp)):
@@ -545,7 +545,7 @@ def res(f, g, x):
 
     """
     if f == 0 or g == 0:
-         raise PolynomialError("The resultant of %s and %s is not defined" % (f, g))
+        raise PolynomialError("The resultant of %s and %s is not defined" % (f, g))
     else:
         return sylvester(f, g, x, 1).det()
 

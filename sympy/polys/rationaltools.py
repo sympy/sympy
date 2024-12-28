@@ -74,9 +74,9 @@ def together(expr, deep=False, fraction=True):
                 else:
                     exp = expr.exp
 
-                return expr.__class__(base, exp)
+                return expr.func(base, exp)
             else:
-                return expr.__class__(*[ _together(arg) for arg in expr.args ])
+                return expr.func(*[ _together(arg) for arg in expr.args ])
         elif iterable(expr):
             return expr.__class__([ _together(ex) for ex in expr ])
 

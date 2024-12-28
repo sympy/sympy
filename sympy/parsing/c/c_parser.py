@@ -180,6 +180,7 @@ if cin:
             """
             file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.cpp')
             file.write(source)
+            file.flush()
             file.seek(0)
             self.tu = self.index.parse(
                 file.name,
@@ -205,10 +206,9 @@ if cin:
             is not implemented
 
             """
-            try:
-                handler = getattr(self, 'transform_%s' % node.kind.name.lower())
-                return handler(node)
-            except AttributeError:
+            handler = getattr(self, 'transform_%s' % node.kind.name.lower(), None)
+
+            if handler is None:
                 print(
                     "Ignoring node of type %s (%s)" % (
                         node.kind,
@@ -217,6 +217,8 @@ if cin:
                         ),
                     file=sys.stderr
                 )
+
+            return handler(node)
 
         def transform_var_decl(self, node):
             """Transformation Function for Variable Declaration
@@ -545,10 +547,10 @@ if cin:
 
             """
             try:
-               value = next(node.get_tokens()).spelling
+                value = next(node.get_tokens()).spelling
             except (StopIteration, ValueError):
                 # No tokens
-               value = node.literal
+                value = node.literal
             return ord(str(value[1]))
 
         def transform_cxx_bool_literal_expr(self, node):

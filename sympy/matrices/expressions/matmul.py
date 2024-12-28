@@ -7,8 +7,8 @@ from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
-from sympy.matrices.common import NonInvertibleMatrixError
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.exceptions import NonInvertibleMatrixError
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.matrices.expressions._shape import validate_matmul_integer as validate
 
@@ -170,8 +170,6 @@ class MatMul(MatrixExpr, Mul):
         if factor != 1:
             from .trace import trace
             return factor * trace(mmul.doit())
-        else:
-            raise NotImplementedError("Can't simplify any further")
 
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import Determinant

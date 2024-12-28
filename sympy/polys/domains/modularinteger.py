@@ -10,6 +10,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.utilities import public
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 @public
 class ModularInteger(PicklableWithSlots, DomainElement):
@@ -28,6 +29,9 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         else:
             self.val = self.dom.convert(val) % self.mod
 
+    def modulus(self):
+        return self.mod
+
     def __hash__(self):
         return hash((self.val, self.mod))
 
@@ -38,9 +42,19 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         return "%s mod %s" % (self.val, self.mod)
 
     def __int__(self):
-        return int(self.to_int())
+        return int(self.val)
 
     def to_int(self):
+
+        sympy_deprecation_warning(
+            """ModularInteger.to_int() is deprecated.
+
+            Use int(a) or K = GF(p) and K.to_int(a) instead of a.to_int().
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="modularinteger-to-int",
+        )
+
         if self.sym:
             if self.val <= self.mod // 2:
                 return self.val
@@ -139,10 +153,28 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def _compare(self, other, op):
         val = self._get_val(other)
 
-        if val is not None:
-            return op(self.val, val % self.mod)
-        else:
+        if val is None:
             return NotImplemented
+
+        return op(self.val, val % self.mod)
+
+    def _compare_deprecated(self, other, op):
+        val = self._get_val(other)
+
+        if val is None:
+            return NotImplemented
+
+        sympy_deprecation_warning(
+            """Ordered comparisons with modular integers are deprecated.
+
+            Use e.g. int(a) < int(b) instead of a < b.
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="modularinteger-compare",
+            stacklevel=4,
+        )
+
+        return op(self.val, val % self.mod)
 
     def __eq__(self, other):
         return self._compare(other, operator.eq)
@@ -151,16 +183,16 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         return self._compare(other, operator.ne)
 
     def __lt__(self, other):
-        return self._compare(other, operator.lt)
+        return self._compare_deprecated(other, operator.lt)
 
     def __le__(self, other):
-        return self._compare(other, operator.le)
+        return self._compare_deprecated(other, operator.le)
 
     def __gt__(self, other):
-        return self._compare(other, operator.gt)
+        return self._compare_deprecated(other, operator.gt)
 
     def __ge__(self, other):
-        return self._compare(other, operator.ge)
+        return self._compare_deprecated(other, operator.ge)
 
     def __bool__(self):
         return bool(self.val)

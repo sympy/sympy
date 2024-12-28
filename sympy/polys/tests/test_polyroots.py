@@ -37,7 +37,7 @@ def _check(roots):
     # this is the desired invariant for roots returned
     # by all_roots. It is trivially true for linear
     # polynomials.
-    nreal = sum([1 if i.is_real else 0 for i in roots])
+    nreal = sum(1 if i.is_real else 0 for i in roots)
     assert sorted(roots[:nreal]) == list(roots[:nreal])
     for ix in range(nreal, len(roots), 2):
         if not (

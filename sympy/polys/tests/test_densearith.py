@@ -1,5 +1,7 @@
 """Tests for dense recursive polynomials' arithmetics. """
 
+from sympy.external.gmpy import GROUND_TYPES
+
 from sympy.polys.densebasic import (
     dup_normal, dmp_normal,
 )
@@ -864,11 +866,10 @@ def test_dup_ff_div():
     assert dup_ff_div(f, g, QQ) == (q, r)
 
 def test_dup_ff_div_gmpy2():
-    try:
-        from gmpy2 import mpq
-    except ImportError:
+    if GROUND_TYPES != 'gmpy2':
         return
 
+    from gmpy2 import mpq
     from sympy.polys.domains import GMPYRationalField
     K = GMPYRationalField()
 

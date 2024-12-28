@@ -1,21 +1,24 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
+from typing import TYPE_CHECKING, ClassVar
+
 from collections import defaultdict
-from functools import cmp_to_key, reduce
+from functools import reduce
 from itertools import product
 import operator
 
 from .sympify import sympify
-from .basic import Basic
+from .basic import Basic, _args_sortkey
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
+from .intfunc import integer_nthroot, trailing
 from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
-
 from sympy.utilities.iterables import sift
+
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -28,8 +31,6 @@ class NC_Marker:
     is_commutative = False
 
 
-# Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -66,27 +67,25 @@ def _unevaluated_Mul(*args):
     False
 
     """
-    args = list(args)
-    newargs = []
+    cargs = []
     ncargs = []
+    args = list(args)
     co = S.One
-    while args:
-        a = args.pop()
+    for a in args:
         if a.is_Mul:
-            c, nc = a.args_cnc()
-            args.extend(c)
-            if nc:
-                ncargs.append(Mul._from_args(nc))
+            a_c, a_nc = a.args_cnc()
+            args.extend(a_c)  # grow args
+            ncargs.extend(a_nc)
         elif a.is_Number:
             co *= a
+        elif a.is_commutative:
+            cargs.append(a)
         else:
-            newargs.append(a)
-    _mulsort(newargs)
+            ncargs.append(a)
+    _mulsort(cargs)
     if co is not S.One:
-        newargs.insert(0, co)
-    if ncargs:
-        newargs.append(Mul._from_args(ncargs))
-    return Mul._from_args(newargs)
+        cargs.insert(0, co)
+    return Mul._from_args(cargs+ncargs)
 
 
 class Mul(Expr, AssocOp):
@@ -161,17 +160,26 @@ class Mul(Expr, AssocOp):
     """
     __slots__ = ()
 
-    args: tTuple[Expr, ...]
-
     is_Mul = True
 
     _args_type = Expr
     _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
 
+    identity: ClassVar[Expr]
+
     @property
     def kind(self):
         arg_kinds = (a.kind for a in self.args)
         return self._kind_dispatcher(*arg_kinds)
+
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Expr | complex, evaluate: bool=True) -> Expr: # type: ignore
+            ...
+
+        @property
+        def args(self) -> tuple[Expr, ...]:
+            ...
 
     def could_extract_minus_sign(self):
         if self == (-self):
@@ -379,6 +387,14 @@ class Mul(Expr, AssocOp):
                 coeff = S.ComplexInfinity
                 continue
 
+            elif not coeff and isinstance(o, Add) and any(
+                    _ in (S.NegativeInfinity, S.ComplexInfinity, S.Infinity)
+                    for __ in o.args for _ in Mul.make_args(__)):
+                # e.g 0 * (x + oo) = NaN but not
+                # 0 * (1 + Integral(x, (x, 0, oo))) which is
+                # treated like 0 * x -> 0
+                return [S.NaN], [], None
+
             elif o is S.ImaginaryUnit:
                 neg1e += S.Half
                 continue
@@ -582,6 +598,9 @@ class Mul(Expr, AssocOp):
         i = 0  # steps through num_rat which may grow
         while i < len(num_rat):
             bi, ei = num_rat[i]
+            if bi == 1:
+                i += 1
+                continue
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
@@ -715,19 +734,18 @@ class Mul(Expr, AssocOp):
 
         return c_part, nc_part, order_symbols
 
-    def _eval_power(self, e):
+    def _eval_power(self, expt):
 
         # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B
         cargs, nc = self.args_cnc(split_1=False)
 
-        if e.is_Integer:
-            return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
-                Pow(Mul._from_args(nc), e, evaluate=False)
-        if e.is_Rational and e.q == 2:
+        if expt.is_Integer:
+            return Mul(*[Pow(b, expt, evaluate=False) for b in cargs]) * \
+                Pow(Mul._from_args(nc), expt, evaluate=False)
+        if expt.is_Rational and expt.q == 2:
             if self.is_imaginary:
                 a = self.as_real_imag()[1]
                 if a.is_Rational:
-                    from .power import integer_nthroot
                     n, d = abs(a/2).as_numer_denom()
                     n, t = integer_nthroot(n, 2)
                     if t:
@@ -735,11 +753,11 @@ class Mul(Expr, AssocOp):
                         if t:
                             from sympy.functions.elementary.complexes import sign
                             r = sympify(n)/d
-                            return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
+                            return _unevaluated_Mul(r**expt.p, (1 + sign(a)*S.ImaginaryUnit)**expt.p)
 
-        p = Pow(self, e, evaluate=False)
+        p = Pow(self, expt, evaluate=False)
 
-        if e.is_Rational or e.is_Float:
+        if expt.is_Rational or expt.is_Float:
             return p._eval_expand_power_base()
 
         return p
@@ -919,7 +937,8 @@ class Mul(Expr, AssocOp):
         # Handle things like 1/(x*(x + 1)), which are automatically converted
         # to 1/x*1/(x + 1)
         expr = self
-        n, d = fraction(expr)
+        # default matches fraction's default
+        n, d = fraction(expr, hints.get('exact', False))
         if d.is_Mul:
             n, d = [i._eval_expand_mul(**hints) if i.is_Mul else i
                 for i in (n, d)]
@@ -1244,7 +1263,7 @@ class Mul(Expr, AssocOp):
                 nc += 1
             if e1 is None:
                 e1 = e
-            elif e != e1 or nc > 1:
+            elif e != e1 or nc > 1 or not e.is_Integer:
                 return self, S.One
             bases.append(b)
         return self.func(*bases), e1
@@ -1390,7 +1409,6 @@ class Mul(Expr, AssocOp):
     #_eval_is_integer = lambda self: _fuzzy_group(
     #    (a.is_integer for a in self.args), quick_exit=True)
     def _eval_is_integer(self):
-        from sympy.ntheory.factor_ import trailing
         is_rational = self._eval_is_rational()
         if is_rational is False:
             return False
@@ -1626,7 +1644,6 @@ class Mul(Expr, AssocOp):
         from sympy.simplify.radsimp import fraction
         n, d = fraction(self)
         if d.is_Integer and d.is_even:
-            from sympy.ntheory.factor_ import trailing
             # if minimal power of 2 in num vs den is
             # positive then we have an even number
             if (Add(*[i.as_base_exp()[1] for i in
@@ -1656,7 +1673,6 @@ class Mul(Expr, AssocOp):
             # if minimal power of 2 in den vs num is not
             # negative then this is not an integer and
             # can't be even
-            from sympy.ntheory.factor_ import trailing
             if (Add(*[i.as_base_exp()[1] for i in
                     Mul.make_args(d) if i.is_even]) - trailing(n.p)
                     ).is_nonnegative:
@@ -1978,7 +1994,10 @@ class Mul(Expr, AssocOp):
                         n -= n1 - ns    # reduce n
                 facs.append(s)
 
-        except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
+        except (ValueError, NotImplementedError, TypeError, PoleError):
+            # XXX: Catching so many generic exceptions around a large block of
+            # code will mask bugs. Whatever purpose catching these exceptions
+            # serves should be handled in a different way.
             n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
             if n0.is_nonnegative:
                 n0 = S.Zero
@@ -2031,7 +2050,7 @@ class Mul(Expr, AssocOp):
             res += Order(x**n, x)
         return res
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         return self.func(*[t.as_leading_term(x, logx=logx, cdir=cdir) for t in self.args])
 
     def _eval_conjugate(self):

@@ -5,7 +5,7 @@
 
     >>> from sympy.solvers import solve
     >>> from sympy.abc import x
-    >>> solve(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)
+    >>> solve(((x + 1)**5).expand(), x)
     [-1]
 """
 from sympy.core.assumptions import check_assumptions, failing_assumptions
@@ -14,7 +14,7 @@ from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
     det_quick, inv_quick
 
-from .diophantine import diophantine
+from sympy.solvers.diophantine.diophantine import diophantine
 
 from .recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 
@@ -34,6 +34,8 @@ from .inequalities import reduce_inequalities, reduce_abs_inequality, \
 from .decompogen import decompogen
 
 from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
+
+from .simplex import lpmin, lpmax, linprog
 
 # This is here instead of sympy/sets/__init__.py to avoid circular import issues
 from ..core.singleton import S
@@ -68,4 +70,6 @@ __all__ = [
 
     # This is here instead of sympy/sets/__init__.py to avoid circular import issues
     'Complexes',
+
+    'lpmin', 'lpmax', 'linprog'
 ]

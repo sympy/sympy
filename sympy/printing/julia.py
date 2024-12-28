@@ -25,7 +25,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asin", "acos", "atan", "acot", "asec", "acsc",
                    "sinh", "cosh", "tanh", "coth", "sech", "csch",
                    "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
-                   "sinc", "atan2", "sign", "floor", "log", "exp",
+                   "atan2", "sign", "floor", "log", "exp",
                    "cbrt", "sqrt", "erf", "erfc", "erfi",
                    "factorial", "gamma", "digamma", "trigamma",
                    "polygamma", "beta",
@@ -58,16 +58,12 @@ class JuliaCodePrinter(CodePrinter):
         'not': '!',
     }
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
-    }
+    })
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Julia.
@@ -349,7 +345,7 @@ class JuliaCodePrinter(CodePrinter):
 
     def _print_SparseRepMatrix(self, A):
         from sympy.matrices import Matrix
-        L = A.col_list();
+        L = A.col_list()
         # make row vectors of the indices and entries
         I = Matrix([k[0] + 1 for k in L])
         J = Matrix([k[1] + 1 for k in L])
@@ -388,11 +384,6 @@ class JuliaCodePrinter(CodePrinter):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s[%s]" % (self._print(expr.base.label), ",".join(inds))
 
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
-
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
 
@@ -426,6 +417,9 @@ class JuliaCodePrinter(CodePrinter):
         expr2 = sqrt(S.Pi/(2*x))*bessely(expr.order + S.Half, x)
         return self._print(expr2)
 
+    def _print_sinc(self, expr):
+        # Julia has the normalized sinc function
+        return "sinc({})".format(self._print(expr.args[0] / S.Pi))
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:

@@ -66,7 +66,7 @@ class Optimization:
         self.priority=priority
 
     def cheapest(self, *args):
-        return sorted(args, key=self.cost_function)[0]
+        return min(args, key=self.cost_function)
 
 
 class ReplaceOptim(Optimization):

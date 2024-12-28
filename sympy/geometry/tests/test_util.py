@@ -1,10 +1,12 @@
+import pytest
+from sympy.core.numbers import Float
 from sympy.core.function import (Derivative, Function)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions import exp, cos, sin, tan, cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry import Point, Point2D, Line, Polygon, Segment, convex_hull,\
-    intersection, centroid, Point3D, Line3D
+    intersection, centroid, Point3D, Line3D, Ray, Ellipse
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar
 from sympy.solvers.solvers import solve
 from sympy.testing.pytest import raises
@@ -55,6 +57,23 @@ def test_intersection():
             Segment((-1, 0), (1, 0)),
             Line((0, 0), slope=1), pairwise=True) == [
         Point(0, 0), Segment((0, 0), (1, 0))]
+    R = 4.0
+    c = intersection(
+            Ray(Point2D(0.001, -1),
+            Point2D(0.0008, -1.7)),
+            Ellipse(center=Point2D(0, 0), hradius=R, vradius=2.0), pairwise=True)[0].coordinates
+    assert c == pytest.approx(
+            Point2D(0.000714285723396502, -1.99999996811224, evaluate=False).coordinates)
+    # check this is responds to a lower precision parameter
+    R = Float(4, 5)
+    c2 = intersection(
+            Ray(Point2D(0.001, -1),
+            Point2D(0.0008, -1.7)),
+            Ellipse(center=Point2D(0, 0), hradius=R, vradius=2.0), pairwise=True)[0].coordinates
+    assert c2 == pytest.approx(
+            Point2D(0.000714285723396502, -1.99999996811224, evaluate=False).coordinates)
+    assert c[0]._prec == 53
+    assert c2[0]._prec == 20
 
 
 def test_convex_hull():

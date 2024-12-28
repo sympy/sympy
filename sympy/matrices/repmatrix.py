@@ -7,14 +7,17 @@ from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.numbers import Integer, Rational
 from sympy.core.sympify import _sympify, SympifyError
 from sympy.core.singleton import S
-from sympy.polys.domains import ZZ, QQ, EXRAW
+from sympy.polys.domains import ZZ, QQ, GF, EXRAW
 from sympy.polys.matrices import DomainMatrix
+from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import filldedent, as_int
 
-from .common import classof
-from .matrices import MatrixBase, MatrixKind, ShapeError
+from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+from .matrixbase import classof, MatrixBase
+from .kind import MatrixKind
 
 
 class RepMatrix(MatrixBase):
@@ -58,6 +61,85 @@ class RepMatrix(MatrixBase):
                 return NotImplemented
 
         return self._rep.unify_eq(other._rep)
+
+    def to_DM(self, domain=None, **kwargs):
+        """Convert to a :class:`~.DomainMatrix`.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 2], [3, 4]])
+        >>> M.to_DM()
+        DomainMatrix({0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}, (2, 2), ZZ)
+
+        The :meth:`DomainMatrix.to_Matrix` method can be used to convert back:
+
+        >>> M.to_DM().to_Matrix() == M
+        True
+
+        The domain can be given explicitly or otherwise it will be chosen by
+        :func:`construct_domain`. Any keyword arguments (besides ``domain``)
+        are passed to :func:`construct_domain`:
+
+        >>> from sympy import QQ, symbols
+        >>> x = symbols('x')
+        >>> M = Matrix([[x, 1], [1, x]])
+        >>> M
+        Matrix([
+        [x, 1],
+        [1, x]])
+        >>> M.to_DM().domain
+        ZZ[x]
+        >>> M.to_DM(field=True).domain
+        ZZ(x)
+        >>> M.to_DM(domain=QQ[x]).domain
+        QQ[x]
+
+        See Also
+        ========
+
+        DomainMatrix
+        DomainMatrix.to_Matrix
+        DomainMatrix.convert_to
+        DomainMatrix.choose_domain
+        construct_domain
+        """
+        if domain is not None:
+            if kwargs:
+                raise TypeError("Options cannot be used with domain parameter")
+            return self._rep.convert_to(domain)
+
+        rep = self._rep
+        dom = rep.domain
+
+        # If the internal DomainMatrix is already ZZ or QQ then we can maybe
+        # bypass calling construct_domain or performing any conversions. Some
+        # kwargs might affect this though e.g. field=True (not sure if there
+        # are others).
+        if not kwargs:
+            if dom.is_ZZ:
+                return rep.copy()
+            elif dom.is_QQ:
+                # All elements might be integers
+                try:
+                    return rep.convert_to(ZZ)
+                except CoercionFailed:
+                    pass
+                return rep.copy()
+
+        # Let construct_domain choose a domain
+        rep_dom = rep.choose_domain(**kwargs)
+
+        # XXX: There should be an option to construct_domain to choose EXRAW
+        # instead of EX. At least converting to EX does not initially trigger
+        # EX.simplify which is what we want here but should probably be
+        # considered a bug in EX. Perhaps also this could be handled in
+        # DomainMatrix.choose_domain rather than here...
+        if rep_dom.domain.is_EX:
+            rep_dom = rep_dom.convert_to(EXRAW)
+
+        return rep_dom
 
     @classmethod
     def _unify_element_sympy(cls, rep, element):
@@ -160,8 +242,29 @@ class RepMatrix(MatrixBase):
     def _eval_todok(self):
         return self._rep.to_sympy().to_dok()
 
+    @classmethod
+    def _eval_from_dok(cls, rows, cols, dok):
+        return cls._fromrep(cls._smat_to_DomainMatrix(rows, cols, dok))
+
     def _eval_values(self):
-        return list(self.todok().values())
+        return list(self._eval_iter_values())
+
+    def _eval_iter_values(self):
+        rep = self._rep
+        K = rep.domain
+        values = rep.iter_values()
+        if not K.is_EXRAW:
+            values = map(K.to_sympy, values)
+        return values
+
+    def _eval_iter_items(self):
+        rep = self._rep
+        K = rep.domain
+        to_sympy = K.to_sympy
+        items = rep.iter_items()
+        if not K.is_EXRAW:
+            items = ((i, to_sympy(v)) for i, v in items)
+        return items
 
     def copy(self):
         return self._fromrep(self._rep.copy())
@@ -312,6 +415,132 @@ class RepMatrix(MatrixBase):
                 elif ans is not True and rv is True:
                     rv = ans
         return rv
+
+    def inv_mod(M, m):
+        r"""
+        Returns the inverse of the integer matrix ``M`` modulo ``m``.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.inv_mod(5)
+        Matrix([
+        [3, 1],
+        [4, 2]])
+        >>> A.inv_mod(3)
+        Matrix([
+        [1, 1],
+        [0, 1]])
+
+        """
+
+        if not M.is_square:
+            raise NonSquareMatrixError()
+
+        try:
+            m = as_int(m)
+        except ValueError:
+            raise TypeError("inv_mod: modulus m must be an integer")
+
+        K = GF(m, symmetric=False)
+
+        try:
+            dM = M.to_DM(K)
+        except CoercionFailed:
+            raise ValueError("inv_mod: matrix entries must be integers")
+
+        try:
+            dMi = dM.inv()
+        except DMNonInvertibleMatrixError as exc:
+            msg = f'Matrix is not invertible (mod {m})'
+            raise NonInvertibleMatrixError(msg) from exc
+
+        return dMi.to_Matrix()
+
+    def lll(self, delta=0.75):
+        """LLL-reduced basis for the rowspace of a matrix of integers.
+
+        Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm.
+
+        The implementation is provided by :class:`~DomainMatrix`. See
+        :meth:`~DomainMatrix.lll` for more details.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 0, 0, 0, -20160],
+        ...             [0, 1, 0, 0, 33768],
+        ...             [0, 0, 1, 0, 39578],
+        ...             [0, 0, 0, 1, 47757]])
+        >>> M.lll()
+        Matrix([
+        [ 10, -3,  -2,  8,  -4],
+        [  3, -9,   8,  1, -11],
+        [ -3, 13,  -9, -3,  -9],
+        [-12, -7, -11,  9,  -1]])
+
+        See Also
+        ========
+
+        lll_transform
+        sympy.polys.matrices.domainmatrix.DomainMatrix.lll
+        """
+        delta = QQ.from_sympy(_sympify(delta))
+        dM = self._rep.convert_to(ZZ)
+        basis = dM.lll(delta=delta)
+        return self._fromrep(basis)
+
+    def lll_transform(self, delta=0.75):
+        """LLL-reduced basis and transformation matrix.
+
+        Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm.
+
+        The implementation is provided by :class:`~DomainMatrix`. See
+        :meth:`~DomainMatrix.lll_transform` for more details.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 0, 0, 0, -20160],
+        ...             [0, 1, 0, 0, 33768],
+        ...             [0, 0, 1, 0, 39578],
+        ...             [0, 0, 0, 1, 47757]])
+        >>> B, T = M.lll_transform()
+        >>> B
+        Matrix([
+        [ 10, -3,  -2,  8,  -4],
+        [  3, -9,   8,  1, -11],
+        [ -3, 13,  -9, -3,  -9],
+        [-12, -7, -11,  9,  -1]])
+        >>> T
+        Matrix([
+        [ 10, -3,  -2,  8],
+        [  3, -9,   8,  1],
+        [ -3, 13,  -9, -3],
+        [-12, -7, -11,  9]])
+
+        The transformation matrix maps the original basis to the LLL-reduced
+        basis:
+
+        >>> T * M == B
+        True
+
+        See Also
+        ========
+
+        lll
+        sympy.polys.matrices.domainmatrix.DomainMatrix.lll_transform
+        """
+        delta = QQ.from_sympy(_sympify(delta))
+        dM = self._rep.convert_to(ZZ)
+        basis, transform = dM.lll_transform(delta=delta)
+        B = self._fromrep(basis)
+        T = self._fromrep(transform)
+        return B, T
 
 
 class MutableRepMatrix(RepMatrix):
@@ -494,6 +723,43 @@ class MutableRepMatrix(RepMatrix):
         for j in range(self.cols):
             self[i, j] = f(self[i, j], j)
 
+    #The next three methods give direct support for the most common row operations inplace.
+    def row_mult(self,i,factor):
+        """Multiply the given row by the given factor in-place.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> M = eye(3)
+        >>> M.row_mult(1,7); M
+        Matrix([
+        [1, 0, 0],
+        [0, 7, 0],
+        [0, 0, 1]])
+
+        """
+        for j in range(self.cols):
+            self[i,j] *= factor
+
+    def row_add(self,s,t,k):
+        """Add k times row s (source) to row t (target) in place.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> M = eye(3)
+        >>> M.row_add(0, 2,3); M
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [3, 0, 1]])
+        """
+
+        for j in range(self.cols):
+            self[t,j] += k*self[s,j]
+
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
 
@@ -666,7 +932,7 @@ class MutableRepMatrix(RepMatrix):
         if not value:
             self._rep = DomainMatrix.zeros(self.shape, EXRAW)
         else:
-            elements_dod = {i: {j: value for j in range(self.cols)} for i in range(self.rows)}
+            elements_dod = {i: dict.fromkeys(range(self.cols), value) for i in range(self.rows)}
             self._rep = DomainMatrix(elements_dod, self.shape, EXRAW)
 
 

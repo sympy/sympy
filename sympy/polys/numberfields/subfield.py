@@ -251,7 +251,7 @@ def _switch_domain(g, K):
 
 def _linsolve(p):
     # Compute root of linear polynomial.
-    c, d = p.rep.rep
+    c, d = p.rep.to_list()
     return -d/c
 
 
@@ -356,7 +356,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
                 continue
             _, factors = factor_list(g, extension=ext)
             g = _choose_factor(factors, x, gen)
-            s, _, g = g.sqf_norm()
+            [s], _, g = g.sqf_norm()
             gen += s*ext
             coeffs.append(s)
 
@@ -378,21 +378,21 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         L = QQ.algebraic_field((p, ext))
         _, factors = factor_list(f, domain=L)
         f = _choose_factor(factors, x, gen)
-        s, g, f = f.sqf_norm()
+        [s], g, f = f.sqf_norm()
         gen += s*ext
         coeffs.append(s)
         K = QQ.algebraic_field((f, gen))
         h = _switch_domain(g, K)
         erep = _linsolve(h.gcd(p))  # ext as element of K
         ogen = K.unit - s*erep  # old gen as element of K
-        reps = [dup_eval(_.rep, ogen, K) for _ in reps] + [erep]
+        reps = [dup_eval(_.to_list(), ogen, K) for _ in reps] + [erep]
 
     if K.ext.root.is_Rational:  # all extensions are rational
         H = [K.convert(_).rep for _ in extension]
         coeffs = [0]*len(extension)
         f = cls(x, domain=QQ)
     else:
-        H = [_.rep for _ in reps]
+        H = [_.to_list() for _ in reps]
     if not polys:
         return f.as_expr(), coeffs, H
     else:
@@ -488,7 +488,7 @@ def to_number_field(extension, theta=None, *, gen=None, alias=None):
         return AlgebraicNumber(extension[0], alias=alias)
 
     minpoly, coeffs = primitive_element(extension, gen, polys=True)
-    root = sum([ coeff*ext for coeff, ext in zip(coeffs, extension) ])
+    root = sum(coeff*ext for coeff, ext in zip(coeffs, extension))
 
     if theta is None:
         return AlgebraicNumber((minpoly, root), alias=alias)

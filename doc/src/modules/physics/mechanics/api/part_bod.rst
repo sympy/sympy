@@ -37,6 +37,8 @@ Loads
 Other Functions
 ===============
 
+.. autofunction:: sympy.physics.mechanics.functions.center_of_mass
+
 .. autofunction:: sympy.physics.mechanics.functions.linear_momentum
 
 .. autofunction:: sympy.physics.mechanics.functions.angular_momentum
@@ -46,3 +48,5 @@ Other Functions
 .. autofunction:: sympy.physics.mechanics.functions.potential_energy
 
 .. autofunction:: sympy.physics.mechanics.functions.Lagrangian
+
+.. autofunction:: sympy.physics.mechanics.functions.find_dynamicsymbols

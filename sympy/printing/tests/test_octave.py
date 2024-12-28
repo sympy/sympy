@@ -217,7 +217,7 @@ def test_Matrices():
     assert mcode(Matrix(1, 1, [10])) == "10"
     A = Matrix([[1, sin(x/2), abs(x)],
                 [0, 1, pi],
-                [0, exp(1), ceiling(x)]]);
+                [0, exp(1), ceiling(x)]])
     expected = "[1 sin(x/2) abs(x); 0 1 pi; 0 exp(1) ceil(x)]"
     assert mcode(A) == expected
     # row and columns
@@ -378,13 +378,10 @@ def test_octave_boolean():
 
 
 def test_octave_not_supported():
-    assert mcode(S.ComplexInfinity) == (
-        "% Not supported in Octave:\n"
-        "% ComplexInfinity\n"
-        "zoo"
-    )
+    with raises(NotImplementedError):
+        mcode(S.ComplexInfinity)
     f = Function('f')
-    assert mcode(f(x).diff(x)) == (
+    assert mcode(f(x).diff(x), strict=False) == (
         "% Not supported in Octave:\n"
         "% Derivative\n"
         "Derivative(f(x), x)"
@@ -393,21 +390,15 @@ def test_octave_not_supported():
 
 def test_octave_not_supported_not_on_whitelist():
     from sympy.functions.special.polynomials import assoc_laguerre
-    assert mcode(assoc_laguerre(x, y, z)) == (
-        "% Not supported in Octave:\n"
-        "% assoc_laguerre\n"
-        "assoc_laguerre(x, y, z)"
-    )
+    with raises(NotImplementedError):
+        mcode(assoc_laguerre(x, y, z))
 
 
 def test_octave_expint():
     assert mcode(expint(1, x)) == "expint(x)"
-    assert mcode(expint(2, x)) == (
-        "% Not supported in Octave:\n"
-        "% expint\n"
-        "expint(2, x)"
-    )
-    assert mcode(expint(y, x)) == (
+    with raises(NotImplementedError):
+        mcode(expint(2, x))
+    assert mcode(expint(y, x), strict=False) == (
         "% Not supported in Octave:\n"
         "% expint\n"
         "expint(y, x)"
@@ -416,8 +407,8 @@ def test_octave_expint():
 
 def test_trick_indent_with_end_else_words():
     # words starting with "end" or "else" do not confuse the indenter
-    t1 = S('endless');
-    t2 = S('elsewhere');
+    t1 = S('endless')
+    t2 = S('elsewhere')
     pw = Piecewise((t1, x < 0), (t2, x <= 1), (1, True))
     assert mcode(pw, inline=False) == (
         "if (x < 0)\n"
@@ -451,11 +442,11 @@ def test_hadamard():
 
 def test_sparse():
     M = SparseMatrix(5, 6, {})
-    M[2, 2] = 10;
-    M[1, 2] = 20;
-    M[1, 3] = 22;
-    M[0, 3] = 30;
-    M[3, 0] = x*y;
+    M[2, 2] = 10
+    M[1, 2] = 20
+    M[1, 3] = 22
+    M[0, 3] = 30
+    M[3, 0] = x*y
     assert mcode(M) == (
         "sparse([4 2 3 1 2], [1 3 3 4 4], [x.*y 20 10 30 22], 5, 6)"
     )
@@ -495,9 +486,9 @@ def test_specfun():
     assert octave_code(LambertW(x, n)) == 'lambertw(n, x)'
 
     # Automatic rewrite
-    assert octave_code(Ei(x)) == 'logint(exp(x))'
-    assert octave_code(dirichlet_eta(x)) == '((x == 1).*(log(2)) + (~(x == 1)).*((1 - 2.^(1 - x)).*zeta(x)))'
-    assert octave_code(riemann_xi(x)) == 'pi.^(-x/2).*x.*(x - 1).*gamma(x/2).*zeta(x)/2'
+    assert octave_code(Ei(x)) == '(logint(exp(x)))'
+    assert octave_code(dirichlet_eta(x)) == '(((x == 1).*(log(2)) + (~(x == 1)).*((1 - 2.^(1 - x)).*zeta(x))))'
+    assert octave_code(riemann_xi(x)) == '(pi.^(-x/2).*x.*(x - 1).*gamma(x/2).*zeta(x)/2)'
 
 
 def test_MatrixElement_printing():
@@ -515,9 +506,10 @@ def test_MatrixElement_printing():
 
 def test_zeta_printing_issue_14820():
     assert octave_code(zeta(x)) == 'zeta(x)'
-    assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'
+    with raises(NotImplementedError):
+        octave_code(zeta(x, y))
 
 
 def test_automatic_rewrite():
-    assert octave_code(Li(x)) == 'logint(x) - logint(2)'
-    assert octave_code(erf2(x, y)) == '-erf(x) + erf(y)'
+    assert octave_code(Li(x)) == '(logint(x) - logint(2))'
+    assert octave_code(erf2(x, y)) == '(-erf(x) + erf(y))'

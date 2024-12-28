@@ -673,7 +673,7 @@ example when dealing with matrices a matrix of all zeros might be referred to
 as "zero". The predicates in the assumptions system do not allow any
 generalizations such as this. The predicate ``zero`` is strictly reserved for
 the plain number $0$. Instead matrices have an
-:py:meth:`~.MatrixCommon.is_zero_matrix` property for this purpose (although
+:py:meth:`~.MatrixBase.is_zero_matrix` property for this purpose (although
 that property is not strictly part of the assumptions system):
 
     >>> from sympy import Matrix
@@ -861,7 +861,7 @@ There are many properties and attributes in SymPy that that have names
 beginning with ``is_`` that look similar to the properties used in the
 (old) assumptions system but are not in fact part of the assumptions system.
 Some of these have a similar meaning and usage as those of the assumptions
-system such as the :py:meth:`~.MatrixCommon.is_zero_matrix` property shown
+system such as the :py:meth:`~.MatrixBase.is_zero_matrix` property shown
 above.  Another example is the ``is_empty`` property of sets:
 
     >>> from sympy import FiniteSet, Intersection
@@ -895,7 +895,7 @@ listed in the table above. It is not possible to declare a
 ``SetSymbol`` class but if there was it would not have a system for
 understanding predicates like ``empty=False``.
 
-The properties :py:meth:`~.MatrixCommon.is_zero_matrix` and ``is_empty`` are
+The properties :py:meth:`~.MatrixBase.is_zero_matrix` and ``is_empty`` are
 similar to those of the assumptions system because they concern *semantic*
 aspects of an expression. There are a large number of other properties that
 focus on *structural* aspects such as ``is_Number``,

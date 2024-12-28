@@ -5,7 +5,7 @@ from sympy.core.expr import ExprBuilder
 from sympy.core.cache import cacheit
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 
 
 class MatPow(MatrixExpr):
@@ -88,7 +88,15 @@ class MatPow(MatrixExpr):
 
     def _eval_transpose(self):
         base, exp = self.args
-        return MatPow(base.T, exp)
+        return MatPow(base.transpose(), exp)
+
+    def _eval_adjoint(self):
+        base, exp = self.args
+        return MatPow(base.adjoint(), exp)
+
+    def _eval_conjugate(self):
+        base, exp = self.args
+        return MatPow(base.conjugate(), exp)
 
     def _eval_derivative(self, x):
         assert not hasattr(x, "shape")

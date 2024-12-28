@@ -1,25 +1,31 @@
 from sympy.core.add import Add
 from sympy.core.function import Function
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.numbers import (I, pi, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import atan
 from sympy.matrices.dense import eye
+from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.polys.polytools import factor
 from sympy.polys.rootoftools import CRootOf
 from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
-from sympy.matrices import ImmutableMatrix, Matrix
-from sympy.physics.control import (TransferFunction, Series, Parallel,
+from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
+from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.physics.control import (TransferFunction, PIDController, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
-    gbt, bilinear, forward_diff, backward_diff)
+    StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 
-a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
-    a0:3, b0:3, tau, zeta, wn, T')
+a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
+    tau, zeta, wn, T')
+a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
+    b0:4, c0:4, d0:4')
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -152,6 +158,26 @@ def test_TransferFunction_functions():
     assert TransferFunction.from_rational_expression(expr_8, s) == \
         TransferFunction(2*s**2 + 3*s + 2, s**2 + 1, s)
 
+    # classmethod from_coeff_lists
+    tf1 = TransferFunction.from_coeff_lists([1, 2], [3, 4, 5], s)
+    num2 = [p**2, 2*p]
+    den2 = [p**3, p + 1, 4]
+    tf2 = TransferFunction.from_coeff_lists(num2, den2, s)
+    num3 = [1, 2, 3]
+    den3 = [0, 0]
+
+    assert tf1 == TransferFunction(s + 2, 3*s**2 + 4*s + 5, s)
+    assert tf2 == TransferFunction(p**2*s + 2*p, p**3*s**2 + s*(p + 1) + 4, s)
+    raises(ZeroDivisionError, lambda: TransferFunction.from_coeff_lists(num3, den3, s))
+
+    # classmethod from_zpk
+    zeros = [4]
+    poles = [-1+2j, -1-2j]
+    gain = 3
+    tf1 = TransferFunction.from_zpk(zeros, poles, gain, s)
+
+    assert tf1 == TransferFunction(3*s - 12, (s + 1.0 - 2.0*I)*(s + 1.0 + 2.0*I), s)
+
     # explicitly cancel poles and zeros.
     tf0 = TransferFunction(s**5 + s**3 + s, s - s**2, s)
     a = TransferFunction(-(s**4 + s**2 + 1), s - 1, s)
@@ -210,6 +236,12 @@ def test_TransferFunction_functions():
     assert SP4.subs({a0: -1, a1: -7}) == expect4_
     assert SP4.subs({a0: -1, a1: -7}).evalf() == expect4
     assert expect4_.evalf() == expect4
+
+    # evaluate the transfer function at particular frequencies.
+    assert tf1.eval_frequency(wn) == wn**2/(wn**2 + 4*wn - 5) + 2*wn/(wn**2 + 4*wn - 5) - 3/(wn**2 + 4*wn - 5)
+    assert G1.eval_frequency(1 + I) == S(3)/25 + S(4)*I/25
+    assert G4.eval_frequency(S(5)/3) == \
+        a0*s**s/(a1*a2*s**(S(8)/3) + S(5)*a1*s/3 + 5*a2*b1*s**(S(8)/3)/3 + S(25)*b1*s/9) - 5*3**(S(1)/3)*5**(S(2)/3)*b0/(9*a1*a2*s**(S(8)/3) + 15*a1*s + 15*a2*b1*s**(S(8)/3) + 25*b1*s)
 
     # Low-frequency (or DC) gain.
     assert tf0.dc_gain() == 1
@@ -320,6 +352,7 @@ def test_TransferFunction_functions():
     assert tf10.to_expr() == Mul(S(0), Pow(1, -1, evaluate=False), evaluate=False)
     assert tf11.to_expr() == Pow(1, -1, evaluate=False)
 
+
 def test_TransferFunction_addition_and_subtraction():
     tf1 = TransferFunction(s + 6, s - 5, s)
     tf2 = TransferFunction(s + 3, s + 1, s)
@@ -373,6 +406,11 @@ def test_TransferFunction_multiplication_and_division():
         Series(G1, G2, TransferFunction(-1, 1, s), Series(G5, G6))
     assert G1*G2*(G5 + G6) == Series(G1, G2, Parallel(G5, G6))
 
+    # division - See ``test_Feedback_functions()`` for division by Parallel objects.
+    assert G5/G6 == Series(G5, pow(G6, -1))
+    assert -G3/G4 == Series(-G3, pow(G4, -1))
+    assert (G5*G6)/G7 == Series(G5, G6, pow(G7, -1))
+
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: G3 * Matrix([1, 2, 3]))
     raises(ValueError, lambda: G1 * c)
@@ -387,8 +425,6 @@ def test_TransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G5 / s**2)
     raises(ValueError, lambda: (s - 4*s**2) / G2)
     raises(ValueError, lambda: 0 / G4)
-    raises(ValueError, lambda: G5 / G6)
-    raises(ValueError, lambda: -G3 /G4)
     raises(ValueError, lambda: G7 / (1 + G6))
     raises(ValueError, lambda: G7 / (G5 * G6))
     raises(ValueError, lambda: G7 / (G7 + (G5 + G6)))
@@ -428,6 +464,49 @@ def test_TransferFunction_is_biproper():
     assert tf2.is_biproper
     assert not tf3.is_biproper
     assert not tf4.is_biproper
+
+
+def test_PIDController():
+    kp, ki, kd, tf = symbols("kp ki kd tf")
+    p1 = PIDController(kp, ki, kd, tf)
+    p2 = PIDController()
+
+    # Type Checking
+    assert isinstance(p1, PIDController)
+    assert isinstance(p1, TransferFunction)
+
+    # Properties checking
+    assert p1 == PIDController(kp, ki, kd, tf, s)
+    assert p2 == PIDController(kp, ki, kd, 0, s)
+    assert p1.num == kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s
+    assert p1.den == s**2*tf + s
+    assert p1.var == s
+    assert p1.kp == kp
+    assert p1.ki == ki
+    assert p1.kd == kd
+    assert p1.tf == tf
+
+    # Functionality checking
+    assert p1.doit() == TransferFunction(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s, s**2*tf + s, s)
+    assert p1.is_proper == True
+    assert p1.is_biproper == True
+    assert p1.is_strictly_proper == False
+    assert p2.doit() == TransferFunction(kd*s**2 + ki + kp*s, s, s)
+
+    # Using PIDController with TransferFunction
+    tf1 = TransferFunction(s, s + 1, s)
+    par1 = Parallel(p1, tf1)
+    ser1 = Series(p1, tf1)
+    fed1 = Feedback(p1, tf1)
+    assert par1 == Parallel(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
+    assert ser1 == Series(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
+    assert fed1 == Feedback(PIDController(kp, ki, kd, tf, s), TransferFunction(s, s + 1, s))
+    assert par1.doit() == TransferFunction(s*(s**2*tf + s) + (s + 1)*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s),
+                                           (s + 1)*(s**2*tf + s), s)
+    assert ser1.doit() == TransferFunction(s*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s),
+                                           (s + 1)*(s**2*tf + s), s)
+    assert fed1.doit() == TransferFunction((s + 1)*(s**2*tf + s)*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s),
+                                           (s*(kd*s**2 + ki*s*tf + ki + kp*s**2*tf + kp*s) + (s + 1)*(s**2*tf + s))*(s**2*tf + s), s)
 
 
 def test_Series_construction():
@@ -932,6 +1011,8 @@ def test_Feedback_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(s - p, p + s, p)
 
+    assert (tf1*tf2*tf3 / tf3*tf5) == Series(tf1, tf2, tf3, pow(tf3, -1), tf5)
+    assert (tf1*tf2*tf3) / (tf3*tf5) == Series((tf1*tf2*tf3).doit(), pow((tf3*tf5).doit(),-1))
     assert tf / (tf + tf1) == Feedback(tf, tf1)
     assert tf / (tf + tf1*tf2*tf3) == Feedback(tf, tf1*tf2*tf3)
     assert tf1 / (tf + tf1*tf2*tf3) == Feedback(tf1, tf2*tf3)
@@ -942,7 +1023,6 @@ def test_Feedback_functions():
     assert tf5 / (tf + tf5) == Feedback(tf5, tf)
 
     raises(TypeError, lambda: tf1*tf2*tf3 / (1 + tf1*tf2*tf3))
-    raises(ValueError, lambda: tf1*tf2*tf3 / tf3*tf5)
     raises(ValueError, lambda: tf2*tf3 / (tf + tf2*tf3*tf4))
 
     assert Feedback(tf, tf1*tf2*tf3).doit() == \
@@ -971,6 +1051,76 @@ def test_Feedback_functions():
         (a0 + s)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert Feedback(TransferFunction(1, 1, p), tf4).rewrite(TransferFunction) == \
         TransferFunction(p, a0*p + p + p**a1 - s, p)
+
+
+def test_Feedback_with_Series():
+    # Solves issue https://github.com/sympy/sympy/issues/26161
+    tf1 = TransferFunction(s+1, 1, s)
+    tf2 = TransferFunction(s+2, 1, s)
+    fd1 = Feedback(tf1, tf2, -1) # Negative Feedback system
+    fd2 = Feedback(tf1, tf2, 1) # Positive Feedback system
+    unit = TransferFunction(1, 1, s)
+
+    # Checking the type
+    assert isinstance(fd1, SISOLinearTimeInvariant)
+    assert isinstance(fd1, Feedback)
+
+    # Testing the numerator and denominator
+    assert fd1.num == tf1
+    assert fd2.num == tf1
+    assert fd1.den == Parallel(unit, Series(tf2, tf1))
+    assert fd2.den == Parallel(unit, -Series(tf2, tf1))
+
+    # Testing the Series and Parallel Combination with Feedback and TransferFunction
+    s1 = Series(tf1, fd1)
+    p1 = Parallel(tf1, fd1)
+    assert tf1 * fd1 == s1
+    assert tf1 + fd1 == p1
+    assert s1.doit() == TransferFunction((s + 1)**2, (s + 1)*(s + 2) + 1, s)
+    assert p1.doit() == TransferFunction(s + (s + 1)*((s + 1)*(s + 2) + 1) + 1, (s + 1)*(s + 2) + 1, s)
+
+    # Testing the use of Feedback and TransferFunction with Feedback
+    fd3 = Feedback(tf1*fd1, tf2, -1)
+    assert fd3 == Feedback(Series(tf1, fd1), tf2)
+    assert fd3.num == tf1 * fd1
+    assert fd3.den == Parallel(unit, Series(tf2, Series(tf1, fd1)))
+
+    # Testing the use of Feedback and TransferFunction with TransferFunction
+    tf3 = TransferFunction(tf1*fd1, tf2, s)
+    assert tf3 == TransferFunction(Series(tf1, fd1), tf2, s)
+    assert tf3.num == tf1*fd1
+
+
+def test_issue_26161():
+    # Issue https://github.com/sympy/sympy/issues/26161
+    Ib, Is, m, h, l2, l1 = symbols('I_b, I_s, m, h, l2, l1',
+                                            real=True, nonnegative=True)
+    KD, KP, v = symbols('K_D, K_P, v', real=True)
+
+    tau1_sq = (Ib + m * h ** 2) / m / g / h
+    tau2 = l2 / v
+    tau3 = v / (l1 + l2)
+    K = v ** 2 / g / (l1 + l2)
+
+    Gtheta = TransferFunction(-K * (tau2 * s + 1), tau1_sq * s ** 2 - 1, s)
+    Gdelta = TransferFunction(1, Is * s ** 2 + c * s, s)
+    Gpsi = TransferFunction(1, tau3 * s, s)
+    Dcont = TransferFunction(KD * s, 1, s)
+    PIcont = TransferFunction(KP, s, s)
+    Gunity = TransferFunction(1, 1, s)
+
+    Ginner = Feedback(Dcont * Gdelta, Gtheta)
+    Gouter = Feedback(PIcont * Ginner * Gpsi, Gunity)
+    assert Gouter == Feedback(Series(PIcont, Series(Ginner, Gpsi)), Gunity)
+    assert Gouter.num == Series(PIcont, Series(Ginner, Gpsi))
+    assert Gouter.den == Parallel(Gunity, Series(Gunity, Series(PIcont, Series(Ginner, Gpsi))))
+    expr = (KD*KP*g*s**3*v**2*(l1 + l2)*(Is*s**2 + c*s)**2*(-g*h*m + s**2*(Ib + h**2*m))*(-KD*g*h*m*s*v**2*(l2*s + v) + \
+            g*v*(l1 + l2)*(Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m))))/((s**2*v*(Is*s**2 + c*s)*(-KD*g*h*m*s*v**2* \
+            (l2*s + v) + g*v*(l1 + l2)*(Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m)))*(KD*KP*g*s*v*(l1 + l2)**2* \
+            (Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m)) + s**2*v*(Is*s**2 + c*s)*(-KD*g*h*m*s*v**2*(l2*s + v) + \
+            g*v*(l1 + l2)*(Is*s**2 + c*s)*(-g*h*m + s**2*(Ib + h**2*m))))/(l1 + l2)))
+
+    assert (Gouter.to_expr() - expr).simplify() == 0
 
 
 def test_MIMOFeedback_construction():
@@ -1161,6 +1311,9 @@ def test_TransferFunctionMatrix_functions():
     assert H_2.subs(a, 0) == TransferFunctionMatrix([[TransferFunction(0, k*s**2, s), TransferFunction(p*s, k*s**2, s)]])
     assert H_2.subs({p: 1, k: 1, a: a0}) == TransferFunctionMatrix([[TransferFunction(a0*s, s**2, s), TransferFunction(s, -a0 + s**2, s)]])
 
+    # eval_frequency()
+    assert H_2.eval_frequency(S(1)/2 + I) == Matrix([[2*a*p/(5*k) - 4*I*a*p/(5*k), I*p/(-a*k - 3*k/4 + I*k) + p/(-2*a*k - 3*k/2 + 2*I*k)]])
+
     # transpose()
 
     assert H_1.transpose() == TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(p, 1, s)], [TransferFunction(2, 1, s), TransferFunction(p, s, s)]])
@@ -1292,3 +1445,829 @@ def test_TransferFunction_backward_diff():
     tf_test_manual = TransferFunction(s * T/(a + b*T), s - a/(a + b*T), s)
 
     assert S.Zero == (tf_test_backward.simplify()-tf_test_manual.simplify()).simplify().num
+
+def test_TransferFunction_phase_margin():
+    # Test for phase margin
+    tf1 = TransferFunction(10, p**3 + 1, p)
+    tf2 = TransferFunction(s**2, 10, s)
+    tf3 = TransferFunction(1, a*s+b, s)
+    tf4 = TransferFunction((s + 1)*exp(s/tau), s**2 + 2, s)
+    tf_m = TransferFunctionMatrix([[tf2],[tf3]])
+
+    assert phase_margin(tf1) == -180 + 180*atan(3*sqrt(11))/pi
+    assert phase_margin(tf2) == 0
+
+    raises(NotImplementedError, lambda: phase_margin(tf4))
+    raises(ValueError, lambda: phase_margin(tf3))
+    raises(ValueError, lambda: phase_margin(MIMOSeries(tf_m)))
+
+def test_TransferFunction_gain_margin():
+    # Test for gain margin
+    tf1 = TransferFunction(s**2, 5*(s+1)*(s-5)*(s-10), s)
+    tf2 = TransferFunction(s**2 + 2*s + 1, 1, s)
+    tf3 = TransferFunction(1, a*s+b, s)
+    tf4 = TransferFunction((s + 1)*exp(s/tau), s**2 + 2, s)
+    tf_m = TransferFunctionMatrix([[tf2],[tf3]])
+
+    assert gain_margin(tf1) == -20*log(S(7)/540)/log(10)
+    assert gain_margin(tf2) == oo
+
+    raises(NotImplementedError, lambda: gain_margin(tf4))
+    raises(ValueError, lambda: gain_margin(tf3))
+    raises(ValueError, lambda: gain_margin(MIMOSeries(tf_m)))
+
+
+def test_StateSpace_construction():
+    # using different numbers for a SISO system.
+    A1 = Matrix([[0, 1], [1, 0]])
+    B1 = Matrix([1, 0])
+    C1 = Matrix([[0, 1]])
+    D1 = Matrix([0])
+    ss1 = StateSpace(A1, B1, C1, D1)
+
+    assert ss1.state_matrix == Matrix([[0, 1], [1, 0]])
+    assert ss1.input_matrix == Matrix([1, 0])
+    assert ss1.output_matrix == Matrix([[0, 1]])
+    assert ss1.feedforward_matrix == Matrix([0])
+    assert ss1.args == (Matrix([[0, 1], [1, 0]]), Matrix([[1], [0]]), Matrix([[0, 1]]), Matrix([[0]]))
+
+    # using different symbols for a SISO system.
+    ss2 = StateSpace(Matrix([a0]), Matrix([a1]),
+                    Matrix([a2]), Matrix([a3]))
+
+    assert ss2.state_matrix == Matrix([[a0]])
+    assert ss2.input_matrix == Matrix([[a1]])
+    assert ss2.output_matrix == Matrix([[a2]])
+    assert ss2.feedforward_matrix == Matrix([[a3]])
+    assert ss2.args == (Matrix([[a0]]), Matrix([[a1]]), Matrix([[a2]]), Matrix([[a3]]))
+
+    # using different numbers for a MIMO system.
+    ss3 = StateSpace(Matrix([[-1.5, -2], [1, 0]]),
+                    Matrix([[0.5, 0], [0, 1]]),
+                    Matrix([[0, 1], [0, 2]]),
+                    Matrix([[2, 2], [1, 1]]))
+
+    assert ss3.state_matrix == Matrix([[-1.5, -2], [1,  0]])
+    assert ss3.input_matrix == Matrix([[0.5, 0], [0, 1]])
+    assert ss3.output_matrix == Matrix([[0, 1], [0, 2]])
+    assert ss3.feedforward_matrix == Matrix([[2, 2], [1, 1]])
+    assert ss3.args == (Matrix([[-1.5, -2],
+                                [1,  0]]),
+                        Matrix([[0.5, 0],
+                                [0, 1]]),
+                        Matrix([[0, 1],
+                                [0, 2]]),
+                        Matrix([[2, 2],
+                                [1, 1]]))
+
+    # using different symbols for a MIMO system.
+    A4 = Matrix([[a0, a1], [a2, a3]])
+    B4 = Matrix([[b0, b1], [b2, b3]])
+    C4 = Matrix([[c0, c1], [c2, c3]])
+    D4 = Matrix([[d0, d1], [d2, d3]])
+    ss4 = StateSpace(A4, B4, C4, D4)
+
+    assert ss4.state_matrix == Matrix([[a0, a1], [a2, a3]])
+    assert ss4.input_matrix == Matrix([[b0, b1], [b2, b3]])
+    assert ss4.output_matrix == Matrix([[c0, c1], [c2, c3]])
+    assert ss4.feedforward_matrix == Matrix([[d0, d1], [d2, d3]])
+    assert ss4.args == (Matrix([[a0, a1],
+                                [a2, a3]]),
+                        Matrix([[b0, b1],
+                                [b2, b3]]),
+                        Matrix([[c0, c1],
+                                [c2, c3]]),
+                        Matrix([[d0, d1],
+                                [d2, d3]]))
+
+    # using less matrices. Rest will be filled with a minimum of zeros.
+    ss5 = StateSpace()
+    assert ss5.args == (Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[0]]))
+
+    A6 = Matrix([[0, 1], [1, 0]])
+    B6 = Matrix([1, 1])
+    ss6 = StateSpace(A6, B6)
+
+    assert ss6.state_matrix == Matrix([[0, 1], [1, 0]])
+    assert ss6.input_matrix ==  Matrix([1, 1])
+    assert ss6.output_matrix == Matrix([[0, 0]])
+    assert ss6.feedforward_matrix == Matrix([[0]])
+    assert ss6.args == (Matrix([[0, 1],
+                                [1, 0]]),
+                        Matrix([[1],
+                                [1]]),
+                        Matrix([[0, 0]]),
+                        Matrix([[0]]))
+
+    # Check if the system is SISO or MIMO.
+    # If system is not SISO, then it is definitely MIMO.
+
+    assert ss1.is_SISO == True
+    assert ss2.is_SISO == True
+    assert ss3.is_SISO == False
+    assert ss4.is_SISO == False
+    assert ss5.is_SISO == True
+    assert ss6.is_SISO == True
+
+    # ShapeError if matrices do not fit.
+    raises(ShapeError, lambda: StateSpace(Matrix([s, (s+1)**2]), Matrix([s+1]),
+                                          Matrix([s**2 - 1]), Matrix([2*s])))
+    raises(ShapeError, lambda: StateSpace(Matrix([s]), Matrix([s+1, s**3 + 1]),
+                                          Matrix([s**2 - 1]), Matrix([2*s])))
+    raises(ShapeError, lambda: StateSpace(Matrix([s]), Matrix([s+1]),
+                                          Matrix([[s**2 - 1], [s**2 + 2*s + 1]]), Matrix([2*s])))
+    raises(ShapeError, lambda: StateSpace(Matrix([[-s, -s], [s, 0]]),
+                                                Matrix([[s/2, 0], [0, s]]),
+                                                Matrix([[0, s]]),
+                                                Matrix([[2*s, 2*s], [s, s]])))
+
+    # TypeError if arguments are not sympy matrices.
+    raises(TypeError, lambda: StateSpace(s**2, s+1, 2*s, 1))
+    raises(TypeError, lambda: StateSpace(Matrix([2, 0.5]), Matrix([-1]),
+                                         Matrix([1]), 0))
+def test_StateSpace_add():
+    A1 = Matrix([[4, 1],[2, -3]])
+    B1 = Matrix([[5, 2],[-3, -3]])
+    C1 = Matrix([[2, -4],[0, 1]])
+    D1 = Matrix([[3, 2],[1, -1]])
+    ss1 = StateSpace(A1, B1, C1, D1)
+
+    A2 = Matrix([[-3, 4, 2],[-1, -3, 0],[2, 5, 3]])
+    B2 = Matrix([[1, 4],[-3, -3],[-2, 1]])
+    C2 = Matrix([[4, 2, -3],[1, 4, 3]])
+    D2 = Matrix([[-2, 4],[0, 1]])
+    ss2 = StateSpace(A2, B2, C2, D2)
+    ss3 = StateSpace()
+    ss4 = StateSpace(Matrix([1]), Matrix([2]), Matrix([3]), Matrix([4]))
+
+    expected_add = \
+        StateSpace(
+        Matrix([
+        [4,  1,  0,  0, 0],
+        [2, -3,  0,  0, 0],
+        [0,  0, -3,  4, 2],
+        [0,  0, -1, -3, 0],
+        [0,  0,  2,  5, 3]]),
+        Matrix([
+        [ 5,  2],
+        [-3, -3],
+        [ 1,  4],
+        [-3, -3],
+        [-2,  1]]),
+        Matrix([
+        [2, -4, 4, 2, -3],
+        [0,  1, 1, 4,  3]]),
+        Matrix([
+        [1, 6],
+        [1, 0]]))
+
+    expected_mul = \
+        StateSpace(
+        Matrix([
+        [ -3,   4,  2, 0,  0],
+        [ -1,  -3,  0, 0,  0],
+        [  2,   5,  3, 0,  0],
+        [ 22,  18, -9, 4,  1],
+        [-15, -18,  0, 2, -3]]),
+        Matrix([
+        [  1,   4],
+        [ -3,  -3],
+        [ -2,   1],
+        [-10,  22],
+        [  6, -15]]),
+        Matrix([
+        [14, 14, -3, 2, -4],
+        [ 3, -2, -6, 0,  1]]),
+        Matrix([
+        [-6, 14],
+        [-2,  3]]))
+
+    assert ss1 + ss2 == expected_add
+    assert ss1*ss2 == expected_mul
+    assert ss3 + 1/2 == StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[0.5]]))
+    assert ss4*1.5 == StateSpace(Matrix([[1]]), Matrix([[2]]), Matrix([[4.5]]), Matrix([[6.0]]))
+    assert 1.5*ss4 == StateSpace(Matrix([[1]]), Matrix([[3.0]]), Matrix([[3]]), Matrix([[6.0]]))
+    raises(ShapeError, lambda: ss1 + ss3)
+    raises(ShapeError, lambda: ss2*ss4)
+
+def test_StateSpace_negation():
+    A = Matrix([[a0, a1], [a2, a3]])
+    B = Matrix([[b0, b1], [b2, b3]])
+    C = Matrix([[c0, c1], [c1, c2], [c2, c3]])
+    D = Matrix([[d0, d1], [d1, d2], [d2, d3]])
+    SS = StateSpace(A, B, C, D)
+    SS_neg = -SS
+
+    state_mat = Matrix([[-1, 1], [1, -1]])
+    input_mat = Matrix([1, -1])
+    output_mat = Matrix([[-1, 1]])
+    feedforward_mat = Matrix([1])
+    system = StateSpace(state_mat, input_mat, output_mat, feedforward_mat)
+
+    assert SS_neg == \
+        StateSpace(Matrix([[a0, a1],
+                           [a2, a3]]),
+                   Matrix([[b0, b1],
+                           [b2, b3]]),
+                   Matrix([[-c0, -c1],
+                           [-c1, -c2],
+                           [-c2, -c3]]),
+                   Matrix([[-d0, -d1],
+                           [-d1, -d2],
+                           [-d2, -d3]]))
+    assert -system == \
+        StateSpace(Matrix([[-1,  1],
+                           [ 1, -1]]),
+                   Matrix([[ 1],[-1]]),
+                   Matrix([[1, -1]]),
+                   Matrix([[-1]]))
+    assert -SS_neg == SS
+    assert -(-(-(-system))) == system
+
+def test_SymPy_substitution_functions():
+    # subs
+    ss1 = StateSpace(Matrix([s]), Matrix([(s + 1)**2]), Matrix([s**2 - 1]), Matrix([2*s]))
+    ss2 = StateSpace(Matrix([s + p]), Matrix([(s + 1)*(p - 1)]), Matrix([p**3 - s**3]), Matrix([s - p]))
+
+    assert ss1.subs({s:5}) == StateSpace(Matrix([[5]]), Matrix([[36]]), Matrix([[24]]), Matrix([[10]]))
+    assert ss2.subs({p:1}) == StateSpace(Matrix([[s + 1]]), Matrix([[0]]), Matrix([[1 - s**3]]), Matrix([[s - 1]]))
+
+    # xreplace
+    assert ss1.xreplace({s:p}) == \
+        StateSpace(Matrix([[p]]), Matrix([[(p + 1)**2]]), Matrix([[p**2 - 1]]), Matrix([[2*p]]))
+    assert ss2.xreplace({s:a, p:b}) == \
+        StateSpace(Matrix([[a + b]]), Matrix([[(a + 1)*(b - 1)]]), Matrix([[-a**3 + b**3]]), Matrix([[a - b]]))
+
+    # evalf
+    p1 = a1*s + a0
+    p2 = b2*s**2 + b1*s + b0
+    G = StateSpace(Matrix([p1]), Matrix([p2]))
+    expect = StateSpace(Matrix([[2*s + 1]]), Matrix([[5*s**2 + 4*s + 3]]), Matrix([[0]]), Matrix([[0]]))
+    expect_ = StateSpace(Matrix([[2.0*s + 1.0]]), Matrix([[5.0*s**2 + 4.0*s + 3.0]]), Matrix([[0]]), Matrix([[0]]))
+    assert G.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}) == expect
+    assert G.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}).evalf() == expect_
+    assert expect.evalf() == expect_
+
+def test_conversion():
+    # StateSpace to TransferFunction for SISO
+    A1 = Matrix([[-5, -1], [3, -1]])
+    B1 = Matrix([2, 5])
+    C1 = Matrix([[1, 2]])
+    D1 = Matrix([0])
+    H1 = StateSpace(A1, B1, C1, D1)
+    H3 = StateSpace(Matrix([[a0, a1], [a2, a3]]), B = Matrix([[b1], [b2]]), C = Matrix([[c1, c2]]))
+    tm1 = H1.rewrite(TransferFunction)
+    tm2 = (-H1).rewrite(TransferFunction)
+
+    tf1 = tm1[0][0]
+    tf2 = tm2[0][0]
+
+    assert tf1 == TransferFunction(12*s + 59, s**2 + 6*s + 8, s)
+    assert tf2.num == -tf1.num
+    assert tf2.den == tf1.den
+
+    # StateSpace to TransferFunction for MIMO
+    A2 = Matrix([[-1.5, -2, 3], [1, 0, 1], [2, 1, 1]])
+    B2 = Matrix([[0.5, 0, 1], [0, 1, 2], [2, 2, 3]])
+    C2 = Matrix([[0, 1, 0], [0, 2, 1], [1, 0, 2]])
+    D2 = Matrix([[2, 2, 0], [1, 1, 1], [3, 2, 1]])
+    H2 = StateSpace(A2, B2, C2, D2)
+    tm3 = H2.rewrite(TransferFunction)
+
+    # outputs for input i obtained at Index i-1. Consider input 1
+    assert tm3[0][0] == TransferFunction(2.0*s**3 + 1.0*s**2 - 10.5*s + 4.5, 1.0*s**3 + 0.5*s**2 - 6.5*s - 2.5, s)
+    assert tm3[0][1] == TransferFunction(2.0*s**3 + 2.0*s**2 - 10.5*s - 3.5, 1.0*s**3 + 0.5*s**2 - 6.5*s - 2.5, s)
+    assert tm3[0][2] == TransferFunction(2.0*s**2 + 5.0*s - 0.5, 1.0*s**3 + 0.5*s**2 - 6.5*s - 2.5, s)
+    assert H3.rewrite(TransferFunction) == [[TransferFunction(-c1*(a1*b2 - a3*b1 + b1*s) - c2*(-a0*b2 + a2*b1 + b2*s),
+                                                              -a0*a3 + a0*s + a1*a2 + a3*s - s**2, s)]]
+    # TransferFunction to StateSpace
+    SS = TF1.rewrite(StateSpace)
+    assert SS == \
+        StateSpace(Matrix([[     0,          1],
+                           [-wn**2, -2*wn*zeta]]),
+                   Matrix([[0],
+                           [1]]),
+                   Matrix([[1, 0]]),
+                   Matrix([[0]]))
+    assert SS.rewrite(TransferFunction)[0][0] == TF1
+
+    # Transfer function has to be proper
+    raises(ValueError, lambda: TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s).rewrite(StateSpace))
+
+
+def test_StateSpace_dsolve():
+    # https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
+    # https://lpsa.swarthmore.edu/Transient/TransMethSS.html
+    A1 = Matrix([[0, 1], [-2, -3]])
+    B1 = Matrix([[0], [1]])
+    C1 = Matrix([[1, -1]])
+    D1 = Matrix([0])
+    I1 = Matrix([[1], [2]])
+    t = symbols('t')
+    ss1 = StateSpace(A1, B1, C1, D1)
+
+    # Zero input and Zero initial conditions
+    assert ss1.dsolve() == Matrix([[0]])
+    assert ss1.dsolve(initial_conditions=I1) == Matrix([[8*exp(-t) - 9*exp(-2*t)]])
+
+    A2 = Matrix([[-2, 0], [1, -1]])
+    C2 = eye(2,2)
+    I2 = Matrix([2, 3])
+    ss2 = StateSpace(A=A2, C=C2)
+    assert ss2.dsolve(initial_conditions=I2) == Matrix([[2*exp(-2*t)], [5*exp(-t) - 2*exp(-2*t)]])
+
+    A3 = Matrix([[-1, 1], [-4, -4]])
+    B3 = Matrix([[0], [4]])
+    C3 = Matrix([[0, 1]])
+    D3 = Matrix([0])
+    U3 = Matrix([10])
+    ss3 = StateSpace(A3, B3, C3, D3)
+    op = ss3.dsolve(input_vector=U3, var=t)
+    assert str(op.simplify().expand().evalf()[0]) == str(5.0 + 20.7880460155075*exp(-5*t/2)*sin(sqrt(7)*t/2)
+                                            - 5.0*exp(-5*t/2)*cos(sqrt(7)*t/2))
+
+    # Test with Heaviside as input
+    A4 = Matrix([[-1, 1], [-4, -4]])
+    B4 = Matrix([[0], [4]])
+    C4 = Matrix([[0, 1]])
+    U4 = Matrix([[10*Heaviside(t)]])
+    ss4 = StateSpace(A4, B4, C4)
+    op4 = str(ss4.dsolve(var=t, input_vector=U4)[0].simplify().expand().evalf())
+    assert op4 == str(5.0*Heaviside(t) + 20.7880460155075*exp(-5*t/2)*sin(sqrt(7)*t/2)*Heaviside(t)
+                                            - 5.0*exp(-5*t/2)*cos(sqrt(7)*t/2)*Heaviside(t))
+
+    # Test with Symbolic Matrices
+    m, a, x0 = symbols('m a x_0')
+    A5 = Matrix([[0, 1], [0, 0]])
+    B5 = Matrix([[0], [1 / m]])
+    C5 = Matrix([[1, 0]])
+    I5 = Matrix([[x0], [0]])
+    U5 = Matrix([[exp(-a * t)]])
+    ss5 = StateSpace(A5, B5, C5)
+    op5 = ss5.dsolve(initial_conditions=I5, input_vector=U5, var=t).simplify()
+    assert op5[0].args[0][0] == x0 + t/(a*m) - 1/(a**2*m) + exp(-a*t)/(a**2*m)
+    a11, a12, a21, a22, b1, b2, c1, c2, i1, i2 = symbols('a_11 a_12 a_21 a_22 b_1 b_2 c_1 c_2 i_1 i_2')
+    A6 = Matrix([[a11, a12], [a21, a22]])
+    B6 = Matrix([b1, b2])
+    C6 = Matrix([[c1, c2]])
+    I6 = Matrix([i1, i2])
+    ss6 = StateSpace(A6, B6, C6)
+    expr6 = ss6.dsolve(initial_conditions=I6)[0]
+    expr6 = expr6.subs([(a11, 0), (a12, 1), (a21, -2), (a22, -3), (b1, 0), (b2, 1), (c1, 1), (c2, -1), (i1, 1), (i2, 2)])
+    assert expr6 == 8*exp(-t) - 9*exp(-2*t)
+
+
+def test_StateSpace_functions():
+    # https://in.mathworks.com/help/control/ref/statespacemodel.obsv.html
+
+    A_mat = Matrix([[-1.5, -2], [1, 0]])
+    B_mat = Matrix([0.5, 0])
+    C_mat = Matrix([[0, 1]])
+    D_mat = Matrix([1])
+    SS1 = StateSpace(A_mat, B_mat, C_mat, D_mat)
+    SS2 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[0, 1], [0, 2]]),Matrix([[-1, 1], [1, -1]]))
+    SS3 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[1, -1], [1, -1]]))
+    SS4 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1], [b2]]), Matrix([[c1, c2]]))
+
+    # Observability
+    assert SS1.is_observable() == True
+    assert SS2.is_observable() == False
+    assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
+    assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
+    assert SS1.observable_subspace() == [Matrix([[0], [1]]), Matrix([[1], [0]])]
+    assert SS2.observable_subspace() == [Matrix([[-1], [ 1], [ 3], [-3]])]
+    Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5), (c1, 0), (c2, 1)])
+    assert Qo == Matrix([[0, 1], [1, -5]])
+
+    # Controllability
+    assert SS1.is_controllable() == True
+    assert SS3.is_controllable() == False
+    assert SS1.controllability_matrix() ==  Matrix([[0.5, -0.75], [  0,   0.5]])
+    assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
+    assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
+    assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
+    assert SS4.controllable_subspace() == [Matrix([
+                                          [b1],
+                                          [b2]]), Matrix([
+                                          [a0*b1 + a1*b2],
+                                          [a2*b1 + a3*b2]])]
+    Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
+    assert Qc == Matrix([[0, 1], [1, -5]])
+
+    # Append
+    A1 = Matrix([[0, 1], [1, 0]])
+    B1 = Matrix([[0], [1]])
+    C1 = Matrix([[0, 1]])
+    D1 = Matrix([[0]])
+    ss1 = StateSpace(A1, B1, C1, D1)
+    ss2 = StateSpace(Matrix([[1, 0], [0, 1]]), Matrix([[1], [0]]), Matrix([[1, 0]]), Matrix([[1]]))
+    ss3 = ss1.append(ss2)
+    ss4 = SS4.append(ss1)
+
+    assert ss3.num_states == ss1.num_states + ss2.num_states
+    assert ss3.num_inputs == ss1.num_inputs + ss2.num_inputs
+    assert ss3.num_outputs == ss1.num_outputs + ss2.num_outputs
+    assert ss3.state_matrix == Matrix([[0, 1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+    assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
+    assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
+    assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
+
+    # Using symbolic matrices
+    assert ss4.num_states == SS4.num_states + ss1.num_states
+    assert ss4.num_inputs == SS4.num_inputs + ss1.num_inputs
+    assert ss4.num_outputs == SS4.num_outputs + ss1.num_outputs
+    assert ss4.state_matrix == Matrix([[a0, a1, 0, 0], [a2, a3, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    assert ss4.input_matrix == Matrix([[b1, 0], [b2, 0], [0, 0], [0, 1]])
+    assert ss4.output_matrix == Matrix([[c1, c2, 0, 0], [0, 0, 0, 1]])
+    assert ss4.feedforward_matrix == Matrix([[0, 0], [0, 0]])
+
+
+def test_StateSpace_series():
+    # For SISO Systems
+    a1 = Matrix([[0, 1], [1, 0]])
+    b1 = Matrix([[0], [1]])
+    c1 = Matrix([[0, 1]])
+    d1 = Matrix([[0]])
+    a2 = Matrix([[1, 0], [0, 1]])
+    b2 = Matrix([[1], [0]])
+    c2 = Matrix([[1, 0]])
+    d2 = Matrix([[1]])
+
+    ss1 = StateSpace(a1, b1, c1, d1)
+    ss2 = StateSpace(a2, b2, c2, d2)
+    tf1 = TransferFunction(s, s+1, s)
+    ser1 = Series(ss1, ss2)
+    assert ser1 == Series(StateSpace(Matrix([
+                            [0, 1],
+                            [1, 0]]), Matrix([
+                            [0],
+                            [1]]), Matrix([[0, 1]]), Matrix([[0]])), StateSpace(Matrix([
+                            [1, 0],
+                            [0, 1]]), Matrix([
+                            [1],
+                            [0]]), Matrix([[1, 0]]), Matrix([[1]])))
+    assert ser1.doit() == StateSpace(
+                            Matrix([
+                            [0, 1, 0, 0],
+                            [1, 0, 0, 0],
+                            [0, 1, 1, 0],
+                            [0, 0, 0, 1]]),
+                            Matrix([
+                            [0],
+                            [1],
+                            [0],
+                            [0]]),
+                            Matrix([[0, 1, 1, 0]]),
+                            Matrix([[0]]))
+
+    assert ser1.num_inputs == 1
+    assert ser1.num_outputs == 1
+    assert ser1.rewrite(TransferFunction) == TransferFunction(s**2, s**3 - s**2 - s + 1, s)
+    ser2 = Series(ss1)
+    ser3 = Series(ser2, ss2)
+    assert ser3.doit() == ser1.doit()
+
+    # TransferFunction interconnection with StateSpace
+    ser_tf = Series(tf1, ss1)
+    assert ser_tf == Series(TransferFunction(s, s + 1, s), StateSpace(Matrix([
+                            [0, 1],
+                            [1, 0]]), Matrix([
+                            [0],
+                            [1]]), Matrix([[0, 1]]), Matrix([[0]])))
+    assert ser_tf.doit() == StateSpace(
+                            Matrix([
+                            [-1, 0,  0],
+                            [0, 0,  1],
+                            [-1, 1, 0]]),
+                            Matrix([
+                            [1],
+                            [0],
+                            [1]]),
+                            Matrix([[0, 0, 1]]),
+                            Matrix([[0]]))
+    assert ser_tf.rewrite(TransferFunction) == TransferFunction(s**2, s**3 + s**2 - s - 1, s)
+
+    # For MIMO Systems
+    a3 = Matrix([[4, 1], [2, -3]])
+    b3 = Matrix([[5, 2], [-3, -3]])
+    c3 = Matrix([[2, -4], [0, 1]])
+    d3 = Matrix([[3, 2], [1, -1]])
+    a4 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    b4 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    c4 = Matrix([[4, 2, -3], [1, 4, 3]])
+    d4 = Matrix([[-2, 4], [0, 1]])
+    ss3 = StateSpace(a3, b3, c3, d3)
+    ss4 = StateSpace(a4, b4, c4, d4)
+    ser4 = MIMOSeries(ss3, ss4)
+    assert ser4 == MIMOSeries(StateSpace(Matrix([
+                    [4,  1],
+                    [2, -3]]), Matrix([
+                    [ 5,  2],
+                    [-3, -3]]), Matrix([
+                    [2, -4],
+                    [0,  1]]), Matrix([
+                    [3,  2],
+                    [1, -1]])), StateSpace(Matrix([
+                    [-3,  4, 2],
+                    [-1, -3, 0],
+                    [ 2,  5, 3]]), Matrix([
+                    [ 1,  4],
+                    [-3, -3],
+                    [-2,  1]]), Matrix([
+                    [4, 2, -3],
+                    [1, 4,  3]]), Matrix([
+                    [-2, 4],
+                    [ 0, 1]])))
+    assert ser4.doit() == StateSpace(
+                        Matrix([
+                        [4,   1,  0, 0,  0],
+                        [2,  -3,  0, 0,  0],
+                        [2,   0,  -3, 4,  2],
+                        [-6,  9, -1, -3,  0],
+                        [-4, 9,  2, 5, 3]]),
+                        Matrix([
+                        [5,   2],
+                        [-3,  -3],
+                        [7,   -2],
+                        [-12,  -3],
+                        [-5, -5]]),
+                        Matrix([
+                        [-4, 12, 4, 2, -3],
+                        [0, 1, 1, 4, 3]]),
+                        Matrix([
+                        [-2, -8],
+                        [1, -1]]))
+    assert ser4.num_inputs == ss3.num_inputs
+    assert ser4.num_outputs == ss4.num_outputs
+    ser5 = MIMOSeries(ss3)
+    ser6 = MIMOSeries(ser5, ss4)
+    assert ser6.doit() == ser4.doit()
+    assert ser6.rewrite(TransferFunctionMatrix) == ser4.rewrite(TransferFunctionMatrix)
+    tf2 = TransferFunction(1, s, s)
+    tf3 = TransferFunction(1, s+1, s)
+    tf4 = TransferFunction(s, s+2, s)
+    tfm = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    ser6 = MIMOSeries(ss3, tfm)
+    assert ser6 == MIMOSeries(StateSpace(Matrix([
+                        [4,  1],
+                        [2, -3]]), Matrix([
+                        [ 5,  2],
+                        [-3, -3]]), Matrix([
+                        [2, -4],
+                        [0,  1]]), Matrix([
+                        [3,  2],
+                        [1, -1]])), TransferFunctionMatrix((
+                        (TransferFunction(s, s + 1, s), TransferFunction(1, s, s)),
+                        (TransferFunction(1, s + 1, s), TransferFunction(s, s + 2, s)))))
+
+
+def test_StateSpace_parallel():
+    # For SISO system
+    a1 = Matrix([[0, 1], [1, 0]])
+    b1 = Matrix([[0], [1]])
+    c1 = Matrix([[0, 1]])
+    d1 = Matrix([[0]])
+    a2 = Matrix([[1, 0], [0, 1]])
+    b2 = Matrix([[1], [0]])
+    c2 = Matrix([[1, 0]])
+    d2 = Matrix([[1]])
+    ss1 = StateSpace(a1, b1, c1, d1)
+    ss2 = StateSpace(a2, b2, c2, d2)
+    p1 = Parallel(ss1, ss2)
+    assert p1 == Parallel(StateSpace(Matrix([[0, 1], [1, 0]]), Matrix([[0], [1]]), Matrix([[0, 1]]), Matrix([[0]])),
+                          StateSpace(Matrix([[1, 0],[0, 1]]), Matrix([[1],[0]]), Matrix([[1, 0]]), Matrix([[1]])))
+    assert p1.doit() == StateSpace(Matrix([
+                        [0, 1, 0, 0],
+                        [1, 0, 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]]),
+                        Matrix([
+                        [0],
+                        [1],
+                        [1],
+                        [0]]),
+                        Matrix([[0, 1, 1, 0]]),
+                        Matrix([[1]]))
+    assert p1.rewrite(TransferFunction) == TransferFunction(s*(s + 2), s**2 - 1, s)
+
+    # Connecting StateSpace with TransferFunction
+    tf1 = TransferFunction(s, s+1, s)
+    p2 = Parallel(ss1, tf1)
+    assert p2 == Parallel(StateSpace(Matrix([
+                        [0, 1],
+                        [1, 0]]), Matrix([
+                        [0],
+                        [1]]), Matrix([[0, 1]]), Matrix([[0]])), TransferFunction(s, s + 1, s))
+    assert p2.doit() == StateSpace(
+                        Matrix([
+                        [0, 1,  0],
+                        [1, 0,  0],
+                        [0, 0, -1]]),
+                        Matrix([
+                        [0],
+                        [1],
+                        [1]]),
+                        Matrix([[0, 1, -1]]),
+                        Matrix([[1]]))
+    assert p2.rewrite(TransferFunction) == TransferFunction(s**2, s**2 - 1, s)
+
+    # For MIMO
+    a3 = Matrix([[4, 1], [2, -3]])
+    b3 = Matrix([[5, 2], [-3, -3]])
+    c3 = Matrix([[2, -4], [0, 1]])
+    d3 = Matrix([[3, 2], [1, -1]])
+    a4 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    b4 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    c4 = Matrix([[4, 2, -3], [1, 4, 3]])
+    d4 = Matrix([[-2, 4], [0, 1]])
+    ss3 = StateSpace(a3, b3, c3, d3)
+    ss4 = StateSpace(a4, b4, c4, d4)
+    p3 = MIMOParallel(ss3, ss4)
+    assert p3 == MIMOParallel(StateSpace(Matrix([
+                        [4,  1],
+                        [2, -3]]), Matrix([
+                        [ 5,  2],
+                        [-3, -3]]), Matrix([
+                        [2, -4],
+                        [0,  1]]), Matrix([
+                        [3,  2],
+                        [1, -1]])), StateSpace(Matrix([
+                        [-3,  4, 2],
+                        [-1, -3, 0],
+                        [ 2,  5, 3]]), Matrix([
+                        [ 1,  4],
+                        [-3, -3],
+                        [-2,  1]]), Matrix([
+                        [4, 2, -3],
+                        [1, 4,  3]]), Matrix([
+                        [-2, 4],
+                        [ 0, 1]])))
+    assert p3.doit() == StateSpace(Matrix([
+                        [4, 1, 0, 0, 0],
+                        [2, -3, 0, 0, 0],
+                        [0, 0, -3, 4, 2],
+                        [0, 0, -1, -3, 0],
+                        [0, 0, 2, 5, 3]]),
+                        Matrix([
+                        [5, 2],
+                        [-3, -3],
+                        [1, 4],
+                        [-3, -3],
+                        [-2, 1]]),
+                        Matrix([
+                        [2, -4, 4, 2, -3],
+                        [0, 1, 1, 4, 3]]),
+                        Matrix([
+                        [1, 6],
+                        [1, 0]]))
+
+    # Using StateSpace with MIMOParallel.
+    tf2 = TransferFunction(1, s, s)
+    tf3 = TransferFunction(1, s + 1, s)
+    tf4 = TransferFunction(s, s + 2, s)
+    tfm = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    p4 = MIMOParallel(tfm, ss3)
+    assert p4 == MIMOParallel(TransferFunctionMatrix((
+                        (TransferFunction(s, s + 1, s), TransferFunction(1, s, s)),
+                        (TransferFunction(1, s + 1, s), TransferFunction(s, s + 2, s)))),
+                        StateSpace(Matrix([
+                        [4, 1],
+                        [2, -3]]), Matrix([
+                        [5, 2],
+                        [-3, -3]]), Matrix([
+                        [2, -4],
+                        [0, 1]]), Matrix([
+                        [3, 2],
+                        [1, -1]])))
+
+
+def test_StateSpace_feedback():
+    # For SISO
+    a1 = Matrix([[0, 1], [1, 0]])
+    b1 = Matrix([[0], [1]])
+    c1 = Matrix([[0, 1]])
+    d1 = Matrix([[0]])
+    a2 = Matrix([[1, 0], [0, 1]])
+    b2 = Matrix([[1], [0]])
+    c2 = Matrix([[1, 0]])
+    d2 = Matrix([[1]])
+    ss1 = StateSpace(a1, b1, c1, d1)
+    ss2 = StateSpace(a2, b2, c2, d2)
+    fd1 = Feedback(ss1, ss2)
+
+    # Negative feedback
+    assert fd1 == Feedback(StateSpace(Matrix([[0, 1], [1, 0]]), Matrix([[0], [1]]), Matrix([[0, 1]]), Matrix([[0]])),
+                          StateSpace(Matrix([[1, 0],[0, 1]]), Matrix([[1],[0]]), Matrix([[1, 0]]), Matrix([[1]])), -1)
+    assert fd1.doit() == StateSpace(Matrix([
+                            [0,  1,  0, 0],
+                            [1, -1, -1, 0],
+                            [0,  1,  1, 0],
+                            [0,  0,  0, 1]]), Matrix([
+                            [0],
+                            [1],
+                            [0],
+                            [0]]), Matrix(
+                            [[0, 1, 0, 0]]), Matrix(
+                            [[0]]))
+    assert fd1.rewrite(TransferFunction) == TransferFunction(s*(s - 1), s**3 - s + 1, s)
+
+    # Positive Feedback
+    fd2 = Feedback(ss1, ss2, 1)
+    assert fd2.doit() == StateSpace(Matrix([
+                            [0, 1, 0, 0],
+                            [1, 1, 1, 0],
+                            [0, 1, 1, 0],
+                            [0, 0, 0, 1]]), Matrix([
+                            [0],
+                            [1],
+                            [0],
+                            [0]]), Matrix(
+                            [[0, 1, 0, 0]]), Matrix(
+                            [[0]]))
+    assert fd2.rewrite(TransferFunction) == TransferFunction(s*(s - 1), s**3 - 2*s**2 - s + 1, s)
+
+    # Connection with TransferFunction
+    tf1 = TransferFunction(s, s+1, s)
+    fd3 = Feedback(ss1, tf1)
+    assert fd3 == Feedback(StateSpace(Matrix([
+                            [0, 1],
+                            [1, 0]]), Matrix([
+                            [0],
+                            [1]]), Matrix([[0, 1]]), Matrix([[0]])),
+                            TransferFunction(s, s + 1, s), -1)
+    assert fd3.doit() == StateSpace (Matrix([
+                            [0,  1,  0],
+                            [1, -1,  1],
+                            [0,  1, -1]]), Matrix([
+                            [0],
+                            [1],
+                            [0]]), Matrix(
+                            [[0, 1, 0]]), Matrix(
+                            [[0]]))
+
+    # For MIMO
+    a3 = Matrix([[4, 1], [2, -3]])
+    b3 = Matrix([[5, 2], [-3, -3]])
+    c3 = Matrix([[2, -4], [0, 1]])
+    d3 = Matrix([[3, 2], [1, -1]])
+    a4 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    b4 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    c4 = Matrix([[4, 2, -3], [1, 4, 3]])
+    d4 = Matrix([[-2, 4], [0, 1]])
+    ss3 = StateSpace(a3, b3, c3, d3)
+    ss4 = StateSpace(a4, b4, c4, d4)
+
+    # Negative Feedback
+    fd4 = MIMOFeedback(ss3, ss4)
+    assert fd4 == MIMOFeedback(StateSpace(Matrix([
+                            [4,  1],
+                            [2, -3]]), Matrix([
+                            [ 5,  2],
+                            [-3, -3]]), Matrix([
+                            [2, -4],
+                            [0,  1]]), Matrix([
+                            [3,  2],
+                            [1, -1]])), StateSpace(Matrix([
+                            [-3,  4, 2],
+                            [-1, -3, 0],
+                            [ 2,  5, 3]]), Matrix([
+                            [ 1,  4],
+                            [-3, -3],
+                            [-2,  1]]), Matrix([
+                            [4, 2, -3],
+                            [1, 4,  3]]), Matrix([
+                            [-2, 4],
+                            [ 0, 1]])), -1)
+    assert fd4.doit() == StateSpace(Matrix([
+                            [Rational(3), Rational(-3, 4), Rational(-15, 4), Rational(-37, 2), Rational(-15)],
+                            [Rational(7, 2), Rational(-39, 8), Rational(9, 8), Rational(39, 4), Rational(9)],
+                            [Rational(3), Rational(-41, 4), Rational(-45, 4), Rational(-51, 2), Rational(-19)],
+                            [Rational(-9, 2), Rational(129, 8), Rational(73, 8), Rational(171, 4), Rational(36)],
+                            [Rational(-3, 2), Rational(47, 8), Rational(31, 8), Rational(85, 4), Rational(18)]]), Matrix([
+                            [Rational(-1, 4), Rational(19, 4)],
+                            [Rational(3, 8), Rational(-21, 8)],
+                            [Rational(1, 4), Rational(29, 4)],
+                            [Rational(3, 8), Rational(-93, 8)],
+                            [Rational(5, 8), Rational(-35, 8)]]), Matrix([
+                            [Rational(1), Rational(-15, 4), Rational(-7, 4), Rational(-21, 2), Rational(-9)],
+                            [Rational(1, 2), Rational(-13, 8), Rational(-13, 8), Rational(-19, 4), Rational(-3)]]), Matrix([
+                            [Rational(-1, 4), Rational(11, 4)],
+                            [Rational(1, 8), Rational(9, 8)]]))
+
+    # Positive Feedback
+    fd5 = MIMOFeedback(ss3, ss4, 1)
+    assert fd5.doit() == StateSpace(Matrix([
+                            [Rational(4, 7), Rational(62, 7), Rational(1), Rational(-8), Rational(-69, 7)],
+                            [Rational(32, 7), Rational(-135, 14), Rational(-3, 2), Rational(3), Rational(36, 7)],
+                            [Rational(-10, 7), Rational(41, 7), Rational(-4), Rational(-12), Rational(-97, 7)],
+                            [Rational(12, 7), Rational(-111, 14), Rational(-5, 2), Rational(18), Rational(171, 7)],
+                            [Rational(2, 7), Rational(-29, 14), Rational(-1, 2), Rational(10), Rational(81, 7)]]), Matrix([
+                            [Rational(6, 7), Rational(-17, 7)],
+                            [Rational(-9, 14), Rational(15, 14)],
+                            [Rational(6, 7), Rational(-31, 7)],
+                            [Rational(-27, 14), Rational(87, 14)],
+                            [Rational(-15, 14), Rational(25, 14)]]), Matrix([
+                            [Rational(-2, 7), Rational(11, 7), Rational(1), Rational(-4), Rational(-39, 7)],
+                            [Rational(-2, 7), Rational(15, 14), Rational(-1, 2), Rational(-3), Rational(-18, 7)]]), Matrix([
+                            [Rational(4, 7), Rational(-9, 7)],
+                            [Rational(1, 14), Rational(-11, 14)]]))

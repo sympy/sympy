@@ -208,7 +208,7 @@ def test_output_arg_mixed_unordered():
     name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
     result, = codegen(name_expr, "Rust", header=False, empty=False)
     assert result[0] == "foo.rs"
-    source = result[1];
+    source = result[1]
     expected = (
         "fn foo(x: f64) -> (f64, f64, f64, f64) {\n"
         "    let out1 = (2*x).cos();\n"
@@ -228,11 +228,11 @@ def test_piecewise_():
     source = result[1]
     expected = (
         "fn pwtest(x: f64) -> f64 {\n"
-        "    let out1 = if (x < -1) {\n"
+        "    let out1 = if (x < -1.0) {\n"
         "        0\n"
-        "    } else if (x <= 1) {\n"
+        "    } else if (x <= 1.0) {\n"
         "        x.powi(2)\n"
-        "    } else if (x > 1) {\n"
+        "    } else if (x > 1.0) {\n"
         "        2 - x\n"
         "    } else {\n"
         "        1\n"
@@ -265,7 +265,7 @@ def test_multifcns_per_file():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
     result = codegen(name_expr, "Rust", header=False, empty=False)
     assert result[0][0] == "foo.rs"
-    source = result[0][1];
+    source = result[0][1]
     expected = (
         "fn foo(x: f64, y: f64) -> (f64, f64) {\n"
         "    let out1 = 2*x;\n"
@@ -285,7 +285,7 @@ def test_multifcns_per_file_w_header():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
     result = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0][0] == "foo.rs"
-    source = result[0][1];
+    source = result[0][1]
     version_str = "Code generated with SymPy %s" % sympy.__version__
     version_line = version_str.center(76).rstrip()
     expected = (

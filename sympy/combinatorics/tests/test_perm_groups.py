@@ -806,7 +806,7 @@ def test_elements():
     from sympy.sets.sets import FiniteSet
 
     p = Permutation(2, 3)
-    assert PermutationGroup(p).elements == {Permutation(3), Permutation(2, 3)}
+    assert set(PermutationGroup(p).elements) == {Permutation(3), Permutation(2, 3)}
     assert FiniteSet(*PermutationGroup(p).elements) \
         == FiniteSet(Permutation(2, 3), Permutation(3))
 
@@ -833,7 +833,7 @@ def test_coset_transvesal():
 
 def test_coset_table():
     G = PermutationGroup(Permutation(0,1,2,3), Permutation(0,1,2),
-         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7));
+         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7))
     H = PermutationGroup(Permutation(0,1,2,3), Permutation(0,7))
     assert G.coset_table(H) == \
         [[0, 0, 0, 0, 1, 2, 3, 3, 0, 0], [4, 5, 2, 5, 6, 0, 7, 7, 1, 1],

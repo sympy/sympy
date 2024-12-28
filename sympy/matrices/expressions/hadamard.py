@@ -99,7 +99,7 @@ class HadamardProduct(MatrixExpr):
     def doit(self, **hints):
         expr = self.func(*(i.doit(**hints) for i in self.args))
         # Check for explicit matrices:
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix
 
         explicit = [i for i in expr.args if isinstance(i, MatrixBase)]

@@ -2,7 +2,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.numbers import (I, Rational, pi)
-from sympy.core.relational import Ne
+from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh, tanh)
@@ -12,11 +12,15 @@ from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin
 from sympy.functions.special.bessel import (besselj, besselk, bessely, jn)
 from sympy.functions.special.error_functions import erf
 from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import And
+from sympy.matrices import Matrix
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import simplify
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.testing.pytest import XFAIL, skip, slow, ON_CI
+from sympy.testing.pytest import XFAIL, slow
 from sympy.integrals.integrals import integrate
+from sympy import S
+
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
 
@@ -268,12 +272,8 @@ def test_pmint_trig():
 
     assert heurisch(f, x) == g
 
-@slow # 8 seconds on 3.4 GHz
-def test_pmint_logexp():
-    if ON_CI:
-        # See https://github.com/sympy/sympy/pull/12795
-        skip("Too slow for CI.")
 
+def test_pmint_logexp():
     f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
     g = log(x + exp(x) + log(x)) + 1/(x + exp(x) + log(x))
 
@@ -310,13 +310,9 @@ def test_pmint_besselj():
 
     assert heurisch(f, x) == g
 
+
 @slow
 def test_pmint_bessel_products():
-    # Note: Derivatives of Bessel functions have many forms.
-    # Recurrence relations are needed for comparisons.
-    if ON_CI:
-        skip("Too slow for CI.")
-
     f = x*besselj(nu, x)*bessely(nu, 2*x)
     g = -2*x*besselj(nu, x)*bessely(nu - 1, 2*x)/3 + x*besselj(nu - 1, x)*bessely(nu, 2*x)/3
 
@@ -327,10 +323,8 @@ def test_pmint_bessel_products():
 
     assert heurisch(f, x) == g
 
-@slow # 110 seconds on 3.4 GHz
+
 def test_pmint_WrightOmega():
-    if ON_CI:
-        skip("Too slow for CI.")
     def omega(x):
         return LambertW(exp(x))
 
@@ -361,7 +355,63 @@ def test_issue_22527():
     t, R = symbols(r't R')
     z = Function('z')(t)
     def f(x):
-      return x/sqrt(R**2 - x**2)
+        return x/sqrt(R**2 - x**2)
     Uz = integrate(f(z), z)
     Ut = integrate(f(t), t)
     assert Ut == Uz.subs(z, t)
+
+
+def test_heurisch_complex_erf_issue_26338():
+    r = symbols('r', real=True)
+    a = sqrt(pi)*erf((1 + I)/2)/2
+    assert integrate(exp(-I*r**2/2), (r, 0, 1)) == a - I*a
+
+    a = exp(-x**2/(2*(2 - I)**2))
+    assert heurisch(a, x, hints=[]) is None  # None, not a wrong soln
+    a = exp(-r**2/(2*(2 - I)**2))
+    assert heurisch(a, r, hints=[]) is None
+    a = sqrt(pi)*erf((1 + I)/2)/2
+    assert integrate(exp(-I*x**2/2), (x, 0, 1)) == a - I*a
+
+
+def test_issue_15498():
+    Z0 = Function('Z0')
+    k01, k10, t, s= symbols('k01 k10 t s', real=True, positive=True)
+    m = Matrix([[exp(-k10*t)]])
+    _83 = Rational(83, 100)  # 0.83 works, too
+    [a, b, c, d, e, f, g] = [100, 0.5, _83, 50, 0.6, 2, 120]
+    AIF_btf = a*(d*e*(1 - exp(-(t - b)/e)) + f*g*(1 - exp(-(t - b)/g)))
+    AIF_atf = a*(d*e*exp(-(t - b)/e)*(exp((c - b)/e) - 1
+        ) + f*g*exp(-(t - b)/g)*(exp((c - b)/g) - 1))
+    AIF_sym = Piecewise((0, t < b), (AIF_btf, And(b <= t, t < c)), (AIF_atf, c <= t))
+    aif_eq = Eq(Z0(t), AIF_sym)
+    f_vec = Matrix([[k01*Z0(t)]])
+    integrand = m*m.subs(t, s)**-1*f_vec.subs(aif_eq.lhs, aif_eq.rhs).subs(t, s)
+    solution = integrate(integrand[0], (s, 0, t))
+    assert solution is not None  # does not hang and takes less than 10 s
+
+
+@slow
+def test_heurisch_issue_26930():
+    integrand = x**Rational(4, 3)*log(x)
+    anti = 3*x**(S(7)/3)*log(x)/7 - 9*x**(S(7)/3)/49
+    assert heurisch(integrand, x) == anti
+    assert integrate(integrand, x) == anti
+    assert integrate(integrand, (x, 0, 1)) == -S(9)/49
+
+
+def test_heurisch_issue_26922():
+
+    a, b, x = symbols("a, b, x", real=True, positive=True)
+    C = symbols("C", real=True)
+    i1 = -C*x*exp(-a*x**2 - sqrt(b)*x)
+    i2 = C*x*exp(-a*x**2 + sqrt(b)*x)
+    i = Integral(i1, x) + Integral(i2, x)
+    res = (
+        -C*exp(-a*x**2)*exp(sqrt(b)*x)/(2*a)
+        + C*exp(-a*x**2)*exp(-sqrt(b)*x)/(2*a)
+        + sqrt(pi)*C*sqrt(b)*exp(b/(4*a))*erf(sqrt(a)*x - sqrt(b)/(2*sqrt(a)))/(4*a**(S(3)/2))
+        + sqrt(pi)*C*sqrt(b)*exp(b/(4*a))*erf(sqrt(a)*x + sqrt(b)/(2*sqrt(a)))/(4*a**(S(3)/2))
+    )
+
+    assert i.doit(heurisch=False).expand() == res

@@ -2,7 +2,8 @@
 
 from abc import ABC, abstractmethod
 
-from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
+from sympy import pi, Derivative, Matrix
+from sympy.core.function import AppliedUndef
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.functions import _validate_coordinates
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
@@ -555,7 +556,8 @@ class Joint(ABC):
 class PinJoint(Joint):
     """Pin (Revolute) Joint.
 
-    .. image:: PinJoint.svg
+    .. raw:: html
+        :file: ../../../doc/src/explanation/modules/physics/mechanics/PinJoint.svg
 
     Explanation
     ===========
@@ -1380,9 +1382,8 @@ class CylindricalJoint(Joint):
 class PlanarJoint(Joint):
     """Planar Joint.
 
-    .. image:: PlanarJoint.svg
-        :align: center
-        :width: 800
+    .. raw:: html
+        :file: ../../../doc/src/modules/physics/mechanics/api/PlanarJoint.svg
 
     Explanation
     ===========
@@ -1990,9 +1991,8 @@ class SphericalJoint(Joint):
 class WeldJoint(Joint):
     """Weld Joint.
 
-    .. image:: WeldJoint.svg
-        :align: center
-        :width: 500
+    .. raw:: html
+        :file: ../../../doc/src/modules/physics/mechanics/api/WeldJoint.svg
 
     Explanation
     ===========

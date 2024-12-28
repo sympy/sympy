@@ -137,7 +137,6 @@ def _ode_lie_group( s, func, order, match):
     y = match.pop('y', None)
     if y:
         h = -simplify(match[match['d']]/match[match['e']])
-        y = y
     else:
         y = Dummy("y")
         h = s.subs(func, y)
@@ -191,13 +190,9 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
         >>> genform = Eq(eta.diff(x) + (eta.diff(y) - xi.diff(x))*h
         ... - (xi.diff(y))*h**2 - xi*(h.diff(x)) - eta*(h.diff(y)), 0)
         >>> pprint(genform)
-        /d               d           \                     d              2       d
-        |--(eta(x, y)) - --(xi(x, y))|*h(x, y) - eta(x, y)*--(h(x, y)) - h (x, y)*--(x
-        \dy              dx          /                     dy                     dy
-        <BLANKLINE>
-                            d             d
-        i(x, y)) - xi(x, y)*--(h(x, y)) + --(eta(x, y)) = 0
-                            dx            dx
+        /d               d           \                     d              2       d                       d             d
+        |--(eta(x, y)) - --(xi(x, y))|*h(x, y) - eta(x, y)*--(h(x, y)) - h (x, y)*--(xi(x, y)) - xi(x, y)*--(h(x, y)) + --(eta(x, y)) = 0
+        \dy              dx          /                     dy                     dy                      dx            dx
 
     Solving the above mentioned PDE is not trivial, and can be solved only by
     making intelligent assumptions for `\xi` and `\eta` (heuristics). Once an
@@ -292,15 +287,15 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                     " the given ODE")
 
             elif hint not in lie_heuristics:
-                 raise ValueError("Heuristic not recognized: " + hint)
+                raise ValueError("Heuristic not recognized: " + hint)
 
             else:
-                 function = globals()['lie_heuristic_' + hint]
-                 xieta = function(match, comp=True)
-                 if xieta:
-                     return xieta
-                 else:
-                     raise ValueError("Infinitesimals could not be found using the"
+                function = globals()['lie_heuristic_' + hint]
+                xieta = function(match, comp=True)
+                if xieta:
+                    return xieta
+                else:
+                    raise ValueError("Infinitesimals could not be found using the"
                          " given heuristic")
 
 
@@ -547,7 +542,7 @@ def lie_heuristic_bivariate(match, comp=False):
                     etared = etaeq.subs(soldict)
                     # Scaling is done by substituting one for the parameters
                     # This can be any number except zero.
-                    dict_ = {sym: 1 for sym in symset}
+                    dict_ = dict.fromkeys(symset, 1)
                     inf = {eta: etared.subs(dict_).subs(y, func),
                         xi: xired.subs(dict_).subs(y, func)}
                     return [inf]
@@ -610,7 +605,7 @@ def lie_heuristic_chi(match, comp=False):
                         soldict = soldict[0]
                     if any(soldict.values()):
                         chieq = chieq.subs(soldict)
-                        dict_ = {sym: 1 for sym in solsyms}
+                        dict_ = dict.fromkeys(solsyms, 1)
                         chieq = chieq.subs(dict_)
                         # After finding chi, the main aim is to find out
                         # eta, xi by the equation eta = xi*h + chi

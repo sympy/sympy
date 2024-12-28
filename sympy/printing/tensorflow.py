@@ -1,3 +1,5 @@
+import sympy.codegen
+import sympy.codegen.cfunctions
 from sympy.external.importtools import version_tuple
 from collections.abc import Iterable
 
@@ -202,6 +204,12 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
         for subexpr in expr.args:
             ret.append(self._print(subexpr))
         return "\n".join(ret)
+
+    def _print_isnan(self, exp):
+        return f'tensorflow.math.is_nan({self._print(*exp.args)})'
+
+    def _print_isinf(self, exp):
+        return f'tensorflow.math.is_inf({self._print(*exp.args)})'
 
     _module = "tensorflow"
     _einsum = "linalg.einsum"

@@ -10,7 +10,8 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (Integer, Rational, igcd, oo, pi)
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import (Integer, Rational, oo, pi)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
@@ -21,7 +22,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import gamma
 from sympy.logic.boolalg import (And, Not, Or)
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.dense import (Matrix, eye, ones, zeros)
 from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -674,13 +675,13 @@ class MarkovProcess(StochasticProcess):
                 gprob = S.One
 
             if min_key_rv == rv:
-                return sum([prob[FiniteSet(state)] for state in states])
+                return sum(prob[FiniteSet(state)] for state in states)
             if isinstance(self, ContinuousMarkovChain):
-                return gprob * sum([trans_probs(rv.key - min_key_rv.key).__getitem__((gstate, state))
-                                    for state in states])
+                return gprob * sum(trans_probs(rv.key - min_key_rv.key).__getitem__((gstate, state))
+                                    for state in states)
             if isinstance(self, DiscreteMarkovChain):
-                return gprob * sum([(trans_probs**(rv.key - min_key_rv.key)).__getitem__((gstate, state))
-                                    for state in states])
+                return gprob * sum((trans_probs**(rv.key - min_key_rv.key)).__getitem__((gstate, state))
+                                    for state in states)
 
         if isinstance(condition, Not):
             expr = condition.args[0]
@@ -719,8 +720,8 @@ class MarkovProcess(StochasticProcess):
             return prod
 
         if isinstance(condition, Or):
-            return sum([self.probability(expr, given_condition, evaluate, **kwargs)
-                        for expr in condition.args])
+            return sum(self.probability(expr, given_condition, evaluate, **kwargs)
+                        for expr in condition.args)
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(condition, given_condition))
@@ -815,7 +816,7 @@ class MarkovProcess(StochasticProcess):
             cond = condition & mat_of & \
                     StochasticStateSpaceOf(self, state_index)
             func = lambda s: self.probability(Eq(rv, s), cond) * expr.subs(rv, self._state_index[s])
-            return sum([func(s) for s in state_index])
+            return sum(func(s) for s in state_index)
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(expr, condition))
@@ -1020,7 +1021,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         .. [1] https://web.archive.org/web/20220207032113/https://www.columbia.edu/~ww2040/4701Sum07/4701-06-Notes-MCII.pdf
         .. [2] https://cecas.clemson.edu/~shierd/Shier/markov.pdf
-        .. [3] https://ujcontent.uj.ac.za/esploro/outputs/graduate/Markov-chains--a-graph-theoretical/999849107691#file-0
+        .. [3] https://www.proquest.com/openview/4adc6a51d8371be5b0e4c7dff287fc70/1?pq-origsite=gscholar&cbl=2026366&diss=y
         .. [4] https://www.mathworks.com/help/econ/dtmc.classify.html
         """
         n = self.number_of_states
@@ -1643,7 +1644,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
     {0, 1}
-    >>> (B.p).round(2)
+    >>> B.p.round(2)
     0.70
     >>> B.success
     1

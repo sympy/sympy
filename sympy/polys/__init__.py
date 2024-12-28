@@ -8,9 +8,9 @@ __all__ = [
     'gcd', 'lcm_list', 'lcm', 'terms_gcd', 'trunc', 'monic', 'content',
     'primitive', 'compose', 'decompose', 'sturm', 'gff_list', 'gff',
     'sqf_norm', 'sqf_part', 'sqf_list', 'sqf', 'factor_list', 'factor',
-    'intervals', 'refine_root', 'count_roots', 'real_roots', 'nroots',
-    'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced', 'groebner',
-    'is_zero_dimensional', 'GroebnerBasis', 'poly',
+    'intervals', 'refine_root', 'count_roots', 'all_roots', 'real_roots',
+    'nroots', 'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced',
+    'groebner', 'is_zero_dimensional', 'GroebnerBasis', 'poly',
 
     'symmetrize', 'horner', 'interpolate', 'rational_interpolate', 'viete',
 
@@ -72,8 +72,9 @@ from .polytools import (Poly, PurePoly, poly_from_expr,
         gcd, lcm_list, lcm, terms_gcd, trunc, monic, content, primitive,
         compose, decompose, sturm, gff_list, gff, sqf_norm, sqf_part,
         sqf_list, sqf, factor_list, factor, intervals, refine_root,
-        count_roots, real_roots, nroots, ground_roots, nth_power_roots_poly,
-        cancel, reduced, groebner, is_zero_dimensional, GroebnerBasis, poly)
+        count_roots, all_roots, real_roots, nroots, ground_roots,
+        nth_power_roots_poly, cancel, reduced, groebner, is_zero_dimensional,
+        GroebnerBasis, poly)
 
 from .polyfuncs import (symmetrize, horner, interpolate,
         rational_interpolate, viete)

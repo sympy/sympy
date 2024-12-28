@@ -59,7 +59,7 @@ Here are some basic operations on ``Matrix``.
 Shape
 -----
 
-To get the shape of a matrix, use :func:`~.shape()` function.
+To get the shape of a matrix, use :func:`~.shape` function.
 
     >>> from sympy import shape
     >>> M = Matrix([[1, 2, 3], [-2, 0, 4]])
@@ -460,10 +460,7 @@ by injecting a custom zero test with warnings enabled.
     >>> import warnings
     >>>
     >>> def my_iszero(x):
-    ...     try:
-    ...         result = x.is_zero
-    ...     except AttributeError:
-    ...         result = None
+    ...     result = x.is_zero
     ...
     ...     # Warnings if evaluated into None
     ...     if result is None:
@@ -486,10 +483,7 @@ make zero test stronger for hyperbolics,
 while being harmless to other polynomials or transcendental functions.
 
     >>> def my_iszero(x):
-    ...     try:
-    ...         result = x.rewrite(exp).simplify().is_zero
-    ...     except AttributeError:
-    ...         result = None
+    ...     result = x.rewrite(exp).simplify().is_zero
     ...
     ...     # Warnings if evaluated into None
     ...     if result is None:

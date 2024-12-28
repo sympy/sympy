@@ -6,9 +6,12 @@ Core
 
 sympify
 -------
+
 .. module:: sympy.core.sympify
 
 .. autofunction:: sympify
+
+.. py:class:: Tbasic
 
 assumptions
 -----------
@@ -24,6 +27,10 @@ cache
 basic
 -----
 .. module:: sympy.core.basic
+
+.. py:class:: collections.abc.Mapping
+
+.. py:class:: collections.abc.Iterable
 
 .. autoclass:: Basic
    :members:
@@ -72,6 +79,30 @@ symbol
 
 .. autofunction:: var
 
+intfunc
+-------
+.. module:: sympy.core.intfunc
+
+.. autofunction:: num_digits
+
+.. autofunction:: trailing
+
+.. autofunction:: ilcm
+
+.. autofunction:: igcd
+
+.. autofunction:: igcd_lehmer
+
+.. autofunction:: igcdex
+
+.. autofunction:: isqrt
+
+.. autofunction:: integer_nthroot
+
+.. autofunction:: integer_log
+
+.. autofunction:: mod_inverse
+
 numbers
 -------
 .. module:: sympy.core.numbers
@@ -98,10 +129,6 @@ numbers
 
 .. autoclass:: RealNumber
    :members:
-
-.. autofunction:: igcd
-
-.. autofunction:: ilcm
 
 .. autofunction:: seterr
 
@@ -177,10 +204,6 @@ power
 
 .. autoclass:: Pow
    :members:
-
-.. autofunction:: integer_nthroot
-
-.. autofunction:: integer_log
 
 mul
 ---

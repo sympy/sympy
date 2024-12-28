@@ -18,9 +18,9 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 
-from sympy.testing.pytest import SKIP
+from sympy.testing.pytest import SKIP, warns_deprecated_sympy
 
-a, b, c, x, y, z = symbols('a,b,c,x,y,z')
+a, b, c, x, y, z, s = symbols('a,b,c,x,y,z,s')
 
 
 whitelist = [
@@ -653,6 +653,11 @@ def test_sympy__core__function__Application():
 def test_sympy__core__function__AppliedUndef():
     from sympy.core.function import AppliedUndef
     assert _test_args(AppliedUndef(1, 2, 3))
+
+
+def test_sympy__core__function__DefinedFunction():
+    from sympy.core.function import DefinedFunction
+    assert _test_args(DefinedFunction(1, 2, 3))
 
 
 def test_sympy__core__function__Derivative():
@@ -2014,9 +2019,12 @@ def test_sympy__functions__combinatorial__numbers__carmichael():
     assert _test_args(carmichael(x))
 
 
-def test_sympy__functions__combinatorial__numbers__motzkin():
-    from sympy.functions.combinatorial.numbers import motzkin
-    assert _test_args(motzkin(5))
+def test_sympy__functions__combinatorial__numbers__divisor_sigma():
+    from sympy.functions.combinatorial.numbers import divisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = divisor_sigma(n, k)
+    assert _test_args(t)
 
 
 def test_sympy__functions__combinatorial__numbers__fibonacci():
@@ -2024,9 +2032,83 @@ def test_sympy__functions__combinatorial__numbers__fibonacci():
     assert _test_args(fibonacci(x))
 
 
+def test_sympy__functions__combinatorial__numbers__jacobi_symbol():
+    from sympy.functions.combinatorial.numbers import jacobi_symbol
+    assert _test_args(jacobi_symbol(2, 3))
+
+
+def test_sympy__functions__combinatorial__numbers__kronecker_symbol():
+    from sympy.functions.combinatorial.numbers import kronecker_symbol
+    assert _test_args(kronecker_symbol(2, 3))
+
+
+def test_sympy__functions__combinatorial__numbers__legendre_symbol():
+    from sympy.functions.combinatorial.numbers import legendre_symbol
+    assert _test_args(legendre_symbol(2, 3))
+
+
+def test_sympy__functions__combinatorial__numbers__mobius():
+    from sympy.functions.combinatorial.numbers import mobius
+    assert _test_args(mobius(2))
+
+
+def test_sympy__functions__combinatorial__numbers__motzkin():
+    from sympy.functions.combinatorial.numbers import motzkin
+    assert _test_args(motzkin(5))
+
+
+def test_sympy__functions__combinatorial__numbers__partition():
+    from sympy.core.symbol import Symbol
+    from sympy.functions.combinatorial.numbers import partition
+    assert _test_args(partition(Symbol('a', integer=True)))
+
+
+def test_sympy__functions__combinatorial__numbers__primenu():
+    from sympy.functions.combinatorial.numbers import primenu
+    n = symbols('n', integer=True)
+    t = primenu(n)
+    assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__primeomega():
+    from sympy.functions.combinatorial.numbers import primeomega
+    n = symbols('n', integer=True)
+    t = primeomega(n)
+    assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__primepi():
+    from sympy.functions.combinatorial.numbers import primepi
+    n = symbols('n')
+    t = primepi(n)
+    assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__reduced_totient():
+    from sympy.functions.combinatorial.numbers import reduced_totient
+    k = symbols('k', integer=True)
+    t = reduced_totient(k)
+    assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__totient():
+    from sympy.functions.combinatorial.numbers import totient
+    k = symbols('k', integer=True)
+    t = totient(k)
+    assert _test_args(t)
+
+
 def test_sympy__functions__combinatorial__numbers__tribonacci():
     from sympy.functions.combinatorial.numbers import tribonacci
     assert _test_args(tribonacci(x))
+
+
+def test_sympy__functions__combinatorial__numbers__udivisor_sigma():
+    from sympy.functions.combinatorial.numbers import udivisor_sigma
+    k = symbols('k', integer=True)
+    n = symbols('n', integer=True)
+    t = udivisor_sigma(n, k)
+    assert _test_args(t)
 
 
 def test_sympy__functions__combinatorial__numbers__harmonic():
@@ -2037,12 +2119,6 @@ def test_sympy__functions__combinatorial__numbers__harmonic():
 def test_sympy__functions__combinatorial__numbers__lucas():
     from sympy.functions.combinatorial.numbers import lucas
     assert _test_args(lucas(x))
-
-
-def test_sympy__functions__combinatorial__numbers__partition():
-    from sympy.core.symbol import Symbol
-    from sympy.functions.combinatorial.numbers import partition
-    assert _test_args(partition(Symbol('a', integer=True)))
 
 
 def test_sympy__functions__elementary__complexes__Abs():
@@ -3036,8 +3112,8 @@ def test_sympy__logic__boolalg__Exclusive():
     assert _test_args(Exclusive(x, y, z))
 
 
-def test_sympy__matrices__matrices__DeferredVector():
-    from sympy.matrices.matrices import DeferredVector
+def test_sympy__matrices__matrixbase__DeferredVector():
+    from sympy.matrices.matrixbase import DeferredVector
     assert _test_args(DeferredVector("X"))
 
 
@@ -3366,6 +3442,53 @@ def test_sympy__physics__vector__frame__CoordinateSym():
     assert _test_args(CoordinateSym('R_x', ReferenceFrame('R'), 0))
 
 
+@SKIP("abstract class")
+def test_sympy__physics__biomechanics__curve__CharacteristicCurveFunction():
+    pass
+
+
+def test_sympy__physics__biomechanics__curve__TendonForceLengthDeGroote2016():
+    from sympy.physics.biomechanics import TendonForceLengthDeGroote2016
+    l_T_tilde, c0, c1, c2, c3 = symbols('l_T_tilde, c0, c1, c2, c3')
+    assert _test_args(TendonForceLengthDeGroote2016(l_T_tilde, c0, c1, c2, c3))
+
+
+def test_sympy__physics__biomechanics__curve__TendonForceLengthInverseDeGroote2016():
+    from sympy.physics.biomechanics import TendonForceLengthInverseDeGroote2016
+    fl_T, c0, c1, c2, c3 = symbols('fl_T, c0, c1, c2, c3')
+    assert _test_args(TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceLengthPassiveDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceLengthPassiveDeGroote2016
+    l_M_tilde, c0, c1 = symbols('l_M_tilde, c0, c1')
+    assert _test_args(FiberForceLengthPassiveDeGroote2016(l_M_tilde, c0, c1))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceLengthPassiveInverseDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceLengthPassiveInverseDeGroote2016
+    fl_M_pas, c0, c1 = symbols('fl_M_pas, c0, c1')
+    assert _test_args(FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceLengthActiveDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceLengthActiveDeGroote2016
+    l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = symbols('l_M_tilde, c0:12')
+    assert _test_args(FiberForceLengthActiveDeGroote2016(l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceVelocityDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceVelocityDeGroote2016
+    v_M_tilde, c0, c1, c2, c3 = symbols('v_M_tilde, c0, c1, c2, c3')
+    assert _test_args(FiberForceVelocityDeGroote2016(v_M_tilde, c0, c1, c2, c3))
+
+
+def test_sympy__physics__biomechanics__curve__FiberForceVelocityInverseDeGroote2016():
+    from sympy.physics.biomechanics import FiberForceVelocityInverseDeGroote2016
+    fv_M, c0, c1, c2, c3 = symbols('fv_M, c0, c1, c2, c3')
+    assert _test_args(FiberForceVelocityInverseDeGroote2016(fv_M, c0, c1, c2, c3))
+
+
 def test_sympy__physics__paulialgebra__Pauli():
     from sympy.physics.paulialgebra import Pauli
     assert _test_args(Pauli(1))
@@ -3636,8 +3759,9 @@ def test_sympy__physics__quantum__operator__HermitianOperator():
 
 
 def test_sympy__physics__quantum__operator__IdentityOperator():
-    from sympy.physics.quantum.operator import IdentityOperator
-    assert _test_args(IdentityOperator(5))
+    with warns_deprecated_sympy():
+        from sympy.physics.quantum.operator import IdentityOperator
+        assert _test_args(IdentityOperator(5))
 
 
 def test_sympy__physics__quantum__operator__Operator():
@@ -4213,6 +4337,21 @@ def test_sympy__physics__control__lti__TransferFunction():
     assert _test_args(TransferFunction(2, 3, x))
 
 
+def _test_args_PIDController(obj):
+    from sympy.physics.control.lti import PIDController
+    if isinstance(obj, PIDController):
+        kp, ki, kd, tf = obj.kp, obj.ki, obj.kd, obj.tf
+        recreated_pid = PIDController(kp, ki, kd, tf, s)
+        return recreated_pid == obj
+    return False
+
+
+def test_sympy__physics__control__lti__PIDController():
+    from sympy.physics.control.lti import PIDController
+    kp, ki, kd, tf = 1, 0.1, 0.01, 0
+    assert _test_args_PIDController(PIDController(kp, ki, kd, tf, s))
+
+
 def test_sympy__physics__control__lti__Series():
     from sympy.physics.control import Series, TransferFunction
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
@@ -4269,6 +4408,16 @@ def test_sympy__physics__control__lti__TransferFunctionMatrix():
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
     tf2 = TransferFunction(y - x, z + y, x)
     assert _test_args(TransferFunctionMatrix([[tf1, tf2]]))
+
+
+def test_sympy__physics__control__lti__StateSpace():
+    from sympy.matrices.dense import Matrix
+    from sympy.physics.control import StateSpace
+    A = Matrix([[-5, -1], [3, -1]])
+    B = Matrix([2, 5])
+    C = Matrix([[1, 2]])
+    D = Matrix([0])
+    assert _test_args(StateSpace(A, B, C, D))
 
 
 def test_sympy__physics__units__dimensions__Dimension():
@@ -4908,62 +5057,6 @@ def test_sympy__categories__baseclasses__Category():
     assert _test_args(K)
 
 
-def test_sympy__ntheory__factor___totient():
-    from sympy.ntheory.factor_ import totient
-    k = symbols('k', integer=True)
-    t = totient(k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___reduced_totient():
-    from sympy.ntheory.factor_ import reduced_totient
-    k = symbols('k', integer=True)
-    t = reduced_totient(k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___divisor_sigma():
-    from sympy.ntheory.factor_ import divisor_sigma
-    k = symbols('k', integer=True)
-    n = symbols('n', integer=True)
-    t = divisor_sigma(n, k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___udivisor_sigma():
-    from sympy.ntheory.factor_ import udivisor_sigma
-    k = symbols('k', integer=True)
-    n = symbols('n', integer=True)
-    t = udivisor_sigma(n, k)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___primenu():
-    from sympy.ntheory.factor_ import primenu
-    n = symbols('n', integer=True)
-    t = primenu(n)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__factor___primeomega():
-    from sympy.ntheory.factor_ import primeomega
-    n = symbols('n', integer=True)
-    t = primeomega(n)
-    assert _test_args(t)
-
-
-def test_sympy__ntheory__residue_ntheory__mobius():
-    from sympy.ntheory import mobius
-    assert _test_args(mobius(2))
-
-
-def test_sympy__ntheory__generate__primepi():
-    from sympy.ntheory import primepi
-    n = symbols('n')
-    t = primepi(n)
-    assert _test_args(t)
-
-
 def test_sympy__physics__optics__waves__TWave():
     from sympy.physics.optics import TWave
     A, f, phi = symbols('A, f, phi')
@@ -5089,6 +5182,11 @@ def test_sympy__codegen__cfunctions__isnan():
     assert _test_args(isnan(x))
 
 
+def test_sympy__codegen__cfunctions__isinf():
+    from sympy.codegen.cfunctions import isinf
+    assert _test_args(isinf(x))
+
+
 def test_sympy__codegen__fnodes__FFunction():
     from sympy.codegen.fnodes import FFunction
     assert _test_args(FFunction('f'))
@@ -5145,6 +5243,22 @@ def test_sympy__codegen__matrix_nodes__MatrixSolve():
     A = MatrixSymbol('A', 3, 3)
     v = MatrixSymbol('x', 3, 1)
     assert _test_args(MatrixSolve(A, v))
+
+
+def test_sympy__printing__rust__TypeCast():
+    from sympy.printing.rust import TypeCast
+    from sympy.codegen.ast import real
+    assert _test_args(TypeCast(x, real))
+
+
+def test_sympy__printing__rust__float_floor():
+    from sympy.printing.rust import float_floor
+    assert _test_args(float_floor(x))
+
+
+def test_sympy__printing__rust__float_ceiling():
+    from sympy.printing.rust import float_ceiling
+    assert _test_args(float_ceiling(x))
 
 
 def test_sympy__vector__coordsysrect__CoordSys3D():

@@ -458,7 +458,7 @@ def find_transitive_subgroups_of_S6(*targets, print_report=False):
     ==========
 
     .. [2] https://en.wikipedia.org/wiki/Projective_linear_group#Exceptional_isomorphisms
-    .. [3] https://en.wikipedia.org/wiki/Automorphisms_of_the_symmetric_and_alternating_groups#PGL(2,5)
+    .. [3] https://en.wikipedia.org/wiki/Automorphisms_of_the_symmetric_and_alternating_groups#PGL%282,5%29
 
     """
     def elts_by_order(G):

@@ -1,4 +1,4 @@
-from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
+from sympy import cos, Matrix, sin, zeros, tan, pi, symbols
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.solvers.solvers import solve
@@ -186,8 +186,10 @@ def test_aux_dep():
 
     assert Matrix(Fr_c).expand() == fr.expand()
     assert Matrix(Fr_star_c.subs(kdd)).expand() == frstar.expand()
-    assert (simplify(Matrix(Fr_star_steady).expand()) ==
-            simplify(frstar_steady.expand()))
+    # These Matrices have some Integer(0) and some Float(0). Running under
+    # SymEngine gives different types of zero.
+    assert (simplify(Matrix(Fr_star_steady).expand()).xreplace({0:0.0}) ==
+            simplify(frstar_steady.expand()).xreplace({0:0.0}))
 
     syms_in_forcing = find_dynamicsymbols(kane.forcing)
     for qdi in qd:

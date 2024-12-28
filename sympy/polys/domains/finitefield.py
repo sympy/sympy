@@ -1,6 +1,11 @@
 """Implementation of :class:`FiniteField` class. """
 
+import operator
 
+from sympy.external.gmpy import GROUND_TYPES
+from sympy.utilities.decorator import doctest_depends_on
+
+from sympy.core.numbers import int_valued
 from sympy.polys.domains.field import Field
 
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
@@ -10,7 +15,98 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 from sympy.polys.domains.groundtypes import SymPyInteger
 
+
+if GROUND_TYPES == 'flint':
+    __doctest_skip__ = ['FiniteField']
+
+
+if GROUND_TYPES == 'flint':
+    import flint
+    # Don't use python-flint < 0.5.0 because nmod was missing some features in
+    # previous versions of python-flint and fmpz_mod was not yet added.
+    _major, _minor, *_ = flint.__version__.split('.')
+    if (int(_major), int(_minor)) < (0, 5):
+        flint = None
+else:
+    flint = None
+
+
+def _modular_int_factory_nmod(mod):
+    # nmod only recognises int
+    index = operator.index
+    mod = index(mod)
+    nmod = flint.nmod
+    nmod_poly = flint.nmod_poly
+
+    # flint's nmod is only for moduli up to 2^64-1 (on a 64-bit machine)
+    try:
+        nmod(0, mod)
+    except OverflowError:
+        return None, None
+
+    def ctx(x):
+        try:
+            return nmod(x, mod)
+        except TypeError:
+            return nmod(index(x), mod)
+
+    def poly_ctx(cs):
+        return nmod_poly(cs, mod)
+
+    return ctx, poly_ctx
+
+
+def _modular_int_factory_fmpz_mod(mod):
+    index = operator.index
+    fctx = flint.fmpz_mod_ctx(mod)
+    fctx_poly = flint.fmpz_mod_poly_ctx(mod)
+    fmpz_mod_poly = flint.fmpz_mod_poly
+
+    def ctx(x):
+        try:
+            return fctx(x)
+        except TypeError:
+            # x might be Integer
+            return fctx(index(x))
+
+    def poly_ctx(cs):
+        return fmpz_mod_poly(cs, fctx_poly)
+
+    return ctx, poly_ctx
+
+
+def _modular_int_factory(mod, dom, symmetric, self):
+    # Convert the modulus to ZZ
+    try:
+        mod = dom.convert(mod)
+    except CoercionFailed:
+        raise ValueError('modulus must be an integer, got %s' % mod)
+
+    ctx, poly_ctx, is_flint = None, None, False
+
+    # Don't use flint if the modulus is not prime as it often crashes.
+    if flint is not None and mod.is_prime():
+
+        is_flint = True
+
+        # Try to use flint's nmod first
+        ctx, poly_ctx = _modular_int_factory_nmod(mod)
+
+        if ctx is None:
+            # Use fmpz_mod for larger moduli
+            ctx, poly_ctx = _modular_int_factory_fmpz_mod(mod)
+
+    if ctx is None:
+        # Use the Python implementation if flint is not available or the
+        # modulus is not prime.
+        ctx = ModularIntegerFactory(mod, dom, symmetric, self)
+        poly_ctx = None  # not used
+
+    return ctx, poly_ctx, is_flint
+
+
 @public
+@doctest_depends_on(modules=['python', 'gmpy'])
 class FiniteField(Field, SimpleDomain):
     r"""Finite field of prime order :ref:`GF(p)`
 
@@ -119,11 +215,22 @@ class FiniteField(Field, SimpleDomain):
         if mod <= 0:
             raise ValueError('modulus must be a positive integer, got %s' % mod)
 
-        self.dtype = ModularIntegerFactory(mod, dom, symmetric, self)
+        ctx, poly_ctx, is_flint = _modular_int_factory(mod, dom, symmetric, self)
+
+        self.dtype = ctx
+        self._poly_ctx = poly_ctx
+        self._is_flint = is_flint
+
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
         self.dom = dom
         self.mod = mod
+        self.sym = symmetric
+        self._tp = type(self.zero)
+
+    @property
+    def tp(self):
+        return self._tp
 
     def __str__(self):
         return 'GF(%s)' % self.mod
@@ -146,24 +253,47 @@ class FiniteField(Field, SimpleDomain):
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
-        return SymPyInteger(int(a))
+        return SymPyInteger(self.to_int(a))
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to SymPy's ``Integer``. """
         if a.is_Integer:
             return self.dtype(self.dom.dtype(int(a)))
-        elif a.is_Float and int(a) == a:
+        elif int_valued(a):
             return self.dtype(self.dom.dtype(int(a)))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
 
+    def to_int(self, a):
+        """Convert ``val`` to a Python ``int`` object. """
+        aval = int(a)
+        if self.sym and aval > self.mod // 2:
+            aval -= self.mod
+        return aval
+
+    def is_positive(self, a):
+        """Returns True if ``a`` is positive. """
+        return bool(a)
+
+    def is_nonnegative(self, a):
+        """Returns True if ``a`` is non-negative. """
+        return True
+
+    def is_negative(self, a):
+        """Returns True if ``a`` is negative. """
+        return False
+
+    def is_nonpositive(self, a):
+        """Returns True if ``a`` is non-positive. """
+        return not a
+
     def from_FF(K1, a, K0=None):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
-        return K1.dtype(K1.dom.from_ZZ(a.val, K0.dom))
+        return K1.dtype(K1.dom.from_ZZ(int(a), K0.dom))
 
     def from_FF_python(K1, a, K0=None):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
-        return K1.dtype(K1.dom.from_ZZ_python(a.val, K0.dom))
+        return K1.dtype(K1.dom.from_ZZ_python(int(a), K0.dom))
 
     def from_ZZ(K1, a, K0=None):
         """Convert Python's ``int`` to ``dtype``. """
@@ -206,7 +336,7 @@ class FiniteField(Field, SimpleDomain):
     def is_square(self, a):
         """Returns True if ``a`` is a quadratic residue modulo p. """
         # a is not a square <=> x**2-a is irreducible
-        poly = [x.val for x in [self.one, self.zero, -a]]
+        poly = [int(x) for x in [self.one, self.zero, -a]]
         return not gf_irred_p_rabin(poly, self.mod, self.dom)
 
     def exsqrt(self, a):
@@ -220,7 +350,7 @@ class FiniteField(Field, SimpleDomain):
         if self.mod == 2 or a == 0:
             return a
         # Otherwise, use square-free factorization routine to factorize x**2-a
-        poly = [x.val for x in [self.one, self.zero, -a]]
+        poly = [int(x) for x in [self.one, self.zero, -a]]
         for factor in gf_zassenhaus(poly, self.mod, self.dom):
             if len(factor) == 2 and factor[1] <= self.mod // 2:
                 return self.dtype(factor[1])

@@ -23,7 +23,7 @@ second contribution.
 ## Install Git
 
 SymPy is available on [GitHub](https://github.com/sympy/sympy) and uses
-[Git](https://git-scm.com) for source control. The workflow is such that
+[Git](https://git-scm.com/) for source control. The workflow is such that
 code is pulled and pushed to and from the main repository. Install the respective version
 of Git for your operating system to start development.
 
@@ -53,6 +53,7 @@ terminal.
 If you do decide to use the GitHub GUI, you should make sure that any "sync
 does rebase" option is disabled in the settings.
 
+(configure-git-settings)=
 ### Configure Your Name and Email in Git
 
 Git tracks who makes each commit by checking the user’s name and email.
@@ -106,19 +107,19 @@ to do them again.
 ### Create a GitHub Account
 
 A [GitHub](https://github.com) account is required to contribute to SymPy. If
-you have not one yet then sign up at <https://github.com/signup/free>. Your
+you have not one yet then sign up at <https://github.com/join>. Your
 GitHub account is your presence in the open source world, so we recommend
 choosing a professional username.
 
 ### Setup SSH Keys
 
 To establish a secure connection between your computer and GitHub see detailed
-instructions in <https://help.github.com/en/articles/set-up-git> or at
-<https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account>.
+instructions in <https://docs.github.com/get-started/getting-started-with-git/set-up-git> or at
+<https://docs.github.com/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>.
 
 If you have any problems with SSH access to GitHub, read the troubleshooting
-instructions at <https://help.github.com/en/articles/troubleshooting-ssh>, or
-ask us on the [mailing list](https://groups.google.com/group/sympy).
+instructions at <https://docs.github.com/authentication/troubleshooting-ssh>, or
+ask us on the [mailing list](https://groups.google.com/g/sympy).
 
 ### Fork SymPy
 
@@ -156,7 +157,7 @@ git remote add github git@github.com:<your-github-username>/sympy.git
 ```
 
 For more information about GitHub forking and tuning see:
-<https://help.github.com/en/articles/about-pull-requests>, <https://help.github.com/en/articles/fork-a-repo>, and <https://help.github.com/en/articles/set-up-git>
+<https://docs.github.com/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>, <https://docs.github.com/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>, and <https://docs.github.com/get-started/quickstart/set-up-git>
 
 After the configuration, your setup should be similar to this:
 
@@ -175,7 +176,7 @@ You may want to take advantage of using virtual environments to isolate your dev
 If you use `conda`, you can use it to create a virtual environment:
 
 ```bash
-$ conda create -n sympy-dev python=3 mpmath flake8
+$ conda create -n sympy-dev -c conda-forge --file requirements-dev.txt
 ```
 
 If you prefer to use `pip` and `venv`, you can use something like
@@ -184,7 +185,7 @@ If you prefer to use `pip` and `venv`, you can use something like
 cd sympy
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -r requirements-dev.txt
 ```
 
 You can add any other packages to this command that you might find useful for

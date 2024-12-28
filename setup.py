@@ -34,8 +34,6 @@ from setuptools import setup, Command
 from setuptools.command.sdist import sdist
 
 
-min_mpmath_version = '0.19'
-
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
 
@@ -100,7 +98,9 @@ modules = [
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
+    'sympy.parsing.latex.lark',
     'sympy.physics',
+    'sympy.physics.biomechanics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.control',
     'sympy.physics.hep',
@@ -112,6 +112,9 @@ modules = [
     'sympy.physics.units.systems',
     'sympy.physics.vector',
     'sympy.plotting',
+    'sympy.plotting.backends',
+    'sympy.plotting.backends.matplotlibbackend',
+    'sympy.plotting.backends.textbackend',
     'sympy.plotting.intervalmath',
     'sympy.plotting.pygletplot',
     'sympy.polys',
@@ -144,6 +147,7 @@ modules = [
     'sympy.utilities',
     'sympy.utilities._compilation',
     'sympy.utilities.mathml',
+    'sympy.utilities.mathml.data',
     'sympy.vector',
 ]
 
@@ -208,7 +212,7 @@ class sdist_sympy(sdist):
             commit_hash = commit_hash.rstrip()
             print('Commit hash found : {}.'.format(commit_hash))
             print('Writing it to {}.'.format(commit_hash_filepath))
-        except:
+        except Exception:
             pass
 
         if commit_hash:
@@ -255,6 +259,7 @@ tests = [
     'sympy.multipledispatch.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.biomechanics.tests',
     'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.control.tests',
     'sympy.physics.hep.tests',
@@ -303,7 +308,7 @@ with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
 
 if __name__ == '__main__':
     setup(name='sympy',
-          version=__version__,
+          version=__version__, # noqa: F821
           description='Computer algebra system (CAS) in Python',
           long_description=(Path(__file__).parent / 'README.md').read_text("UTF-8"),
           long_description_content_type='text/markdown',
@@ -315,11 +320,15 @@ if __name__ == '__main__':
           project_urls={
               'Source': 'https://github.com/sympy/sympy',
           },
+          # Set upper bound when making the release branch.
+          install_requires=[
+              'mpmath >= 1.1.0',
+          ],
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
           package_data={
-              'sympy.utilities.mathml': ['data/*.xsl'],
+              'sympy.utilities.mathml.data': ['*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
               'sympy.parsing.autolev': [
                   '*.g4', 'test-examples/*.al', 'test-examples/*.py',
@@ -327,7 +336,7 @@ if __name__ == '__main__':
                   'test-examples/pydy-example-repo/*.py',
                   'test-examples/README.txt',
                   ],
-              'sympy.parsing.latex': ['*.txt', '*.g4'],
+              'sympy.parsing.latex': ['*.txt', '*.g4', 'lark/grammar/*.lark'],
               'sympy.plotting.tests': ['test_region_*.png'],
               'sympy': ['py.typed']
               },
@@ -353,8 +362,8 @@ if __name__ == '__main__':
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
             ],
-          install_requires=[
-            'mpmath>=%s' % min_mpmath_version,
-            ],
+          extras_require={
+              "dev": ["pytest>=7.1.0", "hypothesis>=6.70.0"],
+            },
           **extra_kwargs
           )

@@ -1,11 +1,17 @@
 """Useful utility decorators. """
 
+from typing import TypeVar
 import sys
 import types
 import inspect
 from functools import wraps, update_wrapper
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
+T = TypeVar('T')
+"""A generic type"""
+
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
@@ -77,7 +83,7 @@ def xthreaded(func):
 
 
 def conserve_mpmath_dps(func):
-    """After the function finishes, resets the value of mpmath.mp.dps to
+    """After the function finishes, resets the value of ``mpmath.mp.dps`` to
     the value it had before the function was run."""
     import mpmath
 
@@ -123,19 +129,20 @@ class no_attrs_in_subclass:
         raise AttributeError
 
 
-def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_version=None):
+def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
+                       python_version=None, ground_types=None):
     """
     Adds metadata about the dependencies which need to be met for doctesting
     the docstrings of the decorated objects.
 
-    exe should be a list of executables
+    ``exe`` should be a list of executables
 
-    modules should be a list of modules
+    ``modules`` should be a list of modules
 
-    disable_viewers should be a list of viewers for preview() to disable
+    ``disable_viewers`` should be a list of viewers for :func:`~sympy.printing.preview.preview` to disable
 
-    python_version should be the minimum Python version required, as a tuple
-    (like (3, 0))
+    ``python_version`` should be the minimum Python version required, as a tuple
+    (like ``(3, 0)``)
     """
     dependencies = {}
     if exe is not None:
@@ -146,6 +153,8 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_vers
         dependencies['disable_viewers'] = disable_viewers
     if python_version is not None:
         dependencies['python_version'] = python_version
+    if ground_types is not None:
+        dependencies['ground_types'] = ground_types
 
     def skiptests():
         from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter # lazy import
@@ -172,7 +181,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_vers
     return depends_on_deco
 
 
-def public(obj):
+def public(obj: T) -> T:
     """
     Append ``obj``'s name to global ``__all__`` variable (call site).
 
@@ -223,7 +232,7 @@ def public(obj):
 
 def memoize_property(propfunc):
     """Property decorator that caches the value of potentially expensive
-    `propfunc` after the first evaluation. The cached value is stored in
+    ``propfunc`` after the first evaluation. The cached value is stored in
     the corresponding property name with an attached underscore."""
     attrname = '_' + propfunc.__name__
     sentinel = object()

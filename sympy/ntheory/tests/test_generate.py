@@ -1,12 +1,11 @@
-from sympy.core.numbers import (I, Rational, nan, zoo)
-from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
-from sympy.ntheory.generate import (sieve, Sieve)
-from sympy.series.limits import limit
+from bisect import bisect, bisect_left
 
-from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevprime, \
-    primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
-from sympy.ntheory.generate import cycle_length
+from sympy.functions.combinatorial.numbers import mobius, totient
+from sympy.ntheory.generate import (sieve, Sieve)
+
+from sympy.ntheory import isprime, randprime, nextprime, prevprime, \
+    primerange, primepi, prime, primorial, composite, compositepi
+from sympy.ntheory.generate import cycle_length, _primepi
 from sympy.ntheory.primetest import mr
 from sympy.testing.pytest import raises
 
@@ -30,42 +29,24 @@ def test_prime():
     raises(ValueError, lambda: prime(-1))
 
 
-def test_primepi():
-    assert primepi(-1) == 0
-    assert primepi(1) == 0
-    assert primepi(2) == 1
-    assert primepi(Rational(7, 2)) == 2
-    assert primepi(3.5) == 2
-    assert primepi(5) == 3
-    assert primepi(11) == 5
-    assert primepi(57) == 16
-    assert primepi(296) == 62
-    assert primepi(559) == 102
-    assert primepi(3000) == 430
-    assert primepi(4096) == 564
-    assert primepi(9096) == 1128
-    assert primepi(25023) == 2763
-    assert primepi(10**8) == 5761455
-    assert primepi(253425253) == 13856396
-    assert primepi(8769575643) == 401464322
+def test__primepi():
+    assert _primepi(-1) == 0
+    assert _primepi(1) == 0
+    assert _primepi(2) == 1
+    assert _primepi(5) == 3
+    assert _primepi(11) == 5
+    assert _primepi(57) == 16
+    assert _primepi(296) == 62
+    assert _primepi(559) == 102
+    assert _primepi(3000) == 430
+    assert _primepi(4096) == 564
+    assert _primepi(9096) == 1128
+    assert _primepi(25023) == 2763
+    assert _primepi(10**8) == 5761455
+    assert _primepi(253425253) == 13856396
+    assert _primepi(8769575643) == 401464322
     sieve.extend(3000)
-    assert primepi(2000) == 303
-
-    n = Symbol('n')
-    assert primepi(n).subs(n, 2) == 1
-
-    r = Symbol('r', real=True)
-    assert primepi(r).subs(r, 2) == 1
-
-    assert primepi(S.Infinity) is S.Infinity
-    assert primepi(S.NegativeInfinity) == 0
-
-    assert limit(primepi(n), n, 100) == 25
-
-    raises(ValueError, lambda: primepi(I))
-    raises(ValueError, lambda: primepi(1 + I))
-    raises(ValueError, lambda: primepi(zoo))
-    raises(ValueError, lambda: primepi(nan))
+    assert _primepi(2000) == 303
 
 
 def test_composite():
@@ -129,8 +110,38 @@ def test_generate():
 
     assert nextprime(90) == 97
     assert nextprime(10**40) == (10**40 + 121)
+    primelist = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31,
+                 37, 41, 43, 47, 53, 59, 61, 67, 71, 73,
+                 79, 83, 89, 97, 101, 103, 107, 109, 113,
+                 127, 131, 137, 139, 149, 151, 157, 163,
+                 167, 173, 179, 181, 191, 193, 197, 199,
+                 211, 223, 227, 229, 233, 239, 241, 251,
+                 257, 263, 269, 271, 277, 281, 283, 293]
+    for i in range(len(primelist) - 2):
+        for j in range(2, len(primelist) - i):
+            assert nextprime(primelist[i], j) == primelist[i + j]
+            if 3 < i:
+                assert nextprime(primelist[i] - 1, j) == primelist[i + j - 1]
+    raises(ValueError, lambda: nextprime(2, 0))
+    raises(ValueError, lambda: nextprime(2, -1))
     assert prevprime(97) == 89
     assert prevprime(10**40) == (10**40 - 17)
+
+    raises(ValueError, lambda: Sieve(0))
+    raises(ValueError, lambda: Sieve(-1))
+    for sieve_interval in [1, 10, 11, 1_000_000]:
+        s = Sieve(sieve_interval=sieve_interval)
+        for head in range(s._list[-1] + 1, (s._list[-1] + 1)**2, 2):
+            for tail in range(head + 1, (s._list[-1] + 1)**2):
+                A = list(s._primerange(head, tail))
+                B = primelist[bisect(primelist, head):bisect_left(primelist, tail)]
+                assert A == B
+        for k in range(s._list[-1], primelist[-1] - 1, 2):
+            s = Sieve(sieve_interval=sieve_interval)
+            s.extend(k)
+            assert list(s._list) == primelist[:bisect(primelist, k)]
+            s.extend(primelist[-1])
+            assert list(s._list) == primelist
 
     assert list(sieve.primerange(10, 1)) == []
     assert list(sieve.primerange(5, 9)) == [5, 7]
@@ -168,25 +179,42 @@ def test_generate():
             B = list(primerange(i, i + j))
             assert A == B
     s = Sieve()
+    sieve._reset(prime=True)
+    sieve.extend(13)
+    for i in range(200):
+        for j in range(i, 200):
+            A = list(s.primerange(i, j))
+            B = list(primerange(i, j))
+            assert A == B
+    sieve.extend(1000)
+    for a, b in [(901, 1103), # a < 1000 < b < 1000**2
+                 (806, 1002007), # a < 1000 < 1000**2 < b
+                 (2000, 30001), # 1000 < a < b < 1000**2
+                 (100005, 1010001), # 1000 < a < 1000**2 < b
+                 (1003003, 1005000), # 1000**2 < a < b
+                 ]:
+        assert list(primerange(a, b)) == list(s.primerange(a, b))
+    sieve._reset(prime=True)
+    sieve.extend(100000)
+    assert len(sieve._list) == len(set(sieve._list))
+    s = Sieve()
     assert s[10] == 29
 
     assert nextprime(2, 2) == 5
 
     raises(ValueError, lambda: totient(0))
 
-    raises(ValueError, lambda: reduced_totient(0))
-
     raises(ValueError, lambda: primorial(0))
 
     assert mr(1, [2]) is False
 
     func = lambda i: (i**2 + 1) % 51
-    assert next(cycle_length(func, 4)) == (6, 2)
+    assert next(cycle_length(func, 4)) == (6, 3)
     assert list(cycle_length(func, 4, values=True)) == \
-        [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
+        [4, 17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
     assert next(cycle_length(func, 4, nmax=5)) == (5, None)
     assert list(cycle_length(func, 4, nmax=5, values=True)) == \
-        [17, 35, 2, 5, 26]
+        [4, 17, 35, 2, 5]
     sieve.extend(3000)
     assert nextprime(2968) == 2969
     assert prevprime(2930) == 2927
@@ -248,3 +276,10 @@ def test_sieve_iter():
 def test_sieve_repr():
     assert "sieve" in repr(sieve)
     assert "prime" in repr(sieve)
+
+
+def test_deprecated_ntheory_symbolic_functions():
+    from sympy.testing.pytest import warns_deprecated_sympy
+
+    with warns_deprecated_sympy():
+        assert primepi(0) == 0

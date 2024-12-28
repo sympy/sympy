@@ -1,8 +1,8 @@
 """ Elliptic Integrals. """
 
 from sympy.core import S, pi, I, Rational
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.symbol import Dummy
+from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.symbol import Dummy,uniquely_named_symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -10,7 +10,7 @@ from sympy.functions.elementary.trigonometric import sin, tan
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper, meijerg
 
-class elliptic_k(Function):
+class elliptic_k(DefinedFunction):
     r"""
     The complete elliptic integral of the first kind, defined by
 
@@ -95,12 +95,12 @@ class elliptic_k(Function):
 
     def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         m = self.args[0]
         return Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2))
 
 
-class elliptic_f(Function):
+class elliptic_f(DefinedFunction):
     r"""
     The Legendre incomplete elliptic integral of the first
     kind, defined by
@@ -173,7 +173,7 @@ class elliptic_f(Function):
 
     def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         z, m = self.args[0], self.args[1]
         return Integral(1/(sqrt(1 - m*sin(t)**2)), (t, 0, z))
 
@@ -185,7 +185,7 @@ class elliptic_f(Function):
             return True
 
 
-class elliptic_e(Function):
+class elliptic_e(DefinedFunction):
     r"""
     Called with two arguments $z$ and $m$, evaluates the
     incomplete elliptic integral of the second kind, defined by
@@ -303,11 +303,11 @@ class elliptic_e(Function):
     def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         z, m = (pi/2, self.args[0]) if len(self.args) == 1 else self.args
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         return Integral(sqrt(1 - m*sin(t)**2), (t, 0, z))
 
 
-class elliptic_pi(Function):
+class elliptic_pi(DefinedFunction):
     r"""
     Called with three arguments $n$, $z$ and $m$, evaluates the
     Legendre incomplete elliptic integral of the third kind, defined by
@@ -355,7 +355,7 @@ class elliptic_pi(Function):
     @classmethod
     def eval(cls, n, m, z=None):
         if z is not None:
-            n, z, m = n, m, z
+            z, m = m, z
             if n.is_zero:
                 return elliptic_f(z, m)
             elif n is S.One:
@@ -441,5 +441,5 @@ class elliptic_pi(Function):
             n, m, z = self.args[0], self.args[1], pi/2
         else:
             n, z, m = self.args
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         return Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z))

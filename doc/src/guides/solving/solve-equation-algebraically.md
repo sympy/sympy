@@ -55,7 +55,7 @@ Here are recommendations on when to use:
 
 Refer to
 [](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
-and [](solving-guidance.md#ensure-consistent-formatting-from).
+and [](ensure-consistent-formatting-from-solve).
 
 ## Solve an Equation Algebraically
 
@@ -311,7 +311,7 @@ Intersection({-sqrt(y), sqrt(y)}, Reals)
 
 ## Options That Can Speed up {func}`~.solve`
 
-Refer to [solving guidance](solving-guidance.md#options-that-can-speed-up).
+Refer to [solving guidance](options-that-can-speed-up-solve).
 
 ## Not All Equations Can Be Solved
 

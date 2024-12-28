@@ -1,5 +1,6 @@
-from sympy.core import S, Function, diff, Tuple, Dummy, Mul
+from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
+from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
@@ -61,7 +62,7 @@ class ExprCondPair(Tuple):
         return self.func(*[a.simplify(**kwargs) for a in self.args])
 
 
-class Piecewise(Function):
+class Piecewise(DefinedFunction):
     """
     Represents a piecewise function.
 
@@ -221,7 +222,7 @@ class Piecewise(Function):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)
@@ -734,7 +735,7 @@ class Piecewise(Function):
             else:
                 return False, 'unrecognized condition: %s' % cond
 
-            lower, upper = lower, Max(lower, upper)
+            upper = Max(lower, upper)
             if err_on_Eq and lower == upper:
                 return False, 'encountered Eq condition'
             if (lower >= upper) is not S.true:
@@ -1121,7 +1122,7 @@ def _clip(A, B, k):
     a, b = B
     c, d = A
     c, d = Min(Max(c, a), b), Min(Max(d, a), b)
-    a, b = Min(a, b), b
+    a = Min(a, b)
     p = []
     if a != c:
         p.append((a, c, -1))
@@ -1172,25 +1173,35 @@ def piecewise_simplify_arguments(expr, **kwargs):
                 cset = iv - covered
                 if not cset:
                     continue
+                try:
+                    a = cset.inf
+                except NotImplementedError:
+                    pass # continue with the given `a`
+                else:
+                    incl_a = include(c, x, a)
                 if incl_a and incl_b:
                     if a.is_infinite and b.is_infinite:
                         c = S.true
                     elif b.is_infinite:
-                        c = (x >= a)
-                    elif a in covered or a.is_infinite:
+                        c = (x > a) if a in covered else (x >= a)
+                    elif a.is_infinite:
                         c = (x <= b)
+                    elif a in covered:
+                        c = And(a < x, x <= b)
                     else:
                         c = And(a <= x, x <= b)
                 elif incl_a:
-                    if a in covered or a.is_infinite:
+                    if a.is_infinite:
                         c = (x < b)
+                    elif a in covered:
+                        c = And(a < x, x < b)
                     else:
                         c = And(a <= x, x < b)
                 elif incl_b:
                     if b.is_infinite:
                         c = (x > a)
                     else:
-                        c = (x <= b)
+                        c = And(a < x, x <= b)
                 else:
                     if a in covered:
                         c = (x < b)

@@ -2,13 +2,12 @@ from sympy.core.evalf import N
 from sympy.core.numbers import (Float, I, Rational)
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices import eye, Matrix
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
-from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError, MatrixError
 from sympy.matrices.expressions.fourier import DFT
 from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix
@@ -140,18 +139,6 @@ def test_eigen():
     assert isinstance(m.eigenvals(simplify=True, multiple=True), list)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
-
-
-@slow
-def test_eigen_slow():
-    # issue 15125
-    from sympy.core.function import count_ops
-    q = Symbol("q", positive = True)
-    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
-    assert count_ops(m.eigenvals(simplify=False)) > \
-        count_ops(m.eigenvals(simplify=True))
-    assert count_ops(m.eigenvals(simplify=lambda x: x)) > \
-        count_ops(m.eigenvals(simplify=True))
 
 
 def test_float_eigenvals():
@@ -705,3 +692,21 @@ def test_issue_20752():
     b = symbols('b', nonzero=True)
     m = Matrix([[0, 0, 0], [0, b, 0], [0, 0, b]])
     assert m.is_positive_semidefinite is None
+
+
+def test_issue_25282():
+    dd = sd = [0] * 11 + [1]
+    ds = [2, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0]
+    ss = ds.copy()
+    ss[8] = 2
+
+    def rotate(x, i):
+        return x[i:] + x[:i]
+
+    mat = []
+    for i in range(12):
+        mat.append(rotate(ss, i) + rotate(sd, i))
+    for i in range(12):
+        mat.append(rotate(ds, i) + rotate(dd, i))
+
+    assert sum(Matrix(mat).eigenvals().values()) == 24

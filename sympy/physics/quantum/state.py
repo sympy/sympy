@@ -109,6 +109,9 @@ class StateBase(QExpr):
     def _represent_default_basis(self, **options):
         return self._represent(basis=self.operators)
 
+    def _apply_operator(self, op, **options):
+        return None
+
     #-------------------------------------------------------------------------
     # Dagger/dual
     #-------------------------------------------------------------------------
@@ -822,10 +825,6 @@ class Wavefunction(Function):
 
     def _eval_transpose(self):
         return self
-
-    @property
-    def free_symbols(self):
-        return self.expr.free_symbols
 
     @property
     def is_commutative(self):

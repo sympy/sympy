@@ -855,8 +855,7 @@ def topological_sort(graph, key=None):
     S = set(V)
     E = list(E)
 
-    for v, u in E:
-        S.discard(u)
+    S.difference_update(u for v, u in E)
 
     if key is None:
         def key(value):
@@ -1295,7 +1294,7 @@ def multiset_permutations(m, size=None, g=None):
             g = [list(i) for i in group(m, multiple=False)]
         del m
     do = [gi for gi in g if gi[1] > 0]
-    SUM = sum([gi[1] for gi in do])
+    SUM = sum(gi[1] for gi in do)
     if not do or size is not None and (size > SUM or size < 1):
         if not do and size is None or size == 0:
             yield []
@@ -1889,8 +1888,8 @@ def binary_partitions(n):
     .. [1] TAOCP 4, section 7.2.1.5, problem 64
 
     """
-    from math import ceil, log
-    power = int(2**(ceil(log(n, 2))))
+    from math import ceil, log2
+    power = int(2**(ceil(log2(n))))
     acc = 0
     partition = []
     while power:
@@ -2954,7 +2953,8 @@ def permute_signs(t):
 
 def signed_permutations(t):
     """Return iterator in which the signs of non-zero elements
-    of t and the order of the elements are permuted.
+    of t and the order of the elements are permuted and all
+    returned values are unique.
 
     Examples
     ========
@@ -2967,7 +2967,7 @@ def signed_permutations(t):
     (-1, -2, 0), (2, 0, 1), (-2, 0, 1), (2, 0, -1), (-2, 0, -1),
     (2, 1, 0), (-2, 1, 0), (2, -1, 0), (-2, -1, 0)]
     """
-    return (type(t)(i) for j in permutations(t)
+    return (type(t)(i) for j in multiset_permutations(t)
         for i in permute_signs(j))
 
 

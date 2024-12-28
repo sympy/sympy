@@ -545,7 +545,9 @@ Polynomial factorization in characteristic zero:
 
 .. currentmodule:: sympy.polys.factortools
 
+.. autofunction:: dup_trial_division
 .. autofunction:: dmp_trial_division
+.. autofunction:: dup_zz_mignotte_bound
 .. autofunction:: dmp_zz_mignotte_bound
 .. autofunction:: dup_zz_hensel_step
 .. autofunction:: dup_zz_hensel_lift
@@ -559,15 +561,48 @@ Polynomial factorization in characteristic zero:
 .. autofunction:: dmp_zz_wang_non_divisors
 .. autofunction:: dmp_zz_wang_test_points
 .. autofunction:: dmp_zz_wang_lead_coeffs
+.. autofunction:: dup_zz_diophantine
 .. autofunction:: dmp_zz_diophantine
 .. autofunction:: dmp_zz_wang_hensel_lifting
 .. autofunction:: dmp_zz_wang
 .. autofunction:: dmp_zz_factor
+.. autofunction:: dup_qq_i_factor
+.. autofunction:: dup_zz_i_factor
+.. autofunction:: dmp_qq_i_factor
+.. autofunction:: dmp_zz_i_factor
+.. autofunction:: dup_ext_factor
 .. autofunction:: dmp_ext_factor
 .. autofunction:: dup_gf_factor
+.. autofunction:: dmp_gf_factor
+.. autofunction:: dup_factor_list
+.. autofunction:: dup_factor_list_include
 .. autofunction:: dmp_factor_list
 .. autofunction:: dmp_factor_list_include
+.. autofunction:: dup_irreducible_p
 .. autofunction:: dmp_irreducible_p
+
+Square-free factorization:
+
+.. currentmodule:: sympy.polys.sqfreetools
+
+.. autofunction:: dup_sqf_p
+.. autofunction:: dmp_sqf_p
+.. autofunction:: dup_sqf_norm
+.. autofunction:: dmp_sqf_norm
+.. autofunction:: dmp_norm
+.. autofunction:: dup_gf_sqf_part
+.. autofunction:: dmp_gf_sqf_part
+.. autofunction:: dup_sqf_part
+.. autofunction:: dmp_sqf_part
+.. autofunction:: dup_gf_sqf_list
+.. autofunction:: dmp_gf_sqf_list
+.. autofunction:: dup_sqf_list
+.. autofunction:: dup_sqf_list_include
+.. autofunction:: dmp_sqf_list
+.. autofunction:: dmp_sqf_list_include
+.. autofunction:: dup_gff_list
+.. autofunction:: dmp_gff_list
+
 
 Groebner basis algorithms
 *************************

@@ -1,10 +1,10 @@
-from sympy.core import Function, S, sympify, NumberKind
+from sympy.core import S, sympify, NumberKind
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
-    ArgumentIndexError)
+    ArgumentIndexError, DefinedFunction)
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.mod import Mod
@@ -290,7 +290,7 @@ def root(arg, n, k=0, evaluate=None):
     ========
 
     sympy.polys.rootoftools.rootof
-    sympy.core.power.integer_nthroot
+    sympy.core.intfunc.integer_nthroot
     sqrt, real_root
 
     References
@@ -351,7 +351,7 @@ def real_root(arg, n=None, evaluate=None):
     ========
 
     sympy.polys.rootoftools.rootof
-    sympy.core.power.integer_nthroot
+    sympy.core.intfunc.integer_nthroot
     root, sqrt
     """
     from sympy.functions.elementary.complexes import Abs, im, sign
@@ -636,7 +636,7 @@ class MinMaxBase(Expr, LatticeOp):
             try:
                 df = self.fdiff(i)
             except ArgumentIndexError:
-                df = Function.fdiff(self, i)
+                df = super().fdiff(i)
             l.append(df * da)
         return Add(*l)
 
@@ -861,7 +861,7 @@ class Min(MinMaxBase, Application):
         return fuzzy_or(a.is_negative for a in self.args)
 
 
-class Rem(Function):
+class Rem(DefinedFunction):
     """Returns the remainder when ``p`` is divided by ``q`` where ``p`` is finite
     and ``q`` is not equal to zero. The result, ``p - int(p/q)*q``, has the same sign
     as the divisor.

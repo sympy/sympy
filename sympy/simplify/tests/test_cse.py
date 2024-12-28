@@ -246,6 +246,14 @@ def test_issue_6263():
     assert cse(e, optimizations='basic') == ([], [True])
 
 
+def test_issue_25043():
+    c = symbols("c")
+    x = symbols("x0", real=True)
+    cse_expr = cse(c*x**2 + c*(x**4 - x**2))[-1][-1]
+    free = cse_expr.free_symbols
+    assert len(free) == len({i.name for i in free})
+
+
 def test_dont_cse_tuples():
     from sympy.core.function import Subs
     f = Function("f")
@@ -495,7 +503,7 @@ def test_issue_11577():
     def check(eq):
         r, c = cse(eq)
         assert eq.count_ops() >= \
-            len(r) + sum([i[1].count_ops() for i in r]) + \
+            len(r) + sum(i[1].count_ops() for i in r) + \
             count_ops(c)
 
     eq = x**5*y**2 + x**5*y + x**5
@@ -525,6 +533,7 @@ def test_cse_ignore():
     subst2, red2 = cse(exprs, ignore=(y,))  # y is not allowed in substitutions
     assert not any(y in sub.free_symbols for _, sub in subst2), "Sub-expressions containing y must be ignored"
     assert any(sub - sqrt(x + 1) == 0 for _, sub in subst2), "cse failed to identify sqrt(x + 1) as sub-expression"
+
 
 def test_cse_ignore_issue_15002():
     l = [
@@ -566,7 +575,7 @@ def test_cse__performance():
 def test_issue_12070():
     exprs = [x + y, 2 + x + y, x + y + z, 3 + x + y + z]
     subst, red = cse(exprs)
-    assert 6 >= (len(subst) + sum([v.count_ops() for k, v in subst]) +
+    assert 6 >= (len(subst) + sum(v.count_ops() for k, v in subst) +
                  count_ops(red))
 
 
@@ -585,6 +594,7 @@ def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
 
+
 def test_cse_release_variables():
     from sympy.simplify.cse_main import cse_release_variables
     _0, _1, _2, _3, _4 = symbols('_:5')
@@ -600,6 +610,7 @@ def test_cse_release_variables():
     r.reverse()
     r = [(s, v) for s, v in r if v is not None]
     assert eqs == [i.subs(r) for i in e]
+
 
 def test_cse_list():
     _cse = lambda x: cse(x, list=False)

@@ -1,7 +1,7 @@
 from math import prod
 
 from sympy.core import S, Integer
-from sympy.core.function import Function
+from sympy.core.function import DefinedFunction
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
@@ -39,7 +39,7 @@ def eval_levicivita(*args):
     # converting factorial(i) to int is slightly faster
 
 
-class LeviCivita(Function):
+class LeviCivita(DefinedFunction):
     """
     Represent the Levi-Civita symbol.
 
@@ -87,7 +87,7 @@ class LeviCivita(Function):
         return eval_levicivita(*self.args)
 
 
-class KroneckerDelta(Function):
+class KroneckerDelta(DefinedFunction):
     """
     The discrete, or Kronecker, delta function.
 
@@ -193,7 +193,7 @@ class KroneckerDelta(Function):
         # to make KroneckerDelta canonical
         # following lines will check if inputs are in order
         # if not, will return KroneckerDelta with correct order
-        if i != min(i, j, key=default_sort_key):
+        if default_sort_key(j) < default_sort_key(i):
             if delta_range:
                 return cls(j, i, delta_range)
             else:

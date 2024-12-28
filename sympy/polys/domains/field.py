@@ -68,6 +68,20 @@ class Field(Ring):
 
         return self.convert(p, ring)/q
 
+    def gcdex(self, a, b):
+        """
+        Returns x, y, g such that a * x + b * y == g == gcd(a, b)
+        """
+        d = self.gcd(a, b)
+
+        if a == self.zero:
+            if b == self.zero:
+                return self.zero, self.one, self.zero
+            else:
+                return self.zero, d/b, d
+        else:
+            return d/a, self.zero, d
+
     def lcm(self, a, b):
         """
         Returns LCM of ``a`` and ``b``.

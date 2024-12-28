@@ -141,7 +141,7 @@ def entropy(expr, condition=None, **kwargs):
     pdf = density(expr, condition, **kwargs)
     base = kwargs.get('b', exp(1))
     if isinstance(pdf, dict):
-            return sum([-prob*log(prob, base) for prob in pdf.values()])
+            return sum(-prob*log(prob, base) for prob in pdf.values())
     return expectation(-log(pdf(expr), base))
 
 def covariance(X, Y, condition=None, **kwargs):

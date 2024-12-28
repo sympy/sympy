@@ -3,18 +3,18 @@ from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
-from sympy.core.function import Function, ArgumentIndexError, PoleError
+from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
-from sympy.external.gmpy import HAS_GMPY, gmpy
+from sympy.external.gmpy import gmpy as _gmpy
 from sympy.ntheory import sieve
 from sympy.ntheory.residue_ntheory import binomial_mod
 from sympy.polys.polytools import Poly
 
 from math import factorial as _factorial, prod, sqrt as _sqrt
 
-class CombinatorialFunction(Function):
+class CombinatorialFunction(DefinedFunction):
     """Base class for combinatorial functions. """
 
     def _eval_simplify(self, **kwargs):
@@ -159,8 +159,16 @@ class factorial(CombinatorialFunction):
                         result = cls._small_factorials[n-1]
 
                     # GMPY factorial is faster, use it when available
-                    elif HAS_GMPY:
-                        result = gmpy.fac(n)
+                    #
+                    # XXX: There is a sympy.external.gmpy.factorial function
+                    # which provides gmpy.fac if available or the flint version
+                    # if flint is used. It could be used here to avoid the
+                    # conditional logic but it needs to be checked whether the
+                    # pure Python fallback used there is as fast as the
+                    # fallback used here (perhaps the fallback here should be
+                    # moved to sympy.external.ntheory).
+                    elif _gmpy is not None:
+                        result = _gmpy.fac(n)
 
                     else:
                         bits = bin(n).count('1')
@@ -261,7 +269,7 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x)
         arg0 = arg.subs(x, 0)
         if arg0.is_zero:
@@ -939,8 +947,11 @@ class binomial(CombinatorialFunction):
                 elif k > n // 2:
                     k = n - k
 
-                if HAS_GMPY:
-                    return Integer(gmpy.bincoef(n, k))
+                # XXX: This conditional logic should be moved to
+                # sympy.external.gmpy and the pure Python version of bincoef
+                # should be moved to sympy.external.ntheory.
+                if _gmpy is not None:
+                    return Integer(_gmpy.bincoef(n, k))
 
                 d, result = n - k, 1
                 for i in range(1, k + 1):
@@ -1117,6 +1128,6 @@ class binomial(CombinatorialFunction):
             elif k.is_even is False:
                 return  False
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.special.gamma_functions import gamma
         return self.rewrite(gamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)

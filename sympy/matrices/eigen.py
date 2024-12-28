@@ -15,17 +15,26 @@ from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
 from sympy.polys.polytools import gcd
 
-from .common import MatrixError, NonSquareMatrixError
+from .exceptions import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
 
 from .utilities import _iszero, _simplify
+
+
+__doctest_requires__ = {
+    ('_is_indefinite',
+     '_is_negative_definite',
+     '_is_negative_semidefinite',
+     '_is_positive_definite',
+     '_is_positive_semidefinite'): ['matplotlib'],
+}
 
 
 def _eigenvals_eigenvects_mpmath(M):
     norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
 
     v1 = None
-    prec = max([x._prec for x in M.atoms(Float)])
+    prec = max(x._prec for x in M.atoms(Float))
     eps = 2**-prec
 
     while prec < DEFAULT_MAXPREC:
@@ -131,7 +140,7 @@ def _eigenvals(
     See Also
     ========
 
-    MatrixDeterminant.charpoly
+    MatrixBase.charpoly
     eigenvects
 
     Notes
@@ -210,11 +219,8 @@ def _eigenvals_list(
         eigs = roots(charpoly, multiple=True, **flags)
 
         if len(eigs) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
             try:
-                eigs = [CRootOf(f, x, idx) for idx in range(degree)]
+                eigs = charpoly.all_roots(multiple=True)
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)
@@ -254,11 +260,8 @@ def _eigenvals_dict(
         eigs = roots(charpoly, multiple=False, **flags)
 
         if sum(eigs.values()) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
             try:
-                eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
+                eigs = dict(charpoly.all_roots(multiple=False))
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)
@@ -400,7 +403,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     ========
 
     eigenvals
-    MatrixSubspaces.nullspace
+    MatrixBase.nullspace
     """
     simplify = flags.get('simplify', True)
     primitive = flags.get('simplify', False)
@@ -497,7 +500,7 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     diagonalize
     """
     if not M.is_square:
@@ -683,7 +686,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     is_diagonalizable
     """
 
@@ -999,7 +1002,7 @@ _doc_positive_definite = \
     hermitian) and we can defer most of the studies to symmetric or
     hermitian positive definite matrices.
 
-    But it is a different problem for the existance of Cholesky
+    But it is a different problem for the existence of Cholesky
     decomposition. Because even though a non symmetric or a non
     hermitian matrix can be positive definite, Cholesky or LDL
     decomposition does not exist because the decompositions require the

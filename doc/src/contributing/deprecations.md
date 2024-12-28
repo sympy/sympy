@@ -529,7 +529,7 @@ Once the PR is merged, you should also add it to the "Backwards compatibility
 breaks and deprecations" section of the release notes for the upcoming
 release. This needs to be done manually, in addition to the change from the
 bot. See
-https://github.com/sympy/sympy/wiki/Writing-Release-Notes#backwards-compatibility-breaks-and-deprecations
+https://github.com/sympy/sympy/wiki/Writing-Release-Notes#user-content-backwards-compatibility-breaks-and-deprecations
 
 Whenever a deprecated functionality is removed entirely after its deprecation
 period, this also needs to be marked as a `BREAKING CHANGE` and added to the

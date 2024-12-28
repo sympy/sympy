@@ -275,11 +275,11 @@ Literature
 ==========
 
 .. [Page52] C. H. Page, `Classes of units in the SI
-    <https://aapt.scitation.org/doi/10.1119/1.11124>`_,
+    <https://doi.org/10.1119/1.1927482>`_,
     Am. J. of Phys. 20, 1 (1952): 1.
 
 .. [Page78] C. H. Page, `Units and Dimensions in Physics
-    <https://aapt.scitation.org/doi/10.1119/1.1927482>`_,
+    <https://pubs.aip.org/aapt/ajp/article-abstract/20/1/1/1034555/Units-and-Dimensions-in-Physics>`_,
     Am. J. of Phys. 46, 1 (1978): 78.
 
 .. [deBoer79] J. de Boer, `Group properties of quantities and units

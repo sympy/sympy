@@ -7,7 +7,7 @@ from sympy.matrices.dense import Matrix
 
 from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module
-from sympy.testing.pytest import skip
+from sympy.testing.pytest import skip, warns_deprecated_sympy
 from sympy.physics.quantum.operator import Operator, IdentityOperator
 
 
@@ -37,9 +37,10 @@ def test_matrix():
 
 def test_dagger_mul():
     O = Operator('O')
-    I = IdentityOperator()
     assert Dagger(O)*O == Dagger(O)*O
-    assert Dagger(O)*O*I == Mul(Dagger(O), O)*I
+    with warns_deprecated_sympy():
+        I = IdentityOperator()
+        assert Dagger(O)*O*I == Mul(Dagger(O), O)*I
     assert Dagger(O)*Dagger(O) == Dagger(O)**2
     assert Dagger(O)*Dagger(I) == Dagger(O)
 

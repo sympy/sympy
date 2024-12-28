@@ -117,6 +117,8 @@ def test_E():
         z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)
     assert E(z).series(z) == pi/2 - pi*z/8 - 3*pi*z**2/128 - \
         5*pi*z**3/512 - 175*pi*z**4/32768 - 441*pi*z**5/131072 + O(z**6)
+    assert E(4*z/(z+1)).series(z) == \
+        pi/2 - pi*z/2 + pi*z**2/8 - 3*pi*z**3/8 - 15*pi*z**4/128 - 93*pi*z**5/128 + O(z**6)
 
     assert E(z, m).rewrite(Integral).dummy_eq(
         Integral(sqrt(1 - m*sin(t)**2), (t, 0, z)))

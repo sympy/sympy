@@ -2,7 +2,8 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
+from sympy.matrices.matrixbase import MatrixBase
 
 
 class Determinant(Expr):
@@ -40,11 +41,17 @@ class Determinant(Expr):
     def kind(self):
         return self.arg.kind.element_kind
 
-    def doit(self, expand=False, **hints):
-        try:
-            return self.arg._eval_determinant()
-        except (AttributeError, NotImplementedError):
-            return self
+    def doit(self, **hints):
+        arg = self.arg
+        if hints.get('deep', True):
+            arg = arg.doit(**hints)
+
+        result = arg._eval_determinant()
+        if result is not None:
+            return result
+
+        return self
+
 
 def det(matexpr):
     """ Matrix Determinant
@@ -90,9 +97,9 @@ class Permanent(Expr):
         return self.args[0]
 
     def doit(self, expand=False, **hints):
-        try:
+        if isinstance(self.arg, MatrixBase):
             return self.arg.per()
-        except (AttributeError, NotImplementedError):
+        else:
             return self
 
 def per(matexpr):

@@ -14,14 +14,15 @@ from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, Lambda, Subs,
     diff, expand, expand_func)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (AlgebraicNumber, E, I, Rational, igcd,
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import (AlgebraicNumber, E, I, Rational,
     nan, oo, pi, zoo)
 from sympy.core.relational import Eq, Lt
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.functions.combinatorial.factorials import (rf, binomial,
     factorial, factorial2)
-from sympy.functions.combinatorial.numbers import bernoulli, fibonacci
+from sympy.functions.combinatorial.numbers import bernoulli, fibonacci, totient, partition
 from sympy.functions.elementary.complexes import (conjugate, im, re,
     sign)
 from sympy.functions.elementary.exponential import LambertW, exp, log
@@ -49,9 +50,8 @@ from sympy.ntheory.continued_fraction import (
     continued_fraction_convergents as cf_c,
     continued_fraction_iterator as cf_i, continued_fraction_periodic as
     cf_p, continued_fraction_reduce as cf_r)
-from sympy.ntheory.factor_ import factorint, totient
+from sympy.ntheory.factor_ import factorint
 from sympy.ntheory.generate import primerange
-from sympy.ntheory.partitions_ import npartitions
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.partfrac import apart
@@ -76,8 +76,7 @@ from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
-from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_CI,
-    raises)
+from sympy.testing.pytest import (XFAIL, slow, SKIP, tooslow, raises)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -92,7 +91,7 @@ from sympy.concrete.products import Product
 from sympy.integrals import integrate
 from sympy.integrals.transforms import laplace_transform,\
     inverse_laplace_transform, LaplaceTransform, fourier_transform,\
-    mellin_transform
+    mellin_transform, laplace_correspondence, laplace_initial_conds
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
@@ -270,7 +269,7 @@ def test_C24():
 
 
 def test_D1():
-    assert 0.0 / sqrt(2) == 0.0
+    assert 0.0 / sqrt(2) == 0
 
 
 def test_D2():
@@ -370,7 +369,7 @@ def test_F6():
 
 
 def test_F7():
-    assert npartitions(4) == 5
+    assert partition(4) == 5
 
 
 def test_F8():
@@ -949,11 +948,12 @@ def test_M8():
 @XFAIL
 def test_M9():
     # x = symbols('x')
+    # solutions are 1/2*(1 +/- sqrt(9 + 8*I*pi*n)) for integer n
     raise NotImplementedError("solveset(exp(2-x**2)-exp(-x),x) has complex solutions.")
 
 
 def test_M10():
-    # TODO: Replace solve with solveset, as of now test fails for solveset
+    # TODO: Replace solve with solveset when it gives Lambert solution
     assert solve(exp(x) - x, x) == [-LambertW(-1)]
 
 
@@ -2607,10 +2607,8 @@ def test_W23b():
 
 
 @XFAIL
-@slow
+@tooslow
 def test_W24():
-    if ON_CI:
-        skip("Too slow for CI.")
     # Not that slow, but does not fully evaluate so simplify is slow.
     # Maybe also require doit()
     x, y = symbols('x y', real=True)
@@ -2619,10 +2617,8 @@ def test_W24():
 
 
 @XFAIL
-@slow
+@tooslow
 def test_W25():
-    if ON_CI:
-        skip("Too slow for CI.")
     a, x, y = symbols('a x y', real=True)
     i1 = integrate(
         sin(a)*sin(y)/sqrt(1 - sin(a)**2*sin(x)**2*sin(y)**2),
@@ -2941,20 +2937,29 @@ def test_Y5_Y6():
 # Company, 1983, p. 211.  First, take the Laplace transform of the ODE
 # => s^2 Y(s) - s + Y(s) = 4/s [e^(-s) - e^(-2 s)]
 # where Y(s) is the Laplace transform of y(t)
-    t = symbols('t', positive=True)
+    t = symbols('t', real=True)
     s = symbols('s')
     y = Function('y')
-    F, _, _ = laplace_transform(diff(y(t), t, 2) + y(t)
+    Y = Function('Y')
+    F = laplace_correspondence(laplace_transform(diff(y(t), t, 2) + y(t)
                                 - 4*(Heaviside(t - 1) - Heaviside(t - 2)),
-                                t, s, simplify=True)
-    D = (F - (s**2*LaplaceTransform(y(t), t, s) - s*y(0) +
-            LaplaceTransform(y(t), t, s) - Subs(Derivative(y(t), t), t, 0) +
-            4*(1 - exp(s))*exp(-2*s)/s)).simplify(doit=False)
+                                t, s, noconds=True), {y: Y})
+    D = (
+        -F + s**2*Y(s) - s*y(0) + Y(s) - Subs(Derivative(y(t), t), t, 0) -
+        4*exp(-s)/s + 4*exp(-2*s)/s)
     assert D == 0
-# TODO implement second part of test case
 # Now, solve for Y(s) and then take the inverse Laplace transform
 #   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]
 #   => y(t) = cos t + 4 {[1 - cos(t - 1)] H(t - 1) - [1 - cos(t - 2)] H(t - 2)}
+    Yf = solve(F, Y(s))[0]
+    Yf = laplace_initial_conds(Yf, t, {y: [1, 0]})
+    assert Yf == (s**2*exp(2*s) + 4*exp(s) - 4)*exp(-2*s)/(s*(s**2 + 1))
+    yf = inverse_laplace_transform(Yf, s, t)
+    yf = yf.collect(Heaviside(t-1)).collect(Heaviside(t-2))
+    assert yf == (
+        (4 - 4*cos(t - 1))*Heaviside(t - 1) +
+        (4*cos(t - 2) - 4)*Heaviside(t - 2) +
+        cos(t)*Heaviside(t))
 
 
 @XFAIL

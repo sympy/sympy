@@ -27,6 +27,8 @@ from sympy.physics.quantum.gate import (
     Gate, HadamardGate, SwapGate, OneQubitGate, CGate, PhaseGate, TGate, ZGate
 )
 
+from sympy.functions.elementary.complexes import sign
+
 __all__ = [
     'QFT',
     'IQFT',
@@ -85,7 +87,7 @@ class RkGate(OneQubitGate):
 
     def get_target_matrix(self, format='sympy'):
         if format == 'sympy':
-            return Matrix([[1, 0], [0, exp(Integer(2)*pi*I/(Integer(2)**self.k))]])
+            return Matrix([[1, 0], [0, exp(sign(self.k)*Integer(2)*pi*I/(Integer(2)**abs(self.k)))]])
         raise NotImplementedError(
             'Invalid format for the R_k gate: %r' % format)
 

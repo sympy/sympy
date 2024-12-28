@@ -11,6 +11,7 @@ from sympy.core import Mul, Pow
 from sympy.core import (S, pi, symbols, Function, Rational, Integer,
                         Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, exp, sin, cos
+from sympy.assumptions.ask import Q
 from sympy.printing.smtlib import smtlib_code
 from sympy.testing.pytest import raises, Failed
 
@@ -72,6 +73,27 @@ def test_Relational():
         assert smtlib_code(Gt(x, y), auto_declare=False, log_warn=w) == "(assert (> x y))"
         assert smtlib_code(Ge(x, y), auto_declare=False, log_warn=w) == "(assert (>= x y))"
 
+
+def test_AppliedBinaryRelation():
+    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 12) as w:
+        assert smtlib_code(Q.eq(x, y), auto_declare=False, log_warn=w) == "(assert (= x y))"
+        assert smtlib_code(Q.ne(x, y), auto_declare=False, log_warn=w) == "(assert (not (= x y)))"
+        assert smtlib_code(Q.lt(x, y), auto_declare=False, log_warn=w) == "(assert (< x y))"
+        assert smtlib_code(Q.le(x, y), auto_declare=False, log_warn=w) == "(assert (<= x y))"
+        assert smtlib_code(Q.gt(x, y), auto_declare=False, log_warn=w) == "(assert (> x y))"
+        assert smtlib_code(Q.ge(x, y), auto_declare=False, log_warn=w) == "(assert (>= x y))"
+
+    raises(ValueError, lambda: smtlib_code(Q.complex(x), log_warn=w))
+
+
+def test_AppliedPredicate():
+    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 6) as w:
+        assert smtlib_code(Q.positive(x), auto_declare=False, log_warn=w) == "(assert (> x 0))"
+        assert smtlib_code(Q.negative(x), auto_declare=False, log_warn=w) == "(assert (< x 0))"
+        assert smtlib_code(Q.zero(x), auto_declare=False, log_warn=w) == "(assert (= x 0))"
+        assert smtlib_code(Q.nonpositive(x), auto_declare=False, log_warn=w) == "(assert (<= x 0))"
+        assert smtlib_code(Q.nonnegative(x), auto_declare=False, log_warn=w) == "(assert (>= x 0))"
+        assert smtlib_code(Q.nonzero(x), auto_declare=False, log_warn=w) == "(assert (not (= x 0)))"
 
 def test_Function():
     with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
@@ -170,7 +192,7 @@ def test_Pow():
              '(assert (= (> b a) c))\n' \
              '(assert c)\n' \
              '(assert (= ' \
-             '(* (pow (* 7. a) (+ (pow b a) (* -1 a))) (pow (+ b (pow a 2)) -1)) ' \
+             '(* (pow (* 7.0 a) (+ (pow b a) (* -1 a))) (pow (+ b (pow a 2)) -1)) ' \
              '(/ 7 3)' \
              '))'
 
@@ -523,3 +545,9 @@ def test_not_supported():
         raises(KeyError, lambda: smtlib_code(f(x).diff(x), symbol_table={f: Callable[[float], float]}, log_warn=w))
     with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         raises(KeyError, lambda: smtlib_code(S.ComplexInfinity, log_warn=w))
+
+
+def test_Float():
+    assert smtlib_code(0.0) == "0.0"
+    assert smtlib_code(0.000000000000000003) == '(* 3.0 (pow 10 -18))'
+    assert smtlib_code(5.3) == "5.3"

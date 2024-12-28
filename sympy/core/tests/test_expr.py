@@ -7,7 +7,7 @@ from sympy.core.expr import (ExprBuilder, unchanged, Expr,
     UnevaluatedExpr)
 from sympy.core.function import (Function, expand, WildFunction,
     AppliedUndef, Derivative, diff, Subs)
-from sympy.core.mul import Mul
+from sympy.core.mul import Mul, _unevaluated_Mul
 from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
     Rational, nan, Integer, Number, pi, _illegal)
 from sympy.core.power import Pow
@@ -18,6 +18,7 @@ from sympy.core.symbol import Symbol, symbols, Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import exp_polar, exp, log
+from sympy.functions.elementary.hyperbolic import sinh, tanh
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import tan, sin, cos
@@ -479,14 +480,16 @@ def test_as_leading_term():
     # https://github.com/sympy/sympy/issues/21177
     e = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
         - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
-    assert e.as_leading_term(x) == \
-        (12*sqrt(3)*x - 12*S.ImaginaryUnit*x)/(4*sqrt(3) + 12*S.ImaginaryUnit)
+    assert e.as_leading_term(x) == -sqrt(3)*I*x
 
     # https://github.com/sympy/sympy/issues/21245
     e = 1 - x - x**2
     d = (1 + sqrt(5))/2
     assert e.subs(x, y + 1/d).as_leading_term(y) == \
-        (-576*sqrt(5)*y - 1280*y)/(256*sqrt(5) + 576)
+        (-40*y - 16*sqrt(5)*y)/(16 + 8*sqrt(5))
+
+    # https://github.com/sympy/sympy/issues/26991
+    assert sinh(tanh(3/(100*x))).as_leading_term(x, cdir = 1) == sinh(1)
 
 
 def test_leadterm2():
@@ -978,6 +981,15 @@ def test_replace():
     assert S.Zero.replace(Wild('x'), 1, exact=True) == 0
 
 
+def test_replace_integral():
+    # https://github.com/sympy/sympy/issues/27142
+    q, p, s, t = symbols('q p s t', cls=Wild)
+    a, b, c, d = symbols('a b c d')
+    i = Integral(a + b, (b, c, d))
+    pattern = Integral(q, (p, s, t))
+    assert i.replace(pattern, q) == a + b
+
+
 def test_find():
     expr = (x + y + 2 + sin(3*x))
 
@@ -1053,6 +1065,10 @@ def test_has_basics():
     assert (2*p).has(Wild)
 
     assert not x.has()
+
+    # see issue at https://github.com/sympy/sympy/issues/5190
+    assert not S(1).has(Wild)
+    assert not x.has(Wild)
 
 
 def test_has_multiple():
@@ -1499,6 +1515,8 @@ def test_as_base_exp():
     assert (x*y*z).as_base_exp() == (x*y*z, S.One)
     assert (x + y + z).as_base_exp() == (x + y + z, S.One)
     assert ((x + y)**z).as_base_exp() == (x + y, z)
+    assert (x**2*y**2).as_base_exp() == (x*y, 2)
+    assert (x**z*y**z).as_base_exp() == (x**z*y**z, S.One)
 
 
 def test_issue_4963():
@@ -1991,7 +2009,7 @@ def test_round():
             n = '-' + n
         v = str(Float(n).round(p))[:j]  # pertinent digits
         if v.endswith('.'):
-          continue  # it ends with 0 which is even
+            continue  # it ends with 0 which is even
         L = int(v[-1])  # last digit
         assert L % 2 == 0, (n, '->', v)
 
@@ -2005,12 +2023,17 @@ def test_round():
 
     assert S.Zero.round() == 0
 
-    a = (Add(1, Float('1.' + '9'*27, ''), evaluate=0))
+    a = (Add(1, Float('1.' + '9'*27, ''), evaluate=False))
     assert a.round(10) == Float('3.000000000000000000000000000', '')
     assert a.round(25) == Float('3.000000000000000000000000000', '')
     assert a.round(26) == Float('3.000000000000000000000000000', '')
     assert a.round(27) == Float('2.999999999999999999999999999', '')
     assert a.round(30) == Float('2.999999999999999999999999999', '')
+    #assert a.round(10) == Float('3.0000000000', '')
+    #assert a.round(25) == Float('3.0000000000000000000000000', '')
+    #assert a.round(26) == Float('3.00000000000000000000000000', '')
+    #assert a.round(27) == Float('2.999999999999999999999999999', '')
+    #assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     # XXX: Should round set the precision of the result?
     #      The previous version of the tests above is this but they only pass
@@ -2074,6 +2097,19 @@ def test_round():
         assert S(i).round().is_Integer
         assert type(round(fi)) is int
         assert S(fi).round().is_Integer
+
+        # issue 25698
+        n = 6000002
+        assert int(n*(log(n) + log(log(n)))) == 110130079
+        one = cos(2)**2 + sin(2)**2
+        eq = exp(one*I*pi)
+        qr, qi = eq.as_real_imag()
+        assert qi.round(2) == 0.0
+        assert eq.round(2) == -1.0
+        eq = one - 1/S(10**120)
+        assert S.true not in (eq > 1, eq < 1)
+        assert int(eq) == int(.9) == 0
+        assert int(-eq) == int(-.9) == 0
 
 
 def test_held_expression_UnevaluatedExpr():
@@ -2260,3 +2296,18 @@ def test_format():
     assert '{:+3.0f}'.format(S(3)) == ' +3'
     assert '{:23.20f}'.format(pi) == ' 3.14159265358979323846'
     assert '{:50.48f}'.format(exp(sin(1))) == '2.319776824715853173956590377503266813254904772376'
+
+
+def test_issue_24045():
+    assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
+
+
+def test__unevaluated_Mul():
+    A, B = symbols('A B', commutative=False)
+    assert _unevaluated_Mul(x, A, B, S(2), A).args == (2, x, A, B, A)
+    assert _unevaluated_Mul(-x*A*B, S(2), A).args == (-2, x, A, B, A)
+
+
+def test_Float_zero_division_error():
+    # issue 27165
+    assert Float('1.7567e-1417').round(15) == Float(0)

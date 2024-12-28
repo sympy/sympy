@@ -79,7 +79,7 @@ class BasisDependent(Expr):
 
     evalf.__doc__ += Expr.evalf.__doc__  # type: ignore
 
-    n = evalf
+    n = evalf # type: ignore
 
     def simplify(self, **kwargs):
         """
@@ -154,8 +154,7 @@ class BasisDependent(Expr):
 
     def as_coeff_add(self, *deps):
         """Efficiently extract the coefficient of a summation."""
-        l = [x * self.components[x] for x in self.components]
-        return 0, tuple(l)
+        return 0, tuple(x * self.components[x] for x in self.components)
 
     def diff(self, *args, **kwargs):
         """
@@ -191,7 +190,7 @@ class BasisDependentAdd(BasisDependent, Add):
         components = {}
 
         # Check each arg and simultaneously learn the components
-        for i, arg in enumerate(args):
+        for arg in args:
             if not isinstance(arg, cls._expr_type):
                 if isinstance(arg, Mul):
                     arg = cls._mul_func(*(arg.args))
@@ -204,9 +203,8 @@ class BasisDependentAdd(BasisDependent, Add):
             if arg == cls.zero:
                 continue
             # Else, update components accordingly
-            if hasattr(arg, "components"):
-                for x in arg.components:
-                    components[x] = components.get(x, 0) + arg.components[x]
+            for x in arg.components:
+                components[x] = components.get(x, 0) + arg.components[x]
 
         temp = list(components.keys())
         for x in temp:
@@ -236,6 +234,17 @@ class BasisDependentMul(BasisDependent, Mul):
     """
 
     def __new__(cls, *args, **options):
+        obj = cls._new(*args, **options)
+        return obj
+
+    def _new_rawargs(self, *args):
+        # XXX: This is needed because Add.flatten() uses it but the default
+        # implementation does not work for Vectors because they assign
+        # attributes outside of .args.
+        return type(self)(*args)
+
+    @classmethod
+    def _new(cls, *args, **options):
         from sympy.vector import Cross, Dot, Curl, Gradient
         count = 0
         measure_number = S.One
