@@ -38,7 +38,7 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # Operators and outer products
 #-----------------------------------------------------------------------------
- 
+
 
 @Mul._kind_dispatcher.register(_NumberKind, _OperatorKind)
 def _mul_operator_kind(lhs, rhs):

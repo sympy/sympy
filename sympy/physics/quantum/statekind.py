@@ -23,4 +23,4 @@ class _BraKind(Kind):
     def __repr__(self):
         return "BraKind"
 
-BraKind = _BraKind()  
+BraKind = _BraKind()
