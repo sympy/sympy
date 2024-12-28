@@ -17,7 +17,7 @@ from sympy.multipledispatch.dispatcher import (
 )
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
-from sympy.physics.quantum.statekind import KetKind, _KetKind, BraKind, _BraKind
+from sympy.physics.quantum.kind import KetKind, _KetKind, BraKind, _BraKind
 
 
 __all__ = [
@@ -36,19 +36,6 @@ __all__ = [
     'Wavefunction'
 ]
 
-
-#-----------------------------------------------------------------------------
-# Kind resolution.
-#-----------------------------------------------------------------------------
-
-@Mul._kind_dispatcher.register(_NumberKind, _KetKind)
-def _mul_ket_kind(lhs, rhs):
-    return KetKind
-
-
-@Mul._kind_dispatcher.register(_NumberKind, _BraKind)
-def _mul_bra_kind(lhs, rhs):
-    return BraKind
 
 #-----------------------------------------------------------------------------
 # States, bras and kets.
