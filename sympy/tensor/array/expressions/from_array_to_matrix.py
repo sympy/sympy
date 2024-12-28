@@ -706,7 +706,7 @@ def _a2m_tensor_product(*args):
     for arg in args:
         if isinstance(arg, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
             arrays.append(arg)
-        elif isinstance(arg, (NDimArray, MatrixCommon)):
+        elif isinstance(arg, (NDimArray, MatrixBase)):
             # This fixes issue 15651
             arrays.append(arg)
         else:

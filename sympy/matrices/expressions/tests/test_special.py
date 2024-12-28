@@ -183,7 +183,7 @@ def test_MatrixUnit():
 
     assert mu.as_explicit() == ImmutableDenseMatrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
     assert mu.T == MatrixUnit(2, 1, (3, 3))
-    assert mu.free_symbols == set([])
+    assert mu.free_symbols == set()
     assert mu.shape == (3, 3)
     assert mu.rows == 3
     assert mu.cols == 3
