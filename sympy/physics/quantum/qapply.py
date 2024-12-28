@@ -6,6 +6,7 @@ Todo:
 
 from sympy.concrete import Sum
 from sympy.core.add import Add
+from sympy.core.kind import NumberKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -27,6 +28,10 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # Main code
 #-----------------------------------------------------------------------------
+
+def ip_doit_func(e):
+    return e.replace(InnerProduct, lambda *args: InnerProduct(*args).doit())
+
 
 def qapply(e, **options):
     """Apply operators to states in a quantum expression.
@@ -77,9 +82,13 @@ def qapply(e, **options):
 
     dagger = options.get('dagger', False)
     sum_doit = options.get('sum_doit', False)
+    ip_doit = options.get('ip_doit', True)
 
-    if e == 0:
-        return S.Zero
+    if isinstance(e, (int, complex, float)):
+        e = sympify(e)
+
+    if e.kind == NumberKind:
+        return ip_doit_func(e) if ip_doit else e
 
     # This may be a bit aggressive but ensures that everything gets expanded
     # to its simplest form before trying to apply operators. This includes
@@ -127,14 +136,15 @@ def qapply(e, **options):
         c_part, nc_part = e.args_cnc()
         c_mul = Mul(*c_part)
         nc_mul = Mul(*nc_part)
-        if isinstance(nc_mul, Mul):
+        if not nc_part:
+            result = c_mul
+        elif isinstance(nc_mul, Mul):
             result = c_mul*qapply_Mul(nc_mul, **options)
         else:
             result = c_mul*qapply(nc_mul, **options)
         if result == e and dagger:
-            return Dagger(qapply_Mul(Dagger(e), **options))
-        else:
-            return result
+            result = Dagger(qapply_Mul(Dagger(e), **options))
+        return ip_doit_func(result) if ip_doit else result
 
     # In all other cases (State, Operator, Pow, Commutator, InnerProduct,
     # OuterProduct) we won't ever have operators to apply to kets.
@@ -148,6 +158,9 @@ def qapply_Mul(e, **options):
     sum_doit = options.get('sum_doit', False)
 
     args = list(e.args)
+    extra = S.One
+    result = None
+
 
     # If we only have 0 or 1 args, we have nothing to do and return.
     if len(args) <= 1 or not isinstance(e, Mul):
@@ -171,6 +184,10 @@ def qapply_Mul(e, **options):
         args.append(lhs.ket)
         lhs = lhs.bra
 
+    if isinstance(rhs, OuterProduct):
+        extra = rhs.bra # Append to the right of the result
+        rhs = rhs.ket
+
     # Call .doit() on Commutator/AntiCommutator.
     if isinstance(lhs, (Commutator, AntiCommutator)):
         comm = lhs.doit()
@@ -179,16 +196,38 @@ def qapply_Mul(e, **options):
                 e.func(*(args + [comm.args[0], rhs])) +
                 e.func(*(args + [comm.args[1], rhs])),
                 **options
-            )
+            )*extra
         else:
-            return qapply(e.func(*args)*comm*rhs, **options)
+            return qapply(e.func(*args)*comm*rhs, **options)*extra
 
     # Apply tensor products of operators to states
     if isinstance(lhs, TensorProduct) and all(isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in lhs.args) and \
             isinstance(rhs, TensorProduct) and all(isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in rhs.args) and \
             len(lhs.args) == len(rhs.args):
         result = TensorProduct(*[qapply(lhs.args[n]*rhs.args[n], **options) for n in range(len(lhs.args))]).expand(tensorproduct=True)
-        return qapply_Mul(e.func(*args), **options)*result
+        return qapply_Mul(e.func(*args), **options)*result*extra
+
+    # For Sums, move the Sum to the right.
+    if isinstance(rhs, Sum):
+        if isinstance(lhs, Sum):
+            if set(lhs.variables).intersection(set(rhs.variables)):
+                raise ValueError('Duplicated dummy indices in separate sums in qapply.')
+            limits = lhs.limits + rhs.limits
+            result = Sum(qapply(lhs.function*rhs.function, **options), *limits)
+            if sum_doit:
+                result = result.doit()
+            return qapply_Mul(e.func(*args)*result, **options)
+        else:
+            result = Sum(qapply(lhs*rhs.function, **options), rhs.limits)
+            if sum_doit:
+                result = result.doit()
+            return qapply_Mul(e.func(*args)*result, **options)
+
+    if isinstance(lhs, Sum):
+        result = Sum(qapply(lhs.function*rhs, **options), lhs.limits)
+        if sum_doit:
+            result = result.doit()
+        return qapply_Mul(e.func(*args)*result, **options)
 
     # For Sums, move the Sum to the right.
     if isinstance(rhs, Sum):
@@ -233,19 +272,17 @@ def qapply_Mul(e, **options):
     if result is None:
         if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
             result = InnerProduct(lhs, rhs)
-            if ip_doit:
-                result = result.doit()
 
     # TODO: I may need to expand before returning the final result.
-    if result == 0:
-        return S.Zero
+    if isinstance(result, (int, complex, float)):
+        return sympify(result)
     elif result is None:
         if len(args) == 0:
             # We had two args to begin with so args=[].
             return e
         else:
-            return qapply_Mul(e.func(*(args + [lhs])), **options)*rhs
+            return qapply_Mul(e.func(*(args + [lhs])), **options)*rhs*extra
     elif isinstance(result, InnerProduct):
-        return result*qapply_Mul(e.func(*args), **options)
+        return result*qapply_Mul(e.func(*args), **options)*extra
     else:  # result is a scalar times a Mul, Add or TensorProduct
-        return qapply(e.func(*args)*result, **options)
+        return qapply(e.func(*args)*result, **options)*extra

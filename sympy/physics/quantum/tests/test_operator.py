@@ -2,6 +2,7 @@ from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Integer, pi)
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import sin
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
@@ -95,21 +96,22 @@ def test_identity():
         I = IdentityOperator()
         O = Operator('O')
         x = Symbol("x")
+        three = sympify(3)
 
         assert isinstance(I, IdentityOperator)
         assert isinstance(I, Operator)
 
-        assert I * O == O
-        assert O * I == O
-        assert I * Dagger(O) == Dagger(O)
-        assert Dagger(O) * I == Dagger(O)
-        assert isinstance(I * I, IdentityOperator)
-        assert isinstance(3 * I, Mul)
-        assert isinstance(I * x, Mul)
-        assert I.inv() == I
-        assert Dagger(I) == I
-        assert qapply(I * O) == O
-        assert qapply(O * I) == O
+    assert I * O == O
+    assert O * I == O
+    assert I * Dagger(O) == Dagger(O)
+    assert Dagger(O) * I == Dagger(O)
+    assert isinstance(I * I, IdentityOperator)
+    assert three * I == three
+    assert I * x == x
+    assert I.inv() == I
+    assert Dagger(I) == I
+    assert qapply(I * O) == O
+    assert qapply(O * I) == O
 
         for n in [2, 3, 5]:
             assert represent(IdentityOperator(n)) == eye(n)
