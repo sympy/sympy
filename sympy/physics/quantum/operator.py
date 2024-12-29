@@ -330,13 +330,6 @@ class IdentityOperator(Operator):
     def _print_contents_latex(self, printer, *args):
         return r'{\mathcal{I}}'
 
-    # def __mul__(self, other):
-
-    #     if isinstance(other, (Operator, Dagger)):
-    #         return other
-
-    #     return Mul(self, other)
-
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:
             raise NotImplementedError('Cannot represent infinite dimensional' +
