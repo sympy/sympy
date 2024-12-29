@@ -134,9 +134,6 @@ def represent(expr, **options):
     >>> y = XBra('y')
     >>> represent(X*x)
     x*DiracDelta(x - x_2)
-    >>> represent(X*x*y)
-    x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
-
     """
 
     format = options.get('format', 'sympy')

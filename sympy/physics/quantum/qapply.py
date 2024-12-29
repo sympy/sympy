@@ -78,10 +78,8 @@ def qapply(e, **options):
         |k><b|
         >>> qapply(A * b.dual / (b * b.dual))
         |k>
-        >>> qapply(k.dual * A / (k.dual * k), dagger=True)
-        <b|
         >>> qapply(k.dual * A / (k.dual * k))
-        <k|*|k><b|/<k|k>
+        <b|
     """
     from sympy.physics.quantum.density import Density
 

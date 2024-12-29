@@ -379,24 +379,17 @@ class OuterProduct(Operator):
         >>> Dagger(op)
         |b><k|
 
-    In simple products of kets and bras outer products will be automatically
+    In quantum expressions, outer products will be automatically
     identified and created::
 
         >>> k*b
         |k><b|
 
-    But in more complex expressions, outer products are not automatically
-    created::
+    However, the creation of inner products always has higher priority than that of
+    outer products:
 
-        >>> A = Operator('A')
-        >>> A*k*b
-        A*|k>*<b|
-
-    A user can force the creation of an outer product in a complex expression
-    by using parentheses to group the ket and bra::
-
-        >>> A*(k*b)
-        A*|k><b|
+        >>> b*k*b
+        <b|k>*<b|
 
     References
     ==========
