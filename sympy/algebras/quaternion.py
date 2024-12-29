@@ -1095,7 +1095,6 @@ class Quaternion(Expr):
         4 + 8*i + 12*j + 16*k
 
         """
-        # TODO: is this expression correct?
         return Quaternion(integrate(self.a, *args), integrate(self.b, *args),
                           integrate(self.c, *args), integrate(self.d, *args))
 
