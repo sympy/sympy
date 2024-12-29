@@ -10,13 +10,16 @@ from sympy.matrices.dense import DenseMatrix as Matrix
 from sympy.matrices.immutable import ImmutableDenseMatrix as ImmutableMatrix
 from sympy.printing.pretty.stringpict import prettyForm
 
-from sympy.physics.quantum.qexpr import QuantumError
-from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
-from sympy.physics.quantum.operator import OperatorKind, _OperatorKind
-from sympy.physics.quantum.state import Ket, _KetKind, KetKind
-from sympy.physics.quantum.state import Bra, _BraKind, BraKind
+from sympy.physics.quantum.commutator import Commutator
+from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.kind import (
+    KetKind, _KetKind,
+    BraKind, _BraKind,
+    OperatorKind, _OperatorKind
+)
+from sympy.physics.quantum.qexpr import QuantumError
+from sympy.physics.quantum.state import Ket, Bra
 
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray,

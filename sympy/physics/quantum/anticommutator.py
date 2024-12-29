@@ -8,7 +8,7 @@ from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import Operator, _OperatorKind, OperatorKind
+from sympy.physics.quantum.kind import _OperatorKind, OperatorKind
 
 __all__ = [
     'AntiCommutator'
@@ -118,6 +118,7 @@ class AntiCommutator(Expr):
 
     def doit(self, **hints):
         """ Evaluate anticommutator """
+        from sympy.physics.quantum.operator import Operator
         A = self.args[0]
         B = self.args[1]
         if isinstance(A, Operator) and isinstance(B, Operator):
