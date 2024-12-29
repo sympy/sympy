@@ -76,7 +76,7 @@ def _transform_bra_bra(a, b):
 
 @_transform_state_pair.register(OuterProduct, KetBase)
 def _transform_op_ket(a, b):
-    return (a.ket, InnerProduct(a.bra, b))
+    return (InnerProduct(a.bra, b), a.ket)
 
 @_transform_state_pair.register(BraBase, OuterProduct)
 def _transform_bra_op(a, b):
@@ -104,13 +104,15 @@ def _transform_bra_tp(a, b):
 
 @_transform_state_pair.register(TensorProduct, TensorProduct)
 def _transform_tp_tp(a, b):
-    if a.kind == BraKind and b.kind == KetKind:
-        if len(a.args) == len(b.args):
+    if len(a.args) == len(b.args):
+        if a.kind == BraKind and b.kind == KetKind:
             return tuple([InnerProduct(i, j) for (i, j) in zip(a.args, b.args)])
+        else:
+            return (TensorProduct(*(i*j for (i, j) in zip(a.args, b.args))), )
 
 @_transform_state_pair.register(OuterProduct, OuterProduct)
 def _transform_op_op(a, b):
-    return (a.ket, InnerProduct(a.bra, b.ket), b.bra)
+    return (InnerProduct(a.bra, b.ket), OuterProduct(a.ket, b.bra))
 
 
 #-----------------------------------------------------------------------------
