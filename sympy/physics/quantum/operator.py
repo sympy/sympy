@@ -363,7 +363,6 @@ class OuterProduct(Operator):
     Create a simple outer product by hand and take its dagger::
 
         >>> from sympy.physics.quantum import Ket, Bra, OuterProduct, Dagger
-        >>> from sympy.physics.quantum import Operator
 
         >>> k = Ket('k')
         >>> b = Bra('b')
