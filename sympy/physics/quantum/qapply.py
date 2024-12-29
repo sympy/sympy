@@ -29,6 +29,7 @@ __all__ = [
 # Main code
 #-----------------------------------------------------------------------------
 
+
 def ip_doit_func(e):
     return e.replace(InnerProduct, lambda *args: InnerProduct(*args).doit())
 
