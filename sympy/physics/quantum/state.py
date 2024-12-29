@@ -1,20 +1,17 @@
 """Dirac notation for states."""
 
-from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Function
-from sympy.core.kind import _NumberKind
 from sympy.core.numbers import oo, equal_valued
-from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.integrals.integrals import integrate
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
-from sympy.physics.quantum.kind import KetKind, _KetKind, BraKind, _BraKind
+from sympy.physics.quantum.kind import KetKind, BraKind
 
 
 __all__ = [

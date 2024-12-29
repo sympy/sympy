@@ -1,6 +1,5 @@
 """Bosonic quantum operators."""
 
-from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import conjugate

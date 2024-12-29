@@ -1,7 +1,6 @@
 """Tests for sympy.physics.quantum.kind."""
 
 from sympy.core.kind import NumberKind, UndefinedKind
-from sympy.core.sympify import sympify
 from sympy.core.symbol import symbols
 
 from sympy.physics.quantum.kind import (
