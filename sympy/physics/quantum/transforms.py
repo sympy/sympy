@@ -13,6 +13,7 @@ THIS IS EXPERIMENTAL.
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
+from sympy.core.singleton import S
 from sympy.multipledispatch.dispatcher import (
     Dispatcher, ambiguity_register_error_ignore_dup
 )

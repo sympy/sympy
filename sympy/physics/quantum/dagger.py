@@ -1,6 +1,6 @@
 """Hermitian conjugation."""
 
-from sympy.core import Expr, Mul, sympify
+from sympy.core import Expr, sympify
 from sympy.functions.elementary.complexes import adjoint
 
 __all__ = [

@@ -1,7 +1,7 @@
 """Kinds for Operators, Bras, and Kets."""
 
 from sympy.core.mul import Mul
-from sympy.core.kind import Kind, _NumberKind, NumberKind
+from sympy.core.kind import Kind, _NumberKind
 
 
 __all__ = [

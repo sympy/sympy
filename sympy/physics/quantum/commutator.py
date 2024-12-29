@@ -9,7 +9,7 @@ from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import Operator, _OperatorKind, OperatorKind
+from sympy.physics.quantum.kind import _OperatorKind, OperatorKind
 
 
 __all__ = [

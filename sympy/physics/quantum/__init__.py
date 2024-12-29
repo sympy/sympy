@@ -29,7 +29,9 @@ __all__ = [
 
     'hbar', 'HBar',
 
+    '_postprocess_state_mul', '_postprocess_state_pow'
 ]
+
 from .anticommutator import AntiCommutator
 
 from .qapply import qapply
