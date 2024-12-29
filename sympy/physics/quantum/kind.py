@@ -3,6 +3,17 @@
 from sympy.core.mul import Mul
 from sympy.core.kind import Kind, _NumberKind, NumberKind
 
+
+__all__ = [
+    '_KetKind',
+    'KetKind',
+    '_BraKind',
+    'BraKind',
+    '_OperatorKind',
+    'OperatorKind',
+]
+
+
 class _KetKind(Kind):
 
     def __new__(cls):
@@ -47,7 +58,7 @@ OperatorKind = _OperatorKind()
 # Note: We can't currently add kind dispatchers for the following combinations
 #       as the Mul._kind_dispatcher is set to commutative and will also
 #       register the opposite order, which isn't correct for these pairs:
-# 
+#
 # 1. (_OperatorKind, _KetKind)
 # 2. (_BraKind, _OperatorKind)
 # 3. (_BraKind, _KetKind)

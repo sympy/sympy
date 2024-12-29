@@ -57,3 +57,7 @@ from .state import (KetBase, BraBase, StateBase, State, Ket, Bra,
 from .tensorproduct import TensorProduct, tensor_product_simp
 
 from .constants import hbar, HBar
+
+# These are private, but need to be imported so they are registered
+# as postprocessing transformers with Mul and Pow.
+from .transforms import _postprocess_state_mul, _postprocess_state_pow

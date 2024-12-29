@@ -72,4 +72,3 @@ def test_tensorproduct_kind():
     assert TensorProduct(A, B).kind == OperatorKind
     assert TensorProduct(A, x*B).kind == OperatorKind
     assert TensorProduct(x*A, B).kind == OperatorKind
-
