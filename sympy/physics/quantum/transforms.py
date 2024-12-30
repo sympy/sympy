@@ -17,9 +17,10 @@ from sympy.core.singleton import S
 from sympy.multipledispatch.dispatcher import (
     Dispatcher, ambiguity_register_error_ignore_dup
 )
+from sympy.utilities.misc import debug
 
 from sympy.physics.quantum.innerproduct import InnerProduct
-from sympy.physics.quantum.kind import KetKind, BraKind
+from sympy.physics.quantum.kind import KetKind, BraKind, OperatorKind
 from sympy.physics.quantum.operator import (
     OuterProduct, IdentityOperator, Operator
 )
@@ -68,11 +69,15 @@ def _transform_ket_bra(a, b):
 
 @_transform_state_pair.register(KetBase, KetBase)
 def _transform_ket_ket(a, b):
-    return (TensorProduct(a, b),)
+    raise TypeError(
+        'Multiplication of two kets is not allowed. Use TensorProduct instead.'
+    )
 
 @_transform_state_pair.register(BraBase, BraBase)
 def _transform_bra_bra(a, b):
-    return (TensorProduct(a, b),)
+    raise TypeError(
+        'Multiplication of two bras is not allowed. Use TensorProduct instead.'
+    )
 
 @_transform_state_pair.register(OuterProduct, KetBase)
 def _transform_op_ket(a, b):
@@ -85,25 +90,34 @@ def _transform_bra_op(a, b):
 @_transform_state_pair.register(TensorProduct, KetBase)
 def _transform_tp_ket(a, b):
     if a.kind == KetKind:
-        return (TensorProduct(*(a.args + (b,))),)
+        raise TypeError(
+            'Multiplication of TensorProduct(*kets)*ket is invalid.'
+        )
 
 @_transform_state_pair.register(KetBase, TensorProduct)
 def _transform_ket_tp(a, b):
     if b.kind == KetKind:
-        return (TensorProduct(*((a,) + b.args)),)
+        raise TypeError(
+            'Multiplication of ket*TensorProduct(*kets) is invalid.'
+        )
 
 @_transform_state_pair.register(TensorProduct, BraBase)
 def _transform_tp_bra(a, b):
     if a.kind == BraKind:
-        return (TensorProduct(*(a.args + (b,))),)
+        raise TypeError(
+            'Multiplication of TensorProduct(*bras)*bra is invalid.'
+        )
 
 @_transform_state_pair.register(BraBase, TensorProduct)
 def _transform_bra_tp(a, b):
     if b.kind == BraKind:
-        return (TensorProduct(*((a,) + b.args)),)
+        raise TypeError(
+            'Multiplication of bra*TensorProduct(*bras) is invalid.'
+        )
 
 @_transform_state_pair.register(TensorProduct, TensorProduct)
 def _transform_tp_tp(a, b):
+    debug('_transform_tp_tp', a, b)
     if len(a.args) == len(b.args):
         if a.kind == BraKind and b.kind == KetKind:
             return tuple([InnerProduct(i, j) for (i, j) in zip(a.args, b.args)])
@@ -148,9 +162,33 @@ def _postprocess_state_mul(expr):
 
 
 def _postprocess_state_pow(expr):
+    """Handle bras and kets to powers.
+
+    Under normal multiplication this is invalid. Users should use a
+    TensorProduct instead.
+    """
     base, exp = expr.as_base_exp()
-    if exp.is_integer and exp.is_positive:
-        return TensorProduct(*(base for i in range(int(exp))))
+    if base.kind == KetKind or base.kind == BraKind:
+        raise TypeError(
+            'A bra or ket to a power is invalid, use TensorProduct instead.'
+        )
+
+
+def _postprocess_tp_pow(expr):
+    """Handle TensorProduct(*operators)**(positive integer).
+
+    This handles a tensor product of operators, to an integer power.
+    The power here is interpreted as regular multiplication, not
+    tensor product exponentiation. The form of exponentiation performed
+    here leaves the space and dimension of the object the same.
+
+    This operation does not make sense for tensor product's of states.
+    """
+    base, exp = expr.as_base_exp()
+    debug('_postprocess_tp_pow: ', base, exp, expr.args)
+    if isinstance(base, TensorProduct) and exp.is_integer and exp.is_positive and base.kind == OperatorKind:
+        new_args = [a**exp for a in base.args]
+        return TensorProduct(*new_args)
 
 
 #-----------------------------------------------------------------------------
@@ -164,7 +202,8 @@ Basic._constructor_postprocessor_mapping[StateBase] = {
 }
 
 Basic._constructor_postprocessor_mapping[TensorProduct] = {
-    "Mul": [_postprocess_state_mul]
+    "Mul": [_postprocess_state_mul],
+    "Pow": [_postprocess_tp_pow]
 }
 
 Basic._constructor_postprocessor_mapping[Operator] = {

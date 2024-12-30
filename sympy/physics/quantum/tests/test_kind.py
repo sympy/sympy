@@ -17,7 +17,7 @@ k = Ket('k')
 b = Bra('k')
 A = Operator('A')
 B = Operator('B')
-x, y, z = symbols('x y z', is_integer=True)
+x, y, z = symbols('x y z', integer=True)
 
 def test_bra_ket():
     assert k.kind == KetKind

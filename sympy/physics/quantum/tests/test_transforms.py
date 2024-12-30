@@ -1,6 +1,7 @@
 """Tests of transforms of quantum expressions for Mul and Pow."""
 
 from sympy.core.symbol import symbols
+from sympy.testing.pytest import raises
 
 from sympy.physics.quantum.operator import (
     Operator, OuterProduct
@@ -31,12 +32,18 @@ def test_bra_ket():
 
 
 def test_tensor_product():
-    assert k1*k1 == TensorProduct(k1, k1)
-    assert b1*b1 == TensorProduct(b1, b1)
-    assert k1*TensorProduct(k2, k3) == TensorProduct(k1, k2, k3)
-    assert b1*TensorProduct(b2, b3) == TensorProduct(b1, b2, b3)
-    assert TensorProduct(k2, k3)*k1 == TensorProduct(k2, k3, k1)
-    assert TensorProduct(b2, b3)*b1 == TensorProduct(b2, b3, b1)
+    with raises(TypeError):
+        assert k1*k1 == TensorProduct(k1, k1)
+    with raises(TypeError):
+        assert b1*b1 == TensorProduct(b1, b1)
+    with raises(TypeError):
+        assert k1*TensorProduct(k2, k3) == TensorProduct(k1, k2, k3)
+    with raises(TypeError):
+        assert b1*TensorProduct(b2, b3) == TensorProduct(b1, b2, b3)
+    with raises(TypeError):
+        assert TensorProduct(k2, k3)*k1 == TensorProduct(k2, k3, k1)
+    with raises(TypeError):
+        assert TensorProduct(b2, b3)*b1 == TensorProduct(b2, b3, b1)
 
     assert TensorProduct(A, B, C)*TensorProduct(k1, k2, k3) == \
         TensorProduct(A*k1, B*k2, C*k3)
