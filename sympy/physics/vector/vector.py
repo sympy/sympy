@@ -265,7 +265,7 @@ class Vector(Printable, EvalfMixin):
             pa = printer._print(a)
             pb = printer._print(b)
             if a.is_Add:
-                pa = prettyForm(*pa.parens())
+                pa = prettyForm(*pa.parenthesis())
             return printer._print_seq([pa, pb], delimiter=' ')
 
         for M, N in self.args:

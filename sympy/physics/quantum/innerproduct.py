@@ -2,7 +2,6 @@
 
 from sympy.core.expr import Expr
 from sympy.functions.elementary.complexes import conjugate
-from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.state import KetBase, BraBase
 
@@ -111,10 +110,10 @@ class InnerProduct(Expr):
         lbracket, _ = self.bra._pretty_brackets(height, use_unicode)
         cbracket, rbracket = self.ket._pretty_brackets(height, use_unicode)
         # Build innerproduct
-        pform = prettyForm(*bra.left(lbracket))
-        pform = prettyForm(*pform.right(cbracket))
-        pform = prettyForm(*pform.right(ket))
-        pform = prettyForm(*pform.right(rbracket))
+        pform = bra.left(lbracket)
+        pform = pform.right(cbracket)
+        pform = pform.right(ket)
+        pform = pform.right(rbracket)
         return pform
 
     def _latex(self, printer, *args):

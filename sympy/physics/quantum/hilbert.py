@@ -414,15 +414,13 @@ class TensorProductHilbertSpace(HilbertSpace):
             next_pform = printer._print(self.args[i], *args)
             if isinstance(self.args[i], (DirectSumHilbertSpace,
                           TensorProductHilbertSpace)):
-                next_pform = prettyForm(
-                    *next_pform.parens(left='(', right=')')
-                )
-            pform = prettyForm(*pform.right(next_pform))
+                next_pform = next_pform.parenthesis(left='(', right=')')
+            pform = pform.right(next_pform)
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(' ' + '\N{N-ARY CIRCLED TIMES OPERATOR}' + ' '))
+                    pform = pform.right(' ' + '\N{N-ARY CIRCLED TIMES OPERATOR}' + ' ')
                 else:
-                    pform = prettyForm(*pform.right(' x '))
+                    pform = pform.right(' x ')
         return pform
 
     def _latex(self, printer, *args):
@@ -524,15 +522,13 @@ class DirectSumHilbertSpace(HilbertSpace):
             next_pform = printer._print(self.args[i], *args)
             if isinstance(self.args[i], (DirectSumHilbertSpace,
                           TensorProductHilbertSpace)):
-                next_pform = prettyForm(
-                    *next_pform.parens(left='(', right=')')
-                )
-            pform = prettyForm(*pform.right(next_pform))
+                next_pform = next_pform.parenthesis(left='(', right=')')
+            pform = pform.right(next_pform)
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(' \N{CIRCLED PLUS} '))
+                    pform = pform.right(' \N{CIRCLED PLUS} ')
                 else:
-                    pform = prettyForm(*pform.right(' + '))
+                    pform = pform.right(' + ')
         return pform
 
     def _latex(self, printer, *args):
@@ -641,9 +637,9 @@ class TensorPowerHilbertSpace(HilbertSpace):
     def _pretty(self, printer, *args):
         pform_exp = printer._print(self.exp, *args)
         if printer._use_unicode:
-            pform_exp = prettyForm(*pform_exp.left(prettyForm('\N{N-ARY CIRCLED TIMES OPERATOR}')))
+            pform_exp = pform_exp.left(prettyForm('\N{N-ARY CIRCLED TIMES OPERATOR}'))
         else:
-            pform_exp = prettyForm(*pform_exp.left(prettyForm('x')))
+            pform_exp = pform_exp.left(prettyForm('x'))
         pform_base = printer._print(self.base, *args)
         return pform_base**pform_exp
 

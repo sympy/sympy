@@ -16,7 +16,7 @@ from sympy.core.symbol import (Wild, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, wigner_9j
@@ -129,21 +129,21 @@ class Wigner3j(Expr):
                 wleft = wdelta //2
                 wright = wdelta - wleft
 
-                s = prettyForm(*s.right(' '*wright))
-                s = prettyForm(*s.left(' '*wleft))
+                s = s.right(' '*wright)
+                s = s.left(' '*wleft)
 
                 if D_row is None:
                     D_row = s
                     continue
-                D_row = prettyForm(*D_row.right(' '*hsep))
-                D_row = prettyForm(*D_row.right(s))
+                D_row = D_row.right(' '*hsep)
+                D_row = D_row.right(s)
             if D is None:
                 D = D_row
                 continue
             for _ in range(vsep):
-                D = prettyForm(*D.below(' '))
-            D = prettyForm(*D.below(D_row))
-        D = prettyForm(*D.parens())
+                D = D.below(' ')
+            D = D.below(D_row)
+        D = D.parenthesis()
         return D
 
     def _latex(self, printer, *args):
@@ -226,16 +226,16 @@ class CG(Wigner3j):
         top = printer._print_seq((self.j3, self.m3), delimiter=',')
 
         pad = max(top.width(), bot.width())
-        bot = prettyForm(*bot.left(' '))
-        top = prettyForm(*top.left(' '))
+        bot = bot.left(' ')
+        top = top.left(' ')
 
         if not pad == bot.width():
-            bot = prettyForm(*bot.right(' '*(pad - bot.width())))
+            bot = bot.right(' '*(pad - bot.width()))
         if not pad == top.width():
-            top = prettyForm(*top.right(' '*(pad - top.width())))
-        s = stringPict('C' + ' '*pad)
-        s = prettyForm(*s.below(bot))
-        s = prettyForm(*s.above(top))
+            top = top.right(' '*(pad - top.width()))
+        s = prettyForm('C' + ' '*pad)
+        s = s.below(bot)
+        s = s.above(top)
         return s
 
     def _latex(self, printer, *args):
@@ -304,21 +304,21 @@ class Wigner6j(Expr):
                 wleft = wdelta //2
                 wright = wdelta - wleft
 
-                s = prettyForm(*s.right(' '*wright))
-                s = prettyForm(*s.left(' '*wleft))
+                s = s.right(' '*wright)
+                s = s.left(' '*wleft)
 
                 if D_row is None:
                     D_row = s
                     continue
-                D_row = prettyForm(*D_row.right(' '*hsep))
-                D_row = prettyForm(*D_row.right(s))
+                D_row = D_row.right(' '*hsep)
+                D_row = D_row.right(s)
             if D is None:
                 D = D_row
                 continue
             for _ in range(vsep):
-                D = prettyForm(*D.below(' '))
-            D = prettyForm(*D.below(D_row))
-        D = prettyForm(*D.parens(left='{', right='}'))
+                D = D.below(' ')
+            D = D.below(D_row)
+        D = D.parenthesis(left='{', right='}')
         return D
 
     def _latex(self, printer, *args):
@@ -408,21 +408,21 @@ class Wigner9j(Expr):
                 wleft = wdelta //2
                 wright = wdelta - wleft
 
-                s = prettyForm(*s.right(' '*wright))
-                s = prettyForm(*s.left(' '*wleft))
+                s = s.right(' '*wright)
+                s = s.left(' '*wleft)
 
                 if D_row is None:
                     D_row = s
                     continue
-                D_row = prettyForm(*D_row.right(' '*hsep))
-                D_row = prettyForm(*D_row.right(s))
+                D_row = D_row.right(' '*hsep)
+                D_row = D_row.right(s)
             if D is None:
                 D = D_row
                 continue
             for _ in range(vsep):
-                D = prettyForm(*D.below(' '))
-            D = prettyForm(*D.below(D_row))
-        D = prettyForm(*D.parens(left='{', right='}'))
+                D = D.below(' ')
+            D = D.below(D_row)
+        D = D.parenthesis(left='{', right='}')
         return D
 
     def _latex(self, printer, *args):

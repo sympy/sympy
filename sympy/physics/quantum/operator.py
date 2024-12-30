@@ -137,10 +137,8 @@ class Operator(QExpr):
         else:
             pform = self._print_operator_name_pretty(printer, *args)
             label_pform = self._print_label_pretty(printer, *args)
-            label_pform = prettyForm(
-                *label_pform.parens(left='(', right=')')
-            )
-            pform = prettyForm(*pform.right(label_pform))
+            label_pform = label_pform.parenthesis(left='(', right=')')
+            pform = pform.right(label_pform)
             return pform
 
     def _print_contents_latex(self, printer, *args):
@@ -492,7 +490,7 @@ class OuterProduct(Operator):
 
     def _pretty(self, printer, *args):
         pform = self.ket._pretty(printer, *args)
-        return prettyForm(*pform.right(self.bra._pretty(printer, *args)))
+        return pform.right(self.bra._pretty(printer, *args))
 
     def _latex(self, printer, *args):
         k = printer._print(self.ket, *args)
@@ -664,7 +662,7 @@ class DifferentialOperator(Operator):
         pform = self._print_operator_name_pretty(printer, *args)
         label_pform = self._print_label_pretty(printer, *args)
         label_pform = prettyForm(
-            *label_pform.parens(left='(', right=')')
+            *label_pform.parenthesis(left='(', right=')')
         )
-        pform = prettyForm(*pform.right(label_pform))
+        pform = pform.right(label_pform)
         return pform

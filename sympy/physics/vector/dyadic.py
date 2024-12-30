@@ -235,7 +235,7 @@ class Dyadic(Printable, EvalfMixin):
                     elif v[0] != 0:
                         if isinstance(v[0], Add):
                             arg_str = mpp._print(
-                                v[0]).parens()[0]
+                                v[0]).parenthesis()[0]
                         else:
                             arg_str = mpp.doprint(v[0])
                         if arg_str.startswith("-"):
