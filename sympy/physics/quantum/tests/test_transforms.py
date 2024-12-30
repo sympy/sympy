@@ -1,15 +1,12 @@
 """Tests of transforms of quantum expressions for Mul and Pow."""
 
 from sympy.core.symbol import symbols
-from sympy.core.sympify import sympify
-from sympy.testing.pytest import warns_deprecated_sympy
 
 from sympy.physics.quantum.operator import (
     Operator, OuterProduct
 )
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.innerproduct import InnerProduct
-from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
 
