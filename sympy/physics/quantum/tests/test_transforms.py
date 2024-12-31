@@ -37,17 +37,17 @@ def test_tensor_product():
     # In particular, we are not trying to interpret regular ``*`` multiplication
     # as a tensor product.
     with raises(TypeError):
-        assert k1*k1 == TensorProduct(k1, k1)
+        k1*k1
     with raises(TypeError):
-        assert b1*b1 == TensorProduct(b1, b1)
+        b1*b1
     with raises(TypeError):
-        assert k1*TensorProduct(k2, k3) == TensorProduct(k1, k2, k3)
+        k1*TensorProduct(k2, k3)
     with raises(TypeError):
-        assert b1*TensorProduct(b2, b3) == TensorProduct(b1, b2, b3)
+        b1*TensorProduct(b2, b3)
     with raises(TypeError):
-        assert TensorProduct(k2, k3)*k1 == TensorProduct(k2, k3, k1)
+        TensorProduct(k2, k3)*k1
     with raises(TypeError):
-        assert TensorProduct(b2, b3)*b1 == TensorProduct(b2, b3, b1)
+        TensorProduct(b2, b3)*b1
 
     assert TensorProduct(A, B, C)*TensorProduct(k1, k2, k3) == \
         TensorProduct(A*k1, B*k2, C*k3)
