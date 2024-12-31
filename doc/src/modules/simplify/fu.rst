@@ -248,3 +248,4 @@ References
 
 .. [2] A formula sheet for trigonometric functions.
     https://www.geeksforgeeks.org/trigonometry-formulas/
+    
