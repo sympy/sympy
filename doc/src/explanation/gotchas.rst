@@ -259,7 +259,7 @@ To get a full list of all default names in SymPy do:
 If you have `IPython <https://ipython.org/>`_ installed and
 use :command:`isympy`, you can also press the TAB key to get a list of
 all built-in names and to autocomplete.  Also, see `this page
-<https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
+<https://docs.python.org/3/library/readline.html#completion>`_ for a
 trick for getting tab completion in the regular Python console.
 
 .. note::
