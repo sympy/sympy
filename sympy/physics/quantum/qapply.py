@@ -10,7 +10,7 @@ from sympy.core.kind import NumberKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
@@ -89,8 +89,7 @@ def qapply(e, **options):
     sum_doit = options.get('sum_doit', False)
     ip_doit = options.get('ip_doit', True)
 
-    if isinstance(e, (int, complex, float)):
-        e = sympify(e)
+    e = _sympify(e)
 
     # Using the kind API here helps us to narrow what types of expressions
     # we call ``ip_doit_func`` on.
@@ -251,7 +250,7 @@ def qapply_Mul(e, **options):
 
     # TODO: I may need to expand before returning the final result.
     if isinstance(result, (int, complex, float)):
-        return sympify(result)
+        return _sympify(result)
     elif result is None:
         if len(args) == 0:
             # We had two args to begin with so args=[].
