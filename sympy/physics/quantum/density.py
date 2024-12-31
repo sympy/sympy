@@ -183,6 +183,9 @@ class Density(HermitianOperator):
                              ' Non-commutative instance required'
                              ' for outer product.')
 
+        # We were able to remove some tensor product simplifications that
+        # used to be here as those transformations are not automatically
+        # applied by transforms.py.
         op = Mul(*nc_part1)*Dagger(Mul(*nc_part2))
 
         return Mul(*c_part1)*Mul(*c_part2) * op

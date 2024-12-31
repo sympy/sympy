@@ -198,6 +198,8 @@ def represent(expr, **options):
         B = expr.args[1]
         return represent(Mul(A, B) + Mul(B, A), **options)
     elif not isinstance(expr, (Mul, OuterProduct, InnerProduct)):
+        # We have removed special handling of inner products that used to be
+        # required (before automatic transforms).
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format in ('numpy', 'scipy.sparse'):
             return _sympy_to_scalar(expr)

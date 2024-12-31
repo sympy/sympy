@@ -128,6 +128,7 @@ class TensorProduct(Expr):
 
     @property
     def kind(self):
+        """Calculate the kind of a tensor product by looking at its children."""
         arg_kinds = (a.kind for a in self.args)
         return self._kind_dispatcher(*arg_kinds)
 

@@ -31,10 +31,12 @@ __all__ = [
 
 
 def ip_doit_func(e):
+    """Transform the inner products in an expression by calling ``.doit()``."""
     return e.replace(InnerProduct, lambda *args: InnerProduct(*args).doit())
 
 
 def sum_doit_func(e):
+    """Transform the sums in an expression by calling ``.doit()``."""
     return e.replace(Sum, lambda *args: Sum(*args).doit())
 
 
@@ -90,6 +92,8 @@ def qapply(e, **options):
     if isinstance(e, (int, complex, float)):
         e = sympify(e)
 
+    # Using the kind API here helps us to narrow what types of expressions
+    # we call ``ip_doit_func`` on.
     if e.kind == NumberKind:
         return ip_doit_func(e) if ip_doit else e
 
@@ -138,7 +142,7 @@ def qapply(e, **options):
         c_part, nc_part = e.args_cnc()
         c_mul = Mul(*c_part)
         nc_mul = Mul(*nc_part)
-        if not nc_part:
+        if not nc_part: # If we only have a commuting part, just return it.
             result = c_mul
         elif isinstance(nc_mul, Mul):
             result = c_mul*qapply_Mul(nc_mul, **options)
