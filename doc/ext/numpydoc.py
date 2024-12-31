@@ -45,19 +45,33 @@ def mangle_docstrings(app, what, name, obj, options, lines,
         title_re = re.compile(pattern, re.I | re.S)
         lines[:] = title_re.sub('', u_NL.join(lines)).split(u_NL)
     else:
-        doc = get_doc_object(obj, what, u_NL.join(lines), config=cfg)
-        doc = str(doc)
-        lines[:] = doc.split(u_NL)
+        # jupyterlite-sphinx uses the "!! processed by numpydoc !!" tag to identify
+        # section boundaries when parsing docstrings. However, if this tag appears
+        # inconsistently or in the middle of content, it can cause index errors
+        # during section parsing. Here, we ensure the tag appears exactly once at
+        # the end of the docstring with consistent formatting (i.e., '...' on its
+        # own line followed by the indented tag). This helps jupyterlite-sphinx
+        # correctly identify where the Examples section ends per docstring.
+        try:
+            doc = get_doc_object(obj, what, u_NL.join(lines), config=cfg)
+            if doc is None:
+                return
 
-    if (app.config.numpydoc_edit_link and hasattr(obj, '__name__') and
-            obj.__name__):
-        if hasattr(obj, '__module__'):
-            v = {"full_name": "{}.{}".format(obj.__module__, obj.__name__)}
-        else:
-            v = {"full_name": obj.__name__}
-        lines += ['', '.. htmlonly::', '']
-        lines += ['    %s' % x for x in
-                  (app.config.numpydoc_edit_link % v).split("\n")]
+            # Split into lines and strip the processed tag if it
+            # is present.
+            doc_str = str(doc)
+            new_lines = [line for line in doc_str.split(u_NL) 
+                        if not line.strip().endswith('!! processed by numpydoc !!')]
+
+            # Ensure the tag appears exactly once at the end
+            new_lines.extend(['..', '    !! processed by numpydoc !!'])
+
+            lines[:] = new_lines
+        except Exception as e:
+            import warnings
+            warning_msg = f"Failed to process docstring for {name}: {str(e)}"
+            warnings.warn(warning_msg)
+            return
 
     # replace reference numbers so that there are no duplicates
     references = []
@@ -68,8 +82,8 @@ def mangle_docstrings(app, what, name, obj, options, lines,
             references.append(m.group(1))
 
     # start renaming from the longest string, to avoid overwriting parts
-    references.sort(key=lambda x: -len(x))
     if references:
+        references.sort(key=lambda x: -len(x))
         for i, line in enumerate(lines):
             for r in references:
                 if re.match('^\\d+$', r):
@@ -81,7 +95,7 @@ def mangle_docstrings(app, what, name, obj, options, lines,
                 lines[i] = lines[i].replace('.. [%s]' % r,
                                             '.. [%s]' % new_r)
 
-    reference_offset[0] += len(references)
+        reference_offset[0] += len(references)
 
 
 def mangle_signature(app, what, name, obj, options, sig, retann):
