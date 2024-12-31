@@ -31,8 +31,13 @@ j12, j13, j24, j34, j123, j134, mi, mi1, mp = symbols(
 
 
 def assert_simplify_expand(e1, e2):
-    """Helper for simplifying and expanding results."""
-    assert simplify(e1.expand(tensorproduct=True)) == simplify(e2.expand(tensorproduct=True))
+    """Helper for simplifying and expanding results.
+
+    This is needed to help us test complex expressions whose form
+    might change in subtle ways as the rest of sympy evolves.
+    """
+    assert simplify(e1.expand(tensorproduct=True)) == \
+        simplify(e2.expand(tensorproduct=True))
 
 
 def test_represent_spin_operators():

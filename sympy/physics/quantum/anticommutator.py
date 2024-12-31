@@ -118,6 +118,8 @@ class AntiCommutator(Expr):
 
     def doit(self, **hints):
         """ Evaluate anticommutator """
+        # Keep the import of Operator here to avoid problems with
+        # circular imports.
         from sympy.physics.quantum.operator import Operator
         A = self.args[0]
         B = self.args[1]
@@ -160,4 +162,5 @@ class AntiCommutator(Expr):
 
 @AntiCommutator._kind_dispatcher.register(_OperatorKind, _OperatorKind)
 def find_op_kind(e1, e2):
+    """Find the kind of an anticommutator of two OperatorKinds."""
     return OperatorKind

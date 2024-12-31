@@ -22,7 +22,7 @@ x, y, z = symbols('x y z', integer=True)
 def test_bra_ket():
     assert k.kind == KetKind
     assert b.kind == BraKind
-    assert (b*k).kind == NumberKind
+    assert (b*k).kind == NumberKind # inner product
     assert (x*k).kind == KetKind
     assert (x*b).kind == BraKind
 
@@ -32,10 +32,12 @@ def test_operator_kind():
     assert (A*B).kind == OperatorKind
     assert (x*A).kind == OperatorKind
     assert (x*A*B).kind == OperatorKind
-    assert (x*k*b).kind == OperatorKind
+    assert (x*k*b).kind == OperatorKind # outer product
 
 
 def test_undefind_kind():
+    # Because of limitations in the kind dispatcher API, we are currently
+    # unable to have OperatorKind*KetKind -> KetKind (and similar for bras).
     assert (A*k).kind == UndefinedKind
     assert (b*A).kind == UndefinedKind
     assert (x*b*A*k).kind == UndefinedKind

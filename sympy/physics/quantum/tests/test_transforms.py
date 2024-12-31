@@ -32,6 +32,10 @@ def test_bra_ket():
 
 
 def test_tensor_product():
+    # We are attempting to be rigourous and raise TypeError when a user tries
+    # to combine bras, kets, and operators in a manner that doesn't make sense.
+    # In particular, we are not trying to interpret regular ``*`` multiplication
+    # as a tensor product.
     with raises(TypeError):
         assert k1*k1 == TensorProduct(k1, k1)
     with raises(TypeError):

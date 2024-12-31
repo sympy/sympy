@@ -72,6 +72,8 @@ class InnerProduct(Expr):
     is_complex = True
 
     def __new__(cls, bra, ket):
+        # Keep the import of BraBase and KetBase here to avoid problems
+        # with circular imports.
         from sympy.physics.quantum.state import KetBase, BraBase
         if not isinstance(ket, KetBase):
             raise TypeError('KetBase subclass expected, got: %r' % ket)

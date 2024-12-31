@@ -81,6 +81,7 @@ class Dagger(adjoint):
 
     @property
     def kind(self):
+        """Find the kind of a dagger of something (just the kind of the something)."""
         return self.args[0].kind
 
     def __new__(cls, arg, evaluate=True):
