@@ -60,7 +60,7 @@ def mangle_docstrings(app, what, name, obj, options, lines,
             # Split into lines and strip the processed tag if it
             # is present.
             doc_str = str(doc)
-            new_lines = [line for line in doc_str.split(u_NL) 
+            new_lines = [line for line in doc_str.split(u_NL)
                         if not line.strip().endswith('!! processed by numpydoc !!')]
 
             # Ensure the tag appears exactly once at the end
