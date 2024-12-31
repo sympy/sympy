@@ -498,7 +498,6 @@ blobpath = \
 jupyterlite_silence = False # temporary, for debugging
 global_enable_try_examples = True
 try_examples_global_button_text = "Try it!"
-try_examples_global_height = "400px"
 try_examples_global_warning_text = (
     "Interactive examples are experimental and may not always work as "
     "expected. If you encounter any issues, please report them on the "
