@@ -1,6 +1,5 @@
 """Bosonic quantum operators."""
 
-from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import conjugate
@@ -91,18 +90,6 @@ class BosonOp(Operator):
 
     def _eval_adjoint(self):
         return BosonOp(str(self.name), not self.is_annihilation)
-
-    def __mul__(self, other):
-
-        if isinstance(other, Mul):
-            args1 = tuple(arg for arg in other.args if arg.is_commutative)
-            args2 = tuple(arg for arg in other.args if not arg.is_commutative)
-            x = self
-            for y in args2:
-                x = x * y
-            return Mul(*args1) * x
-
-        return Mul(self, other)
 
     def _print_contents_latex(self, printer, *args):
         if self.is_annihilation:
