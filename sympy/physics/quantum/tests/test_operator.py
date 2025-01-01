@@ -2,6 +2,7 @@ from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Integer, pi)
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import sin
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
@@ -95,6 +96,7 @@ def test_identity():
         I = IdentityOperator()
         O = Operator('O')
         x = Symbol("x")
+        three = sympify(3)
 
         assert isinstance(I, IdentityOperator)
         assert isinstance(I, Operator)
@@ -104,8 +106,8 @@ def test_identity():
         assert I * Dagger(O) == Dagger(O)
         assert Dagger(O) * I == Dagger(O)
         assert isinstance(I * I, IdentityOperator)
-        assert isinstance(3 * I, Mul)
-        assert isinstance(I * x, Mul)
+        assert three * I == three
+        assert I * x == x
         assert I.inv() == I
         assert Dagger(I) == I
         assert qapply(I * O) == O
