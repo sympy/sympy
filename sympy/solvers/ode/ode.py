@@ -1079,10 +1079,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             point = boundary.get('f0', 0)
             value = boundary.get('f0val', C1)
             check = cancel(r[d]/r[e])
-            check1 = check.subs({x: point, y: value}).simplify()
+            check1 = cancel(check.subs({x: point, y: value}))
             if not check1.has(oo) and not check1.has(zoo) and \
                 not check1.has(nan) and not check1.has(-oo):
-                check2 = check.diff(x).subs({x: point, y: value}).simplify()
+                check2 = cancel(check.diff(x).subs({x: point, y: value}))
                 if not check2.has(oo) and not check2.has(zoo) and \
                     not check2.has(nan) and not check2.has(-oo):
                     rseries = r.copy()
