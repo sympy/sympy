@@ -2029,7 +2029,7 @@ class MatrixBase(Printable):
         return self._eval_iter_items()
 
     def _eval_adjoint(self):
-        return self.transpose().conjugate()
+        return self.transpose().applyfunc(lambda x: x.adjoint())
 
     def _eval_applyfunc(self, f):
         cols = self.cols
