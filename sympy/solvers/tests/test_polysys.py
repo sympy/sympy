@@ -1,4 +1,5 @@
 """Tests for solvers of systems of polynomial equations. """
+from sympy.polys.domains import  ZZ, QQ_I
 from sympy.core.numbers import (I, Integer, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -9,14 +10,20 @@ from sympy.polys.polyoptions import Options
 from sympy.polys.polytools import Poly
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import flatten
-from sympy.abc import x, y, z
+from sympy.abc import a, b, c, x, y, z
 from sympy.polys import PolynomialError
 from sympy.solvers.polysys import (solve_poly_system,
                                    solve_triangulated,
                                    solve_biquadratic, SolveFailed,
-                                   solve_generic)
+                                   solve_generic, factor_system_bool,
+                                   factor_system_cond, factor_system_poly,
+                                   factor_system)
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.testing.pytest import raises
+from sympy.core.relational import Eq
+from sympy.functions.elementary.trigonometric import sin, cos
+
+from sympy.functions.elementary.exponential import exp
 
 
 def test_solve_poly_system():
@@ -176,3 +183,235 @@ def test_solve_issue_3686():
     assert roots[0][1].epsilon_eq(-499.474999374969, 1e12)
     assert roots[1][0] == 0
     assert roots[1][1].epsilon_eq(500.474999374969, 1e12)
+
+
+def test_factor_system():
+
+    assert factor_system([x**2 + 2*x + 1]) ==  ([[x + 1]], True)
+    assert factor_system([x**2 + 2*x + 1, y**2 + 2*y + 1]) ==  ([[x + 1, y + 1]], True)
+    assert factor_system([x**2 + 1]) ==  ([[x**2 + 1]], True)
+    assert factor_system([]) == ([[]], True)
+
+    result = factor_system([x**2 + y**2 + 2*x*y, x**2 - 2], extension=sqrt(2))
+    expected = ([[x + y, x - sqrt(2)], [x + y, x + sqrt(2)]], True)
+    assert result == expected
+
+    result = factor_system([x ** 2 + 1, y ** 2 + 1], gaussian=True)
+    expcted = ([[x - I, y - I], [x - I, y + I], [x + I, y - I], [x + I, y + I]], True)
+    assert result == expcted
+
+    result = factor_system([x ** 2 + 1, y ** 2 + 1], domain=QQ_I)
+    expected = ([[x - I, y - I], [x - I, y + I], [x + I, y - I], [x + I, y + I]], True)
+    assert result == expected
+
+    assert factor_system([0]) == ([[]], True)
+    assert factor_system([1]) == ([], True)
+    assert factor_system([0 , x]) == ([[x]], True)
+    assert factor_system([1, 0, x]) == ([], True)
+
+    result = factor_system([x**4 - 1, y**6 - 1])
+    expected = (
+        [
+            [x - 1, y - 1],
+            [x - 1, y**2 - y + 1],
+            [x - 1, y + 1],
+            [x - 1, y**2 + y + 1],
+            [x + 1, y - 1],
+            [x + 1, y**2 - y + 1],
+            [x + 1, y + 1],
+            [x + 1, y**2 + y + 1],
+            [x**2 + 1, y - 1],
+            [x**2 + 1, y**2 - y + 1],
+            [x**2 + 1, y + 1],
+            [x**2 + 1, y**2 + y + 1]
+        ],
+        True
+    )
+    assert result == expected
+
+    result = factor_system([(x - 1)*(y - 2), (y  - 2)*(z - 3)])
+    expected = ([[x - 1, z - 3], [y - 2]], True)
+    assert result == expected
+
+    result = factor_system([sin(x) ** 2 + cos(x) ** 2 - 1, x])
+    expected = ([[sin(x)**2 + cos(x)**2 - 1, x]], True)
+    assert result == expected
+
+    result = factor_system([sin(x)**2 + cos(x)**2 - 1])
+    expected = ([[sin(x)**2 + cos(x)**2 - 1]], True)
+    assert result == expected
+
+    result = factor_system([sin(x) ** 2 + cos(x) ** 2])
+    expected = ([[sin(x)**2 + cos(x)**2]], True)
+    assert result == expected
+
+    result = factor_system([a*x*(x-1), b*y, c], [x, y])
+    expected = ([[x, y], [x - 1, y]], Eq(c, 0))
+    assert result == expected
+
+    result = factor_system([x**2 - 2], [y])
+    expected = ([[]], Eq(x**2 - 2, 0))
+    assert result == expected
+
+    # Generators not symbols
+    expr1 = cos(x) ** 2 - sin(x) ** 2
+    expr2 = cos(x) ** 2 + sin(x) ** 2 - 1
+    result = factor_system([expr1, expr2])
+    expected = (
+        [
+            [sin(x) + cos(x), sin(x)**2 + cos(x)**2 - 1],
+            [-sin(x) + cos(x), sin(x)**2 + cos(x)**2 - 1]],
+        True
+    )
+    assert result == expected
+
+    expr3 = (cos(x) + sin(x)) ** 2 - 1
+    expr4 = cos(x) ** 2 - sin(x) ** 2 - cos(2 * x)
+    result = factor_system([expr3, expr4])
+    expected = (
+        [
+            [sin(x) + cos(x) + 1, sin(x)**2 - cos(x)**2 + cos(2*x)],
+            [sin(x) + cos(x) - 1, sin(x)**2 - cos(x)**2 + cos(2*x)]],
+        True
+    )
+    assert result == expected
+
+    expr5 = (cos(x) + sin(x)) * exp(y) - 1
+    expr6 = (cos(x) - sin(x)) * exp(y) - 1
+    result = factor_system([expr5, expr6])
+    expected = ([[exp(y)*sin(x) + exp(y)*cos(x) - 1, -exp(y)*sin(x) + exp(y)*cos(x) - 1]], True)
+    assert result == expected
+
+
+def test_factor_system_poly():
+
+    p1 = Poly(x ** 2 - 1, x)
+    p2 = Poly(x ** 2 - 4, x)
+    result = factor_system_poly([p1, p2])
+    expected = ([[(Poly(x + 1, x, domain='ZZ'), ()), (Poly(x - 2, x, domain='ZZ'), ())],
+                 [(Poly(x + 1, x, domain='ZZ'), ()), (Poly(x + 2, x, domain='ZZ'), ())],
+                 [(Poly(x - 1, x, domain='ZZ'), ()), (Poly(x - 2, x, domain='ZZ'), ())],
+                 [(Poly(x - 1, x, domain='ZZ'), ()), (Poly(x + 2, x, domain='ZZ'), ())]], [])
+    assert result == expected
+
+    p = Poly(x ** 2 - 1, x)
+    result = factor_system_poly([p])
+    expected = ([[(Poly(x - 1, x, domain='ZZ'), ())], [(Poly(x + 1, x, domain='ZZ'), ())]], [])
+    assert result == expected
+
+    p1 = Poly(x ** 2 * y - y, x, y, z)
+    p2 = Poly(x ** 2 * z - z, x, y, z)
+    result = factor_system_poly([p1, p2])
+    expected = ([[(Poly(x + 1, x, y, z, domain='ZZ'), ())],
+                 [(Poly(x - 1, x, y, z, domain='ZZ'), ())],
+                 [(Poly(y, x, y, z, domain='ZZ'), ()), (Poly(z, x, y, z, domain='ZZ'), ())]], [])
+    assert result == expected
+
+    p1 = Poly(x ** 2 * (x - 1) ** 2, x)
+    p2 = Poly(x * (x - 1), x)
+    result = factor_system_poly([p1, p2])
+    expected = ([[(Poly(x, x, domain='ZZ'), ())], [(Poly(x - 1, x, domain='ZZ'), ())]], [])
+    assert result == expected
+
+    p1 = Poly(x ** 2 + y * x, x, y, z)
+    p2 = Poly(x ** 2 + z * x, x, y, z)
+    result = factor_system_poly([p1, p2])
+    expected = ([[(Poly(x + y, x, y, z, domain='ZZ'), ()), (Poly(x + z, x, y, z, domain='ZZ'), ())],
+                 [(Poly(x, x, y, z, domain='ZZ'), ())]], [])
+    assert result == expected
+
+    p1 = Poly((a - 1) * (x - 2), x, domain=ZZ[a, b])
+    p2 = Poly((b - 3) * (x - 2), x, domain=ZZ[a, b])
+    result = factor_system_poly([p1, p2])
+    expected = (
+        [[
+            (
+                Poly(x - 2, x, domain='ZZ[a,b]'),
+                (Poly(a - 1, x, domain='ZZ[a,b]'), Poly(b - 3, x, domain='ZZ[a,b]'))
+            )
+        ]],
+        []
+    )
+    assert result == expected
+
+    result = factor_system_poly([Poly(x ** 2 + 1, x, domain=QQ_I)])
+    expected = ([[(Poly(x - I, x, domain='QQ_I'), ())], [(Poly(x + I, x, domain='QQ_I'), ())]], [])
+    assert result == expected
+
+    assert factor_system_poly([]) == ([[]], [])
+    assert factor_system_poly([Poly(1, x), Poly(x, x)]) == ([], [])
+    assert factor_system_poly([Poly(0, x), Poly(x, x)]) == ([[(Poly(x, x, domain='ZZ'), ())]], [])
+
+
+def test_factor_system_cond():
+
+    result = factor_system_cond([x ** 2 - 1, x ** 2 - 4])
+    expected = (
+        [
+            [(x + 1, []), (x - 2, [])],
+            [(x + 1, []), (x + 2, [])],
+            [(x - 1, []), (x - 2, [])],
+            [(x - 1, []), (x + 2, [])]
+        ],
+        []
+    )
+    assert result == expected
+
+    assert factor_system_cond([1]) == ([], [])
+    assert factor_system_cond([0]) == ([[]], [])
+    assert factor_system_cond([1, x]) == ([], [])
+    assert factor_system_cond([0, x]) == ([[(x, [])]], [])
+    assert factor_system_cond([]) == ([[]], [])
+
+    result = factor_system_cond([x ** 2 + y * x])
+    expected = ([[(x, [])], [(x + y, [])]], [])
+    assert result == expected
+
+    result = factor_system_cond([(a - 1) * (x - 2), (b - 3) * (x - 2)], [x])
+    expected = ([[(x - 2, [a - 1, b - 3])]], [])
+    assert result == expected
+
+    result = factor_system_cond([a * (x - 1), b], [x])
+    expected = ([[(x - 1, [a])]], [b])
+    assert result == expected
+
+    result = factor_system_cond([a*x*(x-1), b*y, c], [x, y])
+    expected = ([[(x, [a]), (y, [b])], [(x - 1, [a]), (y, [b])]], [c])
+    assert result == expected
+
+    result = factor_system_cond([x*(x-1), y], [x, y])
+    expected = ([[(x, []), (y, [])], [(x - 1, []), (y, [])]], [])
+    assert result == expected
+
+
+def test_factor_system_bool():
+
+    eqs = [a * (x - 1) * (y - 1), b * (x - 2) * (y - 1) * (y - 2)]
+    expected = (Eq(y - 1, 0) |
+                (Eq(a, 0) & Eq(b, 0)) |
+                ((Eq(a, 0) | Eq(x - 1, 0)) & (Eq(b, 0) | Eq(x - 2, 0))) |
+                ((Eq(a, 0) | Eq(x - 1, 0)) & (Eq(b, 0) | Eq(y - 2, 0))))
+    assert factor_system_bool(eqs, [x, y]) == expected
+
+    eqs = [x - 1]
+    assert factor_system_bool(eqs, [x]) == Eq(x - 1, 0)
+
+    eqs = [(x - 1) * (x - 2)]
+    assert factor_system_bool(eqs, [x]) == Eq(x - 2, 0) | Eq(x - 1, 0)
+
+    assert factor_system_bool([], [x]) == True
+    assert factor_system_bool([0], [x]) == True
+    assert factor_system_bool([1], [x]) == False
+    assert factor_system_bool([a], [x]) == Eq(a, 0)
+
+    eqs = [a * x * y, b * y * z]
+    result = factor_system_bool(eqs, [x, y, z])
+    expected = (
+        Eq(y, 0)
+        | (Eq(a, 0) & Eq(b, 0))
+        | ((Eq(a, 0) | Eq(x, 0)) & (Eq(b, 0) | Eq(z, 0)))
+    )
+    assert result == expected
+
+    eqs = [a * (x - 1), b]
+    assert factor_system_bool(eqs, [x]) == Eq(b, 0) & (Eq(a, 0) | Eq(x - 1, 0))

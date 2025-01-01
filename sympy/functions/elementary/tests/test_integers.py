@@ -21,6 +21,7 @@ x = Symbol('x')
 i = Symbol('i', imaginary=True)
 y = Symbol('y', real=True)
 k, n = symbols('k,n', integer=True)
+b = Symbol('b', real=True, noninteger=True)
 
 
 def test_floor():
@@ -121,10 +122,10 @@ def test_floor():
     assert floor(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336800
 
-    assert (floor(y) < y) == False
+    assert (floor(y) < y).is_Relational
     assert (floor(y) <= y) == True
     assert (floor(y) > y) == False
-    assert (floor(y) >= y) == False
+    assert (floor(y) >= y).is_Relational
     assert (floor(x) <= x).is_Relational  # x could be non-real
     assert (floor(x) > x).is_Relational
     assert (floor(x) <= y).is_Relational  # arg is not same as rhs
@@ -133,6 +134,10 @@ def test_floor():
     assert (floor(y) < oo) == True
     assert (floor(y) >= -oo) == True
     assert (floor(y) > -oo) == True
+    assert (floor(b) < b) == True
+    assert (floor(b) <= b) == True
+    assert (floor(b) > b) == False
+    assert (floor(b) >= b) == False
 
     assert floor(y).rewrite(frac) == y - frac(y)
     assert floor(y).rewrite(ceiling) == -ceiling(-y)
@@ -311,9 +316,9 @@ def test_ceiling():
         11188719610782480504630258070757734324011354208865721592720336801
 
     assert (ceiling(y) >= y) == True
-    assert (ceiling(y) > y) == False
+    assert (ceiling(y) > y).is_Relational
     assert (ceiling(y) < y) == False
-    assert (ceiling(y) <= y) == False
+    assert (ceiling(y) <= y).is_Relational
     assert (ceiling(x) >= x).is_Relational  # x could be non-real
     assert (ceiling(x) < x).is_Relational
     assert (ceiling(x) >= y).is_Relational  # arg is not same as rhs
@@ -322,6 +327,10 @@ def test_ceiling():
     assert (ceiling(y) > -oo) == True
     assert (ceiling(y) <= oo) == True
     assert (ceiling(y) < oo) == True
+    assert (ceiling(b) < b) == False
+    assert (ceiling(b) <= b) == False
+    assert (ceiling(b) > b) == True
+    assert (ceiling(b) >= b) == True
 
     assert ceiling(y).rewrite(floor) == -floor(-y)
     assert ceiling(y).rewrite(frac) == y + frac(-y)

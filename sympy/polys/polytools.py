@@ -58,7 +58,6 @@ from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
 
-
 # Required to avoid errors
 import sympy.polys
 
