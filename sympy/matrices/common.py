@@ -2019,7 +2019,7 @@ class MatrixOperations(MatrixRequired):
     operations.  Should not be instantiated directly."""
 
     def _eval_adjoint(self):
-        return self.transpose().applyfunc(lambda x: x.adjoint())
+        return self.transpose().conjugate()
 
     def _eval_applyfunc(self, f):
         out = self._new(self.rows, self.cols, [f(x) for x in self])
