@@ -2191,7 +2191,7 @@ class MatrixBase(Printable):
         conjugate: By-element conjugation
         sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
-        return self.T.C
+        return self.adjoint()
 
     def permute(self, perm, orientation='rows', direction='forward'):
         r"""Permute the rows or columns of a matrix by the given list of
