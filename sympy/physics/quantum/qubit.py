@@ -646,7 +646,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
             # Calculate probability of finding the specified bits with
             # given values.
             prob_of_outcome = 0
-            prob_of_outcome += (outcome.H * outcome)[0]
+            prob_of_outcome += (outcome.H*outcome)[0]
 
             # If the output has a chance, append it to output with found
             # probability.
