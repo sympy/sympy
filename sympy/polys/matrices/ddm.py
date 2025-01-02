@@ -70,7 +70,7 @@ from .exceptions import (
     DMBadInputError,
     DMDomainError,
     DMNonSquareMatrixError,
-    DMShapeError,
+    DMShapeError, DMRankError,
 )
 
 from sympy.polys.domains import QQ
@@ -958,6 +958,83 @@ class DDM(list):
 
         return L, U, swaps
 
+    def PLDUdecompositionFF(self):
+        """
+        Compute a fraction-free PLDU decomposition for DDM.
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            P is the permutation matrix.
+            L is the lower triangular matrix.
+            D is the diagonal matrix.
+            U is the upper triangular matrix.
+
+        Raises
+        ======
+
+        DMRankError
+            If the matrix is not full rank.
+
+        See Also
+        ========
+
+        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
+        LUdecomposition_Simple
+        LUsolve
+
+        References
+        ==========
+
+        .. [1] W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
+            for LU and QR factors". Frontiers in Computer Science in China,
+            Vol 2, no. 1, pp. 67-80, 2008.
+        """
+        rows, cols = self.shape
+        K = self.domain
+        P = self.eye(rows, K)
+        L = self.eye(rows, K)
+        D = self.zeros((rows, rows), K)
+        U = self.copy()
+
+        if rows == 1 and cols == 1:
+            D[0][0] = U[0][0]
+            U[0][0] = K.one
+            return P, L, D, U
+
+        oldpivot = K.one
+
+        for k in range(rows - 1):
+            if U[k][k] == K.zero:
+                for kpivot in range(k + 1, rows):
+                    if U[kpivot][k] != K.zero:
+                        U[k], U[kpivot] = U[kpivot], U[k]
+                        P[k], P[kpivot] = P[kpivot], P[k]
+                        L[k][:k], L[kpivot][:k] = L[kpivot][:k], L[k][:k]
+                        break
+                else:
+                    raise DMRankError("Matrix is not full rank")
+
+            Ukk = U[k][k]
+            L[k][k] = Ukk
+            D[k][k] = oldpivot * Ukk
+
+            for i in range(k + 1, rows):
+                Uik = U[i][k]
+                L[i][k] = Uik
+
+                for j in range(k + 1, cols):
+                    U[i][j] = (Ukk * U[i][j] - U[k][j] * Uik) / oldpivot
+
+                U[i][k] = K.zero
+
+            oldpivot = Ukk
+
+        D[rows - 1][rows - 1] = oldpivot
+
+        return P, L, D, U
+
     def qr(self):
         """
         QR decomposition for DDM.
@@ -999,6 +1076,64 @@ class DDM(list):
         Q = Q.extract(range(rows), range(min(rows, cols)))
 
         return Q, R
+
+    def fraction_free_qrd(self):
+        """
+        Compute a fraction-free QR decomposition for DDM.
+
+        Returns
+        =======
+
+        (Q, R, D)
+            Q is the orthogonal matrix.
+            R is the upper triangular matrix.
+            D is the diagonal matrix.
+
+        Raises
+        ======
+
+        ValueError
+            If the matrix is rank deficient.
+
+        See Also
+        ========
+
+        qr
+        """
+        rows, cols = self.shape
+        K = self.domain
+        Q = self.copy()
+        R = self.zeros((min(rows, cols), cols), K)
+        D = self.eye(min(rows, cols), K)
+        oldpivot = K.one
+
+        for k in range(min(rows, cols)):
+            if Q[k][k] == K.zero:
+                for i in range(k + 1, rows):
+                    if Q[i][k] != K.zero:
+                        Q[k], Q[i] = Q[i], Q[k]
+                        R[k], R[i] = R[i], R[k]
+                        break
+                else:
+                    raise ValueError("Matrix is rank deficient")
+
+            pivot = Q[k][k]
+            D[k][k] = oldpivot * pivot
+            R[k][k] = pivot
+
+            for j in range(k + 1, cols):
+                R[k][j] = Q[k][j] * oldpivot
+                for i in range(k + 1, rows):
+                    Q[i][j] = (pivot * Q[i][j] - Q[i][k] * R[k][j]) / oldpivot
+
+            for i in range(k + 1, rows):
+                Q[i][k] = oldpivot * Q[i][k]
+
+            oldpivot = pivot
+
+        Q = Q.extract(range(rows), range(min(rows, cols)))
+
+        return Q, R, D
 
     def lu_solve(a, b):
         """x where a*x = b"""
