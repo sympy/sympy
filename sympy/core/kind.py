@@ -199,7 +199,7 @@ class KindDispatcher:
     ===========
 
     SymPy object's :obj:`sympy.core.kind.Kind()` vaguely represents the
-    algebraic structure where the object belongs to. Therefore, with
+    algebraic structure were the object belongs to. Therefore, with
     given operation, we can always find a dominating kind among the
     different kinds. This class selects the kind by recursive binary
     dispatching. If the result cannot be determined, ``UndefinedKind``
@@ -304,7 +304,7 @@ class KindDispatcher:
 
     @cacheit
     def dispatch_kinds(self, kinds, **kwargs):
-        # Quick exit for the case where all kinds are same
+        # Quick exit for the case were all kinds are same
         if len(kinds) == 1:
             result, = kinds
             if not isinstance(result, Kind):

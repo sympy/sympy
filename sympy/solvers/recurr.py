@@ -15,13 +15,13 @@ Given a recurrence relation:
     .. math:: a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) +
               ... + a_{0}(n) y(n) = f(n)
 
-where `k > 0` and `a_{i}(n)` are polynomials in `n`. To use
+were `k > 0` and `a_{i}(n)` are polynomials in `n`. To use
 ``rsolve_X`` we need to put all coefficients in to a list ``L`` of
 `k+1` elements the following way:
 
     ``L = [a_{0}(n), ..., a_{k-1}(n), a_{k}(n)]``
 
-where ``L[i]``, for `i=0, \ldots, k`, maps to
+were ``L[i]``, for `i=0, \ldots, k`, maps to
 `a_{i}(n) y(n+i)` (`y(n+i)` is implicit).
 
 For example if we would like to compute `m`-th Bernoulli polynomial
@@ -70,7 +70,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
     r"""
     Given linear recurrence operator `\operatorname{L}` of order
     `k` with polynomial coefficients and inhomogeneous equation
-    `\operatorname{L} y = f`, where `f` is a polynomial, we seek for
+    `\operatorname{L} y = f`, were `f` is a polynomial, we seek for
     all polynomial solutions over field `K` of characteristic zero.
 
     The algorithm performs two basic steps:
@@ -355,7 +355,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     r"""
     Given linear recurrence operator `\operatorname{L}` of order `k`
     with polynomial coefficients and inhomogeneous equation
-    `\operatorname{L} y = f`, where `f` is a polynomial, we seek
+    `\operatorname{L} y = f`, were `f` is a polynomial, we seek
     for all rational solutions over field `K` of characteristic zero.
 
     This procedure accepts only polynomials, however if you are
@@ -379,7 +379,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     method can be easily adapted to the q-difference equations case.
 
     Besides finding rational solutions alone, this functions is
-    an important part of Hyper algorithm where it is used to find
+    an important part of Hyper algorithm were it is used to find
     a particular solution for the inhomogeneous part of a recurrence.
 
     Examples
@@ -685,7 +685,7 @@ def rsolve(f, y, init=None):
     .. math:: a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) +
               \cdots + a_{0}(n) y(n) = f(n)
 
-    where `a_{i}(n)`, for `i=0, \ldots, k`, are polynomials or rational
+    were `a_{i}(n)`, for `i=0, \ldots, k`, are polynomials or rational
     functions in `n`, and `f` is a hypergeometric function or a sum
     of a fixed number of pairwise dissimilar hypergeometric terms in
     `n`, finds all solutions or returns ``None``, if none were found.
@@ -699,7 +699,7 @@ def rsolve(f, y, init=None):
 
         ``L = [v_0, v_1, ..., v_m]``
 
-    where ``L[i] = v_i``, for `i=0, \ldots, m`, maps to `y(n_i)`.
+    were ``L[i] = v_i``, for `i=0, \ldots, m`, maps to `y(n_i)`.
 
     Examples
     ========

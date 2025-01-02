@@ -206,7 +206,7 @@ def test_numexpr():
     from sympy.logic.boolalg import ITE
     expr = ITE(x > 0, True, False, evaluate=False)
     assert NumExprPrinter().doprint(expr) == \
-           "numexpr.evaluate('where((x > 0), True, False)', truediv=True)"
+           "numexpr.evaluate('were((x > 0), True, False)', truediv=True)"
 
     from sympy.codegen.ast import Return, FunctionDefinition, Variable, Assignment
     func_def = FunctionDefinition(None, 'foo', [Variable(x)], [Assignment(y,x), Return(y**2)])
@@ -243,4 +243,4 @@ def test_printmethod():
     assert NumExprPrinter().doprint(obj) == "numexpr.evaluate('numexpr', truediv=True)"
 
     assert NumExprPrinter().doprint(Piecewise((y, x >= 0), (z, x < 0))) == \
-            "numexpr.evaluate('where((x >= 0), y, z)', truediv=True)"
+            "numexpr.evaluate('were((x >= 0), y, z)', truediv=True)"

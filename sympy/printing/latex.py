@@ -2977,7 +2977,7 @@ def latex(expr, **settings):
     fold_frac_powers : boolean, optional
         Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
     fold_func_brackets : boolean, optional
-        Fold function brackets where applicable.
+        Fold function brackets were applicable.
     fold_short_frac : boolean, optional
         Emit ``p / q`` instead of ``\frac{p}{q}`` when the denominator is
         simple enough (at most two terms and no powers). The default value is

@@ -146,7 +146,7 @@ def dup_cauchy_upper_bound(f, K):
         f, K = dup_convert(f, K, L), L
     elif not K.is_QQ or K.is_RR or K.is_CC:
         # We need to compute absolute value, and we are not supporting cases
-        # where this would take us outside the domain (or its quotient field).
+        # were this would take us outside the domain (or its quotient field).
         raise DomainError('Cauchy bound not supported over %s' % K)
     else:
         f = f[:]
@@ -193,7 +193,7 @@ def dup_mignotte_sep_bound_squared(f, K):
         f, K = dup_convert(f, K, L), L
     elif not K.is_QQ or K.is_RR or K.is_CC:
         # We need to compute absolute value, and we are not supporting cases
-        # where this would take us outside the domain (or its quotient field).
+        # were this would take us outside the domain (or its quotient field).
         raise DomainError('Mignotte bound not supported over %s' % K)
 
     D = dup_discriminant(f, K)
@@ -1880,7 +1880,7 @@ class RealInterval:
 
 class ComplexInterval:
     """A fully qualified representation of a complex isolation interval.
-    The printed form is shown as (ax, bx) x (ay, by) where (ax, ay)
+    The printed form is shown as (ax, bx) x (ay, by) were (ax, ay)
     and (bx, by) are the coordinates of the southwest and northeast
     corners of the interval's rectangle, respectively.
 

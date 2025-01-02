@@ -256,7 +256,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
         raise ValueError("'n' must be greater than 'l'")
     if (l == 0 and spin_up is False):
         raise ValueError("Spin must be up for l==0.")
-    # skappa is sign*kappa, where sign contains the correct sign
+    # skappa is sign*kappa, were sign contains the correct sign
     if spin_up:
         skappa = -l - 1
     else:

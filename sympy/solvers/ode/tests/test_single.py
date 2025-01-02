@@ -1842,12 +1842,12 @@ def _get_examples_ode_sol_separable():
 @_add_example_keys
 def _get_examples_ode_sol_1st_exact():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
-    # where dp/df == dq/dx
+    # were dp/df == dq/dx
     '''
     Example 7 is an exact equation that fails under the exact engine. It is caught
     by first order homogeneous albeit with a much contorted solution.  The
     exact engine fails because of a poorly simplified integral of q(0,y)dy,
-    where q is the function multiplying f'.  The solutions should be
+    were q is the function multiplying f'.  The solutions should be
     Eq(sqrt(x**2+f(x)**2)**3+y**3, C1).  The equation below is
     equivalent, but it is so complex that checkodesol fails, and takes a long
     time to do so.

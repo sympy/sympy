@@ -26,7 +26,7 @@ example:
   \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_y} &= \mathbf{\hat{a}_x}
   \mathbf{\hat{a}_y}\\
 
-Where :math:`\mathbf{\hat{a}_x}\mathbf{\hat{a}_x}` and
+were :math:`\mathbf{\hat{a}_x}\mathbf{\hat{a}_x}` and
 `\mathbf{\hat{a}_x}\mathbf{\hat{a}_y}` are the outer products obtained by
 multiplying the left side as a column vector by the right side as a row vector.
 Note that the order is significant.
@@ -206,7 +206,7 @@ To solve equations involving vectors, you cannot directly use the solve
 functions on a vector. Instead, you must convert the vector to a set of scalar
 equations.
 
-Suppose that we have two frames ``N`` and ``A``, where ``A`` is rotated 30
+Suppose that we have two frames ``N`` and ``A``, were ``A`` is rotated 30
 degrees about the z-axis with respect to ``N``. ::
 
   >>> from sympy import pi, symbols, solve

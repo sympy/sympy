@@ -267,7 +267,7 @@ class DomainMatrix:
         =====
 
         This takes ownership of rep as its internal representation. If rep is
-        being mutated elsewhere then a copy should be provided to
+        being mutated elsewere then a copy should be provided to
         ``from_rep``. Only minimal verification or checking is done on *rep*
         as this is supposed to be an efficient internal routine.
 
@@ -934,7 +934,7 @@ class DomainMatrix:
         Explanation
         ===========
 
-        Returns a tuple ``(elements, data)`` where ``elements`` is a list of
+        Returns a tuple ``(elements, data)`` were ``elements`` is a list of
         elements of the matrix with zeros possibly excluded. The matrix can be
         reconstructed by passing these to :meth:`from_flat_nz`. The idea is to
         be able to modify a flat list of the elements and then create a new
@@ -1702,7 +1702,7 @@ class DomainMatrix:
         ===========
 
         A square matrix can be considered as the adjacency matrix for a
-        directed graph where the row and column indices are the vertices. In
+        directed graph were the row and column indices are the vertices. In
         this graph if there is an edge from vertex ``i`` to vertex ``j`` if
         ``M[i, j]`` is nonzero. This routine computes the strongly connected
         components of that graph which are subsets of the rows and columns that
@@ -3195,7 +3195,7 @@ class DomainMatrix:
         #
         #   p(A)*B = A*(...A*(A*(A*(p[0]*B) + p[1]*B) + p[2]*B) + ...) + p[n-1]*B
         #
-        # where each pair of brackets represents one iteration of the loop
+        # were each pair of brackets represents one iteration of the loop
         # below starting from the innermost p[0]*B. If B is a column matrix
         # then products like A*(...) are matrix-vector multiplies and products
         # like p[i]*B are scalar-vector multiplies so there are no

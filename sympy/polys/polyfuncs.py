@@ -19,7 +19,7 @@ def symmetrize(F, *gens, **args):
 
     A symmetric polynomial is a multivariate polynomial that remains invariant
     under any variable permutation, i.e., if `f = f(x_1, x_2, \dots, x_n)`,
-    then `f = f(x_{i_1}, x_{i_2}, \dots, x_{i_n})`, where
+    then `f = f(x_{i_1}, x_{i_2}, \dots, x_{i_n})`, were
     `(i_1, i_2, \dots, i_n)` is a permutation of `(1, 2, \dots, n)` (an
     element of the group `S_n`).
 
@@ -207,7 +207,7 @@ def interpolate(data, x):
 @public
 def rational_interpolate(data, degnum, X=symbols('x')):
     """
-    Returns a rational interpolation, where the data points are element of
+    Returns a rational interpolation, were the data points are element of
     any integral domain.
 
     The first argument  contains the data (as a list of coordinates). The

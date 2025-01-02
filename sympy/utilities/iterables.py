@@ -431,7 +431,7 @@ def subsets(seq, k=None, repetition=False):
 
     A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
     number of `k`-subsets of an `n`-element set is given by ``binomial(n, k)``,
-    whereas there are `2^n` subsets all together. If `k` is ``None`` then all
+    wereas there are `2^n` subsets all together. If `k` is ``None`` then all
     `2^n` subsets will be returned from shortest to longest.
 
     Examples
@@ -590,9 +590,9 @@ def sift(seq, keyfunc, binary=False):
     =======
 
     When ``binary`` is ``False`` (default), the output is a dictionary
-    where elements of ``seq`` are stored in a list keyed to the value
+    were elements of ``seq`` are stored in a list keyed to the value
     of keyfunc for that element. If ``binary`` is True then a tuple
-    with lists ``T`` and ``F`` are returned where ``T`` is a list
+    with lists ``T`` and ``F`` are returned were ``T`` is a list
     containing elements of seq for which ``keyfunc`` was ``True`` and
     ``F`` containing those elements for which ``keyfunc`` was ``False``;
     a ValueError is raised if the ``keyfunc`` is not binary.
@@ -630,7 +630,7 @@ def sift(seq, keyfunc, binary=False):
     ([1], [pi])
 
     A ValueError is raised if the predicate was not actually binary
-    (which is a good test for the logic where sifting is used and
+    (which is a good test for the logic were sifting is used and
     binary results were expected):
 
     >>> unknown = exp(1) - pi  # the rationality of this is unknown
@@ -816,7 +816,7 @@ def topological_sort(graph, key=None):
         +---+  |  +---+ |  +----+
                \________/
 
-    where vertices are integers. This graph can be encoded using
+    were vertices are integers. This graph can be encoded using
     elementary Python's data structures as follows::
 
         >>> V = [2, 3, 5, 7, 8, 9, 10, 11]
@@ -929,7 +929,7 @@ def strongly_connected_components(G):
             B -> D
         }
 
-    where vertices are the letters A, B, C and D. This graph can be encoded
+    were vertices are the letters A, B, C and D. This graph can be encoded
     using Python's elementary data structures as follows::
 
         >>> V = ['A', 'B', 'C', 'D']
@@ -1382,7 +1382,7 @@ def _set_partitions(n):
 
     This algorithm is similar to, and solves the same problem as,
     Algorithm 7.2.1.5H, from volume 4A of Knuth's The Art of Computer
-    Programming.  Knuth uses the term "restricted growth string" where
+    Programming.  Knuth uses the term "restricted growth string" were
     this code refers to a "partition vector". In each case, the meaning is
     the same: the value in the ith element of the vector specifies to
     which part the ith set element is to be assigned.
@@ -1609,7 +1609,7 @@ def partitions(n, m=None, k=None, size=False):
     k : int, optional
         limits the numbers that are kept in the partition (mnemonic: k, keys)
     size : bool, default: False
-        If ``True``, (M, P) is returned where M is the sum of the
+        If ``True``, (M, P) is returned were M is the sum of the
         multiplicities and P is the generated partition.
         If ``False``, only the generated partition is returned.
 
@@ -2049,13 +2049,13 @@ def generate_bell(n):
     [(0, 1, 2, 3), (0, 1, 3, 2), (0, 3, 1, 2), (3, 0, 1, 2), (3, 0, 2, 1)]
 
     Notice how the 2nd and 3rd lexicographical permutations have 3 elements
-    out of place whereas each "bell" permutation always has only two
+    out of place wereas each "bell" permutation always has only two
     elements out of place relative to the previous permutation (and so the
     signature (+/-1) of a permutation is opposite of the signature of the
     previous permutation).
 
     How the position of inversion varies across the elements can be seen
-    by tracing out where the largest number appears in the permutations:
+    by tracing out were the largest number appears in the permutations:
 
     >>> m = zeros(4, 24)
     >>> for i, p in enumerate(generate_bell(4)):
@@ -2218,7 +2218,7 @@ def multiset_derangements(s):
         return
 
     # find the first element that is repeated the most to place
-    # in the following two special cases where the selection
+    # in the following two special cases were the selection
     # is unambiguous: either there are two elements with multiplicity
     # of mx or else there is only one with multiplicity mx
     for M in ms:
@@ -2269,7 +2269,7 @@ def multiset_derangements(s):
     #    1) `finish_derangements` will place the last two elements
     #       which have arbitrary multiplicities, e.g. for multiset
     #       {c: 3, a: 2, b: 2}, the last two elements are a and b
-    #    2) `iopen` will tell where a given element can be placed
+    #    2) `iopen` will tell were a given element can be placed
     #    3) `do` will recursively place elements into subsets of
     #        valid locations
 
@@ -2343,7 +2343,7 @@ def multiset_derangements(s):
                     rv[ii] = M
                 # recursively place the next element
                 yield from do(j - 1)
-                # mark positions where M was placed as once again
+                # mark positions were M was placed as once again
                 # open for placement of other elements
                 for ii in i:
                     rv[ii] = None
@@ -2705,7 +2705,7 @@ def sequence_partitions(l, n, /):
     Explanation
     ===========
 
-    Given the sequence $l_1 \cdots l_m \in V^+$ where
+    Given the sequence $l_1 \cdots l_m \in V^+$ were
     $V^+$ is the Kleene plus of $V$
 
     The set of $n$ partitions of $l$ is defined as:
@@ -2767,7 +2767,7 @@ def sequence_partitions_empty(l, n, /):
     Explanation
     ===========
 
-    Given the sequence $l_1 \cdots l_m \in V^*$ where
+    Given the sequence $l_1 \cdots l_m \in V^*$ were
     $V^*$ is the Kleene star of $V$
 
     The set of $n$ partitions of $l$ is defined as:
@@ -2777,7 +2777,7 @@ def sequence_partitions_empty(l, n, /):
         s_1 \cdots s_n = l_1 \cdots l_m\}
 
     There are more combinations than :func:`sequence_partitions` because
-    empty sequence can fill everywhere, so we try to provide different
+    empty sequence can fill everywere, so we try to provide different
     utility for this.
 
     Parameters
@@ -2972,7 +2972,7 @@ def signed_permutations(t):
 
 
 def rotations(s, dir=1):
-    """Return a generator giving the items in s as list where
+    """Return a generator giving the items in s as list were
     each subsequent list has the items rotated to the left (default)
     or right (``dir=-1``) relative to the previous list.
 

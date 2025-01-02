@@ -514,7 +514,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 def _sympify(a):
     """
     Short version of :func:`~.sympify` for internal usage for ``__add__`` and
-    ``__eq__`` methods where it is ok to allow some things (like Python
+    ``__eq__`` methods were it is ok to allow some things (like Python
     integers and floats) in the expression. This excludes things (like strings)
     that are unwise to allow into such an expression.
 

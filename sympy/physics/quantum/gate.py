@@ -315,7 +315,7 @@ class CGate(Gate):
     Parameters
     ----------
     label : tuple
-        The label in this case has the form (controls, gate), where controls
+        The label in this case has the form (controls, gate), were controls
         is a tuple/list of control qubits (as ints) and gate is a ``Gate``
         instance that is the target operator.
 
@@ -500,7 +500,7 @@ class UGate(Gate):
     Parameters
     ----------
     label : tuple
-        A tuple of the form (targets, U), where targets is a tuple of the
+        A tuple of the form (targets, U), were targets is a tuple of the
         target qubits and U is a unitary matrix with dimension of
         len(targets).
     """

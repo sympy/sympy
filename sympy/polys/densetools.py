@@ -1094,7 +1094,7 @@ def dup_decompose(f, K):
     Computes functional decomposition of ``f`` in ``K[x]``.
 
     Given a univariate polynomial ``f`` with coefficients in a field of
-    characteristic zero, returns list ``[f_1, f_2, ..., f_n]``, where::
+    characteristic zero, returns list ``[f_1, f_2, ..., f_n]``, were::
 
               f = f_1 o f_2 o ... f_n = f_1(f_2(... f_n))
 
@@ -1108,7 +1108,7 @@ def dup_decompose(f, K):
     2. ``x**n o x**m = x**m o x**n``
     3. ``T_n o T_m = T_m o T_n``
 
-    where ``T_n`` and ``T_m`` are Chebyshev polynomials.
+    were ``T_n`` and ``T_m`` are Chebyshev polynomials.
 
     Examples
     ========

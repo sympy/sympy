@@ -27,7 +27,7 @@ general form:
   f_{2}(q, u, \dot{u}, t) + f_{3}(q, \dot{q}, u, r, t) +
   f_{4}(q, \lambda, t) &= 0_{(o-m+k) \times 1}
 
-where
+were
 
 .. math::
   q, \dot{q} & \in \mathbb{R}^n\\
@@ -77,7 +77,7 @@ forms of the linearized EOM:
     M \begin{bmatrix} \delta \dot{q} \\ \delta \dot{u} \\ \delta \lambda \end{bmatrix} =
     A \begin{bmatrix} \delta q_i \\ \delta u_i \end{bmatrix} + B \begin{bmatrix} \delta r \end{bmatrix}
 
-  where
+  were
 
   .. math::
     M &\in \mathbb{R}^{(n+o+k) \times (n+o+k)}\\
@@ -98,7 +98,7 @@ forms of the linearized EOM:
     \begin{bmatrix} \delta \dot{q_i} \\ \delta \dot{u_i} \end{bmatrix} =
     A \begin{bmatrix} \delta q_i \\ \delta u_i \end{bmatrix} + B \begin{bmatrix} \delta r \end{bmatrix}
 
-  where
+  were
 
   .. math::
     A &\in \mathbb{R}^{(n-l+o-m) \times (n-l+o-m)}\\

@@ -101,7 +101,7 @@ def sort(key, new=new):
 def distribute(A, B):
     """ Turns an A containing Bs into a B of As
 
-    where A, B are container types
+    were A, B are container types
 
     >>> from sympy.strategies import distribute
     >>> from sympy import Add, Mul, symbols

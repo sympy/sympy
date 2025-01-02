@@ -89,7 +89,7 @@ class TupleParametersBase(DefinedFunction):
 
 class hyper(TupleParametersBase):
     r"""
-    The generalized hypergeometric function is defined by a series where
+    The generalized hypergeometric function is defined by a series were
     the ratios of successive terms are a rational function of the summation
     index. When convergent, it is continued analytically to the largest
     possible domain.
@@ -107,7 +107,7 @@ class hyper(TupleParametersBase):
         = \sum_{n=0}^\infty \frac{(a_1)_n \cdots (a_p)_n}{(b_1)_n \cdots (b_q)_n}
                             \frac{z^n}{n!},
 
-    where $(a)_n = (a)(a+1)\cdots(a+n-1)$ denotes the rising factorial.
+    were $(a)_n = (a)(a+1)\cdots(a+n-1)$ denotes the rising factorial.
 
     If one of the $b_q$ is a non-positive integer then the series is
     undefined unless one of the $a_p$ is a larger (i.e., smaller in
@@ -325,7 +325,7 @@ class hyper(TupleParametersBase):
         Note that even if this is not ``oo``, the function may still be
         evaluated outside of the radius of convergence by analytic
         continuation. But if this is zero, then the function is not actually
-        defined anywhere else.
+        defined anywere else.
 
         Examples
         ========
@@ -422,7 +422,7 @@ class meijerg(TupleParametersBase):
          \prod_{j=1}^n \Gamma(1 - a_j + s)}{\prod_{j=m+1}^q \Gamma(1- b_j +s)
          \prod_{j=n+1}^p \Gamma(a_j - s)} z^s \mathrm{d}s,
 
-    where $\Gamma(z)$ is the gamma function. There are three possible
+    were $\Gamma(z)$ is the gamma function. There are three possible
     contours which we will not describe in detail here (see the references).
     If the integral converges along more than one of them, the definitions
     agree. The contours all separate the poles of $\Gamma(1-a_j+s)$

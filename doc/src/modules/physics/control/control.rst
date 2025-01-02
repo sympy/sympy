@@ -4,7 +4,7 @@ Control
 
 Currently, :mod:`sympy.physics.control` is able to deal with LTI
 (Linear, time-invariant) systems. The ``TransferFunction`` class is used to
-represent Continuous-time Transfer functions in the Laplace domain; where Transfer
+represent Continuous-time Transfer functions in the Laplace domain; were Transfer
 functions are input to output representations of dynamic systems. The additive
 property is used for transfer functions in the ``Parallel`` class, and the
 multiplicative property is used for transfer functions in the ``Series`` class.

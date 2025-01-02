@@ -27,14 +27,14 @@ multiplication are called *polynomial expressions in the generators* `x_i`.
 By the distributive law it is possible to perform multiplications before
 additions and subtractions. The products of generators thus obtained are called
 *monomials*. They are usually written in the form `x_1^{\nu_1}x_2^{\nu_2}\cdots
-x_n^{\nu_n}` where the exponents `\nu_i` are nonnegative integers. It is often
-convenient to write this briefly as `x^\nu` where `x = (x_1, x_2, \ldots, x_n)`
+x_n^{\nu_n}` were the exponents `\nu_i` are nonnegative integers. It is often
+convenient to write this briefly as `x^\nu` were `x = (x_1, x_2, \ldots, x_n)`
 denotes the family of generators and `\nu = (\nu_1, \nu_2, \ldots, \nu_n)` is
 the family of exponents.
 
 When all monomials having the same exponents are combined, the polynomial
 expression becomes a sum of products `c_\nu x^\nu`, called the *terms* of the
-polynomial, where the *coefficients* `c_\nu` are integers. If some of the `x_i`
+polynomial, were the *coefficients* `c_\nu` are integers. If some of the `x_i`
 are manifest numbers, they are incorporated in the coefficients and not regarded
 as generators. Such coefficients are typically rational, real or complex
 numbers. Some symbolic numbers, e.g., ``pi``, can be either coefficients or
@@ -174,7 +174,7 @@ units of the ring of integers are `1` and `-1`. The invertible elements in a
 polynomial ring over a field are the nonzero constant polynomials.
 
 If two elements of `P`, `a` and `b`, are divisible by each other, then the
-quotient `a/b` is invertible with inverse `b/a`, or equivalently, `b = ua` where
+quotient `a/b` is invertible with inverse `b/a`, or equivalently, `b = ua` were
 `u` is a unit. Such elements are said to be *associated* with, or *associates*
 of, each other. The associates of an integer `n` are `n` and `-n`. In a
 polynomial ring over a field the associates of a polynomial are its constant
@@ -311,7 +311,7 @@ For a polynomial `f` in `A`, let `c` be the greatest common divisor of its
 coefficients. Then `f` is divisible by the constant polynomial `c` in `A`, and
 the quotient `f/c= p` is a polynomial whose coefficients are integers that have
 no common divisor apart from the units. Such polynomials are called *primitive*.
-A polynomial with rational coefficients can also be written as `f = cp`, where
+A polynomial with rational coefficients can also be written as `f = cp`, were
 `c` is a rational number and `p` is a primitive polynomial. The constant `c` is
 called the *content* of `f`, and `p` is its *primitive part*. These components
 can be found by the method :obj:`sympy.core.expr.Expr.as_content_primitive`::
@@ -328,7 +328,7 @@ can be found by the method :obj:`sympy.core.expr.Expr.as_content_primitive`::
     (1/6, 2*x  - 3*x + 6)
 
 Let `f`, `f'` be polynomials with contents `c`, `c'` and primitive parts `p`,
-`p'`. Then `ff' = (cc')(pp')` where the product `pp'` is primitive by `Gauss's
+`p'`. Then `ff' = (cc')(pp')` were the product `pp'` is primitive by `Gauss's
 lemma <https://en.wikipedia.org/wiki/Gauss%27s_lemma_(polynomial)>`_. It follows
 that
 

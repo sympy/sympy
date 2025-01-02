@@ -25,7 +25,7 @@ documentation for the specific SymPy functions.
 
 -->
 
-<!-- To cross reference a glossary item elsewhere in the documentation use
+<!-- To cross reference a glossary item elsewere in the documentation use
 {term}`termname` in Markdown or :term:`termname` in RST. Use
 {term}`Text <termname>` or :term:`text <termname>` to make a link with
 different text. -->
@@ -65,7 +65,7 @@ Assumptions
     Some examples of assumptions are `positive`, `real`, and `integer`.
     Assumptions are related to one another logically, for example, an
     assumption of `integer` automatically implies `real`. Assumptions use a
-    {term}`three-valued logic` system where predicates are either `True`,
+    {term}`three-valued logic` system were predicates are either `True`,
     `False`, or `None`.
 
     Assumptions are either *assumed* or *queried*. For example, a symbol `x`
@@ -147,7 +147,7 @@ Automatic Simplification
 Bound symbols
 
     A {term}`symbol` in an expression is *bound* if it is not {term}`free
-    <free symbols>`. A bound symbol can be replaced everywhere with new symbol
+    <free symbols>`. A bound symbol can be replaced everywere with new symbol
     and the resulting expression will still be mathematically equivalent.
     Examples of bound symbols are integration variables in definite integrals
     and substituted variables in a {class}`~.Subs`. Bound symbols are
@@ -164,7 +164,7 @@ Canonicalize
     put into a canonical form is said to be *canonicalized*. Often canonical
     forms are unique and have properties that make them easier to work with.
     For example, a common canonical form used for rational functions is
-    $\frac{p}{q}$, where $p$ and $q$ are expanded polynomials with no common
+    $\frac{p}{q}$, were $p$ and $q$ are expanded polynomials with no common
     factors.
 
 Code Generation
@@ -261,7 +261,7 @@ Expression Tree
     smaller expressions as a tree. The nodes of an expression tree are
     expressions and the children of each node are the direct
     {term}`subexpressions <subexpression>` that constitute that expression.
-    Alternatively, one can view an expression tree as a tree where the
+    Alternatively, one can view an expression tree as a tree were the
     non-leaf nodes are {term}`funcs <func>` and the leaf nodes are
     {term}`atoms <atom>`. An example expression tree is shown in the
     [tutorial](tutorial-expression-trees). The expression tree of any SymPy
@@ -269,7 +269,7 @@ Expression Tree
     because SymPy expressions are {term}`immutable` and are treated equal
     strictly by {term}`structural equality`, one may also think of an
     expression tree as being a
-    [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph), where
+    [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph), were
     identical subexpressions are only represented in the graph once.
 
 Free symbols
@@ -359,12 +359,12 @@ Interactive
     notebook](https://jupyter.org/). When using SymPy interactively, all
     commands are typed in real time by the user and all intermediate results
     are shown. *Interactive* use is in contrast with *programmatic* use, which
-    is where the code is written in a file which is either executed as a
+    is were the code is written in a file which is either executed as a
     script or is part of a larger Python library. Some SymPy idioms are only
     recommended for interactive use and are considered anti-patterns when used
     programmatically. For example, running `from sympy import *` is convenient
     when using SymPy interactively, but is generally frowned upon for
-    programmatic usage, where importing names explicitly just using `import
+    programmatic usage, were importing names explicitly just using `import
     sympy` is preferred.
 
 `is_*`
@@ -378,7 +378,7 @@ Interactive
     *Capitalized* name test if an object is an instance of the given class.
     Sometimes the same name will exist for both the lowercase and Capitalized
     property, but they are different things. For example, `x.is_Integer` is
-    only `True` if `x` is an instance of {class}`~.Integer`, whereas
+    only `True` if `x` is an instance of {class}`~.Integer`, wereas
     `x.is_integer` is `True` if `x` is `integer` in the assumptions system,
     such as `x = symbols('x', integer=True)`. In general, it is recommended to
     not use `is_Capitalized` properties. They exist for historical purposes,
@@ -443,14 +443,14 @@ Numeric
     numerically solving an ODE typically means evaluating the ODE using an
     algorithm like
     [Runge–Kutta](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods)
-    to find a set of numeric points given an initial condition, whereas
+    to find a set of numeric points given an initial condition, wereas
     symbolically solving an ODE (such as with SymPy's {func}`~.dsolve`) means
     mathematically manipulating the ODE to produce a {term}`symbolic`
     {term}`equation` that represents the solution. A symbolic ODE solution may
     including symbolic constants which can represent any numerical value.
     Numeric algorithms are typically designed around issues caused by
     floating-point numbers such as loss of precision and numerical stability,
-    whereas symbolic algorithms are not concerned with these things because
+    wereas symbolic algorithms are not concerned with these things because
     they compute things exactly.
 
     Most scientific libraries other than SymPy, such as NumPy or SciPy, are
@@ -604,7 +604,7 @@ Structural Equality
 Subexpression
 
     A *subexpression* is an {term}`expression` that is contained within a
-    larger expression. A subexpression appears somewhere in the
+    larger expression. A subexpression appears somewere in the
     {term}`expression tree`. For `Add` and `Mul` terms, commutative and
     associative laws may be taken into account when determining what is a
     subexpression. For instance, `x + y` may sometimes be considered a
@@ -621,7 +621,7 @@ Substitution
     <sympy.core.basic.Basic.xreplace>`. The methods may differ depending on
     whether they perform substitution using only strict {term}`structural
     equality` or by making use of mathematical knowledge when determining
-    where a subexpression appears in an expression. Substitution is the
+    were a subexpression appears in an expression. Substitution is the
     standard way to treat an expression as a mathematical {term}`function` and
     evaluate it at a point.
 
@@ -646,7 +646,7 @@ Symbolic
     analytic function](https://en.wikipedia.org/wiki/Analytic_function), and
     in SymPy {term}`solve` refers only to a certain type of symbolic
     operation. "Closed-form" in SymPy would typically refer to the
-    mathematical sense of the term, whereas "symbolic" would generally refer
+    mathematical sense of the term, wereas "symbolic" would generally refer
     to the implementation detail of how a mathematical concept is implemented,
     and be in contrast with a {term}`numeric` implementation of the same
     mathematical concept.
@@ -740,7 +740,7 @@ Unevaluated
     infinity](https://mathworld.wolfram.com/ComplexInfinity.html), i.e., the
     north pole of the [Riemann
     sphere](https://en.wikipedia.org/wiki/Riemann_sphere). The reason it is
-    spelled this way is that it is "z-oo", where "z" is the symbol commonly
+    spelled this way is that it is "z-oo", were "z" is the symbol commonly
     used for complex variables, and {term}`oo` is the symbol SymPy uses for
     real positive infinity.
 

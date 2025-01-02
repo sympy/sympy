@@ -156,7 +156,7 @@ class _IndexStructure(CantSympify):
         ===========
 
         ``free``     list of tuples ``(index, pos, 0)``,
-                     where ``pos`` is the position of index in
+                     were ``pos`` is the position of index in
                      the list of indices formed by the component tensors
 
         ``dum``      list of tuples ``(pos_contr, pos_cov, 0, 0)``
@@ -426,7 +426,7 @@ class _TensorDataLazyEvaluator(CantSympify):
     expressions, is stored inside this class as a mapping between the tensor
     expression and the ``ndarray``.
 
-    Computations are executed lazily: whereas the tensor expressions can have
+    Computations are executed lazily: wereas the tensor expressions can have
     contractions, tensor products, and additions, components data are not
     computed until they are accessed by reading the ``.data`` property
     associated to the tensor expression.
@@ -1011,7 +1011,7 @@ class TensorIndexType(Basic):
 
     ``g(-a, b) = delta(-a, b)``
 
-    where ``delta(-a, b) = delta(b, -a)`` is the ``Kronecker delta``
+    were ``delta(-a, b) = delta(b, -a)`` is the ``Kronecker delta``
     (see ``TensorIndex`` for the conventions on indices).
     For antisymmetric metrics there is also the following equality:
 
@@ -1298,7 +1298,7 @@ class TensorIndex(Basic):
     ``tensor_inde_type.dummy_name`` with underscore and a number.
 
     Similar to ``symbols`` multiple contravariant indices can be created
-    at once using ``tensor_indices(s, typ)``, where ``s`` is a string
+    at once using ``tensor_indices(s, typ)``, were ``s`` is a string
     of names.
 
 
@@ -1717,7 +1717,7 @@ class TensorHead(Basic):
     =====
 
     Similar to ``symbols`` multiple TensorHeads can be created using
-    ``tensorhead(s, typ, sym=None, comm=0)`` function, where ``s``
+    ``tensorhead(s, typ, sym=None, comm=0)`` function, were ``s``
     is the string of names and ``sym`` is the monoterm tensor symmetry
     (see ``tensorsymmetry``).
 
@@ -1961,7 +1961,7 @@ class TensorHead(Basic):
 
         # the data attached to a tensor must be deleted only by the TensorHead
         # destructor. If the TensorHead is deleted, it means that there are no
-        # more instances of that tensor anywhere.
+        # more instances of that tensor anywere.
         if self in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self]
 
@@ -1998,7 +1998,7 @@ class TensExpr(Expr, ABC):
 
 
     In the internal representation contracted indices are represented
-    by ``(ipos1, ipos2, icomp1, icomp2)``, where ``icomp1`` is the position
+    by ``(ipos1, ipos2, icomp1, icomp2)``, were ``icomp1`` is the position
     of the component tensor with contravariant index, ``ipos1`` is the
     slot which the index occupies in that component tensor.
 
@@ -3420,7 +3420,7 @@ class TensMul(TensExpr, AssocOp):
     ``args[0]``   list of ``TensorHead`` of the component tensors.
 
     ``args[1]``   list of ``(ind, ipos, icomp)``
-    where ``ind`` is a free index, ``ipos`` is the slot position
+    were ``ind`` is a free index, ``ipos`` is the slot position
     of ``ind`` in the ``icomp``-th component tensor.
 
     ``args[2]`` list of tuples representing dummy indices.
@@ -5067,7 +5067,7 @@ def riemann_cyclic(t2):
 def get_lines(ex, index_type):
     """
     Returns ``(lines, traces, rest)`` for an index type,
-    where ``lines`` is the list of list of positions of a matrix line,
+    were ``lines`` is the list of list of positions of a matrix line,
     ``traces`` is the list of list of traced matrix lines,
     ``rest`` is the rest of the elements of the tensor.
     """

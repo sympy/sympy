@@ -925,7 +925,7 @@ class FockState(Expr):
     """
     Many particle Fock state with a sequence of occupation numbers.
 
-    Anywhere you can have a FockState, you can also have S.Zero.
+    Anywere you can have a FockState, you can also have S.Zero.
     All code must check for this!
 
     Base class to represent FockStates.
@@ -1053,7 +1053,7 @@ class FermionState(FockState):
         if above fermi we try to create a particle.
 
         If general index p we return ``Kronecker(p,i)*self``
-        where ``i`` is a new symbol with restriction above or below.
+        were ``i`` is a new symbol with restriction above or below.
 
         Examples
         ========
@@ -1105,7 +1105,7 @@ class FermionState(FockState):
         If above fermi we try to remove a particle.
 
         If general index p we return ``Kronecker(p,i)*self``
-        where ``i`` is a new symbol with restriction above or below.
+        were ``i`` is a new symbol with restriction above or below.
 
         Examples
         ========
@@ -1204,7 +1204,7 @@ class FermionState(FockState):
 
     def _negate_holes(self, occupations):
         """
-        Returns the occupations list where states below the fermi level have negative labels.
+        Returns the occupations list were states below the fermi level have negative labels.
 
         For symbolic state labels, no sign is included.
         """
@@ -2029,7 +2029,7 @@ class NO(Expr):
 
         {Fd(p)*F(q)} = {Fd(a)*F(b)} + {Fd(a)*F(i)} + {Fd(j)*F(b)} -{F(i)*Fd(j)}
 
-        where a,b are above and i,j are below fermi level.
+        were a,b are above and i,j are below fermi level.
         """
         return NO(self._remove_brackets)
 
@@ -2347,7 +2347,7 @@ def evaluate_deltas(e):
     >>> evaluate_deltas(KroneckerDelta(p,q)*f(p,q))
     f(_p, _p)
 
-    Finally, here are some cases where nothing is done, because that would
+    Finally, here are some cases were nothing is done, because that would
     imply a loss of information:
 
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(q))
@@ -2412,7 +2412,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
 
     The idea is to substitute all dummy variables consistently depending on
     the structure of the term.  For each term, we obtain a sequence of all
-    dummy variables, where the order is determined by the index range, what
+    dummy variables, were the order is determined by the index range, what
     factors the index belongs to and its position in each factor.  See
     _get_ordered_dummies() for more information about the sorting of dummies.
     The index sequence is then substituted consistently in each term.
@@ -2599,7 +2599,7 @@ def _get_ordered_dummies(mul, verbose=False):
     --------
 
     The canonical order is given by an arbitrary sorting rule.  A sort key
-    is determined for each dummy as a tuple that depends on all factors where
+    is determined for each dummy as a tuple that depends on all factors were
     the index is present.  The dummies are thereby sorted according to the
     contraction structure of the term, instead of sorting based solely on the
     dummy symbol itself.
@@ -2624,7 +2624,7 @@ def _get_ordered_dummies(mul, verbose=False):
         1. A single character indicating the range of the dummy (above, below
            or general.)
         2. A list of strings with fully masked string representations of all
-           factors where the dummy is present.  By masked, we mean that dummies
+           factors were the dummy is present.  By masked, we mean that dummies
            are represented by a symbol to indicate either below fermi, above or
            general.  No other information is displayed about the dummies at
            this point.  The list is sorted stringwise.
@@ -3028,7 +3028,7 @@ class PermutationOperator(Expr):
 
 def simplify_index_permutations(expr, permutation_operators):
     """
-    Performs simplification by introducing PermutationOperators where appropriate.
+    Performs simplification by introducing PermutationOperators were appropriate.
 
     Explanation
     ===========
@@ -3075,7 +3075,7 @@ def simplify_index_permutations(expr, permutation_operators):
         return result
 
     def _choose_one_to_keep(a, b, ind):
-        # we keep the one where indices in ind are in order ind[0] < ind[1]
+        # we keep the one were indices in ind are in order ind[0] < ind[1]
         return min(a, b, key=lambda x: default_sort_key(_get_indices(x, ind)))
 
     expr = expr.expand()

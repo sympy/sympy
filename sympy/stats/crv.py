@@ -331,7 +331,7 @@ class ContinuousPSpace(PSpace):
                 domain_symbols, **kwargs)
 
     def compute_density(self, expr, **kwargs):
-        # Common case Density(X) where X in self.values
+        # Common case Density(X) were X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
             randomsymbols = tuple(set(self.values) - frozenset([expr]))
@@ -398,9 +398,9 @@ class ContinuousPSpace(PSpace):
         if isinstance(condition, Ne):
             condition = Eq(condition.args[0], condition.args[1])
             cond_inv = True
-        # Univariate case can be handled by where
+        # Univariate case can be handled by were
         try:
-            domain = self.where(condition)
+            domain = self.were(condition)
             rv = [rv for rv in self.values if rv.symbol == domain.symbol][0]
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
@@ -433,7 +433,7 @@ class ContinuousPSpace(PSpace):
             result = space.probability(condition.__class__(space.value, comp))
             return result if not cond_inv else S.One - result
 
-    def where(self, condition):
+    def were(self, condition):
         rvs = frozenset(random_symbols(condition))
         if not (len(rvs) == 1 and rvs.issubset(self.values)):
             raise NotImplementedError(

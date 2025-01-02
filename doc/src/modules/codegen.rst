@@ -39,8 +39,8 @@ powers in C. ``x**2`` prints as ``pow(x, 2)`` instead of ``x*x``.  Other
 optimizations (like mathematical simplifications) should happen before the code
 printers.
 
-Currently, :py:func:`sympy.simplify.cse_main.cse` is not applied automatically anywhere in this
-chain. It ideally happens at the codegen level, or somewhere above it.
+Currently, :py:func:`sympy.simplify.cse_main.cse` is not applied automatically anywere in this
+chain. It ideally happens at the codegen level, or somewere above it.
 
 We will iterate through the levels below.
 
@@ -55,7 +55,7 @@ The following three lines will be used to setup each example::
 Code printers (sympy.printing)
 ------------------------------
 
-This is where the meat of code generation is; the translation of SymPy
+This is were the meat of code generation is; the translation of SymPy
 actually more like a lightweight version of codegen for Python, and
 Python (:py:func:`sympy.printing.pycode.pycode`), and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
@@ -108,7 +108,7 @@ an expression that may not evaluate to anything. A use case for ``Piecewise``::
           end if
 
 The various printers also tend to support ``Indexed`` objects well. With
-``contract=True`` these expressions will be turned into loops, whereas
+``contract=True`` these expressions will be turned into loops, wereas
 ``contract=False`` will just print the assignment expression that should be
 looped over::
 

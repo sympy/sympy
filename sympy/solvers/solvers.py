@@ -69,7 +69,7 @@ import warnings
 
 def recast_to_symbols(eqs, symbols):
     """
-    Return (e, s, d) where e and s are versions of *eqs* and
+    Return (e, s, d) were e and s are versions of *eqs* and
     *symbols* in which any non-Symbol objects in *symbols* have
     been replaced with generic Dummy symbols and d is a dictionary
     that can be used to restore the original expressions.
@@ -804,7 +804,7 @@ def solve(f, *symbols, **flags):
             expensive.
         quick=True (default is False; ``particular`` must be True)
             Selects a fast heuristic to find a solution with many zeros
-            whereas a value of False uses the very slow method guaranteed
+            wereas a value of False uses the very slow method guaranteed
             to find the largest number of zeros possible.
         cubics=True (default)
             Return explicit solutions when cubic expressions are encountered.
@@ -1497,7 +1497,7 @@ def _solve(f, *symbols, **flags):
         gens = [g for g in poly.gens if g.has(symbol)]
 
         def _as_base_q(x):
-            """Return (b**e, q) for x = b**(p*e/q) where p/q is the leading
+            """Return (b**e, q) for x = b**(p*e/q) were p/q is the leading
             Rational of the exponent of x, e.g. exp(-2*x/3) -> (exp(x), 3)
             """
             b, e = x.as_base_exp()
@@ -1580,7 +1580,7 @@ def _solve(f, *symbols, **flags):
                     msg = 'multiple generators %s' % gens
 
             else:
-                # e.g. case where gens are exp(x), exp(-x)
+                # e.g. case were gens are exp(x), exp(-x)
                 u = bases.pop()
                 t = Dummy('t')
                 inv = _vsolve(u - t, symbol, **flags)
@@ -1667,7 +1667,7 @@ def _solve(f, *symbols, **flags):
                             # decision on a certain critical length of the
                             # roots. In addition, wester test M2 has an expression
                             # whose roots can be shown to be real with the
-                            # unsimplified form of the solution whereas only one of
+                            # unsimplified form of the solution wereas only one of
                             # the simplified forms appears to be real.
                             flags['simplify'] = flags.get('simplify', False)
                 if soln is not None:
@@ -1755,7 +1755,7 @@ def _remove_duplicate_solutions(solutions: list[dict[Expr, Expr]]
 
 
 def _solve_system(exprs, symbols, **flags):
-    """return ``(linear, solution)`` where ``linear`` is True
+    """return ``(linear, solution)`` were ``linear`` is True
     if the system was linear, else False; ``solution``
     is a list of dictionaries giving solutions for the symbols
     """
@@ -2037,12 +2037,12 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     symbols given. If the first element of the tuple is not zero, then the
     function is guaranteed to be dependent on a symbol in *symbols*.
 
-    ``(symbol, solution)`` where symbol appears linearly in the numerator of
+    ``(symbol, solution)`` were symbol appears linearly in the numerator of
     ``f``, is in *symbols* (if given), and is not in *exclude* (if given). No
     simplification is done to ``f`` other than a ``mul=True`` expansion, so the
     solution will correspond strictly to a unique solution.
 
-    ``(n, d)`` where ``n`` and ``d`` are the numerator and denominator of ``f``
+    ``(n, d)`` were ``n`` and ``d`` are the numerator and denominator of ``f``
     when the numerator was not linear in any symbol of interest; ``n`` will
     never be a symbol unless a solution for that symbol was found (in which case
     the second element is the solution, not the denominator).
@@ -2699,7 +2699,7 @@ def _tsolve(eq, sym, **flags):
 
             # a ** g(x) == 0
             if not rhs:
-                # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
+                # f(x)**g(x) only has solutions were f(x) == 0 and g(x) != 0 at
                 # the same place
                 sol_base = _vsolve(lhs.base, sym, **flags)
                 return [s for s in sol_base if lhs.exp.subs(sym, s) != 0]  # XXX use checksol here?
@@ -3099,7 +3099,7 @@ def nsolve(*args, dict=False, **kwargs):
 
 def _invert(eq, *symbols, **kwargs):
     """
-    Return tuple (i, d) where ``i`` is independent of *symbols* and ``d``
+    Return tuple (i, d) were ``i`` is independent of *symbols* and ``d``
     contains symbols.
 
     Explanation
@@ -3305,14 +3305,14 @@ def unrad(eq, *syms, **flags):
     change of variable needed to rewrite the system as a polynomial cannot
     be solved.
 
-    Otherwise the tuple, ``(eq, cov)``, is returned where:
+    Otherwise the tuple, ``(eq, cov)``, is returned were:
 
     *eq*, ``cov``
         *eq* is an equation without radicals (in the symbol(s) of
         interest) whose solutions are a superset of the solutions to the
         original expression. *eq* might be rewritten in terms of a new
         variable; the relationship to the original variables is given by
-        ``cov`` which is a list containing ``v`` and ``v**p - b`` where
+        ``cov`` which is a list containing ``v`` and ``v**p - b`` were
         ``p`` is the power needed to clear the radical and ``b`` is the
         radical now expressed as a polynomial in the symbols of interest.
         For example, for sqrt(2 - x) the tuple would be

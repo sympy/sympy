@@ -413,7 +413,7 @@ def test_jordan_form():
     m = Matrix(3, 2, [-3, 1, -3, 20, 3, 10])
     raises(NonSquareMatrixError, lambda: m.jordan_form())
 
-    # the next two tests test the cases where the old
+    # the next two tests test the cases were the old
     # algorithm failed due to the fact that the block structure can
     # *NOT* be determined  from algebraic and geometric multiplicity alone
     # This can be seen most easily when one lets compute the J.c.f. of a matrix that

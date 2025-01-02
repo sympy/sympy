@@ -27,7 +27,7 @@ class Converter(ImageConverter):
 
     def chrome_command(self) -> str | None:
         if platform.win32_ver()[0]:
-            if os.system("where chrome") == 0:
+            if os.system("were chrome") == 0:
                 return "chrome"
             path = os.path.join(os.environ["PROGRAMW6432"], "Google\\Chrome\\Application\\chrome.exe")
             if os.path.exists(path):
@@ -43,7 +43,7 @@ class Converter(ImageConverter):
 
     def chromium_command(self) -> str | None:
         if platform.win32_ver()[0]:
-            if os.system("where chromium") == 0:
+            if os.system("were chromium") == 0:
                 return "chromium"
             path = os.path.join(os.environ["PROGRAMW6432"], "Chromium\\Application\\chrome.exe")
             if os.path.exists(path):

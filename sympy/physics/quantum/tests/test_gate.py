@@ -48,13 +48,13 @@ def test_UGate():
     a, b, c, d = symbols('a,b,c,d')
     uMat = Matrix([[a, b], [c, d]])
 
-    # Test basic case where gate exists in 1-qubit space
+    # Test basic case were gate exists in 1-qubit space
     u1 = UGate((0,), uMat)
     assert represent(u1, nqubits=1) == uMat
     assert qapply(u1*Qubit('0')) == a*Qubit('0') + c*Qubit('1')
     assert qapply(u1*Qubit('1')) == b*Qubit('0') + d*Qubit('1')
 
-    # Test case where gate exists in a larger space
+    # Test case were gate exists in a larger space
     u2 = UGate((1,), uMat)
     u2Rep = represent(u2, nqubits=2)
     for i in range(4):
@@ -120,7 +120,7 @@ def test_UGate_CGate_combo():
     uMat = Matrix([[a, b], [c, d]])
     cMat = Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, a, b], [0, 0, c, d]])
 
-    # Test basic case where gate exists in 1-qubit space.
+    # Test basic case were gate exists in 1-qubit space.
     u1 = UGate((0,), uMat)
     cu1 = CGate(1, u1)
     assert represent(cu1, nqubits=2) == cMat
@@ -129,7 +129,7 @@ def test_UGate_CGate_combo():
     assert qapply(cu1*Qubit('01')) == Qubit('01')
     assert qapply(cu1*Qubit('00')) == Qubit('00')
 
-    # Test case where gate exists in a larger space.
+    # Test case were gate exists in a larger space.
     u2 = UGate((1,), uMat)
     u2Rep = represent(u2, nqubits=2)
     for i in range(4):

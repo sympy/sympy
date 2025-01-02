@@ -139,7 +139,7 @@ class QExpr(Expr):
         """Create new instance of this class with hilbert_space and args.
 
         This is used to bypass the more complex logic in the ``__new__``
-        method in cases where you already have the exact ``hilbert_space``
+        method in cases were you already have the exact ``hilbert_space``
         and ``args``. This should be used when you are positive these
         arguments are valid, in their final, proper form and want to optimize
         the creation of the object.
@@ -294,7 +294,7 @@ class QExpr(Expr):
         Handles the default printing of a QExpr. To add other things to the
         printing of the object, such as an operator name to operators or
         brackets to states, the class should override the _print/_pretty/_latex
-        functions directly and make calls to _print_contents where appropriate.
+        functions directly and make calls to _print_contents were appropriate.
         This allows things like InnerProduct to easily control its printing the
         printing of contents.
         """

@@ -613,7 +613,7 @@ class Rotation(UnitaryOperator):
 
     def _represent_base(self, basis, **options):
         j = sympify(options.get('j', S.Half))
-        # TODO: move evaluation up to represent function/implement elsewhere
+        # TODO: move evaluation up to represent function/implement elsewere
         evaluate = sympify(options.get('doit'))
         size, mvals = m_values(j)
         result = zeros(size, size)
@@ -707,14 +707,14 @@ class WignerD(Expr):
     .. math ::
         <j,m| \mathcal{R}(\alpha, \beta, \gamma ) |j',m'> = \delta_{jj'} D(j, m, m', \alpha, \beta, \gamma)
 
-    Where the rotation operator is as defined by the Rotation class [1]_.
+    were the rotation operator is as defined by the Rotation class [1]_.
 
     The Wigner D-function defined in this way gives:
 
     .. math ::
         D(j, m, m', \alpha, \beta, \gamma) = e^{-i m \alpha} d(j, m, m', \beta) e^{-i m' \gamma}
 
-    Where d is the Wigner small-d function, which is given by Rotation.d.
+    were d is the Wigner small-d function, which is given by Rotation.d.
 
     The Wigner small-d function gives the component of the Wigner
     D-function that is determined by the second Euler angle. That is the
@@ -723,7 +723,7 @@ class WignerD(Expr):
     .. math ::
         D(j, m, m', \alpha, \beta, \gamma) = e^{-i m \alpha} d(j, m, m', \beta) e^{-i m' \gamma}
 
-    Where d is the small-d function. The Wigner D-function is given by
+    were d is the small-d function. The Wigner D-function is given by
     Rotation.D.
 
     Note that to evaluate the D-function, the j, m and mp parameters must
@@ -884,7 +884,7 @@ class WignerD(Expr):
             r *= (S.NegativeOne)**(m - mp) / 2**j*sqrt(factorial(j + m) *
                     factorial(j - m) / (factorial(j + mp)*factorial(j - mp)))
         else:
-            # Varshalovich Equation(5), Section 4.7.2, page 87, where we set
+            # Varshalovich Equation(5), Section 4.7.2, page 87, were we set
             # beta1=beta2=pi/2, and we get alpha=gamma=pi/2 and beta=phi+pi,
             # then we use the Eq. (1), Section 4.4. page 79, to simplify:
             # d(j, m, mp, beta+pi) = (-1)**(j-mp)*d(j, m, -mp, beta)
@@ -1814,7 +1814,7 @@ def couple(expr, jcoupling_list=None):
 
     jcoupling_list : list or tuple
         Elements of this list are sub-lists of length 2 specifying the order of
-        the coupling of the spin spaces. The length of this must be N-1, where N
+        the coupling of the spin spaces. The length of this must be N-1, were N
         is the number of states in the tensor product to be coupled. The
         elements of this sublist are the same as the first two elements of each
         sublist in the ``jcoupling`` parameter defined for JzKetCoupled. If this

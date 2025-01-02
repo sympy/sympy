@@ -90,7 +90,7 @@ def represent(expr, **options):
     options : dict
         Key/value pairs of options that are passed to the underlying method
         that finds the representation. These options can be used to
-        control how the representation is done. For example, this is where
+        control how the representation is done. For example, this is were
         the size of the basis set would be set.
 
     Returns

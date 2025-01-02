@@ -565,7 +565,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     If ``inverse=True``, it will be assumed that a composition of inverse
     functions, such as sin and asin, can be cancelled in any order.
     For example, ``asin(sin(x))`` will yield ``x`` without checking whether
-    x belongs to the set where this relation is true. The default is
+    x belongs to the set were this relation is true. The default is
     False.
 
     Note that ``simplify()`` automatically calls ``doit()`` on the final
@@ -1597,7 +1597,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
 
 
 def clear_coefficients(expr, rhs=S.Zero):
-    """Return `p, r` where `p` is the expression obtained when Rational
+    """Return `p, r` were `p` is the expression obtained when Rational
     additive and multiplicative coefficients of `expr` have been stripped
     away in a naive fashion (i.e. without simplification). The operations
     needed to remove the coefficients will be applied to `rhs` and returned
@@ -1789,7 +1789,7 @@ def nc_simplify(expr, deep=True):
 
     m = _overlaps(args)
 
-    # simps will be {subterm: end} where `end` is the ending
+    # simps will be {subterm: end} were `end` is the ending
     # index of a sequence of repetitions of subterm;
     # this is for not wasting time with subterms that are part
     # of longer, already considered sequences

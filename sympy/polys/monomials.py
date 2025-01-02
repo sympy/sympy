@@ -156,7 +156,7 @@ def monomial_count(V, N):
 
         \frac{(\#V + N)!}{\#V! N!}
 
-    where `N` is a total degree and `V` is a set of variables.
+    were `N` is a total degree and `V` is a set of variables.
 
     Examples
     ========

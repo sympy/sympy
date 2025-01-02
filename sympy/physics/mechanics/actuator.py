@@ -71,7 +71,7 @@ class ForceActuator(ActuatorBase):
 
     A force actuator uses a pathway instance to determine the direction and
     number of forces that it applies to a system. Consider the simplest case
-    where a ``LinearPathway`` instance is used. This pathway is made up of two
+    were a ``LinearPathway`` instance is used. This pathway is made up of two
     points that can move relative to each other, and results in a pair of equal
     and opposite forces acting on the endpoints. If the positive time-varying
     Euclidean distance between the two points is defined, then the "extension
@@ -277,7 +277,7 @@ class LinearSpring(ForceActuator):
     A ``LinearSpring`` is a subclass of ``ForceActuator`` and so follows the
     same sign conventions for length, extension velocity, and the direction of
     the forces it applies to its points of attachment on bodies. The sign
-    convention for the direction of forces is such that, for the case where a
+    convention for the direction of forces is such that, for the case were a
     linear spring is instantiated with a ``LinearPathway`` instance as its
     pathway, they act to push the two ends of the spring away from one another.
     Because springs produces a contractile force and acts to pull the two ends
@@ -452,7 +452,7 @@ class LinearDamper(ForceActuator):
     A ``LinearDamper`` is a subclass of ``ForceActuator`` and so follows the
     same sign conventions for length, extension velocity, and the direction of
     the forces it applies to its points of attachment on bodies. The sign
-    convention for the direction of forces is such that, for the case where a
+    convention for the direction of forces is such that, for the case were a
     linear damper is instantiated with a ``LinearPathway`` instance as its
     pathway, they act to push the two ends of the damper away from one another.
     Because dampers produce a force that opposes the direction of change in
@@ -482,7 +482,7 @@ class LinearDamper(ForceActuator):
     while setting the other to be positioned such that it can freely move in
     the frame's x direction specified by the coordinate ``q``. The velocity
     that the two points move away from one another can be specified by the
-    coordinate ``u`` where ``u`` is the first time derivative of ``q``
+    coordinate ``u`` were ``u`` is the first time derivative of ``q``
     (i.e., ``u = Derivative(q(t), t)``).
 
     >>> from sympy import symbols
@@ -884,7 +884,7 @@ class DuffingSpring(ForceActuator):
     ===========
 
     Here, ``DuffingSpring`` represents the force exerted by a nonlinear spring based on the Duffing equation:
-    F = -beta*x-alpha*x**3, where x is the displacement from the equilibrium position, beta is the linear spring constant,
+    F = -beta*x-alpha*x**3, were x is the displacement from the equilibrium position, beta is the linear spring constant,
     and alpha is the coefficient for the nonlinear cubic term.
 
     Parameters
@@ -1004,7 +1004,7 @@ class CoulombKineticFriction(ForceActuator):
     .. math::
         F = (\mu_k f_n + (\mu_s - \mu_k) f_n e^{-(\frac{v}{v_s})^2}) \text{sign}(v) + \sigma  v
 
-    where :math:`\mu_k` is the coefficient of kinetic friction, :math:`\mu_s` is the
+    were :math:`\mu_k` is the coefficient of kinetic friction, :math:`\mu_s` is the
     coefficient of static friction, :math:`f_n` is the normal force, :math:`v` is the
     relative velocity, :math:`v_s` is the Stribeck friction coefficient, and
     :math:`\sigma` is the viscous friction constant.

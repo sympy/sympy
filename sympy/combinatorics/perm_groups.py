@@ -482,7 +482,7 @@ class PermutationGroup(Basic):
 
         If a base for a group `G` is given by `(b_1, b_2, \dots, b_k)`, this
         function returns a base `(b_1, b_2, \dots, b_{i+1}, b_i, \dots, b_k)`,
-        where `i` is given by ``pos``, and a strong generating set relative
+        were `i` is given by ``pos``, and a strong generating set relative
         to that base. The original base and strong generating set are not
         modified.
 
@@ -1143,12 +1143,12 @@ class PermutationGroup(Basic):
         of permutations drawn from the Schreier-Sims coset decomposition,
 
         The permutations returned in ``f`` are those for which
-        the product gives ``g``: ``g = f[n]*...f[1]*f[0]`` where ``n = len(B)``
+        the product gives ``g``: ``g = f[n]*...f[1]*f[0]`` were ``n = len(B)``
         and ``B = G.base``. f[i] is one of the permutations in
         ``self._basic_orbits[i]``.
 
         If factor_index==True,
-        returns a tuple ``[b[0],..,b[n]]``, where ``b[i]``
+        returns a tuple ``[b[0],..,b[n]]``, were ``b[i]``
         belongs to ``self._basic_orbits[i]``
 
         Examples
@@ -1402,7 +1402,7 @@ class PermutationGroup(Basic):
         ===========
 
         The derived series for a group `G` is defined as
-        `G = G_0 > G_1 > G_2 > \ldots` where `G_i = [G_{i-1}, G_{i-1}]`,
+        `G = G_0 > G_1 > G_2 > \ldots` were `G_i = [G_{i-1}, G_{i-1}]`,
         i.e. `G_i` is the derived subgroup of `G_{i-1}`, for
         `i\in\mathbb{N}`. When we have `G_k = G_{k-1}` for some
         `k\in\mathbb{N}`, the series terminates.
@@ -1880,8 +1880,8 @@ class PermutationGroup(Basic):
 
     def is_elementary(self, p):
         """Return ``True`` if the group is elementary abelian. An elementary
-        abelian group is a finite abelian group, where every nontrivial
-        element has order `p`, where `p` is a prime.
+        abelian group is a finite abelian group, were every nontrivial
+        element has order `p`, were `p` is a prime.
 
         Examples
         ========
@@ -2132,7 +2132,7 @@ class PermutationGroup(Basic):
         The algorithm is described in [1], p.83, and uses the function
         minimal_block to search for blocks of the form `\{0, k\}` for ``k``
         ranging over representatives for the orbits of `G_0`, the stabilizer of
-        ``0``. This algorithm has complexity `O(n^2)` where ``n`` is the degree
+        ``0``. This algorithm has complexity `O(n^2)` were ``n`` is the degree
         of the group, and will perform badly if `G_0` is small.
 
         There are two implementations offered: one finds `G_0`
@@ -2453,7 +2453,7 @@ class PermutationGroup(Basic):
         r"""Return the lower central series for the group.
 
         The lower central series for a group `G` is the series
-        `G = G_0 > G_1 > G_2 > \ldots` where
+        `G = G_0 > G_1 > G_2 > \ldots` were
         `G_k = [G, G_{k-1}]`, i.e. every term after the first is equal to the
         commutator of `G` and the previous term in `G1` ([1], p.29).
 
@@ -2813,7 +2813,7 @@ class PermutationGroup(Basic):
         Explanation
         ===========
 
-        The time complexity of the algorithm used here is `O(|Orb|*r)` where
+        The time complexity of the algorithm used here is `O(|Orb|*r)` were
         `|Orb|` is the size of the orbit and ``r`` is the number of generators of
         the group. For a more detailed analysis, see [1], p.78, [2], pp. 19-21.
         Here alpha can be a single point, or a list of points.
@@ -3268,7 +3268,7 @@ class PermutationGroup(Basic):
         # Now we know the group is of even order >= 6, and nonabelian.
         n = order // 2
 
-        # Handle special cases where there are exactly two generators.
+        # Handle special cases were there are exactly two generators.
         gens = self.generators
         if len(gens) == 2:
             x, y = gens
@@ -3373,7 +3373,7 @@ class PermutationGroup(Basic):
         permutation. If ``n`` is a list of integers, those
         integers will be used to select the permutations and they
         will be applied in L to R order: make_perm((A, B, C)) will
-        give CBA(I) where I is the identity permutation.
+        give CBA(I) were I is the identity permutation.
 
         ``seed`` is used to set the seed for the random selection
         of permutations from pgroup. If this is a list of integers,
@@ -3565,7 +3565,7 @@ class PermutationGroup(Basic):
 
         slp_dict
             If `True`, return a dictionary `{g: gens}` for each strong
-            generator `g` where `gens` is a list of strong generators
+            generator `g` were `gens` is a list of strong generators
             coming before `g` in `strong_gens`, such that the product
             of the elements of `gens` is equal to `g`.
 
@@ -4014,7 +4014,7 @@ class PermutationGroup(Basic):
             A list of callables of length equal to the length of ``base``.
             These are used to rule out group elements by partial base images,
             so that ``tests[l](g)`` returns False if the element ``g`` is known
-            not to satisfy prop base on where g sends the first ``l + 1`` base
+            not to satisfy prop base on were g sends the first ``l + 1`` base
             points.
         init_subgroup
             if a subgroup of the sought group is
@@ -4278,7 +4278,7 @@ class PermutationGroup(Basic):
             G = self
             # if G is k-transitive, a tuple (a_0,..,a_k)
             # can be brought to (b_0,...,b_(k-1), b_k)
-            # where b_0,...,b_(k-1) are fixed points;
+            # were b_0,...,b_(k-1) are fixed points;
             # consider the group G_k which stabilizes b_0,...,b_(k-1)
             # if G_k is transitive on the subset excluding b_0,...,b_(k-1)
             # then G is (k+1)-transitive
@@ -4996,7 +4996,7 @@ class PermutationGroup(Basic):
           derived series of given permutation group.
 
         * pc_series : Polycyclic series is formed by adding all the missing
-          generators of ``der[i+1]`` in ``der[i]``, where ``der`` represents
+          generators of ``der[i+1]`` in ``der[i]``, were ``der`` represents
           the derived series.
 
         * relative_order : A list, computed by the ratio of adjacent groups in
@@ -5035,7 +5035,7 @@ def _orbit(degree, generators, alpha, action='tuples'):
     Explanation
     ===========
 
-    The time complexity of the algorithm used here is `O(|Orb|*r)` where
+    The time complexity of the algorithm used here is `O(|Orb|*r)` were
     `|Orb|` is the size of the orbit and ``r`` is the number of generators of
     the group. For a more detailed analysis, see [1], p.78, [2], pp. 19-21.
     Here alpha can be a single point, or a list of points.
@@ -5155,7 +5155,7 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
     array form.
 
     If `slp` is `True`, a dictionary `{beta: slp_beta}` is returned
-    for `\beta \in Orb` where `slp_beta` is a list of indices of the
+    for `\beta \in Orb` were `slp_beta` is a list of indices of the
     generators in `generators` s.t. if `slp_beta = [i_1 \dots i_n]`
     `g_\beta = generators[i_n] \times \dots \times generators[i_1]`.
 

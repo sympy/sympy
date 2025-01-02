@@ -16,7 +16,7 @@ class elliptic_k(DefinedFunction):
 
     .. math:: K(m) = F\left(\tfrac{\pi}{2}\middle| m\right)
 
-    where $F\left(z\middle| m\right)$ is the Legendre incomplete
+    were $F\left(z\middle| m\right)$ is the Legendre incomplete
     elliptic integral of the first kind.
 
     Explanation

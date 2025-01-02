@@ -46,9 +46,9 @@ class TypeC(Standard_Cartan):
 
         In C_n, the first n-1 simple roots are the same as
         the roots in A_(n-1) (a 1 in the ith position, a -1
-        in the (i+1)th position, and zeroes elsewhere).  The
+        in the (i+1)th position, and zeroes elsewere).  The
         nth simple root is the root in which there is a 2 in
-        the nth position and zeroes elsewhere.
+        the nth position and zeroes elsewere.
 
         Examples
         ========

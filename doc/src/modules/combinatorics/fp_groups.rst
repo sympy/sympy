@@ -66,7 +66,7 @@ Construction of a Free Group
 ````````````````````````````
 
 ``free_group("gen0, gen1, ..., gen_(n-1)")`` constructs a free group ``F`` on
-``n`` generators, where ``n`` is a positive integer. The `i`-th generator of
+``n`` generators, were ``n`` is a positive integer. The `i`-th generator of
 `F` may be obtained using the method ``.generators[i]``, `i = 0, \ldots n-1`.
 
 >>> F, x, y = free_group("x, y")
@@ -97,7 +97,7 @@ When we say *word* in SymPy, it actually means a `reduced word
 <https://en.wikipedia.org/wiki/Word_(group_theory)#Reduced_words>`_ , since the
 words are automatically reduced. Given a group ``G`` defined on `n` generators
 `x_1, x_2, x_3, \ldots, x_n`, a word is constructed as
-`s_1^{r_1}s_2^{r_2} \cdots s_k^{r_k}` where `s_i \in \{x_1, x_2, \ldots, x_n\}`
+`s_1^{r_1}s_2^{r_2} \cdots s_k^{r_k}` were `s_i \in \{x_1, x_2, \ldots, x_n\}`
 , `r_i \in \mathbb{Z}` for all `k`.
 
 Each word can be constructed in a variety of ways, since after reduction they
@@ -152,7 +152,7 @@ enumeration by changing the values of the variable
 Attributes of CosetTable
 ````````````````````````
 
-For ``CosetTable(G, H)`` where ``G`` is the group and ``H`` is the subgroup.
+For ``CosetTable(G, H)`` were ``G`` is the group and ``H`` is the subgroup.
 
 * ``n``: A non-negative integer, non-mutable attribute, dependently
   calculated as the maximum among the live-cosets (i.e. `\Omega`).
@@ -162,7 +162,7 @@ For ``CosetTable(G, H)`` where ``G`` is the group and ``H`` is the subgroup.
 
 * ``omega``: A list, dependent on the internal attribute ``p``. `\Omega`
   represents the list of live-cosets. A *standard* coset-table has its
-  `\Omega = \{0, 1, \ldots, index-1 \}` where `index` is the index of subgroup
+  `\Omega = \{0, 1, \ldots, index-1 \}` were `index` is the index of subgroup
   `H` in `G`.
 
 For experienced users we have a number of parameters that can be used to
@@ -247,7 +247,7 @@ Reidemeister-Schreier algorithm or on the given list of generators of ``H``.
 Reidemeister Schreier algorithm
 ```````````````````````````````
 
-called using ``reidemeister_presentation(G, Y)`` where ``G`` is the group and
+called using ``reidemeister_presentation(G, Y)`` were ``G`` is the group and
 ``Y`` is a list of generators for subgroup ``H`` whose presentation we want to
 find.
 

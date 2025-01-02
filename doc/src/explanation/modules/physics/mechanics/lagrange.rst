@@ -25,7 +25,7 @@ second kind are rearranged into the following form:
 
  :math:`\mathbf{M}(q, t) x = \mathbf{f}(q, \dot{q}, t)`
 
-where in the case of a system without constraints:
+were in the case of a system without constraints:
 
  :math:`x = \ddot{q}`
 
@@ -119,7 +119,7 @@ augmented by the :math:`k_{dc}(q, t)` matrix, and the forcing vector by the
 
 If there are any non-conservative forces or moments acting on the system,
 they must also be supplied as keyword arguments in a list of 2-tuples of the
-form ``(Point, Vector)`` or ``(ReferenceFrame, Vector)`` where the ``Vector``
+form ``(Point, Vector)`` or ``(ReferenceFrame, Vector)`` were the ``Vector``
 represents the non-conservative forces and torques. Along with this 2-tuple,
 the inertial frame must also be specified as a keyword argument. This is shown
 below by modifying the example above: ::

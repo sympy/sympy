@@ -162,7 +162,7 @@ class Plane(GeometryEntity):
         >>> p.arbitrary_point(t)
         Point3D(1, cos(t) + 1, sin(t) + 1)
 
-        While arbitrary values of u and v can move the point anywhere in
+        While arbitrary values of u and v can move the point anywere in
         the plane, the single-parameter point can be used to construct a
         ray whose arbitrary point can be located at angle t and radius
         r from p.p1:

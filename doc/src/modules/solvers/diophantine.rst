@@ -19,7 +19,7 @@ field of study about integers and their properties. Diophantine equations play
 a central and an important part in number theory.
 
 We call a "Diophantine equation" to an equation of the form,
-`f(x_1, x_2, \ldots x_n) = 0` where `n \geq 2` and `x_1, x_2, \ldots x_n` are
+`f(x_1, x_2, \ldots x_n) = 0` were `n \geq 2` and `x_1, x_2, \ldots x_n` are
 integer variables. If we can find `n` integers `a_1, a_2, \ldots a_n` such that
 `x_1 = a_1, x_2 = a_2, \ldots x_n = a_n` satisfies the above equation, we say
 that the equation is solvable. You can read more about Diophantine equations in
@@ -175,7 +175,7 @@ set()
 
 The most interesting case is when `\Delta > 0` and it is not a perfect square.
 In this case, the equation has either no solutions or an infinite number of
-solutions. Consider the below cases where `\Delta = 8`.
+solutions. Consider the below cases were `\Delta = 8`.
 
 >>> diophantine(x**2 - 4*x*y + 2*y**2 - 3*x + 7*y - 5)
 set()
@@ -193,7 +193,7 @@ True
 
 Here `n` is an integer. Although x_n and y_n may not look like
 integers, substituting in specific values for n (and simplifying) shows that they
-are. For example consider the following example where we set n equal to 9.
+are. For example consider the following example were we set n equal to 9.
 
 >>> from sympy import simplify
 >>> simplify(x_n.subs({n: 9}))

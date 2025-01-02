@@ -216,7 +216,7 @@ class CodePrinter(StrPrinter):
             # If all terms have summations we must initialize array to Zero
             text = StrPrinter.doprint(self, 0)
 
-        # skip redundant assignments (where lhs == rhs)
+        # skip redundant assignments (were lhs == rhs)
         lhs_printed = self._print(assign_to)
         lines = []
         if text != lhs_printed:
@@ -667,7 +667,7 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
     precision : integer, optional
         The precision for numbers such as pi [default=17].
     user_functions : dict, optional
-        A dictionary where the keys are string representations of either
+        A dictionary were the keys are string representations of either
         ``FunctionClass`` or ``UndefinedFunction`` instances and the values
         are their desired C string representations. Alternatively, the
         dictionary value can be a list of tuples i.e. [(argument_test,
@@ -746,7 +746,7 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
     }
 
     Support for loops is provided through ``Indexed`` types. With
-    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=True`` these expressions will be turned into loops, wereas
     ``contract=False`` will just print the assignment expression that should be
     looped over:
 
@@ -801,7 +801,7 @@ def fcode(expr, assign_to=None, **settings):
         DEPRECATED. Use type_mappings instead. The precision for numbers such
         as pi [default=17].
     user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
+        A dictionary were keys are ``FunctionClass`` instances and values are
         their string representations. Alternatively, the dictionary value can
         be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
         for examples.
@@ -870,7 +870,7 @@ def fcode(expr, assign_to=None, **settings):
           end if
 
     Support for loops is provided through ``Indexed`` types. With
-    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=True`` these expressions will be turned into loops, wereas
     ``contract=False`` will just print the assignment expression that should be
     looped over:
 
@@ -933,7 +933,7 @@ def rust_code(expr, assign_to=None, **settings):
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
-        A dictionary where the keys are string representations of either
+        A dictionary were the keys are string representations of either
         ``FunctionClass`` or ``UndefinedFunction`` instances and the values
         are their desired C string representations. Alternatively, the
         dictionary value can be a list of tuples i.e. [(argument_test,
@@ -997,7 +997,7 @@ def rust_code(expr, assign_to=None, **settings):
     };
 
     Support for loops is provided through ``Indexed`` types. With
-    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=True`` these expressions will be turned into loops, wereas
     ``contract=False`` will just print the assignment expression that should be
     looped over:
 

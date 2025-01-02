@@ -18,7 +18,7 @@ def gosper_normal(f, g, n, polys=True):
     .. math::
         \frac{f(n)}{g(n)} = Z \cdot \frac{A(n) C(n+1)}{B(n) C(n)}
 
-    where ``Z`` is an arbitrary constant and ``A``, ``B``, ``C`` are
+    were ``Z`` is an arbitrary constant and ``A``, ``B``, ``C`` are
     monic polynomials in ``n`` with the following properties:
 
     1. `\gcd(A(n), B(n+h)) = 1 \forall h \in \mathbb{N}`
@@ -168,7 +168,7 @@ def gosper_sum(f, k):
     .. math ::
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and `f(n)` does not depend on `n`, returns `g_{n} - g(0)` where
+    and `f(n)` does not depend on `n`, returns `g_{n} - g(0)` were
     `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` cannot be expressed
     in closed form as a sum of hypergeometric terms.
 

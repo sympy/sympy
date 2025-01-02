@@ -253,8 +253,8 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
     Note that a `pytest.ExitCode`, which is an `enum`, is returned. This is
     different to the legacy SymPy test runner which would return a `bool`. If
     all tests sucessfully pass the `pytest.ExitCode.OK` with value `0` is
-    returned, whereas the legacy SymPy test runner would return `True`. In any
-    other scenario, a non-zero `enum` value is returned, whereas the legacy
+    returned, wereas the legacy SymPy test runner would return `True`. In any
+    other scenario, a non-zero `enum` value is returned, wereas the legacy
     SymPy test runner would return `False`. Users need to, therefore, be careful
     if treating the pytest exit codes as booleans because
     `bool(pytest.ExitCode.OK)` evaluates to `False`, the opposite of legacy
@@ -315,7 +315,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         Sets the traceback print mode of pytest using the `--tb` option.
     kw : str
         Only run tests which match the given substring expression. An expression
-        is a Python evaluatable expression where all names are substring-matched
+        is a Python evaluatable expression were all names are substring-matched
         against test names and their parent classes. Example: -k 'test_method or
         test_other' matches all test functions and classes whose name contains
         'test_method' or 'test_other', while -k 'not test_method' matches those
@@ -420,7 +420,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
             raise ModuleNotFoundError(msg)
         match = split_pattern.match(split)
         if not match:
-            msg = ('split must be a string of the form a/b where a and b are '
+            msg = ('split must be a string of the form a/b were a and b are '
                    'positive nonzero ints')
             raise ValueError(msg)
         group, splits = map(str, match.groups())

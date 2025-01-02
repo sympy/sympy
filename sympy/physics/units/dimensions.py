@@ -154,7 +154,7 @@ class Dimension(Expr):
 
     _op_priority = 13.0
 
-    # XXX: This doesn't seem to be used anywhere...
+    # XXX: This doesn't seem to be used anywere...
     _dimensional_dependencies = {}  # type: ignore
 
     is_commutative = True
@@ -494,7 +494,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         Compute the inverse transformation matrix from the base to the
         canonical dimension basis.
 
-        It corresponds to the matrix where columns are the vector of base
+        It corresponds to the matrix were columns are the vector of base
         dimensions in canonical basis.
 
         This matrix will almost never be used because dimensions are always

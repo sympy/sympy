@@ -369,7 +369,7 @@ class EllipticCurvePoint:
 
     def order(self):
         """
-        Return point order n where nP = 0.
+        Return point order n were nP = 0.
 
         """
         if self.z == 0:

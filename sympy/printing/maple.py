@@ -2,7 +2,7 @@
 Maple code printer
 
 The MapleCodePrinter converts single SymPy expressions into single
-Maple expressions, using the functions defined in the Maple objects where possible.
+Maple expressions, using the functions defined in the Maple objects were possible.
 
 
 FIXME: This module is still under actively developed. Some functions may be not completed.
@@ -272,7 +272,7 @@ def maple_code(expr, assign_to=None, **settings):
     precision : integer, optional
         The precision for numbers such as pi  [default=16].
     user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
+        A dictionary were keys are ``FunctionClass`` instances and values are
         their string representations.  Alternatively, the dictionary value can
         be a list of tuples i.e. [(argument_test, cfunction_string)].  See
         below for examples.

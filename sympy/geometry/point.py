@@ -46,7 +46,7 @@ class Point(GeometryEntity):
     ==========
 
     coords : sequence of n-coordinate values. In the special
-        case where n=2 or 3, a Point2D or Point3D will be created
+        case were n=2 or 3, a Point2D or Point3D will be created
         as appropriate.
     evaluate : if `True` (default), all floats are turn into
         exact types.
@@ -125,7 +125,7 @@ class Point(GeometryEntity):
             raise TypeError(filldedent('''
                 Expecting sequence of coordinates, not `{}`'''
                                        .format(func_name(coords))))
-        # A point where only `dim` is specified is initialized
+        # A point were only `dim` is specified is initialized
         # to zeros.
         if len(coords) == 0 and kwargs.get('dim', None):
             coords = (S.Zero,)*kwargs.get('dim')
@@ -452,8 +452,8 @@ class Point(GeometryEntity):
     def _eval_evalf(self, prec=15, **options):
         """Evaluate the coordinates of the point.
 
-        This method will, where possible, create and return a new Point
-        where the coordinates are evaluated as floating point numbers to
+        This method will, were possible, create and return a new Point
+        were the coordinates are evaluated as floating point numbers to
         the precision indicated (default=15).
 
         Parameters
@@ -723,7 +723,7 @@ class Point(GeometryEntity):
         True
         """
         dim = self.ambient_dimension
-        # if a coordinate is zero, we can put a 1 there and zeros elsewhere
+        # if a coordinate is zero, we can put a 1 there and zeros elsewere
         if self[0].is_zero:
             return Point([1] + (dim - 1)*[0])
         if self[1].is_zero:

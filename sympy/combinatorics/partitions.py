@@ -239,7 +239,7 @@ class Partition(FiniteSet):
         Explanation
         ===========
 
-        The RGS is returned as a list of indices, L, where L[i] indicates
+        The RGS is returned as a list of indices, L, were L[i] indicates
         the block in which element i appears. For example, in a partition
         of 3 elements (a, b, c) into 2 blocks ([c], [a, b]) the RGS is
         [1, 1, 0]: "a" is in block 1, "b" is in block 1 and "c" is in block 0.

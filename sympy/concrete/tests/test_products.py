@@ -40,7 +40,7 @@ def test_karr_convention():
     #
     # \prod_{m <= i < n} f(i) = \prod_{i = m}^{n-1} f(i)
     #
-    # where we intentionally used two different ways to typeset the
+    # were we intentionally used two different ways to typeset the
     # products and its limits.
 
     i = Symbol("i", integer=True)

@@ -6,7 +6,7 @@ from sympy.utilities.misc import filldedent
 from sympy.core.evalf import EvalfMixin
 
 from mpmath.libmp.libmpf import prec_to_dps
-
+from sympy.simplify.radsimp import fraction
 
 __all__ = ['Vector']
 
@@ -694,6 +694,24 @@ class Vector(Printable, EvalfMixin):
         vec2 = vec.normalize()
         angle = acos(vec1.dot(vec2))
         return angle
+    def define_orientation(vector_expression, exact=False):
+        """
+        Define the orientation of a vector and simplify its representation.
+    
+        Parameters
+    ----------
+        vector_expression : Expr
+            The vector expression to define orientation for.
+        exact : bool, optional
+        Whether to use exact handling of fractions (default is False).
+        
+        Returns
+        -------
+        simplified_expression : Expr
+            The simplified vector expression with the defined orientation.
+    """
+        numer, denom = fraction(vector_expression, exact=exact)
+        return numer / denom
 
     def free_symbols(self, reference_frame):
         """Returns the free symbols in the measure numbers of the vector

@@ -70,7 +70,7 @@ def _pinv_diagonalization(M):
 
     except MatrixError:
         raise NotImplementedError(
-            'pinv for rank-deficient matrices where '
+            'pinv for rank-deficient matrices were '
             'diagonalization of A.H*A fails is not supported yet.')
 
 def _pinv(M, method='RD'):

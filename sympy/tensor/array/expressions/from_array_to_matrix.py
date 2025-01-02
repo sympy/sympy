@@ -132,7 +132,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
 
 def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
     # If there are matrices of trivial shape in the tensor product (i.e. shape
-    # (1, 1)), try to check if there is a suitable non-trivial MatMul where the
+    # (1, 1)), try to check if there is a suitable non-trivial MatMul were the
     # expression can be inserted.
 
     # For example, if "a" has shape (1, 1) and "b" has shape (k, 1), the
@@ -760,7 +760,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
         make_trace: bool = False
         if len(k) == 1 and next(iter(k)) >= 0 and sum(next(iter(k)) in i for i in map_contr_to_args) == 1:
             # This is a trace: the arguments are fully contracted with only one
-            # index, and the index isn't used anywhere else:
+            # index, and the index isn't used anywere else:
             make_trace = True
             first_element = S.One
         elif len(k) != 2:
@@ -831,7 +831,7 @@ def identify_removable_identity_matrices(expr):
                     elif counted > 2:
                         # Case counted = 2 is a matrix multiplication by identity matrix, skip it.
                         # Case counted > 2 is a multiple contraction,
-                        # this is a case where the contraction becomes a diagonalization if the
+                        # this is a case were the contraction becomes a diagonalization if the
                         # identity matrix is dropped.
                         continue
                 elif arg_with_ind.indices[0] == arg_with_ind.indices[1]:
@@ -842,7 +842,7 @@ def identify_removable_identity_matrices(expr):
                         flag = True
                         break
                     else:
-                        # This is a trace, skip it as it will be recognized somewhere else:
+                        # This is a trace, skip it as it will be recognized somewere else:
                         pass
             elif ask(Q.diagonal(arg_with_ind.element)):
                 if arg_with_ind.indices == [None, None]:

@@ -34,7 +34,7 @@ changed using a bijective function on the position of the characters
 to perform the encryption.
 
 A *monoalphabetic cipher* uses fixed substitution over the entire
-message, whereas a *polyalphabetic cipher* uses a number of
+message, wereas a *polyalphabetic cipher* uses a number of
 substitutions at different times in the message.
 
 .. module:: sympy.crypto.crypto

@@ -66,7 +66,7 @@ The dot product operation maps two vectors to a scalar.  It is defined as:
   \mathbf{a} \cdot \mathbf{b} = \Vert \mathbf{a} \Vert \Vert \mathbf{b}
   \Vert \cos(\theta)\\
 
-where :math:`\theta` is the angle between :math:`\mathbf{a}` and
+were :math:`\theta` is the angle between :math:`\mathbf{a}` and
 :math:`\mathbf{b}`.
 
 The dot product of two unit vectors represent the magnitude of the common
@@ -91,7 +91,7 @@ vector:
 The vector :math:`\mathbf{c}` has the following properties: it's orientation is
 perpendicular to both :math:`\mathbf{a}` and :math:`\mathbf{b}`, it's magnitude
 is defined as :math:`\Vert \mathbf{c} \Vert = \Vert \mathbf{a} \Vert \Vert
-\mathbf{b} \Vert \sin(\theta)` (where :math:`\theta` is the angle between
+\mathbf{b} \Vert \sin(\theta)` (were :math:`\theta` is the angle between
 :math:`\mathbf{a}` and :math:`\mathbf{b}`), and has a sense defined by using
 the right hand rule between :math:`\Vert \mathbf{a} \Vert \Vert \mathbf{b}
 \Vert`. The figure below shows this:
@@ -116,7 +116,7 @@ and not associative:
 Two parallel vectors will have a zero cross product.
 
 The outer product between two vectors will not be not be discussed here, but
-instead in the inertia section (that is where it is used). Other useful vector
+instead in the inertia section (that is were it is used). Other useful vector
 properties and relationships are:
 
 .. math::
@@ -476,7 +476,7 @@ still be valid:
 Note the difference in expression complexity between the two forms. They are
 equivalent, but one is much simpler. This is an extremely important concept, as
 defining vectors in the more complex forms can vastly slow down formulation of
-the equations of motion and increase their length, sometimes to a point where
+the equations of motion and increase their length, sometimes to a point were
 they cannot be shown on screen.
 
 Using Vectors and Reference Frames
@@ -742,7 +742,7 @@ length 2; if it has ``A``, ``B``, and ``C`` frame basis vector, ``args`` is of
 length three.
 
 Each element in the ``args`` list is a 2-tuple; the first element is a SymPy
-``Matrix`` (this is where the measure numbers for each set of basis vectors are
+``Matrix`` (this is were the measure numbers for each set of basis vectors are
 stored) and the second element is a ``ReferenceFrame`` to associate those
 measure numbers with.
 
@@ -750,7 +750,7 @@ measure numbers with.
 on creation (``name`` attribute). It also stores the direction cosine matrices,
 defined upon creation with the ``orientnew`` method, or calling the ``orient``
 method after creation. The direction cosine matrices are represented by SymPy's
-``Matrix``, and are part of a dictionary where the keys are the
+``Matrix``, and are part of a dictionary were the keys are the
 ``ReferenceFrame`` and the value the ``Matrix``; these are set
 bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
 orientation dictionary to include ``N`` and its ``Matrix``, but you are also

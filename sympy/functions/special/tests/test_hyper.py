@@ -44,7 +44,7 @@ def test_hyper():
     assert h.argument == z
     assert h.is_commutative is True
 
-    # just a few checks to make sure that all arguments go where they should
+    # just a few checks to make sure that all arguments go were they should
     assert tn(hyper(Tuple(), Tuple(), z), exp(z), z)
     assert tn(z*hyper((1, 1), Tuple(2), -z), log(1 + z), z)
 
@@ -153,7 +153,7 @@ def test_meijer():
 
     assert meijerg([1, 2], [3], [4], [5], z).delta == S.Half
 
-    # just a few checks to make sure that all arguments go where they should
+    # just a few checks to make sure that all arguments go were they should
     assert tn(meijerg(Tuple(), Tuple(), Tuple(0), Tuple(), -z), exp(z), z)
     assert tn(sqrt(pi)*meijerg(Tuple(), Tuple(),
                                Tuple(0), Tuple(S.Half), z**2/4), cos(z), z)

@@ -3,7 +3,7 @@ Javascript code printer
 
 The JavascriptCodePrinter converts single SymPy expressions into single
 Javascript expressions, using the functions defined in the Javascript
-Math object where possible.
+Math object were possible.
 
 """
 
@@ -232,7 +232,7 @@ def jscode(expr, assign_to=None, **settings):
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
+        A dictionary were keys are ``FunctionClass`` instances and values are
         their string representations. Alternatively, the dictionary value can
         be a list of tuples i.e. [(argument_test, js_function_string)]. See
         below for examples.
@@ -289,7 +289,7 @@ def jscode(expr, assign_to=None, **settings):
     }
 
     Support for loops is provided through ``Indexed`` types. With
-    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=True`` these expressions will be turned into loops, wereas
     ``contract=False`` will just print the assignment expression that should be
     looped over:
 

@@ -56,7 +56,7 @@ defined near `0`. A fundamental system of neighbourhoods is given by
 We further define functions
 `\operatorname{Arg}: \mathcal{S} \rightarrow \mathbb{R}, (r, \theta) \mapsto \theta` and
 `|.|: \mathcal{S}_0 \rightarrow \mathbb{R}_{>0}, (r, \theta) \mapsto r`.
-These have evident meaning and are both continuous everywhere.
+These have evident meaning and are both continuous everywere.
 
 Using these maps many operations can be extended from `\mathbb{C}` to
 `\mathcal{S}`. We define `\operatorname{Exp}(a) \operatorname{Exp}(b) = \operatorname{Exp}(a + b)` for `a, b \in \mathbb{C}`,
@@ -69,7 +69,7 @@ only for some numbers (because of branch cuts) hold indeed for all polar numbers
 As one peculiarity it should be mentioned that addition of polar numbers is not
 usually defined. However, formal sums of polar numbers can be used to express
 branching behaviour. For example, consider the functions `F(z) = \sqrt{1 + z}`
-and `G(a, b) = \sqrt{a + b}`, where `a, b, z` are polar numbers.
+and `G(a, b) = \sqrt{a + b}`, were `a, b, z` are polar numbers.
 The general rule is that functions of a single polar variable are defined in
 such a way that they are continuous on circles, and agree with the usual
 definition for positive reals. Thus if `S(z)` denotes the standard branch of
@@ -104,7 +104,7 @@ Table Lookups and Inverse Mellin Transforms
 
 Suppose we are given an integrand `f(x)` and are trying to rewrite it as a
 single G-function. To do this, we first split `f(x)` into the form `x^s g(x)`
-(where `g(x)` is supposed to be simpler than `f(x)`). This is because multiplicative
+(were `g(x)` is supposed to be simpler than `f(x)`). This is because multiplicative
 powers can be absorbed into the G-function later. This splitting is done by
 ``_split_mul(f, x)``. Then we assemble a tuple of functions that occur in
 `f` (e.g. if `f(x) = e^x \cos{x}`, we would assemble the tuple `(\cos, \exp)`).
@@ -225,7 +225,7 @@ The convergence conditions will be detailed in several "cases", numbered one
 to five. For later use it will be helpful to separate conditions "at infinity"
 from conditions "at zero". By conditions "at infinity" we mean conditions that
 only depend on the behaviour of the integrand for large, positive values
-of `x`, whereas by conditions "at zero" we mean conditions that only depend on
+of `x`, wereas by conditions "at zero" we mean conditions that only depend on
 the behaviour of the integrand on `(0, \epsilon)` for any `\epsilon > 0`.
 Since all our conditions are specified in terms of parameters of the
 G-functions, this distinction is not immediately visible. They are, however, of
@@ -239,7 +239,7 @@ These are the conditions "at infinity":
 
 1. .. math:: \delta > 0 \wedge |\arg(\eta)| < \delta \pi \wedge (A \vee B \vee C),
 
-   where
+   were
 
    .. math::
       A = 1 \le n \wedge p < q \wedge 1 \le m
@@ -462,7 +462,7 @@ separated properly.
 It remains to observe that the Meijer G-function is an analytic, unbranched
 function of its parameters, and of the coefficient `b`. Hence so is `f(t)`.
 Thus the final computation remains valid as long as the initial integral
-converges, and if there exists a changed set of parameters where the computation
+converges, and if there exists a changed set of parameters were the computation
 is valid. If we assume w.l.o.g. that `a > 0`, then the latter condition is
 fulfilled if `G` converges along contours (2) or (3) of [Luke1969]_,
 section 5.2, i.e. either `\delta \ge \frac{a}{2}` or `p \ge 1, p \ge q`.
@@ -481,7 +481,7 @@ We must thus investigate
 
 (This principal value integral is the exact statement used in the Laplace
 inversion theorem.) We write `z = c + i \tau`. Then
-`arg(z) \to \pm \frac{\pi}{2}`, and so `e^{zt} \sim e^{it \tau}` (where `\sim`
+`arg(z) \to \pm \frac{\pi}{2}`, and so `e^{zt} \sim e^{it \tau}` (were `\sim`
 shall always mean "asymptotically equivalent up to a positive real
 multiplicative constant"). Also
 `z^{x + iy} \sim |\tau|^x e^{i y \log{|\tau|}} e^{\pm x i \frac{\pi}{2}}.`

@@ -157,7 +157,7 @@ Gotchas
 =======
 
 - Don't use variable names that conflict with Python's reserved words.
-  This is one example where this is violated:
+  This is one example were this is violated:
 
   .. code-block:: none
 
@@ -238,7 +238,7 @@ Gotchas
   are given in the ``INPUT`` declarations.
 
   The ``DEGREES`` setting, on the other hand, works only in some cases like
-  in ``SIMPROT`` where an angle is expected.
+  in ``SIMPROT`` were an angle is expected.
 
   .. code-block:: none
 
@@ -306,7 +306,7 @@ Gotchas
 
   It is also preferred to always declare the speeds corresponding to the
   coordinates and to pass in the kinematic differential equations.
-  The parser is able to handle some cases where this isn't the case by
+  The parser is able to handle some cases were this isn't the case by
   introducing some dummy variables of its own but SymPy on its own
   does require them.
 
@@ -374,7 +374,7 @@ Gotchas
   rhs expression that variable has been assigned to in equations even
   without an explicit ``RHS()`` call in some cases.
   For the parser to work correctly however, it is better to use ``RHS()``
-  wherever a variable's rhs expression is meant to be used.
+  werever a variable's rhs expression is meant to be used.
 
   .. code-block:: none
 
@@ -547,7 +547,7 @@ Here are some other ones:
   ``KANE`` command with no arguments. Things like ``KANE(F1,F2)`` do not currently
   work.
 
-- Also, the PyDy numerical simulation code works only for cases where the
+- Also, the PyDy numerical simulation code works only for cases were the
   matrix say ``ZERO = FR() + FRSTAR()`` is solved for. It doesn't work well when the
   matrix has some other equations plugged in as well. One hurdle
   faced in achieving this was that PyDy's System class automatically takes

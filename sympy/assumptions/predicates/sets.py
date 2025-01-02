@@ -313,7 +313,7 @@ class ImaginaryPredicate(Predicate):
         "ImaginaryHandler",
         doc=("Handler for Q.imaginary.\n\n"
         "Test that an expression belongs to the field of imaginary numbers,\n"
-        "that is, numbers in the form x*I, where x is real.")
+        "that is, numbers in the form x*I, were x is real.")
     )
 
 
@@ -325,7 +325,7 @@ class AntihermitianPredicate(Predicate):
     ===========
 
     ``Q.antihermitian(x)`` is true iff ``x`` belongs to the field of
-    antihermitian operators, i.e., operators in the form ``x*I``, where
+    antihermitian operators, i.e., operators in the form ``x*I``, were
     ``x`` is Hermitian.
 
     References
@@ -340,7 +340,7 @@ class AntihermitianPredicate(Predicate):
         "AntiHermitianHandler",
         doc=("Handler for Q.antihermitian.\n\n"
         "Test that an expression belongs to the field of anti-Hermitian\n"
-        "operators, that is, operators in the form x*I, where x is Hermitian.")
+        "operators, that is, operators in the form x*I, were x is Hermitian.")
     )
 
 

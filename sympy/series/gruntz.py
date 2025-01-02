@@ -57,7 +57,7 @@ set w=exp(-x) (but we could also set w=exp(-2x) or w=exp(-3x) ...). We
 rewrite the mrv set using w, in our case {1/w, 1/w^2}, and substitute it
 into f. Then we expand f into a series in w::
 
-    f = c0*w^e0 + c1*w^e1 + ... + O(w^en),       where e0<e1<...<en, c0!=0
+    f = c0*w^e0 + c1*w^e1 + ... + O(w^en),       were e0<e1<...<en, c0!=0
 
 but for x->oo, lim f = lim c0*w^e0, because all the other terms go to zero,
 because w goes to zero faster than the ci and ei. So::

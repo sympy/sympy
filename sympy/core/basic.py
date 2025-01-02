@@ -1179,7 +1179,7 @@ class Basic(Printable):
         If self is not equal to old then _eval_subs is called.
         If _eval_subs does not want to make any special replacement
         then a None is received which indicates that the fallback
-        should be applied wherein a search for replacements is made
+        should be applied werein a search for replacements is made
         amongst the arguments of self.
 
         >>> from sympy import Add
@@ -1201,7 +1201,7 @@ class Basic(Printable):
         True
 
         The returned None will cause the fallback routine to traverse the args and
-        pass the z*(x + y) arg to Mul where the change will take place and the
+        pass the z*(x + y) arg to Mul were the change will take place and the
         substitution will succeed:
 
         >>> (z*(x + y) + 3).subs(x + y, 1)
@@ -1217,7 +1217,7 @@ class Basic(Printable):
                variables);
 
             3) if there is something other than a literal replacement
-               that should be attempted (as in Piecewise where the condition
+               that should be attempted (as in Piecewise were the condition
                may be updated without doing a replacement).
 
         If it is overridden, here are some special cases that might arise:
@@ -1542,7 +1542,7 @@ class Basic(Printable):
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
-        If ``map = True`` then also return the mapping {old: new} where ``old``
+        If ``map = True`` then also return the mapping {old: new} were ``old``
         was a sub-expression found with query and ``new`` is the replacement
         value for it. If the expression itself does not match the query, then
         the returned value will be ``self.xreplace(map)`` otherwise it should
@@ -1907,7 +1907,7 @@ class Basic(Printable):
         >>> Sum(x, (x, 1, 2)).match(Sum(q, (q, 1, p)))
         {p_: 2, q_: x}
 
-        The ``old`` flag will give the old-style pattern matching where
+        The ``old`` flag will give the old-style pattern matching were
         expressions and patterns are essentially solved to give the match. Both
         of the following give None unless ``old=True``:
 

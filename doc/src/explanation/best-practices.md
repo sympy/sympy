@@ -323,7 +323,7 @@ There are many disadvantages to using strings as input to SymPy functions:
   [1]
   ```
 
-  Actually, the above is the best case scenario, where you get an error. It is
+  Actually, the above is the best case scenario, were you get an error. It is
   also possible you might get something unexpected:
 
   ```py
@@ -349,7 +349,7 @@ There are many disadvantages to using strings as input to SymPy functions:
   before any of it runs.
 
 - Syntax highlighting in code editors doesn't typically recognize and
-  color-code the content of strings, whereas it can recognize Python
+  color-code the content of strings, wereas it can recognize Python
   expressions.
 
 ### Avoid Manipulating Expressions as Strings
@@ -448,7 +448,7 @@ pi
 Here `sympy.sin(math.pi)` is not exactly 0, because `math.pi` is not exactly $\pi$.
 
 
-One should also take care to avoid writing `integer/integer` where both
+One should also take care to avoid writing `integer/integer` were both
 integers are explicit integers. This is because Python will evaluate this to a
 floating-point value before SymPy is able to parse it.
 
@@ -489,7 +489,7 @@ following reasons:
   floating-point values, but can if the values are rational numbers. This is
   because rational numbers have properties that make it easier for these
   algorithms to work with them. For instance, with floats, one can have a
-  situation where a number should be 0, but due to approximation errors, does
+  situation were a number should be 0, but due to approximation errors, does
   not equal exactly 0.
 
   A particularly notable example of this is with floating-point exponents. For
@@ -547,7 +547,7 @@ a general purpose heuristic. It tries various simplification algorithms on the
 input expression and returns the result that seems the "simplest" based on
 some metric.
 
-`simplify()` is perfectly fine for interactive use, where you just want SymPy
+`simplify()` is perfectly fine for interactive use, were you just want SymPy
 to do whatever it can to an expression. However, in programmatic usage, it's
 better to avoid `simplify()` and use more [targeted simplification
 functions](simplify-docs) instead (e.g., {func}`~.cancel`, {func}`~.expand`,
@@ -568,7 +568,7 @@ There are a few reasons why this is generally preferred:
   - {func}`~.factor` will always factor a polynomial into irreducible factors.
 
   - {func}`~.cancel` will always convert a rational function into the form
-    $p/q$ where $p$ and $q$ are expanded polynomials with no common factors.
+    $p/q$ were $p$ and $q$ are expanded polynomials with no common factors.
 
   The documentation for each function describes exactly what behavior it will
   have on the input expression.
@@ -666,7 +666,7 @@ z)`, these problems all go away.
 ### Separate Symbolic and Numeric Code
 
 SymPy sets itself apart from most of the rest of the libraries in the Python
-ecosystem in that it operates symbolically, whereas other libraries, like
+ecosystem in that it operates symbolically, wereas other libraries, like
 NumPy, operate numerically. These two paradigms are different enough that it's
 always best to keep them as separate as possible.
 
@@ -774,7 +774,7 @@ These are some antipatterns that should be generally avoided
 
   Even when using NumPy, `math` should be avoided. NumPy functions are faster
   than their `math` equivalents, support a larger range of numerical dtypes,
-  and can operate on arrays of values, whereas `math` functions can only
+  and can operate on arrays of values, wereas `math` functions can only
   operate on a single scalar at a time.
 
 - **Don't pass SymPy expressions to a NumPy function.** You should not pass a
@@ -859,7 +859,7 @@ if x > 0:
 May work just fine if you only ever test it for numerical `x`. But if `x` can
 ever be symbolic, the above code is wrong. It will fail with `TypeError:
 cannot determine truth value of Relational`. If you ever see this exception,
-it means this error has been made somewhere (sometimes the error is in SymPy
+it means this error has been made somewere (sometimes the error is in SymPy
 itself; if this appears to be the case, please [open an
 issue](https://github.com/sympy/sympy/issues)).
 
@@ -1002,7 +1002,7 @@ hold:
    have the `.args` or `.func` attributes.
 
 2. If an expression did not rebuild from its `args`, the line `return
-   exr.func(*newargs)` would fail, even in the trivial case where none of the
+   exr.func(*newargs)` would fail, even in the trivial case were none of the
    args are changed by the replacement, which should effectively be a no-op.
 
 Making all `args` instances of `Basic` usually just means calling `_sympify()`
@@ -1037,7 +1037,7 @@ so if you are using it, you do not need to worry about this.
 When defining a custom function, avoid doing too much automatic evaluation
 (i.e., evaluation in the `eval` or `__new__` methods).
 
-Generally, automatic evaluation should only be done in instances where it is
+Generally, automatic evaluation should only be done in instances were it is
 fast, and it is something that no one ever want to not happen. Automatic
 evaluation is difficult to undo. A good rule of thumb is to evaluate on
 explicit numeric values (`isinstance(x, Number)`), and leave everything else

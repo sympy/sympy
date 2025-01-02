@@ -21,7 +21,7 @@ def ratint(f, x, **flags):
     ===========
 
     Given a field :math:`K` and a rational function :math:`f = p/q`,
-    where :math:`p` and :math:`q` are polynomials in :math:`K[x]`,
+    were :math:`p` and :math:`q` are polynomials in :math:`K[x]`,
     returns a function :math:`g` such that :math:`f = g'`.
 
     Examples

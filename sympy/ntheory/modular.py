@@ -171,7 +171,7 @@ def crt2(m, v, mm, e, s, symmetric=False):
 
 def solve_congruence(*remainder_modulus_pairs, **hint):
     """Compute the integer ``n`` that has the residual ``ai`` when it is
-    divided by ``mi`` where the ``ai`` and ``mi`` are given as pairs to
+    divided by ``mi`` were the ``ai`` and ``mi`` are given as pairs to
     this function: ((a1, m1), (a2, m2), ...). If there is no solution,
     return None. Otherwise return ``n`` and its modulus.
 

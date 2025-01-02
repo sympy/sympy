@@ -211,7 +211,7 @@ def simpleDE(f, x, g, order=4):
     .. math::
         f^k(x) + \sum\limits_{j=0}^{k-1} A_j f^j(x) = 0
 
-    where :math:`A_j` should be rational function in x.
+    were :math:`A_j` should be rational function in x.
 
     Generates DE's upto order 4 (default). DE's can also have free parameters.
 

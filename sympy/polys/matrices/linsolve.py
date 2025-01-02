@@ -175,7 +175,7 @@ def _linear_eq_to_dict(eqs, syms):
 
 
 def _lin_eq2dict(a, symset):
-    """return (c, d) where c is the sym-independent part of ``a`` and
+    """return (c, d) were c is the sym-independent part of ``a`` and
     ``d`` is an efficiently calculated dictionary mapping symbols to
     their coefficients. A PolyNonlinearError is raised if non-linearity
     is detected.

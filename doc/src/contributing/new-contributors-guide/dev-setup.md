@@ -130,7 +130,7 @@ Go to the [SymPy GitHub repository](https://github.com/sympy/sympy) and click th
 
 Now you have your own repository for the SymPy project. The address of the
 forked project will look something like
-`https://github.com/<your-github-username>/sympy`, where
+`https://github.com/<your-github-username>/sympy`, were
 `<your-github-username>` is your GitHub username.
 
 ## Get the SymPy Code
@@ -143,7 +143,7 @@ https://github.com/sympy/sympy
 
 You will now have a fork at `https://github.com/<your-user-name>/sympy`.
 
-Then, on your machine browse to where you would like to store SymPy, and clone (download) the latest code from SymPy's original repository (about 77 MiB):
+Then, on your machine browse to were you would like to store SymPy, and clone (download) the latest code from SymPy's original repository (about 77 MiB):
 
 ```bash
 $ git clone https://github.com/sympy/sympy

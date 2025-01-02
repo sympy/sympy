@@ -194,7 +194,7 @@ Tests are located alongside the code in `tests/` directories, in files named
 `sympy/<submodule>/tests/test_<file>.py`. For example, the tests for the
 functions in `sympy/simplify/sqrtdenest.py` are in
 `sympy/simplify/tests/test_sqrtdenest.py`. There are some exceptions to this
-rule so in general try to find where the existing tests are for a function and
+rule so in general try to find were the existing tests are for a function and
 add your tests alongside them.
 
 Tests follow a simple pattern, which should be apparent from reading the
@@ -288,7 +288,7 @@ always looking to add new well-written long-form guides to our documentation.
 
 Once you have made a pull request on GitHub, the CI will automatically build a
 preview of the documentation that you can view. On the pull request page,
-scroll to the bottom where the checks are, and find the link that says "Click
+scroll to the bottom were the checks are, and find the link that says "Click
 here to see a preview of the documentation."
 
 (workflow-process-run-tests)=
@@ -313,7 +313,7 @@ To run tests for a specific file, use:
 $ ./bin/test test_basic
 ```
 
-Where `test_basic` is from file `sympy/core/basic.py`.
+were `test_basic` is from file `sympy/core/basic.py`.
 
 To run tests for modules, use:
 
@@ -696,7 +696,7 @@ git commit -m 'author: add Joe Bloggs to .mailmap'
 
 (mailmap-mapping-names)=
 ### Mapping user names to AUTHORS file entry
-Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses or an author wishes to use a proper name that differs from their github name. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
+Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses or an author wishes to use a proper name that differs from their github name. In this case a line should be added to the .mailmap file were the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
 
 ```
 Joe Bloggs <joe@bloggs.com> joeb <wrong@email.com>

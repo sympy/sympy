@@ -163,7 +163,7 @@ generators are
     0 \\ 0 \\ 1
     \end{pmatrix},
 
-whereas the mass and time are given by
+wereas the mass and time are given by
 
 .. math::
 

@@ -17,7 +17,7 @@ The state-space representation of a system can be written as:
             y(t) = C x(t) + D u(t)
 
 
-Where :math:`x(t)` is the state vector, :math:`u(t)` is the input vector, :math:`y(t)` is the output vector,
+were :math:`x(t)` is the state vector, :math:`u(t)` is the input vector, :math:`y(t)` is the output vector,
 :math:`A`, :math:`B`, :math:`C`, and :math:`D` are matrices that define the system dynamics.
 
 Below are some examples to demonstrate the use of StateSpace to solve Electrical problems.
@@ -38,7 +38,7 @@ Applying **Kirchhoff's Voltage Law** (KVL) around the loop in the above diagram 
 
             v_{in}(t) = R \cdot i(t) + L \frac{di(t)}{dt} +  V_C(t)
 
-Where: :math:`v_{in}(t)` is the input voltage, :math:`i(t)` is the current through the inductor and
+were: :math:`v_{in}(t)` is the input voltage, :math:`i(t)` is the current through the inductor and
 :math:`v_C(t)` is the voltage across the capacitor.
 
 This equation relates the input voltage to the elements of the RLC circuit.

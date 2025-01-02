@@ -44,8 +44,8 @@ class Morphism(Basic):
     ===========
 
     In abstract categories, a morphism is an arrow between two
-    category objects.  The object where the arrow starts is called the
-    domain, while the object where the arrow ends is called the
+    category objects.  The object were the arrow starts is called the
+    domain, while the object were the arrow ends is called the
     codomain.
 
     Two morphisms between the same pair of objects are considered to

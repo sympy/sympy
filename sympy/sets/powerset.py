@@ -29,7 +29,7 @@ class PowerSet(Set):
     subsets of `S`.
 
     If the set `S` is a finite set, its power set would have
-    `2^{\left| S \right|}` elements, where `\left| S \right|` denotes
+    `2^{\left| S \right|}` elements, were `\left| S \right|` denotes
     the cardinality of `S`.
 
     Examples

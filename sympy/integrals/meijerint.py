@@ -161,7 +161,7 @@ def _create_lookup_table(table):
     # Section 8.4.3
     add(exp(polar_lift(-1)*t), [], [], [0], [])
 
-    # TODO can do sin^n, sinh^n by expansion ... where?
+    # TODO can do sin^n, sinh^n by expansion ... were?
     # 8.4.4 (hyperbolic functions)
     add(sinh(t), [], [1], [S.Half], [1, 0], t**2/4, pi**Rational(3, 2))
     add(cosh(t), [], [S.Half], [0], [S.Half, S.Half], t**2/4, pi**Rational(3, 2))
@@ -427,7 +427,7 @@ def _find_splitting_points(expr, x):
 
 def _split_mul(f, x):
     """
-    Split expression ``f`` into fac, po, g, where fac is a constant factor,
+    Split expression ``f`` into fac, po, g, were fac is a constant factor,
     po = x**s for some s independent of s, and g is "the rest".
 
     Examples
@@ -596,7 +596,7 @@ def _dummy_(name, token, **kwargs):
 
 def _is_analytic(f, x):
     """ Check if f(x), when expressed using G functions on the positive reals,
-        will in fact agree with the G functions almost everywhere """
+        will in fact agree with the G functions almost everywere """
     return not any(x in expr.free_symbols for expr in f.atoms(Heaviside, Abs))
 
 
@@ -749,7 +749,7 @@ def _my_principal_branch(expr, period, full_pb=False):
 def _rewrite_saxena_1(fac, po, g, x):
     """
     Rewrite the integral fac*po*g dx, from zero to infinity, as
-    integral fac*G, where G has argument a*x. Note po=x**s.
+    integral fac*G, were G has argument a*x. Note po=x**s.
     Return fac, G.
     """
     _, s = _get_coeff_exp(po, x)
@@ -1093,7 +1093,7 @@ def _check_antecedents(g1, g2, x):
     When `c15` is NaN (e.g. from `psi` being NaN as happens during
     'test_issue_4992' and/or `theta` is NaN as in 'test_issue_6253',
     both in `test_integrals.py`) the comparison to 0 formerly gave False
-    whereas now an error is raised. To keep the old behavior, the value
+    wereas now an error is raised. To keep the old behavior, the value
     of NaN is replaced with False but perhaps a closer look at this condition
     should be made: XXX how should conditions leading to c15=NaN be handled?
     '''
@@ -1470,7 +1470,7 @@ _lookup_table = None
 def _rewrite_single(f, x, recursive=True):
     """
     Try to rewrite f as a sum of single G functions of the form
-    C*x**s*G(a*x**b), where b is a rational number and C is independent of x.
+    C*x**s*G(a*x**b), were b is a rational number and C is independent of x.
     We guarantee that result.argument.as_coeff_mul(x) returns (a, (x**b,))
     or (a, ()).
     Returns a list of tuples (C, s, G) and a condition cond.
@@ -1624,7 +1624,7 @@ def _rewrite1(f, x, recursive=True):
 def _rewrite2(f, x):
     """
     Try to rewrite ``f`` as a product of two G functions of arguments a*x**b.
-    Return fac, po, g1, g2 such that f = fac*po*g1*g2, where fac is
+    Return fac, po, g1, g2 such that f = fac*po*g1*g2, were fac is
     independent of x and po is x**s.
     Here g1 and g2 are results of _rewrite_single.
     Returns None on failure.
@@ -1783,7 +1783,7 @@ def meijerint_definite(f, x, a, b):
     Integrate ``f`` over the interval [``a``, ``b``], by rewriting it as a product
     of two G functions, or as a single G function.
 
-    Return res, cond, where cond are convergence conditions.
+    Return res, cond, were cond are convergence conditions.
 
     Examples
     ========

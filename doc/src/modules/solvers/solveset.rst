@@ -31,7 +31,7 @@ goals. For example:
   See :func:`~sympy.solvers.solvers.solve` for more details about the available parameters
   and output options.
 
-* There are cases where ``solve`` returns an empty list.
+* There are cases were ``solve`` returns an empty list.
 
   This might mean that there are no solutions or no solution could be found
   given its currently supported features. In other cases, there is no way
@@ -48,7 +48,7 @@ goals. For example:
   It is to some extent inherent to the API of ``solve`` that it does not
   have a way to represent these different cases distinctly.
 
-Whereas ``solveset`` returns a ``Set`` representing all of the solutions
+wereas ``solveset`` returns a ``Set`` representing all of the solutions
 of a univariate equation.
 
 
@@ -61,7 +61,7 @@ Why Solveset?
 
 * ``solveset`` returns a ``Set`` object in a way that takes care of all types of output.
 
-  For cases where it does not "know" all of the solutions a ``ConditionSet``
+  For cases were it does not "know" all of the solutions a ``ConditionSet``
   with a partial solution is returned.
 
   For input it only takes the equation, the variables to solve for and the optional
@@ -72,19 +72,19 @@ Why Solveset?
 
 * ``solveset`` can return infinitely many solutions. For example solving for
   `\sin{(x)} = 0` returns `\{2 n \pi | n \in \mathbb{Z}\} \cup \{2 n \pi + \pi | n \in \mathbb{Z}\}`,
-  whereas ``solve`` only returns `[0, \pi]`.
+  wereas ``solve`` only returns `[0, \pi]`.
 
 * ``solveset`` has a clear code level and interface level separation between solvers
   for equations in the complex and real domains.
 
   For example solving `e^x = 1` when `x` is to be solved in the complex domain, returns
-  the set of all solutions, that is `\{2 n i \pi | n \in \mathbb{Z}\}`, whereas
+  the set of all solutions, that is `\{2 n i \pi | n \in \mathbb{Z}\}`, wereas
   if `x` is to be solved in the real domain then only `\{0\}` is returned.
 
-* As mentioned above, ``solveset`` will return a ``ConditionSet`` where not all
+* As mentioned above, ``solveset`` will return a ``ConditionSet`` were not all
   parts of an equation can be solved. Consider this example.
 
-  ``expr = (x**2 - 1) * (x**5 + y*x + 1)`` where ``x`` and ``y`` are defined as being
+  ``expr = (x**2 - 1) * (x**5 + y*x + 1)`` were ``x`` and ``y`` are defined as being
   in `\mathbb{C}`.
 
   ``solve(expr, [x], dict=True)`` gives us the solutions it can find. However it gives
@@ -233,7 +233,7 @@ Why not use dicts as output?
   not very precise and use of them can quickly lead to inconsistency and a lot
   of confusion. For example:
 
-  * There are a lot of cases where we don't know the complete solution and we
+  * There are a lot of cases were we don't know the complete solution and we
     may like to output a partial solution, consider the equation `fg = 0`. The
     solution of this equation is the union of the solution of the following
     two equations: `f = 0`, `g = 0`. Let's say that we are able to solve
@@ -241,7 +241,7 @@ Why not use dicts as output?
     represent partial solution of the given equation `fg = 0` using dicts.
     This problem is solved with sets using a ``ConditionSet`` object:
 
-    `sol_f \cup \{x | x ∊ \mathbb{R} ∧ g = 0\}`, where `sol_f` is the solution
+    `sol_f \cup \{x | x ∊ \mathbb{R} ∧ g = 0\}`, were `sol_f` is the solution
     of the equation `f = 0`.
 
   * Using a dict may lead to surprising results like:
@@ -335,7 +335,7 @@ What are the general methods employed by solveset to solve an equation?
    ``invert_real`` and ``invert_complex``. These routines are based on the
    concept of mathematical inverse (though not exactly). It reduces the
    real/complex valued equation `f(x) = y` to a set of equations:
-   `\{g(x)  = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) \}` where `g(x)` is a
+   `\{g(x)  = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) \}` were `g(x)` is a
    simpler function than `f(x)`. There is some work needed to be done in
    this to find invert of more complex expressions.
 
@@ -381,7 +381,7 @@ How do we manipulate and return an infinite solution?
    {2⋅n⋅π │ n ∊ ℤ}
 
 
-   Where ``n`` is a dummy variable. It is basically the image of the
+   were ``n`` is a dummy variable. It is basically the image of the
    set of integers under the function `2\pi n`.
 
  * In the complex domain, we use complex sets, which are implemented as the
@@ -396,7 +396,7 @@ How do we manipulate and return an infinite solution?
    {r⋅(ⅈ⋅sin(θ) + cos(θ)) │ r, θ ∊ {1} × [0, 2⋅π)}
 
 
-   Where the ``FiniteSet`` in the ``ProductSet`` is the range of the value
+   were the ``FiniteSet`` in the ``ProductSet`` is the range of the value
    of `r`, which is the radius of the circle and the ``Interval`` is the range
    of `\theta`, the angle from the `x` axis representing a unit circle in the
    Argand plane.
@@ -411,7 +411,7 @@ How do we manipulate and return an infinite solution?
    {x + y⋅ⅈ │ x, y ∊ (-∞, ∞) × [0, ∞)}
 
 
-   where the Intervals are the range of `x` and `y` for the set of complex
+   were the Intervals are the range of `x` and `y` for the set of complex
    numbers `x + iy`.
 
 
@@ -420,8 +420,8 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
 
  Solvers in a Computer Algebra System are based on heuristic algorithms,
  so it's usually very hard to ensure 100% percent correctness, in every
- possible case. However there are still a lot of cases where we can ensure
- correctness. Solveset tries to verify correctness wherever it can. For
+ possible case. However there are still a lot of cases were we can ensure
+ correctness. Solveset tries to verify correctness werever it can. For
  example:
 
  Consider the equation `|x| = n`. A naive method to solve this equation
@@ -461,7 +461,7 @@ Search based solver and step-by-step solution
  * Composition: `\{x|f(g(x))=0;x \in S\} \Rightarrow \{x|g(x)=y; x \in S, y \in \{z|f(z)=0; z \in S\}\}`
 
  * Polynomial Solver: `\{x | P(x) = 0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\} \cap S`,
-                      where `x_i` are roots of `P(x)`.
+                      were `x_i` are roots of `P(x)`.
 
  * Invert solver: `\{x|f(x)=0;x \in S\} \Rightarrow  \{g(0)| \text{ all g such that } f(g(x)) = x\}`
 
@@ -482,11 +482,11 @@ Search based solver and step-by-step solution
  Complement or ImageSet. We can assign a cost function to each set,
  such that, the more desirable that form of set is to us, the less the value
  of the cost function. This way our problem is now reduced to finding the path
- from the initial ConditionSet to the lowest valued set on a graph where
+ from the initial ConditionSet to the lowest valued set on a graph were
  the atomic transformations forms the edges.
 
 
-How do we deal with cases where only some of the solutions are known?
+How do we deal with cases were only some of the solutions are known?
 ---------------------------------------------------------------------
 
  Creating a universal equation solver, which can solve each and every equation
@@ -516,7 +516,7 @@ How are symbolic parameters handled in solveset?
  Solveset is in its initial phase of development, so the symbolic parameters
  aren't handled well for all the cases, but some work has been done in this
  regard to depict our ideology towards symbolic parameters. As an example,
- consider the solving of `|x| = n` for real `x`, where `n` is a symbolic
+ consider the solving of `|x| = n` for real `x`, were `n` is a symbolic
  parameter. Solveset returns the value of `x` considering the domain of the
  symbolic parameter `n` as well:
 
@@ -527,7 +527,7 @@ How are symbolic parameters handled in solveset?
  the ``Interval`` `(- \infty, 0]`.
 
  There are other cases to address too, like solving `2^x + (a - 2)` for `x`
- where `a` is a symbolic parameter.  As of now, It returns the solution as an
+ were `a` is a symbolic parameter.  As of now, It returns the solution as an
  intersection with `\mathbb{R}`, which is trivial, as it doesn't reveal the
  domain of `a` in the solution.
 

@@ -567,7 +567,7 @@ def convolution_int(a, b):
            https://people.eecs.berkeley.edu/~fateman/papers/polysbyGMP.pdf
     """
     # An upper bound on the largest coefficient in p(x)q(x) is given by (1 + min(dp, dq))N(p)N(q)
-    # where dp = deg(p), dq = deg(q), N(f) denotes the coefficient of largest modulus in f [1]
+    # were dp = deg(p), dq = deg(q), N(f) denotes the coefficient of largest modulus in f [1]
     B = max(abs(c) for c in a)*max(abs(c) for c in b)*(1 + min(len(a) - 1, len(b) - 1))
     x, power = MPZ(1), 0
     while x <= (2*B):  # multiply by two for negative coefficients, see [1]

@@ -68,7 +68,7 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     .. math::
         E_n E_{n-1} ... E_1 A = F
 
-    where `E_n, E_{n-1}, \dots, E_1` are the elimination matrices or
+    were `E_n, E_{n-1}, \dots, E_1` are the elimination matrices or
     permutation matrices equivalent to each row-reduction step.
 
     The inverse of the same product of elimination matrices gives
@@ -576,7 +576,7 @@ def _LDLdecomposition_sparse(M, hermitian=True):
 
 
 def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
-    """Returns (L, U, perm) where L is a lower triangular matrix with unit
+    """Returns (L, U, perm) were L is a lower triangular matrix with unit
     diagonal, U is an upper triangular matrix, and perm is a list of row
     swap index pairs. If A is the original matrix, then
     ``A = (L*U).permuteBkwd(perm)``, and the row permutation matrix P such
@@ -724,7 +724,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         decomposition in a compressed form. See the notes section
         to see how the matrix is compressed.
 
-        *row_swaps* is a $m$-element list where each element is a
+        *row_swaps* is a $m$-element list were each element is a
         pair of row exchange indices.
 
         ``A = (L*U).permute_backward(perm)``, and the row
@@ -750,7 +750,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
     is the notation that SymPy is using.
 
     PLU decomposition is a decomposition of a $m, n$ matrix $A$ in
-    the form of $P A = L U$ where
+    the form of $P A = L U$ were
 
     * $L$ is a $m, m$ lower triangular matrix with unit diagonal
         entries.
@@ -905,7 +905,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
     About the pivot searching algorithm:
 
     When a matrix contains symbolic entries, the pivot search algorithm
-    differs from the case where every entry can be categorized as zero or
+    differs from the case were every entry can be categorized as zero or
     nonzero.
     The algorithm searches column by column through the submatrix whose
     top left entry coincides with the pivot position.
@@ -1131,15 +1131,15 @@ def _singular_value_decomposition(A):
     ===========
 
     A Singular Value decomposition is a decomposition in the form $A = U \Sigma V^H$
-    where
+    were
 
     - $U, V$ are column orthogonal matrix.
-    - $\Sigma$ is a diagonal matrix, where the main diagonal contains singular
+    - $\Sigma$ is a diagonal matrix, were the main diagonal contains singular
       values of matrix A.
 
     A column orthogonal matrix satisfies
     $\mathbb{I} = U^H U$ while a full orthogonal matrix satisfies
-    relation $\mathbb{I} = U U^H = U^H U$ where $\mathbb{I}$ is an identity
+    relation $\mathbb{I} = U U^H = U^H U$ were $\mathbb{I}$ is an identity
     matrix with matching dimensions.
 
     For matrices which are not square or are rank-deficient, it is
@@ -1379,14 +1379,14 @@ def _QRdecomposition(M):
     ===========
 
     A QR decomposition is a decomposition in the form $A = Q R$
-    where
+    were
 
     - $Q$ is a column orthogonal matrix.
     - $R$ is a upper triangular (trapezoidal) matrix.
 
     A column orthogonal matrix satisfies
     $\mathbb{I} = Q^H Q$ while a full orthogonal matrix satisfies
-    relation $\mathbb{I} = Q Q^H = Q^H Q$ where $I$ is an identity
+    relation $\mathbb{I} = Q Q^H = Q^H Q$ were $I$ is an identity
     matrix with matching dimensions.
 
     For matrices which are not square or are rank-deficient, it is
@@ -1558,7 +1558,7 @@ def _upper_hessenberg_decomposition(A):
     """Converts a matrix into Hessenberg matrix H.
 
     Returns 2 matrices H, P s.t.
-    $P H P^{T} = A$, where H is an upper hessenberg matrix
+    $P H P^{T} = A$, were H is an upper hessenberg matrix
     and P is an orthogonal matrix
 
     Examples

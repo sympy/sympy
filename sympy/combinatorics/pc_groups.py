@@ -19,7 +19,7 @@ class PolycyclicGroup(DefaultPrinting):
             A sequence of elements whose classes generate the cyclic factor
             groups of pc_series.
         pc_series : list
-            A subnormal sequence of subgroups where each factor group is cyclic.
+            A subnormal sequence of subgroups were each factor group is cyclic.
         relative_order : list
             The orders of factor groups of pc_series.
         collector : Collector
@@ -96,7 +96,7 @@ class Collector(DefaultPrinting):
 
         * `v = {x_i}^{a_j}`
 
-        for `a_j` not in `\{1, \ldots, s-1\}`. Where, ``s`` is the power
+        for `a_j` not in `\{1, \ldots, s-1\}`. were, ``s`` is the power
         exponent of the corresponding generator.
 
         Examples
@@ -395,11 +395,11 @@ class Collector(DefaultPrinting):
         presentation.
 
         * Power relations : Power relators are of the form `x_i^{re_i}`,
-          where `i \in \{0, \ldots, \mathrm{len(pcgs)}\}`, ``x`` represents polycyclic
+          were `i \in \{0, \ldots, \mathrm{len(pcgs)}\}`, ``x`` represents polycyclic
           generator and ``re`` is the corresponding relative order.
 
         * Conjugate relations : Conjugate relators are of the form `x_j^-1x_ix_j`,
-          where `j < i \in \{0, \ldots, \mathrm{len(pcgs)}\}`.
+          were `j < i \in \{0, \ldots, \mathrm{len(pcgs)}\}`.
 
         Returns
         =======
@@ -515,7 +515,7 @@ class Collector(DefaultPrinting):
 
         For a given generator/element ``g`` of the polycyclic group,
         it can be represented as `g = {x_1}^{e_1}, \ldots, {x_n}^{e_n}`,
-        where `x_i` represents polycyclic generators and ``n`` is
+        were `x_i` represents polycyclic generators and ``n`` is
         the number of generators in the free_group equal to the length
         of pcgs.
 
@@ -583,7 +583,7 @@ class Collector(DefaultPrinting):
 
         The depth of a given element ``g`` is defined by
         `\mathrm{dep}[g] = i` if `e_1 = e_2 = \ldots = e_{i-1} = 0`
-        and `e_i != 0`, where ``e`` represents the exponent-vector.
+        and `e_i != 0`, were ``e`` represents the exponent-vector.
 
         Examples
         ========

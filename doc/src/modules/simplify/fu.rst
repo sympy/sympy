@@ -137,7 +137,7 @@ simply applying the transformation itself.
 
 Although the algorithms should be canonical, always giving the same
 result, they may not yield the best result. This, in general, is
-the nature of simplification where searching all possible transformation
+the nature of simplification were searching all possible transformation
 paths is very expensive. Here is a simple example. There are 6 terms
 in the following sum:
 

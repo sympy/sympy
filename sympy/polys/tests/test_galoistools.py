@@ -813,7 +813,7 @@ def test_gf_factor():
     assert gf_factor_sqf(f, p, ZZ) == g
 
     # Shoup polynomials: f = a_0 x**n + a_1 x**(n-1) + ... + a_n
-    # (mod p > 2**(n-2) * pi), where a_n = a_{n-1}**2 + 1, a_0 = 1
+    # (mod p > 2**(n-2) * pi), were a_n = a_{n-1}**2 + 1, a_0 = 1
 
     p = ZZ(nextprime(int((2**4 * pi).evalf())))
     f = ZZ.map([1, 2, 5, 26, 41, 39, 38])

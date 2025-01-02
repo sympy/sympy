@@ -67,7 +67,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     1. Substitute the solution for `f` in the original equation.  This only
        works if ``ode`` is solved for `f`.  It will attempt to solve it first
        unless ``solve_for_func == False``.
-    2. Take `n` derivatives of the solution, where `n` is the order of
+    2. Take `n` derivatives of the solution, were `n` is the order of
        ``ode``, and check to see if that is equal to the solution.  This only
        works on exact ODEs.
     3. Take the 1st, 2nd, ..., `n`\th derivatives of the solution, each time

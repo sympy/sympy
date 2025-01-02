@@ -346,7 +346,7 @@ def glsl_code(expr,assign_to=None,**settings):
     assign_to : optional
         When given, the argument is used for naming the variable or variables
         to which the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol`` or ``Indexed`` type object. In cases where ``expr``
+        ``MatrixSymbol`` or ``Indexed`` type object. In cases were ``expr``
         would be printed as an array, a list of string or ``Symbol`` objects
         can also be passed.
 
@@ -382,7 +382,7 @@ def glsl_code(expr,assign_to=None,**settings):
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
+        A dictionary were keys are ``FunctionClass`` instances and values are
         their string representations. Alternatively, the dictionary value can
         be a list of tuples i.e. [(argument_test, js_function_string)]. See
         below for examples.
@@ -441,7 +441,7 @@ def glsl_code(expr,assign_to=None,**settings):
     x.c = 3;
     x.d = 4;
 
-    This could be useful in cases where it's desirable to modify members of a
+    This could be useful in cases were it's desirable to modify members of a
     GLSL ``Struct``.  It could also be used to spread items from an array-like
     expression into various miscellaneous assignments:
     >>> misc_assignments = ('x[0]', 'x[1]', 'float y', 'float z')
@@ -511,7 +511,7 @@ def glsl_code(expr,assign_to=None,**settings):
     }
 
     Support for loops is provided through ``Indexed`` types. With
-    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=True`` these expressions will be turned into loops, wereas
     ``contract=False`` will just print the assignment expression that should be
     looped over:
 

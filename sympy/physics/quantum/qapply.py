@@ -136,7 +136,7 @@ def qapply(e, **options):
     elif isinstance(e, Pow):
         return qapply(e.base, **options)**e.exp
 
-    # We have a Mul where there might be actual operators to apply to kets.
+    # We have a Mul were there might be actual operators to apply to kets.
     elif isinstance(e, Mul):
         c_part, nc_part = e.args_cnc()
         c_mul = Mul(*c_part)

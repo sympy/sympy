@@ -144,7 +144,7 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
         if version and version_tuple(version) < version_tuple('1.0'):
             tensorflow_piecewise = "tensorflow.select"
         else:
-            tensorflow_piecewise = "tensorflow.where"
+            tensorflow_piecewise = "tensorflow.were"
 
         from sympy.functions.elementary.piecewise import Piecewise
         e, cond = expr.args[0].args

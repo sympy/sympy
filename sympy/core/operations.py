@@ -668,7 +668,7 @@ class AssocOpDispatcher:
         Select the handler class, and return its handler method.
         """
 
-        # Quick exit for the case where all handlers are same
+        # Quick exit for the case were all handlers are same
         if len(handlers) == 1:
             h, = handlers
             if not isinstance(h, type):

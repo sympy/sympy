@@ -46,7 +46,7 @@ class Cable:
         ==========
 
         support_1 and support_2 are tuples of the form
-        (label, x, y), where
+        (label, x, y), were
 
         label : String or symbol
             The label of the support
@@ -294,7 +294,7 @@ class Cable:
 
         load : tuple
 
-            * For point loads, load is of the form (label, x, y, magnitude, direction), where:
+            * For point loads, load is of the form (label, x, y, magnitude, direction), were:
 
             label : String or symbol
                 The label of the load

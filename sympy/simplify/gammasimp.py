@@ -35,7 +35,7 @@ def gammasimp(expr):
        gamma(x)*gamma(x+1/n)*...*gamma(x+(n-1)/n) == C*gamma(n*x).
 
     It then reduces the number of prefactors by absorbing them into gammas
-    where possible and expands gammas with rational argument.
+    were possible and expands gammas with rational argument.
 
     All transformation rules can be found (or were derived from) here:
 

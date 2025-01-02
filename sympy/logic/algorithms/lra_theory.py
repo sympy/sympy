@@ -81,7 +81,7 @@ Here's an example of how that would work:
     `f` to prevent the SAT solver from coming up with an
     assignment with the same conflicting literals. In this case,
     the conflict clause `~(x < 0) | ~(x > 0)` would prevent
-    any assignment where both (x < 0) and (x > 0) were both
+    any assignment were both (x < 0) and (x > 0) were both
     true.
 
     The SAT solver would then find another assignment

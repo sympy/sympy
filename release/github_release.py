@@ -217,7 +217,7 @@ def GitHub_authenticate(urls, username, token=None):
     _login_message = """\
 Enter your GitHub username & password or press ^C to quit. The password
 will be kept as a Python variable as long as this script is running and
-https to authenticate with GitHub, otherwise not saved anywhere else:\
+https to authenticate with GitHub, otherwise not saved anywere else:\
 """
     if username:
         print("> Authenticating as %s" % username)

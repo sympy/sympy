@@ -2294,7 +2294,7 @@ class DUP_Flint(DMP):
             factors = [ (f.from_rep(g, f.dom), k) for g, k in factors ]
 
         elif f.dom.is_QQ:
-            # python-flint returns monic factors over QQ whereas polys returns
+            # python-flint returns monic factors over QQ wereas polys returns
             # denominator free factors.
             coeff, factors = f._rep.factor()
             factors_monic = [ (f.from_rep(g, f.dom), k) for g, k in factors ]

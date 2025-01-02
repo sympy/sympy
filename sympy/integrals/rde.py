@@ -9,9 +9,9 @@ monomial over k and the coefficients of f and g are in k(t), then y is
 in k(t), and the outline of the algorithm here is given as:
 
 1. Compute the normal part n of the denominator of y.  The problem is
-then reduced to finding y' in k<t>, where y == y'/n.
+then reduced to finding y' in k<t>, were y == y'/n.
 2. Compute the special part s of the denominator of y.   The problem is
-then reduced to finding y'' in k[t], where y == y''/(n*s)
+then reduced to finding y'' in k[t], were y == y''/(n*s)
 3. Bound the degree of y''.
 4. Reduce the equation Dy + f*y == g to a similar equation with f, g in
 k[t].
@@ -46,7 +46,7 @@ def order_at(a, p, t):
     ===========
 
     For a, p in k[t], the order of a at p is defined as nu_p(a) = max({n
-    in Z+ such that p**n|a}), where a != 0.  If a == 0, nu_p(a) = +oo.
+    in Z+ such that p**n|a}), were a != 0.  If a == 0, nu_p(a) = +oo.
 
     To compute the order at a rational function, a/b, use the fact that
     nu_p(a/b) == nu_p(a) - nu_p(b).
@@ -57,7 +57,7 @@ def order_at(a, p, t):
         return a.as_poly(t).ET()[0][0]
 
     # Uses binary search for calculating the power. power_list collects the tuples
-    # (p^k,k) where each k is some power of 2. After deciding the largest k
+    # (p^k,k) were each k is some power of 2. After deciding the largest k
     # such that k is power of 2 and p^k|a the loop iteratively calculates
     # the actual power.
     power_list = []
@@ -85,7 +85,7 @@ def order_at_oo(a, d, t):
     """
     Computes the order of a/d at oo (infinity), with respect to t.
 
-    For f in k(t), the order or f at oo is defined as deg(d) - deg(a), where
+    For f in k(t), the order or f at oo is defined as deg(d) - deg(a), were
     f == a/d.
     """
     if a.is_zero:
@@ -108,7 +108,7 @@ def weak_normalizer(a, d, DE, z=None):
     in k[t] such that f is in R_p (Definition 6.1.1).  If f has an
     elementary integral, this is equivalent to no logarithm of
     integral(f) whose argument depends on t has a positive integer
-    coefficient, where the arguments of the logarithms not in k(t) are
+    coefficient, were the arguments of the logarithms not in k(t) are
     in k[t].
 
     Returns (q, f - Dq/q)
@@ -116,7 +116,7 @@ def weak_normalizer(a, d, DE, z=None):
     z = z or Dummy('z')
     dn, ds = splitfactor(d, DE)
 
-    # Compute d1, where dn == d1*d2**2*...*dn**n is a square-free
+    # Compute d1, were dn == d1*d2**2*...*dn**n is a square-free
     # factorization of d.
     g = gcd(dn, dn.diff(DE.t))
     d_sqf_part = dn.quo(g)
@@ -397,7 +397,7 @@ def spde(a, b, c, n, DE):
     k[t], or return the tuple (B, C, m, alpha, beta) such that B, C,
     alpha, beta in k[t], m in ZZ, and any solution q in k[t] of degree
     at most n of a*Dq + b*q == c must be of the form
-    q == alpha*h + beta, where h in k[t], deg(h) <= m, and Dh + B*h == C.
+    q == alpha*h + beta, were h in k[t], deg(h) <= m, and Dh + B*h == C.
 
     This constitutes step 4 of the outline given in the rde.py docstring.
     """

@@ -35,9 +35,9 @@ def linrec(coeffs, init, n):
         \end{cases}
 
     Let `x_0, x_1, \ldots, x_n` be a sequence and consider the transformation
-    that maps each polynomial `f(x)` to `T(f(x))` where each power `x^i` is
+    that maps each polynomial `f(x)` to `T(f(x))` were each power `x^i` is
     replaced by the corresponding value `x_i`. The sequence is then a solution
-    of the recurrence if and only if `T(x^i p(x)) = 0` for each `i \ge 0` where
+    of the recurrence if and only if `T(x^i p(x)) = 0` for each `i \ge 0` were
     `p(x) = x^k - c_0 x^(k-1) - \cdots - c_{k-1}` is the characteristic
     polynomial.
 

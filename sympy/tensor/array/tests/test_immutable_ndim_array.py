@@ -142,7 +142,7 @@ def test_iterator():
 def test_sparse():
     sparse_array = ImmutableSparseNDimArray([0, 0, 0, 1], (2, 2))
     assert len(sparse_array) == 2 * 2
-    # dictionary where all data is, only non-zero entries are actually stored:
+    # dictionary were all data is, only non-zero entries are actually stored:
     assert len(sparse_array._sparse_array) == 1
 
     assert sparse_array.tolist() == [[0, 0], [0, 1]]

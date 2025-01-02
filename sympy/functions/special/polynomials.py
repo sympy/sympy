@@ -888,7 +888,7 @@ class legendre(OrthogonalPolynomial):
 
 class assoc_legendre(DefinedFunction):
     r"""
-    ``assoc_legendre(n, m, x)`` gives $P_n^m(x)$, where $n$ and $m$ are
+    ``assoc_legendre(n, m, x)`` gives $P_n^m(x)$, were $n$ and $m$ are
     the degree and order or an expression which is related to the nth
     order Legendre polynomial, $P_n(x)$ in the following manner:
 

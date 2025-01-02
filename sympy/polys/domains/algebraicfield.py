@@ -106,7 +106,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     limited printing support. The raw display shows the internal
     representation of the element as the list ``[4, 3]`` representing the
     coefficients of ``1`` and ``sqrt(2)`` for this element in the form
-    ``a * sqrt(2) + b * 1`` where ``a`` and ``b`` are elements of :ref:`QQ`.
+    ``a * sqrt(2) + b * 1`` were ``a`` and ``b`` are elements of :ref:`QQ`.
     The minimal polynomial for the generator ``(x**2 - 2)`` is also shown in
     the :ref:`dup-representation` as the list ``[1, 0, -2]``. We can use
     :py:meth:`~.Domain.to_sympy` to get a better printed form for the

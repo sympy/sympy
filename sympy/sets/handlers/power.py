@@ -60,7 +60,7 @@ def _(x, exponent):
             Min(s1, s2),
             Max(s1, s2), left_open, right_open)
 
-    # Case where x.start < 0 and x.end > 0:
+    # Case were x.start < 0 and x.end > 0:
     if exponent.is_odd:
         if exponent.is_negative:
             if x.start.is_zero:

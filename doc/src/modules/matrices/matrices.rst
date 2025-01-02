@@ -109,7 +109,7 @@ the diagonal:
 Basic Manipulation
 ------------------
 
-While learning to work with matrices, let's choose one where the entries are
+While learning to work with matrices, let's choose one were the entries are
 readily identifiable. One useful thing to know is that while matrices are
 2-dimensional, the storage is not and so it is allowable - though one should be
 careful - to access the entries as if they were a 1-d list.

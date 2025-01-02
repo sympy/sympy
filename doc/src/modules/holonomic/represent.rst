@@ -18,7 +18,7 @@ provide initial conditions i.e. `y(0) = 0, y^{(1)}(0) = 1`.
 To represent the same in this module one needs to provide the differential
 equation in the form of annihilator. Basically a differential operator is an
 operator on functions that differentiates them. So `D^{n} \cdot y(x) = y^{(n)}(x)`
-where :math:`y^{(n)}(x)` denotes ``n`` times differentiation of :math:`y(x)` with
+were :math:`y^{(n)}(x)` denotes ``n`` times differentiation of :math:`y(x)` with
 respect to ``x``.
 
 So the differential equation can also be written as

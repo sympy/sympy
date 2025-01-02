@@ -139,7 +139,7 @@ def test_aux_dep():
             zip(partial_v_O, partial_v_P)])
 
     # Inertia force: R_star_O.
-    # Inertia of disc: I_C_O, where J is a inertia component about principal axis.
+    # Inertia of disc: I_C_O, were J is a inertia component about principal axis.
     # Inertia torque: T_star_C.
     # Generalized inertia forces (unconstrained): Fr_star_u.
     R_star_O = -m*O.acc(N)

@@ -26,8 +26,8 @@ class, such as {class}`~.Boolean`, {class}`~.MatrixExpr`, {class}`~.Expr`, or
 ## Easy Cases: Fully Symbolic or Fully Evaluated
 
 Before digging into the more advanced functionality for custom functions, we
-should mention two common cases, the case where the function is fully
-symbolic, and the case where the function is fully evaluated. Both of these
+should mention two common cases, the case were the function is fully
+symbolic, and the case were the function is fully evaluated. Both of these
 cases have much simpler alternatives than the full mechanisms described in this
 guide.
 
@@ -124,7 +124,7 @@ x + 1
 ```
 
 If you find yourself defining an [`eval()`](custom-functions-eval) method on a
-`Function` subclass where you always return a value and never return `None`,
+`Function` subclass were you always return a value and never return `None`,
 you should consider just using a normal Python function instead, as there is
 no benefit to using a symbolic `Function` subclass in that case (see the
 {any}`custom-functions-eval-best-practices` section below)
@@ -231,7 +231,7 @@ Remember that `eval()` should be defined with the `@classmethod` decorator.
 ```
 
 The first and most common thing we might want to define on our custom function
-is automatic evaluation, that is, the cases where it will return an actual
+is automatic evaluation, that is, the cases were it will return an actual
 value instead of just remaining unevaluated as-is.
 
 This is done by defining the class method `eval()`. `eval()` should take the
@@ -265,7 +265,7 @@ of `pi`:
 ```
 
 Here we make use of the fact that if a Python function does not explicitly
-return a value, it automatically returns `None`. So in the cases where the `if
+return a value, it automatically returns `None`. So in the cases were the `if
 isinstance(n, Integer)` statement is not triggered, `eval()` returns `None`
 and `versin` remains unevaluated.
 
@@ -392,7 +392,7 @@ avoided.
   above](custom-functions-versin-eval-example) that we used `isinstance(n,
   Integer)` instead of checking `n.is_integer` using the assumptions system.
   We could have done that instead, which would make `versin(n*pi)` evaluate
-  even if `n = Symbol('n', integer=True)`. But this is a case where we might
+  even if `n = Symbol('n', integer=True)`. But this is a case were we might
   not always want evaluation to happen, and if `n` is a more complicated
   expression, `n.is_integer` might be more expensive to compute.
 
@@ -586,7 +586,7 @@ avoided.
   TypeError: m and n should be integers
   ```
 
-  But it does not fail in cases where the assumption is `None`:
+  But it does not fail in cases were the assumption is `None`:
 
   ```py
   >>> divides(2, (m**2 + m)/2)
@@ -601,8 +601,8 @@ avoided.
   ```{note}
 
   This rule of allowing `None` assumptions only applies to instances
-  where an exception would be raised, such as type checking an input domain.
-  In cases where simplifications or other operations are done, one should
+  were an exception would be raised, such as type checking an input domain.
+  In cases were simplifications or other operations are done, one should
   treat a `None` assumption as meaning "can be either `True` or `False`" and
   not perform an operation that might not be mathematically valid.
 
@@ -806,7 +806,7 @@ functions included with SymPy, numerical evaluation will happen automatically
 and you do not need to do anything.
 
 If this is not the case, numerical evaluation can be specified by defining the
-method `_eval_evalf(self, prec)`, where `prec` is the binary precision of the
+method `_eval_evalf(self, prec)`, were `prec` is the binary precision of the
 input. The method should return the expression evaluated to the given
 precision, or `None` if this is not possible.
 
@@ -880,7 +880,7 @@ cos(x - pi/2)
 ```
 
 To implement rewriting, define a method `_eval_rewrite(self, rule, args,
-**hints)`, where
+**hints)`, were
 
 - `rule` is the *rule* passed to the `rewrite()` method. Typically `rule` will
   be the class of the object to be rewritten to, although for more complex
@@ -950,7 +950,7 @@ advanced evaluation which is not performed in [`eval()`](custom-functions-eval).
 For example, for our [`divides` example](custom-functions-divides-definition),
 there are several instances that could be simplified using some identities.
 For example, we defined `eval()` to evaluate on explicit integers, but we might
-also want to evaluate examples like `divides(k, k*n)` where the divisibility
+also want to evaluate examples like `divides(k, k*n)` were the divisibility
 is symbolically true. One of the [best practices for
 `eval()`](custom-functions-eval-best-practices) is to avoid too much automatic
 evaluation. Automatically evaluating in this case might be considered too
@@ -1086,7 +1086,7 @@ The `**hints` keyword arguments are additional hints that may be passed to the
 expand function to specify additional behavior (these are separate from the
 predefined *hints* described in the previous paragraph). Unknown hints should
 be ignored as they may apply to other functions' custom `expand()` methods. A
-common hint to define is `force`, where `force=True` would force an expansion
+common hint to define is `force`, were `force=True` would force an expansion
 that might not be mathematically valid for all the given input assumptions.
 For example, `expand_log(log(x*y), force=True)` produces `log(x) + log(y)`
 even though this identity is not true for all complex `x` and `y` (typically
@@ -1124,7 +1124,7 @@ considering the chain rule, with respect to the `argindex`-th variable.
 `argindex` is indexed starting at `1`.
 
 That is, `f(x1, ..., xi, ..., xn).fdiff(i)` should return $\frac{d}{d x_i}
-f(x_1, \ldots, x_i, \ldots, x_n)$, where $x_k$ are independent of one another.
+f(x_1, \ldots, x_i, \ldots, x_n)$, were $x_k$ are independent of one another.
 `diff()` will automatically apply the chain rule using the result of
 `fdiff()`. User code should use `diff()` and not call `fdiff()` directly.
 
@@ -1341,7 +1341,7 @@ expression separately.
 
 `as_real_imag(self, deep=True, **hints)` should return a 2-tuple containing
 the real part and imaginary part of the function. That is
-`expr.as_real_imag()` returns `(re(expr), im(expr))`, where
+`expr.as_real_imag()` returns `(re(expr), im(expr))`, were
 `expr == re(expr) + im(expr)*I`, and `re(expr)` and `im(expr)` are real.
 
 If `deep=True`, it should recursively call `as_real_imag(deep=True, **hints)`

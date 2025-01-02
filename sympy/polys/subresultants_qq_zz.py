@@ -644,7 +644,7 @@ def bezout(p, q, x, method='bz'):
     bezout(p, q, x, 'prs') =
     backward_eye(deg(p)) * bezout(p, q, x, 'bz') * backward_eye(deg(p)),
 
-    where backward_eye() is the backward identity function.
+    were backward_eye() is the backward identity function.
 
     References
     ==========
@@ -2324,7 +2324,7 @@ def subresultants_vv(p, q, x, method = 0):
     If sylvester2 has small dimensions and you want to see the final,
     triangularized matrix use this version with method=1; otherwise,
     use either this version with method=0 (default) or the faster version,
-    subresultants_vv_2(p, q, x), where sylvester2 is used implicitly.
+    subresultants_vv_2(p, q, x), were sylvester2 is used implicitly.
 
     Sylvester's matrix sylvester1  is also used to compute one
     subresultant per remainder; namely, that of the leading
@@ -2466,7 +2466,7 @@ def subresultants_vv_2(p, q, x):
     see references 1 and 2 for Van Vleck's method.
 
     If the sylvester2 matrix has big dimensions use this version,
-    where sylvester2 is used implicitly. If you want to see the final,
+    were sylvester2 is used implicitly. If you want to see the final,
     triangularized matrix sylvester2, then use the first version,
     subresultants_vv(p, q, x, 1).
 

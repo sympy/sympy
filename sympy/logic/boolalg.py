@@ -158,7 +158,7 @@ class Boolean(Basic):
             not satisfiable(Not(Equivalent(self, other)))
 
     def to_nnf(self, simplify=True):
-        # override where necessary
+        # override were necessary
         return self
 
     def as_set(self):
@@ -284,7 +284,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
 
     This is the SymPy version of ``True``, for use in the logic module. The
     primary advantage of using ``true`` instead of ``True`` is that shorthand Boolean
-    operations like ``~`` and ``>>`` will work as expected on this class, whereas with
+    operations like ``~`` and ``>>`` will work as expected on this class, wereas with
     True they act bitwise on 1. Functions in the logic module will return this
     class when they evaluate to true.
 
@@ -305,7 +305,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     ``Boolean``, like ``Or(x, y)`` or ``x > 1``, use ``S.true``.
     Otherwise, use ``True``"
 
-    In other words, use ``S.true`` only on those contexts where the
+    In other words, use ``S.true`` only on those contexts were the
     boolean is being used as a symbolic representation of truth.
     For example, if the object ends up in the ``.args`` of any expression,
     then it must necessarily be ``S.true`` instead of ``True``, as
@@ -315,7 +315,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     rather than mathematical, so it should return ``True``. The assumptions
     system should use ``True`` and ``False``. Aside from not satisfying
     the above rule of thumb, the assumptions system uses a three-valued logic
-    (``True``, ``False``, ``None``), whereas ``S.true`` and ``S.false``
+    (``True``, ``False``, ``None``), wereas ``S.true`` and ``S.false``
     represent a two-valued logic. When in doubt, use ``True``.
 
     "``S.true == True is True``."
@@ -401,7 +401,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     This is the SymPy version of ``False``, for use in the logic module. The
     primary advantage of using ``false`` instead of ``False`` is that shorthand
     Boolean operations like ``~`` and ``>>`` will work as expected on this class,
-    whereas with ``False`` they act bitwise on 0. Functions in the logic module
+    wereas with ``False`` they act bitwise on 0. Functions in the logic module
     will return this class when they evaluate to false.
 
     Notes
@@ -1375,7 +1375,7 @@ class ITE(BooleanFunction):
     else it returns the result of C. All args must be Booleans.
 
     From a logic gate perspective, ITE corresponds to a 2-to-1 multiplexer,
-    where A is the select signal.
+    were A is the select signal.
 
     Examples
     ========
@@ -2803,9 +2803,9 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         aware that this can lead to very long simplification times.
 
     dontcare : Boolean
-        Optimize expression under the assumption that inputs where this
+        Optimize expression under the assumption that inputs were this
         expression is true are don't care. This is useful in e.g. Piecewise
-        conditions, where later conditions do not need to consider inputs that
+        conditions, were later conditions do not need to consider inputs that
         are converted by previous conditions. For example, if a previous
         condition is ``And(A, B)``, the simplification of expr can be made
         with don't cares for ``And(A, B)``.
@@ -2931,7 +2931,7 @@ def _finger(eq):
     # of times it appeared as a Not(symbol);
     # of times it appeared as a Symbol in an And or Or;
     # of times it appeared as a Not(Symbol) in an And or Or;
-    a sorted tuple of tuples, (i, j, k), where i is the number of arguments
+    a sorted tuple of tuples, (i, j, k), were i is the number of arguments
     in an And or Or with which it appeared as a Symbol, and j is
     the number of arguments that were Not(Symbol); k is the number
     of times that (i, j) was seen.

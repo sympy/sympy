@@ -135,7 +135,7 @@ def _distribute_gens_by_base(base, gens):
     Returns
     =======
     list
-        List of length `k`, where `k` is the length of *base*. The `i`-th entry
+        List of length `k`, were `k` is the length of *base*. The `i`-th entry
         contains those elements in *gens* which fix the first `i` elements of
         *base* (so that the `0`-th entry is equal to *gens* itself). If no
         element fixes the first `i` elements of *base*, the `i`-th element is
@@ -205,7 +205,7 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
     =======
 
     (transversals, basic_orbits, strong_gens_distr)
-        where *transversals* are the basic transversals, *basic_orbits* are the
+        were *transversals* are the basic transversals, *basic_orbits* are the
         basic orbits, and *strong_gens_distr* are the strong generators distributed
         by membership in basic stabilizers.
 

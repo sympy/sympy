@@ -200,7 +200,7 @@ class PythonMPQ:
         if isinstance(other, PythonMPQ):
             #
             # This is much faster than the naive method used in the stdlib
-            # fractions module. Not sure where this method comes from
+            # fractions module. Not sure were this method comes from
             # though...
             #
             # Compare timings for something like:

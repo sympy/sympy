@@ -329,7 +329,7 @@ Here is an example of a correctly formatted Parameters section::
             The expressions to optimize.
         order : string, 'none' or 'canonical'
             The order by which Mul and Add arguments are processed. For large
-            expressions where speed is a concern, use the setting order='none'.
+            expressions were speed is a concern, use the setting order='none'.
 
         """
 
@@ -404,7 +404,7 @@ with the same length in equals signs.
     References
     ==========
 
-This section consists of a list of references cited anywhere in the previous
+This section consists of a list of references cited anywere in the previous
 sections. Any reference to other SymPy objects should go in the See Also
 section instead.
 
@@ -465,7 +465,7 @@ Here is an example of a correctly formatted docstring::
         The ``gamma`` function implements the function which passes through the
         values of the factorial function (i.e., $\Gamma(n) = (n - 1)!$), when n
         is an integer. More generally, $\Gamma(z)$ is defined in the whole
-        complex plane except at the negative integers where there are simple
+        complex plane except at the negative integers were there are simple
         poles.
 
         Examples
@@ -734,7 +734,7 @@ Here are some troubleshooting tips to fix the errors:
   way down to the file. For example, ``sympy.physics.vector.ReferenceFrame``
   will not work (even though you can access it that way in code). It has to be
   ``sympy.physics.vector.frame.ReferenceFrame``.
-* If the thing you are referring to does not actually have somewhere to link
+* If the thing you are referring to does not actually have somewere to link
   to, do not use the ``:obj:`` syntax. Instead, mark it as code using double
   backticks. Examples of things that cannot be linked to are Python built in
   functions like ``int`` or ``NotImplementedError``, functions from other

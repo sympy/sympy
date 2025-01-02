@@ -623,7 +623,7 @@ def test_cut_section():
     assert s[1] == Polygon(Point2D(6, 0), Point2D(-3*sqrt(3) + 9, -3*sqrt(3) + 9),
         Point2D(-9 + 3*sqrt(3), -9 + 3*sqrt(3)), Point2D(-3, -3*sqrt(3)), Point2D(3, -3*sqrt(3)))
 
-    # case where line does not intersects but coincides with the edge of polygon
+    # case were line does not intersects but coincides with the edge of polygon
     a, b = 20, 10
     t1, t2, t3, t4 = [(0, b), (0, 0), (a, 0), (a, b)]
     p = Polygon(t1, t2, t3, t4)
@@ -635,7 +635,7 @@ def test_cut_section():
     assert p3 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
     assert p4 == None
 
-    # case where the line does not intersect with a polygon at all
+    # case were the line does not intersect with a polygon at all
     raises(ValueError, lambda: p.cut_section(Line((0, a), slope=0)))
 
 def test_type_of_triangle():

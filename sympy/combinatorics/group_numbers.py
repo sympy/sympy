@@ -121,7 +121,7 @@ def is_cyclic_number(n) -> bool:
 
 def _holder_formula(prime_factors):
     r""" Number of groups of order `n`.
-    where `n` is squarefree and its prime factors are ``prime_factors``.
+    were `n` is squarefree and its prime factors are ``prime_factors``.
     i.e., ``n == math.prod(prime_factors)``
 
     Explanation
@@ -132,7 +132,7 @@ def _holder_formula(prime_factors):
     .. math ::
         \sum_{d \mid n} \prod_p \frac{p^{c(p, d)} - 1}{p - 1}
 
-    where `n=de`, `p` is the prime factor of `e`,
+    were `n=de`, `p` is the prime factor of `e`,
     and `c(p, d)` is the number of prime factors `q` of `d` such that `q \equiv 1 \pmod{p}` [2]_.
 
     The formula is elegant, but can be improved when implemented as an algorithm.
@@ -149,7 +149,7 @@ def _holder_formula(prime_factors):
     ==========
 
     prime_factors : set
-        The set of prime factors of ``n``. where `n` is squarefree.
+        The set of prime factors of ``n``. were `n` is squarefree.
 
     Returns
     =======

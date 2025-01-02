@@ -64,13 +64,13 @@ class carmichael(DefinedFunction):
     Randomized prime number checking tests exist that offer a high degree of
     confidence of accurate determination at low cost, such as the Fermat test.
 
-    Let 'a' be a random number between $2$ and $n - 1$, where $n$ is the
+    Let 'a' be a random number between $2$ and $n - 1$, were $n$ is the
     number whose primality we are testing. Then, $n$ is probably prime if it
     satisfies the modular arithmetic congruence relation:
 
     .. math :: a^{n-1} = 1 \pmod{n}
 
-    (where mod refers to the modulo operation)
+    (were mod refers to the modulo operation)
 
     If a number passes the Fermat test several times, then it is prime with a
     high probability.
@@ -436,7 +436,7 @@ class bernoulli(DefinedFunction):
     `B_n(1) = B_n`.
 
     The generalized Bernoulli function `\operatorname{B}(s, a)`
-    is defined for any complex `s` and `a`, except where `a` is a
+    is defined for any complex `s` and `a`, except were `a` is a
     nonpositive integer and `s` is not a nonnegative integer. It is
     an entire function of `s` for fixed `a`, related to the Hurwitz
     zeta function by
@@ -454,7 +454,7 @@ class bernoulli(DefinedFunction):
 
     .. math :: B_n = \frac{A(n) - S(n)}{\binom{n+3}{n}}
 
-    where:
+    were:
 
     .. math :: A(n) = \begin{cases} \frac{n+3}{3} &
         n \equiv 0\ \text{or}\ 2 \pmod{6} \\
@@ -701,7 +701,7 @@ class bell(DefinedFunction):
                 \sum_{m=1}^{n-k+1}
                 \x_m \binom{n-1}{m-1} B_{n-m,k-1}(x_1, x_2, \dotsc, x_{n-m-k})
 
-        where
+        were
             `B_{0,0} = 1;`
             `B_{n,0} = 0; for n \ge 1`
             `B_{0,k} = 0; for k \ge 1`
@@ -775,10 +775,10 @@ class harmonic(DefinedFunction):
     * ``harmonic(n)`` gives the nth harmonic number, `\operatorname{H}_n`
 
     * ``harmonic(n, m)`` gives the nth generalized harmonic number
-      of order `m`, `\operatorname{H}_{n,m}`, where
+      of order `m`, `\operatorname{H}_{n,m}`, were
       ``harmonic(n) == harmonic(n, 1)``
 
-    This function can be extended to complex `n` and `m` where `n` is not a
+    This function can be extended to complex `n` and `m` were `n` is not a
     negative integer or `m` is a nonpositive integer as
 
     .. math:: \operatorname{H}_{n,m} = \begin{cases} \zeta(m) - \zeta(m, n+1)
@@ -1471,7 +1471,7 @@ class andre(DefinedFunction):
     Andre numbers / Andre function
 
     The Andre number `\mathcal{A}_n` is Luschny's name for half the number of
-    *alternating permutations* on `n` elements, where a permutation is alternating
+    *alternating permutations* on `n` elements, were a permutation is alternating
     if adjacent elements alternately compare "greater" and "smaller" going from
     left to right. For example, `2 < 3 > 1 < 4` is an alternating permutation.
 
@@ -1839,7 +1839,7 @@ class jacobi_symbol(DefinedFunction):
             \genfrac(){}{}{m}{p^{2}}^{\alpha_2}
             ...
             \genfrac(){}{}{m}{p^{k}}^{\alpha_k}
-            \text{ where } n =
+            \text{ were } n =
                 p_1^{\alpha_1}
                 p_2^{\alpha_2}
                 ...
@@ -2661,7 +2661,7 @@ def stirling(n, k, d=None, kind=2, signed=False):
 
     .. math :: {{n+1} \brace k} = j {n \brace k} + {n \brace {k-1}}
 
-    where $j$ is:
+    were $j$ is:
         $n$ for Stirling numbers of the first kind,
         $-n$ for signed Stirling numbers of the first kind,
         $k$ for Stirling numbers of the second kind.

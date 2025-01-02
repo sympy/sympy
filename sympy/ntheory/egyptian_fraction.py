@@ -88,7 +88,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
     greater than the given number.  This list of denominators is prefixed
     to the result from the requested algorithm used on the remainder.  For
     example, if r is 8/3, using the Greedy algorithm, we get [1, 2, 3, 4,
-    5, 6, 7, 14, 420], where the beginning of the sequence, [1, 2, 3, 4, 5,
+    5, 6, 7, 14, 420], were the beginning of the sequence, [1, 2, 3, 4, 5,
     6, 7] is part of the harmonic sequence summing to 363/140, leaving a
     remainder of 31/420, which yields [14, 420] by the Greedy algorithm.
     The result of egyptian_fraction(Rational(8, 3), "Golomb") is [1, 2, 3,

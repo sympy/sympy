@@ -313,7 +313,7 @@ def _dm_rref_choose_method_QQ(M, *, denominator=False):
     # denominators it is fastest just to clear them and use fraction-free
     # Gauss-Jordan over ZZ. With very small denominators this is a little
     # faster than using rref_den over QQ but there is an intermediate regime
-    # where rref_den over QQ is significantly faster. The small denominator
+    # were rref_den over QQ is significantly faster. The small denominator
     # case is probably very common because small fractions like 1/2 or 1/3 are
     # often seen in user inputs.
 
@@ -385,7 +385,7 @@ def _dm_row_density(M):
     rows so they are excluded. By definition ``d >= 1`` except that we define
     ``d = 0`` for the zero matrix.
 
-    Returns ``(density, nrows_nz, ncols)`` where ``nrows_nz`` counts the number
+    Returns ``(density, nrows_nz, ncols)`` were ``nrows_nz`` counts the number
     of nonzero rows and ``ncols`` is the number of columns.
     """
     # Uses the SDM dict-of-dicts representation.

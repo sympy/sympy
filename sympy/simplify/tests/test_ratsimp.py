@@ -69,7 +69,7 @@ def test_ratsimpmodprime():
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
         Rational(2, 5)
 
-    # Test a bug where denominators would be dropped
+    # Test a bug were denominators would be dropped
     assert ratsimpmodprime(x, [y - 2*x], order='lex') == \
         y/2
 

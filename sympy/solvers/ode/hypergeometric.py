@@ -5,12 +5,12 @@ The algorithm solves 2nd order linear ODEs of the form
 
 .. math:: y'' + A(x) y' + B(x) y = 0\text{,}
 
-where `A` and `B` are rational functions. The algorithm should find any
+were `A` and `B` are rational functions. The algorithm should find any
 solution of the form
 
 .. math:: y = P(x) _pF_q(..; ..;\frac{\alpha x^k + \beta}{\gamma x^k + \delta})\text{,}
 
-where pFq is any of 2F1, 1F1 or 0F1 and `P` is an "arbitrary function".
+were pFq is any of 2F1, 1F1 or 0F1 and `P` is an "arbitrary function".
 Currently only the 2F1 case is implemented in SymPy but the other cases are
 described in the paper and could be implemented in future (contributions
 welcome!).

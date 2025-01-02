@@ -185,7 +185,7 @@ Two basic examples:
     >>> fcode((3 + 4*I)/(1 - conjugate(x)))
     '      (cmplx(3,4))/(1 - conjg(x))'
 
-An example where line wrapping is required:
+An example were line wrapping is required:
 
     >>> expr = sqrt(1-x**2).series(x,n=20).removeO()
     >>> print(fcode(expr))

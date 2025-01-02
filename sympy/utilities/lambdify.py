@@ -39,7 +39,7 @@ NUMEXPR_DEFAULT: dict[str, Any] = {}
 
 # These are the namespaces the lambda functions will use.
 # These are separate from the names above because they are modified
-# throughout this file, whereas the defaults should remain unmodified.
+# throughout this file, wereas the defaults should remain unmodified.
 
 MATH = MATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
@@ -174,7 +174,7 @@ def _import(module, reload=False):
     # function, instead of the previously used fabs function for all
     # translation modules. This is because the fabs function in the math
     # module does not accept complex valued arguments. (see issue 9474). The
-    # only exception, where we don't use the builtin abs function is the
+    # only exception, were we don't use the builtin abs function is the
     # mpmath translation module, because mpmath.fabs returns mpf objects in
     # contrast to abs().
     if 'Abs' not in namespace:
@@ -581,11 +581,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     from NumPy. But notice that the versions of ``sin`` and ``cos`` that were
     used was not inherent to the ``sin_cos`` function definition. Both
     ``sin_cos`` definitions are exactly the same. Rather, it was based on the
-    names defined at the module where the ``sin_cos`` function was defined.
+    names defined at the module were the ``sin_cos`` function was defined.
 
     The key point here is that when function in Python references a name that
     is not defined in the function, that name is looked up in the "global"
-    namespace of the module where that function is defined.
+    namespace of the module were that function is defined.
 
     Now, in Python, we can emulate this behavior without actually writing a
     file to disk using the ``exec`` function. ``exec`` takes a string
@@ -618,10 +618,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     So now we can get an idea of how ``lambdify`` works. The name "lambdify"
     comes from the fact that we can think of something like ``lambdify(x,
-    sin(x) + cos(x), 'numpy')`` as ``lambda x: sin(x) + cos(x)``, where
+    sin(x) + cos(x), 'numpy')`` as ``lambda x: sin(x) + cos(x)``, were
     ``sin`` and ``cos`` come from the ``numpy`` namespace. This is also why
     the symbols argument is first in ``lambdify``, as opposed to most SymPy
-    functions where it comes after the expression: to better mimic the
+    functions were it comes after the expression: to better mimic the
     ``lambda`` keyword.
 
     ``lambdify`` takes the input expression (like ``sin(x) + cos(x)``) and
@@ -629,7 +629,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     1. Converts it to a string
     2. Creates a module globals dictionary based on the modules that are
        passed in (by default, it uses the NumPy module)
-    3. Creates the string ``"def func({vars}): return {expr}"``, where ``{vars}`` is the
+    3. Creates the string ``"def func({vars}): return {expr}"``, were ``{vars}`` is the
        list of variables separated by commas, and ``{expr}`` is the string
        created in step 1., then ``exec``s that string with the module globals
        namespace and returns ``func``.
@@ -771,7 +771,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             try:
                 _import("numpy")
             except ImportError:
-                # Use either numpy (if available) or python.math where possible.
+                # Use either numpy (if available) or python.math were possible.
                 # XXX: This leads to different behaviour on different systems and
                 #      might be the reason for irreproducible errors.
                 modules = ["math", "mpmath", "sympy"]

@@ -373,9 +373,9 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     ===========
 
     Encryption is based on the map `x \rightarrow ax+b` (mod `N`)
-    where ``N`` is the number of characters in the alphabet.
+    were ``N`` is the number of characters in the alphabet.
     Decryption is based on the map `x \rightarrow cx+d` (mod `N`),
-    where `c = a^{-1}` (mod `N`) and `d = -a^{-1}b` (mod `N`).
+    were `c = a^{-1}` (mod `N`) and `d = -a^{-1}b` (mod `N`).
     In particular, for the map to be invertible, we need
     `\mathrm{gcd}(a, N) = 1` and an error will be raised if this is
     not true.
@@ -446,10 +446,10 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
 def decipher_affine(msg, key, symbols=None):
     r"""
     Return the deciphered text that was made from the mapping,
-    `x \rightarrow ax+b` (mod `N`), where ``N`` is the
+    `x \rightarrow ax+b` (mod `N`), were ``N`` is the
     number of characters in the alphabet. Deciphering is done by
     reciphering with a new key: `x \rightarrow cx+d` (mod `N`),
-    where `c = a^{-1}` (mod `N`) and `d = -a^{-1}b` (mod `N`).
+    were `c = a^{-1}` (mod `N`) and `d = -a^{-1}b` (mod `N`).
 
     Examples
     ========
@@ -565,7 +565,7 @@ def encipher_substitution(msg, old, new=None):
     >>> encipher_substitution(ct, new, old)
     'GONAVYBEATARMY'
 
-    In the special case where ``old`` and ``new`` are a permutation of
+    In the special case were ``old`` and ``new`` are a permutation of
     order 2 (representing a transposition of characters) their order
     is immaterial:
 
@@ -578,7 +578,7 @@ def encipher_substitution(msg, old, new=None):
     'NAVY'
 
     The substitution cipher, in general, is a method
-    whereby "units" (not necessarily single characters) of plaintext
+    wereby "units" (not necessarily single characters) of plaintext
     are replaced with ciphertext according to a regular system.
 
     >>> ords = dict(zip('abc', ['\\%i' % ord(i) for i in 'abc']))
@@ -639,7 +639,7 @@ def encipher_vigenere(msg, key, symbols=None):
     Meade) [1]_.
 
     The Vigenere cipher is a generalization of the shift cipher.
-    Whereas the shift cipher shifts each letter by the same amount
+    wereas the shift cipher shifts each letter by the same amount
     (that amount being the key of the shift cipher) the Vigenere
     cipher shifts a letter by an amount determined by the key (which is
     a word or phrase known only to the sender and receiver).
@@ -1248,7 +1248,7 @@ def encipher_bifid5(msg, key):
     =====
 
     The Bifid cipher was invented around 1901 by Felix Delastelle.
-    It is a *fractional substitution* cipher, where letters are
+    It is a *fractional substitution* cipher, were letters are
     replaced by pairs of symbols from a smaller alphabet. The
     cipher uses a `5 \times 5` square filled with some ordering of the
     alphabet, except that "J" is replaced with "I" (this is a so-called
@@ -1590,13 +1590,13 @@ def rsa_public_key(*args, **kwargs):
     ==========
 
     args : naturals
-        If specified as `p, q, e` where `p` and `q` are distinct primes
+        If specified as `p, q, e` were `p` and `q` are distinct primes
         and `e` is a desired public exponent of the RSA, `n = p q` and
         `e` will be verified against the totient
         `\phi(n)` (Euler totient) or `\lambda(n)` (Carmichael totient)
         to be `\gcd(e, \phi(n)) = 1` or `\gcd(e, \lambda(n)) = 1`.
 
-        If specified as `p_1, p_2, \dots, p_n, e` where
+        If specified as `p_1, p_2, \dots, p_n, e` were
         `p_1, p_2, \dots, p_n` are specified as primes,
         and `e` is specified as a desired public exponent of the RSA,
         it will be able to form a multi-prime RSA, which is a more
@@ -1658,7 +1658,7 @@ def rsa_public_key(*args, **kwargs):
         can behave in the same manner.
 
         From any given RSA public exponent `e`, there are can be an
-        another RSA public exponent `e + k \lambda(n)` where `k` is an
+        another RSA public exponent `e + k \lambda(n)` were `k` is an
         integer, `\lambda` is a Carmichael's totient function.
 
         However, considering only the positive cases, there can be
@@ -1795,7 +1795,7 @@ def rsa_private_key(*args, **kwargs):
 
         RSA private exponent is a non-unique solution of
         `e d \mod \lambda(n) = 1` and it is possible in any form of
-        `d + k \lambda(n)`, where `d` is an another
+        `d + k \lambda(n)`, were `d` is an another
         already-computed private exponent, and `\lambda` is a
         Carmichael's totient function, and `k` is any integer.
 
@@ -1828,7 +1828,7 @@ def rsa_private_key(*args, **kwargs):
         `n` is a product of any arbitrary number of primes given as
         the argument.
 
-        `d` is the inverse of `e` (mod `\phi(n)`) where `e` is the
+        `d` is the inverse of `e` (mod `\phi(n)`) were `e` is the
         exponent given, and `\phi` is a Euler totient.
 
     False
@@ -1906,7 +1906,7 @@ def encipher_rsa(i, key, factors=None):
     i : integer
         The plaintext to be encrypted for.
 
-    key : (n, e) where n, e are integers
+    key : (n, e) were n, e are integers
         `n` is the modulus of the key and `e` is the exponent of the
         key. The encryption is computed by `i^e \bmod n`.
 
@@ -1932,7 +1932,7 @@ def encipher_rsa(i, key, factors=None):
     `e` th root.
 
     And also, specifying the exponent as `1` or in more generalized form
-    as `1 + k \lambda(n)` where `k` is an nonnegative integer,
+    as `1 + k \lambda(n)` were `k` is an nonnegative integer,
     `\lambda` is a carmichael totient, the RSA becomes an identity
     mapping.
 
@@ -1975,7 +1975,7 @@ def decipher_rsa(i, key, factors=None):
     i : integer
         The ciphertext to be decrypted for.
 
-    key : (n, d) where n, d are integers
+    key : (n, d) were n, d are integers
         `n` is the modulus of the key and `d` is the exponent of the
         key. The decryption is computed by `i^d \bmod n`.
 
@@ -1987,7 +1987,7 @@ def decipher_rsa(i, key, factors=None):
     factors : list of coprime integers
         As the modulus `n` created from RSA key generation is composed
         of arbitrary prime factors
-        `n = {p_1}^{k_1}{p_2}^{k_2}\dots{p_n}^{k_n}` where
+        `n = {p_1}^{k_1}{p_2}^{k_2}\dots{p_n}^{k_n}` were
         `p_1, p_2, \dots, p_n` are distinct primes and
         `k_1, k_2, \dots, k_n` are positive integers, chinese remainder
         theorem can be used to compute `i^d \bmod n` from the
@@ -2327,7 +2327,7 @@ def lfsr_sequence(key, fill, n):
 
         C(k) = C(k,a) = \lim_{N\rightarrow \infty} {1\over N}\sum_{n=1}^N (-1)^{a_n + a_{n+k}}.
 
-    In the case where `a` is periodic with period
+    In the case were `a` is periodic with period
     `P` then this reduces to
 
     .. math::
@@ -2639,7 +2639,7 @@ def encipher_elgamal(i, key, seed=None):
     ``key`` is public key (p, r, e). In order to encrypt
     a message, a random number ``a`` in ``range(2, p)``
     is generated and the encryped message is returned as
-    `c_{1}` and `c_{2}` where:
+    `c_{1}` and `c_{2}` were:
 
     `c_{1} \equiv r^{a} \pmod p`
 
@@ -2743,7 +2743,7 @@ def dh_private_key(digit=10, seed=None):
 
     *   Alice and Bob agree on a base that consist of a prime ``p``
         and a primitive root of ``p`` called ``g``
-    *   Alice choses a number ``a`` and Bob choses a number ``b`` where
+    *   Alice choses a number ``a`` and Bob choses a number ``b`` were
         ``a`` and ``b`` are random numbers in range `[2, p)`. These are
         their private keys.
     *   Alice then publicly sends Bob `g^{a} \pmod p` while Bob sends
@@ -3253,7 +3253,7 @@ def encipher_bg(i, key, seed=None):
 
     ALGORITHM:
         1. Encodes i as a string of L bits, m.
-        2. Select a random element r, where 1 < r < key, and computes
+        2. Select a random element r, were 1 < r < key, and computes
            x = r^2 mod key.
         3. Use BBS pseudo-random number generator to generate L random bits, b,
         using the initial seed as x.

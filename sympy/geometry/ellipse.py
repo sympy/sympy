@@ -889,7 +889,7 @@ class Ellipse(GeometrySet):
         [Line2D(Point2D(-0.81, -2.7), Point2D(0.19, -1.2)),
         Line2D(Point2D(1.5, -2.0), Point2D(2.5, -2.7))]
 
-        Whereas the above solution has an operation count of 12, the exact
+        wereas the above solution has an operation count of 12, the exact
         solution has an operation count of 2020.
         """
         p = Point(p, dim=2)
@@ -1020,7 +1020,7 @@ class Ellipse(GeometrySet):
 
     def director_circle(self):
         """
-        Returns a Circle consisting of all points where two perpendicular
+        Returns a Circle consisting of all points were two perpendicular
         tangent lines to the ellipse cross each other.
 
         Returns
@@ -1748,7 +1748,7 @@ class Circle(Ellipse):
         """
         This Ellipse property is an alias for the Circle's radius.
 
-        Whereas hradius, major and minor can use Ellipse's conventions,
+        wereas hradius, major and minor can use Ellipse's conventions,
         the vradius does not exist for a circle. It is always a positive
         value in order that the Circle, like Polygons, will have an
         area that can be positive or negative as determined by the sign

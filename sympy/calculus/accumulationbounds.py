@@ -594,7 +594,7 @@ class AccumulationBounds(Expr):
 
     def __contains__(self, other):
         """
-        Returns ``True`` if other is contained in self, where other
+        Returns ``True`` if other is contained in self, were other
         belongs to extended real numbers, ``False`` if not contained,
         otherwise TypeError is raised.
 
@@ -713,7 +713,7 @@ def _eval_is_le(lhs, rhs): # noqa: F811
     """
     Returns ``True `` if range of values attained by ``lhs`` AccumulationBounds
     object is greater than the range of values attained by ``rhs``,
-    where ``rhs`` may be any value of type AccumulationBounds object or
+    were ``rhs`` may be any value of type AccumulationBounds object or
     extended real number value, ``False`` if ``rhs`` satisfies
     the same property, else an unevaluated :py:class:`~.Relational`.
 
@@ -752,7 +752,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
 def _eval_is_ge(lhs, rhs): # noqa: F811
     """
     Returns ``True`` if range of values attained by ``lhs`` AccumulationBounds
-    object is less that the range of values attained by ``rhs``, where
+    object is less that the range of values attained by ``rhs``, were
     other may be any value of type AccumulationBounds object or extended
     real number value, ``False`` if ``rhs`` satisfies the same
     property, else an unevaluated :py:class:`~.Relational`.

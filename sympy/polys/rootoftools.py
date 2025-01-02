@@ -596,7 +596,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _reals_index(cls, reals, index):
         """
-        Map initial real root index to an index in a factor where
+        Map initial real root index to an index in a factor were
         the root belongs.
         """
         i = 0
@@ -616,7 +616,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _complexes_index(cls, complexes, index):
         """
-        Map initial complex root index to an index in a factor where
+        Map initial complex root index to an index in a factor were
         the root belongs.
         """
         i = 0

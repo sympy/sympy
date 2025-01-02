@@ -310,7 +310,7 @@ Given,
 
             H3 &= 1\\
 
-Where $s$ is the variable of the transfer function (in Laplace Domain).
+were $s$ is the variable of the transfer function (in Laplace Domain).
 
 Find
 

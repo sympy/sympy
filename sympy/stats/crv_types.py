@@ -194,7 +194,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs):
     density : Expression containing symbol
         Represents probability density function.
     set : set/Interval
-        Represents the region where the pdf is valid, by default is real line.
+        Represents the region were the pdf is valid, by default is real line.
     check : bool
         If True, it will check whether the given density
         integrates to 1 over the given set. If False, it
@@ -1618,8 +1618,8 @@ def FDistribution(name, d1, d2):
     Parameters
     ==========
 
-    d1 : `d_1 > 0`, where `d_1` is the degrees of freedom (`n_1 - 1`)
-    d2 : `d_2 > 0`, where `d_2` is the degrees of freedom (`n_2 - 1`)
+    d1 : `d_1 > 0`, were `d_1` is the degrees of freedom (`n_1 - 1`)
+    d2 : `d_2 > 0`, were `d_2` is the degrees of freedom (`n_2 - 1`)
 
     Returns
     =======
@@ -2731,7 +2731,7 @@ def LogitNormal(name, mu, s):
 
     .. math::
         f(x) := \frac{1}{s \sqrt{2 \pi}} \frac{1}{x(1 - x)} e^{- \frac{(logit(x)  - \mu)^2}{s^2}}
-        where logit(x) = \log(\frac{x}{1 - x})
+        were logit(x) = \log(\frac{x}{1 - x})
     Parameters
     ==========
 

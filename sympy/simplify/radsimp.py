@@ -127,7 +127,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         >>> collect(a*x*y + x*y + b*x + x, [x, y], exact=None)
         x*y*(a + 1) + x*(b + 1)
 
-    You can also apply this function to differential equations, where
+    You can also apply this function to differential equations, were
     derivatives of arbitrary order can be collected. Note that if you
     collect with respect to a function or a derivative of a function, all
     derivatives of that function will also be collected. Use
@@ -260,7 +260,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     def parse_term(expr):
         """Parses expression expr and outputs tuple (sexpr, rat_expo,
         sym_expo, deriv)
-        where:
+        were:
          - sexpr is the base expression
          - rat_expo is the rational exponent that sexpr is raised to
          - sym_expo is the symbolic exponent that sexpr is raised to
@@ -889,7 +889,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
     def handle(expr):
         # Handle first reduces to the case
-        # expr = 1/d, where d is an add, or d is base**p/2.
+        # expr = 1/d, were d is an add, or d is base**p/2.
         # We do this by recursively calling handle on each piece.
         from sympy.simplify.simplify import nsimplify
 

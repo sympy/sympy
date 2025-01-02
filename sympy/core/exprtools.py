@@ -177,7 +177,7 @@ def _monotonic_sign(self):
     c, a = self.as_coeff_Add()
     v = None
     if not a.is_polynomial():
-        # F/A or A/F where A is a number and F is a signed, rational monomial
+        # F/A or A/F were A is a number and F is a signed, rational monomial
         n, d = a.as_numer_denom()
         if not (n.is_number or d.is_number):
             return
@@ -1112,7 +1112,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
 def _factor_sum_int(expr, **kwargs):
     """Return Sum or Integral object with factors that are not
-    in the wrt variables removed. In cases where there are additive
+    in the wrt variables removed. In cases were there are additive
     terms in the function of the object that are independent, the
     object will be separated into two objects.
 

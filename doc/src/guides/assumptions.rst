@@ -10,9 +10,9 @@ different assumptions predicates mean.
 
 .. note:: This page describes the core assumptions system also often referred
    to as the "old assumptions" system. There is also a "new assumptions"
-   system which is described elsewhere. Note that the system described here is
+   system which is described elsewere. Note that the system described here is
    actually the system that is widely used in SymPy. The "new assumptions"
-   system is not really used anywhere in SymPy yet and the "old assumptions"
+   system is not really used anywere in SymPy yet and the "old assumptions"
    system will not be removed. At the time of writing (SymPy 1.7) it is
    still recommended for users to use the old assumption system.
 
@@ -36,7 +36,7 @@ a concrete integer such as $2$ or $-2$:
     True
 
 What these examples demonstrate is that for a positive number $x$ we have
-$\sqrt{x^2} = x$ whereas for a negative number we would instead have
+$\sqrt{x^2} = x$ wereas for a negative number we would instead have
 $\sqrt{x^2} = -x$. That may seem obvious but the situation can be more
 surprising when working with a symbol rather then an explicit number. For
 example
@@ -98,7 +98,7 @@ We can query assumptions on any expression not just a symbol:
     False
 
 The values given in an assumptions query use three-valued "fuzzy" logic. Any
-query can return ``True``, ``False``, or ``None`` where ``None`` should be
+query can return ``True``, ``False``, or ``None`` were ``None`` should be
 interpreted as meaning that the result is *unknown*.
 
     >>> x = Symbol('x')
@@ -397,7 +397,7 @@ A full table of the possible predicates and their definitions is given below.
 
     * - ``complex``
       - A complex number, $z\in\mathbb{C}$. Any number of the form $x + iy$
-        where $x$ and $y$ are ``real`` and $i = \sqrt{-1}$. All ``complex``
+        were $x$ and $y$ are ``real`` and $i = \sqrt{-1}$. All ``complex``
         numbers are ``finite``. Includes all ``real`` numbers.
         [complex]_
       - | ``-> commutative``
@@ -422,7 +422,7 @@ A full table of the possible predicates and their definitions is given below.
 
     * - ``extended_real``
       - An element of the extended real number line,
-        $x\in\overline{\mathbb{R}}$ where
+        $x\in\overline{\mathbb{R}}$ were
         $\overline{\mathbb{R}}=\mathbb{R}\cup\{-\infty,+\infty\}$. An
         ``extended_real`` number is either ``real`` or $\pm\infty$. The
         relational operators ``<``, ``<=``, ``>=`` and ``>`` are defined only
@@ -443,7 +443,7 @@ A full table of the possible predicates and their definitions is given below.
 
     * - ``imaginary``
       - An imaginary number, $z\in\mathbb{I}-\{0\}$. A number of the form $z=yi$
-        where $y$ is real, $y\ne 0$ and $i=\sqrt{-1}$. All ``imaginary``
+        were $y$ is real, $y\ne 0$ and $i=\sqrt{-1}$. All ``imaginary``
         numbers are ``complex`` and not ``real``. Note in particular that
         ``zero`` is `not` considered ``imaginary`` in SymPy.
         [imaginary]_
@@ -453,7 +453,7 @@ A full table of the possible predicates and their definitions is given below.
 
     * - ``rational``
       - A rational number, $q\in\mathbb{Q}$. Any number of the form
-        $\frac{a}{b}$ where $a$ and $b$ are integers and $b \ne 0$. All
+        $\frac{a}{b}$ were $a$ and $b$ are integers and $b \ne 0$. All
         ``rational`` numbers are ``real`` and ``algebraic``.  Includes all
         ``integer`` numbers.
         [rational]_
@@ -883,7 +883,7 @@ to ``1`` so ``S2.is_empty`` gives ``None``. The ``is_empty`` property for sets
 plays a similar role to the ``is_zero`` property for numbers in the
 assumptions system: ``is_empty`` is normally only ``True`` for the
 :class:`~.EmptySet` object but it is still useful to be able to distinguish between
-the cases where ``is_empty=False`` and ``is_empty=None``.
+the cases were ``is_empty=False`` and ``is_empty=None``.
 
 Although ``is_zero_matrix`` and ``is_empty`` are used for similar purposes to
 the assumptions properties such as ``is_zero`` they are not part of the
@@ -1063,7 +1063,7 @@ x.is_extended_real`` which means that we only reject the argument if it is
 the argument will not be rejected. The first reason for allowing
 ``x.is_extended_real=None`` is so that a vanilla symbol can be used with
 ``expreal``. The second reason is that an assumptions query can always give
-``None`` even in cases where an argument is definitely real e.g.:
+``None`` even in cases were an argument is definitely real e.g.:
 
     >>> x = Symbol('x')
     >>> print(x.is_extended_real)
@@ -1373,7 +1373,7 @@ to resolve the query are exhausted ``None`` will be cached and returned.
           order which can mean that execution at this point is
           non-deterministic. Provided all of the different handler methods
           are consistent (i.e. there are no bugs) then the end result will
-          still be deterministic. However a bug where two handlers are
+          still be deterministic. However a bug were two handlers are
           inconsistent can manifest in non-deterministic behaviour because
           this randomisation might lead to the handlers being called in
           different orders when the same program is run multiple times.

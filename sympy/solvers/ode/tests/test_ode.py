@@ -491,7 +491,7 @@ def test_solve_ics():
     assert dsolve([f(x).diff(x) - f(x) + g(x), g(x).diff(x) - g(x) - f(x)],
         [f(x), g(x)], ics={f(0): 1, g(0): 0}) == [Eq(f(x), exp(x)*cos(x)), Eq(g(x), exp(x)*sin(x))]
 
-    # Test cases where dsolve returns two solutions.
+    # Test cases were dsolve returns two solutions.
     eq = (x**2*f(x)**2 - x).diff(x)
     assert dsolve(eq, f(x), ics={f(1): 0}) == [Eq(f(x),
         -sqrt(x - 1)/x), Eq(f(x), sqrt(x - 1)/x)]

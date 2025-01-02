@@ -9,7 +9,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 class DiagonalMatrix(MatrixExpr):
     """DiagonalMatrix(M) will create a matrix expression that
     behaves as though all off-diagonal elements,
-    `M[i, j]` where `i != j`, are zero.
+    `M[i, j]` were `i != j`, are zero.
 
     Examples
     ========

@@ -666,7 +666,7 @@ def dmp_sub(f, g, u, K):
 
 def dup_add_mul(f, g, h, K):
     """
-    Returns ``f + g*h`` where ``f, g, h`` are in ``K[x]``.
+    Returns ``f + g*h`` were ``f, g, h`` are in ``K[x]``.
 
     Examples
     ========
@@ -683,7 +683,7 @@ def dup_add_mul(f, g, h, K):
 
 def dmp_add_mul(f, g, h, u, K):
     """
-    Returns ``f + g*h`` where ``f, g, h`` are in ``K[X]``.
+    Returns ``f + g*h`` were ``f, g, h`` are in ``K[X]``.
 
     Examples
     ========
@@ -700,7 +700,7 @@ def dmp_add_mul(f, g, h, u, K):
 
 def dup_sub_mul(f, g, h, K):
     """
-    Returns ``f - g*h`` where ``f, g, h`` are in ``K[x]``.
+    Returns ``f - g*h`` were ``f, g, h`` are in ``K[x]``.
 
     Examples
     ========
@@ -717,7 +717,7 @@ def dup_sub_mul(f, g, h, K):
 
 def dmp_sub_mul(f, g, h, u, K):
     """
-    Returns ``f - g*h`` where ``f, g, h`` are in ``K[X]``.
+    Returns ``f - g*h`` were ``f, g, h`` are in ``K[X]``.
 
     Examples
     ========

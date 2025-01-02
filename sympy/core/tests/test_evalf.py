@@ -610,7 +610,7 @@ def test_issue_11151():
         evalf(z, 15, {}) == (None, None, 15, None)
     # so this shouldn't fail
     assert (e/2).n() == 0
-    # this was where the issue appeared
+    # this was were the issue appeared
     expr0 = Sum(x**2 + x, (x, 1, 2))
     expr1 = Sum(0, (x, 1, 2))
     expr2 = expr1/expr0
@@ -683,7 +683,7 @@ def test_evalf_with_bounded_error():
         (2 - 3 * I, Rational(1, 1000), None),
         # very large eps
         (2 - 3 * I, Rational(1000), None),
-        # case where x already small, hence some cancellation in p = m + n - 1
+        # case were x already small, hence some cancellation in p = m + n - 1
         (Rational(1234, 10**8), Rational(1, 10**12), None),
     ]
     for x0, eps, m in cases:

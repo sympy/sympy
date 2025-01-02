@@ -78,7 +78,7 @@ def continued_fraction_periodic(p, q, d=0, s=1) -> list:
     Find the periodic continued fraction expansion of a quadratic irrational.
 
     Compute the continued fraction expansion of a rational or a
-    quadratic irrational number, i.e. `\frac{p + s\sqrt{d}}{q}`, where
+    quadratic irrational number, i.e. `\frac{p + s\sqrt{d}}{q}`, were
     `p`, `q \ne 0` and `d \ge 0` are integers.
 
     Returns the continued fraction representation (canonical form) as

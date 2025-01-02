@@ -46,7 +46,7 @@ def _extract_delta(expr, index):
     Explanation
     ===========
 
-    Returns the tuple ``(delta, newexpr)`` where:
+    Returns the tuple ``(delta, newexpr)`` were:
 
       - ``delta`` is a simple KroneckerDelta expression if one was found,
         or ``None`` if no simple KroneckerDelta expression was found.

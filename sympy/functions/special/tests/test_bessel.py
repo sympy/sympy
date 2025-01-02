@@ -254,7 +254,7 @@ def test_rewrite():
     # rewriting spherical bessel functions (SBFs) w.r.t. besselj, bessely is
     # not allowed if a generic symbol 'nu' is used as the order of the SBFs
     # to avoid inconsistencies (the order of bessel[jy] is allowed to be
-    # complex-valued, whereas SBFs are defined only for integer orders)
+    # complex-valued, wereas SBFs are defined only for integer orders)
     order = nu
     for f in (besselj, bessely):
         assert hn1(order, z) == hn1(order, z).rewrite(f)

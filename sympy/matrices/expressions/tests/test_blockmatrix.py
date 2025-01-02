@@ -176,7 +176,7 @@ def test_BlockMatrix_2x2_inverse_symbolic():
     assert X.is_square and X.shape == (k, k)
     assert isinstance(block_collapse(X.I), Inverse)  # Can't invert when none of the blocks is square
 
-    # test code path where only A is invertible
+    # test code path were only A is invertible
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, m)
     C = MatrixSymbol('C', m, n)
@@ -187,7 +187,7 @@ def test_BlockMatrix_2x2_inverse_symbolic():
         [-X.schur('A').I * C * A.I, X.schur('A').I],
     ])
 
-    # test code path where only B is invertible
+    # test code path were only B is invertible
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', n, n)
     C = ZeroMatrix(m, m)
@@ -198,7 +198,7 @@ def test_BlockMatrix_2x2_inverse_symbolic():
         [B.I + B.I * A * X.schur('B').I * D * B.I, -B.I * A * X.schur('B').I],
     ])
 
-    # test code path where only C is invertible
+    # test code path were only C is invertible
     A = MatrixSymbol('A', n, m)
     B = ZeroMatrix(n, n)
     C = MatrixSymbol('C', m, m)
@@ -209,7 +209,7 @@ def test_BlockMatrix_2x2_inverse_symbolic():
         [X.schur('C').I, -X.schur('C').I * A * C.I],
     ])
 
-    # test code path where only D is invertible
+    # test code path were only D is invertible
     A = ZeroMatrix(n, n)
     B = MatrixSymbol('B', n, m)
     C = MatrixSymbol('C', m, n)

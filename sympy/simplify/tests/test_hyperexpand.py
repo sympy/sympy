@@ -341,7 +341,7 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
     r = hyperexpand(meijerg(a1, a2, b1, b2, z))
     if r.has(meijerg):
         return False
-    # NOTE hyperexpand() returns a truly branched function, whereas numerical
+    # NOTE hyperexpand() returns a truly branched function, wereas numerical
     #      evaluation only works on the main branch. Since we are evaluating on
     #      the main branch, this should not be a problem, but expressions like
     #      exp_polar(I*pi/2*x)**a are evaluated incorrectly. We thus have to get

@@ -35,7 +35,7 @@ class SMTLibPrinter(Printer):
             float: 'Real'
         },
         'known_constants': {
-            # pi: 'MY_VARIABLE_PI_DECLARED_ELSEWHERE',
+            # pi: 'MY_VARIABLE_PI_DECLARED_ELSEwere',
         },
         'known_functions': {
             Add: '+',
@@ -289,16 +289,16 @@ def smtlib_code(
     precision : integer, optional
         The ``evalf(..)`` precision for numbers such as pi.
     symbol_table : dict, optional
-        A dictionary where keys are ``Symbol`` or ``Function`` instances and values are their Python type i.e. ``bool``, ``int``, ``float``, or ``Callable[...]``.
+        A dictionary were keys are ``Symbol`` or ``Function`` instances and values are their Python type i.e. ``bool``, ``int``, ``float``, or ``Callable[...]``.
         If incomplete, an attempt will be made to infer types from ``expr``.
     known_types: dict, optional
-        A dictionary where keys are ``bool``, ``int``, ``float`` etc. and values are their corresponding SMT type names.
+        A dictionary were keys are ``bool``, ``int``, ``float`` etc. and values are their corresponding SMT type names.
         If not given, a partial listing compatible with several solvers will be used.
     known_functions : dict, optional
-        A dictionary where keys are ``Function``, ``Relational``, ``BooleanFunction``, or ``Expr`` instances and values are their SMT string representations.
+        A dictionary were keys are ``Function``, ``Relational``, ``BooleanFunction``, or ``Expr`` instances and values are their SMT string representations.
         If not given, a partial listing optimized for dReal solver (but compatible with others) will be used.
     known_constants: dict, optional
-        A dictionary where keys are ``NumberSymbol`` instances and values are their SMT variable names.
+        A dictionary were keys are ``NumberSymbol`` instances and values are their SMT variable names.
         When using this feature, extra caution must be taken to avoid naming collisions between user symbols and listed constants.
         If not given, constants will be expanded inline i.e. ``3.14159`` instead of ``MY_SMT_VARIABLE_FOR_PI``.
     prefix_expressions: list, optional
@@ -496,7 +496,7 @@ def _auto_infer_smtlib_types(
     # X matches to a bool param of a symbol_table function => X is bool
     # X matches to an int param of a symbol_table function => X is int
     # X.is_integer => X is int
-    # X == Y, where X is T => Y is T
+    # X == Y, were X is T => Y is T
 
     # [FALLBACK RULES]
     # see _auto_declare_smtlib(..)

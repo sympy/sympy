@@ -169,7 +169,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     The Wigner 3j symbol obeys the following symmetry rules:
 
     - invariant under any permutation of the columns (with the
-      exception of a sign change where `J:=j_1+j_2+j_3`):
+      exception of a sign change were `J:=j_1+j_2+j_3`):
 
       .. math::
 
@@ -833,7 +833,7 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
         \end{aligned}
 
 
-    where `\delta_{ij}` is the Kronecker delta symbol and `\Theta` is a step
+    were `\delta_{ij}` is the Kronecker delta symbol and `\Theta` is a step
     function defined as
 
     .. math::
@@ -885,7 +885,7 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
 
     - zero for `l_1`, `l_2`, `l_3` not fulfiling the condition
       `l_1 \in \{l_{\text{max}}, l_{\text{max}}-2, \ldots, l_{\text{min}}\}`,
-      where `l_{\text{max}} = l_2+l_3`,
+      were `l_{\text{max}} = l_2+l_3`,
 
       .. math::
           \begin{aligned}

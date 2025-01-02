@@ -144,7 +144,7 @@ class RigidBody(BodyBase):
 
         ``L = m * v``
 
-        where m is the mass of the rigid body, and v is the velocity of the mass
+        were m is the mass of the rigid body, and v is the velocity of the mass
         center of B in the frame N.
 
         Parameters
@@ -186,7 +186,7 @@ class RigidBody(BodyBase):
 
         ``H = dot(I, w) + cross(r, m * v)``
 
-        where I and m are the central inertia dyadic and mass of rigid body B, w
+        were I and m are the central inertia dyadic and mass of rigid body B, w
         is the angular velocity of body B in the frame N, r is the position
         vector from point O to the mass center of B, and v is the velocity of
         the mass center in the frame N.
@@ -236,7 +236,7 @@ class RigidBody(BodyBase):
 
         ``T = 1/2 * (dot(dot(I, w), w) + dot(m * v, v))``
 
-        where I and m are the central inertia dyadic and mass of rigid body B
+        were I and m are the central inertia dyadic and mass of rigid body B
         respectively, w is the body's angular velocity, and v is the velocity of
         the body's mass center in the supplied ReferenceFrame.
 

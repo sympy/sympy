@@ -202,7 +202,7 @@ class stringPict:
     def leftslash(self):
         """Precede object by a slash of the proper size.
         """
-        # XXX not used anywhere ?
+        # XXX not used anywere ?
         height = max(
             self.baseline,
             self.height() - 1 - self.baseline)*2 + 1
@@ -216,7 +216,7 @@ class stringPict:
         """Produce a nice root symbol.
         Produces ugly results for big n inserts.
         """
-        # XXX not used anywhere
+        # XXX not used anywere
         # XXX duplicate of root drawing in pretty.py
         #put line over expression
         result = self.above('_'*self.width())

@@ -537,7 +537,7 @@ class Relational(Boolean, EvalfMixin):
 
     @property
     def binary_symbols(self):
-        # override where necessary
+        # override were necessary
         return set()
 
 
@@ -910,9 +910,9 @@ class GreaterThan(_Greater):
     Explanation
     ===========
 
-    The ``*Than`` classes represent inequal relationships, where the left-hand
+    The ``*Than`` classes represent inequal relationships, were the left-hand
     side is generally bigger or smaller than the right-hand side.  For example,
-    the GreaterThan class represents an inequal relationship where the
+    the GreaterThan class represents an inequal relationship were the
     left-hand side is at least as big as the right side, if not bigger.  In
     mathematical notation:
 
@@ -1331,7 +1331,7 @@ def is_ge(lhs, rhs, assumptions=None):
     Therefore, supporting new type with this function will ensure behavior for
     other three functions as well.
 
-    To maintain these equivalences in fuzzy logic it is important that in cases where
+    To maintain these equivalences in fuzzy logic it is important that in cases were
     either x or y is non-real all comparisons will give None.
 
     Examples

@@ -28,7 +28,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import FiniteSet, Complement, Intersection
-from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis, median,
+from sympy.stats import (P, E, were, density, variance, covariance, skewness, kurtosis, median,
                          given, pspace, cdf, characteristic_function, moment_generating_function,
                          ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Davis, Erlang, ExGaussian,
@@ -92,10 +92,10 @@ def test_conditional_1d():
 
 def test_ContinuousDomain():
     X = Normal('x', 0, 1)
-    assert where(X**2 <= 1).set == Interval(-1, 1)
-    assert where(X**2 <= 1).symbol == X.symbol
-    assert where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
-    raises(ValueError, lambda: where(sin(X) > 1))
+    assert were(X**2 <= 1).set == Interval(-1, 1)
+    assert were(X**2 <= 1).symbol == X.symbol
+    assert were(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
+    raises(ValueError, lambda: were(sin(X) > 1))
 
     Y = given(X, X >= 0)
 
@@ -662,7 +662,7 @@ def test_exponential():
     assert P(X > 10) == exp(-10*rate)
     assert quantile(X)(p) == -log(1-p)/rate
 
-    assert where(X <= 1).set == Interval(0, 1)
+    assert were(X <= 1).set == Interval(0, 1)
     Y = Exponential('y', 1)
     assert median(Y) == FiniteSet(log(2))
     #Test issue 9970

@@ -130,7 +130,7 @@ denoted by :math:`\nabla \times \mathbf{F}` is given by:
 \left(\frac{\partial F_y}{\partial x} -
 \frac{\partial F_x}{\partial y}\right) \mathbf{\hat{k}}`
 
-where :math:`F_x` denotes the :math:`X` component of vector :math:`\mathbf{F}`.
+were :math:`F_x` denotes the :math:`X` component of vector :math:`\mathbf{F}`.
 
 Computing the curl of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
@@ -167,7 +167,7 @@ denoted by :math:`\nabla\cdot\mathbf{F}` is given by:
 +\frac{\partial W}{\partial z
 }`
 
-where :math:`U`, :math:`V` and :math:`W` denote the :math:`X`, :math:`Y` and
+were :math:`U`, :math:`V` and :math:`W` denote the :math:`X`, :math:`Y` and
 :math:`Z` components of :math:`\mathbf{F}` respectively.
 
 Computing the divergence of a vector field in :mod:`sympy.vector` can be
@@ -281,7 +281,7 @@ of the path travelled.
 A conservative vector field is also said to be 'irrotational', since the
 curl of a conservative field is always zero.
 
-In physics, conservative fields represent forces in physical systems where
+In physics, conservative fields represent forces in physical systems were
 energy is conserved.
 
 To check if a vector field is conservative in :mod:`sympy.vector`, the

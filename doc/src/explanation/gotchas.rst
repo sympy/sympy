@@ -798,7 +798,7 @@ Although all docs are available at `docs.sympy.org <https://docs.sympy.org/>`_ o
 Python interpreter that runs SymPy.  The easiest way to do this is to do
 ``help(function)``, or ``function?`` if you are using :command:`ipython`::
 
-    In [1]: help(powsimp)  # help() works everywhere
+    In [1]: help(powsimp)  # help() works everywere
 
     In [2]: # But in ipython, you can also use ?, which is better because it
     In [3]: # it gives you more information

@@ -135,7 +135,7 @@ groups (`A = \mathbb{Z}`). A *submodule* of the `A`-module `M` is a subset
 `N \subset M`, such that the binary operations restrict to `N`, and `N` becomes
 an `A`-module with these operations.
 
-The ring `A` itself has a natural `A`-module structure where addition and
+The ring `A` itself has a natural `A`-module structure were addition and
 multiplication in the module coincide with addition and multiplication in
 the ring. This `A`-module is also written as `A`. An `A`-submodule of `A`
 is called an *ideal* of `A`. Ideals come up very naturally in algebraic
@@ -243,7 +243,7 @@ Module Homomorphisms and Syzygies
 Let `M` and `N` be `A`-modules. A mapping `f: M \to N` satisfying various
 obvious properties (see [Atiyah69]_) is called an `A`-module homomorphism.
 In this case `M` is called the *domain* and *N* the *codomain*. The
-set `\{x \in M | f(x) = 0\}` is called the *kernel* `ker(f)`, whereas the
+set `\{x \in M | f(x) = 0\}` is called the *kernel* `ker(f)`, wereas the
 set `\{f(x) | x \in M\}` is called the *image* `im(f)`.
 The kernel is a submodule of `M`, the image is a submodule of `N`.
 The homomorphism `f` is injective if and only if `ker(f) = 0` and surjective

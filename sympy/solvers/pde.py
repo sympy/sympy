@@ -245,7 +245,7 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
     this will most likely not be in the same order as the tuple.
 
     You can get help on different hints by doing help(pde.pde_hintname),
-    where hintname is the name of the hint without "_Integral".
+    were hintname is the name of the hint without "_Integral".
 
     See sympy.pde.allhints or the sympy.pde docstring for a list of all
     supported hints that can be returned from classify_pde.
@@ -390,7 +390,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
            provided solve_for_func has not been set to False.
 
     If the solution satisfies the PDE, then a tuple (True, 0) is returned.
-    Otherwise a tuple (False, expr) where expr is the value obtained
+    Otherwise a tuple (False, expr) were expr is the value obtained
     after substituting the solution in the PDE. However if a known solution
     returns False, it may be due to the inability of doit() to simplify it to zero.
 
@@ -472,7 +472,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     .. math:: a \frac{\partial f(x,y)}{\partial x}
               + b \frac{\partial f(x,y)}{\partial y} + c f(x,y) = 0
 
-    where `a`, `b` and `c` are constants.
+    were `a`, `b` and `c` are constants.
 
     The general solution is of the form:
 
@@ -547,7 +547,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
               + b \frac{\partial f(x,y)}{\partial y}
               + c f(x,y) = G(x,y)
 
-    where `a`, `b` and `c` are constants and `G(x, y)` can be an arbitrary
+    were `a`, `b` and `c` are constants and `G(x, y)` can be an arbitrary
     function in `x` and `y`.
 
     The general solution of the PDE is:
@@ -560,7 +560,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         e^{- \frac{c \xi}{a^2 + b^2}}
         \right|_{\substack{\eta=- a y + b x\\ \xi=a x + b y }}\, ,
 
-    where `F(\eta)` is an arbitrary single-valued function. The solution
+    were `F(\eta)` is an arbitrary single-valued function. The solution
     can be found in SymPy with ``pdsolve``::
 
         >>> from sympy.solvers import pdsolve
@@ -645,7 +645,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
                 + b(x, y) \frac{\partial f(x, y)}{\partial y}
                 + c(x, y) f(x, y) = G(x, y)
 
-    where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary
+    were `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary
     functions in `x` and `y`. This PDE is converted into an ODE by
     making the following transformation:
 

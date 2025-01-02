@@ -2,7 +2,7 @@
 SymPy core decorators.
 
 The purpose of this module is to expose decorators without any other
-dependencies, so that they can be easily imported anywhere in sympy/core.
+dependencies, so that they can be easily imported anywere in sympy/core.
 """
 
 from __future__ import annotations

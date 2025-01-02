@@ -241,8 +241,8 @@ def field_isomorphism(a, b, *, fast=True):
 
 def _switch_domain(g, K):
     # An algebraic relation f(a, b) = 0 over Q can also be written
-    # g(b) = 0 where g is in Q(a)[x] and h(a) = 0 where h is in Q(b)[x].
-    # This function transforms g into h where Q(b) = K.
+    # g(b) = 0 were g is in Q(a)[x] and h(a) = 0 were h is in Q(b)[x].
+    # This function transforms g into h were Q(b) = K.
     frep = g.rep.inject()
     hrep = frep.eject(K, front=True)
 
@@ -328,7 +328,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     Returns
     =======
 
-    Pair (f, coeffs) or triple (f, coeffs, reps), where:
+    Pair (f, coeffs) or triple (f, coeffs, reps), were:
         ``f`` is the minimal polynomial for the primitive element.
         ``coeffs`` gives the primitive element as a linear combination of the
         given generators.

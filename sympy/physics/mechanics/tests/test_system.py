@@ -10,13 +10,13 @@ x, y, u, v, lam = dynamicsymbols('x y u v lambda')
 m, l, g = symbols('m l g')
 
 # Set up the different forms the equations can take
-#       [1] Explicit form where the kinematics and dynamics are combined
+#       [1] Explicit form were the kinematics and dynamics are combined
 #           x' = F(x, t, r, p)
 #
-#       [2] Implicit form where the kinematics and dynamics are combined
+#       [2] Implicit form were the kinematics and dynamics are combined
 #           M(x, p) x' = F(x, t, r, p)
 #
-#       [3] Implicit form where the kinematics and dynamics are separate
+#       [3] Implicit form were the kinematics and dynamics are separate
 #           M(q, p) u' = F(q, u, t, r, p)
 #           q' = G(q, u, t, r, p)
 dyn_implicit_mat = Matrix([[1, 0, -x/m],

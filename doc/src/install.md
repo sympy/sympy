@@ -113,7 +113,7 @@ sys.modules['sympy.mpmath'] = mpmath
 ```
 
 before the code that imports `sympy.mpmath`. It is recommended to change
-code that uses `sympy.mpmath` to use `mpmath` directly wherever possible.
+code that uses `sympy.mpmath` to use `mpmath` directly werever possible.
 
 ## Questions
 

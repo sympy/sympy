@@ -58,7 +58,7 @@ representing the implementation of those coefficients::
 Here the domain is :ref:`QQ` which represents the implementation of the
 rational numbers in the domain system. The :py:class:`~.Poly` instance itself
 has a :py:attr:`.Poly.domain` attribute :ref:`QQ` and then a list of
-:py:class:`~.PythonMPQ` coefficients where :py:class:`~.PythonMPQ`
+:py:class:`~.PythonMPQ` coefficients were :py:class:`~.PythonMPQ`
 is the class that implements the elements of the :ref:`QQ` domain. The list of
 coefficients ``[1, 1/2, 0]`` gives a standardised low-level representation of
 the polynomial expression ``(1)*x**2 + (1/2)*x + (0)``.
@@ -99,7 +99,7 @@ has two children ``1`` and ``1/(x**2 + 2)``. The child ``1`` is represented as
 an :py:class:`~.Integer` and the other child is represented as a :py:class:`~.Pow` with
 base ``x**2 + 2`` and exponent ``1``. Then ``x**2 + 2`` is represented as an
 :py:class:`~.Add` with children ``x**2`` and ``2`` and so on. In this way the
-expression is represented as a tree where the internal nodes are operations
+expression is represented as a tree were the internal nodes are operations
 like :py:class:`~.Add`, :py:class:`~.Mul`, :py:class:`~.Pow` and so on and the
 leaf nodes are atomic expression types like :py:class:`~.Integer` and
 :py:class:`~.Symbol`. See :ref:`tutorial-manipulation` for more about this
@@ -201,7 +201,7 @@ DMP representation
 A multivariate polynomial (a polynomial in multiple variables) can be
 represented as a polynomial with coefficients that are themselves polynomials.
 For example ``x**2*y + x**2 + x*y + y + 1`` can be represented as polynomial
-in ``x`` where the coefficients are themselves polynomials in ``y`` i.e.: ``(y
+in ``x`` were the coefficients are themselves polynomials in ``y`` i.e.: ``(y
 + 1)*x**2 + (y)*x + (y+1)``. Since we can represent a polynomial with a list
 of coefficients a multivariate polynomial can be represented with a list of
 lists of coefficients::
@@ -348,7 +348,7 @@ accessed as functions from the :py:class:`~.Domain` object::
   (5/3, 0)
 
 The :py:meth:`~.Domain.exquo` function is used to compute an exact quotient.
-This is the analogue of ``a / b`` but where the division is expected to be exact
+This is the analogue of ``a / b`` but were the division is expected to be exact
 (with no remainder) or an error will be raised::
 
   >>> QQ.exquo(QQ(5), QQ(3))
@@ -455,7 +455,7 @@ It is important not to mix domain elements with other Python types such as
 When working in a domain, care should be taken as some Python operations will
 do this implicitly. for example the ``sum`` function will use the regular
 ``int`` value of zero so that ``sum([a, b])`` is effectively evaluated as ``(0
-+ a) + b`` where ``0`` is of type ``int``.
++ a) + b`` were ``0`` is of type ``int``.
 
 Every domain is at least a ring if not a field and as such is guaranteed to
 have two elements in particular corresponding to `1` and `0`.  The domain
@@ -508,7 +508,7 @@ The two example domains that we have seen so far are :ref:`ZZ` and :ref:`QQ`
 representing the integers and the rationals respectively. There are other
 simple domains such as :ref:`ZZ_I` and :ref:`QQ_I` representing the
 `Gaussian integers`_ and `Gaussian rationals`_. The Gaussian integers are
-numbers of the form `a\sqrt{-1} + b` where `a` and `b` are integers. The
+numbers of the form `a\sqrt{-1} + b` were `a` and `b` are integers. The
 Gaussian rationals are defined similarly except that `a` and `b` can be
 rationals. We can use the Gaussian domains like::
 
@@ -520,7 +520,7 @@ rationals. We can use the Gaussian domains like::
   (-3 + 4*I)
 
 Note the contrast with the way this calculation works in the tree
-representation where :py:func:`~.expand` is needed to get the reduced form::
+representation were :py:func:`~.expand` is needed to get the reduced form::
 
   >>> from sympy import expand, I
   >>> z = 1 + 2*I
@@ -535,7 +535,7 @@ their elements by :py:class:`~.GaussianInteger` and
 :py:class:`~.GaussianRational` respectively. The internal representation for
 an element of :ref:`ZZ_I` or :ref:`QQ_I` is simply as a pair ``(a, b)`` of
 elements of :ref:`ZZ` or :ref:`QQ` respectively. The domain :ref:`ZZ_I` is a
-ring with similar properties to :ref:`ZZ` whereas :ref:`QQ_I` is a field much
+ring with similar properties to :ref:`ZZ` wereas :ref:`QQ_I` is a field much
 like :ref:`QQ`::
 
   >>> ZZ.is_Field
@@ -548,7 +548,7 @@ like :ref:`QQ`::
   True
 
 Since :ref:`QQ_I` is a field division by nonzero elements is always possible
-whereas in :ref:`ZZ_I` we have the important concept of the greatest common
+wereas in :ref:`ZZ_I` we have the important concept of the greatest common
 divisor (GCD)::
 
   >>> e1 = QQ_I.from_sympy(1+I)
@@ -587,7 +587,7 @@ There is also ``FF`` as an alias for ``GF`` (standing for "finite field" and
 :py:class:`~.PythonFiniteField` or :py:class:`~.GMPYFiniteField` depending on
 whether or not ``gmpy`` is installed.
 
-Finite fields of order `p^n` where `n \ne 1` are not implemented. It is
+Finite fields of order `p^n` were `n \ne 1` are not implemented. It is
 possible to use e.g. ``GF(6)`` or ``GF(9)`` but the resulting domain is *not*
 a field. It is just the integers modulo ``6`` or ``9`` and therefore has zero
 divisors and non-invertible elements::
@@ -693,7 +693,7 @@ The printing support for these is less developed but we can use
 
 The raw printed display immediately shows the internal representation of the
 elements as :py:class:`~.ANP` instances. The field `\mathbb{Q}(\sqrt{2})`
-consists of numbers of the form `a\sqrt{2}+b` where `a` and `b` are rational
+consists of numbers of the form `a\sqrt{2}+b` were `a` and `b` are rational
 numbers. Consequently every number in this field can be represented as a pair
 ``(a, b)`` of elements of :ref:`QQ`. The domain element stores these two in a
 list and also stores a list representation of the *minimal polynomial* for the
@@ -798,7 +798,7 @@ that ordinary sympy (:py:class:`~.Expr`) expressions are represented. The
   >>> srepr(p_expr)
   "Add(Pow(Symbol('x'), Integer(2)), Mul(Integer(2), Symbol('x')), Integer(1))"
 
-Here the expression is a tree where the top node is an :py:class:`~.Add` and
+Here the expression is a tree were the top node is an :py:class:`~.Add` and
 its children nodes are :py:class:`~.Pow` etc. This tree representation makes
 it possible to represent equivalent expressions in different ways e.g.::
 
@@ -867,7 +867,7 @@ their implementations in sympy are different::
   {(0,): x**2, (1,): x, (2,): 1}
 
 Here the coefficients like ``x**2`` are instances of :py:class:`~.PolyElement`
-as well so this is a ``dict`` where the values are also dicts. The full
+as well so this is a ``dict`` were the values are also dicts. The full
 representation is more like::
 
   >>> {k: dict(v) for k, v in p.items()}
@@ -894,7 +894,7 @@ like :ref:`K[x]` uses a sparse representation of a polynomial as a dict
 mapping monomial exponents to coefficients. There is also an older version of
 :ref:`K[x]` that uses the dense :ref:`dmp-representation`. We can create these
 two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
-:py:meth:`~.Domain.old_poly_ring` where the syntax ``K[x]`` is equivalent to
+:py:meth:`~.Domain.old_poly_ring` were the syntax ``K[x]`` is equivalent to
 ``K.poly_ring(x)``::
 
   >>> K1 = ZZ.poly_ring(x)

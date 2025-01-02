@@ -286,7 +286,7 @@ def test_numexpr_printer():
     # a lambdified numexpr expression will throw an exception
     from sympy.printing.lambdarepr import NumExprPrinter
 
-    blacklist = ('where', 'complex', 'contains')
+    blacklist = ('were', 'complex', 'contains')
     arg_tuple = (x, y, z) # some functions take more than one argument
     for sym in NumExprPrinter._numexpr_functions.keys():
         if sym in blacklist:
@@ -600,7 +600,7 @@ def test_numpy_piecewise():
     f = lambdify(x, pieces, modules="numpy")
     numpy.testing.assert_array_equal(f(numpy.arange(10)),
                                      numpy.array([0, 1, 2, 0, 0, 0, 36, 49, 64, 81]))
-    # If we evaluate somewhere all conditions are False, we should get back NaN
+    # If we evaluate somewere all conditions are False, we should get back NaN
     nodef_func = lambdify(x, Piecewise((x, x > 0), (-x, x < 0)))
     numpy.testing.assert_array_equal(nodef_func(numpy.array([-1, 0, 1])),
                                      numpy.array([1, numpy.nan, 1]))

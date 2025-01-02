@@ -1008,7 +1008,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         Notes
         =====
 
-        The algorithm used is of order ``O(n**2)`` where
+        The algorithm used is of order ``O(n**2)`` were
         ``n`` is the number of states in the markov chain.
         It uses Tarjan's algorithm to find the classes
         themselves and then it uses a breadth-first search
@@ -1179,7 +1179,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         is row stochastic and each element in p must be nonnegative.
         That means in matrix form: :math:`(P-I)^T p^T = 0` and
         :math:`(1, \dots, 1) p = 1`
-        where ``P`` is the one-step transition matrix.
+        were ``P`` is the one-step transition matrix.
 
         All time-homogeneous Markov Chains with a finite state space
         have at least one stationary distribution. In addition, if
@@ -2151,7 +2151,7 @@ class CountingProcess(ContinuousTimeStochasticProcess):
 class PoissonProcess(CountingProcess):
     """
     The Poisson process is a counting process. It is usually used in scenarios
-    where we are counting the occurrences of certain events that appear
+    were we are counting the occurrences of certain events that appear
     to happen at a certain rate, but completely at random.
 
     Parameters

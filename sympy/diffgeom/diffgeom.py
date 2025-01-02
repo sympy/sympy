@@ -187,13 +187,13 @@ class CoordSystem(Basic):
         The name of the coordinate system.
 
     patch : Patch
-        The patch where the coordinate system is defined.
+        The patch were the coordinate system is defined.
 
     symbols : list of Symbols, optional
         Defines the names and assumptions of coordinate symbols.
 
     relations : dict, optional
-        Key is a tuple of two strings, who are the names of the systems where
+        Key is a tuple of two strings, who are the names of the systems were
         the coordinates transform from and transform to.
         Value is a tuple of the symbols before transformation and a tuple of
         the expressions after transformation.
@@ -1685,7 +1685,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
 
     `V(f)\big(\gamma(t)\big) = \frac{d}{dt}f\big(\gamma(t)\big)`
 
-    where the given ``vector_field`` is denoted as `V`. This holds for any
+    were the given ``vector_field`` is denoted as `V`. This holds for any
     value `t` for the parameter and any scalar field `f`.
 
     This equation can also be decomposed of a basis of coordinate functions
@@ -1806,7 +1806,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     `V(f)\big(\gamma(t)\big) = \frac{d}{dt}f\big(\gamma(t)\big)`
 
-    where the given ``vector_field`` is denoted as `V`. This holds for any
+    were the given ``vector_field`` is denoted as `V`. This holds for any
     value `t` for the parameter and any scalar field `f`.
 
     This function returns the differential equation of `\gamma(t)` in terms of the
@@ -2027,7 +2027,7 @@ def twoform_to_matrix(expr):
     """Return the matrix representing the twoform.
 
     For the twoform `w` return the matrix `M` such that `M[i,j]=w(e_i, e_j)`,
-    where `e_i` is the i-th base vector field for the coordinate system in
+    were `e_i` is the i-th base vector field for the coordinate system in
     which the expression of `w` is given.
 
     Examples

@@ -53,7 +53,7 @@ def test_index_permutations_with_dummies():
     assert simplify_index_permutations(
         expr, [P(a, b)]) == P(a, b)*f(a, b, p, q)
 
-    # Cases where dummy substitution is needed
+    # Cases were dummy substitution is needed
     expected = P(a, b)*substitute_dummies(f(a, b, p, q))
 
     expr = f(a, b, p, q) - f(b, a, q, p)
@@ -64,7 +64,7 @@ def test_index_permutations_with_dummies():
     result = simplify_index_permutations(expr, [P(a, b)])
     assert expected == substitute_dummies(result)
 
-    # A case where nothing can be done
+    # A case were nothing can be done
     expr = f(a, b, q, p) - g(b, a, p, q)
     result = simplify_index_permutations(expr, [P(a, b)])
     assert expr == result
@@ -949,7 +949,7 @@ def test_dummy_order_well_defined():
 
     # We go through all key components in the order of increasing priority,
     # and consider only fully orderable expressions.  Non-orderable expressions
-    # are tested elsewhere.
+    # are tested elsewere.
 
     # pos in first factor determines sort order
     assert dums(A(k, l)*B(l, k)) == [k, l]

@@ -188,7 +188,7 @@ def public(obj: T) -> T:
     By using this decorator on functions or classes you achieve the same goal
     as by filling ``__all__`` variables manually, you just do not have to repeat
     yourself (object's name). You also know if object is public at definition
-    site, not at some random location (where ``__all__`` was set).
+    site, not at some random location (were ``__all__`` was set).
 
     Note that in multiple decorator setup (in almost all cases) ``@public``
     decorator must be applied before any other decorators, because it relies

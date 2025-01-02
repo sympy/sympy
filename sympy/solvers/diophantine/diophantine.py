@@ -226,7 +226,7 @@ class Univariate(DiophantineEquationType):
     Representation of a univariate diophantine equation.
 
     A univariate diophantine equation is an equation of the form
-    `a_{0} + a_{1}x + a_{2}x^2 + .. + a_{n}x^n = 0` where `a_{1}, a_{2}, ..a_{n}` are
+    `a_{0} + a_{1}x + a_{2}x^2 + .. + a_{n}x^n = 0` were `a_{1}, a_{2}, ..a_{n}` are
     integer constants and `x` is an integer variable.
 
     Examples
@@ -258,7 +258,7 @@ class Linear(DiophantineEquationType):
     Representation of a linear diophantine equation.
 
     A linear diophantine equation is an equation of the form `a_{1}x_{1} +
-    a_{2}x_{2} + .. + a_{n}x_{n} = 0` where `a_{1}, a_{2}, ..a_{n}` are
+    a_{2}x_{2} + .. + a_{n}x_{n} = 0` were `a_{1}, a_{2}, ..a_{n}` are
     integer constants and `x_{1}, x_{2}, ..x_{n}` are integer variables.
 
     Examples
@@ -323,7 +323,7 @@ class Linear(DiophantineEquationType):
 
         a_0*x_0 + g_0*y_0 == c
 
-        where
+        were
 
         g_0 == gcd(a_1, a_2)
 
@@ -370,7 +370,7 @@ class Linear(DiophantineEquationType):
 
         4*x_0 + 3*y_0 == 2
 
-        where
+        were
 
         y_0 == 2*x_1 + x_2
         (Note that gcd(3, 6) == 3)
@@ -380,7 +380,7 @@ class Linear(DiophantineEquationType):
         x_0 ==  2 + 3*t_0
         y_0 == -2 - 4*t_0
 
-        where 't_0' is any integer.
+        were 't_0' is any integer.
 
         Now that we have a solution for 'x_0', find 'x_1' and 'x_2':
 
@@ -402,7 +402,7 @@ class Linear(DiophantineEquationType):
         x_1 == t_0 + t_1
         x_2 == -2 - 6*t_0 - 2*t_1
 
-        where 't_0' and 't_1' are any integers.
+        were 't_0' and 't_1' are any integers.
 
         Note that:
 
@@ -456,7 +456,7 @@ class BinaryQuadratic(DiophantineEquationType):
     Representation of a binary quadratic diophantine equation.
 
     A binary quadratic diophantine equation is an equation of the
-    form `Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0`, where `A, B, C, D, E,
+    form `Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0`, were `A, B, C, D, E,
     F` are integer constants and `x` and `y` are integer variables.
 
     Examples
@@ -1109,7 +1109,7 @@ class CubicThue(DiophantineEquationType):
     Representation of a cubic Thue diophantine equation.
 
     A cubic Thue diophantine equation is a polynomial of the form
-    `f(x, y) = r` of degree 3, where `x` and `y` are integers
+    `f(x, y) = r` of degree 3, were `x` and `y` are integers
     and `r` is a rational number.
 
     No solver is currently implemented for this equation type.
@@ -1137,7 +1137,7 @@ class GeneralSumOfEvenPowers(DiophantineEquationType):
 
     `x_{1}^e + x_{2}^e + . . . + x_{n}^e - k = 0`
 
-    where `e` is an even, integer power.
+    were `e` is an even, integer power.
 
     Examples
     ========
@@ -1519,7 +1519,7 @@ def merge_solution(var, var_t, solution):
     found independently. Solutions for `x - y = 0` are `(x, y) = (t, t)`. But
     we should introduce a value for z when we output the solution for the
     original equation. This function converts `(t, t)` into `(t, t, n_{1})`
-    where `n_{1}` is an integer parameter.
+    were `n_{1}` is an integer parameter.
     """
     sol = []
 
@@ -1708,7 +1708,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     Solves linear diophantine equations.
 
     A linear diophantine equation is an equation of the form `a_{1}x_{1} +
-    a_{2}x_{2} + .. + a_{n}x_{n} = 0` where `a_{1}, a_{2}, ..a_{n}` are
+    a_{2}x_{2} + .. + a_{n}x_{n} = 0` were `a_{1}, a_{2}, ..a_{n}` are
     integer constants and `x_{1}, x_{2}, ..x_{n}` are integer variables.
 
     Usage
@@ -1821,7 +1821,7 @@ def diop_univariate(eq):
     ===========
 
     A univariate diophantine equation is an equation of the form
-    `a_{0} + a_{1}x + a_{2}x^2 + .. + a_{n}x^n = 0` where `a_{1}, a_{2}, ..a_{n}` are
+    `a_{0} + a_{1}x + a_{2}x^2 + .. + a_{n}x^n = 0` were `a_{1}, a_{2}, ..a_{n}` are
     integer constants and `x` is an integer variable.
 
     Usage
@@ -2065,7 +2065,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
 def _special_diop_DN(D, N):
     """
-    Solves the equation `x^2 - Dy^2 = N` for the special case where
+    Solves the equation `x^2 - Dy^2 = N` for the special case were
     `1 < N**2 < D` and `D` is not a perfect square.
     It is better to call `diop_DN` rather than this function, as
     the former checks the condition `1 < N**2 < D`, and calls the latter only
@@ -2142,7 +2142,7 @@ def _special_diop_DN(D, N):
 
 def cornacchia(a:int, b:int, m:int) -> set[tuple[int, int]]:
     r"""
-    Solves `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
+    Solves `ax^2 + by^2 = m` were `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
 
     Explanation
     ===========
@@ -2451,7 +2451,7 @@ def transformation_to_DN(eq):
 
     This is used to solve the general quadratic equation by transforming it to
     the latter form. Refer to [1]_ for more detailed information on the
-    transformation. This function returns a tuple (A, B) where A is a 2 X 2
+    transformation. This function returns a tuple (A, B) were A is a 2 X 2
     matrix and B is a 2 X 1 matrix such that,
 
     Transpose([x y]) =  A * Transpose([X Y]) + B
@@ -2459,7 +2459,7 @@ def transformation_to_DN(eq):
     Usage
     =====
 
-    ``transformation_to_DN(eq)``: where ``eq`` is the quadratic to be
+    ``transformation_to_DN(eq)``: were ``eq`` is the quadratic to be
     transformed.
 
     Examples
@@ -2583,7 +2583,7 @@ def find_DN(eq):
     Usage
     =====
 
-    ``find_DN(eq)``: where ``eq`` is the quadratic to be transformed.
+    ``find_DN(eq)``: were ``eq`` is the quadratic to be transformed.
 
     Examples
     ========
@@ -2892,7 +2892,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
 
     if solution.count(0) >= 2:
         # if there are 2 zeros the equation reduces
-        # to k*X**2 == 0 where X is x, y, or z so X must
+        # to k*X**2 == 0 were X is x, y, or z so X must
         # be zero, too. So there is only the trivial
         # solution.
         return (None, None, None)
@@ -2935,7 +2935,7 @@ def diop_ternary_quadratic_normal(eq, parameterize=False):
     Usage
     =====
 
-    ``diop_ternary_quadratic_normal(eq)``: where ``eq`` is an equation of the form
+    ``diop_ternary_quadratic_normal(eq)``: were ``eq`` is an equation of the form
     `ax^2 + by^2 + cz^2 = 0`.
 
     Examples
@@ -2971,9 +2971,9 @@ def _diop_ternary_quadratic_normal(var, coeff):
 def sqf_normal(a, b, c, steps=False):
     """
     Return `a', b', c'`, the coefficients of the square-free normal
-    form of `ax^2 + by^2 + cz^2 = 0`, where `a', b', c'` are pairwise
+    form of `ax^2 + by^2 + cz^2 = 0`, were `a', b', c'` are pairwise
     prime.  If `steps` is True then also return three tuples:
-    `sq`, `sqf`, and `(a', b', c')` where `sq` contains the square
+    `sq`, `sqf`, and `(a', b', c')` were `sq` contains the square
     factors of `a`, `b` and `c` after removing the `gcd(a, b, c)`;
     `sqf` contains the values of `a`, `b` and `c` after removing
     both the `gcd(a, b, c)` and the square factors.
@@ -3055,7 +3055,7 @@ def reconstruct(A, B, z):
     """
     Reconstruct the `z` value of an equivalent solution of `ax^2 + by^2 + cz^2`
     from the `z` value of a solution of the square-free normal form of the
-    equation, `a'*x^2 + b'*y^2 + c'*z^2`, where `a'`, `b'` and `c'` are square
+    equation, `a'*x^2 + b'*y^2 + c'*z^2`, were `a'`, `b'` and `c'` are square
     free and `gcd(a', b', c') == 1`.
     """
     f = factorint(igcd(A, B))
@@ -3265,7 +3265,7 @@ def gaussian_reduce(w:int, a:int, b:int) -> tuple[int, int]:
 
     if b**2 < w**2 + a:
         u, v = v, u
-    # i.e., norm(u) >= norm(v), where norm(u) := sqrt(_dot(u, u))
+    # i.e., norm(u) >= norm(v), were norm(u) := sqrt(_dot(u, u))
 
     while _dot(u, u) > (dv := _dot(v, v)):
         k = _dot(u, v) // dv
@@ -3352,7 +3352,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     Usage
     =====
 
-    ``diop_general_pythagorean(eq, param)``: where ``eq`` is a general
+    ``diop_general_pythagorean(eq, param)``: were ``eq`` is a general
     pythagorean equation which is assumed to be zero and ``param`` is the base
     parameter used to construct other parameters by subscripting.
 
@@ -3419,7 +3419,7 @@ def diop_general_sum_of_squares(eq, limit=1):
 def diop_general_sum_of_even_powers(eq, limit=1):
     """
     Solves the equation `x_{1}^e + x_{2}^e + . . . + x_{n}^e - k = 0`
-    where `e` is an even, integer power.
+    were `e` is an even, integer power.
 
     Returns at most ``limit`` number of solutions.
 

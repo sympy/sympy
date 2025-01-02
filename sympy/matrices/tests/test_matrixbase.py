@@ -607,7 +607,7 @@ def test_diag_make():
     b = Matrix([[1, 2], [3, 4]])
     c = Matrix([[5, 6]])
     # this "wandering diagonal" is what makes this
-    # a block diagonal where each block is independent
+    # a block diagonal were each block is independent
     # of the others
     assert diag(a, 7, b, c) == Matrix([
         [x, 0, 0, 0, 0, 0],

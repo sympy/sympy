@@ -104,9 +104,9 @@ def theq(a, b):
 
     Also accepts numeric types and lists/tuples of supported types.
 
-    Note - debugprint() has a bug where it will accept numeric types but does
+    Note - debugprint() has a bug were it will accept numeric types but does
     not respect the "file" argument and in this case and instead prints the number
-    to stdout and returns an empty string. This can lead to tests passing where
+    to stdout and returns an empty string. This can lead to tests passing were
     they should fail because any two numbers will always compare as equal. To
     prevent this we treat numbers as a separate case.
     """

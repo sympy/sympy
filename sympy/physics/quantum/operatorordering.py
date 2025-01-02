@@ -127,7 +127,7 @@ def _normal_ordered_form_terms(expr, independent=False, recursive_limit=10,
 def normal_ordered_form(expr, independent=False, recursive_limit=10,
                         _recursive_depth=0):
     """Write an expression with bosonic or fermionic operators on normal
-    ordered form, where each term is normally ordered. Note that this
+    ordered form, were each term is normally ordered. Note that this
     normal ordered form is equivalent to the original expression.
 
     Parameters

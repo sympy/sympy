@@ -32,7 +32,7 @@ decimal form of the square root of 8, we would be done.
 
 But suppose we want to go further. Recall that `\sqrt{8} = \sqrt{4\cdot 2} =
 2\sqrt{2}`.  We would have a hard time deducing this from the above result.
-This is where symbolic computation comes in.  With a symbolic computation
+This is were symbolic computation comes in.  With a symbolic computation
 system like SymPy, square roots of numbers that are not perfect squares are
 left unevaluated by default
 
@@ -40,7 +40,7 @@ left unevaluated by default
    >>> sympy.sqrt(3)
    sqrt(3)
 
-Furthermore---and this is where we start to see the real power of symbolic
+Furthermore---and this is were we start to see the real power of symbolic
 computation---symbolic results can be symbolically simplified.
 
    >>> sympy.sqrt(8)
@@ -206,7 +206,7 @@ language, we are able to focus on those things that matter: the mathematics.
 Another computer algebra system, Sage also uses Python as its language.  But
 Sage is large, with a download of over a gigabyte.  An advantage of SymPy is
 that it is lightweight.  In addition to being relatively small, it has no
-dependencies other than Python, so it can be used almost anywhere easily.
+dependencies other than Python, so it can be used almost anywere easily.
 Furthermore, the goals of Sage and the goals of SymPy are different.  Sage
 aims to be a full featured system for mathematics, and aims to do so by
 compiling all the major open source mathematical systems together into

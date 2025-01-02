@@ -40,7 +40,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'convert-svg-to-pdf', 'sphinx.ext.intersphinx', ]
 
 # Add redirects here. This should be done whenever a page that is in the
-# existing release docs is moved somewhere else so that the URLs don't break.
+# existing release docs is moved somewere else so that the URLs don't break.
 # The format is
 
 # "old-page/path/without/extension": "../new-page/relative_path_with.html"

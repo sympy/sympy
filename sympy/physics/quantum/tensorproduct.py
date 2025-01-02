@@ -287,9 +287,54 @@ class TensorProduct(Expr):
 def tensor_product_simp_Mul(e):
     """Simplify a Mul with tensor products.
 
+<<<<<<< Updated upstream
     .. deprecated:: 1.14.
         The transformations applied by this function are not done automatically
         when tensor products are combined.
+=======
+<<<<<<< HEAD
+    Current the main use of this is to simplify a ``Mul`` of ``TensorProduct``s
+    to a ``TensorProduct`` of ``Muls``. It currently only works for relatively
+    simple cases were the initial ``Mul`` only has scalars and raw
+    ``TensorProduct``s, not ``Add``, ``Pow``, ``Commutator``s of
+    ``TensorProduct``s.
+
+    Parameters
+    ==========
+
+    e : Expr
+        A ``Mul`` of ``TensorProduct``s to be simplified.
+
+    Returns
+    =======
+
+    e : Expr
+        A ``TensorProduct`` of ``Mul``s.
+
+    Examples
+    ========
+
+    This is an example of the type of simplification that this function
+    performs::
+
+        >>> from sympy.physics.quantum.tensorproduct import \
+                    tensor_product_simp_Mul, TensorProduct
+        >>> from sympy import Symbol
+        >>> A = Symbol('A',commutative=False)
+        >>> B = Symbol('B',commutative=False)
+        >>> C = Symbol('C',commutative=False)
+        >>> D = Symbol('D',commutative=False)
+        >>> e = TensorProduct(A,B)*TensorProduct(C,D)
+        >>> e
+        AxB*CxD
+        >>> tensor_product_simp_Mul(e)
+        (A*C)x(B*D)
+=======
+    .. deprecated:: 1.14.
+        The transformations applied by this function are not done automatically
+        when tensor products are combined.
+>>>>>>> ab159eec4dfcc9ac448c35ee986c6b9cefbca2d5
+>>>>>>> Stashed changes
 
     Originally, the main use of this function is to simplify a ``Mul`` of
     ``TensorProduct``s to a ``TensorProduct`` of ``Muls``.
@@ -327,12 +372,23 @@ def tensor_product_simp_Pow(e):
 def tensor_product_simp(e, **hints):
     """Try to simplify and combine tensor products.
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+    In general this will try to pull expressions inside of ``TensorProducts``.
+    It currently only works for relatively simple cases were the products have
+=======
+>>>>>>> Stashed changes
     .. deprecated:: 1.14.
         The transformations applied by this function are not done automatically
         when tensor products are combined.
 
     Originally, this function tried to pull expressions inside of ``TensorProducts``.
     It only worked for relatively simple cases where the products have
+<<<<<<< Updated upstream
+=======
+>>>>>>> ab159eec4dfcc9ac448c35ee986c6b9cefbca2d5
+>>>>>>> Stashed changes
     only scalars, raw ``TensorProducts``, not ``Add``, ``Pow``, ``Commutators``
     of ``TensorProducts``.
     """

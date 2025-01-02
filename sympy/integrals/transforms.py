@@ -233,7 +233,7 @@ def _noconds_(default):
 
     Decorating it ``@_noconds_(default)`` will add a new keyword argument
     ``noconds`` to it. If ``noconds=True``, the return value will be altered to
-    be only ``result``, whereas if ``noconds=False`` the return value will not
+    be only ``result``, wereas if ``noconds=False`` the return value will not
     be altered.
 
     The default value of the ``noconds`` keyword will be ``default`` (i.e. the
@@ -377,7 +377,7 @@ def mellin_transform(f, x, s, **hints):
     transform, and also to the (bilateral) Laplace transform.
 
     This function returns ``(F, (a, b), cond)``
-    where ``F`` is the Mellin transform of ``f``, ``(a, b)`` is the fundamental strip
+    were ``F`` is the Mellin transform of ``f``, ``(a, b)`` is the fundamental strip
     (as above), and ``cond`` are auxiliary convergence conditions.
 
     If the integral cannot be computed in closed form, this function returns

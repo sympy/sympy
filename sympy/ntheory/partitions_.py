@@ -157,7 +157,7 @@ def _partition_rec(n: int, prev) -> int:
             break
         s = prev[np]
         np -= i + 1
-        # np = n - gp where gp = generalized pentagonal: 2, 7, 15, ...
+        # np = n - gp were gp = generalized pentagonal: 2, 7, 15, ...
         if 0 <= np:
             s += prev[np]
         v += -s if i % 2 else s

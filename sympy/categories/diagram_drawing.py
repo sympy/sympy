@@ -40,7 +40,7 @@ correspond to morphisms, then the triangle with the least number of such
 edges is selected.  One of such edges is picked and the corresponding
 objects are placed horizontally, on a grid.  This edge is recorded to
 be in the fringe.  The algorithm then finds a "welding" of a triangle
-to the fringe.  A welding is an edge in the fringe where a triangle
+to the fringe.  A welding is an edge in the fringe were a triangle
 could be attached.  If the algorithm succeeds in finding such a
 welding, it adds to the grid that vertex of the triangle which was not
 yet included in any edge in the fringe and records the two new edges in
@@ -595,8 +595,8 @@ class DiagramGrid:
 
         obj = DiagramGrid._other_vertex(tri, (grid[a], grid[b]))
 
-        # We now have a triangle and an edge where it can be welded to
-        # the fringe.  Decide where to place the other vertex of the
+        # We now have a triangle and an edge were it can be welded to
+        # the fringe.  Decide were to place the other vertex of the
         # triangle and check for degenerate situations en route.
 
         if (abs(a[0] - b[0]) == 1) and (abs(a[1] - b[1]) == 1):
@@ -658,7 +658,7 @@ class DiagramGrid:
                     fringe.remove((a, b))
                     return True
 
-        # We now know where to place the other vertex of the
+        # We now know were to place the other vertex of the
         # triangle.
         offset = DiagramGrid._put_object(target_cell, obj, grid, fringe)
 
@@ -726,7 +726,7 @@ class DiagramGrid:
                 # Here we need to choose a triangle which has only
                 # ``obj`` in common with the existing structure.  The
                 # situations when this is not possible should be
-                # handled elsewhere.
+                # handled elsewere.
 
                 def good_triangle(tri):
                     objs = DiagramGrid._triangle_objects(tri)
@@ -1692,7 +1692,7 @@ class XypicDiagramDrawer:
                 elif (d_i < 0) and (d_j > 0):
                     quadrant[3] += 1
             elif d_i == 0:
-                # Knowing where the other end of the morphism is
+                # Knowing were the other end of the morphism is
                 # and which way it goes, we now have to decide
                 # which quadrant is now the upper one and which is
                 # the lower one.
@@ -1722,7 +1722,7 @@ class XypicDiagramDrawer:
                     quadrant[upper_quadrant] += 1
                     quadrant[lower_quadrant] += 1
             elif d_j == 0:
-                # Knowing where the other end of the morphism is
+                # Knowing were the other end of the morphism is
                 # and which way it goes, we now have to decide
                 # which quadrant is now the left one and which is
                 # the right one.
@@ -2193,7 +2193,7 @@ class XypicDiagramDrawer:
             backwards = False
 
         # This is an attempt at a fast and furious strategy to
-        # decide where there is free space on the two sides of
+        # decide were there is free space on the two sides of
         # a diagonal morphism.  For a diagonal morphism
         # starting at ``(start_i, start_j)`` and ending at
         # ``(end_i, end_j)`` the rectangle defined by these

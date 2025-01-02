@@ -8,7 +8,7 @@ from .utilities import _get_intermediate_simp, _iszero
 
 
 def _diagonal_solve(M, rhs):
-    """Solves ``Ax = B`` efficiently, where A is a diagonal Matrix,
+    """Solves ``Ax = B`` efficiently, were A is a diagonal Matrix,
     with non-zero diagonal entries.
 
     Examples
@@ -44,7 +44,7 @@ def _diagonal_solve(M, rhs):
 
 
 def _lower_triangular_solve(M, rhs):
-    """Solves ``Ax = B``, where A is a lower triangular matrix.
+    """Solves ``Ax = B``, were A is a lower triangular matrix.
 
     See Also
     ========
@@ -83,7 +83,7 @@ def _lower_triangular_solve(M, rhs):
     return M._new(X)
 
 def _lower_triangular_solve_sparse(M, rhs):
-    """Solves ``Ax = B``, where A is a lower triangular matrix.
+    """Solves ``Ax = B``, were A is a lower triangular matrix.
 
     See Also
     ========
@@ -126,7 +126,7 @@ def _lower_triangular_solve_sparse(M, rhs):
 
 
 def _upper_triangular_solve(M, rhs):
-    """Solves ``Ax = B``, where A is an upper triangular matrix.
+    """Solves ``Ax = B``, were A is an upper triangular matrix.
 
     See Also
     ========
@@ -165,7 +165,7 @@ def _upper_triangular_solve(M, rhs):
     return M._new(X)
 
 def _upper_triangular_solve_sparse(M, rhs):
-    """Solves ``Ax = B``, where A is an upper triangular matrix.
+    """Solves ``Ax = B``, were A is an upper triangular matrix.
 
     See Also
     ========
@@ -314,7 +314,7 @@ def _LDLsolve(M, rhs):
 
 
 def _LUsolve(M, rhs, iszerofunc=_iszero):
-    """Solve the linear system ``Ax = rhs`` for ``x`` where ``A = M``.
+    """Solve the linear system ``Ax = rhs`` for ``x`` were ``A = M``.
 
     This is for symbolic matrices, for real or complex ones use
     mpmath.lu_solve or mpmath.qr_solve.
@@ -776,7 +776,7 @@ def _cramer_solve(M, rhs, det_method="laplace"):
 
 
 def _solve(M, rhs, method='GJ'):
-    """Solves linear equation where the unique solution exists.
+    """Solves linear equation were the unique solution exists.
 
     Parameters
     ==========

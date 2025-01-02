@@ -198,7 +198,7 @@ Mathematical Equivalents
 |                       |                       |                       |
 |                       |                       | ``z = x + I*y``       |
 |                       |                       |                       |
-|                       |                       | where x, y and z are  |
+|                       |                       | were x, y and z are  |
 |                       |                       | symbols.              |
 +-----------------------+-----------------------+-----------------------+
 | ``Tina = 2*pi``       | ``tina = 2*sm.pi``    | Using ``.evalf()``    |
@@ -247,7 +247,7 @@ Mathematical Equivalents
 |                       | expression is made up |                       |
 |                       | of dynamicsymbols.    |                       |
 | ``Dt2 = Dt(V, A)``    |                       |                       |
-| where V is a vector   | ``dt2 = v.dt(A)``     |                       |
+| were V is a vector   | ``dt2 = v.dt(A)``     |                       |
 | and A is a frame      |                       |                       |
 |                       |                       |                       |
 | ``Dy2 = D(V, y, A)``  | ``dy2 = v.diff(y, A)``|                       |
@@ -295,7 +295,7 @@ Mathematical Equivalents
 | ``Solve(A, x1, x2)``  | ``sm.linsolve(A,      | For more information  |
 |                       | (x1, x2))``           | refer to              |
 |                       |                       | :ref:`                |
-| where A is an         | where A is an         | solvers/solveset.     |
+| were A is an         | were A is an         | solvers/solveset.     |
 | augmented matrix that | augmented matrix      | <solveset>`           |
 | represents the linear |                       |                       |
 | equations and x1, x2  |                       |                       |
@@ -422,7 +422,7 @@ Physical Equivalents
 |                       | i31)``                | :ref:`mechanics api.  |
 |                       |                       | <part_bod>`           |
 |                       | ``B.inertia = (I, P)``|                       |
-|                       | where B is a          |                       |
+|                       | were B is a          |                       |
 |                       | rigidbody, Bf is the  |                       |
 |                       | related frame and P is|                       |
 |                       | the center of mass of |                       |
@@ -459,7 +459,7 @@ Physical Equivalents
 |                       | O.locatenew(‘Qo’,     | refer to the          |
 |                       | LA*A.x)``             | :ref:`kinematics api. |
 |                       |                       | <kinematics>`         |
-| ``P_P_Q> = LA*A1>``   | where A is a          |                       |
+| ``P_P_Q> = LA*A1>``   | were A is a          |                       |
 |                       | reference frame.      |                       |
 |                       |                       |                       |
 |                       | ``Q.point =           |                       |
@@ -487,7 +487,7 @@ Physical Equivalents
 | ``W_B_N> = qB’*B3>``  | ``B.set_ang_vel(N,    | The getter would be   |
 |                       | qBd*Bf.z)``           | ``B.ang_vel_in(N)``.  |
 | Angular velocity of   |                       |                       |
-| body B in reference   | where Bf is the frame |                       |
+| body B in reference   | were Bf is the frame |                       |
 | frame F.              | associated with the   |                       |
 |                       | body B.               |                       |
 +-----------------------+-----------------------+-----------------------+
@@ -506,14 +506,14 @@ Physical Equivalents
 |                       | ``fL.append((O, f1*N.x|                       |
 |                       | + f2*N.y))``          |                       |
 |                       |                       |                       |
-|                       | where fL is the force |                       |
+|                       | were fL is the force |                       |
 |                       | list.                 |                       |
 |                       |                       |                       |
 |                       | ``fl.append((A,       |                       |
 |                       | -c*qAd*A.z))``        |                       |
 +-----------------------+-----------------------+-----------------------+
 | ``A_B = M``           | ``B.orient(A, 'DCM',  |                       |
-| where M is a matrix   | M)`` where M is a     |                       |
+| were M is a matrix   | M)`` were M is a     |                       |
 | and A, B are frames.  | SymPy Matrix.         |                       |
 |                       |                       |                       |
 | ``D = A_B*2 + 1``     | ``D = A.dcm(B)*2 + 1``|                       |
@@ -616,7 +616,7 @@ Physical Equivalents
 |                       |                       |                       |
 |                       | ``(fr, frstar) =      |                       |
 |                       | KM.kanes_equations(fL,|                       |
-|                       | bL)`` where fL and bL |                       |
+|                       | bL)`` were fL and bL |                       |
 |                       | are lists of forces   |                       |
 |                       | and bodies            |                       |
 |                       | respectively.         |                       |

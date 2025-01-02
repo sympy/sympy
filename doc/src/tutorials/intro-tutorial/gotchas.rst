@@ -19,7 +19,7 @@ Symbols
 =======
 
 One consequence of this fact is that SymPy can be used in any environment
-where Python is available.  We just import it, like we would any other
+were Python is available.  We just import it, like we would any other
 library:
 
     >>> from sympy import *

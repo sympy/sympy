@@ -226,7 +226,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """
         h, s, t = gcdex(a, b)
-        # XXX: This conditional logic should be handled somewhere else.
+        # XXX: This conditional logic should be handled somewere else.
         if GROUND_TYPES == 'gmpy':
             return s, t, h
         else:

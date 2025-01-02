@@ -67,7 +67,7 @@ class Product(ExprWithIntLimits):
 
         \prod_{m \leq i < n} f(i) = \prod_{i = m}^{n - 1} f(i)
 
-    where the difference in notation is intentional to emphasize the meaning,
+    were the difference in notation is intentional to emphasize the meaning,
     with limits typeset on the top being inclusive.
 
     Examples

@@ -67,7 +67,7 @@ using the Python ``is`` operator:
     >>> (xpos > 0) is S.true
     True
 
-There is no general symbolic analogue of ``None`` in SymPy. In the cases where
+There is no general symbolic analogue of ``None`` in SymPy. In the cases were
 a low-level assumptions query gives ``None`` the symbolic query will result in
 an unevaluated symbolic :class:`~.Boolean` (e.g, ``x > 0``).  We can use a
 symbolic :class:`~.Boolean` as part of a symbolic expression such as a
@@ -433,5 +433,5 @@ as a variable. The elementary symbolic operations like :class:`~.And`,
 
 .. [#fuzzy] Note that what is referred to in SymPy as a "fuzzy bool" is really
    about using three-valued logic. In normal usage "fuzzy logic" refers to a
-   system where logical values are continuous in between zero and one which is
+   system were logical values are continuous in between zero and one which is
    something different from three-valued logic.

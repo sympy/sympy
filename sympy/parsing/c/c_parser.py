@@ -542,7 +542,7 @@ if cin:
             Notes
             =====
 
-            Only for cases where character is assigned to a integer value,
+            Only for cases were character is assigned to a integer value,
             since character literal is not in SymPy AST
 
             """

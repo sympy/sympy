@@ -357,7 +357,7 @@ geometric multiplicities are the same for all the eigenvalues, ``M`` is
 diagonalizable.
 
 To diagonalize a matrix, use ``diagonalize``. ``diagonalize`` returns a tuple
-`(P, D)`, where `D` is diagonal and `M = PDP^{-1}`.
+`(P, D)`, were `D` is diagonal and `M = PDP^{-1}`.
 
     >>> P, D = M.diagonalize()
     >>> P

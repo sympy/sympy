@@ -83,7 +83,7 @@ know how to compute the derivative of an expression (for example, if it
 contains an undefined function, which are described in the :ref:`Solving
 Differential Equations <tutorial-dsolve>` section).
 
-Derivatives of unspecified order can be created using tuple ``(x, n)`` where
+Derivatives of unspecified order can be created using tuple ``(x, n)`` were
 ``n`` is the order of the derivative with respect to ``x``.
 
     >>> m, n, a, b = symbols('m n a b')
@@ -250,7 +250,7 @@ To compute the integral with a specified precision:
     >>> integral.evalf(50)
     0.70710678118654752440084436210484903928483593768847
 
-Numeric integration becomes a viable approach in situations where symbolic integration
+Numeric integration becomes a viable approach in situations were symbolic integration
 is impractical or impossible. This method allows for the computation of integrals
 through numerical techniques, even when dealing with infinite intervals or integrands:
 
@@ -331,7 +331,7 @@ which case the defaults ``x0=0`` and ``n=6`` will be used.
 
 The `O\left(x^4\right)` term at the end represents the Landau order term at
 `x=0` (not to be confused with big O notation used in computer science, which
-generally represents the Landau order term at `x` where `x \rightarrow \infty`).  It means that all
+generally represents the Landau order term at `x` were `x \rightarrow \infty`).  It means that all
 x terms with power greater than or equal to `x^4` are omitted.  Order terms
 can be created and manipulated outside of ``series``.  They automatically
 absorb higher order terms.

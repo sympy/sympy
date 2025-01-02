@@ -40,17 +40,17 @@ The first step will be to initialize all of the dynamic and constant symbols. ::
 
 Next step is to define the equations of motion in multiple forms:
 
-    [1] Explicit form where the kinematics and dynamics are combined
+    [1] Explicit form were the kinematics and dynamics are combined
         x' = F_1(x, t, r, p)
 
-    [2] Implicit form where the kinematics and dynamics are combined
+    [2] Implicit form were the kinematics and dynamics are combined
         M_2(x, p) x' = F_2(x, t, r, p)
 
-    [3] Implicit form where the kinematics and dynamics are separate
+    [3] Implicit form were the kinematics and dynamics are separate
         M_3(q, p) u' = F_3(q, u, t, r, p)
         q' = G(q, u, t, r, p)
 
-where
+were
 
     x : states, e.g. [q, u]
     t : time

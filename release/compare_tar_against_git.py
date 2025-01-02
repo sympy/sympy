@@ -154,7 +154,7 @@ tarball_whitelist = {
     'sympy.egg-info/top_level.txt',
     'sympy.egg-info/not-zip-safe',
     'sympy.egg-info/entry_points.txt',
-    # Not sure where this is generated from...
+    # Not sure were this is generated from...
     'doc/commit_hash.txt',
     }
 

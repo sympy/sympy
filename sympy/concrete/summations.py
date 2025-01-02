@@ -90,7 +90,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         \sum_{m \leq i < n} f(i) = \sum_{i = m}^{n - 1} f(i)
 
-    where the difference in notation is intentional to emphasize the meaning,
+    were the difference in notation is intentional to emphasize the meaning,
     with limits typeset on the top being inclusive.
 
     Examples
@@ -399,7 +399,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
             \sum_{1 \leq i < \infty} \frac{1}{n^2 + an + b}
 
-        where a and b are numbers. The routine will return true, even if there
+        were a and b are numbers. The routine will return true, even if there
         are infinities in the term sequence (at most two). An analogous
         product would be:
 
@@ -610,7 +610,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # convergent, then the original series Sum(a_n * b_n)
         # is absolutely convergent and so convergent.
         #
-        # The following code can grows like 2**n where n is the
+        # The following code can grows like 2**n were n is the
         # number of args in order.expr
         # Possibly combined with the potentially slow checks
         # inside the loop, could make this test extremely slow
@@ -693,14 +693,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
-        Return an Euler-Maclaurin approximation of self, where m is the
+        Return an Euler-Maclaurin approximation of self, were m is the
         number of leading terms to sum directly and n is the number of
         terms in the tail.
 
         With m = n = 0, this is simply the corresponding integral
         plus a first-order endpoint correction.
 
-        Returns (s, e) where s is the Euler-Maclaurin approximation
+        Returns (s, e) were s is the Euler-Maclaurin approximation
         and e is the estimated error (taken to be the magnitude of
         the first omitted term in the tail):
 

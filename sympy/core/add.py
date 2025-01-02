@@ -311,7 +311,7 @@ class Add(Expr, AssocOp):
                 s = o
 
             # now we have:
-            # o = c*s, where
+            # o = c*s, were
             #
             # c is a Number
             # s is an expression with number factor extracted
@@ -428,7 +428,7 @@ class Add(Expr, AssocOp):
     @cacheit
     def as_coeff_add(self, *deps):
         """
-        Returns a tuple (coeff, args) where self is treated as an Add and coeff
+        Returns a tuple (coeff, args) were self is treated as an Add and coeff
         is the Number term and args is a tuple of all other terms.
 
         Examples
@@ -1094,7 +1094,7 @@ class Add(Expr, AssocOp):
 
     def primitive(self):
         """
-        Return ``(R, self/R)`` where ``R``` is the Rational GCD of ``self```.
+        Return ``(R, self/R)`` were ``R``` is the Rational GCD of ``self```.
 
         ``R`` is collected only from the leading coefficient of each term.
 
@@ -1173,7 +1173,7 @@ class Add(Expr, AssocOp):
         return Rational(ngcd, dlcm), self._new_rawargs(*terms)
 
     def as_content_primitive(self, radical=False, clear=True):
-        """Return the tuple (R, self/R) where R is the positive Rational
+        """Return the tuple (R, self/R) were R is the positive Rational
         extracted from self. If radical is True (default is False) then
         common radicals will be removed and included as a factor of the
         primitive expression.

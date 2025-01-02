@@ -215,7 +215,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     Explanation
     ===========
 
-    The function returns a dictionary where keys are the name of a given type of
+    The function returns a dictionary were keys are the name of a given type of
     generating function. Six types are currently implemented:
 
          type  |  formal definition
@@ -423,7 +423,7 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
         and their inverses;
       * etc.
 
-    The returned formulas contain symbols i0, i1, i2, ... where the main
+    The returned formulas contain symbols i0, i1, i2, ... were the main
     variables is i0 (and auxiliary variables are i1, i2, ...). A list of
     other symbols can be provided in the 'variables' option; the length of
     the least should be the value of 'niter' (more is acceptable but only

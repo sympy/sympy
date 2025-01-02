@@ -703,7 +703,7 @@ class CodeBlock(CodegenAST):
         if any(isinstance(i, AugmentedAssignment) for i in assignments):
             raise NotImplementedError("CodeBlock.topological_sort does not yet work with AugmentedAssignments")
 
-        # Create a graph where the nodes are assignments and there is a directed edge
+        # Create a graph were the nodes are assignments and there is a directed edge
         # between nodes that use a variable and nodes that assign that
         # variable, like
 
@@ -976,7 +976,7 @@ class Type(Token):
     ==========
 
     name : str
-        Name of the type, e.g. ``object``, ``int16``, ``float16`` (where the latter two
+        Name of the type, e.g. ``object``, ``int16``, ``float16`` (were the latter two
         would use the ``Type`` sub-classes ``IntType`` and ``FloatType`` respectively).
         If a ``Type`` instance is given, the said instance is returned.
 

@@ -204,7 +204,7 @@ def test_DN():
     # https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
     # others are verified using Wolfram Alpha.
 
-    # Covers cases where D <= 0 or D > 0 and D is a square or N = 0
+    # Covers cases were D <= 0 or D > 0 and D is a square or N = 0
     # Solutions are straightforward in these cases.
     assert diop_DN(3, 0) == [(0, 0)]
     assert diop_DN(-17, -5) == []

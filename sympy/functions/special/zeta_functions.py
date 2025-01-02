@@ -34,7 +34,7 @@ class lerchphi(DefinedFunction):
 
     .. math :: \Phi(z, s, a) = \sum_{n=0}^\infty \frac{z^n}{(n + a)^s},
 
-    where the standard branch of the argument is used for $n + a$,
+    were the standard branch of the argument is used for $n + a$,
     and by analytic continuation for other values of the parameters.
 
     A commonly used related function is the Lerch zeta function, defined by
@@ -232,7 +232,7 @@ class polylog(DefinedFunction):
 
     .. math:: \operatorname{Li}_s(z) = \sum_{n=1}^\infty \frac{z^n}{n^s},
 
-    where the standard branch of the argument is used for $n$. It admits
+    were the standard branch of the argument is used for $n$. It admits
     an analytic continuation which is branched at $z=1$ (notably not on the
     sheet of initial definition), $z=0$ and $z=\infty$.
 
@@ -404,7 +404,7 @@ class zeta(DefinedFunction):
 
     .. math:: \zeta(s, a) = \sum_{n=0}^\infty \frac{1}{(n + a)^s},
 
-    where the standard choice of argument for $n + a$ is used. For fixed
+    were the standard choice of argument for $n + a$ is used. For fixed
     $a$ not a nonpositive integer the Hurwitz zeta function admits a
     meromorphic continuation to all of $\mathbb{C}$; it is an unbranched
     function with a simple pole at $s = 1$.

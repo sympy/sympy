@@ -13,7 +13,7 @@ import pytest
 # give different results if the order of the rows is changed. The tests below
 # show all results on lowest terms as should be returned by cancel_denom.
 #
-# The EX domain is also a case where the dense and sparse implementations
+# The EX domain is also a case were the dense and sparse implementations
 # can give results in different forms: the results should be equivalent but
 # are not canonical because EX does not have a canonical form.
 #
@@ -509,7 +509,7 @@ RREF_EXAMPLES = [
     ),
 
     (
-        # This is intended to trigger the threshold where we give up on
+        # This is intended to trigger the threshold were we give up on
         # clearing denominators.
         'qq_large_1',
         qq_large_1,
@@ -518,7 +518,7 @@ RREF_EXAMPLES = [
     ),
 
     (
-        # This is intended to trigger the threshold where we use rref_den over
+        # This is intended to trigger the threshold were we use rref_den over
         # QQ.
         'qq_large_2',
         qq_large_2,

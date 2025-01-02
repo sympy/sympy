@@ -425,7 +425,7 @@ def test_canonicalize3():
     assert t1 == -chi(a0)*psi(a1)
 
 def test_canonicalize4():
-    #Check whether TensAdd.canon_bp chokes on a case where the type of the expression changes on calling expand
+    #Check whether TensAdd.canon_bp chokes on a case were the type of the expression changes on calling expand
     Cartesian = TensorIndexType('Cartesian', dim=3)
     p = tensor_indices("p", Cartesian)
     K = TensorHead("K", [Cartesian])
@@ -1860,7 +1860,7 @@ def test_tensor_expand():
     assert expr.expand() == C(-i)*B(j)*B(-j) + C(-i)*B(j)*C(-j)
 
     """
-    Test whether expand correctly handles the case where the coeff of a TensMul
+    Test whether expand correctly handles the case were the coeff of a TensMul
     is an add. We do not directly check expr_expand == 2*A(i) + F(x)*A(i) since
     __add__ currently consolidates the coefficients automatically
     """

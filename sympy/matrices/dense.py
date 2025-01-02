@@ -195,7 +195,7 @@ def rot_givens(i, j, theta, dim=3):
                 0   & \cdots &    0   & \cdots &    0   & \cdots &    1
             \end{bmatrix}
 
-    Where $c = \cos(\theta)$ and $s = \sin(\theta)$ appear at the intersections
+    were $c = \cos(\theta)$ and $s = \sin(\theta)$ appear at the intersections
     ``i``\th and ``j``\th rows and columns.
 
     For fixed ``i > j``\, the non-zero elements of a Givens matrix are
@@ -716,7 +716,7 @@ def casoratian(seqs, n, zero=True):
                   |    .         .         .    .     |
                   +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +
 
-       It proves very useful in rsolve_hyper() where it is applied
+       It proves very useful in rsolve_hyper() were it is applied
        to a generating set of a recurrence to factor out linearly
        dependent solutions and return a basis:
 

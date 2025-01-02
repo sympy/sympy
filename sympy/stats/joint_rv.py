@@ -127,7 +127,7 @@ class JointPSpace(ProductPSpace):
             self.distribution.set.args[rv.args[1]]) for rv in syms)
         return Integral(expr, *limits)
 
-    def where(self, condition):
+    def were(self, condition):
         raise NotImplementedError()
 
     def compute_density(self, expr):

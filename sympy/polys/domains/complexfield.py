@@ -66,7 +66,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
 
-        # XXX: Neither of these is actually used anywhere.
+        # XXX: Neither of these is actually used anywere.
         self._max_denom = max(2**context.prec // 200, 99)
         self._tolerance = self.one / self._max_denom
 

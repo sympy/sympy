@@ -35,7 +35,7 @@ It is described in great(er) detail in the Sphinx documentation.
 #   is no cancellation. Thus e.g. an index a_J (upper or lower) can be
 #   incremented if a_J != b_i for i = 1, ..., q.
 #
-# o Order reduction: if b_j - a_i is a non-negative integer, where
+# o Order reduction: if b_j - a_i is a non-negative integer, were
 #   j <= m and i > n, the corresponding quotient of gamma functions reduces
 #   to a polynomial. Hence the G function can be expressed using a G-function
 #   of lower order.
@@ -43,7 +43,7 @@ It is described in great(er) detail in the Sphinx documentation.
 #
 #   Secondly, there are paired index theorems [Adamchik, The evaluation of
 #   integrals of Bessel functions via G-function identities]. Suppose there
-#   are three parameters a, b, c, where a is an a_i, i <= n, b is a b_j,
+#   are three parameters a, b, c, were a is an a_i, i <= n, b is a b_j,
 #   j <= m and c is a denominator parameter (i.e. a_i, i > n or b_j, j > m).
 #   Suppose further all three differ by integers.
 #   Then the order can be reduced.
@@ -515,7 +515,7 @@ class Hyper_Function(Expr):
 
         The invariant vector is:
             (gamma, ((s1, n1), ..., (sk, nk)), ((t1, m1), ..., (tr, mr)))
-        where gamma is the number of integer a < 0,
+        were gamma is the number of integer a < 0,
               s1 < ... < sk
               nl is the number of parameters a_i congruent to sl mod 1
               t1 < ... < tr
@@ -975,7 +975,7 @@ class Operator:
 
     def apply(self, obj, op):
         """
-        Apply ``self`` to the object ``obj``, where the generator is ``op``.
+        Apply ``self`` to the object ``obj``, were the generator is ``op``.
 
         Examples
         ========
@@ -1248,7 +1248,7 @@ class MeijerUnShiftC(Operator):
     """ Decrement a lower b index. """
     # XXX this is "essentially" the same as MeijerUnShiftA. This "essentially"
     #     can be made rigorous using the functional equation G(1/z) = G'(z),
-    #     where G' denotes a G function of slightly altered parameters.
+    #     were G' denotes a G function of slightly altered parameters.
     #     However, sorting out the details seems harder than just coding it
     #     again.
 
@@ -1442,7 +1442,7 @@ def reduce_order(func):
     Explanation
     ===========
 
-    Return (newfunc, [operators]), where applying the operators to the
+    Return (newfunc, [operators]), were applying the operators to the
     hypergeometric function newfunc yields func.
 
     Examples
@@ -1774,7 +1774,7 @@ def try_lerchphi(func):
 
     # Now do a partial fraction decomposition.
     # We assemble two structures: a list monomials of pairs (a, b) representing
-    # a*t**b (b a non-negative integer), and a dict terms, where
+    # a*t**b (b a non-negative integer), and a dict terms, were
     # terms[a] = [(b, c)] means that there is a term b/(t-a)**c.
     part = apart(numer/denom, t)
     args = Add.make_args(part)
@@ -1913,7 +1913,7 @@ def build_hypergeometric_formula(func):
 
 def hyperexpand_special(ap, bq, z):
     """
-    Try to find a closed-form expression for hyper(ap, bq, z), where ``z``
+    Try to find a closed-form expression for hyper(ap, bq, z), were ``z``
     is supposed to be a "special" value, e.g. 1.
 
     This function tries various of the classical summation formulae

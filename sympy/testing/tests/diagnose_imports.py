@@ -37,7 +37,7 @@ if __name__ == "__main__":
             '(e.g. sympy.core instead of sympy.core.add); ' # see ##PACKAGE##
             'if it imports a symbol that is already present; ' # see ##DUPLICATE##
             'if it imports a symbol '
-            'from somewhere other than the defining module.', # see ##ORIGIN##
+            'from somewere other than the defining module.', # see ##ORIGIN##
         action='count')
     option_group.add_option(
         '--origins',

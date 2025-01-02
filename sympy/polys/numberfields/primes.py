@@ -49,7 +49,7 @@ class PrimeIdeal(IntegerPowerable):
         ==========
 
         ZK : :py:class:`~.Submodule`
-            The maximal order where this ideal lives.
+            The maximal order were this ideal lives.
         p : int
             The rational prime this ideal divides.
         alpha : :py:class:`~.PowerBasisElement`
@@ -370,7 +370,7 @@ def _compute_test_factor(p, gens, ZK):
         it has no effect except to waste time).
 
     ZK : :py:class:`~.Submodule`
-        The maximal order where the prime ideal $\mathfrak{p}$ lives.
+        The maximal order were the prime ideal $\mathfrak{p}$ lives.
 
     Returns
     =======
@@ -562,7 +562,7 @@ def _prime_decomp_easy_case(p, ZK):
     r"""
     Compute the decomposition of rational prime *p* in the ring of integers
     *ZK* (given as a :py:class:`~.Submodule`), in the "easy case", i.e. the
-    case where *p* does not divide the index of $\theta$ in *ZK*, where
+    case were *p* does not divide the index of $\theta$ in *ZK*, were
     $\theta$ is the generator of the ``PowerBasis`` of which *ZK* is a
     ``Submodule``.
     """
@@ -592,7 +592,7 @@ def _prime_decomp_compute_kernel(I, p, ZK):
     Returns
     =======
 
-    Pair ``(N, G)``, where:
+    Pair ``(N, G)``, were:
 
         ``N`` is a :py:class:`~.Module` representing the kernel of the map
         ``a |--> a**p - a`` on ``(O/pO)/I``, guaranteed to be a module with
@@ -618,7 +618,7 @@ def _prime_decomp_compute_kernel(I, p, ZK):
 
     G = ZK.submodule_from_matrix(B)
     # Must compute G's multiplication table _before_ discarding the first r
-    # columns. (See Step 9 in Alg 6.2.9 in Cohen, where the betas are actually
+    # columns. (See Step 9 in Alg 6.2.9 in Cohen, were the betas are actually
     # needed in order to represent each product of gammas. However, once we've
     # found the representations, then we can ignore the betas.)
     G.compute_mult_tab()
@@ -632,7 +632,7 @@ def _prime_decomp_compute_kernel(I, p, ZK):
 
 def _prime_decomp_maximal_ideal(I, p, ZK):
     r"""
-    We have reached the case where we have a maximal (hence prime) ideal *I*,
+    We have reached the case were we have a maximal (hence prime) ideal *I*,
     which we know because the quotient ``O/I`` is a field.
 
     Parameters
@@ -661,7 +661,7 @@ def _prime_decomp_maximal_ideal(I, p, ZK):
 
 def _prime_decomp_split_ideal(I, p, N, G, ZK):
     r"""
-    Perform the step in the prime decomposition algorithm where we have determined
+    Perform the step in the prime decomposition algorithm were we have determined
     the quotient ``ZK/I`` is _not_ a field, and we want to perform a non-trivial
     factorization of *I* by locating an idempotent element of ``ZK/I``.
     """

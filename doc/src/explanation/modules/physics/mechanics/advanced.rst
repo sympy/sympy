@@ -79,9 +79,9 @@ handles the derivative issue appropriately: ::
 
 Linearization
 -------------
-Currently, the linearization methods don't support cases where there are
+Currently, the linearization methods don't support cases were there are
 non-coordinate, non-speed dynamic symbols outside of the "dynamic equations".
-It also does not support cases where time derivatives of these types of dynamic
+It also does not support cases were time derivatives of these types of dynamic
 symbols show up. This means if you have kinematic differential equations which
 have a non-coordinate, non-speed dynamic symbol, it will not work. It also
 means if you have defined a system parameter (say a length or distance or mass)

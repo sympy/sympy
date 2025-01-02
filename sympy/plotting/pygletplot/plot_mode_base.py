@@ -93,7 +93,7 @@ class PlotModeBase(PlotMode):
     default_wireframe_color
     default_solid_color
         Can be used when color is None or being calculated.
-        Used by PlotCurve and PlotSurface, but not anywhere
+        Used by PlotCurve and PlotSurface, but not anywere
         in PlotModeBase.
     """
 

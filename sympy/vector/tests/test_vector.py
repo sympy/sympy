@@ -15,6 +15,8 @@ from sympy.testing.pytest import raises
 from sympy.vector.kind import VectorKind
 from sympy.core.kind import NumberKind
 from sympy.testing.pytest import XFAIL
+from sympy.physics.vector import Vector
+from sympy import symbols, exp
 
 
 C = CoordSys3D('C')
@@ -306,6 +308,18 @@ def test_projection():
     assert v3.projection(v1) == Vector.zero
     assert v3.projection(v1, scalar=True) == S.Zero
 
+
+def test_define_orientation():
+    x, y = symbols('x y')
+    v = Vector((exp(-x) + exp(-y)) / exp(-x))
+
+    # Test with exact=True
+    simplified_v = v.define_orientation(exact=True)
+    assert simplified_v == Vector(exp(x) + exp(x - y))
+
+    # Test without exact=True
+    simplified_v_default = v.define_orientation()
+    assert simplified_v_default == Vector(1 / exp(-x) + 1 / exp(x - y))
 
 def test_vector_diff_integrate():
     f = Function('f')

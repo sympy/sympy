@@ -172,7 +172,7 @@ class Beam:
 
         base_char : String, optional
             A String that will be used as base character to generate sequential
-            symbols for integration constants in cases where boundary conditions
+            symbols for integration constants in cases were boundary conditions
             are not sufficient to solve them.
 
         ild_variable : Symbol, optional
@@ -360,7 +360,7 @@ class Beam:
         """
         Returns a dictionary of boundary conditions applied on the beam.
         The dictionary has three keywords namely moment, slope and deflection.
-        The value of each keyword is a list of tuple, where each tuple
+        The value of each keyword is a list of tuple, were each tuple
         contains location and value of a boundary condition in the format
         (location, value).
 
@@ -691,7 +691,7 @@ class Beam:
         ==========
         value : Sympifyable
             The value inserted should have the units [Force/(Distance**(n+1)]
-            where n is the order of applied load.
+            were n is the order of applied load.
             Units for applied loads:
 
                - For moments, unit = kN*m
@@ -1164,7 +1164,7 @@ class Beam:
     def point_cflexure(self):
         """
         Returns a Set of point(s) with zero bending moment and
-        where bending moment curve of the beam object changes
+        were bending moment curve of the beam object changes
         its sign from negative to positive or vice versa.
 
         Examples
@@ -2732,7 +2732,7 @@ class Beam3D(Beam):
         """
         Returns a dictionary of boundary conditions applied on the beam.
         The dictionary has two keywords namely slope and deflection.
-        The value of each keyword is a list of tuple, where each tuple
+        The value of each keyword is a list of tuple, were each tuple
         contains location and value of a boundary condition in the format
         (location, value). Further each value is a list corresponding to
         slope or deflection(s) values along three axes at that location.

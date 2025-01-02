@@ -228,7 +228,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             return bkey(x)[0][1]
 
         def bkey(b, e=None):
-            '''Return (b**s, c.q), c.p where e -> c*s. If e is not given then
+            '''Return (b**s, c.q), c.p were e -> c*s. If e is not given then
             it will be taken by using as_base_exp() on the input b.
             e.g.
                 x**3/2 -> (x, 2), 3

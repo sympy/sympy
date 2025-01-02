@@ -173,7 +173,7 @@ def dup_zz_mignotte_bound(f, K):
     >>> R.dup_zz_mignotte_bound(f)
     744
 
-    The new Mignotte bound is 744 whereas the old one (SymPy 1.5.1) is 1937664.
+    The new Mignotte bound is 744 wereas the old one (SymPy 1.5.1) is 1937664.
 
 
     References
@@ -1002,7 +1002,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
                       x_2 -> a_2, ..., x_n -> a_n
 
-    where `a_i`, for `i = 2, \dots, n`, are carefully chosen integers.  The
+    were `a_i`, for `i = 2, \dots, n`, are carefully chosen integers.  The
     mapping is used to transform `f` into a univariate polynomial in `Z[x_1]`,
     which can be factored efficiently using Zassenhaus algorithm. The last
     step is to lift univariate factors to obtain true multivariate
@@ -1301,7 +1301,7 @@ def dup_ext_factor(f, K):
     If `f` is a polynomial in `k(a)[x]` then its norm `g(x)` is a polynomial in
     `k[x]`. If `g(x)` is square-free and has irreducible factors `g_1(x)`,
     `g_2(x)`, `\cdots` then the irreducible factors of `f` in `k(a)[x]` are
-    given by `f_i(x) = \gcd(f(x), g_i(x))` where the GCD is computed in
+    given by `f_i(x) = \gcd(f(x), g_i(x))` were the GCD is computed in
     `k(a)[x]`.
 
     The first step in Trager's algorithm is to find an integer shift `s` so

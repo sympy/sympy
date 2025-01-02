@@ -86,7 +86,7 @@ def _series(j, n, prec=14):
         d += 8
 
     # Right sum iterates to infinity for full precision, but we
-    # stop at the point where one iteration is beyond the precision
+    # stop at the point were one iteration is beyond the precision
     # specified.
 
     t = 0

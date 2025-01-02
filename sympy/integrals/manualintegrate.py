@@ -329,7 +329,7 @@ class SqrtQuadraticDenomRule(AtomicRule):
         # coeffs are coefficients of the polynomial.
         # Let I_n = x**n/sqrt(a+b*x+c*x**2), then
         # I_n = A * x**(n-1)*sqrt(a+b*x+c*x**2) - B * I_{n-1} - C * I_{n-2}
-        # where A = 1/(n*c), B = (2*n-1)*b/(2*n*c), C = (n-1)*a/(n*c)
+        # were A = 1/(n*c), B = (2*n-1)*b/(2*n*c), C = (n-1)*a/(n*c)
         # See https://github.com/sympy/sympy/pull/23608 for proof.
         result_coeffs = []
         coeffs = coeffs.copy()
@@ -1114,7 +1114,7 @@ def nested_pow_rule(integral: IntegralInfo):
 
 def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
     """
-    Set degenerate=False on recursive call where coefficient of quadratic term
+    Set degenerate=False on recursive call were coefficient of quadratic term
     is assumed non-zero.
     """
     integrand, symbol = integral

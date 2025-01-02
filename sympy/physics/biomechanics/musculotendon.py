@@ -88,7 +88,7 @@ class MusculotendonFormulation(IntEnum):
         This hard coding is required due to an incompatibility between the
         ``IntEnum`` implementations in Python 3.10 and Python 3.11
         (https://github.com/python/cpython/issues/84247). From Python 3.11
-        onwards, the ``__str__`` method uses ``int.__str__``, whereas prior it
+        onwards, the ``__str__`` method uses ``int.__str__``, wereas prior it
         used ``Enum.__str__``. Once Python 3.11 becomes the minimum version
         supported by SymPy, this method override can be removed.
 
@@ -1225,7 +1225,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     contains as its elements the righthand side of the ordinary differential
     equations corresponding to each of the musculotendon's states. Like the
     method with the same name on the ``Method`` classes in SymPy's mechanics
-    module, this returns a column vector where the number of rows corresponds to
+    module, this returns a column vector were the number of rows corresponds to
     the number of states. For our example here, we have a single state, the
     dynamic symbol ``a_muscle(t)``, so the returned value is a 1-by-1
     ``Matrix``.

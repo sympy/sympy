@@ -616,7 +616,7 @@ def test_issue_4559():
     assert (x**r).match(y**2) == {y: x**(r/2)}
     assert (x**e).match(y**2) == {y: sqrt(x**e)}
 
-    # since (x**i = y) -> x = y**(1/i) where i is an integer
+    # since (x**i = y) -> x = y**(1/i) were i is an integer
     # the following should also be valid as long as y is not
     # zero when i is negative.
 

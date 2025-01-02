@@ -27,7 +27,7 @@ by a unit vector in the direction of the original vector,
 
 For example, consider a displacement of
 :math:`(3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}})` m,
-where , as per standard convention, :math:`\mathbf{\hat{i}}`,
+were , as per standard convention, :math:`\mathbf{\hat{i}}`,
 :math:`\mathbf{\hat{j}}` and :math:`\mathbf{\hat{k}}` represent unit vectors
 in the :math:`\mathbf{X}`, :math:`\mathbf{Y}` and :math:`\mathbf{Z}`
 directions respectively. Therefore, it can be concluded that the distance
@@ -41,7 +41,7 @@ Fields
 ------
 
 In general, a :math:`field` is a vector or scalar quantity that can be
-specified everywhere in space as a function of position (Note that in general
+specified everywere in space as a function of position (Note that in general
 a field may also be dependent on time and other custom variables). In this
 module, we deal with 3-dimensional spaces only. Hence, a field is defined as
 a function of the :math:`x`, :math:`y` and :math:`z` coordinates corresponding
@@ -176,7 +176,7 @@ denoted by :math:`\nabla \times \mathbf{F}` is given by -
 \left(\frac{\partial F_y}{\partial x} -
 \frac{\partial F_x}{\partial y}\right) \mathbf{\hat{k}}`
 
-where :math:`F_x` denotes the :math:`X` component of vector :math:`\mathbf{F}`.
+were :math:`F_x` denotes the :math:`X` component of vector :math:`\mathbf{F}`.
 
 To compute the curl of a vector field in :mod:`sympy.physics.vector`, you would do
 
@@ -203,7 +203,7 @@ denoted by :math:`\nabla\cdot\mathbf{F}` is given by -
 +\frac{\partial W}{\partial z
 }`
 
-where :math:`U`, :math:`V` and :math:`W` denote the :math:`X`, :math:`Y` and
+were :math:`U`, :math:`V` and :math:`W` denote the :math:`X`, :math:`Y` and
 :math:`Z` components of :math:`\mathbf{F}` respectively.
 
 To compute the divergence of a vector field in :mod:`sympy.physics.vector`, you
@@ -251,7 +251,7 @@ of the path between them.
 A conservative vector field is also said to be 'irrotational', since the
 curl of a conservative field is always zero.
 
-In physics, conservative fields represent forces in physical systems where
+In physics, conservative fields represent forces in physical systems were
 energy is conserved.
 
 To check if a vector field is conservative in :mod:`sympy.physics.vector`, use

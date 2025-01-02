@@ -124,7 +124,7 @@ def test_decomp_4():
 
 def test_decomp_5():
     # Here is our first test of the "hard case" of prime decomposition.
-    # We work in a quadratic extension Q(sqrt(d)) where d is 1 mod 4, and
+    # We work in a quadratic extension Q(sqrt(d)) were d is 1 mod 4, and
     # we consider the factorization of the rational prime 2, which divides
     # the index.
     # Theory says the form of p's factorization depends on the residue of
@@ -148,7 +148,7 @@ def test_decomp_5():
 
 
 def test_decomp_6():
-    # Another case where 2 divides the index. This is Dedekind's example of
+    # Another case were 2 divides the index. This is Dedekind's example of
     # an essential discriminant divisor. (See Cohen, Exercise 6.10.)
     T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
     rad = {}

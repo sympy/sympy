@@ -664,7 +664,7 @@ def TR10i(rv):
         def do(rv, first=True):
             # args which can be expressed as A*(cos(a)*cos(b)+/-sin(a)*sin(b))
             # or B*(cos(a)*sin(b)+/-cos(b)*sin(a)) can be combined into
-            # A*f(a+/-b) where f is either sin or cos.
+            # A*f(a+/-b) were f is either sin or cos.
             #
             # If there are more than two args, the pairs which "work" will have
             # a gcd extractable and the remaining two terms will have the above
@@ -1420,7 +1420,7 @@ def TR16(rv, max=4, pow=False):
 
 
 def TR111(rv):
-    """Convert f(x)**-i to g(x)**i where either ``i`` is an integer
+    """Convert f(x)**-i to g(x)**i were either ``i`` is an integer
     or the base is positive and f, g are: tan, cot; sin, csc; or cos, sec.
 
     Examples
@@ -1726,10 +1726,10 @@ _ROOT2 = None
 
 
 def trig_split(a, b, two=False):
-    """Return the gcd, s1, s2, a1, a2, bool where
+    """Return the gcd, s1, s2, a1, a2, bool were
 
     If two is False (default) then::
-        a + b = gcd*(s1*f(a1) + s2*f(a2)) where f = cos if bool else sin
+        a + b = gcd*(s1*f(a1) + s2*f(a2)) were f = cos if bool else sin
     else:
         if bool, a + b was +/- cos(a1)*cos(a2) +/- sin(a1)*sin(a2) and equals
             n1*gcd*cos(a - b) if n1 == n2 else
@@ -1908,8 +1908,8 @@ def trig_split(a, b, two=False):
 
 
 def as_f_sign_1(e):
-    """If ``e`` is a sum that can be written as ``g*(a + s)`` where
-    ``s`` is ``+/-1``, return ``g``, ``a``, and ``s`` where ``a`` does
+    """If ``e`` is a sum that can be written as ``g*(a + s)`` were
+    ``s`` is ``+/-1``, return ``g``, ``a``, and ``s`` were ``a`` does
     not have a leading negative coefficient.
 
     Examples

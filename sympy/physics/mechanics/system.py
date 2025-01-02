@@ -947,7 +947,7 @@ class System(_Methods):
         .. math::
             M_d \dot{u} = f_d
 
-        where $\dot{u}$ is the time derivative of the generalized speeds.
+        were $\dot{u}$ is the time derivative of the generalized speeds.
 
         """
         return self.eom_method.mass_matrix
@@ -967,7 +967,7 @@ class System(_Methods):
         .. math::
             M_m \dot{x} = f_m
 
-        where $x$ is the state vector stacking $q$ and $u$.
+        were $x$ is the state vector stacking $q$ and $u$.
 
         """
         return self.eom_method.mass_matrix_full
@@ -1122,17 +1122,17 @@ class SymbolicSystem:
     Symbolic System:
 
 
-        [1] Explicit form where the kinematics and dynamics are combined
+        [1] Explicit form were the kinematics and dynamics are combined
             x' = F_1(x, t, r, p)
 
-        [2] Implicit form where the kinematics and dynamics are combined
+        [2] Implicit form were the kinematics and dynamics are combined
             M_2(x, p) x' = F_2(x, t, r, p)
 
-        [3] Implicit form where the kinematics and dynamics are separate
+        [3] Implicit form were the kinematics and dynamics are separate
             M_3(q, p) u' = F_3(q, u, t, r, p)
             q' = G(q, u, t, r, p)
 
-    where
+    were
 
     x : states, e.g. [q, u]
     t : time
@@ -1188,7 +1188,7 @@ class SymbolicSystem:
 
         output_eqns : Dictionary, optional
             Any output equations that are desired to be tracked are stored in a
-            dictionary where the key corresponds to the name given for the
+            dictionary were the key corresponds to the name given for the
             specific equation and the value is the equation itself in symbolic
             form
 
@@ -1206,7 +1206,7 @@ class SymbolicSystem:
             Iterable containing the bodies of the system
 
         loads : iterable of load instances (described below), optional
-            Iterable containing the loads of the system where forces are given
+            Iterable containing the loads of the system were forces are given
             by (point of application, force vector) and torques are given by
             (reference frame acting upon, torque vector). Ex [(point, force),
             (ref_frame, torque)]
@@ -1243,7 +1243,7 @@ class SymbolicSystem:
 
     comb_implicit_mat : Matrix, shape(o, o)
         This is the M matrix in form [2] of the equations of motion.
-        This matrix contains a block diagonal structure where the top
+        This matrix contains a block diagonal structure were the top
         left block (the first rows) represent the matrix in the
         implicit form of the kinematical equations and the bottom right
         block (the last rows) represent the matrix in the implicit form
@@ -1265,7 +1265,7 @@ class SymbolicSystem:
         equations of motion as can be seen in form [3] (the G matrix).
 
     output_eqns : Dictionary
-        If output equations were given they are stored in a dictionary where
+        If output equations were given they are stored in a dictionary were
         the key corresponds to the name given for the specific equation and
         the value is the equation itself in symbolic form
 
@@ -1275,7 +1275,7 @@ class SymbolicSystem:
 
     loads : Tuple
         If the loads in the system were given they are stored in a tuple for
-        future access. This includes forces and torques where forces are given
+        future access. This includes forces and torques were forces are given
         by (point of application, force vector) and torques are given by
         (reference frame acted upon, torque vector).
 
@@ -1292,7 +1292,7 @@ class SymbolicSystem:
         >>> l, m, g = symbols('l m g')
 
     The system will be defined by an angle of theta from the vertical and a
-    generalized speed of omega will be used where omega = theta_dot. ::
+    generalized speed of omega will be used were omega = theta_dot. ::
 
         >>> theta, omega = dynamicsymbols('theta omega')
 
@@ -1408,7 +1408,7 @@ class SymbolicSystem:
     @property
     def dyn_implicit_mat(self):
         """Returns the matrix, M, corresponding to the dynamic equations in
-        implicit form, M x' = F, where the kinematical equations are not
+        implicit form, M x' = F, were the kinematical equations are not
         included"""
         if self._dyn_implicit_mat is None:
             raise AttributeError("dyn_implicit_mat is not specified for "
@@ -1419,7 +1419,7 @@ class SymbolicSystem:
     @property
     def dyn_implicit_rhs(self):
         """Returns the column matrix, F, corresponding to the dynamic equations
-        in implicit form, M x' = F, where the kinematical equations are not
+        in implicit form, M x' = F, were the kinematical equations are not
         included"""
         if self._dyn_implicit_rhs is None:
             raise AttributeError("dyn_implicit_rhs is not specified for "
@@ -1430,7 +1430,7 @@ class SymbolicSystem:
     @property
     def comb_implicit_mat(self):
         """Returns the matrix, M, corresponding to the equations of motion in
-        implicit form (form [2]), M x' = F, where the kinematical equations are
+        implicit form (form [2]), M x' = F, were the kinematical equations are
         included"""
         if self._comb_implicit_mat is None:
             if self._dyn_implicit_mat is not None:
@@ -1451,7 +1451,7 @@ class SymbolicSystem:
     @property
     def comb_implicit_rhs(self):
         """Returns the column matrix, F, corresponding to the equations of
-        motion in implicit form (form [2]), M x' = F, where the kinematical
+        motion in implicit form (form [2]), M x' = F, were the kinematical
         equations are included"""
         if self._comb_implicit_rhs is None:
             if self._dyn_implicit_rhs is not None:
@@ -1484,7 +1484,7 @@ class SymbolicSystem:
     @property
     def comb_explicit_rhs(self):
         """Returns the right hand side of the equations of motion in explicit
-        form, x' = F, where the kinematical equations are included"""
+        form, x' = F, were the kinematical equations are included"""
         if self._comb_explicit_rhs is None:
             raise AttributeError("Please run .combute_explicit_form before "
                                  "attempting to access comb_explicit_rhs.")

@@ -47,9 +47,9 @@ class TypeB(Standard_Cartan):
 
         In B_n the first n-1 simple roots are the same as the
         roots in A_(n-1) (a 1 in the ith position, a -1 in
-        the (i+1)th position, and zeroes elsewhere).  The n-th
+        the (i+1)th position, and zeroes elsewere).  The n-th
         simple root is the root with a 1 in the nth position
-        and zeroes elsewhere.
+        and zeroes elsewere.
 
         This method returns the ith simple root for the B series.
 

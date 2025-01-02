@@ -30,7 +30,7 @@ def is_fermat_pseudoprime(n, a):
     .. math ::
         a^{n-1} \equiv 1 \pmod{n}
 
-    (where mod refers to the modulo operation).
+    (were mod refers to the modulo operation).
 
     Parameters
     ==========
@@ -77,7 +77,7 @@ def is_euler_pseudoprime(n, a):
     .. math ::
         a^{(n-1)/2} \equiv \pm 1 \pmod{n}
 
-    (where mod refers to the modulo operation).
+    (were mod refers to the modulo operation).
 
     Parameters
     ==========
@@ -133,7 +133,7 @@ def is_euler_jacobi_pseudoprime(n, a):
     .. math ::
         a^{(n-1)/2} \equiv \left(\frac{a}{n}\right) \pmod{n}
 
-    (where mod refers to the modulo operation).
+    (were mod refers to the modulo operation).
 
     Parameters
     ==========
@@ -456,7 +456,7 @@ def is_extra_strong_lucas_prp(n):
 
 
 def proth_test(n):
-    r""" Test if the Proth number `n = k2^m + 1` is prime. where k is a positive odd number and `2^m > k`.
+    r""" Test if the Proth number `n = k2^m + 1` is prime. were k is a positive odd number and `2^m > k`.
 
     Parameters
     ==========

@@ -59,7 +59,7 @@ For `g_1 = g` and `\omega` as above we also have the following easy result:
 
     * `\lim_{x \to \infty} g \omega^c = 0` for `c > 0`
     * `\lim_{x \to \infty} g \omega^c = \pm \infty` for `c < 0`,
-      where the sign is determined by the (eventual) sign of `g`
+      were the sign is determined by the (eventual) sign of `g`
     * `\lim_{x \to \infty} g \omega^0 = \lim_{x \to \infty} g`.
 
 

@@ -46,7 +46,7 @@ combination are not restricted to be integers, but may be any rational
 numbers. This is necessary so that any and all algebraic integers be
 representable, starting from the power basis in a primitive element $\theta$
 for the number field in question. For example, in a quadratic field
-$\mathbb{Q}(\sqrt{d})$ where $d \equiv 1 \mod{4}$, a denominator of $2$ is
+$\mathbb{Q}(\sqrt{d})$ were $d \equiv 1 \mod{4}$, a denominator of $2$ is
 needed.
 
 A :py:class:`~.ModuleElement` can be constructed from an integer column vector
@@ -74,7 +74,7 @@ generators of a particular module, recall that every module is either a
 :py:class:`~.PowerBasis` or a descendant (along a chain of
 :py:class:`~.Submodule` objects) thereof, so that in fact every
 :py:class:`~.ModuleElement` represents an algebraic number in some field
-$\mathbb{Q}(\theta)$, where $\theta$ is the defining element of some
+$\mathbb{Q}(\theta)$, were $\theta$ is the defining element of some
 :py:class:`~.PowerBasis`. It thus makes sense to talk about the number field
 to which a given :py:class:`~.ModuleElement` belongs.
 
@@ -235,7 +235,7 @@ class Module:
         In other words, if ``0 <= i <= j < self.n``, then ``M[i][j]`` is the
         list ``c`` of coefficients such that
         ``g[i] * g[j] == sum(c[k]*g[k], k in range(self.n))``,
-        where ``g`` is the list of generators of this module.
+        were ``g`` is the list of generators of this module.
 
         If ``j < i`` then ``M[i][j]`` is undefined.
 
@@ -1173,7 +1173,7 @@ class Submodule(Module, IntegerPowerable):
         Explanation
         ===========
 
-        In the special case where $A$ is a power basis for a number field $K$,
+        In the special case were $A$ is a power basis for a number field $K$,
         and $B$ is a submodule representing an ideal $I$, this operation
         represents one of a few important ways of reducing an element of $K$
         modulo $I$ to obtain a "small" representative. See [Cohen00]_ Section

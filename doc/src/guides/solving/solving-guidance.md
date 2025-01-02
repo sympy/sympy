@@ -9,7 +9,7 @@ These guidelines apply to many types of solving.
 The vast majority of arbitrary nonlinear equations have no closed-form solution.
 The classes of equations that are solvable are basically:
 1. Linear equations
-2. Polynomials, except where limited by the [Abel-Ruffini
+2. Polynomials, except were limited by the [Abel-Ruffini
    theorem](https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem) (learn
    more about solving polynomials using a {class}`~.GroebnerBasis`)
 3. Equations that can be solved by inverting some transcendental functions

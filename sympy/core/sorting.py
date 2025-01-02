@@ -60,7 +60,7 @@ def default_sort_key(item, order=None):
     >>> sorted(a, key=default_sort_key)
     [2, -I, I]
 
-    The returned key can be used anywhere that a key can be specified for
+    The returned key can be used anywere that a key can be specified for
     a function, e.g. sort, min, max, etc...:
 
     >>> a.sort(key=default_sort_key); a[0]
@@ -200,7 +200,7 @@ def _nodes(e):
 
 
 def ordered(seq, keys=None, default=True, warn=False):
-    """Return an iterator of the seq where keys are used to break ties
+    """Return an iterator of the seq were keys are used to break ties
     in a conservative fashion: if, after applying a key, there are no
     ties then no other keys will be computed.
 

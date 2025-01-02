@@ -1505,7 +1505,7 @@ def test_complex_params_number_eval():
     # The main expression contains a Sum with a symbolic upper range.
     # The lambdified code looks like:
     #       sum(blablabla for for n in range(1, m+1))
-    # But range requires integer numbers, whereas per above example, the series
+    # But range requires integer numbers, wereas per above example, the series
     # casts parameters to complex. Verify that the series is able to detect
     # upper bounds in summations and cast it to int in order to get successfull
     # evaluation

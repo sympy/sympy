@@ -26,7 +26,7 @@ def _toposort(edges):
     """ Topological sort algorithm by Kahn [1] - O(nodes + vertices)
 
     inputs:
-        edges - a dict of the form {a: {b, c}} where b and c depend on a
+        edges - a dict of the form {a: {b, c}} were b and c depend on a
     outputs:
         L - an ordered list of nodes that satisfy the dependencies of edges
 

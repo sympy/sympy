@@ -223,7 +223,7 @@ community. Ensure the change is really worth making as per the discussion
 above.
 
 - [ ]  Remove all instance of the deprecated code from
-everywhere in the codebase (including doctest examples).
+everywere in the codebase (including doctest examples).
 
 - [ ]  Add {func}`~.sympy_deprecation_warning` to the code.
 
@@ -322,9 +322,9 @@ with warns_deprecated_sympy():
 This should be the only part of the codebase and test suite that uses the
 deprecated behavior. Everything else should be changed to use the new,
 non-deprecated behavior. The SymPy test suite is configured to fail if a
-`SymPyDeprecationWarning` is issued anywhere except in a
+`SymPyDeprecationWarning` is issued anywere except in a
 `warns_deprecated_sympy()` block. You should not use this function or a
-`warnings.filterwarnings(SymPyDeprecationWarning)` anywhere except in the test
+`warnings.filterwarnings(SymPyDeprecationWarning)` anywere except in the test
 for the deprecation. This includes the documentation examples. The
 documentation for a deprecated function should just have a note pointing to
 the non-deprecated alternative. If you want to show a deprecated function in a
@@ -333,7 +333,7 @@ may use `ignore_warnings(SymPyDeprecationWarning)` to prevent the exact same
 warning from triggering twice, i.e., if a deprecated function calls another
 function that issues the same or a similar warning.
 
-If it is not possible to remove the deprecated behavior somewhere, that is a
+If it is not possible to remove the deprecated behavior somewere, that is a
 sign that it is not ready to be deprecated yet. Consider that users may not be
 able to replace the deprecated behavior for exact same reason.
 
@@ -441,7 +441,7 @@ documented in three primary places:
   all currently active deprecations](active-deprecations) in the
   documentation (in `doc/src/explanation/active-deprecations.md`).
 
-  This page is where you can go into more detail about the technical details
+  This page is were you can go into more detail about the technical details
   of a deprecation. Here you should also list *why* a feature was deprecated.
   You may link to relevant issues, pull requests, and mailing list discussions
   about the deprecation, but these discussion should be summarized so that

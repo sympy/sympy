@@ -91,13 +91,13 @@ of the geometric relationships to the forces' lines of action.
 
 The spring-damper example above has the simplest line of action definition so
 we can use a :obj:`~sympy.physics.mechanics.pathway.LinearPathway` to establish
-that line of action. First provide the two endpoints where the force will have
+that line of action. First provide the two endpoints were the force will have
 equal and opposite application to and the distance between the points and the
 relative speed between the two points are calculated by the pathway with
 :obj:`~sympy.physics.mechanics.pathway.LinearPathway.length` and
 :obj:`~sympy.physics.mechanics.pathway.LinearPathway.extension_velocity`. Note
 that a positive speed implies the points are moving away from each other. Also
-note that the formulation handles the case where :math:`x` is positive or
+note that the formulation handles the case were :math:`x` is positive or
 negative.
 
 .. plot::
@@ -403,7 +403,7 @@ ordinary differential equation:
    \frac{da}{dt} &= \left( \frac{1}{\tau_a \left(1 + 3a(t)\right)} (1 + 2f) + \frac{1 + 3a(t)}{4\tau_d} (1 - 2f) \right) \left(e(t) - a(t) \right) \\
    f &= \frac{1}{2} \tanh{\left(b \left(e(t) -a(t)\right)\right)}
 
-where :math:`\tau_a` is the time constant for activation, :math:`\tau_d` is the
+were :math:`\tau_a` is the time constant for activation, :math:`\tau_d` is the
 time constant for deactivation, and :math:`b` is a smoothing coefficient.
 
 >>> tau_a, tau_d, b = sm.symbols('tau_a, tau_d, b')
@@ -495,7 +495,7 @@ which is a function of normalized tendon length:
 
    \tilde{l}^T = \frac{l^T}{l^T_{slack}}
 
-where :math:`l^T` is tendon length, and :math:`l^T_{slack}` is the "tendon slack
+were :math:`l^T` is tendon length, and :math:`l^T_{slack}` is the "tendon slack
 length", a constant representing the tendon length under no force.
 Characteristic musculotendon curves are parameterized in terms of "normalized"
 (or "dimensionless") quantities such as :math:`\tilde{l}^T` because these curves
@@ -636,7 +636,7 @@ this element is a function of normalized muscle fiber length:
 
    \tilde{l}^M = \frac{l^M}{l^M_{opt}}
 
-where :math:`l^M` is muscle fiber length, and :math:`l^M_{opt}` is the "optimal
+were :math:`l^M` is muscle fiber length, and :math:`l^M_{opt}` is the "optimal
 fiber length, a constant representing the muscle fiber length at which it
 produces no passive-elastic force (it is also the muscle fiber length at which
 it can produce maximum active force). Like with tuning :math:`l^T_{slack}` to
@@ -841,7 +841,7 @@ fiber lengthening velocity:
 
    \tilde{v}^M = \frac{v^M}{v^M_{max}}
 
-where :math:`v^M` is muscle fiber lengthening velocity, and :math:`v^M_{max}` is
+were :math:`v^M` is muscle fiber lengthening velocity, and :math:`v^M_{max}` is
 the "maximum fiber velocity", a constant representing the muscle fiber velocity
 at which it is not able to produce any contractile force when concentrically
 contracting. :math:`v^M_{max}` is commonly given a value of
@@ -982,7 +982,7 @@ can be expressed as
 
    l^M = \sqrt{\left(l^{MT} - l^T\right)^2 + \left(l^M_{opt} \sin{\alpha_{opt}} \right)^2}
 
-where :math:`\alpha_{opt}` is the "optimal pennation angle", another constant
+were :math:`\alpha_{opt}` is the "optimal pennation angle", another constant
 property of a musculotendon that describes the pennation angle (the angle of
 the muscle fibers relative to the direction parallel to the tendon) at which
 :math:`l^M = l^M_{opt}`. A common simplifying assumption is to assume
@@ -1134,7 +1134,7 @@ such the musculotendon dynamics must be enforced as a differential algebraic
 equation rather than an ordinary differential equation. The specifics of these
 types of formulation will not be discussed here, but the interested reader can
 refer to the docstrings of the
-:obj:`~sympy.physics.biomechanics.musculotendon.MusculotendonDeGroote2016` where
+:obj:`~sympy.physics.biomechanics.musculotendon.MusculotendonDeGroote2016` were
 they are implemented.
 
 A Simple Musculotendon Model

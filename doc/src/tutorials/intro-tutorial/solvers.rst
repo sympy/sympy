@@ -44,7 +44,7 @@ Solving Equations Algebraically
 
 The main function for solving algebraic equations is ``solveset``.
 The syntax for ``solveset`` is ``solveset(equation, variable=None, domain=S.Complexes)``
-Where ``equations`` may be in the form of ``Eq`` instances or expressions
+were ``equations`` may be in the form of ``Eq`` instances or expressions
 that are assumed to be equal to zero.
 
 Please note that there is another function called ``solve`` which

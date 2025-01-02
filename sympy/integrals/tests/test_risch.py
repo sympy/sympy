@@ -371,7 +371,7 @@ def test_integrate_hyperexponential_returns_piecewise():
             2*exp(log(x)*y)*log(x))/(2*log(x)**2), Ne(2*log(x)**2, 0)),
             (2*y, True),
         ), z, True)
-    # TODO: Add a test where two different parts of the extension use a
+    # TODO: Add a test were two different parts of the extension use a
     # Piecewise, like y**x + z**x.
 
 

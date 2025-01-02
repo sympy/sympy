@@ -384,7 +384,7 @@ def test_infinite_strict_inequalities():
     # and constraints containing infinity is needed because
     # the paper's rule for strict inequalities don't work when
     # infinite numbers are allowed. Using the paper's rules you
-    # can end up with situations where oo + delta > oo is considered
+    # can end up with situations were oo + delta > oo is considered
     # True when oo + delta should be equal to oo.
     # See https://math.stackexchange.com/questions/4757069/can-this-method-of-converting-strict-inequalities-to-equisatisfiable-nonstrict-i
     bf = (-x - y >= -float("inf")) & (x > 0) & (y >= float("inf"))

@@ -3,7 +3,7 @@
 Dimensional analysis and unit systems.
 
 This module defines dimension/unit systems and physical quantities. It is
-based on a group-theoretical construction where dimensions are represented as
+based on a group-theoretical construction were dimensions are represented as
 vectors (coefficients being the exponents), and units are defined as a dimension
 to which we added a scale.
 

@@ -735,7 +735,7 @@ class RecursiveSeq(SeqBase):
 
         a(n) = f(a(n - 1), a(n - 2), ..., a(n - d))
 
-    for some fixed, positive integer d, where f is some function defined by a
+    for some fixed, positive integer d, were f is some function defined by a
     SymPy expression.
 
     Parameters
@@ -747,7 +747,7 @@ class RecursiveSeq(SeqBase):
         then the expression should be :code:`f(a(n - 1), ..., a(n - d))`.
 
     yn : applied undefined function
-        Represents the nth term of the sequence as e.g. :code:`y(n)` where
+        Represents the nth term of the sequence as e.g. :code:`y(n)` were
         :code:`y` is an undefined function and `n` is the sequence index.
 
     n : symbolic argument

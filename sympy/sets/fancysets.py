@@ -558,7 +558,7 @@ class Range(Set):
 
     Although ``Range`` is a :class:`Set` (and supports the normal set
     operations) it maintains the order of the elements and can
-    be used in contexts where ``range`` would be used.
+    be used in contexts were ``range`` would be used.
 
         >>> from sympy import Interval
         >>> Range(0, 10, 2).intersect(Interval(3, 7))

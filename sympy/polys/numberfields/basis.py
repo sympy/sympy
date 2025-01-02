@@ -159,7 +159,7 @@ def round_two(T, radicals=None):
     radicals : dict, optional
         This is a way for any $p$-radicals (if computed) to be returned by
         reference. If desired, pass an empty dictionary. If the algorithm
-        reaches the point where it computes the nilradical mod $p$ of the ring
+        reaches the point were it computes the nilradical mod $p$ of the ring
         of integers $Z_K$, then an $\mathbb{F}_p$-basis for this ideal will be
         stored in this dictionary under the key ``p``. This can be useful for
         other algorithms, such as prime decomposition.
@@ -167,7 +167,7 @@ def round_two(T, radicals=None):
     Returns
     =======
 
-    Pair ``(ZK, dK)``, where:
+    Pair ``(ZK, dK)``, were:
 
         ``ZK`` is a :py:class:`~sympy.polys.numberfields.modules.Submodule`
         representing the maximal order.
@@ -199,7 +199,7 @@ def round_two(T, radicals=None):
     D = T.discriminant()
     D_modulus = ZZ.from_sympy(abs(D))
     # D must be 0 or 1 mod 4 (see Cohen Sec 4.4), which ensures we can write
-    # it in the form D = D_0 * F**2, where D_0 is 1 or a fundamental discriminant.
+    # it in the form D = D_0 * F**2, were D_0 is 1 or a fundamental discriminant.
     _, F = extract_fundamental_discriminant(D)
     Ztheta = PowerBasis(K or T)
     H = Ztheta.whole_submodule()

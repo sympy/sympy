@@ -13,7 +13,7 @@ integration (Dx == 1), DE.D is a list of the derivatives of
 x, t1, t2, ..., tn-1 = t, DE.T is the list [x, t1, t2, ..., tn-1], DE.t is the
 outer-most variable of the differential extension at the given level (the level
 can be adjusted using DE.increment_level() and DE.decrement_level()),
-k is the field C(x, t0, ..., tn-2), where C is the constant field.  The
+k is the field C(x, t0, ..., tn-2), were C is the constant field.  The
 numerator of a fraction is denoted by a and the denominator by
 d.  If the fraction is named f, fa == numer(f) and fd == denom(f).
 Fractions are returned as tuples (fa, fd).  DE.d and DE.t are used to
@@ -59,14 +59,14 @@ def integer_powers(exprs):
 
     For example, if you have [x, x/2, x**2 + 1, 2*x/3], then you can rewrite
     this as [(x/6) * 6, (x/6) * 3, (x**2 + 1) * 1, (x/6) * 4]. This is useful
-    in the Risch integration algorithm, where we must write exp(x) + exp(x/2)
+    in the Risch integration algorithm, were we must write exp(x) + exp(x/2)
     as (exp(x/2))**2 + exp(x/2), but not as exp(x) + sqrt(exp(x)) (this is
     because only the transcendental case is implemented and we therefore cannot
     integrate algebraic extensions). The integer multiples returned by this
     function for each term are the smallest possible (their content equals 1).
 
-    Returns a list of tuples where the first element is the base term and the
-    second element is a list of `(item, factor)` terms, where `factor` is the
+    Returns a list of tuples were the first element is the base term and the
+    second element is a list of `(item, factor)` terms, were `factor` is the
     integer multiplicative factor that must multiply the base term to obtain
     the original item.
 
@@ -377,7 +377,7 @@ class DifferentialExtension:
                 ans, u, const = A
                 newterm = exp(i.exp*(log(const) + u))
                 # Under the current implementation, exp kills terms
-                # only if they are of the form a*log(x), where a is a
+                # only if they are of the form a*log(x), were a is a
                 # Number.  This case should have already been killed by the
                 # above tests.  Again, if this changes to kill more than
                 # that, this will break, which maybe is a sign that you
@@ -627,7 +627,7 @@ class DifferentialExtension:
             self.backsubs, self.exts, self.extargs)
 
     # NOTE: this printing doesn't follow the Python's standard
-    # eval(repr(DE)) == DE, where DE is the DifferentialExtension object,
+    # eval(repr(DE)) == DE, were DE is the DifferentialExtension object,
     # also this printing is supposed to contain all the important
     # attributes of a DifferentialExtension object
     def __repr__(self):
@@ -684,7 +684,7 @@ class DifferentialExtension:
         Returns
         =======
 
-        list: A list of indices of 'exts' where extension of
+        list: A list of indices of 'exts' were extension of
             type 'extension' is present.
 
         Examples
@@ -808,14 +808,14 @@ def gcdex_diophantine(a, b, c):
 
 def frac_in(f, t, *, cancel=False, **kwargs):
     """
-    Returns the tuple (fa, fd), where fa and fd are Polys in t.
+    Returns the tuple (fa, fd), were fa and fd are Polys in t.
 
     Explanation
     ===========
 
     This is a common idiom in the Risch Algorithm functions, so we abstract
     it out here. ``f`` should be a basic expression, a Poly, or a tuple (fa, fd),
-    where fa and fd are either basic expressions or Polys, and f == fa/fd.
+    were fa and fd are either basic expressions or Polys, and f == fa/fd.
     **kwargs are applied to Poly.
     """
     if isinstance(f, tuple):
@@ -1118,7 +1118,7 @@ def polynomial_reduce(p, DE):
     Explanation
     ===========
 
-    Given a derivation D on k(t) and p in k[t] where t is a nonlinear
+    Given a derivation D on k(t) and p in k[t] were t is a nonlinear
     monomial over k, return q, r in k[t] such that p = Dq  + r, and
     deg(r) < deg_t(Dt).
     """
@@ -1164,7 +1164,7 @@ def laurent_series(a, d, F, n, DE):
     V, DE_D_list, H_list= [], [], []
 
     for j in range(0, n):
-    # jth derivative of z would be substituted with dfnth/(j+1) where dfnth =(d^n)f/(dx)^n
+    # jth derivative of z would be substituted with dfnth/(j+1) were dfnth =(d^n)f/(dx)^n
         F_store = derivation(F_store, DE)
         v = (F_store.as_expr())/(j + 1)
         V.append(v)
@@ -1203,7 +1203,7 @@ def recognize_derivative(a, d, DE, z=None):
     """
     Compute the squarefree factorization of the denominator of f
     and for each Di the polynomial H in K[x] (see Theorem 2.7.1), using the
-    LaurentSeries algorithm. Write Di = GiEi where Gj = gcd(Hn, Di) and
+    LaurentSeries algorithm. Write Di = GiEi were Gj = gcd(Hn, Di) and
     gcd(Ei,Hn) = 1. Since the residues of f at the roots of Gj are all 0, and
     the residue of f at a root alpha of Ei is Hi(a) != 0, f is the derivative of a
     rational function if and only if Ei = 1 for each i, which is equivalent to
@@ -1228,8 +1228,8 @@ def recognize_derivative(a, d, DE, z=None):
 def recognize_log_derivative(a, d, DE, z=None):
     """
     There exists a v in K(x)* such that f = dv/v
-    where f a rational function if and only if f can be written as f = A/D
-    where D is squarefree,deg(A) < deg(D), gcd(A, D) = 1,
+    were f a rational function if and only if f can be written as f = A/D
+    were D is squarefree,deg(A) < deg(D), gcd(A, D) = 1,
     and all the roots of the Rothstein-Trager resultant are integers. In that case,
     any of the Rothstein-Trager, Lazard-Rioboo-Trager or Czichowski algorithm
     produces u in K(x) such that du/dx = uf.
@@ -1268,7 +1268,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     elementary integral over k(t) for any h in k<t> (reduced) if b ==
     False.
 
-    Returns (G, b), where G is a tuple of tuples of the form (s_i, S_i),
+    Returns (G, b), were G is a tuple of tuples of the form (s_i, S_i),
     such that g = Add(*[RootSum(s_i, lambda z: z*log(S_i(z, t))) for
     S_i, s_i in G]). f - Dg is the remaining integral, which is elementary
     only if b == True, and hence the integral of f is elementary only if
@@ -1613,7 +1613,7 @@ def integrate_nonlinear_no_specials(a, d, DE, z=None):
     if b == False.
 
     This function is applicable to all nonlinear extensions, but in the case
-    where it returns b == False, it will only have proven that the integral of
+    were it returns b == False, it will only have proven that the integral of
     f - Dg is nonelementary if Sirr is empty.
 
     This function returns a Basic expression.
@@ -1657,7 +1657,7 @@ class NonElementaryIntegral(Integral):
     guaranteed to be nonelementary.  Note that integrate() by default will try
     to find any closed-form solution, even in terms of special functions which
     may themselves not be elementary.  To make integrate() only give
-    elementary solutions, or, in the cases where it can prove the integral to
+    elementary solutions, or, in the cases were it can prove the integral to
     be nonelementary, instances of this class, use integrate(risch=True).
     In this case, integrate() may raise NotImplementedError if it cannot make
     such a determination.
@@ -1723,7 +1723,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     exponential case has been implemented.
 
     If ``separate_integral`` is ``True``, the result is returned as a tuple (ans, i),
-    where the integral is ans + i, ans is elementary, and i is either a
+    were the integral is ans + i, ans is elementary, and i is either a
     NonElementaryIntegral or 0.  This useful if you want to try further
     integrating the NonElementaryIntegral part using other algorithms to
     possibly get a solution in terms of special functions.  It is False by

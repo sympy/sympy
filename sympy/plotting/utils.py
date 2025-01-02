@@ -60,7 +60,7 @@ def _plot_sympify(args):
 
     expr, range1 [tuple, opt], ..., label [str, opt], rendering_kw [dict, opt]
 
-    `expr, range1, ...` can be sympified, whereas `label, rendering_kw` can't.
+    `expr, range1, ...` can be sympified, wereas `label, rendering_kw` can't.
     In particular, whenever a special character like $, {, }, ... is used in
     the `label`, sympify will raise an error.
     """
@@ -140,7 +140,7 @@ def _create_ranges(exprs, ranges, npar, label="", params=None):
     if len(free_symbols) == npar:
         # there could be times when this condition is not met, for example
         # plotting the function f(x, y) = x (which is a plane); in this case,
-        # free_symbols = {x} whereas rfs = {x, y} (or x and Dummy)
+        # free_symbols = {x} wereas rfs = {x, y} (or x and Dummy)
         rfs = set().union([r[0] for r in ranges])
         if len(free_symbols.difference(rfs)) > 0:
             raise ValueError(
@@ -280,7 +280,7 @@ def _check_arguments(args, nexpr, npar, **kwargs):
     else:
         # In this case, we are plotting multiple expressions, each one with its
         # range. Each "expression" to be plotted has the following form:
-        # (expr, range, label) where label is optional
+        # (expr, range, label) were label is optional
 
         _, ranges, labels, rendering_kw = _unpack_args(*args)
         labels = [labels] if labels else []

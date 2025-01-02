@@ -509,7 +509,7 @@ class MinMaxBase(Expr, LatticeOp):
         # factor out common elements as for
         # Min(Max(x, y), Max(x, z)) -> Max(x, Min(y, z))
         # and vice versa when swapping Min/Max -- do this only for the
-        # easy case where all functions contain something in common;
+        # easy case were all functions contain something in common;
         # trying to find some optimal subset of args to modify takes
         # too long
 
@@ -862,7 +862,7 @@ class Min(MinMaxBase, Application):
 
 
 class Rem(DefinedFunction):
-    """Returns the remainder when ``p`` is divided by ``q`` where ``p`` is finite
+    """Returns the remainder when ``p`` is divided by ``q`` were ``p`` is finite
     and ``q`` is not equal to zero. The result, ``p - int(p/q)*q``, has the same sign
     as the divisor.
 

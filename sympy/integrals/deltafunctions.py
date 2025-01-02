@@ -18,7 +18,7 @@ def change_mul(node, x):
        expressions are simplified (using DiracDelta.expand(diracdelta=True, wrt=x)).
 
        Return: (dirac, new node)
-       Where:
+       were:
          o dirac is either a simple DiracDelta expression or None (if no simple
            expression was found);
          o new node is either a simplified DiracDelta expressions or None (if it
@@ -181,7 +181,7 @@ def deltaintegrate(f, x):
                 #
                 # This is so Integral(y*DiracDelta(x).diff(x),x).doit()
                 # will return y*DiracDelta(x) instead of 0 or DiracDelta(x),
-                # both of which are correct everywhere the value is defined
+                # both of which are correct everywere the value is defined
                 # but give wrong answers for nested integration.
                 n = (0 if len(deltaterm.args)==1 else deltaterm.args[1])
                 m = 0

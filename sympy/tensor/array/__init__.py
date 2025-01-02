@@ -189,7 +189,7 @@ positions `a` and `b` means
 `A_{i_1,\ldots,i_a,\ldots,i_b,\ldots,i_n} \implies A_{i_1,\ldots,k,\ldots,k,\ldots,i_n}
 \implies \tilde{A}_{i_1,\ldots,i_{a-1},i_{a+1},\ldots,i_{b-1},i_{b+1},\ldots,i_n,k}`
 
-where `\tilde{A}` is the array equivalent to the diagonal of `A` at positions
+were `\tilde{A}` is the array equivalent to the diagonal of `A` at positions
 `a` and `b` moved to the last index slot.
 
 Compare the difference between contraction and diagonal operators:

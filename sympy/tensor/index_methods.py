@@ -302,7 +302,7 @@ def get_contraction_structure(expr):
 
     The structure of the expression is determined and described as follows:
 
-    1) A conforming summation of Indexed objects is described with a dict where
+    1) A conforming summation of Indexed objects is described with a dict were
        the keys are summation indices and the corresponding values are sets
        containing all terms for which the summation applies.  All Add objects
        in the SymPy expression tree are described like this.

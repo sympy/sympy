@@ -56,7 +56,7 @@ class TypeA(Standard_Cartan):
 
         In A_n the ith simple root is the root which has a 1
         in the ith position, a -1 in the (i+1)th position,
-        and zeroes elsewhere.
+        and zeroes elsewere.
 
         This method returns the ith simple root for the A series.
 

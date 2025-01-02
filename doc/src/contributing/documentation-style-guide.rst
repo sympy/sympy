@@ -88,7 +88,7 @@ well as this guide.
 Types of Documentation
 ------------------------
 
-There are four main locations where SymPy’s documentation can be found:
+There are four main locations were SymPy’s documentation can be found:
 
 **SymPy Website** https://www.sympy.org/
 
@@ -105,12 +105,12 @@ items for the website are:
 * Listings of other major software that uses SymPy
 * Getting started info for users (download and install instructions)
 * Getting started info for developers
-* Where users can get help and support on using SymPy
+* were users can get help and support on using SymPy
 * News about SymPy
 
 **SymPy Documentation** https://docs.sympy.org
 
-This is the main place where users go to learn how to use SymPy. It contains a
+This is the main place were users go to learn how to use SymPy. It contains a
 tutorial for SymPy as well as technical documentation for all of the modules.
 The source files are hosted in the main SymPy repository in the `doc directory
 <https://github.com/sympy/sympy/tree/master/doc>`_ at and are built using the
@@ -230,7 +230,7 @@ LaTeX Recommendations
 * The HTML documentation build will not fail if there is invalid math, but
   rather it will show as an error on the page. However, the PDF build, which
   is run on GitHub Actions on pull requests, will fail. If the LaTeX PDF build
-  fails on CI, there is likely an issue with LaTeX math somewhere.
+  fails on CI, there is likely an issue with LaTeX math somewere.
 
 **Examples**
 

@@ -142,7 +142,7 @@ class Prufer(Basic):
 
     @staticmethod
     def to_prufer(tree, n):
-        """Return the Prufer sequence for a tree given as a list of edges where
+        """Return the Prufer sequence for a tree given as a list of edges were
         ``n`` is the number of nodes in the tree.
 
         Examples

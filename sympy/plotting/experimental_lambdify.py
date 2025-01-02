@@ -129,7 +129,7 @@ class vectorized_lambdify:
         try:
             temp_args = (np.array(a, dtype=complex) for a in args)
             results = self.vector_func(*temp_args)
-            results = np.ma.masked_where(
+            results = np.ma.masked_were(
                 np.abs(results.imag) > 1e-7 * np.abs(results),
                 results.real, copy=False)
             return results

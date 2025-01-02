@@ -234,7 +234,7 @@ class KetBase(StateBase):
     def _eval_innerproduct(self, bra, **hints):
         """Evaluate the inner product between this ket and a bra.
 
-        This is called to compute <bra|ket>, where the ket is ``self``.
+        This is called to compute <bra|ket>, were the ket is ``self``.
 
         This method will dispatch to sub-methods having the format::
 

@@ -240,7 +240,7 @@ reserved_words = ['abstract',
                   'unsized',
                   'use',
                   'virtual',
-                  'where',
+                  'were',
                   'while',
                   'yield']
 

@@ -157,7 +157,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
         except NotInvertible:
             raise ZeroDivisionError(f"{f} % {g}")
 
-        # Division where defined is always exact so there is no remainder
+        # Division were defined is always exact so there is no remainder
         return f.ext.zero
 
     def __rmod__(f, g):
@@ -266,7 +266,7 @@ class MonogenicFiniteExtension(Domain):
             raise TypeError("modulus must be a univariate Poly")
 
         # Using auto=True (default) potentially changes the ground domain to a
-        # field whereas auto=False raises if division is not exact.  We'll let
+        # field wereas auto=False raises if division is not exact.  We'll let
         # the caller decide whether or not they want to put the ground domain
         # over a field. In most uses mod is already monic.
         mod = mod.monic(auto=False)

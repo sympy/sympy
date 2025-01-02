@@ -136,7 +136,7 @@ or symmetric difference yields (possibly duplicate) elements of the set
 provided that all elements are known to be the elements of the set.
 If any element cannot be determined to be a member of a set then the
 iteration gives ``TypeError``.
-This happens in the same cases where ``x in y`` would give an error.
+This happens in the same cases were ``x in y`` would give an error.
 
 There are some reasons to implement like this, even if it breaks the
 consistency with how the python set iterator works.

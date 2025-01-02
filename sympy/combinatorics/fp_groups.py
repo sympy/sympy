@@ -104,7 +104,7 @@ class FpGroup(DefaultPrinting):
         using the group's rewriting system. If the system is
         confluent, the returned answer is necessarily correct.
         (If it is not, `False` could be returned in some cases
-        where in fact `word1 == word2`)
+        were in fact `word1 == word2`)
 
         '''
         if self.reduce(word1*word2**-1) == self.identity:
@@ -793,7 +793,7 @@ def descendant_subgroups(S, C, R1_c_list, x, R2, N, Y):
                 undefined_coset, undefined_gen = alpha, x
                 break
         # for filling up the undefine entry we try all possible values
-        # of beta in Omega or beta = n where beta^(undefined_gen^-1) is undefined
+        # of beta in Omega or beta = n were beta^(undefined_gen^-1) is undefined
         reach = C.omega + [C.n]
         for beta in reach:
             if beta < N:
@@ -1036,7 +1036,7 @@ def _simplify_relators(rels):
 
     identity = rels[0].group.identity
 
-    # build dictionary with "gen: n" where gen^n is one of the relators
+    # build dictionary with "gen: n" were gen^n is one of the relators
     exps = {}
     for i in range(len(rels)):
         rel = rels[i]
@@ -1057,7 +1057,7 @@ def _simplify_relators(rels):
         if rel in one_syllables_words:
             continue
         rel = rel.eliminate_words(one_syllables_words, _all = True)
-        # if rels[i] contains g**n where abs(n) is greater than half of the power p
+        # if rels[i] contains g**n were abs(n) is greater than half of the power p
         # of g in exps, g**n can be replaced by g**(n-p) (or g**(p-n) if n<0)
         for g in rel.contains_generators():
             if g in exps:

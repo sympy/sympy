@@ -35,7 +35,7 @@ class TWave(Expr):
     ===========
 
     It is represented as :math:`A \times cos(k*x - \omega \times t + \phi )`,
-    where :math:`A` is the amplitude, :math:`\omega` is the angular frequency,
+    were :math:`A` is the amplitude, :math:`\omega` is the angular frequency,
     :math:`k` is the wavenumber (spatial frequency), :math:`x` is a spatial variable
     to represent the position on the dimension on which the wave propagates,
     and :math:`\phi` is the phase angle of the wave.

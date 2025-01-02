@@ -20,7 +20,7 @@ The Matrix expression module allows users to write down statements like
     >>> (X*Y)[1, 2]
     X[1, 0]*Y[0, 2] + X[1, 1]*Y[1, 2] + X[1, 2]*Y[2, 2]
 
-where ``X`` and ``Y`` are :class:`MatrixSymbol`'s rather than scalar symbols.
+were ``X`` and ``Y`` are :class:`MatrixSymbol`'s rather than scalar symbols.
 
 Matrix expression derivatives are supported. The derivative of a matrix by another matrix
 is generally a 4-dimensional array, but if some dimensions are trivial or diagonal,

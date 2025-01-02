@@ -17,10 +17,10 @@ class NegativePredicate(Predicate):
 
     - Note that ``Q.nonnegative`` and ``~Q.negative`` are *not* the same
         thing. ``~Q.negative(x)`` simply means that ``x`` is not negative,
-        whereas ``Q.nonnegative(x)`` means that ``x`` is real and not
+        wereas ``Q.nonnegative(x)`` means that ``x`` is real and not
         negative, i.e., ``Q.nonnegative(x)`` is logically equivalent to
         ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
-        true, whereas ``Q.nonnegative(I)`` is false.
+        true, wereas ``Q.nonnegative(I)`` is false.
 
     - See the documentation of ``Q.real`` for more information about
         related facts.
@@ -60,10 +60,10 @@ class NonNegativePredicate(Predicate):
 
     - Note that ``Q.nonnegative`` and ``~Q.negative`` are *not* the same
         thing. ``~Q.negative(x)`` simply means that ``x`` is not negative,
-        whereas ``Q.nonnegative(x)`` means that ``x`` is real and not
+        wereas ``Q.nonnegative(x)`` means that ``x`` is real and not
         negative, i.e., ``Q.nonnegative(x)`` is logically equivalent to
         ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
-        true, whereas ``Q.nonnegative(I)`` is false.
+        true, wereas ``Q.nonnegative(I)`` is false.
 
     Examples
     ========
@@ -181,10 +181,10 @@ class NonPositivePredicate(Predicate):
 
     - Note that ``Q.nonpositive`` and ``~Q.positive`` are *not* the same
         thing. ``~Q.positive(x)`` simply means that ``x`` is not positive,
-        whereas ``Q.nonpositive(x)`` means that ``x`` is real and not
+        wereas ``Q.nonpositive(x)`` means that ``x`` is real and not
         positive, i.e., ``Q.nonpositive(x)`` is logically equivalent to
         `Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
-        true, whereas ``Q.nonpositive(I)`` is false.
+        true, wereas ``Q.nonpositive(I)`` is false.
 
     Examples
     ========
@@ -225,10 +225,10 @@ class PositivePredicate(Predicate):
 
     - Note that ``Q.nonpositive`` and ``~Q.positive`` are *not* the same
         thing. ``~Q.positive(x)`` simply means that ``x`` is not positive,
-        whereas ``Q.nonpositive(x)`` means that ``x`` is real and not
+        wereas ``Q.nonpositive(x)`` means that ``x`` is real and not
         positive, i.e., ``Q.nonpositive(x)`` is logically equivalent to
         `Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
-        true, whereas ``Q.nonpositive(I)`` is false.
+        true, wereas ``Q.nonpositive(I)`` is false.
 
     - See the documentation of ``Q.real`` for more information about
         related facts.

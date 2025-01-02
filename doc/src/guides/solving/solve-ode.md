@@ -31,7 +31,7 @@ Eq(y(x), C1*sin(3*x) + C2*cos(3*x))
 (True, 0)
 ```
 
-The output of {func}`~.checkodesol` is a tuple where the first item, a boolean,
+The output of {func}`~.checkodesol` is a tuple were the first item, a boolean,
 tells whether substituting the solution into the ODE results in `0`, indicating
 the solution is correct.
 
@@ -99,7 +99,7 @@ If your differential equation(s) have initial or boundary conditions, specify
 them with the {func}`~.dsolve` optional argument `ics`. Initial and boundary
 conditions are treated the same way (even though the argument is called `ics`).
 It should be given in the form of `{f(x0): y0, f(x).diff(x).subs(x, x1): y1}`
-and so on where, for example, the value of $f(x)$ at $x = x_{0}$ is $y_{0}$. For
+and so on were, for example, the value of $f(x)$ at $x = x_{0}$ is $y_{0}$. For
 power series solutions, if no initial conditions are specified $f(0)$ is assumed
 to be $C_{0}$ and the power series solution is calculated about $0$.
 
@@ -220,7 +220,7 @@ Eq(Ei(f(x)), C1 - x)
 ```
 
 This gives no direct expression for $f(x)$. Instead, {func}`~.dsolve` expresses
-a solution as $g(f(x))$ where $g$ is {class}`~.Ei`, the classical exponential
+a solution as $g(f(x))$ were $g$ is {class}`~.Ei`, the classical exponential
 integral function. `Ei` does not have a known closed-form inverse, so a solution
 cannot be explicitly expressed as $f(x)$ equaling a function of $x$. Instead,
 `dsolve` returns an [implicit
@@ -337,7 +337,7 @@ solving is
 
 Here is an [example from the field of chemical
 kinetics](https://www.sympy.org/scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html)
-where the nonlinear ordinary differential equations take this form:
+were the nonlinear ordinary differential equations take this form:
 
 $$ r_f = & k_f y_0(t)^2  y_1(t) \\
 r_b = & k_b y_2(t)^2 \\

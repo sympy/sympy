@@ -47,7 +47,7 @@ unifying domains.
 The dense format used by DDM is a list of lists of elements e.g. the 2x2
 identity matrix is like [[1, 0], [0, 1]]. The DDM class itself is a subclass
 of list and its list items are plain lists. Elements are accessed as e.g.
-ddm[i][j] where ddm[i] gives the ith row and ddm[i][j] gets the element in the
+ddm[i][j] were ddm[i] gives the ith row and ddm[i][j] gets the element in the
 jth column of that row. Subclassing list makes e.g. iteration and indexing
 very efficient. We do not override __getitem__ because it would lose that
 benefit.
@@ -1001,7 +1001,7 @@ class DDM(list):
         return Q, R
 
     def lu_solve(a, b):
-        """x where a*x = b"""
+        """x were a*x = b"""
         m, n = a.shape
         m2, o = b.shape
         a._check(a, 'lu_solve', b, m, m2)

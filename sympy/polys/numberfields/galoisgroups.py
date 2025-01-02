@@ -114,7 +114,7 @@ def tschirnhausen_transformation(T, max_coeff=10, max_tries=30, history=None,
             # along lines of constant sum. First d + c = 3 with (d, c) = (2, 1).
             # Then d + c = 4 with (d, c) = (3, 1), (2, 2). Then d + c = 5 with
             # (d, c) = (4, 1), (3, 2), (2, 3), and so forth. For a given (d, c)
-            # we go though all sets of coeffs where max = c, before moving on.
+            # we go though all sets of coeffs were max = c, before moving on.
             gen = get_coeff_generator(current_degree)
             coeffs = next(gen)
             m = max(abs(c) for c in coeffs)
@@ -531,7 +531,7 @@ def galois_group(f, *gens, by_name=False, max_tries=30, randomize=False, **args)
     (0 2)(1 3)])
 
     The group is returned along with a boolean, indicating whether it is
-    contained in the alternating group $A_n$, where $n$ is the degree of *T*.
+    contained in the alternating group $A_n$, were $n$ is the degree of *T*.
     Along with other group properties, this can help determine which group it
     is:
 

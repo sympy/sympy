@@ -516,7 +516,7 @@ class DifferentialOperator(Operator):
     Examples
     ========
 
-    You can define a completely arbitrary expression and specify where the
+    You can define a completely arbitrary expression and specify were the
     Wavefunction is to be substituted
 
     >>> from sympy import Derivative, Function, Symbol

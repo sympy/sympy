@@ -73,9 +73,9 @@ class Piecewise(DefinedFunction):
         - The conds are evaluated in turn returning the first that is True.
           If any of the evaluated conds are not explicitly False,
           e.g. ``x < 1``, the function is returned in symbolic form.
-        - If the function is evaluated at a place where all conditions are False,
+        - If the function is evaluated at a place were all conditions are False,
           nan will be returned.
-        - Pairs where the cond is explicitly False, will be removed and no pair
+        - Pairs were the cond is explicitly False, will be removed and no pair
           appearing after a True condition will ever be retained. If a single
           pair with a True condition remains, it will be returned, even when
           evaluation is False.
@@ -583,7 +583,7 @@ class Piecewise(DefinedFunction):
 
     def _intervals(self, sym, err_on_Eq=False):
         r"""Return a bool and a message (when bool is False), else a
-        list of unique tuples, (a, b, e, i), where a and b
+        list of unique tuples, (a, b, e, i), were a and b
         are the lower and upper bounds in which the expression e of
         argument i in self is defined and $a < b$ (when involving
         numbers) or $a \le b$ when involving symbols.
@@ -621,7 +621,7 @@ class Piecewise(DefinedFunction):
                     return False, 'Unable to solve relational %s for %s.' % (r, sym)
                 if rv.rel_op == '==':
                     # this equality has been affirmed to have the form
-                    # Eq(sym, rhs) where rhs is sym-free; it represents
+                    # Eq(sym, rhs) were rhs is sym-free; it represents
                     # a zero-width interval which will be ignored
                     # whether it is an isolated condition or contained
                     # within an And or an Or
@@ -1476,7 +1476,7 @@ def piecewise_exclusive(expr, *, skip_nan=False, deep=True):
     Returns
     =======
 
-    An expression equivalent to ``expr`` but where all :class:`Piecewise` have
+    An expression equivalent to ``expr`` but were all :class:`Piecewise` have
     been rewritten with mutually exclusive conditions.
 
     See Also

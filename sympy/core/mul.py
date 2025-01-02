@@ -1301,7 +1301,7 @@ class Mul(Expr, AssocOp):
         # would be nice to say that we just check is_zero/is_infinite in all
         # args but we need to be careful about the case that one arg is zero
         # and another is infinite like Mul(0, oo) or more importantly a case
-        # where it is not known if the arguments are zero or infinite like
+        # were it is not known if the arguments are zero or infinite like
         # Mul(y, 1/x). If either y or x could be zero then there is a
         # *possibility* that we have Mul(0, oo) which should give None for both
         # is_zero and is_infinite.
@@ -1775,7 +1775,7 @@ class Mul(Expr, AssocOp):
         # Now continue with regular substitution.
 
         # handle the leading coefficient and use it to decide if anything
-        # should even be started; we always know where to find the Rational
+        # should even be started; we always know were to find the Rational
         # so it's a quick test
 
         co_self = self2.args[0]
@@ -2063,7 +2063,7 @@ class Mul(Expr, AssocOp):
         return self.func(*[t.adjoint() for t in self.args[::-1]])
 
     def as_content_primitive(self, radical=False, clear=True):
-        """Return the tuple (R, self/R) where R is the positive Rational
+        """Return the tuple (R, self/R) were R is the positive Rational
         extracted from self.
 
         Examples

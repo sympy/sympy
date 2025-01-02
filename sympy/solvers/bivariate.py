@@ -83,7 +83,7 @@ def _mostfunc(lhs, func, X=None):
 
 def _linab(arg, symbol):
     """Return ``a, b, X`` assuming ``arg`` can be written as ``a*X + b``
-    where ``X`` is a symbol-dependent factor and ``a`` and ``b`` are
+    were ``X`` is a symbol-dependent factor and ``a`` and ``b`` are
     independent of ``symbol``.
 
     Examples
@@ -122,7 +122,7 @@ def _lambert(eq, x):
     """
     Given an expression assumed to be in the form
         ``F(X, a..f) = a*log(b*X + c) + d*X + f = 0``
-    where X = g(x) and x = g^-1(X), return the Lambert solution,
+    were X = g(x) and x = g^-1(X), return the Lambert solution,
         ``x = g^-1(-c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(-f/a)))``.
     """
     eq = _mexpand(expand_log(eq))
@@ -166,10 +166,10 @@ def _lambert(eq, x):
 
     # solution of the given Lambert equation is like
     # sol = -c/b + (a/d)*LambertW(arg, k),
-    # where arg = d/(a*b)*exp((c*d-b*f)/a/b) and k in lambert_real_branches.
+    # were arg = d/(a*b)*exp((c*d-b*f)/a/b) and k in lambert_real_branches.
     # Instead of considering the single arg, `d/(a*b)*exp((c*d-b*f)/a/b)`,
     # the individual `p` roots obtained when writing `exp((c*d-b*f)/a/b)`
-    # as `exp(A/p) = exp(A)**(1/p)`, where `p` is an Integer, are used.
+    # as `exp(A/p) = exp(A)**(1/p)`, were `p` is an Integer, are used.
 
     # calculating args for LambertW
     num, den = ((c*d-b*f)/a/b).as_numer_denom()
@@ -262,7 +262,7 @@ def _solve_lambert(f, symbol, gens):
         in ``x**2`` is negated. If `g(x)` does not have even powers of
         symbol then we do not want to replace the ``x`` there with
         ``-x``. So the role of the ``t`` in the expression received by
-        this function is to mark where ``+/-x`` should be inserted
+        this function is to mark were ``+/-x`` should be inserted
         before obtaining the Lambert solutions.
 
         """
@@ -273,7 +273,7 @@ def _solve_lambert(f, symbol, gens):
             sols.extend(_solve_lambert(plhs, symbol, gens))
         # uniq is needed for a case like
         # 2*log(t) - log(-z**2) + log(z + log(x) + log(z))
-        # where substituting t with +/-x gives all the same solution;
+        # were substituting t with +/-x gives all the same solution;
         # uniq, rather than list(set()), is used to maintain canonical
         # order
         return list(uniq(sols))

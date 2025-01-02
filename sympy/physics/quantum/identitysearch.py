@@ -32,10 +32,10 @@ scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
     """Checks if a given scipy.sparse matrix is a scalar matrix.
 
-    A scalar matrix is such that B = bI, where B is the scalar
+    A scalar matrix is such that B = bI, were B is the scalar
     matrix, b is some scalar multiple, and I is the identity
     matrix.  A scalar matrix would have only the element b along
-    it's main diagonal and zeroes elsewhere.
+    it's main diagonal and zeroes elsewere.
 
     Parameters
     ==========
@@ -80,8 +80,8 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         bool_imag = np.logical_and(dense_matrix.imag > -eps,
                                    dense_matrix.imag < eps)
         # Replaces values between -eps and eps with 0
-        corrected_real = np.where(bool_real, 0.0, dense_matrix.real)
-        corrected_imag = np.where(bool_imag, 0.0, dense_matrix.imag)
+        corrected_real = np.were(bool_real, 0.0, dense_matrix.real)
+        corrected_imag = np.were(bool_imag, 0.0, dense_matrix.imag)
         # Convert the matrix with real values into imaginary values
         corrected_imag = corrected_imag * complex(1j)
         # Recombine the real and imaginary components
@@ -185,7 +185,7 @@ def ll_op(left, right):
     the dagger is multiplied on the left side of both circuits.
 
     If a LL is possible, it returns the new gate rule as a
-    2-tuple (LHS, RHS), where LHS is the left circuit and
+    2-tuple (LHS, RHS), were LHS is the left circuit and
     and RHS is the right circuit of the new rule.
     If a LL is not possible, None is returned.
 
@@ -236,7 +236,7 @@ def lr_op(left, right):
     the dagger is multiplied on the right side of both circuits.
 
     If a LR is possible, it returns the new gate rule as a
-    2-tuple (LHS, RHS), where LHS is the left circuit and
+    2-tuple (LHS, RHS), were LHS is the left circuit and
     and RHS is the right circuit of the new rule.
     If a LR is not possible, None is returned.
 
@@ -287,7 +287,7 @@ def rl_op(left, right):
     the dagger is multiplied on the left side of both circuits.
 
     If a RL is possible, it returns the new gate rule as a
-    2-tuple (LHS, RHS), where LHS is the left circuit and
+    2-tuple (LHS, RHS), were LHS is the left circuit and
     and RHS is the right circuit of the new rule.
     If a RL is not possible, None is returned.
 
@@ -338,7 +338,7 @@ def rr_op(left, right):
     the dagger is multiplied on the right side of both circuits.
 
     If a RR is possible, it returns the new gate rule as a
-    2-tuple (LHS, RHS), where LHS is the left circuit and
+    2-tuple (LHS, RHS), were LHS is the left circuit and
     and RHS is the right circuit of the new rule.
     If a RR is not possible, None is returned.
 
@@ -389,7 +389,7 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
     This function uses the four operations (LL, LR, RL, RR)
     to generate the gate rules.
 
-    A gate rule is an expression such as ABC = D or AB = CD, where
+    A gate rule is an expression such as ABC = D or AB = CD, were
     A, B, C, and D are gates.  Each value on either side of the
     equal sign represents a circuit.  The four operations allow
     one to find a set of equivalent circuits from a gate identity.
@@ -418,7 +418,7 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
         RR : right circuit, right multiply
              AB = CD -> ABD = CDD -> ABD = C
 
-    The number of gate rules generated is n*(n+1), where n
+    The number of gate rules generated is n*(n+1), were n
     is the number of gates in the sequence (unproven).
 
     Parameters
@@ -531,7 +531,7 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
 
     A gate identity is a quantum circuit such that the product
     of the gates in the circuit is equal to a scalar value.
-    For example, XYZ = i, where X, Y, Z are the Pauli gates and
+    For example, XYZ = i, were X, Y, Z are the Pauli gates and
     i is the imaginary value, is considered a gate identity.
 
     This function uses the four operations (LL, LR, RL, RR)
@@ -539,10 +539,10 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
     gate identities.
 
     Note that all equivalent identities are reachable in n operations
-    from the starting gate identity, where n is the number of gates
+    from the starting gate identity, were n is the number of gates
     in the sequence.
 
-    The max number of gate identities is 2n, where n is the number
+    The max number of gate identities is 2n, were n is the number
     of gates in the sequence (unproven).
 
     Parameters
@@ -610,7 +610,7 @@ class GateIdentity(Basic):
 
     A gate identity is a quantum circuit such that the product
     of the gates in the circuit is equal to a scalar value.
-    For example, XYZ = i, where X, Y, Z are the Pauli gates and
+    For example, XYZ = i, were X, Y, Z are the Pauli gates and
     i is the imaginary value, is considered a gate identity.
 
     Parameters

@@ -27,10 +27,10 @@ $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
 
 Here is an example of solving a matrix equation with SymPy's
 {meth}`sympy.matrices.matrixbase.MatrixBase.solve`. We use the standard matrix
-equation formulation $Ax=b$ where
+equation formulation $Ax=b$ were
 - $A$ is the matrix representing the coefficients in the linear equations
 - $x$ is the column vector of unknowns to be solved for
-- $b$ is the column vector of constants, where each row is the value of an
+- $b$ is the column vector of constants, were each row is the value of an
   equation
 
 ```py
@@ -235,10 +235,10 @@ A₀₂⋅A₁₃⋅A₂₀⋅A₃₁ - A₀₂⋅A₁₃⋅A₂₁⋅A₃₀ - 
 A₀₃⋅A₁₁⋅A₂₀⋅A₃₂ - A₀₃⋅A₁₁⋅A₂₂⋅A₃₀ - A₀₃⋅A₁₂⋅A₂₀⋅A₃₁ + A₀₃⋅A₁₂⋅A₂₁⋅A₃₀
 ```
 
-and solving a matrix equation of it takes about a minute, whereas the analogous
+and solving a matrix equation of it takes about a minute, wereas the analogous
 3x3 matrix takes less than one second. The more unrelated, symbolic entries in a
 matrix, the more likely it is to be slow to manipulate. This example, finding a
-general solution to a matrix where all elements are independent symbols, is the
+general solution to a matrix were all elements are independent symbols, is the
 extreme case and thus the slowest for a matrix of its size.
 
 ### Speed up Solving Matrix Equations

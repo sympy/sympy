@@ -26,7 +26,7 @@ A function :math:`f(x)` will be holonomic if there exists polynomials
 
     p_0 \cdot f(x) + p_1 \cdot f^{(1)}(x) + p_2 \cdot f^{(2)}(x) + ... + p_r \cdot f^{(r)}(x) = 0
 
-This differential equation can also be written as :math:`L \cdot f(x) = 0` where
+This differential equation can also be written as :math:`L \cdot f(x) = 0` were
 
 .. math::
 

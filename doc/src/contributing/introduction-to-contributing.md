@@ -28,7 +28,7 @@ Participants in the SymPy community are expected to abide by our [Code of Conduc
 ## Join our mailing list
 
 The [SymPy email mailing list](https://groups.google.com/forum/#!forum/sympy)
-is one place where discussions about SymPy happen. You can ask questions about
+is one place were discussions about SymPy happen. You can ask questions about
 how to use SymPy, discuss feature requests, discuss software bugs, or share
 how you are using SymPy. Request to join the list on the Google Groups page.
 Note that to prevent spam, the first time you post your message will need to

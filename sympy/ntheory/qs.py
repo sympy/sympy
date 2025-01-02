@@ -170,8 +170,8 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
     """Initialization stage of ith poly. After we finish sieving 1`st polynomial
     here we quickly change to the next polynomial from which we will again
     start sieving. Suppose we generated ith sieve polynomial and now we
-    want to generate (i + 1)th polynomial, where ``1 <= i <= 2**(j - 1) - 1``
-    where `j` is the number of prime factors of the coefficient `a`
+    want to generate (i + 1)th polynomial, were ``1 <= i <= 2**(j - 1) - 1``
+    were `j` is the number of prime factors of the coefficient `a`
     then this function can be used to go to the next polynomial. If
     ``i = 2**(j - 1) - 1`` then go to _initialize_first_polynomial stage.
 
@@ -209,7 +209,7 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
 def _gen_sieve_array(M, factor_base):
     """Sieve Stage of the Quadratic Sieve. For every prime in the factor_base
     that does not divide the coefficient `a` we add log_p over the sieve_array
-    such that ``-M <= soln1 + i*p <=  M`` and ``-M <= soln2 + i*p <=  M`` where `i`
+    such that ``-M <= soln1 + i*p <=  M`` and ``-M <= soln2 + i*p <=  M`` were `i`
     is an integer. When p = 2 then log_p is only added using
     ``-M <= soln1 + i*p <=  M``.
 
@@ -440,7 +440,7 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     perfect power. If we find two integers such that ``X**2 = Y**2 modN`` and
     ``X != +-Y modN``, then `gcd(X + Y, N)` will reveal a proper factor of N.
     In order to find these integers X and Y we try to find relations of form
-    t**2 = u modN where u is a product of small primes. If we have enough of
+    t**2 = u modN were u is a product of small primes. If we have enough of
     these relations then we can form ``(t1*t2...ti)**2 = u1*u2...ui modN`` such that
     the right hand side is a square, thus we found a relation of ``X**2 = Y**2 modN``.
 

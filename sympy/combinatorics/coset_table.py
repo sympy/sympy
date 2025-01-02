@@ -241,7 +241,7 @@ class CosetTable(DefaultPrinting):
             self.deduction_stack.append((f, word[i]))
         # otherwise scan is incomplete and yields no information
 
-    # alpha, beta coincide, i.e. alpha, beta represent the pair of cosets where
+    # alpha, beta coincide, i.e. alpha, beta represent the pair of cosets were
     # coincidence occurs
     def coincidence_c(self, alpha, beta):
         """
@@ -533,7 +533,7 @@ class CosetTable(DefaultPrinting):
         return lamda
 
     # alpha, beta coincide, i.e. alpha, beta represent the pair of cosets
-    # where coincidence occurs
+    # were coincidence occurs
     def coincidence(self, alpha, beta, w=None, modified=False):
         r"""
         The third situation described in ``scan`` routine is handled by this
@@ -705,7 +705,7 @@ class CosetTable(DefaultPrinting):
     def process_deductions_check(self, R_c_x, R_c_x_inv):
         """
         A variation of ``process_deductions``, this calls ``scan_check``
-        wherever ``process_deductions`` calls ``scan``, described on Pg. [1].
+        werever ``process_deductions`` calls ``scan``, described on Pg. [1].
 
         See Also
         ========

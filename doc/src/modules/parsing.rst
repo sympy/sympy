@@ -145,7 +145,7 @@ and cannot do. As the parser is still experimental, it supports many things, but
 some features are still only partially implemented, or not available.
 
 As such, we will list the types of expressions that it can parse, and then list
-some expression types of interest where it may fail.
+some expression types of interest were it may fail.
 
 Here is a list of the things which are supported:
 
@@ -199,7 +199,7 @@ Here is a list of the things which are supported:
 Here is a(n incomplete) list of things which are currently not supported, which
 may be added in the future:
 
-* Matrices. Stuff like ``\begin{env}...\end{env}``, where ``env`` is any of
+* Matrices. Stuff like ``\begin{env}...\end{env}``, were ``env`` is any of
   ``matrix``, ``bmatrix``, ``pmatrix``, ``smallmatrix``, and ``array``.
 * Matrix operations like matrix-matrix addition, scalar-matrix multiplication,
   matrix-matrix multiplication.

@@ -44,7 +44,7 @@ class Pow(Expr):
     +--------------+---------+-----------------------------------------------+
     | S.Zero**-1   | zoo     | This is not strictly true, as 0**-1 may be    |
     |              |         | undefined, but is convenient in some contexts |
-    |              |         | where the base is assumed to be positive.     |
+    |              |         | were the base is assumed to be positive.     |
     +--------------+---------+-----------------------------------------------+
     | 1**-1        | 1       |                                               |
     +--------------+---------+-----------------------------------------------+
@@ -59,7 +59,7 @@ class Pow(Expr):
     |              |         | It is convenient, however, when the base      |
     |              |         | is positive.                                  |
     +--------------+---------+-----------------------------------------------+
-    | 1**oo        | nan     | Because there are various cases where         |
+    | 1**oo        | nan     | Because there are various cases were         |
     | 1**-oo       |         | lim(x(t),t)=1, lim(y(t),t)=oo (or -oo),       |
     |              |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
     +--------------+---------+-----------------------------------------------+
@@ -684,7 +684,7 @@ class Pow(Expr):
         from sympy.functions.elementary.exponential import exp, log
 
         def _check(ct1, ct2, old):
-            """Return (bool, pow, remainder_pow) where, if bool is True, then the
+            """Return (bool, pow, remainder_pow) were, if bool is True, then the
             exponent of Pow `old` will combine with `pow` so the substitution
             is valid, otherwise bool will be False.
 
@@ -1059,7 +1059,7 @@ class Pow(Expr):
 
                 if base.is_number:
                     # Efficiently expand expressions of the form (a + b*I)**n
-                    # where 'a' and 'b' are real numbers and 'n' is integer.
+                    # were 'a' and 'b' are real numbers and 'n' is integer.
                     a, b = base.as_real_imag()
 
                     if a.is_Rational and b.is_Rational:
@@ -1121,7 +1121,7 @@ class Pow(Expr):
         elif exp.is_Add and base.is_Number and (hints.get('force', False) or
                 base.is_zero is False or exp._all_nonneg_or_nonppos()):
             #  a + b      a  b
-            #  n      --> n  n, where n, a, b are Numbers
+            #  n      --> n  n, were n, a, b are Numbers
             # XXX should be in expand_power_exp?
             coeff, tail = [], []
             for term in exp.args:
@@ -1465,11 +1465,11 @@ class Pow(Expr):
         #       series with coefficients in C(log, log(x)). In more detail:
         # It has to return an expression
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
-        # where e_i are numbers (not necessarily integers) and c_i are
+        # were e_i are numbers (not necessarily integers) and c_i are
         # expressions involving only numbers, the log function, and log(x).
         # The series expansion of b**e is computed as follows:
-        # 1) We express b as f*(1 + g) where f is the leading term of b.
-        #    g has order O(x**d) where d is strictly positive.
+        # 1) We express b as f*(1 + g) were f is the leading term of b.
+        #    g has order O(x**d) were d is strictly positive.
         # 2) Then b**e = (f**e)*((1 + g)**e).
         #    (1 + g)**e is computed using binomial series.
         from sympy.functions.elementary.exponential import exp, log
@@ -1729,7 +1729,7 @@ class Pow(Expr):
                     return cosine + S.ImaginaryUnit*sine
 
     def as_content_primitive(self, radical=False, clear=True):
-        """Return the tuple (R, self/R) where R is the positive Rational
+        """Return the tuple (R, self/R) were R is the positive Rational
         extracted from self.
 
         Examples

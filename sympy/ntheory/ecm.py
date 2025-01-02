@@ -64,7 +64,7 @@ class Point:
 
     def add(self, Q, diff):
         """
-        Add two points self and Q where diff = self - Q. Moreover the assumption
+        Add two points self and Q were diff = self - Q. Moreover the assumption
         is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
         requires 6 multiplications. Here the difference between the points
         is already known and using this algorithm speeds up the addition
@@ -169,7 +169,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
 
     This ECM method considers elliptic curves in Montgomery
     form (E : b*y**2*z = x**3 + a*x**2*z + x*z**2) and involves
-    elliptic curve operations (mod N), where the elements in
+    elliptic curve operations (mod N), were the elements in
     Z are reduced (mod N). Since N is not a prime, E over FF(N)
     is not really an elliptic curve but we can still do point additions
     and doubling as if FF(N) was a field.
@@ -239,7 +239,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
 
         try:
             # We use the elliptic curve y**2 = x**3 + a*x**2 + x
-            # where a = pow(v - u, 3, n)*(3*u + v)*invert(4*u_3*v, n) - 2
+            # were a = pow(v - u, 3, n)*(3*u + v)*invert(4*u_3*v, n) - 2
             # However, we do not declare a because it is more convenient
             # to use a24 = (a + 2)*invert(4, n) in the calculation.
             a24 = pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n
@@ -278,7 +278,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
         T = Q.mont_ladder(B1 - 2*D)
         R = Q.mont_ladder(B1 + 2*D)
         for deltas in deltas_list:
-            # R = Q.mont_ladder(r) where r in range(B1 + 2*D, B2 + 2*D, 4*D)
+            # R = Q.mont_ladder(r) were r in range(B1 + 2*D, B2 + 2*D, 4*D)
             alpha = (R.x_cord*R.z_cord) % n
             for delta in deltas:
                 # We want to calculate

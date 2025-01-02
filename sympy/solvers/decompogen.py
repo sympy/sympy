@@ -10,7 +10,7 @@ def decompogen(f, symbol):
     """
     Computes General functional decomposition of ``f``.
     Given an expression ``f``, returns a list ``[f_1, f_2, ..., f_n]``,
-    where::
+    were::
               f = f_1 o f_2 o ... f_n = f_1(f_2(... f_n))
 
     Note: This is a General decomposition function. It also decomposes
@@ -92,7 +92,7 @@ def compogen(g_s, symbol):
     """
     Returns the composition of functions.
     Given a list of functions ``g_s``, returns their composition ``f``,
-    where:
+    were:
         f = g_1 o g_2 o .. o g_n
 
     Note: This is a General composition function. It also composes Polynomials.

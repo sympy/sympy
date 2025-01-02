@@ -704,7 +704,7 @@ def repeated_decimals(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
         result.append((toknum, tokval))
 
         if num and num[-1][1] == ']':
-            # pre.post[repetend] = a + b/c + d/e where a = pre, b/c = post,
+            # pre.post[repetend] = a + b/c + d/e were a = pre, b/c = post,
             # and d/e = repetend
             result = result[:-len(num)]
             pre, post = num[0][1].split('.')

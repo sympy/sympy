@@ -6,7 +6,7 @@ release. They are kept here for backwards compatibility in case downstream
 code was subclassing them.
 
 Importing anything else from this module is deprecated so anything here
-should either not be used or should be imported from somewhere else.
+should either not be used or should be imported from somewere else.
 """
 
 from collections import defaultdict
@@ -68,7 +68,7 @@ class _MatrixDeprecatedMeta(type):
     # matrix classes. Matrix no longer inherits from MatrixCommon so
     # isinstance(M, MatrixCommon) would now return False by default.
     #
-    # There were lots of places in the codebase where this was being done
+    # There were lots of places in the codebase were this was being done
     # so it seems likely that downstream code may be doing it too. All use
     # of these mixins is deprecated though so we give a deprecation warning
     # unconditionally if they are being used with isinstance.
@@ -161,7 +161,7 @@ class MatrixRequired(metaclass=_MatrixDeprecatedMeta):
     @classmethod
     def _new(cls, *args, **kwargs):
         """`_new` must, at minimum, be callable as
-        `_new(rows, cols, mat) where mat is a flat list of the
+        `_new(rows, cols, mat) were mat is a flat list of the
         elements of the matrix."""
         raise NotImplementedError("Subclasses must implement this.")
 
@@ -172,7 +172,7 @@ class MatrixRequired(metaclass=_MatrixDeprecatedMeta):
         """Implementations of __getitem__ should accept ints, in which
         case the matrix is indexed as a flat list, tuples (i,j) in which
         case the (i,j) entry is returned, slices, or mixed tuples (a,b)
-        where a and b are any combination of slices and integers."""
+        were a and b are any combination of slices and integers."""
         raise NotImplementedError("Subclasses must implement this.")
 
     def __len__(self):
@@ -407,7 +407,7 @@ class MatrixShaping(MatrixRequired):
     def extract(self, rowsList, colsList):
         r"""Return a submatrix by specifying a list of rows and columns.
         Negative indices can be given. All indices must be in the range
-        $-n \le i < n$ where $n$ is the number of rows or columns.
+        $-n \le i < n$ were $n$ is the number of rows or columns.
 
         Examples
         ========
@@ -1123,7 +1123,7 @@ class MatrixSpecial(MatrixRequired):
         cls : Matrix, optional
             Specifies the matrix class of the output form.
 
-            If it is not specified, the class type where the method is
+            If it is not specified, the class type were the method is
             being executed on will be returned.
 
         Returns
@@ -1153,7 +1153,7 @@ class MatrixSpecial(MatrixRequired):
         [0, 0, x, 1],
         [0, 0, 0, x]])
 
-        Creating an alternative Jordan block matrix where `1` is on
+        Creating an alternative Jordan block matrix were `1` is on
         lower off-diagonal:
 
         >>> Matrix.jordan_block(4, x, band='lower')
@@ -2766,7 +2766,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        """Return self*other where other is either a scalar or a matrix
+        """Return self*other were other is either a scalar or a matrix
         of compatible dimensions.
 
         Examples

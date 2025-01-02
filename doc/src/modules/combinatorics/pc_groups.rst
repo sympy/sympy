@@ -45,7 +45,7 @@ Attributes of PolycyclicGroup
   permutation group.
 
 * ``pc_series`` : Polycyclic series is formed by adding all the missing generators
-  of ``der[i+1]`` in ``der[i]``, where ``der`` represents derived series.
+  of ``der[i+1]`` in ``der[i]``, were ``der`` represents derived series.
 
 * ``relative_order`` : A list, computed by the ratio of adjacent groups in pc_series.
 
@@ -142,7 +142,7 @@ Computation of Collected Word
 `````````````````````````````
 
 A word ``W`` is called collected, if ``W`` `= {x_{i_1}}^{a_1} \ldots {x_{i_r}}^{a_r}`
-with `i_1 < i_2< \ldots < i_r` and `a_j` is in `\{1 \ldots s_{j-1}\}`, where `s_j`
+with `i_1 < i_2< \ldots < i_r` and `a_j` is in `\{1 \ldots s_{j-1}\}`, were `s_j`
 represents the respective relative order.
 
 >>> from sympy.combinatorics.named_groups import SymmetricGroup
@@ -256,7 +256,7 @@ polycyclic generating sequence. Hence, the length of exponent vector is equal to
 the length of the pcgs.
 
 A given generator ``g`` of the polycyclic group, can be represented as
-`g = x_1^{e_1} \ldots x_n^{e_n}`, where `x_i` represents polycyclic generators
+`g = x_1^{e_1} \ldots x_n^{e_n}`, were `x_i` represents polycyclic generators
 and ``n`` is the number of generators in the free_group equal to the length of pcgs.
 
 >>> from sympy.combinatorics.named_groups import SymmetricGroup

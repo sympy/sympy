@@ -31,7 +31,7 @@ While looking for the method, it follows these steps:
     is hard to produce a high quality printer, if all the methods are spread
     out that far. Therefore all printing code was combined into the different
     printers, which works great for built-in SymPy objects, but not that
-    good for user defined classes where it is inconvenient to patch the
+    good for user defined classes were it is inconvenient to patch the
     printers.
 
 2.  **Take the best fitting method defined in the printer.**

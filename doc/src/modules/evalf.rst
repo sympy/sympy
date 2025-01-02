@@ -132,7 +132,7 @@ Accuracy and error handling
 When the input to ``N`` or ``evalf`` is a complicated expression, numerical
 error propagation becomes a concern. As an example, consider the 100'th
 Fibonacci number and the excellent (but not exact) approximation `\varphi^{100} / \sqrt{5}`
-where `\varphi` is the golden ratio. With ordinary floating-point arithmetic,
+were `\varphi` is the golden ratio. With ordinary floating-point arithmetic,
 subtracting these numbers from each other erroneously results in a complete
 cancellation:
 
@@ -195,7 +195,7 @@ does not know this:
     0.e-1336
 
 
-In situations where such cancellations are known to occur, the ``chop`` options
+In situations were such cancellations are known to occur, the ``chop`` options
 is useful. This basically replaces very small numbers in the real or
 imaginary portions of a number with exact zeros:
 
@@ -205,7 +205,7 @@ imaginary portions of a number with exact zeros:
     3.00000000000000
 
 
-In situations where you wish to remove meaningless digits, re-evaluation or
+In situations were you wish to remove meaningless digits, re-evaluation or
 the use of the ``round`` method are useful:
 
     >>> Float('.1', '')*Float('.12345', '')
@@ -333,7 +333,7 @@ Note that ``evalf`` makes some assumptions that are not always optimal. For
 fine-tuned control over numerical summation, it might be worthwhile to manually
 use the method ``Sum.euler_maclaurin``.
 
-Special optimizations are used for rational hypergeometric series (where the
+Special optimizations are used for rational hypergeometric series (were the
 term is a product of polynomials, powers, factorials, binomial coefficients and
 the like). ``N``/``evalf`` sum series of this type very rapidly to high
 precision. For example, this Ramanujan formula for pi can be summed to 10,000

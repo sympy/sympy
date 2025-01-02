@@ -90,7 +90,7 @@ def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     density : Expression containing symbol
         Represents probability density function.
     set : set
-        Represents the region where the pdf is valid, by default is real line.
+        Represents the region were the pdf is valid, by default is real line.
     check : bool
         If True, it will check whether the given density
         integrates to 1 over the given set. If False, it

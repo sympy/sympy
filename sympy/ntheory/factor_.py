@@ -59,7 +59,7 @@ def smoothness(n):
 def smoothness_p(n, m=-1, power=0, visual=None):
     """
     Return a list of [m, (p, (M, sm(p + m), psm(p + m)))...]
-    where:
+    were:
 
     1. p**M is the base-p divisor of n
     2. sm(p + m) is the smoothness of p + m (m = -1 by default)
@@ -629,7 +629,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 # Having a factor, we know that e is the maximal
                 # possible value for a root of n.
                 # If n = fac**e*m can be written as a perfect
-                # power then see if m can be written as r**E where
+                # power then see if m can be written as r**E were
                 # gcd(e, E) != 1 so n = (fac**(e//E)*r)**E
                 m = n//fac**e
                 rE = perfect_power(m, candidates=divisors(e, generator=True))
@@ -805,7 +805,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     loop length = 1482; leader length = 286
     loop length = 1482; leader length = 101
 
-    Here is an explicit example where there is a three element leadup to
+    Here is an explicit example were there is a three element leadup to
     a sequence of 3 numbers (11, 14, 4) that then repeat:
 
     >>> x=2
@@ -1283,7 +1283,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     2 *3 *5 *7
 
     Note that this is achieved by using the evaluate=False flag in Mul
-    and Pow. If you do other manipulations with an expression where
+    and Pow. If you do other manipulations with an expression were
     evaluate=False, it may evaluate.  Therefore, you should use the
     visual option only for visualization, and use the normal dictionary
     returned by visual=False if you want to perform operations on the

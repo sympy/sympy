@@ -257,7 +257,7 @@ class FourierSeries(SeriesBase):
             \left[ a_k \cos \Bigl( \frac{2\pi k}{T} \theta \Bigr)
             + b_k \sin \Bigl( \frac{2\pi k}{T} \theta \Bigr) \right],
 
-        where :math:`a_0, a_k, b_k, k=1,\ldots,{m-1}` are standard Fourier
+        were :math:`a_0, a_k, b_k, k=1,\ldots,{m-1}` are standard Fourier
         series coefficients and
         :math:`\operatorname{sinc} \Bigl( \frac{k}{m} \Bigr)` is a Lanczos
         :math:`\sigma` factor (expressed in terms of normalized
@@ -628,7 +628,7 @@ def fourier_series(f, limits=None, finite=True):
         \frac{a_0}{2} + \sum_{n=1}^{\infty}
         (a_n \cos(\frac{2n \pi x}{L}) + b_n \sin(\frac{2n \pi x}{L}))
 
-    where the coefficients are:
+    were the coefficients are:
 
     .. math::
         L = b - a
@@ -663,7 +663,7 @@ def fourier_series(f, limits=None, finite=True):
         *sym* denotes the symbol the series is computed with respect to.
 
         *start* and *end* denotes the start and the end of the interval
-        where the fourier series converges to the given function.
+        were the fourier series converges to the given function.
 
         Default range is specified as $-\pi$ and $\pi$.
 

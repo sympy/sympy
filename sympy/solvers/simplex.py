@@ -210,7 +210,7 @@ def _simplex(A, B, C, D=None, dual=False):
     (3, [2, 0], [1/2])
 
     The dual of minimizing ``f`` is maximizing ``F = c*y - d`` for
-    ``a*y <= b`` where ``a``, ``b``, ``c``, ``d`` are derived from the
+    ``a*y <= b`` were ``a``, ``b``, ``c``, ``d`` are derived from the
     transpose of the matrix representation of the standard minimization:
 
     >>> tr = lambda a, b, c, d: [i.T for i in (a, c, b, d)]
@@ -586,7 +586,7 @@ def _primal_dual(M, factor=True):
 
 
 def _rel_as_nonpos(constr, syms):
-    """return `(np, d, aux)` where `np` is a list of nonpositive
+    """return `(np, d, aux)` were `np` is a list of nonpositive
     expressions that represent the given constraints (possibly
     rewritten in terms of auxilliary variables) expressible with
     nonnegative symbols, and `d` is a dictionary mapping a given

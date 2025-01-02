@@ -483,7 +483,7 @@ def kahane_simplify(expression):
     # `links` is a dictionary containing the graph described in Kahane's paper,
     # to every key correspond one or two values, representing the linked indices.
     # All values in `links` are integers, negative numbers are used in the case
-    # where it is necessary to insert gamma matrices between free indices, in
+    # were it is necessary to insert gamma matrices between free indices, in
     # order to make Kahane's algorithm work (see paper).
     links = {i: [] for i in range(first_dum_pos, total_number)}
 

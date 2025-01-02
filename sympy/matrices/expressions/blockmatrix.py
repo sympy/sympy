@@ -330,7 +330,7 @@ class BlockMatrix(MatrixExpr):
                     return B - A * inv * D
                 elif mat == 'D':
                     return A - B * inv * C
-                #For matrices where no sub-matrix is square
+                #For matrices were no sub-matrix is square
                 return self
             except NonInvertibleMatrixError:
                 raise NonInvertibleMatrixError('The given matrix is not invertible. Please set generalized=True \

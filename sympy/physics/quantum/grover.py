@@ -253,7 +253,7 @@ class WGate(Gate):
             )
 
         # See 'Quantum Computer Science' by David Mermin p.92 -> W|a> result
-        # Return (2/(sqrt(2^n)))|phi> - |a> where |a> is the current basis
+        # Return (2/(sqrt(2^n)))|phi> - |a> were |a> is the current basis
         # state and phi is the superposition of basis states (see function
         # create_computational_basis above)
         basis_states = superposition_basis(self.nqubits)

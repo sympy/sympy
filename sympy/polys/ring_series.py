@@ -558,7 +558,7 @@ def rs_series_inversion(p, x, prec):
     return r
 
 def _coefficient_t(p, t):
-    r"""Coefficient of `x_i**j` in p, where ``t`` = (i, j)"""
+    r"""Coefficient of `x_i**j` in p, were ``t`` = (i, j)"""
     i, j = t
     R = p.ring
     expv1 = [0]*R.ngens
@@ -575,7 +575,7 @@ def rs_series_reversion(p, x, n, y):
     Reversion of a series.
 
     ``p`` is a series with ``O(x**n)`` of the form $p = ax + f(x)$
-    where $a$ is a number different from 0.
+    were $a$ is a number different from 0.
 
     $f(x) = \sum_{k=2}^{n-1} a_kx_k$
 
@@ -1284,7 +1284,7 @@ def _tan1(p, x, prec):
     Consider `f(x) = y - \arctan(x)`
     Let r be a root of f(x) found using Newton's method.
     Then `f(r) = 0`
-    Or `y = \arctan(x)` where `x = \tan(y)` as required.
+    Or `y = \arctan(x)` were `x = \tan(y)` as required.
     """
     R = p.ring
     p1 = R(0)
@@ -1375,7 +1375,7 @@ def rs_cot(p, x, prec):
 
     cot
     """
-    # It can not handle series like `p = x + x*y` where the coefficient of the
+    # It can not handle series like `p = x + x*y` were the coefficient of the
     # linear term in the series variable is symbolic.
     if rs_is_puiseux(p, x):
         r = rs_puiseux(rs_cot, p, x, prec)
@@ -1770,7 +1770,7 @@ def rs_newton(p, x, prec):
 def rs_hadamard_exp(p1, inverse=False):
     """
     Return ``sum f_i/i!*x**i`` from ``sum f_i*x**i``,
-    where ``x`` is the first variable.
+    were ``x`` is the first variable.
 
     If ``invers=True`` return ``sum f_i*i!*x**i``
 

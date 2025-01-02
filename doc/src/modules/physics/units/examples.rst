@@ -14,7 +14,7 @@ We will start from Newton's second law
 .. math::
     m a = F
 
-where :math:`m, a` and :math:`F` are the mass, the acceleration and the force
+were :math:`m, a` and :math:`F` are the mass, the acceleration and the force
 respectively. Knowing the dimensions of :math:`m` (:math:`M`) and :math:`a`
 (:math:`L T^{-2}`), we will determine the dimension of :math:`F`; obviously we
 will find that it is a force: :math:`M L T^{-2}`.

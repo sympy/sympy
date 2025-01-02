@@ -150,12 +150,12 @@ def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
     The degrees of freedom of the system are n + 1, i.e. one for each
     pendulum link and one for the lateral motion of the cart.
 
-    M x' = F, where x = [u0, ..., un+1, q0, ..., qn+1]
+    M x' = F, were x = [u0, ..., un+1, q0, ..., qn+1]
 
-    The joint angles are all defined relative to the ground where the x axis
+    The joint angles are all defined relative to the ground were the x axis
     defines the ground line and the y axis points up. The joint torques are
     applied between each adjacent link and the between the cart and the
-    lower link where a positive torque corresponds to positive angle.
+    lower link were a positive torque corresponds to positive angle.
 
     """
     if n <= 0:

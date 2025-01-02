@@ -39,7 +39,7 @@ class PlotMode(PlotObject):
 
     ## Everything else in this file has to
     ## do with registration and retrieval
-    ## of plot modes. This is where I've
+    ## of plot modes. This is were I've
     ## hidden much of the ugliness of automatic
     ## plot mode divination...
 

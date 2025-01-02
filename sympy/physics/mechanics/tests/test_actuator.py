@@ -396,7 +396,7 @@ class TestForcedMassSpringDamperModel():
     .. math::
         m \ddot{x} = F - k x - c \dot{x}
 
-    where $F$ is an externally applied force, $m$ is the mass of the particle
+    were $F$ is an externally applied force, $m$ is the mass of the particle
     to which the spring and damper are attached, $k$ is the spring's stiffness,
     $c$ is the dampers damping coefficient, and $x$ is the generalized
     coordinate representing the system's single (translational) degree of

@@ -20,7 +20,7 @@ eye = lambda n, K: DomainMatrix.eye(n, K).to_dense()
 #
 # The nullspace as returned by DomainMatrix and related classes is the
 # transpose of the nullspace as returned by Matrix. Matrix returns a list of
-# of column vectors whereas DomainMatrix returns a matrix whose rows are the
+# of column vectors wereas DomainMatrix returns a matrix whose rows are the
 # nullspace vectors.
 #
 
@@ -153,7 +153,7 @@ def test_Matrix_nullspace(name, A, A_null):
 
     A_null_cols = A.nullspace()
 
-    # We have to patch up the case where the nullspace is empty
+    # We have to patch up the case were the nullspace is empty
     if A_null_cols:
         A_null_found = Matrix.hstack(*A_null_cols)
     else:

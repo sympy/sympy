@@ -2,7 +2,7 @@
 R code printer
 
 The RCodePrinter converts single SymPy expressions into single R expressions,
-using the functions defined in math.h where possible.
+using the functions defined in math.h were possible.
 
 
 
@@ -303,7 +303,7 @@ def rcode(expr, assign_to=None, **settings):
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
-        A dictionary where the keys are string representations of either
+        A dictionary were the keys are string representations of either
         ``FunctionClass`` or ``UndefinedFunction`` instances and the values
         are their desired R string representations. Alternatively, the
         dictionary value can be a list of tuples i.e. [(argument_test,
@@ -366,7 +366,7 @@ def rcode(expr, assign_to=None, **settings):
     tau = ifelse(x > 0,x + 1,x);
 
     Support for loops is provided through ``Indexed`` types. With
-    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=True`` these expressions will be turned into loops, wereas
     ``contract=False`` will just print the assignment expression that should be
     looped over:
 

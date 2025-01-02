@@ -821,7 +821,7 @@ class Expr(Basic, EvalfMixin):
         # sometimes we can use a simplified result to give a clue as to
         # what the expression should be; if the expression is *not* zero
         # then we should have been able to compute that and so now
-        # we can just consider the cases where the approximation appears
+        # we can just consider the cases were the approximation appears
         # to be zero -- we try to prove it via minimal_polynomial.
         #
         # removed
@@ -1540,7 +1540,7 @@ class Expr(Basic, EvalfMixin):
             return l1[:]
 
         def find(l, sub, first=True):
-            """ Find where list sub appears in list l. When ``first`` is True
+            """ Find were list sub appears in list l. When ``first`` is True
             the first occurrence from the left is returned, else the last
             occurrence is returned. Return None if sub is not in l.
 
@@ -2055,7 +2055,7 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def as_coeff_mul(self, *deps, **kwargs) -> tuple[Expr, tuple[Expr, ...]]:
-        """Return the tuple (c, args) where self is written as a Mul, ``m``.
+        """Return the tuple (c, args) were self is written as a Mul, ``m``.
 
         c should be a Rational multiplied by any factors of the Mul that are
         independent of deps.
@@ -2090,7 +2090,7 @@ class Expr(Basic, EvalfMixin):
         return S.One, (self,)
 
     def as_coeff_add(self, *deps) -> tuple[Expr, tuple[Expr, ...]]:
-        """Return the tuple (c, args) where self is written as an Add, ``a``.
+        """Return the tuple (c, args) were self is written as an Add, ``a``.
 
         c should be a Rational added to any terms of the Add that are
         independent of deps.
@@ -2810,7 +2810,7 @@ class Expr(Basic, EvalfMixin):
 
         Multivalued functions are considered meromorphic when their
         branches are meromorphic. Thus most functions are meromorphic
-        everywhere except at essential singularities and branch points.
+        everywere except at essential singularities and branch points.
         In particular, they will be meromorphic also on branch cuts
         except at their endpoints.
 
@@ -3243,7 +3243,7 @@ class Expr(Basic, EvalfMixin):
         using this normalised representation.
 
         If the expansion contains an order term, it will be either ``O(x ** (-n))`` or ``O(w ** (-n))``
-        where ``w`` belongs to the most rapidly varying expression of ``self``.
+        were ``w`` belongs to the most rapidly varying expression of ``self``.
 
         References
         ==========
@@ -3568,7 +3568,7 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def as_coeff_exponent(self, x) -> tuple[Expr, Expr]:
-        """ ``c*x**e -> c,e`` where x can be any symbolic expression.
+        """ ``c*x**e -> c,e`` were x can be any symbolic expression.
         """
         from sympy.simplify.radsimp import collect
         s = collect(self, x)
@@ -3661,7 +3661,7 @@ class Expr(Basic, EvalfMixin):
         """
         Helper for ``expand()``.  Recursively calls ``expr._eval_expand_hint()``.
 
-        Returns ``(expr, hit)``, where expr is the (possibly) expanded
+        Returns ``(expr, hit)``, were expr is the (possibly) expanded
         ``expr`` and ``hit`` is ``True`` if ``expr`` was truly expanded and
         ``False`` otherwise.
         """
@@ -3854,7 +3854,7 @@ class Expr(Basic, EvalfMixin):
 
     def invert(self, g, *gens, **args):
         """Return the multiplicative inverse of ``self`` mod ``g``
-        where ``self`` (and ``g``) may be symbolic expressions).
+        were ``self`` (and ``g``) may be symbolic expressions).
 
         See Also
         ========

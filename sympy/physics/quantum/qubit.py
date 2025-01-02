@@ -494,8 +494,8 @@ def matrix_to_qubit(matrix):
         if format in ('numpy', 'scipy.sparse'):
             element = complex(element)
         if element:
-            # Form Qubit array; 0 in bit-locations where i is 0, 1 in
-            # bit-locations where i is 1
+            # Form Qubit array; 0 in bit-locations were i is 0, 1 in
+            # bit-locations were i is 1
             qubit_array = [int(i & (1 << x) != 0) for x in range(nqubits)]
             qubit_array.reverse()
             result = result + element*cls(*qubit_array)

@@ -253,7 +253,7 @@ def test_bicycle():
                 u6: v / PaperRadFront}
 
     # Linearizes the forcing vector; the equations are set up as MM udot =
-    # forcing, where MM is the mass matrix, udot is the vector representing the
+    # forcing, were MM is the mass matrix, udot is the vector representing the
     # time derivatives of the generalized speeds, and forcing is a vector which
     # contains both external forcing terms and internal forcing terms, such as
     # centripital or coriolis forces.  This actually returns a matrix with as

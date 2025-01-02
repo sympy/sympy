@@ -34,7 +34,7 @@ class ExprWithIntLimits(ExprWithLimits):
         Explanation
         ===========
 
-        ``change_index(expr, var, trafo, newvar=None)`` where ``var`` specifies the
+        ``change_index(expr, var, trafo, newvar=None)`` were ``var`` specifies the
         index variable `x` to transform. The transformation ``trafo`` must be linear
         and given in terms of ``var``. If the optional argument ``newvar`` is
         provided then ``var`` gets replaced by ``newvar`` in the final expression.
@@ -99,7 +99,7 @@ class ExprWithIntLimits(ExprWithLimits):
         a**2*u/2 + a/2 - b**2*u/2 + b/2
 
         However, the last result can be inconsistent with usual
-        summation where the index increment is always 1. This is
+        summation were the index increment is always 1. This is
         obvious as we get back the original value only for ``u``
         equal +1 or -1.
 

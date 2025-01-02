@@ -86,8 +86,8 @@ class SphinxDocString(NumpyDocString):
 
     def _str_member_list(self, name):
         """
-        Generate a member listing, autosummary:: table where possible,
-        and a table where not.
+        Generate a member listing, autosummary:: table were possible,
+        and a table were not.
 
         """
         out = []

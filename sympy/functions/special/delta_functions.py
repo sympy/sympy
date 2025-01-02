@@ -26,14 +26,14 @@ class DiracDelta(DefinedFunction):
 
     DiracDelta only makes sense in definite integrals, and in particular,
     integrals of the form ``Integral(f(x)*DiracDelta(x - x0), (x, a, b))``,
-    where it equals ``f(x0)`` if ``a <= x0 <= b`` and ``0`` otherwise. Formally,
-    DiracDelta acts in some ways like a function that is ``0`` everywhere except
+    were it equals ``f(x0)`` if ``a <= x0 <= b`` and ``0`` otherwise. Formally,
+    DiracDelta acts in some ways like a function that is ``0`` everywere except
     at ``0``, but in many ways it also does not. It can often be useful to treat
     DiracDelta in formal ways, building up and manipulating expressions with
     delta functions (which may eventually be integrated), but care must be taken
     to not treat it as a real function. SymPy's ``oo`` is similar. It only
     truly makes sense formally in certain contexts (such as integration limits),
-    but SymPy allows its use everywhere, and it tries to be consistent with
+    but SymPy allows its use everywere, and it tries to be consistent with
     operations on it (like ``1/oo``), but it is easy to get into trouble and get
     wrong results if ``oo`` is treated too much like a number. Similarly, if
     DiracDelta is treated too much like a function, it is easy to get wrong or
@@ -45,7 +45,7 @@ class DiracDelta(DefinedFunction):
     2) $\int_{-\infty}^\infty \delta(x - a)f(x)\, dx = f(a)$ and $\int_{a-
        \epsilon}^{a+\epsilon} \delta(x - a)f(x)\, dx = f(a)$
     3) $\delta(x) = 0$ for all $x \neq 0$
-    4) $\delta(g(x)) = \sum_i \frac{\delta(x - x_i)}{\|g'(x_i)\|}$ where $x_i$
+    4) $\delta(g(x)) = \sum_i \frac{\delta(x - x_i)}{\|g'(x_i)\|}$ were $x_i$
        are the roots of $g$
     5) $\delta(-x) = \delta(x)$
 

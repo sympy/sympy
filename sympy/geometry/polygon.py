@@ -91,7 +91,7 @@ class Polygon(GeometrySet):
     The area of a polygon is calculated as positive when vertices are
     traversed in a ccw direction. When the sides of a polygon cross the
     area will have positive and negative contributions. The following
-    defines a Z shape where the bottom right connects back to the top
+    defines a Z shape were the bottom right connects back to the top
     left.
 
     >>> Polygon((0, 2), (2, 2), (0, 0), (2, 0)).area
@@ -100,7 +100,7 @@ class Polygon(GeometrySet):
     When the keyword `n` is used to define the number of sides of the
     Polygon then a RegularPolygon is created and the other arguments are
     interpreted as center, radius and rotation. The unrotated RegularPolygon
-    will always have a vertex at Point(r, 0) where `r` is the radius of the
+    will always have a vertex at Point(r, 0) were `r` is the radius of the
     circle that circumscribes the RegularPolygon. Its method `spin` can be
     used to increment that angle.
 
@@ -241,7 +241,7 @@ class Polygon(GeometrySet):
         =======
 
         angles : dict
-            A dictionary where each key is a vertex and each value is the
+            A dictionary were each key is a vertex and each value is the
             internal angle at that vertex. The vertices are represented as
             Points.
 
@@ -1459,7 +1459,7 @@ class RegularPolygon(Polygon):
     A RegularPolygon can be instantiated with Polygon with the kwarg n.
 
     Regular polygons are instantiated with a center, radius, number of sides
-    and a rotation angle. Whereas the arguments of a Polygon are vertices, the
+    and a rotation angle. wereas the arguments of a Polygon are vertices, the
     vertices of the RegularPolygon must be obtained with the vertices method.
 
     See Also

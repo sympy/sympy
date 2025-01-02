@@ -31,7 +31,7 @@ class Order(Expr):
     .. math ::
         \sin(x) = x - x^3/3! + O(x^5)
 
-    where in this case `O(x^5) = x^5/5! - x^7/7! + \cdots`. By the definition
+    were in this case `O(x^5) = x^5/5! - x^7/7! + \cdots`. By the definition
     of `O`, there is a `\delta > 0` and an `M` such that:
 
     .. math ::
@@ -260,7 +260,7 @@ class Order(Expr):
                                 b = expr.base
                                 expr = exp(e * log(b))
 
-                    # It would probably be better to handle this somewhere
+                    # It would probably be better to handle this somewere
                     # else. This is needed for a testcase in which there is a
                     # symbol with the assumptions zero=True.
                     if expr.is_zero:

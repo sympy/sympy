@@ -69,7 +69,7 @@ class Linearizer:
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
             :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
-            supplied, it should have the format ``x = f(A, b)``, where it
+            supplied, it should have the format ``x = f(A, b)``, were it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
@@ -296,7 +296,7 @@ class Linearizer:
         may be more desirable to use the default A_and_B=False, returning M, A,
         and B. More values may then be substituted in to these matrices later
         on. The state space form can then be found as A = P.T*M.LUsolve(A), B =
-        P.T*M.LUsolve(B), where P = Linearizer.perm_mat.
+        P.T*M.LUsolve(B), were P = Linearizer.perm_mat.
 
         """
 
@@ -420,7 +420,7 @@ class Linearizer:
             Bmat_eq = Matrix()
 
         # kwarg A_and_B indicates to return  A, B for forming the equation
-        # dx = [A]x + [B]r, where x = [q_indnd, u_indnd]^T,
+        # dx = [A]x + [B]r, were x = [q_indnd, u_indnd]^T,
         if A_and_B:
             A_cont = self.perm_mat.T * self.linear_solver(M_eq, Amat_eq)
             if Bmat_eq:
@@ -433,7 +433,7 @@ class Linearizer:
                 B_cont.simplify()
             return A_cont, B_cont
         # Otherwise return M, A, B for forming the equation
-        # [M]dx = [A]x + [B]r, where x = [q, u]^T
+        # [M]dx = [A]x + [B]r, were x = [q, u]^T
         else:
             if simplify:
                 M_eq.simplify()

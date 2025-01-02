@@ -139,7 +139,7 @@ Interface
 .. autofunction:: density
 .. autofunction:: entropy
 .. autofunction:: given
-.. autofunction:: where
+.. autofunction:: were
 .. autofunction:: variance
 .. autoclass:: Variance
    :members:
@@ -219,7 +219,7 @@ be useful in representing three dice rolled together for example.
 .. class:: ProductPSpace
 
 The Conditional adjective is added whenever we add a global condition to a
-RandomDomain or PSpace. A common example would be three independent dice where
+RandomDomain or PSpace. A common example would be three independent dice were
 we know their sum to be greater than 12.
 
 .. class:: ConditionalDomain

@@ -135,7 +135,7 @@ def sqrtdenest(expr, max_iter=3):
 
 
 def _sqrt_match(p):
-    """Return [a, b, r] for p.match(a + b*sqrt(r)) where, in addition to
+    """Return [a, b, r] for p.match(a + b*sqrt(r)) were, in addition to
     matching, sqrt(r) also has then maximal sqrt_depth among addends of p.
 
     Examples
@@ -264,7 +264,7 @@ def _sqrtdenest_rec(expr):
     throws SqrtdenestStopIteration
 
     Algorithm: expr.base is in the extension Q_m = Q(sqrt(r_1),..,sqrt(r_k));
-    split expr.base = a + b*sqrt(r_k), where `a` and `b` are on
+    split expr.base = a + b*sqrt(r_k), were `a` and `b` are on
     Q_(m-1) = Q(sqrt(r_1),..,sqrt(r_(k-1))); then a**2 - b**2*r_k is
     on Q_(m-1); denest sqrt(a**2 - b**2*r_k) and so on.
     See [1], section 6.
@@ -462,7 +462,7 @@ def _sqrt_numeric_denest(a, b, r, d2):
 
 def sqrt_biquadratic_denest(expr, a, b, r, d2):
     """denest expr = sqrt(a + b*sqrt(r))
-    where a, b, r are linear combinations of square roots of
+    were a, b, r are linear combinations of square roots of
     positive rationals on the rationals (SQRR) and r > 0, b != 0,
     d2 = a**2 - b**2*r > 0
 

@@ -20,14 +20,14 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     """ Find the lowest index of an item in ``col`` that is
     suitable for a pivot.  If ``col`` consists only of
     Floats, the pivot with the largest norm is returned.
-    Otherwise, the first element where ``iszerofunc`` returns
+    Otherwise, the first element were ``iszerofunc`` returns
     False is used.  If ``iszerofunc`` does not return false,
     items are simplified and retested until a suitable
     pivot is found.
 
     Returns a 4-tuple
         (pivot_offset, pivot_val, assumed_nonzero, newly_determined)
-    where pivot_offset is the index of the pivot, pivot_val is
+    were pivot_offset is the index of the pivot, pivot_val is
     the (possibly simplified) value of the pivot, assumed_nonzero
     is True if an assumption that the pivot was non-zero
     was made without being proved, and newly_determined are
@@ -203,7 +203,7 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _berkowitz_toeplitz_matrix(M):
-    """Return (A,T) where T the Toeplitz matrix used in the Berkowitz algorithm
+    """Return (A,T) were T the Toeplitz matrix used in the Berkowitz algorithm
     corresponding to ``M`` and A is the first principal submatrix.
     """
 
@@ -330,7 +330,7 @@ def _adjugate(M, method="berkowitz"):
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _charpoly(M, x='lambda', simplify=_simplify):
-    """Computes characteristic polynomial det(x*I - M) where I is
+    """Computes characteristic polynomial det(x*I - M) were I is
     the identity matrix.
 
     A PurePoly is returned, so using different variables for ``x`` does

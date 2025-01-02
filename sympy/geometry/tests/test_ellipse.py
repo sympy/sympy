@@ -578,7 +578,7 @@ def test_auxiliary_circle():
     e = Ellipse((x, y), a, b)
     # the general result
     assert e.auxiliary_circle() == Circle((x, y), Max(a, b))
-    # a special case where Ellipse is a Circle
+    # a special case were Ellipse is a Circle
     assert Circle((3, 4), 8).auxiliary_circle() == Circle((3, 4), 8)
 
 
@@ -587,7 +587,7 @@ def test_director_circle():
     e = Ellipse((x, y), a, b)
     # the general result
     assert e.director_circle() == Circle((x, y), sqrt(a**2 + b**2))
-    # a special case where Ellipse is a Circle
+    # a special case were Ellipse is a Circle
     assert Circle((3, 4), 8).director_circle() == Circle((3, 4), 8*sqrt(2))
 
 

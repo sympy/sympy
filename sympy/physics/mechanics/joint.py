@@ -48,12 +48,12 @@ class Joint(ABC):
     speeds : iterable of dynamicsymbols, optional
         Generalized speeds of joint.
     parent_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the parent body. If a
+        Attachment point were the joint is fixed to the parent body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the child body. If a
+        Attachment point were the joint is fixed to the child body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
@@ -104,9 +104,9 @@ class Joint(ABC):
     speeds : Matrix
         Matrix of the joint's generalized speeds.
     parent_point : Point
-        Attachment point where the joint is fixed to the parent body.
+        Attachment point were the joint is fixed to the parent body.
     child_point : Point
-        Attachment point where the joint is fixed to the child body.
+        Attachment point were the joint is fixed to the child body.
     parent_axis : Vector
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
@@ -127,7 +127,7 @@ class Joint(ABC):
     is created which aligns its X axis with the provided vector. This is done
     with a single fixed rotation about a rotation axis. This rotation axis is
     determined by taking the cross product of the ``body.x`` axis with the
-    provided vector. In the case where the provided vector is in the ``-body.x``
+    provided vector. In the case were the provided vector is in the ``-body.x``
     direction, the rotation is done about the ``body.y`` axis.
 
     """
@@ -267,12 +267,12 @@ class Joint(ABC):
 
     @property
     def parent_point(self):
-        """Attachment point where the joint is fixed to the parent body."""
+        """Attachment point were the joint is fixed to the parent body."""
         return self._parent_point
 
     @property
     def child_point(self):
-        """Attachment point where the joint is fixed to the child body."""
+        """Attachment point were the joint is fixed to the child body."""
         return self._child_point
 
     @property
@@ -359,7 +359,7 @@ class Joint(ABC):
     def _create_aligned_interframe(frame, align_axis, frame_axis=None,
                                    frame_name=None):
         """
-        Returns an intermediate frame, where the ``frame_axis`` defined in
+        Returns an intermediate frame, were the ``frame_axis`` defined in
         ``frame`` is aligned with ``axis``. By default this means that the X
         axis will be aligned with ``axis``.
 
@@ -382,7 +382,7 @@ class Joint(ABC):
         Example
         =======
 
-        An intermediate frame, where the X axis of the parent becomes aligned
+        An intermediate frame, were the X axis of the parent becomes aligned
         with ``parent.y + parent.z`` can be created as follows:
 
         >>> from sympy.physics.mechanics.joint import Joint
@@ -585,12 +585,12 @@ class PinJoint(Joint):
     speeds : dynamicsymbol, optional
         Generalized speeds of joint.
     parent_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the parent body. If a
+        Attachment point were the joint is fixed to the parent body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the child body. If a
+        Attachment point were the joint is fixed to the child body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
@@ -646,9 +646,9 @@ class PinJoint(Joint):
         Matrix of the joint's generalized speeds. The default value is
         ``dynamicsymbols(f'u_{joint.name}')``.
     parent_point : Point
-        Attachment point where the joint is fixed to the parent body.
+        Attachment point were the joint is fixed to the parent body.
     child_point : Point
-        Attachment point where the joint is fixed to the child body.
+        Attachment point were the joint is fixed to the child body.
     parent_axis : Vector
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
@@ -852,12 +852,12 @@ class PrismaticJoint(Joint):
         Generalized speeds of joint. The default value is
         ``dynamicsymbols(f'u_{joint.name}')``.
     parent_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the parent body. If a
+        Attachment point were the joint is fixed to the parent body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the child body. If a
+        Attachment point were the joint is fixed to the child body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
@@ -911,9 +911,9 @@ class PrismaticJoint(Joint):
     speeds : Matrix
         Matrix of the joint's generalized speeds.
     parent_point : Point
-        Attachment point where the joint is fixed to the parent body.
+        Attachment point were the joint is fixed to the parent body.
     child_point : Point
-        Attachment point where the joint is fixed to the child body.
+        Attachment point were the joint is fixed to the child body.
     parent_axis : Vector
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
@@ -1124,12 +1124,12 @@ class CylindricalJoint(Joint):
         Generalized speed corresponding to the translation velocity. The default
         value is ``dynamicsymbols(f'u1_{joint.name}')``.
     parent_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the parent body. If a
+        Attachment point were the joint is fixed to the parent body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the child body. If a
+        Attachment point were the joint is fixed to the child body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
@@ -1169,9 +1169,9 @@ class CylindricalJoint(Joint):
     speeds : Matrix
         Matrix of the joint's generalized speeds.
     parent_point : Point
-        Attachment point where the joint is fixed to the parent body.
+        Attachment point were the joint is fixed to the parent body.
     child_point : Point
-        Attachment point where the joint is fixed to the child body.
+        Attachment point were the joint is fixed to the child body.
     parent_interframe : ReferenceFrame
         Intermediate frame of the parent body with respect to which the joint
         transformation is formulated.
@@ -1440,12 +1440,12 @@ class PlanarJoint(Joint):
         Two generalized speeds used for the planar translation velocity. The
         default value is ``dynamicsymbols(f'u1_{joint.name} u2_{joint.name}')``.
     parent_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the parent body. If a
+        Attachment point were the joint is fixed to the parent body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the child body. If a
+        Attachment point were the joint is fixed to the child body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
@@ -1482,9 +1482,9 @@ class PlanarJoint(Joint):
     speeds : Matrix
         Matrix of the joint's generalized speeds.
     parent_point : Point
-        Attachment point where the joint is fixed to the parent body.
+        Attachment point were the joint is fixed to the parent body.
     child_point : Point
-        Attachment point where the joint is fixed to the child body.
+        Attachment point were the joint is fixed to the child body.
     parent_interframe : ReferenceFrame
         Intermediate frame of the parent body with respect to which the joint
         transformation is formulated.
@@ -1773,12 +1773,12 @@ class SphericalJoint(Joint):
     speeds : iterable of dynamicsymbols, optional
         Generalized speeds of joint.
     parent_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the parent body. If a
+        Attachment point were the joint is fixed to the parent body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the child body. If a
+        Attachment point were the joint is fixed to the child body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
@@ -1830,9 +1830,9 @@ class SphericalJoint(Joint):
     speeds : Matrix
         Matrix of the joint's generalized speeds.
     parent_point : Point
-        Attachment point where the joint is fixed to the parent body.
+        Attachment point were the joint is fixed to the parent body.
     child_point : Point
-        Attachment point where the joint is fixed to the child body.
+        Attachment point were the joint is fixed to the child body.
     parent_interframe : ReferenceFrame
         Intermediate frame of the parent body with respect to which the joint
         transformation is formulated.
@@ -2014,12 +2014,12 @@ class WeldJoint(Joint):
     child : Particle or RigidBody or Body
         The child body of joint.
     parent_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the parent body. If a
+        Attachment point were the joint is fixed to the parent body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
-        Attachment point where the joint is fixed to the child body. If a
+        Attachment point were the joint is fixed to the child body. If a
         vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
@@ -2050,9 +2050,9 @@ class WeldJoint(Joint):
         Matrix of the joint's generalized speeds. The default value is
         ``dynamicsymbols(f'u_{joint.name}')``.
     parent_point : Point
-        Attachment point where the joint is fixed to the parent body.
+        Attachment point were the joint is fixed to the parent body.
     child_point : Point
-        Attachment point where the joint is fixed to the child body.
+        Attachment point were the joint is fixed to the child body.
     parent_interframe : ReferenceFrame
         Intermediate frame of the parent body with respect to which the joint
         transformation is formulated.

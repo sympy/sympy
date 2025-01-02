@@ -691,7 +691,7 @@ def test_rational_laurent_series():
         oo, 3, 6,
         {3: 1, 2: 0, 1: 1, 0: 6, -1: 15, -2: 17}
     ),
-    # Laurent series at x0 where x0 is not a pole of the function
+    # Laurent series at x0 were x0 is not a pole of the function
     # Using multiplicity as 0 (as x0 will not be a pole)
     (
         Poly(3*x**3 + 6*x**2 - 2*x + 5, x, extension=True),

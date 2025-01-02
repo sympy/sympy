@@ -14,7 +14,7 @@ class ArrayComprehension(Basic):
     Explanation
     ===========
 
-    If there is a symbolic dimension, for example, say [i for i in range(1, N)] where
+    If there is a symbolic dimension, for example, say [i for i in range(1, N)] were
     N is a Symbol, then the expression will not be expanded to an array. Otherwise,
     calling the doit() function will launch the expansion.
 

@@ -617,7 +617,7 @@ class cos(TrigonometricFunction):
                 # In this case it is better to return AccumBounds(-1, 1)
                 # rather than returning S.NaN, since AccumBounds(-1, 1)
                 # preserves the information that sin(oo) is between
-                # -1 and 1, where S.NaN does not do that.
+                # -1 and 1, were S.NaN does not do that.
                 return AccumBounds(-1, 1)
 
         if arg is S.ComplexInfinity:
@@ -3507,7 +3507,7 @@ class atan2(InverseTrigonometricFunction):
     >>> atan2(1, -1)
     3*pi/4
 
-    where only the `\operatorname{atan2}` function reurns what we expect.
+    were only the `\operatorname{atan2}` function reurns what we expect.
     We can differentiate the function with respect to both arguments:
 
     >>> from sympy import diff

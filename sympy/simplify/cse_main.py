@@ -97,7 +97,7 @@ def cse_separate(r, e):
 
 def cse_release_variables(r, e):
     """
-    Return tuples giving ``(a, b)`` where ``a`` is a symbol and ``b`` is
+    Return tuples giving ``(a, b)`` were ``a`` is a symbol and ``b`` is
     either an expression or None. The value of None is used when a
     symbol is no longer needed for subsequent expressions.
 
@@ -467,7 +467,7 @@ def opt_cse(exprs, order='canonical'):
         The expressions to optimize.
     order : string, 'none' or 'canonical'
         The order by which Mul and Add arguments are processed. For large
-        expressions where speed is a concern, use the setting order='none'.
+        expressions were speed is a concern, use the setting order='none'.
 
     Returns
     =======
@@ -595,7 +595,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
         The expressions to be substituted before any CSE action is performed.
     order : string, 'none' or 'canonical'
         The order by which Mul and Add arguments are processed. For large
-        expressions where speed is a concern, use the setting order='none'.
+        expressions were speed is a concern, use the setting order='none'.
     ignore : iterable of Symbols
         Substitutions containing any Symbol from ``ignore`` will be ignored.
     """
@@ -753,7 +753,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         The order by which Mul and Add arguments are processed. If set to
         'canonical', arguments will be canonically ordered. If set to 'none',
         ordering will be faster but dependent on expressions hashes, thus
-        machine dependent and variable. For large expressions where speed is a
+        machine dependent and variable. For large expressions were speed is a
         concern, use the setting order='none'.
     ignore : iterable of Symbols
         Substitutions containing any Symbol from ``ignore`` will be ignored.

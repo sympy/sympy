@@ -118,7 +118,7 @@ class MatrixBase(Printable):
     @classmethod
     def _new(cls, *args, **kwargs):
         """`_new` must, at minimum, be callable as
-        `_new(rows, cols, mat) where mat is a flat list of the
+        `_new(rows, cols, mat) were mat is a flat list of the
         elements of the matrix."""
         raise NotImplementedError("Subclasses must implement this.")
 
@@ -129,7 +129,7 @@ class MatrixBase(Printable):
         """Implementations of __getitem__ should accept ints, in which
         case the matrix is indexed as a flat list, tuples (i,j) in which
         case the (i,j) entry is returned, slices, or mixed tuples (a,b)
-        where a and b are any combination of slices and integers."""
+        were a and b are any combination of slices and integers."""
         raise NotImplementedError("Subclasses must implement this.")
 
     @property
@@ -377,7 +377,7 @@ class MatrixBase(Printable):
     def extract(self, rowsList, colsList):
         r"""Return a submatrix by specifying a list of rows and columns.
         Negative indices can be given. All indices must be in the range
-        $-n \le i < n$ where $n$ is the number of rows or columns.
+        $-n \le i < n$ were $n$ is the number of rows or columns.
 
         Examples
         ========
@@ -1091,7 +1091,7 @@ class MatrixBase(Printable):
         cls : Matrix, optional
             Specifies the matrix class of the output form.
 
-            If it is not specified, the class type where the method is
+            If it is not specified, the class type were the method is
             being executed on will be returned.
 
         Returns
@@ -1121,7 +1121,7 @@ class MatrixBase(Printable):
         [0, 0, x, 1],
         [0, 0, 0, x]])
 
-        Creating an alternative Jordan block matrix where `1` is on
+        Creating an alternative Jordan block matrix were `1` is on
         lower off-diagonal:
 
         >>> Matrix.jordan_block(4, x, band='lower')
@@ -2788,7 +2788,7 @@ class MatrixBase(Printable):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        """Return self*other where other is either a scalar or a matrix
+        """Return self*other were other is either a scalar or a matrix
         of compatible dimensions.
 
         Examples
@@ -4039,7 +4039,7 @@ class MatrixBase(Printable):
         [9,     4]])
         >>> m[1, 0] = [[0, 1]]
 
-        To replace row r you assign to position r*m where m
+        To replace row r you assign to position r*m were m
         is the number of columns:
 
         >>> M = zeros(4)
@@ -4532,7 +4532,7 @@ class MatrixBase(Printable):
 
     def analytic_func(self, f, x):
         """
-        Computes f(A) where A is a Square Matrix
+        Computes f(A) were A is a Square Matrix
         and f is an analytic function.
 
         Examples

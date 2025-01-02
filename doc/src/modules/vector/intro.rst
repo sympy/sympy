@@ -27,7 +27,7 @@ by a unit vector in the direction of the original vector,
 
 For example, consider a displacement of
 :math:`(3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}})` m,
-where , as per standard convention, :math:`\mathbf{\hat{i}}`,
+were , as per standard convention, :math:`\mathbf{\hat{i}}`,
 :math:`\mathbf{\hat{j}}` and :math:`\mathbf{\hat{k}}` represent unit vectors
 along the :math:`\mathbf{X}`, :math:`\mathbf{Y}` and :math:`\mathbf{Z}`
 axes respectively. Therefore, it can be concluded that the distance
@@ -80,7 +80,7 @@ Fields
 ======
 
 A **field** is a vector or scalar quantity that can be
-specified everywhere in space as a function of position (Note that in general
+specified everywere in space as a function of position (Note that in general
 a field may also be dependent on time and other custom variables). Since we
 only deal with 3D spaces in this module, a field is defined as a function of
 the :math:`x`, :math:`y` and :math:`z` coordinates corresponding

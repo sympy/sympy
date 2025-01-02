@@ -605,7 +605,7 @@ class MutableRepMatrix(RepMatrix):
         [9,     4]])
         >>> m[1, 0] = [[0, 1]]
 
-        To replace row r you assign to position r*m where m
+        To replace row r you assign to position r*m were m
         is the number of columns:
 
         >>> M = zeros(4)

@@ -92,7 +92,7 @@ def simpsol(sol, wrt1, wrt2, doit=True):
     # and then multiply out all brackets with expand_mul. This gives an Add
     # with many terms.
     #
-    # We split each term into two multiplicative factors dep and coeff where
+    # We split each term into two multiplicative factors dep and coeff were
     # all factors that involve wrt1 are in dep and any constant factors are in
     # coeff e.g.
     #         sqrt(2)*C1*exp(t) -> ( exp(t), sqrt(2)*C1 )
@@ -175,7 +175,7 @@ def simpsol(sol, wrt1, wrt2, doit=True):
         if coeff.is_polynomial():
             # Calling ratsimp can be expensive. The main reason is to simplify
             # sums of terms with irrational denominators so we limit ourselves
-            # to the case where the expression is polynomial in any symbols.
+            # to the case were the expression is polynomial in any symbols.
             # Maybe there's a better approach...
             coeff = ratsimp(radsimp(coeff))
         # collect on secondary variables first and any remaining symbols after
@@ -352,7 +352,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
     .. math:: A_1 X' = A_0 X + b
 
-    where $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
+    were $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
     $2 \times 1$ matrices with $X = [x, y]^T$.
 
     Higher-order systems are represented with additional matrices e.g. a
@@ -435,7 +435,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Returns
     =======
 
-    The tuple ``(As, b)`` where ``As`` is a tuple of matrices and ``b`` is the
+    The tuple ``(As, b)`` were ``As`` is a tuple of matrices and ``b`` is the
     the matrix representing the rhs of the matrix equation.
 
     Raises
@@ -500,7 +500,7 @@ def matrix_exp(A, t):
 
     .. math:: \exp(A*t) = P * expJ * P^{-1}
 
-    where $expJ$ is $\exp(J*t)$. $J$ is the Jordan normal
+    were $expJ$ is $\exp(J*t)$. $J$ is the Jordan normal
     form of $A$ and $P$ is matrix such that:
 
     .. math:: A = P * J * P^{-1}
@@ -625,7 +625,7 @@ def matrix_exp_jordan_form(A, t):
         '''Chains from Jordan normal form analogous to M.eigenvects().
         Returns a dict with eignevalues as keys like:
             {e1: [[v111,v112,...], [v121, v122,...]], e2:...}
-        where vijk is the kth vector in the jth chain for eigenvalue i.
+        were vijk is the kth vector in the jth chain for eigenvalue i.
         '''
         P, blocks = A.jordan_cells()
         basis = [P[:,i] for i in range(P.shape[1])]
@@ -733,7 +733,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     .. math::
         A(t) = f(t) * A
 
-    Where $f(t)$ is a scalar expression in the independent variable $t$ and $A$ is a constant matrix,
+    were $f(t)$ is a scalar expression in the independent variable $t$ and $A$ is a constant matrix,
     then we can do the following substitutions:
 
     .. math::
@@ -783,7 +783,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         "type2" for constant coefficient non-homogeneous, "type3" for non-constant
         coefficient homogeneous, "type4" for non-constant coefficient non-homogeneous,
         "type5" and "type6" for non-constant coefficient homogeneous and non-homogeneous
-        systems respectively where the coefficient matrix can be factorized to a constant
+        systems respectively were the coefficient matrix can be factorized to a constant
         coefficient matrix.
         The default value is "auto" which will let the solver decide the correct type of
         the system passed.
@@ -1189,7 +1189,7 @@ def _match_second_order_type(A1, A0, t, b=None):
             introducing dummy variables.
     Type 1: When the substitution: $U = t*X' - X$ works for reducing
             the second order system to first order system.
-    Type 2: When the system is of the form: $poly * X'' = A*X$ where
+    Type 2: When the system is of the form: $poly * X'' = A*X$ were
             $poly$ is square of a quadratic polynomial with respect to
             *t* and $A$ is a constant coefficient matrix.
 
@@ -1232,7 +1232,7 @@ def _second_order_subs_type1(A, b, funcs, t):
     To get the system:
     .. math::  U' = t*(A(t)*U + b(t))
 
-    Where $U$ is the vector of dependent variables, $X$ is the vector of dependent
+    were $U$ is the vector of dependent variables, $X$ is the vector of dependent
     variables in `funcs` and $X'$ is the first order derivative of $X$ with respect to
     $t$. It may or may not reduce the system into linear first order system of ODEs.
 
@@ -1329,7 +1329,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
     Explanation
     ===========
 
-    This function takes the eqs, converts it into a form Ax = b where x is a vector of terms
+    This function takes the eqs, converts it into a form Ax = b were x is a vector of terms
     containing dependent variables and their derivatives till their maximum order. If it is
     possible to convert eqs into Ax = b, then all the equations in eqs are linear otherwise
     they are non-linear.
@@ -1928,7 +1928,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
         return _higher_order_to_first_order(new_eqs, new_sys_order, t_, funcs=new_funcs)
 
     # Systems of the form: X(n)(t) = f(t)*A*X + b
-    # where X(n)(t) is the nth derivative of the vector of dependent variables
+    # were X(n)(t) is the nth derivative of the vector of dependent variables
     # with respect to the independent variable and A is a constant matrix.
     if type == "type2":
         J = kwargs.get('J', None)
@@ -1989,7 +1989,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     function can solve the above types irrespective of the number of equations in the system passed.
     But, the bigger the system, the more time it will take to solve the system.
 
-    This function returns a list of solutions. Each solution is a list of equations where LHS is
+    This function returns a list of solutions. Each solution is a list of equations were LHS is
     the dependent variable and RHS is an expression in terms of the independent variable.
 
     Among the non constant coefficient types, not all the systems are solvable by this function. Only

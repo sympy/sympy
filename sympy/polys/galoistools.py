@@ -394,7 +394,7 @@ def gf_neg(f, p, K):
 
 def gf_add_ground(f, a, p, K):
     """
-    Compute ``f + a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
+    Compute ``f + a`` were ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
     Examples
     ========
@@ -422,7 +422,7 @@ def gf_add_ground(f, a, p, K):
 
 def gf_sub_ground(f, a, p, K):
     """
-    Compute ``f - a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
+    Compute ``f - a`` were ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
     Examples
     ========
@@ -450,7 +450,7 @@ def gf_sub_ground(f, a, p, K):
 
 def gf_mul_ground(f, a, p, K):
     """
-    Compute ``f * a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
+    Compute ``f * a`` were ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
     Examples
     ========
@@ -470,7 +470,7 @@ def gf_mul_ground(f, a, p, K):
 
 def gf_quo_ground(f, a, p, K):
     """
-    Compute ``f/a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
+    Compute ``f/a`` were ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
     Examples
     ========
@@ -631,7 +631,7 @@ def gf_sqr(f, p, K):
 
 def gf_add_mul(f, g, h, p, K):
     """
-    Returns ``f + g*h`` where ``f``, ``g``, ``h`` in ``GF(p)[x]``.
+    Returns ``f + g*h`` were ``f``, ``g``, ``h`` in ``GF(p)[x]``.
 
     Examples
     ========
@@ -646,7 +646,7 @@ def gf_add_mul(f, g, h, p, K):
 
 def gf_sub_mul(f, g, h, p, K):
     """
-    Compute ``f - g*h`` where ``f``, ``g``, ``h`` in ``GF(p)[x]``.
+    Compute ``f - g*h`` were ``f``, ``g``, ``h`` in ``GF(p)[x]``.
 
     Examples
     ========
@@ -906,7 +906,7 @@ def gf_pow(f, n, p, K):
 def gf_frobenius_monomial_base(g, p, K):
     """
     return the list of ``x**(i*p) mod g in Z_p`` for ``i = 0, .., n - 1``
-    where ``n = gf_degree(g)``
+    were ``n = gf_degree(g)``
 
     Examples
     ========
@@ -1835,9 +1835,9 @@ def gf_ddf_zassenhaus(f, p, K):
     Cantor-Zassenhaus: Deterministic Distinct Degree Factorization
 
     Given a monic square-free polynomial ``f`` in ``GF(p)[x]``, computes
-    partial distinct degree factorization ``f_1 ... f_d`` of ``f`` where
+    partial distinct degree factorization ``f_1 ... f_d`` of ``f`` were
     ``deg(f_i) != deg(f_j)`` for ``i != j``. The result is returned as a
-    list of pairs ``(f_i, e_i)`` where ``deg(f_i) > 0`` and ``e_i > 0``
+    list of pairs ``(f_i, e_i)`` were ``deg(f_i) > 0`` and ``e_i > 0``
     is an argument to the equal degree factorization routine.
 
     Consider the polynomial ``x**15 - 1`` in ``GF(11)[x]``::
@@ -1956,9 +1956,9 @@ def gf_ddf_shoup(f, p, K):
     Kaltofen-Shoup: Deterministic Distinct Degree Factorization
 
     Given a monic square-free polynomial ``f`` in ``GF(p)[x]``, computes
-    partial distinct degree factorization ``f_1,...,f_d`` of ``f`` where
+    partial distinct degree factorization ``f_1,...,f_d`` of ``f`` were
     ``deg(f_i) != deg(f_j)`` for ``i != j``. The result is returned as a
-    list of pairs ``(f_i, e_i)`` where ``deg(f_i) > 0`` and ``e_i > 0``
+    list of pairs ``(f_i, e_i)`` were ``deg(f_i) > 0`` and ``e_i > 0``
     is an argument to the equal degree factorization routine.
 
     This algorithm is an improved version of Zassenhaus algorithm for
@@ -2178,7 +2178,7 @@ def gf_factor(f, p, K):
 
                  f_1(x)**e_1 f_2(x)**e_2 ... f_d(x)**e_d
 
-    where each ``f_i`` is a monic polynomial and ``gcd(f_i, f_j) == 1``,
+    were each ``f_i`` is a monic polynomial and ``gcd(f_i, f_j) == 1``,
     for ``i != j``.  The result is given as a tuple consisting of the
     leading coefficient of ``f`` and a list of factors of ``f`` with
     their multiplicities.

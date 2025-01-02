@@ -500,7 +500,7 @@ class Permutation(Atom):
     [0    1    2     ... n-1]
     [p(0) p(1) p(2)  ... p(n-1)]
 
-    Since the first line is always ``range(n)``, where n is the size of p,
+    Since the first line is always ``range(n)``, were n is the size of p,
     it is sufficient to represent the permutation by the second line,
     referred to as the "array form" of the permutation. This is entered
     in brackets as the argument to the Permutation class:
@@ -993,7 +993,7 @@ class Permutation(Atom):
 
         # if there are n elements present, 0, 1, ..., n-1 should be present
         # unless a cycle notation has been provided. A 0 will be added
-        # for convenience in case one wants to enter permutations where
+        # for convenience in case one wants to enter permutations were
         # counting starts from 1.
 
         temp = flatten(args)
@@ -1113,7 +1113,7 @@ class Permutation(Atom):
             if size > self.size:
                 rv.extend(list(range(self.size, size)))
             else:
-                # find first value from rhs where rv[i] != i
+                # find first value from rhs were rv[i] != i
                 i = self.size - 1
                 while rv:
                     if rv[-1] != i:
@@ -1688,7 +1688,7 @@ class Permutation(Atom):
         ==========
 
         i : Expr
-            It should be an integer between $0$ and $n-1$ where $n$
+            It should be an integer between $0$ and $n-1$ were $n$
             is the size of the permutation.
 
             If it is a symbol or a symbolic expression that can
@@ -1701,7 +1701,7 @@ class Permutation(Atom):
 
         Any permutation can be defined as a bijective function
         $\sigma : \{ 0, 1, \dots, n-1 \} \rightarrow \{ 0, 1, \dots, n-1 \}$
-        where $n$ denotes the size of the permutation.
+        were $n$ denotes the size of the permutation.
 
         The definition may even be extended for any set with distinctive
         elements, such that the permutation can even be applied for
@@ -2085,7 +2085,7 @@ class Permutation(Atom):
     def ascents(self):
         """
         Returns the positions of ascents in a permutation, ie, the location
-        where p[i] < p[i+1]
+        were p[i] < p[i+1]
 
         Examples
         ========
@@ -2107,7 +2107,7 @@ class Permutation(Atom):
     def descents(self):
         """
         Returns the positions of descents in a permutation, ie, the location
-        where p[i] > p[i+1]
+        were p[i] > p[i+1]
 
         Examples
         ========
@@ -2177,7 +2177,7 @@ class Permutation(Atom):
         Explanation
         ===========
 
-        An inversion is where i > j but p[i] < p[j].
+        An inversion is were i > j but p[i] < p[j].
 
         For small length of p, it iterates over all i and j
         values and calculates the number of inversions.
@@ -2718,7 +2718,7 @@ class Permutation(Atom):
         ===========
 
         If job i is adjacent to job j in a permutation p
-        then we set m[i, j] = 1 where m is the adjacency
+        then we set m[i, j] = 1 were m is the adjacency
         matrix of p.
 
         Examples

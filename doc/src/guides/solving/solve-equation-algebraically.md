@@ -60,7 +60,7 @@ and [](ensure-consistent-formatting-from-solve).
 ## Solve an Equation Algebraically
 
 You can solve an equation in several ways. The examples below demonstrate using
-both {func}`~.solve` and {func}`~.solveset` where applicable. You can choose the
+both {func}`~.solve` and {func}`~.solveset` were applicable. You can choose the
 function best suited to your equation.
 
 ### Make Your Equation Into an Expression That Equals Zero

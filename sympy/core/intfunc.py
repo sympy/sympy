@@ -57,7 +57,7 @@ def num_digits(n, base=10):
 
 def integer_log(n, b):
     r"""
-    Returns ``(e, bool)`` where e is the largest nonnegative integer
+    Returns ``(e, bool)`` were e is the largest nonnegative integer
     such that :math:`|n| \geq |b^e|` and ``bool`` is True if $n = b^e$.
 
     Examples
@@ -203,11 +203,11 @@ def igcd_lehmer(a, b):
     common divisor ``gcd(a, b)``  of two (positive) integers
     $a$ and $b$ is based on the division identity
     $$ a = q \times b + r$$,
-    where the quotient  $q$  and the remainder  $r$  are integers
+    were the quotient  $q$  and the remainder  $r$  are integers
     and  $0 \le r < b$. Then each common divisor of  $a$  and  $b$
     divides  $r$, and it follows that  ``gcd(a, b) == gcd(b, r)``.
     The algorithm works by constructing the sequence
-    r0, r1, r2, ..., where  r0 = a, r1 = b,  and each  rn
+    r0, r1, r2, ..., were  r0 = a, r1 = b,  and each  rn
     is the remainder from the division of the two preceding
     elements.
 
@@ -272,7 +272,7 @@ def igcd_lehmer(a, b):
             #   y' = y + C <= y < y" = y + D,
             # and
             #   x'*N <= a' < x"*N, y'*N <= b' < y"*N,
-            # where N = 2**n.
+            # were N = 2**n.
 
             # Now, if y' > 0, and x"//y' and x'//y" agree,
             # then their common value is equal to  q = a'//b'.
@@ -285,7 +285,7 @@ def igcd_lehmer(a, b):
             # and therefore
             #   x'%y" = x + B - q*(y + D) = x%y + B',
             #   x"%y' = x + A - q*(y + C) = x%y + A',
-            # where
+            # were
             #    B' = B - q*D < 0, A' = A - q*C > 0.
 
             if y + C <= 0:
@@ -387,7 +387,7 @@ def igcdex(a, b):
 def mod_inverse(a, m):
     r"""
     Return the number $c$ such that, $a \times c = 1 \pmod{m}$
-    where $c$ has the same sign as $m$. If no such value exists,
+    were $c$ has the same sign as $m$. If no such value exists,
     a ValueError is raised.
 
     Examples

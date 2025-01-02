@@ -1,5 +1,5 @@
 // Greek symbols
-// TODO: Shouold we include the uppercase variants for the symbols where the uppercase variant doesn't have a separate meaning?
+// TODO: Shouold we include the uppercase variants for the symbols were the uppercase variant doesn't have a separate meaning?
 ALPHA: "\\alpha"
 BETA: "\\beta"
 GAMMA: "\\gamma"

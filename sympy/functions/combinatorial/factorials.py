@@ -38,7 +38,7 @@ class factorial(CombinatorialFunction):
        By convention (consistent with the gamma function and the binomial
        coefficients), factorial of a negative integer is complex infinity.
 
-       The factorial is very important in combinatorics where it gives
+       The factorial is very important in combinatorics were it gives
        the number of ways in which `n` objects can be permuted. It also
        arises in calculus, probability, number theory, etc.
 
@@ -298,7 +298,7 @@ class subfactorial(CombinatorialFunction):
 
     which is valid for non-negative integers `x`. The above formula
     is not very useful in case of non-integers. `\Gamma(x + 1, -1)` is
-    single-valued only for integral arguments `x`, elsewhere on the positive
+    single-valued only for integral arguments `x`, elsewere on the positive
     real axis it has an infinite number of branches none of which are real.
 
     References
@@ -508,12 +508,12 @@ class RisingFactorial(CombinatorialFunction):
 
     .. math:: \texttt{rf(y, k)} = (x)^k = x \cdot (x+1) \cdots (x+k-1)
 
-    where `x` can be arbitrary expression and `k` is an integer. For
+    were `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit https://mathworld.wolfram.com/RisingFactorial.html page.
 
     When `x` is a `~.Poly` instance of degree $\ge 1$ with a single variable,
-    `(x)^k = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
+    `(x)^k = x(y) \cdot x(y+1) \cdots x(y+k-1)`, were `y` is the
     variable of `x`. This is as described in [2]_.
 
     Examples
@@ -669,12 +669,12 @@ class FallingFactorial(CombinatorialFunction):
 
     .. math:: \texttt{ff(x, k)} = (x)_k = x \cdot (x-1) \cdots (x-k+1)
 
-    where `x` can be arbitrary expression and `k` is an integer. For
+    were `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
     or [1]_.
 
     When `x` is a `~.Poly` instance of degree $\ge 1$ with single variable,
-    `(x)_k = x(y) \cdot x(y-1) \cdots x(y-k+1)`, where `y` is the
+    `(x)_k = x(y) \cdot x(y-1) \cdots x(y-k+1)`, were `y` is the
     variable of `x`. This is as described in
 
     >>> from sympy import ff, Poly, Symbol

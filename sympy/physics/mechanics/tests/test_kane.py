@@ -202,7 +202,7 @@ def test_rolling_disc():
                     KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(6, 1)
 
     # This code tests our output vs. benchmark values. When r=g=m=1, the
-    # critical speed (where all eigenvalues of the linearized equations are 0)
+    # critical speed (were all eigenvalues of the linearized equations are 0)
     # is 1 / sqrt(3) for the upright case.
     A = KM.linearize(A_and_B=True)[0]
     A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
@@ -494,7 +494,7 @@ def test_implicit_kinematics():
 
     # Ideally we would check that implicit and explicit equations give the same result as done in test_one_dof
     # But the whole raison-d'etre of the implicit equations is to deal with problems such
-    # as this one where the explicit form is too complicated to handle, especially the angular part
+    # as this one were the explicit form is too complicated to handle, especially the angular part
     # (i.e. tests would be too slow)
     # Instead, we check that the kinematic equations are correct using more fundamental tests:
     #

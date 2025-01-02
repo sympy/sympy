@@ -285,7 +285,7 @@ class ImplicitRegion(Basic):
         Returns a set of singular points of the region.
 
         The singular points are those points on the region
-        where all partial derivatives vanish.
+        were all partial derivatives vanish.
 
         Examples
         ========

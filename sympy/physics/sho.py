@@ -16,7 +16,7 @@ def R_nl(n, l, nu, r):
     l :
         The quantum number for orbital angular momentum.
     nu :
-        mass-scaled frequency: nu = m*omega/(2*hbar) where `m` is the mass
+        mass-scaled frequency: nu = m*omega/(2*hbar) were `m` is the mass
         and `omega` the frequency of the oscillator.
         (in atomic units ``nu == omega/2``)
     r :

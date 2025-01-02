@@ -71,7 +71,7 @@ use depends on whether you
 - want an algebraic or numeric answer
 - want the multiplicity of each root (how many times each root is a solution).
   In the `expression` below representing $(x+2)^2(x-3)$, the root -2 has a
-  multiplicity of two because $x+2$ is squared, whereas 3 has a multiplicity of
+  multiplicity of two because $x+2$ is squared, wereas 3 has a multiplicity of
   one because $x-3$ has no exponent. Similarly, for the `symbolic` expression,
   the root $-a$ has a multiplicity of two and the root $b$ has a multiplicity of
   one.
@@ -155,7 +155,7 @@ polynomials. Here are examples of {func}`~.roots`:
 {-a: 2, b: 1}
 ```
 
-It returns results as a dictionary, where the key is the root (for example, -2)
+It returns results as a dictionary, were the key is the root (for example, -2)
 and the value is the multiplicity of that root (for example, 2).
 
 {func}`~.roots` function uses a combination of techniques (factorization,
@@ -461,7 +461,7 @@ get solutions expressible in radicals (if there are any).
 {x: CRootOf(x**5 - x + 1, 4)}]
 ```
 
-where the second argument in each `CRootOf` is the index of the root.
+were the second argument in each `CRootOf` is the index of the root.
 
 #### Numerically Evaluate `CRootOf` Roots
 You can then numerically evaluate those `CRootOf` roots using `n` from
@@ -536,7 +536,7 @@ CRootOf\x  - x + 1, 2/
 False
 ```
 
-{func}`~.solve` will also give the complex roots where possible but it is less
+{func}`~.solve` will also give the complex roots were possible but it is less
 efficient than using {meth}`~sympy.polys.polytools.Poly.all_roots` directly.
 
 {func}`~sympy.polys.rootoftools.RootOf` exactly represents the root in a way

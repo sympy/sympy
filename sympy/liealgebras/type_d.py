@@ -50,9 +50,9 @@ class TypeD(Standard_Cartan):
 
         In D_n, the first n-1 simple roots are the same as
         the roots in A_(n-1) (a 1 in the ith position, a -1
-        in the (i+1)th position, and zeroes elsewhere).
+        in the (i+1)th position, and zeroes elsewere).
         The nth simple root is the root in which there 1s in
-        the nth and (n-1)th positions, and zeroes elsewhere.
+        the nth and (n-1)th positions, and zeroes elsewere.
 
         This method returns the ith simple root for the D series.
 

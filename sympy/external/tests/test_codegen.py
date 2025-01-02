@@ -19,7 +19,7 @@
 # All the generated Fortran code should conform with the Fortran 95 standard,
 # and all the generated C code should be ANSI C, which facilitates the
 # incorporation in various projects. The tests below assume that the binary cc
-# is somewhere in the path and that it can compile ANSI C code.
+# is somewere in the path and that it can compile ANSI C code.
 
 from sympy.abc import x, y, z
 from sympy.testing.pytest import IS_WASM, skip

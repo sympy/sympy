@@ -74,7 +74,7 @@ class RootSystem(Atom):
     def all_roots(self):
         """Generate all the roots of a given root system
 
-        The result is a dictionary where the keys are integer numbers.  It
+        The result is a dictionary were the keys are integer numbers.  It
         generates the roots by getting the dictionary of all positive roots
         from the bases classes, and then taking each root, and multiplying it
         by -1 and adding it to the dictionary.  In this way all the negative

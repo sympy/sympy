@@ -2,7 +2,7 @@
 Checks that SymPy does not contain indirect imports.
 
 An indirect import is importing a symbol from a module that itself imported the
-symbol from elsewhere. Such a constellation makes it harder to diagnose
+symbol from elsewere. Such a constellation makes it harder to diagnose
 inter-module dependencies and import order problems, and is therefore strongly
 discouraged.
 

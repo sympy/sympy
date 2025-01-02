@@ -98,7 +98,7 @@ class DifferentialOperatorAlgebra:
 
     for :math:`a \subset A`.
 
-    Where :math:`\sigma: A \Rightarrow A` is an endomorphism and :math:`\delta: A \rightarrow A`
+    were :math:`\sigma: A \Rightarrow A` is an endomorphism and :math:`\delta: A \rightarrow A`
     is a skew-derivation i.e. :math:`\delta(ab) = \delta(a) b + \sigma(a) \delta(b)`.
 
     If one takes the sigma as identity map and delta as the standard derivation
@@ -390,7 +390,7 @@ class HolonomicFunction:
     For regular singular points initial conditions can also be provided in this
     format:
     :math:`{s0: [C_0, C_1, ...], s1: [C^1_0, C^1_1, ...], ...}`
-    where s0, s1, ... are the roots of indicial equation and vectors
+    were s0, s1, ... are the roots of indicial equation and vectors
     :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding initial
     terms of the associated power series. See Examples below.
 
@@ -749,7 +749,7 @@ class HolonomicFunction:
 
         # definite integral
         # initial conditions for the answer will be stored at point `a`,
-        # where `a` is the lower limit of the integrand
+        # were `a` is the lower limit of the integrand
         if hasattr(limits, "__iter__"):
 
             if len(limits) == 3 and limits[0] == self.x:
@@ -1183,14 +1183,14 @@ class HolonomicFunction:
     def to_sequence(self, lb=True):
         r"""
         Finds recurrence relation for the coefficients in the series expansion
-        of the function about :math:`x_0`, where :math:`x_0` is the point at
+        of the function about :math:`x_0`, were :math:`x_0` is the point at
         which the initial condition is stored.
 
         Explanation
         ===========
 
         If the point :math:`x_0` is ordinary, solution of the form :math:`[(R, n_0)]`
-        is returned. Where :math:`R` is the recurrence relation and :math:`n_0` is the
+        is returned. were :math:`R` is the recurrence relation and :math:`n_0` is the
         smallest ``n`` for which the recurrence holds true.
 
         If the point :math:`x_0` is regular singular, a list of solutions in
@@ -1928,7 +1928,7 @@ class HolonomicFunction:
             # if the recurrence relation doesn't hold for `n = i`,
             # then a Hypergeometric representation doesn't exist.
             # add the algebraic term a * x**i to the solution,
-            # where a is u0[i]
+            # were a is u0[i]
             if i < smallest_n:
                 if as_list:
                     listofsol.append(((S(u0[i]) * x**(i+constantpower)).subs(x, x-x0), ))
@@ -2420,7 +2420,7 @@ def _normalize(list_of, parent, negative=True):
 def _derivate_diff_eq(listofpoly, K):
     """
     Let a differential equation a0(x)y(x) + a1(x)y'(x) + ... = 0
-    where a0, a1,... are polynomials or rational functions. The function
+    were a0, a1,... are polynomials or rational functions. The function
     returns b0, b1, b2... such that the differential equation
     b0(x)y(x) + b1(x)y'(x) +... = 0 is formed after differentiating the
     former equation.

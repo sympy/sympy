@@ -1554,7 +1554,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """add to self the monomial coeff*x0**i0*x1**i1*...
         unless self is a generator -- then just return the sum of the two.
 
-        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
+        mc is a tuple, (monom, coeff), were monomial is (i0, i1, ...)
 
         Examples
         ========
@@ -1598,7 +1598,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """add to self the product of (p)*(coeff*x0**i0*x1**i1*...)
         unless self is a generator -- then just return the sum of the two.
 
-        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
+        mc is a tuple, (monom, coeff), were monomial is (i0, i1, ...)
 
         Examples
         ========
@@ -2597,7 +2597,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         The pseudo-quotient ``q`` and pseudo-remainder ``r`` with respect to
         ``z`` when dividing ``f`` by ``g`` satisfy ``m*f = g*q + r``,
-        where ``deg(r,z) < deg(g,z)`` and
+        were ``deg(r,z) < deg(g,z)`` and
         ``m = LC(g,z)**(deg(f,z) - deg(g,z)+1)``.
 
         See :meth:`pdiv` for explanation of pseudo-division.
@@ -2687,7 +2687,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Computes the pseudo-division of the polynomial ``self`` with respect to ``g``.
 
         The pseudo-division algorithm is used to find the pseudo-quotient ``q``
-        and pseudo-remainder ``r`` such that ``m*f = g*q + r``, where ``m``
+        and pseudo-remainder ``r`` such that ``m*f = g*q + r``, were ``m``
         represents the multiplier and ``f`` is the dividend polynomial.
 
         The pseudo-quotient ``q`` and pseudo-remainder ``r`` are polynomials in
@@ -2696,14 +2696,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         The multiplier ``m`` is defined as
         ``LC(g, x) ^ (deg(f, x) - deg(g, x) + 1)``,
-        where ``LC(g, x)`` represents the leading coefficient of ``g``.
+        were ``LC(g, x)`` represents the leading coefficient of ``g``.
 
         It is important to note that in the context of the ``prem`` method,
         multivariate polynomials in a ring, such as ``R[x,y,z]``, are treated
         as univariate polynomials with coefficients that are polynomials,
         such as ``R[x,y][z]``. When dividing ``f`` by ``g`` with respect to the
         variable ``z``, the pseudo-quotient ``q`` and pseudo-remainder ``r``
-        satisfy ``m*f = g*q + r``, where ``deg(r, z) < deg(g, z)``
+        satisfy ``m*f = g*q + r``, were ``deg(r, z) < deg(g, z)``
         and ``m = LC(g, z)^(deg(f, z) - deg(g, z) + 1)``.
 
         In this function, the pseudo-remainder ``r`` can be obtained using the

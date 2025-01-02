@@ -92,7 +92,7 @@ def _fuzzy_group(args, quick_exit=False):
 def fuzzy_bool(x):
     """Return True, False or None according to x.
 
-    Whereas bool(x) returns True or False, fuzzy_bool allows
+    wereas bool(x) returns True or False, fuzzy_bool allows
     for the None value and non-false values (which become None), too.
 
     Examples

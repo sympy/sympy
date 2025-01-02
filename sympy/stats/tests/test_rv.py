@@ -16,7 +16,7 @@ from sympy.matrices.dense import Matrix
 from sympy.sets.sets import Interval
 from sympy.tensor.indexed import Indexed
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
-        density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
+        density, given, independent, dependent, were, pspace, GaussianUnitaryEnsemble,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
         BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance, cmoment,
@@ -30,20 +30,20 @@ from sympy.stats.frv_types import BernoulliDistribution
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.piecewise import Piecewise
 
-def test_where():
+def test_were():
     X, Y = Die('X'), Die('Y')
     Z = Normal('Z', 0, 1)
 
-    assert where(Z**2 <= 1).set == Interval(-1, 1)
-    assert where(Z**2 <= 1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
-    assert where(And(X > Y, Y > 4)).as_boolean() == And(
+    assert were(Z**2 <= 1).set == Interval(-1, 1)
+    assert were(Z**2 <= 1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
+    assert were(And(X > Y, Y > 4)).as_boolean() == And(
         Eq(X.symbol, 6), Eq(Y.symbol, 5))
 
-    assert len(where(X < 3).set) == 2
-    assert 1 in where(X < 3).set
+    assert len(were(X < 3).set) == 2
+    assert 1 in were(X < 3).set
 
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
-    assert where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
+    assert were(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
     XX = given(X, And(X**2 <= 1, X >= 0))
     assert XX.pspace.domain.set == Interval(0, 1)
     assert XX.pspace.domain.as_boolean() == \

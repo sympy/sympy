@@ -693,7 +693,7 @@ class Function(Application, Expr):
             # logarithmic term". e.g.
             #      f(1+x+log(x))
             #     -> f(1+logx) + x*f'(1+logx) + O(x**2)
-            # where 'logx' is given in the argument
+            # were 'logx' is given in the argument
             a = [t._eval_nseries(x, n, logx) for t in args]
             z = [r - r0 for (r, r0) in zip(a, a0)]
             p = [Dummy() for _ in z]
@@ -796,7 +796,7 @@ class Function(Application, Expr):
         args = [a.as_leading_term(x, logx=logx) for a in self.args]
         o = Order(1, x)
         if any(x in a.free_symbols and o.contains(a) for a in args):
-            # Whereas x and any finite number are contained in O(1, x),
+            # wereas x and any finite number are contained in O(1, x),
             # expressions like 1/x are not. If any arg simplified to a
             # vanishing expression as x -> 0 (like x or x**2, but not
             # 3, 1/x, etc...) then the _eval_as_leading_term is needed
@@ -1120,7 +1120,7 @@ class Derivative(Expr):
 
     For the most part, one may not differentiate wrt non-symbols.
     For example, we do not allow differentiation wrt `x*y` because
-    there are multiple ways of structurally defining where x*y appears
+    there are multiple ways of structurally defining were x*y appears
     in an expression: a very strict definition would make
     (x*y*z).diff(x*y) == 0. Derivatives wrt defined functions (like
     cos(x)) are not allowed, either:
@@ -1133,7 +1133,7 @@ class Derivative(Expr):
     To make it easier to work with variational calculus, however,
     derivatives wrt AppliedUndef and Derivatives are allowed.
     For example, in the Euler-Lagrange method one may write
-    F(t, u, v) where u = f(t) and v = f'(t). These variables can be
+    F(t, u, v) were u = f(t) and v = f'(t). These variables can be
     written explicitly as functions of time::
 
         >>> from sympy.abc import t
@@ -1208,7 +1208,7 @@ class Derivative(Expr):
 
     An object must define ._eval_derivative(symbol) method that returns
     the differentiation result. This function only needs to consider the
-    non-trivial case where expr contains symbol and it should call the diff()
+    non-trivial case were expr contains symbol and it should call the diff()
     method internally (not _eval_derivative); Derivative should be the only
     one to call _eval_derivative.
 
@@ -1285,7 +1285,7 @@ class Derivative(Expr):
                         must be supplied to differentiate %s''' % expr))
 
         # Split the list of variables into a list of the variables we are diff
-        # wrt, where each element of the list has the form (s, count) where
+        # wrt, were each element of the list has the form (s, count) were
         # s is the entity to diff wrt and count is the order of the
         # derivative.
         variable_count = []
@@ -2561,7 +2561,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     multinomial
     -----------
 
-    Expand (x + y + ...)**n where n is a positive integer.
+    Expand (x + y + ...)**n were n is a positive integer.
 
     >>> ((x + y + z)**2).expand(multinomial=True)
     x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
@@ -2591,7 +2591,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     >>> ((2*y)**z).expand(power_base=True)
     2**z*y**z
 
-    Note that in some cases where this expansion always holds, SymPy performs
+    Note that in some cases were this expansion always holds, SymPy performs
     it automatically:
 
     >>> (x*y)**2

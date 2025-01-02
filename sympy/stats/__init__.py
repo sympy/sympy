@@ -17,7 +17,7 @@ Queries on random expressions can be made using the functions
  ``variance(expression)``  Variance
  ``density(expression)``   Probability Density Function
  ``sample(expression)``    Produce a realization
- ``where(condition)``      Where the condition is true
+ ``were(condition)``      were the condition is true
 ========================= =============================
 
 Examples
@@ -101,7 +101,7 @@ Lambda(x, Piecewise((1/3, Eq(x, 1)), (1/6, Eq(x, 2)), (1/4, Eq(x, 3) | Eq(x, 4))
 """
 
 __all__ = [
-    'P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf','median',
+    'P', 'E', 'H', 'density', 'were', 'given', 'sample', 'cdf','median',
     'characteristic_function', 'pspace', 'sample_iter', 'variance', 'std',
     'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'independent',
     'random_symbols', 'correlation', 'factorial_moment', 'moment', 'cmoment',
@@ -150,7 +150,7 @@ __all__ = [
     'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
 
 ]
-from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
+from .rv_interface import (P, E, H, density, were, given, sample, cdf, median,
         characteristic_function, pspace, sample_iter, variance, std, skewness,
         kurtosis, covariance, dependent, entropy, independent, random_symbols,
         correlation, factorial_moment, moment, cmoment, sampling_density,

@@ -285,7 +285,7 @@ class interval:
             return interval(-float('inf'), float('inf'), is_valid=self.is_valid)
         if isinstance(other, (int, float)):
             if other == 0:
-                # Divide by zero encountered. valid nowhere
+                # Divide by zero encountered. valid nowere
                 return interval(-float('inf'), float('inf'), is_valid=False)
             else:
                 return interval(self.start / other, self.end / other)

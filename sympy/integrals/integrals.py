@@ -180,7 +180,7 @@ class Integral(AddWithLimits):
         .. math:: \int_a^b x \mathrm{d}x \rightarrow \int_{F(a)}^{F(b)} f(x)
                   \frac{\mathrm{d}}{\mathrm{d}x}
 
-        where `F(x)` is the inverse of `f(x)` and the limits and integrand have
+        were `F(x)` is the inverse of `f(x)` and the limits and integrand have
         been corrected so as to retain the same value after integration.
 
         Notes
@@ -197,7 +197,7 @@ class Integral(AddWithLimits):
 
         ``x`` must be (or contain) only one of of the integration variables. If
         ``u`` has more than one free symbol then it should be sent as a tuple
-        (``u``, ``uvar``) where ``uvar`` identifies which variable is replacing
+        (``u``, ``uvar``) were ``uvar`` identifies which variable is replacing
         the integration variable.
         XXX can it contain another integration variable?
 
@@ -289,7 +289,7 @@ class Integral(AddWithLimits):
             u, uvar = u
             if uvar not in u.free_symbols:
                 raise ValueError(filldedent('''
-                Expecting a tuple (expr, symbol) where symbol identified
+                Expecting a tuple (expr, symbol) were symbol identified
                 a free symbol in expr, but symbol is not in expr's free
                 symbols.'''))
             if not isinstance(uvar, Symbol):
@@ -340,7 +340,7 @@ class Integral(AddWithLimits):
         def _calc_limit_1(F, a, b):
             """
             replace d with a, using subs if possible, otherwise limit
-            where sign of b is considered
+            were sign of b is considered
             """
             wok = F.subs(d, a)
             if wok is S.NaN or wok.is_finite is False and a.is_finite:
@@ -350,7 +350,7 @@ class Integral(AddWithLimits):
         def _calc_limit(a, b):
             """
             replace d with a, using subs if possible, otherwise limit
-            where sign of b is considered
+            were sign of b is considered
             """
             avals = list({_calc_limit_1(Fi, a, b) for Fi in F})
             if len(avals) > 1:
@@ -1144,7 +1144,7 @@ class Integral(AddWithLimits):
             # at the outset because there are things
             # that cannot be solved unless they are
             # NOT expanded e.g., x**x*(1+log(x)). There
-            # should probably be a checker somewhere in this
+            # should probably be a checker somewere in this
             # routine to look for such cases and try to do
             # collection on the expressions if they are already
             # in an expanded form

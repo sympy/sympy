@@ -256,7 +256,7 @@ def roots_quartic(f):
     tested and found to be correct for 0, 2 or 4 complex roots.
 
     The quasisymmetric case solution [6] looks for quartics that have the form
-    `x**4 + A*x**3 + B*x**2 + C*x + D = 0` where `(C/A)**2 = D`.
+    `x**4 + A*x**3 + B*x**2 + C*x + D = 0` were `(C/A)**2 = D`.
 
     Although no general solution that is always applicable for all
     coefficients is known to this reviewer, certain conditions are tested
@@ -667,7 +667,7 @@ def roots_quintic(f):
             return []
         saw.add(r)
 
-    # Restore to original equation where coeff_4 is nonzero
+    # Restore to original equation were coeff_4 is nonzero
     if coeff_4:
         result = [x - coeff_4 / 5 for x in result]
     return result
@@ -684,7 +684,7 @@ def _integer_basis(poly):
     """Compute coefficient basis for a polynomial over integers.
 
     Returns the integer ``div`` such that substituting ``x = div*y``
-    ``p(x) = m*q(y)`` where the coefficients of ``q`` are smaller
+    ``p(x) = m*q(y)`` were the coefficients of ``q`` are smaller
     than those of ``p``.
 
     For example ``x**5 + 512*x + 1024 = 0``
@@ -891,7 +891,7 @@ def roots(f, *gens,
     radicals, the result of ``roots`` will be incomplete or empty
     respectively.
 
-    Example where result is incomplete:
+    Example were result is incomplete:
 
     >>> roots((x-1)*(x**5-x+1), x)
     {1: 1}
@@ -901,7 +901,7 @@ def roots(f, *gens,
     rational root (due to the factor `(x-1)`), which is returned since
     ``roots`` always finds all rational roots.
 
-    Example where result is empty:
+    Example were result is empty:
 
     >>> roots(x**7-3*x**2+1, x)
     {}

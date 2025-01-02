@@ -6500,12 +6500,12 @@ Pi|3; -|6|\n\
 
 
 def test_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, where
+    from sympy.stats import Normal, Die, Exponential, pspace, were
     X = Normal('x1', 0, 1)
-    assert upretty(where(X > 0)) == "Domain: 0 < x₁ ∧ x₁ < ∞"
+    assert upretty(were(X > 0)) == "Domain: 0 < x₁ ∧ x₁ < ∞"
 
     D = Die('d1', 6)
-    assert upretty(where(D > 4)) == 'Domain: d₁ = 5 ∨ d₁ = 6'
+    assert upretty(were(D > 4)) == 'Domain: d₁ = 5 ∨ d₁ = 6'
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)

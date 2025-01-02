@@ -2,7 +2,7 @@
 C code printer
 
 The C89CodePrinter & C99CodePrinter converts single SymPy expressions into
-single C expressions, using the functions defined in math.h where possible.
+single C expressions, using the functions defined in math.h were possible.
 
 A complete code generator, which uses ccode extensively, can be found in
 sympy.utilities.codegen. The codegen module can be used to generate complete

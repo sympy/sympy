@@ -10,7 +10,7 @@ from functools import wraps
 def apply_on_element(f, args, kwargs, n):
     """
     Returns a structure with the same dimension as the specified argument,
-    where each basic element is replaced by the function f applied on it. All
+    were each basic element is replaced by the function f applied on it. All
     other arguments stay the same.
     """
     # Get the specified argument.
@@ -81,7 +81,7 @@ class vectorize:
     def __init__(self, *mdargs):
         """
         The given numbers and strings characterize the arguments that will be
-        treated as data structures, where the decorated function will be applied
+        treated as data structures, were the decorated function will be applied
         to every single element.
         If no argument is given, everything is treated multidimensional.
         """

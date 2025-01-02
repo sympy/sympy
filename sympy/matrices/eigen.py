@@ -582,7 +582,7 @@ def _bidiagonal_decomposition(M, upper=True):
 
     $$A = UBV^{H}$$
 
-    where $A$ is the input matrix, and $B$ is its Bidiagonalized form
+    were $A$ is the input matrix, and $B$ is its Bidiagonalized form
 
     Note: Bidiagonal Computation can hang for symbolic matrices.
 
@@ -640,11 +640,11 @@ def _bidiagonalize(M, upper=True):
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     """
-    Return (P, D), where D is diagonal and
+    Return (P, D), were D is diagonal and
 
         D = P^-1 * M * P
 
-    where M is current matrix.
+    were M is current matrix.
 
     Parameters
     ==========
@@ -1027,7 +1027,7 @@ _is_indefinite.__doc__            = _doc_positive_definite
 
 
 def _jordan_form(M, calc_transform=True, *, chop=False):
-    """Return $(P, J)$ where $J$ is a Jordan block
+    """Return $(P, J)$ were $J$ is a Jordan block
     matrix and $P$ is a matrix such that $M = P J P^{-1}$
 
     Parameters
@@ -1111,7 +1111,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
     # helper functions
     def nullity_chain(val, algebraic_multiplicity):
         """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
-        until it is constant where ``E = M - val*I``"""
+        until it is constant were ``E = M - val*I``"""
 
         # mat.rank() is faster than computing the null space,
         # so use the rank-nullity theorem
@@ -1234,7 +1234,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
 
     # For each generalized eigenspace, calculate a basis.
     # We start by looking for a vector in null( (A - eig*I)**n )
-    # which isn't in null( (A - eig*I)**(n-1) ) where n is
+    # which isn't in null( (A - eig*I)**(n-1) ) were n is
     # the size of the Jordan block
     #
     # Ideally we'd just loop through block_structure and

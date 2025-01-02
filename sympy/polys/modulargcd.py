@@ -1224,7 +1224,7 @@ def _rational_function_reconstruction(c, p, m):
 
         c = \frac a b \; \mathrm{mod} \, m,
 
-    where `c` and `m` are polynomials in `\mathbb Z_p[t]` and `m` has
+    were `c` and `m` are polynomials in `\mathbb Z_p[t]` and `m` has
     positive degree.
 
     The algorithm is based on the Euclidean Algorithm. In general, `m` is
@@ -1294,7 +1294,7 @@ def _rational_reconstruction_func_coeffs(hm, p, m, ring, k):
 
         c_{h_m} = c_h \; \mathrm{mod} \, m,
 
-    where `m \in \mathbb Z_p[t]`.
+    were `m \in \mathbb Z_p[t]`.
 
     The reconstruction is based on the Euclidean Algorithm. In general, `m`
     is not irreducible, so it is possible that this fails for some
@@ -1456,7 +1456,7 @@ def _euclidean_algorithm(f, g, minpoly, p):
 def _trial_division(f, h, minpoly, p=None):
     r"""
     Check if `h` divides `f` in
-    `\mathbb K[t_1, \ldots, t_k][z]/(m_{\alpha}(z))`, where `\mathbb K` is
+    `\mathbb K[t_1, \ldots, t_k][z]/(m_{\alpha}(z))`, were `\mathbb K` is
     either `\mathbb Q` or `\mathbb Z_p`.
 
     This algorithm is based on pseudo division and does not use any
@@ -1710,7 +1710,7 @@ def _integer_rational_reconstruction(c, m, domain):
 
         c = \frac a b \; \mathrm{mod} \, m,
 
-    where `c` and `m` are integers.
+    were `c` and `m` are integers.
 
     The algorithm is based on the Euclidean Algorithm. In general, `m` is
     not a prime number, so it is possible that `b` is not invertible modulo
@@ -1777,7 +1777,7 @@ def _rational_reconstruction_int_coeffs(hm, m, ring):
 
         c_{h_m} = c_h \; \mathrm{mod} \, m,
 
-    where `m \in \mathbb Z`.
+    were `m \in \mathbb Z`.
 
     The reconstruction is based on the Euclidean Algorithm. In general,
     `m` is not a prime number, so it is possible that this fails for some
@@ -1988,7 +1988,7 @@ def _to_ZZ_poly(f, ring):
     Compute an associate of a polynomial
     `f \in \mathbb Q(\alpha)[x_0, \ldots, x_{n-1}]` in
     `\mathbb Z[x_1, \ldots, x_{n-1}][z] / (\check m_{\alpha}(z))[x_0]`,
-    where `\check m_{\alpha}(z) \in \mathbb Z[z]` is the primitive associate
+    were `\check m_{\alpha}(z) \in \mathbb Z[z]` is the primitive associate
     of the minimal polynomial `m_{\alpha}(z)` of `\alpha` over
     `\mathbb Q`.
 
@@ -2046,7 +2046,7 @@ def _to_ANP_poly(f, ring):
     Convert a polynomial
     `f \in \mathbb Z[x_1, \ldots, x_{n-1}][z]/(\check m_{\alpha}(z))[x_0]`
     to a polynomial in `\mathbb Q(\alpha)[x_0, \ldots, x_{n-1}]`,
-    where `\check m_{\alpha}(z) \in \mathbb Z[z]` is the primitive associate
+    were `\check m_{\alpha}(z) \in \mathbb Z[z]` is the primitive associate
     of the minimal polynomial `m_{\alpha}(z)` of `\alpha` over
     `\mathbb Q`.
 

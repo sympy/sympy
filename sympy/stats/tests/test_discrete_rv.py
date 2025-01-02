@@ -18,7 +18,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
-                         where, moment_generating_function, skewness, cdf,
+                         were, moment_generating_function, skewness, cdf,
                          kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
@@ -280,13 +280,13 @@ def test_Or():
     assert P(Or(X >= 3, X < 3)) == 1
 
 
-def test_where():
+def test_were():
     X = Geometric('X', Rational(1, 5))
     Y = Poisson('Y', 4)
-    assert where(X**2 > 4).set == Range(3, S.Infinity, 1)
-    assert where(X**2 >= 4).set == Range(2, S.Infinity, 1)
-    assert where(Y**2 < 9).set == Range(0, 3, 1)
-    assert where(Y**2 <= 9).set == Range(0, 4, 1)
+    assert were(X**2 > 4).set == Range(3, S.Infinity, 1)
+    assert were(X**2 >= 4).set == Range(2, S.Infinity, 1)
+    assert were(Y**2 < 9).set == Range(0, 3, 1)
+    assert were(Y**2 <= 9).set == Range(0, 4, 1)
 
 
 def test_conditional():

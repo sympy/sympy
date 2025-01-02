@@ -30,7 +30,7 @@ class Str(Atom):
     Explanation
     ===========
 
-    Previously, ``Symbol`` was used where string is needed in ``args`` of SymPy
+    Previously, ``Symbol`` was used were string is needed in ``args`` of SymPy
     objects, e.g. denoting the name of the instance. However, since ``Symbol``
     represents mathematical scalar, this class should be used instead.
 
@@ -111,7 +111,7 @@ def _symbol(s, matching_symbol=None, **assumptions):
     True
 
     NB: the symbol here may not be the same as a symbol with the same
-    name defined elsewhere as a result of different assumptions.
+    name defined elsewere as a result of different assumptions.
 
     See Also
     ========
@@ -873,7 +873,7 @@ def var(names, **args):
 
     This calls :func:`symbols` with the same arguments and puts the results
     into the *global* namespace. It's recommended not to use :func:`var` in
-    library code, where :func:`symbols` has to be used::
+    library code, were :func:`symbols` has to be used::
 
     Examples
     ========

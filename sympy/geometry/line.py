@@ -166,7 +166,7 @@ class LinearEntity(GeometrySet):
 
             ``dot(v1, v2) = |v1|*|v2|*cos(A)``
 
-        where A is the angle formed between the two vectors. We can
+        were A is the angle formed between the two vectors. We can
         get the directional vectors of the two lines and readily
         find the angle between the two using the above formula.
 
@@ -1311,7 +1311,7 @@ class Line(LinearEntity):
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of line. Gives
-        values that will produce a line that is +/- 5 units long (where a
+        values that will produce a line that is +/- 5 units long (were a
         unit is the distance between the two points that define the line).
 
         Parameters
@@ -1522,7 +1522,7 @@ class Ray(LinearEntity):
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ray. Gives
-        values that will produce a ray that is 10 units long (where a unit is
+        values that will produce a ray that is 10 units long (were a unit is
         the distance between the two points that define the ray).
 
         Parameters

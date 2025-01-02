@@ -72,7 +72,7 @@ def real_imag(ba, bd, gen):
     ===========
 
     Separates the even and odd power terms by checking the degree of terms wrt
-    mod 4. Returns a tuple (ba[0], ba[1], bd) where ba[0] is real part
+    mod 4. Returns a tuple (ba[0], ba[1], bd) were ba[0] is real part
     of the numerator ba[1] is the imaginary part and bd is the denominator
     of the rational function.
     """
@@ -233,7 +233,7 @@ def constant_system(A, u, DE):
 
     Given a differential field (K, D) with constant field C = Const(K), a Matrix
     A, and a vector (Matrix) u with coefficients in K, returns the tuple
-    (B, v, s), where B is a Matrix with coefficients in C and v is a vector
+    (B, v, s), were B is a Matrix with coefficients in C and v is a vector
     (Matrix) such that either v has coefficients in C, in which case s is True
     and the solutions in C of Ax == u are exactly all the solutions of Bx == v,
     or v has a non-constant coefficient, in which case s is False Ax == u has no
@@ -330,7 +330,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     b != 0 and either D == d/dt or deg(b) > max(0, deg(D) - 1), returns
     h1, ..., hr in k[t] and a matrix A with coefficients in Const(k) such that
     if c1, ..., cm in Const(k) and q in k[t] satisfy deg(q) <= n and
-    Dq + b*q == Sum(ci*qi, (i, 1, m)), then q = Sum(dj*hj, (j, 1, r)), where
+    Dq + b*q == Sum(ci*qi, (i, 1, m)), then q = Sum(dj*hj, (j, 1, r)), were
     d1, ..., dr in Const(k) and A*Matrix([[c1, ..., cm, d1, ..., dr]]).T == 0.
     """
     db = b.degree(DE.t)
@@ -366,7 +366,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     deg(b) < deg(D) - 1 and either D == d/dt or deg(D) >= 2, returns
     h1, ..., hr in k[t] and a matrix A with coefficients in Const(k) such that
     if c1, ..., cm in Const(k) and q in k[t] satisfy deg(q) <= n and
-    Dq + b*q == Sum(ci*qi, (i, 1, m)) then q = Sum(dj*hj, (j, 1, r)) where
+    Dq + b*q == Sum(ci*qi, (i, 1, m)) then q = Sum(dj*hj, (j, 1, r)) were
     d1, ..., dr in Const(k) and A*Matrix([[c1, ..., cm, d1, ..., dr]]).T == 0.
     """
     m = len(Q)
@@ -407,7 +407,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
             # m + r columns and entries in Const(k) = Const(k0)
             # such that Dy0 + b*y0 = Sum(ci*qi, (i, 1, m)) has
             # a solution y0 in k with c1, ..., cm in Const(k)
-            # if and only y0 = Sum(dj*fj, (j, 1, r)) where
+            # if and only y0 = Sum(dj*fj, (j, 1, r)) were
             # d1, ..., dr ar in Const(k) and
             # B*Matrix([c1, ..., cm, d1, ..., dr]) == 0.
 
@@ -440,7 +440,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
 
     # Solutions of the original equation are
     #    y = Sum(dj*fj, (j, 1, r) + Sum(ei*hi, (i, 1, m)),
-    # where  ei == ci  (i = 1, ..., m),  when
+    # were  ei == ci  (i = 1, ..., m),  when
     # A*Matrix([c1, ..., cm]) == 0 and
     # B*Matrix([c1, ..., cm, d1, ..., dr]) == 0
 
@@ -514,7 +514,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     a matrix A with m + r columns and entries in Const(k) such that
     a*Dp + b*p = Sum(ci*qi, (i, 1, m)) has a solution p of degree <= n
     in k[t] with c1, ..., cm in Const(k) if and only if p = Sum(dj*hj,
-    (j, 1, r)) where d1, ..., dr are in Const(k) and (c1, ..., cm,
+    (j, 1, r)) were d1, ..., dr are in Const(k) and (c1, ..., cm,
     d1, ..., dr) is a solution of Ax == 0.
     """
     m = len(q)
@@ -576,9 +576,9 @@ def param_poly_rischDE(a, b, q, n, DE):
     # only if the sum is divisible by d.
 
     qq, M = poly_linear_constraints(q, d)
-    # qq = [qq1, ..., qqm] where qqi = qi.quo(d).
+    # qq = [qq1, ..., qqm] were qqi = qi.quo(d).
     # M is a matrix with m columns an entries in k.
-    # Sum(fi*qi, (i, 1, m)), where f1, ..., fm are elements of k, is
+    # Sum(fi*qi, (i, 1, m)), were f1, ..., fm are elements of k, is
     # divisible by d if and only if M*Matrix([f1, ..., fm]) == 0,
     # in which case the quotient is Sum(fi*qqi).
 
@@ -589,7 +589,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     # A*Matrix([c1, ...,cm]) == 0.
 
     V = A.nullspace()
-    # V = [v1, ..., vu] where each vj is a column matrix with
+    # V = [v1, ..., vu] were each vj is a column matrix with
     # entries aj1, ..., ajm in Const(k).
     # Sum(aji*qi) is divisible by d with exact quotient Sum(aji*qqi).
     # Sum(ci*qi) is divisible by d if and only if ci = Sum(dj*aji)
@@ -598,7 +598,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     #     a*Dp + b*p = Sum(ci*qi) = Sum(dj*Sum(aji*qi))
     # are the same as those of
     #     (a/d)*Dp + (b/d)*p = Sum(dj*rj)
-    # where rj = Sum(aji*qqi).
+    # were rj = Sum(aji*qqi).
 
     if not V:  # No non-trivial solution.
         return [], eye(m, DE.t)  # Could return A, but this has
@@ -609,7 +609,7 @@ def param_poly_rischDE(a, b, q, n, DE):
 
     # Solutions of (a/d)*Dp + (b/d)*p = Sum(dj*rj) correspond to
     # solutions alpha*p + Sum(Sum(dj*aji)*betai) of the initial
-    # equation. These are equal to alpha*p + Sum(dj*fj) where
+    # equation. These are equal to alpha*p + Sum(dj*fj) were
     # fj = Sum(aji*betai).
     Mbeta = Matrix([beta])
     f = [(Mbeta*vj)[0] for vj in V]  # [f1, ..., fu]
@@ -622,7 +622,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     # g = [g1, ..., gv] in k[t]^v and and B is a matrix with u + v
     # columns and entries in Const(k) such that
     # (a/d)*Dp + (b/d)*p = Sum(dj*rj) has a solution p of degree <= n
-    # in k[t] if and only if p = Sum(ek*gk) where e1, ..., ev are in
+    # in k[t] if and only if p = Sum(ek*gk) were e1, ..., ev are in
     # Const(k) and B*Matrix([d1, ..., du, e1, ..., ev]) == 0.
     # The solutions of the original equation are then
     # Sum(dj*fj, (j, 1, u)) + alpha*Sum(ek*gk, (k, 1, v)).
@@ -652,7 +652,7 @@ def param_rischDE(fa, fd, G, DE):
     a matrix A with m + r columns and entries in Const(k) such that
     Dy + f*y = Sum(ci*Gi, (i, 1, m)) has a solution y
     in k(t) with c1, ..., cm in Const(k) if and only if y = Sum(dj*hj,
-    (j, 1, r)) where d1, ..., dr are in Const(k) and (c1, ..., cm,
+    (j, 1, r)) were d1, ..., dr are in Const(k) and (c1, ..., cm,
     d1, ..., dr) is a solution of Ax == 0.
 
     Elements of k(t) are tuples (a, d) with a and d in k[t].
@@ -683,10 +683,10 @@ def param_rischDE(fa, fd, G, DE):
 
     q, M = prde_linear_constraints(a, b, g, DE)
 
-    # q = [q1, ..., qm] where qi in k[t] is the polynomial component
+    # q = [q1, ..., qm] were qi in k[t] is the polynomial component
     # of the partial fraction expansion of gi.
     # M is a matrix with m columns and entries in k.
-    # Sum(fi*gi, (i, 1, m)), where f1, ..., fm are elements of k,
+    # Sum(fi*gi, (i, 1, m)), were f1, ..., fm are elements of k,
     # is a polynomial if and only if M*Matrix([f1, ..., fm]) == 0,
     # in which case the sum is equal to Sum(fi*qi).
 
@@ -699,14 +699,14 @@ def param_rischDE(fa, fd, G, DE):
     ## Reduce number of constants at this point
 
     V = M.nullspace()
-    # V = [v1, ..., vu] where each vj is a column matrix with
+    # V = [v1, ..., vu] were each vj is a column matrix with
     # entries aj1, ..., ajm in Const(k).
     # Sum(aji*gi) is in k[t] and equal to Sum(aji*qi) (j = 1, ..., u).
     # Sum(ci*gi) is in k[t] if and only is ci = Sum(dj*aji)
     # (i = 1, ..., m) for some d1, ..., du in Const(k).
     # In that case,
     #     Sum(ci*gi) = Sum(ci*qi) = Sum(dj*Sum(aji*qi)) = Sum(dj*rj)
-    # where rj = Sum(aji*qi) (j = 1, ..., u) in k[t].
+    # were rj = Sum(aji*qi) (j = 1, ..., u) in k[t].
 
     if not V:  # No non-trivial solution
         return [], eye(m, DE.t)
@@ -732,7 +732,7 @@ def param_rischDE(fa, fd, G, DE):
     # h = [h1, ..., hv] in k[t]^v and and B is a matrix with u + v
     # columns and entries in Const(k) such that
     # a*Dp + b*p = Sum(dj*rj) has a solution p of degree <= n
-    # in k[t] if and only if p = Sum(ek*hk) where e1, ..., ev are in
+    # in k[t] if and only if p = Sum(ek*hk) were e1, ..., ev are in
     # Const(k) and B*Matrix([d1, ..., du, e1, ..., ev]) == 0.
     # The solutions of the original equation for ci = Sum(dj*aji)
     # (i = 1, ..., m) are then y = Sum(ek*hk, (k, 1, v))/gamma.
@@ -749,14 +749,14 @@ def param_rischDE(fa, fd, G, DE):
 
     W = A.nullspace()
 
-    # W = [w1, ..., wt] where each wl is a column matrix with
+    # W = [w1, ..., wt] were each wl is a column matrix with
     # entries blk (k = 1, ..., m + u + v) in Const(k).
     # The vectors (bl1, ..., blm) generate the space of those
     # constant families (c1, ..., cm) for which a solution of
     # the equation Dy + f*y == Sum(ci*Gi) exists. They generate
     # the space and form a basis except possibly when Dy + f*y == 0
     # is solvable in k(t}. The corresponding solutions are
-    # y = Sum(blk'*hk, (k, 1, v))/gamma, where k' = k + m + u.
+    # y = Sum(blk'*hk, (k, 1, v))/gamma, were k' = k + m + u.
 
     v = len(h)
     shape = (len(W), m+v)
@@ -767,7 +767,7 @@ def param_rischDE(fa, fd, G, DE):
     M = Matrix(*shape, items, DE.t)
     N = M.nullspace()
 
-    # N = [n1, ..., ns] where the ni in Const(k)^(m + v) are column
+    # N = [n1, ..., ns] were the ni in Const(k)^(m + v) are column
     # vectors generating the space of linear relations between
     # c1, ..., cm, e1, ..., ev.
 
@@ -806,7 +806,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     b = -derivation(hn, DE)
     N = 0
 
-    # These are the cases where we know that S1irr = Sirr, but there could be
+    # These are the cases were we know that S1irr = Sirr, but there could be
     # others, and this algorithm will need to be extended to handle them.
     if DE.case in ('base', 'primitive', 'exp', 'tan'):
         hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
@@ -985,7 +985,7 @@ def is_deriv_k(fa, fd, DE):
                K/C(x)            K/C(x)
 
 
-    Where C = Const(K), L_K/C(x) = { i in {1, ..., n} such that t_i is
+    were C = Const(K), L_K/C(x) = { i in {1, ..., n} such that t_i is
     transcendental over C(x)(t_1, ..., t_i-1) and Dt_i = Da_i/a_i, for some a_i
     in C(x)(t_1, ..., t_i-1)* } (i.e., the set of all indices of logarithmic
     monomials of K over C(x)), and E_K/C(x) = { i in {1, ..., n} such that t_i
@@ -1013,7 +1013,7 @@ def is_deriv_k(fa, fd, DE):
     logarithm from the other.  Therefore, it is necessary to pass the arguments
     of the logarithmic terms in L_args.
 
-    To handle the case where we are given Df/f, not f, use is_deriv_k_in_field().
+    To handle the case were we are given Df/f, not f, use is_deriv_k_in_field().
 
     See also
     ========
@@ -1108,7 +1108,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
                K/C(x)            K/C(x)
 
 
-    Where C = Const(K), L_K/C(x) = { i in {1, ..., n} such that t_i is
+    were C = Const(K), L_K/C(x) = { i in {1, ..., n} such that t_i is
     transcendental over C(x)(t_1, ..., t_i-1) and Dt_i = Da_i/a_i, for some a_i
     in C(x)(t_1, ..., t_i-1)* } (i.e., the set of all indices of logarithmic
     monomials of K over C(x)), and E_K/C(x) = { i in {1, ..., n} such that t_i
@@ -1134,7 +1134,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     subtracting the arguments of one exponential from the other.  Therefore, it
     is necessary to pass the arguments of the exponential terms in E_args.
 
-    To handle the case where we are given Df, not f, use
+    To handle the case were we are given Df, not f, use
     is_log_deriv_k_t_radical_in_field().
 
     See also
@@ -1255,7 +1255,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         # roots of the resultant must be rational numbers.
         return None
 
-    # [(a, i), ...], where i*log(a) is a term in the log-part of the integral
+    # [(a, i), ...], were i*log(a) is a term in the log-part of the integral
     # of f
     respolys, residues = list(zip(*roots)) or [[], []]
     # Note: this might be empty, but everything below should work find in that

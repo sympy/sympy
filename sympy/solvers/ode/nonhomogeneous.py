@@ -29,7 +29,7 @@ from sympy.solvers.ode.ode import get_numbered_constants
 def _test_term(coeff, func, order):
     r"""
     Linear Euler ODEs have the form  K*x**order*diff(y(x), x, order) = F(x),
-    where K is independent of x and y(x), order>= 0.
+    were K is independent of x and y(x), order>= 0.
     So we need to check that for each term, coeff == K*x**order from
     some K.  We have a few cases, since coeff may have several
     different types.
@@ -60,7 +60,7 @@ def _get_euler_characteristic_eq_sols(eq, func, match_obj):
     Returns the solution of homogeneous part of the linear euler ODE and
     the list of roots of characteristic equation.
 
-    The parameter ``match_obj`` is a dict of order:coeff terms, where order is the order
+    The parameter ``match_obj`` is a dict of order:coeff terms, were order is the order
     of the derivative on each term, and coeff is the coefficient of that derivative.
 
     """
@@ -180,7 +180,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
     linear ODE and list of collectterms which is later on used by simplification
     to use collect on solution.
 
-    The parameter `r` is a dict of order:coeff terms, where order is the order of the
+    The parameter `r` is a dict of order:coeff terms, were order is the order of the
     derivative on each term, and coeff is the coefficient of that derivative.
 
     """
@@ -255,7 +255,7 @@ def _get_simplified_sol(sol, func, collectterms):
     collectterms. Ideally this should be handled by odesimp.It is used
     only when the simplify is set to True in dsolve.
 
-    The parameter ``collectterms`` is a list of tuple (i, reroot, imroot) where `i` is
+    The parameter ``collectterms`` is a list of tuple (i, reroot, imroot) were `i` is
     the multiplicity of the root, reroot is real part and imroot being the imaginary part.
 
     """

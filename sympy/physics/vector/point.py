@@ -124,7 +124,7 @@ class Point:
         ^N a^P = ^B a^P + ^N a^O + ^N alpha^B x r^OP + ^N omega^B x (^N omega^B
         x r^OP) + 2 ^N omega^B x ^B v^P
 
-        where O is a point fixed in B, P is a point moving in B, and B is
+        were O is a point fixed in B, P is a point moving in B, and B is
         rotating in frame N.
 
         Parameters
@@ -180,7 +180,7 @@ class Point:
 
         ^N a^P = ^N a^O + ^N alpha^B x r^OP + ^N omega^B x (^N omega^B x r^OP)
 
-        where O and P are both points fixed in frame B, which is rotating in
+        were O and P are both points fixed in frame B, which is rotating in
         frame N.
 
         Parameters
@@ -407,7 +407,7 @@ class Point:
 
         ^N v^P = ^B v^P + ^N v^O + ^N omega^B x r^OP
 
-        where O is a point fixed in B, P is a point moving in B, and B is
+        were O is a point fixed in B, P is a point moving in B, and B is
         rotating in frame N.
 
         Parameters
@@ -460,7 +460,7 @@ class Point:
 
         ^N v^P = ^N v^O + ^N omega^B x r^OP
 
-        where O and P are both points fixed in frame B, which is rotating in
+        were O and P are both points fixed in frame B, which is rotating in
         frame N.
 
         Parameters

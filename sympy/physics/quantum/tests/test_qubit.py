@@ -217,7 +217,7 @@ def test_eval_trace():
     t = Tr(d, 4)
     assert t.doit() == (0.4*Density([Qubit('1010'), 1]) +
                         0.6*Density([Qubit('0110'), 1]))
-    # index somewhere in between
+    # index somewere in between
     t = Tr(d, 2)
     assert t.doit() == (0.4*Density([Qubit('0110'), 1]) +
                         0.6*Density([Qubit('1010'), 1]))

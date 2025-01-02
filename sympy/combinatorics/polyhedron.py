@@ -627,7 +627,7 @@ def _pgroup_calcs():
     Instead, they are selected to contain those permutations whose powers
     alone will construct all orientations of the polyhedron, i.e. for
     permutations ``a``, ``b``, etc... in the group, ``a, a**2, ..., a**o_a``,
-    ``b, b**2, ..., b**o_b``, etc... (where ``o_i`` is the order of
+    ``b, b**2, ..., b**o_b``, etc... (were ``o_i`` is the order of
     permutation ``i``) generate all permutations of the polyhedron instead of
     mixed products like ``a*b``, ``a*b**2``, etc....
 

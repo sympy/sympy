@@ -231,7 +231,7 @@ def rules_2prereq(rules):
        return:  {} of c <- [a, b, ...]
 
        Note however, that this prerequisites may be *not* enough to prove a
-       fact. An example is 'a -> b' rule, where prereq(a) is b, and prereq(b)
+       fact. An example is 'a -> b' rule, were prereq(a) is b, and prereq(b)
        is a. That's because a=T -> b=T, and b=F -> a=F, but a=F -> b=?
     """
     prereq = defaultdict(set)

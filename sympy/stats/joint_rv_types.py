@@ -97,7 +97,7 @@ class JointDistributionHandmade(JointDistribution):
 
 def JointRV(symbol, pdf, _set=None):
     """
-    Create a Joint Random Variable where each of its component is continuous,
+    Create a Joint Random Variable were each of its component is continuous,
     given the following:
 
     Parameters

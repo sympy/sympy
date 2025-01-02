@@ -110,7 +110,7 @@ class DixonResultant():
         dixon_polynomial: polynomial
             Dixon's polynomial is calculated as:
 
-            delta = Delta(A) / ((x_1 - a_1) ... (x_n - a_n)) where,
+            delta = Delta(A) / ((x_1 - a_1) ... (x_n - a_n)) were,
 
             A =  |p_1(x_1,... x_n), ..., p_n(x_1,... x_n)|
                  |p_1(a_1,... x_n), ..., p_n(a_1,... x_n)|
@@ -327,7 +327,7 @@ class MacaulayResultant():
 
         degree_m: int
             The degree_m is calculated as  1 + \sum_1 ^ n (d_i - 1),
-            where d_i is the degree of the i polynomial
+            were d_i is the degree of the i polynomial
         """
         return 1 + sum(d - 1 for d in self.degrees)
 

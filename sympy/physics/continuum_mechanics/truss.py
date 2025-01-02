@@ -661,7 +661,7 @@ class Truss:
 
         2n >= r + m
 
-        Where n is the number of nodes, r is the number of reaction forces, where each pinned
+        were n is the number of nodes, r is the number of reaction forces, were each pinned
         support has 2 reaction forces and each roller has 1, and m is the number of members.
 
         The given condition is derived from the fact that a system of equations is solvable

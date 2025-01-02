@@ -74,7 +74,7 @@ class PrecisionExhausted(ArithmeticError):
 
 """
 An mpf value tuple is a tuple of integers (sign, man, exp, bc)
-representing a floating-point number: [1, -1][sign]*man*2**exp where
+representing a floating-point number: [1, -1][sign]*man*2**exp were
 sign is 0 or 1 and bc should correspond to the number of bits used to
 represent the mantissa (man) in binary notation, e.g.
 """
@@ -90,11 +90,11 @@ Explanation
 >>> n, bitcount(man)
 (10, 3)
 
-A temporary result is a tuple (re, im, re_acc, im_acc) where
+A temporary result is a tuple (re, im, re_acc, im_acc) were
 re and im are nonzero mpf value tuples representing approximate
 numbers, or None to denote exact zeros.
 
-re_acc, im_acc are integers denoting log2(e) where e is the estimated
+re_acc, im_acc are integers denoting log2(e) were e is the estimated
 relative accuracy of the respective complex part, but may be anything
 if the corresponding complex part is None.
 
@@ -148,7 +148,7 @@ def fastlog(x: Optional[MPF_TUP]) -> tUnion[int, Any]:
 
 
 def pure_complex(v: 'Expr', or_real=False) -> tuple['Number', 'Number'] | None:
-    """Return a and b if v matches a + I*b where b is not zero and
+    """Return a and b if v matches a + I*b were b is not zero and
     a and b are Numbers, else None. If `or_real` is True then 0 will
     be returned for `b` if `v` is a real number.
 
@@ -236,7 +236,7 @@ def complex_accuracy(result: TMP_RES) -> tUnion[int, Any]:
     """
     Returns relative accuracy of a complex number with given accuracies
     for the real and imaginary parts. The relative accuracy is defined
-    in the complex norm sense as ||z|+|error|| / |z| where error
+    in the complex norm sense as ||z|+|error|| / |z| were error
     is equal to (real absolute error) + (imag absolute error)*i.
 
     The full expression for the (logarithmic) error can be approximated
@@ -1195,7 +1195,7 @@ def check_convergence(numer: 'Expr', denom: 'Expr', n: 'Symbol') -> tTuple[int, 
     Returns
     =======
 
-    (h, g, p) where
+    (h, g, p) were
     -- h is:
         > 0 for convergence of rate 1/factorial(n)**h
         < 0 for divergence of rate factorial(n)**(-h)

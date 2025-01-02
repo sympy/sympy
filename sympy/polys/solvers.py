@@ -86,7 +86,7 @@ def eqs_to_matrix(eqs_coeffs, eqs_rhs, gens, domain):
 
     eqs_coeffs: list[dict[Symbol, DomainElement]]
         The left hand sides of the equations as dicts mapping from symbols to
-        coefficients where the coefficients are instances of
+        coefficients were the coefficients are instances of
         DomainElement.
     eqs_rhs: list[DomainElements]
         The right hand sides of the equations as instances of

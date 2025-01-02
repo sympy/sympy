@@ -5,7 +5,7 @@ classes.
 
 Ideally all exceptions raised in these modules would be defined and documented
 here and not e.g. imported from matrices. Also ideally generic exceptions like
-ValueError/TypeError would not be raised anywhere.
+ValueError/TypeError would not be raised anywere.
 
 """
 

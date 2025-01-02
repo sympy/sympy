@@ -378,7 +378,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """
         SymPy provides two different internal kinds of representation
         of associative words. The first one is called the `array_form`
-        which is a tuple containing `tuples` as its elements, where the
+        which is a tuple containing `tuples` as its elements, were the
         size of each tuple is two. At the first position the tuple
         contains the `symbol-generator`, while at the second position
         of tuple contains the exponent of that generator at the position.
@@ -1117,7 +1117,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def sub_syllables(self, from_i, to_j):
         """
         `sub_syllables` returns the subword of the associative word `self` that
-        consists of syllables from positions `from_to` to `to_j`, where
+        consists of syllables from positions `from_to` to `to_j`, were
         `from_to` and `to_j` must be positive integers and indexing is done
         with origin 0.
 
@@ -1235,7 +1235,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         side of it. Compare the examples with those of
         `identity_cyclic_reduction`.
 
-        When `removed` is `True`, return a tuple `(word, r)` where
+        When `removed` is `True`, return a tuple `(word, r)` were
         self `r` is such that before the reduction the word was either
         `r*word*r**-1`.
 

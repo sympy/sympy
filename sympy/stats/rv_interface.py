@@ -8,13 +8,13 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.integrals.integrals import Integral
 from sympy.solvers.solveset import solveset
-from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
+from .rv import (probability, expectation, density, were, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
                  sample_stochastic_process)
 
 
-__all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
+__all__ = ['P', 'E', 'H', 'density', 'were', 'given', 'sample', 'cdf',
         'characteristic_function', 'pspace', 'sample_iter', 'variance', 'std',
         'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'median',
         'independent', 'random_symbols', 'correlation', 'factorial_moment',

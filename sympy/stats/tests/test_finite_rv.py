@@ -20,7 +20,7 @@ from sympy.simplify.simplify import simplify
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
                          Hypergeometric, Rademacher, IdealSoliton, RobustSoliton, P, E, variance,
-                         covariance, skewness, density, where, FiniteRV, pspace, cdf,
+                         covariance, skewness, density, were, FiniteRV, pspace, cdf,
                          correlation, moment, cmoment, smoment, characteristic_function,
                          moment_generating_function, quantile,  kurtosis, median, coskewness)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
@@ -112,7 +112,7 @@ def test_dice():
     assert pspace(X).domain.as_boolean() == Or(
         *[Eq(X.symbol, i) for i in [1, 2, 3, 4, 5, 6]])
 
-    assert where(X > 3).set == FiniteSet(4, 5, 6)
+    assert were(X > 3).set == FiniteSet(4, 5, 6)
 
     assert characteristic_function(X)(t) == exp(6*I*t)/6 + exp(5*I*t)/6 + exp(4*I*t)/6 + exp(3*I*t)/6 + exp(2*I*t)/6 + exp(I*t)/6
     assert moment_generating_function(X)(t) == exp(6*t)/6 + exp(5*t)/6 + exp(4*t)/6 + exp(3*t)/6 + exp(2*t)/6 + exp(t)/6
@@ -160,16 +160,16 @@ def test_dice():
 def test_given():
     X = Die('X', 6)
     assert density(X, X > 5) == {S(6): S.One}
-    assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
+    assert were(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
 
 
 def test_domains():
     X, Y = Die('x', 6), Die('y', 6)
     x, y = X.symbol, Y.symbol
     # Domains
-    d = where(X > Y)
+    d = were(X > Y)
     assert d.condition == (x > y)
-    d = where(And(X > Y, Y > 3))
+    d = were(And(X > Y, Y > 3))
     assert d.as_boolean() == Or(And(Eq(x, 5), Eq(y, 4)), And(Eq(x, 6),
         Eq(y, 5)), And(Eq(x, 6), Eq(y, 4)))
     assert len(d.elements) == 3
@@ -182,11 +182,11 @@ def test_domains():
 
     assert pspace(X + Y).domain.set == FiniteSet(1, 2, 3, 4, 5, 6)**2
 
-    assert where(X > 3).set == FiniteSet(4, 5, 6)
+    assert were(X > 3).set == FiniteSet(4, 5, 6)
     assert X.pspace.domain.dict == FiniteSet(
         *[Dict({X.symbol: i}) for i in range(1, 7)])
 
-    assert where(X > Y).dict == FiniteSet(*[Dict({X.symbol: i, Y.symbol: j})
+    assert were(X > Y).dict == FiniteSet(*[Dict({X.symbol: i, Y.symbol: j})
             for i in range(1, 7) for j in range(1, 7) if i > j])
 
 def test_bernoulli():

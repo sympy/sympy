@@ -46,10 +46,10 @@ def gbt(tf, sample_per, alpha):
     Explanation
     ===========
 
-    Where H(z) is the corresponding discretized transfer function,
+    were H(z) is the corresponding discretized transfer function,
     discretized with the generalised bilinear transformation method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s), where T is the
+    by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s), were T is the
     sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
@@ -122,10 +122,10 @@ def bilinear(tf, sample_per):
     Explanation
     ===========
 
-    Where H(z) is the corresponding discretized transfer function,
+    were H(z) is the corresponding discretized transfer function,
     discretized with the bilinear transform method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T is the
+    by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), were T is the
     sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
@@ -152,10 +152,10 @@ def forward_diff(tf, sample_per):
     Explanation
     ===========
 
-    Where H(z) is the corresponding discretized transfer function,
+    were H(z) is the corresponding discretized transfer function,
     discretized with the forward difference transform method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{z-1}{T}$ into H(s), where T is the
+    by substituting $s(z) = \frac{z-1}{T}$ into H(s), were T is the
     sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
@@ -182,10 +182,10 @@ def backward_diff(tf, sample_per):
     Explanation
     ===========
 
-    Where H(z) is the corresponding discretized transfer function,
+    were H(z) is the corresponding discretized transfer function,
     discretized with the backward difference transform method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) =  \frac{z-1}{Tz}$ into H(s), where T is the
+    by substituting $s(z) =  \frac{z-1}{Tz}$ into H(s), were T is the
     sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
@@ -440,10 +440,10 @@ class TransferFunction(SISOLinearTimeInvariant):
     r"""
     A class for representing LTI (Linear, time-invariant) systems that can be strictly described
     by ratio of polynomials in the Laplace transform complex variable. The arguments
-    are ``num``, ``den``, and ``var``, where ``num`` and ``den`` are numerator and
+    are ``num``, ``den``, and ``var``, were ``num`` and ``den`` are numerator and
     denominator polynomials of the ``TransferFunction`` respectively, and the third argument is
     a complex variable of the Laplace transform used by these polynomials of the transfer function.
-    ``num`` and ``den`` can be either polynomials or numbers, whereas ``var``
+    ``num`` and ``den`` can be either polynomials or numbers, wereas ``var``
     has to be a :py:class:`~.Symbol`.
 
     Explanation
@@ -1326,7 +1326,7 @@ class PIDController(TransferFunction):
     controllers in control systems. The PIDController class is a subclass
     of TransferFunction, representing the controller's transfer function
     in the Laplace domain. The arguments are ``kp``, ``ki``, ``kd``,
-    ``tf``, and ``var``, where ``kp``, ``ki``, and ``kd`` are the
+    ``tf``, and ``var``, were ``kp``, ``ki``, and ``kd`` are the
     proportional, integral, and derivative gains respectively.``tf``
     is the derivative filter time constant, which can be used to
     filter out the noise and ``var`` is the complex variable used in
@@ -3653,7 +3653,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     ``subs()`` returns the ``TransferFunctionMatrix`` object with the value substituted in the expression. This will not
     mutate your original ``TransferFunctionMatrix``.
 
-    >>> tfm_2.subs(p, 2)  #  substituting p everywhere in tfm_2 with 2.
+    >>> tfm_2.subs(p, 2)  #  substituting p everywere in tfm_2 with 2.
     TransferFunctionMatrix(((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)), (TransferFunction(12, s + 2, s), TransferFunction(-a - s, s**2 + s + 1, s)), (TransferFunction(3, s + 2, s), TransferFunction(-12, s + 2, s))))
     >>> pprint(_, use_unicode=False)
     [  a + s        -3     ]
@@ -4194,7 +4194,7 @@ class StateSpace(LinearTimeInvariant):
         (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
         (2) y(t)  = C * x(t) + D * u(t);    y in R^m
 
-    where u(t) is any input signal, y(t) the corresponding output, and x(t) the system's state.
+    were u(t) is any input signal, y(t) the corresponding output, and x(t) the system's state.
 
     Parameters
     ==========
@@ -4540,7 +4540,7 @@ class StateSpace(LinearTimeInvariant):
 
     def _eval_evalf(self, prec):
         """
-        Returns state space model where numerical expressions are evaluated into floating point numbers.
+        Returns state space model were numerical expressions are evaluated into floating point numbers.
         """
         dps = prec_to_dps(prec)
         return StateSpace(

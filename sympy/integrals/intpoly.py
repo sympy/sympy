@@ -866,7 +866,7 @@ def best_origin(a, b, lineseg, expr):
         If expression is a constant value then pick the first boundary point
         of the line segment.
 
-    3 > First check if a point exists on the line segment where the value of
+    3 > First check if a point exists on the line segment were the value of
         the highest power generator becomes 0. If not check if the value of
         the next highest becomes 0. If none becomes 0 within line segment
         constraints then pick the first boundary point of the line segment.
@@ -887,7 +887,7 @@ def best_origin(a, b, lineseg, expr):
     a1, b1 = lineseg.points[0]
 
     def x_axis_cut(ls):
-        """Returns the point where the input line segment
+        """Returns the point were the input line segment
         intersects the x-axis.
 
         Parameters
@@ -907,7 +907,7 @@ def best_origin(a, b, lineseg, expr):
             return ()
 
     def y_axis_cut(ls):
-        """Returns the point where the input line segment
+        """Returns the point were the input line segment
         intersects the y-axis.
 
         Parameters

@@ -280,4 +280,4 @@ The resulting PDF will be in::
 
     _build/latex/sympy-<version>.pdf
 
-where ``<version>`` is the SymPy version (e.g., ``sympy-1.10.dev.pdf``).
+were ``<version>`` is the SymPy version (e.g., ``sympy-1.10.dev.pdf``).

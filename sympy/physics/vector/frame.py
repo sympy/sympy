@@ -415,7 +415,7 @@ class ReferenceFrame:
 
         ``N_alpha_B``
 
-        which represent the angular acceleration of B in N, where B is self,
+        which represent the angular acceleration of B in N, were B is self,
         and N is otherframe.
 
         Parameters
@@ -450,7 +450,7 @@ class ReferenceFrame:
 
         ^N omega ^B
 
-        which represent the angular velocity of B in N, where B is self, and
+        which represent the angular velocity of B in N, were B is self, and
         N is otherframe.
 
         Parameters

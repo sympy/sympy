@@ -10,7 +10,7 @@ from .determinant import _find_reasonable_pivot
 def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
                 normalize_last=True, normalize=True, zero_above=True):
     """Row reduce a flat list representation of a matrix and return a tuple
-    (rref_matrix, pivot_cols, swaps) where ``rref_matrix`` is a flat list,
+    (rref_matrix, pivot_cols, swaps) were ``rref_matrix`` is a flat list,
     ``pivot_cols`` are the pivot columns and ``swaps`` are any row swaps that
     were used in the process of row reduction.
 
@@ -31,7 +31,7 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
     simpfunc : used to simplify elements and test if they are
         zero if ``iszerofunc`` returns `None`
 
-    normalize_last : indicates where all row reduction should
+    normalize_last : indicates were all row reduction should
         happen in a fraction-free manner and then the rows are
         normalized (so that the pivots are 1), or whether
         rows should be normalized along the way (like the naive
@@ -197,7 +197,7 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
         algorithms start on the left, having complexity right-shifted
         speeds things up.
 
-        Returns a tuple (mat, perm) where perm is a permutation
+        Returns a tuple (mat, perm) were perm is a permutation
         of the columns to perform to shift the complex columns right, and mat
         is the permuted matrix."""
 
@@ -317,7 +317,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         If ``True``, no pivots are normalized to `1` until after all
         entries above and below each pivot are zeroed.  This means the row
         reduction algorithm is fraction free until the very last step.
-        If ``False``, the naive row reduction procedure is used where
+        If ``False``, the naive row reduction procedure is used were
         each pivot is normalized to be `1` before row operations are
         used to zero above and below the pivot.
 

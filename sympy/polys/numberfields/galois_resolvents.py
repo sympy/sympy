@@ -80,7 +80,7 @@ class Resolvent:
     X0*X1 + X2*X3
 
     Resolvents are useful for computing Galois groups. Given a polynomial $T$
-    of degree $n$, we will use a resolvent $R$ where $Gal(T) \leq G \leq S_n$.
+    of degree $n$, we will use a resolvent $R$ were $Gal(T) \leq G \leq S_n$.
     We will then want to substitute the roots of $T$ for the variables $X_i$
     in $R$, and study things like the discriminant of $R$, and the way $R$
     factors over $\mathbb{Q}$.
@@ -154,7 +154,7 @@ class Resolvent:
     continue to increase. However, the binomial coefficient never falls by more
     than a factor of $1/m$ at a time, so our assumptions that $M \geq 2$ and
     $m < r 2^t$ are enough to tell us that the constant coefficient of $R$,
-    i.e. that where $j = m$, has the largest error bound. Therefore we can use
+    i.e. that were $j = m$, has the largest error bound. Therefore we can use
     $$r^m (mt + 1) M^{mt - 1} \varepsilon$$
     as our error bound for all the coefficients.
 
@@ -187,7 +187,7 @@ class Resolvent:
         X : list of :py:class:`~.Symbol`
         s : list of :py:class:`~.Permutation`
             representing the cosets of the stabilizer of *F* in
-            some subgroup $G$ of $S_n$, where $n$ is the length of *X*.
+            some subgroup $G$ of $S_n$, were $n$ is the length of *X*.
         """
         self.F = F
         self.X = X

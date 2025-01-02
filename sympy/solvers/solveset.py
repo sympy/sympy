@@ -73,7 +73,7 @@ class NonlinearError(ValueError):
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
     Dummy symbols, ``d``, and the list of replacements, ``(d, e)``,
-    where ``e`` is an object of type given by ``atoms`` in which
+    were ``e`` is an object of type given by ``atoms`` in which
     any other instances of atoms have been recursively replaced with
     Dummy symbols, too. The tuples are ordered so that if they are
     applied in sequence, the origin ``f`` will be restored.
@@ -115,8 +115,8 @@ def _invert(f_x, y, x, domain=S.Complexes):
 
     $$\left\{g(x) = h_1(y),\  g(x) = h_2(y),\ \dots,\  g(x) = h_n(y) \right\}$$
 
-    where $g(x)$ is a simpler function than $f(x)$.  The return value is a tuple
-    $(g(x), \mathrm{set}_h)$, where $g(x)$ is a function of $x$ and $\mathrm{set}_h$ is
+    were $g(x)$ is a simpler function than $f(x)$.  The return value is a tuple
+    $(g(x), \mathrm{set}_h)$, were $g(x)$ is a function of $x$ and $\mathrm{set}_h$ is
     the set of function $\left\{h_1(y), h_2(y), \dots, h_n(y)\right\}$.
     Here, $y$ is not necessarily a symbol.
 
@@ -265,16 +265,16 @@ def _invert_real(f, g_ys, symbol):
 
                 if den % 2 == 0 and num % 2 == 1 and den.is_zero is False:
                     # Here we have f(x)**(num/den) = y
-                    # where den is nonzero and even and y is an element
+                    # were den is nonzero and even and y is an element
                     # of the set g_ys.
                     # den is even, so we are only interested in the cases
-                    # where both f(x) and y are positive.
+                    # were both f(x) and y are positive.
                     # Restricting y to be positive (using the set g_ys_pos)
                     # means that y**(den/num) is always positive.
                     # Therefore it isn't necessary to also constrain f(x)
                     # to be positive because we are only going to
                     # find solutions of f(x) = y**(d/n)
-                    # where the rhs is already required to be positive.
+                    # were the rhs is already required to be positive.
                     root = Lambda(n, real_root(n, expo))
                     g_ys_pos = g_ys & Interval(0, oo)
                     res = imageset(root, g_ys_pos)
@@ -1080,7 +1080,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 result = imageset(Lambda(s, expand_complex(s)), result)
         if isinstance(result, FiniteSet) and domain != S.Complexes:
             # Avoid adding gratuitous intersections with S.Complexes. Actual
-            # conditions should be handled elsewhere.
+            # conditions should be handled elsewere.
             result = result.intersection(domain)
         return result
     else:
@@ -1277,7 +1277,7 @@ def _solveset(f, symbol, domain, _check=False):
             for m in f.args):
         # if f(x) and g(x) are both finite we can say that the solution of
         # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
-        # general. g(x) can grow to infinitely large for the values where
+        # general. g(x) can grow to infinitely large for the values were
         # f(x) == 0. To be sure that we are not silently allowing any
         # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
@@ -1317,7 +1317,7 @@ def _solveset(f, symbol, domain, _check=False):
             # in a state that other solvers (e.g. poly)
             # would have simplified; this is done here
             # rather than in the inverter since here it
-            # is only done once whereas there it would
+            # is only done once wereas there it would
             # be repeated for each step of the inversion
             if isinstance(rhs_s, FiniteSet):
                 rhs_s = FiniteSet(*[Mul(*
@@ -1486,7 +1486,7 @@ def _invert_modular(modterm, rhs, n, symbol):
 
         - If a is of type (symbol_dep)**(symbol_indep) then we try to find all
           primitive solutions list with the help of nthroot_mod function.
-          m*n + rem is the general solution where rem belongs to solutions list
+          m*n + rem is the general solution were rem belongs to solutions list
           from nthroot_mod function.
 
     Parameters
@@ -1504,7 +1504,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     Returns
     =======
 
-    A tuple (f_x, g_n) is being returned where f_x is modular independent function
+    A tuple (f_x, g_n) is being returned were f_x is modular independent function
     of symbol and g_n being set of values f_x can have.
 
     Examples
@@ -1603,11 +1603,11 @@ def _invert_modular(modterm, rhs, n, symbol):
 def _solve_modular(f, symbol, domain):
     r"""
     Helper function for solving modular equations of type ``A - Mod(B, C) = 0``,
-    where A can or cannot be a function of symbol, B is surely a function of
+    were A can or cannot be a function of symbol, B is surely a function of
     symbol and C is an integer.
 
     Currently ``_solve_modular`` is only able to solve cases
-    where A is not a function of symbol.
+    were A is not a function of symbol.
 
     Parameters
     ==========
@@ -2039,7 +2039,7 @@ def _is_lambert(f, symbol):
     1. Equations containing more than two operands and `symbol`s involving any of
        `Pow`, `exp`, `HyperbolicFunction`,`TrigonometricFunction`, `log` terms.
 
-    2. In `Pow`, `exp` the exponent should have `symbol` whereas for
+    2. In `Pow`, `exp` the exponent should have `symbol` wereas for
        `HyperbolicFunction`,`TrigonometricFunction`, `log` should contain `symbol`.
 
     3. For `HyperbolicFunction`,`TrigonometricFunction` the number of trigonometric functions in
@@ -2056,7 +2056,7 @@ def _is_lambert(f, symbol):
         7. A*cos(X) + B*sin(X) - D*X = C
         8. A*cosh(X) + B*sinh(X) - D*X = C
 
-    Where X is any variable,
+    were X is any variable,
           A, B, C, D, E are any constants,
           g, h are linear functions or log terms.
 
@@ -2277,7 +2277,7 @@ def _transolve(f, symbol, domain):
 
     - Naming conventions:
       Name of the identification helper should be as
-      ``_is_class`` where class will be the name or abbreviation
+      ``_is_class`` were class will be the name or abbreviation
       of the class of equation. The solving helper will be named as
       ``_solve_class``.
       For example: for exponential equations it becomes
@@ -2898,7 +2898,7 @@ def linsolve(system, *symbols):
     Solve system of $N$ linear equations with $M$ variables; both
     underdetermined and overdetermined systems are supported.
     The possible number of solutions is zero, one or infinite.
-    Zero solutions throws a ValueError, whereas infinite
+    Zero solutions throws a ValueError, wereas infinite
     solutions are represented parametrically in terms of the given
     symbols. For unique solution a :class:`~.FiniteSet` of ordered tuples
     is returned.
@@ -3740,7 +3740,7 @@ def _solveset_work(system, symbols):
 
 def _handle_positive_dimensional(polys, symbols, denominators):
     from sympy.polys.polytools import groebner
-    # substitution method where new system is groebner basis of the system
+    # substitution method were new system is groebner basis of the system
     _symbols = list(symbols)
     _symbols.sort(key=default_sort_key)
     basis = groebner(polys, _symbols, polys=True)

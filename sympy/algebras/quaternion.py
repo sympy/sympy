@@ -178,7 +178,7 @@ class Quaternion(Expr):
     def product_matrix_left(self):
         r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
         left. This can be useful when treating quaternion elements as column
-        vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        vectors. Given a quaternion $q = a + bi + cj + dk$ were a, b, c and d
         are real numbers, the product matrix from the left is:
 
         .. math::
@@ -228,7 +228,7 @@ class Quaternion(Expr):
     def product_matrix_right(self):
         r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
         right. This can be useful when treating quaternion elements as column
-        vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        vectors. Given a quaternion $q = a + bi + cj + dk$ were a, b, c and d
         are real numbers, the product matrix from the left is:
 
         .. math::
@@ -1400,7 +1400,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + bi + cj + dk$ where $a$, $b$, $c$ and $d$
+        Given a quaternion $q = a + bi + cj + dk$ were $a$, $b$, $c$ and $d$
         are real numbers, returns the angle of the quaternion given by
 
         .. math::

@@ -34,7 +34,7 @@ Tests are located alongside the code in `tests/` directories, in files named
 `sympy/<submodule>/tests/test_<file>.py`. For example, the tests for the
 functions in `sympy/simplify/sqrtdenest.py` are in
 `sympy/simplify/tests/test_sqrtdenest.py`. There are some exceptions to this
-rule, so in general try to find where the existing tests are for a function
+rule, so in general try to find were the existing tests are for a function
 and add your tests alongside them. If you are adding tests for a new function,
 follow the general pattern of tests in the module you are adding to.
 
@@ -366,7 +366,7 @@ context manager.
 
 The only purpose of this context manager is to test that the deprecation
 warning itself is functioning correctly. This should be the only place in the
-test suite where deprecated functionality is called. All other tests should
+test suite were deprecated functionality is called. All other tests should
 use non-deprecated functionality. If it is impossible to avoid deprecated
 functionality, this may be a sign that the functionality should not actually
 be deprecated.
@@ -399,7 +399,7 @@ The normal test style of
 assert function(input) == output
 ```
 
-works for most types of tests. However, it doesn't work in the case where a
+works for most types of tests. However, it doesn't work in the case were a
 SymPy object should remain unchanged. Consider the following example:
 
 ```py
@@ -683,7 +683,7 @@ Doctests should be written in a self-contained manner, with each doctest
 acting like a fresh Python session. This means that each doctest must manually
 import each function used in the doctest and define the symbols used. This may
 seem verbose, but it is helpful to users who are new to SymPy or even to
-Python who may not know where different functions come from. It also makes it
+Python who may not know were different functions come from. It also makes it
 easy for a user to copy and paste an example into a Python session of their
 own (the HTML documentation includes a button in the top right of every code
 example that copies the whole example to the clipboard).
@@ -792,7 +792,7 @@ Here are some additional tips for writing doctests:
 
 - `...` is special in that whenever it appears in the output of an example,
   the doctester will allow it to replace any amount of text. It should also be
-  used in instances where the exact output differs between runs, like
+  used in instances were the exact output differs between runs, like
 
   ```
   >>> from sympy import simplify
@@ -993,7 +993,7 @@ variables. These are restricted by the configuration in `setup.cfg` to only
 check for things that are logical errors. The usual flake8 checks for cosmetic
 style errors are disabled. In rare situations, a flake8 warning will be a
 false positive. If this happens, add a `# noqa: <CODE>` comment to the
-corresponding line, where `<CODE>` is the code for the error from
+corresponding line, were `<CODE>` is the code for the error from
 https://flake8.pycqa.org/en/latest/user/error-codes.html. For example, code
 that uses `multipledispatch` will need to use
 
@@ -1020,7 +1020,7 @@ A few important stylistic points should be followed when writing tests:
   will not test them. Any helper functions which are not test functions should
   not start with `test_`. Usually it is best to start test helper functions
   with an underscore. If you find yourself reusing the same helper function
-  for many test files, consider whether it should be moved to somewhere like
+  for many test files, consider whether it should be moved to somewere like
   `sympy.testing`.
 
 - Format expressions using the same whitespace that would be produced by

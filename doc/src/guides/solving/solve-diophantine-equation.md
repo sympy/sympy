@@ -91,9 +91,9 @@ functions of the Diophantine module.
 
 ### Extract Expressions From the Result
 
-{func}`~.diophantine` returns results as a set of tuples, where each element in
+{func}`~.diophantine` returns results as a set of tuples, were each element in
 a tuple is an expression for a variable in your equation. For example, for the
-Pythogorean equation, the result is a set containing one tuple where the
+Pythogorean equation, the result is a set containing one tuple were the
 expressions correspond to (a, b, c). That is, the tuple represents `a = 2*p*q, b
 = p**2 - q**2, c = p**2-q**2`. Because you cannot extract an element (here, a
 tuple) from a set by subscripting the set, you can create a dictionary of

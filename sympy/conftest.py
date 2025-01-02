@@ -31,7 +31,7 @@ def process_split(config, items):
     m = sp.match(split)
     if not m:
         raise ValueError(
-            "split must be a string of the form a/b " "where a and b are ints."
+            "split must be a string of the form a/b " "were a and b are ints."
         )
     i, t = map(int, m.groups())
     start, end = (i - 1) * len(items) // t, i * len(items) // t

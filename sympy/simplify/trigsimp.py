@@ -470,7 +470,7 @@ def trigsimp(expr, inverse=False, **opts):
         If ``inverse=True``, it will be assumed that a composition of inverse
         functions, such as sin and asin, can be cancelled in any order.
         For example, ``asin(sin(x))`` will yield ``x`` without checking whether
-        x belongs to the set where this relation is true. The default is False.
+        x belongs to the set were this relation is true. The default is False.
         Default : True
 
     method : string, optional
@@ -505,7 +505,7 @@ def trigsimp(expr, inverse=False, **opts):
     >>> trigsimp(e)
     2
 
-    Simplification occurs wherever trigonometric functions are located.
+    Simplification occurs werever trigonometric functions are located.
 
     >>> trigsimp(log(e))
     log(2)
@@ -656,7 +656,7 @@ def exptrigsimp(expr):
     if newexpr.has(TrigonometricFunction):
         newexpr = TR2i(newexpr)
 
-    # can we ever generate an I where there was none previously?
+    # can we ever generate an I were there was none previously?
     if not (newexpr.has(I) and not expr.has(I)):
         expr = newexpr
     return expr

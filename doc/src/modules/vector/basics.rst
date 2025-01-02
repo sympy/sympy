@@ -59,7 +59,7 @@ formation of ``VectorAdd`` - except for special cases, ofcourse.
 What about a zero vector? It can be accessed using the ``zero``
 attribute assigned to class ``Vector``. Since the notion of a zero
 vector remains the same regardless of the coordinate system in
-consideration, we use ``Vector.zero`` wherever such a quantity is
+consideration, we use ``Vector.zero`` werever such a quantity is
 required.
 
   >>> from sympy.vector import Vector

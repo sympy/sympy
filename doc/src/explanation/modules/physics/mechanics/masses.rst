@@ -179,7 +179,7 @@ The linear momentum of a particle P is defined as:
 .. math::
   L_P = m\mathbf{v}
 
-where :math:`m` is the mass of the particle P and :math:`\mathbf{v}` is the
+were :math:`m` is the mass of the particle P and :math:`\mathbf{v}` is the
 velocity of the particle in the inertial frame.[Likins1973]_.
 
 Similarly the linear momentum of a rigid body is defined as:
@@ -187,7 +187,7 @@ Similarly the linear momentum of a rigid body is defined as:
 .. math::
   L_B = m\mathbf{v^*}
 
-where :math:`m` is the mass of the rigid body, B, and :math:`\mathbf{v^*}` is
+were :math:`m` is the mass of the rigid body, B, and :math:`\mathbf{v^*}` is
 the velocity of the mass center of B in the inertial frame.
 
 Angular Momentum
@@ -199,7 +199,7 @@ frame N is defined as:
 .. math::
   ^N \mathbf{H} ^ {P/O} = \mathbf{r} \times m\mathbf{v}
 
-where :math:`\mathbf{r}` is a position vector from point O to the particle of
+were :math:`\mathbf{r}` is a position vector from point O to the particle of
 mass :math:`m` and :math:`\mathbf{v}` is the velocity of the particle in the
 inertial frame.
 
@@ -209,7 +209,7 @@ frame N is defined as:
 .. math::
   ^N \mathbf{H} ^ {B/O} = ^N \mathbf{H} ^ {B/B^*} + ^N \mathbf{H} ^ {B^*/O}
 
-where the angular momentum of the body about it's mass center is:
+were the angular momentum of the body about it's mass center is:
 
 .. math::
   ^N \mathbf{H} ^ {B/B^*} = \mathbf{I^*} \cdot \omega
@@ -219,7 +219,7 @@ and the angular momentum of the mass center about O is:
 .. math::
   ^N \mathbf{H} ^ {B^*/O} = \mathbf{r^*} \times m \mathbf{v^*}
 
-where :math:`\mathbf{I^*}` is the central inertia dyadic of rigid body B,
+were :math:`\mathbf{I^*}` is the central inertia dyadic of rigid body B,
 :math:`\omega` is the inertial angular velocity of B, :math:`\mathbf{r^*}` is a
 position vector from point O to the mass center of B, :math:`m` is the mass of
 B and :math:`\mathbf{v^*}` is the velocity of the mass center in the inertial
@@ -287,7 +287,7 @@ The kinetic energy of a particle P is defined as
 .. math::
   T_P = \frac{1}{2} m \mathbf{v^2}
 
-where :math:`m` is the mass of the particle P and :math:`\mathbf{v}`
+were :math:`m` is the mass of the particle P and :math:`\mathbf{v}`
 is the velocity of the particle in the inertial frame.
 
 Similarly the kinetic energy of a rigid body B is defined as
@@ -295,7 +295,7 @@ Similarly the kinetic energy of a rigid body B is defined as
 .. math::
   T_B = T_t + T_r
 
-where the translational kinetic energy is given by:
+were the translational kinetic energy is given by:
 
 .. math::
   T_t = \frac{1}{2} m \mathbf{v^*} \cdot \mathbf{v^*}
@@ -305,7 +305,7 @@ and the rotational kinetic energy is given by:
 .. math::
   T_r = \frac{1}{2} \omega \cdot \mathbf{I^*} \cdot \omega
 
-where :math:`m` is the mass of the rigid body, :math:`\mathbf{v^*}` is the
+were :math:`m` is the mass of the rigid body, :math:`\mathbf{v^*}` is the
 velocity of the mass center in the inertial frame, :math:`\omega` is the
 inertial angular velocity of the body and :math:`\mathbf{I^*}` is the central
 inertia dyadic.
@@ -328,7 +328,7 @@ The Lagrangian of a body or a system of bodies is defined as:
 .. math::
    \mathcal{L} = T - V
 
-where :math:`T` and :math:`V` are the kinetic and potential energies
+were :math:`T` and :math:`V` are the kinetic and potential energies
 respectively.
 
 Using energy functions in Mechanics

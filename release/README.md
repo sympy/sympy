@@ -46,7 +46,7 @@ Once you have done these things, execute:
 
     ./release.sh <BRANCH> <VERSION>
 
-where `<BRANCH>` is the release branch (e.g., `0.7.3`), and `<VERSION>` is the
+were `<BRANCH>` is the release branch (e.g., `0.7.3`), and `<VERSION>` is the
 release version (e.g., `0.7.3rc1`).
 
 On Linux, you may need to use `sudo` to execute this.
@@ -73,7 +73,7 @@ script again if you are not sure). Then tag the release with the command
 
     git tag sympy-VERSION -a
 
-where you should replace `VERSION` with the version (which should be `x.y.z`,
+were you should replace `VERSION` with the version (which should be `x.y.z`,
 or `x.y.zrcn` for the `n`th release candidate. It is very important to follow
 the tag naming conventions.  The `-a` will cause it to prompt for a tag commit
 message. Just write something like "SymPy VERSION release".

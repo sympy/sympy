@@ -94,14 +94,14 @@ class KanesMethod(_Methods):
         Method used to solve the kinematic differential equations. If a string
         is supplied, it should be a valid method that can be used with the
         :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
-        supplied, it should have the format ``f(A, rhs)``, where it solves the
+        supplied, it should have the format ``f(A, rhs)``, were it solves the
         equations and returns the solution. The default utilizes LU solve. See
         the notes for more information.
     constraint_solver : str, callable
         Method used to solve the velocity constraints. If a string is
         supplied, it should be a valid method that can be used with the
         :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
-        supplied, it should have the format ``f(A, rhs)``, where it solves the
+        supplied, it should have the format ``f(A, rhs)``, were it solves the
         equations and returns the solution. The default utilizes LU solve. See
         the notes for more information.
 
@@ -136,7 +136,7 @@ class KanesMethod(_Methods):
     kinematic differential equations are not too complex it can be worth it to simplify
     the solution by using ``lambda A, b: simplify(Matrix.LUsolve(A, b))``. Another
     option solver one may use is :func:`sympy.solvers.solveset.linsolve`. This can be
-    done using `lambda A, b: tuple(linsolve((A, b)))[0]`, where we select the first
+    done using `lambda A, b: tuple(linsolve((A, b)))[0]`, were we select the first
     solution as our system should have only one unique solution.
 
     Examples
@@ -162,8 +162,8 @@ class KanesMethod(_Methods):
 
     Next we need to arrange/store information in the way that KanesMethod
     requires. The kinematic differential equations should be an iterable of
-    expressions. A list of forces/torques must be constructed, where each entry
-    in the list is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where
+    expressions. A list of forces/torques must be constructed, were each entry
+    in the list is a (Point, Vector) or (ReferenceFrame, Vector) tuple, were
     the Vectors represent the Force or Torque.
     Next a particle needs to be created, and it needs to have a point and mass
     assigned to it.
@@ -183,7 +183,7 @@ class KanesMethod(_Methods):
     Next we form FR* and FR to complete: Fr + Fr* = 0.
     We have the equations of motion at this point.
     It makes sense to rearrange them though, so we calculate the mass matrix and
-    the forcing terms, for E.o.M. in the form: [MM] udot = forcing, where MM is
+    the forcing terms, for E.o.M. in the form: [MM] udot = forcing, were MM is
     the mass matrix, udot is a vector of the time derivatives of the
     generalized speeds, and forcing is a vector representing "forcing" terms.
 
@@ -336,7 +336,7 @@ class KanesMethod(_Methods):
         Parameters
         ==========
         kdeqs : sequence of sympy expressions
-            Kinematic differential equations in the form of f(u,q',q,t) where
+            Kinematic differential equations in the form of f(u,q',q,t) were
             f() = 0. The equations have to be linear in the time-derivatives of
             the generalized coordinates and in the generalized speeds.
 
@@ -546,7 +546,7 @@ class KanesMethod(_Methods):
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
             :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
-            supplied, it should have the format ``x = f(A, b)``, where it
+            supplied, it should have the format ``x = f(A, b)``, were it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
@@ -640,7 +640,7 @@ class KanesMethod(_Methods):
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
             :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
-            supplied, it should have the format ``x = f(A, b)``, where it
+            supplied, it should have the format ``x = f(A, b)``, were it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
@@ -656,12 +656,12 @@ class KanesMethod(_Methods):
         linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
 
         If kwarg A_and_B is True, returns A, B, r for the linearized form
-        dx = A*x + B*r, where x = [q_ind, u_ind]^T. Note that this is
+        dx = A*x + B*r, were x = [q_ind, u_ind]^T. Note that this is
         computationally intensive if there are many symbolic parameters. For
         this reason, it may be more desirable to use the default A_and_B=False,
         returning M, A, and B. Values may then be substituted in to these
         matrices, and the state space form found as
-        A = P.T*M.inv()*A, B = P.T*M.inv()*B, where P = Linearizer.perm_mat.
+        A = P.T*M.inv()*A, B = P.T*M.inv()*B, were P = Linearizer.perm_mat.
 
         In both cases, r is found as all dynamicsymbols in the equations of
         motion that are not part of q, u, q', or u'. They are sorted in
@@ -686,7 +686,7 @@ class KanesMethod(_Methods):
         Explanation
         ===========
 
-        Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
+        Returns (Fr, Fr*). In the case were auxiliary generalized speeds are
         present (say, s auxiliary speeds, o generalized speeds, and m motion
         constraints) the length of the returned vectors will be o - m + s in
         length. The first o - m equations will be the constrained Kane's

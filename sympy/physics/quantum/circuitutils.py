@@ -251,7 +251,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
     qubit_map : dict
         An existing mapping of symbolic indices to real indices
 
-    All symbolic indices have the format 'i#', where # is
+    All symbolic indices have the format 'i#', were # is
     some number >= 0.
     """
 
@@ -451,7 +451,7 @@ def random_insert(circuit, choices, seed=None):
         Set of circuit choices
     seed : int or list
         seed used for _randrange; to override the random selections, give
-        a list two integers, [i, j] where i is the circuit location where
+        a list two integers, [i, j] were i is the circuit location were
         choice[j] will be inserted.
 
     Notes

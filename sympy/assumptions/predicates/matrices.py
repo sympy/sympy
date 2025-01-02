@@ -116,7 +116,7 @@ class OrthogonalPredicate(Predicate):
 
     ``Q.orthogonal(x)`` is true iff ``x`` is an orthogonal matrix.
     A square matrix ``M`` is an orthogonal matrix if it satisfies
-    ``M^TM = MM^T = I`` where ``M^T`` is the transpose matrix of
+    ``M^TM = MM^T = I`` were ``M^T`` is the transpose matrix of
     ``M`` and ``I`` is an identity matrix. Note that an orthogonal
     matrix is necessarily invertible.
 
@@ -156,7 +156,7 @@ class UnitaryPredicate(Predicate):
     ``Q.unitary(x)`` is true iff ``x`` is a unitary matrix.
     Unitary matrix is an analogue to orthogonal matrix. A square
     matrix ``M`` with complex elements is unitary if :math:``M^TM = MM^T= I``
-    where :math:``M^T`` is the conjugate transpose matrix of ``M``.
+    were :math:``M^T`` is the conjugate transpose matrix of ``M``.
 
     Examples
     ========

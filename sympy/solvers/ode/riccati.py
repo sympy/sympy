@@ -5,7 +5,7 @@ Riccati ODEs. A general first order Riccati ODE is given by -
 
 .. math:: y' = b_0(x) + b_1(x)w + b_2(x)w^2
 
-where `b_0, b_1` and `b_2` can be arbitrary rational functions of `x`
+were `b_0, b_1` and `b_2` can be arbitrary rational functions of `x`
 with `b_2 \ne 0`. When `b_2 = 0`, the equation is not a Riccati ODE
 anymore and becomes a Linear ODE. Similarly, when `b_0 = 0`, the equation
 is a Bernoulli ODE. The algorithm presented below can find rational
@@ -23,7 +23,7 @@ using the transformation
 
 .. math:: y = -b_2(x) - \frac{b'_2(x)}{2 b_2(x)} - \frac{b_1(x)}{2}
 
-where `a(x)` is given by
+were `a(x)` is given by
 
 .. math:: a(x) = \frac{1}{4}\left(\frac{b_2'}{b_2} + b_1\right)^2 - \frac{1}{2}\left(\frac{b_2'}{b_2} + b_1\right)' - b_0 b_2
 
@@ -90,7 +90,7 @@ This algorithm finds all possible rational solutions for the Riccati ODE.
 If no rational solutions are found, it means that no rational solutions
 exist.
 
-The algorithm works for Riccati ODEs where the coefficients are rational
+The algorithm works for Riccati ODEs were the coefficients are rational
 functions in the independent variable `x` with rational number coefficients
 i.e. in `Q(x)`. The coefficients in the rational function cannot be floats,
 irrational numbers, symbols or any other kind of expression. The reasons
@@ -113,7 +113,7 @@ the equation. `y(x)` must have the form -
 
 .. math:: y(x) = \sum_{i=1}^{n} \sum_{j=1}^{r_i} \frac{c_{ij}}{(x - x_i)^j} + \sum_{i=1}^{m} \frac{1}{x - \chi_i} + \sum_{i=0}^{N} d_i x^i
 
-where `x_1, x_2, \dots, x_n` are non-movable poles of `a(x)`,
+were `x_1, x_2, \dots, x_n` are non-movable poles of `a(x)`,
 `\chi_1, \chi_2, \dots, \chi_m` are movable poles of `a(x)`, and the values
 of `N, n, r_1, r_2, \dots, r_n` can be determined from `a(x)`. The
 coefficient vectors `(d_0, d_1, \dots, d_N)` and `(c_{i1}, c_{i2}, \dots, c_{i r_i})`
@@ -170,7 +170,7 @@ For each of these above combinations, do
 Step 8 : Compute `m` in ``compute_m_ybar``. `m` is the degree bound of
 the polynomial solution we must find for the auxiliary equation.
 
-Step 9 : In ``compute_m_ybar``, compute ybar as well where ``ybar`` is
+Step 9 : In ``compute_m_ybar``, compute ybar as well were ``ybar`` is
 one part of y(x) -
 
 .. math:: \overline{y}(x) = \sum_{i=1}^{n} \sum_{j=1}^{r_i} \frac{c_{ij}}{(x - x_i)^j} + \sum_{i=0}^{N} d_i x^i
@@ -596,7 +596,7 @@ def rational_laurent_series(num, den, x, r, m, n):
 
     1. Substitute `x + x_0` in place of `x`. If `x_0`
     is a pole of `f(x)`, multiply the expression by `x^m`
-    where `m` is the multiplicity of `x_0`. Denote the
+    were `m` is the multiplicity of `x_0`. Denote the
     the resulting expression as g(x). We do this substitution
     so that we can now find the Laurent series of g(x) about
     `x = 0`.
@@ -606,7 +606,7 @@ def rational_laurent_series(num, den, x, r, m, n):
 
     .. math:: g(x) = \frac{num(x)}{den(x)} = \sum_{m = 0}^{\infty} a_m x^m
 
-    where `a_m` denotes the Laurent series coefficients.
+    were `a_m` denotes the Laurent series coefficients.
 
     3. Multiply the denominator to the RHS of the equation
     and form a recurrence relation for the coefficients `a_m`.
@@ -835,7 +835,7 @@ def solve_riccati(fx, x, b0, b1, b2, gensol=False):
 
         # Step 7 : Iterate over all possible combinations and return solutions
         # For each possible combination, generate an array of 0's and 1's
-        # where 0 means pick 1st choice and 1 means pick the second choice.
+        # were 0 means pick 1st choice and 1 means pick the second choice.
 
         # NOTE: We could exit from the loop if we find 3 particular solutions,
         # but it is not implemented here as -

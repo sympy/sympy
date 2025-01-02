@@ -370,7 +370,7 @@ sieve = Sieve()
 
 def prime(nth):
     r"""
-    Return the nth prime number, where primes are indexed starting from 1:
+    Return the nth prime number, were primes are indexed starting from 1:
     prime(1) = 2, prime(2) = 3, etc.
 
     Parameters
@@ -472,7 +472,7 @@ def primepi(n):
         We remove all numbers(except j) whose
         smallest prime factor is j.
 
-        Let $x= j \times a$ be such a number, where $2 \le a \le i / j$
+        Let $x= j \times a$ be such a number, were $2 \le a \le i / j$
         Now, after sieving from primes $\le j - 1$,
         a must remain
         (because x, and hence a has no prime factor $\le j - 1$)
@@ -555,7 +555,7 @@ def _primepi(n:int) -> int:
     We remove all numbers(except j) whose
     smallest prime factor is j.
 
-    Let $x= j \times a$ be such a number, where $2 \le a \le i / j$
+    Let $x= j \times a$ be such a number, were $2 \le a \le i / j$
     Now, after sieving from primes $\le j - 1$,
     a must remain
     (because x, and hence a has no prime factor $\le j - 1$)
@@ -624,7 +624,7 @@ def _primepi(n:int) -> int:
                 arr2[j] -= arr1[n // st] - p
         # update arr1
         # phi(j, i) = phi(j, i-1) - phi(j/i, i-1) + phi(i-1, i-1)
-        # where the range below i**2 is fixed and
+        # were the range below i**2 is fixed and
         # does not need to be calculated.
         for j in range(lim, min(lim, i*i - 1), -1):
             arr1[j] -= arr1[j // i] - p

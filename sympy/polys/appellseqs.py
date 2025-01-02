@@ -211,7 +211,7 @@ def dup_andre(n, K):
 def andre_poly(n, x=None, polys=False):
     r"""Generates the Andre polynomial `\mathcal{A}_n(x)`.
 
-    This is the Appell sequence where the constant coefficients form the sequence
+    This is the Appell sequence were the constant coefficients form the sequence
     of Euler numbers ``euler(n)``. As such they have integer coefficients
     and parities matching the parity of `n`.
 

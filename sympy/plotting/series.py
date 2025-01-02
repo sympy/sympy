@@ -267,7 +267,7 @@ class BaseSeries:
         # discretized ranges
         self._discretized_domain = None
         # wheter the series contains any interactive range, which is a range
-        # where the minimum and maximum values can be changed with an
+        # were the minimum and maximum values can be changed with an
         # interactive widget
         self._interactive_ranges = False
         # NOTE: consider a generic summation, for example:
@@ -1476,7 +1476,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
         if self._return is None:
             # The evaluation could produce complex numbers. Set real elements
-            # to NaN where there are non-zero imaginary elements
+            # to NaN were there are non-zero imaginary elements
             _re[np.invert(np.isclose(_im, np.zeros_like(_im)))] = np.nan
         elif self._return == "real":
             pass

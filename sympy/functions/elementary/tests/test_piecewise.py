@@ -370,7 +370,7 @@ def test_piecewise_integrate3_inequality_conditions():
 
     # delete old tests that involved c1 and c2 since those
     # reduce to the above except that a value of 0 was used
-    # for two expressions whereas the above uses 3 different
+    # for two expressions wereas the above uses 3 different
     # values
 
 

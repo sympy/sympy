@@ -5,7 +5,7 @@ import inspect
 
 from .dispatcher import Dispatcher, MethodDispatcher, ambiguity_warn
 
-# XXX: This parameter to dispatch isn't documented and isn't used anywhere in
+# XXX: This parameter to dispatch isn't documented and isn't used anywere in
 # sympy. Maybe it should just be removed.
 global_namespace: dict[str, Any] = {}
 

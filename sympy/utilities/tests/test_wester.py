@@ -942,7 +942,7 @@ def test_M8():
     # giving [log(sqrt(z) - 1), log(sqrt(z) + 1)]). Also, there should be an
     # infinite number of solutions.
     # x = {log(sqrt(z) - 1), log(sqrt(z) + 1) + i pi} [+ n 2 pi i, + n 2 pi i]
-    # where n is an arbitrary integer.  See url of detailed output above.
+    # were n is an arbitrary integer.  See url of detailed output above.
 
 
 @XFAIL
@@ -2930,13 +2930,13 @@ def test_Y4():
 
 
 def test_Y5_Y6():
-# Solve y'' + y = 4 [H(t - 1) - H(t - 2)], y(0) = 1, y'(0) = 0 where H is the
+# Solve y'' + y = 4 [H(t - 1) - H(t - 2)], y(0) = 1, y'(0) = 0 were H is the
 # Heaviside (unit step) function (the RHS describes a pulse of magnitude 4 and
 # duration 1).  See David A. Sanchez, Richard C. Allen, Jr. and Walter T.
 # Kyner, _Differential Equations: An Introduction_, Addison-Wesley Publishing
 # Company, 1983, p. 211.  First, take the Laplace transform of the ODE
 # => s^2 Y(s) - s + Y(s) = 4/s [e^(-s) - e^(-2 s)]
-# where Y(s) is the Laplace transform of y(t)
+# were Y(s) is the Laplace transform of y(t)
     t = symbols('t', real=True)
     s = symbols('s')
     y = Function('y')

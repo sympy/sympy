@@ -208,7 +208,7 @@ def are_similar(e1, e2):
 def centroid(*args):
     """Find the centroid (center of mass) of the collection containing only Points,
     Segments or Polygons. The centroid is the weighted average of the individual centroid
-    where the weights are the lengths (of segments) or areas (of polygons).
+    were the weights are the lengths (of segments) or areas (of polygons).
     Overlapping regions will add to the weight of that region.
 
     If there are no objects (or a mixture of objects) then None is returned.
@@ -374,7 +374,7 @@ def convex_hull(*args, polygon=True):
     Returns
     =======
 
-    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where
+    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` were
                   ``L`` and ``U`` are the lower and upper hulls, respectively.
 
     Notes

@@ -155,7 +155,7 @@ cancel
 ------
 
 ``cancel()`` will take any rational function and put it into the standard
-canonical form, `\frac{p}{q}`, where `p` and `q` are expanded polynomials with
+canonical form, `\frac{p}{q}`, were `p` and `q` are expanded polynomials with
 no common factors, and the leading coefficients of `p` and `q` do not have
 denominators (i.e., are integers).
 
@@ -308,7 +308,7 @@ kinds of identities satisfied by exponents
 Identity 1 is always true.
 
 Identity 2 is not always true.  For example, if `x = y = -1` and `a =
-\frac{1}{2}`, then `x^ay^a = \sqrt{-1}\sqrt{-1} = i\cdot i = -1`, whereas
+\frac{1}{2}`, then `x^ay^a = \sqrt{-1}\sqrt{-1} = i\cdot i = -1`, wereas
 `(xy)^a = \sqrt{-1\cdot-1} = \sqrt{1} = 1`.  However, identity 2 is true at
 least if `x` and `y` are nonnegative and `a` is real (it may also be true
 under other conditions as well).  A common consequence of the failure of
@@ -706,7 +706,7 @@ form
    a_0 + \cfrac{1}{a_1 + \cfrac{1}{a_2 + \cfrac{1}{ \ddots + \cfrac{1}{a_n}
    }}}
 
-where `a_0, \ldots, a_n` are integers, and `a_1, \ldots, a_n` are positive. A
+were `a_0, \ldots, a_n` are integers, and `a_1, \ldots, a_n` are positive. A
 continued fraction can also be infinite, but infinite objects are more
 difficult to represent in computers, so we will only examine the finite case
 here.
@@ -774,7 +774,7 @@ Now suppose we were given ``frac`` in the above canceled form. In fact, we
 might be given the fraction in any form, but we can always put it into the
 above canonical form with ``cancel()``.  Suppose that we knew that it could be
 rewritten as a continued fraction.  How could we do this with SymPy?  A
-continued fraction is recursively `c + \frac{1}{f}`, where `c` is an integer
+continued fraction is recursively `c + \frac{1}{f}`, were `c` is an integer
 and `f` is a (smaller) continued fraction.  If we could write the expression
 in this form, we could pull out each `c` recursively and add it to a list.  We
 could then get a continued fraction with our ``list_to_frac()`` function.

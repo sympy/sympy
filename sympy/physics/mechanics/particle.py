@@ -60,7 +60,7 @@ class Particle(BodyBase):
 
         L = m * v
 
-        where m is the mass of the particle, and v is the velocity of the
+        were m is the mass of the particle, and v is the velocity of the
         particle in the frame N.
 
         Parameters
@@ -99,7 +99,7 @@ class Particle(BodyBase):
 
         ``H = cross(r, m * v)``
 
-        where r is the position vector from point O to the particle P, m is
+        were r is the position vector from point O to the particle P, m is
         the mass of the particle, and v is the velocity of the particle in
         the inertial frame, N.
 
@@ -143,7 +143,7 @@ class Particle(BodyBase):
 
         ``T = 1/2 (dot(m * v, v))``
 
-        where m is the mass of particle P, and v is the velocity of the
+        were m is the mass of particle P, and v is the velocity of the
         particle in the supplied ReferenceFrame.
 
         Parameters

@@ -147,7 +147,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         return res
 
     # We consider each denominator in the expression, and try to find
-    # cases where one or more symbolic denominator might be zero. The
+    # cases were one or more symbolic denominator might be zero. The
     # conditions for these cases are stored in the list slns.
     #
     # Since denoms returns a set we use ordered. This is important because the
@@ -325,7 +325,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
      heurisch(f, x, rewrite=False, hints=None)
 
-       where
+       were
          f : expression
          x : symbol
 
@@ -485,7 +485,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     # XXX: The commented line below makes heurisch more deterministic wrt
     # PYTHONHASHSEED and the iteration order of sets. There are other places
-    # where sets are iterated over but this one is possibly the most important.
+    # were sets are iterated over but this one is possibly the most important.
     # Theoretically the order here should not matter but different orderings
     # can expose potential bugs in the different code paths so potentially it
     # is better to keep the non-determinism.
@@ -706,7 +706,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         h = F - _derivation(candidate) / denom
         raw_numer = h.as_numer_denom()[0]
 
-        # Rewrite raw_numer as a polynomial in K[coeffs][V] where K is a field
+        # Rewrite raw_numer as a polynomial in K[coeffs][V] were K is a field
         # that we have to determine. We can't use simply atoms() because log(3),
         # sqrt(y) and similar expressions can appear, leading to non-trivial
         # domains.

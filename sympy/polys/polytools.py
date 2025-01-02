@@ -141,7 +141,7 @@ class Poly(Basic):
     >>> Poly(y*x**2 + x*y + 1)
     Poly(x**2*y + x*y + 1, x, y, domain='ZZ')
 
-    Create a univariate polynomial, where y is a constant:
+    Create a univariate polynomial, were y is a constant:
 
     >>> Poly(y*x**2 + x*y + 1,x)
     Poly(y*x**2 + y*x + 1, x, domain='ZZ[y]')
@@ -1606,7 +1606,7 @@ class Poly(Basic):
           employ anyone of the corresponding functions found in
           the module sympy.polys.subresultants_qq_zz. The functions
           in the module with suffix _pg compute prs's in Z[x] employing
-          rem(f, g, x), whereas the functions with suffix _amv
+          rem(f, g, x), wereas the functions with suffix _amv
           compute prs's in Z[x] employing rem_z(f, g, x).
 
           The function rem_z(f, g, x) differs from prem(f, g, x) in that
@@ -2100,7 +2100,7 @@ class Poly(Basic):
 
     def nth(f, *N):
         """
-        Returns the ``n``-th coefficient of ``f`` where ``N`` are the
+        Returns the ``n``-th coefficient of ``f`` were ``N`` are the
         exponents of the generators in the term of interest.
 
         Examples
@@ -3249,7 +3249,7 @@ class Poly(Basic):
 
         Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and
         ``r(x) = Norm(g(x))`` is a square-free polynomial over ``K``,
-        where ``a`` is the algebraic extension of the ground domain.
+        were ``a`` is the algebraic extension of the ground domain.
 
         Examples
         ========
@@ -3998,7 +3998,7 @@ class Poly(Basic):
 
         dom_delta_sq = f.rep.mignotte_sep_bound_squared()
         delta_sq = f.domain.get_field().to_sympy(dom_delta_sq)
-        # We have delta_sq = delta**2, where delta is a lower bound on the
+        # We have delta_sq = delta**2, were delta is a lower bound on the
         # minimum separation between any two roots of this polynomial.
         # Let eps = delta/3, and define eps_sq = eps**2 = delta**2/9.
         eps_sq = delta_sq / 9
@@ -6202,7 +6202,7 @@ def sqf_norm(f, *gens, **args):
 
     Returns ``s``, ``f``, ``r``, such that ``g(x) = f(x-sa)`` and
     ``r(x) = Norm(g(x))`` is a square-free polynomial over ``K``,
-    where ``a`` is the algebraic extension of the ground domain.
+    were ``a`` is the algebraic extension of the ground domain.
 
     Examples
     ========
@@ -6417,7 +6417,7 @@ def to_rational_coeffs(f):
 
     try to find a transformation ``x = alpha*y``
 
-    ``f(x) = lc*alpha**n * g(y)`` where ``g`` is a polynomial with
+    ``f(x) = lc*alpha**n * g(y)`` were ``g`` is a polynomial with
     rational coefficients, ``lc`` the leading coefficient.
 
     If this fails, try ``x = y + beta``
@@ -7423,7 +7423,7 @@ def reduced(f, G, *gens, **args):
 
     Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
     computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
-    such that ``f = q_1*g_1 + ... + q_n*g_n + r``, where ``r`` vanishes or ``r``
+    such that ``f = q_1*g_1 + ... + q_n*g_n + r``, were ``r`` vanishes or ``r``
     is a completely reduced polynomial with respect to ``G``.
 
     Examples
@@ -7740,7 +7740,7 @@ class GroebnerBasis(Basic):
 
         Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
         computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
-        such that ``f = q_1*f_1 + ... + q_n*f_n + r``, where ``r`` vanishes or ``r``
+        such that ``f = q_1*f_1 + ... + q_n*f_n + r``, were ``r`` vanishes or ``r``
         is a completely reduced polynomial with respect to ``G``.
 
         Examples

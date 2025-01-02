@@ -275,7 +275,7 @@ class ZerothOrderActivation(ActivationBase):
     Explanation
     ===========
 
-    Zeroth-order activation dynamics are useful in instances where you want to
+    Zeroth-order activation dynamics are useful in instances were you want to
     reduce the complexity of your musculotendon dynamics as they simple map
     exictation to activation. As a result, no additional state equations are
     introduced to your system. They also remove a potential source of delay
@@ -514,7 +514,7 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
             + \frac{3a}{2}\right) \left(\frac{1}{2} - a0\right)}{\tau_d}\right)
             \left(e - a\right)
 
-    where
+    were
 
     .. math::
 
@@ -553,8 +553,8 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
             excitation.
         smoothing_rate : Symbol | Number | None
             The slope of the hyperbolic tangent function used to smooth between
-            the switching of the equations where excitation exceed activation
-            and where activation exceeds excitation. The recommended value to
+            the switching of the equations were excitation exceed activation
+            and were activation exceeds excitation. The recommended value to
             use is ``10``, but values between ``0.1`` and ``100`` can be used.
 
         """

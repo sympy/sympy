@@ -682,7 +682,7 @@ class Domain:
         return K0.unify(K1)
 
     def unify_composite(K0, K1):
-        """Unify two domains where at least one is composite."""
+        """Unify two domains were at least one is composite."""
         K0_ground = K0.dom if K0.is_Composite else K0
         K1_ground = K1.dom if K1.is_Composite else K1
 

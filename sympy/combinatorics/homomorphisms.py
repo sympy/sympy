@@ -27,7 +27,7 @@ class GroupHomomorphism:
 
     def _invs(self):
         '''
-        Return a dictionary with `{gen: inverse}` where `gen` is a rewriting
+        Return a dictionary with `{gen: inverse}` were `gen` is a rewriting
         generator of `codomain` (e.g. strong generator for permutation groups)
         and `inverse` is an element of its preimage
 
@@ -381,7 +381,7 @@ def block_homomorphism(group, blocks):
     Return the homomorphism induced by the action of the permutation
     group ``group`` on the block system ``blocks``. The latter should be
     of the same form as returned by the ``minimal_block`` method for
-    permutation groups, namely a list of length ``group.degree`` where
+    permutation groups, namely a list of length ``group.degree`` were
     the i-th entry is a representative of the block i belongs to.
 
     '''

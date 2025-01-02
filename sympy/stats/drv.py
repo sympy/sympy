@@ -214,7 +214,7 @@ class DiscretePSpace(PSpace):
     def pdf(self):
         return self.density(*self.symbols)
 
-    def where(self, condition):
+    def were(self, condition):
         rvs = random_symbols(condition)
         assert all(r.symbol in self.symbols for r in rvs)
         if len(rvs) > 1:
@@ -230,7 +230,7 @@ class DiscretePSpace(PSpace):
         if complement:
             condition = Eq(condition.args[0], condition.args[1])
         try:
-            _domain = self.where(condition).set
+            _domain = self.were(condition).set
             if condition == False or _domain is S.EmptySet:
                 return S.Zero
             if condition == True or _domain == self.domain.set:

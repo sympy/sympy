@@ -242,7 +242,7 @@ def run_in_subprocess_with_hash_randomization(
 
     """
     cwd = get_sympy_dir()
-    # Note, we must return False everywhere, not None, as subprocess.call will
+    # Note, we must return False everywere, not None, as subprocess.call will
     # sometimes return None.
 
     # First check if the Python version supports hash randomization
@@ -450,7 +450,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
     You can disable running the tests in a separate subprocess using
     ``subprocess=False``.  This is done to support seeding hash randomization,
-    which is enabled by default in the Python versions where it is supported.
+    which is enabled by default in the Python versions were it is supported.
     If subprocess=False, hash randomization is enabled/disabled according to
     whether it has been enabled or not in the calling Python process.
     However, even if it is enabled, the seed cannot be printed unless it is
@@ -834,7 +834,7 @@ def _doctest(*paths, **kwargs):
         matched = not_blacklisted
     else:
         # take only what was requested...but not blacklisted items
-        # and allow for partial match anywhere or fnmatch of name
+        # and allow for partial match anywere or fnmatch of name
         paths = convert_to_native_paths(paths)
         matched = []
         for f in not_blacklisted:
@@ -971,7 +971,7 @@ def split_list(l, split, density=None):
     """
     m = sp.match(split)
     if not m:
-        raise ValueError("split must be a string of the form a/b where a and b are ints")
+        raise ValueError("split must be a string of the form a/b were a and b are ints")
     i, t = map(int, m.groups())
 
     if not density:
@@ -1628,7 +1628,7 @@ class SymPyDocTestFinder(DocTestFinder):
     Modified from doctest's version to look harder for code that
     appears comes from a different module. For example, the @vectorize
     decorator makes it look like functions come from multidimensional.py
-    even though their code exists elsewhere.
+    even though their code exists elsewere.
     """
 
     def _find(self, tests, obj, name, module, source_lines, globs, seen):
@@ -1806,7 +1806,7 @@ class SymPyDocTestRunner(DocTestRunner):
     """
     A class used to run DocTest test cases, and accumulate statistics.
     The ``run`` method is used to process a single DocTest case.  It
-    returns a tuple ``(f, t)``, where ``t`` is the number of test cases
+    returns a tuple ``(f, t)``, were ``t`` is the number of test cases
     tried, and ``f`` is the number of test cases that failed.
 
     Modified from the doctest version to not reset the sys.displayhook (see

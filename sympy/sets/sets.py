@@ -1647,7 +1647,7 @@ class Intersection(Set, LatticeOp):
         # At this point all elements in all of fs_sets are possibly in the
         # intersection. In some cases this is because they are definitely in
         # the intersection of the finite sets but it's not clear if they are
-        # members of others. We might have {m, n}, {m}, and Reals where we
+        # members of others. We might have {m, n}, {m}, and Reals were we
         # don't know if m or n is real. We want to remove n here but it is
         # possibly in because it might be equal to m. So what we do now is
         # extract the elements that are definitely in the remaining finite
@@ -2321,7 +2321,7 @@ class DisjointUnion(Set):
     def _eval_rewrite_as_Union(self, *sets, **kwargs):
         """
         Rewrites the disjoint union as the union of (``set`` x {``i``})
-        where ``set`` is the element in ``sets`` at index = ``i``
+        were ``set`` is the element in ``sets`` at index = ``i``
         """
 
         dj_union = S.EmptySet

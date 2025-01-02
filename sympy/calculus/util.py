@@ -65,7 +65,7 @@ def continuous_domain(f, symbol, domain):
     =======
 
     :py:class:`~.Interval`
-        Union of all intervals where the function is continuous.
+        Union of all intervals were the function is continuous.
 
     Raises
     ======
@@ -197,7 +197,7 @@ def function_range(f, symbol, domain):
     =======
 
     :py:class:`~.Interval`
-        Union of all ranges for all intervals under domain where function is
+        Union of all ranges for all intervals under domain were function is
         continuous.
 
     Raises
@@ -751,7 +751,7 @@ def is_convex(f, *syms, domain=S.Reals):
 
 def stationary_points(f, symbol, domain=S.Reals):
     """
-    Returns the stationary points of a function (where derivative of the
+    Returns the stationary points of a function (were derivative of the
     function is 0) in the given domain.
 
     Parameters

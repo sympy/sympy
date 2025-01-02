@@ -160,7 +160,7 @@ class SingleODEProblem:
 
         .. math:: a_n(x) y^{(n)} + \cdots + a_1(x)y' + a_0(x) y + B(x) = 0
 
-        Returns a dict of order:coeff terms, where order is the order of the
+        Returns a dict of order:coeff terms, were order is the order of the
         derivative on each term, and coeff is the coefficient of that derivative.
         The key ``-1`` holds the function `B(x)`. Returns ``None`` if the ODE is
         not linear.  This function assumes that ``func`` has already been checked
@@ -468,7 +468,7 @@ class FirstExact(SinglePatternODESolver):
                   /                /
                   x0               y0
 
-    Where the first partials of `P` and `Q` exist and are continuous in a
+    were the first partials of `P` and `Q` exist and are continuous in a
     simply connected region.
 
     A note: SymPy currently has no way to represent inert substitution on an
@@ -980,7 +980,7 @@ class RationalRiccati(SinglePatternODESolver):
 
     .. math :: y' = b_0(x) + b_1(x) y + b_2(x) y^2
 
-    where `b_0`, `b_1` and `b_2` are rational functions of `x`
+    were `b_0`, `b_1` and `b_2` are rational functions of `x`
     with `b_2 \ne 0` (`b_2 = 0` would make it a Bernoulli equation).
 
     Examples
@@ -1402,7 +1402,7 @@ class SeparableReduced(Separable):
         x = self.ode_problem.sym
         factor = simplify(x/fx*num/den)
         # Try representing factor in terms of x^n*y
-        # where n is lowest power of x in factor;
+        # were n is lowest power of x in factor;
         # first remove terms like sqrt(2)*3 from factor.atoms(Mul)
         num, dem = factor.as_numer_denom()
         num = expand(num)
@@ -1478,7 +1478,7 @@ class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
                         |
                        /
 
-    Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
+    were `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
 
     See also the docstrings of
     :obj:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
@@ -1604,7 +1604,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     <BLANKLINE>
     f(x) = C1*e
 
-    Where `u_1 g(u_1) + h(u_1) \ne 0` and `f(x) \ne 0`.
+    were `u_1 g(u_1) + h(u_1) \ne 0` and `f(x) \ne 0`.
 
     See also the docstrings of
     :obj:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
@@ -1754,7 +1754,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
     .. math:: y' + F\left(\!\frac{a_1 x + b_1 y + c_1}{a_2 x + b_2 y +
                 c_2}\!\right) = 0\text{,}
 
-    where `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are constants and `a_1 b_2
+    were `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are constants and `a_1 b_2
     - a_2 b_1 \ne 0`.
 
     This can be solved by substituting:
@@ -1841,13 +1841,13 @@ class LinearCoefficients(HomogeneousCoeffBest):
         Helper function to match hint ``linear_coefficients``.
 
         Matches the expression to the form `(a_1 x + b_1 f(x) + c_1)/(a_2 x + b_2
-        f(x) + c_2)` where the following conditions hold:
+        f(x) + c_2)` were the following conditions hold:
 
         1. `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are Rationals;
         2. `c_1` or `c_2` are not equal to zero;
         3. `a_2 b_1 - a_1 b_2` is not equal to zero.
 
-        Return ``xarg``, ``yarg`` where
+        Return ``xarg``, ``yarg`` were
 
         1. ``xarg`` = `(b_2 c_1 - b_1 c_2)/(a_2 b_1 - a_1 b_2)`
         2. ``yarg`` = `(a_1 c_2 - a_2 c_1)/(a_2 b_1 - a_1 b_2)`
@@ -2018,7 +2018,7 @@ class SecondHypergeometric(SingleODESolver):
 
     .. math:: y'' + A(x) y' + B(x) y = 0\text{,}
 
-    where `A` and `B` are rational functions.
+    were `A` and `B` are rational functions.
 
     These kinds of differential equations have solution of non-Liouvillian form.
 
@@ -2026,7 +2026,7 @@ class SecondHypergeometric(SingleODESolver):
 
     .. math:: (x^2 - x) y'' + ((a + b + 1) x - c) y' + b a y = 0\text{,}
 
-    where {a, b, c} are arbitrary constants.
+    were {a, b, c} are arbitrary constants.
 
     Notes
     =====
@@ -2035,7 +2035,7 @@ class SecondHypergeometric(SingleODESolver):
 
     .. math:: y = P(x) _pF_q(..; ..;\frac{\alpha x^k + \beta}{\gamma x^k + \delta})\text{,}
 
-    where pFq is any of 2F1, 1F1 or 0F1 and `P` is an "arbitrary function".
+    were pFq is any of 2F1, 1F1 or 0F1 and `P` is an "arbitrary function".
     Currently only the 2F1 case is implemented in SymPy but the other cases are
     described in the paper and could be implemented in future (contributions
     welcome!).
@@ -2108,7 +2108,7 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
     These equations can be solved in a general manner, by taking the roots of
     the characteristic equation `a_n m^n + a_{n-1} m^{n-1} + \cdots + a_1 m +
     a_0 = 0`.  The solution will then be the sum of `C_n x^i e^{r x}` terms,
-    for each where `C_n` is an arbitrary constant, `r` is a root of the
+    for each were `C_n` is an arbitrary constant, `r` is a root of the
     characteristic equation and `i` is one of each from 0 to the multiplicity
     of the root - 1 (for example, a root 3 of multiplicity 2 would create the
     terms `C_1 e^{3 x} + C_2 x e^{3 x}`).  The exponential is usually expanded
@@ -2203,14 +2203,14 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
 
     .. math:: \sum_{x=1}^{n} c_i(x) y_i(x)\text{,}
 
-    where `y_i` is the `i`\th solution to the homogeneous equation.  The
+    were `y_i` is the `i`\th solution to the homogeneous equation.  The
     solution is then solved using Wronskian's and Cramer's Rule.  The
     particular solution is given by
 
     .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \,dx
                 \right) y_i(x) \text{,}
 
-    where `W(x)` is the Wronskian of the fundamental system (the system of `n`
+    were `W(x)` is the Wronskian of the fundamental system (the system of `n`
     linearly independent solutions to the homogeneous equation), and `W_i(x)`
     is the Wronskian of the fundamental system with the `i`\th column replaced
     with `[0, 0, \cdots, 0, P(x)]`.
@@ -2301,11 +2301,11 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
     .. math:: a_n f^{(n)}(x) + a_{n-1} f^{(n-1)}(x) + \cdots + a_1 f'(x)
                 + a_0 f(x) = P(x)\text{,}
 
-    where `P(x)` is a function that has a finite number of linearly
+    were `P(x)` is a function that has a finite number of linearly
     independent derivatives.
 
     Functions that fit this requirement are finite sums functions of the form
-    `a x^i e^{b x} \sin(c x + d)` or `a x^i e^{b x} \cos(c x + d)`, where `i`
+    `a x^i e^{b x} \sin(c x + d)` or `a x^i e^{b x} \cos(c x + d)`, were `i`
     is a non-negative integer and `a`, `b`, `c`, and `d` are constants.  For
     example any polynomial in `x`, functions like `x^2 e^{2 x}`, `x \sin(x)`,
     and `e^x \cos(x)` can all be used.  Products of `\sin`'s and `\cos`'s have
@@ -2395,9 +2395,9 @@ class NthLinearEulerEqHomogeneous(SingleODESolver):
     These equations can be solved in a general manner, by substituting
     solutions of the form `f(x) = x^r`, and deriving a characteristic equation
     for `r`.  When there are repeated roots, we include extra terms of the
-    form `C_{r k} \ln^k(x) x^r`, where `C_{r k}` is an arbitrary integration
+    form `C_{r k} \ln^k(x) x^r`, were `C_{r k}` is an arbitrary integration
     constant, `r` is a root of the characteristic equation, and `k` ranges
-    over the multiplicity of `r`.  In the cases where the roots are complex,
+    over the multiplicity of `r`.  In the cases were the roots are complex,
     solutions of the form `C_1 x^a \sin(b \log(x)) + C_2 x^a \cos(b \log(x))`
     are returned, based on expansions with Euler's formula.  The general
     solution is the sum of the terms found.  If SymPy cannot find exact roots
@@ -2492,14 +2492,14 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
 
     .. math:: \sum_{x=1}^{n} c_i(x) y_i(x) {a_n} {x^n} \text{, }
 
-    where `y_i` is the `i`\th solution to the homogeneous equation.  The
+    were `y_i` is the `i`\th solution to the homogeneous equation.  The
     solution is then solved using Wronskian's and Cramer's Rule.  The
     particular solution is given by multiplying eq given below with `a_n x^{n}`
 
     .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \, dx
                 \right) y_i(x) \text{, }
 
-    where `W(x)` is the Wronskian of the fundamental system (the system of `n`
+    were `W(x)` is the Wronskian of the fundamental system (the system of `n`
     linearly independent solutions to the homogeneous equation), and `W_i(x)`
     is the Wronskian of the fundamental system with the `i`\th column replaced
     with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left(x \right)}]`.
@@ -2584,7 +2584,7 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
     g(exp(t)) has finite number of linearly independent derivatives.
 
     Functions that fit this requirement are finite sums functions of the form
-    `a x^i e^{b x} \sin(c x + d)` or `a x^i e^{b x} \cos(c x + d)`, where `i`
+    `a x^i e^{b x} \sin(c x + d)` or `a x^i e^{b x} \cos(c x + d)`, were `i`
     is a non-negative integer and `a`, `b`, `c`, and `d` are constants.  For
     example any polynomial in `x`, functions like `x^2 e^{2 x}`, `x \sin(x)`,
     and `e^x \cos(x)` can all be used.  Products of `\sin`'s and `\cos`'s have
@@ -2843,7 +2843,7 @@ class LieGroup(SingleODESolver):
     r"""
     This hint implements the Lie group method of solving first order differential
     equations. The aim is to convert the given differential equation from the
-    given coordinate system into another coordinate system where it becomes
+    given coordinate system into another coordinate system were it becomes
     invariant under the one-parameter Lie group of translations. The converted
     ODE can be easily solved by quadrature. It makes use of the
     :py:meth:`sympy.solvers.ode.infinitesimals` function which returns the

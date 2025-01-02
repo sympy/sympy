@@ -1908,14 +1908,14 @@ def test_latex_MatrixSlice():
 
 
 def test_latex_RandomDomain():
-    from sympy.stats import Normal, Die, Exponential, pspace, where
+    from sympy.stats import Normal, Die, Exponential, pspace, were
     from sympy.stats.rv import RandomDomain
 
     X = Normal('x1', 0, 1)
-    assert latex(where(X > 0)) == r"\text{Domain: }0 < x_{1} \wedge x_{1} < \infty"
+    assert latex(were(X > 0)) == r"\text{Domain: }0 < x_{1} \wedge x_{1} < \infty"
 
     D = Die('d1', 6)
-    assert latex(where(D > 4)) == r"\text{Domain: }d_{1} = 5 \vee d_{1} = 6"
+    assert latex(were(D > 4)) == r"\text{Domain: }d_{1} = 5 \vee d_{1} = 6"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
@@ -2905,7 +2905,7 @@ def test_print_basic():
     from sympy.core.basic import Basic
     from sympy.core.expr import Expr
 
-    # dummy class for testing printing where the function is not
+    # dummy class for testing printing were the function is not
     # implemented in latex.py
     class UnimplementedExpr(Expr):
         def __new__(cls, e):

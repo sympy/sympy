@@ -65,7 +65,7 @@ def test_karr_convention():
     #
     # \sum_{m <= i < n} f(i) = \sum_{i = m}^{n-1} f(i)
     #
-    # where we intentionally used two different ways to typeset the
+    # were we intentionally used two different ways to typeset the
     # sum and its limits.
 
     i = Symbol("i", integer=True)

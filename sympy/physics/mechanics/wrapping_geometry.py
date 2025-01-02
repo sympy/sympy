@@ -121,7 +121,7 @@ class WrappingSphere(WrappingGeometryBase):
     See Also
     ========
 
-    WrappingCylinder: Cylindrical geometry where the wrapping direction can be
+    WrappingCylinder: Cylindrical geometry were the wrapping direction can be
         defined.
 
     """
@@ -193,7 +193,7 @@ class WrappingSphere(WrappingGeometryBase):
 
            l = \arccos\left(\mathbf{v}_1 \cdot \mathbf{v}_2\right)
 
-        where $\mathbf{v}_1$ and $\mathbf{v}_2$ are the unit vectors from the
+        were $\mathbf{v}_1$ and $\mathbf{v}_2$ are the unit vectors from the
         sphere's center to the first and second points on the sphere's surface
         respectively. Note that the actual path that the geodesic will take is
         undefined when the two points are directly opposite one another.
@@ -348,7 +348,7 @@ class WrappingCylinder(WrappingGeometryBase):
     See Also
     ========
 
-    WrappingSphere: Spherical geometry where the wrapping direction is always
+    WrappingSphere: Spherical geometry were the wrapping direction is always
         geodetic.
 
     """
@@ -455,9 +455,9 @@ class WrappingCylinder(WrappingGeometryBase):
 
         Let's assume that ``p1`` is located at ``N.x + r*N.y`` relative to
         ``pO`` and that ``p2`` is located at ``r*(cos(q)*N.y + sin(q)*N.z)``
-        relative to ``pO``, where ``q(t)`` is a generalized coordinate
+        relative to ``pO``, were ``q(t)`` is a generalized coordinate
         specifying the angle rotated around the ``N.x`` axis according to the
-        right-hand rule where ``N.y`` is zero. These positions can be set with:
+        right-hand rule were ``N.y`` is zero. These positions can be set with:
 
         >>> q = dynamicsymbols('q')
         >>> p1.set_pos(pO, N.x + r*N.y)
@@ -468,7 +468,7 @@ class WrappingCylinder(WrappingGeometryBase):
         r*cos(q(t))*N.y + r*sin(q(t))*N.z
 
         The geodesic length, which is in this case a is the hypotenuse of a
-        right triangle where the other two side lengths are ``1`` (parallel to
+        right triangle were the other two side lengths are ``1`` (parallel to
         the cylinder's axis) and ``r*q(t)`` (parallel to the cylinder's cross
         section), can be calculated using the ``geodesic_length`` method:
 
@@ -593,7 +593,7 @@ def _directional_atan(numerator, denominator):
     surface of a cylinder a dedicated arctangent function is needed that
     properly handles the directionality of different case. This function
     ensures that the central angle is always positive but shifting the case
-    where ``atan2`` would return a negative angle to be centered around
+    were ``atan2`` would return a negative angle to be centered around
     ``2*pi``.
 
     Notes

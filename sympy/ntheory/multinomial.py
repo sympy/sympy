@@ -2,7 +2,7 @@ from sympy.utilities.misc import as_int
 
 
 def binomial_coefficients(n):
-    """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
+    """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` were
     :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`.
 
     Examples
@@ -54,7 +54,7 @@ def binomial_coefficients_list(n):
 
 def multinomial_coefficients(m, n):
     r"""Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
-    where ``C_kn`` are multinomial coefficients such that
+    were ``C_kn`` are multinomial coefficients such that
     ``n=k1+k2+..+km``.
 
     Examples

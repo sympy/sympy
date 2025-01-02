@@ -1,4 +1,4 @@
-"""Miscellaneous stuff that does not really fit anywhere else."""
+"""Miscellaneous stuff that does not really fit anywere else."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from textwrap import fill, dedent
 
 class Undecidable(ValueError):
     # an error to be raised when a decision cannot be made definitively
-    # where a definitive answer is needed
+    # were a definitive answer is needed
     pass
 
 
@@ -407,7 +407,7 @@ def replace(string, *reps):
 
 
 def translate(s, a, b=None, c=None):
-    """Return ``s`` where characters have been replaced or deleted.
+    """Return ``s`` were characters have been replaced or deleted.
 
     SYNTAX
     ======

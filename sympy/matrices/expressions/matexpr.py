@@ -206,7 +206,7 @@ class MatrixExpr(Expr):
 
     def _eval_power(self, exp):
         """
-        Override this in sub-classes to implement simplification of powers.  The cases where the exponent
+        Override this in sub-classes to implement simplification of powers.  The cases were the exponent
         is -1, 0, 1 are already covered in MatPow.doit(), so implementations can exclude these cases.
         """
         return MatPow(self, exp)
@@ -819,7 +819,7 @@ class _LeftRightArgs:
 
         if _get_shape(self.first)[1] != _get_shape(self.second)[1]:
             # Remove one-dimensional identity matrices:
-            # (this is needed by `a.diff(a)` where `a` is a vector)
+            # (this is needed by `a.diff(a)` were `a` is a vector)
             if _get_shape(self.second) == (1, 1):
                 return self.first*self.second[0, 0]
             if _get_shape(self.first) == (1, 1):

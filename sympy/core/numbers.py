@@ -46,7 +46,7 @@ def comp(z1, z2, tol=None):
     ========
 
     If ``tol`` is ``None`` then ``True`` will be returned if
-    :math:`|z1 - z2|\times 10^p \le 5` where $p$ is minimum value of the
+    :math:`|z1 - z2|\times 10^p \le 5` were $p$ is minimum value of the
     decimal precision of each value.
 
     >>> from sympy import comp, pi
@@ -762,7 +762,7 @@ class Float(Number):
 
     # A Float, though rational in form, does not behave like
     # a rational in all Python expressions so we deal with
-    # exceptions (where we want to deal with the rational
+    # exceptions (were we want to deal with the rational
     # form of the Float as a rational) at the source rather
     # than assigning a mathematically loaded category of 'rational'
     is_rational = None
@@ -1719,7 +1719,7 @@ class Rational(Number):
         return Integer(self.p), Integer(self.q)
 
     def as_content_primitive(self, radical=False, clear=True):
-        """Return the tuple (R, self/R) where R is the positive Rational
+        """Return the tuple (R, self/R) were R is the positive Rational
         extracted from self.
 
         Examples
@@ -1792,7 +1792,7 @@ class Integer(Rational):
     def __new__(cls, i):
         if isinstance(i, str):
             i = i.replace(' ', '')
-        # whereas we cannot, in general, make a Rational from an
+        # wereas we cannot, in general, make a Rational from an
         # arbitrary expression, we can make an Integer unambiguously
         # (except when a non-integer expression happens to round to
         # an integer). So we proceed by taking int() of the input and
@@ -2058,7 +2058,7 @@ class Integer(Rational):
                 result *= S.NegativeOne**expt
             return result
 
-        # The following is an algorithm where we collect perfect roots
+        # The following is an algorithm were we collect perfect roots
         # from the factors of base.
 
         # if it's not an nth root, it still might be a perfect power
@@ -2387,7 +2387,7 @@ class AlgebraicNumber(Expr):
         $\mathrm{e}^{2i\pi/5}$. See :py:class:`~.ComplexRootOf`.)
 
         Example (6): Building on the last example, construct the number
-        $2 \phi \in \mathbb{Q}(\phi)$, where $\phi$ is the Golden Ratio:
+        $2 \phi \in \mathbb{Q}(\phi)$, were $\phi$ is the Golden Ratio:
 
         >>> from sympy.abc import phi
         >>> a6 = AlgebraicNumber(a5.to_root(), coeffs=[2, 0], alias=phi)
@@ -2627,7 +2627,7 @@ class AlgebraicNumber(Expr):
         >>> a.as_poly().as_expr(x)
         x**3/2 - 9*x/2
 
-        reflects the fact that $\sqrt{2} = \theta^3/2 - 9 \theta/2$, where
+        reflects the fact that $\sqrt{2} = \theta^3/2 - 9 \theta/2$, were
         $\theta = \sqrt{2} + \sqrt{3}$.
 
         ``a`` is not equal to its own primitive element. Its minpoly
@@ -2698,7 +2698,7 @@ class AlgebraicNumber(Expr):
         """
         Convert to an :py:class:`~.Expr` that is not an
         :py:class:`~.AlgebraicNumber`, specifically, either a
-        :py:class:`~.ComplexRootOf`, or, optionally and where possible, an
+        :py:class:`~.ComplexRootOf`, or, optionally and were possible, an
         expression in radicals.
 
         Parameters
@@ -3340,7 +3340,7 @@ class NaN(Number, metaclass=Singleton):
     the examples below.
 
     NaN is not comparable so inequalities raise a TypeError.  This is in
-    contrast with floating point nan where all inequalities are false.
+    contrast with floating point nan were all inequalities are false.
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.
@@ -4206,7 +4206,7 @@ def equal_valued(x, y):
     that instead of testing ``if x == 1:`` if we want to accept floats like
     ``1.0`` as well then the test can be written as ``if equal_valued(x, 1):``
     or ``if equal_valued(x, 2):``. Since this function is intended to be used
-    in situations where one or both operands are expected to be concrete
+    in situations were one or both operands are expected to be concrete
     numbers like 1 or 0 the function does not recurse through the args of any
     compound expression to compare any nested floats.
 
@@ -4380,7 +4380,7 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
             for k2 in cd2:
                 if _all_close_expr(k1, k2):
                     # found a matching key
-                    # XXX there could be a corner case where
+                    # XXX there could be a corner case were
                     # more than 1 might match and the numbers are
                     # such that one is better than the other
                     # that is not being considered here

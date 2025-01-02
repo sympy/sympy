@@ -26,7 +26,7 @@ from sympy.ntheory.factor_ import factorint
 # power series with coefficients in C(log(x), log).
 # In more detail, the result of _eval_nseries(self, x, n) must be
 #   c_0*x**e_0 + ... (finitely many terms)
-# where e_i are numbers (not necessarily integers) and c_i involve only
+# were e_i are numbers (not necessarily integers) and c_i involve only
 # numbers, the function log, and log(x). [This also means it must not contain
 # log(x(1+p)), this *has* to be expanded to log(x)+log(1+p) if x.is_positive and
 # p.is_positive.]

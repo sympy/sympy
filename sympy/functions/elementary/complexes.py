@@ -696,7 +696,7 @@ class Abs(DefinedFunction):
 class arg(DefinedFunction):
     r"""
     Returns the argument (in radians) of a complex number. The argument is
-    evaluated in consistent convention with ``atan2`` where the branch-cut is
+    evaluated in consistent convention with ``atan2`` were the branch-cut is
     taken along the negative real axis and ``arg(z)`` is in the interval
     $(-\pi,\pi]$. For a positive number, the argument is always 0; the
     argument of a negative number is $\pi$; and the argument of 0
@@ -824,7 +824,7 @@ class conjugate(DefinedFunction):
     is given by changing the sign of the imaginary part.
 
     Thus, the conjugate of the complex number
-    :math:`a + ib` (where $a$ and $b$ are real numbers) is :math:`a - ib`
+    :math:`a + ib` (were $a$ and $b$ are real numbers) is :math:`a - ib`
 
     Examples
     ========

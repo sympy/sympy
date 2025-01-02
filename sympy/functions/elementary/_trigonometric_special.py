@@ -89,7 +89,7 @@ def ipartfrac(*denoms: int) -> tuple[int, ...]:
     Explanation
     ===========
 
-    Given a rational number $\frac{1}{q_1 \cdots q_n}$ where all
+    Given a rational number $\frac{1}{q_1 \cdots q_n}$ were all
     $q_1, \cdots, q_n$ are pairwise coprime,
 
     A partial fraction decomposition is defined as
@@ -103,7 +103,7 @@ def ipartfrac(*denoms: int) -> tuple[int, ...]:
     .. math::
         1 = p_1 \prod_{i \ne 1}q_i + \cdots + p_n \prod_{i \ne n}q_i
 
-    Where $q_1, \cdots, q_n$ being pairwise coprime implies
+    were $q_1, \cdots, q_n$ being pairwise coprime implies
     $\gcd(\prod_{i \ne 1}q_i, \cdots, \prod_{i \ne n}q_i) = 1$,
     which guarantees the existence of the solution.
 

@@ -74,7 +74,7 @@ class LagrangesMethod(_Methods):
     Following this the lagrangian is created from the kinetic and potential
     energies.
     Then, an iterable of nonconservative forces/torques must be constructed,
-    where each item is a (Point, Vector) or (ReferenceFrame, Vector) tuple,
+    were each item is a (Point, Vector) or (ReferenceFrame, Vector) tuple,
     with the Vectors representing the nonconservative forces or torques.
 
         >>> Pa = Particle('Pa', P, m)
@@ -308,7 +308,7 @@ class LagrangesMethod(_Methods):
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
             :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
-            supplied, it should have the format ``x = f(A, b)``, where it
+            supplied, it should have the format ``x = f(A, b)``, were it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
@@ -383,7 +383,7 @@ class LagrangesMethod(_Methods):
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
             :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
-            supplied, it should have the format ``x = f(A, b)``, where it
+            supplied, it should have the format ``x = f(A, b)``, were it
             solves the equations and returns the solution. The default is
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
@@ -399,12 +399,12 @@ class LagrangesMethod(_Methods):
         linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
 
         If kwarg A_and_B is True, returns A, B, r for the linearized form
-        dx = A*x + B*r, where x = [q_ind, u_ind]^T. Note that this is
+        dx = A*x + B*r, were x = [q_ind, u_ind]^T. Note that this is
         computationally intensive if there are many symbolic parameters. For
         this reason, it may be more desirable to use the default A_and_B=False,
         returning M, A, and B. Values may then be substituted in to these
         matrices, and the state space form found as
-        A = P.T*M.inv()*A, B = P.T*M.inv()*B, where P = Linearizer.perm_mat.
+        A = P.T*M.inv()*A, B = P.T*M.inv()*B, were P = Linearizer.perm_mat.
 
         In both cases, r is found as all dynamicsymbols in the equations of
         motion that are not part of q, u, q', or u'. They are sorted in

@@ -169,8 +169,8 @@ class CircuitPlot:
             gate.plot_gate(self, i)
 
     def _measurements(self):
-        """Return a dict ``{i:j}`` where i is the index of the wire that has
-        been measured, and j is the gate where the wire is measured.
+        """Return a dict ``{i:j}`` were i is the index of the wire that has
+        been measured, and j is the gate were the wire is measured.
         """
         ismeasured = {}
         for i,g in enumerate(self._gates()):

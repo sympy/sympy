@@ -220,7 +220,7 @@ def test_files():
         if idx is not None:
             assert False, message_bare_expr % (fname, idx + 1)
 
-        line = None  # to flag the case where there were no lines in file
+        line = None  # to flag the case were there were no lines in file
         tests = 0
         test_set = set()
         for idx, line in enumerate(test_file):
@@ -390,15 +390,15 @@ def test_implicit_imports_regular_expression():
     candidates_ok = [
         "from sympy import something",
         ">>> from sympy import something",
-        "from sympy.somewhere import something",
-        ">>> from sympy.somewhere import something",
+        "from sympy.somewere import something",
+        ">>> from sympy.somewere import something",
         "import sympy",
         ">>> import sympy",
         "import sympy.something.something",
         "... import sympy",
         "... import sympy.something.something",
         "... from sympy import something",
-        "... from sympy.somewhere import something",
+        "... from sympy.somewere import something",
         ">> from sympy import *",  # To allow 'fake' docstrings
         "# from sympy import *",
         "some text # from sympy import *",
@@ -406,10 +406,10 @@ def test_implicit_imports_regular_expression():
     candidates_fail = [
         "from sympy import *",
         ">>> from sympy import *",
-        "from sympy.somewhere import *",
-        ">>> from sympy.somewhere import *",
+        "from sympy.somewere import *",
+        ">>> from sympy.somewere import *",
         "... from sympy import *",
-        "... from sympy.somewhere import *",
+        "... from sympy.somewere import *",
     ]
     for c in candidates_ok:
         assert implicit_test_re.search(_with_space(c)) is None, c

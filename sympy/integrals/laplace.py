@@ -1156,7 +1156,7 @@ def laplace_initial_conds(f, t, fdict, /):
     """
     This helper function takes a function `f` that is the result of a
     ``laplace_transform``.  It takes an fdict of the form ``{y: [1, 4, 2]}``,
-    where the values in the list are the initial value, the initial slope, the
+    were the values in the list are the initial value, the initial slope, the
     initial second derivative, etc., of the function `y(t)`, and replaces all
     unevaluated initial conditions.
 
@@ -1335,7 +1335,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     .. math :: a < \operatorname{Re}(s)
 
-    This function returns ``(F, a, cond)`` where ``F`` is the Laplace
+    This function returns ``(F, a, cond)`` were ``F`` is the Laplace
     transform of ``f``, `a` is the half-plane of convergence, and `cond` are
     auxiliary convergence conditions.
 
@@ -1366,7 +1366,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     not the plane ``a``).
 
     .. deprecated:: 1.9
-        Legacy behavior for matrices where ``laplace_transform`` with
+        Legacy behavior for matrices were ``laplace_transform`` with
         ``noconds=False`` (the default) returns a Matrix whose elements are
         tuples. The behavior of ``laplace_transform`` for matrices will change
         in a future release of SymPy to return a tuple of the transformed

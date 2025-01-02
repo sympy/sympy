@@ -672,7 +672,7 @@ class SDM(dict):
         Returns a :py:class:`~.SDM` of size shape,
         belonging to the specified domain
 
-        In the example below we declare a matrix A where,
+        In the example below we declare a matrix A were,
 
         .. math::
             A := \left[\begin{array}{ccc}
@@ -1470,7 +1470,7 @@ def sdm_matmul(A, B, K, m, o):
     #
     # The idea here is that we compute C = A*B in terms of the rows of C and
     # B since the dict of dicts representation naturally stores the matrix as
-    # rows. The ith row of C (Ci) is equal to the sum of Aik * Bk where Bk is
+    # rows. The ith row of C (Ci) is equal to the sum of Aik * Bk were Bk is
     # the kth row of B. The algorithm below loops over each nonzero element
     # Aik of A and if the corresponding row Bj is nonzero then we do
     #    Ci += Aik * Bk.

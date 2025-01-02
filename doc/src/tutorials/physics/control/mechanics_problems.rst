@@ -26,7 +26,7 @@ The equation of motion for the mass-spring-damper system is given by:
 
    m\ddot{x} + b\dot{x} + kx = F(t)
 
-where:
+were:
 
 * :math:`x` is the displacement of the mass,
 * :math:`\dot{x}` is the velocity of the mass,
@@ -189,7 +189,7 @@ The state-space model of the system can be expressed in the standard form:
 
    y = C x + D u
 
-Where:
+were:
 
 - **x** is the state vector:
 
@@ -255,4 +255,4 @@ Solution
 
 References
 ^^^^^^^^^^
-1. `https://lpsa.swarthmore.edu/ <https://lpsa.swarthmore.edu/Representations/SysRepSS.html#:~:text=Example%3A%20Direct%20Derivation%20of%20State%20Space%20Model%20(Electrical),-Derive%20a%20state&text=The%20input%20is%20ia%20and%20the%20output%20is%20e2.&text=space%20representation%20becomes-,This%20technique%20does%20not%20always%20easily%20yield%20a%20set%20of,Transfer%20functions%20are%20discussed%20elsewhere.>`_
+1. `https://lpsa.swarthmore.edu/ <https://lpsa.swarthmore.edu/Representations/SysRepSS.html#:~:text=Example%3A%20Direct%20Derivation%20of%20State%20Space%20Model%20(Electrical),-Derive%20a%20state&text=The%20input%20is%20ia%20and%20the%20output%20is%20e2.&text=space%20representation%20becomes-,This%20technique%20does%20not%20always%20easily%20yield%20a%20set%20of,Transfer%20functions%20are%20discussed%20elsewere.>`_

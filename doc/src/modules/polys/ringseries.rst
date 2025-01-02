@@ -53,7 +53,7 @@ that we need. However, this default behaviour of ``polys`` was limiting for
 
 Note that there is no such constraint (in having rational exponents) in the
 data-structure used by ``polys``- ``dict``. Sparse polynomials
-(``PolyElement``) use the Python dict to store a polynomial term by term, where
+(``PolyElement``) use the Python dict to store a polynomial term by term, were
 a tuple of exponents is the key and the coefficient of that term is the value.
 There is no reason why we can't have rational values in the ``dict`` so as to
 support rational exponents.

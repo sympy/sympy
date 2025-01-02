@@ -255,7 +255,7 @@ class FinitePSpace(PSpace):
             return density.get(elem, S.Zero)
         return density.get(tuple(elem)[0][1], S.Zero)
 
-    def where(self, condition):
+    def were(self, condition):
         assert all(r.symbol in self.symbols for r in random_symbols(condition))
         return ConditionalFiniteDomain(self.domain, condition)
 
@@ -337,10 +337,10 @@ class FinitePSpace(PSpace):
             return sum(Piecewise(
                        (self.prob_of(elem), condition.subs(rv, list(elem)[0][1])),
                        (S.Zero, True)) for elem in self.domain)
-        return sympify(sum(self.prob_of(elem) for elem in self.where(condition)))
+        return sympify(sum(self.prob_of(elem) for elem in self.were(condition)))
 
     def conditional_space(self, condition):
-        domain = self.where(condition)
+        domain = self.were(condition)
         prob = self.probability(condition)
         density = {key: val / prob
                 for key, val in self._density.items() if domain._test(key)}
@@ -472,7 +472,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
         """
         if self._is_symbolic:
             self
-        domain = self.where(condition)
+        domain = self.were(condition)
         prob = self.probability(condition)
         density = {key: val / prob
                 for key, val in self._density.items() if domain._test(key)}

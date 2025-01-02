@@ -9,7 +9,7 @@ Terminology (following Knuth, algorithm 7.1.2.5M TAOCP)
 The submultisets, aaabc and bccc of the partition are called
 *parts*, or sometimes *vectors*.  (Knuth notes that multiset
 partitions can be thought of as partitions of vectors of integers,
-where the ith element of the vector gives the multiplicity of
+were the ith element of the vector gives the multiplicity of
 element i.)
 
 The values a, b and c are *components* of the multiset.  These
@@ -424,7 +424,7 @@ class MultisetPartitionTraverser():
         # dp_stack is list of lists of (part_key, start_count) pairs
         self.dp_stack = []
 
-        # dp_map is map part_key-> count, where count represents the
+        # dp_map is map part_key-> count, were count represents the
         # number of multiset which are descendants of a part with this
         # key, **or any of its decrements**
 

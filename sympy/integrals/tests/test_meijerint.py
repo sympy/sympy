@@ -651,7 +651,7 @@ def test_messy():
     assert laplace_transform(Shi(x), x, s, simplify=True) == (
         acoth(s)/s, -oo, s**2 > 1)
 
-    # where should the logs be simplified?
+    # were should the logs be simplified?
     assert laplace_transform(Chi(x), x, s, simplify=True) == (
         (log(s**(-2)) - log(1 - 1/s**2))/(2*s), -oo, s**2 > 1)
 

@@ -81,7 +81,7 @@ def _connected_components_decomposition(M):
     Explanation
     ===========
 
-    The decomposition is in a form of $A = P^{-1} B P$ where $P$ is a
+    The decomposition is in a form of $A = P^{-1} B P$ were $P$ is a
     permutation matrix and $B$ is a block diagonal matrix.
 
     Returns
@@ -167,7 +167,7 @@ def _strongly_connected_components_decomposition(M, lower=True):
     Explanation
     ===========
 
-    The decomposition is in a form of $A = P^{-1} B P$ where $P$ is a
+    The decomposition is in a form of $A = P^{-1} B P$ were $P$ is a
     permutation matrix and $B$ is a block diagonal matrix.
 
     Parameters

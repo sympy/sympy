@@ -145,7 +145,7 @@ ODE without solving for it as much as possible, so that
 :py:meth:`~sympy.solvers.ode.classify_ode` remains fast and is not hindered by
 bugs in solving code.  Be sure to consider corner cases.  For example, if your
 solution method involves dividing by something, make sure you exclude the case
-where that division will be 0.
+were that division will be 0.
 
 In most cases, the matching of the ODE will also give you the various parts
 that you need to solve it.  You should put that in a dictionary (``.match()``
@@ -212,7 +212,7 @@ tests and skip/XFAIL if it runs too slow/does not work).  Be sure to call your
 hint specifically in :py:meth:`~sympy.solvers.ode.dsolve`, that way the test
 will not be broken simply by the introduction of another matching hint.  If your
 method works for higher order (>1) ODEs, you will need to run ``sol =
-constant_renumber(sol, 'C', 1, order)`` for each solution, where ``order`` is
+constant_renumber(sol, 'C', 1, order)`` for each solution, were ``order`` is
 the order of the ODE.  This is because ``constant_renumber`` renumbers the
 arbitrary constants by printing order, which is platform dependent.  Try to
 test every corner case of your solver, including a range of orders if it is a
@@ -494,7 +494,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
           not be the same, because one constant may have "absorbed" other
           constants into it.
         - Do ``help(ode.ode_<hintname>)`` to get help more information on a
-          specific hint, where ``<hintname>`` is the name of a hint without
+          specific hint, were ``<hintname>`` is the name of a hint without
           ``_Integral``.
 
     For system of ordinary differential equations
@@ -503,7 +503,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     **Usage**
         ``dsolve(eq, func)`` -> Solve a system of ordinary differential
         equations ``eq`` for ``func`` being list of functions including
-        `x(t)`, `y(t)`, `z(t)` where number of functions in the list depends
+        `x(t)`, `y(t)`, `z(t)` were number of functions in the list depends
         upon the number of equations provided in ``eq``.
 
     **Details**
@@ -840,7 +840,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     in the same order as the tuple.
 
     You can get help on different hints by executing
-    ``help(ode.ode_hintname)``, where ``hintname`` is the name of the hint
+    ``help(ode.ode_hintname)``, were ``hintname`` is the name of the hint
     without ``_Integral``.
 
     See :py:data:`~sympy.solvers.ode.allhints` or the
@@ -1153,7 +1153,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     'is_linear' (boolean), which tells whether the given system is linear.
     Note that "linear" here refers to the operator: terms such as ``x*diff(x,t)`` are
-    nonlinear, whereas terms like ``sin(t)*diff(x,t)`` are still linear operators.
+    nonlinear, wereas terms like ``sin(t)*diff(x,t)`` are still linear operators.
 
     'func' (list) contains the :py:class:`~sympy.core.function.Function`s that
     appear with a derivative in the ODE, i.e. those that we are trying to solve
@@ -1166,7 +1166,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     function, order)```. The coefficients are those subexpressions that do not
     appear in 'func', and hence can be considered constant for purposes of ODE
     solving. The value of this parameter can also be a  Matrix if the system of ODEs are
-    linear first order of the form X' = AX where X is the vector of dependent variables.
+    linear first order of the form X' = AX were X is the vector of dependent variables.
     Here, this function returns the coefficient matrix A.
 
     'eq' (list) with the equations from ``eq``, sympified and transformed into
@@ -1802,7 +1802,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
     # Next, try to solve for func.  This code will change slightly when CRootOf
     # is implemented in solve().  Probably a CRootOf solution should fall
-    # somewhere between a normal solution and an unsolvable expression.
+    # somewere between a normal solution and an unsolvable expression.
 
     # First, see if they are already solved
     if sol.lhs == func and not sol.rhs.has(func) or \
@@ -2193,7 +2193,7 @@ def _handle_Integral(expr, func, hint):
     return sol
 
 
-# XXX: Should this function maybe go somewhere else?
+# XXX: Should this function maybe go somewere else?
 
 
 def homogeneous_order(eq, *symbols):
@@ -2560,7 +2560,7 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     Returns a dict with keys as coefficients and values as their values in terms of C0
     """
     n = int(n)
-    # In cases where m1 - m2 is not an integer
+    # In cases were m1 - m2 is not an integer
     m2 = check
 
     d = Dummy("d")
@@ -2737,7 +2737,7 @@ def ode_1st_power_series(eq, func, order, match):
 
     .. math:: y(x) = y(x_{0}) + \sum_{n = 1}^{\infty} \frac{F_{n}(x_{0},b)(x - x_{0})^n}{n!},
 
-    where `y(x_{0}) = b` is the value of y at the initial value of `x_{0}`.
+    were `y(x_{0}) = b` is the value of y at the initial value of `x_{0}`.
     To compute the values of the `F_{n}(x_{0},b)` the following algorithm is
     followed, until the required number of terms are generated.
 
@@ -2816,12 +2816,12 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                 - \xi\frac{\partial h}{\partial x} - \eta\frac{\partial h}{\partial y} = 0
 
 
-    where `\eta`, and `\xi` are the infinitesimals and `h(x,y) = \frac{dy}{dx}`
+    were `\eta`, and `\xi` are the infinitesimals and `h(x,y) = \frac{dy}{dx}`
 
     The infinitesimals should be given in the form of a list of dicts
     ``[{xi(x, y): inf, eta(x, y): inf}]``, corresponding to the
     output of the function infinitesimals. It returns a list
-    of values of the form ``[(True/False, sol)]`` where ``sol`` is the value
+    of values of the form ``[(True/False, sol)]`` were ``sol`` is the value
     obtained after substituting the infinitesimals in the PDE. If it
     is ``True``, then ``sol`` would be 0.
 
@@ -2995,7 +2995,7 @@ def _linear_2eq_order1_type7(x, y, t, r, eq):
 
     .. math:: y = C_1 y_0(t) + C_2 [\frac{F(t) P(t)}{x_0(t)} + y_0(t) \int \frac{g(t) F(t) P(t)}{x_0^{2}(t)} \,dt]
 
-    where C1 and C2 are arbitrary constants and
+    were C1 and C2 are arbitrary constants and
 
     .. math:: F(t) = e^{\int f(t) \,dt}, P(t) = e^{\int p(t) \,dt}
 
@@ -3065,7 +3065,7 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
 
     .. math:: x = \varphi(y), \int \frac{1}{g(y) F(\varphi(y),y)} \,dy = t + C_2
 
-    where
+    were
 
     if `n \neq 1`
 
@@ -3075,7 +3075,7 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
 
     .. math:: \varphi = C_1 e^{\int \frac{1}{g(y)} \,dy}
 
-    where `C_1` and `C_2` are arbitrary constants.
+    were `C_1` and `C_2` are arbitrary constants.
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3110,7 +3110,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
 
     .. math:: x = \varphi(y), \int \frac{1}{g(y) F(\varphi(y),y)} \,dy = t + C_2
 
-    where
+    were
 
     if `\lambda \neq 0`
 
@@ -3120,7 +3120,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
 
     .. math:: \varphi = C_1 + \int \frac{1}{g(y)} \,dy
 
-    where `C_1` and `C_2` are arbitrary constants.
+    were `C_1` and `C_2` are arbitrary constants.
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3151,7 +3151,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
 
     .. math:: y' = G(x,y)
 
-    Assuming `y = y(x, C_1)` where `C_1` is an arbitrary constant is the general
+    Assuming `y = y(x, C_1)` were `C_1` is an arbitrary constant is the general
     solution of the first-order equation
 
     .. math:: F(x,y) y'_x = G(x,y)
@@ -3193,7 +3193,7 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
 
     .. math:: \int \frac{f_2(x)}{f_1(x)} \,dx - \int \frac{g_1(y)}{g_2(y)} \,dy = C
 
-    where `C` is an arbitrary constant.
+    were `C` is an arbitrary constant.
 
     On solving the first integral for `x` (resp., `y` ) and on substituting the
     resulting expression into either equation of the original solution, one
@@ -3242,7 +3242,7 @@ def _nonlinear_2eq_order1_type5(func, t, eq):
 
     .. math:: x = C_1 t + F(C_1, C_2), y = C_2 t + G(C_1, C_2)
 
-    where `C_1` and `C_2` are arbitrary constants;
+    were `C_1` and `C_2` are arbitrary constants;
 
     `(ii)` envelopes of the above lines;
 
@@ -3307,7 +3307,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
 
     .. math:: a^{2} x^{2} + b^{2} y^{2} + c^{2} z^{2} = C_2
 
-    where `C_1` and `C_2` are arbitrary constants. On solving the integrals for `y` and
+    were `C_1` and `C_2` are arbitrary constants. On solving the integrals for `y` and
     `z` and on substituting the resulting expressions into the first equation of the
     system, we arrives at a separable first-order equation on `x`. Similarly doing that
     for other two equations, we will arrive at first order equation on `y` and `z` too.
@@ -3361,7 +3361,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
 
     .. math:: a^{2} x^{2} + b^{2} y^{2} + c^{2} z^{2} = C_2
 
-    where `C_1` and `C_2` are arbitrary constants. On solving the integrals for `y` and
+    were `C_1` and `C_2` are arbitrary constants. On solving the integrals for `y` and
     `z` and on substituting the resulting expressions into the first equation of the
     system, we arrives at a first-order differential equations on `x`. Similarly doing
     that for other two equations we will arrive at first order equation on `y` and `z`.
@@ -3406,13 +3406,13 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
 
     .. math:: x' = c F_2 - b F_3, \enspace y' = a F_3 - c F_1, \enspace z' = b F_1 - a F_2
 
-    where `F_n = F_n(x, y, z, t)`.
+    were `F_n = F_n(x, y, z, t)`.
 
     1. First Integral:
 
     .. math:: a x + b y + c z = C_1,
 
-    where C is an arbitrary constant.
+    were C is an arbitrary constant.
 
     2. If we assume function `F_n` to be independent of `t`,i.e, `F_n` = `F_n (x, y, z)`
     Then, on eliminating `t` and `z` from the first two equation of the system, one
@@ -3421,7 +3421,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     .. math:: \frac{dy}{dx} = \frac{a F_3 (x, y, z) - c F_1 (x, y, z)}{c F_2 (x, y, z) -
                 b F_3 (x, y, z)}
 
-    where `z = \frac{1}{c} (C_1 - a x - b y)`
+    were `z = \frac{1}{c} (C_1 - a x - b y)`
 
     References
     ==========
@@ -3466,13 +3466,13 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
 
     .. math:: x' = c z F_2 - b y F_3, \enspace y' = a x F_3 - c z F_1, \enspace z' = b y F_1 - a x F_2
 
-    where `F_n = F_n (x, y, z, t)`
+    were `F_n = F_n (x, y, z, t)`
 
     1. First integral:
 
     .. math:: a x^{2} + b y^{2} + c z^{2} = C_1
 
-    where `C` is an arbitrary constant.
+    were `C` is an arbitrary constant.
 
     2. Assuming the function `F_n` is independent of `t`: `F_n = F_n (x, y, z)`. Then on
     eliminating `t` and `z` from the first two equations of the system, one arrives at
@@ -3481,7 +3481,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     .. math:: \frac{dy}{dx} = \frac{a x F_3 (x, y, z) - c z F_1 (x, y, z)}
                 {c z F_2 (x, y, z) - b y F_3 (x, y, z)}
 
-    where `z = \pm \sqrt{\frac{1}{c} (C_1 - a x^{2} - b y^{2})}`
+    were `z = \pm \sqrt{\frac{1}{c} (C_1 - a x^{2} - b y^{2})}`
 
     References
     ==========
@@ -3523,13 +3523,13 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     r"""
     .. math:: x' = x (c F_2 - b F_3), \enspace y' = y (a F_3 - c F_1), \enspace z' = z (b F_1 - a F_2)
 
-    where `F_n = F_n (x, y, z, t)` and are arbitrary functions.
+    were `F_n = F_n (x, y, z, t)` and are arbitrary functions.
 
     First Integral:
 
     .. math:: \left|x\right|^{a} \left|y\right|^{b} \left|z\right|^{c} = C_1
 
-    where `C` is an arbitrary constant. If the function `F_n` is independent of `t`,
+    were `C` is an arbitrary constant. If the function `F_n` is independent of `t`,
     then, by eliminating `t` and `z` from the first two equations of the system, one
     arrives at a first-order equation.
 

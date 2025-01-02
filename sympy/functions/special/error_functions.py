@@ -192,7 +192,7 @@ class erf(DefinedFunction):
     def _eval_is_real(self):
         if self.args[0].is_extended_real is True:
             return True
-        # There are cases where erf(z) becomes a real number
+        # There are cases were erf(z) becomes a real number
         # even if z is a complex number
 
     def _eval_is_imaginary(self):
@@ -1101,7 +1101,7 @@ class Ei(DefinedFunction):
     .. math:: \operatorname{Ei}(x) = \sum_{n=1}^\infty \frac{x^n}{n\, n!}
                                      + \log(x) + \gamma,
 
-    where $\gamma$ is the Euler-Mascheroni constant.
+    were $\gamma$ is the Euler-Mascheroni constant.
 
     If $x$ is a polar number, this defines an analytic function on the
     Riemann surface of the logarithm. Otherwise this defines an analytic
@@ -1283,7 +1283,7 @@ class expint(DefinedFunction):
 
     .. math:: \operatorname{E}_\nu(z) = z^{\nu - 1} \Gamma(1 - \nu, z),
 
-    where $\Gamma(1 - \nu, z)$ is the upper incomplete gamma function
+    were $\Gamma(1 - \nu, z)$ is the upper incomplete gamma function
     (``uppergamma``).
 
     Hence for $z$ with positive real part we have
@@ -1974,7 +1974,7 @@ class Ci(TrigonometricIntegral):
                          + \int_0^x \frac{\cos{t} - 1}{t} \mathrm{d}t
            = -\int_x^\infty \frac{\cos{t}}{t} \mathrm{d}t,
 
-    where $\gamma$ is the Euler-Mascheroni constant.
+    were $\gamma$ is the Euler-Mascheroni constant.
 
     We have
 
@@ -2219,7 +2219,7 @@ class Chi(TrigonometricIntegral):
     .. math:: \operatorname{Chi}(x) = \gamma + \log{x}
                          + \int_0^x \frac{\cosh{t} - 1}{t} \mathrm{d}t,
 
-    where $\gamma$ is the Euler-Mascheroni constant.
+    were $\gamma$ is the Euler-Mascheroni constant.
 
     We have
 

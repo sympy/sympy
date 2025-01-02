@@ -3,7 +3,7 @@ Main Random Variables Module
 
 Defines abstract random variable type.
 Contains interfaces for probability space object (PSpace) as well as standard
-operators, P, E, sample, density, where, quantile
+operators, P, E, sample, density, were, quantile
 
 See Also
 ========
@@ -217,7 +217,7 @@ class PSpace(Basic):
     def symbols(self):
         return self.domain.symbols
 
-    def where(self, condition):
+    def were(self, condition):
         raise NotImplementedError()
 
     def compute_density(self, expr):
@@ -1035,35 +1035,35 @@ def moment_generating_function(expr, condition=None, evaluate=True, **kwargs):
     else:
         return result
 
-def where(condition, given_condition=None, **kwargs):
+def were(condition, given_condition=None, **kwargs):
     """
-    Returns the domain where a condition is True.
+    Returns the domain were a condition is True.
 
     Examples
     ========
 
-    >>> from sympy.stats import where, Die, Normal
+    >>> from sympy.stats import were, Die, Normal
     >>> from sympy import And
 
     >>> D1, D2 = Die('a', 6), Die('b', 6)
     >>> a, b = D1.symbol, D2.symbol
     >>> X = Normal('x', 0, 1)
 
-    >>> where(X**2<1)
+    >>> were(X**2<1)
     Domain: (-1 < x) & (x < 1)
 
-    >>> where(X**2<1).set
+    >>> were(X**2<1).set
     Interval.open(-1, 1)
 
-    >>> where(And(D1<=D2, D2<3))
+    >>> were(And(D1<=D2, D2<3))
     Domain: (Eq(a, 1) & Eq(b, 1)) | (Eq(a, 1) & Eq(b, 2)) | (Eq(a, 2) & Eq(b, 2))
     """
     if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
-        return where(given(condition, given_condition, **kwargs), **kwargs)
+        return were(given(condition, given_condition, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
-    return pspace(condition).where(condition, **kwargs)
+    return pspace(condition).were(condition, **kwargs)
 
 
 @doctest_depends_on(modules=('scipy',))
@@ -1605,7 +1605,7 @@ class Distribution(Basic):
 
         if library == 'scipy':
             # scipy does not require map as it can handle using custom distributions.
-            # However, we will still use a map where we can.
+            # However, we will still use a map were we can.
 
             # TODO: do this for drv.py and frv.py if necessary.
             # TODO: add more distributions here if there are more

@@ -64,7 +64,7 @@ def test_dispersion():
 
     # For any specific value of a, the dispersion is 3*a
     # but the algorithm can not find this in general.
-    # This is the point where the resultant based Ansatz
+    # This is the point were the resultant based Ansatz
     # is superior to the current one.
     fp = poly(a**2*x**3 + (a**3 + a**2 + a + 1)*x, x)
     gp = fp.as_expr().subs(x, x - 3*a).as_poly(x)

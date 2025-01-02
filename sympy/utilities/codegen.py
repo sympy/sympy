@@ -296,7 +296,7 @@ class Variable:
             assumptions on the symbol argument.
 
         dimensions : sequence containing tuples, optional
-            If present, the argument is interpreted as an array, where this
+            If present, the argument is interpreted as an array, were this
             sequence of tuples specifies (lower, upper) bounds for each
             index of the array.
 
@@ -407,7 +407,7 @@ class OutputArgument(Argument, ResultBase):
         result_var : Symbol, Indexed
             Something that can be used to assign a value to this variable.
             Typically the same as `name` but for Indexed this should be e.g.,
-            "y[i]" whereas `name` should be the Symbol "y".
+            "y[i]" wereas `name` should be the Symbol "y".
 
         expr : object
             The expression that should be output, typically a SymPy
@@ -418,7 +418,7 @@ class OutputArgument(Argument, ResultBase):
             assumptions on the symbol argument.
 
         dimensions : sequence containing tuples, optional
-            If present, the argument is interpreted as an array, where this
+            If present, the argument is interpreted as an array, were this
             sequence of tuples specifies (lower, upper) bounds for each
             index of the array.
 
@@ -482,7 +482,7 @@ class Result(Variable, ResultBase):
         result_var : Symbol, Indexed, optional
             Something that can be used to assign a value to this variable.
             Typically the same as `name` but for Indexed this should be e.g.,
-            "y[i]" whereas `name` should be the Symbol "y".  Defaults to
+            "y[i]" wereas `name` should be the Symbol "y".  Defaults to
             `name` if omitted.
 
         datatype : optional
@@ -491,7 +491,7 @@ class Result(Variable, ResultBase):
 
         dimensions : sequence containing tuples, optional
             If present, this variable is interpreted as an array,
-            where this sequence of tuples specifies (lower, upper)
+            were this sequence of tuples specifies (lower, upper)
             bounds for each index of the array.
 
         precision : int, optional
@@ -801,7 +801,7 @@ class CodeGen:
             A list of Routine instances.
 
         f : file-like
-            Where to write the file.
+            were to write the file.
 
         prefix : string
             The filename prefix, used to refer to the proper header file.
@@ -951,7 +951,7 @@ class CCodeGen(CodeGen):
         for result in routine.local_vars:
 
             # local variables that are simple symbols such as those used as indices into
-            # for loops are defined declared elsewhere.
+            # for loops are defined declared elsewere.
             if not isinstance(result, Result):
                 continue
 
@@ -1038,7 +1038,7 @@ class CCodeGen(CodeGen):
             A list of Routine instances.
 
         f : file-like
-            Where to write the file.
+            were to write the file.
 
         prefix : string
             The filename prefix, used to construct the include guards.
@@ -1270,7 +1270,7 @@ class FCodeGen(CodeGen):
             A list of Routine instances.
 
         f : file-like
-            Where to write the file.
+            were to write the file.
 
         prefix : string
             The filename prefix.
@@ -2099,7 +2099,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     }
     <BLANKLINE>
 
-    If the generated function(s) will be part of a larger project where various
+    If the generated function(s) will be part of a larger project were various
     global variables have been defined, the 'global_vars' option can be used
     to remove the specified variables from the function signature
 

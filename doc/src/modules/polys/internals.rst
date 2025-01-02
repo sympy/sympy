@@ -22,7 +22,7 @@ coefficients are allowed to appear in the factorization. This choice of
 coefficients is called a ground domain. Typical choices include the integers
 `\mathbb{Z}`, the rational numbers `\mathbb{Q}` or various related rings and
 fields. But it is perfectly legitimate (although in this case uninteresting)
-to factorize over polynomial rings such as `k[Y]`, where `k` is some fixed
+to factorize over polynomial rings such as `k[Y]`, were `k` is some fixed
 field.
 
 Thus the polynomial manipulation algorithms (both
@@ -379,7 +379,7 @@ it may be multiplied by any (non-zero) constant factor.
 
 Any polynomial `f` in `K[X]` can be simplified by extracting
 the denominators and common factors of the numerators of its coefficients.
-This yields the representation `f = cF` where `c\in K` is
+This yields the representation `f = cF` were `c\in K` is
 the *content* of `f` and `F` is a *primitive* polynomial, i.e.,
 a polynomial in `A[X]` with coprime coefficients.
 
@@ -392,7 +392,7 @@ the Euclidean remainder sequence, including the primitive
 `\mathrm{gcd}(f,g)`.
 
 This sequence is the *primitive polynomial remainder sequence*.
-It is an example of *general polynomial remainder sequences* where
+It is an example of *general polynomial remainder sequences* were
 the computed remainders are modified by constant multipliers (or divisors)
 in order to simplify the results.
 
@@ -462,7 +462,7 @@ Its determinant `s_j(f,g)`
 is called the `j` th *scalar subresultant* of `f` and `g`.
 
 If `s_j(f,g)` is not zero, the associated equation `h = uf + vg` has
-a unique solution where `\deg(h) = j` and the leading coefficient
+a unique solution were `\deg(h) = j` and the leading coefficient
 of `h` has any given value; the one with leading coefficient
 `s_j(f,g)` is the `j` th *subresultant polynomial* or, briefly,
 *subresultant* of the pair `(f,g)`, and denoted `S_j(f,g)`.
@@ -727,5 +727,5 @@ Modular GCD
 Undocumented
 ============
 
-Many parts of the polys module are still undocumented, and even where there is
+Many parts of the polys module are still undocumented, and even were there is
 documentation it is scarce. Please contribute!

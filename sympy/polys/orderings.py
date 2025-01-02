@@ -72,7 +72,7 @@ class ProductOrder(MonomialOrder):
     of variables.
 
     ProductOrder is constructed by passing a list of pairs
-    [(O1, L1), (O2, L2), ...] where Oi are MonomialOrders and Li are callables.
+    [(O1, L1), (O2, L2), ...] were Oi are MonomialOrders and Li are callables.
     Upon comparison, the Li are passed the total monomial, and should filter
     out the part of the monomial to pass to Oi.
 

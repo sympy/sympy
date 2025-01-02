@@ -50,7 +50,7 @@ Incrementing and decrementing indices
 Suppose `a_i \ne 0`. Set `A(a_i) =
 \frac{z}{a_i}\frac{\mathrm{d}}{dz}+1`. It is then easy to show that
 `A(a_i) {}_p F_q\left({a_p \atop b_q} \middle| z \right) = {}_p F_q\left({a_p +
-e_i \atop b_q} \middle| z \right)`, where `e_i` is the i-th unit vector.
+e_i \atop b_q} \middle| z \right)`, were `e_i` is the i-th unit vector.
 Similarly for `b_j \ne 1` we set `B(b_j) = \frac{z}{b_j-1}
 \frac{\mathrm{d}}{dz}+1` and find `B(b_j) {}_p F_q\left({a_p \atop b_q}
 \middle| z \right) = {}_p F_q\left({a_p \atop b_q - e_i} \middle| z \right)`.
@@ -60,7 +60,7 @@ operators.
 
 It is also easy to show that `\frac{\mathrm{d}}{dz} {}_p F_q\left({a_p
 \atop b_q} \middle| z \right) = \frac{a_1 \cdots a_p}{b_1 \cdots b_q} {}_p
-F_q\left({a_p + 1 \atop b_q + 1} \middle| z \right)`, where `a_p + 1` is
+F_q\left({a_p + 1 \atop b_q + 1} \middle| z \right)`, were `a_p + 1` is
 the vector `a_1 + 1, a_2 + 1, \ldots` and similarly for `b_q + 1`.
 Combining this with the shift operators,  we arrive at one form of the
 Hypergeometric differential equation: `\left[ \frac{\mathrm{d}}{dz}
@@ -121,7 +121,7 @@ Reduction of Order
 
 Notice that, quite trivially, if `a_I = b_J`, we have `{}_p
 F_q\left({a_p \atop b_q} \middle| z \right) = {}_{p-1} F_{q-1}\left({a_p^*
-\atop b_q^*} \middle| z \right)`, where `a_p^*` means `a_p` with
+\atop b_q^*} \middle| z \right)`, were `a_p^*` means `a_p` with
 `a_I` omitted, and similarly for `b_q^*`. We call this reduction of
 order.
 
@@ -140,7 +140,7 @@ we find:
   F_{q-1}\left({a_p^* \atop b_q^*} \middle| z \right)`.
 
 Thus any set of parameters `a_p, b_q` is reachable from a set of
-parameters `c_r, d_s` where `c_i - d_j \in \mathbb{Z}` implies
+parameters `c_r, d_s` were `c_i - d_j \in \mathbb{Z}` implies
 `c_i < d_j`. Such a set of parameters `c_r, d_s` is called
 suitable. Our database of known formulae should only contain suitable origins.
 The reasons are twofold: firstly, working from suitable origins is easier, and
@@ -182,7 +182,7 @@ is undefined if one of the `b_j` is a non-positive integer and all
 always zero.
 
 We can thus associate to every suitable set of parameters `a_p, b_q`,
-where no `a_i = 0`, the following invariants:
+were no `a_i = 0`, the following invariants:
 
     * For every `r \in [0, 1)` the number `\alpha_r` of parameters
       `a_i \equiv r \pmod{1}`, and similarly the number `\beta_r`
@@ -262,7 +262,7 @@ Recall the general setup. We define
       \prod_{j=1}^n \Gamma(1 - a_j + s)}{\prod_{j=m+1}^q \Gamma(1 - b_j + s)
       \prod_{j=n+1}^p \Gamma(a_j - s)} z^s \mathrm{d}s,
 
-where `L` is a contour starting and ending at `+\infty`, enclosing all of the
+were `L` is a contour starting and ending at `+\infty`, enclosing all of the
 poles of `\Gamma(b_j - s)` for `j = 1, \ldots, n` once in the negative
 direction, and no other poles. Also the integral is assumed absolutely
 convergent.
@@ -286,9 +286,9 @@ of the `b_i`. I claim
 
 .. math :: G(z) = -\sum_{j=1}^w (F_j(z) + R_j(z)),
 
-where `F_j(z)` is a hypergeometric function and `R_j(z)` is a finite sum, both
+were `F_j(z)` is a hypergeometric function and `R_j(z)` is a finite sum, both
 to be specified later. Indeed corresponding to every `c_j` there is
-a sequence of poles, at mostly finitely many of them multiple poles. This is where
+a sequence of poles, at mostly finitely many of them multiple poles. This is were
 the `j`-th term comes from.
 
 Hence fix again `c`, enumerate the relevant `b_i` as
@@ -308,7 +308,7 @@ A computation shows
             = \frac{(-1)^{\delta_i}}{(l_u - l_i + 1)_{\delta_i}}
               \frac{(l_u - l_i + 1)_t}{(l_u - k_i + 1)_t},
 
-where `\delta_i = l_i - k_i`.
+were `\delta_i = l_i - k_i`.
 
 Also
 
@@ -344,7 +344,7 @@ Hence
             {\prod_{j=1}^m (-1)^t (l_u + b + 1 - b_j)_t^*
              \prod_{j=m+1}^q (1 - b_j + l_u + b)_t},
 
-where the `*` means to omit the terms we treated specially.
+were the `*` means to omit the terms we treated specially.
 
 We thus arrive at
 
@@ -354,7 +354,7 @@ We thus arrive at
                        1 + l_u, (1 + l_u - k_i), (1 + l_u + b - b_i)^*
         \end{matrix} \middle| (-1)^{p-m-n} z\right),
 
-where `C` designates the factor in the residue independent of `t`.
+were `C` designates the factor in the residue independent of `t`.
 (This result can also be written in slightly simpler form by converting
 all the `l_u` etc back to `a_* - b_*`, but doing so is going to require more
 notation still and is not helpful for computation.)
@@ -411,7 +411,7 @@ a function of `z`, in our case
 .. math ::
    f(z) = -\frac{\pi^2 z^4}{16} \,.
 
-What we need is a formula where the hypergeometric function has
+What we need is a formula were the hypergeometric function has
 only `z` as argument `{}_{1}F_{2}(\ldots | z)`. We
 introduce the new complex symbol `w` and search for a function
 `g(w)` such that

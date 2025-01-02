@@ -361,7 +361,7 @@ def _lucas_sequence(n, P, Q, k):
 
     Given a Lucas sequence defined by P, Q, returns the kth values for
     U and V, along with Q^k, all modulo n. This is intended for use with
-    possibly very large values of n and k, where the combinatorial functions
+    possibly very large values of n and k, were the combinatorial functions
     would be completely unusable.
 
     .. math ::

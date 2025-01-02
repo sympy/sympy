@@ -16,7 +16,7 @@ into translational motion, and rotational motion (when dealing with particles, w
 only have translational motion). Rotational motion can further be broken down
 into simple rotations and general rotations.
 
-Translation of a rigid body is defined as a motion where the orientation of the
+Translation of a rigid body is defined as a motion were the orientation of the
 body does not change during the motion; or during the motion any line segment
 would be parallel to itself at the start of the motion.
 
@@ -126,7 +126,7 @@ vector in a reference frame:
 The vector :math:`\mathbf{v}` can be any vector quantity: a position vector,
 a velocity vector, angular velocity vector, etc. Instead of taking the time
 derivative of the vector in :math:`\mathbf{N}`, we take it in
-:math:`\mathbf{B}`, where :math:`\mathbf{B}` can be any reference frame or
+:math:`\mathbf{B}`, were :math:`\mathbf{B}` can be any reference frame or
 body, usually one in which it is easy to take the derivative on
 :math:`\mathbf{v}` in (:math:`\mathbf{v}` is usually composed only of the basis
 vector set belonging to :math:`\mathbf{B}`). Then we add the cross product of

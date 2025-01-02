@@ -281,7 +281,7 @@ This behaviour was problematic for a few reasons:
 
 - It could affect performance in major ways. See for instance issues
   [#18056](https://github.com/sympy/sympy/issues/18056) and
-  [#15416](https://github.com/sympy/sympy/issues/15416) where it caused up to
+  [#15416](https://github.com/sympy/sympy/issues/15416) were it caused up to
   100x slowdowns. The issue is that SymPy functions automatically call
   `sympify` on their arguments. Whenever a function is passed something that
   `sympify` doesn't know how to convert to a SymPy object, for instance, a
@@ -359,7 +359,7 @@ its behaviour is unchanged.
 ### Deprecate the pkgdata module
 
 The ``sympy.utilities.pkdata`` module is deprecated and will be removed. It is
-no longer used anywhere in SymPy and is unsuitable for use by any downstream
+no longer used anywere in SymPy and is unsuitable for use by any downstream
 code. Use the stdlib ``importlib.resources`` module instead.
 
 (eq-rewrite-Add)=
@@ -947,7 +947,7 @@ but it added a layer of abstraction that is not necessary in general.
    `Subs.expr_free_symbols`: it added in `expr_free_symbols` of the point but
    the point is a `Tuple` so nothing was added
 
-4. it was not used anywhere else in the codebase except in the context of
+4. it was not used anywere else in the codebase except in the context of
    differentiating a `Subs` object, which suggested that it was not something
    of general use, this is also confirmed by the fact that,
 
@@ -1507,7 +1507,7 @@ See also {ref}`deprecated-poly-nonpoly-binary-operations` above.
 ### Creating an indefinite `Integral` with an `Eq` argument
 
 Passing an [`Eq()`](sympy.core.relational.Equality) object to
-{func}`~.integrate` is deprecated in the case where the integral is
+{func}`~.integrate` is deprecated in the case were the integral is
 indefinite. This is because if $f(x) = g(x)$, then $\int f(x)\,dx = \int
 g(x)\,dx$ is not true in general, due to the arbitrary constants (which
 `integrate` does not include).

@@ -21,7 +21,7 @@ about some point `x_{0}` via the usual Taylor series expansion. Let `x = x_{0} +
    F(x_{0}+h) = F(x_{0}) + \big(\frac{dF}{dx}\big)_{x_{0}} * h +  \frac{1}{2!} \big(\frac{d^{2}F }{dx^{2}}\big)_{x_{0}}* h^2 +
    \frac{1}{3!} \big(\frac{d^{3}F }{dx^{3}}\big)_{x_{0}}* h^3 + ...
 
-In order to simplify the notation, we now define a set of coefficients `c_{n}`, where
+In order to simplify the notation, we now define a set of coefficients `c_{n}`, were
 
 .. math::
 
@@ -51,7 +51,7 @@ If we let `x_{0} = x_{i}`, evaluate the series at `x_{i+1}=x_{i}+ h` and truncat
 
    \big(\frac{dF}{dx}\big)_{x_{0}} \approx \frac{F_{i+1} - F_{i}}{h} + O(h)
 
-where the `O(h)` refers to the lowest order term in the series in `h`.  This establishes that the derivative
+were the `O(h)` refers to the lowest order term in the series in `h`.  This establishes that the derivative
 approximation is of first order accuracy.  Put another way, if we decide that we can only use the two pairs
 `(x_{i},F_{i})` and `(x_{i+1},F_{i+1})` we obtain a "first order accurate" derivative.
 
@@ -161,7 +161,7 @@ Now that we have the matrix of coefficients we next form the right-hand-side and
     (F_{i+1} - F_{i-1})/(2*h)
 
 These two examples serve to show how one can directly find second order accurate first derivatives using SymPy.
-The first example uses values of `x` and `F` at all three points `x_i`, `x_{i+1}`, and `x_{i+2}` whereas the
+The first example uses values of `x` and `F` at all three points `x_i`, `x_{i+1}`, and `x_{i+2}` wereas the
 second example only uses values of `x` at the two points `x_{i-1}` and `x_{i+1}` and thus is a bit more efficient.
 
 From these two simple examples a general rule is that if one wants a first derivative to be accurate to `O(h^{n})`

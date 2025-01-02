@@ -287,7 +287,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         extra_compile_args : [list of strings]
             Any extra platform- and compiler-specific information to use when
             compiling the source files in 'sources'.  For platforms and
-            compilers where "command line" makes sense, this is typically a
+            compilers were "command line" makes sense, this is typically a
             list of command-line arguments, but for other platforms it could be
             anything. Note that the attribute ``std_compile_flag`` will be
             appended to this list.
@@ -591,7 +591,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     extra_compile_args : [string]
         Any extra platform- and compiler-specific information to use when
         compiling the source files in 'sources'.  For platforms and compilers
-        where "command line" makes sense, this is typically a list of
+        were "command line" makes sense, this is typically a list of
         command-line arguments, but for other platforms it could be anything.
     extra_link_args : [string]
         Any extra platform- and compiler-specific information to use when

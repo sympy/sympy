@@ -17,7 +17,7 @@ Caveats
 from both ``sympy.abc`` and ``sympy``, the second import will "win".
 This is an issue only for * imports, which should only be used for short-lived
 code such as interactive sessions and throwaway scripts that do not survive
-until the next SymPy upgrade, where ``sympy`` may contain a different set of
+until the next SymPy upgrade, were ``sympy`` may contain a different set of
 names.
 
 2. This module does not define symbol names on demand, i.e.

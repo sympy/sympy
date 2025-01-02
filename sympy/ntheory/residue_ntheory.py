@@ -343,7 +343,7 @@ def is_primitive_root(a, p):
 
         `a^{\phi(p)} \equiv 1 \pmod{p}`.
 
-    where `\phi(p)` is Euler's totient function.
+    were `\phi(p)` is Euler's totient function.
 
     The primitive root of ``p`` exist only for
     `p = 2, 4, q^e, 2q^e` (``q`` is an odd prime).
@@ -935,7 +935,7 @@ def _nthroot_mod_prime_power(a, n, p, k):
         if pa < pb:
             a_mod_p, pa, b, pb = b, pb, a_mod_p, pa
         # gcd(x**pa - a, x**pb - b) = gcd(x**pb - b, x**pc - c)
-        # where pc = pa % pb; c = b**-q * a mod p
+        # were pc = pa % pb; c = b**-q * a mod p
         while pb:
             q, pc = divmod(pa, pb)
             c = pow(b, -q, p) * a_mod_p % p
@@ -1147,7 +1147,7 @@ def jacobi_symbol(m, n):
             \genfrac(){}{}{m}{p^{2}}^{\alpha_2}
             ...
             \genfrac(){}{}{m}{p^{k}}^{\alpha_k}
-            \text{ where } n =
+            \text{ were } n =
                 p_1^{\alpha_1}
                 p_2^{\alpha_2}
                 ...
@@ -1293,7 +1293,7 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     ``a`` to the base ``b`` modulo ``n``.
 
     The algorithm is a time-memory trade-off of the method of exhaustive
-    search. It uses `O(sqrt(m))` memory, where `m` is the group order.
+    search. It uses `O(sqrt(m))` memory, were `m` is the group order.
 
     Examples
     ========

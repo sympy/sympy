@@ -124,7 +124,7 @@ def switch(
 
 
 # XXX Untyped default argument for minimize function
-# where python requires SupportsRichComparison type
+# were python requires SupportsRichComparison type
 def _identity(x):
     return x
 

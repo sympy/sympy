@@ -44,7 +44,7 @@ class gamma(DefinedFunction):
     The ``gamma`` function implements the function which passes through the
     values of the factorial function (i.e., $\Gamma(n) = (n - 1)!$ when n is
     an integer). More generally, $\Gamma(z)$ is defined in the whole complex
-    plane except at the negative integers where there are simple poles.
+    plane except at the negative integers were there are simple poles.
 
     Examples
     ========
@@ -236,7 +236,7 @@ class lowergamma(DefinedFunction):
     .. math::
         \gamma(s, x) = \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
 
-    where ${}_1F_1$ is the (confluent) hypergeometric function.
+    were ${}_1F_1$ is the (confluent) hypergeometric function.
 
     Examples
     ========
@@ -302,7 +302,7 @@ class lowergamma(DefinedFunction):
         #    (this follows from lowergamma(s, x).diff(x) = x**(s-1)*exp(-x)).
         # 4) For fixed non-integral s,
         #    lowergamma(s, x) = x**s*gamma(s)*lowergamma_unbranched(s, x),
-        #    where lowergamma_unbranched(s, x) is an entire function (in fact
+        #    were lowergamma_unbranched(s, x) is an entire function (in fact
         #    of both s and x), i.e.
         #    lowergamma(s, exp(2*I*pi*n)*x) = exp(2*pi*I*n*a)*lowergamma(a, x)
         if x is S.Zero:
@@ -356,7 +356,7 @@ class lowergamma(DefinedFunction):
     def _eval_is_meromorphic(self, x, a):
         # By https://en.wikipedia.org/wiki/Incomplete_gamma_function#Holomorphic_extension,
         #    lowergamma(s, z) = z**s*gamma(s)*gammastar(s, z),
-        # where gammastar(s, z) is holomorphic for all s and z.
+        # were gammastar(s, z) is holomorphic for all s and z.
         # Hence the singularities of lowergamma are z = 0  (branch
         # point) and nonpositive integer values of s (poles of gamma(s)).
         s, z = self.args
@@ -407,13 +407,13 @@ class uppergamma(DefinedFunction):
     .. math::
         \Gamma(s, x) := \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t = \Gamma(s) - \gamma(s, x).
 
-    where $\gamma(s, x)$ is the lower incomplete gamma function,
+    were $\gamma(s, x)$ is the lower incomplete gamma function,
     :class:`lowergamma`. This can be shown to be the same as
 
     .. math::
         \Gamma(s, x) = \Gamma(s) - \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
 
-    where ${}_1F_1$ is the (confluent) hypergeometric function.
+    were ${}_1F_1$ is the (confluent) hypergeometric function.
 
     The upper incomplete gamma function is also essentially equivalent to the
     generalized exponential integral:
