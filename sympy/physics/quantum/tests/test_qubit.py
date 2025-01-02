@@ -143,7 +143,7 @@ def test_matrix_to_qubits():
 
 
 def test_measure_normalize():
-    a, b = symbols('a b')
+    a, b = symbols('a b', complex=True)
     state = a*Qubit('110') + b*Qubit('111')
     assert measure_partial(state, (0,), normalize=False) == \
         [(a*Qubit('110'), a*a.conjugate()), (b*Qubit('111'), b*b.conjugate())]
