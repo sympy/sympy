@@ -3318,6 +3318,56 @@ class DomainMatrix:
         R = self.from_rep(ddm_r)
         return Q, R
 
+    def fraction_free_qrd(self):
+        """
+        Compute the fraction-free QR decomposition of the DomainMatrix.
+
+        Explanation
+        ===========
+
+        This method computes the QR decomposition of a matrix in a fraction-free
+        manner, ensuring that all intermediate results remain in the domain of
+        the input matrix. This avoids divisions and is particularly suited for
+        exact arithmetic domains like integers or polynomials.
+
+        Returns
+        =======
+
+        (Q, R, D)
+            Q is the orthogonal matrix.
+            R is the upper triangular matrix.
+            D is the diagonal matrix.
+
+        Raises
+        ======
+
+        DMDomainError
+            If the domain of the DomainMatrix is not an integral domain.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), ZZ)
+        >>> Q, R, D = A.fraction_free_qrd()
+        >>> Q
+        DomainMatrix([[1, -2], [3, 0], [5, 2]], (3, 2), ZZ)
+        >>> R
+        DomainMatrix([[1, 2], [0, 1]], (2, 2), ZZ)
+        >>> D
+        DomainMatrix([[1, 0], [0, 2]], (2, 2), ZZ)
+        """
+        if not self.domain.is_IntegerRing and not self.domain.is_PolynomialRing:
+            raise DMDomainError("Fraction-free QR decomposition requires an integral domain.")
+
+        ddm_q, ddm_r, ddm_d = self.rep.fraction_free_qrd()
+        Q = self.from_rep(ddm_q)
+        R = self.from_rep(ddm_r)
+        D = self.from_rep(ddm_d)
+
+        return Q, R, D
+
     def lu_solve(self, rhs):
         r"""
         Solver for DomainMatrix x in the A*x = B
@@ -3369,6 +3419,39 @@ class DomainMatrix:
             raise DMNotAField('Not a field')
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_rep(sol)
+
+    def PLDUdecompositionFF(self):
+        """
+        Compute the PLDU decomposition of the DomainMatrix.
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            P is the permutation matrix.
+            L is the lower triangular matrix.
+            D is the diagonal matrix.
+            U is the upper triangular matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), ZZ)
+        >>> P, L, D, U = A.PLDUdecompositionFF()
+        >>> P
+        DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), ZZ)
+        >>> L
+        DomainMatrix([[1, 0], [3, 1], [5, 0]], (3, 2), ZZ)
+        >>> D
+        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+        >>> U
+        DomainMatrix([[1, 2], [0, 2]], (2, 2), ZZ)
+        """
+
+        P, L, D, U = self.rep.PLDUdecompositionFF()
+        return self.from_rep(P), self.from_rep(L), self.from_rep(D), self.from_rep(U)
 
     def _solve(A, b):
         # XXX: Not sure about this method or its signature. It is just created
