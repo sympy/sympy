@@ -695,11 +695,11 @@ def test_adjoint():
 
     x, y = symbols('x y')
     assert adjoint(adjoint(x)) == x
-    assert adjoint(x + y) == adjoint(x) + adjoint(y)
-    assert adjoint(x - y) == adjoint(x) - adjoint(y)
-    assert adjoint(x * y) == adjoint(x) * adjoint(y)
-    assert adjoint(x / y) == adjoint(x) / adjoint(y)
-    assert adjoint(-x) == -adjoint(x)
+    assert adjoint(x + y) == conjugate(x) + conjugate(y)
+    assert adjoint(x - y) == conjugate(x) - conjugate(y)
+    assert adjoint(x * y) == conjugate(x) * conjugate(y)
+    assert adjoint(x / y) == conjugate(x) / conjugate(y)
+    assert adjoint(-x) == -conjugate(x)
 
     x, y = symbols('x y', commutative=False)
     assert adjoint(adjoint(x)) == x
@@ -737,7 +737,7 @@ def test_conjugate():
 
 
 def test_conjugate_transpose():
-    x = Symbol('x')
+    x = Symbol('x', commutative=False)
     assert conjugate(transpose(x)) == adjoint(x)
     assert transpose(conjugate(x)) == adjoint(x)
     assert adjoint(transpose(x)) == conjugate(x)
@@ -745,16 +745,7 @@ def test_conjugate_transpose():
     assert adjoint(conjugate(x)) == transpose(x)
     assert conjugate(adjoint(x)) == transpose(x)
 
-    class Symmetric(Expr):
-        def _eval_adjoint(self):
-            return None
-
-        def _eval_conjugate(self):
-            return None
-
-        def _eval_transpose(self):
-            return self
-    x = Symmetric()
+    x = Symbol('x')
     assert conjugate(x) == adjoint(x)
     assert transpose(x) == x
 
@@ -766,11 +757,11 @@ def test_transpose():
 
     x, y = symbols('x y')
     assert transpose(transpose(x)) == x
-    assert transpose(x + y) == transpose(x) + transpose(y)
-    assert transpose(x - y) == transpose(x) - transpose(y)
-    assert transpose(x * y) == transpose(x) * transpose(y)
-    assert transpose(x / y) == transpose(x) / transpose(y)
-    assert transpose(-x) == -transpose(x)
+    assert transpose(x + y) == x + y
+    assert transpose(x - y) == x - y
+    assert transpose(x * y) == x * y
+    assert transpose(x / y) == x / y
+    assert transpose(-x) == -x
 
     x, y = symbols('x y', commutative=False)
     assert transpose(transpose(x)) == x
