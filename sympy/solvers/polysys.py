@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
-from collections.abc import Sequence
+from collections.abc import Sequence, Iterable
 
 import itertools
 
@@ -14,6 +14,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.sorting import default_sort_key
 from sympy.logic.boolalg import Boolean
 from sympy.polys import Poly, groebner, roots
+from sympy.polys.domains import ZZ
 from sympy.polys.polytools import parallel_poly_from_expr, sqf_part
 from sympy.polys.polyerrors import (
     ComputationFailed,
@@ -490,7 +491,7 @@ def factor_system(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kw
     A simple system with multiple solutions:
 
     >>> factor_system([x**2 - 1, y - 1])
-    [[x - 1, y - 1], [x + 1, y - 1]]
+    [[x + 1, y - 1], [x - 1, y - 1]]
 
     A system with no solution:
 
@@ -510,13 +511,13 @@ def factor_system(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kw
     If c is added to the unknowns then the system has a generic solution:
 
     >>> factor_system([a*x*(x-1), b*y, c], [x, y, c])
-    [[x, y, c], [x - 1, y, c]]
+    [[x - 1, y, c], [x, y, c]]
 
     Alternatively :func:`factor_system_cond` can be used to get degenerate
     cases as well:
 
     >>> factor_system_cond([a*x*(x-1), b*y, c], [x, y])
-    [[x, y, c], [x, b, c], [x - 1, y, c], [x - 1, b, c], [a, y, c], [a, b, c]]
+    [[x - 1, y, c], [x, y, c], [x - 1, b, c], [x, b, c], [y, a, c], [a, b, c]]
 
     Each of the above cases is only satisfiable in the degenerate case `c = 0`.
 
@@ -657,10 +658,10 @@ def factor_system_cond(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
     >>> from sympy.abc import x, y, a, b, c
 
     >>> factor_system_cond([x**2 - 4, a*y, b], [x, y])
-    [[x - 2, y, b], [x - 2, a, b], [x + 2, y, b], [x + 2, a, b]]
+    [[x + 2, y, b], [x - 2, y, b], [x + 2, a, b], [x - 2, a, b]]
 
     >>> factor_system_cond([a*x*(x-1), b*y, c], [x, y])
-    [[x, y, c], [x, b, c], [x - 1, y, c], [x - 1, b, c], [a, y, c], [a, b, c]]
+    [[x - 1, y, c], [x, y, c], [x - 1, b, c], [x, b, c], [y, a, c], [a, b, c]]
 
     In the return of the (systems, conds) pair, systems is [[]]
     when the system implies tautology. Eg. x - x = 0,
@@ -742,12 +743,12 @@ def factor_system_poly(polys: list[Poly]) -> list[list[Poly]]:
 
     >>> sys1, sys2 = factor_system_poly([p1, p2, p3])
     >>> sys1
-    [Poly(c, x, domain='ZZ[a,b,c]'),
-     Poly(a - 1, x, domain='ZZ[a,b,c]'),
-     Poly(b - 3, x, domain='ZZ[a,b,c]')]
+    [Poly(x - 2, x, domain='ZZ[a,b,c]'),
+     Poly(c, x, domain='ZZ[a,b,c]')]
     >>> sys2
-    [Poly(c, x, domain='ZZ[a,b,c]'),
-     Poly(x - 2, x, domain='ZZ[a,b,c]')]
+    [Poly(a - 1, x, domain='ZZ[a,b,c]'),
+     Poly(b - 3, x, domain='ZZ[a,b,c]'),
+     Poly(c, x, domain='ZZ[a,b,c]')]
 
     This is the core routine used by higher-level functions factor_system_cond,
     factor_system, and factor_system_bool. It Returns empty systems list
@@ -788,87 +789,37 @@ def factor_system_poly(polys: list[Poly]) -> list[list[Poly]]:
         else:
             constant = sqf_part(factor_terms(constant).as_coeff_Mul()[1])
             constp = Poly(constant, base_gens, domain=base_domain)
-            factors.append(constp)
+            factors.insert(0, constp)
 
         eqs_factors.append(factors)
 
     return _cnf2dnf(eqs_factors)
 
 
-def _has_common_variables(poly1: Poly, poly2: Poly) -> bool:
-    """Helper function to check if two polynomials have nonzero degree in any common variables"""
-    return any(d1 and d2 for d1, d2 in zip(poly1.degree_list(), poly2.degree_list()))
-
-
 def _cnf2dnf(eqs: list[list[Poly]]) -> list[list[Poly]]:
     """
-    Given a list of lists of (factor, conditions) pairs from the factorization of a
-    polynomial system, returns the minimal DNF sufficient to
-    satisfy the CNF. Only includes terms necessary for
-    satisfying the CNF, omitting redundant factors, hence different from a simple
-    mechanical rewrite of CNF to DNF.
-
-    The input is a list of lists of (Poly, tuple) pairs, where each Poly represents a
-    factor and the tuple contains conditions on that factor..
+    Given a list of lists of Poly from the factorization of the equations in a
+    polynomial system, find the minimal set of factorised subsystems that is
+    equivalent to the original system. The result is a disjunctive normal form.
     """
-    # remove equations that are independent of all others
-    # and generate the Cartesian product for them
-    eqs = [list(i) for i in eqs]
-    indep = set()
-
-    for i in range(len(eqs)):
-        is_independent = True
-        for j in range(len(eqs)):
-            if i != j:
-                for expr1 in eqs[i]:
-                    for expr2 in eqs[j]:
-                        if _has_common_variables(expr1, expr2):
-                            is_independent = False
-                            break
-                    if not is_independent:
-                        break
-            if not is_independent:
-                break
-        if is_independent:
-            indep.add(i)
-
-    if not indep:
-        return list(_dnf(eqs))
-
-    indep_eqs = []
-    dep_eqs = []
-    for i, e in enumerate(eqs):
-        if i in indep:
-            indep_eqs.append(e)
-        else:
-            dep_eqs.append(e)
-
-    result = []
-    for t in cartes(*indep_eqs):
-        t_list = list(t)
-        for d in _dnf(dep_eqs):
-            result.append(t_list + d)
-    return result
+    systems = {frozenset(sys) for sys in cartes(*eqs)}
+    systems = [s1 for s1 in systems if not any(s1 > s2 for s2 in systems)]
+    return _sort_systems(systems)
 
 
-def _dnf(eqs: list[list[Poly]]) -> list[list[Poly]]:
-    # helper for _cnf2dnf that recursively enumerates the
-    # minimal dnf args that satisfy the cnf expression;
-    if not eqs:
-        return [[]]
-    elif len(eqs) == 1:
-        return [[f] for f in eqs[0]]
-    else:
-        f = eqs[0][0]
-        eqs_f_zero = [eq for eq in eqs if f not in eq]
-        dnf_f = _dnf(eqs_f_zero)
+def _sort_systems(systems: Iterable[Iterable[Poly]]) -> list[list[Poly]]:
+    """Sorts a list of lists of polynomials"""
+    systems = [sorted(s, key=_poly_sort_key, reverse=True) for s in systems]
+    return sorted(systems, key=_sys_sort_key, reverse=True)
 
-        f_free_eqs = [[x for x in eq if x != f] for eq in eqs]
-        if not all(f_free_eqs):
-            dnf = [[f] + s for s in dnf_f]
-        else:
-            eqs_f_nonzero = list(filter(None, f_free_eqs))
-            dnf_no_f = _dnf(eqs_f_nonzero)
-            dnf = dnf_no_f + [[f] + s for s in dnf_f if s not in dnf_no_f]
 
-        return dnf
+def _poly_sort_key(poly):
+    """Sort key for polynomials"""
+    if poly.domain.is_FF:
+        poly = poly.set_domain(ZZ)
+    return poly.degree_list(), poly.rep.to_list()
+
+
+def _sys_sort_key(sys):
+    """Sort key for lists of polynomials"""
+    return list(zip(*map(_poly_sort_key, sys)))
