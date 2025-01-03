@@ -193,22 +193,22 @@ def test_factor_system():
     assert factor_system([]) == [[]]
 
     assert factor_system([x**2 + y**2 + 2*x*y, x**2 - 2], extension=sqrt(2)) == [
-        [x + y, x - sqrt(2)],
         [x + y, x + sqrt(2)],
+        [x + y, x - sqrt(2)],
     ]
 
     assert factor_system([x**2 + 1, y**2 + 1], gaussian=True) == [
-        [x - I, y - I],
-        [x - I, y + I],
-        [x + I, y - I],
         [x + I, y + I],
+        [x + I, y - I],
+        [x - I, y + I],
+        [x - I, y - I],
     ]
 
     assert factor_system([x**2 + 1, y**2 + 1], domain=QQ_I) == [
-        [x - I, y - I],
-        [x - I, y + I],
-        [x + I, y - I],
         [x + I, y + I],
+        [x + I, y - I],
+        [x - I, y + I],
+        [x - I, y - I],
     ]
 
     assert factor_system([0]) == [[]]
@@ -217,18 +217,18 @@ def test_factor_system():
     assert factor_system([1, 0, x]) == []
 
     assert factor_system([x**4 - 1, y**6 - 1]) == [
-        [x - 1, y - 1],
-        [x - 1, y**2 - y + 1],
-        [x - 1, y + 1],
-        [x - 1, y**2 + y + 1],
-        [x + 1, y - 1],
-        [x + 1, y**2 - y + 1],
-        [x + 1, y + 1],
-        [x + 1, y**2 + y + 1],
-        [x**2 + 1, y - 1],
+        [x**2 + 1, y**2 + y + 1],
         [x**2 + 1, y**2 - y + 1],
         [x**2 + 1, y + 1],
-        [x**2 + 1, y**2 + y + 1]
+        [x**2 + 1, y - 1],
+        [x + 1, y**2 + y + 1],
+        [x + 1, y**2 - y + 1],
+        [x - 1, y**2 + y + 1],
+        [x - 1, y**2 - y + 1],
+        [x + 1, y + 1],
+        [x + 1, y - 1],
+        [x - 1, y + 1],
+        [x - 1, y - 1],
     ]
 
     assert factor_system([(x - 1)*(y - 2), (y - 2)*(z - 3)]) == [
@@ -237,7 +237,7 @@ def test_factor_system():
     ]
 
     assert factor_system([sin(x)**2 + cos(x)**2 - 1, x]) == [
-        [sin(x)**2 + cos(x)**2 - 1, x]
+        [x, sin(x)**2 + cos(x)**2 - 1],
     ]
 
     assert factor_system([sin(x)**2 + cos(x)**2 - 1]) == [
@@ -251,17 +251,17 @@ def test_factor_system():
     assert factor_system([a*x*(x - 1), b*y, c], [x, y]) == []
 
     assert factor_system([a*x*(x - 1), b*y, c], [x, y, c]) == [
-        [x, y, c],
         [x - 1, y, c],
+        [x, y, c],
     ]
 
     assert factor_system([a*x*(x - 1), b*y, c]) == [
-        [a, y, c],
-        [a, b, c],
-        [x, y, c],
-        [x, b, c],
         [x - 1, y, c],
+        [x, y, c],
         [x - 1, b, c],
+        [x, b, c],
+        [y, a, c],
+        [a, b, c],
     ]
 
     assert factor_system([x**2 - 2], [y]) == []
@@ -269,13 +269,13 @@ def test_factor_system():
     assert factor_system([x**2 - 2], [x]) == [[x**2 - 2]]
 
     assert factor_system([cos(x)**2 - sin(x)**2, cos(x)**2 + sin(x)**2 - 1]) == [
-        [sin(x) + cos(x), sin(x)**2 + cos(x)**2 - 1],
-        [-sin(x) + cos(x), sin(x)**2 + cos(x)**2 - 1],
+        [sin(x)**2 + cos(x)**2 - 1, sin(x) + cos(x)],
+        [sin(x)**2 + cos(x)**2 - 1, -sin(x) + cos(x)],
     ]
 
     assert factor_system([(cos(x) + sin(x))**2 - 1, cos(x)**2 - sin(x)**2 - cos(2*x)]) == [
-        [sin(x) + cos(x) + 1, sin(x)**2 - cos(x)**2 + cos(2*x)],
-        [sin(x) + cos(x) - 1, sin(x)**2 - cos(x)**2 + cos(2*x)],
+        [sin(x)**2 - cos(x)**2 + cos(2*x), sin(x) + cos(x) + 1],
+        [sin(x)**2 - cos(x)**2 + cos(2*x), sin(x) + cos(x) - 1],
     ]
 
     assert factor_system([(cos(x) + sin(x))*exp(y) - 1, (cos(x) - sin(x))*exp(y) - 1]) == [
@@ -291,13 +291,13 @@ def test_factor_system_poly():
     pxyz = lambda e: Poly(e, (x, y, z))
 
     assert factor_system_poly([px(x**2 - 1), px(x**2 - 4)]) == [
+        [px(x + 2), px(x + 1)],
+        [px(x + 2), px(x - 1)],
         [px(x + 1), px(x - 2)],
-        [px(x + 1), px(x + 2)],
         [px(x - 1), px(x - 2)],
-        [px(x - 1), px(x + 2)],
     ]
 
-    assert factor_system_poly([px(x**2 - 1)]) == [[px(x - 1)], [px(x + 1)]]
+    assert factor_system_poly([px(x**2 - 1)]) == [[px(x + 1)], [px(x - 1)]]
 
     assert factor_system_poly([pxyz(x**2*y - y), pxyz(x**2*z - z)]) == [
         [pxyz(x + 1)],
@@ -316,11 +316,11 @@ def test_factor_system_poly():
     ]
 
     assert factor_system_poly([pxab((a - 1)*(x - 2)), pxab((b - 3)*(x - 2))]) == [
-        [pxab(a - 1), pxab(b - 3)],
         [pxab(x - 2)],
+        [pxab(a - 1), pxab(b - 3)],
     ]
 
-    assert factor_system_poly([pxI(x**2 + 1)]) == [[pxI(x - I)], [pxI(x + I)]]
+    assert factor_system_poly([pxI(x**2 + 1)]) == [[pxI(x + I)], [pxI(x - I)]]
 
     assert factor_system_poly([]) == [[]]
 
@@ -331,10 +331,10 @@ def test_factor_system_poly():
 def test_factor_system_cond():
 
     assert factor_system_cond([x ** 2 - 1, x ** 2 - 4]) == [
+        [x + 2, x + 1],
+        [x + 2, x - 1],
         [x + 1, x - 2],
-        [x + 1, x + 2],
         [x - 1, x - 2],
-        [x - 1, x + 2],
     ]
 
     assert factor_system_cond([1]) == []
@@ -343,25 +343,25 @@ def test_factor_system_cond():
     assert factor_system_cond([0, x]) == [[x]]
     assert factor_system_cond([]) == [[]]
 
-    assert factor_system_cond([x**2 + y*x]) == [[x], [x + y]]
+    assert factor_system_cond([x**2 + y*x]) == [[x + y], [x]]
 
     assert factor_system_cond([(a - 1)*(x - 2), (b - 3)*(x - 2)], [x]) == [
-        [a - 1, b - 3],
         [x - 2],
+        [a - 1, b - 3],
     ]
 
     assert factor_system_cond([a * (x - 1), b], [x]) == [[x - 1, b], [a, b]]
 
     assert factor_system_cond([a*x*(x-1), b*y, c], [x, y]) == [
-        [x, y, c],
-        [x, b, c],
         [x - 1, y, c],
+        [x, y, c],
         [x - 1, b, c],
-        [a, y, c],
+        [x, b, c],
+        [y, a, c],
         [a, b, c],
     ]
 
-    assert factor_system_cond([x*(x-1), y], [x, y]) == [[x, y], [x - 1, y]]
+    assert factor_system_cond([x*(x-1), y], [x, y]) == [[x - 1, y], [x, y]]
 
 
 def test_factor_system_bool():
