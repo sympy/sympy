@@ -11,6 +11,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
@@ -142,6 +143,18 @@ def test_simplify_expr():
 
     assert simplify(hyper([], [], x)) == exp(x)
 
+
+def test_simplify_floor():
+    x, y, a, b, c, d = symbols('x,y,a,b,c,d')
+    # Noramal case
+    assert simplify(floor(floor(x/y)/a)) == floor(x/(a*y))
+    #deep case
+    assert simplify(tan(sin(x//y//z))) == tan(sin(floor(x/(y*z))))
+    assert simplify(floor((floor(x/y/a))/ (b/(c*d)))) == floor(c*d*x/(a*b*y))
+    assert simplify((6+ floor(floor(x/y)/a)) / floor(floor(floor(x/y)/a)/d)) == \
+            (floor(x/(a*y)) + 6)/floor(x/(a*d*y))
+    assert simplify((6+(x//y)//(a/(b/c//d)))//(x//y//a//b//c//d)) == \
+            floor((floor(b*x/(a*c*d*y)) + 6)/floor(x/(a*b*c*d*y)))
 
 def test_issue_3557():
     f_1 = x*a + y*b + z*c - 1
