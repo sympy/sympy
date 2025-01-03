@@ -3357,7 +3357,7 @@ class Poly(Basic):
 
         return [(f.per(g), k) for g, k in factors]
 
-    def factor_list(f):
+    def factor_list(f) -> tuple[Expr, list[tuple[Poly, int]]]:
         """
         Returns a list of irreducible factors of ``f``.
 
