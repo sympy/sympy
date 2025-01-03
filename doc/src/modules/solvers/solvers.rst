@@ -124,3 +124,8 @@ Linear Programming (Optimization)
 .. autofunction:: lpmin
 
 .. autofunction:: linprog
+
+Types
+-----
+
+.. py:class:: collections.abc.Sequence
