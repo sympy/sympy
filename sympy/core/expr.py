@@ -1059,7 +1059,7 @@ class Expr(Basic, EvalfMixin):
 
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import conjugate
-        if (self.is_complex or self.is_infinite or self.is_commutative):
+        if self.is_commutative:
             return self
         elif self.is_hermitian:
             return conjugate(self)
