@@ -24,7 +24,7 @@ from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify, Abs, sign
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.integers import ceiling,floor
 from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold,
                                                   piecewise_simplify)
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -619,6 +619,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         if not expr.args:  # simplified to atomic
             return expr
 
+    if isinstance(expr, Expr) and expr.has(floor):
+        expr = floor_simplify(expr)
+
     # do deep simplification
     handled = Add, Mul, Pow, ExpBase
     expr = expr.replace(
@@ -953,6 +956,60 @@ def product_mul(self, other, method=0):
 
     return Mul(self, other)
 
+def floor_simplify(expr):
+    """
+    Simplifies a given expression involving the floor function.
+    Parameters:
+        expr: The expression to simplify, which may contain floor functions.
+    Returns:
+        A simplified expression with the floor functions reduced where possible.
+    """
+    def helper_floor_simplify(expr):
+        if isinstance(expr, floor):
+            numerator, denominator = expr.args[0].as_numer_denom()
+            # Simplify numerator
+            if isinstance(numerator, floor):
+                num_numerator, num_denominator = helper_floor_simplify(numerator).args[0].as_numer_denom()
+            elif isinstance(numerator, Mul):
+                num_numerator = numerator
+                num_denominator = 1
+                terms = Mul.make_args(numerator)
+                f_t = []  # floor terms
+                o_t = []  # other terms
+                for term in terms:
+                    if isinstance(term, floor):
+                        f_t.append(helper_floor_simplify(term))
+                    else:
+                        o_t.append(term)
+                num_numerator = Mul(*o_t)
+                for t in f_t:
+                    n, d = t.args[0].as_numer_denom()
+                    num_numerator = Mul(n, num_numerator)
+                    num_denominator = Mul(d, num_denominator)
+            else:
+                num_numerator = numerator
+                num_denominator = 1
+            # Simplify denominator
+            if isinstance(denominator, floor):
+                denominator = helper_floor_simplify(denominator)
+            return floor(num_numerator / Mul(num_denominator, denominator))
+        return expr
+
+    choices = set([expr])
+    floor_atoms = set(expr.atoms(floor))
+    sorted_floor_atoms = sorted(floor_atoms, key=lambda x: count_ops(x), reverse=True)
+
+    for a in sorted_floor_atoms:
+        if a.has(floor):
+            collapse = helper_floor_simplify(a)
+            if collapse != a:
+                temp = set()
+                for choice in choices:
+                    temp.add(choice.xreplace({a: collapse}))
+                choices |= temp
+
+    choices = list(choices)
+    return min(choices, key=count_ops)
 
 def _nthroot_solve(p, n, prec):
     """
