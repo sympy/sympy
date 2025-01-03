@@ -1000,7 +1000,7 @@ def floor_simplify(expr):
             return floor(num_numerator / Mul(num_denominator, denominator))
         return expr
 
-    choices = set([expr])
+    choices = {expr}
     floor_atoms = set(expr.atoms(floor))
     sorted_floor_atoms = sorted(floor_atoms, key=lambda x: count_ops(x), reverse=True)
 
