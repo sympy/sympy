@@ -692,6 +692,8 @@ def _factor_system_poly_from_expr(
         assert opts['domain'].is_Numerical
         only_numbers = True
 
+    systems: list[list[Poly]]
+
     if only_numbers:
         if all(p == 0 for p in polys):
             systems = [[]]
@@ -802,15 +804,15 @@ def _cnf2dnf(eqs: list[list[Poly]]) -> list[list[Poly]]:
     polynomial system, find the minimal set of factorised subsystems that is
     equivalent to the original system. The result is a disjunctive normal form.
     """
-    systems = {frozenset(sys) for sys in cartes(*eqs)}
-    systems = [s1 for s1 in systems if not any(s1 > s2 for s2 in systems)]
+    systems_set = {frozenset(sys) for sys in cartes(*eqs)}
+    systems = [s1 for s1 in systems_set if not any(s1 > s2 for s2 in systems_set)]
     return _sort_systems(systems)
 
 
 def _sort_systems(systems: Iterable[Iterable[Poly]]) -> list[list[Poly]]:
     """Sorts a list of lists of polynomials"""
-    systems = [sorted(s, key=_poly_sort_key, reverse=True) for s in systems]
-    return sorted(systems, key=_sys_sort_key, reverse=True)
+    systems_list = [sorted(s, key=_poly_sort_key, reverse=True) for s in systems]
+    return sorted(systems_list, key=_sys_sort_key, reverse=True)
 
 
 def _poly_sort_key(poly):
