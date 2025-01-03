@@ -220,7 +220,7 @@ def test_constants():
 
 
 def test_dagger():
-    x = symbols('x')
+    x = symbols('x', commutative=False)
     expr = Dagger(x)
     assert str(expr) == 'Dagger(x)'
     ascii_str = \
@@ -236,7 +236,7 @@ x \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     assert latex(expr) == r'x^{\dagger}'
-    sT(expr, "Dagger(Symbol('x'))")
+    sT(expr, "Dagger(Symbol('x', commutative=False))")
 
 
 @XFAIL
