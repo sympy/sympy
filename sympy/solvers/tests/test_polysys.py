@@ -248,6 +248,12 @@ def test_factor_system():
         [sin(x)**2 + cos(x)**2]
     ]
 
+    assert factor_system([a*x, y, a]) == [[y, a]]
+
+    assert factor_system([a*x, y, a], [x, y]) == []
+
+    assert factor_system([a ** 2 * x, y], [x, y]) == [[x, y]]
+
     assert factor_system([a*x*(x - 1), b*y, c], [x, y]) == []
 
     assert factor_system([a*x*(x - 1), b*y, c], [x, y, c]) == [
@@ -363,6 +369,15 @@ def test_factor_system_cond():
 
     assert factor_system_cond([x*(x-1), y], [x, y]) == [[x - 1, y], [x, y]]
 
+    assert factor_system_cond([a*x, y, a], [x, y]) == [[y, a]]
+
+    assert factor_system_cond([a*x, b*x], [x, y]) == [[x], [a, b]]
+
+    assert factor_system_cond([a*b*x, y], [x, y]) == [[x, y], [y, a*b]]
+
+    assert factor_system_cond([a*b*x, y]) == [[x, y], [y, a], [y, b]]
+
+    assert factor_system_cond([a**2*x, y], [x, y]) == [[x, y], [y, a]]
 
 def test_factor_system_bool():
 
@@ -385,6 +400,24 @@ def test_factor_system_bool():
     assert factor_system_bool([0], [x]) == True
     assert factor_system_bool([1], [x]) == False
     assert factor_system_bool([a], [x]) == Eq(a, 0)
+
+    assert factor_system_bool([a * x, y, a], [x, y]) == Eq(a, 0) & Eq(y, 0)
+
+    assert (factor_system_bool([a*x, b*y*x, a], [x, y]) == (
+        Eq(a, 0) & Eq(b, 0))
+        | (Eq(a, 0) & Eq(x, 0))
+        | (Eq(a, 0) & Eq(y, 0)))
+
+    assert (factor_system_bool([a*x, b*x], [x, y]) == Eq(x, 0) |
+            (Eq(a, 0) & Eq(b, 0)))
+
+    assert (factor_system_bool([a*b*x, y], [x, y]) == (
+        Eq(x, 0) & Eq(y, 0)) |
+        (Eq(y, 0) & Eq(a*b, 0)))
+
+    assert (factor_system_bool([a**2*x, y], [x, y]) == (
+        Eq(a, 0) & Eq(y, 0)) |
+        (Eq(x, 0) & Eq(y, 0)))
 
     assert factor_system_bool([a*x*y, b*y*z], [x, y, z]) == (
         Eq(y, 0)
