@@ -730,10 +730,10 @@ def is_convex(f, *syms, domain=S.Reals):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Convex_function
-    .. [2] http://www.ifp.illinois.edu/~angelia/L3_convfunc.pdf
-    .. [3] https://en.wikipedia.org/wiki/Logarithmically_convex_function
-    .. [4] https://en.wikipedia.org/wiki/Logarithmically_concave_function
-    .. [5] https://en.wikipedia.org/wiki/Concave_function
+    .. [2] https://en.wikipedia.org/wiki/Logarithmically_convex_function
+    .. [3] https://en.wikipedia.org/wiki/Logarithmically_concave_function
+    .. [4] https://en.wikipedia.org/wiki/Concave_function
+    .. [5] https://www.dropbox.com/scl/fi/g54vwyb1n2wb3jyj0gq5x/convexity_summary.pdf?rlkey=ip8ukw15insufm0qf7sieloxo&e=1
 
     """
     if len(syms) > 1 :
