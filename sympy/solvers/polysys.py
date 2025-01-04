@@ -1,15 +1,34 @@
 """Solvers of systems of polynomial equations. """
+
+from __future__ import annotations
+
+from typing import Any
+from collections.abc import Sequence, Iterable
+
 import itertools
 
+from sympy import Dummy
 from sympy.core import S
+from sympy.core.expr import Expr
+from sympy.core.exprtools import factor_terms
 from sympy.core.sorting import default_sort_key
+from sympy.logic.boolalg import Boolean
 from sympy.polys import Poly, groebner, roots
-from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polyerrors import (ComputationFailed,
-    PolificationFailed, CoercionFailed)
+from sympy.polys.domains import ZZ
+from sympy.polys.polytools import parallel_poly_from_expr, sqf_part
+from sympy.polys.polyerrors import (
+    ComputationFailed,
+    PolificationFailed,
+    CoercionFailed,
+    GeneratorsNeeded,
+    DomainError
+)
 from sympy.simplify import rcollect
 from sympy.utilities import postfixes
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import cartes
+from sympy.logic.boolalg import Or, And
+from sympy.core.relational import Eq
 
 
 class SolveFailed(Exception):
@@ -429,3 +448,380 @@ def solve_triangulated(polys, *gens, **args):
 
         solutions = _solutions
     return sorted((s for s, _ in solutions), key=default_sort_key)
+
+
+def factor_system(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kwargs: Any) -> list[list[Expr]]:
+    """
+    Factorizes a system of polynomial equations into
+    irreducible subsystems.
+
+    Parameters
+    ==========
+
+    eqs : list
+        List of expressions to be factored.
+        Each expression is assumed to be equal to zero.
+
+    gens : sequence of Symbols, optional
+        Generator(s) of the polynomial ring.
+        If not provided, all free symbols will be used.
+
+    **kwargs : dict, optional
+        Same optional arguments taken by ``factor``
+
+    Returns
+    =======
+
+    tuple
+        A pair (systems, condition) where:
+
+        * systems is a list of lists of expressions,
+          where each sublist when solved gives one
+          component of the solution
+
+        * condition is a Boolean expression that must
+          be satisfied for the system to be solvable
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.polysys import factor_system, factor_system_cond
+    >>> from sympy.abc import x, y, a, b, c
+
+    A simple system with multiple solutions:
+
+    >>> factor_system([x**2 - 1, y - 1])
+    [[x + 1, y - 1], [x - 1, y - 1]]
+
+    A system with no solution:
+
+    >>> factor_system([x, 1])
+    []
+
+    A system where any value of the symbol(s) is a solution:
+
+    >>> factor_system([x - x, (x + 1)**2 - (x**2 + 2*x + 1)])
+    [[]]
+
+    A system with no generic solution:
+
+    >>> factor_system([a*x*(x-1), b*y, c], [x, y])
+    []
+
+    If c is added to the unknowns then the system has a generic solution:
+
+    >>> factor_system([a*x*(x-1), b*y, c], [x, y, c])
+    [[x - 1, y, c], [x, y, c]]
+
+    Alternatively :func:`factor_system_cond` can be used to get degenerate
+    cases as well:
+
+    >>> factor_system_cond([a*x*(x-1), b*y, c], [x, y])
+    [[x - 1, y, c], [x, y, c], [x - 1, b, c], [x, b, c], [y, a, c], [a, b, c]]
+
+    Each of the above cases is only satisfiable in the degenerate case `c = 0`.
+
+    The solution set of the original system represented
+    by eqs is the union of the solution sets of the
+    factorized systems.
+
+    A return of a list containing an empty list [[]]
+    in the tuple means any value of the symbol(s)
+    is a solution whereas a return of an empty list []
+    in the tuple means no solutions for the system exists.
+
+    See Also
+    ========
+
+    factor_system_cond : Returns both factors and conditions
+    factor_system_bool : Returns a Boolean combination representing the solution
+    sympy.polys.polytools.factor : Factors a polynomial into irreducible factors
+                                   over the rational numbers
+    """
+
+    systems = _factor_system_poly_from_expr(eqs, gens, **kwargs)
+    systems_generic = [sys for sys in systems if not _is_degenerate(sys)]
+    systems_expr = [[p.as_expr() for p in system] for system in systems_generic]
+    return systems_expr
+
+
+def _is_degenerate(system: list[Poly]) -> bool:
+    """Helper function to check if a system is degenerate"""
+    return any(p.is_ground for p in system)
+
+
+def factor_system_bool(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kwargs: Any) -> Boolean:
+    """
+    Factorizes a system of polynomial equations into irreducible DNF.
+
+    The system of expressions(eqs) is taken and a Boolean combination
+    of equations is returned that represents the same solution set.
+    The result is in disjunctive normal form (OR of ANDs).
+
+    Parameters
+    ==========
+
+    eqs : list
+       List of expressions to be factored.
+       Each expression is assumed to be equal to zero.
+
+    *gens : Symbol or sequence of Symbols, optional
+       Generator(s) of the polynomial ring.
+       If not provided, all free symbols will be used.
+
+    **kwargs : dict, optional
+       Optional keyword arguments
+
+
+    Returns
+    =======
+
+    Boolean:
+       A Boolean combination of equations. The result is typically in
+       the form of a conjunction (AND) of a disjunctive normal form
+       with additional conditions.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.polysys import factor_system_bool
+    >>> from sympy.abc import x, y, a, b, c
+    >>> factor_system_bool([x**2 - 1])
+    Eq(x - 1, 0) | Eq(x + 1, 0)
+
+    >>> factor_system_bool([x**2 - 1, y - 1])
+    (Eq(x - 1, 0) & Eq(y - 1, 0)) | (Eq(x + 1, 0) & Eq(y - 1, 0))
+
+    >>> eqs = [a * (x - 1), b]
+    >>> factor_system_bool([a*(x - 1), b])
+    (Eq(a, 0) & Eq(b, 0)) | (Eq(b, 0) & Eq(x - 1, 0))
+
+    >>> factor_system_bool([a*x**2 - a, b*(x + 1), c], [x])
+    (Eq(c, 0) & Eq(x + 1, 0)) | (Eq(a, 0) & Eq(b, 0) & Eq(c, 0)) | (Eq(b, 0) & Eq(c, 0) & Eq(x - 1, 0))
+
+    >>> factor_system_bool([x**2 + 2*x + 1 - (x + 1)**2])
+    True
+
+    The result is logically equivalent to the system of equations
+    i.e. eqs. The function returns ``True`` when all values of
+    the symbol(s) is a solution and ``False`` when the system
+    cannot be solved.
+
+    See Also
+    ========
+
+    factor_system : Returns factors and solvability condition separately
+    factor_system_cond : Returns both factors and conditions
+
+    """
+
+    systems = factor_system_cond(eqs, gens, **kwargs)
+    return Or(*[And(*[Eq(eq, 0) for eq in sys]) for sys in systems])
+
+
+def factor_system_cond(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kwargs: Any) -> list[list[Expr]]:
+    """
+    Factorizes a polynomial system into irreducible components and returns
+    factors with their associated conditions.
+
+    Parameters
+    ==========
+
+    eqs : list
+        List of expressions to be factored.
+        Each expression is assumed to be equal to zero.
+
+    *gens : Symbol or sequence of Symbols, optional
+        Generator(s) of the polynomial ring.
+        If not provided, all free symbols will be used.
+
+    **kwargs : dict, optional
+        Optional keyword arguments.
+
+    Returns
+    =======
+
+    tuple
+        A pair (systems, conditions) where:
+
+        * systems is a list of lists of (factor, conditions) pairs,
+          where factor is an expression and conditions is a list
+          of expressions that must be zero for the factor to be relevant
+
+        * conditions is a list of expressions that must be zero
+          for any solution to exist
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.polysys import factor_system_cond
+    >>> from sympy.abc import x, y, a, b, c
+
+    >>> factor_system_cond([x**2 - 4, a*y, b], [x, y])
+    [[x + 2, y, b], [x - 2, y, b], [x + 2, a, b], [x - 2, a, b]]
+
+    >>> factor_system_cond([a*x*(x-1), b*y, c], [x, y])
+    [[x - 1, y, c], [x, y, c], [x - 1, b, c], [x, b, c], [y, a, c], [a, b, c]]
+
+    In the return of the (systems, conds) pair, systems is [[]]
+    when the system implies tautology. Eg. x - x = 0,
+    and [] when the system of equations is unatisfiable. Eg. 1 = 0
+
+    See Also
+    ========
+
+    factor_system : Returns factors and solvability condition separately
+    factor_system_bool : Returns a Boolean combination representing the solution
+    sympy.polys.polytools.factor : Factors a polynomial into irreducible factors
+                                   over the rational numbers
+    """
+    systems_poly = _factor_system_poly_from_expr(eqs, gens, **kwargs)
+    systems = [[p.as_expr() for p in system] for system in systems_poly]
+    return systems
+
+
+def _factor_system_poly_from_expr(
+        eqs: Sequence[Expr | complex], gens: Sequence[Expr], **kwargs: Any
+) -> list[list[Poly]]:
+    try:
+        polys, opts = parallel_poly_from_expr(eqs, *gens, **kwargs)
+        only_numbers = False
+    except (GeneratorsNeeded, PolificationFailed):
+        _u = Dummy('u')
+        polys, opts = parallel_poly_from_expr(eqs, [_u], **kwargs)
+        assert opts['domain'].is_Numerical
+        only_numbers = True
+
+    systems: list[list[Poly]]
+
+    if only_numbers:
+        if all(p == 0 for p in polys):
+            systems = [[]]
+        else:
+            systems = []
+    else:
+        systems = factor_system_poly(polys)
+
+    return systems
+
+
+def factor_system_poly(polys: list[Poly]) -> list[list[Poly]]:
+    """
+    Factors a system of polynomials into irreducible factors with conditions.
+    Core implementation that works directly with Poly instances.
+
+    Parameters
+    ==========
+
+    polys : list
+        A list of Poly instances to be factored.
+
+    Returns
+    =======
+
+    tuple
+        A pair (systems, constant_conds) where:
+
+        * systems is a list of lists of (factor, conditions) pairs, with each
+          factor being a Poly instance and conditions being a tuple of Poly
+          instances
+
+        * constant_conds is a list of Poly instances representing conditions that
+          must be satisfied for any solution to exist
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Poly, ZZ
+    >>> from sympy.solvers.polysys import factor_system_poly
+    >>> a, b, c, x = symbols('a b c x')
+    >>> p1 = Poly((a - 1)*(x - 2), x, domain=ZZ[a,b,c])
+    >>> p2 = Poly((b - 3)*(x - 2), x, domain=ZZ[a,b,c])
+    >>> p3 = Poly(c, x, domain=ZZ[a,b,c])
+
+    The equation to be solved for x is ``x - 2 = 0`` provided either
+    of the two conditions on the parameters ``a`` and ``b`` is nonzero
+    and the constant parameter ``c`` should be zero.
+
+    >>> sys1, sys2 = factor_system_poly([p1, p2, p3])
+    >>> sys1
+    [Poly(x - 2, x, domain='ZZ[a,b,c]'),
+     Poly(c, x, domain='ZZ[a,b,c]')]
+    >>> sys2
+    [Poly(a - 1, x, domain='ZZ[a,b,c]'),
+     Poly(b - 3, x, domain='ZZ[a,b,c]'),
+     Poly(c, x, domain='ZZ[a,b,c]')]
+
+    This is the core routine used by higher-level functions factor_system_cond,
+    factor_system, and factor_system_bool. It Returns empty systems list
+    ([]) when no solution exists and [[]] (list containing empty list) when any
+    value is a solution
+
+    See Also
+    ========
+
+    factor_system : Returns factors and solvability condition separately
+    factor_system_bool : Returns a Boolean combination representing the solution
+    factor_system_cond : Returns both factors and conditions
+    sympy.polys.polytools.factor : Factors a polynomial into irreducible factors
+                                   over the rational numbers
+    """
+    if not all(isinstance(poly, Poly) for poly in polys):
+        raise TypeError("polys should be a list of Poly instances")
+    if not polys:
+        return [[]]
+    else:
+        base_domain = polys[0].domain
+        base_gens = polys[0].gens
+        if not all(poly.domain == base_domain and poly.gens == base_gens for poly in polys[1:]):
+            raise DomainError("All polynomials must have the same domain and generators")
+
+    eqs_factors = []
+
+    for poly in polys:
+        constant, factors_mult = poly.factor_list()
+
+        factors = [f for f, m in factors_mult]
+
+        if constant.is_zero is True:
+            continue
+        elif constant.is_zero is False:
+            if not factors:
+                return []
+        else:
+            constant = sqf_part(factor_terms(constant).as_coeff_Mul()[1])
+            constp = Poly(constant, base_gens, domain=base_domain)
+            factors.insert(0, constp)
+
+        eqs_factors.append(factors)
+
+    return _cnf2dnf(eqs_factors)
+
+
+def _cnf2dnf(eqs: list[list[Poly]]) -> list[list[Poly]]:
+    """
+    Given a list of lists of Poly from the factorization of the equations in a
+    polynomial system, find the minimal set of factorised subsystems that is
+    equivalent to the original system. The result is a disjunctive normal form.
+    """
+    systems_set = {frozenset(sys) for sys in cartes(*eqs)}
+    systems = [s1 for s1 in systems_set if not any(s1 > s2 for s2 in systems_set)]
+    return _sort_systems(systems)
+
+
+def _sort_systems(systems: Iterable[Iterable[Poly]]) -> list[list[Poly]]:
+    """Sorts a list of lists of polynomials"""
+    systems_list = [sorted(s, key=_poly_sort_key, reverse=True) for s in systems]
+    return sorted(systems_list, key=_sys_sort_key, reverse=True)
+
+
+def _poly_sort_key(poly):
+    """Sort key for polynomials"""
+    if poly.domain.is_FF:
+        poly = poly.set_domain(ZZ)
+    return poly.degree_list(), poly.rep.to_list()
+
+
+def _sys_sort_key(sys):
+    """Sort key for lists of polynomials"""
+    return list(zip(*map(_poly_sort_key, sys)))

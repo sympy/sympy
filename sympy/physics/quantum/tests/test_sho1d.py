@@ -40,8 +40,8 @@ N = NumberOp('N')
 omega = Symbol('omega')
 m = Symbol('m')
 ndim = Integer(4)
-p = Symbol('p', is_integer=True)
-q = Symbol('q', nonnegative=True, is_integer=True)
+p = Symbol('p', integer=True)
+q = Symbol('q', nonnegative=True, integer=True)
 
 
 np = import_module('numpy')
@@ -167,10 +167,10 @@ def test_sho_coherant_state():
     assert simplify(qapply(SHOBra(q)*a*cstate, sum_doit=True)) == simplify(qapply(SHOBra(q)*alpha*cstate, sum_doit=True))
 
 def test_issue_26495():
-    nbar = Symbol('nbar', is_real=True, nonnegative=True)
-    n = Symbol('n', is_integer=True)
-    i = Symbol('i', is_integer=True, nonnegative=True)
-    j = Symbol('j', is_integer=True, nonnegative=True)
-    rho = (1/(1+nbar))*Sum((nbar/(1+nbar))**n*SHOKet(n)*SHOBra(n), (n,0,oo))
+    nbar = Symbol('nbar', real=True, nonnegative=True)
+    n = Symbol('n', integer=True)
+    i = Symbol('i', integer=True, nonnegative=True)
+    j = Symbol('j', integer=True, nonnegative=True)
+    rho = Sum((nbar/(1+nbar))**n*SHOKet(n)*SHOBra(n), (n,0,oo))
     result = qapply(SHOBra(i)*rho*SHOKet(j), sum_doit=True)
-    assert simplify(result) == nbar**j*(nbar+1)**(-j-1)*KroneckerDelta(i,j)
+    assert simplify(result) == (nbar/(nbar+1))**i*KroneckerDelta(i,j)

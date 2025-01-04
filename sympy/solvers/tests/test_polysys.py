@@ -1,4 +1,5 @@
 """Tests for solvers of systems of polynomial equations. """
+from sympy.polys.domains import  ZZ, QQ_I
 from sympy.core.numbers import (I, Integer, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -9,14 +10,20 @@ from sympy.polys.polyoptions import Options
 from sympy.polys.polytools import Poly
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import flatten
-from sympy.abc import x, y, z
+from sympy.abc import a, b, c, x, y, z
 from sympy.polys import PolynomialError
 from sympy.solvers.polysys import (solve_poly_system,
                                    solve_triangulated,
                                    solve_biquadratic, SolveFailed,
-                                   solve_generic)
+                                   solve_generic, factor_system_bool,
+                                   factor_system_cond, factor_system_poly,
+                                   factor_system)
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.testing.pytest import raises
+from sympy.core.relational import Eq
+from sympy.functions.elementary.trigonometric import sin, cos
+
+from sympy.functions.elementary.exponential import exp
 
 
 def test_solve_poly_system():
@@ -176,3 +183,218 @@ def test_solve_issue_3686():
     assert roots[0][1].epsilon_eq(-499.474999374969, 1e12)
     assert roots[1][0] == 0
     assert roots[1][1].epsilon_eq(500.474999374969, 1e12)
+
+
+def test_factor_system():
+
+    assert factor_system([x**2 + 2*x + 1]) ==  [[x + 1]]
+    assert factor_system([x**2 + 2*x + 1, y**2 + 2*y + 1]) ==  [[x + 1, y + 1]]
+    assert factor_system([x**2 + 1]) ==  [[x**2 + 1]]
+    assert factor_system([]) == [[]]
+
+    assert factor_system([x**2 + y**2 + 2*x*y, x**2 - 2], extension=sqrt(2)) == [
+        [x + y, x + sqrt(2)],
+        [x + y, x - sqrt(2)],
+    ]
+
+    assert factor_system([x**2 + 1, y**2 + 1], gaussian=True) == [
+        [x + I, y + I],
+        [x + I, y - I],
+        [x - I, y + I],
+        [x - I, y - I],
+    ]
+
+    assert factor_system([x**2 + 1, y**2 + 1], domain=QQ_I) == [
+        [x + I, y + I],
+        [x + I, y - I],
+        [x - I, y + I],
+        [x - I, y - I],
+    ]
+
+    assert factor_system([0]) == [[]]
+    assert factor_system([1]) == []
+    assert factor_system([0 , x]) == [[x]]
+    assert factor_system([1, 0, x]) == []
+
+    assert factor_system([x**4 - 1, y**6 - 1]) == [
+        [x**2 + 1, y**2 + y + 1],
+        [x**2 + 1, y**2 - y + 1],
+        [x**2 + 1, y + 1],
+        [x**2 + 1, y - 1],
+        [x + 1, y**2 + y + 1],
+        [x + 1, y**2 - y + 1],
+        [x - 1, y**2 + y + 1],
+        [x - 1, y**2 - y + 1],
+        [x + 1, y + 1],
+        [x + 1, y - 1],
+        [x - 1, y + 1],
+        [x - 1, y - 1],
+    ]
+
+    assert factor_system([(x - 1)*(y - 2), (y - 2)*(z - 3)]) == [
+        [x - 1, z - 3],
+        [y - 2]
+    ]
+
+    assert factor_system([sin(x)**2 + cos(x)**2 - 1, x]) == [
+        [x, sin(x)**2 + cos(x)**2 - 1],
+    ]
+
+    assert factor_system([sin(x)**2 + cos(x)**2 - 1]) == [
+        [sin(x)**2 + cos(x)**2 - 1]
+    ]
+
+    assert factor_system([sin(x)**2 + cos(x)**2]) == [
+        [sin(x)**2 + cos(x)**2]
+    ]
+
+    assert factor_system([a*x*(x - 1), b*y, c], [x, y]) == []
+
+    assert factor_system([a*x*(x - 1), b*y, c], [x, y, c]) == [
+        [x - 1, y, c],
+        [x, y, c],
+    ]
+
+    assert factor_system([a*x*(x - 1), b*y, c]) == [
+        [x - 1, y, c],
+        [x, y, c],
+        [x - 1, b, c],
+        [x, b, c],
+        [y, a, c],
+        [a, b, c],
+    ]
+
+    assert factor_system([x**2 - 2], [y]) == []
+
+    assert factor_system([x**2 - 2], [x]) == [[x**2 - 2]]
+
+    assert factor_system([cos(x)**2 - sin(x)**2, cos(x)**2 + sin(x)**2 - 1]) == [
+        [sin(x)**2 + cos(x)**2 - 1, sin(x) + cos(x)],
+        [sin(x)**2 + cos(x)**2 - 1, -sin(x) + cos(x)],
+    ]
+
+    assert factor_system([(cos(x) + sin(x))**2 - 1, cos(x)**2 - sin(x)**2 - cos(2*x)]) == [
+        [sin(x)**2 - cos(x)**2 + cos(2*x), sin(x) + cos(x) + 1],
+        [sin(x)**2 - cos(x)**2 + cos(2*x), sin(x) + cos(x) - 1],
+    ]
+
+    assert factor_system([(cos(x) + sin(x))*exp(y) - 1, (cos(x) - sin(x))*exp(y) - 1]) == [
+        [exp(y)*sin(x) + exp(y)*cos(x) - 1, -exp(y)*sin(x) + exp(y)*cos(x) - 1]
+    ]
+
+
+def test_factor_system_poly():
+
+    px = lambda e: Poly(e, x)
+    pxab = lambda e: Poly(e, x, domain=ZZ[a, b])
+    pxI = lambda e: Poly(e, x, domain=QQ_I)
+    pxyz = lambda e: Poly(e, (x, y, z))
+
+    assert factor_system_poly([px(x**2 - 1), px(x**2 - 4)]) == [
+        [px(x + 2), px(x + 1)],
+        [px(x + 2), px(x - 1)],
+        [px(x + 1), px(x - 2)],
+        [px(x - 1), px(x - 2)],
+    ]
+
+    assert factor_system_poly([px(x**2 - 1)]) == [[px(x + 1)], [px(x - 1)]]
+
+    assert factor_system_poly([pxyz(x**2*y - y), pxyz(x**2*z - z)]) == [
+        [pxyz(x + 1)],
+        [pxyz(x - 1)],
+        [pxyz(y), pxyz(z)],
+    ]
+
+    assert factor_system_poly([px(x**2*(x - 1)**2), px(x*(x - 1))]) == [
+        [px(x)],
+        [px(x - 1)],
+    ]
+
+    assert factor_system_poly([pxyz(x**2 + y*x), pxyz(x**2 + z*x)]) == [
+        [pxyz(x + y), pxyz(x + z)],
+        [pxyz(x)],
+    ]
+
+    assert factor_system_poly([pxab((a - 1)*(x - 2)), pxab((b - 3)*(x - 2))]) == [
+        [pxab(x - 2)],
+        [pxab(a - 1), pxab(b - 3)],
+    ]
+
+    assert factor_system_poly([pxI(x**2 + 1)]) == [[pxI(x + I)], [pxI(x - I)]]
+
+    assert factor_system_poly([]) == [[]]
+
+    assert factor_system_poly([px(1)]) == []
+    assert factor_system_poly([px(0), px(x)]) == [[px(x)]]
+
+
+def test_factor_system_cond():
+
+    assert factor_system_cond([x ** 2 - 1, x ** 2 - 4]) == [
+        [x + 2, x + 1],
+        [x + 2, x - 1],
+        [x + 1, x - 2],
+        [x - 1, x - 2],
+    ]
+
+    assert factor_system_cond([1]) == []
+    assert factor_system_cond([0]) == [[]]
+    assert factor_system_cond([1, x]) == []
+    assert factor_system_cond([0, x]) == [[x]]
+    assert factor_system_cond([]) == [[]]
+
+    assert factor_system_cond([x**2 + y*x]) == [[x + y], [x]]
+
+    assert factor_system_cond([(a - 1)*(x - 2), (b - 3)*(x - 2)], [x]) == [
+        [x - 2],
+        [a - 1, b - 3],
+    ]
+
+    assert factor_system_cond([a * (x - 1), b], [x]) == [[x - 1, b], [a, b]]
+
+    assert factor_system_cond([a*x*(x-1), b*y, c], [x, y]) == [
+        [x - 1, y, c],
+        [x, y, c],
+        [x - 1, b, c],
+        [x, b, c],
+        [y, a, c],
+        [a, b, c],
+    ]
+
+    assert factor_system_cond([x*(x-1), y], [x, y]) == [[x - 1, y], [x, y]]
+
+
+def test_factor_system_bool():
+
+    eqs = [a*(x - 1)*(y - 1), b*(x - 2)*(y - 1)*(y - 2)]
+    assert factor_system_bool(eqs, [x, y]) == (
+        Eq(y - 1, 0)
+        | (Eq(a, 0) & Eq(b, 0))
+        | (Eq(a, 0) & Eq(x - 2, 0))
+        | (Eq(a, 0) & Eq(y - 2, 0))
+        | (Eq(b, 0) & Eq(x - 1, 0))
+        | (Eq(x - 2, 0) & Eq(x - 1, 0))
+        | (Eq(x - 1, 0) & Eq(y - 2, 0))
+    )
+
+    assert factor_system_bool([x - 1], [x]) == Eq(x - 1, 0)
+
+    assert factor_system_bool([(x - 1)*(x - 2)], [x]) == Eq(x - 2, 0) | Eq(x - 1, 0)
+
+    assert factor_system_bool([], [x]) == True
+    assert factor_system_bool([0], [x]) == True
+    assert factor_system_bool([1], [x]) == False
+    assert factor_system_bool([a], [x]) == Eq(a, 0)
+
+    assert factor_system_bool([a*x*y, b*y*z], [x, y, z]) == (
+        Eq(y, 0)
+        | (Eq(a, 0) & Eq(b, 0))
+        | (Eq(a, 0) & Eq(z, 0))
+        | (Eq(b, 0) & Eq(x, 0))
+        | (Eq(x, 0) & Eq(z, 0))
+    )
+
+    assert factor_system_bool([a*(x - 1), b], [x]) == (
+        (Eq(a, 0) & Eq(b, 0))
+        | (Eq(x - 1, 0) & Eq(b, 0))
+    )

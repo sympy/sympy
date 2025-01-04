@@ -58,7 +58,6 @@ from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
 
-
 # Required to avoid errors
 import sympy.polys
 
@@ -164,6 +163,9 @@ class Poly(Basic):
     is_commutative = True
     is_Poly = True
     _op_priority = 10.001
+
+    rep: DMP
+    gens: tuple[Expr, ...]
 
     def __new__(cls, rep, *gens, **args) -> Poly:
         """Create a new polynomial instance out of something useful. """
@@ -3358,7 +3360,7 @@ class Poly(Basic):
 
         return [(f.per(g), k) for g, k in factors]
 
-    def factor_list(f):
+    def factor_list(f) -> tuple[Expr, list[tuple[Poly, int]]]:
         """
         Returns a list of irreducible factors of ``f``.
 
@@ -6260,6 +6262,12 @@ def sqf_part(f, *gens, **args):
         return result.as_expr()
     else:
         return result
+
+
+def _poly_sort_key(poly):
+    """Sort a list of polys."""
+    rep = poly.rep.to_list()
+    return (len(rep), len(poly.gens), str(poly.domain), rep)
 
 
 def _sorted_factors(factors, method):
