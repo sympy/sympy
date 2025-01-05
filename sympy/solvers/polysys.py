@@ -458,11 +458,11 @@ def factor_system(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kw
     Parameters
     ==========
 
-    eqs : Sequence[Expr | complex]
+    eqs : list
         List of expressions to be factored.
         Each expression is assumed to be equal to zero.
 
-    gens : Sequence[Expr], optional
+    gens : list, optional
         Generator(s) of the polynomial ring.
         If not provided, all free symbols will be used.
 
@@ -556,11 +556,11 @@ def factor_system_bool(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
     Parameters
     ==========
 
-    eqs : Sequence[Expr | complex]
+    eqs : list
        List of expressions to be factored.
        Each expression is assumed to be equal to zero.
 
-    gens : Sequence[Expr], optional
+    gens : list, optional
        Generator(s) of the polynomial ring.
        If not provided, all free symbols will be used.
 
@@ -622,11 +622,11 @@ def factor_system_cond(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
     Parameters
     ==========
 
-    eqs : Sequence[Expr | complex]
+    eqs : list
         List of expressions to be factored.
         Each expression is assumed to be equal to zero.
 
-    gens : Sequence[Expr], optional
+    gens : list, optional
         Generator(s) of the polynomial ring.
         If not provided, all free symbols will be used.
 
@@ -639,7 +639,7 @@ def factor_system_cond(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
     list[list[Expr]]
         A list of lists of expressions, where each sublist represents
         an irreducible subsystem. Includes both generic solutions and
-        degenerate cases where parameters must be zero.
+        degenerate cases requiring equality conditions on parameters.
 
     Examples
     ========
@@ -704,8 +704,9 @@ def _factor_system_poly_from_expr(
 
 def factor_system_poly(polys: list[Poly]) -> list[list[Poly]]:
     """
-    Core implementation that factors a system of polynomials into
-    irreducible components. Works directly with Poly instances.
+    Factors a system of polynomial equations into irreducible subsystems
+
+    Core implementation that works directly with Poly instances.
 
     Parameters
     ==========
