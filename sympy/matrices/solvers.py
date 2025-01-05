@@ -375,10 +375,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
             b.zip_row_op(i, j, lambda x, y: dps(x - scale * y))
 
         scale = A[i, i]
-        if scale.is_commutative:
-            b.row_op(i, lambda x, _: dps(x / scale))
-        else:
-            b.row_op(i, lambda x, _: dps(scale**-1 * x))
+        b.row_op(i, lambda x, _: dps(scale**-1 * x))
 
     return rhs.__class__(b)
 
