@@ -262,3 +262,46 @@ Examples
  >>> from sympy.ntheory import qs
  >>> qs(5915587277*3267000013, 1000, 10000)
  {3267000013, 5915587277}
+
+.. autofunction:: factorint
+
+Examples
+--------
+
+A Prime Number Just Under the Limit:
+
+ >>> from sympy.ntheory import factorint
+ >>> factorint(99991, limit=100000)
+ {99991: 1}
+
+A Perfect Square or Cube:
+
+ >>> factorint(1024)  # 1024 = 2**10
+ {2: 10}
+
+ >>> factorint(1000)  # 1000 = 2**3 * 5**3
+ {2: 3, 5: 3}
+
+Verbose Output:
+
+ >>> factorint(420, verbose=True)
+ Trial division with primes up to 2
+ Factors so far: {2: 2}
+ Trial division with primes up to 3
+ Factors so far: {2: 2, 3: 1}
+ Trial division with primes up to 5
+ Factors so far: {2: 2, 3: 1, 5: 1}
+ Completed trial division
+ Result: {2: 2, 3: 1, 5: 1, 7: 1}
+
+Invalid Input Examples:
+
+ >>> factorint("invalid")
+ Traceback (most recent call last):
+   ...
+ TypeError: factorint() argument must be an integer or Rational
+
+ >>> factorint(-1)
+ Traceback (most recent call last):
+   ...
+ ValueError: factorint() works only for non-negative integers or Rationals.
