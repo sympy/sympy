@@ -1107,7 +1107,6 @@ class DDM(list):
 
         qr, fflu
         """
-        K = self.domain
         P, L, D, U = self.fflu()
         Q = P.matmul(L)
         R = U
