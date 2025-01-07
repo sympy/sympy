@@ -4,6 +4,8 @@ from sympy.core.containers import Tuple
 from sympy.functions.elementary.integers import floor
 
 def normalize(i, parentsize):
+    if i is ...:
+      return (0, parentsize, 1)
     if isinstance(i, slice):
         i = (i.start, i.stop, i.step)
     if not isinstance(i, (tuple, list, Tuple)):

@@ -292,12 +292,16 @@ class MatrixExpr(Expr):
                 (j >= -self.cols) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
+        from sympy.matrices.expressions.slice import MatrixSlice
+        from sympy.core.sympify import _sympify
+        if key is ...:
+            return MatrixSlice(self, ..., ...)
         if not isinstance(key, tuple) and isinstance(key, slice):
             from sympy.matrices.expressions.slice import MatrixSlice
-            return MatrixSlice(self, key, (0, None, 1))
+            return MatrixSlice(self, key, ...)
         if isinstance(key, tuple) and len(key) == 2:
             i, j = key
-            if isinstance(i, slice) or isinstance(j, slice):
+            if isinstance(i, slice) or isinstance(j, slice) or i is ... or j is ...:
                 from sympy.matrices.expressions.slice import MatrixSlice
                 return MatrixSlice(self, i, j)
             i, j = _sympify(i), _sympify(j)
