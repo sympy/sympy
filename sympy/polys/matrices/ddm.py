@@ -70,7 +70,7 @@ from .exceptions import (
     DMBadInputError,
     DMDomainError,
     DMNonSquareMatrixError,
-    DMShapeError, DMRankError,
+    DMShapeError,
 )
 
 from sympy.polys.domains import QQ
@@ -958,7 +958,7 @@ class DDM(list):
 
         return L, U, swaps
 
-    def PLDUdecompositionFF(self):
+    def fflu(self):
         """
         Compute a fraction-free PLDU decomposition for DDM.
 
@@ -995,8 +995,11 @@ class DDM(list):
         K = self.domain
         P = self.eye(rows, K)
         L = self.eye(rows, K)
-        D = self.zeros((rows, rows), K)
+        D = self.eye(min(rows, cols), K)
         U = self.copy()
+
+        if rows == 0 or cols == 0:
+            return P, L, D, U
 
         if rows == 1 and cols == 1:
             D[0][0] = U[0][0]
@@ -1014,7 +1017,7 @@ class DDM(list):
                         L[k][:k], L[kpivot][:k] = L[kpivot][:k], L[k][:k]
                         break
                 else:
-                    raise DMRankError("Matrix is not full rank")
+                    raise ValueError("Matrix is not full rank")
 
             Ukk = U[k][k]
             L[k][k] = Ukk
@@ -1025,13 +1028,16 @@ class DDM(list):
                 L[i][k] = Uik
 
                 for j in range(k + 1, cols):
-                    U[i][j] = (Ukk * U[i][j] - U[k][j] * Uik) / oldpivot
+                    U[i][j] = K.exquo(Ukk * U[i][j] - U[k][j] * Uik, oldpivot)
 
                 U[i][k] = K.zero
 
             oldpivot = Ukk
 
-        D[rows - 1][rows - 1] = oldpivot
+        if rows < cols:
+            D[min(rows, cols) - 1][min(rows, cols) - 1] = oldpivot
+        else:
+            D[rows - 1][rows - 1] = oldpivot
 
         return P, L, D, U
 
@@ -1077,9 +1083,10 @@ class DDM(list):
 
         return Q, R
 
-    def fraction_free_qrd(self):
+    def qrd(self):
         """
-        Compute a fraction-free QR decomposition for DDM.
+        Compute a fraction-free QR decomposition for
+        DDM using fflu decomposition.
 
         Returns
         =======
@@ -1092,47 +1099,18 @@ class DDM(list):
         Raises
         ======
 
-        ValueError
-            If the matrix is rank deficient.
+        DMRankError
+            If the matrix is not full rank.
 
         See Also
         ========
 
-        qr
+        qr, fflu
         """
-        rows, cols = self.shape
         K = self.domain
-        Q = self.copy()
-        R = self.zeros((min(rows, cols), cols), K)
-        D = self.eye(min(rows, cols), K)
-        oldpivot = K.one
-
-        for k in range(min(rows, cols)):
-            if Q[k][k] == K.zero:
-                for i in range(k + 1, rows):
-                    if Q[i][k] != K.zero:
-                        Q[k], Q[i] = Q[i], Q[k]
-                        R[k], R[i] = R[i], R[k]
-                        break
-                else:
-                    raise ValueError("Matrix is rank deficient")
-
-            pivot = Q[k][k]
-            D[k][k] = oldpivot * pivot
-            R[k][k] = pivot
-
-            for j in range(k + 1, cols):
-                R[k][j] = Q[k][j] * oldpivot
-                for i in range(k + 1, rows):
-                    Q[i][j] = (pivot * Q[i][j] - Q[i][k] * R[k][j]) / oldpivot
-
-            for i in range(k + 1, rows):
-                Q[i][k] = oldpivot * Q[i][k]
-
-            oldpivot = pivot
-
-        Q = Q.extract(range(rows), range(min(rows, cols)))
-
+        P, L, D, U = self.fflu()
+        Q = P.matmul(L)
+        R = U
         return Q, R, D
 
     def lu_solve(a, b):

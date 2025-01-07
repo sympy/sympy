@@ -699,7 +699,7 @@ class DFM:
         Q, R = self.to_ddm().qr()
         return Q.to_dfm(), R.to_dfm()
 
-    def fraction_free_qrd(self):
+    def qrd(self):
         """
         Fraction-free QR decomposition for DFM.
 
@@ -711,7 +711,7 @@ class DFM:
             R is the upper triangular matrix as a DFM.
             D is the diagonal matrix as a DFM.
         """
-        ddm_q, ddm_r, ddm_d = self.to_ddm().fraction_free_qrd()
+        ddm_q, ddm_r, ddm_d = self.to_ddm().qrd()
         Q = ddm_q.to_dfm()
         R = ddm_r.to_dfm()
         D = ddm_d.to_dfm()
@@ -803,9 +803,9 @@ class DFM:
 
         return self._new(sol, sol_shape, self.domain)
 
-    def PLDUdecompositionFF(self):
+    def fflu(self):
         """
-        PLDU decomposition for _DFM (Dense Field Matrix).
+        fflu decomposition for _DFM (Dense Field Matrix).
 
         Returns:
             - P: Permutation matrix as a _DFM.
@@ -813,7 +813,7 @@ class DFM:
             - D: Diagonal matrix as a _DFM.
             - U: Upper triangular matrix as a _DFM.
         """
-        ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().PLDUdecompositionFF()
+        ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
         P = ddm_p.to_dfm()
         L = ddm_l.to_dfm()
         D = ddm_d.to_dfm()

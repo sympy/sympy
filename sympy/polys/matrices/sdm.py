@@ -1078,7 +1078,7 @@ class SDM(dict):
         R = ddm_r.to_sdm()
         return Q, R
 
-    def fraction_free_qrd(self):
+    def qrd(self):
         """
         Fraction-free QR decomposition for SDM.
 
@@ -1090,7 +1090,7 @@ class SDM(dict):
             R is the upper triangular matrix as an SDM.
             D is the diagonal matrix as an SDM.
         """
-        ddm_q, ddm_r, ddm_d = self.to_ddm().fraction_free_qrd()
+        ddm_q, ddm_r, ddm_d = self.to_ddm().qrd()
         Q = ddm_q.to_sdm()
         R = ddm_r.to_sdm()
         D = ddm_d.to_sdm()
@@ -1114,7 +1114,7 @@ class SDM(dict):
         """
         return A.from_ddm(A.to_ddm().lu_solve(b.to_ddm()))
 
-    def PLDUdecompositionFF(self):
+    def fflu(self):
         """
         PLDU decomposition for SDM (Sparse Domain Matrix).
 
@@ -1124,7 +1124,7 @@ class SDM(dict):
             - D: Diagonal matrix as a SDM.
             - U: Upper triangular matrix as a SDM.
         """
-        ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().PLDUdecompositionFF()
+        ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
         P = ddm_p.to_sdm()
         L = ddm_l.to_sdm()
         D = ddm_d.to_sdm()

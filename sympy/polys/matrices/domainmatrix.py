@@ -3256,7 +3256,7 @@ class DomainMatrix:
         L, U, swaps = self.rep.lu()
         return self.from_rep(L), self.from_rep(U), swaps
 
-    def qr(self):
+    def qr(self, normalize=False):
         r"""
         QR decomposition of the DomainMatrix.
 
@@ -3264,10 +3264,13 @@ class DomainMatrix:
         ===========
 
         The QR decomposition expresses a matrix as the product of an orthogonal
-        matrix (Q) and an upper triangular matrix (R). In this implementation,
-        Q is not orthonormal: its columns are orthogonal but not normalized to
-        unit vectors. This avoids unnecessary divisions and is particularly
-        suited for exact arithmetic domains.
+        matrix (Q) and an upper triangular matrix (R). By default, Q is not
+        orthonormal: its columns are orthogonal but not normalized to unit vectors.
+        This avoids unnecessary divisions and is particularly suited for exact
+        arithmetic domains.
+
+        If `normalize=True`, the columns of Q are normalized to produce an
+        orthonormal Q matrix.
 
         Note
         ====
@@ -3275,6 +3278,12 @@ class DomainMatrix:
         This implementation is valid only for matrices over real domains. For
         matrices over complex domains, a proper QR decomposition would require
         handling conjugation to ensure orthogonality.
+
+        Parameters
+        ==========
+
+        normalize : bool, optional
+            If True, the columns of Q are normalized to produce an orthonormal matrix.
 
         Returns
         =======
@@ -3291,7 +3300,6 @@ class DomainMatrix:
 
         Examples
         ========
-
         >>> from sympy import QQ
         >>> from sympy.polys.matrices import DomainMatrix
         >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), QQ)
@@ -3306,19 +3314,31 @@ class DomainMatrix:
         True
         >>> R.is_upper
         True
+        >>> Q, R = A.qr(normalize=True)
+        >>> Q
+        DomainMatrix([[1/sqrt(35), 2/sqrt(35)], [3/sqrt(35),
+        4/sqrt(35)], [5/sqrt(35), 6/sqrt(35)]], (3, 2), QQ)
+        >>> R
+        DomainMatrix([[sqrt(35), sqrt(35)], [0, sqrt(35)]], (2, 2), QQ)
 
         See Also
         ========
-
         lu
 
         """
         ddm_q, ddm_r = self.rep.qr()
+
+        if normalize:
+            for i in range(ddm_q.cols):
+                norm = ddm_q.col_norm(i)
+                ddm_q[:, i] = ddm_q[:, i].mul_elementwise(ddm_q.domain.exquo(ddm_q.domain.one, norm))
+                ddm_r[i, :] = ddm_r[i, :].mul_elementwise(norm)
+
         Q = self.from_rep(ddm_q)
         R = self.from_rep(ddm_r)
         return Q, R
 
-    def fraction_free_qrd(self):
+    def qrd(self):
         """
         Compute the fraction-free QR decomposition of the DomainMatrix.
 
@@ -3350,7 +3370,7 @@ class DomainMatrix:
         >>> from sympy import ZZ
         >>> from sympy.polys.matrices import DomainMatrix
         >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), ZZ)
-        >>> Q, R, D = A.fraction_free_qrd()
+        >>> Q, R, D = A.qrd()
         >>> Q
         DomainMatrix([[1, -2], [3, 0], [5, 2]], (3, 2), ZZ)
         >>> R
@@ -3361,7 +3381,7 @@ class DomainMatrix:
         if not self.domain.is_IntegerRing and not self.domain.is_PolynomialRing:
             raise DMDomainError("Fraction-free QR decomposition requires an integral domain.")
 
-        ddm_q, ddm_r, ddm_d = self.rep.fraction_free_qrd()
+        ddm_q, ddm_r, ddm_d = self.rep.qrd()
         Q = self.from_rep(ddm_q)
         R = self.from_rep(ddm_r)
         D = self.from_rep(ddm_d)
@@ -3420,7 +3440,7 @@ class DomainMatrix:
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_rep(sol)
 
-    def PLDUdecompositionFF(self):
+    def fflu(self):
         """
         Compute the PLDU decomposition of the DomainMatrix.
 
@@ -3439,7 +3459,7 @@ class DomainMatrix:
         >>> from sympy import ZZ
         >>> from sympy.polys.matrices import DomainMatrix
         >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), ZZ)
-        >>> P, L, D, U = A.PLDUdecompositionFF()
+        >>> P, L, D, U = A.fflu()
         >>> P
         DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), ZZ)
         >>> L
@@ -3450,7 +3470,7 @@ class DomainMatrix:
         DomainMatrix([[1, 2], [0, 2]], (2, 2), ZZ)
         """
 
-        P, L, D, U = self.rep.PLDUdecompositionFF()
+        P, L, D, U = self.rep.fflu()
         return self.from_rep(P), self.from_rep(L), self.from_rep(D), self.from_rep(U)
 
     def _solve(A, b):

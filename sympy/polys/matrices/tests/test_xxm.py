@@ -1000,9 +1000,9 @@ def test_XXM_qr_empty_matrix_0x2(DM):
 
 
 @pytest.mark.parametrize('DM', DMQ_all)
-def test_XXM_PLDU_square_matrix(DM):
+def test_xxm_fflu_square_matrix(DM):
     A = DM([[4, 3], [6, 3]])
-    P, L, D, U = A.PLDUdecompositionFF()
+    P, L, D, U = A.fflu()
     assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
     assert L.is_lower
     assert U.is_upper
@@ -1010,9 +1010,9 @@ def test_XXM_PLDU_square_matrix(DM):
 
 
 @pytest.mark.parametrize('DM', DMQ_all)
-def test_XXM_PLDU_sparse_matrix(DM):
+def test_xxm_fflu_sparse_matrix(DM):
     A = DM([[1, 0, 0], [0, 4, 0], [0, 0, 9]])
-    P, L, D, U = A.PLDUdecompositionFF()
+    P, L, D, U = A.fflu()
     assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
     assert L.is_lower
     assert U.is_upper
@@ -1020,9 +1020,9 @@ def test_XXM_PLDU_sparse_matrix(DM):
 
 
 @pytest.mark.parametrize('DM', DMQ_all)
-def test_XXM_PLDU_with_permutations(DM):
+def test_xxm_fflu_with_permutations(DM):
     A = DM([[0, 1], [1, 0]])
-    P, L, D, U = A.PLDUdecompositionFF()
+    P, L, D, U = A.fflu()
     assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
     assert L.is_lower
     assert U.is_upper
@@ -1030,9 +1030,9 @@ def test_XXM_PLDU_with_permutations(DM):
 
 
 @pytest.mark.parametrize('DM', DMQ_all)
-def test_XXM_PLDU_random_integer_matrix(DM):
+def test_xxm_fflu_random_integer_matrix(DM):
     A = DM([[7, 2], [3, 8]])
-    P, L, D, U = A.PLDUdecompositionFF()
+    P, L, D, U = A.fflu()
     assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
     assert L.is_lower
     assert U.is_upper
@@ -1040,10 +1040,10 @@ def test_XXM_PLDU_random_integer_matrix(DM):
 
 
 @pytest.mark.parametrize('DM', DMQ_all)
-def test_XXM_PLDU_identity_matrix(DM):
+def test_xxm_fflu_identity_matrix(DM):
     T = type(DM([[0]]))
     A = T.eye(3, DM([[0]]).domain)
-    P, L, D, U = A.PLDUdecompositionFF()
+    P, L, D, U = A.fflu()
     assert P == A
     assert L == A
     assert D == A
@@ -1051,9 +1051,9 @@ def test_XXM_PLDU_identity_matrix(DM):
 
 
 @pytest.mark.parametrize('DM', DMQ_all)
-def test_XXM_PLDU_single_element(DM):
+def test_xxm_fflu_single_element(DM):
     A = DM([[5]])
-    P, L, D, U = A.PLDUdecompositionFF()
+    P, L, D, U = A.fflu()
     assert P == DM([[1]])
     assert L == DM([[1]])
     assert D == DM([[5]])
@@ -1061,8 +1061,24 @@ def test_XXM_PLDU_single_element(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
-def test_XXM_fraction_free_qrd_rank_deficient(DM):
-    lol = [[ZZ(1), ZZ(2)], [ZZ(2), ZZ(4)], [ZZ(3), ZZ(6)]]
-    A = DM(lol)
-    with pytest.raises(ValueError, match="Matrix is rank deficient"):
-        A.fraction_free_qrd()
+def test_xxm_qrd_rank_deficient(DM):
+    A = DM([[1, 2], [2, 4], [3, 6]])
+    with pytest.raises(ValueError, match="Matrix is not full rank"):
+        A.qrd()
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_qrd_empty_matrix(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((0, 0), ZZ)
+    Q, R, D = A.qrd()
+    adm = DomainMatrix.from_rep(A)
+    qdm = DomainMatrix.from_rep(Q)
+    rdm = DomainMatrix.from_rep(R)
+    ddm = DomainMatrix.from_rep(D)
+    assert qdm.matmul(rdm).shape == (0, 0)
+    assert adm.matmul(ddm).shape == (0, 0)
+    assert Q.shape == (0, 0)
+    assert R.shape == (0, 0)
+    assert D.shape == (0, 0)
+
