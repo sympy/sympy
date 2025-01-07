@@ -20,7 +20,7 @@ def test_scalars():
     assert Dagger(i) == i
 
     p = symbols('p')
-    assert isinstance(Dagger(p), adjoint)
+    assert isinstance(Dagger(p), conjugate)
 
     i = Integer(3)
     assert Dagger(i) == i
@@ -89,7 +89,7 @@ def test_unknown():
     Objects without adjoint or conjugate/transpose methods
     are sympified and wrapped in dagger.
     """
-    x = symbols("x")
+    x = symbols("x", commutative=False)
     result = Dagger(x)
     assert result.args == (x,) and isinstance(result, adjoint)
 
