@@ -462,7 +462,7 @@ def factor_system(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kw
         List of expressions to be factored.
         Each expression is assumed to be equal to zero.
 
-    gens : sequence of Symbols, optional
+    gens : list, optional
         Generator(s) of the polynomial ring.
         If not provided, all free symbols will be used.
 
@@ -472,15 +472,11 @@ def factor_system(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kw
     Returns
     =======
 
-    tuple
-        A pair (systems, condition) where:
-
-        * systems is a list of lists of expressions,
-          where each sublist when solved gives one
-          component of the solution
-
-        * condition is a Boolean expression that must
-          be satisfied for the system to be solvable
+    list[list[Expr]]
+        A list of lists of expressions, where each sublist represents
+        an irreducible subsystem. When solved, each subsystem gives
+        one component of the solution. Only generic solutions are
+        returned (cases not requiring parameters to be zero).
 
     Examples
     ========
@@ -525,16 +521,15 @@ def factor_system(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kw
     by eqs is the union of the solution sets of the
     factorized systems.
 
-    A return of a list containing an empty list [[]]
-    in the tuple means any value of the symbol(s)
-    is a solution whereas a return of an empty list []
-    in the tuple means no solutions for the system exists.
+    An empty list [] means no generic solution exists.
+    A list containing an empty list [[]] means any value of
+    the symbol(s) is a solution.
 
     See Also
     ========
 
-    factor_system_cond : Returns both factors and conditions
-    factor_system_bool : Returns a Boolean combination representing the solution
+    factor_system_cond : Returns both generic and degenerate solutions
+    factor_system_bool : Returns a Boolean combination representing all solutions
     sympy.polys.polytools.factor : Factors a polynomial into irreducible factors
                                    over the rational numbers
     """
@@ -565,7 +560,7 @@ def factor_system_bool(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
        List of expressions to be factored.
        Each expression is assumed to be equal to zero.
 
-    *gens : Symbol or sequence of Symbols, optional
+    gens : list, optional
        Generator(s) of the polynomial ring.
        If not provided, all free symbols will be used.
 
@@ -622,7 +617,7 @@ def factor_system_bool(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
 def factor_system_cond(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (), **kwargs: Any) -> list[list[Expr]]:
     """
     Factorizes a polynomial system into irreducible components and returns
-    factors with their associated conditions.
+    both generic and degenerate solutions.
 
     Parameters
     ==========
@@ -631,7 +626,7 @@ def factor_system_cond(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
         List of expressions to be factored.
         Each expression is assumed to be equal to zero.
 
-    *gens : Symbol or sequence of Symbols, optional
+    gens : list, optional
         Generator(s) of the polynomial ring.
         If not provided, all free symbols will be used.
 
@@ -641,15 +636,10 @@ def factor_system_cond(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
     Returns
     =======
 
-    tuple
-        A pair (systems, conditions) where:
-
-        * systems is a list of lists of (factor, conditions) pairs,
-          where factor is an expression and conditions is a list
-          of expressions that must be zero for the factor to be relevant
-
-        * conditions is a list of expressions that must be zero
-          for any solution to exist
+    list[list[Expr]]
+        A list of lists of expressions, where each sublist represents
+        an irreducible subsystem. Includes both generic solutions and
+        degenerate cases requiring equality conditions on parameters.
 
     Examples
     ========
@@ -663,15 +653,15 @@ def factor_system_cond(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
     >>> factor_system_cond([a*x*(x-1), b*y, c], [x, y])
     [[x - 1, y, c], [x, y, c], [x - 1, b, c], [x, b, c], [y, a, c], [a, b, c]]
 
-    In the return of the (systems, conds) pair, systems is [[]]
-    when the system implies tautology. Eg. x - x = 0,
-    and [] when the system of equations is unatisfiable. Eg. 1 = 0
+    An empty list [] means no solution exists.
+    A list containing an empty list [[]] means any value of
+    the symbol(s) is a solution.
 
     See Also
     ========
 
-    factor_system : Returns factors and solvability condition separately
-    factor_system_bool : Returns a Boolean combination representing the solution
+    factor_system : Returns only generic solutions
+    factor_system_bool : Returns a Boolean combination representing all solutions
     sympy.polys.polytools.factor : Factors a polynomial into irreducible factors
                                    over the rational numbers
     """
@@ -683,6 +673,13 @@ def factor_system_cond(eqs: Sequence[Expr | complex], gens: Sequence[Expr] = (),
 def _factor_system_poly_from_expr(
         eqs: Sequence[Expr | complex], gens: Sequence[Expr], **kwargs: Any
 ) -> list[list[Poly]]:
+    """
+    Convert expressions to polynomials and factor the system.
+
+    Takes a sequence of expressions, converts them to
+    polynomials, and factors the resulting system. Handles both regular
+    polynomial systems and purely numerical cases.
+    """
     try:
         polys, opts = parallel_poly_from_expr(eqs, *gens, **kwargs)
         only_numbers = False
@@ -707,27 +704,23 @@ def _factor_system_poly_from_expr(
 
 def factor_system_poly(polys: list[Poly]) -> list[list[Poly]]:
     """
-    Factors a system of polynomials into irreducible factors with conditions.
+    Factors a system of polynomial equations into irreducible subsystems
+
     Core implementation that works directly with Poly instances.
 
     Parameters
     ==========
 
-    polys : list
+    polys : list[Poly]
         A list of Poly instances to be factored.
 
     Returns
     =======
 
-    tuple
-        A pair (systems, constant_conds) where:
-
-        * systems is a list of lists of (factor, conditions) pairs, with each
-          factor being a Poly instance and conditions being a tuple of Poly
-          instances
-
-        * constant_conds is a list of Poly instances representing conditions that
-          must be satisfied for any solution to exist
+    list[list[Poly]]
+        A list of lists of polynomials, where each sublist represents
+        an irreducible component of the solution. Includes both
+        generic and degenerate cases.
 
     Examples
     ========
@@ -752,17 +745,15 @@ def factor_system_poly(polys: list[Poly]) -> list[list[Poly]]:
      Poly(b - 3, x, domain='ZZ[a,b,c]'),
      Poly(c, x, domain='ZZ[a,b,c]')]
 
-    This is the core routine used by higher-level functions factor_system_cond,
-    factor_system, and factor_system_bool. It Returns empty systems list
-    ([]) when no solution exists and [[]] (list containing empty list) when any
-    value is a solution
+     An empty list [] when returned means no solution exists.
+     Whereas a list containing an empty list [[]] means any value is a solution.
 
     See Also
     ========
 
-    factor_system : Returns factors and solvability condition separately
-    factor_system_bool : Returns a Boolean combination representing the solution
-    factor_system_cond : Returns both factors and conditions
+    factor_system : Returns only generic solutions
+    factor_system_bool : Returns a Boolean combination representing the solutions
+    factor_system_cond : Returns both generic and degenerate solutions
     sympy.polys.polytools.factor : Factors a polynomial into irreducible factors
                                    over the rational numbers
     """
