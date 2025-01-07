@@ -857,7 +857,7 @@ header_comment = """Code generated with SymPy %(version)s
 
 See http://www.sympy.org/ for more information.
 
-This file is part of '%(project)s' generated with the codegen tool at '%(datetime)s' UTC time.
+This file is part of '%(project)s,  generated at '%(datetime)s' UTC time.'
 """
 
 
