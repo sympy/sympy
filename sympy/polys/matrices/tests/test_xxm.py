@@ -1081,4 +1081,3 @@ def test_xxm_qrd_empty_matrix(DM):
     assert Q.shape == (0, 0)
     assert R.shape == (0, 0)
     assert D.shape == (0, 0)
-
