@@ -29,7 +29,8 @@ def normalize(i, parentsize):
         raise IndexError()
 
     return (start, stop, step)
-
+       
+       
 class MatrixSlice(MatrixExpr):
     """ A MatrixSlice of a Matrix Expression
 
