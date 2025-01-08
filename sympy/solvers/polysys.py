@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional, Tuple
 from collections.abc import Sequence, Iterable
 
 import itertools
 
-from sympy import Dummy
+from sympy import Dummy, Symbol
 from sympy.core import S
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.sorting import default_sort_key
 from sympy.logic.boolalg import Boolean
 from sympy.polys import Poly, groebner, roots
-from sympy.polys.domains import ZZ
+from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I
 from sympy.polys.polytools import parallel_poly_from_expr, sqf_part
 from sympy.polys.polyerrors import (
     ComputationFailed,
@@ -816,3 +816,111 @@ def _poly_sort_key(poly):
 def _sys_sort_key(sys):
     """Sort key for lists of polynomials"""
     return list(zip(*map(_poly_sort_key, sys)))
+
+
+def groebner_basis(polys: list[Poly], gens: Optional[Tuple] = None) -> Tuple[list[Poly], list[Poly], list[Poly]]:
+
+    if not polys:
+        return [], [], []
+
+    domain = polys[0].domain
+    if not all(p.domain == domain for p in polys):
+        raise ValueError("All polynomials must have the same domain")
+
+    if gens is None:
+        gens = polys[0].gens
+
+    if domain.is_ZZ:
+        basis = groebner_basis_zz(polys, gens)
+        return basis, [], []
+    elif domain.is_QQ:
+        basis = groebner_basis_qq(polys, gens)
+        return basis, [], []
+    elif domain in (ZZ_I, QQ_I):
+        basis = groebner_basis_complex(polys, gens)
+        return basis, [], []
+    elif domain.is_PolynomialRing:
+        basis, eqs = groebner_basis_polyring(polys, gens)
+        return basis, eqs, []
+    elif domain.is_AlgebraicField:
+        basis = groebner_basis_algebraic(polys, gens)
+        return basis, [], []
+    else:
+        raise DomainError(f"Unsupported domain: {domain}")
+
+
+def groebner_basis_zz(polys: list[Poly], gens: Tuple) -> list[Poly]:
+
+    exprs = [p.as_expr() for p in polys]
+    basis = groebner(exprs, gens)
+    return [Poly(b, *gens, domain=ZZ) for b in basis]
+
+
+def groebner_basis_qq(polys: list[Poly], gens: Tuple) -> list[Poly]:
+
+    polys_zz = [p.clear_denoms()[1] for p in polys]
+    basis = groebner_basis_zz(polys_zz, gens)
+    return [p.set_domain(QQ) for p in basis]
+
+
+def groebner_basis_complex(polys: list[Poly], gens: Tuple) -> list[Poly]:
+    i = Symbol('i')
+    new_gens = gens + (i,)
+
+    new_polys = [Poly(p.as_expr().subs(S.ImaginaryUnit, i), *new_gens, domain=ZZ) for p in polys]
+    new_polys.append(Poly(i ** 2 + 1, *new_gens, domain=ZZ))
+
+
+    exprs = [p.as_expr() for p in new_polys]
+    basis = groebner(exprs, new_gens)
+
+    return [Poly(b.subs(i, S.ImaginaryUnit), *gens, domain=polys[0].domain)
+            for b in basis if i not in b.free_symbols]
+
+
+def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly], list[Poly]]:
+
+    domain = polys[0].domain
+    base_domain = domain.domain
+    params = domain.symbols
+
+    injected_polys = [p.inject() for p in polys]
+    new_gens = gens + tuple(params)
+
+    exprs = [p.as_expr() for p in injected_polys]
+    basis = groebner(exprs, new_gens)
+
+    param_eqs = []
+    var_basis = []
+
+    for b in basis:
+        poly = Poly(b, *new_gens, domain=base_domain)
+        if all(g not in poly.free_symbols for g in gens):
+            param_eqs.append(poly)
+        else:
+            var_basis.append(poly.eject(*params))
+
+    return var_basis, param_eqs
+
+
+def groebner_basis_algebraic(polys: list[Poly], gens: Tuple) -> list[Poly]:
+
+    K = polys[0].domain
+    alpha = Dummy('alpha')
+    new_gens = gens + (alpha,)
+
+    min_poly = Poly(K.mod.to_list(), alpha, domain=K)
+
+    new_polys = []
+    for p in polys:
+        expr = p.as_expr()
+        new_expr = expr.subs(K.ext, alpha)
+        new_polys.append(Poly(new_expr, *new_gens, domain=K))
+
+    new_polys.append(min_poly)
+
+    exprs = [p.as_expr() for p in new_polys]
+    basis = groebner(exprs, new_gens)
+
+    return [Poly(b.subs(alpha, K.ext), *gens, domain=K)
+            for b in basis if alpha not in b.free_symbols]
