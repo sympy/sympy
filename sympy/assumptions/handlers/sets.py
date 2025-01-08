@@ -53,7 +53,7 @@ def _(expr, assumptions):
         raise MDNotImplementedError
     return ret
 
-@IntegerPredicate.register_many(Add, Pow)
+@IntegerPredicate.register(Add)
 def _(expr, assumptions):
     """
     * Integer + Integer       -> Integer
@@ -62,6 +62,24 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
+    return test_closed_group(expr, assumptions, Q.integer)
+
+
+@IntegerPredicate.register(Pow)
+def _(expr, assumptions):
+    """
+    * Integer ** Integer       -> Integer
+    * Integer ** !Integer      -> !Integer
+    * !Integer ** !Integer -> ?
+    * Integer ** -Integer  -> !Integer
+    """
+    if expr.is_number:
+        return _IntegerPredicate_number(expr, assumptions)
+    
+    # Edge case to check for --> Integer ** -Integer  -> !Integer
+    if ask(Q.integer(expr.args[0])) and ask(Q.integer(expr.args[1]) and ask(Q.negative(expr.args[1]))):
+        return False
+    
     return test_closed_group(expr, assumptions, Q.integer)
 
 @IntegerPredicate.register(Mul)
