@@ -73,6 +73,7 @@ class InfinitePredicate(Predicate):
     True
     >>> ask(Q.infinite(1/Rational(0)))
     True
+
     """
     name = 'infinite'
     handler = Dispatcher(
