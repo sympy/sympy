@@ -29,8 +29,7 @@ def normalize(i, parentsize):
         raise IndexError()
 
     return (start, stop, step)
-       
-       
+
 class MatrixSlice(MatrixExpr):
     """ A MatrixSlice of a Matrix Expression
 
@@ -100,7 +99,6 @@ def slice_of_slice(s, t):
         raise IndexError()
 
     return start, stop, step
-
 
 def mat_slice_of_slice(parent, rowslice, colslice):
     """ Collapse nested matrix slices
