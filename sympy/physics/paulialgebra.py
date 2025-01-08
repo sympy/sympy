@@ -204,28 +204,42 @@ def evaluate_pauli_product(arg):
         start = end
 
         tmp = start.as_coeff_mul()
-        sigma_product = 1
+        sigma_products_by_label = {}
         com_product = 1
         keeper = 1
 
+        def add_sigma_product(p: Pauli):
+            if (sigma_products_by_label.get(p.label)):
+                sigma_products_by_label[p.label] *= p
+            else:
+                sigma_products_by_label[p.label] = p
+
+        def flatten_sigma_product():
+            sigma_product = 1
+            nonlocal sigma_products_by_label
+            for label in sorted(sigma_products_by_label):
+                sigma_product *= sigma_products_by_label[label]
+
+            sigma_products_by_label = {}
+
+            return sigma_product
+
         for el in tmp[1]:
             if isinstance(el, Pauli):
-                sigma_product *= el
+                add_sigma_product(el)
             elif not el.is_commutative:
                 if isinstance(el, Pow) and isinstance(el.args[0], Pauli):
                     if el.args[1].is_odd:
-                        sigma_product *= el.args[0]
+                        add_sigma_product(el.args[0])
                 elif isinstance(el, TensorProduct):
-                    keeper = keeper*sigma_product*\
+                    keeper = keeper*flatten_sigma_product()*\
                         TensorProduct(
                             *[evaluate_pauli_product(part) for part in el.args]
                         )
-                    sigma_product = 1
                 else:
-                    keeper = keeper*sigma_product*el
-                    sigma_product = 1
+                    keeper = keeper*flatten_sigma_product()*el
             else:
                 com_product *= el
-        end = tmp[0]*keeper*sigma_product*com_product
+        end = tmp[0]*keeper*flatten_sigma_product()*com_product
         if end == arg: break
     return end
