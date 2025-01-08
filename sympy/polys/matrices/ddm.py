@@ -1034,10 +1034,8 @@ class DDM(list):
 
             oldpivot = Ukk
 
-        if rows < cols:
+        if min(rows, cols) > 0:
             D[min(rows, cols) - 1][min(rows, cols) - 1] = oldpivot
-        else:
-            D[rows - 1][rows - 1] = oldpivot
 
         return P, L, D, U
 

@@ -3316,10 +3316,9 @@ class DomainMatrix:
         True
         >>> Q, R = A.qr(normalize=True)
         >>> Q
-        DomainMatrix([[1/sqrt(35), 2/sqrt(35)], [3/sqrt(35),
-        4/sqrt(35)], [5/sqrt(35), 6/sqrt(35)]], (3, 2), QQ)
+        DomainMatrix([[1, 26/35], [3, 8/35], [5, -2/7]], (3, 2), QQ)
         >>> R
-        DomainMatrix([[sqrt(35), sqrt(35)], [0, sqrt(35)]], (2, 2), QQ)
+        DomainMatrix([[1, 44/35], [0, 1]], (2, 2), QQ)
 
         See Also
         ========
@@ -3330,9 +3329,12 @@ class DomainMatrix:
 
         if normalize:
             for i in range(ddm_q.cols):
-                norm = ddm_q.col_norm(i)
-                ddm_q[:, i] = ddm_q[:, i].mul_elementwise(ddm_q.domain.exquo(ddm_q.domain.one, norm))
-                ddm_r[i, :] = ddm_r[i, :].mul_elementwise(norm)
+                norm = ddm_q[:, i].norm()
+
+                for j in range(ddm_q.rows):
+                    ddm_q[j, i] = ddm_q.domain.exquo(ddm_q[j, i], norm)
+                for j in range(ddm_r.cols):
+                    ddm_r[i, j] = ddm_r.domain.exquo(ddm_r[i, j], norm)
 
         Q = self.from_rep(ddm_q)
         R = self.from_rep(ddm_r)
@@ -3469,7 +3471,6 @@ class DomainMatrix:
         >>> U
         DomainMatrix([[1, 2], [0, 2]], (2, 2), ZZ)
         """
-
         P, L, D, U = self.rep.fflu()
         return self.from_rep(P), self.from_rep(L), self.from_rep(D), self.from_rep(U)
 
