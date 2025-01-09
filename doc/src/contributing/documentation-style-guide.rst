@@ -75,12 +75,12 @@ The following lists the processing tools:
   * ``matplotlib.sphinxext.plot_directive``: Provides directives for included
     matplotlib generated figures in reStructuredText. See
     https://matplotlib.org/devel/plot_directive.html for more info.
-  # ``jupyterlite-sphinx``: Provides directives for adding mini-notebooks with
+  * ``jupyterlite-sphinx``: Provides directives for adding mini-notebooks with
     JupyterLite that make API examples in docstrings interactive in the HTML
     documentation. See https://jupyterlite-sphinx.readthedocs.io/en/stable/
-    for more info. This extension is used hand in hand with the
+    for more info. This extension is used hand-in-hand with the
     ``jupyterlite-pyodide-kernel`` package, which provides a Pyodide kernel
-    for JupyterLite, see https://jupyterlite-pyodide-kernel.readthedocs.io/en/latest/
+    for JupyterLite. See https://jupyterlite-pyodide-kernel.readthedocs.io/en/latest/
     for more info on the versions of Pyodide and SymPy used.
 
 Everything supported by the above processing tools is available for use in the
