@@ -1106,10 +1106,11 @@ def test_bounded():
     assert ask(Q.finite(cos(x)**2)) is True
     assert ask(Q.finite(cos(x) + sin(x))) is True
 
+
 def test_issue_27441():
-    # Test for issue 27441
-    # checks that a positive integer which is not prime is not necessarily composite
+    # https://github.com/sympy/sympy/issues/27441
     assert ask(Q.composite(y), Q.integer(y) & Q.positive(y) & ~Q.prime(y)) is None
+
 
 @XFAIL
 def test_bounded_xfail():
