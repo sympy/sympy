@@ -26,7 +26,6 @@ from sympy.polys.polyerrors import (
 from sympy.simplify import rcollect
 from sympy.utilities import postfixes
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import cartes
 from sympy.logic.boolalg import Or, And
 from sympy.core.relational import Eq
 
@@ -692,17 +691,10 @@ def _factor_system_poly_from_expr(
         assert opts['domain'].is_Numerical
         only_numbers = True
 
-    systems: list[list[Poly]]
-
     if only_numbers:
-        if all(p == 0 for p in polys):
-            systems = [[]]
-        else:
-            systems = []
-    else:
-        systems = factor_system_poly(polys)
+        return [[]] if all(p == 0 for p in polys) else []
 
-    return systems
+    return factor_system_poly(polys)
 
 
 def factor_system_poly(polys: list[Poly]) -> list[list[Poly]]:
@@ -770,43 +762,69 @@ def factor_system_poly(polys: list[Poly]) -> list[list[Poly]]:
         raise TypeError("polys should be a list of Poly instances")
     if not polys:
         return [[]]
-    else:
-        base_domain = polys[0].domain
-        base_gens = polys[0].gens
-        if not all(poly.domain == base_domain and poly.gens == base_gens for poly in polys[1:]):
-            raise DomainError("All polynomials must have the same domain and generators")
 
-    eqs_factors = []
+    base_domain = polys[0].domain
+    base_gens = polys[0].gens
+    if not all(poly.domain == base_domain and poly.gens == base_gens for poly in polys[1:]):
+        raise DomainError("All polynomials must have the same domain and generators")
 
+    factor_sets = []
     for poly in polys:
         constant, factors_mult = poly.factor_list()
-
-        factors = [f for f, m in factors_mult]
 
         if constant.is_zero is True:
             continue
         elif constant.is_zero is False:
-            if not factors:
+            if not factors_mult:
                 return []
+            factor_sets.append({f for f, _ in factors_mult})
         else:
             constant = sqf_part(factor_terms(constant).as_coeff_Mul()[1])
             constp = Poly(constant, base_gens, domain=base_domain)
-            factors.insert(0, constp)
+            factors = {f for f, _ in factors_mult}
+            factors.add(constp)
+            factor_sets.append(factors)
 
-        eqs_factors.append(factors)
+    if not factor_sets:
+        return [[]]
 
-    return _cnf2dnf(eqs_factors)
+    return _factor_sets(factor_sets)
 
 
-def _cnf2dnf(eqs: list[list[Poly]]) -> list[list[Poly]]:
+def _factor_sets(factor_sets: list[set[Poly]]) -> list[list[Poly]]:
     """
-    Given a list of lists of Poly from the factorization of the equations in a
-    polynomial system, find the minimal set of factorised subsystems that is
-    equivalent to the original system. The result is a disjunctive normal form.
+    Helper that builds factor combinations.
     """
-    systems_set = {frozenset(sys) for sys in cartes(*eqs)}
-    systems = [s1 for s1 in systems_set if not any(s1 > s2 for s2 in systems_set)]
-    return _sort_systems(systems)
+    if not factor_sets:
+        return [[]]
+
+    current_set = min(factor_sets, key=len)
+    other_sets = [s for s in factor_sets if s is not current_set]
+
+    stack = [(factor, [s for s in other_sets if factor not in s], {factor})
+             for factor in current_set]
+
+    result = set()
+
+    while stack:
+        factor, remaining_sets, current_solution = stack.pop()
+
+        if not remaining_sets:
+            result.add(frozenset(current_solution))
+            continue
+
+        next_set = min(remaining_sets, key=len)
+        next_remaining = [s for s in remaining_sets if s is not next_set]
+
+        for next_factor in next_set:
+            valid_remaining = [s for s in next_remaining if next_factor not in s]
+            new_solution = current_solution | {next_factor}
+            stack.append((next_factor, valid_remaining, new_solution))
+
+    minimal_solutions = {s1 for s1 in result
+                         if not any(s1 > s2 for s2 in result)}
+
+    return _sort_systems(minimal_solutions)
 
 
 def _sort_systems(systems: Iterable[Iterable[Poly]]) -> list[list[Poly]]:
