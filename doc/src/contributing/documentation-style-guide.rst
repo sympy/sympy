@@ -102,6 +102,8 @@ items for the website are:
 
 * General descriptions of what SymPy and the SymPy community are
 * Explanations/demonstrations of major software features
+* `The SymPy live shell <https://live.sympy.org>`_ which provides a REPL-like
+  interface to SymPy that runs in the browser
 * Listings of other major software that uses SymPy
 * Getting started info for users (download and install instructions)
 * Getting started info for developers
