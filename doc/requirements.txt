@@ -1,11 +1,11 @@
 furo
 intersphinx-registry
 jupyterlite-sphinx>=0.17.1
-# Pyodide kernel 0.4.7 and 0.5.0 come with Pyodide 0.27.0 and SymPy 1.13.3
+# earliest version of the Pyodide kernel that comes with Pyodide 0.27 and SymPy 1.13.3
 # see https://pyodide.org/en/0.27.0/usage/packages-in-pyodide.html
 # and https://jupyterlite-pyodide-kernel.readthedocs.io/en/latest/#with-pyodide
 # for information on updating
-jupyterlite-pyodide-kernel==0.5.0 # pin to 0.5.0 for Pyodide 0.27.0
+jupyterlite-pyodide-kernel==0.4.7
 linkify-it-py
 matplotlib
 matplotlib-inline
