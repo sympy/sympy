@@ -701,7 +701,7 @@ def test_XXM_div_elementwise(DM):
     A = DM([[6, 4], [8, 10]])
     B = DM([[2, 2], [4, 5]])
     C = DM([[3, 2], [2, 2]])
-    assert A.div_elementwise(B) == C
+    assert A.exquo_elementwise(B) == C
 
 
 @pytest.mark.parametrize('DM', DMZ_all)

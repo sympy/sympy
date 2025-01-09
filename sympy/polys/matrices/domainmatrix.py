@@ -3256,15 +3256,7 @@ class DomainMatrix:
         L, U, swaps = self.rep.lu()
         return self.from_rep(L), self.from_rep(U), swaps
 
-    def norm(self):
-        if self.shape[1] != 1:
-            raise ValueError("Norm is only defined for column matrices")
-
-        K = self.domain
-        norm_squared = sum(K.mul(x, x) for row in self.rep for x in row)
-        return K.sqrt(norm_squared)
-
-    def qr(self, normalize=False):
+    def qr(self):
         r"""
         QR decomposition of the DomainMatrix.
 
@@ -3272,13 +3264,10 @@ class DomainMatrix:
         ===========
 
         The QR decomposition expresses a matrix as the product of an orthogonal
-        matrix (Q) and an upper triangular matrix (R). By default, Q is not
-        orthonormal: its columns are orthogonal but not normalized to unit vectors.
-        This avoids unnecessary divisions and is particularly suited for exact
-        arithmetic domains.
-
-        If `normalize=True`, the columns of Q are normalized to produce an
-        orthonormal Q matrix.
+        matrix (Q) and an upper triangular matrix (R). In this implementation,
+        Q is not orthonormal: its columns are orthogonal but not normalized to
+        unit vectors. This avoids unnecessary divisions and is particularly
+        suited for exact arithmetic domains.
 
         Note
         ====
@@ -3286,12 +3275,6 @@ class DomainMatrix:
         This implementation is valid only for matrices over real domains. For
         matrices over complex domains, a proper QR decomposition would require
         handling conjugation to ensure orthogonality.
-
-        Parameters
-        ==========
-
-        normalize : bool, optional
-            If True, the columns of Q are normalized to produce an orthonormal matrix.
 
         Returns
         =======
@@ -3308,6 +3291,7 @@ class DomainMatrix:
 
         Examples
         ========
+
         >>> from sympy import QQ
         >>> from sympy.polys.matrices import DomainMatrix
         >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), QQ)
@@ -3322,28 +3306,16 @@ class DomainMatrix:
         True
         >>> R.is_upper
         True
-        >>> Q, R = A.qr(normalize=True)
-        >>> Q
-        DomainMatrix([[1, 26/35], [3, 8/35], [5, -2/7]], (3, 2), QQ)
-        >>> R
-        DomainMatrix([[1, 44/35], [0, 1]], (2, 2), QQ)
 
         See Also
         ========
+
         lu
 
         """
         ddm_q, ddm_r = self.rep.qr()
         Q = self.from_rep(ddm_q)
         R = self.from_rep(ddm_r)
-
-        if normalize:
-            for i in range(Q.shape[1]):
-                cols = Q.extract(range(Q.shape[0]), [i])
-                norm = cols.norm()
-                Q.rep[:, i] = Q.rep[:, i].div_elementwise(norm)
-                R.rep[i, :] = R.rep[i, :].mul_elementwise(norm)
-
         return Q, R
 
     def qrd(self):
