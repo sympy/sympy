@@ -1228,7 +1228,7 @@ def test_issue_21651():
 
 def test_issue_27450():
     n = Symbol('n', negative=True, integer=True)
-    exp = 2 ** n
+    exp = 2**n
     assert exp.is_integer is False
 
 def test_assumptions_copy():

@@ -67,19 +67,16 @@ def _(expr, assumptions):
 
 @IntegerPredicate.register(Pow)
 def _(expr, assumptions):
-    """
-    * Integer ** Integer       -> Integer
-    * Integer ** !Integer      -> !Integer
-    * !Integer ** !Integer -> ?
-    * Integer ** -Integer  -> !Integer
-    """
+#     """
+#     * Integer ** Integer       -> Integer
+#     * Integer ** !Integer      -> !Integer
+#     * !Integer ** !Integer -> ?
+#     * Integer ** -Integer  -> !Integer
+#     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
-    
-    # Edge case to check for --> Integer ** -Integer  -> !Integer
-    if ask(Q.integer(expr.args[0])) and ask(Q.integer(expr.args[1]) and ask(Q.negative(expr.args[1]))):
+    if ask(Q.integer(expr.args[0]), assumptions) and ask(Q.integer(expr.args[1]), assumptions) and expr.args[1].is_negative:
         return False
-    
     return test_closed_group(expr, assumptions, Q.integer)
 
 @IntegerPredicate.register(Mul)
