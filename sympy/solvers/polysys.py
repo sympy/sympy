@@ -25,6 +25,7 @@ from sympy.polys.polyerrors import (
 )
 from sympy.simplify import rcollect
 from sympy.utilities import postfixes
+from sympy.utilities.iterables import cartes
 from sympy.utilities.misc import filldedent
 from sympy.logic.boolalg import Or, And
 from sympy.core.relational import Eq
@@ -777,29 +778,43 @@ def factor_system_poly(polys: list[Poly]) -> list[list[Poly]]:
         elif constant.is_zero is False:
             if not factors_mult:
                 return []
-            factor_sets.append({f for f, _ in factors_mult})
+            factor_sets.append([f for f, _ in factors_mult])
         else:
             constant = sqf_part(factor_terms(constant).as_coeff_Mul()[1])
             constp = Poly(constant, base_gens, domain=base_domain)
-            factors = {f for f, _ in factors_mult}
-            factors.add(constp)
+            factors = [f for f, _ in factors_mult]
+            factors.append(constp)
             factor_sets.append(factors)
 
     if not factor_sets:
         return [[]]
 
-    return _factor_sets(factor_sets)
+    result = _factor_sets(factor_sets)
+    return _sort_systems(result)
 
 
-def _factor_sets(factor_sets: list[set[Poly]]) -> list[list[Poly]]:
+def _factor_sets_slow(eqs: list[list]) -> set[frozenset]:
+    """
+    Helper to find the minimal set of factorised subsystems that is
+    equivalent to the original system.
+
+    The result is in DNF.
+    """
+    if not eqs:
+        return {frozenset()}
+    systems_set = {frozenset(sys) for sys in cartes(*eqs)}
+    return {s1 for s1 in systems_set if not any(s1 > s2 for s2 in systems_set)}
+
+
+def _factor_sets(eqs: list[list]) -> set[frozenset]:
     """
     Helper that builds factor combinations.
     """
-    if not factor_sets:
-        return [[]]
+    if not eqs:
+        return {frozenset()}
 
-    current_set = min(factor_sets, key=len)
-    other_sets = [s for s in factor_sets if s is not current_set]
+    current_set = min(eqs, key=len)
+    other_sets = [s for s in eqs if s is not current_set]
 
     stack = [(factor, [s for s in other_sets if factor not in s], {factor})
              for factor in current_set]
@@ -821,10 +836,7 @@ def _factor_sets(factor_sets: list[set[Poly]]) -> list[list[Poly]]:
             new_solution = current_solution | {next_factor}
             stack.append((next_factor, valid_remaining, new_solution))
 
-    minimal_solutions = {s1 for s1 in result
-                         if not any(s1 > s2 for s2 in result)}
-
-    return _sort_systems(minimal_solutions)
+    return {s1 for s1 in result if not any(s1 > s2 for s2 in result)}
 
 
 def _sort_systems(systems: Iterable[Iterable[Poly]]) -> list[list[Poly]]:
