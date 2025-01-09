@@ -58,20 +58,12 @@ def test_evaluate_pauli_product_ordering():
     b3 = Pauli(3, label = "b")
 
     # Simpler case where ordering is already present
-    assert evaluate_pauli_product(
-        (a1 * b3) +
-        (a1 * b3)
-    ) == 2 * a1 * b3
+    assert evaluate_pauli_product((a1 * b3) + (a1 * b3)) == 2 * a1 * b3
 
     # Issue 26745
-    assert evaluate_pauli_product(
-        (a1 * b3) +
-        (b3 * a1)
-    ) == 2 * a1 * b3
+    assert evaluate_pauli_product((a1 * b3) + (b3 * a1)) == 2 * a1 * b3
 
-    assert evaluate_pauli_product(
-        a1 * b3 * a1
-    ) == b3
+    assert evaluate_pauli_product(a1 * b3 * a1) == b3
 
 @XFAIL
 def test_Pauli_should_work():
