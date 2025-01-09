@@ -3326,18 +3326,16 @@ class DomainMatrix:
 
         """
         ddm_q, ddm_r = self.rep.qr()
-
-        if normalize:
-            for i in range(ddm_q.cols):
-                norm = ddm_q[:, i].norm()
-
-                for j in range(ddm_q.rows):
-                    ddm_q[j, i] = ddm_q.domain.exquo(ddm_q[j, i], norm)
-                for j in range(ddm_r.cols):
-                    ddm_r[i, j] = ddm_r.domain.exquo(ddm_r[i, j], norm)
-
         Q = self.from_rep(ddm_q)
         R = self.from_rep(ddm_r)
+
+        if normalize:
+            for i in range(Q.shape[1]):
+                col = Q.rep.col(i)
+                norm = col.norm()
+                Q.rep[:, i] = Q.rep[:, i].div_elementwise(norm)
+                R.rep[i, :] = R.rep[i, :].mul_elementwise(norm)
+
         return Q, R
 
     def qrd(self):
@@ -3374,11 +3372,11 @@ class DomainMatrix:
         >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), ZZ)
         >>> Q, R, D = A.qrd()
         >>> Q
-        DomainMatrix([[1, -2], [3, 0], [5, 2]], (3, 2), ZZ)
+        DomainMatrix([[1, 0, 0], [3, -2, 0], [5, -4, 1]], (3, 3), ZZ)
         >>> R
-        DomainMatrix([[1, 2], [0, 1]], (2, 2), ZZ)
+        DomainMatrix([[1, 2], [0, -2], [0, 0]], (3, 2), ZZ)
         >>> D
-        DomainMatrix([[1, 0], [0, 2]], (2, 2), ZZ)
+        DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
         """
         if not self.domain.is_IntegerRing and not self.domain.is_PolynomialRing:
             raise DMDomainError("Fraction-free QR decomposition requires an integral domain.")
@@ -3465,11 +3463,11 @@ class DomainMatrix:
         >>> P
         DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), ZZ)
         >>> L
-        DomainMatrix([[1, 0], [3, 1], [5, 0]], (3, 2), ZZ)
+        DomainMatrix([[1, 0, 0], [3, -2, 0], [5, -4, 1]], (3, 3), ZZ)
         >>> D
-        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+        DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
         >>> U
-        DomainMatrix([[1, 2], [0, 2]], (2, 2), ZZ)
+        DomainMatrix([[1, 2], [0, -2], [0, 0]], (3, 2), ZZ)
         """
         P, L, D, U = self.rep.fflu()
         return self.from_rep(P), self.from_rep(L), self.from_rep(D), self.from_rep(U)

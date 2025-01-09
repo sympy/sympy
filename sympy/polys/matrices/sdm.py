@@ -851,6 +851,16 @@ class SDM(dict):
         Csdm = binop_dict(A, B, mul, fzero, fzero)
         return A.new(Csdm, A.shape, A.domain)
 
+    def div_elementwise(A, B):
+        if A.domain != B.domain:
+            raise DMDomainError
+        if A.shape != B.shape:
+            raise DMShapeError
+        zero = A.domain.zero
+        fzero = lambda e: zero
+        Csdm = binop_dict(A, B, A.domain.exquo, fzero, fzero)
+        return A.new(Csdm, A.shape, A.domain)
+
     def add(A, B):
         """
 

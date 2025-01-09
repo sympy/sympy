@@ -709,6 +709,12 @@ class DDM(list):
         c = [[aij * bij for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
         return DDM(c, a.shape, a.domain)
 
+    def div_elementwise(a, b):
+        assert a.shape == b.shape
+        assert a.domain == b.domain
+        c = [[a.domain.exquo(aij, bij) for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
+        return DDM(c, a.shape, a.domain)
+
     def hstack(A, *B):
         """Horizontally stacks :py:class:`~.DDM` matrices.
 
