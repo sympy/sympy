@@ -3256,6 +3256,14 @@ class DomainMatrix:
         L, U, swaps = self.rep.lu()
         return self.from_rep(L), self.from_rep(U), swaps
 
+    def norm(self):
+        if self.shape[1] != 1:
+            raise ValueError("Norm is only defined for column matrices")
+
+        K = self.domain
+        norm_squared = sum(K.mul(x, x) for row in self.rep for x in row)
+        return K.sqrt(norm_squared)
+
     def qr(self, normalize=False):
         r"""
         QR decomposition of the DomainMatrix.
@@ -3331,8 +3339,8 @@ class DomainMatrix:
 
         if normalize:
             for i in range(Q.shape[1]):
-                col = Q.rep.col(i)
-                norm = col.norm()
+                cols = Q.extract(range(Q.shape[0]), [i])
+                norm = cols.norm()
                 Q.rep[:, i] = Q.rep[:, i].div_elementwise(norm)
                 R.rep[i, :] = R.rep[i, :].mul_elementwise(norm)
 
