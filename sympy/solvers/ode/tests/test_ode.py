@@ -1,5 +1,5 @@
 from sympy.core.function import (Derivative, Function, Subs, diff)
-from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.numbers import (E, I, Rational, pi, oo)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -789,6 +789,15 @@ def test_issue_4825():
     assert classify_ode(f(x).diff(x), f(y), dict=True) == \
         {'order': 0, 'default': None, 'ordered_hints': ()}
 
+def test_issue_27392():
+    # See also issue 27403
+    bcs = {f(x).subs(x, oo): C1, f(x).diff(x).subs(x, oo): C2}
+
+    eq1 = f(x).diff(x) + C3 * f(x) / x
+    assert '1st_power_series' in classify_ode(eq1, x0=oo, n=3, ics=bcs)
+
+    eq2 = f(x).diff(x) + C3 * f(x) / (x * (C3 + C4))
+    assert '1st_power_series' in classify_ode(eq2, x0=oo, n=3, ics=bcs)
 
 def test_constant_renumber_order_issue_5308():
     from sympy.utilities.iterables import variations
