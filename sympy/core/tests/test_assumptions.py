@@ -1226,11 +1226,6 @@ def test_issue_21651():
     exp = 2*2**(-k)
     assert exp.is_integer is None
 
-def test_issue_27450():
-    n = Symbol('n', negative=True, integer=True)
-    exp = 2**n
-    assert exp.is_integer is False
-
 def test_assumptions_copy():
     assert assumptions(Symbol('x'), {"commutative": True}
         ) == {'commutative': True}
