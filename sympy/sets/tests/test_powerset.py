@@ -139,3 +139,8 @@ def test_is_subset():
     assert subset.is_subset(pset)
     # assert "bad_set" is subset of pset == False
     assert not pset.is_subset(bad_set)
+
+def test_powerset_measure():
+    assert PowerSet(FiniteSet(1, 2, 3)).measure == 0
+    assert PowerSet(S.Rationals).measure == 0
+    raises(NotImplementedError, lambda: PowerSet(S.Reals).measure)

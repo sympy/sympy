@@ -117,3 +117,14 @@ class PowerSet(Set):
     @property
     def kind(self):
         return SetKind(self.arg.kind)
+
+    @property
+    def measure(self):
+        if self.arg._measure == 0:
+            return 0
+
+        rewritten = self.rewrite(FiniteSet)
+        if isinstance(rewritten, FiniteSet):
+            return rewritten._measure
+
+        raise NotImplementedError("Measure for `PowerSet` is undetermined")

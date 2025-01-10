@@ -45,6 +45,7 @@ def test_naturals():
     assert N.boundary == N
     assert N.is_open == False
     assert N.is_closed == True
+    assert N.measure == 0
 
     assert N.inf == 1
     assert N.sup is oo
@@ -89,6 +90,7 @@ def test_integers():
     assert Z.boundary == Z
     assert Z.is_open == False
     assert Z.is_closed == True
+    assert Z.measure == 0
 
     assert Z.as_relational(x) == And(Eq(floor(x), x), -oo < x, x < oo)
 
@@ -154,6 +156,12 @@ def test_ImageSet():
     assert S2._contains(3) is None
 
     raises(TypeError, lambda: ImageSet(Lambda(x, x**2), 1))
+
+
+def test_ImageSet_measure():
+    assert ImageSet(Lambda(x, x), S.Integers).measure == 0
+    assert ImageSet(Lambda(x, x**2+1), S.Naturals).measure == 0
+    raises(NotImplementedError, lambda: ImageSet(Lambda(x, x**2+1), Interval(0, 1)).measure)
 
 
 def test_image_is_ImageSet():
@@ -353,6 +361,9 @@ def test_Range_set():
     assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3)  & Eq(Mod(x, 1), 0)
     assert Range(oo, 1, -2).as_relational(x) == (x >= 3) & (x < oo)  & Eq(Mod(x + 1, -2), 0)
 
+
+def test_Range_measure():
+    assert Range(-oo, oo).measure == Range(3, 11, 2).measure == 0
 
 def test_Range_symbolic():
     # symbolic Range
@@ -665,6 +676,7 @@ def test_Reals():
     assert S.ComplexInfinity not in S.Reals
     assert S.NaN not in S.Reals
     assert x + S.ComplexInfinity not in S.Reals
+    assert S.Reals.measure == oo
 
 
 def test_Complex():
@@ -680,6 +692,7 @@ def test_Complex():
     assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
     assert str(S.Complexes) == "Complexes"
     assert repr(S.Complexes) == "Complexes"
+    assert S.Complexes.measure == oo
 
 
 def take(n, iterable):
@@ -1280,6 +1293,7 @@ def test_Rationals():
     assert S.Rationals.closure == S.Reals
     assert S.Rationals.is_open == False
     assert S.Rationals.is_closed == False
+    assert S.Rationals.measure == 0
 
 
 def test_NZQRC_unions():

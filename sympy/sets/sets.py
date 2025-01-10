@@ -1577,6 +1577,13 @@ class Intersection(Set, LatticeOp):
     def _sup(self):
         raise NotImplementedError()
 
+    @property
+    def _measure(self):
+        simplified = simplify_intersection(self.args)
+        if isinstance(simplified, Intersection):
+            raise NotImplementedError("Measure for unevaluable `Intersection` is undefined")
+        return simplified._measure
+
     def _contains(self, other):
         return And(*[set.contains(other) for set in self.args])
 
@@ -1806,6 +1813,13 @@ class Complement(Set):
             return True
         elif a_finite is False and B.is_finite_set:
             return False
+
+    @property
+    def _measure(self):
+        reduced = Complement.reduce(*self.args)
+        if isinstance(reduced, Complement):
+            NotImplementedError("Measure for unevaluable `Complement` is undefined")
+        return reduced._measure
 
     def __iter__(self):
         A, B = self.args
@@ -2103,7 +2117,7 @@ class FiniteSet(Set):
         return Max(*self)
 
     @property
-    def measure(self):
+    def _measure(self):
         return 0
 
     def _kind(self):
@@ -2242,6 +2256,13 @@ class SymmetricDifference(Set):
         if all(arg.is_iterable for arg in self.args):
             return True
 
+    @property
+    def _measure(self):
+        reduced = SymmetricDifference.reduce(*self.args)
+        if isinstance(reduced, SymmetricDifference):
+            raise NotImplementedError("Measure for unevaluable `SymmetricDifference` is undefined")
+        return reduced._measure
+
     def __iter__(self):
 
         args = self.args
@@ -2317,6 +2338,10 @@ class DisjointUnion(Set):
             if not set_i.is_empty:
                 iter_flag = iter_flag and set_i.is_iterable
         return iter_flag
+
+    @property
+    def _measure(self):
+        return sum(s._measure for s in self.sets)
 
     def _eval_rewrite_as_Union(self, *sets, **kwargs):
         """

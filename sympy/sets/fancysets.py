@@ -66,6 +66,10 @@ class Rationals(Set, metaclass=Singleton):
     def _boundary(self):
         return S.Reals
 
+    @property
+    def _measure(self):
+        return 0
+
     def _kind(self):
         return SetKind(NumberKind)
 
@@ -128,6 +132,10 @@ class Naturals(Set, metaclass=Singleton):
     @property
     def _boundary(self):
         return self
+
+    @property
+    def _measure(self):
+        return 0
 
     def as_relational(self, x):
         return And(Eq(floor(x), x), x >= self.inf, x < oo)
@@ -222,6 +230,10 @@ class Integers(Set, metaclass=Singleton):
     @property
     def _boundary(self):
         return self
+
+    @property
+    def _measure(self):
+        return 0
 
     def _kind(self):
         return SetKind(NumberKind)
@@ -514,6 +526,12 @@ class ImageSet(Set):
 
     def _kind(self):
         return SetKind(self.lamda.expr.kind)
+
+    @property
+    def _measure(self):
+        if all(s._measure == 0 for s in self.base_sets):
+            return 0
+        raise NotImplementedError("Measure for `ImageSet` is undetermined")
 
 
 class Range(Set):
@@ -986,6 +1004,10 @@ class Range(Set):
     @property
     def _boundary(self):
         return self
+
+    @property
+    def _measure(self):
+        return 0
 
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
