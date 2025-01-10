@@ -2420,4 +2420,4 @@ def test_issue_25221():
 def test_issue_27450():
     n = Symbol('n', negative=True, integer=True)
     exp = 2**n
-    assert exp.is_integer is False
+    assert ask(Q.integer(exp)) is False
