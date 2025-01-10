@@ -208,7 +208,7 @@ def evaluate_pauli_product(arg):
         com_product = 1
         keeper = 1
 
-        def add_sigma_product(p: Pauli):
+        def add_sigma_product(p):
             if (sigma_products_by_label.get(p.label)):
                 sigma_products_by_label[p.label] *= p
             else:
