@@ -232,6 +232,8 @@ def test_issue_5652():
     n = symbols('n', commutative=False)
     assert simplify(n + n**(-n)) == n + n**(-n)
 
+def test_issue_27380():
+    assert simplify(1.0**(x+1)/1.0**x) == 1.0
 
 def test_simplify_fail1():
     x = Symbol('x')
