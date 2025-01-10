@@ -5,7 +5,7 @@ from math import prod
 from sympy.core.function import expand_log, count_ops, _coeff_isneg
 from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms
 from sympy.core.sorting import ordered, default_sort_key
-from sympy.core.numbers import Integer, Rational
+from sympy.core.numbers import Integer, Rational, equal_valued
 from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
@@ -189,7 +189,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if bpos:
                 binv = 1/b
                 #Special case for float 1
-                if b.is_Float and b.equals(1):
+                if b.is_Float and equal_valued(b, 1):
                     c_powers[b] = S.One
                     continue
                 if b != binv and binv in c_powers:
