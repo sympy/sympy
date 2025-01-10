@@ -188,6 +188,10 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             bpos = b.is_positive or b.is_polar
             if bpos:
                 binv = 1/b
+                #Special case for float 1
+                if b.is_Float and b.equals(1):
+                    c_powers[b] = S.One
+                    continue
                 if b != binv and binv in c_powers:
                     if b.as_numer_denom()[0] is S.One:
                         c_powers.pop(b)
