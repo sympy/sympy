@@ -9,6 +9,7 @@ from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import factor as fctr
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
+from sympy.series.limits import limit
 
 if TYPE_CHECKING:
     from sympy.vector.vector import BaseVector
@@ -178,6 +179,12 @@ class BasisDependent(Expr):
         doit_components = [self.components[x].doit(**hints) * x
                            for x in self.components]
         return self._add_func(*doit_components)
+
+    def limit(self, *args, **kwargs):
+        """Calls limit() on each component"""
+        limit_components = [limit(v, *args, **kwargs) * k for
+                           k, v in self.components.items()]
+        return self._add_func(*limit_components)
 
 
 class BasisDependentAdd(BasisDependent, Add):
