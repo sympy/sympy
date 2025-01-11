@@ -216,11 +216,10 @@ def evaluate_pauli_product(arg):
 
         def flatten_sigma_product():
             sigma_product = 1
-            nonlocal sigma_products_by_label
             for label in sorted(sigma_products_by_label):
                 sigma_product *= sigma_products_by_label[label]
 
-            sigma_products_by_label = {}
+            sigma_products_by_label.clear()
 
             return sigma_product
 
