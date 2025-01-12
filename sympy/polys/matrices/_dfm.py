@@ -420,6 +420,11 @@ class DFM:
         # XXX: flint matrices do not support elementwise multiplication
         return self.to_ddm().mul_elementwise(other.to_ddm()).to_dfm()
 
+    def exquo_elementwise(self, other):
+        """Elementwise division of two DFM matrices using exact division."""
+        # XXX: flint matrices do not support elementwise division directly
+        return self.to_ddm().exquo_elementwise(other.to_ddm()).to_dfm()
+
     def matmul(self, other):
         """Multiply two DFM matrices."""
         shape = (self.rows, other.cols)
@@ -689,6 +694,12 @@ class DFM:
             # what happens here.
             raise NotImplementedError("DFM.inv() is not implemented for %s" % K)
 
+    def inv_den(self):
+        """Returns inverse as numerator/denominator pair."""
+        ddm = self.to_ddm()
+        adj, det = ddm.inv_den()
+        return self.from_ddm(adj), det
+
     def lu(self):
         """Return the LU decomposition of the matrix."""
         L, U, swaps = self.to_ddm().lu()
@@ -698,6 +709,24 @@ class DFM:
         """Return the QR decomposition of the matrix."""
         Q, R = self.to_ddm().qr()
         return Q.to_dfm(), R.to_dfm()
+
+    def qrd(self):
+        """
+        Fraction-free QR decomposition for DFM.
+
+        Returns
+        =======
+
+        (Q, R, D)
+            Q is the orthogonal matrix as a DFM.
+            R is the upper triangular matrix as a DFM.
+            D is the diagonal matrix as a DFM.
+        """
+        ddm_q, ddm_r, ddm_d = self.to_ddm().qrd()
+        Q = ddm_q.to_dfm()
+        R = ddm_r.to_dfm()
+        D = ddm_d.to_dfm()
+        return Q, R, D
 
     # XXX: The lu_solve function should be renamed to solve. Whether or not it
     # uses an LU decomposition is an implementation detail. A method called
@@ -784,6 +813,26 @@ class DFM:
             raise DMNonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
         return self._new(sol, sol_shape, self.domain)
+
+    def fflu(self):
+        """
+        Fraction-free PLDU decomposition for DFM.
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            P is the permutation matrix as a DFM.
+            L is the lower triangular matrix as a DFM.
+            D is the diagonal matrix as a DFM.
+            U is the upper triangular matrix as a DFM.
+        """
+        ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
+        P = ddm_p.to_dfm()
+        L = ddm_l.to_dfm()
+        D = ddm_d.to_dfm()
+        U = ddm_u.to_dfm()
+        return P, L, D, U
 
     def nullspace(self):
         """Return a basis for the nullspace of the matrix."""

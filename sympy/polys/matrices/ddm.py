@@ -70,7 +70,7 @@ from .exceptions import (
     DMBadInputError,
     DMDomainError,
     DMNonSquareMatrixError,
-    DMShapeError,
+    DMShapeError, DMNonInvertibleMatrixError,
 )
 
 from sympy.polys.domains import QQ
@@ -709,6 +709,12 @@ class DDM(list):
         c = [[aij * bij for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
         return DDM(c, a.shape, a.domain)
 
+    def exquo_elementwise(a, b):
+        assert a.shape == b.shape
+        assert a.domain == b.domain
+        c = [[a.domain.exquo(aij, bij) for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
+        return DDM(c, a.shape, a.domain)
+
     def hstack(A, *B):
         """Horizontally stacks :py:class:`~.DDM` matrices.
 
@@ -947,6 +953,91 @@ class DDM(list):
         ddm_iinv(ainv, a, K)
         return ainv
 
+    def inv_den(self):
+        """
+        Returns the inverse of a matrix as a numerator/denominator pair.
+
+        For a matrix M over ZZ, returns (Mi, d) such that M * Mi = d * I
+        where I is the identity matrix.
+        """
+        m, n = self.shape
+        if m != n:
+            raise DMNonSquareMatrixError("Matrix must be square")
+
+        # Get adjugate and determinant
+        adj, det = self.adj_det()
+        if det == 0:
+            raise DMNonInvertibleMatrixError("Matrix is not invertible")
+
+        return adj, det
+
+    def adj_det(self):
+        """
+        Returns the adjugate matrix and determinant as a pair.
+
+        The adjugate matrix is the transpose of the cofactor matrix.
+        For a matrix M, if adj is its adjugate matrix and d its determinant,
+        then M * adj = d * I where I is the identity matrix.
+
+        Returns
+        =======
+
+        (adj, det) : A tuple containing:
+            - adj: The adjugate matrix
+            - det: The determinant
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ).to_ddm()
+        >>> adj, det = A.adj_det()
+        >>> A.matmul(adj).rmul(1) == det * A.eye(A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        det
+        """
+        m, n = self.shape
+        if m != n:
+            raise DMNonSquareMatrixError("Matrix must be square")
+
+        if n == 0:
+            return self.zeros((0, 0), self.domain), self.domain.one
+        if n == 1:
+            return self.eye(1, self.domain), self[0][0]
+
+        K = self.domain
+        zero = K.zero
+        one = K.one
+        adj = [[zero]*n for _ in range(n)]
+        M = self.copy()
+        sign = one
+        det = zero
+        for j in range(n):
+            minor = [[M[i][k] for k in range(n) if k != j]
+                    for i in range(1, n)]
+            minor_det = ddm_idet(minor, K)
+            cofactor = sign * minor_det
+            det += M[0][j] * cofactor
+            adj[j][0] = cofactor
+            sign = -sign
+        for i in range(1, n):
+            sign = -one if i % 2 else one
+            for j in range(n):
+                if i == 0:
+                    continue
+                minor = [[M[r][c] for c in range(n) if c != j]
+                        for r in range(n) if r != i]
+                minor_det = ddm_idet(minor, K)
+                cofactor = sign * minor_det
+                adj[j][i] = cofactor
+                sign = -sign
+        return DDM(adj, (n, n), K), det
+
     def lu(a):
         """L, U decomposition of a"""
         m, n = a.shape
@@ -957,6 +1048,87 @@ class DDM(list):
         swaps = ddm_ilu_split(L, U, K)
 
         return L, U, swaps
+
+    def fflu(self):
+        """
+        Compute a fraction-free PLDU decomposition for DDM.
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            P is the permutation matrix.
+            L is the lower triangular matrix.
+            D is the diagonal matrix.
+            U is the upper triangular matrix.
+
+        Raises
+        ======
+
+        DMRankError
+            If the matrix is not full rank.
+
+        See Also
+        ========
+
+        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
+        LUdecomposition_Simple
+        LUsolve
+
+        References
+        ==========
+
+        .. [1] W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
+            for LU and QR factors". Frontiers in Computer Science in China,
+            Vol 2, no. 1, pp. 67-80, 2008.
+        """
+        rows, cols = self.shape
+        K = self.domain
+        P = self.eye(rows, K)
+        L = self.eye(rows, K)
+        D = self.eye(min(rows, cols), K)
+        U = self.copy()
+
+        if rows == 0 or cols == 0:
+            return P, L, D, U
+
+        if rows == 1 and cols == 1:
+            D[0][0] = U[0][0]
+            U[0][0] = K.one
+            return P, L, D, U
+
+        oldpivot = K.one
+
+        for k in range(rows - 1):
+            if U[k][k] == K.zero:
+                for kpivot in range(k + 1, rows):
+                    if U[kpivot][k] != K.zero:
+                        U[k], U[kpivot] = U[kpivot], U[k]
+                        P[k], P[kpivot] = P[kpivot], P[k]
+                        L[k][:k], L[kpivot][:k] = L[kpivot][:k], L[k][:k]
+                        break
+                else:
+                    raise ValueError("Matrix is not full rank")
+
+            Ukk = U[k][k]
+            L[k][k] = Ukk
+            D[k][k] = oldpivot * Ukk
+
+            for i in range(k + 1, rows):
+                Uik = U[i][k]
+                L[i][k] = Uik
+
+                for j in range(k + 1, cols):
+                    U[i][j] = K.exquo(Ukk * U[i][j] - U[k][j] * Uik, oldpivot)
+
+                U[i][k] = K.zero
+
+            oldpivot = Ukk
+
+        if min(rows, cols) > 0:
+            D[min(rows, cols) - 1][min(rows, cols) - 1] = oldpivot
+
+        return P, L, D, U
 
     def qr(self):
         """
@@ -999,6 +1171,35 @@ class DDM(list):
         Q = Q.extract(range(rows), range(min(rows, cols)))
 
         return Q, R
+
+    def qrd(self):
+        """
+        Compute a fraction-free QR decomposition for
+        DDM using fflu decomposition.
+
+        Returns
+        =======
+
+        (Q, R, D)
+            Q is the orthogonal matrix.
+            R is the upper triangular matrix.
+            D is the diagonal matrix.
+
+        Raises
+        ======
+
+        DMRankError
+            If the matrix is not full rank.
+
+        See Also
+        ========
+
+        qr, fflu
+        """
+        P, L, D, U = self.fflu()
+        Q = P.matmul(L)
+        R = U
+        return Q, R, D
 
     def lu_solve(a, b):
         """x where a*x = b"""

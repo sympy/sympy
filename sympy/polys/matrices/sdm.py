@@ -851,6 +851,16 @@ class SDM(dict):
         Csdm = binop_dict(A, B, mul, fzero, fzero)
         return A.new(Csdm, A.shape, A.domain)
 
+    def exquo_elementwise(A, B):
+        if A.domain != B.domain:
+            raise DMDomainError
+        if A.shape != B.shape:
+            raise DMShapeError
+        zero = A.domain.zero
+        fzero = lambda e: zero
+        Csdm = binop_dict(A, B, A.domain.exquo, fzero, fzero)
+        return A.new(Csdm, A.shape, A.domain)
+
     def add(A, B):
         """
 
@@ -1024,6 +1034,12 @@ class SDM(dict):
         """
         return A.to_dfm_or_ddm().inv().to_sdm()
 
+    def inv_den(self):
+        """Returns inverse as numerator/denominator pair."""
+        ddm = self.to_ddm()
+        adj, det = ddm.inv_den()
+        return self.from_ddm(adj), det
+
     def det(A):
         """
         Returns determinant of A
@@ -1078,6 +1094,24 @@ class SDM(dict):
         R = ddm_r.to_sdm()
         return Q, R
 
+    def qrd(self):
+        """
+        Fraction-free QR decomposition for SDM.
+
+        Returns
+        =======
+
+        (Q, R, D)
+            Q is the orthogonal matrix as an SDM.
+            R is the upper triangular matrix as an SDM.
+            D is the diagonal matrix as an SDM.
+        """
+        ddm_q, ddm_r, ddm_d = self.to_ddm().qrd()
+        Q = ddm_q.to_sdm()
+        R = ddm_r.to_sdm()
+        D = ddm_d.to_sdm()
+        return Q, R, D
+
     def lu_solve(A, b):
         """
 
@@ -1095,6 +1129,46 @@ class SDM(dict):
 
         """
         return A.from_ddm(A.to_ddm().lu_solve(b.to_ddm()))
+
+    def fflu(self):
+        """
+        Compute a fraction-free PLDU decomposition for SDM.
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            P is the permutation matrix.
+            L is the lower triangular matrix.
+            D is the diagonal matrix.
+            U is the upper triangular matrix.
+
+        Raises
+        ======
+
+        DMRankError
+            If the matrix is not full rank.
+
+        See Also
+        ========
+
+        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
+        LUdecomposition_Simple
+        LUsolve
+
+        References
+        ==========
+
+        .. [1] W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
+            for LU and QR factors". Frontiers in Computer Science in China,
+            Vol 2, no. 1, pp. 67-80, 2008.
+        """
+        ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
+        P = ddm_p.to_sdm()
+        L = ddm_l.to_sdm()
+        D = ddm_d.to_sdm()
+        U = ddm_u.to_sdm()
+        return P, L, D, U
 
     def nullspace(A):
         """
