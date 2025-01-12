@@ -1034,6 +1034,12 @@ class SDM(dict):
         """
         return A.to_dfm_or_ddm().inv().to_sdm()
 
+    def inv_den(self):
+        """Returns inverse as numerator/denominator pair."""
+        ddm = self.to_ddm()
+        adj, det = ddm.inv_den()
+        return self.from_ddm(adj), det
+
     def det(A):
         """
         Returns determinant of A
@@ -1126,13 +1132,36 @@ class SDM(dict):
 
     def fflu(self):
         """
-        PLDU decomposition for SDM (Sparse Domain Matrix).
+        Compute a fraction-free PLDU decomposition for SDM.
 
-        Returns:
-            - P: Permutation matrix as a SDM.
-            - L: Lower triangular matrix as a SDM.
-            - D: Diagonal matrix as a SDM.
-            - U: Upper triangular matrix as a SDM.
+        Returns
+        =======
+
+        (P, L, D, U)
+            P is the permutation matrix.
+            L is the lower triangular matrix.
+            D is the diagonal matrix.
+            U is the upper triangular matrix.
+
+        Raises
+        ======
+
+        DMRankError
+            If the matrix is not full rank.
+
+        See Also
+        ========
+
+        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
+        LUdecomposition_Simple
+        LUsolve
+
+        References
+        ==========
+
+        .. [1] W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
+            for LU and QR factors". Frontiers in Computer Science in China,
+            Vol 2, no. 1, pp. 67-80, 2008.
         """
         ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
         P = ddm_p.to_sdm()

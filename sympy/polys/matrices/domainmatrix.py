@@ -3422,7 +3422,7 @@ class DomainMatrix:
 
     def fflu(self):
         """
-        Compute the PLDU decomposition of the DomainMatrix.
+        Compute a fraction-free PLDU decomposition.
 
         Returns
         =======
@@ -3438,19 +3438,26 @@ class DomainMatrix:
 
         >>> from sympy import ZZ
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), ZZ)
+        >>> A = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
         >>> P, L, D, U = A.fflu()
         >>> P
-        DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), ZZ)
+        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
         >>> L
-        DomainMatrix([[1, 0, 0], [3, -2, 0], [5, -4, 1]], (3, 3), ZZ)
+        DomainMatrix([[1, 0], [3, 1]], (2, 2), ZZ)
         >>> D
         DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
         >>> U
-        DomainMatrix([[1, 2], [0, -2], [0, 0]], (3, 2), ZZ)
+        DomainMatrix([[1, 2], [0, 1]], (2, 2), ZZ)
+        >>> Di, d = D.inv_den()
+        >>> P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
+        True
+
+        See Also
+        ========
+
+        lu
         """
-        P, L, D, U = self.rep.fflu()
-        return self.from_rep(P), self.from_rep(L), self.from_rep(D), self.from_rep(U)
+        return self.rep.fflu()
 
     def _solve(A, b):
         # XXX: Not sure about this method or its signature. It is just created

@@ -70,7 +70,7 @@ from .exceptions import (
     DMBadInputError,
     DMDomainError,
     DMNonSquareMatrixError,
-    DMShapeError,
+    DMShapeError, DMNonInvertibleMatrixError,
 )
 
 from sympy.polys.domains import QQ
@@ -952,6 +952,93 @@ class DDM(list):
         K = a.domain
         ddm_iinv(ainv, a, K)
         return ainv
+
+    def inv_den(self):
+        """
+        Returns the inverse of a matrix as a numerator/denominator pair.
+
+        For a matrix M over ZZ, returns (Mi, d) such that M * Mi = d * I
+        where I is the identity matrix.
+        """
+        m, n = self.shape
+        if m != n:
+            raise DMNonSquareMatrixError("Matrix must be square")
+
+        # Get adjugate and determinant
+        adj, det = self.adj_det()
+        if det == 0:
+            raise DMNonInvertibleMatrixError("Matrix is not invertible")
+
+        return adj, det
+
+    def adj_det(self):
+        """
+        Returns the adjugate matrix and determinant as a pair.
+
+        The adjugate matrix is the transpose of the cofactor matrix.
+        For a matrix M, if adj is its adjugate matrix and d its determinant,
+        then M * adj = d * I where I is the identity matrix.
+
+        Returns
+        =======
+        (adj, det) : A tuple containing:
+            - adj: The adjugate matrix
+            - det: The determinant
+
+        Examples
+        ========
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> adj, det = A.adj_det()
+        >>> adj
+        DomainMatrix([[4, -2], [-3, 1]], (2, 2), ZZ)
+        >>> det
+        -2
+        >>> A.matmul(adj) == det * A.eye(A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        det : Compute only the determinant
+        """
+        m, n = self.shape
+        if m != n:
+            raise DMNonSquareMatrixError("Matrix must be square")
+
+        if n == 0:
+            return self.zeros((0, 0), self.domain), self.domain.one
+        if n == 1:
+            return self.eye(1, self.domain), self[0][0]
+
+        K = self.domain
+        zero = K.zero
+        one = K.one
+        adj = [[zero]*n for _ in range(n)]
+        M = self.copy()
+        sign = one
+        det = zero
+        for j in range(n):
+            minor = [[M[i][k] for k in range(n) if k != j]
+                    for i in range(1, n)]
+            minor_det = ddm_idet(minor, K)
+            cofactor = sign * minor_det
+            det += M[0][j] * cofactor
+            adj[j][0] = cofactor
+            sign = -sign
+        for i in range(1, n):
+            sign = -one if i % 2 else one
+            for j in range(n):
+                if i == 0:
+                    continue
+                minor = [[M[r][c] for c in range(n) if c != j]
+                        for r in range(n) if r != i]
+                minor_det = ddm_idet(minor, K)
+                cofactor = sign * minor_det
+                adj[j][i] = cofactor
+                sign = -sign
+        return DDM(adj, (n, n), K), det
 
     def lu(a):
         """L, U decomposition of a"""

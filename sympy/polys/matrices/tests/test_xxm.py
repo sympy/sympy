@@ -23,7 +23,7 @@ from sympy.polys.matrices.exceptions import (
     DMDomainError,
     DMNonSquareMatrixError,
     DMNonInvertibleMatrixError,
-    DMShapeError,
+    DMShapeError, DMRankError,
 )
 
 from sympy.polys.matrices.domainmatrix import DM, DomainMatrix, DDM, SDM, DFM
@@ -1007,47 +1007,51 @@ def test_XXM_qr_empty_matrix_0x2(DM):
     assert R.shape == (0, 2)
 
 
-@pytest.mark.parametrize('DM', DMQ_all)
+@pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_square_matrix(DM):
     A = DM([[4, 3], [6, 3]])
     P, L, D, U = A.fflu()
-    assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
+    Di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
 
 
-@pytest.mark.parametrize('DM', DMQ_all)
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_non_square_matrix(DM):
+    A = DM([[1, 2, 3], [4, 5, 6]])
+    P, L, D, U = A.fflu()
+    Di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_sparse_matrix(DM):
     A = DM([[1, 0, 0], [0, 4, 0], [0, 0, 9]])
     P, L, D, U = A.fflu()
-    assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
+    Di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
 
 
-@pytest.mark.parametrize('DM', DMQ_all)
+@pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_with_permutations(DM):
     A = DM([[0, 1], [1, 0]])
     P, L, D, U = A.fflu()
-    assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
+    Di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
 
 
-@pytest.mark.parametrize('DM', DMQ_all)
-def test_xxm_fflu_random_integer_matrix(DM):
-    A = DM([[7, 2], [3, 8]])
-    P, L, D, U = A.fflu()
-    assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMQ_all)
+@pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_identity_matrix(DM):
     T = type(DM([[0]]))
     A = T.eye(3, DM([[0]]).domain)
@@ -1058,7 +1062,7 @@ def test_xxm_fflu_identity_matrix(DM):
     assert U == A
 
 
-@pytest.mark.parametrize('DM', DMQ_all)
+@pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_single_element(DM):
     A = DM([[5]])
     P, L, D, U = A.fflu()
@@ -1069,10 +1073,75 @@ def test_xxm_fflu_single_element(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_qrd_rank_deficient(DM):
-    A = DM([[1, 2], [2, 4], [3, 6]])
+def test_xxm_fflu_zero_matrix(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((3, 3), DM([[0]]).domain)
     with pytest.raises(ValueError, match="Matrix is not full rank"):
-        A.qrd()
+        A.fflu()
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_empty_matrix_with_rows(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((2, 0), DM([[0]]).domain)
+    P, L, D, U = A.fflu()
+    assert P.shape == (2, 2)
+    assert L.shape == (2, 2)
+    assert D.shape == (0, 0)
+    assert U.shape == (2, 0)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_empty_matrix_with_cols(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((0, 2), DM([[0]]).domain)
+    P, L, D, U = A.fflu()
+    assert P.shape == (0, 0)
+    assert L.shape == (0, 0)
+    assert D.shape == (0, 0)
+    assert U.shape == (0, 2)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_qrd_square_matrix(DM):
+    A = DM([[4, 3], [6, 3]])
+    Q, R, D = A.qrd()
+    assert Q.shape == (2, 2)
+    assert R.shape == (2, 2)
+    assert D.shape == (2, 2)
+    assert R.is_upper
+    assert D.is_diagonal
+    assert Q.transpose().matmul(Q).is_diagonal
+    Di, d = D.inv_den()
+    assert Q.matmul(Di.matmul(R)) == A.rmul(d)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_qrd_mixed_signs(DM):
+    lol = [[ZZ(1), ZZ(-2)], [ZZ(-3), ZZ(4)]]
+    A = DM(lol)
+    Q, R, D = A.qrd()
+    assert Q.shape == (2, 2)
+    assert R.shape == (2, 2)
+    assert D.shape == (2, 2)
+    assert R.is_upper
+    assert D.is_diagonal
+    assert Q.transpose().matmul(Q).is_diagonal
+    Di, d = D.inv_den()
+    assert Q.matmul(Di.matmul(R)) == A.rmul(d)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_qrd_identity_matrix(DM):
+    T = type(DM([[0]]))
+    A = T.eye(3, DM([[0]]).domain)
+    Q, R, D = A.qrd()
+    assert Q.shape == (3, 3)
+    assert R.shape == (3, 3)
+    assert D.shape == (3, 3)
+    assert Q == A
+    assert R == A
+    assert D == A
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
@@ -1080,12 +1149,22 @@ def test_xxm_qrd_empty_matrix(DM):
     T = type(DM([[0]]))
     A = T.zeros((0, 0), ZZ)
     Q, R, D = A.qrd()
-    adm = DomainMatrix.from_rep(A)
-    qdm = DomainMatrix.from_rep(Q)
-    rdm = DomainMatrix.from_rep(R)
-    ddm = DomainMatrix.from_rep(D)
-    assert qdm.matmul(rdm).shape == (0, 0)
-    assert adm.matmul(ddm).shape == (0, 0)
     assert Q.shape == (0, 0)
     assert R.shape == (0, 0)
     assert D.shape == (0, 0)
+    assert Q.matmul(R).shape == (0, 0)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_qrd_zero_matrix(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((3, 3), DM([[0]]).domain)
+    with pytest.raises(ValueError, match="Matrix is not full rank"):
+        A.qrd()
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_qrd_rank_deficient(DM):
+    A = DM([[1, 2], [2, 4], [3, 6]])
+    with pytest.raises(ValueError, match="Matrix is not full rank"):
+        A.qrd()
