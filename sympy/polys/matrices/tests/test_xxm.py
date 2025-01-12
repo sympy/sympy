@@ -23,7 +23,7 @@ from sympy.polys.matrices.exceptions import (
     DMDomainError,
     DMNonSquareMatrixError,
     DMNonInvertibleMatrixError,
-    DMShapeError, DMRankError,
+    DMShapeError,
 )
 
 from sympy.polys.matrices.domainmatrix import DM, DomainMatrix, DDM, SDM, DFM

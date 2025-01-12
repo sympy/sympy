@@ -816,12 +816,16 @@ class DFM:
 
     def fflu(self):
         """
-        fflu decomposition for _DFM (Dense Field Matrix).
-        Returns:
-            - P: Permutation matrix as a _DFM.
-            - L: Lower triangular matrix as a _DFM.
-            - D: Diagonal matrix as a _DFM.
-            - U: Upper triangular matrix as a _DFM.
+        Fraction-free PLDU decomposition for DFM.
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            P is the permutation matrix as a DFM.
+            L is the lower triangular matrix as a DFM.
+            D is the diagonal matrix as a DFM.
+            U is the upper triangular matrix as a DFM.
         """
         ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
         P = ddm_p.to_dfm()
