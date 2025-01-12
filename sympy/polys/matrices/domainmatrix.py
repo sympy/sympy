@@ -3440,13 +3440,17 @@ class DomainMatrix:
         >>> from sympy.polys.matrices import DomainMatrix
         >>> A = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
         >>> P, L, D, U = A.fflu()
-        >>> P
+        >>> P = DomainMatrix(P, (2, 2), ZZ)
+        >>> L = DomainMatrix(L, (2, 2), ZZ)
+        >>> D = DomainMatrix(D, (2, 2), ZZ)
+        >>> U = DomainMatrix(U, (2, 2), ZZ)
+        >>> P.rep
         [[1, 0], [0, 1]]
-        >>> L
+        >>> L.rep
         [[1, 0], [3, 1]]
-        >>> D
+        >>> D.rep
         [[1, 0], [0, 1]]
-        >>> U
+        >>> U.rep
         [[1, 2], [0, -2]]
         >>> Di, d = D.inv_den()
         >>> P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
