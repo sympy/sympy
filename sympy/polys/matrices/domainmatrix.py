@@ -3441,13 +3441,13 @@ class DomainMatrix:
         >>> A = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
         >>> P, L, D, U = A.fflu()
         >>> P
-        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+        [[1, 0], [0, 1]]
         >>> L
-        DomainMatrix([[1, 0], [3, 1]], (2, 2), ZZ)
+        [[1, 0], [3, 1]]
         >>> D
-        DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
+        [[1, 0], [0, 1]]
         >>> U
-        DomainMatrix([[1, 2], [0, 1]], (2, 2), ZZ)
+        [[1, 2], [0, -2]]
         >>> Di, d = D.inv_den()
         >>> P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
         True

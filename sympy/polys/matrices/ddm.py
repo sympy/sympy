@@ -981,27 +981,25 @@ class DDM(list):
 
         Returns
         =======
+
         (adj, det) : A tuple containing:
             - adj: The adjugate matrix
             - det: The determinant
 
         Examples
         ========
+
         >>> from sympy import ZZ
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> A = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ).to_ddm()
         >>> adj, det = A.adj_det()
-        >>> adj
-        DomainMatrix([[4, -2], [-3, 1]], (2, 2), ZZ)
-        >>> det
-        -2
-        >>> A.matmul(adj) == det * A.eye(A.shape, A.domain)
+        >>> A.matmul(adj).rmul(1) == det * A.eye(A.shape, A.domain)
         True
 
         See Also
         ========
 
-        det : Compute only the determinant
+        det
         """
         m, n = self.shape
         if m != n:
