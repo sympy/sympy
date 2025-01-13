@@ -189,11 +189,7 @@ with
 
     @property
     def _measure(self):
-        # Assumption: a `ConditionSet` is a subset of its base set
-        if self.base_set._measure == 0:
-            return 0
-        raise NotImplementedError("Measure for `ConditionSet` is undetermined")
-
+        raise NotImplementedError("Measure for unevaluated `ConditionSet` is undetermined")
 
     def _contains(self, other):
         def ok_sig(a, b):

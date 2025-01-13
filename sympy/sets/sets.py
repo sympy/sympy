@@ -1579,10 +1579,7 @@ class Intersection(Set, LatticeOp):
 
     @property
     def _measure(self):
-        simplified = simplify_intersection(self.args)
-        if isinstance(simplified, Intersection):
-            raise NotImplementedError("Measure for unevaluable `Intersection` is undefined")
-        return simplified._measure
+        raise NotImplementedError("Measure for unevaluated `Intersection` is undefined")
 
     def _contains(self, other):
         return And(*[set.contains(other) for set in self.args])
@@ -1816,10 +1813,7 @@ class Complement(Set):
 
     @property
     def _measure(self):
-        reduced = Complement.reduce(*self.args)
-        if isinstance(reduced, Complement):
-            NotImplementedError("Measure for unevaluable `Complement` is undefined")
-        return reduced._measure
+        NotImplementedError("Measure for unevaluated `Complement` is undefined")
 
     def __iter__(self):
         A, B = self.args
@@ -1873,7 +1867,7 @@ class EmptySet(Set, metaclass=Singleton):
 
     @property
     def _measure(self):
-        return 0
+        return S.Zero
 
     def _contains(self, other):
         return false
@@ -2118,7 +2112,7 @@ class FiniteSet(Set):
 
     @property
     def _measure(self):
-        return 0
+        return S.Zero
 
     def _kind(self):
         if not self.args:
@@ -2258,10 +2252,7 @@ class SymmetricDifference(Set):
 
     @property
     def _measure(self):
-        reduced = SymmetricDifference.reduce(*self.args)
-        if isinstance(reduced, SymmetricDifference):
-            raise NotImplementedError("Measure for unevaluable `SymmetricDifference` is undefined")
-        return reduced._measure
+        raise NotImplementedError("Measure for unevaluated `SymmetricDifference` is undefined")
 
     def __iter__(self):
 

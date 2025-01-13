@@ -731,11 +731,11 @@ def test_measure():
     assert (square + band).measure is oo
     assert (band * FiniteSet(1, 2, 3)).measure is nan
 
-    assert Intersection(Interval(0, 1.), Interval(.5, 2), evaluate=False).measure == .5
-    assert SymmetricDifference(FiniteSet(3., 5), Interval(0., 10), evaluate=False).measure == 10.
-    assert Complement(Interval(-1, 1), Interval(.5, oo), evaluate=False).measure == 1.5
-    assert Complement(Interval(-2, 3), S.Reals, evaluate=False).measure == 0
-    assert Complement(S.Reals, Interval(-2, 3), evaluate=False).measure == oo
+    assert Intersection(Interval(0, 1.), Interval(.5, 2)).measure == .5
+    assert SymmetricDifference(FiniteSet(3., 5), Interval(0., 10)).measure == 10.
+    assert Complement(Interval(-1, 1), Interval(.5, oo)).measure == 1.5
+    assert Complement(Interval(-2, 3), S.Reals).measure == 0
+    assert Complement(S.Reals, Interval(-2, 3)).measure == oo
 
 def test_is_subset():
     assert Interval(0, 1).is_subset(Interval(0, 2)) is True
