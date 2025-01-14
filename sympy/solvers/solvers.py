@@ -959,6 +959,8 @@ def solve(f, *symbols, **flags):
 
         # rewrite hyperbolics in terms of exp if they have symbols of
         # interest
+
+        # when w = sinh(x), w.has_free(*(Derivative(y(x), x))) is false
         f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction) and \
             w.has_free(*symbols), lambda w: w.rewrite(exp))
 
