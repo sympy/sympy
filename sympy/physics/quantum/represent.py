@@ -6,12 +6,14 @@ TODO:
 * Document default basis functionality.
 """
 
+from sympy import log
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.numbers import I
 from sympy.core.power import Pow
 from sympy.integrals.integrals import integrate
+from sympy.matrices.dense import MutableDenseMatrix
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -219,6 +221,9 @@ def represent(expr, **options):
     result = represent(expr.args[-1], **options)
     last_arg = expr.args[-1]
 
+    # add nqubits so gates get it and represent works correctly
+    if isinstance(result, MutableDenseMatrix):
+        options["nqubits"] = log(result.rows, 2)
     for arg in reversed(expr.args[:-1]):
         if isinstance(last_arg, Operator):
             options["index"] += 1
