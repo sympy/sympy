@@ -557,7 +557,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
 
     def _print_Not(self, expr):
         PREC = precedence(expr)
-        return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
+        return self._operators['not'] + ' ' + self.parenthesize(expr.args[0], PREC)
 
     def _print_IndexedBase(self, expr):
         return expr.name
