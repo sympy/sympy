@@ -69,15 +69,19 @@ def _(expr, assumptions):
 def _(expr, assumptions):
 #     """
 #     * Integer ** Integer       -> Integer
-#     * Integer ** !Integer      -> !Integer
+#     * Integer ** !Integer      -> ?
 #     * !Integer ** !Integer -> ?
 #     * Integer ** -Integer  -> !Integer
 #     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
-    if ask(Q.integer(expr.args[0]), assumptions) and ask(Q.integer(expr.args[1]), assumptions) and expr.args[1].is_negative:
-        return False
-    return test_closed_group(expr, assumptions, Q.integer)
+    if ask(Q.integer(expr.args[0]), assumptions) and ask(Q.integer(expr.args[1]), assumptions):
+        if expr.args[1].is_negative:
+            return False
+        else:
+            return True
+    else:
+        return None
 
 @IntegerPredicate.register(Mul)
 def _(expr, assumptions):
