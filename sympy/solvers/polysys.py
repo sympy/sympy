@@ -858,25 +858,31 @@ def groebner_basis_zz(polys: list[Poly], gens: Tuple) -> list[Poly]:
 
 def groebner_basis_qq(polys: list[Poly], gens: Tuple) -> list[Poly]:
 
-    polys_zz = [p.clear_denoms()[1] for p in polys]
+    cleared = [p.clear_denoms() for p in polys]
+    polys_zz = [p[1] for p in cleared]
     basis = groebner_basis_zz(polys_zz, gens)
     return [p.set_domain(QQ) for p in basis]
 
 
 def groebner_basis_complex(polys: list[Poly], gens: Tuple) -> list[Poly]:
+
+    domain = polys[0].domain
     i = Symbol('i')
     new_gens = gens + (i,)
+
+    # Convert to ZZ[i] first
+    if domain.is_QQ_I:
+        cleared = [p.clear_denoms() for p in polys]
+        polys = [p[1] for p in cleared]
 
     new_polys = [Poly(p.as_expr().subs(S.ImaginaryUnit, i), *new_gens, domain=ZZ) for p in polys]
     new_polys.append(Poly(i ** 2 + 1, *new_gens, domain=ZZ))
 
+    basis = groebner([p.as_expr() for p in new_polys], new_gens)
 
-    exprs = [p.as_expr() for p in new_polys]
-    basis = groebner(exprs, new_gens)
-
-    return [Poly(b.subs(i, S.ImaginaryUnit), *gens, domain=polys[0].domain)
+    # Filter i-free polynomials and convert back
+    return [Poly(b.subs(i, S.ImaginaryUnit), *gens, domain=domain)
             for b in basis if i not in b.free_symbols]
-
 
 def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly], list[Poly]]:
 
@@ -884,11 +890,16 @@ def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly],
     base_domain = domain.domain
     params = domain.symbols
 
+    # Handle QQ base domain
+    if base_domain.is_QQ:
+        cleared = [p.clear_denoms() for p in polys]
+        polys = [p[1] for p in cleared]
+        base_domain = ZZ
+
     injected_polys = [p.inject() for p in polys]
     new_gens = gens + tuple(params)
 
-    exprs = [p.as_expr() for p in injected_polys]
-    basis = groebner(exprs, new_gens)
+    basis = groebner([p.as_expr() for p in injected_polys], new_gens)
 
     param_eqs = []
     var_basis = []
@@ -906,21 +917,20 @@ def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly],
 def groebner_basis_algebraic(polys: list[Poly], gens: Tuple) -> list[Poly]:
 
     K = polys[0].domain
+    base_domain = K.domain
+
+    if base_domain.is_QQ:
+        polys = [p.clear_denoms()[1] for p in polys]
+
     alpha = Dummy('alpha')
     new_gens = gens + (alpha,)
+    min_poly = Poly(K.mod.to_list(), alpha, domain=base_domain)
 
-    min_poly = Poly(K.mod.to_list(), alpha, domain=K)
-
-    new_polys = []
-    for p in polys:
-        expr = p.as_expr()
-        new_expr = expr.subs(K.ext, alpha)
-        new_polys.append(Poly(new_expr, *new_gens, domain=K))
-
+    new_polys = [Poly(p.as_expr().subs(K.ext, alpha), *new_gens, domain=base_domain)
+                 for p in polys]
     new_polys.append(min_poly)
 
-    exprs = [p.as_expr() for p in new_polys]
-    basis = groebner(exprs, new_gens)
+    basis = groebner([p.as_expr() for p in new_polys], new_gens)
 
     return [Poly(b.subs(alpha, K.ext), *gens, domain=K)
             for b in basis if alpha not in b.free_symbols]
