@@ -65,6 +65,15 @@ def test_evaluate_pauli_product_ordering():
 
     assert evaluate_pauli_product(a1 * b3 * a1) == b3
 
+def test_evaluate_pauli_product_empty():
+    from sympy.physics.paulialgebra import evaluate_pauli_product
+
+    assert evaluate_pauli_product(1) == 1
+    a1 = Pauli(1, label = "a")
+    assert evaluate_pauli_product(a1) == a1
+    labelmissing = Pauli(1)
+    assert evaluate_pauli_product(labelmissing) == labelmissing
+
 @XFAIL
 def test_Pauli_should_work():
     assert sigma1*sigma3*sigma1 == -sigma3

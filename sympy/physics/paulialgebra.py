@@ -10,6 +10,7 @@ References
 .. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 """
 
+from collections import defaultdict
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.numbers import I
@@ -204,41 +205,28 @@ def evaluate_pauli_product(arg):
         start = end
 
         tmp = start.as_coeff_mul()
-        sigma_products_by_label = {}
+        sigma_products_by_label = defaultdict(lambda: 1)
         com_product = 1
         keeper = 1
 
-        def add_sigma_product(p):
-            if (sigma_products_by_label.get(p.label)):
-                sigma_products_by_label[p.label] *= p
-            else:
-                sigma_products_by_label[p.label] = p
-
-        def flatten_sigma_product():
-            sigma_product = 1
-            for label in sorted(sigma_products_by_label):
-                sigma_product *= sigma_products_by_label[label]
-
-            sigma_products_by_label.clear()
-
-            return sigma_product
-
         for el in tmp[1]:
             if isinstance(el, Pauli):
-                add_sigma_product(el)
+                sigma_products_by_label[el.label] *= el
             elif not el.is_commutative:
                 if isinstance(el, Pow) and isinstance(el.args[0], Pauli):
                     if el.args[1].is_odd:
-                        add_sigma_product(el.args[0])
+                        sigma_products_by_label[el.args[0].label] *= el.args[0]
                 elif isinstance(el, TensorProduct):
-                    keeper = keeper*flatten_sigma_product()*\
+                    keeper = keeper*Mul(*(sigma_products_by_label[label] for label in sorted(sigma_products_by_label)))*\
                         TensorProduct(
                             *[evaluate_pauli_product(part) for part in el.args]
                         )
+                    sigma_products_by_label.clear()
                 else:
-                    keeper = keeper*flatten_sigma_product()*el
+                    keeper = keeper*Mul(*(sigma_products_by_label[label] for label in sorted(sigma_products_by_label)))*el
+                    sigma_products_by_label.clear()
             else:
                 com_product *= el
-        end = tmp[0]*keeper*flatten_sigma_product()*com_product
+        end = tmp[0]*keeper*Mul(*(sigma_products_by_label[label] for label in sorted(sigma_products_by_label)))*com_product
         if end == arg: break
     return end
