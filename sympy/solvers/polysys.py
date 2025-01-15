@@ -915,20 +915,21 @@ def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly],
 
 
 def groebner_basis_algebraic(polys: list[Poly], gens: Tuple) -> list[Poly]:
-
     K = polys[0].domain
-    base_domain = K.domain
 
-    if base_domain.is_QQ:
-        polys = [p.clear_denoms()[1] for p in polys]
+    cleared_polys = []
+    for p in polys:
+        p_cleared, _ = p.clear_denoms()
+        cleared_polys.append(p_cleared)
 
     alpha = Dummy('alpha')
     new_gens = gens + (alpha,)
-    min_poly = Poly(K.mod.to_list(), alpha, domain=base_domain)
 
-    new_polys = [Poly(p.as_expr().subs(K.ext, alpha), *new_gens, domain=base_domain)
-                 for p in polys]
-    new_polys.append(min_poly)
+    min_poly = Poly(K.mod.to_list(), alpha)
+    min_poly_cleared, _ = min_poly.clear_denoms()
+
+    new_polys = [Poly(p.as_expr().subs(K.ext, alpha), *new_gens) for p in cleared_polys]
+    new_polys.append(min_poly_cleared)
 
     basis = groebner([p.as_expr() for p in new_polys], new_gens)
 
