@@ -53,7 +53,7 @@ class Determinant(Expr):
         return self
 
 
-def det(matexpr):
+def det(matexpr) -> Expr:
     """ Matrix Determinant
 
     Examples

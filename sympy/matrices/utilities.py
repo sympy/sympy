@@ -1,6 +1,9 @@
+from typing import Callable
+
 from contextlib import contextmanager
 from threading import local
 
+from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
 
 
@@ -28,7 +31,7 @@ def _dotprodsimp(expr, withsimp=False):
 
 
 def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
-        onfunc=_dotprodsimp, dotprodsimp=None):
+                           onfunc=_dotprodsimp, dotprodsimp=None) -> Callable[[Expr], Expr]:
     """Support function for controlling intermediate simplification. Returns a
     simplification function according to the global setting of dotprodsimp
     operation.
