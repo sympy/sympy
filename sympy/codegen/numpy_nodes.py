@@ -2,8 +2,10 @@ from sympy.core.function import Add, ArgumentIndexError, Function
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min
+from .ast import Token, none
 
 
 def _logaddexp(x1, x2, *, evaluate=True):
@@ -111,7 +113,7 @@ class logaddexp2(Function):
             return logaddexp2(a, b)
 
 
-class amin(Function):
+class amin(Token):
     """ Minimum value along an axis.
 
     Helper class for use with e.g. numpy.amin
@@ -122,10 +124,12 @@ class amin(Function):
 
     https://numpy.org/doc/stable/reference/generated/numpy.amin.html
     """
-    nargs = 1
+    __slots__ = _fields = ('array', 'axis')
+    defaults = {'axis': none}
+    _construct_axis = staticmethod(sympify)
 
 
-class amax(Function):
+class amax(Token):
     """ Maximum value along an axis.
 
     Helper class for use with e.g. numpy.amax
@@ -136,7 +140,9 @@ class amax(Function):
 
     https://numpy.org/doc/stable/reference/generated/numpy.amax.html
     """
-    nargs = 1
+    __slots__ = _fields = ('array', 'axis')
+    defaults = {'axis': none}
+    _construct_axis = staticmethod(sympify)
 
 
 class maximum(Function):
