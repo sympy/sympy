@@ -1071,6 +1071,7 @@ def test_Min_Max():
     assert lambdify((x, y, z), Min(x, y, z))(1, 2, 3) == 1
     assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3
 
+
 def test_amin_amax_minimum_maximum():
     if not numpy:
         skip("numpy not installed")
@@ -1106,6 +1107,11 @@ def test_amin_amax_minimum_maximum():
     min_, max_ = lambdify((x,), [amin(x, axis=0), amax(x, axis=1)])(A)
     assert numpy.all(min_ == numpy.amin(A, axis=0))
     assert numpy.all(max_ == numpy.amax(A, axis=1))
+
+    # see gh-25659
+    assert numpy.all(lambdify((x, y), Max(x, y))([1, 2, 3], [3, 2, 1]) == [3, 2, 3])
+    assert numpy.all(lambdify((x), Min(2, x))([1, 2, 3]) == [1, 2, 2])
+
 
 
 def test_Indexed():
