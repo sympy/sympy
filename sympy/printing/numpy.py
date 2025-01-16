@@ -227,7 +227,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         return f"{_reduce}({op}, [{', '.join(s_args)}])"
 
     def _print_Min(self, expr):
-        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amin'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
+        return self._print_minimum(expr)
 
     def _print_amin(self, expr):
         return '{}({}, axis={})'.format(self._module_format(self._module + '.amin'), self._print(expr.array), self._print(expr.axis))
@@ -237,7 +237,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         return self._helper_minimum_maximum(op, *expr.args)
 
     def _print_Max(self, expr):
-        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amax'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
+        return self._print_maximum(expr)
 
     def _print_amax(self, expr):
         return '{}({}, axis={})'.format(self._module_format(self._module + '.amax'), self._print(expr.array), self._print(expr.axis))
