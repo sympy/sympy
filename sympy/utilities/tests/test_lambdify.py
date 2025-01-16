@@ -41,7 +41,7 @@ from sympy.utilities.iterables import numbered_symbols
 from sympy.vector import CoordSys3D
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot, isnan, isinf
-from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2, amin, amax, minimum, maximum
 from sympy.codegen.scipy_nodes import cosm1, powm1
 from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
@@ -1070,6 +1070,20 @@ def test_Min_Max():
     # see gh-10375
     assert lambdify((x, y, z), Min(x, y, z))(1, 2, 3) == 1
     assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3
+
+def test_amin_amax_minimum_maximum():
+    if not numpy:
+        skip("numpy not installed")
+
+    a234 = numpy.array([2, 3, 4])
+    a152 = numpy.array([1, 5, 2])
+
+    a254 = numpy.array([2, 5, 4])
+    a132 = numpy.array([1, 3, 2])
+    assert numpy.all(lambdify((x, y), maximum(x, y))(a234, a152) == a254)
+    assert numpy.all(lambdify((x, y), minimum(x, y))(a234, a152) == a132)
+
+    assert lambdify((x, y), [amin(x), amax(y)])(a234, a152) == [2, 5]
 
 
 def test_Indexed():
