@@ -4,6 +4,8 @@ from sympy.core.containers import Tuple
 from sympy.functions.elementary.integers import floor
 
 def normalize(i, parentsize):
+    if i is ...:
+      return (0, parentsize, 1)
     if isinstance(i, slice):
         i = (i.start, i.stop, i.step)
     if not isinstance(i, (tuple, list, Tuple)):
@@ -97,7 +99,6 @@ def slice_of_slice(s, t):
         raise IndexError()
 
     return start, stop, step
-
 
 def mat_slice_of_slice(parent, rowslice, colslice):
     """ Collapse nested matrix slices
