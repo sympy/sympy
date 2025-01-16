@@ -494,6 +494,10 @@ def test_minmax_no_evaluate():
     assert Max(0, p, evaluate=False).args == (0, p)
     assert Min(0, p, evaluate=False) != 0
     assert Min(0, p, evaluate=False).args == (0, p)
+    assert Min(p, evaluate=False).func == Min
+    assert Min(p, evaluate=False).args == (p,)
+    assert Max(p, evaluate=False).func == Max
+    assert Max(p, evaluate=False).args == (p,)
 
     with evaluate(False):
         assert Max(1, 3) != 3
@@ -502,3 +506,7 @@ def test_minmax_no_evaluate():
         assert Max(0, p).args == (0, p)
         assert Min(0, p) != 0
         assert Min(0, p).args == (0, p)
+        assert Min(p).func == Min
+        assert Min(p).args == (p,)
+        assert Max(p).func == Max
+        assert Max(p).args == (p,)

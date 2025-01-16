@@ -399,7 +399,7 @@ class MinMaxBase(Expr, LatticeOp):
         if not args:
             return cls.identity
 
-        if len(args) == 1:
+        if len(args) == 1 and evaluate:
             return list(args).pop()
 
         # base creation
