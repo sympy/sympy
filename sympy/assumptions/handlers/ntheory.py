@@ -106,8 +106,11 @@ def _(expr, assumptions):
                 return
             # Positive integer which is not prime is not
             # necessarily composite
-            if expr.equals(1):
+            _is_one = ask(Q.eq(expr, 1), assumptions)
+            if _is_one:
                 return False
+            if _is_one is None:
+                return None
             return not _prime
         else:
             return _integer
