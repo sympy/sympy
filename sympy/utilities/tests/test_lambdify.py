@@ -1,4 +1,5 @@
 from itertools import product
+import functools
 import math
 import inspect
 import linecache
