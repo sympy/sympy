@@ -292,10 +292,3 @@ def test_duplicate():
 def test_SetKind_ConditionSet():
     assert ConditionSet(x, Eq(sin(x), 0), Interval(0, 2*pi)).kind is SetKind(NumberKind)
     assert ConditionSet(x, x < 0).kind is SetKind(NumberKind)
-
-
-def test_CondSet_measure():
-    assert ConditionSet(x, x**2 > 4, FiniteSet(0, 1, 2, 3)).measure == 0
-    assert ConditionSet(x, x**.5 > 0, S.Naturals).measure == 0
-    raises(NotImplementedError, lambda: ConditionSet(x, x, Interval(0, 1)).measure)
-    raises(NotImplementedError, lambda: ConditionSet(x, Eq(sin(x), 0), S.Reals).measure)

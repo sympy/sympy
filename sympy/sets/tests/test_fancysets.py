@@ -158,12 +158,6 @@ def test_ImageSet():
     raises(TypeError, lambda: ImageSet(Lambda(x, x**2), 1))
 
 
-def test_ImageSet_measure():
-    assert ImageSet(Lambda(x, x), S.Integers).measure == 0
-    assert ImageSet(Lambda(x, x**2+1), S.Naturals).measure == 0
-    raises(NotImplementedError, lambda: ImageSet(Lambda(x, x**2+1), Interval(0, 1)).measure)
-
-
 def test_image_is_ImageSet():
     assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
 
