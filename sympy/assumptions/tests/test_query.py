@@ -2420,4 +2420,4 @@ def test_issue_27485():
     n = Symbol('n', negative=True)
     p = Symbol('p', positive=True)
     exp = n**p
-    assert ask(Q.real(exp)) is None 
+    assert ask(Q.real(exp)) is None
