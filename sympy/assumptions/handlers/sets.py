@@ -324,7 +324,7 @@ def _(expr, assumptions):
                     return False
                 else:
                     return None
-                    
+
 
 @RealPredicate.register_many(cos, sin)
 def _(expr, assumptions):
