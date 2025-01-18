@@ -1034,12 +1034,6 @@ class SDM(dict):
         """
         return A.to_dfm_or_ddm().inv().to_sdm()
 
-    def inv_den(self):
-        """Returns inverse as numerator/denominator pair."""
-        ddm = self.to_ddm()
-        adj, det = ddm.inv_den()
-        return self.from_ddm(adj), det
-
     def det(A):
         """
         Returns determinant of A

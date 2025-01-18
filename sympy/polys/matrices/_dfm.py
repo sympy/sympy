@@ -694,12 +694,6 @@ class DFM:
             # what happens here.
             raise NotImplementedError("DFM.inv() is not implemented for %s" % K)
 
-    def inv_den(self):
-        """Returns inverse as numerator/denominator pair."""
-        ddm = self.to_ddm()
-        adj, det = ddm.inv_den()
-        return self.from_ddm(adj), det
-
     def lu(self):
         """Return the LU decomposition of the matrix."""
         L, U, swaps = self.to_ddm().lu()

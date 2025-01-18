@@ -830,17 +830,12 @@ def GramSchmidt(vlist, orthonormal=False):
     .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
     from sympy.polys.matrices import DomainMatrix
-    try:
-        A = DomainMatrix.hstack(*[DomainMatrix.from_Matrix(v) for v in vlist])
-        Q, _ = A.qr()
-        orthogonal_vectors = [Q.cols(i).to_Matrix() for i in range(Q.shape[1])]
-        if orthonormal:
-            orthogonal_vectors = [v / v.norm() for v in orthogonal_vectors]
-        return orthogonal_vectors
-    except Exception:
-        return MutableDenseMatrix.orthogonalize(
-            *vlist, normalize=orthonormal, rankcheck=True
-        )
+    A = DomainMatrix.hstack(*[DomainMatrix.from_Matrix(v).to_DM() for v in vlist])
+    Q, _ = A.qr()
+    orthogonal_vectors = [Q.cols(i).to_Matrix() for i in range(Q.shape[1])]
+    if orthonormal:
+        orthogonal_vectors = [v / v.norm() for v in orthogonal_vectors]
+    return orthogonal_vectors
 
 
 def hessian(f, varlist, constraints=()):

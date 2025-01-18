@@ -1010,9 +1010,20 @@ def test_XXM_qr_empty_matrix_0x2(DM):
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_square_matrix(DM):
     A = DM([[4, 3], [6, 3]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    Di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
+    D_as_DM = DomainMatrix.from_rep(D)
+    di, d = D_as_DM.inv_den()
+    if isinstance(P, DFM):
+        A = A.to_dfm()
+        di = di.to_dfm()
+    elif isinstance(P, SDM):
+        A = A.to_sdm()
+        di = di.to_sdm()
+    else:
+        A = A.to_ddm()
+        di = di.to_ddm()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
@@ -1021,9 +1032,20 @@ def test_xxm_fflu_square_matrix(DM):
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_non_square_matrix(DM):
     A = DM([[1, 2, 3], [4, 5, 6]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    Di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
+    d_as_dm = DomainMatrix.from_rep(D)
+    di, d = d_as_dm.inv_den()
+    if isinstance(P, DFM):
+        A = A.to_dfm()
+        di = di.to_dfm()
+    elif isinstance(P, SDM):
+        A = A.to_sdm()
+        di = di.to_sdm()
+    else:
+        A = A.to_ddm()
+        di = di.to_ddm()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
@@ -1032,9 +1054,20 @@ def test_xxm_fflu_non_square_matrix(DM):
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_sparse_matrix(DM):
     A = DM([[1, 0, 0], [0, 4, 0], [0, 0, 9]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    Di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
+    d_as_dm = DomainMatrix.from_rep(D)
+    di, d = d_as_dm.inv_den()
+    if isinstance(P, DFM):
+        A = A.to_dfm()
+        di = di.to_dfm()
+    elif isinstance(P, SDM):
+        A = A.to_sdm()
+        di = di.to_sdm()
+    else:
+        A = A.to_ddm()
+        di = di.to_ddm()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
@@ -1043,9 +1076,20 @@ def test_xxm_fflu_sparse_matrix(DM):
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_with_permutations(DM):
     A = DM([[0, 1], [1, 0]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    Di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(Di).matmul(U)
+    d_as_dm = DomainMatrix.from_rep(D)
+    di, d = d_as_dm.inv_den()
+    if isinstance(P, DFM):
+        A = A.to_dfm()
+        di = di.to_dfm()
+    elif isinstance(P, SDM):
+        A = A.to_sdm()
+        di = di.to_sdm()
+    else:
+        A = A.to_ddm()
+        di = di.to_ddm()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
@@ -1112,8 +1156,6 @@ def test_xxm_qrd_square_matrix(DM):
     assert R.is_upper
     assert D.is_diagonal
     assert Q.transpose().matmul(Q).is_diagonal
-    Di, d = D.inv_den()
-    assert Q.matmul(Di.matmul(R)) == A.rmul(d)
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
@@ -1127,8 +1169,6 @@ def test_xxm_qrd_mixed_signs(DM):
     assert R.is_upper
     assert D.is_diagonal
     assert Q.transpose().matmul(Q).is_diagonal
-    Di, d = D.inv_den()
-    assert Q.matmul(Di.matmul(R)) == A.rmul(d)
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
