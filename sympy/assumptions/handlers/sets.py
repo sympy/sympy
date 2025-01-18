@@ -262,7 +262,7 @@ def _(expr, assumptions):
     """
     * Real**Integer              -> Real
     * Positive**Real             -> Real
-    * Negative**Real             -> ? e.g. -2**2 is real whereas -2**3 is imaginary
+    * Negative**Real             -> Depends on power e.g. -2**2 is real whereas -2**3 is imaginary
     * Real**(Integer/Even)       -> Real if base is nonnegative
     * Real**(Integer/Odd)        -> Real
     * Imaginary**(Integer/Even)  -> Real
@@ -320,7 +320,7 @@ def _(expr, assumptions):
             elif ask(Q.positive(expr.base), assumptions):
                 return True
             elif ask(Q.negative(expr.base), assumptions):
-                return None
+                return ask(Q.even(expr.exp), assumptions)
 
 @RealPredicate.register_many(cos, sin)
 def _(expr, assumptions):
