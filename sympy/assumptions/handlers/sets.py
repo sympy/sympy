@@ -76,7 +76,9 @@ def _(expr, assumptions):
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
     if ask(Q.integer(expr.base), assumptions) and ask(Q.integer(expr.exp), assumptions):
-        return ask(Q.positive(expr.exp), assumptions)
+        if expr.base == -1 or expr.base == 1: # can't become a fraction if the base is 1
+            return True
+        return ask(~Q.negative(expr.exp), assumptions) # for the pow to be integer -> expr.exp >= 0
     else:
         return None
 
