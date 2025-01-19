@@ -1907,7 +1907,7 @@ def test_real_pow():
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.odd(y)) is False
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.even(y)) is True
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.rational(y/z) & Q.even(z) & Q.positive(x)) is True
-    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is False
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is None
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.integer(y/z)) is True
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.positive(x)) is True
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.negative(x)) is None
