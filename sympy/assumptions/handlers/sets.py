@@ -319,7 +319,7 @@ def _(expr, assumptions):
                 return True
             elif ask(Q.positive(expr.base), assumptions):
                 return True
-            elif ask(Q.negative(expr.base), assumptions):
+            else:
                 return None
 
 
