@@ -950,9 +950,8 @@ def _lower_poly(poly: Poly, orig_domain, gen_index: int) -> Poly:
 
 
 def groebner_basis_zz(polys: list[Poly], gens: Tuple) -> list[Poly]:
-    exprs = [p.as_expr() for p in polys]
-    basis = groebner(exprs, gens)
-    return [Poly(b, *gens, domain=ZZ) for b in basis]
+    basis = groebner(polys, gens)
+    return [Poly(b, *gens, domain=ZZ) if not isinstance(b, Poly) else b for b in basis]
 
 
 def groebner_basis_qq(polys: list[Poly], gens: Tuple) -> list[Poly]:
@@ -973,13 +972,14 @@ def groebner_basis_complex(polys: list[Poly], gens: Tuple) -> list[Poly]:
     min_poly = Poly(i ** 2 + 1, *new_gens, domain=ZZ)
     lifted_polys.append(min_poly)
 
-    basis = groebner([p.as_expr() for p in lifted_polys], new_gens)
+    basis = groebner(lifted_polys, new_gens)
 
     result = []
     for b in basis:
-        poly = Poly(b, *new_gens, domain=ZZ)
-        if i not in poly.free_symbols:
-            result.append(_lower_poly(poly, domain, len(gens)))
+        if not isinstance(b, Poly):
+            b = Poly(b, *new_gens, domain=ZZ)
+        if b.degree(i) < 2:
+            result.append(_lower_poly(b, domain, len(gens)))
 
     return result
 
@@ -995,13 +995,14 @@ def groebner_basis_algebraic(polys: list[Poly], gens: Tuple) -> list[Poly]:
     min_poly = Poly(K.mod.to_list(), alpha).clear_denoms()[1]
     lifted_polys.append(min_poly)
 
-    basis = groebner([p.as_expr() for p in lifted_polys], new_gens)
+    basis = groebner(lifted_polys, new_gens)
 
     result = []
     for b in basis:
-        poly = Poly(b, *new_gens, domain=ZZ)
-        if alpha not in poly.free_symbols:
-            result.append(_lower_poly(poly, K, len(gens)))
+        if not isinstance(b, Poly):
+            b = Poly(b, *new_gens, domain=ZZ)
+        if alpha not in b.free_symbols:
+            result.append(_lower_poly(b, K, len(gens)))
 
     return result
 
@@ -1011,7 +1012,6 @@ def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly],
     base_domain = domain.domain
     params = domain.symbols
 
-    # Handle QQ base domain
     if base_domain.is_QQ:
         polys = [p.clear_denoms()[1] for p in polys]
         base_domain = ZZ
@@ -1019,20 +1019,19 @@ def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly],
     injected_polys = [p.inject() for p in polys]
     new_gens = gens + tuple(params)
 
-    basis = groebner([p.as_expr() for p in injected_polys], new_gens)
+    basis = groebner(injected_polys, new_gens)
 
     param_eqs = []
     var_basis = []
 
     for b in basis:
-        poly = Poly(b, *new_gens, domain=base_domain)
-        if all(g not in poly.free_symbols for g in gens):
-            param_eqs.append(poly)
+        if not isinstance(b, Poly):
+            b = Poly(b, *new_gens, domain=base_domain)
+        if all(g not in b.free_symbols for g in gens):
+            param_eqs.append(b)
         else:
-            # Convert back to original domain
-            var_basis.append(poly.eject(*params).set_domain(domain))
+            var_basis.append(b.eject(*params).set_domain(domain))
 
-    # Convert param_eqs to original domain too
     param_eqs = [p.eject(*params).set_domain(domain) for p in param_eqs]
 
     return var_basis, param_eqs
@@ -1057,25 +1056,23 @@ def groebner_basis_fracfield(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly]
         if denom != 1:
             new_polys.append(Poly(d - denom, *new_gens, domain=domain))
 
-    basis = groebner([p.as_expr() for p in new_polys], new_gens)
+    basis = groebner(new_polys, new_gens)
 
     var_basis = []
     equalities = []
 
     for b in basis:
-        poly = Poly(b, *new_gens)
-        if d not in poly.free_symbols:
-            if all(g not in poly.free_symbols for g in gens):
-                # Convert equations back to original domain
-                equalities.append(Poly(poly.as_expr(), *gens, domain=domain))
+        if not isinstance(b, Poly):
+            b = Poly(b, *new_gens)
+        if d not in b.free_symbols:
+            if all(g not in b.free_symbols for g in gens):
+                equalities.append(Poly(b, *gens, domain=domain))
             else:
-                # Convert basis elements back to original domain
-                var_basis.append(Poly(poly.as_expr(), *gens, domain=domain))
+                var_basis.append(Poly(b, *gens, domain=domain))
         else:
-            if poly.degree(d) == 1:
-                coeff = -poly.coeff_monomial(1)
+            if b.degree(d) == 1:
+                coeff = -b.coeff_monomial(1)
                 if coeff != 0:
-                    # Convert inequalities back to original domain
                     inequalities.append(Poly(coeff, *gens, domain=domain))
 
     return var_basis, equalities, inequalities
