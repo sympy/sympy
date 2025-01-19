@@ -670,11 +670,9 @@ if cin:
                 if the compound statement is empty
 
             """
-            expr = []
             children = node.get_children()
 
-            for child in children:
-                expr.append(self.transform(child))
+            expr = [self.transform(child) for child in children]
             return expr
 
         def transform_decl_stmt(self, node):

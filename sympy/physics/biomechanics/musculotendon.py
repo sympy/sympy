@@ -844,8 +844,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
         """
         state_vars = [self._state_vars]
-        for child in self._child_objects:
-            state_vars.append(child.state_vars)
+        state_vars.extend(child.state_vars for child in self._child_objects)
         return Matrix.vstack(*state_vars)
 
     @property
@@ -860,8 +859,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
         """
         state_vars = [self._state_vars]
-        for child in self._child_objects:
-            state_vars.append(child.state_vars)
+        state_vars.extend(child.state_vars for child in self._child_objects)
         return Matrix.vstack(*state_vars)
 
     @property
@@ -876,8 +874,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
         """
         input_vars = [self._input_vars]
-        for child in self._child_objects:
-            input_vars.append(child.input_vars)
+        input_vars.extend(child.input_vars for child in self._child_objects)
         return Matrix.vstack(*input_vars)
 
     @property
@@ -892,8 +889,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
         """
         input_vars = [self._input_vars]
-        for child in self._child_objects:
-            input_vars.append(child.input_vars)
+        input_vars.extend(child.input_vars for child in self._child_objects)
         return Matrix.vstack(*input_vars)
 
     @property
@@ -930,8 +926,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             if musculotendon_constants
             else zeros(0, 1)
         ]
-        for child in self._child_objects:
-            constants.append(child.constants)
+        constants.extend(child.constants for child in self._child_objects)
         constants.append(self._curve_constants)
         return Matrix.vstack(*constants)
 
@@ -969,8 +964,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             if musculotendon_constants
             else zeros(0, 1)
         ]
-        for child in self._child_objects:
-            constants.append(child.constants)
+        constants.extend(child.constants for child in self._child_objects)
         constants.append(self._curve_constants)
         return Matrix.vstack(*constants)
 
@@ -992,8 +986,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
         """
         M = [eye(len(self._state_vars))]
-        for child in self._child_objects:
-            M.append(child.M)
+        M.extend(child.M for child in self._child_objects)
         return diag(*M)
 
     @property
@@ -1014,8 +1007,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
         """
         F = [self._state_eqns]
-        for child in self._child_objects:
-            F.append(child.F)
+        F.extend(child.F for child in self._child_objects)
         return Matrix.vstack(*F)
 
     def rhs(self):

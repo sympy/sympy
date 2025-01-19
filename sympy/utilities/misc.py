@@ -208,9 +208,7 @@ def debug_decorator(func):
                 return r
             if len(subtrees) == 0:
                 return ""
-            f = []
-            for a in subtrees[:-1]:
-                f.append(indent(a))
+            f = [indent(a) for a in subtrees[:-1]]
             f.append(indent(subtrees[-1], 2))
             return ''.join(f)
 

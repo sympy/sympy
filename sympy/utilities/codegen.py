@@ -887,8 +887,7 @@ class CCodeGen(CodeGen):
         code_lines.append("/" + "*"*78 + '\n')
         tmp = header_comment % {"version": sympy_version,
                                 "project": self.project}
-        for line in tmp.splitlines():
-            code_lines.append(" *%s*\n" % line.center(76))
+        code_lines.extend(" *%s*\n" % line.center(76) for line in tmp.splitlines())
         code_lines.append(" " + "*"*78 + "/\n")
         return code_lines
 
@@ -942,10 +941,7 @@ class CCodeGen(CodeGen):
         # Compose a list of symbols to be dereferenced in the function
         # body. These are the arguments that were passed by a reference
         # pointer, excluding arrays.
-        dereference = []
-        for arg in routine.arguments:
-            if isinstance(arg, ResultBase) and not arg.dimensions:
-                dereference.append(arg.name)
+        dereference = [arg.name for arg in routine.arguments if isinstance(arg, ResultBase) and not arg.dimensions]
 
         code_lines = []
         for result in routine.local_vars:
@@ -983,10 +979,7 @@ class CCodeGen(CodeGen):
         # Compose a list of symbols to be dereferenced in the function
         # body. These are the arguments that were passed by a reference
         # pointer, excluding arrays.
-        dereference = []
-        for arg in routine.arguments:
-            if isinstance(arg, ResultBase) and not arg.dimensions:
-                dereference.append(arg.name)
+        dereference = [arg.name for arg in routine.arguments if isinstance(arg, ResultBase) and not arg.dimensions]
 
         return_val = None
         for result in routine.result_variables:
@@ -1107,8 +1100,7 @@ class FCodeGen(CodeGen):
         code_lines.append("!" + "*"*78 + '\n')
         tmp = header_comment % {"version": sympy_version,
             "project": self.project}
-        for line in tmp.splitlines():
-            code_lines.append("!*%s*\n" % line.center(76))
+        code_lines.extend("!*%s*\n" % line.center(76) for line in tmp.splitlines())
         code_lines.append("!" + "*"*78 + '\n')
         return code_lines
 
@@ -1375,8 +1367,7 @@ class JuliaCodeGen(CodeGen):
         for array in expressions.atoms(MatrixSymbol):
             array_symbols[array] = array
 
-        for symbol in sorted(symbols, key=str):
-            arg_list.append(InputArgument(symbol))
+        arg_list.extend(InputArgument(symbol) for symbol in sorted(symbols, key=str))
 
         if argument_sequence is not None:
             # if the user has supplied IndexedBase instances, we'll accept that
@@ -1576,15 +1567,13 @@ class OctaveCodeGen(CodeGen):
                 return_vals.append(Result(expr, name='out%d' % (i+1)))
 
         # setup input argument list
-        arg_list = []
         array_symbols = {}
         for array in expressions.atoms(Indexed):
             array_symbols[array.base.label] = array
         for array in expressions.atoms(MatrixSymbol):
             array_symbols[array] = array
 
-        for symbol in sorted(symbols, key=str):
-            arg_list.append(InputArgument(symbol))
+        arg_list = [InputArgument(symbol) for symbol in sorted(symbols, key=str)]
 
         if argument_sequence is not None:
             # if the user has supplied IndexedBase instances, we'll accept that
@@ -1814,8 +1803,7 @@ class RustCodeGen(CodeGen):
         for array in expressions.atoms(MatrixSymbol):
             array_symbols[array] = array
 
-        for symbol in sorted(symbols, key=str):
-            arg_list.append(InputArgument(symbol))
+        arg_list.extend(InputArgument(symbol) for symbol in sorted(symbols, key=str))
 
         if argument_sequence is not None:
             # if the user has supplied IndexedBase instances, we'll accept that
@@ -1852,8 +1840,7 @@ class RustCodeGen(CodeGen):
         code_lines.append("/*\n")
         tmp = header_comment % {"version": sympy_version,
                                 "project": self.project}
-        for line in tmp.splitlines():
-            code_lines.append((" *%s" % line.center(76)).rstrip() + "\n")
+        code_lines.extend((" *%s" % line.center(76)).rstrip() + "\n" for line in tmp.splitlines())
         code_lines.append(" */\n")
         return code_lines
 
@@ -1911,14 +1898,6 @@ class RustCodeGen(CodeGen):
         code_lines = []
         declarations = []
         returns = []
-
-        # Compose a list of symbols to be dereferenced in the function
-        # body. These are the arguments that were passed by a reference
-        # pointer, excluding arrays.
-        dereference = []
-        for arg in routine.arguments:
-            if isinstance(arg, ResultBase) and not arg.dimensions:
-                dereference.append(arg.name)
 
         for result in routine.results:
             if isinstance(result, Result):

@@ -434,17 +434,14 @@ class OuterProduct(Operator):
         op_terms = []
         if isinstance(ket_expr, Add) and isinstance(bra_expr, Add):
             for ket_term in ket_expr.args:
-                for bra_term in bra_expr.args:
-                    op_terms.append(OuterProduct(ket_term, bra_term,
-                                                 **old_assumptions))
+                op_terms.extend(OuterProduct(ket_term, bra_term,
+                                                 **old_assumptions) for bra_term in bra_expr.args)
         elif isinstance(ket_expr, Add):
-            for ket_term in ket_expr.args:
-                op_terms.append(OuterProduct(ket_term, bra_expr,
-                                             **old_assumptions))
+            op_terms.extend(OuterProduct(ket_term, bra_expr,
+                                             **old_assumptions) for ket_term in ket_expr.args)
         elif isinstance(bra_expr, Add):
-            for bra_term in bra_expr.args:
-                op_terms.append(OuterProduct(ket_expr, bra_term,
-                                             **old_assumptions))
+            op_terms.extend(OuterProduct(ket_expr, bra_term,
+                                             **old_assumptions) for bra_term in bra_expr.args)
         else:
             raise TypeError(
                 'Expected ket and bra expression, got: %r, %r' %

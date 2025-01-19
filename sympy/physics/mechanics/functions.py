@@ -709,21 +709,13 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
             msgs.append(f'The auxiliary speeds {overlap_aux} are also defined '
                         f'as generalized coordinates or generalized speeds.')
     if is_dynamicsymbols:  # Check whether all coordinates are dynamicsymbols
-        for coordinate in coordinates:
-            if not (isinstance(coordinate, (AppliedUndef, Derivative)) and
-                    coordinate.free_symbols == t_set):
-                msgs.append(f'Generalized coordinate "{coordinate}" is not a '
-                            f'dynamicsymbol.')
-        for speed in speeds:
-            if not (isinstance(speed, (AppliedUndef, Derivative)) and
-                    speed.free_symbols == t_set):
-                msgs.append(
-                    f'Generalized speed "{speed}" is not a dynamicsymbol.')
-        for aux in u_auxiliary:
-            if not (isinstance(aux, (AppliedUndef, Derivative)) and
-                    aux.free_symbols == t_set):
-                msgs.append(
-                    f'Auxiliary speed "{aux}" is not a dynamicsymbol.')
+        msgs.extend(f'Generalized coordinate "{coordinate}" is not a '
+                            f'dynamicsymbol.' for coordinate in coordinates if not (isinstance(coordinate, (AppliedUndef, Derivative)) and
+                    coordinate.free_symbols == t_set))
+        msgs.extend(f'Generalized speed "{speed}" is not a dynamicsymbol.' for speed in speeds if not (isinstance(speed, (AppliedUndef, Derivative)) and
+                    speed.free_symbols == t_set))
+        msgs.extend(f'Auxiliary speed "{aux}" is not a dynamicsymbol.' for aux in u_auxiliary if not (isinstance(aux, (AppliedUndef, Derivative)) and
+                    aux.free_symbols == t_set))
     if msgs:
         raise ValueError('\n'.join(msgs))
 

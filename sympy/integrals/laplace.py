@@ -950,8 +950,7 @@ def _laplace_rule_sdiff(f, t, s):
                 except ValueError:
                     d1 = False
                 if r_.has(LaplaceTransform):
-                    for k in range(N-1):
-                        deri.append((-1)**(k+1)*Derivative(r_, s, k+1))
+                    deri.extend((-1)**(k+1)*Derivative(r_, s, k+1) for k in range(N-1))
                 elif d1:
                     deri.append(d1)
                     for k in range(N-2):

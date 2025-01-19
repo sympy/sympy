@@ -67,13 +67,9 @@ def _naive_list_centralizer(self, other, af=False):
         commutes_with_gens = lambda x: all(_af_commutes_with(x, gen) for gen in gens)
         centralizer_list = []
         if not af:
-            for element in elements:
-                if commutes_with_gens(element):
-                    centralizer_list.append(Permutation._af_new(element))
+            centralizer_list.extend(Permutation._af_new(element) for element in elements if commutes_with_gens(element))
         else:
-            for element in elements:
-                if commutes_with_gens(element):
-                    centralizer_list.append(element)
+            centralizer_list.extend(element for element in elements if commutes_with_gens(element))
         return centralizer_list
     elif hasattr(other, 'getitem'):
         return _naive_list_centralizer(self, PermutationGroup(other), af)

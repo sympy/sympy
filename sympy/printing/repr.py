@@ -38,9 +38,7 @@ class ReprPrinter(Printer):
         elif hasattr(expr, "__srepr__"):
             return expr.__srepr__()
         elif hasattr(expr, "args") and hasattr(expr.args, "__iter__"):
-            l = []
-            for o in expr.args:
-                l.append(self._print(o))
+            l = [self._print(o) for o in expr.args]
             return expr.__class__.__name__ + '(%s)' % ', '.join(l)
         elif hasattr(expr, "__module__") and hasattr(expr, "__name__"):
             return "<'%s.%s'>" % (expr.__module__, expr.__name__)

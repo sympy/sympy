@@ -177,8 +177,7 @@ class CodePrinter(StrPrinter):
             if self._not_supported:
                 frontlines.append(self._get_comment(
                         "Not supported in {}:".format(self.language)))
-                for expr in sorted(self._not_supported, key=str):
-                    frontlines.append(self._get_comment(type(expr).__name__))
+                frontlines.extend(self._get_comment(type(expr).__name__) for expr in sorted(self._not_supported, key=str))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append(self._declare_number_const(name, value))
             lines = frontlines + lines

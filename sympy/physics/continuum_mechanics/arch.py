@@ -999,7 +999,6 @@ class Arch:
 
     def _draw_filler(self):
         x = Symbol('x')
-        filler = []
         xmax = self._right_support[0]
         xmin = self._left_support[0]
         ymin = min(self._left_support[1],self._right_support[1])
@@ -1012,14 +1011,11 @@ class Arch:
 
         x_points = numpy.arange(self._left_support[0],self._right_support[0],(self._right_support[0]-self._left_support[0])/(max_diff*max_diff))
 
-        for point in x_points:
-            filler.append(
-                    {
+        filler = [{
                         'xy':(point,self._shape_eqn.subs(x,point)-max_diff*0.015),
                         'width': (self._right_support[0]-self._left_support[0])/(max_diff*max_diff),
                         'height': max_diff*0.015,
                         'color': 'brown'
-                    }
-            )
+                    } for point in x_points]
 
         return filler

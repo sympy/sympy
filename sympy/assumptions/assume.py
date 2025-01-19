@@ -203,9 +203,7 @@ class PredicateMeta(type):
                 func = handler.funcs[sig]
                 if func.__doc__:
                     s = '    Inputs: <%s>' % str_signature(sig)
-                    lines = []
-                    for line in func.__doc__.splitlines():
-                        lines.append("    %s" % line)
+                    lines = ["    %s" % line for line in func.__doc__.splitlines()]
                     s += "\n".join(lines)
                     docs.append(s)
                 else:

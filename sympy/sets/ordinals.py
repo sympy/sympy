@@ -225,12 +225,10 @@ class Ordinal(Basic):
         a_mult = self.leading_term.mult
         summation = []
         if other.is_limit_ordinal:
-            for arg in other.terms:
-                summation.append(OmegaPower(a_exp + arg.exp, arg.mult))
+            summation.extend(OmegaPower(a_exp + arg.exp, arg.mult) for arg in other.terms)
 
         else:
-            for arg in other.terms[:-1]:
-                summation.append(OmegaPower(a_exp + arg.exp, arg.mult))
+            summation.extend(OmegaPower(a_exp + arg.exp, arg.mult) for arg in other.terms[:-1])
             b_mult = other.trailing_term.mult
             summation.append(OmegaPower(a_exp, a_mult*b_mult))
             summation += list(self.terms[1:])

@@ -1705,10 +1705,7 @@ def nc_simplify(expr, deep=True):
             overlaps = []
             j = 0
             for j in range(len(args) - i - 1):
-                overlap = []
-                for v in m[i-1][j+1]:
-                    if j + i + 1 + v < len(args) and args[i] == args[j+i+1+v]:
-                        overlap.append(v + 1)
+                overlap = [v + 1 for v in m[i-1][j+1] if j + i + 1 + v < len(args) and args[i] == args[j+i+1+v]]
                 overlap += [0]
                 overlaps.append(overlap)
             m.append(overlaps)

@@ -122,9 +122,7 @@ def _unify_gens(f_gens, g_gens):
 
     gens, common, k = [], [], 0
 
-    for gen in f_gens:
-        if gen in g_gens:
-            common.append(gen)
+    common.extend(gen for gen in f_gens if gen in g_gens)
 
     for i, gen in enumerate(g_gens):
         if gen in common:

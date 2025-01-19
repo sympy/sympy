@@ -37,6 +37,7 @@ lint.select = [
     "E",
     "F",
     "LOG",
+    "PERF401",
     "PIE810",
     "PLE",
     "PLR1736",

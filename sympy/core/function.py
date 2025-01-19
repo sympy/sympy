@@ -1588,9 +1588,7 @@ class Derivative(Expr):
                 return _block(d.xreplace({v: D}), D)
             return d.free_symbols & v.free_symbols
         for i in range(len(vc)):
-            for j in range(i):
-                if _block(v(j), v(i)):
-                    E.append((j,i))
+            E.extend((j,i) for j in range(i) if _block(v(j), v(i)))
         # this is the default ordering to use in case of ties
         O = dict(zip(ordered(uniq([i for i, c in vc])), range(len(vc))))
         ix = topological_sort((V, E), key=lambda i: O[v(i)])

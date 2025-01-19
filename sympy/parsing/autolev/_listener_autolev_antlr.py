@@ -785,9 +785,7 @@ if AutolevListener:
                     self.vector_expr.append(ctx)
                 expr = self.getValue(ch.expr(0))
                 if self.explicit.keys():
-                    explicit_list = []
-                    for i in self.explicit.keys():
-                        explicit_list.append(i + ":" + self.explicit[i])
+                    explicit_list = [i + ":" + self.explicit[i] for i in self.explicit.keys()]
                     self.setValue(ctx, "(" + expr + ")" + ".subs({" + ", ".join(explicit_list) + "})")
                 else:
                     self.setValue(ctx, expr)
@@ -1114,10 +1112,8 @@ if AutolevListener:
 
                     else:
                         l = []
-                        l2 = []
                         v2 = ch.expr(0).getChild(0).ID(0).getText().lower()
-                        for i in range(1, (ch.expr(0).getChild(0).getChildCount()-2)//2):
-                            l2.append(ch.expr(0).getChild(0).ID(i).getText().lower())
+                        l2 = [ch.expr(0).getChild(0).ID(i).getText().lower() for i in range(1, (ch.expr(0).getChild(0).getChildCount()-2)//2)]
                         for v1 in l2:
                             inertia_func(self, v1, v2, l, frame)
                         self.setValue(ctx, " + ".join(l))
@@ -1135,9 +1131,7 @@ if AutolevListener:
                     self.setValue(ctx, "_me.functions.center_of_mass(" + self.symbol_table2[ch.expr(0).getText().lower()] +
                                   text + "," + ", ".join(self.bodies.values()) + ")")
                 else:
-                    bodies = []
-                    for i in range(1, (ch.getChildCount()-1)//2):
-                        bodies.append(self.symbol_table2[ch.expr(i).getText().lower()])
+                    bodies = [self.symbol_table2[ch.expr(i).getText().lower()] for i in range(1, (ch.getChildCount()-1)//2)]
                     self.setValue(ctx, "_me.functions.center_of_mass(" + self.symbol_table2[ch.expr(0).getText().lower()] +
                                   text + "," + ", ".join(bodies) + ")")
 
@@ -1230,9 +1224,7 @@ if AutolevListener:
 
                 self.u_dep[:] = [i for i in self.u_dep if i not in self.kd_equivalents.values()]
 
-                force_list = []
-                for i in self.forces.keys():
-                    force_list.append("(" + i + "," + self.forces[i] + ")")
+                force_list = ["(" + i + "," + self.forces[i] + ")" for i in self.forces.keys()]
                 if self.u_dep:
                     u_dep_text = ", u_dependent=[" + ", ".join(self.u_dep) + "]"
                 else:
@@ -1614,13 +1606,11 @@ if AutolevListener:
             if ctx.functionCall().getChild(0).getText().lower() == "algebraic":
                 matrix_name = self.getValue(ctx.functionCall().expr(0))
                 e = []
-                d = []
                 for i in range(1, (ctx.functionCall().getChildCount()-2)//2):
                     a = self.getValue(ctx.functionCall().expr(i))
                     e.append(a)
 
-                for i in self.inputs.keys():
-                    d.append(i + ":" + self.inputs[i])
+                d = [i + ":" + self.inputs[i] for i in self.inputs.keys()]
                 self.write(matrix_name + "_list" + " = " + "[]\n")
                 self.write("for i in " + matrix_name + ":  " + matrix_name +
                            "_list" + ".append(i.subs({" + ", ".join(d) + "}))\n")
@@ -1702,16 +1692,13 @@ if AutolevListener:
                     self.write("from pydy.system import System\n")
                     const_list = []
                     if numerical_constants:
-                        for i in range(len(self.constants)):
-                            const_list.append(self.constants[i] + ":" + numerical_constants[i])
+                        const_list.extend(self.constants[i] + ":" + numerical_constants[i] for i in range(len(self.constants)))
                     specifieds = []
                     if self.t:
                         specifieds.append("_me.dynamicsymbols('t')" + ":" + "lambda x, t: t")
 
-                    for i in self.inputs:
-                        if i in self.symbol_table.keys() and self.symbol_table[i] not in\
-                        self.constants + self.q_ind + self.q_dep + self.u_ind + self.u_dep:
-                            specifieds.append(self.symbol_table[i] + ":" + self.inputs[i])
+                    specifieds.extend(self.symbol_table[i] + ":" + self.inputs[i] for i in self.inputs if i in self.symbol_table.keys() and self.symbol_table[i] not in\
+                        self.constants + self.q_ind + self.q_dep + self.u_ind + self.u_dep)
 
                     self.write("sys = System(kane, constants = {" + ", ".join(const_list) + "},\n" +
                                "specifieds={" + ", ".join(specifieds) + "},\n" +
@@ -1935,9 +1922,7 @@ if AutolevListener:
                         self.vector_expr.append(ctx)
                     expr = self.getValue(ctx.expr(0))
                     if self.explicit.keys():
-                        explicit_list = []
-                        for i in self.explicit.keys():
-                            explicit_list.append(i + ":" + self.explicit[i])
+                        explicit_list = [i + ":" + self.explicit[i] for i in self.explicit.keys()]
                         if '_' in ctx.expr(0).getText().lower() and ctx.expr(0).getText().count('_') == 2:
                             vec = ctx.expr(0).getText().lower().replace(">", "").split('_')
                             v1 = self.symbol_table2[vec[1]]
@@ -2063,8 +2048,7 @@ if AutolevListener:
                     inertia_list.append(a_text)
 
             if len(inertia_list) < 6:
-                for i in range(6-len(inertia_list)):
-                    inertia_list.append("0")
+                inertia_list.extend("0" for i in range(6-len(inertia_list)))
             # body_a.inertia = (_me.inertia(body_a, I1, I2, I3, 0, 0, 0), body_a_cm)
             try:
                 frame = self.symbol_table2[ctx.ID(1).getText().lower()]

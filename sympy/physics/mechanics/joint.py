@@ -463,10 +463,8 @@ class Joint(ABC):
 
     def _generate_kdes(self):
         """Generate kinematical differential equations."""
-        kdes = []
         t = dynamicsymbols._t
-        for i in range(len(self.coordinates)):
-            kdes.append(-self.coordinates[i].diff(t) + self.speeds[i])
+        kdes = [-self.coordinates[i].diff(t) + self.speeds[i] for i in range(len(self.coordinates))]
         return Matrix(kdes)
 
     def _locate_joint_pos(self, body, joint_pos, body_frame=None):
@@ -548,8 +546,7 @@ class Joint(ABC):
             else:
                 raise TypeError(f'The {name} {coord} should have been a '
                                 f'dynamicsymbol.')
-        for i in range(len(coordinates) + offset, n_coords + offset):
-            generated_coordinates.append(create_symbol(i))
+        generated_coordinates.extend(create_symbol(i) for i in range(len(coordinates) + offset, n_coords + offset))
         return Matrix(generated_coordinates)
 
 

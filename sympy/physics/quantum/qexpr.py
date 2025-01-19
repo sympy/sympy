@@ -215,9 +215,7 @@ class QExpr(Expr):
     # Utilities for printing: these operate on raw SymPy objects
 
     def _print_sequence(self, seq, sep, printer, *args):
-        result = []
-        for item in seq:
-            result.append(printer._print(item, *args))
+        result = [printer._print(item, *args) for item in seq]
         return sep.join(result)
 
     def _print_sequence_pretty(self, seq, sep, printer, *args):

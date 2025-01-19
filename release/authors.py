@@ -23,9 +23,7 @@ for the first time for this release.
 Thanks to everyone who contributed to this release!
 """
 
-    authors_lines = []
-    for name in authors:
-        authors_lines.append("- " + name)
+    authors_lines = ["- " + name for name in authors]
 
     authors_text += '\n'.join(authors_lines)
 

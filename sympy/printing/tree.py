@@ -86,9 +86,7 @@ def tree(node, assumptions=True):
     print_tree
 
     """
-    subtrees = []
-    for arg in node.args:
-        subtrees.append(tree(arg, assumptions=assumptions))
+    subtrees = [tree(arg, assumptions=assumptions) for arg in node.args]
     s = print_node(node, assumptions=assumptions) + pprint_nodes(subtrees)
     return s
 

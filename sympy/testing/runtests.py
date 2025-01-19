@@ -684,8 +684,7 @@ def _get_doctest_blacklist():
     ])
     # autolev parser tests
     num = 12
-    for i in range (1, num+1):
-        blacklist.append("sympy/parsing/autolev/test-examples/ruletest" + str(i) + ".py")
+    blacklist.extend("sympy/parsing/autolev/test-examples/ruletest" + str(i) + ".py" for i in range (1, num+1))
     blacklist.extend(["sympy/parsing/autolev/test-examples/pydy-example-repo/mass_spring_damper.py",
                       "sympy/parsing/autolev/test-examples/pydy-example-repo/chaos_pendulum.py",
                       "sympy/parsing/autolev/test-examples/pydy-example-repo/double_pendulum.py",

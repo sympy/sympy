@@ -683,9 +683,7 @@ class PermutationGroup(Basic):
         if not base: # e.g. if self is trivial
             return []
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-        basic_stabilizers = []
-        for gens in strong_gens_distr:
-            basic_stabilizers.append(PermutationGroup(gens))
+        basic_stabilizers = [PermutationGroup(gens) for gens in strong_gens_distr]
         return basic_stabilizers
 
     @property
@@ -2163,10 +2161,8 @@ class PermutationGroup(Basic):
             return False
 
         if randomized:
-            random_stab_gens = []
             v = self.schreier_vector(0)
-            for _ in range(len(self)):
-                random_stab_gens.append(self.random_stab(0, v))
+            random_stab_gens = [self.random_stab(0, v) for _ in range(len(self))]
             stab = PermutationGroup(random_stab_gens)
         else:
             stab = self.stabilizer(0)
@@ -2224,10 +2220,8 @@ class PermutationGroup(Basic):
         num_blocks = []
         rep_blocks = []
         if randomized:
-            random_stab_gens = []
             v = self.schreier_vector(0)
-            for i in range(len(self)):
-                random_stab_gens.append(self.random_stab(0, v))
+            random_stab_gens = [self.random_stab(0, v) for i in range(len(self))]
             stab = PermutationGroup(random_stab_gens)
         else:
             stab = self.stabilizer(0)
@@ -3351,11 +3345,8 @@ class PermutationGroup(Basic):
         """
         if incremental:
             base, strong_gens = self.schreier_sims_incremental(base=points)
-            stab_gens = []
             degree = self.degree
-            for gen in strong_gens:
-                if [gen(point) for point in points] == points:
-                    stab_gens.append(gen)
+            stab_gens = [gen for gen in strong_gens if [gen(point) for point in points] == points]
             if not stab_gens:
                 stab_gens = _af_new(list(range(degree)))
             return PermutationGroup(stab_gens)
@@ -5451,9 +5442,7 @@ class Coset(Basic):
         H = self.args[1]
         cst = []
         if str(self._dir) == '+':
-            for h in H.elements:
-                cst.append(h*g)
+            cst.extend(h*g for h in H.elements)
         else:
-            for h in H.elements:
-                cst.append(g*h)
+            cst.extend(g*h for h in H.elements)
         return cst

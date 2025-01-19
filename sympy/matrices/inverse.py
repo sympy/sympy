@@ -476,10 +476,8 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
 
     if try_block_diag:
         blocks = M.get_diag_blocks()
-        r      = []
 
-        for block in blocks:
-            r.append(block.inv(method=method, iszerofunc=iszerofunc))
+        r = [block.inv(method=method, iszerofunc=iszerofunc) for block in blocks]
 
         return diag(*r)
 

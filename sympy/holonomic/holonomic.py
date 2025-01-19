@@ -1413,9 +1413,7 @@ class HolonomicFunction:
         if self.is_singularics() == True:
             rootstoconsider = []
             for i in ordered(self.y0.keys()):
-                for j in ordered(indicialroots.keys()):
-                    if equal_valued(j, i):
-                        rootstoconsider.append(i)
+                rootstoconsider.extend(i for j in ordered(indicialroots.keys()) if equal_valued(j, i))
 
         elif allpos and allint:
             rootstoconsider = [min(reals)]
@@ -2489,15 +2487,12 @@ def _extend_y0(Holonomic, n):
     annihilator = Holonomic.annihilator
     a = annihilator.order
 
-    listofpoly = []
 
     y0 = Holonomic.y0
     R = annihilator.parent.base
     K = R.get_field()
 
-    for j in annihilator.listofpoly:
-        if isinstance(j, annihilator.parent.base.dtype):
-            listofpoly.append(K.new(j.to_list()))
+    listofpoly = [K.new(j.to_list()) for j in annihilator.listofpoly if isinstance(j, annihilator.parent.base.dtype)]
 
     if len(y0) < a or n <= len(y0):
         return y0

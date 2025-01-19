@@ -204,10 +204,7 @@ def _(f, self):
         a, b = match[a], match[b]
         if a in [1, -1]:
             # drop integer addends in b
-            nonint = []
-            for bi in Add.make_args(b):
-                if not bi.is_integer:
-                    nonint.append(bi)
+            nonint = [bi for bi in Add.make_args(b) if not bi.is_integer]
             b = Add(*nonint)
         if b.is_number and a.is_real:
             # avoid Mod for complex numbers, #11391

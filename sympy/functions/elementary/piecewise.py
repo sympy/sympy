@@ -1056,11 +1056,9 @@ def piecewise_fold(expr, evaluate=True):
                     com = common_prefix(*[
                         [i.cond for i in j] for j in pargs])
                     n = len(com)
-                    collected = []
-                    for i in range(n):
-                        collected.append((
+                    collected = [(
                             expr.func(*[ai[i].expr for ai in pargs]),
-                            com[i]))
+                            com[i]) for i in range(n)]
                     remains = []
                     for a in pargs:
                         if n == len(a):  # no more args

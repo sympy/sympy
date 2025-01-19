@@ -574,18 +574,13 @@ def measure_all(qubit, format='sympy', normalize=True):
     m = qubit_to_matrix(qubit, format)
 
     if format == 'sympy':
-        results = []
 
         if normalize:
             m = m.normalized()
 
         size = max(m.shape)  # Max of shape to account for bra or ket
         nqubits = int(math.log(size)/math.log(2))
-        for i in range(size):
-            if m[i]:
-                results.append(
-                    (Qubit(IntQubit(i, nqubits=nqubits)), m[i]*conjugate(m[i]))
-                )
+        results = [(Qubit(IntQubit(i, nqubits=nqubits)), m[i]*conjugate(m[i])) for i in range(size) if m[i]]
         return results
     else:
         raise NotImplementedError(
@@ -744,16 +739,12 @@ def _get_possible_outcomes(m, bits):
     # Thus, output_matrices[0] is the matrix which we get when all measured
     # bits return 0. and output_matrices[1] is the matrix for only the 0th
     # bit being true
-    output_matrices = []
-    for i in range(1 << len(bits)):
-        output_matrices.append(zeros(2**nqubits, 1))
+    output_matrices = [zeros(2**nqubits, 1) for i in range(1 << len(bits))]
 
     # Bitmasks will help sort how to determine possible outcomes.
     # When the bit mask is and-ed with a matrix-index,
     # it will determine which state that index belongs to
-    bit_masks = []
-    for bit in bits:
-        bit_masks.append(1 << bit)
+    bit_masks = [1 << bit for bit in bits]
 
     # Make possible outcome states
     for i in range(2**nqubits):

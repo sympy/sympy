@@ -81,7 +81,5 @@ def test_induced_pcgs():
         collector = PcGroup.collector
         gens = list(g.generators)
         ipcgs = collector.induced_pcgs(gens)
-        m = []
-        for i in ipcgs:
-            m.append(collector.exponent_vector(i))
+        m = [collector.exponent_vector(i) for i in ipcgs]
         assert Matrix(m).is_upper

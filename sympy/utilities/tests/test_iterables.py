@@ -579,10 +579,8 @@ def test_derangements():
 def test_necklaces():
     def count(n, k, f):
         return len(list(necklaces(n, k, f)))
-    m = []
-    for i in range(1, 8):
-        m.append((
-        i, count(i, 2, 0), count(i, 2, 1), count(i, 3, 1)))
+    m = [(
+        i, count(i, 2, 0), count(i, 2, 1), count(i, 3, 1)) for i in range(1, 8)]
     assert Matrix(m) == Matrix([
         [1,   2,   2,   3],
         [2,   3,   3,   6],
