@@ -320,8 +320,7 @@ def _(expr, assumptions):
             elif ask(Q.positive(expr.base), assumptions):
                 return True
             elif ask(Q.negative(expr.base), assumptions):
-                if ask(Q.rational(expr.exp), assumptions):
-                    return None
+                return None
 
 
 @RealPredicate.register_many(cos, sin)
