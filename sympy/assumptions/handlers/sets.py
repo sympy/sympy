@@ -76,10 +76,7 @@ def _(expr, assumptions):
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
     if ask(Q.integer(expr.base), assumptions) and ask(Q.integer(expr.exp), assumptions):
-        if ask(Q.negative(expr.exp), assumptions):
-            return False
-        else:
-            return True
+        return ask(Q.positive(expr.exp), assumptions)
     else:
         return None
 
