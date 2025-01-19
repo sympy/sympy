@@ -321,11 +321,6 @@ def _(expr, assumptions):
                 return True
             elif ask(Q.negative(expr.base), assumptions):
                 if ask(Q.rational(expr.exp), assumptions):
-                    if ask(Q.even(expr.exp.args[1].args[0]), assumptions): # if the denominator of the rational is-even then it can't 2, 4, 6
-                        return False
-                    else:
-                        return None # otherwise we don't know
-                else:
                     return None
 
 
