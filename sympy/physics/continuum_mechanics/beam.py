@@ -1046,7 +1046,9 @@ class Beam:
             try:
                 shear_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self._load.rewrite(Piecewise), x<s), (float("nan"), True))
                 points = solve(shear_slope, x)
-                val = [abs(shear_curve.subs(x, point)) for point in points]
+                val = []
+                for point in points:
+                    val.append(abs(shear_curve.subs(x, point)))
                 points.extend([singularity[i-1], s])
                 val += [abs(limit(shear_curve, x, singularity[i-1], '+')), abs(limit(shear_curve, x, s, '-'))]
                 max_shear = max(val)
@@ -1131,7 +1133,9 @@ class Beam:
                     (self.shear_force().rewrite(Piecewise), x < s),
                     (float("nan"), True))
                 points = solve(moment_slope, x)
-                val = [abs(bending_curve.subs(x, point)) for point in points]
+                val = []
+                for point in points:
+                    val.append(abs(bending_curve.subs(x, point)))
                 points.extend([singularity[i-1], s])
                 val += [abs(limit(bending_curve, x, singularity[i-1], '+')), abs(limit(bending_curve, x, s, '-'))]
                 max_moment = max(val)
@@ -1981,6 +1985,7 @@ class Beam:
             raise ValueError("I.L.D. reaction equations not found. Please use solve_for_ild_reactions() to generate the I.L.D. reaction equations.")
 
         a = self.ild_variable
+        ildplots = []
 
         if subs is None:
             subs = {}
@@ -1994,9 +1999,10 @@ class Beam:
             if sym != a and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
 
-        ildplots = [plot(self._ild_reactions[reaction].subs(subs),
+        for reaction in self._ild_reactions:
+            ildplots.append(plot(self._ild_reactions[reaction].subs(subs),
             (a, 0, self._length.subs(subs)), title='I.L.D. for Reactions',
-            xlabel=a, ylabel=reaction, line_color='blue', show=False) for reaction in self._ild_reactions]
+            xlabel=a, ylabel=reaction, line_color='blue', show=False))
 
         return PlotGrid(len(ildplots), 1, *ildplots)
 

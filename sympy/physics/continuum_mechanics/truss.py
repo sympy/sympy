@@ -861,6 +861,7 @@ class Truss:
 
 
     def _draw_nodes(self, subs_dict):
+        node_markers = []
 
         for node in self._node_coordinates:
             if (type(self._node_coordinates[node][0]) in (Symbol, Quantity)):
@@ -893,12 +894,15 @@ class Truss:
                             self._node_coordinates[node][1] /= object
                             self._node_coordinates[node][1] *= subs_dict[object]
 
-        node_markers = [{
+        for node in self._node_coordinates:
+            node_markers.append(
+                {
                     'args':[[self._node_coordinates[node][0]], [self._node_coordinates[node][1]]],
                     'marker':'o',
                     'markersize':5,
                     'color':'black'
-                } for node in self._node_coordinates]
+                }
+            )
         return node_markers
 
     def _draw_members(self):
