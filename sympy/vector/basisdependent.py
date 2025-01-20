@@ -272,8 +272,10 @@ class BasisDependentMul(BasisDependent, Mul):
             elif isinstance(arg, Vector):
                 try:
                     arg.components
-                except AttributeError:
-                    raise ValueError("Wrong way of defining a vector.")
+                except AttributeError as exc:
+                    raise ValueError(
+                        "Invalid vector definition, object does not have components."
+                    ) from exc
             else:
                 measure_number *= arg
         # Make sure incompatible types weren't multiplied
