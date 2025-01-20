@@ -93,6 +93,10 @@ from sympy.printing.latex import (latex, translate, greek_letters_set,
 import sympy as sym
 
 from sympy.abc import mu, tau
+from sympy import latex
+from sympy.testing.pytest import raises
+from sympy.physics import units  # Fixed import
+from sympy.physics.units import kg, m, s, N, mile, hour # Direct unit imports
 
 
 class lowergamma(sym.lowergamma):
@@ -3156,3 +3160,48 @@ def test_Array():
 def test_latex_with_unevaluated():
     with evaluate(False):
         assert latex(a * a) == r"a a"
+
+def test_unit_spacing():
+    """Test proper spacing between units in LaTeX output"""
+
+    # Test basic unit combinations
+    minute = units.minute
+    t = 1.0 * kg / minute / s
+    assert latex(t) == r'\frac{1.0 \text{kg}}{s \text{minute}}'
+
+    # Test multiple units in denominator
+    expr = 1 / (s * minute)
+    assert latex(expr) == r'\frac{1}{s \text{minute}}'
+
+def test_unit_spacing_in_equations():
+    """Test unit spacing in more complex equations"""
+
+    # Test in equations with multiple terms
+    x = Symbol('x')
+    expr = x * m + 2 * m
+    assert latex(expr) == r'm x + 2 m'
+
+    # Test with multiple unit systems
+    expr = 1 * kg * mile / hour
+    assert latex(expr) == r'\frac{\text{kg} \text{mile}}{\text{hour}}'
+
+def test_edge_cases():
+    """Test edge cases and special situations"""
+
+    # Test unit with large numbers
+    expr = 1e6 * kg
+    assert latex(expr) == r'1000000.0 \text{kg}'
+
+    # Test unit with small numbers
+    expr = 1e-6 * kg
+    assert latex(expr) == r'1.0 \cdot 10^{-6} \text{kg}'
+
+    # Test unit division
+    expr = kg / m
+    assert latex(expr) == r'\frac{\text{kg}}{m}'
+
+if __name__ == '__main__':
+    test_unit_spacing()
+    test_unit_spacing_in_equations()
+    test_edge_cases()
+    print("All tests passed!")
