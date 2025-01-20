@@ -217,11 +217,35 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
             expr = Pow(expr.base, expr.exp.evalf(), evaluate=False)
         return self._hprint_Pow(expr, rational=rational, sqrt=self._module + '.sqrt')
 
+    def _helper_minimum_maximum(self, op: str, *args):
+        if len(args) == 0:
+            raise NotImplementedError(f"Need at least one argument for {op}")
+        elif len(args) == 1:
+            return self._print(args[0])
+        _reduce = self._module_format('functools.reduce')
+        s_args = [self._print(arg) for arg in args]
+        return f"{_reduce}({op}, [{', '.join(s_args)}])"
+
     def _print_Min(self, expr):
-        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amin'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
+        return self._print_minimum(expr)
+
+    def _print_amin(self, expr):
+        return '{}({}, axis={})'.format(self._module_format(self._module + '.amin'), self._print(expr.array), self._print(expr.axis))
+
+    def _print_minimum(self, expr):
+        op = self._module_format(self._module + '.minimum')
+        return self._helper_minimum_maximum(op, *expr.args)
 
     def _print_Max(self, expr):
-        return '{}({}.asarray([{}]), axis=0)'.format(self._module_format(self._module + '.amax'), self._module_format(self._module), ','.join(self._print(i) for i in expr.args))
+        return self._print_maximum(expr)
+
+    def _print_amax(self, expr):
+        return '{}({}, axis={})'.format(self._module_format(self._module + '.amax'), self._print(expr.array), self._print(expr.axis))
+
+    def _print_maximum(self, expr):
+        op = self._module_format(self._module + '.maximum')
+        return self._helper_minimum_maximum(op, *expr.args)
+
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.angle'), self._print(expr.args[0]))
 
