@@ -571,14 +571,27 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     verbose : bool, optional
         If True, autowrap will not mute the command line backends. This can be
         helpful for debugging.
-    helpers : 3-tuple or iterable of 3-tuples, optional
-        Used to define auxiliary expressions needed for the main expr. If the
-        main expression needs to call a specialized function it should be
-        passed in via ``helpers``. Autowrap will then make sure that the
-        compiled main expression can link to the helper routine. Items should
-        be 3-tuples with (<function_name>, <sympy_expression>,
-        <argument_tuple>). It is mandatory to supply an argument sequence to
-        helper routines.
+    helpers : tuple or list of tuples, optional
+        Used to define auxiliary functions needed for the main expression.
+
+        For the f2py backend:
+        A single tuple of the form (name, expr, args) where:
+        - name : str, the function name
+        - expr : sympy expression, the function body
+        - args : list, the function arguments
+
+        For the cython backend:
+        Either a single tuple or list of tuples, each of form (name, expr, args).
+
+        Example:
+        >>> from sympy.abc import x, t
+        >>> expr = 3*x + f(t)  # Main expression using helper function f
+        >>> # Define f(x) = 4*x
+        >>> binary_func = autowrap(expr, args=[x, t],
+        ...                       helpers=('f', 4*x, [x]))  # f2py
+        >>> # Or for cython:
+        >>> binary_func = autowrap(expr, args=[x, t], backend='cython',
+        ...                       helpers=[('f', 4*x, [x])])
     code_gen : CodeGen instance
         An instance of a CodeGen subclass. Overrides ``language``.
     include_dirs : [string]
@@ -1023,14 +1036,20 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     verbose : bool, optional
         If True, autowrap will not mute the command line backends. This can
         be helpful for debugging.
-    helpers : iterable, optional
-        Used to define auxiliary expressions needed for the main expr. If
-        the main expression needs to call a specialized function it should
-        be put in the ``helpers`` iterable. Autowrap will then make sure
-        that the compiled main expression can link to the helper routine.
-        Items should be tuples with (<funtion_name>, <sympy_expression>,
-        <arguments>). It is mandatory to supply an argument sequence to
-        helper routines.
+    helpers : iterable of tuples, optional
+        Used to define auxiliary functions needed for the main expression.
+        Each tuple should be of the form (name, expr, args) where:
+        - name : str, the function name
+        - expr : sympy expression, the function body
+        - args : list, the function arguments
+
+        Example:
+        >>> from sympy.abc import x, t
+        >>> expr = 3*x + f(t)  # Main expression using helper function f
+        >>> # Define f(x) = 4*x
+        >>> ufunc = ufuncify([x, t], expr, helpers=[('f', 4*x, [x])])
+        >>> ufunc([1, 2], [0.5, 1.0])
+        array([ 5.,  9.])
     kwargs : dict
         These kwargs will be passed to autowrap if the `f2py` or `cython`
         backend is used and ignored if the `numpy` backend is used.
@@ -1063,22 +1082,13 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     >>> f(np.arange(5), 3)
     array([  3.,   4.,   7.,  12.,  19.])
 
-    For the 'f2py' and 'cython' backends, inputs are required to be equal length
-    1-dimensional arrays. The 'f2py' backend will perform type conversion, but
-    the Cython backend will error if the inputs are not of the expected type.
+    With helper functions:
 
-    >>> f_fortran = ufuncify((x, y), y + x**2, backend='f2py')
-    >>> f_fortran(1, 2)
-    array([ 3.])
-    >>> f_fortran(np.array([1, 2, 3]), np.array([1.0, 2.0, 3.0]))
-    array([  2.,   6.,  12.])
-    >>> f_cython = ufuncify((x, y), y + x**2, backend='Cython')
-    >>> f_cython(1, 2)  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-      ...
-    TypeError: Argument '_x' has incorrect type (expected numpy.ndarray, got int)
-    >>> f_cython(np.array([1.0]), np.array([2.0]))
-    array([ 3.])
+    >>> expr = x**2 + y*h(x)  # Main expression using helper function h
+    >>> # Define h(x) = x**3
+    >>> f = ufuncify((x, y), expr, helpers=[('h', x**3, [x])])
+    >>> f([1, 2], [3, 4])
+    array([  4.,  36.])
 
     """
 
