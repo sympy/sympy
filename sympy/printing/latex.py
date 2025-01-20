@@ -555,7 +555,8 @@ class LatexPrinter(Printer):
                         _tex += separator
                 elif _tex:
                     _tex += separator
-
+                if(i>0):
+                    _tex += r"\,"
                 _tex += term_tex
                 last_term_tex = term_tex
             return _tex
