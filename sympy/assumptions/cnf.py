@@ -281,9 +281,7 @@ class CNF:
     >>> from sympy.abc import x
     >>> cnf = CNF.from_prop(Q.real(x) & ~Q.zero(x))
     >>> cnf.clauses
-    {frozenset({Literal(Q.zero(x), True)}),
-    frozenset({Literal(Q.negative(x), False),
-    Literal(Q.positive(x), False), Literal(Q.zero(x), False)})}
+    {frozenset({Literal(Q.real(x), False)}), frozenset({Literal(Q.zero(x), True)})}
     """
     def __init__(self, clauses=None):
         if not clauses:
@@ -374,8 +372,7 @@ class CNF:
 
     @classmethod
     def to_CNF(cls, expr):
-        from sympy.assumptions.facts import get_composite_predicates
-        expr = to_NNF(expr, get_composite_predicates())
+        expr = to_NNF(expr)
         expr = distribute_AND_over_OR(expr)
         return expr
 
