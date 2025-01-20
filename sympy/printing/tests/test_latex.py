@@ -49,10 +49,11 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.dotproduct import DotProduct
+from sympy.physics import units
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
-from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
+from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro, kg, m, s, N, mile, hour
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.fields import field
 from sympy.polys.polytools import Poly
@@ -93,10 +94,6 @@ from sympy.printing.latex import (latex, translate, greek_letters_set,
 import sympy as sym
 
 from sympy.abc import mu, tau
-from sympy import latex
-from sympy.testing.pytest import raises
-from sympy.physics import units  # Fixed import
-from sympy.physics.units import kg, m, s, N, mile, hour # Direct unit imports
 
 
 class lowergamma(sym.lowergamma):
