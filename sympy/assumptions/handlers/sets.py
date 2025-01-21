@@ -319,9 +319,6 @@ def _(expr, assumptions):
                 return True
             elif ask(Q.positive(expr.base), assumptions):
                 return True
-            else:
-                return None
-
 
 @RealPredicate.register_many(cos, sin)
 def _(expr, assumptions):
