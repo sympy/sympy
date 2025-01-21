@@ -41,6 +41,7 @@ lint.select = [
     "PLE",
     "PLR1736",
     "SIM101",
+    "SLOT",
     "TRY002",
 ]
 
