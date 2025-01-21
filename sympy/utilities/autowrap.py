@@ -577,7 +577,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         For the f2py backend:
         A single tuple of the form (name, expr, args) where:
         - name : str, the function name
-        - expr : sympy expression, the function body
+        - expr : sympy expression, the function
         - args : list, the function arguments
 
         For the cython backend:
