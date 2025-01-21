@@ -64,7 +64,6 @@ def _(expr, assumptions):
         return _IntegerPredicate_number(expr, assumptions)
     return test_closed_group(expr, assumptions, Q.integer)
 
-
 @IntegerPredicate.register(Pow)
 def _(expr, assumptions):
 #     """

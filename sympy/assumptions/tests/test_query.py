@@ -2418,6 +2418,29 @@ def test_issue_25221():
 
 
 def test_issue_27450():
-    n = Symbol('n', negative=True, integer=True)
-    exp = 2**n
-    assert ask(Q.integer(exp)) is False
+   # Original test cases handling basic integer, zero and negative conditions
+   assert ask(Q.integer(2**n), Q.integer(n) & Q.negative(n)) is False
+   assert ask(Q.integer(x**y), Q.zero(y)) is None
+   assert ask(Q.integer(x**y), Q.zero(x)) is None
+   assert ask(Q.integer(x**y), ~Q.zero(y) & Q.zero(x)) is None
+   assert ask(Q.integer(x**y), Q.zero(y) & ~Q.zero(x)) is None
+   assert ask(Q.integer(x**y), Q.zero(y) & Q.nonzero(x)) is None
+   assert ask(Q.integer(x**y), Q.nonzero(y) & Q.zero(x)) is None
+   assert ask(Q.integer(x**y), Q.integer(x)) is None
+   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y)) is None
+   assert ask(Q.integer(x**y), Q.integer(x) & Q.positive(y)) is None
+   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
+   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y)) is False
+   assert ask(Q.integer(x**y), Q.integer(x) & Q.negative(y)) is None
+   # Additional test cases covering special bases, specific powers and rational conditions
+   assert ask(Q.integer((-1)**y), Q.integer(y)) is True
+   assert ask(Q.integer(1**y), Q.integer(y)) is True
+   assert ask(Q.integer(x**2), Q.integer(x)) is True
+   assert ask(Q.integer(x**3), Q.integer(x)) is True
+   assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y)) is None
+   assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y) & Q.positive(y)) is None
+   assert ask(Q.integer(x**y), Q.integer(x) & ~Q.integer(y)) is None
+   assert ask(Q.integer(2**3)) is True
+   assert ask(Q.integer(2**(-3))) is False
+   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is True
+   assert ask(Q.integer(x**y), Q.rational(x) & Q.integer(y)) is None
