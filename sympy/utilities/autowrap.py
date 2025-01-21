@@ -577,19 +577,6 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         - name : str, the function name
         - expr : sympy expression, the expression to be evaluated as a function
         - args : iterable, the function arguments
-
-        For the cython backend:
-        Either a single tuple or list of tuples, each of form (name, expr, args).
-
-        Example:
-        >>> from sympy.abc import x, t
-        >>> expr = 3*x + f(t)  # Main expression using helper function f
-        >>> # Define f(x) = 4*x
-        >>> binary_func = autowrap(expr, args=[x, t],
-        ...                       helpers=('f', 4*x, [x]))  # f2py
-        >>> # Or for cython:
-        >>> binary_func = autowrap(expr, args=[x, t], backend='cython',
-        ...                       helpers=[('f', 4*x, [x])])
     code_gen : CodeGen instance
         An instance of a CodeGen subclass. Overrides ``language``.
     include_dirs : [string]
@@ -631,6 +618,12 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     >>> binary_func = autowrap(expr, args=[x, t], backend='cython',
     ...                       helpers=[('f', 4*x, [x])])
 
+    >>> # Complex computation using multiple helper functions
+    >>> expr = x**2 + y*h(x) + g(t)
+    >>> # Define h(x) = x**3 and g(t) = t**2
+    >>> binary_func = autowrap(expr, args=[x, y, t],
+    ...                       helpers=[('h', x**3, [x]), ('g', t**2, [t])])
+
     Type conversion behavior:
     >>> f_cython = autowrap(expr, backend='cython')
     >>> f_cython(1, 2)
@@ -638,6 +631,11 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     ...
     TypeError: Argument '_x' has incorrect type (expected numpy.ndarray, got int)
     >>> f_cython(np.array([1.0]), np.array([2.0]))
+    array([ 3.])
+
+    >>> # f2py backend handles type conversion automatically
+    >>> f_fortran = autowrap(expr, backend='f2py')
+    >>> f_fortran(1, 2)
     array([ 3.])
 
     """
@@ -1060,14 +1058,6 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         - name : str, the function name
         - expr : sympy expression, the expression to be evaluated as a function
         - args : iterable, the function arguments
-
-        Example:
-        >>> from sympy.abc import x, t
-        >>> expr = 3*x + f(t)  # Main expression using helper function f
-        >>> # Define f(x) = 4*x
-        >>> ufunc = ufuncify([x, t], expr, helpers=[('f', 4*x, [x])])
-        >>> ufunc([1, 2], [0.5, 1.0])
-        array([ 5.,  9.])
     kwargs : dict
         These kwargs will be passed to autowrap if the `f2py` or `cython`
         backend is used and ignored if the `numpy` backend is used.
@@ -1100,18 +1090,6 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     >>> f(np.arange(5), 3)
     array([  3.,   4.,   7.,  12.,  19.])
 
-    For the 'f2py' and 'cython' backends, inputs are required to be equal length
-    1-dimensional arrays. The 'f2py' backend will perform type conversion, but
-    the Cython backend will error if the inputs are not of the expected type.
-
-    >>> f_fortran = ufuncify((x, y), y + x**2, backend='f2py')
-    >>> f_fortran(1, 2)
-    array([ 3.])
-    >>> f_fortran(np.array([1, 2, 3]), np.array([1.0, 2.0, 3.0]))
-    array([  2.,   6.,  12.])
-    >>> f_cython = ufuncify((x, y), y + x**2, backend='Cython')
-    >>> f_cython(1, 2)  # doctest: +ELLIPSIS
-
     With helper functions:
 
     >>> from sympy.abc import x, t
@@ -1126,6 +1104,20 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     >>> f = ufuncify((x, y), expr, helpers=[('h', x**3, [x])])
     >>> f([1, 2], [3, 4])
     array([  4.,  36.])
+
+    Backend-specific behavior:
+
+    For the 'f2py' and 'cython' backends, inputs are required to be equal length
+    1-dimensional arrays. The 'f2py' backend will perform type conversion, but
+    the Cython backend will error if the inputs are not of the expected type.
+
+    >>> f_fortran = ufuncify((x, y), y + x**2, backend='f2py')
+    >>> f_fortran(1, 2)
+    array([ 3.])
+    >>> f_fortran(np.array([1, 2, 3]), np.array([1.0, 2.0, 3.0]))
+    array([  2.,   6.,  12.])
+    >>> f_cython = ufuncify((x, y), y + x**2, backend='Cython')
+    >>> f_cython(1, 2)  # doctest: +ELLIPSIS
 
     Traceback (most recent call last):
       ...
