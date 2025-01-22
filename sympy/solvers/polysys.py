@@ -820,6 +820,56 @@ def _sys_sort_key(sys):
     return list(zip(*map(_poly_sort_key, sys)))
 
 
+def get_domain_conversion(domain, gens):
+    if domain.is_PolynomialRing:
+        base_domain = domain.domain
+        params = domain.symbols
+
+        def lift_poly(poly: Poly, new_gen: Symbol) -> Poly:
+            injected = poly.inject()
+            return injected.set_domain(base_domain)
+
+        def lower_poly(poly: Poly, orig_domain, gen_index: int) -> Poly:
+            return poly.eject(*params).set_domain(orig_domain)
+
+        return base_domain, lift_poly, lower_poly
+    else:
+        dom, lift, lower = dom_get_alg_lift(domain)
+
+        def lift_poly(poly: Poly, new_gen: Symbol) -> Poly:
+            new_gens = poly.gens + (new_gen,)
+            new_coeffs = {}
+
+            for monom, coeff in poly.rep.to_dict().items():
+                lifted = lift(coeff)
+                for i, c in enumerate(lifted):
+                    new_monom = monom + (i,)
+                    new_coeffs[new_monom] = c
+
+            return Poly.from_dict(new_coeffs, *new_gens, domain=dom)
+
+        def lower_poly(poly: Poly, orig_domain, gen_index: int) -> Poly:
+            coeffs = defaultdict(list)
+            for monom, coeff in poly.rep.to_dict().items():
+                base_monom = monom[:gen_index] + monom[gen_index + 1:]
+                deg = monom[gen_index]
+                while len(coeffs[base_monom]) <= deg:
+                    coeffs[base_monom].append(0)
+                coeffs[base_monom][deg] = coeff
+
+            new_coeffs = {}
+            for monom, coeff_list in coeffs.items():
+                if not coeff_list:
+                    coeff_list = [0, 0]
+                elif len(coeff_list) == 1:
+                    coeff_list.append(0)
+                new_coeffs[monom] = lower(coeff_list)
+
+            return Poly.from_dict(new_coeffs, *poly.gens[:gen_index], domain=orig_domain)
+
+        return dom, lift_poly, lower_poly
+
+
 def groebner_basis(polys: list[Poly], gens: Optional[Tuple] = None) -> Tuple[list[Poly], list[Poly], list[Poly]]:
 
     if not polys:
@@ -968,7 +1018,8 @@ def groebner_basis_complex(polys: list[Poly], gens: Tuple) -> list[Poly]:
     if domain.is_QQ_I:
         polys = [p.clear_denoms()[1] for p in polys]
 
-    lifted_polys = [_lift_poly(p, i) for p in polys]
+    dom, lift_poly, lower_poly = get_domain_conversion(domain, gens)
+    lifted_polys = [lift_poly(p, i) for p in polys]
     min_poly = Poly(i ** 2 + 1, *new_gens, domain=ZZ)
     lifted_polys.append(min_poly)
 
@@ -979,7 +1030,7 @@ def groebner_basis_complex(polys: list[Poly], gens: Tuple) -> list[Poly]:
         if not isinstance(b, Poly):
             b = Poly(b, *new_gens, domain=ZZ)
         if b.degree(i) < 2:
-            result.append(_lower_poly(b, domain, len(gens)))
+            result.append(lower_poly(b, domain, len(gens)))
 
     return result
 
@@ -990,8 +1041,9 @@ def groebner_basis_algebraic(polys: list[Poly], gens: Tuple) -> list[Poly]:
     new_gens = gens + (alpha,)
 
     cleared_polys = [p.clear_denoms()[1] for p in polys]
+    dom, lift_poly, lower_poly = get_domain_conversion(K, gens)
 
-    lifted_polys = [_lift_poly(p, alpha) for p in cleared_polys]
+    lifted_polys = [lift_poly(p, alpha) for p in cleared_polys]
     min_poly = Poly(K.mod.to_list(), alpha).clear_denoms()[1]
     lifted_polys.append(min_poly)
 
@@ -1002,7 +1054,7 @@ def groebner_basis_algebraic(polys: list[Poly], gens: Tuple) -> list[Poly]:
         if not isinstance(b, Poly):
             b = Poly(b, *new_gens, domain=ZZ)
         if alpha not in b.free_symbols:
-            result.append(_lower_poly(b, K, len(gens)))
+            result.append(lower_poly(b, K, len(gens)))
 
     return result
 
@@ -1016,7 +1068,8 @@ def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly],
         polys = [p.clear_denoms()[1] for p in polys]
         base_domain = ZZ
 
-    injected_polys = [p.inject() for p in polys]
+    dom, lift_poly, lower_poly = get_domain_conversion(domain, gens)
+    injected_polys = [lift_poly(p, None) for p in polys]
     new_gens = gens + tuple(params)
 
     basis = groebner(injected_polys, new_gens)
@@ -1030,9 +1083,9 @@ def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly],
         if all(g not in b.free_symbols for g in gens):
             param_eqs.append(b)
         else:
-            var_basis.append(b.eject(*params).set_domain(domain))
+            var_basis.append(lower_poly(b, domain, len(gens)))
 
-    param_eqs = [p.eject(*params).set_domain(domain) for p in param_eqs]
+    param_eqs = [lower_poly(p, domain, len(gens)) for p in param_eqs]
 
     return var_basis, param_eqs
 
