@@ -593,13 +593,15 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     Using helper functions:
 
     >>> from sympy.abc import x, t
-    >>> expr = 3*x + f(t)  # Main expression using helper function f
-    >>> # Define f(x) = 4*x using f2py backend
+    >>> from sympy import Function
+    >>> helper_func = Function('helper_func')  # Define symbolic function
+    >>> expr = 3*x + helper_func(t)  # Main expression using helper function
+    >>> # Define helper_func(x) = 4*x using f2py backend
     >>> binary_func = autowrap(expr, args=[x, t],
-    ...                       helpers=('f', 4*x, [x]))
+    ...                       helpers=('helper_func', 4*x, [x]))
     >>> # Same example using cython backend
     >>> binary_func = autowrap(expr, args=[x, t], backend='cython',
-    ...                       helpers=[('f', 4*x, [x])])
+    ...                       helpers=[('helper_func', 4*x, [x])])
 
     Type handling example:
 
@@ -1061,17 +1063,15 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
 
     Using helper functions:
 
-    >>> expr = x**2 + y*h(x)  # Main expression using helper function h
-    >>> # Define h(x) = x**3
-    >>> f = ufuncify((x, y), expr, helpers=[('h', x**3, [x])])
+    >>> from sympy import Function
+    >>> helper_func = Function('helper_func')  # Define symbolic function
+    >>> expr = x**2 + y*helper_func(x)  # Main expression using helper function
+    >>> # Define helper_func(x) = x**3
+    >>> f = ufuncify((x, y), expr, helpers=[('helper_func', x**3, [x])])
     >>> f([1, 2], [3, 4])
     array([  4.,  36.])
 
     Type handling with different backends:
-
-    For the 'f2py' and 'cython' backends, inputs are required to be equal length
-    1-dimensional arrays. The 'f2py' backend will perform type conversion, but
-    the Cython backend will error if the inputs are not of the expected type.
 
     >>> f_fortran = ufuncify((x, y), y + x**2, backend='f2py')
     >>> f_fortran(1, 2)
