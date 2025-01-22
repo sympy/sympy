@@ -577,6 +577,25 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         - name : str, the function name
         - expr : sympy expression, the function
         - args : iterable, the function arguments (can be any iterable of symbols)
+    code_gen : CodeGen instance
+        An instance of a CodeGen subclass. Overrides ``language``.
+    include_dirs : [string]
+        A list of directories to search for C/C++ header files (in Unix form
+        for portability).
+    library_dirs : [string]
+        A list of directories to search for C/C++ libraries at link time.
+    libraries : [string]
+        A list of library names (not filenames or paths) to link against.
+    extra_compile_args : [string]
+        Any extra platform- and compiler-specific information to use when
+        compiling the source files in 'sources'.  For platforms and compilers
+        where "command line" makes sense, this is typically a list of
+        command-line arguments, but for other platforms it could be anything.
+    extra_link_args : [string]
+        Any extra platform- and compiler-specific information to use when
+        linking object files together to create the extension (or to create a
+        new static Python interpreter).  Similar interpretation as for
+        'extra_compile_args'.
 
     Examples
     ========
