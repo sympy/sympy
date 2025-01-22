@@ -49,11 +49,10 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.dotproduct import DotProduct
-from sympy.physics import units
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
-from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro, kg, m, s, mile, hour, minute
+from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro, kg, mile, hour, minute
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.fields import field
 from sympy.polys.polytools import Poly
@@ -3160,41 +3159,31 @@ def test_latex_with_unevaluated():
 
 def test_unit_spacing():
     """Test proper spacing between units in LaTeX output"""
+    t = 1.0 * kg / minute / second
+    assert latex(t) == r'\frac{1.0 \text{kg}}{\text{minute} \text{s}}'
 
-    # Test basic unit combinations
-    t = 1.0 * kg / minute / s
-    assert latex(t) == r'\frac{1.0 \text{kg}}{s \text{minute}}'
-
-    # Test multiple units in denominator
-    expr = 1 / (s * minute)
-    assert latex(expr) == r'\frac{1}{s \text{minute}}'
+    expr = 1 / (second * minute)
+    assert latex(expr) == r'\frac{1}{\text{minute} \text{s}}'
 
 def test_unit_spacing_in_equations():
     """Test unit spacing in more complex equations"""
-
-    # Test in equations with multiple terms
     x = Symbol('x')
-    expr = x * m + 2 * m
-    assert latex(expr) == r'm x + 2 m'
+    expr = x * meter + 2 * meter
+    assert latex(expr) == r'x \text{m} + 2 \text{m}'
 
-    # Test with multiple unit systems
     expr = 1 * kg * mile / hour
     assert latex(expr) == r'\frac{\text{kg} \text{mile}}{\text{hour}}'
 
 def test_edge_cases():
     """Test edge cases and special situations"""
-
-    # Test unit with large numbers
     expr = 1e6 * kg
     assert latex(expr) == r'1000000.0 \text{kg}'
 
-    # Test unit with small numbers
     expr = 1e-6 * kg
     assert latex(expr) == r'1.0 \cdot 10^{-6} \text{kg}'
 
-    # Test unit division
-    expr = kg / m
-    assert latex(expr) == r'\frac{\text{kg}}{m}'
+    expr = kg / meter
+    assert latex(expr) == r'\frac{\text{kg}}{\text{m}}'
 
 if __name__ == '__main__':
     test_unit_spacing()
