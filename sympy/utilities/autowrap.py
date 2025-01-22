@@ -1054,6 +1054,9 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         - name : str, the function name
         - expr : sympy expression, the function
         - args : iterable, the function arguments (can be any iterable of symbols)
+    kwargs : dict
+        These kwargs will be passed to autowrap if the `f2py` or `cython`
+        backend is used and ignored if the `numpy` backend is used.
 
     Notes
     =====
@@ -1063,6 +1066,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     conversion. Use of the other backends will result in a "ufunc-like"
     function, which requires equal length 1-dimensional arrays for all
     arguments, and will not perform any type conversions.
+
+    References
+    ==========
+
+    .. [1] https://numpy.org/doc/stable/reference/ufuncs.html
 
     Examples
     ========
@@ -1091,6 +1099,10 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     array([  4.,  36.])
 
     Type handling with different backends:
+
+    For the 'f2py' and 'cython' backends, inputs are required to be equal length
+    1-dimensional arrays. The 'f2py' backend will perform type conversion, but
+    the Cython backend will error if the inputs are not of the expected type.
 
     >>> f_fortran = ufuncify((x, y), y + x**2, backend='f2py')
     >>> f_fortran(1, 2)
