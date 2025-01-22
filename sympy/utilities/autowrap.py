@@ -573,45 +573,15 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         helpful for debugging.
     helpers : 3-tuple or iterable of 3-tuples, optional
         Used to define auxiliary functions needed for the main expression.
-        A single tuple of the form (name, expr, args) where:
+        Each tuple should be of the form (name, expr, args) where:
         - name : str, the function name
         - expr : sympy expression, the function
-        - args : arguments, the function arguments
-
-        For the cython backend:
-        Either a single tuple or list of tuples, each of form (name, expr, args).
-
-        Example:
-        >>> from sympy.abc import x, t
-        >>> expr = 3*x + f(t)  # Main expression using helper function f
-        >>> # Define f(x) = 4*x
-        >>> binary_func = autowrap(expr, args=[x, t],
-        ...                       helpers=('f', 4*x, [x]))  # f2py
-        >>> # Or for cython:
-        >>> binary_func = autowrap(expr, args=[x, t], backend='cython',
-        ...                       helpers=[('f', 4*x, [x])])
-    code_gen : CodeGen instance
-        An instance of a CodeGen subclass. Overrides ``language``.
-    include_dirs : [string]
-        A list of directories to search for C/C++ header files (in Unix form
-        for portability).
-    library_dirs : [string]
-        A list of directories to search for C/C++ libraries at link time.
-    libraries : [string]
-        A list of library names (not filenames or paths) to link against.
-    extra_compile_args : [string]
-        Any extra platform- and compiler-specific information to use when
-        compiling the source files in 'sources'.  For platforms and compilers
-        where "command line" makes sense, this is typically a list of
-        command-line arguments, but for other platforms it could be anything.
-    extra_link_args : [string]
-        Any extra platform- and compiler-specific information to use when
-        linking object files together to create the extension (or to create a
-        new static Python interpreter).  Similar interpretation as for
-        'extra_compile_args'.
+        - args : iterable, the function arguments (can be any iterable of symbols)
 
     Examples
     ========
+
+    Basic usage:
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
@@ -619,6 +589,29 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     >>> binary_func = autowrap(expr)
     >>> binary_func(1, 4, 2)
     -1.0
+
+    Using helper functions:
+
+    >>> from sympy.abc import x, t
+    >>> expr = 3*x + f(t)  # Main expression using helper function f
+    >>> # Define f(x) = 4*x using f2py backend
+    >>> binary_func = autowrap(expr, args=[x, t],
+    ...                       helpers=('f', 4*x, [x]))
+    >>> # Same example using cython backend
+    >>> binary_func = autowrap(expr, args=[x, t], backend='cython',
+    ...                       helpers=[('f', 4*x, [x])])
+
+    Type handling example:
+
+    >>> import numpy as np
+    >>> expr = x + y
+    >>> f_cython = autowrap(expr, backend='cython')
+    >>> f_cython(1, 2)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    TypeError: Argument '_x' has incorrect type (expected numpy.ndarray, got int)
+    >>> f_cython(np.array([1.0]), np.array([2.0]))
+    array([ 3.])
 
     """
     if language:
@@ -1039,18 +1032,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         Each tuple should be of the form (name, expr, args) where:
         - name : str, the function name
         - expr : sympy expression, the function
-        - args : arguments, the function arguments
-
-        Example:
-        >>> from sympy.abc import x, t
-        >>> expr = 3*x + f(t)  # Main expression using helper function f
-        >>> # Define f(x) = 4*x
-        >>> ufunc = ufuncify([x, t], expr, helpers=[('f', 4*x, [x])])
-        >>> ufunc([1, 2], [0.5, 1.0])
-        array([ 5.,  9.])
-    kwargs : dict
-        These kwargs will be passed to autowrap if the `f2py` or `cython`
-        backend is used and ignored if the `numpy` backend is used.
+        - args : iterable, the function arguments (can be any iterable of symbols)
 
     Notes
     =====
@@ -1061,13 +1043,10 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     function, which requires equal length 1-dimensional arrays for all
     arguments, and will not perform any type conversions.
 
-    References
-    ==========
-
-    .. [1] https://numpy.org/doc/stable/reference/ufuncs.html
-
     Examples
     ========
+
+    Basic usage:
 
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y
@@ -1080,11 +1059,15 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     >>> f(np.arange(5), 3)
     array([  3.,   4.,   7.,  12.,  19.])
 
+    Using helper functions:
+
     >>> expr = x**2 + y*h(x)  # Main expression using helper function h
     >>> # Define h(x) = x**3
     >>> f = ufuncify((x, y), expr, helpers=[('h', x**3, [x])])
     >>> f([1, 2], [3, 4])
     array([  4.,  36.])
+
+    Type handling with different backends:
 
     For the 'f2py' and 'cython' backends, inputs are required to be equal length
     1-dimensional arrays. The 'f2py' backend will perform type conversion, but
