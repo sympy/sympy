@@ -52,7 +52,7 @@ from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
-from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
+from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro, kg, m, s, mile, hour, minute
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.fields import field
 from sympy.polys.polytools import Poly
@@ -93,10 +93,6 @@ from sympy.printing.latex import (latex, translate, greek_letters_set,
 import sympy as sym
 
 from sympy.abc import mu, tau
-from sympy import latex
-from sympy.testing.pytest import raises
-from sympy.physics import units  # Fixed import
-from sympy.physics.units import kg, m, s, N, mile, hour # Direct unit imports
 
 
 class lowergamma(sym.lowergamma):
@@ -3165,7 +3161,6 @@ def test_unit_spacing():
     """Test proper spacing between units in LaTeX output"""
 
     # Test basic unit combinations
-    minute = units.minute
     t = 1.0 * kg / minute / s
     assert latex(t) == r'\frac{1.0 \text{kg}}{s \text{minute}}'
 

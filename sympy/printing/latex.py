@@ -525,7 +525,7 @@ class LatexPrinter(Printer):
         def add_unit_spacing(tex: str) -> str:
            """Add thin spaces after unit text commands."""
            if r'\text{' in tex:
-              for unit in ['kg', 's', 'minute', 'm', 'N', 'J', 'W', 'Pa', 'V', 'A']:
+              for unit in ['kg', 's', 'minute', 'm', 'J', 'W', 'Pa', 'V', 'A']:
                 tex = tex.replace(rf'\text{{{unit}}}', rf'\text{{{unit}}}\,')
               tex = tex.rstrip(r'\,')  # Remove trailing thin space if it exists
            return tex
