@@ -757,7 +757,7 @@ def dup_mul(f, g, K):
 
     n = max(df, dg) + 1
 
-    if n < 100:
+    if K.is_RR or K.is_ComplexField or n < 100:
         h = []
 
         for i in range(0, df + dg + 1):
