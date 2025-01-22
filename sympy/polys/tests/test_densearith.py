@@ -2,6 +2,8 @@
 
 from sympy.external.gmpy import GROUND_TYPES
 
+from sympy.polys import ring
+
 from sympy.polys.densebasic import (
     dup_normal, dmp_normal,
 )
@@ -42,7 +44,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.specialpolys import f_polys
-from sympy.polys.domains import FF, ZZ, QQ
+from sympy.polys.domains import FF, ZZ, QQ, RR
 
 from sympy.testing.pytest import raises
 
@@ -995,3 +997,29 @@ def test_dmp_expand():
     assert dmp_expand(([[1], [2], [3]], [[1], [2]], [[7], [5], [4], [3]]), 1, ZZ) == \
         dmp_mul([[1], [2], [3]], dmp_mul([[1], [2]], [[7], [5], [
                 4], [3]], 1, ZZ), 1, ZZ)
+
+def test_dup_mul_inexact_domain_stability():
+
+    R, x = ring("x", RR)
+    large_coeff = RR(18786186952704.0)
+    p = large_coeff * x
+    result = p * x
+    coeff = result.coeffs()[0]
+
+    relative_error = abs((coeff - large_coeff) / large_coeff)
+    assert relative_error < 1e-12, f"Relative error {relative_error} exceeds threshold"
+
+    small_coeff = RR('1e-10')
+    large_coeff = RR('1e20')
+    p2 = small_coeff * x + large_coeff
+    result2 = p2 * x
+    coeffs = result2.coeffs()
+
+    large_result = coeffs[1]
+    small_result = coeffs[0]
+
+    large_rel_error = abs((large_result - large_coeff) / large_coeff)
+    small_rel_error = abs((small_result - small_coeff) / small_coeff)
+
+    assert large_rel_error < 1e-12, f"Large coefficient error {large_rel_error} exceeds threshold"
+    assert small_rel_error < 1e-12, f"Small coefficient error {small_rel_error} exceeds threshold"
