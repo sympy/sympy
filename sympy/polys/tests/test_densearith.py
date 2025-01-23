@@ -2,8 +2,6 @@
 
 from sympy.external.gmpy import GROUND_TYPES
 
-from sympy.polys import ring
-
 from sympy.polys.densebasic import (
     dup_normal, dmp_normal,
 )
@@ -43,8 +41,8 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed,
 )
 
-from sympy.polys.specialpolys import f_polys
-from sympy.polys.domains import FF, ZZ, QQ, RR
+from sympy.polys.specialpolys import f_polys, Symbol, Poly
+from sympy.polys.domains import FF, ZZ, QQ
 
 from sympy.testing.pytest import raises
 
@@ -998,28 +996,36 @@ def test_dmp_expand():
         dmp_mul([[1], [2], [3]], dmp_mul([[1], [2]], [[7], [5], [
                 4], [3]], 1, ZZ), 1, ZZ)
 
-def test_dup_mul_inexact_domain_stability():
+def test_dup_mul_poly():
+    x = Symbol('x')
 
-    R, x = ring("x", RR)
-    large_coeff = RR(18786186952704.0)
-    p = large_coeff * x
-    result = p * x
-    coeff = result.coeffs()[0]
+    p = Poly(18786186952704.0*x**165 + 9.31746684052255e+31*x**82, x, domain='RR')
 
-    relative_error = abs((coeff - large_coeff) / large_coeff)
-    assert relative_error < 1e-12, f"Relative error {relative_error} exceeds threshold"
+    assert p.LC() == 18786186952704.0
+    assert (p * x).LC() == 18786186952704.0
 
-    small_coeff = RR('1e-10')
-    large_coeff = RR('1e20')
-    p2 = small_coeff * x + large_coeff
-    result2 = p2 * x
-    coeffs = result2.coeffs()
+    p = Poly(0.1234*x**165 + 1e30*x**82, x, domain='RR')
 
-    large_result = coeffs[1]
-    small_result = coeffs[0]
+    assert p.LC() == 0.1234
+    assert (p * x).LC() == 0.1234
 
-    large_rel_error = abs((large_result - large_coeff) / large_coeff)
-    small_rel_error = abs((small_result - small_coeff) / small_coeff)
+    p_rr = Poly(18786186952704.0*x**165 + 9.31746684052255e+31*x**82, x, domain='RR')
+    p_qq = p_rr.set_domain(QQ)
 
-    assert large_rel_error < 1e-12, f"Large coefficient error {large_rel_error} exceeds threshold"
-    assert small_rel_error < 1e-12, f"Small coefficient error {small_rel_error} exceeds threshold"
+    assert abs(p_rr.LC() - p_qq.LC()) < 1e-10
+
+    p = Poly(18786186952704.0*x**165 + 9.31746684052255e+31*x**82, x, domain='RR')
+
+    p1 = p * x
+    assert abs(p1.coeffs()[0] - p.coeffs()[0]) < 1e-10
+    p2 = p + p
+    assert abs(p2.coeffs()[0] - 2*p.coeffs()[0]) < 1e-10
+    p3 = p - p
+    assert all(abs(c) < 1e-10 for c in p3.coeffs())
+
+    p1 = Poly(1e-100*x**10 + 1e100*x**5, x, domain='RR')
+    p2 = Poly(1e5*x**10 + 1e6*x**5, x, domain='RR')
+
+    assert (p1 * x).degree() == 11
+    assert abs((p1 * x).LC() - 1e-100) < 1e-110
+    assert abs((p2 * x).LC() - 1e5) < 1e-5
