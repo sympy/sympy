@@ -574,9 +574,11 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     helpers : 3-tuple or iterable of 3-tuples, optional
         Used to define auxiliary functions needed for the main expression.
         Each tuple should be of the form (name, expr, args) where:
+
         - name : str, the function name
         - expr : sympy expression, the function
         - args : iterable, the function arguments (can be any iterable of symbols)
+
     code_gen : CodeGen instance
         An instance of a CodeGen subclass. Overrides ``language``.
     include_dirs : [string]
@@ -1055,9 +1057,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     helpers : 3-tuple or iterable of 3-tuples, optional
         Used to define auxiliary functions needed for the main expression.
         Each tuple should be of the form (name, expr, args) where:
+
         - name : str, the function name
         - expr : sympy expression, the function
         - args : iterable, the function arguments (can be any iterable of symbols)
+
     kwargs : dict
         These kwargs will be passed to autowrap if the `f2py` or `cython`
         backend is used and ignored if the `numpy` backend is used.
