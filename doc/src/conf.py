@@ -100,7 +100,7 @@ redirects = {
     "modules/physics/mechanics/reference": "../../../explanation/modules/physics/mechanics/reference.html",
     "modules/physics/mechanics/symsystem": "../../../explanation/modules/physics/mechanics/symsystem.html",
     "modules/physics/mechanics/linearize": "../../../explanation/modules/physics/mechanics/linearize.html",
-    "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../../../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_uses.html",
+    "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../../../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_users.html",
     "tutorials/physics/biomechanics/biomechanics": "../../../explanation/modules/physics/biomechanics/biomechanics.html",
 
 }
