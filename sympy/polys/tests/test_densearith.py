@@ -42,9 +42,11 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.specialpolys import f_polys, Symbol, Poly
-from sympy.polys.domains import FF, ZZ, QQ
+from sympy.polys.domains import FF, ZZ, QQ, CC
 
 from sympy.testing.pytest import raises
+
+x = Symbol('x')
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 F_0 = dmp_mul_ground(dmp_normal(f_0, 2, QQ), QQ(1, 7), 2, QQ)
@@ -997,35 +999,9 @@ def test_dmp_expand():
                 4], [3]], 1, ZZ), 1, ZZ)
 
 def test_dup_mul_poly():
-    x = Symbol('x')
-
     p = Poly(18786186952704.0*x**165 + 9.31746684052255e+31*x**82, x, domain='RR')
+    px = Poly(18786186952704.0*x**166 + 9.31746684052255e+31*x**83, x, domain='RR')
 
-    assert p.LC() == 18786186952704.0
-    assert (p * x).LC() == 18786186952704.0
-
-    p = Poly(0.1234*x**165 + 1e30*x**82, x, domain='RR')
-
-    assert p.LC() == 0.1234
-    assert (p * x).LC() == 0.1234
-
-    p_rr = Poly(18786186952704.0*x**165 + 9.31746684052255e+31*x**82, x, domain='RR')
-    p_qq = p_rr.set_domain(QQ)
-
-    assert abs(p_rr.LC() - p_qq.LC()) < 1e-10
-
-    p = Poly(18786186952704.0*x**165 + 9.31746684052255e+31*x**82, x, domain='RR')
-
-    p1 = p * x
-    assert abs(p1.coeffs()[0] - p.coeffs()[0]) < 1e-10
-    p2 = p + p
-    assert abs(p2.coeffs()[0] - 2*p.coeffs()[0]) < 1e-10
-    p3 = p - p
-    assert all(abs(c) < 1e-10 for c in p3.coeffs())
-
-    p1 = Poly(1e-100*x**10 + 1e100*x**5, x, domain='RR')
-    p2 = Poly(1e5*x**10 + 1e6*x**5, x, domain='RR')
-
-    assert (p1 * x).degree() == 11
-    assert abs((p1 * x).LC() - 1e-100) < 1e-110
-    assert abs((p2 * x).LC() - 1e5) < 1e-5
+    assert p * x == px
+    assert p.set_domain(QQ) * x == px.set_domain(QQ)
+    assert p.set_domain(CC) * x == px.set_domain(CC)
