@@ -148,6 +148,10 @@ def _(expr, assumptions):
             return ask(~Q.nonzero(x), assumptions)
         return
 
+    # Check if base is zero and exponent is negative
+    if ask(Q.zero(expr.base), assumptions) and ask(Q.negative(expr.exp), assumptions):
+        return False  # 0^(-n) is undefined, hence not rational
+
     if ask(Q.integer(expr.exp), assumptions):
         return ask(Q.rational(expr.base), assumptions)
     elif ask(Q.rational(expr.exp), assumptions):
@@ -156,6 +160,7 @@ def _(expr, assumptions):
 
 @RationalPredicate.register_many(asin, atan, cos, sin, tan)
 def _(expr, assumptions):
+
     x = expr.args[0]
     if ask(Q.rational(x), assumptions):
         return ask(~Q.nonzero(x), assumptions)
