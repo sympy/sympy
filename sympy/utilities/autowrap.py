@@ -623,7 +623,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     >>> # Same example using cython backend
     >>> binary_func = autowrap(expr, args=[x, t], backend='cython',
     ...                       helpers=[('helper_func', 4*x, [x])])
-    >>> binary_func_cython(2, 5)  # 3*2 + helper_func(5) = 6 + 20
+    >>> binary_func(2, 5)  # 3*2 + helper_func(5) = 6 + 20
     26.0
 
     Type handling example:
