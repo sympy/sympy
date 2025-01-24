@@ -35,10 +35,19 @@ from sympy.polys.polyerrors import (
 
 from math import ceil as _ceil, log2 as _log2
 
-
-def dup_integrate(f, m, K):
+def dup_integrate(poly_coefficients, n_integrations, field):
     """
     Computes the indefinite integral of ``f`` in ``K[x]``.
+
+    Parameters
+    ==========
+
+    poly_coefficients : list
+        List of coefficients of the polynomial to integrate.
+    num_integrations : int
+        Number of integrations to perform.
+    field : Field
+        Coefficient domain.
 
     Examples
     ========
@@ -51,21 +60,28 @@ def dup_integrate(f, m, K):
     >>> R.dup_integrate(x**2 + 2*x, 2)
     1/12*x**4 + 1/3*x**3
 
+    >>> from sympy.polys.densetools import dup_integrate
+    >>> dup_integrate([1, 2], 1, QQ)
+    [MPQ(1,2), MPQ(2,1), MPQ(0,1)]
+
+
     """
-    if m <= 0 or not f:
-        return f
+    if n_integrations <= 0 or not poly_coefficients:
+        return poly_coefficients
 
-    g = [K.zero]*m
+    result = [field.zero] * n_integrations
 
-    for i, c in enumerate(reversed(f)):
-        n = i + 1
+    for i, coefficient in enumerate(reversed(poly_coefficients)):
+        # The denominator represent also the exponent
+        denominator = i + 1
 
-        for j in range(1, m):
-            n *= i + j + 1
+        for j in range(1, n_integrations):
+            denominator *= i + j + 1
 
-        g.insert(0, K.exquo(c, K(n)))
+        quotient = field.exquo(coefficient, field(denominator))
+        result.insert(0, quotient)
 
-    return g
+    return result
 
 
 def dmp_integrate(f, m, u, K):
