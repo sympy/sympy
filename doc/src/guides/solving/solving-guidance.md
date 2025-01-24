@@ -55,7 +55,7 @@ root of a polynomial), you can evaluate them numerically using
 >>> from sympy.abc import x
 >>> solutions = solve(x**5 - x - 1, x, dict=True)
 >>> solutions
-[{x: CRootOf(x**5 - x - 1, 0)}, {x: CRootOf(x**5 - x - 1, 1)}, {x: CRootOf(x**5 - x - 1, 2)}, {x: CRootOf(x**5 - x - 1, 3)}, {x: CRootOf(x**5 - x - 1, 4)}]
+[{x: CRootOf(_x**5 - _x - 1, 0)}, {x: CRootOf(_x**5 - _x - 1, 1)}, {x: CRootOf(_x**5 - _x - 1, 2)}, {x: CRootOf(_x**5 - _x - 1, 3)}, {x: CRootOf(_x**5 - _x - 1, 4)}]
 >>> [solution[x].evalf(3) for solution in solutions]
 [1.17, -0.765 - 0.352*I, -0.765 + 0.352*I, 0.181 - 1.08*I, 0.181 + 1.08*I]
 ```
