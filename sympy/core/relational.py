@@ -446,14 +446,15 @@ class Relational(Boolean, EvalfMixin):
                     x = free.pop()
                     dif = r.lhs - r.rhs
                     m, b = linear_coeffs(dif, x)
-                    if m.is_zero is False:
+                    mz = m.is_zero
+                    if mz is False:
                         if m.is_negative:
                             # Dividing with a negative number, so change order of arguments
                             # canonical will put the symbol back on the lhs later
                             r = r.func(-b / m, x)
                         else:
                             r = r.func(x, -b / m)
-                    else:
+                    elif mz is True:  # fixing issue 26847 (mz can be None)
                         r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
@@ -465,8 +466,9 @@ class Relational(Boolean, EvalfMixin):
                         constant = c[-1]
                         c[-1] = 0
                         scale = gcd(c)
-                        c = [ctmp / scale for ctmp in c]
-                        r = r.func(Poly.from_list(c, x).as_expr(), -constant / scale)
+                        if scale.is_zero is False:  # avoid dividing by symbolic expressions
+                            c = [ctmp / scale for ctmp in c]
+                            r = r.func(Poly.from_list(c, x).as_expr(), -constant / scale)
                     except PolynomialError:
                         pass
             elif len(free) >= 2:
@@ -479,9 +481,10 @@ class Relational(Boolean, EvalfMixin):
                     constant = m[-1]
                     del m[-1]
                     scale = gcd(m)
-                    m = [mtmp / scale for mtmp in m]
-                    nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
-                    if scale.is_zero is False:
+                    scalez = scale.is_zero
+                    if scalez is False:
+                        m = [mtmp / scale for mtmp in m]
+                        nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
                         if constant != 0:
                             # lhs: expression, rhs: constant
                             newexpr = Add(*[i * j for i, j in nzm])
@@ -492,8 +495,7 @@ class Relational(Boolean, EvalfMixin):
                             del nzm[0]
                             newexpr = Add(*[i * j for i, j in nzm])
                             r = r.func(lhsterm, -newexpr)
-
-                    else:
+                    elif scalez is True:
                         r = r.func(constant, S.Zero)
                 except ValueError:
                     pass
