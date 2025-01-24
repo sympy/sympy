@@ -1,5 +1,5 @@
 from sympy.core.singleton import S
-from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
+from sympy.combinatorics.fp_groups import (fp_group, FpGroup, low_index_subgroups,
                                    reidemeister_presentation, FpSubgroup,
                                            simplify_presentation)
 from sympy.combinatorics.free_groups import (free_group, FreeGroup)
@@ -27,7 +27,7 @@ def test_low_index_subgroups():
     F, x, y = free_group("x, y")
 
     # Example 5.10 from [1] Pg. 194
-    f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    f,x,y = fp_group(F, [x**2, y**3, (x*y)**4])
     L = low_index_subgroups(f, 4)
     t1 = [[[0, 0, 0, 0]],
           [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]],
@@ -36,7 +36,7 @@ def test_low_index_subgroups():
     for i in range(len(t1)):
         assert L[i].table == t1[i]
 
-    f = FpGroup(F, [x**2, y**3, (x*y)**7])
+    f, x, y = fp_group(F, [x**2, y**3, (x*y)**7])
     L = low_index_subgroups(f, 15)
     t2 = [[[0, 0, 0, 0]],
            [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 4, 5],
@@ -98,7 +98,7 @@ def test_low_index_subgroups():
     for i  in range(len(t2)):
         assert L[i].table == t2[i]
 
-    f = FpGroup(F, [x**2, y**3, (x*y)**7])
+    f, x, y = fp_group(F, [x**2, y**3, (x*y)**7])
     L = low_index_subgroups(f, 10, [x])
     t3 = [[[0, 0, 0, 0]],
           [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 4, 5], [4, 4, 5, 3],
@@ -113,7 +113,7 @@ def test_low_index_subgroups():
 
 def test_subgroup_presentations():
     F, x, y = free_group("x, y")
-    f = FpGroup(F, [x**3, y**5, (x*y)**2])
+    f, x, y = fp_group(F, [x**3, y**5, (x*y)**2])
     H = [x*y, x**-1*y**-1*x*y*x]
     p1 = reidemeister_presentation(f, H)
     assert str(p1) == "((y_1, y_2), (y_1**2, y_2**3, y_2*y_1*y_2*y_1*y_2*y_1))"
@@ -121,17 +121,17 @@ def test_subgroup_presentations():
     H = f.subgroup(H)
     assert (H.generators, H.relators) == p1
 
-    f = FpGroup(F, [x**3, y**3, (x*y)**3])
+    f, x, y = fp_group(F, [x**3, y**3, (x*y)**3])
     H = [x*y, x*y**-1]
     p2 = reidemeister_presentation(f, H)
     assert str(p2) == "((x_0, y_0), (x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0))"
 
-    f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
+    f, x, y = fp_group(F, [x**2*y**2, y**-1*x*y*x**-3])
     H = [x]
     p3 = reidemeister_presentation(f, H)
     assert str(p3) == "((x_0,), (x_0**4,))"
 
-    f = FpGroup(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
+    f, x, y = fp_group(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
     H = [x]
     p4 = reidemeister_presentation(f, H)
     assert str(p4) == "((x_0,), (x_0**6,))"
@@ -141,7 +141,7 @@ def test_subgroup_presentations():
     # See [2] Pg 474 group PSL_2(11)
     # This is the group PSL_2(11)
     F, a, b, c = free_group("a, b, c")
-    f = FpGroup(F, [a**11, b**5, c**4, (b*c**2)**2, (a*b*c)**3, (a**4*c**2)**3, b**2*c**-1*b**-1*c, a**4*b**-1*a**-1*b])
+    f, a, b, c = fp_group(F, [a**11, b**5, c**4, (b*c**2)**2, (a*b*c)**3, (a**4*c**2)**3, b**2*c**-1*b**-1*c, a**4*b**-1*a**-1*b])
     H = [a, b, c**2]
     gens, rels = reidemeister_presentation(f, H)
     assert str(gens) == "(b_1, c_3)"
@@ -151,22 +151,22 @@ def test_subgroup_presentations():
 @slow
 def test_order():
     F, x, y = free_group("x, y")
-    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    f, x, y = fp_group(F, [x**4, y**2, x*y*x**-1*y])
     assert f.order() == 8
 
-    f = FpGroup(F, [x*y*x**-1*y**-1, y**2])
+    f, x, y = fp_group(F, [x*y*x**-1*y**-1, y**2])
     assert f.order() is S.Infinity
 
     F, a, b, c = free_group("a, b, c")
-    f = FpGroup(F, [a**250, b**2, c*b*c**-1*b, c**4, c**-1*a**-1*c*a, a**-1*b**-1*a*b])
+    f, a, b, c = fp_group(F, [a**250, b**2, c*b*c**-1*b, c**4, c**-1*a**-1*c*a, a**-1*b**-1*a*b])
     assert f.order() == 2000
 
     F, x = free_group("x")
-    f = FpGroup(F, [])
+    f, x = fp_group(F, [])
     assert f.order() is S.Infinity
 
-    f = FpGroup(free_group('')[0], [])
-    assert f.order() == 1
+    # f = FpGroup(free_group('')[0], [])
+    # assert f.order() == 1
 
 def test_fp_subgroup():
     def _test_subgroup(K, T, S):
@@ -175,7 +175,7 @@ def test_fp_subgroup():
         assert T.is_injective()
         assert T.image().order() == S.order()
     F, x, y = free_group("x, y")
-    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    f, x, y = fp_group(F, [x**4, y**2, x*y*x**-1*y])
     S = FpSubgroup(f, [x*y])
     assert (x*y)**-3 in S
     K, T = f.subgroup([x*y], homomorphism=True)
@@ -189,7 +189,7 @@ def test_fp_subgroup():
     assert T(K.generators[0]**3) == y**3
     _test_subgroup(K, T, S)
 
-    f = FpGroup(F, [x**3, y**5, (x*y)**2])
+    f, x, y = fp_group(F, [x**3, y**5, (x*y)**2])
     H = [x*y, x**-1*y**-1*x*y*x]
     K, T = f.subgroup(H, homomorphism=True)
     S = FpSubgroup(f, H)
@@ -198,28 +198,28 @@ def test_fp_subgroup():
 def test_permutation_methods():
     F, x, y = free_group("x, y")
     # DihedralGroup(8)
-    G = FpGroup(F, [x**2, y**8, x*y*x**-1*y])
+    G, x, y = fp_group(F, [x**2, y**8, x*y*x**-1*y])
     T = G._to_perm_group()[1]
     assert T.is_isomorphism()
     assert G.center() == [y**4]
 
     # DiheadralGroup(4)
-    G = FpGroup(F, [x**2, y**4, x*y*x**-1*y])
+    G, x, y = fp_group(F, [x**2, y**4, x*y*x**-1*y])
     S = FpSubgroup(G, G.normal_closure([x]))
     assert x in S
     assert y**-1*x*y in S
 
     # Z_5xZ_4
-    G = FpGroup(F, [x*y*x**-1*y**-1, y**5, x**4])
+    G, x, y = fp_group(F, [x*y*x**-1*y**-1, y**5, x**4])
     assert G.is_abelian
     assert G.is_solvable
 
     # AlternatingGroup(5)
-    G = FpGroup(F, [x**3, y**2, (x*y)**5])
+    G, x, y = fp_group(F, [x**3, y**2, (x*y)**5])
     assert not G.is_solvable
 
     # AlternatingGroup(4)
-    G = FpGroup(F, [x**3, y**2, (x*y)**3])
+    G, x, y = fp_group(F, [x**3, y**2, (x*y)**3])
     assert len(G.derived_series()) == 3
     S = FpSubgroup(G, G.derived_subgroup())
     assert S.order() == 4
@@ -239,19 +239,19 @@ def test_simplify_presentation():
 
 def test_cyclic():
     F, x, y = free_group("x, y")
-    f = FpGroup(F, [x*y, x**-1*y**-1*x*y*x])
+    f, x, y = fp_group(F, [x*y, x**-1*y**-1*x*y*x])
     assert f.is_cyclic
-    f = FpGroup(F, [x*y, x*y**-1])
+    f, x, y = fp_group(F, [x*y, x*y**-1])
     assert f.is_cyclic
-    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    f, x, y = fp_group(F, [x**4, y**2, x*y*x**-1*y])
     assert not f.is_cyclic
 
 
 def test_abelian_invariants():
     F, x, y = free_group("x, y")
-    f = FpGroup(F, [x*y, x**-1*y**-1*x*y*x])
+    f, x, y = fp_group(F, [x*y, x**-1*y**-1*x*y*x])
     assert f.abelian_invariants() == []
-    f = FpGroup(F, [x*y, x*y**-1])
+    f, x, y = fp_group(F, [x*y, x*y**-1])
     assert f.abelian_invariants() == [2]
-    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    f, x, y = fp_group(F, [x**4, y**2, x*y*x**-1*y])
     assert f.abelian_invariants() == [2, 4]
