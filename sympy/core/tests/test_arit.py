@@ -1060,7 +1060,7 @@ def test_Pow_is_integer():
 
     assert sqrt(3).is_integer is False
     assert sqrt(.3).is_integer is False
-    assert Pow(0, negative_exp, evaluate=False).is_integer is False 
+    assert Pow(0, negative_exp, evaluate=False).is_integer is False
     assert Pow(3, 2, evaluate=False).is_integer is True
     assert Pow(3, 0, evaluate=False).is_integer is True
     assert Pow(3, -2, evaluate=False).is_integer is False
