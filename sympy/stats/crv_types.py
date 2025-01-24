@@ -40,6 +40,7 @@ Moyal
 Nakagami
 Normal
 Pareto
+PERT
 PowerFunction
 QuadraticU
 RaisedCosine
@@ -63,6 +64,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
 from sympy.functions.special.bessel import (besseli, besselj, besselk)
 from sympy.functions.special.beta_functions import beta as beta_fn
+from sympy.functions.special.beta_functions import betainc_regularized
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
@@ -131,6 +133,7 @@ __all__ = ['ContinuousRV',
 'Normal',
 'GaussianInverse',
 'Pareto',
+'PERT',
 'PowerFunction',
 'QuadraticU',
 'RaisedCosine',
@@ -3520,6 +3523,111 @@ def Pareto(name, xm, alpha):
     """
 
     return rv(name, ParetoDistribution, (xm, alpha))
+
+
+#-------------------------------------------------------------------------------
+# Pert distribution ------------------------------------------------------------
+
+
+class PERTDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b', 'c')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.c)
+
+    @staticmethod
+    def check(a, b, c):
+        _value_check(b > a, "Parameter b must be greater than a.")
+        _value_check(c > b, "Parameter c must be greater than b.")
+        _value_check(c > a, "Parameter c must be greater than a.")
+
+    def pdf(self, x):
+        a, b, c = self.a, self.b, self.c
+        alpha = 1 + 4*(b - a)/(c - a)
+        beta = 1 + 4*(c - b)/(c - a)
+        num = (x - a)**(alpha - 1)*(c - x)**(beta - 1)
+        den = beta_fn(alpha, beta)*(c - a)**(alpha + beta - 1)
+        return num/den
+
+    def _cdf(self, x):
+        a, b, c = self.a, self.b, self.c
+        alpha = 1 + 4*(b - a/(c - a))
+        beta = 1 + 4*(c - b/(c - a))
+        z = (x - a)/(c - a)
+        return betainc_regularized(alpha, beta, 0, z)
+
+    def expectation(self, expr, var, **kwargs):
+        a, b, c = self.a, self.b, self.c
+        return (a + 4*b + c)/6
+
+
+def PERT(name, a, b, c):
+    r"""
+    Create a continuous random variable with a PERT distribution.
+
+    Explanation
+    ===========
+
+    The density of the PERT distribution is given by
+
+    .. math::
+        f(x) := \frac{(x - a)^{\alpha - 1}(c - x)^{\beta - 1}}
+                {B(\alpha, \beta)(c - a)^{\alpha + \beta - 1}}
+
+    where :math: '\alpha' := 1 + 4\frac{b - a}{c - a} and
+        '\beta' := 1 + 4\frac{c - b}{c - a}.
+
+    Parameters
+    ==========
+
+    a : Real number, :math: 'a < c'
+    b : Real number, :math: 'b > a'
+    c : Real number, :math: 'c > b'
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import PERT, density, cdf, E, variance
+    >>> from sympy import Symbol
+
+    >>> a = Symbol("a", real=True)
+    >>> b = Symbol("b", real=True)
+    >>> c = Symbol("c", real=True)
+    >>> z = Symbol("z")
+
+    >>> X = PERT("x", a, b, c)
+
+    >>> density(X)(z)
+    (-a + c)**(4*a/(-a + c) - 4*b + 4*b/(-a + c) - 4*c - 1)*(-a + z)**(-4*a/(-a + c) + 4*b)*(c - z)**(-4*b/(-a + c) + 4*c)/beta(-4*a/(-a + c) + 4*b + 1, -4*b/(-a + c) + 4*c + 1)
+
+    >>> cdf(X)(z)
+    betainc_regularized(-4*a/(-a + c) + 4*b + 1, -4*b/(-a + c) + 4*c + 1, 0, (-a + z)/(-a + c))
+
+    >>> a = 1
+    >>> b = 2
+    >>> c = 3
+    >>> Y = PERT("Y", a, b, c)
+
+    >>> E(Y)
+    2
+
+    >>> variance(Y)
+    2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/PERT_distribution
+
+    """
+    return rv(name, PERTDistribution, (a, b, c))
+
 
 #-------------------------------------------------------------------------------
 # PowerFunction distribution ---------------------------------------------------
