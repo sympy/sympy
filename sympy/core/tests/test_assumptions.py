@@ -8,7 +8,7 @@ from sympy.simplify.simplify import simplify
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.assumptions import (assumptions, check_assumptions,
     failing_assumptions, common_assumptions, _generate_assumption_rules,
-    load_pre_generated_assumption_rules)
+    _load_pre_generated_assumption_rules)
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.random import seed
 from sympy.combinatorics import Permutation
