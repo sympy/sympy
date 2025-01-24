@@ -487,6 +487,36 @@ def test_DifferentialExtension_log():
         [None, x, t0*x])
 
 
+def test_DifferentialExtension_tan():
+    assert DifferentialExtension(tan(x), x)._important_attrs == \
+        (Poly(t0, t0, domain='ZZ'), Poly(1, t0, domain='ZZ'),
+        [Poly(1, x, domain='ZZ'), Poly(t0**2 + 1, t0, domain='ZZ')],
+        [x, t0], [Lambda(i, tan(i))], [], [None, 'tan'], [None, x])
+
+    assert DifferentialExtension(tan(log(x)), x)._important_attrs == \
+        (Poly(t1, t1, domain='ZZ'), Poly(1, t1, domain='ZZ'),
+        [Poly(1, x, domain='ZZ'), Poly(1/x, t0, domain='ZZ(x)'),
+        Poly(1/x*t1**2 + 1/x, t1, domain='ZZ(x)')], [x, t0, t1],
+        [Lambda(i, log(i)), Lambda(i, tan(t0))], [], [None, 'log', 'tan'], [None, x, t0])
+
+    assert DifferentialExtension(x*tan(x), x)._important_attrs == \
+        (Poly(x*t0, t0, domain='ZZ[x]'), Poly(1, t0, domain='ZZ'),
+        [Poly(1, x, domain='ZZ'), Poly(t0**2 + 1, t0, domain='ZZ')],
+        [x, t0], [Lambda(i, tan(i))], [], [None, 'tan'], [None, x])
+
+    assert DifferentialExtension(tan(x/2) + tan(x), x)._important_attrs == \
+        (Poly(-t0**3 + 3*t0, t0, domain='ZZ'), Poly(-t0**2 + 1, t0, domain='ZZ'),
+        [Poly(1, x, domain='ZZ'), Poly(1/2*t0**2 + 1/2, t0, domain='QQ')],
+        [x, t0], [Lambda(i, tan(i/2))], [], [None, 'tan'], [None, x/2])
+
+    assert DifferentialExtension(tan(atan(x).rewrite(log)), x)._important_attrs == \
+        (Poly(t1, t1, domain='ZZ'), Poly(1, t1, domain='ZZ'),
+        [Poly(1, x, domain='ZZ'), Poly((2*x - 2*I)/(I*x**3 + x**2 + I*x + 1), t0, domain='EX', expand=False),
+        Poly(1/(x**2 + 1)*t1**2 + 1/(x**2 + 1), t1, domain='ZZ(x)')], [x, t0, t1],
+        [Lambda(i, log((-I*i + 1)/(I*i + 1))), Lambda(i, tan(I*t0/2))],
+        [], [None, 'log', 'tan'], [None, (-I*x + 1)/(I*x + 1), I*t0/2])
+
+
 def test_DifferentialExtension_symlog():
     # See comment on test_risch_integrate below
     assert DifferentialExtension(log(x**x), x)._important_attrs == \
