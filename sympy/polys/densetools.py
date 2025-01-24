@@ -35,7 +35,7 @@ from sympy.polys.polyerrors import (
 
 from math import ceil as _ceil, log2 as _log2
 
-def dup_integrate(poly_coefficients, n_integrations, field):
+def dup_integrate(poly_coefficients, n_integrations, ring):
     """
     Computes the indefinite integral of ``f`` in ``K[x]``.
 
@@ -46,7 +46,7 @@ def dup_integrate(poly_coefficients, n_integrations, field):
         List of coefficients of the polynomial to integrate.
     num_integrations : int
         Number of integrations to perform.
-    field : Field
+    field : Ring
         Coefficient domain.
 
     Examples
@@ -69,7 +69,7 @@ def dup_integrate(poly_coefficients, n_integrations, field):
     if n_integrations <= 0 or not poly_coefficients:
         return poly_coefficients
 
-    result = [field.zero] * n_integrations
+    result = [ring.zero] * n_integrations
 
     for i, coefficient in enumerate(reversed(poly_coefficients)):
         # The denominator represent also the exponent
@@ -78,7 +78,7 @@ def dup_integrate(poly_coefficients, n_integrations, field):
         for j in range(1, n_integrations):
             denominator *= i + j + 1
 
-        quotient = field.exquo(coefficient, field(denominator))
+        quotient = ring.exquo(coefficient, ring(denominator))
         result.insert(0, quotient)
 
     return result
