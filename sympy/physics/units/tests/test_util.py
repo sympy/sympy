@@ -161,6 +161,20 @@ def test_quantity_simplify_across_dimensions():
     assert quantity_simplify(5*kilometer/hour, across_dimensions=True, unit_system="SI") == 25*meter/(18*second)
     assert quantity_simplify(5*kilogram*meter/second**2, across_dimensions=True, unit_system="SI") == 5*newton
 
+def test_quantity_simplify_with_prefix():
+    from sympy.physics.units.util import quantity_simplify
+    from sympy.physics.units import meter, kilo, centi, kilometer, centimeter, second, microsecond
+
+    assert quantity_simplify(1000*meter, add_prefix=True, unit_system="SI") == kilometer
+    assert quantity_simplify(kilo*meter, add_prefix=True, unit_system="SI") == kilometer
+    assert quantity_simplify(centi*meter, add_prefix=True, unit_system="SI") == centimeter
+    assert quantity_simplify(100000*centi*meter, add_prefix=True, unit_system="SI") == kilometer
+    assert quantity_simplify(2000*meter, add_prefix=True, unit_system="SI") == 2*kilometer
+    assert quantity_simplify(200000*centi*meter, add_prefix=True, unit_system="SI") == 2*kilometer
+    assert quantity_simplify(1e-2*meter, add_prefix=True, unit_system="SI") == 1.0*centimeter
+    # FIXME: this test case appears to work as intended, but the assertion still fails.
+    assert quantity_simplify(6.83e-6*second, add_prefix=True, unit_system="SI") == 6.83*microsecond
+
 def test_check_dimensions():
     x = symbols('x')
     assert check_dimensions(inch + x) == inch + x
