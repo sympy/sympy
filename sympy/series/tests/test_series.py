@@ -244,7 +244,7 @@ def test_issue_12791():
 
 
 def test_issue_14384():
-    x, a = symbols('x a')
+    a = symbols('a')
     assert series(x**a, x) == x**a
     assert series(x**(-2*a), x) == x**(-2*a)
     assert series(exp(a*log(x)), x) == exp(a*log(x))
@@ -265,6 +265,22 @@ def test_issue_15539():
     assert series(atan(x), x, oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2
         + O(x**(-6), (x, oo)))
 
+def test_lagrange_inversion():
+    from sympy.series.series import lagrange_inversion
+    from sympy import exp
+
+    raises(ValueError, lambda: lagrange_inversion(2, x, 1, 1))
+    raises(ValueError, lambda: lagrange_inversion(2 * y, x, 1, 1))
+    raises(ValueError, lambda: lagrange_inversion(x ** 2, y, 1, 1))
+    assert lagrange_inversion(x ** 2, x, 1, 1) == 1
+    assert lagrange_inversion(x ** 2, x, 1, 2) == x**2/2 + 1/2
+    assert lagrange_inversion(x ** 2, x, 1, 3) == x**2/2 - (x**2 - 1)**2/8 + 1/2
+    assert lagrange_inversion(x ** 2, x, 1, 4) == x**2/2 + (x**2 - 1)**3/16 - (x**2 - 1)**2/8 + 1/2
+    assert lagrange_inversion((x ** 3) * exp(x), x, 1, 2) == (x**3*exp(x) - E)*exp(-1)/4 + 1
+    assert lagrange_inversion((x ** 3) * exp(x), x, 1, 3) == -13*(x**3*exp(x) - E)**2*exp(-2)/128 + (x**3*exp(x) - E)*exp(-1)/4 + 1
+    raises(ValueError, lambda: lagrange_inversion((x ** 3) * exp(x) * y, x, 1, 1))
+    assert lagrange_inversion(sin(x), x, 1, 2) == (sin(x) - sin(1))/cos(1) + 1
+    raises(ValueError, lambda: lagrange_inversion(cos(y), x, 1, 1))
 
 def test_issue_7259():
     assert series(LambertW(x), x) == x - x**2 + 3*x**3/2 - 8*x**4/3 + 125*x**5/24 + O(x**6)
@@ -339,9 +355,8 @@ def test_issue_19534():
             + Float('1.0', precision=70)
         )
 
-
 def test_issue_11407():
-    a, b, c, x = symbols('a b c x')
+    a, b, c = symbols('a b c')
     assert series(sqrt(a + b + c*x), x, 0, 1) == sqrt(a + b) + O(x)
     assert series(sqrt(a + b + c + c*x), x, 0, 1) == sqrt(a + b + c) + O(x)
 
