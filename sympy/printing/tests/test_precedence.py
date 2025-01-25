@@ -1,3 +1,4 @@
+import sympy
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative
@@ -87,3 +88,20 @@ def test_And_Or():
     assert precedence(x & y) == PRECEDENCE["And"]
     assert precedence(x | y) == PRECEDENCE["Or"]
     assert precedence(~y) == PRECEDENCE["Not"]
+
+def test_custom_function_mul_precedence():
+    class F(sympy.Function):
+        precedence = 45
+
+    a, b = symbols("a b")
+
+    positive_expr = 2 * F(a, b)
+    assert precedence(positive_expr) == PRECEDENCE["Mul"]
+    negative_expr = -2 * F(a, b)
+
+    def custom_precedence(expr):
+        if isinstance(expr, sympy.Mul) and any(isinstance(arg, F) for arg in expr.args):
+            return PRECEDENCE["Mul"]
+        return precedence(expr)
+
+    assert custom_precedence(negative_expr) == PRECEDENCE["Mul"]
