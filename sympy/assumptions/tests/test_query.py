@@ -2416,6 +2416,7 @@ def test_issue_25221():
     assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
 
+
 def test_issue_27485():
     n = Symbol('n', negative=True)
     p = Symbol('p', positive=True)
