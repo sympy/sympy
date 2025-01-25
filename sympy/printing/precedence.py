@@ -59,8 +59,18 @@ PRECEDENCE_VALUES = {
 
 
 def precedence_Mul(item):
-    if item.could_extract_minus_sign():
-        return PRECEDENCE["Add"]
+    if hasattr(item, 'could_extract_minus_sign'):
+        custom_func_args = [
+            arg for arg in item.args
+            if hasattr(arg, 'precedence') and hasattr(arg, 'func')
+        ]
+
+        if custom_func_args:
+            return PRECEDENCE["Mul"]
+
+        if item.could_extract_minus_sign():
+            return PRECEDENCE["Add"]
+
     return PRECEDENCE["Mul"]
 
 
