@@ -2419,7 +2419,11 @@ def test_issue_25221():
 
 def test_issue_27450():
    assert ask(Q.integer(2**n), Q.integer(n) & Q.negative(n)) is False
-   # 0^0 and 0^(i) are undefined. If x^0 or 0^x is not undefined, it is an integer.
+   assert ask(Q.integer((-1)**y), Q.integer(y)) is True
+   assert ask(Q.integer(x**2), Q.integer(x)) is True
+   assert ask(Q.integer(x**3), Q.integer(x)) is True
+   assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y)) is None
+   # 0^0 and 0^(i) are undefined. x^0 or 0^x are integers as long as they are not undefined.
    assert ask(Q.integer(x**y), Q.zero(y)) is None
    assert ask(Q.integer(x**y), Q.zero(x)) is None
    assert ask(Q.integer(x**y), ~Q.zero(y) & Q.zero(x)) is None
@@ -2435,10 +2439,6 @@ def test_issue_27450():
    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y)) is False
    assert ask(Q.integer(x**y), Q.integer(x) & Q.negative(y)) is None    # (or False)
-   assert ask(Q.integer((-1)**y), Q.integer(y)) is True
-   assert ask(Q.integer(x**2), Q.integer(x)) is True
-   assert ask(Q.integer(x**3), Q.integer(x)) is True
-   assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y)) is None
    assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y) & Q.positive(y)) is None
    assert ask(Q.integer(x**y), Q.integer(x) & ~Q.integer(y)) is None
    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is True
