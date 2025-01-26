@@ -39,34 +39,38 @@ def test_Mul():
 
 
 class F(Function):
-    precedence = PRECEDENCE["Mul"]  # Set precedence to multiplication level
+    precedence = PRECEDENCE["Mul"]
 
     def _sympystr(self, printer):
         return f"{printer._print(self.args[0])} F {printer._print(self.args[1])}"
+
+    @property
+    def _args_priority(self):
+        return PRECEDENCE["Atom"] + 1
 
 
 def test_mul_precedence_with_custom_function():
     x, y = symbols("x y")
 
-    
+
     positive_expr = 2 * F(x, y)
     negative_expr = -2 * F(x, y)
 
-    
     assert F.precedence == PRECEDENCE["Mul"]
-    
-    
+
+
     assert str(positive_expr) == "2*(x F y)"
     assert str(negative_expr) == "-2*(x F y)"
 
-    
+
     nested_expr = -2 * (F(x, y) + x)
     assert str(nested_expr) == "-2*(x F y + x)"
 
-    
-    
+
     no_paren_expr = 2 * x
     assert str(no_paren_expr) == "2*x"
+
+
 
 
 
