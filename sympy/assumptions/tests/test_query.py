@@ -1792,7 +1792,6 @@ def test_prime():
     assert ask(Q.prime(4**1), Q.integer(4)) is False  
     assert ask(Q.prime(5**1), Q.integer(5)) is True  
     assert ask(Q.prime(x**1), Q.integer(x)) is None  
-
     assert ask(Q.prime(6**1), Q.integer(6)) is False  
     assert ask(Q.prime(10**1), Q.integer(10)) is False 
 
