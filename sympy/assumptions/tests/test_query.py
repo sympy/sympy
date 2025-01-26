@@ -1786,6 +1786,14 @@ def test_prime():
     assert ask(Q.prime(x**2), Q.integer(x)) is False
     assert ask(Q.prime(x**2), Q.prime(x)) is False
     assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) is False
+    assert ask(Q.prime(x**1), Q.integer(x)) is None  # x is integer, exponent is 1 (but not prime)
+    assert ask(Q.prime(2**1), Q.integer(2)) is True  # 2 is prime, exponent is 1
+    assert ask(Q.prime(3**1), Q.integer(3)) is True  # 3 is prime, exponent is 1
+    assert ask(Q.prime(4**1), Q.integer(4)) is False  # 4 is not prime, exponent is 1
+    assert ask(Q.prime(5**1), Q.integer(5)) is True  # 5 is prime, exponent is 1
+    assert ask(Q.prime(6**1), Q.integer(6)) is False  # 6 is not prime, exponent is 1
+    
+    
 
 
 @_both_exp_pow
