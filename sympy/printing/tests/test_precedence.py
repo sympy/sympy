@@ -10,7 +10,6 @@ from sympy.integrals.integrals import Integral
 from sympy.series.order import Order
 
 from sympy.printing.precedence import precedence, PRECEDENCE
-from sympy.printing.str import StrPrinter
 
 x, y = symbols("x,y")
 
