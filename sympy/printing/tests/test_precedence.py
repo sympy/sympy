@@ -95,15 +95,12 @@ def test_custom_function_mul_precedence():
     class F(sympy.Function):
         precedence = 45
 
-    a, b = symbols("a b")
+        def _sympystr(self, printer):
+            return f"{printer._print(self.args[0])} F {printer._print(self.args[1])}"
 
-    positive_expr = 2 * F(a, b)
-    negative_expr = -2 * F(a, b)
+    f_instance = F(x, y)
 
-    printer = StrPrinter()
-
-    positive_str = printer.doprint(positive_expr)
-    negative_str = printer.doprint(negative_expr)
-
-    assert positive_str in ['2*F(a, b)', '2*(F(a, b))']
-    assert negative_str in ['-2*F(a, b)', '-2*(F(a, b))']
+    positive_mul = 2 * f_instance
+    negative_mul = -2 * f_instance
+    assert str(positive_mul) == "2*(x F y)"
+    assert str(negative_mul) == "-2*(x F y)"
