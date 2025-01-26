@@ -1,5 +1,4 @@
 import sympy
-from sympy import symbols, Function, precedence
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative
