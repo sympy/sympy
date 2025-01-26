@@ -33,8 +33,6 @@ def test_Mul():
     assert precedence(x*y) == PRECEDENCE["Mul"]
     assert precedence(-x*y) == PRECEDENCE["Add"]
 
-
-
 class F(sympy.Function):
     precedence = 45
 
