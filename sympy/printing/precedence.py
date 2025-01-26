@@ -58,24 +58,21 @@ PRECEDENCE_VALUES = {
 # Precedence functions
 
 
-def precedence_Mul(item):
-    if not hasattr(item, 'could_extract_minus_sign'):
-        return PRECEDENCE["Mul"]
+def get_precedence(item):
 
-    if any(hasattr(arg, 'precedence') and hasattr(arg, 'func') for arg in item.args):
-        return PRECEDENCE["Mul"]
+    if hasattr(item, 'could_extract_minus_sign'):
+        valid_args = [
+            arg for arg in getattr(item, 'args', [])
+            if hasattr(arg, 'precedence') and hasattr(arg, 'func')
+        ]
+        if valid_args:
+            return PRECEDENCE["Mul"]
 
-
-    if item.could_extract_minus_sign():
-        return PRECEDENCE["Mul"]  # Keep multiplication precedence even when there's a negative sign
-
-
-    first_arg = item.args[0] if hasattr(item, 'args') and item.args else None
-    if first_arg and hasattr(first_arg, 'could_extract_minus_sign') and first_arg.could_extract_minus_sign():
-        return PRECEDENCE["Mul"]
-
-
+        if item.could_extract_minus_sign():
+            return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
+
+
 
 def precedence_Rational(item):
     if item.p < 0:

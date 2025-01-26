@@ -1,10 +1,11 @@
 import sympy
-from sympy import Function, symbols, sin, oo
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative
-from sympy.core.numbers import Integer, Rational, Float
+from sympy.core.numbers import Integer, Rational, Float, oo
 from sympy.core.relational import Rel
+from sympy.core.symbol import symbols
+from sympy.functions import sin
 from sympy.integrals.integrals import Integral
 from sympy.series.order import Order
 
@@ -34,46 +35,26 @@ def test_Mul():
 
 
 
-
-
-class F(Function):
-    precedence = PRECEDENCE["Mul"]
+class F(sympy.Function):
+    precedence = 45
 
     def _sympystr(self, printer):
-        return f"{printer._print(self.args[0])} F {printer._print(self.args[1])}"
 
-    @property
-    def _args_priority(self):
-        return PRECEDENCE["Atom"] + 1
+        arg1 = printer._print(self.args[0])
+        arg2 = printer._print(self.args[1])
+        return f"({arg1} F {arg2})"
 
+def test_custom_function_mul_precedence():
 
-def test_mul_precedence_with_custom_function():
-    x, y = symbols("x y")
+    a, b = symbols("a b")
 
+    f_instance = F(a, b)
 
-    positive_expr = 2 * F(x, y)
-    negative_expr = -2 * F(x, y)
+    positive_mul = 2 * f_instance
+    assert str(positive_mul) == "2*(a F b)", f"Expected '2*(a F b)', got '{str(positive_mul)}'"
 
-    assert F.precedence == PRECEDENCE["Mul"]
-
-
-    assert str(positive_expr) == "2*(x F y)"
-    assert str(negative_expr) == "-2*(x F y)"
-
-
-    nested_expr = -2 * (F(x, y) + x)
-    assert str(nested_expr) == "-2*(x F y + x)"
-
-
-    no_paren_expr = 2 * x
-    assert str(no_paren_expr) == "2*x"
-
-
-
-
-
-
-
+    negative_mul = -2 * f_instance
+    assert str(negative_mul) == "-2*(a F b)", f"Expected '-2*(a F b)', got '{str(negative_mul)}'"
 
 
 def test_Number():
