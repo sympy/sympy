@@ -67,17 +67,15 @@ def precedence_Mul(item):
 
 
     if item.could_extract_minus_sign():
-        return PRECEDENCE["Add"]  # Adjust precedence for a negative item
+        return PRECEDENCE["Mul"]  # Keep multiplication precedence even when there's a negative sign
 
-    # Check for negative signs in the first argument (e.g., -(a + b))
+
     first_arg = item.args[0] if hasattr(item, 'args') and item.args else None
     if first_arg and hasattr(first_arg, 'could_extract_minus_sign') and first_arg.could_extract_minus_sign():
-        return PRECEDENCE["Add"]
+        return PRECEDENCE["Mul"]
+
 
     return PRECEDENCE["Mul"]
-
-
-
 
 def precedence_Rational(item):
     if item.p < 0:
