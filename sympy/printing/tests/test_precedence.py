@@ -33,17 +33,18 @@ def test_Mul():
     assert precedence(x*y) == PRECEDENCE["Mul"]
     assert precedence(-x*y) == PRECEDENCE["Add"]
 
+import sympy
+from sympy import symbols
+
 class F(sympy.Function):
-    precedence = 45
+    precedence = 40
 
     def _sympystr(self, printer):
-
-        arg1 = printer._print(self.args[0])
-        arg2 = printer._print(self.args[1])
-        return f"({arg1} F {arg2})"
+        arg1 = printer.parenthesize(self.args[0], self.precedence)
+        arg2 = printer.parenthesize(self.args[1], self.precedence)
+        return f"{arg1} F {arg2}"
 
 def test_custom_function_mul_precedence():
-
     a, b = symbols("a b")
 
     f_instance = F(a, b)
@@ -53,6 +54,7 @@ def test_custom_function_mul_precedence():
 
     negative_mul = -2 * f_instance
     assert str(negative_mul) == "-2*(a F b)", f"Expected '-2*(a F b)', got '{str(negative_mul)}'"
+
 
 
 def test_Number():
