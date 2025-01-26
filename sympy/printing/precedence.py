@@ -59,21 +59,24 @@ PRECEDENCE_VALUES = {
 
 
 def precedence_Mul(item):
-    if hasattr(item, 'could_extract_minus_sign'):
-        custom_func_args = [
-            arg for arg in item.args
-            if hasattr(arg, 'precedence') and hasattr(arg, 'func')
-        ]
-        if custom_func_args:
-            return PRECEDENCE["Mul"]
+    if not hasattr(item, 'could_extract_minus_sign'):
+        return PRECEDENCE["Mul"]
 
-        if item.could_extract_minus_sign():
-            return PRECEDENCE["Add"]  # Adjust precedence for negative expression
-        
-        if isinstance(item, Parenthesis) and hasattr(item.args[0], 'could_extract_minus_sign') and item.args[0].could_extract_minus_sign():
-            return PRECEDENCE["Add"]  # For cases like -(a + b)
+    
+    if any(hasattr(arg, 'precedence') and hasattr(arg, 'func') for arg in item.args):
+        return PRECEDENCE["Mul"]
+
+    
+    if item.could_extract_minus_sign():
+        return PRECEDENCE["Add"]  # Adjust precedence for a negative item
+
+    # Check for negative signs in the first argument (e.g., -(a + b))
+    first_arg = item.args[0] if hasattr(item, 'args') and item.args else None
+    if first_arg and hasattr(first_arg, 'could_extract_minus_sign') and first_arg.could_extract_minus_sign():
+        return PRECEDENCE["Add"]
 
     return PRECEDENCE["Mul"]
+
 
 
 
