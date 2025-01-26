@@ -62,11 +62,10 @@ def precedence_Mul(item):
     if not hasattr(item, 'could_extract_minus_sign'):
         return PRECEDENCE["Mul"]
 
-    
     if any(hasattr(arg, 'precedence') and hasattr(arg, 'func') for arg in item.args):
         return PRECEDENCE["Mul"]
 
-    
+
     if item.could_extract_minus_sign():
         return PRECEDENCE["Add"]  # Adjust precedence for a negative item
 

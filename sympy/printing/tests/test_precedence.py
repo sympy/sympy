@@ -64,6 +64,7 @@ def test_mul_precedence_with_custom_function():
     assert str(nested_expr) == "-2*(x F y + x)"
 
     
+    
     no_paren_expr = 2 * x
     assert str(no_paren_expr) == "2*x"
 
