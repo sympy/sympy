@@ -59,8 +59,10 @@ PRECEDENCE_VALUES = {
 
 
 def precedence_Mul(item):
-    if item.could_extract_minus_sign():
-        return PRECEDENCE["Add"]
+    if item.could_extract_minus_sign():       
+        min_precedence = min(precedence(arg) for arg in item.args)
+        if min_precedence < PRECEDENCE["Mul"]:
+            return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
 
