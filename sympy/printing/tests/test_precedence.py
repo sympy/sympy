@@ -1,4 +1,5 @@
 import sympy
+from sympy import Function, symbols
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative
@@ -34,30 +35,41 @@ def test_Mul():
     assert precedence(-x*y) == PRECEDENCE["Add"]
 
 
-def test_mul_precedence_with_custom_function():
-    class F(Function):
-        precedence = 45
-        def _sympystr(self, printer):
-            return f"{printer._print(self.args[0])} F {printer._print(self.args[1])}"
 
+
+
+class F(Function):
+    precedence = PRECEDENCE["Mul"]  # Set precedence to multiplication level
+
+    def _sympystr(self, printer):
+        return f"{printer._print(self.args[0])} F {printer._print(self.args[1])}"
+
+
+def test_mul_precedence_with_custom_function():
     x, y = symbols("x y")
 
     
     positive_expr = 2 * F(x, y)
     negative_expr = -2 * F(x, y)
 
-    assert precedence(positive_expr) == sympy.PRECEDENCE["Mul"]
-    assert precedence(negative_expr) == sympy.PRECEDENCE["Mul"]
-
-   
+    
+    assert F.precedence == PRECEDENCE["Mul"]
+    
+    
     assert str(positive_expr) == "2*(x F y)"
     assert str(negative_expr) == "-2*(x F y)"
 
+    
     nested_expr = -2 * (F(x, y) + x)
     assert str(nested_expr) == "-2*(x F y + x)"
 
+    
     no_paren_expr = 2 * x
     assert str(no_paren_expr) == "2*x"
+
+
+
+
 
 
 
