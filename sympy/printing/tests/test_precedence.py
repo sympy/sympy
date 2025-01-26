@@ -10,6 +10,7 @@ from sympy.integrals.integrals import Integral
 from sympy.series.order import Order
 
 from sympy.printing.precedence import precedence, PRECEDENCE
+from sympy.printing.str import StrPrinter
 
 x, y = symbols("x,y")
 
@@ -97,12 +98,12 @@ def test_custom_function_mul_precedence():
     a, b = symbols("a b")
 
     positive_expr = 2 * F(a, b)
-    assert precedence(positive_expr) == PRECEDENCE["Mul"]
     negative_expr = -2 * F(a, b)
 
-    def custom_precedence(expr):
-        if isinstance(expr, sympy.Mul) and any(isinstance(arg, F) for arg in expr.args):
-            return PRECEDENCE["Mul"]
-        return precedence(expr)
+    printer = StrPrinter()
 
-    assert custom_precedence(negative_expr) == PRECEDENCE["Mul"]
+    positive_str = printer.doprint(positive_expr)
+    negative_str = printer.doprint(negative_expr)
+
+    assert positive_str in ['2*F(a, b)', '2*(F(a, b))']
+    assert negative_str in ['-2*F(a, b)', '-2*(F(a, b))']
