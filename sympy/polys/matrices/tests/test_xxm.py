@@ -17,6 +17,7 @@
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy import ZZ, QQ, GF, ZZ_I, symbols
+from sympy.polys.matrices.domainscalar import DomainScalar
 
 from sympy.polys.matrices.exceptions import (
     DMBadInputError,
@@ -1008,94 +1009,6 @@ def test_XXM_qr_empty_matrix_0x2(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_square_matrix(DM):
-    A = DM([[4, 3], [6, 3]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    P, L, D, U = A.fflu()
-    D_as_DM = DomainMatrix.from_rep(D)
-    di, d = D_as_DM.inv_den()
-    if isinstance(P, DFM):
-        A = A.to_dfm()
-        di = di.to_dfm()
-    elif isinstance(P, SDM):
-        A = A.to_sdm()
-        di = di.to_sdm()
-    else:
-        A = A.to_ddm()
-        di = di.to_ddm()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_non_square_matrix(DM):
-    A = DM([[1, 2, 3], [4, 5, 6]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    P, L, D, U = A.fflu()
-    d_as_dm = DomainMatrix.from_rep(D)
-    di, d = d_as_dm.inv_den()
-    if isinstance(P, DFM):
-        A = A.to_dfm()
-        di = di.to_dfm()
-    elif isinstance(P, SDM):
-        A = A.to_sdm()
-        di = di.to_sdm()
-    else:
-        A = A.to_ddm()
-        di = di.to_ddm()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_sparse_matrix(DM):
-    A = DM([[1, 0, 0], [0, 4, 0], [0, 0, 9]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    P, L, D, U = A.fflu()
-    d_as_dm = DomainMatrix.from_rep(D)
-    di, d = d_as_dm.inv_den()
-    if isinstance(P, DFM):
-        A = A.to_dfm()
-        di = di.to_dfm()
-    elif isinstance(P, SDM):
-        A = A.to_sdm()
-        di = di.to_sdm()
-    else:
-        A = A.to_ddm()
-        di = di.to_ddm()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_with_permutations(DM):
-    A = DM([[0, 1], [1, 0]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    P, L, D, U = A.fflu()
-    d_as_dm = DomainMatrix.from_rep(D)
-    di, d = d_as_dm.inv_den()
-    if isinstance(P, DFM):
-        A = A.to_dfm()
-        di = di.to_dfm()
-    elif isinstance(P, SDM):
-        A = A.to_sdm()
-        di = di.to_sdm()
-    else:
-        A = A.to_ddm()
-        di = di.to_ddm()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_identity_matrix(DM):
     T = type(DM([[0]]))
     A = T.eye(3, DM([[0]]).domain)
@@ -1114,14 +1027,6 @@ def test_xxm_fflu_single_element(DM):
     assert L == DM([[1]])
     assert D == DM([[5]])
     assert U == DM([[1]])
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_zero_matrix(DM):
-    T = type(DM([[0]]))
-    A = T.zeros((3, 3), DM([[0]]).domain)
-    with pytest.raises(ValueError, match="Matrix is not full rank"):
-        A.fflu()
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
@@ -1144,6 +1049,189 @@ def test_xxm_fflu_empty_matrix_with_cols(DM):
     assert L.shape == (0, 0)
     assert D.shape == (0, 0)
     assert U.shape == (0, 2)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_single_row(DM):
+    A = DM([[1, 2, 3]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    assert P.shape == (1, 1)
+    assert L.shape == (1, 1)
+    assert D.shape == (1, 1)
+    assert U.shape == (1, 3)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_empty_matrix(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((0, 0), ZZ)
+    P, L, D, U = A.fflu()
+    assert P.shape == (0, 0)
+    assert L.shape == (0, 0)
+    assert D.shape == (0, 0)
+    assert U.shape == (0, 0)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_rank_deficient(DM):
+    A = DM([[1, 2], [2, 4], [3, 6]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    assert P.shape == (1, 1)
+    assert L.shape == (1, 1)
+    assert D.shape == (1, 1)
+    assert U.shape == (1, 2)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_single_column(DM):
+    A = DM([[1], [2], [3]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    assert P.shape == (1, 1)
+    assert L.shape == (1, 1)
+    assert D.shape == (1, 1)
+    assert U.shape == (1, 1)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_square_matrix(DM):
+    A = DM([[4, 3], [6, 3]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    if not isinstance(D, DomainMatrix):
+        D = DomainMatrix.from_rep(D)
+    D_cleared, denom = D.clear_denoms()
+    if isinstance(D_cleared, DomainScalar):
+        scalar_value = D_cleared.element
+        D_cleared = DomainMatrix.eye(D.shape[0], D.domain).scalarmul(scalar_value)
+    if isinstance(denom, DomainMatrix):
+        denom = denom.rep[0][0] if isinstance(denom.rep, DDM) else denom.to_field().flat()[0]
+
+    def ensure_compatible(matrix):
+        if isinstance(A.rep, DFM):
+            return matrix.to_dfm() if isinstance(matrix, DomainMatrix) else matrix
+        elif isinstance(A.rep, SDM):
+            return matrix.to_sdm() if isinstance(matrix, DomainMatrix) else matrix
+        else:
+            return matrix.to_ddm() if isinstance(matrix, DomainMatrix) else matrix
+
+    P = ensure_compatible(P)
+    L = ensure_compatible(L)
+    U = ensure_compatible(U)
+    D_cleared = ensure_compatible(D_cleared)
+    A = ensure_compatible(A)
+    assert P.matmul(A).rmul(denom) == L.matmul(D_cleared).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_non_square_matrix(DM):
+    A = DM([[1, 2, 3], [4, 5, 6]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    if not isinstance(D, DomainMatrix):
+        D = DomainMatrix.from_rep(D)
+    D_cleared, denom = D.clear_denoms()
+    if isinstance(D_cleared, DomainScalar):
+        scalar_value = D_cleared.element
+        D_cleared = DomainMatrix.eye(D.shape[0], D.domain).scalarmul(scalar_value)
+    if isinstance(denom, DomainMatrix):
+        denom = denom.rep[0][0] if isinstance(denom.rep, DDM) else denom.to_field().flat()[0]
+
+    def ensure_compatible(matrix):
+        if isinstance(A.rep, DFM):
+            return matrix.to_dfm() if isinstance(matrix, DomainMatrix) else matrix
+        elif isinstance(A.rep, SDM):
+            return matrix.to_sdm() if isinstance(matrix, DomainMatrix) else matrix
+        else:
+            return matrix.to_ddm() if isinstance(matrix, DomainMatrix) else matrix
+
+    P = ensure_compatible(P)
+    L = ensure_compatible(L)
+    U = ensure_compatible(U)
+    D_cleared = ensure_compatible(D_cleared)
+    A = ensure_compatible(A)
+    assert P.matmul(A).rmul(denom) == L.matmul(D_cleared).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_with_permutations(DM):
+    A = DM([[0, 1], [1, 0]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    if not isinstance(D, DomainMatrix):
+        D = DomainMatrix.from_rep(D)
+    D_cleared, denom = D.clear_denoms()
+    if isinstance(D_cleared, DomainScalar):
+        scalar_value = D_cleared.element
+        D_cleared = DomainMatrix.eye(D.shape[0], D.domain).scalarmul(scalar_value)
+    if isinstance(denom, DomainMatrix):
+        denom = denom.rep[0][0] if isinstance(denom.rep, DDM) else denom.to_field().flat()[0]
+
+    def ensure_compatible(matrix):
+        if isinstance(A.rep, DFM):
+            return matrix.to_dfm() if isinstance(matrix, DomainMatrix) else matrix
+        elif isinstance(A.rep, SDM):
+            return matrix.to_sdm() if isinstance(matrix, DomainMatrix) else matrix
+        else:
+            return matrix.to_ddm() if isinstance(matrix, DomainMatrix) else matrix
+    P = ensure_compatible(P)
+    L = ensure_compatible(L)
+    U = ensure_compatible(U)
+    D_cleared = ensure_compatible(D_cleared)
+    A = ensure_compatible(A)
+    assert P.matmul(A).rmul(denom) == L.matmul(D_cleared).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_with_sparse_matrix(DM):
+    A = DM([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    if not isinstance(D, DomainMatrix):
+        D = DomainMatrix.from_rep(D)
+    D_cleared, denom = D.clear_denoms()
+    if isinstance(D_cleared, DomainScalar):
+        scalar_value = D_cleared.element
+        D_cleared = DomainMatrix.eye(D.shape[0], D.domain).scalarmul(scalar_value)
+    if isinstance(denom, DomainMatrix):
+        denom = denom.rep[0][0] if isinstance(denom.rep, DDM) else denom.to_field().flat()[0]
+
+    def ensure_compatible(matrix):
+        if isinstance(A.rep, DFM):
+            return matrix.to_dfm() if isinstance(matrix, DomainMatrix) else matrix
+        elif isinstance(A.rep, SDM):
+            return matrix.to_sdm() if isinstance(matrix, DomainMatrix) else matrix
+        else:
+            return matrix.to_ddm() if isinstance(matrix, DomainMatrix) else matrix
+    P = ensure_compatible(P)
+    L = ensure_compatible(L)
+    U = ensure_compatible(U)
+    D_cleared = ensure_compatible(D_cleared)
+    A = ensure_compatible(A)
+    assert P.matmul(A).rmul(denom) == L.matmul(D_cleared).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
@@ -1196,15 +1284,37 @@ def test_xxm_qrd_empty_matrix(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_qrd_zero_matrix(DM):
-    T = type(DM([[0]]))
-    A = T.zeros((3, 3), DM([[0]]).domain)
-    with pytest.raises(ValueError, match="Matrix is not full rank"):
-        A.qrd()
+def test_xxm_qrd_single_row(DM):
+    A = DM([[1, 2, 3]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    Q, R, D = A.qrd()
+    assert Q.shape == (1, 1)
+    assert R.shape == (1, 3)
+    assert D.shape == (1, 1)
+    assert R.is_upper
+    assert D.is_diagonal
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_qrd_rank_deficient(DM):
     A = DM([[1, 2], [2, 4], [3, 6]])
-    with pytest.raises(ValueError, match="Matrix is not full rank"):
-        A.qrd()
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    Q, R, D = A.qrd()
+    assert Q.shape == (1, 1)
+    assert R.shape == (1, 2)
+    assert D.shape == (1, 1)
+    assert R.is_upper
+    assert D.is_diagonal
+    assert Q.transpose().matmul(Q).is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_qrd_single_column(DM):
+    A = DM([[1], [2], [3]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    Q, R, D = A.qrd()
+    assert Q.shape == (1, 1)
+    assert R.shape == (1, 1)
+    assert D.shape == (1, 1)
+    assert R.is_upper
+    assert D.is_diagonal

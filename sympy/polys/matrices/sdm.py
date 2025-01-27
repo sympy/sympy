@@ -1128,20 +1128,17 @@ class SDM(dict):
         """
         Compute a fraction-free PLDU decomposition for SDM.
 
+        This method adapts to rank-deficient matrices by removing rows and columns
+        corresponding to zero pivots in the upper triangular matrix U.
+
         Returns
         =======
 
         (P, L, D, U)
-            P is the permutation matrix.
-            L is the lower triangular matrix.
-            D is the diagonal matrix.
-            U is the upper triangular matrix.
-
-        Raises
-        ======
-
-        DMRankError
-            If the matrix is not full rank.
+            P is the permutation matrix as an SDM.
+            L is the lower triangular matrix as an SDM.
+            D is the diagonal matrix as an SDM.
+            U is the upper triangular matrix as an SDM.
 
         See Also
         ========

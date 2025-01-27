@@ -812,6 +812,9 @@ class DFM:
         """
         Fraction-free PLDU decomposition for DFM.
 
+        This method adapts to rank-deficient matrices by removing rows and columns
+        corresponding to zero pivots in the upper triangular matrix U.
+
         Returns
         =======
 

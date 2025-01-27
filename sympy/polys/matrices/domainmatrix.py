@@ -3454,7 +3454,13 @@ class DomainMatrix:
 
         lu
         """
-        return self.rep.fflu()
+        ddm_rep = self.to_ddm()
+        ddm_p, ddm_l, ddm_d, ddm_u = ddm_rep.fflu()
+        P = self.from_rep(ddm_p)
+        L = self.from_rep(ddm_l)
+        D = self.from_rep(ddm_d)
+        U = self.from_rep(ddm_u)
+        return P, L, D, U
 
     def _solve(A, b):
         # XXX: Not sure about this method or its signature. It is just created
