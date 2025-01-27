@@ -1,3 +1,4 @@
+from sympy.assumptions import ask, Q
 from sympy.core.mod import Mod
 from sympy.core.numbers import (I, oo, pi)
 from sympy.functions.combinatorial.factorials import factorial
@@ -1225,6 +1226,10 @@ def test_issue_21651():
     k = Symbol('k', positive=True, integer=True)
     exp = 2*2**(-k)
     assert exp.is_integer is None
+
+
+def test_issue_27449():
+    assert ask(Q.imaginary(I * oo)) is False
 
 
 def test_assumptions_copy():
