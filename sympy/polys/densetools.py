@@ -35,8 +35,7 @@ from sympy.polys.polyerrors import (
 
 from math import ceil as _ceil, log2 as _log2
 
-
-def dup_integrate(f, m, K):
+def dup_integrate(poly_coefficients, n_integrations, ring):
     """
     Computes the indefinite integral of ``f`` in ``K[x]``.
 
@@ -67,8 +66,8 @@ def dup_integrate(f, m, K):
 
 
     """
-    if m <= 0 or not f:
-        return f
+    if n_integrations <= 0 or not poly_coefficients:
+        return poly_coefficients
 
     result = [K.zero] * m
 
@@ -82,6 +81,7 @@ def dup_integrate(f, m, K):
         quotient = K.exquo(coefficient, K(denominator))
         result.insert(0, quotient)
 
+    return result
     return result
 
 
