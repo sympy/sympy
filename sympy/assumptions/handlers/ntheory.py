@@ -65,9 +65,8 @@ def _(expr, assumptions):
             ask(Q.integer(expr.base), assumptions):
         if ask(Q.prime(expr.base), assumptions) is False:
             return False
-        elif expr.exp.is_number==True:
-            if expr.exp!=1:
-                return False
+        if ask(~Q.eq(expr.exp, 1), assumptions):
+            return False
     return None
 
 @PrimePredicate.register(Integer)
