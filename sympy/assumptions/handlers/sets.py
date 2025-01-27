@@ -501,9 +501,6 @@ def _(expr, assumptions):
 
 @ImaginaryPredicate.register(Expr) # type:ignore
 def _(expr, assumptions):
-    if expr.is_infinite:
-        return False
-
     ret = expr.is_imaginary
     if ret is None:
         raise MDNotImplementedError
@@ -544,7 +541,7 @@ def _(expr, assumptions):
     * Imaginary*Imaginary -> Real
     * Anything*Infinity   -> !Imaginary
     """
-    if any(arg.is_infinite for arg in expr.args):
+    if any(ask(Q.infinite(arg), assumptions) for arg in expr.args):
         return False
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
@@ -574,7 +571,7 @@ def _(expr, assumptions):
     * Negative**Real        -> not Imaginary if exponent is not Rational
     * Anything**Infinity    -> !Imaginary
     """
-    if expr.is_infinite or any(arg.is_infinite for arg in (expr.base, expr.exp)):
+    if (ask(Q.infinite(expr.base), assumptions) or ask(Q.infinite(expr.exp), assumptions)):
         return False
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
