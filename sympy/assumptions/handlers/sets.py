@@ -262,6 +262,7 @@ def _(expr, assumptions):
     """
     * Real**Integer              -> Real
     * Positive**Real             -> Real
+    * Negative**Real             -> ?
     * Real**(Integer/Even)       -> Real if base is nonnegative
     * Real**(Integer/Odd)        -> Real
     * Imaginary**(Integer/Even)  -> Real
@@ -318,8 +319,6 @@ def _(expr, assumptions):
                 return True
             elif ask(Q.positive(expr.base), assumptions):
                 return True
-            elif ask(Q.negative(expr.base), assumptions):
-                return False
 
 @RealPredicate.register_many(cos, sin)
 def _(expr, assumptions):
