@@ -1230,6 +1230,16 @@ def test_issue_21651():
 
 def test_issue_27449():
     assert ask(Q.imaginary(I * oo)) is False
+    assert ask(Q.imaginary(oo)) is False
+    assert ask(Q.imaginary(2*I + oo)) is False
+    assert ask(Q.imaginary(3*I * oo)) is False
+    assert ask(Q.imaginary((I*oo)**2)) is False
+
+    i = Symbol('i', imaginary=True)
+    r = Symbol('r', real=True)
+    assert ask(Q.imaginary(r * i * oo)) is False
+    assert ask(Q.imaginary(i + r + oo)) is False
+    assert ask(Q.imaginary((i*oo)**r)) is False
 
 
 def test_assumptions_copy():

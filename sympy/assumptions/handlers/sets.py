@@ -518,7 +518,7 @@ def _(expr, assumptions):
     * Imaginary + Real      -> !Imaginary
     * Anything + Infinity   -> !Imaginary
     """
-    if expr.is_infinite:
+    if any(ask(Q.infinite(arg), assumptions) for arg in expr.args):
         return False
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
