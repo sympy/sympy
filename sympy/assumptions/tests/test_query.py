@@ -2432,14 +2432,14 @@ def test_issue_27450():
    assert ask(Q.integer(x**y), Q.nonzero(y) & Q.zero(x)) is None    # (or True)
    # If the exponent is not real, the expression may be undefined.
    assert ask(Q.integer(x**y), Q.integer(x)) is None
-   # Else, if the base is an integer and the exponent is real, the expression is an integer
-   # if and only if the exponent is a positive integer
+   # Else, if the base is an integer and the exponent is real, the expression is an integer.
+   # if and only if the exponent is a positive integer.
    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y)) is None
    assert ask(Q.integer(x**y), Q.integer(x) & Q.positive(y)) is None
    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
-   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y)) is False
    assert ask(Q.integer(x**y), Q.integer(x) & Q.negative(y)) is None    # (or False)
    assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y) & Q.positive(y)) is None
    assert ask(Q.integer(x**y), Q.integer(x) & ~Q.integer(y)) is None
    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is True
    assert ask(Q.integer(x**y), Q.rational(x) & Q.integer(y)) is None
+   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y)) is None

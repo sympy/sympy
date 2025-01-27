@@ -67,19 +67,23 @@ def _(expr, assumptions):
 @IntegerPredicate.register(Pow)
 def _(expr, assumptions):
 #     """
-#     * Integer ** Integer       -> Integer
-#     * Integer ** !Integer      -> ?
-#     * !Integer ** !Integer -> ?
-#     * Integer ** -Integer  -> !Integer
+#     * Integer  **  Integer  -> Integer
+#     * Integer  ** !Integer  -> ?
+#     * !Integer ** !Integer  -> ?
+#     * Integer  ** -Integer  -> ?
 #     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
     if ask(Q.integer(expr.base), assumptions) and ask(Q.integer(expr.exp), assumptions):
-        if expr.base == -1 or expr.base == 1: # can't become a fraction if the base is 1
+        if expr.base == -1 or expr.base == 1 or expr.base == 0: # can't become a fraction if the base is -1, 0, 1
             return True
-        return ask(~Q.negative(expr.exp), assumptions) # for the pow to be integer -> expr.exp >= 0
-    else:
-        return None
+        if ask(Q.negative(expr.exp), assumptions):
+            if ask(Q.gt(expr.base , 1), assumptions) or ask(Q.lt(expr.base , -1), assumptions): # if expr.base is beyond -1, 0, 1 then it won't become an integer after a negative power.
+                return False
+            else:
+                return None
+        if ask(~Q.negative(expr.exp), assumptions):
+            return True
 
 @IntegerPredicate.register(Mul)
 def _(expr, assumptions):
