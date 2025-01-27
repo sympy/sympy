@@ -63,7 +63,7 @@ def _(expr, assumptions):
         return _PrimePredicate_number(expr, assumptions)
     if ask(Q.integer(expr.exp), assumptions) and \
             ask(Q.integer(expr.base), assumptions):
-        if ask(Q.prime(expr.base), assumptions)==False:
+        if ask(Q.prime(expr.base), assumptions)==False or expr.exp.is_number==False:
             return False
     return None
 
