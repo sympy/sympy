@@ -1917,6 +1917,9 @@ def test_real_pow():
     assert ask(Q.real(x**i), Q.imaginary(i)) is None  # x could be 0
     assert ask(Q.real(x**(I*pi/log(x))), Q.real(x)) is True
 
+    # https://github.com/sympy/sympy/issues/27485
+    assert ask(Q.real(n**p), Q.negative(n) & Q.positive(p)) is None
+
 
 @_both_exp_pow
 def test_real_functions():
@@ -2415,10 +2418,3 @@ def test_issue_25221():
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.positive(y,y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
-
-
-def test_issue_27485():
-    n = Symbol('n', negative=True)
-    p = Symbol('p', positive=True)
-    exp = n**p
-    assert ask(Q.real(exp)) is None
