@@ -40,6 +40,16 @@ def dup_integrate(f, m, K):
     """
     Computes the indefinite integral of ``f`` in ``K[x]``.
 
+    Parameters
+    ==========
+
+    f : list
+        List of coefficients of the polynomial to integrate.
+    m : int
+        Number of integrations to perform.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -51,26 +61,45 @@ def dup_integrate(f, m, K):
     >>> R.dup_integrate(x**2 + 2*x, 2)
     1/12*x**4 + 1/3*x**3
 
+    >>> from sympy.polys.densetools import dup_integrate
+    >>> dup_integrate([1, 2], 1, QQ)
+    [1/2, 2, 0]
+
+
     """
     if m <= 0 or not f:
         return f
 
-    g = [K.zero]*m
+    result = [K.zero] * m
 
-    for i, c in enumerate(reversed(f)):
-        n = i + 1
+    for i, coefficient in enumerate(reversed(f)):
+        # The denominator represent also the exponent
+        denominator = i + 1
 
         for j in range(1, m):
-            n *= i + j + 1
+            denominator *= i + j + 1
 
-        g.insert(0, K.exquo(c, K(n)))
+        quotient = K.exquo(coefficient, K(denominator))
+        result.insert(0, quotient)
 
-    return g
+    return result
 
 
 def dmp_integrate(f, m, u, K):
     """
     Computes the indefinite integral of ``f`` in ``x_0`` in ``K[X]``.
+
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    m : int
+        Number of integrations to perform.
+    u : int
+        Number of variables, excluding the main variable x_0.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -83,6 +112,12 @@ def dmp_integrate(f, m, u, K):
     >>> R.dmp_integrate(x + 2*y, 2)
     1/6*x**3 + x**2*y
 
+    >>> from sympy.polys.densetools import dmp_integrate
+    >>> # Integration of x+2*y+z by x, Result: 1/2*x**2 + 2*x*y + x*z
+    >>> dmp_integrate([[[1]], [[2], [1, 0]]], 1, 2, QQ)
+    [[[1/2]], [[2], [1, 0]], [[]]]
+
+
     """
     if not u:
         return dup_integrate(f, m, K)
@@ -90,17 +125,20 @@ def dmp_integrate(f, m, u, K):
     if m <= 0 or dmp_zero_p(f, u):
         return f
 
-    g, v = dmp_zeros(m, u - 1, K), u - 1
+    result = dmp_zeros(m, u - 1, K)
+    reduced_vars = u-1
 
-    for i, c in enumerate(reversed(f)):
-        n = i + 1
+    for i, coefficient in enumerate(reversed(f)):
+        # The denominator represent also the exponent
+        denominator = i + 1
 
         for j in range(1, m):
-            n *= i + j + 1
+            denominator *= i + j + 1
 
-        g.insert(0, dmp_quo_ground(c, K(n), v, K))
+        quotient = dmp_quo_ground(coefficient, K(denominator), reduced_vars, K)
+        result.insert(0, quotient)
 
-    return g
+    return result
 
 
 def _rec_integrate_in(g, m, v, i, j, K):
@@ -117,6 +155,20 @@ def dmp_integrate_in(f, m, j, u, K):
     """
     Computes the indefinite integral of ``f`` in ``x_j`` in ``K[X]``.
 
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    m : int
+        Number of integrations to perform.
+    j : int
+        Index to the variable to integrate.
+    u : int
+        Number of variables, excluding the variable x_j.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -127,6 +179,12 @@ def dmp_integrate_in(f, m, j, u, K):
     1/2*x**2 + 2*x*y
     >>> R.dmp_integrate_in(x + 2*y, 1, 1)
     x*y + y**2
+
+    >>> from sympy.polys.densetools import dmp_integrate_in
+    >>> # Integration of x+2*y+z by y, Result: x*y + y**2 + y*z
+    >>> dmp_integrate_in([[[1]], [[2], [1, 0]]], 1, 1, 2, QQ)
+    [[[1], []], [[1], [1, 0], []]]
+
 
     """
     if j < 0 or j > u:
