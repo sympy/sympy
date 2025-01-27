@@ -66,12 +66,12 @@ def _(expr, assumptions):
 
 @IntegerPredicate.register(Pow)
 def _(expr, assumptions):
-#     """
-#     * Integer  **  Integer  -> Integer
-#     * Integer  ** !Integer  -> ?
-#     * !Integer ** !Integer  -> ?
-#     * Integer  ** -Integer  -> ?
-#     """
+    """
+    * Integer  **  Integer  -> Integer
+    * Integer  ** !Integer  -> ?
+    * !Integer ** !Integer  -> ?
+    * Integer  ** -Integer  -> ?
+    """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
     if ask(Q.integer(expr.base), assumptions) and ask(Q.integer(expr.exp), assumptions):
