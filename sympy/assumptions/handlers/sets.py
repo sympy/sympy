@@ -571,7 +571,7 @@ def _(expr, assumptions):
     * Negative**Real        -> not Imaginary if exponent is not Rational
     * Anything**Infinity    -> !Imaginary
     """
-    if (ask(Q.infinite(expr.base), assumptions) or ask(Q.infinite(expr.exp), assumptions)):
+    if expr.is_infinite or any(arg.is_infinite for arg in (expr.base, expr.exp)):
         return False
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
