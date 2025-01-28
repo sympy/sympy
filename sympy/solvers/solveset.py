@@ -4139,12 +4139,7 @@ def nonlinsolve(system, *symbols):
         else:
             return subs_res
 
-
-
-
-
 def test_issue_25241():
-
     x = Symbol('x')  # Define the symbolic variable x
     function = -2 * x**4 + 2 * x**2 + 3 * x - 1
     polynomial = Eq(function, 0)
@@ -4153,5 +4148,7 @@ def test_issue_25241():
     expected_roots = poly.real_roots()
 
     solution = solveset(polynomial, x, domain=S.Reals)
+
+    # Assert either the solution is a ConditionSet or the roots match within tolerance
     assert solution == ConditionSet(x, Eq(function, 0), S.Reals) or \
            all(abs(r - s) < 1e-6 for r, s in zip(sorted(expected_roots), sorted(solution)))
