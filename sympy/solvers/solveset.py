@@ -666,24 +666,16 @@ def domain_check(f, symbol, p):
 
 
 def _domain_check(f, symbol, p):
-    """
-    Helper for domain check.
-
-    Avoids triggering expensive symbolic computations like minimal_polynomial
-    evaluation when not strictly necessary. Specifically optimized for cases
-    like polynomials.
-    """
-
+    # helper for domain check
     if f.is_Atom and f.is_finite:
         return True
-
-
     subs_result = f.subs(symbol, p)
     if subs_result.is_infinite:
         return False
-
-
     if isinstance(f, Piecewise):
+        # Check the cases of the Piecewise in turn. There might be invalid
+        # expressions in later cases that don't apply e.g.
+        #    solveset(Piecewise((0, Eq(x, 0)), (1/x, True)), x)
         for expr, cond in f.args:
             condsubs = cond.subs(symbol, p)
             if condsubs is S.false:
@@ -691,16 +683,20 @@ def _domain_check(f, symbol, p):
             elif condsubs is S.true:
                 return _domain_check(expr, symbol, p)
             else:
-
+                # We don't know which case of the Piecewise holds. On this
+                # basis we cannot decide whether any solution is in or out of
+                # the domain. Ideally this function would allow returning a
+                # symbolic condition for the validity of the solution that
+                # could be handled in the calling code. In the mean time we'll
+                # give this particular solution the benefit of the doubt and
+                # let it pass.
                 return True
 
-
     if isinstance(f, Poly):
-
+        # If `p` is not in the domain of `f`, return False
         if not f.domain.contains(p):
             return False
         return True
-
     # TODO: Avoid blind recursion for arbitrary expressions
     # Fallback to recursive checks for other cases
     try:
@@ -708,7 +704,6 @@ def _domain_check(f, symbol, p):
     except AttributeError:
         # If `f` has no `.args` (e.g., a number), return True
         return True
-
 
 
 def _is_finite_with_finite_vars(f, domain=S.Complexes):
