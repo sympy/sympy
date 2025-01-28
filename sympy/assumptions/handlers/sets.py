@@ -524,7 +524,7 @@ def _(expr, assumptions):
         elif ask(Q.real(arg), assumptions):
             reals += 1
         else:
-            if any(ask(Q.infinite(arg), assumptions) for arg in expr.args):
+            if not ask(Q.finite(arg), assumptions):
                 return False
             break
     else:
