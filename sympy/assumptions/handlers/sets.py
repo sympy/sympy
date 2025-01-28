@@ -249,12 +249,12 @@ def _(expr, assumptions):
     result = True
     check_zero = False
     for arg in expr.args:
+        if ask(Q.eq(arg,0),assumptions) is None:
+            check_zero = None
         if ask(Q.real(arg), assumptions):
             pass
         elif ask(Q.imaginary(arg), assumptions):
             result = result ^ True
-        elif ask(Q.eq(arg,0),assumptions) is None:
-            check_zero = None
         else:
             break
     else:
