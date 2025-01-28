@@ -11,6 +11,7 @@ from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
 from sympy.utilities.iterables import sift
+
 from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
 
