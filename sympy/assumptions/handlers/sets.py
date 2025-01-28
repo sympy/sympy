@@ -258,7 +258,9 @@ def _(expr, assumptions):
         else:
             break
     else:
-        return (result or check_zero)
+        if check_zero is None:
+            return None
+        return result
 
 @RealPredicate.register(Pow)
 def _(expr, assumptions):
