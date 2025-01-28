@@ -3546,3 +3546,16 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+def test_issue_25241():
+
+    function = -2 * x**4 + 2 * x**2 + 3 * x - 1
+    polynomial = Eq(function, 0)
+
+    poly = Poly(function)
+    expected_roots = poly.real_roots()
+
+    solution = solveset(polynomial, x, domain=S.Reals)
+
+    assert solution == ConditionSet(x, Eq(function, 0), S.Reals) or \
+           sorted(expected_roots) == sorted(solution)
