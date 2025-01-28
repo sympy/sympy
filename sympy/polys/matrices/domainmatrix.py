@@ -3352,11 +3352,11 @@ class DomainMatrix:
         >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), ZZ)
         >>> Q, R, D = A.qrd()
         >>> Q
-        DomainMatrix([[1, 0, 0], [3, -2, 0], [5, -4, 1]], (3, 3), ZZ)
+        DomainMatrix([[1, 0], [3, 1]], (2, 2), ZZ)
         >>> R
-        DomainMatrix([[1, 2], [0, -2], [0, 0]], (3, 2), ZZ)
+        DomainMatrix([[1, 2], [0, -2]], (2, 2), ZZ)
         >>> D
-        DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
+        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
         """
         if not self.domain.is_IntegerRing and not self.domain.is_PolynomialRing:
             raise DMDomainError("Fraction-free QR decomposition requires an integral domain.")
@@ -3441,13 +3441,13 @@ class DomainMatrix:
         >>> A = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
         >>> P, L, D, U = A.fflu()
         >>> P
-        [[1, 0], [0, 1]]
+        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
         >>> L
-        [[1, 0], [3, 1]]
+        DomainMatrix([[1, 0], [3, 1]], (2, 2), ZZ)
         >>> D
-        [[1, 0], [0, 1]]
+        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
         >>> U
-        [[1, 2], [0, -2]]
+        DomainMatrix([[1, 2], [0, -2]], (2, 2), ZZ)
 
         See Also
         ========
