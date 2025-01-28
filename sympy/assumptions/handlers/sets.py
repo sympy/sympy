@@ -75,10 +75,10 @@ def _(expr, assumptions):
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
     if ask(Q.integer(expr.base), assumptions) and ask(Q.integer(expr.exp), assumptions):
-        if expr.base == -1 or expr.base == 1 or expr.base == 0: # can't become a fraction if the base is -1, 0, 1
+        if ask(Q.lt(expr.base , 2), assumptions) and ask(Q.gt(expr.base , -2), assumptions):
             return True
         if ask(Q.negative(expr.exp), assumptions):
-            if ask(Q.gt(expr.base , 1), assumptions) or ask(Q.lt(expr.base , -1), assumptions): # if expr.base is beyond -1, 0, 1 then it won't become an integer after a negative power.
+            if ask(Q.gt(expr.base , 1), assumptions) or ask(Q.lt(expr.base , -1), assumptions):
                 return False
             else:
                 return None
