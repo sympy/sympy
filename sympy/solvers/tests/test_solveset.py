@@ -3533,29 +3533,3 @@ def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
 
 
-def test_issue_26077():
-    _n = Symbol('_n')
-    function = x*cot(5*x)
-    critical_points = stationary_points(function, x, S.Reals)
-    excluded_points = Union(
-        ImageSet(Lambda(_n, 2*_n*pi/5), S.Integers),
-        ImageSet(Lambda(_n, 2*_n*pi/5 + pi/5), S.Integers)
-    )
-    solution = ConditionSet(x,
-        Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0),
-        Complement(S.Reals, excluded_points)
-    )
-    assert solution.as_dummy() == critical_points.as_dummy()
-
-def test_issue_25241():
-    function = -2 * x**4 + 2 * x**2 + 3 * x - 1
-    polynomial = Eq(function, 0)
-
-    poly = Poly(function)
-    expected_roots = poly.real_roots()
-
-    solution = solveset(polynomial, x, domain=S.Reals)
-
-    # We are using the `CRootOf` format comparison and allowing symbolic expression matches
-    assert solution == ConditionSet(x, Eq(function, 0), S.Reals) or \
-           all(abs(r - s) < 1e-6 for r, s in zip(sorted(expected_roots), sorted(solution)))

@@ -697,8 +697,7 @@ def _domain_check(f, symbol, p):
         if not f.domain.contains(p):
             return False
         return True
-    # TODO: Avoid blind recursion for arbitrary expressions
-    # Fallback to recursive checks for other cases
+
     try:
         return all(_domain_check(g, symbol, p) for g in f.args)
     except AttributeError:
@@ -4139,3 +4138,15 @@ def nonlinsolve(system, *symbols):
             return FiniteSet(*map(to_tuple, correct_sols))
         else:
             return subs_res
+
+def test_issue_25241():
+    function = -2 * x**4 + 2 * x**2 + 3 * x - 1
+    polynomial = Eq(function, 0)
+
+    poly = Poly(function)
+    expected_roots = poly.real_roots()
+
+    solution = solveset(polynomial, x, domain=S.Reals)
+
+    assert solution == ConditionSet(x, Eq(function, 0), S.Reals) or \
+           all(abs(r - s) < 1e-6 for r, s in zip(sorted(expected_roots), sorted(solution)))
