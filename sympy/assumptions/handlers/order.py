@@ -126,6 +126,10 @@ def _(expr, assumptions):
         return False
     raise MDNotImplementedError
 
+@NegativePredicate.register(NaN)
+def _(expr, assumptions):
+    return None
+
 
 # NonNegativePredicate
 
