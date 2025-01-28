@@ -144,7 +144,6 @@ def dup_mul_term(f, c, i, K):
     Examples
     ========
 
-
     >>> from sympy.polys import ring, ZZ
     >>> R, x = ring("x", ZZ)
 
@@ -756,23 +755,18 @@ def dup_mul(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    try:
-        import numpy as np
-        f_np = np.array(f, dtype=np.int64)
-        g_np = np.array(g, dtype=np.int64)
-        h_np = np.convolve(f_np, g_np)  # Fast polynomial multiplication
-        return h_np.tolist()
-    except ImportError:
-        pass
-
     n = max(df, dg) + 1
 
     if n < 100 or not K.is_Exact:
-        h = [K.zero] * (df + dg + 1)
+        h = []
 
-        for i, fi in enumerate(f):
-            for j, gj in enumerate(g):
-                h[i + j] += fi * gj
+        for i in range(0, df + dg + 1):
+            coeff = K.zero
+
+            for j in range(max(0, i - dg), min(df, i) + 1):
+                coeff += f[j]*g[i - j]
+
+            h.append(coeff)
 
         return dup_strip(h)
     else:
