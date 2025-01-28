@@ -830,12 +830,11 @@ def GramSchmidt(vlist, orthonormal=False):
     .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
     from sympy.polys.matrices import DomainMatrix
-    from sympy.polys.domains import QQ
     A = DomainMatrix.hstack(*[DomainMatrix.from_Matrix(v) for v in vlist])
-    if A.domain != QQ:
-        A = A.convert_to(QQ)
+    A = A.to_field()
     Q, _ = A.qr()
-    orthogonal_vectors = [Q.cols(i).to_Matrix() for i in range(Q.shape[1])]
+    Q_matrix = Q.to_Matrix()
+    orthogonal_vectors = [Q_matrix[:, i] for i in range(Q_matrix.cols)]
     if orthonormal:
         orthogonal_vectors = [v / v.norm() for v in orthogonal_vectors]
     return orthogonal_vectors
