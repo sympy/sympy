@@ -2292,7 +2292,7 @@ class primepi(DefinedFunction):
 
 
 class _MultisetHistogram(tuple):
-    pass
+    __slots__ = ()
 
 
 _N = -1

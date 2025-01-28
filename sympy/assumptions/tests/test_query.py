@@ -1107,6 +1107,11 @@ def test_bounded():
     assert ask(Q.finite(cos(x) + sin(x))) is True
 
 
+def test_issue_27441():
+    # https://github.com/sympy/sympy/issues/27441
+    assert ask(Q.composite(y), Q.integer(y) & Q.positive(y) & ~Q.prime(y)) is None
+
+
 @XFAIL
 def test_bounded_xfail():
     """We need to support relations in ask for this to work"""
@@ -1907,15 +1912,18 @@ def test_real_pow():
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.odd(y)) is False
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.even(y)) is True
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.rational(y/z) & Q.even(z) & Q.positive(x)) is True
-    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is False
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is None
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.integer(y/z)) is True
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.positive(x)) is True
-    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.negative(x)) is False
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.negative(x)) is None
     assert ask(Q.real((-I)**i), Q.imaginary(i)) is True
     assert ask(Q.real(I**i), Q.imaginary(i)) is True
     assert ask(Q.real(i**i), Q.imaginary(i)) is None  # i might be 2*I
     assert ask(Q.real(x**i), Q.imaginary(i)) is None  # x could be 0
     assert ask(Q.real(x**(I*pi/log(x))), Q.real(x)) is True
+
+    # https://github.com/sympy/sympy/issues/27485
+    assert ask(Q.real(n**p), Q.negative(n) & Q.positive(p)) is None
 
 
 @_both_exp_pow
