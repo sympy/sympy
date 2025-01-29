@@ -27,12 +27,12 @@ jobs:
         splits: [4] # keep in sync with number of groups below
         group: [1, 2, 3, 4]
     env:
-      PYODIDE_VERSION: 0.27.0a2
+      PYODIDE_VERSION: 0.27.2
       # PYTHON_VERSION and EMSCRIPTEN_VERSION are determined by PYODIDE_VERSION.
       # The appropriate versions can be found in the Pyodide repodata.json
       # "info" field, or in Makefile.envs:
-      # https://github.com/pyodide/pyodide/blob/main/Makefile.envs#L2
-      PYTHON_VERSION: 3.12.1
+      # https://github.com/pyodide/pyodide/blob/d85f9cda735e47f16b3f032832fab73bd1c12a30/Makefile.envs#L1-L3
+      PYTHON_VERSION: 3.12 # any Python 3.12.x version works
       EMSCRIPTEN_VERSION: 3.1.58
       NODE_VERSION: 20
     steps:
