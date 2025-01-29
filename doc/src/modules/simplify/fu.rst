@@ -247,4 +247,4 @@ References
     https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=718d67a8d1ce0a23808c1cc265612f81977357e4
 
 .. [2] A formula sheet for trigonometric functions.
-    http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html
+    https://www.geeksforgeeks.org/trigonometry-formulas/
