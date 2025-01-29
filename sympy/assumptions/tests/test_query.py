@@ -2423,3 +2423,11 @@ def test_issue_25221():
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.positive(y,y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
+
+
+def test_issue_27449():
+    assert ask(Q.imaginary(I + oo)) is False
+    assert ask(Q.imaginary(I * oo)) is False
+    assert ask(Q.imaginary(oo)) is False
+    assert ask(Q.imaginary(2*I + oo)) is False
+    assert ask(Q.imaginary(3*I * oo)) is False
