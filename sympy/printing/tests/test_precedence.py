@@ -1,3 +1,4 @@
+import sympy
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative
@@ -31,6 +32,27 @@ def test_Integral():
 def test_Mul():
     assert precedence(x*y) == PRECEDENCE["Mul"]
     assert precedence(-x*y) == PRECEDENCE["Add"]
+
+
+class F(sympy.Function):
+    precedence = 40
+
+    def _sympystr(self, printer):
+        arg1 = printer.parenthesize(self.args[0], self.precedence)
+        arg2 = printer.parenthesize(self.args[1], self.precedence)
+        return f"{arg1} F {arg2}"
+
+def test_custom_function_mul_precedence():
+    a, b = symbols("a b")
+
+    f_instance = F(a, b)
+
+    positive_mul = 2 * f_instance
+    assert str(positive_mul) == "2*(a F b)", f"Expected '2*(a F b)', got '{str(positive_mul)}'"
+
+    negative_mul = -2 * f_instance
+    assert str(negative_mul) == "-2*(a F b)", f"Expected '-2*(a F b)', got '{str(negative_mul)}'"
+
 
 
 def test_Number():
