@@ -1796,7 +1796,7 @@ def test_prime():
     assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x)) is None
     assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x) & Q.ne(x, 1)) is False
     assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x)) is None
-    assert ask(Q.prime(n**x), Q.integer(x) & ~Q.prime(n)) is False
+    assert ask(Q.prime(n**x), Q.integer(x) & Q.composite(n)) is False
 
 
 @_both_exp_pow
