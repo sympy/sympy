@@ -74,11 +74,13 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
-    if ask(Q.integer(expr.base), assumptions) and ask(Q.integer(expr.exp), assumptions):
-        if ask(Q.lt(expr.base , 2), assumptions) and ask(Q.gt(expr.base , -2), assumptions):
+    _both_integers = ask(Q.integer(expr.base) & Q.integer(expr.exp), assumptions)
+    if _both_integers:
+        _beyond_abs_1 = ask(Q.gt(expr.base , 1), assumptions) or ask(Q.lt(expr.base , -1), assumptions) # if the base is beyond absolute value of 1, i.e. it is not equal to {1, 0, 1}. Then with a negative power it will be not an integer.
+        if _beyond_abs_1 == False:
             return True
         if ask(Q.negative(expr.exp), assumptions):
-            if ask(Q.gt(expr.base , 1), assumptions) or ask(Q.lt(expr.base , -1), assumptions):
+            if _beyond_abs_1:
                 return False
             else:
                 return None
