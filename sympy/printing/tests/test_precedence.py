@@ -97,8 +97,8 @@ def test_custom_function_precedence_comparison():
     2. Functions with precedence = Func (70)
 
     Key distinction:
-    - Lower precedence functions (45) need parentheses: -2*(x F y)
-    - Higher precedence functions (70) don't: -2*x F y
+    1. Lower precedence functions (45) need parentheses: -2*(x F y)
+    2. Higher precedence functions (70) don't: -2*x F y
     """
     class LowPrecedenceF(Function):
         precedence = PRECEDENCE["Mul"] - 5
