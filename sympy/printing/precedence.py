@@ -60,14 +60,9 @@ PRECEDENCE_VALUES = {
 
 def precedence_Mul(item):
     from sympy.core.function import Function
-    custom_func_args = [
-        arg for arg in item.args
-        if hasattr(arg, 'precedence') and isinstance(arg, Function)
-    ]
-    if custom_func_args:
-        min_custom_precedence = min(arg.precedence for arg in custom_func_args)
-        if min_custom_precedence < PRECEDENCE["Mul"]:
-            return PRECEDENCE["Mul"]
+    if any(hasattr(arg, 'precedence') and isinstance(arg, Function) and
+           arg.precedence < PRECEDENCE["Mul"] for arg in item.args):
+        return PRECEDENCE["Mul"]
 
     if item.could_extract_minus_sign():
         return PRECEDENCE["Add"]

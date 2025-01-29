@@ -1,7 +1,6 @@
-import sympy
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, Function
 from sympy.core.numbers import Integer, Rational, Float, oo
 from sympy.core.relational import Rel
 from sympy.core.symbol import symbols
@@ -101,12 +100,12 @@ def test_custom_function_precedence_comparison():
     - Lower precedence functions (45) need parentheses: -2*(x F y)
     - Higher precedence functions (70) don't: -2*x F y
     """
-    class LowPrecedenceF(sympy.Function):
+    class LowPrecedenceF(Function):
         precedence = PRECEDENCE["Mul"] - 5
         def _sympystr(self, printer):
             return f"{printer._print(self.args[0])} F {printer._print(self.args[1])}"
 
-    class HighPrecedenceF(sympy.Function):
+    class HighPrecedenceF(Function):
         precedence = PRECEDENCE["Func"]
         def _sympystr(self, printer):
             return f"{printer._print(self.args[0])} F {printer._print(self.args[1])}"
@@ -127,6 +126,3 @@ def test_custom_function_precedence_comparison():
 
     test_low_precedence()
     test_high_precedence()
-
-if __name__ == "__main__":
-    test_custom_function_precedence_comparison()
