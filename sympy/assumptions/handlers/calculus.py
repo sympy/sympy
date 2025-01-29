@@ -151,10 +151,12 @@ def _(expr, assumptions):
         * /s = not signed
     """
     result = True
+    possible_zero = False
     for arg in expr.args:
         _bounded = ask(Q.finite(arg), assumptions)
         if _bounded:
-            continue
+            if ask(Q.eq(arg, 0), assumptions) is None:
+                possible_zero = None
         elif _bounded is None:
             if result is None:
                 return None
@@ -164,7 +166,9 @@ def _(expr, assumptions):
                 result = None
         else:
             result = False
-    return result
+    if result:
+        return result
+    return possible_zero
 
 @FinitePredicate.register(Pow)
 def _(expr, assumptions):
