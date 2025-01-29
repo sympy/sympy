@@ -589,6 +589,18 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __init__(self, ring, init):
         super().__init__(init)
         self.ring = ring
+        # This check would be too slow to run every time:
+        # self._check()
+
+    def _check(self):
+        assert isinstance(self, PolyElement)
+        assert isinstance(self.ring, PolyRing)
+        dom = self.ring.domain
+        assert isinstance(dom, Domain)
+        for monom, coeff in self.items():
+            assert dom.of_type(coeff)
+            assert len(monom) == self.ring.ngens
+            assert all(isinstance(exp, int) and exp >= 0 for exp in monom)
 
     def new(self, init):
         return self.__class__(self.ring, init)
