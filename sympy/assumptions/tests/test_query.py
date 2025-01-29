@@ -1794,8 +1794,9 @@ def test_prime():
     assert ask(Q.prime(4**x), Q.integer(x)) is False
     assert ask(Q.prime(2**x), Q.integer(x)) is None
     assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x)) is None
-    assert ask(Q.prime(p**1), Q.prime(p)) is True
-    assert ask(Q.prime(9**x), Q.integer(x) & Q.positive(x)) is False
+    assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x) & Q.ne(x, 1)) is None
+    assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x)) is None
+    assert ask(Q.prime(n**x), Q.integer(x) & ~Q.prime(n)) is False
 
 
 @_both_exp_pow
