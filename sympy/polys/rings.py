@@ -1115,6 +1115,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             for expv in p1:
                 p[expv] = -p1[expv]
             p += n
+            # p._check()
             return p
 
     def __mul__(p1, p2):
@@ -1147,6 +1148,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     exp = monomial_mul(exp1, exp2)
                     p[exp] = get(exp, zero) + v1*v2
             p.strip_zero()
+            # p._check()
             return p
         elif isinstance(p2, PolyElement):
             if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
@@ -1165,6 +1167,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 v = v1*p2
                 if v:
                     p[exp1] = v
+            # p._check()
             return p
 
     def __rmul__(p1, p2):
@@ -1211,6 +1214,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         x**3 + 3*x**2*y**2 + 3*x*y**4 + y**6
 
         """
+        if not isinstance(n, int):
+            raise TypeError("exponent must be an integer, got %s" % n)
+        elif n < 0:
+            raise ValueError("exponent must be a non-negative integer, got %s" % n)
+
         ring = self.ring
 
         if not n:
@@ -1225,6 +1233,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 p[ring.monomial_pow(monom, n)] = coeff
             else:
                 p[ring.monomial_pow(monom, n)] = coeff**n
+            # p._check()
             return p
 
         # For ring series, we need negative and rational exponent support only
@@ -1323,6 +1332,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             k2 = monomial_mul(k, k)
             p[k2] = get(k2, zero) + v**2
         p.strip_zero()
+        # p._check()
         return p
 
     def __divmod__(p1, p2):
@@ -1348,7 +1358,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return (p1.quo_ground(p2), p1.rem_ground(p2))
 
     def __rdivmod__(p1, p2):
-        return NotImplemented
+        ring = p1.ring
+        try:
+            p2 = ring.ground_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p2.div(p1)
 
     def __mod__(p1, p2):
         ring = p1.ring
@@ -1373,7 +1389,44 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return p1.rem_ground(p2)
 
     def __rmod__(p1, p2):
-        return NotImplemented
+        ring = p1.ring
+        try:
+            p2 = ring.ground_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p2.rem(p1)
+
+    def __floordiv__(p1, p2):
+        ring = p1.ring
+
+        if not p2:
+            raise ZeroDivisionError("polynomial division")
+        elif ring.is_element(p2):
+            return p1.quo(p2)
+        elif isinstance(p2, PolyElement):
+            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+                pass
+            elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
+                return p2.__rtruediv__(p1)
+            else:
+                return NotImplemented
+
+        try:
+            p2 = ring.domain_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p1.quo_ground(p2)
+
+    def __rfloordiv__(p1, p2):
+        ring = p1.ring
+        try:
+            p2 = ring.ground_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p2.quo(p1)
 
     def __truediv__(p1, p2):
         ring = p1.ring
@@ -1381,10 +1434,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not p2:
             raise ZeroDivisionError("polynomial division")
         elif ring.is_element(p2):
-            if p2.is_monomial:
-                return p1*(p2**(-1))
-            else:
-                return p1.quo(p2)
+            return p1.exquo(p2)
         elif isinstance(p2, PolyElement):
             if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
@@ -1401,12 +1451,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return p1.quo_ground(p2)
 
     def __rtruediv__(p1, p2):
-        return NotImplemented
-
-    __floordiv__ = __truediv__
-    __rfloordiv__ = __rtruediv__
-
-    # TODO: use // (__floordiv__) for exquo()?
+        ring = p1.ring
+        try:
+            p2 = ring.ground_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p2.exquo(p1)
 
     def _term_div(self):
         zm = self.ring.zero_monom

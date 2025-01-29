@@ -1830,7 +1830,7 @@ def rs_compose_add(p1, p2):
     np2e = rs_hadamard_exp(np2)
     np3e = rs_mul(np1e, np2e, x, prec)
     np3 = rs_hadamard_exp(np3e, True)
-    np3a = (np3[(0,)] - np3)/x
+    np3a = (np3[(0,)] - np3) / x
     q = rs_integrate(np3a, x)
     q = rs_exp(q, x, prec)
     q = _invert_monoms(q)
