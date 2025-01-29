@@ -1,11 +1,12 @@
 import itertools as it
 
+from sympy.assumptions import refine, Q
 from sympy.core.expr import unchanged
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.external import import_module
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
@@ -461,11 +462,20 @@ def test_issue_14000():
     assert root(16, 4, 2, evaluate=False).has(Pow) == True
     assert real_root(-8, 3, evaluate=False).has(Pow) == True
 
+
+def test_refine_MinMax():
+    a, b, c = symbols('a b c')
+    assert refine(Max(a, b, c), Q.gt(a, c)) == Max(a, b)
+    assert refine(Min(a, b, c), Q.gt(a, c)) == Min(b, c)
+    # assert refine(Max(a, b, c), Q.positive(a) and Q.negative(c)) == Max(a, b)
+
+
 def test_issue_6899():
     from sympy.core.function import Lambda
     x = Symbol('x')
     eqn = Lambda(x, x)
     assert eqn.func(*eqn.args) == eqn
+
 
 def test_Rem():
     from sympy.abc import x, y
