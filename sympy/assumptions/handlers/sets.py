@@ -76,10 +76,11 @@ def _(expr, assumptions):
         return _IntegerPredicate_number(expr, assumptions)
     _both_integers = ask(Q.integer(expr.base) & Q.integer(expr.exp), assumptions)
     if _both_integers:
-        _beyond_abs_1 = ask(Q.gt(expr.base , 1) | Q.lt(expr.base , -1), assumptions) # not one of {-1, 0, 1}
-        if _beyond_abs_1 is False:
+        _beyond_abs_1 = ask((Q.gt(expr.base , 1) | Q.lt(expr.base , -1)), assumptions) # not one of {-1, 0, 1},
+        _is_zero = ask(Q.zero(expr.base), assumptions)
+        if _beyond_abs_1 is False and _is_zero is False:
             return True
-        if _beyond_abs_1 is True:
+        if _beyond_abs_1 is True or _is_zero is True:
             if ask(Q.negative(expr.exp), assumptions):
                 return False
         if ask(~Q.negative(expr.exp), assumptions):

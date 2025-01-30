@@ -2451,3 +2451,4 @@ def test_issue_27450():
    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is True
    assert ask(Q.integer(x**y), Q.rational(x) & Q.integer(y)) is None
    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y)) is None
+   assert ask(Q.integer(x**y) , Q.integer(x) & Q.integer(y) & Q.zero(x)) is None
