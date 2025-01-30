@@ -789,7 +789,32 @@ def geometric_conj_af(a, f):
     a, f = map(sympify, (a, f))
     return -geometric_conj_ab(a, -f)
 
-geometric_conj_bf = geometric_conj_af
+def geometric_conj_bf(b, f):
+    """
+    Conjugation relation for geometrical beams under paraxial conditions.
+
+    Explanation
+    ===========
+
+    Takes the image distance (for geometric_conj_bf) to the optical element and the focal distance.
+    Then it returns the object distance needed for conjugation.
+
+    See Also
+    ========
+
+    geometric_conj_ab
+
+    Examples
+    ========
+
+    >>> from sympy.physics.optics.gaussopt import geometric_conj_bf
+    >>> from sympy import symbols
+    >>> b, f = symbols('b f')
+    >>> geometric_conj_bf(b, f)
+    b*f/(b - f)
+    """
+    b, f = map(sympify, (b, f))
+    return -geometric_conj_ab(b, -f)
 
 
 def gaussian_conj(s_in, z_r_in, f):

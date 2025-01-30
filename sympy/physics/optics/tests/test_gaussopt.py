@@ -100,3 +100,19 @@ def test_gauss_opt():
     assert streq(p.q, 1 + 3.77358490566038*I*pi)
     assert streq(N(p.z_r), Float(11.8550666173200))
     assert streq(N(p.w_0), Float(0.00100000000000000))
+
+    # Test cases for geometric_conj_af
+    assert geometric_conj_af(10, 5) == 10*5/(10 - 5)
+    assert geometric_conj_af(20, 10) == 20*10/(20 - 10)
+
+    # Test cases for geometric_conj_bf
+    assert geometric_conj_bf(10, 5) == 10*5/(10 - 5)
+    assert geometric_conj_bf(20, 10) == 20*10/(20 - 10)
+
+    # Test cases for gaussian_conj
+    assert gaussian_conj(10, 5, 2) == (1/(-1/(10 + 5**2/(-2 + 10)) + 1/2), 5/(1 - 10**2/2**2 + 5**2/2**2), 1/sqrt(1 - 10**2/2**2 + 5**2/2**2))
+    assert gaussian_conj(20, 10, 5) == (1/(-1/(20 + 10**2/(-5 + 20)) + 1/5), 10/(1 - 20**2/5**2 + 10**2/5**2), 1/sqrt(1 - 20**2/5**2 + 10**2/5**2))
+
+    # Test cases for conjugate_gauss_beams
+    assert conjugate_gauss_beams(530e-9, 1e-3, 2e-3, f=10) == (10*(-sqrt(1e-3**2/2e-3**2 - pi**2*1e-3**4/(10**2*530e-9**2)) + 1), 10*2e-3**2*(1e-3**2/2e-3**2 - sqrt(1e-3**2/2e-3**2 - pi**2*1e-3**4/(10**2*530e-9**2)))/1e-3**2, 10)
+    assert conjugate_gauss_beams(530e-9, 2e-3, 1e-3, f=20) == (20*(-sqrt(2e-3**2/1e-3**2 - pi**2*2e-3**4/(20**2*530e-9**2)) + 1), 20*1e-3**2*(2e-3**2/1e-3**2 - sqrt(2e-3**2/1e-3**2 - pi**2*2e-3**4/(20**2*530e-9**2)))/2e-3**2, 20)
