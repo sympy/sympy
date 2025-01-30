@@ -524,8 +524,11 @@ def _(expr, assumptions):
         elif ask(Q.real(arg), assumptions):
             reals += 1
         else:
-            if not ask(Q.finite(arg), assumptions):
+            finite_result = ask(Q.finite(arg), assumptions)
+            if finite_result is False:
                 return False
+            if finite_result is None:
+                return None
             break
     else:
         if reals == 0:
@@ -533,6 +536,7 @@ def _(expr, assumptions):
         if reals in (1, len(expr.args)):
             # two reals could sum 0 thus giving an imaginary
             return False
+    return None
 
 @ImaginaryPredicate.register(Mul) # type:ignore
 def _(expr, assumptions):
@@ -541,7 +545,7 @@ def _(expr, assumptions):
     * Imaginary*Imaginary -> Real
     * Anything*Infinity   -> !Imaginary
     """
-    if any(ask(Q.infinite(arg), assumptions) for arg in expr.args):
+    if any(ask(Q.finite(arg), assumptions) is False for arg in expr.args):
         return False
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
@@ -569,10 +573,7 @@ def _(expr, assumptions):
     * Negative**Integer     -> Real
     * Negative**(Integer/2) -> Imaginary
     * Negative**Real        -> not Imaginary if exponent is not Rational
-    * Anything**Infinity    -> !Imaginary
     """
-    if expr.is_infinite or any(arg.is_infinite for arg in (expr.base, expr.exp)):
-        return False
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
 
