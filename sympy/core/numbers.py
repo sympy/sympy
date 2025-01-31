@@ -4036,9 +4036,11 @@ class Catalan(NumberSymbol, metaclass=Singleton):
 
     def _as_mpf_val(self, prec):
         # XXX track down why this has to be increased
-        v = mlib.catalan_fixed(prec + 10)
-        rv = mlib.from_man_exp(v, -prec - 10)
-        return mpf_norm(rv, prec)
+        max_prec = min(prec, 50)
+
+        v = mlib.catalan_fixed(max_prec)
+        rv = mlib.from_man_exp(v,-max_prec)
+        return mpf_norm(rv,max_prec)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
