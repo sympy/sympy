@@ -19,7 +19,6 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.dense import zeros
