@@ -4036,7 +4036,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
 
     def _as_mpf_val(self, prec):
         # XXX track down why this has to be increased
-        max_prec = max(prec, 200)
+        max_prec = max(prec, 400)
 
         v = mlib.catalan_fixed(max_prec)
         rv = mlib.from_man_exp(v,-max_prec)
