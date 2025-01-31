@@ -536,7 +536,6 @@ def _(expr, assumptions):
         if reals in (1, len(expr.args)):
             # two reals could sum 0 thus giving an imaginary
             return False
-    return None
 
 @ImaginaryPredicate.register(Mul) # type:ignore
 def _(expr, assumptions):
