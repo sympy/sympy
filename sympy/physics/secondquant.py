@@ -145,12 +145,15 @@ class Dagger(Expr):
                 return Add(*tuple(map(Dagger, arg.args)))
             if arg.is_Mul:
                 return Mul(*tuple(map(Dagger, reversed(arg.args))))
-            if arg.is_Number or arg.is_scalar:
-                return conjugate(arg)
+            if arg.is_Number:
+                return arg
             if arg.is_Pow:
                 return Pow(Dagger(arg.args[0]), arg.args[1])
             if arg == I:
                 return -arg
+        if isinstance(arg, Function):
+            if all(a.is_commutative for a in arg.args):
+                return arg.func(*[Dagger(a) for a in arg.args])
         else:
             return None
 

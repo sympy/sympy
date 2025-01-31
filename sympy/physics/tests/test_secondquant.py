@@ -1,3 +1,4 @@
+from sympy.functions.elementary.exponential import exp
 from sympy.physics.secondquant import (
     Dagger, Bd, VarBosonicBasis, BBra, B, BKet, FixedBosonicBasis,
     matrix_rep, apply_operators, InnerProduct, Commutator, KroneckerDelta,
@@ -87,6 +88,7 @@ def test_dagger():
     assert Dagger(B(n)**10) == Dagger(B(n))**10
     assert Dagger('a') == Dagger(Symbol('a'))
     assert Dagger(Dagger('a')) == Symbol('a')
+    assert Dagger(exp(2 * I)) == exp(-2 * I)
 
 
 def test_operator():
