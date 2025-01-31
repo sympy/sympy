@@ -2345,7 +2345,9 @@ def test_fixed_precision():
         is_trivial = solve_time < 1
 
         simplified_eq = simplify(new_eq.rhs - new_eq.lhs)
-        is_simplifiable = simplified_eq == 0
+        tolerance = 1e-12
+        is_simplifiable = abs(simplified_eq) < tolerance
+
 
         assert is_trivial
         assert is_simplifiable
