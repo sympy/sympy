@@ -1,7 +1,6 @@
-from sympy.testing.pytest import XFAIL
-
 from sympy.polys.domains import QQ, EX, RR
 from sympy.polys.rings import ring
+from sympy.polys.puiseux import puiseux_ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
@@ -226,9 +225,8 @@ def test_fun():
     assert rs_fun(p, _tan1, x, 10) == _tan1(p, x, 10)
 
 
-@XFAIL
 def test_nth_root():
-    R, x, y = ring('x, y', QQ)
+    R, x, y = puiseux_ring('x, y', QQ)
     assert rs_nth_root(1 + x**2*y, 4, x, 10) == -77*x**8*y**4/2048 + \
         7*x**6*y**3/128 - 3*x**4*y**2/32 + x**2*y/4 + 1
     assert rs_nth_root(1 + x*y + x**2*y**3, 3, x, 5) == -x**4*y**6/9 + \
@@ -241,8 +239,8 @@ def test_nth_root():
 
     # Constant term in series
     a = symbols('a')
-    R, x, y = ring('x, y', EX)
-    assert rs_nth_root(x + a, 3, x, 4) == EX(5/(81*a**QQ(8, 3)))*x**3 - \
+    R, x, y = puiseux_ring('x, y', EX)
+    assert rs_nth_root(x + EX(a), 3, x, 4) == EX(5/(81*a**QQ(8, 3)))*x**3 - \
         EX(1/(9*a**QQ(5, 3)))*x**2 + EX(1/(3*a**QQ(2, 3)))*x + EX(a**QQ(1, 3))
     assert rs_nth_root(x**QQ(2, 3) + x**2*y + 5, 2, x, 3) == -EX(sqrt(5)/100)*\
         x**QQ(8, 3)*y - EX(sqrt(5)/16000)*x**QQ(8, 3) + EX(sqrt(5)/10)*x**2*y + \
@@ -307,9 +305,8 @@ def test_tan():
         668083460499)
 
 
-@XFAIL
 def test_cot():
-    R, x, y = ring('x, y', QQ)
+    R, x, y = puiseux_ring('x, y', QQ)
     assert rs_cot(x**6 + x**7, x, 8) == x**(-6) - x**(-5) + x**(-4) - \
         x**(-3) + x**(-2) - x**(-1) + 1 - x + x**2 - x**3 + x**4 - x**5 + \
         2*x**6/3 - 4*x**7/3
@@ -449,9 +446,8 @@ def test_RR():
     is_close(p.as_expr(), q.subs(a, 5).n())
 
 
-@XFAIL
 def test_is_regular():
-    R, x, y = ring('x, y', QQ)
+    R, x, y = puiseux_ring('x, y', QQ)
     p = 1 + 2*x + x**2 + 3*x**3
     assert not rs_is_puiseux(p, x)
 
@@ -463,9 +459,8 @@ def test_is_regular():
     assert not rs_is_puiseux(p, x)
 
 
-@XFAIL
 def test_puiseux():
-    R, x, y = ring('x, y', QQ)
+    R, x, y = puiseux_ring('x, y', QQ)
     p = x**QQ(2,5) + x**QQ(2,3) + x
 
     r = rs_series_inversion(p, x, 1)
@@ -528,22 +523,20 @@ def test_puiseux():
         x + x**QQ(2,3) + x**QQ(2,5)
 
 
-@XFAIL
 def test_puiseux_algebraic(): # https://github.com/sympy/sympy/issues/24395
 
     K = QQ.algebraic_field(sqrt(2))
     sqrt2 = K.from_sympy(sqrt(2))
     x, y = symbols('x, y')
-    R, xr, yr = ring([x, y], K)
+    R, xr, yr = puiseux_ring([x, y], K)
     p = (1+sqrt2)*xr**QQ(1,2) + (1-sqrt2)*yr**QQ(2,3)
 
-    assert dict(p) == {(QQ(1,2),QQ(0)):1+sqrt2, (QQ(0),QQ(2,3)):1-sqrt2}
+    assert p.to_dict() == {(QQ(1,2),QQ(0)):1+sqrt2, (QQ(0),QQ(2,3)):1-sqrt2}
     assert p.as_expr() == (1 + sqrt(2))*x**(S(1)/2) + (1 - sqrt(2))*y**(S(2)/3)
 
 
-@XFAIL
 def test1():
-    R, x = ring('x', QQ)
+    R, x = puiseux_ring('x', QQ)
     r = rs_sin(x, x, 15)*x**(-5)
     assert r == x**8/6227020800 - x**6/39916800 + x**4/362880 - x**2/5040 + \
         QQ(1,120) - x**-2/6 + x**-4
@@ -569,10 +562,9 @@ def test1():
         x**QQ(1,2) + 1
 
 
-@XFAIL
 def test_puiseux2():
     R, y = ring('y', QQ)
-    S, x = ring('x', R)
+    S, x = puiseux_ring('x', R.to_domain())
 
     p = x + x**QQ(1,5)*y
     r = rs_atan(p, x, 3)
