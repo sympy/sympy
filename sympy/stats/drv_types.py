@@ -502,7 +502,7 @@ def NegativeBinomial(name, r, p):
     >>> X = NegativeBinomial("x", r, p)
 
     >>> density(X)(z)
-    1024*binomial(z + 4, z)/(3125*5**z)
+    (2/3)**z*binomial(z + 4, z)/243
 
     >>> E(X)
     10
