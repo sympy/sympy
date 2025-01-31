@@ -1,4 +1,5 @@
 import numbers as nums
+import timeit
 import decimal
 from sympy.concrete.summations import Sum
 from sympy.core import (EulerGamma, Catalan, TribonacciConstant,
@@ -32,7 +33,7 @@ from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
-from sympy import Add
+from sympy import Add,Eq , solve
 
 from mpmath import mpf
 import mpmath
@@ -2327,3 +2328,52 @@ def test_all_close():
     assert not all_close(x + exp(2.*x)*y, 1.*x + 2*exp(2*x)*y)
     assert not all_close(x + exp(2.*x)*y, 1.*x + exp(3*x)*y)
     assert not all_close(x + 2.*y, 1.*x + 3*y)
+
+def test_fixed_precision():
+    """Test if the updated `_as_mpf_val` function keeps solving trivial after substituting Floats for A."""
+
+    # Define symbolic variables
+    A, B, C, X, Y = symbols('A B C X Y', real=True)
+
+    # Define the equation
+    eq = sympy.Eq(Y, C + sympy.log(10) / (A * sympy.log(X) - B))
+
+    # Test with different Float values of A
+    test_values = [0.00095, 0.000954, 0.0009547, 0.00095471, 0.0009547157]
+
+    for A_val in test_values:
+        # Substitute A into the equation
+        new_eq = eq.subs({'A': A_val})
+
+        # Measure solving time
+        solve_time = timeit.timeit(lambda: sympy.solve(new_eq, C), number=1)
+        is_trivial = solve_time < 1  # True if trivial, False if non-trivial
+
+        # Check if simplification is possible
+        simplified_eq = sympy.simplify(new_eq.rhs - new_eq.lhs)
+        is_simplifiable = simplified_eq == 0  # True if simplifies easily
+
+        # Assert checks
+        assert is_trivial, f"Solving time for A={A_val} is not trivial"
+        assert is_simplifiable, f"Equation for A={A_val} does not simplify easily"
+
+def test_fixed_precision():
+    """Test if the updated `_as_mpf_val` function keeps solving trivial after substituting Floats for A."""
+
+    A, B, C, X, Y = Symbol('A B C X Y', real=True)
+    eq = Eq(Y, C + log(10) / (A * log(X) - B))
+
+    test_values = [0.00095, 0.000954, 0.0009547, 0.00095471, 0.0009547157]
+
+    for A_val in test_values:
+
+        new_eq = eq.subs({'A': A_val})
+
+        solve_time = timeit.timeit(lambda: solve(new_eq, C), number=1)
+        is_trivial = solve_time < 1
+
+        simplified_eq = simplify(new_eq.rhs - new_eq.lhs)
+        is_simplifiable = simplified_eq == 0
+
+        assert is_trivial
+        assert is_simplifiable
