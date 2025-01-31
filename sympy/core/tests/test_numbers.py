@@ -17,7 +17,7 @@ from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Gt, Le, Lt
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol , symbols
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.integers import floor
@@ -2332,7 +2332,7 @@ def test_all_close():
 def test_fixed_precision():
     """Test if the updated `_as_mpf_val` function keeps solving trivial after substituting Floats for A."""
 
-    A, B, C, X, Y = Symbol('A B C X Y', real=True)
+    A, B, C, X, Y = symbols('A B C X Y', real=True)
     eq = Eq(Y, C + log(10) / (A * log(X) - B))
 
     test_values = [0.00095, 0.000954, 0.0009547, 0.00095471, 0.0009547157]
