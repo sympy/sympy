@@ -64,7 +64,7 @@ def _(expr, assumptions):
     if ask(Q.integer(expr.exp), assumptions) and \
             ask(Q.integer(expr.base), assumptions):
         _prime_base = ask(Q.prime(expr.base), assumptions)
-        if _prime_base is False:  
+        if _prime_base is False:
             return False
         is_exp_not_one = ask(~Q.eq(expr.exp, 1), assumptions)
         if is_exp_not_one:
