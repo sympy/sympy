@@ -489,8 +489,11 @@ def _(expr, assumptions):
 def _Imaginary_number(expr, assumptions):
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
-    r = expr.as_real_imag()[0].evalf(2)
+    r, i = expr.as_real_imag()
+    r = r.evalf(2)
     if r._prec != 1:
+        if i.is_infinite:
+           return False
         return not r
     # allow None to be returned if we couldn't show for sure
     # that r was 0
