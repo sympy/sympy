@@ -2715,6 +2715,8 @@ def test_solve_Piecewise():
 
 def test_issue_27233():
 
+    x, y = symbols('x y', real=True)
+
     eq1 = (x**2 - 6*x + y**2 + 9) * log(Abs(x) - Abs(y) - 2)
     eq2 = x**2 - y
 
