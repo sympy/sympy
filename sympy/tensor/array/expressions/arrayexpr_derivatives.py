@@ -176,9 +176,12 @@ def _(expr: ArrayAdd, x: Expr):
 
 @array_derive.register(PermuteDims)
 def _(expr: PermuteDims, x: Expr):
-    de = array_derive(expr.expr, x)
-    perm = [0, 1] + [i + 2 for i in expr.permutation.array_form]
-    return _permute_dims(de, perm)
+    derived_expr = array_derive(expr.expr, x)
+    rank_x = get_rank(x)
+    permutation_indices = list(range(rank_x)) + [
+        i + rank_x for i in expr.permutation.array_form
+    ]
+    return _permute_dims(derived_expr, permutation_indices)
 
 
 @array_derive.register(Reshape)
