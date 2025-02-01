@@ -3422,16 +3422,55 @@ class DomainMatrix:
 
     def fflu(self):
         """
-        Compute a fraction-free PLDU decomposition.
+        Compute the fraction-free PLDU decomposition of the DomainMatrix.
+
+        Explanation
+        ===========
+
+        This method computes the PLDU decomposition in a fraction-free manner,
+        ensuring that all intermediate results remain in the domain of the input
+        matrix. Unlike standard LU decomposition, which introduces division,
+        this approach avoids fractions, making it particularly suitable for
+        exact arithmetic over integers or polynomials.
+
+        Given a square matrix A, this decomposition expresses it as:
+
+            P * A = L * D * U
+
+        where:
+
+        - P is a permutation matrix that applies row swaps for numerical stability.
+        - L is a unit lower triangular matrix (having ones on the diagonal).
+        - D is a diagonal matrix.
+        - U is an upper triangular matrix.
+
+        Invariants
+        ==========
+
+            >>> L.is_lower and U.is_upper and D.is_diagonal
+            True
+
+            >>> L * D.to_field().inv() * U == P * A.to_field()
+            True
+
+            >>> I, d = D.inv_den()
+            >>> L * I * U == d * P * A
+            True
 
         Returns
         =======
 
         (P, L, D, U)
-            P is the permutation matrix.
-            L is the lower triangular matrix.
-            D is the diagonal matrix.
-            U is the upper triangular matrix.
+            - P (Permutation matrix)
+            - L (Lower triangular matrix with unit diagonal)
+            - D (Diagonal matrix)
+            - U (Upper triangular matrix)
+
+        Raises
+        ======
+
+        DMDomainError
+            If the domain of the DomainMatrix is not an integral domain.
 
         Examples
         ========
@@ -3452,14 +3491,19 @@ class DomainMatrix:
         See Also
         ========
 
-        lu
+        lu : Standard LU decomposition (with division).
         """
-        ddm_rep = self.to_ddm()
-        ddm_p, ddm_l, ddm_d, ddm_u = ddm_rep.fflu()
-        P = self.from_rep(ddm_p)
-        L = self.from_rep(ddm_l)
-        D = self.from_rep(ddm_d)
-        U = self.from_rep(ddm_u)
+        if not self.domain.is_IntegerRing and not self.domain.is_PolynomialRing:
+            raise DMDomainError("Fraction-free PLDU decomposition requires an integral domain.")
+        rep_type = type(self.rep)
+        ddm_p, ddm_l, ddm_d, ddm_u = self.rep.fflu()
+        if rep_type is SDM:
+            P, L, D, U = map(lambda x: x.to_sdm(), [ddm_p, ddm_l, ddm_d, ddm_u])
+        elif rep_type is DFM:
+            P, L, D, U = map(lambda x: x.to_dfm(), [ddm_p, ddm_l, ddm_d, ddm_u])
+        else:
+            P, L, D, U = map(self.from_rep, [ddm_p, ddm_l, ddm_d, ddm_u])
+
         return P, L, D, U
 
     def _solve(A, b):

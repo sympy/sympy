@@ -420,11 +420,6 @@ class DFM:
         # XXX: flint matrices do not support elementwise multiplication
         return self.to_ddm().mul_elementwise(other.to_ddm()).to_dfm()
 
-    def exquo_elementwise(self, other):
-        """Elementwise division of two DFM matrices using exact division."""
-        # XXX: flint matrices do not support elementwise division directly
-        return self.to_ddm().exquo_elementwise(other.to_ddm()).to_dfm()
-
     def matmul(self, other):
         """Multiply two DFM matrices."""
         shape = (self.rows, other.cols)

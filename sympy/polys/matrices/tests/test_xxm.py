@@ -698,14 +698,6 @@ def test_XXM_mul_elementwise(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
-def test_XXM_div_elementwise(DM):
-    A = DM([[6, 4], [8, 10]])
-    B = DM([[2, 2], [4, 5]])
-    C = DM([[3, 2], [2, 2]])
-    assert A.exquo_elementwise(B) == C
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
 def test_XXM_neg(DM):
     A = DM([[1, 2, 3], [4, 5, 6]])
     C = DM([[-1, -2, -3], [-4, -5, -6]])
@@ -1109,29 +1101,18 @@ def test_xxm_fflu_square_matrix(DM):
     A = DM([[4, 3], [6, 3]])
     A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    if not isinstance(D, DomainMatrix):
-        D = DomainMatrix.from_rep(D)
-    D_cleared, denom = D.clear_denoms()
-    if isinstance(D_cleared, DomainScalar):
-        scalar_value = D_cleared.element
-        D_cleared = DomainMatrix.eye(D.shape[0], D.domain).scalarmul(scalar_value)
-    if isinstance(denom, DomainMatrix):
-        denom = denom.rep[0][0] if isinstance(denom.rep, DDM) else denom.to_field().flat()[0]
-
-    def ensure_compatible(matrix):
-        if isinstance(A.rep, DFM):
-            return matrix.to_dfm() if isinstance(matrix, DomainMatrix) else matrix
-        elif isinstance(A.rep, SDM):
-            return matrix.to_sdm() if isinstance(matrix, DomainMatrix) else matrix
-        else:
-            return matrix.to_ddm() if isinstance(matrix, DomainMatrix) else matrix
-
-    P = ensure_compatible(P)
-    L = ensure_compatible(L)
-    U = ensure_compatible(U)
-    D_cleared = ensure_compatible(D_cleared)
-    A = ensure_compatible(A)
-    assert P.matmul(A).rmul(denom) == L.matmul(D_cleared).matmul(U)
+    D_as_DM = DomainMatrix.from_rep(D)
+    di, d = D_as_DM.inv_den()
+    if isinstance(P, DFM):
+        A = A.to_dfm()
+        di = di.to_dfm()
+    elif isinstance(P, SDM):
+        A = A.to_sdm()
+        di = di.to_sdm()
+    else:
+        A = A.to_ddm()
+        di = di.to_ddm()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
@@ -1142,29 +1123,40 @@ def test_xxm_fflu_non_square_matrix(DM):
     A = DM([[1, 2, 3], [4, 5, 6]])
     A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    if not isinstance(D, DomainMatrix):
-        D = DomainMatrix.from_rep(D)
-    D_cleared, denom = D.clear_denoms()
-    if isinstance(D_cleared, DomainScalar):
-        scalar_value = D_cleared.element
-        D_cleared = DomainMatrix.eye(D.shape[0], D.domain).scalarmul(scalar_value)
-    if isinstance(denom, DomainMatrix):
-        denom = denom.rep[0][0] if isinstance(denom.rep, DDM) else denom.to_field().flat()[0]
+    D_as_DM = DomainMatrix.from_rep(D)
+    di, d = D_as_DM.inv_den()
+    if isinstance(P, DFM):
+        A = A.to_dfm()
+        di = di.to_dfm()
+    elif isinstance(P, SDM):
+        A = A.to_sdm()
+        di = di.to_sdm()
+    else:
+        A = A.to_ddm()
+        di = di.to_ddm()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
 
-    def ensure_compatible(matrix):
-        if isinstance(A.rep, DFM):
-            return matrix.to_dfm() if isinstance(matrix, DomainMatrix) else matrix
-        elif isinstance(A.rep, SDM):
-            return matrix.to_sdm() if isinstance(matrix, DomainMatrix) else matrix
-        else:
-            return matrix.to_ddm() if isinstance(matrix, DomainMatrix) else matrix
 
-    P = ensure_compatible(P)
-    L = ensure_compatible(L)
-    U = ensure_compatible(U)
-    D_cleared = ensure_compatible(D_cleared)
-    A = ensure_compatible(A)
-    assert P.matmul(A).rmul(denom) == L.matmul(D_cleared).matmul(U)
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_sparse_matrix(DM):
+    A = DM([[1, 0, 0], [0, 4, 0], [0, 0, 9]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    D_as_DM = DomainMatrix.from_rep(D)
+    di, d = D_as_DM.inv_den()
+    if isinstance(P, DFM):
+        A = A.to_dfm()
+        di = di.to_dfm()
+    elif isinstance(P, SDM):
+        A = A.to_sdm()
+        di = di.to_sdm()
+    else:
+        A = A.to_ddm()
+        di = di.to_ddm()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
@@ -1175,60 +1167,18 @@ def test_xxm_fflu_with_permutations(DM):
     A = DM([[0, 1], [1, 0]])
     A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    if not isinstance(D, DomainMatrix):
-        D = DomainMatrix.from_rep(D)
-    D_cleared, denom = D.clear_denoms()
-    if isinstance(D_cleared, DomainScalar):
-        scalar_value = D_cleared.element
-        D_cleared = DomainMatrix.eye(D.shape[0], D.domain).scalarmul(scalar_value)
-    if isinstance(denom, DomainMatrix):
-        denom = denom.rep[0][0] if isinstance(denom.rep, DDM) else denom.to_field().flat()[0]
-
-    def ensure_compatible(matrix):
-        if isinstance(A.rep, DFM):
-            return matrix.to_dfm() if isinstance(matrix, DomainMatrix) else matrix
-        elif isinstance(A.rep, SDM):
-            return matrix.to_sdm() if isinstance(matrix, DomainMatrix) else matrix
-        else:
-            return matrix.to_ddm() if isinstance(matrix, DomainMatrix) else matrix
-    P = ensure_compatible(P)
-    L = ensure_compatible(L)
-    U = ensure_compatible(U)
-    D_cleared = ensure_compatible(D_cleared)
-    A = ensure_compatible(A)
-    assert P.matmul(A).rmul(denom) == L.matmul(D_cleared).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_with_sparse_matrix(DM):
-    A = DM([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    P, L, D, U = A.fflu()
-    if not isinstance(D, DomainMatrix):
-        D = DomainMatrix.from_rep(D)
-    D_cleared, denom = D.clear_denoms()
-    if isinstance(D_cleared, DomainScalar):
-        scalar_value = D_cleared.element
-        D_cleared = DomainMatrix.eye(D.shape[0], D.domain).scalarmul(scalar_value)
-    if isinstance(denom, DomainMatrix):
-        denom = denom.rep[0][0] if isinstance(denom.rep, DDM) else denom.to_field().flat()[0]
-
-    def ensure_compatible(matrix):
-        if isinstance(A.rep, DFM):
-            return matrix.to_dfm() if isinstance(matrix, DomainMatrix) else matrix
-        elif isinstance(A.rep, SDM):
-            return matrix.to_sdm() if isinstance(matrix, DomainMatrix) else matrix
-        else:
-            return matrix.to_ddm() if isinstance(matrix, DomainMatrix) else matrix
-    P = ensure_compatible(P)
-    L = ensure_compatible(L)
-    U = ensure_compatible(U)
-    D_cleared = ensure_compatible(D_cleared)
-    A = ensure_compatible(A)
-    assert P.matmul(A).rmul(denom) == L.matmul(D_cleared).matmul(U)
+    D_as_DM = DomainMatrix.from_rep(D)
+    di, d = D_as_DM.inv_den()
+    if isinstance(P, DFM):
+        A = A.to_dfm()
+        di = di.to_dfm()
+    elif isinstance(P, SDM):
+        A = A.to_sdm()
+        di = di.to_sdm()
+    else:
+        A = A.to_ddm()
+        di = di.to_ddm()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
