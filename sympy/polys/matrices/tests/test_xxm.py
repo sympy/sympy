@@ -17,8 +17,6 @@
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy import ZZ, QQ, GF, ZZ_I, symbols
-from sympy.polys.matrices.domainscalar import DomainScalar
-
 from sympy.polys.matrices.exceptions import (
     DMBadInputError,
     DMDomainError,
@@ -1101,17 +1099,7 @@ def test_xxm_fflu_square_matrix(DM):
     A = DM([[4, 3], [6, 3]])
     A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    D_as_DM = DomainMatrix.from_rep(D)
-    di, d = D_as_DM.inv_den()
-    if isinstance(P, DFM):
-        A = A.to_dfm()
-        di = di.to_dfm()
-    elif isinstance(P, SDM):
-        A = A.to_sdm()
-        di = di.to_sdm()
-    else:
-        A = A.to_ddm()
-        di = di.to_ddm()
+    di, d = D.inv_den()
     assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
@@ -1123,17 +1111,7 @@ def test_xxm_fflu_non_square_matrix(DM):
     A = DM([[1, 2, 3], [4, 5, 6]])
     A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    D_as_DM = DomainMatrix.from_rep(D)
-    di, d = D_as_DM.inv_den()
-    if isinstance(P, DFM):
-        A = A.to_dfm()
-        di = di.to_dfm()
-    elif isinstance(P, SDM):
-        A = A.to_sdm()
-        di = di.to_sdm()
-    else:
-        A = A.to_ddm()
-        di = di.to_ddm()
+    di, d = D.inv_den()
     assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
@@ -1145,17 +1123,7 @@ def test_xxm_fflu_sparse_matrix(DM):
     A = DM([[1, 0, 0], [0, 4, 0], [0, 0, 9]])
     A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    D_as_DM = DomainMatrix.from_rep(D)
-    di, d = D_as_DM.inv_den()
-    if isinstance(P, DFM):
-        A = A.to_dfm()
-        di = di.to_dfm()
-    elif isinstance(P, SDM):
-        A = A.to_sdm()
-        di = di.to_sdm()
-    else:
-        A = A.to_ddm()
-        di = di.to_ddm()
+    di, d = D.inv_den()
     assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper
@@ -1167,17 +1135,80 @@ def test_xxm_fflu_with_permutations(DM):
     A = DM([[0, 1], [1, 0]])
     A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    D_as_DM = DomainMatrix.from_rep(D)
-    di, d = D_as_DM.inv_den()
-    if isinstance(P, DFM):
-        A = A.to_dfm()
-        di = di.to_dfm()
-    elif isinstance(P, SDM):
-        A = A.to_sdm()
-        di = di.to_sdm()
-    else:
-        A = A.to_ddm()
-        di = di.to_ddm()
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_negative_entries(DM):
+    A = DM([[-1, -2], [-3, -4]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_mixed_sign_entries(DM):
+    A = DM([[1, -2], [-3, 4]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_upper_triangular(DM):
+    A = DM([[1, 2, 3], [0, 4, 5], [0, 0, 6]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_lower_triangular(DM):
+    A = DM([[1, 0, 0], [2, 3, 0], [4, 5, 6]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_diagonal_matrix(DM):
+    A = DM([[1, 0, 0], [0, 2, 0], [0, 0, 3]])
+    A = DomainMatrix(A.to_list(), A.shape, A.domain)
+    P, L, D, U = A.fflu()
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+
+
+@pytest.mark.parametrize('domain', [ZZ, QQ])
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_different_domains(DM, domain):
+    lol = DM([[1, 2], [3, 4]])
+    A = DomainMatrix(lol.to_list(), lol.shape, domain)
+    P, L, D, U = A.fflu()
+    di, d = D.inv_den()
     assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert L.is_lower
     assert U.is_upper

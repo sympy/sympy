@@ -3358,8 +3358,6 @@ class DomainMatrix:
         >>> D
         DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
         """
-        if not self.domain.is_IntegerRing and not self.domain.is_PolynomialRing:
-            raise DMDomainError("Fraction-free QR decomposition requires an integral domain.")
 
         ddm_q, ddm_r, ddm_d = self.rep.qrd()
         Q = self.from_rep(ddm_q)
@@ -3493,18 +3491,9 @@ class DomainMatrix:
 
         lu : Standard LU decomposition (with division).
         """
-        if not self.domain.is_IntegerRing and not self.domain.is_PolynomialRing:
-            raise DMDomainError("Fraction-free PLDU decomposition requires an integral domain.")
-        rep_type = type(self.rep)
-        ddm_p, ddm_l, ddm_d, ddm_u = self.rep.fflu()
-        if rep_type is SDM:
-            P, L, D, U = map(lambda x: x.to_sdm(), [ddm_p, ddm_l, ddm_d, ddm_u])
-        elif rep_type is DFM:
-            P, L, D, U = map(lambda x: x.to_dfm(), [ddm_p, ddm_l, ddm_d, ddm_u])
-        else:
-            P, L, D, U = map(self.from_rep, [ddm_p, ddm_l, ddm_d, ddm_u])
-
-        return P, L, D, U
+        from_rep = self.from_rep
+        P, L, D, U = self.rep.fflu()
+        return from_rep(P), from_rep(L), from_rep(D), from_rep(U)
 
     def _solve(A, b):
         # XXX: Not sure about this method or its signature. It is just created
