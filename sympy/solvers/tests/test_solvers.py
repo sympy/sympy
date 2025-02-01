@@ -2713,8 +2713,6 @@ def test_solve_Piecewise():
         (0, x < 10),  # this will simplify away
         (S.NaN,True)))
 
-from sympy import Abs, log, Symbol, solve
-
 def test_issue_27233():
 
     eq1 = (x**2 - 6*x + y**2 + 9) * log(Abs(x) - Abs(y) - 2)
