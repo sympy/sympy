@@ -1527,7 +1527,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
             # convert (approximately) from given tolerance;
             # the formula here will will make 1e-i rounds to 0 for
             # i in the range +/-27 while 2e-i will not be chopped
-            chop_prec = int(round(-3.321*math.log10(chop) + 2.5))
+            chop_prec = round(-3.321*math.log10(chop) + 2.5)
             if chop_prec == 3:
                 chop_prec -= 1
         r = chop_parts(r, chop_prec)

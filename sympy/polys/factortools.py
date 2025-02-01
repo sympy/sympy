@@ -299,7 +299,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
 
     m = p
     k = r // 2
-    d = int(_ceil(_log2(l)))
+    d = _ceil(_log2(l))
 
     g = gf_from_int_poly([lc], p)
 
@@ -345,7 +345,7 @@ def dup_zz_zassenhaus(f, K):
     b = dup_LC(f, K)
     B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
-    gamma = int(_ceil(2*_log2(C)))
+    gamma = _ceil(2*_log2(C))
     bound = int(2*gamma*_log(gamma))
     a = []
     # choose a prime number `p` such that `f` be square free in Z_p
@@ -367,7 +367,7 @@ def dup_zz_zassenhaus(f, K):
             break
     p, fsqf = min(a, key=lambda x: len(x[1]))
 
-    l = int(_ceil(_log(2*B + 1, p)))
+    l = _ceil(_log(2*B + 1, p))
 
     modular = [gf_to_int_poly(ff, p) for ff in fsqf]
 

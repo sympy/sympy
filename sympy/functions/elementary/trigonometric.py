@@ -214,7 +214,7 @@ def _pi_coeff(arg: Expr, cycles: int = 1) -> tUnion[Expr, None]:
                 # recast exact binary fractions to Rationals
                 f = abs(c) % 1
                 if f != 0:
-                    p = -int(round(log(f, 2).evalf()))
+                    p = -round(log(f, 2).evalf())
                     m = 2**p
                     cm = c*m
                     i = int(cm)

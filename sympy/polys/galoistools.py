@@ -1984,7 +1984,7 @@ def gf_ddf_shoup(f, p, K):
 
     """
     n = gf_degree(f)
-    k = int(_ceil(_sqrt(n//2)))
+    k = _ceil(_sqrt(n//2))
     b = gf_frobenius_monomial_base(f, p, K)
     h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
     # U[i] = x**(p**i)
