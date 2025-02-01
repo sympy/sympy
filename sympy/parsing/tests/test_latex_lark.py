@@ -386,7 +386,8 @@ EVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
     (r"(x + 1)!", factorial(x + 1)),
     (r"(x!)!", factorial(factorial(x))),
     (r"x!!!", factorial(factorial(factorial(x)))),
-    (r"5!7!", factorial(5) * factorial(7))
+    (r"5!7!", factorial(5) * factorial(7)),
+    (r"24! \times 24!", factorial(24) * factorial(24))
 ]
 
 UNEVALUATED_SUM_EXPRESSION_PAIRS = [
