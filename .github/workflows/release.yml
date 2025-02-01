@@ -142,7 +142,7 @@ jobs:
         # It is recommended to pin a commit hash here for security but it
         # should be kept up to date. Probably all actions and dependencies
         # used by the build script should be pinned...
-        uses: pypa/gh-action-pypi-publish@67339c736fd9354cd4f8cb0b744f2b82a74b5c70  # v1.12.3
+        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc  # v1.12.4
 
   # -------------------- Make a GitHub release --------------------- #
 
