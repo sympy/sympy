@@ -1432,7 +1432,6 @@ def _solve(f, *symbols, **flags):
                         # unconditionally take the simplification of v
                         v = _eval_simplify(ratio=2, measure=lambda x: 1)
                 except (TypeError, ValueError):
-
                     # incompatible type with condition(s)
                     continue
                 if v == False:

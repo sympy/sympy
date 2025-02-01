@@ -2724,5 +2724,3 @@ def test_issue_27233():
     assert solutions == [
         {x: 3, y: 0}, {x: -3, y: 0}
     ]
-
-
