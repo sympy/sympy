@@ -1335,6 +1335,17 @@ def test_Piecewise_rewrite_as_ITE():
     raises(ValueError, lambda: _ITE((a, x < 2), (b, x > 3)))
 
 
+def test_Piecewise_replace_relational_27538():
+    x, y = symbols('x, y')
+    p1 = Piecewise(
+        (0, Eq(x, True)),
+        (1, True),
+    )
+    p2 = p1.xreplace({x: y < 1})
+    assert p2.subs(y, 0) == 0
+    assert p2.subs(y, 1) == 1
+
+
 def test_issue_14052():
     assert integrate(abs(sin(x)), (x, 0, 2*pi)) == 4
 
