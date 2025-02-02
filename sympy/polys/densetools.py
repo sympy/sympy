@@ -201,7 +201,7 @@ def dup_diff(f, m, K):
     ==========
 
     f : list
-        List of coefficients of the polynomial to be derived.
+        List of coefficients of the polynomial.
     m : int
         Number of differentiations to perform.
     K : Ring
@@ -326,7 +326,7 @@ def dmp_diff_in(f, m, j, u, K):
     f : list[list]
         List of list of coefficients representing the polynomial.
     m : int
-        Number of integrations to perform.
+        Number of differentiations to perform.
     j : int
         Index to the variable to be derived.
     u : int
@@ -636,7 +636,7 @@ def dmp_trunc(f, p, u, K):
     """
     Reduce a ``K[X]`` polynomial modulo a polynomial ``p`` in ``K[Y]``.
 
-   Parameters
+    Parameters
     ==========
 
     f : list[list]
@@ -1137,7 +1137,7 @@ def dup_scale(f, a, K):
     f : list
         List of coefficients of the polynomial.
     a : Element of K or its subdomain
-        Value at which to scale the polynomial.
+        Value by which to scale the polynomial.
     K : Ring
         Coefficient domain.
 
@@ -1168,7 +1168,7 @@ def dup_shift(f, a, K):
     f : list
         List of coefficients of the polynomial.
     a : Element of K or its subdomain
-        Value at which to shift the polynomial.
+        Value by which to shift the polynomial.
     K : Ring
         Coefficient domain.
 
@@ -1252,11 +1252,11 @@ def dup_transform(f, p, q, K):
     Parameters
     ==========
     f : list
-        List of coefficients of the polynomial.
+        List of coefficients of the polynomial f(x).
     p : list
-        List of coefficients of the polynomial.
+        List of coefficients of the polynomial p, used in the transformation.
     q : list
-        List of coefficients of the polynomial.
+        List of coefficients of the polynomial q, used in the transformation.
     K : Ring
         Coefficient domain.
 
