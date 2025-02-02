@@ -1,4 +1,3 @@
-
 """
 A Printer which converts an expression into its LaTeX equivalent.
 """
@@ -522,17 +521,9 @@ class LatexPrinter(Printer):
         separator: str = self._settings['mul_symbol_latex']
         numbersep: str = self._settings['mul_symbol_latex_numbers']
 
-        def add_unit_spacing(tex: str) -> str:
-           """Add thin spaces after unit text commands."""
-           if r'\text{' in tex:
-              for unit in ['kg', 's', 'minute', 'm', 'J', 'W', 'Pa', 'V', 'A']:
-                tex = tex.replace(rf'\text{{{unit}}}', rf'\text{{{unit}}}\,')
-              tex = tex.rstrip(r'\,')  # Remove trailing thin space if it exists
-           return tex
-
         def convert(expr) -> str:
             if not expr.is_Mul:
-                return add_unit_spacing(str(self._print(expr)))
+                return str(self._print(expr))
             else:
                 if self.order not in ('old', 'none'):
                     args = expr.as_ordered_factors()
@@ -550,7 +541,7 @@ class LatexPrinter(Printer):
             _tex = last_term_tex = ""
 
             for i, term in enumerate(args):
-                term_tex = add_unit_spacing(self._print(term))
+                term_tex = self._print(term)
                 if not (hasattr(term, "_scale_factor") or hasattr(term, "is_physical_constant")):
                     if self._needs_mul_brackets(term, first=(i == 0),
                                                 last=(i == len(args) - 1)):

@@ -3157,36 +3157,26 @@ def test_latex_with_unevaluated():
     with evaluate(False):
         assert latex(a * a) == r"a a"
 
-def test_unit_spacing():
-    """Test proper spacing between units in LaTeX output"""
-    t = 1.0 * kg / minute / second
-    assert latex(t) == r'\frac{1.0 \text{kg}}{\text{minute} \text{s}}'
+def test_simple_unit_fraction():
+    expr = 1.0 * kg / minute / second
+    assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute} \text{s}}"
+    assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute} \cdot \text{s}}"
+    assert latex(expr, mul_symbol=r"\\, ") == r"\frac{1.0\\, \text{kg}}{\text{minute}\\, \text{s}}"
 
-    expr = 1 / (second * minute)
-    assert latex(expr) == r'\frac{1}{\text{minute} \text{s}}'
+def test_units_with_addition():
+    expr = 1.0 * kg / (4 + minute * second)
+    assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute} \text{s} + 4}"
+    assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute} \cdot \text{s} + 4}"
+    assert latex(expr, mul_symbol=r"\\, ") == r"\frac{1.0\\, \text{kg}}{\text{minute}\\, \text{s} + 4}"
 
-def test_unit_spacing_in_equations():
-    """Test unit spacing in more complex equations"""
-    x = Symbol('x')
-    expr = x * meter + 2 * meter
-    assert latex(expr) == r'x \text{m} + 2 \text{m}'
+def test_units_with_powers():
+    expr = 1.0 * kg / (minute * minute * second)
+    assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute}^{2} \text{s}}"
+    assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute}^{2} \cdot \text{s}}"
+    assert latex(expr, mul_symbol=r"\\, ") == r"\frac{1.0\\, \text{kg}}{\text{minute}^{2}\\, \text{s}}"
 
-    expr = 1 * kg * mile / hour
-    assert latex(expr) == r'\frac{\text{kg} \text{mile}}{\text{hour}}'
-
-def test_edge_cases():
-    """Test edge cases and special situations"""
-    expr = 1e6 * kg
-    assert latex(expr) == r'1000000.0 \text{kg}'
-
-    expr = 1e-6 * kg
-    assert latex(expr) == r'1.0 \cdot 10^{-6} \text{kg}'
-
-    expr = kg / meter
-    assert latex(expr) == r'\frac{\text{kg}}{\text{m}}'
-
-if __name__ == '__main__':
-    test_unit_spacing()
-    test_unit_spacing_in_equations()
-    test_edge_cases()
-    print("All tests passed!")
+def test_units_different_order():
+    expr = 1.0 * kg / (second * second * minute)
+    assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute} \text{s}^{2}}"
+    assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute} \cdot \text{s}^{2}}"
+    assert latex(expr, mul_symbol=r"\, ") == r"\frac{1.0\, \text{kg}}{\text{minute}\, \text{s}^{2}}"
