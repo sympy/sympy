@@ -3,7 +3,7 @@ Handlers related to order relations: positive, negative, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.core import Add, Basic, Expr, Mul, Pow
+from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 from sympy.core.numbers import E, ImaginaryUnit, NaN, I, pi
 from sympy.functions import Abs, acos, acot, asin, atan, exp, factorial, log
@@ -23,6 +23,8 @@ from ..predicates.order import (NegativePredicate, NonNegativePredicate,
 
 def _NegativePredicate_number(expr, assumptions):
     r, i = expr.as_real_imag()
+    if r == S.NaN or i == S.NaN:
+        return None
     # If the imaginary part can symbolically be shown to be zero then
     # we just evaluate the real part; otherwise we evaluate the imaginary
     # part to see if it actually evaluates to zero and if it does then
@@ -125,10 +127,6 @@ def _(expr, assumptions):
     if ask(Q.real(expr.exp), assumptions):
         return False
     raise MDNotImplementedError
-
-@NegativePredicate.register(NaN)
-def _(expr, assumptions):
-    return None
 
 
 # NonNegativePredicate
