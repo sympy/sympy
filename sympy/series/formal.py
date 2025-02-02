@@ -191,8 +191,8 @@ def rational_independent(terms, x):
         for i, term in enumerate(ind):
             d = term.as_independent(x)[1]
             q = (n / d).cancel()
-            if q.is_rational_function(x) or q.is_algebraic_expr():
-                ind[i] += t
+            if q.is_number or q.is_rational_function(x) or q.is_algebraic_expr():
+                ind[i] = (ind[i] + t).expand()
                 break
         else:
             ind.append(t)
