@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 
-import sympy
 from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -168,12 +167,13 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
 def rational_independent(terms, x):
     """
-    Returns a list of all the rationally independent terms, using algebraic checks instead of FPS.
+    Returns a list of all the rationally independent terms.
 
     Examples
     ========
 
     >>> from sympy import sin, cos
+    >>> from sympy.series.formal import rational_independent
     >>> from sympy.abc import x
 
     >>> rational_independent([cos(x), sin(x)], x)
@@ -184,28 +184,18 @@ def rational_independent(terms, x):
     if not terms:
         return []
 
-    ind = terms[:1]
+    ind = terms[0:1]
 
     for t in terms[1:]:
         n = t.as_independent(x)[1]
-
-        if not n.is_algebraic_expr():
-            continue
-
         for i, term in enumerate(ind):
             d = term.as_independent(x)[1]
-
-            if not d.is_algebraic_expr():
-                continue
-
-            q = sympy.simplify(n / d)
-
+            q = (n / d).cancel()
             if q.is_number or q.is_rational_function(x) or q.is_algebraic_expr():
-                ind[i] = expand(ind[i] + t)
+                ind[i] = (ind[i] + t).expand
                 break
         else:
             ind.append(t)
-
     return ind
 
 
