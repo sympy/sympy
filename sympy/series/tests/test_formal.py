@@ -616,3 +616,7 @@ def test_fps__inverse():
 
     assert f3.inverse(x).truncate() == 1 + x**2/2 + 5*x**4/24 + O(x**6)
     assert f3.inverse(x).truncate(8) == 1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + O(x**8)
+
+def test_fps_power_law_fail():
+    f = (1 + x) ** 3.5  # Power-law function
+    assert fps(f, x) == 1 + 3.5*x + 3.5*3.5/2*x**2 + O(x**3)
