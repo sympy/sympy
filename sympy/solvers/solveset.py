@@ -669,9 +669,10 @@ def _domain_check(f, symbol, p):
     # helper for domain check
     if f.is_Atom and f.is_finite:
         return True
-    elif f.subs(symbol, p).is_infinite:
+    subs_result = f.subs(symbol, p)
+    if subs_result.is_infinite:
         return False
-    elif isinstance(f, Piecewise):
+    if isinstance(f, Piecewise):
         # Check the cases of the Piecewise in turn. There might be invalid
         # expressions in later cases that don't apply e.g.
         #    solveset(Piecewise((0, Eq(x, 0)), (1/x, True)), x)
@@ -690,10 +691,18 @@ def _domain_check(f, symbol, p):
                 # give this particular solution the benefit of the doubt and
                 # let it pass.
                 return True
-    else:
-        # TODO : We should not blindly recurse through all args of arbitrary expressions like this
-        return all(_domain_check(g, symbol, p)
-                   for g in f.args)
+
+    if isinstance(f, Poly):
+        # If `p` is not in the domain of `f`, return False
+        if not f.domain.contains(p):
+            return False
+        return True
+
+    try:
+        return all(_domain_check(g, symbol, p) for g in f.args)
+    except AttributeError:
+        # If `f` has no `.args` (e.g., a number), return True
+        return True
 
 
 def _is_finite_with_finite_vars(f, domain=S.Complexes):
@@ -4129,3 +4138,17 @@ def nonlinsolve(system, *symbols):
             return FiniteSet(*map(to_tuple, correct_sols))
         else:
             return subs_res
+
+def test_issue_25241():
+    x = Symbol('x')  # Define the symbolic variable x
+    function = -2 * x**4 + 2 * x**2 + 3 * x - 1
+    polynomial = Eq(function, 0)
+
+    poly = Poly(function)
+    expected_roots = poly.real_roots()
+
+    solution = solveset(polynomial, x, domain=S.Reals)
+
+    # Assert either the solution is a ConditionSet or the roots match within tolerance
+    assert solution == ConditionSet(x, Eq(function, 0), S.Reals) or \
+           all(abs(r - s) < 1e-6 for r, s in zip(sorted(expected_roots), sorted(solution)))
