@@ -52,7 +52,7 @@ from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
-from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro, kg, mile, hour, minute
+from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro, kg, minute
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.fields import field
 from sympy.polys.polytools import Poly
