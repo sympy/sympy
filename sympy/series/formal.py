@@ -24,6 +24,7 @@ from sympy.series.order import Order
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 from sympy.series.series import series
+from sympy.simplify.ratsimp import cancel
 from sympy.utilities.iterables import iterable
 
 
