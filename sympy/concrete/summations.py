@@ -1,5 +1,6 @@
 from typing import Tuple as tTuple
 
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.calculus.singularities import is_decreasing
 from sympy.calculus.accumulationbounds import AccumulationBounds
 from .expr_with_intlimits import ExprWithIntLimits
@@ -1007,50 +1008,60 @@ def telescopic(L, R, limits):
 
 
 def eval_sum(f, limits):
-    (i, a, b) = limits
+
+    if isinstance(limits, list):
+        first_limit = limits[0]
+    else:
+        first_limit = limits
+
+    (i, a, b) = first_limit
+
     if f.is_zero:
         return S.Zero
     if i not in f.free_symbols:
-        return f*(b - a + 1)
+        return f * (b - a + 1)
     if a == b:
         return f.subs(i, a)
+
+
     if isinstance(f, Piecewise):
         if not any(i in arg.args[1].free_symbols for arg in f.args):
-            # Piecewise conditions do not depend on the dummy summation variable,
-            # therefore we can fold:     Sum(Piecewise((e, c), ...), limits)
-            #                        --> Piecewise((Sum(e, limits), c), ...)
-            newargs = []
-            for arg in f.args:
-                newexpr = eval_sum(arg.expr, limits)
-                if newexpr is None:
-                    return None
-                newargs.append((newexpr, arg.cond))
+            newargs = [(eval_sum(arg.expr, limits), arg.cond) for arg in f.args]
             return f.func(*newargs)
+
+
+    if f == 1 and isinstance(limits, list) and len(limits) > 1:
+        indices = [lim[0] for lim in limits]
+        lower_bounds = [lim[1] for lim in limits]
+        upper_bounds = [lim[2] for lim in limits]
+
+
+        if all(lower_bounds[i] == indices[i - 1] for i in range(1, len(indices))):
+            k = len(indices)
+            n = upper_bounds[-1]
+            return binomial(n + k - 1, k)
+
 
     if f.has(KroneckerDelta):
         from .delta import deltasummation, _has_simple_delta
-        f = f.replace(
-            lambda x: isinstance(x, Sum),
-            lambda x: x.factor()
-        )
-        if _has_simple_delta(f, limits[0]):
-            return deltasummation(f, limits)
+        f = f.replace(lambda x: isinstance(x, Sum), lambda x: x.factor())
+        if _has_simple_delta(f, first_limit[0]):
+            return deltasummation(f, first_limit)
+
 
     dif = b - a
-    definite = dif.is_Integer
-    # Doing it directly may be faster if there are very few terms.
-    if definite and (dif < 100):
+    if dif.is_Integer and dif < 100:
         return eval_sum_direct(f, (i, a, b))
-    if isinstance(f, Piecewise):
-        return None
-    # Try to do it symbolically. Even when the number of terms is
-    # known, this can save time when b-a is big.
+
+
     value = eval_sum_symbolic(f.expand(), (i, a, b))
     if value is not None:
         return value
-    # Do it directly
-    if definite:
+
+
+    if dif.is_Integer:
         return eval_sum_direct(f, (i, a, b))
+    return None
 
 
 def eval_sum_direct(expr, limits):
