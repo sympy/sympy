@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 
-from sympy import simplify
+import sympy
 from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -198,7 +198,7 @@ def rational_independent(terms, x):
             if not d.is_algebraic_expr():
                 continue
 
-            q = simplify(n / d)
+            q = sympy.simplify(n / d)
 
             if q.is_number or q.is_rational_function(x) or q.is_algebraic_expr():
                 ind[i] = expand(ind[i] + t)
