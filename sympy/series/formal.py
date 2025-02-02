@@ -23,6 +23,7 @@ from sympy.series.limits import Limit
 from sympy.series.order import Order
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
+from sympy.series.series import series
 from sympy.utilities.iterables import iterable
 
 
@@ -164,9 +165,6 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
     return None
 
-
-from sympy import symbols, Function, series, expand, Rational, cancel
-
 def rational_independent(terms, x, order=10):
     """
     Returns a list of all the rationally independent terms.
@@ -212,12 +210,11 @@ def rational_independent(terms, x, order=10):
     return ind
 
 
-def compute_fps(expr, x, order=10):
+def compute_fps_(expr, x, order=10):
     try:
         fps_expansion = series(expr, x, 0, order).removeO()
         return fps_expansion
-    except Exception as e:
-
+    except Exception:
         return None
 
 
