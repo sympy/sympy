@@ -577,7 +577,7 @@ def rs_series_reversion(p, x, n, y):
     ``p`` is a series with ``O(x**n)`` of the form $p = ax + f(x)$
     where $a$ is a number different from 0.
 
-    $f(x) = \sum_{k=2}^{n-1} a_kx_k$
+    $f(x) = \sum_{k=2}^{n-1} a_kx^k$
 
     Parameters
     ==========
@@ -607,7 +607,7 @@ def rs_series_reversion(p, x, n, y):
 
     So we use the recursion relation:
     $r_{i + 1} = r_i - f(r_i)/a$
-    with the boundary condition: $r_1 = y$
+    with the boundary condition: $r_1 = y/a$
 
     Examples
     ========
