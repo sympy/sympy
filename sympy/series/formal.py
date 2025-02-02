@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 
+from sympy import simplify
 from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -23,8 +24,6 @@ from sympy.series.limits import Limit
 from sympy.series.order import Order
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
-from sympy.series.series import series
-from sympy.simplify.ratsimp import cancel
 from sympy.utilities.iterables import iterable
 
 
@@ -166,17 +165,17 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
     return None
 
-def rational_independent(terms, x, order=10):
+
+def rational_independent(terms, x):
     """
-    Returns a list of all the rationally independent terms.
-    Ensures terms are properly handled for Formal Power Series (FPS) expansion.
+    Returns a list of all the rationally independent terms, using algebraic checks instead of FPS.
 
     Examples
     ========
 
     >>> from sympy import sin, cos
-    >>> from sympy.series.formal import rational_independent
     >>> from sympy.abc import x
+
     >>> rational_independent([cos(x), sin(x)], x)
     [cos(x), sin(x)]
     >>> rational_independent([x**2, sin(x), x*sin(x), x**3], x)
@@ -185,12 +184,11 @@ def rational_independent(terms, x, order=10):
     if not terms:
         return []
 
-    ind = terms[0:1]  # Start with the first term
+    ind = terms[:1]
 
     for t in terms[1:]:
         n = t.as_independent(x)[1]
 
-        # Check if the term is algebraic (power law)
         if not n.is_algebraic_expr():
             continue
 
@@ -200,7 +198,7 @@ def rational_independent(terms, x, order=10):
             if not d.is_algebraic_expr():
                 continue
 
-            q = cancel(n / d)  # Simplify fraction
+            q = simplify(n / d)
 
             if q.is_number or q.is_rational_function(x) or q.is_algebraic_expr():
                 ind[i] = expand(ind[i] + t)
@@ -209,14 +207,6 @@ def rational_independent(terms, x, order=10):
             ind.append(t)
 
     return ind
-
-
-def compute_fps_(expr, x, order=10):
-    try:
-        fps_expansion = series(expr, x, 0, order).removeO()
-        return fps_expansion
-    except Exception:
-        return None
 
 
 def simpleDE(f, x, g, order=4):
