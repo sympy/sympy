@@ -165,9 +165,12 @@ def rational_algorithm(f, x, k, order=4, full=False):
     return None
 
 
-def rational_independent(terms, x):
+from sympy import symbols, Function, series, expand, Rational, cancel
+
+def rational_independent(terms, x, order=10):
     """
     Returns a list of all the rationally independent terms.
+    Ensures terms are properly handled for Formal Power Series (FPS) expansion.
 
     Examples
     ========
@@ -175,7 +178,6 @@ def rational_independent(terms, x):
     >>> from sympy import sin, cos
     >>> from sympy.series.formal import rational_independent
     >>> from sympy.abc import x
-
     >>> rational_independent([cos(x), sin(x)], x)
     [cos(x), sin(x)]
     >>> rational_independent([x**2, sin(x), x*sin(x), x**3], x)
@@ -184,19 +186,39 @@ def rational_independent(terms, x):
     if not terms:
         return []
 
-    ind = terms[0:1]
+    ind = terms[0:1]  # Start with the first term
 
     for t in terms[1:]:
         n = t.as_independent(x)[1]
+
+        # Check if the term is algebraic (power law)
+        if not n.is_algebraic_expr():
+            continue
+
         for i, term in enumerate(ind):
             d = term.as_independent(x)[1]
-            q = (n / d).cancel()
+
+            if not d.is_algebraic_expr():
+                continue
+
+            q = cancel(n / d)  # Simplify fraction
+
             if q.is_number or q.is_rational_function(x) or q.is_algebraic_expr():
-                ind[i] = (ind[i] + t).expand()
+                ind[i] = expand(ind[i] + t)
                 break
         else:
             ind.append(t)
+
     return ind
+
+
+def compute_fps(expr, x, order=10):
+    try:
+        fps_expansion = series(expr, x, 0, order).removeO()
+        return fps_expansion
+    except Exception as e:
+
+        return None
 
 
 def simpleDE(f, x, g, order=4):
