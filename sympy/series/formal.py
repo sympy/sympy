@@ -2,7 +2,8 @@
 
 from collections import defaultdict
 
-from sympy import  exp, sqrt
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
 from sympy.core.expr import Expr
