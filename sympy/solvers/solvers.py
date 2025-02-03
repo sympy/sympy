@@ -1164,6 +1164,19 @@ def solve(f, *symbols, **flags):
         linear, solution = _solve_system(f, symbols, **flags)
     assert type(solution) is list
     assert not solution or type(solution[0]) is dict, solution
+    # algebric solution check 
+    if symbols:
+        var = symbols[0]
+        eqn = f[0] if bare_f else f
+        valid_solutions = []
+        for sol in solution:
+            if isinstance(sol, dict):
+                result = eqn.subs(sol)
+            else:
+                result = eqn.subs(var, sol)
+            if result.simplify() == 0:
+                valid_solutions.append(sol)
+        solution = valid_solutions
     #
     # postprocessing
     ###########################################################################
