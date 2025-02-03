@@ -23,8 +23,10 @@ from ..predicates.order import (NegativePredicate, NonNegativePredicate,
 
 def _NegativePredicate_number(expr, assumptions):
     r, i = expr.as_real_imag()
+
     if r == S.NaN or i == S.NaN:
         return None
+
     # If the imaginary part can symbolically be shown to be zero then
     # we just evaluate the real part; otherwise we evaluate the imaginary
     # part to see if it actually evaluates to zero and if it does then
