@@ -70,19 +70,17 @@ def dup_integrate(f, m, K):
     if m <= 0 or not f:
         return f
 
-    result = [K.zero] * m
+    g = [K.zero]*m
 
-    for i, coefficient in enumerate(reversed(f)):
-        # The denominator represent also the exponent
-        denominator = i + 1
+    for i, c in enumerate(reversed(f)):
+        n = i + 1
 
         for j in range(1, m):
-            denominator *= i + j + 1
+            n *= i + j + 1
 
-        quotient = K.exquo(coefficient, K(denominator))
-        result.insert(0, quotient)
+        g.insert(0, K.exquo(c, K(n)))
 
-    return result
+    return g
 
 
 def dmp_integrate(f, m, u, K):
@@ -125,20 +123,17 @@ def dmp_integrate(f, m, u, K):
     if m <= 0 or dmp_zero_p(f, u):
         return f
 
-    result = dmp_zeros(m, u - 1, K)
-    reduced_vars = u-1
+    g, v = dmp_zeros(m, u - 1, K), u - 1
 
-    for i, coefficient in enumerate(reversed(f)):
-        # The denominator represent also the exponent
-        denominator = i + 1
+    for i, c in enumerate(reversed(f)):
+        n = i + 1
 
         for j in range(1, m):
-            denominator *= i + j + 1
+            n *= i + j + 1
 
-        quotient = dmp_quo_ground(coefficient, K(denominator), reduced_vars, K)
-        result.insert(0, quotient)
+        g.insert(0, dmp_quo_ground(c, K(n), v, K))
 
-    return result
+    return g
 
 
 def _rec_integrate_in(g, m, v, i, j, K):
