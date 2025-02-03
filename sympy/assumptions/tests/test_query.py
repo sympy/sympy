@@ -1586,6 +1586,36 @@ def test_integer():
     assert ask(Q.integer(x/3), Q.odd(x)) is None
     assert ask(Q.integer(x/3), Q.even(x)) is None
 
+    # <This test was already existing. The following was added to the end>
+    # https://github.com/sympy/sympy/issues/21177
+
+    # Edge cases: 0^0 is undefined, 0^y (non-positive y) is undefined, -1^Real is integer.
+    # x^y where both x and y are integers is None as 2^-1 is not a integer.
+    # x^y where y is a negative integer is None because 1^-1 is a integer.
+    # x^y where y is a negative integer is False because when x < -1 or x > 1.
+    # x^y where y is a positive integer is True because it is certainly a integer.
+    assert ask(Q.integer((-1)**y), Q.integer(y)) is True
+    assert ask(Q.integer(x**2), Q.integer(x)) is True
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is True
+    assert ask(Q.integer(2**n), Q.integer(n) & Q.negative(n)) is False
+    assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.integer(x**y), Q.zero(y)) is None
+    assert ask(Q.integer(x**y), Q.zero(x)) is None
+    assert ask(Q.integer(x**y), ~Q.zero(y) & Q.zero(x)) is None
+    assert ask(Q.integer(x**y), Q.zero(y) & ~Q.zero(x)) is None
+    assert ask(Q.integer(x**y), Q.zero(y) & Q.nonzero(x)) is None
+    assert ask(Q.integer(x**y), Q.nonzero(y) & Q.zero(x)) is None
+    assert ask(Q.integer(x**y), Q.integer(x)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.positive(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.negative(y)) is None
+    assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y) & Q.positive(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & ~Q.integer(y)) is None
+    assert ask(Q.integer(x**y), Q.rational(x) & Q.integer(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.zero(x)) is None
+
 
 def test_negative():
     assert ask(Q.negative(x), Q.negative(x)) is True
@@ -2423,32 +2453,3 @@ def test_issue_25221():
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.positive(y,y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
-
-
-def test_issue_27450():
-   assert ask(Q.integer(2**n), Q.integer(n) & Q.negative(n)) is False
-   assert ask(Q.integer((-1)**y), Q.integer(y)) is True
-   assert ask(Q.integer(x**2), Q.integer(x)) is True
-   assert ask(Q.integer(x**3), Q.integer(x)) is True
-   assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y)) is None
-   # 0^0 and 0^(i) are undefined. x^0 or 0^x are integers as long as they are not undefined.
-   assert ask(Q.integer(x**y), Q.zero(y)) is None
-   assert ask(Q.integer(x**y), Q.zero(x)) is None
-   assert ask(Q.integer(x**y), ~Q.zero(y) & Q.zero(x)) is None
-   assert ask(Q.integer(x**y), Q.zero(y) & ~Q.zero(x)) is None
-   assert ask(Q.integer(x**y), Q.zero(y) & Q.nonzero(x)) is None    # (or True)
-   assert ask(Q.integer(x**y), Q.nonzero(y) & Q.zero(x)) is None    # (or True)
-   # If the exponent is not real, the expression may be undefined.
-   assert ask(Q.integer(x**y), Q.integer(x)) is None
-   # Else, if the base is an integer and the exponent is real, the expression is an integer.
-   # if and only if the exponent is a positive integer.
-   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y)) is None
-   assert ask(Q.integer(x**y), Q.integer(x) & Q.positive(y)) is None
-   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
-   assert ask(Q.integer(x**y), Q.integer(x) & Q.negative(y)) is None
-   assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y) & Q.positive(y)) is None
-   assert ask(Q.integer(x**y), Q.integer(x) & ~Q.integer(y)) is None
-   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is True
-   assert ask(Q.integer(x**y), Q.rational(x) & Q.integer(y)) is None
-   assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y)) is None
-   assert ask(Q.integer(x**y) , Q.integer(x) & Q.integer(y) & Q.zero(x)) is None
