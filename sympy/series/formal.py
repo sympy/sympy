@@ -28,78 +28,6 @@ from sympy.utilities.iterables import iterable
 
 
 def rational_algorithm(f, x, k, order=4, full=False):
-    """
-    Rational algorithm for computing
-    formula of coefficients of Formal Power Series
-    of a function.
-
-    Explanation
-    ===========
-
-    Applicable when f(x) or some derivative of f(x)
-    is a rational function in x.
-
-    :func:`rational_algorithm` uses :func:`~.apart` function for partial fraction
-    decomposition. :func:`~.apart` by default uses 'undetermined coefficients
-    method'. By setting ``full=True``, 'Bronstein's algorithm' can be used
-    instead.
-
-    Looks for derivative of a function up to 4'th order (by default).
-    This can be overridden using order option.
-
-    Parameters
-    ==========
-
-    x : Symbol
-    order : int, optional
-        Order of the derivative of ``f``, Default is 4.
-    full : bool
-
-    Returns
-    =======
-
-    formula : Expr
-    ind : Expr
-        Independent terms.
-    order : int
-    full : bool
-
-    Examples
-    ========
-
-    >>> from sympy import log, atan
-    >>> from sympy.series.formal import rational_algorithm as ra
-    >>> from sympy.abc import x, k
-
-    >>> ra(1 / (1 - x), x, k)
-    (1, 0, 0)
-    >>> ra(log(1 + x), x, k)
-    (-1/((-1)**k*k), 0, 1)
-
-    >>> ra(atan(x), x, k, full=True)
-    ((-I/(2*(-I)**k) + I/(2*I**k))/k, 0, 1)
-
-    Notes
-    =====
-
-    By setting ``full=True``, range of admissible functions to be solved using
-    ``rational_algorithm`` can be increased. This option should be used
-    carefully as it can significantly slow down the computation as ``doit`` is
-    performed on the :class:`~.RootSum` object returned by the :func:`~.apart`
-    function. Use ``full=False`` whenever possible.
-
-    See Also
-    ========
-
-    sympy.polys.partfrac.apart
-
-    References
-    ==========
-
-    .. [1] Formal Power Series - Dominik Gruntz, Wolfram Koepf
-    .. [2] Power Series in Computer Algebra - Wolfram Koepf
-
-    """
     from sympy.polys import RootSum, apart
     from sympy.integrals import integrate
 
@@ -110,7 +38,8 @@ def rational_algorithm(f, x, k, order=4, full=False):
         if i:
             diff = diff.diff(x)
 
-        if diff.is_rational_function(x):
+        # Check if the derivative is a rational function or contains fractional exponents
+        if diff.is_rational_function(x) or any(p.is_rational for p in diff.as_ordered_terms()):
             coeff, sep = S.Zero, S.Zero
 
             terms = apart(diff, x, full=full)
@@ -198,12 +127,6 @@ def rational_independent(terms, x):
             ind.append(t)
     return ind
 
-# def fps_with_fractional(f, x):
-
-#     if f.has(sqrt(x)) or any(p.is_fraction for p in f.as_ordered_terms()):
-#         return f.series(x, 0, 6).removeO()
-#     else:
-#         return fps(f, x).truncate()
 
 def simpleDE(f, x, g, order=4):
     r"""
