@@ -1593,7 +1593,7 @@ def test_integer():
     # x^y where both x and y are integers is None as 2^-1 is not a integer.
     # x^y where y is a negative integer is None because 1^-1 is a integer.
     # x^y where y is a negative integer is False because when x < -1 or x > 1.
-    # x^y where y is a positive integer is True because it is certainly a integer.
+    # x^y where x and y are integers and y is a positive integer is True because it is certainly a integer.
     assert ask(Q.integer((-1)**y), Q.integer(y)) is True
     assert ask(Q.integer(x**2), Q.integer(x)) is True
     assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
