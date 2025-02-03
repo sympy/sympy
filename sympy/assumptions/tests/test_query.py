@@ -2027,6 +2027,7 @@ def test_algebraic():
     assert ask(Q.algebraic(Pow(1, x, evaluate=False))) is None
     assert ask(Q.algebraic(x**(pi*I))) is None
     assert ask(Q.algebraic(pi**n),Q.integer(n) & Q.positive(n)) is False
+    assert ask(Q.algebraic(x**y),Q.algebraic(x) & Q.rational(y)) is True
 
 
 def test_global():
