@@ -63,7 +63,14 @@ def _(expr, assumptions):
         return _PrimePredicate_number(expr, assumptions)
     if ask(Q.integer(expr.exp), assumptions) and \
             ask(Q.integer(expr.base), assumptions):
-        return False
+        prime_base = ask(Q.prime(expr.base), assumptions)
+        if prime_base is False:
+            return False
+        is_exp_one = ask(Q.eq(expr.exp, 1), assumptions)
+        if is_exp_one is False:
+            return False
+        if prime_base is True and is_exp_one is True:
+            return True
 
 @PrimePredicate.register(Integer)
 def _(expr, assumptions):
