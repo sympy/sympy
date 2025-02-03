@@ -191,13 +191,19 @@ def rational_independent(terms, x):
         for i, term in enumerate(ind):
             d = term.as_independent(x)[1]
             q = (n / d).cancel()
-            if q.is_rational_function(x):
+            if q.is_rational_function(x) or q.is_algebraic_expr():
                 ind[i] += t
                 break
         else:
             ind.append(t)
     return ind
 
+# def fps_with_fractional(f, x):
+
+#     if f.has(sqrt(x)) or any(p.is_fraction for p in f.as_ordered_terms()):
+#         return f.series(x, 0, 6).removeO()
+#     else:
+#         return fps(f, x).truncate()
 
 def simpleDE(f, x, g, order=4):
     r"""
