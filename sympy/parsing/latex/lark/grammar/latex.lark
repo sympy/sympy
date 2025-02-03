@@ -346,7 +346,7 @@ log: FUNC_LOG _expression
 square_root: FUNC_SQRT group_curly_parentheses
     | FUNC_SQRT group_square_brackets group_curly_parentheses
 
-factorial: _expression BANG
+factorial: _expression_func BANG
 
 conjugate: CMD_OVERLINE group_curly_parentheses
     | CMD_OVERLINE DIGIT
