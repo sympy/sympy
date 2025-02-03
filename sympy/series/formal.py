@@ -26,7 +26,7 @@ from sympy.series.order import Order
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 from sympy.utilities.iterables import iterable
-from sympy.series.formal import FormalPowerSeries, SeqFormula
+from sympy.series.formal import SeqFormula
 
 
 
