@@ -398,12 +398,10 @@ class MacaulayResultant():
         row_coefficients = self.get_row_coefficients()
         for i in range(self.n):
             for multiplier in row_coefficients[i]:
-                coefficients = []
                 poly = Poly(self.polynomials[i] * multiplier,
                             *self.variables)
 
-                for mono in self.monomial_set:
-                    coefficients.append(poly.coeff_monomial(mono))
+                coefficients = [poly.coeff_monomial(mono) for mono in self.monomial_set]
                 rows.append(coefficients)
 
         macaulay_matrix = Matrix(rows)

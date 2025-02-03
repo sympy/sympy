@@ -1168,8 +1168,7 @@ def _atan(p, iv, prec):
     mo = R(-1)
     c = [-mo]
     p2 = rs_square(p, iv, prec)
-    for k in range(1, prec):
-        c.append(mo**k/(2*k + 1))
+    c.extend(mo**k/(2*k + 1) for k in range(1, prec))
     s = rs_series_from_list(p2, c, iv, prec)
     s = rs_mul(s, p, iv, prec)
     return s
@@ -1556,8 +1555,7 @@ def _atanh(p, x, prec):
     one = R(1)
     c = [one]
     p2 = rs_square(p, x, prec)
-    for k in range(1, prec):
-        c.append(one/(2*k + 1))
+    c.extend(one/(2*k + 1) for k in range(1, prec))
     s = rs_series_from_list(p2, c, x, prec)
     s = rs_mul(s, p, x, prec)
     return s

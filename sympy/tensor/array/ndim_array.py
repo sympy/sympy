@@ -385,10 +385,8 @@ class NDimArray(Printable):
         def f(sh, shape_left, i, j):
             if len(shape_left) == 1:
                 return [self[self._get_tuple_index(e)] for e in range(i, j)]
-            result = []
             sh //= shape_left[0]
-            for e in range(shape_left[0]):
-                result.append(f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh))
+            result = [f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]
             return result
 
         return f(self._loop_size, self.shape, 0, self._loop_size)

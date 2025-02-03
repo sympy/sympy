@@ -779,9 +779,7 @@ def solve_ics(sols, funcs, constants, ics):
                 x0 = funcarg.variables[0]
                 variables = (x,)*len(funcarg.variables)
                 matching_func = deriv.subs(x0, x)
-            for sol in sols:
-                if sol.has(deriv.expr.func):
-                    diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
+            diff_sols.extend(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)) for sol in sols if sol.has(deriv.expr.func))
             diff_variables.add(variables)
             S = diff_sols
         else:
@@ -3221,11 +3219,8 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     G1 = R1[g1]; G2 = R2[g2]
     sol1r = solve(Integral(F2/F1, u).doit() - Integral(G1/G2,v).doit() - C1, u)
     sol2r = solve(Integral(F2/F1, u).doit() - Integral(G1/G2,v).doit() - C1, v)
-    sol = []
-    for sols in sol1r:
-        sol.append(Eq(y(t), dsolve(diff(V(t),t) - F2.subs(u,sols).subs(v,V(t))*G2.subs(v,V(t))*phi.subs(u,sols).subs(v,V(t))).rhs))
-    for sols in sol2r:
-        sol.append(Eq(x(t), dsolve(diff(U(t),t) - F1.subs(u,U(t))*G1.subs(v,sols).subs(u,U(t))*phi.subs(v,sols).subs(u,U(t))).rhs))
+    sol = [Eq(y(t), dsolve(diff(V(t),t) - F2.subs(u,sols).subs(v,V(t))*G2.subs(v,V(t))*phi.subs(u,sols).subs(v,V(t))).rhs) for sols in sol1r]
+    sol.extend(Eq(x(t), dsolve(diff(U(t),t) - F1.subs(u,U(t))*G1.subs(v,sols).subs(u,U(t))*phi.subs(v,sols).subs(u,U(t))).rhs) for sols in sol2r)
     return set(sol)
 
 def _nonlinear_2eq_order1_type5(func, t, eq):

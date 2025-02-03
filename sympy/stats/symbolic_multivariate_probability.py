@@ -171,10 +171,7 @@ class VarianceMatrix(Variance, MatrixExpr):
         if isinstance(arg, RandomSymbol):
             return self
         elif isinstance(arg, Add):
-            rv = []
-            for a in arg.args:
-                if is_random(a):
-                    rv.append(a)
+            rv = [a for a in arg.args if is_random(a)]
             variances = Add(*(Variance(xv, condition).expand() for xv in rv))
             map_to_covar = lambda x: 2*Covariance(*x, condition=condition).expand()
             covariances = Add(*map(map_to_covar, itertools.combinations(rv, 2)))

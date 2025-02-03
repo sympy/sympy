@@ -70,9 +70,7 @@ def _(self, other):
 
         # self in rectangular form
         if not self.polar:
-            for element in self.psets:
-                if S.Zero in element.args[1]:
-                    new_interval.append(element.args[0])
+            new_interval.extend(element.args[0] for element in self.psets if S.Zero in element.args[1])
             new_interval = Union(*new_interval)
             return Intersection(new_interval, other)
 

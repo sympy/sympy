@@ -338,9 +338,7 @@ def sylvester(f, g, x, method = 1):
     # Sylvester's matrix of 1853 (a.k.a sylvester2)
     else:
         if len(fp) < len(gp):
-            h = []
-            for i in range(len(gp) - len(fp)):
-                h.append(0)
+            h = [0 for i in range(len(gp) - len(fp))]
             fp[ : 0] = h
         else:
             h = []
@@ -1163,8 +1161,7 @@ def sturm_amv(p, q, x, method=0):
     # subresultants or modified subresultants?
     if method == 0 and lcf > 1:
         aux_seq = [sturm_seq[0], sturm_seq[1]]
-        for i in range(2, m):
-            aux_seq.append(simplify(sturm_seq[i] * lcf ))
+        aux_seq.extend(simplify(sturm_seq[i] * lcf ) for i in range(2, m))
         sturm_seq = aux_seq
 
     return sturm_seq
@@ -1579,8 +1576,7 @@ def modified_subresultants_pg(p, q, x):
     m = len(subres_l)   # list may be shorter now due to deg(gcd ) > 0
     if LC( p ) < 0:
         aux_seq = [subres_l[0], subres_l[1]]
-        for i in range(2, m):
-            aux_seq.append(simplify(subres_l[i] * (-1) ))
+        aux_seq.extend(simplify(subres_l[i] * (-1) ) for i in range(2, m))
         subres_l = aux_seq
 
     return  subres_l
@@ -2220,7 +2216,6 @@ def row2poly(row, deg, x):
 
     '''
     k = 0
-    poly = []
     leng = len(row)
 
     # find the beginning of the poly ; i.e. the first
@@ -2229,9 +2224,7 @@ def row2poly(row, deg, x):
         k = k + 1
 
     # append the next deg + 1 elements to poly
-    for j in range( deg + 1):
-        if k + j <= leng:
-            poly.append(row[k + j])
+    poly = [row[k + j] for j in range( deg + 1) if k + j <= leng]
 
     return Poly(poly, x)
 

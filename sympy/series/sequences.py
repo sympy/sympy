@@ -344,9 +344,7 @@ class SeqBase(Basic):
         coeffs = []
         for l in range(1, r+1):
             l2 = 2*l
-            mlist = []
-            for k in range(l):
-                mlist.append(x[k:k+l])
+            mlist = [x[k:k+l] for k in range(l)]
             m = Matrix(mlist)
             if m.det() != 0:
                 y = simplify(m.LUsolve(Matrix(x[l:l2])))

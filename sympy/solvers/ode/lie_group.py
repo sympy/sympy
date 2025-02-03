@@ -1087,10 +1087,7 @@ def _lie_group_remove(coords):
         expr = _lie_group_remove(expr)
         return base**expr
     elif coords.is_Mul:
-        mulargs = []
         coordargs = coords.args
-        for arg in coordargs:
-            if not isinstance(coords, AppliedUndef):
-                mulargs.append(_lie_group_remove(arg))
+        mulargs = [_lie_group_remove(arg) for arg in coordargs if not isinstance(coords, AppliedUndef)]
         return Mul(*mulargs)
     return coords

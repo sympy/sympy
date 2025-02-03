@@ -1673,9 +1673,7 @@ def try_shifted_sum(func, z):
     nap = [x - k for x in nap]
     nbq = [x - k for x in nbq]
 
-    ops = []
-    for n in range(r - 1):
-        ops.append(ShiftA(n + 1))
+    ops = [ShiftA(n + 1) for n in range(r - 1)]
     ops.reverse()
 
     fac = factorial(k)/z**k

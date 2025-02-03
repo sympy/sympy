@@ -133,9 +133,7 @@ def roots_cubic(f, trig=False):
         q = (2*b**3 - 9*a*b*c + 27*a**2*d)/(27*a**3)
         D = 18*a*b*c*d - 4*b**3*d + b**2*c**2 - 4*a*c**3 - 27*a**2*d**2
         if (D > 0) == True:
-            rv = []
-            for k in range(3):
-                rv.append(2*sqrt(-p/3)*cos(acos(q/p*sqrt(-3/p)*Rational(3, 2))/3 - k*pi*Rational(2, 3)))
+            rv = [2*sqrt(-p/3)*cos(acos(q/p*sqrt(-3/p)*Rational(3, 2))/3 - k*pi*Rational(2, 3)) for k in range(3)]
             return [i - b/3/a for i in rv]
 
     # a*x**3 + b*x**2 + c*x + d -> x**3 + a*x**2 + b*x + c
@@ -340,8 +338,7 @@ def roots_quartic(f):
                 ans = []
                 for s in [-1, 1]:
                     root = sqrt(-(arg1 + s*arg2))
-                    for t in [-1, 1]:
-                        ans.append((s*w - t*root)/2 - aon4)
+                    ans.extend((s*w - t*root)/2 - aon4 for t in [-1, 1])
                 return ans
 
             # whether a Piecewise is returned or not
@@ -492,8 +489,7 @@ def roots_cyclotomic(f, factor=False):
         ks = [i for i in range(1, n + 1) if igcd(i, n) == 1]
         ks.sort(key=lambda x: (x, -1) if x <= h else (abs(x - n), 1))
         d = 2*I*pi/n
-        for k in reversed(ks):
-            roots.append(exp(k*d).expand(complex=True))
+        roots.extend(exp(k*d).expand(complex=True) for k in reversed(ks))
     else:
         g = Poly(f, extension=root(-1, n))
 

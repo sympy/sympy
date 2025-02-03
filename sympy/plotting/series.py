@@ -866,10 +866,7 @@ class BaseSeries:
 
     @ranges.setter
     def ranges(self, val):
-        new_vals = []
-        for v in val:
-            if v is not None:
-                new_vals.append(tuple([sympify(t) for t in v]))
+        new_vals = [tuple([sympify(t) for t in v]) for v in val if v is not None]
         self._ranges = new_vals
 
     def _apply_transform(self, *args):

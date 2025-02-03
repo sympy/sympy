@@ -74,8 +74,7 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
         assertion = "(assert " + clause + ")"
         assertions.append(assertion)
 
-    for sym in symbols:
-        declarations.append(f"(declare-const {sym} Real)")
+    declarations.extend(f"(declare-const {sym} Real)" for sym in symbols)
 
     declarations = "\n".join(declarations)
     assertions = "\n".join(assertions)

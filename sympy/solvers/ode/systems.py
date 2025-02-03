@@ -1519,9 +1519,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
         return match
 
 def _preprocess_eqs(eqs):
-    processed_eqs = []
-    for eq in eqs:
-        processed_eqs.append(eq if isinstance(eq, Equality) else Eq(eq, 0))
+    processed_eqs = [eq if isinstance(eq, Equality) else Eq(eq, 0) for eq in eqs]
 
     return processed_eqs
 

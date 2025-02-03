@@ -1266,9 +1266,7 @@ class ComplexRegion(Set):
         Union(Interval(2, 3), Interval(4, 5))
 
         """
-        a_interval = []
-        for element in self.psets:
-            a_interval.append(element.args[0])
+        a_interval = [element.args[0] for element in self.psets]
 
         a_interval = Union(*a_interval)
         return a_interval
@@ -1295,9 +1293,7 @@ class ComplexRegion(Set):
         Interval(1, 7)
 
         """
-        b_interval = []
-        for element in self.psets:
-            b_interval.append(element.args[1])
+        b_interval = [element.args[1] for element in self.psets]
 
         b_interval = Union(*b_interval)
         return b_interval
@@ -1425,8 +1421,7 @@ class CartesianComplexRegion(ComplexRegion):
             # return ImageSet(Lambda((x, y), x+I*y), sets).rewrite(FiniteSet)
             complex_num = []
             for x in sets.args[0]:
-                for y in sets.args[1]:
-                    complex_num.append(x + S.ImaginaryUnit*y)
+                complex_num.extend(x + S.ImaginaryUnit*y for y in sets.args[1])
             return FiniteSet(*complex_num)
         else:
             return Set.__new__(cls, sets)

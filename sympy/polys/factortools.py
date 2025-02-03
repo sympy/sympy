@@ -598,11 +598,8 @@ def dup_zz_cyclotomic_factor(f, K):
     if not K.is_one(tc_f):
         return F
     else:
-        H = []
 
-        for h in _dup_cyclotomic_decompose(2*n, K):
-            if h not in F:
-                H.append(h)
+        H = [h for h in _dup_cyclotomic_decompose(2*n, K) if h not in F]
 
         return H
 

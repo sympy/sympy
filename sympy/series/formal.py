@@ -1603,9 +1603,7 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
 
         aks = convolution(coeff1[:n], coeff2[:n])
 
-        terms = []
-        for i in range(0, n):
-            terms.append(aks[i] * self.ffps.xk.coeff(i))
+        terms = [aks[i] * self.ffps.xk.coeff(i) for i in range(0, n)]
 
         return Add(*terms)
 

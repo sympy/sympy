@@ -819,11 +819,8 @@ def canonicalize(g, dummies, msym, *v):
         for j in range(n_i):
             # get the elements corresponding to the component tensor
             h = g1[start:(start + len_tens)]
-            fr = []
             # get the positions of the fixed elements in h
-            for k in free:
-                if k in h:
-                    fr.append(h.index(k))
+            fr = [h.index(k) for k in free if k in h]
             free_i.append(fr)
             start += len_tens
         v1[i] = (base_i, gens_i, free_i, sym_i)

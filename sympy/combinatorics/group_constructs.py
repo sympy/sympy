@@ -45,9 +45,7 @@ def DirectProduct(*groups):
         total_degree += current_deg
         gens_count.append(current_num_gens)
         total_gens += current_num_gens
-    array_gens = []
-    for i in range(total_gens):
-        array_gens.append(list(range(total_degree)))
+    array_gens = [list(range(total_degree)) for i in range(total_gens)]
     current_gen = 0
     current_deg = 0
     for i in range(len(gens_count)):

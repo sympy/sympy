@@ -212,8 +212,7 @@ def _get_arg_list(name, fobj):
     arg_list = []
 
     if argspec.args:
-        for arg in argspec.args:
-            arg_list.append(str(arg))
+        arg_list.extend(str(arg) for arg in argspec.args)
 
     arg_list.reverse()
 

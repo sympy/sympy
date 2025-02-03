@@ -119,9 +119,7 @@ class factorial(CombinatorialFunction):
                 if p > 1:
                     primes.append(p)
 
-            for prime in sieve.primerange(N + 1, n//3 + 1):
-                if (n // prime) & 1 == 1:
-                    primes.append(prime)
+            primes.extend(prime for prime in sieve.primerange(N + 1, n//3 + 1) if (n // prime) & 1 == 1)
 
             L_product = prod(sieve.primerange(n//2 + 1, n + 1))
             R_product = prod(primes)

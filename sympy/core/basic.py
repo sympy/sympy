@@ -2127,8 +2127,7 @@ class Basic(Printable):
         clsname = obj.__class__.__name__
         postprocessors = set()
         for i in obj.args:
-            for f in _get_postprocessors(clsname, type(i)):
-                postprocessors.add(f)
+            postprocessors.update(_get_postprocessors(clsname, type(i)))
 
         for f in postprocessors:
             obj = f(obj)

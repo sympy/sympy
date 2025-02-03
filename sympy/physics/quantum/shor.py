@@ -79,8 +79,7 @@ class CMod(Gate):
         outarray = list(qubits.args[0][:self.t])
 
         # Place out in low memory
-        for i in reversed(range(self.t)):
-            outarray.append((out >> i) & 1)
+        outarray.extend((out >> i) & 1 for i in reversed(range(self.t)))
 
         return Qubit(*outarray)
 

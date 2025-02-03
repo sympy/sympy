@@ -1316,10 +1316,7 @@ class Equivalent(BooleanFunction):
             if isinstance(x, Number) or x in [True, False]:  # Includes 0, 1
                 argset.discard(x)
                 argset.add(bool(x))
-        rel = []
-        for r in argset:
-            if isinstance(r, Relational):
-                rel.append((r, r.canonical, r.negated.canonical))
+        rel = [(r, r.canonical, r.negated.canonical) for r in argset if isinstance(r, Relational)]
         remove = []
         for i, (r, c, nc) in enumerate(rel):
             for j in range(i + 1, len(rel)):
@@ -2640,10 +2637,8 @@ def anf_coeffs(truthvalues):
     coeffs = [[v] for v in truthvalues]
 
     for i in range(n):
-        tmp = []
-        for j in range(2 ** (n-i-1)):
-            tmp.append(coeffs[2*j] +
-                list(map(lambda x, y: x^y, coeffs[2*j], coeffs[2*j+1])))
+        tmp = [coeffs[2*j] +
+                list(map(lambda x, y: x^y, coeffs[2*j], coeffs[2*j+1])) for j in range(2 ** (n-i-1))]
         coeffs = tmp
 
     return coeffs[0]

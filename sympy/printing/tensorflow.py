@@ -200,9 +200,7 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
 
     def _print_CodeBlock(self, expr):
         # TODO: is this necessary?
-        ret = []
-        for subexpr in expr.args:
-            ret.append(self._print(subexpr))
+        ret = [self._print(subexpr) for subexpr in expr.args]
         return "\n".join(ret)
 
     def _print_isnan(self, exp):

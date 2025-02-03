@@ -421,10 +421,7 @@ def get_contraction_structure(expr):
         dbase = get_contraction_structure(b)
         dexp = get_contraction_structure(e)
 
-        dicts = []
-        for d in dbase, dexp:
-            if not (None in d and len(d) == 1):
-                dicts.append(d)
+        dicts = [d for d in (dbase, dexp) if not (None in d and len(d) == 1)]
         result = {None: {expr}}
         if dicts:
             result[expr] = dicts

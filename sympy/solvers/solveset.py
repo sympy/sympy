@@ -1356,10 +1356,7 @@ def _solveset(f, symbol, domain, _check=False):
                                         # non-trivial factoring of equation
                                         # but use form with constants
                                         # in case they need special handling
-                                        t_results = []
-                                        for fac in Mul.make_args(factored):
-                                            if fac.has(symbol):
-                                                t_results.append(solver(fac, symbol))
+                                        t_results = [solver(fac, symbol) for fac in Mul.make_args(factored) if fac.has(symbol)]
                                         t_result = Union(*t_results)
                             result += t_result
                 else:
@@ -3744,9 +3741,7 @@ def _handle_positive_dimensional(polys, symbols, denominators):
     _symbols = list(symbols)
     _symbols.sort(key=default_sort_key)
     basis = groebner(polys, _symbols, polys=True)
-    new_system = []
-    for poly_eq in basis:
-        new_system.append(poly_eq.as_expr())
+    new_system = [poly_eq.as_expr() for poly_eq in basis]
     result = [{}]
     result = substitution(
         new_system, symbols, result, [],

@@ -172,10 +172,8 @@ def glob_at_depth(filename_glob, cwd=None):
         cwd = '.'
     globbed = []
     for root, dirs, filenames in os.walk(cwd):
-        for fn in filenames:
-            # This is not tested:
-            if fnmatch.fnmatch(fn, filename_glob):
-                globbed.append(os.path.join(root, fn))
+        # This is not tested:
+        globbed.extend(os.path.join(root, fn) for fn in filenames if fnmatch.fnmatch(fn, filename_glob))
     return globbed
 
 def sha256_of_file(path, nblocks=128):

@@ -640,10 +640,8 @@ class Polygon(GeometrySet):
         Segment2D(Point2D(5, 1), Point2D(0, 1)), Segment2D(Point2D(0, 1), Point2D(0, 0))]
 
         """
-        res = []
         args = self.vertices
-        for i in range(-len(args), 0):
-            res.append(Segment(args[i], args[i + 1]))
+        res = [Segment(args[i], args[i + 1]) for i in range(-len(args), 0)]
         return res
 
     @property

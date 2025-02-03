@@ -1686,10 +1686,9 @@ class LatexPrinter(Printer):
         return tex % r" \\".join(ecpairs)
 
     def _print_matrix_contents(self, expr):
-        lines = []
 
-        for line in range(expr.rows):  # horrible, should be 'rows'
-            lines.append(" & ".join([self._print(i) for i in expr[line, :]]))
+        # horrible, should be 'rows'
+        lines = [" & ".join([self._print(i) for i in expr[line, :]]) for line in range(expr.rows)]
 
         mat_str = self._settings['mat_str']
         if mat_str is None:
@@ -1979,10 +1978,8 @@ class LatexPrinter(Printer):
         )
 
     def _print_TensAdd(self, expr):
-        a = []
         args = expr.args
-        for x in args:
-            a.append(self.parenthesize(x, precedence(expr)))
+        a = [self.parenthesize(x, precedence(expr)) for x in args]
         a.sort()
         s = ' + '.join(a)
         s = s.replace('+ -', '- ')

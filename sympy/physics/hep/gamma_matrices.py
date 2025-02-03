@@ -440,10 +440,7 @@ def kahane_simplify(expression):
     # elif spinor_free:
     #     raise ValueError('spinor indices do not match')
 
-    dum = []
-    for dum_pair in expression.dum:
-        if expression.index_types[dum_pair[0]] == LorentzIndex:
-            dum.append((dum_pair[0], dum_pair[1]))
+    dum = [(dum_pair[0], dum_pair[1]) for dum_pair in expression.dum if expression.index_types[dum_pair[0]] == LorentzIndex]
 
     dum = sorted(dum)
 
