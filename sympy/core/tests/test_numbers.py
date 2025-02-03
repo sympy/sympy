@@ -1,4 +1,5 @@
 import numbers as nums
+import timeit
 import decimal
 from sympy.concrete.summations import Sum
 from sympy.core import (EulerGamma, Catalan, TribonacciConstant,
@@ -16,7 +17,7 @@ from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Gt, Le, Lt
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol , symbols
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.integers import floor
@@ -32,7 +33,7 @@ from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
-from sympy import Add
+from sympy import Add,Eq , solve
 
 from mpmath import mpf
 import mpmath
@@ -2327,3 +2328,26 @@ def test_all_close():
     assert not all_close(x + exp(2.*x)*y, 1.*x + 2*exp(2*x)*y)
     assert not all_close(x + exp(2.*x)*y, 1.*x + exp(3*x)*y)
     assert not all_close(x + 2.*y, 1.*x + 3*y)
+
+
+
+A, B, C, X, Y = symbols('A B C X Y', real=True)
+eq = Eq(Y, C + log(10) / (A * log(X) - B))
+test_values = [0.00095, 0.000954, 0.0009547, 0.00095471, 0.0009547157]
+
+def test_fixed_precision():
+    for A_val in test_values:
+        new_eq = eq.subs({'A': A_val})
+
+
+        solve_time = timeit.timeit(lambda: solve(new_eq, C), number=1)
+
+        is_trivial = solve_time < 1
+        simplified_eq = simplify(new_eq.rhs - new_eq.lhs)
+        tolerance = 1e-12
+        is_simplifiable = abs(simplified_eq) < tolerance
+
+        assert is_trivial
+        assert is_simplifiable
+
+test_fixed_precision()
