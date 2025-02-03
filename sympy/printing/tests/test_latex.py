@@ -52,7 +52,7 @@ from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
-from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
+from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro, kg, minute
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.fields import field
 from sympy.polys.polytools import Poly
@@ -3156,3 +3156,27 @@ def test_Array():
 def test_latex_with_unevaluated():
     with evaluate(False):
         assert latex(a * a) == r"a a"
+
+def test_simple_unit_fraction():
+    expr = 1.0 * kg / minute / second
+    assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute} \text{s}}"
+    assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute} \cdot \text{s}}"
+    assert latex(expr, mul_symbol=r"\\, ") == r"\frac{1.0\\, \text{kg}}{\text{minute}\\, \text{s}}"
+
+def test_units_with_addition():
+    expr = 1.0 * kg / (4 + minute * second)
+    assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute} \text{s} + 4}"
+    assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute} \cdot \text{s} + 4}"
+    assert latex(expr, mul_symbol=r"\\, ") == r"\frac{1.0\\, \text{kg}}{\text{minute}\\, \text{s} + 4}"
+
+def test_units_with_powers():
+    expr = 1.0 * kg / (minute * minute * second)
+    assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute}^{2} \text{s}}"
+    assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute}^{2} \cdot \text{s}}"
+    assert latex(expr, mul_symbol=r"\\, ") == r"\frac{1.0\\, \text{kg}}{\text{minute}^{2}\\, \text{s}}"
+
+def test_units_different_order():
+    expr = 1.0 * kg / (second * second * minute)
+    assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute} \text{s}^{2}}"
+    assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute} \cdot \text{s}^{2}}"
+    assert latex(expr, mul_symbol=r"\, ") == r"\frac{1.0\, \text{kg}}{\text{minute}\, \text{s}^{2}}"
