@@ -616,5 +616,3 @@ def test_fps__inverse():
 
     assert f3.inverse(x).truncate() == 1 + x**2/2 + 5*x**4/24 + O(x**6)
     assert f3.inverse(x).truncate(8) == 1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + O(x**8)
-
-

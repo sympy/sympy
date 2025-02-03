@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 
-from sympy import sqrt
 from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
 from sympy.core.expr import Expr
