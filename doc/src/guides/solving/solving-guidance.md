@@ -189,7 +189,7 @@ Eq(x**2, y)
 >>> [solution[x] for solution in solutions]
 [-sqrt(y), sqrt(y)]
 >>> solveset(parsed, x)
-{-sqrt(y), sqrt(y)}
+FiniteSet(-sqrt(y), sqrt(y))
 ```
 
 (options-that-can-speed-up-solve)=
