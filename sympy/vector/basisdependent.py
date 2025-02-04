@@ -62,7 +62,7 @@ class BasisDependent(Expr):
     def __rtruediv__(self, other):
         return TypeError("Invalid divisor for division")
 
-    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False, quadmaxdims=1):
         """
         Implements the SymPy evalf routine for this quantity.
 
@@ -71,7 +71,7 @@ class BasisDependent(Expr):
 
         """
         options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
-                'quad':quad, 'verbose':verbose}
+                'quad':quad, 'verbose':verbose, 'quadmaxdims':quadmaxdims}
         vec = self.zero
         for k, v in self.components.items():
             vec += v.evalf(n, **options) * k
