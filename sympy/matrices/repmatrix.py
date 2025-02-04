@@ -1,4 +1,12 @@
+from __future__ import annotations
+
+from typing import overload, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
 from collections import defaultdict
+from collections.abc import Iterable
 
 from operator import index as index_
 
@@ -49,6 +57,10 @@ class RepMatrix(MatrixBase):
     #
 
     _rep: DomainMatrix
+
+    @classmethod
+    def _fromrep(cls, rep: DomainMatrix) -> Self:
+        raise NotImplementedError("Subclasses should implement _fromrep")
 
     def __eq__(self, other):
         # Skip sympify for mutable matrices...
@@ -249,7 +261,7 @@ class RepMatrix(MatrixBase):
     def _eval_values(self):
         return list(self._eval_iter_values())
 
-    def _eval_iter_values(self):
+    def _eval_iter_values(self) -> Iterable[Expr]:
         rep = self._rep
         K = rep.domain
         values = rep.iter_values()
@@ -257,7 +269,7 @@ class RepMatrix(MatrixBase):
             values = map(K.to_sympy, values)
         return values
 
-    def _eval_iter_items(self):
+    def _eval_iter_items(self) -> Iterable[tuple[tuple[int, int], Expr]]:
         rep = self._rep
         K = rep.domain
         to_sympy = K.to_sympy
@@ -331,6 +343,17 @@ class RepMatrix(MatrixBase):
 
     def _eval_extract(self, rowsList, colsList):
         return self._fromrep(self._rep.extract(rowsList, colsList))
+
+    @overload
+    def __getitem__(self, key: tuple[int, int]) -> Expr: ...
+    @overload
+    def __getitem__(self, key: int) -> Expr: ...
+    @overload
+    def __getitem__(self, key: tuple[int, slice]) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, int]) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, slice]) -> Self: ...
 
     def __getitem__(self, key):
         return _getitem_RepMatrix(self, key)
@@ -632,21 +655,21 @@ class MutableRepMatrix(RepMatrix):
             self._rep, value = self._unify_element_sympy(self._rep, value)
             self._rep.rep.setitem(i, j, value)
 
-    def _eval_col_del(self, col):
+    def _eval_col_del(self, col): # type: ignore
         self._rep = DomainMatrix.hstack(self._rep[:,:col], self._rep[:,col+1:])
         self.cols -= 1
 
-    def _eval_row_del(self, row):
+    def _eval_row_del(self, row): # type: ignore
         self._rep = DomainMatrix.vstack(self._rep[:row,:], self._rep[row+1:, :])
         self.rows -= 1
 
-    def _eval_col_insert(self, col, other):
+    def _eval_col_insert(self, pos, other):
         other = self._new(other)
-        return self.hstack(self[:,:col], other, self[:,col:])
+        return self.hstack(self[:,:pos], other, self[:,pos:])
 
-    def _eval_row_insert(self, row, other):
+    def _eval_row_insert(self, pos, other):
         other = self._new(other)
-        return self.vstack(self[:row,:], other, self[row:,:])
+        return self.vstack(self[:pos,:], other, self[pos:,:])
 
     def col_op(self, j, f):
         """In-place operation on col j using two-arg functor whose args are
