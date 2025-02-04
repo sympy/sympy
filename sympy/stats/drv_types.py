@@ -2,6 +2,7 @@
 
 Contains
 ========
+BetaNegativeBinomial
 FlorySchulz
 Geometric
 Hermite
@@ -28,6 +29,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.bessel import besseli
 from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.hyper import hyper
@@ -36,7 +38,8 @@ from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import _value_check, is_random
 
 
-__all__ = ['FlorySchulz',
+__all__ = ['BetaNegativeBinomial',
+'FlorySchulz',
 'Geometric',
 'Hermite',
 'Logarithmic',
@@ -122,6 +125,82 @@ def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     # have a default of False while `rv` should have a default of True
     kwargs['check'] = kwargs.pop('check', False)
     return rv(symbol.name, DiscreteDistributionHandmade, pdf, set, **kwargs)
+
+
+#-------------------------------------------------------------------------------
+# Beta Negative Binomial distribution ------------------------------------------------------------
+
+class BetaNegativeBinomialDistribution(SingleDiscreteDistribution):
+    _argnames = ('alpha', 'beta', 'r')
+    set = S.Naturals0
+
+    @staticmethod
+    def check(alpha, beta, r):
+        _value_check(alpha > 0, "alpha must be positive")
+        _value_check(beta > 0, "beta must be positive")
+        _value_check(r > 0, "r must be positive")
+
+    def pdf(self, k):
+        alpha, beta, r = self.alpha, self.beta, self.r
+        return (gamma(r + k)/(gamma(k + 1)*gamma(r)))* \
+            ((gamma(alpha + r)*gamma(beta + k)*gamma(alpha + beta))/(gamma(alpha + r + beta + k)*gamma(alpha)*gamma(beta)))
+
+    def _characteristic_function(self, t):
+        alpha, beta, r = self.alpha, self.beta, self.r
+        return ((gamma(alpha + r)*gamma(alpha + beta))/(gamma(alpha + beta + r)*gamma(alpha)))* \
+            hyper((r, beta), [alpha + beta + r], exp(I*t))
+
+
+def BetaNegativeBinomial(name, alpha, beta, r):
+    r"""
+    Create a discrete random variable with a Beta-negative-binomial distribution.
+
+    The density of the Beta negative binomial distribution is given by
+
+    .. math::
+        f(k|\alpha,\beta,r) := \frac{\Gamma(r+k)}{(k)! \Gamma(r)} \frac{\beta(alpha+r, beta + k)}{\beta(alpha, beta)}
+
+    Parameters
+    ==========
+
+    alpha : A positive value
+    beta : A positive value
+    r : A positive value
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, E, variance, BetaNegativeBinomial
+    >>> from sympy import Symbol
+
+    >>> alpha = 4
+    >>> beta = 4
+    >>> r = 4
+    >>> z = Symbol('z')
+
+    >>> X = BetaNegativeBinomial('x', alpha, beta, r)
+
+    >>> density(X)(z)
+    117600*gamma(z + 4)**2/(gamma(z + 1)*gamma(z + 12))
+
+    >>> E(X)
+    16/3
+
+    >>> variance(X)
+    392/9
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Beta_negative_binomial_distribution
+
+    """
+    return rv(name, BetaNegativeBinomialDistribution, alpha, beta, r)
 
 
 #-------------------------------------------------------------------------------
