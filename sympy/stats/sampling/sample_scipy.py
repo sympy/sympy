@@ -8,10 +8,14 @@ from sympy.stats import DiscreteDistributionHandmade
 from sympy.stats.crv import SingleContinuousDistribution
 from sympy.stats.crv_types import ChiSquaredDistribution, ExponentialDistribution, GammaDistribution, \
     LogNormalDistribution, NormalDistribution, ParetoDistribution, UniformDistribution, BetaDistribution, \
-    StudentTDistribution, CauchyDistribution
+    StudentTDistribution, CauchyDistribution, ChiDistribution, \
+        FDistributionDistribution, GompertzDistribution, LaplaceDistribution, LevyDistribution, LomaxDistribution, \
+            MoyalDistribution, RayleighDistribution
 from sympy.stats.drv_types import GeometricDistribution, LogarithmicDistribution, NegativeBinomialDistribution, \
     PoissonDistribution, SkellamDistribution, YuleSimonDistribution, ZetaDistribution
 from sympy.stats.frv import SingleFiniteDistribution
+from sympy.stats.frv_types import BernoulliDistribution, BinomialDistribution, \
+    BetaBinomialDistribution, HypergeometricDistribution
 
 
 scipy = import_module("scipy", import_kwargs={'fromlist':['stats']})
@@ -41,6 +45,22 @@ def _(dist: SingleContinuousDistribution, size, seed):
     return scipy_rv.rvs(size=size, random_state=seed)
 
 
+@do_sample_scipy.register(BetaDistribution)
+def _(dist: BetaDistribution, size, seed):
+    # same parametrisation
+    return scipy.stats.beta.rvs(a=float(dist.alpha), b=float(dist.beta), size=size, random_state=seed)
+
+
+@do_sample_scipy.register(CauchyDistribution)
+def _(dist: CauchyDistribution, size, seed):
+    return scipy.stats.cauchy.rvs(loc=float(dist.x0), scale=float(dist.gamma), size=size, random_state=seed)
+
+
+@do_sample_scipy.register(ChiDistribution)
+def _(dist: ChiDistribution, size, seed):
+    return scipy.stats.chi.rvs(df = int(dist.k), size=size, random_state=seed)
+
+
 @do_sample_scipy.register(ChiSquaredDistribution)
 def _(dist: ChiSquaredDistribution, size, seed):
     # same parametrisation
@@ -53,16 +73,45 @@ def _(dist: ExponentialDistribution, size, seed):
     return scipy.stats.expon.rvs(scale=1 / float(dist.rate), size=size, random_state=seed)
 
 
+@do_sample_scipy.register(FDistributionDistribution)
+def _(dist: FDistributionDistribution, size, seed):
+    return scipy.stats.f.rvs(dfn=float(dist.d1), dfd=float(dist.d2), size=size, random_state=seed)
+
+
 @do_sample_scipy.register(GammaDistribution)
 def _(dist: GammaDistribution, size, seed):
     # https://stackoverflow.com/questions/42150965/how-to-plot-gamma-distribution-with-alpha-and-beta-parameters-in-python
     return scipy.stats.gamma.rvs(a=float(dist.k), scale=float(dist.theta), size=size, random_state=seed)
 
 
+@do_sample_scipy.register(GompertzDistribution)
+def _(dist: GompertzDistribution, size, seed):
+    return scipy.stats.gompertz.rvs(c=float(dist.eta), scale = float(dist.b) ,size=size, random_state=seed)
+
+
+@do_sample_scipy.register(LaplaceDistribution)
+def _(dist: LaplaceDistribution, size, seed):
+    return scipy.stats.laplace.rvs(loc = dist.mu, scale = dist.b, size=size, random_state=seed)
+
+
+@do_sample_scipy.register(LevyDistribution)
+def _(dist: LevyDistribution, size, seed):
+    return scipy.stats.levy.rvs(loc = dist.mu, scale = dist.c,size=size, random_state=seed)
+
+
 @do_sample_scipy.register(LogNormalDistribution)
 def _(dist: LogNormalDistribution, size, seed):
     # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html
     return scipy.stats.lognorm.rvs(scale=float(exp(dist.mean)), s=float(dist.std), size=size, random_state=seed)
+
+
+@do_sample_scipy.register(LomaxDistribution)
+def _(dist: LomaxDistribution, size, seed):
+    return scipy.stats.lomax.rvs(c = float(dist.alpha), scale = float(dist.lamda) ,size=size, random_state=seed)
+
+@do_sample_scipy.register(MoyalDistribution)
+def _(dist: MoyalDistribution, size, seed):
+    return scipy.stats.moyal.rvs(loc = dist.mu, scale = dist.sigma,size=size, random_state=seed)
 
 
 @do_sample_scipy.register(NormalDistribution)
@@ -76,6 +125,11 @@ def _(dist: ParetoDistribution, size, seed):
     return scipy.stats.pareto.rvs(b=float(dist.alpha), scale=float(dist.xm), size=size, random_state=seed)
 
 
+@do_sample_scipy.register(RayleighDistribution)
+def _(dist: RayleighDistribution, size, seed):
+    return scipy.stats.rayleigh.rvs(size=size, random_state=seed)
+
+
 @do_sample_scipy.register(StudentTDistribution)
 def _(dist: StudentTDistribution, size, seed):
     return scipy.stats.t.rvs(df=float(dist.nu), size=size, random_state=seed)
@@ -85,17 +139,6 @@ def _(dist: StudentTDistribution, size, seed):
 def _(dist: UniformDistribution, size, seed):
     # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
     return scipy.stats.uniform.rvs(loc=float(dist.left), scale=float(dist.right - dist.left), size=size, random_state=seed)
-
-
-@do_sample_scipy.register(BetaDistribution)
-def _(dist: BetaDistribution, size, seed):
-    # same parametrisation
-    return scipy.stats.beta.rvs(a=float(dist.alpha), b=float(dist.beta), size=size, random_state=seed)
-
-
-@do_sample_scipy.register(CauchyDistribution)
-def _(dist: CauchyDistribution, size, seed):
-    return scipy.stats.cauchy.rvs(loc=float(dist.x0), scale=float(dist.gamma), size=size, random_state=seed)
 
 
 # DRV:
@@ -165,3 +208,22 @@ def _(dist: SingleFiniteDistribution, size, seed):
         y.append(float(v))
     scipy_rv = rv_discrete(name='scipy_rv', values=(x, y))
     return scipy_rv.rvs(size=size, random_state=seed)
+
+@do_sample_scipy.register(BernoulliDistribution)
+def _(dist: BernoulliDistribution, size, seed):
+    return scipy.stats.bernoulli.rvs(p=float(dist.p), size=size, random_state=seed)
+
+
+@do_sample_scipy.register(BinomialDistribution)
+def _(dist: BinomialDistribution, size, seed):
+    return scipy.stats.binom.rvs(n=int(dist.n), p=float(dist.p), size=size, random_state=seed)
+
+
+@do_sample_scipy.register(BetaBinomialDistribution)
+def _(dist: BetaBinomialDistribution, size, seed):
+    return scipy.stats.betabinom.rvs(n=int(dist.n), a=float(dist.alpha), b=float(dist.beta), size=size, random_state=seed)
+
+
+@do_sample_scipy.register(HypergeometricDistribution)
+def _(dist: HypergeometricDistribution, size, seed):
+    return scipy.stats.hypergeom.rvs(M=int(dist.m), n=int(dist.n), N=int(dist.N), size=size, random_state=seed)

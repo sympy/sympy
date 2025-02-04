@@ -5,7 +5,7 @@ from sympy.sets.sets import Interval
 from sympy.external import import_module
 from sympy.stats import Beta, Chi, Normal, Gamma, Exponential, LogNormal, Pareto, ChiSquared, Uniform, sample, \
     BetaPrime, Cauchy, GammaInverse, GaussianInverse, StudentT, Weibull, density, ContinuousRV, FDistribution, \
-    Gumbel, Laplace, Logistic, Rayleigh, Triangular
+    Gumbel, Laplace, Logistic, Rayleigh, Triangular, Gompertz, Levy, Lomax, Moyal
 from sympy.testing.pytest import skip, raises
 
 
@@ -51,11 +51,18 @@ def test_sample_scipy():
         Gamma("G", 2, 7),
         GammaInverse("GI", 1, 1),
         GaussianInverse("GUI", 1, 1),
+        Gompertz("GO", 1, 1),
         Exponential("E", 2),
+        FDistribution("FD", 1, 2),
+        Laplace("L", 1, 2),
+        Levy("LE", 1, 2),
         LogNormal("LN", 0, 1),
+        Lomax("LO", 1, 2),
+        Moyal("M", 1, 2),
         Pareto("P", 1, 1),
         StudentT("S", 2),
         ChiSquared("CS", 2),
+        Rayleigh("R", 1),
         Uniform("U", 0, 1)
     ]
     size = 3
